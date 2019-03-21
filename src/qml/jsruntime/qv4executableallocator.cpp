@@ -38,15 +38,21 @@
 ****************************************************************************/
 
 #include "qv4executableallocator_p.h"
+#include "qv4functiontable_p.h"
 
 #include <wtf/StdLibExtras.h>
 #include <wtf/PageAllocation.h>
 
 using namespace QV4;
 
-void *ExecutableAllocator::Allocation::start() const
+void *ExecutableAllocator::Allocation::exceptionHandler() const
 {
     return reinterpret_cast<void*>(addr);
+}
+
+void *ExecutableAllocator::Allocation::start() const
+{
+    return reinterpret_cast<void*>(addr + exceptionHandlerSize());
 }
 
 void ExecutableAllocator::Allocation::deallocate(ExecutableAllocator *allocator)
@@ -159,10 +165,10 @@ ExecutableAllocator::~ExecutableAllocator()
 ExecutableAllocator::Allocation *ExecutableAllocator::allocate(size_t size)
 {
     QMutexLocker locker(&mutex);
-    Allocation *allocation = 0;
+    Allocation *allocation = nullptr;
 
     // Code is best aligned to 16-byte boundaries.
-    size = WTF::roundUpToMultipleOf(16, size);
+    size = WTF::roundUpToMultipleOf(16, size + exceptionHandlerSize());
 
     QMultiMap<size_t, Allocation*>::Iterator it = freeAllocations.lowerBound(size);
     if (it != freeAllocations.end()) {
@@ -217,7 +223,7 @@ void ExecutableAllocator::free(Allocation *allocation)
     if (!merged)
         freeAllocations.insert(allocation->size, allocation);
 
-    allocation = 0;
+    allocation = nullptr;
 
     if (!chunk->firstAllocation->next) {
         freeAllocations.remove(chunk->firstAllocation->size, chunk->firstAllocation);
@@ -235,7 +241,7 @@ ExecutableAllocator::ChunkOfPages *ExecutableAllocator::chunkForAllocation(Alloc
     if (it != chunks.begin())
         --it;
     if (it == chunks.end())
-        return 0;
+        return nullptr;
     return *it;
 }
 

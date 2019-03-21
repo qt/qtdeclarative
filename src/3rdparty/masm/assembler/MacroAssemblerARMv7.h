@@ -255,6 +255,14 @@ public:
         store32(dataTempRegister, address.m_ptr);
     }
 
+    void getEffectiveAddress(BaseIndex address, RegisterID dest)
+    {
+        m_assembler.lsl(addressTempRegister, address.index, static_cast<int>(address.scale));
+        m_assembler.add(dest, address.base, addressTempRegister);
+        if (address.offset)
+            add32(TrustedImm32(address.offset), dest);
+    }
+
     void add64(TrustedImm32 imm, AbsoluteAddress address)
     {
         move(TrustedImmPtr(address.m_ptr), addressTempRegister);
@@ -680,6 +688,11 @@ public:
         load32(setupArmAddress(address), dest);
     }
 
+    void load16Unaligned(ImplicitAddress address, RegisterID dest)
+    {
+        load16(setupArmAddress(address), dest);
+    }
+
     void load16Unaligned(BaseIndex address, RegisterID dest)
     {
         load16(setupArmAddress(address), dest);
@@ -815,6 +828,17 @@ public:
         store8(src, setupArmAddress(address));
     }
     
+    void store8(RegisterID src, Address address)
+    {
+        store8(src, setupArmAddress(address));
+    }
+
+    void store8(TrustedImm32 imm, Address address)
+    {
+        move(imm, dataTempRegister);
+        store8(dataTempRegister, address);
+    }
+
 #if !defined(V4_BOOTSTRAP)
     void store8(RegisterID src, void* address)
     {

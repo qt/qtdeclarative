@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquick-visual
     \since 5.8
     \since QtQuick 2.8
-    \brief Provides information about the used Qt Quick backend
+    \brief Provides information about the used Qt Quick backend.
 
     The GraphicsInfo attached type provides information about the scenegraph
     backend used to render the contents of the associated window.
@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 
 QQuickGraphicsInfo::QQuickGraphicsInfo(QQuickItem *item)
     : QObject(item)
-    , m_window(0)
+    , m_window(nullptr)
     , m_api(Unknown)
     , m_shaderType(UnknownShadingLanguage)
     , m_shaderCompilationType(ShaderCompilationType(0))

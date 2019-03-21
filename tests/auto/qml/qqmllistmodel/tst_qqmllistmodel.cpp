@@ -49,7 +49,7 @@ Q_DECLARE_METATYPE(QList<QVariantHash>)
 
 inline QVariant runexpr(QQmlEngine *engine, const QString &str)
 {
-    QQmlExpression expr(engine->rootContext(), 0, str);
+    QQmlExpression expr(engine->rootContext(), nullptr, str);
     return expr.evaluate();
 }
 
@@ -106,6 +106,7 @@ private slots:
     void get_nested_data();
     void crash_model_with_multiple_roles();
     void crash_model_with_unknown_roles();
+    void crash_model_with_dynamic_roles();
     void set_model_cache();
     void property_changes();
     void property_changes_data();
@@ -123,6 +124,10 @@ private slots:
     void about_to_be_signals();
     void modify_through_delegate();
     void bindingsOnGetResult();
+    void stringifyModelEntry();
+    void qobjectTrackerForDynamicModelObjects();
+    void crash_append_empty_array();
+    void dynamic_roles_crash_QTBUG_38907();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -130,7 +135,7 @@ bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVarian
     bool allOk = true;
 
     QQmlListModel *model = qobject_cast<QQmlListModel *>(object.value<QObject *>());
-    if (model == 0)
+    if (model == nullptr)
         return false;
 
     if (model->count() != testList.count())
@@ -253,7 +258,7 @@ void tst_qqmllistmodel::static_types()
     QVERIFY(!component.isError());
 
     QObject *obj = component.create();
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     if (error.isEmpty()) {
         QVariant actual = obj->property("test");
@@ -324,7 +329,7 @@ void tst_qqmllistmodel::static_i18n()
     QVERIFY(!component.isError());
 
     QObject *obj = component.create();
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QVariant actual = obj->property("test");
 
@@ -373,7 +378,7 @@ void tst_qqmllistmodel::dynamic_i18n()
     QVERIFY(!component.isError());
 
     QObject *obj = component.create();
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QVariant actual = obj->property("test");
 
@@ -411,7 +416,7 @@ void tst_qqmllistmodel::static_nestedElements()
     component.setData(componentStr.toUtf8(), QUrl::fromLocalFile(""));
 
     QObject *obj = component.create();
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QVariant count = obj->property("count");
     QCOMPARE(count.type(), QVariant::Int);
@@ -447,6 +452,7 @@ void tst_qqmllistmodel::dynamic_data()
         QTest::newRow("get2") << "{get(-1) === undefined}" << 1 << "" << dr;
         QTest::newRow("get3") << "{append({'foo':123});get(0) != undefined}" << 1 << "" << dr;
         QTest::newRow("get4") << "{append({'foo':123});get(0).foo}" << 123 << "" << dr;
+        QTest::newRow("get5") << "{append({'foo':123});get(0) == get(0)}" << 1 << "" << dr;
         QTest::newRow("get-modify1") << "{append({'foo':123,'bar':456});get(0).foo = 333;get(0).foo}" << 333 << "" << dr;
         QTest::newRow("get-modify2") << "{append({'z':1});append({'foo':123,'bar':456});get(1).bar = 999;get(1).bar}" << 999 << "" << dr;
 
@@ -610,7 +616,7 @@ void tst_qqmllistmodel::enumerate()
     QQmlComponent component(&eng, testFileUrl("enumerate.qml"));
     QVERIFY(!component.isError());
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
 
     QLatin1String expectedStrings[] = {
         QLatin1String("val1=1Y"),
@@ -955,9 +961,9 @@ void tst_qqmllistmodel::crash_model_with_multiple_roles()
     QQmlComponent component(&eng, testFileUrl("multipleroles.qml"));
     QObject *rootItem = component.create();
     QVERIFY(component.errorString().isEmpty());
-    QVERIFY(rootItem != 0);
+    QVERIFY(rootItem != nullptr);
     QQmlListModel *model = rootItem->findChild<QQmlListModel*>("listModel");
-    QVERIFY(model != 0);
+    QVERIFY(model != nullptr);
 
     // used to cause a crash
     model->setProperty(0, "black", true);
@@ -971,13 +977,104 @@ void tst_qqmllistmodel::crash_model_with_unknown_roles()
     QQmlComponent component(&eng, testFileUrl("multipleroles.qml"));
     QScopedPointer<QObject> rootItem(component.create());
     QVERIFY(component.errorString().isEmpty());
-    QVERIFY(rootItem != 0);
+    QVERIFY(rootItem != nullptr);
     QQmlListModel *model = rootItem->findChild<QQmlListModel*>("listModel");
-    QVERIFY(model != 0);
+    QVERIFY(model != nullptr);
 
     // used to cause a crash in debug builds
     model->index(0, 0, QModelIndex()).data(Qt::DisplayRole);
     model->index(0, 0, QModelIndex()).data(Qt::UserRole);
+}
+
+//QTBUG-35639
+void tst_qqmllistmodel::crash_model_with_dynamic_roles()
+{
+    {
+        // setting a dynamic role to a QObject value, then triggering dtor
+        QQmlEngine eng;
+        QQmlComponent component(&eng, testFileUrl("dynamicroles.qml"));
+        QObject *rootItem = component.create();
+        qWarning() << component.errorString();
+        QVERIFY(component.errorString().isEmpty());
+        QVERIFY(rootItem != 0);
+        QQmlListModel *model = rootItem->findChild<QQmlListModel*>("listModel");
+        QVERIFY(model != 0);
+
+        QMetaObject::invokeMethod(model, "appendNewElement");
+
+        QObject *testObj = new QObject;
+        model->setProperty(0, "obj", QVariant::fromValue<QObject*>(testObj));
+        delete testObj;
+
+        // delete the root item, which will cause the model dtor to run
+        // previously, this would crash as it attempted to delete testObj.
+        delete rootItem;
+    }
+
+    {
+        // setting a dynamic role to a QObject value, then triggering
+        // DynamicRoleModelNode::updateValues() to trigger unsafe qobject_cast
+        QQmlEngine eng;
+        QQmlComponent component(&eng, testFileUrl("dynamicroles.qml"));
+        QObject *rootItem = component.create();
+        qWarning() << component.errorString();
+        QVERIFY(component.errorString().isEmpty());
+        QVERIFY(rootItem != 0);
+        QQmlListModel *model = rootItem->findChild<QQmlListModel*>("listModel");
+        QVERIFY(model != 0);
+
+        QMetaObject::invokeMethod(model, "appendNewElement");
+
+        QObject *testObj = new QObject;
+        model->setProperty(0, "obj", QVariant::fromValue<QObject*>(testObj));
+        delete testObj;
+
+        QMetaObject::invokeMethod(model, "setElementAgain");
+
+        delete rootItem;
+    }
+
+    {
+        // setting a dynamic role to a QObject value, then triggering
+        // DynamicRoleModelNodeMetaObject::propertyWrite()
+
+        /*
+           XXX TODO: I couldn't reproduce this one simply - I think it
+           requires a WorkerScript sync() call, and that's non-trivial.
+           I thought I could do it simply via:
+
+        QQmlEngine eng;
+        QQmlComponent component(&eng, testFileUrl("dynamicroles.qml"));
+        QObject *rootItem = component.create();
+        qWarning() << component.errorString();
+        QVERIFY(component.errorString().isEmpty());
+        QVERIFY(rootItem != 0);
+        QQmlListModel *model = rootItem->findChild<QQmlListModel*>("listModel");
+        QVERIFY(model != 0);
+
+        QMetaObject::invokeMethod(model, "appendNewElement");
+
+        QObject *testObj = new QObject;
+        model->setProperty(0, "obj", QVariant::fromValue<QObject*>(testObj));
+        delete testObj;
+        QObject *testObj2 = new QObject;
+        model->setProperty(0, "obj", QVariant::fromValue<QObject*>(testObj2));
+
+           But it turns out that that doesn't work (the setValue() call within
+           setProperty() doesn't seem to trigger the right codepath, for some
+           reason), and you can't trigger it manually via:
+
+        QObject *testObj2 = new QObject;
+        void *a[] = { testObj2, 0 };
+        QMetaObject::metacall(dynamicNodeModel, QMetaObject::WriteProperty, 0, a);
+
+           because the dynamicNodeModel for that index cannot be retrieved
+           using the public API.
+
+           But, anyway, I think the above two test cases are sufficient to
+           show that QObject* values should be guarded internally.
+        */
+    }
 }
 
 //QTBUG-15190
@@ -987,7 +1084,7 @@ void tst_qqmllistmodel::set_model_cache()
     QQmlComponent component(&eng, testFileUrl("setmodelcachelist.qml"));
     QObject *model = component.create();
     QVERIFY2(component.errorString().isEmpty(), QTest::toString(component.errorString()));
-    QVERIFY(model != 0);
+    QVERIFY(model != nullptr);
     QVERIFY(model->property("ok").toBool());
 
     delete model;
@@ -1185,10 +1282,10 @@ void tst_qqmllistmodel::signal_handlers()
     QQmlComponent component(&eng, testFileUrl("signalhandlers.qml"));
     QObject *model = component.create();
     QQmlListModel *lm = qobject_cast<QQmlListModel *>(model);
-    QVERIFY(lm != 0);
+    QVERIFY(lm != nullptr);
     lm->setDynamicRoles(dynamicRoles);
     QVERIFY2(component.errorString().isEmpty(), QTest::toString(component.errorString()));
-    QVERIFY(model != 0);
+    QVERIFY(model != nullptr);
     QVERIFY(model->property("ok").toBool());
 
     delete model;
@@ -1272,7 +1369,7 @@ void tst_qqmllistmodel::empty_element_warning()
     QVERIFY(!component.isError());
 
     QObject *obj = component.create();
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     delete obj;
 }
@@ -1480,6 +1577,94 @@ void tst_qqmllistmodel::bindingsOnGetResult()
     QVERIFY(!obj.isNull());
 
     QVERIFY(obj->property("success").toBool());
+}
+
+void tst_qqmllistmodel::stringifyModelEntry()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(
+                      "import QtQuick 2.0\n"
+                      "Item {\n"
+                      "   ListModel {\n"
+                      "       id: testModel\n"
+                      "       objectName: \"testModel\"\n"
+                      "       ListElement { name: \"Joe\"; age: 22 }\n"
+                      "   }\n"
+                      "}\n", QUrl());
+    QScopedPointer<QObject> scene(component.create());
+    QQmlListModel *model = scene->findChild<QQmlListModel*>("testModel");
+    QQmlExpression expr(engine.rootContext(), model, "JSON.stringify(get(0));");
+    QVariant v = expr.evaluate();
+    QVERIFY2(!expr.hasError(), QTest::toString(expr.error().toString()));
+    const QString expectedString = QStringLiteral("{\"age\":22,\"name\":\"Joe\"}");
+    QCOMPARE(v.toString(), expectedString);
+}
+
+void tst_qqmllistmodel::qobjectTrackerForDynamicModelObjects()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(
+                      "import QtQuick 2.0\n"
+                      "Item {\n"
+                      "   ListModel {\n"
+                      "       id: testModel\n"
+                      "       objectName: \"testModel\"\n"
+                      "       ListElement { name: \"Joe\"; age: 22 }\n"
+                      "   }\n"
+                      "}\n", QUrl());
+    QScopedPointer<QObject> scene(component.create());
+    QQmlListModel *model = scene->findChild<QQmlListModel*>("testModel");
+    QQmlExpression expr(engine.rootContext(), model, "get(0);");
+    QVariant v = expr.evaluate();
+    QVERIFY2(!expr.hasError(), QTest::toString(expr.error().toString()));
+
+    QObject *obj = v.value<QObject*>();
+    QVERIFY(obj);
+
+    QQmlData *ddata = QQmlData::get(obj, /*create*/false);
+    QVERIFY(ddata);
+    QVERIFY(!ddata->jsWrapper.isNullOrUndefined());
+}
+
+void tst_qqmllistmodel::crash_append_empty_array()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(
+                "import QtQuick 2.0\n"
+                "Item {\n"
+                "   ListModel {\n"
+                "      id: testModel\n"
+                "      objectName: \"testModel\""
+                "   }\n"
+                "}\n", QUrl());
+    QScopedPointer<QObject> scene(component.create());
+    QQmlListModel *model = scene->findChild<QQmlListModel*>("testModel");
+    QSignalSpy spy(model, &QQmlListModel::rowsAboutToBeInserted);
+    QQmlExpression expr(engine.rootContext(), model, "append(new Array())");
+    expr.evaluate();
+    QVERIFY2(!expr.hasError(), QTest::toString(expr.error().toString()));
+    QCOMPARE(spy.count(), 0);
+}
+
+void tst_qqmllistmodel::dynamic_roles_crash_QTBUG_38907()
+{
+    QQmlEngine eng;
+    QQmlComponent component(&eng, testFileUrl("qtbug38907.qml"));
+    QVERIFY(!component.isError());
+    QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(component.create()));
+    QVERIFY(item != 0);
+
+    QVariant retVal;
+
+    QMetaObject::invokeMethod(item.data(),
+                              "exec",
+                              Qt::DirectConnection,
+                              Q_RETURN_ARG(QVariant, retVal));
+
+    QVERIFY(retVal.toBool());
 }
 
 QTEST_MAIN(tst_qqmllistmodel)

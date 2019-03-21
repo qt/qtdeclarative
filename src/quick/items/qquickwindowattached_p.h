@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
 #include <qqml.h>
 #include <QWindow>
 
@@ -59,7 +60,7 @@ QT_BEGIN_NAMESPACE
 class QQuickItem;
 class QQuickWindow;
 
-class Q_AUTOTEST_EXPORT QQuickWindowAttached : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickWindowAttached : public QObject
 {
     Q_OBJECT
 

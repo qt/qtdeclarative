@@ -45,26 +45,54 @@ QT_BEGIN_NAMESPACE
 
 QAtomicInt QQmlPropertyCacheCreatorBase::classIndexCounter(0);
 
-QQmlBindingInstantiationContext::QQmlBindingInstantiationContext()
-    : referencingObjectIndex(-1)
-    , instantiatingBinding(nullptr)
-    , instantiatingProperty(nullptr)
-{
-
-}
-
-QQmlBindingInstantiationContext::QQmlBindingInstantiationContext(int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding, const QString &instantiatingPropertyName, const QQmlPropertyCache *referencingObjectPropertyCache)
+QQmlBindingInstantiationContext::QQmlBindingInstantiationContext(int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding,
+                                                                 const QString &instantiatingPropertyName, QQmlPropertyCache *referencingObjectPropertyCache)
     : referencingObjectIndex(referencingObjectIndex)
     , instantiatingBinding(instantiatingBinding)
-    , instantiatingProperty(nullptr)
+    , instantiatingPropertyName(instantiatingPropertyName)
+    , referencingObjectPropertyCache(referencingObjectPropertyCache)
 {
-    if (instantiatingBinding && instantiatingBinding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
-        Q_ASSERT(referencingObjectIndex >= 0);
-        Q_ASSERT(referencingObjectPropertyCache);
-        Q_ASSERT(instantiatingBinding->propertyNameIndex != 0);
+}
 
-        bool notInRevision = false;
-        instantiatingProperty = QmlIR::PropertyResolver(referencingObjectPropertyCache).property(instantiatingPropertyName, &notInRevision);
+bool QQmlBindingInstantiationContext::resolveInstantiatingProperty()
+{
+    if (!instantiatingBinding || instantiatingBinding->type != QV4::CompiledData::Binding::Type_GroupProperty)
+        return true;
+
+    Q_ASSERT(referencingObjectIndex >= 0);
+    Q_ASSERT(referencingObjectPropertyCache);
+    Q_ASSERT(instantiatingBinding->propertyNameIndex != 0);
+
+    bool notInRevision = false;
+    instantiatingProperty = QmlIR::PropertyResolver(referencingObjectPropertyCache).property(instantiatingPropertyName, &notInRevision, QmlIR::PropertyResolver::IgnoreRevision);
+    return instantiatingProperty != nullptr;
+}
+
+QQmlRefPointer<QQmlPropertyCache> QQmlBindingInstantiationContext::instantiatingPropertyCache(QQmlEnginePrivate *enginePrivate) const
+{
+    if (instantiatingProperty) {
+        if (instantiatingProperty->isQObject()) {
+            return enginePrivate->rawPropertyCacheForType(instantiatingProperty->propType(), instantiatingProperty->typeMinorVersion());
+        } else if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(instantiatingProperty->propType())) {
+            return enginePrivate->cache(vtmo, instantiatingProperty->typeMinorVersion());
+        }
+    }
+    return QQmlRefPointer<QQmlPropertyCache>();
+}
+
+void QQmlPendingGroupPropertyBindings::resolveMissingPropertyCaches(QQmlEnginePrivate *enginePrivate, QQmlPropertyCacheVector *propertyCaches) const
+{
+    for (QQmlBindingInstantiationContext pendingBinding: *this) {
+        const int groupPropertyObjectIndex = pendingBinding.instantiatingBinding->value.objectIndex;
+
+        if (propertyCaches->at(groupPropertyObjectIndex))
+            continue;
+
+        if (!pendingBinding.resolveInstantiatingProperty())
+            continue;
+
+        auto cache = pendingBinding.instantiatingPropertyCache(enginePrivate);
+        propertyCaches->set(groupPropertyObjectIndex, cache);
     }
 }
 

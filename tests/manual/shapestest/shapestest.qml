@@ -372,6 +372,62 @@ Rectangle {
                     }
                 }
             }
+
+            Rectangle {
+                border.color: "purple"
+                color: "transparent"
+                width: 200
+                height: 100
+                Shape {
+                    anchors.fill: parent
+                    ShapePath {
+                        strokeWidth: -1
+                        strokeColor: "red"
+                        fillGradient: RadialGradient {
+                            centerX: 100; centerY: 50
+                            focalX: centerX; focalY: centerY
+                            centerRadius: 50
+                            spread: RadialGradient.ReflectSpread
+                            GradientStop { position: 0; color: "blue" }
+                            GradientStop { position: 0.2; color: "green" }
+                            GradientStop { position: 0.4; color: "red" }
+                            GradientStop { position: 0.6; color: "yellow" }
+                            GradientStop { position: 1; color: "cyan" }
+                        }
+                        PathLine { x: 0; y: 100 }
+                        PathLine { x: 200; y: 100 }
+                        PathLine { x: 200; y: 0 }
+                        PathLine { x: 0; y: 0 }
+                    }
+                }
+            }
+
+            Rectangle {
+                border.color: "purple"
+                color: "transparent"
+                width: 200
+                height: 100
+                Shape {
+                    anchors.fill: parent
+                    ShapePath {
+                        strokeWidth: -1
+                        strokeColor: "red"
+                        fillGradient: ConicalGradient {
+                            centerX: 100; centerY: 50
+                            angle: 90
+                            GradientStop { position: 0; color: "blue" }
+                            GradientStop { position: 0.2; color: "green" }
+                            GradientStop { position: 0.4; color: "red" }
+                            GradientStop { position: 0.6; color: "yellow" }
+                            GradientStop { position: 1; color: "cyan" }
+                        }
+                        PathLine { x: 0; y: 100 }
+                        PathLine { x: 200; y: 100 }
+                        PathLine { x: 200; y: 0 }
+                        PathLine { x: 0; y: 0 }
+                    }
+                }
+            }
         }
     }
 

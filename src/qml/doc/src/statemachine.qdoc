@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -11,8 +11,8 @@
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Free Documentation License Usage
 ** Alternatively, this file may be used under the terms of the GNU Free
@@ -20,13 +20,13 @@
 ** Foundation and appearing in the file included in the packaging of
 ** this file. Please review the following information to ensure
 ** the GNU Free Documentation License version 1.3 requirements
-** will be met: http://www.gnu.org/copyleft/fdl.html.
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 /*!
-  \qmlmodule QtQml.StateMachine 1.0
+  \qmlmodule QtQml.StateMachine 1.\QtMinorVersion
   \title Declarative State Machine QML Types
   \brief Provides QML types to create and execute state graphs.
 
@@ -61,16 +61,16 @@
 
   \annotatedlist statemachine-qmltypes
 
-  \section1 Using both QtQuick and QtQml.StateMachine imports
+  \section1 Using Both QtQuick and QtQml.StateMachine Imports
 
   \warning If you're attempting to import both \l{QtQuick} and
     \e{QtQml.StateMachine} in one single QML file, make sure to import
     \e{QtQml.StateMachine} \e{last}. This way, the \e{State} type is provided
     by the Declarative State Machine Framework and not by \l{QtQuick}:
 
-  \qml
-    import QtQuick 2.0
-    import QtQml.StateMachine 1.0
+  \qml \QtMinorVersion
+    import QtQuick 2.\1
+    import QtQml.StateMachine 1.\1
 
     StateMachine {
         State {
@@ -82,9 +82,9 @@
   Alternatively, you can import \e{QtQml.StateMachine} into a separate
   namespace to avoid any ambiguity with QtQuick's \e{State} item:
 
-  \qml
-    import QtQuick 2.0
-    import QtQml.StateMachine 1.0 as DSM
+  \qml \QtMinorVersion
+    import QtQuick 2.\1
+    import QtQml.StateMachine 1.\1 as DSM
 
     DSM.StateMachine {
         DSM.State {

@@ -132,7 +132,7 @@ public:
 
     static QQuickPositionerAttached *qmlAttachedProperties(QObject *obj);
 
-    void updateAttachedProperties(QQuickPositionerAttached *specificProperty = 0, QQuickItem *specificPropertyOwner = 0) const;
+    void updateAttachedProperties(QQuickPositionerAttached *specificProperty = nullptr, QQuickItem *specificPropertyOwner = nullptr) const;
 
     qreal padding() const;
     void setPadding(qreal padding);
@@ -158,10 +158,10 @@ public:
 
 protected:
     QQuickBasePositioner(QQuickBasePositionerPrivate &dd, PositionerType at, QQuickItem *parent);
-    void componentComplete() Q_DECL_OVERRIDE;
-    void itemChange(ItemChange, const ItemChangeData &) Q_DECL_OVERRIDE;
+    void componentComplete() override;
+    void itemChange(ItemChange, const ItemChangeData &) override;
 
-    void updatePolish() Q_DECL_OVERRIDE;
+    void updatePolish() override;
 
 Q_SIGNALS:
     void spacingChanged();
@@ -231,11 +231,11 @@ class Q_AUTOTEST_EXPORT QQuickColumn : public QQuickBasePositioner
 {
     Q_OBJECT
 public:
-    QQuickColumn(QQuickItem *parent=0);
+    QQuickColumn(QQuickItem *parent=nullptr);
 
 protected:
-    void doPositioning(QSizeF *contentSize) Q_DECL_OVERRIDE;
-    void reportConflictingAnchors() Q_DECL_OVERRIDE;
+    void doPositioning(QSizeF *contentSize) override;
+    void reportConflictingAnchors() override;
 private:
     Q_DISABLE_COPY(QQuickColumn)
 };
@@ -247,7 +247,7 @@ class Q_AUTOTEST_EXPORT QQuickRow: public QQuickBasePositioner
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
 public:
-    QQuickRow(QQuickItem *parent=0);
+    QQuickRow(QQuickItem *parent=nullptr);
 
     Qt::LayoutDirection layoutDirection() const;
     void setLayoutDirection (Qt::LayoutDirection);
@@ -258,8 +258,8 @@ Q_SIGNALS:
     void effectiveLayoutDirectionChanged();
 
 protected:
-    void doPositioning(QSizeF *contentSize) Q_DECL_OVERRIDE;
-    void reportConflictingAnchors() Q_DECL_OVERRIDE;
+    void doPositioning(QSizeF *contentSize) override;
+    void reportConflictingAnchors() override;
 private:
     Q_DISABLE_COPY(QQuickRow)
     Q_DECLARE_PRIVATE(QQuickRow)
@@ -281,7 +281,7 @@ class Q_AUTOTEST_EXPORT QQuickGrid : public QQuickBasePositioner
     Q_PROPERTY(VAlignment verticalItemAlignment READ vItemAlign WRITE setVItemAlign NOTIFY verticalAlignmentChanged REVISION 1)
 
 public:
-    QQuickGrid(QQuickItem *parent=0);
+    QQuickGrid(QQuickItem *parent=nullptr);
 
     int rows() const { return m_rows; }
     void setRows(const int rows);
@@ -335,8 +335,8 @@ Q_SIGNALS:
     Q_REVISION(1) void verticalAlignmentChanged(VAlignment alignment);
 
 protected:
-    void doPositioning(QSizeF *contentSize) Q_DECL_OVERRIDE;
-    void reportConflictingAnchors() Q_DECL_OVERRIDE;
+    void doPositioning(QSizeF *contentSize) override;
+    void reportConflictingAnchors() override;
 
 private:
     int m_rows;
@@ -360,7 +360,7 @@ class Q_AUTOTEST_EXPORT QQuickFlow: public QQuickBasePositioner
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
 public:
-    QQuickFlow(QQuickItem *parent=0);
+    QQuickFlow(QQuickItem *parent=nullptr);
 
     enum Flow { LeftToRight, TopToBottom };
     Q_ENUM(Flow)
@@ -377,8 +377,8 @@ Q_SIGNALS:
     void effectiveLayoutDirectionChanged();
 
 protected:
-    void doPositioning(QSizeF *contentSize) Q_DECL_OVERRIDE;
-    void reportConflictingAnchors() Q_DECL_OVERRIDE;
+    void doPositioning(QSizeF *contentSize) override;
+    void reportConflictingAnchors() override;
 protected:
     QQuickFlow(QQuickFlowPrivate &dd, QQuickItem *parent);
 private:

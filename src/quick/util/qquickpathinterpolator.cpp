@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickPathInterpolator
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-control
-    \brief Specifies how to manually animate along a path
+    \brief Specifies how to manually animate along a path.
 
     PathInterpolator provides \c x, \c y, and \c angle information for a particular \c progress
     along a path.
@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickPathInterpolator::QQuickPathInterpolator(QObject *parent) :
-    QObject(parent), _path(0), _x(0), _y(0), _angle(0), _progress(0)
+    QObject(parent), _path(nullptr), _x(0), _y(0), _angle(0), _progress(0)
 {
 }
 

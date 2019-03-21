@@ -51,9 +51,9 @@
 // We mean it.
 //
 
-#include "qqmlconfigurabledebugservice.h"
 #include "qv4debuggeragent.h"
 #include "qv4datacollector.h"
+#include <private/qqmlconfigurabledebugservice_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qv4debugging_p.h>
 
@@ -64,56 +64,50 @@ QT_BEGIN_NAMESPACE
 namespace QV4 { struct ExecutionEngine; }
 
 class VariableCollector;
-class V8CommandHandler;
-class UnknownV8CommandHandler;
+class V4CommandHandler;
+class UnknownV4CommandHandler;
 class QV4DebugServiceImpl;
 
 class QV4DebugServiceImpl : public QQmlConfigurableDebugService<QV4DebugService>
 {
     Q_OBJECT
 public:
-    explicit QV4DebugServiceImpl(QObject *parent = 0);
-    ~QV4DebugServiceImpl() Q_DECL_OVERRIDE;
+    explicit QV4DebugServiceImpl(QObject *parent = nullptr);
+    ~QV4DebugServiceImpl() override;
 
-    void engineAdded(QJSEngine *engine) Q_DECL_OVERRIDE;
-    void engineAboutToBeRemoved(QJSEngine *engine) Q_DECL_OVERRIDE;
+    void engineAdded(QJSEngine *engine) override;
+    void engineAboutToBeRemoved(QJSEngine *engine) override;
 
-    void stateAboutToBeChanged(State state) Q_DECL_OVERRIDE;
+    void stateAboutToBeChanged(State state) override;
 
-    void signalEmitted(const QString &signal) Q_DECL_OVERRIDE;
-    void send(QJsonObject v8Payload);
+    void signalEmitted(const QString &signal) override;
+    void send(QJsonObject v4Payload);
 
     int selectedFrame() const;
     void selectFrame(int frameNr);
 
-    bool clientRequiresRedundantRefs() const { return redundantRefs; }
-    bool clientRequiresNamesAsObjects() const { return namesAsObjects; }
-
     QV4DebuggerAgent debuggerAgent;
 
 protected:
-    void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
+    void messageReceived(const QByteArray &) override;
     void sendSomethingToSomebody(const char *type, int magicNumber = 1);
 
 private:
     friend class QQmlDebuggerServiceFactory;
 
-    void handleV8Request(const QByteArray &payload);
+    void handleV4Request(const QByteArray &payload);
     static QByteArray packMessage(const QByteArray &command,
                                   const QByteArray &message = QByteArray());
     void processCommand(const QByteArray &command, const QByteArray &data);
-    V8CommandHandler *v8CommandHandler(const QString &command) const;
+    V4CommandHandler *v4CommandHandler(const QString &command) const;
 
     QStringList breakOnSignals;
     static int sequence;
     int theSelectedFrame;
 
-    bool redundantRefs;
-    bool namesAsObjects;
-
-    void addHandler(V8CommandHandler* handler);
-    QHash<QString, V8CommandHandler*> handlers;
-    QScopedPointer<UnknownV8CommandHandler> unknownV8CommandHandler;
+    void addHandler(V4CommandHandler* handler);
+    QHash<QString, V4CommandHandler*> handlers;
+    QScopedPointer<UnknownV4CommandHandler> unknownV4CommandHandler;
 };
 
 QT_END_NAMESPACE

@@ -128,7 +128,7 @@ public:
     };
     Q_ENUM(VerticalLayoutDirection)
 
-    QQuickItemView(QQuickFlickablePrivate &dd, QQuickItem *parent = 0);
+    QQuickItemView(QQuickFlickablePrivate &dd, QQuickItem *parent = nullptr);
     ~QQuickItemView();
 
     QVariant model() const;
@@ -228,6 +228,7 @@ public:
     Q_INVOKABLE void positionViewAtIndex(int index, int mode);
     Q_INVOKABLE int indexAt(qreal x, qreal y) const;
     Q_INVOKABLE QQuickItem *itemAt(qreal x, qreal y) const;
+    Q_REVISION(13) Q_INVOKABLE QQuickItem *itemAtIndex(int index) const;
     Q_INVOKABLE void positionViewAtBeginning();
     Q_INVOKABLE void positionViewAtEnd();
     Q_REVISION(1) Q_INVOKABLE void forceLayout();

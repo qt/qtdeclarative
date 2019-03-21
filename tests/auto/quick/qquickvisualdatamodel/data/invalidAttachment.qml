@@ -1,15 +1,16 @@
 import QtQuick 2.0
+import QtQml.Models 2.12
 
 Item {
-    property VisualDataModel invalidVdm: VisualDataModel.model
+    property DelegateModel invalidVdm: DelegateModel.model
     Repeater {
         model: 1
         delegate: Item {
             id: outer
             objectName: "delegate"
 
-            property VisualDataModel validVdm: outer.VisualDataModel.model
-            property VisualDataModel invalidVdm: inner.VisualDataModel.model
+            property DelegateModel validVdm: outer.DelegateModel.model
+            property DelegateModel invalidVdm: inner.DelegateModel.model
 
             Item {
                 id: inner

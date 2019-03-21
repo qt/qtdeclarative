@@ -19,7 +19,6 @@ Rectangle {
     property Window extraWindow: Window {
         objectName: "extraWindow"
         title: "extra window"
-        visible: true
         Text {
             objectName: "extraWindowText"
             anchors.centerIn: parent

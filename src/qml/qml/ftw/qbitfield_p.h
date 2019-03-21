@@ -77,12 +77,12 @@ private:
 };
 
 QBitField::QBitField()
-: bits(0), ownData(0), data(0)
+: bits(0), ownData(nullptr), data(nullptr)
 {
 }
 
 QBitField::QBitField(const quint32 *bitData, int bitCount)
-: bits((quint32)bitCount), ownData(0), data(bitData)
+: bits((quint32)bitCount), ownData(nullptr), data(bitData)
 {
 }
 

@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -114,6 +124,44 @@ Item {
         fillMode: AnimatedImage.TileHorizontally
     }
 
+    Loader {
+        id: raceConditionLoader
+        active: false
+        anchors.fill: parent
+
+        sourceComponent: ListView {
+            anchors.fill: parent
+            model: 5000
+            delegate: Item {
+                height: 10
+                width: parent.width
+                Text {
+                    anchors.fill: parent
+                    text: index
+                }
+                AnimatedImage {
+                    anchors.fill: parent
+                    source: "http://127.0.0.1/some-image-url.gif"
+                    Component.onCompleted: source = "";
+                }
+            }
+
+            function scrollToNext() {
+                currentIndex = currentIndex + 30 < model ? currentIndex + 30 : model;
+                positionViewAtIndex(currentIndex, ListView.Beginning);
+                if (currentIndex >= model)
+                    raceConditionLoader.active = false;
+            }
+
+            property Timer timer: Timer {
+                interval: 10
+                repeat: true
+                onTriggered: parent.scrollToNext()
+                Component.onCompleted: start()
+            }
+        }
+    }
+
     TestCase {
         name: "AnimatedImage"
 
@@ -214,6 +262,11 @@ Item {
             compare(tileModes3.width, 300)
             compare(tileModes3.height, 150)
             compare(tileModes3.fillMode, AnimatedImage.TileHorizontally)
+        }
+
+        function test_crashRaceCondition_replyFinished() {
+            raceConditionLoader.active = true;
+            tryCompare(raceConditionLoader, "active", false);
         }
 
     }

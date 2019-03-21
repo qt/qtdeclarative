@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET  = qtquick2plugin
 TARGETPATH = QtQuick.2
-IMPORT_VERSION = 2.6
+IMPORT_VERSION = 2.$$QT_MINOR_VERSION
 
 SOURCES += \
     plugin.cpp

@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -48,16 +58,16 @@
 class FbRenderer : public QQuickFramebufferObject::Renderer
 {
 public:
-    FbRenderer() : c(0), dir(1) { }
+    FbRenderer() { }
 
     // The lifetime of the FBO and this class depends on how QQuickWidget
     // manages the scenegraph and context when it comes to showing and hiding
     // the widget. The actual behavior is proven by the debug prints.
-    ~FbRenderer() {
+    ~FbRenderer() override {
         qDebug("FbRenderer destroyed");
     }
 
-    void render() {
+    void render() override {
         QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
         f->glClearColor(c, 0, 0, 1);
         f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -67,7 +77,7 @@ public:
         update();
     }
 
-    QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) {
+    QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) override {
         qDebug() << "Creating FBO" << size;
         QOpenGLFramebufferObjectFormat format;
         format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
@@ -75,8 +85,8 @@ public:
     }
 
 private:
-    float c;
-    int dir;
+    float c = 0;
+    int dir = 1;
 };
 #endif
 

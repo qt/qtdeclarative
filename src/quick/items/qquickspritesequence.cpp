@@ -61,50 +61,51 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-utility
     \inherits Item
-    \brief Draws a sprite animation
+    \brief Draws a sprite animation.
 
     SpriteSequence renders and controls a list of animations defined
     by \l Sprite types.
 
     For full details, see the \l{Sprite Animations} overview.
+    \sa {Sprite animations with SpriteSequence}
 */
 /*!
     \qmlproperty bool QtQuick::SpriteSequence::running
 
     Whether the sprite is animating or not.
 
-    Default is true
+    Default is \c true.
 */
 /*!
     \qmlproperty bool QtQuick::SpriteSequence::interpolate
 
-    If true, interpolation will occur between sprite frames to make the
+    If \c true, interpolation will occur between sprite frames to make the
     animation appear smoother.
 
-    Default is true.
+    Default is \c true.
 */
 /*!
     \qmlproperty string QtQuick::SpriteSequence::currentSprite
 
-    The name of the Sprite which is currently animating.
+    The name of the \l Sprite that is currently animating.
 */
 /*!
     \qmlproperty string QtQuick::SpriteSequence::goalSprite
 
-    The name of the Sprite which the animation should move to.
+    The name of the \l Sprite that the animation should move to.
 
-    Sprite states have defined durations and transitions between them, setting goalState
-    will cause it to disregard any path weightings (including 0) and head down the path
-    which will reach the goalState quickest (fewest animations). It will pass through
+    Sprite states have defined durations and transitions between them; setting \c goalSprite
+    will cause it to disregard any path weightings (including \c 0) and head down the path
+    that will reach the \c goalSprite quickest (fewest animations). It will pass through
     intermediate states on that path, and animate them for their duration.
 
-    If it is possible to return to the goalState from the starting point of the goalState
-    it will continue to do so until goalState is set to "" or an unreachable state.
+    If it is possible to return to the \c goalSprite from the starting point of the \c goalSprite,
+    it will continue to do so until \c goalSprite is set to \c "" or an unreachable state.
 */
 /*! \qmlmethod QtQuick::SpriteSequence::jumpTo(string sprite)
 
-    This function causes the SpriteSequence to jump to the specified sprite immediately, intermediate
-    sprites are not played. The \a sprite argument is the name of the sprite you wish to jump to.
+    This function causes the SpriteSequence to jump to the specified \a sprite immediately;
+    intermediate sprites are not played.
 */
 /*!
     \qmlproperty list<Sprite> QtQuick::SpriteSequence::sprites
@@ -199,7 +200,7 @@ void QQuickSpriteSequence::createEngine()
         if (!d->m_goalState.isEmpty())
             d->m_spriteEngine->setGoal(d->m_spriteEngine->stateIndex(d->m_goalState));
     } else {
-        d->m_spriteEngine = 0;
+        d->m_spriteEngine = nullptr;
     }
     reset();
 }
@@ -226,7 +227,7 @@ QSGSpriteNode *QQuickSpriteSequence::initNode()
 
     QSGSpriteNode *node = d->sceneGraphContext()->createSpriteNode();
 
-    d->m_sheetSize = QSize(image.size());
+    d->m_sheetSize = QSize(image.size() / image.devicePixelRatioF());
     node->setTexture(window()->createTextureFromImage(image));
     d->m_spriteEngine->start(0);
     node->setTime(0.0f);

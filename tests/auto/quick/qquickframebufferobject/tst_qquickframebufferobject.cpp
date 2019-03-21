@@ -192,7 +192,8 @@ void tst_QQuickFramebufferObject::testThatStuffWorks()
     item->setMsaa(msaa);
 
     view.show();
-    QTest::qWaitForWindowExposed(&view);
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QImage result = view.grabWindow();
 
@@ -231,7 +232,8 @@ void tst_QQuickFramebufferObject::testInvalidate()
     item->setTextureSize(QSize(200, 200));
 
     view.show();
-    QTest::qWaitForWindowExposed(&view);
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QCOMPARE(frameInfo.fboSize, QSize(200, 200));
 
@@ -240,7 +242,7 @@ void tst_QQuickFramebufferObject::testInvalidate()
     item->update();
 
     QTRY_COMPARE(frameInfo.createFBOCount, 1);
-    QCOMPARE(frameInfo.fboSize, QSize(300, 300));
+    QTRY_COMPARE(frameInfo.fboSize, QSize(300, 300));
 }
 
 QTEST_MAIN(tst_QQuickFramebufferObject)

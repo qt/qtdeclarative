@@ -187,9 +187,10 @@ struct Chunk {
     }
 
     bool sweep(ClassDestroyStatsCallback classCountPtr);
-    void freeAll();
     void resetBlackBits();
     void collectGrayItems(QV4::MarkStack *markStack);
+    bool sweep(ExecutionEngine *engine);
+    void freeAll(ExecutionEngine *engine);
 
     void sortIntoBins(HeapItem **bins, uint nBins);
 };
@@ -271,9 +272,9 @@ Q_STATIC_ASSERT((1 << Chunk::BitShift) == Chunk::Bits);
 
 struct MarkStack {
     MarkStack(ExecutionEngine *engine);
-    Heap::Base **top = 0;
-    Heap::Base **base = 0;
-    Heap::Base **limit = 0;
+    Heap::Base **top = nullptr;
+    Heap::Base **base = nullptr;
+    Heap::Base **limit = nullptr;
     ExecutionEngine *engine;
     void push(Heap::Base *m) {
         *top = m;
@@ -287,32 +288,8 @@ struct MarkStack {
 
 };
 
-// Some helper classes and macros to automate the generation of our
-// tables used for marking objects
-
-enum MarkFlags {
-    Mark_NoMark = 0,
-    Mark_Value = 1,
-    Mark_Pointer = 2,
-    Mark_ValueArray = 3
-};
-
-template <typename T>
-struct MarkFlagEvaluator {
-    static Q_CONSTEXPR quint64 value = 0;
-};
-template <typename T, size_t o>
-struct MarkFlagEvaluator<Heap::Pointer<T, o>> {
-    static Q_CONSTEXPR quint64 value = static_cast<quint64>(Mark_Pointer) << (2*o / sizeof(quintptr));
-};
-template <size_t o>
-struct MarkFlagEvaluator<ValueArray<o>> {
-    static Q_CONSTEXPR quint64 value = static_cast<quint64>(Mark_ValueArray) << (2*o / sizeof(quintptr));
-};
-template <size_t o>
-struct MarkFlagEvaluator<HeapValue<o>> {
-    static Q_CONSTEXPR quint64 value = static_cast<quint64>(Mark_Value) << (2 *o / sizeof(quintptr));
-};
+// Some helper to automate the generation of our
+// functions used for marking objects
 
 #define HEAP_OBJECT_OFFSET_MEMBER_EXPANSION(c, gcType, type, name) \
     HEAP_OBJECT_OFFSET_MEMBER_EXPANSION_##gcType(c, type, name)
@@ -334,25 +311,42 @@ struct MarkFlagEvaluator<HeapValue<o>> {
 #define HEAP_OBJECT_MEMBER_EXPANSION_ValueArray(c, type, name) \
     type<offsetof(c##OffsetStruct, name) + baseOffset> name;
 
-#define HEAP_OBJECT_MARK_EXPANSION(class, gcType, type, name) \
-    MarkFlagEvaluator<decltype(class::name)>::value |
+#define HEAP_OBJECT_MARKOBJECTS_EXPANSION(c, gcType, type, name) \
+    HEAP_OBJECT_MARKOBJECTS_EXPANSION_##gcType(c, type, name)
+#define HEAP_OBJECT_MARKOBJECTS_EXPANSION_Pointer(c, type, name) \
+    if (o->name) o->name.heapObject()->mark(stack);
+#define HEAP_OBJECT_MARKOBJECTS_EXPANSION_NoMark(c, type, name)
+#define HEAP_OBJECT_MARKOBJECTS_EXPANSION_HeapValue(c, type, name) \
+    o->name.mark(stack);
+#define HEAP_OBJECT_MARKOBJECTS_EXPANSION_ValueArray(c, type, name) \
+    o->name.mark(stack);
+
+
+#define DECLARE_HEAP_OBJECT_BASE(name, base) \
+    struct name##OffsetStruct { \
+        name##Members(name, HEAP_OBJECT_OFFSET_MEMBER_EXPANSION) \
+    }; \
+    struct name##SizeStruct : base, name##OffsetStruct {}; \
+    struct name##Data { \
+        typedef base SuperClass; \
+        static Q_CONSTEXPR size_t baseOffset = sizeof(name##SizeStruct) - sizeof(name##OffsetStruct); \
+        name##Members(name, HEAP_OBJECT_MEMBER_EXPANSION) \
+    }; \
+    Q_STATIC_ASSERT(sizeof(name##SizeStruct) == sizeof(name##Data) + name##Data::baseOffset); \
 
 #define DECLARE_HEAP_OBJECT(name, base) \
-struct name##OffsetStruct { \
-    name##Members(name, HEAP_OBJECT_OFFSET_MEMBER_EXPANSION) \
-}; \
-struct name##SizeStruct : base, name##OffsetStruct {}; \
-struct name##Data { \
-    static Q_CONSTEXPR size_t baseOffset = sizeof(name##SizeStruct) - sizeof(name##OffsetStruct); \
-    name##Members(name, HEAP_OBJECT_MEMBER_EXPANSION) \
-}; \
-Q_STATIC_ASSERT(sizeof(name##SizeStruct) == sizeof(name##Data) + name##Data::baseOffset); \
-static Q_CONSTEXPR quint64 name##_markTable = \
-    (name##Members(name##Data, HEAP_OBJECT_MARK_EXPANSION) 0) | QV4::Heap::base::markTable; \
-    \
-struct name : base, name##Data
+    DECLARE_HEAP_OBJECT_BASE(name, base) \
+    struct name : base, name##Data
+#define DECLARE_EXPORTED_HEAP_OBJECT(name, base) \
+    DECLARE_HEAP_OBJECT_BASE(name, base) \
+    struct Q_QML_EXPORT name : base, name##Data
 
-#define DECLARE_MARK_TABLE(class) static Q_CONSTEXPR quint64 markTable = class##_markTable
+#define DECLARE_MARKOBJECTS(class) \
+    static void markObjects(Heap::Base *b, MarkStack *stack) { \
+        class *o = static_cast<class *>(b); \
+        class##Data::SuperClass::markObjects(o, stack); \
+        class##Members(class, HEAP_OBJECT_MARKOBJECTS_EXPANSION) \
+    }
 
 }
 

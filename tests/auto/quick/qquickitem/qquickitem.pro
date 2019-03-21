@@ -11,3 +11,8 @@ TESTDATA = data/*
 
 QT += core-private gui-private  qml-private quick-private testlib
 
+qtHaveModule(widgets): {
+    DEFINES += TEST_QTBUG_60123
+    QT += widgets
+}
+

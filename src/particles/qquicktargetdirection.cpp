@@ -41,6 +41,7 @@
 #include "qquickparticleemitter_p.h"
 #include <cmath>
 #include <QDebug>
+#include <QRandomGenerator>
 
 QT_BEGIN_NAMESPACE
 /*!
@@ -49,7 +50,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Direction
-    \brief For specifying a direction towards the target point
+    \brief For specifying a direction towards the target point.
 
 */
 /*!
@@ -90,7 +91,7 @@ QQuickTargetDirection::QQuickTargetDirection(QObject *parent) :
   , m_proportionalMagnitude(false)
   , m_magnitude(0)
   , m_magnitudeVariation(0)
-  , m_targetItem(0)
+  , m_targetItem(nullptr)
 {
 }
 
@@ -117,10 +118,10 @@ QPointF QQuickTargetDirection::sample(const QPointF &from)
         targetX = m_targetX;
         targetY = m_targetY;
     }
-    targetX += 0 - from.x() - m_targetVariation + rand()/(float)RAND_MAX * m_targetVariation*2;
-    targetY += 0 - from.y() - m_targetVariation + rand()/(float)RAND_MAX * m_targetVariation*2;
+    targetX += 0 - from.x() - m_targetVariation + QRandomGenerator::global()->generateDouble() * m_targetVariation*2;
+    targetY += 0 - from.y() - m_targetVariation + QRandomGenerator::global()->generateDouble() * m_targetVariation*2;
     qreal theta = std::atan2(targetY, targetX);
-    qreal mag = m_magnitude + rand()/(float)RAND_MAX * m_magnitudeVariation * 2 - m_magnitudeVariation;
+    qreal mag = m_magnitude + QRandomGenerator::global()->generateDouble() * m_magnitudeVariation * 2 - m_magnitudeVariation;
     if (m_proportionalMagnitude)
         mag *= std::sqrt(targetX * targetX + targetY * targetY);
     ret.setX(mag * std::cos(theta));

@@ -82,8 +82,10 @@ public:
 
     inline T *data() const;
 
+    inline explicit operator bool() const;
+
 private:
-    quintptr ptr_value;
+    quintptr ptr_value = 0;
 
     static const quintptr FlagBit = 0x1;
     static const quintptr Flag2Bit = 0x2;
@@ -115,7 +117,7 @@ public:
     inline T2 *asT2() const;
 
 private:
-    quintptr ptr_value;
+    quintptr ptr_value = 0;
 
     static const quintptr FlagBit = 0x1;
     static const quintptr Flag2Bit = 0x2;
@@ -124,7 +126,6 @@ private:
 
 template<typename T>
 QFlagPointer<T>::QFlagPointer()
-: ptr_value(0)
 {
 }
 
@@ -231,9 +232,14 @@ T *QFlagPointer<T>::data() const
     return (T *)(ptr_value & ~FlagsMask);
 }
 
+template<typename T>
+QFlagPointer<T>::operator bool() const
+{
+    return data() != nullptr;
+}
+
 template<typename T, typename T2>
 QBiPointer<T, T2>::QBiPointer()
-: ptr_value(0)
 {
 }
 

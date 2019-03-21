@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qquickparticleextruder_p.h"
-#include <stdlib.h>
+#include <QRandomGenerator>
 
 QT_BEGIN_NAMESPACE
 
@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Shape
     \instantiates QQuickParticleExtruder
     \inqmlmodule QtQuick.Particles
-    \brief For specifying an area for affectors and emitters
+    \brief For specifying an area for affectors and emitters.
     \ingroup qtquick-particles
 
     The base class is just a rectangle.
@@ -59,8 +59,8 @@ QQuickParticleExtruder::QQuickParticleExtruder(QObject *parent) :
 
 QPointF QQuickParticleExtruder::extrude(const QRectF &rect)
 {
-    return QPointF(((qreal)rand() / RAND_MAX) * rect.width() + rect.x(),
-                   ((qreal)rand() / RAND_MAX) * rect.height() + rect.y());
+    return QPointF(QRandomGenerator::global()->generateDouble() * rect.width() + rect.x(),
+                   QRandomGenerator::global()->generateDouble() * rect.height() + rect.y());
 }
 
 bool QQuickParticleExtruder::contains(const QRectF &bounds, const QPointF &point)

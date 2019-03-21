@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -38,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.12
 import QtTest 1.1
 
 Item {
@@ -68,6 +78,17 @@ Item {
         gradient: Gradient {
             GradientStop { position: 0.0; color: "red" }
             GradientStop { position: 0.5; color: "yellow" }
+            GradientStop { position: 1.0; color: "green" }
+        }
+    }
+
+    Rectangle {
+        id: horizontalGradient
+        width: 300
+        height: 100
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+            GradientStop { position: 0.0; color: "red" }
             GradientStop { position: 1.0; color: "green" }
         }
     }
@@ -122,7 +143,17 @@ Item {
             compare(gstops[0].color.toString(), "#ff0000")
             compare(gstops[1].color.toString(), "#ffff00")
             compare(gstops[2].color.toString(), "#008000")
+            compare(grad.orientation, Gradient.Vertical)
         }
+
+        function test_horizontalGradient() {
+            var grad = horizontalGradient.gradient;
+            var gstops = grad.stops;
+            compare(gstops[0].color.toString(), "#ff0000")
+            compare(gstops[1].color.toString(), "#008000")
+            compare(grad.orientation, Gradient.Horizontal)
+        }
+
 
         function test_borders() {
             compare(rectangleborder.border.width, 1)

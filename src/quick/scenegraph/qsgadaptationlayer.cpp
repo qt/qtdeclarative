@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -56,7 +56,7 @@ static QElapsedTimer qsg_render_timer;
 
 QSGDistanceFieldGlyphCache::Texture QSGDistanceFieldGlyphCache::s_emptyTexture;
 
-QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(QOpenGLContext *c, const QRawFont &font)
+QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(const QRawFont &font)
     : m_pendingGlyphs(64)
 {
     Q_ASSERT(font.isValid());
@@ -71,30 +71,32 @@ QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(QOpenGLContext *c, const 
     // this allows us to call pathForGlyph once and reuse the result.
     m_referenceFont.setPixelSize(QT_DISTANCEFIELD_BASEFONTSIZE(m_doubleGlyphResolution) * QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution));
     Q_ASSERT(m_referenceFont.isValid());
-#if QT_CONFIG(opengl)
-    m_coreProfile = (c->format().profile() == QSurfaceFormat::CoreProfile);
-#else
-    Q_UNUSED(c)
-#endif
 }
 
 QSGDistanceFieldGlyphCache::~QSGDistanceFieldGlyphCache()
 {
 }
 
+QSGDistanceFieldGlyphCache::GlyphData &QSGDistanceFieldGlyphCache::emptyData(glyph_t glyph)
+{
+    GlyphData gd;
+    gd.texture = &s_emptyTexture;
+    QHash<glyph_t, GlyphData>::iterator it = m_glyphsData.insert(glyph, gd);
+    return it.value();
+}
+
 QSGDistanceFieldGlyphCache::GlyphData &QSGDistanceFieldGlyphCache::glyphData(glyph_t glyph)
 {
     QHash<glyph_t, GlyphData>::iterator data = m_glyphsData.find(glyph);
     if (data == m_glyphsData.end()) {
-        GlyphData gd;
-        gd.texture = &s_emptyTexture;
+        GlyphData &gd = emptyData(glyph);
         gd.path = m_referenceFont.pathForGlyph(glyph);
         // need bounding rect in base font size scale
         qreal scaleFactor = qreal(1) / QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution);
         QTransform scaleDown;
         scaleDown.scale(scaleFactor, scaleFactor);
         gd.boundingRect = scaleDown.mapRect(gd.path.boundingRect());
-        data = m_glyphsData.insert(glyph, gd);
+        return gd;
     }
     return data.value();
 }
@@ -234,10 +236,8 @@ void QSGDistanceFieldGlyphCache::setGlyphsPosition(const QList<GlyphPosition> &g
     }
 
     if (!invalidatedGlyphs.isEmpty()) {
-        QLinkedList<QSGDistanceFieldGlyphConsumer *>::iterator it = m_registeredNodes.begin();
-        while (it != m_registeredNodes.end()) {
-            (*it)->invalidateGlyphs(invalidatedGlyphs);
-            ++it;
+        for (QSGDistanceFieldGlyphConsumerList::iterator iter = m_registeredNodes.begin(); iter != m_registeredNodes.end(); ++iter) {
+            iter->invalidateGlyphs(invalidatedGlyphs);
         }
     }
 }
@@ -280,10 +280,8 @@ void QSGDistanceFieldGlyphCache::setGlyphsTexture(const QVector<glyph_t> &glyphs
     }
 
     if (!invalidatedGlyphs.isEmpty()) {
-        QLinkedList<QSGDistanceFieldGlyphConsumer*>::iterator it = m_registeredNodes.begin();
-        while (it != m_registeredNodes.end()) {
-            (*it)->invalidateGlyphs(invalidatedGlyphs);
-            ++it;
+        for (QSGDistanceFieldGlyphConsumerList::iterator iter = m_registeredNodes.begin(); iter != m_registeredNodes.end(); ++iter) {
+            iter->invalidateGlyphs(invalidatedGlyphs);
         }
     }
 }

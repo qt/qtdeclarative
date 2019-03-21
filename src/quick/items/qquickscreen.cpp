@@ -396,24 +396,24 @@ void QQuickScreenInfo::setWrappedScreen(QScreen *screen)
     if (!oldScreen || screen->devicePixelRatio() != oldScreen->devicePixelRatio())
         emit devicePixelRatioChanged();
 
-    connect(screen, SIGNAL(geometryChanged(QRect)),
-            this, SIGNAL(widthChanged()));
-    connect(screen, SIGNAL(geometryChanged(QRect)),
-            this, SIGNAL(heightChanged()));
-    connect(screen, SIGNAL(geometryChanged(QRect)),
-            this, SIGNAL(virtualXChanged()));
-    connect(screen, SIGNAL(geometryChanged(QRect)),
-            this, SIGNAL(virtualYChanged()));
-    connect(screen, SIGNAL(orientationChanged(Qt::ScreenOrientation)),
-            this, SIGNAL(orientationChanged()));
-    connect(screen, SIGNAL(primaryOrientationChanged(Qt::ScreenOrientation)),
-            this, SIGNAL(primaryOrientationChanged()));
-    connect(screen, SIGNAL(virtualGeometryChanged(QRect)),
-            this, SIGNAL(desktopGeometryChanged()));
-    connect(screen, SIGNAL(logicalDotsPerInchChanged(qreal)),
-            this, SIGNAL(logicalPixelDensityChanged()));
-    connect(screen, SIGNAL(physicalDotsPerInchChanged(qreal)),
-            this, SIGNAL(pixelDensityChanged()));
+    qmlobject_connect(screen, QScreen, SIGNAL(geometryChanged(QRect)),
+            this, QQuickScreenInfo, SIGNAL(widthChanged()));
+    qmlobject_connect(screen, QScreen, SIGNAL(geometryChanged(QRect)),
+            this, QQuickScreenInfo, SIGNAL(heightChanged()));
+    qmlobject_connect(screen, QScreen, SIGNAL(geometryChanged(QRect)),
+            this, QQuickScreenInfo, SIGNAL(virtualXChanged()));
+    qmlobject_connect(screen, QScreen, SIGNAL(geometryChanged(QRect)),
+            this, QQuickScreenInfo, SIGNAL(virtualYChanged()));
+    qmlobject_connect(screen, QScreen, SIGNAL(orientationChanged(Qt::ScreenOrientation)),
+            this, QQuickScreenInfo, SIGNAL(orientationChanged()));
+    qmlobject_connect(screen, QScreen, SIGNAL(primaryOrientationChanged(Qt::ScreenOrientation)),
+            this, QQuickScreenInfo, SIGNAL(primaryOrientationChanged()));
+    qmlobject_connect(screen, QScreen, SIGNAL(virtualGeometryChanged(QRect)),
+            this, QQuickScreenInfo, SIGNAL(desktopGeometryChanged()));
+    qmlobject_connect(screen, QScreen, SIGNAL(logicalDotsPerInchChanged(qreal)),
+            this, QQuickScreenInfo, SIGNAL(logicalPixelDensityChanged()));
+    qmlobject_connect(screen, QScreen, SIGNAL(physicalDotsPerInchChanged(qreal)),
+            this, QQuickScreenInfo, SIGNAL(pixelDensityChanged()));
 }
 
 QScreen *QQuickScreenInfo::wrappedScreen() const
@@ -423,8 +423,8 @@ QScreen *QQuickScreenInfo::wrappedScreen() const
 
 QQuickScreenAttached::QQuickScreenAttached(QObject* attachee)
     : QQuickScreenInfo(attachee)
-    , m_window(NULL)
-    , m_updateMask(0)
+    , m_window(nullptr)
+    , m_updateMask(nullptr)
     , m_updateMaskSet(false)
 {
     m_attachee = qobject_cast<QQuickItem*>(attachee);
@@ -473,11 +473,11 @@ int QQuickScreenAttached::angleBetween(int a, int b)
 void QQuickScreenAttached::windowChanged(QQuickWindow* c)
 {
     if (m_window)
-        disconnect(m_window, SIGNAL(screenChanged(QScreen*)), this, SLOT(screenChanged(QScreen*)));
+        qmlobject_disconnect(m_window, QQuickWindow, SIGNAL(screenChanged(QScreen*)), this, QQuickScreenAttached, SLOT(screenChanged(QScreen*)));
     m_window = c;
-    screenChanged(c ? c->screen() : NULL);
+    screenChanged(c ? c->screen() : nullptr);
     if (c)
-        connect(c, SIGNAL(screenChanged(QScreen*)), this, SLOT(screenChanged(QScreen*)));
+        qmlobject_connect(c, QQuickWindow, SIGNAL(screenChanged(QScreen*)), this, QQuickScreenAttached, SLOT(screenChanged(QScreen*)));
 }
 
 void QQuickScreenAttached::screenChanged(QScreen *screen)

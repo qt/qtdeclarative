@@ -111,15 +111,13 @@ qWarning() << "Current pixel size:" << property.read().toInt();
 property.write(24);
 qWarning() << "Pixel size should now be 24:" << property.read().toInt();
 \endcode
-
-The \l {Qt Quick 1} version of this class was named QDeclarativeProperty.
 */
 
 /*!
     Create an invalid QQmlProperty.
 */
 QQmlProperty::QQmlProperty()
-: d(0)
+: d(nullptr)
 {
 }
 
@@ -128,7 +126,7 @@ QQmlProperty::~QQmlProperty()
 {
     if (d)
         d->release();
-    d = 0;
+    d = nullptr;
 }
 
 /*!
@@ -150,8 +148,8 @@ QQmlProperty::QQmlProperty(QObject *obj)
 QQmlProperty::QQmlProperty(QObject *obj, QQmlContext *ctxt)
 : d(new QQmlPropertyPrivate)
 {
-    d->context = ctxt?QQmlContextData::get(ctxt):0;
-    d->engine = ctxt?ctxt->engine():0;
+    d->context = ctxt?QQmlContextData::get(ctxt):nullptr;
+    d->engine = ctxt?ctxt->engine():nullptr;
     d->initDefault(obj);
 }
 
@@ -164,7 +162,7 @@ QQmlProperty::QQmlProperty(QObject *obj, QQmlContext *ctxt)
 QQmlProperty::QQmlProperty(QObject *obj, QQmlEngine *engine)
   : d(new QQmlPropertyPrivate)
 {
-    d->context = 0;
+    d->context = nullptr;
     d->engine = engine;
     d->initDefault(obj);
 }
@@ -190,7 +188,7 @@ QQmlProperty::QQmlProperty(QObject *obj, const QString &name)
 : d(new QQmlPropertyPrivate)
 {
     d->initProperty(obj, name);
-    if (!isValid()) d->object = 0;
+    if (!isValid()) d->object = nullptr;
 }
 
 /*!
@@ -203,10 +201,10 @@ QQmlProperty::QQmlProperty(QObject *obj, const QString &name)
 QQmlProperty::QQmlProperty(QObject *obj, const QString &name, QQmlContext *ctxt)
 : d(new QQmlPropertyPrivate)
 {
-    d->context = ctxt?QQmlContextData::get(ctxt):0;
-    d->engine = ctxt?ctxt->engine():0;
+    d->context = ctxt?QQmlContextData::get(ctxt):nullptr;
+    d->engine = ctxt?ctxt->engine():nullptr;
     d->initProperty(obj, name);
-    if (!isValid()) { d->object = 0; d->context = 0; d->engine = 0; }
+    if (!isValid()) { d->object = nullptr; d->context = nullptr; d->engine = nullptr; }
 }
 
 /*!
@@ -217,14 +215,30 @@ QQmlProperty::QQmlProperty(QObject *obj, const QString &name, QQmlContext *ctxt)
 QQmlProperty::QQmlProperty(QObject *obj, const QString &name, QQmlEngine *engine)
 : d(new QQmlPropertyPrivate)
 {
-    d->context = 0;
+    d->context = nullptr;
     d->engine = engine;
     d->initProperty(obj, name);
-    if (!isValid()) { d->object = 0; d->context = 0; d->engine = 0; }
+    if (!isValid()) { d->object = nullptr; d->context = nullptr; d->engine = nullptr; }
+}
+
+QQmlProperty QQmlPropertyPrivate::create(QObject *target, const QString &propertyName, QQmlContextData *context)
+{
+    QQmlProperty result;
+    auto d = new QQmlPropertyPrivate;
+    result.d = d;
+    d->context = context;
+    d->engine = context ? context->engine : nullptr;
+    d->initProperty(target, propertyName);
+    if (!result.isValid()) {
+        d->object = nullptr;
+        d->context = nullptr;
+        d->engine = nullptr;
+    }
+    return result;
 }
 
 QQmlPropertyPrivate::QQmlPropertyPrivate()
-: context(0), engine(0), object(0), isNameCached(false)
+: context(nullptr), engine(nullptr), object(nullptr), isNameCached(false)
 {
 }
 
@@ -232,97 +246,103 @@ QQmlContextData *QQmlPropertyPrivate::effectiveContext() const
 {
     if (context) return context;
     else if (engine) return QQmlContextData::get(engine->rootContext());
-    else return 0;
+    else return nullptr;
 }
 
 void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
 {
     if (!obj) return;
 
-    QQmlTypeNameCache *typeNameCache = context?context->imports:0;
-
-    const auto path = name.splitRef(QLatin1Char('.'));
-    if (path.isEmpty()) return;
+    QQmlRefPointer<QQmlTypeNameCache> typeNameCache = context?context->imports:nullptr;
 
     QObject *currentObject = obj;
+    QVector<QStringRef> path;
+    QStringRef terminal(&name);
 
-    // Everything up to the last property must be an "object type" property
-    for (int ii = 0; ii < path.count() - 1; ++ii) {
-        const QStringRef &pathName = path.at(ii);
+    if (name.contains(QLatin1Char('.'))) {
+        path = name.splitRef(QLatin1Char('.'));
+        if (path.isEmpty()) return;
 
-        if (typeNameCache) {
-            QQmlTypeNameCache::Result r = typeNameCache->query(pathName);
-            if (r.isValid()) {
-                if (r.type) {
-                    QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
-                    QQmlAttachedPropertiesFunc func = r.type->attachedPropertiesFunction(enginePrivate);
-                    if (!func) return; // Not an attachable type
+        // Everything up to the last property must be an "object type" property
+        for (int ii = 0; ii < path.count() - 1; ++ii) {
+            const QStringRef &pathName = path.at(ii);
 
-                    currentObject = qmlAttachedPropertiesObjectById(r.type->attachedPropertiesId(enginePrivate), currentObject);
-                    if (!currentObject) return; // Something is broken with the attachable type
-                } else if (r.importNamespace) {
-                    if ((ii + 1) == path.count()) return; // No type following the namespace
+            // Types must begin with an uppercase letter (see checkRegistration()
+            // in qqmlmetatype.cpp for the enforcement of this).
+            if (typeNameCache && !pathName.isEmpty() && pathName.at(0).isUpper()) {
+                QQmlTypeNameCache::Result r = typeNameCache->query(pathName);
+                if (r.isValid()) {
+                    if (r.type.isValid()) {
+                        QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
+                        QQmlAttachedPropertiesFunc func = r.type.attachedPropertiesFunction(enginePrivate);
+                        if (!func) return; // Not an attachable type
 
-                    ++ii; r = typeNameCache->query(path.at(ii), r.importNamespace);
-                    if (!r.type) return; // Invalid type in namespace
+                        currentObject = qmlAttachedPropertiesObjectById(r.type.attachedPropertiesId(enginePrivate), currentObject);
+                        if (!currentObject) return; // Something is broken with the attachable type
+                    } else if (r.importNamespace) {
+                        if ((ii + 1) == path.count()) return; // No type following the namespace
 
-                    QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
-                    QQmlAttachedPropertiesFunc func = r.type->attachedPropertiesFunction(enginePrivate);
-                    if (!func) return; // Not an attachable type
+                        ++ii; r = typeNameCache->query(path.at(ii), r.importNamespace);
+                        if (!r.type.isValid()) return; // Invalid type in namespace
 
-                    currentObject = qmlAttachedPropertiesObjectById(r.type->attachedPropertiesId(enginePrivate), currentObject);
-                    if (!currentObject) return; // Something is broken with the attachable type
+                        QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
+                        QQmlAttachedPropertiesFunc func = r.type.attachedPropertiesFunction(enginePrivate);
+                        if (!func) return; // Not an attachable type
 
-                } else if (r.scriptIndex != -1) {
-                    return; // Not a type
-                } else {
-                    Q_ASSERT(!"Unreachable");
+                        currentObject = qmlAttachedPropertiesObjectById(r.type.attachedPropertiesId(enginePrivate), currentObject);
+                        if (!currentObject) return; // Something is broken with the attachable type
+
+                    } else if (r.scriptIndex != -1) {
+                        return; // Not a type
+                    } else {
+                        Q_ASSERT(!"Unreachable");
+                    }
+                    continue;
                 }
-                continue;
+
+            }
+
+            QQmlPropertyData local;
+            QQmlPropertyData *property =
+                    QQmlPropertyCache::property(engine, currentObject, pathName, context, local);
+
+            if (!property) return; // Not a property
+            if (property->isFunction())
+                return; // Not an object property
+
+            if (ii == (path.count() - 2) && QQmlValueTypeFactory::isValueType(property->propType())) {
+                // We're now at a value type property
+                const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(property->propType());
+                if (!valueTypeMetaObject) return; // Not a value type
+
+                int idx = valueTypeMetaObject->indexOfProperty(path.last().toUtf8().constData());
+                if (idx == -1) return; // Value type property does not exist
+
+                QMetaProperty vtProp = valueTypeMetaObject->property(idx);
+
+                Q_ASSERT(vtProp.userType() <= 0x0000FFFF);
+                Q_ASSERT(idx <= 0x0000FFFF);
+
+                object = currentObject;
+                core = *property;
+                valueTypeData.setFlags(QQmlPropertyData::flagsForProperty(vtProp));
+                valueTypeData.setPropType(vtProp.userType());
+                valueTypeData.setCoreIndex(idx);
+
+                return;
+            } else {
+                if (!property->isQObject())
+                    return; // Not an object property
+
+                property->readProperty(currentObject, &currentObject);
+                if (!currentObject) return; // No value
+
             }
 
         }
 
-        QQmlPropertyData local;
-        QQmlPropertyData *property =
-            QQmlPropertyCache::property(engine, currentObject, pathName, context, local);
-
-        if (!property) return; // Not a property
-        if (property->isFunction())
-            return; // Not an object property
-
-        if (ii == (path.count() - 2) && QQmlValueTypeFactory::isValueType(property->propType())) {
-            // We're now at a value type property
-            const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(property->propType());
-            if (!valueTypeMetaObject) return; // Not a value type
-
-            int idx = valueTypeMetaObject->indexOfProperty(path.last().toUtf8().constData());
-            if (idx == -1) return; // Value type property does not exist
-
-            QMetaProperty vtProp = valueTypeMetaObject->property(idx);
-
-            Q_ASSERT(vtProp.userType() <= 0x0000FFFF);
-            Q_ASSERT(idx <= 0x0000FFFF);
-
-            object = currentObject;
-            core = *property;
-            valueTypeData.setFlags(QQmlPropertyData::flagsForProperty(vtProp));
-            valueTypeData.setPropType(vtProp.userType());
-            valueTypeData.setCoreIndex(idx);
-
-            return;
-        } else {
-            if (!property->isQObject())
-                return; // Not an object property
-
-            property->readProperty(currentObject, &currentObject);
-            if (!currentObject) return; // No value
-
-        }
-
+        terminal = path.last();
     }
-
-    const QStringRef &terminal = path.last();
 
     if (terminal.count() >= 3 &&
         terminal.at(0) == QLatin1Char('o') &&
@@ -467,7 +487,7 @@ QQmlPropertyPrivate::propertyTypeCategory() const
 const char *QQmlProperty::propertyTypeName() const
 {
     if (!d)
-        return 0;
+        return nullptr;
     if (d->isValueType()) {
         const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(d->core.propType());
         Q_ASSERT(valueTypeMetaObject);
@@ -475,7 +495,7 @@ const char *QQmlProperty::propertyTypeName() const
     } else if (d->object && type() & Property && d->core.isValid()) {
         return d->object->metaObject()->property(d->core.coreIndex()).typeName();
     } else {
-        return 0;
+        return nullptr;
     }
 }
 
@@ -559,7 +579,7 @@ bool QQmlProperty::isSignalProperty() const
 */
 QObject *QQmlProperty::object() const
 {
-    return d ? d->object : 0;
+    return d ? d->object : nullptr;
 }
 
 /*!
@@ -697,7 +717,7 @@ QQmlAbstractBinding *
 QQmlPropertyPrivate::binding(const QQmlProperty &that)
 {
     if (!that.d || !that.isProperty() || !that.d->object)
-        return 0;
+        return nullptr;
 
     QQmlPropertyIndex thatIndex(that.d->core.coreIndex(), that.d->valueTypeData.coreIndex());
     return binding(that.d->object, thatIndex);
@@ -759,7 +779,7 @@ static void removeOldBinding(QObject *object, QQmlPropertyIndex index, QQmlPrope
         return;
 
     if (!(flags & QQmlPropertyPrivate::DontEnable))
-        oldBinding->setEnabled(false, 0);
+        oldBinding->setEnabled(false, nullptr);
     oldBinding->removeFromObject();
 }
 
@@ -793,13 +813,13 @@ QQmlPropertyPrivate::binding(QObject *object, QQmlPropertyIndex index)
 
     QQmlData *data = QQmlData::get(object);
     if (!data)
-        return 0;
+        return nullptr;
 
     const int coreIndex = index.coreIndex();
     const int valueTypeIndex = index.valueTypeIndex();
 
-    if (!data->hasBindingBit(coreIndex))
-        return 0;
+    if (coreIndex < 0 || !data->hasBindingBit(coreIndex))
+        return nullptr;
 
     QQmlAbstractBinding *binding = data->bindings;
     while (binding && (binding->targetPropertyIndex().coreIndex() != coreIndex ||
@@ -825,11 +845,11 @@ void QQmlPropertyPrivate::findAliasTarget(QObject *object, QQmlPropertyIndex bin
         int valueTypeIndex = bindingIndex.valueTypeIndex();
 
         QQmlPropertyData *propertyData =
-            data->propertyCache?data->propertyCache->property(coreIndex):0;
+            data->propertyCache?data->propertyCache->property(coreIndex):nullptr;
         if (propertyData && propertyData->isAlias()) {
             QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
 
-            QObject *aObject = 0; int aCoreIndex = -1; int aValueTypeIndex = -1;
+            QObject *aObject = nullptr; int aCoreIndex = -1; int aValueTypeIndex = -1;
             if (vme->aliasTarget(coreIndex, &aObject, &aCoreIndex, &aValueTypeIndex)) {
                 // This will either be a value type sub-reference or an alias to a value-type sub-reference not both
                 Q_ASSERT(valueTypeIndex == -1 || aValueTypeIndex == -1);
@@ -855,6 +875,7 @@ void QQmlPropertyPrivate::findAliasTarget(QObject *object, QQmlPropertyIndex bin
 void QQmlPropertyPrivate::setBinding(QQmlAbstractBinding *binding, BindingFlags flags, QQmlPropertyData::WriteFlags writeFlags)
 {
     Q_ASSERT(binding);
+    Q_ASSERT(binding->targetObject());
 
     QObject *object = binding->targetObject();
     const QQmlPropertyIndex index = binding->targetPropertyIndex();
@@ -884,11 +905,11 @@ QQmlBoundSignalExpression *
 QQmlPropertyPrivate::signalExpression(const QQmlProperty &that)
 {
     if (!(that.type() & QQmlProperty::SignalProperty))
-        return 0;
+        return nullptr;
 
     QQmlData *data = QQmlData::get(that.d->object);
     if (!data)
-        return 0;
+        return nullptr;
 
     QQmlBoundSignal *signalHandler = data->signalHandlers;
 
@@ -898,7 +919,7 @@ QQmlPropertyPrivate::signalExpression(const QQmlProperty &that)
     if (signalHandler)
         return signalHandler->expression();
 
-    return 0;
+    return nullptr;
 }
 
 /*!
@@ -925,7 +946,7 @@ void QQmlPropertyPrivate::takeSignalExpression(const QQmlProperty &that,
         return;
     }
 
-    QQmlData *data = QQmlData::get(that.d->object, 0 != expr);
+    QQmlData *data = QQmlData::get(that.d->object, nullptr != expr);
     if (!data)
         return;
 
@@ -1032,7 +1053,7 @@ QVariant QQmlPropertyPrivate::readValueProperty()
 
     } else if (core.isQObject()) {
 
-        QObject *rv = 0;
+        QObject *rv = nullptr;
         core.readProperty(object, &rv);
         return QVariant::fromValue(rv);
 
@@ -1043,11 +1064,11 @@ QVariant QQmlPropertyPrivate::readValueProperty()
 
         QVariant value;
         int status = -1;
-        void *args[] = { 0, &value, &status };
+        void *args[] = { nullptr, &value, &status };
         if (core.propType() == QMetaType::QVariant) {
             args[0] = &value;
         } else {
-            value = QVariant(core.propType(), (void*)0);
+            value = QVariant(core.propType(), (void*)nullptr);
             args[0] = value.data();
         }
         core.readPropertyWithArgs(object, args);
@@ -1275,10 +1296,10 @@ bool QQmlPropertyPrivate::write(QObject *object,
         if (enginePriv) {
             listType = enginePriv->rawMetaObjectForType(enginePriv->listType(property.propType()));
         } else {
-            QQmlType *type = QQmlMetaType::qmlType(QQmlMetaType::listType(property.propType()));
-            if (!type)
+            QQmlType type = QQmlMetaType::qmlType(QQmlMetaType::listType(property.propType()));
+            if (!type.isValid())
                 return false;
-            listType = type->baseMetaObject();
+            listType = type.baseMetaObject();
         }
         if (listType.isNull())
             return false;
@@ -1393,8 +1414,9 @@ QQmlMetaObject QQmlPropertyPrivate::rawMetaObjectForType(QQmlEnginePrivate *engi
         return metaType.metaObject();
     if (engine)
         return engine->rawMetaObjectForType(userType);
-    if (QQmlType *type = QQmlMetaType::qmlType(userType))
-        return QQmlMetaObject(type->baseMetaObject());
+    QQmlType type = QQmlMetaType::qmlType(userType);
+    if (type.isValid())
+        return QQmlMetaObject(type.baseMetaObject());
     return QQmlMetaObject();
 }
 
@@ -1405,7 +1427,7 @@ QQmlMetaObject QQmlPropertyPrivate::rawMetaObjectForType(QQmlEnginePrivate *engi
  */
 bool QQmlProperty::write(const QVariant &value) const
 {
-    return QQmlPropertyPrivate::write(*this, value, 0);
+    return QQmlPropertyPrivate::write(*this, value, nullptr);
 }
 
 /*!
@@ -1474,7 +1496,7 @@ bool QQmlProperty::write(QObject *object, const QString &name, const QVariant &v
 bool QQmlProperty::reset() const
 {
     if (isResettable()) {
-        void *args[] = { 0 };
+        void *args[] = { nullptr };
         QMetaObject::metacall(d->object, QMetaObject::ResetProperty, d->core.coreIndex(), args);
         return true;
     } else {
@@ -1545,6 +1567,9 @@ bool QQmlProperty::connectNotifySignal(QObject *dest, int method) const
     represent a regular Qt property or if it has no
     change notifier signal, or if the \a dest object does
     not have the specified \a slot.
+
+    \note \a slot should be passed using the SLOT() macro so it is
+    correctly identified.
 */
 bool QQmlProperty::connectNotifySignal(QObject *dest, const char *slot) const
 {

@@ -53,55 +53,61 @@
 #include "qv4identifier_p.h"
 #include "qv4string_p.h"
 #include "qv4engine_p.h"
+#include <qset.h>
 #include <limits.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct IdentifierTable
+struct Q_QML_PRIVATE_EXPORT IdentifierTable
 {
     ExecutionEngine *engine;
 
-    int alloc;
-    int size;
+    uint alloc;
+    uint size;
     int numBits;
-    Heap::String **entries;
+    Heap::StringOrSymbol **entriesByHash;
+    Heap::StringOrSymbol **entriesById;
 
-    void addEntry(Heap::String *str);
+    QSet<IdentifierHashData *> idHashes;
+
+    void addEntry(Heap::StringOrSymbol *str);
 
 public:
 
-    IdentifierTable(ExecutionEngine *engine);
+    IdentifierTable(ExecutionEngine *engine, int numBits = 8);
     ~IdentifierTable();
 
     Heap::String *insertString(const QString &s);
+    Heap::Symbol *insertSymbol(const QString &s);
 
-    Identifier *identifier(const Heap::String *str) {
-        if (str->identifier)
+    PropertyKey asPropertyKey(const Heap::String *str) {
+        if (str->identifier.isValid())
             return str->identifier;
-        return identifierImpl(str);
+        return asPropertyKeyImpl(str);
     }
-    Identifier *identifier(const QV4::String *str) {
-        return identifier(str->d());
+    PropertyKey asPropertyKey(const QV4::String *str) {
+        return asPropertyKey(str->d());
     }
 
-    Identifier *identifier(const QString &s);
-    Identifier *identifier(const char *s, int len);
+    PropertyKey asPropertyKey(const QString &s);
+    PropertyKey asPropertyKey(const char *s, int len);
 
-    Identifier *identifierImpl(const Heap::String *str);
+    PropertyKey asPropertyKeyImpl(const Heap::String *str);
 
-    Heap::String *stringFromIdentifier(Identifier *i);
+    Heap::StringOrSymbol *resolveId(PropertyKey i) const;
+    Heap::String *stringForId(PropertyKey i) const;
+    Heap::Symbol *symbolForId(PropertyKey i) const;
 
-    void mark(MarkStack *markStack) {
-        for (int i = 0; i < alloc; ++i) {
-            Heap::String *entry = entries[i];
-            if (!entry || entry->isMarked())
-                continue;
-            entry->setMarkBit();
-            Q_ASSERT(entry->vtable()->markObjects);
-            entry->vtable()->markObjects(entry, markStack);
-        }
+    void markObjects(MarkStack *markStack);
+    void sweep();
+
+    void addIdentifierHash(IdentifierHashData *h) {
+        idHashes.insert(h);
+    }
+    void removeIdentifierHash(IdentifierHashData *h) {
+        idHashes.remove(h);
     }
 };
 

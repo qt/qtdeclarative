@@ -77,7 +77,7 @@ public:
         Exception = 3
     };
 
-    static void method_include(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static QV4::ReturnedValue method_include(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
 
 private Q_SLOTS:
     void finished();
@@ -88,7 +88,8 @@ private:
 
     QV4::ReturnedValue result();
 
-    static QV4::ReturnedValue resultValue(QV4::ExecutionEngine *v4, Status status = Loading);
+    static QV4::ReturnedValue resultValue(QV4::ExecutionEngine *v4, Status status = Loading,
+                                          const QString &statusText = QString());
     static void callback(const QV4::Value &callback, const QV4::Value &status);
 
     QV4::ExecutionEngine *v4;

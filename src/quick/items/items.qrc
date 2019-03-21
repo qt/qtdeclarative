@@ -8,9 +8,5 @@
         <file>shaders/shadereffect_core.vert</file>
         <file>shaders/shadereffectfallback_core.frag</file>
         <file>shaders/shadereffectfallback_core.vert</file>
-        <file>shaders/lineargradient.vert</file>
-        <file>shaders/lineargradient.frag</file>
-        <file>shaders/lineargradient_core.vert</file>
-        <file>shaders/lineargradient_core.frag</file>
     </qresource>
 </RCC>

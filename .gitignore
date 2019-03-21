@@ -43,6 +43,8 @@ Makefile*
 *.prl
 *.app
 *.pro.user
+# e.g. .pro.user.4.8-pre1
+*.pro.user.*
 *.qmlproject.user
 *.gcov
 bin/Qt*.dll
@@ -286,6 +288,7 @@ tests/auto/*/*/*/*.moc
 src/qml/RegExpJitTables.h
 src/qml/udis86_itab.c
 src/qml/udis86_itab.h
+src/qml/qml_compile_hash_p.h
 
 # Generated HLSL bytecode headers
 *.hlslh

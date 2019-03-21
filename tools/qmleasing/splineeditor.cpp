@@ -42,7 +42,7 @@ const int canvasHeight = 320;
 const int canvasMargin = 160;
 
 SplineEditor::SplineEditor(QWidget *parent) :
-    QWidget(parent), m_pointListWidget(0), m_block(false)
+    QWidget(parent), m_pointListWidget(nullptr), m_block(false)
 {
     setFixedSize(canvasWidth + canvasMargin * 2, canvasHeight + canvasMargin * 2);
 
@@ -524,7 +524,7 @@ void SplineEditor::setupPointListWidget()
 
     m_pointListWidget->setWidget(new QWidget(m_pointListWidget));
     QVBoxLayout *layout = new QVBoxLayout(m_pointListWidget->widget());
-    layout->setMargin(0);
+    layout->setContentsMargins(QMargins());
     layout->setSpacing(2);
     m_pointListWidget->widget()->setLayout(layout);
 

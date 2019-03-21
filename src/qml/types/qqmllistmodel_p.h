@@ -64,6 +64,8 @@
 #include <private/qv4engine_p.h>
 #include <private/qpodvector_p.h>
 
+QT_REQUIRE_CONFIG(qml_list_model);
+
 QT_BEGIN_NAMESPACE
 
 
@@ -82,7 +84,7 @@ class Q_QML_PRIVATE_EXPORT QQmlListModel : public QAbstractListModel
     Q_PROPERTY(bool dynamicRoles READ dynamicRoles WRITE setDynamicRoles)
 
 public:
-    QQmlListModel(QObject *parent=0);
+    QQmlListModel(QObject *parent=nullptr);
     ~QQmlListModel();
 
     QModelIndex index(int row, int column, const QModelIndex &parent) const override;
@@ -122,10 +124,11 @@ private:
     friend class ListElement;
     friend class DynamicRoleModelNode;
     friend class DynamicRoleModelNodeMetaObject;
+    friend struct StringOrTranslation;
 
     // Constructs a flat list model for a worker agent
     QQmlListModel(QQmlListModel *orig, QQmlListModelWorkerAgent *agent);
-    QQmlListModel(const QQmlListModel *owner, ListModel *data, QV4::ExecutionEngine *engine, QObject *parent=0);
+    QQmlListModel(const QQmlListModel *owner, ListModel *data, QV4::ExecutionEngine *engine, QObject *parent=nullptr);
 
     QV4::ExecutionEngine *engine() const;
 
@@ -133,6 +136,7 @@ private:
 
     QQmlListModelWorkerAgent *m_agent;
     mutable QV4::ExecutionEngine *m_engine;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_compilationUnit;
     bool m_mainThread;
     bool m_primary;
 
@@ -143,28 +147,24 @@ private:
 
     QVector<class DynamicRoleModelNode *> m_modelObjects;
     QVector<QString> m_roles;
-    int m_uid;
 
     struct ElementSync
     {
-        ElementSync() : src(0), target(0) {}
-
-        DynamicRoleModelNode *src;
-        DynamicRoleModelNode *target;
+        DynamicRoleModelNode *src = nullptr;
+        DynamicRoleModelNode *target = nullptr;
+        int srcIndex = -1;
+        int targetIndex = -1;
+        QVector<int> changedRoles;
     };
 
-    int getUid() const { return m_uid; }
-
-    static void sync(QQmlListModel *src, QQmlListModel *target, QHash<int, QQmlListModel *> *targetModelHash);
+    static bool sync(QQmlListModel *src, QQmlListModel *target);
     static QQmlListModel *createWithOwner(QQmlListModel *newOwner);
 
     void emitItemsChanged(int index, int count, const QVector<int> &roles);
-    void emitItemsAboutToBeRemoved(int index, int count);
-    void emitItemsRemoved(int index, int count);
     void emitItemsAboutToBeInserted(int index, int count);
-    void emitItemsInserted(int index, int count);
-    void emitItemsAboutToBeMoved(int from, int to, int n);
-    void emitItemsMoved(int from, int to, int n);
+    void emitItemsInserted();
+
+    void removeElements(int index, int removeCount);
 };
 
 // ### FIXME
@@ -187,13 +187,13 @@ public:
 
     QQmlListModelParser() : QQmlCustomParser(QQmlCustomParser::AcceptsSignalHandlers) {}
 
-    void verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings) Q_DECL_OVERRIDE;
-    void applyBindings(QObject *obj, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) Q_DECL_OVERRIDE;
+    void verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
+    void applyBindings(QObject *obj, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
 
 private:
-    bool verifyProperty(const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding);
+    bool verifyProperty(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding);
     // returns true if a role was set
-    bool applyProperty(const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex);
+    bool applyProperty(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex);
 
     static bool definesEmptyList(const QString &);
 

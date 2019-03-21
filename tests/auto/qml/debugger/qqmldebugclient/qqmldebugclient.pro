@@ -7,7 +7,6 @@ HEADERS += ../shared/qqmldebugtestservice.h
 SOURCES += tst_qqmldebugclient.cpp \
            ../shared/qqmldebugtestservice.cpp
 
-INCLUDEPATH += ../shared
 include(../shared/debugutil.pri)
 
 DEFINES += QT_QML_DEBUG_NO_WARNING

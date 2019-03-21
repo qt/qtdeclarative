@@ -58,7 +58,7 @@ public:
     \instantiates QQuickSystemPalette
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-utility
-    \brief Provides access to the Qt palettes
+    \brief Provides access to the Qt palettes.
 
     The SystemPalette type provides access to the Qt application
     palettes. This provides information about the standard colors used

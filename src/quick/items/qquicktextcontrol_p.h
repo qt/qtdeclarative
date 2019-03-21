@@ -77,7 +77,7 @@ class Q_AUTOTEST_EXPORT QQuickTextControl : public QInputControl
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickTextControl)
 public:
-    explicit QQuickTextControl(QTextDocument *doc, QObject *parent = 0);
+    explicit QQuickTextControl(QTextDocument *doc, QObject *parent = nullptr);
     virtual ~QQuickTextControl();
 
     QTextDocument *document() const;
@@ -177,9 +177,9 @@ public:
     bool cursorOn() const;
 
 protected:
-    void timerEvent(QTimerEvent *e) Q_DECL_OVERRIDE;
+    void timerEvent(QTimerEvent *e) override;
 
-    bool event(QEvent *e) Q_DECL_OVERRIDE;
+    bool event(QEvent *e) override;
 
 private:
     Q_DISABLE_COPY(QQuickTextControl)

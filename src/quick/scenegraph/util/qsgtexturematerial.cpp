@@ -57,7 +57,6 @@ inline static bool isPowerOfTwo(int x)
 QSGMaterialType QSGOpaqueTextureMaterialShader::type;
 
 QSGOpaqueTextureMaterialShader::QSGOpaqueTextureMaterialShader()
-    : QSGMaterialShader()
 {
 #if QT_CONFIG(opengl)
     setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/opaquetexture.vert"));
@@ -67,7 +66,7 @@ QSGOpaqueTextureMaterialShader::QSGOpaqueTextureMaterialShader()
 
 char const *const *QSGOpaqueTextureMaterialShader::attributeNames() const
 {
-    static char const *const attr[] = { "qt_VertexPosition", "qt_VertexTexCoord", 0 };
+    static char const *const attr[] = { "qt_VertexPosition", "qt_VertexTexCoord", nullptr };
     return attr;
 }
 
@@ -80,7 +79,7 @@ void QSGOpaqueTextureMaterialShader::initialize()
 
 void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
-    Q_ASSERT(oldEffect == 0 || newEffect->type() == oldEffect->type());
+    Q_ASSERT(oldEffect == nullptr || newEffect->type() == oldEffect->type());
     QSGOpaqueTextureMaterial *tx = static_cast<QSGOpaqueTextureMaterial *>(newEffect);
     QSGOpaqueTextureMaterial *oldTx = static_cast<QSGOpaqueTextureMaterial *>(oldEffect);
 
@@ -112,7 +111,7 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
     t->setMipmapFiltering(tx->mipmapFiltering());
     t->setAnisotropyLevel(tx->anisotropyLevel());
 
-    if (oldTx == 0 || oldTx->texture()->textureId() != t->textureId())
+    if (oldTx == nullptr || oldTx->texture()->textureId() != t->textureId())
         t->bind();
     else
         t->updateBindOptions();
@@ -169,7 +168,7 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
 
  */
 QSGOpaqueTextureMaterial::QSGOpaqueTextureMaterial()
-    : m_texture(0)
+    : m_texture(nullptr)
     , m_filtering(QSGTexture::Nearest)
     , m_mipmap_filtering(QSGTexture::None)
     , m_horizontal_wrap(QSGTexture::ClampToEdge)
@@ -304,7 +303,17 @@ void QSGOpaqueTextureMaterial::setTexture(QSGTexture *texture)
      The default vertical wrap mode is \c QSGTexture::ClampToEdge.
   */
 
+/*!
+  \fn void QSGOpaqueTextureMaterial::setAnisotropyLevel(QSGTexture::AnisotropyLevel level)
 
+  Sets this material's anistropy level to \a level.
+*/
+
+/*!
+  \fn QSGTexture::AnisotropyLevel QSGOpaqueTextureMaterial::anisotropyLevel() const
+
+  Returns this material's anistropy level.
+*/
 
 /*!
     \internal
@@ -388,7 +397,7 @@ QSGTextureMaterialShader::QSGTextureMaterialShader()
 
 void QSGTextureMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
-    Q_ASSERT(oldEffect == 0 || newEffect->type() == oldEffect->type());
+    Q_ASSERT(oldEffect == nullptr || newEffect->type() == oldEffect->type());
 #if QT_CONFIG(opengl)
     if (state.isOpacityDirty())
         program()->setUniformValue(m_opacity_id, state.opacity());

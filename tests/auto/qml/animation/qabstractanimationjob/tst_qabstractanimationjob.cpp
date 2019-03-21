@@ -53,7 +53,7 @@ private slots:
 class TestableQAbstractAnimation : public QAbstractAnimationJob
 {
 public:
-    TestableQAbstractAnimation() : m_duration(10) {}
+    TestableQAbstractAnimation() {}
     virtual ~TestableQAbstractAnimation() {};
 
     int duration() const { return m_duration; }
@@ -61,7 +61,7 @@ public:
 
     void setDuration(int duration) { m_duration = duration; }
 private:
-    int m_duration;
+    int m_duration = 10;
 };
 
 class DummyQAnimationGroup : public QAnimationGroupJob

@@ -42,7 +42,7 @@
 #include <sys/mman.h>
 #include <functional>
 #include <private/qcore_unix_p.h>
-#include <private/qdeferredcleanup_p.h>
+#include <QScopeGuard>
 #include <QDateTime>
 
 #include "qv4compileddata_p.h"
@@ -61,7 +61,7 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
         return nullptr;
     }
 
-    QDeferredCleanup cleanup([fd]{
+    auto cleanup = qScopeGuard([fd]{
        qt_safe_close(fd) ;
     });
 
@@ -73,7 +73,7 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
         return nullptr;
     }
 
-    if (!verifyHeader(&header, sourceTimeStamp, errorString))
+    if (!header.verifyHeader(sourceTimeStamp, errorString))
         return nullptr;
 
     // Data structure and qt version matched, so now we can access the rest of the file safely.
@@ -92,8 +92,16 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
 
 void CompilationUnitMapper::close()
 {
-    if (dataPtr != nullptr)
-        munmap(dataPtr, length);
+    // Do not unmap the data here.
+    if (dataPtr != nullptr) {
+        // Do not unmap cache files that are built with the StaticData flag. That's the majority of
+        // them and it's necessary to benefit from the QString literal optimization. There might
+        // still be QString instances around that point into that memory area. The memory is backed
+        // on the disk, so the kernel is free to release the pages and all that remains is the
+        // address space allocation.
+        if (!(reinterpret_cast<CompiledData::Unit*>(dataPtr)->flags & CompiledData::Unit::StaticData))
+            munmap(dataPtr, length);
+    }
     dataPtr = nullptr;
 }
 

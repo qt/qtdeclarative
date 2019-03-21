@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -50,6 +60,16 @@ Item {
     ListModel { id: firstmodel; ListElement { name: "FirstModelElement0" } }
     ListModel { id: secondmodel; ListElement { name: "SecondModelElement0" } ListElement { name: "SecondModelElement1" } }
     ListModel { id: altermodel; ListElement { name: "AlterModelElement0" } ListElement { name: "AlterModelElement1" } }
+
+    property string funcResult
+    ListModel {
+        id: funcModel
+        property string modelProp
+        ListElement { friendlyText: "one"; action: function(obj) { funcResult = obj.friendlyText } }
+        ListElement { friendlyText: "two"; action: function() {} }
+        ListElement { friendlyText: "three"; action: function() { modelProp = "fail" } }
+        ListElement { friendlyText: "four"; action: function() { funcResult = friendlyText } }
+    }
 
     TestCase {
         name: "ListModel"
@@ -127,6 +147,52 @@ Item {
             altermodel.clear()
             tryCompare(altermodel, 'count', 0)
             compare(altermodel.get(0), undefined)
+        }
+
+        function test_functions() {
+            // test different ways of calling
+            funcModel.get(0).action(funcModel.get(0))
+            compare(funcResult, "one")
+            funcModel.get(0).action.call(this, { friendlyText: "seven" })
+            compare(funcResult, "seven")
+
+            // test different ways of setting
+            funcResult = ""
+            funcModel.get(1).action()
+            compare(funcResult, "")
+
+            funcModel.set(1, { friendlyText: "two", action: function() { funcResult = "set" } })
+            funcModel.get(1).action()
+            compare(funcResult, "set")
+
+            funcModel.setProperty(1, "action", function() { top.funcResult = "setProperty" })
+            funcModel.get(1).action()
+            compare(funcResult, "setProperty")
+
+            funcModel.get(1).action = function() { funcResult = "jsSet" }
+            funcModel.get(1).action()
+            compare(funcResult, "jsSet")
+
+            // test unsupported features
+            var didThrow = false
+            try {
+                funcModel.get(2).action()
+            } catch(ex) {
+                verify(ex.toString().includes("Error: Invalid write to global property"))
+                didThrow = true
+            }
+            verify(didThrow)
+
+            didThrow = false
+            try {
+                funcModel.get(3).action()
+            } catch(ex) {
+                verify(ex.toString().includes("ReferenceError: friendlyText is not defined"))
+                didThrow = true
+            }
+            verify(didThrow)
+
+
         }
     }
 }

@@ -74,10 +74,10 @@ ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, QObject *object, i
 
     Scope scope(engine);
 
-    Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocObject<QmlListWrapper>());
+    Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocate<QmlListWrapper>());
     r->d()->object = object;
     r->d()->propertyType = propType;
-    void *args[] = { &r->d()->property(), 0 };
+    void *args[] = { &r->d()->property(), nullptr };
     QMetaObject::metacall(object, QMetaObject::ReadProperty, propId, args);
     return r.asReturnedValue();
 }
@@ -86,7 +86,7 @@ ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, const QQmlListProp
 {
     Scope scope(engine);
 
-    Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocObject<QmlListWrapper>());
+    Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocate<QmlListWrapper>());
     r->d()->object = prop.object;
     r->d()->property() = prop;
     r->d()->propertyType = propType;
@@ -102,68 +102,73 @@ QVariant QmlListWrapper::toVariant() const
 }
 
 
-ReturnedValue QmlListWrapper::get(const Managed *m, String *name, bool *hasProperty)
+ReturnedValue QmlListWrapper::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<QmlListWrapper>());
     const QmlListWrapper *w = static_cast<const QmlListWrapper *>(m);
     QV4::ExecutionEngine *v4 = w->engine();
 
-    if (name->equals(v4->id_length()) && !w->d()->object.isNull()) {
+    if (id.isArrayIndex()) {
+        uint index = id.asArrayIndex();
         quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
-        return Primitive::fromUInt32(count).asReturnedValue();
-    }
+        if (index < count && w->d()->property().at) {
+            if (hasProperty)
+                *hasProperty = true;
+            return QV4::QObjectWrapper::wrap(v4, w->d()->property().at(&w->d()->property(), index));
+        }
 
-    uint idx = name->asArrayIndex();
-    if (idx != UINT_MAX)
-        return getIndexed(m, idx, hasProperty);
-
-    return Object::get(m, name, hasProperty);
-}
-
-ReturnedValue QmlListWrapper::getIndexed(const Managed *m, uint index, bool *hasProperty)
-{
-    Q_UNUSED(hasProperty);
-
-    Q_ASSERT(m->as<QmlListWrapper>());
-    const QmlListWrapper *w = static_cast<const QmlListWrapper *>(m);
-    QV4::ExecutionEngine *v4 = w->engine();
-
-    quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
-    if (index < count && w->d()->property().at) {
         if (hasProperty)
-            *hasProperty = true;
-        return QV4::QObjectWrapper::wrap(v4, w->d()->property().at(&w->d()->property(), index));
+            *hasProperty = false;
+        return Value::undefinedValue().asReturnedValue();
+    } else if (id.isString()) {
+        if (id == v4->id_length()->propertyKey() && !w->d()->object.isNull()) {
+            quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
+            return Value::fromUInt32(count).asReturnedValue();
+        }
     }
 
-    if (hasProperty)
-        *hasProperty = false;
-    return Primitive::undefinedValue().asReturnedValue();
+    return Object::virtualGet(m, id, receiver, hasProperty);
 }
 
-bool QmlListWrapper::put(Managed *m, String *name, const Value &value)
+bool QmlListWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     // doesn't do anything. Should we throw?
     Q_UNUSED(m);
-    Q_UNUSED(name);
+    Q_UNUSED(id);
     Q_UNUSED(value);
+    Q_UNUSED(receiver);
     return false;
 }
 
-void QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
+struct QmlListWrapperOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
 {
-    name->setM(0);
-    *index = UINT_MAX;
-    Q_ASSERT(m->as<QmlListWrapper>());
-    QmlListWrapper *w = static_cast<QmlListWrapper *>(m);
+    ~QmlListWrapperOwnPropertyKeyIterator() override = default;
+    PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
+
+};
+
+PropertyKey QmlListWrapperOwnPropertyKeyIterator::next(const Object *o, Property *pd, PropertyAttributes *attrs)
+{
+    const QmlListWrapper *w = static_cast<const QmlListWrapper *>(o);
+
     quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
-    if (it->arrayIndex < count) {
-        *index = it->arrayIndex;
-        ++it->arrayIndex;
-        *attrs = QV4::Attr_Data;
-        p->value = QV4::QObjectWrapper::wrap(w->engine(), w->d()->property().at(&w->d()->property(), *index));
-        return;
+    if (arrayIndex < count) {
+        uint index = arrayIndex;
+        ++arrayIndex;
+        if (attrs)
+            *attrs = QV4::Attr_Data;
+        if (pd)
+            pd->value = QV4::QObjectWrapper::wrap(w->engine(), w->d()->property().at(&w->d()->property(), index));
+        return PropertyKey::fromArrayIndex(index);
     }
-    return QV4::Object::advanceIterator(m, it, name, index, p, attrs);
+
+    return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
+}
+
+OwnPropertyKeyIterator *QmlListWrapper::virtualOwnPropertyKeys(const Object *m, Value *target)
+{
+    *target = *m;
+    return new QmlListWrapperOwnPropertyKeyIterator;
 }
 
 void PropertyListPrototype::init(ExecutionEngine *)
@@ -171,9 +176,10 @@ void PropertyListPrototype::init(ExecutionEngine *)
     defineDefaultProperty(QStringLiteral("push"), method_push, 1);
 }
 
-void PropertyListPrototype::method_push(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue PropertyListPrototype::method_push(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
-    ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
+    Scope scope(b);
+    ScopedObject instance(scope, thisObject->toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
     QmlListWrapper *w = instance->as<QmlListWrapper>();
@@ -183,12 +189,13 @@ void PropertyListPrototype::method_push(const BuiltinFunction *, Scope &scope, C
         THROW_GENERIC_ERROR("List doesn't define an Append function");
 
     QV4::ScopedObject so(scope);
-    for (int i = 0; i < callData->argc; ++i)
+    for (int i = 0, ei = argc; i < ei; ++i)
     {
-        so = callData->args[i].toObject(scope.engine);
+        so = argv[i].toObject(scope.engine);
         if (QV4::QObjectWrapper *wrapper = so->as<QV4::QObjectWrapper>())
             w->d()->property().append(&w->d()->property(), wrapper->object() );
     }
+    return Encode::undefined();
 }
 
 QT_END_NAMESPACE

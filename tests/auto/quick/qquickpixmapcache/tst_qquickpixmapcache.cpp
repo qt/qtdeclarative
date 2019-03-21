@@ -431,7 +431,7 @@ void tst_qquickpixmapcache::uncached()
     QUrl url("image://mypixmaps/mypix");
     {
         QQuickPixmap p;
-        p.load(&engine, url, 0);
+        p.load(&engine, url, nullptr);
         QImage img = p.image();
         QCOMPARE(img.pixel(0,0), qRgb(255, 0, 0));
     }
@@ -440,7 +440,7 @@ void tst_qquickpixmapcache::uncached()
     MyPixmapProvider::fillColor = qRgb(0, 255, 0);
     {
         QQuickPixmap p;
-        p.load(&engine, url, 0);
+        p.load(&engine, url, nullptr);
         QImage img = p.image();
         QCOMPARE(img.pixel(0,0), qRgb(0, 255, 0));
     }
@@ -458,7 +458,7 @@ void tst_qquickpixmapcache::uncached()
     MyPixmapProvider::fillColor = qRgb(255, 0, 255);
     {
         QQuickPixmap p;
-        p.load(&engine, url, 0);
+        p.load(&engine, url, nullptr);
         QImage img = p.image();
         QCOMPARE(img.pixel(0,0), qRgb(255, 0, 255));
     }

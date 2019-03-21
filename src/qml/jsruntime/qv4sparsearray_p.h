@@ -52,6 +52,7 @@
 //
 
 #include "qv4global_p.h"
+#include "qv4value_p.h"
 #include <QtCore/qlist.h>
 
 //#define Q_MAP_DEBUG
@@ -109,7 +110,7 @@ struct SparseArrayNode
 inline SparseArrayNode *SparseArrayNode::lowerBound(uint akey)
 {
     SparseArrayNode *n = this;
-    SparseArrayNode *last = 0;
+    SparseArrayNode *last = nullptr;
     while (n) {
         if (akey <= n->size_left) {
             last = n;
@@ -126,7 +127,7 @@ inline SparseArrayNode *SparseArrayNode::lowerBound(uint akey)
 inline SparseArrayNode *SparseArrayNode::upperBound(uint akey)
 {
     SparseArrayNode *n = this;
-    SparseArrayNode *last = 0;
+    SparseArrayNode *last = nullptr;
     while (n) {
         if (akey < n->size_left) {
             last = n;
@@ -150,6 +151,8 @@ struct Q_QML_EXPORT SparseArray
     }
 
     SparseArray(const SparseArray &other);
+
+    Value freeList;
 private:
     SparseArray &operator=(const SparseArray &other);
 
@@ -221,7 +224,7 @@ inline SparseArrayNode *SparseArray::findNode(uint akey) const
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 inline uint SparseArray::pop_front()

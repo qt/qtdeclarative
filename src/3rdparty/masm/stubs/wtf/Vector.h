@@ -55,6 +55,8 @@ class Vector : public std::vector<T> {
 public:
     Vector() {}
     Vector(int initialSize) : std::vector<T>(initialSize) {}
+    Vector(const Vector &other) : std::vector<T>(other) {}
+    Vector(std::initializer_list<T> list) : std::vector<T>(list) {}
 
     inline void append(const T& value)
     { this->push_back(value); }
@@ -62,6 +64,9 @@ public:
     template <typename OtherType>
     inline void append(const OtherType& other)
     { this->push_back(T(other)); }
+
+    inline void append(T&& other)
+    { this->push_back(std::move(other)); }
 
     inline void append(const Vector<T>& vector)
     {
@@ -79,6 +84,8 @@ public:
         for (size_t i = 0; i < count; ++i, ++it)
             this->push_back(*it);
     }
+
+    unsigned size() const { return static_cast<unsigned>(std::vector<T>::size()); }
 
     using std::vector<T>::insert;
 
@@ -102,6 +109,15 @@ public:
     inline bool isEmpty() const { return this->empty(); }
 
     inline T &last() { return *(this->begin() + this->size() - 1); }
+
+    bool contains(const T &value) const
+    {
+        for (const T &inVector : *this) {
+            if (inVector == value)
+                return true;
+        }
+        return false;
+    }
 };
 
 template <typename T, int capacity>

@@ -53,7 +53,7 @@
 
 #include <private/qtqmlglobal_p.h>
 #include <QtCore/QObject>
-#include <private/qqmlpropertycache_p.h>
+#include <private/qqmlmetaobject_p.h>
 #include <private/qmetaobject_p.h>
 #include <private/qv8engine_p.h>
 
@@ -174,16 +174,6 @@ T qmlobject_cast(QObject *object)
         return 0;
 }
 
-inline quint16 qmlSourceCoordinate(int n)
-{
-    return (n > 0 && n <= static_cast<int>(USHRT_MAX)) ? static_cast<quint16>(n) : 0;
-}
-
-inline int qmlSourceCoordinate(quint16 n)
-{
-    return (n == 0) ? -1 : static_cast<int>(n);
-}
-
 #define IS_SIGNAL_CONNECTED(Sender, SenderType, Name, Arguments) \
 do { \
     QObject *sender = (Sender); \
@@ -192,16 +182,6 @@ do { \
     static int signalIdx = QMetaObjectPrivate::signalIndex(method); \
     return QObjectPrivate::get(sender)->isSignalConnected(signalIdx); \
 } while (0)
-
-struct QQmlGraphics_DerivedObject : public QObject
-{
-    void setParent_noEvent(QObject *parent) {
-        bool sce = d_ptr->sendChildEvents;
-        d_ptr->sendChildEvents = false;
-        setParent(parent);
-        d_ptr->sendChildEvents = sce;
-    }
-};
 
 /*!
     Returns true if the case of \a fileName is equivalent to the file case of
@@ -230,7 +210,11 @@ bool QQml_isFileCaseCorrect(const QString &fileName, int length = -1);
 */
 inline void QQml_setParent_noEvent(QObject *object, QObject *parent)
 {
-    static_cast<QQmlGraphics_DerivedObject *>(object)->setParent_noEvent(parent);
+    QObjectPrivate *d_ptr = QObjectPrivate::get(object);
+    bool sce = d_ptr->sendChildEvents;
+    d_ptr->sendChildEvents = false;
+    object->setParent(parent);
+    d_ptr->sendChildEvents = sce;
 }
 
 class Q_QML_PRIVATE_EXPORT QQmlValueTypeProvider
@@ -329,7 +313,7 @@ class Q_QML_PRIVATE_EXPORT QQmlApplication : public QObject
     Q_PROPERTY(QString organization READ organization WRITE setOrganization NOTIFY organizationChanged)
     Q_PROPERTY(QString domain READ domain WRITE setDomain NOTIFY domainChanged)
 public:
-    QQmlApplication(QObject* parent=0);
+    QQmlApplication(QObject* parent=nullptr);
 
     QStringList args();
 
@@ -353,7 +337,7 @@ Q_SIGNALS:
     void domainChanged();
 
 protected:
-    QQmlApplication(QQmlApplicationPrivate &dd, QObject* parent=0);
+    QQmlApplication(QQmlApplicationPrivate &dd, QObject* parent=nullptr);
 
 private:
     Q_DISABLE_COPY(QQmlApplication)
@@ -374,12 +358,12 @@ public:
 
 struct QQmlSourceLocation
 {
-    QQmlSourceLocation() : line(0), column(0) {}
+    QQmlSourceLocation() {}
     QQmlSourceLocation(const QString &sourceFile, quint16 line, quint16 column)
         : sourceFile(sourceFile), line(line), column(column) {}
     QString sourceFile;
-    quint16 line;
-    quint16 column;
+    quint16 line = 0;
+    quint16 column = 0;
 };
 
 QT_END_NAMESPACE

@@ -69,11 +69,11 @@ protected:
 
 
 QQuickItemViewTransitionJob::QQuickItemViewTransitionJob()
-    : m_transitioner(0)
-    , m_item(0)
+    : m_transitioner(nullptr)
+    , m_item(nullptr)
     , m_type(QQuickItemViewTransitioner::NoTransition)
     , m_isTarget(false)
-    , m_wasDeleted(0)
+    , m_wasDeleted(nullptr)
 {
 }
 
@@ -143,12 +143,12 @@ void QQuickItemViewTransitionJob::finished()
         m_transitioner->finishedTransition(this, m_item);
         if (deleted)
             return;
-        m_wasDeleted = 0;
+        m_wasDeleted = nullptr;
 
-        m_transitioner = 0;
+        m_transitioner = nullptr;
     }
 
-    m_item = 0;
+    m_item = nullptr;
     m_toPos.setX(0);
     m_toPos.setY(0);
     m_type = QQuickItemViewTransitioner::NoTransition;
@@ -157,12 +157,12 @@ void QQuickItemViewTransitionJob::finished()
 
 
 QQuickItemViewTransitioner::QQuickItemViewTransitioner()
-    : populateTransition(0)
-    , addTransition(0), addDisplacedTransition(0)
-    , moveTransition(0), moveDisplacedTransition(0)
-    , removeTransition(0), removeDisplacedTransition(0)
-    , displacedTransition(0)
-    , changeListener(0)
+    : populateTransition(nullptr)
+    , addTransition(nullptr), addDisplacedTransition(nullptr)
+    , moveTransition(nullptr), moveDisplacedTransition(nullptr)
+    , removeTransition(nullptr), removeDisplacedTransition(nullptr)
+    , displacedTransition(nullptr)
+    , changeListener(nullptr)
     , usePopulateTransition(false)
 {
 }
@@ -172,7 +172,7 @@ QQuickItemViewTransitioner::~QQuickItemViewTransitioner()
     typedef QSet<QQuickItemViewTransitionJob *>::iterator JobIt;
 
     for (JobIt it = runningJobs.begin(), end = runningJobs.end(); it != end; ++it)
-        (*it)->m_transitioner = 0;
+        (*it)->m_transitioner = nullptr;
 }
 
 bool QQuickItemViewTransitioner::canTransition(QQuickItemViewTransitioner::TransitionType type, bool asTarget) const
@@ -249,12 +249,12 @@ void QQuickItemViewTransitioner::resetTargetLists()
 QQuickTransition *QQuickItemViewTransitioner::transitionObject(QQuickItemViewTransitioner::TransitionType type, bool asTarget) const
 {
     if (type == QQuickItemViewTransitioner::NoTransition)
-        return 0;
+        return nullptr;
 
     if (type == PopulateTransition)
         asTarget = true;    // no separate displaced transition
 
-    QQuickTransition *trans = 0;
+    QQuickTransition *trans = nullptr;
     switch (type) {
     case NoTransition:
         break;
@@ -276,7 +276,7 @@ QQuickTransition *QQuickItemViewTransitioner::transitionObject(QQuickItemViewTra
         trans = displacedTransition;
     if (trans && trans->enabled())
         return trans;
-    return 0;
+    return nullptr;
 }
 
 const QList<int> &QQuickItemViewTransitioner::targetIndexes(QQuickItemViewTransitioner::TransitionType type) const
@@ -328,7 +328,7 @@ void QQuickItemViewTransitioner::finishedTransition(QQuickItemViewTransitionJob 
 
 QQuickItemViewTransitionableItem::QQuickItemViewTransitionableItem(QQuickItem *i)
     : item(i)
-    , transition(0)
+    , transition(nullptr)
     , nextTransitionType(QQuickItemViewTransitioner::NoTransition)
     , isTransitionTarget(false)
     , nextTransitionToSet(false)
@@ -500,6 +500,8 @@ void QQuickItemViewTransitionableItem::startTransition(QQuickItemViewTransitione
     }
 
     if (!transition || transition->m_type != nextTransitionType || transition->m_isTarget != isTransitionTarget) {
+        if (transition)
+            transition->cancel();
         delete transition;
         transition = new QQuickItemViewTransitionJob;
     }
@@ -563,7 +565,7 @@ void QQuickItemViewTransitionableItem::stopTransition()
 
 
 QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
-    : QObject(parent), m_item(0), m_index(-1)
+    : QObject(parent), m_item(nullptr), m_index(-1)
 {
 }
 /*!
@@ -571,7 +573,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     \instantiates QQuickViewTransitionAttached
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
-    \brief Specifies items under transition in a view
+    \brief Specifies items under transition in a view.
 
     With ListView and GridView, it is possible to specify transitions that should be applied whenever
     the items in the view change as a result of modifications to the view's model. They both have the
@@ -639,7 +641,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     attached property can be used to augment view transitions.
 
 
-    \section2 View transitions: a simple example
+    \section2 View Transitions: a Simple Example
 
     Here is a basic example of the use of view transitions. The view below specifies transitions for
     the \c add and \c displaced properties, which will be run when items are added to the view:
@@ -668,7 +670,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     are some examples of how this can be achieved.
 
 
-    \section2 Using the ViewTransition attached property
+    \section2 Using the ViewTransition Attached Property
 
     As stated, the various ViewTransition properties provide details specific to the individual item
     being transitioned as well as the operation that triggered the transition. In the animation above,
@@ -719,7 +721,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     that is triggered by a particular add operation.
 
 
-    \section3 Delaying animations based on index
+    \section3 Delaying Animations Based on Index
 
     Since each view transition is run once for each item affected by the transition, the ViewTransition
     properties can be used within a transition to define custom behavior for each item's transition.
@@ -738,7 +740,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     \image viewtransitions-delayedbyindex.gif
 
 
-    \section3 Animating items to intermediate positions
+    \section3 Animating Items to Intermediate Positions
 
     The ViewTransition.item property gives a reference to the item to which the transition is being
     applied. This can be used to access any of the item's attributes, custom \c property values,
@@ -775,7 +777,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     \image viewtransitions-pathanim.gif
 
 
-    \section2 Handling interrupted animations
+    \section2 Handling Interrupted Animations
 
     A view transition may be interrupted at any time if a different view transition needs to be
     applied while the original transition is in progress. For example, say Item A is inserted at index 0
@@ -819,7 +821,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     properties.
 
 
-    \section2 Restrictions regarding ScriptAction
+    \section2 Restrictions Regarding ScriptAction
 
     When a view transition is initialized, any property bindings that refer to the ViewTransition
     attached property are evaluated in preparation for the transition. Due to the nature of the

@@ -1,7 +1,7 @@
 ﻿/****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -11,8 +11,8 @@
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Free Documentation License Usage
 ** Alternatively, this file may be used under the terms of the GNU Free
@@ -20,7 +20,7 @@
 ** Foundation and appearing in the file included in the packaging of
 ** this file. Please review the following information to ensure
 ** the GNU Free Documentation License version 1.3 requirements
-** will be met: http://www.gnu.org/copyleft/fdl.html.
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -66,6 +66,8 @@ this manner, but the type cannot be used instantiated as a QML object type
 from QML. This is useful, for example, if a type has enums that should be
 exposed to QML but the type itself should not be instantiable.
 
+For a quick guide to choosing the correct approach to expose C++ types to QML,
+see \l {Choosing the Correct Integration Method Between C++ and QML}.
 
 \section2 Registering an Instantiable Object Type
 
@@ -297,6 +299,8 @@ qmlRegisterRevision<BaseType,1>("MyTypes", 1, 1);
 This is useful when deriving from base classes provided by other authors,
 e.g. when extending classes from the Qt Quick module.
 
+\note The QML engine does not support revisions for properties or signals of
+grouped and attached property objects.
 
 \section2 Registering Extension Objects
 
@@ -346,8 +350,8 @@ demonstrates a usage of extension objects.
 
 \section1 Defining QML-Specific Types and Attributes
 
-
-\section2 Providing Attached Objects for Data Annotations
+\section2 Providing Attached Properties
+\keyword Integrating QML and C++ - Attached Properties
 
 In the QML language syntax, there is a notion of \l{Attached properties and
 attached signal handlers}{\e {attached properties} and \e {attached signal
@@ -606,7 +610,6 @@ public:
     RandomNumberGenerator(QObject *parent)
         : QObject(parent), m_maxValue(100)
     {
-        qsrand(QDateTime::currentMSecsSinceEpoch() / 1000);
         QObject::connect(&m_timer, SIGNAL(timeout()), SLOT(updateProperty()));
         m_timer.start(500);
     }
@@ -621,7 +624,7 @@ signals:
 
 private slots:
     void updateProperty() {
-        m_targetProperty.write(qrand() % m_maxValue);
+        m_targetProperty.write(QRandomGenerator::global()->bounded(m_maxValue));
     }
 
 private:
@@ -690,7 +693,7 @@ public:
     QQmlListProperty<Message> messages();
 
 private:
-    QList<Message *> messages;
+    QList<Message *> m_messages;
 };
 \endcode
 

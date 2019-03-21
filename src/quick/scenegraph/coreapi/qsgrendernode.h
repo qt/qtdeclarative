@@ -80,7 +80,7 @@ public:
     };
 
     QSGRenderNode();
-    ~QSGRenderNode();
+    ~QSGRenderNode() override;
 
     virtual StateFlags changedStates() const;
     virtual void render(const RenderState *state) = 0;

@@ -46,12 +46,12 @@ QT_BEGIN_NAMESPACE
 QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGRenderContext *context)
     : m_glyphNodeType(RootGlyphNode)
     , m_context(context)
-    , m_material(0)
-    , m_glyph_cache(0)
+    , m_material(nullptr)
+    , m_glyph_cache(nullptr)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 0)
     , m_style(QQuickText::Normal)
     , m_antialiasingMode(GrayAntialiasing)
-    , m_texture(0)
+    , m_texture(nullptr)
     , m_dirtyGeometry(false)
     , m_dirtyMaterial(false)
 {
@@ -80,7 +80,7 @@ QSGDistanceFieldGlyphNode::~QSGDistanceFieldGlyphNode()
 void QSGDistanceFieldGlyphNode::setColor(const QColor &color)
 {
     m_color = color;
-    if (m_material != 0) {
+    if (m_material != nullptr) {
         m_material->setColor(color);
         markDirty(DirtyMaterial);
     } else {
@@ -113,7 +113,7 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
         return;
 
     if (m_glyph_cache != oldCache) {
-        Q_ASSERT(ownerElement() != 0);
+        Q_ASSERT(ownerElement() != nullptr);
         if (oldCache) {
             oldCache->unregisterGlyphNode(this);
             oldCache->unregisterOwnerElement(ownerElement());
@@ -181,7 +181,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
     // Remove previously created sub glyph nodes
     // We assume all the children are sub glyph nodes
     QSGNode *subnode = firstChild();
-    QSGNode *nextNode = 0;
+    QSGNode *nextNode = nullptr;
     while (subnode) {
         nextNode = subnode->nextSibling();
         delete subnode;

@@ -86,13 +86,14 @@ public:
 
     bool isMirrored() const;
     void renderScene(const QSGBindable &bindable);
-    virtual void renderScene(uint fboId = 0) Q_DECL_OVERRIDE;
-    virtual void nodeChanged(QSGNode *node, QSGNode::DirtyState state) Q_DECL_OVERRIDE;
+    void renderScene(uint fboId = 0) override;
+    void nodeChanged(QSGNode *node, QSGNode::DirtyState state) override;
 
     QSGNodeUpdater *nodeUpdater() const;
     void setNodeUpdater(QSGNodeUpdater *updater);
     inline QSGMaterialShader::RenderState state(QSGMaterialShader::RenderState::DirtyStates dirty) const;
-    virtual void setCustomRenderMode(const QByteArray &) { };
+    virtual void setCustomRenderMode(const QByteArray &) { }
+    virtual void releaseCachedResources() { }
 
     void clearChangedFlag() { m_changed_emitted = false; }
 
@@ -161,12 +162,12 @@ class Q_QUICK_PRIVATE_EXPORT QSGNodeDumper : public QSGNodeVisitor {
 public:
     static void dump(QSGNode *n);
 
-    QSGNodeDumper() : m_indent(0) {}
+    QSGNodeDumper() {}
     void visitNode(QSGNode *n) override;
     void visitChildren(QSGNode *n) override;
 
 private:
-    int m_indent;
+    int m_indent = 0;
 };
 
 

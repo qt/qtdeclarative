@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -98,14 +98,15 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFlickable : public QQuickItem
     Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged)
     Q_PROPERTY(int pressDelay READ pressDelay WRITE setPressDelay NOTIFY pressDelayChanged)
 
-    Q_PROPERTY(bool atXEnd READ isAtXEnd NOTIFY isAtBoundaryChanged)
-    Q_PROPERTY(bool atYEnd READ isAtYEnd NOTIFY isAtBoundaryChanged)
-    Q_PROPERTY(bool atXBeginning READ isAtXBeginning NOTIFY isAtBoundaryChanged)
-    Q_PROPERTY(bool atYBeginning READ isAtYBeginning NOTIFY isAtBoundaryChanged)
+    Q_PROPERTY(bool atXEnd READ isAtXEnd NOTIFY atXEndChanged)
+    Q_PROPERTY(bool atYEnd READ isAtYEnd NOTIFY atYEndChanged)
+    Q_PROPERTY(bool atXBeginning READ isAtXBeginning NOTIFY atXBeginningChanged)
+    Q_PROPERTY(bool atYBeginning READ isAtYBeginning NOTIFY atYBeginningChanged)
 
     Q_PROPERTY(QQuickFlickableVisibleArea *visibleArea READ visibleArea CONSTANT)
 
     Q_PROPERTY(bool pixelAligned READ pixelAligned WRITE setPixelAligned NOTIFY pixelAlignedChanged)
+    Q_PROPERTY(bool synchronousDrag READ synchronousDrag WRITE setSynchronousDrag NOTIFY synchronousDragChanged REVISION 12)
 
     Q_PROPERTY(qreal horizontalOvershoot READ horizontalOvershoot NOTIFY horizontalOvershootChanged REVISION 9)
     Q_PROPERTY(qreal verticalOvershoot READ verticalOvershoot NOTIFY verticalOvershootChanged REVISION 9)
@@ -115,8 +116,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFlickable : public QQuickItem
     Q_CLASSINFO("DefaultProperty", "flickableData")
 
 public:
-    QQuickFlickable(QQuickItem *parent=0);
-    ~QQuickFlickable();
+    QQuickFlickable(QQuickItem *parent=nullptr);
+    ~QQuickFlickable() override;
 
     QQmlListProperty<QObject> flickableData();
     QQmlListProperty<QQuickItem> flickableChildren();
@@ -213,6 +214,9 @@ public:
     bool pixelAligned() const;
     void setPixelAligned(bool align);
 
+    bool synchronousDrag() const;
+    void setSynchronousDrag(bool v);
+
     qreal horizontalOvershoot() const;
     qreal verticalOvershoot() const;
 
@@ -259,18 +263,25 @@ Q_SIGNALS:
     void dragStarted();
     void dragEnded();
     void pixelAlignedChanged();
+    Q_REVISION(12) void synchronousDragChanged();
     Q_REVISION(9) void horizontalOvershootChanged();
     Q_REVISION(9) void verticalOvershootChanged();
 
+    // The next four signals should be marked as Q_REVISION(12). See QTBUG-71243
+    void atXEndChanged();
+    void atYEndChanged();
+    void atXBeginningChanged();
+    void atYBeginningChanged();
+
 protected:
-    bool childMouseEventFilter(QQuickItem *, QEvent *) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    bool childMouseEventFilter(QQuickItem *, QEvent *) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
 #if QT_CONFIG(wheelevent)
-    void wheelEvent(QWheelEvent *event) Q_DECL_OVERRIDE;
+    void wheelEvent(QWheelEvent *event) override;
 #endif
-    void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
+    void timerEvent(QTimerEvent *event) override;
 
     QQuickFlickableVisibleArea *visibleArea();
 
@@ -288,11 +299,11 @@ protected:
     virtual qreal maxYExtent() const;
     qreal vWidth() const;
     qreal vHeight() const;
-    void componentComplete() Q_DECL_OVERRIDE;
+    void componentComplete() override;
     virtual void viewportMoved(Qt::Orientations orient);
     void geometryChanged(const QRectF &newGeometry,
-                         const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
+                         const QRectF &oldGeometry) override;
+    void mouseUngrabEvent() override;
     bool filterMouseEvent(QQuickItem *receiver, QMouseEvent *event);
 
     bool xflick() const;

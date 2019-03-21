@@ -45,12 +45,30 @@ using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(MemberData);
 
+static size_t nextPowerOfTwo(size_t s)
+{
+    --s;
+    s |= s >> 1;
+    s |= s >> 2;
+    s |= s >> 4;
+    s |= s >> 8;
+    s |= s >> 16;
+#if (QT_POINTER_SIZE == 8)
+        s |= s >> 32;
+#endif
+    ++s;
+    return s;
+}
+
 Heap::MemberData *MemberData::allocate(ExecutionEngine *e, uint n, Heap::MemberData *old)
 {
-    Q_ASSERT(!old || old->values.size < n);
-    Q_ASSERT(n);
+    Q_ASSERT(!old || old->values.size <= n);
+    if (!n)
+        n = 4;
 
     size_t alloc = MemoryManager::align(sizeof(Heap::MemberData) + (n - 1)*sizeof(Value));
+    // round up to next power of two to avoid quadratic behaviour for very large objects
+    alloc = nextPowerOfTwo(alloc);
     Heap::MemberData *m = e->memoryManager->allocManaged<MemberData>(alloc);
     if (old)
         // no write barrier required here

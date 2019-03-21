@@ -75,7 +75,7 @@ class Q_AUTOTEST_EXPORT QQuickParentChange : public QQuickStateOperation, public
     Q_PROPERTY(QQmlScriptString scale READ scale WRITE setScale)
     Q_PROPERTY(QQmlScriptString rotation READ rotation WRITE setRotation)
 public:
-    QQuickParentChange(QObject *parent=0);
+    QQuickParentChange(QObject *parent=nullptr);
     ~QQuickParentChange();
 
     QQuickItem *object() const;
@@ -110,17 +110,17 @@ public:
     void setRotation(QQmlScriptString rotation);
     bool rotationIsSet() const;
 
-    ActionList actions() Q_DECL_OVERRIDE;
+    ActionList actions() override;
 
-    void saveOriginals() Q_DECL_OVERRIDE;
+    void saveOriginals() override;
     //virtual void copyOriginals(QQuickStateActionEvent*);
-    void execute() Q_DECL_OVERRIDE;
-    bool isReversable() Q_DECL_OVERRIDE;
-    void reverse() Q_DECL_OVERRIDE;
-    EventType type() const Q_DECL_OVERRIDE;
-    bool override(QQuickStateActionEvent*other) Q_DECL_OVERRIDE;
-    void rewind() Q_DECL_OVERRIDE;
-    void saveCurrentValues() Q_DECL_OVERRIDE;
+    void execute() override;
+    bool isReversable() override;
+    void reverse() override;
+    EventType type() const override;
+    bool mayOverride(QQuickStateActionEvent*other) override;
+    void rewind() override;
+    void saveCurrentValues() override;
 };
 
 class QQuickAnchorChanges;
@@ -138,7 +138,7 @@ class Q_AUTOTEST_EXPORT QQuickAnchorSet : public QObject
     Q_PROPERTY(QQmlScriptString baseline READ baseline WRITE setBaseline RESET resetBaseline)
 
 public:
-    QQuickAnchorSet(QObject *parent=0);
+    QQuickAnchorSet(QObject *parent=nullptr);
     virtual ~QQuickAnchorSet();
 
     QQmlScriptString left() const;
@@ -187,31 +187,31 @@ class Q_AUTOTEST_EXPORT QQuickAnchorChanges : public QQuickStateOperation, publi
     Q_PROPERTY(QQuickAnchorSet *anchors READ anchors CONSTANT)
 
 public:
-    QQuickAnchorChanges(QObject *parent=0);
+    QQuickAnchorChanges(QObject *parent=nullptr);
     ~QQuickAnchorChanges();
 
-    ActionList actions() Q_DECL_OVERRIDE;
+    ActionList actions() override;
 
     QQuickAnchorSet *anchors() const;
 
     QQuickItem *object() const;
     void setObject(QQuickItem *);
 
-    void execute() Q_DECL_OVERRIDE;
-    bool isReversable() Q_DECL_OVERRIDE;
-    void reverse() Q_DECL_OVERRIDE;
-    EventType type() const Q_DECL_OVERRIDE;
-    bool override(QQuickStateActionEvent*other) Q_DECL_OVERRIDE;
-    bool changesBindings() Q_DECL_OVERRIDE;
-    void saveOriginals() Q_DECL_OVERRIDE;
-    bool needsCopy() Q_DECL_OVERRIDE { return true; }
-    void copyOriginals(QQuickStateActionEvent*) Q_DECL_OVERRIDE;
-    void clearBindings() Q_DECL_OVERRIDE;
-    void rewind() Q_DECL_OVERRIDE;
-    void saveCurrentValues() Q_DECL_OVERRIDE;
+    void execute() override;
+    bool isReversable() override;
+    void reverse() override;
+    EventType type() const override;
+    bool mayOverride(QQuickStateActionEvent*other) override;
+    bool changesBindings() override;
+    void saveOriginals() override;
+    bool needsCopy() override { return true; }
+    void copyOriginals(QQuickStateActionEvent*) override;
+    void clearBindings() override;
+    void rewind() override;
+    void saveCurrentValues() override;
 
     QList<QQuickStateAction> additionalActions() const;
-    void saveTargetValues() Q_DECL_OVERRIDE;
+    void saveTargetValues() override;
 };
 
 QT_END_NAMESPACE

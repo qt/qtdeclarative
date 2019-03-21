@@ -51,7 +51,6 @@
 // We mean it.
 //
 
-#include "qqmlmetatype_p.h"
 #include "qqmlerror.h"
 #include "qqmlbinding_p.h"
 #include <private/qqmltypecompiler_p.h>
@@ -74,15 +73,15 @@ public:
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
-    QQmlCustomParser() : engine(0), validator(0), m_flags(NoFlag) {}
-    QQmlCustomParser(Flags f) : engine(0), validator(0), m_flags(f) {}
+    QQmlCustomParser() : engine(nullptr), validator(nullptr), m_flags(NoFlag) {}
+    QQmlCustomParser(Flags f) : engine(nullptr), validator(nullptr), m_flags(f) {}
     virtual ~QQmlCustomParser() {}
 
     void clearErrors();
     Flags flags() const { return m_flags; }
 
-    virtual void verifyBindings(const QV4::CompiledData::Unit *, const QList<const QV4::CompiledData::Binding *> &) = 0;
-    virtual void applyBindings(QObject *, QV4::CompiledData::CompilationUnit *, const QList<const QV4::CompiledData::Binding *> &) = 0;
+    virtual void verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) = 0;
+    virtual void applyBindings(QObject *, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) = 0;
 
     QVector<QQmlCompileError> errors() const { return exceptions; }
 

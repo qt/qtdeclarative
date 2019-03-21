@@ -70,9 +70,9 @@ QV4Debugger::QV4Debugger(QV4::ExecutionEngine *engine)
     , m_pauseRequested(false)
     , m_haveBreakPoints(false)
     , m_breakOnThrow(false)
-    , m_returnedValue(engine, QV4::Primitive::undefinedValue())
-    , m_gatherSources(0)
-    , m_runningJob(0)
+    , m_returnedValue(engine, QV4::Value::undefinedValue())
+    , m_gatherSources(nullptr)
+    , m_runningJob(nullptr)
     , m_collector(engine)
 {
     static int debuggerId = qRegisterMetaType<QV4Debugger*>();
@@ -115,7 +115,7 @@ void QV4Debugger::resume(Speed speed)
     if (!m_returnedValue.isUndefined())
         m_returnedValue.set(m_engine, QV4::Encode::undefined());
 
-    m_currentContext.set(m_engine, *m_engine->currentContext);
+    m_currentFrame = m_engine->currentStackFrame;
     m_stepping = speed;
     m_runningCondition.wakeAll();
 }
@@ -157,8 +157,8 @@ void QV4Debugger::clearPauseRequest()
 QV4Debugger::ExecutionState QV4Debugger::currentExecutionState() const
 {
     ExecutionState state;
-    state.fileName = getFunction()->sourceFile();
-    state.lineNumber = engine()->current->lineNumber;
+    state.fileName = QUrl(getFunction()->sourceFile()).fileName();
+    state.lineNumber = engine()->currentStackFrame->lineNumber();
 
     return state;
 }
@@ -182,14 +182,14 @@ void QV4Debugger::maybeBreakAtInstruction()
     if (m_gatherSources) {
         m_gatherSources->run();
         delete m_gatherSources;
-        m_gatherSources = 0;
+        m_gatherSources = nullptr;
     }
 
     switch (m_stepping) {
     case StepOver:
-        if (m_currentContext.asManaged()->d() != m_engine->current)
+        if (m_currentFrame != m_engine->currentStackFrame)
             break;
-        // fall through
+        Q_FALLTHROUGH();
     case StepIn:
         pauseAndWait(Step);
         return;
@@ -203,7 +203,8 @@ void QV4Debugger::maybeBreakAtInstruction()
         pauseAndWait(PauseRequest);
     } else if (m_haveBreakPoints) {
         if (QV4::Function *f = getFunction()) {
-            const int lineNumber = engine()->current->lineNumber;
+            // lineNumber will be negative for Ret instructions, so those won't match
+            const int lineNumber = engine()->currentStackFrame->lineNumber();
             if (reallyHitTheBreakPoint(f->sourceFile(), lineNumber))
                 pauseAndWait(BreakPointHit);
         }
@@ -216,9 +217,8 @@ void QV4Debugger::enteringFunction()
         return;
     QMutexLocker locker(&m_lock);
 
-    if (m_stepping == StepIn) {
-        m_currentContext.set(m_engine, *m_engine->currentContext);
-    }
+    if (m_stepping == StepIn)
+        m_currentFrame = m_engine->currentStackFrame;
 }
 
 void QV4Debugger::leavingFunction(const QV4::ReturnedValue &retVal)
@@ -229,13 +229,8 @@ void QV4Debugger::leavingFunction(const QV4::ReturnedValue &retVal)
 
     QMutexLocker locker(&m_lock);
 
-    if (m_stepping != NotStepping && m_currentContext.asManaged()->d() == m_engine->current) {
-        if (QV4::ExecutionContext *parentContext
-                = m_engine->parentContext(m_engine->currentContext)) {
-            m_currentContext.set(m_engine, *parentContext);
-        } else {
-            m_currentContext.clear();
-        }
+    if (m_stepping != NotStepping && m_currentFrame == m_engine->currentStackFrame) {
+        m_currentFrame = m_currentFrame->parent;
         m_stepping = StepOver;
         m_returnedValue.set(m_engine, retVal);
     }
@@ -255,10 +250,8 @@ void QV4Debugger::aboutToThrow()
 
 QV4::Function *QV4Debugger::getFunction() const
 {
-    QV4::Scope scope(m_engine);
-    QV4::ExecutionContext *context = m_engine->currentContext;
-    if (QV4::Function *function = context->getFunction())
-        return function;
+    if (m_engine->currentStackFrame)
+        return m_engine->currentStackFrame->v4Function;
     else
         return m_engine->globalCode;
 }
@@ -295,18 +288,18 @@ void QV4Debugger::pauseAndWait(PauseReason reason)
 bool QV4Debugger::reallyHitTheBreakPoint(const QString &filename, int linenr)
 {
     QHash<BreakPoint, QString>::iterator it = m_breakPoints.find(
-                BreakPoint(filename.mid(filename.lastIndexOf('/') + 1), linenr));
+                BreakPoint(QUrl(filename).fileName(), linenr));
     if (it == m_breakPoints.end())
         return false;
     QString condition = it.value();
     if (condition.isEmpty())
         return true;
 
-    Q_ASSERT(m_runningJob == 0);
+    Q_ASSERT(m_runningJob == nullptr);
     EvalJob evilJob(m_engine, condition);
     m_runningJob = &evilJob;
     m_runningJob->run();
-    m_runningJob = 0;
+    m_runningJob = nullptr;
 
     return evilJob.resultAsBoolean();
 }
@@ -320,7 +313,7 @@ void QV4Debugger::runInEngine(QV4DebugJob *job)
 void QV4Debugger::runInEngine_havingLock(QV4DebugJob *job)
 {
     Q_ASSERT(job);
-    Q_ASSERT(m_runningJob == 0);
+    Q_ASSERT(m_runningJob == nullptr);
 
     m_runningJob = job;
     if (state() == Paused)
@@ -328,7 +321,7 @@ void QV4Debugger::runInEngine_havingLock(QV4DebugJob *job)
     else
         emit scheduleJob();
     m_jobIsRunning.wait(&m_lock);
-    m_runningJob = 0;
+    m_runningJob = nullptr;
 }
 
 QT_END_NAMESPACE

@@ -56,7 +56,8 @@
 
 #include <private/qobject_p.h>
 #include <private/qtqmlglobal_p.h>
-#include <private/qqmlpropertycache_p.h>
+#include <private/qqmlrefcount_p.h>
+#include <private/qqmlcontext_p.h>
 #include <private/qqmlboundsignalexpressionpointer_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -64,6 +65,7 @@ QT_BEGIN_NAMESPACE
 class QQmlContext;
 class QQmlEnginePrivate;
 class QQmlJavaScriptExpression;
+class QQmlMetaObject;
 
 class Q_QML_PRIVATE_EXPORT QQmlPropertyPrivate : public QQmlRefCount
 {
@@ -104,9 +106,9 @@ public:
     static bool writeValueProperty(QObject *,
                                    const QQmlPropertyData &, const QQmlPropertyData &valueTypeData,
                                    const QVariant &, QQmlContextData *,
-                                   QQmlPropertyData::WriteFlags flags = 0);
+                                   QQmlPropertyData::WriteFlags flags = nullptr);
     static bool write(QObject *, const QQmlPropertyData &, const QVariant &,
-                      QQmlContextData *, QQmlPropertyData::WriteFlags flags = 0);
+                      QQmlContextData *, QQmlPropertyData::WriteFlags flags = nullptr);
     static void findAliasTarget(QObject *, QQmlPropertyIndex, QObject **, QQmlPropertyIndex *);
 
     enum BindingFlag {
@@ -140,10 +142,12 @@ public:
     static QMetaMethod findSignalByName(const QMetaObject *mo, const QByteArray &);
     static bool connect(const QObject *sender, int signal_index,
                         const QObject *receiver, int method_index,
-                        int type = 0, int *types = 0);
+                        int type = 0, int *types = nullptr);
     static void flushSignal(const QObject *sender, int signal_index);
 
     static QVariant resolvedUrlSequence(const QVariant &value, QQmlContextData *context);
+    static QQmlProperty create(QObject *target, const QString &propertyName, QQmlContextData *context);
+
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlPropertyPrivate::BindingFlags)

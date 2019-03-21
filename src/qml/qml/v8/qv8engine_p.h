@@ -67,6 +67,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4identifier_p.h>
 #include <private/qv4context_p.h>
+#include <private/qv4stackframe_p.h>
 #include <private/qqmldelayedcallqueue_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -76,12 +77,6 @@ namespace QV4 {
     struct ExecutionEngine;
     struct QObjectMethod;
 }
-
-#define V4THROW_ERROR(string) \
-    return ctx->engine()->throwError(QString::fromUtf8(string));
-
-#define V4THROW_TYPE(string) \
-    return ctx->engine()->throwTypeError(QStringLiteral(string));
 
 #define V4_DEFINE_EXTENSION(dataclass, datafunction) \
     static inline dataclass *datafunction(QV4::ExecutionEngine *engine) \
@@ -116,8 +111,8 @@ namespace QV4 {
 class QQmlV4Function
 {
 public:
-    int length() const { return callData->argc; }
-    QV4::ReturnedValue operator[](int idx) const { return (idx < callData->argc ? callData->args[idx].asReturnedValue() : QV4::Encode::undefined()); }
+    int length() const { return callData->argc(); }
+    QV4::ReturnedValue operator[](int idx) const { return (idx < callData->argc() ? callData->args[idx].asReturnedValue() : QV4::Encode::undefined()); }
     void setReturnValue(QV4::ReturnedValue rv) { *retVal = rv; }
     QV4::ExecutionEngine *v4engine() const { return e; }
 private:
@@ -159,12 +154,10 @@ class Q_QML_PRIVATE_EXPORT QV8Engine
 {
     friend class QJSEngine;
 public:
-    static QV8Engine* get(QJSEngine* q) { Q_ASSERT(q); return q->handle(); }
 //    static QJSEngine* get(QV8Engine* d) { Q_ASSERT(d); return d->q; }
-    static QV4::ExecutionEngine *getV4(QJSEngine *q) { return q->handle()->m_v4Engine; }
     static QV4::ExecutionEngine *getV4(QV8Engine *d) { return d->m_v4Engine; }
 
-    QV8Engine(QJSEngine* qq);
+    QV8Engine(QV4::ExecutionEngine *v4);
     virtual ~QV8Engine();
 
     // This enum should be in sync with QQmlEngine::ObjectOwnership
@@ -177,14 +170,11 @@ public:
     void initQmlGlobalObject();
     void setEngine(QQmlEngine *engine);
     QQmlEngine *engine() { return m_engine; }
-    QJSEngine *publicEngine() { return q; }
-    QV4::ReturnedValue global();
     QQmlDelayedCallQueue *delayedCallQueue() { return &m_delayedCallQueue; }
 
+#if QT_CONFIG(qml_xml_http_request)
     void *xmlHttpRequestData() const { return m_xmlHttpRequestData; }
-
-    Deletable *listModelData() const { return m_listModelData; }
-    void setListModelData(Deletable *d) { if (m_listModelData) delete m_listModelData; m_listModelData = d; }
+#endif
 
     void freezeObject(const QV4::Value &value);
 
@@ -213,16 +203,16 @@ public:
     int consoleCountHelper(const QString &file, quint16 line, quint16 column);
 
 protected:
-    QJSEngine* q;
     QQmlEngine *m_engine;
     QQmlDelayedCallQueue m_delayedCallQueue;
 
     QV4::ExecutionEngine *m_v4Engine;
 
+#if QT_CONFIG(qml_xml_http_request)
     void *m_xmlHttpRequestData;
+#endif
 
     QVector<Deletable *> m_extensionData;
-    Deletable *m_listModelData;
 
     QSet<QString> m_illegalNames;
 
@@ -242,7 +232,7 @@ inline QV8Engine::Deletable *QV8Engine::extensionData(int index) const
     if (index < m_extensionData.count())
         return m_extensionData[index];
     else
-        return 0;
+        return nullptr;
 }
 
 

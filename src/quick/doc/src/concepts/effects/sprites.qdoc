@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -11,8 +11,8 @@
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Free Documentation License Usage
 ** Alternatively, this file may be used under the terms of the GNU Free
@@ -20,7 +20,7 @@
 ** Foundation and appearing in the file included in the packaging of
 ** this file. Please review the following information to ensure
 ** the GNU Free Documentation License version 1.3 requirements
-** will be met: http://www.gnu.org/copyleft/fdl.html.
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -52,38 +52,38 @@ This allows you to easily insert a transitional animation between two different 
 \image spriteenginegraph.png
 
 As an example, consider the above diagram which illustrates the sprites for a hypothetical 2D
-platform game character. The character starts by displaying the standing state. From this state,
-barring external input, he will transition to either the waiting animation, the walking animation,
-or play the standing animation again. Because the weights for those transitions are one, zero and three
-respectively, he has a one in four chance of playing the waiting animation when the standing animation
-finishes, and a three in four chance of playing the standing animation again. This allows for a character
+platform game character. The character starts by displaying the \e standing state. From this state,
+barring external input, he will transition to either the \e waiting animation, the \e walking animation,
+or play the \e standing animation again. Because the weights for those transitions are one, zero and three
+respectively, he has a one in four chance of playing the \e waiting animation when the \e standing animation
+finishes, and a three in four chance of playing the \e standing animation again. This allows for a character
 who has a slightly animated and variable behavior while waiting.
 
-Because there is a zero weight transition to the walking animation, the standing animation will not normally
-transition there. But if you set the goal animation to be the walking animation, it would play the walking
-animation when it finished the standing animation. If it was previously in the waiting animation, it would
-finish playing that, then play the standing animation, then play the walking animation. It would then continue to
-play the walking animation until the goal animation is unset, at which point it would switch to the standing
-animation after finishing the walking animation.
+Because there is a zero weight transition to the \e walking animation, the \e standing animation will not normally
+transition there. But if you set the goal animation to be the \e walking animation, it would play the \e walking
+animation when it finished the \e standing animation. If it was previously in the \e waiting animation, it would
+finish playing that, then play the \e standing animation, then play the \e walking animation. It would then continue to
+play the \e walking animation until the goal animation is unset, at which point it would switch to the \e standing
+animation after finishing the \e walking animation.
 
-If you set the goal state then to the jumping animation, it would finish the walking animation before
-playing the jumping animation. Because the jumping animation does not transition to other states, it will still
-keep playing the jumping animation until the state is forced to change. In this example, you could set it back to
-walking and change to goal animation to walking or to nothing (which would lead it to play the standing animation
-after the walking animation). Note that by forcibly setting the animation, you can start playing the animation
+If you then set the goal state to the \e jumping animation, it would finish the \e walking animation before
+playing the \e jumping animation. Because the \e jumping animation does not transition to other states, it will still
+keep playing the \e jumping animation until the state is forced to change. In this example, you could set it back to
+\e walking and change the goal animation to \e walking or to nothing (which would lead it to play the \e standing animation
+after the \e walking animation). Note that by forcibly setting the animation, you can start playing the animation
 immediately.
 
 \section2 Input Format
 
-The file formats accepted by the sprite engine is the same as the file formats accepted by other QML types,
-such as \l Image. In order to animate the image however, the sprite engine requires the image file to contain
+The file formats accepted by the sprite engine are the same as the file formats accepted by other QML types,
+such as \l Image. In order to animate the image, however, the sprite engine requires the image file to contain
 all of the frames of the animation. They should be arranged in a contiguous line, which may wrap from the right
 edge of the file to a lower row starting from the left edge of the file (and which is placed directly below the
 previous row).
 
 \image spritecutting.png
 
-As an example, take the above image. For now just consider the black numbers, and assume the squares are 40x40 pixels.
+As an example, take the above image. For now, just consider the black numbers, and assume the squares are 40x40 pixels.
 Normally, the image is read from the top-left corner. If you specified the frame size as 40x40 pixels, and a frame count
 of 8, then it would read in the frames as they are numbered. The frame in the top left would be the first frame, the frame
 in the top right would be the fifth frame, and then it would wrap to the next row (at pixel location 0,40 in the file) to read
@@ -97,9 +97,9 @@ The first 120x40 of the image will not be used, as it starts reading 40x40 block
 When it reaches the end of the file at 160,0, it then starts to read the next row from 0,40.
 
 The blue numbers show the frame numbers if you tried to load two frames of that size, starting from 40,40. Note
-that it is possible to load multiple sprites out of the one image file. The red, blue and black numbers can all
+that it is possible to load multiple sprites from one image file. The red, blue and black numbers can all
 be loaded as separate animations to the same sprite engine. The following code loads the animations as per the image.
-It also specifies that animations are to played at 20 frames per second.
+It also specifies that animations are to be played at 20 frames per second.
 
 \code
 Sprite {
@@ -131,17 +131,17 @@ Sprite {
 }
 \endcode
 
-Frames within one animation must be the same size, however multiple animations within the same file
-do not. Sprites without a frameCount specified assume that they take the entire file, and you must specify
+Frames within one animation must be the same size. However, multiple animations within the same file
+do not. Sprites without a \l {Sprite::}{frameCount} specified assume that they take the entire file, and you must specify
 the frame size. Sprites without a frame size assume that they are square and take the entire file without wrapping,
 and you must specify a frame count.
 
-The sprite engine internally copies and cuts up images to fit in an easier to read internal format, which leads
+The sprite engine internally copies and cuts up images to fit in an easier-to-read internal format, which leads
 to some graphics memory limitations. Because it requires all the sprites for a single engine to be in the same
 texture, attempting to load many different animations can run into texture memory limits on embedded devices. In
 these situations, a warning will be output to the console containing the maximum texture size.
 
-There are several tools to help turn a set of images into sprite sheets, here are some examples:
+There are several tools to help turn a set of images into sprite sheets. Here are some examples:
 \list
  \li Photoshop plugin: \l http://www.johnwordsworth.com/projects/photoshop-sprite-sheet-generator-script
  \li Gimp plugin: \l http://registry.gimp.org/node/20943
@@ -150,23 +150,23 @@ There are several tools to help turn a set of images into sprite sheets, here ar
 
 \section2 QML Types Using the Sprite Engine
 
-Sprites for the sprite engine can be defined using the \l Sprite type. This type includes the input parameters
+Sprites for the sprite engine can be defined using the \l Sprite type. This type includes the input parameters,
 as well as the length of the animation and weighted transitions to other animations. It is purely a data class, and
 does not render anything.
 
 \l SpriteSequence is a type which uses a sprite engine to draw the sprites defined in it. It is a single and
 self-contained sprite engine, and does not interact with other sprite engines. \l Sprite types can be shared between
-sprite engine using types, but this is not done automatically. So if you have defined a sprite in one \l SpriteSequence
+sprite engine-using types, but this is not done automatically. So, if you have defined a sprite in one \l SpriteSequence
 you will need to redefine it (or reference the same \l Sprite type) in the sprites property of another \l SpriteSequence
 in order to transition to that animation.
 
 Additionally, \l ImageParticle can use \l Sprite types to define sprites for each particle. This is again a single
-sprite engine per type. This works similarly to SpriteSequence, but it also has the parametrized variability provided
+sprite engine per type. This works similarly to \c SpriteSequence, but it also has the parameterized variability provided
 by the \l ImageParticle type.
 
 \section1 AnimatedSprite Type
 
-For use-cases which do not need to transition between animations, consider the AnimatedSprite type.
+For use-cases which do not need to transition between animations, consider the \l AnimatedSprite type.
 This type displays sprite animations with the same input format, but only one at a time. It also provides more fine-grained
 manual control, as there is no sprite engine managing the timing and transitions behind the scenes.
 

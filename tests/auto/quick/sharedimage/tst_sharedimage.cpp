@@ -90,7 +90,7 @@ void tst_sharedimage::compareToPlainLoad()
         engine.loadData(i ? sharedScript : plainScript);
         QVERIFY(engine.rootObjects().size());
         QQuickImage *obj = qobject_cast<QQuickImage*>(engine.rootObjects().at(0));
-        QVERIFY(obj != 0);
+        QVERIFY(obj != nullptr);
         QTRY_VERIFY(!obj->image().isNull());
         images[i] = obj->image();
     }

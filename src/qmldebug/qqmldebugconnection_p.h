@@ -64,7 +64,7 @@ class QQmlDebugConnection : public QObject
     Q_DISABLE_COPY(QQmlDebugConnection)
     Q_DECLARE_PRIVATE(QQmlDebugConnection)
 public:
-    QQmlDebugConnection(QObject *parent = 0);
+    QQmlDebugConnection(QObject *parent = nullptr);
     ~QQmlDebugConnection();
 
     void connectToHost(const QString &hostName, quint16 port);

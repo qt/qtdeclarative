@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET = qtqmlstatemachine
 TARGETPATH = QtQml/StateMachine
-IMPORT_VERSION = 1.0
+IMPORT_VERSION = 1.$$QT_MINOR_VERSION
 
 QT = core-private qml-private
 

@@ -157,7 +157,7 @@ QSGAbstractRenderer *QSGEngine::createRenderer() const
 {
     Q_D(const QSGEngine);
     if (!d->sgRenderContext->isValid())
-        return 0;
+        return nullptr;
 
     QSGRenderer *renderer = d->sgRenderContext->createRenderer();
     renderer->setCustomRenderMode(qgetenv("QSG_VISUALIZE"));
@@ -178,7 +178,7 @@ QSGTexture *QSGEngine::createTextureFromImage(const QImage &image, CreateTexture
 {
     Q_D(const QSGEngine);
      if (!d->sgRenderContext->isValid())
-         return 0;
+         return nullptr;
     uint flags = 0;
     if (options & TextureCanUseAtlas)     flags |= QSGRenderContext::CreateTexture_Atlas;
     if (!(options & TextureIsOpaque))     flags |= QSGRenderContext::CreateTexture_Alpha;
@@ -206,7 +206,7 @@ QSGTexture *QSGEngine::createTextureFromId(uint id, const QSize &size, CreateTex
         texture->setTextureSize(size);
         return texture;
     }
-    return 0;
+    return nullptr;
 }
 
 /*!

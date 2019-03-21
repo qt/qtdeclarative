@@ -53,11 +53,12 @@
 
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlparserstatus.h>
+#include <QtQml/private/qtqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlInstantiatorPrivate;
-class Q_AUTOTEST_EXPORT QQmlInstantiator : public QObject, public QQmlParserStatus
+class Q_QML_PRIVATE_EXPORT QQmlInstantiator : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
@@ -71,7 +72,7 @@ class Q_AUTOTEST_EXPORT QQmlInstantiator : public QObject, public QQmlParserStat
     Q_CLASSINFO("DefaultProperty", "delegate")
 
 public:
-    QQmlInstantiator(QObject *parent = 0);
+    QQmlInstantiator(QObject *parent = nullptr);
     ~QQmlInstantiator();
 
     bool isActive() const;

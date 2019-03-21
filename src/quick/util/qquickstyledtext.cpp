@@ -50,6 +50,8 @@
     QQuickStyledText supports few tags:
 
     <b></b> - bold
+    <del></del> - strike out (removed content)
+    <s></s> - strike out (no longer accurate or no longer relevant content)
     <strong></strong> - bold
     <i></i> - italic
     <br> - new line
@@ -379,8 +381,16 @@ bool QQuickStyledTextPrivate::parseTag(const QChar *&ch, const QString &textIn, 
                     format.setFontWeight(QFont::Bold);
                     return true;
                 }
-            } else if (tag == QLatin1String("strong")) {
-                format.setFontWeight(QFont::Bold);
+            } else if (char0 == QLatin1Char('s')) {
+                if (tagLength == 1) {
+                    format.setFontStrikeOut(true);
+                    return true;
+                } else if (tag == QLatin1String("strong")) {
+                    format.setFontWeight(QFont::Bold);
+                    return true;
+                }
+            } else if (tag == QLatin1String("del")) {
+                format.setFontStrikeOut(true);
                 return true;
             } else if (tag == QLatin1String("ol")) {
                 List listItem;
@@ -511,7 +521,13 @@ bool QQuickStyledTextPrivate::parseCloseTag(const QChar *&ch, const QString &tex
                 return true;
             } else if (tag == QLatin1String("font")) {
                 return true;
-            } else if (tag == QLatin1String("strong")) {
+            } else if (char0 == QLatin1Char('s')) {
+                if (tagLength == 1) {
+                    return true;
+                } else if (tag == QLatin1String("strong")) {
+                    return true;
+                }
+            } else if (tag == QLatin1String("del")) {
                 return true;
             } else if (tag == QLatin1String("ol")) {
                 if (!listStack.isEmpty()) {
@@ -659,7 +675,7 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
 {
     qreal imgWidth = 0.0;
     QFontMetricsF fm(layout.font());
-    const qreal spaceWidth = fm.width(QChar::Nbsp);
+    const qreal spaceWidth = fm.horizontalAdvance(QChar::Nbsp);
     const bool trailingSpace = textOut.endsWith(space);
 
     if (!updateImagePositions) {
@@ -695,7 +711,7 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
                     image->size = image->pix->implicitSize();
                 } else {
                     delete image->pix;
-                    image->pix = 0;
+                    image->pix = nullptr;
                 }
             }
         }

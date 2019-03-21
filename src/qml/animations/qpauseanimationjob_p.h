@@ -53,6 +53,8 @@
 
 #include <private/qanimationgroupjob_p.h>
 
+QT_REQUIRE_CONFIG(qml_animation);
+
 QT_BEGIN_NAMESPACE
 
 class Q_QML_PRIVATE_EXPORT QPauseAnimationJob : public QAbstractAnimationJob
@@ -60,7 +62,7 @@ class Q_QML_PRIVATE_EXPORT QPauseAnimationJob : public QAbstractAnimationJob
     Q_DISABLE_COPY(QPauseAnimationJob)
 public:
     explicit QPauseAnimationJob(int duration = 250);
-    ~QPauseAnimationJob();
+    ~QPauseAnimationJob() override;
 
     int duration() const override;
     void setDuration(int msecs);

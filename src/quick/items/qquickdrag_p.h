@@ -83,7 +83,7 @@ class QQuickDragGrabber
     typedef QIntrusiveList<Item, &Item::node> ItemList;
 
 public:
-    QQuickDragGrabber() : m_target(0) {}
+    QQuickDragGrabber() : m_target(nullptr) {}
     ~QQuickDragGrabber() { while (!m_items.isEmpty()) delete m_items.first(); }
 
 
@@ -94,10 +94,10 @@ public:
         else if (!m_items.isEmpty())
             return *m_items.first();
         else
-            return 0;
+            return nullptr;
     }
     void setTarget(QObject *target) { m_target = target; }
-    void resetTarget() { m_target = 0; }
+    void resetTarget() { m_target = nullptr; }
 
     bool isEmpty() const { return m_items.isEmpty(); }
 
@@ -136,7 +136,7 @@ class QQuickDragMimeData : public QMimeData
     Q_OBJECT
 public:
     QQuickDragMimeData()
-        : m_source(0)
+        : m_source(nullptr)
     {
     }
 
@@ -173,7 +173,7 @@ class Q_AUTOTEST_EXPORT QQuickDrag : public QObject
     //### consider drag and drop
 
 public:
-    QQuickDrag(QObject *parent=0);
+    QQuickDrag(QObject *parent=nullptr);
     ~QQuickDrag();
 
     enum DragType { None, Automatic, Internal };

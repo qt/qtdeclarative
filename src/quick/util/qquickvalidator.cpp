@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QIntValidator
     \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
-    \brief Defines a validator for integer values
+    \brief Defines a validator for integer values.
 
     The IntValidator type provides a validator for integer values.
 
@@ -111,7 +111,7 @@ void QQuickIntValidator::resetLocaleName()
     \instantiates QDoubleValidator
     \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
-    \brief Defines a validator for non-integer numbers
+    \brief Defines a validator for non-integer numbers.
 
     The DoubleValidator type provides a validator for non-integer numbers.
 
@@ -205,7 +205,7 @@ void QQuickDoubleValidator::resetLocaleName()
     \instantiates QRegExpValidator
     \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
-    \brief Provides a string validator
+    \brief Provides a string validator.
 
     The RegExpValidator type provides a validator, which counts as valid any string which
     matches a specified regular expression.
@@ -219,6 +219,25 @@ void QQuickDoubleValidator::resetLocaleName()
    matching "a".
 
    By default, this property contains a regular expression with the pattern .* that matches any string.
+
+   Below you can find an example of a \l TextInput object with a RegExpValidator specified:
+
+   \snippet qml/regexp.qml 0
+
+   Some more examples of regular expressions:
+
+   \list
+   \li A list of numbers with one to three positions separated by a comma:
+       \badcode
+       /\d{1,3}(?:,\d{1,3})+$/
+       \endcode
+
+   \li An amount consisting of up to 3 numbers before the decimal point, and
+       1 to 2 after the decimal point:
+       \badcode
+       /(\d{1,3})([.,]\d{1,2})?$/
+       \endcode
+   \endlist
 */
 
 #endif // validator

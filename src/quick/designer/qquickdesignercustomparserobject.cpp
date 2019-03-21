@@ -46,12 +46,12 @@ QQuickDesignerCustomParserObject::QQuickDesignerCustomParserObject()
 
 }
 
-void QQuickDesignerCustomParser::verifyBindings(const QV4::CompiledData::Unit *, const QList<const QV4::CompiledData::Binding *> &)
+void QQuickDesignerCustomParser::verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &)
 {
     /* Nothing to do we accept anything */
 }
 
-void QQuickDesignerCustomParser::applyBindings(QObject *, QV4::CompiledData::CompilationUnit *, const QList<const QV4::CompiledData::Binding *> &)
+void QQuickDesignerCustomParser::applyBindings(QObject *, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &)
 {
     /* Nothing to do we accept anything */
 }

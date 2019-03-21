@@ -39,9 +39,15 @@
 
 #include "qqmlmodelsmodule_p.h"
 #include <QtCore/qitemselectionmodel.h>
+#if QT_CONFIG(qml_list_model)
 #include <private/qqmllistmodel_p.h>
+#endif
+#if QT_CONFIG(qml_delegate_model)
 #include <private/qqmldelegatemodel_p.h>
+#include <private/qqmldelegatecomponent_p.h>
+#endif
 #include <private/qqmlobjectmodel_p.h>
+#include <private/qqmltablemodel_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -49,14 +55,28 @@ void QQmlModelsModule::defineModule()
 {
     const char uri[] = "QtQml.Models";
 
+#if QT_CONFIG(qml_list_model)
     qmlRegisterType<QQmlListElement>(uri, 2, 1, "ListElement");
     qmlRegisterCustomType<QQmlListModel>(uri, 2, 1, "ListModel", new QQmlListModelParser);
+#endif
+#if QT_CONFIG(qml_delegate_model)
     qmlRegisterType<QQmlDelegateModel>(uri, 2, 1, "DelegateModel");
     qmlRegisterType<QQmlDelegateModelGroup>(uri, 2, 1, "DelegateModelGroup");
+#endif
     qmlRegisterType<QQmlObjectModel>(uri, 2, 1, "ObjectModel");
     qmlRegisterType<QQmlObjectModel,3>(uri, 2, 3, "ObjectModel");
 
     qmlRegisterType<QItemSelectionModel>(uri, 2, 2, "ItemSelectionModel");
+}
+
+void QQmlModelsModule::defineLabsModule()
+{
+    const char uri[] = "Qt.labs.qmlmodels";
+
+    qmlRegisterUncreatableType<QQmlAbstractDelegateComponent>(uri, 1, 0, "AbstractDelegateComponent", QQmlAbstractDelegateComponent::tr("Cannot create instance of abstract class AbstractDelegateComponent."));
+    qmlRegisterType<QQmlDelegateChooser>(uri, 1, 0, "DelegateChooser");
+    qmlRegisterType<QQmlDelegateChoice>(uri, 1, 0, "DelegateChoice");
+    qmlRegisterType<QQmlTableModel>(uri, 1, 0, "TableModel");
 }
 
 QT_END_NAMESPACE

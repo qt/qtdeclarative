@@ -178,8 +178,8 @@ private:
 class QQuickRevertAction
 {
 public:
-    QQuickRevertAction() : event(0) {}
-    QQuickRevertAction(const QQmlProperty &prop) : property(prop), event(0) {}
+    QQuickRevertAction() : event(nullptr) {}
+    QQuickRevertAction(const QQmlProperty &prop) : property(prop), event(nullptr) {}
     QQuickRevertAction(QQuickStateActionEvent *e) : event(e) {}
     QQmlProperty property;
     QQuickStateActionEvent *event;
@@ -192,7 +192,7 @@ class QQuickStateOperationPrivate : public QObjectPrivate
 public:
 
     QQuickStateOperationPrivate()
-    : m_state(0) {}
+    : m_state(nullptr) {}
 
     QQuickState *m_state;
 };
@@ -203,12 +203,12 @@ class QQuickStatePrivate : public QObjectPrivate
 
 public:
     QQuickStatePrivate()
-    : when(0), named(false), inState(false), group(0) {}
+    : named(false), inState(false), group(nullptr) {}
 
     typedef QList<QQuickSimpleAction> SimpleActionList;
 
     QString name;
-    QQmlBinding *when;
+    QQmlBinding::Ptr when;
     bool named;
 
     struct OperationGuard : public QQmlGuard<QQuickStateOperation>
@@ -233,7 +233,7 @@ public:
         QList<OperationGuard> *list = static_cast<QList<OperationGuard> *>(prop->data);
         QMutableListIterator<OperationGuard> listIterator(*list);
         while(listIterator.hasNext())
-            listIterator.next()->setState(0);
+            listIterator.next()->setState(nullptr);
         list->clear();
     }
     static int operations_count(QQmlListProperty<QQuickStateOperation> *prop) {

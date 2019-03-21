@@ -47,6 +47,7 @@
 #include <QtGui/qwindow.h>
 #include <QtGui/qevent.h>
 #include <QtQml/qqml.h>
+#include <QtQml/qqmldebug.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -94,21 +95,28 @@ public:
     };
 
     Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
+    Q_FLAG(CreateTextureOptions)
 
     enum SceneGraphError {
         ContextNotAvailable = 1
     };
     Q_ENUM(SceneGraphError)
 
-    explicit QQuickWindow(QWindow *parent = Q_NULLPTR);
+    enum TextRenderType {
+        QtTextRendering,
+        NativeTextRendering
+    };
+    Q_ENUM(TextRenderType)
+
+    explicit QQuickWindow(QWindow *parent = nullptr);
     explicit QQuickWindow(QQuickRenderControl *renderControl);
 
-    virtual ~QQuickWindow();
+    ~QQuickWindow() override;
 
     QQuickItem *contentItem() const;
 
     QQuickItem *activeFocusItem() const;
-    QObject *focusObject() const Q_DECL_OVERRIDE;
+    QObject *focusObject() const override;
 
     QQuickItem *mouseGrabberItem() const;
 
@@ -130,7 +138,7 @@ public:
     QQmlIncubationController *incubationController() const;
 
 #if QT_CONFIG(accessibility)
-    QAccessibleInterface *accessibleRoot() const Q_DECL_OVERRIDE;
+    QAccessibleInterface *accessibleRoot() const override;
 #endif
 
     // Scene graph specific functions
@@ -170,6 +178,9 @@ public:
     QSGImageNode *createImageNode() const;
     QSGNinePatchNode *createNinePatchNode() const;
 
+    static TextRenderType textRenderType();
+    static void setTextRenderType(TextRenderType renderType);
+
 Q_SIGNALS:
     void frameSwapped();
     Q_REVISION(2) void openglContextCreated(QOpenGLContext *context);
@@ -193,27 +204,28 @@ public Q_SLOTS:
     void releaseResources();
 
 protected:
-    QQuickWindow(QQuickWindowPrivate &dd, QWindow *parent = Q_NULLPTR);
+    QQuickWindow(QQuickWindowPrivate &dd, QWindow *parent = nullptr);
+    QQuickWindow(QQuickWindowPrivate &dd, QQuickRenderControl *control);
 
-    void exposeEvent(QExposeEvent *) Q_DECL_OVERRIDE;
-    void resizeEvent(QResizeEvent *) Q_DECL_OVERRIDE;
+    void exposeEvent(QExposeEvent *) override;
+    void resizeEvent(QResizeEvent *) override;
 
-    void showEvent(QShowEvent *) Q_DECL_OVERRIDE;
-    void hideEvent(QHideEvent *) Q_DECL_OVERRIDE;
+    void showEvent(QShowEvent *) override;
+    void hideEvent(QHideEvent *) override;
     // TODO Qt 6: reimplement QWindow::closeEvent to emit closing
 
-    void focusInEvent(QFocusEvent *) Q_DECL_OVERRIDE;
-    void focusOutEvent(QFocusEvent *) Q_DECL_OVERRIDE;
+    void focusInEvent(QFocusEvent *) override;
+    void focusOutEvent(QFocusEvent *) override;
 
-    bool event(QEvent *) Q_DECL_OVERRIDE;
-    void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
-    void keyReleaseEvent(QKeyEvent *) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *) Q_DECL_OVERRIDE;
-    void mouseDoubleClickEvent(QMouseEvent *) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *) Q_DECL_OVERRIDE;
+    bool event(QEvent *) override;
+    void keyPressEvent(QKeyEvent *) override;
+    void keyReleaseEvent(QKeyEvent *) override;
+    void mousePressEvent(QMouseEvent *) override;
+    void mouseReleaseEvent(QMouseEvent *) override;
+    void mouseDoubleClickEvent(QMouseEvent *) override;
+    void mouseMoveEvent(QMouseEvent *) override;
 #if QT_CONFIG(wheelevent)
-    void wheelEvent(QWheelEvent *) Q_DECL_OVERRIDE;
+    void wheelEvent(QWheelEvent *) override;
 #endif
 
 private Q_SLOTS:
@@ -223,7 +235,7 @@ private Q_SLOTS:
     void handleScreenChanged(QScreen *screen);
     void setTransientParent_helper(QQuickWindow *window);
     void runJobsAfterSwap();
-
+    void handleApplicationStateChanged(Qt::ApplicationState state);
 private:
     friend class QQuickItem;
     friend class QQuickWidget;
@@ -231,6 +243,10 @@ private:
     friend class QQuickAnimatorController;
     Q_DISABLE_COPY(QQuickWindow)
 };
+
+#ifndef QT_NO_DEBUG_STREAM
+QDebug Q_QUICK_EXPORT operator<<(QDebug debug, const QQuickWindow *item);
+#endif
 
 QT_END_NAMESPACE
 

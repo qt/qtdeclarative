@@ -52,7 +52,7 @@ Q_GLOBAL_STATIC(interceptorSelectorMap, interceptorInstances);
    \class QQmlFileSelector
    \since 5.2
    \inmodule QtQml
-   \brief A class for applying a QFileSelector to QML file loading
+   \brief A class for applying a QFileSelector to QML file loading.
 
   QQmlFileSelector will automatically apply a QFileSelector to
   qml file and asset paths.
@@ -115,8 +115,8 @@ QQmlFileSelector::~QQmlFileSelector()
 {
     Q_D(QQmlFileSelector);
     if (d->engine && QQmlFileSelector::get(d->engine) == this) {
-        d->engine->setUrlInterceptor(0);
-        d->engine = 0;
+        d->engine->setUrlInterceptor(nullptr);
+        d->engine = nullptr;
     }
     interceptorInstances()->remove(d->myInstance.data());
 }
@@ -200,7 +200,7 @@ QQmlFileSelector* QQmlFileSelector::get(QQmlEngine* engine)
     QQmlAbstractUrlInterceptor* current = engine->urlInterceptor();
     if (current && interceptorInstances()->contains(current))
         return interceptorInstances()->value(current);
-    return 0;
+    return nullptr;
 }
 
 /*!

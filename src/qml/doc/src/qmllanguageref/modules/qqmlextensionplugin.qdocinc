@@ -23,7 +23,7 @@ plugins. Library plugins should limit themselves to registering types, as
 any manipulation of the engine's root context may cause conflicts or other
 issues in the library user's code.
 
-\section1 Plugin Example
+\section1 TimeExample QML extension plugin
 
 Suppose there is a new \c TimeModel C++ class that should be made available
 as a new QML type. It provides the current time through \c hour and \c minute
@@ -47,6 +47,8 @@ imported correctly by any QML components that use this plugin. The
 \l{Defining QML Types from C++} article has more information about registering C++
 types into the runtime.
 
+\section1 Project settings for the plugin
+
 Additionally, the project file (\c .pro) defines the project as a plugin library,
 specifies it should be built into the \c imports/TimeExample directory, and registers
 the plugin target name and various other details:
@@ -60,6 +62,8 @@ DESTDIR = imports/TimeExample
 TARGET = qmlqtimeexampleplugin
 SOURCES += qexampleqmlplugin.cpp
 \endcode
+
+\section1 Plugin definition in the qmldir
 
 Finally, a \l{Module Definition qmldir Files}{qmldir file} is required
 in the \c imports/TimeExample directory to describe the plugin and the types that it

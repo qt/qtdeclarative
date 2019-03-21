@@ -56,7 +56,7 @@ class QQuickShaderEffectSourceTextureProvider : public QSGTextureProvider
     Q_OBJECT
 public:
     QQuickShaderEffectSourceTextureProvider()
-        : sourceTexture(0)
+        : sourceTexture(nullptr)
         , mipmapFiltering(QSGTexture::None)
         , filtering(QSGTexture::Nearest)
         , horizontalWrap(QSGTexture::ClampToEdge)
@@ -87,7 +87,7 @@ public:
         : texture(t)
         , provider(p)
     {}
-    void run() Q_DECL_OVERRIDE {
+    void run() override {
         delete texture;
         delete provider;
     }
@@ -102,7 +102,7 @@ public:
     \since 5.0
     \inherits Item
     \ingroup qtquick-effects
-    \brief Renders a \l {Qt Quick} item into a texture and displays it
+    \brief Renders a \l {Qt Quick} item into a texture and displays it.
 
     The ShaderEffectSource type renders \l sourceItem into a texture and
     displays it in the scene. \l sourceItem is drawn into the texture as though
@@ -183,10 +183,10 @@ public:
 
 QQuickShaderEffectSource::QQuickShaderEffectSource(QQuickItem *parent)
     : QQuickItem(parent)
-    , m_provider(0)
-    , m_texture(0)
+    , m_provider(nullptr)
+    , m_texture(nullptr)
     , m_wrapMode(ClampToEdge)
-    , m_sourceItem(0)
+    , m_sourceItem(nullptr)
     , m_textureSize(0, 0)
     , m_format(RGBA)
     , m_samples(0)
@@ -246,7 +246,7 @@ QSGTextureProvider *QQuickShaderEffectSource::textureProvider() const
     const QQuickItemPrivate *d = QQuickItemPrivate::get(this);
     if (!d->window || !d->sceneGraphRenderContext() || QThread::currentThread() != d->sceneGraphRenderContext()->thread()) {
         qWarning("QQuickShaderEffectSource::textureProvider: can only be queried on the rendering thread of an exposed window");
-        return 0;
+        return nullptr;
     }
 
     if (!m_provider) {
@@ -334,8 +334,8 @@ void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
 
     if (m_sourceItem) {
         if (window() == m_sourceItem->window()
-                || (window() == 0 && m_sourceItem->window())
-                || (m_sourceItem->window() == 0 && window())) {
+                || (window() == nullptr && m_sourceItem->window())
+                || (m_sourceItem->window() == nullptr && window())) {
             QQuickItemPrivate *d = QQuickItemPrivate::get(item);
             // 'item' needs a window to get a scene graph node. It usually gets one through its
             // parent, but if the source item is "inline" rather than a reference -- i.e.
@@ -350,7 +350,7 @@ void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
             connect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
         } else {
             qWarning("ShaderEffectSource: sourceItem and ShaderEffectSource must both be children of the same window.");
-            m_sourceItem = 0;
+            m_sourceItem = nullptr;
         }
     }
     update();
@@ -361,7 +361,7 @@ void QQuickShaderEffectSource::sourceItemDestroyed(QObject *item)
 {
     Q_ASSERT(item == m_sourceItem);
     Q_UNUSED(item);
-    m_sourceItem = 0;
+    m_sourceItem = nullptr;
     update();
     emit sourceItemChanged();
 }
@@ -662,8 +662,8 @@ void QQuickShaderEffectSource::releaseResources()
     if (m_texture || m_provider) {
         window()->scheduleRenderJob(new QQuickShaderEffectSourceCleanup(m_texture, m_provider),
                                     QQuickWindow::AfterSynchronizingStage);
-        m_texture = 0;
-        m_provider = 0;
+        m_texture = nullptr;
+        m_provider = nullptr;
     }
 }
 
@@ -684,9 +684,9 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
 {
     if (!m_sourceItem || m_sourceItem->width() <= 0 || m_sourceItem->height() <= 0) {
         if (m_texture)
-            m_texture->setItem(0);
+            m_texture->setItem(nullptr);
         delete oldNode;
-        return 0;
+        return nullptr;
     }
 
     ensureTexture();
@@ -745,7 +745,7 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
     // Don't create the paint node if we're not spanning any area
     if (width() <= 0 || height() <= 0) {
         delete oldNode;
-        return 0;
+        return nullptr;
     }
 
     QSGInternalImageNode *node = static_cast<QSGInternalImageNode *>(oldNode);
@@ -779,8 +779,8 @@ void QQuickShaderEffectSource::invalidateSceneGraph()
         delete m_texture;
     if (m_provider)
         delete m_provider;
-    m_texture = 0;
-    m_provider = 0;
+    m_texture = nullptr;
+    m_provider = nullptr;
 }
 
 void QQuickShaderEffectSource::itemChange(ItemChange change, const ItemChangeData &value)

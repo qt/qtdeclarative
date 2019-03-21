@@ -56,7 +56,7 @@
 QT_BEGIN_NAMESPACE
 
 QQmlContextPrivate::QQmlContextPrivate()
-: data(0), notifyIndex(-1)
+: data(nullptr), notifyIndex(-1)
 {
 }
 
@@ -161,6 +161,7 @@ QQmlContext::QQmlContext(QQmlEngine *e, bool)
 {
     Q_D(QQmlContext);
     d->data = new QQmlContextData(this);
+    ++d->data->refCount;
 
     d->data->engine = e;
 }
@@ -174,8 +175,9 @@ QQmlContext::QQmlContext(QQmlEngine *engine, QObject *parent)
 {
     Q_D(QQmlContext);
     d->data = new QQmlContextData(this);
+    ++d->data->refCount;
 
-    d->data->setParent(engine?QQmlContextData::get(engine->rootContext()):0);
+    d->data->setParent(engine?QQmlContextData::get(engine->rootContext()):nullptr);
 }
 
 /*!
@@ -187,18 +189,20 @@ QQmlContext::QQmlContext(QQmlContext *parentContext, QObject *parent)
 {
     Q_D(QQmlContext);
     d->data = new QQmlContextData(this);
+    ++d->data->refCount;
 
-    d->data->setParent(parentContext?QQmlContextData::get(parentContext):0);
+    d->data->setParent(parentContext?QQmlContextData::get(parentContext):nullptr);
 }
 
 /*!
     \internal
 */
 QQmlContext::QQmlContext(QQmlContextData *data)
-: QObject(*(new QQmlContextPrivate), 0)
+: QObject(*(new QQmlContextPrivate), nullptr)
 {
     Q_D(QQmlContext);
     d->data = data;
+    // don't add a refcount here, as the data owns this context
 }
 
 /*!
@@ -212,7 +216,8 @@ QQmlContext::~QQmlContext()
 {
     Q_D(QQmlContext);
 
-    if (!d->data->isInternal)
+    d->data->publicContext = nullptr;
+    if (!--d->data->refCount)
         d->data->destroy();
 }
 
@@ -245,7 +250,7 @@ QQmlEngine *QQmlContext::engine() const
 QQmlContext *QQmlContext::parentContext() const
 {
     Q_D(const QQmlContext);
-    return d->data->parent?d->data->parent->asQQmlContext():0;
+    return d->data->parent?d->data->parent->asQQmlContext():nullptr;
 }
 
 /*!
@@ -301,16 +306,7 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
         return;
     }
 
-    if (data->engine) {
-        bool ok;
-        QObject *o = QQmlEnginePrivate::get(data->engine)->toQObject(value, &ok);
-        if (ok) {
-            setContextProperty(name, o);
-            return;
-        }
-    }
-
-    QV4::IdentifierHash<int> &properties = data->detachedPropertyNames();
+    QV4::IdentifierHash &properties = data->detachedPropertyNames();
     int idx = properties.value(name);
     if (idx == -1) {
         properties.add(name, data->idValueCount + d->propertyValues.count());
@@ -319,7 +315,7 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
         data->refreshExpressions();
     } else {
         d->propertyValues[idx] = value;
-        QMetaObject::activate(this, d->notifyIndex, idx, 0);
+        QMetaObject::activate(this, d->notifyIndex, idx, nullptr);
     }
 }
 
@@ -330,35 +326,52 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
 */
 void QQmlContext::setContextProperty(const QString &name, QObject *value)
 {
-    Q_D(QQmlContext);
-    if (d->notifyIndex == -1)
-        d->notifyIndex = QMetaObjectPrivate::absoluteSignalCount(&QQmlContext::staticMetaObject);
+    setContextProperty(name, QVariant::fromValue(value));
+}
+
+/*!
+    \since 5.11
+
+    Set a batch of \a properties on this context.
+
+    Setting all properties in one batch avoids unnecessary
+    refreshing  expressions, and is therefore recommended
+    instead of calling \l setContextProperty() for each individual property.
+
+    \sa QQmlContext::setContextProperty()
+*/
+void QQmlContext::setContextProperties(const QVector<PropertyPair> &properties)
+{
+    Q_D(const QQmlContext);
 
     QQmlContextData *data = d->data;
 
-    if (data->isInternal) {
-        qWarning("QQmlContext: Cannot set property on internal context.");
-        return;
-    }
+    QQmlJavaScriptExpression *expressions = data->expressions;
+    QQmlContextData *childContexts = data->childContexts;
 
-    if (!isValid()) {
-        qWarning("QQmlContext: Cannot set property on invalid context.");
-        return;
-    }
+    data->expressions = nullptr;
+    data->childContexts = nullptr;
 
-    QV4::IdentifierHash<int> &properties = data->detachedPropertyNames();
-    int idx = properties.value(name);
+    for (auto property : properties)
+        setContextProperty(property.name, property.value);
 
-    if (idx == -1) {
-        properties.add(name, data->idValueCount + d->propertyValues.count());
-        d->propertyValues.append(QVariant::fromValue(value));
+    data->expressions = expressions;
+    data->childContexts = childContexts;
 
-        data->refreshExpressions();
-    } else {
-        d->propertyValues[idx] = QVariant::fromValue(value);
-        QMetaObject::activate(this, d->notifyIndex, idx, 0);
-    }
+    data->refreshExpressions();
 }
+
+/*!
+    \since 5.11
+
+    \class QQmlContext::PropertyPair
+    \inmodule QtQml
+
+    This struct contains a property name and a property value.
+    It is used as a parameter for the \c setContextProperties function.
+
+    \sa QQmlContext::setContextProperties()
+*/
 
 /*!
   Returns the value of the \a name property for this context
@@ -372,7 +385,7 @@ QVariant QQmlContext::contextProperty(const QString &name) const
 
     QQmlContextData *data = d->data;
 
-    const QV4::IdentifierHash<int> &properties = data->propertyNames();
+    const QV4::IdentifierHash &properties = data->propertyNames();
     if (properties.count())
         idx = properties.value(name);
 
@@ -508,7 +521,7 @@ QObject *QQmlContextPrivate::context_at(QQmlListProperty<QObject> *prop, int ind
     int contextProperty = (int)(quintptr)prop->data;
 
     if (d->propertyValues.at(contextProperty).userType() != qMetaTypeId<QList<QObject*> >()) {
-        return 0;
+        return nullptr;
     } else {
         return ((const QList<QObject*> *)d->propertyValues.at(contextProperty).constData())->at(index);
     }
@@ -521,12 +534,12 @@ QQmlContextData::QQmlContextData()
 }
 
 QQmlContextData::QQmlContextData(QQmlContext *ctxt)
-: parent(0), engine(0), isInternal(false), ownedByParent(false), isJSContext(false),
-  isPragmaLibraryContext(false), unresolvedNames(false), hasEmittedDestruction(false), isRootObjectInCreation(false),
-  publicContext(ctxt), activeVMEData(0), componentObjectIndex(-1),
-  contextObject(0), childContexts(0), nextChild(0), prevChild(0),
-  expressions(0), contextObjects(0), contextGuards(0), idValues(0), idValueCount(0), linkedContext(0),
-  componentAttached(0)
+    : engine(nullptr), isInternal(false), isJSContext(false),
+      isPragmaLibraryContext(false), unresolvedNames(false), hasEmittedDestruction(false), isRootObjectInCreation(false),
+      stronglyReferencedByParent(false), publicContext(ctxt), incubator(nullptr), componentObjectIndex(-1),
+      contextObject(nullptr), nextChild(nullptr), prevChild(nullptr),
+      expressions(nullptr), contextObjects(nullptr), idValues(nullptr), idValueCount(0),
+      componentAttached(nullptr)
 {
 }
 
@@ -543,8 +556,8 @@ void QQmlContextData::emitDestruction()
                 componentAttached = a->next;
                 if (componentAttached) componentAttached->prev = &componentAttached;
 
-                a->next = 0;
-                a->prev = 0;
+                a->next = nullptr;
+                a->prev = nullptr;
 
                 emit a->destruction();
             }
@@ -563,22 +576,32 @@ void QQmlContextData::invalidate()
     emitDestruction();
 
     while (childContexts) {
-        if (childContexts->ownedByParent) {
+        Q_ASSERT(childContexts != this);
+        if (childContexts->stronglyReferencedByParent && !--childContexts->refCount)
             childContexts->destroy();
-        } else {
+        else
             childContexts->invalidate();
-        }
     }
 
     if (prevChild) {
         *prevChild = nextChild;
         if (nextChild) nextChild->prevChild = prevChild;
-        nextChild = 0;
-        prevChild = 0;
+        nextChild = nullptr;
+        prevChild = nullptr;
     }
 
-    engine = 0;
-    parent = 0;
+    importedScripts.clear();
+
+    engine = nullptr;
+    parent = nullptr;
+}
+
+void QQmlContextData::clearContextRecursively()
+{
+    clearContext();
+
+    for (auto ctxIt = childContexts; ctxIt; ctxIt = ctxIt->nextChild)
+        ctxIt->clearContextRecursively();
 }
 
 void QQmlContextData::clearContext()
@@ -589,63 +612,85 @@ void QQmlContextData::clearContext()
     while (expression) {
         QQmlJavaScriptExpression *nextExpression = expression->m_nextExpression;
 
-        expression->m_prevExpression = 0;
-        expression->m_nextExpression = 0;
+        expression->m_prevExpression = nullptr;
+        expression->m_nextExpression = nullptr;
 
-        expression->setContext(0);
+        expression->setContext(nullptr);
 
         expression = nextExpression;
     }
-    expressions = 0;
+    expressions = nullptr;
 }
 
 void QQmlContextData::destroy()
 {
-    if (linkedContext)
-        linkedContext->destroy();
+    Q_ASSERT(refCount == 0);
+    linkedContext = nullptr;
 
-    if (engine) invalidate();
+    // avoid recursion
+    ++refCount;
+    if (engine)
+        invalidate();
 
+    Q_ASSERT(refCount == 1);
     clearContext();
+    Q_ASSERT(refCount == 1);
 
     while (contextObjects) {
         QQmlData *co = contextObjects;
         contextObjects = contextObjects->nextContextObject;
 
-        co->context = 0;
-        co->outerContext = 0;
-        co->nextContextObject = 0;
-        co->prevContextObject = 0;
+        if (co->context == this)
+            co->context = nullptr;
+        co->outerContext = nullptr;
+        co->nextContextObject = nullptr;
+        co->prevContextObject = nullptr;
     }
+    Q_ASSERT(refCount == 1);
 
     QQmlGuardedContextData *contextGuard = contextGuards;
     while (contextGuard) {
         QQmlGuardedContextData *next = contextGuard->m_next;
-        contextGuard->m_next = 0;
-        contextGuard->m_prev = 0;
-        contextGuard->m_contextData = 0;
+        contextGuard->m_next = nullptr;
+        contextGuard->m_prev = nullptr;
+        contextGuard->m_contextData = nullptr;
         contextGuard = next;
     }
-    contextGuards = 0;
+    contextGuards = nullptr;
+    Q_ASSERT(refCount == 1);
 
     delete [] idValues;
+    idValues = nullptr;
 
-    if (isInternal)
+    Q_ASSERT(refCount == 1);
+    if (publicContext) {
+        // the QQmlContext destructor will remove one ref again
+        ++refCount;
         delete publicContext;
+    }
+
+    Q_ASSERT(refCount == 1);
+    --refCount;
+    Q_ASSERT(refCount == 0);
 
     delete this;
 }
 
-void QQmlContextData::setParent(QQmlContextData *p, bool parentTakesOwnership)
+void QQmlContextData::setParent(QQmlContextData *p, bool stronglyReferencedByParent)
 {
+    if (p == parent)
+        return;
     if (p) {
+        Q_ASSERT(!parent);
         parent = p;
+        this->stronglyReferencedByParent = stronglyReferencedByParent;
+        if (stronglyReferencedByParent)
+            ++refCount; // balanced in QQmlContextData::invalidate()
         engine = p->engine;
         nextChild = p->childContexts;
         if (nextChild) nextChild->prevChild = &nextChild;
         prevChild = &p->childContexts;
         p->childContexts = this;
-        ownedByParent = parentTakesOwnership;
     }
 }
 
@@ -658,6 +703,10 @@ void QQmlContextData::refreshExpressionsRecursive(QQmlJavaScriptExpression *expr
 
     if (!w.wasDeleted())
         expression->refresh();
+}
+
+QQmlContextData::~QQmlContextData()
+{
 }
 
 static inline bool expressions_to_run(QQmlContextData *ctxt, bool isGlobalRefresh)
@@ -713,7 +762,7 @@ void QQmlContextData::refreshExpressionsRecursive(bool isGlobal)
 // *structure* (not values) changes.
 void QQmlContextData::refreshExpressions()
 {
-    bool isGlobal = (parent == 0);
+    bool isGlobal = (parent == nullptr);
 
     // For efficiency, we try and minimize the number of guards we have to create
     if (expressions_to_run(this, isGlobal) && childContexts) {
@@ -735,13 +784,17 @@ void QQmlContextData::refreshExpressions()
     }
 }
 
-void QQmlContextData::addObject(QObject *o)
+void QQmlContextData::addObject(QQmlData *data)
 {
-    QQmlData *data = QQmlData::get(o, true);
+    if (data->outerContext) {
+        if (data->nextContextObject)
+            data->nextContextObject->prevContextObject = data->prevContextObject;
+        if (data->prevContextObject)
+            *data->prevContextObject = data->nextContextObject;
+        else if (data->outerContext->contextObjects == data)
+            data->outerContext->contextObjects = data->nextContextObject;
+    }
 
-    Q_ASSERT(data->context == 0);
-
-    data->context = this;
     data->outerContext = this;
 
     data->nextContextObject = contextObjects;
@@ -759,7 +812,7 @@ void QQmlContextData::setIdProperty(int idx, QObject *obj)
 
 QString QQmlContextData::findObjectId(const QObject *obj) const
 {
-    const QV4::IdentifierHash<int> &properties = propertyNames();
+    const QV4::IdentifierHash &properties = propertyNames();
     if (propertyNameCache.isEmpty())
         return QString();
 
@@ -795,24 +848,24 @@ QQmlContextPrivate *QQmlContextData::asQQmlContextPrivate()
 void QQmlContextData::initFromTypeCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit, int subComponentIndex)
 {
     typeCompilationUnit = unit;
-    componentObjectIndex = subComponentIndex == -1 ? typeCompilationUnit->data->indexOfRootObject : subComponentIndex;
+    componentObjectIndex = subComponentIndex == -1 ? /*root object*/0 : subComponentIndex;
     Q_ASSERT(!idValues);
-    idValueCount = typeCompilationUnit->data->objectAt(componentObjectIndex)->nNamedObjectsInComponent;
+    idValueCount = typeCompilationUnit->objectAt(componentObjectIndex)->nNamedObjectsInComponent;
     idValues = new ContextGuard[idValueCount];
 }
 
-const QV4::IdentifierHash<int> &QQmlContextData::propertyNames() const
+const QV4::IdentifierHash &QQmlContextData::propertyNames() const
 {
     if (propertyNameCache.isEmpty()) {
         if (typeCompilationUnit)
             propertyNameCache = typeCompilationUnit->namedObjectsPerComponent(componentObjectIndex);
         else
-            propertyNameCache = QV4::IdentifierHash<int>(QV8Engine::getV4(engine));
+            propertyNameCache = QV4::IdentifierHash(engine->handle());
     }
     return propertyNameCache;
 }
 
-QV4::IdentifierHash<int> &QQmlContextData::detachedPropertyNames()
+QV4::IdentifierHash &QQmlContextData::detachedPropertyNames()
 {
     propertyNames();
     propertyNameCache.detach();
@@ -822,14 +875,14 @@ QV4::IdentifierHash<int> &QQmlContextData::detachedPropertyNames()
 QUrl QQmlContextData::url() const
 {
     if (typeCompilationUnit)
-        return typeCompilationUnit->url();
+        return typeCompilationUnit->finalUrl();
     return baseUrl;
 }
 
 QString QQmlContextData::urlString() const
 {
     if (typeCompilationUnit)
-        return typeCompilationUnit->fileName();
+        return typeCompilationUnit->finalUrlString();
     return baseUrlString;
 }
 

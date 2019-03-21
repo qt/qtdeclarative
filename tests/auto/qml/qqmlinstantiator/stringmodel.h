@@ -60,27 +60,27 @@ public:
         endInsertRows();
     }
 
-    int rowCount(const QModelIndex &) const
+    int rowCount(const QModelIndex &) const override
     {
         return items.count();
     }
 
-    virtual QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE
+    QHash<int, QByteArray> roleNames() const override
     {
         return roles;
     }
 
-    virtual int columnCount(const QModelIndex &) const
+    int columnCount(const QModelIndex &) const override
     {
         return 1;
     }
 
-    virtual bool hasChildren(const QModelIndex &) const Q_DECL_OVERRIDE
+    bool hasChildren(const QModelIndex &) const override
     {
         return rowCount(QModelIndex()) > 0;
     }
 
-    virtual QModelIndex index(int row, int column, const QModelIndex &parent) const
+    QModelIndex index(int row, int column, const QModelIndex &parent) const override
     {
         Q_UNUSED(column);
         if (row>=0 && row<rowCount(parent))
@@ -89,12 +89,12 @@ public:
             return QModelIndex();
     }
 
-    virtual QModelIndex parent(const QModelIndex &) const
+    QModelIndex parent(const QModelIndex &) const override
     {
         return QModelIndex();
     }
 
-    QVariant data (const QModelIndex & index, int role) const
+    QVariant data (const QModelIndex & index, int role) const override
     {
         int row = index.row();
         if ((row<0) || (row>=items.count()))

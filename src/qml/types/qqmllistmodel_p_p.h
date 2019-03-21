@@ -57,6 +57,8 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <qqml.h>
 
+QT_REQUIRE_CONFIG(qml_list_model);
+
 QT_BEGIN_NAMESPACE
 
 
@@ -108,7 +110,7 @@ public:
         return m_uid;
     }
 
-    static void sync(DynamicRoleModelNode *src, DynamicRoleModelNode *target, QHash<int, QQmlListModel *> *targetModelHash);
+    static QVector<int> sync(DynamicRoleModelNode *src, DynamicRoleModelNode *target);
 
 private:
     QQmlListModel *m_owner;
@@ -142,16 +144,6 @@ protected:
 
 private:
     using QQmlOpenMetaObject::setValue;
-    void setValue(const QByteArray &name, const QVariant &val, bool force)
-    {
-        if (force) {
-            QVariant existingValue = value(name);
-            if (existingValue.isValid()) {
-                (*this)[name] = QVariant();
-            }
-        }
-        setValue(name, val);
-    }
 
     void emitDirectNotifies(const int *changedRoles, int roleCount);
 
@@ -164,27 +156,32 @@ namespace QV4 {
 namespace Heap {
 
 struct ModelObject : public QObjectWrapper {
-    void init(QObject *object, QQmlListModel *model, int elementIndex)
+    void init(QObject *object, QQmlListModel *model)
     {
         QObjectWrapper::init(object);
         m_model = model;
-        m_elementIndex = elementIndex;
+        QObjectPrivate *op = QObjectPrivate::get(object);
+        m_nodeModelMetaObject = static_cast<ModelNodeMetaObject *>(op->metaObject);
     }
     void destroy() { QObjectWrapper::destroy(); }
+    int elementIndex() const { return m_nodeModelMetaObject->m_elementIndex; }
     QQmlListModel *m_model;
-    int m_elementIndex;
+    ModelNodeMetaObject *m_nodeModelMetaObject;
 };
 
 }
 
 struct ModelObject : public QObjectWrapper
 {
-    static bool put(Managed *m, String *name, const Value& value);
-    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
-    static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
-
     V4_OBJECT2(ModelObject, QObjectWrapper)
     V4_NEEDS_DESTROY
+
+    ListModel *listModel() const { return d()->m_model->m_listModel; }
+
+protected:
+    static bool virtualPut(Managed *m, PropertyKey id, const Value& value, Value *receiver);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
 };
 
 } // namespace QV4
@@ -216,6 +213,7 @@ public:
             QObject,
             VariantMap,
             DateTime,
+            Function,
 
             MaxDataType
         };
@@ -249,6 +247,22 @@ private:
     QStringHash<Role *> roleHash;
 };
 
+struct StringOrTranslation
+{
+    explicit StringOrTranslation(const QString &s);
+    explicit StringOrTranslation(const QV4::CompiledData::Binding *binding);
+    ~StringOrTranslation();
+    bool isSet() const { return d.flag(); }
+    bool isTranslation() const { return d.isT2(); }
+    void setString(const QString &s);
+    void setTranslation(const QV4::CompiledData::Binding *binding);
+    QString toString(const QQmlListModel *owner) const;
+    QString asString() const;
+private:
+    void clear();
+    QBiPointer<QStringData, const QV4::CompiledData::Binding> d;
+};
+
 /*!
 \internal
 */
@@ -260,7 +274,7 @@ public:
     ListElement(int existingUid);
     ~ListElement();
 
-    static void sync(ListElement *src, ListLayout *srcLayout, ListElement *target, ListLayout *targetLayout, QHash<int, ListModel *> *targetModelHash);
+    static QVector<int> sync(ListElement *src, ListLayout *srcLayout, ListElement *target, ListLayout *targetLayout);
 
     enum
     {
@@ -283,6 +297,8 @@ private:
     int setVariantMapProperty(const ListLayout::Role &role, QV4::Object *o);
     int setVariantMapProperty(const ListLayout::Role &role, QVariantMap *m);
     int setDateTimeProperty(const ListLayout::Role &role, const QDateTime &dt);
+    int setFunctionProperty(const ListLayout::Role &role, const QJSValue &f);
+    int setTranslationProperty(const ListLayout::Role &role, const QV4::CompiledData::Binding *b);
 
     void setStringPropertyFast(const ListLayout::Role &role, const QString &s);
     void setDoublePropertyFast(const ListLayout::Role &role, double n);
@@ -291,16 +307,18 @@ private:
     void setListPropertyFast(const ListLayout::Role &role, ListModel *m);
     void setVariantMapFast(const ListLayout::Role &role, QV4::Object *o);
     void setDateTimePropertyFast(const ListLayout::Role &role, const QDateTime &dt);
+    void setFunctionPropertyFast(const ListLayout::Role &role, const QJSValue &f);
 
     void clearProperty(const ListLayout::Role &role);
 
     QVariant getProperty(const ListLayout::Role &role, const QQmlListModel *owner, QV4::ExecutionEngine *eng);
     ListModel *getListProperty(const ListLayout::Role &role);
-    QString *getStringProperty(const ListLayout::Role &role);
+    StringOrTranslation *getStringProperty(const ListLayout::Role &role);
     QObject *getQObjectProperty(const ListLayout::Role &role);
     QPointer<QObject> *getGuardProperty(const ListLayout::Role &role);
     QVariantMap *getVariantMapProperty(const ListLayout::Role &role);
     QDateTime *getDateTimeProperty(const ListLayout::Role &role);
+    QJSValue *getFunctionProperty(const ListLayout::Role &role);
 
     inline char *getPropertyMemory(const ListLayout::Role &role);
 
@@ -324,7 +342,7 @@ class ListModel
 {
 public:
 
-    ListModel(ListLayout *layout, QQmlListModel *modelCache, int uid);
+    ListModel(ListLayout *layout, QQmlListModel *modelCache);
     ~ListModel() {}
 
     void destroy();
@@ -366,33 +384,30 @@ public:
     int append(QV4::Object *object);
     void insert(int elementIndex, QV4::Object *object);
 
-    void clear();
-    void remove(int index, int count);
+    Q_REQUIRED_RESULT QVector<std::function<void()>> remove(int index, int count);
 
     int appendElement();
     void insertElement(int index);
 
     void move(int from, int to, int n);
 
-    int getUid() const { return m_uid; }
-
-    static void sync(ListModel *src, ListModel *target, QHash<int, ListModel *> *srcModelHash);
+    static bool sync(ListModel *src, ListModel *target);
 
     QObject *getOrCreateModelObject(QQmlListModel *model, int elementIndex);
 
 private:
     QPODVector<ListElement *, 4> elements;
     ListLayout *m_layout;
-    int m_uid;
 
     QQmlListModel *m_modelCache;
 
     struct ElementSync
     {
-        ElementSync() : src(0), target(0) {}
-
-        ListElement *src;
-        ListElement *target;
+        ListElement *src = nullptr;
+        ListElement *target = nullptr;
+        int srcIndex = -1;
+        int targetIndex = -1;
+        QVector<int> changedRoles;
     };
 
     void newElement(int index);
@@ -401,6 +416,7 @@ private:
 
     friend class ListElement;
     friend class QQmlListModelWorkerAgent;
+    friend class QQmlListModelParser;
 };
 
 QT_END_NAMESPACE

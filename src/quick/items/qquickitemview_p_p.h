@@ -56,6 +56,7 @@
 QT_REQUIRE_CONFIG(quick_itemview);
 
 #include "qquickitemview_p.h"
+#include "qquickitemviewfxitem_p_p.h"
 #include "qquickitemviewtransition_p.h"
 #include "qquickflickable_p_p.h"
 #include <QtQml/private/qqmlobjectmodel_p.h>
@@ -65,47 +66,13 @@ QT_REQUIRE_CONFIG(quick_itemview);
 
 QT_BEGIN_NAMESPACE
 
-
-class Q_AUTOTEST_EXPORT FxViewItem
+class Q_AUTOTEST_EXPORT FxViewItem : public QQuickItemViewFxItem
 {
 public:
     FxViewItem(QQuickItem *, QQuickItemView *, bool own, QQuickItemViewAttached *attached);
-    virtual ~FxViewItem();
 
-    qreal itemX() const;
-    qreal itemY() const;
-    inline qreal itemWidth() const { return item ? item->width() : 0; }
-    inline qreal itemHeight() const { return item ? item->height() : 0; }
-
-    void moveTo(const QPointF &pos, bool immediate);
-    void setVisible(bool visible);
-    void trackGeometry(bool track);
-
-    QQuickItemViewTransitioner::TransitionType scheduledTransitionType() const;
-    bool transitionScheduledOrRunning() const;
-    bool transitionRunning() const;
-    bool isPendingRemoval() const;
-
-    void transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget);
-    bool prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds);
-    void startTransition(QQuickItemViewTransitioner *transitioner);
-
-    // these are positions and sizes along the current direction of scrolling/flicking
-    virtual qreal position() const = 0;
-    virtual qreal endPosition() const = 0;
-    virtual qreal size() const = 0;
-    virtual qreal sectionSize() const = 0;
-
-    virtual bool contains(qreal x, qreal y) const = 0;
-
-    QPointer<QQuickItem> item;
     QQuickItemView *view;
-    QQuickItemViewTransitionableItem *transitionableItem;
     QQuickItemViewAttached *attached;
-    int index;
-    bool ownItem;
-    bool releaseAfterTransition;
-    bool trackGeom;
 };
 
 
@@ -201,12 +168,12 @@ public:
 
     void regenerate(bool orientationChanged=false);
     void layout();
-    virtual void animationFinished(QAbstractAnimationJob *) override;
+    void animationFinished(QAbstractAnimationJob *) override;
     void refill();
     void refill(qreal from, qreal to);
     void mirrorChange() override;
 
-    FxViewItem *createItem(int modelIndex, bool asynchronous = false);
+    FxViewItem *createItem(int modelIndex,QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested);
     virtual bool releaseItem(FxViewItem *item);
 
     QQuickItem *createHighlightItem() const;
@@ -267,6 +234,15 @@ public:
         Q_Q(QQuickItemView);
         forceLayout = true;
         q->polish();
+    }
+
+    void releaseVisibleItems() {
+        // make a copy and clear the visibleItems first to avoid destroyed
+        // items being accessed during the loop (QTBUG-61294)
+        const QList<FxViewItem *> oldVisible = visibleItems;
+        visibleItems.clear();
+        for (FxViewItem *item : oldVisible)
+            releaseItem(item);
     }
 
     QPointer<QQmlInstanceModel> model;
@@ -354,6 +330,7 @@ protected:
     virtual void createHighlight() = 0;
     virtual void updateHighlight() = 0;
     virtual void resetHighlightPosition() = 0;
+    virtual bool movingFromHighlight() { return false; }
 
     virtual void setPosition(qreal pos) = 0;
     virtual void fixupPosition() = 0;

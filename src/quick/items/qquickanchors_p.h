@@ -86,8 +86,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnchors : public QObject
     Q_PROPERTY(bool alignWhenCentered READ alignWhenCentered WRITE setAlignWhenCentered NOTIFY centerAlignedChanged)
 
 public:
-    QQuickAnchors(QQuickItem *item, QObject *parent=0);
-    virtual ~QQuickAnchors();
+    QQuickAnchors(QQuickItem *item, QObject *parent=nullptr);
+    ~QQuickAnchors() override;
 
     enum Anchor
 #if defined(Q_CC_CLANG) || !defined(Q_CC_GNU) // meaning: clang and msvc, but NOT gcc proper (because, you know, Q_CC_CLANG implies Q_CC_GNU)
@@ -108,6 +108,7 @@ public:
         Vertical_Mask = TopAnchor | BottomAnchor | VCenterAnchor | BaselineAnchor
     };
     Q_DECLARE_FLAGS(Anchors, Anchor)
+    Q_FLAG(Anchors)
 
     QQuickAnchorLine left() const;
     void setLeft(const QQuickAnchorLine &edge);
@@ -174,6 +175,7 @@ public:
     void resetCenterIn();
 
     Anchors usedAnchors() const;
+    Qt::Orientations activeDirections() const;
 
     bool mirrored();
 

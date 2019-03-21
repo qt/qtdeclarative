@@ -52,7 +52,7 @@
 //
 
 #include "qqmllist.h"
-#include "qqmlpropertycache_p.h"
+#include "qqmlmetaobject_p.h"
 
 QT_BEGIN_NAMESPACE
 

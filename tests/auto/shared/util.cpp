@@ -28,11 +28,6 @@
 
 #include "util.h"
 
-#include <QtQml/QQmlComponent>
-#include <QtQml/QQmlError>
-#include <QtQml/QQmlContext>
-#include <QtQml/QQmlEngine>
-#include <QtCore/QTextStream>
 #include <QtCore/QDebug>
 #include <QtCore/QMutexLocker>
 
@@ -70,31 +65,6 @@ QString QQmlDataTest::testFile(const QString &fileName) const
     result += QLatin1Char('/');
     result += fileName;
     return result;
-}
-
-QByteArray QQmlDataTest::msgComponentError(const QQmlComponent &c,
-                                                   const QQmlEngine *engine /* = 0 */)
-{
-    QString result;
-    const QList<QQmlError> errors = c.errors();
-    QTextStream str(&result);
-    str << "Component '" << c.url().toString() << "' has " << errors.size()
-        << " errors: '";
-    for (int i = 0; i < errors.size(); ++i) {
-        if (i)
-            str << ", '";
-        str << errors.at(i).toString() << '\'';
-
-    }
-    if (!engine)
-        if (QQmlContext *context = c.creationContext())
-            engine = context->engine();
-    if (engine) {
-        str << " Import paths: (" << engine->importPathList().join(QStringLiteral(", "))
-            << ") Plugin paths: (" << engine->pluginPathList().join(QStringLiteral(", "))
-            << ')';
-    }
-    return result.toLocal8Bit();
 }
 
 Q_GLOBAL_STATIC(QMutex, qQmlTestMessageHandlerMutex)

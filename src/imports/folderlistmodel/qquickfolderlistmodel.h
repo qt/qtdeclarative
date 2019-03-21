@@ -75,11 +75,13 @@ class QQuickFolderListModel : public QAbstractListModel, public QQmlParserStatus
     Q_PROPERTY(bool showOnlyReadable READ showOnlyReadable WRITE setShowOnlyReadable)
     Q_PROPERTY(bool caseSensitive READ caseSensitive WRITE setCaseSensitive REVISION 2)
     Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged REVISION 11)
+    Q_PROPERTY(bool sortCaseSensitive READ sortCaseSensitive WRITE setSortCaseSensitive REVISION 12)
 //![class props]
 
 //![abslistmodel]
 public:
-    QQuickFolderListModel(QObject *parent = 0);
+    QQuickFolderListModel(QObject *parent = nullptr);
     ~QQuickFolderListModel();
 
     enum Roles {
@@ -137,6 +139,12 @@ public:
     void setShowOnlyReadable(bool on);
     bool caseSensitive() const;
     void setCaseSensitive(bool on);
+
+    enum Status { Null, Ready, Loading };
+    Q_ENUM(Status)
+    Status status() const;
+    bool sortCaseSensitive() const;
+    void setSortCaseSensitive(bool on);
 //![prop funcs]
 
     Q_INVOKABLE bool isFolder(int index) const;
@@ -155,6 +163,7 @@ Q_SIGNALS:
     void folderChanged();
     void rowCountChanged() const;
     Q_REVISION(1) void countChanged() const;
+    Q_REVISION(11) void statusChanged();
 //![notifier]
 
 //![class end]
@@ -168,6 +177,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_directoryChanged(const QString &directory, const QList<FileProperty> &list))
     Q_PRIVATE_SLOT(d_func(), void _q_directoryUpdated(const QString &directory, const QList<FileProperty> &list, int fromIndex, int toIndex))
     Q_PRIVATE_SLOT(d_func(), void _q_sortFinished(const QList<FileProperty> &list))
+    Q_PRIVATE_SLOT(d_func(), void _q_statusChanged(QQuickFolderListModel::Status s))
 };
 //![class end]
 

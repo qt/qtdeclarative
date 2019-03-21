@@ -67,26 +67,26 @@ public:
                                   QQuickItem *parent = 0);
 
     ~QQuickGridLayoutBase();
-    void componentComplete() Q_DECL_OVERRIDE;
-    void invalidate(QQuickItem *childItem = 0) Q_DECL_OVERRIDE;
+    void componentComplete() override;
+    void invalidate(QQuickItem *childItem = 0) override;
     Qt::Orientation orientation() const;
     void setOrientation(Qt::Orientation orientation);
-    QSizeF sizeHint(Qt::SizeHint whichSizeHint) const Q_DECL_OVERRIDE;
+    QSizeF sizeHint(Qt::SizeHint whichSizeHint) const override;
     Qt::LayoutDirection layoutDirection() const;
     void setLayoutDirection(Qt::LayoutDirection dir);
     Qt::LayoutDirection effectiveLayoutDirection() const;
-    void setAlignment(QQuickItem *item, Qt::Alignment align) Q_DECL_OVERRIDE;
+    void setAlignment(QQuickItem *item, Qt::Alignment align) override;
 
     /* QQuickItemChangeListener */
-    void itemDestroyed(QQuickItem *item) Q_DECL_OVERRIDE;
-    void itemVisibilityChanged(QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemDestroyed(QQuickItem *item) override;
+    void itemVisibilityChanged(QQuickItem *item) override;
 
 protected:
-    void updateLayoutItems() Q_DECL_OVERRIDE;
-    QQuickItem *itemAt(int index) const Q_DECL_OVERRIDE;
-    int itemCount() const Q_DECL_OVERRIDE;
+    void updateLayoutItems() override;
+    QQuickItem *itemAt(int index) const override;
+    int itemCount() const override;
 
-    void rearrange(const QSizeF &size) Q_DECL_OVERRIDE;
+    void rearrange(const QSizeF &size) override;
     virtual void insertLayoutItems() {}
 
 signals:
@@ -109,7 +109,7 @@ public:
                                     , m_layoutDirection(Qt::LeftToRight)
                                     {}
 
-    void mirrorChange() Q_DECL_OVERRIDE
+    void mirrorChange() override
     {
         Q_Q(QQuickGridLayoutBase);
         q->invalidate();

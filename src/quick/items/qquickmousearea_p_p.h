@@ -61,6 +61,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickMouseEvent;
 class QQuickMouseArea;
+class QQuickPointerMask;
 class QQuickMouseAreaPrivate : public QQuickItemPrivate
 {
     Q_DECLARE_PUBLIC(QQuickMouseArea)
@@ -99,6 +100,7 @@ public:
 #if QT_CONFIG(draganddrop)
     QQuickDrag *drag;
 #endif
+    QPointer<QQuickPointerMask> mask;
     QPointF startScene;
     QPointF targetStartPos;
     QPointF lastPos;
@@ -112,6 +114,7 @@ public:
 #endif
     QQuickMouseEvent quickMouseEvent;
     QQuickWheelEvent quickWheelEvent;
+    Qt::MouseEventFlags lastFlags;
 };
 
 QT_END_NAMESPACE

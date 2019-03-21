@@ -60,9 +60,9 @@ class Q_QML_EXPORT QQmlExpression : public QObject
     Q_OBJECT
 public:
     QQmlExpression();
-    QQmlExpression(QQmlContext *, QObject *, const QString &, QObject * = Q_NULLPTR);
-    explicit QQmlExpression(const QQmlScriptString &, QQmlContext * = Q_NULLPTR, QObject * = Q_NULLPTR, QObject * = Q_NULLPTR);
-    virtual ~QQmlExpression();
+    QQmlExpression(QQmlContext *, QObject *, const QString &, QObject * = nullptr);
+    explicit QQmlExpression(const QQmlScriptString &, QQmlContext * = nullptr, QObject * = nullptr, QObject * = nullptr);
+    ~QQmlExpression() override;
 
     QQmlEngine *engine() const;
     QQmlContext *context() const;
@@ -84,7 +84,7 @@ public:
     void clearError();
     QQmlError error() const;
 
-    QVariant evaluate(bool *valueIsUndefined = Q_NULLPTR);
+    QVariant evaluate(bool *valueIsUndefined = nullptr);
 
 Q_SIGNALS:
     void valueChanged();

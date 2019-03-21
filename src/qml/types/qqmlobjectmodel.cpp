@@ -72,7 +72,7 @@ public:
         int ref;
     };
 
-    QQmlObjectModelPrivate() : QObjectPrivate() {}
+    QQmlObjectModelPrivate() : QObjectPrivate(), moveId(0) {}
 
     static void children_append(QQmlListProperty<QObject> *prop, QObject *item) {
         int index = static_cast<QQmlObjectModelPrivate *>(prop->data)->children.count();
@@ -129,7 +129,7 @@ public:
         }
 
         QQmlChangeSet changeSet;
-        changeSet.move(from, to, n, -1);
+        changeSet.move(from, to, n, ++moveId);
         emit q->modelUpdated(changeSet, false);
         emit q->childrenChanged();
     }
@@ -166,7 +166,7 @@ public:
         return -1;
     }
 
-
+    uint moveId;
     QList<Item> children;
 };
 
@@ -176,7 +176,7 @@ public:
     \instantiates QQmlObjectModel
     \inqmlmodule QtQml.Models
     \ingroup qtquick-models
-    \brief Defines a set of items to be used as a model
+    \brief Defines a set of items to be used as a model.
 
     An ObjectModel contains the visual items to be used in a view.
     When an ObjectModel is used in a view, the view does not require
@@ -206,26 +206,9 @@ public:
     }
     \endcode
 
-    \image visualitemmodel.png
+    \image objectmodel.png
 
     \sa {Qt Quick Examples - Views}
-*/
-/*!
-    \qmltype VisualItemModel
-    \instantiates QQmlObjectModel
-    \inqmlmodule QtQuick
-    \brief Defines a set of objects to be used as a model
-
-    The VisualItemModel type contains the objects to be used
-    as a model.
-
-    This element is now primarily available as ObjectModel in the QtQml.Models module.
-    VisualItemModel continues to be provided, with the same implementation, in \c QtQuick for
-    compatibility reasons.
-
-    For full details about the type, see the \l ObjectModel documentation.
-
-    \sa {QtQml.Models::ObjectModel}
 */
 
 QQmlObjectModel::QQmlObjectModel(QObject *parent)
@@ -267,7 +250,7 @@ bool QQmlObjectModel::isValid() const
     return true;
 }
 
-QObject *QQmlObjectModel::object(int index, bool)
+QObject *QQmlObjectModel::object(int index, QQmlIncubator::IncubationMode)
 {
     Q_D(QQmlObjectModel);
     QQmlObjectModelPrivate::Item &item = d->children[index];
@@ -287,7 +270,7 @@ QQmlInstanceModel::ReleaseFlags QQmlObjectModel::release(QObject *item)
         if (!d->children[idx].deref())
             return QQmlInstanceModel::Referenced;
     }
-    return 0;
+    return nullptr;
 }
 
 QString QQmlObjectModel::stringValue(int index, const QString &name)
@@ -296,6 +279,11 @@ QString QQmlObjectModel::stringValue(int index, const QString &name)
     if (index < 0 || index >= d->children.count())
         return QString();
     return QQmlEngine::contextForObject(d->children.at(index).item)->contextProperty(name).toString();
+}
+
+QQmlIncubator::Status QQmlObjectModel::incubationStatus(int)
+{
+    return QQmlIncubator::Ready;
 }
 
 int QQmlObjectModel::indexOf(QObject *item, QObject *) const
@@ -332,7 +320,7 @@ QObject *QQmlObjectModel::get(int index) const
 {
     Q_D(const QQmlObjectModel);
     if (index < 0 || index >= d->children.count())
-        return 0;
+        return nullptr;
     return d->children.at(index).item;
 }
 

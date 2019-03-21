@@ -18,6 +18,8 @@ Flickable {
         height: 300
 
         color: "yellow"
+        objectName: "yellowRect"
+
         Flickable {
             id: inner
             objectName: "innerFlickable"
@@ -30,6 +32,7 @@ Flickable {
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: 100
+                objectName: "blueRect"
                 color: "blue"
             }
             MouseArea {

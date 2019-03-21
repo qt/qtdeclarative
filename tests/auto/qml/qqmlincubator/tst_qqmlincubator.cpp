@@ -39,6 +39,7 @@
 #include <QQmlComponent>
 #include <QQmlIncubator>
 #include "../../shared/util.h"
+#include <private/qjsvalue_p.h>
 #include <private/qqmlincubator_p.h>
 #include <private/qqmlobjectcreator_p.h>
 
@@ -68,6 +69,7 @@ private slots:
     void chainedAsynchronousClear();
     void selfDelete();
     void contextDelete();
+    void garbageCollection();
 
 private:
     QQmlIncubationController controller;
@@ -145,15 +147,15 @@ void tst_qqmlincubator::objectDeleted()
         QCOMPARE(incubator.status(), QQmlIncubator::Loading);
         QVERIFY(!SelfRegisteringType::me());
 
-        while (SelfRegisteringOuterType::me() == 0 && incubator.isLoading()) {
+        while (SelfRegisteringOuterType::me() == nullptr && incubator.isLoading()) {
             bool b = false;
             controller.incubateWhile(&b);
         }
 
-        QVERIFY(SelfRegisteringOuterType::me() != 0);
+        QVERIFY(SelfRegisteringOuterType::me() != nullptr);
         QVERIFY(incubator.isLoading());
 
-        while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
+        while (SelfRegisteringType::me() == nullptr && incubator.isLoading()) {
             bool b = false;
             controller.incubateWhile(&b);
         }
@@ -201,13 +203,13 @@ void tst_qqmlincubator::clear()
     QQmlIncubator incubator;
     component.create(incubator);
 
-    while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
+    while (SelfRegisteringType::me() == nullptr && incubator.isLoading()) {
         bool b = false;
         controller.incubateWhile(&b);
     }
 
     QVERIFY(incubator.isLoading());
-    QVERIFY(SelfRegisteringType::me() != 0);
+    QVERIFY(SelfRegisteringType::me() != nullptr);
     QPointer<SelfRegisteringType> srt = SelfRegisteringType::me();
 
     incubator.clear();
@@ -226,7 +228,7 @@ void tst_qqmlincubator::clear()
     }
 
     QVERIFY(incubator.isReady());
-    QVERIFY(incubator.object() != 0);
+    QVERIFY(incubator.object() != nullptr);
     QPointer<QObject> obj = incubator.object();
 
     incubator.clear();
@@ -299,7 +301,7 @@ void tst_qqmlincubator::forceCompletion()
     incubator.forceCompletion();
 
     QVERIFY(incubator.isReady());
-    QVERIFY(incubator.object() != 0);
+    QVERIFY(incubator.object() != nullptr);
     QCOMPARE(incubator.object()->property("testValue").toInt(), 3499);
 
     delete incubator.object();
@@ -314,18 +316,18 @@ void tst_qqmlincubator::forceCompletion()
     component.create(incubator);
     QVERIFY(incubator.isLoading());
 
-    while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
+    while (SelfRegisteringType::me() == nullptr && incubator.isLoading()) {
         bool b = false;
         controller.incubateWhile(&b);
     }
 
-    QVERIFY(SelfRegisteringType::me() != 0);
+    QVERIFY(SelfRegisteringType::me() != nullptr);
     QVERIFY(incubator.isLoading());
 
     incubator.forceCompletion();
 
     QVERIFY(incubator.isReady());
-    QVERIFY(incubator.object() != 0);
+    QVERIFY(incubator.object() != nullptr);
     QCOMPARE(incubator.object()->property("testValue").toInt(), 3499);
 
     delete incubator.object();
@@ -341,13 +343,13 @@ void tst_qqmlincubator::forceCompletion()
     incubator.forceCompletion();
 
     QVERIFY(incubator.isReady());
-    QVERIFY(incubator.object() != 0);
+    QVERIFY(incubator.object() != nullptr);
     QCOMPARE(incubator.object()->property("testValue").toInt(), 3499);
 
     incubator.forceCompletion();
 
     QVERIFY(incubator.isReady());
-    QVERIFY(incubator.object() != 0);
+    QVERIFY(incubator.object() != nullptr);
     QCOMPARE(incubator.object()->property("testValue").toInt(), 3499);
 
     delete incubator.object();
@@ -410,19 +412,19 @@ void tst_qqmlincubator::clearDuringCompletion()
     QCOMPARE(incubator.status(), QQmlIncubator::Loading);
     QVERIFY(!CompletionRegisteringType::me());
 
-    while (CompletionRegisteringType::me() == 0 && incubator.isLoading()) {
+    while (CompletionRegisteringType::me() == nullptr && incubator.isLoading()) {
         bool b = false;
         controller.incubateWhile(&b);
     }
 
-    QVERIFY(CompletionRegisteringType::me() != 0);
-    QVERIFY(SelfRegisteringType::me() != 0);
+    QVERIFY(CompletionRegisteringType::me() != nullptr);
+    QVERIFY(SelfRegisteringType::me() != nullptr);
     QVERIFY(incubator.isLoading());
 
     QPointer<QObject> srt = SelfRegisteringType::me();
 
     incubator.clear();
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
     QVERIFY(incubator.isNull());
     QVERIFY(srt.isNull());
@@ -436,7 +438,7 @@ void tst_qqmlincubator::objectDeletionAfterInit()
     struct MyIncubator : public QQmlIncubator
     {
         MyIncubator(QQmlIncubator::IncubationMode mode)
-        : QQmlIncubator(mode), obj(0) {}
+        : QQmlIncubator(mode), obj(nullptr) {}
 
         virtual void setInitialState(QObject *o) {
             obj = o;
@@ -455,12 +457,12 @@ void tst_qqmlincubator::objectDeletionAfterInit()
     }
 
     QVERIFY(incubator.isLoading());
-    QVERIFY(SelfRegisteringType::me() != 0);
+    QVERIFY(SelfRegisteringType::me() != nullptr);
 
     delete incubator.obj;
 
     incubator.clear();
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
     QVERIFY(incubator.isNull());
 }
@@ -592,11 +594,11 @@ void tst_qqmlincubator::asynchronousIfNested()
     QVERIFY(component.isReady());
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("a").toInt(), 10);
 
     QQmlIncubator incubator(QQmlIncubator::AsynchronousIfNested);
-    component.create(incubator, 0, qmlContext(object));
+    component.create(incubator, nullptr, qmlContext(object));
 
     QVERIFY(incubator.isReady());
     QVERIFY(incubator.object());
@@ -618,16 +620,16 @@ void tst_qqmlincubator::asynchronousIfNested()
 
     QVERIFY(incubator.isLoading());
     QVERIFY(!SelfRegisteringType::me());
-    while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
+    while (SelfRegisteringType::me() == nullptr && incubator.isLoading()) {
         bool b = false;
         controller.incubateWhile(&b);
     }
 
-    QVERIFY(SelfRegisteringType::me() != 0);
+    QVERIFY(SelfRegisteringType::me() != nullptr);
     QVERIFY(incubator.isLoading());
 
     QQmlIncubator nested(QQmlIncubator::AsynchronousIfNested);
-    component.create(nested, 0, qmlContext(SelfRegisteringType::me()));
+    component.create(nested, nullptr, qmlContext(SelfRegisteringType::me()));
     QVERIFY(nested.isLoading());
 
     while (nested.isLoading()) {
@@ -669,7 +671,7 @@ void tst_qqmlincubator::asynchronousIfNested()
             if (!c.isReady()) return;
 
             QQmlIncubator incubator(QQmlIncubator::AsynchronousIfNested);
-            c.create(incubator, 0, qmlContext(o));
+            c.create(incubator, nullptr, qmlContext(o));
 
             if (!incubator.isReady()) return;
 
@@ -738,12 +740,12 @@ void tst_qqmlincubator::chainedAsynchronousIfNested()
     QVERIFY(incubator.isLoading());
     QVERIFY(!SelfRegisteringType::me());
 
-    while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
+    while (SelfRegisteringType::me() == nullptr && incubator.isLoading()) {
         bool b = false;
         controller.incubateWhile(&b);
     }
 
-    QVERIFY(SelfRegisteringType::me() != 0);
+    QVERIFY(SelfRegisteringType::me() != nullptr);
     QVERIFY(incubator.isLoading());
 
     struct MyIncubator : public QQmlIncubator {
@@ -753,7 +755,7 @@ void tst_qqmlincubator::chainedAsynchronousIfNested()
     protected:
         virtual void statusChanged(Status s) {
             if (s == Ready && next)
-                component->create(*next, 0, ctxt);
+                component->create(*next, nullptr, ctxt);
         }
 
     private:
@@ -762,10 +764,10 @@ void tst_qqmlincubator::chainedAsynchronousIfNested()
         QQmlContext *ctxt;
     };
 
-    MyIncubator incubator2(0, &component, 0);
+    MyIncubator incubator2(nullptr, &component, nullptr);
     MyIncubator incubator1(&incubator2, &component, qmlContext(SelfRegisteringType::me()));
 
-    component.create(incubator1, 0, qmlContext(SelfRegisteringType::me()));
+    component.create(incubator1, nullptr, qmlContext(SelfRegisteringType::me()));
 
     QVERIFY(incubator.isLoading());
     QVERIFY(incubator1.isLoading());
@@ -824,7 +826,7 @@ void tst_qqmlincubator::chainedAsynchronousIfNestedOnCompleted()
     protected:
         virtual void statusChanged(Status s) {
             if (s == Ready && next) {
-                component->create(*next, 0, ctxt);
+                component->create(*next, nullptr, ctxt);
             }
         }
 
@@ -842,7 +844,7 @@ void tst_qqmlincubator::chainedAsynchronousIfNestedOnCompleted()
         QQmlContext *ctxt;
         static void callback(CompletionCallbackType *, void *data) {
             CallbackData *d = (CallbackData *)data;
-            d->component->create(*d->incubator, 0, d->ctxt);
+            d->component->create(*d->incubator, nullptr, d->ctxt);
         }
     };
 
@@ -852,15 +854,15 @@ void tst_qqmlincubator::chainedAsynchronousIfNestedOnCompleted()
     QVERIFY(incubator.isLoading());
     QVERIFY(!SelfRegisteringType::me());
 
-    while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
+    while (SelfRegisteringType::me() == nullptr && incubator.isLoading()) {
         bool b = false;
         controller.incubateWhile(&b);
     }
 
-    QVERIFY(SelfRegisteringType::me() != 0);
+    QVERIFY(SelfRegisteringType::me() != nullptr);
     QVERIFY(incubator.isLoading());
 
-    MyIncubator incubator3(0, &c1, qmlContext(SelfRegisteringType::me()));
+    MyIncubator incubator3(nullptr, &c1, qmlContext(SelfRegisteringType::me()));
     MyIncubator incubator2(&incubator3, &c1, qmlContext(SelfRegisteringType::me()));
     MyIncubator incubator1(&incubator2, &c1, qmlContext(SelfRegisteringType::me()));
 
@@ -952,7 +954,7 @@ void tst_qqmlincubator::chainedAsynchronousClear()
     protected:
         virtual void statusChanged(Status s) {
             if (s == Ready && next) {
-                component->create(*next, 0, ctxt);
+                component->create(*next, nullptr, ctxt);
             }
         }
 
@@ -970,7 +972,7 @@ void tst_qqmlincubator::chainedAsynchronousClear()
         QQmlContext *ctxt;
         static void callback(CompletionCallbackType *, void *data) {
             CallbackData *d = (CallbackData *)data;
-            d->component->create(*d->incubator, 0, d->ctxt);
+            d->component->create(*d->incubator, nullptr, d->ctxt);
         }
     };
 
@@ -980,15 +982,15 @@ void tst_qqmlincubator::chainedAsynchronousClear()
     QVERIFY(incubator.isLoading());
     QVERIFY(!SelfRegisteringType::me());
 
-    while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
+    while (SelfRegisteringType::me() == nullptr && incubator.isLoading()) {
         bool b = false;
         controller.incubateWhile(&b);
     }
 
-    QVERIFY(SelfRegisteringType::me() != 0);
+    QVERIFY(SelfRegisteringType::me() != nullptr);
     QVERIFY(incubator.isLoading());
 
-    MyIncubator incubator3(0, &c1, qmlContext(SelfRegisteringType::me()));
+    MyIncubator incubator3(nullptr, &c1, qmlContext(SelfRegisteringType::me()));
     MyIncubator incubator2(&incubator3, &c1, qmlContext(SelfRegisteringType::me()));
     MyIncubator incubator1(&incubator2, &c1, qmlContext(SelfRegisteringType::me()));
 
@@ -1103,12 +1105,12 @@ void tst_qqmlincubator::selfDelete()
     QCOMPARE(incubator->QQmlIncubator::status(), QQmlIncubator::Loading);
     QVERIFY(!SelfRegisteringType::me());
 
-    while (SelfRegisteringType::me() == 0 && incubator->isLoading()) {
+    while (SelfRegisteringType::me() == nullptr && incubator->isLoading()) {
         bool b = false;
         controller.incubateWhile(&b);
     }
 
-    QVERIFY(SelfRegisteringType::me() != 0);
+    QVERIFY(SelfRegisteringType::me() != nullptr);
     QVERIFY(incubator->isLoading());
 
     // We have to cheat and manually remove it from the creator->allCreatedObjects
@@ -1142,6 +1144,34 @@ void tst_qqmlincubator::contextDelete()
         bool b = false;
         controller.incubateWhile(&b);
     }
+}
+
+// QTBUG-53111
+void tst_qqmlincubator::garbageCollection()
+{
+    QQmlComponent component(&engine, testFileUrl("garbageCollection.qml"));
+    QScopedPointer<QObject> obj(component.create());
+
+    engine.collectGarbage();
+
+    bool b = true;
+    controller.incubateWhile(&b);
+
+    // verify incubation completed (the incubator was not prematurely collected)
+    QVariant incubatorVariant;
+    QMetaObject::invokeMethod(obj.data(), "getAndClearIncubator", Q_RETURN_ARG(QVariant, incubatorVariant));
+    QJSValue strongRef = incubatorVariant.value<QJSValue>();
+    QVERIFY(!strongRef.isNull() && !strongRef.isUndefined());
+
+    // turn the last strong reference to the incubator into a weak one and collect
+    QV4::WeakValue weakIncubatorRef;
+    weakIncubatorRef.set(QQmlEnginePrivate::getV4Engine(&engine), *QJSValuePrivate::getValue(&strongRef));
+    strongRef = QJSValue();
+    incubatorVariant.clear();
+
+    // verify incubator is correctly collected now that incubation is complete and all references are gone
+    engine.collectGarbage();
+    QVERIFY(weakIncubatorRef.isNullOrUndefined());
 }
 
 QTEST_MAIN(tst_qqmlincubator)

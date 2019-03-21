@@ -59,19 +59,18 @@ void QQmlProfiler::startProfiling(quint64 features)
 void QQmlProfiler::stopProfiling()
 {
     featuresEnabled = false;
-    reportData(true);
+    reportData();
     m_locations.clear();
 }
 
-void QQmlProfiler::reportData(bool trackLocations)
+void QQmlProfiler::reportData()
 {
     LocationHash resolved;
     resolved.reserve(m_locations.size());
     for (auto it = m_locations.begin(), end = m_locations.end(); it != end; ++it) {
-        if (!trackLocations || !it->sent) {
+        if (!it->sent) {
             resolved.insert(it.key(), it.value());
-            if (trackLocations)
-                it->sent = true;
+            it->sent = true;
         }
     }
 

@@ -57,7 +57,7 @@ public:
         transform = t;
         update();
     }
-    void applyTo(QMatrix4x4 *matrix) const Q_DECL_OVERRIDE {
+    void applyTo(QMatrix4x4 *matrix) const override {
         *matrix *= transform;
     }
 private:
@@ -68,9 +68,9 @@ class QQuickFlipablePrivate : public QQuickItemPrivate
 {
     Q_DECLARE_PUBLIC(QQuickFlipable)
 public:
-    QQuickFlipablePrivate() : current(QQuickFlipable::Front), front(0), back(0), sideDirty(false) {}
+    QQuickFlipablePrivate() : current(QQuickFlipable::Front), front(nullptr), back(nullptr), sideDirty(false) {}
 
-    void transformChanged() Q_DECL_OVERRIDE;
+    void transformChanged() override;
     void updateSide();
     void setBackTransform();
 
@@ -91,7 +91,7 @@ public:
     \inherits Item
     \ingroup qtquick-input
     \ingroup qtquick-containers
-    \brief Provides a surface that can be flipped
+    \brief Provides a surface that can be flipped.
 
     Flipable is an item that can be visibly "flipped" between its front and
     back sides, like a card. It may used together with \l Rotation, \l State
@@ -178,7 +178,7 @@ void QQuickFlipable::setBack(QQuickItem *back)
         qmlWarning(this) << tr("back is a write-once property");
         return;
     }
-    if (back == 0)
+    if (back == nullptr)
         return;
     d->back = back;
     d->back->setParentItem(this);

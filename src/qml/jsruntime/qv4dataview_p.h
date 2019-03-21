@@ -64,12 +64,12 @@ struct DataViewCtor : FunctionObject {
 };
 
 #define DataViewMembers(class, Member) \
-    Member(class, Pointer, ArrayBuffer *, buffer) \
+    Member(class, Pointer, SharedArrayBuffer *, buffer) \
     Member(class, NoMark, uint, byteLength) \
     Member(class, NoMark, uint, byteOffset)
 
 DECLARE_HEAP_OBJECT(DataView, Object) {
-    DECLARE_MARK_TABLE(DataView);
+    DECLARE_MARKOBJECTS(DataView);
     void init() { Object::init(); }
 };
 
@@ -79,8 +79,8 @@ struct DataViewCtor: FunctionObject
 {
     V4_OBJECT2(DataViewCtor, FunctionObject)
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct DataView : Object
@@ -93,21 +93,21 @@ struct DataViewPrototype: Object
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static void method_get_buffer(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_byteLength(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_byteOffset(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_get_buffer(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_byteLength(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_byteOffset(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     template <typename T>
-    static void method_getChar(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_getChar(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     template <typename T>
-    static void method_get(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_get(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     template <typename T>
-    static void method_getFloat(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_getFloat(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     template <typename T>
-    static void method_setChar(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_setChar(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     template <typename T>
-    static void method_set(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_set(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     template <typename T>
-    static void method_setFloat(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_setFloat(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 

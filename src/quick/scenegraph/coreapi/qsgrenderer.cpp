@@ -50,7 +50,9 @@
 
 QT_BEGIN_NAMESPACE
 
+#if QT_CONFIG(opengl)
 static const bool qsg_sanity_check = qEnvironmentVariableIntValue("QSG_SANITY_CHECK");
+#endif
 
 static QElapsedTimer frameTimer;
 static qint64 preprocessTime;
@@ -130,8 +132,8 @@ QSGRenderer::QSGRenderer(QSGRenderContext *context)
     , m_current_determinant(1)
     , m_device_pixel_ratio(1)
     , m_context(context)
-    , m_node_updater(0)
-    , m_bindable(0)
+    , m_node_updater(nullptr)
+    , m_bindable(nullptr)
     , m_changed_emitted(false)
     , m_is_rendering(false)
     , m_is_preprocessing(false)
@@ -141,7 +143,7 @@ QSGRenderer::QSGRenderer(QSGRenderContext *context)
 
 QSGRenderer::~QSGRenderer()
 {
-    setRootNode(0);
+    setRootNode(nullptr);
     delete m_node_updater;
 }
 
@@ -247,7 +249,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
 
     m_is_rendering = false;
     m_changed_emitted = false;
-    m_bindable = 0;
+    m_bindable = nullptr;
 
     qCDebug(QSG_LOG_TIME_RENDERER,
             "time in renderer: total=%dms, preprocess=%d, updates=%d, binding=%d, rendering=%d",

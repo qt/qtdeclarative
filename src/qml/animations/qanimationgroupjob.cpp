@@ -42,7 +42,7 @@
 QT_BEGIN_NAMESPACE
 
 QAnimationGroupJob::QAnimationGroupJob()
-    : QAbstractAnimationJob(), m_firstChild(0), m_lastChild(0)
+    : QAbstractAnimationJob(), m_firstChild(nullptr), m_lastChild(nullptr)
 {
     m_isGroup = true;
 }
@@ -111,25 +111,21 @@ void QAnimationGroupJob::removeAnimation(QAbstractAnimationJob *animation)
     else
         m_lastChild = prev;
 
-    animation->m_previousSibling = 0;
-    animation->m_nextSibling = 0;
+    animation->m_previousSibling = nullptr;
+    animation->m_nextSibling = nullptr;
 
-    animation->m_group = 0;
+    animation->m_group = nullptr;
     animationRemoved(animation, prev, next);
 }
 
 void QAnimationGroupJob::clear()
 {
-    QAbstractAnimationJob *child = firstChild();
-    QAbstractAnimationJob *nextSibling = 0;
-    while (child != 0) {
-         child->m_group = 0;
-         nextSibling = child->nextSibling();
-         delete child;
-         child = nextSibling;
+    while (QAbstractAnimationJob *child = firstChild()) {
+        removeAnimation(child);
+        delete child;
     }
-    m_firstChild = 0;
-    m_lastChild = 0;
+    m_firstChild = nullptr;
+    m_lastChild = nullptr;
 }
 
 void QAnimationGroupJob::resetUncontrolledAnimationsFinishTime()

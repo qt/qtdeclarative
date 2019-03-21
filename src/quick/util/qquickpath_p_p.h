@@ -72,7 +72,7 @@ public:
     static QQuickPathPrivate* get(QQuickPath *path) { return path->d_func(); }
     static const QQuickPathPrivate* get(const QQuickPath *path) { return path->d_func(); }
 
-    QQuickPathPrivate() : pathLength(0), closed(false), componentComplete(true) { }
+    QQuickPathPrivate() {}
 
     QPainterPath _path;
     QList<QQuickPathElement*> _pathElements;
@@ -83,9 +83,10 @@ public:
     mutable QQuickCachedBezier prevBez;
     QQmlNullableValue<qreal> startX;
     QQmlNullableValue<qreal> startY;
-    qreal pathLength;
-    bool closed;
-    bool componentComplete;
+    qreal pathLength = 0;
+    bool closed = false;
+    bool componentComplete = true;
+    bool isShapePath = false;
 };
 
 QT_END_NAMESPACE

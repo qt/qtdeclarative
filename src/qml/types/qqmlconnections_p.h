@@ -69,11 +69,11 @@ class Q_AUTOTEST_EXPORT QQmlConnections : public QObject, public QQmlParserStatu
 
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QObject *target READ target WRITE setTarget NOTIFY targetChanged)
-    Q_REVISION(1) Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
+    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged REVISION 1)
     Q_PROPERTY(bool ignoreUnknownSignals READ ignoreUnknownSignals WRITE setIgnoreUnknownSignals)
 
 public:
-    QQmlConnections(QObject *parent=0);
+    QQmlConnections(QObject *parent=nullptr);
     ~QQmlConnections();
 
     QObject *target() const;
@@ -98,8 +98,8 @@ private:
 class QQmlConnectionsParser : public QQmlCustomParser
 {
 public:
-    void verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props) override;
-    void applyBindings(QObject *object, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
+    void verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &props) override;
+    void applyBindings(QObject *object, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
 };
 
 

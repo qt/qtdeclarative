@@ -33,7 +33,7 @@ qhp.QtQml.subprojects.qmltypes.sortPages = true
 
 tagfile                 = ../../../doc/qtqml/qtqml.tags
 
-depends += qtcore qtxmlpatterns qtgui qtquick qtdoc qtlinguist qmake qtscript qtwidgets
+depends += qtcore qtgui qtquick qtdoc qtlinguist qmake qtscript qtwidgets qtxmlpatterns qtquickcontrols
 
 headerdirs  += .. \
                ../../imports/models
@@ -52,6 +52,8 @@ imagedirs   += images
 manifestmeta.thumbnail.names += "QtQml/Chapter 4*" \
                                 "QtQml/Chapter 6*" \
                                 "QtQml/C++ Extensions: *"
+
+manifestmeta.highlighted.names = "QtQml/Writing QML Extensions with C++"
 
 navigation.landingpage = "Qt QML"
 navigation.cppclassespage = "Qt QML C++ Classes"

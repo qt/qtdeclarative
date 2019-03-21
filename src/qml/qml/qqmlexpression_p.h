@@ -68,14 +68,14 @@ class QQmlExpressionPrivate : public QObjectPrivate,
     Q_DECLARE_PUBLIC(QQmlExpression)
 public:
     QQmlExpressionPrivate();
-    ~QQmlExpressionPrivate();
+    ~QQmlExpressionPrivate() override;
 
     void init(QQmlContextData *, const QString &, QObject *);
     void init(QQmlContextData *, QV4::Function *runtimeFunction, QObject *);
 
-    QVariant value(bool *isUndefined = 0);
+    QVariant value(bool *isUndefined = nullptr);
 
-    void v4value(bool *isUndefined, QV4::Scope &scope);
+    QV4::ReturnedValue v4value(bool *isUndefined = nullptr);
 
     static inline QQmlExpressionPrivate *get(QQmlExpression *expr);
     static inline QQmlExpression *get(QQmlExpressionPrivate *expr);

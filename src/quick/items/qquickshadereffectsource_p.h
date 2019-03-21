@@ -113,8 +113,8 @@ public:
     };
     Q_ENUM(TextureMirroring)
 
-    QQuickShaderEffectSource(QQuickItem *parent = 0);
-    ~QQuickShaderEffectSource();
+    QQuickShaderEffectSource(QQuickItem *parent = nullptr);
+    ~QQuickShaderEffectSource() override;
 
     WrapMode wrapMode() const;
     void setWrapMode(WrapMode mode);
@@ -146,8 +146,8 @@ public:
     TextureMirroring textureMirroring() const;
     void setTextureMirroring(TextureMirroring mirroring);
 
-    bool isTextureProvider() const Q_DECL_OVERRIDE { return true; }
-    QSGTextureProvider *textureProvider() const Q_DECL_OVERRIDE;
+    bool isTextureProvider() const override { return true; }
+    QSGTextureProvider *textureProvider() const override;
 
     Q_INVOKABLE void scheduleUpdate();
 
@@ -174,11 +174,11 @@ private Q_SLOTS:
     void invalidateSceneGraph();
 
 protected:
-    void releaseResources() Q_DECL_OVERRIDE;
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+    void releaseResources() override;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 
-    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &) Q_DECL_OVERRIDE;
-    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &) override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
 
 private:
     void ensureTexture();

@@ -52,8 +52,11 @@
 //
 
 #include <QtCore/private/qabstractanimation_p.h>
-#include <QtQml/private/qqmlprofilerdefinitions_p.h>
 #include <QtQuick/private/qtquickglobal_p.h>
+
+#if QT_CONFIG(qml_debug)
+#include <QtQml/private/qqmlprofilerdefinitions_p.h>
+#endif
 
 #include <QtCore/qurl.h>
 #include <QtCore/qsize.h>
@@ -62,7 +65,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifdef QT_NO_QML_DEBUGGER
+#if !QT_CONFIG(qml_debug)
 
 #define Q_QUICK_PROFILE_IF_ENABLED(feature, Code)
 
@@ -330,7 +333,7 @@ public:
 
     static void initialize(QObject *parent);
 
-    virtual ~QQuickProfiler();
+    ~QQuickProfiler() override;
 
 signals:
     void dataReady(const QVector<QQuickProfilerData> &data);
@@ -354,11 +357,11 @@ protected:
 
     void startProfilingImpl(quint64 features);
     void stopProfilingImpl();
-    void reportDataImpl(bool trackLocations);
+    void reportDataImpl();
     void setTimer(const QElapsedTimer &t);
 };
 
-#endif // QT_NO_QML_DEBUGGER
+#endif // QT_CONFIG(qml_debug)
 
 #define Q_QUICK_PROFILE(feature, Method)\
     Q_QUICK_PROFILE_IF_ENABLED(feature, QQuickProfiler::Method)

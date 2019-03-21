@@ -66,7 +66,7 @@ struct QQmlDebugConnectorParams {
     QString arguments;
     QQmlDebugConnector *instance;
 
-    QQmlDebugConnectorParams() : instance(0)
+    QQmlDebugConnectorParams() : instance(nullptr)
     {
         if (qApp) {
             QCoreApplicationPrivate *appD =
@@ -82,7 +82,7 @@ Q_GLOBAL_STATIC(QQmlDebugConnectorParams, qmlDebugConnectorParams)
 void QQmlDebugConnector::setPluginKey(const QString &key)
 {
     QQmlDebugConnectorParams *params = qmlDebugConnectorParams();
-    if (params) {
+    if (params && params->pluginKey != key) {
         if (params->instance)
             qWarning() << "QML debugger: Cannot set plugin key after loading the plugin.";
         else
@@ -109,7 +109,7 @@ QQmlDebugConnector *QQmlDebugConnector::instance()
 {
     QQmlDebugConnectorParams *params = qmlDebugConnectorParams();
     if (!params)
-        return 0;
+        return nullptr;
 
     if (!QQmlEnginePrivate::qml_debugging_enabled) {
         if (!params->arguments.isEmpty()) {
@@ -118,14 +118,14 @@ QQmlDebugConnector *QQmlDebugConnector::instance()
                                         "has not been enabled.").arg(params->arguments);
             params->arguments.clear();
         }
-        return 0;
+        return nullptr;
     }
 
     if (!params->instance) {
         if (!params->pluginKey.isEmpty()) {
             params->instance = loadQQmlDebugConnector(params->pluginKey);
         } else if (params->arguments.isEmpty()) {
-            return 0; // no explicit class name given and no command line arguments
+            return nullptr; // no explicit class name given and no command line arguments
         } else if (params->arguments.startsWith(QLatin1String("connector:"))) {
             static const int connectorBegin = int(strlen("connector:"));
 
@@ -169,7 +169,7 @@ QQmlDebugConnectorFactory::~QQmlDebugConnectorFactory()
         params->arguments.clear();
         params->services.clear();
         delete params->instance;
-        params->instance = 0;
+        params->instance = nullptr;
     }
 }
 

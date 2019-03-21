@@ -38,8 +38,10 @@
 ****************************************************************************/
 
 #include "qquicksprite_p.h"
+#include "qquickimagebase_p.h"
 #include <qqml.h>
 #include <QDebug>
+#include <QRandomGenerator>
 
 QT_BEGIN_NAMESPACE
 
@@ -48,10 +50,10 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickSprite
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-utility
-    \brief Specifies sprite animations
+    \brief Specifies sprite animations.
 
-    QQuickSprite renders sprites of one or more frames and animates them. The sprites
-    can be in the middle of an image file, or split along multiple rows, as long as they form
+    Sprite defines a series of one or more frames to be animated and rendered by SpriteSequence.
+    The sprites can be in the middle of an image file, or split along multiple rows, as long as they form
     a contiguous line wrapping to the next row of the file from the left edge of the file.
 
     For full details, see the \l{Sprite Animations} overview.
@@ -99,7 +101,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty int QtQuick::Sprite::frameDuration
 
-    Duration of each frame of the animation. Values below 0 are invalid.
+    Duration of each frame of the animation in milliseconds. Values below 0 are invalid.
 
     If frameRate is valid then it will be used to calculate the duration of the frames.
     If not, and frameDuration is valid, then frameDuration will be used. Otherwise duration is used.
@@ -221,6 +223,7 @@ QQuickSprite::QQuickSprite(QObject *parent)
     , m_frameDuration(unsetDuration)
     , m_frameDurationVariation(0)
     , m_frameSync(false)
+    , m_devicePixelRatio(1.0)
 {
 }
 
@@ -236,12 +239,12 @@ int QQuickSprite::variedDuration() const //Deals with precedence when multiple d
 
     if (m_frameRate != unsetDuration) {
         qreal fpms = (m_frameRate
-                + (m_frameRateVariation * ((qreal)qrand()/RAND_MAX) * 2)
+                + (m_frameRateVariation * QRandomGenerator::global()->generateDouble() * 2)
                 - m_frameRateVariation) / 1000.0;
         return qMax(qreal(0.0) , m_frames / fpms);
     } else if (m_frameDuration != unsetDuration) {
         int mspf = m_frameDuration
-                + (m_frameDurationVariation * ((qreal)qrand()/RAND_MAX) * 2)
+                + (m_frameDurationVariation * QRandomGenerator::global()->generateDouble() * 2)
                 - m_frameDurationVariation;
         return qMax(0, m_frames * mspf);
     } else if (duration() >= 0) {
@@ -264,7 +267,10 @@ void QQuickSprite::startImageLoading()
             if (!e)
                 qWarning() << "QQuickSprite: Cannot find QQmlEngine - this class is only for use in QML and may not work";
         }
-        m_pix.load(e, m_source);
+        QUrl loadUrl = m_source;
+        QQuickImageBase::resolve2xLocalFile(m_source, m_devicePixelRatio, &loadUrl, &m_devicePixelRatio);
+
+        m_pix.load(e, loadUrl);
     }
 }
 

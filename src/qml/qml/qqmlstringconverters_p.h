@@ -67,19 +67,19 @@ class QByteArray;
 namespace QQmlStringConverters
 {
     Q_QML_PRIVATE_EXPORT QVariant variantFromString(const QString &);
-    Q_QML_PRIVATE_EXPORT QVariant variantFromString(const QString &, int preferredType, bool *ok = 0);
+    Q_QML_PRIVATE_EXPORT QVariant variantFromString(const QString &, int preferredType, bool *ok = nullptr);
 
-    Q_QML_PRIVATE_EXPORT QVariant colorFromString(const QString &, bool *ok = 0);
-    Q_QML_PRIVATE_EXPORT unsigned rgbaFromString(const QString &, bool *ok = 0);
+    Q_QML_PRIVATE_EXPORT QVariant colorFromString(const QString &, bool *ok = nullptr);
+    Q_QML_PRIVATE_EXPORT unsigned rgbaFromString(const QString &, bool *ok = nullptr);
 
 #if QT_CONFIG(datestring)
-    Q_QML_PRIVATE_EXPORT QDate dateFromString(const QString &, bool *ok = 0);
-    Q_QML_PRIVATE_EXPORT QTime timeFromString(const QString &, bool *ok = 0);
-    Q_QML_PRIVATE_EXPORT QDateTime dateTimeFromString(const QString &, bool *ok = 0);
+    Q_QML_PRIVATE_EXPORT QDate dateFromString(const QString &, bool *ok = nullptr);
+    Q_QML_PRIVATE_EXPORT QTime timeFromString(const QString &, bool *ok = nullptr);
+    Q_QML_PRIVATE_EXPORT QDateTime dateTimeFromString(const QString &, bool *ok = nullptr);
 #endif
-    Q_QML_PRIVATE_EXPORT QPointF pointFFromString(const QString &, bool *ok = 0);
-    Q_QML_PRIVATE_EXPORT QSizeF sizeFFromString(const QString &, bool *ok = 0);
-    Q_QML_PRIVATE_EXPORT QRectF rectFFromString(const QString &, bool *ok = 0);
+    Q_QML_PRIVATE_EXPORT QPointF pointFFromString(const QString &, bool *ok = nullptr);
+    Q_QML_PRIVATE_EXPORT QSizeF sizeFFromString(const QString &, bool *ok = nullptr);
+    Q_QML_PRIVATE_EXPORT QRectF rectFFromString(const QString &, bool *ok = nullptr);
 
     Q_QML_PRIVATE_EXPORT bool createFromString(int, const QString &, void *, size_t);
 }

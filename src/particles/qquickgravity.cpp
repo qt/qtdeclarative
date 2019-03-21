@@ -48,7 +48,7 @@ const qreal CONV = 0.017453292520444443;
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Affector
-    \brief For applying acceleration in an angle
+    \brief For applying acceleration in an angle.
 
     This element will accelerate all affected particles to a vector of
     the specified magnitude in the specified angle. If the angle and acceleration do

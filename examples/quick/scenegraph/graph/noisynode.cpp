@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -40,6 +50,7 @@
 
 #include "noisynode.h"
 
+#include <QtCore/QRandomGenerator>
 #include <QtQuick/QSGSimpleMaterialShader>
 #include <QtQuick/QSGTexture>
 #include <QtQuick/QQuickWindow>
@@ -61,14 +72,14 @@ class NoisyShader : public QSGSimpleMaterialShader<NoisyMaterial>
     QSG_DECLARE_SIMPLE_SHADER(NoisyShader, NoisyMaterial)
 
 public:
-    NoisyShader() : id_color(-1), id_texture(-1), id_textureSize(-1) {
+    NoisyShader() {
         setShaderSourceFile(QOpenGLShader::Vertex, ":/scenegraph/graph/shaders/noisy.vsh");
         setShaderSourceFile(QOpenGLShader::Fragment, ":/scenegraph/graph/shaders/noisy.fsh");
     }
 
-    QList<QByteArray> attributes() const {  return QList<QByteArray>() << "aVertex" << "aTexCoord"; }
+    QList<QByteArray> attributes() const override {  return QList<QByteArray>() << "aVertex" << "aTexCoord"; }
 
-    void updateState(const NoisyMaterial *m, const NoisyMaterial *) {
+    void updateState(const NoisyMaterial *m, const NoisyMaterial *) override {
 
         // Set the color
         program()->setUniformValue(id_color, m->color);
@@ -82,7 +93,7 @@ public:
         program()->setUniformValue(id_textureSize, QSizeF(1.0 / s.width(), 1.0 / s.height()));
     }
 
-    void resolveUniforms() {
+    void resolveUniforms() override {
         id_texture = program()->uniformLocation("texture");
         id_textureSize = program()->uniformLocation("textureSize");
         id_color = program()->uniformLocation("color");
@@ -92,9 +103,9 @@ public:
     }
 
 private:
-    int id_color;
-    int id_texture;
-    int id_textureSize;
+    int id_color = -1;
+    int id_texture = -1;
+    int id_textureSize = -1;
 };
 
 NoisyNode::NoisyNode(QQuickWindow *window)
@@ -103,7 +114,7 @@ NoisyNode::NoisyNode(QQuickWindow *window)
     QImage image(NOISE_SIZE, NOISE_SIZE, QImage::Format_RGB32);
     uint *data = (uint *) image.bits();
     for (int i=0; i<NOISE_SIZE * NOISE_SIZE; ++i) {
-        uint g = rand() & 0xff;
+        uint g = QRandomGenerator::global()->bounded(0xff);
         data[i] = 0xff000000 | (g << 16) | (g << 8) | g;
     }
 

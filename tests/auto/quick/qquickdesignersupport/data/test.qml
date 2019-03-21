@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.11
 
 Rectangle {
     objectName: "rootItem"
@@ -13,7 +13,7 @@ Rectangle {
 
     Rectangle {
         objectName: "rectangleItem"
-        gradient: Gradient {
+        containmentMask: Item {
 
         }
     }

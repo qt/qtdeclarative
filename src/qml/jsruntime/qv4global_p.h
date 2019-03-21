@@ -76,9 +76,6 @@ namespace std {
 inline bool isinf(double d) { return !_finite(d) && !_isnan(d); }
 inline bool isnan(double d) { return !!_isnan(d); }
 inline bool isfinite(double d) { return _finite(d); }
-#if _MSC_VER < 1800
-inline bool signbit(double d) { return _copysign(1.0, d) < 0; }
-#endif
 
 } // namespace std
 
@@ -91,11 +88,11 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 //
 // NOTE: This should match the logic in qv4targetplatform_p.h!
 
-#if defined(Q_PROCESSOR_X86) && (QT_POINTER_SIZE == 4) \
+#if defined(Q_PROCESSOR_X86_32) && (QT_POINTER_SIZE == 4) \
     && (defined(Q_OS_WIN) || defined(Q_OS_LINUX) || defined(Q_OS_QNX) || defined(Q_OS_FREEBSD))
 #  define V4_ENABLE_JIT
 #elif defined(Q_PROCESSOR_X86_64) && (QT_POINTER_SIZE == 8) \
-    && (defined(Q_OS_WIN) || defined(Q_OS_LINUX) || defined(Q_OS_MAC) || defined(Q_OS_FREEBSD))
+    && (defined(Q_OS_WIN) || defined(Q_OS_LINUX) || defined(Q_OS_QNX) || defined(Q_OS_MAC) || defined(Q_OS_FREEBSD))
 #  define V4_ENABLE_JIT
 #elif defined(Q_PROCESSOR_ARM_32) && (QT_POINTER_SIZE == 4)
 #  if defined(thumb2) || defined(__thumb2__) || ((defined(__thumb) || defined(__thumb__)) && __TARGET_ARCH_THUMB-0 == 4)
@@ -104,11 +101,16 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #    define V4_ENABLE_JIT
 #  endif
 #elif defined(Q_PROCESSOR_ARM_64) && (QT_POINTER_SIZE == 8)
-#  if defined(Q_OS_LINUX)
+#  if defined(Q_OS_LINUX) || defined(Q_OS_QNX) || defined(Q_OS_INTEGRITY)
 #    define V4_ENABLE_JIT
 #  endif
-#elif defined(Q_PROCESSOR_MIPS_32) && defined(Q_OS_LINUX)
-#  define V4_ENABLE_JIT
+//#elif defined(Q_PROCESSOR_MIPS_32) && defined(Q_OS_LINUX)
+//#  define V4_ENABLE_JIT
+#endif
+
+// check FPU with double precision on ARM platform
+#if (defined(Q_PROCESSOR_ARM_64) || defined(Q_PROCESSOR_ARM_32)) && defined(V4_ENABLE_JIT) && defined(__ARM_FP) && (__ARM_FP <= 0x04)
+#  undef V4_ENABLE_JIT
 #endif
 
 // Black list some platforms
@@ -147,19 +149,33 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+namespace Compiler {
+    struct Module;
+    struct Context;
+    struct JSUnitGenerator;
+    class Codegen;
+}
+
+namespace Moth {
+    class BytecodeGenerator;
+}
+
 namespace Heap {
     struct Base;
     struct MemberData;
     struct ArrayData;
 
+    struct StringOrSymbol;
     struct String;
+    struct Symbol;
     struct Object;
     struct ObjectPrototype;
 
     struct ExecutionContext;
-    struct GlobalContext;
     struct CallContext;
+    struct QmlContext;
     struct ScriptFunction;
+    struct InternalClass;
 
     struct BooleanObject;
     struct NumberObject;
@@ -174,21 +190,33 @@ namespace Heap {
     struct RegExp;
     struct EvalFunction;
 
+    struct SharedArrayBuffer;
     struct ArrayBuffer;
     struct DataView;
     struct TypedArray;
 
+    struct MapObject;
+    struct SetObject;
+
+    struct PromiseObject;
+    struct PromiseCapability;
+
     template <typename T, size_t> struct Pointer;
 }
 
+struct CppStackFrame;
 class MemoryManager;
+class ExecutableAllocator;
+struct PropertyKey;
+struct StringOrSymbol;
 struct String;
+struct Symbol;
 struct Object;
 struct ObjectPrototype;
 struct ObjectIterator;
 struct ExecutionContext;
-struct GlobalContext;
 struct CallContext;
+struct QmlContext;
 struct ScriptFunction;
 struct InternalClass;
 struct Property;
@@ -206,7 +234,6 @@ struct StringObject;
 struct ArrayObject;
 struct DateObject;
 struct FunctionObject;
-struct BuiltinFunction;
 struct ErrorObject;
 struct ArgumentsObject;
 struct Managed;
@@ -216,9 +243,16 @@ struct RegExpObject;
 struct RegExp;
 struct EvalFunction;
 
+struct SharedArrayBuffer;
 struct ArrayBuffer;
 struct DataView;
 struct TypedArray;
+
+struct MapObject;
+struct SetMapObject;
+
+struct PromiseObject;
+struct PromiseCapability;
 
 // ReturnedValue is used to return values from runtime methods
 // the type has to be a primitive type (no struct or union), so that the compiler
@@ -230,6 +264,7 @@ struct Scope;
 struct ScopedValue;
 template<typename T> struct Scoped;
 typedef Scoped<String> ScopedString;
+typedef Scoped<StringOrSymbol> ScopedStringOrSymbol;
 typedef Scoped<Object> ScopedObject;
 typedef Scoped<ArrayObject> ScopedArrayObject;
 typedef Scoped<FunctionObject> ScopedFunctionObject;
@@ -238,16 +273,25 @@ typedef Scoped<ExecutionContext> ScopedContext;
 struct PersistentValueStorage;
 class PersistentValue;
 class WeakValue;
+struct MarkStack;
 
 struct IdentifierTable;
 class RegExpCache;
 class MultiplyWrappedQObjectMap;
 
-namespace Global {
-    enum {
-        ReservedArgumentCount = 6
-    };
-}
+enum class ObservedTraceValues : quint8 {
+    Integer = 1 << 0,
+    Boolean = 1 << 1,
+    Double  = 1 << 2,
+    Other   = 1 << 3,
+    TypeMask = Integer | Boolean | Double | Other,
+
+    TruePathTaken  = 1 << 0,
+    FalsePathTaken = 1 << 1,
+
+    ArrayWasAccessed          = 1 << 7,
+    ArrayAccessNeededFallback = 1 << 6,
+};
 
 enum PropertyFlag {
     Attr_Data = 0,
@@ -340,6 +384,7 @@ struct PropertyAttributes
     bool isEmpty() const { return !m_all; }
 
     uint flags() const { return m_flags; }
+    uint all() const { return m_all; }
 
     bool operator==(PropertyAttributes other) {
         return m_all == other.m_all;
@@ -349,15 +394,31 @@ struct PropertyAttributes
     }
 };
 
-struct StackFrame {
+struct Q_QML_EXPORT StackFrame {
     QString source;
     QString function;
-    int line;
-    int column;
+    int line = -1;
+    int column = -1;
 };
 typedef QVector<StackFrame> StackTrace;
 
-}
+enum class ObjectLiteralArgument {
+    Value,
+    Method,
+    Getter,
+    Setter
+};
+
+namespace JIT {
+
+enum class CallResultDestination {
+    Ignore,
+    InAccumulator,
+};
+
+} // JIT namespace
+
+} // QV4 namespace
 
 Q_DECLARE_TYPEINFO(QV4::PropertyAttributes, Q_PRIMITIVE_TYPE);
 

@@ -1,10 +1,11 @@
 import QtQuick 2.0
+import QtQml.Models 2.12
 
 Rectangle {
     width: 360
     height: 360
 
-    VisualItemModel {
+    ObjectModel {
         id: visItemModel
         Rectangle {
             width: 20

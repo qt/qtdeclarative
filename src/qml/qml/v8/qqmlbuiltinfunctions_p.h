@@ -80,8 +80,11 @@ struct ConsoleObject : Object {
     void init();
 };
 
-struct QQmlBindingFunction : FunctionObject {
-    void init(const QV4::FunctionObject *originalFunction);
+#define QQmlBindingFunctionMembers(class, Member) \
+    Member(class, Pointer, FunctionObject *, bindingFunction)
+DECLARE_HEAP_OBJECT(QQmlBindingFunction, FunctionObject) {
+    DECLARE_MARKOBJECTS(QQmlBindingFunction)
+    void init(const QV4::FunctionObject *bindingFunction);
 };
 
 }
@@ -90,48 +93,50 @@ struct QtObject : Object
 {
     V4_OBJECT2(QtObject, Object)
 
-    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
-    static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
 
-    static void method_isQtObject(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_rgba(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_hsla(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_hsva(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_colorEqual(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_font(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_rect(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_point(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_size(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_vector2d(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_vector3d(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_vector4d(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_quaternion(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_matrix4x4(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_lighter(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_darker(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_tint(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_formatDate(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_formatTime(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_formatDateTime(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_openUrlExternally(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_fontFamilies(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_md5(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_btoa(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_atob(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_quit(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_exit(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_resolvedUrl(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_createQmlObject(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_createComponent(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_locale(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_binding(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_isQtObject(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_rgba(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_hsla(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_hsva(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_colorEqual(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_font(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_rect(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_point(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_size(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_vector2d(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_vector3d(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_vector4d(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_quaternion(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_matrix4x4(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_lighter(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_darker(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_tint(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_formatDate(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_formatTime(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_formatDateTime(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_openUrlExternally(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_fontFamilies(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_md5(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_btoa(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_atob(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_quit(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_exit(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_resolvedUrl(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_createQmlObject(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_createComponent(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+#if QT_CONFIG(qml_locale)
+    static ReturnedValue method_locale(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+#endif
+    static ReturnedValue method_binding(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 
-    static void method_get_platform(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_application(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_inputMethod(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_styleHints(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_get_platform(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_application(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_inputMethod(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_styleHints(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 
-    static void method_callLater(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_callLater(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
 private:
     void addAll();
@@ -142,18 +147,18 @@ struct ConsoleObject : Object
 {
     V4_OBJECT2(ConsoleObject, Object)
 
-    static void method_error(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_log(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_info(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_profile(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_profileEnd(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_time(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_timeEnd(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_count(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_trace(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_warn(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_assert(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_exception(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_error(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_log(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_info(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_profile(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_profileEnd(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_time(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_timeEnd(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_count(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_trace(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_warn(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_assert(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_exception(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 
 };
 
@@ -161,17 +166,17 @@ struct Q_QML_PRIVATE_EXPORT GlobalExtensions {
     static void init(Object *globalObject, QJSEngine::Extensions extensions);
 
 #if QT_CONFIG(translation)
-    static void method_qsTranslate(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_qsTranslateNoOp(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_qsTr(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_qsTrNoOp(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_qsTrId(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_qsTrIdNoOp(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_qsTranslate(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_qsTranslateNoOp(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_qsTr(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_qsTrNoOp(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_qsTrId(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_qsTrIdNoOp(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 #endif
-    static void method_gc(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_gc(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 
     // on String:prototype
-    static void method_string_arg(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_string_arg(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 
 };
 
@@ -179,8 +184,14 @@ struct QQmlBindingFunction : public QV4::FunctionObject
 {
     V4_OBJECT2(QQmlBindingFunction, FunctionObject)
 
+    Heap::FunctionObject *bindingFunction() const { return d()->bindingFunction; }
     QQmlSourceLocation currentLocation() const; // from caller stack trace
 };
+
+inline bool FunctionObject::isBinding() const
+{
+    return d()->vtable() == QQmlBindingFunction::staticVTable();
+}
 
 }
 

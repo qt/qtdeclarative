@@ -135,17 +135,17 @@ int QQmlCustomParser::evaluateEnum(const QByteArray& script, bool *ok) const
     if (scope != QLatin1String("Qt")) {
         if (imports.isNull())
             return -1;
-        QQmlType *type = 0;
+        QQmlType type;
 
         if (imports.isT1()) {
-            imports.asT1()->resolveType(scope, &type, 0, 0, 0);
+            imports.asT1()->resolveType(scope, &type, nullptr, nullptr, nullptr);
         } else {
             QQmlTypeNameCache::Result result = imports.asT2()->query(scope);
             if (result.isValid())
                 type = result.type;
         }
 
-        if (!type)
+        if (!type.isValid())
             return -1;
 
         int dot2 = script.indexOf('.', dot+1);
@@ -153,9 +153,9 @@ int QQmlCustomParser::evaluateEnum(const QByteArray& script, bool *ok) const
         QByteArray enumValue = script.mid(dot2Valid ? dot2 + 1 : dot + 1);
         QByteArray scopedEnumName = (dot2Valid ? script.mid(dot + 1, dot2 - dot - 1) : QByteArray());
         if (!scopedEnumName.isEmpty())
-            return type->scopedEnumValue(engine, scopedEnumName, enumValue, ok);
+            return type.scopedEnumValue(engine, scopedEnumName, enumValue, ok);
         else
-            return type->enumValue(engine, QHashedCStringRef(enumValue.constData(), enumValue.length()), ok);
+            return type.enumValue(engine, QHashedCStringRef(enumValue.constData(), enumValue.length()), ok);
     }
 
     QByteArray enumValue = script.mid(dot + 1);
@@ -177,12 +177,10 @@ const QMetaObject *QQmlCustomParser::resolveType(const QString& name) const
 {
     if (!imports.isT1())
         return nullptr;
-    QQmlType *qmltype = 0;
-    if (!imports.asT1()->resolveType(name, &qmltype, 0, 0, 0))
+    QQmlType qmltype;
+    if (!imports.asT1()->resolveType(name, &qmltype, nullptr, nullptr, nullptr))
         return nullptr;
-    if (!qmltype)
-        return nullptr;
-    return qmltype->metaObject();
+    return qmltype.metaObject();
 }
 
 QT_END_NAMESPACE

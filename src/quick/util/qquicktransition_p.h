@@ -53,6 +53,7 @@
 
 #include "qquickstate_p.h"
 #include <private/qabstractanimationjob_p.h>
+#include <private/qqmlguard_p.h>
 #include <qqml.h>
 
 #include <QtCore/qobject.h>
@@ -64,10 +65,10 @@ class QQuickTransitionPrivate;
 class QQuickTransitionManager;
 class QQuickTransition;
 
-class QQuickTransitionInstance
+class QQuickTransitionInstance : QAnimationJobChangeListener
 {
 public:
-    QQuickTransitionInstance(QQuickTransitionPrivate *transition, QAbstractAnimationJob *anim);
+    QQuickTransitionInstance(QQuickTransition *transition, QAbstractAnimationJob *anim);
     ~QQuickTransitionInstance();
 
     void start();
@@ -75,8 +76,16 @@ public:
 
     bool isRunning() const;
 
+protected:
+    void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State, QAbstractAnimationJob::State) override;
+
+    void removeStateChangeListener()
+    {
+        m_anim->removeAnimationChangeListener(this, QAbstractAnimationJob::StateChange);
+    }
+
 private:
-    QQuickTransitionPrivate *m_transition;
+    QQmlGuard<QQuickTransition> m_transition;
     QAbstractAnimationJob *m_anim;
     friend class QQuickTransition;
 };
@@ -96,7 +105,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTransition : public QObject
     Q_CLASSINFO("DeferredPropertyNames", "animations")
 
 public:
-    QQuickTransition(QObject *parent=0);
+    QQuickTransition(QObject *parent=nullptr);
     ~QQuickTransition();
 
     QString fromState() const;

@@ -43,6 +43,8 @@
 #include <private/qtqmlglobal_p.h>
 #include <private/qv4profiling_p.h>
 
+QT_REQUIRE_CONFIG(qml_debug);
+
 //
 //  W A R N I N G
 //  -------------
@@ -56,8 +58,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_QML_DEBUGGER
-
 struct QQmlProfilerDefinitions {
     enum Message {
         Event,
@@ -69,6 +69,7 @@ struct QQmlProfilerDefinitions {
         PixmapCacheEvent,
         SceneGraphFrame,
         MemoryAllocation,
+        DebugMessage,
 
         MaximumMessage
     };
@@ -93,11 +94,6 @@ struct QQmlProfilerDefinitions {
         Javascript,
 
         MaximumRangeType
-    };
-
-    enum BindingType {
-        QmlBinding,
-        MaximumBindingType
     };
 
     enum PixmapEventType {
@@ -127,8 +123,6 @@ struct QQmlProfilerDefinitions {
         NumRenderThreadFrameTypes = SceneGraphPolishAndSync,
         NumGUIThreadFrameTypes = MaximumSceneGraphFrameType - NumRenderThreadFrameTypes
     };
-
-    typedef QV4::Profiling::MemoryType MemoryType;
 
     enum ProfileFeature {
         ProfileJavaScript,
@@ -162,8 +156,6 @@ struct QQmlProfilerDefinitions {
         MaximumInputEventType
     };
 };
-
-#endif // QT_NO_QML_DEBUGGER
 
 QT_END_NAMESPACE
 

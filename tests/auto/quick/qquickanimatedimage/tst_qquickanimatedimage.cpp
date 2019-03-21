@@ -67,6 +67,7 @@ private slots:
     void progressAndStatusChanges();
     void playingAndPausedChanges();
     void noCaching();
+    void sourceChangesOnFrameChanged();
 };
 
 void tst_qquickanimatedimage::cleanup()
@@ -132,6 +133,16 @@ void tst_qquickanimatedimage::frameCount()
     QVERIFY(anim->isPlaying());
     QCOMPARE(anim->frameCount(), 3);
 
+    QSignalSpy frameCountChangedSpy(anim, &QQuickAnimatedImage::frameCountChanged);
+
+    const QUrl origSource = anim->source();
+    anim->setSource(QUrl());
+    QCOMPARE(anim->frameCount(), 0);
+    QCOMPARE(frameCountChangedSpy.count(), 1);
+    anim->setSource(origSource);
+    QCOMPARE(anim->frameCount(), 3);
+    QCOMPARE(frameCountChangedSpy.count(), 2);
+
     delete anim;
 }
 
@@ -142,7 +153,7 @@ void tst_qquickanimatedimage::mirror_running()
     QQuickView window;
     window.setSource(testFileUrl("hearts.qml"));
     window.show();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
 
     QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(window.rootObject());
     QVERIFY(anim);
@@ -324,7 +335,7 @@ void tst_qquickanimatedimage::sourceSizeChanges()
     QQmlContext *ctxt = engine.rootContext();
     ctxt->setContextProperty("srcImage", "");
     QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage*>(component.create());
-    QVERIFY(anim != 0);
+    QVERIFY(anim != nullptr);
 
     QSignalSpy sourceSizeSpy(anim, SIGNAL(sourceSizeChanged()));
 
@@ -387,7 +398,7 @@ void tst_qquickanimatedimage::sourceSizeChanges_intermediate()
     ctxt->setContextProperty("srcImage", "");
 
     QScopedPointer<QQuickAnimatedImage> anim(qobject_cast<QQuickAnimatedImage*>(component.create()));
-    QVERIFY(anim != 0);
+    QVERIFY(anim != nullptr);
 
     ctxt->setContextProperty("srcImage", testFileUrl("hearts.gif"));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
@@ -412,7 +423,7 @@ void tst_qquickanimatedimage::qtbug_16520()
     QQuickRectangle *root = qobject_cast<QQuickRectangle *>(component.create());
     QVERIFY(root);
     QQuickAnimatedImage *anim = root->findChild<QQuickAnimatedImage*>("anim");
-    QVERIFY(anim != 0);
+    QVERIFY(anim != nullptr);
 
     anim->setProperty("source", server.urlString("/stickman.gif"));
     QTRY_COMPARE(anim->opacity(), qreal(0));
@@ -435,7 +446,7 @@ void tst_qquickanimatedimage::progressAndStatusChanges()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->status(), QQuickImage::Ready);
     QTRY_COMPARE(obj->progress(), 1.0);
 
@@ -489,7 +500,7 @@ void tst_qquickanimatedimage::playingAndPausedChanges()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickAnimatedImage *obj = qobject_cast<QQuickAnimatedImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->status(), QQuickAnimatedImage::Null);
     QTRY_VERIFY(obj->isPlaying());
     QTRY_VERIFY(!obj->isPaused());
@@ -555,8 +566,8 @@ void tst_qquickanimatedimage::noCaching()
     window_nocache.setSource(testFileUrl("colors_nocache.qml"));
     window.show();
     window_nocache.show();
-    QTest::qWaitForWindowExposed(&window);
-    QTest::qWaitForWindowExposed(&window_nocache);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowExposed(&window_nocache));
 
     QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(window.rootObject());
     QVERIFY(anim);
@@ -578,6 +589,33 @@ void tst_qquickanimatedimage::noCaching()
             QCOMPARE(image_cache, image_nocache);
         }
     }
+}
+
+void tst_qquickanimatedimage::sourceChangesOnFrameChanged()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("colors.qml"));
+    QVector<QQuickAnimatedImage*> images;
+
+    // Run multiple animations in parallel, this should be fast
+    for (int loops = 0; loops < 25; ++loops) {
+        QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(component.create());
+
+        // QTBUG-67427: this should not produce a segfault
+        QObject::connect(anim,
+                         &QQuickAnimatedImage::frameChanged,
+                         [this, anim]() { anim->setSource(testFileUrl("hearts.gif")); });
+
+        QVERIFY(anim);
+        QVERIFY(anim->isPlaying());
+
+        images.append(anim);
+    }
+
+    for (auto *anim : images)
+        QTRY_COMPARE(anim->source(), testFileUrl("hearts.gif"));
+
+    qDeleteAll(images);
 }
 
 QTEST_MAIN(tst_qquickanimatedimage)

@@ -102,4 +102,17 @@ QtObject {
         })
         return testSuccess
     }
+
+    property QtObject subObject: QtObject {
+        id: subObject
+        property int value
+        property bool ok: false
+        onValueChanged: this.ok = true
+    }
+
+    function testThisInSignalHandler() {
+        subObject.ok = false
+        subObject.value = subObject.value + 1
+        return subObject.ok
+    }
 }

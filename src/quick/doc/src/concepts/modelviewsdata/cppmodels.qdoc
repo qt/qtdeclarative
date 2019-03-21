@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -11,8 +11,8 @@
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Free Documentation License Usage
 ** Alternatively, this file may be used under the terms of the GNU Free
@@ -20,7 +20,7 @@
 ** Foundation and appearing in the file included in the packaging of
 ** this file. Please review the following information to ensure
 ** the GNU Free Documentation License version 1.3 requirements
-** will be met: http://www.gnu.org/copyleft/fdl.html.
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -40,6 +40,11 @@ A C++ model class can be defined as a \l QStringList, a \l QVariantList, a
 QObjectList or a \l QAbstractItemModel. The first three are useful for exposing
 simpler datasets, while QAbstractItemModel provides a more flexible solution for
 more complex models.
+
+Here is a video tutorial that takes you through the whole process of exposing a C++
+model to QML:
+
+\youtube 9BcAYDlpuT8
 
 \section2 QStringList-based Model
 
@@ -75,7 +80,7 @@ The API works just like with \l QStringList, as shown in the previous section.
 have changed. If the QVariantList changes, it will be necessary to reset
 the model.
 
-\section2 QObjectList-based model
+\section2 QObjectList-based Model
 
 A list of QObject* values can also be used as a model. A QList<QObject*> provides
 the properties of the objects in the list as roles.
@@ -112,7 +117,7 @@ has changed.  If the QList changes, it is necessary to reset
 the model by calling QQmlContext::setContextProperty() again.
 
 
-\section2 QAbstractItemModel subclass
+\section2 QAbstractItemModel Subclass
 
 A model can be defined by subclassing QAbstractItemModel. This is the
 best approach if you have a more complex model that cannot be supported
@@ -228,34 +233,10 @@ contact details from an SQLite database.
 
 \section3 Editable Data Model
 
-Besides the \c roleNames() and \c data(), the editable models must reimplement
-the \l{QSqlTableModel::}{setData} method to save changes to existing SQL data.
-The following version of the method checks if the given model index is valid
-and the \c role is equal to \l Qt::EditRole, before calling the parent class
-version:
+QSqlTableModel implements setData() as described \l{#changing-model-data}{below}.
 
-\code
-bool SqlEditableModel::setData(const QModelIndex &item, const QVariant &value, int role)
-{
-    if (item.isValid() && role == Qt::EditRole) {
-        QSqlTableModel::setData(item, value,role);
-        emit dataChanged(item, item);
-        return true;
-    }
-    return false;
-
-}
-\endcode
-
-\note It is important to emit the \l{QAbstractItemModel::}{dataChanged}()
-signal after saving the changes.
-
-Unlike the C++ item views such as QListView or QTableView, the \c setData()
-method must be explicitly invoked from QML whenever appropriate. For example,
-on the \l[QML]{TextField::}{editingFinished}() or \l[QML]{TextField::}{accepted}()
-signal of \l[QtQuickControls]{TextField}. Depending on the
-\l{QSqlTableModel::}{EditStrategy} used by the model, the changes are either
-queued for submission later or submitted immediately.
+Depending on the \l{QSqlTableModel::}{EditStrategy} used by the model, the
+changes are either queued for submission later or submitted immediately.
 
 You can also insert new data into the model by calling
 \l {QSqlTableModel::insertRecord}(). In the following example snippet,
@@ -322,5 +303,49 @@ ListView {
 See \l {Writing QML Extensions with C++} for details on writing QML C++
 plugins.
 
+\section2 Changing Model Data
+
+Besides the \c roleNames() and \c data(), editable models must reimplement
+the \l{QAbstractItemModel::}{setData} method to save changes to existing model data.
+The following version of the method checks if the given model index is valid
+and the \c role is equal to \l Qt::EditRole:
+
+\code
+bool EditableModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (index.isValid() && role == Qt::EditRole) {
+        // Set data in model here. It can also be a good idea to check whether
+        // the new value actually differs from the current value
+        if (m_entries[index.row()] != value.toString()) {
+            m_entries[index.row()] = value.toString();
+            emit dataChanged(index, index, { Qt::EditRole, Qt::DisplayRole });
+            return true;
+        }
+    }
+    return false;
+}
+\endcode
+
+\note It is important to emit the \l{QAbstractItemModel::}{dataChanged}()
+signal after saving the changes.
+
+Unlike the C++ item views such as QListView or QTableView, the \c setData()
+method must be explicitly invoked from QML delegates whenever appropriate. This is done
+by simply assigning a new value to the corresponding model property.
+
+\qml
+ListView {
+    anchors.fill: parent
+    model: EditableModel {}
+    delegate: TextField {
+        width: ListView.view.width
+        text: model.edit
+        onAccepted: model.edit = text
+    }
+}
+\endqml
+
+\note The \c edit role is equal to \l Qt::EditRole. See \l{QAbstractItemModel::}{roleNames}()
+for the built-in role names. However, real life models would usually register custom roles.
 
 */

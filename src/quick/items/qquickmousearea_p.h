@@ -87,7 +87,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
     Q_PROPERTY(int pressAndHoldInterval READ pressAndHoldInterval WRITE setPressAndHoldInterval NOTIFY pressAndHoldIntervalChanged RESET resetPressAndHoldInterval REVISION 9)
 
 public:
-    QQuickMouseArea(QQuickItem *parent=0);
+    QQuickMouseArea(QQuickItem *parent=nullptr);
     ~QQuickMouseArea();
 
     qreal mouseX() const;
@@ -164,25 +164,25 @@ protected:
     bool setPressed(Qt::MouseButton button, bool p, Qt::MouseEventSource source);
     bool sendMouseEvent(QMouseEvent *event);
 
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseDoubleClickEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    void hoverEnterEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
-    void hoverMoveEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
-    void hoverLeaveEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseUngrabEvent() override;
+    void hoverEnterEvent(QHoverEvent *event) override;
+    void hoverMoveEvent(QHoverEvent *event) override;
+    void hoverLeaveEvent(QHoverEvent *event) override;
 #if QT_CONFIG(wheelevent)
-    void wheelEvent(QWheelEvent *event) Q_DECL_OVERRIDE;
+    void wheelEvent(QWheelEvent *event) override;
 #endif
-    bool childMouseEventFilter(QQuickItem *i, QEvent *e) Q_DECL_OVERRIDE;
-    void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
-    void windowDeactivateEvent() Q_DECL_OVERRIDE;
+    bool childMouseEventFilter(QQuickItem *i, QEvent *e) override;
+    void timerEvent(QTimerEvent *event) override;
+    void windowDeactivateEvent() override;
 
     void geometryChanged(const QRectF &newGeometry,
-                                 const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void itemChange(ItemChange change, const ItemChangeData& value) Q_DECL_OVERRIDE;
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+                                 const QRectF &oldGeometry) override;
+    void itemChange(ItemChange change, const ItemChangeData& value) override;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 
 private:
     void handlePress();

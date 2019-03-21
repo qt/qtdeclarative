@@ -670,12 +670,12 @@ function TestDataViewConstructor() {
 
     /* This is wrong according to ecma 6 and should throw:
 
-  var d4 = new DataView(ab, 1, 3.1415926);
+  var d4 = new DataView(ab, 1, Math.PI);
   assertSame(ab, d4.buffer);
   assertSame(1, d4.byteOffset);
   assertSame(3, d4.byteLength);
     */
-  assertThrows(function() { new DataView(ab, 3.1415926); }, RangeError);
+  assertThrows(function() { new DataView(ab, Math.PI); }, RangeError);
 
   // error cases
   assertThrows(function() { new DataView(ab, -1); }, RangeError);

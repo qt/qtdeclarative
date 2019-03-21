@@ -81,7 +81,7 @@ public:
     };
     Q_ENUM(Flow)
 
-    QQuickGridView(QQuickItem *parent=0);
+    QQuickGridView(QQuickItem *parent=nullptr);
     ~QQuickGridView();
 
     void setHighlightFollowsCurrentItem(bool) override;

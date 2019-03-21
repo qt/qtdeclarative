@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 QQuickContext2DTile::QQuickContext2DTile()
     : m_dirty(true)
     , m_rect(QRect(0, 0, 1, 1))
-    , m_device(0)
+    , m_device(nullptr)
 {
 }
 
@@ -95,12 +95,12 @@ QPainter* QQuickContext2DTile::createPainter(bool smooth, bool antialiasing)
         return &m_painter;
     }
 
-    return 0;
+    return nullptr;
 }
 #if QT_CONFIG(opengl)
 QQuickContext2DFBOTile::QQuickContext2DFBOTile()
     : QQuickContext2DTile()
-    , m_fbo(0)
+    , m_fbo(nullptr)
 {
 }
 

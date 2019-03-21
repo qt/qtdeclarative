@@ -148,7 +148,19 @@ void QQuickDesignerCustomObjectData::populateResetHashes()
     const QQuickDesignerSupport::PropertyNameList propertyNameList =
             QQuickDesignerSupportProperties::propertyNameListForWritableProperties(object());
 
+    const QMetaObject *mo = object()->metaObject();
+    QByteArrayList deferredPropertyNames;
+    const int namesIndex = mo->indexOfClassInfo("DeferredPropertyNames");
+    if (namesIndex != -1) {
+        QMetaClassInfo classInfo = mo->classInfo(namesIndex);
+        deferredPropertyNames = QByteArray(classInfo.value()).split(',');
+    }
+
     for (const QQuickDesignerSupport::PropertyName &propertyName : propertyNameList) {
+
+        if (deferredPropertyNames.contains(propertyName))
+            continue;
+
         QQmlProperty property(object(), QString::fromUtf8(propertyName), QQmlEngine::contextForObject(object()));
 
         QQmlAbstractBinding::Ptr binding = QQmlAbstractBinding::Ptr(QQmlPropertyPrivate::binding(property));
@@ -180,7 +192,7 @@ void QQuickDesignerCustomObjectData::doResetProperty(QQmlContext *context, const
 
     QQmlAbstractBinding *binding = QQmlPropertyPrivate::binding(property);
     if (binding && !(hasValidResetBinding(propertyName) && getResetBinding(propertyName) == binding)) {
-        binding->setEnabled(false, 0);
+        binding->setEnabled(false, nullptr);
     }
 
 

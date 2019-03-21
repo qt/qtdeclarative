@@ -11,7 +11,6 @@ SUBDIRS =\
     nestedPlugin\
     strictModule\
     strictModule.2\
-    invalidStrictModule\
     nonstrictModule\
     preemptiveModule\
     preemptedStrictModule\

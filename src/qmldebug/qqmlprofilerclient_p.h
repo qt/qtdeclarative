@@ -41,8 +41,10 @@
 #define QQMLPROFILERCLIENT_P_H
 
 #include "qqmldebugclient_p.h"
-#include "qqmleventlocation_p.h"
-#include <private/qqmlprofilerdefinitions_p.h>
+#include "qqmlprofilereventlocation_p.h"
+#include "qqmlprofilereventreceiver_p.h"
+#include "qqmlprofilerclientdefinitions_p.h"
+
 #include <private/qpacket_p.h>
 
 //
@@ -63,48 +65,38 @@ class QQmlProfilerClient : public QQmlDebugClient
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlProfilerClient)
+    Q_PROPERTY(bool recording READ isRecording WRITE setRecording NOTIFY recordingChanged)
 
 public:
-    QQmlProfilerClient(QQmlDebugConnection *connection);
-    void setFeatures(quint64 features);
-    void sendRecordingStatus(bool record, int engineId = -1, quint32 flushInterval = 0);
+    QQmlProfilerClient(QQmlDebugConnection *connection, QQmlProfilerEventReceiver *eventReceiver,
+                       quint64 features = std::numeric_limits<quint64>::max());
+    ~QQmlProfilerClient();
+
+    bool isRecording() const;
+    void setRecording(bool);
+    quint64 recordedFeatures() const;
+    virtual void messageReceived(const QByteArray &) override;
+
+    void clearEvents();
+    void clearAll();
+
+    void sendRecordingStatus(int engineId = -1);
+    void setRequestedFeatures(quint64 features);
+    void setFlushInterval(quint32 flushInterval);
 
 protected:
     QQmlProfilerClient(QQmlProfilerClientPrivate &dd);
+    void onStateChanged(State status);
 
-private:
-    void messageReceived(const QByteArray &message) override;
+signals:
+    void complete(qint64 maximumTime);
+    void traceFinished(qint64 timestamp, const QList<int> &engineIds);
+    void traceStarted(qint64 timestamp, const QList<int> &engineIds);
 
-    virtual void traceStarted(qint64 time, int engineId);
-    virtual void traceFinished(qint64 time, int engineId);
+    void recordingChanged(bool arg);
+    void recordedFeaturesChanged(quint64 features);
 
-    virtual void rangeStart(QQmlProfilerDefinitions::RangeType type, qint64 startTime);
-    virtual void rangeData(QQmlProfilerDefinitions::RangeType type, qint64 time,
-                           const QString &data);
-    virtual void rangeLocation(QQmlProfilerDefinitions::RangeType type, qint64 time,
-                               const QQmlEventLocation &location);
-    virtual void rangeEnd(QQmlProfilerDefinitions::RangeType type, qint64 endTime);
-
-    virtual void animationFrame(qint64 time, int frameRate, int animationCount, int threadId);
-
-    virtual void sceneGraphEvent(QQmlProfilerDefinitions::SceneGraphFrameType type, qint64 time,
-                                 qint64 numericData1, qint64 numericData2, qint64 numericData3,
-                                 qint64 numericData4, qint64 numericData5);
-
-    virtual void pixmapCacheEvent(QQmlProfilerDefinitions::PixmapEventType type, qint64 time,
-                                  const QString &url, int numericData1, int numericData2);
-
-    virtual void memoryAllocation(QQmlProfilerDefinitions::MemoryType type, qint64 time,
-                                  qint64 amount);
-
-    virtual void inputEvent(QQmlProfilerDefinitions::InputEventType type, qint64 time, int a,
-                            int b);
-
-    virtual void complete();
-
-    virtual void unknownEvent(QQmlProfilerDefinitions::Message messageType, qint64 time,
-                              int detailType);
-    virtual void unknownData(QPacket &stream);
+    void cleared();
 };
 
 QT_END_NAMESPACE

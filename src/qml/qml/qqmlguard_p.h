@@ -65,9 +65,9 @@ public:
     inline QQmlGuardImpl(const QQmlGuardImpl &);
     inline ~QQmlGuardImpl();
 
-    QObject *o;
-    QQmlGuardImpl  *next;
-    QQmlGuardImpl **prev;
+    QObject *o = nullptr;
+    QQmlGuardImpl  *next = nullptr;
+    QQmlGuardImpl **prev = nullptr;
 
     inline void addGuard();
     inline void remGuard();
@@ -106,6 +106,34 @@ protected:
     virtual void objectDestroyed(T *) {}
 };
 
+template <typename T>
+class QQmlStrongJSQObjectReference : public QQmlGuard<T>
+{
+public:
+    void setObject(T *o, QObject *parent) {
+        T *old = this->object();
+        if (o == old)
+            return;
+
+        if (m_jsOwnership && old && old->parent() == parent)
+            QQml_setParent_noEvent(old, nullptr);
+
+        this->QQmlGuard<T>::operator=(o);
+
+        if (o && !o->parent() && !QQmlData::keepAliveDuringGarbageCollection(o)) {
+            m_jsOwnership = true;
+            QQml_setParent_noEvent(o, parent);
+        } else {
+            m_jsOwnership = false;
+        }
+    }
+
+private:
+    using QQmlGuard<T>::setObject;
+    using QQmlGuard<T>::operator=;
+    bool m_jsOwnership = false;
+};
+
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QQmlGuard<QObject>)
@@ -113,18 +141,17 @@ Q_DECLARE_METATYPE(QQmlGuard<QObject>)
 QT_BEGIN_NAMESPACE
 
 QQmlGuardImpl::QQmlGuardImpl()
-: o(0), next(0), prev(0)
 {
 }
 
 QQmlGuardImpl::QQmlGuardImpl(QObject *g)
-: o(g), next(0), prev(0)
+: o(g)
 {
     if (o) addGuard();
 }
 
 QQmlGuardImpl::QQmlGuardImpl(const QQmlGuardImpl &g)
-: o(g.o), next(0), prev(0)
+: o(g.o)
 {
     if (o) addGuard();
 }
@@ -132,7 +159,7 @@ QQmlGuardImpl::QQmlGuardImpl(const QQmlGuardImpl &g)
 QQmlGuardImpl::~QQmlGuardImpl()
 {
     if (prev) remGuard();
-    o = 0;
+    o = nullptr;
 }
 
 void QQmlGuardImpl::addGuard()
@@ -155,8 +182,8 @@ void QQmlGuardImpl::remGuard()
 
     if (next) next->prev = prev;
     *prev = next;
-    next = 0;
-    prev = 0;
+    next = nullptr;
+    prev = nullptr;
 }
 
 template<class T>

@@ -52,7 +52,7 @@ class Q_QUICK_EXPORT QSGSimpleTextureNode : public QSGGeometryNode
 {
 public:
     QSGSimpleTextureNode();
-    ~QSGSimpleTextureNode();
+    ~QSGSimpleTextureNode() override;
 
     void setRect(const QRectF &rect);
     inline void setRect(qreal x, qreal y, qreal w, qreal h) { setRect(QRectF(x, y, w, h)); }

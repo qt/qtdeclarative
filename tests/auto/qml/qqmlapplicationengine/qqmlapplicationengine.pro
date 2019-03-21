@@ -1,3 +1,5 @@
 TEMPLATE = subdirs
-SUBDIRS = tst_qqmlapplicationengine.pro \
-          testapp
+SUBDIRS = testapp \
+          tst_qqmlapplicationengine.pro
+
+CONFIG += ordered

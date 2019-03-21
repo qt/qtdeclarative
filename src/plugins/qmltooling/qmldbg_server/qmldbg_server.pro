@@ -5,13 +5,7 @@ SOURCES += \
     $$PWD/qqmldebugserver.cpp
 
 HEADERS += \
-    $$PWD/qqmldebugserverfactory.h \
-    $$PWD/../shared/qqmldebugserver.h \
-    $$PWD/../shared/qqmldebugserverconnection.h \
-    $$PWD/../shared/qqmldebugpacket.h
-
-INCLUDEPATH += $$PWD \
-    $$PWD/../shared
+    $$PWD/qqmldebugserverfactory.h
 
 OTHER_FILES += \
     qqmldebugserver.json

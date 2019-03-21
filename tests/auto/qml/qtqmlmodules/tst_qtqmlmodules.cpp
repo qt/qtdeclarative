@@ -49,7 +49,7 @@ void tst_qtqmlmodules::baseTypes()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("base.qml"));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QVERIFY(object->property("success").toBool());
 
     delete object;
@@ -60,7 +60,7 @@ void tst_qtqmlmodules::modelsTypes()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("models.qml"));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QVERIFY(object->property("success").toBool());
 
     delete object;
@@ -71,7 +71,7 @@ void tst_qtqmlmodules::unavailableTypes()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("unavailable.qml"));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QVERIFY(object->property("success").toBool());
 
     delete object;

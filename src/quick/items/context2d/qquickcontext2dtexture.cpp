@@ -54,6 +54,9 @@
 #include <QtGui/QGuiApplication>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcCanvas, "qt.quick.canvas")
+
 #if QT_CONFIG(opengl)
 #define QT_MINIMUM_FBO_SIZE 64
 
@@ -90,12 +93,13 @@ struct GLAcquireContext {
 };
 #endif
 QQuickContext2DTexture::QQuickContext2DTexture()
-    : m_context(0)
+    : m_context(nullptr)
 #if QT_CONFIG(opengl)
-    , m_gl(0)
+    , m_gl(nullptr)
 #endif
-    , m_surface(0)
-    , m_item(0)
+    , m_surface(nullptr)
+    , m_item(nullptr)
+    , m_canvasDevicePixelRatio(1)
     , m_canvasWindowChanged(false)
     , m_dirtyTexture(false)
     , m_smooth(true)
@@ -155,18 +159,28 @@ void QQuickContext2DTexture::setItem(QQuickCanvasItem* item)
         m_context = (QQuickContext2D*) item->rawContext(); // FIXME
         m_state = m_context->state;
     } else {
-        m_context = 0;
+        m_context = nullptr;
     }
 }
 
 bool QQuickContext2DTexture::setCanvasWindow(const QRect& r)
 {
+    qreal canvasDevicePixelRatio = (m_item && m_item->window()) ?
+        m_item->window()->effectiveDevicePixelRatio() : qApp->devicePixelRatio();
+    if (!qFuzzyCompare(m_canvasDevicePixelRatio, canvasDevicePixelRatio)) {
+        qCDebug(lcCanvas, "%s device pixel ratio %.1lf -> %.1lf",
+                (m_item->objectName().isEmpty() ? "Canvas" : qPrintable(m_item->objectName())),
+                m_canvasDevicePixelRatio, canvasDevicePixelRatio);
+        m_canvasDevicePixelRatio = canvasDevicePixelRatio;
+        m_canvasWindowChanged = true;
+    }
+
     if (m_canvasWindow != r) {
         m_canvasWindow = r;
         m_canvasWindowChanged = true;
-        return true;
     }
-    return false;
+
+    return m_canvasWindowChanged;
 }
 
 bool QQuickContext2DTexture::setDirtyRect(const QRect &r)
@@ -243,7 +257,7 @@ void QQuickContext2DTexture::paintWithoutTiles(QQuickContext2DCommandBuffer *ccb
 
 bool QQuickContext2DTexture::canvasDestroyed()
 {
-    return m_item == 0;
+    return m_item == nullptr;
 }
 
 void QQuickContext2DTexture::paint(QQuickContext2DCommandBuffer *ccb)
@@ -335,7 +349,7 @@ QRect QQuickContext2DTexture::createTiles(const QRect& window)
             int ht = xx + h1;
             int vt = yy + v1;
 
-            QQuickContext2DTile* tile = 0;
+            QQuickContext2DTile* tile = nullptr;
 
             QPoint pos(ht * tw, vt * th);
             QRect rect(pos, m_tileSize);
@@ -406,9 +420,9 @@ static inline QSize npotAdjustedSize(const QSize &size)
 
 QQuickContext2DFBOTexture::QQuickContext2DFBOTexture()
     : QQuickContext2DTexture()
-    , m_fbo(0)
-    , m_multisampledFbo(0)
-    , m_paint_device(0)
+    , m_fbo(nullptr)
+    , m_multisampledFbo(nullptr)
+    , m_paint_device(nullptr)
 {
     m_displayTextures[0] = 0;
     m_displayTextures[1] = 0;
@@ -549,24 +563,21 @@ QPaintDevice* QQuickContext2DFBOTexture::beginPainting()
 {
     QQuickContext2DTexture::beginPainting();
 
-    const qreal devicePixelRatio = (m_item && m_item->window()) ?
-        m_item->window()->effectiveDevicePixelRatio() : qApp->devicePixelRatio();
-
     if (m_canvasWindow.size().isEmpty()) {
         delete m_fbo;
         delete m_multisampledFbo;
         delete m_paint_device;
-        m_fbo = 0;
-        m_multisampledFbo = 0;
-        m_paint_device = 0;
-        return 0;
+        m_fbo = nullptr;
+        m_multisampledFbo = nullptr;
+        m_paint_device = nullptr;
+        return nullptr;
     } else if (!m_fbo || m_canvasWindowChanged) {
         delete m_fbo;
         delete m_multisampledFbo;
         delete m_paint_device;
-        m_paint_device = 0;
+        m_paint_device = nullptr;
 
-        m_fboSize = npotAdjustedSize(m_canvasWindow.size() * devicePixelRatio);
+        m_fboSize = npotAdjustedSize(m_canvasWindow.size() * m_canvasDevicePixelRatio);
         m_canvasWindowChanged = false;
 
         if (doMultisampling()) {
@@ -604,7 +615,10 @@ QPaintDevice* QQuickContext2DFBOTexture::beginPainting()
         QOpenGLPaintDevice *gl_device = new QOpenGLPaintDevice(m_fbo->size());
         gl_device->setPaintFlipped(true);
         gl_device->setSize(m_fbo->size());
-        gl_device->setDevicePixelRatio(devicePixelRatio);
+        gl_device->setDevicePixelRatio(m_canvasDevicePixelRatio);
+        qCDebug(lcCanvas, "%s size %.1lf x %.1lf painting with size %d x %d DPR %.1lf",
+                (m_item->objectName().isEmpty() ? "Canvas" : qPrintable(m_item->objectName())),
+                m_item->width(), m_item->height(), m_fbo->size().width(), m_fbo->size().height(), m_canvasDevicePixelRatio);
         m_paint_device = gl_device;
     }
 
@@ -708,16 +722,17 @@ QPaintDevice* QQuickContext2DImageTexture::beginPainting()
     QQuickContext2DTexture::beginPainting();
 
     if (m_canvasWindow.size().isEmpty())
-        return 0;
+        return nullptr;
 
-    const qreal devicePixelRatio = (m_item && m_item->window()) ?
-        m_item->window()->effectiveDevicePixelRatio() : qApp->devicePixelRatio();
 
     if (m_canvasWindowChanged) {
-        m_image = QImage(m_canvasWindow.size() * devicePixelRatio, QImage::Format_ARGB32_Premultiplied);
-        m_image.setDevicePixelRatio(devicePixelRatio);
+        m_image = QImage(m_canvasWindow.size() * m_canvasDevicePixelRatio, QImage::Format_ARGB32_Premultiplied);
+        m_image.setDevicePixelRatio(m_canvasDevicePixelRatio);
         m_image.fill(0x00000000);
         m_canvasWindowChanged = false;
+        qCDebug(lcCanvas, "%s size %.1lf x %.1lf painting with size %d x %d DPR %.1lf",
+                (m_item->objectName().isEmpty() ? "Canvas" : qPrintable(m_item->objectName())),
+                m_item->width(), m_item->height(), m_image.size().width(), m_image.size().height(), m_canvasDevicePixelRatio);
     }
 
     return &m_image;

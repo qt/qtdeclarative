@@ -29,6 +29,10 @@
 #include <qdir.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlextensionplugin.h>
+#include <QtCore/qjsondocument.h>
+#include <QtCore/qjsonarray.h>
 #include <QDebug>
 
 #if defined(Q_OS_MAC)
@@ -73,10 +77,78 @@ private slots:
     void importsChildPlugin();
     void importsChildPlugin2();
     void importsChildPlugin21();
+    void parallelPluginImport();
 
 private:
     QString m_importsDirectory;
     QString m_dataImportsDirectory;
+};
+
+class PluginThatWaits : public QQmlExtensionPlugin
+{
+public:
+    static QByteArray metaData;
+
+    static QMutex initializeEngineEntered;
+    static QWaitCondition waitingForInitializeEngineEntry;
+    static QMutex leavingInitializeEngine;
+    static QWaitCondition waitingForInitializeEngineLeave;
+
+    void registerTypes(const char *uri) override
+    {
+        qmlRegisterModule(uri, 1, 0);
+    }
+
+    void initializeEngine(QQmlEngine *engine, const char *uri) override
+    {
+        initializeEngineEntered.lock();
+        leavingInitializeEngine.lock();
+        waitingForInitializeEngineEntry.wakeOne();
+        initializeEngineEntered.unlock();
+        waitingForInitializeEngineLeave.wait(&leavingInitializeEngine);
+        leavingInitializeEngine.unlock();
+    }
+};
+QByteArray PluginThatWaits::metaData;
+QMutex PluginThatWaits::initializeEngineEntered;
+QWaitCondition PluginThatWaits::waitingForInitializeEngineEntry;
+QMutex PluginThatWaits::leavingInitializeEngine;
+QWaitCondition PluginThatWaits::waitingForInitializeEngineLeave;
+
+class SecondStaticPlugin : public QQmlExtensionPlugin
+{
+public:
+    static QByteArray metaData;
+
+    void registerTypes(const char *uri) override
+    {
+        qmlRegisterModule(uri, 1, 0);
+    }
+};
+QByteArray SecondStaticPlugin::metaData;
+
+template <typename PluginType>
+void registerStaticPlugin(const char *uri)
+{
+    QStaticPlugin plugin;
+    plugin.instance = []() {
+        static PluginType plugin;
+        return static_cast<QObject*>(&plugin);
+    };
+
+    QJsonObject md;
+    md.insert(QStringLiteral("IID"), QQmlExtensionInterface_iid);
+    QJsonArray uris;
+    uris.append(uri);
+    md.insert(QStringLiteral("uri"), uris);
+
+    PluginType::metaData.append(QLatin1String("QTMETADATA  "));
+    PluginType::metaData.append(QJsonDocument(md).toBinaryData());
+
+    plugin.rawMetaData = []() {
+        return PluginType::metaData.constData();
+    };
+    qRegisterStaticPluginFunction(plugin);
 };
 
 void tst_qqmlmoduleplugin::initTestCase()
@@ -88,6 +160,9 @@ void tst_qqmlmoduleplugin::initTestCase()
     m_dataImportsDirectory = directory() + QStringLiteral("/imports");
     QVERIFY2(QFileInfo(m_dataImportsDirectory).isDir(),
              qPrintable(QString::fromLatin1("Imports directory '%1' does not exist.").arg(m_dataImportsDirectory)));
+
+    registerStaticPlugin<PluginThatWaits>("moduleWithWaitingPlugin");
+    registerStaticPlugin<SecondStaticPlugin>("moduleWithStaticPlugin");
 }
 
 #define VERIFY_ERRORS(errorfile) \
@@ -143,7 +218,7 @@ void tst_qqmlmoduleplugin::importsPlugin()
         qWarning() << err;
     VERIFY_ERRORS(0);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("value").toInt(),123);
     delete object;
 }
@@ -211,7 +286,7 @@ void tst_qqmlmoduleplugin::importPluginWithQmlFile()
         qWarning() << err;
     VERIFY_ERRORS(0);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     delete object;
 }
 
@@ -227,7 +302,7 @@ void tst_qqmlmoduleplugin::remoteImportWithQuotedUrl()
     QTRY_COMPARE(component.status(), QQmlComponent::Ready);
     QObject *object = component.create();
     QCOMPARE(object->property("width").toInt(), 300);
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     delete object;
 
     foreach (QQmlError err, component.errors())
@@ -249,13 +324,36 @@ void tst_qqmlmoduleplugin::remoteImportWithUnquotedUri()
 
     QTRY_COMPARE(component.status(), QQmlComponent::Ready);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("width").toInt(), 300);
     delete object;
 
     foreach (QQmlError err, component.errors())
         qWarning() << err;
     VERIFY_ERRORS(0);
+}
+
+static QByteArray msgComponentError(const QQmlComponent &c, const QQmlEngine *engine /* = 0 */)
+{
+    QString result;
+    const QList<QQmlError> errors = c.errors();
+    QTextStream str(&result);
+    str << "Component '" << c.url().toString() << "' has " << errors.size() << " errors: '";
+    for (int i = 0; i < errors.size(); ++i) {
+        if (i)
+            str << ", '";
+        str << errors.at(i).toString() << '\'';
+    }
+    if (!engine) {
+        if (QQmlContext *context = c.creationContext())
+            engine = context->engine();
+    }
+    if (engine) {
+        str << " Import paths: (" << engine->importPathList().join(QStringLiteral(", "))
+            << ") Plugin paths: (" << engine->pluginPathList().join(QStringLiteral(", "))
+            << ')';
+    }
+    return result.toLocal8Bit();
 }
 
 // QTBUG-17324
@@ -271,7 +369,7 @@ void tst_qqmlmoduleplugin::importsMixedQmlCppPlugin()
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("importsMixedQmlCppPlugin.qml")));
 
     QObject *o = component.create();
-    QVERIFY2(o != 0, QQmlDataTest::msgComponentError(component, &engine));
+    QVERIFY2(o != nullptr, msgComponentError(component, &engine));
     QCOMPARE(o->property("test").toBool(), true);
     delete o;
     }
@@ -280,7 +378,7 @@ void tst_qqmlmoduleplugin::importsMixedQmlCppPlugin()
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("importsMixedQmlCppPlugin.2.qml")));
 
     QObject *o = component.create();
-    QVERIFY2(o != 0, QQmlDataTest::msgComponentError(component, &engine));
+    QVERIFY2(o != nullptr, msgComponentError(component, &engine));
     QCOMPARE(o->property("test").toBool(), true);
     QCOMPARE(o->property("test2").toBool(), true);
     delete o;
@@ -408,7 +506,7 @@ void tst_qqmlmoduleplugin::importLocalModule()
     component.setData(qml.toUtf8(), testFileUrl("empty.qml"));
 
     QScopedPointer<QObject> object(component.create());
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("majorVersion").value<int>(), majorVersion);
     QCOMPARE(object->property("minorVersion").value<int>(), minorVersion);
 }
@@ -465,7 +563,7 @@ void tst_qqmlmoduleplugin::importStrictModule()
 
     if (error.isEmpty()) {
         QScopedPointer<QObject> object(component.create());
-        QVERIFY(object != 0);
+        QVERIFY(object != nullptr);
     } else {
         QVERIFY(!component.isReady());
         QCOMPARE(component.errors().count(), 1);
@@ -505,12 +603,6 @@ void tst_qqmlmoduleplugin::importStrictModule_data()
            "New.MyPluginType {}"
         << QString()
         << QString();
-
-    QTest::newRow("wrong target")
-        << "import org.qtproject.InvalidStrictModule 1.0\n"
-           "MyPluginType {}"
-        << QString()
-        << ":1:1: plugin cannot be loaded for module \"org.qtproject.InvalidStrictModule\": Cannot install element 'MyPluginType' into unregistered namespace 'org.qtproject.SomeOtherModule'";
 
     QTest::newRow("non-strict clash")
         << "import org.qtproject.NonstrictModule 1.0\n"
@@ -555,7 +647,7 @@ void tst_qqmlmoduleplugin::importProtectedModule()
     //If plugin is loaded due to import, should assert
     QScopedPointer<QObject> object(component.create());
     //qDebug() << component.errorString();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 }
 
 void tst_qqmlmoduleplugin::importVersionedModule()
@@ -596,7 +688,7 @@ void tst_qqmlmoduleplugin::importsChildPlugin()
         qWarning() << err;
     VERIFY_ERRORS(0);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("value").toInt(),123);
     delete object;
 }
@@ -613,7 +705,7 @@ void tst_qqmlmoduleplugin::importsChildPlugin2()
         qWarning() << err;
     VERIFY_ERRORS(0);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("value").toInt(),123);
     delete object;
 }
@@ -630,9 +722,54 @@ void tst_qqmlmoduleplugin::importsChildPlugin21()
         qWarning() << err;
     VERIFY_ERRORS(0);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("value").toInt(),123);
     delete object;
+}
+
+void tst_qqmlmoduleplugin::parallelPluginImport()
+{
+    QMutexLocker locker(&PluginThatWaits::initializeEngineEntered);
+
+    QThread worker;
+    QObject::connect(&worker, &QThread::started, [&worker](){
+        // Engines in separate threads are tricky, but as long as we do not create a graphical
+        // object and move objects created by the engines across thread boundaries, this is safe.
+        // At the same time this allows us to place the engine's loader thread into the position
+        // where, without the fix for this bug, the global lock is acquired.
+        QQmlEngine engineInThread;
+
+        QQmlComponent component(&engineInThread);
+        component.setData("import moduleWithWaitingPlugin 1.0\nimport QtQml 2.0\nQtObject {}",
+                          QUrl());
+
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+
+        worker.quit();
+    });
+    worker.start();
+
+    PluginThatWaits::waitingForInitializeEngineEntry.wait(&PluginThatWaits::initializeEngineEntered);
+
+    {
+        // After acquiring this lock, the engine in the other thread as well as its type loader
+        // thread are blocked. However they should not hold the global plugin lock
+        // qmlEnginePluginsWithRegisteredTypes()->mutex in qqmllimports.cpp, allowing for the load
+        // of a component in a different engine with its own plugin to proceed.
+        QMutexLocker continuationLock(&PluginThatWaits::leavingInitializeEngine);
+
+        QQmlEngine secondEngine;
+        QQmlComponent secondComponent(&secondEngine);
+        secondComponent.setData("import moduleWithStaticPlugin 1.0\nimport QtQml 2.0\nQtObject {}",
+                                QUrl());
+        QScopedPointer<QObject> o(secondComponent.create());
+        QVERIFY(!o.isNull());
+
+        PluginThatWaits::waitingForInitializeEngineLeave.wakeOne();
+    }
+
+    worker.wait();
 }
 
 QTEST_MAIN(tst_qqmlmoduleplugin)

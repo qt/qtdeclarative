@@ -49,17 +49,17 @@ class QQmlInspectorServiceImpl : public QQmlInspectorService
 {
     Q_OBJECT
 public:
-    QQmlInspectorServiceImpl(QObject *parent = 0);
+    QQmlInspectorServiceImpl(QObject *parent = nullptr);
 
-    void addWindow(QQuickWindow *window) Q_DECL_OVERRIDE;
-    void setParentWindow(QQuickWindow *window, QWindow *parent) Q_DECL_OVERRIDE;
-    void removeWindow(QQuickWindow *window) Q_DECL_OVERRIDE;
+    void addWindow(QQuickWindow *window) override;
+    void setParentWindow(QQuickWindow *window, QWindow *parent) override;
+    void removeWindow(QQuickWindow *window) override;
 
 signals:
     void scheduleMessage(const QByteArray &message);
 
 protected:
-    virtual void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
+    void messageReceived(const QByteArray &) override;
 
 private:
     friend class QQmlInspectorServiceFactory;
@@ -72,7 +72,7 @@ private:
 };
 
 QQmlInspectorServiceImpl::QQmlInspectorServiceImpl(QObject *parent):
-    QQmlInspectorService(1, parent), m_globalInspector(0)
+    QQmlInspectorService(1, parent), m_globalInspector(nullptr)
 {
     connect(this, &QQmlInspectorServiceImpl::scheduleMessage,
             this, &QQmlInspectorServiceImpl::messageFromClient, Qt::QueuedConnection);
@@ -95,7 +95,7 @@ QmlJSDebugger::GlobalInspector *QQmlInspectorServiceImpl::checkInspector()
         }
     } else if (m_globalInspector) {
         delete m_globalInspector;
-        m_globalInspector = 0;
+        m_globalInspector = nullptr;
     }
     return m_globalInspector;
 }
@@ -138,7 +138,7 @@ void QQmlInspectorServiceImpl::messageFromClient(const QByteArray &message)
 
 QQmlDebugService *QQmlInspectorServiceFactory::create(const QString &key)
 {
-    return key == QQmlInspectorServiceImpl::s_key ? new QQmlInspectorServiceImpl(this) : 0;
+    return key == QQmlInspectorServiceImpl::s_key ? new QQmlInspectorServiceImpl(this) : nullptr;
 }
 
 QT_END_NAMESPACE

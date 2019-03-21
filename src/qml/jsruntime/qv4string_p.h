@@ -60,41 +60,63 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct ExecutionEngine;
-struct Identifier;
+struct PropertyKey;
 
 namespace Heap {
 
-struct Q_QML_PRIVATE_EXPORT String : Base {
+struct Q_QML_PRIVATE_EXPORT StringOrSymbol : Base
+{
     enum StringType {
-        StringType_Unknown,
+        StringType_Symbol,
         StringType_Regular,
-        StringType_ArrayIndex
+        StringType_ArrayIndex,
+        StringType_Unknown,
+        StringType_AddedString,
+        StringType_SubString,
+        StringType_Complex = StringType_AddedString
     };
 
-#ifndef V4_BOOTSTRAP
-    void init(const QString &text);
-    void init(String *l, String *n);
+    mutable QStringData *text;
+    mutable PropertyKey identifier;
+    mutable uint subtype;
+    mutable uint stringHash;
+
+    static void markObjects(Heap::Base *that, MarkStack *markStack);
     void destroy();
-    void simplifyString() const;
-    int length() const {
-        Q_ASSERT((largestSubLength &&
-                  (len == left->len + right->len)) ||
-                 len == (uint)text->size);
-        return len;
-    }
-    std::size_t retainedTextSize() const {
-        return largestSubLength ? 0 : (std::size_t(text->size) * sizeof(QChar));
+
+    inline QString toQString() const {
+        if (!text)
+            return QString();
+        QStringDataPtr ptr = { text };
+        text->ref.ref();
+        return QString(ptr);
     }
     void createHashValue() const;
     inline unsigned hashValue() const {
-        if (subtype == StringType_Unknown)
+        if (subtype >= StringType_Unknown)
             createHashValue();
-        Q_ASSERT(!largestSubLength);
+        Q_ASSERT(subtype < StringType_Complex);
 
         return stringHash;
     }
+};
+
+struct Q_QML_PRIVATE_EXPORT String : StringOrSymbol {
+    static void markObjects(Heap::Base *that, MarkStack *markStack);
+
+#ifndef V4_BOOTSTRAP
+    const VTable *vtable() const {
+        return internalClass->vtable;
+    }
+
+    void init(const QString &text);
+    void simplifyString() const;
+    int length() const;
+    std::size_t retainedTextSize() const {
+        return subtype >= StringType_Complex ? 0 : (std::size_t(text->size) * sizeof(QChar));
+    }
     inline QString toQString() const {
-        if (largestSubLength)
+        if (subtype >= StringType_Complex)
             simplifyString();
         QStringDataPtr ptr = { text };
         text->ref.ref();
@@ -105,8 +127,8 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
             return true;
         if (hashValue() != other->hashValue())
             return false;
-        Q_ASSERT(!largestSubLength);
-        if (identifier && identifier == other->identifier)
+        Q_ASSERT(subtype < StringType_Complex);
+        if (identifier.isValid() && identifier == other->identifier)
             return true;
         if (subtype == Heap::String::StringType_ArrayIndex && other->subtype == Heap::String::StringType_ArrayIndex)
             return true;
@@ -114,32 +136,62 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
         return toQString() == other->toQString();
     }
 
-    union {
-        mutable QStringData *text;
-        mutable String *left;
-    };
-    union {
-        mutable Identifier *identifier;
-        mutable String *right;
-    };
-    mutable uint subtype;
-    mutable uint stringHash;
-    mutable uint largestSubLength;
-    uint len;
+    bool startsWithUpper() const;
+
 private:
     static void append(const String *data, QChar *ch);
 #endif
 };
-V4_ASSERT_IS_TRIVIAL(String)
+Q_STATIC_ASSERT(std::is_trivial< String >::value);
+
+#ifndef V4_BOOTSTRAP
+struct ComplexString : String {
+    void init(String *l, String *n);
+    void init(String *ref, int from, int len);
+    mutable String *left;
+    mutable String *right;
+    union {
+        mutable int largestSubLength;
+        int from;
+    };
+    int len;
+};
+Q_STATIC_ASSERT(std::is_trivial< ComplexString >::value);
+
+inline
+int String::length() const {
+    return text ? text->size : static_cast<const ComplexString *>(this)->len;
+}
+#endif
 
 }
 
-struct Q_QML_PRIVATE_EXPORT String : public Managed {
+struct Q_QML_PRIVATE_EXPORT StringOrSymbol : public Managed {
 #ifndef V4_BOOTSTRAP
-    V4_MANAGED(String, Managed)
+    V4_MANAGED(StringOrSymbol, Managed)
+    V4_NEEDS_DESTROY
+    enum {
+        IsStringOrSymbol = true
+    };
+
+private:
+    inline void createPropertyKey() const;
+public:
+    PropertyKey propertyKey() const { Q_ASSERT(d()->identifier.isValid()); return d()->identifier; }
+    PropertyKey toPropertyKey() const;
+
+
+    inline QString toQString() const {
+        return d()->toQString();
+    }
+#endif
+};
+
+struct Q_QML_PRIVATE_EXPORT String : public StringOrSymbol {
+#ifndef V4_BOOTSTRAP
+    V4_MANAGED(String, StringOrSymbol)
     Q_MANAGED_TYPE(String)
     V4_INTERNALCLASS(String)
-    V4_NEEDS_DESTROY
     enum {
         IsString = true
     };
@@ -154,7 +206,7 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
         return d()->isEqualTo(other->d());
     }
 
-    inline bool compare(const String *other) {
+    inline bool lessThan(const String *other) {
         return toQString() < other->toQString();
     }
 
@@ -165,23 +217,10 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     inline unsigned hashValue() const {
         return d()->hashValue();
     }
-    uint asArrayIndex() const {
-        if (subtype() == Heap::String::StringType_Unknown)
-            d()->createHashValue();
-        Q_ASSERT(!d()->largestSubLength);
-        if (subtype() == Heap::String::StringType_ArrayIndex)
-            return d()->stringHash;
-        return UINT_MAX;
-    }
     uint toUInt(bool *ok) const;
 
-    void makeIdentifier() const {
-        if (d()->identifier)
-            return;
-        makeIdentifierImpl();
-    }
-
-    void makeIdentifierImpl() const;
+    // slow path
+    Q_NEVER_INLINE void createPropertyKeyImpl() const;
 
     static uint createHashValue(const QChar *ch, int length, uint *subtype)
     {
@@ -195,19 +234,11 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
         return calculateHashValue(ch, end, subtype);
     }
 
-    bool startsWithUpper() const {
-        const String::Data *l = d();
-        while (l->largestSubLength)
-            l = l->left;
-        return l->text->size && QChar::isUpper(l->text->data()[0]);
-    }
-
-    Identifier *identifier() const { return d()->identifier; }
+    bool startsWithUpper() const { return d()->startsWithUpper(); }
 
 protected:
-    static void markObjects(Heap::Base *that, MarkStack *markStack);
-    static bool isEqualTo(Managed *that, Managed *o);
-    static uint getLength(const Managed *m);
+    static bool virtualIsEqualTo(Managed *that, Managed *o);
+    static qint64 virtualGetLength(const Managed *m);
 #endif
 
 public:
@@ -215,7 +246,7 @@ public:
 
 private:
     static inline uint toUInt(const QChar *ch) { return ch->unicode(); }
-    static inline uint toUInt(const char *ch) { return *ch; }
+    static inline uint toUInt(const char *ch) { return static_cast<unsigned char>(*ch); }
 
     template <typename T>
     static inline uint toArrayIndex(const T *ch, const T *end)
@@ -247,7 +278,7 @@ public:
         uint h = toArrayIndex(ch, end);
         if (h != UINT_MAX) {
             if (subtype)
-                *subtype = Heap::String::StringType_ArrayIndex;
+                *subtype = Heap::StringOrSymbol::StringType_ArrayIndex;
             return h;
         }
 
@@ -257,17 +288,45 @@ public:
         }
 
         if (subtype)
-            *subtype = Heap::String::StringType_Regular;
+            *subtype = (toUInt(ch) == '@') ? Heap::StringOrSymbol::StringType_Symbol : Heap::StringOrSymbol::StringType_Regular;
         return h;
     }
 };
 
-template<>
-inline const String *Value::as() const {
-    return isManaged() && m()->vtable()->isString ? static_cast<const String *>(this) : 0;
+#ifndef V4_BOOTSTRAP
+struct ComplexString : String {
+    typedef QV4::Heap::ComplexString Data;
+    QV4::Heap::ComplexString *d_unchecked() const { return static_cast<QV4::Heap::ComplexString *>(m()); }
+    QV4::Heap::ComplexString *d() const {
+        QV4::Heap::ComplexString *dptr = d_unchecked();
+        dptr->_checkIsInitialized();
+        return dptr;
+    }
+};
+
+inline
+void StringOrSymbol::createPropertyKey() const {
+    Q_ASSERT(!d()->identifier.isValid());
+    Q_ASSERT(isString());
+    static_cast<const String *>(this)->createPropertyKeyImpl();
 }
 
-#ifndef V4_BOOTSTRAP
+inline PropertyKey StringOrSymbol::toPropertyKey() const {
+    if (!d()->identifier.isValid())
+        createPropertyKey();
+    return d()->identifier;
+}
+
+template<>
+inline const StringOrSymbol *Value::as() const {
+    return isManaged() && m()->internalClass->vtable->isStringOrSymbol ? static_cast<const String *>(this) : nullptr;
+}
+
+template<>
+inline const String *Value::as() const {
+    return isManaged() && m()->internalClass->vtable->isString ? static_cast<const String *>(this) : nullptr;
+}
+
 template<>
 inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
 {

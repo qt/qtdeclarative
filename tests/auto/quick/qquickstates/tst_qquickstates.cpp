@@ -137,6 +137,7 @@ private slots:
     void revertListBug();
     void QTBUG_38492();
     void revertListMemoryLeak();
+    void duplicateStateName();
 };
 
 void tst_qquickstates::initTestCase()
@@ -158,7 +159,7 @@ void tst_qquickstates::basicChanges()
         QQmlComponent rectComponent(&engine, testFileUrl("basicChanges.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
 
         QCOMPARE(rect->color(),QColor("red"));
 
@@ -173,7 +174,7 @@ void tst_qquickstates::basicChanges()
         QQmlComponent rectComponent(&engine, testFileUrl("basicChanges2.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
 
         QCOMPARE(rect->color(),QColor("red"));
 
@@ -194,7 +195,7 @@ void tst_qquickstates::basicChanges()
         QQmlComponent rectComponent(&engine, testFileUrl("basicChanges3.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
 
         QCOMPARE(rect->color(),QColor("red"));
         QCOMPARE(rect->border()->width(),1.0);
@@ -231,7 +232,7 @@ void tst_qquickstates::basicChanges()
         QVERIFY(component.isReady());
 
         MyRect *rect = qobject_cast<MyRect*>(component.create());
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
 
         QMetaProperty prop = rect->metaObject()->property(rect->metaObject()->indexOfProperty("propertyWithNotify"));
         QVERIFY(prop.hasNotifySignal());
@@ -253,7 +254,7 @@ void tst_qquickstates::attachedPropertyChanges()
     QVERIFY(component.isReady());
 
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
     QCOMPARE(item->width(), 50.0);
 
     // Ensure attached property has been changed
@@ -274,7 +275,7 @@ void tst_qquickstates::basicExtension()
         QQmlComponent rectComponent(&engine, testFileUrl("basicExtension.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
 
         QCOMPARE(rect->color(),QColor("red"));
         QCOMPARE(rect->border()->width(),1.0);
@@ -308,7 +309,7 @@ void tst_qquickstates::basicExtension()
         QQmlComponent rectComponent(&engine, testFileUrl("fakeExtension.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
 
         QCOMPARE(rect->color(),QColor("red"));
 
@@ -340,7 +341,7 @@ void tst_qquickstates::basicBinding()
         QQmlComponent rectComponent(&engine, testFileUrl("basicBinding.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
 
         QCOMPARE(rect->color(),QColor("red"));
 
@@ -368,7 +369,7 @@ void tst_qquickstates::basicBinding()
         QQmlComponent rectComponent(&engine, testFileUrl("basicBinding2.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
 
         QCOMPARE(rect->color(),QColor("red"));
 
@@ -399,7 +400,7 @@ void tst_qquickstates::basicBinding()
         QQmlComponent rectComponent(&engine, testFileUrl("basicBinding3.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
 
         QCOMPARE(rect->color(),QColor("red"));
         rect->setProperty("sourceColor", QColor("green"));
@@ -424,7 +425,7 @@ void tst_qquickstates::basicBinding()
         QQmlComponent rectComponent(&engine, testFileUrl("basicBinding4.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
 
         QCOMPARE(rect->color(),QColor("red"));
 
@@ -456,7 +457,7 @@ void tst_qquickstates::signalOverride()
     {
         QQmlComponent rectComponent(&engine, testFileUrl("signalOverride.qml"));
         MyRect *rect = qobject_cast<MyRect*>(rectComponent.create());
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
 
         QCOMPARE(rect->color(),QColor("red"));
         rect->doSomething();
@@ -472,7 +473,7 @@ void tst_qquickstates::signalOverride()
     {
         QQmlComponent rectComponent(&engine, testFileUrl("signalOverride2.qml"));
         MyRect *rect = qobject_cast<MyRect*>(rectComponent.create());
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
 
         QCOMPARE(rect->color(),QColor("white"));
         rect->doSomething();
@@ -495,7 +496,7 @@ void tst_qquickstates::signalOverrideCrash()
 
     QQmlComponent rectComponent(&engine, testFileUrl("signalOverrideCrash.qml"));
     MyRect *rect = qobject_cast<MyRect*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QQuickItemPrivate::get(rect)->setState("overridden");
     rect->doSomething();
@@ -507,7 +508,7 @@ void tst_qquickstates::signalOverrideCrash2()
 
     QQmlComponent rectComponent(&engine, testFileUrl("signalOverrideCrash2.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QQuickItemPrivate::get(rect)->setState("state1");
     QQuickItemPrivate::get(rect)->setState("state2");
@@ -522,7 +523,7 @@ void tst_qquickstates::signalOverrideCrash3()
 
     QQmlComponent rectComponent(&engine, testFileUrl("signalOverrideCrash3.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QQuickItemPrivate::get(rect)->setState("state1");
     QQuickItemPrivate::get(rect)->setState("");
@@ -537,7 +538,7 @@ void tst_qquickstates::signalOverrideCrash4()
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("signalOverrideCrash4.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
@@ -557,20 +558,20 @@ void tst_qquickstates::parentChange()
     {
         QQmlComponent rectComponent(&engine, testFileUrl("parentChange1.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
 
         QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
-        QVERIFY(innerRect != 0);
+        QVERIFY(innerRect != nullptr);
 
         QQmlListReference list(rect, "states");
         QQuickState *state = qobject_cast<QQuickState*>(list.at(0));
-        QVERIFY(state != 0);
+        QVERIFY(state != nullptr);
 
         qmlExecuteDeferred(state);
         QQuickParentChange *pChange = qobject_cast<QQuickParentChange*>(state->operationAt(0));
-        QVERIFY(pChange != 0);
+        QVERIFY(pChange != nullptr);
         QQuickItem *nParent = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("NewParent"));
-        QVERIFY(nParent != 0);
+        QVERIFY(nParent != nullptr);
 
         QCOMPARE(pChange->parent(), nParent);
 
@@ -584,10 +585,10 @@ void tst_qquickstates::parentChange()
     {
         QQmlComponent rectComponent(&engine, testFileUrl("parentChange2.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
-        QVERIFY(innerRect != 0);
+        QVERIFY(innerRect != nullptr);
 
         rectPrivate->setState("reparented");
         QCOMPARE(innerRect->rotation(), qreal(15));
@@ -599,10 +600,10 @@ void tst_qquickstates::parentChange()
     {
         QQmlComponent rectComponent(&engine, testFileUrl("parentChange3.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
-        QVERIFY(innerRect != 0);
+        QVERIFY(innerRect != nullptr);
 
         rectPrivate->setState("reparented");
         QCOMPARE(innerRect->rotation(), qreal(-37));
@@ -621,10 +622,10 @@ void tst_qquickstates::parentChange()
     {
         QQmlComponent rectComponent(&engine, testFileUrl("parentChange6.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
 
         QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
-        QVERIFY(innerRect != 0);
+        QVERIFY(innerRect != nullptr);
 
         QQuickItemPrivate::get(rect)->setState("reparented");
         QCOMPARE(innerRect->rotation(), qreal(180));
@@ -641,10 +642,10 @@ void tst_qquickstates::parentChangeErrors()
     {
         QQmlComponent rectComponent(&engine, testFileUrl("parentChange4.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
 
         QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
-        QVERIFY(innerRect != 0);
+        QVERIFY(innerRect != nullptr);
 
         QTest::ignoreMessage(QtWarningMsg, fullDataPath("parentChange4.qml") + ":25:9: QML ParentChange: Unable to preserve appearance under non-uniform scale");
         QQuickItemPrivate::get(rect)->setState("reparented");
@@ -657,10 +658,10 @@ void tst_qquickstates::parentChangeErrors()
     {
         QQmlComponent rectComponent(&engine, testFileUrl("parentChange5.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
 
         QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
-        QVERIFY(innerRect != 0);
+        QVERIFY(innerRect != nullptr);
 
         QTest::ignoreMessage(QtWarningMsg, fullDataPath("parentChange5.qml") + ":25:9: QML ParentChange: Unable to preserve appearance under complex transform");
         QQuickItemPrivate::get(rect)->setState("reparented");
@@ -677,19 +678,19 @@ void tst_qquickstates::anchorChanges()
 
     QQmlComponent rectComponent(&engine, testFileUrl("anchorChanges1.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
     QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
-    QVERIFY(innerRect != 0);
+    QVERIFY(innerRect != nullptr);
 
     QQmlListReference list(rect, "states");
     QQuickState *state = qobject_cast<QQuickState*>(list.at(0));
-    QVERIFY(state != 0);
+    QVERIFY(state != nullptr);
 
     qmlExecuteDeferred(state);
     QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
-    QVERIFY(aChanges != 0);
+    QVERIFY(aChanges != nullptr);
 
     QCOMPARE(aChanges->anchors()->left().isUndefinedLiteral(), true);
     QVERIFY(!aChanges->anchors()->left().isEmpty());
@@ -714,11 +715,11 @@ void tst_qquickstates::anchorChanges2()
 
     QQmlComponent rectComponent(&engine, testFileUrl("anchorChanges2.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
     QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
-    QVERIFY(innerRect != 0);
+    QVERIFY(innerRect != nullptr);
 
     rectPrivate->setState("right");
     QCOMPARE(innerRect->x(), qreal(150));
@@ -735,25 +736,25 @@ void tst_qquickstates::anchorChanges3()
 
     QQmlComponent rectComponent(&engine, testFileUrl("anchorChanges3.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
     QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
-    QVERIFY(innerRect != 0);
+    QVERIFY(innerRect != nullptr);
 
     QQuickItem *leftGuideline = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("LeftGuideline"));
-    QVERIFY(leftGuideline != 0);
+    QVERIFY(leftGuideline != nullptr);
 
     QQuickItem *bottomGuideline = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("BottomGuideline"));
-    QVERIFY(bottomGuideline != 0);
+    QVERIFY(bottomGuideline != nullptr);
 
     QQmlListReference list(rect, "states");
     QQuickState *state = qobject_cast<QQuickState*>(list.at(0));
-    QVERIFY(state != 0);
+    QVERIFY(state != nullptr);
 
     qmlExecuteDeferred(state);
     QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
-    QVERIFY(aChanges != 0);
+    QVERIFY(aChanges != nullptr);
 
     QVERIFY(!aChanges->anchors()->top().isEmpty());
     QVERIFY(!aChanges->anchors()->bottom().isEmpty());
@@ -789,24 +790,24 @@ void tst_qquickstates::anchorChanges4()
 
     QQmlComponent rectComponent(&engine, testFileUrl("anchorChanges4.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
-    QVERIFY(innerRect != 0);
+    QVERIFY(innerRect != nullptr);
 
     QQuickItem *leftGuideline = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("LeftGuideline"));
-    QVERIFY(leftGuideline != 0);
+    QVERIFY(leftGuideline != nullptr);
 
     QQuickItem *bottomGuideline = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("BottomGuideline"));
-    QVERIFY(bottomGuideline != 0);
+    QVERIFY(bottomGuideline != nullptr);
 
     QQmlListReference list(rect, "states");
     QQuickState *state = qobject_cast<QQuickState*>(list.at(0));
-    QVERIFY(state != 0);
+    QVERIFY(state != nullptr);
 
     qmlExecuteDeferred(state);
     QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
-    QVERIFY(aChanges != 0);
+    QVERIFY(aChanges != nullptr);
 
     QVERIFY(!aChanges->anchors()->horizontalCenter().isEmpty());
     QVERIFY(!aChanges->anchors()->verticalCenter().isEmpty());
@@ -827,24 +828,24 @@ void tst_qquickstates::anchorChanges5()
 
     QQmlComponent rectComponent(&engine, testFileUrl("anchorChanges5.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
-    QVERIFY(innerRect != 0);
+    QVERIFY(innerRect != nullptr);
 
     QQuickItem *leftGuideline = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("LeftGuideline"));
-    QVERIFY(leftGuideline != 0);
+    QVERIFY(leftGuideline != nullptr);
 
     QQuickItem *bottomGuideline = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("BottomGuideline"));
-    QVERIFY(bottomGuideline != 0);
+    QVERIFY(bottomGuideline != nullptr);
 
     QQmlListReference list(rect, "states");
     QQuickState *state = qobject_cast<QQuickState*>(list.at(0));
-    QVERIFY(state != 0);
+    QVERIFY(state != nullptr);
 
     qmlExecuteDeferred(state);
     QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
-    QVERIFY(aChanges != 0);
+    QVERIFY(aChanges != nullptr);
 
     QVERIFY(!aChanges->anchors()->baseline().isEmpty());
 
@@ -873,20 +874,20 @@ void tst_qquickstates::anchorChangesRTL()
 
     QQmlComponent rectComponent(&engine, testFileUrl("anchorChanges1.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
     QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
-    QVERIFY(innerRect != 0);
+    QVERIFY(innerRect != nullptr);
     mirrorAnchors(innerRect);
 
     QQmlListReference list(rect, "states");
     QQuickState *state = qobject_cast<QQuickState*>(list.at(0));
-    QVERIFY(state != 0);
+    QVERIFY(state != nullptr);
 
     qmlExecuteDeferred(state);
     QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
-    QVERIFY(aChanges != 0);
+    QVERIFY(aChanges != nullptr);
 
     rectPrivate->setState("right");
     QCOMPARE(innerRect->x(), offsetRTL(rect, innerRect) - qreal(150));
@@ -907,11 +908,11 @@ void tst_qquickstates::anchorChangesRTL2()
 
     QQmlComponent rectComponent(&engine, testFileUrl("anchorChanges2.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
     QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
-    QVERIFY(innerRect != 0);
+    QVERIFY(innerRect != nullptr);
     mirrorAnchors(innerRect);
 
     rectPrivate->setState("right");
@@ -929,26 +930,26 @@ void tst_qquickstates::anchorChangesRTL3()
 
     QQmlComponent rectComponent(&engine, testFileUrl("anchorChanges3.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
     QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
-    QVERIFY(innerRect != 0);
+    QVERIFY(innerRect != nullptr);
     mirrorAnchors(innerRect);
 
     QQuickItem *leftGuideline = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("LeftGuideline"));
-    QVERIFY(leftGuideline != 0);
+    QVERIFY(leftGuideline != nullptr);
 
     QQuickItem *bottomGuideline = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("BottomGuideline"));
-    QVERIFY(bottomGuideline != 0);
+    QVERIFY(bottomGuideline != nullptr);
 
     QQmlListReference list(rect, "states");
     QQuickState *state = qobject_cast<QQuickState*>(list.at(0));
-    QVERIFY(state != 0);
+    QVERIFY(state != nullptr);
 
     qmlExecuteDeferred(state);
     QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
-    QVERIFY(aChanges != 0);
+    QVERIFY(aChanges != nullptr);
 
     rectPrivate->setState("reanchored");
     QCOMPARE(aChanges->object(), qobject_cast<QQuickItem*>(innerRect));
@@ -984,7 +985,7 @@ void tst_qquickstates::anchorChangesCrash()
 
     QQmlComponent rectComponent(&engine, testFileUrl("anchorChangesCrash.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QQuickItemPrivate::get(rect)->setState("reanchored");
 
@@ -1002,11 +1003,11 @@ void tst_qquickstates::anchorRewindBug()
     QVERIFY(QTest::qWaitForWindowExposed(view));
 
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(view->rootObject());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QQuickItem * column = rect->findChild<QQuickItem*>("column");
 
-    QVERIFY(column != 0);
+    QVERIFY(column != nullptr);
     QVERIFY(!QQuickItemPrivate::get(column)->heightValid);
     QVERIFY(!QQuickItemPrivate::get(column)->widthValid);
     QCOMPARE(column->height(), 200.0);
@@ -1036,11 +1037,11 @@ void tst_qquickstates::anchorRewindBug2()
 
     QQmlComponent rectComponent(&engine, testFileUrl("anchorRewindBug2.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QQuickRectangle *mover = rect->findChild<QQuickRectangle*>("mover");
 
-    QVERIFY(mover != 0);
+    QVERIFY(mover != nullptr);
     QCOMPARE(mover->y(), qreal(0.0));
     QCOMPARE(mover->width(), qreal(50.0));
 
@@ -1062,7 +1063,7 @@ void tst_qquickstates::script()
     {
         QQmlComponent rectComponent(&engine, testFileUrl("script.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-        QVERIFY(rect != 0);
+        QVERIFY(rect != nullptr);
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QCOMPARE(rect->color(),QColor("red"));
 
@@ -1080,7 +1081,7 @@ void tst_qquickstates::restoreEntryValues()
 
     QQmlComponent rectComponent(&engine, testFileUrl("restoreEntryValues.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     QCOMPARE(rect->color(),QColor("red"));
 
@@ -1097,15 +1098,15 @@ void tst_qquickstates::explicitChanges()
 
     QQmlComponent rectComponent(&engine, testFileUrl("explicit.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     QQmlListReference list(rect, "states");
     QQuickState *state = qobject_cast<QQuickState*>(list.at(0));
-    QVERIFY(state != 0);
+    QVERIFY(state != nullptr);
 
     qmlExecuteDeferred(state);
     QQuickPropertyChanges *changes = qobject_cast<QQuickPropertyChanges*>(rect->findChild<QQuickPropertyChanges*>("changes"));
-    QVERIFY(changes != 0);
+    QVERIFY(changes != nullptr);
     QVERIFY(changes->isExplicit());
 
     QCOMPARE(rect->color(),QColor("red"));
@@ -1130,7 +1131,7 @@ void tst_qquickstates::propertyErrors()
     QQmlEngine engine;
     QQmlComponent rectComponent(&engine, testFileUrl("propertyErrors.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QCOMPARE(rect->color(),QColor("red"));
 
@@ -1145,7 +1146,7 @@ void tst_qquickstates::incorrectRestoreBug()
 
     QQmlComponent rectComponent(&engine, testFileUrl("basicChanges.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     QCOMPARE(rect->color(),QColor("red"));
 
@@ -1172,7 +1173,7 @@ void tst_qquickstates::autoStateAtStartupRestoreBug()
     QQmlComponent component(&engine, testFileUrl("autoStateAtStartupRestoreBug.qml"));
     QObject *obj = component.create();
 
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->property("test").toInt(), 3);
 
     obj->setProperty("input", 2);
@@ -1188,7 +1189,7 @@ void tst_qquickstates::deletingChange()
 
     QQmlComponent rectComponent(&engine, testFileUrl("deleting.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     rectPrivate->setState("blue");
     QCOMPARE(rect->color(),QColor("blue"));
@@ -1199,11 +1200,11 @@ void tst_qquickstates::deletingChange()
     QCOMPARE(rect->radius(),qreal(0));
 
     QQuickPropertyChanges *pc = rect->findChild<QQuickPropertyChanges*>("pc1");
-    QVERIFY(pc != 0);
+    QVERIFY(pc != nullptr);
     delete pc;
 
     QQuickState *state = rect->findChild<QQuickState*>();
-    QVERIFY(state != 0);
+    QVERIFY(state != nullptr);
     qmlExecuteDeferred(state);
     QCOMPARE(state->operationCount(), 1);
 
@@ -1220,11 +1221,11 @@ void tst_qquickstates::deletingState()
 
     QQmlComponent rectComponent(&engine, testFileUrl("deletingState.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QQuickStateGroup *sg = rect->findChild<QQuickStateGroup*>();
-    QVERIFY(sg != 0);
-    QVERIFY(sg->findState("blue") != 0);
+    QVERIFY(sg != nullptr);
+    QVERIFY(sg->findState("blue") != nullptr);
 
     sg->setState("blue");
     QCOMPARE(rect->color(),QColor("blue"));
@@ -1233,7 +1234,7 @@ void tst_qquickstates::deletingState()
     QCOMPARE(rect->color(),QColor("red"));
 
     QQuickState *state = rect->findChild<QQuickState*>();
-    QVERIFY(state != 0);
+    QVERIFY(state != nullptr);
     delete state;
 
     QVERIFY(!sg->findState("blue"));
@@ -1251,7 +1252,7 @@ void tst_qquickstates::tempState()
 
     QQmlComponent rectComponent(&engine, testFileUrl("legalTempState.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     QTest::ignoreMessage(QtDebugMsg, "entering placed");
     QTest::ignoreMessage(QtDebugMsg, "entering idle");
@@ -1265,7 +1266,7 @@ void tst_qquickstates::illegalTempState()
 
     QQmlComponent rectComponent(&engine, testFileUrl("illegalTempState.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML StateGroup: Can't apply a state change as part of a state definition.");
     rectPrivate->setState("placed");
@@ -1278,7 +1279,7 @@ void tst_qquickstates::nonExistantProperty()
 
     QQmlComponent rectComponent(&engine, testFileUrl("nonExistantProp.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     QTest::ignoreMessage(QtWarningMsg, fullDataPath("nonExistantProp.qml") + ":9:9: QML PropertyChanges: Cannot assign to non-existent property \"colr\"");
     rectPrivate->setState("blue");
@@ -1291,10 +1292,10 @@ void tst_qquickstates::reset()
 
     QQmlComponent c(&engine, testFileUrl("reset.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QQuickImage *image = rect->findChild<QQuickImage*>();
-    QVERIFY(image != 0);
+    QVERIFY(image != nullptr);
     QCOMPARE(image->width(), qreal(40.));
     QCOMPARE(image->height(), qreal(20.));
 
@@ -1325,7 +1326,7 @@ void tst_qquickstates::whenOrdering()
 
     QQmlComponent c(&engine, testFileUrl("whenOrdering.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
     QCOMPARE(rectPrivate->state(), QLatin1String(""));
@@ -1348,13 +1349,13 @@ void tst_qquickstates::urlResolution()
 
     QQmlComponent c(&engine, testFileUrl("urlResolution.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QQuickItem *myType = rect->findChild<QQuickItem*>("MyType");
     QQuickImage *image1 = rect->findChild<QQuickImage*>("image1");
     QQuickImage *image2 = rect->findChild<QQuickImage*>("image2");
     QQuickImage *image3 = rect->findChild<QQuickImage*>("image3");
-    QVERIFY(myType != 0 && image1 != 0 && image2 != 0 && image3 != 0);
+    QVERIFY(myType != nullptr && image1 != nullptr && image2 != nullptr && image3 != nullptr);
 
     QQuickItemPrivate::get(myType)->setState("SetImageState");
     QUrl resolved = testFileUrl("Implementation/images/qt-logo.png");
@@ -1371,7 +1372,7 @@ void tst_qquickstates::unnamedWhen()
 
     QQmlComponent c(&engine, testFileUrl("unnamedWhen.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
     QCOMPARE(rectPrivate->state(), QLatin1String(""));
@@ -1390,7 +1391,7 @@ void tst_qquickstates::returnToBase()
 
     QQmlComponent c(&engine, testFileUrl("returnToBase.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
     QCOMPARE(rectPrivate->state(), QLatin1String(""));
@@ -1410,7 +1411,7 @@ void tst_qquickstates::extendsBug()
 
     QQmlComponent c(&engine, testFileUrl("extendsBug.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     QQuickRectangle *greenRect = rect->findChild<QQuickRectangle*>("greenRect");
 
@@ -1425,30 +1426,30 @@ void tst_qquickstates::editProperties()
 
     QQmlComponent c(&engine, testFileUrl("editProperties.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
     QQuickStateGroup *stateGroup = rectPrivate->_states();
-    QVERIFY(stateGroup != 0);
+    QVERIFY(stateGroup != nullptr);
     qmlExecuteDeferred(stateGroup);
 
     QQuickState *blueState = stateGroup->findState("blue");
-    QVERIFY(blueState != 0);
+    QVERIFY(blueState != nullptr);
     qmlExecuteDeferred(blueState);
 
     QQuickPropertyChanges *propertyChangesBlue = qobject_cast<QQuickPropertyChanges*>(blueState->operationAt(0));
-    QVERIFY(propertyChangesBlue != 0);
+    QVERIFY(propertyChangesBlue != nullptr);
 
     QQuickState *greenState = stateGroup->findState("green");
-    QVERIFY(greenState != 0);
+    QVERIFY(greenState != nullptr);
     qmlExecuteDeferred(greenState);
 
     QQuickPropertyChanges *propertyChangesGreen = qobject_cast<QQuickPropertyChanges*>(greenState->operationAt(0));
-    QVERIFY(propertyChangesGreen != 0);
+    QVERIFY(propertyChangesGreen != nullptr);
 
     QQuickRectangle *childRect = rect->findChild<QQuickRectangle*>("rect2");
-    QVERIFY(childRect != 0);
+    QVERIFY(childRect != nullptr);
     QCOMPARE(childRect->width(), qreal(402));
     QVERIFY(QQmlPropertyPrivate::binding(QQmlProperty(childRect, "width")));
     QCOMPARE(childRect->height(), qreal(200));
@@ -1553,7 +1554,7 @@ void tst_qquickstates::QTBUG_14830()
 
     QQmlComponent c(&engine, testFileUrl("QTBUG-14830.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItem *item = rect->findChild<QQuickItem*>("area");
 
     QCOMPARE(item->width(), qreal(170));
@@ -1566,7 +1567,7 @@ void tst_qquickstates::avoidFastForward()
     //shouldn't fast forward if there isn't a transition
     QQmlComponent c(&engine, testFileUrl("avoidFastForward.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     rectPrivate->setState("a");
@@ -1580,7 +1581,7 @@ void tst_qquickstates::revertListBug()
 
     QQmlComponent c(&engine, testFileUrl("revertListBug.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QQuickRectangle *rect1 = rect->findChild<QQuickRectangle*>("rect1");
     QQuickRectangle *rect2 = rect->findChild<QQuickRectangle*>("rect2");
@@ -1621,7 +1622,7 @@ void tst_qquickstates::QTBUG_38492()
 
     QQmlComponent rectComponent(&engine, testFileUrl("QTBUG-38492.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(rectComponent.create());
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
 
     QQuickItemPrivate::get(item)->setState("apply");
 
@@ -1653,6 +1654,17 @@ void tst_qquickstates::revertListMemoryLeak()
     }
     QVERIFY(bindingPtr->ref == 1);
 }
+
+void tst_qquickstates::duplicateStateName()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, testFileUrl("duplicateStateName.qml"));
+    QTest::ignoreMessage(QtWarningMsg, fullDataPath("duplicateStateName.qml") + ":3:1: QML Rectangle: Found duplicate state name: state1");
+    QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem *>(c.create()));
+    QVERIFY(!item.isNull());
+}
+
 
 QTEST_MAIN(tst_qquickstates)
 

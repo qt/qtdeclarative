@@ -90,7 +90,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectMaterial : public QSGMateri
 public:
     struct UniformData
     {
-        enum SpecialType { None, Sampler, SubRect, Opacity, Matrix };
+        enum SpecialType { None, Sampler, SamplerExternal, SubRect, Opacity, Matrix };
 
         QByteArray name;
         QVariant value;
@@ -109,10 +109,10 @@ public:
         }
     };
 
-    explicit QQuickOpenGLShaderEffectMaterial(QQuickOpenGLShaderEffectNode *node = 0);
-    QSGMaterialType *type() const Q_DECL_OVERRIDE;
-    QSGMaterialShader *createShader() const Q_DECL_OVERRIDE;
-    int compare(const QSGMaterial *other) const Q_DECL_OVERRIDE;
+    explicit QQuickOpenGLShaderEffectMaterial(QQuickOpenGLShaderEffectNode *node = nullptr);
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader() const override;
+    int compare(const QSGMaterial *other) const override;
 
     QVector<QByteArray> attributes;
     QVector<UniformData> uniforms[QQuickOpenGLShaderEffectMaterialKey::ShaderTypeCount];
@@ -149,9 +149,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectNode : public QObject, publ
     Q_OBJECT
 public:
     QQuickOpenGLShaderEffectNode();
-    virtual ~QQuickOpenGLShaderEffectNode();
+    ~QQuickOpenGLShaderEffectNode() override;
 
-    void preprocess() Q_DECL_OVERRIDE;
+    void preprocess() override;
 
 Q_SIGNALS:
     void logAndStatusChanged(const QString &, int status);

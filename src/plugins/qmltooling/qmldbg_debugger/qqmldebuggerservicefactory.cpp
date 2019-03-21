@@ -52,7 +52,7 @@ QQmlDebugService *QQmlDebuggerServiceFactory::create(const QString &key)
     if (key == QV4DebugServiceImpl::s_key)
         return new QV4DebugServiceImpl(this);
 
-    return 0;
+    return nullptr;
 }
 
 QT_END_NAMESPACE

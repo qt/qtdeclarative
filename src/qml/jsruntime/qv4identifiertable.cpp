@@ -37,6 +37,7 @@
 **
 ****************************************************************************/
 #include "qv4identifiertable_p.h"
+#include "qv4symbol_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -53,44 +54,44 @@ static inline int primeForNumBits(int numBits)
 }
 
 
-IdentifierTable::IdentifierTable(ExecutionEngine *engine)
+IdentifierTable::IdentifierTable(ExecutionEngine *engine, int numBits)
     : engine(engine)
     , size(0)
-    , numBits(8)
+    , numBits(numBits)
 {
     alloc = primeForNumBits(numBits);
-    entries = (Heap::String **)malloc(alloc*sizeof(Heap::String *));
-    memset(entries, 0, alloc*sizeof(Heap::String *));
+    entriesByHash = (Heap::StringOrSymbol **)malloc(alloc*sizeof(Heap::StringOrSymbol *));
+    entriesById = (Heap::StringOrSymbol **)malloc(alloc*sizeof(Heap::StringOrSymbol *));
+    memset(entriesByHash, 0, alloc*sizeof(Heap::String *));
+    memset(entriesById, 0, alloc*sizeof(Heap::String *));
 }
 
 IdentifierTable::~IdentifierTable()
 {
-    for (int i = 0; i < alloc; ++i)
-        if (entries[i])
-            delete entries[i]->identifier;
-    free(entries);
+    free(entriesByHash);
+    free(entriesById);
+    for (auto &h : idHashes)
+        h->identifierTable = nullptr;
 }
 
-void IdentifierTable::addEntry(Heap::String *str)
+void IdentifierTable::addEntry(Heap::StringOrSymbol *str)
 {
     uint hash = str->hashValue();
 
     if (str->subtype == Heap::String::StringType_ArrayIndex)
         return;
 
-    str->identifier = new Identifier;
-    str->identifier->string = str->toQString();
-    str->identifier->hashValue = hash;
+    str->identifier = PropertyKey::fromStringOrSymbol(str);
 
     bool grow = (alloc <= size*2);
 
     if (grow) {
         ++numBits;
         int newAlloc = primeForNumBits(numBits);
-        Heap::String **newEntries = (Heap::String **)malloc(newAlloc*sizeof(Heap::String *));
-        memset(newEntries, 0, newAlloc*sizeof(Heap::String *));
-        for (int i = 0; i < alloc; ++i) {
-            Heap::String *e = entries[i];
+        Heap::StringOrSymbol **newEntries = (Heap::StringOrSymbol **)malloc(newAlloc*sizeof(Heap::String *));
+        memset(newEntries, 0, newAlloc*sizeof(Heap::StringOrSymbol *));
+        for (uint i = 0; i < alloc; ++i) {
+            Heap::StringOrSymbol *e = entriesByHash[i];
             if (!e)
                 continue;
             uint idx = e->stringHash % newAlloc;
@@ -100,17 +101,42 @@ void IdentifierTable::addEntry(Heap::String *str)
             }
             newEntries[idx] = e;
         }
-        free(entries);
-        entries = newEntries;
+        free(entriesByHash);
+        entriesByHash = newEntries;
+
+        newEntries = (Heap::StringOrSymbol **)malloc(newAlloc*sizeof(Heap::String *));
+        memset(newEntries, 0, newAlloc*sizeof(Heap::StringOrSymbol *));
+        for (uint i = 0; i < alloc; ++i) {
+            Heap::StringOrSymbol *e = entriesById[i];
+            if (!e)
+                continue;
+            uint idx = e->identifier.id() % newAlloc;
+            while (newEntries[idx]) {
+                ++idx;
+                idx %= newAlloc;
+            }
+            newEntries[idx] = e;
+        }
+        free(entriesById);
+        entriesById = newEntries;
+
         alloc = newAlloc;
     }
 
     uint idx = hash % alloc;
-    while (entries[idx]) {
+    while (entriesByHash[idx]) {
         ++idx;
         idx %= alloc;
     }
-    entries[idx] = str;
+    entriesByHash[idx] = str;
+
+    idx = str->identifier.id() % alloc;
+    while (entriesById[idx]) {
+        ++idx;
+        idx %= alloc;
+    }
+    entriesById[idx] = str;
+
     ++size;
 }
 
@@ -120,10 +146,16 @@ Heap::String *IdentifierTable::insertString(const QString &s)
 {
     uint subtype;
     uint hash = String::createHashValue(s.constData(), s.length(), &subtype);
+    if (subtype == Heap::String::StringType_ArrayIndex) {
+        Heap::String *str = engine->newString(s);
+        str->stringHash = hash;
+        str->subtype = subtype;
+        return str;
+    }
     uint idx = hash % alloc;
-    while (Heap::String *e = entries[idx]) {
+    while (Heap::StringOrSymbol *e = entriesByHash[idx]) {
         if (e->stringHash == hash && e->toQString() == s)
-            return e;
+            return static_cast<Heap::String *>(e);
         ++idx;
         idx %= alloc;
     }
@@ -135,18 +167,42 @@ Heap::String *IdentifierTable::insertString(const QString &s)
     return str;
 }
 
-
-Identifier *IdentifierTable::identifierImpl(const Heap::String *str)
+Heap::Symbol *IdentifierTable::insertSymbol(const QString &s)
 {
-    if (str->identifier)
+    Q_ASSERT(s.at(0) == QLatin1Char('@'));
+
+    uint subtype;
+    uint hash = String::createHashValue(s.constData(), s.length(), &subtype);
+    uint idx = hash % alloc;
+    while (Heap::StringOrSymbol *e = entriesByHash[idx]) {
+        if (e->stringHash == hash && e->toQString() == s)
+            return static_cast<Heap::Symbol *>(e);
+        ++idx;
+        idx %= alloc;
+    }
+
+    Heap::Symbol *str = Symbol::create(engine, s);
+    str->stringHash = hash;
+    str->subtype = subtype;
+    addEntry(str);
+    return str;
+
+}
+
+
+PropertyKey IdentifierTable::asPropertyKeyImpl(const Heap::String *str)
+{
+    if (str->identifier.isValid())
         return str->identifier;
     uint hash = str->hashValue();
-    if (str->subtype == Heap::String::StringType_ArrayIndex)
-        return 0;
+    if (str->subtype == Heap::String::StringType_ArrayIndex) {
+        str->identifier = PropertyKey::fromArrayIndex(hash);
+        return str->identifier;
+    }
 
     uint idx = hash % alloc;
-    while (Heap::String *e = entries[idx]) {
-        if (e->stringHash == hash && e->isEqualTo(str)) {
+    while (Heap::StringOrSymbol *e = entriesByHash[idx]) {
+        if (e->stringHash == hash && e->toQString() == str->toQString()) {
             str->identifier = e->identifier;
             return e->identifier;
         }
@@ -158,37 +214,96 @@ Identifier *IdentifierTable::identifierImpl(const Heap::String *str)
     return str->identifier;
 }
 
-Heap::String *IdentifierTable::stringFromIdentifier(Identifier *i)
+Heap::StringOrSymbol *IdentifierTable::resolveId(PropertyKey i) const
 {
-    if (!i)
-        return 0;
+    uint arrayIdx = i.asArrayIndex();
+    if (arrayIdx < UINT_MAX)
+        return engine->newString(QString::number(arrayIdx));
+    if (!i.isValid())
+        return nullptr;
 
-    uint idx = i->hashValue % alloc;
+    uint idx = i.id() % alloc;
     while (1) {
-        Heap::String *e = entries[idx];
-        Q_ASSERT(e);
-        if (e->identifier == i)
+        Heap::StringOrSymbol *e = entriesById[idx];
+        if (!e || e->identifier == i)
             return e;
         ++idx;
         idx %= alloc;
     }
 }
 
-Identifier *IdentifierTable::identifier(const QString &s)
+Heap::String *IdentifierTable::stringForId(PropertyKey i) const
+{
+    Heap::StringOrSymbol *s = resolveId(i);
+    Q_ASSERT(s && s->internalClass->vtable->isString);
+    return static_cast<Heap::String *>(s);
+}
+
+Heap::Symbol *IdentifierTable::symbolForId(PropertyKey i) const
+{
+    Heap::StringOrSymbol *s = resolveId(i);
+    Q_ASSERT(!s || !s->internalClass->vtable->isString);
+    return static_cast<Heap::Symbol *>(s);
+}
+
+void IdentifierTable::markObjects(MarkStack *markStack)
+{
+    for (const auto &h : idHashes)
+        h->markObjects(markStack);
+}
+
+void IdentifierTable::sweep()
+{
+    int freed = 0;
+
+    Heap::StringOrSymbol **newTable = (Heap::StringOrSymbol **)malloc(alloc*sizeof(Heap::String *));
+    memset(newTable, 0, alloc*sizeof(Heap::StringOrSymbol *));
+    memset(entriesById, 0, alloc*sizeof(Heap::StringOrSymbol *));
+    for (uint i = 0; i < alloc; ++i) {
+        Heap::StringOrSymbol *e = entriesByHash[i];
+        if (!e)
+            continue;
+        if (!e->isMarked()) {
+            ++freed;
+            continue;
+        }
+        uint idx = e->hashValue() % alloc;
+        while (newTable[idx]) {
+            ++idx;
+            if (idx == alloc)
+                idx = 0;
+        }
+        newTable[idx] = e;
+
+        idx = e->identifier.id() % alloc;
+        while (entriesById[idx]) {
+            ++idx;
+            if (idx == alloc)
+                idx = 0;
+        }
+        entriesById[idx] = e;
+    }
+    free(entriesByHash);
+    entriesByHash = newTable;
+
+    size -= freed;
+}
+
+PropertyKey IdentifierTable::asPropertyKey(const QString &s)
 {
     return insertString(s)->identifier;
 }
 
-Identifier *IdentifierTable::identifier(const char *s, int len)
+PropertyKey IdentifierTable::asPropertyKey(const char *s, int len)
 {
     uint subtype;
     uint hash = String::createHashValue(s, len, &subtype);
     if (hash == UINT_MAX)
-        return identifier(QString::fromUtf8(s, len));
+        return asPropertyKey(QString::fromUtf8(s, len));
 
     QLatin1String latin(s, len);
     uint idx = hash % alloc;
-    while (Heap::String *e = entries[idx]) {
+    while (Heap::StringOrSymbol *e = entriesByHash[idx]) {
         if (e->stringHash == hash && e->toQString() == latin)
             return e->identifier;
         ++idx;

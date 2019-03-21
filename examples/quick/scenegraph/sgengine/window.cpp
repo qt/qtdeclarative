@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -48,6 +58,7 @@
 #include <QScreen>
 #include <QVariantAnimation>
 #include <QOpenGLFunctions>
+#include <QRandomGenerator>
 
 class Item {
 public:
@@ -61,9 +72,9 @@ public:
         transformNode->appendChildNode(textureNode);
         parentNode->appendChildNode(transformNode);
 
-        int duration = qrand() / float(RAND_MAX) * 400 + 800;
-        rotAnimation.setStartValue(qrand() / float(RAND_MAX) * 720 - 180);
-        rotAnimation.setEndValue(qrand() / float(RAND_MAX) * 720 - 180);
+        int duration = QRandomGenerator::global()->generateDouble() * 400 + 800;
+        rotAnimation.setStartValue(QRandomGenerator::global()->generateDouble() * 720 - 180);
+        rotAnimation.setEndValue(QRandomGenerator::global()->generateDouble() * 720 - 180);
         rotAnimation.setDuration(duration);
         rotAnimation.start();
 
@@ -171,9 +182,9 @@ void Window::addItems()
     QSGTexture *textures[] = { m_smileTexture.data(), m_qtTexture.data() };
     for (int i = 0; i < 50; ++i) {
         QSGTexture *tex = textures[i%2];
-        QPointF fromPos(-tex->textureSize().width(), qrand() / float(RAND_MAX) * (height() - tex->textureSize().height()));
-        QPointF toPos(width(), qrand() / float(RAND_MAX) * height() * 1.5 - height() * 0.25);
-        m_items.append(QSharedPointer<Item>(new Item(m_sgRootNode.data(), tex, fromPos, toPos)));
+        QPointF fromPos(-tex->textureSize().width(), QRandomGenerator::global()->generateDouble() * (height() - tex->textureSize().height()));
+        QPointF toPos(width(), QRandomGenerator::global()->generateDouble() * height() * 1.5 - height() * 0.25);
+        m_items.append(QSharedPointer<Item>::create(m_sgRootNode.data(), tex, fromPos, toPos));
     }
     update();
 }

@@ -46,7 +46,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_QML_DEBUGGER
+#if QT_CONFIG(qml_debug)
 
 struct Q_QML_EXPORT QQmlDebuggingEnabler
 {

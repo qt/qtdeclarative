@@ -45,12 +45,15 @@
 
 #include "private/qv4engine_p.h"
 #include "private/qv4mm_p.h"
+#include "private/qv4errorobject_p.h"
 #include "private/qv4globalobject_p.h"
 #include "private/qv4script_p.h"
 #include "private/qv4runtime_p.h"
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4stackframe_p.h>
+#include <private/qv4module_p.h>
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmetaobject.h>
@@ -113,6 +116,45 @@ Q_DECLARE_METATYPE(QList<int>)
   argument is a general-purpose string that is stored in the \c Error
   object for debugging purposes.
 
+  For larger pieces of functionality, you may want to encapsulate
+  your code and data into modules. A module is a file that contains
+  script code, variables, etc., and uses export statements to describe
+  its interface towards the rest of the application. With the help of
+  import statements, a module can refer to functionality from other modules.
+  This allows building a scripted application from smaller connected building blocks
+  in a safe way. In contrast, the approach of using evaluate() carries the risk
+  that internal variables or functions from one evaluate() call accidentally pollute the
+  global object and affect subsequent evaluations.
+
+  The following example provides a module that can add numbers:
+
+  \code
+  export function sum(left, right)
+  {
+      return left + right
+  }
+  \endcode
+
+  This module can be loaded with QJSEngine::import() if it is saved under
+  the name \c{math.mjs}:
+
+  \code
+  QJSvalue module = myEngine.importModule("./math.mjs");
+  QJSValue sumFunction = module.property("sum");
+  QJSValue result = sumFunction.call(args);
+  \endcode
+
+  Modules can also use functionality from other modules using import
+  statements:
+
+  \code
+  import { sum } from "./math.mjs";
+  export function addTwice(left, right)
+  {
+      return sum(left, right) * 2;
+  }
+  \endcode
+
   \section1 Engine Configuration
 
   The globalObject() function returns the \b {Global Object}
@@ -166,18 +208,37 @@ Q_DECLARE_METATYPE(QList<int>)
   properties of the proxy object. No binding code is needed because it
   is done dynamically using the Qt meta object system.
 
+  \snippet code/src_script_qjsengine.cpp 5
+
   Use newQMetaObject() to wrap a QMetaObject; this gives you a
   "script representation" of a QObject-based class. newQMetaObject()
   returns a proxy script object; enum values of the class are available
   as properties of the proxy object.
 
-  Constructors exposed to the meta-object system ( using Q_INVOKABLE ) can be
+  Constructors exposed to the meta-object system (using Q_INVOKABLE) can be
   called from the script to create a new QObject instance with
-  JavaScriptOwnership.
+  JavaScriptOwnership. For example, given the following class definition:
 
+  \snippet code/src_script_qjsengine.cpp 7
 
+  The \c staticMetaObject for the class can be exposed to JavaScript like so:
 
-  \snippet code/src_script_qjsengine.cpp 5
+  \snippet code/src_script_qjsengine.cpp 8
+
+  Instances of the class can then be created in JavaScript:
+
+  \snippet code/src_script_qjsengine.cpp 9
+
+  \note Currently only classes using the Q_OBJECT macro are supported; it is
+  not possible to expose the \c staticMetaObject of a Q_GADGET class to
+  JavaScript.
+
+  \section2 Dynamic QObject Properties
+
+  Dynamic QObject properties are not supported. For example, the following code
+  will not work:
+
+  \snippet code/src_script_qjsengine.cpp 6
 
   \section1 Extensions
 
@@ -285,8 +346,9 @@ QJSEngine::QJSEngine()
 
 QJSEngine::QJSEngine(QObject *parent)
     : QObject(*new QJSEnginePrivate, parent)
-    , d(new QV8Engine(this))
+    , m_v4Engine(new QV4::ExecutionEngine(this))
 {
+    m_v4Engine->v8Engine = new QV8Engine(m_v4Engine);
     checkForApplicationInstance();
 
     QJSEnginePrivate::addToDebugServer(this);
@@ -297,8 +359,9 @@ QJSEngine::QJSEngine(QObject *parent)
 */
 QJSEngine::QJSEngine(QJSEnginePrivate &dd, QObject *parent)
     : QObject(dd, parent)
-    , d(new QV8Engine(this))
+    , m_v4Engine(new QV4::ExecutionEngine(this))
 {
+    m_v4Engine->v8Engine = new QV8Engine(m_v4Engine);
     checkForApplicationInstance();
 }
 
@@ -312,11 +375,12 @@ QJSEngine::QJSEngine(QJSEnginePrivate &dd, QObject *parent)
 QJSEngine::~QJSEngine()
 {
     QJSEnginePrivate::removeFromDebugServer(this);
-    delete d;
+    delete m_v4Engine->v8Engine;
+    delete m_v4Engine;
 }
 
 /*!
-    \fn QV8Engine *QJSEngine::handle() const
+    \fn QV4::ExecutionEngine *QJSEngine::handle() const
     \internal
 */
 
@@ -333,7 +397,7 @@ QJSEngine::~QJSEngine()
 */
 void QJSEngine::collectGarbage()
 {
-    d->m_v4Engine->memoryManager->runGC();
+    m_v4Engine->memoryManager->runGC();
 }
 
 #if QT_DEPRECATED_SINCE(5, 6)
@@ -390,12 +454,12 @@ void QJSEngine::installTranslatorFunctions(const QJSValue &object)
 void QJSEngine::installExtensions(QJSEngine::Extensions extensions, const QJSValue &object)
 {
     QV4::ExecutionEngine *otherEngine = QJSValuePrivate::engine(&object);
-    if (otherEngine && otherEngine != d->m_v4Engine) {
+    if (otherEngine && otherEngine != m_v4Engine) {
         qWarning("QJSEngine: Trying to install extensions from a different engine");
         return;
     }
 
-    QV4::Scope scope(d->m_v4Engine);
+    QV4::Scope scope(m_v4Engine);
     QV4::ScopedObject obj(scope);
     QV4::Value *val = QJSValuePrivate::getValue(&object);
     if (val)
@@ -404,6 +468,17 @@ void QJSEngine::installExtensions(QJSEngine::Extensions extensions, const QJSVal
         obj = scope.engine->globalObject;
 
     QV4::GlobalExtensions::init(obj, extensions);
+}
+
+static QUrl urlForFileName(const QString &fileName)
+{
+    if (!fileName.startsWith(QLatin1Char(':')))
+        return QUrl::fromLocalFile(fileName);
+
+    QUrl url;
+    url.setPath(fileName.mid(1));
+    url.setScheme(QLatin1String("qrc"));
+    return url;
 }
 
 /*!
@@ -436,17 +511,16 @@ void QJSEngine::installExtensions(QJSEngine::Extensions extensions, const QJSVal
 */
 QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, int lineNumber)
 {
-    QV4::ExecutionEngine *v4 = d->m_v4Engine;
+    QV4::ExecutionEngine *v4 = m_v4Engine;
     QV4::Scope scope(v4);
-    QV4::ExecutionContextSaver saver(scope);
-
-    QV4::ExecutionContext *ctx = v4->currentContext;
-    if (ctx->d() != v4->rootContext()->d())
-        ctx = v4->pushGlobalContext();
     QV4::ScopedValue result(scope);
 
-    QV4::Script script(ctx, program, fileName, lineNumber);
-    script.strictMode = ctx->d()->strictMode;
+    QV4::Script script(v4->rootContext(), QV4::Compiler::ContextType::Global, program, urlForFileName(fileName).toString(), lineNumber);
+    script.strictMode = false;
+    if (v4->currentStackFrame)
+        script.strictMode = v4->currentStackFrame->v4Function->isStrict();
+    else if (v4->globalCode)
+        script.strictMode = v4->globalCode->isStrict();
     script.inheritContext = true;
     script.parse();
     if (!scope.engine->hasException)
@@ -454,7 +528,44 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     if (scope.engine->hasException)
         result = v4->catchException();
 
-    return QJSValue(v4, result->asReturnedValue());
+    QJSValue retval(v4, result->asReturnedValue());
+
+    return retval;
+}
+
+/*!
+    Imports the module located at \a fileName and returns a module namespace object that
+    contains all exported variables, constants and functions as properties.
+
+    If this is the first time the module is imported in the engine, the file is loaded
+    from the specified location in either the local file system or the Qt resource system
+    and evaluated as an ECMAScript module. The file is expected to be encoded in UTF-8 text.
+
+    Subsequent imports of the same module will return the previously imported instance. Modules
+    are singletons and remain around until the engine is destroyed.
+
+    The specified \a fileName will internally be normalized using \l QFileInfo::canonicalFilePath().
+    That means that multiple imports of the same file on disk using different relative paths will
+    load the file only once.
+
+    \note If an exception is thrown during the loading of the module, the return value
+    will be the exception (typically an \c{Error} object; see QJSValue::isError()).
+
+    \since 5.12
+ */
+QJSValue QJSEngine::importModule(const QString &fileName)
+{
+    const QUrl url = urlForFileName(QFileInfo(fileName).canonicalFilePath());
+    auto moduleUnit = m_v4Engine->loadModule(url);
+    if (m_v4Engine->hasException)
+        return QJSValue(m_v4Engine, m_v4Engine->catchException());
+
+    QV4::Scope scope(m_v4Engine);
+    QV4::Scoped<QV4::Module> moduleNamespace(scope, moduleUnit->instantiate(m_v4Engine));
+    if (m_v4Engine->hasException)
+        return QJSValue(m_v4Engine, m_v4Engine->catchException());
+    moduleUnit->evaluate();
+    return QJSValue(m_v4Engine, moduleNamespace->asReturnedValue());
 }
 
 /*!
@@ -467,9 +578,49 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
 */
 QJSValue QJSEngine::newObject()
 {
-    QV4::Scope scope(d->m_v4Engine);
-    QV4::ScopedValue v(scope, d->m_v4Engine->newObject());
-    return QJSValue(d->m_v4Engine, v->asReturnedValue());
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedValue v(scope, m_v4Engine->newObject());
+    return QJSValue(m_v4Engine, v->asReturnedValue());
+}
+
+/*!
+  \since 5.12
+  Creates a JavaScript object of class Error.
+
+  The prototype of the created object will be \a errorType.
+
+  \sa newObject(), throwError(), QJSValue::isError()
+*/
+QJSValue QJSEngine::newErrorObject(QJSValue::ErrorType errorType, const QString &message)
+{
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedObject error(scope);
+    switch (errorType) {
+    case QJSValue::RangeError:
+        error = m_v4Engine->newRangeErrorObject(message);
+        break;
+    case QJSValue::SyntaxError:
+        error = m_v4Engine->newSyntaxErrorObject(message);
+        break;
+    case QJSValue::TypeError:
+        error = m_v4Engine->newTypeErrorObject(message);
+        break;
+    case QJSValue::URIError:
+        error = m_v4Engine->newURIErrorObject(message);
+        break;
+    case QJSValue::ReferenceError:
+        error = m_v4Engine->newReferenceErrorObject(message);
+        break;
+    case QJSValue::EvalError:
+        error = m_v4Engine->newEvalErrorObject(message);
+        break;
+    case QJSValue::GenericError:
+        error = m_v4Engine->newErrorObject(message);
+        break;
+    case QJSValue::NoError:
+        return QJSValue::UndefinedValue;
+    }
+    return QJSValue(m_v4Engine, error->asReturnedValue());
 }
 
 /*!
@@ -479,12 +630,12 @@ QJSValue QJSEngine::newObject()
 */
 QJSValue QJSEngine::newArray(uint length)
 {
-    QV4::Scope scope(d->m_v4Engine);
-    QV4::ScopedArrayObject array(scope, d->m_v4Engine->newArrayObject());
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedArrayObject array(scope, m_v4Engine->newArrayObject());
     if (length < 0x1000)
         array->arrayReserve(length);
     array->setArrayLengthUnchecked(length);
-    return QJSValue(d->m_v4Engine, array.asReturnedValue());
+    return QJSValue(m_v4Engine, array.asReturnedValue());
 }
 
 /*!
@@ -510,7 +661,7 @@ QJSValue QJSEngine::newArray(uint length)
 QJSValue QJSEngine::newQObject(QObject *object)
 {
     Q_D(QJSEngine);
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(d);
+    QV4::ExecutionEngine *v4 = m_v4Engine;
     QV4::Scope scope(v4);
     if (object) {
         QQmlData *ddata = QQmlData::get(object, true);
@@ -532,24 +683,24 @@ QJSValue QJSEngine::newQObject(QObject *object)
   When called as a constructor, a new instance of the class will be created.
   Only constructors exposed by Q_INVOKABLE will be visible from the script engine.
 
-  \sa newQObject()
+  \sa newQObject(), {QObject Integration}
 */
 
 QJSValue QJSEngine::newQMetaObject(const QMetaObject* metaObject) {
     Q_D(QJSEngine);
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(d);
+    QV4::ExecutionEngine *v4 = m_v4Engine;
     QV4::Scope scope(v4);
     QV4::ScopedValue v(scope, QV4::QMetaObjectWrapper::create(v4, metaObject));
     return QJSValue(v4, v->asReturnedValue());
 }
 
-/*! \fn QJSValue QJSEngine::newQMetaObject<T>()
+/*! \fn template <typename T> QJSValue QJSEngine::newQMetaObject()
 
   \since 5.8
   Creates a JavaScript object that wraps the static QMetaObject associated
   with class \c{T}.
 
-  \sa newQObject()
+  \sa newQObject(), {QObject Integration}
 */
 
 
@@ -565,10 +716,9 @@ QJSValue QJSEngine::newQMetaObject(const QMetaObject* metaObject) {
 */
 QJSValue QJSEngine::globalObject() const
 {
-    Q_D(const QJSEngine);
-    QV4::Scope scope(d->m_v4Engine);
-    QV4::ScopedValue v(scope, d->m_v4Engine->globalObject);
-    return QJSValue(d->m_v4Engine, v->asReturnedValue());
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedValue v(scope, m_v4Engine->globalObject);
+    return QJSValue(m_v4Engine, v->asReturnedValue());
 }
 
 /*!
@@ -577,10 +727,9 @@ QJSValue QJSEngine::globalObject() const
  */
 QJSValue QJSEngine::create(int type, const void *ptr)
 {
-    Q_D(QJSEngine);
-    QV4::Scope scope(d->m_v4Engine);
+    QV4::Scope scope(m_v4Engine);
     QV4::ScopedValue v(scope, scope.engine->metaTypeToJS(type, ptr));
-    return QJSValue(d->m_v4Engine, v->asReturnedValue());
+    return QJSValue(m_v4Engine, v->asReturnedValue());
 }
 
 /*!
@@ -616,16 +765,16 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
             double d = QV4::RuntimeHelpers::stringToNumber(string);
             switch (type) {
             case QMetaType::Int:
-                *reinterpret_cast<int*>(ptr) = QV4::Primitive::toInt32(d);
+                *reinterpret_cast<int*>(ptr) = QV4::Value::toInt32(d);
                 return true;
             case QMetaType::UInt:
-                *reinterpret_cast<uint*>(ptr) = QV4::Primitive::toUInt32(d);
+                *reinterpret_cast<uint*>(ptr) = QV4::Value::toUInt32(d);
                 return true;
             case QMetaType::LongLong:
-                *reinterpret_cast<qlonglong*>(ptr) = QV4::Primitive::toInteger(d);
+                *reinterpret_cast<qlonglong*>(ptr) = QV4::Value::toInteger(d);
                 return true;
             case QMetaType::ULongLong:
-                *reinterpret_cast<qulonglong*>(ptr) = QV4::Primitive::toInteger(d);
+                *reinterpret_cast<qulonglong*>(ptr) = QV4::Value::toInteger(d);
                 return true;
             case QMetaType::Double:
                 *reinterpret_cast<double*>(ptr) = d;
@@ -634,19 +783,19 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
                 *reinterpret_cast<float*>(ptr) = d;
                 return true;
             case QMetaType::Short:
-                *reinterpret_cast<short*>(ptr) = QV4::Primitive::toInt32(d);
+                *reinterpret_cast<short*>(ptr) = QV4::Value::toInt32(d);
                 return true;
             case QMetaType::UShort:
-                *reinterpret_cast<unsigned short*>(ptr) = QV4::Primitive::toUInt32(d);
+                *reinterpret_cast<unsigned short*>(ptr) = QV4::Value::toUInt32(d);
                 return true;
             case QMetaType::Char:
-                *reinterpret_cast<char*>(ptr) = QV4::Primitive::toInt32(d);
+                *reinterpret_cast<char*>(ptr) = QV4::Value::toInt32(d);
                 return true;
             case QMetaType::UChar:
-                *reinterpret_cast<unsigned char*>(ptr) = QV4::Primitive::toUInt32(d);
+                *reinterpret_cast<unsigned char*>(ptr) = QV4::Value::toUInt32(d);
                 return true;
             case QMetaType::QChar:
-                *reinterpret_cast<QChar*>(ptr) = QV4::Primitive::toUInt32(d);
+                *reinterpret_cast<QChar*>(ptr) = QV4::Value::toUInt32(d);
                 return true;
             default:
                 return false;
@@ -703,32 +852,134 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
     }
 }
 
-/*! \fn QJSValue QJSEngine::toScriptValue(const T &value)
+/*! \fn template <typename T> QJSValue QJSEngine::toScriptValue(const T &value)
 
     Creates a QJSValue with the given \a value.
 
     \sa fromScriptValue()
 */
 
-/*! \fn T QJSEngine::fromScriptValue(const QJSValue &value)
+/*! \fn template <typename T> T QJSEngine::fromScriptValue(const QJSValue &value)
 
     Returns the given \a value converted to the template type \c{T}.
 
     \sa toScriptValue()
 */
 
+/*!
+    Throws a run-time error (exception) with the given \a message.
+
+    This method is the C++ counterpart of a \c throw() expression in
+    JavaScript. It enables C++ code to report run-time errors to QJSEngine.
+    Therefore it should only be called from C++ code that was invoked by a
+    JavaScript function through QJSEngine.
+
+    When returning from C++, the engine will interrupt the normal flow of
+    execution and call the the next pre-registered exception handler with
+    an error object that contains the given \a message. The error object
+    will point to the location of the top-most context on the JavaScript
+    caller stack; specifically, it will have properties \c lineNumber,
+    \c fileName and \c stack. These properties are described in
+    \l{Script Exceptions}.
+
+    In the following example a C++ method in \e FileAccess.cpp throws an error
+    in \e qmlFile.qml at the position where \c readFileAsText() is called:
+
+    \code
+    // qmlFile.qml
+    function someFunction() {
+      ...
+      var text = FileAccess.readFileAsText("/path/to/file.txt");
+    }
+    \endcode
+
+    \code
+    // FileAccess.cpp
+    // Assuming that FileAccess is a QObject-derived class that has been
+    // registered as a singleton type and provides an invokable method
+    // readFileAsText()
+
+    QJSValue FileAccess::readFileAsText(const QString & filePath) {
+      QFile file(filePath);
+
+      if (!file.open(QIODevice::ReadOnly)) {
+        jsEngine->throwError(file.errorString());
+        return QString();
+      }
+
+      ...
+      return content;
+    }
+    \endcode
+
+    It is also possible to catch the thrown error in JavaScript:
+    \code
+    // qmlFile.qml
+    function someFunction() {
+      ...
+      var text;
+      try {
+        text = FileAccess.readFileAsText("/path/to/file.txt");
+      } catch (error) {
+        console.warn("In " + error.fileName + ":" + "error.lineNumber" +
+                     ": " + error.message);
+      }
+    }
+    \endcode
+
+    If you need a more specific run-time error to describe an exception, you can use the
+    \l {QJSEngine::}{throwError(QJSValue::ErrorType errorType, const QString &message)}
+    overload.
+
+    \since Qt 5.12
+    \sa {Script Exceptions}
+*/
+void QJSEngine::throwError(const QString &message)
+{
+    m_v4Engine->throwError(message);
+}
+
+/*!
+    \overload throwError()
+
+    Throws a run-time error (exception) with the given \a errorType and
+    \a message.
+
+    \code
+    // Assuming that DataEntry is a QObject-derived class that has been
+    // registered as a singleton type and provides an invokable method
+    // setAge().
+
+    void DataEntry::setAge(int age) {
+      if (age < 0 || age > 200) {
+        jsEngine->throwError(QJSValue::RangeError,
+                             "Age must be between 0 and 200");
+      }
+      ...
+    }
+    \endcode
+
+    \since Qt 5.12
+    \sa {Script Exceptions}, newErrorObject()
+*/
+void QJSEngine::throwError(QJSValue::ErrorType errorType, const QString &message)
+{
+    QV4::Scope scope(m_v4Engine);
+    QJSValue error = newErrorObject(errorType, message);
+    QV4::ScopedObject e(scope, QJSValuePrivate::getValue(&error));
+    if (!e)
+        return;
+    m_v4Engine->throwError(e);
+}
 
 QJSEnginePrivate *QJSEnginePrivate::get(QV4::ExecutionEngine *e)
 {
-    return e->v8Engine->publicEngine()->d_func();
+    return e->jsEngine()->d_func();
 }
 
 QJSEnginePrivate::~QJSEnginePrivate()
 {
-    typedef QHash<const QMetaObject *, QQmlPropertyCache *>::Iterator PropertyCacheIt;
-
-    for (PropertyCacheIt iter = propertyCache.begin(), end = propertyCache.end(); iter != end; ++iter)
-        (*iter)->release();
+    QQmlMetaType::freeUnusedTypesAndCaches();
 }
 
 void QJSEnginePrivate::addToDebugServer(QJSEngine *q)
@@ -751,20 +1002,6 @@ void QJSEnginePrivate::removeFromDebugServer(QJSEngine *q)
         server->removeEngine(q);
 }
 
-QQmlPropertyCache *QJSEnginePrivate::createCache(const QMetaObject *mo)
-{
-    if (!mo->superClass()) {
-        QQmlPropertyCache *rv = new QQmlPropertyCache(QV8Engine::getV4(q_func()), mo);
-        propertyCache.insert(mo, rv);
-        return rv;
-    } else {
-        QQmlPropertyCache *super = cache(mo->superClass());
-        QQmlPropertyCache *rv = super->copyAndAppend(mo);
-        propertyCache.insert(mo, rv);
-        return rv;
-    }
-}
-
 /*!
    \since 5.5
    \relates QJSEngine
@@ -779,7 +1016,7 @@ QJSEngine *qjsEngine(const QObject *object)
 {
     QQmlData *data = QQmlData::get(object, false);
     if (!data || data->jsWrapper.isNullOrUndefined())
-        return 0;
+        return nullptr;
     return data->jsWrapper.engine()->jsEngine();
 }
 

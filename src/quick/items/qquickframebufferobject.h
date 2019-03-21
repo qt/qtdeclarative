@@ -75,7 +75,7 @@ public:
         void *data;
     };
 
-    QQuickFramebufferObject(QQuickItem *parent = Q_NULLPTR);
+    QQuickFramebufferObject(QQuickItem *parent = nullptr);
 
     bool textureFollowsItemSize() const;
     void setTextureFollowsItemSize(bool follows);
@@ -85,15 +85,15 @@ public:
 
     virtual Renderer *createRenderer() const = 0;
 
-    bool isTextureProvider() const Q_DECL_OVERRIDE;
-    QSGTextureProvider *textureProvider() const Q_DECL_OVERRIDE;
-    void releaseResources() Q_DECL_OVERRIDE;
+    bool isTextureProvider() const override;
+    QSGTextureProvider *textureProvider() const override;
+    void releaseResources() override;
 
 protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
 protected:
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 
 Q_SIGNALS:
     void textureFollowsItemSizeChanged(bool);

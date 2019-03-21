@@ -48,6 +48,7 @@
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgdefaultrendercontext_p.h>
 
 #include <QtQuick/QQuickWindow>
@@ -63,7 +64,7 @@ QT_BEGIN_NAMESPACE
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
-#define RLDEBUG(x) qCDebug(QSG_LOG_RENDERLOOP) << x;
+#define RLDEBUG(x) qCDebug(QSG_LOG_RENDERLOOP, x)
 
 static QElapsedTimer qsg_render_timer;
 #define QSG_LOG_TIME_SAMPLE(sampleName) \
@@ -77,7 +78,7 @@ static QElapsedTimer qsg_render_timer;
 
 
 QSGWindowsRenderLoop::QSGWindowsRenderLoop()
-    : m_gl(0)
+    : m_gl(nullptr)
     , m_sg(QSGContext::createDefaultContext())
     , m_updateTimer(0)
     , m_animationTimer(0)
@@ -116,7 +117,7 @@ QSGWindowsRenderLoop::WindowData *QSGWindowsRenderLoop::windowData(QQuickWindow 
         if (wd.window == window)
             return &wd;
     }
-    return 0;
+    return nullptr;
 }
 
 void QSGWindowsRenderLoop::maybePostUpdateTimer()
@@ -157,7 +158,7 @@ void QSGWindowsRenderLoop::stopped()
 void QSGWindowsRenderLoop::show(QQuickWindow *window)
 {
     RLDEBUG("show");
-    if (windowData(window) != 0)
+    if (windowData(window) != nullptr)
         return;
 
     // This happens before the platform window is shown, but after
@@ -177,7 +178,7 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
         if (!created) {
             const bool isEs = m_gl->isOpenGLES();
             delete m_gl;
-            m_gl = 0;
+            m_gl = nullptr;
             handleContextCreationFailure(window, isEs);
             return;
         }
@@ -242,17 +243,18 @@ void QSGWindowsRenderLoop::windowDestroyed(QQuickWindow *window)
         current = m_gl->makeCurrent(surface);
     }
     if (Q_UNLIKELY(!current))
-        qCDebug(QSG_LOG_RENDERLOOP) << "cleanup without an OpenGL context";
+        RLDEBUG("cleanup without an OpenGL context");
 
 #if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
-    QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
+    if (current)
+        QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
 #endif
 
     d->cleanupNodesOnShutdown();
     if (m_windows.size() == 0) {
         d->context->invalidate();
         delete m_gl;
-        m_gl = 0;
+        m_gl = nullptr;
     } else if (m_gl && current) {
         m_gl->doneCurrent();
     }
@@ -271,7 +273,7 @@ bool QSGWindowsRenderLoop::anyoneShowing() const
 void QSGWindowsRenderLoop::exposureChanged(QQuickWindow *window)
 {
 
-    if (windowData(window) == 0)
+    if (windowData(window) == nullptr)
         return;
 
     if (window->isExposed() && window->isVisible()) {
@@ -445,6 +447,14 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
         }
     }
 
+    bool lastDirtyWindow = true;
+    for (int i=0; i<m_windows.size(); ++i) {
+        if ( m_windows[i].pendingUpdate) {
+            lastDirtyWindow = false;
+            break;
+        }
+    }
+
     d->flushFrameSynchronousEvents();
     // Event delivery or processing has caused the window to stop rendering.
     if (!windowData(window))
@@ -464,6 +474,8 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
 
     RLDEBUG(" - syncing");
     d->syncSceneGraph();
+    if (lastDirtyWindow)
+        m_rc->endSync();
     QSG_RENDER_TIMING_SAMPLE(QQuickProfiler::SceneGraphRenderLoopFrame, time_synced,
                              QQuickProfiler::SceneGraphRenderLoopSync);
 
@@ -491,6 +503,15 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
 
     Q_QUICK_SG_PROFILE_REPORT(QQuickProfiler::SceneGraphRenderLoopFrame,
                               QQuickProfiler::SceneGraphRenderLoopSwap);
+}
+
+void QSGWindowsRenderLoop::releaseResources(QQuickWindow *w)
+{
+    // No full invalidation of the rendercontext, just clear some caches.
+    RLDEBUG("releaseResources");
+    QQuickWindowPrivate *d = QQuickWindowPrivate::get(w);
+    if (d->renderer)
+        d->renderer->releaseCachedResources();
 }
 
 QT_END_NAMESPACE

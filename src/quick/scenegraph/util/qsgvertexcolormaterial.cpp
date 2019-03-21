@@ -64,7 +64,6 @@ private:
 QSGMaterialType QSGVertexColorMaterialShader::type;
 
 QSGVertexColorMaterialShader::QSGVertexColorMaterialShader()
-    : QSGMaterialShader()
 {
 #if QT_CONFIG(opengl)
     setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/vertexcolor.vert"));
@@ -87,7 +86,7 @@ void QSGVertexColorMaterialShader::updateState(const RenderState &state, QSGMate
 
 char const *const *QSGVertexColorMaterialShader::attributeNames() const
 {
-    static const char *const attr[] = { "vertexCoord", "vertexColor", 0 };
+    static const char *const attr[] = { "vertexCoord", "vertexColor", nullptr };
     return attr;
 }
 

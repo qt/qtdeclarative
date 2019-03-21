@@ -152,7 +152,7 @@ void tst_qqmllocale::addPropertyData(const QString &l)
         LOCALE_PROP(QString,exponential),
         LOCALE_PROP(int,measurementSystem),
         LOCALE_PROP(int,textDirection),
-        { 0, QVariant() }
+        { nullptr, QVariant() }
     };
 
     int i = 0;
@@ -663,7 +663,7 @@ void tst_qqmllocale::addDateTimeFormatData(const QString &l)
         "h:m:sap ddd MMMM d yy",
         "'The date and time is: 'H:mm:ss:zzz dd/MM/yy",
         "MMM d yyyy HH:mm t",
-        0
+        nullptr
     };
     QByteArray locale = l.toLatin1();
     int i = 0;
@@ -751,7 +751,7 @@ void tst_qqmllocale::addDateFormatData(const QString &l)
         "ddd MMMM d yy",
         "'The date is: 'dd/MM/yy",
         "MMM d yyyy",
-        0
+        nullptr
     };
     QByteArray locale = l.toLatin1();
     int i = 0;
@@ -839,7 +839,7 @@ void tst_qqmllocale::addTimeFormatData(const QString &l)
         "h:m:sap",
         "'The time is: 'H:mm:ss:zzz",
         "HH:mm t",
-        0
+        nullptr
     };
     QByteArray locale = l.toLatin1();
     int i = 0;
@@ -1232,7 +1232,7 @@ class DateFormatter : public QObject
 {
     Q_OBJECT
 public:
-    DateFormatter() : QObject() {}
+    DateFormatter() {}
 
     Q_INVOKABLE QString getLocalizedForm(const QString &isoTimestamp);
 };
@@ -1268,8 +1268,8 @@ void tst_qqmllocale::timeZoneUpdated()
 {
     QByteArray original(qgetenv("TZ"));
 
-    // Set the timezone to Brisbane time
-    setTimeZone(QByteArray("AEST-10:00"));
+    // Set the timezone to Brisbane time, AEST-10:00
+    setTimeZone(QByteArray("Australia/Brisbane"));
 
     DateFormatter formatter;
 
@@ -1281,8 +1281,8 @@ void tst_qqmllocale::timeZoneUpdated()
     QVERIFY(obj);
     QVERIFY(obj->property("success").toBool());
 
-    // Change to Indian time
-    setTimeZone(QByteArray("IST-05:30"));
+    // Change to Indian time, IST-05:30
+    setTimeZone(QByteArray("Asia/Kolkata"));
 
     QMetaObject::invokeMethod(obj.data(), "check");
 

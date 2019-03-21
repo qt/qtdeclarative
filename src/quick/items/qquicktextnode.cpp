@@ -78,7 +78,7 @@ namespace {
   Creates an empty QQuickTextNode
 */
 QQuickTextNode::QQuickTextNode(QQuickItem *ownerElement)
-    : m_cursorNode(0), m_ownerElement(ownerElement), m_useNativeRenderer(false)
+    : m_cursorNode(nullptr), m_ownerElement(ownerElement), m_useNativeRenderer(false)
 {
 #ifdef QSG_RUNTIME_DESCRIPTION
     qsgnode_set_description(this, QLatin1String("text"));
@@ -125,7 +125,7 @@ QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun
     node->geometry()->setIndexDataPattern(QSGGeometry::StaticPattern);
     node->geometry()->setVertexDataPattern(QSGGeometry::StaticPattern);
 
-    if (parentNode == 0)
+    if (parentNode == nullptr)
         parentNode = this;
     parentNode->appendChildNode(node);
 
@@ -134,7 +134,7 @@ QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun
 
 void QQuickTextNode::setCursor(const QRectF &rect, const QColor &color)
 {
-    if (m_cursorNode != 0)
+    if (m_cursorNode != nullptr)
         delete m_cursorNode;
 
     QSGRenderContext *sg = QQuickItemPrivate::get(m_ownerElement)->sceneGraphRenderContext();
@@ -147,7 +147,7 @@ void QQuickTextNode::clearCursor()
     if (m_cursorNode)
         removeChildNode(m_cursorNode);
     delete m_cursorNode;
-    m_cursorNode = 0;
+    m_cursorNode = nullptr;
 }
 
 void QQuickTextNode::addRectangleNode(const QRectF &rect, const QColor &color)
@@ -205,7 +205,7 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
 
             QTextBlock block = textFrame->firstCursorPosition().block();
             engine.setCurrentLine(block.layout()->lineForTextPosition(pos - block.position()));
-            engine.addTextObject(rect.topLeft(), format, QQuickTextNodeEngine::Unselected, textDocument,
+            engine.addTextObject(block, rect.topLeft(), format, QQuickTextNodeEngine::Unselected, textDocument,
                                  pos, textFrame->frameFormat().position());
         } else {
             QTextFrame::iterator it = textFrame->begin();
@@ -273,9 +273,9 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
 
 void QQuickTextNode::deleteContent()
 {
-    while (firstChild() != 0)
+    while (firstChild() != nullptr)
         delete firstChild();
-    m_cursorNode = 0;
+    m_cursorNode = nullptr;
     qDeleteAll(m_textures);
     m_textures.clear();
 }

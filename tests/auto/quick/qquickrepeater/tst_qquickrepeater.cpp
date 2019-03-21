@@ -37,6 +37,7 @@
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQml/private/qqmllistmodel_p.h>
 #include <QtQml/private/qqmlobjectmodel_p.h>
+#include <QtGui/qstandarditemmodel.h>
 
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
@@ -75,6 +76,9 @@ private slots:
     void destroyCount();
     void stackingOrder();
     void objectModel();
+    void QTBUG54859_asynchronousMove();
+    void package();
+    void ownership();
 };
 
 class TestObject : public QObject
@@ -118,7 +122,7 @@ void tst_QQuickRepeater::numberModel()
     qApp->processEvents();
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
-    QVERIFY(repeater != 0);
+    QVERIFY(repeater != nullptr);
     QCOMPARE(repeater->parentItem()->childItems().count(), 5+1);
 
     QVERIFY(!repeater->itemAt(-1));
@@ -128,6 +132,12 @@ void tst_QQuickRepeater::numberModel()
 
     QMetaObject::invokeMethod(window->rootObject(), "checkProperties");
     QVERIFY(!testObject->error());
+
+    ctxt->setContextProperty("testData", std::numeric_limits<int>::max());
+    QCOMPARE(repeater->parentItem()->childItems().count(), 1);
+
+    ctxt->setContextProperty("testData", -1234);
+    QCOMPARE(repeater->parentItem()->childItems().count(), 1);
 
     delete testObject;
     delete window;
@@ -159,7 +169,7 @@ void tst_QQuickRepeater::objectList()
     qApp->processEvents();
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
-    QVERIFY(repeater != 0);
+    QVERIFY(repeater != nullptr);
     QCOMPARE(repeater->property("errors").toInt(), 0);//If this fails either they are out of order or can't find the object's data
     QCOMPARE(repeater->property("instantiated").toInt(), 100);
 
@@ -200,10 +210,10 @@ void tst_QQuickRepeater::stringList()
     qApp->processEvents();
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
-    QVERIFY(repeater != 0);
+    QVERIFY(repeater != nullptr);
 
     QQuickItem *container = findItem<QQuickItem>(window->rootObject(), "container");
-    QVERIFY(container != 0);
+    QVERIFY(container != nullptr);
 
     QCOMPARE(container->childItems().count(), data.count() + 3);
 
@@ -212,7 +222,7 @@ void tst_QQuickRepeater::stringList()
 
         if (i == 0) {
             QQuickText *name = qobject_cast<QQuickText*>(container->childItems().at(i));
-            QVERIFY(name != 0);
+            QVERIFY(name != nullptr);
             QCOMPARE(name->text(), QLatin1String("Zero"));
         } else if (i == container->childItems().count() - 2) {
             // The repeater itself
@@ -222,11 +232,11 @@ void tst_QQuickRepeater::stringList()
             continue;
         } else if (i == container->childItems().count() - 1) {
             QQuickText *name = qobject_cast<QQuickText*>(container->childItems().at(i));
-            QVERIFY(name != 0);
+            QVERIFY(name != nullptr);
             QCOMPARE(name->text(), QLatin1String("Last"));
         } else {
             QQuickText *name = qobject_cast<QQuickText*>(container->childItems().at(i));
-            QVERIFY(name != 0);
+            QVERIFY(name != nullptr);
             QCOMPARE(name->text(), data.at(i-1));
         }
     }
@@ -248,9 +258,9 @@ void tst_QQuickRepeater::dataModel_adding()
     qApp->processEvents();
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
-    QVERIFY(repeater != 0);
+    QVERIFY(repeater != nullptr);
     QQuickItem *container = findItem<QQuickItem>(window->rootObject(), "container");
-    QVERIFY(container != 0);
+    QVERIFY(container != nullptr);
 
     QVERIFY(!repeater->itemAt(0));
 
@@ -330,9 +340,9 @@ void tst_QQuickRepeater::dataModel_removing()
     qApp->processEvents();
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
-    QVERIFY(repeater != 0);
+    QVERIFY(repeater != nullptr);
     QQuickItem *container = findItem<QQuickItem>(window->rootObject(), "container");
-    QVERIFY(container != 0);
+    QVERIFY(container != nullptr);
     QCOMPARE(container->childItems().count(), repeater->count()+1);
 
     QSignalSpy countSpy(repeater, SIGNAL(countChanged()));
@@ -396,9 +406,9 @@ void tst_QQuickRepeater::dataModel_changes()
     qApp->processEvents();
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
-    QVERIFY(repeater != 0);
+    QVERIFY(repeater != nullptr);
     QQuickItem *container = findItem<QQuickItem>(window->rootObject(), "container");
-    QVERIFY(container != 0);
+    QVERIFY(container != nullptr);
     QCOMPARE(container->childItems().count(), repeater->count()+1);
 
     // Check that model changes are propagated
@@ -430,10 +440,10 @@ void tst_QQuickRepeater::itemModel()
     qApp->processEvents();
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
-    QVERIFY(repeater != 0);
+    QVERIFY(repeater != nullptr);
 
     QQuickItem *container = findItem<QQuickItem>(window->rootObject(), "container");
-    QVERIFY(container != 0);
+    QVERIFY(container != nullptr);
 
     QCOMPARE(container->childItems().count(), 1);
 
@@ -473,9 +483,9 @@ void tst_QQuickRepeater::resetModel()
     window->setSource(testFileUrl("repeater1.qml"));
     qApp->processEvents();
     QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
-    QVERIFY(repeater != 0);
+    QVERIFY(repeater != nullptr);
     QQuickItem *container = findItem<QQuickItem>(window->rootObject(), "container");
-    QVERIFY(container != 0);
+    QVERIFY(container != nullptr);
 
     QCOMPARE(repeater->count(), dataA.count());
     for (int i=0; i<repeater->count(); i++)
@@ -566,9 +576,9 @@ void tst_QQuickRepeater::modelReset()
     QVERIFY(rootItem);
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(rootItem, "repeater");
-    QVERIFY(repeater != 0);
+    QVERIFY(repeater != nullptr);
     QQuickItem *container = findItem<QQuickItem>(rootItem, "container");
-    QVERIFY(container != 0);
+    QVERIFY(container != nullptr);
 
     QCOMPARE(repeater->count(), 0);
 
@@ -700,7 +710,7 @@ void tst_QQuickRepeater::asynchronous()
         container = findItem<QQuickItem>(rootObject, "container");
     }
 
-    QQuickRepeater *repeater = 0;
+    QQuickRepeater *repeater = nullptr;
     while (!repeater) {
         bool b = false;
         controller.incubateWhile(&b);
@@ -712,8 +722,8 @@ void tst_QQuickRepeater::asynchronous()
     for (int i = 9; i >= 0; --i) {
         QString name("delegate");
         name += QString::number(i);
-        QVERIFY(findItem<QQuickItem>(container, name) == 0);
-        QQuickItem *item = 0;
+        QVERIFY(findItem<QQuickItem>(container, name) == nullptr);
+        QQuickItem *item = nullptr;
         while (!item) {
             bool b = false;
             controller.incubateWhile(&b);
@@ -803,7 +813,7 @@ void tst_QQuickRepeater::invalidContextCrash()
     // deleted first and then the repeater. During deletion the QML context
     // has been deleted already and is invalid.
     model->setParent(root.data());
-    repeater->setParent(0);
+    repeater->setParent(nullptr);
     repeater->setParent(root.data());
 
     QCOMPARE(root->children().count(), 2);
@@ -812,7 +822,7 @@ void tst_QQuickRepeater::invalidContextCrash()
 
     // Delete the root object, which will invalidate/delete the QML context
     // and then delete the child QObjects, which may try to access the context.
-    root.reset(0);
+    root.reset(nullptr);
 }
 
 void tst_QQuickRepeater::jsArrayChange()
@@ -987,6 +997,115 @@ void tst_QQuickRepeater::objectModel()
     QCOMPARE(repeater->count(), 0);
 
     delete positioner;
+}
+
+class Ctrl : public QObject
+{
+    Q_OBJECT
+public:
+
+    Q_INVOKABLE void wait()
+    {
+        QTest::qWait(200);
+    }
+};
+
+void tst_QQuickRepeater::QTBUG54859_asynchronousMove()
+{
+    Ctrl ctrl;
+    QQuickView* view = createView();
+    view->rootContext()->setContextProperty("ctrl", &ctrl);
+    view->setSource(testFileUrl("asynchronousMove.qml"));
+    view->show();
+    QQuickItem* item = view->rootObject();
+
+
+    QTRY_COMPARE(item->property("finished"), QVariant(true));
+}
+
+void tst_QQuickRepeater::package()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("package.qml"));
+
+    QScopedPointer<QObject>o(component.create()); // don't crash!
+    QVERIFY(o != nullptr);
+
+    {
+        QQuickRepeater *repeater1 = qobject_cast<QQuickRepeater*>(qmlContext(o.data())->contextProperty("repeater1").value<QObject*>());
+        QVERIFY(repeater1);
+        QCOMPARE(repeater1->count(), 1);
+        QCOMPARE(repeater1->itemAt(0)->objectName(), "firstItem");
+    }
+
+    {
+        QQuickRepeater *repeater2 = qobject_cast<QQuickRepeater*>(qmlContext(o.data())->contextProperty("repeater2").value<QObject*>());
+        QVERIFY(repeater2);
+        QCOMPARE(repeater2->count(), 1);
+        QCOMPARE(repeater2->itemAt(0)->objectName(), "secondItem");
+    }
+}
+
+void tst_QQuickRepeater::ownership()
+{
+    QQmlEngine engine;
+
+    QQmlComponent component(&engine, testFileUrl("ownership.qml"));
+
+    QScopedPointer<QAbstractItemModel> aim(new QStandardItemModel);
+    QPointer<QAbstractItemModel> modelGuard(aim.data());
+    QQmlEngine::setObjectOwnership(aim.data(), QQmlEngine::JavaScriptOwnership);
+    {
+        QJSValue wrapper = engine.newQObject(aim.data());
+    }
+
+    QScopedPointer<QObject> repeater(component.create());
+    QVERIFY(!repeater.isNull());
+
+    QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(aim.data()));
+
+    repeater->setProperty("model", QVariant::fromValue<QObject*>(aim.data()));
+
+    QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(aim.data()));
+
+    engine.collectGarbage();
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+    QVERIFY(modelGuard);
+
+    QScopedPointer<QQmlComponent> delegate(new QQmlComponent(&engine));
+    delegate->setData(QByteArrayLiteral("import QtQuick 2.0\nItem{}"), dataDirectoryUrl().resolved(QUrl("inline.qml")));
+    QPointer<QQmlComponent> delegateGuard(delegate.data());
+    QQmlEngine::setObjectOwnership(delegate.data(), QQmlEngine::JavaScriptOwnership);
+    {
+        QJSValue wrapper = engine.newQObject(delegate.data());
+    }
+
+    QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(delegate.data()));
+
+    repeater->setProperty("delegate", QVariant::fromValue<QObject*>(delegate.data()));
+
+    QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(delegate.data()));
+
+    engine.collectGarbage();
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+    QVERIFY(delegateGuard);
+
+    repeater->setProperty("model", QVariant());
+    repeater->setProperty("delegate", QVariant());
+
+    QVERIFY(delegateGuard);
+    QVERIFY(modelGuard);
+
+    delegate.take();
+    aim.take();
+
+    engine.collectGarbage();
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+    QVERIFY(!delegateGuard);
+    QVERIFY(!modelGuard);
 }
 
 QTEST_MAIN(tst_QQuickRepeater)

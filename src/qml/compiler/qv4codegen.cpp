@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -39,61 +39,39 @@
 
 #include "qv4codegen_p.h"
 #include "qv4util_p.h"
-#include "qv4engine_p.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
-#include <QtCore/QSet>
-#include <QtCore/QBuffer>
-#include <QtCore/QBitArray>
-#include <QtCore/QLinkedList>
 #include <QtCore/QStack>
+#include <QScopeGuard>
 #include <private/qqmljsast_p.h>
 #include <private/qv4string_p.h>
 #include <private/qv4value_p.h>
+#include <private/qv4compilercontext_p.h>
+#include <private/qv4compilercontrolflow_p.h>
+#include <private/qv4bytecodegenerator_p.h>
+#include <private/qv4compilerscanfunctions_p.h>
 
 #ifndef V4_BOOTSTRAP
-#include <qv4context_p.h>
+#  include <qqmlerror.h>
 #endif
 
 #include <cmath>
 #include <iostream>
 
+static const bool disable_lookups = false;
+
 #ifdef CONST
 #undef CONST
 #endif
 
+QT_USE_NAMESPACE
 using namespace QV4;
-using namespace QQmlJS;
-using namespace AST;
+using namespace QV4::Compiler;
+using namespace QQmlJS::AST;
 
-static inline void setLocation(IR::Stmt *s, const SourceLocation &loc)
-{
-    if (s && loc.isValid())
-        s->location = loc;
-}
-
-static bool cjumpCanHandle(IR::AluOp op)
-{
-    switch (op) {
-    case IR::OpIn:
-    case IR::OpInstanceof:
-    case IR::OpEqual:
-    case IR::OpNotEqual:
-    case IR::OpGe:
-    case IR::OpGt:
-    case IR::OpLe:
-    case IR::OpLt:
-    case IR::OpStrictEqual:
-    case IR::OpStrictNotEqual:
-        return true;
-    default:
-        return false;
-    }
-}
-
-static inline void setJumpOutLocation(IR::Stmt *s, const Statement *body,
-                                      const SourceLocation &fallback)
+static inline void setJumpOutLocation(QV4::Moth::BytecodeGenerator *bytecodeGenerator,
+                                      const Statement *body, const SourceLocation &fallback)
 {
     switch (body->kind) {
     // Statements where we might never execute the last line.
@@ -102,677 +80,296 @@ static inline void setJumpOutLocation(IR::Stmt *s, const Statement *body,
     case Statement::Kind_ForEachStatement:
     case Statement::Kind_ForStatement:
     case Statement::Kind_IfStatement:
-    case Statement::Kind_LocalForEachStatement:
-    case Statement::Kind_LocalForStatement:
     case Statement::Kind_WhileStatement:
-        setLocation(s, fallback);
+        bytecodeGenerator->setLocation(fallback);
         break;
     default:
-        setLocation(s, body->lastSourceLocation());
+        bytecodeGenerator->setLocation(body->lastSourceLocation());
         break;
     }
 }
 
-Codegen::ScanFunctions::ScanFunctions(Codegen *cg, const QString &sourceCode, CompilationMode defaultProgramMode)
-    : _cg(cg)
-    , _sourceCode(sourceCode)
-    , _variableEnvironment(0)
-    , _allowFuncDecls(true)
-    , defaultProgramMode(defaultProgramMode)
-{
-}
-
-void Codegen::ScanFunctions::operator()(Node *node)
-{
-    if (node)
-        node->accept(this);
-}
-
-void Codegen::ScanFunctions::enterEnvironment(Node *node, CompilationMode compilationMode)
-{
-    Environment *e = _cg->newEnvironment(node, _variableEnvironment, compilationMode);
-    if (!e->isStrict)
-        e->isStrict = _cg->_strictMode;
-    _envStack.append(e);
-    _variableEnvironment = e;
-}
-
-void Codegen::ScanFunctions::leaveEnvironment()
-{
-    _envStack.pop();
-    _variableEnvironment = _envStack.isEmpty() ? 0 : _envStack.top();
-}
-
-void Codegen::ScanFunctions::checkDirectivePrologue(SourceElements *ast)
-{
-    for (SourceElements *it = ast; it; it = it->next) {
-        if (StatementSourceElement *stmt = cast<StatementSourceElement *>(it->element)) {
-            if (ExpressionStatement *expr = cast<ExpressionStatement *>(stmt->statement)) {
-                if (StringLiteral *strLit = cast<StringLiteral *>(expr->expression)) {
-                    // Use the source code, because the StringLiteral's
-                    // value might have escape sequences in it, which is not
-                    // allowed.
-                    if (strLit->literalToken.length < 2)
-                        continue;
-                    QStringRef str = _sourceCode.midRef(strLit->literalToken.offset + 1, strLit->literalToken.length - 2);
-                    if (str == QLatin1String("use strict")) {
-                        _variableEnvironment->isStrict = true;
-                    } else {
-                        // TODO: give a warning.
-                    }
-                    continue;
-                }
-            }
-        }
-
-        break;
-    }
-}
-
-void Codegen::ScanFunctions::checkName(const QStringRef &name, const SourceLocation &loc)
-{
-    if (_variableEnvironment->isStrict) {
-        if (name == QLatin1String("implements")
-                || name == QLatin1String("interface")
-                || name == QLatin1String("let")
-                || name == QLatin1String("package")
-                || name == QLatin1String("private")
-                || name == QLatin1String("protected")
-                || name == QLatin1String("public")
-                || name == QLatin1String("static")
-                || name == QLatin1String("yield")) {
-            _cg->throwSyntaxError(loc, QStringLiteral("Unexpected strict mode reserved word"));
-        }
-    }
-}
-void Codegen::ScanFunctions::checkForArguments(AST::FormalParameterList *parameters)
-{
-    while (parameters) {
-        if (parameters->name == QLatin1String("arguments"))
-            _variableEnvironment->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
-        parameters = parameters->next;
-    }
-}
-
-bool Codegen::ScanFunctions::visit(Program *ast)
-{
-    enterEnvironment(ast, defaultProgramMode);
-    checkDirectivePrologue(ast->elements);
-    return true;
-}
-
-void Codegen::ScanFunctions::endVisit(Program *)
-{
-    leaveEnvironment();
-}
-
-bool Codegen::ScanFunctions::visit(CallExpression *ast)
-{
-    if (! _variableEnvironment->hasDirectEval) {
-        if (IdentifierExpression *id = cast<IdentifierExpression *>(ast->base)) {
-            if (id->name == QLatin1String("eval")) {
-                if (_variableEnvironment->usesArgumentsObject == Environment::ArgumentsObjectUnknown)
-                    _variableEnvironment->usesArgumentsObject = Environment::ArgumentsObjectUsed;
-                _variableEnvironment->hasDirectEval = true;
-            }
-        }
-    }
-    int argc = 0;
-    for (ArgumentList *it = ast->arguments; it; it = it->next)
-        ++argc;
-    _variableEnvironment->maxNumberOfArguments = qMax(_variableEnvironment->maxNumberOfArguments, argc);
-    return true;
-}
-
-bool Codegen::ScanFunctions::visit(NewMemberExpression *ast)
-{
-    int argc = 0;
-    for (ArgumentList *it = ast->arguments; it; it = it->next)
-        ++argc;
-    _variableEnvironment->maxNumberOfArguments = qMax(_variableEnvironment->maxNumberOfArguments, argc);
-    return true;
-}
-
-bool Codegen::ScanFunctions::visit(ArrayLiteral *ast)
-{
-    int index = 0;
-    for (ElementList *it = ast->elements; it; it = it->next) {
-        for (Elision *elision = it->elision; elision; elision = elision->next)
-            ++index;
-        ++index;
-    }
-    if (ast->elision) {
-        for (Elision *elision = ast->elision->next; elision; elision = elision->next)
-            ++index;
-    }
-    _variableEnvironment->maxNumberOfArguments = qMax(_variableEnvironment->maxNumberOfArguments, index);
-    return true;
-}
-
-bool Codegen::ScanFunctions::visit(VariableDeclaration *ast)
-{
-    if (_variableEnvironment->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
-        _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Variable name may not be eval or arguments in strict mode"));
-    checkName(ast->name, ast->identifierToken);
-    if (ast->name == QLatin1String("arguments"))
-        _variableEnvironment->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
-    if (ast->scope == AST::VariableDeclaration::VariableScope::ReadOnlyBlockScope && !ast->expression) {
-        _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Missing initializer in const declaration"));
-        return false;
-    }
-    QString name = ast->name.toString();
-    const Environment::Member *m = 0;
-    if (_variableEnvironment->memberInfo(name, &m)) {
-        if (m->isLexicallyScoped() || ast->isLexicallyScoped()) {
-            _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(name));
-            return false;
-        }
-    }
-    _variableEnvironment->enter(ast->name.toString(), ast->expression ? Environment::VariableDefinition : Environment::VariableDeclaration, ast->scope);
-    return true;
-}
-
-bool Codegen::ScanFunctions::visit(IdentifierExpression *ast)
-{
-    checkName(ast->name, ast->identifierToken);
-    if (_variableEnvironment->usesArgumentsObject == Environment::ArgumentsObjectUnknown && ast->name == QLatin1String("arguments"))
-        _variableEnvironment->usesArgumentsObject = Environment::ArgumentsObjectUsed;
-    return true;
-}
-
-bool Codegen::ScanFunctions::visit(ExpressionStatement *ast)
-{
-    if (FunctionExpression* expr = AST::cast<AST::FunctionExpression*>(ast->expression)) {
-        if (!_allowFuncDecls)
-            _cg->throwSyntaxError(expr->functionToken, QStringLiteral("conditional function or closure declaration"));
-
-        enterFunction(expr, /*enterName*/ true);
-        Node::accept(expr->formals, this);
-        Node::accept(expr->body, this);
-        leaveEnvironment();
-        return false;
-    } else {
-        SourceLocation firstToken = ast->firstSourceLocation();
-        if (_sourceCode.midRef(firstToken.offset, firstToken.length) == QLatin1String("function")) {
-            _cg->throwSyntaxError(firstToken, QStringLiteral("unexpected token"));
-        }
-    }
-    return true;
-}
-
-bool Codegen::ScanFunctions::visit(FunctionExpression *ast)
-{
-    enterFunction(ast, /*enterName*/ false);
-    return true;
-}
-
-void Codegen::ScanFunctions::enterFunction(FunctionExpression *ast, bool enterName, bool isExpression)
-{
-    if (_variableEnvironment->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
-        _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Function name may not be eval or arguments in strict mode"));
-    enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName ? ast : 0, isExpression);
-}
-
-void Codegen::ScanFunctions::endVisit(FunctionExpression *)
-{
-    leaveEnvironment();
-}
-
-bool Codegen::ScanFunctions::visit(ObjectLiteral *ast)
-{
-    int argc = 0;
-    for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
-        QString key = it->assignment->name->asString();
-        if (QV4::String::toArrayIndex(key) != UINT_MAX)
-            ++argc;
-        ++argc;
-        if (AST::cast<AST::PropertyGetterSetter *>(it->assignment))
-            ++argc;
-    }
-    _variableEnvironment->maxNumberOfArguments = qMax(_variableEnvironment->maxNumberOfArguments, argc);
-
-    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
-    Node::accept(ast->properties, this);
-    return false;
-}
-
-bool Codegen::ScanFunctions::visit(PropertyGetterSetter *ast)
-{
-    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
-    enterFunction(ast, QString(), ast->formals, ast->functionBody, /*FunctionExpression*/0, /*isExpression*/false);
-    return true;
-}
-
-void Codegen::ScanFunctions::endVisit(PropertyGetterSetter *)
-{
-    leaveEnvironment();
-}
-
-bool Codegen::ScanFunctions::visit(FunctionDeclaration *ast)
-{
-    enterFunction(ast, /*enterName*/ true, /*isExpression */false);
-    return true;
-}
-
-void Codegen::ScanFunctions::endVisit(FunctionDeclaration *)
-{
-    leaveEnvironment();
-}
-
-bool Codegen::ScanFunctions::visit(WithStatement *ast)
-{
-    if (_variableEnvironment->isStrict) {
-        _cg->throwSyntaxError(ast->withToken, QStringLiteral("'with' statement is not allowed in strict mode"));
-        return false;
-    }
-
-    return true;
-}
-
-bool Codegen::ScanFunctions::visit(DoWhileStatement *ast) {
-    {
-        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_variableEnvironment->isStrict);
-        Node::accept(ast->statement, this);
-    }
-    Node::accept(ast->expression, this);
-    return false;
-}
-
-bool Codegen::ScanFunctions::visit(ForStatement *ast) {
-    Node::accept(ast->initialiser, this);
-    Node::accept(ast->condition, this);
-    Node::accept(ast->expression, this);
-
-    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_variableEnvironment->isStrict);
-    Node::accept(ast->statement, this);
-
-    return false;
-}
-
-bool Codegen::ScanFunctions::visit(LocalForStatement *ast) {
-    Node::accept(ast->declarations, this);
-    Node::accept(ast->condition, this);
-    Node::accept(ast->expression, this);
-
-    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_variableEnvironment->isStrict);
-    Node::accept(ast->statement, this);
-
-    return false;
-}
-
-bool Codegen::ScanFunctions::visit(ForEachStatement *ast) {
-    Node::accept(ast->initialiser, this);
-    Node::accept(ast->expression, this);
-
-    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_variableEnvironment->isStrict);
-    Node::accept(ast->statement, this);
-
-    return false;
-}
-
-bool Codegen::ScanFunctions::visit(LocalForEachStatement *ast) {
-    Node::accept(ast->declaration, this);
-    Node::accept(ast->expression, this);
-
-    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_variableEnvironment->isStrict);
-    Node::accept(ast->statement, this);
-
-    return false;
-}
-
-bool Codegen::ScanFunctions::visit(ThisExpression *)
-{
-    _variableEnvironment->usesThis = true;
-    return false;
-}
-
-bool Codegen::ScanFunctions::visit(Block *ast) {
-    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, _variableEnvironment->isStrict ? false : _allowFuncDecls);
-    Node::accept(ast->statements, this);
-    return false;
-}
-
-void Codegen::ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, FunctionBody *body, FunctionExpression *expr, bool isExpression)
-{
-    bool wasStrict = false;
-    if (_variableEnvironment) {
-        _variableEnvironment->hasNestedFunctions = true;
-        // The identifier of a function expression cannot be referenced from the enclosing environment.
-        if (expr)
-            _variableEnvironment->enter(name, Environment::FunctionDefinition, AST::VariableDeclaration::FunctionScope, expr);
-        if (name == QLatin1String("arguments"))
-            _variableEnvironment->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
-        wasStrict = _variableEnvironment->isStrict;
-    }
-
-    enterEnvironment(ast, FunctionCode);
-    checkForArguments(formals);
-
-    _variableEnvironment->isNamedFunctionExpression = isExpression && !name.isEmpty();
-    _variableEnvironment->formals = formals;
-
-    if (body)
-        checkDirectivePrologue(body->elements);
-
-    if (wasStrict || _variableEnvironment->isStrict) {
-        QStringList args;
-        for (FormalParameterList *it = formals; it; it = it->next) {
-            QString arg = it->name.toString();
-            if (args.contains(arg)) {
-                _cg->throwSyntaxError(it->identifierToken, QStringLiteral("Duplicate parameter name '%1' is not allowed in strict mode").arg(arg));
-                return;
-            }
-            if (arg == QLatin1String("eval") || arg == QLatin1String("arguments")) {
-                _cg->throwSyntaxError(it->identifierToken, QStringLiteral("'%1' cannot be used as parameter name in strict mode").arg(arg));
-                return;
-            }
-            args += arg;
-        }
-    }
-}
-
-
-Codegen::Codegen(bool strict)
-    : _module(0)
-    , _function(0)
-    , _block(0)
-    , _exitBlock(0)
-    , _returnAddress(0)
-    , _variableEnvironment(0)
-    , _loop(0)
-    , _labelledStatement(0)
-    , _scopeAndFinally(0)
+Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
+    : _module(nullptr)
+    , _returnAddress(-1)
+    , _context(nullptr)
+    , _labelledStatement(nullptr)
+    , jsUnitGenerator(jsUnitGenerator)
     , _strictMode(strict)
     , _fileNameIsUrl(false)
     , hasError(false)
 {
+    jsUnitGenerator->codeGeneratorName = QStringLiteral("moth");
 }
 
+const char *globalNames[] = {
+    "isNaN",
+    "parseFloat",
+    "String",
+    "EvalError",
+    "URIError",
+    "Math",
+    "encodeURIComponent",
+    "RangeError",
+    "eval",
+    "isFinite",
+    "ReferenceError",
+    "Infinity",
+    "Function",
+    "RegExp",
+    "Number",
+    "parseInt",
+    "Object",
+    "decodeURI",
+    "TypeError",
+    "Boolean",
+    "encodeURI",
+    "NaN",
+    "Error",
+    "decodeURIComponent",
+    "Date",
+    "Array",
+    "Symbol",
+    "escape",
+    "unescape",
+    "SyntaxError",
+    "undefined",
+    "JSON",
+    "ArrayBuffer",
+    "SharedArrayBuffer",
+    "DataView",
+    "Int8Array",
+    "Uint8Array",
+    "Uint8ClampedArray",
+    "Int16Array",
+    "Uint16Array",
+    "Int32Array",
+    "Uint32Array",
+    "Float32Array",
+    "Float64Array",
+    "WeakSet",
+    "Set",
+    "WeakMap",
+    "Map",
+    "Reflect",
+    "Proxy",
+    "Atomics",
+    "Promise",
+    nullptr
+};
+
 void Codegen::generateFromProgram(const QString &fileName,
+                                  const QString &finalUrl,
                                   const QString &sourceCode,
                                   Program *node,
-                                  QV4::IR::Module *module,
-                                  CompilationMode mode,
-                                  const QStringList &inheritedLocals)
+                                  Module *module,
+                                  ContextType contextType)
 {
     Q_ASSERT(node);
 
     _module = module;
-    _variableEnvironment = 0;
+    _context = nullptr;
 
-    _module->setFileName(fileName);
+    // ### should be set on the module outside of this method
+    _module->fileName = fileName;
+    _module->finalUrl = finalUrl;
 
-    ScanFunctions scan(this, sourceCode, mode);
+    if (contextType == ContextType::ScriptImportedByQML) {
+        // the global object is frozen, so we know that members of it are
+        // pointing to the global object. This is important so that references
+        // to Math etc. do not go through the expensive path in the context wrapper
+        // that tries to see whether we have a matching type
+        //
+        // Since this can be called from the loader thread we can't get the list
+        // directly from the engine, so let's hardcode the most important ones here
+        for (const char **g = globalNames; *g != nullptr; ++g)
+            m_globalNames << QString::fromLatin1(*g);
+    }
+
+    ScanFunctions scan(this, sourceCode, contextType);
     scan(node);
 
-    defineFunction(QStringLiteral("%entry"), node, 0, node->elements, inheritedLocals);
-    qDeleteAll(_envMap);
-    _envMap.clear();
+    if (hasError)
+        return;
+
+    defineFunction(QStringLiteral("%entry"), node, nullptr, node->statements);
 }
 
-void Codegen::generateFromFunctionExpression(const QString &fileName,
-                                             const QString &sourceCode,
-                                             AST::FunctionExpression *ast,
-                                             QV4::IR::Module *module)
+void Codegen::generateFromModule(const QString &fileName,
+                                 const QString &finalUrl,
+                                 const QString &sourceCode,
+                                 ESModule *node,
+                                 Module *module)
 {
+    Q_ASSERT(node);
+
     _module = module;
-    _module->setFileName(fileName);
-    _variableEnvironment = 0;
+    _context = nullptr;
 
-    ScanFunctions scan(this, sourceCode, GlobalCode);
-    // fake a global environment
-    scan.enterEnvironment(0, FunctionCode);
-    scan(ast);
-    scan.leaveEnvironment();
+    // ### should be set on the module outside of this method
+    _module->fileName = fileName;
+    _module->finalUrl = finalUrl;
 
-    defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
+    ScanFunctions scan(this, sourceCode, ContextType::ESModule);
+    scan(node);
 
-    qDeleteAll(_envMap);
-    _envMap.clear();
+    if (hasError)
+        return;
+
+    {
+        Compiler::Context *moduleContext = _module->contextMap.value(node);
+        for (const auto &entry: moduleContext->exportEntries) {
+            if (entry.moduleRequest.isEmpty()) {
+                // ### check against imported bound names
+                _module->localExportEntries << entry;
+            } else if (entry.importName == QLatin1Char('*')) {
+                _module->starExportEntries << entry;
+            } else {
+                _module->indirectExportEntries << entry;
+            }
+        }
+        _module->importEntries = moduleContext->importEntries;
+
+        _module->moduleRequests = std::move(moduleContext->moduleRequests);
+        _module->moduleRequests.removeDuplicates();
+    }
+
+    std::sort(_module->localExportEntries.begin(), _module->localExportEntries.end(), ExportEntry::lessThan);
+    std::sort(_module->starExportEntries.begin(), _module->starExportEntries.end(), ExportEntry::lessThan);
+    std::sort(_module->indirectExportEntries.begin(), _module->indirectExportEntries.end(), ExportEntry::lessThan);
+
+    defineFunction(QStringLiteral("%entry"), node, nullptr, node->body);
 }
 
-
-void Codegen::enterEnvironment(Node *node)
+void Codegen::enterContext(Node *node)
 {
-    _variableEnvironment = _envMap.value(node);
-    Q_ASSERT(_variableEnvironment);
+    _context = _module->contextMap.value(node);
+    Q_ASSERT(_context);
 }
 
-void Codegen::leaveEnvironment()
+int Codegen::leaveContext()
 {
-    Q_ASSERT(_variableEnvironment);
-    _variableEnvironment = _variableEnvironment->parent;
+    Q_ASSERT(_context);
+    int functionIndex = _context->functionIndex;
+    _context = _context->parent;
+    return functionIndex;
 }
 
-void Codegen::enterLoop(Statement *node, IR::BasicBlock *breakBlock, IR::BasicBlock *continueBlock)
+Context *Codegen::enterBlock(Node *node)
 {
-    _loop = new Loop(node, breakBlock, continueBlock, _loop);
-    _loop->labelledStatement = _labelledStatement; // consume the enclosing labelled statement
-    _loop->scopeAndFinally = _scopeAndFinally;
-    _labelledStatement = 0;
+    enterContext(node);
+    return _context;
 }
 
-void Codegen::leaveLoop()
-{
-    Loop *current = _loop;
-    _loop = _loop->parent;
-    delete current;
-}
-
-IR::Expr *Codegen::member(IR::Expr *base, const QString *name)
+Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
 {
     if (hasError)
-        return 0;
+        return _expr.result();
 
-    if (base->asTemp() || base->asArgLocal())
-        return _block->MEMBER(base, name);
-    else {
-        const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), base);
-        return _block->MEMBER(_block->TEMP(t), name);
-    }
-}
-
-IR::Expr *Codegen::subscript(IR::Expr *base, IR::Expr *index)
-{
-    if (hasError)
-        return 0;
-
-    if (! base->asTemp() && !base->asArgLocal()) {
-        const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), base);
-        base = _block->TEMP(t);
-    }
-
-    if (! index->asTemp() && !index->asArgLocal() && !index->asConst()) {
-        const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), index);
-        index = _block->TEMP(t);
-    }
-
-    Q_ASSERT(base->asTemp() || base->asArgLocal());
-    Q_ASSERT(index->asTemp() || index->asArgLocal() || index->asConst());
-    return _block->SUBSCRIPT(base, index);
-}
-
-IR::Expr *Codegen::argument(IR::Expr *expr)
-{
-    if (expr && !expr->asTemp()) {
-        const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), expr);
-        expr = _block->TEMP(t);
-    }
-    return expr;
-}
-
-// keeps references alive, converts other expressions to temps
-IR::Expr *Codegen::reference(IR::Expr *expr)
-{
-    if (hasError)
-        return 0;
-
-    if (expr && !expr->asTemp() && !expr->asArgLocal() && !expr->asName() && !expr->asMember() && !expr->asSubscript()) {
-        const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), expr);
-        expr = _block->TEMP(t);
-    }
-    return expr;
-}
-
-IR::Expr *Codegen::unop(IR::AluOp op, IR::Expr *expr, const SourceLocation &loc)
-{
-    if (hasError)
-        return 0;
-
-    Q_ASSERT(op != IR::OpIncrement);
-    Q_ASSERT(op != IR::OpDecrement);
-
-    if (IR::Const *c = expr->asConst()) {
-        if (c->type == IR::NumberType) {
+    if (expr.isConstant()) {
+        auto v = Value::fromReturnedValue(expr.constant);
+        if (v.isNumber()) {
             switch (op) {
-            case IR::OpNot:
-                return _block->CONST(IR::BoolType, !c->value);
-            case IR::OpUMinus:
-                return _block->CONST(IR::NumberType, -c->value);
-            case IR::OpUPlus:
+            case Not:
+                return Reference::fromConst(this, Encode(!v.toBoolean()));
+            case UMinus:
+                return Reference::fromConst(this, Runtime::UMinus::call(v));
+            case UPlus:
                 return expr;
-            case IR::OpCompl:
-                return _block->CONST(IR::NumberType, ~QV4::Primitive::toInt32(c->value));
-            case IR::OpIncrement:
-                return _block->CONST(IR::NumberType, c->value + 1);
-            case IR::OpDecrement:
-                return _block->CONST(IR::NumberType, c->value - 1);
+            case Compl:
+                return Reference::fromConst(this, Encode((int)~v.toInt32()));
             default:
                 break;
             }
         }
     }
-    if (!expr->asTemp() && !expr->asArgLocal()) {
-        const unsigned t = _block->newTemp();
-        setLocation(move(_block->TEMP(t), expr), loc);
-        expr = _block->TEMP(t);
+
+    switch (op) {
+    case UMinus: {
+        expr.loadInAccumulator();
+        Instruction::UMinus uminus = {};
+        bytecodeGenerator->addTracingInstruction(uminus);
+        return Reference::fromAccumulator(this);
     }
-    Q_ASSERT(expr->asTemp() || expr->asArgLocal());
-    return _block->UNOP(op, expr);
-}
-
-IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right, const AST::SourceLocation &loc)
-{
-    if (hasError)
-        return 0;
-
-    if (IR::Const *c1 = left->asConst()) {
-        if (IR::Const *c2 = right->asConst()) {
-            if ((c1->type & IR::NumberType) && (c2->type & IR::NumberType)) {
-                switch (op) {
-                case IR::OpAdd: return _block->CONST(IR::NumberType, c1->value + c2->value);
-                case IR::OpAnd: return _block->CONST(IR::BoolType, c1->value ? c2->value : 0);
-                case IR::OpBitAnd: return _block->CONST(IR::NumberType, int(c1->value) & int(c2->value));
-                case IR::OpBitOr: return _block->CONST(IR::NumberType, int(c1->value) | int(c2->value));
-                case IR::OpBitXor: return _block->CONST(IR::NumberType, int(c1->value) ^ int(c2->value));
-                case IR::OpDiv: return _block->CONST(IR::NumberType, c1->value / c2->value);
-                case IR::OpEqual: return _block->CONST(IR::BoolType, c1->value == c2->value);
-                case IR::OpNotEqual: return _block->CONST(IR::BoolType, c1->value != c2->value);
-                case IR::OpStrictEqual: return _block->CONST(IR::BoolType, c1->value == c2->value);
-                case IR::OpStrictNotEqual: return _block->CONST(IR::BoolType, c1->value != c2->value);
-                case IR::OpGe: return _block->CONST(IR::BoolType, c1->value >= c2->value);
-                case IR::OpGt: return _block->CONST(IR::BoolType, c1->value > c2->value);
-                case IR::OpLe: return _block->CONST(IR::BoolType, c1->value <= c2->value);
-                case IR::OpLt: return _block->CONST(IR::BoolType, c1->value < c2->value);
-                case IR::OpLShift: return _block->CONST(IR::NumberType, QV4::Primitive::toInt32(c1->value) << (QV4::Primitive::toUInt32(c2->value) & 0x1f));
-                case IR::OpMod: return _block->CONST(IR::NumberType, std::fmod(c1->value, c2->value));
-                case IR::OpMul: return _block->CONST(IR::NumberType, c1->value * c2->value);
-                case IR::OpOr: return _block->CONST(IR::NumberType, c1->value ? c1->value : c2->value);
-                case IR::OpRShift: return _block->CONST(IR::NumberType, QV4::Primitive::toInt32(c1->value) >> (QV4::Primitive::toUInt32(c2->value) & 0x1f));
-                case IR::OpSub: return _block->CONST(IR::NumberType, c1->value - c2->value);
-                case IR::OpURShift: return _block->CONST(IR::NumberType,QV4::Primitive::toUInt32(c1->value) >> (QV4::Primitive::toUInt32(c2->value) & 0x1f));
-
-                case IR::OpInstanceof:
-                case IR::OpIn:
-                    break;
-
-                case IR::OpIfTrue: // unary ops
-                case IR::OpNot:
-                case IR::OpUMinus:
-                case IR::OpUPlus:
-                case IR::OpCompl:
-                case IR::OpIncrement:
-                case IR::OpDecrement:
-                case IR::OpInvalid:
-                    break;
-                }
-            }
+    case UPlus: {
+        expr.loadInAccumulator();
+        Instruction::UPlus uplus;
+        bytecodeGenerator->addInstruction(uplus);
+        return Reference::fromAccumulator(this);
+    }
+    case Not: {
+        expr.loadInAccumulator();
+        Instruction::UNot unot;
+        bytecodeGenerator->addInstruction(unot);
+        return Reference::fromAccumulator(this);
+    }
+    case Compl: {
+        expr.loadInAccumulator();
+        Instruction::UCompl ucompl;
+        bytecodeGenerator->addInstruction(ucompl);
+        return Reference::fromAccumulator(this);
+    }
+    case PostIncrement:
+        if (!_expr.accept(nx) || requiresReturnValue) {
+            Reference e = expr.asLValue();
+            e.loadInAccumulator();
+            Instruction::UPlus uplus;
+            bytecodeGenerator->addInstruction(uplus);
+            Reference originalValue = Reference::fromStackSlot(this).storeRetainAccumulator();
+            Instruction::Increment inc = {};
+            bytecodeGenerator->addTracingInstruction(inc);
+            e.storeConsumeAccumulator();
+            return originalValue;
+        } else {
+            // intentionally fall-through: the result is never used, so it's equivalent to
+            // "expr += 1", which is what a pre-increment does as well.
+            Q_FALLTHROUGH();
         }
-    } else if (op == IR::OpAdd) {
-        if (IR::String *s1 = left->asString()) {
-            if (IR::String *s2 = right->asString()) {
-                return _block->STRING(_function->newString(*s1->value + *s2->value));
-            }
+    case PreIncrement: {
+        Reference e = expr.asLValue();
+        e.loadInAccumulator();
+        Instruction::Increment inc = {};
+        bytecodeGenerator->addTracingInstruction(inc);
+        if (_expr.accept(nx))
+            return e.storeConsumeAccumulator();
+        else
+            return e.storeRetainAccumulator();
+    }
+    case PostDecrement:
+        if (!_expr.accept(nx) || requiresReturnValue) {
+            Reference e = expr.asLValue();
+            e.loadInAccumulator();
+            Instruction::UPlus uplus;
+            bytecodeGenerator->addInstruction(uplus);
+            Reference originalValue = Reference::fromStackSlot(this).storeRetainAccumulator();
+            Instruction::Decrement dec = {};
+            bytecodeGenerator->addTracingInstruction(dec);
+            e.storeConsumeAccumulator();
+            return originalValue;
+        } else {
+            // intentionally fall-through: the result is never used, so it's equivalent to
+            // "expr -= 1", which is what a pre-decrement does as well.
+            Q_FALLTHROUGH();
         }
+    case PreDecrement: {
+        Reference e = expr.asLValue();
+        e.loadInAccumulator();
+        Instruction::Decrement dec = {};
+        bytecodeGenerator->addTracingInstruction(dec);
+        if (_expr.accept(nx))
+            return e.storeConsumeAccumulator();
+        else
+            return e.storeRetainAccumulator();
+    }
     }
 
-    if (!left->asTemp() && !left->asArgLocal() && !left->asConst()) {
-        const unsigned t = _block->newTemp();
-        setLocation(move(_block->TEMP(t), left), loc);
-        left = _block->TEMP(t);
-    }
-
-    if (!right->asTemp() && !right->asArgLocal() && !right->asConst()) {
-        const unsigned t = _block->newTemp();
-        setLocation(move(_block->TEMP(t), right), loc);
-        right = _block->TEMP(t);
-    }
-
-    Q_ASSERT(left->asTemp() || left->asArgLocal() || left->asConst());
-    Q_ASSERT(right->asTemp() || right->asArgLocal() || right->asConst());
-
-    return _block->BINOP(op, left, right);
+    Q_UNREACHABLE();
 }
 
-IR::Expr *Codegen::call(IR::Expr *base, IR::ExprList *args)
+void Codegen::addCJump()
 {
-    if (hasError)
-        return 0;
-    base = reference(base);
-    return _block->CALL(base, args);
-}
-
-IR::Stmt *Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
-{
-    if (hasError)
-        return 0;
-
-    Q_ASSERT(target->isLValue());
-
-    if (op != IR::OpInvalid) {
-        return move(target, binop(op, target, source));
-    }
-
-    if (!source->asTemp() && !source->asConst() && !target->asTemp() && !source->asArgLocal() && !target->asArgLocal()) {
-        unsigned t = _block->newTemp();
-        _block->MOVE(_block->TEMP(t), source);
-        source = _block->TEMP(t);
-    }
-    if (source->asConst() && !target->asTemp() && !target->asArgLocal()) {
-        unsigned t = _block->newTemp();
-        _block->MOVE(_block->TEMP(t), source);
-        source = _block->TEMP(t);
-    }
-
-    return _block->MOVE(target, source);
-}
-
-IR::Stmt *Codegen::cjump(IR::Expr *cond, IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
-{
-    if (hasError)
-        return 0;
-
-    if (! (cond->asTemp() || (cond->asBinop() && cjumpCanHandle(cond->asBinop()->op)) )) {
-        const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), cond);
-        cond = _block->TEMP(t);
-    }
-    return _block->CJUMP(cond, iftrue, iffalse);
+    bytecodeGenerator->addCJumpInstruction(_expr.trueBlockFollowsCondition(),
+                                           _expr.iftrue(), _expr.iffalse());
 }
 
 void Codegen::accept(Node *node)
@@ -786,8 +383,15 @@ void Codegen::accept(Node *node)
 
 void Codegen::statement(Statement *ast)
 {
-    _block->nextLocation = ast->firstSourceLocation();
+    RecursionDepthCheck depthCheck(this, ast->lastSourceLocation());
+    RegisterScope scope(this);
+
+    bytecodeGenerator->setLocation(ast->firstSourceLocation());
+
+    VolatileMemoryLocations vLocs = scanVolatileMemoryLocations(ast);
+    qSwap(_volatileMemoryLocations, vLocs);
     accept(ast);
+    qSwap(_volatileMemoryLocations, vLocs);
 }
 
 void Codegen::statement(ExpressionNode *ast)
@@ -795,115 +399,191 @@ void Codegen::statement(ExpressionNode *ast)
     if (! ast) {
         return;
     } else {
+        RecursionDepthCheck depthCheck(this, ast->lastSourceLocation());
+        RegisterScope scope(this);
+
         Result r(nx);
         qSwap(_expr, r);
+        VolatileMemoryLocations vLocs = scanVolatileMemoryLocations(ast);
+        qSwap(_volatileMemoryLocations, vLocs);
+
         accept(ast);
+
+        qSwap(_volatileMemoryLocations, vLocs);
+        qSwap(_expr, r);
+
         if (hasError)
             return;
-        qSwap(_expr, r);
-        if (r.format == ex) {
-            if (r->asCall()) {
-                _block->EXP(*r); // the nest nx representation for calls is EXP(CALL(c..))
-            } else if (r->asTemp() || r->asArgLocal()) {
-                // there is nothing to do
-            } else {
-                unsigned t = _block->newTemp();
-                move(_block->TEMP(t), *r);
-            }
-        }
+        if (r.result().loadTriggersSideEffect())
+            r.result().loadInAccumulator(); // triggers side effects
     }
 }
 
-void Codegen::condition(ExpressionNode *ast, IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
+void Codegen::condition(ExpressionNode *ast, const BytecodeGenerator::Label *iftrue,
+                        const BytecodeGenerator::Label *iffalse, bool trueBlockFollowsCondition)
 {
-    if (ast) {
-        Result r(iftrue, iffalse);
-        qSwap(_expr, r);
-        accept(ast);
-        qSwap(_expr, r);
-        if (r.format == ex) {
-            setLocation(cjump(*r, r.iftrue, r.iffalse), ast->firstSourceLocation());
-        }
+    if (hasError)
+        return;
+
+    if (!ast)
+        return;
+
+    RecursionDepthCheck depthCheck(this, ast->lastSourceLocation());
+    Result r(iftrue, iffalse, trueBlockFollowsCondition);
+    qSwap(_expr, r);
+    accept(ast);
+    qSwap(_expr, r);
+
+    if (hasError)
+        return;
+
+    if (r.format() == ex) {
+        Q_ASSERT(iftrue == r.iftrue());
+        Q_ASSERT(iffalse == r.iffalse());
+        Q_ASSERT(r.result().isValid());
+        bytecodeGenerator->setLocation(ast->firstSourceLocation());
+        r.result().loadInAccumulator();
+        if (r.trueBlockFollowsCondition())
+            bytecodeGenerator->jumpFalse().link(*r.iffalse());
+        else
+            bytecodeGenerator->jumpTrue().link(*r.iftrue());
     }
 }
 
-Codegen::Result Codegen::expression(ExpressionNode *ast)
+Codegen::Reference Codegen::expression(ExpressionNode *ast)
 {
+    RecursionDepthCheck depthCheck(this, ast->lastSourceLocation());
     Result r;
     if (ast) {
         qSwap(_expr, r);
         accept(ast);
         qSwap(_expr, r);
     }
-    return r;
-}
-
-Codegen::Result Codegen::sourceElement(SourceElement *ast)
-{
-    Result r(nx);
-    if (ast) {
-        qSwap(_expr, r);
-        accept(ast);
-        qSwap(_expr, r);
-    }
-    return r;
-}
-
-Codegen::UiMember Codegen::uiObjectMember(UiObjectMember *ast)
-{
-    UiMember m;
-    if (ast) {
-        qSwap(_uiMember, m);
-        accept(ast);
-        qSwap(_uiMember, m);
-    }
-    return m;
-}
-
-void Codegen::functionBody(FunctionBody *ast)
-{
-    if (ast)
-        sourceElements(ast->elements);
+    return r.result();
 }
 
 void Codegen::program(Program *ast)
 {
     if (ast) {
-        sourceElements(ast->elements);
+        statementList(ast->statements);
     }
 }
 
-void Codegen::sourceElements(SourceElements *ast)
+enum class CompletionState {
+    Empty,
+    EmptyAbrupt,
+    NonEmpty
+};
+
+static CompletionState completionState(StatementList *list)
 {
-    for (SourceElements *it = ast; it; it = it->next) {
-        sourceElement(it->element);
-        if (hasError)
-            return;
+    for (StatementList *it = list; it; it = it->next) {
+        if (it->statement->kind == Statement::Kind_BreakStatement ||
+            it->statement->kind == Statement::Kind_ContinueStatement)
+            return CompletionState::EmptyAbrupt;
+        if (it->statement->kind == Statement::Kind_EmptyStatement ||
+            it->statement->kind == Statement::Kind_VariableDeclaration ||
+            it->statement->kind == Statement::Kind_FunctionDeclaration)
+            continue;
+        if (it->statement->kind == Statement::Kind_Block) {
+            CompletionState subState = completionState(static_cast<Block *>(it->statement)->statements);
+            if (subState != CompletionState::Empty)
+                return subState;
+            continue;
+        }
+        return CompletionState::NonEmpty;
     }
+    return CompletionState::Empty;
 }
 
-void Codegen::variableDeclaration(VariableDeclaration *ast)
+static Node *completionStatement(StatementList *list)
 {
-    IR::Expr *initializer = 0;
-    if (!ast->expression)
-        return;
-    Result expr = expression(ast->expression);
-    if (hasError)
-        return;
-
-    Q_ASSERT(expr.code);
-    initializer = *expr;
-
-    IR::Expr *lhs = identifier(ast->name.toString(), ast->identifierToken.startLine,
-                               ast->identifierToken.startColumn);
-
-    if (lhs->asArgLocal()) {
-        move(lhs, initializer);
-    } else {
-        int initialized = _block->newTemp();
-        move(_block->TEMP(initialized), initializer);
-        move(lhs, _block->TEMP(initialized));
+    Node *completionStatement = nullptr;
+    for (StatementList *it = list; it; it = it->next) {
+        if (it->statement->kind == Statement::Kind_BreakStatement ||
+            it->statement->kind == Statement::Kind_ContinueStatement)
+            return completionStatement;
+        if (it->statement->kind == Statement::Kind_ThrowStatement ||
+            it->statement->kind == Statement::Kind_ReturnStatement)
+            return it->statement;
+        if (it->statement->kind == Statement::Kind_EmptyStatement ||
+            it->statement->kind == Statement::Kind_VariableStatement ||
+            it->statement->kind == Statement::Kind_FunctionDeclaration)
+            continue;
+        if (it->statement->kind == Statement::Kind_Block) {
+            CompletionState state = completionState(static_cast<Block *>(it->statement)->statements);
+            switch (state) {
+            case CompletionState::Empty:
+                continue;
+            case CompletionState::EmptyAbrupt:
+                return it->statement;
+            case CompletionState::NonEmpty:
+                break;
+            }
+        }
+        completionStatement = it->statement;
     }
+    return completionStatement;
+}
+
+void Codegen::statementList(StatementList *ast)
+{
+    if (!ast)
+        return;
+
+    bool _requiresReturnValue = requiresReturnValue;
+    // ### the next line is pessimizing a bit too much, as there are many cases, where the complietion from the break
+    // statement will not be used, but it's at least spec compliant
+    if (!controlFlow || !controlFlow->hasLoop())
+        requiresReturnValue = false;
+
+    Node *needsCompletion = nullptr;
+
+    if (_requiresReturnValue && !requiresReturnValue)
+        needsCompletion = completionStatement(ast);
+
+    if (requiresReturnValue && !needsCompletion && !insideSwitch) {
+        // break or continue is the first real statement, set the return value to undefined
+        Reference::fromConst(this, Encode::undefined()).storeOnStack(_returnAddress);
+    }
+
+    bool _insideSwitch = insideSwitch;
+    insideSwitch = false;
+
+    for (StatementList *it = ast; it; it = it->next) {
+        if (it->statement == needsCompletion)
+            requiresReturnValue = true;
+        if (Statement *s = it->statement->statementCast())
+            statement(s);
+        else
+            statement(static_cast<ExpressionNode *>(it->statement));
+        if (it->statement == needsCompletion)
+            requiresReturnValue = false;
+        if (it->statement->kind == Statement::Kind_ThrowStatement ||
+            it->statement->kind == Statement::Kind_BreakStatement ||
+            it->statement->kind == Statement::Kind_ContinueStatement ||
+            it->statement->kind == Statement::Kind_ReturnStatement)
+            // any code after those statements is unreachable
+            break;
+    }
+    requiresReturnValue = _requiresReturnValue;
+    insideSwitch = _insideSwitch;
+}
+
+void Codegen::variableDeclaration(PatternElement *ast)
+{
+    TailCallBlocker blockTailCalls(this);
+    RegisterScope scope(this);
+
+    if (!ast->initializer) {
+        if (ast->isLexicallyScoped()) {
+            Reference::fromConst(this, Encode::undefined()).loadInAccumulator();
+            Reference varToStore = targetForPatternElement(ast);
+            varToStore.storeConsumeAccumulator();
+        }
+        return;
+    }
+    initializeAndDestructureBindingElement(ast, Reference(), /*isDefinition*/ true);
 }
 
 void Codegen::variableDeclarationList(VariableDeclarationList *ast)
@@ -913,178 +593,491 @@ void Codegen::variableDeclarationList(VariableDeclarationList *ast)
     }
 }
 
+Codegen::Reference Codegen::targetForPatternElement(AST::PatternElement *p)
+{
+    if (!p->bindingIdentifier.isNull())
+        return referenceForName(p->bindingIdentifier.toString(), true, p->firstSourceLocation());
+    if (!p->bindingTarget || p->destructuringPattern())
+        return Codegen::Reference::fromStackSlot(this);
+    Reference lhs = expression(p->bindingTarget);
+    if (hasError)
+        return lhs;
+    if (!lhs.isLValue()) {
+        throwReferenceError(p->bindingTarget->firstSourceLocation(), QStringLiteral("Binding target is not a reference."));
+        return lhs;
+    }
+    lhs = lhs.asLValue();
+    return lhs;
+}
+
+void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &base, bool isDefinition)
+{
+    Q_ASSERT(e->type == AST::PatternElement::Binding || e->type == AST::PatternElement::RestElement);
+    RegisterScope scope(this);
+    Reference baseRef = (base.isAccumulator()) ? base.storeOnStack() : base;
+    Reference varToStore = targetForPatternElement(e);
+    if (isDefinition)
+        varToStore.isReferenceToConst = false;
+    if (hasError)
+        return;
+
+    if (e->initializer) {
+        if (!baseRef.isValid()) {
+            // assignment
+            Reference expr = expression(e->initializer);
+            if (hasError)
+                return;
+            expr.loadInAccumulator();
+            varToStore.storeConsumeAccumulator();
+        } else if (baseRef == varToStore) {
+            baseRef.loadInAccumulator();
+            BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
+            Reference expr = expression(e->initializer);
+            if (hasError) {
+                jump.link();
+                return;
+            }
+            expr.loadInAccumulator();
+            varToStore.storeConsumeAccumulator();
+            jump.link();
+        } else {
+            baseRef.loadInAccumulator();
+            BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
+            Reference expr = expression(e->initializer);
+            if (hasError) {
+                jump.link();
+                return;
+            }
+            expr.loadInAccumulator();
+            jump.link();
+            varToStore.storeConsumeAccumulator();
+        }
+    } else if (baseRef != varToStore && baseRef.isValid()) {
+        baseRef.loadInAccumulator();
+        varToStore.storeConsumeAccumulator();
+    }
+    Pattern *p = e->destructuringPattern();
+    if (!p)
+        return;
+
+    if (!varToStore.isStackSlot())
+        varToStore = varToStore.storeOnStack();
+    if (PatternElementList *l = e->elementList()) {
+        destructureElementList(varToStore, l, isDefinition);
+    } else if (PatternPropertyList *p = e->propertyList()) {
+        destructurePropertyList(varToStore, p, isDefinition);
+    } else if (e->bindingTarget) {
+        // empty binding pattern. For spec compatibility, try to coerce the argument to an object
+        varToStore.loadInAccumulator();
+        Instruction::ToObject toObject;
+        bytecodeGenerator->addInstruction(toObject);
+        return;
+    }
+}
+
+Codegen::Reference Codegen::referenceForPropertyName(const Codegen::Reference &object, AST::PropertyName *name)
+{
+    AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(name);
+    Reference property;
+    if (cname) {
+        Reference computedName = expression(cname->expression);
+        if (hasError)
+            return Reference();
+        computedName = computedName.storeOnStack();
+        property = Reference::fromSubscript(object, computedName).asLValue();
+    } else {
+        QString propertyName = name->asString();
+        property = Reference::fromMember(object, propertyName);
+    }
+    return property;
+}
+
+void Codegen::destructurePropertyList(const Codegen::Reference &object, PatternPropertyList *bindingList, bool isDefinition)
+{
+    RegisterScope scope(this);
+
+    object.loadInAccumulator();
+    Instruction::ThrowOnNullOrUndefined t;
+    bytecodeGenerator->addInstruction(t);
+
+    for (PatternPropertyList *it = bindingList; it; it = it->next) {
+        PatternProperty *p = it->property;
+        RegisterScope scope(this);
+        Reference property = referenceForPropertyName(object, p->name);
+        if (hasError)
+            return;
+        initializeAndDestructureBindingElement(p, property, isDefinition);
+        if (hasError)
+            return;
+    }
+}
+
+void Codegen::destructureElementList(const Codegen::Reference &array, PatternElementList *bindingList, bool isDefinition)
+{
+    RegisterScope scope(this);
+
+    Reference iterator = Reference::fromStackSlot(this);
+    Reference iteratorValue = Reference::fromStackSlot(this);
+    Reference iteratorDone = Reference::fromStackSlot(this);
+    Reference::storeConstOnStack(this, Encode(false), iteratorDone.stackSlot());
+
+    array.loadInAccumulator();
+    Instruction::GetIterator iteratorObjInstr;
+    iteratorObjInstr.iterator = static_cast<int>(AST::ForEachType::Of);
+    bytecodeGenerator->addInstruction(iteratorObjInstr);
+    iterator.storeConsumeAccumulator();
+
+    {
+        auto cleanup = [this, iterator, iteratorDone]() {
+            iterator.loadInAccumulator();
+            Instruction::IteratorClose close;
+            close.done = iteratorDone.stackSlot();
+            bytecodeGenerator->addInstruction(close);
+        };
+
+        ControlFlowUnwindCleanup flow(this, cleanup);
+
+        for (PatternElementList *p = bindingList; p; p = p->next) {
+            PatternElement *e = p->element;
+            for (Elision *elision = p->elision; elision; elision = elision->next) {
+                iterator.loadInAccumulator();
+                Instruction::IteratorNext next;
+                next.value = iteratorValue.stackSlot();
+                next.done = iteratorDone.stackSlot();
+                bytecodeGenerator->addInstruction(next);
+            }
+
+            if (!e)
+                continue;
+
+            RegisterScope scope(this);
+            iterator.loadInAccumulator();
+
+            if (e->type == PatternElement::RestElement) {
+                Reference::fromConst(this, Encode(true)).storeOnStack(iteratorDone.stackSlot());
+                bytecodeGenerator->addInstruction(Instruction::DestructureRestElement());
+                initializeAndDestructureBindingElement(e, Reference::fromAccumulator(this), isDefinition);
+            } else {
+                Instruction::IteratorNext next;
+                next.value = iteratorValue.stackSlot();
+                next.done = iteratorDone.stackSlot();
+                bytecodeGenerator->addInstruction(next);
+                initializeAndDestructureBindingElement(e, iteratorValue, isDefinition);
+                if (hasError)
+                    return;
+            }
+        }
+    }
+}
+
+void Codegen::destructurePattern(Pattern *p, const Reference &rhs)
+{
+    RegisterScope scope(this);
+    if (auto *o = AST::cast<ObjectPattern *>(p))
+        destructurePropertyList(rhs, o->properties);
+    else if (auto *a = AST::cast<ArrayPattern *>(p))
+        destructureElementList(rhs, a->elements);
+    else
+        Q_UNREACHABLE();
+}
+
 
 bool Codegen::visit(ArgumentList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(CaseBlock *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(CaseClause *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(CaseClauses *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(Catch *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(DefaultClause *)
 {
-    Q_ASSERT(!"unreachable");
-    return false;
-}
-
-bool Codegen::visit(ElementList *)
-{
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(Elision *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(Finally *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(FormalParameterList *)
 {
-    Q_ASSERT(!"unreachable");
-    return false;
-}
-
-bool Codegen::visit(FunctionBody *)
-{
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(Program *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
-bool Codegen::visit(PropertyAssignmentList *)
+bool Codegen::visit(PatternElement *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
-bool Codegen::visit(PropertyNameAndValue *)
+bool Codegen::visit(PatternElementList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
-bool Codegen::visit(PropertyGetterSetter *)
+bool Codegen::visit(PatternProperty *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
-bool Codegen::visit(SourceElements *)
+bool Codegen::visit(PatternPropertyList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
+    return false;
+}
+
+bool Codegen::visit(ExportDeclaration *ast)
+{
+    if (!ast->exportDefault)
+        return true;
+
+    TailCallBlocker blockTailCalls(this);
+    Reference exportedValue;
+
+    if (auto *fdecl = AST::cast<FunctionDeclaration*>(ast->variableStatementOrDeclaration)) {
+        Result r;
+        qSwap(_expr, r);
+        visit(static_cast<FunctionExpression*>(fdecl));
+        qSwap(_expr, r);
+        exportedValue = r.result();
+    } else if (auto *classDecl = AST::cast<ClassDeclaration*>(ast->variableStatementOrDeclaration)) {
+        Result r;
+        qSwap(_expr, r);
+        visit(static_cast<ClassExpression*>(classDecl));
+        qSwap(_expr, r);
+        exportedValue = r.result();
+    } else if (ExpressionNode *expr = ast->variableStatementOrDeclaration->expressionCast()) {
+        exportedValue = expression(expr);
+    }
+
+    exportedValue.loadInAccumulator();
+
+    const int defaultExportIndex = _context->locals.indexOf(_context->localNameForDefaultExport);
+    Q_ASSERT(defaultExportIndex != -1);
+    Reference defaultExportSlot = Reference::fromScopedLocal(this, defaultExportIndex, /*scope*/0);
+    defaultExportSlot.storeConsumeAccumulator();
+
     return false;
 }
 
 bool Codegen::visit(StatementList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiArrayMemberList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiImport *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiHeaderItemList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiPragma *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiObjectInitializer *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiObjectMemberList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiParameterList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiProgram *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiQualifiedId *)
 {
-    Q_ASSERT(!"unreachable");
-    return false;
-}
-
-bool Codegen::visit(UiQualifiedPragmaId *)
-{
-    Q_ASSERT(!"unreachable");
-    return false;
-}
-
-bool Codegen::visit(VariableDeclaration *)
-{
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(VariableDeclarationList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
+    return false;
+}
+
+bool Codegen::visit(ClassExpression *ast)
+{
+    TailCallBlocker blockTailCalls(this);
+
+    Compiler::Class jsClass;
+    jsClass.nameIndex = registerString(ast->name.toString());
+
+    ClassElementList *constructor = nullptr;
+    int nComputedNames = 0;
+    int nStaticComputedNames = 0;
+
+    RegisterScope scope(this);
+    ControlFlowBlock controlFlow(this, ast);
+
+    for (auto *member = ast->elements; member; member = member->next) {
+        PatternProperty *p = member->property;
+        FunctionExpression *f = p->initializer->asFunctionDefinition();
+        Q_ASSERT(f);
+        AST::ComputedPropertyName *cname = AST::cast<ComputedPropertyName *>(p->name);
+        if (cname) {
+            ++nComputedNames;
+            if (member->isStatic)
+                ++nStaticComputedNames;
+        }
+        QString name = p->name->asString();
+        uint nameIndex = cname ? UINT_MAX : registerString(name);
+        Compiler::Class::Method::Type type = Compiler::Class::Method::Regular;
+        if (p->type == PatternProperty::Getter)
+            type = Compiler::Class::Method::Getter;
+        else if (p->type == PatternProperty::Setter)
+            type = Compiler::Class::Method::Setter;
+        Compiler::Class::Method m{ nameIndex, type, static_cast<uint>(defineFunction(name, f, f->formals, f->body)) };
+
+        if (member->isStatic) {
+            if (name == QStringLiteral("prototype")) {
+                throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Cannot declare a static method named 'prototype'."));
+                return false;
+            }
+            jsClass.staticMethods << m;
+        } else {
+            if (name == QStringLiteral("constructor")) {
+                if (constructor) {
+                    throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Cannot declare a multiple constructors in a class."));
+                    return false;
+                }
+                if (m.type != Compiler::Class::Method::Regular) {
+                    throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Cannot declare a getter or setter named 'constructor'."));
+                    return false;
+                }
+                constructor = member;
+                jsClass.constructorIndex = m.functionIndex;
+                continue;
+            }
+
+            jsClass.methods << m;
+        }
+    }
+
+    int classIndex = _module->classes.size();
+    _module->classes.append(jsClass);
+
+    Reference heritage = Reference::fromStackSlot(this);
+    if (ast->heritage) {
+        bytecodeGenerator->setLocation(ast->heritage->firstSourceLocation());
+        Reference r = expression(ast->heritage);
+        if (hasError)
+            return false;
+        r.storeOnStack(heritage.stackSlot());
+    } else {
+        Reference::fromConst(this, Value::emptyValue().asReturnedValue()).loadInAccumulator();
+        heritage.storeConsumeAccumulator();
+    }
+
+    int computedNames = nComputedNames ? bytecodeGenerator->newRegisterArray(nComputedNames) : 0;
+    int currentStaticName = computedNames;
+    int currentNonStaticName = computedNames + nStaticComputedNames;
+
+    for (auto *member = ast->elements; member; member = member->next) {
+        AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(member->property->name);
+        if (!cname)
+            continue;
+        RegisterScope scope(this);
+        bytecodeGenerator->setLocation(cname->firstSourceLocation());
+        Reference computedName = expression(cname->expression);
+        if (hasError)
+            return false;
+        computedName.storeOnStack(member->isStatic ? currentStaticName++ : currentNonStaticName++);
+    }
+
+    Instruction::CreateClass createClass;
+    createClass.classIndex = classIndex;
+    createClass.heritage = heritage.stackSlot();
+    createClass.computedNames = computedNames;
+
+    bytecodeGenerator->addInstruction(createClass);
+
+    if (!ast->name.isEmpty()) {
+        Reference ctor = referenceForName(ast->name.toString(), true);
+        ctor.isReferenceToConst = false; // this is the definition
+        (void) ctor.storeRetainAccumulator();
+    }
+
+    _expr.setResult(Reference::fromAccumulator(this));
+    return false;
+}
+
+bool Codegen::visit(ClassDeclaration *ast)
+{
+    TailCallBlocker blockTailCalls(this);
+    Reference outerVar = referenceForName(ast->name.toString(), true);
+    visit(static_cast<ClassExpression *>(ast));
+    (void) outerVar.storeRetainAccumulator();
     return false;
 }
 
@@ -1093,64 +1086,168 @@ bool Codegen::visit(Expression *ast)
     if (hasError)
         return false;
 
+    TailCallBlocker blockTailCalls(this);
     statement(ast->left);
+    blockTailCalls.unblock();
     accept(ast->right);
     return false;
 }
 
-bool Codegen::visit(ArrayLiteral *ast)
+bool Codegen::visit(ArrayPattern *ast)
 {
     if (hasError)
         return false;
 
-    IR::ExprList *args = 0;
-    IR::ExprList *current = 0;
-    for (ElementList *it = ast->elements; it; it = it->next) {
-        for (Elision *elision = it->elision; elision; elision = elision->next) {
-            IR::ExprList *arg = _function->New<IR::ExprList>();
-            if (!current) {
-                args = arg;
+    TailCallBlocker blockTailCalls(this);
+
+    PatternElementList *it = ast->elements;
+
+    int argc = 0;
+    {
+        RegisterScope scope(this);
+
+        int args = -1;
+        auto push = [this, &argc, &args](AST::ExpressionNode *arg) {
+            int temp = bytecodeGenerator->newRegister();
+            if (args == -1)
+                args = temp;
+            if (!arg) {
+                auto c = Reference::fromConst(this, Value::emptyValue().asReturnedValue());
+                (void) c.storeOnStack(temp);
             } else {
-                current->next = arg;
+                RegisterScope scope(this);
+                Reference r = expression(arg);
+                if (hasError)
+                    return;
+                (void) r.storeOnStack(temp);
             }
-            current = arg;
-            current->expr = _block->CONST(IR::MissingType, 0);
-        }
-        Result expr = expression(it->expression);
-        if (hasError)
-            return false;
+            ++argc;
+        };
 
-        IR::ExprList *arg = _function->New<IR::ExprList>();
-        if (!current) {
-            args = arg;
-        } else {
-            current->next = arg;
-        }
-        current = arg;
+        for (; it; it = it->next) {
+            PatternElement *e = it->element;
+            if (e && e->type == PatternElement::SpreadElement)
+                break;
+            for (Elision *elision = it->elision; elision; elision = elision->next)
+                push(nullptr);
 
-        IR::Expr *exp = *expr;
-        if (exp->asTemp() || expr->asArgLocal() || exp->asConst()) {
-            current->expr = exp;
-        } else {
-            unsigned value = _block->newTemp();
-            move(_block->TEMP(value), exp);
-            current->expr = _block->TEMP(value);
+            if (!e)
+                continue;
+
+            push(e->initializer);
+            if (hasError)
+                return false;
         }
-    }
-    for (Elision *elision = ast->elision; elision; elision = elision->next) {
-        IR::ExprList *arg = _function->New<IR::ExprList>();
-        if (!current) {
-            args = arg;
-        } else {
-            current->next = arg;
+
+        if (args == -1) {
+            Q_ASSERT(argc == 0);
+            args = 0;
         }
-        current = arg;
-        current->expr = _block->CONST(IR::MissingType, 0);
+
+        Instruction::DefineArray call;
+        call.argc = argc;
+        call.args = Moth::StackSlot::createRegister(args);
+        bytecodeGenerator->addInstruction(call);
     }
 
-    const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), _block->CALL(_block->NAME(IR::Name::builtin_define_array, 0, 0), args));
-    _expr.code = _block->TEMP(t);
+    if (!it) {
+        _expr.setResult(Reference::fromAccumulator(this));
+        return false;
+    }
+    Q_ASSERT(it->element && it->element->type == PatternElement::SpreadElement);
+
+    RegisterScope scope(this);
+    Reference array = Reference::fromStackSlot(this);
+    array.storeConsumeAccumulator();
+    Reference index = Reference::storeConstOnStack(this, Encode(argc));
+
+    auto pushAccumulator = [&]() {
+        Reference slot = Reference::fromSubscript(array, index);
+        slot.storeConsumeAccumulator();
+
+        index.loadInAccumulator();
+        Instruction::Increment inc = {};
+        bytecodeGenerator->addTracingInstruction(inc);
+        index.storeConsumeAccumulator();
+    };
+
+    while (it) {
+        for (Elision *elision = it->elision; elision; elision = elision->next) {
+            Reference::fromConst(this, Value::emptyValue().asReturnedValue()).loadInAccumulator();
+            pushAccumulator();
+        }
+
+        if (!it->element) {
+            it = it->next;
+            continue;
+        }
+
+        // handle spread element
+        if (it->element->type == PatternElement::SpreadElement) {
+            RegisterScope scope(this);
+
+            Reference iterator = Reference::fromStackSlot(this);
+            Reference iteratorDone = Reference::fromConst(this, Encode(false)).storeOnStack();
+            Reference lhsValue = Reference::fromStackSlot(this);
+
+            // There should be a temporal block, so that variables declared in lhs shadow outside vars.
+            // This block should define a temporal dead zone for those variables, which is not yet implemented.
+            {
+                RegisterScope innerScope(this);
+                Reference expr = expression(it->element->initializer);
+                if (hasError)
+                    return false;
+
+                expr.loadInAccumulator();
+                Instruction::GetIterator iteratorObjInstr;
+                iteratorObjInstr.iterator = static_cast<int>(AST::ForEachType::Of);
+                bytecodeGenerator->addInstruction(iteratorObjInstr);
+                iterator.storeConsumeAccumulator();
+            }
+
+            BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
+            BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
+
+            {
+                auto cleanup = [this, iterator, iteratorDone]() {
+                    iterator.loadInAccumulator();
+                    Instruction::IteratorClose close;
+                    close.done = iteratorDone.stackSlot();
+                    bytecodeGenerator->addInstruction(close);
+                };
+                ControlFlowLoop flow(this, &end, &in, cleanup);
+
+                in.link();
+                bytecodeGenerator->addLoopStart(in);
+                iterator.loadInAccumulator();
+                Instruction::IteratorNext next;
+                next.value = lhsValue.stackSlot();
+                next.done = iteratorDone.stackSlot();
+                bytecodeGenerator->addInstruction(next);
+                bytecodeGenerator->addTracingJumpInstruction(Instruction::JumpTrue()).link(end);
+
+                lhsValue.loadInAccumulator();
+                pushAccumulator();
+
+                bytecodeGenerator->jump().link(in);
+                end.link();
+            }
+        } else {
+            RegisterScope innerScope(this);
+            Reference expr = expression(it->element->initializer);
+            if (hasError)
+                return false;
+
+            expr.loadInAccumulator();
+            pushAccumulator();
+        }
+
+        it = it->next;
+    }
+
+    array.loadInAccumulator();
+    _expr.setResult(Reference::fromAccumulator(this));
+
     return false;
 }
 
@@ -1159,29 +1256,52 @@ bool Codegen::visit(ArrayMemberExpression *ast)
     if (hasError)
         return false;
 
-    Result base = expression(ast->base);
-    Result index = expression(ast->expression);
+    TailCallBlocker blockTailCalls(this);
+    Reference base = expression(ast->base);
     if (hasError)
         return false;
-    _expr.code = subscript(*base, *index);
+    if (base.isSuper()) {
+        Reference index = expression(ast->expression).storeOnStack();
+        _expr.setResult(Reference::fromSuperProperty(index));
+        return false;
+    }
+    base = base.storeOnStack();
+    if (hasError)
+        return false;
+    if (AST::StringLiteral *str = AST::cast<AST::StringLiteral *>(ast->expression)) {
+        QString s = str->value.toString();
+        uint arrayIndex = QV4::String::toArrayIndex(s);
+        if (arrayIndex == UINT_MAX) {
+            _expr.setResult(Reference::fromMember(base, str->value.toString()));
+            return false;
+        }
+        Reference index = Reference::fromConst(this, QV4::Encode(arrayIndex));
+        _expr.setResult(Reference::fromSubscript(base, index));
+        return false;
+    }
+    Reference index = expression(ast->expression);
+    if (hasError)
+        return false;
+    _expr.setResult(Reference::fromSubscript(base, index));
     return false;
 }
 
-static IR::AluOp baseOp(int op)
+static QSOperator::Op baseOp(int op)
 {
     switch ((QSOperator::Op) op) {
-    case QSOperator::InplaceAnd: return IR::OpBitAnd;
-    case QSOperator::InplaceSub: return IR::OpSub;
-    case QSOperator::InplaceDiv: return IR::OpDiv;
-    case QSOperator::InplaceAdd: return IR::OpAdd;
-    case QSOperator::InplaceLeftShift: return IR::OpLShift;
-    case QSOperator::InplaceMod: return IR::OpMod;
-    case QSOperator::InplaceMul: return IR::OpMul;
-    case QSOperator::InplaceOr: return IR::OpBitOr;
-    case QSOperator::InplaceRightShift: return IR::OpRShift;
-    case QSOperator::InplaceURightShift: return IR::OpURShift;
-    case QSOperator::InplaceXor: return IR::OpBitXor;
-    default: return IR::OpInvalid;
+    case QSOperator::InplaceAnd: return QSOperator::BitAnd;
+    case QSOperator::InplaceSub: return QSOperator::Sub;
+    case QSOperator::InplaceDiv: return QSOperator::Div;
+    case QSOperator::InplaceAdd: return QSOperator::Add;
+    case QSOperator::InplaceLeftShift: return QSOperator::LShift;
+    case QSOperator::InplaceMod: return QSOperator::Mod;
+    case QSOperator::InplaceExp: return QSOperator::Exp;
+    case QSOperator::InplaceMul: return QSOperator::Mul;
+    case QSOperator::InplaceOr: return QSOperator::BitOr;
+    case QSOperator::InplaceRightShift: return QSOperator::RShift;
+    case QSOperator::InplaceURightShift: return QSOperator::URShift;
+    case QSOperator::InplaceXor: return QSOperator::BitXor;
+    default: return QSOperator::Invalid;
     }
 }
 
@@ -1190,93 +1310,116 @@ bool Codegen::visit(BinaryExpression *ast)
     if (hasError)
         return false;
 
+    TailCallBlocker blockTailCalls(this);
+
     if (ast->op == QSOperator::And) {
         if (_expr.accept(cx)) {
-            IR::BasicBlock *iftrue = _function->newBasicBlock(exceptionHandler());
-            condition(ast->left, iftrue, _expr.iffalse);
-            _block = iftrue;
-            condition(ast->right, _expr.iftrue, _expr.iffalse);
+            auto iftrue = bytecodeGenerator->newLabel();
+            condition(ast->left, &iftrue, _expr.iffalse(), true);
+            iftrue.link();
+            blockTailCalls.unblock();
+            condition(ast->right, _expr.iftrue(), _expr.iffalse(), _expr.trueBlockFollowsCondition());
         } else {
-            IR::BasicBlock *iftrue = _function->newBasicBlock(exceptionHandler());
-            IR::BasicBlock *endif = _function->newBasicBlock(exceptionHandler());
+            auto iftrue = bytecodeGenerator->newLabel();
+            auto endif = bytecodeGenerator->newLabel();
 
-            const unsigned r = _block->newTemp();
-
-            Result lhs = expression(ast->left);
+            Reference left = expression(ast->left);
             if (hasError)
                 return false;
-            move(_block->TEMP(r), *lhs);
-            setLocation(cjump(_block->TEMP(r), iftrue, endif), ast->operatorToken);
-            _block = iftrue;
-            Result rhs = expression(ast->right);
+            left.loadInAccumulator();
+
+            bytecodeGenerator->setLocation(ast->operatorToken);
+            bytecodeGenerator->jumpFalse().link(endif);
+            iftrue.link();
+
+            blockTailCalls.unblock();
+            Reference right = expression(ast->right);
             if (hasError)
                 return false;
-            move(_block->TEMP(r), *rhs);
-            _block->JUMP(endif);
+            right.loadInAccumulator();
 
-            _expr.code = _block->TEMP(r);
-            _block = endif;
+            endif.link();
+
+            _expr.setResult(Reference::fromAccumulator(this));
         }
         return false;
     } else if (ast->op == QSOperator::Or) {
         if (_expr.accept(cx)) {
-            IR::BasicBlock *iffalse = _function->newBasicBlock(exceptionHandler());
-            condition(ast->left, _expr.iftrue, iffalse);
-            _block = iffalse;
-            condition(ast->right, _expr.iftrue, _expr.iffalse);
+            auto iffalse = bytecodeGenerator->newLabel();
+            condition(ast->left, _expr.iftrue(), &iffalse, false);
+            iffalse.link();
+            condition(ast->right, _expr.iftrue(), _expr.iffalse(), _expr.trueBlockFollowsCondition());
         } else {
-            IR::BasicBlock *iffalse = _function->newBasicBlock(exceptionHandler());
-            IR::BasicBlock *endif = _function->newBasicBlock(exceptionHandler());
+            auto iffalse = bytecodeGenerator->newLabel();
+            auto endif = bytecodeGenerator->newLabel();
 
-            const unsigned r = _block->newTemp();
-            Result lhs = expression(ast->left);
+            Reference left = expression(ast->left);
             if (hasError)
                 return false;
-            move(_block->TEMP(r), *lhs);
-            setLocation(cjump(_block->TEMP(r), endif, iffalse), ast->operatorToken);
-            _block = iffalse;
-            Result rhs = expression(ast->right);
+            left.loadInAccumulator();
+
+            bytecodeGenerator->setLocation(ast->operatorToken);
+            bytecodeGenerator->jumpTrue().link(endif);
+            iffalse.link();
+
+            blockTailCalls.unblock();
+            Reference right = expression(ast->right);
             if (hasError)
                 return false;
-            move(_block->TEMP(r), *rhs);
-            _block->JUMP(endif);
+            right.loadInAccumulator();
 
-            _block = endif;
-            _expr.code = _block->TEMP(r);
+            endif.link();
+
+            _expr.setResult(Reference::fromAccumulator(this));
         }
+        return false;
+    } else if (ast->op == QSOperator::Assign) {
+        if (AST::Pattern *p = ast->left->patternCast()) {
+            RegisterScope scope(this);
+            Reference right = expression(ast->right);
+            if (hasError)
+                return false;
+            right = right.storeOnStack();
+            destructurePattern(p, right);
+            if (!_expr.accept(nx)) {
+                right.loadInAccumulator();
+                _expr.setResult(Reference::fromAccumulator(this));
+            }
+            return false;
+        }
+        Reference left = expression(ast->left);
+        if (hasError)
+            return false;
+
+        if (!left.isLValue()) {
+            throwReferenceError(ast->operatorToken, QStringLiteral("left-hand side of assignment operator is not an lvalue"));
+            return false;
+        }
+        left = left.asLValue();
+        if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
+            return false;
+        blockTailCalls.unblock();
+        Reference r = expression(ast->right);
+        if (hasError)
+            return false;
+        r.loadInAccumulator();
+        if (_expr.accept(nx))
+            _expr.setResult(left.storeConsumeAccumulator());
+        else
+            _expr.setResult(left.storeRetainAccumulator());
         return false;
     }
 
-    IR::Expr* left = *expression(ast->left);
+    Reference left = expression(ast->left);
     if (hasError)
         return false;
 
     switch (ast->op) {
     case QSOperator::Or:
     case QSOperator::And:
+    case QSOperator::Assign:
+        Q_UNREACHABLE(); // handled separately above
         break;
-
-    case QSOperator::Assign: {
-        if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
-            return false;
-        Result right = expression(ast->right);
-        if (hasError)
-            return false;
-        if (!left->isLValue()) {
-            throwReferenceError(ast->operatorToken, QStringLiteral("left-hand side of assignment operator is not an lvalue"));
-            return false;
-        }
-
-        if (_expr.accept(nx)) {
-            move(left, *right);
-        } else {
-            const unsigned t = _block->newTemp();
-            move(_block->TEMP(t), *right);
-            move(left, _block->TEMP(t));
-            _expr.code = _block->TEMP(t);
-        }
-        break;
-    }
 
     case QSOperator::InplaceAnd:
     case QSOperator::InplaceSub:
@@ -1284,6 +1427,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::InplaceAdd:
     case QSOperator::InplaceLeftShift:
     case QSOperator::InplaceMod:
+    case QSOperator::InplaceExp:
     case QSOperator::InplaceMul:
     case QSOperator::InplaceOr:
     case QSOperator::InplaceRightShift:
@@ -1291,25 +1435,36 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::InplaceXor: {
         if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
             return false;
-        Result right = expression(ast->right);
-        if (hasError)
-            return false;
-        if (!left->isLValue()) {
+
+        if (!left.isLValue()) {
             throwSyntaxError(ast->operatorToken, QStringLiteral("left-hand side of inplace operator is not an lvalue"));
             return false;
         }
+        left = left.asLValue();
 
-        if (_expr.accept(nx)) {
-            move(left, *right, baseOp(ast->op));
-        } else {
-            const unsigned t = _block->newTemp();
-            move(_block->TEMP(t), *right);
-            move(left, _block->TEMP(t), baseOp(ast->op));
-            _expr.code = left;
-        }
+        Reference tempLeft = left.storeOnStack();
+        Reference right = expression(ast->right);
+
+        if (hasError)
+            return false;
+
+        binopHelper(baseOp(ast->op), tempLeft, right).loadInAccumulator();
+        _expr.setResult(left.storeRetainAccumulator());
+
         break;
     }
 
+    case QSOperator::BitAnd:
+    case QSOperator::BitOr:
+    case QSOperator::BitXor:
+        if (left.isConstant()) {
+            Reference right = expression(ast->right);
+            if (hasError)
+                return false;
+            _expr.setResult(binopHelper(static_cast<QSOperator::Op>(ast->op), right, left));
+            break;
+        }
+        // intentional fall-through!
     case QSOperator::In:
     case QSOperator::InstanceOf:
     case QSOperator::Equal:
@@ -1319,47 +1474,29 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::Le:
     case QSOperator::Lt:
     case QSOperator::StrictEqual:
-    case QSOperator::StrictNotEqual: {
-        if (!left->asTemp() && !left->asArgLocal() && !left->asConst()) {
-            const unsigned t = _block->newTemp();
-            setLocation(move(_block->TEMP(t), left), ast->operatorToken);
-            left = _block->TEMP(t);
-        }
-
-        Result right = expression(ast->right);
-        if (hasError)
-            return false;
-
-        if (_expr.accept(cx)) {
-            setLocation(cjump(binop(IR::binaryOperator(ast->op), left, *right, ast->operatorToken), _expr.iftrue, _expr.iffalse), ast->operatorToken);
-        } else {
-            _expr.code = binop(IR::binaryOperator(ast->op), left, *right, ast->operatorToken);
-        }
-        break;
-    }
-
+    case QSOperator::StrictNotEqual:
     case QSOperator::Add:
-    case QSOperator::BitAnd:
-    case QSOperator::BitOr:
-    case QSOperator::BitXor:
     case QSOperator::Div:
-    case QSOperator::LShift:
+    case QSOperator::Exp:
     case QSOperator::Mod:
     case QSOperator::Mul:
-    case QSOperator::RShift:
     case QSOperator::Sub:
+    case QSOperator::LShift:
+    case QSOperator::RShift:
     case QSOperator::URShift: {
-        if (!left->asTemp() && !left->asArgLocal() && !left->asConst()) {
-            const unsigned t = _block->newTemp();
-            setLocation(move(_block->TEMP(t), left), ast->operatorToken);
-            left = _block->TEMP(t);
+        Reference right;
+        if (AST::NumericLiteral *rhs = AST::cast<AST::NumericLiteral *>(ast->right)) {
+            visit(rhs);
+            right = _expr.result();
+        } else {
+            left = left.storeOnStack(); // force any loads of the lhs, so the rhs won't clobber it
+            right = expression(ast->right);
         }
-
-        Result right = expression(ast->right);
         if (hasError)
             return false;
 
-        _expr.code = binop(IR::binaryOperator(ast->op), left, *right, ast->operatorToken);
+        _expr.setResult(binopHelper(static_cast<QSOperator::Op>(ast->op), left, right));
+
         break;
     }
 
@@ -1368,58 +1505,644 @@ bool Codegen::visit(BinaryExpression *ast)
     return false;
 }
 
+Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Reference &right)
+{
+    switch (oper) {
+    case QSOperator::Add: {
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        Instruction::Add add;
+        add.lhs = left.stackSlot();
+        bytecodeGenerator->addTracingInstruction(add);
+        break;
+    }
+    case QSOperator::Sub: {
+        if (right.isConstant() && right.constant == Encode(int(1))) {
+            left.loadInAccumulator();
+            Instruction::Decrement dec = {};
+            bytecodeGenerator->addTracingInstruction(dec);
+        } else {
+            left = left.storeOnStack();
+            right.loadInAccumulator();
+            Instruction::Sub sub;
+            sub.lhs = left.stackSlot();
+            bytecodeGenerator->addTracingInstruction(sub);
+        }
+        break;
+    }
+    case QSOperator::Exp: {
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        Instruction::Exp exp;
+        exp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(exp);
+        break;
+    }
+    case QSOperator::Mul: {
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        Instruction::Mul mul;
+        mul.lhs = left.stackSlot();
+        bytecodeGenerator->addTracingInstruction(mul);
+        break;
+    }
+    case QSOperator::Div: {
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        Instruction::Div div;
+        div.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(div);
+        break;
+    }
+    case QSOperator::Mod: {
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        Instruction::Mod mod;
+        mod.lhs = left.stackSlot();
+        bytecodeGenerator->addTracingInstruction(mod);
+        break;
+    }
+    case QSOperator::BitAnd:
+        if (right.isConstant()) {
+            int rightAsInt = Value::fromReturnedValue(right.constant).toInt32();
+            if (left.isConstant()) {
+                int result = Value::fromReturnedValue(left.constant).toInt32() & rightAsInt;
+                return Reference::fromConst(this, Encode(result));
+            }
+            left.loadInAccumulator();
+            Instruction::BitAndConst bitAnd;
+            bitAnd.rhs = rightAsInt;
+            bytecodeGenerator->addInstruction(bitAnd);
+        } else {
+            right.loadInAccumulator();
+            Instruction::BitAnd bitAnd;
+            bitAnd.lhs = left.stackSlot();
+            bytecodeGenerator->addInstruction(bitAnd);
+        }
+        break;
+    case QSOperator::BitOr:
+        if (right.isConstant()) {
+            int rightAsInt = Value::fromReturnedValue(right.constant).toInt32();
+            if (left.isConstant()) {
+                int result = Value::fromReturnedValue(left.constant).toInt32() | rightAsInt;
+                return Reference::fromConst(this, Encode(result));
+            }
+            left.loadInAccumulator();
+            Instruction::BitOrConst bitOr;
+            bitOr.rhs = rightAsInt;
+            bytecodeGenerator->addInstruction(bitOr);
+        } else {
+            right.loadInAccumulator();
+            Instruction::BitOr bitOr;
+            bitOr.lhs = left.stackSlot();
+            bytecodeGenerator->addInstruction(bitOr);
+        }
+        break;
+    case QSOperator::BitXor:
+        if (right.isConstant()) {
+            int rightAsInt = Value::fromReturnedValue(right.constant).toInt32();
+            if (left.isConstant()) {
+                int result = Value::fromReturnedValue(left.constant).toInt32() ^ rightAsInt;
+                return Reference::fromConst(this, Encode(result));
+            }
+            left.loadInAccumulator();
+            Instruction::BitXorConst bitXor;
+            bitXor.rhs = rightAsInt;
+            bytecodeGenerator->addInstruction(bitXor);
+        } else {
+            right.loadInAccumulator();
+            Instruction::BitXor bitXor;
+            bitXor.lhs = left.stackSlot();
+            bytecodeGenerator->addInstruction(bitXor);
+        }
+        break;
+    case QSOperator::URShift:
+        if (right.isConstant()) {
+            left.loadInAccumulator();
+            Instruction::UShrConst ushr;
+            ushr.rhs = Value::fromReturnedValue(right.constant).toInt32() & 0x1f;
+            bytecodeGenerator->addInstruction(ushr);
+        } else {
+            right.loadInAccumulator();
+            Instruction::UShr ushr;
+            ushr.lhs = left.stackSlot();
+            bytecodeGenerator->addInstruction(ushr);
+        }
+        break;
+    case QSOperator::RShift:
+        if (right.isConstant()) {
+            left.loadInAccumulator();
+            Instruction::ShrConst shr;
+            shr.rhs = Value::fromReturnedValue(right.constant).toInt32() & 0x1f;
+            bytecodeGenerator->addInstruction(shr);
+        } else {
+            right.loadInAccumulator();
+            Instruction::Shr shr;
+            shr.lhs = left.stackSlot();
+            bytecodeGenerator->addInstruction(shr);
+        }
+        break;
+    case QSOperator::LShift:
+        if (right.isConstant()) {
+            left.loadInAccumulator();
+            Instruction::ShlConst shl;
+            shl.rhs = Value::fromReturnedValue(right.constant).toInt32() & 0x1f;
+            bytecodeGenerator->addInstruction(shl);
+        } else {
+            right.loadInAccumulator();
+            Instruction::Shl shl;
+            shl.lhs = left.stackSlot();
+            bytecodeGenerator->addInstruction(shl);
+        }
+        break;
+    case QSOperator::InstanceOf: {
+        Instruction::CmpInstanceOf binop;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        binop.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(binop);
+        break;
+    }
+    case QSOperator::In: {
+        Instruction::CmpIn binop;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        binop.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(binop);
+        break;
+    }
+    case QSOperator::StrictEqual: {
+        if (_expr.accept(cx))
+            return jumpBinop(oper, left, right);
+
+        Instruction::CmpStrictEqual cmp;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        break;
+    }
+    case QSOperator::StrictNotEqual: {
+        if (_expr.accept(cx))
+            return jumpBinop(oper, left, right);
+
+        Instruction::CmpStrictNotEqual cmp;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        break;
+    }
+    case QSOperator::Equal: {
+        if (_expr.accept(cx))
+            return jumpBinop(oper, left, right);
+
+        Instruction::CmpEq cmp;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        break;
+    }
+    case QSOperator::NotEqual: {
+        if (_expr.accept(cx))
+            return jumpBinop(oper, left, right);
+
+        Instruction::CmpNe cmp;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        break;
+    }
+    case QSOperator::Gt: {
+        if (_expr.accept(cx))
+            return jumpBinop(oper, left, right);
+
+        Instruction::CmpGt cmp;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        break;
+    }
+    case QSOperator::Ge: {
+        if (_expr.accept(cx))
+            return jumpBinop(oper, left, right);
+
+        Instruction::CmpGe cmp;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        break;
+    }
+    case QSOperator::Lt: {
+        if (_expr.accept(cx))
+            return jumpBinop(oper, left, right);
+
+        Instruction::CmpLt cmp;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        break;
+    }
+    case QSOperator::Le:
+        if (_expr.accept(cx))
+            return jumpBinop(oper, left, right);
+
+        Instruction::CmpLe cmp;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        break;
+    default:
+        Q_UNREACHABLE();
+    }
+
+    return Reference::fromAccumulator(this);
+}
+
+static QSOperator::Op operatorForSwappedOperands(QSOperator::Op oper)
+{
+    switch (oper) {
+    case QSOperator::StrictEqual: return QSOperator::StrictEqual;
+    case QSOperator::StrictNotEqual: return QSOperator::StrictNotEqual;
+    case QSOperator::Equal: return QSOperator::Equal;
+    case QSOperator::NotEqual: return QSOperator::NotEqual;
+    case QSOperator::Gt: return QSOperator::Le;
+    case QSOperator::Ge: return QSOperator::Lt;
+    case QSOperator::Lt: return QSOperator::Ge;
+    case QSOperator::Le: return QSOperator::Gt;
+    default: Q_UNIMPLEMENTED(); return QSOperator::Invalid;
+    }
+}
+
+Codegen::Reference Codegen::jumpBinop(QSOperator::Op oper, Reference &left, Reference &right)
+{
+    if (left.isConstant()) {
+        oper = operatorForSwappedOperands(oper);
+        qSwap(left, right);
+    }
+
+    if (right.isConstant() && (oper == QSOperator::Equal || oper == QSOperator::NotEqual)) {
+        Value c = Value::fromReturnedValue(right.constant);
+        if (c.isNull() || c.isUndefined()) {
+            left.loadInAccumulator();
+            if (oper == QSOperator::Equal) {
+                Instruction::CmpEqNull cmp;
+                bytecodeGenerator->addInstruction(cmp);
+                addCJump();
+                return Reference();
+            } else if (oper == QSOperator::NotEqual) {
+                Instruction::CmpNeNull cmp;
+                bytecodeGenerator->addInstruction(cmp);
+                addCJump();
+                return Reference();
+            }
+        } else if (c.isInt32()) {
+            left.loadInAccumulator();
+            if (oper == QSOperator::Equal) {
+                Instruction::CmpEqInt cmp;
+                cmp.lhs = c.int_32();
+                bytecodeGenerator->addInstruction(cmp);
+                addCJump();
+                return Reference();
+            } else if (oper == QSOperator::NotEqual) {
+                Instruction::CmpNeInt cmp;
+                cmp.lhs = c.int_32();
+                bytecodeGenerator->addInstruction(cmp);
+                addCJump();
+                return Reference();
+            }
+
+        }
+    }
+
+    left = left.storeOnStack();
+    right.loadInAccumulator();
+
+    switch (oper) {
+    case QSOperator::StrictEqual: {
+        Instruction::CmpStrictEqual cmp;
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        addCJump();
+        break;
+    }
+    case QSOperator::StrictNotEqual: {
+        Instruction::CmpStrictNotEqual cmp;
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        addCJump();
+        break;
+    }
+    case QSOperator::Equal: {
+        Instruction::CmpEq cmp;
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        addCJump();
+        break;
+    }
+    case QSOperator::NotEqual: {
+        Instruction::CmpNe cmp;
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        addCJump();
+        break;
+    }
+    case QSOperator::Gt: {
+        Instruction::CmpGt cmp;
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        addCJump();
+        break;
+    }
+    case QSOperator::Ge: {
+        Instruction::CmpGe cmp;
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        addCJump();
+        break;
+    }
+    case QSOperator::Lt: {
+        Instruction::CmpLt cmp;
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        addCJump();
+        break;
+    }
+    case QSOperator::Le: {
+        Instruction::CmpLe cmp;
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        addCJump();
+        break;
+    }
+    default:
+        Q_UNREACHABLE();
+    }
+    return Reference();
+}
+
 bool Codegen::visit(CallExpression *ast)
 {
     if (hasError)
         return false;
 
-    Result base = expression(ast->base);
-    IR::ExprList *args = 0, **args_it = &args;
-    for (ArgumentList *it = ast->arguments; it; it = it->next) {
-        Result arg = expression(it->expression);
-        if (hasError)
-            return false;
-        IR::Expr *actual = argument(*arg);
-        *args_it = _function->New<IR::ExprList>();
-        (*args_it)->init(actual);
-        args_it = &(*args_it)->next;
-    }
+    RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
+
+    Reference base = expression(ast->base);
+
     if (hasError)
         return false;
-    _expr.code = call(*base, args);
+    switch (base.type) {
+    case Reference::Member:
+    case Reference::Subscript:
+    case Reference::QmlScopeObject:
+    case Reference::QmlContextObject:
+        base = base.asLValue();
+        break;
+    case Reference::Name:
+        break;
+    case Reference::Super:
+        handleConstruct(base, ast->arguments);
+        return false;
+    case Reference::SuperProperty:
+        break;
+    default:
+        base = base.storeOnStack();
+        break;
+    }
+
+    int thisObject = bytecodeGenerator->newRegister();
+    int functionObject = bytecodeGenerator->newRegister();
+
+    auto calldata = pushArgs(ast->arguments);
+    if (hasError)
+        return false;
+
+    blockTailCalls.unblock();
+    if (calldata.hasSpread || _tailCallsAreAllowed) {
+        Reference baseObject = base.baseObject();
+        if (!baseObject.isStackSlot()) {
+            baseObject.storeOnStack(thisObject);
+            baseObject = Reference::fromStackSlot(this, thisObject);
+        }
+        if (!base.isStackSlot()) {
+            base.storeOnStack(functionObject);
+            base = Reference::fromStackSlot(this, functionObject);
+        }
+
+        if (calldata.hasSpread) {
+            Instruction::CallWithSpread call;
+            call.func = base.stackSlot();
+            call.thisObject = baseObject.stackSlot();
+            call.argc = calldata.argc;
+            call.argv = calldata.argv;
+            bytecodeGenerator->addTracingInstruction(call);
+        } else {
+            Instruction::TailCall call;
+            call.func = base.stackSlot();
+            call.thisObject = baseObject.stackSlot();
+            call.argc = calldata.argc;
+            call.argv = calldata.argv;
+            bytecodeGenerator->addInstruction(call);
+        }
+
+        _expr.setResult(Reference::fromAccumulator(this));
+        return false;
+
+    }
+
+    handleCall(base, calldata, functionObject, thisObject);
     return false;
+}
+
+void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunction, int slotForThisObject)
+{
+    //### Do we really need all these call instructions? can's we load the callee in a temp?
+    if (base.type == Reference::QmlScopeObject) {
+        Instruction::CallScopeObjectProperty call;
+        call.base = base.qmlBase.stackSlot();
+        call.name = base.qmlCoreIndex;
+        call.argc = calldata.argc;
+        call.argv = calldata.argv;
+        bytecodeGenerator->addTracingInstruction(call);
+    } else if (base.type == Reference::QmlContextObject) {
+        Instruction::CallContextObjectProperty call;
+        call.base = base.qmlBase.stackSlot();
+        call.name = base.qmlCoreIndex;
+        call.argc = calldata.argc;
+        call.argv = calldata.argv;
+        bytecodeGenerator->addTracingInstruction(call);
+    } else if (base.type == Reference::Member) {
+        if (!disable_lookups && useFastLookups) {
+            Instruction::CallPropertyLookup call;
+            call.base = base.propertyBase.stackSlot();
+            call.lookupIndex = registerGetterLookup(base.propertyNameIndex);
+            call.argc = calldata.argc;
+            call.argv = calldata.argv;
+            bytecodeGenerator->addTracingInstruction(call);
+        } else {
+            Instruction::CallProperty call;
+            call.base = base.propertyBase.stackSlot();
+            call.name = base.propertyNameIndex;
+            call.argc = calldata.argc;
+            call.argv = calldata.argv;
+            bytecodeGenerator->addTracingInstruction(call);
+        }
+    } else if (base.type == Reference::Subscript) {
+        Instruction::CallElement call;
+        call.base = base.elementBase;
+        call.index = base.elementSubscript.stackSlot();
+        call.argc = calldata.argc;
+        call.argv = calldata.argv;
+        bytecodeGenerator->addTracingInstruction(call);
+    } else if (base.type == Reference::Name) {
+        if (base.name == QStringLiteral("eval")) {
+            Instruction::CallPossiblyDirectEval call;
+            call.argc = calldata.argc;
+            call.argv = calldata.argv;
+            bytecodeGenerator->addTracingInstruction(call);
+        } else if (!disable_lookups && useFastLookups && base.global) {
+            Instruction::CallGlobalLookup call;
+            call.index = registerGlobalGetterLookup(base.nameAsIndex());
+            call.argc = calldata.argc;
+            call.argv = calldata.argv;
+            bytecodeGenerator->addTracingInstruction(call);
+        } else {
+            Instruction::CallName call;
+            call.name = base.nameAsIndex();
+            call.argc = calldata.argc;
+            call.argv = calldata.argv;
+            bytecodeGenerator->addTracingInstruction(call);
+        }
+    } else if (base.type == Reference::SuperProperty) {
+        Reference receiver = base.baseObject();
+        if (!base.isStackSlot()) {
+            base.storeOnStack(slotForFunction);
+            base = Reference::fromStackSlot(this, slotForFunction);
+        }
+        if (!receiver.isStackSlot()) {
+            receiver.storeOnStack(slotForThisObject);
+            receiver = Reference::fromStackSlot(this, slotForThisObject);
+        }
+        Instruction::CallWithReceiver call;
+        call.name = base.stackSlot();
+        call.thisObject = receiver.stackSlot();
+        call.argc = calldata.argc;
+        call.argv = calldata.argv;
+        bytecodeGenerator->addTracingInstruction(call);
+    } else {
+        Q_ASSERT(base.isStackSlot());
+        Instruction::CallValue call;
+        call.name = base.stackSlot();
+        call.argc = calldata.argc;
+        call.argv = calldata.argv;
+        bytecodeGenerator->addTracingInstruction(call);
+    }
+
+    _expr.setResult(Reference::fromAccumulator(this));
+}
+
+Codegen::Arguments Codegen::pushArgs(ArgumentList *args)
+{
+    bool hasSpread = false;
+    int argc = 0;
+    for (ArgumentList *it = args; it; it = it->next) {
+        if (it->isSpreadElement) {
+            hasSpread = true;
+            ++argc;
+        }
+        ++argc;
+    }
+
+    if (!argc)
+        return { 0, 0, false };
+
+    int calldata = bytecodeGenerator->newRegisterArray(argc);
+
+    argc = 0;
+    for (ArgumentList *it = args; it; it = it->next) {
+        if (it->isSpreadElement) {
+            Reference::fromConst(this, Value::emptyValue().asReturnedValue()).storeOnStack(calldata + argc);
+            ++argc;
+        }
+        RegisterScope scope(this);
+        Reference e = expression(it->expression);
+        if (hasError)
+            break;
+        if (!argc && !it->next && !hasSpread) {
+            // avoid copy for functions taking a single argument
+            if (e.isStackSlot())
+                return { 1, e.stackSlot(), hasSpread };
+        }
+        (void) e.storeOnStack(calldata + argc);
+        ++argc;
+    }
+
+    return { argc, calldata, hasSpread };
+}
+
+Codegen::Arguments Codegen::pushTemplateArgs(TemplateLiteral *args)
+{
+    int argc = 0;
+    for (TemplateLiteral *it = args; it; it = it->next)
+        ++argc;
+
+    if (!argc)
+        return { 0, 0, false };
+
+    int calldata = bytecodeGenerator->newRegisterArray(argc);
+
+    argc = 0;
+    for (TemplateLiteral *it = args; it && it->expression; it = it->next) {
+        RegisterScope scope(this);
+        Reference e = expression(it->expression);
+        if (hasError)
+            break;
+        (void) e.storeOnStack(calldata + argc);
+        ++argc;
+    }
+
+    return { argc, calldata, false };
 }
 
 bool Codegen::visit(ConditionalExpression *ast)
 {
     if (hasError)
-        return true;
+        return false;
 
-    IR::BasicBlock *iftrue = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *iffalse = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *endif = _function->newBasicBlock(exceptionHandler());
+    RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
-    const unsigned t = _block->newTemp();
+    BytecodeGenerator::Label iftrue = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label iffalse = bytecodeGenerator->newLabel();
+    condition(ast->expression, &iftrue, &iffalse, true);
 
-    condition(ast->expression, iftrue, iffalse);
+    blockTailCalls.unblock();
 
-    _block = iftrue;
-    Result ok = expression(ast->ok);
+    iftrue.link();
+    Reference ok = expression(ast->ok);
     if (hasError)
         return false;
-    move(_block->TEMP(t), *ok);
-    _block->JUMP(endif);
+    ok.loadInAccumulator();
+    BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
 
-    _block = iffalse;
-    Result ko = expression(ast->ko);
-    if (hasError)
+    iffalse.link();
+    Reference ko = expression(ast->ko);
+    if (hasError) {
+        jump_endif.link(); // dummy link, to prevent assert in Jump destructor from triggering
         return false;
-    move(_block->TEMP(t), *ko);
-    _block->JUMP(endif);
+    }
+    ko.loadInAccumulator();
 
-    _block = endif;
-
-    _expr.code = _block->TEMP(t);
+    jump_endif.link();
+    _expr.setResult(Reference::fromAccumulator(this));
 
     return false;
 }
@@ -1429,48 +2152,69 @@ bool Codegen::visit(DeleteExpression *ast)
     if (hasError)
         return false;
 
-    IR::Expr* expr = *expression(ast->expression);
+    RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
+    Reference expr = expression(ast->expression);
     if (hasError)
         return false;
-    // Temporaries cannot be deleted
-    IR::ArgLocal *al = expr->asArgLocal();
-    if (al && al->index < static_cast<unsigned>(_variableEnvironment->members.size())) {
+
+    switch (expr.type) {
+    case Reference::SuperProperty:
+        // ### this should throw a reference error at runtime.
+        return false;
+    case Reference::StackSlot:
+        if (!expr.stackSlotIsLocalOrArgument)
+            break;
+        // fall through
+    case Reference::ScopedLocal:
         // Trying to delete a function argument might throw.
-        if (_function->isStrict) {
+        if (_context->isStrict) {
             throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
             return false;
         }
-        _expr.code = _block->CONST(IR::BoolType, 0);
+        _expr.setResult(Reference::fromConst(this, QV4::Encode(false)));
+        return false;
+    case Reference::Name: {
+        if (_context->isStrict) {
+            throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
+            return false;
+        }
+        Instruction::DeleteName del;
+        del.name = expr.nameAsIndex();
+        bytecodeGenerator->addInstruction(del);
+        _expr.setResult(Reference::fromAccumulator(this));
         return false;
     }
-    if (_function->isStrict && expr->asName()) {
-        throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
+    case Reference::Member: {
+        //### maybe add a variant where the base can be in the accumulator?
+        expr = expr.asLValue();
+        Instruction::LoadRuntimeString instr;
+        instr.stringId = expr.propertyNameIndex;
+        bytecodeGenerator->addInstruction(instr);
+        Reference index = Reference::fromStackSlot(this);
+        index.storeConsumeAccumulator();
+        Instruction::DeleteProperty del;
+        del.base = expr.propertyBase.stackSlot();
+        del.index = index.stackSlot();
+        bytecodeGenerator->addInstruction(del);
+        _expr.setResult(Reference::fromAccumulator(this));
         return false;
     }
-
+    case Reference::Subscript: {
+        //### maybe add a variant where the index can be in the accumulator?
+        expr = expr.asLValue();
+        Instruction::DeleteProperty del;
+        del.base = expr.elementBase;
+        del.index = expr.elementSubscript.stackSlot();
+        bytecodeGenerator->addInstruction(del);
+        _expr.setResult(Reference::fromAccumulator(this));
+        return false;
+    }
+    default:
+        break;
+    }
     // [[11.4.1]] Return true if it's not a reference
-    if (expr->asConst() || expr->asString()) {
-        _expr.code = _block->CONST(IR::BoolType, 1);
-        return false;
-    }
-
-    // Return values from calls are also not a reference, but we have to
-    // perform the call to allow for side effects.
-    if (expr->asCall()) {
-        _block->EXP(expr);
-        _expr.code = _block->CONST(IR::BoolType, 1);
-        return false;
-    }
-    if (expr->asTemp() ||
-            (expr->asArgLocal() &&
-             expr->asArgLocal()->index >= static_cast<unsigned>(_variableEnvironment->members.size()))) {
-        _expr.code = _block->CONST(IR::BoolType, 1);
-        return false;
-    }
-
-    IR::ExprList *args = _function->New<IR::ExprList>();
-    args->init(reference(expr));
-    _expr.code = call(_block->NAME(IR::Name::builtin_delete, ast->deleteToken.startLine, ast->deleteToken.startColumn), args);
+    _expr.setResult(Reference::fromConst(this, QV4::Encode(true)));
     return false;
 }
 
@@ -1479,11 +2223,16 @@ bool Codegen::visit(FalseLiteral *)
     if (hasError)
         return false;
 
-    if (_expr.accept(cx)) {
-        _block->JUMP(_expr.iffalse);
-    } else {
-        _expr.code = _block->CONST(IR::BoolType, 0);
-    }
+    _expr.setResult(Reference::fromConst(this, QV4::Encode(false)));
+    return false;
+}
+
+bool Codegen::visit(SuperLiteral *)
+{
+    if (hasError)
+        return false;
+
+    _expr.setResult(Reference::fromSuper(this));
     return false;
 }
 
@@ -1492,10 +2241,97 @@ bool Codegen::visit(FieldMemberExpression *ast)
     if (hasError)
         return false;
 
-    Result base = expression(ast->base);
-    if (!hasError)
-        _expr.code = member(*base, _function->newString(ast->name.toString()));
+    TailCallBlocker blockTailCalls(this);
+    if (AST::IdentifierExpression *id = AST::cast<AST::IdentifierExpression *>(ast->base)) {
+        if (id->name == QLatin1String("new")) {
+            // new.target
+            Q_ASSERT(ast->name == QLatin1String("target"));
+
+            if (_context->isArrowFunction || _context->contextType == ContextType::Eval) {
+                Reference r = referenceForName(QStringLiteral("new.target"), false);
+                r.isReadonly = true;
+                _expr.setResult(r);
+                return false;
+            }
+
+            Reference r = Reference::fromStackSlot(this, CallData::NewTarget);
+            _expr.setResult(r);
+            return false;
+        }
+    }
+
+    Reference base = expression(ast->base);
+    if (hasError)
+        return false;
+    if (base.isSuper()) {
+        Instruction::LoadRuntimeString load;
+        load.stringId = registerString(ast->name.toString());
+        bytecodeGenerator->addInstruction(load);
+        Reference property = Reference::fromAccumulator(this).storeOnStack();
+        _expr.setResult(Reference::fromSuperProperty(property));
+        return false;
+    }
+    _expr.setResult(Reference::fromMember(base, ast->name.toString()));
     return false;
+}
+
+bool Codegen::visit(TaggedTemplate *ast)
+{
+    if (hasError)
+        return false;
+
+    RegisterScope scope(this);
+
+    int functionObject = -1, thisObject = -1;
+
+    Reference base = expression(ast->base);
+    if (hasError)
+        return false;
+    switch (base.type) {
+    case Reference::Member:
+    case Reference::Subscript:
+        base = base.asLValue();
+        break;
+    case Reference::Name:
+        break;
+    case Reference::SuperProperty:
+        thisObject = bytecodeGenerator->newRegister();
+        functionObject = bytecodeGenerator->newRegister();
+        break;
+    default:
+        base = base.storeOnStack();
+        break;
+    }
+
+    createTemplateObject(ast->templateLiteral);
+    int templateObjectTemp = Reference::fromAccumulator(this).storeOnStack().stackSlot();
+    Q_UNUSED(templateObjectTemp);
+    auto calldata = pushTemplateArgs(ast->templateLiteral);
+    if (hasError)
+        return false;
+    ++calldata.argc;
+    Q_ASSERT(calldata.argv == templateObjectTemp + 1);
+    --calldata.argv;
+
+    handleCall(base, calldata, functionObject, thisObject);
+    return false;
+}
+
+void Codegen::createTemplateObject(TemplateLiteral *t)
+{
+    TemplateObject obj;
+
+    for (TemplateLiteral *it = t; it; it = it->next) {
+        obj.strings.append(registerString(it->value.toString()));
+        obj.rawStrings.append(registerString(it->rawValue.toString()));
+    }
+
+    int index = _module->templateObjects.size();
+    _module->templateObjects.append(obj);
+
+    Instruction::GetTemplateObject getTemplateObject;
+    getTemplateObject.index = index;
+    bytecodeGenerator->addInstruction(getTemplateObject);
 }
 
 bool Codegen::visit(FunctionExpression *ast)
@@ -1503,62 +2339,73 @@ bool Codegen::visit(FunctionExpression *ast)
     if (hasError)
         return false;
 
-    int function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
-    _expr.code = _block->CLOSURE(function);
+    TailCallBlocker blockTailCalls(this);
+
+    RegisterScope scope(this);
+
+    int function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body);
+    if (hasError)
+        return false;
+    loadClosure(function);
+    _expr.setResult(Reference::fromAccumulator(this));
     return false;
 }
 
-IR::Expr *Codegen::identifier(const QString &name, int line, int col)
+Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, const SourceLocation &accessLocation)
 {
-    if (hasError)
-        return 0;
+    Context::ResolvedName resolved = _context->resolveName(name, accessLocation);
 
-    uint scope = 0;
-    Environment *e = _variableEnvironment;
-    IR::Function *f = _function;
-
-    while (f && e->parent) {
-        if (f->insideWithOrCatch || (f->isNamedExpression && QStringRef(f->name) == name))
-            return _block->NAME(name, line, col);
-
-        int index = e->findMember(name);
-        Q_ASSERT (index < e->members.size());
-        if (index != -1) {
-            IR::ArgLocal *al = _block->LOCAL(index, scope);
-            if (name == QLatin1String("arguments") || name == QLatin1String("eval"))
-                al->isArgumentsOrEval = true;
-            return al;
+    if (resolved.type == Context::ResolvedName::Local || resolved.type == Context::ResolvedName::Stack
+        || resolved.type == Context::ResolvedName::Import) {
+        if (resolved.isArgOrEval && isLhs)
+            // ### add correct source location
+            throwSyntaxError(SourceLocation(), QStringLiteral("Variable name may not be eval or arguments in strict mode"));
+        Reference r;
+        switch (resolved.type) {
+        case Context::ResolvedName::Local:
+            r = Reference::fromScopedLocal(this, resolved.index, resolved.scope); break;
+        case Context::ResolvedName::Stack:
+            r = Reference::fromStackSlot(this, resolved.index, true /*isLocal*/); break;
+        case Context::ResolvedName::Import:
+            r = Reference::fromImport(this, resolved.index); break;
+        default: Q_UNREACHABLE();
         }
-        const int argIdx = f->indexOfArgument(QStringRef(&name));
-        if (argIdx != -1)
-            return _block->ARG(argIdx, scope);
-
-        if (!f->isStrict && f->hasDirectEval)
-            return _block->NAME(name, line, col);
-
-        ++scope;
-        e = e->parent;
-        f = f->outer;
+        if (r.isStackSlot() && _volatileMemoryLocations.isVolatile(name))
+            r.isVolatile = true;
+        r.isArgOrEval = resolved.isArgOrEval;
+        r.isReferenceToConst = resolved.isConst;
+        r.requiresTDZCheck = resolved.requiresTDZCheck;
+        r.name = name; // used to show correct name at run-time when TDZ check fails.
+        return r;
     }
 
     // This hook allows implementing QML lookup semantics
-    if (IR::Expr *fallback = fallbackNameLookup(name, line, col))
+    Reference fallback = fallbackNameLookup(name);
+    if (fallback.type != Reference::Invalid)
         return fallback;
 
-    if (!e->parent && (!f || !f->insideWithOrCatch) && _variableEnvironment->compilationMode != EvalCode && e->compilationMode != QmlBinding)
-        return _block->GLOBALNAME(name, line, col);
-
-    // global context or with. Lookup by name
-    return _block->NAME(name, line, col);
-
+    Reference r = Reference::fromName(this, name);
+    r.global = useFastLookups && (resolved.type == Context::ResolvedName::Global);
+    if (!r.global && canAccelerateGlobalLookups() && m_globalNames.contains(name))
+        r.global = true;
+    return r;
 }
 
-IR::Expr *Codegen::fallbackNameLookup(const QString &name, int line, int col)
+void Codegen::loadClosure(int closureId)
+{
+    if (closureId >= 0) {
+        Instruction::LoadClosure load;
+        load.value = closureId;
+        bytecodeGenerator->addInstruction(load);
+    } else {
+        Reference::fromConst(this, Encode::undefined()).loadInAccumulator();
+    }
+}
+
+Codegen::Reference Codegen::fallbackNameLookup(const QString &name)
 {
     Q_UNUSED(name)
-    Q_UNUSED(line)
-    Q_UNUSED(col)
-    return 0;
+    return Reference();
 }
 
 bool Codegen::visit(IdentifierExpression *ast)
@@ -1566,7 +2413,7 @@ bool Codegen::visit(IdentifierExpression *ast)
     if (hasError)
         return false;
 
-    _expr.code = identifier(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn);
+    _expr.setResult(referenceForName(ast->name.toString(), false, ast->firstSourceLocation()));
     return false;
 }
 
@@ -1579,21 +2426,63 @@ bool Codegen::visit(NestedExpression *ast)
     return false;
 }
 
+void Codegen::handleConstruct(const Reference &base, ArgumentList *arguments)
+{
+    Reference constructor;
+    if (base.isSuper()) {
+        Instruction::LoadSuperConstructor super;
+        bytecodeGenerator->addInstruction(super);
+        constructor = Reference::fromAccumulator(this).storeOnStack();
+    } else {
+        constructor = base.storeOnStack();
+    }
+
+    auto calldata = pushArgs(arguments);
+    if (hasError)
+        return;
+
+    if (base.isSuper())
+        Reference::fromStackSlot(this, CallData::NewTarget).loadInAccumulator();
+    else
+        constructor.loadInAccumulator();
+
+    if (calldata.hasSpread) {
+        Instruction::ConstructWithSpread create;
+        create.func = constructor.stackSlot();
+        create.argc = calldata.argc;
+        create.argv = calldata.argv;
+        bytecodeGenerator->addInstruction(create);
+    } else {
+        Instruction::Construct create;
+        create.func = constructor.stackSlot();
+        create.argc = calldata.argc;
+        create.argv = calldata.argv;
+        bytecodeGenerator->addInstruction(create);
+    }
+    if (base.isSuper())
+        // set the result up as the thisObject
+        Reference::fromAccumulator(this).storeOnStack(CallData::This);
+
+    _expr.setResult(Reference::fromAccumulator(this));
+}
+
 bool Codegen::visit(NewExpression *ast)
 {
     if (hasError)
         return false;
 
-    Result base = expression(ast->expression);
+    RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
+
+    Reference base = expression(ast->expression);
     if (hasError)
         return false;
-    IR::Expr *expr = *base;
-    if (expr && !expr->asTemp() && !expr->asArgLocal() && !expr->asName() && !expr->asMember()) {
-        const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), expr);
-        expr = _block->TEMP(t);
+    if (base.isSuper()) {
+        throwSyntaxError(ast->expression->firstSourceLocation(), QStringLiteral("Cannot use new with super."));
+        return false;
     }
-    _expr.code = _block->NEW(expr, 0);
+
+    handleConstruct(base, nullptr);
     return false;
 }
 
@@ -1602,29 +2491,18 @@ bool Codegen::visit(NewMemberExpression *ast)
     if (hasError)
         return false;
 
-    Result base = expression(ast->base);
+    RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
+
+    Reference base = expression(ast->base);
     if (hasError)
         return false;
-    IR::Expr *expr = *base;
-    if (expr && !expr->asTemp() && !expr->asArgLocal() && !expr->asName() && !expr->asMember()) {
-        const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), expr);
-        expr = _block->TEMP(t);
+    if (base.isSuper()) {
+        throwSyntaxError(ast->base->firstSourceLocation(), QStringLiteral("Cannot use new with super."));
+        return false;
     }
 
-    IR::ExprList *args = 0, **args_it = &args;
-    for (ArgumentList *it = ast->arguments; it; it = it->next) {
-        Result arg = expression(it->expression);
-        if (hasError)
-            return false;
-        IR::Expr *actual = argument(*arg);
-        *args_it = _function->New<IR::ExprList>();
-        (*args_it)->init(actual);
-        args_it = &(*args_it)->next;
-    }
-    const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), _block->NEW(expr, args));
-    _expr.code = _block->TEMP(t);
+    handleConstruct(base, ast->arguments);
     return false;
 }
 
@@ -1633,12 +2511,8 @@ bool Codegen::visit(NotExpression *ast)
     if (hasError)
         return false;
 
-    Result expr = expression(ast->expression);
-    if (hasError)
-        return false;
-    const unsigned r = _block->newTemp();
-    setLocation(move(_block->TEMP(r), unop(IR::OpNot, *expr, ast->notToken)), ast->notToken);
-    _expr.code = _block->TEMP(r);
+    TailCallBlocker blockTailCalls(this);
+    _expr.setResult(unop(Not, expression(ast->expression)));
     return false;
 }
 
@@ -1647,8 +2521,10 @@ bool Codegen::visit(NullExpression *)
     if (hasError)
         return false;
 
-    if (_expr.accept(cx)) _block->JUMP(_expr.iffalse);
-    else _expr.code = _block->CONST(IR::NullType, 0);
+    if (_expr.accept(cx))
+        bytecodeGenerator->jump().link(*_expr.iffalse());
+    else
+        _expr.setResult(Reference::fromConst(this, Encode::null()));
 
     return false;
 }
@@ -1658,164 +2534,120 @@ bool Codegen::visit(NumericLiteral *ast)
     if (hasError)
         return false;
 
-    if (_expr.accept(cx)) {
-        if (ast->value) _block->JUMP(_expr.iftrue);
-        else _block->JUMP(_expr.iffalse);
-    } else {
-        _expr.code = _block->CONST(IR::NumberType, ast->value);
-    }
+    _expr.setResult(Reference::fromConst(this, QV4::Encode::smallestNumber(ast->value)));
     return false;
 }
 
-struct ObjectPropertyValue {
-    ObjectPropertyValue()
-        : value(0)
-        , getter(-1)
-        , setter(-1)
-    {}
-
-    IR::Expr *value;
-    int getter; // index in _module->functions or -1 if not set
-    int setter;
-
-    bool hasGetter() const { return getter >= 0; }
-    bool hasSetter() const { return setter >= 0; }
-};
-
-bool Codegen::visit(ObjectLiteral *ast)
+bool Codegen::visit(ObjectPattern *ast)
 {
     if (hasError)
         return false;
 
-    QMap<QString, ObjectPropertyValue> valueMap;
+    TailCallBlocker blockTailCalls(this);
 
-    for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
-        QString name = it->assignment->name->asString();
-        if (PropertyNameAndValue *nv = AST::cast<AST::PropertyNameAndValue *>(it->assignment)) {
-            Result value = expression(nv->value);
+    RegisterScope scope(this);
+
+    QStringList members;
+
+    int argc = 0;
+    int args = 0;
+    auto push = [this, &args, &argc](const Reference &arg) {
+        int temp = bytecodeGenerator->newRegister();
+        if (argc == 0)
+            args = temp;
+        (void) arg.storeOnStack(temp);
+        ++argc;
+    };
+
+    PatternPropertyList *it = ast->properties;
+    for (; it; it = it->next) {
+        PatternProperty *p = it->property;
+        AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(p->name);
+        if (cname || p->type != PatternProperty::Literal)
+            break;
+        QString name = p->name->asString();
+        uint arrayIndex = QV4::String::toArrayIndex(name);
+        if (arrayIndex != UINT_MAX)
+            break;
+        if (members.contains(name))
+            break;
+        members.append(name);
+
+        {
+            RegisterScope innerScope(this);
+            Reference value = expression(p->initializer);
             if (hasError)
                 return false;
-            ObjectPropertyValue &v = valueMap[name];
-            if (v.hasGetter() || v.hasSetter() || (_function->isStrict && v.value)) {
-                throwSyntaxError(nv->lastSourceLocation(),
-                                 QStringLiteral("Illegal duplicate key '%1' in object literal").arg(name));
+            value.loadInAccumulator();
+        }
+        push(Reference::fromAccumulator(this));
+    }
+
+    int classId = jsUnitGenerator->registerJSClass(members);
+
+    // handle complex property setters
+    for (; it; it = it->next) {
+        PatternProperty *p = it->property;
+        AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(p->name);
+        ObjectLiteralArgument argType = ObjectLiteralArgument::Value;
+        if (p->type == PatternProperty::Method)
+            argType = ObjectLiteralArgument::Method;
+        else if (p->type == PatternProperty::Getter)
+            argType = ObjectLiteralArgument::Getter;
+        else if (p->type == PatternProperty::Setter)
+            argType = ObjectLiteralArgument::Setter;
+
+        Reference::fromConst(this, Encode(int(argType))).loadInAccumulator();
+        push(Reference::fromAccumulator(this));
+
+        if (cname) {
+            RegisterScope innerScope(this);
+            Reference name = expression(cname->expression);
+            if (hasError)
                 return false;
-            }
-
-            valueMap[name].value = *value;
-        } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
-            const int function = defineFunction(name, gs, gs->formals, gs->functionBody ? gs->functionBody->elements : 0);
-            ObjectPropertyValue &v = valueMap[name];
-            if (v.value ||
-                (gs->type == PropertyGetterSetter::Getter && v.hasGetter()) ||
-                (gs->type == PropertyGetterSetter::Setter && v.hasSetter())) {
-                throwSyntaxError(gs->lastSourceLocation(),
-                                 QStringLiteral("Illegal duplicate key '%1' in object literal").arg(name));
-                return false;
-            }
-            if (gs->type == PropertyGetterSetter::Getter)
-                v.getter = function;
-            else
-                v.setter = function;
+            name.loadInAccumulator();
         } else {
-            Q_UNREACHABLE();
+            QString name = p->name->asString();
+#if 0
+            uint arrayIndex = QV4::String::toArrayIndex(name);
+            if (arrayIndex != UINT_MAX) {
+                Reference::fromConst(this, Encode(arrayIndex)).loadInAccumulator();
+            } else
+#endif
+            {
+                Instruction::LoadRuntimeString instr;
+                instr.stringId = registerString(name);
+                bytecodeGenerator->addInstruction(instr);
+            }
         }
-    }
-
-    // The linked-list arguments to builtin_define_object_literal
-    // begin with a CONST counting the number of key/value pairs, followed by the
-    // key value pairs, followed by the array entries.
-    IR::ExprList *args = _function->New<IR::ExprList>();
-
-    IR::Const *entryCountParam = _function->New<IR::Const>();
-    entryCountParam->init(IR::SInt32Type, 0);
-    args->expr = entryCountParam;
-    args->next = 0;
-
-    IR::ExprList *keyValueEntries = 0;
-    IR::ExprList *currentKeyValueEntry = 0;
-    int keyValueEntryCount = 0;
-    IR::ExprList *arrayEntries = 0;
-
-    IR::ExprList *currentArrayEntry = 0;
-
-    for (QMap<QString, ObjectPropertyValue>::iterator it = valueMap.begin(); it != valueMap.end(); ) {
-        IR::ExprList **currentPtr = 0;
-        uint keyAsIndex = QV4::String::toArrayIndex(it.key());
-        if (keyAsIndex != UINT_MAX) {
-            if (!arrayEntries) {
-                arrayEntries = _function->New<IR::ExprList>();
-                currentArrayEntry = arrayEntries;
+        push(Reference::fromAccumulator(this));
+        {
+            RegisterScope innerScope(this);
+            if (p->type != PatternProperty::Literal) {
+                // need to get the closure id for the method
+                FunctionExpression *f = p->initializer->asFunctionDefinition();
+                Q_ASSERT(f);
+                int function = defineFunction(f->name.toString(), f, f->formals, f->body);
+                if (hasError)
+                    return false;
+                Reference::fromConst(this, Encode(function)).loadInAccumulator();
             } else {
-                currentArrayEntry->next = _function->New<IR::ExprList>();
-                currentArrayEntry = currentArrayEntry->next;
+                Reference value = expression(p->initializer);
+                if (hasError)
+                    return false;
+                value.loadInAccumulator();
             }
-            currentPtr = &currentArrayEntry;
-            IR::Const *idx = _function->New<IR::Const>();
-            idx->init(IR::UInt32Type, keyAsIndex);
-            (*currentPtr)->expr = idx;
-        } else {
-            if (!keyValueEntries) {
-                keyValueEntries = _function->New<IR::ExprList>();
-                currentKeyValueEntry = keyValueEntries;
-            } else {
-                currentKeyValueEntry->next = _function->New<IR::ExprList>();
-                currentKeyValueEntry = currentKeyValueEntry->next;
-            }
-            currentPtr = &currentKeyValueEntry;
-            (*currentPtr)->expr = _block->NAME(it.key(), 0, 0);
-            keyValueEntryCount++;
         }
-
-        IR::ExprList *&current = *currentPtr;
-        if (it->value) {
-            current->next = _function->New<IR::ExprList>();
-            current = current->next;
-            current->expr = _block->CONST(IR::BoolType, true);
-
-            unsigned value = _block->newTemp();
-            move(_block->TEMP(value), it->value);
-
-            current->next = _function->New<IR::ExprList>();
-            current = current->next;
-            current->expr = _block->TEMP(value);
-        } else {
-            current->next = _function->New<IR::ExprList>();
-            current = current->next;
-            current->expr = _block->CONST(IR::BoolType, false);
-
-            unsigned getter = _block->newTemp();
-            unsigned setter = _block->newTemp();
-            move(_block->TEMP(getter), it->hasGetter() ? _block->CLOSURE(it->getter) : _block->CONST(IR::UndefinedType, 0));
-            move(_block->TEMP(setter), it->hasSetter() ? _block->CLOSURE(it->setter) : _block->CONST(IR::UndefinedType, 0));
-
-            current->next = _function->New<IR::ExprList>();
-            current = current->next;
-            current->expr = _block->TEMP(getter);
-            current->next = _function->New<IR::ExprList>();
-            current = current->next;
-            current->expr = _block->TEMP(setter);
-        }
-
-        it = valueMap.erase(it);
+        push(Reference::fromAccumulator(this));
     }
 
-    entryCountParam->value = keyValueEntryCount;
-
-    if (keyValueEntries)
-        args->next = keyValueEntries;
-    if (arrayEntries) {
-        if (currentKeyValueEntry)
-            currentKeyValueEntry->next = arrayEntries;
-        else
-            args->next = arrayEntries;
-    }
-
-    const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), _block->CALL(_block->NAME(IR::Name::builtin_define_object_literal,
-         ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), args));
-
-    _expr.code = _block->TEMP(t);
+    Instruction::DefineObjectLiteral call;
+    call.internalClassId = classId;
+    call.argc = argc;
+    call.args = Moth::StackSlot::createRegister(args);
+    bytecodeGenerator->addInstruction(call);
+    Reference result = Reference::fromAccumulator(this);
+    _expr.setResult(result);
     return false;
 }
 
@@ -1824,25 +2656,17 @@ bool Codegen::visit(PostDecrementExpression *ast)
     if (hasError)
         return false;
 
-    Result expr = expression(ast->base);
+    Reference expr = expression(ast->base);
     if (hasError)
         return false;
-    if (!expr->isLValue()) {
+    if (!expr.isLValue()) {
         throwReferenceError(ast->base->lastSourceLocation(), QStringLiteral("Invalid left-hand side expression in postfix operation"));
         return false;
     }
-    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken))
+    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->decrementToken))
         return false;
 
-    const unsigned oldValue = _block->newTemp();
-    setLocation(move(_block->TEMP(oldValue), unop(IR::OpUPlus, *expr, ast->decrementToken)), ast->decrementToken);
-
-    const unsigned  newValue = _block->newTemp();
-    setLocation(move(_block->TEMP(newValue), binop(IR::OpSub, _block->TEMP(oldValue), _block->CONST(IR::NumberType, 1), ast->decrementToken)), ast->decrementToken);
-    setLocation(move(*expr, _block->TEMP(newValue)), ast->decrementToken);
-
-    if (!_expr.accept(nx))
-        _expr.code = _block->TEMP(oldValue);
+    _expr.setResult(unop(PostDecrement, expr));
 
     return false;
 }
@@ -1852,53 +2676,35 @@ bool Codegen::visit(PostIncrementExpression *ast)
     if (hasError)
         return false;
 
-    Result expr = expression(ast->base);
+    Reference expr = expression(ast->base);
     if (hasError)
         return false;
-    if (!expr->isLValue()) {
+    if (!expr.isLValue()) {
         throwReferenceError(ast->base->lastSourceLocation(), QStringLiteral("Invalid left-hand side expression in postfix operation"));
         return false;
     }
-    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken))
+    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->incrementToken))
         return false;
 
-    const unsigned oldValue = _block->newTemp();
-    setLocation(move(_block->TEMP(oldValue), unop(IR::OpUPlus, *expr, ast->incrementToken)), ast->incrementToken);
-
-    const unsigned  newValue = _block->newTemp();
-    setLocation(move(_block->TEMP(newValue), binop(IR::OpAdd, _block->TEMP(oldValue), _block->CONST(IR::NumberType, 1), ast->incrementToken)), ast->incrementToken);
-    setLocation(move(*expr, _block->TEMP(newValue)), ast->incrementToken);
-
-    if (!_expr.accept(nx))
-        _expr.code = _block->TEMP(oldValue);
-
+    _expr.setResult(unop(PostIncrement, expr));
     return false;
 }
 
 bool Codegen::visit(PreDecrementExpression *ast)
-{
-    if (hasError)
+{    if (hasError)
         return false;
 
-    Result expr = expression(ast->expression);
+    Reference expr = expression(ast->expression);
     if (hasError)
         return false;
-    if (!expr->isLValue()) {
+    if (!expr.isLValue()) {
         throwReferenceError(ast->expression->lastSourceLocation(), QStringLiteral("Prefix ++ operator applied to value that is not a reference."));
         return false;
     }
 
-    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken))
+    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->decrementToken))
         return false;
-    IR::Expr *op = binop(IR::OpSub, *expr, _block->CONST(IR::NumberType, 1), ast->decrementToken);
-    if (_expr.accept(nx)) {
-        setLocation(move(*expr, op), ast->decrementToken);
-    } else {
-        const unsigned t = _block->newTemp();
-        setLocation(move(_block->TEMP(t), op), ast->decrementToken);
-        setLocation(move(*expr, _block->TEMP(t)), ast->decrementToken);
-        _expr.code = _block->TEMP(t);
-    }
+    _expr.setResult(unop(PreDecrement, expr));
     return false;
 }
 
@@ -1907,25 +2713,17 @@ bool Codegen::visit(PreIncrementExpression *ast)
     if (hasError)
         return false;
 
-    Result expr = expression(ast->expression);
+    Reference expr = expression(ast->expression);
     if (hasError)
         return false;
-    if (!expr->isLValue()) {
+    if (!expr.isLValue()) {
         throwReferenceError(ast->expression->lastSourceLocation(), QStringLiteral("Prefix ++ operator applied to value that is not a reference."));
         return false;
     }
 
-    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken))
+    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->incrementToken))
         return false;
-    IR::Expr *op = binop(IR::OpAdd, unop(IR::OpUPlus, *expr, ast->incrementToken), _block->CONST(IR::NumberType, 1), ast->incrementToken);
-    if (_expr.accept(nx)) {
-        setLocation(move(*expr, op), ast->incrementToken);
-    } else {
-        const unsigned t = _block->newTemp();
-        setLocation(move(_block->TEMP(t), op), ast->incrementToken);
-        setLocation(move(*expr, _block->TEMP(t)), ast->incrementToken);
-        _expr.code = _block->TEMP(t);
-    }
+    _expr.setResult(unop(PreIncrement, expr));
     return false;
 }
 
@@ -1934,7 +2732,14 @@ bool Codegen::visit(RegExpLiteral *ast)
     if (hasError)
         return false;
 
-    _expr.code = _block->REGEXP(_function->newString(ast->pattern.toString()), ast->flags);
+    auto r = Reference::fromStackSlot(this);
+    r.isReadonly = true;
+    _expr.setResult(r);
+
+    Instruction::MoveRegExp instr;
+    instr.regExpId = jsUnitGenerator->registerRegExp(ast);
+    instr.destReg = r.stackSlot();
+    bytecodeGenerator->addInstruction(instr);
     return false;
 }
 
@@ -1943,16 +2748,75 @@ bool Codegen::visit(StringLiteral *ast)
     if (hasError)
         return false;
 
-    _expr.code = _block->STRING(_function->newString(ast->value.toString()));
+    auto r = Reference::fromAccumulator(this);
+    r.isReadonly = true;
+    _expr.setResult(r);
+
+    Instruction::LoadRuntimeString instr;
+    instr.stringId = registerString(ast->value.toString());
+    bytecodeGenerator->addInstruction(instr);
     return false;
 }
 
-bool Codegen::visit(ThisExpression *ast)
+bool Codegen::visit(TemplateLiteral *ast)
 {
     if (hasError)
         return false;
 
-    _expr.code = _block->NAME(QStringLiteral("this"), ast->thisToken.startLine, ast->thisToken.startColumn);
+    TailCallBlocker blockTailCalls(this);
+
+    Instruction::LoadRuntimeString instr;
+    instr.stringId = registerString(ast->value.toString());
+    bytecodeGenerator->addInstruction(instr);
+
+    if (ast->expression) {
+        RegisterScope scope(this);
+        int temp = bytecodeGenerator->newRegister();
+        Instruction::StoreReg store;
+        store.reg = temp;
+        bytecodeGenerator->addInstruction(store);
+
+        Reference expr = expression(ast->expression);
+        if (hasError)
+            return false;
+
+        if (ast->next) {
+            int temp2 = bytecodeGenerator->newRegister();
+            expr.storeOnStack(temp2);
+            visit(ast->next);
+
+            Instruction::Add instr;
+            instr.lhs = temp2;
+            bytecodeGenerator->addTracingInstruction(instr);
+        } else {
+            expr.loadInAccumulator();
+        }
+
+        Instruction::Add instr;
+        instr.lhs = temp;
+        bytecodeGenerator->addTracingInstruction(instr);
+    }
+
+    auto r = Reference::fromAccumulator(this);
+    r.isReadonly = true;
+
+    _expr.setResult(r);
+    return false;
+
+}
+
+bool Codegen::visit(ThisExpression *)
+{
+    if (hasError)
+        return false;
+
+    if (_context->isArrowFunction) {
+        Reference r = referenceForName(QStringLiteral("this"), false);
+        r.isReadonly = true;
+        _expr.setResult(r);
+        return false;
+    }
+    _expr.setResult(Reference::fromThis(this));
     return false;
 }
 
@@ -1961,12 +2825,8 @@ bool Codegen::visit(TildeExpression *ast)
     if (hasError)
         return false;
 
-    Result expr = expression(ast->expression);
-    if (hasError)
-        return false;
-    const unsigned t = _block->newTemp();
-    setLocation(move(_block->TEMP(t), unop(IR::OpCompl, *expr, ast->tildeToken)), ast->tildeToken);
-    _expr.code = _block->TEMP(t);
+    TailCallBlocker blockTailCalls(this);
+    _expr.setResult(unop(Compl, expression(ast->expression)));
     return false;
 }
 
@@ -1975,11 +2835,7 @@ bool Codegen::visit(TrueLiteral *)
     if (hasError)
         return false;
 
-    if (_expr.accept(cx)) {
-        _block->JUMP(_expr.iftrue);
-    } else {
-        _expr.code = _block->CONST(IR::BoolType, 1);
-    }
+    _expr.setResult(Reference::fromConst(this, QV4::Encode(true)));
     return false;
 }
 
@@ -1988,12 +2844,25 @@ bool Codegen::visit(TypeOfExpression *ast)
     if (hasError)
         return false;
 
-    Result expr = expression(ast->expression);
+    RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
+
+    Reference expr = expression(ast->expression);
     if (hasError)
         return false;
-    IR::ExprList *args = _function->New<IR::ExprList>();
-    args->init(reference(*expr));
-    _expr.code = call(_block->NAME(IR::Name::builtin_typeof, ast->typeofToken.startLine, ast->typeofToken.startColumn), args);
+
+    if (expr.type == Reference::Name) {
+        // special handling as typeof doesn't throw here
+        Instruction::TypeofName instr;
+        instr.name = expr.nameAsIndex();
+        bytecodeGenerator->addInstruction(instr);
+    } else {
+        expr.loadInAccumulator();
+        Instruction::TypeofValue instr;
+        bytecodeGenerator->addInstruction(instr);
+    }
+    _expr.setResult(Reference::fromAccumulator(this));
+
     return false;
 }
 
@@ -2002,12 +2871,8 @@ bool Codegen::visit(UnaryMinusExpression *ast)
     if (hasError)
         return false;
 
-    Result expr = expression(ast->expression);
-    if (hasError)
-        return false;
-    const unsigned t = _block->newTemp();
-    setLocation(move(_block->TEMP(t), unop(IR::OpUMinus, *expr, ast->minusToken)), ast->minusToken);
-    _expr.code = _block->TEMP(t);
+    TailCallBlocker blockTailCalls(this);
+    _expr.setResult(unop(UMinus, expression(ast->expression)));
     return false;
 }
 
@@ -2016,12 +2881,8 @@ bool Codegen::visit(UnaryPlusExpression *ast)
     if (hasError)
         return false;
 
-    Result expr = expression(ast->expression);
-    if (hasError)
-        return false;
-    const unsigned t = _block->newTemp();
-    setLocation(move(_block->TEMP(t), unop(IR::OpUPlus, *expr, ast->plusToken)), ast->plusToken);
-    _expr.code = _block->TEMP(t);
+    TailCallBlocker blockTailCalls(this);
+    _expr.setResult(unop(UPlus, expression(ast->expression)));
     return false;
 }
 
@@ -2030,8 +2891,11 @@ bool Codegen::visit(VoidExpression *ast)
     if (hasError)
         return false;
 
+    RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
+
     statement(ast->expression);
-    _expr.code = _block->CONST(IR::UndefinedType, 0);
+    _expr.setResult(Reference::fromConst(this, Encode::undefined()));
     return false;
 }
 
@@ -2040,162 +2904,265 @@ bool Codegen::visit(FunctionDeclaration * ast)
     if (hasError)
         return false;
 
-    if (_variableEnvironment->compilationMode == QmlBinding)
-        move(_block->TEMP(_returnAddress), _block->NAME(ast->name.toString(), 0, 0));
+    // no need to block tail calls: the function body isn't visited here.
+    RegisterScope scope(this);
+
+    if (_functionContext->contextType == ContextType::Binding)
+        referenceForName(ast->name.toString(), true).loadInAccumulator();
     _expr.accept(nx);
+    return false;
+}
+
+bool Codegen::visit(YieldExpression *ast)
+{
+    if (inFormalParameterList) {
+        throwSyntaxError(ast->firstSourceLocation(), QLatin1String("yield is not allowed inside parameter lists"));
+        return false;
+    }
+
+    RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
+    Reference expr = ast->expression ? expression(ast->expression) : Reference::fromConst(this, Encode::undefined());
+    if (hasError)
+        return false;
+
+    Reference acc = Reference::fromAccumulator(this);
+
+    if (ast->isYieldStar) {
+        Reference iterator = Reference::fromStackSlot(this);
+        Reference lhsValue = Reference::fromConst(this, Encode::undefined()).storeOnStack();
+
+        expr.loadInAccumulator();
+        Instruction::GetIterator getIterator;
+        getIterator.iterator = static_cast<int>(AST::ForEachType::Of);
+        bytecodeGenerator->addInstruction(getIterator);
+        iterator.storeConsumeAccumulator();
+        Instruction::LoadUndefined load;
+        bytecodeGenerator->addInstruction(load);
+
+        BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
+        bytecodeGenerator->jump().link(in);
+
+        BytecodeGenerator::Label loop = bytecodeGenerator->label();
+
+        lhsValue.loadInAccumulator();
+        Instruction::YieldStar yield;
+        bytecodeGenerator->addInstruction(yield);
+
+        in.link();
+
+        Instruction::IteratorNextForYieldStar next;
+        next.object = lhsValue.stackSlot();
+        next.iterator = iterator.stackSlot();
+        bytecodeGenerator->addInstruction(next);
+
+        BytecodeGenerator::Jump done = bytecodeGenerator->jumpTrue();
+        bytecodeGenerator->jumpNotUndefined().link(loop);
+        lhsValue.loadInAccumulator();
+        emitReturn(acc);
+
+
+        done.link();
+
+        lhsValue.loadInAccumulator();
+        _expr.setResult(acc);
+        return false;
+    }
+
+    expr.loadInAccumulator();
+    Instruction::Yield yield;
+    bytecodeGenerator->addInstruction(yield);
+    Instruction::Resume resume;
+    BytecodeGenerator::Jump jump = bytecodeGenerator->addJumpInstruction(resume);
+    emitReturn(acc);
+    jump.link();
+    _expr.setResult(acc);
+    return false;
+}
+
+static bool endsWithReturn(Module *module, Node *node)
+{
+    if (!node)
+        return false;
+    if (AST::cast<ReturnStatement *>(node))
+        return true;
+    if (AST::cast<ThrowStatement *>(node))
+        return true;
+    if (Program *p = AST::cast<Program *>(node))
+        return endsWithReturn(module, p->statements);
+    if (StatementList *sl = AST::cast<StatementList *>(node)) {
+        while (sl->next)
+            sl = sl->next;
+        return endsWithReturn(module, sl->statement);
+    }
+    if (Block *b = AST::cast<Block *>(node)) {
+        Context *blockContext = module->contextMap.value(node);
+        if (blockContext->requiresExecutionContext)
+            // we need to emit a return statement here, because of the
+            // unwind handler
+            return false;
+        return endsWithReturn(module, b->statements);
+    }
+    if (IfStatement *is = AST::cast<IfStatement *>(node))
+        return is->ko && endsWithReturn(module, is->ok) && endsWithReturn(module, is->ko);
     return false;
 }
 
 int Codegen::defineFunction(const QString &name, AST::Node *ast,
                             AST::FormalParameterList *formals,
-                            AST::SourceElements *body,
-                            const QStringList &inheritedLocals)
+                            AST::StatementList *body)
 {
-    Loop *loop = 0;
-    qSwap(_loop, loop);
-    QStack<IR::BasicBlock *> exceptionHandlers;
-    qSwap(_exceptionHandlers, exceptionHandlers);
+    enterContext(ast);
 
-    ScopeAndFinally *scopeAndFinally = 0;
+    if (_context->functionIndex >= 0)
+        // already defined
+        return leaveContext();
 
-    enterEnvironment(ast);
-    IR::Function *function = _module->newFunction(name, _function);
-    int functionIndex = _module->functions.count() - 1;
+    _context->name = name;
+    _module->functions.append(_context);
+    _context->functionIndex = _module->functions.count() - 1;
 
-    IR::BasicBlock *entryBlock = function->newBasicBlock(0);
-    IR::BasicBlock *exitBlock = function->newBasicBlock(0, IR::Function::DontInsertBlock);
-    function->hasDirectEval = _variableEnvironment->hasDirectEval || _variableEnvironment->compilationMode == EvalCode
-            || _module->debugMode; // Conditional breakpoints are like eval in the function
-    function->usesArgumentsObject = _variableEnvironment->parent && (_variableEnvironment->usesArgumentsObject == Environment::ArgumentsObjectUsed);
-    function->usesThis = _variableEnvironment->usesThis;
-    function->maxNumberOfArguments = qMax(_variableEnvironment->maxNumberOfArguments, (int)QV4::Global::ReservedArgumentCount);
-    function->isStrict = _variableEnvironment->isStrict;
-    function->isNamedExpression = _variableEnvironment->isNamedFunctionExpression;
-    function->isQmlBinding = _variableEnvironment->compilationMode == QmlBinding;
+    Context *savedFunctionContext = _functionContext;
+    _functionContext = _context;
+    ControlFlow *savedControlFlow = controlFlow;
+    controlFlow = nullptr;
 
-    AST::SourceLocation loc = ast->firstSourceLocation();
-    function->line = loc.startLine;
-    function->column = loc.startColumn;
-
-    if (function->usesArgumentsObject)
-        _variableEnvironment->enter(QStringLiteral("arguments"), Environment::VariableDeclaration, AST::VariableDeclaration::FunctionScope);
-
-    // variables in global code are properties of the global context object, not locals as with other functions.
-    if (_variableEnvironment->compilationMode == FunctionCode || _variableEnvironment->compilationMode == QmlBinding) {
-        unsigned t = 0;
-        for (Environment::MemberMap::iterator it = _variableEnvironment->members.begin(), end = _variableEnvironment->members.end(); it != end; ++it) {
-            const QString &local = it.key();
-            function->LOCAL(local);
-            (*it).index = t;
-            entryBlock->MOVE(entryBlock->LOCAL(t, 0), entryBlock->CONST(IR::UndefinedType, 0));
-            ++t;
-        }
-    } else {
-        if (!_variableEnvironment->isStrict) {
-            for (const QString &inheritedLocal : qAsConst(inheritedLocals)) {
-                function->LOCAL(inheritedLocal);
-                unsigned tempIndex = entryBlock->newTemp();
-                Environment::Member member = { Environment::UndefinedMember,
-                                               static_cast<int>(tempIndex), 0,
-                                               AST::VariableDeclaration::VariableScope::FunctionScope };
-                _variableEnvironment->members.insert(inheritedLocal, member);
-            }
-        }
-
-        IR::ExprList *args = 0;
-        for (Environment::MemberMap::const_iterator it = _variableEnvironment->members.constBegin(), cend = _variableEnvironment->members.constEnd(); it != cend; ++it) {
-            const QString &local = it.key();
-            IR::ExprList *next = function->New<IR::ExprList>();
-            next->expr = entryBlock->NAME(local, 0, 0);
-            next->next = args;
-            args = next;
-        }
-        if (args) {
-            IR::ExprList *next = function->New<IR::ExprList>();
-            next->expr = entryBlock->CONST(IR::BoolType, false); // ### Investigate removal of bool deletable
-            next->next = args;
-            args = next;
-
-            entryBlock->EXP(entryBlock->CALL(entryBlock->NAME(IR::Name::builtin_declare_vars, 0, 0), args));
-        }
+    if (_context->contextType == ContextType::Global || _context->contextType == ContextType::ScriptImportedByQML) {
+        _module->blocks.append(_context);
+        _context->blockIndex = _module->blocks.count() - 1;
     }
+    if (_module->debugMode) // allow the debugger to see overwritten arguments
+        _context->argumentsCanEscape = true;
 
-    unsigned returnAddress = entryBlock->newTemp();
+    // When a user writes the following QML signal binding:
+    //    onSignal: function() { doSomethingUsefull }
+    // we will generate a binding function that just returns the closure. However, that's not useful
+    // at all, because if the onSignal is a signal handler, the user is actually making it explicit
+    // that the binding is a function, so we should execute that. However, we don't know that during
+    // AOT compilation, so mark the surrounding function as only-returning-a-closure.
+    _context->returnsClosure = body && body->statement && cast<ExpressionStatement *>(body->statement) && cast<FunctionExpression *>(cast<ExpressionStatement *>(body->statement)->expression);
 
-    entryBlock->MOVE(entryBlock->TEMP(returnAddress), entryBlock->CONST(IR::UndefinedType, 0));
-    setLocation(exitBlock->RET(exitBlock->TEMP(returnAddress)), ast->lastSourceLocation());
+    BytecodeGenerator bytecode(_context->line, _module->debugMode);
+    BytecodeGenerator *savedBytecodeGenerator;
+    savedBytecodeGenerator = bytecodeGenerator;
+    bytecodeGenerator = &bytecode;
+    bytecodeGenerator->setLocation(ast->firstSourceLocation());
+    BytecodeGenerator::Label *savedReturnLabel = _returnLabel;
+    _returnLabel = nullptr;
 
-    qSwap(_function, function);
-    qSwap(_block, entryBlock);
-    qSwap(_exitBlock, exitBlock);
+    bool savedFunctionEndsWithReturn = functionEndsWithReturn;
+    functionEndsWithReturn = endsWithReturn(_module, body);
+    bytecodeGenerator->setTracing(_functionContext->canUseTracingJit(), _context->arguments.size());
+
+    // reserve the js stack frame (Context & js Function & accumulator)
+    bytecodeGenerator->newRegisterArray(sizeof(CallData)/sizeof(Value) - 1 + _context->arguments.size());
+
+    bool _inFormalParameterList = false;
+    qSwap(_inFormalParameterList, inFormalParameterList);
+
+    int returnAddress = -1;
+    bool _requiresReturnValue = _context->requiresImplicitReturnValue();
+    qSwap(requiresReturnValue, _requiresReturnValue);
+    returnAddress = bytecodeGenerator->newRegister();
     qSwap(_returnAddress, returnAddress);
-    qSwap(_scopeAndFinally, scopeAndFinally);
 
-    for (FormalParameterList *it = formals; it; it = it->next) {
-        _function->RECEIVE(it->name.toString());
+    // register the lexical scope for global code
+    if (!_context->parent && _context->requiresExecutionContext) {
+        _module->blocks.append(_context);
+        _context->blockIndex = _module->blocks.count() - 1;
     }
 
-    for (const Environment::Member &member : qAsConst(_variableEnvironment->members)) {
-        if (member.function) {
-            const int function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
-                                                member.function->body ? member.function->body->elements : 0);
-            if (! _variableEnvironment->parent) {
-                move(_block->NAME(member.function->name.toString(), member.function->identifierToken.startLine, member.function->identifierToken.startColumn),
-                     _block->CLOSURE(function));
-            } else {
-                Q_ASSERT(member.index >= 0);
-                move(_block->LOCAL(member.index, 0), _block->CLOSURE(function));
+    TailCallBlocker maybeBlockTailCalls(this, _context->canHaveTailCalls());
+
+    RegisterScope registerScope(this);
+    _context->emitBlockHeader(this);
+
+    {
+        QScopedValueRollback<bool> inFormals(inFormalParameterList, true);
+        TailCallBlocker blockTailCalls(this); // we're not in the FunctionBody or ConciseBody yet
+
+        int argc = 0;
+        while (formals) {
+            PatternElement *e = formals->element;
+            if (!e) {
+                if (!formals->next)
+                    // trailing comma
+                    break;
+                Q_UNREACHABLE();
             }
+
+            Reference arg = referenceForName(e->bindingIdentifier.toString(), true);
+            if (e->type == PatternElement::RestElement) {
+                Q_ASSERT(!formals->next);
+                Instruction::CreateRestParameter rest;
+                rest.argIndex = argc;
+                bytecodeGenerator->addInstruction(rest);
+                arg.storeConsumeAccumulator();
+            } else {
+                if (e->bindingTarget || e->initializer) {
+                    initializeAndDestructureBindingElement(e, arg);
+                    if (hasError)
+                        break;
+                }
+            }
+            formals = formals->next;
+            ++argc;
         }
     }
-    if (_function->usesArgumentsObject) {
-        move(identifier(QStringLiteral("arguments"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn),
-             _block->CALL(_block->NAME(IR::Name::builtin_setup_argument_object,
-                     ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), 0));
-    }
-    if (_function->usesThis && !_function->isStrict) {
-        // make sure we convert this to an object
-        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_convert_this_to_object,
-                ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), 0));
+
+    if (_context->isGenerator) {
+        Instruction::Yield yield;
+        bytecodeGenerator->addInstruction(yield);
     }
 
     beginFunctionBodyHook();
 
-    sourceElements(body);
+    statementList(body);
 
-    _function->addBasicBlock(_exitBlock);
+    if (!hasError) {
+        bytecodeGenerator->setLocation(ast->lastSourceLocation());
+        _context->emitBlockFooter(this);
 
-    _block->JUMP(_exitBlock);
+        if (_returnLabel || !functionEndsWithReturn) {
+            if (_returnLabel)
+                _returnLabel->link();
 
-    qSwap(_function, function);
-    qSwap(_block, entryBlock);
-    qSwap(_exitBlock, exitBlock);
+            if (_returnLabel || requiresReturnValue) {
+                Instruction::LoadReg load;
+                load.reg = Moth::StackSlot::createRegister(_returnAddress);
+                bytecodeGenerator->addInstruction(load);
+            } else {
+                Reference::fromConst(this, Encode::undefined()).loadInAccumulator();
+            }
+
+            bytecodeGenerator->addInstruction(Instruction::Ret());
+        }
+
+        Q_ASSERT(_context == _functionContext);
+        bytecodeGenerator->finalize(_context);
+        _context->registerCountInFunction = bytecodeGenerator->registerCount();
+        _context->nTraceInfos = bytecodeGenerator->traceInfoCount();
+        static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
+        if (showCode) {
+            qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict
+                     << "register count" << _context->registerCountInFunction << "implicit return" << requiresReturnValue;
+            QV4::Moth::dumpBytecode(_context->code, _context->locals.size(), _context->arguments.size(),
+                                    _context->line, _context->lineNumberMapping);
+            qDebug();
+        }
+    }
+
     qSwap(_returnAddress, returnAddress);
-    qSwap(_scopeAndFinally, scopeAndFinally);
-    qSwap(_exceptionHandlers, exceptionHandlers);
-    qSwap(_loop, loop);
+    qSwap(requiresReturnValue, _requiresReturnValue);
+    qSwap(_inFormalParameterList, inFormalParameterList);
+    bytecodeGenerator = savedBytecodeGenerator;
+    delete _returnLabel;
+    _returnLabel = savedReturnLabel;
+    controlFlow = savedControlFlow;
+    functionEndsWithReturn = savedFunctionEndsWithReturn;
+    _functionContext = savedFunctionContext;
 
-    leaveEnvironment();
-
-    return functionIndex;
-}
-
-bool Codegen::visit(FunctionSourceElement *ast)
-{
-    if (hasError)
-        return false;
-
-    statement(ast->declaration);
-    return false;
-}
-
-bool Codegen::visit(StatementSourceElement *ast)
-{
-    if (hasError)
-        return false;
-
-    statement(ast->statement);
-    return false;
+    return leaveContext();
 }
 
 bool Codegen::visit(Block *ast)
@@ -2203,9 +3170,10 @@ bool Codegen::visit(Block *ast)
     if (hasError)
         return false;
 
-    for (StatementList *it = ast->statements; it; it = it->next) {
-        statement(it->statement);
-    }
+    RegisterScope scope(this);
+
+    ControlFlowBlock controlFlow(this, ast);
+    statementList(ast->statements);
     return false;
 }
 
@@ -2214,25 +3182,23 @@ bool Codegen::visit(BreakStatement *ast)
     if (hasError)
         return false;
 
-    if (!_loop) {
+    // no need to block tail calls here: children aren't visited
+    if (!controlFlow) {
         throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Break outside of loop"));
         return false;
     }
-    Loop *loop = 0;
-    if (ast->label.isEmpty())
-        loop = _loop;
-    else {
-        for (loop = _loop; loop; loop = loop->parent) {
-            if (loop->labelledStatement && loop->labelledStatement->label == ast->label)
-                break;
-        }
-        if (!loop) {
+
+    ControlFlow::UnwindTarget target = controlFlow->unwindTarget(ControlFlow::Break, ast->label.toString());
+    if (!target.linkLabel.isValid()) {
+        if (ast->label.isEmpty())
+            throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Break outside of loop"));
+        else
             throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Undefined label '%1'").arg(ast->label.toString()));
-            return false;
-        }
+        return false;
     }
-    unwindException(loop->scopeAndFinally);
-    _block->JUMP(loop->breakBlock);
+
+    bytecodeGenerator->unwindToLabel(target.unwindLevel, target.linkLabel);
+
     return false;
 }
 
@@ -2241,31 +3207,25 @@ bool Codegen::visit(ContinueStatement *ast)
     if (hasError)
         return false;
 
-    Loop *loop = 0;
-    if (ast->label.isEmpty()) {
-        for (loop = _loop; loop; loop = loop->parent) {
-            if (loop->continueBlock)
-                break;
-        }
-    } else {
-        for (loop = _loop; loop; loop = loop->parent) {
-            if (loop->labelledStatement && loop->labelledStatement->label == ast->label) {
-                if (!loop->continueBlock)
-                    loop = 0;
-                break;
-            }
-        }
-        if (!loop) {
-            throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Undefined label '%1'").arg(ast->label.toString()));
-            return false;
-        }
-    }
-    if (!loop) {
-        throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("continue outside of loop"));
+    // no need to block tail calls here: children aren't visited
+    RegisterScope scope(this);
+
+    if (!controlFlow) {
+        throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Continue outside of loop"));
         return false;
     }
-    unwindException(loop->scopeAndFinally);
-    _block->JUMP(loop->continueBlock);
+
+    ControlFlow::UnwindTarget target = controlFlow->unwindTarget(ControlFlow::Continue, ast->label.toString());
+    if (!target.linkLabel.isValid()) {
+        if (ast->label.isEmpty())
+            throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Undefined label '%1'").arg(ast->label.toString()));
+        else
+            throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("continue outside of loop"));
+        return false;
+    }
+
+    bytecodeGenerator->unwindToLabel(target.unwindLevel, target.linkLabel);
+
     return false;
 }
 
@@ -2278,47 +3238,59 @@ bool Codegen::visit(DebuggerStatement *)
 bool Codegen::visit(DoWhileStatement *ast)
 {
     if (hasError)
-        return true;
+        return false;
 
-    IR::BasicBlock *loopbody = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *loopcond = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *loopend = _function->newBasicBlock(exceptionHandler());
+    RegisterScope scope(this);
 
-    enterLoop(ast, loopend, loopcond);
+    BytecodeGenerator::Label body = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label cond = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
-    _block->JUMP(loopbody);
+    ControlFlowLoop flow(this, &end, &cond);
 
-    _block = loopbody;
+    // special case that is not a loop:
+    //   do {...} while (false)
+    if (!AST::cast<FalseLiteral *>(ast->expression))
+        bytecodeGenerator->addLoopStart(body);
+
+    body.link();
     statement(ast->statement);
-    setJumpOutLocation(_block->JUMP(loopcond), ast->statement, ast->semicolonToken);
+    setJumpOutLocation(bytecodeGenerator, ast->statement, ast->semicolonToken);
 
-    _block = loopcond;
-    condition(ast->expression, loopbody, loopend);
+    cond.link();
+    if (AST::cast<TrueLiteral *>(ast->expression)) {
+        // do {} while (true) -> just jump back to the loop body, no need to generate a condition
+        bytecodeGenerator->jump().link(body);
+    } else if (AST::cast<FalseLiteral *>(ast->expression)) {
+        // do {} while (false) -> fall through, no need to generate a condition
+    } else {
+        TailCallBlocker blockTailCalls(this);
+        condition(ast->expression, &body, &end, false);
+    }
 
-    _block = loopend;
-
-    leaveLoop();
+    end.link();
 
     return false;
 }
 
 bool Codegen::visit(EmptyStatement *)
 {
-    if (hasError)
-        return true;
-
     return false;
 }
 
 bool Codegen::visit(ExpressionStatement *ast)
 {
     if (hasError)
-        return true;
+        return false;
 
-    if (_variableEnvironment->compilationMode == EvalCode || _variableEnvironment->compilationMode == QmlBinding) {
-        Result e = expression(ast->expression);
-        if (*e)
-            move(_block->TEMP(_returnAddress), *e);
+    RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
+
+    if (requiresReturnValue) {
+        Reference e = expression(ast->expression);
+        if (hasError)
+            return false;
+        (void) e.storeOnStack(_returnAddress);
     } else {
         statement(ast->expression);
     }
@@ -2328,81 +3300,138 @@ bool Codegen::visit(ExpressionStatement *ast)
 bool Codegen::visit(ForEachStatement *ast)
 {
     if (hasError)
-        return true;
-
-    IR::BasicBlock *foreachin = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *foreachbody = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *foreachend = _function->newBasicBlock(exceptionHandler());
-
-    int objectToIterateOn = _block->newTemp();
-    Result expr = expression(ast->expression);
-    if (hasError)
         return false;
-    move(_block->TEMP(objectToIterateOn), *expr);
-    IR::ExprList *args = _function->New<IR::ExprList>();
-    args->init(_block->TEMP(objectToIterateOn));
 
-    int iterator = _block->newTemp();
-    move(_block->TEMP(iterator), _block->CALL(_block->NAME(IR::Name::builtin_foreach_iterator_object, 0, 0), args));
+    RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
-    enterLoop(ast, foreachend, foreachin);
-    _block->JUMP(foreachin);
+    Reference iterator = Reference::fromStackSlot(this);
+    Reference iteratorDone = Reference::fromConst(this, Encode(false)).storeOnStack();
+    Reference lhsValue = Reference::fromStackSlot(this);
 
-    _block = foreachbody;
-    int temp = _block->newTemp();
-    Result init = expression(ast->initialiser);
-    if (hasError)
-        return false;
-    move(*init, _block->TEMP(temp));
-    statement(ast->statement);
-    setJumpOutLocation(_block->JUMP(foreachin), ast->statement, ast->forToken);
+    // There should be a temporal block, so that variables declared in lhs shadow outside vars.
+    // This block should define a temporal dead zone for those variables.
+    {
+        RegisterScope innerScope(this);
+        ControlFlowBlock controlFlow(this, ast);
+        Reference expr = expression(ast->expression);
+        if (hasError)
+            return false;
 
-    _block = foreachin;
+        expr.loadInAccumulator();
+        Instruction::GetIterator iteratorObjInstr;
+        iteratorObjInstr.iterator = static_cast<int>(ast->type);
+        bytecodeGenerator->addInstruction(iteratorObjInstr);
+        iterator.storeConsumeAccumulator();
+    }
 
-    args = _function->New<IR::ExprList>();
-    args->init(_block->TEMP(iterator));
-    move(_block->TEMP(temp), _block->CALL(_block->NAME(IR::Name::builtin_foreach_next_property_name, 0, 0), args));
-    int null = _block->newTemp();
-    move(_block->TEMP(null), _block->CONST(IR::NullType, 0));
-    setLocation(cjump(_block->BINOP(IR::OpStrictNotEqual, _block->TEMP(temp), _block->TEMP(null)), foreachbody, foreachend), ast->forToken);
-    _block = foreachend;
+    BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
-    leaveLoop();
+    {
+        auto cleanup = [ast, iterator, iteratorDone, this]() {
+            if (ast->type == ForEachType::Of) {
+                iterator.loadInAccumulator();
+                Instruction::IteratorClose close;
+                close.done = iteratorDone.stackSlot();
+                bytecodeGenerator->addInstruction(close);
+            }
+        };
+        ControlFlowLoop flow(this, &end, &in, cleanup);
+        bytecodeGenerator->addLoopStart(in);
+        in.link();
+        iterator.loadInAccumulator();
+        Instruction::IteratorNext next;
+        next.value = lhsValue.stackSlot();
+        next.done = iteratorDone.stackSlot();
+        bytecodeGenerator->addInstruction(next);
+        bytecodeGenerator->addTracingJumpInstruction(Instruction::JumpTrue()).link(end);
+
+        // each iteration gets it's own context, as per spec
+        {
+            RegisterScope innerScope(this);
+            ControlFlowBlock controlFlow(this, ast);
+
+            if (ExpressionNode *e = ast->lhs->expressionCast()) {
+                if (AST::Pattern *p = e->patternCast()) {
+                    RegisterScope scope(this);
+                    destructurePattern(p, lhsValue);
+                } else {
+                    Reference lhs = expression(e);
+                    if (hasError)
+                        goto error;
+                    if (!lhs.isLValue()) {
+                        throwReferenceError(e->firstSourceLocation(), QStringLiteral("Invalid left-hand side expression for 'in' expression"));
+                        goto error;
+                    }
+                    lhs = lhs.asLValue();
+                    lhsValue.loadInAccumulator();
+                    lhs.storeConsumeAccumulator();
+                }
+            } else if (PatternElement *p = AST::cast<PatternElement *>(ast->lhs)) {
+                initializeAndDestructureBindingElement(p, lhsValue, /*isDefinition =*/ true);
+                if (hasError)
+                    goto error;
+            } else {
+                Q_UNREACHABLE();
+            }
+
+            blockTailCalls.unblock();
+            statement(ast->statement);
+            setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
+        }
+
+        bytecodeGenerator->jump().link(in);
+
+      error:
+        end.link();
+
+        // all execution paths need to end up here (normal loop exit, break, and exceptions) in
+        // order to reset the unwind handler, and to close the iterator in calse of an for-of loop.
+    }
+
     return false;
 }
 
 bool Codegen::visit(ForStatement *ast)
 {
     if (hasError)
-        return true;
+        return false;
 
-    IR::BasicBlock *forcond = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *forbody = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *forstep = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *forend = _function->newBasicBlock(exceptionHandler());
+    RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
-    statement(ast->initialiser);
-    _block->JUMP(forcond);
+    ControlFlowBlock controlFlow(this, ast);
 
-    enterLoop(ast, forend, forstep);
+    if (ast->initialiser)
+        statement(ast->initialiser);
+    else if (ast->declarations)
+        variableDeclarationList(ast->declarations);
 
-    _block = forcond;
-    if (ast->condition)
-        condition(ast->condition, forbody, forend);
-    else
-        _block->JUMP(forbody);
+    BytecodeGenerator::Label cond = bytecodeGenerator->label();
+    BytecodeGenerator::Label body = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label step = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
-    _block = forbody;
+    ControlFlowLoop flow(this, &end, &step);
+    bytecodeGenerator->addLoopStart(cond);
+    condition(ast->condition, &body, &end, true);
+
+    body.link();
+    blockTailCalls.unblock();
     statement(ast->statement);
-    setJumpOutLocation(_block->JUMP(forstep), ast->statement, ast->forToken);
+    blockTailCalls.reblock();
+    setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
 
-    _block = forstep;
+    step.link();
+    if (_context->requiresExecutionContext) {
+        Instruction::CloneBlockContext clone;
+        bytecodeGenerator->addInstruction(clone);
+    }
     statement(ast->expression);
-    _block->JUMP(forcond);
+    bytecodeGenerator->jump().link(cond);
 
-    _block = forend;
-
-    leaveLoop();
+    end.link();
 
     return false;
 }
@@ -2410,25 +3439,31 @@ bool Codegen::visit(ForStatement *ast)
 bool Codegen::visit(IfStatement *ast)
 {
     if (hasError)
-        return true;
+        return false;
 
-    IR::BasicBlock *iftrue = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *iffalse = ast->ko ? _function->newBasicBlock(exceptionHandler()) : 0;
-    IR::BasicBlock *endif = _function->newBasicBlock(exceptionHandler());
+    RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
-    condition(ast->expression, iftrue, ast->ko ? iffalse : endif);
+    BytecodeGenerator::Label trueLabel = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label falseLabel = bytecodeGenerator->newLabel();
+    condition(ast->expression, &trueLabel, &falseLabel, true);
+    blockTailCalls.unblock();
 
-    _block = iftrue;
+    trueLabel.link();
     statement(ast->ok);
-    setJumpOutLocation(_block->JUMP(endif), ast->ok, ast->ifToken);
-
     if (ast->ko) {
-        _block = iffalse;
-        statement(ast->ko);
-        setJumpOutLocation(_block->JUMP(endif), ast->ko, ast->elseToken);
+        if (endsWithReturn(_module, ast)) {
+            falseLabel.link();
+            statement(ast->ko);
+        } else {
+            BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
+            falseLabel.link();
+            statement(ast->ko);
+            jump_endif.link();
+        }
+    } else {
+        falseLabel.link();
     }
-
-    _block = endif;
 
     return false;
 }
@@ -2436,12 +3471,14 @@ bool Codegen::visit(IfStatement *ast)
 bool Codegen::visit(LabelledStatement *ast)
 {
     if (hasError)
-        return true;
+        return false;
+
+    RegisterScope scope(this);
 
     // check that no outer loop contains the label
-    Loop *l = _loop;
+    ControlFlow *l = controlFlow;
     while (l) {
-        if (l->labelledStatement && l->labelledStatement->label == ast->label) {
+        if (l->label() == ast->label) {
             QString error = QString(QStringLiteral("Label '%1' has already been declared")).arg(ast->label.toString());
             throwSyntaxError(ast->firstSourceLocation(), error);
             return false;
@@ -2454,364 +3491,205 @@ bool Codegen::visit(LabelledStatement *ast)
             AST::cast<AST::WhileStatement *>(ast->statement) ||
             AST::cast<AST::DoWhileStatement *>(ast->statement) ||
             AST::cast<AST::ForStatement *>(ast->statement) ||
-            AST::cast<AST::ForEachStatement *>(ast->statement) ||
-            AST::cast<AST::LocalForStatement *>(ast->statement) ||
-            AST::cast<AST::LocalForEachStatement *>(ast->statement)) {
+            AST::cast<AST::ForEachStatement *>(ast->statement)) {
         statement(ast->statement); // labelledStatement will be associated with the ast->statement's loop.
     } else {
-        IR::BasicBlock *breakBlock = _function->newBasicBlock(exceptionHandler());
-        enterLoop(ast->statement, breakBlock, /*continueBlock*/ 0);
+        BytecodeGenerator::Label breakLabel = bytecodeGenerator->newLabel();
+        ControlFlowLoop flow(this, &breakLabel);
         statement(ast->statement);
-        _block->JUMP(breakBlock);
-        _block = breakBlock;
-        leaveLoop();
+        breakLabel.link();
     }
 
     return false;
 }
 
-bool Codegen::visit(LocalForEachStatement *ast)
+void Codegen::emitReturn(const Reference &expr)
 {
-    if (hasError)
-        return true;
-
-    IR::BasicBlock *foreachin = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *foreachbody = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *foreachend = _function->newBasicBlock(exceptionHandler());
-
-    variableDeclaration(ast->declaration);
-
-    int iterator = _block->newTemp();
-    move(_block->TEMP(iterator), *expression(ast->expression));
-    IR::ExprList *args = _function->New<IR::ExprList>();
-    args->init(_block->TEMP(iterator));
-    move(_block->TEMP(iterator), _block->CALL(_block->NAME(IR::Name::builtin_foreach_iterator_object, 0, 0), args));
-
-    _block->JUMP(foreachin);
-    enterLoop(ast, foreachend, foreachin);
-
-    _block = foreachbody;
-    int temp = _block->newTemp();
-    move(identifier(ast->declaration->name.toString()), _block->TEMP(temp));
-    statement(ast->statement);
-    setJumpOutLocation(_block->JUMP(foreachin), ast->statement, ast->forToken);
-
-    _block = foreachin;
-
-    args = _function->New<IR::ExprList>();
-    args->init(_block->TEMP(iterator));
-    move(_block->TEMP(temp), _block->CALL(_block->NAME(IR::Name::builtin_foreach_next_property_name, 0, 0), args));
-    int null = _block->newTemp();
-    move(_block->TEMP(null), _block->CONST(IR::NullType, 0));
-    setLocation(cjump(_block->BINOP(IR::OpStrictNotEqual, _block->TEMP(temp), _block->TEMP(null)), foreachbody, foreachend), ast->forToken);
-    _block = foreachend;
-
-    leaveLoop();
-    return false;
-}
-
-bool Codegen::visit(LocalForStatement *ast)
-{
-    if (hasError)
-        return true;
-
-    IR::BasicBlock *forcond = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *forbody = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *forstep = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *forend = _function->newBasicBlock(exceptionHandler());
-
-    variableDeclarationList(ast->declarations);
-    _block->JUMP(forcond);
-
-    enterLoop(ast, forend, forstep);
-
-    _block = forcond;
-    if (ast->condition)
-        condition(ast->condition, forbody, forend);
-    else
-        _block->JUMP(forbody);
-
-    _block = forbody;
-    statement(ast->statement);
-    setJumpOutLocation(_block->JUMP(forstep), ast->statement, ast->forToken);
-
-    _block = forstep;
-    statement(ast->expression);
-    _block->JUMP(forcond);
-
-    _block = forend;
-
-    leaveLoop();
-
-    return false;
+    ControlFlow::UnwindTarget target = controlFlow ? controlFlow->unwindTarget(ControlFlow::Return) : ControlFlow::UnwindTarget();
+    if (target.linkLabel.isValid() && target.unwindLevel) {
+        Q_ASSERT(_returnAddress >= 0);
+        (void) expr.storeOnStack(_returnAddress);
+        bytecodeGenerator->unwindToLabel(target.unwindLevel, target.linkLabel);
+    } else {
+        expr.loadInAccumulator();
+        bytecodeGenerator->addInstruction(Instruction::Ret());
+    }
 }
 
 bool Codegen::visit(ReturnStatement *ast)
 {
     if (hasError)
-        return true;
+        return false;
 
-    if (_variableEnvironment->compilationMode != FunctionCode && _variableEnvironment->compilationMode != QmlBinding) {
+    if (_functionContext->contextType != ContextType::Function && _functionContext->contextType != ContextType::Binding) {
         throwSyntaxError(ast->returnToken, QStringLiteral("Return statement outside of function"));
         return false;
     }
+    Reference expr;
     if (ast->expression) {
-        Result expr = expression(ast->expression);
-        move(_block->TEMP(_returnAddress), *expr);
+         expr = expression(ast->expression);
+        if (hasError)
+            return false;
+    } else {
+        expr = Reference::fromConst(this, Encode::undefined());
     }
 
-    // Since we're leaving, don't let any finally statements we emit as part of the unwinding
-    // jump to exception handlers at run-time if they throw.
-    IR::BasicBlock *unwindBlock = _function->newBasicBlock(/*no exception handler*/Q_NULLPTR);
-    _block->JUMP(unwindBlock);
-    _block = unwindBlock;
+    emitReturn(expr);
 
-    unwindException(0);
-
-    _block->JUMP(_exitBlock);
     return false;
 }
 
 bool Codegen::visit(SwitchStatement *ast)
 {
     if (hasError)
-        return true;
+        return false;
 
-    IR::BasicBlock *switchend = _function->newBasicBlock(exceptionHandler());
+    if (requiresReturnValue)
+        Reference::fromConst(this, Encode::undefined()).storeOnStack(_returnAddress);
+
+    RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
     if (ast->block) {
-        int lhs = _block->newTemp();
-        move(_block->TEMP(lhs), *expression(ast->expression));
-        IR::BasicBlock *switchcond = _function->newBasicBlock(exceptionHandler());
-        _block->JUMP(switchcond);
-        IR::BasicBlock *previousBlock = 0;
+        BytecodeGenerator::Label switchEnd = bytecodeGenerator->newLabel();
 
-        QHash<Node *, IR::BasicBlock *> blockMap;
+        Reference lhs = expression(ast->expression);
+        if (hasError)
+            return false;
+        lhs = lhs.storeOnStack();
 
-        enterLoop(ast, switchend, 0);
+        ControlFlowBlock controlFlow(this, ast->block);
 
+        // set up labels for all clauses
+        QHash<Node *, BytecodeGenerator::Label> blockMap;
+        for (CaseClauses *it = ast->block->clauses; it; it = it->next)
+            blockMap[it->clause] = bytecodeGenerator->newLabel();
+        if (ast->block->defaultClause)
+            blockMap[ast->block->defaultClause] = bytecodeGenerator->newLabel();
+        for (CaseClauses *it = ast->block->moreClauses; it; it = it->next)
+            blockMap[it->clause] = bytecodeGenerator->newLabel();
+
+        // do the switch conditions
         for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
             CaseClause *clause = it->clause;
+            Reference rhs = expression(clause->expression);
+            if (hasError)
+                return false;
+            rhs.loadInAccumulator();
+            bytecodeGenerator->jumpStrictEqual(lhs.stackSlot(), blockMap.value(clause));
+        }
 
-            _block = _function->newBasicBlock(exceptionHandler());
-            blockMap[clause] = _block;
+        for (CaseClauses *it = ast->block->moreClauses; it; it = it->next) {
+            CaseClause *clause = it->clause;
+            Reference rhs = expression(clause->expression);
+            if (hasError)
+                return false;
+            rhs.loadInAccumulator();
+            bytecodeGenerator->jumpStrictEqual(lhs.stackSlot(), blockMap.value(clause));
+        }
 
-            if (previousBlock && !previousBlock->isTerminated())
-                previousBlock->JUMP(_block);
+        if (DefaultClause *defaultClause = ast->block->defaultClause)
+            bytecodeGenerator->jump().link(blockMap.value(defaultClause));
+        else
+            bytecodeGenerator->jump().link(switchEnd);
 
-            for (StatementList *it2 = clause->statements; it2; it2 = it2->next)
-                statement(it2->statement);
+        ControlFlowLoop flow(this, &switchEnd);
 
-            previousBlock = _block;
+        insideSwitch = true;
+        blockTailCalls.unblock();
+        for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
+            CaseClause *clause = it->clause;
+            blockMap[clause].link();
+
+            statementList(clause->statements);
         }
 
         if (ast->block->defaultClause) {
-            _block = _function->newBasicBlock(exceptionHandler());
-            blockMap[ast->block->defaultClause] = _block;
+            DefaultClause *clause = ast->block->defaultClause;
+            blockMap[clause].link();
 
-            if (previousBlock && !previousBlock->isTerminated())
-                previousBlock->JUMP(_block);
-
-            for (StatementList *it2 = ast->block->defaultClause->statements; it2; it2 = it2->next)
-                statement(it2->statement);
-
-            previousBlock = _block;
+            statementList(clause->statements);
         }
 
         for (CaseClauses *it = ast->block->moreClauses; it; it = it->next) {
             CaseClause *clause = it->clause;
+            blockMap[clause].link();
 
-            _block = _function->newBasicBlock(exceptionHandler());
-            blockMap[clause] = _block;
-
-            if (previousBlock && !previousBlock->isTerminated())
-                previousBlock->JUMP(_block);
-
-            for (StatementList *it2 = clause->statements; it2; it2 = it2->next)
-                statement(it2->statement);
-
-            previousBlock = _block;
+            statementList(clause->statements);
         }
+        insideSwitch = false;
 
-        leaveLoop();
+        switchEnd.link();
 
-        _block->JUMP(switchend);
-
-        _block = switchcond;
-        for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
-            CaseClause *clause = it->clause;
-            Result rhs = expression(clause->expression);
-            IR::BasicBlock *iftrue = blockMap[clause];
-            IR::BasicBlock *iffalse = _function->newBasicBlock(exceptionHandler());
-            setLocation(cjump(binop(IR::OpStrictEqual, _block->TEMP(lhs), *rhs), iftrue, iffalse), clause->caseToken);
-            _block = iffalse;
-        }
-
-        for (CaseClauses *it = ast->block->moreClauses; it; it = it->next) {
-            CaseClause *clause = it->clause;
-            Result rhs = expression(clause->expression);
-            IR::BasicBlock *iftrue = blockMap[clause];
-            IR::BasicBlock *iffalse = _function->newBasicBlock(exceptionHandler());
-            setLocation(cjump(binop(IR::OpStrictEqual, _block->TEMP(lhs), *rhs), iftrue, iffalse), clause->caseToken);
-            _block = iffalse;
-        }
-
-        if (DefaultClause *defaultClause = ast->block->defaultClause) {
-            setLocation(_block->JUMP(blockMap[ast->block->defaultClause]), defaultClause->defaultToken);
-        }
     }
 
-    _block->JUMP(switchend);
-
-    _block = switchend;
     return false;
 }
 
 bool Codegen::visit(ThrowStatement *ast)
 {
     if (hasError)
-        return true;
+        return false;
 
-    Result expr = expression(ast->expression);
-    move(_block->TEMP(_returnAddress), *expr);
-    IR::ExprList *throwArgs = _function->New<IR::ExprList>();
-    throwArgs->expr = _block->TEMP(_returnAddress);
-    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_throw, /*line*/0, /*column*/0), throwArgs));
+    RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
+
+    Reference expr = expression(ast->expression);
+    if (hasError)
+        return false;
+
+    expr.loadInAccumulator();
+    Instruction::ThrowException instr;
+    bytecodeGenerator->addInstruction(instr);
     return false;
+}
+
+void Codegen::handleTryCatch(TryStatement *ast)
+{
+    Q_ASSERT(ast);
+    RegisterScope scope(this);
+    {
+        ControlFlowCatch catchFlow(this, ast->catchExpression);
+        RegisterScope scope(this);
+        TailCallBlocker blockTailCalls(this); // IMPORTANT: destruction will unblock tail calls before catch is generated
+        statement(ast->statement);
+    }
+}
+
+void Codegen::handleTryFinally(TryStatement *ast)
+{
+    RegisterScope scope(this);
+    ControlFlowFinally finally(this, ast->finallyExpression);
+    TailCallBlocker blockTailCalls(this); // IMPORTANT: destruction will unblock tail calls before finally is generated
+
+    if (ast->catchExpression) {
+        handleTryCatch(ast);
+    } else {
+        RegisterScope scope(this);
+        statement(ast->statement);
+    }
 }
 
 bool Codegen::visit(TryStatement *ast)
 {
     if (hasError)
-        return true;
-
-    _function->hasTry = true;
-
-    if (_function->isStrict && ast->catchExpression &&
-            (ast->catchExpression->name == QLatin1String("eval") || ast->catchExpression->name == QLatin1String("arguments"))) {
-        throwSyntaxError(ast->catchExpression->identifierToken, QStringLiteral("Catch variable name may not be eval or arguments in strict mode"));
         return false;
-    }
 
-    IR::BasicBlock *surroundingExceptionHandler = exceptionHandler();
+    RegisterScope scope(this);
 
-    // We always need a finally body to clean up the exception handler
-    // exceptions thrown in finally get caught by the surrounding catch block
-    IR::BasicBlock *finallyBody = 0;
-    IR::BasicBlock *catchBody = 0;
-    IR::BasicBlock *catchExceptionHandler = 0;
-    IR::BasicBlock *end = _function->newBasicBlock(surroundingExceptionHandler, IR::Function::DontInsertBlock);
-
-    if (ast->finallyExpression)
-        finallyBody = _function->newBasicBlock(surroundingExceptionHandler, IR::Function::DontInsertBlock);
-
-    if (ast->catchExpression) {
-        // exception handler for the catch body
-        catchExceptionHandler = _function->newBasicBlock(0, IR::Function::DontInsertBlock);
-        pushExceptionHandler(catchExceptionHandler);
-        catchBody =  _function->newBasicBlock(catchExceptionHandler, IR::Function::DontInsertBlock);
-        popExceptionHandler();
-        pushExceptionHandler(catchBody);
+    if (ast->finallyExpression && ast->finallyExpression->statement) {
+        handleTryFinally(ast);
     } else {
-        Q_ASSERT(finallyBody);
-        pushExceptionHandler(finallyBody);
+        handleTryCatch(ast);
     }
-
-    IR::BasicBlock *tryBody = _function->newBasicBlock(exceptionHandler());
-    _block->JUMP(tryBody);
-
-    ScopeAndFinally tcf(_scopeAndFinally, ast->finallyExpression);
-    _scopeAndFinally = &tcf;
-
-    _block = tryBody;
-    statement(ast->statement);
-    _block->JUMP(finallyBody ? finallyBody : end);
-
-    popExceptionHandler();
-
-    if (ast->catchExpression) {
-        pushExceptionHandler(catchExceptionHandler);
-        _function->addBasicBlock(catchBody);
-        _block = catchBody;
-
-        ++_function->insideWithOrCatch;
-        IR::ExprList *catchArgs = _function->New<IR::ExprList>();
-        catchArgs->init(_block->STRING(_function->newString(ast->catchExpression->name.toString())));
-        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_push_catch_scope, 0, 0), catchArgs));
-        {
-            ScopeAndFinally scope(_scopeAndFinally, ScopeAndFinally::CatchScope);
-            _scopeAndFinally = &scope;
-            statement(ast->catchExpression->statement);
-            _scopeAndFinally = scope.parent;
-        }
-        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
-        --_function->insideWithOrCatch;
-        _block->JUMP(finallyBody ? finallyBody : end);
-        popExceptionHandler();
-
-        _function->addBasicBlock(catchExceptionHandler);
-        catchExceptionHandler->EXP(catchExceptionHandler->CALL(catchExceptionHandler->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
-        if (finallyBody || surroundingExceptionHandler)
-            catchExceptionHandler->JUMP(finallyBody ? finallyBody : surroundingExceptionHandler);
-        else
-            catchExceptionHandler->EXP(catchExceptionHandler->CALL(catchExceptionHandler->NAME(IR::Name::builtin_rethrow, 0, 0), 0));
-    }
-
-    _scopeAndFinally = tcf.parent;
-
-    if (finallyBody) {
-        _function->addBasicBlock(finallyBody);
-        _block = finallyBody;
-
-        int hasException = _block->newTemp();
-        move(_block->TEMP(hasException), _block->CALL(_block->NAME(IR::Name::builtin_unwind_exception, /*line*/0, /*column*/0), 0));
-
-        if (ast->finallyExpression && ast->finallyExpression->statement)
-            statement(ast->finallyExpression->statement);
-
-        IR::ExprList *arg = _function->New<IR::ExprList>();
-        arg->expr = _block->TEMP(hasException);
-        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_throw, /*line*/0, /*column*/0), arg));
-        _block->JUMP(end);
-    }
-
-    _function->addBasicBlock(end);
-    _block = end;
 
     return false;
-}
-
-void Codegen::unwindException(Codegen::ScopeAndFinally *outest)
-{
-    int savedDepthForWidthOrCatch = _function->insideWithOrCatch;
-    ScopeAndFinally *scopeAndFinally = _scopeAndFinally;
-    qSwap(_scopeAndFinally, scopeAndFinally);
-    while (_scopeAndFinally != outest) {
-        switch (_scopeAndFinally->type) {
-        case ScopeAndFinally::WithScope:
-            // fall through
-        case ScopeAndFinally::CatchScope:
-            _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0)));
-            _scopeAndFinally = _scopeAndFinally->parent;
-            --_function->insideWithOrCatch;
-            break;
-        case ScopeAndFinally::TryScope: {
-            ScopeAndFinally *tc = _scopeAndFinally;
-            _scopeAndFinally = tc->parent;
-            if (tc->finally && tc->finally->statement)
-                statement(tc->finally->statement);
-            break;
-        }
-        }
-    }
-    qSwap(_scopeAndFinally, scopeAndFinally);
-    _function->insideWithOrCatch = savedDepthForWidthOrCatch;
 }
 
 bool Codegen::visit(VariableStatement *ast)
 {
     if (hasError)
-        return true;
+        return false;
 
     variableDeclarationList(ast->declarations);
     return false;
@@ -2820,128 +3698,110 @@ bool Codegen::visit(VariableStatement *ast)
 bool Codegen::visit(WhileStatement *ast)
 {
     if (hasError)
-        return true;
+        return false;
 
-    IR::BasicBlock *whilecond = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *whilebody = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *whileend = _function->newBasicBlock(exceptionHandler());
+    if (AST::cast<FalseLiteral *>(ast->expression))
+        return false;
 
-    enterLoop(ast, whileend, whilecond);
+    RegisterScope scope(this);
 
-    _block->JUMP(whilecond);
-    _block = whilecond;
-    condition(ast->expression, whilebody, whileend);
+    BytecodeGenerator::Label start = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label cond = bytecodeGenerator->label();
+    ControlFlowLoop flow(this, &end, &cond);
+    bytecodeGenerator->addLoopStart(cond);
 
-    _block = whilebody;
+    if (!AST::cast<TrueLiteral *>(ast->expression)) {
+        TailCallBlocker blockTailCalls(this);
+        condition(ast->expression, &start, &end, true);
+    }
+
+    start.link();
     statement(ast->statement);
-    setJumpOutLocation(_block->JUMP(whilecond), ast->statement, ast->whileToken);
+    setJumpOutLocation(bytecodeGenerator, ast->statement, ast->whileToken);
+    bytecodeGenerator->jump().link(cond);
 
-    _block = whileend;
-    leaveLoop();
-
+    end.link();
     return false;
 }
 
 bool Codegen::visit(WithStatement *ast)
 {
     if (hasError)
-        return true;
+        return false;
 
-    _function->hasWith = true;
+    RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
-    const int withObject = _block->newTemp();
-    Result src = expression(ast->expression);
+    Reference src = expression(ast->expression);
     if (hasError)
         return false;
-    _block->MOVE(_block->TEMP(withObject), *src);
+    src = src.storeOnStack(); // trigger load before we setup the exception handler, so exceptions here go to the right place
+    src.loadInAccumulator();
 
-    // need an exception handler for with to cleanup the with scope
-    IR::BasicBlock *withExceptionHandler = _function->newBasicBlock(exceptionHandler());
-    withExceptionHandler->EXP(withExceptionHandler->CALL(withExceptionHandler->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
-    if (!exceptionHandler())
-        withExceptionHandler->EXP(withExceptionHandler->CALL(withExceptionHandler->NAME(IR::Name::builtin_rethrow, 0, 0), 0));
-    else
-        withExceptionHandler->JUMP(exceptionHandler());
-
-    pushExceptionHandler(withExceptionHandler);
-
-    IR::BasicBlock *withBlock = _function->newBasicBlock(exceptionHandler());
-
-    _block->JUMP(withBlock);
-    _block = withBlock;
-    IR::ExprList *args = _function->New<IR::ExprList>();
-    args->init(_block->TEMP(withObject));
-    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_push_with_scope, 0, 0), args));
-
-    ++_function->insideWithOrCatch;
+    enterContext(ast);
     {
-        ScopeAndFinally scope(_scopeAndFinally);
-        _scopeAndFinally = &scope;
+        blockTailCalls.unblock();
+        ControlFlowWith flow(this);
         statement(ast->statement);
-        _scopeAndFinally = scope.parent;
     }
-    --_function->insideWithOrCatch;
-    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
-    popExceptionHandler();
-
-    IR::BasicBlock *next = _function->newBasicBlock(exceptionHandler());
-    _block->JUMP(next);
-    _block = next;
+    leaveContext();
 
     return false;
 }
 
 bool Codegen::visit(UiArrayBinding *)
 {
-    Q_ASSERT(!"not implemented");
+    Q_UNIMPLEMENTED();
     return false;
 }
 
 bool Codegen::visit(UiObjectBinding *)
 {
-    Q_ASSERT(!"not implemented");
+    Q_UNIMPLEMENTED();
     return false;
 }
 
 bool Codegen::visit(UiObjectDefinition *)
 {
-    Q_ASSERT(!"not implemented");
+    Q_UNIMPLEMENTED();
     return false;
 }
 
 bool Codegen::visit(UiPublicMember *)
 {
-    Q_ASSERT(!"not implemented");
+    Q_UNIMPLEMENTED();
     return false;
 }
 
 bool Codegen::visit(UiScriptBinding *)
 {
-    Q_ASSERT(!"not implemented");
+    Q_UNIMPLEMENTED();
     return false;
 }
 
 bool Codegen::visit(UiSourceElement *)
 {
-    Q_ASSERT(!"not implemented");
+    Q_UNIMPLEMENTED();
     return false;
 }
 
-bool Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(IR::Expr *expr, const SourceLocation& loc)
+bool Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(const Reference &r, const SourceLocation& loc)
 {
-    if (!_variableEnvironment->isStrict)
+    if (!_context->isStrict)
         return false;
-    if (IR::Name *n = expr->asName()) {
-        if (*n->id != QLatin1String("eval") && *n->id != QLatin1String("arguments"))
-            return false;
-    } else if (IR::ArgLocal *al = expr->asArgLocal()) {
-        if (!al->isArgumentsOrEval)
-            return false;
-    } else {
-        return false;
+    bool isArgOrEval = false;
+    if (r.type == Reference::Name) {
+        QString str = jsUnitGenerator->stringForIndex(r.nameAsIndex());
+        if (str == QLatin1String("eval") || str == QLatin1String("arguments")) {
+            isArgOrEval = true;
+        }
+    } else if (r.type == Reference::ScopedLocal || r.isRegister()) {
+        isArgOrEval = r.isArgOrEval;
     }
-    throwSyntaxError(loc, QStringLiteral("Variable name may not be eval or arguments in strict mode"));
-    return true;
+    if (isArgOrEval)
+        throwSyntaxError(loc, QStringLiteral("Variable name may not be eval or arguments in strict mode"));
+    return isArgOrEval;
 }
 
 void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
@@ -2973,6 +3833,117 @@ QList<QQmlJS::DiagnosticMessage> Codegen::errors() const
     return _errors;
 }
 
+QQmlRefPointer<CompiledData::CompilationUnit> Codegen::generateCompilationUnit(bool generateUnitData)
+{
+    CompiledData::Unit *unitData = nullptr;
+    if (generateUnitData)
+        unitData = jsUnitGenerator->generateUnit();
+    CompiledData::CompilationUnit *compilationUnit = new CompiledData::CompilationUnit(unitData);
+
+    QQmlRefPointer<CompiledData::CompilationUnit> unit;
+    unit.adopt(compilationUnit);
+    return unit;
+}
+
+QQmlRefPointer<CompiledData::CompilationUnit> Codegen::createUnitForLoading()
+{
+    QQmlRefPointer<CompiledData::CompilationUnit> result;
+    result.adopt(new CompiledData::CompilationUnit);
+    return result;
+}
+
+class Codegen::VolatileMemoryLocationScanner: protected QQmlJS::AST::Visitor
+{
+    VolatileMemoryLocations locs;
+
+public:
+    Codegen::VolatileMemoryLocations scan(AST::Node *s)
+    {
+        s->accept(this);
+        return locs;
+    }
+
+    bool visit(ArrayMemberExpression *) override
+    {
+        locs.setAllVolatile();
+        return false;
+    }
+
+    bool visit(FieldMemberExpression *) override
+    {
+        locs.setAllVolatile();
+        return false;
+    }
+
+    bool visit(PostIncrementExpression *e) override
+    {
+        collectIdentifiers(locs.specificLocations, e->base);
+        return false;
+    }
+
+    bool visit(PostDecrementExpression *e) override
+    {
+        collectIdentifiers(locs.specificLocations, e->base);
+        return false;
+    }
+
+    bool visit(PreIncrementExpression *e) override
+    {
+        collectIdentifiers(locs.specificLocations, e->expression);
+        return false;
+    }
+
+    bool visit(PreDecrementExpression *e) override
+    {
+        collectIdentifiers(locs.specificLocations, e->expression);
+        return false;
+    }
+
+    bool visit(BinaryExpression *e) override
+    {
+        switch (e->op) {
+        case QSOperator::InplaceAnd:
+        case QSOperator::InplaceSub:
+        case QSOperator::InplaceDiv:
+        case QSOperator::InplaceAdd:
+        case QSOperator::InplaceLeftShift:
+        case QSOperator::InplaceMod:
+        case QSOperator::InplaceMul:
+        case QSOperator::InplaceOr:
+        case QSOperator::InplaceRightShift:
+        case QSOperator::InplaceURightShift:
+        case QSOperator::InplaceXor:
+            collectIdentifiers(locs.specificLocations, e);
+            return false;
+
+        default:
+            return true;
+        }
+    }
+
+private:
+    void collectIdentifiers(QVector<QStringView> &ids, AST::Node *node) const {
+        class Collector: public QQmlJS::AST::Visitor {
+            QVector<QStringView> &ids;
+        public:
+            Collector(QVector<QStringView> &ids): ids(ids) {}
+            virtual bool visit(IdentifierExpression *ie) {
+                ids.append(ie->name);
+                return false;
+            }
+        };
+        Collector collector(ids);
+        node->accept(&collector);
+    }
+};
+
+Codegen::VolatileMemoryLocations Codegen::scanVolatileMemoryLocations(AST::Node *ast) const
+{
+    VolatileMemoryLocationScanner scanner;
+    return scanner.scan(ast);
+}
+
+
 #ifndef V4_BOOTSTRAP
 
 QList<QQmlError> Codegen::qmlErrors() const
@@ -2998,20 +3969,489 @@ QList<QQmlError> Codegen::qmlErrors() const
     return qmlErrors;
 }
 
-void RuntimeCodegen::throwSyntaxError(const AST::SourceLocation &loc, const QString &detail)
-{
-    if (hasError)
-        return;
-    hasError = true;
-    engine->throwSyntaxError(detail, _module->fileName, loc.startLine, loc.startColumn);
-}
-
-void RuntimeCodegen::throwReferenceError(const AST::SourceLocation &loc, const QString &detail)
-{
-    if (hasError)
-        return;
-    hasError = true;
-    engine->throwReferenceError(detail, _module->fileName, loc.startLine, loc.startColumn);
-}
-
 #endif // V4_BOOTSTRAP
+
+bool Codegen::RValue::operator==(const RValue &other) const
+{
+    switch (type) {
+    case Accumulator:
+        return other.isAccumulator();
+    case StackSlot:
+        return other.isStackSlot() && theStackSlot == other.theStackSlot;
+    case Const:
+        return other.isConst() && constant == other.constant;
+    default:
+        return false;
+    }
+}
+
+Codegen::RValue Codegen::RValue::storeOnStack() const
+{
+    switch (type) {
+    case Accumulator:
+        return RValue::fromStackSlot(codegen, Reference::fromAccumulator(codegen).storeOnStack().stackSlot());
+    case StackSlot:
+        return *this;
+    case Const:
+        return RValue::fromStackSlot(codegen, Reference::storeConstOnStack(codegen, constant).stackSlot());
+    default:
+        Q_UNREACHABLE();
+    }
+}
+
+void Codegen::RValue::loadInAccumulator() const
+{
+    switch (type) {
+    case Accumulator:
+        // nothing to do
+        return;
+    case StackSlot:
+        return Reference::fromStackSlot(codegen, theStackSlot).loadInAccumulator();
+    case Const:
+        return Reference::fromConst(codegen, constant).loadInAccumulator();
+    default:
+        Q_UNREACHABLE();
+    }
+
+}
+
+bool Codegen::Reference::operator==(const Codegen::Reference &other) const
+{
+    if (type != other.type)
+        return false;
+    switch (type) {
+    case Invalid:
+    case Accumulator:
+        break;
+    case Super:
+        return true;
+    case SuperProperty:
+        return property == other.property;
+    case StackSlot:
+        return theStackSlot == other.theStackSlot;
+    case ScopedLocal:
+        return index == other.index && scope == other.scope;
+    case Name:
+        return nameAsIndex() == other.nameAsIndex();
+    case Member:
+        return propertyBase == other.propertyBase && propertyNameIndex == other.propertyNameIndex;
+    case Subscript:
+        return elementBase == other.elementBase && elementSubscript == other.elementSubscript;
+    case Import:
+        return index == other.index;
+    case Const:
+        return constant == other.constant;
+    case QmlScopeObject:
+    case QmlContextObject:
+        return qmlCoreIndex == other.qmlCoreIndex && qmlNotifyIndex == other.qmlNotifyIndex
+                && capturePolicy == other.capturePolicy;
+    }
+    return true;
+}
+
+Codegen::RValue Codegen::Reference::asRValue() const
+{
+    switch (type) {
+    case Invalid:
+        Q_UNREACHABLE();
+    case Accumulator:
+        return RValue::fromAccumulator(codegen);
+    case StackSlot:
+        return RValue::fromStackSlot(codegen, stackSlot());
+    case Const:
+        return RValue::fromConst(codegen, constant);
+    default:
+        loadInAccumulator();
+        return RValue::fromAccumulator(codegen);
+    }
+}
+
+Codegen::Reference Codegen::Reference::asLValue() const
+{
+    switch (type) {
+    case Invalid:
+    case Accumulator:
+        Q_UNREACHABLE();
+    case Super:
+        codegen->throwSyntaxError(AST::SourceLocation(), QStringLiteral("Super lvalues not implemented."));
+        return *this;
+    case Member:
+        if (!propertyBase.isStackSlot()) {
+            Reference r = *this;
+            r.propertyBase = propertyBase.storeOnStack();
+            return r;
+        }
+        return *this;
+    case Subscript:
+        if (!elementSubscript.isStackSlot()) {
+            Reference r = *this;
+            r.elementSubscript = elementSubscript.storeOnStack();
+            return r;
+        }
+        return *this;
+    default:
+        return *this;
+    }
+}
+
+Codegen::Reference Codegen::Reference::storeConsumeAccumulator() const
+{
+    storeAccumulator(); // it doesn't matter what happens here, just do it.
+    return Reference();
+}
+
+Codegen::Reference Codegen::Reference::baseObject() const
+{
+    if (type == Reference::QmlScopeObject || type == Reference::QmlContextObject) {
+        return Reference::fromStackSlot(codegen, qmlBase.stackSlot());
+    } else if (type == Reference::Member) {
+        RValue rval = propertyBase;
+        if (!rval.isValid())
+            return Reference::fromConst(codegen, Encode::undefined());
+        if (rval.isAccumulator())
+            return Reference::fromAccumulator(codegen);
+        if (rval.isStackSlot())
+            return Reference::fromStackSlot(codegen, rval.stackSlot());
+        if (rval.isConst())
+            return Reference::fromConst(codegen, rval.constantValue());
+        Q_UNREACHABLE();
+    } else if (type == Reference::Subscript) {
+        return Reference::fromStackSlot(codegen, elementBase.stackSlot());
+    } else if (type == Reference::SuperProperty) {
+        return Reference::fromStackSlot(codegen, CallData::This);
+    } else {
+        return Reference::fromConst(codegen, Encode::undefined());
+    }
+}
+
+Codegen::Reference Codegen::Reference::storeOnStack() const
+{ return doStoreOnStack(-1); }
+
+void Codegen::Reference::storeOnStack(int slotIndex) const
+{ doStoreOnStack(slotIndex); }
+
+Codegen::Reference Codegen::Reference::doStoreOnStack(int slotIndex) const
+{
+    Q_ASSERT(isValid());
+
+    if (isStackSlot() && slotIndex == -1 && !(stackSlotIsLocalOrArgument && isVolatile) && !requiresTDZCheck)
+        return *this;
+
+    if (isStackSlot() && !requiresTDZCheck) { // temp-to-temp move
+        Reference dest = Reference::fromStackSlot(codegen, slotIndex);
+        Instruction::MoveReg move;
+        move.srcReg = stackSlot();
+        move.destReg = dest.stackSlot();
+        codegen->bytecodeGenerator->addInstruction(move);
+        return dest;
+    }
+
+    Reference slot = Reference::fromStackSlot(codegen, slotIndex);
+    if (isConstant()) {
+        Instruction::MoveConst move;
+        move.constIndex = codegen->registerConstant(constant);
+        move.destTemp = slot.stackSlot();
+        codegen->bytecodeGenerator->addInstruction(move);
+    } else {
+        loadInAccumulator();
+        slot.storeConsumeAccumulator();
+    }
+    return slot;
+}
+
+Codegen::Reference Codegen::Reference::storeRetainAccumulator() const
+{
+    if (storeWipesAccumulator()) {
+        // a store will
+        auto tmp = Reference::fromStackSlot(codegen);
+        tmp.storeAccumulator(); // this is safe, and won't destory the accumulator
+        storeAccumulator();
+        return tmp;
+    } else {
+        // ok, this is safe, just do the store.
+        storeAccumulator();
+        return *this;
+    }
+}
+
+bool Codegen::Reference::storeWipesAccumulator() const
+{
+    switch (type) {
+    default:
+    case Invalid:
+    case Const:
+    case Accumulator:
+        Q_UNREACHABLE();
+        return false;
+    case StackSlot:
+    case ScopedLocal:
+        return false;
+    case Name:
+    case Member:
+    case Subscript:
+    case QmlScopeObject:
+    case QmlContextObject:
+        return true;
+    }
+}
+
+void Codegen::Reference::storeAccumulator() const
+{
+    if (isReferenceToConst) {
+        // throw a type error
+        RegisterScope scope(codegen);
+        Reference r = codegen->referenceForName(QStringLiteral("TypeError"), false);
+        r = r.storeOnStack();
+        Instruction::Construct construct;
+        construct.func = r.stackSlot();
+        construct.argc = 0;
+        construct.argv = 0;
+        codegen->bytecodeGenerator->addInstruction(construct);
+        Instruction::ThrowException throwException;
+        codegen->bytecodeGenerator->addInstruction(throwException);
+        return;
+    }
+    switch (type) {
+    case Super:
+        Q_UNREACHABLE();
+        return;
+    case SuperProperty:
+        Instruction::StoreSuperProperty store;
+        store.property = property.stackSlot();
+        codegen->bytecodeGenerator->addInstruction(store);
+        return;
+    case StackSlot: {
+        Instruction::StoreReg store;
+        store.reg = theStackSlot;
+        codegen->bytecodeGenerator->addInstruction(store);
+        return;
+    }
+    case ScopedLocal: {
+        if (scope == 0) {
+            Instruction::StoreLocal store;
+            store.index = index;
+            codegen->bytecodeGenerator->addInstruction(store);
+        } else {
+            Instruction::StoreScopedLocal store;
+            store.index = index;
+            store.scope = scope;
+            codegen->bytecodeGenerator->addInstruction(store);
+        }
+        return;
+    }
+    case Name: {
+        Context *c = codegen->currentContext();
+        if (c->isStrict) {
+            Instruction::StoreNameStrict store;
+            store.name = nameAsIndex();
+            codegen->bytecodeGenerator->addInstruction(store);
+        } else {
+            Instruction::StoreNameSloppy store;
+            store.name = nameAsIndex();
+            codegen->bytecodeGenerator->addInstruction(store);
+        }
+    } return;
+    case Member:
+        if (!disable_lookups && codegen->useFastLookups) {
+            Instruction::SetLookup store;
+            store.base = propertyBase.stackSlot();
+            store.index = codegen->registerSetterLookup(propertyNameIndex);
+            codegen->bytecodeGenerator->addInstruction(store);
+        } else {
+            Instruction::StoreProperty store;
+            store.base = propertyBase.stackSlot();
+            store.name = propertyNameIndex;
+            codegen->bytecodeGenerator->addInstruction(store);
+        }
+        return;
+    case Subscript: {
+        Instruction::StoreElement store;
+        store.base = elementBase;
+        store.index = elementSubscript.stackSlot();
+        codegen->bytecodeGenerator->addTracingInstruction(store);
+    } return;
+    case QmlScopeObject: {
+        Instruction::StoreScopeObjectProperty store;
+        store.base = qmlBase;
+        store.propertyIndex = qmlCoreIndex;
+        codegen->bytecodeGenerator->addInstruction(store);
+    } return;
+    case QmlContextObject: {
+        Instruction::StoreContextObjectProperty store;
+        store.base = qmlBase;
+        store.propertyIndex = qmlCoreIndex;
+        codegen->bytecodeGenerator->addInstruction(store);
+    } return;
+    case Invalid:
+    case Accumulator:
+    case Const:
+    case Import:
+        break;
+    }
+
+    Q_UNREACHABLE();
+}
+
+void Codegen::Reference::loadInAccumulator() const
+{
+    auto tdzCheck = [this](bool requiresCheck){
+        if (!requiresCheck)
+            return;
+        Instruction::DeadTemporalZoneCheck check;
+        check.name = codegen->registerString(name);
+        codegen->bytecodeGenerator->addInstruction(check);
+    };
+    auto tdzCheckStackSlot = [this, tdzCheck](Moth::StackSlot slot, bool requiresCheck){
+        if (!requiresCheck)
+            return;
+        Instruction::LoadReg load;
+        load.reg = slot;
+        codegen->bytecodeGenerator->addInstruction(load);
+        tdzCheck(true);
+    };
+
+    switch (type) {
+    case Accumulator:
+        return;
+    case Super:
+        Q_UNREACHABLE();
+        return;
+    case SuperProperty:
+        tdzCheckStackSlot(property, subscriptRequiresTDZCheck);
+        Instruction::LoadSuperProperty load;
+        load.property = property.stackSlot();
+        codegen->bytecodeGenerator->addInstruction(load);
+        return;
+    case Const: {
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // the loads below are empty structs.
+        if (constant == Encode::null()) {
+            Instruction::LoadNull load;
+            codegen->bytecodeGenerator->addInstruction(load);
+        } else if (constant == Encode(true)) {
+            Instruction::LoadTrue load;
+            codegen->bytecodeGenerator->addInstruction(load);
+        } else if (constant == Encode(false)) {
+            Instruction::LoadFalse load;
+            codegen->bytecodeGenerator->addInstruction(load);
+        } else if (constant == Encode::undefined()) {
+            Instruction::LoadUndefined load;
+            codegen->bytecodeGenerator->addInstruction(load);
+        } else {
+            Value p = Value::fromReturnedValue(constant);
+            if (p.isNumber()) {
+                double d = p.asDouble();
+                int i = static_cast<int>(d);
+                if (d == i && (d != 0 || !std::signbit(d))) {
+                    if (!i) {
+                        Instruction::LoadZero load;
+                        codegen->bytecodeGenerator->addInstruction(load);
+                        return;
+                    }
+                    Instruction::LoadInt load;
+                    load.value = Value::fromReturnedValue(constant).toInt32();
+                    codegen->bytecodeGenerator->addInstruction(load);
+                    return;
+                }
+            }
+            Instruction::LoadConst load;
+            load.index = codegen->registerConstant(constant);
+            codegen->bytecodeGenerator->addInstruction(load);
+        }
+QT_WARNING_POP
+    } return;
+    case StackSlot: {
+        Instruction::LoadReg load;
+        load.reg = stackSlot();
+        codegen->bytecodeGenerator->addInstruction(load);
+        tdzCheck(requiresTDZCheck);
+    } return;
+    case ScopedLocal: {
+        if (!scope) {
+            Instruction::LoadLocal load;
+            load.index = index;
+            codegen->bytecodeGenerator->addTracingInstruction(load);
+        } else {
+            Instruction::LoadScopedLocal load;
+            load.index = index;
+            load.scope = scope;
+            codegen->bytecodeGenerator->addTracingInstruction(load);
+        }
+        tdzCheck(requiresTDZCheck);
+        return;
+    }
+    case Name:
+        if (global) {
+            // these value properties of the global object are immutable, we we can directly convert them
+            // to their numeric value here
+            if (name == QStringLiteral("undefined")) {
+                Reference::fromConst(codegen, Encode::undefined()).loadInAccumulator();
+                return;
+            } else if (name == QStringLiteral("Infinity")) {
+                Reference::fromConst(codegen, Encode(qInf())).loadInAccumulator();
+                return;
+            } else if (name == QStringLiteral("Nan")) {
+                Reference::fromConst(codegen, Encode(qQNaN())).loadInAccumulator();
+                return;
+            }
+        }
+        if (!disable_lookups && global) {
+            Instruction::LoadGlobalLookup load;
+            load.index = codegen->registerGlobalGetterLookup(nameAsIndex());
+            codegen->bytecodeGenerator->addTracingInstruction(load);
+        } else {
+            Instruction::LoadName load;
+            load.name = nameAsIndex();
+            codegen->bytecodeGenerator->addTracingInstruction(load);
+        }
+        return;
+    case Member:
+        propertyBase.loadInAccumulator();
+        tdzCheck(requiresTDZCheck);
+        if (!disable_lookups && codegen->useFastLookups) {
+            Instruction::GetLookup load;
+            load.index = codegen->registerGetterLookup(propertyNameIndex);
+            codegen->bytecodeGenerator->addTracingInstruction(load);
+        } else {
+            Instruction::LoadProperty load;
+            load.name = propertyNameIndex;
+            codegen->bytecodeGenerator->addTracingInstruction(load);
+        }
+        return;
+    case Import: {
+        Instruction::LoadImport load;
+        load.index = index;
+        codegen->bytecodeGenerator->addInstruction(load);
+        tdzCheck(requiresTDZCheck);
+    } return;
+    case Subscript: {
+        tdzCheckStackSlot(elementBase, requiresTDZCheck);
+        elementSubscript.loadInAccumulator();
+        tdzCheck(subscriptRequiresTDZCheck);
+        Instruction::LoadElement load;
+        load.base = elementBase;
+        codegen->bytecodeGenerator->addTracingInstruction(load);
+    } return;
+    case QmlScopeObject: {
+        Instruction::LoadScopeObjectProperty load;
+        load.base = qmlBase;
+        load.propertyIndex = qmlCoreIndex;
+        load.captureRequired = capturePolicy == CaptureAtRuntime;
+        codegen->bytecodeGenerator->addInstruction(load);
+        if (capturePolicy == CaptureAheadOfTime)
+            codegen->_context->scopeObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
+    } return;
+    case QmlContextObject: {
+        Instruction::LoadContextObjectProperty load;
+        load.base = qmlBase;
+        load.propertyIndex = qmlCoreIndex;
+        load.captureRequired = capturePolicy == CaptureAtRuntime;
+        codegen->bytecodeGenerator->addInstruction(load);
+        if (capturePolicy == CaptureAheadOfTime)
+            codegen->_context->contextObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
+    } return;
+    case Invalid:
+        break;
+    }
+    Q_UNREACHABLE();
+}

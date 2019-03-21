@@ -153,7 +153,6 @@ public:
     bool moving : 1;
     bool flicking : 1;
     bool dragging : 1;
-    bool requestedOnPath : 1;
     bool inRequest : 1;
     bool delegateValidated : 1;
     bool inRefill : 1;

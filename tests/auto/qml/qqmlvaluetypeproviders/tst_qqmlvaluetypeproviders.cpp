@@ -78,7 +78,7 @@ void tst_qqmlvaluetypeproviders::qtqmlValueTypes()
     QVERIFY(!component.isError());
     QVERIFY(component.errors().isEmpty());
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QVERIFY(object->property("qtqmlTypeSuccess").toBool());
     QVERIFY(object->property("qtquickTypeSuccess").toBool());
     delete object;
@@ -91,7 +91,7 @@ void tst_qqmlvaluetypeproviders::qtquickValueTypes()
     QVERIFY(!component.isError());
     QVERIFY(component.errors().isEmpty());
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QVERIFY(object->property("qtqmlTypeSuccess").toBool());
     QVERIFY(object->property("qtquickTypeSuccess").toBool());
     delete object;
@@ -104,7 +104,7 @@ void tst_qqmlvaluetypeproviders::comparisonSemantics()
     QVERIFY(!component.isError());
     QVERIFY(component.errors().isEmpty());
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QVERIFY(object->property("comparisonSuccess").toBool());
     delete object;
 }
@@ -116,7 +116,7 @@ void tst_qqmlvaluetypeproviders::cppIntegration()
     QVERIFY(!component.isError());
     QVERIFY(component.errors().isEmpty());
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     // ensure accessing / comparing / assigning cpp-defined props
     // and qml-defined props works in QML.
@@ -156,7 +156,7 @@ void tst_qqmlvaluetypeproviders::jsObjectConversion()
     QVERIFY(!component.isError());
     QVERIFY(component.errors().isEmpty());
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QVERIFY(object->property("qtquickTypeSuccess").toBool());
     delete object;
 }
@@ -168,7 +168,7 @@ void tst_qqmlvaluetypeproviders::invokableFunctions()
     QVERIFY(!component.isError());
     QVERIFY(component.errors().isEmpty());
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QVERIFY(object->property("complete").toBool());
     QVERIFY(object->property("success").toBool());
     delete object;
@@ -233,7 +233,7 @@ public:
         if (type == qMetaTypeId<TestValue>())
             return &TestValueType::staticMetaObject;
 
-        return 0;
+        return nullptr;
     }
 
 };
@@ -284,7 +284,7 @@ void tst_qqmlvaluetypeproviders::userType()
 
     QQmlComponent component(&e, testFileUrl("userType.qml"));
     QScopedPointer<QObject> obj(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->property("success").toBool(), true);
 }
 
@@ -295,7 +295,7 @@ void tst_qqmlvaluetypeproviders::changedSignal()
     QVERIFY(!component.isError());
     QVERIFY(component.errors().isEmpty());
     QScopedPointer<QObject> object(component.create());
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QVERIFY(object->property("complete").toBool());
     QVERIFY(object->property("success").toBool());
 }

@@ -56,9 +56,10 @@ class QQuickWindow;
 
 class Q_QUICK_EXPORT QQuickTextureFactory : public QObject
 {
+    Q_OBJECT
 public:
     QQuickTextureFactory();
-    virtual ~QQuickTextureFactory();
+    ~QQuickTextureFactory() override;
 
     virtual QSGTexture *createTexture(QQuickWindow *window) const = 0;
     virtual QSize textureSize() const = 0;
@@ -68,12 +69,14 @@ public:
     static QQuickTextureFactory *textureFactoryForImage(const QImage &image);
 };
 
+class QQuickImageResponsePrivate;
+
 class Q_QUICK_EXPORT QQuickImageResponse : public QObject
 {
 Q_OBJECT
 public:
     QQuickImageResponse();
-    virtual ~QQuickImageResponse();
+    ~QQuickImageResponse() override;
 
     virtual QQuickTextureFactory *textureFactory() const = 0;
     virtual QString errorString() const;
@@ -83,6 +86,10 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void finished();
+
+private:
+    Q_DECLARE_PRIVATE(QQuickImageResponse)
+    Q_PRIVATE_SLOT(d_func(), void _q_finished())
 };
 
 class Q_QUICK_EXPORT QQuickImageProvider : public QQmlImageProviderBase
@@ -90,7 +97,7 @@ class Q_QUICK_EXPORT QQuickImageProvider : public QQmlImageProviderBase
     friend class QQuickImageProviderWithOptions; // ### Qt 6 Remove
 public:
     QQuickImageProvider(ImageType type, Flags flags = Flags());
-    virtual ~QQuickImageProvider();
+    ~QQuickImageProvider() override;
 
     ImageType imageType() const override;
     Flags flags() const override;
@@ -113,7 +120,7 @@ class Q_QUICK_EXPORT QQuickAsyncImageProvider : public QQuickImageProvider
 {
 public:
     QQuickAsyncImageProvider();
-    virtual ~QQuickAsyncImageProvider();
+    ~QQuickAsyncImageProvider() override;
 
 #if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
     virtual QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize, const QQuickImageProviderOptions &options) = 0;

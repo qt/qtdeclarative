@@ -1,7 +1,7 @@
 import QtQuick 2.0
 
-import com.nokia.JsModule 1.0
-import com.nokia.JsModule 1.0 as RenamedModule
+import com.qt.JsModule 1.0
+import com.qt.JsModule 1.0 as RenamedModule
 import "testJsModuleImport.js" as TestJsModuleImport
 
 QtObject {

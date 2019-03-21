@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 QSGNodeUpdater::QSGNodeUpdater()
     : m_combined_matrix_stack(64)
     , m_opacity_stack(64)
-    , m_current_clip(0)
+    , m_current_clip(nullptr)
     , m_force_update(0)
 {
     m_opacity_stack.add(1);
@@ -60,7 +60,7 @@ QSGNodeUpdater::~QSGNodeUpdater()
 
 void QSGNodeUpdater::updateStates(QSGNode *n)
 {
-    m_current_clip = 0;
+    m_current_clip = nullptr;
     m_force_update = 0;
 
     Q_ASSERT(m_opacity_stack.size() == 1); // The one we added in the constructr...
@@ -82,7 +82,7 @@ void QSGNodeUpdater::updateStates(QSGNode *n)
 
 bool QSGNodeUpdater::isNodeBlocked(QSGNode *node, QSGNode *root) const
 {
-    while (node != root && node != 0) {
+    while (node != root && node != nullptr) {
         if (node->isSubtreeBlocked())
             return true;
         node = node->parent();

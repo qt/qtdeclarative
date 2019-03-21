@@ -46,6 +46,7 @@ private slots:
     void initTestCase();
     void basicLoading();
     void testNonResolvedPath();
+    void application_data();
     void application();
     void applicationProperties();
     void removeObjectsWhenDestroyed();
@@ -111,35 +112,56 @@ void tst_qqmlapplicationengine::testNonResolvedPath()
     }
 }
 
+void tst_qqmlapplicationengine::application_data()
+{
+    QTest::addColumn<QByteArray>("qmlFile");
+    QTest::addColumn<QByteArray>("expectedStdErr");
+
+    QTest::newRow("delayed quit") << QByteArray("delayedQuit.qml")
+                                  << QByteArray("qml: Start: delayedQuit.qml\nqml: End\n");
+    QTest::newRow("delayed exit") << QByteArray("delayedExit.qml")
+                                  << QByteArray("qml: Start: delayedExit.qml\nqml: End\n");
+    QTest::newRow("immediate quit") << QByteArray("immediateQuit.qml")
+                                    << QByteArray("qml: End: immediateQuit.qml\n");
+    QTest::newRow("immediate exit") << QByteArray("immediateExit.qml")
+                                    << QByteArray("qml: End: immediateExit.qml\n");
+}
+
 void tst_qqmlapplicationengine::application()
 {
     /* This test batches together some tests about running an external application
        written with QQmlApplicationEngine. The application tests the following functionality
        which is easier to do by watching a separate process:
-       -Loads relative paths from the working directory
-       -quits when quit is called
-       -emits aboutToQuit after quit is called
-       -has access to application command line arguments
+       - Loads relative paths from the working directory
+       - Quits when quit is called
+       - Exits when exit is called
+       - Emits aboutToQuit after quit is called
+       - Has access to application command line arguments
 
        Note that checking the output means that on builds with extra debugging, this might fail with a false positive.
        Also the testapp is automatically built and installed in shadow builds, so it does NOT use testData
    */
+
+    QFETCH(QByteArray, qmlFile);
+    QFETCH(QByteArray, expectedStdErr);
+
 #if QT_CONFIG(process)
     QDir::setCurrent(buildDir);
     QProcess *testProcess = new QProcess(this);
     QStringList args;
-    args << QLatin1String("testData");
+    args << qmlFile; // QML file passed as an argument is going to be run by testapp.
     testProcess->start(QLatin1String("testapp/testapp"), args);
     QVERIFY(testProcess->waitForFinished(5000));
     QCOMPARE(testProcess->exitCode(), 0);
-    QByteArray test_stdout = testProcess->readAllStandardOutput();
-    QByteArray test_stderr = testProcess->readAllStandardError();
-    QByteArray test_stderr_target("qml: Start: testData\nqml: End\n");
+    QByteArray testStdOut = testProcess->readAllStandardOutput();
+    QByteArray testStdErr = testProcess->readAllStandardError();
 #ifdef Q_OS_WIN
-    test_stderr_target.replace('\n', QByteArray("\r\n"));
+    expectedStdErr.replace('\n', QByteArray("\r\n"));
 #endif
-    QCOMPARE(test_stdout, QByteArray(""));
-    QVERIFY(QString(test_stderr).endsWith(QString(test_stderr_target)));
+    QCOMPARE(testStdOut, QByteArray(""));
+    QVERIFY2(QString(testStdErr).endsWith(QString(expectedStdErr)),
+             QByteArray("\nExpected ending:\n") + expectedStdErr
+             + QByteArray("\nActual output:\n") + testStdErr);
     delete testProcess;
     QDir::setCurrent(srcDir);
 #else // process

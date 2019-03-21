@@ -53,25 +53,30 @@
 #include "qv4global_p.h"
 
 #include <QHash>
-#include <private/qqmljsmemorypool_p.h>
-#include <private/qv4identifier_p.h>
+#include <private/qv4propertykey_p.h>
+#include <private/qv4heap_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct String;
-struct Object;
-struct Identifier;
 struct VTable;
 struct MarkStack;
+
+struct InternalClassEntry {
+    uint index;
+    uint setterIndex;
+    PropertyAttributes attributes;
+    bool isValid() const { return !attributes.isEmpty(); }
+};
 
 struct PropertyHashData;
 struct PropertyHash
 {
     struct Entry {
-        const Identifier *identifier;
+        PropertyKey identifier;
         uint index;
+        uint setterIndex;
     };
 
     PropertyHashData *d;
@@ -79,12 +84,12 @@ struct PropertyHash
     inline PropertyHash();
     inline PropertyHash(const PropertyHash &other);
     inline ~PropertyHash();
+    PropertyHash &operator=(const PropertyHash &other);
 
     void addEntry(const Entry &entry, int classSize);
-    uint lookup(const Identifier *identifier) const;
-
-private:
-    PropertyHash &operator=(const PropertyHash &other);
+    Entry *lookup(PropertyKey identifier) const;
+    int removeIdentifier(PropertyKey identifier, int classSize);
+    void detach(bool grow, int classSize);
 };
 
 struct PropertyHashData
@@ -118,40 +123,121 @@ inline PropertyHash::~PropertyHash()
         delete d;
 }
 
-inline uint PropertyHash::lookup(const Identifier *identifier) const
+inline PropertyHash &PropertyHash::operator=(const PropertyHash &other)
+{
+    ++other.d->refCount;
+    if (!--d->refCount)
+        delete d;
+    d = other.d;
+    return *this;
+}
+
+
+
+inline PropertyHash::Entry *PropertyHash::lookup(PropertyKey identifier) const
 {
     Q_ASSERT(d->entries);
 
-    uint idx = identifier->hashValue % d->alloc;
+    uint idx = identifier.id() % d->alloc;
     while (1) {
         if (d->entries[idx].identifier == identifier)
-            return d->entries[idx].index;
-        if (!d->entries[idx].identifier)
-            return UINT_MAX;
+            return d->entries + idx;
+        if (!d->entries[idx].identifier.isValid())
+            return nullptr;
         ++idx;
         idx %= d->alloc;
     }
 }
 
+template<typename T>
+struct SharedInternalClassDataPrivate {
+    SharedInternalClassDataPrivate(ExecutionEngine *)
+        : refcount(1),
+          m_alloc(0),
+          m_size(0),
+          data(nullptr)
+    { }
+    SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate &other)
+        : refcount(1),
+          m_alloc(other.m_alloc),
+          m_size(other.m_size)
+    {
+        if (m_alloc) {
+            data = new T[m_alloc];
+            memcpy(data, other.data, m_size*sizeof(T));
+        }
+    }
+    SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate &other, uint pos, T value)
+        : refcount(1),
+          m_alloc(pos + 8),
+          m_size(pos + 1)
+    {
+        data = new T[m_alloc];
+        if (other.data)
+            memcpy(data, other.data, (m_size - 1)*sizeof(T));
+        data[pos] = value;
+    }
+    ~SharedInternalClassDataPrivate() { delete [] data; }
+
+
+    void grow() {
+        if (!m_alloc)
+            m_alloc = 4;
+        T *n = new T[m_alloc * 2];
+        if (data) {
+            memcpy(n, data, m_alloc*sizeof(T));
+            delete [] data;
+        }
+        data = n;
+        m_alloc *= 2;
+    }
+
+    uint alloc() const { return m_alloc; }
+    uint size() const { return m_size; }
+    void setSize(uint s) { m_size = s; }
+
+    T at(uint i) { Q_ASSERT(data && i < m_alloc); return data[i]; }
+    void set(uint i, T t) { Q_ASSERT(data && i < m_alloc); data[i] = t; }
+
+    void mark(MarkStack *) {}
+
+    int refcount = 1;
+private:
+    uint m_alloc;
+    uint m_size;
+    T *data;
+};
+
+template<>
+struct SharedInternalClassDataPrivate<PropertyKey> {
+    SharedInternalClassDataPrivate(ExecutionEngine *e) : refcount(1), engine(e), data(nullptr) {}
+    SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate &other);
+    SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate &other, uint pos, PropertyKey value);
+    ~SharedInternalClassDataPrivate() {}
+
+    void grow();
+    uint alloc() const;
+    uint size() const;
+    void setSize(uint s);
+
+    PropertyKey at(uint i);
+    void set(uint i, PropertyKey t);
+
+    void mark(MarkStack *s);
+
+    int refcount = 1;
+private:
+    ExecutionEngine *engine;
+    Heap::MemberData *data;
+};
+
 template <typename T>
 struct SharedInternalClassData {
-    struct Private {
-        Private(int alloc)
-            : refcount(1),
-              alloc(alloc),
-              size(0)
-        { data = new T  [alloc]; }
-        ~Private() { delete [] data; }
-
-        int refcount;
-        uint alloc;
-        uint size;
-        T *data;
-    };
+    using Private = SharedInternalClassDataPrivate<T>;
     Private *d;
 
-    inline SharedInternalClassData() {
-        d = new Private(8);
+    inline SharedInternalClassData(ExecutionEngine *e) {
+        d = new Private(e);
     }
 
     inline SharedInternalClassData(const SharedInternalClassData &other)
@@ -163,76 +249,72 @@ struct SharedInternalClassData {
         if (!--d->refcount)
             delete d;
     }
+    SharedInternalClassData &operator=(const SharedInternalClassData &other) {
+        ++other.d->refcount;
+        if (!--d->refcount)
+            delete d;
+        d = other.d;
+        return *this;
+    }
 
     void add(uint pos, T value) {
-        if (pos < d->size) {
+        if (pos < d->size()) {
             Q_ASSERT(d->refcount > 1);
             // need to detach
-            Private *dd = new Private(pos + 8);
-            memcpy(dd->data, d->data, pos*sizeof(T));
-            dd->size = pos + 1;
-            dd->data[pos] = value;
+            Private *dd = new Private(*d, pos, value);
             if (!--d->refcount)
                 delete d;
             d = dd;
             return;
         }
-        Q_ASSERT(pos == d->size);
-        if (pos == d->alloc) {
-            T *n = new T[d->alloc * 2];
-            memcpy(n, d->data, d->alloc*sizeof(T));
-            delete [] d->data;
-            d->data = n;
-            d->alloc *= 2;
-        }
-        d->data[pos] = value;
-        ++d->size;
+        Q_ASSERT(pos == d->size());
+        if (pos == d->alloc())
+            d->grow();
+        d->setSize(d->size() + 1);
+        d->set(pos, value);
     }
 
     void set(uint pos, T value) {
-        Q_ASSERT(pos < d->size);
+        Q_ASSERT(pos < d->size());
         if (d->refcount > 1) {
             // need to detach
-            Private *dd = new Private(d->alloc);
-            memcpy(dd->data, d->data, d->size*sizeof(T));
-            dd->size = d->size;
+            Private *dd = new Private(*d);
             if (!--d->refcount)
                 delete d;
             d = dd;
         }
-        d->data[pos] = value;
+        d->set(pos, value);
     }
 
-    T *constData() const {
-        return d->data;
-    }
     T at(uint i) const {
-        Q_ASSERT(i < d->size);
-        return d->data[i];
+        Q_ASSERT(i < d->size());
+        return d->at(i);
     }
     T operator[] (uint i) {
-        Q_ASSERT(i < d->size);
-        return d->data[i];
+        Q_ASSERT(i < d->size());
+        return d->at(i);
     }
 
-private:
-    SharedInternalClassData &operator=(const SharedInternalClassData &other);
+    void mark(MarkStack *s) { d->mark(s); }
 };
 
 struct InternalClassTransition
 {
     union {
-        Identifier *id;
+        PropertyKey id;
         const VTable *vtable;
         Heap::Object *prototype;
     };
-    InternalClass *lookup;
+    Heap::InternalClass *lookup;
     int flags;
     enum {
         // range 0-0xff is reserved for attribute changes
         NotExtensible = 0x100,
         VTableChange = 0x200,
-        PrototypeChange = 0x201
+        PrototypeChange = 0x201,
+        ProtoClass = 0x202,
+        Sealed = 0x203,
+        Frozen = 0x204
     };
 
     bool operator==(const InternalClassTransition &other) const
@@ -242,26 +324,137 @@ struct InternalClassTransition
     { return id < other.id || (id == other.id && flags < other.flags); }
 };
 
-struct InternalClass : public QQmlJS::Managed {
+namespace Heap {
+
+struct InternalClass : Base {
     ExecutionEngine *engine;
     const VTable *vtable;
+    quintptr protoId; // unique across the engine, gets changed whenever the proto chain changes
     Heap::Object *prototype;
+    InternalClass *parent;
 
     PropertyHash propertyTable; // id to valueIndex
-    SharedInternalClassData<Identifier *> nameMap;
+    SharedInternalClassData<PropertyKey> nameMap;
     SharedInternalClassData<PropertyAttributes> propertyData;
 
     typedef InternalClassTransition Transition;
     std::vector<Transition> transitions;
     InternalClassTransition &lookupOrInsertTransition(const InternalClassTransition &t);
 
-    InternalClass *m_sealed;
-    InternalClass *m_frozen;
-
     uint size;
     bool extensible;
+    bool isSealed;
+    bool isFrozen;
+    bool isUsedAsProto;
 
+    void init(ExecutionEngine *engine);
+    void init(InternalClass *other);
+    void destroy();
+
+    Q_QML_PRIVATE_EXPORT QString keyAt(uint index) const;
     Q_REQUIRED_RESULT InternalClass *nonExtensible();
+
+    static void addMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, InternalClassEntry *entry);
+    Q_REQUIRED_RESULT InternalClass *addMember(PropertyKey identifier, PropertyAttributes data, InternalClassEntry *entry = nullptr);
+    Q_REQUIRED_RESULT InternalClass *changeMember(PropertyKey identifier, PropertyAttributes data, InternalClassEntry *entry = nullptr);
+    static void changeMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, InternalClassEntry *entry = nullptr);
+    static void removeMember(QV4::Object *object, PropertyKey identifier);
+    PropertyHash::Entry *findEntry(const PropertyKey id)
+    {
+        Q_ASSERT(id.isStringOrSymbol());
+
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size)
+            return e;
+
+        return nullptr;
+    }
+
+    InternalClassEntry find(const PropertyKey id)
+    {
+        Q_ASSERT(id.isStringOrSymbol());
+
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size) {
+            PropertyAttributes a = propertyData.at(e->index);
+            if (!a.isEmpty())
+                return { e->index, e->setterIndex, a };
+        }
+
+        return { UINT_MAX, UINT_MAX, Attr_Invalid };
+    }
+
+    struct IndexAndAttribute {
+        uint index;
+        PropertyAttributes attrs;
+        bool isValid() const { return index != UINT_MAX; }
+    };
+
+    IndexAndAttribute findValueOrGetter(const PropertyKey id)
+    {
+        Q_ASSERT(id.isStringOrSymbol());
+
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size) {
+            PropertyAttributes a = propertyData.at(e->index);
+            if (!a.isEmpty())
+                return { e->index, a };
+        }
+
+        return { UINT_MAX, Attr_Invalid };
+    }
+
+    IndexAndAttribute findValueOrSetter(const PropertyKey id)
+    {
+        Q_ASSERT(id.isStringOrSymbol());
+
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size) {
+            PropertyAttributes a = propertyData.at(e->index);
+            if (!a.isEmpty()) {
+                if (a.isAccessor()) {
+                    Q_ASSERT(e->setterIndex != UINT_MAX);
+                    return { e->setterIndex, a };
+                }
+                return { e->index, a };
+            }
+        }
+
+        return { UINT_MAX, Attr_Invalid };
+    }
+
+    uint indexOfValueOrGetter(const PropertyKey id)
+    {
+        Q_ASSERT(id.isStringOrSymbol());
+
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size) {
+            Q_ASSERT(!propertyData.at(e->index).isEmpty());
+            return e->index;
+        }
+
+        return UINT_MAX;
+    }
+
+    bool verifyIndex(const PropertyKey id, uint index)
+    {
+        Q_ASSERT(id.isStringOrSymbol());
+
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size) {
+            Q_ASSERT(!propertyData.at(e->index).isEmpty());
+            return e->index == index;
+        }
+
+        return false;
+    }
+
+    Q_REQUIRED_RESULT InternalClass *sealed();
+    Q_REQUIRED_RESULT InternalClass *frozen();
+    Q_REQUIRED_RESULT InternalClass *propertiesFrozen() const;
+
+    Q_REQUIRED_RESULT InternalClass *asProtoClass();
+
     Q_REQUIRED_RESULT InternalClass *changeVTable(const VTable *vt) {
         if (vtable == vt)
             return this;
@@ -273,41 +466,26 @@ struct InternalClass : public QQmlJS::Managed {
         return changePrototypeImpl(proto);
     }
 
-    static void addMember(Object *object, String *string, PropertyAttributes data, uint *index);
-    Q_REQUIRED_RESULT InternalClass *addMember(String *string, PropertyAttributes data, uint *index = 0);
-    Q_REQUIRED_RESULT InternalClass *addMember(Identifier *identifier, PropertyAttributes data, uint *index = 0);
-    Q_REQUIRED_RESULT InternalClass *changeMember(Identifier *identifier, PropertyAttributes data, uint *index = 0);
-    static void changeMember(Object *object, String *string, PropertyAttributes data, uint *index = 0);
-    static void removeMember(Object *object, Identifier *id);
-    uint find(const String *string);
-    uint find(const Identifier *id)
-    {
-        uint index = propertyTable.lookup(id);
-        if (index < size)
-            return index;
+    void updateProtoUsage(Heap::Object *o);
 
-        return UINT_MAX;
-    }
-
-    Q_REQUIRED_RESULT InternalClass *sealed();
-    Q_REQUIRED_RESULT InternalClass *frozen();
-    Q_REQUIRED_RESULT InternalClass *propertiesFrozen() const;
-
-    void destroy();
+    static void markObjects(Heap::Base *ic, MarkStack *stack);
 
 private:
     Q_QML_EXPORT InternalClass *changeVTableImpl(const VTable *vt);
     Q_QML_EXPORT InternalClass *changePrototypeImpl(Heap::Object *proto);
-    InternalClass *addMemberImpl(Identifier *identifier, PropertyAttributes data, uint *index);
+    InternalClass *addMemberImpl(PropertyKey identifier, PropertyAttributes data, InternalClassEntry *entry);
+
+    void removeChildEntry(InternalClass *child);
     friend struct ExecutionEngine;
-    InternalClass(ExecutionEngine *engine);
-    InternalClass(const InternalClass &other);
 };
 
-struct InternalClassPool : public QQmlJS::MemoryPool
+inline
+void Base::markObjects(Base *b, MarkStack *stack)
 {
-    void markObjects(MarkStack *markStack);
-};
+    b->internalClass->mark(stack);
+}
+
+}
 
 }
 

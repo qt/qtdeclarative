@@ -53,9 +53,10 @@
 
 #include <QtCore/qstring.h>
 #include <private/qtqmlglobal_p.h>
+#if QT_CONFIG(qml_debug)
 #include <private/qqmldebugservice_p.h>
+#endif
 #include <private/qqmldebugstatesdelegate_p.h>
-#include <private/qqmlabstractprofileradapter_p.h>
 #include <private/qqmlboundsignal_p.h>
 
 #include <limits>
@@ -65,7 +66,7 @@ QT_BEGIN_NAMESPACE
 class QWindow;
 class QQuickWindow;
 
-#ifdef QT_NO_QML_DEBUGGER
+#if !QT_CONFIG(qml_debug)
 
 class QV4DebugService
 {
@@ -116,10 +117,11 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QV4DebugService(float version, QObject *parent = 0) :
+    QV4DebugService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 };
 
+class QQmlAbstractProfilerAdapter;
 class Q_QML_PRIVATE_EXPORT QQmlProfilerService : public QQmlDebugService
 {
     Q_OBJECT
@@ -138,7 +140,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QQmlProfilerService(float version, QObject *parent = 0) :
+    QQmlProfilerService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 };
 
@@ -154,7 +156,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QQmlEngineDebugService(float version, QObject *parent = 0) :
+    QQmlEngineDebugService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 
     QQmlBoundSignal *nextSignal(QQmlBoundSignal *prev) { return prev->m_nextSignal; }
@@ -173,7 +175,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QQmlInspectorService(float version, QObject *parent = 0) :
+    QQmlInspectorService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 };
 
@@ -188,7 +190,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QDebugMessageService(float version, QObject *parent = 0) :
+    QDebugMessageService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 };
 
@@ -201,7 +203,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QQmlEngineControlService(float version, QObject *parent = 0) :
+    QQmlEngineControlService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 
 };
@@ -215,7 +217,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QQmlNativeDebugService(float version, QObject *parent = 0)
+    QQmlNativeDebugService(float version, QObject *parent = nullptr)
         : QQmlDebugService(s_key, version,  parent) {}
 };
 

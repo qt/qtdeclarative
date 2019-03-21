@@ -30,6 +30,7 @@ QtObject {
         MyQmlObject { id: testObj22; objectName: "test22"; qjsvalue: null },
         MyQmlObject { id: testObj1Bound; objectName: "test1Bound"; qjsvalue: testObj1.qjsvalue + 4 },  // 1 + 4 + 4 = 9
         MyQmlObject { id: testObj20Bound; objectName: "test20Bound"; qjsvalue: testObj20.qjsvalue(testObj1Bound.qjsvalue) }, // 9 * 3 = 27
+        MyQmlObject { id: testObj23; objectName: "test23"; qjsvalue: QtObject { objectName: "blah" } },
         QtObject {
             id: varProperties
             objectName: "varProperties"

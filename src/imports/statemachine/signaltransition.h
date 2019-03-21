@@ -59,13 +59,13 @@ class SignalTransition : public QSignalTransition, public QQmlParserStatus
     Q_PROPERTY(QQmlScriptString guard READ guard WRITE setGuard NOTIFY guardChanged)
 
 public:
-    explicit SignalTransition(QState *parent = Q_NULLPTR);
+    explicit SignalTransition(QState *parent = nullptr);
 
     QQmlScriptString guard() const;
     void setGuard(const QQmlScriptString &guard);
 
-    bool eventTest(QEvent *event) Q_DECL_OVERRIDE;
-    void onTransition(QEvent *event) Q_DECL_OVERRIDE;
+    bool eventTest(QEvent *event) override;
+    void onTransition(QEvent *event) override;
 
     const QJSValue &signal();
     void setSignal(const QJSValue &signal);
@@ -81,8 +81,8 @@ Q_SIGNALS:
     void qmlSignalChanged();
 
 private:
-    void classBegin() Q_DECL_OVERRIDE { m_complete = false; }
-    void componentComplete() Q_DECL_OVERRIDE { m_complete = true; connectTriggered(); }
+    void classBegin() override { m_complete = false; }
+    void componentComplete() override { m_complete = true; connectTriggered(); }
     void connectTriggered();
 
     friend class SignalTransitionParser;
@@ -97,8 +97,8 @@ private:
 class SignalTransitionParser : public QQmlCustomParser
 {
 public:
-    void verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props) Q_DECL_OVERRIDE;
-    void applyBindings(QObject *object, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) Q_DECL_OVERRIDE;
+    void verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &props) override;
+    void applyBindings(QObject *object, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
 };
 
 QT_END_NAMESPACE

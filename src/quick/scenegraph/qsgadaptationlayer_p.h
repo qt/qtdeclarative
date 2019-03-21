@@ -62,8 +62,8 @@
 #include <QtCore/qurl.h>
 #include <private/qfontengine_p.h>
 #include <QtGui/private/qdatabuffer_p.h>
-#include <private/qopenglcontext_p.h>
 #include <private/qdistancefield_p.h>
+#include <private/qintrusivelist_p.h>
 
 // ### remove
 #include <QtQuick/private/qquicktext_p.h>
@@ -74,7 +74,6 @@ class QSGNode;
 class QImage;
 class TextureReference;
 class QSGDistanceFieldGlyphNode;
-class QOpenGLContext;
 class QSGInternalImageNode;
 class QSGPainterNode;
 class QSGInternalRectangleNode;
@@ -82,6 +81,7 @@ class QSGGlyphNode;
 class QSGRootNode;
 class QSGSpriteNode;
 class QSGRenderNode;
+class QSGRenderContext;
 
 class Q_QUICK_PRIVATE_EXPORT QSGNodeVisitorEx
 {
@@ -136,6 +136,7 @@ public:
     virtual void setPenColor(const QColor &color) = 0;
     virtual void setPenWidth(qreal width) = 0;
     virtual void setGradientStops(const QGradientStops &stops) = 0;
+    virtual void setGradientVertical(bool vertical) = 0;
     virtual void setRadius(qreal radius) = 0;
     virtual void setAntialiasing(bool antialiasing) { Q_UNUSED(antialiasing) }
     virtual void setAligned(bool aligned) = 0;
@@ -266,19 +267,19 @@ public:
             Texture // for APIs with separate texture and sampler objects
         };
         struct InputParameter {
-            InputParameter() : semanticIndex(0) { }
+            InputParameter() {}
             // Semantics use the D3D keys (POSITION, TEXCOORD).
             // Attribute name based APIs can map based on pre-defined names.
             QByteArray semanticName;
-            int semanticIndex;
+            int semanticIndex = 0;
         };
         struct Variable {
-            Variable() : type(Constant), offset(0), size(0), bindPoint(0) { }
-            VariableType type;
+            Variable() {}
+            VariableType type = Constant;
             QByteArray name;
-            uint offset; // for cbuffer members
-            uint size; // for cbuffer members
-            int bindPoint; // for textures and samplers; for register-based APIs
+            uint offset = 0; // for cbuffer members
+            uint size = 0; // for cbuffer members
+            int bindPoint = 0; // for textures and samplers; for register-based APIs
         };
 
         QByteArray blob; // source or bytecode
@@ -329,8 +330,8 @@ public:
     };
 
     struct ShaderData {
-        ShaderData() : hasShaderCode(false) { }
-        bool hasShaderCode;
+        ShaderData() {}
+        bool hasShaderCode = false;
         QSGGuiThreadShaderEffectManager::ShaderInfo shaderInfo;
         QVector<VariableData> varData;
     };
@@ -373,7 +374,7 @@ public:
         HighQualitySubPixelAntialiasing
     };
 
-    QSGGlyphNode() : m_ownerElement(0) {}
+    QSGGlyphNode() {}
 
     virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) = 0;
     virtual void setColor(const QColor &color) = 0;
@@ -394,7 +395,7 @@ public:
     void accept(QSGNodeVisitorEx *visitor) override { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 protected:
     QRectF m_bounding_rect;
-    QQuickItem *m_ownerElement;
+    QQuickItem *m_ownerElement = nullptr;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldGlyphConsumer
@@ -403,12 +404,14 @@ public:
     virtual ~QSGDistanceFieldGlyphConsumer() {}
 
     virtual void invalidateGlyphs(const QVector<quint32> &glyphs) = 0;
+    QIntrusiveListNode node;
 };
+typedef QIntrusiveList<QSGDistanceFieldGlyphConsumer, &QSGDistanceFieldGlyphConsumer::node> QSGDistanceFieldGlyphConsumerList;
 
 class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldGlyphCache
 {
 public:
-    QSGDistanceFieldGlyphCache(QOpenGLContext *c, const QRawFont &font);
+    QSGDistanceFieldGlyphCache(const QRawFont &font);
     virtual ~QSGDistanceFieldGlyphCache();
 
     struct Metrics {
@@ -421,24 +424,24 @@ public:
     };
 
     struct TexCoord {
-        qreal x;
-        qreal y;
-        qreal width;
-        qreal height;
-        qreal xMargin;
-        qreal yMargin;
+        qreal x = 0;
+        qreal y = 0;
+        qreal width = -1;
+        qreal height = -1;
+        qreal xMargin = 0;
+        qreal yMargin = 0;
 
-        TexCoord() : x(0), y(0), width(-1), height(-1), xMargin(0), yMargin(0) { }
+        TexCoord() {}
 
         bool isNull() const { return width <= 0 || height <= 0; }
         bool isValid() const { return width >= 0 && height >= 0; }
     };
 
     struct Texture {
-        uint textureId;
+        uint textureId = 0;
         QSize size;
 
-        Texture() : textureId(0), size(QSize()) { }
+        Texture() : size(QSize()) { }
         bool operator == (const Texture &other) const { return textureId == other.textureId; }
     };
 
@@ -464,8 +467,8 @@ public:
 
     void update();
 
-    void registerGlyphNode(QSGDistanceFieldGlyphConsumer *node) { m_registeredNodes.append(node); }
-    void unregisterGlyphNode(QSGDistanceFieldGlyphConsumer *node) { m_registeredNodes.removeOne(node); }
+    void registerGlyphNode(QSGDistanceFieldGlyphConsumer *node) { m_registeredNodes.insert(node); }
+    void unregisterGlyphNode(QSGDistanceFieldGlyphConsumer *node) { m_registeredNodes.remove(node); }
 
     virtual void registerOwnerElement(QQuickItem *ownerElement);
     virtual void unregisterOwnerElement(QQuickItem *ownerElement);
@@ -478,13 +481,13 @@ protected:
     };
 
     struct GlyphData {
-        Texture *texture;
+        Texture *texture = nullptr;
         TexCoord texCoord;
         QRectF boundingRect;
         QPainterPath path;
-        quint32 ref;
+        quint32 ref = 0;
 
-        GlyphData() : texture(0), ref(0) { }
+        GlyphData() {}
     };
 
     virtual void requestGlyphs(const QSet<glyph_t> &glyphs) = 0;
@@ -503,25 +506,24 @@ protected:
     uint textureIdForGlyph(glyph_t glyph) const;
 
     GlyphData &glyphData(glyph_t glyph);
+    GlyphData &emptyData(glyph_t glyph);
 
 #if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
     void saveTexture(GLuint textureId, int width, int height) const;
 #endif
 
-    inline bool isCoreProfile() const { return m_coreProfile; }
+    bool m_doubleGlyphResolution;
+
+protected:
+    QRawFont m_referenceFont;
 
 private:
-    QRawFont m_referenceFont;
     int m_glyphCount;
-
-    bool m_doubleGlyphResolution;
-    bool m_coreProfile;
-
     QList<Texture> m_textures;
     QHash<glyph_t, GlyphData> m_glyphsData;
     QDataBuffer<glyph_t> m_pendingGlyphs;
     QSet<glyph_t> m_populatingGlyphs;
-    QLinkedList<QSGDistanceFieldGlyphConsumer*> m_registeredNodes;
+    QSGDistanceFieldGlyphConsumerList m_registeredNodes;
 
     static Texture s_emptyTexture;
 };

@@ -2077,7 +2077,7 @@ void QSGD3D12EnginePrivate::queueDraw(const QSGD3D12Engine::DrawParams &params)
             ? buffers[indexBufIdx].d[currentPFrameIndex].buffer.Get() : nullptr;
 
     if (!skip && params.mode != tframeData.drawingMode) {
-        D3D_PRIMITIVE_TOPOLOGY topology;
+        D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
         switch (params.mode) {
         case QSGGeometry::DrawPoints:
             topology = D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
@@ -3046,7 +3046,7 @@ void QSGD3D12EnginePrivate::useRenderTargetAsTexture(uint id)
     }
 
     tframeData.activeTextures[tframeData.activeTextureCount++] =
-            TransientFrameData::ActiveTexture::ActiveTexture(TransientFrameData::ActiveTexture::TypeRenderTarget, id);
+            TransientFrameData::ActiveTexture(TransientFrameData::ActiveTexture::TypeRenderTarget, id);
 }
 
 QImage QSGD3D12EnginePrivate::executeAndWaitReadbackRenderTarget(uint id)

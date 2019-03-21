@@ -73,7 +73,7 @@ private:
     friend class QQmlThreadNotifierProxyObject;
 
     static void emitNotify(QQmlNotifierEndpoint *, void **a);
-    QQmlNotifierEndpoint *endpoints;
+    QQmlNotifierEndpoint *endpoints = nullptr;
 };
 
 class QQmlEngine;
@@ -100,14 +100,23 @@ public:
     inline bool isConnected(QObject *source, int sourceSignal) const;
     inline bool isConnected(QQmlNotifier *) const;
 
-    void connect(QObject *source, int sourceSignal, QQmlEngine *engine);
+    void connect(QObject *source, int sourceSignal, QQmlEngine *engine, bool doNotify = true);
     inline void connect(QQmlNotifier *);
     inline void disconnect();
 
     inline bool isNotifying() const;
+    inline void startNotifying(qintptr *originalSenderPtr);
+    inline void stopNotifying(qintptr *originalSenderPtr);
+
     inline void cancelNotify();
 
     inline int signalIndex() const { return sourceSignal; }
+
+    inline qintptr sender() const;
+    inline void setSender(qintptr sender);
+
+    inline QObject *senderAsObject() const;
+    inline QQmlNotifier *senderAsNotifier() const;
 
 private:
     friend class QQmlData;
@@ -117,17 +126,15 @@ private:
     // endpoint is connected to.  While the endpoint is notifying, the
     // senderPtr points to another qintptr that contains this value.
     qintptr senderPtr;
-    inline QObject *senderAsObject() const;
-    inline QQmlNotifier *senderAsNotifier() const;
 
     Callback callback:4;
+    int needsConnectNotify:1;
     // The index is in the range returned by QObjectPrivate::signalIndex().
     // This is different from QMetaMethod::methodIndex().
-    signed int sourceSignal:28;
+    signed int sourceSignal:27;
 };
 
 QQmlNotifier::QQmlNotifier()
-: endpoints(0)
 {
 }
 
@@ -137,25 +144,22 @@ QQmlNotifier::~QQmlNotifier()
     while (endpoint) {
         QQmlNotifierEndpoint *n = endpoint;
         endpoint = n->next;
-
-        if (n->isNotifying()) *((qintptr *)(n->senderPtr & ~0x1)) = 0;
-
-        n->next = 0;
-        n->prev = 0;
-        n->senderPtr = 0;
+        n->setSender(0x0);
+        n->next = nullptr;
+        n->prev = nullptr;
         n->sourceSignal = -1;
     }
-    endpoints = 0;
+    endpoints = nullptr;
 }
 
 void QQmlNotifier::notify()
 {
-    void *args[] = { 0 };
+    void *args[] = { nullptr };
     if (endpoints) emitNotify(endpoints, args);
 }
 
 QQmlNotifierEndpoint::QQmlNotifierEndpoint(Callback callback)
-: next(0), prev(0), senderPtr(0), callback(callback), sourceSignal(-1)
+: next(nullptr), prev(nullptr), senderPtr(0), callback(callback), needsConnectNotify(false), sourceSignal(-1)
 {
 }
 
@@ -166,7 +170,7 @@ QQmlNotifierEndpoint::~QQmlNotifierEndpoint()
 
 bool QQmlNotifierEndpoint::isConnected() const
 {
-    return prev != 0;
+    return prev != nullptr;
 }
 
 /*! \internal
@@ -192,7 +196,7 @@ void QQmlNotifierEndpoint::connect(QQmlNotifier *notifier)
     if (next) { next->prev = &next; }
     notifier->endpoints = this;
     prev = &notifier->endpoints;
-    senderPtr = qintptr(notifier);
+    setSender(qintptr(notifier));
 }
 
 void QQmlNotifierEndpoint::disconnect()
@@ -204,14 +208,15 @@ void QQmlNotifierEndpoint::disconnect()
 
     if (sourceSignal != -1) {
         QObject * const obj = senderAsObject();
+        Q_ASSERT(obj);
         QObjectPrivate * const priv = QObjectPrivate::get(obj);
-        priv->disconnectNotify(QMetaObjectPrivate::signal(obj->metaObject(), sourceSignal));
+        if (needsConnectNotify)
+            priv->disconnectNotify(QMetaObjectPrivate::signal(obj->metaObject(), sourceSignal));
     }
 
-    if (isNotifying()) *((qintptr *)(senderPtr & ~0x1)) = 0;
-    next = 0;
-    prev = 0;
-    senderPtr = 0;
+    setSender(0x0);
+    next = nullptr;
+    prev = nullptr;
     sourceSignal = -1;
 }
 
@@ -227,26 +232,60 @@ bool QQmlNotifierEndpoint::isNotifying() const
     return senderPtr & 0x1;
 }
 
+void QQmlNotifierEndpoint::startNotifying(qintptr *originalSenderPtr)
+{
+    Q_ASSERT(*originalSenderPtr == 0);
+    // Set the endpoint to notifying:
+    // - Save the original senderPtr,
+    *originalSenderPtr = senderPtr;
+    // - Take a pointer of it,
+    // - And assign that to the senderPtr, including a flag to signify "notifying".
+    senderPtr = qintptr(originalSenderPtr) | 0x1;
+}
+
+void QQmlNotifierEndpoint::stopNotifying(qintptr *originalSenderPtr)
+{
+    // End of notifying, restore values
+    Q_ASSERT((senderPtr & ~0x1) == qintptr(originalSenderPtr));
+    senderPtr = *originalSenderPtr;
+    *originalSenderPtr = 0;
+}
+
 /*!
 Cancel any notifies that are in progress.
 */
 void QQmlNotifierEndpoint::cancelNotify()
 {
     if (isNotifying()) {
-        qintptr sp = *((qintptr *)(senderPtr & ~0x1));
-        *((qintptr *)(senderPtr & ~0x1)) = 0;
-        senderPtr = sp;
+        auto *ptr = (qintptr *)(senderPtr & ~0x1);
+        Q_ASSERT(ptr);
+        senderPtr = *ptr;
+        *ptr = 0;
     }
+}
+
+qintptr QQmlNotifierEndpoint::sender() const
+{
+    return isNotifying() ? *(qintptr *)(senderPtr & ~0x1) : senderPtr;
+}
+
+void QQmlNotifierEndpoint::setSender(qintptr sender)
+{
+    // If we're just notifying, we write through to the originalSenderPtr
+    if (isNotifying())
+        *(qintptr *)(senderPtr & ~0x1) = sender;
+    else
+        senderPtr = sender;
 }
 
 QObject *QQmlNotifierEndpoint::senderAsObject() const
 {
-    return isNotifying()?((QObject *)(*((qintptr *)(senderPtr & ~0x1)))):((QObject *)senderPtr);
+    return (QObject *)(sender());
 }
 
 QQmlNotifier *QQmlNotifierEndpoint::senderAsNotifier() const
 {
-    return isNotifying()?((QQmlNotifier *)(*((qintptr *)(senderPtr & ~0x1)))):((QQmlNotifier *)senderPtr);
+    return (QQmlNotifier *)(sender());
 }
 
 QT_END_NAMESPACE

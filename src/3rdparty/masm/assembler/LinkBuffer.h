@@ -26,6 +26,8 @@
 #ifndef LinkBuffer_h
 #define LinkBuffer_h
 
+#include <Platform.h>
+
 #if ENABLE(ASSEMBLER)
 
 #define DUMP_LINK_STATISTICS 0
@@ -66,7 +68,7 @@ struct DefaultExecutableOffsetCalculator {
 //
 template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
 class LinkBufferBase {
-    WTF_MAKE_NONCOPYABLE(LinkBufferBase);
+    WTF_MAKE_NONCOPYABLE(LinkBufferBase)
     typedef MacroAssemblerCodeRef CodeRef;
     typedef MacroAssemblerCodePtr CodePtr;
     typedef typename MacroAssembler::Label Label;
@@ -209,7 +211,7 @@ public:
     // displaying disassembly.
     
     inline CodeRef finalizeCodeWithoutDisassembly();
-    inline CodeRef finalizeCodeWithDisassembly(const char* format, ...) WTF_ATTRIBUTE_PRINTF(2, 3);
+    inline CodeRef finalizeCodeWithDisassembly(const char *jitKind, const char* format, ...) WTF_ATTRIBUTE_PRINTF(3, 4);
 
     CodePtr trampolineAt(Label label)
     {
@@ -225,6 +227,8 @@ public:
     {
         return m_size;
     }
+
+    inline void makeExecutable();
 
 private:
     template <typename T> T applyOffset(T src)
@@ -263,9 +267,9 @@ protected:
 #endif
 };
 
-#define FINALIZE_CODE_IF(condition, linkBufferReference, dataLogFArgumentsForHeading)  \
+#define FINALIZE_CODE_IF(condition, linkBufferReference, jitKind, dataLogFArgumentsForHeading)  \
     (UNLIKELY((condition))                                              \
-     ? ((linkBufferReference).finalizeCodeWithDisassembly dataLogFArgumentsForHeading) \
+     ? ((linkBufferReference).finalizeCodeWithDisassembly (jitKind, dataLogFArgumentsForHeading)) \
      : (linkBufferReference).finalizeCodeWithoutDisassembly())
 
 // Use this to finalize code, like so:
@@ -284,11 +288,11 @@ protected:
 // Note that the dataLogFArgumentsForHeading are only evaluated when showDisassembly
 // is true, so you can hide expensive disassembly-only computations inside there.
 
-#define FINALIZE_CODE(linkBufferReference, dataLogFArgumentsForHeading)  \
-    FINALIZE_CODE_IF(Options::showDisassembly(), linkBufferReference, dataLogFArgumentsForHeading)
+#define FINALIZE_CODE(linkBufferReference, jitKind, dataLogFArgumentsForHeading)  \
+    FINALIZE_CODE_IF(Options::showDisassembly(), linkBufferReference, jitKind, dataLogFArgumentsForHeading)
 
-#define FINALIZE_DFG_CODE(linkBufferReference, dataLogFArgumentsForHeading)  \
-    FINALIZE_CODE_IF((Options::showDisassembly() || Options::showDFGDisassembly()), linkBufferReference, dataLogFArgumentsForHeading)
+#define FINALIZE_DFG_CODE(linkBufferReference, jitKind, dataLogFArgumentsForHeading)  \
+    FINALIZE_CODE_IF((Options::showDisassembly() || Options::showDFGDisassembly()), linkBufferReference, jitKind, dataLogFArgumentsForHeading)
 
 
 template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
@@ -300,13 +304,13 @@ inline typename LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::Code
 }
 
 template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
-inline typename LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::CodeRef LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::finalizeCodeWithDisassembly(const char* format, ...)
+inline typename LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::CodeRef LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::finalizeCodeWithDisassembly(const char *jitKind, const char* format, ...)
 {
     ASSERT(Options::showDisassembly() || Options::showDFGDisassembly());
 
     CodeRef result = finalizeCodeWithoutDisassembly();
 
-    dataLogF("Generated JIT code for ");
+    dataLogF("Generated %s code for ", jitKind);
     va_list argList;
     va_start(argList, format);
     WTF::dataLogFV(format, argList);
@@ -350,8 +354,13 @@ inline void LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::performF
 #endif
 
     ASSERT(m_size <= INT_MAX);
-    ExecutableAllocator::makeExecutable(code(), static_cast<int>(m_size));
     MacroAssembler::cacheFlush(code(), m_size);
+}
+
+template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
+inline void LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::makeExecutable()
+{
+    ExecutableAllocator::makeExecutable(code(), static_cast<int>(m_size));
 }
 
 template <typename MacroAssembler>
@@ -387,6 +396,7 @@ public:
     }
 
     inline void performFinalization();
+    inline void makeExecutable();
 
     inline void linkCode(void* ownerUID, JITCompilationEffort);
 
@@ -418,8 +428,13 @@ inline void BranchCompactingLinkBuffer<MacroAssembler>::performFinalization()
     this->m_completed = true;
 #endif
 
-    ExecutableAllocator::makeExecutable(code(), m_initialSize);
     MacroAssembler::cacheFlush(code(), m_size);
+}
+
+template <typename MacroAssembler>
+inline void BranchCompactingLinkBuffer<MacroAssembler>::makeExecutable()
+{
+    ExecutableAllocator::makeExecutable(code(), m_initialSize);
 }
 
 template <typename MacroAssembler>
@@ -516,6 +531,18 @@ public:
 };
 #endif
 
+#endif
+
+#if CPU(ARM_THUMB2)
+typedef LinkBuffer<MacroAssembler<MacroAssemblerARMv7>> DefaultLinkBuffer;
+#elif CPU(ARM64)
+typedef LinkBuffer<MacroAssembler<MacroAssemblerARM64>> DefaultLinkBuffer;
+#elif CPU(MIPS)
+typedef LinkBuffer<MacroAssembler<MacroAssemblerMIPS>> DefaultLinkBuffer;
+#elif CPU(X86)
+typedef LinkBuffer<MacroAssembler<MacroAssemblerX86>> DefaultLinkBuffer;
+#elif CPU(X86_64)
+typedef LinkBuffer<MacroAssembler<MacroAssemblerX86_64>> DefaultLinkBuffer;
 #endif
 
 } // namespace JSC

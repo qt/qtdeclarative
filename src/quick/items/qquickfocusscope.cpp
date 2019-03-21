@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick
     \ingroup qtquick-input
 
-    \brief Explicitly creates a focus scope
+    \brief Explicitly creates a focus scope.
     \inherits Item
 
     Focus scopes assist in keyboard focus handling when building reusable QML

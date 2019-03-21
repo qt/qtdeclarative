@@ -46,6 +46,7 @@
 #include "qqmlscriptstring_p.h"
 #include "qqmlbinding_p.h"
 #include <private/qv8engine_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
 
 #include <QtCore/qdebug.h>
 
@@ -74,7 +75,7 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr, QOb
 void QQmlExpressionPrivate::init(QQmlContextData *ctxt, QV4::Function *runtimeFunction, QObject *me)
 {
     expressionFunctionValid = true;
-    QV4::ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(ctxt->engine);
+    QV4::ExecutionEngine *engine = ctxt->engine->handle();
     QV4::Scope scope(engine);
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(engine->rootContext(), ctxt, me));
     setupFunction(qmlContext, runtimeFunction);
@@ -110,8 +111,6 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, QV4::Function *runtimeFu
     QQmlExpression *expr = new QQmlExpression(engine->rootContext(), myObject, "width * 2");
     int result = expr->evaluate().toInt();  // result = 400
     \endcode
-
-    Note that the \l {Qt Quick 1} version is called QDeclarativeExpression.
 */
 
 /*!
@@ -121,7 +120,7 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, QV4::Function *runtimeFu
     null expression object and its value will always be an invalid QVariant.
  */
 QQmlExpression::QQmlExpression()
-: QObject(*new QQmlExpressionPrivate, 0)
+: QObject(*new QQmlExpressionPrivate, nullptr)
 {
 }
 
@@ -147,7 +146,7 @@ QQmlExpression::QQmlExpression(const QQmlScriptString &script, QQmlContext *ctxt
 
     QQmlContextData *evalCtxtData = QQmlContextData::get(ctxt ? ctxt : scriptPrivate->context);
     QObject *scopeObject = scope ? scope : scriptPrivate->scope;
-    QV4::Function *runtimeFunction = 0;
+    QV4::Function *runtimeFunction = nullptr;
 
     if (scriptPrivate->context) {
         QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
@@ -191,7 +190,7 @@ QQmlExpression::QQmlExpression(QQmlContext *ctxt,
 */
 QQmlExpression::QQmlExpression(QQmlContextData *ctxt, QObject *scope,
                                                const QString &expression)
-: QObject(*new QQmlExpressionPrivate, 0)
+: QObject(*new QQmlExpressionPrivate, nullptr)
 {
     Q_D(QQmlExpression);
     d->init(ctxt, expression, scope);
@@ -202,7 +201,6 @@ QQmlExpression::QQmlExpression(QQmlContextData *ctxt, QObject *scope,
 */
 QQmlExpression::~QQmlExpression()
 {
-    clearError();
 }
 
 /*!
@@ -212,7 +210,7 @@ QQmlExpression::~QQmlExpression()
 QQmlEngine *QQmlExpression::engine() const
 {
     Q_D(const QQmlExpression);
-    return d->context()?d->context()->engine:0;
+    return d->context()?d->context()->engine:nullptr;
 }
 
 /*!
@@ -223,7 +221,7 @@ QQmlContext *QQmlExpression::context() const
 {
     Q_D(const QQmlExpression);
     QQmlContextData *data = d->context();
-    return data?data->asQQmlContext():0;
+    return data?data->asQQmlContext():nullptr;
 }
 
 /*!
@@ -248,15 +246,19 @@ void QQmlExpression::setExpression(const QString &expression)
 }
 
 // Must be called with a valid handle scope
-void QQmlExpressionPrivate::v4value(bool *isUndefined, QV4::Scope &scope)
+QV4::ReturnedValue QQmlExpressionPrivate::v4value(bool *isUndefined)
 {
     if (!expressionFunctionValid) {
         createQmlBinding(context(), scopeObject(), expression, url, line);
         expressionFunctionValid = true;
+        if (hasError()) {
+            if (isUndefined)
+                *isUndefined = true;
+            return QV4::Encode::undefined();
+        }
     }
 
-    QV4::ScopedCallData callData(scope);
-    evaluate(callData, isUndefined, scope);
+    return evaluate(isUndefined);
 }
 
 QVariant QQmlExpressionPrivate::value(bool *isUndefined)
@@ -268,16 +270,17 @@ QVariant QQmlExpressionPrivate::value(bool *isUndefined)
         return QVariant();
     }
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(q->engine());
+    QQmlEngine *engine = q->engine();
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     QVariant rv;
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
     {
-        QV4::Scope scope(QV8Engine::getV4(ep->v8engine()));
-        v4value(isUndefined, scope);
+        QV4::Scope scope(engine->handle());
+        QV4::ScopedValue result(scope, v4value(isUndefined));
         if (!hasError())
-            rv = scope.engine->toVariant(scope.result, -1);
+            rv = scope.engine->toVariant(result, -1);
     }
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.

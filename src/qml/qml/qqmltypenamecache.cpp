@@ -55,8 +55,8 @@ QQmlTypeNameCache::~QQmlTypeNameCache()
 void QQmlTypeNameCache::add(const QHashedString &name, const QUrl &url, const QHashedString &nameSpace)
 {
     if (nameSpace.length() != 0) {
-        Import *i = m_namedImports.value(nameSpace);
-        Q_ASSERT(i != 0);
+        QQmlImportRef *i = m_namedImports.value(nameSpace);
+        Q_ASSERT(i != nullptr);
         i->compositeSingletons.insert(name, url);
         return;
     }
@@ -69,13 +69,13 @@ void QQmlTypeNameCache::add(const QHashedString &name, const QUrl &url, const QH
 
 void QQmlTypeNameCache::add(const QHashedString &name, int importedScriptIndex, const QHashedString &nameSpace)
 {
-    Import import;
+    QQmlImportRef import;
     import.scriptIndex = importedScriptIndex;
     import.m_qualifier = name;
 
     if (nameSpace.length() != 0) {
-        Import *i = m_namedImports.value(nameSpace);
-        Q_ASSERT(i != 0);
+        QQmlImportRef *i = m_namedImports.value(nameSpace);
+        Q_ASSERT(i != nullptr);
         m_namespacedImports[i].insert(name, import);
         return;
     }
@@ -98,10 +98,10 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name)
 
     if (!result.isValid()) {
         // Look up anonymous types from the imports of this document
-        QQmlImportNamespace *typeNamespace = 0;
+        QQmlImportNamespace *typeNamespace = nullptr;
         QList<QQmlError> errors;
-        QQmlType *t = 0;
-        bool typeFound = m_imports.resolveType(name, &t, 0, 0, &typeNamespace, &errors);
+        QQmlType t;
+        bool typeFound = m_imports.resolveType(name, &t, nullptr, nullptr, &typeNamespace, &errors);
         if (typeFound) {
             return Result(t);
         }
@@ -112,26 +112,24 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name)
 }
 
 QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name,
-                                                   const void *importNamespace) const
+                                                   const QQmlImportRef *importNamespace) const
 {
-    Q_ASSERT(importNamespace);
-    const Import *i = static_cast<const Import *>(importNamespace);
-    Q_ASSERT(i->scriptIndex == -1);
+    Q_ASSERT(importNamespace && importNamespace->scriptIndex == -1);
 
-    Result result = typeSearch(i->modules, name);
+    Result result = typeSearch(importNamespace->modules, name);
 
     if (!result.isValid())
-        result = query(i->compositeSingletons, name);
+        result = query(importNamespace->compositeSingletons, name);
 
     if (!result.isValid()) {
         // Look up types from the imports of this document
         // ### it would be nice if QQmlImports allowed us to resolve a namespace
         // first, and then types on it.
-        QString qualifiedTypeName = i->m_qualifier + QLatin1Char('.') + name.toString();
-        QQmlImportNamespace *typeNamespace = 0;
+        QString qualifiedTypeName = importNamespace->m_qualifier + QLatin1Char('.') + name.toString();
+        QQmlImportNamespace *typeNamespace = nullptr;
         QList<QQmlError> errors;
-        QQmlType *t = 0;
-        bool typeFound = m_imports.resolveType(qualifiedTypeName, &t, 0, 0, &typeNamespace, &errors);
+        QQmlType t;
+        bool typeFound = m_imports.resolveType(qualifiedTypeName, &t, nullptr, nullptr, &typeNamespace, &errors);
         if (typeFound) {
             return Result(t);
         }
@@ -140,7 +138,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name,
     return result;
 }
 
-QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name) const
+QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name, QQmlImport::RecursionRestriction recursionRestriction) const
 {
     Result result = query(m_namedImports, name);
 
@@ -153,10 +151,11 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name) cons
     if (!result.isValid()) {
         // Look up anonymous types from the imports of this document
         QString typeName = name->toQStringNoThrow();
-        QQmlImportNamespace *typeNamespace = 0;
+        QQmlImportNamespace *typeNamespace = nullptr;
         QList<QQmlError> errors;
-        QQmlType *t = 0;
-        bool typeFound = m_imports.resolveType(typeName, &t, 0, 0, &typeNamespace, &errors);
+        QQmlType t;
+        bool typeFound = m_imports.resolveType(typeName, &t, nullptr, nullptr, &typeNamespace, &errors,
+                                               QQmlType::AnyRegistrationType, recursionRestriction);
         if (typeFound) {
             return Result(t);
         }
@@ -166,33 +165,31 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name) cons
     return result;
 }
 
-QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name, const void *importNamespace) const
+QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name, const QQmlImportRef *importNamespace) const
 {
-    Q_ASSERT(importNamespace);
-    const Import *i = static_cast<const Import *>(importNamespace);
-    Q_ASSERT(i->scriptIndex == -1);
+    Q_ASSERT(importNamespace && importNamespace->scriptIndex == -1);
 
-    QMap<const Import *, QStringHash<Import> >::const_iterator it = m_namespacedImports.constFind(i);
+    QMap<const QQmlImportRef *, QStringHash<QQmlImportRef> >::const_iterator it = m_namespacedImports.constFind(importNamespace);
     if (it != m_namespacedImports.constEnd()) {
         Result r = query(*it, name);
         if (r.isValid())
             return r;
     }
 
-    Result r = typeSearch(i->modules, name);
+    Result r = typeSearch(importNamespace->modules, name);
 
     if (!r.isValid())
-        r = query(i->compositeSingletons, name);
+        r = query(importNamespace->compositeSingletons, name);
 
     if (!r.isValid()) {
         // Look up types from the imports of this document
         // ### it would be nice if QQmlImports allowed us to resolve a namespace
         // first, and then types on it.
-        QString qualifiedTypeName = i->m_qualifier + QLatin1Char('.') + name->toQStringNoThrow();
-        QQmlImportNamespace *typeNamespace = 0;
+        QString qualifiedTypeName = importNamespace->m_qualifier + QLatin1Char('.') + name->toQStringNoThrow();
+        QQmlImportNamespace *typeNamespace = nullptr;
         QList<QQmlError> errors;
-        QQmlType *t = 0;
-        bool typeFound = m_imports.resolveType(qualifiedTypeName, &t, 0, 0, &typeNamespace, &errors);
+        QQmlType t;
+        bool typeFound = m_imports.resolveType(qualifiedTypeName, &t, nullptr, nullptr, &typeNamespace, &errors);
         if (typeFound) {
             return Result(t);
         }

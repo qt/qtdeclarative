@@ -73,6 +73,10 @@ public:
     static T* reallocateCommitted(T*, size_t oldSize, size_t newSize, Usage = UnknownUsage, bool writable = true, bool executable = false);
 
     static bool canAllocateExecutableMemory();
+
+#if defined(Q_OS_INTEGRITY)
+    static void setMemoryAttributes(void* addr, size_t size, bool writable, bool executable);
+#endif
 };
 
 inline void* OSAllocator::reserveAndCommit(size_t reserveSize, size_t commitSize, Usage usage, bool writable, bool executable)

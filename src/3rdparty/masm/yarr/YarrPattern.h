@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009, 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2009, 2013-2017 Apple Inc. All rights reserved.
  * Copyright (C) 2010 Peter Varga (pvarga@inf.u-szeged.hu), University of Szeged
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,26 +24,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef YarrPattern_h
-#define YarrPattern_h
+#pragma once
 
+#include "RegExpKey.h"
+#include "YarrErrorCode.h"
+#include "YarrUnicodeProperties.h"
 #include <wtf/CheckedArithmetic.h>
-#include <wtf/OwnPtr.h>
-#include <wtf/PassOwnPtr.h>
-#include <wtf/RefCounted.h>
+#include <wtf/HashMap.h>
+#include <wtf/PrintStream.h>
 #include <wtf/Vector.h>
 #include <wtf/text/WTFString.h>
-#include <wtf/unicode/Unicode.h>
 
 namespace JSC { namespace Yarr {
 
+struct YarrPattern;
 struct PatternDisjunction;
 
 struct CharacterRange {
-    UChar begin;
-    UChar end;
+    UChar32 begin { 0 };
+    UChar32 end { 0x10ffff };
 
-    CharacterRange(UChar begin, UChar end)
+    CharacterRange(UChar32 begin, UChar32 end)
         : begin(begin)
         , end(end)
     {
@@ -58,20 +59,38 @@ public:
     // specified matches and ranges)
     CharacterClass()
         : m_table(0)
+        , m_hasNonBMPCharacters(false)
+        , m_anyCharacter(false)
     {
     }
     CharacterClass(const char* table, bool inverted)
         : m_table(table)
         , m_tableInverted(inverted)
+        , m_hasNonBMPCharacters(false)
+        , m_anyCharacter(false)
     {
     }
-    Vector<UChar> m_matches;
+    CharacterClass(std::initializer_list<UChar32> matches, std::initializer_list<CharacterRange> ranges, std::initializer_list<UChar32> matchesUnicode, std::initializer_list<CharacterRange> rangesUnicode)
+        : m_matches(matches)
+        , m_ranges(ranges)
+        , m_matchesUnicode(matchesUnicode)
+        , m_rangesUnicode(rangesUnicode)
+        , m_table(0)
+        , m_tableInverted(false)
+        , m_hasNonBMPCharacters(false)
+        , m_anyCharacter(false)
+    {
+    }
+
+    Vector<UChar32> m_matches;
     Vector<CharacterRange> m_ranges;
-    Vector<UChar> m_matchesUnicode;
+    Vector<UChar32> m_matchesUnicode;
     Vector<CharacterRange> m_rangesUnicode;
 
     const char* m_table;
-    bool m_tableInverted;
+    bool m_tableInverted : 1;
+    bool m_hasNonBMPCharacters : 1;
+    bool m_anyCharacter : 1;
 };
 
 enum QuantifierType {
@@ -96,7 +115,7 @@ struct PatternTerm {
     bool m_capture :1;
     bool m_invert :1;
     union {
-        UChar patternCharacter;
+        UChar32 patternCharacter;
         CharacterClass* characterClass;
         unsigned backReferenceSubpatternId;
         struct {
@@ -112,18 +131,19 @@ struct PatternTerm {
         } anchors;
     };
     QuantifierType quantityType;
-    Checked<unsigned> quantityCount;
-    int inputPosition;
+    Checked<unsigned> quantityMinCount;
+    Checked<unsigned> quantityMaxCount;
+    unsigned inputPosition;
     unsigned frameLocation;
 
-    PatternTerm(UChar ch)
+    PatternTerm(UChar32 ch)
         : type(PatternTerm::TypePatternCharacter)
         , m_capture(false)
         , m_invert(false)
     {
         patternCharacter = ch;
         quantityType = QuantifierFixedCount;
-        quantityCount = 1;
+        quantityMinCount = quantityMaxCount = 1;
     }
 
     PatternTerm(CharacterClass* charClass, bool invert)
@@ -133,7 +153,7 @@ struct PatternTerm {
     {
         characterClass = charClass;
         quantityType = QuantifierFixedCount;
-        quantityCount = 1;
+        quantityMinCount = quantityMaxCount = 1;
     }
 
     PatternTerm(Type type, unsigned subpatternId, PatternDisjunction* disjunction, bool capture = false, bool invert = false)
@@ -146,7 +166,7 @@ struct PatternTerm {
         parentheses.isCopy = false;
         parentheses.isTerminal = false;
         quantityType = QuantifierFixedCount;
-        quantityCount = 1;
+        quantityMinCount = quantityMaxCount = 1;
     }
     
     PatternTerm(Type type, bool invert = false)
@@ -155,7 +175,7 @@ struct PatternTerm {
         , m_invert(invert)
     {
         quantityType = QuantifierFixedCount;
-        quantityCount = 1;
+        quantityMinCount = quantityMaxCount = 1;
     }
 
     PatternTerm(unsigned spatternId)
@@ -165,7 +185,7 @@ struct PatternTerm {
     {
         backReferenceSubpatternId = spatternId;
         quantityType = QuantifierFixedCount;
-        quantityCount = 1;
+        quantityMinCount = quantityMaxCount = 1;
     }
 
     PatternTerm(bool bolAnchor, bool eolAnchor)
@@ -176,7 +196,7 @@ struct PatternTerm {
         anchors.bolAnchor = bolAnchor;
         anchors.eolAnchor = eolAnchor;
         quantityType = QuantifierFixedCount;
-        quantityCount = 1;
+        quantityMinCount = quantityMaxCount = 1;
     }
     
     static PatternTerm ForwardReference()
@@ -208,12 +228,32 @@ struct PatternTerm {
     {
         return m_capture;
     }
-    
+
+    bool containsAnyCaptures()
+    {
+        ASSERT(this->type == TypeParenthesesSubpattern);
+        return parentheses.lastSubpatternId >= parentheses.subpatternId;
+    }
+
     void quantify(unsigned count, QuantifierType type)
     {
-        quantityCount = count;
+        quantityMinCount = 0;
+        quantityMaxCount = count;
         quantityType = type;
     }
+
+    void quantify(unsigned minCount, unsigned maxCount, QuantifierType type)
+    {
+        // Currently only Parentheses can specify a non-zero min with a different max.
+        ASSERT(this->type == TypeParenthesesSubpattern || !minCount || minCount == maxCount);
+        ASSERT(minCount <= maxCount);
+        quantityMinCount = minCount;
+        quantityMaxCount = maxCount;
+        quantityType = type;
+    }
+
+    void dumpQuantifier(PrintStream&);
+    void dump(PrintStream&, YarrPattern*, unsigned);
 };
 
 struct PatternAlternative {
@@ -250,6 +290,8 @@ public:
         return m_onceThrough;
     }
 
+    void dump(PrintStream&, YarrPattern*, unsigned);
+
     Vector<PatternTerm> m_terms;
     PatternDisjunction* m_parent;
     unsigned m_minimumSize;
@@ -270,12 +312,13 @@ public:
     
     PatternAlternative* addNewAlternative()
     {
-        PatternAlternative* alternative = new PatternAlternative(this);
-        m_alternatives.append(adoptPtr(alternative));
-        return alternative;
+        m_alternatives.append(std::make_unique<PatternAlternative>(this));
+        return static_cast<PatternAlternative*>(m_alternatives.last().get());
     }
 
-    Vector<OwnPtr<PatternAlternative> > m_alternatives;
+    void dump(PrintStream&, YarrPattern*, unsigned);
+
+    Vector<std::unique_ptr<PatternAlternative>> m_alternatives;
     PatternAlternative* m_parent;
     unsigned m_minimumSize;
     unsigned m_callFrameSize;
@@ -286,13 +329,17 @@ public:
 // (please to be calling newlineCharacterClass() et al on your
 // friendly neighborhood YarrPattern instance to get nicely
 // cached copies).
-CharacterClass* newlineCreate();
-CharacterClass* digitsCreate();
-CharacterClass* spacesCreate();
-CharacterClass* wordcharCreate();
-CharacterClass* nondigitsCreate();
-CharacterClass* nonspacesCreate();
-CharacterClass* nonwordcharCreate();
+
+std::unique_ptr<CharacterClass> anycharCreate();
+std::unique_ptr<CharacterClass> newlineCreate();
+std::unique_ptr<CharacterClass> digitsCreate();
+std::unique_ptr<CharacterClass> spacesCreate();
+std::unique_ptr<CharacterClass> wordcharCreate();
+std::unique_ptr<CharacterClass> wordUnicodeIgnoreCaseCharCreate();
+std::unique_ptr<CharacterClass> nondigitsCreate();
+std::unique_ptr<CharacterClass> nonspacesCreate();
+std::unique_ptr<CharacterClass> nonwordcharCreate();
+std::unique_ptr<CharacterClass> nonwordUnicodeIgnoreCaseCharCreate();
 
 struct TermChain {
     TermChain(PatternTerm term)
@@ -303,27 +350,38 @@ struct TermChain {
     Vector<TermChain> hotTerms;
 };
 
-struct YarrPattern {
-    JS_EXPORT_PRIVATE YarrPattern(const String& pattern, bool ignoreCase, bool multiline, const char** error);
 
-    void reset()
+struct YarrPattern {
+    JS_EXPORT_PRIVATE YarrPattern(const String& pattern, RegExpFlags, ErrorCode&, void* stackLimit = nullptr);
+
+    void resetForReparsing()
     {
         m_numSubpatterns = 0;
         m_maxBackReference = 0;
+        m_initialStartValueFrameLocation = 0;
 
         m_containsBackreferences = false;
         m_containsBOL = false;
+        m_containsUnsignedLengthPattern = false;
+        m_hasCopiedParenSubexpressions = false;
+        m_saveInitialStartValue = false;
 
-        newlineCached = 0;
-        digitsCached = 0;
-        spacesCached = 0;
-        wordcharCached = 0;
-        nondigitsCached = 0;
-        nonspacesCached = 0;
-        nonwordcharCached = 0;
+        anycharCached = nullptr;
+        newlineCached = nullptr;
+        digitsCached = nullptr;
+        spacesCached = nullptr;
+        wordcharCached = nullptr;
+        wordUnicodeIgnoreCaseCharCached = nullptr;
+        nondigitsCached = nullptr;
+        nonspacesCached = nullptr;
+        nonwordcharCached = nullptr;
+        nonwordUnicodeIgnoreCasecharCached = nullptr;
+        unicodePropertiesCached.clear();
 
         m_disjunctions.clear();
         m_userCharacterClasses.clear();
+        m_captureGroupNames.shrink(0);
+        m_namedForwardReferences.shrink(0);
     }
 
     bool containsIllegalBackReference()
@@ -331,71 +389,227 @@ struct YarrPattern {
         return m_maxBackReference > m_numSubpatterns;
     }
 
+    bool containsIllegalNamedForwardReferences()
+    {
+        if (m_namedForwardReferences.isEmpty())
+            return false;
+
+        for (auto& entry : m_namedForwardReferences) {
+            if (m_captureGroupNames.contains(entry))
+                return true;
+        }
+
+        return false;
+    }
+
+    bool containsUnsignedLengthPattern()
+    {
+        return m_containsUnsignedLengthPattern;
+    }
+
+    CharacterClass* anyCharacterClass()
+    {
+        if (!anycharCached) {
+            m_userCharacterClasses.append(anycharCreate());
+            anycharCached = m_userCharacterClasses.last().get();
+        }
+        return anycharCached;
+    }
     CharacterClass* newlineCharacterClass()
     {
-        if (!newlineCached)
-            m_userCharacterClasses.append(adoptPtr(newlineCached = newlineCreate()));
+        if (!newlineCached) {
+            m_userCharacterClasses.append(newlineCreate());
+            newlineCached = m_userCharacterClasses.last().get();
+        }
         return newlineCached;
     }
     CharacterClass* digitsCharacterClass()
     {
-        if (!digitsCached)
-            m_userCharacterClasses.append(adoptPtr(digitsCached = digitsCreate()));
+        if (!digitsCached) {
+            m_userCharacterClasses.append(digitsCreate());
+            digitsCached = m_userCharacterClasses.last().get();
+        }
         return digitsCached;
     }
     CharacterClass* spacesCharacterClass()
     {
-        if (!spacesCached)
-            m_userCharacterClasses.append(adoptPtr(spacesCached = spacesCreate()));
+        if (!spacesCached) {
+            m_userCharacterClasses.append(spacesCreate());
+            spacesCached = m_userCharacterClasses.last().get();
+        }
         return spacesCached;
     }
     CharacterClass* wordcharCharacterClass()
     {
-        if (!wordcharCached)
-            m_userCharacterClasses.append(adoptPtr(wordcharCached = wordcharCreate()));
+        if (!wordcharCached) {
+            m_userCharacterClasses.append(wordcharCreate());
+            wordcharCached = m_userCharacterClasses.last().get();
+        }
         return wordcharCached;
+    }
+    CharacterClass* wordUnicodeIgnoreCaseCharCharacterClass()
+    {
+        if (!wordUnicodeIgnoreCaseCharCached) {
+            m_userCharacterClasses.append(wordUnicodeIgnoreCaseCharCreate());
+            wordUnicodeIgnoreCaseCharCached = m_userCharacterClasses.last().get();
+        }
+        return wordUnicodeIgnoreCaseCharCached;
     }
     CharacterClass* nondigitsCharacterClass()
     {
-        if (!nondigitsCached)
-            m_userCharacterClasses.append(adoptPtr(nondigitsCached = nondigitsCreate()));
+        if (!nondigitsCached) {
+            m_userCharacterClasses.append(nondigitsCreate());
+            nondigitsCached = m_userCharacterClasses.last().get();
+        }
         return nondigitsCached;
     }
     CharacterClass* nonspacesCharacterClass()
     {
-        if (!nonspacesCached)
-            m_userCharacterClasses.append(adoptPtr(nonspacesCached = nonspacesCreate()));
+        if (!nonspacesCached) {
+            m_userCharacterClasses.append(nonspacesCreate());
+            nonspacesCached = m_userCharacterClasses.last().get();
+        }
         return nonspacesCached;
     }
     CharacterClass* nonwordcharCharacterClass()
     {
-        if (!nonwordcharCached)
-            m_userCharacterClasses.append(adoptPtr(nonwordcharCached = nonwordcharCreate()));
+        if (!nonwordcharCached) {
+            m_userCharacterClasses.append(nonwordcharCreate());
+            nonwordcharCached = m_userCharacterClasses.last().get();
+        }
         return nonwordcharCached;
     }
+    CharacterClass* nonwordUnicodeIgnoreCaseCharCharacterClass()
+    {
+        if (!nonwordUnicodeIgnoreCasecharCached) {
+            m_userCharacterClasses.append(nonwordUnicodeIgnoreCaseCharCreate());
+            nonwordUnicodeIgnoreCasecharCached = m_userCharacterClasses.last().get();
+        }
+        return nonwordUnicodeIgnoreCasecharCached;
+    }
+    CharacterClass* unicodeCharacterClassFor(BuiltInCharacterClassID unicodeClassID)
+    {
+        ASSERT(unicodeClassID >= BuiltInCharacterClassID::BaseUnicodePropertyID);
 
-    bool m_ignoreCase : 1;
-    bool m_multiline : 1;
+        unsigned classID = static_cast<unsigned>(unicodeClassID);
+
+        if (unicodePropertiesCached.find(classID) == unicodePropertiesCached.end()) {
+            m_userCharacterClasses.append(createUnicodeCharacterClassFor(unicodeClassID));
+            CharacterClass* result = m_userCharacterClasses.last().get();
+            unicodePropertiesCached.add(classID, result);
+            return result;
+        }
+
+        return unicodePropertiesCached.get(classID);
+    }
+
+    void dumpPatternString(PrintStream& out, const String& patternString);
+    void dumpPattern(const String& pattern);
+    void dumpPattern(PrintStream& out, const String& pattern);
+
+    bool global() const { return m_flags & FlagGlobal; }
+    bool ignoreCase() const { return m_flags & FlagIgnoreCase; }
+    bool multiline() const { return m_flags & FlagMultiline; }
+    bool sticky() const { return m_flags & FlagSticky; }
+    bool unicode() const { return m_flags & FlagUnicode; }
+    bool dotAll() const { return m_flags & FlagDotAll; }
+
     bool m_containsBackreferences : 1;
     bool m_containsBOL : 1;
-    unsigned m_numSubpatterns;
-    unsigned m_maxBackReference;
+    bool m_containsUnsignedLengthPattern : 1;
+    bool m_hasCopiedParenSubexpressions : 1;
+    bool m_saveInitialStartValue : 1;
+    RegExpFlags m_flags;
+    unsigned m_numSubpatterns { 0 };
+    unsigned m_maxBackReference { 0 };
+    unsigned m_initialStartValueFrameLocation { 0 };
     PatternDisjunction* m_body;
-    Vector<OwnPtr<PatternDisjunction>, 4> m_disjunctions;
-    Vector<OwnPtr<CharacterClass> > m_userCharacterClasses;
+    Vector<std::unique_ptr<PatternDisjunction>, 4> m_disjunctions;
+    Vector<std::unique_ptr<CharacterClass>> m_userCharacterClasses;
+    Vector<String> m_captureGroupNames;
+    Vector<String> m_namedForwardReferences;
+    HashMap<String, unsigned> m_namedGroupToParenIndex;
 
 private:
-    const char* compile(const String& patternString);
+    ErrorCode compile(const String& patternString, void* stackLimit);
 
-    CharacterClass* newlineCached;
-    CharacterClass* digitsCached;
-    CharacterClass* spacesCached;
-    CharacterClass* wordcharCached;
-    CharacterClass* nondigitsCached;
-    CharacterClass* nonspacesCached;
-    CharacterClass* nonwordcharCached;
+    CharacterClass* anycharCached { nullptr };
+    CharacterClass* newlineCached { nullptr };
+    CharacterClass* digitsCached { nullptr };
+    CharacterClass* spacesCached { nullptr };
+    CharacterClass* wordcharCached { nullptr };
+    CharacterClass* wordUnicodeIgnoreCaseCharCached { nullptr };
+    CharacterClass* nondigitsCached { nullptr };
+    CharacterClass* nonspacesCached { nullptr };
+    CharacterClass* nonwordcharCached { nullptr };
+    CharacterClass* nonwordUnicodeIgnoreCasecharCached { nullptr };
+    HashMap<unsigned, CharacterClass*> unicodePropertiesCached;
 };
 
-} } // namespace JSC::Yarr
+    void indentForNestingLevel(PrintStream&, unsigned);
+    void dumpUChar32(PrintStream&, UChar32);
+    void dumpCharacterClass(PrintStream&, YarrPattern*, CharacterClass*);
 
-#endif // YarrPattern_h
+    struct BackTrackInfoPatternCharacter {
+        uintptr_t begin; // Only needed for unicode patterns
+        uintptr_t matchAmount;
+
+        static unsigned beginIndex() { return offsetof(BackTrackInfoPatternCharacter, begin) / sizeof(uintptr_t); }
+        static unsigned matchAmountIndex() { return offsetof(BackTrackInfoPatternCharacter, matchAmount) / sizeof(uintptr_t); }
+    };
+
+    struct BackTrackInfoCharacterClass {
+        uintptr_t begin; // Only needed for unicode patterns
+        uintptr_t matchAmount;
+
+        static unsigned beginIndex() { return offsetof(BackTrackInfoCharacterClass, begin) / sizeof(uintptr_t); }
+        static unsigned matchAmountIndex() { return offsetof(BackTrackInfoCharacterClass, matchAmount) / sizeof(uintptr_t); }
+    };
+
+    struct BackTrackInfoBackReference {
+        uintptr_t begin; // Not really needed for greedy quantifiers.
+        uintptr_t matchAmount; // Not really needed for fixed quantifiers.
+
+        static unsigned beginIndex() { return offsetof(BackTrackInfoBackReference, begin) / sizeof(uintptr_t); }
+        static unsigned matchAmountIndex() { return offsetof(BackTrackInfoBackReference, matchAmount) / sizeof(uintptr_t); }
+    };
+
+    struct BackTrackInfoAlternative {
+        union {
+            uintptr_t offset;
+        };
+    };
+
+    struct BackTrackInfoParentheticalAssertion {
+        uintptr_t begin;
+
+        static unsigned beginIndex() { return offsetof(BackTrackInfoParentheticalAssertion, begin) / sizeof(uintptr_t); }
+    };
+
+    struct BackTrackInfoParenthesesOnce {
+        uintptr_t begin;
+        uintptr_t returnAddress;
+
+        static unsigned beginIndex() { return offsetof(BackTrackInfoParenthesesOnce, begin) / sizeof(uintptr_t); }
+        static unsigned returnAddressIndex() { return offsetof(BackTrackInfoParenthesesOnce, returnAddress) / sizeof(uintptr_t); }
+    };
+
+    struct BackTrackInfoParenthesesTerminal {
+        uintptr_t begin;
+
+        static unsigned beginIndex() { return offsetof(BackTrackInfoParenthesesTerminal, begin) / sizeof(uintptr_t); }
+    };
+
+    struct BackTrackInfoParentheses {
+        uintptr_t begin;
+        uintptr_t returnAddress;
+        uintptr_t matchAmount;
+        uintptr_t parenContextHead;
+
+        static unsigned beginIndex() { return offsetof(BackTrackInfoParentheses, begin) / sizeof(uintptr_t); }
+        static unsigned returnAddressIndex() { return offsetof(BackTrackInfoParentheses, returnAddress) / sizeof(uintptr_t); }
+        static unsigned matchAmountIndex() { return offsetof(BackTrackInfoParentheses, matchAmount) / sizeof(uintptr_t); }
+        static unsigned parenContextHeadIndex() { return offsetof(BackTrackInfoParentheses, parenContextHead) / sizeof(uintptr_t); }
+    };
+
+} } // namespace JSC::Yarr

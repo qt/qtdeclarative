@@ -1,8 +1,6 @@
 TARGET = qmldbg_inspector
 QT    += qml-private quick-private core-private gui-private packetprotocol-private
 
-INCLUDEPATH *= $$PWD $$PWD/../shared
-
 SOURCES += \
     $$PWD/globalinspector.cpp \
     $$PWD/highlight.cpp \
@@ -11,7 +9,6 @@ SOURCES += \
     $$PWD/qquickwindowinspector.cpp
 
 HEADERS += \
-    $$PWD/../shared/qqmldebugpacket.h \
     $$PWD/globalinspector.h \
     $$PWD/highlight.h \
     $$PWD/inspecttool.h\

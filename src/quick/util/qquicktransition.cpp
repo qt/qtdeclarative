@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickTransition
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
-    \brief Defines animated transitions that occur on state changes
+    \brief Defines animated transitions that occur on state changes.
 
     A Transition defines the animations to be applied when a \l State change occurs.
 
@@ -109,7 +109,7 @@ protected:
     void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState) override;
 };
 
-class QQuickTransitionPrivate : public QObjectPrivate, QAnimationJobChangeListener
+class QQuickTransitionPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickTransition)
 public:
@@ -120,11 +120,8 @@ public:
     {
     }
 
-    void removeStateChangeListener(QAbstractAnimationJob *anim)
-    {
-        if (anim)
-            anim->removeAnimationChangeListener(this, QAbstractAnimationJob::StateChange);
-    }
+    static QQuickTransitionPrivate *get(QQuickTransition *q) { return q->d_func(); }
+    void animationStateChanged(QAbstractAnimationJob::State newState);
 
     QString fromState;
     QString toState;
@@ -134,7 +131,6 @@ public:
     bool reversible;
     bool enabled;
 protected:
-    void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State, QAbstractAnimationJob::State) override;
 
     static void append_animation(QQmlListProperty<QQuickAbstractAnimation> *list, QQuickAbstractAnimation *a);
     static int animation_count(QQmlListProperty<QQuickAbstractAnimation> *list);
@@ -171,7 +167,16 @@ void QQuickTransitionPrivate::clear_animations(QQmlListProperty<QQuickAbstractAn
     }
 }
 
-void QQuickTransitionPrivate::animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State)
+void QQuickTransitionInstance::animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State)
+{
+    if (!m_transition)
+        return;
+
+    QQuickTransitionPrivate *transition = QQuickTransitionPrivate::get(m_transition);
+    transition->animationStateChanged(newState);
+}
+
+void QQuickTransitionPrivate::animationStateChanged(QAbstractAnimationJob::State newState)
 {
     Q_Q(QQuickTransition);
 
@@ -197,15 +202,16 @@ void ParallelAnimationWrapper::updateState(QAbstractAnimationJob::State newState
     }
 }
 
-QQuickTransitionInstance::QQuickTransitionInstance(QQuickTransitionPrivate *transition, QAbstractAnimationJob *anim)
+QQuickTransitionInstance::QQuickTransitionInstance(QQuickTransition *transition, QAbstractAnimationJob *anim)
     : m_transition(transition)
     , m_anim(anim)
 {
+    anim->addAnimationChangeListener(this, QAbstractAnimationJob::StateChange);
 }
 
 QQuickTransitionInstance::~QQuickTransitionInstance()
 {
-    m_transition->removeStateChangeListener(m_anim);
+    removeStateChangeListener();
     delete m_anim;
 }
 
@@ -257,7 +263,7 @@ QQuickTransitionInstance *QQuickTransition::prepare(QQuickStateOperation::Action
     int start = d->reversed ? d->animations.count() - 1 : 0;
     int end = d->reversed ? -1 : d->animations.count();
 
-    QAbstractAnimationJob *anim = 0;
+    QAbstractAnimationJob *anim = nullptr;
     for (int i = start; i != end;) {
         anim = d->animations.at(i)->transition(actions, after, direction, defaultTarget);
         if (anim) {
@@ -270,8 +276,7 @@ QQuickTransitionInstance *QQuickTransition::prepare(QQuickStateOperation::Action
 
     group->setDirection(d->reversed ? QAbstractAnimationJob::Backward : QAbstractAnimationJob::Forward);
 
-    group->addAnimationChangeListener(d, QAbstractAnimationJob::StateChange);
-    QQuickTransitionInstance *wrapper = new QQuickTransitionInstance(d, group);
+    QQuickTransitionInstance *wrapper = new QQuickTransitionInstance(this, group);
     return wrapper;
 }
 

@@ -29,6 +29,7 @@
 
 #include "qqmldebugtestservice.h"
 #include "debugutil_p.h"
+#include "qqmldebugprocess_p.h"
 #include "../../../shared/util.h"
 
 #include <private/qqmldebugclient_p.h>
@@ -74,16 +75,14 @@ void tst_QQmlDebugService::initTestCase()
     QQmlDebugConnector::setPluginKey(QLatin1String("QQmlDebugServer"));
     QQmlDebugConnector::setServices(QStringList()
                                     << QStringLiteral("tst_QQmlDebugService"));
-    QTest::ignoreMessage(QtWarningMsg,
-                         "QML debugger: Cannot set plugin key after loading the plugin.");
     m_service = new QQmlDebugTestService("tst_QQmlDebugService", 2);
 
     foreach (const QString &service, QQmlDebuggingEnabler::debuggerServices())
-        QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)0);
+        QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)nullptr);
     foreach (const QString &service, QQmlDebuggingEnabler::inspectorServices())
-        QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)0);
+        QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)nullptr);
     foreach (const QString &service, QQmlDebuggingEnabler::profilerServices())
-        QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)0);
+        QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)nullptr);
 
     const QString waitingMsg = QString("QML Debugger: Waiting for connection on port %1...").arg(PORT);
     QTest::ignoreMessage(QtDebugMsg, waitingMsg.toLatin1().constData());
@@ -105,10 +104,13 @@ void tst_QQmlDebugService::initTestCase()
 
 void tst_QQmlDebugService::checkPortRange()
 {
-    QQmlDebugConnection *connection1 = new QQmlDebugConnection();
-    QQmlDebugProcess *process1 = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
+    QScopedPointer<QQmlDebugConnection> connection1(new QQmlDebugConnection());
+    QScopedPointer<QQmlDebugProcess> process1(
+                new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath)
+                                     + "/qmlscene", this));
 
-    process1->start(QStringList() << QLatin1String("-qmljsdebugger=port:3782,3792") << testFile("test.qml"));
+    process1->start(QStringList() << QLatin1String("-qmljsdebugger=port:3782,3792")
+                                  << testFile("test.qml"));
 
     if (!process1->waitForSessionStart())
         QFAIL("could not launch application, or did not get 'Waiting for connection'.");
@@ -119,10 +121,13 @@ void tst_QQmlDebugService::checkPortRange()
         QFAIL("could not connect to host!");
 
     // Second instance
-    QQmlDebugConnection *connection2 = new QQmlDebugConnection();
-    QQmlDebugProcess *process2 = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
+    QScopedPointer<QQmlDebugConnection> connection2(new QQmlDebugConnection());
+    QScopedPointer<QQmlDebugProcess> process2(
+                new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath)
+                                     + "/qmlscene", this));
 
-    process2->start(QStringList() << QLatin1String("-qmljsdebugger=port:3782,3792") << testFile("test.qml"));
+    process2->start(QStringList() << QLatin1String("-qmljsdebugger=port:3782,3792")
+                                  << testFile("test.qml"));
 
     if (!process2->waitForSessionStart())
         QFAIL("could not launch application, or did not get 'Waiting for connection'.");
@@ -131,11 +136,6 @@ void tst_QQmlDebugService::checkPortRange()
     connection2->connectToHost("127.0.0.1", port2);
     if (!connection2->waitForConnected())
         QFAIL("could not connect to host!");
-
-    delete connection1;
-    delete process1;
-    delete connection2;
-    delete process2;
 }
 
 void tst_QQmlDebugService::name()
@@ -207,7 +207,7 @@ void tst_QQmlDebugService::checkSupportForDataStreamVersion()
 
 void tst_QQmlDebugService::idForObject()
 {
-    QCOMPARE(QQmlDebugService::idForObject(0), -1);
+    QCOMPARE(QQmlDebugService::idForObject(nullptr), -1);
 
     QObject *objA = new QObject;
 
@@ -229,15 +229,15 @@ void tst_QQmlDebugService::idForObject()
 
 void tst_QQmlDebugService::objectForId()
 {
-    QCOMPARE(QQmlDebugService::objectForId(-1), static_cast<QObject*>(0));
-    QCOMPARE(QQmlDebugService::objectForId(1), static_cast<QObject*>(0));
+    QCOMPARE(QQmlDebugService::objectForId(-1), static_cast<QObject*>(nullptr));
+    QCOMPARE(QQmlDebugService::objectForId(1), static_cast<QObject*>(nullptr));
 
     QObject *obj = new QObject;
     int id = QQmlDebugService::idForObject(obj);
     QCOMPARE(QQmlDebugService::objectForId(id), obj);
 
     delete obj;
-    QCOMPARE(QQmlDebugService::objectForId(id), static_cast<QObject*>(0));
+    QCOMPARE(QQmlDebugService::objectForId(id), static_cast<QObject*>(nullptr));
 }
 
 void tst_QQmlDebugService::checkSupportForOldDataStreamVersion()

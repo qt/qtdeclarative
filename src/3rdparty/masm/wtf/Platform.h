@@ -2,6 +2,7 @@
  * Copyright (C) 2006, 2007, 2008, 2009, 2013 Apple Inc. All rights reserved.
  * Copyright (C) 2007-2009 Torch Mobile, Inc.
  * Copyright (C) 2010, 2011 Research In Motion Limited. All rights reserved.
+ * Copyright (C) 2018 The Qt Company Ltd.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,26 +39,26 @@
 /* ==== PLATFORM handles OS, operating environment, graphics API, and
    CPU. This macro will be phased out in favor of platform adaptation
    macros, policy decision macros, and top-level port definitions. ==== */
-#define PLATFORM(WTF_FEATURE) (defined WTF_PLATFORM_##WTF_FEATURE  && WTF_PLATFORM_##WTF_FEATURE)
+#define PLATFORM(WTF_FEATURE) WTF_PLATFORM_##WTF_FEATURE
 
 
 /* ==== Platform adaptation macros: these describe properties of the target environment. ==== */
 
 /* CPU() - the target CPU architecture */
-#define CPU(WTF_FEATURE) (defined WTF_CPU_##WTF_FEATURE  && WTF_CPU_##WTF_FEATURE)
+#define CPU(WTF_FEATURE) WTF_CPU_##WTF_FEATURE
 /* HAVE() - specific system features (headers, functions or similar) that are present or not */
-#define HAVE(WTF_FEATURE) (defined HAVE_##WTF_FEATURE  && HAVE_##WTF_FEATURE)
+#define HAVE(WTF_FEATURE) HAVE_##WTF_FEATURE
 /* OS() - underlying operating system; only to be used for mandated low-level services like 
    virtual memory, not to choose a GUI toolkit */
-#define OS(WTF_FEATURE) (defined WTF_OS_##WTF_FEATURE  && WTF_OS_##WTF_FEATURE)
+#define OS(WTF_FEATURE) WTF_OS_##WTF_FEATURE
 
 
 /* ==== Policy decision macros: these define policy choices for a particular port. ==== */
 
 /* USE() - use a particular third-party library or optional OS service */
-#define USE(WTF_FEATURE) (defined WTF_USE_##WTF_FEATURE  && WTF_USE_##WTF_FEATURE)
+#define USE(WTF_FEATURE) WTF_USE_##WTF_FEATURE
 /* ENABLE() - turn on a specific feature of WebKit */
-#define ENABLE(WTF_FEATURE) (defined ENABLE_##WTF_FEATURE  && ENABLE_##WTF_FEATURE)
+#define ENABLE(WTF_FEATURE) ENABLE_##WTF_FEATURE
 
 
 /* ==== CPU() - the target CPU architecture ==== */
@@ -168,6 +169,11 @@
 
 /* CPU(ARM64) - Apple */
 #if (defined(__arm64__) && defined(__APPLE__)) || defined(__aarch64__)
+#define WTF_CPU_ARM64 1
+#endif
+
+/* CPU(ARM64) - INTEGRITY */
+#if (defined(__ARM64__))
 #define WTF_CPU_ARM64 1
 #endif
 
@@ -735,10 +741,6 @@
 #define ENABLE_JIT 0
 #endif
 
-#if !defined(ENABLE_JIT) && CPU(SH4) && PLATFORM(QT)
-#define ENABLE_JIT 1
-#endif
-
 /* The JIT is enabled by default on all x86, x86-64, ARM & MIPS platforms. */
 #if !defined(ENABLE_JIT) \
     && (CPU(X86) || CPU(X86_64) || CPU(ARM) || CPU(MIPS) || CPU(ARM64)) \
@@ -1043,6 +1045,13 @@
 
 #if !PLATFORM(IOS) && PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 1080
 #define WTF_USE_CONTENT_FILTERING 1
+#endif
+
+#if ENABLE(YARR_JIT)
+#if CPU(ARM64) || (CPU(X86_64) && !OS(WINDOWS))
+/* Enable JIT'ing Regular Expressions that have nested parenthesis. */
+#define ENABLE_YARR_JIT_ALL_PARENS_EXPRESSIONS 1
+#endif
 #endif
 
 #endif /* WTF_Platform_h */

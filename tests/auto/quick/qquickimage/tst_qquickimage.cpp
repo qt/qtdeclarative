@@ -62,6 +62,7 @@ public:
     tst_qquickimage();
 
 private slots:
+    void initTestCase();
     void cleanup();
     void noSource();
     void imageSource();
@@ -97,10 +98,20 @@ private slots:
 
 private:
     QQmlEngine engine;
+    QSGRendererInterface::GraphicsApi graphicsApi = QSGRendererInterface::Unknown;
 };
 
 tst_qquickimage::tst_qquickimage()
 {
+}
+
+void tst_qquickimage::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+    QScopedPointer<QQuickView> window(new QQuickView(0));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    graphicsApi = window->rendererInterface()->graphicsApi();
 }
 
 void tst_qquickimage::cleanup()
@@ -116,7 +127,7 @@ void tst_qquickimage::noSource()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->source(), QUrl());
     QCOMPARE(obj->status(), QQuickImage::Null);
     QCOMPARE(obj->width(), 0.);
@@ -150,8 +161,27 @@ void tst_qquickimage::imageSource_data()
         QTest::newRow("remote svg") << "/heart.svg" << 595.0 << 841.0 << true << false << false << "";
     if (QImageReader::supportedImageFormats().contains("svgz"))
         QTest::newRow("remote svgz") << "/heart.svgz" << 595.0 << 841.0 << true << false << false << "";
+    if (graphicsApi == QSGRendererInterface::OpenGL) {
+        QTest::newRow("texturefile pkm format") << testFileUrl("logo.pkm").toString() << 256.0 << 256.0 << false << false << true << "";
+        QTest::newRow("texturefile ktx format") << testFileUrl("car.ktx").toString() << 146.0 << 80.0 << false << false << true << "";
+        QTest::newRow("texturefile async") << testFileUrl("logo.pkm").toString() << 256.0 << 256.0 << false << true << true << "";
+    }
     QTest::newRow("remote not found") << "/no-such-file.png" << 0.0 << 0.0 << true
         << false << true << "<Unknown File>:2:1: QML Image: Error transferring {{ServerBaseUrl}}/no-such-file.png - server replied: Not found";
+    QTest::newRow("extless") << testFileUrl("colors").toString() << 120.0 << 120.0 << false << false << true << "";
+    QTest::newRow("extless no cache") << testFileUrl("colors").toString() << 120.0 << 120.0 << false << false << false << "";
+    QTest::newRow("extless async") << testFileUrl("colors1").toString() << 120.0 << 120.0 << false << true << true << "";
+    QTest::newRow("extless not found") << testFileUrl("no-such-file").toString() << 0.0 << 0.0 << false
+        << false << true << "<Unknown File>:2:1: QML Image: Cannot open: " + testFileUrl("no-such-file").toString();
+    // Test that texture file is preferred over image file, when supported.
+    // Since pattern.pkm has different size than pattern.png, these tests verify that the right file has been loaded
+    if (graphicsApi == QSGRendererInterface::OpenGL) {
+        QTest::newRow("extless prefer-tex") << testFileUrl("pattern").toString() << 64.0 << 64.0 << false << false << true << "";
+        QTest::newRow("extless prefer-tex async") << testFileUrl("pattern").toString() << 64.0 << 64.0 << false << true << true << "";
+    } else {
+        QTest::newRow("extless ignore-tex") << testFileUrl("pattern").toString() << 200.0 << 200.0 << false << false << true << "";
+        QTest::newRow("extless ignore-tex async") << testFileUrl("pattern").toString() << 200.0 << 200.0 << false << true << true << "";
+    }
 
 }
 
@@ -195,7 +225,7 @@ void tst_qquickimage::imageSource()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     if (async)
         QVERIFY(obj->asynchronous());
@@ -233,7 +263,7 @@ void tst_qquickimage::clearSource()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->status(), QQuickImage::Ready);
     QCOMPARE(obj->width(), 120.);
     QCOMPARE(obj->height(), 120.);
@@ -255,7 +285,7 @@ void tst_qquickimage::resized()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->width(), 300.);
     QCOMPARE(obj->height(), 300.);
     QCOMPARE(obj->fillMode(), QQuickImage::Stretch);
@@ -265,13 +295,13 @@ void tst_qquickimage::resized()
 
 void tst_qquickimage::preserveAspectRatio()
 {
-    QScopedPointer<QQuickView> window(new QQuickView(0));
+    QScopedPointer<QQuickView> window(new QQuickView(nullptr));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     window->setSource(testFileUrl("aspectratio.qml"));
     QQuickImage *image = qobject_cast<QQuickImage*>(window->rootObject());
-    QVERIFY(image != 0);
+    QVERIFY(image != nullptr);
     image->setWidth(80.0);
     QCOMPARE(image->width(), 80.);
     QCOMPARE(image->height(), 80.);
@@ -279,7 +309,7 @@ void tst_qquickimage::preserveAspectRatio()
     window->setSource(testFileUrl("aspectratio.qml"));
     image = qobject_cast<QQuickImage*>(window->rootObject());
     image->setHeight(60.0);
-    QVERIFY(image != 0);
+    QVERIFY(image != nullptr);
     QCOMPARE(image->height(), 60.);
     QCOMPARE(image->width(), 60.);
 }
@@ -290,7 +320,7 @@ void tst_qquickimage::smooth()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->width(), 300.);
     QCOMPARE(obj->height(), 300.);
     QCOMPARE(obj->smooth(), true);
@@ -301,6 +331,10 @@ void tst_qquickimage::smooth()
 
 void tst_qquickimage::mirror()
 {
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
     QMap<QQuickImage::FillMode, QImage> screenshots;
     QList<QQuickImage::FillMode> fillModes;
     fillModes << QQuickImage::Stretch << QQuickImage::PreserveAspectFit << QQuickImage::PreserveAspectCrop
@@ -315,7 +349,7 @@ void tst_qquickimage::mirror()
         window->setSource(testFileUrl("mirror.qml"));
 
         QQuickImage *obj = window->rootObject()->findChild<QQuickImage*>("image");
-        QVERIFY(obj != 0);
+        QVERIFY(obj != nullptr);
 
         obj->setFillMode(fillMode);
         obj->setProperty("mirror", true);
@@ -399,13 +433,24 @@ void tst_qquickimage::svg()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
-    QCOMPARE(obj->width(), 212.0);
+    QVERIFY(obj != nullptr);
+    QCOMPARE(obj->width(), 300.0);
     QCOMPARE(obj->height(), 300.0);
     obj->setSourceSize(QSize(200,200));
 
-    QCOMPARE(obj->width(), 141.0);
+    QCOMPARE(obj->width(), 200.0);
     QCOMPARE(obj->height(), 200.0);
+    obj->setSourceSize(QSize(100,0));
+    QCOMPARE(obj->width(), 100.0);
+    // Due to aspect ratio calculations we can't get a precise
+    // check for all setups, so we allow a small margin of error
+    QVERIFY(qAbs(obj->height() - 141) < 1);
+
+    // Setting it to a size bigger than the actual file, SVG formats
+    // can scale up although other image formats cannot
+    obj->setSourceSize(QSize(800,0));
+    QCOMPARE(obj->width(), 800.0);
+    QVERIFY(qAbs(obj->height() - 1131) < 1);
     delete obj;
 }
 
@@ -469,7 +514,7 @@ void tst_qquickimage::geometry()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(obj->width(), itemWidth);
     QCOMPARE(obj->paintedWidth(), paintedWidth);
@@ -492,7 +537,7 @@ void tst_qquickimage::big()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->width(), 100.0);
     QCOMPARE(obj->height(), 256.0);
 
@@ -501,6 +546,10 @@ void tst_qquickimage::big()
 
 void tst_qquickimage::tiling_QTBUG_6716()
 {
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
     QFETCH(QString, source);
 
     QQuickView view(testFileUrl(source));
@@ -509,7 +558,7 @@ void tst_qquickimage::tiling_QTBUG_6716()
 
     QQuickImage *tiling = findItem<QQuickImage>(view.rootObject(), "tiling");
 
-    QVERIFY(tiling != 0);
+    QVERIFY(tiling != nullptr);
     QImage img = view.grabWindow();
     for (int x = 0; x < tiling->width(); ++x) {
         for (int y = 0; y < tiling->height(); ++y) {
@@ -540,7 +589,7 @@ void tst_qquickimage::noLoading()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->status(), QQuickImage::Ready);
 
     QSignalSpy sourceSpy(obj, SIGNAL(sourceChanged(QUrl)));
@@ -587,7 +636,7 @@ void tst_qquickimage::paintedWidthHeight()
         QQmlComponent component(&engine);
         component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-        QVERIFY(obj != 0);
+        QVERIFY(obj != nullptr);
         QCOMPARE(obj->width(), 200.0);
         QCOMPARE(obj->height(), 25.0);
         QCOMPARE(obj->paintedWidth(), 25.0);
@@ -602,7 +651,7 @@ void tst_qquickimage::paintedWidthHeight()
         QQmlComponent component(&engine);
         component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-        QVERIFY(obj != 0);
+        QVERIFY(obj != nullptr);
         QCOMPARE(obj->width(), 26.0);
         QCOMPARE(obj->height(), 175.0);
         QCOMPARE(obj->paintedWidth(), 26.0);
@@ -623,7 +672,7 @@ void tst_qquickimage::sourceSize_QTBUG_14303()
 
     QSignalSpy sourceSizeSpy(obj, SIGNAL(sourceSizeChanged()));
 
-    QTRY_VERIFY(obj != 0);
+    QTRY_VERIFY(obj != nullptr);
     QTRY_COMPARE(obj->status(), QQuickImage::Ready);
 
     QTRY_COMPARE(obj->sourceSize().width(), 200);
@@ -645,7 +694,7 @@ void tst_qquickimage::sourceSize_QTBUG_14303()
 
 void tst_qquickimage::sourceSize_QTBUG_16389()
 {
-    QScopedPointer<QQuickView> window(new QQuickView(0));
+    QScopedPointer<QQuickView> window(new QQuickView(nullptr));
     window->setSource(testFileUrl("qtbug_16389.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
@@ -669,7 +718,7 @@ void tst_qquickimage::sourceSize_QTBUG_16389()
 // QTBUG-15690
 void tst_qquickimage::nullPixmapPaint()
 {
-    QScopedPointer<QQuickView> window(new QQuickView(0));
+    QScopedPointer<QQuickView> window(new QQuickView(nullptr));
     window->setSource(testFileUrl("nullpixmap.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
@@ -679,7 +728,7 @@ void tst_qquickimage::nullPixmapPaint()
     server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
     QQuickImage *image = qobject_cast<QQuickImage*>(window->rootObject());
-    QTRY_VERIFY(image != 0);
+    QTRY_VERIFY(image != nullptr);
     image->setSource(server.url("/no-such-file.png"));
 
     QQmlTestMessageHandler messageHandler;
@@ -709,7 +758,7 @@ void tst_qquickimage::imageCrash_QTBUG_22125()
 
     // shouldn't crash when deleting cancelled QQmlPixmapReplys.
     server.sendDelayedItem();
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 }
 
@@ -742,7 +791,7 @@ void tst_qquickimage::sourceSize()
     QFETCH(qreal, implicitWidth);
     QFETCH(qreal, implicitHeight);
 
-    QScopedPointer<QQuickView> window(new QQuickView(0));
+    QScopedPointer<QQuickView> window(new QQuickView(nullptr));
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("srcWidth", sourceWidth);
     ctxt->setContextProperty("srcHeight", sourceHeight);
@@ -773,7 +822,7 @@ void tst_qquickimage::sourceSizeChanges()
     QQmlContext *ctxt = engine.rootContext();
     ctxt->setContextProperty("srcImage", "");
     QQuickImage *img = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(img != 0);
+    QVERIFY(img != nullptr);
 
     QSignalSpy sourceSizeSpy(img, SIGNAL(sourceSizeChanged()));
 
@@ -839,7 +888,7 @@ void tst_qquickimage::progressAndStatusChanges()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->status(), QQuickImage::Ready);
     QTRY_COMPARE(obj->progress(), 1.0);
 
@@ -956,7 +1005,7 @@ void tst_qquickimage::highdpi()
     ctxt->setContextProperty("srcImage", testFileUrl("heart-highdpi@2x.png"));
 
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(obj->width(), 150.0);
     QCOMPARE(obj->height(), 150.0);
@@ -1034,6 +1083,10 @@ void tst_qquickimage::highDpiFillModesAndSizes()
 
 void tst_qquickimage::hugeImages()
 {
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
     QQuickView view;
     view.setSource(testFileUrl("hugeImages.qml"));
     view.setGeometry(0, 0, 200, 200);

@@ -65,9 +65,6 @@ public:
     QQuickImplicitSizeItemPrivate()
     {
     }
-
-    void implicitWidthChanged() Q_DECL_OVERRIDE;
-    void implicitHeightChanged() Q_DECL_OVERRIDE;
 };
 
 QT_END_NAMESPACE

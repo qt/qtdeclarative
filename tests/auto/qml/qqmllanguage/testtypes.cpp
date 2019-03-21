@@ -35,6 +35,14 @@ static QObject *myTypeObjectSingleton(QQmlEngine *engine, QJSEngine *scriptEngin
     return new MyTypeObject();
 }
 
+static QJSValue myQJSValueQObjectSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine)
+
+    QJSValue value = scriptEngine->newQObject(new MyTypeObject());
+    return value;
+}
+
 void registerTypes()
 {
     qmlRegisterInterface<MyInterface>("MyInterface");
@@ -101,8 +109,12 @@ void registerTypes()
     qmlRegisterType<MyCompositeBaseType>("Test", 1, 0, "MyCompositeBaseType");
 
     qmlRegisterSingletonType<MyTypeObjectSingleton>("Test", 1, 0, "MyTypeObjectSingleton", myTypeObjectSingleton);
+    qmlRegisterSingletonType("Test", 1, 0, "MyQJSValueQObjectSingleton", myQJSValueQObjectSingleton);
 
     qmlRegisterType<MyArrayBufferTestClass>("Test", 1, 0, "MyArrayBufferTestClass");
+
+    qmlRegisterType<LazyDeferredSubObject>("Test", 1, 0, "LazyDeferredSubObject");
+    qmlRegisterType<DeferredProperties>("Test", 1, 0, "DeferredProperties");
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)
@@ -113,7 +125,7 @@ QVariant myCustomVariantTypeConverter(const QString &data)
 }
 
 
-void CustomBindingParser::applyBindings(QObject *object, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+void CustomBindingParser::applyBindings(QObject *object, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     CustomBinding *customBinding = qobject_cast<CustomBinding*>(object);
     Q_ASSERT(customBinding);
@@ -126,14 +138,14 @@ void CustomBinding::componentComplete()
     Q_ASSERT(m_target);
 
     foreach (const QV4::CompiledData::Binding *binding, bindings) {
-        QString name = compilationUnit->data->stringAt(binding->propertyNameIndex);
+        QString name = compilationUnit->stringAt(binding->propertyNameIndex);
 
         int bindingId = binding->value.compiledScriptIndex;
 
         QQmlContextData *context = QQmlContextData::get(qmlContext(this));
 
         QQmlProperty property(m_target, name, qmlContext(this));
-        QV4::Scope scope(QQmlEnginePrivate::getV4Engine(qmlEngine(this)));
+        QV4::Scope scope(qmlEngine(this)->handle());
         QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(scope.engine->rootContext(), context, m_target));
         QQmlBinding *qmlBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core,
                                                       compilationUnit->runtimeFunctions[bindingId], m_target, context, qmlContext);
@@ -142,7 +154,7 @@ void CustomBinding::componentComplete()
     }
 }
 
-void EnumSupportingCustomParser::verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+void EnumSupportingCustomParser::verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     if (bindings.count() != 1) {
         error(bindings.first(), QStringLiteral("Custom parser invoked incorrectly for unit test"));
@@ -150,7 +162,7 @@ void EnumSupportingCustomParser::verifyBindings(const QV4::CompiledData::Unit *q
     }
 
     const QV4::CompiledData::Binding *binding = bindings.first();
-    if (qmlUnit->stringAt(binding->propertyNameIndex) != QStringLiteral("foo")) {
+    if (compilationUnit->stringAt(binding->propertyNameIndex) != QStringLiteral("foo")) {
         error(binding, QStringLiteral("Custom parser invoked with the wrong property name"));
         return;
     }
@@ -159,7 +171,7 @@ void EnumSupportingCustomParser::verifyBindings(const QV4::CompiledData::Unit *q
         error(binding, QStringLiteral("Custom parser invoked with the wrong property value. Expected script that evaluates to enum"));
         return;
     }
-    QByteArray script = qmlUnit->stringAt(binding->stringIndex).toUtf8();
+    QByteArray script = compilationUnit->stringAt(binding->stringIndex).toUtf8();
     bool ok;
     int v = evaluateEnum(script, &ok);
     if (!ok) {
@@ -172,7 +184,7 @@ void EnumSupportingCustomParser::verifyBindings(const QV4::CompiledData::Unit *q
     }
 }
 
-void SimpleObjectCustomParser::applyBindings(QObject *object, QV4::CompiledData::CompilationUnit *, const QList<const QV4::CompiledData::Binding *> &bindings)
+void SimpleObjectCustomParser::applyBindings(QObject *object, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     SimpleObjectWithCustomParser *o = qobject_cast<SimpleObjectWithCustomParser*>(object);
     Q_ASSERT(o);
@@ -182,8 +194,8 @@ void SimpleObjectCustomParser::applyBindings(QObject *object, QV4::CompiledData:
 
 MyQmlObject::MyQmlObject()
     : m_value(-1)
-    , m_interface(0)
-    , m_qmlobject(0)
+    , m_interface(nullptr)
+    , m_qmlobject(nullptr)
     , m_childAddedEventCount(0)
 {
     qRegisterMetaType<MyCustomVariantType>("MyCustomVariantType");

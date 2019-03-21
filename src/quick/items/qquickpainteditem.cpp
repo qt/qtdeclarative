@@ -53,7 +53,7 @@ class QQuickPaintedItemTextureProvider : public QSGTextureProvider
 {
 public:
     QSGPainterNode *node;
-    QSGTexture *texture() const override { return node ? node->texture() : 0; }
+    QSGTexture *texture() const override { return node ? node->texture() : nullptr; }
     void fireTextureChanged() { emit textureChanged(); }
 };
 
@@ -133,12 +133,12 @@ QQuickPaintedItemPrivate::QQuickPaintedItemPrivate()
     , contentsScale(1.0)
     , fillColor(Qt::transparent)
     , renderTarget(QQuickPaintedItem::Image)
-    , performanceHints(0)
+    , performanceHints(nullptr)
     , opaquePainting(false)
     , antialiasing(false)
     , mipmap(false)
-    , textureProvider(0)
-    , node(0)
+    , textureProvider(nullptr)
+    , node(nullptr)
 {
 }
 
@@ -566,10 +566,10 @@ QSGNode *QQuickPaintedItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
     if (width() <= 0 || height() <= 0) {
         delete oldNode;
         if (d->textureProvider) {
-            d->textureProvider->node = 0;
+            d->textureProvider->node = nullptr;
             d->textureProvider->fireTextureChanged();
         }
-        return 0;
+        return nullptr;
     }
 
     QSGPainterNode *node = static_cast<QSGPainterNode *>(oldNode);
@@ -628,17 +628,17 @@ void QQuickPaintedItem::releaseResources()
     Q_D(QQuickPaintedItem);
     if (d->textureProvider) {
         QQuickWindowQObjectCleanupJob::schedule(window(), d->textureProvider);
-        d->textureProvider = 0;
+        d->textureProvider = nullptr;
     }
-    d->node = 0; // Managed by the scene graph, just clear the pointer.
+    d->node = nullptr; // Managed by the scene graph, just clear the pointer.
 }
 
 void QQuickPaintedItem::invalidateSceneGraph()
 {
     Q_D(QQuickPaintedItem);
     delete d->textureProvider;
-    d->textureProvider = 0;
-    d->node = 0; // Managed by the scene graph, just clear the pointer
+    d->textureProvider = nullptr;
+    d->node = nullptr; // Managed by the scene graph, just clear the pointer
 }
 
 /*!
@@ -666,7 +666,7 @@ QSGTextureProvider *QQuickPaintedItem::textureProvider() const
     QQuickWindow *w = window();
     if (!w || !w->openglContext() || QThread::currentThread() != w->openglContext()->thread()) {
         qWarning("QQuickPaintedItem::textureProvider: can only be queried on the rendering thread of an exposed window");
-        return 0;
+        return nullptr;
     }
 #endif
     if (!d->textureProvider)
@@ -675,6 +675,10 @@ QSGTextureProvider *QQuickPaintedItem::textureProvider() const
     return d->textureProvider;
 }
 
+
+/*!
+   \reimp
+*/
 void QQuickPaintedItem::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == ItemDevicePixelRatioHasChanged)

@@ -65,11 +65,23 @@ class QQmlLoggingCategory : public QObject, public QQmlParserStatus
     Q_INTERFACES(QQmlParserStatus)
 
     Q_PROPERTY(QString name READ name WRITE setName)
+    Q_PROPERTY(DefaultLogLevel defaultLogLevel READ defaultLogLevel WRITE setDefaultLogLevel REVISION 1)
 
 public:
-    QQmlLoggingCategory(QObject *parent = 0);
+    enum DefaultLogLevel {
+        Debug = QtDebugMsg,
+        Info = QtInfoMsg,
+        Warning = QtWarningMsg,
+        Critical = QtCriticalMsg,
+        Fatal = QtFatalMsg
+    };
+    Q_ENUM(DefaultLogLevel);
+
+    QQmlLoggingCategory(QObject *parent = nullptr);
     virtual ~QQmlLoggingCategory();
 
+    DefaultLogLevel defaultLogLevel() const;
+    void setDefaultLogLevel(DefaultLogLevel defaultLogLevel);
     QString name() const;
     void setName(const QString &name);
 
@@ -81,6 +93,7 @@ public:
 private:
     QByteArray m_name;
     QScopedPointer<QLoggingCategory> m_category;
+    DefaultLogLevel m_defaultLogLevel = Debug;
     bool m_initialized;
 };
 

@@ -1,4 +1,5 @@
 SOURCES += \
+    $$PWD/qqml.cpp \
     $$PWD/qqmlopenmetaobject.cpp \
     $$PWD/qqmlvmemetaobject.cpp \
     $$PWD/qqmlengine.cpp \
@@ -14,16 +15,21 @@ SOURCES += \
     $$PWD/qqmlvme.cpp \
     $$PWD/qqmlboundsignal.cpp \
     $$PWD/qqmlmetatype.cpp \
+    $$PWD/qqmlmetatypedata.cpp \
     $$PWD/qqmlstringconverters.cpp \
+    $$PWD/qqmltype.cpp \
+    $$PWD/qqmltypemodule.cpp \
+    $$PWD/qqmltypemoduleversion.cpp \
     $$PWD/qqmlparserstatus.cpp \
     $$PWD/qqmltypeloader.cpp \
     $$PWD/qqmlinfo.cpp \
-    $$PWD/qqmlerror.cpp \
     $$PWD/qqmlvaluetype.cpp \
-    $$PWD/qqmlxmlhttprequest.cpp \
     $$PWD/qqmlcleanup.cpp \
     $$PWD/qqmlpropertycache.cpp \
+    $$PWD/qqmlmetaobject.cpp \
     $$PWD/qqmlnotifier.cpp \
+    $$PWD/qqmlobjectorgadget.cpp \
+    $$PWD/qqmlstaticmetaobject.cpp \
     $$PWD/qqmltypenotavailable.cpp \
     $$PWD/qqmltypenamecache.cpp \
     $$PWD/qqmlscriptstring.cpp \
@@ -31,7 +37,6 @@ SOURCES += \
     $$PWD/qqmlextensionplugin.cpp \
     $$PWD/qqmlimport.cpp \
     $$PWD/qqmllist.cpp \
-    $$PWD/qqmllocale.cpp \
     $$PWD/qqmljavascriptexpression.cpp \
     $$PWD/qqmlabstractbinding.cpp \
     $$PWD/qqmlvaluetypeproxybinding.cpp \
@@ -46,7 +51,6 @@ SOURCES += \
     $$PWD/qqmltypewrapper.cpp \
     $$PWD/qqmlfileselector.cpp \
     $$PWD/qqmlobjectcreator.cpp \
-    $$PWD/qqmldirparser.cpp \
     $$PWD/qqmldelayedcallqueue.cpp \
     $$PWD/qqmlloggingcategory.cpp
 
@@ -72,6 +76,12 @@ HEADERS += \
     $$PWD/qqmlexpression_p.h \
     $$PWD/qqmlprivate.h \
     $$PWD/qqmlmetatype_p.h \
+    $$PWD/qqmlmetatypedata_p.h \
+    $$PWD/qqmltype_p.h \
+    $$PWD/qqmltype_p_p.h \
+    $$PWD/qqmltypemodule_p.h \
+    $$PWD/qqmltypemodule_p_p.h \
+    $$PWD/qqmltypemoduleversion_p.h \
     $$PWD/qqmlengine.h \
     $$PWD/qqmlcontext.h \
     $$PWD/qqmlexpression.h \
@@ -83,13 +93,20 @@ HEADERS += \
     $$PWD/qqmllist.h \
     $$PWD/qqmllist_p.h \
     $$PWD/qqmldata_p.h \
-    $$PWD/qqmlerror.h \
     $$PWD/qqmlvaluetype_p.h \
-    $$PWD/qqmlxmlhttprequest_p.h \
     $$PWD/qqmlcleanup_p.h \
+    $$PWD/qqmlenumdata_p.h \
+    $$PWD/qqmlenumvalue_p.h \
     $$PWD/qqmlpropertycache_p.h \
+    $$PWD/qqmlpropertycachemethodarguments_p.h \
+    $$PWD/qqmlpropertycachevector_p.h \
+    $$PWD/qqmlpropertydata_p.h \
     $$PWD/qqmlpropertyindex_p.h \
+    $$PWD/qqmlpropertyrawdata_p.h \
+    $$PWD/qqmlmetaobject_p.h \
     $$PWD/qqmlnotifier_p.h \
+    $$PWD/qqmlobjectorgadget_p.h \
+    $$PWD/qqmlstaticmetaobject_p.h \
     $$PWD/qqmltypenotavailable_p.h \
     $$PWD/qqmltypenamecache_p.h \
     $$PWD/qqmlscriptstring.h \
@@ -99,7 +116,6 @@ HEADERS += \
     $$PWD/qqmlimport_p.h \
     $$PWD/qqmlextensionplugin.h \
     $$PWD/qqmlscriptstring_p.h \
-    $$PWD/qqmllocale_p.h \
     $$PWD/qqmlcomponentattached_p.h \
     $$PWD/qqmljavascriptexpression_p.h \
     $$PWD/qqmlabstractbinding_p.h \
@@ -116,9 +132,25 @@ HEADERS += \
     $$PWD/qqmlfileselector_p.h \
     $$PWD/qqmlfileselector.h \
     $$PWD/qqmlobjectcreator_p.h \
-    $$PWD/qqmldirparser_p.h \
     $$PWD/qqmldelayedcallqueue_p.h \
     $$PWD/qqmlloggingcategory_p.h
+
+qtConfig(qml-xml-http-request) {
+    HEADERS += \
+        $$PWD/qqmlxmlhttprequest_p.h
+
+    SOURCES += \
+        $$PWD/qqmlxmlhttprequest.cpp
+
+}
+
+qtConfig(qml-locale) {
+    HEADERS += \
+        $$PWD/qqmllocale_p.h
+
+    SOURCES += \
+        $$PWD/qqmllocale.cpp
+}
 
 include(ftw/ftw.pri)
 include(v8/v8.pri)

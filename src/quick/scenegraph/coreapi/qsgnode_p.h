@@ -78,18 +78,14 @@ public:
 class QSGBasicGeometryNodePrivate : public QSGNodePrivate
 {
 public:
-    QSGBasicGeometryNodePrivate()
-        : QSGNodePrivate()
-    {}
+    QSGBasicGeometryNodePrivate() {}
 };
 
 
 class QSGGeometryNodePrivate: public QSGBasicGeometryNodePrivate
 {
 public:
-    QSGGeometryNodePrivate()
-        : QSGBasicGeometryNodePrivate()
-    {}
+    QSGGeometryNodePrivate() {}
 };
 
 QT_END_NAMESPACE

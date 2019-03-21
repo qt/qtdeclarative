@@ -54,8 +54,11 @@
 #include <QtCore/qabstractitemmodel.h>
 
 #include "private/qqmllistaccessor_p.h"
-
+#include <private/qqmlglobal_p.h>
 #include <private/qqmlguard_p.h>
+#include <private/qqmlnullablevalue_p.h>
+
+QT_REQUIRE_CONFIG(qml_delegate_model);
 
 QT_BEGIN_NAMESPACE
 
@@ -65,7 +68,7 @@ class QQmlDelegateModel;
 class QQmlDelegateModelItem;
 class QQmlDelegateModelItemMetaType;
 
-class QQmlAdaptorModel : public QQmlGuard<QObject>
+class Q_QML_PRIVATE_EXPORT QQmlAdaptorModel : public QQmlStrongJSQObjectReference<QObject>
 {
 public:
     class Accessors
@@ -73,8 +76,9 @@ public:
     public:
         inline Accessors() {}
         virtual ~Accessors();
-        virtual int count(const QQmlAdaptorModel &) const { return 0; }
-        virtual void cleanup(QQmlAdaptorModel &, QQmlDelegateModel * = 0) const {}
+        virtual int rowCount(const QQmlAdaptorModel &) const { return 0; }
+        virtual int columnCount(const QQmlAdaptorModel &) const { return 0; }
+        virtual void cleanup(QQmlAdaptorModel &) const {}
 
         virtual QVariant value(const QQmlAdaptorModel &, int, const QString &) const {
             return QVariant(); }
@@ -82,8 +86,7 @@ public:
         virtual QQmlDelegateModelItem *createItem(
                 QQmlAdaptorModel &,
                 QQmlDelegateModelItemMetaType *,
-                QQmlEngine *,
-                int) const { return 0; }
+                int, int, int) const { return nullptr; }
 
         virtual bool notify(
                 const QQmlAdaptorModel &,
@@ -101,29 +104,42 @@ public:
             return QVariant(); }
         virtual bool canFetchMore(const QQmlAdaptorModel &) const { return false; }
         virtual void fetchMore(QQmlAdaptorModel &) const {}
+
+        QScopedPointer<QMetaObject, QScopedPointerPodDeleter> metaObject;
+        QQmlRefPointer<QQmlPropertyCache> propertyCache;
     };
 
     const Accessors *accessors;
     QPersistentModelIndex rootIndex;
     QQmlListAccessor list;
 
+    int modelItemRevision = 0;
+
     QQmlAdaptorModel();
     ~QQmlAdaptorModel();
 
     inline QVariant model() const { return list.list(); }
-    void setModel(const QVariant &variant, QQmlDelegateModel *vdm, QQmlEngine *engine);
-    void invalidateModel(QQmlDelegateModel *vdm);
+    void setModel(const QVariant &variant, QObject *parent, QQmlEngine *engine);
+    void invalidateModel();
 
     bool isValid() const;
+    int count() const;
+    int rowCount() const;
+    int columnCount() const;
+    int rowAt(int index) const;
+    int columnAt(int index) const;
+    int indexAt(int row, int column) const;
 
+    void useImportVersion(int minorVersion);
+
+    inline bool adaptsAim() const { return qobject_cast<QAbstractItemModel *>(object()); }
     inline QAbstractItemModel *aim() { return static_cast<QAbstractItemModel *>(object()); }
     inline const QAbstractItemModel *aim() const { return static_cast<const QAbstractItemModel *>(object()); }
 
-    inline int count() const { return qMax(0, accessors->count(*this)); }
     inline QVariant value(int index, const QString &role) const {
         return accessors->value(*this, index, role); }
-    inline QQmlDelegateModelItem *createItem(QQmlDelegateModelItemMetaType *metaType, QQmlEngine *engine, int index) {
-        return accessors->createItem(*this, metaType, engine, index); }
+    inline QQmlDelegateModelItem *createItem(QQmlDelegateModelItemMetaType *metaType, int index) {
+        return accessors->createItem(*this, metaType, index, rowAt(index), columnAt(index)); }
     inline bool hasProxyObject() const {
         return list.type() == QQmlListAccessor::Instance || list.type() == QQmlListAccessor::ListProperty; }
 

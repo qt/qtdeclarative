@@ -107,9 +107,6 @@ private slots:
 
     void typeResolution_data();
     void typeResolution();
-
-private:
-    QQmlEngine engine;
 };
 
 tst_holistic::tst_holistic()
@@ -251,6 +248,8 @@ void tst_holistic::compilation()
     Q_ASSERT(files.size() > 0);
     Q_ASSERT(repetitions > 0);
 
+    QQmlEngine engine;
+
     QBENCHMARK {
         engine.clearComponentCache();
         for (int i = 0; i < repetitions; ++i) {
@@ -271,6 +270,8 @@ void tst_holistic::instantiation()
     QFETCH(int, repetitions);
     Q_ASSERT(files.size() > 0);
     Q_ASSERT(repetitions > 0);
+
+    QQmlEngine engine;
 
     QList<QQmlComponent*> components;
     for (int i = 0; i < files.size(); ++i) {
@@ -305,6 +306,8 @@ void tst_holistic::creation()
     QFETCH(int, repetitions);
     Q_ASSERT(files.size() > 0);
     Q_ASSERT(repetitions > 0);
+
+    QQmlEngine engine;
 
     QBENCHMARK {
         engine.clearComponentCache();
@@ -369,6 +372,7 @@ void tst_holistic::dynamicity()
     QFETCH(QVariant, writeValueTwo);
     QFETCH(QString, readProperty);
 
+    QQmlEngine engine;
     QQmlComponent c(&engine, file);
     QObject *obj = c.create();
 
@@ -478,6 +482,7 @@ void tst_holistic::cppToJsDirect()
     QFETCH(QString, file);
     QFETCH(QString, methodName);
 
+    QQmlEngine engine;
     QQmlComponent c(&engine, file);
     QObject *obj = c.create();
 
@@ -497,6 +502,7 @@ void tst_holistic::cppToJsIndirect()
     // The benchmark deliberately causes change signals to be emitted (and
     // modifies the scarce resources) so that the properties are updated.
 
+    QQmlEngine engine;
     QQmlComponent c(&engine, QString(SRCDIR + QLatin1String("/data/scopeSwitching/ScarceTwo.qml")));
     QObject *obj = c.create();
 
@@ -560,6 +566,7 @@ void tst_holistic::typeResolution()
     Q_ASSERT(propertyNameTwo.size() == propertyValueTwo.size());
     Q_ASSERT(repetitions > 0);
 
+    QQmlEngine engine;
     QQmlComponent c(&engine, file);
     QObject *obj = c.create();
 

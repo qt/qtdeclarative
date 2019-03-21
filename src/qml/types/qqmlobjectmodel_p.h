@@ -52,6 +52,7 @@
 //
 
 #include <private/qtqmlglobal_p.h>
+#include <private/qqmlincubator_p.h>
 #include <QtQml/qqml.h>
 #include <QtCore/qobject.h>
 
@@ -59,6 +60,7 @@ QT_BEGIN_NAMESPACE
 
 class QObject;
 class QQmlChangeSet;
+class QAbstractItemModel;
 
 class Q_QML_PRIVATE_EXPORT QQmlInstanceModel : public QObject
 {
@@ -74,13 +76,15 @@ public:
 
     virtual int count() const = 0;
     virtual bool isValid() const = 0;
-    virtual QObject *object(int index, bool asynchronous=false) = 0;
+    virtual QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) = 0;
     virtual ReleaseFlags release(QObject *object) = 0;
     virtual void cancel(int) {}
     virtual QString stringValue(int, const QString &) = 0;
     virtual void setWatchedRoles(const QList<QByteArray> &roles) = 0;
+    virtual QQmlIncubator::Status incubationStatus(int index) = 0;
 
     virtual int indexOf(QObject *object, QObject *objectContext) const = 0;
+    virtual const QAbstractItemModel *abstractItemModel() const { return nullptr; }
 
 Q_SIGNALS:
     void countChanged();
@@ -90,7 +94,7 @@ Q_SIGNALS:
     void destroyingItem(QObject *object);
 
 protected:
-    QQmlInstanceModel(QObjectPrivate &dd, QObject *parent = 0)
+    QQmlInstanceModel(QObjectPrivate &dd, QObject *parent = nullptr)
         : QObject(dd, parent) {}
 
 private:
@@ -108,15 +112,16 @@ class Q_QML_PRIVATE_EXPORT QQmlObjectModel : public QQmlInstanceModel
     Q_CLASSINFO("DefaultProperty", "children")
 
 public:
-    QQmlObjectModel(QObject *parent=0);
+    QQmlObjectModel(QObject *parent=nullptr);
     ~QQmlObjectModel() {}
 
     int count() const override;
     bool isValid() const override;
-    QObject *object(int index, bool asynchronous = false) override;
+    QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
     ReleaseFlags release(QObject *object) override;
     QString stringValue(int index, const QString &role) override;
     void setWatchedRoles(const QList<QByteArray> &) override {}
+    QQmlIncubator::Status incubationStatus(int index) override;
 
     int indexOf(QObject *object, QObject *objectContext) const override;
 

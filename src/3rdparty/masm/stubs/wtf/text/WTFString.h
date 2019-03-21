@@ -42,26 +42,33 @@
 #include <QString>
 #include <wtf/ASCIICType.h>
 #include <wtf/unicode/Unicode.h>
+#include <memory>
 
 namespace WTF {
+
+class PrintStream;
 
 class String : public QString
 {
 public:
+    String() = default;
     String(const QString& s) : QString(s) {}
     bool is8Bit() const { return false; }
     const unsigned char *characters8() const { return 0; }
     const UChar *characters16() const { return reinterpret_cast<const UChar*>(constData()); }
 
     template <typename T>
-    const T* getCharacters() const;
+    const T* characters() const;
 
+    bool operator!() const { return isEmpty(); }
+
+    void dump(PrintStream &) const {}
 };
 
 template <>
-inline const unsigned char* String::getCharacters<unsigned char>() const { return characters8(); }
+inline const unsigned char* String::characters<unsigned char>() const { return characters8(); }
 template <>
-inline const UChar* String::getCharacters<UChar>() const { return characters16(); }
+inline const UChar* String::characters<UChar>() const { return characters16(); }
 
 }
 
@@ -69,5 +76,7 @@ inline const UChar* String::getCharacters<UChar>() const { return characters16()
 namespace JSC {
     using WTF::String;
 }
+
+#define WTFMove(value) std::move(value)
 
 #endif // WTFSTRING_H

@@ -66,6 +66,7 @@ public:
     void setPenColor(const QColor &color) override;
     void setPenWidth(qreal width) override;
     void setGradientStops(const QGradientStops &stops) override;
+    void setGradientVertical(bool vertical) override;
     void setRadius(qreal radius) override;
     void setAntialiasing(bool antialiasing) override;
     void setAligned(bool aligned) override;
@@ -90,6 +91,7 @@ protected:
     uint m_antialiasing : 1;
     uint m_gradient_is_opaque : 1;
     uint m_dirty_geometry : 1;
+    uint m_gradient_is_vertical : 1;
 
     QSGGeometry m_geometry;
 };

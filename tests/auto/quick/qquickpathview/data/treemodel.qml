@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQml.Models 2.12
 
 PathView {
     width: 320
@@ -6,7 +7,7 @@ PathView {
     function setRoot(index) {
         vdm.rootIndex = vdm.modelIndex(index);
     }
-    model: VisualDataModel {
+    model: DelegateModel {
         id: vdm
         model: myModel
         delegate: Text { objectName: "wrapper"; text: display }

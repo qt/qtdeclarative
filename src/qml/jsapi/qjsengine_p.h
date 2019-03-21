@@ -55,6 +55,7 @@
 #include <QtCore/qmutex.h>
 #include "qjsengine.h"
 #include "private/qtqmlglobal_p.h"
+#include <private/qqmlmetatype_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -74,7 +75,7 @@ public:
     static QJSEnginePrivate* get(QV4::ExecutionEngine *e);
 
     QJSEnginePrivate() : mutex(QMutex::Recursive) {}
-    ~QJSEnginePrivate();
+    ~QJSEnginePrivate() override;
 
     static void addToDebugServer(QJSEngine *q);
     static void removeFromDebugServer(QJSEngine *q);
@@ -108,16 +109,8 @@ public:
 
 
     // These methods may be called from the QML loader thread
-    inline QQmlPropertyCache *cache(QObject *obj);
-    inline QQmlPropertyCache *cache(const QMetaObject *);
-
-private:
-    // Must be called locked
-    QQmlPropertyCache *createCache(const QMetaObject *);
-
-    // These members must be protected by a QJSEnginePrivate::Locker as they are required by
-    // the threaded loader.  Only access them through their respective accessor methods.
-    QHash<const QMetaObject *, QQmlPropertyCache *> propertyCache;
+    inline QQmlPropertyCache *cache(QObject *obj, int minorVersion = -1);
+    inline QQmlPropertyCache *cache(const QMetaObject *, int minorVersion = -1);
 };
 
 QJSEnginePrivate::Locker::Locker(const QJSEngine *e)
@@ -167,16 +160,14 @@ and deleted before the loader thread has a chance to use or reference it.  This
 can't currently happen as the cache holds a reference to the
 QQmlPropertyCache until the QQmlEngine is destroyed.
 */
-QQmlPropertyCache *QJSEnginePrivate::cache(QObject *obj)
+QQmlPropertyCache *QJSEnginePrivate::cache(QObject *obj, int minorVersion)
 {
     if (!obj || QObjectPrivate::get(obj)->metaObject || QObjectPrivate::get(obj)->wasDeleted)
-        return 0;
+        return nullptr;
 
     Locker locker(this);
     const QMetaObject *mo = obj->metaObject();
-    QQmlPropertyCache *rv = propertyCache.value(mo);
-    if (!rv) rv = createCache(mo);
-    return rv;
+    return QQmlMetaType::propertyCache(mo, minorVersion);
 }
 
 /*!
@@ -188,14 +179,12 @@ exist for the lifetime of the QQmlEngine.
 
 The returned cache is not referenced, so if it is to be stored, call addref().
 */
-QQmlPropertyCache *QJSEnginePrivate::cache(const QMetaObject *metaObject)
+QQmlPropertyCache *QJSEnginePrivate::cache(const QMetaObject *metaObject, int minorVersion)
 {
     Q_ASSERT(metaObject);
 
     Locker locker(this);
-    QQmlPropertyCache *rv = propertyCache.value(metaObject);
-    if (!rv) rv = createCache(metaObject);
-    return rv;
+    return QQmlMetaType::propertyCache(metaObject, minorVersion);
 }
 
 

@@ -54,6 +54,7 @@
 #include "qv4engine_p.h"
 #include "qv4functionobject_p.h"
 #include "qv4qmlcontext_p.h"
+#include "private/qv4compilercontext_p.h"
 
 #include <QQmlError>
 
@@ -62,87 +63,49 @@ QT_BEGIN_NAMESPACE
 class QQmlContextData;
 
 namespace QQmlJS {
-class Directives;
+class Engine;
 }
 
 namespace QV4 {
 
-struct ContextStateSaver {
-    Value *savedContext;
-    bool strictMode;
-    Lookup *lookups;
-    const QV4::Value *constantTable;
-    CompiledData::CompilationUnitBase *compilationUnit;
-    int lineNumber;
-
-    ContextStateSaver(const Scope &scope, ExecutionContext *context)
-        : savedContext(scope.alloc(1))
-        , strictMode(context->d()->strictMode)
-        , lookups(context->d()->lookups)
-        , constantTable(context->d()->constantTable)
-        , compilationUnit(context->d()->compilationUnit)
-        , lineNumber(context->d()->lineNumber)
-    {
-        savedContext->setM(context->d());
-    }
-    ContextStateSaver(const Scope &scope, Heap::ExecutionContext *context)
-        : savedContext(scope.alloc(1))
-        , strictMode(context->strictMode)
-        , lookups(context->lookups)
-        , constantTable(context->constantTable)
-        , compilationUnit(context->compilationUnit)
-        , lineNumber(context->lineNumber)
-    {
-        savedContext->setM(context);
-    }
-
-    ~ContextStateSaver()
-    {
-        Heap::ExecutionContext *ctx = static_cast<Heap::ExecutionContext *>(savedContext->m());
-        ctx->strictMode = strictMode;
-        ctx->lookups = lookups;
-        ctx->constantTable = constantTable;
-        ctx->compilationUnit = compilationUnit;
-        ctx->lineNumber = lineNumber;
-    }
-};
-
 struct Q_QML_EXPORT Script {
-    Script(ExecutionContext *scope, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
+    Script(ExecutionContext *scope, QV4::Compiler::ContextType mode, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
-        , scope(scope), strictMode(false), inheritContext(false), parsed(false)
-        , vmFunction(0), parseAsBinding(false) {}
-    Script(ExecutionEngine *engine, QmlContext *qml, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
+        , context(scope), strictMode(false), inheritContext(false), parsed(false), contextType(mode)
+        , vmFunction(nullptr), parseAsBinding(false) {}
+    Script(ExecutionEngine *engine, QmlContext *qml, bool parseAsBinding, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
-        , scope(engine->rootContext()), strictMode(false), inheritContext(true), parsed(false)
-        , vmFunction(0), parseAsBinding(true) {
+        , context(engine->rootContext()), strictMode(false), inheritContext(true), parsed(false)
+        , vmFunction(nullptr), parseAsBinding(parseAsBinding) {
         if (qml)
             qmlContext.set(engine, *qml);
     }
-    Script(ExecutionEngine *engine, QmlContext *qml, CompiledData::CompilationUnit *compilationUnit);
+    Script(ExecutionEngine *engine, QmlContext *qml, const QQmlRefPointer<CompiledData::CompilationUnit> &compilationUnit);
     ~Script();
     QString sourceFile;
     int line;
     int column;
     QString sourceCode;
-    ExecutionContext *scope;
+    ExecutionContext *context;
     bool strictMode;
     bool inheritContext;
     bool parsed;
+    QV4::Compiler::ContextType contextType = QV4::Compiler::ContextType::Eval;
     QV4::PersistentValue qmlContext;
     QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit;
     Function *vmFunction;
     bool parseAsBinding;
 
     void parse();
-    ReturnedValue run();
+    ReturnedValue run(const QV4::Value *thisObject = nullptr);
 
     Function *function();
 
-    static QQmlRefPointer<CompiledData::CompilationUnit> precompile(IR::Module *module, Compiler::JSUnitGenerator *unitGenerator, ExecutionEngine *engine, const QUrl &url, const QString &source,
-                                                                    QList<QQmlError> *reportedErrors = 0, QQmlJS::Directives *directivesCollector = 0);
-
-    static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, QmlContext *qmlContext);
+    static QQmlRefPointer<CompiledData::CompilationUnit> precompile(QV4::Compiler::Module *module, QQmlJS::Engine *jsEngine, Compiler::JSUnitGenerator *unitGenerator,
+            const QString &fileName, const QString &finalUrl, const QString &source,
+            QList<QQmlError> *reportedErrors = nullptr,
+            QV4::Compiler::ContextType contextType = QV4::Compiler::ContextType::Global);
+    static Script *createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlContext, const QString &fileName, const QUrl &originalUrl, QString *error);
 };
 
 }

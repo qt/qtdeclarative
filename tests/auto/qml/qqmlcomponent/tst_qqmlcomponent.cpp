@@ -89,7 +89,7 @@ public slots:
 static void gc(QQmlEngine &engine)
 {
     engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 }
 
@@ -116,7 +116,11 @@ private slots:
     void onDestructionCount();
     void recursion();
     void recursionContinuation();
+    void partialComponentCreation();
     void callingContextForInitialProperties();
+    void setNonExistentInitialProperty();
+    void relativeUrl_data();
+    void relativeUrl();
 
 private:
     QQmlEngine engine;
@@ -155,7 +159,7 @@ void tst_qqmlcomponent::qmlIncubateObject()
 {
     QQmlComponent component(&engine, testFileUrl("incubateObject.qml"));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("test1").toBool(), true);
     QCOMPARE(object->property("test2").toBool(), false);
 
@@ -169,8 +173,8 @@ void tst_qqmlcomponent::qmlCreateWindow()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("createWindow.qml"));
-    QQuickWindow* window = qobject_cast<QQuickWindow *>(component.create());
-    QVERIFY(window);
+    QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow *>(component.create()));
+    QVERIFY(!window.isNull());
 }
 
 void tst_qqmlcomponent::qmlCreateObjectAutoParent_data()
@@ -188,8 +192,8 @@ void tst_qqmlcomponent::qmlCreateObjectAutoParent()
 
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl(testFile));
-    QQuickItem *root = qobject_cast<QQuickItem *>(component.create());
-    QVERIFY(root);
+    QScopedPointer<QObject> root(qobject_cast<QQuickItem *>(component.create()));
+    QVERIFY(!root.isNull());
     QObject *qtobjectParent = root->property("qtobjectParent").value<QObject*>();
     QQuickItem *itemParent = qobject_cast<QQuickItem *>(root->property("itemParent").value<QObject*>());
     QQuickWindow *windowParent = qobject_cast<QQuickWindow *>(root->property("windowParent").value<QObject*>());
@@ -234,8 +238,8 @@ void tst_qqmlcomponent::qmlCreateObjectAutoParent()
     QCOMPARE(window_item->parent(), windowParent);
     QCOMPARE(window_window->parent(), windowParent);
 
-    QCOMPARE(qobject_cast<QQuickItem *>(qtobject_item)->parentItem(), (QQuickItem *)0);
-    QCOMPARE(qobject_cast<QQuickWindow *>(qtobject_window)->transientParent(), (QQuickWindow *)0);
+    QCOMPARE(qobject_cast<QQuickItem *>(qtobject_item)->parentItem(), (QQuickItem *)nullptr);
+    QCOMPARE(qobject_cast<QQuickWindow *>(qtobject_window)->transientParent(), (QQuickWindow *)nullptr);
     QCOMPARE(qobject_cast<QQuickItem *>(item_item)->parentItem(), itemParent);
     QCOMPARE(qobject_cast<QQuickWindow *>(item_window)->transientParent(), itemParent->window());
     QCOMPARE(qobject_cast<QQuickItem *>(window_item)->parentItem(), windowParent->contentItem());
@@ -247,45 +251,52 @@ void tst_qqmlcomponent::qmlCreateObjectWithProperties()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("createObjectWithScript.qml"));
     QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
-    QObject *object = component.create();
-    QVERIFY(object != 0);
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
 
-    QObject *testObject1 = object->property("declarativerectangle").value<QObject*>();
-    QVERIFY(testObject1);
-    QCOMPARE(testObject1->parent(), object);
-    QCOMPARE(testObject1->property("x").value<int>(), 17);
-    QCOMPARE(testObject1->property("y").value<int>(), 17);
-    QCOMPARE(testObject1->property("color").value<QColor>(), QColor(255,255,255));
-    QCOMPARE(QQmlProperty::read(testObject1,"border.width").toInt(), 3);
-    QCOMPARE(QQmlProperty::read(testObject1,"innerRect.border.width").toInt(), 20);
-    delete testObject1;
+    {
+        QScopedPointer<QObject> testObject1(object->property("declarativerectangle")
+                                                    .value<QObject*>());
+        QVERIFY(testObject1);
+        QCOMPARE(testObject1->parent(), object.data());
+        QCOMPARE(testObject1->property("x").value<int>(), 17);
+        QCOMPARE(testObject1->property("y").value<int>(), 17);
+        QCOMPARE(testObject1->property("color").value<QColor>(), QColor(255,255,255));
+        QCOMPARE(QQmlProperty::read(testObject1.data(),"border.width").toInt(), 3);
+        QCOMPARE(QQmlProperty::read(testObject1.data(),"innerRect.border.width").toInt(), 20);
+    }
 
-    QObject *testObject2 = object->property("declarativeitem").value<QObject*>();
-    QVERIFY(testObject2);
-    QCOMPARE(testObject2->parent(), object);
-    //QCOMPARE(testObject2->metaObject()->className(), "QDeclarativeItem_QML_2");
-    QCOMPARE(testObject2->property("x").value<int>(), 17);
-    QCOMPARE(testObject2->property("y").value<int>(), 17);
-    QCOMPARE(testObject2->property("testBool").value<bool>(), true);
-    QCOMPARE(testObject2->property("testInt").value<int>(), 17);
-    QCOMPARE(testObject2->property("testObject").value<QObject*>(), object);
-    delete testObject2;
+    {
+        QScopedPointer<QObject> testObject2(object->property("declarativeitem").value<QObject*>());
+        QVERIFY(testObject2);
+        QCOMPARE(testObject2->parent(), object.data());
+        //QCOMPARE(testObject2->metaObject()->className(), "QDeclarativeItem_QML_2");
+        QCOMPARE(testObject2->property("x").value<int>(), 17);
+        QCOMPARE(testObject2->property("y").value<int>(), 17);
+        QCOMPARE(testObject2->property("testBool").value<bool>(), true);
+        QCOMPARE(testObject2->property("testInt").value<int>(), 17);
+        QCOMPARE(testObject2->property("testObject").value<QObject*>(), object.data());
+    }
 
-    QObject *testBindingObj = object->property("bindingTestObject").value<QObject*>();
-    QVERIFY(testBindingObj);
-    QCOMPARE(testBindingObj->parent(), object);
-    QCOMPARE(testBindingObj->property("testValue").value<int>(), 300);
-    object->setProperty("width", 150);
-    QCOMPARE(testBindingObj->property("testValue").value<int>(), 150 * 3);
-    delete testBindingObj;
+    {
+        QScopedPointer<QObject> testBindingObj(object->property("bindingTestObject")
+                                                       .value<QObject*>());
+        QVERIFY(testBindingObj);
+        QCOMPARE(testBindingObj->parent(), object.data());
+        QCOMPARE(testBindingObj->property("testValue").value<int>(), 300);
+        object->setProperty("width", 150);
+        QCOMPARE(testBindingObj->property("testValue").value<int>(), 150 * 3);
+    }
 
-    QObject *testBindingThisObj = object->property("bindingThisTestObject").value<QObject*>();
-    QVERIFY(testBindingThisObj);
-    QCOMPARE(testBindingThisObj->parent(), object);
-    QCOMPARE(testBindingThisObj->property("testValue").value<int>(), 900);
-    testBindingThisObj->setProperty("width", 200);
-    QCOMPARE(testBindingThisObj->property("testValue").value<int>(), 200 * 3);
-    delete testBindingThisObj;
+    {
+        QScopedPointer<QObject> testBindingThisObj(object->property("bindingThisTestObject")
+                                                           .value<QObject*>());
+        QVERIFY(testBindingThisObj);
+        QCOMPARE(testBindingThisObj->parent(), object.data());
+        QCOMPARE(testBindingThisObj->property("testValue").value<int>(), 900);
+        testBindingThisObj->setProperty("width", 200);
+        QCOMPARE(testBindingThisObj->property("testValue").value<int>(), 200 * 3);
+    }
 }
 
 void tst_qqmlcomponent::qmlCreateParentReference()
@@ -299,7 +310,7 @@ void tst_qqmlcomponent::qmlCreateParentReference()
     QQmlComponent component(&engine, testFileUrl("createParentReference.qml"));
     QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QVERIFY(QMetaObject::invokeMethod(object, "createChild"));
     delete object;
@@ -325,7 +336,7 @@ void tst_qqmlcomponent::async()
     QCOMPARE(watcher.error, 0);
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     delete object;
 }
@@ -346,7 +357,7 @@ void tst_qqmlcomponent::asyncHierarchy()
     QCOMPARE(watcher.error, 0);
 
     QObject *root = component.create();
-    QVERIFY(root != 0);
+    QVERIFY(root != nullptr);
 
     // ensure that the parent-child relationship hierarchy is correct
     // (use QQuickItem* for all children rather than types which are not publicly exported)
@@ -411,7 +422,7 @@ void tst_qqmlcomponent::componentUrlCanonicalization()
         QQmlEngine engine;
         QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.qml"));
         QScopedPointer<QObject> object(component.create());
-        QVERIFY(object != 0);
+        QVERIFY(object != nullptr);
         QVERIFY(object->property("success").toBool());
     }
 
@@ -421,7 +432,7 @@ void tst_qqmlcomponent::componentUrlCanonicalization()
         QQmlEngine engine;
         QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.2.qml"));
         QScopedPointer<QObject> object(component.create());
-        QVERIFY(object != 0);
+        QVERIFY(object != nullptr);
         QVERIFY(object->property("success").toBool());
     }
 
@@ -430,7 +441,7 @@ void tst_qqmlcomponent::componentUrlCanonicalization()
         QQmlEngine engine;
         QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.3.qml"));
         QScopedPointer<QObject> object(component.create());
-        QVERIFY(object != 0);
+        QVERIFY(object != nullptr);
         QVERIFY(object->property("success").toBool());
     }
 
@@ -439,7 +450,7 @@ void tst_qqmlcomponent::componentUrlCanonicalization()
         QQmlEngine engine;
         QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.4.qml"));
         QScopedPointer<QObject> object(component.create());
-        QVERIFY(object != 0);
+        QVERIFY(object != nullptr);
         QVERIFY(object->property("success").toBool());
     }
 
@@ -459,7 +470,7 @@ void tst_qqmlcomponent::onDestructionLookup()
     QQmlComponent component(&engine, testFileUrl("onDestructionLookup.qml"));
     QScopedPointer<QObject> object(component.create());
     gc(engine);
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QVERIFY(object->property("success").toBool());
 }
 
@@ -475,7 +486,7 @@ void tst_qqmlcomponent::onDestructionCount()
         QTest::ignoreMessage(QtWarningMsg, warning.data());
 
         QScopedPointer<QObject> object(component.create());
-        QVERIFY(object != 0);
+        QVERIFY(object != nullptr);
     }
 
     // Warning should not be emitted any further
@@ -485,7 +496,7 @@ void tst_qqmlcomponent::onDestructionCount()
     {
         QQmlTestMessageHandler messageHandler;
 
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
         QCoreApplication::processEvents();
         warnings = messageHandler.messages();
     }
@@ -503,7 +514,7 @@ void tst_qqmlcomponent::recursion()
 
     QTest::ignoreMessage(QtWarningMsg, QLatin1String("QQmlComponent: Component creation is recursing - aborting").data());
     QScopedPointer<QObject> object(component.create());
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     // Sub-object creation does not succeed
     QCOMPARE(object->property("success").toBool(), false);
@@ -518,10 +529,33 @@ void tst_qqmlcomponent::recursionContinuation()
         QTest::ignoreMessage(QtWarningMsg, QLatin1String("QQmlComponent: Component creation is recursing - aborting").data());
 
     QScopedPointer<QObject> object(component.create());
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     // Eventual sub-object creation succeeds
     QVERIFY(object->property("success").toBool());
+}
+
+void tst_qqmlcomponent::partialComponentCreation()
+{
+    const int maxCount = 17;
+    QQmlEngine engine;
+    QScopedPointer<QQmlComponent> components[maxCount];
+    QScopedPointer<QObject> objects[maxCount];
+    QQmlTestMessageHandler messageHandler;
+
+    QCOMPARE(engine.outputWarningsToStandardError(), true);
+
+    for (int i = 0; i < maxCount; i++) {
+        components[i].reset(new QQmlComponent(&engine, testFileUrl("QtObjectComponent.qml")));
+        objects[i].reset(components[i]->beginCreate(engine.rootContext()));
+        QVERIFY(objects[i].isNull() == false);
+    }
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
+
+    for (int i = 0; i < maxCount; i++) {
+        components[i]->completeCreate();
+    }
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
 }
 
 class CallingContextCheckingClass : public QObject
@@ -536,13 +570,13 @@ public:
     int value() const { return m_value; }
     void setValue(int v) {
         scopeObject.clear();
-        callingContextData.setContextData(0);
+        callingContextData.setContextData(nullptr);
 
         m_value = v;
         QJSEngine *jsEngine = qjsEngine(this);
         if (!jsEngine)
             return;
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(jsEngine);
+        QV4::ExecutionEngine *v4 = jsEngine->handle();
         if (!v4)
             return;
         QV4::Scope scope(v4);
@@ -579,6 +613,45 @@ void tst_qqmlcomponent::callingContextForInitialProperties()
 
     QVERIFY(!checker->scopeObject.isNull());
     QVERIFY(checker->scopeObject->metaObject()->indexOfProperty("incubatedObject") != -1);
+}
+
+void tst_qqmlcomponent::setNonExistentInitialProperty()
+{
+    QQmlIncubationController controller;
+    QQmlEngine engine;
+    engine.setIncubationController(&controller);
+    QQmlComponent component(&engine, testFileUrl("nonExistentInitialProperty.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QMetaObject::invokeMethod(obj.data(), "startIncubation");
+    QJSValue incubatorStatus = obj->property("incubator").value<QJSValue>();
+    incubatorStatus.property("forceCompletion").callWithInstance(incubatorStatus);
+    QJSValue objectWrapper = incubatorStatus.property("object");
+    QVERIFY(objectWrapper.isQObject());
+    QPointer<QObject> object(objectWrapper.toQObject());
+    QVERIFY(object->property("ok").toBool());
+}
+
+void tst_qqmlcomponent::relativeUrl_data()
+{
+    QTest::addColumn<QUrl>("url");
+
+    QTest::addRow("fromLocalFile") << QUrl::fromLocalFile("data/QtObjectComponent.qml");
+    QTest::addRow("fromLocalFileHash") << QUrl::fromLocalFile("data/QtObjectComponent#2.qml");
+    QTest::addRow("constructor") << QUrl("data/QtObjectComponent.qml");
+    QTest::addRow("absolute") << QUrl::fromLocalFile(QFINDTESTDATA("data/QtObjectComponent.qml"));
+    QTest::addRow("qrc") << QUrl("qrc:/data/QtObjectComponent.qml");
+}
+
+void tst_qqmlcomponent::relativeUrl()
+{
+    QFETCH(QUrl, url);
+
+    QQmlComponent component(&engine);
+    // Shouldn't assert in QQmlTypeLoader; we want QQmlComponent to assume that
+    // data/QtObjectComponent.qml refers to the data/QtObjectComponent.qml in the current working directory.
+    component.loadUrl(url);
+    QVERIFY2(!component.isError(), qPrintable(component.errorString()));
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

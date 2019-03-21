@@ -35,6 +35,16 @@ MultiPointTouchArea {
     width: 100
     height: 100
 
+    // touchUpdatedSpy stores the QQuickTouchPoint, and in some cases
+    // MultiPointTouchArea can delete it out from under us.
+    // (test_simpleChain was failing because touchUpdatedSpy.signalArguments[0][0][0]
+    // ended up as an empty object somehow.)  If we declare
+    // all the touchpoints that this test will use, that won't happen.
+    touchPoints: [
+        TouchPoint { },
+        TouchPoint { }
+    ]
+
     SignalSpy {
         id: touchUpdatedSpy
         target: touchArea
@@ -173,10 +183,10 @@ MultiPointTouchArea {
 
         function test_simpleChain() {
             var first = 1;
-            touchEvent(touchArea).press(first).commit().release(first).commit();
-            compare(touchUpdatedSpy.count, 2);
-            var touchPoint =  touchUpdatedSpy.signalArguments[0][0][0];
-            verify(comparePoint(touchPoint, first, touchArea.width / 2, touchArea.height / 2));
+            touchEvent(interior).press(first).commit().release(first).commit();
+            compare(interiorSpy.count, 2);
+            var touchPoint =  interiorSpy.signalArguments[0][0][0];
+            verify(comparePoint(touchPoint, first, interior.width / 2, interior.height / 2));
         }
     }
 }

@@ -73,7 +73,7 @@ public:
     enum ReversingMode { Eased, Immediate, Sync };
     Q_ENUM(ReversingMode)
 
-    QQuickSmoothedAnimation(QObject *parent = 0);
+    QQuickSmoothedAnimation(QObject *parent = nullptr);
     ~QQuickSmoothedAnimation();
 
     ReversingMode reversingMode() const;
@@ -91,7 +91,7 @@ public:
     QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0) override;
+                            QObject *defaultTarget = nullptr) override;
 Q_SIGNALS:
     void velocityChanged();
     void reversingModeChanged();

@@ -78,6 +78,8 @@ class QQmlExpression;
 class QQmlExpressionPrivate;
 class QQmlJavaScriptExpression;
 class QQmlContextData;
+class QQmlGuardedContextData;
+class QQmlIncubatorPrivate;
 
 class QQmlContextPrivate : public QObjectPrivate
 {
@@ -105,7 +107,7 @@ public:
 };
 
 class QQmlComponentAttached;
-class QQmlGuardedContextData;
+
 class Q_QML_PRIVATE_EXPORT QQmlContextData
 {
 public:
@@ -113,7 +115,7 @@ public:
     QQmlContextData(QQmlContext *);
     void emitDestruction();
     void clearContext();
-    void destroy();
+    void clearContextRecursively();
     void invalidate();
 
     inline bool isValid() const {
@@ -121,13 +123,13 @@ public:
     }
 
     // My parent context and engine
-    QQmlContextData *parent;
+    QQmlContextData *parent = nullptr;
     QQmlEngine *engine;
 
-    void setParent(QQmlContextData *, bool parentTakesOwnership = false);
+    void setParent(QQmlContextData *, bool stronglyReferencedByParent = false);
     void refreshExpressions();
 
-    void addObject(QObject *);
+    void addObject(QQmlData *data);
 
     QUrl resolvedUrl(const QUrl &);
 
@@ -135,18 +137,19 @@ public:
     // If internal is false publicContext owns this.
     QQmlContext *asQQmlContext();
     QQmlContextPrivate *asQQmlContextPrivate();
+    quint32 refCount = 0;
     quint32 isInternal:1;
-    quint32 ownedByParent:1; // unrelated to isInternal; parent context deletes children if true.
     quint32 isJSContext:1;
     quint32 isPragmaLibraryContext:1;
     quint32 unresolvedNames:1; // True if expressions in this context failed to resolve a toplevel name
     quint32 hasEmittedDestruction:1;
     quint32 isRootObjectInCreation:1;
+    quint32 stronglyReferencedByParent:1;
     quint32 dummy:25;
     QQmlContext *publicContext;
 
-    // VME data that is constructing this context if any
-    void *activeVMEData;
+    // The incubator that is constructing this context if any
+    QQmlIncubatorPrivate *incubator;
 
     // Compilation unit for contexts that belong to a compiled type.
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> typeCompilationUnit;
@@ -157,9 +160,9 @@ public:
     void initFromTypeCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit, int subComponentIndex);
 
     // flag indicates whether the context owns the cache (after mutation) or not.
-    mutable QV4::IdentifierHash<int> propertyNameCache;
-    const QV4::IdentifierHash<int> &propertyNames() const;
-    QV4::IdentifierHash<int> &detachedPropertyNames();
+    mutable QV4::IdentifierHash propertyNameCache;
+    const QV4::IdentifierHash &propertyNames() const;
+    QV4::IdentifierHash &detachedPropertyNames();
 
     // Context object
     QObject *contextObject;
@@ -177,7 +180,7 @@ public:
     QQmlRefPointer<QQmlTypeNameCache> imports;
 
     // My children
-    QQmlContextData *childContexts;
+    QQmlContextData *childContexts = nullptr;
 
     // My peers in parent's childContexts list
     QQmlContextData  *nextChild;
@@ -190,7 +193,7 @@ public:
     QQmlData *contextObjects;
 
     // Doubly-linked list of context guards (XXX merge with contextObjects)
-    QQmlGuardedContextData *contextGuards;
+    QQmlGuardedContextData *contextGuards = nullptr;
 
     // id guards
     struct ContextGuard : public QQmlGuard<QObject>
@@ -209,7 +212,7 @@ public:
     void setIdProperty(int, QObject *);
 
     // Linked contexts. this owns linkedContext.
-    QQmlContextData *linkedContext;
+    QQmlContextDataRef linkedContext;
 
     // Linked list of uses of the Component attached property in this
     // context
@@ -223,57 +226,53 @@ public:
     }
 
 private:
+    friend class QQmlContextDataRef;
+    friend class QQmlContext; // needs to do manual refcounting :/
     void refreshExpressionsRecursive(bool isGlobal);
     void refreshExpressionsRecursive(QQmlJavaScriptExpression *);
-    ~QQmlContextData() {}
+    ~QQmlContextData();
+    void destroy();
 };
+
 
 class QQmlGuardedContextData
 {
 public:
-    inline QQmlGuardedContextData();
-    inline QQmlGuardedContextData(QQmlContextData *);
-    inline ~QQmlGuardedContextData();
+    inline QQmlGuardedContextData() = default;
+    inline QQmlGuardedContextData(QQmlContextData *data)
+    { setContextData(data); }
+    inline ~QQmlGuardedContextData()
+    { clear(); }
 
-    inline QQmlContextData *contextData() const;
+    inline QQmlContextData *contextData() const
+    { return m_contextData; }
     inline void setContextData(QQmlContextData *);
 
     inline bool isNull() const { return !m_contextData; }
 
     inline operator QQmlContextData*() const { return m_contextData; }
     inline QQmlContextData* operator->() const { return m_contextData; }
-    inline QQmlGuardedContextData &operator=(QQmlContextData *d);
+    inline QQmlGuardedContextData &operator=(QQmlContextData *d) {
+        setContextData(d); return *this;
+    }
 
 private:
-    QQmlGuardedContextData &operator=(const QQmlGuardedContextData &);
-    QQmlGuardedContextData(const QQmlGuardedContextData &);
+    QQmlGuardedContextData &operator=(const QQmlGuardedContextData &) = delete;
+    QQmlGuardedContextData(const QQmlGuardedContextData &) = delete;
     friend class QQmlContextData;
 
     inline void clear();
 
-    QQmlContextData *m_contextData;
-    QQmlGuardedContextData  *m_next;
-    QQmlGuardedContextData **m_prev;
+    QQmlContextData *m_contextData = nullptr;
+    QQmlGuardedContextData  *m_next = nullptr;
+    QQmlGuardedContextData **m_prev = nullptr;
 };
 
-QQmlGuardedContextData::QQmlGuardedContextData()
-: m_contextData(0), m_next(0), m_prev(0)
-{
-}
-
-QQmlGuardedContextData::QQmlGuardedContextData(QQmlContextData *data)
-: m_contextData(0), m_next(0), m_prev(0)
-{
-    setContextData(data);
-}
-
-QQmlGuardedContextData::~QQmlGuardedContextData()
-{
-    clear();
-}
 
 void QQmlGuardedContextData::setContextData(QQmlContextData *contextData)
-{
+ {
+    if (m_contextData == contextData)
+        return;
     clear();
 
     if (contextData) {
@@ -285,31 +284,81 @@ void QQmlGuardedContextData::setContextData(QQmlContextData *contextData)
     }
 }
 
-QQmlContextData *QQmlGuardedContextData::contextData() const
-{
-    return m_contextData;
-}
-
 void QQmlGuardedContextData::clear()
 {
     if (m_prev) {
         *m_prev = m_next;
         if (m_next) m_next->m_prev = m_prev;
-        m_contextData = 0;
-        m_next = 0;
-        m_prev = 0;
+        m_contextData = nullptr;
+        m_next = nullptr;
+        m_prev = nullptr;
     }
 }
 
-QQmlGuardedContextData &
-QQmlGuardedContextData::operator=(QQmlContextData *d)
+QQmlContextDataRef::QQmlContextDataRef()
+    : m_contextData(nullptr)
+{
+}
+
+QQmlContextDataRef::QQmlContextDataRef(const QQmlContextDataRef &other)
+    : m_contextData(other.m_contextData)
+{
+    if (m_contextData)
+        ++m_contextData->refCount;
+}
+
+QQmlContextDataRef::QQmlContextDataRef(QQmlContextData *data)
+    : m_contextData(data)
+{
+    if (m_contextData)
+        ++m_contextData->refCount;
+}
+
+QQmlContextDataRef::~QQmlContextDataRef()
+{
+    clear();
+}
+
+void QQmlContextDataRef::setContextData(QQmlContextData *contextData)
+{
+    if (m_contextData == contextData)
+        return;
+    clear();
+
+    if (contextData) {
+        m_contextData = contextData;
+        ++m_contextData->refCount;
+    }
+}
+
+QQmlContextData *QQmlContextDataRef::contextData() const
+{
+    return m_contextData;
+}
+
+void QQmlContextDataRef::clear()
+{
+    if (m_contextData && !--m_contextData->refCount)
+        m_contextData->destroy();
+    m_contextData = nullptr;
+}
+
+QQmlContextDataRef &
+QQmlContextDataRef::operator=(QQmlContextData *d)
 {
     setContextData(d);
     return *this;
 }
 
+QQmlContextDataRef &
+QQmlContextDataRef::operator=(const QQmlContextDataRef &other)
+{
+    setContextData(other.m_contextData);
+    return *this;
+}
+
 QQmlContextData::ContextGuard::ContextGuard()
-: context(0)
+: context(nullptr)
 {
 }
 

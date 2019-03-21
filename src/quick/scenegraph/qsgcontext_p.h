@@ -78,6 +78,7 @@ class QSGMaterial;
 class QSGRenderLoop;
 class QSGLayer;
 class QQuickTextureFactory;
+class QSGCompressedTextureFactory;
 class QSGContext;
 class QQuickPaintedItem;
 class QSGRendererInterface;
@@ -109,8 +110,8 @@ public:
         MsaaAntialiasing
     };
 
-    explicit QSGContext(QObject *parent = 0);
-    virtual ~QSGContext();
+    explicit QSGContext(QObject *parent = nullptr);
+    ~QSGContext() override;
 
     virtual void renderContextInitialized(QSGRenderContext *renderContext);
     virtual void renderContextInvalidated(QSGRenderContext *renderContext);
@@ -158,7 +159,7 @@ public:
     };
 
     QSGRenderContext(QSGContext *context);
-    virtual ~QSGRenderContext();
+    ~QSGRenderContext() override;
 
     QSGContext *sceneGraphContext() const { return m_sg; }
     virtual bool isValid() const { return true; }
@@ -173,6 +174,7 @@ public:
 
     virtual QSGTexture *createTexture(const QImage &image, uint flags = CreateTexture_Alpha) const = 0;
     virtual QSGRenderer *createRenderer() = 0;
+    virtual QSGTexture *compressedTextureForFactory(const QSGCompressedTextureFactory *) const;
 
     virtual void setAttachToGraphicsContext(bool attach) { Q_UNUSED(attach); }
 
@@ -194,7 +196,7 @@ protected:
     QMutex m_mutex;
     QHash<QQuickTextureFactory *, QSGTexture *> m_textures;
     QSet<QSGTexture *> m_texturesToDelete;
-    QHash<QRawFont, QSGDistanceFieldGlyphCache*> m_glyphCaches;
+    QHash<QString, QSGDistanceFieldGlyphCache *> m_glyphCaches;
 
     QSet<QFontEngine *> m_fontEnginesToClean;
 };

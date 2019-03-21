@@ -66,17 +66,15 @@ void tst_QQmlDebugClient::initTestCase()
     QQmlDebugConnector::setPluginKey(QLatin1String("QQmlDebugServer"));
     QQmlDebugConnector::setServices(QStringList()
                                     << QStringLiteral("tst_QQmlDebugClient::handshake()"));
-    QTest::ignoreMessage(QtWarningMsg,
-                         "QML debugger: Cannot set plugin key after loading the plugin.");
 
     m_service = new QQmlDebugTestService("tst_QQmlDebugClient::handshake()");
 
     foreach (const QString &service, QQmlDebuggingEnabler::debuggerServices())
-        QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)0);
+        QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)nullptr);
     foreach (const QString &service, QQmlDebuggingEnabler::inspectorServices())
-        QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)0);
+        QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)nullptr);
     foreach (const QString &service, QQmlDebuggingEnabler::profilerServices())
-        QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)0);
+        QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)nullptr);
 
     const QString waitingMsg = QString("QML Debugger: Waiting for connection on port %1...").arg(PORT);
     QTest::ignoreMessage(QtDebugMsg, waitingMsg.toLatin1().constData());
@@ -126,7 +124,7 @@ void tst_QQmlDebugClient::state()
     QQmlDebugClient client2("tst_QQmlDebugClient::state()", m_conn);
     QCOMPARE(client2.state(), QQmlDebugClient::NotConnected);
 
-    QQmlDebugClient client3("tst_QQmlDebugClient::state3()", 0);
+    QQmlDebugClient client3("tst_QQmlDebugClient::state3()", nullptr);
     QCOMPARE(client3.state(), QQmlDebugClient::NotConnected);
 }
 

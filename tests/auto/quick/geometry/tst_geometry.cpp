@@ -58,7 +58,7 @@ void GeometryTest::testPoint2D()
     QSGGeometry::updateRectGeometry(&geometry, QRectF(1, 2, 3, 4));
 
     QSGGeometry::Point2D *pts = geometry.vertexDataAsPoint2D();
-    QVERIFY(pts != 0);
+    QVERIFY(pts != nullptr);
 
     QCOMPARE(pts[0].x, (float) 1);
     QCOMPARE(pts[0].y, (float) 2);
@@ -91,7 +91,7 @@ void GeometryTest::testTexturedPoint2D()
     QSGGeometry::updateTexturedRectGeometry(&geometry, QRectF(1, 2, 3, 4), QRectF(5, 6, 7, 8));
 
     QSGGeometry::TexturedPoint2D *pts = geometry.vertexDataAsTexturedPoint2D();
-    QVERIFY(pts != 0);
+    QVERIFY(pts != nullptr);
 
     QCOMPARE(pts[0].x, (float) 1);
     QCOMPARE(pts[0].y, (float) 2);

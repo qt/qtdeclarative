@@ -9,4 +9,4 @@ macx:CONFIG -= app_bundle
 
 TESTDATA = data/*
 
-QT += testlib
+QT += testlib qmltest

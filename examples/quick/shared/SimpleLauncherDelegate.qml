@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -37,7 +47,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 2.0
+import QtQuick 2.12
 
 Rectangle {
     id: container
@@ -79,12 +89,14 @@ Rectangle {
         implicitHeight: col.height
         height: implicitHeight
         width: buttonLabel.width + 20
+        property alias containsMouse: hoverHandler.hovered
 
-        MouseArea {
-            id: mouseArea
-            anchors.fill: parent
-            onClicked: container.clicked()
-            hoverEnabled: true
+        TapHandler {
+            id: tapHandler
+            onTapped: container.clicked()
+        }
+        HoverHandler {
+            id: hoverHandler
         }
 
         Column {

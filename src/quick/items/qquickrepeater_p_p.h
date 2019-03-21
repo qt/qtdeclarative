@@ -56,6 +56,8 @@
 
 #include <QtCore/qpointer.h>
 
+QT_REQUIRE_CONFIG(quick_repeater);
+
 QT_BEGIN_NAMESPACE
 
 class QQmlContext;

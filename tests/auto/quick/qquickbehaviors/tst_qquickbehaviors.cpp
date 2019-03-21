@@ -72,6 +72,8 @@ private slots:
     void currentValue();
     void disabledWriteWhileRunning();
     void aliasedProperty();
+    void innerBehaviorOverwritten();
+    void oneWay();
 };
 
 void tst_qquickbehaviors::simpleBehavior()
@@ -392,7 +394,7 @@ void tst_qquickbehaviors::delayedRegistration()
     QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
     QQuickItem *innerRect = rect->property("myItem").value<QQuickItem*>();
-    QVERIFY(innerRect != 0);
+    QVERIFY(innerRect != nullptr);
 
     QCOMPARE(innerRect->property("x").toInt(), int(0));
 
@@ -409,7 +411,7 @@ void tst_qquickbehaviors::startOnCompleted()
     QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
     QQuickItem *innerRect = rect->findChild<QQuickRectangle*>();
-    QVERIFY(innerRect != 0);
+    QVERIFY(innerRect != nullptr);
 
     QCOMPARE(innerRect->property("x").toInt(), int(0));
 
@@ -426,7 +428,7 @@ void tst_qquickbehaviors::multipleChangesToValueType()
     QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
     QQuickText *text = rect->findChild<QQuickText *>();
-    QVERIFY(text != 0);
+    QVERIFY(text != nullptr);
 
     QFont value;
     value.setPointSize(24);
@@ -515,6 +517,7 @@ void tst_qquickbehaviors::disabledWriteWhileRunning()
         myRect->setProperty("x", 200);
         QCOMPARE(myAnimation->isRunning(), true);
         QTRY_VERIFY(myRect->x() != qreal(0) && myRect->x() != qreal(200));
+        QCOMPARE(myBehavior->targetValue(), 200); // grabbed before starting the animation
 
         // set disabled while animation is in progress
         myBehavior->setProperty("enabled", false);
@@ -525,6 +528,7 @@ void tst_qquickbehaviors::disabledWriteWhileRunning()
         myRect->setProperty("x", 100);
         QCOMPARE(myAnimation->isRunning(), false);
         QCOMPARE(myRect->x(), qreal(100));
+        QCOMPARE(myBehavior->targetValue(), 100);
         QTest::qWait(200);
         QCOMPARE(myRect->x(), qreal(100));
     }
@@ -545,17 +549,20 @@ void tst_qquickbehaviors::disabledWriteWhileRunning()
 
         // initial values
         QCOMPARE(myBehavior->enabled(), true);
+        QCOMPARE(myBehavior->targetValue(), QVariant());
         QCOMPARE(myAnimation->isRunning(), false);
         QCOMPARE(myRect->x(), qreal(0));
 
         // start animation
         myRect->setProperty("x", 200);
         QCOMPARE(myAnimation->isRunning(), true);
+        QCOMPARE(myBehavior->targetValue(), 200);
         QTRY_VERIFY(myRect->x() != qreal(0) && myRect->x() != qreal(200));
 
         //set second value
         myRect->setProperty("x", 300);
         QCOMPARE(myAnimation->isRunning(), true);
+        QCOMPARE(myBehavior->targetValue(), 300);
         QTRY_VERIFY(myRect->x() != qreal(0) && myRect->x() != qreal(200));
 
         // set disabled while animation is in progress
@@ -567,6 +574,7 @@ void tst_qquickbehaviors::disabledWriteWhileRunning()
         myRect->setProperty("x", 100);
         QCOMPARE(myAnimation->isRunning(), false);
         QCOMPARE(myRect->x(), qreal(100));
+        QCOMPARE(myBehavior->targetValue(), 100);
         QTest::qWait(200);
         QCOMPARE(myRect->x(), qreal(100));
     }
@@ -579,7 +587,12 @@ void tst_qquickbehaviors::aliasedProperty()
     QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));
     QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
+    QQuickBehavior* behavior =
+        qobject_cast<QQuickBehavior*>(rect->findChild<QQuickBehavior*>("behavior"));
+    QSignalSpy targetValueSpy(behavior, SIGNAL(targetValueChanged()));
     QQuickItemPrivate::get(rect.data())->setState("moved");
+    QCOMPARE(behavior->targetValue(), 400);
+    QCOMPARE(targetValueSpy.count(), 1);
     QScopedPointer<QQuickRectangle> acc(qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("acc")));
     QScopedPointer<QQuickRectangle> range(qobject_cast<QQuickRectangle*>(acc->findChild<QQuickRectangle*>("range")));
     QTRY_VERIFY(acc->property("value").toDouble() > 0);
@@ -587,6 +600,51 @@ void tst_qquickbehaviors::aliasedProperty()
     QTRY_VERIFY(acc->property("value").toDouble() < 400);
     QTRY_VERIFY(range->width() < 400);
     //i.e. the behavior has been triggered
+}
+
+void tst_qquickbehaviors::innerBehaviorOverwritten()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("overwrittenbehavior.qml"));
+    QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(c.create()));
+    QQuickBehavior* behavior =
+        qobject_cast<QQuickBehavior*>(item->findChild<QQuickBehavior*>("behavior"));
+    QVERIFY(item->property("behaviorTriggered").toBool());
+    QCOMPARE(behavior->targetValue(), true);
+}
+
+void tst_qquickbehaviors::oneWay()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("oneway.qml"));
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
+    QQuickBehavior* behavior =
+        qobject_cast<QQuickBehavior*>(rect->findChild<QQuickBehavior*>("MyBehaviorOneWay"));
+    QCOMPARE(behavior->enabled(), false);
+    QCOMPARE(behavior->targetValue(), QVariant());
+
+    QSignalSpy targetValueSpy(behavior, SIGNAL(targetValueChanged()));
+    QQuickRectangle *myRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRectOneWay"));
+    myRect->setProperty("x", 100);
+    QCOMPARE(behavior->targetValue(), 100);
+    QCOMPARE(targetValueSpy.count(), 1);
+    QCOMPARE(behavior->enabled(), false);
+    qreal x = myRect->x();
+    QCOMPARE(x, qreal(100));    //should change immediately
+    QQuickNumberAnimation *myAnimation =
+        qobject_cast<QQuickNumberAnimation*>(behavior->findChild<QQuickNumberAnimation*>("MyAnimationOneWay"));
+    QCOMPARE(myAnimation->isRunning(), false);
+
+    myRect->setProperty("x", 0);
+    QCOMPARE(behavior->targetValue(), 0);
+    QCOMPARE(targetValueSpy.count(), 2);
+    QCOMPARE(behavior->enabled(), true);
+    QCOMPARE(myAnimation->isRunning(), true);
+    QVERIFY(myRect->x() > 0.0);
+    QTRY_VERIFY(myRect->x() < 100.0);
+    QTRY_COMPARE(myRect->x(), qreal(0));
+    QCOMPARE(myAnimation->isRunning(), false);
 }
 
 QTEST_MAIN(tst_qquickbehaviors)

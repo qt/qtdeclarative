@@ -8,7 +8,7 @@ macx:CONFIG -= app_bundle
 
 TESTDATA = data/*
 
-QT += core-private gui-private qml-private quick-private network testlib
+QT += core-private gui-private qml-private quick-private network testlib qmltest
 
 OTHER_FILES += \
-    data/largeAnimation.qml
+    $$files(data/*.qml)

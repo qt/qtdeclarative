@@ -55,11 +55,10 @@
 #include "qv4context_p.h"
 #include "qv4functionobject_p.h"
 #include "qv4string_p.h"
-#include "qv4codegen_p.h"
-#include "qv4isel_p.h"
 #include "qv4managed_p.h"
 #include "qv4property_p.h"
 #include "qv4objectiterator_p.h"
+#include "qv4regexp_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
@@ -74,15 +73,17 @@ namespace QV4 {
 namespace Heap {
 
 #define RegExpObjectMembers(class, Member) \
-    Member(class, Pointer, RegExp *, value) \
-    Member(class, NoMark, bool, global)
+    Member(class, Pointer, RegExp *, value)
 
 DECLARE_HEAP_OBJECT(RegExpObject, Object) {
-    DECLARE_MARK_TABLE(RegExpObject);
+    DECLARE_MARKOBJECTS(RegExpObject)
 
     void init();
-    void init(QV4::RegExp *value, bool global);
+    void init(QV4::RegExp *value);
     void init(const QRegExp &re);
+#if QT_CONFIG(regularexpression)
+    void init(const QRegularExpression &re);
+#endif
 };
 
 #define RegExpCtorMembers(class, Member) \
@@ -92,7 +93,7 @@ DECLARE_HEAP_OBJECT(RegExpObject, Object) {
     Member(class, NoMark, int, lastMatchEnd)
 
 DECLARE_HEAP_OBJECT(RegExpCtor, FunctionObject) {
-    DECLARE_MARK_TABLE(RegExpCtor);
+    DECLARE_MARKOBJECTS(RegExpCtor);
 
     void init(QV4::ExecutionContext *scope);
     void clearLastMatch();
@@ -106,41 +107,53 @@ struct RegExpObject: Object {
     V4_INTERNALCLASS(RegExpObject)
     V4_PROTOTYPE(regExpPrototype)
 
-    // needs to be compatible with the flags in qv4jsir_p.h
+    // needs to be compatible with the flags in qv4compileddata_p.h
     enum Flags {
         RegExp_Global     = 0x01,
         RegExp_IgnoreCase = 0x02,
-        RegExp_Multiline  = 0x04
+        RegExp_Multiline  = 0x04,
+        RegExp_Unicode    = 0x08,
+        RegExp_Sticky     = 0x10
     };
 
     enum {
         Index_LastIndex = 0,
-        Index_Source = 1,
-        Index_Global = 2,
-        Index_IgnoreCase = 3,
-        Index_Multiline = 4,
         Index_ArrayIndex = Heap::ArrayObject::LengthPropertyIndex + 1,
         Index_ArrayInput = Index_ArrayIndex + 1
     };
 
-    Heap::RegExp *value() const { return d()->value; }
-    bool global() const { return d()->global; }
+    enum { NInlineProperties = 5 };
+
 
     void initProperties();
 
     int lastIndex() const {
-        Q_ASSERT(Index_LastIndex == internalClass()->find(engine()->id_lastIndex()));
+        Q_ASSERT(internalClass()->verifyIndex(engine()->id_lastIndex()->propertyKey(), Index_LastIndex));
         return propertyData(Index_LastIndex)->toInt32();
     }
     void setLastIndex(int index) {
-        Q_ASSERT(Index_LastIndex == internalClass()->find(engine()->id_lastIndex()));
-        return setProperty(Index_LastIndex, Primitive::fromInt32(index));
+        Q_ASSERT(internalClass()->verifyIndex(engine()->id_lastIndex()->propertyKey(), Index_LastIndex));
+        if (!internalClass()->propertyData[Index_LastIndex].isWritable()) {
+            engine()->throwTypeError();
+            return;
+        }
+        return setProperty(Index_LastIndex, Value::fromInt32(index));
     }
 
     QRegExp toQRegExp() const;
+#if QT_CONFIG(regularexpression)
+    QRegularExpression toQRegularExpression() const;
+#endif
     QString toString() const;
     QString source() const;
-    uint flags() const;
+
+    Heap::RegExp *value() const { return d()->value; }
+    uint flags() const { return d()->value->flags; }
+    bool global() const { return d()->value->global(); }
+    bool sticky() const { return d()->value->sticky(); }
+    bool unicode() const { return d()->value->unicode(); }
+
+    ReturnedValue builtinExec(ExecutionEngine *engine, const String *s);
 };
 
 struct RegExpCtor: FunctionObject
@@ -152,25 +165,43 @@ struct RegExpCtor: FunctionObject
     int lastMatchStart() { return d()->lastMatchStart; }
     int lastMatchEnd() { return d()->lastMatchEnd; }
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
-struct RegExpPrototype: RegExpObject
+struct RegExpPrototype: Object
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static void method_exec(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_test(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_compile(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_exec(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_flags(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_global(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_ignoreCase(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_match(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_multiline(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_replace(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_search(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_source(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_split(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_sticky(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_test(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_unicode(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
-    template <int index>
-    static void method_get_lastMatch_n(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_lastParen(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_input(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_leftContext(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_rightContext(const BuiltinFunction *, Scope &scope, CallData *callData);
+    // Web extension
+    static ReturnedValue method_compile(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+
+    // properties on the constructor, web extensions
+    template <uint index>
+    static ReturnedValue method_get_lastMatch_n(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_lastParen(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_input(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_leftContext(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_rightContext(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+
+    static ReturnedValue execFirstMatch(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+
+    static ReturnedValue exec(ExecutionEngine *engine, const Object *o, const String *s);
 };
 
 }

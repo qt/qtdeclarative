@@ -39,25 +39,25 @@
 
 import QtQuick 2.0
 import QtQuick.Window 2.0 // used for qtest_verifyItem
-import QtTest 1.1
+import QtTest 1.2
 import "testlogger.js" as TestLogger
 import Qt.test.qtestroot 1.0
 
 /*!
     \qmltype TestCase
     \inqmlmodule QtTest
-    \brief Represents a unit test case
+    \brief Represents a unit test case.
     \since 4.8
     \ingroup qtquicktest
 
-    \section1 Introduction to QML test cases
+    \section1 Introduction to QML Test Cases
 
     Test cases are written as JavaScript functions within a TestCase
     type:
 
     \code
     import QtQuick 2.0
-    import QtTest 1.0
+    import QtTest 1.2
 
     TestCase {
         name: "MathTests"
@@ -99,7 +99,7 @@ import Qt.test.qtestroot 1.0
     once they have all completed.  If a test case doesn't need to run
     (because a precondition has failed), then \l optional can be set to true.
 
-    \section1 Data-driven tests
+    \section1 Data-driven Tests
 
     Table data can be provided to a test using a function name that ends
     with "_data". Alternatively, the \c init_data() function can be used
@@ -108,7 +108,7 @@ import Qt.test.qtestroot 1.0
 
     \code
     import QtQuick 2.0
-    import QtTest 1.1
+    import QtTest 1.2
 
     TestCase {
         name: "DataTests"
@@ -173,7 +173,7 @@ import Qt.test.qtestroot 1.0
     To get the effect of the \c{QBENCHMARK_ONCE} macro, prefix the test
     function name with "benchmark_once_".
 
-    \section1 Simulating keyboard and mouse events
+    \section1 Simulating Keyboard and Mouse Events
 
     The keyPress(), keyRelease(), and keyClick() methods can be used
     to simulate keyboard events within unit tests.  The events are
@@ -260,7 +260,7 @@ import Qt.test.qtestroot 1.0
     For objects that are created via the \l {Component::}{createObject()} function
     of \l Component, the \l createTemporaryObject() function can be used.
 
-    \sa {QtTest::SignalSpy}{SignalSpy}, {Qt Quick Test Reference Documentation}
+    \sa {QtTest::SignalSpy}{SignalSpy}, {Qt Quick Test}
 */
 
 
@@ -521,6 +521,75 @@ Item {
     }
 
     /*!
+        \since 5.13
+        \qmlmethod bool TestCase::isPolishScheduled(object item)
+
+        Returns \c true if \l {QQuickItem::}{updatePolish()} has not been called
+        on \a item since the last call to \l {QQuickItem::}{polish()},
+        otherwise returns \c false.
+
+        When assigning values to properties in QML, any layouting the item
+        must do as a result of the assignment might not take effect immediately,
+        but can instead be postponed until the item is polished. For these cases,
+        you can use this function to ensure that the item has been polished
+        before the execution of the test continues. For example:
+
+        \code
+            verify(isPolishScheduled(item))
+            verify(waitForItemPolished(item))
+        \endcode
+
+        Without the call to \c isPolishScheduled() above, the
+        call to \c waitForItemPolished() might see that no polish
+        was scheduled and therefore pass instantly, assuming that
+        the item had already been polished. This function
+        makes it obvious why an item wasn't polished and allows tests to
+        fail early under such circumstances.
+
+        \sa waitForItemPolished(), QQuickItem::polish(), QQuickItem::updatePolish()
+    */
+    function isPolishScheduled(item) {
+        if (!item || typeof item !== "object") {
+            qtest_results.fail("Argument must be a valid Item; actual type is " + typeof item,
+                util.callerFile(), util.callerLine())
+            throw new Error("QtQuickTest::fail")
+        }
+
+        return qtest_results.isPolishScheduled(item)
+    }
+
+    /*!
+        \since 5.13
+        \qmlmethod bool waitForItemPolished(object item, int timeout = 5000)
+
+        Waits for \a timeout milliseconds or until
+        \l {QQuickItem::}{updatePolish()} has been called on \a item.
+
+        Returns \c true if \c updatePolish() was called on \a item within
+        \a timeout milliseconds, otherwise returns \c false.
+
+        \sa isPolishScheduled(), QQuickItem::polish(), QQuickItem::updatePolish()
+    */
+    function waitForItemPolished(item, timeout) {
+        if (!item || typeof item !== "object") {
+            qtest_results.fail("First argument must be a valid Item; actual type is " + typeof item,
+                util.callerFile(), util.callerLine())
+            throw new Error("QtQuickTest::fail")
+        }
+
+        if (timeout !== undefined && typeof(timeout) != "number") {
+            qtest_results.fail("Second argument must be a number; actual type is " + typeof timeout,
+                util.callerFile(), util.callerLine())
+            throw new Error("QtQuickTest::fail")
+        }
+
+        if (!timeout)
+            timeout = 5000
+
+        return qtest_results.waitForItemPolished(item, timeout)
+    }
+
+    /*!
         \since 5.9
         \qmlmethod object TestCase::createTemporaryQmlObject(string qml, object parent, string filePath)
 
@@ -757,6 +826,10 @@ Item {
             bProperties.push(i); // collect exp's properties
         }
 
+        if (aProperties.length == 0 && bProperties.length == 0) { // at least a special case for QUrl
+            return eq && (JSON.stringify(act) == JSON.stringify(exp));
+        }
+
         // Ensures identical properties name
         return eq && qtest_compareInternal(aProperties.sort(), bProperties.sort());
 
@@ -846,12 +919,12 @@ Item {
 
         Additionally, the returned image object has the following methods:
         \list
-        \li red(x, y) Returns the red channel value of the pixel at \a x, \a y position
-        \li green(x, y) Returns the green channel value of the pixel at \a x, \a y position
-        \li blue(x, y) Returns the blue channel value of the pixel at \a x, \a y position
-        \li alpha(x, y) Returns the alpha channel value of the pixel at \a x, \a y position
-        \li pixel(x, y) Returns the color value of the pixel at \a x, \a y position
-        \li equals(image) Returns \c true if this image is identical to \a image -
+        \li \c {red(x, y)} Returns the red channel value of the pixel at \e x, \e y position
+        \li \c {green(x, y)} Returns the green channel value of the pixel at \e x, \e y position
+        \li \c {blue(x, y)} Returns the blue channel value of the pixel at \e x, \e y position
+        \li \c {alpha(x, y)} Returns the alpha channel value of the pixel at \e x, \e y position
+        \li \c {pixel(x, y)} Returns the color value of the pixel at \e x, \e y position
+        \li \c {equals(image)} Returns \c true if this image is identical to \e image -
             see \l QImage::operator== (since 5.6)
 
         For example:
@@ -865,7 +938,8 @@ Item {
         var newImage = grabImage(rect);
         verify(!newImage.equals(image));
         \endcode
-        \li save(path) Saves the image to the given \a path. If the image cannot
+
+        \li \c {save(path)} Saves the image to the given \e path. If the image cannot
         be saved, an exception will be thrown. (since 5.10)
 
         This can be useful to perform postmortem analysis on failing tests, for
@@ -882,8 +956,6 @@ Item {
         \endcode
 
         \endlist
-
-        \sa
     */
     function grabImage(item) {
         return qtest_results.grabImage(item);
@@ -1080,6 +1152,24 @@ Item {
         does not occur, then the test will fail.  Similar to
         \c{QTest::ignoreMessage(QtWarningMsg, message)} in C++.
 
+        Since Qt 5.12, \a message can be either a string, or a regular
+        expression providing a pattern of messages to ignore.
+
+        For example, the following snippet will ignore a string warning message:
+        \qml
+        ignoreWarning("Something sort of bad happened")
+        \endqml
+
+        And the following snippet will ignore a regular expression matching a
+        number of possible warning messages:
+        \qml
+        ignoreWarning(new RegExp("[0-9]+ bad things happened"))
+        \endqml
+
+        \note Despite being a JavaScript RegExp object, it will not be
+        interpreted as such; instead, the pattern will be passed to
+        \l QRegularExpression.
+
         \sa warn()
     */
     function ignoreWarning(msg) {
@@ -1130,7 +1220,7 @@ Item {
     /*!
         \qmlmethod TestCase::keyPress(key, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates pressing a \a key with an optional \a modifier on the currently
+        Simulates pressing a \a key with optional \a modifiers on the currently
         focused item.  If \a delay is larger than 0, the test will wait for
         \a delay milliseconds.
 
@@ -1158,7 +1248,7 @@ Item {
     /*!
         \qmlmethod TestCase::keyRelease(key, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates releasing a \a key with an optional \a modifier on the currently
+        Simulates releasing a \a key with optional \a modifiers on the currently
         focused item.  If \a delay is larger than 0, the test will wait for
         \a delay milliseconds.
 
@@ -1184,7 +1274,7 @@ Item {
     /*!
         \qmlmethod TestCase::keyClick(key, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates clicking of \a key with an optional \a modifier on the currently
+        Simulates clicking of \a key with optional \a modifiers on the currently
         focused item.  If \a delay is larger than 0, the test will wait for
         \a delay milliseconds.
 
@@ -1208,9 +1298,29 @@ Item {
     }
 
     /*!
+        \since 5.10
+        \qmlmethod TestCase::keySequence(keySequence)
+
+        Simulates typing of \a keySequence. The key sequence can be set
+        to one of the \l{QKeySequence::StandardKey}{standard keyboard shortcuts}, or
+        it can be described with a string containing a sequence of up to four key
+        presses.
+
+        Each event shall be sent to the TestCase window or, in case of multiple windows,
+        to the current active window. See \l QGuiApplication::focusWindow() for more details.
+
+        \sa keyPress(), keyRelease(), {GNU Emacs Style Key Sequences},
+        {QtQuick::Shortcut::sequence}{Shortcut.sequence}
+    */
+    function keySequence(keySequence) {
+        if (!qtest_events.keySequence(keySequence))
+            qtest_fail("window not shown", 2)
+    }
+
+    /*!
         \qmlmethod TestCase::mousePress(item, x = item.width / 2, y = item.height / 2, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates pressing a mouse \a button with an optional \a modifier
+        Simulates pressing a mouse \a button with optional \a modifiers
         on an \a item.  The position is defined by \a x and \a y.
         If \a x or \a y are not defined the position will be the center of \a item.
         If \a delay is specified, the test will wait for the specified amount of
@@ -1244,7 +1354,7 @@ Item {
     /*!
         \qmlmethod TestCase::mouseRelease(item, x = item.width / 2, y = item.height / 2, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates releasing a mouse \a button with an optional \a modifier
+        Simulates releasing a mouse \a button with optional \a modifiers
         on an \a item.  The position of the release is defined by \a x and \a y.
         If \a x or \a y are not defined the position will be the center of \a item.
         If \a delay is specified, the test will wait for the specified amount of
@@ -1278,7 +1388,7 @@ Item {
     /*!
         \qmlmethod TestCase::mouseDrag(item, x, y, dx, dy, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates dragging the mouse on an \a item with \a button pressed and an optional \a modifier.
+        Simulates dragging the mouse on an \a item with \a button pressed and optional \a modifiers
         The initial drag position is defined by \a x and \a y,
         and drag distance is defined by \a dx and \a dy. If \a delay is specified,
         the test will wait for the specified amount of milliseconds before releasing the button.
@@ -1287,9 +1397,6 @@ Item {
         system of \a item into window co-ordinates and then delivered.
         If \a item is obscured by another item, or a child of \a item occupies
         that position, then the event will be delivered to the other item instead.
-
-        Note: this method does not imply a drop action, to make a drop, an additional
-        mouseRelease(item, x + dx, y + dy) is needed.
 
         \sa mousePress(), mouseClick(), mouseDoubleClick(), mouseDoubleClickSequence(), mouseMove(), mouseRelease(), mouseWheel()
     */
@@ -1331,7 +1438,7 @@ Item {
     /*!
         \qmlmethod TestCase::mouseClick(item, x = item.width / 2, y = item.height / 2, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates clicking a mouse \a button with an optional \a modifier
+        Simulates clicking a mouse \a button with optional \a modifiers
         on an \a item.  The position of the click is defined by \a x and \a y.
         If \a x and \a y are not defined the position will be the center of \a item.
         If \a delay is specified, the test will wait for the specified amount of
@@ -1365,7 +1472,7 @@ Item {
     /*!
         \qmlmethod TestCase::mouseDoubleClick(item, x = item.width / 2, y = item.height / 2, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates double-clicking a mouse \a button with an optional \a modifier
+        Simulates double-clicking a mouse \a button with optional \a modifiers
         on an \a item.  The position of the click is defined by \a x and \a y.
         If \a x and \a y are not defined the position will be the center of \a item.
         If \a delay is specified, the test will wait for the specified amount of
@@ -1400,7 +1507,7 @@ Item {
         \qmlmethod TestCase::mouseDoubleClickSequence(item, x = item.width / 2, y = item.height / 2, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
         Simulates the full sequence of events generated by double-clicking a mouse
-        \a button with an optional \a modifier on an \a item.
+        \a button with optional \a modifiers on an \a item.
 
         This method reproduces the sequence of mouse events generated when a user makes
         a double click: Press-Release-Press-DoubleClick-Release.
@@ -1466,7 +1573,7 @@ Item {
     /*!
         \qmlmethod TestCase::mouseWheel(item, x, y, xDelta, yDelta, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates rotating the mouse wheel on an \a item with \a button pressed and an optional \a modifier.
+        Simulates rotating the mouse wheel on an \a item with \a button pressed and optional \a modifiers.
         The position of the wheel event is defined by \a x and \a y.
         If \a delay is specified, the test will wait for the specified amount of milliseconds before releasing the button.
 
@@ -1735,11 +1842,6 @@ Item {
 
     /*! \internal */
     function qtest_run() {
-        if (util.printAvailableFunctions) {
-            completed = true
-            return
-        }
-
         if (TestLogger.log_start_test()) {
             qtest_results.reset()
             qtest_results.testCaseName = name
@@ -1750,17 +1852,28 @@ Item {
         running = true
 
         // Check the run list to see if this class is mentioned.
-        var functionsToRun = qtest_results.functionsToRun
-        if (functionsToRun.length > 0) {
+        let checkNames = false
+        let testsToRun = {} // explicitly provided function names to run and their tags for data-driven tests
+
+        if (qtest_results.functionsToRun.length > 0) {
+            checkNames = true
             var found = false
-            var list = []
+
             if (name.length > 0) {
-                var prefix = name + "::"
-                for (var index in functionsToRun) {
-                    if (functionsToRun[index].indexOf(prefix) == 0) {
-                        list.push(functionsToRun[index])
-                        found = true
-                    }
+                for (var index in qtest_results.functionsToRun) {
+                    let caseFuncName = qtest_results.functionsToRun[index]
+                    if (caseFuncName.indexOf(name + "::") != 0)
+                        continue
+
+                    found = true
+                    let funcName = caseFuncName.substring(name.length + 2)
+
+                    if (!(funcName in testsToRun))
+                        testsToRun[funcName] = []
+
+                    let tagName = qtest_results.tagsToRun[index]
+                    if (tagName.length > 0) // empty tags mean run all rows
+                        testsToRun[funcName].push(tagName)
                 }
             }
             if (!found) {
@@ -1772,7 +1885,6 @@ Item {
                 qtest_results.testCaseName = ""
                 return
             }
-            functionsToRun = list
         }
 
         // Run the initTestCase function.
@@ -1797,17 +1909,15 @@ Item {
             }
             testList.sort()
         }
-        var checkNames = (functionsToRun.length > 0)
+
         for (var index in testList) {
             var prop = testList[index]
+
+            if (checkNames && !(prop in testsToRun))
+                continue
+
             var datafunc = prop + "_data"
             var isBenchmark = (prop.indexOf("benchmark_") == 0)
-            if (checkNames) {
-                var index = functionsToRun.indexOf(name + "::" + prop)
-                if (index < 0)
-                    continue
-                functionsToRun.splice(index, 1)
-            }
             qtest_results.functionName = prop
 
             if (!(datafunc in testCase))
@@ -1817,18 +1927,29 @@ Item {
                 if (qtest_runInternal(datafunc)) {
                     var table = qtest_testCaseResult
                     var haveData = false
+
+                    let checkTags = (checkNames && testsToRun[prop].length > 0)
+
                     qtest_results.initTestTable()
                     for (var index in table) {
                         haveData = true
                         var row = table[index]
                         if (!row.tag)
                             row.tag = "row " + index    // Must have something
+                        if (checkTags) {
+                            let tags = testsToRun[prop]
+                            let tagIdx = tags.indexOf(row.tag)
+                            if (tagIdx < 0)
+                                continue
+                            tags.splice(tagIdx, 1)
+                        }
                         qtest_results.dataTag = row.tag
                         if (isBenchmark)
                             qtest_runBenchmarkFunction(prop, row)
                         else
                             qtest_runFunction(prop, row)
                         qtest_results.dataTag = ""
+                        qtest_results.skipped = false
                     }
                     if (!haveData) {
                         if (datafunc === "init_data")
@@ -1846,6 +1967,9 @@ Item {
             }
             qtest_results.finishTestFunction()
             qtest_results.skipped = false
+
+            if (checkNames && testsToRun[prop].length <= 0)
+                delete testsToRun[prop]
         }
 
         // Run the cleanupTestCase function.
@@ -1854,8 +1978,21 @@ Item {
         qtest_runInternal("cleanupTestCase")
 
         // Complain about missing functions that we were supposed to run.
-        if (functionsToRun.length > 0)
-            qtest_results.fail("Could not find functions: " + functionsToRun, "", 0)
+        if (checkNames) {
+            let missingTests = []
+            for (var func in testsToRun) {
+                let caseFuncName = name + '::' + func
+                let tags = testsToRun[func]
+                if (tags.length <= 0)
+                    missingTests.push(caseFuncName)
+                else
+                    for (var i in tags)
+                        missingTests.push(caseFuncName + ':' + tags[i])
+            }
+            missingTests.sort()
+            if (missingTests.length > 0)
+                qtest_results.fail("Could not find test functions: " + missingTests, "", 0)
+        }
 
         // Clean up and exit.
         running = false
@@ -1890,29 +2027,9 @@ Item {
         }
     }
 
-
     Component.onCompleted: {
         QTestRootObject.hasTestCase = true;
         qtest_componentCompleted = true;
-
-        if (util.printAvailableFunctions) {
-            var testList = []
-            for (var prop in testCase) {
-                if (prop.indexOf("test_") != 0 && prop.indexOf("benchmark_") != 0)
-                    continue
-                var tail = prop.lastIndexOf("_data");
-                if (tail != -1 && tail == (prop.length - 5))
-                    continue
-                // Note: cannot run functions in TestCase elements
-                // that lack a name.
-                if (name.length > 0)
-                    testList.push(name + "::" + prop + "()")
-            }
-            testList.sort()
-            for (var index in testList)
-                console.log(testList[index])
-            return
-        }
         qtest_testId = TestLogger.log_register_test(name)
         if (optional)
             TestLogger.log_optional_test(qtest_testId)

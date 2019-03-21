@@ -38,20 +38,14 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/qqml.h>
 
 #include <private/qqmlmodelsmodule_p.h>
-
-static void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQml_Models_2);
-#endif
-}
 
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlmodule QtQml.Models 2.2
+    \qmlmodule QtQml.Models 2.\QtMinorVersion
     \title Qt QML Models QML Types
     \ingroup qmlmodules
     \brief Provides QML types for data models
@@ -61,9 +55,9 @@ QT_BEGIN_NAMESPACE
 
     To use the types in this module, import the module with the following line:
 
-    \code
-    import QtQml.Models 2.2
-    \endcode
+    \qml \QtMinorVersion
+    import QtQml.Models 2.\1
+    \endqml
 
     Note that QtQml.Models module started at version 2.1 to match the version
     of the parent module, \l{Qt QML}.
@@ -77,12 +71,14 @@ class QtQmlModelsPlugin : public QQmlExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    QtQmlModelsPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
-    void registerTypes(const char *uri) Q_DECL_OVERRIDE
+    QtQmlModelsPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
+    void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQml.Models"));
-        Q_UNUSED(uri);
         QQmlModelsModule::defineModule();
+
+        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
+        qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
     }
 };
 //![class decl]

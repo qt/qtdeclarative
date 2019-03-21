@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 
 QQmlValueTypeProxyBinding::QQmlValueTypeProxyBinding(QObject *o, QQmlPropertyIndex index)
     : QQmlAbstractBinding(),
-      m_bindings(0)
+      m_bindings(nullptr)
 {
     m_target = o;
     m_targetIndex = index;
@@ -72,6 +72,11 @@ bool QQmlValueTypeProxyBinding::isValueTypeProxy() const
     return true;
 }
 
+QQmlAbstractBinding *QQmlValueTypeProxyBinding::subBindings() const
+{
+    return m_bindings.data();
+}
+
 QQmlAbstractBinding *QQmlValueTypeProxyBinding::binding(QQmlPropertyIndex propertyIndex) const
 {
     QQmlAbstractBinding *binding = m_bindings.data();
@@ -88,7 +93,7 @@ Removes a collection of bindings, corresponding to the set bits in \a mask.
 void QQmlValueTypeProxyBinding::removeBindings(quint32 mask)
 {
     QQmlAbstractBinding *binding = m_bindings.data();
-    QQmlAbstractBinding *lastBinding = 0;
+    QQmlAbstractBinding *lastBinding = nullptr;
 
     while (binding) {
         const int valueTypeIndex = binding->targetPropertyIndex().valueTypeIndex();
@@ -97,7 +102,7 @@ void QQmlValueTypeProxyBinding::removeBindings(quint32 mask)
             remove->setAddedToObject(false);
             binding = remove->nextBinding();
 
-            if (lastBinding == 0)
+            if (lastBinding == nullptr)
                 m_bindings = remove->nextBinding();
             else
                 lastBinding->setNextBinding(remove->nextBinding());

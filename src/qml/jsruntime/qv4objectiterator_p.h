@@ -57,87 +57,86 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct Q_QML_EXPORT ObjectIteratorData
+struct Q_QML_EXPORT ObjectIterator
 {
     enum Flags {
         NoFlags = 0,
         EnumerableOnly = 0x1,
-        WithProtoChain = 0x2,
+        WithSymbols = 0x2
     };
 
     ExecutionEngine *engine;
-    Value *object;
-    Value *current;
-    SparseArrayNode *arrayNode;
-    uint arrayIndex;
-    uint memberIndex;
+    Object *object;
+    OwnPropertyKeyIterator *iterator = nullptr;
     uint flags;
-};
-V4_ASSERT_IS_TRIVIAL(ObjectIteratorData)
-
-struct Q_QML_EXPORT ObjectIterator: ObjectIteratorData
-{
-    ObjectIterator(ExecutionEngine *e, Value *scratch1, Value *scratch2, Object *o, uint flags)
-    {
-        engine = e;
-        object = scratch1;
-        current = scratch2;
-        arrayNode = nullptr;
-        arrayIndex = 0;
-        memberIndex = 0;
-        this->flags = flags;
-        init(o);
-    }
 
     ObjectIterator(Scope &scope, const Object *o, uint flags)
     {
         engine = scope.engine;
-        object = scope.alloc(1);
-        current = scope.alloc(1);
-        arrayNode = nullptr;
-        arrayIndex = 0;
-        memberIndex = 0;
+        object = static_cast<Object *>(scope.alloc());
         this->flags = flags;
-        init(o);
+        object->setM(o ? o->m() : nullptr);
+        if (o)
+            iterator = object->ownPropertyKeys(object);
+    }
+    ~ObjectIterator()
+    {
+        delete iterator;
     }
 
-    void next(Value *name, uint *index, Property *pd, PropertyAttributes *attributes = 0);
+    PropertyKey next(Property *pd = nullptr, PropertyAttributes *attributes = nullptr);
     ReturnedValue nextPropertyName(Value *value);
     ReturnedValue nextPropertyNameAsString(Value *value);
     ReturnedValue nextPropertyNameAsString();
-
-private:
-    void init(const Object *o);
 };
 
 namespace Heap {
-struct ForEachIteratorObject : Object {
+
+#define ForInIteratorObjectMembers(class, Member) \
+    Member(class, Pointer, Object *, object) \
+    Member(class, Pointer, Object *, current) \
+    Member(class, Pointer, Object *, target) \
+    Member(class, NoMark, OwnPropertyKeyIterator *, iterator)
+
+DECLARE_HEAP_OBJECT(ForInIteratorObject, Object) {
     void init(QV4::Object *o);
-    ObjectIterator &it() { return *reinterpret_cast<ObjectIterator*>(&itData); }
     Value workArea[2];
 
-private:
-    ObjectIteratorData itData;
+    static void markObjects(Heap::Base *that, MarkStack *markStack);
+    void destroy();
 };
 
 }
 
-struct ForEachIteratorObject: Object {
-    V4_OBJECT2(ForEachIteratorObject, Object)
-    Q_MANAGED_TYPE(ForeachIteratorObject)
+struct ForInIteratorPrototype : Object
+{
+    V4_PROTOTYPE(iteratorPrototype)
+    void init(ExecutionEngine *engine);
 
-    ReturnedValue nextPropertyName() { return d()->it().nextPropertyNameAsString(); }
+    static ReturnedValue method_next(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+};
 
-protected:
-    static void markObjects(Heap::Base *that, MarkStack *markStack);
+struct ForInIteratorObject: Object {
+    V4_OBJECT2(ForInIteratorObject, Object)
+    Q_MANAGED_TYPE(ForInIterator)
+    V4_PROTOTYPE(forInIteratorPrototype)
+    V4_NEEDS_DESTROY
+
+    PropertyKey nextProperty() const;
 };
 
 inline
-void Heap::ForEachIteratorObject::init(QV4::Object *o)
+void Heap::ForInIteratorObject::init(QV4::Object *o)
 {
     Object::init();
-    it() = ObjectIterator(internalClass->engine, workArea, workArea + 1, o,
-                          ObjectIterator::EnumerableOnly | ObjectIterator::WithProtoChain);
+    if (!o)
+        return;
+    object.set(o->engine(), o->d());
+    current.set(o->engine(), o->d());
+    Scope scope(o);
+    ScopedObject obj(scope);
+    iterator = o->ownPropertyKeys(obj.getRef());
+    target.set(o->engine(), obj->d());
 }
 
 

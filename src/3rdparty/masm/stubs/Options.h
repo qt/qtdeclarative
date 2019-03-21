@@ -44,6 +44,8 @@ namespace JSC {
 struct Options {
     static bool showDisassembly();
     static bool showDFGDisassembly() { return true; }
+    static bool zeroStackFrame() { return true; }
+    static bool dumpCompiledRegExpPatterns() { return false; }
 };
 
 }

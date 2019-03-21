@@ -50,6 +50,12 @@
 QT_BEGIN_NAMESPACE
 
 /*!
+    \namespace QtQml
+    \inmodule QtQml
+    \brief Provides functions for producing logging messages for QML types.
+*/
+
+/*!
     \fn QQmlInfo QtQml::qmlDebug(const QObject *object)
     \relates QQmlEngine
     \since 5.9
@@ -57,6 +63,7 @@ QT_BEGIN_NAMESPACE
     Prints debug messages that include the file and line number for the
     specified QML \a object.
 
+//! [qqmlinfo-desc]
     When QML types produce logging messages, it improves traceability
     if they include the QML file and line number on which the
     particular instance was instantiated.
@@ -65,6 +72,7 @@ QT_BEGIN_NAMESPACE
     the file and line number is not available for that instance
     (either it was not instantiated by the QML engine or location
     information is disabled), "unknown location" will be used instead.
+//! [qqmlinfo-desc]
 
     For example,
 
@@ -74,7 +82,7 @@ QT_BEGIN_NAMESPACE
 
     prints
 
-    \code
+    \badcode
     QML MyCustomType (unknown location): Internal state: 42
     \endcode
 
@@ -88,14 +96,7 @@ QT_BEGIN_NAMESPACE
     Prints informational messages that include the file and line number for the
     specified QML \a object.
 
-    When QML types produce logging messages, it improves traceability
-    if they include the QML file and line number on which the
-    particular instance was instantiated.
-
-    To include the file and line number, an object must be passed.  If
-    the file and line number is not available for that instance
-    (either it was not instantiated by the QML engine or location
-    information is disabled), "unknown location" will be used instead.
+    \include qqmlinfo.cpp qqmlinfo-desc
 
     For example,
 
@@ -105,7 +106,7 @@ QT_BEGIN_NAMESPACE
 
     prints
 
-    \code
+    \badcode
     QML MyCustomType (unknown location): component property is a write-once property
     \endcode
 
@@ -116,7 +117,6 @@ QT_BEGIN_NAMESPACE
     \sa QtQml::qmlDebug, QtQml::qmlWarning
 */
 
-
 /*!
     \fn QQmlInfo QtQml::qmlWarning(const QObject *object)
     \relates QQmlEngine
@@ -125,14 +125,7 @@ QT_BEGIN_NAMESPACE
     Prints warning messages that include the file and line number for the
     specified QML \a object.
 
-    When QML types produce logging messages, it improves traceability
-    if they include the QML file and line number on which the
-    particular instance was instantiated.
-
-    To include the file and line number, an object must be passed.  If
-    the file and line number is not available for that instance
-    (either it was not instantiated by the QML engine or location
-    information is disabled), "unknown location" will be used instead.
+    \include qqmlinfo.cpp qqmlinfo-desc
 
     For example,
 
@@ -142,11 +135,41 @@ QT_BEGIN_NAMESPACE
 
     prints
 
-    \code
+    \badcode
     QML MyCustomType (unknown location): property cannot be set to 0
     \endcode
 
     \sa QtQml::qmlDebug, QtQml::qmlInfo
+*/
+
+/*!
+    \fn QQmlInfo QtQml::qmlDebug(const QObject *object, const QQmlError &error)
+    \internal
+*/
+
+/*!
+    \fn QQmlInfo QtQml::qmlDebug(const QObject *object, const QList<QQmlError> &errors)
+    \internal
+*/
+
+/*!
+    \fn QQmlInfo QtQml::qmlInfo(const QObject *object, const QQmlError &error)
+    \internal
+*/
+
+/*!
+    \fn QQmlInfo QtQml::qmlInfo(const QObject *object, const QList<QQmlError> &errors)
+    \internal
+*/
+
+/*!
+    \fn QQmlInfo QtQml::qmlWarning(const QObject *object, const QQmlError &error)
+    \internal
+*/
+
+/*!
+    \fn QQmlInfo QtQml::qmlWarning(const QObject *object, const QList<QQmlError> &errors)
+    \internal
 */
 
 class QQmlInfoPrivate
@@ -182,7 +205,7 @@ QQmlInfo::~QQmlInfo()
     if (0 == --d->ref) {
         QList<QQmlError> errors = d->errors;
 
-        QQmlEngine *engine = 0;
+        QQmlEngine *engine = nullptr;
 
         if (!d->buffer.isEmpty()) {
             QQmlError error;

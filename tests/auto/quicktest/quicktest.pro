@@ -1,3 +1,6 @@
 TEMPLATE = subdirs
 SUBDIRS = \
-    signalspy
+    polish \
+    signalspy \
+    quicktestmainwithsetup \
+    testfiltering

@@ -83,7 +83,7 @@ namespace QQmlVMETypes {
     struct State {
         enum Flag { Deferred = 0x00000001 };
 
-        State() : flags(0), context(0), instructionStream(0) {}
+        State() : flags(0), context(nullptr), instructionStream(nullptr) {}
         quint32 flags;
         QQmlContextData *context;
         const char *instructionStream;
@@ -124,6 +124,10 @@ private:
 // Used to check that a QQmlVME that is interrupted mid-execution
 // is still valid.  Checks all the objects and contexts have not been
 // deleted.
+//
+// VME stands for Virtual Machine Execution. QML files used to
+// be compiled to a byte code data structure that a virtual machine executed
+// (for constructing the tree of QObjects and setting properties).
 class QQmlVMEGuard
 {
 public:
@@ -131,7 +135,6 @@ public:
     ~QQmlVMEGuard();
 
     void guard(QQmlObjectCreator *);
-    void unguard(QObject *);
     void clear();
 
     bool isOK() const;
@@ -144,7 +147,7 @@ private:
 };
 
 QQmlInstantiationInterrupt::QQmlInstantiationInterrupt()
-    : mode(None), nsecs(0), runWhile(0)
+    : mode(None), nsecs(0), runWhile(nullptr)
 {
 }
 
@@ -154,7 +157,7 @@ QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(volatile bool *runWhile, 
 }
 
 QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(int nsecs)
-    : mode(Time), nsecs(nsecs), runWhile(0)
+    : mode(Time), nsecs(nsecs), runWhile(nullptr)
 {
 }
 

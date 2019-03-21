@@ -55,11 +55,12 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlValueTypeProxyBinding : public QQmlAbstractBinding
+class Q_AUTOTEST_EXPORT QQmlValueTypeProxyBinding : public QQmlAbstractBinding
 {
 public:
     QQmlValueTypeProxyBinding(QObject *o, QQmlPropertyIndex coreIndex);
 
+    QQmlAbstractBinding *subBindings() const;
     QQmlAbstractBinding *binding(QQmlPropertyIndex targetPropertyIndex) const;
     void removeBindings(quint32 mask);
 

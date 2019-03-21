@@ -1,4 +1,3 @@
-DEFINES += QSG_SEPARATE_INDEX_BUFFER
 # DEFINES += QSG_DISTANCEFIELD_CACHE_DEBUG
 
 # Core API
@@ -116,7 +115,6 @@ qtConfig(opengl(es1|es2)?) {
         $$PWD/util/qsgdefaultimagenode.cpp \
         $$PWD/util/qsgdefaultninepatchnode.cpp \
         $$PWD/qsgdefaultlayer.cpp \
-        $$PWD/qsgthreadedrenderloop.cpp \
         $$PWD/qsgwindowsrenderloop.cpp
     HEADERS += \
         $$PWD/qsgdefaultglyphnode_p.h \
@@ -133,8 +131,14 @@ qtConfig(opengl(es1|es2)?) {
         $$PWD/util/qsgdefaultimagenode_p.h \
         $$PWD/util/qsgdefaultninepatchnode_p.h \
         $$PWD/qsgdefaultlayer_p.h \
-        $$PWD/qsgthreadedrenderloop_p.h \
         $$PWD/qsgwindowsrenderloop_p.h
+
+    qtConfig(thread) {
+        SOURCES += \
+            $$PWD/qsgthreadedrenderloop.cpp
+        HEADERS += \
+            $$PWD/qsgthreadedrenderloop_p.h
+    }
 
     qtConfig(quick-sprite) {
         SOURCES += \
@@ -219,4 +223,21 @@ qtConfig(opengl(es1|es2)?) {
         $$PWD/shaders/vertexcolor_core.vert \
         $$PWD/shaders/visualization.frag \
         $$PWD/shaders/visualization.vert
+}
+
+# Compressed Texture API
+HEADERS += \
+    $$PWD/util/qsgtexturereader_p.h
+
+SOURCES += \
+    $$PWD/util/qsgtexturereader.cpp
+
+qtConfig(opengl(es1|es2)?) {
+    HEADERS += \
+        $$PWD/compressedtexture/qsgcompressedatlastexture_p.h \
+        $$PWD/compressedtexture/qsgcompressedtexture_p.h
+
+    SOURCES += \
+        $$PWD/compressedtexture/qsgcompressedatlastexture.cpp \
+        $$PWD/compressedtexture/qsgcompressedtexture.cpp
 }

@@ -57,13 +57,12 @@
 #include "qv4scopedvalue_p.h"
 #include "qv4value_p.h"
 #include "qv4internalclass_p.h"
+#include "qv4string_p.h"
 
 QT_BEGIN_NAMESPACE
 
 
 namespace QV4 {
-
-struct BuiltinFunction;
 
 namespace Heap {
 
@@ -71,32 +70,39 @@ namespace Heap {
     Member(class, Pointer, MemberData *, memberData) \
     Member(class, Pointer, ArrayData *, arrayData)
 
-DECLARE_HEAP_OBJECT(Object, Base) {
-    DECLARE_MARK_TABLE(Object);
+DECLARE_EXPORTED_HEAP_OBJECT(Object, Base) {
+    static void markObjects(Heap::Base *base, MarkStack *stack);
     void init() { Base::init(); }
-    void destroy() { Base::destroy(); }
 
+    const VTable *vtable() const {
+        return internalClass->vtable;
+    }
+
+    const Value *inlinePropertyDataWithOffset(uint indexWithOffset) const {
+        Q_ASSERT(indexWithOffset >= vtable()->inlinePropertyOffset && indexWithOffset < uint(vtable()->inlinePropertyOffset + vtable()->nInlineProperties));
+        return reinterpret_cast<const Value *>(this) + indexWithOffset;
+    }
     const Value *inlinePropertyData(uint index) const {
         Q_ASSERT(index < vtable()->nInlineProperties);
         return reinterpret_cast<const Value *>(this) + vtable()->inlinePropertyOffset + index;
     }
-    void setInlineProperty(ExecutionEngine *e, uint index, Value v) {
-        Q_ASSERT(index < vtable()->nInlineProperties);
-        Value *prop = reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index;
-        WriteBarrier::write(e, this, prop, v);
+    void setInlinePropertyWithOffset(ExecutionEngine *e, uint indexWithOffset, Value v) {
+        Q_ASSERT(indexWithOffset >= vtable()->inlinePropertyOffset && indexWithOffset < uint(vtable()->inlinePropertyOffset + vtable()->nInlineProperties));
+        Value *prop = reinterpret_cast<Value *>(this) + indexWithOffset;
+        WriteBarrier::write(e, this, prop->data_ptr(), v.asReturnedValue());
     }
-    void setInlineProperty(ExecutionEngine *e, uint index, Heap::Base *b) {
-        Q_ASSERT(index < vtable()->nInlineProperties);
-        Value *prop = reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index;
-        WriteBarrier::write(e, this, prop, b);
+    void setInlinePropertyWithOffset(ExecutionEngine *e, uint indexWithOffset, Heap::Base *b) {
+        Q_ASSERT(indexWithOffset >= vtable()->inlinePropertyOffset && indexWithOffset < uint(vtable()->inlinePropertyOffset + vtable()->nInlineProperties));
+        Value *prop = reinterpret_cast<Value *>(this) + indexWithOffset;
+        WriteBarrier::write(e, this, prop->data_ptr(), Value::fromHeapObject(b).asReturnedValue());
     }
 
-    QV4::MemberData::Index writablePropertyData(uint index) {
+    PropertyIndex writablePropertyData(uint index) {
         uint nInline = vtable()->nInlineProperties;
         if (index < nInline)
-            return { this, reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index};
+            return PropertyIndex{ this, reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index};
         index -= nInline;
-        return { memberData, memberData->values.values + index };
+        return PropertyIndex{ memberData, memberData->values.values + index };
     }
 
     const Value *propertyData(uint index) const {
@@ -109,7 +115,7 @@ DECLARE_HEAP_OBJECT(Object, Base) {
     void setProperty(ExecutionEngine *e, uint index, Value v) {
         uint nInline = vtable()->nInlineProperties;
         if (index < nInline) {
-            setInlineProperty(e, index, v);
+            setInlinePropertyWithOffset(e, index + vtable()->inlinePropertyOffset, v);
             return;
         }
         index -= nInline;
@@ -118,109 +124,19 @@ DECLARE_HEAP_OBJECT(Object, Base) {
     void setProperty(ExecutionEngine *e, uint index, Heap::Base *b) {
         uint nInline = vtable()->nInlineProperties;
         if (index < nInline) {
-            setInlineProperty(e, index, b);
+            setInlinePropertyWithOffset(e, index + vtable()->inlinePropertyOffset, b);
             return;
         }
         index -= nInline;
         memberData->values.set(e, index, b);
     }
 
+    void setUsedAsProto();
+
     Heap::Object *prototype() const { return internalClass->prototype; }
 };
 
-Q_STATIC_ASSERT(Object::markTable == ((2 << 2) | (2 << 4)));
-
 }
-
-#define V4_OBJECT(superClass) \
-    public: \
-        Q_MANAGED_CHECK \
-        typedef superClass SuperClass; \
-        static const QV4::ObjectVTable static_vtbl; \
-        static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
-        V4_MANAGED_SIZE_TEST \
-        Data *d_unchecked() const { return static_cast<Data *>(m()); } \
-        Data *d() const { \
-            Data *dptr = d_unchecked(); \
-            dptr->_checkIsInitialized(); \
-            return dptr; \
-        } \
-        V4_ASSERT_IS_TRIVIAL(Data);
-
-#define V4_OBJECT2(DataClass, superClass) \
-    private: \
-        DataClass() Q_DECL_EQ_DELETE; \
-        Q_DISABLE_COPY(DataClass) \
-    public: \
-        Q_MANAGED_CHECK \
-        typedef QV4::Heap::DataClass Data; \
-        typedef superClass SuperClass; \
-        static const QV4::ObjectVTable static_vtbl; \
-        static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
-        V4_MANAGED_SIZE_TEST \
-        QV4::Heap::DataClass *d_unchecked() const { return static_cast<QV4::Heap::DataClass *>(m()); } \
-        QV4::Heap::DataClass *d() const { \
-            QV4::Heap::DataClass *dptr = d_unchecked(); \
-            dptr->_checkIsInitialized(); \
-            return dptr; \
-        } \
-        V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass); \
-        static Q_CONSTEXPR quint64 markTable = QV4::Heap::DataClass::markTable;
-
-#define V4_PROTOTYPE(p) \
-    static QV4::Object *defaultPrototype(QV4::ExecutionEngine *e) \
-    { return e->p(); }
-
-struct ObjectVTable
-{
-    VTable vTable;
-    void (*call)(const Managed *, Scope &scope, CallData *data);
-    void (*construct)(const Managed *, Scope &scope, CallData *data);
-    ReturnedValue (*get)(const Managed *, String *name, bool *hasProperty);
-    ReturnedValue (*getIndexed)(const Managed *, uint index, bool *hasProperty);
-    bool (*put)(Managed *, String *name, const Value &value);
-    bool (*putIndexed)(Managed *, uint index, const Value &value);
-    PropertyAttributes (*query)(const Managed *, String *name);
-    PropertyAttributes (*queryIndexed)(const Managed *, uint index);
-    bool (*deleteProperty)(Managed *m, String *name);
-    bool (*deleteIndexedProperty)(Managed *m, uint index);
-    ReturnedValue (*getLookup)(const Managed *m, Lookup *l);
-    void (*setLookup)(Managed *m, Lookup *l, const Value &v);
-    uint (*getLength)(const Managed *m);
-    void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
-    ReturnedValue (*instanceOf)(const Object *typeObject, const Value &var);
-};
-
-#define DEFINE_OBJECT_VTABLE_BASE(classname) \
-const QV4::ObjectVTable classname::static_vtbl =    \
-{     \
-    DEFINE_MANAGED_VTABLE_INT(classname, (std::is_same<classname::SuperClass, Object>::value) ? nullptr : &classname::SuperClass::static_vtbl.vTable), \
-    call,                                       \
-    construct,                                  \
-    get,                                        \
-    getIndexed,                                 \
-    put,                                        \
-    putIndexed,                                 \
-    query,                                      \
-    queryIndexed,                               \
-    deleteProperty,                             \
-    deleteIndexedProperty,                      \
-    getLookup,                                  \
-    setLookup,                                  \
-    getLength,                                  \
-    advanceIterator,                            \
-    instanceOf                                  \
-}
-
-#define DEFINE_OBJECT_VTABLE(classname) \
-QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
-DEFINE_OBJECT_VTABLE_BASE(classname) \
-QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
-
-#define DEFINE_OBJECT_TEMPLATE_VTABLE(classname) \
-QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
-template<> DEFINE_OBJECT_VTABLE_BASE(classname) \
-QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
 
 struct Q_QML_EXPORT Object: Managed {
     V4_OBJECT2(Object, Object)
@@ -228,88 +144,100 @@ struct Q_QML_EXPORT Object: Managed {
     V4_INTERNALCLASS(Object)
     V4_PROTOTYPE(objectPrototype)
 
+    enum { NInlineProperties = 2 };
+
     enum {
         IsObject = true,
         GetterOffset = 0,
         SetterOffset = 1
     };
 
-    void setInternalClass(InternalClass *ic);
+    void setInternalClass(Heap::InternalClass *ic);
 
     const Value *propertyData(uint index) const { return d()->propertyData(index); }
 
     Heap::ArrayData *arrayData() const { return d()->arrayData; }
     void setArrayData(ArrayData *a) { d()->arrayData.set(engine(), a->d()); }
 
-    void getProperty(uint index, Property *p, PropertyAttributes *attrs) const;
-    void setProperty(uint index, const Property *p);
+    void getProperty(const InternalClassEntry &entry, Property *p) const;
+    void setProperty(const InternalClassEntry &entry, const Property *p);
     void setProperty(uint index, Value v) const { d()->setProperty(engine(), index, v); }
     void setProperty(uint index, Heap::Base *b) const { d()->setProperty(engine(), index, b); }
     void setProperty(ExecutionEngine *engine, uint index, Value v) const { d()->setProperty(engine, index, v); }
     void setProperty(ExecutionEngine *engine, uint index, Heap::Base *b) const { d()->setProperty(engine, index, b); }
 
-    const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(d()->vtable()); }
-    Heap::Object *prototype() const { return d()->prototype(); }
-    bool setPrototype(Object *proto);
+    const VTable *vtable() const { return d()->vtable(); }
 
-    void getOwnProperty(String *name, PropertyAttributes *attrs, Property *p = 0);
-    void getOwnProperty(uint index, PropertyAttributes *attrs, Property *p = 0);
+    PropertyAttributes getOwnProperty(PropertyKey id, Property *p = nullptr) const {
+        return vtable()->getOwnProperty(this, id, p);
+    }
 
-    MemberData::Index getValueOrSetter(String *name, PropertyAttributes *attrs);
-    ArrayData::Index getValueOrSetter(uint index, PropertyAttributes *attrs);
+    PropertyIndex getValueOrSetter(PropertyKey id, PropertyAttributes *attrs);
 
-    bool hasProperty(String *name) const;
-    bool hasProperty(uint index) const;
+    bool hasProperty(PropertyKey id) const {
+        return vtable()->hasProperty(this, id);
+    }
 
-    bool hasOwnProperty(String *name) const;
-    bool hasOwnProperty(uint index) const;
-
-    bool __defineOwnProperty__(ExecutionEngine *engine, uint index, String *member, const Property *p, PropertyAttributes attrs);
-    bool __defineOwnProperty__(ExecutionEngine *engine, String *name, const Property *p, PropertyAttributes attrs);
-    bool __defineOwnProperty__(ExecutionEngine *engine, uint index, const Property *p, PropertyAttributes attrs);
-    bool __defineOwnProperty__(ExecutionEngine *engine, const QString &name, const Property *p, PropertyAttributes attrs);
-    bool defineOwnProperty2(ExecutionEngine *engine, uint index, const Property *p, PropertyAttributes attrs);
+    bool defineOwnProperty(PropertyKey id, const Property *p, PropertyAttributes attrs) {
+        return vtable()->defineOwnProperty(this, id, p, attrs);
+    }
 
     //
     // helpers
     //
-    static ReturnedValue getValue(const Value &thisObject, const Value &v, PropertyAttributes attrs);
-    ReturnedValue getValue(const Value &v, PropertyAttributes attrs) const {
-        Scope scope(this->engine());
-        ScopedValue t(scope, const_cast<Object *>(this));
-        return getValue(t, v, attrs);
+    static ReturnedValue getValue(const Value &thisObject, const Value &v, PropertyAttributes attrs) {
+        if (attrs.isData())
+            return v.asReturnedValue();
+        return getValueAccessor(thisObject, v, attrs);
     }
+    ReturnedValue getValue(const Value &v, PropertyAttributes attrs) const {
+        return getValue(*this, v, attrs);
+    }
+    ReturnedValue getValueByIndex(uint propertyIndex) const {
+        PropertyAttributes attrs = internalClass()->propertyData.at(propertyIndex);
+        const Value *v = propertyData(propertyIndex);
+        if (!attrs.isAccessor())
+            return v->asReturnedValue();
+        return getValueAccessor(*this, *v, attrs);
+    }
+    static ReturnedValue getValueAccessor(const Value &thisObject, const Value &v, PropertyAttributes attrs);
 
-    bool putValue(uint memberIndex, const Value &value);
+    bool putValue(uint memberIndex, PropertyAttributes attrs, const Value &value);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
-    void defineDefaultProperty(String *name, const Value &value) {
-        insertMember(name, value, Attr_Data|Attr_NotEnumerable);
+    void defineDefaultProperty(StringOrSymbol *name, const Value &value, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable) {
+        insertMember(name, value, attributes);
     }
-    void defineDefaultProperty(const QString &name, const Value &value);
-    void defineDefaultProperty(const QString &name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount = 0);
-    void defineDefaultProperty(String *name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount = 0);
-    void defineAccessorProperty(const QString &name, void (*getter)(const BuiltinFunction *, Scope &, CallData *),
-                                void (*setter)(const BuiltinFunction *, Scope &, CallData *));
-    void defineAccessorProperty(String *name, void (*getter)(const BuiltinFunction *, Scope &, CallData *),
-                                void (*setter)(const BuiltinFunction *, Scope &, CallData *));
+    void defineDefaultProperty(const QString &name, const Value &value, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable);
+    void defineDefaultProperty(const QString &name, VTable::Call code,
+                               int argumentCount = 0, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable);
+    void defineDefaultProperty(StringOrSymbol *name, VTable::Call code,
+                               int argumentCount = 0, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable);
+    void defineAccessorProperty(const QString &name, VTable::Call getter, VTable::Call setter);
+    void defineAccessorProperty(StringOrSymbol *name, VTable::Call getter, VTable::Call setter);
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
     void defineReadonlyProperty(const QString &name, const Value &value);
     void defineReadonlyProperty(String *name, const Value &value);
 
     /* Fixed: Writable: false, Enumerable: false, Configurable: true */
     void defineReadonlyConfigurableProperty(const QString &name, const Value &value);
-    void defineReadonlyConfigurableProperty(String *name, const Value &value);
+    void defineReadonlyConfigurableProperty(StringOrSymbol *name, const Value &value);
 
-    void insertMember(String *s, const Value &v, PropertyAttributes attributes = Attr_Data) {
+    void addSymbolSpecies();
+
+    void insertMember(StringOrSymbol *s, const Value &v, PropertyAttributes attributes = Attr_Data) {
         Scope scope(engine());
         ScopedProperty p(scope);
         p->value = v;
         insertMember(s, p, attributes);
     }
-    void insertMember(String *s, const Property *p, PropertyAttributes attributes);
+    void insertMember(StringOrSymbol *s, const Property *p, PropertyAttributes attributes);
 
-    bool isExtensible() const { return d()->internalClass->extensible; }
+    bool isExtensible() const { return vtable()->isExtensible(this); }
+    bool preventExtensions() { return vtable()->preventExtensions(this); }
+    Heap::Object *getPrototypeOf() const { return vtable()->getPrototypeOf(this); }
+    bool setPrototypeOf(const Object *p) { return vtable()->setPrototypeOf(this, p); }
+    void setPrototypeUnchecked(const Object *p);
 
     // Array handling
 
@@ -362,40 +290,65 @@ public:
     }
 
     void initSparseArray();
-    SparseArrayNode *sparseBegin() { return arrayType() == Heap::ArrayData::Sparse ? d()->arrayData->sparse->begin() : 0; }
-    SparseArrayNode *sparseEnd() { return arrayType() == Heap::ArrayData::Sparse ? d()->arrayData->sparse->end() : 0; }
+    SparseArrayNode *sparseBegin() const { return arrayType() == Heap::ArrayData::Sparse ? d()->arrayData->sparse->begin() : nullptr; }
+    SparseArrayNode *sparseEnd() const { return arrayType() == Heap::ArrayData::Sparse ? d()->arrayData->sparse->end() : nullptr; }
 
     inline bool protoHasArray() {
         Scope scope(engine());
         ScopedObject p(scope, this);
 
-        while ((p = p->prototype()))
+        while ((p = p->getPrototypeOf()))
             if (p->arrayData())
                 return true;
 
         return false;
     }
 
-    inline ReturnedValue get(String *name, bool *hasProperty = 0) const
-    { return vtable()->get(this, name, hasProperty); }
-    inline ReturnedValue getIndexed(uint idx, bool *hasProperty = 0) const
-    { return vtable()->getIndexed(this, idx, hasProperty); }
+    inline ReturnedValue get(StringOrSymbol *name, bool *hasProperty = nullptr, const Value *receiver = nullptr) const
+    { if (!receiver) receiver = this; return vtable()->get(this, name->toPropertyKey(), receiver, hasProperty); }
+    inline ReturnedValue get(uint idx, bool *hasProperty = nullptr, const Value *receiver = nullptr) const
+    { if (!receiver) receiver = this; return vtable()->get(this, PropertyKey::fromArrayIndex(idx), receiver, hasProperty); }
+    QT_DEPRECATED inline ReturnedValue getIndexed(uint idx, bool *hasProperty = nullptr) const
+    { return get(idx, hasProperty); }
+    inline ReturnedValue get(PropertyKey id, const Value *receiver = nullptr, bool *hasProperty = nullptr) const
+    { if (!receiver) receiver = this; return vtable()->get(this, id, receiver, hasProperty); }
 
     // use the set variants instead, to customize throw behavior
-    inline bool put(String *name, const Value &v)
-    { return vtable()->put(this, name, v); }
-    inline bool putIndexed(uint idx, const Value &v)
-    { return vtable()->putIndexed(this, idx, v); }
+    inline bool put(StringOrSymbol *name, const Value &v, Value *receiver = nullptr)
+    { if (!receiver) receiver = this; return vtable()->put(this, name->toPropertyKey(), v, receiver); }
+    inline bool put(uint idx, const Value &v, Value *receiver = nullptr)
+    { if (!receiver) receiver = this; return vtable()->put(this, PropertyKey::fromArrayIndex(idx), v, receiver); }
+    QT_DEPRECATED inline bool putIndexed(uint idx, const Value &v)
+    { return put(idx, v); }
+    inline bool put(PropertyKey id, const Value &v, Value *receiver = nullptr)
+    { if (!receiver) receiver = this; return vtable()->put(this, id, v, receiver); }
 
     enum ThrowOnFailure {
         DoThrowOnRejection,
         DoNotThrow
     };
 
-    // ES6: 7.3.3 Set (O, P, V, Throw)
-    inline bool set(String *name, const Value &v, ThrowOnFailure shouldThrow)
+    // This is the same as set(), but it doesn't require creating a string key,
+    // which is much more efficient for the array case.
+    inline bool setIndexed(uint idx, const Value &v, ThrowOnFailure shouldThrow)
     {
-        bool ret = vtable()->put(this, name, v);
+        bool ret = vtable()->put(this, PropertyKey::fromArrayIndex(idx), v, this);
+        // ES6: 7.3.3, 6: If success is false and Throw is true, throw a TypeError exception.
+        if (!ret && shouldThrow == ThrowOnFailure::DoThrowOnRejection) {
+            ExecutionEngine *e = engine();
+            if (!e->hasException) { // allow a custom set impl to throw itself
+                QString message = QLatin1String("Cannot assign to read-only property \"") +
+                        QString::number(idx) + QLatin1Char('\"');
+                e->throwTypeError(message);
+            }
+        }
+        return ret;
+    }
+
+    // ES6: 7.3.3 Set (O, P, V, Throw)
+    inline bool set(StringOrSymbol *name, const Value &v, ThrowOnFailure shouldThrow)
+    {
+        bool ret = vtable()->put(this, name->toPropertyKey(), v, this);
         // ES6: 7.3.3, 6: If success is false and Throw is true, throw a TypeError exception.
         if (!ret && shouldThrow == ThrowOnFailure::DoThrowOnRejection) {
             ExecutionEngine *e = engine();
@@ -408,69 +361,57 @@ public:
         return ret;
     }
 
-    inline bool setIndexed(uint idx, const Value &v, ThrowOnFailure shouldThrow)
-    {
-        bool ret = vtable()->putIndexed(this, idx, v);
-        if (!ret && shouldThrow == ThrowOnFailure::DoThrowOnRejection) {
-            ExecutionEngine *e = engine();
-            if (!e->hasException) { // allow a custom set impl to throw itself
-                e->throwTypeError();
-            }
-        }
-        return ret;
-    }
-
-
-    PropertyAttributes query(String *name) const
-    { return vtable()->query(this, name); }
-    PropertyAttributes queryIndexed(uint index) const
-    { return vtable()->queryIndexed(this, index); }
-    bool deleteProperty(String *name)
-    { return vtable()->deleteProperty(this, name); }
-    bool deleteIndexedProperty(uint index)
-    { return vtable()->deleteIndexedProperty(this, index); }
-    ReturnedValue getLookup(Lookup *l) const
-    { return vtable()->getLookup(this, l); }
-    void setLookup(Lookup *l, const Value &v)
-    { vtable()->setLookup(this, l, v); }
-    void advanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
-    { vtable()->advanceIterator(this, it, name, index, p, attributes); }
-    uint getLength() const { return vtable()->getLength(this); }
+    bool deleteProperty(PropertyKey id)
+    { return vtable()->deleteProperty(this, id); }
+    OwnPropertyKeyIterator *ownPropertyKeys(Value *target) const
+    { return vtable()->ownPropertyKeys(this, target); }
+    qint64 getLength() const { return vtable()->getLength(this); }
     ReturnedValue instanceOf(const Value &var) const
     { return vtable()->instanceOf(this, var); }
 
-    inline void construct(Scope &scope, CallData *d) const
-    { return vtable()->construct(this, scope, d); }
-    inline void call(Scope &scope, CallData *d) const
-    { vtable()->call(this, scope, d); }
+    bool isConcatSpreadable() const;
+    bool isArray() const;
+    const FunctionObject *speciesConstructor(Scope &scope, const FunctionObject *defaultConstructor) const;
+
+    bool setProtoFromNewTarget(const Value *newTarget);
+
 protected:
-    static void construct(const Managed *m, Scope &scope, CallData *);
-    static void call(const Managed *m, Scope &scope, CallData *);
-    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
-    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
-    static bool put(Managed *m, String *name, const Value &value);
-    static bool putIndexed(Managed *m, uint index, const Value &value);
-    static PropertyAttributes query(const Managed *m, String *name);
-    static PropertyAttributes queryIndexed(const Managed *m, uint index);
-    static bool deleteProperty(Managed *m, String *name);
-    static bool deleteIndexedProperty(Managed *m, uint index);
-    static ReturnedValue getLookup(const Managed *m, Lookup *l);
-    static void setLookup(Managed *m, Lookup *l, const Value &v);
-    static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
-    static uint getLength(const Managed *m);
-    static ReturnedValue instanceOf(const Object *typeObject, const Value &var);
-    static void markObjects(Heap::Base *, MarkStack *);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver,bool *hasProperty);
+    static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static bool virtualDeleteProperty(Managed *m, PropertyKey id);
+    static bool virtualHasProperty(const Managed *m, PropertyKey id);
+    static PropertyAttributes virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p);
+    static bool virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
+    static bool virtualIsExtensible(const Managed *m);
+    static bool virtualPreventExtensions(Managed *);
+    static Heap::Object *virtualGetPrototypeOf(const Managed *);
+    static bool virtualSetPrototypeOf(Managed *, const Object *);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
+    static qint64 virtualGetLength(const Managed *m);
+    static ReturnedValue virtualInstanceOf(const Object *typeObject, const Value &var);
+public:
+    // qv4runtime uses this directly
+    static ReturnedValue checkedInstanceOf(ExecutionEngine *engine, const FunctionObject *typeObject, const Value &var);
 
 private:
-    ReturnedValue internalGet(String *name, bool *hasProperty) const;
-    ReturnedValue internalGetIndexed(uint index, bool *hasProperty) const;
-    bool internalPut(String *name, const Value &value);
-    bool internalPutIndexed(uint index, const Value &value);
-    bool internalDeleteProperty(String *name);
-    bool internalDeleteIndexedProperty(uint index);
+    bool internalDefineOwnProperty(ExecutionEngine *engine, uint index, const InternalClassEntry *memberEntry, const Property *p, PropertyAttributes attrs);
+    ReturnedValue internalGet(PropertyKey id, const Value *receiver, bool *hasProperty) const;
+    bool internalPut(PropertyKey id, const Value &value, Value *receiver);
+    bool internalDeleteProperty(PropertyKey id);
 
     friend struct ObjectIterator;
     friend struct ObjectPrototype;
+};
+
+struct ObjectOwnPropertyKeyIterator : OwnPropertyKeyIterator
+{
+    uint arrayIndex = 0;
+    uint memberIndex = 0;
+    bool iterateOverSymbols = false;
+    SparseArrayNode *arrayNode = nullptr;
+    ~ObjectOwnPropertyKeyIterator() override = default;
+    PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
+
 };
 
 namespace Heap {
@@ -509,7 +450,7 @@ struct ArrayObject : Object {
 
 private:
     void commonInit()
-    { setProperty(internalClass->engine, LengthPropertyIndex, Primitive::fromInt32(0)); }
+    { setProperty(internalClass->engine, LengthPropertyIndex, Value::fromInt32(0)); }
 };
 
 }
@@ -539,17 +480,18 @@ struct ArrayObject: Object {
 
     void init(ExecutionEngine *engine);
 
-    static ReturnedValue getLookup(const Managed *m, Lookup *l);
-    using Object::getLength;
-    static uint getLength(const Managed *m);
+    static qint64 virtualGetLength(const Managed *m);
 
     QStringList toQStringList() const;
+protected:
+    static bool virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
+
 };
 
 inline void Object::setArrayLengthUnchecked(uint l)
 {
     if (isArrayObject())
-        setProperty(Heap::ArrayObject::LengthPropertyIndex, Primitive::fromUInt32(l));
+        setProperty(Heap::ArrayObject::LengthPropertyIndex, Value::fromUInt32(l));
 }
 
 inline void Object::push_back(const Value &v)
@@ -592,7 +534,7 @@ inline void Object::arraySet(uint index, const Value &value)
 
 template<>
 inline const ArrayObject *Value::as() const {
-    return isManaged() && m()->vtable()->type == Managed::Type_ArrayObject ? static_cast<const ArrayObject *>(this) : 0;
+    return isManaged() && m()->internalClass->vtable->type == Managed::Type_ArrayObject ? static_cast<const ArrayObject *>(this) : nullptr;
 }
 
 #ifndef V4_BOOTSTRAP

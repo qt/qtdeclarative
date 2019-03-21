@@ -57,8 +57,8 @@ class Q_QUICK_EXPORT QQuickPaintedItem : public QQuickItem
     Q_PROPERTY(QSize textureSize READ textureSize WRITE setTextureSize NOTIFY textureSizeChanged)
 
 public:
-    explicit QQuickPaintedItem(QQuickItem *parent = Q_NULLPTR);
-    virtual ~QQuickPaintedItem();
+    explicit QQuickPaintedItem(QQuickItem *parent = nullptr);
+    ~QQuickPaintedItem() override;
 
     enum RenderTarget {
         Image,
@@ -71,6 +71,7 @@ public:
         FastFBOResizing = 0x1
     };
     Q_DECLARE_FLAGS(PerformanceHints, PerformanceHint)
+    Q_FLAG(PerformanceHints)
 
     void update(const QRect &rect = QRect());
 
@@ -107,8 +108,8 @@ public:
 
     virtual void paint(QPainter *painter) = 0;
 
-    bool isTextureProvider() const Q_DECL_OVERRIDE;
-    QSGTextureProvider *textureProvider() const Q_DECL_OVERRIDE;
+    bool isTextureProvider() const override;
+    QSGTextureProvider *textureProvider() const override;
 
 Q_SIGNALS:
     void fillColorChanged();
@@ -118,10 +119,10 @@ Q_SIGNALS:
     void textureSizeChanged();
 
 protected:
-    QQuickPaintedItem(QQuickPaintedItemPrivate &dd, QQuickItem *parent = Q_NULLPTR);
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
-    void releaseResources() Q_DECL_OVERRIDE;
-    void itemChange(ItemChange, const ItemChangeData &) Q_DECL_OVERRIDE;
+    QQuickPaintedItem(QQuickPaintedItemPrivate &dd, QQuickItem *parent = nullptr);
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
+    void releaseResources() override;
+    void itemChange(ItemChange, const ItemChangeData &) override;
 
 private Q_SLOTS:
     void invalidateSceneGraph();

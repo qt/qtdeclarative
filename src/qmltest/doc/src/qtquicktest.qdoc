@@ -1,0 +1,79 @@
+/****************************************************************************
+**
+** Copyright (C) 2018 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+   \namespace QQuickTest
+   \inmodule QtQuickTest
+
+   \brief The QQuickTest namespace contains all the functions and
+   macros related to Qt Quick Test.
+
+   See the \l{Introduction to Qt Quick Test} for information about how to write
+   Qt Quick unit tests.
+
+   To link to the Qt Quick Test C++ library, see \l {Qt Quick Test C++ API}.
+
+   \sa {Executing C++ Before QML Tests}
+*/
+
+/*!
+    \macro QUICK_TEST_MAIN(name)
+    \relates QQuickTest
+
+    \brief Sets up the entry point for a Qt Quick Test application.
+    The \a name argument uniquely identifies this set of tests.
+
+    \snippet src_qmltest_qquicktest.cpp 1
+
+    \note The macro assumes that your test sources are in the current
+    directory, unless the \c QUICK_TEST_SOURCE_DIR environment variable is set.
+
+    \sa QUICK_TEST_MAIN_WITH_SETUP(), {Running Qt Quick Tests}
+
+*/
+
+/*!
+    \macro QUICK_TEST_MAIN_WITH_SETUP(name, QuickTestSetupClass)
+    \relates QQuickTest
+
+    \brief Sets up the entry point for a Qt Quick Test application.
+    The \a name argument uniquely identifies this set of tests.
+
+    This macro is identical to QUICK_TEST_MAIN(), except that it takes an
+    additional argument \a QuickTestSetupClass, a pointer to a QObject-derived
+    class. With this class it is possible to define additional setup code to
+    execute before running the QML test.
+
+    \note The macro assumes that your test sources are in the current
+    directory, unless the \c QUICK_TEST_SOURCE_DIR environment variable is set.
+
+    The following snippet demonstrates the use of this macro:
+
+    \snippet src_qmltest_qquicktest.cpp 2
+
+    \sa QUICK_TEST_MAIN(), {Running Qt Quick Tests}
+*/

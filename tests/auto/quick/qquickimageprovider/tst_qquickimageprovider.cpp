@@ -65,6 +65,7 @@ private slots:
     void threadTest();
 
     void asyncTextureTest();
+    void instantAsyncTextureTest();
 
 private:
     QString newImageFileName() const;
@@ -76,7 +77,7 @@ private:
 class TestQImageProvider : public QQuickImageProvider
 {
 public:
-    TestQImageProvider(bool *deleteWatch = 0, bool forceAsync = false)
+    TestQImageProvider(bool *deleteWatch = nullptr, bool forceAsync = false)
         : QQuickImageProvider(Image, (forceAsync ? ForceAsynchronousImageLoading : Flags()))
         , deleteWatch(deleteWatch)
     {
@@ -114,7 +115,7 @@ Q_DECLARE_METATYPE(TestQImageProvider*);
 class TestQPixmapProvider : public QQuickImageProvider
 {
 public:
-    TestQPixmapProvider(bool *deleteWatch = 0)
+    TestQPixmapProvider(bool *deleteWatch = nullptr)
         : QQuickImageProvider(Pixmap), deleteWatch(deleteWatch)
     {
     }
@@ -217,7 +218,7 @@ void tst_qquickimageprovider::runTest(bool async, QQuickImageProvider *provider)
     QQmlEngine engine;
 
     engine.addImageProvider("test", provider);
-    QVERIFY(engine.imageProvider("test") != 0);
+    QVERIFY(engine.imageProvider("test") != nullptr);
 
     QString componentStr = "import QtQuick 2.0\nImage { source: \"" + source + "\"; "
             + (async ? "asynchronous: true; " : "")
@@ -225,7 +226,7 @@ void tst_qquickimageprovider::runTest(bool async, QQuickImageProvider *provider)
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     // From this point on, treat forced async providers as async behaviour-wise
     if (engine.imageProvider(QUrl(source).host()) == provider)
@@ -314,14 +315,14 @@ void tst_qquickimageprovider::requestPixmap_async()
     QQuickImageProvider *provider = new TestQPixmapProvider();
 
     engine.addImageProvider("test", provider);
-    QVERIFY(engine.imageProvider("test") != 0);
+    QVERIFY(engine.imageProvider("test") != nullptr);
 
     // pixmaps are loaded synchronously regardless of 'asynchronous' value
     QString componentStr = "import QtQuick 2.0\nImage { asynchronous: true; source: \"image://test/pixmap-async-test.png\" }";
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     delete obj;
 }
@@ -341,14 +342,14 @@ void tst_qquickimageprovider::removeProvider()
     QQmlEngine engine;
 
     engine.addImageProvider("test", provider);
-    QVERIFY(engine.imageProvider("test") != 0);
+    QVERIFY(engine.imageProvider("test") != nullptr);
 
     // add provider, confirm it works
     QString componentStr = "import QtQuick 2.0\nImage { source: \"" + newImageFileName() + "\" }";
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(obj->status(), QQuickImage::Ready);
 
@@ -384,7 +385,7 @@ void tst_qquickimageprovider::imageProviderId()
     TestQImageProvider *provider = new TestQImageProvider(&deleteWatch);
 
     engine.addImageProvider(providerId, provider);
-    QVERIFY(engine.imageProvider(providerId) != 0);
+    QVERIFY(engine.imageProvider(providerId) != nullptr);
 
     engine.removeImageProvider(providerId);
     QVERIFY(deleteWatch);
@@ -393,7 +394,7 @@ void tst_qquickimageprovider::imageProviderId()
 class TestThreadProvider : public QQuickImageProvider
 {
     public:
-        TestThreadProvider() : QQuickImageProvider(Image), ok(false) {}
+        TestThreadProvider() : QQuickImageProvider(Image) {}
 
         ~TestThreadProvider() {}
 
@@ -417,7 +418,7 @@ class TestThreadProvider : public QQuickImageProvider
 
         QWaitCondition cond;
         QMutex mutex;
-        bool ok;
+        bool ok = false;
 };
 
 
@@ -428,7 +429,7 @@ void tst_qquickimageprovider::threadTest()
     TestThreadProvider *provider = new TestThreadProvider;
 
     engine.addImageProvider("test_thread", provider);
-    QVERIFY(engine.imageProvider("test_thread") != 0);
+    QVERIFY(engine.imageProvider("test_thread") != nullptr);
 
     QString componentStr = "import QtQuick 2.0\nItem { \n"
             "Image { source: \"image://test_thread/blue\";  asynchronous: true; }\n"
@@ -440,7 +441,7 @@ void tst_qquickimageprovider::threadTest()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QObject *obj = component.create();
     //MUST not deadlock
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QList<QQuickImage *> images = obj->findChildren<QQuickImage *>();
     QCOMPARE(images.count(), 4);
     QTest::qWait(100);
@@ -459,7 +460,7 @@ class TestImageResponse : public QQuickImageResponse, public QRunnable
 {
     public:
         TestImageResponse(QMutex *lock, QWaitCondition *condition, bool *ok, const QString &id, const QSize &requestedSize)
-         : m_lock(lock), m_condition(condition), m_ok(ok), m_id(id), m_requestedSize(requestedSize), m_texture(0)
+         : m_lock(lock), m_condition(condition), m_ok(ok), m_id(id), m_requestedSize(requestedSize), m_texture(nullptr)
         {
             setAutoDelete(false);
         }
@@ -495,7 +496,7 @@ class TestImageResponse : public QQuickImageResponse, public QRunnable
 class TestAsyncProvider : public QQuickAsyncImageProvider
 {
     public:
-        TestAsyncProvider() : ok(false)
+        TestAsyncProvider()
         {
             pool.setMaxThreadCount(4);
         }
@@ -512,7 +513,7 @@ class TestAsyncProvider : public QQuickAsyncImageProvider
         QThreadPool pool;
         QMutex lock;
         QWaitCondition condition;
-        bool ok;
+        bool ok = false;
 };
 
 
@@ -523,7 +524,7 @@ void tst_qquickimageprovider::asyncTextureTest()
     TestAsyncProvider *provider = new TestAsyncProvider;
 
     engine.addImageProvider("test_async", provider);
-    QVERIFY(engine.imageProvider("test_async") != 0);
+    QVERIFY(engine.imageProvider("test_async") != nullptr);
 
     QString componentStr = "import QtQuick 2.0\nItem { \n"
             "Image { source: \"image://test_async/blue\"; }\n"
@@ -535,7 +536,7 @@ void tst_qquickimageprovider::asyncTextureTest()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QObject *obj = component.create();
     //MUST not deadlock
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QList<QQuickImage *> images = obj->findChildren<QQuickImage *>();
     QCOMPARE(images.count(), 4);
 
@@ -546,6 +547,70 @@ void tst_qquickimageprovider::asyncTextureTest()
     provider->ok = true;
     provider->condition.wakeAll();
     foreach (QQuickImage *img, images) {
+        QTRY_COMPARE(img->status(), QQuickImage::Ready);
+    }
+}
+
+class InstantAsyncImageResponse : public QQuickImageResponse
+{
+    public:
+        InstantAsyncImageResponse(const QString &id, const QSize &requestedSize)
+        {
+            QImage image(50, 50, QImage::Format_RGB32);
+            image.fill(QColor(id).rgb());
+            if (requestedSize.isValid())
+                image = image.scaled(requestedSize);
+            m_texture = QQuickTextureFactory::textureFactoryForImage(image);
+            emit finished();
+        }
+
+        QQuickTextureFactory *textureFactory() const
+        {
+            return m_texture;
+        }
+
+        QQuickTextureFactory *m_texture;
+};
+
+class InstancAsyncProvider : public QQuickAsyncImageProvider
+{
+    public:
+        InstancAsyncProvider()
+        {
+        }
+
+        ~InstancAsyncProvider() {}
+
+        QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize)
+        {
+            return new InstantAsyncImageResponse(id, requestedSize);
+        }
+};
+
+void tst_qquickimageprovider::instantAsyncTextureTest()
+{
+    QQmlEngine engine;
+
+    InstancAsyncProvider *provider = new InstancAsyncProvider;
+
+    engine.addImageProvider("test_instantasync", provider);
+    QVERIFY(engine.imageProvider("test_instantasync") != nullptr);
+
+    QString componentStr = "import QtQuick 2.0\nItem { \n"
+            "Image { source: \"image://test_instantasync/blue\"; }\n"
+            "Image { source: \"image://test_instantasync/red\"; }\n"
+            "Image { source: \"image://test_instantasync/green\";  }\n"
+            "Image { source: \"image://test_instantasync/yellow\";  }\n"
+            " }";
+    QQmlComponent component(&engine);
+    component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QScopedPointer<QObject> obj(component.create());
+
+    QVERIFY(!obj.isNull());
+    const QList<QQuickImage *> images = obj->findChildren<QQuickImage *>();
+    QCOMPARE(images.count(), 4);
+
+    for (QQuickImage *img: images) {
         QTRY_COMPARE(img->status(), QQuickImage::Ready);
     }
 }

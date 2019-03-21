@@ -25,6 +25,7 @@ qtConfig(opengl(es1|es2)?) {
 
 PRIVATETESTS += \
     nokeywords \
+    propertyrequirements \
     qquickanimations \
     qquickapplication \
     qquickbehaviors \
@@ -40,13 +41,10 @@ PRIVATETESTS += \
     qquickstyledtext \
     qquickstates \
     qquicksystempalette \
-    qquicktimeline \
-    qquickxmllistmodel
+    qquicktimeline
 
-# This test requires the xmlpatterns module
-!qtHaveModule(xmlpatterns): PRIVATETESTS -= qquickxmllistmodel
-
-QUICKTESTS =  \
+QUICKTESTS += \
+    pointerhandlers \
     qquickaccessible \
     qquickanchors \
     qquickanimatedimage \
@@ -65,6 +63,7 @@ QUICKTESTS =  \
     qquickitem2 \
     qquickitemlayer \
     qquicklistview \
+    qquicktableview \
     qquickloader \
     qquickmousearea \
     qquickmultipointtoucharea \
@@ -90,6 +89,9 @@ QUICKTESTS =  \
     sharedimage
 
 SUBDIRS += $$PUBLICTESTS
+
+# Following tests are too slow on qemu + software backend
+boot2qt: QUICKTESTS -= qquickgridview qquicklistview qquicktableview qquickpositioners
 
 !qtConfig(accessibility):QUICKTESTS -= qquickaccessible
 

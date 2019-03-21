@@ -70,7 +70,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImageBase : public QQuickImplicitSizeItem
     Q_PROPERTY(bool mirror READ mirror WRITE setMirror NOTIFY mirrorChanged)
 
 public:
-    QQuickImageBase(QQuickItem *parent=0);
+    QQuickImageBase(QQuickItem *parent=nullptr);
     ~QQuickImageBase();
     enum Status { Null, Ready, Loading, Error };
     Q_ENUM(Status)
@@ -98,7 +98,7 @@ public:
     virtual void setAutoTransform(bool transform);
     bool autoTransform() const;
 
-    void resolve2xLocalFile(const QUrl &url, qreal targetDevicePixelRatio, QUrl *sourceUrl, qreal *sourceDevicePixelRatio);
+    static void resolve2xLocalFile(const QUrl &url, qreal targetDevicePixelRatio, QUrl *sourceUrl, qreal *sourceDevicePixelRatio);
 
     // Use a virtual rather than a signal->signal to avoid the huge
     // connect/conneciton overhead for this rare case.
@@ -115,9 +115,9 @@ Q_SIGNALS:
 
 protected:
     virtual void load();
-    void componentComplete() Q_DECL_OVERRIDE;
+    void componentComplete() override;
     virtual void pixmapChange();
-    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
     QQuickImageBase(QQuickImageBasePrivate &dd, QQuickItem *parent);
 
 private Q_SLOTS:

@@ -36,7 +36,7 @@ class MyChildPluginType : public QObject
     Q_PROPERTY(int value READ value WRITE setValue)
 
 public:
-    MyChildPluginType(QObject *parent=0) : QObject(parent)
+    MyChildPluginType(QObject *parent=nullptr) : QObject(parent)
     {
         qWarning("child import worked");
     }

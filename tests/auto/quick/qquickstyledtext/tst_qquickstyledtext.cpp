@@ -44,7 +44,8 @@ public:
             Bold = 0x01,
             Underline = 0x02,
             Italic = 0x04,
-            Anchor = 0x08
+            Anchor = 0x08,
+            StrikeOut = 0x10
         };
         Format(int t, int s, int l)
             : type(t), start(s), length(l) {}
@@ -92,6 +93,10 @@ void tst_qquickstyledtext::textOutput_data()
     QTest::newRow("underline") << "<u>underline</u>" << "underline" << (FormatList() << Format(Format::Underline, 0, 9)) << false;
     QTest::newRow("strong") << "<strong>strong</strong>" << "strong" << (FormatList() << Format(Format::Bold, 0, 6)) << false;
     QTest::newRow("underline") << "<u>underline</u>" << "underline" << (FormatList() << Format(Format::Underline, 0, 9)) << false;
+    QTest::newRow("strike out s") << "<s>strike out</s>" << "strike out" << (FormatList() << Format(Format::StrikeOut, 0, 10)) << false;
+    QTest::newRow("strike out del") << "<del>strike out</del>" << "strike out" << (FormatList() << Format(Format::StrikeOut, 0, 10)) << false;
+    QTest::newRow("strike out not s") << "this is <s>not</s> a test" << "this is not a test" << (FormatList() << Format(Format::StrikeOut, 8, 3)) << false;
+    QTest::newRow("strike out not del") << "this is <del>not</del> a test" << "this is not a test" << (FormatList() << Format(Format::StrikeOut, 8, 3)) << false;
     QTest::newRow("missing >") << "<b>text</b" << "text" << (FormatList() << Format(Format::Bold, 0, 4)) << false;
     QTest::newRow("missing b>") << "<b>text</" << "text" << (FormatList() << Format(Format::Bold, 0, 4)) << false;
     QTest::newRow("missing /b>") << "<b>text<" << "text" << (FormatList() << Format(Format::Bold, 0, 4)) << false;
@@ -162,7 +167,7 @@ void tst_qquickstyledtext::textOutput()
     QTextLayout layout;
     QList<QQuickStyledTextImgTag*> imgTags;
     bool fontSizeModified = false;
-    QQuickStyledText::parse(input, layout, imgTags, QUrl(), 0, false, &fontSizeModified);
+    QQuickStyledText::parse(input, layout, imgTags, QUrl(), nullptr, false, &fontSizeModified);
 
     QCOMPARE(layout.text(), output);
 
@@ -178,6 +183,7 @@ void tst_qquickstyledtext::textOutput()
             QCOMPARE(layoutFormats.at(i).format.fontWeight(), int(QFont::Normal));
         QVERIFY(layoutFormats.at(i).format.fontItalic() == bool(formats.at(i).type & Format::Italic));
         QVERIFY(layoutFormats.at(i).format.fontUnderline() == bool(formats.at(i).type & Format::Underline));
+        QVERIFY(layoutFormats.at(i).format.fontStrikeOut() == bool(formats.at(i).type & Format::StrikeOut));
     }
     QCOMPARE(fontSizeModified, modifiesFontSize);
 }
@@ -191,7 +197,7 @@ void tst_qquickstyledtext::anchors()
     QTextLayout layout;
     QList<QQuickStyledTextImgTag*> imgTags;
     bool fontSizeModified = false;
-    QQuickStyledText::parse(input, layout, imgTags, QUrl(), 0, false, &fontSizeModified);
+    QQuickStyledText::parse(input, layout, imgTags, QUrl(), nullptr, false, &fontSizeModified);
 
     QCOMPARE(layout.text(), output);
 
@@ -229,11 +235,11 @@ void tst_qquickstyledtext::longString()
     bool fontSizeModified = false;
 
     QString input(9999999, QChar('.'));
-    QQuickStyledText::parse(input, layout, imgTags, QUrl(), 0, false, &fontSizeModified);
+    QQuickStyledText::parse(input, layout, imgTags, QUrl(), nullptr, false, &fontSizeModified);
     QCOMPARE(layout.text(), input);
 
     input = QString(9999999, QChar('\t')); // whitespace
-    QQuickStyledText::parse(input, layout, imgTags, QUrl(), 0, false, &fontSizeModified);
+    QQuickStyledText::parse(input, layout, imgTags, QUrl(), nullptr, false, &fontSizeModified);
     QCOMPARE(layout.text(), QString(""));
 }
 

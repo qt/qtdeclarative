@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
 
 QQuickWindowAttached::QQuickWindowAttached(QObject* attachee)
     : QObject(attachee)
-    , m_window(NULL)
+    , m_window(nullptr)
 {
     m_attachee = qobject_cast<QQuickItem*>(attachee);
     if (m_attachee && m_attachee->window()) // It might not be in a window yet
@@ -68,12 +68,12 @@ bool QQuickWindowAttached::isActive() const
 
 QQuickItem *QQuickWindowAttached::activeFocusItem() const
 {
-    return (m_window ? m_window->activeFocusItem() : Q_NULLPTR);
+    return (m_window ? m_window->activeFocusItem() : nullptr);
 }
 
 QQuickItem *QQuickWindowAttached::contentItem() const
 {
-    return (m_window ? m_window->contentItem() : Q_NULLPTR);
+    return (m_window ? m_window->contentItem() : nullptr);
 }
 
 int QQuickWindowAttached::width() const

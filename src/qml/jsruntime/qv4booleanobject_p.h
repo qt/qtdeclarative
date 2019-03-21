@@ -70,8 +70,8 @@ struct BooleanCtor: FunctionObject
 {
     V4_OBJECT2(BooleanCtor, FunctionObject)
 
-    static void construct(const Managed *, Scope &scope, CallData *callData);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct BooleanPrototype: BooleanObject
@@ -79,8 +79,8 @@ struct BooleanPrototype: BooleanObject
     V4_PROTOTYPE(objectPrototype)
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_valueOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 

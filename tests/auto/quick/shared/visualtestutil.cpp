@@ -66,12 +66,18 @@ void QQuickVisualTestUtil::dumpTree(QQuickItem *parent, int depth)
 // distance field glyph pixels have a measurable, but not visible
 // pixel error. This was GT-216 with the ubuntu "nvidia-319" driver package.
 // llvmpipe does not show the same issue.
-bool QQuickVisualTestUtil::compareImages(const QImage &ia, const QImage &ib)
+
+bool QQuickVisualTestUtil::compareImages(const QImage &ia, const QImage &ib, QString *errorMessage)
 {
-    if (ia.size() != ib.size())
-        qDebug() << "images are of different size" << ia.size() << ib.size();
-    Q_ASSERT(ia.size() == ib.size());
-    Q_ASSERT(ia.format() == ib.format());
+    if (ia.size() != ib.size()) {
+        QDebug(errorMessage) << "Images are of different size:" << ia.size() << ib.size()
+            << "DPR:" << ia.devicePixelRatio() << ib.devicePixelRatio();
+        return false;
+    }
+    if (ia.format() != ib.format()) {
+        QDebug(errorMessage) << "Images are of different formats:" << ia.format() << ib.format();
+        return false;
+    }
 
     int w = ia.width();
     int h = ia.height();
@@ -84,14 +90,14 @@ bool QQuickVisualTestUtil::compareImages(const QImage &ia, const QImage &ib)
             uint b = bs[x];
 
             // No tolerance for error in the alpha.
-            if ((a & 0xff000000) != (b & 0xff000000))
+            if ((a & 0xff000000) != (b & 0xff000000)
+                || qAbs(qRed(a) - qRed(b)) > tolerance
+                || qAbs(qRed(a) - qRed(b)) > tolerance
+                || qAbs(qRed(a) - qRed(b)) > tolerance) {
+                QDebug(errorMessage) << "Mismatch at:" << x << y << ':'
+                    << hex << showbase << a << b;
                 return false;
-            if (qAbs(qRed(a) - qRed(b)) > tolerance)
-                return false;
-            if (qAbs(qRed(a) - qRed(b)) > tolerance)
-                return false;
-            if (qAbs(qRed(a) - qRed(b)) > tolerance)
-                return false;
+            }
         }
     }
     return true;

@@ -78,7 +78,7 @@ QAccessibleInterface *QAccessibleQuickWindow::child(int index) const
     const QList<QQuickItem*> &kids = rootItems();
     if (index >= 0 && index < kids.count())
         return QAccessible::queryAccessibleInterface(kids.at(index));
-    return 0;
+    return nullptr;
 }
 
 QAccessibleInterface *QAccessibleQuickWindow::focusChild() const
@@ -91,7 +91,7 @@ QAccessibleInterface *QAccessibleQuickWindow::focusChild() const
 
 QAccessible::Role QAccessibleQuickWindow::role() const
 {
-    return QAccessible::Window; // FIXME
+    return QAccessible::Window;
 }
 
 QAccessible::State QAccessibleQuickWindow::state() const
@@ -133,7 +133,7 @@ QAccessibleInterface *QAccessibleQuickWindow::childAt(int x, int y) const
                 return childIface;
         }
     }
-    return 0;
+    return nullptr;
 }
 
 int QAccessibleQuickWindow::indexOfChild(const QAccessibleInterface *iface) const

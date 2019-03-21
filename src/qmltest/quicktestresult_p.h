@@ -76,9 +76,10 @@ class Q_QUICK_TEST_EXPORT QuickTestResult : public QObject
     Q_PROPERTY(int failCount READ failCount)
     Q_PROPERTY(int skipCount READ skipCount)
     Q_PROPERTY(QStringList functionsToRun READ functionsToRun)
+    Q_PROPERTY(QStringList tagsToRun READ tagsToRun)
 public:
-    QuickTestResult(QObject *parent = 0);
-    ~QuickTestResult();
+    QuickTestResult(QObject *parent = nullptr);
+    ~QuickTestResult() override;
 
     // Values must match QBenchmarkIterationController::RunMode.
     enum RunMode
@@ -107,6 +108,7 @@ public:
     int skipCount() const;
 
     QStringList functionsToRun() const;
+    QStringList tagsToRun() const;
 
 public Q_SLOTS:
     void reset();
@@ -137,7 +139,7 @@ public Q_SLOTS:
                             const QUrl &location, int line);
     void warn(const QString &message, const QUrl &location, int line);
 
-    void ignoreWarning(const QString &message);
+    void ignoreWarning(const QJSValue &message);
 
     void wait(int ms);
     void sleep(int ms);
@@ -157,6 +159,9 @@ public Q_SLOTS:
     QObject *grabImage(QQuickItem *item);
 
     Q_REVISION(1) QObject *findChild(QObject *parent, const QString &objectName);
+
+    Q_REVISION(13) bool isPolishScheduled(QQuickItem *item) const;
+    Q_REVISION(13) bool waitForItemPolished(QQuickItem *item, int timeout);
 
 public:
     // Helper functions for the C++ main() shell.

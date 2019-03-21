@@ -61,6 +61,7 @@ private slots:
     void statesPropertyChanges();
     void testNotifyPropertyChangeCallBack();
     void testFixResourcePathsForObjectCallBack();
+    void testComponentOnCompleteSignal();
 };
 
 void tst_qquickdesignersupport::customData()
@@ -102,7 +103,7 @@ void tst_qquickdesignersupport::customData()
     QVERIFY(QQuickDesignerSupportProperties::hasBindingForProperty(newItem,
                                                                    view->engine()->contextForObject(newItem),
                                                                    "width",
-                                                                   0));
+                                                                   nullptr));
 
     //Check if reseting property does work after setting binding
     QQuickDesignerSupportProperties::doResetProperty(newItem, view->rootContext(), "width");
@@ -136,7 +137,7 @@ void tst_qquickdesignersupport::customDataBindings()
     QVERIFY(QQuickDesignerSupportProperties::hasBindingForProperty(testComponent,
                                                            view->engine()->contextForObject(testComponent),
                                                            "x",
-                                                           0));
+                                                           nullptr));
 
     QCOMPARE(testComponent->property("x").toInt(), 200);
 
@@ -149,7 +150,7 @@ void tst_qquickdesignersupport::customDataBindings()
     QVERIFY(!QQuickDesignerSupportProperties::hasBindingForProperty(testComponent,
                                                            view->engine()->contextForObject(testComponent),
                                                            "x",
-                                                           0));
+                                                           nullptr));
 
     //Reset the binding to the default
     QQuickDesignerSupportProperties::doResetProperty(testComponent,
@@ -159,7 +160,7 @@ void tst_qquickdesignersupport::customDataBindings()
     QVERIFY(QQuickDesignerSupportProperties::hasBindingForProperty(testComponent,
                                                            view->engine()->contextForObject(testComponent),
                                                            "x",
-                                                           0));
+                                                           nullptr));
     QCOMPARE(testComponent->property("x").toInt(), 200);
 
 
@@ -173,7 +174,7 @@ void tst_qquickdesignersupport::customDataBindings()
     QVERIFY(QQuickDesignerSupportProperties::hasBindingForProperty(testComponent,
                                                            view->engine()->contextForObject(testComponent),
                                                            "x",
-                                                           0));
+                                                           nullptr));
 
     QCOMPARE(testComponent->property("x").toInt(), 300);
 
@@ -188,7 +189,7 @@ void tst_qquickdesignersupport::customDataBindings()
     QVERIFY(QQuickDesignerSupportProperties::hasBindingForProperty(testComponent,
                                                            view->engine()->contextForObject(testComponent),
                                                            "x",
-                                                           0));
+                                                           nullptr));
     QCOMPARE(testComponent->property("x").toInt(), 200);
 }
 
@@ -209,15 +210,15 @@ void tst_qquickdesignersupport::objectProperties()
 
 
     //Read gradient property as QObject
-    int propertyIndex = rectangleItem->metaObject()->indexOfProperty("gradient");
+    int propertyIndex = rectangleItem->metaObject()->indexOfProperty("containmentMask");
     QVERIFY(propertyIndex > 0);
     QMetaProperty metaProperty = rectangleItem->metaObject()->property(propertyIndex);
     QVERIFY(metaProperty.isValid());
 
     QVERIFY(QQuickDesignerSupportProperties::isPropertyQObject(metaProperty));
 
-    QObject*gradient = QQuickDesignerSupportProperties::readQObjectProperty(metaProperty, rectangleItem);
-    QVERIFY(gradient);
+    QObject *containmentItem = QQuickDesignerSupportProperties::readQObjectProperty(metaProperty, rectangleItem);
+    QVERIFY(containmentItem);
 
 
     //The width property is not a QObject
@@ -417,7 +418,7 @@ void tst_qquickdesignersupport::statesPropertyChanges()
 
 }
 
-static QObject * s_object = 0;
+static QObject * s_object = nullptr;
 static QQuickDesignerSupport::PropertyName  s_propertyName;
 
 static void notifyPropertyChangeCallBackFunction(QObject *object, const QQuickDesignerSupport::PropertyName &propertyName)
@@ -450,7 +451,7 @@ void tst_qquickdesignersupport::testNotifyPropertyChangeCallBack()
 
     QQuickDesignerSupportMetaInfo::registerNotifyPropertyChangeCallBack(notifyPropertyChangeCallBackPointer);
 
-    rectangle->setProperty("gradient", QVariant::fromValue<QQuickGradient *>(gradient));
+    rectangle->setProperty("gradient", QVariant::fromValue<QJSValue>(view->engine()->newQObject(gradient)));
 
     QVERIFY(s_object);
     QCOMPARE(s_object, rootItem);
@@ -476,7 +477,7 @@ void tst_qquickdesignersupport::testFixResourcePathsForObjectCallBack()
 
     QVERIFY(rootItem);
 
-    s_object = 0;
+    s_object = nullptr;
 
     QQuickDesignerSupportItems::registerFixResourcePathsForObjectCallBack(fixResourcePathsForObjectCallBackPointer);
 
@@ -488,6 +489,101 @@ void tst_qquickdesignersupport::testFixResourcePathsForObjectCallBack()
 
     //Check that the fixResourcePathsForObjectCallBack was called on simpleItem
     QCOMPARE(simpleItem , s_object);
+}
+
+void doComponentCompleteRecursive(QObject *object)
+{
+    if (object) {
+        QQuickItem *item = qobject_cast<QQuickItem*>(object);
+
+        if (item && DesignerSupport::isComponentComplete(item))
+            return;
+
+        DesignerSupport::emitComponentCompleteSignalForAttachedProperty(object);
+
+        QList<QObject*> childList = object->children();
+
+        if (item) {
+            foreach (QQuickItem *childItem, item->childItems()) {
+                if (!childList.contains(childItem))
+                    childList.append(childItem);
+            }
+        }
+
+        foreach (QObject *child, childList)
+                doComponentCompleteRecursive(child);
+
+        if (item) {
+            static_cast<QQmlParserStatus*>(item)->componentComplete();
+        } else {
+            QQmlParserStatus *qmlParserStatus = dynamic_cast< QQmlParserStatus*>(object);
+            if (qmlParserStatus)
+                qmlParserStatus->componentComplete();
+        }
+    }
+}
+
+void tst_qquickdesignersupport::testComponentOnCompleteSignal()
+{
+    {
+        QScopedPointer<QQuickView> view(new QQuickView);
+        view->engine()->setOutputWarningsToStandardError(false);
+        view->setSource(testFileUrl("componentTest.qml"));
+
+        QVERIFY(view->errors().isEmpty());
+        QQuickItem *rootItem = view->rootObject();
+        QVERIFY(rootItem);
+
+        QQuickItem *item = findItem<QQuickItem>(view->rootObject(), QLatin1String("topLevelComplete"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("red"));
+
+        item = findItem<QQuickItem>(view->rootObject(), QLatin1String("implemented"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("blue"));
+
+        item = findItem<QQuickItem>(view->rootObject(), QLatin1String("most inner"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("green"));
+    }
+
+    {
+        ComponentCompleteDisabler disableComponentComplete;
+
+        QScopedPointer<QQuickView> view(new QQuickView);
+        view->engine()->setOutputWarningsToStandardError(false);
+        view->setSource(testFileUrl("componentTest.qml"));
+
+        QVERIFY(view->errors().isEmpty());
+        QQuickItem *rootItem = view->rootObject();
+        QVERIFY(rootItem);
+
+        QQuickItem *item = findItem<QQuickItem>(view->rootObject(), QLatin1String("topLevelComplete"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("white"));
+
+        item = findItem<QQuickItem>(view->rootObject(), QLatin1String("implemented"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("white"));
+
+        item = findItem<QQuickItem>(view->rootObject(), QLatin1String("most inner"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("white"));
+
+        doComponentCompleteRecursive(rootItem);
+
+        item = findItem<QQuickItem>(view->rootObject(), QLatin1String("topLevelComplete"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("red"));
+
+        item = findItem<QQuickItem>(view->rootObject(), QLatin1String("implemented"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("blue"));
+
+        item = findItem<QQuickItem>(view->rootObject(), QLatin1String("most inner"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("green"));
+    }
 }
 
 

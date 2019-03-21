@@ -101,15 +101,15 @@ struct DateObject: Object {
 
 template<>
 inline const DateObject *Value::as() const {
-    return isManaged() && m()->vtable()->type == Managed::Type_DateObject ? static_cast<const DateObject *>(this) : 0;
+    return isManaged() && m()->internalClass->vtable->type == Managed::Type_DateObject ? static_cast<const DateObject *>(this) : nullptr;
 }
 
 struct DateCtor: FunctionObject
 {
     V4_OBJECT2(DateCtor, FunctionObject)
 
-    static void construct(const Managed *, Scope &scope, CallData *callData);
-    static void call(const Managed *that, Scope &scope, CallData *);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int);
 };
 
 struct DatePrototype: Object
@@ -118,59 +118,60 @@ struct DatePrototype: Object
 
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static double getThisDate(Scope &scope, CallData *callData);
+    static double getThisDate(ExecutionEngine *v4, const Value *thisObject);
 
-    static void method_parse(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_UTC(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_now(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_parse(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_UTC(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_now(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
-    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toDateString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toTimeString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toLocaleString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toLocaleDateString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toLocaleTimeString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getTime(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getYear(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getFullYear(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getUTCFullYear(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getMonth(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getUTCMonth(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getDate(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getUTCDate(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getDay(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getUTCDay(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getHours(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getUTCHours(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getMinutes(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getUTCMinutes(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getSeconds(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getUTCSeconds(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getMilliseconds(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getUTCMilliseconds(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_getTimezoneOffset(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_setTime(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_setMilliseconds(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_setUTCMilliseconds(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_setSeconds(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_setUTCSeconds(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_setMinutes(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_setUTCMinutes(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_setHours(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_setUTCHours(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_setDate(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_setUTCDate(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_setMonth(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_setUTCMonth(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_setYear(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_setFullYear(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_setUTCFullYear(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toUTCString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toISOString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toJSON(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toDateString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toTimeString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toLocaleString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toLocaleDateString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toLocaleTimeString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_valueOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getTime(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getYear(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getFullYear(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getUTCFullYear(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getMonth(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getUTCMonth(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getDate(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getUTCDate(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getDay(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getUTCDay(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getHours(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getUTCHours(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getMinutes(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getUTCMinutes(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getSeconds(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getUTCSeconds(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getMilliseconds(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getUTCMilliseconds(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getTimezoneOffset(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setTime(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setMilliseconds(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setUTCMilliseconds(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setSeconds(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setUTCSeconds(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setMinutes(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setUTCMinutes(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setHours(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setUTCHours(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setDate(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setUTCDate(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setMonth(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setUTCMonth(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setYear(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setFullYear(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setUTCFullYear(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toUTCString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toISOString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toJSON(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_symbolToPrimitive(const FunctionObject *f, const Value *thisObject, const Value *, int);
 
-    static void timezoneUpdated();
+    static void timezoneUpdated(ExecutionEngine *e);
 };
 
 }

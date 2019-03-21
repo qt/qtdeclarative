@@ -69,10 +69,10 @@ public:
 
 QSGD3D12Renderer::QSGD3D12Renderer(QSGRenderContext *context)
     : QSGRenderer(context),
-      m_renderList(16),
       m_vboData(1024),
       m_iboData(256),
-      m_cboData(4096)
+      m_cboData(4096),
+      m_renderList(16)
 {
     setNodeUpdater(new DummyUpdater);
 }
@@ -447,10 +447,10 @@ void QSGD3D12Renderer::renderElements()
 struct RenderNodeState : public QSGRenderNode::RenderState
 {
     const QMatrix4x4 *projectionMatrix() const override { return m_projectionMatrix; }
-    QRect scissorRect() const { return m_scissorRect; }
-    bool scissorEnabled() const { return m_scissorEnabled; }
-    int stencilValue() const { return m_stencilValue; }
-    bool stencilEnabled() const { return m_stencilEnabled; }
+    QRect scissorRect() const override { return m_scissorRect; }
+    bool scissorEnabled() const override { return m_scissorEnabled; }
+    int stencilValue() const override { return m_stencilValue; }
+    bool stencilEnabled() const override { return m_stencilEnabled; }
     const QRegion *clipRegion() const override { return nullptr; }
 
     const QMatrix4x4 *m_projectionMatrix;

@@ -66,7 +66,7 @@ uint32_t cryptographicallyRandomNumber()
     return 0;
 }
 
-static FilePrintStream* s_dataFile;
+static FilePrintStream* s_dataFile = nullptr;
 
 void setDataFile(FilePrintStream *ps)
 {
@@ -91,7 +91,7 @@ void dataLogFV(const char* format, va_list args)
 {
     char buffer[1024];
     qvsnprintf(buffer, sizeof(buffer), format, args);
-    qDebug("%s", buffer);
+    qDebug().nospace().noquote() << buffer;
 }
 
 void dataLogF(const char* format, ...)
@@ -101,17 +101,22 @@ void dataLogF(const char* format, ...)
     va_start(args, format);
     qvsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
-    qDebug("%s", buffer);
+    qDebug().nospace().noquote() << buffer;
 }
 
 void dataLogFString(const char* str)
 {
-    qDebug("%s", str);
+    qDebug().nospace().noquote() << str;
 }
 
 }
 
 extern "C" {
+// When adding a new stub here do not forget to add
+// DEFINES += StubFunctionName=qmlStubFunctionName
+// for example:
+// DEFINES += WTFReportAssertionFailureWithMessage=qmlWTFReportAssertionFailureWithMessage
+// to prevent "duplicate symbol" error during static library linking. See bugs QTBUG-35041 and QTBUG-63050
 
 void WTFReportAssertionFailure(const char* file, int line, const char* function, const char*assertion)
 {

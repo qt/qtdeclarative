@@ -42,12 +42,13 @@
 // From qquickfolderlistmodel.h
 const int FileNameRole = Qt::UserRole+1;
 enum SortField { Unsorted, Name, Time, Size, Type };
+enum Status { Null, Ready, Loading };
 
 class tst_qquickfolderlistmodel : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickfolderlistmodel() : removeStart(0), removeEnd(0) {}
+    tst_qquickfolderlistmodel() {}
 
 public slots:
     void removed(const QModelIndex &, int start, int end) {
@@ -58,6 +59,7 @@ public slots:
 private slots:
     void initTestCase();
     void basicProperties();
+    void status();
     void showFiles();
     void resetFiltering();
     void nameFilters();
@@ -71,13 +73,14 @@ private slots:
     void showDotAndDotDot_data();
     void sortReversed();
     void introspectQrc();
-
+    void sortCaseSensitive_data();
+    void sortCaseSensitive();
 private:
     void checkNoErrors(const QQmlComponent& component);
     QQmlEngine engine;
 
-    int removeStart;
-    int removeEnd;
+    int removeStart = 0;
+    int removeEnd = 0;
 };
 
 void tst_qquickfolderlistmodel::checkNoErrors(const QQmlComponent& component)
@@ -113,7 +116,7 @@ void tst_qquickfolderlistmodel::basicProperties()
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
     QCOMPARE(flm->property("nameFilters").toStringList(), QStringList() << "*.qml"); // from basic.qml
     QCOMPARE(flm->property("folder").toUrl(), QUrl::fromLocalFile(QDir::currentPath()));
 
@@ -124,7 +127,7 @@ void tst_qquickfolderlistmodel::basicProperties()
     QSignalSpy folderChangedSpy(flm, SIGNAL(folderChanged()));
     flm->setProperty("folder", dataDirectoryUrl());
     QVERIFY(folderChangedSpy.wait());
-    QCOMPARE(flm->property("count").toInt(), 8);
+    QCOMPARE(flm->property("count").toInt(), 9);
     QCOMPARE(flm->property("folder").toUrl(), dataDirectoryUrl());
     QCOMPARE(flm->property("parentFolder").toUrl(), QUrl::fromLocalFile(QDir(directory()).canonicalPath()));
     QCOMPARE(flm->property("sortField").toInt(), int(Name));
@@ -141,21 +144,35 @@ void tst_qquickfolderlistmodel::basicProperties()
     QCOMPARE(flm->property("folder").toUrl(), QUrl::fromLocalFile(""));
 }
 
+void tst_qquickfolderlistmodel::status()
+{
+    QQmlComponent component(&engine, testFileUrl("basic.qml"));
+    checkNoErrors(component);
+
+    QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
+    QVERIFY(flm != nullptr);
+    QTRY_COMPARE(flm->property("status").toInt(), int(Ready));
+    flm->setProperty("folder", QUrl::fromLocalFile(""));
+    QTRY_COMPARE(flm->property("status").toInt(), int(Null));
+    flm->setProperty("folder", QUrl::fromLocalFile(QDir::currentPath()));
+    QTRY_COMPARE(flm->property("status").toInt(), int(Ready));
+}
+
 void tst_qquickfolderlistmodel::showFiles()
 {
     QQmlComponent component(&engine, testFileUrl("basic.qml"));
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
 
     flm->setProperty("folder", dataDirectoryUrl());
-    QTRY_COMPARE(flm->property("count").toInt(), 8); // wait for refresh
+    QTRY_COMPARE(flm->property("count").toInt(), 9); // wait for refresh
     QCOMPARE(flm->property("showFiles").toBool(), true);
 
     flm->setProperty("showFiles", false);
     QCOMPARE(flm->property("showFiles").toBool(), false);
-    QTRY_COMPARE(flm->property("count").toInt(), 2); // wait for refresh
+    QTRY_COMPARE(flm->property("count").toInt(), 3); // wait for refresh
 }
 
 void tst_qquickfolderlistmodel::resetFiltering()
@@ -165,7 +182,7 @@ void tst_qquickfolderlistmodel::resetFiltering()
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
 
     flm->setProperty("folder", testFileUrl("resetfiltering"));
     // _q_directoryUpdated may be triggered if model was empty before, but there won't be a rowsRemoved signal
@@ -187,7 +204,7 @@ void tst_qquickfolderlistmodel::nameFilters()
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
 
     connect(flm, SIGNAL(rowsRemoved(QModelIndex,int,int)),
             this, SLOT(removed(QModelIndex,int,int)));
@@ -219,10 +236,10 @@ void tst_qquickfolderlistmodel::refresh()
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
 
     flm->setProperty("folder", dataDirectoryUrl());
-    QTRY_COMPARE(flm->property("count").toInt(),8); // wait for refresh
+    QTRY_COMPARE(flm->property("count").toInt(), 9); // wait for refresh
 
     int count = flm->rowCount();
 
@@ -242,7 +259,7 @@ void tst_qquickfolderlistmodel::cdUp()
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
     const QUrl startFolder = flm->property("folder").toUrl();
     QVERIFY(startFolder.isValid());
 
@@ -320,13 +337,13 @@ void tst_qquickfolderlistmodel::showDotAndDotDot()
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
 
     flm->setProperty("folder", folder);
     flm->setProperty("rootFolder", rootFolder);
     flm->setProperty("showDotAndDotDot", showDotAndDotDot);
 
-    int count = 9;
+    int count = 10;
     if (showDot) count++;
     if (showDotDot) count++;
     QTRY_COMPARE(flm->property("count").toInt(), count); // wait for refresh
@@ -355,9 +372,9 @@ void tst_qquickfolderlistmodel::sortReversed()
     QQmlComponent component(&engine, testFileUrl("sortReversed.qml"));
     checkNoErrors(component);
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
     flm->setProperty("folder", dataDirectoryUrl());
-    QTRY_COMPARE(flm->property("count").toInt(), 9); // wait for refresh
+    QTRY_COMPARE(flm->property("count").toInt(), 10); // wait for refresh
     QCOMPARE(flm->data(flm->index(0),FileNameRole).toString(), QLatin1String("txtdir"));
 }
 
@@ -366,9 +383,39 @@ void tst_qquickfolderlistmodel::introspectQrc()
     QQmlComponent component(&engine, testFileUrl("qrc.qml"));
     checkNoErrors(component);
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
     QTRY_COMPARE(flm->property("count").toInt(), 1); // wait for refresh
     QCOMPARE(flm->data(flm->index(0),FileNameRole).toString(), QLatin1String("hello.txt"));
+}
+
+void tst_qquickfolderlistmodel::sortCaseSensitive_data()
+{
+    QTest::addColumn<bool>("sortCaseSensitive");
+    QTest::addColumn<QStringList>("expectedOrder");
+
+    const QString upperFile = QLatin1String("Uppercase.txt");
+    const QString lowerFile = QLatin1String("lowercase.txt");
+
+    QTest::newRow("caseSensitive") << true << (QStringList() << upperFile << lowerFile);
+    QTest::newRow("caseInsensitive") << false << (QStringList() << lowerFile << upperFile);
+}
+
+void tst_qquickfolderlistmodel::sortCaseSensitive()
+{
+    QFETCH(bool, sortCaseSensitive);
+    QFETCH(QStringList, expectedOrder);
+    QQmlComponent component(&engine);
+    component.setData("import Qt.labs.folderlistmodel 1.0\n"
+                      "FolderListModel { }", QUrl());
+    checkNoErrors(component);
+
+    QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
+    QVERIFY(flm != 0);
+    flm->setProperty("folder", QUrl::fromLocalFile(dataDirectoryUrl().path() + QLatin1String("/sortdir")));
+    flm->setProperty("sortCaseSensitive", sortCaseSensitive);
+    QTRY_COMPARE(flm->property("count").toInt(), 2); // wait for refresh
+    for (int i = 0; i < 2; ++i)
+        QTRY_COMPARE(flm->data(flm->index(i),FileNameRole).toString(), expectedOrder.at(i));
 }
 
 QTEST_MAIN(tst_qquickfolderlistmodel)

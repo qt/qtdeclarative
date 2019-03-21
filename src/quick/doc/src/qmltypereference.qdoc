@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -11,8 +11,8 @@
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Free Documentation License Usage
 ** Alternatively, this file may be used under the terms of the GNU Free
@@ -20,13 +20,13 @@
 ** Foundation and appearing in the file included in the packaging of
 ** this file. Please review the following information to ensure
 ** the GNU Free Documentation License version 1.3 requirements
-** will be met: http://www.gnu.org/copyleft/fdl.html.
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 /*!
-\qmlmodule QtQuick 2.7
+\qmlmodule QtQuick 2.\QtMinorVersion
 \title Qt Quick QML Types
 \ingroup qmlmodules
 \brief Provides graphical QML types.
@@ -34,11 +34,11 @@
 The \l{Qt Quick} module provides graphical primitive types. These types are only
 available in a QML document if that document imports the \c QtQuick namespace.
 
-The current version of the \c QtQuick module is version 2.7, and thus it may be
-imported via the following statement:
+The current version of the \c QtQuick module is version \QtMinorVersion, and
+thus it may be imported via the following statement:
 
-\qml
-import QtQuick 2.7
+\qml \QtMinorVersion
+import QtQuick 2.\1
 \endqml
 
 Visit the \l {Qt Quick} module documentation for more
@@ -49,7 +49,7 @@ information about the concepts which are central to \c QtQuick.
     Qt Quick includes several submodules which contain additional types.
 
     \list
-    \li \l{Qt Quick XmlListModel QML Types}{XML List Model} - contains types
+    \li \l{Qt Quick XmlListModel QML Types}{Xml List Model} - contains types
     for creating models from XML data
     \li \l{Qt Quick Local Storage QML Types}{Local Storage} - a submodule
     containing a JavaScript interface for an SQLite database
@@ -78,7 +78,7 @@ In addition, the \c QtQuick import provides the following basic types:
 
 \section1 Object Types
 
-All  object types provided by the \c QtQuick import are based on the \l{Item}
+Most object types provided by the \c QtQuick import are based on the \l{Item}
 type, which itself derives from \l{QtQml::QtObject}{QtObject}. \l{Qt QML QML
 Types#Object Types} {QML object types} provided by the Qt QML module (such as
 \l{QtQml::QtObject}{QtObject} and \l{QtQml::Component}{Component}) are also
@@ -95,8 +95,7 @@ available when you import \c QtQuick.
     The \c color type refers to an ARGB color value. It can be specified in a number of ways:
 
     \list
-    \li By a \l{http://www.w3.org/TR/SVG/types.html#ColorKeywords}{SVG color name}, such as
-        "red", "green" or "lightsteelblue".
+    \li By a \l{SVG Color Reference}{SVG color name}, such as "red", "green" or "lightsteelblue".
     \li By a hexadecimal triplet or quad in the form \c "#RRGGBB" and \c "#AARRGGBB"
         respectively. For example, the color red corresponds to a triplet of \c "#FF0000"
         and a slightly transparent blue to a quad of \c "#800000FF".
@@ -137,6 +136,13 @@ available when you import \c QtQuick.
 
     This basic type is provided by the QtQuick import.
 
+    \section1 SVG Color Reference
+
+    The following table lists the available
+    \l {http://www.w3.org/TR/SVG/types.html#ColorKeywords}{SVG colors}:
+
+    \include svg-colors.qdocinc
+
     \sa {QML Basic Types}
 */
 
@@ -170,6 +176,9 @@ available when you import \c QtQuick.
     \li \l enumeration \c font.capitalization
     \li \l real \c font.letterSpacing
     \li \l real \c font.wordSpacing
+    \li \l bool \c font.kerning
+    \li \l bool \c font.preferShaping
+    \li \l enumeration \c font.hintingPreference
     \endlist
 
     Example:
@@ -235,6 +244,19 @@ available when you import \c QtQuick.
         \li \c Font.Capitalize
         \li Alters the text to be rendered with the first character of each word as an uppercase character.
     \endtable
+
+    Setting the hinting preference only has an effect when using the "NativeRendering" render type.
+    The property supports the following values:
+
+    \list
+    \value Font.PreferDefaultHinting - Use the default hinting level for the target platform.
+    \value Font.PreferNoHinting - If possible, render text without hinting the outlines
+           of the glyphs.
+    \value Font.PreferVerticalHinting - If possible, render text with no horizontal hinting,
+           but align glyphs to the pixel grid in the vertical direction.
+    \value Font.PreferFullHinting - If possible, render text with hinting in both horizontal and
+           vertical directions.
+    \endlist
 
     \sa {QML Basic Types}
 */
@@ -864,19 +886,4 @@ console.log(c + " " + d); // false true
     This basic type is provided by the QtQuick import.
 
     \sa {QML Basic Types}
-*/
-
-/*!
-\qmlmodule QtTest 1.1
-\title Qt Quick Test QML Types
-\brief This module provides QML types to unit test your QML application
-\ingroup qmlmodules
-
-You can import this module using the following statement:
-\code
-import QtTest 1.1
-\endcode
-
-For more information about how to use these types, see
-\l{Qt Quick Test Reference Documentation}.
 */

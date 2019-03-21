@@ -74,7 +74,7 @@ private:
 };
 
 QRecursionNode::QRecursionNode()
-: _r(0)
+: _r(nullptr)
 {
 }
 
@@ -89,7 +89,7 @@ QRecursionWatcher<T, Node>::QRecursionWatcher(T *t)
 template<class T, QRecursionNode T::*Node>
 QRecursionWatcher<T, Node>::~QRecursionWatcher()
 {
-    if ((_t->*Node)._r == &_r) (_t->*Node)._r = 0;
+    if ((_t->*Node)._r == &_r) (_t->*Node)._r = nullptr;
 }
 
 template<class T, QRecursionNode T::*Node>

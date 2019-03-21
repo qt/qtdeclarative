@@ -47,12 +47,12 @@
 #include "qv4script_p.h"
 #include "qv4scopedvalue_p.h"
 #include "qv4string_p.h"
+#include "qv4jscall_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
-#include <qv4jsir_p.h>
 #include <qv4codegen_p.h>
 #include "private/qlocale_tools_p.h"
 #include "private/qtools_p.h"
@@ -335,75 +335,60 @@ void Heap::EvalFunction::init(QV4::ExecutionContext *scope)
     Scope s(scope);
     Heap::FunctionObject::init(scope, s.engine->id_eval());
     ScopedFunctionObject f(s, this);
-    f->defineReadonlyProperty(s.engine->id_length(), Primitive::fromInt32(1));
+    f->defineReadonlyConfigurableProperty(s.engine->id_length(), Value::fromInt32(1));
 }
 
-void EvalFunction::evalCall(Scope &scope, CallData *callData, bool directCall) const
+ReturnedValue EvalFunction::evalCall(const Value *, const Value *argv, int argc, bool directCall) const
 {
-    if (callData->argc < 1) {
-        scope.result = Encode::undefined();
-        return;
-    }
+    if (argc < 1)
+        return Encode::undefined();
 
     ExecutionEngine *v4 = engine();
-    ExecutionContextSaver ctxSaver(scope);
+    bool isStrict = v4->currentStackFrame->v4Function->isStrict();
 
-    ExecutionContext *currentContext = v4->currentContext;
-    ExecutionContext *ctx = currentContext;
+    Scope scope(v4);
+    ScopedContext ctx(scope, v4->currentContext());
 
     if (!directCall) {
-        // the context for eval should be the global scope, so we fake a root
-        // context
-        ctx = v4->pushGlobalContext();
+        // the context for eval should be the global scope
+        ctx = v4->scriptContext();
     }
 
-    String *scode = callData->args[0].stringValue();
-    if (!scode) {
-        scope.result = callData->args[0].asReturnedValue();
-        return;
-    }
+    String *scode = argv[0].stringValue();
+    if (!scode)
+        return argv[0].asReturnedValue();
 
     const QString code = scode->toQString();
-    bool inheritContext = !ctx->d()->strictMode;
+    bool inheritContext = !isStrict;
 
-    Script script(ctx, code, QStringLiteral("eval code"));
-    script.strictMode = (directCall && currentContext->d()->strictMode);
+    Script script(ctx, QV4::Compiler::ContextType::Eval, code, QStringLiteral("eval code"));
+    script.strictMode = (directCall && isStrict);
     script.inheritContext = inheritContext;
     script.parse();
-    if (v4->hasException) {
-        scope.result = Encode::undefined();
-        return;
-    }
+    if (v4->hasException)
+        return Encode::undefined();
 
     Function *function = script.function();
-    if (!function) {
-        scope.result = Encode::undefined();
-        return;
-    }
+    if (!function)
+        return Encode::undefined();
+    function->isEval = true;
 
-    if (function->isStrict() || (ctx->d()->strictMode)) {
+    if (function->isStrict() || isStrict) {
         ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));
-        ScopedCallData callData(scope, 0);
-        callData->thisObject = ctx->thisObject();
-        e->call(scope, callData);
-        return;
+        ScopedValue thisObject(scope, directCall ? scope.engine->currentStackFrame->thisObject() : scope.engine->globalObject->asReturnedValue());
+        return e->call(thisObject, nullptr, 0);
     }
 
-    ContextStateSaver stateSaver(scope, ctx);
+    ScopedValue thisObject(scope, scope.engine->currentStackFrame->thisObject());
 
-    // set the correct strict mode flag on the context
-    ctx->d()->strictMode = false;
-    ctx->d()->compilationUnit = function->compilationUnit;
-    ctx->d()->constantTable = function->compilationUnit->constants;
-
-    scope.result = Q_V4_PROFILE(ctx->engine(), function);
+    return function->call(thisObject, nullptr, 0, ctx);
 }
 
 
-void EvalFunction::call(const Managed *that, Scope &scope, CallData *callData)
+ReturnedValue EvalFunction::virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
     // indirect call
-    static_cast<const EvalFunction *>(that)->evalCall(scope, callData, false);
+    return static_cast<const EvalFunction *>(f)->evalCall(thisObject, argv, argc, false);
 }
 
 
@@ -424,10 +409,11 @@ static inline int toInt(const QChar &qc, int R)
 }
 
 // parseInt [15.1.2.2]
-void GlobalFunctions::method_parseInt(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_parseInt(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    ScopedValue inputString(scope, callData->argument(0));
-    ScopedValue radix(scope, callData->argument(1));
+    Scope scope(b);
+    ScopedValue inputString(scope, argc ? argv[0] : Value::undefinedValue());
+    ScopedValue radix(scope, argc > 1 ? argv[1] : Value::undefinedValue());
     int R = radix->isUndefined() ? 0 : radix->toInt32();
 
     // [15.1.2.2] step by step:
@@ -504,10 +490,11 @@ void GlobalFunctions::method_parseInt(const BuiltinFunction *, Scope &scope, Cal
 }
 
 // parseFloat [15.1.2.3]
-void GlobalFunctions::method_parseFloat(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_parseFloat(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
+    Scope scope(b);
     // [15.1.2.3] step by step:
-    ScopedString inputString(scope, callData->argument(0), ScopedString::Convert);
+    ScopedString inputString(scope, argc ? argv[0] : Value::undefinedValue(), ScopedString::Convert);
     CHECK_EXCEPTION();
 
     QString trimmed = inputString->toQString().trimmed(); // 2
@@ -521,7 +508,7 @@ void GlobalFunctions::method_parseFloat(const BuiltinFunction *, Scope &scope, C
     QByteArray ba = trimmed.toLatin1();
     bool ok;
     const char *begin = ba.constData();
-    const char *end = 0;
+    const char *end = nullptr;
     double d = qstrtod(begin, &end, &ok);
     if (end - begin == 0)
         RETURN_RESULT(Encode(std::numeric_limits<double>::quiet_NaN())); // 3
@@ -530,115 +517,125 @@ void GlobalFunctions::method_parseFloat(const BuiltinFunction *, Scope &scope, C
 }
 
 /// isNaN [15.1.2.4]
-void GlobalFunctions::method_isNaN(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_isNaN(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    if (!callData->argc)
+    if (!argc)
         // undefined gets converted to NaN
         RETURN_RESULT(Encode(true));
 
-    if (callData->args[0].integerCompatible())
+    if (argv[0].integerCompatible())
         RETURN_RESULT(Encode(false));
 
-    double d = callData->args[0].toNumber();
+    double d = argv[0].toNumber();
     RETURN_RESULT(Encode((bool)std::isnan(d)));
 }
 
 /// isFinite [15.1.2.5]
-void GlobalFunctions::method_isFinite(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_isFinite(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    if (!callData->argc)
+    if (!argc)
         // undefined gets converted to NaN
         RETURN_RESULT(Encode(false));
 
-    if (callData->args[0].integerCompatible())
+    if (argv[0].integerCompatible())
         RETURN_RESULT(Encode(true));
 
-    double d = callData->args[0].toNumber();
+    double d = argv[0].toNumber();
     RETURN_RESULT(Encode((bool)std::isfinite(d)));
 }
 
 /// decodeURI [15.1.3.1]
-void GlobalFunctions::method_decodeURI(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_decodeURI(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    if (callData->argc == 0)
+    if (argc == 0)
         RETURN_UNDEFINED();
 
-    QString uriString = callData->args[0].toQString();
+    ExecutionEngine *v4 = b->engine();
+    QString uriString = argv[0].toQString();
     bool ok;
     QString out = decode(uriString, DecodeNonReserved, &ok);
     if (!ok) {
+        Scope scope(v4);
         ScopedString s(scope, scope.engine->newString(QStringLiteral("malformed URI sequence")));
         RETURN_RESULT(scope.engine->throwURIError(s));
     }
 
-    RETURN_RESULT(scope.engine->newString(out));
+    RETURN_RESULT(v4->newString(out));
 }
 
 /// decodeURIComponent [15.1.3.2]
-void GlobalFunctions::method_decodeURIComponent(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_decodeURIComponent(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    if (callData->argc == 0)
+    if (argc == 0)
         RETURN_UNDEFINED();
 
-    QString uriString = callData->args[0].toQString();
+    ExecutionEngine *v4 = b->engine();
+    QString uriString = argv[0].toQString();
     bool ok;
     QString out = decode(uriString, DecodeAll, &ok);
     if (!ok) {
+        Scope scope(v4);
         ScopedString s(scope, scope.engine->newString(QStringLiteral("malformed URI sequence")));
         RETURN_RESULT(scope.engine->throwURIError(s));
     }
 
-    RETURN_RESULT(scope.engine->newString(out));
+    RETURN_RESULT(v4->newString(out));
 }
 
 /// encodeURI [15.1.3.3]
-void GlobalFunctions::method_encodeURI(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_encodeURI(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    if (callData->argc == 0)
+    if (argc == 0)
         RETURN_UNDEFINED();
 
-    QString uriString = callData->args[0].toQString();
+    ExecutionEngine *v4 = b->engine();
+    QString uriString = argv[0].toQString();
     bool ok;
     QString out = encode(uriString, uriUnescapedReserved, &ok);
     if (!ok) {
+        Scope scope(v4);
         ScopedString s(scope, scope.engine->newString(QStringLiteral("malformed URI sequence")));
         RETURN_RESULT(scope.engine->throwURIError(s));
     }
 
-    RETURN_RESULT(scope.engine->newString(out));
+    RETURN_RESULT(v4->newString(out));
 }
 
 /// encodeURIComponent [15.1.3.4]
-void GlobalFunctions::method_encodeURIComponent(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_encodeURIComponent(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    if (callData->argc == 0)
+    if (argc == 0)
         RETURN_UNDEFINED();
 
-    QString uriString = callData->args[0].toQString();
+    ExecutionEngine *v4 = b->engine();
+    QString uriString = argv[0].toQString();
     bool ok;
     QString out = encode(uriString, uriUnescaped, &ok);
     if (!ok) {
+        Scope scope(v4);
         ScopedString s(scope, scope.engine->newString(QStringLiteral("malformed URI sequence")));
         RETURN_RESULT(scope.engine->throwURIError(s));
     }
 
-    RETURN_RESULT(scope.engine->newString(out));
+    RETURN_RESULT(v4->newString(out));
 }
 
-void GlobalFunctions::method_escape(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_escape(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    if (!callData->argc)
-        RETURN_RESULT(scope.engine->newString(QStringLiteral("undefined")));
+    ExecutionEngine *v4 = b->engine();
+    if (!argc)
+        RETURN_RESULT(v4->newString(QStringLiteral("undefined")));
 
-    QString str = callData->args[0].toQString();
-    RETURN_RESULT(scope.engine->newString(escape(str)));
+    QString str = argv[0].toQString();
+    RETURN_RESULT(v4->newString(escape(str)));
 }
 
-void GlobalFunctions::method_unescape(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_unescape(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    if (!callData->argc)
-        RETURN_RESULT(scope.engine->newString(QStringLiteral("undefined")));
+    ExecutionEngine *v4 = b->engine();
+    if (!argc)
+        RETURN_RESULT(v4->newString(QStringLiteral("undefined")));
 
-    QString str = callData->args[0].toQString();
-    RETURN_RESULT(scope.engine->newString(unescape(str)));
+    QString str = argv[0].toQString();
+    RETURN_RESULT(v4->newString(unescape(str)));
 }

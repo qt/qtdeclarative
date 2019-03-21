@@ -51,58 +51,105 @@
 //
 
 #include "qv4global_p.h"
-#include <private/qqmlglobal_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qv4context_p.h>
 
+namespace JSC {
+class MacroAssemblerCodeRef;
+}
+
 QT_BEGIN_NAMESPACE
+
+struct QQmlSourceLocation;
 
 namespace QV4 {
 
-struct Q_QML_EXPORT Function {
-    const CompiledData::Function *compiledFunction;
+struct Q_QML_EXPORT FunctionData {
     CompiledData::CompilationUnit *compilationUnit;
 
-    ReturnedValue (*code)(ExecutionEngine *, const uchar *);
-    const uchar *codeData;
+    FunctionData(CompiledData::CompilationUnit *compilationUnit)
+        : compilationUnit(compilationUnit)
+    {}
+};
+// Make sure this class can be accessed through offsetof (done by the assemblers):
+Q_STATIC_ASSERT(std::is_standard_layout< FunctionData >::value);
+
+struct Q_QML_EXPORT Function : public FunctionData {
+private:
+    Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function);
+    ~Function();
+
+public:
+    const CompiledData::Function *compiledFunction;
+
+    ReturnedValue call(const Value *thisObject, const Value *argv, int argc, const ExecutionContext *context);
+
+    const char *codeData;
+
+    typedef ReturnedValue (*JittedCode)(CppStackFrame *, ExecutionEngine *);
+    JittedCode jittedCode;
+    JSC::MacroAssemblerCodeRef *codeRef;
 
     // first nArguments names in internalClass are the actual arguments
-    InternalClass *internalClass;
+    Heap::InternalClass *internalClass;
     uint nFormals;
+    int interpreterCallCount = 0;
     bool hasQmlDependencies;
-    bool canUseSimpleCall;
+    bool isEval = false;
 
-    Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
-             ReturnedValue (*codePtr)(ExecutionEngine *, const uchar *));
-    ~Function();
+    static Function *create(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function);
+    void destroy();
 
     // used when dynamically assigning signal handlers (QQmlConnection)
     void updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters);
 
-    inline Heap::String *name() {
+    inline Heap::String *name() const {
         return compilationUnit->runtimeStrings[compiledFunction->nameIndex];
     }
+
+    static QString prettyName(const Function *function, const void *address);
+
     inline QString sourceFile() const { return compilationUnit->fileName(); }
+    inline QUrl finalUrl() const { return compilationUnit->finalUrl(); }
 
-    inline bool usesArgumentsObject() const { return compiledFunction->flags & CompiledData::Function::UsesArgumentsObject; }
     inline bool isStrict() const { return compiledFunction->flags & CompiledData::Function::IsStrict; }
-    inline bool isNamedExpression() const { return compiledFunction->flags & CompiledData::Function::IsNamedExpression; }
+    inline bool isArrowFunction() const { return compiledFunction->flags & CompiledData::Function::IsArrowFunction; }
+    inline bool isGenerator() const { return compiledFunction->flags & CompiledData::Function::IsGenerator; }
 
-    inline bool canUseSimpleFunction() const { return canUseSimpleCall; }
+    QQmlSourceLocation sourceLocation() const;
 
-    QQmlSourceLocation sourceLocation() const
+    Function *nestedFunction() const
     {
-        return QQmlSourceLocation(sourceFile(), compiledFunction->location.line, compiledFunction->location.column);
+        if (compiledFunction->nestedFunctionIndex == std::numeric_limits<uint32_t>::max())
+            return nullptr;
+        return compilationUnit->runtimeFunctions[compiledFunction->nestedFunctionIndex];
     }
 
+    Q_NEVER_INLINE QString traceInfoToString();
+
+    quint8 *traceInfo(uint i)
+    {
+#if QT_CONFIG(qml_tracing)
+        Q_ASSERT((tracingEnabled() && i < traceInfoCount()) || (i == 0));
+        return reinterpret_cast<quint8 *>(this) + sizeof(Function) + i;
+#else
+        Q_UNUSED(i);
+        return nullptr;
+#endif
+    }
+
+    quint32 traceInfoCount() const
+    { return compiledFunction->nTraceInfos; }
+
+    bool tracingEnabled() const
+    {
+#if QT_CONFIG(qml_tracing)
+        return traceInfoCount() != CompiledData::Function::NoTracing();
+#else
+        return false;
+#endif
+    }
 };
-
-
-inline unsigned int Heap::SimpleCallContext::formalParameterCount() const
-{
-    return v4Function ? v4Function->nFormals : 0;
-}
-
 
 }
 

@@ -35,9 +35,6 @@
 #include <QtCore/QStringList>
 #include <QtTest/QTest>
 
-QT_FORWARD_DECLARE_CLASS(QQmlComponent)
-QT_FORWARD_DECLARE_CLASS(QQmlEngine)
-
 /* Base class for tests with data that are located in a "data" subfolder. */
 
 class QQmlDataTest : public QObject
@@ -60,9 +57,6 @@ public:
     inline QString directory() const  { return m_directory; }
 
     static inline QQmlDataTest *instance() { return m_instance; }
-
-    static QByteArray msgComponentError(const QQmlComponent &,
-                                        const QQmlEngine *engine = 0);
 
 public slots:
     virtual void initTestCase();

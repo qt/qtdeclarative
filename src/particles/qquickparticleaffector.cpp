@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickParticleAffector
     \inqmlmodule QtQuick.Particles
     \brief Applies alterations to the attributes of logical particles at any
-    point in their lifetime
+    point in their lifetime.
     \ingroup qtquick-particles
 
     The base Affector does not alter any attributes, but can be used to emit a signal
@@ -131,7 +131,7 @@ QT_BEGIN_NAMESPACE
 */
 QQuickParticleAffector::QQuickParticleAffector(QQuickItem *parent) :
     QQuickItem(parent), m_needsReset(false), m_ignoresTime(false), m_onceOff(false), m_enabled(true)
-    , m_system(0), m_updateIntSet(false), m_shape(new QQuickParticleExtruder(this))
+    , m_system(nullptr), m_updateIntSet(false), m_shape(new QQuickParticleExtruder(this))
 {
 }
 

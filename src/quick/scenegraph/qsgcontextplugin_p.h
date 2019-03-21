@@ -87,13 +87,13 @@ class Q_QUICK_PRIVATE_EXPORT QSGContextPlugin : public QObject, public QSGContex
     Q_OBJECT
     Q_INTERFACES(QSGContextFactoryInterface:QFactoryInterface)
 public:
-    explicit QSGContextPlugin(QObject *parent = 0);
+    explicit QSGContextPlugin(QObject *parent = nullptr);
     virtual ~QSGContextPlugin();
 
-    virtual QStringList keys() const override = 0;
+    QStringList keys() const override = 0;
 
-    QQuickTextureFactory *createTextureFactoryFromImage(const QImage &) override { return 0; }
-    QSGRenderLoop *createWindowManager() override { return 0; }
+    QQuickTextureFactory *createTextureFactoryFromImage(const QImage &) override { return nullptr; }
+    QSGRenderLoop *createWindowManager() override { return nullptr; }
 };
 
 QT_END_NAMESPACE

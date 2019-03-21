@@ -57,46 +57,57 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+struct CppStackFrame;
+
 // Base class for the execution engine
 
 #if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
 #pragma pack(push, 1)
 #endif
-struct EngineBase {
-    Heap::ExecutionContext *current = 0;
+struct Q_QML_EXPORT EngineBase {
 
-    Value *jsStackTop = 0;
+    CppStackFrame *currentStackFrame = nullptr;
+
+    Value *jsStackTop = nullptr;
     quint8 hasException = false;
     quint8 writeBarrierActive = false;
     quint16 unused = 0;
-#if QT_POINTER_SIZE == 8
-    quint8 padding[4];
-#endif
-    MemoryManager *memoryManager = 0;
+    quint8 isExecutingInRegExpJIT = false;
+    quint8 padding[3];
+    MemoryManager *memoryManager = nullptr;
     Runtime runtime;
 
     qint32 callDepth = 0;
-    Value *jsStackLimit = 0;
-    Value *jsStackBase = 0;
+    Value *jsStackLimit = nullptr;
+    Value *jsStackBase = nullptr;
 
-    ExecutionContext *currentContext = 0;
-    IdentifierTable *identifierTable = 0;
-    Object *globalObject = 0;
+    IdentifierTable *identifierTable = nullptr;
+    Object *globalObject = nullptr;
 
-    enum {
+    // Exception handling
+    Value *exceptionValue = nullptr;
+
+    enum InternalClassType {
         Class_Empty,
         Class_String,
         Class_MemberData,
         Class_SimpleArrayData,
         Class_SparseArrayData,
         Class_ExecutionContext,
-        Class_SimpleCallContext,
+        Class_CallContext,
+        Class_QmlContext,
         Class_Object,
         Class_ArrayObject,
         Class_FunctionObject,
+        Class_ArrowFunction,
+        Class_GeneratorFunction,
+        Class_GeneratorObject,
         Class_StringObject,
+        Class_SymbolObject,
         Class_ScriptFunction,
-        Class_BuiltinFunction,
+        Class_ConstructorFunction,
+        Class_MemberFunction,
+        Class_MemberGeneratorFunction,
         Class_ObjectProto,
         Class_RegExp,
         Class_RegExpObject,
@@ -106,19 +117,24 @@ struct EngineBase {
         Class_ErrorObject,
         Class_ErrorObjectWithMessage,
         Class_ErrorProto,
+        Class_QmlContextWrapper,
+        Class_ProxyObject,
+        Class_ProxyFunctionObject,
+        Class_Symbol,
         NClasses
     };
-    InternalClass *internalClasses[NClasses];
+    Heap::InternalClass *classes[NClasses];
+    Heap::InternalClass *internalClasses(InternalClassType icType) { return classes[icType]; }
 };
 #if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
 #pragma pack(pop)
 #endif
 
 Q_STATIC_ASSERT(std::is_standard_layout<EngineBase>::value);
-Q_STATIC_ASSERT(offsetof(EngineBase, current) == 0);
-Q_STATIC_ASSERT(offsetof(EngineBase, jsStackTop) == offsetof(EngineBase, current) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(EngineBase, currentStackFrame) == 0);
+Q_STATIC_ASSERT(offsetof(EngineBase, jsStackTop) == offsetof(EngineBase, currentStackFrame) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(EngineBase, hasException) == offsetof(EngineBase, jsStackTop) + QT_POINTER_SIZE);
-Q_STATIC_ASSERT(offsetof(EngineBase, memoryManager) == offsetof(EngineBase, hasException) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(EngineBase, memoryManager) == offsetof(EngineBase, hasException) + 8);
 Q_STATIC_ASSERT(offsetof(EngineBase, runtime) == offsetof(EngineBase, memoryManager) + QT_POINTER_SIZE);
 
 }

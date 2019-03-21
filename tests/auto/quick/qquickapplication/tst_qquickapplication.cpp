@@ -67,7 +67,7 @@ void tst_qquickapplication::cleanup()
 {
     if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ApplicationState)) {
         QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationInactive);
-        QTest::waitForEvents();
+        QCoreApplication::processEvents();
     }
 }
 
@@ -88,31 +88,37 @@ void tst_qquickapplication::active()
     QQuickWindow window;
     item->setParentItem(window.contentItem());
 
-    // not active
-    QVERIFY(!item->property("active").toBool());
-    QVERIFY(!item->property("active2").toBool());
+    // If the platform plugin has the ApplicationState capability, app activation originate from it
+    // as a result of a system event. We therefore have to simulate these events here.
+    if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ApplicationState)) {
 
-    // active
-    window.show();
-    window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
-    QCOMPARE(QGuiApplication::focusWindow(), &window);
-    QVERIFY(item->property("active").toBool());
-    QVERIFY(item->property("active2").toBool());
+        // Flush pending events, in case the platform have already queued real application state events
+        QWindowSystemInterface::flushWindowSystemEvents();
 
-    QWindowSystemInterface::handleWindowActivated(0);
+        QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationActive);
+        QWindowSystemInterface::flushWindowSystemEvents();
+        QVERIFY(item->property("active").toBool());
+        QVERIFY(item->property("active2").toBool());
 
-#ifdef Q_OS_OSX
-    // OS X has the concept of "reactivation"
-    QTRY_VERIFY(QGuiApplication::focusWindow() != &window);
-    QVERIFY(item->property("active").toBool());
-    QVERIFY(item->property("active2").toBool());
-#else
-    // not active again
-    QTRY_VERIFY(QGuiApplication::focusWindow() != &window);
-    QVERIFY(!item->property("active").toBool());
-    QVERIFY(!item->property("active2").toBool());
-#endif
+        QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationInactive);
+        QWindowSystemInterface::flushWindowSystemEvents();
+        QVERIFY(!item->property("active").toBool());
+        QVERIFY(!item->property("active2").toBool());
+    } else {
+        // Otherwise, app activation is triggered by window activation.
+        window.show();
+        window.requestActivate();
+        QVERIFY(QTest::qWaitForWindowActive(&window));
+        QCOMPARE(QGuiApplication::focusWindow(), &window);
+        QVERIFY(item->property("active").toBool());
+        QVERIFY(item->property("active2").toBool());
+
+        // not active again
+        QWindowSystemInterface::handleWindowActivated(nullptr);
+        QTRY_VERIFY(QGuiApplication::focusWindow() != &window);
+        QVERIFY(!item->property("active").toBool());
+        QVERIFY(!item->property("active2").toBool());
+    }
 }
 
 void tst_qquickapplication::state()
@@ -165,13 +171,13 @@ void tst_qquickapplication::state()
         // triggered by window activation.
         window.show();
         window.requestActivate();
-        QTest::qWaitForWindowActive(&window);
+        QVERIFY(QTest::qWaitForWindowActive(&window));
         QCOMPARE(QGuiApplication::focusWindow(), &window);
         QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationActive);
         QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationActive);
 
         // not active again
-        QWindowSystemInterface::handleWindowActivated(0);
+        QWindowSystemInterface::handleWindowActivated(nullptr);
         QTRY_VERIFY(QGuiApplication::focusWindow() != &window);
         QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationInactive);
         QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationInactive);

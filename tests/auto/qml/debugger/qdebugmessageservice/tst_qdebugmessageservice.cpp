@@ -28,7 +28,6 @@
 
 //QQmlDebugTest
 #include "debugutil_p.h"
-#include "../../../shared/util.h"
 
 #include <private/qqmldebugclient_p.h>
 #include <private/qqmldebugconnection_p.h>
@@ -38,31 +37,19 @@
 #include <QtCore/qlibraryinfo.h>
 #include <QtTest/qtest.h>
 
-const char *NORMALMODE = "-qmljsdebugger=port:3777,3787,block";
 const char *QMLFILE = "test.qml";
 
 class QQmlDebugMsgClient;
-class tst_QDebugMessageService : public QQmlDataTest
+class tst_QDebugMessageService : public QQmlDebugTest
 {
     Q_OBJECT
 
-public:
-    tst_QDebugMessageService();
-
-    void init();
-
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
-
-    void cleanup();
-
     void retrieveDebugOutput();
 
 private:
-    QQmlDebugProcess *m_process;
-    QQmlDebugMsgClient *m_client;
-    QQmlDebugConnection *m_connection;
+    QList<QQmlDebugClient *> createClients() override;
+    QPointer<QQmlDebugMsgClient> m_client;
 };
 
 struct LogEntry {
@@ -102,20 +89,11 @@ public:
 
 protected:
     //inherited from QQmlDebugClient
-    void stateChanged(State state);
     void messageReceived(const QByteArray &data);
 
 signals:
-    void enabled();
     void debugOutput();
 };
-
-void QQmlDebugMsgClient::stateChanged(State state)
-{
-    if (state == Enabled) {
-        emit enabled();
-    }
-}
 
 void QQmlDebugMsgClient::messageReceived(const QByteArray &data)
 {
@@ -150,73 +128,16 @@ void QQmlDebugMsgClient::messageReceived(const QByteArray &data)
     }
 }
 
-tst_QDebugMessageService::tst_QDebugMessageService()
+QList<QQmlDebugClient *> tst_QDebugMessageService::createClients()
 {
-}
-
-void tst_QDebugMessageService::initTestCase()
-{
-    QQmlDataTest::initTestCase();
-    m_process = 0;
-    m_client = 0;
-    m_connection = 0;
-}
-
-void tst_QDebugMessageService::cleanupTestCase()
-{
-    if (m_process)
-        delete m_process;
-
-    if (m_client)
-        delete m_client;
-
-    if (m_connection)
-        delete m_connection;
-}
-
-void tst_QDebugMessageService::init()
-{
-    m_connection = new QQmlDebugConnection();
-    m_process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qml", this);
     m_client = new QQmlDebugMsgClient(m_connection);
-
-    m_process->start(QStringList() << QLatin1String(NORMALMODE) << QQmlDataTest::instance()->testFile(QMLFILE));
-    QVERIFY2(m_process->waitForSessionStart(),
-             "Could not launch application, or did not get 'Waiting for connection'.");
-
-    const int port = m_process->debugPort();
-    m_connection->connectToHost("127.0.0.1", port);
-    QVERIFY(m_connection->waitForConnected());
-
-    if (m_client->state() != QQmlDebugClient::Enabled)
-        QQmlDebugTest::waitForSignal(m_client, SIGNAL(enabled()));
-
-    QCOMPARE(m_client->state(), QQmlDebugClient::Enabled);
-}
-
-void tst_QDebugMessageService::cleanup()
-{
-    if (QTest::currentTestFailed()) {
-        qDebug() << "Process State:" << m_process->state();
-        qDebug() << "Application Output:" << m_process->output();
-    }
-    if (m_process)
-        delete m_process;
-
-    if (m_client)
-        delete m_client;
-
-    if (m_connection)
-        delete m_connection;
-
-    m_process = 0;
-    m_client = 0;
-    m_connection = 0;
+    return QList<QQmlDebugClient *>({m_client});
 }
 
 void tst_QDebugMessageService::retrieveDebugOutput()
 {
-    init();
+    QCOMPARE(QQmlDebugTest::connect(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qml",
+                                    QString(), testFile(QMLFILE), true), ConnectSuccess);
 
     QTRY_VERIFY(m_client->logBuffer.size() >= 2);
 

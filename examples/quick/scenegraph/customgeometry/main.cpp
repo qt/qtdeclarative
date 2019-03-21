@@ -67,6 +67,6 @@ int main(int argc, char **argv)
     view.setSource(QUrl("qrc:///scenegraph/customgeometry/main.qml"));
     view.show();
 
-    app.exec();
+    return app.exec();
 }
 //! [1]

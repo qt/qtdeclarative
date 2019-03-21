@@ -26,207 +26,177 @@
 **
 ****************************************************************************/
 
-#include <qhashfunctions.h>
 #include <qtest.h>
-
-#define V4_AUTOTEST
-#include <private/qv4ssa_p.h>
+#include <private/qv4instr_moth_p.h>
+#include <private/qv4script_p.h>
 
 class tst_v4misc: public QObject
 {
     Q_OBJECT
 
 private slots:
-    void initTestCase();
+    void tdzOptimizations_data();
+    void tdzOptimizations();
 
-    void rangeSplitting_1();
-    void rangeSplitting_2();
-    void rangeSplitting_3();
+    void parserMisc_data();
+    void parserMisc();
 
-    void moveMapping_1();
-    void moveMapping_2();
+    void subClassing_data();
+    void subClassing();
+
+    void nestingDepth();
 };
 
-using namespace QT_PREPEND_NAMESPACE(QV4::IR);
-
-void tst_v4misc::initTestCase()
+void tst_v4misc::tdzOptimizations_data()
 {
-    qSetGlobalQHashSeed(0);
-    QCOMPARE(qGlobalQHashSeed(), 0);
+    QTest::addColumn<QString>("scriptToCompile");
+
+    QTest::newRow("access-after-let") << QString("let x; x = 10;");
+    QTest::newRow("access-after-const") << QString("const x = 10; print(x);");
+    QTest::newRow("access-after-let") << QString("for (let x of y) print(x);");
 }
 
-// split between two ranges
-void tst_v4misc::rangeSplitting_1()
+void tst_v4misc::tdzOptimizations()
 {
-    LifeTimeInterval interval;
-    interval.addRange(59, 59);
-    interval.addRange(61, 62);
-    interval.addRange(64, 64);
-    interval.addRange(69, 71);
-    interval.validate();
-    QCOMPARE(interval.end(), 71);
+    QFETCH(QString, scriptToCompile);
 
-    LifeTimeInterval newInterval = interval.split(66, 70);
-    interval.validate();
-    newInterval.validate();
-    QVERIFY(newInterval.isSplitFromInterval());
+    QV4::ExecutionEngine v4;
+    QV4::Script script(&v4, nullptr, /*parse as binding*/false, scriptToCompile);
+    script.parse();
+    QVERIFY(!v4.hasException);
 
-    QCOMPARE(interval.ranges().size(), 3);
-    QCOMPARE(interval.ranges()[0].start, 59);
-    QCOMPARE(interval.ranges()[0].end, 59);
-    QCOMPARE(interval.ranges()[1].start, 61);
-    QCOMPARE(interval.ranges()[1].end, 62);
-    QCOMPARE(interval.ranges()[2].start, 64);
-    QCOMPARE(interval.ranges()[2].end, 64);
-    QCOMPARE(interval.end(), 70);
+    const auto function = script.compilationUnit->unitData()->functionAt(0);
+    const auto *code = function->code();
+    const auto len = function->codeSize;
+    const char *end = code + len;
 
-    QCOMPARE(newInterval.ranges().size(), 1);
-    QCOMPARE(newInterval.ranges()[0].start, 70);
-    QCOMPARE(newInterval.ranges()[0].end, 71);
-    QCOMPARE(newInterval.end(), 71);
+    const auto decodeInstruction = [&code]() {
+        QV4::Moth::Instr::Type type = QV4::Moth::Instr::Type(static_cast<uchar>(*code));
+    dispatch:
+        switch (type) {
+            case QV4::Moth::Instr::Type::Nop:
+                ++code;
+                type = QV4::Moth::Instr::Type(static_cast<uchar>(*code));
+                goto dispatch;
+            case QV4::Moth::Instr::Type::Nop_Wide: /* wide prefix */
+                ++code;
+                type = QV4::Moth::Instr::Type(0x100 | static_cast<uchar>(*code));
+                goto dispatch;
+
+#define CASE_AND_GOTO_INSTRUCTION(name, nargs, ...) \
+      case QV4::Moth::Instr::Type::name: \
+            MOTH_ADJUST_CODE(qint8, nargs); \
+            break;
+
+#define CASE_AND_GOTO_WIDE_INSTRUCTION(name, nargs, ...) \
+      case QV4::Moth::Instr::Type::name##_Wide: \
+            MOTH_ADJUST_CODE(int, nargs); \
+            type = QV4::Moth::Instr::Type::name; \
+            break;
+
+#define MOTH_DECODE_WITHOUT_ARGS(instr) \
+     INSTR_##instr(CASE_AND_GOTO) \
+     INSTR_##instr(CASE_AND_GOTO_WIDE)
+
+            FOR_EACH_MOTH_INSTR(MOTH_DECODE_WITHOUT_ARGS)
+        }
+        return type;
+    };
+
+    while (code < end) {
+        QV4::Moth::Instr::Type type = decodeInstruction();
+        QVERIFY(type != QV4::Moth::Instr::Type::DeadTemporalZoneCheck);
+    }
+
 }
 
-// split in the middle of a range
-void tst_v4misc::rangeSplitting_2()
+void tst_v4misc::parserMisc_data()
 {
-    LifeTimeInterval interval;
-    interval.addRange(59, 59);
-    interval.addRange(61, 64);
-    interval.addRange(69, 71);
-    interval.validate();
-    QCOMPARE(interval.end(), 71);
+    QTest::addColumn<QString>("error");
 
-    LifeTimeInterval newInterval = interval.split(62, 64);
-    interval.validate();
-    newInterval.validate();
-    QVERIFY(newInterval.isSplitFromInterval());
-
-    QCOMPARE(interval.ranges().size(), 2);
-    QCOMPARE(interval.ranges()[0].start, 59);
-    QCOMPARE(interval.ranges()[0].end, 59);
-    QCOMPARE(interval.ranges()[1].start, 61);
-    QCOMPARE(interval.ranges()[1].end, 62);
-    QCOMPARE(interval.end(), 64);
-
-    QCOMPARE(newInterval.ranges().size(), 2);
-    QCOMPARE(newInterval.ranges()[0].start, 64);
-    QCOMPARE(newInterval.ranges()[0].end, 64);
-    QCOMPARE(newInterval.ranges()[1].start, 69);
-    QCOMPARE(newInterval.ranges()[1].end, 71);
-    QCOMPARE(newInterval.end(), 71);
+    QTest::newRow("8[++i][+++i]") << QString("ReferenceError: Prefix ++ operator applied to value that is not a reference.");
+    QTest::newRow("`a${1++}`") << QString("ReferenceError: Invalid left-hand side expression in postfix operation");
+    QTest::newRow("for (var f in ++!binaryMathg) ;") << QString("ReferenceError: Prefix ++ operator applied to value that is not a reference.");
+    QTest::newRow("for (va() in obj) {}") << QString("ReferenceError: Invalid left-hand side expression for 'in' expression");
+    QTest::newRow("[1]=7[A=8=9]") << QString("ReferenceError: left-hand side of assignment operator is not an lvalue");
+    QTest::newRow("var asmvalsLen = asmvals{{{{{ngth}}}}};") << QString("SyntaxError: Expected token `;'");
+    QTest::newRow("T||9[---L6i]") << QString("ReferenceError: Prefix ++ operator applied to value that is not a reference.");
+    QTest::newRow("a?b:[---Hi]") << QString("ReferenceError: Prefix ++ operator applied to value that is not a reference.");
+    QTest::newRow("[``]=1") << QString("ReferenceError: Binding target is not a reference.");
 }
 
-// split in the middle of a range, and let it never go back to active again
-void tst_v4misc::rangeSplitting_3()
+void tst_v4misc::parserMisc()
 {
-    LifeTimeInterval interval;
-    interval.addRange(59, 59);
-    interval.addRange(61, 64);
-    interval.addRange(69, 71);
-    interval.validate();
-    QCOMPARE(interval.end(), 71);
+    QFETCH(QString, error);
 
-    LifeTimeInterval newInterval = interval.split(64, LifeTimeInterval::InvalidPosition);
-    interval.validate();
-    newInterval.validate();
-    QVERIFY(!newInterval.isValid());
-
-    QCOMPARE(interval.ranges().size(), 2);
-    QCOMPARE(interval.ranges()[0].start, 59);
-    QCOMPARE(interval.ranges()[0].end, 59);
-    QCOMPARE(interval.ranges()[1].start, 61);
-    QCOMPARE(interval.ranges()[1].end, 64);
-    QCOMPARE(interval.end(), 71);
+    QJSEngine engine;
+    QJSValue result = engine.evaluate(QString::fromUtf8(QTest::currentDataTag()));
+    QVERIFY(result.isError());
+    QCOMPARE(result.toString(), error);
 }
 
-void tst_v4misc::moveMapping_1()
+void tst_v4misc::subClassing_data()
 {
-    Temp fp2(DoubleType, Temp::PhysicalRegister, 2);
-    Temp fp3(DoubleType, Temp::PhysicalRegister, 3);
-    Temp fp4(DoubleType, Temp::PhysicalRegister, 4);
-    Temp fp5(DoubleType, Temp::PhysicalRegister, 5);
+    QTest::addColumn<QString>("script");
 
-    MoveMapping mapping;
-    mapping.add(&fp2, &fp3);
-    mapping.add(&fp2, &fp4);
-    mapping.add(&fp2, &fp5);
-    mapping.add(&fp3, &fp2);
+    QString code(
+                "class Foo extends %1 {"
+                "    constructor() { super(); this.reset(); }"
+                "    reset() { }"
+                "}"
+                "new Foo();");
 
-    mapping.order();
-//    mapping.dump();
 
-    QCOMPARE(mapping._moves.size(), 3);
-    QVERIFY(mapping._moves.contains(MoveMapping::Move(&fp2, &fp4, false)));
-    QVERIFY(mapping._moves.contains(MoveMapping::Move(&fp2, &fp5, false)));
-    QVERIFY(mapping._moves.last() == MoveMapping::Move(&fp2, &fp3, true) ||
-            mapping._moves.last() == MoveMapping::Move(&fp3, &fp2, true));
+    QTest::newRow("Array") << code.arg("Array");
+    QTest::newRow("Boolean") << code.arg("Boolean");
+    QTest::newRow("Date") << code.arg("Date");
+    QTest::newRow("Function") << code.arg("Function");
+    QTest::newRow("Number") << code.arg("Number");
+    QTest::newRow("Map") << code.arg("Map");
+    QTest::newRow("Promise") << QString(
+            "class Foo extends Promise {"
+            "    constructor() { super(Function()); this.reset(); }"
+            "    reset() { }"
+            "}"
+            "new Foo();");
+    QTest::newRow("RegExp") << code.arg("RegExp");
+    QTest::newRow("Set") << code.arg("Set");
+    QTest::newRow("String") << code.arg("String");
+    QTest::newRow("WeakMap") << code.arg("WeakMap");
+    QTest::newRow("WeakSet") << code.arg("WeakSet");
 }
 
-void tst_v4misc::moveMapping_2()
+void tst_v4misc::subClassing()
 {
-    Temp fp1(DoubleType, Temp::PhysicalRegister, 1);
-    Temp fp2(DoubleType, Temp::PhysicalRegister, 2);
-    Temp fp3(DoubleType, Temp::PhysicalRegister, 3);
-    Temp fp4(DoubleType, Temp::PhysicalRegister, 4);
-    Temp fp5(DoubleType, Temp::PhysicalRegister, 5);
-    Temp fp6(DoubleType, Temp::PhysicalRegister, 6);
-    Temp fp7(DoubleType, Temp::PhysicalRegister, 7);
-    Temp fp8(DoubleType, Temp::PhysicalRegister, 8);
-    Temp fp9(DoubleType, Temp::PhysicalRegister, 9);
-    Temp fp10(DoubleType, Temp::PhysicalRegister, 10);
-    Temp fp11(DoubleType, Temp::PhysicalRegister, 11);
-    Temp fp12(DoubleType, Temp::PhysicalRegister, 12);
-    Temp fp13(DoubleType, Temp::PhysicalRegister, 13);
+    QFETCH(QString, script);
 
-    MoveMapping mapping;
-    mapping.add(&fp2, &fp1);
-    mapping.add(&fp2, &fp3);
-    mapping.add(&fp3, &fp2);
-    mapping.add(&fp3, &fp4);
-
-    mapping.add(&fp9, &fp8);
-    mapping.add(&fp8, &fp7);
-    mapping.add(&fp7, &fp6);
-    mapping.add(&fp7, &fp5);
-
-    mapping.add(&fp10, &fp11);
-    mapping.add(&fp11, &fp12);
-    mapping.add(&fp12, &fp13);
-    mapping.add(&fp13, &fp10);
-
-    mapping.order();
-//    mapping.dump();
-
-    QCOMPARE(mapping._moves.size(), 10);
-
-    QVERIFY(mapping._moves.contains(MoveMapping::Move(&fp2, &fp1, false)));
-    QVERIFY(mapping._moves.contains(MoveMapping::Move(&fp3, &fp4, false)));
-    QVERIFY(mapping._moves.contains(MoveMapping::Move(&fp7, &fp6, false)));
-    QVERIFY(mapping._moves.contains(MoveMapping::Move(&fp7, &fp5, false)));
-    QVERIFY(mapping._moves.contains(MoveMapping::Move(&fp8, &fp7, false)));
-    QVERIFY(mapping._moves.contains(MoveMapping::Move(&fp9, &fp8, false)));
-
-    QVERIFY(mapping._moves.contains(MoveMapping::Move(&fp2, &fp3, true)) ||
-            mapping._moves.contains(MoveMapping::Move(&fp3, &fp2, true)));
-    QVERIFY(mapping._moves.contains(MoveMapping::Move(&fp10, &fp13, true)) ||
-            mapping._moves.contains(MoveMapping::Move(&fp13, &fp10, true)));
-    QVERIFY(mapping._moves.contains(MoveMapping::Move(&fp12, &fp13, true)) ||
-            mapping._moves.contains(MoveMapping::Move(&fp13, &fp12, true)));
-    QVERIFY(mapping._moves.contains(MoveMapping::Move(&fp12, &fp11, true)) ||
-            mapping._moves.contains(MoveMapping::Move(&fp11, &fp12, true)));
-
-    QVERIFY(!mapping._moves.at(0).needsSwap);
-    QVERIFY(!mapping._moves.at(1).needsSwap);
-    QVERIFY(!mapping._moves.at(2).needsSwap);
-    QVERIFY(!mapping._moves.at(3).needsSwap);
-    QVERIFY(!mapping._moves.at(4).needsSwap);
-    QVERIFY(!mapping._moves.at(5).needsSwap);
-    QVERIFY(mapping._moves.at(6).needsSwap);
-    QVERIFY(mapping._moves.at(7).needsSwap);
-    QVERIFY(mapping._moves.at(8).needsSwap);
-    QVERIFY(mapping._moves.at(9).needsSwap);
+    QJSEngine engine;
+    QJSValue result = engine.evaluate(script);
+    QVERIFY(!result.isError());
 }
 
-QTEST_MAIN(tst_v4misc)
+void tst_v4misc::nestingDepth()
+{
+    { // left recursive
+        QString s(40000, '`');
+
+        QJSEngine engine;
+        QJSValue result = engine.evaluate(s);
+        QVERIFY(result.isError());
+        QCOMPARE(result.toString(), "SyntaxError: Maximum statement or expression depth exceeded");
+    }
+
+    { // right recursive
+        QString s(200000, '-');
+        s += "\nd";
+
+        QJSEngine engine;
+        QJSValue result = engine.evaluate(s);
+        QVERIFY(result.isError());
+        QCOMPARE(result.toString(), "SyntaxError: Maximum statement or expression depth exceeded");
+    }
+}
+
+QTEST_MAIN(tst_v4misc);
 
 #include "tst_v4misc.moc"

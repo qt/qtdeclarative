@@ -51,44 +51,24 @@
 //
 
 #include <qstring.h>
+#include <private/qv4global_p.h>
+#include <private/qv4propertykey_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-namespace Heap {
-    struct String;
-}
-
-struct String;
-struct IdentifierTable;
-struct ExecutionEngine;
-
-struct Identifier
-{
-    QString string;
-    uint hashValue;
-};
-
-
 struct IdentifierHashEntry {
-    const Identifier *identifier;
-    union {
-        int value;
-        void *pointer;
-    };
-    static int get(const IdentifierHashEntry *This, int *) { return This ? This->value : -1; }
-    static bool get(const IdentifierHashEntry *This, bool *) { return This != 0; }
-    static void *get(const IdentifierHashEntry *This, void **) { return This ? This->pointer : 0; }
+    PropertyKey identifier;
+    int value;
 };
 
 struct IdentifierHashData
 {
-    IdentifierHashData(int numBits);
+    IdentifierHashData(IdentifierTable *table, int numBits);
     explicit IdentifierHashData(IdentifierHashData *other);
-    ~IdentifierHashData() {
-        free(entries);
-    }
+    ~IdentifierHashData();
+    void markObjects(MarkStack *markStack) const;
 
     QBasicAtomicInt refCount;
     int alloc;
@@ -98,73 +78,54 @@ struct IdentifierHashData
     IdentifierHashEntry *entries;
 };
 
-struct IdentifierHashBase
+struct IdentifierHash
 {
 
-    IdentifierHashData *d;
+    IdentifierHashData *d = nullptr;
 
-    IdentifierHashBase() : d(0) {}
-    IdentifierHashBase(ExecutionEngine *engine);
-    inline IdentifierHashBase(const IdentifierHashBase &other);
-    inline ~IdentifierHashBase();
-    inline IdentifierHashBase &operator=(const IdentifierHashBase &other);
+    IdentifierHash() {}
+    IdentifierHash(ExecutionEngine *engine);
+    inline IdentifierHash(const IdentifierHash &other);
+    inline ~IdentifierHash();
+    inline IdentifierHash &operator=(const IdentifierHash &other);
 
     bool isEmpty() const { return !d; }
 
     inline int count() const;
-    bool contains(const Identifier *i) const;
-    bool contains(const QString &str) const;
-    bool contains(String *str) const;
 
     void detach();
 
+    void add(const QString &str, int value);
+    void add(Heap::String *str, int value);
+
+    inline int value(const QString &str) const;
+    inline int value(String *str) const;
+    QString findId(int value) const;
+
 protected:
-    IdentifierHashEntry *addEntry(const Identifier *i);
-    const IdentifierHashEntry *lookup(const Identifier *identifier) const;
+    IdentifierHashEntry *addEntry(PropertyKey i);
+    const IdentifierHashEntry *lookup(PropertyKey identifier) const;
     const IdentifierHashEntry *lookup(const QString &str) const;
     const IdentifierHashEntry *lookup(String *str) const;
-    const Identifier *toIdentifier(const QString &str) const;
-    const Identifier *toIdentifier(Heap::String *str) const;
+    const PropertyKey toIdentifier(const QString &str) const;
+    const PropertyKey toIdentifier(Heap::String *str) const;
 };
 
 
-template<typename T>
-struct IdentifierHash : public IdentifierHashBase
-{
-    IdentifierHash()
-        : IdentifierHashBase() {}
-    IdentifierHash(ExecutionEngine *engine)
-        : IdentifierHashBase(engine) {}
-    inline IdentifierHash(const IdentifierHash<T> &other)
-        : IdentifierHashBase(other) {}
-    inline ~IdentifierHash() {}
-    inline IdentifierHash &operator=(const IdentifierHash<T> &other) {
-        IdentifierHashBase::operator =(other);
-        return *this;
-    }
-
-    void add(const QString &str, const T &value);
-    void add(Heap::String *str, const T &value);
-
-    inline T value(const QString &str) const;
-    inline T value(String *str) const;
-    QString findId(T value) const;
-};
-
-inline IdentifierHashBase::IdentifierHashBase(const IdentifierHashBase &other)
+inline IdentifierHash::IdentifierHash(const IdentifierHash &other)
 {
     d = other.d;
     if (d)
         d->refCount.ref();
 }
 
-inline IdentifierHashBase::~IdentifierHashBase()
+inline IdentifierHash::~IdentifierHash()
 {
     if (d && !d->refCount.deref())
         delete d;
 }
 
-IdentifierHashBase &IdentifierHashBase::operator=(const IdentifierHashBase &other)
+IdentifierHash &IdentifierHash::operator=(const IdentifierHash &other)
 {
     if (other.d)
         other.d->refCount.ref();
@@ -174,64 +135,35 @@ IdentifierHashBase &IdentifierHashBase::operator=(const IdentifierHashBase &othe
     return *this;
 }
 
-inline int IdentifierHashBase::count() const
+inline int IdentifierHash::count() const
 {
     return d ? d->size : 0;
 }
 
-inline bool IdentifierHashBase::contains(const Identifier *i) const
-{
-    return lookup(i) != 0;
-}
-
-inline bool IdentifierHashBase::contains(const QString &str) const
-{
-    return lookup(str) != 0;
-}
-
-inline bool IdentifierHashBase::contains(String *str) const
-{
-    return lookup(str) != 0;
-}
-
-template<typename T>
-void IdentifierHash<T>::add(const QString &str, const T &value)
+inline
+void IdentifierHash::add(const QString &str, int value)
 {
     IdentifierHashEntry *e = addEntry(toIdentifier(str));
     e->value = value;
 }
 
-template<typename T>
-void IdentifierHash<T>::add(Heap::String *str, const T &value)
+inline
+void IdentifierHash::add(Heap::String *str, int value)
 {
     IdentifierHashEntry *e = addEntry(toIdentifier(str));
     e->value = value;
 }
 
-template<typename T>
-inline T IdentifierHash<T>::value(const QString &str) const
+inline int IdentifierHash::value(const QString &str) const
 {
-    return IdentifierHashEntry::get(lookup(str), (T*)0);
+    const IdentifierHashEntry *e = lookup(str);
+    return e ? e->value : -1;
 }
 
-template<typename T>
-inline T IdentifierHash<T>::value(String *str) const
+inline int IdentifierHash::value(String *str) const
 {
-    return IdentifierHashEntry::get(lookup(str), (T*)0);
-}
-
-
-template<typename T>
-QString IdentifierHash<T>::findId(T value) const
-{
-    IdentifierHashEntry *e = d->entries;
-    IdentifierHashEntry *end = e + d->alloc;
-    while (e < end) {
-        if (e->identifier && IdentifierHashEntry::get(e, (T*)0) == value)
-            return e->identifier->string;
-        ++e;
-    }
-    return QString();
+    const IdentifierHashEntry *e = lookup(str);
+    return e ? e->value : -1;
 }
 
 }

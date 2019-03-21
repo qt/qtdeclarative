@@ -35,6 +35,16 @@
 // This benchmark produces performance statistics
 // for the standard set of elements, properties and expressions which
 // are provided in the QtDeclarative library (QtQml and QtQuick).
+//
+// Note that we have hand-rolled our own benchmark harness, rather
+// than directly using QBENCHMARK, in order to avoid contaminating
+// the benchmark results with unwanted initialization or side-effects
+// and allow us to more completely isolate the required specific area
+// (compilation, instantiation, or cached type-data instantiation)
+// that we wish to benchmark.
+
+#define AVERAGE_OVER_N 10
+#define IGNORE_N_OUTLIERS 2
 
 class ModuleApi : public QObject
 {
@@ -197,6 +207,18 @@ void tst_librarymetrics_performance::metrics_data()
     QTest::newRow("062) positioning - binding (with grid) positioning") << testFileUrl("data/bindingwithgridpositioning.qml");
 }
 
+// This method is intended to benchmark the amount of time / cpu cycles
+// required to compile the given QML input.
+// Note that this deliberately does NOT include the time taken to
+// construct the QML engine.
+// Also note that between each iteration, we attempt to clean the
+// engine state (destroying and reconstructing the engine, clearing
+// the QML type registrations, etc) to simulate a cold-start environment.
+//
+// The benchmark result is expected to be dominated by QML parsing,
+// compilation, and optimization paths, and since the compiled component
+// is never instantiated, no construction or binding evaluation should
+// occur.
 void tst_librarymetrics_performance::compilation()
 {
     QFETCH(QUrl, qmlfile);
@@ -211,37 +233,148 @@ void tst_librarymetrics_performance::compilation()
         }
     }
 
-    QBENCHMARK {
+    QList<qint64> nResults;
+
+    // generate AVERAGE_OVER_N results
+    for (int i = 0; i < AVERAGE_OVER_N; ++i) {
         cleanState(&e);
-        QQmlComponent c(e, this);
-        c.loadUrl(qmlfile); // just compile.
+        {
+            QElapsedTimer et;
+            et.start();
+            // BEGIN benchmarked code block
+            QQmlComponent c(e, this);
+            c.loadUrl(qmlfile);
+            // END benchmarked code block
+            qint64 etime = et.nsecsElapsed();
+            nResults.append(etime);
+        }
     }
+
+    // sort the list
+    qSort(nResults);
+
+    // remove IGNORE_N_OUTLIERS*2 from ONLY the worst end (remove gc interference)
+    for (int i = 0; i < IGNORE_N_OUTLIERS; ++i) {
+        if (!nResults.isEmpty()) nResults.removeLast();
+        if (!nResults.isEmpty()) nResults.removeLast();
+    }
+
+    // now generate an average
+    qint64 totaltime = 0;
+    if (nResults.size() == 0) nResults.append(9999);
+    for (int i = 0; i < nResults.size(); ++i)
+        totaltime += nResults.at(i);
+    double average = ((double)totaltime) / nResults.count();
+
+    // and return it as the result
+    QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds);
+    QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds); // twice to workaround bug in QTestLib
 }
 
+// This method is intended to benchmark the amount of time / cpu cycles
+// required to compile and instantiate the given QML input,
+// where the QML state has NOT been cleared in between each iteration.
+// Thus, cached type data should be used when instantiating the object.
+//
+// The benchmark result is expected to be dominated by QObject
+// hierarchy construction and first-time binding evaluation.
 void tst_librarymetrics_performance::instantiation_cached()
 {
     QFETCH(QUrl, qmlfile);
-    cleanState(&e);
 
-    QBENCHMARK {
+    cleanState(&e);
+    QList<qint64> nResults;
+
+    // generate AVERAGE_OVER_N results
+    for (int i = 0; i < AVERAGE_OVER_N; ++i) {
+        QElapsedTimer et;
+        et.start();
+        // BEGIN benchmarked code block
         QQmlComponent c(e, this);
-        c.loadUrl(qmlfile); // just compile.
+        c.loadUrl(qmlfile);
         QObject *o = c.create();
+        // END benchmarked code block
+        qint64 etime = et.nsecsElapsed();
+        nResults.append(etime);
         delete o;
     }
+
+    // sort the list
+    qSort(nResults);
+
+    // remove IGNORE_N_OUTLIERS*2 from ONLY the worst end (remove gc interference)
+    for (int i = 0; i < IGNORE_N_OUTLIERS; ++i) {
+        if (!nResults.isEmpty()) nResults.removeLast();
+        if (!nResults.isEmpty()) nResults.removeLast();
+    }
+
+    // now generate an average
+    qint64 totaltime = 0;
+    if (nResults.size() == 0) nResults.append(9999);
+    for (int i = 0; i < nResults.size(); ++i)
+        totaltime += nResults.at(i);
+    double average = ((double)totaltime) / nResults.count();
+
+    // and return it as the result
+    QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds);
+    QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds); // twice to workaround bug in QTestLib
 }
 
+// This method is intended to benchmark the amount of time / cpu cycles
+// required to compile and instantiate the given QML input,
+// where the QML state has been cleared in between each iteration.
+// This will cause the engine to parse, compile and optimize the
+// input QML in each iteration.  After compilation, the component
+// will be instantiated, and so QObject hierarchy construction and
+// first time binding evaluation will contribute to the result.
+//
+// The compilation phase is expected to dominate the result, however
+// in some cases (complex positioning via expensive bindings, or
+// other pathological cases) instantiation may dominate.  Those
+// cases are prime candidates for further investigation...
 void tst_librarymetrics_performance::instantiation()
 {
     QFETCH(QUrl, qmlfile);
 
-    QBENCHMARK {
+    cleanState(&e);
+    QList<qint64> nResults;
+
+    // generate AVERAGE_OVER_N results
+    for (int i = 0; i < AVERAGE_OVER_N; ++i) {
         cleanState(&e);
-        QQmlComponent c(e, this);
-        c.loadUrl(qmlfile); // just compile.
-        QObject *o = c.create();
-        delete o;
+        {
+            QElapsedTimer et;
+            et.start();
+            // BEGIN benchmarked code block
+            QQmlComponent c(e, this);
+            c.loadUrl(qmlfile);
+            QObject *o = c.create();
+            // END benchmarked code block
+            qint64 etime = et.nsecsElapsed();
+            nResults.append(etime);
+            delete o;
+        }
     }
+
+    // sort the list
+    qSort(nResults);
+
+    // remove IGNORE_N_OUTLIERS*2 from ONLY the worst end (remove gc interference)
+    for (int i = 0; i < IGNORE_N_OUTLIERS; ++i) {
+        if (!nResults.isEmpty()) nResults.removeLast();
+        if (!nResults.isEmpty()) nResults.removeLast();
+    }
+
+    // now generate an average
+    qint64 totaltime = 0;
+    if (nResults.size() == 0) nResults.append(9999);
+    for (int i = 0; i < nResults.size(); ++i)
+        totaltime += nResults.at(i);
+    double average = ((double)totaltime) / nResults.count();
+
+    // and return it as the result
+    QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds);
+    QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds); // twice to workaround bug in QTestLib
 }
 
 void tst_librarymetrics_performance::positioners_data()
@@ -256,19 +389,58 @@ void tst_librarymetrics_performance::positioners_data()
     QTest::newRow("07) positioning - binding (with grid) positioning") << testFileUrl("data/bindingwithgridpositioning.2.qml");
 }
 
-// this test triggers repositioning a large number of times,
+// This method triggers repositioning a large number of times,
 // so we can track the cost of different repositioning methods.
+// Note that the engine state is cleared before every iteration,
+// so the benchmark result will include the cost of compilation
+// as well as instantiation and first-time binding evaluation.
+//
+// The repositioning triggered within the QML is expected
+// to dominate the benchmark time, especially if slow-path
+// binding evaluation occurs.
 void tst_librarymetrics_performance::positioners()
 {
     QFETCH(QUrl, qmlfile);
 
-    QBENCHMARK {
+    cleanState(&e);
+    QList<qint64> nResults;
+
+    // generate AVERAGE_OVER_N results
+    for (int i = 0; i < AVERAGE_OVER_N; ++i) {
         cleanState(&e);
-        QQmlComponent c(e, this);
-        c.loadUrl(qmlfile); // just compile.
-        QObject *o = c.create();
-        delete o;
+        {
+            QElapsedTimer et;
+            et.start();
+            // BEGIN benchmarked code block
+            QQmlComponent c(e, this);
+            c.loadUrl(qmlfile);
+            QObject *o = c.create();
+            // END benchmarked code block
+            qint64 etime = et.nsecsElapsed();
+            nResults.append(etime);
+            delete o;
+        }
     }
+
+    // sort the list
+    qSort(nResults);
+
+    // remove IGNORE_N_OUTLIERS*2 from ONLY the worst end (remove gc interference)
+    for (int i = 0; i < IGNORE_N_OUTLIERS; ++i) {
+        if (!nResults.isEmpty()) nResults.removeLast();
+        if (!nResults.isEmpty()) nResults.removeLast();
+    }
+
+    // now generate an average
+    qint64 totaltime = 0;
+    if (nResults.size() == 0) nResults.append(9999);
+    for (int i = 0; i < nResults.size(); ++i)
+        totaltime += nResults.at(i);
+    double average = ((double)totaltime) / nResults.count();
+
+    // and return it as the result
+    QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds);
+    QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds); // twice to workaround bug in QTestLib
 }
 
 QTEST_MAIN(tst_librarymetrics_performance)

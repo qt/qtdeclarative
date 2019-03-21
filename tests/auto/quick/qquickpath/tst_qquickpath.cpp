@@ -41,6 +41,7 @@ public:
 
 private slots:
     void arc();
+    void angleArc();
     void catmullromCurve();
     void closedCatmullromCurve();
     void svg();
@@ -52,7 +53,7 @@ void tst_QuickPath::arc()
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("arc.qml"));
     QQuickPath *obj = qobject_cast<QQuickPath*>(c.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(obj->startX(), 0.);
     QCOMPARE(obj->startY(), 0.);
@@ -61,7 +62,7 @@ void tst_QuickPath::arc()
     QCOMPARE(list.count(), 1);
 
     QQuickPathArc* arc = qobject_cast<QQuickPathArc*>(list.at(0));
-    QVERIFY(arc != 0);
+    QVERIFY(arc != nullptr);
     QCOMPARE(arc->x(), 100.);
     QCOMPARE(arc->y(), 100.);
     QCOMPARE(arc->radiusX(), 100.);
@@ -82,12 +83,51 @@ void tst_QuickPath::arc()
     QCOMPARE(pos, QPointF(100,100));
 }
 
+void tst_QuickPath::angleArc()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("anglearc.qml"));
+    QQuickPath *obj = qobject_cast<QQuickPath*>(c.create());
+    QVERIFY(obj != nullptr);
+
+    QQmlListReference list(obj, "pathElements");
+    QCOMPARE(list.count(), 1);
+
+    QQuickPathAngleArc* arc = qobject_cast<QQuickPathAngleArc*>(list.at(0));
+    QVERIFY(arc != nullptr);
+    QCOMPARE(arc->centerX(), 100.);
+    QCOMPARE(arc->centerY(), 100.);
+    QCOMPARE(arc->radiusX(), 50.);
+    QCOMPARE(arc->radiusY(), 50.);
+    QCOMPARE(arc->startAngle(), 45.);
+    QCOMPARE(arc->sweepAngle(), 90.);
+    QCOMPARE(arc->moveToStart(), true);
+
+    QPainterPath path = obj->path();
+    QVERIFY(path != QPainterPath());
+
+    // using QPoint to do fuzzy compare
+    QPointF pos = obj->pointAt(0);
+    QCOMPARE(pos.toPoint(), QPoint(135,135));
+    pos = obj->pointAt(.25);
+    QCOMPARE(pos.toPoint(), QPoint(119,146));
+    pos = obj->pointAt(.75);
+    QCOMPARE(pos.toPoint(), QPoint(81,146));
+    pos = obj->pointAt(1);
+    QCOMPARE(pos.toPoint(), QPoint(65,135));
+
+    // if moveToStart is false, we should have a line starting from startX/Y
+    arc->setMoveToStart(false);
+    pos = obj->pointAt(0);
+    QCOMPARE(pos, QPointF(0,0));
+}
+
 void tst_QuickPath::catmullromCurve()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("curve.qml"));
     QQuickPath *obj = qobject_cast<QQuickPath*>(c.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(obj->startX(), 0.);
     QCOMPARE(obj->startY(), 0.);
@@ -96,12 +136,12 @@ void tst_QuickPath::catmullromCurve()
     QCOMPARE(list.count(), 3);
 
     QQuickPathCatmullRomCurve* curve = qobject_cast<QQuickPathCatmullRomCurve*>(list.at(0));
-    QVERIFY(curve != 0);
+    QVERIFY(curve != nullptr);
     QCOMPARE(curve->x(), 100.);
     QCOMPARE(curve->y(), 50.);
 
     curve = qobject_cast<QQuickPathCatmullRomCurve*>(list.at(2));
-    QVERIFY(curve != 0);
+    QVERIFY(curve != nullptr);
     QCOMPARE(curve->x(), 100.);
     QCOMPARE(curve->y(), 150.);
 
@@ -123,7 +163,7 @@ void tst_QuickPath::closedCatmullromCurve()
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("closedcurve.qml"));
     QQuickPath *obj = qobject_cast<QQuickPath*>(c.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(obj->startX(), 50.);
     QCOMPARE(obj->startY(), 50.);
@@ -132,7 +172,7 @@ void tst_QuickPath::closedCatmullromCurve()
     QCOMPARE(list.count(), 3);
 
     QQuickPathCatmullRomCurve* curve = qobject_cast<QQuickPathCatmullRomCurve*>(list.at(2));
-    QVERIFY(curve != 0);
+    QVERIFY(curve != nullptr);
     QCOMPARE(curve->x(), 50.);
     QCOMPARE(curve->y(), 50.);
 
@@ -156,7 +196,7 @@ void tst_QuickPath::svg()
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("svg.qml"));
     QQuickPath *obj = qobject_cast<QQuickPath*>(c.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(obj->startX(), 0.);
     QCOMPARE(obj->startY(), 0.);
@@ -165,7 +205,7 @@ void tst_QuickPath::svg()
     QCOMPARE(list.count(), 1);
 
     QQuickPathSvg* svg = qobject_cast<QQuickPathSvg*>(list.at(0));
-    QVERIFY(svg != 0);
+    QVERIFY(svg != nullptr);
     QCOMPARE(svg->path(), QLatin1String("M200,300 Q400,50 600,300 T1000,300"));
 
     QPainterPath path = obj->path();

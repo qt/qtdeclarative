@@ -42,13 +42,14 @@
 #include <QtQml/qqmlinfo.h>
 #include <QImage>
 #include <QDebug>
+#include <QRandomGenerator>
 QT_BEGIN_NAMESPACE
 /*!
     \qmltype MaskShape
     \instantiates QQuickMaskExtruder
     \inqmlmodule QtQuick.Particles
     \inherits Shape
-    \brief For representing an image as a shape to affectors and emitters
+    \brief For representing an image as a shape to affectors and emitters.
     \ingroup qtquick-particles
 
 */
@@ -102,7 +103,7 @@ QPointF QQuickMaskExtruder::extrude(const QRectF &r)
     ensureInitialized(r);
     if (!m_mask.count() || m_img.isNull())
         return r.topLeft();
-    const QPointF p = m_mask[rand() % m_mask.count()];
+    const QPointF p = m_mask[QRandomGenerator::global()->bounded(m_mask.count())];
     //### Should random sub-pixel positioning be added?
     return p + r.topLeft();
 }

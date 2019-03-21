@@ -30,44 +30,36 @@
 #include <QtTest/QtTest>
 #include <QProcess>
 #include <QLibraryInfo>
+#include <qjstest/test262runner.h>
 
 class tst_EcmaScriptTests : public QObject
 {
     Q_OBJECT
+
 private slots:
-    void runTests_data();
-    void runTests();
+    void runInterpreted();
+    void runJitted();
 };
 
-void tst_EcmaScriptTests::runTests_data()
+void tst_EcmaScriptTests::runInterpreted()
 {
-    QTest::addColumn<QString>("qmljsParameter");
-
-    QTest::newRow("jit") << QStringLiteral("--jit");
-    // Not passing yet: QTest::newRow("interpreter") << QStringLiteral("--interpret");
+#if defined(Q_PROCESSOR_X86_64)
+    QDir::setCurrent(QLatin1String(SRCDIR));
+    Test262Runner runner(QString(), "test262");
+    runner.setFlags(Test262Runner::ForceBytecode|Test262Runner::WithTestExpectations|Test262Runner::Parallel|Test262Runner::Verbose);
+    bool result = runner.run();
+    QVERIFY(result);
+#endif
 }
 
-void tst_EcmaScriptTests::runTests()
+void tst_EcmaScriptTests::runJitted()
 {
-#if defined(Q_OS_LINUX) && defined(Q_PROCESSOR_X86_64)
-    QFETCH(QString, qmljsParameter);
-
-    QProcess process;
-    process.setProcessChannelMode(QProcess::ForwardedChannels);
-    process.setWorkingDirectory(QLatin1String(SRCDIR));
-    process.setProgram("python");
-    process.setArguments(QStringList() << "test262.py" << "--command=" + QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmljs " + qmljsParameter << "--parallel" << "--with-test-expectations");
-
-    qDebug() << "Going to run" << process.program() << process.arguments() << "in" << process.workingDirectory();
-
-    process.start();
-    QVERIFY(process.waitForStarted());
-    const int timeoutInMSecs = 20 * 60 * 1000;
-    QVERIFY2(process.waitForFinished(timeoutInMSecs), "Tests did not terminate in time -- see output above for details");
-    QVERIFY2(process.exitStatus() == QProcess::NormalExit, "Running the test harness failed -- see output above for details");
-    QVERIFY2(process.exitCode() == 0, "Tests failed -- see output above for details");
-#else
-    QSKIP("Currently the ecmascript tests are only run on Linux/x86-64");
+#if defined(Q_PROCESSOR_X86_64)
+    QDir::setCurrent(QLatin1String(SRCDIR));
+    Test262Runner runner(QString(), "test262");
+    runner.setFlags(Test262Runner::ForceJIT|Test262Runner::WithTestExpectations|Test262Runner::Parallel|Test262Runner::Verbose);
+    bool result = runner.run();
+    QVERIFY(result);
 #endif
 }
 

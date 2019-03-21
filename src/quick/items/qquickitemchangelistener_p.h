@@ -125,6 +125,7 @@ public:
     virtual void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF & /* oldGeometry */) {}
     virtual void itemSiblingOrderChanged(QQuickItem *) {}
     virtual void itemVisibilityChanged(QQuickItem *) {}
+    virtual void itemEnabledChanged(QQuickItem *) {}
     virtual void itemOpacityChanged(QQuickItem *) {}
     virtual void itemDestroyed(QQuickItem *) {}
     virtual void itemChildAdded(QQuickItem *, QQuickItem * /* child */ ) {}
@@ -134,7 +135,7 @@ public:
     virtual void itemImplicitWidthChanged(QQuickItem *) {}
     virtual void itemImplicitHeightChanged(QQuickItem *) {}
 
-    virtual QQuickAnchorsPrivate *anchorPrivate() { return 0; }
+    virtual QQuickAnchorsPrivate *anchorPrivate() { return nullptr; }
 };
 
 QT_END_NAMESPACE

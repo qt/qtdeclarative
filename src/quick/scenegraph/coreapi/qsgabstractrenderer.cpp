@@ -97,7 +97,7 @@ QT_BEGIN_NAMESPACE
     \internal
  */
 QSGAbstractRendererPrivate::QSGAbstractRendererPrivate()
-    : m_root_node(0)
+    : m_root_node(nullptr)
     , m_clear_color(Qt::transparent)
     , m_clear_mode(QSGAbstractRenderer::ClearColorBuffer | QSGAbstractRenderer::ClearDepthBuffer)
 {

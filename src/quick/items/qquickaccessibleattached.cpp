@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Accessible
     \instantiates QQuickAccessibleAttached
-    \brief Enables accessibility of QML items
+    \brief Enables accessibility of QML items.
 
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-utility
@@ -410,7 +410,7 @@ void QQuickAccessibleAttached::setIgnored(bool ignored)
 
 bool QQuickAccessibleAttached::doAction(const QString &actionName)
 {
-    QMetaMethod *sig = 0;
+    QMetaMethod *sig = nullptr;
     if (actionName == QAccessibleActionInterface::pressAction())
         sig = &sigPress;
     else if (actionName == QAccessibleActionInterface::toggleAction())

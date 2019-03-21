@@ -53,7 +53,7 @@ class TimeoutTransition : public QSignalTransition, public QQmlParserStatus
     Q_INTERFACES(QQmlParserStatus)
 
 public:
-    TimeoutTransition(QState *parent = Q_NULLPTR);
+    TimeoutTransition(QState *parent = nullptr);
     ~TimeoutTransition();
 
     int timeout() const;

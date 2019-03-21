@@ -34,6 +34,7 @@
 #include <QtCore/qpoint.h>
 #include <QtCore/qsize.h>
 #include <QtQml/qqmllist.h>
+#include <QtCore/qrandom.h>
 #include <QtCore/qrect.h>
 #include <QtGui/qmatrix.h>
 #include <QtGui/qcolor.h>
@@ -223,7 +224,7 @@ public:
     {
         QPixmap pv(150, 150);
         pv.fill(Qt::green);
-        int choice = qrand() % 4;
+        int choice = QRandomGenerator::global()->bounded(4);
         switch (choice) {
             case 0: setArbitraryVariant(QVariant(QString(QLatin1String("string variant value")))); break;
             case 1: setArbitraryVariant(QVariant(QColor(110, 120, 130))); break;
@@ -253,7 +254,7 @@ public:
         QVariant retn;
         QPixmap pv(randomFactorOne % 300, randomFactorTwo % 300);
         pv.fill(QColor(randomFactorOne % 256, randomFactorTwo % 256, randomFactorThree % 256));
-        int choice = qrand() % 4;
+        int choice = QRandomGenerator::global()->bounded(4);
         switch (choice) {
             case 0: retn = QVariant(QString(QLatin1String("string variant value"))); break;
             case 1: retn = QVariant(QColor(randomFactorThree % 256, randomFactorTwo % 256, randomFactorOne % 256)); break;

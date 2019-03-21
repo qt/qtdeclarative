@@ -52,8 +52,8 @@
 //
 
 #include "qqmljsglobal_p.h"
-#include "qqmljsastfwd_p.h"
 #include "qqmljsmemorypool_p.h"
+#include "qqmljssourcelocation_p.h"
 
 #include <QtCore/qstring.h>
 #include <QtCore/qset.h>
@@ -63,16 +63,41 @@ QT_QML_BEGIN_NAMESPACE
 namespace QQmlJS {
 
 class Lexer;
-class Directives;
 class MemoryPool;
+
+class QML_PARSER_EXPORT Directives {
+public:
+    virtual ~Directives() {}
+
+    virtual void pragmaLibrary()
+    {
+    }
+
+    virtual void importFile(const QString &jsfile, const QString &module, int line, int column)
+    {
+        Q_UNUSED(jsfile);
+        Q_UNUSED(module);
+        Q_UNUSED(line);
+        Q_UNUSED(column);
+    }
+
+    virtual void importModule(const QString &uri, const QString &version, const QString &module, int line, int column)
+    {
+        Q_UNUSED(uri);
+        Q_UNUSED(version);
+        Q_UNUSED(module);
+        Q_UNUSED(line);
+        Q_UNUSED(column);
+    }
+};
+
 
 class QML_PARSER_EXPORT DiagnosticMessage
 {
 public:
-    enum Kind { Warning, Error };
+    enum Kind { Hint, Warning, Error };
 
-    DiagnosticMessage()
-        : kind(Error) {}
+    DiagnosticMessage() {}
 
     DiagnosticMessage(Kind kind, const AST::SourceLocation &loc, const QString &message)
         : kind(kind), loc(loc), message(message) {}
@@ -83,7 +108,7 @@ public:
     bool isError() const
     { return kind == Error; }
 
-    Kind kind;
+    Kind kind = Error;
     AST::SourceLocation loc;
     QString message;
 };

@@ -69,7 +69,7 @@ void QQuickBasePositionerPrivate::unwatchChanges(QQuickItem* other)
 
 QQuickBasePositioner::PositionedItem::PositionedItem(QQuickItem *i)
     : item(i)
-    , transitionableItem(0)
+    , transitionableItem(nullptr)
     , index(-1)
     , isNew(false)
     , isVisible(true)
@@ -203,7 +203,7 @@ void QQuickBasePositioner::setSpacing(qreal s)
 QQuickTransition *QQuickBasePositioner::populate() const
 {
     Q_D(const QQuickBasePositioner);
-    return d->transitioner ? d->transitioner->populateTransition : 0;
+    return d->transitioner ? d->transitioner->populateTransition : nullptr;
 }
 
 void QQuickBasePositioner::setPopulate(QQuickTransition *transition)
@@ -220,7 +220,7 @@ void QQuickBasePositioner::setPopulate(QQuickTransition *transition)
 QQuickTransition *QQuickBasePositioner::move() const
 {
     Q_D(const QQuickBasePositioner);
-    return d->transitioner ? d->transitioner->displacedTransition : 0;
+    return d->transitioner ? d->transitioner->displacedTransition : nullptr;
 }
 
 void QQuickBasePositioner::setMove(QQuickTransition *mt)
@@ -238,7 +238,7 @@ void QQuickBasePositioner::setMove(QQuickTransition *mt)
 QQuickTransition *QQuickBasePositioner::add() const
 {
     Q_D(const QQuickBasePositioner);
-    return d->transitioner ? d->transitioner->addTransition : 0;
+    return d->transitioner ? d->transitioner->addTransition : nullptr;
 }
 
 void QQuickBasePositioner::setAdd(QQuickTransition *add)
@@ -460,15 +460,15 @@ void QQuickBasePositioner::updateAttachedProperties(QQuickPositionerAttached *sp
     // be changed to run only when there are attached properties present. This
     // could be a flag in the positioner that is set by the attached property
     // constructor.
-    QQuickPositionerAttached *prevLastProperty = 0;
-    QQuickPositionerAttached *lastProperty = 0;
+    QQuickPositionerAttached *prevLastProperty = nullptr;
+    QQuickPositionerAttached *lastProperty = nullptr;
 
     for (int ii = 0; ii < positionedItems.count(); ++ii) {
         const PositionedItem &child = positionedItems.at(ii);
         if (!child.item)
             continue;
 
-        QQuickPositionerAttached *property = 0;
+        QQuickPositionerAttached *property = nullptr;
 
         if (specificProperty) {
             if (specificPropertyOwner == child.item) {
@@ -503,7 +503,7 @@ void QQuickBasePositioner::updateAttachedProperties(QQuickPositionerAttached *sp
         if (!child.item)
             continue;
 
-        QQuickPositionerAttached *property = 0;
+        QQuickPositionerAttached *property = nullptr;
 
         if (specificProperty) {
             if (specificPropertyOwner == child.item) {
@@ -705,7 +705,7 @@ void QQuickBasePositionerPrivate::setBottomPadding(qreal value, bool reset)
     \instantiates QQuickPositionerAttached
     \inqmlmodule QtQuick
     \ingroup qtquick-positioners
-    \brief Provides attached properties that contain details on where an item exists in a positioner
+    \brief Provides attached properties that contain details on where an item exists in a positioner.
 
     An object of type Positioner is attached to the top-level child item within a
     Column, Row, Flow or Grid. It provides properties that allow a child item to determine
@@ -789,7 +789,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-positioners
-    \brief Positions its children in a column
+    \brief Positions its children in a column.
 
     Column is a type that positions its child items along a single column.
     It can be used as a convenient way to vertically position a series of items without
@@ -900,11 +900,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     cases, these lists will be empty.  See the \l ViewTransition documentation for more details
     and examples on using these transitions.
 
-    \note In \l {Qt Quick 1}, this transition was applied to all items that were part of the
-    positioner at the time of its creation. From \l {Qt Quick}{Qt Quick 2} onwards, positioners apply the
-    \l populate transition to these items instead.
-
-    \sa add, ViewTransition, {Qt Quick Examples - Positioners}
+    \sa add, populate, ViewTransition, {Qt Quick Examples - Positioners}
 */
 /*!
   \qmlproperty real QtQuick::Column::spacing
@@ -993,7 +989,7 @@ void QQuickColumn::reportConflictingAnchors()
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-positioners
-    \brief Positions its children in a row
+    \brief Positions its children in a row.
 
     Row is a type that positions its child items along a single row.
     It can be used as a convenient way to horizontally position a series of items without
@@ -1089,11 +1085,7 @@ void QQuickColumn::reportConflictingAnchors()
     cases, these lists will be empty.  See the \l ViewTransition documentation for more details
     and examples on using these transitions.
 
-    \note In \l {Qt Quick 1}, this transition was applied to all items that were part of the
-    positioner at the time of its creation. From \l {Qt Quick}{QtQuick 2} onwards, positioners apply the
-    \l populate transition to these items instead.
-
-    \sa add, ViewTransition, {Qt Quick Examples - Positioners}
+    \sa add, populate, ViewTransition, {Qt Quick Examples - Positioners}
 */
 /*!
   \qmlproperty real QtQuick::Row::spacing
@@ -1281,7 +1273,7 @@ void QQuickRow::reportConflictingAnchors()
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-positioners
-    \brief Positions its children in grid formation
+    \brief Positions its children in grid formation.
 
     Grid is a type that positions its child items in grid formation.
 
@@ -1378,11 +1370,7 @@ void QQuickRow::reportConflictingAnchors()
     cases, these lists will be empty.  See the \l ViewTransition documentation for more details
     and examples on using these transitions.
 
-    \note In \l {Qt Quick 1}, this transition was applied to all items that were part of the
-    positioner at the time of its creation. From \l {Qt Quick}{QtQuick 2} onwards, positioners apply the
-    \l populate transition to these items instead.
-
-    \sa add, ViewTransition, {Qt Quick Examples - Positioners}
+    \sa add, populate, ViewTransition, {Qt Quick Examples - Positioners}
 */
 /*!
   \qmlproperty qreal QtQuick::Grid::spacing
@@ -1885,7 +1873,7 @@ void QQuickGrid::reportConflictingAnchors()
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-positioners
-    \brief Positions its children side by side, wrapping as necessary
+    \brief Positions its children side by side, wrapping as necessary.
 
     The Flow item positions its child items like words on a page, wrapping them
     to create rows or columns of items.
@@ -1974,11 +1962,7 @@ void QQuickGrid::reportConflictingAnchors()
     cases, these lists will be empty.  See the \l ViewTransition documentation for more details
     and examples on using these transitions.
 
-    \note In \l {Qt Quick 1}, this transition was applied to all items that were part of the
-    positioner at the time of its creation. From \l {Qt Quick}{QtQuick 2} onwards, positioners apply the
-    \l populate transition to these items instead.
-
-    \sa add, ViewTransition, {Qt Quick Examples - Positioners}
+    \sa add, populate, ViewTransition, {Qt Quick Examples - Positioners}
 */
 /*!
   \qmlproperty real QtQuick::Flow::spacing

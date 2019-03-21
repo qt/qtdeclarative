@@ -62,13 +62,13 @@
 
 QT_BEGIN_NAMESPACE
 
-class QJSValuePrivate
+class Q_AUTOTEST_EXPORT QJSValuePrivate
 {
 public:
     static inline QV4::Value *getValue(const QJSValue *jsval)
     {
         if (jsval->d & 3)
-            return 0;
+            return nullptr;
         return reinterpret_cast<QV4::Value *>(jsval->d);
     }
 
@@ -76,7 +76,7 @@ public:
     {
         if (jsval->d & 1)
             return reinterpret_cast<QVariant *>(jsval->d & ~3);
-        return 0;
+        return nullptr;
     }
 
     static inline void setVariant(QJSValue *jsval, const QVariant &v) {
@@ -153,14 +153,14 @@ public:
             *v = QV4::Encode(variant->toUInt());
             break;
         default:
-            return 0;
+            return nullptr;
         }
         return v;
     }
 
     static QV4::ExecutionEngine *engine(const QJSValue *jsval) {
         QV4::Value *v = getValue(jsval);
-        return v ? QV4::PersistentValueStorage::getEngine(v) : 0;
+        return v ? QV4::PersistentValueStorage::getEngine(v) : nullptr;
     }
 
     static inline bool checkEngine(QV4::ExecutionEngine *e, const QJSValue &jsval) {

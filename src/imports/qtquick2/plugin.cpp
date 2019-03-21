@@ -41,13 +41,6 @@
 
 #include <private/qtquick2_p.h>
 
-static void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_2);
-#endif
-}
-
 QT_BEGIN_NAMESPACE
 
 //![class decl]
@@ -56,8 +49,8 @@ class QtQuick2Plugin : public QQmlExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    QtQuick2Plugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
-    void registerTypes(const char *uri) Q_DECL_OVERRIDE
+    QtQuick2Plugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
+    void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick"));
         Q_UNUSED(uri);
@@ -65,7 +58,7 @@ public:
         QQmlQtQuick2Module::defineModule();
     }
 
-    ~QtQuick2Plugin()
+    ~QtQuick2Plugin() override
     {
         if (moduleDefined)
             QQmlQtQuick2Module::undefineModule();

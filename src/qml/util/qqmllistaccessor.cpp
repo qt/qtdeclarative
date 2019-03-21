@@ -72,7 +72,7 @@ void QQmlListAccessor::setList(const QVariant &v, QQmlEngine *engine)
     if (d.userType() == qMetaTypeId<QJSValue>())
         d = d.value<QJSValue>().toVariant();
 
-    QQmlEnginePrivate *enginePrivate = engine?QQmlEnginePrivate::get(engine):0;
+    QQmlEnginePrivate *enginePrivate = engine?QQmlEnginePrivate::get(engine):nullptr;
 
     if (!d.isValid()) {
         m_type = Invalid;
@@ -81,7 +81,26 @@ void QQmlListAccessor::setList(const QVariant &v, QQmlEngine *engine)
     } else if (d.userType() == QMetaType::QVariantList) {
         m_type = VariantList;
     } else if (d.canConvert(QVariant::Int)) {
-        m_type = Integer;
+        // Here we have to check for an upper limit, because down the line code might (well, will)
+        // allocate memory depending on the number of elements. The upper limit cannot be INT_MAX:
+        //      QVector<QPointer<QQuickItem>> something;
+        //      something.resize(count());
+        // (See e.g. QQuickRepeater::regenerate())
+        // This will allocate data along the lines of:
+        //      sizeof(QPointer<QQuickItem>) * count() + QVector::headerSize
+        // So, doing an approximate round-down-to-nice-number, we get:
+        const int upperLimit = 100 * 1000 * 1000;
+
+        int i = v.toInt();
+        if (i < 0) {
+            qWarning("Model size of %d is less than 0", i);
+            m_type = Invalid;
+        } else if (i > upperLimit) {
+            qWarning("Model size of %d is bigger than the upper limit %d", i, upperLimit);
+            m_type = Invalid;
+        } else {
+            m_type = Integer;
+        }
     } else if ((!enginePrivate && QQmlMetaType::isQObject(d.userType())) ||
                (enginePrivate && enginePrivate->isQObject(d.userType()))) {
         QObject *data = enginePrivate?enginePrivate->toQObject(d):QQmlMetaType::toQObject(d);

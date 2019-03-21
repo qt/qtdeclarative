@@ -54,6 +54,7 @@
 #include <private/qtqmlglobal_p.h>
 #include <private/qqmllistcompositor_p.h>
 #include <private/qqmlobjectmodel_p.h>
+#include <private/qqmlincubator_p.h>
 
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qstringlist.h>
@@ -61,10 +62,11 @@
 #include <private/qv8engine_p.h>
 #include <private/qqmlglobal_p.h>
 
+QT_REQUIRE_CONFIG(qml_delegate_model);
+
 QT_BEGIN_NAMESPACE
 
 class QQmlChangeSet;
-class QQmlComponent;
 class QQuickPackage;
 class QQmlV4Function;
 class QQmlDelegateModelGroup;
@@ -89,7 +91,7 @@ class Q_QML_PRIVATE_EXPORT QQmlDelegateModel : public QQmlInstanceModel, public 
     Q_INTERFACES(QQmlParserStatus)
 public:
     QQmlDelegateModel();
-    QQmlDelegateModel(QQmlContext *, QObject *parent=0);
+    QQmlDelegateModel(QQmlContext *, QObject *parent=nullptr);
     ~QQmlDelegateModel();
 
     void classBegin() override;
@@ -108,12 +110,13 @@ public:
     Q_INVOKABLE QVariant parentModelIndex() const;
 
     int count() const override;
-    bool isValid() const override { return delegate() != 0; }
-    QObject *object(int index, bool asynchronous = false) override;
+    bool isValid() const override { return delegate() != nullptr; }
+    QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
     ReleaseFlags release(QObject *object) override;
     void cancel(int index) override;
     QString stringValue(int index, const QString &role) override;
     void setWatchedRoles(const QList<QByteArray> &roles) override;
+    QQmlIncubator::Status incubationStatus(int index) override;
 
     int indexOf(QObject *object, QObject *objectContext) const override;
 
@@ -125,6 +128,8 @@ public:
     QQmlDelegateModelGroup *persistedItems();
     QQmlListProperty<QQmlDelegateModelGroup> groups();
     QObject *parts();
+
+    const QAbstractItemModel *abstractItemModel() const override;
 
     bool event(QEvent *) override;
 
@@ -162,8 +167,8 @@ class Q_QML_PRIVATE_EXPORT QQmlDelegateModelGroup : public QObject
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(bool includeByDefault READ defaultInclude WRITE setDefaultInclude NOTIFY defaultIncludeChanged)
 public:
-    QQmlDelegateModelGroup(QObject *parent = 0);
-    QQmlDelegateModelGroup(const QString &name, QQmlDelegateModel *model, int compositorType, QObject *parent = 0);
+    QQmlDelegateModelGroup(QObject *parent = nullptr);
+    QQmlDelegateModelGroup(const QString &name, QQmlDelegateModel *model, int compositorType, QObject *parent = nullptr);
     ~QQmlDelegateModelGroup();
 
     QString name() const;
@@ -208,6 +213,7 @@ public:
     QQmlDelegateModelAttached(QQmlDelegateModelItem *cacheItem, QObject *parent);
     ~QQmlDelegateModelAttached() {}
 
+    void resetCurrentIndex();
     void setCacheItem(QQmlDelegateModelItem *item);
 
     QQmlDelegateModel *model() const;

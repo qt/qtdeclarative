@@ -7,7 +7,6 @@ HEADERS += ../shared/qqmldebugtestservice.h
 SOURCES += tst_qqmldebuglocal.cpp \
            ../shared/qqmldebugtestservice.cpp
 
-INCLUDEPATH += ../shared
 include(../shared/debugutil.pri)
 
 QT += qml-private testlib gui-private core-private

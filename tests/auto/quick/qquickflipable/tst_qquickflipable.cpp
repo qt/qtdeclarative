@@ -61,7 +61,7 @@ void tst_qquickflipable::create()
     QQmlComponent c(&engine, testFileUrl("test-flipable.qml"));
     QQuickFlipable *obj = qobject_cast<QQuickFlipable*>(c.create());
 
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     delete obj;
 }
 
@@ -71,9 +71,9 @@ void tst_qquickflipable::checkFrontAndBack()
     QQmlComponent c(&engine, testFileUrl("test-flipable.qml"));
     QQuickFlipable *obj = qobject_cast<QQuickFlipable*>(c.create());
 
-    QVERIFY(obj != 0);
-    QVERIFY(obj->front() != 0);
-    QVERIFY(obj->back() != 0);
+    QVERIFY(obj != nullptr);
+    QVERIFY(obj->front() != nullptr);
+    QVERIFY(obj->back() != nullptr);
     delete obj;
 }
 
@@ -83,9 +83,9 @@ void tst_qquickflipable::setFrontAndBack()
     QQmlComponent c(&engine, testFileUrl("test-flipable.qml"));
     QQuickFlipable *obj = qobject_cast<QQuickFlipable*>(c.create());
 
-    QVERIFY(obj != 0);
-    QVERIFY(obj->front() != 0);
-    QVERIFY(obj->back() != 0);
+    QVERIFY(obj != nullptr);
+    QVERIFY(obj->front() != nullptr);
+    QVERIFY(obj->back() != nullptr);
 
     QString message = c.url().toString() + ":3:1: QML Flipable: front is a write-once property";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(message));
@@ -102,7 +102,7 @@ void tst_qquickflipable::flipFlipable()
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("flip-flipable.qml"));
     QQuickFlipable *obj = qobject_cast<QQuickFlipable*>(c.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->side(), QQuickFlipable::Front);
     obj->setProperty("flipped", QVariant(true));
     QTRY_COMPARE(obj->side(), QQuickFlipable::Back);
@@ -116,7 +116,7 @@ void tst_qquickflipable::QTBUG_9161_crash()
     QQuickView *window = new QQuickView;
     window->setSource(testFileUrl("crash.qml"));
     QQuickItem *root = window->rootObject();
-    QVERIFY(root != 0);
+    QVERIFY(root != nullptr);
     window->show();
     delete window;
 }
@@ -126,7 +126,7 @@ void tst_qquickflipable::QTBUG_8474_qgv_abort()
     QQuickView *window = new QQuickView;
     window->setSource(testFileUrl("flipable-abort.qml"));
     QQuickItem *root = window->rootObject();
-    QVERIFY(root != 0);
+    QVERIFY(root != nullptr);
     window->show();
     delete window;
 }

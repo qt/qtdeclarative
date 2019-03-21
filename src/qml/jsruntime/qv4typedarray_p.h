@@ -60,14 +60,50 @@ namespace QV4 {
 
 struct ArrayBuffer;
 
-typedef ReturnedValue (*TypedArrayRead)(const char *data, int index);
-typedef void (*TypedArrayWrite)(ExecutionEngine *engine, char *data, int index, const Value &value);
+enum TypedArrayType {
+    Int8Array,
+    UInt8Array,
+    Int16Array,
+    UInt16Array,
+    Int32Array,
+    UInt32Array,
+    UInt8ClampedArray,
+    Float32Array,
+    Float64Array,
+    NTypedArrayTypes
+};
+
+enum AtomicModifyOps {
+    AtomicAdd,
+    AtomicAnd,
+    AtomicExchange,
+    AtomicOr,
+    AtomicSub,
+    AtomicXor,
+    NAtomicModifyOps
+};
 
 struct TypedArrayOperations {
+    typedef ReturnedValue (*Read)(const char *data);
+    typedef void (*Write)(char *data, Value value);
+    typedef ReturnedValue (*AtomicModify)(char *data, Value value);
+    typedef ReturnedValue (*AtomicCompareExchange)(char *data, Value expected, Value v);
+    typedef ReturnedValue (*AtomicLoad)(char *data);
+    typedef ReturnedValue (*AtomicStore)(char *data, Value value);
+
+    template<typename T>
+    static constexpr TypedArrayOperations create(const char *name);
+    template<typename T>
+    static constexpr TypedArrayOperations createWithAtomics(const char *name);
+
     int bytesPerElement;
     const char *name;
-    TypedArrayRead read;
-    TypedArrayWrite write;
+    Read read;
+    Write write;
+    AtomicModify atomicModifyOps[AtomicModifyOps::NAtomicModifyOps];
+    AtomicCompareExchange atomicCompareExchange;
+    AtomicLoad atomicLoad;
+    AtomicStore atomicStore;
 };
 
 namespace Heap {
@@ -80,27 +116,22 @@ namespace Heap {
     Member(class, NoMark, uint, arrayType)
 
 DECLARE_HEAP_OBJECT(TypedArray, Object) {
-    DECLARE_MARK_TABLE(TypedArray);
-    enum Type {
-        Int8Array,
-        UInt8Array,
-        UInt8ClampedArray,
-        Int16Array,
-        UInt16Array,
-        Int32Array,
-        UInt32Array,
-        Float32Array,
-        Float64Array,
-        NTypes
-    };
+    DECLARE_MARKOBJECTS(TypedArray);
+    using Type = TypedArrayType;
 
     void init(Type t);
+};
+
+struct IntrinsicTypedArrayCtor : FunctionObject {
 };
 
 struct TypedArrayCtor : FunctionObject {
     void init(QV4::ExecutionContext *scope, TypedArray::Type t);
 
     TypedArray::Type type;
+};
+
+struct IntrinsicTypedArrayPrototype : Object {
 };
 
 struct TypedArrayPrototype : Object {
@@ -132,19 +163,73 @@ struct Q_QML_PRIVATE_EXPORT TypedArray : Object
     Heap::TypedArray::Type arrayType() const {
         return static_cast<Heap::TypedArray::Type>(d()->arrayType);
     }
+    using Object::get;
 
-    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
-    static bool putIndexed(Managed *m, uint index, const Value &value);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static bool virtualHasProperty(const Managed *m, PropertyKey id);
+    static PropertyAttributes virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p);
+    static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static bool virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
+
+};
+
+struct IntrinsicTypedArrayCtor: FunctionObject
+{
+    V4_OBJECT2(IntrinsicTypedArrayCtor, FunctionObject)
+
+    static constexpr VTable::Call virtualCall = nullptr;
+
+    static ReturnedValue method_of(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct TypedArrayCtor: FunctionObject
 {
     V4_OBJECT2(TypedArrayCtor, FunctionObject)
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
+struct IntrinsicTypedArrayPrototype : Object
+{
+    V4_OBJECT2(IntrinsicTypedArrayPrototype, Object)
+    V4_PROTOTYPE(objectPrototype)
+
+    void init(ExecutionEngine *engine, IntrinsicTypedArrayCtor *ctor);
+
+    static ReturnedValue method_get_buffer(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_byteLength(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_byteOffset(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_length(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+
+    static ReturnedValue method_copyWithin(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_entries(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_every(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_fill(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_filter(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_find(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_findIndex(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_forEach(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_includes(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_indexOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_join(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_keys(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_lastIndexOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_map(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_reduce(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_reduceRight(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_reverse(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_some(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_values(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_set(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_slice(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_subarray(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toLocaleString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+
+    static ReturnedValue method_get_toStringTag(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+
+};
 
 struct TypedArrayPrototype : Object
 {
@@ -152,14 +237,6 @@ struct TypedArrayPrototype : Object
     V4_PROTOTYPE(objectPrototype)
 
     void init(ExecutionEngine *engine, TypedArrayCtor *ctor);
-
-    static void method_get_buffer(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_byteLength(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_byteOffset(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_length(const BuiltinFunction *, Scope &scope, CallData *callData);
-
-    static void method_set(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_subarray(const BuiltinFunction *, Scope &scope, CallData *callData);
 };
 
 inline void

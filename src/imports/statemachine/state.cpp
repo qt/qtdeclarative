@@ -50,7 +50,7 @@ State::State(QState *parent)
 
 void State::componentComplete()
 {
-    if (this->machine() == NULL) {
+    if (this->machine() == nullptr) {
         static bool once = false;
         if (!once) {
             once = true;

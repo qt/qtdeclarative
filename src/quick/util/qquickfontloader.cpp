@@ -77,8 +77,8 @@ Q_SIGNALS:
     void fontDownloaded(const QString&, QQuickFontLoader::Status);
 
 private:
-    int redirectCount;
-    QNetworkReply *reply;
+    int redirectCount = 0;
+    QNetworkReply *reply = nullptr;
 
 private Q_SLOTS:
     void replyFinished();
@@ -91,13 +91,8 @@ public:
 };
 
 QQuickFontObject::QQuickFontObject(int _id)
-    : QObject(0)
-#if QT_CONFIG(qml_network)
-    ,redirectCount(0), reply(0)
-#endif
-    ,id(_id)
+    : QObject(nullptr), id(_id)
 {
-
 }
 
 #if QT_CONFIG(qml_network)
@@ -119,7 +114,7 @@ void QQuickFontObject::replyFinished()
                 QUrl url = reply->url().resolved(redirect.toUrl());
                 QNetworkAccessManager *manager = reply->manager();
                 reply->deleteLater();
-                reply = 0;
+                reply = nullptr;
                 download(url, manager);
                 return;
             }
@@ -138,7 +133,7 @@ void QQuickFontObject::replyFinished()
             emit fontDownloaded(QString(), QQuickFontLoader::Error);
         }
         reply->deleteLater();
-        reply = 0;
+        reply = nullptr;
     }
 }
 #endif // qml_network
@@ -148,11 +143,11 @@ class QQuickFontLoaderPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickFontLoader)
 
 public:
-    QQuickFontLoaderPrivate() : status(QQuickFontLoader::Null) {}
+    QQuickFontLoaderPrivate() {}
 
     QUrl url;
     QString name;
-    QQuickFontLoader::Status status;
+    QQuickFontLoader::Status status = QQuickFontLoader::Null;
 };
 
 static void q_QFontLoaderFontsStaticReset();
@@ -203,7 +198,7 @@ static void q_QFontLoaderFontsStaticReset()
     \instantiates QQuickFontLoader
     \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
-    \brief Allows fonts to be loaded by name or URL
+    \brief Allows fonts to be loaded by name or URL.
 
     The FontLoader type is used to load fonts by name or URL.
 

@@ -73,10 +73,8 @@ public:
                               const QString &parameterString = QString());
 
     QQmlBoundSignalExpression(QObject *target, int index,
-                              QQmlContextData *ctxt, QObject *scopeObject, QV4::Function *function, QV4::ExecutionContext *scope);
-
-    QQmlBoundSignalExpression(QObject *target, int index,
-                              QQmlContextData *ctxt, QObject *scope, QV4::Function *runtimeFunction);
+                              QQmlContextData *ctxt, QObject *scopeObject, QV4::Function *function,
+                              QV4::ExecutionContext *scope = nullptr);
 
     // inherited from QQmlJavaScriptExpression.
     QString expressionIdentifier() const override;
@@ -89,14 +87,14 @@ public:
     QString expression() const;
     QObject *target() const { return m_target; }
 
-    QQmlEngine *engine() const { return context() ? context()->engine : 0; }
+    QQmlEngine *engine() const { return context() ? context()->engine : nullptr; }
 
 private:
-    ~QQmlBoundSignalExpression();
+    ~QQmlBoundSignalExpression() override;
 
     void init(QQmlContextData *ctxt, QObject *scope);
 
-    bool expressionFunctionValid() const { return function() != 0; }
+    bool expressionFunctionValid() const { return function() != nullptr; }
 
     int m_index;
     QObject *m_target;

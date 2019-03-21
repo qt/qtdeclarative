@@ -47,7 +47,7 @@ FileInfoThread::FileInfoThread(QObject *parent)
     : QThread(parent),
       abort(false),
 #if QT_CONFIG(filesystemwatcher)
-      watcher(0),
+      watcher(nullptr),
 #endif
       sortFlags(QDir::Name),
       needUpdate(true),
@@ -135,6 +135,7 @@ void FileInfoThread::setSortFlags(QDir::SortFlags flags)
     QMutexLocker locker(&mutex);
     sortFlags = flags;
     sortUpdate = true;
+    needUpdate = true;
     condition.wakeAll();
 }
 
@@ -222,8 +223,10 @@ void FileInfoThread::run()
         if (abort) {
             return;
         }
-        if (currentPath.isEmpty() || !needUpdate)
+        if (currentPath.isEmpty() || !needUpdate) {
+            emit statusChanged(currentPath.isEmpty() ? QQuickFolderListModel::Null : QQuickFolderListModel::Ready);
             condition.wait(&mutex);
+        }
 
         if (abort) {
             return;
@@ -231,6 +234,7 @@ void FileInfoThread::run()
 
         if (!currentPath.isEmpty()) {
             updateFiles = true;
+            emit statusChanged(QQuickFolderListModel::Loading);
         }
         if (updateFiles)
             getFileInfos(currentPath);

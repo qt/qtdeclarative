@@ -36,29 +36,7 @@
 #include <QtCore/QDebug>
 #include <QtQml/qqmlengine.h>
 
-class SizeChangesListener : public QObject, public QVector<QSize>
-{
-    Q_OBJECT
-public:
-    explicit SizeChangesListener(QQuickItem *item);
-private slots:
-    void onSizeChanged();
-private:
-    QQuickItem *item;
-
-};
-
-SizeChangesListener::SizeChangesListener(QQuickItem *item) :
-    item(item)
-{
-    connect(item, &QQuickItem::widthChanged, this, &SizeChangesListener::onSizeChanged);
-    connect(item, &QQuickItem::heightChanged, this, &SizeChangesListener::onSizeChanged);
-}
-
-void SizeChangesListener::onSizeChanged()
-{
-    append(QSize(item->width(), item->height()));
-}
+#include "../shared/geometrytestutil.h"
 
 class tst_QQuickView : public QQmlDataTest
 {
@@ -164,7 +142,7 @@ void tst_QQuickView::resizemodeitem()
 
     // size update from view
     QCoreApplication::processEvents(); // make sure the last resize events are gone
-    SizeChangesListener sizeListener(item);
+    QSizeChangeListener sizeListener(item);
     view->resize(QSize(200,300));
     QTRY_COMPARE(item->width(), 200.0);
 
@@ -234,11 +212,11 @@ void tst_QQuickView::engine()
     QQmlEngine *engine = new QQmlEngine;
     QVERIFY(!engine->incubationController());
 
-    QQuickView *view = new QQuickView(engine, 0);
+    QQuickView *view = new QQuickView(engine, nullptr);
     QVERIFY(view);
     QCOMPARE(engine->incubationController(), view->incubationController());
 
-    QQuickView *view2 = new QQuickView(engine, 0);
+    QQuickView *view2 = new QQuickView(engine, nullptr);
     QVERIFY(view);
     QCOMPARE(engine->incubationController(), view->incubationController());
     delete view;
@@ -250,7 +228,7 @@ void tst_QQuickView::engine()
     QVERIFY(!engine->incubationController());
 
     QQuickView *view3 = new QQuickView;
-    QQuickView *view4 = new QQuickView(view3->engine(), 0);
+    QQuickView *view4 = new QQuickView(view3->engine(), nullptr);
 
     QVERIFY(view3->engine());
     QVERIFY(view4->engine());

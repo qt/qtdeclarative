@@ -65,7 +65,7 @@ class QQuickParentAnimationPrivate : public QQuickAnimationGroupPrivate
     Q_DECLARE_PUBLIC(QQuickParentAnimation)
 public:
  QQuickParentAnimationPrivate()
-    : QQuickAnimationGroupPrivate(), target(0), newParent(0), via(0) {}
+    : QQuickAnimationGroupPrivate(), target(nullptr), newParent(nullptr), via(nullptr) {}
 
     QQuickItem *target;
     QQuickItem *newParent;
@@ -91,7 +91,7 @@ public:
 class QQuickPathAnimationUpdater : public QQuickBulkValueUpdater
 {
 public:
-    QQuickPathAnimationUpdater() : path(0), pathLength(0), target(0), reverse(false),
+    QQuickPathAnimationUpdater() : path(nullptr), pathLength(0), target(nullptr), reverse(false),
         fromSourced(false), fromDefined(false), toDefined(false),
         toX(0), toY(0), currentV(0), orientation(QQuickPathAnimation::Fixed),
         entryInterval(0), exitInterval(0) {}
@@ -128,10 +128,10 @@ class QQuickPathAnimationPrivate;
 class QQuickPathAnimationAnimator : public QQuickBulkValueAnimator
 {
 public:
-    QQuickPathAnimationAnimator(QQuickPathAnimationPrivate * = 0);
+    QQuickPathAnimationAnimator(QQuickPathAnimationPrivate * = nullptr);
     ~QQuickPathAnimationAnimator();
 
-    void clearTemplate() { animationTemplate = 0; }
+    void clearTemplate() { animationTemplate = nullptr; }
 
     QQuickPathAnimationUpdater *pathUpdater() const { return static_cast<QQuickPathAnimationUpdater*>(getAnimValue()); }
 private:
@@ -142,7 +142,7 @@ class QQuickPathAnimationPrivate : public QQuickAbstractAnimationPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPathAnimation)
 public:
-    QQuickPathAnimationPrivate() : path(0), target(0),
+    QQuickPathAnimationPrivate() : path(nullptr), target(nullptr),
         orientation(QQuickPathAnimation::Fixed), entryDuration(0), exitDuration(0), duration(250) {}
 
     QQuickPath *path;

@@ -31,12 +31,81 @@
 #include <cstdlib>
 
 #include "PageAllocation.h"
+#include <dlfcn.h>
 #include <errno.h>
 #include <sys/mman.h>
 #include <wtf/Assertions.h>
 #include <wtf/UnusedParam.h>
 
+#if OS(LINUX)
+#include <sys/syscall.h>
+#ifndef MFD_CLOEXEC
+#define MFD_CLOEXEC         0x0001U
+#endif
+#endif
+
+#if defined(__ANDROID__) && defined(SYS_memfd_create)
+   // On Android it's been observed that permissions of memory mappings
+   // backed by a memfd could not be changed via mprotect for no obvious
+   // reason.
+#  undef SYS_memfd_create
+#endif
+
 namespace WTF {
+
+#ifdef SYS_memfd_create
+static int memfdForUsage(size_t bytes, OSAllocator::Usage usage)
+{
+    const char *type = "unknown-usage:";
+    switch (usage) {
+    case OSAllocator::UnknownUsage:
+        break;
+    case OSAllocator::FastMallocPages:
+        type = "fastmalloc:";
+        break;
+    case OSAllocator::JSGCHeapPages:
+        type = "JSGCHeap:";
+        break;
+    case OSAllocator::JSVMStackPages:
+        type = "JSVMStack:";
+        break;
+    case OSAllocator::JSJITCodePages:
+        type = "JITCode:";
+        break;
+    }
+
+    // try to get our own library name by giving dladdr a pointer pointing to
+    // something we know to be in it (using a pointer to string data)
+    static const char *libname = [=]() {
+        Dl_info info;
+        if (dladdr(type, &info) == 0)
+            info.dli_fname = nullptr;
+        return info.dli_fname;
+    }();
+
+    char buf[PATH_MAX];
+    strcpy(buf, type);
+    if (libname)
+        strcat(buf, libname);
+    else
+        strcat(buf, "QtQml");
+
+    int fd = syscall(SYS_memfd_create, buf, MFD_CLOEXEC);
+    if (fd != -1) {
+        if (ftruncate(fd, bytes) == 0)
+            return fd;
+    }
+    close(fd);
+    return -1;
+}
+#elif OS(LINUX)
+static int memfdForUsage(size_t bytes, OSAllocator::Usage usage)
+{
+    UNUSED_PARAM(bytes);
+    UNUSED_PARAM(usage);
+    return -1;
+}
+#endif
 
 void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, bool executable)
 {
@@ -46,14 +115,18 @@ void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, 
     if (result == MAP_FAILED)
         CRASH();
 #elif OS(LINUX)
-    UNUSED_PARAM(usage);
     UNUSED_PARAM(writable);
     UNUSED_PARAM(executable);
+    int fd = memfdForUsage(bytes, usage);
 
-    void* result = mmap(0, bytes, PROT_NONE, MAP_NORESERVE | MAP_PRIVATE | MAP_ANON, -1, 0);
+    void* result = mmap(0, bytes, PROT_NONE, MAP_NORESERVE | MAP_PRIVATE |
+                        (fd == -1 ? MAP_ANON : 0), fd, 0);
     if (result == MAP_FAILED)
         CRASH();
     madvise(result, bytes, MADV_DONTNEED);
+
+    if (fd != -1)
+        close(fd);
 #else
     void* result = reserveAndCommit(bytes, usage, writable, executable);
 #if HAVE(MADV_FREE_REUSE)
@@ -83,6 +156,10 @@ void* OSAllocator::reserveAndCommit(size_t bytes, Usage usage, bool writable, bo
 
 #if OS(DARWIN)
     int fd = usage;
+#elif OS(LINUX)
+    int fd = memfdForUsage(bytes, usage);
+    if (fd != -1)
+        flags &= ~MAP_ANON;
 #else
     UNUSED_PARAM(usage);
     int fd = -1;
@@ -126,6 +203,12 @@ void* OSAllocator::reserveAndCommit(size_t bytes, Usage usage, bool writable, bo
         mmap(result, pageSize(), PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON, fd, 0);
         mmap(static_cast<char*>(result) + bytes - pageSize(), pageSize(), PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON, fd, 0);
     }
+
+#if OS(LINUX)
+    if (fd != -1)
+        close(fd);
+#endif
+
     return result;
 }
 

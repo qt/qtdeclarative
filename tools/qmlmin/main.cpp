@@ -57,15 +57,48 @@ class QmlminLexer: protected Lexer, public Directives
     QString _fileName;
     QString _directives;
 
+protected:
+    QVector<int> _stateStack;
+    QList<int> _tokens;
+    QList<QString> _tokenStrings;
+    int yytoken = -1;
+    QString yytokentext;
+
+    void lex() {
+        if (_tokens.isEmpty()) {
+            _tokens.append(Lexer::lex());
+            _tokenStrings.append(tokenText());
+        }
+
+        yytoken = _tokens.takeFirst();
+        yytokentext = _tokenStrings.takeFirst();
+    }
+
+    int lookaheadToken()
+    {
+        if (yytoken < 0)
+            lex();
+        return yytoken;
+    }
+
+    void pushToken(int token)
+    {
+        _tokens.prepend(yytoken);
+        _tokenStrings.prepend(yytokentext);
+        yytoken = token;
+        yytokentext = QString();
+    }
+
 public:
-    QmlminLexer(): Lexer(&_engine) {}
+    QmlminLexer()
+        : Lexer(&_engine), _stateStack(128) {}
     virtual ~QmlminLexer() {}
 
     QString fileName() const { return _fileName; }
 
     bool operator()(const QString &fileName, const QString &code)
     {
-        int startToken = T_FEED_JS_PROGRAM;
+        int startToken = T_FEED_JS_SCRIPT;
         const QFileInfo fileInfo(fileName);
         if (fileInfo.suffix().toLower() == QLatin1String("qml"))
             startToken = T_FEED_UI_PROGRAM;
@@ -154,6 +187,24 @@ protected:
                 ruleno == J_SCRIPT_REGEXPLITERAL_RULE2;
     }
 
+    void handleLookaheads(int ruleno) {
+        if (ruleno == J_SCRIPT_EXPRESSIONSTATEMENTLOOKAHEAD_RULE) {
+            int token = lookaheadToken();
+            if (token == T_LBRACE)
+                pushToken(T_FORCE_BLOCK);
+            else if (token == T_FUNCTION || token == T_CLASS || token == T_LET || token == T_CONST)
+                pushToken(T_FORCE_DECLARATION);
+        } else if (ruleno == J_SCRIPT_CONCISEBODYLOOKAHEAD_RULE) {
+            int token = lookaheadToken();
+            if (token == T_LBRACE)
+                pushToken(T_FORCE_BLOCK);
+        } else if (ruleno == J_SCRIPT_EXPORTDECLARATIONLOOKAHEAD_RULE) {
+            int token = lookaheadToken();
+            if (token == T_FUNCTION || token == T_CLASS)
+                pushToken(T_FORCE_DECLARATION);
+        }
+    }
+
     bool scanRestOfRegExp(int ruleno, QString *restOfRegExp)
     {
         if (! scanRegExp(ruleno == J_SCRIPT_REGEXPLITERAL_RULE1 ? Lexer::NoPrefix : Lexer::EqualPrefix))
@@ -187,9 +238,6 @@ protected:
 
 class Minify: public QmlminLexer
 {
-    QVector<int> _stateStack;
-    QList<int> _tokens;
-    QList<QString> _tokenStrings;
     QString _minifiedCode;
     int _maxWidth;
     int _width;
@@ -206,7 +254,7 @@ protected:
 };
 
 Minify::Minify(int maxWidth)
-    : _stateStack(128), _maxWidth(maxWidth), _width(0)
+    : _maxWidth(maxWidth), _width(0)
 {
 }
 
@@ -250,16 +298,14 @@ void Minify::escape(const QChar &ch, QString *out)
 bool Minify::parse(int startToken)
 {
     int yyaction = 0;
-    int yytoken = -1;
     int yytos = -1;
-    QString yytokentext;
     QString assembled;
 
     _minifiedCode.clear();
     _tokens.append(startToken);
     _tokenStrings.append(QString());
 
-    if (startToken == T_FEED_JS_PROGRAM) {
+    if (startToken == T_FEED_JS_SCRIPT) {
         // parse optional pragma directive
         DiagnosticMessage error;
         if (scanDirectives(this, &error)) {
@@ -282,15 +328,8 @@ bool Minify::parse(int startToken)
         _stateStack[yytos] = yyaction;
 
     again:
-        if (yytoken == -1 && action_index[yyaction] != -TERMINAL_COUNT) {
-            if (_tokens.isEmpty()) {
-                _tokens.append(lex());
-                _tokenStrings.append(tokenText());
-            }
-
-            yytoken = _tokens.takeFirst();
-            yytokentext = _tokenStrings.takeFirst();
-        }
+        if (yytoken == -1 && action_index[yyaction] != -TERMINAL_COUNT)
+            lex();
 
         yyaction = t_action(yyaction, yytoken);
         if (yyaction > 0) {
@@ -366,6 +405,8 @@ bool Minify::parse(int startToken)
             const int ruleno = -yyaction - 1;
             yytos -= rhs[ruleno];
 
+            handleLookaheads(ruleno);
+
             if (isRegExpRule(ruleno)) {
                 QString restOfRegExp;
 
@@ -398,24 +439,16 @@ bool Minify::parse(int startToken)
 
 class Tokenize: public QmlminLexer
 {
-    QVector<int> _stateStack;
-    QList<int> _tokens;
-    QList<QString> _tokenStrings;
     QStringList _minifiedCode;
 
 public:
-    Tokenize();
+    Tokenize() {}
 
     QStringList tokenStream() const;
 
 protected:
     bool parse(int startToken) override;
 };
-
-Tokenize::Tokenize()
-    : _stateStack(128)
-{
-}
 
 QStringList Tokenize::tokenStream() const
 {
@@ -425,15 +458,13 @@ QStringList Tokenize::tokenStream() const
 bool Tokenize::parse(int startToken)
 {
     int yyaction = 0;
-    int yytoken = -1;
     int yytos = -1;
-    QString yytokentext;
 
     _minifiedCode.clear();
     _tokens.append(startToken);
     _tokenStrings.append(QString());
 
-    if (startToken == T_FEED_JS_PROGRAM) {
+    if (startToken == T_FEED_JS_SCRIPT) {
         // parse optional pragma directive
         DiagnosticMessage error;
         if (scanDirectives(this, &error)) {
@@ -457,15 +488,8 @@ bool Tokenize::parse(int startToken)
         _stateStack[yytos] = yyaction;
 
     again:
-        if (yytoken == -1 && action_index[yyaction] != -TERMINAL_COUNT) {
-            if (_tokens.isEmpty()) {
-                _tokens.append(lex());
-                _tokenStrings.append(tokenText());
-            }
-
-            yytoken = _tokens.takeFirst();
-            yytokentext = _tokenStrings.takeFirst();
-        }
+        if (yytoken == -1 && action_index[yyaction] != -TERMINAL_COUNT)
+            lex();
 
         yyaction = t_action(yyaction, yytoken);
         if (yyaction > 0) {
@@ -483,6 +507,8 @@ bool Tokenize::parse(int startToken)
         } else if (yyaction < 0) {
             const int ruleno = -yyaction - 1;
             yytos -= rhs[ruleno];
+
+            handleLookaheads(ruleno);
 
             if (isRegExpRule(ruleno)) {
                 QString restOfRegExp;

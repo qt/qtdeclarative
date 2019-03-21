@@ -66,6 +66,7 @@ void QQuickScaleGrid::setLeft(int pos)
 {
     if (_left != pos) {
         _left = pos;
+        emit leftBorderChanged();
         emit borderChanged();
     }
 }
@@ -74,6 +75,7 @@ void QQuickScaleGrid::setTop(int pos)
 {
     if (_top != pos) {
         _top = pos;
+        emit topBorderChanged();
         emit borderChanged();
     }
 }
@@ -82,6 +84,7 @@ void QQuickScaleGrid::setRight(int pos)
 {
     if (_right != pos) {
         _right = pos;
+        emit rightBorderChanged();
         emit borderChanged();
     }
 }
@@ -90,6 +93,7 @@ void QQuickScaleGrid::setBottom(int pos)
 {
     if (_bottom != pos) {
         _bottom = pos;
+        emit bottomBorderChanged();
         emit borderChanged();
     }
 }

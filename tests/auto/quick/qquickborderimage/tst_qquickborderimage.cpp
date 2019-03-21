@@ -101,7 +101,7 @@ void tst_qquickborderimage::noSource()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->source(), QUrl());
     QCOMPARE(obj->width(), 0.);
     QCOMPARE(obj->height(), 0.);
@@ -153,7 +153,7 @@ void tst_qquickborderimage::imageSource()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     if (remote)
         QTRY_COMPARE(obj->status(), QQuickBorderImage::Loading);
@@ -183,7 +183,7 @@ void tst_qquickborderimage::clearSource()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->status(), QQuickBorderImage::Ready);
     QCOMPARE(obj->width(), 120.);
     QCOMPARE(obj->height(), 120.);
@@ -203,7 +203,7 @@ void tst_qquickborderimage::resized()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->width(), 300.);
     QCOMPARE(obj->height(), 300.);
     QCOMPARE(obj->sourceSize().width(), 120);
@@ -220,7 +220,7 @@ void tst_qquickborderimage::smooth()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->width(), 300.);
     QCOMPARE(obj->height(), 300.);
     QCOMPARE(obj->smooth(), true);
@@ -235,7 +235,7 @@ void tst_qquickborderimage::mirror()
     QQuickView *window = new QQuickView;
     window->setSource(testFileUrl("mirror.qml"));
     QQuickBorderImage *image = qobject_cast<QQuickBorderImage*>(window->rootObject());
-    QVERIFY(image != 0);
+    QVERIFY(image != nullptr);
 
     QImage screenshot = window->grabWindow();
 
@@ -248,7 +248,7 @@ void tst_qquickborderimage::mirror()
     screenshot = window->grabWindow();
 
     window->show();
-    QTest::qWaitForWindowExposed(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     if (window->rendererInterface()->graphicsApi() == QSGRendererInterface::Software)
         QSKIP("QTBUG-53823");
     QCOMPARE(screenshot, srcPixmap);
@@ -263,7 +263,7 @@ void tst_qquickborderimage::tileModes()
         QQmlComponent component(&engine);
         component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
-        QVERIFY(obj != 0);
+        QVERIFY(obj != nullptr);
         QCOMPARE(obj->width(), 100.);
         QCOMPARE(obj->height(), 300.);
         QCOMPARE(obj->horizontalTileMode(), QQuickBorderImage::Repeat);
@@ -276,7 +276,7 @@ void tst_qquickborderimage::tileModes()
         QQmlComponent component(&engine);
         component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
-        QVERIFY(obj != 0);
+        QVERIFY(obj != nullptr);
         QCOMPARE(obj->width(), 300.);
         QCOMPARE(obj->height(), 150.);
         QCOMPARE(obj->horizontalTileMode(), QQuickBorderImage::Round);
@@ -304,7 +304,7 @@ void tst_qquickborderimage::sciSource()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     if (remote)
         QTRY_COMPARE(obj->status(), QQuickBorderImage::Loading);
@@ -352,7 +352,7 @@ void tst_qquickborderimage::invalidSciFile()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->width(), 300.);
     QCOMPARE(obj->height(), 300.);
     QCOMPARE(obj->status(), QQuickImageBase::Error);
@@ -380,7 +380,7 @@ void tst_qquickborderimage::validSciFiles()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->width(), 300.);
     QCOMPARE(obj->height(), 300.);
     QCOMPARE(obj->horizontalTileMode(), QQuickBorderImage::Round);
@@ -397,7 +397,7 @@ void tst_qquickborderimage::pendingRemoteRequest()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->status(), QQuickBorderImage::Loading);
 
     // verify no crash
@@ -450,7 +450,7 @@ void tst_qquickborderimage::statusChanges()
     QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
     qRegisterMetaType<QQuickImageBase::Status>();
     QSignalSpy spy(obj, SIGNAL(statusChanged(QQuickImageBase::Status)));
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     obj->setSource(source);
     if (remote)
         server.sendDelayedItem();
@@ -473,7 +473,7 @@ void tst_qquickborderimage::sourceSizeChanges()
     QQmlContext *ctxt = engine.rootContext();
     ctxt->setContextProperty("srcImage", "");
     QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QSignalSpy sourceSizeSpy(obj, SIGNAL(sourceSizeChanged()));
 
@@ -539,7 +539,7 @@ void tst_qquickborderimage::progressAndStatusChanges()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->status(), QQuickBorderImage::Ready);
     QTRY_COMPARE(obj->progress(), 1.0);
 
@@ -590,13 +590,15 @@ void tst_qquickborderimage::borderImageMesh()
 
     window->setSource(testFileUrl("nonmesh.qml"));
     window->show();
-    QTest::qWaitForWindowExposed(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QImage nonmesh = window->grabWindow();
 
     window->setSource(testFileUrl("mesh.qml"));
     QImage mesh = window->grabWindow();
 
-    QVERIFY(QQuickVisualTestUtil::compareImages(mesh, nonmesh));
+    QString errorMessage;
+    QVERIFY2(QQuickVisualTestUtil::compareImages(mesh, nonmesh, &errorMessage),
+             qPrintable(errorMessage));
 }
 #endif
 QTEST_MAIN(tst_qquickborderimage)

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -11,8 +11,8 @@
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Free Documentation License Usage
 ** Alternatively, this file may be used under the terms of the GNU Free
@@ -20,7 +20,7 @@
 ** Foundation and appearing in the file included in the packaging of
 ** this file. Please review the following information to ensure
 ** the GNU Free Documentation License version 1.3 requirements
-** will be met: http://www.gnu.org/copyleft/fdl.html.
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -35,7 +35,7 @@ Originally Qt Quick always relied on OpenGL (OpenGL ES 2.0 or OpenGL 2.0) for pa
 the scene graph and rendering the results to a render target. From Qt 5.8 onwards
 Qt Quick also supports rendering in software and with Direct3D 12.
 
-\section1 Switching between the adaptation used by the application
+\section1 Switching Between the Adaptation Used by the Application
 
 The default rendering backend is still OpenGL, or - in Qt builds with disabled OpenGL support -
 the software renderer. This can be overridden either by using an environment variable
@@ -137,6 +137,13 @@ The text rendering with the Software adaptation is based on software
 rasterization and does not respond as well to transformations such as scaling
 as when using OpenGL. The quality is similar to choosing \l [QML] {Text::renderType}
 {Text.NativeRendering} with \l [QML] {Text} items.
+
+\section2 Qt Multimedia VideoOutput
+The VideoOutput item of the Qt Multimedia module is not supported with the software
+adaptation.  This is because VideoOutput uses the QVideoRendererControl item which
+requires custom QSGGeometryNode behavior that is only present in the default OpenGL
+adaptation.
+
 
 */
 
@@ -261,7 +268,7 @@ offscreen render targets will be created with the specified sample count and a
 quality of the maximum supported quality level. The backend automatically
 performs resolving into the non-multisample swapchain buffers after each frame.
 
-\section2 Semi-transparent windows
+\section2 Semi-transparent Windows
 
 When the alpha channel is enabled either via
 QQuickWindow::setDefaultAlphaBuffer() or by setting alphaBufferSize to a
@@ -286,7 +293,7 @@ power-of-two images at the moment. Textures of other size will work too, but
 this involves a QImage-based scaling on the CPU first. Therefore avoid enabling
 mipmapping for NPOT images whenever possible.
 
-\section2 Image formats
+\section2 Image Formats
 
 When creating textures via the C++ scenegraph APIs like
 QQuickWindow::createTextureFromImage(), 32-bit formats will not involve any

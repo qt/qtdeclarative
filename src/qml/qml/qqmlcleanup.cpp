@@ -58,7 +58,7 @@ called by QQmlEngine just before it destroys the context.
 Create a QQmlCleanup that is not associated with any engine.
 */
 QQmlCleanup::QQmlCleanup()
-: prev(0), next(0), engine(0)
+: prev(nullptr), next(nullptr), engine(nullptr)
 {
 }
 
@@ -66,7 +66,7 @@ QQmlCleanup::QQmlCleanup()
 Create a QQmlCleanup for \a engine
 */
 QQmlCleanup::QQmlCleanup(QQmlEngine *engine)
-: prev(0), next(0), engine(0)
+: prev(nullptr), next(nullptr), engine(nullptr)
 {
     if (!engine)
         return;
@@ -109,8 +109,8 @@ QQmlCleanup::~QQmlCleanup()
 
     if (prev) *prev = next;
     if (next) next->prev = prev;
-    prev = 0;
-    next = 0;
+    prev = nullptr;
+    next = nullptr;
 }
 
 QT_END_NAMESPACE

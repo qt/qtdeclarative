@@ -55,7 +55,7 @@ QQmlListReference QQmlListReferencePrivate::init(const QQmlListProperty<QObject>
 
     if (!prop.object) return rv;
 
-    QQmlEnginePrivate *p = engine?QQmlEnginePrivate::get(engine):0;
+    QQmlEnginePrivate *p = engine?QQmlEnginePrivate::get(engine):nullptr;
 
     int listType = p?p->listType(propType):QQmlMetaType::listType(propType);
     if (listType == -1) return rv;
@@ -109,15 +109,13 @@ Attempting to add objects of the incorrect type to a list property will fail.
 
 Like with normal lists, when accessing a list element by index, it is the callers responsibility to ensure
 that it does not request an out of range element using the count() method before calling at().
-
-The \l {Qt Quick 1} version of this class is named QDeclarativeListReference.
 */
 
 /*!
 Constructs an invalid instance.
 */
 QQmlListReference::QQmlListReference()
-: d(0)
+: d(nullptr)
 {
 }
 
@@ -131,27 +129,27 @@ Passing \a engine is required to access some QML created list properties.  If in
 is available, pass it.
 */
 QQmlListReference::QQmlListReference(QObject *object, const char *property, QQmlEngine *engine)
-: d(0)
+: d(nullptr)
 {
     if (!object || !property) return;
 
     QQmlPropertyData local;
     QQmlPropertyData *data =
-        QQmlPropertyCache::property(engine, object, QLatin1String(property), 0, local);
+        QQmlPropertyCache::property(engine, object, QLatin1String(property), nullptr, local);
 
     if (!data || !data->isQList()) return;
 
-    QQmlEnginePrivate *p = engine?QQmlEnginePrivate::get(engine):0;
+    QQmlEnginePrivate *p = engine?QQmlEnginePrivate::get(engine):nullptr;
 
     int listType = p?p->listType(data->propType()):QQmlMetaType::listType(data->propType());
     if (listType == -1) return;
 
     d = new QQmlListReferencePrivate;
     d->object = object;
-    d->elementType = p?p->rawMetaObjectForType(listType):QQmlMetaType::qmlType(listType)->baseMetaObject();
+    d->elementType = p ? p->rawMetaObjectForType(listType) : QQmlMetaType::qmlType(listType).baseMetaObject();
     d->propertyType = data->propType();
 
-    void *args[] = { &d->property, 0 };
+    void *args[] = { &d->property, nullptr };
     QMetaObject::metacall(object, QMetaObject::ReadProperty, data->coreIndex(), args);
 }
 
@@ -186,17 +184,17 @@ bool QQmlListReference::isValid() const
 }
 
 /*!
-Returns the list property's object.  Returns 0 if the reference is invalid.
+Returns the list property's object. Returns \nullptr if the reference is invalid.
 */
 QObject *QQmlListReference::object() const
 {
     if (isValid()) return d->object;
-    else return 0;
+    else return nullptr;
 }
 
 /*!
-Returns the QMetaObject for the elements stored in the list property.  Returns 0 if the reference
-is invalid.
+Returns the QMetaObject for the elements stored in the list property,
+or \nullptr if the reference is invalid.
 
 The QMetaObject can be used ahead of time to determine whether a given instance can be added
 to a list.
@@ -204,7 +202,7 @@ to a list.
 const QMetaObject *QQmlListReference::listElementType() const
 {
     if (isValid()) return d->elementType.metaObject();
-    else return 0;
+    else return nullptr;
 }
 
 /*!
@@ -301,7 +299,7 @@ Returns the list element at \a index, or 0 if the operation failed.
 */
 QObject *QQmlListReference::at(int index) const
 {
-    if (!canAt()) return 0;
+    if (!canAt()) return nullptr;
 
     return d->property.at(&d->property, index);
 }
@@ -361,25 +359,22 @@ List properties should have no setter.  In the example above, the Q_PROPERTY()
 declarative will look like this:
 
 \code
-Q_PROPERTY(QQmlListProperty<Fruit> fruit READ fruit);
+Q_PROPERTY(QQmlListProperty<Fruit> fruit READ fruit)
 \endcode
 
 QML list properties are type-safe - in this case \c {Fruit} is a QObject type that
 \c {Apple}, \c {Orange} and \c {Banana} all derive from.
 
-The \l {Qt Quick 1} version of this class is named QDeclarativeListProperty.
-
 \sa {Extending QML - Object and List Property Types Example}
-
 */
 
 /*!
-\fn QQmlListProperty::QQmlListProperty()
+\fn template<typename T> QQmlListProperty<T>::QQmlListProperty()
 \internal
 */
 
 /*!
-\fn QQmlListProperty::QQmlListProperty(QObject *object, QList<T *> &list)
+\fn template<typename T> QQmlListProperty<T>::QQmlListProperty(QObject *object, QList<T *> &list)
 
 Convenience constructor for making a QQmlListProperty value from an existing
 QList \a list.  The \a list reference must remain valid for as long as \a object
@@ -391,7 +386,7 @@ can be very useful while prototyping.
 */
 
 /*!
-\fn QQmlListProperty::QQmlListProperty(QObject *object, void *data,
+\fn template<typename T> QQmlListProperty<T>::QQmlListProperty(QObject *object, void *data,
                                     CountFunction count, AtFunction at)
 
 Construct a readonly QQmlListProperty from a set of operation functions
@@ -401,7 +396,7 @@ remains valid while \a object exists.
 */
 
 /*!
-\fn QQmlListProperty::QQmlListProperty(QObject *object, void *data, AppendFunction append,
+\fn template<typename T> QQmlListProperty<T>::QQmlListProperty(QObject *object, void *data, AppendFunction append,
                                      CountFunction count, AtFunction at,
                                      ClearFunction clear)
 
@@ -432,7 +427,7 @@ Return the number of elements in the list \a property.
 */
 
 /*!
-\fn bool QQmlListProperty::operator==(const QQmlListProperty &other) const
+\fn template<typename T> bool QQmlListProperty<T>::operator==(const QQmlListProperty &other) const
 
 Returns true if this QQmlListProperty is equal to \a other, otherwise false.
 */

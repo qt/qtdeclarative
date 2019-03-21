@@ -40,7 +40,7 @@
 #ifndef QTCPSERVERCONNECTIONFACTORY_H
 #define QTCPSERVERCONNECTIONFACTORY_H
 
-#include "qqmldebugserverconnection.h"
+#include <private/qqmldebugserverconnection_p.h>
 
 QT_BEGIN_NAMESPACE
 

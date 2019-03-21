@@ -67,6 +67,10 @@ QtObject {
         console.log(1, "pong!", new Object);
         console.log(1, ["ping","pong"], new Object, 2);
 
+        console.log(contextStringListProperty);
+        console.log(customObject);
+        console.log([[1,2,3,[2,2,2,2],4],[5,6,7,8]]);
+
         try {
             console.log(exception);
         } catch (e) {

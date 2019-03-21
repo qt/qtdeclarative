@@ -45,6 +45,10 @@
 
 #include <private/qv4executableallocator_p.h>
 
+#if OS(INTEGRITY)
+#include "OSAllocator.h"
+#endif
+
 #if OS(WINDOWS)
 #include <windows.h>
 #else
@@ -78,7 +82,8 @@ struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
 
     inline bool isManaged() const { return true; }
 
-    void* start() { return m_allocation->start(); }
+    void *exceptionHandler() { return m_allocation->exceptionHandler(); }
+    void *start() { return m_allocation->start(); }
     size_t sizeInBytes() { return m_size; }
 
     QV4::ExecutableAllocator::ChunkOfPages *chunk() const
@@ -94,7 +99,7 @@ struct ExecutableAllocator {
         : realAllocator(alloc)
     {}
 
-    PassRefPtr<ExecutableMemoryHandle> allocate(JSGlobalData&, size_t size, void*, int)
+    Ref<ExecutableMemoryHandle> allocate(JSGlobalData&, size_t size, void*, int)
     {
         return adoptRef(new ExecutableMemoryHandle(realAllocator, size));
     }
@@ -118,6 +123,8 @@ struct ExecutableAllocator {
             Q_UNREACHABLE();
         }
 #    endif
+#  elif OS(INTEGRITY)
+         OSAllocator::setMemoryAttributes(addr, size, /*writable*/ true, /*executable*/ false);
 #  else
         int mode = PROT_READ | PROT_WRITE;
         if (mprotect(addr, size, mode) != 0) {
@@ -152,6 +159,8 @@ struct ExecutableAllocator {
             Q_UNREACHABLE();
         }
 #    endif
+#  elif OS(INTEGRITY)
+        OSAllocator::setMemoryAttributes(addr, size, /*writable*/ false, /*executable*/ true);
 #  else
         int mode = PROT_READ | PROT_EXEC;
         if (mprotect(addr, size, mode) != 0) {

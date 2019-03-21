@@ -33,26 +33,6 @@
         <file>listview/content/pics/vegetable-soup.jpg</file>
         <file>package/Delegate.qml</file>
         <file>package/view.qml</file>
-        <file>parallax/parallax.qml</file>
-        <file>parallax/content/Smiley.qml</file>
-        <file>parallax/content/background.png</file>
-        <file>parallax/content/center.png</file>
-        <file>parallax/content/clock-night.png</file>
-        <file>parallax/content/clock.png</file>
-        <file>parallax/content/Clock.qml</file>
-        <file>parallax/content/hour.png</file>
-        <file>parallax/content/minute.png</file>
-        <file>parallax/content/ParallaxView.qml</file>
-        <file>parallax/content/quit.png</file>
-        <file>parallax/content/QuitButton.qml</file>
-        <file>parallax/content/second.png</file>
-        <file>parallax/content/pics/background.jpg</file>
-        <file>parallax/content/pics/face-smile.png</file>
-        <file>parallax/content/pics/home-page.png</file>
-        <file>parallax/content/pics/home-page.svg</file>
-        <file>parallax/content/pics/shadow.png</file>
-        <file>parallax/content/pics/yast-joystick.png</file>
-        <file>parallax/content/pics/yast-wol.png</file>
         <file>pathview/pathview-example.qml</file>
         <file>pathview/pics/AddressBook_48.png</file>
         <file>pathview/pics/AudioPlayer_48.png</file>
@@ -61,8 +41,8 @@
         <file>pathview/pics/EMail_48.png</file>
         <file>pathview/pics/TodoList_48.png</file>
         <file>pathview/pics/VideoPlayer_48.png</file>
-        <file>visualdatamodel/slideshow.qml</file>
-        <file>visualdatamodel/dragselection.qml</file>
+        <file>delegatemodel/slideshow.qml</file>
+        <file>delegatemodel/dragselection.qml</file>
         <file>objectmodel/objectmodel.qml</file>
         <file>views.qml</file>
         <file>listview/displaymargin.qml</file>

@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -38,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.1
+import QtQuick 2.12
 import QtQuick.Window 2.1
 
 Item {
@@ -47,8 +57,8 @@ Item {
     property alias text: buttonLabel.text
     property alias label: buttonLabel
     signal clicked
-    property alias containsMouse: mouseArea.containsMouse
-    property alias pressed: mouseArea.pressed
+    property alias containsMouse: hoverHandler.hovered
+    property alias pressed: tapHandler.pressed
     implicitHeight: Math.max(Screen.pixelDensity * 7, buttonLabel.implicitHeight * 1.2)
     implicitWidth: Math.max(Screen.pixelDensity * 11, buttonLabel.implicitWidth * 1.3)
     height: implicitHeight
@@ -61,7 +71,7 @@ Item {
         anchors.fill: parent
         color: palette.button
         gradient: Gradient {
-            GradientStop { position: 0.0; color: mouseArea.pressed ? Qt.darker(palette.button, 1.3) : palette.button }
+            GradientStop { position: 0.0; color: tapHandler.pressed ? Qt.darker(palette.button, 1.3) : palette.button }
             GradientStop { position: 1.0; color: Qt.darker(palette.button, 1.3) }
         }
         antialiasing: true
@@ -70,11 +80,12 @@ Item {
         border.width: 1
     }
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        onClicked: container.clicked()
-        hoverEnabled: true
+    TapHandler {
+        id: tapHandler
+        onTapped: container.clicked();
+    }
+    HoverHandler {
+        id: hoverHandler
     }
 
     Text {

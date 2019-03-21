@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick
     \ingroup qtquick-effects
     \since 5.4
-    \brief Provides information about the used OpenGL version
+    \brief Provides information about the used OpenGL version.
 
     The OpenGLInfo attached type provides information about the OpenGL
     version being used to render the surface of the attachee item.
@@ -69,7 +69,7 @@ QT_BEGIN_NAMESPACE
  */
 QQuickOpenGLInfo::QQuickOpenGLInfo(QQuickItem *item)
     : QObject(item)
-    , m_window(0)
+    , m_window(nullptr)
     , m_majorVersion(2)
     , m_minorVersion(0)
     , m_profile(NoProfile)
@@ -150,12 +150,12 @@ QQuickOpenGLInfo *QQuickOpenGLInfo::qmlAttachedProperties(QObject *object)
 {
     if (QQuickItem *item = qobject_cast<QQuickItem *>(object))
         return new QQuickOpenGLInfo(item);
-    return 0;
+    return nullptr;
 }
 
 void QQuickOpenGLInfo::updateFormat()
 {
-    QOpenGLContext *context = 0;
+    QOpenGLContext *context = nullptr;
     if (m_window)
         context = m_window->openglContext();
     QSurfaceFormat format = context ? context->format() : QSurfaceFormat::defaultFormat();

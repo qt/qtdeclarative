@@ -1,4 +1,4 @@
-QT = qml-private network core qmldebug-private
+QT = network core qmldebug-private
 CONFIG += no_import_scan
 
 SOURCES += main.cpp \
@@ -14,13 +14,6 @@ HEADERS += \
     qmlprofilerdata.h \
     qmlprofilerclient.h
 
-QMAKE_TARGET_PRODUCT = qmlprofiler
-QMAKE_TARGET_DESCRIPTION = QML profiler
-
-win32 {
-   VERSION = $${QT_VERSION}.0
-} else {
-   VERSION = $${QT_VERSION}
-}
+QMAKE_TARGET_DESCRIPTION = QML Profiler
 
 load(qt_tool)

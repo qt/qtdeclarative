@@ -1,6 +1,7 @@
 import QtQuick 2.0
+import QtQml.Models 2.12
 
-VisualDataModel {
+DelegateModel {
     id: vm
 
     property var inserted
@@ -42,7 +43,7 @@ VisualDataModel {
     }
 
     groups: [
-        VisualDataGroup {
+        DelegateModelGroup {
             id: vi;
 
             property var inserted
@@ -56,7 +57,7 @@ VisualDataModel {
                 vi.removed = removed
             }
         },
-        VisualDataGroup {
+        DelegateModelGroup {
             id: si;
 
             property var inserted

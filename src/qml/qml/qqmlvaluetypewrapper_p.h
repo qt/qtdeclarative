@@ -56,6 +56,7 @@
 
 #include <private/qv4value_p.h>
 #include <private/qv4object_p.h>
+#include <private/qqmlpropertycache_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -105,13 +106,12 @@ public:
     int typeId() const;
     bool write(QObject *target, int propertyIndex) const;
 
-    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
-    static bool put(Managed *m, String *name, const Value &value);
-    static bool isEqualTo(Managed *m, Managed *other);
-    static PropertyAttributes query(const Managed *, String *name);
-    static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
-
-    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static bool virtualIsEqualTo(Managed *m, Managed *other);
+    static PropertyAttributes virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
+    static ReturnedValue method_toString(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 
     static void initProto(ExecutionEngine *v4);
 };

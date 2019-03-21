@@ -327,7 +327,13 @@ public:
         template<class TemplateAssemblerType>
         friend class AbstractMacroAssembler;
         friend struct DFG::OSRExit;
+
+#if CPU(ARM_THUMB2) || CPU(ARM64) || defined(V4_BOOTSTRAP)
+        using Jump = typename AssemblerType::template Jump<Label>;
+        friend Jump;
+#else
         friend class Jump;
+#endif
         friend class JumpReplacementWatchpoint;
         friend class MacroAssemblerCodeRef;
         template <typename, template <typename> class> friend class LinkBufferBase;
@@ -557,12 +563,6 @@ public:
         {
             ASSERT((type == ARM64Assembler::JumpTestBit) || (type == ARM64Assembler::JumpTestBitFixedSize));
         }
-#elif CPU(SH4)
-        Jump(AssemblerLabel jmp, SH4Assembler::JumpType type = SH4Assembler::JumpFar)
-            : m_label(jmp)
-            , m_type(type)
-        {
-        }
 #else
         Jump(AssemblerLabel jmp)    
             : m_label(jmp)
@@ -592,8 +592,6 @@ public:
                 masm->m_assembler.linkJump(m_label, masm->m_assembler.label(), m_type, m_condition, m_bitNumber, m_compareRegister);
             else
                 masm->m_assembler.linkJump(m_label, masm->m_assembler.label(), m_type, m_condition);
-#elif CPU(SH4)
-            masm->m_assembler.linkJump(m_label, masm->m_assembler.label(), m_type);
 #else
             masm->m_assembler.linkJump(m_label, masm->m_assembler.label());
 #endif
@@ -633,9 +631,6 @@ public:
         bool m_is64Bit;
         unsigned m_bitNumber;
         ARM64Assembler::RegisterID m_compareRegister;
-#endif
-#if CPU(SH4)
-        SH4Assembler::JumpType m_type;
 #endif
     };
 #endif

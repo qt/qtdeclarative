@@ -67,7 +67,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPen : public QObject
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY penChanged)
     Q_PROPERTY(bool pixelAligned READ pixelAligned WRITE setPixelAligned NOTIFY penChanged)
 public:
-    QQuickPen(QObject *parent=0);
+    QQuickPen(QObject *parent=nullptr);
 
     qreal width() const;
     void setWidth(qreal w);
@@ -98,7 +98,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickGradientStop : public QObject
     Q_PROPERTY(QColor color READ color WRITE setColor)
 
 public:
-    QQuickGradientStop(QObject *parent=0);
+    QQuickGradientStop(QObject *parent=nullptr);
 
     qreal position() const;
     void setPosition(qreal position);
@@ -119,24 +119,35 @@ class Q_QUICK_PRIVATE_EXPORT QQuickGradient : public QObject
     Q_OBJECT
 
     Q_PROPERTY(QQmlListProperty<QQuickGradientStop> stops READ stops)
+    Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged REVISION 12)
     Q_CLASSINFO("DefaultProperty", "stops")
 
+    Q_ENUMS(QGradient::Preset)
 public:
-    QQuickGradient(QObject *parent=0);
-    ~QQuickGradient();
+    QQuickGradient(QObject *parent=nullptr);
+    ~QQuickGradient() override;
+
+    enum Orientation { Vertical = Qt::Vertical,
+                       Horizontal = Qt::Horizontal };
+    Q_ENUM(Orientation)
 
     QQmlListProperty<QQuickGradientStop> stops();
+
+    Orientation orientation() const { return m_orientation; }
+    void setOrientation(Orientation orientation);
 
     QGradientStops gradientStops() const;
 
 Q_SIGNALS:
     void updated();
+    void orientationChanged();
 
 private:
     void doUpdate();
 
 private:
     QList<QQuickGradientStop *> m_stops;
+    Orientation m_orientation = Vertical;
     friend class QQuickRectangle;
     friend class QQuickGradientStop;
 };
@@ -147,19 +158,19 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRectangle : public QQuickItem
     Q_OBJECT
 
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
-    Q_PROPERTY(QQuickGradient *gradient READ gradient WRITE setGradient RESET resetGradient)
+    Q_PROPERTY(QJSValue gradient READ gradient WRITE setGradient RESET resetGradient)
     Q_PROPERTY(QQuickPen * border READ border CONSTANT)
     Q_PROPERTY(qreal radius READ radius WRITE setRadius NOTIFY radiusChanged)
 public:
-    QQuickRectangle(QQuickItem *parent=0);
+    QQuickRectangle(QQuickItem *parent=nullptr);
 
     QColor color() const;
     void setColor(const QColor &);
 
     QQuickPen *border();
 
-    QQuickGradient *gradient() const;
-    void setGradient(QQuickGradient *gradient);
+    QJSValue gradient() const;
+    void setGradient(const QJSValue &gradient);
     void resetGradient();
 
     qreal radius() const;
@@ -170,7 +181,7 @@ Q_SIGNALS:
     void radiusChanged();
 
 protected:
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 
 private Q_SLOTS:
     void doUpdate();

@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the demonstration applications of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -46,7 +56,6 @@
 #include <QImage>
 #include <QPainter>
 
-//![0]
 class ColorImageProvider : public QQuickImageProvider
 {
 public:
@@ -55,7 +64,7 @@ public:
     {
     }
 
-    QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
+    QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize) override
     {
         int width = 100;
         int height = 50;
@@ -65,7 +74,6 @@ public:
         QPixmap pixmap(requestedSize.width() > 0 ? requestedSize.width() : width,
                        requestedSize.height() > 0 ? requestedSize.height() : height);
         pixmap.fill(QColor(id).rgba());
-//![0]
 
         // write the color name
         QPainter painter(&pixmap);
@@ -77,11 +85,9 @@ public:
             painter.scale(requestedSize.width() / width, requestedSize.height() / height);
         painter.drawText(QRectF(0, 0, width, height), Qt::AlignCenter, id);
 
-//![1]
         return pixmap;
     }
 };
-//![1]
 
 
 class ImageProviderExtensionPlugin : public QQmlExtensionPlugin
@@ -89,12 +95,12 @@ class ImageProviderExtensionPlugin : public QQmlExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    void registerTypes(const char *uri)
+    void registerTypes(const char *uri) override
     {
         Q_UNUSED(uri);
     }
 
-    void initializeEngine(QQmlEngine *engine, const char *uri)
+    void initializeEngine(QQmlEngine *engine, const char *uri) override
     {
         Q_UNUSED(uri);
         engine->addImageProvider("colors", new ColorImageProvider);

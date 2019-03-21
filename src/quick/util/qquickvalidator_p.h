@@ -62,7 +62,7 @@ class Q_AUTOTEST_EXPORT QQuickIntValidator : public QIntValidator
     Q_OBJECT
     Q_PROPERTY(QString locale READ localeName WRITE setLocaleName RESET resetLocaleName NOTIFY localeNameChanged)
 public:
-    QQuickIntValidator(QObject *parent = 0);
+    QQuickIntValidator(QObject *parent = nullptr);
 
     QString localeName() const;
     void setLocaleName(const QString &name);
@@ -77,7 +77,7 @@ class Q_AUTOTEST_EXPORT QQuickDoubleValidator : public QDoubleValidator
     Q_OBJECT
     Q_PROPERTY(QString locale READ localeName WRITE setLocaleName RESET resetLocaleName NOTIFY localeNameChanged)
 public:
-    QQuickDoubleValidator(QObject *parent = 0);
+    QQuickDoubleValidator(QObject *parent = nullptr);
 
     QString localeName() const;
     void setLocaleName(const QString &name);

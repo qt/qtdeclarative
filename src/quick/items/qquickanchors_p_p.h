@@ -60,15 +60,15 @@ QT_BEGIN_NAMESPACE
 class QQuickAnchorLine
 {
 public:
-    QQuickAnchorLine() : item(0), anchorLine(QQuickAnchors::InvalidAnchor) {}
+    QQuickAnchorLine() {}
     QQuickAnchorLine(QQuickItem *i, QQuickAnchors::Anchor l) : item(i), anchorLine(l) {}
     QQuickAnchorLine(QQuickItem *i, uint l)
         : item(i)
         , anchorLine(static_cast<QQuickAnchors::Anchor>(l))
     { Q_ASSERT(l < ((QQuickAnchors::BaselineAnchor << 1) - 1)); }
 
-    QQuickItem *item;
-    QQuickAnchors::Anchor anchorLine;
+    QQuickItem *item = nullptr;
+    QQuickAnchors::Anchor anchorLine = QQuickAnchors::InvalidAnchor;
 };
 
 inline bool operator==(const QQuickAnchorLine& a, const QQuickAnchorLine& b)
@@ -90,15 +90,15 @@ public:
         , hCenterOffset(0)
         , baselineOffset(0)
         , item(i)
-        , fill(Q_NULLPTR)
-        , centerIn(Q_NULLPTR)
-        , leftAnchorItem(Q_NULLPTR)
-        , rightAnchorItem(Q_NULLPTR)
-        , topAnchorItem(Q_NULLPTR)
-        , bottomAnchorItem(Q_NULLPTR)
-        , vCenterAnchorItem(Q_NULLPTR)
-        , hCenterAnchorItem(Q_NULLPTR)
-        , baselineAnchorItem(Q_NULLPTR)
+        , fill(nullptr)
+        , centerIn(nullptr)
+        , leftAnchorItem(nullptr)
+        , rightAnchorItem(nullptr)
+        , topAnchorItem(nullptr)
+        , bottomAnchorItem(nullptr)
+        , vCenterAnchorItem(nullptr)
+        , hCenterAnchorItem(nullptr)
+        , baselineAnchorItem(nullptr)
         , leftAnchorLine(QQuickAnchors::InvalidAnchor)
         , leftMarginExplicit(false)
         , rightAnchorLine(QQuickAnchors::InvalidAnchor)
@@ -141,8 +141,8 @@ public:
     void updateMe();
 
     // QQuickItemGeometryListener interface
-    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) Q_DECL_OVERRIDE;
-    QQuickAnchorsPrivate *anchorPrivate() Q_DECL_OVERRIDE { return this; }
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) override;
+    QQuickAnchorsPrivate *anchorPrivate() override { return this; }
 
     bool checkHValid() const;
     bool checkVValid() const;

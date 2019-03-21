@@ -45,8 +45,6 @@
 
 QT_BEGIN_NAMESPACE
 
-static const double Q_PI   = 3.14159265358979323846;   // pi
-
 //copied from Qt SVG (qsvghandler.cpp).
 Q_CORE_EXPORT double qstrtod(const char *s00, char const **se, bool *ok);
 // '0' is 0x30 and '9' is 0x39
@@ -128,7 +126,7 @@ static qreal toDouble(const QChar *&str)
             val = -val;
     } else {
         bool ok = false;
-        val = qstrtod(temp, 0, &ok);
+        val = qstrtod(temp, nullptr, &ok);
     }
     return val;
 
@@ -253,11 +251,11 @@ void QQuickSvgParser::pathArc(QPainterPath &path,
 
     th_arc = th1 - th0;
     if (th_arc < 0 && sweep_flag)
-        th_arc += 2 * Q_PI;
+        th_arc += 2 * M_PI;
     else if (th_arc > 0 && !sweep_flag)
-        th_arc -= 2 * Q_PI;
+        th_arc -= 2 * M_PI;
 
-    n_segs = qCeil(qAbs(th_arc / (Q_PI * 0.5 + 0.001)));
+    n_segs = qCeil(qAbs(th_arc / (M_PI * 0.5 + 0.001)));
 
     for (i = 0; i < n_segs; i++) {
         pathArcSegment(path, xc, yc,
@@ -282,11 +280,8 @@ bool QQuickSvgParser::parsePathDataFast(const QString &dataStr, QPainterPath &pa
             ++str;
         QChar pathElem = *str;
         ++str;
-        QChar endc = *end;
-        *const_cast<QChar *>(end) = 0; // parseNumbersArray requires 0-termination that QStringRef cannot guarantee
         QVarLengthArray<qreal, 8> arg;
         parseNumbersArray(str, arg);
-        *const_cast<QChar *>(end) = endc;
         if (pathElem == QLatin1Char('z') || pathElem == QLatin1Char('Z'))
             arg.append(0);//dummy
         const qreal *num = arg.constData();

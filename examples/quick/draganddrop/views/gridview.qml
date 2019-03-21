@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2018 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -38,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.12
 import QtQml.Models 2.1
 
 GridView {
@@ -82,26 +92,38 @@ GridView {
             ListElement { color: "teal" }
         }
 //! [1]
-        delegate: MouseArea {
+        delegate: DropArea {
             id: delegateRoot
 
-            property int visualIndex: DelegateModel.itemsIndex
-
             width: 80; height: 80
-            drag.target: icon
+
+            onEntered: visualModel.items.move(drag.source.visualIndex, icon.visualIndex)
+            property int visualIndex: DelegateModel.itemsIndex
+            Binding { target: icon; property: "visualIndex"; value: visualIndex }
 
             Rectangle {
                 id: icon
+                property int visualIndex: 0
                 width: 72; height: 72
                 anchors {
                     horizontalCenter: parent.horizontalCenter;
                     verticalCenter: parent.verticalCenter
                 }
-                color: model.color
                 radius: 3
+                color: model.color
 
-                Drag.active: delegateRoot.drag.active
-                Drag.source: delegateRoot
+                Text {
+                    anchors.centerIn: parent
+                    color: "white"
+                    text: parent.visualIndex
+                }
+
+                DragHandler {
+                    id: dragHandler
+                }
+
+                Drag.active: dragHandler.active
+                Drag.source: icon
                 Drag.hotSpot.x: 36
                 Drag.hotSpot.y: 36
 
@@ -114,18 +136,12 @@ GridView {
                         }
 
                         AnchorChanges {
-                            target: icon;
-                            anchors.horizontalCenter: undefined;
+                            target: icon
+                            anchors.horizontalCenter: undefined
                             anchors.verticalCenter: undefined
                         }
                     }
                 ]
-            }
-
-            DropArea {
-                anchors { fill: parent; margins: 15 }
-
-                onEntered: visualModel.items.move(drag.source.visualIndex, delegateRoot.visualIndex)
             }
         }
 //! [1]

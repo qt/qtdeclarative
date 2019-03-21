@@ -56,7 +56,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifdef QT_NO_QML_DEBUGGER
+#if !QT_CONFIG(qml_debug)
 
 #define QML_MEMORY_SCOPE_URL(url)
 #define QML_MEMORY_SCOPE_STRING(s)

@@ -85,18 +85,22 @@ public:
     void setMaxTextureCount(int max) { m_maxTextureCount = max; }
     int maxTextureCount() const { return m_maxTextureCount; }
 
+
 private:
+    bool loadPregeneratedCache(const QRawFont &font);
+    inline bool isCoreProfile() const { return m_coreProfile; }
+
     struct TextureInfo {
         GLuint texture;
         QSize size;
         QRect allocatedArea;
         QDistanceField image;
-        int padding;
+        int padding = -1;
 
-        TextureInfo(const QRect &preallocRect = QRect()) : texture(0), allocatedArea(preallocRect), padding(-1)
-        { }
+        TextureInfo(const QRect &preallocRect = QRect()) : texture(0), allocatedArea(preallocRect) { }
     };
 
+    void createTexture(TextureInfo * texInfo, int width, int height, const void *pixels);
     void createTexture(TextureInfo * texInfo, int width, int height);
     void resizeTexture(TextureInfo * texInfo, int width, int height);
 
@@ -134,6 +138,7 @@ private:
 
     mutable int m_maxTextureSize;
     int m_maxTextureCount;
+    bool m_coreProfile;
 
     QList<TextureInfo> m_textures;
     QHash<glyph_t, TextureInfo *> m_glyphsTexture;

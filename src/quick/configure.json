@@ -15,6 +15,7 @@
             "quick-flipable": "boolean",
             "quick-gridview": "boolean",
             "quick-listview": "boolean",
+            "quick-tableview": "boolean",
             "quick-path": "boolean",
             "quick-pathview": "boolean",
             "quick-positioners": "boolean",
@@ -45,7 +46,7 @@
             "label": "AnimatedImage item",
             "purpose": "Provides the AnimatedImage item.",
             "section": "Qt Quick",
-            "condition": "features.movie",
+            "condition": "module.gui && features.movie",
             "output": [
                 "privateFeature"
             ]
@@ -79,13 +80,14 @@
             "label": "GridView item",
             "purpose": "Provides the GridView item.",
             "section": "Qt Quick",
+            "condition": "features.qml-delegate-model",
             "output": [
                 "privateFeature"
             ]
         },
         "quick-itemview": {
             "label": "ItemView item",
-            "condition": "features.quick-gridview || features.quick-listview",
+            "condition": "features.quick-gridview || features.quick-listview || features.quick-tableview",
             "output": [
                 "privateFeature"
             ]
@@ -101,6 +103,15 @@
             "label": "ListView item",
             "purpose": "Provides the ListView item.",
             "section": "Qt Quick",
+            "condition": "features.qml-delegate-model",
+            "output": [
+                "privateFeature"
+            ]
+        },
+        "quick-tableview": {
+            "label": "TableView item",
+            "purpose": "Provides the TableView item.",
+            "section": "Qt Quick",
             "output": [
                 "privateFeature"
             ]
@@ -109,7 +120,7 @@
             "label": "Particle support",
             "purpose": "Provides a particle system.",
             "section": "Qt Quick",
-            "condition": "features.quick-shadereffect && features.quick-sprite && features.opengl",
+            "condition": "module.gui && features.quick-shadereffect && features.quick-sprite && features.opengl",
             "output": [
                 "privateFeature"
             ]
@@ -118,6 +129,7 @@
             "label": "Path support",
             "purpose": "Provides Path elements.",
             "section": "Qt Quick",
+            "condition": "features.quick-shadereffect",
             "output": [
                 "privateFeature"
             ]
@@ -126,7 +138,10 @@
             "label": "PathView item",
             "purpose": "Provides the PathView item.",
             "section": "Qt Quick",
-            "condition": "features.quick-path",
+            "condition": [
+                "features.qml-delegate-model",
+                "features.quick-path"
+            ],
             "output": [
                 "privateFeature"
             ]
@@ -135,6 +150,15 @@
             "label": "Positioner items",
             "purpose": "Provides Positioner items.",
             "section": "Qt Quick",
+            "output": [
+                "privateFeature"
+            ]
+        },
+        "quick-repeater": {
+            "label": "Repeater item",
+            "purpose": "Provides the Repeater item.",
+            "section": "Qt Quick",
+            "condition": "features.qml-delegate-model",
             "output": [
                 "privateFeature"
             ]
@@ -168,9 +192,11 @@
                 "quick-flipable",
                 "quick-gridview",
                 "quick-listview",
+                "quick-tableview",
                 "quick-path",
                 "quick-pathview",
                 "quick-positioners",
+                "quick-repeater",
                 "quick-shadereffect",
                 "quick-sprite"
             ]

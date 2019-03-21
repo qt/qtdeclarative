@@ -88,8 +88,8 @@ private:
     typedef QSet<ObjectItem> V4ObjectSet;
 public:
 
-    static void method_parse(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_stringify(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_parse(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_stringify(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     static ReturnedValue fromJsonValue(ExecutionEngine *engine, const QJsonValue &value);
     static ReturnedValue fromJsonObject(ExecutionEngine *engine, const QJsonObject &object);

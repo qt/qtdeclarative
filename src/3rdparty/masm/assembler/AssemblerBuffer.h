@@ -102,7 +102,7 @@ namespace JSC {
         void putIntegralUnchecked(IntegralType value)
         {
             ASSERT(isAvailable(sizeof(IntegralType)));
-            *reinterpret_cast_ptr<IntegralType*>(m_buffer + m_index) = value;
+            memcpy(m_buffer + m_index, &value, sizeof(IntegralType));
             m_index += sizeof(IntegralType);
         }
 

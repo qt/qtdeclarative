@@ -54,7 +54,7 @@ void tst_QQmlImport::cleanup()
 void tst_QQmlImport::testDesignerSupported()
 {
     QQuickView *window = new QQuickView();
-    window->engine()->addImportPath(QT_TESTCASE_BUILDDIR);
+    window->engine()->addImportPath(directory());
 
     window->setSource(testFileUrl("testfile_supported.qml"));
     QVERIFY(window->errors().isEmpty());
@@ -68,7 +68,7 @@ void tst_QQmlImport::testDesignerSupported()
     delete window;
     window = new QQuickView();
 
-    window->engine()->addImportPath(QT_TESTCASE_BUILDDIR);
+    window->engine()->addImportPath(directory());
     window->engine()->clearComponentCache();
 
     window->setSource(testFileUrl("testfile_supported.qml"));
@@ -91,7 +91,7 @@ void tst_QQmlImport::uiFormatLoading()
     int size = 0;
 
     QQmlApplicationEngine *test = new QQmlApplicationEngine(testFileUrl("TestForm.ui.qml"));
-    test->addImportPath(QT_TESTCASE_BUILDDIR);
+    test->addImportPath(directory());
     QCOMPARE(test->rootObjects().size(), ++size);
     QVERIFY(test->rootObjects()[size -1]);
     QVERIFY(test->rootObjects()[size -1]->property("success").toBool());

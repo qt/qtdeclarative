@@ -102,7 +102,7 @@ public:
     QActionAnimation();
 
     QActionAnimation(QAbstractAnimationAction *action);
-    ~QActionAnimation();
+    ~QActionAnimation() override;
 
     int duration() const override;
     void setAnimAction(QAbstractAnimationAction *action);
@@ -130,7 +130,7 @@ class Q_AUTOTEST_EXPORT QQuickBulkValueAnimator : public QAbstractAnimationJob
     Q_DISABLE_COPY(QQuickBulkValueAnimator)
 public:
     QQuickBulkValueAnimator();
-    ~QQuickBulkValueAnimator();
+    ~QQuickBulkValueAnimator() override;
 
     void setAnimValue(QQuickBulkValueUpdater *value);
     QQuickBulkValueUpdater *getAnimValue() const { return animValue; }
@@ -178,7 +178,7 @@ public:
     : running(false), paused(false), alwaysRunToEnd(false),
       /*connectedTimeLine(false), */componentComplete(true),
       avoidPropertyValueSourceStart(false), disableUserControl(false),
-      registered(false), loopCount(1), group(0), animationInstance(0) {}
+      registered(false), loopCount(1), group(nullptr), animationInstance(nullptr) {}
 
     bool running:1;
     bool paused:1;
@@ -199,7 +199,7 @@ public:
     QQuickAnimationGroup *group;
     QAbstractAnimationJob* animationInstance;
 
-    static QQmlProperty createProperty(QObject *obj, const QString &str, QObject *infoObj, QString *errorMessage = Q_NULLPTR);
+    static QQmlProperty createProperty(QObject *obj, const QString &str, QObject *infoObj, QString *errorMessage = nullptr);
 };
 
 class QQuickPauseAnimationPrivate : public QQuickAbstractAnimationPrivate
@@ -237,7 +237,7 @@ class QQuickPropertyActionPrivate : public QQuickAbstractAnimationPrivate
     Q_DECLARE_PUBLIC(QQuickPropertyAction)
 public:
     QQuickPropertyActionPrivate()
-    : QQuickAbstractAnimationPrivate(), target(0) {}
+    : QQuickAbstractAnimationPrivate(), target(nullptr) {}
 
     QObject *target;
     QString propertyName;
@@ -265,8 +265,8 @@ class QQuickPropertyAnimationPrivate : public QQuickAbstractAnimationPrivate
     Q_DECLARE_PUBLIC(QQuickPropertyAnimation)
 public:
     QQuickPropertyAnimationPrivate()
-    : QQuickAbstractAnimationPrivate(), target(0), fromSourced(false), fromIsDefined(false), toIsDefined(false),
-      defaultToInterpolatorType(0), interpolatorType(0), interpolator(0), duration(250), actions(0) {}
+    : QQuickAbstractAnimationPrivate(), target(nullptr), fromSourced(false), fromIsDefined(false), toIsDefined(false),
+      defaultToInterpolatorType(0), interpolatorType(0), interpolator(nullptr), duration(250), actions(nullptr) {}
 
     QVariant from;
     QVariant to;
@@ -306,8 +306,8 @@ public:
 class Q_AUTOTEST_EXPORT QQuickAnimationPropertyUpdater : public QQuickBulkValueUpdater
 {
 public:
-    QQuickAnimationPropertyUpdater() : interpolatorType(0), interpolator(0), prevInterpolatorType(0), reverse(false), fromSourced(false), fromDefined(false), wasDeleted(0) {}
-    ~QQuickAnimationPropertyUpdater();
+    QQuickAnimationPropertyUpdater() : interpolatorType(0), interpolator(nullptr), prevInterpolatorType(0), reverse(false), fromSourced(false), fromDefined(false), wasDeleted(nullptr) {}
+    ~QQuickAnimationPropertyUpdater() override;
 
     void setValue(qreal v) override;
 

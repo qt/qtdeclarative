@@ -63,6 +63,7 @@ QT_REQUIRE_CONFIG(quick_sprite);
 #include <QQmlListProperty>
 #include <QImage>
 #include <QPair>
+#include <QRandomGenerator>
 #include <private/qquickpixmapcache_p.h>
 #include <private/qtquickglobal_p.h>
 
@@ -80,11 +81,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStochasticState : public QObject //Currently 
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
 
 public:
-    QQuickStochasticState(QObject* parent = 0)
+    QQuickStochasticState(QObject* parent = nullptr)
         : QObject(parent)
-        , m_duration(-1)
-        , m_durationVariation(0)
-        , m_randomStart(false)
     {
     }
 
@@ -111,8 +109,8 @@ public:
 
     virtual int variedDuration() const
     {
-        return qMax(qreal(0.0) , m_duration
-                + (m_durationVariation * ((qreal)qrand()/RAND_MAX) * 2)
+        return qMax(0.0 , m_duration
+                + (m_durationVariation * QRandomGenerator::global()->bounded(2.0))
                 - m_durationVariation);
     }
 
@@ -178,11 +176,11 @@ public Q_SLOTS:
 private:
     QString m_name;
     QVariantMap m_to;
-    int m_duration;
-    int m_durationVariation;
+    int m_duration = -1;
+    int m_durationVariation = 0;
 
     friend class QQuickStochasticEngine;
-    bool m_randomStart;
+    bool m_randomStart = false;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickStochasticEngine : public QObject
@@ -192,9 +190,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStochasticEngine : public QObject
     Q_PROPERTY(QString globalGoal READ globalGoal WRITE setGlobalGoal NOTIFY globalGoalChanged)
     Q_PROPERTY(QQmlListProperty<QQuickStochasticState> states READ states)
 public:
-    explicit QQuickStochasticEngine(QObject *parent = 0);
-    QQuickStochasticEngine(const QList<QQuickStochasticState*> &states, QObject *parent = 0);
-    ~QQuickStochasticEngine();
+    explicit QQuickStochasticEngine(QObject *parent = nullptr);
+    QQuickStochasticEngine(const QList<QQuickStochasticState*> &states, QObject *parent = nullptr);
+    ~QQuickStochasticEngine() override;
 
     QQmlListProperty<QQuickStochasticState> states()
     {
@@ -269,9 +267,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickSpriteEngine : public QQuickStochasticEngine
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<QQuickSprite> sprites READ sprites)
 public:
-    explicit QQuickSpriteEngine(QObject *parent = 0);
-    QQuickSpriteEngine(const QList<QQuickSprite*> &sprites, QObject *parent = 0);
-    ~QQuickSpriteEngine();
+    explicit QQuickSpriteEngine(QObject *parent = nullptr);
+    QQuickSpriteEngine(const QList<QQuickSprite*> &sprites, QObject *parent = nullptr);
+    ~QQuickSpriteEngine() override;
     QQmlListProperty<QQuickSprite> sprites()
     {
         return QQmlListProperty<QQuickSprite>(this, m_sprites);
@@ -289,8 +287,8 @@ public:
     int spriteCount() const;//Like state count
     int maxFrames() const;
 
-    void restart(int index=0) Q_DECL_OVERRIDE;
-    void advance(int index=0) Q_DECL_OVERRIDE;
+    void restart(int index=0) override;
+    void advance(int index=0) override;
 
     //Similar API to QQuickPixmap for async loading convenience
     bool isNull() const { return status() == QQuickPixmap::Null; }
@@ -302,7 +300,7 @@ public:
     QImage assembledImage(int maxSize = 2048);
 
 private:
-    int pseudospriteProgress(int, int, int *rd = 0) const;
+    int pseudospriteProgress(int, int, int *rd = nullptr) const;
     QList<QQuickSprite*> m_sprites;
     bool m_startedImageAssembly;
     bool m_loaded;

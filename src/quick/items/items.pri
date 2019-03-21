@@ -41,8 +41,6 @@ HEADERS += \
     $$PWD/qquickflickable_p.h \
     $$PWD/qquickflickable_p_p.h \
     $$PWD/qquickflickablebehavior_p.h \
-    $$PWD/qquickrepeater_p.h \
-    $$PWD/qquickrepeater_p_p.h \
     $$PWD/qquickloader_p.h \
     $$PWD/qquickloader_p_p.h \
     $$PWD/qquicktranslate_p.h \
@@ -89,7 +87,6 @@ SOURCES += \
     $$PWD/qquickmousearea.cpp \
     $$PWD/qquickpincharea.cpp \
     $$PWD/qquickflickable.cpp \
-    $$PWD/qquickrepeater.cpp \
     $$PWD/qquickloader.cpp \
     $$PWD/qquicktranslate.cpp \
     $$PWD/qquickclipnode.cpp \
@@ -125,9 +122,11 @@ qtConfig(quick-gridview) {
 
 qtConfig(quick-itemview) {
     HEADERS += \
+        $$PWD/qquickitemviewfxitem_p_p.h \
         $$PWD/qquickitemview_p.h \
         $$PWD/qquickitemview_p_p.h
     SOURCES += \
+        $$PWD/qquickitemviewfxitem.cpp \
         $$PWD/qquickitemview.cpp
 }
 
@@ -143,6 +142,14 @@ qtConfig(quick-listview) {
         $$PWD/qquicklistview_p.h
     SOURCES += \
         $$PWD/qquicklistview.cpp
+}
+
+qtConfig(quick-tableview) {
+    HEADERS += \
+        $$PWD/qquicktableview_p.h \
+        $$PWD/qquicktableview_p_p.h
+    SOURCES += \
+        $$PWD/qquicktableview.cpp
 }
 
 qtConfig(quick-pathview) {
@@ -166,6 +173,15 @@ qtConfig(quick-flipable) {
         $$PWD/qquickflipable_p.h
     SOURCES += \
         $$PWD/qquickflipable.cpp
+}
+
+qtConfig(quick-repeater) {
+    HEADERS += \
+        $$PWD/qquickrepeater_p.h \
+        $$PWD/qquickrepeater_p_p.h
+
+    SOURCES += \
+        $$PWD/qquickrepeater.cpp
 }
 
 qtConfig(quick-shadereffect) {

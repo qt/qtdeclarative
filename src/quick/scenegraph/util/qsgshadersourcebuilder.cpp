@@ -262,8 +262,8 @@ void QSGShaderSourceBuilder::addDefinition(const QByteArray &definition)
     tok.initialize(input);
 
     // First find #version, #extension's and "void main() { ... "
-    const char *versionPos = 0;
-    const char *extensionPos = 0;
+    const char *versionPos = nullptr;
+    const char *extensionPos = nullptr;
     bool inSingleLineComment = false;
     bool inMultiLineComment = false;
     bool foundVersionStart = false;
@@ -325,8 +325,8 @@ void QSGShaderSourceBuilder::removeVersion()
     tok.initialize(input);
 
     // First find #version beginning and end (if present)
-    const char *versionStartPos = 0;
-    const char *versionEndPos = 0;
+    const char *versionStartPos = nullptr;
+    const char *versionEndPos = nullptr;
     bool inSingleLineComment = false;
     bool inMultiLineComment = false;
     bool foundVersionStart = false;
@@ -361,7 +361,7 @@ void QSGShaderSourceBuilder::removeVersion()
         t = tok.next();
     }
 
-    if (versionStartPos == 0)
+    if (versionStartPos == nullptr)
         return;
 
     // Construct a new shader string, inserting the definition

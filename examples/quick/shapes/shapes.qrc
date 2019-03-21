@@ -1,19 +1,20 @@
 <RCC>
-    <qresource prefix="/pathitem">
+    <qresource prefix="/shapes">
         <file alias="LauncherList.qml">../shared/LauncherList.qml</file>
         <file alias="SimpleLauncherDelegate.qml">../shared/SimpleLauncherDelegate.qml</file>
         <file alias="images/next.png">../shared/images/next.png</file>
         <file alias="images/back.png">../shared/images/back.png</file>
         <file alias="images/slider_handle.png">../shared/images/slider_handle.png</file>
         <file alias="Slider.qml">../shared/Slider.qml</file>
-        <file alias="pathitem.qml">content/pathitem.qml</file>
-        <file alias="pathitemgallery.qml">content/pathitemgallery.qml</file>
-        <file alias="pathiteminteract.qml">content/pathiteminteract.qml</file>
-        <file alias="pathitemsampling.qml">content/pathitemsampling.qml</file>
-        <file alias="pathitemtigers.qml">content/pathitemtigers.qml</file>
+        <file alias="main.qml">content/main.qml</file>
+        <file alias="shapegallery.qml">content/shapegallery.qml</file>
+        <file alias="interactive.qml">content/interactive.qml</file>
+        <file alias="sampling.qml">content/sampling.qml</file>
+        <file alias="clippedtigers.qml">content/clippedtigers.qml</file>
         <file alias="tiger.qml">content/tiger.qml</file>
-        <file alias="item1.qml">content/item1.qml</file>
+        <file alias="tapableTriangle.qml">content/tapableTriangle.qml</file>
         <file alias="item2.qml">content/item2.qml</file>
+        <file alias="item3.qml">content/item3.qml</file>
         <file alias="item4.qml">content/item4.qml</file>
         <file alias="item5.qml">content/item5.qml</file>
         <file alias="item6.qml">content/item6.qml</file>

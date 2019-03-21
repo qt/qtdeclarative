@@ -60,7 +60,7 @@ class QQuickStateGroupPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickStateGroup)
 public:
     QQuickStateGroupPrivate()
-    : nullState(0), componentComplete(true),
+    : nullState(nullptr), componentComplete(true),
       ignoreTrans(false), applyingState(false), unnamedCount(0) {}
 
     QString currentState;
@@ -94,7 +94,7 @@ public:
     \instantiates QQuickStateGroup
     \inqmlmodule QtQuick
    \ingroup qtquick-states
-   \brief Provides built-in state support for non-Item types
+   \brief Provides built-in state support for non-Item types.
 
    Item (and all derived types) provides built in support for states and transitions
    via its \l{Item::state}{state}, \l{Item::states}{states} and \l{Item::transitions}{transitions} properties. StateGroup provides an easy way to
@@ -129,7 +129,7 @@ QQuickStateGroup::~QQuickStateGroup()
 {
     Q_D(const QQuickStateGroup);
     for (int i = 0; i < d->states.count(); ++i)
-        d->states.at(i)->setStateGroup(0);
+        d->states.at(i)->setStateGroup(nullptr);
 }
 
 QList<QQuickState *> QQuickStateGroup::states() const
@@ -194,7 +194,7 @@ void QQuickStateGroupPrivate::clear_states(QQmlListProperty<QQuickState> *list)
     QQuickStateGroup *_this = static_cast<QQuickStateGroup *>(list->object);
     _this->d_func()->setCurrentStateInternal(QString(), true);
     for (int i = 0; i < _this->d_func()->states.count(); ++i) {
-        _this->d_func()->states.at(i)->setStateGroup(0);
+        _this->d_func()->states.at(i)->setStateGroup(nullptr);
     }
     _this->d_func()->states.clear();
 }
@@ -302,10 +302,19 @@ void QQuickStateGroup::componentComplete()
     Q_D(QQuickStateGroup);
     d->componentComplete = true;
 
+    QVarLengthArray<QString, 4> names;
+    names.reserve(d->states.count());
     for (int ii = 0; ii < d->states.count(); ++ii) {
         QQuickState *state = d->states.at(ii);
         if (!state->isNamed())
             state->setName(QLatin1String("anonymousState") + QString::number(++d->unnamedCount));
+
+        const QString stateName = state->name();
+        if (names.contains(stateName)) {
+            qmlWarning(state->parent()) << "Found duplicate state name: " << stateName;
+        } else {
+            names.append(std::move(stateName));
+        }
     }
 
     if (d->updateAutoState()) {
@@ -364,7 +373,7 @@ bool QQuickStateGroupPrivate::updateAutoState()
 
 QQuickTransition *QQuickStateGroupPrivate::findTransition(const QString &from, const QString &to)
 {
-    QQuickTransition *highest = 0;
+    QQuickTransition *highest = nullptr;
     int score = 0;
     bool reversed = false;
     bool done = false;
@@ -444,7 +453,7 @@ void QQuickStateGroupPrivate::setCurrentStateInternal(const QString &state,
 
     applyingState = true;
 
-    QQuickTransition *transition = ignoreTrans ? 0 : findTransition(currentState, state);
+    QQuickTransition *transition = ignoreTrans ? nullptr : findTransition(currentState, state);
     if (stateChangeDebug()) {
         qWarning() << this << "Changing state.  From" << currentState << ". To" << state;
         if (transition)
@@ -452,7 +461,7 @@ void QQuickStateGroupPrivate::setCurrentStateInternal(const QString &state,
                        << transition->toState();
     }
 
-    QQuickState *oldState = 0;
+    QQuickState *oldState = nullptr;
     if (!currentState.isEmpty()) {
         for (int ii = 0; ii < states.count(); ++ii) {
             if (states.at(ii)->name() == currentState) {
@@ -465,7 +474,7 @@ void QQuickStateGroupPrivate::setCurrentStateInternal(const QString &state,
     currentState = state;
     emit q->stateChanged(currentState);
 
-    QQuickState *newState = 0;
+    QQuickState *newState = nullptr;
     for (int ii = 0; ii < states.count(); ++ii) {
         if (states.at(ii)->name() == currentState) {
             newState = states.at(ii);
@@ -473,7 +482,7 @@ void QQuickStateGroupPrivate::setCurrentStateInternal(const QString &state,
         }
     }
 
-    if (oldState == 0 || newState == 0) {
+    if (oldState == nullptr || newState == nullptr) {
         if (!nullState) {
             nullState = new QQuickState;
             QQml_setParent_noEvent(nullState, q);
@@ -496,7 +505,7 @@ QQuickState *QQuickStateGroup::findState(const QString &name) const
             return state;
     }
 
-    return 0;
+    return nullptr;
 }
 
 void QQuickStateGroup::removeState(QQuickState *state)

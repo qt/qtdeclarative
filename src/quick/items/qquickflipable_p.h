@@ -74,7 +74,7 @@ class Q_AUTOTEST_EXPORT QQuickFlipable : public QQuickItem
     //### flipAxis
     //### flipRotation
 public:
-    QQuickFlipable(QQuickItem *parent=0);
+    QQuickFlipable(QQuickItem *parent=nullptr);
     ~QQuickFlipable();
 
     QQuickItem *front() const;
@@ -93,7 +93,7 @@ Q_SIGNALS:
     void sideChanged();
 
 protected:
-    void updatePolish() Q_DECL_OVERRIDE;
+    void updatePolish() override;
 
 private Q_SLOTS:
     void retransformBack();

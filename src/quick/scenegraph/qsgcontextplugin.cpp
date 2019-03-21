@@ -49,6 +49,9 @@
 #include <QtQuick/private/qsgdefaultcontext_p.h>
 #endif
 
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformintegration.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_INFO)
@@ -70,9 +73,11 @@ Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader,
 struct QSGAdaptationBackendData
 {
     QSGAdaptationBackendData();
+    ~QSGAdaptationBackendData();
+    Q_DISABLE_COPY(QSGAdaptationBackendData)
 
-    bool tried;
-    QSGContextFactoryInterface *factory;
+    bool tried = false;
+    QSGContextFactoryInterface *factory = nullptr;
     QString name;
     QSGContextFactoryInterface::Flags flags;
 
@@ -82,12 +87,15 @@ struct QSGAdaptationBackendData
 };
 
 QSGAdaptationBackendData::QSGAdaptationBackendData()
-    : tried(false)
-    , factory(nullptr)
-    , flags(0)
+    : flags(nullptr)
 {
     // Fill in the table with the built-in adaptations.
     builtIns.append(new QSGSoftwareAdaptation);
+}
+
+QSGAdaptationBackendData::~QSGAdaptationBackendData()
+{
+    qDeleteAll(builtIns);
 }
 
 Q_GLOBAL_STATIC(QSGAdaptationBackendData, qsg_adaptation_data)
@@ -119,24 +127,24 @@ QSGAdaptationBackendData *contextFactory()
             }
         }
 
-        if (requestedBackend.isEmpty() && qEnvironmentVariableIsSet("QMLSCENE_DEVICE"))
-            requestedBackend = QString::fromLocal8Bit(qgetenv("QMLSCENE_DEVICE"));
+        if (requestedBackend.isEmpty())
+            requestedBackend = qEnvironmentVariable("QMLSCENE_DEVICE");
 
         // A modern alternative. Scenegraph adaptations can represent backends
         // for different graphics APIs as well, instead of being specific to
         // some device or platform.
-        if (requestedBackend.isEmpty() && qEnvironmentVariableIsSet("QT_QUICK_BACKEND"))
-            requestedBackend = QString::fromLocal8Bit(qgetenv("QT_QUICK_BACKEND"));
-
-#if !QT_CONFIG(opengl)
-        // If this is a build without OpenGL, and no backend has been set
-        // default to the software renderer
         if (requestedBackend.isEmpty())
+            requestedBackend = qEnvironmentVariable("QT_QUICK_BACKEND");
+
+        // If this platform does not support OpenGL, and no backend has been set
+        // default to the software renderer
+        if (requestedBackend.isEmpty()
+            && !QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::OpenGL)) {
             requestedBackend = QString::fromLocal8Bit("software");
-#endif
+        }
 
         if (!requestedBackend.isEmpty()) {
-            qCDebug(QSG_LOG_INFO) << "Loading backend" << requestedBackend;
+            qCDebug(QSG_LOG_INFO, "Loading backend %s", qUtf8Printable(requestedBackend));
 
             // First look for a built-in adaptation.
             for (QSGContextFactoryInterface *builtInBackend : qAsConst(backendData->builtIns)) {
@@ -206,7 +214,7 @@ QQuickTextureFactory *QSGContext::createTextureFactoryFromImage(const QImage &im
     QSGAdaptationBackendData *backendData = contextFactory();
     if (backendData->factory)
         return backendData->factory->createTextureFactoryFromImage(image);
-    return 0;
+    return nullptr;
 }
 
 
@@ -220,7 +228,7 @@ QSGRenderLoop *QSGContext::createWindowManager()
     QSGAdaptationBackendData *backendData = contextFactory();
     if (backendData->factory)
         return backendData->factory->createWindowManager();
-    return 0;
+    return nullptr;
 }
 
 void QSGContext::setBackend(const QString &backend)

@@ -41,6 +41,7 @@
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
+#include <QtQuick/qquickrendercontrol.h>
 #include <QtQuick/private/qtquickglobal_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 
@@ -50,7 +51,7 @@
     \inqmlmodule QtQuick
     \since 5.5
     \ingroup qtquick-input
-    \brief Provides keyboard shortcuts
+    \brief Provides keyboard shortcuts.
 
     The Shortcut type provides a way of handling keyboard shortcuts. The shortcut can
     be set to one of the \l{QKeySequence::StandardKey}{standard keyboard shortcuts},
@@ -102,6 +103,8 @@ static bool qQuickShortcutContextMatcher(QObject *obj, Qt::ShortcutContext conte
             if (QQuickItem *item = qobject_cast<QQuickItem *>(obj))
                 obj = item->window();
         }
+        if (QWindow *renderWindow = QQuickRenderControl::renderWindowFor(qobject_cast<QQuickWindow *>(obj)))
+            obj = renderWindow;
         return obj && obj == QGuiApplication::focusWindow();
     default:
         return false;
@@ -119,7 +122,8 @@ Q_QUICK_PRIVATE_EXPORT ContextMatcher qt_quick_shortcut_context_matcher()
 
 Q_QUICK_PRIVATE_EXPORT void qt_quick_set_shortcut_context_matcher(ContextMatcher matcher)
 {
-    *ctxMatcher() = matcher;
+    if (!ctxMatcher.isDestroyed())
+        *ctxMatcher() = matcher;
 }
 
 QT_BEGIN_NAMESPACE

@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickPinchEvent
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
-    \brief For specifying information about a pinch event
+    \brief For specifying information about a pinch event.
 
     \b {The PinchEvent type was added in QtQuick 1.1}
 
@@ -151,7 +151,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickPinch::QQuickPinch()
-    : m_target(0), m_minScale(1.0), m_maxScale(1.0)
+    : m_target(nullptr), m_minScale(1.0), m_maxScale(1.0)
     , m_minRotation(0.0), m_maxRotation(0.0)
     , m_axis(NoDrag), m_xmin(-FLT_MAX), m_xmax(FLT_MAX)
     , m_ymin(-FLT_MAX), m_ymax(FLT_MAX), m_active(false)
@@ -169,7 +169,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
     \inqmlmodule QtQuick
     \ingroup qtquick-input
     \inherits Item
-    \brief Enables simple pinch gesture handling
+    \brief Enables simple pinch gesture handling.
 
     \b {The PinchArea type was added in QtQuick 1.1}
 
@@ -288,6 +288,7 @@ QQuickPinchArea::QQuickPinchArea(QQuickItem *parent)
 {
     Q_D(QQuickPinchArea);
     d->init();
+    setAcceptTouchEvents(true);
 #ifdef Q_OS_OSX
     setAcceptHoverEvents(true); // needed to enable touch events on mouse hover.
 #endif
@@ -643,7 +644,8 @@ bool QQuickPinchArea::childMouseEventFilter(QQuickItem *i, QEvent *e)
         return QQuickItem::childMouseEventFilter(i, e);
     switch (e->type()) {
     case QEvent::TouchBegin:
-        clearPinch(); // fall through
+        clearPinch();
+        Q_FALLTHROUGH();
     case QEvent::TouchUpdate: {
              QTouchEvent *touch = static_cast<QTouchEvent*>(e);
             d->touchPoints.clear();

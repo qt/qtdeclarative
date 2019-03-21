@@ -38,9 +38,9 @@
 ****************************************************************************/
 
 #include "qqmlnativedebugconnector.h"
-#include "qqmldebugpacket.h"
 
 #include <private/qhooks_p.h>
+#include <private/qversionedpacket_p.h>
 
 #include <QtQml/qjsengine.h>
 #include <QtCore/qdebug.h>
@@ -224,7 +224,7 @@ QQmlDebugService *QQmlNativeDebugConnector::service(const QString &name) const
         if ((*i)->name() == name)
             return *i;
     }
-    return 0;
+    return nullptr;
 }
 
 void QQmlNativeDebugConnector::addEngine(QJSEngine *engine)
@@ -360,7 +360,7 @@ void QQmlNativeDebugConnector::sendMessages(const QString &name, const QList<QBy
 
 QQmlDebugConnector *QQmlNativeDebugConnectorFactory::create(const QString &key)
 {
-    return key == QLatin1String("QQmlNativeDebugConnector") ? new QQmlNativeDebugConnector : 0;
+    return key == QLatin1String("QQmlNativeDebugConnector") ? new QQmlNativeDebugConnector : nullptr;
 }
 
 QT_END_NAMESPACE

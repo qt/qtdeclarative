@@ -59,7 +59,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlInstantiatorPrivate : public QObjectPrivate
+class Q_QML_PRIVATE_EXPORT QQmlInstantiatorPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQmlInstantiator)
 
@@ -69,16 +69,23 @@ public:
 
     void clear();
     void regenerate();
+#if QT_CONFIG(qml_delegate_model)
     void makeModel();
+#endif
     void _q_createdItem(int, QObject *);
     void _q_modelUpdated(const QQmlChangeSet &, bool);
     QObject *modelObject(int index, bool async);
+
+    static QQmlInstantiatorPrivate *get(QQmlInstantiator *instantiator) { return instantiator->d_func(); }
+    static const QQmlInstantiatorPrivate *get(const QQmlInstantiator *instantiator) { return instantiator->d_func(); }
 
     bool componentComplete:1;
     bool effectiveReset:1;
     bool active:1;
     bool async:1;
+#if QT_CONFIG(qml_delegate_model)
     bool ownModel:1;
+#endif
     int requestedIndex;
     QVariant model;
     QQmlInstanceModel *instanceModel;

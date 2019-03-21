@@ -41,7 +41,6 @@
 #include "qqmlenginecontrolclient_p_p.h"
 #include "qqmldebugconnection_p.h"
 
-#include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qpacket_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -99,8 +98,8 @@ void QQmlEngineControlClient::messageReceived(const QByteArray &data)
 {
     Q_D(QQmlEngineControlClient);
     QPacket stream(d->connection->currentDataStreamVersion(), data);
-    int message;
-    int id;
+    qint32 message;
+    qint32 id;
     QString name;
 
     stream >> message >> id;
@@ -108,36 +107,41 @@ void QQmlEngineControlClient::messageReceived(const QByteArray &data)
     if (!stream.atEnd())
         stream >> name;
 
-    QQmlEngineControlClientPrivate::EngineState &state = d->blockedEngines[id];
-    Q_ASSERT(state.blockers == 0);
-    Q_ASSERT(state.releaseCommand == QQmlEngineControlClientPrivate::InvalidCommand);
+    auto handleWaiting = [&](
+            QQmlEngineControlClientPrivate::CommandType command, std::function<void()> emitter) {
+        QQmlEngineControlClientPrivate::EngineState &state = d->blockedEngines[id];
+        Q_ASSERT(state.blockers == 0);
+        Q_ASSERT(state.releaseCommand == QQmlEngineControlClientPrivate::InvalidCommand);
+        state.releaseCommand = command;
+        emitter();
+        if (state.blockers == 0) {
+            d->sendCommand(state.releaseCommand, id);
+            d->blockedEngines.remove(id);
+        }
+    };
 
     switch (message) {
     case QQmlEngineControlClientPrivate::EngineAboutToBeAdded:
-        state.releaseCommand = QQmlEngineControlClientPrivate::StartWaitingEngine;
-        emit engineAboutToBeAdded(id, name);
+        handleWaiting(QQmlEngineControlClientPrivate::StartWaitingEngine, [&](){
+            emit engineAboutToBeAdded(id, name);
+        });
         break;
     case QQmlEngineControlClientPrivate::EngineAdded:
         emit engineAdded(id, name);
         break;
     case QQmlEngineControlClientPrivate::EngineAboutToBeRemoved:
-        state.releaseCommand = QQmlEngineControlClientPrivate::StopWaitingEngine;
-        emit engineAboutToBeRemoved(id, name);
+        handleWaiting(QQmlEngineControlClientPrivate::StopWaitingEngine, [&](){
+            emit engineAboutToBeRemoved(id, name);
+        });
         break;
     case QQmlEngineControlClientPrivate::EngineRemoved:
         emit engineRemoved(id, name);
         break;
     }
-
-    if (state.blockers == 0 &&
-            state.releaseCommand != QQmlEngineControlClientPrivate::InvalidCommand) {
-        d->sendCommand(state.releaseCommand, id);
-        d->blockedEngines.remove(id);
-    }
 }
 
 QQmlEngineControlClientPrivate::QQmlEngineControlClientPrivate(QQmlDebugConnection *connection) :
-    QQmlDebugClientPrivate(QQmlEngineControlService::s_key, connection)
+    QQmlDebugClientPrivate(QLatin1String("EngineControl"), connection)
 {
 }
 
@@ -146,7 +150,7 @@ void QQmlEngineControlClientPrivate::sendCommand(
 {
     Q_Q(QQmlEngineControlClient);
     QPacket stream(connection->currentDataStreamVersion());
-    stream << int(command) << engineId;
+    stream << static_cast<qint32>(command) << engineId;
     q->sendMessage(stream.data());
 }
 

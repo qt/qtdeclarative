@@ -63,7 +63,7 @@ class QPacketProtocol : public QObject
     Q_OBJECT
     Q_DECLARE_PRIVATE(QPacketProtocol)
 public:
-    explicit QPacketProtocol(QIODevice *dev, QObject *parent = 0);
+    explicit QPacketProtocol(QIODevice *dev, QObject *parent = nullptr);
 
     void send(const QByteArray &data);
     qint64 packetsAvailable() const;
@@ -72,10 +72,9 @@ public:
 
 Q_SIGNALS:
     void readyRead();
-    void invalidPacket();
+    void error();
 
 private:
-    void aboutToClose();
     void bytesWritten(qint64 bytes);
     void readyToRead();
 };

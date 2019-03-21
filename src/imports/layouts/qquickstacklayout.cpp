@@ -213,7 +213,7 @@ QQuickItem *QQuickStackLayout::itemAt(int index) const
             return item;
         --index;
     }
-    return 0;
+    return nullptr;
 }
 
 int QQuickStackLayout::itemCount() const
@@ -288,8 +288,11 @@ void QQuickStackLayout::updateLayoutItems()
         d->count = count;
         emit countChanged();
     }
-    for (int i = 0; i < count; ++i)
-        itemAt(i)->setVisible(d->currentIndex == i);
+    for (int i = 0; i < count; ++i) {
+        QQuickItem *child = itemAt(i);
+        checkAnchors(child);
+        child->setVisible(d->currentIndex == i);
+    }
 
     invalidate();
 }
@@ -317,7 +320,7 @@ void QQuickStackLayout::rearrange(const QSizeF &newSize)
 
 void QQuickStackLayout::collectItemSizeHints(QQuickItem *item, QSizeF *sizeHints)
 {
-    QQuickLayoutAttached *info = 0;
+    QQuickLayoutAttached *info = nullptr;
     QQuickLayout::effectiveSizeHints_helper(item, sizeHints, &info, true);
     if (!info)
         return;

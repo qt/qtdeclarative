@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -64,11 +74,11 @@ class RenderThread : public QThread
     Q_OBJECT
 public:
     RenderThread(const QSize &size)
-        : surface(0)
-        , context(0)
-        , m_renderFbo(0)
-        , m_displayFbo(0)
-        , m_logoRenderer(0)
+        : surface(nullptr)
+        , context(nullptr)
+        , m_renderFbo(nullptr)
+        , m_displayFbo(nullptr)
+        , m_logoRenderer(nullptr)
         , m_size(size)
     {
         ThreadRenderer::threads << this;
@@ -146,7 +156,7 @@ public:
     TextureNode(QQuickWindow *window)
         : m_id(0)
         , m_size(0, 0)
-        , m_texture(0)
+        , m_texture(nullptr)
         , m_window(window)
     {
         // Our texture node must have a texture, so use the default 0 texture.
@@ -155,7 +165,7 @@ public:
         setFiltering(QSGTexture::Linear);
     }
 
-    ~TextureNode()
+    ~TextureNode() override
     {
         delete m_texture;
     }
@@ -214,7 +224,7 @@ private:
 };
 
 ThreadRenderer::ThreadRenderer()
-    : m_renderThread(0)
+    : m_renderThread(nullptr)
 {
     setFlag(ItemHasContents, true);
     m_renderThread = new RenderThread(QSize(512, 512));
@@ -254,7 +264,7 @@ QSGNode *ThreadRenderer::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         current->makeCurrent(window());
 
         QMetaObject::invokeMethod(this, "ready");
-        return 0;
+        return nullptr;
     }
 
     if (!node) {

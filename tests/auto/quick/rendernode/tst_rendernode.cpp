@@ -120,7 +120,7 @@ private:
 class MessUpNode : public QSGRenderNode, protected QOpenGLFunctions
 {
 public:
-    MessUpNode() : initialized(false) { }
+    MessUpNode() {}
 
     StateFlags changedStates() const override
     {
@@ -157,7 +157,7 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     }
 
-    bool initialized;
+    bool initialized = false;
 };
 
 class MessUpItem : public QQuickItem
@@ -213,6 +213,11 @@ void tst_rendernode::renderOrder()
 {
     if (QGuiApplication::primaryScreen()->depth() < 24)
         QSKIP("This test does not work at display depths < 24");
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
     QImage fb = runTest("RenderOrder.qml");
 
     const qreal scaleFactor = QGuiApplication::primaryScreen()->devicePixelRatio();
@@ -237,6 +242,11 @@ void tst_rendernode::messUpState()
 {
     if (QGuiApplication::primaryScreen()->depth() < 24)
         QSKIP("This test does not work at display depths < 24");
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
     QImage fb = runTest("MessUpState.qml");
     int x1 = 0;
     int x2 = fb.width() / 2;
@@ -290,6 +300,10 @@ public:
 
 void tst_rendernode::matrix()
 {
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
     qmlRegisterType<StateRecordingRenderNodeItem>("RenderNode", 1, 0, "StateRecorder");
     StateRecordingRenderNode::matrices.clear();
     runTest("matrix.qml");

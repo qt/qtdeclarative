@@ -66,7 +66,18 @@ Rectangle {
             ShapePath {
                 strokeWidth: 4
                 strokeColor: "black"
-                fillColor: "lightBlue"
+                fillGradient: ConicalGradient {
+                    id: conGrad
+                    centerX: 100; centerY: 75
+                    NumberAnimation on angle { from: 0; to: 360; duration: 10000; loops: Animation.Infinite }
+                    GradientStop { position: 0; color: "#00000000" }
+                    GradientStop { position: 0.10; color: "#ffe0cc73" }
+                    GradientStop { position: 0.17; color: "#ffc6a006" }
+                    GradientStop { position: 0.46; color: "#ff600659" }
+                    GradientStop { position: 0.72; color: "#ff0680ac" }
+                    GradientStop { position: 0.92; color: "#ffb9d9e6" }
+                    GradientStop { position: 1.00; color: "#00000000" }
+                }
 
                 startX: 50; startY: 100
                 PathCubic {
@@ -153,5 +164,11 @@ Rectangle {
                 }
             }
         }
+    }
+
+    Text {
+        anchors.right: parent.right
+        anchors.top: parent.top
+        text: "Conical gradient angle: " + Math.round(conGrad.angle)
     }
 }

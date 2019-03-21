@@ -43,7 +43,6 @@
 QT_BEGIN_NAMESPACE
 
 QContinuingAnimationGroupJob::QContinuingAnimationGroupJob()
-    : QAnimationGroupJob()
 {
 }
 

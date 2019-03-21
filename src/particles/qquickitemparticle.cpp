@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickItemParticle
     \inqmlmodule QtQuick.Particles
     \inherits ParticlePainter
-    \brief For specifying a delegate to paint particles
+    \brief For specifying a delegate to paint particles.
     \ingroup qtquick-particles
 
 */
@@ -118,7 +118,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickItemParticle::QQuickItemParticle(QQuickItem *parent) :
-    QQuickParticlePainter(parent), m_fade(true), m_lastT(0), m_activeCount(0), m_delegate(0)
+    QQuickParticlePainter(parent), m_fade(true), m_lastT(0), m_activeCount(0), m_delegate(nullptr)
 {
     setFlag(QQuickItem::ItemHasContents);
     clock = new Clock(this);
@@ -195,7 +195,7 @@ void QQuickItemParticle::tick(int time)
         //remove old item from the particle that is dying to make room for this one
         if (d->delegate) {
             m_deletables << d->delegate;
-            d->delegate = 0;
+            d->delegate = nullptr;
         }
         if (!m_pendingItems.isEmpty()){
             d->delegate = m_pendingItems.front();
@@ -289,7 +289,7 @@ void QQuickItemParticle::prepareNextFrame()
             }
             if (t >= 1.0f){//Usually happens from load
                 m_deletables << item;
-                data->delegate = 0;
+                data->delegate = nullptr;
             }else{//Fade
                 data->delegate->setVisible(true);
                 if (m_fade){

@@ -56,9 +56,9 @@
 // We mean it.
 //
 
-QT_BEGIN_NAMESPACE
+QT_REQUIRE_CONFIG(qml_debug);
 
-#ifndef QT_NO_QML_DEBUGGER
+QT_BEGIN_NAMESPACE
 
 class QJSEngine;
 
@@ -69,7 +69,7 @@ class Q_QML_PRIVATE_EXPORT QQmlDebugService : public QObject
     Q_DECLARE_PRIVATE(QQmlDebugService)
 
 public:
-    ~QQmlDebugService();
+    ~QQmlDebugService() override;
 
     const QString &name() const;
     float version() const;
@@ -93,7 +93,7 @@ public:
     static QObject *objectForId(int id) { return objectsForIds().value(id); }
 
 protected:
-    explicit QQmlDebugService(const QString &, float version, QObject *parent = 0);
+    explicit QQmlDebugService(const QString &, float version, QObject *parent = nullptr);
 
 signals:
     void attachedToEngine(QJSEngine *);
@@ -102,8 +102,6 @@ signals:
     void messageToClient(const QString &name, const QByteArray &message);
     void messagesToClient(const QString &name, const QList<QByteArray> &messages);
 };
-
-#endif
 
 QT_END_NAMESPACE
 

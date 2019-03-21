@@ -2,9 +2,9 @@
     <qresource prefix="/threading">
         <file>threading.qml</file>
         <file>threadedlistmodel/timedisplay.qml</file>
-        <file>threadedlistmodel/dataloader.js</file>
+        <file>threadedlistmodel/dataloader.mjs</file>
         <file>workerscript/Spinner.qml</file>
-        <file>workerscript/workerscript.js</file>
+        <file>workerscript/workerscript.mjs</file>
         <file>workerscript/workerscript.qml</file>
     </qresource>
 </RCC>

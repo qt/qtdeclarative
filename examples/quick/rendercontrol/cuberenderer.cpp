@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -50,10 +60,10 @@
 
 CubeRenderer::CubeRenderer(QOffscreenSurface *offscreenSurface)
     : m_offscreenSurface(offscreenSurface),
-      m_context(0),
-      m_program(0),
-      m_vbo(0),
-      m_vao(0),
+      m_context(nullptr),
+      m_program(nullptr),
+      m_vbo(nullptr),
+      m_vao(nullptr),
       m_matrixLoc(0)
 {
 }
@@ -170,7 +180,7 @@ void CubeRenderer::setupVertexAttribs()
     m_vbo->bind();
     m_program->enableAttributeArray(0);
     m_program->enableAttributeArray(1);
-    m_context->functions()->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    m_context->functions()->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     m_context->functions()->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0,
                                                   (const void *)(36 * 3 * sizeof(GLfloat)));
     m_vbo->release();

@@ -37,17 +37,17 @@
 **
 ****************************************************************************/
 
-#include "qqmldebugserver.h"
 #include "qqmldebugserverfactory.h"
-#include "qqmldebugserverconnection.h"
-#include "qqmldebugpacket.h"
 
+#include <private/qqmldebugserver_p.h>
+#include <private/qqmldebugserverconnection_p.h>
 #include <private/qqmldebugservice_p.h>
 #include <private/qjsengine_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmldebugpluginmanager_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qpacketprotocol_p.h>
+#include <private/qversionedpacket_p.h>
 
 #include <QtCore/QAtomicInt>
 #include <QtCore/QDir>
@@ -83,12 +83,13 @@ QT_BEGIN_NAMESPACE
 Q_QML_DEBUG_PLUGIN_LOADER(QQmlDebugServerConnection)
 
 const int protocolVersion = 1;
+using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 
 class QQmlDebugServerImpl;
 class QQmlDebugServerThread : public QThread
 {
 public:
-    QQmlDebugServerThread() : m_server(0), m_portFrom(-1), m_portTo(-1) {}
+    QQmlDebugServerThread() : m_server(nullptr), m_portFrom(-1), m_portTo(-1) {}
 
     void setServer(QQmlDebugServerImpl *server)
     {
@@ -131,19 +132,19 @@ class QQmlDebugServerImpl : public QQmlDebugServer
 public:
     QQmlDebugServerImpl();
 
-    bool blockingMode() const Q_DECL_OVERRIDE;
+    bool blockingMode() const override;
 
-    QQmlDebugService *service(const QString &name) const Q_DECL_OVERRIDE;
+    QQmlDebugService *service(const QString &name) const override;
 
-    void addEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
-    void removeEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
-    bool hasEngine(QJSEngine *engine) const Q_DECL_OVERRIDE;
+    void addEngine(QJSEngine *engine) override;
+    void removeEngine(QJSEngine *engine) override;
+    bool hasEngine(QJSEngine *engine) const override;
 
-    bool addService(const QString &name, QQmlDebugService *service) Q_DECL_OVERRIDE;
-    bool removeService(const QString &name) Q_DECL_OVERRIDE;
+    bool addService(const QString &name, QQmlDebugService *service) override;
+    bool removeService(const QString &name) override;
 
-    bool open(const QVariantHash &configuration) Q_DECL_OVERRIDE;
-    void setDevice(QIODevice *socket) Q_DECL_OVERRIDE;
+    bool open(const QVariantHash &configuration) override;
+    void setDevice(QIODevice *socket) override;
 
     void parseArguments();
 
@@ -176,14 +177,13 @@ private:
     void changeServiceState(const QString &serviceName, QQmlDebugService::State state);
     void removeThread();
     void receiveMessage();
-    void invalidPacket();
+    void protocolError();
 
     QQmlDebugServerConnection *m_connection;
     QHash<QString, QQmlDebugService *> m_plugins;
     QStringList m_clientPlugins;
     bool m_gotHello;
     bool m_blockingMode;
-    bool m_clientSupportsMultiPackets;
 
     QHash<QJSEngine *, EngineCondition> m_engineConditions;
 
@@ -228,7 +228,7 @@ void QQmlDebugServerImpl::cleanup()
 
 void QQmlDebugServerThread::run()
 {
-    Q_ASSERT_X(m_server != 0, Q_FUNC_INFO, "There should always be a debug server available here.");
+    Q_ASSERT_X(m_server != nullptr, Q_FUNC_INFO, "There should always be a debug server available here.");
     QQmlDebugServerConnection *connection = loadQQmlDebugServerConnection(m_pluginName);
     if (connection) {
         {
@@ -274,10 +274,9 @@ static void cleanupOnShutdown()
 }
 
 QQmlDebugServerImpl::QQmlDebugServerImpl() :
-    m_connection(0),
+    m_connection(nullptr),
     m_gotHello(false),
-    m_blockingMode(false),
-    m_clientSupportsMultiPackets(false)
+    m_blockingMode(false)
 {
     static bool postRoutineAdded = false;
     if (!postRoutineAdded) {
@@ -463,10 +462,9 @@ void QQmlDebugServerImpl::receiveMessage()
                     s_dataStreamVersion = QDataStream::Qt_DefaultCompiledVersion;
             }
 
+            bool clientSupportsMultiPackets = false;
             if (!in.atEnd())
-                in >> m_clientSupportsMultiPackets;
-            else
-                m_clientSupportsMultiPackets = false;
+                in >> clientSupportsMultiPackets;
 
             // Send the hello answer immediately, since it needs to arrive before
             // the plugins below start sending messages.
@@ -474,13 +472,15 @@ void QQmlDebugServerImpl::receiveMessage()
             QQmlDebugPacket out;
             QStringList pluginNames;
             QList<float> pluginVersions;
-            const int count = m_plugins.count();
-            pluginNames.reserve(count);
-            pluginVersions.reserve(count);
-            for (QHash<QString, QQmlDebugService *>::ConstIterator i = m_plugins.constBegin();
-                 i != m_plugins.constEnd(); ++i) {
-                pluginNames << i.key();
-                pluginVersions << i.value()->version();
+            if (clientSupportsMultiPackets) { // otherwise, disable all plugins
+                const int count = m_plugins.count();
+                pluginNames.reserve(count);
+                pluginVersions.reserve(count);
+                for (QHash<QString, QQmlDebugService *>::ConstIterator i = m_plugins.constBegin();
+                     i != m_plugins.constEnd(); ++i) {
+                    pluginNames << i.key();
+                    pluginVersions << i.value()->version();
+                }
             }
 
             out << QString(QStringLiteral("QDeclarativeDebugClient")) << 0 << protocolVersion
@@ -522,7 +522,7 @@ void QQmlDebugServerImpl::receiveMessage()
 
         } else {
             qWarning("QML Debugger: Invalid control message %d.", op);
-            invalidPacket();
+            protocolError();
             return;
         }
 
@@ -570,7 +570,7 @@ void QQmlDebugServerImpl::removeThread()
     QThread *parentThread = m_thread.thread();
 
     delete m_connection;
-    m_connection = 0;
+    m_connection = nullptr;
 
     // Move it back to the parent thread so that we can potentially restart it on a new thread.
     moveToThread(parentThread);
@@ -700,16 +700,11 @@ void QQmlDebugServerImpl::sendMessage(const QString &name, const QByteArray &mes
 void QQmlDebugServerImpl::sendMessages(const QString &name, const QList<QByteArray> &messages)
 {
     if (canSendMessage(name)) {
-        if (m_clientSupportsMultiPackets) {
-            QQmlDebugPacket out;
-            out << name;
-            for (const QByteArray &message : messages)
-                out << message;
-            m_protocol->send(out.data());
-        } else {
-            for (const QByteArray &message : messages)
-                doSendMessage(name, message);
-        }
+        QQmlDebugPacket out;
+        out << name;
+        for (const QByteArray &message : messages)
+            out << message;
+        m_protocol->send(out.data());
         m_connection->flush();
     }
 }
@@ -742,29 +737,28 @@ void QQmlDebugServerImpl::setDevice(QIODevice *socket)
     m_protocol = new QPacketProtocol(socket, this);
     QObject::connect(m_protocol, &QPacketProtocol::readyRead,
                      this, &QQmlDebugServerImpl::receiveMessage);
-    QObject::connect(m_protocol, &QPacketProtocol::invalidPacket,
-                     this, &QQmlDebugServerImpl::invalidPacket);
+    QObject::connect(m_protocol, &QPacketProtocol::error,
+                     this, &QQmlDebugServerImpl::protocolError);
 
     if (blockingMode())
         m_protocol->waitForReadyRead(-1);
 }
 
-void QQmlDebugServerImpl::invalidPacket()
+void QQmlDebugServerImpl::protocolError()
 {
-    qWarning("QML Debugger: Received a corrupted packet! Giving up ...");
+    qWarning("QML Debugger: A protocol error has occurred! Giving up ...");
     m_connection->disconnect();
     // protocol might still be processing packages at this point
     m_protocol->deleteLater();
-    m_protocol = 0;
+    m_protocol = nullptr;
 }
 
 QQmlDebugConnector *QQmlDebugServerFactory::create(const QString &key)
 {
     // Cannot parent it to this because it gets moved to another thread
-    return (key == QLatin1String("QQmlDebugServer") ? new QQmlDebugServerImpl : 0);
+    return (key == QLatin1String("QQmlDebugServer") ? new QQmlDebugServerImpl : nullptr);
 }
 
 QT_END_NAMESPACE
 
 #include "qqmldebugserver.moc"
-#include "moc_qqmldebugserver.cpp"

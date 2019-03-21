@@ -77,7 +77,7 @@ void tst_qquickfontloader::noFont()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(component.create());
 
-    QVERIFY(fontObject != 0);
+    QVERIFY(fontObject != nullptr);
     QCOMPARE(fontObject->name(), QString(""));
     QCOMPARE(fontObject->source(), QUrl(""));
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Null);
@@ -92,7 +92,7 @@ void tst_qquickfontloader::namedFont()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(component.create());
 
-    QVERIFY(fontObject != 0);
+    QVERIFY(fontObject != nullptr);
     QCOMPARE(fontObject->source(), QUrl(""));
     QCOMPARE(fontObject->name(), QString("Helvetica"));
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
@@ -105,7 +105,7 @@ void tst_qquickfontloader::localFont()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(component.create());
 
-    QVERIFY(fontObject != 0);
+    QVERIFY(fontObject != nullptr);
     QVERIFY(fontObject->source() != QUrl(""));
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
@@ -119,7 +119,7 @@ void tst_qquickfontloader::failLocalFont()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(component.create());
 
-    QVERIFY(fontObject != 0);
+    QVERIFY(fontObject != nullptr);
     QVERIFY(fontObject->source() != QUrl(""));
     QTRY_COMPARE(fontObject->name(), QString(""));
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Error);
@@ -133,7 +133,7 @@ void tst_qquickfontloader::webFont()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(component.create());
 
-    QVERIFY(fontObject != 0);
+    QVERIFY(fontObject != nullptr);
     QVERIFY(fontObject->source() != QUrl(""));
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
@@ -149,7 +149,7 @@ void tst_qquickfontloader::redirWebFont()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(component.create());
 
-    QVERIFY(fontObject != 0);
+    QVERIFY(fontObject != nullptr);
     QVERIFY(fontObject->source() != QUrl(""));
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
@@ -164,7 +164,7 @@ void tst_qquickfontloader::failWebFont()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(component.create());
 
-    QVERIFY(fontObject != 0);
+    QVERIFY(fontObject != nullptr);
     QVERIFY(fontObject->source() != QUrl(""));
     QTRY_COMPARE(fontObject->name(), QString(""));
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Error);
@@ -179,7 +179,7 @@ void tst_qquickfontloader::changeFont()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(component.create());
 
-    QVERIFY(fontObject != 0);
+    QVERIFY(fontObject != nullptr);
 
     QSignalSpy nameSpy(fontObject, SIGNAL(nameChanged()));
     QSignalSpy statusSpy(fontObject, SIGNAL(statusChanged()));
@@ -218,7 +218,7 @@ void tst_qquickfontloader::changeFontSourceViaState()
     QCOMPARE(&window, qGuiApp->focusWindow());
 
     QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(qvariant_cast<QObject *>(window.rootObject()->property("fontloader")));
-    QVERIFY(fontObject != 0);
+    QVERIFY(fontObject != nullptr);
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
     QVERIFY(fontObject->source() != QUrl(""));
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));

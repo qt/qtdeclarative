@@ -57,7 +57,7 @@ class QQmlTimerPrivate : public QObjectPrivate, public QAnimationJobChangeListen
     Q_DECLARE_PUBLIC(QQmlTimer)
 public:
     QQmlTimerPrivate()
-        : interval(1000), running(false), repeating(false), triggeredOnStart(false)
+        : running(false), repeating(false), triggeredOnStart(false)
         , classBegun(false), componentComplete(false), firstTick(true), awaitingTick(false) {}
 
     void animationFinished(QAbstractAnimationJob *) override;
@@ -71,7 +71,7 @@ public:
         }
     }
 
-    int interval;
+    int interval = 1000;
     QPauseAnimationJob pause;
     bool running : 1;
     bool repeating : 1;
@@ -87,7 +87,7 @@ public:
     \instantiates QQmlTimer
     \inqmlmodule QtQml
     \ingroup qtquick-interceptors
-    \brief Triggers a handler at a specified interval
+    \brief Triggers a handler at a specified interval.
 
     A Timer can be used to trigger an action either once, or repeatedly
     at a given interval.

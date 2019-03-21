@@ -44,7 +44,6 @@
 #include "qqmlengine_p.h"
 #include "qqmlexpression_p.h"
 #include "qqmlcontext_p.h"
-#include "qqmlmetatype_p.h"
 #include "qqml.h"
 #include "qqmlcontext.h"
 #include "qqmlglobal_p.h"
@@ -55,6 +54,7 @@
 
 #include <private/qjsvalue_p.h>
 #include <private/qv4value_p.h>
+#include <private/qv4jscall_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 
 #include <QtCore/qdebug.h>
@@ -73,8 +73,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
 {
     init(ctxt, scope);
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine());
-    QV4::ExecutionEngine *v4 = ep->v4engine();
+    QV4::ExecutionEngine *v4 = engine()->handle();
 
     QString function;
 
@@ -110,34 +109,34 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
       m_index(index),
       m_target(target)
 {
-    setupFunction(scope, function);
-    init(ctxt, scopeObject);
-}
-
-QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, QV4::Function *runtimeFunction)
-    : QQmlJavaScriptExpression(),
-      m_index(index),
-      m_target(target)
-{
     // It's important to call init first, because m_index gets remapped in case of cloned signals.
-    init(ctxt, scope);
+    init(ctxt, scopeObject);
 
-    QV4::ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(ctxt->engine);
+    QV4::ExecutionEngine *engine = ctxt->engine->handle();
 
-    QList<QByteArray> signalParameters = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).parameterNames();
-    if (!signalParameters.isEmpty()) {
-        QString error;
-        QQmlPropertyCache::signalParameterStringForJS(engine, signalParameters, &error);
-        if (!error.isEmpty()) {
-            qmlWarning(scopeObject()) << error;
-            return;
+    // If the function is marked as having a nested function, then the user wrote:
+    //   onSomeSignal: function() { /*....*/ }
+    // So take that nested function:
+    if (auto closure = function->nestedFunction()) {
+        function = closure;
+    } else {
+        QList<QByteArray> signalParameters = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).parameterNames();
+        if (!signalParameters.isEmpty()) {
+            QString error;
+            QQmlPropertyCache::signalParameterStringForJS(engine, signalParameters, &error);
+            if (!error.isEmpty()) {
+                qmlWarning(scopeObject) << error;
+                return;
+            }
+            function->updateInternalClass(engine, signalParameters);
         }
-        runtimeFunction->updateInternalClass(engine, signalParameters);
     }
 
     QV4::Scope valueScope(engine);
-    QV4::Scoped<QV4::QmlContext> qmlContext(valueScope, QV4::QmlContext::create(engine->rootContext(), ctxt, scope));
-    setupFunction(qmlContext, runtimeFunction);
+    QV4::Scoped<QV4::QmlContext> qmlContext(valueScope, scope);
+    if (!qmlContext)
+        qmlContext = QV4::QmlContext::create(engine->rootContext(), ctxt, scopeObject);
+    setupFunction(qmlContext, function);
 }
 
 void QQmlBoundSignalExpression::init(QQmlContextData *ctxt, QObject *scope)
@@ -168,7 +167,7 @@ void QQmlBoundSignalExpression::expressionChanged()
 QString QQmlBoundSignalExpression::expression() const
 {
     if (expressionFunctionValid())
-        return QStringLiteral("function() { [code] }");
+        return QStringLiteral("function() { [native code] }");
     return QString();
 }
 
@@ -181,46 +180,48 @@ void QQmlBoundSignalExpression::evaluate(void **a)
     if (!expressionFunctionValid())
         return;
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine());
-    QV4::Scope scope(ep->v4engine());
+    QQmlEngine *qmlengine = engine();
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(qmlengine);
+    QV4::ExecutionEngine *v4 = qmlengine->handle();
+    QV4::Scope scope(v4);
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
     QQmlMetaObject::ArgTypeStorage storage;
     //TODO: lookup via signal index rather than method index as an optimization
     int methodIndex = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).methodIndex();
-    int *argsTypes = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, &storage, 0);
+    int *argsTypes = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, &storage, nullptr);
     int argCount = argsTypes ? *argsTypes : 0;
 
-    QV4::ScopedCallData callData(scope, argCount);
+    QV4::JSCallData jsCall(scope, argCount);
     for (int ii = 0; ii < argCount; ++ii) {
         int type = argsTypes[ii + 1];
         //### ideally we would use metaTypeToJS, however it currently gives different results
         //    for several cases (such as QVariant type and QObject-derived types)
         //args[ii] = engine->metaTypeToJS(type, a[ii + 1]);
         if (type == qMetaTypeId<QJSValue>()) {
-            if (QV4::Value *v4Value = QJSValuePrivate::valueForData(reinterpret_cast<QJSValue *>(a[ii + 1]), &callData->args[ii]))
-                callData->args[ii] = *v4Value;
+            if (QV4::Value *v4Value = QJSValuePrivate::valueForData(reinterpret_cast<QJSValue *>(a[ii + 1]), &jsCall->args[ii]))
+                jsCall->args[ii] = *v4Value;
             else
-                callData->args[ii] = QV4::Encode::undefined();
+                jsCall->args[ii] = QV4::Encode::undefined();
         } else if (type == QMetaType::QVariant) {
-            callData->args[ii] = scope.engine->fromVariant(*((QVariant *)a[ii + 1]));
+            jsCall->args[ii] = scope.engine->fromVariant(*((QVariant *)a[ii + 1]));
         } else if (type == QMetaType::Int) {
             //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
-            callData->args[ii] = QV4::Primitive::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
+            jsCall->args[ii] = QV4::Value::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
         } else if (type == qMetaTypeId<QQmlV4Handle>()) {
-            callData->args[ii] = *reinterpret_cast<QQmlV4Handle *>(a[ii + 1]);
+            jsCall->args[ii] = *reinterpret_cast<QQmlV4Handle *>(a[ii + 1]);
         } else if (ep->isQObject(type)) {
             if (!*reinterpret_cast<void* const *>(a[ii + 1]))
-                callData->args[ii] = QV4::Primitive::nullValue();
+                jsCall->args[ii] = QV4::Value::nullValue();
             else
-                callData->args[ii] = QV4::QObjectWrapper::wrap(ep->v4engine(), *reinterpret_cast<QObject* const *>(a[ii + 1]));
+                jsCall->args[ii] = QV4::QObjectWrapper::wrap(v4, *reinterpret_cast<QObject* const *>(a[ii + 1]));
         } else {
-            callData->args[ii] = scope.engine->fromVariant(QVariant(type, a[ii + 1]));
+            jsCall->args[ii] = scope.engine->fromVariant(QVariant(type, a[ii + 1]));
         }
     }
 
-    QQmlJavaScriptExpression::evaluate(callData, 0, scope);
+    QQmlJavaScriptExpression::evaluate(jsCall.callData(), nullptr);
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }
@@ -232,17 +233,18 @@ void QQmlBoundSignalExpression::evaluate(const QList<QVariant> &args)
     if (!expressionFunctionValid())
         return;
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine());
-    QV4::Scope scope(ep->v4engine());
+    QQmlEngine *qmlengine = engine();
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(qmlengine);
+    QV4::Scope scope(qmlengine->handle());
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
-    QV4::ScopedCallData callData(scope, args.count());
+    QV4::JSCallData jsCall(scope, args.count());
     for (int ii = 0; ii < args.count(); ++ii) {
-        callData->args[ii] = scope.engine->fromVariant(args[ii]);
+        jsCall->args[ii] = scope.engine->fromVariant(args[ii]);
     }
 
-    QQmlJavaScriptExpression::evaluate(callData, 0, scope);
+    QQmlJavaScriptExpression::evaluate(jsCall.callData(), nullptr);
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }
@@ -257,8 +259,8 @@ void QQmlBoundSignalExpression::evaluate(const QList<QVariant> &args)
 QQmlBoundSignal::QQmlBoundSignal(QObject *target, int signal, QObject *owner,
                                  QQmlEngine *engine)
     : QQmlNotifierEndpoint(QQmlNotifierEndpoint::QQmlBoundSignal),
-      m_prevSignal(0), m_nextSignal(0),
-      m_enabled(true), m_expression(0)
+      m_prevSignal(nullptr), m_nextSignal(nullptr),
+      m_enabled(true), m_expression(nullptr)
 {
     addToObject(owner);
 
@@ -295,8 +297,8 @@ void QQmlBoundSignal::removeFromObject()
     if (m_prevSignal) {
         *m_prevSignal = m_nextSignal;
         if (m_nextSignal) m_nextSignal->m_prevSignal = m_prevSignal;
-        m_prevSignal = 0;
-        m_nextSignal = 0;
+        m_prevSignal = nullptr;
+        m_nextSignal = nullptr;
     }
 }
 

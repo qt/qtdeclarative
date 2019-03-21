@@ -185,14 +185,19 @@ void tst_QQuickDropArea::containsDrag_external()
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
     QCOMPARE(evaluate<bool>(dropArea, "hasDrag"), false);
 
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    const qreal dpr = window.devicePixelRatio();
+    const QPoint nativePos1 = QPoint(50, 50) * dpr;
+    const QPoint nativePos2 = QPoint(150, 50) * dpr;
+    QWindowSystemInterface::handleDrag(&window, &data, nativePos1, Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<bool>(dropArea, "hasDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(evaluate<int>(dropArea, "exitEvents"), 0);
 
     evaluate<void>(dropArea, "{ enterEvents = 0; exitEvents = 0 }");
-    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, nativePos1, Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
     QCOMPARE(evaluate<bool>(dropArea, "hasDrag"), false);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
@@ -200,13 +205,15 @@ void tst_QQuickDropArea::containsDrag_external()
 
     evaluate<void>(dropArea, "{ enterEvents = 0; exitEvents = 0 }");
 
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(150, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, nativePos2, Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
     QCOMPARE(evaluate<bool>(dropArea, "hasDrag"), false);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea, "exitEvents"), 0);
 
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, nativePos1, Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<bool>(dropArea, "hasDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
@@ -214,13 +221,15 @@ void tst_QQuickDropArea::containsDrag_external()
 
     evaluate<void>(dropArea, "{ enterEvents = 0; exitEvents = 0 }");
 
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(150, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, nativePos2, Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
     QCOMPARE(evaluate<bool>(dropArea, "hasDrag"), false);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea, "exitEvents"), 1);
 
-    QWindowSystemInterface::handleDrop(&window, &data, QPoint(150, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrop(&window, &data, nativePos2, Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
 }
 
 void tst_QQuickDropArea::keys_internal()
@@ -355,80 +364,96 @@ void tst_QQuickDropArea::keys_external()
 
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
 
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList() << "text/x-red" << "text/x-blue");
 
-    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     evaluate<void>(dropArea, "keys = \"text/x-blue\"");
     QCOMPARE(dropArea->property("keys").toStringList(), QStringList() << "text/x-blue");
     QCOMPARE(dropArea->property("dropKeys").toStringList(), QStringList() << "text/x-blue");
     evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList() << "text/x-red" << "text/x-blue");
 
-    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     evaluate<void>(dropArea, "keys = \"text/x-red\"");
     QCOMPARE(dropArea->property("keys").toStringList(), QStringList() << "text/x-red");
     QCOMPARE(dropArea->property("dropKeys").toStringList(), QStringList() << "text/x-red");
     evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList() << "text/x-red" << "text/x-blue");
 
-    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     evaluate<void>(dropArea, "keys = \"text/x-green\"");
     QCOMPARE(dropArea->property("keys").toStringList(), QStringList() << "text/x-green");
     QCOMPARE(dropArea->property("dropKeys").toStringList(), QStringList() << "text/x-green");
     evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
 
-    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     evaluate<void>(dropArea, "keys = [\"text/x-red\", \"text/x-green\"]");
     QCOMPARE(dropArea->property("keys").toStringList(), QStringList() << "text/x-red" << "text/x-green");
     QCOMPARE(dropArea->property("dropKeys").toStringList(), QStringList() << "text/x-red" << "text/x-green");
     evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList() << "text/x-red" << "text/x-blue");
 
-    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     data.removeFormat("text/x-red");
     data.removeFormat("text/x-blue");
     evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
 
-    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     evaluate<void>(dropArea, "keys = []");
     QCOMPARE(dropArea->property("keys").toStringList(), QStringList());
     QCOMPARE(dropArea->property("dropKeys").toStringList(), QStringList());
     evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList());
 
-    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     data.setData("text/x-red", "red");
     data.setData("text/x-blue", "blue");
     QCOMPARE(dropArea->property("keys").toStringList(), QStringList());
     QCOMPARE(dropArea->property("dropKeys").toStringList(), QStringList());
     evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList() << "text/x-red" << "text/x-blue");
 
-    QWindowSystemInterface::handleDrop(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrop(&window, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
 }
 
 void tst_QQuickDropArea::source_internal()
@@ -460,8 +485,8 @@ void tst_QQuickDropArea::source_internal()
     QQuickItem *dragSource = dropArea->findChild<QQuickItem *>("dragSource");
     QVERIFY(dragSource);
 
-    QCOMPARE(evaluate<QObject *>(dropArea, "source"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(dropArea, "drag.source"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(dropArea, "source"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(dropArea, "drag.source"), static_cast<QObject *>(nullptr));
 
     evaluate<void>(dragItem, "Drag.active = true");
     QCOMPARE(evaluate<QObject *>(dropArea, "source"), static_cast<QObject *>(dragItem));
@@ -469,8 +494,8 @@ void tst_QQuickDropArea::source_internal()
     QCOMPARE(evaluate<QObject *>(dropArea, "eventSource"), static_cast<QObject *>(dragItem));
 
     evaluate<void>(dragItem, "Drag.active = false");
-    QCOMPARE(evaluate<QObject *>(dropArea, "source"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(dropArea, "drag.source"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(dropArea, "source"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(dropArea, "drag.source"), static_cast<QObject *>(nullptr));
 
 
     evaluate<void>(dropArea, "{ eventSource = null }");
@@ -482,8 +507,8 @@ void tst_QQuickDropArea::source_internal()
     QCOMPARE(evaluate<QObject *>(dropArea, "eventSource"), static_cast<QObject *>(dragSource));
 
     evaluate<void>(dragItem, "Drag.active = false");
-    QCOMPARE(evaluate<QObject *>(dropArea, "source"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(dropArea, "drag.source"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(dropArea, "source"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(dropArea, "drag.source"), static_cast<QObject *>(nullptr));
 }
 
 // Setting a source can't be emulated using the QWindowSystemInterface API.
@@ -583,7 +608,9 @@ void tst_QQuickDropArea::position_external()
 
     QMimeData data;
 
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    const qreal dpr = window.devicePixelRatio();
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50) * dpr, Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(evaluate<int>(dropArea, "moveEvents"), 1);
     QCOMPARE(evaluate<qreal>(dropArea, "drag.x"), qreal(50));
@@ -594,7 +621,8 @@ void tst_QQuickDropArea::position_external()
     QCOMPARE(evaluate<qreal>(dropArea, "eventY"), qreal(50));
 
     evaluate<void>(dropArea, "{ enterEvents = 0; moveEvents = 0; eventX = -1; eventY = -1 }");
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(40, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(40, 50) * dpr, Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea, "moveEvents"), 1);
     QCOMPARE(evaluate<qreal>(dropArea, "drag.x"), qreal(40));
@@ -605,7 +633,8 @@ void tst_QQuickDropArea::position_external()
     QCOMPARE(evaluate<qreal>(dropArea, "eventY"), qreal(50));
 
     evaluate<void>(dropArea, "{ enterEvents = 0; moveEvents = 0; eventX = -1; eventY = -1 }");
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(75, 25), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(75, 25) * dpr, Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea, "moveEvents"), 1);
     QCOMPARE(evaluate<qreal>(dropArea, "drag.x"), qreal(75));
@@ -615,7 +644,8 @@ void tst_QQuickDropArea::position_external()
     QCOMPARE(evaluate<qreal>(dropArea, "eventX"), qreal(75));
     QCOMPARE(evaluate<qreal>(dropArea, "eventY"), qreal(25));
 
-    QWindowSystemInterface::handleDrop(&window, &data, QPoint(75, 25), Qt::CopyAction);
+    QWindowSystemInterface::handleDrop(&window, &data, QPoint(75, 25) * dpr, Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
 }
 
 void tst_QQuickDropArea::drop_internal()
@@ -926,7 +956,8 @@ void tst_QQuickDropArea::simultaneousDrags()
 
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     //Same as in the first case, dropArea2 already contains a drag, dropArea1 will get the event
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 1);
@@ -935,7 +966,8 @@ void tst_QQuickDropArea::simultaneousDrags()
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
 
-    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 1);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
@@ -943,7 +975,8 @@ void tst_QQuickDropArea::simultaneousDrags()
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
 
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 2);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
@@ -961,7 +994,8 @@ void tst_QQuickDropArea::simultaneousDrags()
 
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
-    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
@@ -972,7 +1006,8 @@ void tst_QQuickDropArea::simultaneousDrags()
     // external then internal.
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
@@ -1006,7 +1041,8 @@ void tst_QQuickDropArea::simultaneousDrags()
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
 
-    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 2);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
@@ -1102,7 +1138,8 @@ void tst_QQuickDropArea::simultaneousDrags()
 
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
@@ -1112,7 +1149,8 @@ void tst_QQuickDropArea::simultaneousDrags()
 
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
-    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
@@ -1122,7 +1160,8 @@ void tst_QQuickDropArea::simultaneousDrags()
 
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
@@ -1142,7 +1181,8 @@ void tst_QQuickDropArea::simultaneousDrags()
 
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
-    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
@@ -1150,7 +1190,8 @@ void tst_QQuickDropArea::simultaneousDrags()
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 1);
 
-    QWindowSystemInterface::handleDrop(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrop(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
 }
 
 void tst_QQuickDropArea::dropStuff()
@@ -1175,8 +1216,10 @@ void tst_QQuickDropArea::dropStuff()
 
     QCOMPARE(evaluate<QVariant>(dropArea, "array"), QVariant());
 
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
-    QWindowSystemInterface::handleDrop(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
+    QWindowSystemInterface::handleDrop(&window, &data, QPoint(50, 50), Qt::CopyAction,
+                                       Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<int>(dropArea, "array.byteLength"), 3);
     QCOMPARE(evaluate<QByteArray>(dropArea, "array"), QByteArray("red"));
 }

@@ -73,7 +73,7 @@ public:
     }
 
     QColor color;
-    QQuickGradient *gradient;
+    QJSValue gradient;
     QQuickPen *pen;
     qreal radius;
     static int doUpdateSlotIdx;

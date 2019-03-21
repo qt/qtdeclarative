@@ -27,6 +27,7 @@
 #define MacroAssemblerCodeRef_h
 
 #include "Disassembler.h"
+#include <wtf/Platform.h>
 #include "ExecutableAllocator.h"
 #include "LLIntData.h"
 #include <wtf/DataLog.h>
@@ -140,6 +141,8 @@ public:
     {
         ASSERT_VALID_CODE_POINTER(m_value);
     }
+
+    inline FunctionPtr(MacroAssemblerCodePtr ptr);
 
 // MSVC doesn't seem to treat functions with different calling conventions as
 // different types; these methods already defined for fastcall, below.
@@ -326,6 +329,12 @@ public:
 private:
     void* m_value;
 };
+
+
+FunctionPtr::FunctionPtr(MacroAssemblerCodePtr ptr)
+    : m_value(ptr.executableAddress())
+{
+}
 
 // MacroAssemblerCodeRef:
 //

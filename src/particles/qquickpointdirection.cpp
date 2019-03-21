@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qquickpointdirection_p.h"
-#include <stdlib.h>
+#include <QRandomGenerator>
 
 QT_BEGIN_NAMESPACE
 
@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Direction
-    \brief For specifying a direction that varies in x and y components
+    \brief For specifying a direction that varies in x and y components.
 
     The PointDirection element allows both the specification of a direction by x and y components,
     as well as varying the parameters by x or y component.
@@ -78,8 +78,8 @@ QQuickPointDirection::QQuickPointDirection(QObject *parent) :
 QPointF QQuickPointDirection::sample(const QPointF &)
 {
     QPointF ret;
-    ret.setX(m_x - m_xVariation + rand() / float(RAND_MAX) * m_xVariation * 2);
-    ret.setY(m_y - m_yVariation + rand() / float(RAND_MAX) * m_yVariation * 2);
+    ret.setX(m_x - m_xVariation + QRandomGenerator::global()->generateDouble() * m_xVariation * 2);
+    ret.setY(m_y - m_yVariation + QRandomGenerator::global()->generateDouble() * m_yVariation * 2);
     return ret;
 }
 

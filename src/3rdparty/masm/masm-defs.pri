@@ -3,6 +3,7 @@ DEFINES += ENABLE_ASSEMBLER_WX_EXCLUSIVE=1
 
 # Avoid symbol clashes with QtScript during static linking
 DEFINES += WTFReportAssertionFailure=qmlWTFReportAssertionFailure
+DEFINES += WTFReportAssertionFailureWithMessage=qmlWTFReportAssertionFailureWithMessage
 DEFINES += WTFReportBacktrace=qmlWTFReportBacktrace
 DEFINES += WTFInvokeCrashHook=qmlWTFInvokeCrashHook
 
@@ -19,6 +20,7 @@ INCLUDEPATH += $$PWD/assembler
 INCLUDEPATH += $$PWD/runtime
 INCLUDEPATH += $$PWD/wtf
 INCLUDEPATH += $$PWD/stubs
+INCLUDEPATH += $$PWD/stubs/runtime
 INCLUDEPATH += $$PWD/stubs/wtf
 INCLUDEPATH += $$PWD
 

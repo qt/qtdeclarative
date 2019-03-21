@@ -88,9 +88,7 @@ class QSharedImageLoaderPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QSharedImageLoader)
 
 public:
-    QSharedImageLoaderPrivate()
-        : QObjectPrivate()
-    {}
+    QSharedImageLoaderPrivate() {}
 
     QImage load(const QString &path, QSharedImageLoader::ImageParameters *params);
 
@@ -117,7 +115,7 @@ void QSharedImageLoaderPrivate::storeImageToMem(void *data, const QImage &img)
     h->format = img.format();
 
     uchar *p = static_cast<uchar *>(data) + sizeof(SharedImageHeader);
-    memcpy(p, img.constBits(), img.byteCount());
+    memcpy(p, img.constBits(), img.sizeInBytes());
 }
 
 
@@ -174,8 +172,11 @@ QImage QSharedImageLoaderPrivate::load(const QString &path, QSharedImageLoader::
         QImage img = q->loadFile(path, params);
         if (img.isNull())
             return nil;
-        int size = sizeof(SharedImageHeader) + img.byteCount();
-        if (shm->create(size)) {
+        size_t size = sizeof(SharedImageHeader) + img.sizeInBytes();
+        if (size > size_t(std::numeric_limits<int>::max())) {
+            qCDebug(lcSharedImage) << "Image" << path << "to large to load";
+            return nil;
+        } else if (shm->create(int(size))) {
             qCDebug(lcSharedImage) << "Created new shm segment of size" << size << "for image" << path;
             if (!shm->lock()) {
                 qCDebug(lcSharedImage) << "Lock1 failed!?" << shm->errorString();

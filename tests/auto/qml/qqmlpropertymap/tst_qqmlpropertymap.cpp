@@ -35,7 +35,7 @@
 #include <QSignalSpy>
 #include <QDebug>
 
-class tst_QQmlPropertyMap : public QObject
+class tst_QQmlPropertyMap : public QQmlDataTest
 {
     Q_OBJECT
 public:
@@ -61,6 +61,7 @@ private slots:
     void disallowExtending();
     void QTBUG_35906();
     void QTBUG_48136();
+    void lookupsInSubTypes();
 };
 
 class LazyPropertyMap : public QQmlPropertyMap, public QQmlParserStatus
@@ -71,8 +72,7 @@ class LazyPropertyMap : public QQmlPropertyMap, public QQmlParserStatus
     Q_PROPERTY(int someFixedProperty READ someFixedProperty WRITE setSomeFixedProperty NOTIFY someFixedPropertyChanged)
 public:
     LazyPropertyMap()
-        : QQmlPropertyMap(this, /*parent*/0)
-        , value(0)
+        : QQmlPropertyMap(this, /*parent*/nullptr)
     {}
 
     virtual void classBegin() {}
@@ -87,12 +87,21 @@ signals:
     void someFixedPropertyChanged();
 
 private:
-    int value;
+    int value = 0;
+};
+
+class SimplePropertyMap: public QQmlPropertyMap
+{
+    Q_OBJECT
+public:
+    SimplePropertyMap() : QQmlPropertyMap(this, nullptr) {}
 };
 
 void tst_QQmlPropertyMap::initTestCase()
 {
+    QQmlDataTest::initTestCase();
     qmlRegisterType<LazyPropertyMap>("QTBUG_35233", 1, 0, "LazyPropertyMap");
+    qmlRegisterType<SimplePropertyMap>("Test", 1, 0, "SimplePropertyMap");
 }
 
 void tst_QQmlPropertyMap::insert()
@@ -313,7 +322,7 @@ class MyEnhancedPropertyMap : public QQmlPropertyMap
 {
     Q_OBJECT
 public:
-    MyEnhancedPropertyMap() : QQmlPropertyMap(this, 0), m_testSlotCalled(false) {}
+    MyEnhancedPropertyMap() : QQmlPropertyMap(this, nullptr) {}
     bool testSlotCalled() const { return m_testSlotCalled; }
 
 signals:
@@ -323,7 +332,7 @@ public slots:
     void testSlot() { m_testSlotCalled = true; }
 
 private:
-    bool m_testSlotCalled;
+    bool m_testSlotCalled = false;
 };
 
 void tst_QQmlPropertyMap::metaObjectAccessibility()
@@ -495,6 +504,16 @@ void tst_QQmlPropertyMap::QTBUG_48136()
     QCOMPARE(valueChangedSpy.count(), 1);
     map.setProperty(key, 45);
     QCOMPARE(valueChangedSpy.count(), 1);
+}
+
+void tst_QQmlPropertyMap::lookupsInSubTypes()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("PropertyMapSubType.qml"));
+    QTest::ignoreMessage(QtDebugMsg, "expected output");
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QCOMPARE(object->property("newProperty").toInt(), 42);
 }
 
 QTEST_MAIN(tst_QQmlPropertyMap)

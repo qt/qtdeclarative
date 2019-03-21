@@ -66,23 +66,25 @@ struct QQmlContextWrapper;
 
 namespace Heap {
 
-struct QQmlContextWrapper : Object {
-    void init(QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
-    void destroy();
-    bool readOnly;
-    bool ownsContext;
-    bool isNullWrapper;
+#define QQmlContextWrapperMembers(class, Member) \
+    Member(class, Pointer, Module *, module)
 
-    QQmlGuardedContextData *context;
+DECLARE_HEAP_OBJECT(QQmlContextWrapper, Object) {
+    DECLARE_MARKOBJECTS(QQmlContextWrapper);
+
+    void init(QQmlContextData *context, QObject *scopeObject);
+    void destroy();
+
+    QQmlContextDataRef *context;
     QQmlQPointer<QObject> scopeObject;
 };
 
-#define QmlContextMembers(class, Member) \
-    Member(class, Pointer, QQmlContextWrapper *, qml)
+#define QmlContextMembers(class, Member)
 
 DECLARE_HEAP_OBJECT(QmlContext, ExecutionContext) {
-    DECLARE_MARK_TABLE(QmlContext);
+    DECLARE_MARKOBJECTS(QmlContext);
 
+    QQmlContextWrapper *qml() { return static_cast<QQmlContextWrapper *>(activation.get()); }
     void init(QV4::ExecutionContext *outerContext, QV4::QQmlContextWrapper *qml);
 };
 
@@ -92,36 +94,27 @@ struct Q_QML_EXPORT QQmlContextWrapper : Object
 {
     V4_OBJECT2(QQmlContextWrapper, Object)
     V4_NEEDS_DESTROY
-
-    void takeContextOwnership() {
-        d()->ownsContext = true;
-    }
+    V4_INTERNALCLASS(QmlContextWrapper)
 
     inline QObject *getScopeObject() const { return d()->scopeObject; }
     inline QQmlContextData *getContext() const { return *d()->context; }
 
-    void setReadOnly(bool b) { d()->readOnly = b; }
-
-    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
-    static bool put(Managed *m, String *name, const Value &value);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
 };
 
 struct Q_QML_EXPORT QmlContext : public ExecutionContext
 {
     V4_MANAGED(QmlContext, ExecutionContext)
+    V4_INTERNALCLASS(QmlContext)
 
-    static Heap::QmlContext *createWorkerContext(QV4::ExecutionContext *parent, const QUrl &source, Value *sendFunction);
     static Heap::QmlContext *create(QV4::ExecutionContext *parent, QQmlContextData *context, QObject *scopeObject);
 
     QObject *qmlScope() const {
-        return d()->qml->scopeObject;
+        return d()->qml()->scopeObject;
     }
     QQmlContextData *qmlContext() const {
-        return *d()->qml->context;
-    }
-
-    void takeContextOwnership() {
-        d()->qml->ownsContext = true;
+        return *d()->qml()->context;
     }
 };
 

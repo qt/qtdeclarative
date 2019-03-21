@@ -56,6 +56,7 @@
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
+#include <QtQuick/private/qsgrenderer_p.h>
 #include <private/qquickprofiler_p.h>
 
 #if QT_CONFIG(opengl)
@@ -75,7 +76,7 @@ QT_BEGIN_NAMESPACE
 extern bool qsg_useConsistentTiming();
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 #if QT_CONFIG(opengl)
-/*!
+/*
     expectations for this manager to work:
      - one opengl context to render multiple windows
      - OpenGL pipeline will not block for vsync in swap
@@ -87,7 +88,7 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_BAD_GUI_RENDER_LOOP);
 DEFINE_BOOL_CONFIG_OPTION(qmlForceThreadedRenderer, QML_FORCE_THREADED_RENDERER); // Might trigger graphics driver threading bugs, use at own risk
 #endif
-QSGRenderLoop *QSGRenderLoop::s_instance = 0;
+QSGRenderLoop *QSGRenderLoop::s_instance = nullptr;
 
 QSGRenderLoop::~QSGRenderLoop()
 {
@@ -106,11 +107,11 @@ void QSGRenderLoop::cleanup()
         QQuickWindowPrivate *wd = QQuickWindowPrivate::get(w);
         if (wd->windowManager == s_instance) {
            s_instance->windowDestroyed(w);
-           wd->windowManager = 0;
+           wd->windowManager = nullptr;
         }
     }
     delete s_instance;
-    s_instance = 0;
+    s_instance = nullptr;
 }
 
 /*!
@@ -152,9 +153,9 @@ public:
     void update(QQuickWindow *window) override { maybeUpdate(window); } // identical for this implementation.
     void handleUpdateRequest(QQuickWindow *) override;
 
-    void releaseResources(QQuickWindow *) override { }
+    void releaseResources(QQuickWindow *) override;
 
-    QAnimationDriver *animationDriver() const override { return 0; }
+    QAnimationDriver *animationDriver() const override { return nullptr; }
 
     QSGContext *sceneGraphContext() const override;
     QSGRenderContext *createRenderContext(QSGContext *) const override { return rc; }
@@ -220,10 +221,12 @@ QSGRenderLoop *QSGRenderLoop::instance()
             }
 
             switch (loopType) {
+#if QT_CONFIG(thread)
             case ThreadedRenderLoop:
                 qCDebug(QSG_LOG_INFO, "threaded render loop");
                 s_instance = new QSGThreadedRenderLoop();
                 break;
+#endif
             case WindowsRenderLoop:
                 qCDebug(QSG_LOG_INFO, "windows render loop");
                 s_instance = new QSGWindowsRenderLoop();
@@ -274,7 +277,7 @@ void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window,
 }
 #if QT_CONFIG(opengl)
 QSGGuiThreadRenderLoop::QSGGuiThreadRenderLoop()
-    : gl(0)
+    : gl(nullptr)
 {
     if (qsg_useConsistentTiming()) {
         QUnifiedTimer::instance(true)->setConsistentTiming(true);
@@ -304,6 +307,8 @@ void QSGGuiThreadRenderLoop::hide(QQuickWindow *window)
 {
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     cd->fireAboutToStop();
+    if (m_windows.contains(window))
+        m_windows[window].updatePending = false;
 }
 
 void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
@@ -326,17 +331,18 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
         current = gl->makeCurrent(surface);
     }
     if (Q_UNLIKELY(!current))
-        qCDebug(QSG_LOG_RENDERLOOP) << "cleanup without an OpenGL context";
+        qCDebug(QSG_LOG_RENDERLOOP, "cleanup without an OpenGL context");
 
 #if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
-    QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
+    if (current)
+        QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
 #endif
 
     d->cleanupNodesOnShutdown();
     if (m_windows.size() == 0) {
         rc->invalidate();
         delete gl;
-        gl = 0;
+        gl = nullptr;
     } else if (gl && window == gl->surface() && current) {
         gl->doneCurrent();
     }
@@ -346,11 +352,16 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
 
 void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 {
-    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
-    if (!cd->isRenderable() || !m_windows.contains(window))
+    if (!m_windows.contains(window))
         return;
 
     WindowData &data = const_cast<WindowData &>(m_windows[window]);
+    bool alsoSwap = data.updatePending;
+    data.updatePending = false;
+
+    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
+    if (!cd->isRenderable())
+        return;
 
     bool current = false;
 
@@ -363,7 +374,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         if (!gl->create()) {
             const bool isEs = gl->isOpenGLES();
             delete gl;
-            gl = 0;
+            gl = nullptr;
             handleContextCreationFailure(window, isEs);
         } else {
             cd->fireOpenGLContextCreated(gl);
@@ -377,8 +388,15 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         current = gl->makeCurrent(window);
     }
 
-    bool alsoSwap = data.updatePending;
-    data.updatePending = false;
+    bool lastDirtyWindow = true;
+    auto i = m_windows.constBegin();
+    while (i != m_windows.constEnd()) {
+        if (i.value().updatePending) {
+            lastDirtyWindow = false;
+            break;
+        }
+        i++;
+    }
 
     if (!current)
         return;
@@ -407,6 +425,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     emit window->afterAnimating();
 
     cd->syncSceneGraph();
+    if (lastDirtyWindow)
+        rc->endSync();
 
     if (profileFrames)
         syncTime = renderTimer.nsecsElapsed();
@@ -481,7 +501,8 @@ QImage QSGGuiThreadRenderLoop::grab(QQuickWindow *window)
 
 void QSGGuiThreadRenderLoop::maybeUpdate(QQuickWindow *window)
 {
-    if (!m_windows.contains(window))
+    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
+    if (!cd->isRenderable() || !m_windows.contains(window))
         return;
 
     m_windows[window].updatePending = true;
@@ -491,6 +512,14 @@ void QSGGuiThreadRenderLoop::maybeUpdate(QQuickWindow *window)
 QSGContext *QSGGuiThreadRenderLoop::sceneGraphContext() const
 {
     return sg;
+}
+
+void QSGGuiThreadRenderLoop::releaseResources(QQuickWindow *w)
+{
+    // No full invalidation of the rendercontext, just clear some caches.
+    QQuickWindowPrivate *d = QQuickWindowPrivate::get(w);
+    if (d->renderer)
+        d->renderer->releaseCachedResources();
 }
 
 void QSGGuiThreadRenderLoop::handleUpdateRequest(QQuickWindow *window)

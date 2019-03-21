@@ -45,7 +45,7 @@
     \qmltype LoggingCategory
     \ingroup qml-utility-elements
     \inqmlmodule QtQml
-    \brief Defines a logging category in QML
+    \brief Defines a logging category in QML.
     \since 5.8
 
     A logging category can be passed to console.log() and friends as the first argument.
@@ -59,6 +59,7 @@
         LoggingCategory {
             id: category
             name: "com.qt.category"
+            defaultLogLevel: LoggingCategory.Warning
         }
 
         Component.onCompleted: {
@@ -84,6 +85,17 @@
     \sa QLoggingCategory::categoryName()
 */
 
+/*!
+    \qmlproperty enumeration QtQml::LoggingCategory::defaultLogLevel
+    \since 5.12
+
+    Holds the default log level of the logging category. By default it is
+    created with the LoggingCategory.Debug log level.
+
+    \note This property needs to be set when declaring the LoggingCategory
+    and cannot be changed later.
+*/
+
 QQmlLoggingCategory::QQmlLoggingCategory(QObject *parent)
     : QObject(parent)
     , m_initialized(false)
@@ -99,6 +111,11 @@ QString QQmlLoggingCategory::name() const
     return QString::fromUtf8(m_name);
 }
 
+QQmlLoggingCategory::DefaultLogLevel QQmlLoggingCategory::defaultLogLevel() const
+{
+    return m_defaultLogLevel;
+}
+
 QLoggingCategory *QQmlLoggingCategory::category() const
 {
     return m_category.data();
@@ -111,9 +128,24 @@ void QQmlLoggingCategory::classBegin()
 void QQmlLoggingCategory::componentComplete()
 {
     m_initialized = true;
-    if (m_name.isNull())
+    if (m_name.isNull()) {
         qmlWarning(this) << QLatin1String("Declaring the name of the LoggingCategory is mandatory and cannot be changed later !");
+    } else {
+        QScopedPointer<QLoggingCategory> category(new QLoggingCategory(m_name.constData(), QtMsgType(m_defaultLogLevel)));
+        m_category.swap(category);
+    }
 }
+
+void QQmlLoggingCategory::setDefaultLogLevel(DefaultLogLevel defaultLogLevel)
+{
+    if (m_initialized) {
+        qmlWarning(this) << QLatin1String("The defaultLogLevel of a LoggingCategory cannot be changed after the Item is created");
+        return;
+    }
+
+    m_defaultLogLevel = defaultLogLevel;
+}
+
 
 void QQmlLoggingCategory::setName(const QString &name)
 {
@@ -123,8 +155,6 @@ void QQmlLoggingCategory::setName(const QString &name)
     }
 
     m_name = name.toUtf8();
-    QScopedPointer<QLoggingCategory> category(new QLoggingCategory(m_name.constData()));
-    m_category.swap(category);
 }
 
 #include "moc_qqmlloggingcategory_p.cpp"

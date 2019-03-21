@@ -6,4 +6,4 @@ include (../../shared/util.pri)
 
 SOURCES += tst_qqmlenginecleanup.cpp
 
-QT += testlib qml
+QT += testlib qml qml-private

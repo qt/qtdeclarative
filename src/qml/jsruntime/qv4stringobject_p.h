@@ -64,12 +64,14 @@ namespace Heap {
     Member(class, Pointer, String *, string)
 
 DECLARE_HEAP_OBJECT(StringObject, Object) {
-    DECLARE_MARK_TABLE(StringObject);
+    DECLARE_MARKOBJECTS(StringObject);
 
     enum {
         LengthPropertyIndex = 0
     };
 
+    void init(bool /*don't init*/)
+    { Object::init(); }
     void init();
     void init(const QV4::String *string);
 
@@ -96,18 +98,23 @@ struct StringObject: Object {
         return d()->length();
     }
 
-    static bool deleteIndexedProperty(Managed *m, uint index);
-
+    using Object::getOwnProperty;
 protected:
-    static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs);
+    static bool virtualDeleteProperty(Managed *m, PropertyKey id);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
+    static PropertyAttributes virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p);
 };
 
 struct StringCtor: FunctionObject
 {
     V4_OBJECT2(StringCtor, FunctionObject)
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
-    static void call(const Managed *, Scope &scope, CallData *callData);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
+    static ReturnedValue virtualCall(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+
+    static ReturnedValue method_fromCharCode(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_fromCodePoint(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_raw(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct StringPrototype: StringObject
@@ -115,30 +122,34 @@ struct StringPrototype: StringObject
     V4_PROTOTYPE(objectPrototype)
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_charAt(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_charCodeAt(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_concat(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_endsWith(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_indexOf(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_includes(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_lastIndexOf(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_localeCompare(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_match(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_repeat(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_replace(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_search(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_slice(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_split(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_startsWith(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_substr(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_substring(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toLowerCase(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toLocaleLowerCase(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toUpperCase(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toLocaleUpperCase(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_fromCharCode(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_trim(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_charAt(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_charCodeAt(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_codePointAt(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_concat(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_endsWith(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_indexOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_includes(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_lastIndexOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_localeCompare(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_match(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_normalize(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_padEnd(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_padStart(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_repeat(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_replace(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_search(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_slice(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_split(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_startsWith(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_substr(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_substring(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toLowerCase(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toLocaleLowerCase(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toUpperCase(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toLocaleUpperCase(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_trim(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_iterator(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 }

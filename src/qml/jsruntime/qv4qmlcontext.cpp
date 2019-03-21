@@ -54,6 +54,7 @@
 #include <private/qqmljavascriptexpression_p.h>
 #include <private/qjsvalue_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4module_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -62,57 +63,56 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(QQmlContextWrapper);
 DEFINE_MANAGED_VTABLE(QmlContext);
 
-void Heap::QQmlContextWrapper::init(QQmlContextData *context, QObject *scopeObject, bool ownsContext)
+void Heap::QQmlContextWrapper::init(QQmlContextData *context, QObject *scopeObject)
 {
     Object::init();
-    readOnly = true;
-    this->ownsContext = ownsContext;
-    isNullWrapper = false;
-    this->context = new QQmlGuardedContextData(context);
+    this->context = new QQmlContextDataRef(context);
     this->scopeObject.init(scopeObject);
 }
 
 void Heap::QQmlContextWrapper::destroy()
 {
-    if (*context && ownsContext)
-        (*context)->destroy();
     delete context;
     scopeObject.destroy();
     Object::destroy();
 }
 
-ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasProperty)
+ReturnedValue QQmlContextWrapper::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<QQmlContextWrapper>());
+
+    if (!id.isString())
+        return Object::virtualGet(m, id, receiver, hasProperty);
+
     const QQmlContextWrapper *resource = static_cast<const QQmlContextWrapper *>(m);
     QV4::ExecutionEngine *v4 = resource->engine();
     QV4::Scope scope(v4);
 
-    // In V8 the JS global object would come _before_ the QML global object,
-    // so simulate that here.
-    bool hasProp;
-    QV4::ScopedValue result(scope, v4->globalObject->get(name, &hasProp));
+    if (v4->callingQmlContext() != *resource->d()->context) {
+        if (resource->d()->module) {
+            Scoped<Module> module(scope, resource->d()->module);
+            bool hasProp = false;
+            ScopedValue value(scope, module->get(id, receiver, &hasProp));
+            if (hasProp) {
+                if (hasProperty)
+                    *hasProperty = hasProp;
+                return value->asReturnedValue();
+            }
+        }
+
+        return Object::virtualGet(m, id, receiver, hasProperty);
+    }
+
+    bool hasProp = false;
+    ScopedValue result(scope, Object::virtualGet(m, id, receiver, &hasProp));
     if (hasProp) {
         if (hasProperty)
             *hasProperty = hasProp;
         return result->asReturnedValue();
     }
 
-    if (resource->d()->isNullWrapper)
-        return Object::get(m, name, hasProperty);
-
-    if (v4->callingQmlContext() != *resource->d()->context)
-        return Object::get(m, name, hasProperty);
-
-    result = Object::get(m, name, &hasProp);
-    if (hasProp) {
-        if (hasProperty)
-            *hasProperty = hasProp;
-        return result->asReturnedValue();
-    }
-
-    // Its possible we could delay the calculation of the "actual" context (in the case
-    // of sub contexts) until it is definately needed.
+    // It's possible we could delay the calculation of the "actual" context (in the case
+    // of sub contexts) until it is definitely needed.
     QQmlContextData *context = resource->getContext();
     QQmlContextData *expressionContext = context;
 
@@ -132,17 +132,51 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasP
 
     QObject *scopeObject = resource->getScopeObject();
 
+    ScopedString name(scope, id.asStringOrSymbol());
+
+    const auto performGobalLookUp = [&result, v4, &name, hasProperty]() {
+        bool hasProp = false;
+        result = v4->globalObject->get(name, &hasProp);
+        if (hasProp) {
+            if (hasProperty)
+                *hasProperty = hasProp;
+            return true;
+        }
+        return false;
+    };
+
+    // If the scope object is a QAbstractDynamicMetaObject, then QMetaObject::indexOfProperty
+    // will call createProperty() on the QADMO and implicitly create the property. While that
+    // is questionable behavior, there are two use-cases that we support in the light of this:
+    //
+    //    (1) The implicit creation of properties is necessary because it will also result in
+    //        a recorded capture, which will allow a re-evaluation of bindings when the value
+    //        is populated later. See QTBUG-35233 and the test-case in tst_qqmlpropertymap.
+    //
+    //    (1) Looking up "console" in order to place a console.log() call for example must
+    //        find the console instead of creating a new property. Therefore we prioritize the
+    //        lookup in the global object here.
+    //
+    // Note: The scope object is only a QADMO for example when somebody registers a QQmlPropertyMap
+    // sub-class as QML type and then instantiates it in .qml.
+    if (scopeObject && QQmlPropertyCache::isDynamicMetaObject(scopeObject->metaObject())) {
+        if (performGobalLookUp())
+            return result->asReturnedValue();
+    }
+
     if (context->imports && name->startsWithUpper()) {
         // Search for attached properties, enums and imported scripts
-        QQmlTypeNameCache::Result r = context->imports->query(name);
+        QQmlTypeNameCache::Result r = context->imports->query(name, QQmlImport::AllowRecursion);
 
         if (r.isValid()) {
             if (hasProperty)
                 *hasProperty = true;
             if (r.scriptIndex != -1) {
                 QV4::ScopedObject scripts(scope, context->importedScripts.valueRef());
-                return scripts->getIndexed(r.scriptIndex);
-            } else if (r.type) {
+                if (scripts)
+                    return scripts->get(r.scriptIndex);
+                return QV4::Encode::null();
+            } else if (r.type.isValid()) {
                 return QQmlTypeWrapper::create(v4, scopeObject, r.type);
             } else if (r.importNamespace) {
                 return QQmlTypeWrapper::create(v4, scopeObject, context->imports, r.importNamespace);
@@ -157,7 +191,7 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasP
 
     while (context) {
         // Search context properties
-        const QV4::IdentifierHash<int> &properties = context->propertyNames();
+        const QV4::IdentifierHash &properties = context->propertyNames();
         if (properties.count()) {
             int propertyIdx = properties.value(name);
 
@@ -203,7 +237,7 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasP
                 return result->asReturnedValue();
             }
         }
-        scopeObject = 0;
+        scopeObject = nullptr;
 
 
         // Search context object
@@ -220,14 +254,23 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasP
         context = context->parent;
     }
 
+    // Do a lookup in the global object here to avoid expressionContext->unresolvedNames becoming
+    // true if we access properties of the global object.
+    if (performGobalLookUp())
+        return result->asReturnedValue();
+
     expressionContext->unresolvedNames = true;
 
     return Encode::undefined();
 }
 
-bool QQmlContextWrapper::put(Managed *m, String *name, const Value &value)
+bool QQmlContextWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     Q_ASSERT(m->as<QQmlContextWrapper>());
+
+    if (id.isSymbol() || id.isArrayIndex())
+        return Object::virtualPut(m, id, value, receiver);
+
     QQmlContextWrapper *resource = static_cast<QQmlContextWrapper *>(m);
     ExecutionEngine *v4 = resource->engine();
     QV4::Scope scope(v4);
@@ -235,24 +278,12 @@ bool QQmlContextWrapper::put(Managed *m, String *name, const Value &value)
         return false;
     QV4::Scoped<QQmlContextWrapper> wrapper(scope, resource);
 
-    uint member = wrapper->internalClass()->find(name);
-    if (member < UINT_MAX)
-        return wrapper->putValue(member, value);
+    auto member = wrapper->internalClass()->findValueOrSetter(id);
+    if (member.index < UINT_MAX)
+        return wrapper->putValue(member.index, member.attrs, value);
 
-    if (wrapper->d()->isNullWrapper) {
-        if (wrapper && wrapper->d()->readOnly) {
-            QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
-                            QLatin1Char('"');
-            ScopedString e(scope, v4->newString(error));
-            v4->throwError(e);
-            return false;
-        }
-
-        return Object::put(m, name, value);
-    }
-
-    // Its possible we could delay the calculation of the "actual" context (in the case
-    // of sub contexts) until it is definately needed.
+    // It's possible we could delay the calculation of the "actual" context (in the case
+    // of sub contexts) until it is definitely needed.
     QQmlContextData *context = wrapper->getContext();
     QQmlContextData *expressionContext = context;
 
@@ -262,9 +293,10 @@ bool QQmlContextWrapper::put(Managed *m, String *name, const Value &value)
     // See QV8ContextWrapper::Getter for resolution order
 
     QObject *scopeObject = wrapper->getScopeObject();
+    ScopedString name(scope, id.asStringOrSymbol());
 
     while (context) {
-        const QV4::IdentifierHash<int> &properties = context->propertyNames();
+        const QV4::IdentifierHash &properties = context->propertyNames();
         // Search context properties
         if (properties.count() && properties.value(name) != -1)
             return false;
@@ -273,7 +305,7 @@ bool QQmlContextWrapper::put(Managed *m, String *name, const Value &value)
         if (scopeObject &&
             QV4::QObjectWrapper::setQmlProperty(v4, context, scopeObject, name, QV4::QObjectWrapper::CheckRevision, value))
             return true;
-        scopeObject = 0;
+        scopeObject = nullptr;
 
         // Search context object
         if (context->contextObject &&
@@ -285,58 +317,25 @@ bool QQmlContextWrapper::put(Managed *m, String *name, const Value &value)
 
     expressionContext->unresolvedNames = true;
 
-    if (wrapper->d()->readOnly) {
-        QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
-                        QLatin1Char('"');
-        v4->throwError(error);
-        return false;
-    }
-
-    return Object::put(m, name, value);
+    QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
+            QLatin1Char('"');
+    v4->throwError(error);
+    return false;
 }
 
 void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QQmlContextWrapper *qml)
 {
     Heap::ExecutionContext::init(Heap::ExecutionContext::Type_QmlContext);
     outer.set(internalClass->engine, outerContext->d());
-    strictMode = false;
-    callData = outer->callData;
-    lookups = outer->lookups;
-    constantTable = outer->constantTable;
-    compilationUnit = outer->compilationUnit;
 
-    this->qml.set(internalClass->engine, qml->d());
-}
-
-Heap::QmlContext *QmlContext::createWorkerContext(ExecutionContext *parent, const QUrl &source, Value *sendFunction)
-{
-    Scope scope(parent);
-
-    QQmlContextData *context = new QQmlContextData;
-    context->baseUrl = source;
-    context->baseUrlString = source.toString();
-    context->isInternal = true;
-    context->isJSContext = true;
-
-    Scoped<QQmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QQmlContextWrapper>(context, (QObject*)0, true));
-    qml->d()->isNullWrapper = true;
-
-    qml->setReadOnly(false);
-    QV4::ScopedObject api(scope, scope.engine->newObject());
-    api->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("sendMessage"))), *sendFunction);
-    qml->QV4::Object::put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("WorkerScript"))), api);
-    qml->setReadOnly(true);
-
-    Heap::QmlContext *c = scope.engine->memoryManager->alloc<QmlContext>(parent, qml);
-    Q_ASSERT(c->vtable() == staticVTable());
-    return c;
+    this->activation.set(internalClass->engine, qml->d());
 }
 
 Heap::QmlContext *QmlContext::create(ExecutionContext *parent, QQmlContextData *context, QObject *scopeObject)
 {
     Scope scope(parent);
 
-    Scoped<QQmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QQmlContextWrapper>(context, scopeObject));
+    Scoped<QQmlContextWrapper> qml(scope, scope.engine->memoryManager->allocate<QQmlContextWrapper>(context, scopeObject));
     Heap::QmlContext *c = scope.engine->memoryManager->alloc<QmlContext>(parent, qml);
     Q_ASSERT(c->vtable() == staticVTable());
     return c;

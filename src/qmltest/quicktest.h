@@ -45,16 +45,16 @@
 
 QT_BEGIN_NAMESPACE
 
-QTEST_ADD_GPU_BLACKLIST_SUPPORT_DEFS
+class QQuickItem;
 
 Q_QUICK_TEST_EXPORT int quick_test_main(int argc, char **argv, const char *name, const char *sourceDir);
+Q_QUICK_TEST_EXPORT int quick_test_main_with_setup(int argc, char **argv, const char *name, const char *sourceDir, QObject *setup);
 
 #ifdef QUICK_TEST_SOURCE_DIR
 
 #define QUICK_TEST_MAIN(name) \
     int main(int argc, char **argv) \
     { \
-        QTEST_ADD_GPU_BLACKLIST_SUPPORT \
         QTEST_SET_MAIN_SOURCE_PATH \
         return quick_test_main(argc, argv, #name, QUICK_TEST_SOURCE_DIR); \
     }
@@ -62,9 +62,16 @@ Q_QUICK_TEST_EXPORT int quick_test_main(int argc, char **argv, const char *name,
 #define QUICK_TEST_OPENGL_MAIN(name) \
     int main(int argc, char **argv) \
     { \
-        QTEST_ADD_GPU_BLACKLIST_SUPPORT \
         QTEST_SET_MAIN_SOURCE_PATH \
         return quick_test_main(argc, argv, #name, QUICK_TEST_SOURCE_DIR); \
+    }
+
+#define QUICK_TEST_MAIN_WITH_SETUP(name, QuickTestSetupClass) \
+    int main(int argc, char **argv) \
+    { \
+        QTEST_SET_MAIN_SOURCE_PATH \
+        QuickTestSetupClass setup; \
+        return quick_test_main_with_setup(argc, argv, #name, QUICK_TEST_SOURCE_DIR, &setup); \
     }
 
 #else
@@ -72,20 +79,31 @@ Q_QUICK_TEST_EXPORT int quick_test_main(int argc, char **argv, const char *name,
 #define QUICK_TEST_MAIN(name) \
     int main(int argc, char **argv) \
     { \
-        QTEST_ADD_GPU_BLACKLIST_SUPPORT \
         QTEST_SET_MAIN_SOURCE_PATH \
-        return quick_test_main(argc, argv, #name, 0); \
+        return quick_test_main(argc, argv, #name, nullptr); \
     }
 
 #define QUICK_TEST_OPENGL_MAIN(name) \
     int main(int argc, char **argv) \
     { \
-        QTEST_ADD_GPU_BLACKLIST_SUPPORT \
         QTEST_SET_MAIN_SOURCE_PATH \
-        return quick_test_main(argc, argv, #name, 0); \
+        return quick_test_main(argc, argv, #name, nullptr); \
+    }
+
+#define QUICK_TEST_MAIN_WITH_SETUP(name, QuickTestSetupClass) \
+    int main(int argc, char **argv) \
+    { \
+        QTEST_SET_MAIN_SOURCE_PATH \
+        QuickTestSetupClass setup; \
+        return quick_test_main_with_setup(argc, argv, #name, nullptr, &setup); \
     }
 
 #endif
+
+namespace QQuickTest {
+Q_QUICK_TEST_EXPORT bool qIsPolishScheduled(const QQuickItem *item);
+Q_QUICK_TEST_EXPORT bool qWaitForItemPolished(const QQuickItem *item, int timeout = 5000);
+}
 
 QT_END_NAMESPACE
 

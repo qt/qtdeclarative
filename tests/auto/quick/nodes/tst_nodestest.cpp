@@ -41,6 +41,9 @@
 #include <QtQuick/qsgsimpletexturenode.h>
 #include <QtQuick/private/qsgtexture_p.h>
 
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformintegration.h>
+
 QT_BEGIN_NAMESPACE
 inline bool operator==(const QSGGeometry::TexturedPoint2D& l, const QSGGeometry::TexturedPoint2D& r)
 {
@@ -73,13 +76,16 @@ private Q_SLOTS:
     void textureNodeRect();
 
 private:
-    QOffscreenSurface *surface;
-    QOpenGLContext *context;
-    QSGDefaultRenderContext *renderContext;
+    QOffscreenSurface *surface = nullptr;
+    QOpenGLContext *context = nullptr;
+    QSGDefaultRenderContext *renderContext = nullptr;
 };
 
 void NodesTest::initTestCase()
 {
+    if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::OpenGL))
+        QSKIP("OpenGL not supported by the platform");
+
     QSGRenderLoop *renderLoop = QSGRenderLoop::instance();
 
     surface = new QOffscreenSurface;
@@ -112,8 +118,8 @@ class DummyRenderer : public QSGBatchRenderer::Renderer
 public:
     DummyRenderer(QSGRootNode *root, QSGDefaultRenderContext *renderContext)
         : QSGBatchRenderer::Renderer(renderContext)
-        , changedNode(0)
-        , changedState(0)
+        , changedNode(nullptr)
+        , changedState(nullptr)
         , renderCount(0)
     {
         setRootNode(root);
@@ -141,9 +147,6 @@ public:
 int DummyRenderer::globalRendereringOrder;
 
 NodesTest::NodesTest()
-    : surface(Q_NULLPTR)
-    , context(Q_NULLPTR)
-    , renderContext(Q_NULLPTR)
 {
 }
 

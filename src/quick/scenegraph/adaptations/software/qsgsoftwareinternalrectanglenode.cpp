@@ -47,6 +47,7 @@ QT_BEGIN_NAMESPACE
 QSGSoftwareInternalRectangleNode::QSGSoftwareInternalRectangleNode()
     : m_penWidth(0)
     , m_radius(0)
+    , m_vertical(true)
     , m_cornerPixmapIsDirty(true)
     , m_devicePixelRatio(1)
 {
@@ -120,7 +121,7 @@ void QSGSoftwareInternalRectangleNode::setGradientStops(const QGradientStops &st
     for (const QGradientStop &stop : qAsConst(stops)) {
         if (stop.first < 0.0 || stop.first > 1.0) {
             needsNormalization = true;
-            continue;
+            break;
         }
     }
 
@@ -186,6 +187,15 @@ void QSGSoftwareInternalRectangleNode::setGradientStops(const QGradientStops &st
     markDirty(DirtyMaterial);
 }
 
+void QSGSoftwareInternalRectangleNode::setGradientVertical(bool vertical)
+{
+    if (m_vertical != vertical) {
+        m_vertical = vertical;
+        m_cornerPixmapIsDirty = true;
+        markDirty(DirtyMaterial);
+    }
+}
+
 void QSGSoftwareInternalRectangleNode::setRadius(qreal radius)
 {
     if (m_radius != radius) {
@@ -209,7 +219,7 @@ void QSGSoftwareInternalRectangleNode::update()
     }
 
     if (!m_stops.isEmpty()) {
-        QLinearGradient gradient(QPoint(0,0), QPoint(0,1));
+        QLinearGradient gradient(QPoint(0,0), QPoint(m_vertical ? 0 : 1, m_vertical ? 1 : 0));
         gradient.setStops(m_stops);
         gradient.setCoordinateMode(QGradient::ObjectBoundingMode);
         m_brush = QBrush(gradient);
@@ -227,8 +237,8 @@ void QSGSoftwareInternalRectangleNode::paint(QPainter *painter)
 {
     //We can only check for a device pixel ratio change when we know what
     //paint device is being used.
-    if (painter->device()->devicePixelRatio() != m_devicePixelRatio) {
-        m_devicePixelRatio = painter->device()->devicePixelRatio();
+    if (!qFuzzyCompare(painter->device()->devicePixelRatioF(), m_devicePixelRatio)) {
+        m_devicePixelRatio = painter->device()->devicePixelRatioF();
         generateCornerPixmap();
     }
 
@@ -245,7 +255,7 @@ void QSGSoftwareInternalRectangleNode::paint(QPainter *painter)
         } else {
             //Rounded Rects and Rects with Borders
             //Avoids broken behaviors of QPainter::drawRect/roundedRect
-            QPixmap pixmap = QPixmap(m_rect.width() * m_devicePixelRatio, m_rect.height() * m_devicePixelRatio);
+            QPixmap pixmap = QPixmap(qRound(m_rect.width() * m_devicePixelRatio), qRound(m_rect.height() * m_devicePixelRatio));
             pixmap.fill(Qt::transparent);
             pixmap.setDevicePixelRatio(m_devicePixelRatio);
             QPainter pixmapPainter(&pixmap);
@@ -356,7 +366,7 @@ void QSGSoftwareInternalRectangleNode::paintRectangle(QPainter *painter, const Q
         } else {
 
             //blit 4 corners to border
-            int scaledRadius = radius * m_devicePixelRatio;
+            int scaledRadius = qRound(radius * m_devicePixelRatio);
             QRectF topLeftCorner(QPointF(rect.x(), rect.y()),
                                  QPointF(rect.x() + radius, rect.y() + radius));
             painter->drawPixmap(topLeftCorner, m_cornerPixmap, QRectF(0, 0, scaledRadius, scaledRadius));
@@ -415,8 +425,11 @@ void QSGSoftwareInternalRectangleNode::generateCornerPixmap()
 {
     //Generate new corner Pixmap
     int radius = qFloor(qMin(qMin(m_rect.width(), m_rect.height()) * 0.5, m_radius));
+    const auto width = qRound(radius * 2 * m_devicePixelRatio);
 
-    m_cornerPixmap = QPixmap(radius * 2 * m_devicePixelRatio, radius * 2 * m_devicePixelRatio);
+    if (m_cornerPixmap.width() != width)
+        m_cornerPixmap = QPixmap(width, width);
+
     m_cornerPixmap.setDevicePixelRatio(m_devicePixelRatio);
     m_cornerPixmap.fill(Qt::transparent);
 

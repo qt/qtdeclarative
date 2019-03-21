@@ -39,7 +39,7 @@
 
 #include "qquickellipseextruder_p.h"
 #include <qmath.h>
-#include <stdlib.h>
+#include <qrandom.h>
 
 QT_BEGIN_NAMESPACE
 /*!
@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Shape
-    \brief Represents an ellipse to other particle system elements
+    \brief Represents an ellipse to other particle system elements.
 
     This shape can be used by Emitter subclasses and Affector subclasses to have
     them act upon an ellipse shaped area.
@@ -68,8 +68,8 @@ QQuickEllipseExtruder::QQuickEllipseExtruder(QObject *parent) :
 
 QPointF QQuickEllipseExtruder::extrude(const QRectF & r)
 {
-    qreal theta = ((qreal)rand()/RAND_MAX) * 6.2831853071795862;
-    qreal mag = m_fill ? ((qreal)rand()/RAND_MAX) : 1;
+    qreal theta = QRandomGenerator::global()->bounded(2 * M_PI);
+    qreal mag = m_fill ? QRandomGenerator::global()->generateDouble() : 1;
     return QPointF(r.x() + r.width()/2 + mag * (r.width()/2) * qCos(theta),
                    r.y() + r.height()/2 + mag * (r.height()/2) * qSin(theta));
 }

@@ -62,9 +62,9 @@ class QQuickItemGrabResultPrivate : public QObjectPrivate
 {
 public:
     QQuickItemGrabResultPrivate()
-        : cacheEntry(0)
-        , qmlEngine(0)
-        , texture(0)
+        : cacheEntry(nullptr)
+        , qmlEngine(nullptr)
+        , texture(nullptr)
     {
     }
 
@@ -139,7 +139,7 @@ public:
  * This property holds the pixel results from a grab.
  *
  * If the grab is not yet complete or if it failed,
- * an empty image is returned.
+ * a null image is returned (\c {image.isNull()} will return \c true).
  */
 
 /*!
@@ -226,10 +226,12 @@ bool QQuickItemGrabResult::event(QEvent *e)
     Q_D(QQuickItemGrabResult);
     if (e->type() == Event_Grab_Completed) {
         // JS callback
-        if (d->qmlEngine && d->callback.isCallable())
+        if (d->qmlEngine && d->callback.isCallable()) {
             d->callback.call(QJSValueList() << d->qmlEngine->newQObject(this));
-        else
+            deleteLater();
+        } else {
             Q_EMIT ready();
+        }
         return true;
     }
     return QObject::event(e);
@@ -266,7 +268,7 @@ void QQuickItemGrabResult::render()
     d->image =  d->texture->toImage();
 
     delete d->texture;
-    d->texture = 0;
+    d->texture = nullptr;
 
     disconnect(d->window.data(), &QQuickWindow::beforeSynchronizing, this, &QQuickItemGrabResult::setup);
     disconnect(d->window.data(), &QQuickWindow::afterRendering, this, &QQuickItemGrabResult::render);
@@ -281,17 +283,17 @@ QQuickItemGrabResult *QQuickItemGrabResultPrivate::create(QQuickItem *item, cons
 
     if (size.width() < 1 || size.height() < 1) {
         qmlWarning(item) << "grabToImage: item has invalid dimensions";
-        return 0;
+        return nullptr;
     }
 
     if (!item->window()) {
         qmlWarning(item) << "grabToImage: item is not attached to a window";
-        return 0;
+        return nullptr;
     }
 
     if (!item->window()->isVisible()) {
         qmlWarning(item) << "grabToImage: item's window is not visible";
-        return 0;
+        return nullptr;
     }
 
     QQuickItemGrabResult *result = new QQuickItemGrabResult();

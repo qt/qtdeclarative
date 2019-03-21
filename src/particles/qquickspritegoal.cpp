@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-images-sprites
     \inherits Affector
-    \brief For changing the state of a sprite particle
+    \brief For changing the state of a sprite particle.
 
 */
 /*!
@@ -82,7 +82,7 @@ QT_BEGIN_NAMESPACE
 QQuickSpriteGoalAffector::QQuickSpriteGoalAffector(QQuickItem *parent) :
     QQuickParticleAffector(parent),
     m_goalIdx(-1),
-    m_lastEngine(0),
+    m_lastEngine(nullptr),
     m_jump(false),
     m_systemStates(false),
     m_notUsingEngine(false)
@@ -121,7 +121,7 @@ void QQuickSpriteGoalAffector::setGoalState(const QString &arg)
 bool QQuickSpriteGoalAffector::affectParticle(QQuickParticleData *d, qreal dt)
 {
     Q_UNUSED(dt);
-    QQuickStochasticEngine *engine = 0;
+    QQuickStochasticEngine *engine = nullptr;
     if (!m_systemStates){
         //TODO: Affect all engines
         foreach (QQuickParticlePainter *p, m_system->groupData[d->groupId]->painters)

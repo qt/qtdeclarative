@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -11,8 +11,8 @@
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Free Documentation License Usage
 ** Alternatively, this file may be used under the terms of the GNU Free
@@ -20,7 +20,7 @@
 ** Foundation and appearing in the file included in the packaging of
 ** this file. Please review the following information to ensure
 ** the GNU Free Documentation License version 1.3 requirements
-** will be met: http://www.gnu.org/copyleft/fdl.html.
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -48,7 +48,7 @@ graphical types:
 
 \annotatedlist qtquick-positioners
 
-\section2 Column
+\section2 Column Items
 
 \div {class="float-right"}
 \inlineimage qml-column.png
@@ -64,7 +64,7 @@ include a small amount of space between the rectangles.
 Note that, since Column inherits directly from Item, any background color
 must be added to a parent Rectangle, if desired.
 
-\section2 Row
+\section2 Row Items
 
 \div {class="float-right"}
 \inlineimage qml-row.png
@@ -80,7 +80,7 @@ left around the edges of the horizontally centered Row item.
 
 \snippet qml/row.qml document
 
-\section2 Grid
+\section2 Grid Items
 
 \div {class="float-right"}
 \inlineimage qml-grid-spacing.png
@@ -100,7 +100,7 @@ themselves.
 Any empty cells in the grid must be created by defining placeholder items
 at the appropriate places in the Grid definition.
 
-\section2 Flow
+\section2 Flow Items
 
 \div {class="float-right"}
 \inlineimage qml-flow-text1.png
@@ -133,6 +133,5 @@ control of spacing between items and between lines of items.
 There are several other ways to position items in a user interface. In addition
 to the basic technique of specifying their coordinates directly, they can be
 positioned relative to other items with \l{anchor-layout}{anchors}, or used
-with \l{QML Data Models} such as
-\l{QML Data Models#VisualItemModel}{VisualItemModel}.
+with \l{QML Data Models} such as \l{QML Data Models#Object Model}{Object Model}.
 */

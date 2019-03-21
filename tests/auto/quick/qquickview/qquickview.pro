@@ -5,6 +5,7 @@ macx:CONFIG -= app_bundle
 SOURCES += tst_qquickview.cpp
 
 include (../../shared/util.pri)
+include (../shared/util.pri)
 
 TESTDATA = data/*
 

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -11,8 +11,8 @@
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Free Documentation License Usage
 ** Alternatively, this file may be used under the terms of the GNU Free
@@ -20,7 +20,7 @@
 ** Foundation and appearing in the file included in the packaging of
 ** this file. Please review the following information to ensure
 ** the GNU Free Documentation License version 1.3 requirements
-** will be met: http://www.gnu.org/copyleft/fdl.html.
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -105,6 +105,8 @@
   than the actual version of the library. Indeed, it is normal for the new library to allow
   QML written to previous versions to continue to work, even if more advanced versions of
   some of its types are available.
+
+  \sa {Choosing the Correct Integration Method Between C++ and QML}
 */
 
 /*!
@@ -141,7 +143,8 @@
 
   Returns the QML type id.
 
-  \sa qmlRegisterTypeNotAvailable()
+  \sa qmlRegisterTypeNotAvailable(),
+      {Choosing the Correct Integration Method Between C++ and QML}
 */
 
 /*!
@@ -266,7 +269,8 @@
 
   Without this, a generic "Game is not a type" message would be given.
 
-  \sa qmlRegisterUncreatableType()
+  \sa qmlRegisterUncreatableType(),
+      {Choosing the Correct Integration Method Between C++ and QML}
 */
 
 /*!
@@ -278,17 +282,110 @@
   system. Instances of this type cannot be created from the QML
   system.
 
+  This function should be used when the type will not be referenced by name.
+  Specifically, it has to be used for C++ types that are used as the left-hand
+  side of a property binding.
+
+  For example, consider the following two classes:
+
+    \code
+    class Bar : public QObject
+    {
+        Q_OBJECT
+        Q_PROPERTY(QString baz READ baz WRITE setBaz NOTIFY bazChanged)
+
+    public:
+        Bar() {}
+
+        QString baz() const { return mBaz; }
+
+        void setBaz(const QString &baz)
+        {
+            if (baz == mBaz)
+                return;
+
+            mBaz = baz;
+            emit bazChanged();
+        }
+
+    signals:
+        void bazChanged();
+
+    private:
+        QString mBaz;
+    };
+
+    class Foo : public QObject
+    {
+        Q_OBJECT
+        Q_PROPERTY(Bar *bar READ bar CONSTANT FINAL)
+
+    public:
+        Foo() {}
+
+        Bar *bar() { return &mBar; }
+
+    private:
+        Bar mBar;
+    };
+    \endcode
+
+  In QML, we assign a string to the \c baz property of \c bar:
+
+    \code
+    Foo {
+        bar.baz: "abc"
+        Component.onCompleted: print(bar.baz)
+    }
+    \endcode
+
+  For the QML engine to know that the \c Bar type has a \c baz property,
+  we have to make \c Bar known:
+
+    \code
+    qmlRegisterType<Foo>("App", 1, 0, "Foo");
+    qmlRegisterType<Bar>();
+    \endcode
+
+  As the \c Foo type is instantiated in QML, it must be registered
+  with the version of \l qmlRegisterType() that takes an import URI.
+
   Returns the QML type id.
+
+  \sa {Choosing the Correct Integration Method Between C++ and QML}
 */
 
 /*!
-  \fn int qmlRegisterInterface(const char *typeName)
-  \relates QQmlEngine
+    \fn int qmlRegisterInterface(const char *typeName)
+    \relates QQmlEngine
 
-  This template function registers the C++ type in the QML system
-  under the name \a typeName.
+    This template function registers the C++ type in the QML system
+    under the name \a typeName.
 
-  Returns the QML type id.
+    Types registered as an interface with the engine should also
+    declare themselves as an interface with the
+    \l {The Meta-Object System}{meta object system}. For example:
+
+    \code
+    struct FooInterface
+    {
+    public:
+        virtual ~FooInterface();
+        virtual void doSomething() = 0;
+    };
+
+    Q_DECLARE_INTERFACE(FooInterface, "org.foo.FooInterface")
+    \endcode
+
+    When registered with the QML engine in this way, they can be used as
+    property types:
+
+    Q_PROPERTY(FooInterface *foo READ foo WRITE setFoo)
+
+    When you assign a \l QObject sub-class to this property, the QML engine does
+    the interface cast to \c FooInterface* automatically.
+
+    Returns the QML type id.
 */
 
 /*!
@@ -324,6 +421,19 @@
    qmlRegisterSingletonType("Qt.example.qjsvalueApi", 1, 0, "MyApi", example_qjsvalue_singletontype_provider);
    \endcode
 
+   Alternatively, you can use a C++11 lambda:
+
+   \code
+   qmlRegisterSingletonType("Qt.example.qjsvalueApi", 1, 0, "MyApi", [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QJSValue {
+       Q_UNUSED(engine)
+
+       static int seedValue = 5;
+       QJSValue example = scriptEngine->newObject();
+       example.setProperty("someProperty", seedValue++);
+       return example;
+   });
+   \endcode
+
    In order to use the registered singleton type in QML, you must import the singleton type.
    \qml
    import QtQuick 2.0
@@ -333,10 +443,12 @@
        property int someValue: ExampleApi.MyApi.someProperty
    }
    \endqml
-  */
+
+   \sa {Choosing the Correct Integration Method Between C++ and QML}
+*/
 
 /*!
-    \fn Object *qmlAttachedPropertiesObject(const QObject *attachee, bool create = true)
+    \fn template<typename T> QObject *qmlAttachedPropertiesObject(const QObject *attachee, bool create = true)
     \relates QQmlEngine
 
     The form of this template function is:
@@ -354,7 +466,7 @@
     Returns 0 if type \e T is not a valid attaching type, or if \a create is false and no
     attachment object instance has previously been created for \a attachee.
 
-    \sa {Providing Attached Objects for Data Annotations}
+    \sa {Providing Attached Properties}
 
 */
 
@@ -423,6 +535,18 @@
    qmlRegisterSingletonType<SingletonTypeExample>("Qt.example.qobjectSingleton", 1, 0, "MyApi", example_qobject_singletontype_provider);
    \endcode
 
+   Alternatively, you can use a C++11 lambda:
+
+   \code
+   qmlRegisterSingletonType<SingletonTypeExample>("Qt.example.qjsvalueApi", 1, 0, "MyApi", [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject * {
+       Q_UNUSED(engine)
+       Q_UNUSED(scriptEngine)
+
+       SingletonTypeExample *example = new SingletonTypeExample();
+       return example;
+   });
+   \endcode
+
    In order to use the registered singleton type in QML, you must import the singleton type.
    \qml
    import QtQuick 2.0
@@ -437,31 +561,8 @@
    }
    \endqml
 
-   Since singleton types do not have an associated QQmlContext object, then within the functions of a QObject-derived
-   type that is registered as a singleton type implementation the QML context and engine information is not available.
-   The QQmlEngine::contextForObject() function returns NULL when supplied with a pointer to an QObject that
-   implements a singleton type.
-
-   Extending the above example:
-
-   \code
-   class SingletonTypeExample : public QObject
-   {
-       ...
-
-       Q_INVOKABLE void doSomethingElse()
-       {
-           // QML Engine/Context information is not accessible here:
-           Q_ASSERT(QQmlEngine::contextForObject(this) == 0);
-           Q_ASSERT(qmlContext(this) == 0);
-           Q_ASSERT(qmlEngine(this) == 0);
-       }
-
-       ...
-   }
-   \endcode
-
-  */
+   \sa {Choosing the Correct Integration Method Between C++ and QML}
+*/
 
 /*!
    \fn int qmlRegisterSingletonType(const QUrl &url, const char *uri, int versionMajor, int versionMinor, const char *qmlName)
@@ -559,4 +660,26 @@
   This can be used to make a certain module version available, even if no types
   are registered for that version. This is particularly useful for keeping the
   versions of related modules in sync.
+*/
+
+/*!
+  \since 5.12
+  \fn int qmlTypeId(const char* uri, int versionMajor, int versionMinor, const char *qmlName);
+  \relates QQmlEngine
+
+  Returns the QML type id of a type that was registered with the
+  name \a qmlName in a particular \a uri and a version specified in \a
+  versionMajor and \a versionMinor.
+
+  This function returns the same value as the QML type registration functions
+  such as qmlRegisterType() and qmlRegisterSingletonType().
+
+  If \a qmlName, \a uri and \a versionMajor match a registered type, but the
+  specified minor version in \a versionMinor is higher, then the id of the type
+  with the closest minor version is returned.
+
+  Returns -1 if no matching type was found or one of the given parameters
+  was invalid.
+
+  \sa qmlRegisterType(), qmlRegisterSingletonType()
 */

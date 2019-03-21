@@ -63,6 +63,7 @@ private slots:
     void testQml_cleanopen_data();
     void testQml_cleanopen();
     void totalDatabases();
+    void upgradeDatabase();
 
     void cleanupTestCase();
 
@@ -164,7 +165,7 @@ void tst_qqmlsqldatabase::testQml()
     component.setData(qml.toUtf8(), testFileUrl("empty.qml")); // just a file for relative local imports
     QVERIFY(!component.isError());
     QQuickText *text = qobject_cast<QQuickText*>(component.create());
-    QVERIFY(text != 0);
+    QVERIFY(text != nullptr);
     QCOMPARE(text->text(),QString("passed"));
 }
 
@@ -198,6 +199,22 @@ void tst_qqmlsqldatabase::totalDatabases()
         QSKIP("offlineStoragePath is empty, skip this test.");
 
     QCOMPARE(QDir(dbDir()+"/Databases").entryInfoList(QDir::Files|QDir::NoDotAndDotDot).count(), total_databases_created_by_tests*2);
+}
+
+void tst_qqmlsqldatabase::upgradeDatabase()
+{
+    QQmlComponent component(engine, testFile("changeVersion.qml"));
+    QVERIFY(component.isReady());
+
+    QObject *object = component.create();
+    QVERIFY(object);
+    QVERIFY(object->property("version").toString().isEmpty());
+
+    QVERIFY(QMetaObject::invokeMethod(object, "create"));
+    QCOMPARE(object->property("version").toString(), QLatin1String("2"));
+
+    QVERIFY(QMetaObject::invokeMethod(object, "upgrade"));
+    QCOMPARE(object->property("version").toString(), QLatin1String("22"));
 }
 
 QTEST_MAIN(tst_qqmlsqldatabase)

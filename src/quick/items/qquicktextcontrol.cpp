@@ -47,7 +47,6 @@
 #include <qfontmetrics.h>
 #include <qevent.h>
 #include <qdebug.h>
-#include <qdrag.h>
 #include <qclipboard.h>
 #include <qtimer.h>
 #include <qinputmethod.h>
@@ -95,7 +94,7 @@ static QTextLine currentTextLine(const QTextCursor &cursor)
 }
 
 QQuickTextControlPrivate::QQuickTextControlPrivate()
-    : doc(0),
+    : doc(nullptr),
 #if QT_CONFIG(im)
       preeditCursor(0),
 #endif
@@ -432,6 +431,7 @@ void QQuickTextControlPrivate::selectionChanged(bool forceEmitSelectionChanged /
 #endif
         emit q->selectionChanged();
     }
+    q->updateCursorRectangle(true);
 }
 
 void QQuickTextControlPrivate::_q_updateCurrentCharFormatAndSelection()
@@ -998,7 +998,7 @@ QRectF QQuickTextControlPrivate::rectForPosition(int position) const
             if (relativePos < line.textLength() - line.textStart())
                 w = line.cursorToX(relativePos + 1) - x;
             else
-                w = QFontMetrics(block.layout()->font()).width(QLatin1Char(' ')); // in sync with QTextLine::draw()
+                w = QFontMetrics(block.layout()->font()).horizontalAdvance(QLatin1Char(' ')); // in sync with QTextLine::draw()
         }
         r = QRectF(layoutPos.x() + x, layoutPos.y() + line.y(), textCursorWidth + w, line.height());
     } else {
@@ -1150,7 +1150,6 @@ void QQuickTextControlPrivate::mouseMoveEvent(QMouseEvent *e, const QPointF &mou
         if (interactionFlags & Qt::TextEditable) {
             if (cursor.position() != oldCursorPos) {
                 emit q->cursorPositionChanged();
-                q->updateCursorRectangle(true);
             }
             _q_updateCurrentCharFormatAndSelection();
 #if QT_CONFIG(im)
@@ -1159,7 +1158,6 @@ void QQuickTextControlPrivate::mouseMoveEvent(QMouseEvent *e, const QPointF &mou
 #endif
         } else if (cursor.position() != oldCursorPos) {
             emit q->cursorPositionChanged();
-            q->updateCursorRectangle(true);
         }
         selectionChanged(true);
         repaintOldAndNewSelection(oldSelection);
@@ -1305,8 +1303,12 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
         cursor.removeSelectedText();
     }
 
+    QTextBlock block;
+
     // insert commit string
     if (!e->commitString().isEmpty() || e->replacementLength()) {
+        if (e->commitString().endsWith(QChar::LineFeed))
+            block = cursor.block(); // Remember the block where the preedit text is
         QTextCursor c = cursor;
         c.setPosition(c.position() + e->replacementStart());
         c.setPosition(c.position() + e->replacementLength(), QTextCursor::KeepAnchor);
@@ -1325,7 +1327,9 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
         }
     }
 
-    QTextBlock block = cursor.block();
+    if (!block.isValid())
+        block = cursor.block();
+
     QTextLayout *layout = block.layout();
     if (isGettingInput) {
         layout->setPreeditArea(cursor.position() - block.position(), e->preeditString());

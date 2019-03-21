@@ -69,8 +69,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStateAction
 public:
     QQuickStateAction();
     QQuickStateAction(QObject *, const QString &, const QVariant &);
-    QQuickStateAction(QObject *, const QString &,
-                       QQmlContext *, const QVariant &);
+    QQuickStateAction(QObject *, const QQmlProperty &property, const QString &,
+                      const QVariant &);
 
     bool restore:1;
     bool actionDone:1;
@@ -115,7 +115,7 @@ public:
 
     virtual bool changesBindings();
     virtual void clearBindings();
-    virtual bool override(QQuickStateActionEvent*other);
+    virtual bool mayOverride(QQuickStateActionEvent*other);
 };
 
 //### rename to QQuickStateChange?
@@ -126,7 +126,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStateOperation : public QObject
 {
     Q_OBJECT
 public:
-    QQuickStateOperation(QObject *parent = 0)
+    QQuickStateOperation(QObject *parent = nullptr)
         : QObject(parent) {}
     typedef QList<QQuickStateAction> ActionList;
 
@@ -136,7 +136,7 @@ public:
     void setState(QQuickState *state);
 
 protected:
-    QQuickStateOperation(QObjectPrivate &dd, QObject *parent = 0);
+    QQuickStateOperation(QObjectPrivate &dd, QObject *parent = nullptr);
 
 private:
     Q_DECLARE_PRIVATE(QQuickStateOperation)
@@ -159,8 +159,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickState : public QObject
     Q_CLASSINFO("DeferredPropertyNames", "changes")
 
 public:
-    QQuickState(QObject *parent=0);
-    virtual ~QQuickState();
+    QQuickState(QObject *parent=nullptr);
+    ~QQuickState() override;
 
     QString name() const;
     void setName(const QString &);

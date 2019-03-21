@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -39,12 +39,18 @@
 
 #include "qsgdefaultdistancefieldglyphcache_p.h"
 
+#include <QtCore/qelapsedtimer.h>
+#include <QtCore/qbuffer.h>
+#include <QtQml/qqmlfile.h>
+
 #include <QtGui/private/qdistancefield_p.h>
 #include <QtGui/private/qopenglcontext_p.h>
 #include <QtQml/private/qqmlglobal_p.h>
 #include <qopenglfunctions.h>
 #include <qopenglframebufferobject.h>
 #include <qmath.h>
+#include "qsgcontext_p.h"
+
 
 #if !defined(QT_OPENGL_ES_2)
 #include <QtGui/qopenglfunctions_3_2_core.h>
@@ -59,26 +65,34 @@ DEFINE_BOOL_CONFIG_OPTION(qsgPreferFullSizeGlyphCacheTextures, QSG_PREFER_FULLSI
 #  define QSG_DEFAULT_DISTANCEFIELD_GLYPH_CACHE_PADDING 2
 #endif
 
-QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QOpenGLContext *c, const QRawFont &font)
-    : QSGDistanceFieldGlyphCache(c, font)
+QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QOpenGLContext *c,
+                                                                     const QRawFont &font)
+    : QSGDistanceFieldGlyphCache(font)
     , m_maxTextureSize(0)
     , m_maxTextureCount(3)
-    , m_blitProgram(0)
+    , m_areaAllocator(nullptr)
+    , m_blitProgram(nullptr)
     , m_blitBuffer(QOpenGLBuffer::VertexBuffer)
-    , m_fboGuard(0)
+    , m_fboGuard(nullptr)
     , m_funcs(c->functions())
 #if !defined(QT_OPENGL_ES_2)
-    , m_coreFuncs(0)
+    , m_coreFuncs(nullptr)
 #endif
 {
-    m_blitBuffer.create();
-    m_blitBuffer.bind();
-    static GLfloat buffer[16] = {-1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f,
-                                 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
-    m_blitBuffer.allocate(buffer, sizeof(buffer));
-    m_blitBuffer.release();
+    if (Q_LIKELY(m_blitBuffer.create())) {
+        m_blitBuffer.bind();
+        static const GLfloat buffer[16] = {-1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f,
+                                           0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
+        m_blitBuffer.allocate(buffer, sizeof(buffer));
+        m_blitBuffer.release();
+    } else {
+        qWarning("Buffer creation failed");
+    }
 
-    m_areaAllocator = new QSGAreaAllocator(QSize(maxTextureSize(), m_maxTextureCount * maxTextureSize()));
+    m_coreProfile = (c->format().profile() == QSurfaceFormat::CoreProfile);
+
+    // Load a pregenerated cache if the font contains one
+    loadPregeneratedCache(font);
 }
 
 QSGDefaultDistanceFieldGlyphCache::~QSGDefaultDistanceFieldGlyphCache()
@@ -86,7 +100,7 @@ QSGDefaultDistanceFieldGlyphCache::~QSGDefaultDistanceFieldGlyphCache()
     for (int i = 0; i < m_textures.count(); ++i)
         m_funcs->glDeleteTextures(1, &m_textures[i].texture);
 
-    if (m_fboGuard != 0)
+    if (m_fboGuard != nullptr)
         m_fboGuard->free();
 
     delete m_blitProgram;
@@ -97,6 +111,9 @@ void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyph
 {
     QList<GlyphPosition> glyphPositions;
     QVector<glyph_t> glyphsToRender;
+
+    if (m_areaAllocator == nullptr)
+        m_areaAllocator = new QSGAreaAllocator(QSize(maxTextureSize(), m_maxTextureCount * maxTextureSize()));
 
     for (QSet<glyph_t>::const_iterator it = glyphs.constBegin(); it != glyphs.constEnd() ; ++it) {
         glyph_t glyphIndex = *it;
@@ -234,10 +251,23 @@ void QSGDefaultDistanceFieldGlyphCache::releaseGlyphs(const QSet<glyph_t> &glyph
     m_unusedGlyphs += glyphs;
 }
 
-void QSGDefaultDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo, int width, int height)
+void QSGDefaultDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo,
+                                                      int width,
+                                                      int height)
 {
-    if (useTextureResizeWorkaround() && texInfo->image.isNull())
+    QByteArray zeroBuf(width * height, 0);
+    createTexture(texInfo, width, height, zeroBuf.constData());
+}
+
+void QSGDefaultDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo,
+                                                      int width,
+                                                      int height,
+                                                      const void *pixels)
+{
+    if (useTextureResizeWorkaround() && texInfo->image.isNull()) {
         texInfo->image = QDistanceField(width, height);
+        memcpy(texInfo->image.bits(), pixels, width * height);
+    }
 
     while (m_funcs->glGetError() != GL_NO_ERROR) { }
 
@@ -258,8 +288,7 @@ void QSGDefaultDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo, int 
     const GLenum format = GL_ALPHA;
 #endif
 
-    QByteArray zeroBuf(width * height, 0);
-    m_funcs->glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, zeroBuf.constData());
+    m_funcs->glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, pixels);
 
     texInfo->size = QSize(width, height);
 
@@ -397,7 +426,7 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int 
         m_funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 #endif
     m_funcs->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, oldWidth, oldHeight, 0,
-                          GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+                          GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     m_funcs->glBindTexture(GL_TEXTURE_2D, 0);
     m_funcs->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                     GL_TEXTURE_2D, tmp_texture, 0);
@@ -515,6 +544,263 @@ int QSGDefaultDistanceFieldGlyphCache::maxTextureSize() const
     if (!m_maxTextureSize)
         m_funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_maxTextureSize);
     return m_maxTextureSize;
+}
+
+namespace {
+    struct Qtdf {
+        // We need these structs to be tightly packed, but some compilers we use do not
+        // support #pragma pack(1), so we need to hardcode the offsets/sizes in the
+        // file format
+        enum TableSize {
+            HeaderSize = 14,
+            GlyphRecordSize = 46,
+            TextureRecordSize = 17
+        };
+
+        enum Offset {
+            // Header
+            majorVersion        = 0,
+            minorVersion        = 1,
+            pixelSize           = 2,
+            textureSize         = 4,
+            flags               = 8,
+            headerPadding       = 9,
+            numGlyphs           = 10,
+
+            // Glyph record
+            glyphIndex          = 0,
+            textureOffsetX      = 4,
+            textureOffsetY      = 8,
+            textureWidth        = 12,
+            textureHeight       = 16,
+            xMargin             = 20,
+            yMargin             = 24,
+            boundingRectX       = 28,
+            boundingRectY       = 32,
+            boundingRectWidth   = 36,
+            boundingRectHeight  = 40,
+            textureIndex        = 44,
+
+            // Texture record
+            allocatedX          = 0,
+            allocatedY          = 4,
+            allocatedWidth      = 8,
+            allocatedHeight     = 12,
+            texturePadding      = 16
+
+        };
+
+        template <typename T>
+        static inline T fetch(const char *data, Offset offset)
+        {
+            return qFromBigEndian<T>(data + int(offset));
+        }
+    };
+}
+
+bool QSGDefaultDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &font)
+{
+    // The pregenerated data must be loaded first, otherwise the area allocator
+    // will be wrong
+    if (m_areaAllocator != nullptr) {
+        qWarning("Font cache must be loaded before cache is used");
+        return false;
+    }
+
+    static QElapsedTimer timer;
+
+    bool profile = QSG_LOG_TIME_GLYPH().isDebugEnabled();
+    if (profile)
+        timer.start();
+
+    QByteArray qtdfTable = font.fontTable("qtdf");
+    if (qtdfTable.isEmpty())
+        return false;
+
+    typedef QHash<TextureInfo *, QVector<glyph_t> > GlyphTextureHash;
+
+    GlyphTextureHash glyphTextures;
+
+    if (uint(qtdfTable.size()) < Qtdf::HeaderSize) {
+        qWarning("Invalid qtdf table in font '%s'",
+                 qPrintable(font.familyName()));
+        return false;
+    }
+
+    const char *qtdfTableStart = qtdfTable.constData();
+    const char *qtdfTableEnd = qtdfTableStart + qtdfTable.size();
+
+    int padding = 0;
+    int textureCount = 0;
+    {
+        quint8 majorVersion = Qtdf::fetch<quint8>(qtdfTableStart, Qtdf::majorVersion);
+        quint8 minorVersion = Qtdf::fetch<quint8>(qtdfTableStart, Qtdf::minorVersion);
+        if (majorVersion != 5 || minorVersion != 12) {
+            qWarning("Invalid version of qtdf table %d.%d in font '%s'",
+                     majorVersion,
+                     minorVersion,
+                     qPrintable(font.familyName()));
+            return false;
+        }
+
+        qreal pixelSize = qreal(Qtdf::fetch<quint16>(qtdfTableStart, Qtdf::pixelSize));
+        m_maxTextureSize = Qtdf::fetch<quint32>(qtdfTableStart, Qtdf::textureSize);
+        m_doubleGlyphResolution = Qtdf::fetch<quint8>(qtdfTableStart, Qtdf::flags) == 1;
+        padding = Qtdf::fetch<quint8>(qtdfTableStart, Qtdf::headerPadding);
+
+        if (pixelSize <= 0.0) {
+            qWarning("Invalid pixel size in '%s'", qPrintable(font.familyName()));
+            return false;
+        }
+
+        if (m_maxTextureSize <= 0) {
+            qWarning("Invalid texture size in '%s'", qPrintable(font.familyName()));
+            return false;
+        }
+
+        int systemMaxTextureSize;
+        m_funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &systemMaxTextureSize);
+
+        if (m_maxTextureSize > systemMaxTextureSize) {
+            qWarning("System maximum texture size is %d. This is lower than the value in '%s', which is %d",
+                     systemMaxTextureSize,
+                     qPrintable(font.familyName()),
+                     m_maxTextureSize);
+        }
+
+        if (padding != QSG_DEFAULT_DISTANCEFIELD_GLYPH_CACHE_PADDING) {
+            qWarning("Padding mismatch in '%s'. Font requires %d, but Qt is compiled with %d.",
+                     qPrintable(font.familyName()),
+                     padding,
+                     QSG_DEFAULT_DISTANCEFIELD_GLYPH_CACHE_PADDING);
+        }
+
+        m_referenceFont.setPixelSize(pixelSize);
+
+        quint32 glyphCount = Qtdf::fetch<quint32>(qtdfTableStart, Qtdf::numGlyphs);
+        m_unusedGlyphs.reserve(glyphCount);
+
+        const char *allocatorData = qtdfTableStart + Qtdf::HeaderSize;
+        {
+            m_areaAllocator = new QSGAreaAllocator(QSize(0, 0));
+            allocatorData = m_areaAllocator->deserialize(allocatorData, qtdfTableEnd - allocatorData);
+            if (allocatorData == nullptr)
+                return false;
+        }
+
+        if (m_areaAllocator->size().height() % m_maxTextureSize != 0) {
+            qWarning("Area allocator size mismatch in '%s'", qPrintable(font.familyName()));
+            return false;
+        }
+
+        textureCount = m_areaAllocator->size().height() / m_maxTextureSize;
+        m_maxTextureCount = qMax(m_maxTextureCount, textureCount);
+
+        const char *textureRecord = allocatorData;
+        for (int i = 0; i < textureCount; ++i, textureRecord += Qtdf::TextureRecordSize) {
+            if (textureRecord + Qtdf::TextureRecordSize > qtdfTableEnd) {
+                qWarning("qtdf table too small in font '%s'.",
+                         qPrintable(font.familyName()));
+                return false;
+            }
+
+            TextureInfo *tex = textureInfo(i);
+            tex->allocatedArea.setX(Qtdf::fetch<quint32>(textureRecord, Qtdf::allocatedX));
+            tex->allocatedArea.setY(Qtdf::fetch<quint32>(textureRecord, Qtdf::allocatedY));
+            tex->allocatedArea.setWidth(Qtdf::fetch<quint32>(textureRecord, Qtdf::allocatedWidth));
+            tex->allocatedArea.setHeight(Qtdf::fetch<quint32>(textureRecord, Qtdf::allocatedHeight));
+            tex->padding = Qtdf::fetch<quint8>(textureRecord, Qtdf::texturePadding);
+        }
+
+        const char *glyphRecord = textureRecord;
+        for (quint32 i = 0; i < glyphCount; ++i, glyphRecord += Qtdf::GlyphRecordSize) {
+            if (glyphRecord + Qtdf::GlyphRecordSize > qtdfTableEnd) {
+                qWarning("qtdf table too small in font '%s'.",
+                         qPrintable(font.familyName()));
+                return false;
+            }
+
+            glyph_t glyph = Qtdf::fetch<quint32>(glyphRecord, Qtdf::glyphIndex);
+            m_unusedGlyphs.insert(glyph);
+
+            GlyphData &glyphData = emptyData(glyph);
+
+#define FROM_FIXED_POINT(value) \
+(((qreal)value)/(qreal)65536)
+
+            glyphData.texCoord.x = FROM_FIXED_POINT(Qtdf::fetch<quint32>(glyphRecord, Qtdf::textureOffsetX));
+            glyphData.texCoord.y = FROM_FIXED_POINT(Qtdf::fetch<quint32>(glyphRecord, Qtdf::textureOffsetY));
+            glyphData.texCoord.width = FROM_FIXED_POINT(Qtdf::fetch<quint32>(glyphRecord, Qtdf::textureWidth));
+            glyphData.texCoord.height = FROM_FIXED_POINT(Qtdf::fetch<quint32>(glyphRecord, Qtdf::textureHeight));
+            glyphData.texCoord.xMargin = FROM_FIXED_POINT(Qtdf::fetch<quint32>(glyphRecord, Qtdf::xMargin));
+            glyphData.texCoord.yMargin = FROM_FIXED_POINT(Qtdf::fetch<quint32>(glyphRecord, Qtdf::yMargin));
+            glyphData.boundingRect.setX(FROM_FIXED_POINT(Qtdf::fetch<qint32>(glyphRecord, Qtdf::boundingRectX)));
+            glyphData.boundingRect.setY(FROM_FIXED_POINT(Qtdf::fetch<qint32>(glyphRecord, Qtdf::boundingRectY)));
+            glyphData.boundingRect.setWidth(FROM_FIXED_POINT(Qtdf::fetch<quint32>(glyphRecord, Qtdf::boundingRectWidth)));
+            glyphData.boundingRect.setHeight(FROM_FIXED_POINT(Qtdf::fetch<quint32>(glyphRecord, Qtdf::boundingRectHeight)));
+
+#undef FROM_FIXED_POINT
+
+            int textureIndex = Qtdf::fetch<quint16>(glyphRecord, Qtdf::textureIndex);
+            if (textureIndex < 0 || textureIndex >= textureCount) {
+                qWarning("Invalid texture index %d (texture count == %d) in '%s'",
+                         textureIndex,
+                         textureCount,
+                         qPrintable(font.familyName()));
+                return false;
+            }
+
+
+            TextureInfo *texInfo = textureInfo(textureIndex);
+            m_glyphsTexture.insert(glyph, texInfo);
+
+            glyphTextures[texInfo].append(glyph);
+        }
+
+        GLint alignment = 4; // default value
+        m_funcs->glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
+
+        m_funcs->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        const uchar *textureData = reinterpret_cast<const uchar *>(glyphRecord);
+        for (int i = 0; i < textureCount; ++i) {
+
+            TextureInfo *texInfo = textureInfo(i);
+
+            int width = texInfo->allocatedArea.width();
+            int height = texInfo->allocatedArea.height();
+            qint64 size = width * height;
+            if (reinterpret_cast<const char *>(textureData + size) > qtdfTableEnd) {
+                qWarning("qtdf table too small in font '%s'.",
+                         qPrintable(font.familyName()));
+                return false;
+            }
+
+            createTexture(texInfo, width, height, textureData);
+
+            QVector<glyph_t> glyphs = glyphTextures.value(texInfo);
+
+            Texture t;
+            t.textureId = texInfo->texture;
+            t.size = texInfo->size;
+
+            setGlyphsTexture(glyphs, t);
+
+            textureData += size;
+        }
+
+        m_funcs->glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
+    }
+
+    if (profile) {
+        quint64 now = timer.elapsed();
+        qCDebug(QSG_LOG_TIME_GLYPH,
+                "distancefield: %d pre-generated glyphs loaded in %dms",
+                m_unusedGlyphs.size(),
+                (int) now);
+    }
+
+    return true;
 }
 
 QT_END_NAMESPACE

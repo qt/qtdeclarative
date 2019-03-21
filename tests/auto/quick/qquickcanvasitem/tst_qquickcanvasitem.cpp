@@ -26,4 +26,29 @@
 **
 ****************************************************************************/
 #include <QtQuickTest/quicktest.h>
-QUICK_TEST_MAIN(qquickcanvasitem)
+#include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlcontext.h>
+
+class Setup : public QObject
+{
+    Q_OBJECT
+
+public:
+    Setup() {}
+
+public slots:
+    void qmlEngineAvailable(QQmlEngine *engine)
+    {
+        engine->rootContext()->setContextProperty("hasImageFormats", QVariant(
+#ifdef HAS_IMAGE_FORMATS
+            true
+#else
+            false
+#endif
+            ));
+    }
+};
+
+QUICK_TEST_MAIN_WITH_SETUP(qquickcanvasitem, Setup)
+
+#include "tst_qquickcanvasitem.moc"

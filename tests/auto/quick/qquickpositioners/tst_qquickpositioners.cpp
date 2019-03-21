@@ -31,6 +31,7 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquickpositioners_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
+#include <QtQuickTest/QtQuickTest>
 #include <private/qquickitem_p.h>
 #include <qqmlexpression.h>
 #include "../shared/viewtestutil.h"
@@ -39,6 +40,8 @@
 
 using namespace QQuickViewTestUtil;
 using namespace QQuickVisualTestUtil;
+
+Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
 class tst_qquickpositioners : public QQmlDataTest
 {
@@ -313,13 +316,13 @@ void tst_qquickpositioners::test_horizontal()
     window->rootObject()->setProperty("testRightToLeft", false);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -357,13 +360,13 @@ void tst_qquickpositioners::test_horizontal_padding()
     window->rootObject()->setProperty("testRightToLeft", false);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -377,7 +380,7 @@ void tst_qquickpositioners::test_horizontal_padding()
     QCOMPARE(row->height(), 50.0);
 
     QQuickRow *obj = qobject_cast<QQuickRow*>(row);
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(row->property("padding").toDouble(), 0.0);
     QCOMPARE(row->property("topPadding").toDouble(), 0.0);
@@ -519,13 +522,13 @@ void tst_qquickpositioners::test_horizontal_rtl()
     window->rootObject()->setProperty("testRightToLeft", true);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
 
     QCOMPARE(one->x(), 60.0);
     QCOMPARE(one->y(), 0.0);
@@ -598,13 +601,13 @@ void tst_qquickpositioners::test_horizontal_spacing()
     window->rootObject()->setProperty("testRightToLeft", false);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -642,13 +645,13 @@ void tst_qquickpositioners::test_horizontal_spacing_rightToLeft()
     window->rootObject()->setProperty("testRightToLeft", true);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
 
     QCOMPARE(one->x(), 80.0);
     QCOMPARE(one->y(), 0.0);
@@ -686,13 +689,13 @@ void tst_qquickpositioners::test_horizontal_animated()
     window->rootObject()->setProperty("testRightToLeft", false);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
 
     //Note that they animate in
     QCOMPARE(one->x(), -100.0);
@@ -739,13 +742,13 @@ void tst_qquickpositioners::test_horizontal_animated_padding()
     window->rootObject()->setProperty("testRightToLeft", false);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
 
     //Note that they animate in
     QCOMPARE(one->x(), -100.0);
@@ -803,13 +806,13 @@ void tst_qquickpositioners::test_horizontal_animated_rightToLeft()
     window->rootObject()->setProperty("testRightToLeft", true);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
 
     //Note that they animate in
     QCOMPARE(one->x(), -100.0);
@@ -858,13 +861,13 @@ void tst_qquickpositioners::test_horizontal_animated_rightToLeft_padding()
     window->rootObject()->setProperty("testRightToLeft", true);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
 
     //Note that they animate in
     QCOMPARE(one->x(), -100.0);
@@ -922,13 +925,13 @@ void tst_qquickpositioners::test_horizontal_animated_disabled()
     QScopedPointer<QQuickView> window(createView(testFile("horizontal-animated-disabled.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
 
     QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
     QVERIFY(row);
@@ -970,13 +973,13 @@ void tst_qquickpositioners::test_horizontal_animated_disabled_padding()
     QScopedPointer<QQuickView> window(createView(testFile("horizontal-animated-disabled.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
 
     QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
     QVERIFY(row);
@@ -1037,7 +1040,7 @@ void tst_qquickpositioners::populateTransitions(const QString &positionerObjectN
     QQuickItem *positioner = window->rootObject()->findChild<QQuickItem*>(positionerObjectName);
     QVERIFY(positioner);
     window->show();
-    QTest::qWaitForWindowExposed(window.data());
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     qApp->processEvents();
 
     if (!dynamicallyPopulate && usePopulateTransition) {
@@ -1060,7 +1063,7 @@ void tst_qquickpositioners::populateTransitions(const QString &positionerObjectN
         QTRY_COMPARE(window->rootObject()->property("populateTransitionsDone").toInt(), 0);
         QTRY_COMPARE(window->rootObject()->property("addTransitionsDone").toInt(), model.count());
     } else {
-        QTRY_COMPARE(QQuickItemPrivate::get(positioner)->polishScheduled, false);
+        QVERIFY(QQuickTest::qWaitForItemPolished(positioner));
         QTRY_COMPARE(window->rootObject()->property("populateTransitionsDone").toInt(), 0);
         QTRY_COMPARE(window->rootObject()->property("addTransitionsDone").toInt(), 0);
     }
@@ -1120,13 +1123,13 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     ctxt->setContextProperty("testedPositioner", QString());
     window->setSource(testFileUrl(qmlFile));
     window->show();
-    QTest::qWaitForWindowExposed(window.data());
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     qApp->processEvents();
 
     QQuickItem *positioner = window->rootObject()->findChild<QQuickItem*>(positionerObjectName);
     QVERIFY(positioner);
     positioner->findChild<QQuickItem*>("repeater")->setProperty("model", QVariant::fromValue(&model));
-    QTRY_COMPARE(QQuickItemPrivate::get(positioner)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(positioner));
 
     for (int i = 0; i < initialItemCount; i++)
         model.addItem("Original item" + QString::number(i), "");
@@ -1243,7 +1246,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
     ctxt->setContextProperty("testedPositioner", QString());
     window->setSource(testFileUrl(qmlFile));
     window->show();
-    QTest::qWaitForWindowExposed(window.data());
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     qApp->processEvents();
 
     QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);
@@ -1251,7 +1254,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
     QQuickItem *positioner = window->rootObject()->findChild<QQuickItem*>(positionerObjectName);
     QVERIFY(positioner);
     positioner->findChild<QQuickItem*>("repeater")->setProperty("model", QVariant::fromValue(&model));
-    QTRY_COMPARE(QQuickItemPrivate::get(positioner)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(positioner));
 
     switch (change.type) {
         case ListChange::Removed:
@@ -1260,7 +1263,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
             break;
         case ListChange::Moved:
             model.moveItems(change.index, change.to, change.count);
-            QTRY_COMPARE(QQuickItemPrivate::get(positioner)->polishScheduled, false);
+            QVERIFY(QQuickTest::qWaitForItemPolished(positioner));
             break;
         case ListChange::Inserted:
         case ListChange::SetCurrent:
@@ -1390,7 +1393,7 @@ void tst_qquickpositioners::checkItemPositions(QQuickItem *positioner, QaimModel
             QVERIFY2(false, "Unknown positioner type");
         }
         QQuickText *name = findItem<QQuickText>(positioner, "name", i);
-        QVERIFY(name != 0);
+        QVERIFY(name != nullptr);
         QTRY_COMPARE(name->text(), model->name(i));
 
         padding += i * incrementalSize;
@@ -1403,13 +1406,13 @@ void tst_qquickpositioners::test_vertical()
     QScopedPointer<QQuickView> window(createView(testFile("vertical.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -1446,13 +1449,13 @@ void tst_qquickpositioners::test_vertical_padding()
     QScopedPointer<QQuickView> window(createView(testFile("vertical.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -1467,7 +1470,7 @@ void tst_qquickpositioners::test_vertical_padding()
     QCOMPARE(column->width(), 50.0);
 
     QQuickColumn *obj = qobject_cast<QQuickColumn*>(column);
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(column->property("padding").toDouble(), 0.0);
     QCOMPARE(column->property("topPadding").toDouble(), 0.0);
@@ -1607,13 +1610,13 @@ void tst_qquickpositioners::test_vertical_spacing()
     QScopedPointer<QQuickView> window(createView(testFile("vertical-spacing.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -1650,15 +1653,15 @@ void tst_qquickpositioners::test_vertical_animated()
 
     //Note that they animate in
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QCOMPARE(one->y(), -100.0);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QCOMPARE(two->y(), -100.0);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QCOMPARE(three->y(), -100.0);
 
     QVERIFY(QTest::qWaitForWindowExposed(window.data())); //It may not relayout until the next frame, so it needs to be drawn
@@ -1699,15 +1702,15 @@ void tst_qquickpositioners::test_vertical_animated_padding()
 
     //Note that they animate in
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QCOMPARE(one->y(), -100.0);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QCOMPARE(two->y(), -100.0);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QCOMPARE(three->y(), -100.0);
 
     QVERIFY(QTest::qWaitForWindowExposed(window.data())); //It may not relayout until the next frame, so it needs to be drawn
@@ -1758,15 +1761,15 @@ void tst_qquickpositioners::test_grid()
     QScopedPointer<QQuickView> window(createView(testFile("gridtest.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -1811,15 +1814,15 @@ void tst_qquickpositioners::test_grid_padding()
     QScopedPointer<QQuickView> window(createView(testFile("gridtest.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -1999,15 +2002,15 @@ void tst_qquickpositioners::test_grid_topToBottom()
     QScopedPointer<QQuickView> window(createView(testFile("grid-toptobottom.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -2054,15 +2057,15 @@ void tst_qquickpositioners::test_grid_rightToLeft()
     window->rootObject()->setProperty("testRightToLeft", true);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 50.0);
     QCOMPARE(one->y(), 0.0);
@@ -2154,15 +2157,15 @@ void tst_qquickpositioners::test_grid_spacing()
     QScopedPointer<QQuickView> window(createView(testFile("grid-spacing.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -2206,15 +2209,15 @@ void tst_qquickpositioners::test_grid_row_column_spacing()
     QScopedPointer<QQuickView> window(createView(testFile("grid-row-column-spacing.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -2261,27 +2264,27 @@ void tst_qquickpositioners::test_grid_animated()
 
     //Note that all animate in
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QCOMPARE(one->x(), -100.0);
     QCOMPARE(one->y(), -100.0);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QCOMPARE(two->x(), -100.0);
     QCOMPARE(two->y(), -100.0);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QCOMPARE(three->x(), -100.0);
     QCOMPARE(three->y(), -100.0);
 
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QCOMPARE(four->x(), -100.0);
     QCOMPARE(four->y(), -100.0);
 
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
     QCOMPARE(five->x(), -100.0);
     QCOMPARE(five->y(), -100.0);
 
@@ -2345,27 +2348,27 @@ void tst_qquickpositioners::test_grid_animated_padding()
 
     //Note that all animate in
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QCOMPARE(one->x(), -100.0);
     QCOMPARE(one->y(), -100.0);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QCOMPARE(two->x(), -100.0);
     QCOMPARE(two->y(), -100.0);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QCOMPARE(three->x(), -100.0);
     QCOMPARE(three->y(), -100.0);
 
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QCOMPARE(four->x(), -100.0);
     QCOMPARE(four->y(), -100.0);
 
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
     QCOMPARE(five->x(), -100.0);
     QCOMPARE(five->y(), -100.0);
 
@@ -2439,27 +2442,27 @@ void tst_qquickpositioners::test_grid_animated_rightToLeft()
 
     //Note that all animate in
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QCOMPARE(one->x(), -100.0);
     QCOMPARE(one->y(), -100.0);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QCOMPARE(two->x(), -100.0);
     QCOMPARE(two->y(), -100.0);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QCOMPARE(three->x(), -100.0);
     QCOMPARE(three->y(), -100.0);
 
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QCOMPARE(four->x(), -100.0);
     QCOMPARE(four->y(), -100.0);
 
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
     QCOMPARE(five->x(), -100.0);
     QCOMPARE(five->y(), -100.0);
 
@@ -2523,27 +2526,27 @@ void tst_qquickpositioners::test_grid_animated_rightToLeft_padding()
 
     //Note that all animate in
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QCOMPARE(one->x(), -100.0);
     QCOMPARE(one->y(), -100.0);
 
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QCOMPARE(two->x(), -100.0);
     QCOMPARE(two->y(), -100.0);
 
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QCOMPARE(three->x(), -100.0);
     QCOMPARE(three->y(), -100.0);
 
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QCOMPARE(four->x(), -100.0);
     QCOMPARE(four->y(), -100.0);
 
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
     QCOMPARE(five->x(), -100.0);
     QCOMPARE(five->y(), -100.0);
 
@@ -2614,15 +2617,15 @@ void tst_qquickpositioners::test_grid_zero_columns()
     QScopedPointer<QQuickView> window(createView(testFile("gridzerocolumns.qml")));
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -2668,15 +2671,15 @@ void tst_qquickpositioners::test_grid_H_alignment()
     window->rootObject()->setProperty("testHAlignment", QQuickGrid::AlignHCenter);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -2747,15 +2750,15 @@ void tst_qquickpositioners::test_grid_H_alignment_padding()
     window->rootObject()->setProperty("testHAlignment", QQuickGrid::AlignHCenter);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -2836,15 +2839,15 @@ void tst_qquickpositioners::test_grid_V_alignment()
     window->rootObject()->setProperty("testVAlignment", QQuickGrid::AlignVCenter);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -2879,15 +2882,15 @@ void tst_qquickpositioners::test_grid_V_alignment_padding()
     window->rootObject()->setProperty("testVAlignment", QQuickGrid::AlignVCenter);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QQuickItem *grid = window->rootObject()->findChild<QQuickItem*>("grid");
     QCOMPARE(grid->width(), 100.0);
@@ -2934,7 +2937,7 @@ void tst_qquickpositioners::test_propertychanges()
     QScopedPointer<QQuickView> window(createView(testFile("propertychangestest.qml")));
 
     QQuickGrid *grid = qobject_cast<QQuickGrid*>(window->rootObject());
-    QVERIFY(grid != 0);
+    QVERIFY(grid != nullptr);
     QQuickTransition *rowTransition = window->rootObject()->findChild<QQuickTransition*>("rowTransition");
     QQuickTransition *columnTransition = window->rootObject()->findChild<QQuickTransition*>("columnTransition");
 
@@ -2963,8 +2966,8 @@ void tst_qquickpositioners::test_propertychanges()
     QCOMPARE(addSpy.count(),1);
     QCOMPARE(moveSpy.count(),1);
 
-    grid->setAdd(0);
-    grid->setMove(0);
+    grid->setAdd(nullptr);
+    grid->setMove(nullptr);
     QCOMPARE(addSpy.count(),2);
     QCOMPARE(moveSpy.count(),2);
 
@@ -2992,13 +2995,13 @@ void tst_qquickpositioners::test_repeater()
     QScopedPointer<QQuickView> window(createView(testFile("repeatertest.qml")));
 
     QQuickRectangle *one = findItem<QQuickRectangle>(window->contentItem(), "one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
 
     QQuickRectangle *two = findItem<QQuickRectangle>(window->contentItem(), "two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
 
     QQuickRectangle *three = findItem<QQuickRectangle>(window->contentItem(), "three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -3014,13 +3017,13 @@ void tst_qquickpositioners::test_repeater_padding()
     QScopedPointer<QQuickView> window(createView(testFile("repeatertest-padding.qml")));
 
     QQuickRectangle *one = findItem<QQuickRectangle>(window->contentItem(), "one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
 
     QQuickRectangle *two = findItem<QQuickRectangle>(window->contentItem(), "two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
 
     QQuickRectangle *three = findItem<QQuickRectangle>(window->contentItem(), "three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
 
     QCOMPARE(one->x(), 3.0);
     QCOMPARE(one->y(), 2.0);
@@ -3038,15 +3041,15 @@ void tst_qquickpositioners::test_flow()
     window->rootObject()->setProperty("testRightToLeft", false);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -3093,15 +3096,15 @@ void tst_qquickpositioners::test_flow_padding()
     window->rootObject()->setProperty("testRightToLeft", false);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -3120,7 +3123,7 @@ void tst_qquickpositioners::test_flow_padding()
     QCOMPARE(flow->height(), 120.0);
 
     QQuickFlow *obj = qobject_cast<QQuickFlow*>(flow);
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(flow->property("padding").toDouble(), 0.0);
     QCOMPARE(flow->property("topPadding").toDouble(), 0.0);
@@ -3286,15 +3289,15 @@ void tst_qquickpositioners::test_flow_rightToLeft()
     window->rootObject()->setProperty("testRightToLeft", true);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 40.0);
     QCOMPARE(one->y(), 0.0);
@@ -3341,15 +3344,15 @@ void tst_qquickpositioners::test_flow_topToBottom()
     window->rootObject()->setProperty("testRightToLeft", false);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -3393,15 +3396,15 @@ void tst_qquickpositioners::test_flow_topToBottom_padding()
     window->rootObject()->setProperty("testRightToLeft", false);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 0.0);
     QCOMPARE(one->y(), 0.0);
@@ -3469,15 +3472,15 @@ void tst_qquickpositioners::test_flow_resize()
     root->setProperty("testRightToLeft", false);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QTRY_COMPARE(one->x(), 0.0);
     QTRY_COMPARE(one->y(), 0.0);
@@ -3502,15 +3505,15 @@ void tst_qquickpositioners::test_flow_resize_padding()
     root->setProperty("testRightToLeft", false);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QVERIFY(one != 0);
+    QVERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QTRY_COMPARE(one->x(), 3.0);
     QTRY_COMPARE(one->y(), 2.0);
@@ -3535,15 +3538,15 @@ void tst_qquickpositioners::test_flow_resize_rightToLeft()
     root->setProperty("testRightToLeft", true);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QTRY_VERIFY(one != 0);
+    QTRY_VERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 75.0);
     QCOMPARE(one->y(), 0.0);
@@ -3568,15 +3571,15 @@ void tst_qquickpositioners::test_flow_resize_rightToLeft_padding()
     root->setProperty("testRightToLeft", true);
 
     QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
-    QTRY_VERIFY(one != 0);
+    QTRY_VERIFY(one != nullptr);
     QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
-    QVERIFY(two != 0);
+    QVERIFY(two != nullptr);
     QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
-    QVERIFY(three != 0);
+    QVERIFY(three != nullptr);
     QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
-    QVERIFY(four != 0);
+    QVERIFY(four != nullptr);
     QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
-    QVERIFY(five != 0);
+    QVERIFY(five != nullptr);
 
     QCOMPARE(one->x(), 71.0);
     QCOMPARE(one->y(), 2.0);
@@ -3594,10 +3597,10 @@ void tst_qquickpositioners::test_flow_resize_rightToLeft_padding()
 void tst_qquickpositioners::test_flow_implicit_resize()
 {
     QScopedPointer<QQuickView> window(createView(testFile("flow-testimplicitsize.qml")));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     QQuickFlow *flow = window->rootObject()->findChild<QQuickFlow*>("flow");
-    QVERIFY(flow != 0);
+    QVERIFY(flow != nullptr);
 
     QCOMPARE(flow->width(), 100.0);
     QCOMPARE(flow->height(), 120.0);
@@ -3622,10 +3625,10 @@ void tst_qquickpositioners::test_flow_implicit_resize()
 void tst_qquickpositioners::test_flow_implicit_resize_padding()
 {
     QScopedPointer<QQuickView> window(createView(testFile("flow-testimplicitsize.qml")));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     QQuickFlow *flow = window->rootObject()->findChild<QQuickFlow*>("flow");
-    QVERIFY(flow != 0);
+    QVERIFY(flow != nullptr);
 
     QCOMPARE(flow->width(), 100.0);
     QCOMPARE(flow->height(), 120.0);
@@ -3813,7 +3816,7 @@ void tst_qquickpositioners::test_mirroring()
             QQuickItem *positionerB = itemB->parentItem();
             positionerA->setWidth(positionerA->width() * 2);
             positionerB->setWidth(positionerB->width() * 2);
-            QTRY_VERIFY(!QQuickItemPrivate::get(positionerA)->polishScheduled && !QQuickItemPrivate::get(positionerB)->polishScheduled);
+            QVERIFY(QQuickTest::qWaitForItemPolished(positionerA) && QQuickTest::qWaitForItemPolished(positionerB));
             QTRY_COMPARE(itemA->x(), itemB->x());
         }
 
@@ -3841,7 +3844,7 @@ void tst_qquickpositioners::test_allInvisible()
     QVERIFY(root);
 
     QQuickRow *row = window->rootObject()->findChild<QQuickRow*>("row");
-    QVERIFY(row != 0);
+    QVERIFY(row != nullptr);
     QCOMPARE(row->width(), qreal(0));
     QCOMPARE(row->height(), qreal(0));
 
@@ -3856,7 +3859,7 @@ void tst_qquickpositioners::test_allInvisible()
     QCOMPARE(row->width(), 7.0);
 
     QQuickColumn *column = window->rootObject()->findChild<QQuickColumn*>("column");
-    QVERIFY(column != 0);
+    QVERIFY(column != nullptr);
     QCOMPARE(column->width(), qreal(0));
     QCOMPARE(column->height(), qreal(0));
 
@@ -3871,7 +3874,7 @@ void tst_qquickpositioners::test_allInvisible()
     QCOMPARE(column->width(), 7.0);
 
     QQuickGrid *grid = window->rootObject()->findChild<QQuickGrid*>("grid");
-    QVERIFY(grid != 0);
+    QVERIFY(grid != nullptr);
     QCOMPARE(grid->width(), qreal(0));
     QCOMPARE(grid->height(), qreal(0));
 
@@ -3886,7 +3889,7 @@ void tst_qquickpositioners::test_allInvisible()
     QCOMPARE(grid->width(), 7.0);
 
     QQuickFlow *flow = window->rootObject()->findChild<QQuickFlow*>("flow");
-    QVERIFY(flow != 0);
+    QVERIFY(flow != nullptr);
     QCOMPARE(flow->width(), qreal(0));
     QCOMPARE(flow->height(), qreal(0));
 
@@ -3906,10 +3909,10 @@ void tst_qquickpositioners::test_attachedproperties()
     QFETCH(QString, filename);
 
     QScopedPointer<QQuickView> window(createView(filename));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     QQuickRectangle *greenRect = window->rootObject()->findChild<QQuickRectangle *>("greenRect");
-    QVERIFY(greenRect != 0);
+    QVERIFY(greenRect != nullptr);
 
     int posIndex = greenRect->property("posIndex").toInt();
     QCOMPARE(posIndex, 0);
@@ -3919,7 +3922,7 @@ void tst_qquickpositioners::test_attachedproperties()
     QVERIFY(!isLast);
 
     QQuickRectangle *yellowRect = window->rootObject()->findChild<QQuickRectangle *>("yellowRect");
-    QVERIFY(yellowRect != 0);
+    QVERIFY(yellowRect != nullptr);
 
     posIndex = yellowRect->property("posIndex").toInt();
     QCOMPARE(posIndex, -1);
@@ -3952,13 +3955,13 @@ void tst_qquickpositioners::test_attachedproperties_data()
 void tst_qquickpositioners::test_attachedproperties_dynamic()
 {
     QScopedPointer<QQuickView> window(createView(testFile("attachedproperties-dynamic.qml")));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     QQuickRow *row = window->rootObject()->findChild<QQuickRow *>("pos");
-    QVERIFY(row != 0);
+    QVERIFY(row != nullptr);
 
     QQuickRectangle *rect0 = window->rootObject()->findChild<QQuickRectangle *>("rect0");
-    QVERIFY(rect0 != 0);
+    QVERIFY(rect0 != nullptr);
 
     int posIndex = rect0->property("index").toInt();
     QCOMPARE(posIndex, 0);
@@ -3968,7 +3971,7 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
     QVERIFY(!isLast);
 
     QQuickRectangle *rect1 = window->rootObject()->findChild<QQuickRectangle *>("rect1");
-    QVERIFY(rect1 != 0);
+    QVERIFY(rect1 != nullptr);
 
     posIndex = rect1->property("index").toInt();
     QCOMPARE(posIndex, 1);
@@ -3984,7 +3987,7 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
     QTRY_VERIFY(!rect1->property("lastItem").toBool());
 
     QQuickRectangle *rect2 = window->rootObject()->findChild<QQuickRectangle *>("rect2");
-    QVERIFY(rect2 != 0);
+    QVERIFY(rect2 != nullptr);
 
     posIndex = rect2->property("index").toInt();
     QCOMPARE(posIndex, 2);
@@ -3995,7 +3998,7 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
 
     row->metaObject()->invokeMethod(row, "destroySubRect");
 
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 
     QTRY_COMPARE(rect1->property("index").toInt(), 1);
@@ -4006,16 +4009,20 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
 
 QQuickView *tst_qquickpositioners::createView(const QString &filename, bool wait)
 {
-    QQuickView *window = new QQuickView(0);
-    qDebug() << "1";
+    QQuickView *window = new QQuickView(nullptr);
+    qCDebug(lcTests) << "created window";
 
     window->setSource(QUrl::fromLocalFile(filename));
-    qDebug() << "2";
+    qCDebug(lcTests) << "loaded content from" << filename;
     window->show();
-    qDebug() << "3";
+    qCDebug(lcTests) << "window shown";
+    bool exposed = true;
     if (wait)
-        QTest::qWaitForWindowExposed(window); //It may not relayout until the next frame, so it needs to be drawn
-    qDebug() << "4";
+        exposed = QTest::qWaitForWindowExposed(window); //It may not relayout until the next frame, so it needs to be drawn
+    if (exposed)
+        qCDebug(lcTests) << "window exposed";
+    else
+        qCWarning(lcTests) << "window NOT exposed";
 
     return window;
 }

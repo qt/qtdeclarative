@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Affector
-    \brief For attracting particles towards a specific point
+    \brief For attracting particles towards a specific point.
 
     Note that the size and position of this element affects which particles it affects.
     The size of the point attracted to is always 0x0, and the location of that point

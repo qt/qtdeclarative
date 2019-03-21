@@ -59,6 +59,7 @@ class Q_QML_PRIVATE_EXPORT QQmlModelsModule
 {
 public:
     static void defineModule();
+    static void defineLabsModule();
 };
 
 QT_END_NAMESPACE

@@ -58,50 +58,36 @@ public:
     typedef uint Ref;
     typedef QVector<uint> Refs;
 
-    static QV4::Heap::SimpleCallContext *findScope(QV4::ExecutionContext *ctxt, int scope);
+    static QV4::Heap::ExecutionContext *findScope(QV4::Heap::ExecutionContext *ctxt, int scope);
     static int encodeScopeType(QV4::Heap::ExecutionContext::ContextType scopeType);
 
     QVector<QV4::Heap::ExecutionContext::ContextType> getScopeTypes(int frame);
-    QV4::SimpleCallContext *findContext(int frame);
+    QV4::Heap::ExecutionContext *findContext(int frame);
+    QV4::CppStackFrame *findFrame(int frame);
 
     QV4DataCollector(QV4::ExecutionEngine *engine);
 
-    Ref collect(const QV4::ScopedValue &value);      // only for redundantRefs
-    Ref addFunctionRef(const QString &functionName); // only for namesAsObjects
-    Ref addScriptRef(const QString &scriptName);     // only for namesAsObjects
-
-    void setNamesAsObjects(bool namesAsObjects) { m_namesAsObjects = namesAsObjects; }
-    bool namesAsObjects() const { return m_namesAsObjects; }
-
-    void setRedundantRefs(bool redundantRefs) { m_redundantRefs = redundantRefs; }
-    bool redundantRefs() const { return m_redundantRefs; }
+    Ref addValueRef(const QV4::ScopedValue &value);
 
     bool isValidRef(Ref ref) const;
-    QJsonObject lookupRef(Ref ref, bool deep);
+    QJsonObject lookupRef(Ref ref);
 
     bool collectScope(QJsonObject *dict, int frameNr, int scopeNr);
     QJsonObject buildFrame(const QV4::StackFrame &stackFrame, int frameNr);
 
     QV4::ExecutionEngine *engine() const { return m_engine; }
-    QJsonArray flushCollectedRefs(); // only for redundantRefs
     void clear();
 
 private:
     Ref addRef(QV4::Value value, bool deduplicate = true);
     QV4::ReturnedValue getValue(Ref ref);
-    bool lookupSpecialRef(Ref ref, QJsonObject *dict); // only for namesAsObjects
 
     QJsonArray collectProperties(const QV4::Object *object);
     QJsonObject collectAsJson(const QString &name, const QV4::ScopedValue &value);
     void collectArgumentsInContext();
 
     QV4::ExecutionEngine *m_engine;
-    Refs m_collectedRefs;                        // only for redundantRefs
     QV4::PersistentValue m_values;
-    typedef QHash<Ref, QJsonObject> SpecialRefs; // only for namesAsObjects
-    SpecialRefs m_specialRefs;                   // only for namesAsObjects
-    bool m_namesAsObjects;
-    bool m_redundantRefs;
 };
 
 QT_END_NAMESPACE

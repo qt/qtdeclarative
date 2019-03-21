@@ -50,54 +50,70 @@ void Heap::BooleanCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Boolean"));
 }
 
-void BooleanCtor::construct(const Managed *, Scope &scope, CallData *callData)
+ReturnedValue BooleanCtor::virtualCallAsConstructor(const FunctionObject *that, const Value *argv, int argc, const Value *newTarget)
 {
-    bool n = callData->argc ? callData->args[0].toBoolean() : false;
-    scope.result = Encode(scope.engine->newBooleanObject(n));
+    auto v4 = that->engine();
+    bool n = argc ? argv[0].toBoolean() : false;
+
+    ReturnedValue o = Encode(v4->newBooleanObject(n));
+    if (!newTarget)
+        return o;
+    Scope scope(v4);
+    ScopedObject obj(scope, o);
+    obj->setProtoFromNewTarget(newTarget);
+    return obj->asReturnedValue();
 }
 
-void BooleanCtor::call(const Managed *, Scope &scope, CallData *callData)
+ReturnedValue BooleanCtor::virtualCall(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    bool value = callData->argc ? callData->args[0].toBoolean() : 0;
-    scope.result = Encode(value);
+    bool value = argc ? argv[0].toBoolean() : 0;
+    return Encode(value);
 }
 
 void BooleanPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(1));
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString(), method_toString);
     defineDefaultProperty(engine->id_valueOf(), method_valueOf);
 }
 
-void BooleanPrototype::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)
+static bool value(const Value *thisObject, bool *exception)
 {
-    bool result;
-    if (callData->thisObject.isBoolean()) {
-        result = callData->thisObject.booleanValue();
+    *exception = false;
+    if (thisObject->isBoolean()) {
+        return thisObject->booleanValue();
     } else {
-        const BooleanObject *thisObject = callData->thisObject.as<BooleanObject>();
-        if (!thisObject)
-            THROW_TYPE_ERROR();
-        result = thisObject->value();
+        const BooleanObject *that = thisObject->as<BooleanObject>();
+        if (that)
+            return that->value();
     }
-
-    scope.result = result ? scope.engine->id_true() : scope.engine->id_false();
+    *exception = true;
+    return false;
 }
 
-void BooleanPrototype::method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue BooleanPrototype::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
-    if (callData->thisObject.isBoolean()) {
-        scope.result = callData->thisObject.asReturnedValue();
-        return;
+    bool exception;
+    bool result = ::value(thisObject, &exception);
+    ExecutionEngine *v4 = b->engine();
+    if (exception)
+        return v4->throwTypeError();
+
+    return Encode(result ? v4->id_true() : v4->id_false());
+}
+
+ReturnedValue BooleanPrototype::method_valueOf(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    bool exception;
+    bool result = ::value(thisObject, &exception);
+    if (exception) {
+        ExecutionEngine *v4 = b->engine();
+        return v4->throwTypeError();
     }
 
-    const BooleanObject *thisObject = callData->thisObject.as<BooleanObject>();
-    if (!thisObject)
-        THROW_TYPE_ERROR();
-
-    scope.result = Encode(thisObject->value());
+    return Encode(result);
 }

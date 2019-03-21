@@ -51,9 +51,10 @@
 // We mean it.
 //
 
+#include "qqmlprofilerservice.h"
+
 #include <private/qv4profiling_p.h>
 #include <private/qqmlabstractprofileradapter_p.h>
-#include "qqmldebugpacket.h"
 
 #include <QStack>
 #include <QList>
@@ -67,8 +68,7 @@ class QV4ProfilerAdapter : public QQmlAbstractProfilerAdapter {
 public:
     QV4ProfilerAdapter(QQmlProfilerService *service, QV4::ExecutionEngine *engine);
 
-    virtual qint64 sendMessages(qint64 until, QList<QByteArray> &messages,
-                                bool trackLocations) override;
+    virtual qint64 sendMessages(qint64 until, QList<QByteArray> &messages) override;
 
     void receiveData(const QV4::Profiling::FunctionLocationHash &,
                      const QVector<QV4::Profiling::FunctionCallProperties> &,

@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qsgsoftwarepublicnodes_p.h"
+#include "qsgsoftwarelayer_p.h"
 #include "qsgsoftwarepixmaptexture_p.h"
 #include "qsgsoftwareinternalimagenode_p.h"
 
@@ -98,10 +99,15 @@ void QSGSoftwareImageNode::paint(QPainter *painter)
         updateCachedMirroredPixmap();
 
     painter->setRenderHint(QPainter::SmoothPixmapTransform, (m_filtering == QSGTexture::Linear));
+    // Disable antialiased clipping. It causes transformed tiles to have gaps.
+    painter->setRenderHint(QPainter::Antialiasing, false);
 
     if (!m_cachedPixmap.isNull()) {
         painter->drawPixmap(m_rect, m_cachedPixmap, m_sourceRect);
     } else if (QSGSoftwarePixmapTexture *pt = qobject_cast<QSGSoftwarePixmapTexture *>(m_texture)) {
+        const QPixmap &pm = pt->pixmap();
+        painter->drawPixmap(m_rect, pm, m_sourceRect);
+    } else if (QSGSoftwareLayer *pt = qobject_cast<QSGSoftwareLayer *>(m_texture)) {
         const QPixmap &pm = pt->pixmap();
         painter->drawPixmap(m_rect, pm, m_sourceRect);
     } else if (QSGPlainTexture *pt = qobject_cast<QSGPlainTexture *>(m_texture)) {
@@ -115,8 +121,14 @@ void QSGSoftwareImageNode::updateCachedMirroredPixmap()
     if (m_transformMode == NoTransform) {
         m_cachedPixmap = QPixmap();
     } else {
-
         if (QSGSoftwarePixmapTexture *pt = qobject_cast<QSGSoftwarePixmapTexture *>(m_texture)) {
+            QTransform mirrorTransform;
+            if (m_transformMode.testFlag(MirrorVertically))
+                mirrorTransform = mirrorTransform.scale(1, -1);
+            if (m_transformMode.testFlag(MirrorHorizontally))
+                mirrorTransform = mirrorTransform.scale(-1, 1);
+            m_cachedPixmap = pt->pixmap().transformed(mirrorTransform);
+        } else if (QSGSoftwareLayer *pt = qobject_cast<QSGSoftwareLayer *>(m_texture)) {
             QTransform mirrorTransform;
             if (m_transformMode.testFlag(MirrorVertically))
                 mirrorTransform = mirrorTransform.scale(1, -1);
@@ -144,10 +156,11 @@ void QSGSoftwareNinePatchNode::setTexture(QSGTexture *texture)
     QSGSoftwarePixmapTexture *pt = qobject_cast<QSGSoftwarePixmapTexture*>(texture);
     if (!pt) {
         qWarning() << "Image used with invalid texture format.";
-        return;
+    } else {
+        m_pixmap = pt->pixmap();
+        markDirty(DirtyMaterial);
     }
-    m_pixmap = pt->pixmap();
-    markDirty(DirtyMaterial);
+    delete texture;
 }
 
 void QSGSoftwareNinePatchNode::setBounds(const QRectF &bounds)
@@ -184,11 +197,14 @@ void QSGSoftwareNinePatchNode::update()
 
 void QSGSoftwareNinePatchNode::paint(QPainter *painter)
 {
+    // Disable antialiased clipping. It causes transformed tiles to have gaps.
+    painter->setRenderHint(QPainter::Antialiasing, false);
+
     if (m_margins.isNull())
         painter->drawPixmap(m_bounds, m_pixmap, QRectF(0, 0, m_pixmap.width(), m_pixmap.height()));
     else
         QSGSoftwareHelpers::qDrawBorderPixmap(painter, m_bounds.toRect(), m_margins, m_pixmap, QRect(0, 0, m_pixmap.width(), m_pixmap.height()),
-                                              m_margins, Qt::StretchTile, QSGSoftwareHelpers::QDrawBorderPixmap::DrawingHints(0));
+                                              m_margins, Qt::StretchTile, QSGSoftwareHelpers::QDrawBorderPixmap::DrawingHints(nullptr));
 }
 
 QRectF QSGSoftwareNinePatchNode::bounds() const

@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
     \qmltype BorderImage
     \instantiates QQuickBorderImage
     \inqmlmodule QtQuick
-    \brief Paints a border based on an image
+    \brief Paints a border based on an image.
     \inherits Item
     \ingroup qtquick-visual
 
@@ -278,7 +278,7 @@ void QQuickBorderImage::setSource(const QUrl &url)
 #if QT_CONFIG(qml_network)
     if (d->sciReply) {
         d->sciReply->deleteLater();
-        d->sciReply = 0;
+        d->sciReply = nullptr;
     }
 #endif
 
@@ -559,12 +559,12 @@ void QQuickBorderImage::sciRequestFinished()
     if (d->sciReply->error() != QNetworkReply::NoError) {
         d->status = Error;
         d->sciReply->deleteLater();
-        d->sciReply = 0;
+        d->sciReply = nullptr;
         emit statusChanged(d->status);
     } else {
         QQuickGridScaledImage sci(d->sciReply);
         d->sciReply->deleteLater();
-        d->sciReply = 0;
+        d->sciReply = nullptr;
         setGridScaledImage(sci);
     }
 }
@@ -591,10 +591,18 @@ void QQuickBorderImagePrivate::calculateRects(const QQuickScaleGrid *border,
     *innerTargetRect = *targetRect;
 
     if (border) {
-        *innerSourceRect = QRectF(border->left() * devicePixelRatio / qreal(sourceSize.width()),
-                                  border->top() * devicePixelRatio / qreal(sourceSize.height()),
-                                  qMax<qreal>(0, sourceSize.width() - (border->right() + border->left()) * devicePixelRatio) / sourceSize.width(),
-                                  qMax<qreal>(0, sourceSize.height() - (border->bottom() + border->top()) * devicePixelRatio) / sourceSize.height());
+        qreal borderLeft = border->left() * devicePixelRatio;
+        qreal borderRight = border->right() * devicePixelRatio;
+        qreal borderTop = border->top() * devicePixelRatio;
+        qreal borderBottom = border->bottom() * devicePixelRatio;
+        if (borderLeft + borderRight > sourceSize.width() && borderLeft < sourceSize.width())
+            borderRight = sourceSize.width() - borderLeft;
+        if (borderTop + borderBottom > sourceSize.height() && borderTop < sourceSize.height())
+            borderBottom = sourceSize.height() - borderTop;
+        *innerSourceRect = QRectF(QPointF(borderLeft / qreal(sourceSize.width()),
+                                          borderTop / qreal(sourceSize.height())),
+                                  QPointF((sourceSize.width() - borderRight) / qreal(sourceSize.width()),
+                                          (sourceSize.height() - borderBottom) / qreal(sourceSize.height()))),
         *innerTargetRect = QRectF(border->left(),
                                   border->top(),
                                   qMax<qreal>(0, targetSize.width() - (border->right() + border->left())),
@@ -604,14 +612,16 @@ void QQuickBorderImagePrivate::calculateRects(const QQuickScaleGrid *border,
     qreal hTiles = 1;
     qreal vTiles = 1;
     const QSizeF innerTargetSize = innerTargetRect->size() * devicePixelRatio;
-    if (innerSourceRect->width() != 0
-        && horizontalTileMode != QQuickBorderImage::Stretch) {
+    if (innerSourceRect->width() <= 0)
+        hTiles = 0;
+    else if (horizontalTileMode != QQuickBorderImage::Stretch) {
         hTiles = innerTargetSize.width() / qreal(innerSourceRect->width() * sourceSize.width());
         if (horizontalTileMode == QQuickBorderImage::Round)
             hTiles = qCeil(hTiles);
     }
-    if (innerSourceRect->height() != 0
-        && verticalTileMode != QQuickBorderImage::Stretch) {
+    if (innerSourceRect->height() <= 0)
+        vTiles = 0;
+    else if (verticalTileMode != QQuickBorderImage::Stretch) {
         vTiles = innerTargetSize.height() / qreal(innerSourceRect->height() * sourceSize.height());
         if (verticalTileMode == QQuickBorderImage::Round)
             vTiles = qCeil(vTiles);
@@ -629,7 +639,7 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
 
     if (!texture || width() <= 0 || height() <= 0) {
         delete oldNode;
-        return 0;
+        return nullptr;
     }
 
     QSGInternalImageNode *node = static_cast<QSGInternalImageNode *>(oldNode);

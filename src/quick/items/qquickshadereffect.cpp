@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-effects
-    \brief Applies custom shaders to a rectangle
+    \brief Applies custom shaders to a rectangle.
 
     The ShaderEffect type applies a custom
     \l{vertexShader}{vertex} and \l{fragmentShader}{fragment (pixel)} shader to a
@@ -475,7 +475,7 @@ QT_BEGIN_NAMESPACE
       \li \snippet qml/opacitymask.qml 1
     \endtable
 
-    \section1 Other notes
+    \section1 Other Notes
 
     By default, the ShaderEffect consists of four vertices, one for each
     corner. For non-linear vertex transformations, like page curl, you can
@@ -876,7 +876,7 @@ void QQuickShaderEffectPrivate::updatePolish()
 #if QT_CONFIG(opengl)
 bool QQuickShaderEffect::isOpenGLShaderEffect() const
 {
-    return m_glImpl != Q_NULLPTR;
+    return m_glImpl != nullptr;
 }
 #endif
 

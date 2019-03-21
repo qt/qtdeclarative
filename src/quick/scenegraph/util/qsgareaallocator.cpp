@@ -42,6 +42,9 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qrect.h>
 #include <QtCore/qpoint.h>
+#include <QtCore/qdatastream.h>
+#include <QtCore/qstack.h>
+#include <QtCore/qendian.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -72,8 +75,8 @@ struct QSGAreaAllocatorNode
 
 QSGAreaAllocatorNode::QSGAreaAllocatorNode(QSGAreaAllocatorNode *parent)
     : parent(parent)
-    , left(0)
-    , right(0)
+    , left(nullptr)
+    , right(nullptr)
     , isOccupied(false)
 {
 }
@@ -86,14 +89,14 @@ QSGAreaAllocatorNode::~QSGAreaAllocatorNode()
 
 bool QSGAreaAllocatorNode::isLeaf()
 {
-    Q_ASSERT((left != 0) == (right != 0));
+    Q_ASSERT((left != nullptr) == (right != nullptr));
     return !left;
 }
 
 
 QSGAreaAllocator::QSGAreaAllocator(const QSize &size) : m_size(size)
 {
-    m_root = new QSGAreaAllocatorNode(0);
+    m_root = new QSGAreaAllocatorNode(nullptr);
 }
 
 QSGAreaAllocator::~QSGAreaAllocator()
@@ -179,13 +182,13 @@ bool QSGAreaAllocator::deallocateInNode(const QPoint &pos, QSGAreaAllocatorNode 
 void QSGAreaAllocator::mergeNodeWithNeighbors(QSGAreaAllocatorNode *node)
 {
     bool done = false;
-    QSGAreaAllocatorNode *parent = 0;
-    QSGAreaAllocatorNode *current = 0;
+    QSGAreaAllocatorNode *parent = nullptr;
+    QSGAreaAllocatorNode *current = nullptr;
     QSGAreaAllocatorNode *sibling;
     while (!done) {
         Q_ASSERT(node->isLeaf());
         Q_ASSERT(!node->isOccupied);
-        if (node->parent == 0)
+        if (node->parent == nullptr)
             return; // No neighbours.
 
         SplitType splitType = SplitType(node->parent->splitType);
@@ -238,7 +241,7 @@ void QSGAreaAllocator::mergeNodeWithNeighbors(QSGAreaAllocatorNode *node)
                 }
                 sibling->parent = parent->parent;
                 *nodeRef = sibling;
-                parent->left = parent->right = 0;
+                parent->left = parent->right = nullptr;
                 delete parent;
                 delete neighbor;
                 done = false;
@@ -276,13 +279,154 @@ void QSGAreaAllocator::mergeNodeWithNeighbors(QSGAreaAllocatorNode *node)
                 }
                 sibling->parent = parent->parent;
                 *nodeRef = sibling;
-                parent->left = parent->right = 0;
+                parent->left = parent->right = nullptr;
                 delete parent;
                 delete neighbor;
                 done = false;
             }
         }
     } // end while(!done)
+}
+
+namespace {
+    struct AreaAllocatorTable
+    {
+        enum TableSize {
+            HeaderSize = 10,
+            NodeSize   = 9
+        };
+
+        enum Offset {
+            // Header
+            majorVersion    = 0,
+            minorVersion    = 1,
+            width           = 2,
+            height          = 6,
+
+            // Node
+            split           = 0,
+            splitType       = 4,
+            flags           = 8
+        };
+
+        enum Flags {
+            IsOccupied = 1,
+            HasLeft = 2,
+            HasRight = 4
+        };
+
+        template <typename T>
+        static inline T fetch(const char *data, Offset offset)
+        {
+            return qFromBigEndian<T>(data + int(offset));
+        }
+
+        template <typename T>
+        static inline void put(char *data, Offset offset, T value)
+        {
+            qToBigEndian(value, data + int(offset));
+        }
+    };
+}
+
+QByteArray QSGAreaAllocator::serialize()
+{
+    QVarLengthArray<QSGAreaAllocatorNode *> nodesToProcess;
+
+    QStack<QSGAreaAllocatorNode *> nodes;
+    nodes.push(m_root);
+    while (!nodes.isEmpty()) {
+        QSGAreaAllocatorNode *node = nodes.pop();
+
+        nodesToProcess.append(node);
+        if (node->left != nullptr)
+            nodes.push(node->left);
+        if (node->right != nullptr)
+            nodes.push(node->right);
+    }
+
+    QByteArray ret;
+    ret.resize(AreaAllocatorTable::HeaderSize + AreaAllocatorTable::NodeSize * nodesToProcess.size());
+
+    char *data = ret.data();
+    AreaAllocatorTable::put(data, AreaAllocatorTable::majorVersion, quint8(5));
+    AreaAllocatorTable::put(data, AreaAllocatorTable::minorVersion, quint8(12));
+    AreaAllocatorTable::put(data, AreaAllocatorTable::width, quint32(m_size.width()));
+    AreaAllocatorTable::put(data, AreaAllocatorTable::height, quint32(m_size.height()));
+
+    data += AreaAllocatorTable::HeaderSize;
+    for (QSGAreaAllocatorNode *node : nodesToProcess) {
+        AreaAllocatorTable::put(data, AreaAllocatorTable::split, qint32(node->split));
+        AreaAllocatorTable::put(data, AreaAllocatorTable::splitType, quint32(node->splitType));
+
+        quint8 flags =
+                (node->isOccupied ? AreaAllocatorTable::IsOccupied : 0)
+              | (node->left != nullptr ? AreaAllocatorTable::HasLeft : 0)
+              | (node->right != nullptr ? AreaAllocatorTable::HasRight : 0);
+        AreaAllocatorTable::put(data, AreaAllocatorTable::flags, flags);
+        data += AreaAllocatorTable::NodeSize;
+    }
+
+    return ret;
+}
+
+const char *QSGAreaAllocator::deserialize(const char *data, int size)
+{
+    if (uint(size) < AreaAllocatorTable::HeaderSize) {
+        qWarning("QSGAreaAllocator::deserialize: Data not long enough to fit header");
+        return nullptr;
+    }
+
+    const char *end = data + size;
+
+    quint8 majorVersion = AreaAllocatorTable::fetch<quint8>(data, AreaAllocatorTable::majorVersion);
+    quint8 minorVersion = AreaAllocatorTable::fetch<quint8>(data, AreaAllocatorTable::minorVersion);
+    if (majorVersion != 5 || minorVersion != 12) {
+        qWarning("Unrecognized version %d.%d of QSGAreaAllocator",
+                 majorVersion,
+                 minorVersion);
+        return nullptr;
+    }
+
+    m_size = QSize(AreaAllocatorTable::fetch<quint32>(data, AreaAllocatorTable::width),
+                   AreaAllocatorTable::fetch<quint32>(data, AreaAllocatorTable::height));
+
+    Q_ASSERT(m_root != nullptr);
+    Q_ASSERT(m_root->left == nullptr);
+    Q_ASSERT(m_root->right == nullptr);
+
+    QStack<QSGAreaAllocatorNode *> nodes;
+    nodes.push(m_root);
+
+    data += AreaAllocatorTable::HeaderSize;
+    while (!nodes.isEmpty()) {
+        if (data + AreaAllocatorTable::NodeSize > end) {
+            qWarning("QSGAreaAllocator::deseriable: Data not long enough for nodes");
+            return nullptr;
+        }
+
+        QSGAreaAllocatorNode *node = nodes.pop();
+
+        node->split = AreaAllocatorTable::fetch<qint32>(data, AreaAllocatorTable::split);
+        node->splitType = SplitType(AreaAllocatorTable::fetch<quint32>(data, AreaAllocatorTable::splitType));
+
+        quint8 flags = AreaAllocatorTable::fetch<quint8>(data, AreaAllocatorTable::flags);
+        node->isOccupied = flags & AreaAllocatorTable::IsOccupied;
+
+        if (flags & AreaAllocatorTable::HasLeft) {
+            node->left = new QSGAreaAllocatorNode(node);
+            nodes.push(node->left);
+        }
+
+        if (flags & AreaAllocatorTable::HasRight) {
+            node->right = new QSGAreaAllocatorNode(node);
+            nodes.push(node->right);
+        }
+
+        data += AreaAllocatorTable::NodeSize;
+    }
+
+    return data;
 }
 
 QT_END_NAMESPACE

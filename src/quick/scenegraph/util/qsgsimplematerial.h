@@ -138,7 +138,7 @@ template <typename State>
 class QSGSimpleMaterial : public QSGMaterial
 {
 public:
-#ifndef qdoc
+#ifndef Q_CLANG_QDOC
     QSGSimpleMaterial(const State &aState, PtrShaderCreateFunc func)
         : m_state(aState)
         , m_func(func)
@@ -185,7 +185,7 @@ public:
     QSGSimpleMaterialComparableMaterial(PtrShaderCreateFunc func)
         : QSGSimpleMaterial<State>(func) {}
 
-    int compare(const QSGMaterial *other) const {
+    int compare(const QSGMaterial *other) const override {
         return QSGSimpleMaterialComparableMaterial<State>::state()->compare(static_cast<const QSGSimpleMaterialComparableMaterial<State> *>(other)->state());
     }
 };
@@ -207,7 +207,7 @@ Q_INLINE_TEMPLATE void QSGSimpleMaterialShader<State>::updateState(const RenderS
     Q_UNUSED(state)
 #endif
     State *ns = static_cast<QSGSimpleMaterial<State> *>(newMaterial)->state();
-    State *old = 0;
+    State *old = nullptr;
     if (oldMaterial)
         old = static_cast<QSGSimpleMaterial<State> *>(oldMaterial)->state();
     updateState(ns, old);

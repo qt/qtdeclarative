@@ -83,8 +83,8 @@ private:
 };
 
 #  define TRACE0() RuntimeCounters::instance->count(Q_FUNC_INFO);
-#  define TRACE1(x) RuntimeCounters::instance->count(Q_FUNC_INFO, x->type());
-#  define TRACE2(x, y) RuntimeCounters::instance->count(Q_FUNC_INFO, x->type(), y->type());
+#  define TRACE1(x) RuntimeCounters::instance->count(Q_FUNC_INFO, x.type());
+#  define TRACE2(x, y) RuntimeCounters::instance->count(Q_FUNC_INFO, x.type(), y.type());
 #else
 #  define TRACE0()
 #  define TRACE1(x)
@@ -99,14 +99,15 @@ enum TypeHint {
 
 struct Q_QML_PRIVATE_EXPORT RuntimeHelpers {
     static ReturnedValue objectDefaultValue(const Object *object, int typeHint);
-    static ReturnedValue toPrimitive(const Value &value, int typeHint);
+    static ReturnedValue toPrimitive(const Value &value, TypeHint typeHint);
+    static ReturnedValue ordinaryToPrimitive(ExecutionEngine *engine, const Object *object, String *typeHint);
 
     static double stringToNumber(const QString &s);
     static Heap::String *stringFromNumber(ExecutionEngine *engine, double number);
     static double toNumber(const Value &value);
     static void numberToString(QString *result, double num, int radix = 10);
 
-    static Heap::String *convertToString(ExecutionEngine *engine, const Value &value);
+    static Heap::String *convertToString(ExecutionEngine *engine, Value value, TypeHint = STRING_HINT);
     static Heap::Object *convertToObject(ExecutionEngine *engine, const Value &value);
 
     static Bool equalHelper(const Value &x, const Value &y);
@@ -118,12 +119,11 @@ struct Q_QML_PRIVATE_EXPORT RuntimeHelpers {
 
 // type conversion and testing
 #ifndef V4_BOOTSTRAP
-inline ReturnedValue RuntimeHelpers::toPrimitive(const Value &value, int typeHint)
+inline ReturnedValue RuntimeHelpers::toPrimitive(const Value &value, TypeHint typeHint)
 {
-    const Object *o = value.as<Object>();
-    if (!o)
+    if (!value.isObject())
         return value.asReturnedValue();
-    return RuntimeHelpers::objectDefaultValue(o, typeHint);
+    return RuntimeHelpers::objectDefaultValue(&reinterpret_cast<const Object &>(value), typeHint);
 }
 #endif
 

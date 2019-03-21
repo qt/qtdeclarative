@@ -69,7 +69,7 @@ class Q_AUTOTEST_EXPORT QQuickLoader : public QQuickImplicitSizeItem
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
 
 public:
-    QQuickLoader(QQuickItem *parent = 0);
+    QQuickLoader(QQuickItem *parent = nullptr);
     virtual ~QQuickLoader();
 
     bool active() const;
@@ -105,8 +105,9 @@ Q_SIGNALS:
     void asynchronousChanged();
 
 protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void componentComplete() override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
 
 private:
     void setSource(const QUrl &sourceUrl, bool needsClear);

@@ -38,10 +38,13 @@
 ****************************************************************************/
 
 #include "qdebugmessageservice.h"
-#include "qqmldebugpacket.h"
+
 #include <private/qqmldebugconnector_p.h>
+#include <private/qversionedpacket_p.h>
 
 QT_BEGIN_NAMESPACE
+
+using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 
 void DebugMessageHandler(QtMsgType type, const QMessageLogContext &ctxt,
                          const QString &buf)
@@ -50,7 +53,7 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext &ctxt,
 }
 
 QDebugMessageServiceImpl::QDebugMessageServiceImpl(QObject *parent) :
-    QDebugMessageService(2, parent), oldMsgHandler(0),
+    QDebugMessageService(2, parent), oldMsgHandler(nullptr),
     prevState(QQmlDebugService::NotConnected)
 {
     // don't execute stateChanged() in parallel

@@ -44,7 +44,7 @@ class CustomObject: public QObject
 {
     Q_OBJECT
 public:
-    CustomObject(QObject *parent = 0)
+    CustomObject(QObject *parent = nullptr)
         : QObject(parent) {}
 };
 
@@ -53,7 +53,7 @@ void tst_qqmlopenmetaobject::createProperties()
     QQmlEngine engine;
     CustomObject object;
     const QQmlRefPointer<QQmlOpenMetaObjectType> mot = new QQmlOpenMetaObjectType(object.metaObject(), &engine);
-    QQmlOpenMetaObject *const mo = new QQmlOpenMetaObject(&object, mot);
+    QQmlOpenMetaObject *const mo = new QQmlOpenMetaObject(&object, mot.data());
     mo->setCached(true);
     mot->createProperty("customProperty");
     QVERIFY(true);

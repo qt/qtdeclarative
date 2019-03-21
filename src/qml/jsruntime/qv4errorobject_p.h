@@ -67,7 +67,7 @@ namespace Heap {
     Member(class, Pointer, String *, stack)
 
 DECLARE_HEAP_OBJECT(ErrorObject, Object) {
-    DECLARE_MARK_TABLE(ErrorObject);
+    DECLARE_MARKOBJECTS(ErrorObject);
     enum ErrorType {
         Error,
         EvalError,
@@ -115,7 +115,7 @@ struct URIErrorObject : ErrorObject {
     void init(const Value &message);
 };
 
-struct ErrorCtor : Heap::FunctionObject {
+struct ErrorCtor : FunctionObject {
     void init(QV4::ExecutionContext *scope);
     void init(QV4::ExecutionContext *scope, const QString &name);
 };
@@ -153,6 +153,7 @@ struct ErrorObject: Object {
 
     enum {
         Index_Stack = 0, // Accessor Property
+        Index_StackSetter = 1, // Accessor Property
         Index_FileName = 2,
         Index_LineNumber = 3,
         Index_Message = 4
@@ -165,7 +166,7 @@ struct ErrorObject: Object {
     V4_NEEDS_DESTROY
 
     template <typename T>
-    static Heap::Object *create(ExecutionEngine *e, const Value &message);
+    static Heap::Object *create(ExecutionEngine *e, const Value &message, const Value *newTarget);
     template <typename T>
     static Heap::Object *create(ExecutionEngine *e, const QString &message);
     template <typename T>
@@ -175,12 +176,12 @@ struct ErrorObject: Object {
 
     static const char *className(Heap::ErrorObject::ErrorType t);
 
-    static void method_get_stack(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_get_stack(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 template<>
 inline const ErrorObject *Value::as() const {
-    return isManaged() && m()->vtable()->isErrorObject ? reinterpret_cast<const ErrorObject *>(this) : 0;
+    return isManaged() && m()->internalClass->vtable->isErrorObject ? reinterpret_cast<const ErrorObject *>(this) : nullptr;
 }
 
 struct EvalErrorObject: ErrorObject {
@@ -229,54 +230,60 @@ struct ErrorCtor: FunctionObject
 {
     V4_OBJECT2(ErrorCtor, FunctionObject)
 
-    static void construct(const Managed *, Scope &scope, CallData *callData);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct EvalErrorCtor: ErrorCtor
 {
-    V4_OBJECT2(EvalErrorCtor, ErrorCtor)
+    V4_OBJECT2(EvalErrorCtor, FunctionObject)
+    V4_PROTOTYPE(errorCtor)
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct RangeErrorCtor: ErrorCtor
 {
-    V4_OBJECT2(RangeErrorCtor, ErrorCtor)
+    V4_OBJECT2(RangeErrorCtor, FunctionObject)
+    V4_PROTOTYPE(errorCtor)
 
-    static void construct(const Managed *, Scope &scope, CallData *callData);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct ReferenceErrorCtor: ErrorCtor
 {
-    V4_OBJECT2(ReferenceErrorCtor, ErrorCtor)
+    V4_OBJECT2(ReferenceErrorCtor, FunctionObject)
+    V4_PROTOTYPE(errorCtor)
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct SyntaxErrorCtor: ErrorCtor
 {
-    V4_OBJECT2(SyntaxErrorCtor, ErrorCtor)
+    V4_OBJECT2(SyntaxErrorCtor, FunctionObject)
+    V4_PROTOTYPE(errorCtor)
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct TypeErrorCtor: ErrorCtor
 {
-    V4_OBJECT2(TypeErrorCtor, ErrorCtor)
+    V4_OBJECT2(TypeErrorCtor, FunctionObject)
+    V4_PROTOTYPE(errorCtor)
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct URIErrorCtor: ErrorCtor
 {
-    V4_OBJECT2(URIErrorCtor, ErrorCtor)
+    V4_OBJECT2(URIErrorCtor, FunctionObject)
+    V4_PROTOTYPE(errorCtor)
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 
-struct ErrorPrototype : ErrorObject
+struct ErrorPrototype : Object
 {
     enum {
         Index_Constructor = 0,
@@ -286,35 +293,35 @@ struct ErrorPrototype : ErrorObject
     void init(ExecutionEngine *engine, Object *ctor) { init(engine, ctor, this, Heap::ErrorObject::Error); }
 
     static void init(ExecutionEngine *engine, Object *ctor, Object *obj, Heap::ErrorObject::ErrorType t);
-    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
-struct EvalErrorPrototype : ErrorObject
+struct EvalErrorPrototype : Object
 {
     void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this, Heap::ErrorObject::EvalError); }
 };
 
-struct RangeErrorPrototype : ErrorObject
+struct RangeErrorPrototype : Object
 {
     void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this, Heap::ErrorObject::RangeError); }
 };
 
-struct ReferenceErrorPrototype : ErrorObject
+struct ReferenceErrorPrototype : Object
 {
     void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this, Heap::ErrorObject::ReferenceError); }
 };
 
-struct SyntaxErrorPrototype : ErrorObject
+struct SyntaxErrorPrototype : Object
 {
     void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this, Heap::ErrorObject::SyntaxError); }
 };
 
-struct TypeErrorPrototype : ErrorObject
+struct TypeErrorPrototype : Object
 {
     void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this, Heap::ErrorObject::TypeError); }
 };
 
-struct URIErrorPrototype : ErrorObject
+struct URIErrorPrototype : Object
 {
     void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this, Heap::ErrorObject::URIError); }
 };
@@ -322,31 +329,33 @@ struct URIErrorPrototype : ErrorObject
 
 inline SyntaxErrorObject *ErrorObject::asSyntaxError()
 {
-    return d()->errorType == QV4::Heap::ErrorObject::SyntaxError ? static_cast<SyntaxErrorObject *>(this) : 0;
+    return d()->errorType == QV4::Heap::ErrorObject::SyntaxError ? static_cast<SyntaxErrorObject *>(this) : nullptr;
 }
 
 
 template <typename T>
-Heap::Object *ErrorObject::create(ExecutionEngine *e, const Value &message) {
-    InternalClass *ic = e->internalClasses[message.isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage];
-    ic = ic->changePrototype(T::defaultPrototype(e)->d());
-    return e->memoryManager->allocObject<T>(ic, T::defaultPrototype(e), message);
+Heap::Object *ErrorObject::create(ExecutionEngine *e, const Value &message, const Value *newTarget) {
+    EngineBase::InternalClassType klass = message.isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage;
+    Scope scope(e);
+    ScopedObject proto(scope, static_cast<const Object *>(newTarget)->get(scope.engine->id_prototype()));
+    Scoped<InternalClass> ic(scope, e->internalClasses(klass)->changePrototype(proto->d()));
+    return e->memoryManager->allocObject<T>(ic->d(), message);
 }
 template <typename T>
 Heap::Object *ErrorObject::create(ExecutionEngine *e, const QString &message) {
     Scope scope(e);
     ScopedValue v(scope, message.isEmpty() ? Encode::undefined() : e->newString(message)->asReturnedValue());
-    InternalClass *ic = e->internalClasses[v->isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage];
-    ic = ic->changePrototype(T::defaultPrototype(e)->d());
-    return e->memoryManager->allocObject<T>(ic, T::defaultPrototype(e), v);
+    EngineBase::InternalClassType klass = v->isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage;
+    Scoped<InternalClass> ic(scope, e->internalClasses(klass)->changePrototype(T::defaultPrototype(e)->d()));
+    return e->memoryManager->allocObject<T>(ic->d(), v);
 }
 template <typename T>
 Heap::Object *ErrorObject::create(ExecutionEngine *e, const QString &message, const QString &filename, int line, int column) {
     Scope scope(e);
     ScopedValue v(scope, message.isEmpty() ? Encode::undefined() : e->newString(message)->asReturnedValue());
-    InternalClass *ic = e->internalClasses[v->isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage];
-    ic = ic->changePrototype(T::defaultPrototype(e)->d());
-    return e->memoryManager->allocObject<T>(ic, T::defaultPrototype(e), v, filename, line, column);
+    EngineBase::InternalClassType klass = v->isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage;
+    Scoped<InternalClass> ic(scope, e->internalClasses(klass)->changePrototype(T::defaultPrototype(e)->d()));
+    return e->memoryManager->allocObject<T>(ic->d(), v, filename, line, column);
 }
 
 

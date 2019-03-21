@@ -167,7 +167,7 @@ WTF_EXPORT_PRIVATE void WTFInstallReportBacktraceOnCrashHook();
    Signals are ignored by the crash reporter on OS X so we must do better.
 */
 #ifndef CRASH
-#if COMPILER(CLANG)
+#if COMPILER(CLANG) || COMPILER(GCC)
 #define CRASH() \
     (WTFReportBacktrace(), \
      WTFInvokeCrashHook(), \
@@ -256,7 +256,7 @@ inline void assertUnused(T& x) { (void)x; }
         (void)0)
 
 #define ASSERT_NOT_REACHED() do { \
-    WTFReportAssertionFailure(__FILE__, __LINE__, WTF_PRETTY_FUNCTION, 0); \
+    WTFReportAssertionFailure(__FILE__, __LINE__, WTF_PRETTY_FUNCTION, NULL); \
     CRASH(); \
 } while (0)
 

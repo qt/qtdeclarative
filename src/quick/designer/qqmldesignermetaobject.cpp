@@ -45,12 +45,11 @@
 #include <QDebug>
 
 #include <private/qqmlengine_p.h>
-#include <private/qqmlpropertycache_p.h>
 
 QT_BEGIN_NAMESPACE
 
 static QHash<QDynamicMetaObjectData *, bool> nodeInstanceMetaObjectList;
-static void (*notifyPropertyChangeCallBack)(QObject*, const QQuickDesignerSupport::PropertyName &propertyName) = 0;
+static void (*notifyPropertyChangeCallBack)(QObject*, const QQuickDesignerSupport::PropertyName &propertyName) = nullptr;
 
 struct MetaPropertyData {
     inline QPair<QVariant, bool> &getDataRef(int idx) {
@@ -83,7 +82,7 @@ static QQmlPropertyCache *cacheForObject(QObject *object, QQmlEngine *engine)
 {
     QQmlVMEMetaObject *metaObject = QQmlVMEMetaObject::get(object);
     if (metaObject)
-        return metaObject->cache;
+        return metaObject->cache.data();
 
     return QQmlEnginePrivate::get(engine)->cache(object);
 }
@@ -127,7 +126,7 @@ void QQmlDesignerMetaObject::init(QObject *object, QQmlEngine *engine)
 }
 
 QQmlDesignerMetaObject::QQmlDesignerMetaObject(QObject *object, QQmlEngine *engine)
-    : QQmlVMEMetaObject(object, cacheForObject(object, engine), /*qml compilation unit*/nullptr, /*qmlObjectId*/-1),
+    : QQmlVMEMetaObject(engine->handle(), object, cacheForObject(object, engine), /*qml compilation unit*/nullptr, /*qmlObjectId*/-1),
       m_context(engine->contextForObject(object)),
       m_data(new MetaPropertyData)
 {
@@ -137,9 +136,9 @@ QQmlDesignerMetaObject::QQmlDesignerMetaObject(QObject *object, QQmlEngine *engi
     //Assign cache to object
     if (ddata && ddata->propertyCache) {
         cache->setParent(ddata->propertyCache);
-        cache->invalidate(engine, this);
+        cache->invalidate(this);
         ddata->propertyCache->release();
-        ddata->propertyCache = cache;
+        ddata->propertyCache = cache.data();
         ddata->propertyCache->addref();
     }
 
@@ -162,7 +161,7 @@ void QQmlDesignerMetaObject::createNewDynamicProperty(const QString &name)
 
     //Updating cache
     QQmlPropertyCache *oldParent = cache->parent();
-    QQmlEnginePrivate::get(m_context->engine())->cache(this)->invalidate(m_context->engine(), this);
+    QQmlEnginePrivate::get(m_context->engine())->cache(this)->invalidate(this);
     cache->setParent(oldParent);
 
     QQmlProperty property(myObject(), name, m_context);
@@ -174,7 +173,7 @@ void QQmlDesignerMetaObject::setValue(int id, const QVariant &value)
     QPair<QVariant, bool> &prop = m_data->getDataRef(id);
     prop.first = propertyWriteValue(id, value);
     prop.second = true;
-    QMetaObject::activate(myObject(), id + m_type->signalOffset(), 0);
+    QMetaObject::activate(myObject(), id + m_type->signalOffset(), nullptr);
 }
 
 QVariant QQmlDesignerMetaObject::propertyWriteValue(int, const QVariant &value)
@@ -187,7 +186,7 @@ const QAbstractDynamicMetaObject *QQmlDesignerMetaObject::dynamicMetaObjectParen
     if (QQmlVMEMetaObject::parent.isT1())
         return QQmlVMEMetaObject::parent.asT1()->toDynamicMetaObject(QQmlVMEMetaObject::object);
     else
-        return 0;
+        return nullptr;
 }
 
 const QMetaObject *QQmlDesignerMetaObject::metaObjectParent() const
@@ -218,7 +217,7 @@ int QQmlDesignerMetaObject::openMetaCall(QObject *o, QMetaObject::Call call, int
                 prop.first = propertyWriteValue(propId, *reinterpret_cast<QVariant *>(a[0]));
                 prop.second = true;
                 //propertyWritten(propId);
-                activate(myObject(), m_type->signalOffset() + propId, 0);
+                activate(myObject(), m_type->signalOffset() + propId, nullptr);
             }
         }
         return -1;

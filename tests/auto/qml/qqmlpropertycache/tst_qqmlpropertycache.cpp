@@ -29,12 +29,14 @@
 #include <qtest.h>
 #include <private/qqmlpropertycache_p.h>
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlcomponent.h>
 #include <private/qv8engine_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include <QCryptographicHash>
 #include "../../shared/util.h"
 
-class tst_qqmlpropertycache : public QObject
+class tst_qqmlpropertycache : public QQmlDataTest
 {
     Q_OBJECT
 public:
@@ -43,10 +45,13 @@ public:
 private slots:
     void properties();
     void propertiesDerived();
+    void revisionedProperties();
     void methods();
     void methodsDerived();
     void signalHandlers();
     void signalHandlersDerived();
+    void passForeignEnums();
+    void passQGadget();
     void metaObjectSize_data();
     void metaObjectSize();
     void metaObjectChecksum();
@@ -61,7 +66,7 @@ class BaseObject : public QObject
     Q_PROPERTY(int propertyA READ propertyA NOTIFY propertyAChanged)
     Q_PROPERTY(QString propertyB READ propertyB NOTIFY propertyBChanged)
 public:
-    BaseObject(QObject *parent = 0) : QObject(parent) {}
+    BaseObject(QObject *parent = nullptr) : QObject(parent) {}
 
     int propertyA() const { return 0; }
     QString propertyB() const { return QString(); }
@@ -80,11 +85,13 @@ class DerivedObject : public BaseObject
     Q_OBJECT
     Q_PROPERTY(int propertyC READ propertyC NOTIFY propertyCChanged)
     Q_PROPERTY(QString propertyD READ propertyD NOTIFY propertyDChanged)
+    Q_PROPERTY(int propertyE READ propertyE NOTIFY propertyEChanged REVISION 1)
 public:
-    DerivedObject(QObject *parent = 0) : BaseObject(parent) {}
+    DerivedObject(QObject *parent = nullptr) : BaseObject(parent) {}
 
     int propertyC() const { return 0; }
     QString propertyD() const { return QString(); }
+    int propertyE() const { return 0; }
 
 public Q_SLOTS:
     void slotB() {}
@@ -92,22 +99,22 @@ public Q_SLOTS:
 Q_SIGNALS:
     void propertyCChanged();
     void propertyDChanged();
+    Q_REVISION(1) void propertyEChanged();
     void signalB();
 };
 
-QQmlPropertyData *cacheProperty(QQmlPropertyCache *cache, const char *name)
+QQmlPropertyData *cacheProperty(const QQmlRefPointer<QQmlPropertyCache> &cache, const char *name)
 {
-    return cache->property(QLatin1String(name), 0, 0);
+    return cache->property(QLatin1String(name), nullptr, nullptr);
 }
 
 void tst_qqmlpropertycache::properties()
 {
     QQmlEngine engine;
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlRefPointer<QQmlPropertyCache> cache(new QQmlPropertyCache(v4, metaObject));
+    QQmlRefPointer<QQmlPropertyCache> cache(new QQmlPropertyCache(metaObject));
     QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "propertyA")));
@@ -126,11 +133,10 @@ void tst_qqmlpropertycache::properties()
 void tst_qqmlpropertycache::propertiesDerived()
 {
     QQmlEngine engine;
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlRefPointer<QQmlPropertyCache> parentCache(new QQmlPropertyCache(v4, &BaseObject::staticMetaObject));
+    QQmlRefPointer<QQmlPropertyCache> parentCache(new QQmlPropertyCache(&BaseObject::staticMetaObject));
     QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(object.metaObject()));
     QQmlPropertyData *data;
 
@@ -147,14 +153,30 @@ void tst_qqmlpropertycache::propertiesDerived()
     QCOMPARE(data->coreIndex(), metaObject->indexOfProperty("propertyD"));
 }
 
-void tst_qqmlpropertycache::methods()
+void tst_qqmlpropertycache::revisionedProperties()
 {
-    QQmlEngine engine;
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
+    // Check that if you create a QQmlPropertyCache from a QMetaObject together
+    // with an explicit revision, the cache will then, and only then, report a
+    // property with a matching revision as available.
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlRefPointer<QQmlPropertyCache> cache(new QQmlPropertyCache(v4, metaObject));
+    QQmlRefPointer<QQmlPropertyCache> cacheWithoutVersion(new QQmlPropertyCache(metaObject));
+    QQmlRefPointer<QQmlPropertyCache> cacheWithVersion(new QQmlPropertyCache(metaObject, 1));
+    QQmlPropertyData *data;
+
+    QVERIFY((data = cacheProperty(cacheWithoutVersion, "propertyE")));
+    QCOMPARE(cacheWithoutVersion->isAllowedInRevision(data), false);
+    QCOMPARE(cacheWithVersion->isAllowedInRevision(data), true);
+}
+
+void tst_qqmlpropertycache::methods()
+{
+    QQmlEngine engine;
+    DerivedObject object;
+    const QMetaObject *metaObject = object.metaObject();
+
+    QQmlRefPointer<QQmlPropertyCache> cache(new QQmlPropertyCache(metaObject));
     QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "slotA")));
@@ -185,11 +207,10 @@ void tst_qqmlpropertycache::methods()
 void tst_qqmlpropertycache::methodsDerived()
 {
     QQmlEngine engine;
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlRefPointer<QQmlPropertyCache> parentCache(new QQmlPropertyCache(v4, &BaseObject::staticMetaObject));
+    QQmlRefPointer<QQmlPropertyCache> parentCache(new QQmlPropertyCache(&BaseObject::staticMetaObject));
     QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(object.metaObject()));
     QQmlPropertyData *data;
 
@@ -221,11 +242,10 @@ void tst_qqmlpropertycache::methodsDerived()
 void tst_qqmlpropertycache::signalHandlers()
 {
     QQmlEngine engine;
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlRefPointer<QQmlPropertyCache> cache(new QQmlPropertyCache(v4, metaObject));
+    QQmlRefPointer<QQmlPropertyCache> cache(new QQmlPropertyCache(metaObject));
     QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "onSignalA")));
@@ -250,11 +270,10 @@ void tst_qqmlpropertycache::signalHandlers()
 void tst_qqmlpropertycache::signalHandlersDerived()
 {
     QQmlEngine engine;
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlRefPointer<QQmlPropertyCache> parentCache(new QQmlPropertyCache(v4, &BaseObject::staticMetaObject));
+    QQmlRefPointer<QQmlPropertyCache> parentCache(new QQmlPropertyCache(&BaseObject::staticMetaObject));
     QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(object.metaObject()));
     QQmlPropertyData *data;
 
@@ -275,6 +294,132 @@ void tst_qqmlpropertycache::signalHandlersDerived()
 
     QVERIFY((data = cacheProperty(cache, "onPropertyDChanged")));
     QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyDChanged()"));
+}
+
+class MyEnum : public QObject
+ {
+    Q_OBJECT
+ public:
+     enum Option1Flag {
+         Option10 = 0,
+         Option1A = 1,
+         Option1B = 2,
+         Option1C = 4,
+         Option1D = 8,
+         Option1E = 16,
+         Option1F = 32,
+         Option1AD = Option1A | Option1D,
+     };
+     Q_DECLARE_FLAGS(Option1, Option1Flag)
+     Q_FLAG(Option1)
+
+     enum ShortEnum: quint16 {
+         Short0  = 0,
+         Short8  = 0xff,
+         Short16 = 0xffff
+     };
+     Q_ENUM(ShortEnum);
+};
+
+class MyData : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(MyEnum::Option1 opt1 READ opt1 WRITE setOpt1 NOTIFY opt1Changed)
+    Q_PROPERTY(MyEnum::ShortEnum opt2 READ opt2 WRITE setOpt2 NOTIFY opt2Changed)
+public:
+    MyEnum::Option1 opt1() const { return m_opt1;  }
+    MyEnum::ShortEnum opt2() const { return m_opt2;  }
+
+signals:
+    void opt1Changed(MyEnum::Option1 opt1);
+    void opt2Changed(MyEnum::ShortEnum opt2);
+
+public slots:
+    void setOpt1(MyEnum::Option1 opt1)
+    {
+        QCOMPARE(opt1, MyEnum::Option1AD);
+        if (opt1 != m_opt1) {
+            m_opt1 = opt1;
+            emit opt1Changed(opt1);
+        }
+    }
+
+    void setOpt2(MyEnum::ShortEnum opt2)
+    {
+        QCOMPARE(opt2, MyEnum::Short16);
+        if (opt2 != m_opt2) {
+            m_opt2 = opt2;
+            emit opt2Changed(opt2);
+        }
+    }
+
+    void setOption1(MyEnum::Option1 opt1) { setOpt1(opt1); }
+    void setOption2(MyEnum::ShortEnum opt2) { setOpt2(opt2); }
+
+private:
+    MyEnum::Option1 m_opt1 = MyEnum::Option10;
+    MyEnum::ShortEnum m_opt2 = MyEnum::Short8;
+};
+
+void tst_qqmlpropertycache::passForeignEnums()
+{
+    qmlRegisterType<MyEnum>("example", 1, 0, "MyEnum");
+    qmlRegisterType<MyData>("example", 1, 0, "MyData");
+
+    MyEnum myenum;
+    MyData data;
+
+    engine.rootContext()->setContextProperty("myenum", &myenum);
+    engine.rootContext()->setContextProperty("mydata", &data);
+
+    QQmlComponent component(&engine, testFile("foreignEnums.qml"));
+    QVERIFY(component.isReady());
+
+    QScopedPointer<QObject> obj(component.create(engine.rootContext()));
+    QVERIFY(!obj.isNull());
+    QCOMPARE(data.opt1(), MyEnum::Option1AD);
+    QCOMPARE(data.opt2(), MyEnum::Short16);
+}
+
+Q_DECLARE_METATYPE(MyEnum::Option1)
+Q_DECLARE_METATYPE(MyEnum::ShortEnum)
+
+QT_BEGIN_NAMESPACE
+class SimpleGadget
+{
+    Q_GADGET
+    Q_PROPERTY(bool someProperty READ someProperty)
+public:
+    bool someProperty() const { return true; }
+};
+
+// Avoids NeedsCreation and NeedsDestruction flags
+Q_DECLARE_TYPEINFO(SimpleGadget, Q_PRIMITIVE_TYPE);
+QT_END_NAMESPACE
+
+class GadgetEmitter : public QObject
+{
+    Q_OBJECT
+signals:
+    void emitGadget(SimpleGadget);
+};
+
+void tst_qqmlpropertycache::passQGadget()
+{
+    qRegisterMetaType<SimpleGadget>();
+
+    GadgetEmitter emitter;
+    engine.rootContext()->setContextProperty("emitter", &emitter);
+    QQmlComponent component(&engine, testFile("passQGadget.qml"));
+    QVERIFY(component.isReady());
+
+    QScopedPointer<QObject> obj(component.create(engine.rootContext()));
+    QVariant before = obj->property("result");
+    QVERIFY(before.isNull());
+    emit emitter.emitGadget(SimpleGadget());
+    QVariant after = obj->property("result");
+    QCOMPARE(QMetaType::Type(after.type()), QMetaType::Bool);
+    QVERIFY(after.toBool());
 }
 
 class TestClass : public QObject

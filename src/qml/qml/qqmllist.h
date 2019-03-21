@@ -61,20 +61,15 @@ public:
     typedef void (*ClearFunction)(QQmlListProperty<T> *);
 
     QQmlListProperty()
-        : object(Q_NULLPTR),
-          data(Q_NULLPTR),
-          append(Q_NULLPTR),
-          count(Q_NULLPTR),
-          at(Q_NULLPTR),
-          clear(Q_NULLPTR),
-          dummy1(Q_NULLPTR),
-          dummy2(Q_NULLPTR)
+        : append(nullptr),
+          count(nullptr),
+          at(nullptr),
+          clear(nullptr)
     {}
     QQmlListProperty(QObject *o, QList<T *> &list)
         : object(o), data(&list), append(qlist_append), count(qlist_count), at(qlist_at),
-          clear(qlist_clear),
-          dummy1(Q_NULLPTR),
-          dummy2(Q_NULLPTR)
+          clear(qlist_clear)
+
     {}
     QQmlListProperty(QObject *o, void *d, AppendFunction a, CountFunction c, AtFunction t,
                     ClearFunction r )
@@ -83,18 +78,15 @@ public:
           append(a),
           count(c),
           at(t),
-          clear(r),
-          dummy1(Q_NULLPTR),
-          dummy2(Q_NULLPTR)
+          clear(r)
+
     {}
     QQmlListProperty(QObject *o, void *d, CountFunction c, AtFunction t)
         : object(o),
           data(d),
-          append(Q_NULLPTR),
+          append(nullptr),
           count(c), at(t),
-          clear(Q_NULLPTR),
-          dummy1(Q_NULLPTR),
-          dummy2(Q_NULLPTR)
+          clear(nullptr)
     {}
     bool operator==(const QQmlListProperty &o) const {
         return object == o.object &&
@@ -105,8 +97,8 @@ public:
                clear == o.clear;
     }
 
-    QObject *object;
-    void *data;
+    QObject *object = nullptr;
+    void *data = nullptr;
 
     AppendFunction append;
 
@@ -115,8 +107,8 @@ public:
 
     ClearFunction clear;
 
-    void *dummy1;
-    void *dummy2;
+    void *dummy1 = nullptr;
+    void *dummy2 = nullptr;
 
 private:
     static void qlist_append(QQmlListProperty *p, T *v) {
@@ -140,7 +132,7 @@ class Q_QML_EXPORT QQmlListReference
 {
 public:
     QQmlListReference();
-    QQmlListReference(QObject *, const char *property, QQmlEngine * = Q_NULLPTR);
+    QQmlListReference(QObject *, const char *property, QQmlEngine * = nullptr);
     QQmlListReference(const QQmlListReference &);
     QQmlListReference &operator=(const QQmlListReference &);
     ~QQmlListReference();

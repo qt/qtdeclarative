@@ -66,8 +66,8 @@ public:
         , m_spinning(false)
         , m_window(window)
     {
-        connect(window, &QQuickWindow::beforeRendering, this, &SpinnerNode::maybeRotate);
-        connect(window, &QQuickWindow::frameSwapped, this, &SpinnerNode::maybeUpdate);
+        connect(window, &QQuickWindow::beforeRendering, this, &SpinnerNode::maybeRotate, Qt::DirectConnection);
+        connect(window, &QQuickWindow::frameSwapped, this, &SpinnerNode::maybeUpdate, Qt::DirectConnection);
 
         QImage image(":/scenegraph/threadedanimation/spinner.png");
         m_texture = window->createTextureFromImage(image);
@@ -78,7 +78,7 @@ public:
         appendChildNode(textureNode);
     }
 
-    ~SpinnerNode() {
+    ~SpinnerNode() override {
         delete m_texture;
     }
 
@@ -96,6 +96,9 @@ public slots:
             matrix.rotate(m_rotation, 0, 0, 1);
             matrix.translate(-32, -32);
             setMatrix(matrix);
+
+            // If we're inside a QQuickWidget, this call is necessary to ensure the widget gets updated.
+            m_window->update();
         }
     }
 

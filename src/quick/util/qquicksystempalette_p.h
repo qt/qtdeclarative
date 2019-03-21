@@ -81,7 +81,7 @@ class Q_AUTOTEST_EXPORT QQuickSystemPalette : public QObject
     Q_PROPERTY(QColor highlightedText READ highlightedText NOTIFY paletteChanged)
 
 public:
-    QQuickSystemPalette(QObject *parent=0);
+    QQuickSystemPalette(QObject *parent=nullptr);
     ~QQuickSystemPalette();
 
     enum ColorGroup { Active = QPalette::Active, Inactive = QPalette::Inactive, Disabled = QPalette::Disabled };

@@ -59,69 +59,35 @@ namespace QV4 {
 
 namespace Heap {
 
-#define ArgumentsGetterFunctionMembers(class, Member) \
-    Member(class, NoMark, uint, index)
-
-DECLARE_HEAP_OBJECT(ArgumentsGetterFunction, FunctionObject) {
-    DECLARE_MARK_TABLE(ArgumentsGetterFunction);
-    inline void init(QV4::ExecutionContext *scope, uint index);
-};
-
-#define ArgumentsSetterFunctionMembers(class, Member) \
-    Member(class, NoMark, uint, index)
-
-DECLARE_HEAP_OBJECT(ArgumentsSetterFunction, FunctionObject) {
-    DECLARE_MARK_TABLE(ArgumentsSetterFunction);
-    inline void init(QV4::ExecutionContext *scope, uint index);
-};
-
 #define ArgumentsObjectMembers(class, Member) \
     Member(class, Pointer, CallContext *, context) \
-    Member(class, Pointer, MemberData *, mappedArguments) \
-    Member(class, NoMark, bool, fullyCreated)
+    Member(class, NoMark, bool, fullyCreated) \
+    Member(class, NoMark, uint, argCount) \
+    Member(class, NoMark, quint64, mapped)
 
 DECLARE_HEAP_OBJECT(ArgumentsObject, Object) {
-    DECLARE_MARK_TABLE(ArgumentsObject);
+    DECLARE_MARKOBJECTS(ArgumentsObject);
     enum {
         LengthPropertyIndex = 0,
-        CalleePropertyIndex = 1,
-        CallerPropertyIndex = 3
+        SymbolIteratorPropertyIndex = 1,
+        CalleePropertyIndex = 2
     };
-    void init(QV4::CallContext *context);
+    void init(CppStackFrame *frame);
+};
+
+#define StrictArgumentsObjectMembers(class, Member)
+
+DECLARE_HEAP_OBJECT(StrictArgumentsObject, Object) {
+    enum {
+        LengthPropertyIndex = 0,
+        SymbolIteratorPropertyIndex = 1,
+        CalleePropertyIndex = 2,
+        CalleeSetterPropertyIndex = 3
+    };
+    void init(CppStackFrame *frame);
 };
 
 }
-
-struct ArgumentsGetterFunction: FunctionObject
-{
-    V4_OBJECT2(ArgumentsGetterFunction, FunctionObject)
-
-    uint index() const { return d()->index; }
-    static void call(const Managed *that, Scope &scope, CallData *d);
-};
-
-inline void
-Heap::ArgumentsGetterFunction::init(QV4::ExecutionContext *scope, uint index)
-{
-    Heap::FunctionObject::init(scope);
-    this->index = index;
-}
-
-struct ArgumentsSetterFunction: FunctionObject
-{
-    V4_OBJECT2(ArgumentsSetterFunction, FunctionObject)
-
-    uint index() const { return d()->index; }
-    static void call(const Managed *that, Scope &scope, CallData *callData);
-};
-
-inline void
-Heap::ArgumentsSetterFunction::init(QV4::ExecutionContext *scope, uint index)
-{
-    Heap::FunctionObject::init(scope);
-    this->index = index;
-}
-
 
 struct ArgumentsObject: Object {
     V4_OBJECT2(ArgumentsObject, Object)
@@ -131,19 +97,35 @@ struct ArgumentsObject: Object {
     bool fullyCreated() const { return d()->fullyCreated; }
 
     static bool isNonStrictArgumentsObject(Managed *m) {
-        return m->d()->vtable()->type == Type_ArgumentsObject &&
-                !static_cast<ArgumentsObject *>(m)->context()->strictMode;
+        return m->vtable() == staticVTable();
     }
 
-    bool defineOwnProperty(ExecutionEngine *engine, uint index, const Property *desc, PropertyAttributes attrs);
-    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
-    static bool putIndexed(Managed *m, uint index, const Value &value);
-    static bool deleteIndexedProperty(Managed *m, uint index);
-    static PropertyAttributes queryIndexed(const Managed *m, uint index);
-    static uint getLength(const Managed *m);
+    static bool virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *desc, PropertyAttributes attrs);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static bool virtualDeleteProperty(Managed *m, PropertyKey id);
+    static PropertyAttributes virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p);
+    static qint64 virtualGetLength(const Managed *m);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
 
     void fullyCreate();
 
+    // There's a slight hack here, as this limits the amount of mapped arguments to 64, but that should be
+    // more than enough for all practical uses of arguments
+    bool isMapped(uint arg) const {
+        return arg < 64 && (d()->mapped & (1ull << arg));
+    }
+
+    void removeMapping(uint arg) {
+        if (arg < 64)
+            (d()->mapped &= ~(1ull << arg));
+    }
+
+};
+
+struct StrictArgumentsObject : Object {
+    V4_OBJECT2(StrictArgumentsObject, Object)
+    Q_MANAGED_TYPE(ArgumentsObject)
 };
 
 }

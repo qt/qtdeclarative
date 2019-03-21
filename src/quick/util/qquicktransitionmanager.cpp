@@ -56,7 +56,7 @@ class QQuickTransitionManagerPrivate
 {
 public:
     QQuickTransitionManagerPrivate()
-        : state(0), transitionInstance(0) {}
+        : state(nullptr), transitionInstance(nullptr) {}
 
     void applyBindings();
     typedef QList<QQuickSimpleAction> SimpleActionList;
@@ -79,7 +79,7 @@ void QQuickTransitionManager::setState(QQuickState *s)
 QQuickTransitionManager::~QQuickTransitionManager()
 {
     delete d->transitionInstance;
-    delete d; d = 0;
+    delete d; d = nullptr;
 }
 
 bool QQuickTransitionManager::isRunning() const
@@ -91,10 +91,10 @@ void QQuickTransitionManager::complete()
 {
     d->applyBindings();
 
-    for (int ii = 0; ii < d->completeList.count(); ++ii) {
-        const QQmlProperty &prop = d->completeList.at(ii).property();
-        prop.write(d->completeList.at(ii).value());
-    }
+    // Explicitly take a copy in case the write action triggers a script that modifies the list.
+    QQuickTransitionManagerPrivate::SimpleActionList completeListCopy = d->completeList;
+    for (const QQuickSimpleAction &action : qAsConst(completeListCopy))
+        action.property().write(action.value());
 
     d->completeList.clear();
 
@@ -131,7 +131,9 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
 {
     cancel();
 
+    // The copy below is ON PURPOSE, because firing actions might involve scripts that modify the list.
     QQuickStateOperation::ActionList applyList = list;
+
     // Determine which actions are binding changes and disable any current bindings
     for (const QQuickStateAction &action : qAsConst(applyList)) {
         if (action.toBinding)
@@ -156,8 +158,7 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
     if (transition && !d->bindingsList.isEmpty()) {
 
         // Apply all the property and binding changes
-        for (int ii = 0; ii < applyList.size(); ++ii) {
-            const QQuickStateAction &action = applyList.at(ii);
+        for (const QQuickStateAction &action : qAsConst(applyList)) {
             if (action.toBinding) {
                 QQmlPropertyPrivate::setBinding(action.toBinding.data(), QQmlPropertyPrivate::None, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
             } else if (!action.event) {
@@ -170,17 +171,15 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
             }
         }
 
-        // Read all the end values for binding changes
-        for (int ii = 0; ii < applyList.size(); ++ii) {
-            QQuickStateAction *action = &applyList[ii];
-            if (action->event) {
-                action->event->saveTargetValues();
+        // Read all the end values for binding changes.
+        for (auto it = applyList.begin(), eit = applyList.end(); it != eit; ++it) {
+            if (it->event) {
+                it->event->saveTargetValues();
                 continue;
             }
-            const QQmlProperty &prop = action->property;
-            if (action->toBinding || !action->toValue.isValid()) {
-                action->toValue = prop.read();
-            }
+            const QQmlProperty &prop = it->property;
+            if (it->toBinding || !it->toValue.isValid())
+                it->toValue = prop.read();
         }
 
         // Revert back to the original values
@@ -210,29 +209,20 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
             delete oldInstance;
 
         // Modify the action list to remove actions handled in the transition
-        for (int ii = 0; ii < applyList.count(); ++ii) {
-            const QQuickStateAction &action = applyList.at(ii);
-
+        auto isHandledInTransition = [this, touched](const QQuickStateAction &action) {
             if (action.event) {
-
-                if (action.actionDone) {
-                    applyList.removeAt(ii);
-                    --ii;
-                }
-
+                return action.actionDone;
             } else {
-
                 if (touched.contains(action.property)) {
                     if (action.toValue != action.fromValue)
-                        d->completeList <<
-                            QQuickSimpleAction(action, QQuickSimpleAction::EndState);
-
-                    applyList.removeAt(ii);
-                    --ii;
+                        d->completeList << QQuickSimpleAction(action, QQuickSimpleAction::EndState);
+                    return true;
                 }
-
             }
-        }
+            return false;
+        };
+        auto newEnd = std::remove_if(applyList.begin(), applyList.end(), isHandledInTransition);
+        applyList.erase(newEnd, applyList.end());
     }
 
     // Any actions remaining have not been handled by the transition and should
@@ -270,12 +260,9 @@ void QQuickTransitionManager::cancel()
     if (d->transitionInstance && d->transitionInstance->isRunning())
         d->transitionInstance->stop();
 
-    for(int i = 0; i < d->bindingsList.count(); ++i) {
-        QQuickStateAction action = d->bindingsList[i];
+    for (const QQuickStateAction &action : qAsConst(d->bindingsList)) {
         if (action.toBinding && action.deletableToBinding) {
             QQmlPropertyPrivate::removeBinding(action.property);
-            action.toBinding = 0;
-            action.deletableToBinding = false;
         } else if (action.event) {
             //### what do we do here?
         }

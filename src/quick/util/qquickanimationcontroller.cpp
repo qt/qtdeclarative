@@ -49,7 +49,7 @@ class QQuickAnimationControllerPrivate : public QObjectPrivate, QAnimationJobCha
     Q_DECLARE_PUBLIC(QQuickAnimationController)
 public:
     QQuickAnimationControllerPrivate()
-        : progress(0.0), animation(0), animationInstance(0), finalized(false) {}
+        : progress(0.0), animation(nullptr), animationInstance(nullptr), finalized(false) {}
     void animationFinished(QAbstractAnimationJob *job) override;
     void animationCurrentTimeChanged(QAbstractAnimationJob *job, int currentTime) override;
 
@@ -96,7 +96,7 @@ void QQuickAnimationControllerPrivate::animationCurrentTimeChanged(QAbstractAnim
     \instantiates QQuickAnimationController
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-control
-    \brief Enables manual control of animations
+    \brief Enables manual control of animations.
 
     Normally animations are driven by an internal timer, but the AnimationController
     allows the given \a animation to be driven by a \a progress value explicitly.
@@ -197,7 +197,7 @@ void QQuickAnimationController::reload()
         return;
 
     if (!d->animation) {
-        d->animationInstance = 0;
+        d->animationInstance = nullptr;
     } else {
         QQuickStateActions actions;
         QQmlProperties properties;
@@ -223,7 +223,7 @@ void QQuickAnimationController::updateProgress()
 
     d->animationInstance->setDisableUserControl();
     d->animationInstance->start();
-    QQmlAnimationTimer::unregisterAnimation(d->animationInstance);
+    QQmlAnimationTimer::instance()->unregisterAnimation(d->animationInstance);
     d->animationInstance->setCurrentTime(d->progress * d->animationInstance->duration());
 }
 

@@ -51,8 +51,8 @@ class QQuickParentChangePrivate : public QQuickStateOperationPrivate
 {
     Q_DECLARE_PUBLIC(QQuickParentChange)
 public:
-    QQuickParentChangePrivate() : target(0), parent(0), origParent(0), origStackBefore(0),
-        rewindParent(0), rewindStackBefore(0) {}
+    QQuickParentChangePrivate() : target(nullptr), parent(nullptr), origParent(nullptr), origStackBefore(nullptr),
+        rewindParent(nullptr), rewindStackBefore(nullptr) {}
 
     QQuickItem *target;
     QPointer<QQuickItem> parent;
@@ -68,7 +68,7 @@ public:
     QQmlNullableValue<QQmlScriptString> scaleString;
     QQmlNullableValue<QQmlScriptString> rotationString;
 
-    void doChange(QQuickItem *targetParent, QQuickItem *stackBefore = 0);
+    void doChange(QQuickItem *targetParent, QQuickItem *stackBefore = nullptr);
 };
 
 void QQuickParentChangePrivate::doChange(QQuickItem *targetParent, QQuickItem *stackBefore)
@@ -149,7 +149,7 @@ void QQuickParentChangePrivate::doChange(QQuickItem *targetParent, QQuickItem *s
     \instantiates QQuickParentChange
     \inqmlmodule QtQuick
     \ingroup qtquick-states
-    \brief Specifies how to reparent an Item in a state change
+    \brief Specifies how to reparent an Item in a state change.
 
     ParentChange reparents an item while preserving its visual appearance (position, size,
     rotation, and scale) on screen. You can then specify a transition to move/resize/rotate/scale
@@ -510,7 +510,7 @@ QQuickStateActionEvent::EventType QQuickParentChange::type() const
     return ParentChange;
 }
 
-bool QQuickParentChange::override(QQuickStateActionEvent*other)
+bool QQuickParentChange::mayOverride(QQuickStateActionEvent*other)
 {
     Q_D(QQuickParentChange);
     if (other->type() != ParentChange)
@@ -524,13 +524,13 @@ void QQuickParentChange::saveCurrentValues()
 {
     Q_D(QQuickParentChange);
     if (!d->target) {
-        d->rewindParent = 0;
-        d->rewindStackBefore = 0;
+        d->rewindParent = nullptr;
+        d->rewindStackBefore = nullptr;
         return;
     }
 
     d->rewindParent = d->target->parentItem();
-    d->rewindStackBefore = 0;
+    d->rewindStackBefore = nullptr;
 
     if (!d->rewindParent)
         return;
@@ -555,7 +555,7 @@ void QQuickParentChange::rewind()
     \instantiates QQuickAnchorChanges
     \inqmlmodule QtQuick
     \ingroup qtquick-states
-    \brief Specifies how to change the anchors of an item in a state
+    \brief Specifies how to change the anchors of an item in a state.
 
     The AnchorChanges type is used to modify the anchors of an item in a \l State.
 
@@ -588,7 +588,7 @@ class QQuickAnchorSetPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickAnchorSet)
 public:
     QQuickAnchorSetPrivate()
-      : usedAnchors(0), resetAnchors(0)
+      : usedAnchors(nullptr), resetAnchors(nullptr)
     {
     }
 
@@ -771,7 +771,7 @@ class QQuickAnchorChangesPrivate : public QQuickStateOperationPrivate
 {
 public:
     QQuickAnchorChangesPrivate()
-        : target(0), anchorSet(new QQuickAnchorSet)
+        : target(nullptr), anchorSet(new QQuickAnchorSet)
     {
 
     }
@@ -855,7 +855,7 @@ QQuickAnchorChanges::ActionList QQuickAnchorChanges::actions()
     Q_D(QQuickAnchorChanges);
     //### ASSERT these are all 0?
     d->leftBinding = d->rightBinding = d->hCenterBinding = d->topBinding
-                   = d->bottomBinding = d->vCenterBinding = d->baselineBinding = 0;
+                   = d->bottomBinding = d->vCenterBinding = d->baselineBinding = nullptr;
 
     d->leftProp = QQmlProperty(d->target, QLatin1String("anchors.left"));
     d->rightProp = QQmlProperty(d->target, QLatin1String("anchors.right"));
@@ -1236,20 +1236,20 @@ void QQuickAnchorChanges::copyOriginals(QQuickStateActionEvent *other)
 
     //clear old values from other
     //### could this be generalized for all QQuickStateActionEvents, and called after copyOriginals?
-    acp->leftBinding = 0;
-    acp->rightBinding = 0;
-    acp->hCenterBinding = 0;
-    acp->topBinding = 0;
-    acp->bottomBinding = 0;
-    acp->vCenterBinding = 0;
-    acp->baselineBinding = 0;
-    acp->origLeftBinding = 0;
-    acp->origRightBinding = 0;
-    acp->origHCenterBinding = 0;
-    acp->origTopBinding = 0;
-    acp->origBottomBinding = 0;
-    acp->origVCenterBinding = 0;
-    acp->origBaselineBinding = 0;
+    acp->leftBinding = nullptr;
+    acp->rightBinding = nullptr;
+    acp->hCenterBinding = nullptr;
+    acp->topBinding = nullptr;
+    acp->bottomBinding = nullptr;
+    acp->vCenterBinding = nullptr;
+    acp->baselineBinding = nullptr;
+    acp->origLeftBinding = nullptr;
+    acp->origRightBinding = nullptr;
+    acp->origHCenterBinding = nullptr;
+    acp->origTopBinding = nullptr;
+    acp->origBottomBinding = nullptr;
+    acp->origVCenterBinding = nullptr;
+    acp->origBaselineBinding = nullptr;
 
     saveCurrentValues();
 }
@@ -1302,7 +1302,7 @@ void QQuickAnchorChanges::clearBindings()
     }
 }
 
-bool QQuickAnchorChanges::override(QQuickStateActionEvent*other)
+bool QQuickAnchorChanges::mayOverride(QQuickStateActionEvent*other)
 {
     if (other->type() != AnchorChanges)
         return false;

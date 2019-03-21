@@ -84,7 +84,7 @@ public:
     void resetTarget() {
         if (!m_target)
             return;
-        m_target = 0;
+        m_target = nullptr;
         Q_EMIT targetChanged();
     }
 
@@ -270,7 +270,7 @@ class Q_AUTOTEST_EXPORT QQuickPinchArea : public QQuickItem
     Q_PROPERTY(QQuickPinch *pinch READ pinch CONSTANT)
 
 public:
-    QQuickPinchArea(QQuickItem *parent=0);
+    QQuickPinchArea(QQuickItem *parent=nullptr);
     ~QQuickPinchArea();
 
     bool isEnabled() const;
@@ -286,13 +286,13 @@ Q_SIGNALS:
     Q_REVISION(1) void smartZoom(QQuickPinchEvent *pinch);
 
 protected:
-    bool childMouseEventFilter(QQuickItem *i, QEvent *e) Q_DECL_OVERRIDE;
-    void touchEvent(QTouchEvent *event) Q_DECL_OVERRIDE;
+    bool childMouseEventFilter(QQuickItem *i, QEvent *e) override;
+    void touchEvent(QTouchEvent *event) override;
 
     void geometryChanged(const QRectF &newGeometry,
-                         const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void itemChange(ItemChange change, const ItemChangeData& value) Q_DECL_OVERRIDE;
-    bool event(QEvent *) Q_DECL_OVERRIDE;
+                         const QRectF &oldGeometry) override;
+    void itemChange(ItemChange change, const ItemChangeData& value) override;
+    bool event(QEvent *) override;
 
 private:
     void clearPinch();

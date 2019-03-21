@@ -410,6 +410,7 @@ bool QSGD3D12RenderThread::event(QEvent *e)
             QQuickWindowPrivate *wd = QQuickWindowPrivate::get(wme->window);
             rc->initialize(nullptr);
             wd->syncSceneGraph();
+            rc->endSync();
             wd->renderSceneGraph(wme->window->size());
             *wme->image = engine->executeAndWaitReadbackRenderTarget();
         }
@@ -545,6 +546,7 @@ void QSGD3D12RenderThread::sync(bool inExpose)
 
         rc->initialize(nullptr);
         wd->syncSceneGraph();
+        rc->endSync();
 
         if (!hadRenderer && wd->renderer) {
             if (Q_UNLIKELY(debug_loop()))

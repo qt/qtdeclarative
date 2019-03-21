@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_EXPORT QSGNinePatchNode : public QSGGeometryNode
 {
 public:
-    virtual ~QSGNinePatchNode() { }
+    ~QSGNinePatchNode() override = default;
 
     virtual void setTexture(QSGTexture *texture) = 0;
     virtual void setBounds(const QRectF &bounds) = 0;

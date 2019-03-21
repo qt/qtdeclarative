@@ -252,35 +252,35 @@ void QQuickAnchorsPrivate::clearItem(QQuickItem *item)
     if (!item)
         return;
     if (fill == item)
-        fill = 0;
+        fill = nullptr;
     if (centerIn == item)
-        centerIn = 0;
+        centerIn = nullptr;
     if (leftAnchorItem == item) {
-        leftAnchorItem = 0;
+        leftAnchorItem = nullptr;
         usedAnchors &= ~QQuickAnchors::LeftAnchor;
     }
     if (rightAnchorItem == item) {
-        rightAnchorItem = 0;
+        rightAnchorItem = nullptr;
         usedAnchors &= ~QQuickAnchors::RightAnchor;
     }
     if (topAnchorItem == item) {
-        topAnchorItem = 0;
+        topAnchorItem = nullptr;
         usedAnchors &= ~QQuickAnchors::TopAnchor;
     }
     if (bottomAnchorItem == item) {
-        bottomAnchorItem = 0;
+        bottomAnchorItem = nullptr;
         usedAnchors &= ~QQuickAnchors::BottomAnchor;
     }
     if (vCenterAnchorItem == item) {
-        vCenterAnchorItem = 0;
+        vCenterAnchorItem = nullptr;
         usedAnchors &= ~QQuickAnchors::VCenterAnchor;
     }
     if (hCenterAnchorItem == item) {
-        hCenterAnchorItem = 0;
+        hCenterAnchorItem = nullptr;
         usedAnchors &= ~QQuickAnchors::HCenterAnchor;
     }
     if (baselineAnchorItem == item) {
-        baselineAnchorItem = 0;
+        baselineAnchorItem = nullptr;
         usedAnchors &= ~QQuickAnchors::BaselineAnchor;
     }
 }
@@ -462,7 +462,7 @@ void QQuickAnchorsPrivate::updateOnComplete()
 
     std::sort(dependencies, dependencies + 9);
 
-    QQuickItem *lastDependency = 0;
+    QQuickItem *lastDependency = nullptr;
     for (int i = 0; i < 9; ++i) {
         QQuickItem *dependency = dependencies[i];
         if (lastDependency != dependency) {
@@ -542,7 +542,7 @@ void QQuickAnchors::setFill(QQuickItem *f)
 
 void QQuickAnchors::resetFill()
 {
-    setFill(0);
+    setFill(nullptr);
 }
 
 QQuickItem *QQuickAnchors::centerIn() const
@@ -578,7 +578,7 @@ void QQuickAnchors::setCenterIn(QQuickItem* c)
 
 void QQuickAnchors::resetCenterIn()
 {
-    setCenterIn(0);
+    setCenterIn(nullptr);
 }
 
 bool QQuickAnchorsPrivate::calcStretch(QQuickItem *edge1Item,
@@ -832,7 +832,7 @@ void QQuickAnchors::resetTop()
     Q_D(QQuickAnchors);
     d->usedAnchors &= ~TopAnchor;
     d->remDepend(d->topAnchorItem);
-    d->topAnchorItem = Q_NULLPTR;
+    d->topAnchorItem = nullptr;
     d->topAnchorLine = QQuickAnchors::InvalidAnchor;
     emit topChanged();
     d->updateVerticalAnchors();
@@ -872,7 +872,7 @@ void QQuickAnchors::resetBottom()
     Q_D(QQuickAnchors);
     d->usedAnchors &= ~BottomAnchor;
     d->remDepend(d->bottomAnchorItem);
-    d->bottomAnchorItem = Q_NULLPTR;
+    d->bottomAnchorItem = nullptr;
     d->bottomAnchorLine = QQuickAnchors::InvalidAnchor;
     emit bottomChanged();
     d->updateVerticalAnchors();
@@ -912,7 +912,7 @@ void QQuickAnchors::resetVerticalCenter()
     Q_D(QQuickAnchors);
     d->usedAnchors &= ~VCenterAnchor;
     d->remDepend(d->vCenterAnchorItem);
-    d->vCenterAnchorItem = Q_NULLPTR;
+    d->vCenterAnchorItem = nullptr;
     d->vCenterAnchorLine = QQuickAnchors::InvalidAnchor;
     emit verticalCenterChanged();
     d->updateVerticalAnchors();
@@ -952,7 +952,7 @@ void QQuickAnchors::resetBaseline()
     Q_D(QQuickAnchors);
     d->usedAnchors &= ~BaselineAnchor;
     d->remDepend(d->baselineAnchorItem);
-    d->baselineAnchorItem = Q_NULLPTR;
+    d->baselineAnchorItem = nullptr;
     d->baselineAnchorLine = QQuickAnchors::InvalidAnchor;
     emit baselineChanged();
     d->updateVerticalAnchors();
@@ -992,7 +992,7 @@ void QQuickAnchors::resetLeft()
     Q_D(QQuickAnchors);
     d->usedAnchors &= ~LeftAnchor;
     d->remDepend(d->leftAnchorItem);
-    d->leftAnchorItem = Q_NULLPTR;
+    d->leftAnchorItem = nullptr;
     d->leftAnchorLine = QQuickAnchors::InvalidAnchor;
     emit leftChanged();
     d->updateHorizontalAnchors();
@@ -1032,7 +1032,7 @@ void QQuickAnchors::resetRight()
     Q_D(QQuickAnchors);
     d->usedAnchors &= ~RightAnchor;
     d->remDepend(d->rightAnchorItem);
-    d->rightAnchorItem = Q_NULLPTR;
+    d->rightAnchorItem = nullptr;
     d->rightAnchorLine = QQuickAnchors::InvalidAnchor;
     emit rightChanged();
     d->updateHorizontalAnchors();
@@ -1072,7 +1072,7 @@ void QQuickAnchors::resetHorizontalCenter()
     Q_D(QQuickAnchors);
     d->usedAnchors &= ~HCenterAnchor;
     d->remDepend(d->hCenterAnchorItem);
-    d->hCenterAnchorItem = Q_NULLPTR;
+    d->hCenterAnchorItem = nullptr;
     d->hCenterAnchorLine = QQuickAnchors::InvalidAnchor;
     emit horizontalCenterChanged();
     d->updateHorizontalAnchors();
@@ -1322,6 +1322,19 @@ QQuickAnchors::Anchors QQuickAnchors::usedAnchors() const
 {
     Q_D(const QQuickAnchors);
     return static_cast<QQuickAnchors::Anchors>(d->usedAnchors);
+}
+
+Qt::Orientations QQuickAnchors::activeDirections() const
+{
+    Q_D(const QQuickAnchors);
+    if (d->fill || d->centerIn)
+        return Qt::Horizontal | Qt::Vertical;
+    Qt::Orientations o;
+    if (d->usedAnchors & QQuickAnchors::Horizontal_Mask)
+        o |= Qt::Horizontal;
+    if (d->usedAnchors & QQuickAnchors::Vertical_Mask)
+        o |= Qt::Vertical;
+    return o;
 }
 
 bool QQuickAnchorsPrivate::checkHValid() const

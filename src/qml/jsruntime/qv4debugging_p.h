@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Debugging {
 
-#ifdef QT_NO_QML_DEBUGGER
+#if !QT_CONFIG(qml_debug)
 
 class Debugger
 {
@@ -78,7 +78,7 @@ class Q_QML_EXPORT Debugger : public QObject
     Q_OBJECT
 
 public:
-    virtual ~Debugger() {}
+    ~Debugger() override {}
     virtual bool pauseAtNextOpportunity() const = 0;
     virtual void maybeBreakAtInstruction() = 0;
     virtual void enteringFunction() = 0;

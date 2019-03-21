@@ -40,7 +40,6 @@
 #include "qquicktextinput_p.h"
 #include "qquicktextinput_p_p.h"
 #include "qquickwindow.h"
-#include "qquicktextutil_p.h"
 
 #include <private/qqmlglobal_p.h>
 #include <private/qv4scopedvalue_p.h>
@@ -76,7 +75,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
     \ingroup qtquick-visual
     \ingroup qtquick-input
     \inherits Item
-    \brief Displays an editable line of text
+    \brief Displays an editable line of text.
 
     The TextInput type displays a single line of editable plain text.
 
@@ -157,7 +156,7 @@ void QQuickTextInput::setText(const QString &s)
 
     Supported render types are:
     \list
-    \li Text.QtRendering - the default
+    \li Text.QtRendering
     \li Text.NativeRendering
     \endlist
 
@@ -165,6 +164,8 @@ void QQuickTextInput::setText(const QString &s)
     not require advanced features such as transformation of the text. Using such features in
     combination with the NativeRendering render type will lend poor and sometimes pixelated
     results.
+
+    The default rendering type is determined by \l QQuickWindow::textRenderType().
 */
 QQuickTextInput::RenderType QQuickTextInput::renderType() const
 {
@@ -376,6 +377,36 @@ QString QQuickTextInputPrivate::realText() const
 
     \qml
     TextInput { text: "Hello"; renderType: TextInput.NativeRendering; font.hintingPreference: Font.PreferVerticalHinting }
+    \endqml
+*/
+
+/*!
+    \qmlproperty bool QtQuick::TextInput::font.kerning
+    \since 5.10
+
+    Enables or disables the kerning OpenType feature when shaping the text. Disabling this may
+    improve performance when creating or changing the text, at the expense of some cosmetic
+    features. The default value is true.
+
+    \qml
+    TextInput { text: "OATS FLAVOUR WAY"; font.kerning: false }
+    \endqml
+*/
+
+/*!
+    \qmlproperty bool QtQuick::TextInput::font.preferShaping
+    \since 5.10
+
+    Sometimes, a font will apply complex rules to a set of characters in order to
+    display them correctly. In some writing systems, such as Brahmic scripts, this is
+    required in order for the text to be legible, but in e.g. Latin script, it is merely
+    a cosmetic feature. Setting the \c preferShaping property to false will disable all
+    such features when they are not required, which will improve performance in most cases.
+
+    The default value is true.
+
+    \qml
+    TextInput { text: "Some text"; font.preferShaping: false }
     \endqml
 */
 QFont QQuickTextInput::font() const
@@ -846,7 +877,7 @@ QRectF QQuickTextInput::cursorRectangle() const
         if (c < text().length())
             w = l.cursorToX(c + 1) - x;
         else
-            w = QFontMetrics(font()).width(QLatin1Char(' ')); // in sync with QTextLine::draw()
+            w = QFontMetrics(font()).horizontalAdvance(QLatin1Char(' ')); // in sync with QTextLine::draw()
     }
     return QRectF(x, y, w, l.height());
 }
@@ -1077,7 +1108,8 @@ void QQuickTextInputPrivate::checkIsValid()
     Q_Q(QQuickTextInput);
 
     ValidatorState state = hasAcceptableInput(m_text);
-    m_validInput = state != InvalidInput;
+    if (!m_maskData)
+        m_validInput = state != InvalidInput;
     if (state != AcceptableInput) {
         if (m_acceptableInput) {
             m_acceptableInput = false;
@@ -1209,6 +1241,12 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
 #endif
     d->updateDisplayText();
     updateCursorRectangle();
+
+    // If this control is used for password input, we want to minimize
+    // the possibility of string reallocation not to leak (parts of)
+    // the password.
+    if (d->m_echoMode != QQuickTextInput::Normal)
+        d->m_text.reserve(30);
 
     emit echoModeChanged(echoMode());
 }
@@ -1345,7 +1383,7 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
         if (pos < text().length())
             w = l.cursorToX(pos + 1) - x;
         else
-            w = QFontMetrics(font()).width(QLatin1Char(' ')); // in sync with QTextLine::draw()
+            w = QFontMetrics(font()).horizontalAdvance(QLatin1Char(' ')); // in sync with QTextLine::draw()
     }
     return QRectF(x, y, w, l.height());
 }
@@ -1831,7 +1869,7 @@ void QQuickTextInput::invalidateFontCaches()
 {
     Q_D(QQuickTextInput);
 
-    if (d->m_textLayout.engine() != 0)
+    if (d->m_textLayout.engine() != nullptr)
         d->m_textLayout.engine()->resetFontEngineCache();
 }
 
@@ -1854,7 +1892,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     Q_UNUSED(data);
     Q_D(QQuickTextInput);
 
-    if (d->updateType != QQuickTextInputPrivate::UpdatePaintNode && oldNode != 0) {
+    if (d->updateType != QQuickTextInputPrivate::UpdatePaintNode && oldNode != nullptr) {
         // Update done in preprocess() in the nodes
         d->updateType = QQuickTextInputPrivate::UpdateNone;
         return oldNode;
@@ -1863,13 +1901,13 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     d->updateType = QQuickTextInputPrivate::UpdateNone;
 
     QQuickTextNode *node = static_cast<QQuickTextNode *>(oldNode);
-    if (node == 0)
+    if (node == nullptr)
         node = new QQuickTextNode(this);
     d->textNode = node;
 
-    const bool showCursor = !isReadOnly() && d->cursorItem == 0 && d->cursorVisible && d->m_blinkStatus;
+    const bool showCursor = !isReadOnly() && d->cursorItem == nullptr && d->cursorVisible && d->m_blinkStatus;
 
-    if (!d->textLayoutDirty && oldNode != 0) {
+    if (!d->textLayoutDirty && oldNode != nullptr) {
         if (showCursor)
             node->setCursor(cursorRectangle(), d->color);
         else
@@ -3407,9 +3445,9 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
     if (!event->commitString().isEmpty()) {
         internalInsert(event->commitString());
         cursorPositionChanged = true;
+    } else {
+        m_cursor = qBound(0, c, m_text.length());
     }
-
-    m_cursor = qBound(0, c, m_text.length());
 
     for (int i = 0; i < event->attributes().size(); ++i) {
         const QInputMethodEvent::Attribute &a = event->attributes().at(i);
@@ -3530,11 +3568,15 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
 #if QT_CONFIG(validator)
         if (m_validator) {
             QString textCopy = m_text;
+            if (m_maskData)
+                textCopy = maskString(0, m_text, true);
             int cursorCopy = m_cursor;
             QValidator::State state = m_validator->validate(textCopy, cursorCopy);
+            if (m_maskData)
+                textCopy = m_text;
             m_validInput = state != QValidator::Invalid;
             m_acceptableInput = state == QValidator::Acceptable;
-            if (m_validInput) {
+            if (m_validInput && !m_maskData) {
                 if (m_text != textCopy) {
                     internalSetText(textCopy, cursorCopy);
                     return true;
@@ -3543,26 +3585,8 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
             }
         }
 #endif
-
-        if (m_maskData) {
-            if (m_text.length() != m_maxLength) {
-                m_acceptableInput = false;
-            } else {
-                for (int i = 0; i < m_maxLength; ++i) {
-                    if (m_maskData[i].separator) {
-                        if (m_text.at(i) != m_maskData[i].maskChar) {
-                            m_acceptableInput = false;
-                            break;
-                        }
-                    } else {
-                        if (!isValidInput(m_text.at(i), m_maskData[i].maskChar)) {
-                            m_acceptableInput = false;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
+        if (m_maskData)
+            checkIsValid();
 
         if (validateFromState >= 0 && wasValidInput && !m_validInput) {
             if (m_transactions.count())
@@ -3810,7 +3834,7 @@ void QQuickTextInputPrivate::parseInputMask(const QString &maskFields)
     if (maskFields.isEmpty() || delimiter == 0) {
         if (m_maskData) {
             delete [] m_maskData;
-            m_maskData = 0;
+            m_maskData = nullptr;
             m_maxLength = 32767;
             internalSetText(QString());
         }

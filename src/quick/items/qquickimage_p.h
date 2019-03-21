@@ -70,7 +70,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImage : public QQuickImageBase
     Q_PROPERTY(bool autoTransform READ autoTransform WRITE setAutoTransform NOTIFY autoTransformChanged REVISION 2)
 
 public:
-    QQuickImage(QQuickItem *parent=0);
+    QQuickImage(QQuickItem *parent=nullptr);
     ~QQuickImage();
 
     enum HAlignment { AlignLeft = Qt::AlignLeft,
@@ -91,7 +91,7 @@ public:
     qreal paintedWidth() const;
     qreal paintedHeight() const;
 
-    QRectF boundingRect() const Q_DECL_OVERRIDE;
+    QRectF boundingRect() const override;
 
     HAlignment horizontalAlignment() const;
     void setHorizontalAlignment(HAlignment align);
@@ -99,13 +99,13 @@ public:
     VAlignment verticalAlignment() const;
     void setVerticalAlignment(VAlignment align);
 
-    bool isTextureProvider() const Q_DECL_OVERRIDE { return true; }
-    QSGTextureProvider *textureProvider() const Q_DECL_OVERRIDE;
+    bool isTextureProvider() const override { return true; }
+    QSGTextureProvider *textureProvider() const override;
 
     bool mipmap() const;
     void setMipmap(bool use);
 
-    virtual void emitAutoTransformBaseChanged() Q_DECL_OVERRIDE { emit autoTransformChanged(); }
+    void emitAutoTransformBaseChanged() override { emit autoTransformChanged(); }
 
 Q_SIGNALS:
     void fillModeChanged();
@@ -120,12 +120,12 @@ private Q_SLOTS:
 
 protected:
     QQuickImage(QQuickImagePrivate &dd, QQuickItem *parent);
-    void pixmapChange() Q_DECL_OVERRIDE;
+    void pixmapChange() override;
     void updatePaintedGeometry();
-    void releaseResources() Q_DECL_OVERRIDE;
+    void releaseResources() override;
 
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 
 private:
     Q_DISABLE_COPY(QQuickImage)

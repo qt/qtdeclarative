@@ -37,6 +37,8 @@ QT_FORWARD_DECLARE_CLASS(QQuickView)
 QT_FORWARD_DECLARE_CLASS(QQuickItemViewPrivate)
 QT_FORWARD_DECLARE_CLASS(FxViewItem)
 
+QT_BEGIN_NAMESPACE
+
 namespace QQuickViewTestUtil
 {
     QQuickView *createView();
@@ -76,6 +78,7 @@ namespace QQuickViewTestUtil
         QaimModel(QObject *parent=0);
 
         int rowCount(const QModelIndex &parent=QModelIndex()) const;
+        int columnCount(const QModelIndex &parent=QModelIndex()) const;
         QVariant data(const QModelIndex &index, int role=Qt::DisplayRole) const;
         QHash<int,QByteArray> roleNames() const;
 
@@ -103,6 +106,8 @@ namespace QQuickViewTestUtil
         void matchAgainst(const QList<QPair<QString, QString> > &other, const QString &error1, const QString &error2);
 
         using QAbstractListModel::dataChanged;
+
+        int columns = 1;
 
     private:
         QList<QPair<QString,QString> > list;
@@ -181,6 +186,12 @@ namespace QQuickViewTestUtil
 namespace QQuickTouchUtils {
     void flush(QQuickWindow *window);
 }
+
+namespace QQuickTest {
+    bool initView(QQuickView &v, const QUrl &url, bool moveMouseOut, QByteArray *errorMessage);
+}
+
+QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QQuickViewTestUtil::QaimModel*)
 Q_DECLARE_METATYPE(QQuickViewTestUtil::ListChange)

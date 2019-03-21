@@ -6,6 +6,10 @@ version                 = $QT_VERSION
 
 examplesinstallpath     = quick
 
+# Custom module header that pulls in also QtQuickWidgets
+moduleheader            = QtQuickDoc
+includepaths            = -I .
+
 qhp.projects            = QtQuick
 
 qhp.QtQuick.file                = qtquick.qhp
@@ -33,7 +37,7 @@ qhp.QtQuick.subprojects.examples.selectors = fake:example
 
 tagfile                 = ../../../doc/qtquick/qtquick.tags
 
-depends += qtcore qtxmlpatterns qtqml qtgui qtlinguist qtquickcontrols qtdoc qtquickdialogs qtsensors qtwidgets qmake qtmultimedia qtgraphicaleffects
+depends += qtcore qtqml qtqmltest qtgui qtlinguist qtquickcontrols1 qtquickcontrols qtdoc qtquickdialogs qtsensors qtwidgets qmake qtmultimedia qtgraphicaleffects qtsql qtxmlpatterns
 
 headerdirs  += ..\
                ../../quickwidgets
@@ -48,10 +52,11 @@ exampledirs +=  ../../../examples/quick \
 
 imagedirs   += images
 
-
-#add particles sources
-headerdirs += ../../particles
-sourcedirs += ../../particles
+#add particles and shapes sources
+headerdirs += ../../particles \
+              ../../quickshapes
+sourcedirs += ../../particles \
+              ../../quickshapes
 
 #add imports directory because of dependencies
 headerdirs += ../../imports
@@ -71,6 +76,21 @@ examples.fileextensions        += "*.qm"
 manifestmeta.thumbnail.names += "QtQuick/Threaded ListModel Example" \
                                 "QtQuick/QML Dynamic View Ordering Tutorial*"
 
+manifestmeta.highlighted.names = "QtQuick/Qt Quick Demo - Same Game" \
+                                 "QtQuick/Qt Quick Demo - Photo Surface" \
+                                 "QtQuick/Qt Quick Demo - Tweet Search" \
+                                 "QtQuick/Qt Quick Demo - Calqlatr" \
+                                 "QtQuick/Qt Quick Demo - StocQt" \
+                                 "QtQuick/Qt Quick Demo - Clocks" \
+                                 "QtQuick/Qt Quick Examples - Shader Effects"
+
 navigation.landingpage = "Qt Quick"
 navigation.cppclassespage = "Qt Quick C++ Classes"
 navigation.qmltypespage = "Qt Quick QML Types"
+
+# \svgcolor {#ffdead}
+macro.svgcolor.HTML = "<div style=\"padding:10px;color:#fff;background:\1;\"></div>"
+
+# youtube video thumbnails that show up in offline and online docs
+HTML.extraimages += images/9BcAYDlpuT8.jpg
+qhp.QtQuick.extraFiles += images/9BcAYDlpuT8.jpg

@@ -75,7 +75,7 @@ public:
     static QQuickLayoutAttached *qmlAttachedProperties(QObject *object);
 
 
-    void componentComplete() Q_DECL_OVERRIDE;
+    void componentComplete() override;
     virtual QSizeF sizeHint(Qt::SizeHint whichSizeHint) const = 0;
     virtual void setAlignment(QQuickItem *item, Qt::Alignment align) = 0;
     virtual void invalidate(QQuickItem * childItem = 0);
@@ -91,22 +91,23 @@ public:
     static void effectiveSizeHints_helper(QQuickItem *item, QSizeF *cachedSizeHints, QQuickLayoutAttached **info, bool useFallbackToWidthOrHeight);
     static QLayoutPolicy::Policy effectiveSizePolicy_helper(QQuickItem *item, Qt::Orientation orientation, QQuickLayoutAttached *info);
     bool shouldIgnoreItem(QQuickItem *child, QQuickLayoutAttached *&info, QSizeF *sizeHints) const;
+    void checkAnchors(QQuickItem *item) const;
 
-    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)  Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)  override;
     bool isReady() const;
     void deactivateRecur();
 
 
     /* QQuickItemChangeListener */
-    void itemSiblingOrderChanged(QQuickItem *item) Q_DECL_OVERRIDE;
-    void itemImplicitWidthChanged(QQuickItem *item) Q_DECL_OVERRIDE;
-    void itemImplicitHeightChanged(QQuickItem *item) Q_DECL_OVERRIDE;
-    void itemDestroyed(QQuickItem *item) Q_DECL_OVERRIDE;
-    void itemVisibilityChanged(QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemSiblingOrderChanged(QQuickItem *item) override;
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
+    void itemDestroyed(QQuickItem *item) override;
+    void itemVisibilityChanged(QQuickItem *item) override;
 
 protected:
-    void updatePolish() Q_DECL_OVERRIDE;
+    void updatePolish() override;
 
     enum Orientation {
         Vertical = 0,
@@ -293,6 +294,9 @@ private:
 
     qreal m_defaultMargins;
     QMarginsF m_margins;
+
+    qreal m_fallbackWidth;
+    qreal m_fallbackHeight;
 
     // GridLayout specific properties
     int m_row;

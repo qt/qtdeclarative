@@ -53,6 +53,8 @@
 
 #include "private/qanimationgroupjob_p.h"
 
+QT_REQUIRE_CONFIG(qml_animation);
+
 QT_BEGIN_NAMESPACE
 
 class Q_QML_PRIVATE_EXPORT QParallelAnimationGroupJob : public QAnimationGroupJob
@@ -76,8 +78,8 @@ private:
     void applyGroupState(QAbstractAnimationJob *animation);
 
     //state
-    int m_previousLoop;
-    int m_previousCurrentTime;
+    int m_previousLoop = 0;
+    int m_previousCurrentTime = 0;
 };
 
 QT_END_NAMESPACE

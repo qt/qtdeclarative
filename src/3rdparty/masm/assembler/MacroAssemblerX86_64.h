@@ -116,6 +116,23 @@ public:
         sub32(imm, Address(scratchRegister));
     }
 
+    void load16(ExtendedAddress address, RegisterID dest)
+    {
+        TrustedImmPtr addr(reinterpret_cast<void*>(address.offset));
+        MacroAssemblerX86Common::move(addr, scratchRegister);
+        MacroAssemblerX86Common::load16(BaseIndex(scratchRegister, address.base, TimesTwo), dest);
+    }
+
+    void load16(BaseIndex address, RegisterID dest)
+    {
+        MacroAssemblerX86Common::load16(address, dest);
+    }
+
+    void load16(Address address, RegisterID dest)
+    {
+        MacroAssemblerX86Common::load16(address, dest);
+    }
+
     void load32(const void* address, RegisterID dest)
     {
         if (dest == X86Registers::eax)
@@ -243,6 +260,26 @@ public:
         add64(imm, Address(scratchRegister));
     }
 
+    void x86Lea64(BaseIndex index, RegisterID dest)
+    {
+        if (!index.scale && !index.offset) {
+            if (index.base == dest) {
+                add64(index.index, dest);
+                return;
+            }
+            if (index.index == dest) {
+                add64(index.base, dest);
+                return;
+            }
+        }
+        m_assembler.leaq_mr(index.offset, index.base, index.index, index.scale, dest);
+    }
+
+    void getEffectiveAddress(BaseIndex address, RegisterID dest)
+    {
+        return x86Lea64(address, dest);
+    }
+
     void and64(RegisterID src, RegisterID dest)
     {
         m_assembler.andq_rr(src, dest);
@@ -292,6 +329,12 @@ public:
         or64(imm, dest);
     }
     
+    void or64(TrustedImm64 imm, RegisterID src, RegisterID dest)
+    {
+        move(src, dest);
+        or64(imm, dest);
+    }
+
     void rotateRight64(TrustedImm32 imm, RegisterID srcDst)
     {
         m_assembler.rorq_i8r(imm.m_value, srcDst);
@@ -364,6 +407,13 @@ public:
             m_assembler.sarq_CLr(dest == X86Registers::ecx ? src : dest);
             swap(src, X86Registers::ecx);
         }
+    }
+
+    void urshift64(RegisterID src, TrustedImm32 imm, RegisterID dest)
+    {
+        if (src != dest)
+            move(src, dest);
+        urshift64(imm, dest);
     }
 
     void urshift64(TrustedImm32 imm, RegisterID dest)

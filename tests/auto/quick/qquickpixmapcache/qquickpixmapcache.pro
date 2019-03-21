@@ -5,7 +5,6 @@ macx:CONFIG -= app_bundle
 SOURCES += tst_qquickpixmapcache.cpp \
            ../../shared/testhttpserver.cpp
 HEADERS += ../../shared/testhttpserver.h
-INCLUDEPATH += ../../shared/
 
 include (../../shared/util.pri)
 

@@ -28,7 +28,7 @@
 #include "testtypes.h"
 #include <QtQml/qqml.h>
 
-SelfRegisteringType *SelfRegisteringType::m_me = 0;
+SelfRegisteringType *SelfRegisteringType::m_me = nullptr;
 SelfRegisteringType::SelfRegisteringType()
 : m_v(0)
 {
@@ -42,13 +42,13 @@ SelfRegisteringType *SelfRegisteringType::me()
 
 void SelfRegisteringType::clearMe()
 {
-    m_me = 0;
+    m_me = nullptr;
 }
 
-SelfRegisteringOuterType *SelfRegisteringOuterType::m_me = 0;
+SelfRegisteringOuterType *SelfRegisteringOuterType::m_me = nullptr;
 bool SelfRegisteringOuterType::beenDeleted = false;
 SelfRegisteringOuterType::SelfRegisteringOuterType()
-: m_v(0)
+: m_v(nullptr)
 {
     m_me = this;
     beenDeleted = false;
@@ -64,7 +64,7 @@ SelfRegisteringOuterType *SelfRegisteringOuterType::me()
     return m_me;
 }
 
-CompletionRegisteringType *CompletionRegisteringType::m_me = 0;
+CompletionRegisteringType *CompletionRegisteringType::m_me = nullptr;
 CompletionRegisteringType::CompletionRegisteringType()
 {
 }
@@ -85,11 +85,11 @@ CompletionRegisteringType *CompletionRegisteringType::me()
 
 void CompletionRegisteringType::clearMe()
 {
-    m_me = 0;
+    m_me = nullptr;
 }
 
-CallbackRegisteringType::callback CallbackRegisteringType::m_callback = 0;
-void *CallbackRegisteringType::m_data = 0;
+CallbackRegisteringType::callback CallbackRegisteringType::m_callback = nullptr;
+void *CallbackRegisteringType::m_data = nullptr;
 CallbackRegisteringType::CallbackRegisteringType()
 : m_v(0)
 {
@@ -97,8 +97,8 @@ CallbackRegisteringType::CallbackRegisteringType()
 
 void CallbackRegisteringType::clearCallback()
 {
-    m_callback = 0;
-    m_data = 0;
+    m_callback = nullptr;
+    m_data = nullptr;
 }
 
 void CallbackRegisteringType::registerCallback(callback c, void *d)
@@ -107,8 +107,8 @@ void CallbackRegisteringType::registerCallback(callback c, void *d)
     m_data = d;
 }
 
-CompletionCallbackType::callback CompletionCallbackType::m_callback = 0;
-void *CompletionCallbackType::m_data = 0;
+CompletionCallbackType::callback CompletionCallbackType::m_callback = nullptr;
+void *CompletionCallbackType::m_data = nullptr;
 CompletionCallbackType::CompletionCallbackType()
 {
 }
@@ -124,8 +124,8 @@ void CompletionCallbackType::componentComplete()
 
 void CompletionCallbackType::clearCallback()
 {
-    m_callback = 0;
-    m_data = 0;
+    m_callback = nullptr;
+    m_data = nullptr;
 }
 
 void CompletionCallbackType::registerCallback(callback c, void *d)

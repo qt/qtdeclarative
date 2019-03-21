@@ -60,13 +60,14 @@ class QQmlProfilerAdapter : public QQmlAbstractProfilerAdapter {
     Q_OBJECT
 public:
     QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEnginePrivate *engine);
-    qint64 sendMessages(qint64 until, QList<QByteArray> &messages,
-                        bool trackLocations) Q_DECL_OVERRIDE;
+    QQmlProfilerAdapter(QQmlProfilerService *service, QQmlTypeLoader *loader);
+    qint64 sendMessages(qint64 until, QList<QByteArray> &messages) override;
 
     void receiveData(const QVector<QQmlProfilerData> &new_data,
                      const QQmlProfiler::LocationHash &locations);
 
 private:
+    void init(QQmlProfilerService *service, QQmlProfiler *profiler);
     QVector<QQmlProfilerData> data;
     QQmlProfiler::LocationHash locations;
     int next;

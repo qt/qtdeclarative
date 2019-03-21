@@ -133,11 +133,11 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
   \inmodule QtQuick
 */
 
-QSGContext *QQuickRenderControlPrivate::sg = 0;
+QSGContext *QQuickRenderControlPrivate::sg = nullptr;
 
 QQuickRenderControlPrivate::QQuickRenderControlPrivate()
     : initialized(0),
-      window(0)
+      window(nullptr)
 {
     if (!sg) {
         qAddPostRoutine(cleanup);
@@ -149,7 +149,7 @@ QQuickRenderControlPrivate::QQuickRenderControlPrivate()
 void QQuickRenderControlPrivate::cleanup()
 {
     delete sg;
-    sg = 0;
+    sg = nullptr;
 }
 
 /*!
@@ -173,7 +173,7 @@ QQuickRenderControl::~QQuickRenderControl()
     invalidate();
 
     if (d->window)
-        QQuickWindowPrivate::get(d->window)->renderControl = 0;
+        QQuickWindowPrivate::get(d->window)->renderControl = nullptr;
 
     // It is likely that the cleanup in windowDestroyed() is not called since
     // the standard pattern is to destroy the rendercontrol before the QQuickWindow.
@@ -187,16 +187,16 @@ void QQuickRenderControlPrivate::windowDestroyed()
 {
     if (window) {
         rc->invalidate();
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
 
         delete QQuickWindowPrivate::get(window)->animationController;
-        QQuickWindowPrivate::get(window)->animationController = 0;
+        QQuickWindowPrivate::get(window)->animationController = nullptr;
 
 #if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
-        QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
+        if (QOpenGLContext::currentContext())
+            QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
 #endif
 
-        window = 0;
+        window = nullptr;
     }
 }
 
@@ -284,6 +284,7 @@ bool QQuickRenderControl::sync()
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
     cd->syncSceneGraph();
+    d->rc->endSync();
 
     // TODO: find out if the sync actually caused a scenegraph update.
     return true;
@@ -312,15 +313,15 @@ bool QQuickRenderControl::sync()
 void QQuickRenderControl::invalidate()
 {
     Q_D(QQuickRenderControl);
-    if (!d->initialized)
-        return;
-
     if (!d->window)
         return;
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
     cd->fireAboutToStop();
     cd->cleanupNodesOnShutdown();
+
+    if (!d->initialized)
+        return;
 
     // We must invalidate since the context can potentially be destroyed by the
     // application right after returning from this function. Invalidating is
@@ -383,14 +384,19 @@ QImage QQuickRenderControl::grab()
         QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
         cd->polishItems();
         cd->syncSceneGraph();
+        d->rc->endSync();
         render();
-        grabContent = qt_gl_read_framebuffer(d->window->size() * d->window->effectiveDevicePixelRatio(), false, false);
+        const bool alpha = d->window->format().alphaBufferSize() > 0 && d->window->color().alpha() < 255;
+        grabContent = qt_gl_read_framebuffer(d->window->size() * d->window->effectiveDevicePixelRatio(), alpha, alpha);
         if (QQuickRenderControl::renderWindowFor(d->window)) {
             grabContent.setDevicePixelRatio(d->window->effectiveDevicePixelRatio());
         }
 #endif
+#if QT_CONFIG(thread)
     } else if (d->window->rendererInterface()->graphicsApi() == QSGRendererInterface::Software) {
         QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
+        cd->polishItems();
+        cd->syncSceneGraph();
         QSGSoftwareRenderer *softwareRenderer = static_cast<QSGSoftwareRenderer *>(cd->renderer);
         if (softwareRenderer) {
             const qreal dpr = d->window->effectiveDevicePixelRatio();
@@ -400,11 +406,11 @@ QImage QQuickRenderControl::grab()
             QPaintDevice *prevDev = softwareRenderer->currentPaintDevice();
             softwareRenderer->setCurrentPaintDevice(&grabContent);
             softwareRenderer->markDirty();
-            cd->polishItems();
-            cd->syncSceneGraph();
+            d->rc->endSync();
             render();
             softwareRenderer->setCurrentPaintDevice(prevDev);
         }
+#endif
     } else {
         qWarning("QQuickRenderControl: grabs are not supported with the current Qt Quick backend");
     }
@@ -449,11 +455,11 @@ void QQuickRenderControlPrivate::maybeUpdate()
 QWindow *QQuickRenderControl::renderWindowFor(QQuickWindow *win, QPoint *offset)
 {
     if (!win)
-        return 0;
+        return nullptr;
     QQuickRenderControl *rc = QQuickWindowPrivate::get(win)->renderControl;
     if (rc)
         return rc->renderWindow(offset);
-    return 0;
+    return nullptr;
 }
 
 QT_END_NAMESPACE

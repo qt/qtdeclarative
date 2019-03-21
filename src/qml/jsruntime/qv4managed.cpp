@@ -43,35 +43,23 @@
 
 using namespace QV4;
 
+DEFINE_MANAGED_VTABLE(Managed);
 
-const VTable Managed::static_vtbl =
-{
-    0,
-    0,
-    0,
-    0,
-    Managed::IsExecutionContext,
-    Managed::IsString,
-    Managed::IsObject,
-    Managed::IsFunctionObject,
-    Managed::IsErrorObject,
-    Managed::IsArrayData,
-    0,
-    Managed::MyType,
-    "Managed",
-    0,
-    0 /*markObjects*/,
-    isEqualTo
-};
+DEFINE_MANAGED_VTABLE(InternalClass);
 
 
 QString Managed::className() const
 {
-    const char *s = 0;
-    switch (Type(d()->vtable()->type)) {
+    const char *s = nullptr;
+    switch (Type(vtable()->type)) {
     case Type_Invalid:
-    case Type_String:
         return QString();
+    case Type_String:
+        s = "String";
+        break;
+    case Type_Symbol:
+        s = "Symbol";
+        break;
     case Type_Object:
         s = "Object";
         break;
@@ -80,6 +68,9 @@ QString Managed::className() const
         break;
     case Type_FunctionObject:
         s = "Function";
+        break;
+    case Type_GeneratorObject:
+        s = "Generator";
         break;
     case Type_BooleanObject:
         s = "Boolean";
@@ -90,6 +81,9 @@ QString Managed::className() const
     case Type_StringObject:
         s = "String";
         break;
+    case Type_SymbolObject:
+        s = "Symbol";
+        break;
     case Type_DateObject:
         s = "Date";
         break;
@@ -97,13 +91,16 @@ QString Managed::className() const
         s = "RegExp";
         break;
     case Type_ErrorObject:
-        s = ErrorObject::className(static_cast<Heap::ErrorObject *>(d())->errorType);
+        s = "Error";
         break;
     case Type_ArgumentsObject:
         s = "Arguments";
         break;
     case Type_JsonObject:
         s = "JSON";
+        break;
+    case Type_ProxyObject:
+        s = "ProxyObject";
         break;
     case Type_MathObject:
         s = "Math";
@@ -112,8 +109,23 @@ QString Managed::className() const
     case Type_ExecutionContext:
         s = "__ExecutionContext";
         break;
-    case Type_ForeachIteratorObject:
-        s = "__ForeachIterator";
+    case Type_MapIteratorObject:
+        s = "Map Iterator";
+        break;
+    case Type_SetIteratorObject:
+        s = "Set Iterator";
+        break;
+    case Type_ArrayIteratorObject:
+        s = "Array Iterator";
+        break;
+    case Type_StringIteratorObject:
+        s = "String Iterator";
+        break;
+    case Type_ForInIterator:
+        s = "__ForIn Iterator";
+        break;
+    case Type_InternalClass:
+        s = "__InternalClass";
         break;
     case Type_RegExp:
         s = "__RegExp";
@@ -126,7 +138,12 @@ QString Managed::className() const
     return QString::fromLatin1(s);
 }
 
-bool Managed::isEqualTo(Managed *, Managed *)
+bool Managed::virtualIsEqualTo(Managed *, Managed *)
 {
     return false;
+}
+
+
+OwnPropertyKeyIterator::~OwnPropertyKeyIterator()
+{
 }

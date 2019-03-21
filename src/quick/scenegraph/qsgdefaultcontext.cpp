@@ -149,20 +149,23 @@ void QSGDefaultContext::renderContextInitialized(QSGRenderContext *renderContext
         dumped = true;
         QSurfaceFormat format = openglRenderContext->openglContext()->format();
         QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
-        qCDebug(QSG_LOG_INFO) << "R/G/B/A Buffers:   " << format.redBufferSize() << format.greenBufferSize() << format.blueBufferSize() << format.alphaBufferSize();
-        qCDebug(QSG_LOG_INFO) << "Depth Buffer:      " << format.depthBufferSize();
-        qCDebug(QSG_LOG_INFO) << "Stencil Buffer:    " << format.stencilBufferSize();
-        qCDebug(QSG_LOG_INFO) << "Samples:           " << format.samples();
-        qCDebug(QSG_LOG_INFO) << "GL_VENDOR:         " << (const char *) funcs->glGetString(GL_VENDOR);
-        qCDebug(QSG_LOG_INFO) << "GL_RENDERER:       " << (const char *) funcs->glGetString(GL_RENDERER);
-        qCDebug(QSG_LOG_INFO) << "GL_VERSION:        " << (const char *) funcs->glGetString(GL_VERSION);
+        qCDebug(QSG_LOG_INFO, "R/G/B/A Buffers:   %d %d %d %d", format.redBufferSize(),
+                format.greenBufferSize(), format.blueBufferSize(), format.alphaBufferSize());
+        qCDebug(QSG_LOG_INFO, "Depth Buffer:      %d", format.depthBufferSize());
+        qCDebug(QSG_LOG_INFO, "Stencil Buffer:    %d", format.stencilBufferSize());
+        qCDebug(QSG_LOG_INFO, "Samples:           %d", format.samples());
+        qCDebug(QSG_LOG_INFO, "GL_VENDOR:         %s", (const char*)funcs->glGetString(GL_VENDOR));
+        qCDebug(QSG_LOG_INFO, "GL_RENDERER:       %s",
+                (const char*)funcs->glGetString(GL_RENDERER));
+        qCDebug(QSG_LOG_INFO, "GL_VERSION:        %s", (const char*)funcs->glGetString(GL_VERSION));
         QSet<QByteArray> exts = openglRenderContext->openglContext()->extensions();
         QByteArray all;
         for (const QByteArray &e : qAsConst(exts))
             all += ' ' + e;
-        qCDebug(QSG_LOG_INFO) << "GL_EXTENSIONS:    " << all.constData();
-        qCDebug(QSG_LOG_INFO) << "Max Texture Size: " << openglRenderContext->maxTextureSize();
-        qCDebug(QSG_LOG_INFO) << "Debug context:    " << format.testOption(QSurfaceFormat::DebugContext);
+        qCDebug(QSG_LOG_INFO, "GL_EXTENSIONS:    %s", all.constData());
+        qCDebug(QSG_LOG_INFO, "Max Texture Size: %d", openglRenderContext->maxTextureSize());
+        qCDebug(QSG_LOG_INFO, "Debug context:    %s",
+                format.testOption(QSurfaceFormat::DebugContext) ? "true" : "false");
     }
 
     m_mutex.unlock();
@@ -218,8 +221,14 @@ QSurfaceFormat QSGDefaultContext::defaultSurfaceFormat() const
     static bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
     static bool useStencil = qEnvironmentVariableIsEmpty("QSG_NO_STENCIL_BUFFER");
     static bool enableDebug = qEnvironmentVariableIsSet("QSG_OPENGL_DEBUG");
-    format.setDepthBufferSize(useDepth ? 24 : 0);
-    format.setStencilBufferSize(useStencil ? 8 : 0);
+    if (useDepth && format.depthBufferSize() == -1)
+        format.setDepthBufferSize(24);
+    else if (!useDepth)
+        format.setDepthBufferSize(0);
+    if (useStencil && format.stencilBufferSize() == -1)
+        format.setStencilBufferSize(8);
+    else if (!useStencil)
+        format.setStencilBufferSize(0);
     if (enableDebug)
         format.setOption(QSurfaceFormat::DebugContext);
     if (QQuickWindow::hasDefaultAlphaBuffer())
@@ -287,3 +296,10 @@ QSGRendererInterface::ShaderSourceTypes QSGDefaultContext::shaderSourceType() co
 }
 
 QT_END_NAMESPACE
+
+static void initResources()
+{
+    Q_INIT_RESOURCE(scenegraph);
+}
+
+Q_CONSTRUCTOR_FUNCTION(initResources)

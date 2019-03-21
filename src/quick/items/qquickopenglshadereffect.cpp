@@ -139,7 +139,7 @@ namespace {
                         expected = TypeIdentifier;
                         break;
                     }
-                    // Fall through.
+                    Q_FALLTHROUGH();
                 case TypeIdentifier:
                     typeIndex = idIndex;
                     typeLength = idLength;
@@ -230,7 +230,7 @@ void QQuickOpenGLShaderEffectCommon::disconnectPropertySignals(QQuickItem *item,
         auto mapper = signalMappers[shaderType].at(i);
         void *a = mapper;
         QObjectPrivate::disconnect(item, mapper->signalIndex(), &a);
-        if (d.specialType == UniformData::Sampler) {
+        if (d.specialType == UniformData::Sampler || d.specialType == UniformData::SamplerExternal) {
             QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
             if (source) {
                 if (item->window())
@@ -245,7 +245,11 @@ void QQuickOpenGLShaderEffectCommon::connectPropertySignals(QQuickItem *item,
                                                             const QMetaObject *itemMetaObject,
                                                             Key::ShaderType shaderType)
 {
-    QQmlPropertyCache *propCache = QQmlData::ensurePropertyCache(qmlEngine(item), item);
+    auto engine = qmlEngine(item);
+    if (!engine)
+        return;
+
+    QQmlPropertyCache *propCache = QQmlData::ensurePropertyCache(engine, item);
     for (int i = 0; i < uniformData[shaderType].size(); ++i) {
         if (signalMappers[shaderType].at(i) == 0)
             continue;
@@ -272,7 +276,7 @@ void QQuickOpenGLShaderEffectCommon::connectPropertySignals(QQuickItem *item,
                 qWarning("QQuickOpenGLShaderEffect: '%s' does not have a matching property!", d.name.constData());
         }
 
-        if (d.specialType == UniformData::Sampler) {
+        if (d.specialType == UniformData::Sampler || d.specialType == UniformData::SamplerExternal) {
             QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
             if (source) {
                 if (item->window())
@@ -317,7 +321,8 @@ void QQuickOpenGLShaderEffectCommon::lookThroughShaderCode(QQuickItem *item,
                                                            Key::ShaderType shaderType,
                                                            const QByteArray &code)
 {
-    QQmlPropertyCache *propCache = QQmlData::ensurePropertyCache(qmlEngine(item), item);
+    auto engine = qmlEngine(item);
+    QQmlPropertyCache *propCache = (engine) ? QQmlData::ensurePropertyCache(engine, item) : nullptr;
     int index = 0;
     int typeIndex = -1;
     int typeLength = 0;
@@ -335,6 +340,7 @@ void QQuickOpenGLShaderEffectCommon::lookThroughShaderCode(QQuickItem *item,
             Q_ASSERT(decl == UniformQualifier);
 
             const int sampLen = sizeof("sampler2D") - 1;
+            const int sampExtLen = sizeof("samplerExternalOES") - 1;
             const int opLen = sizeof("qt_Opacity") - 1;
             const int matLen = sizeof("qt_Matrix") - 1;
             const int srLen = sizeof("qt_SubRect_") - 1;
@@ -349,16 +355,22 @@ void QQuickOpenGLShaderEffectCommon::lookThroughShaderCode(QQuickItem *item,
             } else if (nameLength > srLen && qstrncmp("qt_SubRect_", s + nameIndex, srLen) == 0) {
                 d.specialType = UniformData::SubRect;
             } else {
-                if (QQmlPropertyData *pd = propCache->property(QString::fromUtf8(d.name), nullptr, nullptr)) {
-                    if (!pd->isFunction())
-                        d.propertyIndex = pd->coreIndex();
+                if (propCache) {
+                    if (QQmlPropertyData *pd = propCache->property(QString::fromUtf8(d.name), nullptr, nullptr)) {
+                        if (!pd->isFunction())
+                            d.propertyIndex = pd->coreIndex();
+                    }
                 }
                 const int mappedId = uniformData[shaderType].size() | (shaderType << 16);
                 mapper = new QtPrivate::MappedSlotObject([this, mappedId](){
                     this->mappedPropertyChanged(mappedId);
                 });
-                bool sampler = typeLength == sampLen && qstrncmp("sampler2D", s + typeIndex, sampLen) == 0;
-                d.specialType = sampler ? UniformData::Sampler : UniformData::None;
+                if (typeLength == sampLen && qstrncmp("sampler2D", s + typeIndex, sampLen) == 0)
+                    d.specialType = UniformData::Sampler;
+                else if (typeLength == sampExtLen && qstrncmp("samplerExternalOES", s + typeIndex, sampExtLen) == 0)
+                    d.specialType = UniformData::SamplerExternal;
+                else
+                    d.specialType = UniformData::None;
                 d.setValueFromProperty(item, itemMetaObject);
             }
             uniformData[shaderType].append(d);
@@ -417,8 +429,9 @@ void QQuickOpenGLShaderEffectCommon::updateShader(QQuickItem *item,
             d.specialType = UniformData::Opacity;
             uniformData[Key::FragmentShader].append(d);
             signalMappers[Key::FragmentShader].append(0);
-            const int mappedId = 1 | (Key::FragmentShader << 16);
-            auto mapper = new QtPrivate::MappedSlotObject([this, mappedId](){mappedPropertyChanged(mappedId);});
+            auto mapper = new QtPrivate::MappedSlotObject([this](){
+                mappedPropertyChanged(1 | (Key::FragmentShader << 16));
+            });
             const char *sourceName = "source";
             d.name = sourceName;
             d.setValueFromProperty(item, itemMetaObject);
@@ -451,7 +464,8 @@ void QQuickOpenGLShaderEffectCommon::updateMaterial(QQuickOpenGLShaderEffectNode
         int textureProviderCount = 0;
         for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
             for (int i = 0; i < uniformData[shaderType].size(); ++i) {
-                if (uniformData[shaderType].at(i).specialType == UniformData::Sampler)
+                if (uniformData[shaderType].at(i).specialType == UniformData::Sampler ||
+                        uniformData[shaderType].at(i).specialType == UniformData::SamplerExternal)
                     ++textureProviderCount;
             }
             material->uniforms[shaderType] = uniformData[shaderType];
@@ -474,10 +488,10 @@ void QQuickOpenGLShaderEffectCommon::updateMaterial(QQuickOpenGLShaderEffectNode
         for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
             for (int i = 0; i < uniformData[shaderType].size(); ++i) {
                 const UniformData &d = uniformData[shaderType].at(i);
-                if (d.specialType != UniformData::Sampler)
+                if (d.specialType != UniformData::Sampler && d.specialType != UniformData::SamplerExternal)
                     continue;
                 QSGTextureProvider *oldProvider = material->textureProviders.at(index);
-                QSGTextureProvider *newProvider = 0;
+                QSGTextureProvider *newProvider = nullptr;
                 QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
                 if (source && source->isTextureProvider())
                     newProvider = source->textureProvider();
@@ -513,7 +527,7 @@ void QQuickOpenGLShaderEffectCommon::updateWindow(QQuickWindow *window)
         for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
             for (int i = 0; i < uniformData[shaderType].size(); ++i) {
                 const UniformData &d = uniformData[shaderType].at(i);
-                if (d.specialType == UniformData::Sampler) {
+                if (d.specialType == UniformData::Sampler || d.specialType == UniformData::SamplerExternal) {
                     QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
                     if (source)
                         QQuickItemPrivate::get(source)->refWindow(window);
@@ -524,7 +538,7 @@ void QQuickOpenGLShaderEffectCommon::updateWindow(QQuickWindow *window)
         for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
             for (int i = 0; i < uniformData[shaderType].size(); ++i) {
                 const UniformData &d = uniformData[shaderType].at(i);
-                if (d.specialType == UniformData::Sampler) {
+                if (d.specialType == UniformData::Sampler || d.specialType == UniformData::SamplerExternal) {
                     QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
                     if (source)
                         QQuickItemPrivate::get(source)->derefWindow();
@@ -539,7 +553,7 @@ void QQuickOpenGLShaderEffectCommon::sourceDestroyed(QObject *object)
     for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
         for (int i = 0; i < uniformData[shaderType].size(); ++i) {
             UniformData &d = uniformData[shaderType][i];
-            if (d.specialType == UniformData::Sampler && d.value.canConvert<QObject *>()) {
+            if ((d.specialType == UniformData::Sampler || d.specialType == UniformData::SamplerExternal) && d.value.canConvert<QObject *>()) {
                 if (qvariant_cast<QObject *>(d.value) == object)
                     d.value = QVariant();
             }
@@ -554,7 +568,7 @@ static bool qquick_uniqueInUniformData(QQuickItem *source, const QVector<QQuickO
             if (s == typeToSkip && i == indexToSkip)
                 continue;
             const QQuickOpenGLShaderEffectMaterial::UniformData &d = uniformData[s][i];
-            if (d.specialType == QQuickOpenGLShaderEffectMaterial::UniformData::Sampler && qvariant_cast<QObject *>(d.value) == source)
+            if ((d.specialType == QQuickOpenGLShaderEffectMaterial::UniformData::Sampler || d.specialType == QQuickOpenGLShaderEffectMaterial::UniformData::SamplerExternal) && qvariant_cast<QObject *>(d.value) == source)
                 return false;
         }
     }
@@ -568,7 +582,7 @@ void QQuickOpenGLShaderEffectCommon::propertyChanged(QQuickItem *item,
     Key::ShaderType shaderType = Key::ShaderType(mappedId >> 16);
     int index = mappedId & 0xffff;
     UniformData &d = uniformData[shaderType][index];
-    if (d.specialType == UniformData::Sampler) {
+    if (d.specialType == UniformData::Sampler || d.specialType == UniformData::SamplerExternal) {
         QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
         if (source) {
             if (item->window())
@@ -617,7 +631,7 @@ QQuickOpenGLShaderEffect::QQuickOpenGLShaderEffect(QQuickShaderEffect *item, QOb
     , m_item(item)
     , m_itemMetaObject(nullptr)
     , m_meshResolution(1, 1)
-    , m_mesh(0)
+    , m_mesh(nullptr)
     , m_cullMode(QQuickShaderEffect::NoCulling)
     , m_status(QQuickShaderEffect::Uncompiled)
     , m_common(this, [this](int mappedId){this->propertyChanged(mappedId);})
@@ -706,7 +720,7 @@ void QQuickOpenGLShaderEffect::setMesh(const QVariant &mesh)
     if (newMesh && newMesh == m_mesh)
         return;
     if (m_mesh)
-        disconnect(m_mesh, SIGNAL(geometryChanged()), this, 0);
+        disconnect(m_mesh, SIGNAL(geometryChanged()), this, nullptr);
     m_mesh = newMesh;
     if (m_mesh) {
         connect(m_mesh, SIGNAL(geometryChanged()), this, SLOT(updateGeometry()));
@@ -759,7 +773,7 @@ QString QQuickOpenGLShaderEffect::parseLog()
     maybeUpdateShaders(true);
 
     if (m_dirtyParseLog) {
-        m_common.updateParseLog(m_mesh != 0);
+        m_common.updateParseLog(m_mesh != nullptr);
         m_dirtyParseLog = false;
     }
     return m_common.parseLog;
@@ -831,7 +845,7 @@ QSGNode *QQuickOpenGLShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQuic
     if (m_common.attributes.isEmpty() || m_item->width() <= 0 || m_item->height() <= 0) {
         if (node)
             delete node;
-        return 0;
+        return nullptr;
     }
 
     if (!node) {
@@ -890,7 +904,7 @@ QSGNode *QQuickOpenGLShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQuic
     bool geometryUsesTextureSubRect = false;
     if (m_supportsAtlasTextures && material->textureProviders.size() == 1) {
         QSGTextureProvider *provider = material->textureProviders.at(0);
-        if (provider->texture()) {
+        if (provider && provider->texture()) {
             srcRect = provider->texture()->normalizedTextureSubRect();
             geometryUsesTextureSubRect = true;
         }
@@ -907,7 +921,7 @@ QSGNode *QQuickOpenGLShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQuic
     }
 
     if (m_dirtyMesh) {
-        node->setGeometry(0);
+        node->setGeometry(nullptr);
         m_dirtyMesh = false;
         m_dirtyGeometry = true;
     }
@@ -928,7 +942,7 @@ QSGNode *QQuickOpenGLShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQuic
                 emit m_item->statusChanged();
             }
             delete node;
-            return 0;
+            return nullptr;
         }
 
         geometry = mesh->updateGeometry(geometry, m_common.attributes.count(), posIndex, srcRect, rect);

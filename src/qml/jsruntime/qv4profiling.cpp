@@ -78,7 +78,7 @@ Profiler::Profiler(QV4::ExecutionEngine *engine) : featuresEnabled(0), m_engine(
 void Profiler::stopProfiling()
 {
     featuresEnabled = 0;
-    reportData(true);
+    reportData();
     m_sentLocations.clear();
 }
 
@@ -89,7 +89,7 @@ bool operator<(const FunctionCall &call1, const FunctionCall &call2)
             (call1.m_end == call2.m_end && call1.m_function < call2.m_function)));
 }
 
-void Profiler::reportData(bool trackLocations)
+void Profiler::reportData()
 {
     std::sort(m_data.begin(), m_data.end());
     QVector<FunctionCallProperties> properties;
@@ -100,12 +100,11 @@ void Profiler::reportData(bool trackLocations)
         properties.append(call.properties());
         Function *function = call.function();
         SentMarker &marker = m_sentLocations[reinterpret_cast<quintptr>(function)];
-        if (!trackLocations || !marker.isValid()) {
+        if (!marker.isValid()) {
             FunctionLocation &location = locations[properties.constLast().id];
             if (!location.isValid())
                 location = call.resolveLocation();
-            if (trackLocations)
-                marker.setFunction(function);
+            marker.setFunction(function);
         }
     }
 
@@ -120,7 +119,8 @@ void Profiler::startProfiling(quint64 features)
         if (features & (1 << FeatureMemoryAllocation)) {
             qint64 timestamp = m_timer.nsecsElapsed();
             MemoryAllocationProperties heap = {timestamp,
-                                               (qint64)m_engine->memoryManager->getAllocatedMem(),
+                                               (qint64)m_engine->memoryManager->getAllocatedMem() -
+                                               (qint64)m_engine->memoryManager->getLargeItemsMem(),
                                                HeapPage};
             m_memory_data.append(heap);
             MemoryAllocationProperties small = {timestamp,

@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET  = qmlfolderlistmodelplugin
 TARGETPATH = Qt/labs/folderlistmodel
-IMPORT_VERSION = 2.1
+IMPORT_VERSION = 2.$$QT_MINOR_VERSION
 
 QT = core-private qml-private
 

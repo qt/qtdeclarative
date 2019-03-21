@@ -59,6 +59,8 @@
 #include "qv4context_p.h"
 #include "qv4string_p.h"
 
+QT_REQUIRE_CONFIG(qml_sequence_object);
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -68,15 +70,11 @@ struct SequencePrototype : public QV4::Object
     V4_PROTOTYPE(arrayPrototype)
     void init();
 
-    static void method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData)
-    {
-        scope.result = callData->thisObject.toString(scope.engine);
-    }
-
-    static void method_sort(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_valueOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_sort(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     static bool isSequenceType(int sequenceTypeId);
-    static ReturnedValue newSequence(QV4::ExecutionEngine *engine, int sequenceTypeId, QObject *object, int propertyIndex, bool *succeeded);
+    static ReturnedValue newSequence(QV4::ExecutionEngine *engine, int sequenceTypeId, QObject *object, int propertyIndex, bool readOnly, bool *succeeded);
     static ReturnedValue fromVariant(QV4::ExecutionEngine *engine, const QVariant& v, bool *succeeded);
     static int metaTypeForSequence(const Object *object);
     static QVariant toVariant(Object *object);

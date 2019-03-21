@@ -1,2 +1,1 @@
-1:1:Expected token `numeric literal'
-1:1:Expected a qualified name id
+-1:-1:File is empty

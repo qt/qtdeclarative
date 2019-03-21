@@ -63,9 +63,9 @@ namespace Heap {
     Member(class, ValueArray, ValueArray, values)
 
 DECLARE_HEAP_OBJECT(MemberData, Base) {
-    DECLARE_MARK_TABLE(MemberData);
+    DECLARE_MARKOBJECTS(MemberData);
 };
-V4_ASSERT_IS_TRIVIAL(MemberData)
+Q_STATIC_ASSERT(std::is_trivial< MemberData >::value);
 
 }
 
@@ -74,26 +74,14 @@ struct MemberData : Managed
     V4_MANAGED(MemberData, Managed)
     V4_INTERNALCLASS(MemberData)
 
-    struct Index {
-        Heap::Base *base;
-        Value *slot;
-
-        void set(EngineBase *e, Value newVal) {
-            WriteBarrier::write(e, base, slot, newVal);
-        }
-        const Value *operator->() const { return slot; }
-        const Value &operator*() const { return *slot; }
-        bool isNull() const { return !slot; }
-    };
-
     const Value &operator[] (uint idx) const { return d()->values[idx]; }
     const Value *data() const { return d()->values.data(); }
-    void set(ExecutionEngine *e, uint index, Value v) { d()->values.set(e, index, v); }
-    void set(ExecutionEngine *e, uint index, Heap::Base *b) { d()->values.set(e, index, b); }
+    void set(EngineBase *e, uint index, Value v) { d()->values.set(e, index, v); }
+    void set(EngineBase *e, uint index, Heap::Base *b) { d()->values.set(e, index, b); }
 
     inline uint size() const { return d()->values.size; }
 
-    static Heap::MemberData *allocate(QV4::ExecutionEngine *e, uint n, Heap::MemberData *old = 0);
+    static Heap::MemberData *allocate(QV4::ExecutionEngine *e, uint n, Heap::MemberData *old = nullptr);
 };
 
 }

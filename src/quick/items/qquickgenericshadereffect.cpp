@@ -61,7 +61,7 @@ QQuickGenericShaderEffect::QQuickGenericShaderEffect(QQuickShaderEffect *item, Q
     , m_mgr(nullptr)
     , m_fragNeedsUpdate(true)
     , m_vertNeedsUpdate(true)
-    , m_dirty(0)
+    , m_dirty(nullptr)
 {
     qRegisterMetaType<QSGGuiThreadShaderEffectManager::ShaderInfo::Type>("ShaderInfo::Type");
     for (int i = 0; i < NShader; ++i)
@@ -134,7 +134,7 @@ void QQuickGenericShaderEffect::setMesh(const QVariant &mesh)
         return;
 
     if (m_mesh)
-        disconnect(m_mesh, SIGNAL(geometryChanged()), this, 0);
+        disconnect(m_mesh, SIGNAL(geometryChanged()), this, nullptr);
 
     m_mesh = newMesh;
 
@@ -290,7 +290,7 @@ QSGNode *QQuickGenericShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQui
         m_dirty &= ~QSGShaderEffectNode::DirtyShaderGeometry;
     }
 
-    m_dirty = 0;
+    m_dirty = nullptr;
     for (int i = 0; i < NShader; ++i) {
         m_dirtyConstants[i].clear();
         m_dirtyTextures[i].clear();
@@ -546,7 +546,10 @@ void QQuickGenericShaderEffect::updateShaderVars(Shader shaderType)
             // Have a QSignalMapper that emits mapped() with an index+type on each property change notify signal.
             auto &sm(m_signalMappers[shaderType][i]);
             if (!sm.mapper) {
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_DEPRECATED
                 sm.mapper = new QSignalMapper;
+QT_WARNING_POP
                 sm.mapper->setMapping(m_item, i | (shaderType << 16));
             }
             sm.active = true;

@@ -75,7 +75,7 @@ QQuickTextNodeEngine::BinaryTreeNode::BinaryTreeNode(const QGlyphRun &g,
     : glyphRun(g)
     , boundingRect(brect)
     , selectionState(selState)
-    , clipNode(0)
+    , clipNode(nullptr)
     , decorations(decs)
     , color(c)
     , backgroundColor(bc)
@@ -256,10 +256,10 @@ void QQuickTextNodeEngine::processCurrentLine()
     QVarLengthArray<TextDecoration> pendingOverlines;
     QVarLengthArray<TextDecoration> pendingStrikeOuts;
     if (!sortedIndexes.isEmpty()) {
-        QQuickDefaultClipNode *currentClipNode = m_hasSelection ? new QQuickDefaultClipNode(QRectF()) : 0;
+        QQuickDefaultClipNode *currentClipNode = m_hasSelection ? new QQuickDefaultClipNode(QRectF()) : nullptr;
         bool currentClipNodeUsed = false;
         for (int i=0; i<=sortedIndexes.size(); ++i) {
-            BinaryTreeNode *node = 0;
+            BinaryTreeNode *node = nullptr;
             if (i < sortedIndexes.size()) {
                 int sortedIndex = sortedIndexes.at(i);
                 Q_ASSERT(sortedIndex < m_currentLineTree.size());
@@ -275,7 +275,7 @@ void QQuickTextNodeEngine::processCurrentLine()
                 decorationRect.setY(m_position.y() + m_currentLine.y());
                 decorationRect.setHeight(m_currentLine.height());
 
-                if (node != 0)
+                if (node != nullptr)
                     decorationRect.setRight(node->boundingRect.left());
 
                 TextDecoration textDecoration(currentSelectionState, decorationRect, lastColor);
@@ -295,14 +295,14 @@ void QQuickTextNodeEngine::processCurrentLine()
             // If we've reached an unselected node from a selected node, we add the
             // selection rect to the graph, and we add decoration every time the
             // selection state changes, because that means the text color changes
-            if (node == 0 || node->selectionState != currentSelectionState) {
+            if (node == nullptr || node->selectionState != currentSelectionState) {
                 currentRect.setY(m_position.y() + m_currentLine.y());
                 currentRect.setHeight(m_currentLine.height());
 
                 if (currentSelectionState == Selected)
                     m_selectionRects.append(currentRect);
 
-                if (currentClipNode != 0) {
+                if (currentClipNode != nullptr) {
                     if (!currentClipNodeUsed) {
                         delete currentClipNode;
                     } else {
@@ -312,13 +312,13 @@ void QQuickTextNodeEngine::processCurrentLine()
                     }
                 }
 
-                if (node != 0 && m_hasSelection)
+                if (node != nullptr && m_hasSelection)
                     currentClipNode = new QQuickDefaultClipNode(QRectF());
                 else
-                    currentClipNode = 0;
+                    currentClipNode = nullptr;
                 currentClipNodeUsed = false;
 
-                if (node != 0) {
+                if (node != nullptr) {
                     currentSelectionState = node->selectionState;
                     currentRect = node->boundingRect;
 
@@ -333,7 +333,7 @@ void QQuickTextNodeEngine::processCurrentLine()
                     currentRect = currentRect.united(node->boundingRect);
             }
 
-            if (node != 0) {
+            if (node != nullptr) {
                 if (node->selectionState == Selected) {
                     node->clipNode = currentClipNode;
                     currentClipNodeUsed = true;
@@ -423,10 +423,11 @@ void QQuickTextNodeEngine::addImage(const QRectF &rect, const QImage &image, qre
     QRectF searchRect = rect;
     if (layoutPosition == QTextFrameFormat::InFlow) {
         if (m_currentLineTree.isEmpty()) {
+            qreal y = m_currentLine.ascent() - ascent;
             if (m_currentTextDirection == Qt::RightToLeft)
-                searchRect.moveTopRight(m_position + m_currentLine.rect().topRight() + QPointF(0, 1));
+                searchRect.moveTopRight(m_position + m_currentLine.rect().topRight() + QPointF(0, y));
             else
-                searchRect.moveTopLeft(m_position + m_currentLine.position() + QPointF(0,1));
+                searchRect.moveTopLeft(m_position + m_currentLine.position() + QPointF(0, y));
         } else {
             const BinaryTreeNode *lastNode = m_currentLineTree.data() + m_currentLineTree.size() - 1;
             if (lastNode->glyphRun.isRightToLeft()) {
@@ -443,13 +444,13 @@ void QQuickTextNodeEngine::addImage(const QRectF &rect, const QImage &image, qre
     m_hasContents = true;
 }
 
-void QQuickTextNodeEngine::addTextObject(const QPointF &position, const QTextCharFormat &format,
+void QQuickTextNodeEngine::addTextObject(const QTextBlock &block, const QPointF &position, const QTextCharFormat &format,
                                          SelectionState selectionState,
                                          QTextDocument *textDocument, int pos,
                                          QTextFrameFormat::Position layoutPosition)
 {
     QTextObjectInterface *handler = textDocument->documentLayout()->handlerForObject(format.objectType());
-    if (handler != 0) {
+    if (handler != nullptr) {
         QImage image;
         QSizeF size = handler->intrinsicSize(textDocument, pos, format);
 
@@ -476,17 +477,23 @@ void QQuickTextNodeEngine::addTextObject(const QPointF &position, const QTextCha
         }
 
         qreal ascent;
-        QFontMetrics m(format.font());
+        QTextLine line = block.layout()->lineForTextPosition(pos);
         switch (format.verticalAlignment())
         {
-        case QTextCharFormat::AlignMiddle:
-            ascent = size.height() / 2 - 1;
+        case QTextCharFormat::AlignTop:
+            ascent = line.ascent();
+            break;
+        case QTextCharFormat::AlignMiddle: {
+            QFontMetrics m(format.font());
+            ascent = (size.height() - m.xHeight()) / 2;
+            break;
+        }
+        case QTextCharFormat::AlignBottom:
+            ascent = size.height() - line.descent();
             break;
         case QTextCharFormat::AlignBaseline:
-            ascent = size.height() - m.descent() - 1;
-            break;
         default:
-            ascent = size.height() - 1;
+            ascent = size.height();
         }
 
         addImage(QRectF(position, size), image, ascent, selectionState, layoutPosition);
@@ -651,7 +658,7 @@ void QQuickTextNodeEngine::addFrameDecorations(QTextDocument *document, QTextFra
     QTextFrameFormat frameFormat = frame->format().toFrameFormat();
     QTextTable *table = qobject_cast<QTextTable *>(frame);
 
-    QRectF boundingRect = table == 0
+    QRectF boundingRect = table == nullptr
             ? documentLayout->frameBoundingRect(frame)
             : documentLayout->tableBoundingRect(table);
 
@@ -674,7 +681,7 @@ void QQuickTextNodeEngine::addFrameDecorations(QTextDocument *document, QTextFra
     addBorder(boundingRect.adjusted(frameFormat.leftMargin(), frameFormat.topMargin(),
                                     -frameFormat.rightMargin(), -frameFormat.bottomMargin()),
               borderWidth, borderStyle, borderBrush);
-    if (table != 0) {
+    if (table != nullptr) {
         int rows = table->rows();
         int columns = table->columns();
 
@@ -781,7 +788,7 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
     // Add all text with unselected color first
     for (int i = 0; i < nodes.size(); ++i) {
         const BinaryTreeNode *node = nodes.at(i);
-        parentNode->addGlyphs(node->position, node->glyphRun, node->color, style, styleColor, 0);
+        parentNode->addGlyphs(node->position, node->glyphRun, node->color, style, styleColor, nullptr);
     }
 
     for (int i = 0; i < imageNodes.size(); ++i) {
@@ -812,7 +819,7 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
     for (int i = 0; i < nodes.size(); ++i) {
         const BinaryTreeNode *node = nodes.at(i);
         QQuickDefaultClipNode *clipNode = node->clipNode;
-        if (clipNode != 0 && clipNode->parent() == 0)
+        if (clipNode != nullptr && clipNode->parent() == nullptr)
             parentNode->appendChildNode(clipNode);
 
         if (node->selectionState == Selected) {
@@ -820,26 +827,26 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
             int previousNodeIndex = i - 1;
             int nextNodeIndex = i + 1;
             const BinaryTreeNode *previousNode = previousNodeIndex < 0 ? 0 : nodes.at(previousNodeIndex);
-            while (previousNode != 0 && qFuzzyCompare(previousNode->boundingRect.left(), node->boundingRect.left()))
+            while (previousNode != nullptr && qFuzzyCompare(previousNode->boundingRect.left(), node->boundingRect.left()))
                 previousNode = --previousNodeIndex < 0 ? 0 : nodes.at(previousNodeIndex);
 
             const BinaryTreeNode *nextNode = nextNodeIndex == nodes.size() ? 0 : nodes.at(nextNodeIndex);
 
-            if (previousNode != 0 && previousNode->selectionState == Unselected)
+            if (previousNode != nullptr && previousNode->selectionState == Unselected)
                 parentNode->addGlyphs(previousNode->position, previousNode->glyphRun, color, style, styleColor, clipNode);
 
-            if (nextNode != 0 && nextNode->selectionState == Unselected)
+            if (nextNode != nullptr && nextNode->selectionState == Unselected)
                 parentNode->addGlyphs(nextNode->position, nextNode->glyphRun, color, style, styleColor, clipNode);
 
             // If the previous or next node completely overlaps this one, then we have already drawn the glyphs of
             // this node
             bool drawCurrent = false;
-            if (previousNode != 0 || nextNode != 0) {
+            if (previousNode != nullptr || nextNode != nullptr) {
                 for (int i = 0; i < node->ranges.size(); ++i) {
                     const QPair<int, int> &range = node->ranges.at(i);
 
                     int rangeLength = range.second - range.first + 1;
-                    if (previousNode != 0) {
+                    if (previousNode != nullptr) {
                         for (int j = 0; j < previousNode->ranges.size(); ++j) {
                             const QPair<int, int> &otherRange = previousNode->ranges.at(j);
 
@@ -853,7 +860,7 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
                         }
                     }
 
-                    if (nextNode != 0 && rangeLength > 0) {
+                    if (nextNode != nullptr && rangeLength > 0) {
                         for (int j = 0; j < nextNode->ranges.size(); ++j) {
                             const QPair<int, int> &otherRange = nextNode->ranges.at(j);
 
@@ -896,8 +903,8 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
 
 void QQuickTextNodeEngine::mergeFormats(QTextLayout *textLayout, QVarLengthArray<QTextLayout::FormatRange> *mergedFormats)
 {
-    Q_ASSERT(mergedFormats != 0);
-    if (textLayout == 0)
+    Q_ASSERT(mergedFormats != nullptr);
+    if (textLayout == nullptr)
         return;
 
     QVector<QTextLayout::FormatRange> additionalFormats = textLayout->formats();
@@ -911,7 +918,7 @@ void QQuickTextNodeEngine::mergeFormats(QTextLayout *textLayout, QVarLengthArray
                 QTextLayout::FormatRange *lastFormat = mergedFormats->data() + mergedFormats->size() - 1;
 
                 if (additionalFormat.start < lastFormat->start + lastFormat->length) {
-                    QTextLayout::FormatRange *mergedRange = 0;
+                    QTextLayout::FormatRange *mergedRange = nullptr;
 
                     int length = additionalFormat.length;
                     if (additionalFormat.start > lastFormat->start) {
@@ -960,9 +967,14 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
     QVarLengthArray<QTextLayout::FormatRange> colorChanges;
     mergeFormats(block.layout(), &colorChanges);
 
-    QPointF blockPosition = textDocument->documentLayout()->blockBoundingRect(block).topLeft() + position;
+    const QTextCharFormat charFormat = block.charFormat();
+    const QRectF blockBoundingRect = textDocument->documentLayout()->blockBoundingRect(block).translated(position);
+
+    if (charFormat.background().style() != Qt::NoBrush)
+        m_backgrounds.append(qMakePair(blockBoundingRect, charFormat.background().color()));
+
     if (QTextList *textList = block.textList()) {
-        QPointF pos = blockPosition;
+        QPointF pos = blockBoundingRect.topLeft();
         QTextLayout *layout = block.layout();
         if (layout->lineCount() > 0) {
             QTextLine firstLine = layout->lineAt(0);
@@ -975,7 +987,6 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
             if (block.textDirection() == Qt::RightToLeft)
                 pos.rx() += textRect.width();
 
-            const QTextCharFormat charFormat = block.charFormat();
             QFont font(charFormat.font());
             QFontMetricsF fontMetrics(font);
             QTextListFormat listFormat = textList->format();
@@ -1000,8 +1011,8 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
                 break;
             };
 
-            QSizeF size(fontMetrics.width(listItemBullet), fontMetrics.height());
-            qreal xoff = fontMetrics.width(QLatin1Char(' '));
+            QSizeF size(fontMetrics.horizontalAdvance(listItemBullet), fontMetrics.height());
+            qreal xoff = fontMetrics.horizontalAdvance(QLatin1Char(' '));
             if (block.textDirection() == Qt::LeftToRight)
                 xoff = -xoff - size.width();
             setPosition(pos + QPointF(xoff, 0));
@@ -1036,15 +1047,15 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
         int fontHeight = fontMetrics.descent() + fontMetrics.ascent();
         int valign = charFormat.verticalAlignment();
         if (valign == QTextCharFormat::AlignSuperScript)
-            setPosition(QPointF(blockPosition.x(), blockPosition.y() - fontHeight / 2));
+            setPosition(QPointF(blockBoundingRect.x(), blockBoundingRect.y() - fontHeight / 2));
         else if (valign == QTextCharFormat::AlignSubScript)
-            setPosition(QPointF(blockPosition.x(), blockPosition.y() + fontHeight / 6));
+            setPosition(QPointF(blockBoundingRect.x(), blockBoundingRect.y() + fontHeight / 6));
         else
-            setPosition(blockPosition);
+            setPosition(blockBoundingRect.topLeft());
 
         if (text.contains(QChar::ObjectReplacementCharacter)) {
             QTextFrame *frame = qobject_cast<QTextFrame *>(textDocument->objectForFormat(charFormat));
-            if (frame && frame->frameFormat().position() == QTextFrameFormat::InFlow) {
+            if (!frame || frame->frameFormat().position() == QTextFrameFormat::InFlow) {
                 int blockRelativePosition = textPos - block.position();
                 QTextLine line = block.layout()->lineForTextPosition(blockRelativePosition);
                 if (!currentLine().isValid()
@@ -1058,7 +1069,7 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
                         ? QQuickTextNodeEngine::Selected
                         : QQuickTextNodeEngine::Unselected;
 
-                addTextObject(QPointF(), charFormat, selectionState, textDocument, textPos);
+                addTextObject(block, QPointF(), charFormat, selectionState, textDocument, textPos);
             }
             textPos += text.length();
         } else {
@@ -1094,7 +1105,7 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
 
 #if QT_CONFIG(im)
     if (preeditLength >= 0 && textPos <= block.position() + preeditPosition) {
-        setPosition(blockPosition);
+        setPosition(blockBoundingRect.topLeft());
         textPos = block.position() + preeditPosition;
         QTextLine line = block.layout()->lineForTextPosition(preeditPosition);
         if (!currentLine().isValid()

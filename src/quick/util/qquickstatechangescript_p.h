@@ -66,7 +66,7 @@ class Q_AUTOTEST_EXPORT QQuickStateChangeScript : public QQuickStateOperation, p
     Q_PROPERTY(QString name READ name WRITE setName)
 
 public:
-    QQuickStateChangeScript(QObject *parent=0);
+    QQuickStateChangeScript(QObject *parent=nullptr);
     ~QQuickStateChangeScript();
 
     ActionList actions() override;

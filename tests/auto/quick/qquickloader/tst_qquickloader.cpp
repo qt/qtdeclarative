@@ -29,12 +29,18 @@
 
 #include <QSignalSpy>
 
+#include <QtQml/QQmlContext>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlincubator.h>
+#include <QtQuick/qquickview.h>
 #include <private/qquickloader_p.h>
+#include <private/qquickwindowmodule_p.h>
 #include "testhttpserver.h"
 #include "../../shared/util.h"
+#include "../shared/geometrytestutil.h"
+
+Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
 class SlowComponent : public QQmlComponent
 {
@@ -49,11 +55,11 @@ class PeriodicIncubationController : public QObject,
     public QQmlIncubationController
 {
 public:
-    PeriodicIncubationController() : incubated(false) {}
+    PeriodicIncubationController() {}
 
     void start() { startTimer(20); }
 
-    bool incubated;
+    bool incubated = false;
 
 protected:
     virtual void timerEvent(QTimerEvent *) {
@@ -74,8 +80,6 @@ public:
     tst_QQuickLoader();
 
 private slots:
-    void cleanup();
-
     void sourceOrComponent();
     void sourceOrComponent_data();
     void clear();
@@ -113,22 +117,25 @@ private slots:
     void parented();
     void sizeBound();
     void QTBUG_30183();
+    void transientWindow();
+    void nestedTransientWindow();
 
     void sourceComponentGarbageCollection();
 
-private:
-    QQmlEngine engine;
+    void bindings();
+    void parentErrors();
+
+    void rootContext();
+    void sourceURLKeepComponent();
+
 };
 
-void tst_QQuickLoader::cleanup()
-{
-    // clear components. otherwise we even bypass the test server by using the cache.
-    engine.clearComponentCache();
-}
+Q_DECLARE_METATYPE(QList<QQmlError>)
 
 tst_QQuickLoader::tst_QQuickLoader()
 {
     qmlRegisterType<SlowComponent>("LoaderTest", 1, 0, "SlowComponent");
+    qRegisterMetaType<QList<QQmlError>>();
 }
 
 void tst_QQuickLoader::sourceOrComponent()
@@ -142,6 +149,7 @@ void tst_QQuickLoader::sourceOrComponent()
     if (error)
         QTest::ignoreMessage(QtWarningMsg, errorString.toUtf8().constData());
 
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray(
             "import QtQuick 2.0\n"
@@ -163,14 +171,14 @@ void tst_QQuickLoader::sourceOrComponent()
             "}")
         , dataDirectoryUrl());
 
-    QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
-    QVERIFY(loader != 0);
-    QCOMPARE(loader->item() == 0, error);
+    QScopedPointer<QQuickLoader> loader(qobject_cast<QQuickLoader*>(component.create()));
+    QVERIFY(loader != nullptr);
+    QCOMPARE(loader->item() == nullptr, error);
     QCOMPARE(loader->source(), sourceUrl);
     QCOMPARE(loader->progress(), 1.0);
 
     QCOMPARE(loader->status(), error ? QQuickLoader::Error : QQuickLoader::Ready);
-    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), error ? 0: 1);
+    QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().count(), error ? 0: 1);
 
     if (!error) {
         bool sourceComponentIsChildOfLoader = false;
@@ -195,8 +203,6 @@ void tst_QQuickLoader::sourceOrComponent()
 
     QCOMPARE(loader->property("onItemChangedCount").toInt(), 1);
     QCOMPARE(loader->property("onLoadedCount").toInt(), error ? 0 : 1);
-
-    delete loader;
 }
 
 void tst_QQuickLoader::sourceOrComponent_data()
@@ -218,6 +224,8 @@ void tst_QQuickLoader::sourceOrComponent_data()
 
 void tst_QQuickLoader::clear()
 {
+    QQmlEngine engine;
+
     {
         QQmlComponent component(&engine);
         component.setData(QByteArray(
@@ -227,22 +235,20 @@ void tst_QQuickLoader::clear()
                     "  Timer { interval: 200; running: true; onTriggered: loader.source = '' }\n"
                     " }")
                 , dataDirectoryUrl());
-        QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
-        QVERIFY(loader != 0);
+        QScopedPointer<QQuickLoader> loader(qobject_cast<QQuickLoader*>(component.create()));
+        QVERIFY(loader != nullptr);
         QVERIFY(loader->item());
         QCOMPARE(loader->progress(), 1.0);
-        QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
+        QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().count(), 1);
 
         QTRY_VERIFY(!loader->item());
         QCOMPARE(loader->progress(), 0.0);
         QCOMPARE(loader->status(), QQuickLoader::Null);
-        QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 0);
-
-        delete loader;
+        QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().count(), 0);
     }
     {
         QQmlComponent component(&engine, testFileUrl("/SetSourceComponent.qml"));
-        QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
+        QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(component.create()));
         QVERIFY(item);
 
         QQuickLoader *loader = qobject_cast<QQuickLoader*>(item->QQuickItem::childItems().at(0));
@@ -251,18 +257,16 @@ void tst_QQuickLoader::clear()
         QCOMPARE(loader->progress(), 1.0);
         QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
 
-        loader->setSourceComponent(0);
+        loader->setSourceComponent(nullptr);
 
         QVERIFY(!loader->item());
         QCOMPARE(loader->progress(), 0.0);
         QCOMPARE(loader->status(), QQuickLoader::Null);
         QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 0);
-
-        delete item;
     }
     {
         QQmlComponent component(&engine, testFileUrl("/SetSourceComponent.qml"));
-        QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
+        QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(component.create()));
         QVERIFY(item);
 
         QQuickLoader *loader = qobject_cast<QQuickLoader*>(item->QQuickItem::childItems().at(0));
@@ -271,19 +275,18 @@ void tst_QQuickLoader::clear()
         QCOMPARE(loader->progress(), 1.0);
         QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
 
-        QMetaObject::invokeMethod(item, "clear");
+        QMetaObject::invokeMethod(item.data(), "clear");
 
         QVERIFY(!loader->item());
         QCOMPARE(loader->progress(), 0.0);
         QCOMPARE(loader->status(), QQuickLoader::Null);
         QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 0);
-
-        delete item;
     }
 }
 
 void tst_QQuickLoader::urlToComponent()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray("import QtQuick 2.0\n"
                 "Loader {\n"
@@ -293,22 +296,21 @@ void tst_QQuickLoader::urlToComponent()
                 " Timer { interval: 100; running: true; onTriggered: loader.sourceComponent = myComp }\n"
                 "}" )
             , dataDirectoryUrl());
-    QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
+    QScopedPointer<QQuickLoader> loader(qobject_cast<QQuickLoader*>(component.create()));
     QTest::qWait(200);
-    QTRY_VERIFY(loader != 0);
+    QTRY_VERIFY(loader != nullptr);
     QVERIFY(loader->item());
     QCOMPARE(loader->progress(), 1.0);
-    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
+    QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().count(), 1);
     QCOMPARE(loader->width(), 10.0);
     QCOMPARE(loader->height(), 10.0);
-
-    delete loader;
 }
 
 void tst_QQuickLoader::componentToUrl()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("/SetSourceComponent.qml"));
-    QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
+    QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(component.create()));
     QVERIFY(item);
 
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(item->QQuickItem::childItems().at(0));
@@ -323,20 +325,19 @@ void tst_QQuickLoader::componentToUrl()
     QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
     QCOMPARE(loader->width(), 120.0);
     QCOMPARE(loader->height(), 60.0);
-
-    delete item;
 }
 
 void tst_QQuickLoader::anchoredLoader()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("/AnchoredLoader.qml"));
-    QQuickItem *rootItem = qobject_cast<QQuickItem*>(component.create());
-    QVERIFY(rootItem != 0);
+    QScopedPointer<QQuickItem> rootItem(qobject_cast<QQuickItem*>(component.create()));
+    QVERIFY(rootItem != nullptr);
     QQuickItem *loader = rootItem->findChild<QQuickItem*>("loader");
     QQuickItem *sourceElement = rootItem->findChild<QQuickItem*>("sourceElement");
 
-    QVERIFY(loader != 0);
-    QVERIFY(sourceElement != 0);
+    QVERIFY(loader != nullptr);
+    QVERIFY(sourceElement != nullptr);
 
     QCOMPARE(rootItem->width(), 300.0);
     QCOMPARE(rootItem->height(), 200.0);
@@ -350,9 +351,10 @@ void tst_QQuickLoader::anchoredLoader()
 
 void tst_QQuickLoader::sizeLoaderToItem()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("/SizeToItem.qml"));
-    QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
-    QVERIFY(loader != 0);
+    QScopedPointer<QQuickLoader> loader(qobject_cast<QQuickLoader*>(component.create()));
+    QVERIFY(loader != nullptr);
     QCOMPARE(loader->width(), 120.0);
     QCOMPARE(loader->height(), 60.0);
 
@@ -385,15 +387,14 @@ void tst_QQuickLoader::sizeLoaderToItem()
     loader->setHeight(30);
     QCOMPARE(rect->width(), 180.0);
     QCOMPARE(rect->height(), 30.0);
-
-    delete loader;
 }
 
 void tst_QQuickLoader::sizeItemToLoader()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("/SizeToLoader.qml"));
-    QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
-    QVERIFY(loader != 0);
+    QScopedPointer<QQuickLoader> loader(qobject_cast<QQuickLoader*>(component.create()));
+    QVERIFY(loader != nullptr);
     QCOMPARE(loader->width(), 200.0);
     QCOMPARE(loader->height(), 80.0);
 
@@ -403,10 +404,16 @@ void tst_QQuickLoader::sizeItemToLoader()
     QCOMPARE(rect->height(), 80.0);
 
     // Check resize
-    loader->setWidth(180);
-    loader->setHeight(30);
-    QCOMPARE(rect->width(), 180.0);
-    QCOMPARE(rect->height(), 30.0);
+    QSizeChangeListener sizeListener(rect);
+    const QSizeF size(180, 30);
+    loader->setSize(size);
+    QVERIFY2(!sizeListener.isEmpty(), "There should be at least one signal about the size changed");
+    for (const QSizeF sizeOnGeometryChanged : sizeListener) {
+        // Check that we have the correct size on all signals
+        QCOMPARE(sizeOnGeometryChanged, size);
+    }
+    QCOMPARE(rect->width(), size.width());
+    QCOMPARE(rect->height(), size.height());
 
     // Switch mode
     loader->resetWidth(); // reset explicit size
@@ -415,41 +422,37 @@ void tst_QQuickLoader::sizeItemToLoader()
     rect->setHeight(45);
     QCOMPARE(loader->width(), 160.0);
     QCOMPARE(loader->height(), 45.0);
-
-    delete loader;
 }
 
 void tst_QQuickLoader::noResize()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("/NoResize.qml"));
-    QQuickItem* item = qobject_cast<QQuickItem*>(component.create());
-    QVERIFY(item != 0);
+    QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(component.create()));
+    QVERIFY(item != nullptr);
     QCOMPARE(item->width(), 200.0);
     QCOMPARE(item->height(), 80.0);
-
-    delete item;
 }
 
 void tst_QQuickLoader::networkRequestUrl()
 {
     ThreadedTestHTTPServer server(dataDirectory());
 
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     const QString qml = "import QtQuick 2.0\nLoader { property int signalCount : 0; source: \"" + server.baseUrl().toString() + "/Rect120x60.qml\"; onLoaded: signalCount += 1 }";
     component.setData(qml.toUtf8(), testFileUrl("../dummy.qml"));
     if (component.isError())
         qDebug() << component.errors();
-    QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
-    QVERIFY(loader != 0);
+    QScopedPointer<QQuickLoader> loader(qobject_cast<QQuickLoader*>(component.create()));
+    QVERIFY(loader != nullptr);
 
     QTRY_COMPARE(loader->status(), QQuickLoader::Ready);
 
     QVERIFY(loader->item());
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->property("signalCount").toInt(), 1);
-    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
-
-    delete loader;
+    QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().count(), 1);
 }
 
 /* XXX Component waits until all dependencies are loaded.  Is this actually possible? */
@@ -457,6 +460,7 @@ void tst_QQuickLoader::networkComponent()
 {
     ThreadedTestHTTPServer server(dataDirectory(), TestHTTPServer::Delay);
 
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     const QString qml = "import QtQuick 2.0\n"
                         "import \"" + server.baseUrl().toString() + "/\" as NW\n"
@@ -489,117 +493,108 @@ void tst_QQuickLoader::failNetworkRequest()
 
     QTest::ignoreMessage(QtWarningMsg, QString(server.baseUrl().toString() + "/IDontExist.qml: File not found").toUtf8());
 
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     const QString qml = "import QtQuick 2.0\nLoader { property int did_load: 123; source: \"" + server.baseUrl().toString() + "/IDontExist.qml\"; onLoaded: did_load=456 }";
     component.setData(qml.toUtf8(), server.url("/dummy.qml"));
     QTRY_COMPARE(component.status(), QQmlComponent::Ready);
-    QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
-    QVERIFY(loader != 0);
+    QScopedPointer<QQuickLoader> loader(qobject_cast<QQuickLoader*>(component.create()));
+    QVERIFY(loader != nullptr);
 
     QTRY_COMPARE(loader->status(), QQuickLoader::Error);
 
     QVERIFY(!loader->item());
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->property("did_load").toInt(), 123);
-    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 0);
-
-    delete loader;
+    QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().count(), 0);
 }
 
 void tst_QQuickLoader::active()
 {
+    QQmlEngine engine;
+
     // check that the item isn't instantiated until active is set to true
     {
         QQmlComponent component(&engine, testFileUrl("active.1.qml"));
-        QObject *object = component.create();
-        QVERIFY(object != 0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object != nullptr);
         QQuickLoader *loader = object->findChild<QQuickLoader*>("loader");
 
         QVERIFY(loader->active() == false); // set manually to false
         QVERIFY(!loader->item());
-        QMetaObject::invokeMethod(object, "doSetSourceComponent");
+        QMetaObject::invokeMethod(object.data(), "doSetSourceComponent");
         QVERIFY(!loader->item());
-        QMetaObject::invokeMethod(object, "doSetSource");
+        QMetaObject::invokeMethod(object.data(), "doSetSource");
         QVERIFY(!loader->item());
-        QMetaObject::invokeMethod(object, "doSetActive");
-        QVERIFY(loader->item() != 0);
-
-        delete object;
+        QMetaObject::invokeMethod(object.data(), "doSetActive");
+        QVERIFY(loader->item() != nullptr);
     }
 
     // check that the status is Null if active is set to false
     {
         QQmlComponent component(&engine, testFileUrl("active.2.qml"));
-        QObject *object = component.create();
-        QVERIFY(object != 0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object != nullptr);
         QQuickLoader *loader = object->findChild<QQuickLoader*>("loader");
 
         QVERIFY(loader->active() == true); // active is true by default
         QCOMPARE(loader->status(), QQuickLoader::Ready);
         int currStatusChangedCount = loader->property("statusChangedCount").toInt();
-        QMetaObject::invokeMethod(object, "doSetInactive");
+        QMetaObject::invokeMethod(object.data(), "doSetInactive");
         QCOMPARE(loader->status(), QQuickLoader::Null);
         QCOMPARE(loader->property("statusChangedCount").toInt(), (currStatusChangedCount+1));
-
-        delete object;
     }
 
     // check that the source is not cleared if active is set to false
     {
         QQmlComponent component(&engine, testFileUrl("active.3.qml"));
-        QObject *object = component.create();
-        QVERIFY(object != 0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object != nullptr);
         QQuickLoader *loader = object->findChild<QQuickLoader*>("loader");
 
         QVERIFY(loader->active() == true); // active is true by default
         QVERIFY(!loader->source().isEmpty());
         int currSourceChangedCount = loader->property("sourceChangedCount").toInt();
-        QMetaObject::invokeMethod(object, "doSetInactive");
+        QMetaObject::invokeMethod(object.data(), "doSetInactive");
         QVERIFY(!loader->source().isEmpty());
         QCOMPARE(loader->property("sourceChangedCount").toInt(), currSourceChangedCount);
-
-        delete object;
     }
 
     // check that the sourceComponent is not cleared if active is set to false
     {
         QQmlComponent component(&engine, testFileUrl("active.4.qml"));
-        QObject *object = component.create();
-        QVERIFY(object != 0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object != nullptr);
         QQuickLoader *loader = object->findChild<QQuickLoader*>("loader");
 
         QVERIFY(loader->active() == true); // active is true by default
-        QVERIFY(loader->sourceComponent() != 0);
+        QVERIFY(loader->sourceComponent() != nullptr);
         int currSourceComponentChangedCount = loader->property("sourceComponentChangedCount").toInt();
-        QMetaObject::invokeMethod(object, "doSetInactive");
-        QVERIFY(loader->sourceComponent() != 0);
+        QMetaObject::invokeMethod(object.data(), "doSetInactive");
+        QVERIFY(loader->sourceComponent() != nullptr);
         QCOMPARE(loader->property("sourceComponentChangedCount").toInt(), currSourceComponentChangedCount);
-
-        delete object;
     }
 
     // check that the item is released if active is set to false
     {
         QQmlComponent component(&engine, testFileUrl("active.5.qml"));
-        QObject *object = component.create();
-        QVERIFY(object != 0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object != nullptr);
         QQuickLoader *loader = object->findChild<QQuickLoader*>("loader");
 
         QVERIFY(loader->active() == true); // active is true by default
-        QVERIFY(loader->item() != 0);
+        QVERIFY(loader->item() != nullptr);
         int currItemChangedCount = loader->property("itemChangedCount").toInt();
-        QMetaObject::invokeMethod(object, "doSetInactive");
+        QMetaObject::invokeMethod(object.data(), "doSetInactive");
         QVERIFY(!loader->item());
         QCOMPARE(loader->property("itemChangedCount").toInt(), (currItemChangedCount+1));
-
-        delete object;
     }
 
     // check that the activeChanged signal is emitted correctly
     {
         QQmlComponent component(&engine, testFileUrl("active.6.qml"));
-        QObject *object = component.create();
-        QVERIFY(object != 0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object != nullptr);
         QQuickLoader *loader = object->findChild<QQuickLoader*>("loader");
 
         QVERIFY(loader->active() == true); // active is true by default
@@ -613,34 +608,30 @@ void tst_QQuickLoader::active()
         QCOMPARE(loader->property("activeChangedCount").toInt(), 2);
         loader->setActive(false);          // change signal should be emitted
         QCOMPARE(loader->property("activeChangedCount").toInt(), 3);
-        QMetaObject::invokeMethod(object, "doSetActive");
+        QMetaObject::invokeMethod(object.data(), "doSetActive");
         QCOMPARE(loader->property("activeChangedCount").toInt(), 4);
-        QMetaObject::invokeMethod(object, "doSetActive");
+        QMetaObject::invokeMethod(object.data(), "doSetActive");
         QCOMPARE(loader->property("activeChangedCount").toInt(), 4);
-        QMetaObject::invokeMethod(object, "doSetInactive");
+        QMetaObject::invokeMethod(object.data(), "doSetInactive");
         QCOMPARE(loader->property("activeChangedCount").toInt(), 5);
         loader->setActive(true);           // change signal should be emitted
         QCOMPARE(loader->property("activeChangedCount").toInt(), 6);
-
-        delete object;
     }
 
     // check that the component isn't loaded until active is set to true
     {
         QQmlComponent component(&engine, testFileUrl("active.7.qml"));
-        QObject *object = component.create();
-        QVERIFY(object != 0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object != nullptr);
         QCOMPARE(object->property("success").toBool(), true);
-        delete object;
     }
 
     // check that the component is loaded if active is not set (true by default)
     {
         QQmlComponent component(&engine, testFileUrl("active.8.qml"));
-        QObject *object = component.create();
-        QVERIFY(object != 0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object != nullptr);
         QCOMPARE(object->property("success").toBool(), true);
-        delete object;
     }
 }
 
@@ -704,14 +695,15 @@ void tst_QQuickLoader::initialPropertyValues()
     foreach (const QString &warning, expectedWarnings)
         QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, qmlFile);
-    QObject *object = component.beginCreate(engine.rootContext());
-    QVERIFY(object != 0);
+    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QVERIFY(object != nullptr);
 
     const int serverBaseUrlPropertyIndex = object->metaObject()->indexOfProperty("serverBaseUrl");
     if (serverBaseUrlPropertyIndex != -1) {
         QMetaProperty prop = object->metaObject()->property(serverBaseUrlPropertyIndex);
-        QVERIFY(prop.write(object, server.baseUrl().toString()));
+        QVERIFY(prop.write(object.data(), server.baseUrl().toString()));
     }
 
     component.completeCreate();
@@ -722,20 +714,17 @@ void tst_QQuickLoader::initialPropertyValues()
 
     for (int i = 0; i < propertyNames.size(); ++i)
         QCOMPARE(object->property(propertyNames.at(i).toLatin1().constData()), propertyValues.at(i));
-
-    delete object;
 }
 
 void tst_QQuickLoader::initialPropertyValuesBinding()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("initialPropertyValues.binding.qml"));
-    QObject *object = component.create();
-    QVERIFY(object != 0);
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != nullptr);
 
     QVERIFY(object->setProperty("bindable", QVariant(8)));
     QCOMPARE(object->property("canaryValue").toInt(), 8);
-
-    delete object;
 }
 
 void tst_QQuickLoader::initialPropertyValuesError_data()
@@ -750,7 +739,7 @@ void tst_QQuickLoader::initialPropertyValuesError_data()
             << (QStringList() << QString(testFileUrl("NonexistentSourceComponent.qml").toString() + ": No such file or directory"));
 
     QTest::newRow("invalid source url") << testFileUrl("initialPropertyValues.error.3.qml")
-            << (QStringList() << QString(testFileUrl("InvalidSourceComponent.qml").toString() + ":5:1: Syntax error"));
+            << (QStringList() << QString(testFileUrl("InvalidSourceComponent.qml").toString() + ":5:1: Expected token `:'"));
 
     QTest::newRow("invalid initial property values object with invalid property access") << testFileUrl("initialPropertyValues.error.4.qml")
             << (QStringList() << QString(testFileUrl("initialPropertyValues.error.4.qml").toString() + ":7:5: QML Loader: setSource: value is not an object")
@@ -765,23 +754,24 @@ void tst_QQuickLoader::initialPropertyValuesError()
     foreach (const QString &warning, expectedWarnings)
         QTest::ignoreMessage(QtWarningMsg, warning.toUtf8().constData());
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, qmlFile);
-    QObject *object = component.create();
-    QVERIFY(object != 0);
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != nullptr);
     QQuickLoader *loader = object->findChild<QQuickLoader*>("loader");
-    QVERIFY(loader != 0);
+    QVERIFY(loader != nullptr);
     QVERIFY(!loader->item());
-    delete object;
 }
 
 // QTBUG-9241
 void tst_QQuickLoader::deleteComponentCrash()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("crash.qml"));
-    QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
+    QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(component.create()));
     QVERIFY(item);
 
-    item->metaObject()->invokeMethod(item, "setLoaderSource");
+    item->metaObject()->invokeMethod(item.data(), "setLoaderSource");
 
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(item->QQuickItem::childItems().at(0));
     QVERIFY(loader);
@@ -789,73 +779,68 @@ void tst_QQuickLoader::deleteComponentCrash()
     QCOMPARE(loader->item()->objectName(), QLatin1String("blue"));
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->status(), QQuickLoader::Ready);
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
     QTRY_COMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
     QCOMPARE(loader->source(), testFileUrl("BlueRect.qml"));
-
-    delete item;
 }
 
 void tst_QQuickLoader::nonItem()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("nonItem.qml"));
 
-    QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
+    QScopedPointer<QQuickLoader> loader(qobject_cast<QQuickLoader*>(component.create()));
     QVERIFY(loader);
     QVERIFY(loader->item());
 
-    QCOMPARE(loader, loader->item()->parent());
+    QCOMPARE(loader.data(), loader->item()->parent());
 
     QPointer<QObject> item = loader->item();
     loader->setActive(false);
     QVERIFY(!loader->item());
     QTRY_VERIFY(!item);
-
-    delete loader;
 }
 
 void tst_QQuickLoader::vmeErrors()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("vmeErrors.qml"));
     QString err = testFileUrl("VmeError.qml").toString() + ":6:26: Cannot assign object type QObject with no default method";
     QTest::ignoreMessage(QtWarningMsg, err.toLatin1().constData());
-    QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
+    QScopedPointer<QQuickLoader> loader(qobject_cast<QQuickLoader*>(component.create()));
     QVERIFY(loader);
     QVERIFY(!loader->item());
-
-    delete loader;
 }
 
 // QTBUG-13481
 void tst_QQuickLoader::creationContext()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("creationContext.qml"));
 
-    QObject *o = component.create();
-    QVERIFY(o != 0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o != nullptr);
 
     QCOMPARE(o->property("test").toBool(), true);
-
-    delete o;
 }
 
 void tst_QQuickLoader::QTBUG_16928()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("QTBUG_16928.qml"));
-    QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
+    QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(component.create()));
     QVERIFY(item);
 
     QCOMPARE(item->width(), 250.);
     QCOMPARE(item->height(), 250.);
-
-    delete item;
 }
 
 void tst_QQuickLoader::implicitSize()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("implicitSize.qml"));
-    QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
+    QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(component.create()));
     QVERIFY(item);
 
     QCOMPARE(item->width(), 150.);
@@ -868,27 +853,24 @@ void tst_QQuickLoader::implicitSize()
     QSignalSpy implWidthSpy(loader, SIGNAL(implicitWidthChanged()));
     QSignalSpy implHeightSpy(loader, SIGNAL(implicitHeightChanged()));
 
-    QMetaObject::invokeMethod(item, "changeImplicitSize");
+    QMetaObject::invokeMethod(item.data(), "changeImplicitSize");
 
     QCOMPARE(loader->property("implicitWidth").toReal(), 200.);
     QCOMPARE(loader->property("implicitHeight").toReal(), 300.);
 
     QCOMPARE(implWidthSpy.count(), 1);
     QCOMPARE(implHeightSpy.count(), 1);
-
-    delete item;
 }
 
 void tst_QQuickLoader::QTBUG_17114()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("QTBUG_17114.qml"));
-    QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
+    QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(component.create()));
     QVERIFY(item);
 
     QCOMPARE(item->property("loaderWidth").toReal(), 32.);
     QCOMPARE(item->property("loaderHeight").toReal(), 32.);
-
-    delete item;
 }
 
 void tst_QQuickLoader::asynchronous_data()
@@ -903,7 +885,7 @@ void tst_QQuickLoader::asynchronous_data()
             << (QStringList() << QString(testFileUrl("IDoNotExist.qml").toString() + ": No such file or directory"));
 
     QTest::newRow("Invalid component") << testFileUrl("InvalidSourceComponent.qml")
-            << (QStringList() << QString(testFileUrl("InvalidSourceComponent.qml").toString() + ":5:1: Syntax error"));
+            << (QStringList() << QString(testFileUrl("InvalidSourceComponent.qml").toString() + ":5:1: Expected token `:'"));
 }
 
 void tst_QQuickLoader::asynchronous()
@@ -911,13 +893,14 @@ void tst_QQuickLoader::asynchronous()
     QFETCH(QUrl, qmlFile);
     QFETCH(QStringList, expectedWarnings);
 
+    QQmlEngine engine;
     PeriodicIncubationController *controller = new PeriodicIncubationController;
     QQmlIncubationController *previous = engine.incubationController();
     engine.setIncubationController(controller);
     delete previous;
 
     QQmlComponent component(&engine, testFileUrl("asynchronous.qml"));
-    QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
+    QScopedPointer<QQuickItem> root(qobject_cast<QQuickItem*>(component.create()));
     QVERIFY(root);
 
     QQuickLoader *loader = root->findChild<QQuickLoader*>("loader");
@@ -929,7 +912,7 @@ void tst_QQuickLoader::asynchronous()
     QVERIFY(!loader->item());
     QCOMPARE(loader->progress(), 0.0);
     root->setProperty("comp", qmlFile.toString());
-    QMetaObject::invokeMethod(root, "loadComponent");
+    QMetaObject::invokeMethod(root.data(), "loadComponent");
     QVERIFY(!loader->item());
 
     if (expectedWarnings.isEmpty()) {
@@ -945,19 +928,18 @@ void tst_QQuickLoader::asynchronous()
         QTRY_COMPARE(loader->progress(), 1.0);
         QTRY_COMPARE(loader->status(), QQuickLoader::Error);
     }
-
-    delete root;
 }
 
 void tst_QQuickLoader::asynchronous_clear()
 {
+    QQmlEngine engine;
     PeriodicIncubationController *controller = new PeriodicIncubationController;
     QQmlIncubationController *previous = engine.incubationController();
     engine.setIncubationController(controller);
     delete previous;
 
     QQmlComponent component(&engine, testFileUrl("asynchronous.qml"));
-    QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
+    QScopedPointer<QQuickItem> root(qobject_cast<QQuickItem*>(component.create()));
     QVERIFY(root);
 
     QQuickLoader *loader = root->findChild<QQuickLoader*>("loader");
@@ -965,7 +947,7 @@ void tst_QQuickLoader::asynchronous_clear()
 
     QVERIFY(!loader->item());
     root->setProperty("comp", "BigComponent.qml");
-    QMetaObject::invokeMethod(root, "loadComponent");
+    QMetaObject::invokeMethod(root.data(), "loadComponent");
     QVERIFY(!loader->item());
 
     controller->start();
@@ -974,7 +956,7 @@ void tst_QQuickLoader::asynchronous_clear()
 
     // clear before component created
     root->setProperty("comp", "");
-    QMetaObject::invokeMethod(root, "loadComponent");
+    QMetaObject::invokeMethod(root.data(), "loadComponent");
     QVERIFY(!loader->item());
     QCOMPARE(engine.incubationController()->incubatingObjectCount(), 0);
 
@@ -984,7 +966,7 @@ void tst_QQuickLoader::asynchronous_clear()
 
     // check loading component
     root->setProperty("comp", "BigComponent.qml");
-    QMetaObject::invokeMethod(root, "loadComponent");
+    QMetaObject::invokeMethod(root.data(), "loadComponent");
     QVERIFY(!loader->item());
 
     QCOMPARE(loader->status(), QQuickLoader::Loading);
@@ -994,19 +976,18 @@ void tst_QQuickLoader::asynchronous_clear()
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->status(), QQuickLoader::Ready);
     QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
-
-    delete root;
 }
 
 void tst_QQuickLoader::simultaneousSyncAsync()
 {
+    QQmlEngine engine;
     PeriodicIncubationController *controller = new PeriodicIncubationController;
     QQmlIncubationController *previous = engine.incubationController();
     engine.setIncubationController(controller);
     delete previous;
 
     QQmlComponent component(&engine, testFileUrl("simultaneous.qml"));
-    QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
+    QScopedPointer<QQuickItem> root(qobject_cast<QQuickItem*>(component.create()));
     QVERIFY(root);
 
     QQuickLoader *asyncLoader = root->findChild<QQuickLoader*>("asyncLoader");
@@ -1016,7 +997,7 @@ void tst_QQuickLoader::simultaneousSyncAsync()
 
     QVERIFY(!asyncLoader->item());
     QVERIFY(!syncLoader->item());
-    QMetaObject::invokeMethod(root, "loadComponents");
+    QMetaObject::invokeMethod(root.data(), "loadComponents");
     QVERIFY(!asyncLoader->item());
     QVERIFY(syncLoader->item());
 
@@ -1027,8 +1008,6 @@ void tst_QQuickLoader::simultaneousSyncAsync()
     QTRY_VERIFY(asyncLoader->item());
     QCOMPARE(asyncLoader->progress(), 1.0);
     QCOMPARE(asyncLoader->status(), QQuickLoader::Ready);
-
-    delete root;
 }
 
 void tst_QQuickLoader::asyncToSync1()
@@ -1040,7 +1019,7 @@ void tst_QQuickLoader::asyncToSync1()
     delete previous;
 
     QQmlComponent component(&engine, testFileUrl("asynchronous.qml"));
-    QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
+    QScopedPointer<QQuickItem> root(qobject_cast<QQuickItem*>(component.create()));
     QVERIFY(root);
 
     QQuickLoader *loader = root->findChild<QQuickLoader*>("loader");
@@ -1048,7 +1027,7 @@ void tst_QQuickLoader::asyncToSync1()
 
     QVERIFY(!loader->item());
     root->setProperty("comp", "BigComponent.qml");
-    QMetaObject::invokeMethod(root, "loadComponent");
+    QMetaObject::invokeMethod(root.data(), "loadComponent");
     QVERIFY(!loader->item());
 
     controller->start();
@@ -1061,19 +1040,18 @@ void tst_QQuickLoader::asyncToSync1()
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->status(), QQuickLoader::Ready);
     QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
-
-    delete root;
 }
 
 void tst_QQuickLoader::asyncToSync2()
 {
+    QQmlEngine engine;
     PeriodicIncubationController *controller = new PeriodicIncubationController;
     QQmlIncubationController *previous = engine.incubationController();
     engine.setIncubationController(controller);
     delete previous;
 
     QQmlComponent component(&engine, testFileUrl("asynchronous.qml"));
-    QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
+    QScopedPointer<QQuickItem> root(qobject_cast<QQuickItem*>(component.create()));
     QVERIFY(root);
 
     QQuickLoader *loader = root->findChild<QQuickLoader*>("loader");
@@ -1081,7 +1059,7 @@ void tst_QQuickLoader::asyncToSync2()
 
     QVERIFY(!loader->item());
     root->setProperty("comp", "BigComponent.qml");
-    QMetaObject::invokeMethod(root, "loadComponent");
+    QMetaObject::invokeMethod(root.data(), "loadComponent");
     QVERIFY(!loader->item());
 
     controller->start();
@@ -1094,12 +1072,11 @@ void tst_QQuickLoader::asyncToSync2()
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->status(), QQuickLoader::Ready);
     QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
-
-    delete root;
 }
 
 void tst_QQuickLoader::loadedSignal()
 {
+    QQmlEngine engine;
     PeriodicIncubationController *controller = new PeriodicIncubationController;
     QQmlIncubationController *previous = engine.incubationController();
     engine.setIncubationController(controller);
@@ -1110,84 +1087,79 @@ void tst_QQuickLoader::loadedSignal()
         // and then immediately setting active to false, causes the
         // loader to be deactivated, including disabling the incubator.
         QQmlComponent component(&engine, testFileUrl("loadedSignal.qml"));
-        QObject *obj = component.create();
+        QScopedPointer<QObject> obj(component.create());
 
-        QMetaObject::invokeMethod(obj, "triggerLoading");
+        QMetaObject::invokeMethod(obj.data(), "triggerLoading");
         QTest::qWait(100); // ensure that loading would have finished if it wasn't deactivated
         QCOMPARE(obj->property("loadCount").toInt(), 0);
         QVERIFY(obj->property("success").toBool());
 
-        QMetaObject::invokeMethod(obj, "triggerLoading");
+        QMetaObject::invokeMethod(obj.data(), "triggerLoading");
         QTest::qWait(100);
         QCOMPARE(obj->property("loadCount").toInt(), 0);
         QVERIFY(obj->property("success").toBool());
 
-        QMetaObject::invokeMethod(obj, "triggerMultipleLoad");
+        QMetaObject::invokeMethod(obj.data(), "triggerMultipleLoad");
         controller->start();
         QTest::qWait(100);
         QTRY_COMPARE(obj->property("loadCount").toInt(), 1); // only one loaded signal should be emitted.
         QVERIFY(obj->property("success").toBool());
-
-        delete obj;
     }
 
     {
         // ensure that an error doesn't result in the onLoaded signal being emitted.
         QQmlComponent component(&engine, testFileUrl("loadedSignal.2.qml"));
-        QObject *obj = component.create();
+        QScopedPointer<QObject> obj(component.create());
 
-        QMetaObject::invokeMethod(obj, "triggerLoading");
+        QMetaObject::invokeMethod(obj.data(), "triggerLoading");
         QTest::qWait(100);
         QCOMPARE(obj->property("loadCount").toInt(), 0);
         QVERIFY(obj->property("success").toBool());
-
-        delete obj;
     }
 }
 
 void tst_QQuickLoader::parented()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("parented.qml"));
-    QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
+    QScopedPointer<QQuickItem> root(qobject_cast<QQuickItem*>(component.create()));
     QVERIFY(root);
 
     QQuickItem *item = root->findChild<QQuickItem*>("comp");
     QVERIFY(item);
 
-    QCOMPARE(item->parentItem(), root);
+    QCOMPARE(item->parentItem(), root.data());
 
     QCOMPARE(item->width(), 300.);
     QCOMPARE(item->height(), 300.);
-
-    delete root;
 }
 
 void tst_QQuickLoader::sizeBound()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("sizebound.qml"));
-    QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
+    QScopedPointer<QQuickItem> root(qobject_cast<QQuickItem*>(component.create()));
     QVERIFY(root);
     QQuickLoader *loader = root->findChild<QQuickLoader*>("loader");
-    QVERIFY(loader != 0);
+    QVERIFY(loader != nullptr);
 
     QVERIFY(loader->item());
 
     QCOMPARE(loader->width(), 50.0);
     QCOMPARE(loader->height(), 60.0);
 
-    QMetaObject::invokeMethod(root, "switchComponent");
+    QMetaObject::invokeMethod(root.data(), "switchComponent");
 
     QCOMPARE(loader->width(), 80.0);
     QCOMPARE(loader->height(), 90.0);
-
-    delete root;
 }
 
 void tst_QQuickLoader::QTBUG_30183()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("/QTBUG_30183.qml"));
-    QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
-    QVERIFY(loader != 0);
+    QScopedPointer<QQuickLoader> loader(qobject_cast<QQuickLoader*>(component.create()));
+    QVERIFY(loader != nullptr);
     QCOMPARE(loader->width(), 240.0);
     QCOMPARE(loader->height(), 120.0);
 
@@ -1196,19 +1168,98 @@ void tst_QQuickLoader::QTBUG_30183()
     QVERIFY(rect);
     QCOMPARE(rect->width(), 240.0);
     QCOMPARE(rect->height(), 120.0);
+}
 
-    delete loader;
+void tst_QQuickLoader::transientWindow() // QTBUG-52944
+{
+    QQuickView view;
+    view.setSource(testFileUrl("itemLoaderWindow.qml"));
+    QQuickItem *root = qobject_cast<QQuickItem*>(view.rootObject());
+    QVERIFY(root);
+    QQuickLoader *loader = root->findChild<QQuickLoader *>();
+    QVERIFY(loader);
+    QTRY_COMPARE(loader->status(), QQuickLoader::Ready);
+    QQuickWindowQmlImpl *loadedWindow = qobject_cast<QQuickWindowQmlImpl *>(loader->item());
+    QVERIFY(loadedWindow);
+    QCOMPARE(loadedWindow->visibility(), QWindow::Hidden);
+
+    QElapsedTimer timer;
+    qint64 viewVisibleTime = -1;
+    qint64 loadedWindowVisibleTime = -1;
+    connect(&view, &QWindow::visibleChanged,
+            [&viewVisibleTime, &timer]() { viewVisibleTime = timer.elapsed(); } );
+    connect(loadedWindow, &QQuickWindowQmlImpl::visibilityChanged,
+            [&loadedWindowVisibleTime, &timer]() { loadedWindowVisibleTime = timer.elapsed(); } );
+    timer.start();
+    view.show();
+
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QTRY_VERIFY(loadedWindowVisibleTime >= 0);
+    QVERIFY(viewVisibleTime >= 0);
+
+    // now that we're sure they are both visible, which one became visible first?
+    qCDebug(lcTests) << "transient Window became visible" << (loadedWindowVisibleTime - viewVisibleTime) << "ms after the root Item";
+    QVERIFY((loadedWindowVisibleTime - viewVisibleTime) >= 0);
+
+    QWindowList windows = QGuiApplication::topLevelWindows();
+    QTRY_COMPARE(windows.size(), 2);
+
+    // TODO Ideally we would now close the outer window and make sure the transient window closes too.
+    // It works during manual testing because of QWindowPrivate::maybeQuitOnLastWindowClosed()
+    // but quitting an autotest doesn't make sense.
+}
+
+void tst_QQuickLoader::nestedTransientWindow() // QTBUG-52944
+{
+    QQuickView view;
+    view.setSource(testFileUrl("itemLoaderItemWindow.qml"));
+    QQuickItem *root = qobject_cast<QQuickItem*>(view.rootObject());
+    QVERIFY(root);
+    QQuickLoader *loader = root->findChild<QQuickLoader *>();
+    QVERIFY(loader);
+    QTRY_COMPARE(loader->status(), QQuickLoader::Ready);
+    QQuickItem *loadedItem = qobject_cast<QQuickItem *>(loader->item());
+    QVERIFY(loadedItem);
+    QQuickWindowQmlImpl *loadedWindow = loadedItem->findChild<QQuickWindowQmlImpl *>();
+    QVERIFY(loadedWindow);
+    QCOMPARE(loadedWindow->visibility(), QWindow::Hidden);
+
+    QElapsedTimer timer;
+    qint64 viewVisibleTime = -1;
+    qint64 loadedWindowVisibleTime = -1;
+    connect(&view, &QWindow::visibleChanged,
+            [&viewVisibleTime, &timer]() { viewVisibleTime = timer.elapsed(); } );
+    connect(loadedWindow, &QQuickWindowQmlImpl::visibilityChanged,
+            [&loadedWindowVisibleTime, &timer]() { loadedWindowVisibleTime = timer.elapsed(); } );
+    timer.start();
+    view.show();
+
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QTRY_VERIFY(loadedWindowVisibleTime >= 0);
+    QVERIFY(viewVisibleTime >= 0);
+
+    // now that we're sure they are both visible, which one became visible first?
+    qCDebug(lcTests) << "transient Window became visible" << (loadedWindowVisibleTime - viewVisibleTime) << "ms after the root Item";
+    QVERIFY((loadedWindowVisibleTime - viewVisibleTime) >= 0);
+
+    QWindowList windows = QGuiApplication::topLevelWindows();
+    QTRY_COMPARE(windows.size(), 2);
+
+    // TODO Ideally we would now close the outer window and make sure the transient window closes too.
+    // It works during manual testing because of QWindowPrivate::maybeQuitOnLastWindowClosed()
+    // but quitting an autotest doesn't make sense.
 }
 
 void tst_QQuickLoader::sourceComponentGarbageCollection()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("sourceComponentGarbageCollection.qml"));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
 
     QMetaObject::invokeMethod(obj.data(), "setSourceComponent");
     engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
     QSignalSpy spy(obj.data(), SIGNAL(loaded()));
 
@@ -1218,6 +1269,176 @@ void tst_QQuickLoader::sourceComponentGarbageCollection()
         QVERIFY(spy.wait());
 
     QCOMPARE(spy.count(), 1);
+}
+
+// QTBUG-51995
+void tst_QQuickLoader::bindings()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("bindings.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QQuickItem *game = object->property("game").value<QQuickItem*>();
+    QVERIFY(game);
+
+    QQuickLoader *loader = object->property("loader").value<QQuickLoader*>();
+    QVERIFY(loader);
+
+    QSignalSpy warningsSpy(&engine, SIGNAL(warnings(QList<QQmlError>)));
+
+    // Causes the Loader to become active
+    game->setState(QLatin1String("running"));
+    QTRY_VERIFY(loader->item());
+
+    // Causes the Loader to become inactive - should not cause binding errors
+    game->setState(QLatin1String("invalid"));
+    QTRY_VERIFY(!loader->item());
+
+    QString failureMessage;
+    if (!warningsSpy.isEmpty()) {
+        QDebug stream(&failureMessage);
+        stream << warningsSpy.first().first().value<QList<QQmlError>>();
+    }
+    QVERIFY2(warningsSpy.isEmpty(), qPrintable(failureMessage));
+}
+
+// QTBUG-47321
+void tst_QQuickLoader::parentErrors()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("parentErrors.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QQuickLoader *loader = object->property("loader").value<QQuickLoader*>();
+    QVERIFY(loader);
+
+    QSignalSpy warningsSpy(&engine, SIGNAL(warnings(QList<QQmlError>)));
+
+    // Give the loader a component
+    loader->setSourceComponent(object->property("component").value<QQmlComponent*>());
+    QTRY_VERIFY(loader->item());
+
+    // Clear the loader's component; should not cause binding errors
+    loader->setSourceComponent(nullptr);
+    QTRY_VERIFY(!loader->item());
+
+    QString failureMessage;
+    if (!warningsSpy.isEmpty()) {
+        QDebug stream(&failureMessage);
+        stream << warningsSpy.first().first().value<QList<QQmlError>>();
+    }
+    QVERIFY2(warningsSpy.isEmpty(), qPrintable(failureMessage));
+}
+
+class ObjectInRootContext: public QObject
+{
+    Q_OBJECT
+
+public:
+    int didIt = 0;
+
+public slots:
+    void doIt() {
+        didIt += 1;
+    }
+};
+
+void tst_QQuickLoader::rootContext()
+{
+    QQmlEngine engine;
+    ObjectInRootContext objectInRootContext;
+    engine.rootContext()->setContextProperty("objectInRootContext", &objectInRootContext);
+
+    QQmlComponent component(&engine, testFileUrl("rootContext.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QQuickLoader *loader = object->property("loader").value<QQuickLoader*>();
+    QVERIFY(loader);
+
+    QSignalSpy warningsSpy(&engine, SIGNAL(warnings(QList<QQmlError>)));
+
+    // Give the loader a component
+    loader->setSourceComponent(object->property("component").value<QQmlComponent*>());
+    QTRY_VERIFY(loader->active());
+    QTRY_VERIFY(loader->item());
+
+    QString failureMessage;
+    if (!warningsSpy.isEmpty()) {
+        QDebug stream(&failureMessage);
+        stream << warningsSpy.first().first().value<QList<QQmlError>>();
+    }
+    QVERIFY2(warningsSpy.isEmpty(), qPrintable(failureMessage));
+    QCOMPARE(objectInRootContext.didIt, 0);
+
+    // Deactivate the loader, which deletes the item.
+    // Check that a) there are no errors, and b) the objectInRootContext can still be resolved even
+    // after deactivating the loader. If it cannot, a ReferenceError for objectInRootContext is
+    // generated (and the 'doIt' counter in objectInRootContext will be 1 for the call before
+    // the deactivation).
+    loader->item()->setProperty("trigger", true);
+    QTRY_VERIFY(!loader->active());
+    QTRY_VERIFY(!loader->item());
+
+    if (!warningsSpy.isEmpty()) {
+        QDebug stream(&failureMessage);
+        stream << warningsSpy.first().first().value<QList<QQmlError>>();
+    }
+    QVERIFY2(warningsSpy.isEmpty(), qPrintable(failureMessage));
+    QCOMPARE(objectInRootContext.didIt, 2);
+}
+
+void tst_QQuickLoader::sourceURLKeepComponent()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(QByteArray(
+                      "import QtQuick 2.0\n"
+                      " Loader { id: loader\n }"),
+                      dataDirectoryUrl());
+
+    QScopedPointer<QQuickLoader> loader(qobject_cast<QQuickLoader*>(component.create()));
+    loader->setSource(testFileUrl("/Rect120x60.qml"));
+
+    QVERIFY(loader);
+    QVERIFY(loader->item());
+    QVERIFY(loader->sourceComponent());
+    QCOMPARE(loader->progress(), 1.0);
+
+    const QPointer<QQmlComponent> sourceComponent =  loader->sourceComponent();
+
+    //Ensure toggling active status does not recreate component
+    loader->setActive(false);
+    QVERIFY(!loader->item());
+    QVERIFY(loader->sourceComponent());
+    QCOMPARE(sourceComponent.data(), loader->sourceComponent());
+
+    loader->setActive(true);
+    QVERIFY(loader->item());
+    QVERIFY(loader->sourceComponent());
+    QCOMPARE(sourceComponent.data(), loader->sourceComponent());
+
+    loader->setActive(false);
+    QVERIFY(!loader->item());
+    QVERIFY(loader->sourceComponent());
+    QCOMPARE(sourceComponent.data(), loader->sourceComponent());
+
+    //Ensure changing source url causes component to be recreated when inactive
+    loader->setSource(testFileUrl("/BlueRect.qml"));
+
+    loader->setActive(true);
+    QVERIFY(loader->item());
+    QVERIFY(loader->sourceComponent());
+
+    const QPointer<QQmlComponent> newSourceComponent =  loader->sourceComponent();
+    QVERIFY(sourceComponent.data() != newSourceComponent.data());
+
+    //Ensure changing source url causes component to be recreated when active
+    loader->setSource(testFileUrl("/Rect120x60.qml"));
+    QVERIFY(loader->sourceComponent() != newSourceComponent.data());
+
 }
 
 QTEST_MAIN(tst_QQuickLoader)

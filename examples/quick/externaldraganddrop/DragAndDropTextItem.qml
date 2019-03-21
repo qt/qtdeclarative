@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -39,32 +49,36 @@
 ****************************************************************************/
 
 import QtQuick 2.2
+import "../shared" as Examples
 
 Rectangle {
     id: item
     property string display
-    color: "#EEE"
+    property alias dropEnabled: acceptDropCB.checked
+    color: dropArea.containsDrag ? "#CFC" : "#EEE"
+    ColorAnimation on color {
+        id: rejectAnimation
+        from: "#FCC"
+        to: "#EEE"
+        duration: 1000
+    }
     Text {
         anchors.fill: parent
         text: item.display
         wrapMode: Text.WordWrap
     }
     DropArea {
+        id: dropArea
         anchors.fill: parent
         keys: ["text/plain"]
-        onEntered: {
-            item.color = "#FCC"
+        onEntered: if (!acceptDropCB.checked) {
+            drag.accepted = false
+            rejectAnimation.start()
         }
-        onExited: {
-            item.color = "#EEE"
-        }
-        onDropped: {
-            item.color = "#EEE"
-            if (drop.hasText) {
-                if (drop.proposedAction == Qt.MoveAction || drop.proposedAction == Qt.CopyAction) {
-                    item.display = drop.text
-                    drop.acceptProposedAction()
-                }
+        onDropped: if (drop.hasText && acceptDropCB.checked) {
+            if (drop.proposedAction == Qt.MoveAction || drop.proposedAction == Qt.CopyAction) {
+                item.display = drop.text
+                drop.acceptProposedAction()
             }
         }
     }
@@ -81,12 +95,12 @@ Rectangle {
         Drag.hotSpot.y: 0
         Drag.mimeData: { "text/plain": item.display }
         Drag.dragType: Drag.Automatic
-        Drag.onDragStarted: {
-        }
-        Drag.onDragFinished: {
-            if (dropAction == Qt.MoveAction) {
-                item.display = ""
-            }
-        }
-    } // Item
+        Drag.onDragFinished: if (dropAction == Qt.MoveAction) item.display = ""
+    }
+    Examples.CheckBox {
+        id: acceptDropCB
+        anchors.right: parent.right
+        checked: true
+        text: "accept drop"
+    }
 }

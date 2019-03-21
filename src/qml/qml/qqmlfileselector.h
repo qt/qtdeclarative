@@ -54,8 +54,8 @@ class Q_QML_EXPORT QQmlFileSelector : public QObject
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlFileSelector)
 public:
-    explicit QQmlFileSelector(QQmlEngine *engine, QObject *parent = Q_NULLPTR);
-    ~QQmlFileSelector();
+    explicit QQmlFileSelector(QQmlEngine *engine, QObject *parent = nullptr);
+    ~QQmlFileSelector() override;
     QFileSelector *selector() const Q_DECL_NOTHROW;
     void setSelector(QFileSelector *selector);
     void setExtraSelectors(QStringList &strings); // TODO Qt6: remove

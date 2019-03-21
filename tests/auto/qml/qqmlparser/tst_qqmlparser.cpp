@@ -50,6 +50,10 @@ private slots:
     void qmlParser();
 #endif
     void invalidEscapeSequence();
+    void stringLiteral();
+    void noSubstitutionTemplateLiteral();
+    void templateLiteral();
+    void leadingSemicolonInClass();
 
 private:
     QStringList excludedDirs;
@@ -77,6 +81,13 @@ public:
             AST::Node *parent = nodeStack.last();
             const quint32 parentBegin = parent->firstSourceLocation().begin();
             const quint32 parentEnd = parent->lastSourceLocation().end();
+
+            if (node->firstSourceLocation().begin() < parentBegin)
+                qDebug() << "first source loc failed: node:" << node->kind << "at" << node->firstSourceLocation().startLine << "/" << node->firstSourceLocation().startColumn
+                         << "parent" << parent->kind << "at" << parent->firstSourceLocation().startLine << "/" << parent->firstSourceLocation().startColumn;
+            if (node->lastSourceLocation().end() > parentEnd)
+                qDebug() << "first source loc failed: node:" << node->kind << "at" << node->lastSourceLocation().startLine << "/" << node->lastSourceLocation().startColumn
+                         << "parent" << parent->kind << "at" << parent->lastSourceLocation().startLine << "/" << parent->lastSourceLocation().startColumn;
 
             QVERIFY(node->firstSourceLocation().begin() >= parentBegin);
             QVERIFY(node->lastSourceLocation().end() <= parentEnd);
@@ -183,13 +194,12 @@ void tst_qqmlparser::qmlParser()
     Lexer lexer(&engine);
     lexer.setCode(code, 1, qmlMode);
     Parser parser(&engine);
-    if (qmlMode)
-        parser.parse();
-    else
-        parser.parseProgram();
+    bool ok = qmlMode ? parser.parse() : parser.parseProgram();
 
-    check::Check chk;
-    chk(parser.rootNode());
+    if (ok) {
+        check::Check chk;
+        chk(parser.rootNode());
+    }
 }
 #endif
 
@@ -202,6 +212,76 @@ void tst_qqmlparser::invalidEscapeSequence()
     lexer.setCode(QLatin1String("\"\\"), 1);
     Parser parser(&engine);
     parser.parse();
+}
+
+void tst_qqmlparser::stringLiteral()
+{
+    using namespace QQmlJS;
+
+    Engine engine;
+    Lexer lexer(&engine);
+    QLatin1String code("'hello string'");
+    lexer.setCode(code , 1);
+    Parser parser(&engine);
+    QVERIFY(parser.parseExpression());
+    AST::ExpressionNode *expression = parser.expression();
+    QVERIFY(expression);
+    auto *literal = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(expression);
+    QVERIFY(literal);
+    QCOMPARE(literal->value, "hello string");
+    QCOMPARE(literal->firstSourceLocation().begin(), 0);
+    QCOMPARE(literal->lastSourceLocation().end(), code.size());
+}
+
+void tst_qqmlparser::noSubstitutionTemplateLiteral()
+{
+    using namespace QQmlJS;
+
+    Engine engine;
+    Lexer lexer(&engine);
+    QLatin1String code("`hello template`");
+    lexer.setCode(code, 1);
+    Parser parser(&engine);
+    QVERIFY(parser.parseExpression());
+    AST::ExpressionNode *expression = parser.expression();
+    QVERIFY(expression);
+
+    auto *literal = QQmlJS::AST::cast<QQmlJS::AST::TemplateLiteral *>(expression);
+    QVERIFY(literal);
+
+    QCOMPARE(literal->value, "hello template");
+    QCOMPARE(literal->firstSourceLocation().begin(), 0);
+    QCOMPARE(literal->lastSourceLocation().end(), code.size());
+}
+
+void tst_qqmlparser::templateLiteral()
+{
+    using namespace QQmlJS;
+
+    Engine engine;
+    Lexer lexer(&engine);
+    QLatin1String code("`one plus one equals ${1+1}!`");
+    lexer.setCode(code, 1);
+    Parser parser(&engine);
+    QVERIFY(parser.parseExpression());
+    AST::ExpressionNode *expression = parser.expression();
+    QVERIFY(expression);
+
+    auto *templateLiteral = QQmlJS::AST::cast<QQmlJS::AST::TemplateLiteral *>(expression);
+    QVERIFY(templateLiteral);
+
+    QCOMPARE(templateLiteral->firstSourceLocation().begin(), 0);
+    auto *e = templateLiteral->expression;
+    QVERIFY(e);
+}
+
+void tst_qqmlparser::leadingSemicolonInClass()
+{
+    QQmlJS::Engine engine;
+    QQmlJS::Lexer lexer(&engine);
+    lexer.setCode(QLatin1String("class X{;n(){}}"), 1);
+    QQmlJS::Parser parser(&engine);
+    QVERIFY(parser.parseProgram());
 }
 
 QTEST_MAIN(tst_qqmlparser)

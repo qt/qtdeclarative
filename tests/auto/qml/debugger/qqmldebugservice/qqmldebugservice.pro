@@ -7,8 +7,6 @@ HEADERS += ../shared/qqmldebugtestservice.h
 SOURCES += tst_qqmldebugservice.cpp \
            ../shared/qqmldebugtestservice.cpp
 
-INCLUDEPATH += ../shared
-include(../../../shared/util.pri)
 include(../shared/debugutil.pri)
 
 TESTDATA = data/*

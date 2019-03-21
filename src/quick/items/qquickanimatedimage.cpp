@@ -54,26 +54,26 @@ QT_BEGIN_NAMESPACE
 
 QQuickPixmap* QQuickAnimatedImagePrivate::infoForCurrentFrame(QQmlEngine *engine)
 {
-    if (!_movie)
-        return 0;
+    if (!movie)
+        return nullptr;
 
-    int current = _movie->currentFrameNumber();
+    int current = movie->currentFrameNumber();
     if (!frameMap.contains(current)) {
         QUrl requestedUrl;
-        QQuickPixmap *pixmap = 0;
-        if (engine && !_movie->fileName().isEmpty()) {
+        QQuickPixmap *pixmap = nullptr;
+        if (engine && !movie->fileName().isEmpty()) {
             requestedUrl.setUrl(QString::fromUtf8("quickanimatedimage://%1#%2")
-                                .arg(_movie->fileName())
+                                .arg(movie->fileName())
                                 .arg(current));
         }
         if (!requestedUrl.isEmpty()) {
             if (QQuickPixmap::isCached(requestedUrl, QSize(), QQuickImageProviderOptions()))
                 pixmap = new QQuickPixmap(engine, requestedUrl);
             else
-                pixmap = new QQuickPixmap(requestedUrl, _movie->currentImage());
+                pixmap = new QQuickPixmap(requestedUrl, movie->currentImage());
         } else {
             pixmap = new QQuickPixmap;
-            pixmap->setImage(_movie->currentImage());
+            pixmap->setImage(movie->currentImage());
         }
         frameMap.insert(current, pixmap);
     }
@@ -86,7 +86,7 @@ QQuickPixmap* QQuickAnimatedImagePrivate::infoForCurrentFrame(QQmlEngine *engine
     \instantiates QQuickAnimatedImage
     \inqmlmodule QtQuick
     \inherits Image
-    \brief Plays animations stored as a series of images
+    \brief Plays animations stored as a series of images.
     \ingroup qtquick-visual
 
     The AnimatedImage type extends the features of the \l Image type, providing
@@ -138,7 +138,7 @@ QQuickPixmap* QQuickAnimatedImagePrivate::infoForCurrentFrame(QQmlEngine *engine
 QQuickAnimatedImage::QQuickAnimatedImage(QQuickItem *parent)
     : QQuickImage(*(new QQuickAnimatedImagePrivate), parent)
 {
-    QObject::connect(this, &QQuickImageBase::cacheChanged, this, &QQuickAnimatedImage::onCacheChanged);
+    connect(this, &QQuickImageBase::cacheChanged, this, &QQuickAnimatedImage::onCacheChanged);
 }
 
 QQuickAnimatedImage::~QQuickAnimatedImage()
@@ -148,7 +148,7 @@ QQuickAnimatedImage::~QQuickAnimatedImage()
     if (d->reply)
         d->reply->deleteLater();
 #endif
-    delete d->_movie;
+    delete d->movie;
     qDeleteAll(d->frameMap);
     d->frameMap.clear();
 }
@@ -164,9 +164,9 @@ QQuickAnimatedImage::~QQuickAnimatedImage()
 bool QQuickAnimatedImage::isPaused() const
 {
     Q_D(const QQuickAnimatedImage);
-    if (!d->_movie)
+    if (!d->movie)
         return d->paused;
-    return d->_movie->state()==QMovie::Paused;
+    return d->movie->state()==QMovie::Paused;
 }
 
 void QQuickAnimatedImage::setPaused(bool pause)
@@ -174,11 +174,11 @@ void QQuickAnimatedImage::setPaused(bool pause)
     Q_D(QQuickAnimatedImage);
     if (pause == d->paused)
         return;
-    if (!d->_movie) {
+    if (!d->movie) {
         d->paused = pause;
         emit pausedChanged();
     } else {
-        d->_movie->setPaused(pause);
+        d->movie->setPaused(pause);
     }
 }
 
@@ -203,9 +203,9 @@ void QQuickAnimatedImage::setPaused(bool pause)
 bool QQuickAnimatedImage::isPlaying() const
 {
     Q_D(const QQuickAnimatedImage);
-    if (!d->_movie)
+    if (!d->movie)
         return d->playing;
-    return d->_movie->state()!=QMovie::NotRunning;
+    return d->movie->state()!=QMovie::NotRunning;
 }
 
 void QQuickAnimatedImage::setPlaying(bool play)
@@ -213,15 +213,15 @@ void QQuickAnimatedImage::setPlaying(bool play)
     Q_D(QQuickAnimatedImage);
     if (play == d->playing)
         return;
-    if (!d->_movie) {
+    if (!d->movie) {
         d->playing = play;
         emit playingChanged();
         return;
     }
     if (play)
-        d->_movie->start();
+        d->movie->start();
     else
-        d->_movie->stop();
+        d->movie->stop();
 }
 
 /*!
@@ -237,27 +237,53 @@ void QQuickAnimatedImage::setPlaying(bool play)
 int QQuickAnimatedImage::currentFrame() const
 {
     Q_D(const QQuickAnimatedImage);
-    if (!d->_movie)
-        return d->preset_currentframe;
-    return d->_movie->currentFrameNumber();
+    if (!d->movie)
+        return d->presetCurrentFrame;
+    return d->movie->currentFrameNumber();
 }
 
 void QQuickAnimatedImage::setCurrentFrame(int frame)
 {
     Q_D(QQuickAnimatedImage);
-    if (!d->_movie) {
-        d->preset_currentframe = frame;
+    if (!d->movie) {
+        d->presetCurrentFrame = frame;
         return;
     }
-    d->_movie->jumpToFrame(frame);
+    d->movie->jumpToFrame(frame);
 }
 
 int QQuickAnimatedImage::frameCount() const
 {
     Q_D(const QQuickAnimatedImage);
-    if (!d->_movie)
+    if (!d->movie)
         return 0;
-    return d->_movie->frameCount();
+    return d->movie->frameCount();
+}
+
+/*!
+    \qmlproperty real QtQuick::AnimatedImage::speed
+    \since QtQuick 2.11
+
+    This property holds the speed of the animation.
+
+    The speed is measured in percentage of the original animated image speed.
+    The default speed is 1.0 (original speed).
+*/
+qreal QQuickAnimatedImage::speed() const
+{
+    Q_D(const QQuickAnimatedImage);
+    return d->speed;
+}
+
+void QQuickAnimatedImage::setSpeed(qreal speed)
+{
+    Q_D(QQuickAnimatedImage);
+    if (d->speed != speed) {
+        d->speed = speed;
+        if (d->movie)
+            d->movie->setSpeed(qRound(speed * 100.0));
+        emit speedChanged();
+    }
 }
 
 void QQuickAnimatedImage::setSource(const QUrl &url)
@@ -269,7 +295,7 @@ void QQuickAnimatedImage::setSource(const QUrl &url)
 #if QT_CONFIG(qml_network)
     if (d->reply) {
         d->reply->deleteLater();
-        d->reply = 0;
+        d->reply = nullptr;
     }
 #endif
 
@@ -278,11 +304,7 @@ void QQuickAnimatedImage::setSource(const QUrl &url)
     d->frameMap.clear();
 
     d->oldPlaying = isPlaying();
-    if (d->_movie) {
-        delete d->_movie;
-        d->_movie = 0;
-    }
-
+    d->setMovie(nullptr);
     d->url = url;
     emit sourceChanged(d->url);
 
@@ -320,7 +342,7 @@ void QQuickAnimatedImage::load()
         QString lf = QQmlFile::urlToLocalFileOrQrc(loadUrl);
 
         if (!lf.isEmpty()) {
-            d->_movie = new QMovie(lf);
+            d->setMovie(new QMovie(lf));
             movieRequestFinished();
         } else {
 #if QT_CONFIG(qml_network)
@@ -336,10 +358,8 @@ void QQuickAnimatedImage::load()
             req.setAttribute(QNetworkRequest::HttpPipeliningAllowedAttribute, true);
 
             d->reply = qmlEngine(this)->networkAccessManager()->get(req);
-            QObject::connect(d->reply, SIGNAL(finished()),
-                            this, SLOT(movieRequestFinished()));
-            QObject::connect(d->reply, SIGNAL(downloadProgress(qint64,qint64)),
-                            this, SLOT(requestProgress(qint64,qint64)));
+            connect(d->reply, &QNetworkReply::finished, this, &QQuickAnimatedImage::movieRequestFinished);
+            connect(d->reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(requestProgress(qint64,qint64)));
 #endif
         }
     }
@@ -366,14 +386,13 @@ void QQuickAnimatedImage::movieRequestFinished()
         }
 
         d->redirectCount=0;
-        d->_movie = new QMovie(d->reply);
+        d->setMovie(new QMovie(d->reply));
     }
 #endif
 
-    if (!d->_movie->isValid()) {
+    if (!d->movie || !d->movie->isValid()) {
         qmlWarning(this) << "Error Reading Animated Image File " << d->url.toString();
-        delete d->_movie;
-        d->_movie = 0;
+        d->setMovie(nullptr);
         d->setImage(QImage());
         if (d->progress != 0) {
             d->progress = 0;
@@ -392,12 +411,11 @@ void QQuickAnimatedImage::movieRequestFinished()
         return;
     }
 
-    connect(d->_movie, SIGNAL(stateChanged(QMovie::MovieState)),
-            this, SLOT(playingStatusChanged()));
-    connect(d->_movie, SIGNAL(frameChanged(int)),
-            this, SLOT(movieUpdate()));
+    connect(d->movie, &QMovie::stateChanged, this, &QQuickAnimatedImage::playingStatusChanged);
+    connect(d->movie, &QMovie::frameChanged, this, &QQuickAnimatedImage::movieUpdate);
     if (d->cache)
-        d->_movie->setCacheMode(QMovie::CacheAll);
+        d->movie->setCacheMode(QMovie::CacheAll);
+    d->movie->setSpeed(qRound(d->speed * 100.0));
 
     d->status = Ready;
     emit statusChanged(d->status);
@@ -408,22 +426,24 @@ void QQuickAnimatedImage::movieRequestFinished()
     }
 
     bool pausedAtStart = d->paused;
-    if (d->playing) {
-        d->_movie->start();
+    if (d->movie && d->playing)
+        d->movie->start();
+    if (d->movie && pausedAtStart)
+        d->movie->setPaused(true);
+    if (d->movie && (d->paused || !d->playing)) {
+        d->movie->jumpToFrame(d->presetCurrentFrame);
+        d->presetCurrentFrame = 0;
     }
-    if (pausedAtStart)
-        d->_movie->setPaused(true);
-    if (d->paused || !d->playing) {
-        d->_movie->jumpToFrame(d->preset_currentframe);
-        d->preset_currentframe = 0;
-    }
-    d->setPixmap(*d->infoForCurrentFrame(qmlEngine(this)));
+
+    QQuickPixmap *pixmap = d->infoForCurrentFrame(qmlEngine(this));
+    if (pixmap)
+        d->setPixmap(*pixmap);
 
     if (isPlaying() != d->oldPlaying)
         emit playingChanged();
 
-    if (d->_movie)
-        d->currentSourceSize = d->_movie->currentPixmap().size();
+    if (d->movie)
+        d->currentSourceSize = d->movie->currentPixmap().size();
     else
         d->currentSourceSize = QSize(0, 0);
 
@@ -442,7 +462,7 @@ void QQuickAnimatedImage::movieUpdate()
         d->frameMap.clear();
     }
 
-    if (d->_movie) {
+    if (d->movie) {
         d->setPixmap(*d->infoForCurrentFrame(qmlEngine(this)));
         emit frameChanged();
     }
@@ -452,12 +472,12 @@ void QQuickAnimatedImage::playingStatusChanged()
 {
     Q_D(QQuickAnimatedImage);
 
-    if ((d->_movie->state() != QMovie::NotRunning) != d->playing) {
-        d->playing = (d->_movie->state() != QMovie::NotRunning);
+    if ((d->movie->state() != QMovie::NotRunning) != d->playing) {
+        d->playing = (d->movie->state() != QMovie::NotRunning);
         emit playingChanged();
     }
-    if ((d->_movie->state() == QMovie::Paused) != d->paused) {
-        d->paused = (d->_movie->state() == QMovie::Paused);
+    if ((d->movie->state() == QMovie::Paused) != d->paused) {
+        d->paused = (d->movie->state() == QMovie::Paused);
         emit pausedChanged();
     }
 }
@@ -468,13 +488,11 @@ void QQuickAnimatedImage::onCacheChanged()
     if (!cache()) {
         qDeleteAll(d->frameMap);
         d->frameMap.clear();
-        if (d->_movie) {
-            d->_movie->setCacheMode(QMovie::CacheNone);
-        }
+        if (d->movie)
+            d->movie->setCacheMode(QMovie::CacheNone);
     } else {
-        if (d->_movie) {
-            d->_movie->setCacheMode(QMovie::CacheAll);
-        }
+        if (d->movie)
+            d->movie->setCacheMode(QMovie::CacheAll);
     }
 }
 
@@ -488,6 +506,23 @@ void QQuickAnimatedImage::componentComplete()
 {
     QQuickItem::componentComplete(); // NOT QQuickImage
     load();
+}
+
+void QQuickAnimatedImagePrivate::setMovie(QMovie *m)
+{
+    if (movie == m)
+        return;
+    Q_Q(QQuickAnimatedImage);
+    const int oldFrameCount = q->frameCount();
+
+    if (movie) {
+        movie->disconnect();
+        movie->deleteLater();
+    }
+    movie = m;
+
+    if (oldFrameCount != q->frameCount())
+        emit q->frameCountChanged();
 }
 
 QT_END_NAMESPACE

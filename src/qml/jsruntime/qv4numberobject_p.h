@@ -79,8 +79,8 @@ struct NumberCtor: FunctionObject
 {
     V4_OBJECT2(NumberCtor, FunctionObject)
 
-    static void construct(const Managed *that, Scope &scope, CallData *callData);
-    static void call(const Managed *, Scope &scope, CallData *callData);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
+    static ReturnedValue virtualCall(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct NumberPrototype: NumberObject
@@ -88,16 +88,16 @@ struct NumberPrototype: NumberObject
     V4_PROTOTYPE(objectPrototype)
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static void method_isFinite(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_isInteger(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_isSafeInteger(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_isNaN(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toLocaleString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toFixed(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toExponential(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toPrecision(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_isFinite(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isInteger(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isSafeInteger(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isNaN(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toLocaleString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_valueOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toFixed(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toExponential(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toPrecision(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 

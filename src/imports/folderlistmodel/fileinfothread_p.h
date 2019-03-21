@@ -54,11 +54,14 @@
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
+#if QT_CONFIG(filesystemwatcher)
 #include <QFileSystemWatcher>
+#endif
 #include <QFileInfo>
 #include <QDir>
 
 #include "fileproperty_p.h"
+#include "qquickfolderlistmodel.h"
 
 class FileInfoThread : public QThread
 {
@@ -68,6 +71,7 @@ Q_SIGNALS:
     void directoryChanged(const QString &directory, const QList<FileProperty> &list) const;
     void directoryUpdated(const QString &directory, const QList<FileProperty> &list, int fromIndex, int toIndex) const;
     void sortFinished(const QList<FileProperty> &list) const;
+    void statusChanged(QQuickFolderListModel::Status status) const;
 
 public:
     FileInfoThread(QObject *parent = 0);

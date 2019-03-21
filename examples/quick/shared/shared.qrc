@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/shared">
+        <file>FlickrRssModel.qml</file>
         <file>LauncherList.qml</file>
         <file>SimpleLauncherDelegate.qml</file>
         <file>Button.qml</file>

@@ -42,145 +42,170 @@
 #include "qv4identifier_p.h"
 #include "qv4argumentsobject_p.h"
 #include "qv4string_p.h"
+#include "qv4iterator_p.h"
+#include "qv4propertykey_p.h"
 
 using namespace QV4;
 
-void ObjectIterator::init(const Object *o)
+void ForInIteratorPrototype::init(ExecutionEngine *)
 {
-    object->setM(o ? o->m() : 0);
-    current->setM(o ? o->m() : 0);
-
-    if (object->as<ArgumentsObject>()) {
-        Scope scope(engine);
-        Scoped<ArgumentsObject> (scope, object->asReturnedValue())->fullyCreate();
-    }
+    defineDefaultProperty(QStringLiteral("next"), method_next, 0);
 }
 
-void ObjectIterator::next(Value *name, uint *index, Property *pd, PropertyAttributes *attrs)
+PropertyKey ObjectIterator::next(Property *pd, PropertyAttributes *attrs)
 {
-    name->setM(0);
-    *index = UINT_MAX;
+    if (!object || !iterator)
+        return PropertyKey::invalid();
 
-    if (!object->as<Object>()) {
-        *attrs = PropertyAttributes();
-        return;
-    }
     Scope scope(engine);
-    ScopedObject o(scope);
-    ScopedString n(scope);
+    ScopedPropertyKey key(scope);
 
     while (1) {
-        Object *co = current->objectValue();
-        if (!co)
-            break;
-
-        while (1) {
-            co->advanceIterator(this, name, index, pd, attrs);
-            if (attrs->isEmpty())
-                break;
-            // check the property is not already defined earlier in the proto chain
-            if (co->heapObject() != object->heapObject()) {
-                o = object->as<Object>();
-                n = *name;
-                bool shadowed = false;
-                while (o->d() != current->heapObject()) {
-                    if ((!!n && o->hasOwnProperty(n)) ||
-                        (*index != UINT_MAX && o->hasOwnProperty(*index))) {
-                        shadowed = true;
-                        break;
-                    }
-                    o = o->prototype();
-                }
-                if (shadowed)
-                    continue;
-            }
-            return;
+        key = iterator->next(object, pd, attrs);
+        if (!key->isValid()) {
+            object = nullptr;
+            return key;
         }
-
-        if (flags & WithProtoChain)
-            current->setM(co->prototype());
-        else
-            current->setM(0);
-
-        arrayIndex = 0;
-        memberIndex = 0;
+        if ((!(flags & WithSymbols) && key->isSymbol()) ||
+            ((flags & EnumerableOnly) && !attrs->isEnumerable()))
+            continue;
+        return key;
     }
-    *attrs = PropertyAttributes();
 }
 
 ReturnedValue ObjectIterator::nextPropertyName(Value *value)
 {
-    Object *o = object->objectValue();
-    if (!o)
+    if (!object)
         return Encode::null();
 
     PropertyAttributes attrs;
-    uint index;
     Scope scope(engine);
     ScopedProperty p(scope);
-    ScopedString name(scope);
-    next(name.getRef(), &index, p, &attrs);
-    if (attrs.isEmpty())
+    ScopedPropertyKey key(scope, next(p, &attrs));
+    if (!key->isValid())
         return Encode::null();
 
-    *value = o->getValue(p->value, attrs);
-
-    if (!!name)
-        return name->asReturnedValue();
-    Q_ASSERT(index < UINT_MAX);
-    return Encode(index);
+    *value = object->getValue(p->value, attrs);
+    if (key->isArrayIndex())
+        return Encode(key->asArrayIndex());
+    Q_ASSERT(key->isStringOrSymbol());
+    return key->asStringOrSymbol()->asReturnedValue();
 }
 
 ReturnedValue ObjectIterator::nextPropertyNameAsString(Value *value)
 {
-    Object *o = object->objectValue();
-    if (!o)
+    if (!object)
         return Encode::null();
 
     PropertyAttributes attrs;
-    uint index;
     Scope scope(engine);
     ScopedProperty p(scope);
-    ScopedString name(scope);
-    next(name.getRef(), &index, p, &attrs);
-    if (attrs.isEmpty())
+    ScopedPropertyKey key(scope, next(p, &attrs));
+    if (!key->isValid())
         return Encode::null();
 
-    *value = o->getValue(p->value, attrs);
+    *value = object->getValue(p->value, attrs);
 
-    if (!!name)
-        return name->asReturnedValue();
-    Q_ASSERT(index < UINT_MAX);
-    return Encode(engine->newString(QString::number(index)));
+    return key->toStringOrSymbol(engine)->asReturnedValue();
 }
 
 ReturnedValue ObjectIterator::nextPropertyNameAsString()
 {
-    if (!object->as<Object>())
+    if (!object)
         return Encode::null();
 
     PropertyAttributes attrs;
-    uint index;
     Scope scope(engine);
-    ScopedProperty p(scope);
-    ScopedString name(scope);
-    next(name.getRef(), &index, p, &attrs);
-    if (attrs.isEmpty())
+    ScopedPropertyKey key(scope, next(nullptr, &attrs));
+    if (!key->isValid())
         return Encode::null();
 
-    if (!!name)
-        return name->asReturnedValue();
-    Q_ASSERT(index < UINT_MAX);
-    return Encode(engine->newString(QString::number(index)));
+    return key->toStringOrSymbol(engine)->asReturnedValue();
 }
 
 
-DEFINE_OBJECT_VTABLE(ForEachIteratorObject);
+DEFINE_OBJECT_VTABLE(ForInIteratorObject);
 
-void ForEachIteratorObject::markObjects(Heap::Base *that, MarkStack *markStack)
+void Heap::ForInIteratorObject::markObjects(Heap::Base *that, MarkStack *markStack)
 {
-    ForEachIteratorObject::Data *o = static_cast<ForEachIteratorObject::Data *>(that);
+    ForInIteratorObject *o = static_cast<ForInIteratorObject *>(that);
+    if (o->object)
+        o->object->mark(markStack);
+    if (o->current)
+        o->current->mark(markStack);
     o->workArea[0].mark(markStack);
     o->workArea[1].mark(markStack);
     Object::markObjects(that, markStack);
+}
+
+void Heap::ForInIteratorObject::destroy()
+{
+    delete iterator;
+}
+
+ReturnedValue ForInIteratorPrototype::method_next(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    const ForInIteratorObject *forIn = static_cast<const ForInIteratorObject *>(thisObject);
+    Q_ASSERT(forIn);
+    Scope scope(b);
+
+    ScopedPropertyKey key(scope, forIn->nextProperty());
+    bool done = false;
+    if (!key->isValid())
+        done = true;
+    ScopedStringOrSymbol s(scope, key->toStringOrSymbol(scope.engine));
+    return IteratorPrototype::createIterResultObject(scope.engine, s, done);
+}
+
+
+PropertyKey ForInIteratorObject::nextProperty() const
+{
+    if (!d()->current)
+        return PropertyKey::invalid();
+
+    Scope scope(this);
+    ScopedObject c(scope, d()->current);
+    ScopedObject t(scope, d()->target);
+    ScopedObject o(scope);
+    ScopedProperty p(scope);
+    ScopedPropertyKey key(scope);
+    PropertyAttributes attrs;
+
+    while (1) {
+        while (1) {
+            key = d()->iterator->next(t, p, &attrs);
+            if (!key->isValid())
+                break;
+            if (!attrs.isEnumerable() || key->isSymbol())
+                continue;
+            // check the property is not already defined earlier in the proto chain
+            if (d()->current != d()->object) {
+                o = d()->object;
+                bool shadowed = false;
+                while (o->d() != c->heapObject()) {
+                    if (o->getOwnProperty(key) != Attr_Invalid) {
+                        shadowed = true;
+                        break;
+                    }
+                    o = o->getPrototypeOf();
+                }
+                if (shadowed)
+                    continue;
+            }
+            return key;
+        }
+
+        c = c->getPrototypeOf();
+        d()->current.set(scope.engine, c->d());
+        if (!c)
+            break;
+        delete d()->iterator;
+        d()->iterator = c->ownPropertyKeys(t.getRef());
+        d()->target.set(scope.engine, t->d());
+        if (!d()->iterator) {
+            scope.engine->throwTypeError();
+            return PropertyKey::invalid();
+        }
+    }
+    return PropertyKey::invalid();
 }

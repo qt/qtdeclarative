@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qqmlvaluetype_p.h"
-#include "qqmlmetatype_p.h"
 
 #include <private/qqmlglobal_p.h>
 #include <QtCore/qdebug.h>
@@ -67,8 +66,7 @@ struct QQmlValueTypeFactoryImpl
 
 QQmlValueTypeFactoryImpl::QQmlValueTypeFactoryImpl()
 {
-    for (unsigned int ii = 0; ii < QVariant::UserType; ++ii)
-        valueTypes[ii] = 0;
+    std::fill_n(valueTypes, int(QVariant::UserType), nullptr);
 
     // See types wrapped in qqmlmodelindexvaluetype_p.h
     qRegisterMetaType<QItemSelectionRange>();
@@ -83,7 +81,7 @@ QQmlValueTypeFactoryImpl::~QQmlValueTypeFactoryImpl()
 bool QQmlValueTypeFactoryImpl::isValueType(int idx)
 {
     if (idx >= (int)QVariant::UserType) {
-        return (valueType(idx) != 0);
+        return (valueType(idx) != nullptr);
     } else if (idx >= 0
             && idx != QVariant::StringList
             && idx != QMetaType::QObjectStar
@@ -130,7 +128,7 @@ const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
     QMetaType metaType(t);
     if (metaType.flags() & QMetaType::IsGadget)
         return metaType.metaObject();
-    return 0;
+    return nullptr;
 }
 
 QQmlValueType *QQmlValueTypeFactoryImpl::valueType(int idx)
@@ -141,7 +139,7 @@ QQmlValueType *QQmlValueTypeFactoryImpl::valueType(int idx)
 
         QHash<int, QQmlValueType *>::iterator it = userTypes.find(idx);
         if (it == userTypes.end()) {
-            QQmlValueType *vt = 0;
+            QQmlValueType *vt = nullptr;
             if (const QMetaObject *mo = metaObjectForMetaType(idx))
                 vt = new QQmlValueType(idx, mo);
             it = userTypes.insert(idx, vt);
@@ -192,7 +190,6 @@ void QQmlValueTypeFactory::registerValueTypes(const char *uri, int versionMajor,
 
 QQmlValueType::QQmlValueType(int typeId, const QMetaObject *gadgetMetaObject)
     : gadgetPtr(QMetaType::create(typeId))
-    , typeId(typeId)
     , metaType(typeId)
 {
     QObjectPrivate *op = QObjectPrivate::get(this);
@@ -209,14 +206,14 @@ QQmlValueType::~QQmlValueType()
 {
     QObjectPrivate *op = QObjectPrivate::get(this);
     Q_ASSERT(op->metaObject == this);
-    op->metaObject = 0;
+    op->metaObject = nullptr;
     ::free(const_cast<QMetaObject *>(_metaObject));
     metaType.destroy(gadgetPtr);
 }
 
 void QQmlValueType::read(QObject *obj, int idx)
 {
-    void *a[] = { gadgetPtr, 0 };
+    void *a[] = { gadgetPtr, nullptr };
     QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
 }
 
@@ -224,19 +221,19 @@ void QQmlValueType::write(QObject *obj, int idx, QQmlPropertyData::WriteFlags fl
 {
     Q_ASSERT(gadgetPtr);
     int status = -1;
-    void *a[] = { gadgetPtr, 0, &status, &flags };
+    void *a[] = { gadgetPtr, nullptr, &status, &flags };
     QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
 }
 
 QVariant QQmlValueType::value()
 {
     Q_ASSERT(gadgetPtr);
-    return QVariant(typeId, gadgetPtr);
+    return QVariant(metaType.id(), gadgetPtr);
 }
 
 void QQmlValueType::setValue(const QVariant &value)
 {
-    Q_ASSERT(typeId == value.userType());
+    Q_ASSERT(metaType.id() == value.userType());
     metaType.destruct(gadgetPtr);
     metaType.construct(gadgetPtr, value.constData());
 }
@@ -521,38 +518,33 @@ void QQmlEasingValueType::setBezierCurve(const QVariantList &customCurveVariant)
     if (customCurveVariant.isEmpty())
         return;
 
-    QVariantList variantList = customCurveVariant;
-    if ((variantList.count() % 6) == 0) {
-        bool allRealsOk = true;
-        QVector<qreal> reals;
-        const int variantListCount = variantList.count();
-        reals.reserve(variantListCount);
-        for (int i = 0; i < variantListCount; i++) {
-            bool ok;
-            const qreal real = variantList.at(i).toReal(&ok);
-            reals.append(real);
-            if (!ok)
-                allRealsOk = false;
-        }
-        if (allRealsOk) {
-            QEasingCurve newEasingCurve(QEasingCurve::BezierSpline);
-            for (int i = 0; i < reals.count() / 6; i++) {
-                const qreal c1x = reals.at(i * 6);
-                const qreal c1y = reals.at(i * 6 + 1);
-                const qreal c2x = reals.at(i * 6 + 2);
-                const qreal c2y = reals.at(i * 6 + 3);
-                const qreal c3x = reals.at(i * 6 + 4);
-                const qreal c3y = reals.at(i * 6 + 5);
+    if ((customCurveVariant.count() % 6) != 0)
+        return;
 
-                const QPointF c1(c1x, c1y);
-                const QPointF c2(c2x, c2y);
-                const QPointF c3(c3x, c3y);
+    auto convert = [](const QVariant &v, qreal &r) {
+        bool ok;
+        r = v.toReal(&ok);
+        return ok;
+    };
 
-                newEasingCurve.addCubicBezierSegment(c1, c2, c3);
-                v = newEasingCurve;
-            }
-        }
+    QEasingCurve newEasingCurve(QEasingCurve::BezierSpline);
+    for (int i = 0, ei = customCurveVariant.size(); i < ei; i += 6) {
+        qreal c1x, c1y, c2x, c2y, c3x, c3y;
+        if (!convert(customCurveVariant.at(i    ), c1x)) return;
+        if (!convert(customCurveVariant.at(i + 1), c1y)) return;
+        if (!convert(customCurveVariant.at(i + 2), c2x)) return;
+        if (!convert(customCurveVariant.at(i + 3), c2y)) return;
+        if (!convert(customCurveVariant.at(i + 4), c3x)) return;
+        if (!convert(customCurveVariant.at(i + 5), c3y)) return;
+
+        const QPointF c1(c1x, c1y);
+        const QPointF c2(c2x, c2y);
+        const QPointF c3(c3x, c3y);
+
+        newEasingCurve.addCubicBezierSegment(c1, c2, c3);
     }
+
+    v = newEasingCurve;
 }
 
 QVariantList QQmlEasingValueType::bezierCurve() const

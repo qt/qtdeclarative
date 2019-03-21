@@ -53,10 +53,10 @@ class Q_QML_EXPORT QQmlApplicationEngine : public QQmlEngine
 {
     Q_OBJECT
 public:
-    QQmlApplicationEngine(QObject *parent = Q_NULLPTR);
-    QQmlApplicationEngine(const QUrl &url, QObject *parent = Q_NULLPTR);
-    QQmlApplicationEngine(const QString &filePath, QObject *parent = Q_NULLPTR);
-    ~QQmlApplicationEngine();
+    QQmlApplicationEngine(QObject *parent = nullptr);
+    QQmlApplicationEngine(const QUrl &url, QObject *parent = nullptr);
+    QQmlApplicationEngine(const QString &filePath, QObject *parent = nullptr);
+    ~QQmlApplicationEngine() override;
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QList<QObject*> rootObjects(); // ### Qt 6: remove

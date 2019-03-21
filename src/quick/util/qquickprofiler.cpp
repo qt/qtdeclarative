@@ -47,12 +47,12 @@
 QT_BEGIN_NAMESPACE
 
 // instance will be set, unset in constructor. Allows static methods to be inlined.
-QQuickProfiler *QQuickProfiler::s_instance = 0;
+QQuickProfiler *QQuickProfiler::s_instance = nullptr;
 quint64 QQuickProfiler::featuresEnabled = 0;
 
 void QQuickProfiler::initialize(QObject *parent)
 {
-    Q_ASSERT(s_instance == 0);
+    Q_ASSERT(s_instance == nullptr);
     s_instance = new QQuickProfiler(parent);
 }
 
@@ -99,7 +99,7 @@ QQuickProfiler::~QQuickProfiler()
 {
     QMutexLocker lock(&m_dataMutex);
     featuresEnabled = 0;
-    s_instance = 0;
+    s_instance = nullptr;
 }
 
 void QQuickProfiler::startProfilingImpl(quint64 features)
@@ -116,9 +116,8 @@ void QQuickProfiler::stopProfilingImpl()
     m_data.clear();
 }
 
-void QQuickProfiler::reportDataImpl(bool trackLocations)
+void QQuickProfiler::reportDataImpl()
 {
-    Q_UNUSED(trackLocations);
     QMutexLocker lock(&m_dataMutex);
     emit dataReady(m_data);
     m_data.clear();

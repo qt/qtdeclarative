@@ -47,6 +47,10 @@
 #include <QtCore/qmutex.h>
 #include <QtGui/qopenglfunctions.h>
 
+#ifndef GL_TEXTURE_EXTERNAL_OES
+#define GL_TEXTURE_EXTERNAL_OES 0x8D65
+#endif
+
 QT_BEGIN_NAMESPACE
 
 static bool hasAtlasTexture(const QVector<QSGTextureProvider *> &textureProviders)
@@ -63,16 +67,16 @@ class QQuickCustomMaterialShader : public QSGMaterialShader
 {
 public:
     QQuickCustomMaterialShader(const QQuickOpenGLShaderEffectMaterialKey &key, const QVector<QByteArray> &attributes);
-    void deactivate() Q_DECL_OVERRIDE;
-    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) Q_DECL_OVERRIDE;
-    char const *const *attributeNames() const Q_DECL_OVERRIDE;
+    void deactivate() override;
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
+    char const *const *attributeNames() const override;
 
 protected:
     friend class QQuickOpenGLShaderEffectNode;
 
-    void compile() Q_DECL_OVERRIDE;
-    const char *vertexShader() const Q_DECL_OVERRIDE;
-    const char *fragmentShader() const Q_DECL_OVERRIDE;
+    void compile() override;
+    const char *vertexShader() const override;
+    const char *fragmentShader() const override;
 
     const QQuickOpenGLShaderEffectMaterialKey m_key;
     QVector<QByteArray> m_attributes;
@@ -107,7 +111,7 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
 {
     typedef QQuickOpenGLShaderEffectMaterial::UniformData UniformData;
 
-    Q_ASSERT(newEffect != 0);
+    Q_ASSERT(newEffect != nullptr);
 
     QQuickOpenGLShaderEffectMaterial *material = static_cast<QQuickOpenGLShaderEffectMaterial *>(newEffect);
     if (!material->m_emittedLogChanged && material->m_node) {
@@ -124,7 +128,7 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
             for (int i = 0; i < material->uniforms[shaderType].size(); ++i) {
                 const UniformData &d = material->uniforms[shaderType].at(i);
                 QByteArray name = d.name;
-                if (d.specialType == UniformData::Sampler) {
+                if (d.specialType == UniformData::Sampler || d.specialType == UniformData::SamplerExternal) {
                     program()->setUniformValue(d.name.constData(), textureProviderIndex++);
                     // We don't need to store the sampler uniform locations, since their values
                     // only need to be set once. Look for the "qt_SubRect_" uniforms instead.
@@ -143,7 +147,7 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
         for (int i = 0; i < material->uniforms[shaderType].size(); ++i) {
             const UniformData &d = material->uniforms[shaderType].at(i);
             int loc = m_uniformLocs[shaderType].at(i);
-            if (d.specialType == UniformData::Sampler) {
+            if (d.specialType == UniformData::Sampler || d.specialType == UniformData::SamplerExternal) {
                 int idx = textureProviderIndex++;
                 functions->glActiveTexture(GL_TEXTURE0 + idx);
                 if (QSGTextureProvider *provider = material->textureProviders.at(idx)) {
@@ -164,7 +168,10 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
                         continue;
                     }
                 }
-                functions->glBindTexture(GL_TEXTURE_2D, 0);
+                if (d.specialType == UniformData::Sampler)
+                    functions->glBindTexture(GL_TEXTURE_2D, 0);
+                else if (d.specialType == UniformData::SamplerExternal)
+                    functions->glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
             } else if (d.specialType == UniformData::Opacity) {
                 program()->setUniformValue(loc, state.opacity());
             } else if (d.specialType == UniformData::Matrix) {
@@ -232,7 +239,7 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
     functions->glActiveTexture(GL_TEXTURE0);
 
     const QQuickOpenGLShaderEffectMaterial *oldMaterial = static_cast<const QQuickOpenGLShaderEffectMaterial *>(oldEffect);
-    if (oldEffect == 0 || material->cullMode != oldMaterial->cullMode) {
+    if (oldEffect == nullptr || material->cullMode != oldMaterial->cullMode) {
         switch (material->cullMode) {
         case QQuickShaderEffect::FrontFaceCulling:
             functions->glEnable(GL_CULL_FACE);
@@ -359,6 +366,7 @@ class QQuickOpenGLShaderEffectMaterialCache : public QObject
 public:
     static QQuickOpenGLShaderEffectMaterialCache *get(bool create = true) {
         QOpenGLContext *ctx = QOpenGLContext::currentContext();
+        Q_ASSERT(ctx);
         QQuickOpenGLShaderEffectMaterialCache *me = ctx->findChild<QQuickOpenGLShaderEffectMaterialCache *>(QStringLiteral("__qt_ShaderEffectCache"), Qt::FindDirectChildrenOnly);
         if (!me && create) {
             me = new QQuickOpenGLShaderEffectMaterialCache();
@@ -396,7 +404,7 @@ bool QQuickOpenGLShaderEffectMaterial::UniformData::operator == (const UniformDa
     if (name != other.name)
         return false;
 
-    if (specialType == UniformData::Sampler) {
+    if (specialType == UniformData::Sampler || specialType == UniformData::SamplerExternal) {
         // We can't check the source objects as these live in the GUI thread,
         // so return true here and rely on the textureProvider check for
         // equality of these..

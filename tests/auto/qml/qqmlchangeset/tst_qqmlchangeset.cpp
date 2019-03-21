@@ -26,6 +26,7 @@
 **
 ****************************************************************************/
 #include <qtest.h>
+#include <qrandom.h>
 #include <private/qqmlchangeset_p.h>
 
 class tst_qqmlchangeset : public QObject
@@ -1462,22 +1463,18 @@ void tst_qqmlchangeset::debug()
 
 void tst_qqmlchangeset::random_data()
 {
-    QTest::addColumn<int>("seed");
     QTest::addColumn<int>("combinations");
     QTest::addColumn<int>("depth");
-    QTest::newRow("1*5") << 32 << 1 << 5;
-    QTest::newRow("2*2") << 32 << 2 << 2;
-    QTest::newRow("3*2") << 32 << 3 << 2;
-    QTest::newRow("3*5") << 32 << 3 << 5;
+    QTest::newRow("1*5") << 1 << 5;
+    QTest::newRow("2*2") << 2 << 2;
+    QTest::newRow("3*2") << 3 << 2;
+    QTest::newRow("3*5") << 3 << 5;
 }
 
 void tst_qqmlchangeset::random()
 {
-    QFETCH(int, seed);
     QFETCH(int, combinations);
     QFETCH(int, depth);
-
-    qsrand(seed);
 
     int failures = 0;
     for (int i = 0; i < 20000; ++i) {
@@ -1490,27 +1487,27 @@ void tst_qqmlchangeset::random()
         for (int j = 0; j < combinations; ++j) {
             QQmlChangeSet set;
             for (int k = 0; k < depth; ++k) {
-                switch (-(qrand() % 3)) {
+                switch (-QRandomGenerator::global()->bounded(3)) {
                 case InsertOp: {
-                    int index = qrand() % (modelCount + 1);
-                    int count = qrand() % 5 + 1;
+                    int index = QRandomGenerator::global()->bounded(modelCount + 1);
+                    int count = QRandomGenerator::global()->bounded(5) + 1;
                     set.insert(index, count);
                     input.append(Insert(index, count));
                     modelCount += count;
                     break;
                 }
                 case RemoveOp: {
-                    const int index = qrand() % (modelCount + 1);
-                    const int count = qrand() % (modelCount - index + 1);
+                    const int index = QRandomGenerator::global()->bounded(modelCount + 1);
+                    const int count = QRandomGenerator::global()->bounded(modelCount - index + 1);
                     set.remove(index, count);
                     input.append(Remove(index, count));
                     modelCount -= count;
                     break;
                 }
                 case MoveOp: {
-                    const int from = qrand() % (modelCount + 1);
-                    const int count = qrand() % (modelCount - from + 1);
-                    const int to = qrand() % (modelCount - count + 1);
+                    const int from = QRandomGenerator::global()->bounded(modelCount + 1);
+                    const int count = QRandomGenerator::global()->bounded(modelCount - from + 1);
+                    const int to = QRandomGenerator::global()->bounded(modelCount - count + 1);
                     const int moveId = moveCount++;
                     set.move(from, to, count, moveId);
                     input.append(Move(from, to, count, moveId));

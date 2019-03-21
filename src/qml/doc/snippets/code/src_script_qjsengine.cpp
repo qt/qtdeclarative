@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -48,7 +58,7 @@ QJSValue three = myEngine.evaluate("1 + 2");
 QJSValue fun = myEngine.evaluate("(function(a, b) { return a + b; })");
 QJSValueList args;
 args << 1 << 2;
-QJSValue threeAgain = fun.call(QJSValue(), args);
+QJSValue threeAgain = fun.call(args);
 //! [1]
 
 
@@ -91,3 +101,36 @@ myEngine.evaluate("button.checkable = true");
 qDebug() << scriptButton.property("checkable").toBool();
 scriptButton.property("show").call(); // call the show() slot
 //! [5]
+
+
+//! [6]
+QJSEngine engine;
+
+QObject *myQObject = new QObject();
+myQObject->setProperty("dynamicProperty", 3);
+
+QJSValue myScriptQObject = engine.newQObject(myQObject);
+engine.globalObject().setProperty("myObject", myScriptQObject);
+
+qDebug() << engine.evaluate("myObject.dynamicProperty").toInt();
+//! [6]
+
+
+//! [7]
+class MyObject : public QObject
+{
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE MyObject() {}
+};
+//! [7]
+
+//! [8]
+QJSValue jsMetaObject = engine.newQMetaObject(&MyObject::staticMetaObject);
+engine.globalObject().setProperty("MyObject", jsMetaObject);
+//! [8]
+
+//! [9]
+engine.evaluate("var myObject = new MyObject()");
+//! [9]

@@ -124,8 +124,8 @@ public:
 
     QRectF rect() const;
 
-private:
     const QPixmap &pixmap() const;
+private:
 
     QRectF m_targetRect;
     QRectF m_innerTargetRect;
@@ -136,6 +136,7 @@ private:
     QPixmap m_cachedMirroredPixmap;
 
     bool m_mirror;
+    bool m_textureIsLayer;
     bool m_smooth;
     bool m_tileHorizontal;
     bool m_tileVertical;

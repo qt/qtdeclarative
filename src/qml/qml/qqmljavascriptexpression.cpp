@@ -46,6 +46,7 @@
 #include <private/qv4script_p.h>
 #include <private/qv4errorobject_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4jscall_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
@@ -92,12 +93,10 @@ void QQmlDelayedError::catchJavaScriptException(QV4::ExecutionEngine *engine)
 
 
 QQmlJavaScriptExpression::QQmlJavaScriptExpression()
-    : m_error(0),
-      m_context(0),
-      m_prevExpression(0),
-      m_nextExpression(0),
-      m_v4Function(0),
-      m_sourceLocation(0)
+    :  m_context(nullptr),
+      m_prevExpression(nullptr),
+      m_nextExpression(nullptr),
+      m_v4Function(nullptr)
 {
 }
 
@@ -111,10 +110,9 @@ QQmlJavaScriptExpression::~QQmlJavaScriptExpression()
 
     clearActiveGuards();
     clearPermanentGuards();
+    clearError();
     if (m_scopeObject.isT2()) // notify DeleteWatcher of our deletion.
-        m_scopeObject.asT2()->_s = 0;
-
-    delete m_sourceLocation;
+        m_scopeObject.asT2()->_s = nullptr;
 }
 
 void QQmlJavaScriptExpression::setNotifyOnValueChanged(bool v)
@@ -135,18 +133,9 @@ void QQmlJavaScriptExpression::resetNotifyOnValueChanged()
 
 QQmlSourceLocation QQmlJavaScriptExpression::sourceLocation() const
 {
-    if (m_sourceLocation)
-        return *m_sourceLocation;
     if (m_v4Function)
         return m_v4Function->sourceLocation();
     return QQmlSourceLocation();
-}
-
-void QQmlJavaScriptExpression::setSourceLocation(const QQmlSourceLocation &location)
-{
-    if (m_sourceLocation)
-        delete m_sourceLocation;
-    m_sourceLocation = new QQmlSourceLocation(location);
 }
 
 void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
@@ -155,8 +144,8 @@ void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
         *m_prevExpression = m_nextExpression;
         if (m_nextExpression)
             m_nextExpression->m_prevExpression = m_prevExpression;
-        m_prevExpression = 0;
-        m_nextExpression = 0;
+        m_prevExpression = nullptr;
+        m_nextExpression = nullptr;
     }
 
     m_context = context;
@@ -179,9 +168,16 @@ void QQmlJavaScriptExpression::refresh()
 {
 }
 
+QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(bool *isUndefined)
+{
+    QV4::ExecutionEngine *v4 = m_context->engine->handle();
+    QV4::Scope scope(v4);
+    QV4::JSCallData jsCall(scope);
 
+    return evaluate(jsCall.callData(), isUndefined);
+}
 
-void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefined, QV4::Scope &scope)
+QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefined)
 {
     Q_ASSERT(m_context && m_context->engine);
 
@@ -189,7 +185,7 @@ void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefin
     if (!v4Function) {
         if (isUndefined)
             *isUndefined = true;
-        return;
+        return QV4::Encode::undefined();
     }
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(m_context->engine);
@@ -202,26 +198,27 @@ void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefin
     QQmlPropertyCapture capture(m_context->engine, this, &watcher);
 
     QQmlPropertyCapture *lastPropertyCapture = ep->propertyCapture;
-    ep->propertyCapture = notifyOnValueChanged() ? &capture : 0;
+    ep->propertyCapture = notifyOnValueChanged() ? &capture : nullptr;
 
 
     if (notifyOnValueChanged())
         capture.guards.copyAndClearPrepend(activeGuards);
 
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
-    scope.result = QV4::Primitive::undefinedValue();
+    QV4::ExecutionEngine *v4 = m_context->engine->handle();
     callData->thisObject = v4->globalObject;
     if (scopeObject()) {
-        QV4::ScopedValue value(scope, QV4::QObjectWrapper::wrap(v4, scopeObject()));
-        if (value->isObject())
-            callData->thisObject = value;
+         QV4::ReturnedValue scope = QV4::QObjectWrapper::wrap(v4, scopeObject());
+        if (QV4::Value::fromReturnedValue(scope).isObject())
+            callData->thisObject = scope;
     }
 
-    QV4::ExecutionContext *outer = static_cast<QV4::ExecutionContext *>(m_qmlScope.valueRef());
-    if (v4Function->canUseSimpleFunction()) {
-        outer->simpleCall(scope, callData, v4Function);
-    } else {
-        outer->call(scope, callData, v4Function);
+    Q_ASSERT(m_qmlScope.valueRef());
+    QV4::ReturnedValue res = v4Function->call(&callData->thisObject, callData->args, callData->argc(), static_cast<QV4::ExecutionContext *>(m_qmlScope.valueRef()));
+    QV4::Scope scope(v4);
+    QV4::ScopedValue result(scope, res);
+    if (v4Function->hasQmlDependencies) {
+        QV4::Heap::QmlContext *qc = m_qmlScope.as<QV4::QmlContext>()->d();
+        QQmlPropertyCapture::registerQmlDependencies(qc, v4, v4Function->compiledFunction);
     }
 
     if (scope.hasException()) {
@@ -233,7 +230,7 @@ void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefin
             *isUndefined = true;
     } else {
         if (isUndefined)
-            *isUndefined = scope.result.isUndefined();
+            *isUndefined = result->isUndefined();
 
         if (!watcher.wasDeleted() && hasDelayedError())
             delayedError()->clearError();
@@ -243,13 +240,18 @@ void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefin
         for (int ii = 0; ii < capture.errorString->count(); ++ii)
             qWarning("%s", qPrintable(capture.errorString->at(ii)));
         delete capture.errorString;
-        capture.errorString = 0;
+        capture.errorString = nullptr;
     }
 
     while (QQmlJavaScriptExpressionGuard *g = capture.guards.takeFirst())
         g->Delete();
 
+    if (!watcher.wasDeleted())
+        setTranslationsCaptured(capture.translationCaptured);
+
     ep->propertyCapture = lastPropertyCapture;
+
+    return result->asReturnedValue();
 }
 
 void QQmlPropertyCapture::captureProperty(QQmlNotifier *n, Duration duration)
@@ -262,7 +264,7 @@ void QQmlPropertyCapture::captureProperty(QQmlNotifier *n, Duration duration)
     while (!guards.isEmpty() && !guards.first()->isConnected(n))
         guards.takeFirst()->Delete();
 
-    QQmlJavaScriptExpressionGuard *g = 0;
+    QQmlJavaScriptExpressionGuard *g = nullptr;
     if (!guards.isEmpty()) {
         g = guards.takeFirst();
         g->cancelNotify();
@@ -282,7 +284,7 @@ void QQmlPropertyCapture::captureProperty(QQmlNotifier *n, Duration duration)
 
     \a n is in the signal index range (see QObjectPrivate::signalIndex()).
 */
-void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, Duration duration)
+void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, Duration duration, bool doNotify)
 {
     if (watcher->wasDeleted())
         return;
@@ -311,14 +313,14 @@ void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, Duration dur
         while (!guards.isEmpty() && !guards.first()->isConnected(o, n))
             guards.takeFirst()->Delete();
 
-        QQmlJavaScriptExpressionGuard *g = 0;
+        QQmlJavaScriptExpressionGuard *g = nullptr;
         if (!guards.isEmpty()) {
             g = guards.takeFirst();
             g->cancelNotify();
             Q_ASSERT(g->isConnected(o, n));
         } else {
             g = QQmlJavaScriptExpressionGuard::New(expression, engine);
-            g->connect(o, n, engine);
+            g->connect(o, n, engine, doNotify);
         }
 
         if (duration == Permanently)
@@ -328,12 +330,11 @@ void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, Duration dur
     }
 }
 
-void QQmlPropertyCapture::registerQmlDependencies(const QV4::CompiledData::Function *compiledFunction, const QV4::Scope &scope)
+void QQmlPropertyCapture::registerQmlDependencies(QV4::Heap::QmlContext *context, const QV4::ExecutionEngine *engine, const QV4::CompiledData::Function *compiledFunction)
 {
     // Let the caller check and avoid the function call :)
     Q_ASSERT(compiledFunction->hasQmlDependencies());
 
-    QV4::ExecutionEngine *engine = scope.engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine->qmlEngine());
     if (!ep)
         return;
@@ -346,10 +347,10 @@ void QQmlPropertyCapture::registerQmlDependencies(const QV4::CompiledData::Funct
 
     capture->expression->m_permanentDependenciesRegistered = true;
 
-    QV4::Scoped<QV4::QmlContext> context(scope, engine->qmlContext());
-    QQmlContextData *qmlContext = context->qmlContext();
+    QV4::Heap::QQmlContextWrapper *wrapper = context->qml();
+    QQmlContextData *qmlContext = wrapper->context->contextData();
 
-    const QV4::CompiledData::LEUInt32 *idObjectDependency = compiledFunction->qmlIdObjectDependencyTable();
+    const quint32_le *idObjectDependency = compiledFunction->qmlIdObjectDependencyTable();
     const int idObjectDependencyCount = compiledFunction->nDependingIdObjects;
     for (int i = 0; i < idObjectDependencyCount; ++i, ++idObjectDependency) {
         Q_ASSERT(int(*idObjectDependency) < qmlContext->idValueCount);
@@ -358,7 +359,7 @@ void QQmlPropertyCapture::registerQmlDependencies(const QV4::CompiledData::Funct
     }
 
     Q_ASSERT(qmlContext->contextObject);
-    const QV4::CompiledData::LEUInt32 *contextPropertyDependency = compiledFunction->qmlContextPropertiesDependencyTable();
+    const quint32_le *contextPropertyDependency = compiledFunction->qmlContextPropertiesDependencyTable();
     const int contextPropertyDependencyCount = compiledFunction->nDependingContextProperties;
     for (int i = 0; i < contextPropertyDependencyCount; ++i) {
         const int propertyIndex = *contextPropertyDependency++;
@@ -367,8 +368,8 @@ void QQmlPropertyCapture::registerQmlDependencies(const QV4::CompiledData::Funct
                                  QQmlPropertyCapture::Permanently);
     }
 
-    QObject *scopeObject = context->qmlScope();
-    const QV4::CompiledData::LEUInt32 *scopePropertyDependency = compiledFunction->qmlScopePropertiesDependencyTable();
+    QObject *scopeObject = wrapper->scopeObject;
+    const quint32_le *scopePropertyDependency = compiledFunction->qmlScopePropertiesDependencyTable();
     const int scopePropertyDependencyCount = compiledFunction->nDependingScopeProperties;
     for (int i = 0; i < scopePropertyDependencyCount; ++i) {
         const int propertyIndex = *scopePropertyDependency++;
@@ -393,7 +394,7 @@ QQmlDelayedError *QQmlJavaScriptExpression::delayedError()
 {
     if (!m_error)
         m_error = new QQmlDelayedError;
-    return m_error;
+    return m_error.data();
 }
 
 QV4::ReturnedValue
@@ -403,11 +404,11 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObje
     QQmlEngine *engine = ctxt->engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
 
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
+    QV4::ExecutionEngine *v4 = engine->handle();
     QV4::Scope scope(v4);
 
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(v4->rootContext(), ctxt, scopeObject));
-    QV4::Script script(v4, qmlContext, code, filename, line);
+    QV4::Script script(v4, qmlContext, /*parse as QML binding*/true, code, filename, line);
     QV4::ScopedValue result(scope);
     script.parse();
     if (!v4->hasException)
@@ -433,22 +434,18 @@ void QQmlJavaScriptExpression::createQmlBinding(QQmlContextData *ctxt, QObject *
     QQmlEngine *engine = ctxt->engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
 
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
+    QV4::ExecutionEngine *v4 = engine->handle();
     QV4::Scope scope(v4);
 
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(v4->rootContext(), ctxt, qmlScope));
-    QV4::Script script(v4, qmlContext, code, filename, line);
+    QV4::Script script(v4, qmlContext, /*parse as QML binding*/true, code, filename, line);
     script.parse();
     if (v4->hasException) {
-        QQmlError error = v4->catchExceptionAsQmlError();
-        if (error.description().isEmpty())
-            error.setDescription(QLatin1String("Exception occurred during function evaluation"));
-        if (error.line() == -1)
-            error.setLine(line);
-        if (error.url().isEmpty())
-            error.setUrl(QUrl::fromLocalFile(filename));
-        error.setObject(qmlScope);
-        ep->warning(error);
+        QQmlDelayedError *error = delayedError();
+        error->catchJavaScriptException(v4);
+        error->setErrorObject(qmlScope);
+        if (!error->addError(ep))
+            ep->warning(error->error());
         return;
     }
     setupFunction(qmlContext, script.vmFunction);
@@ -460,7 +457,12 @@ void QQmlJavaScriptExpression::setupFunction(QV4::ExecutionContext *qmlContext, 
         return;
     m_qmlScope.set(qmlContext->engine(), *qmlContext);
     m_v4Function = f;
-    m_compilationUnit = m_v4Function->compilationUnit;
+    setCompilationUnit(m_v4Function->compilationUnit);
+}
+
+void QQmlJavaScriptExpression::setCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit)
+{
+    m_compilationUnit = compilationUnit;
 }
 
 void QQmlJavaScriptExpression::clearActiveGuards()

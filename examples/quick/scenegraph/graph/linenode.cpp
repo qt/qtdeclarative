@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -56,29 +66,29 @@ class LineShader : public QSGSimpleMaterialShader<LineMaterial>
     QSG_DECLARE_SIMPLE_SHADER(LineShader, LineMaterial)
 
 public:
-    LineShader() : id_color(-1), id_spread(-1), id_size(-1) {
+    LineShader() {
         setShaderSourceFile(QOpenGLShader::Vertex, ":/scenegraph/graph/shaders/line.vsh");
         setShaderSourceFile(QOpenGLShader::Fragment, ":/scenegraph/graph/shaders/line.fsh");
     }
 
-    QList<QByteArray> attributes() const {  return QList<QByteArray>() << "pos" << "t"; }
+    QList<QByteArray> attributes() const override {  return QList<QByteArray>() << "pos" << "t"; }
 
-    void updateState(const LineMaterial *m, const LineMaterial *) {
+    void updateState(const LineMaterial *m, const LineMaterial *) override {
         program()->setUniformValue(id_color, m->color);
         program()->setUniformValue(id_spread, m->spread);
         program()->setUniformValue(id_size, m->size);
     }
 
-    void resolveUniforms() {
+    void resolveUniforms() override {
         id_spread = program()->uniformLocation("spread");
         id_size = program()->uniformLocation("size");
         id_color = program()->uniformLocation("color");
     }
 
 private:
-    int id_color;
-    int id_spread;
-    int id_size;
+    int id_color = -1;
+    int id_spread = -1;
+    int id_size = -1;
 };
 
 struct LineVertex {

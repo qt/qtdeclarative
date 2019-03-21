@@ -108,6 +108,8 @@ private slots:
     void text();
     void cdata();
 
+    void noQmlContext();
+
     // Crashes
     // void outstanding_request_at_shutdown();
 
@@ -291,7 +293,7 @@ class TestThreadedHTTPServer : public QObject
     Q_OBJECT
 public:
     TestThreadedHTTPServer(const QUrl &expectUrl, const QUrl &replyUrl, const QUrl &bodyUrl)
-        : m_server(Q_NULLPTR) {
+        : m_server(nullptr) {
         QMutexLocker locker(&m_lock);
         moveToThread(&m_thread);
         m_thread.start();
@@ -597,6 +599,7 @@ void tst_qqmlxmlhttprequest::send_withdata_data()
     QTest::newRow("Incorrect content-type - out of order") << "send_data.4.expect" << "send_data.5.qml";
     QTest::newRow("PUT") << "send_data.6.expect" << "send_data.6.qml";
     QTest::newRow("Correct content-type - no charset") << "send_data.1.expect" << "send_data.7.qml";
+    QTest::newRow("ArrayBuffer") << "send_data.11.expect" << "send_data.11.qml";
 }
 
 void tst_qqmlxmlhttprequest::send_options()
@@ -914,6 +917,9 @@ void tst_qqmlxmlhttprequest::status()
     QCOMPARE(object->property("loading").toBool(), true);
     QCOMPARE(object->property("done").toBool(), true);
     QCOMPARE(object->property("resetException").toBool(), true);
+    QCOMPARE(object->property("onloadCalled").toBool(), true);
+    QCOMPARE(object->property("onloadendCalled").toBool(), true);
+    QCOMPARE(object->property("onerrorCalled").toBool(), false);
 }
 
 void tst_qqmlxmlhttprequest::status_data()
@@ -1241,6 +1247,30 @@ void tst_qqmlxmlhttprequest::cdata()
     QCOMPARE(object->property("xmlTest").toBool(), true);
     QCOMPARE(object->property("status").toInt(), 200);
 }
+
+void tst_qqmlxmlhttprequest::noQmlContext()
+{
+    TestHTTPServer server;
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
+    QVERIFY(server.wait(testFileUrl("open_network.expect"),
+                        testFileUrl("open_network.reply"),
+                        testFileUrl("testdocument.html")));
+    QUrl url = server.urlString(QStringLiteral("/testdocument.html"));
+
+    QQmlEngine engine;
+
+    QFile f(testFile("noqmlcontext.js"));
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    QString script = QString::fromUtf8(f.readAll());
+    QJSValue testFunction = engine.evaluate(script);
+    QVERIFY(testFunction.isCallable());
+
+    QJSValue resultCollector = engine.newObject();
+
+    testFunction.call(QJSValueList() << url.toString() << resultCollector);
+
+    QTRY_COMPARE(resultCollector.property("responseText").toString(), "QML Rocks!\n");
+ }
 
 void tst_qqmlxmlhttprequest::stateChangeCallingContext()
 {

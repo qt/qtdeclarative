@@ -652,13 +652,14 @@ void QQuickGridLayout::insertLayoutItems()
     QSizeF sizeHints[Qt::NSizeHints];
     const auto items = childItems();
     for (QQuickItem *child : items) {
-        QQuickLayoutAttached *info = 0;
+        checkAnchors(child);
+        QQuickLayoutAttached *info = nullptr;
 
         // Will skip all items with effective maximum width/height == 0
         if (shouldIgnoreItem(child, info, sizeHints))
             continue;
 
-        Qt::Alignment alignment = 0;
+        Qt::Alignment alignment = nullptr;
         int row = -1;
         int column = -1;
         int span[2] = {1,1};
@@ -826,13 +827,14 @@ void QQuickLinearLayout::insertLayoutItems()
     const auto items = childItems();
     for (QQuickItem *child : items) {
         Q_ASSERT(child);
-        QQuickLayoutAttached *info = 0;
+        checkAnchors(child);
+        QQuickLayoutAttached *info = nullptr;
 
         // Will skip all items with effective maximum width/height == 0
         if (shouldIgnoreItem(child, info, sizeHints))
             continue;
 
-        Qt::Alignment alignment = 0;
+        Qt::Alignment alignment = nullptr;
         if (info)
             alignment = info->alignment();
 

@@ -40,13 +40,17 @@
 #include "qv4serialize_p.h"
 
 #include <private/qv8engine_p.h>
+#if QT_CONFIG(qml_list_model)
 #include <private/qqmllistmodel_p.h>
 #include <private/qqmllistmodelworkeragent_p.h>
+#endif
 
 #include <private/qv4value_p.h>
 #include <private/qv4dateobject_p.h>
 #include <private/qv4regexpobject_p.h>
+#if QT_CONFIG(qml_sequence_object)
 #include <private/qv4sequenceobject_p.h>
+#endif
 #include <private/qv4objectproto_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 
@@ -82,8 +86,12 @@ enum Type {
     WorkerNumber,
     WorkerDate,
     WorkerRegexp,
+#if QT_CONFIG(qml_list_model)
     WorkerListModel,
+#endif
+#if QT_CONFIG(qml_sequence_object)
     WorkerSequence
+#endif
 };
 
 static inline quint32 valueheader(Type type, quint32 size = 0)
@@ -189,7 +197,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
         push(data, valueheader(WorkerArray, length));
         ScopedValue val(scope);
         for (uint ii = 0; ii < length; ++ii)
-            serialize(data, (val = array->getIndexed(ii)), engine);
+            serialize(data, (val = array->get(ii)), engine);
     } else if (v.isInteger()) {
         reserve(data, 2 * sizeof(quint32));
         push(data, valueheader(WorkerInt32));
@@ -228,6 +236,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
     } else if (const QObjectWrapper *qobjectWrapper = v.as<QV4::QObjectWrapper>()) {
         // XXX TODO: Generalize passing objects between the main thread and worker scripts so
         // that others can trivially plug in their elements.
+#if QT_CONFIG(qml_list_model)
         QQmlListModel *lm = qobject_cast<QQmlListModel *>(qobjectWrapper->object());
         if (lm && lm->agent()) {
             QQmlListModelWorkerAgent *agent = lm->agent();
@@ -236,9 +245,13 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
             push(data, (void *)agent);
             return;
         }
+#else
+        Q_UNUSED(qobjectWrapper);
+#endif
         // No other QObject's are allowed to be sent
         push(data, valueheader(WorkerUndefined));
     } else if (const Object *o = v.as<Object>()) {
+#if QT_CONFIG(qml_sequence_object)
         if (o->isListType()) {
             // valid sequence.  we generate a length (sequence length + 1 for the sequence type)
             uint seqLength = ScopedValue(scope, o->get(engine->id_length()))->toUInt32();
@@ -249,13 +262,14 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
             }
             reserve(data, sizeof(quint32) + length * sizeof(quint32));
             push(data, valueheader(WorkerSequence, length));
-            serialize(data, QV4::Primitive::fromInt32(QV4::SequencePrototype::metaTypeForSequence(o)), engine); // sequence type
+            serialize(data, QV4::Value::fromInt32(QV4::SequencePrototype::metaTypeForSequence(o)), engine); // sequence type
             ScopedValue val(scope);
             for (uint ii = 0; ii < seqLength; ++ii)
-                serialize(data, (val = o->getIndexed(ii)), engine); // sequence elements
+                serialize(data, (val = o->get(ii)), engine); // sequence elements
 
             return;
         }
+#endif
 
         // regular object
         QV4::ScopedValue val(scope, v);
@@ -269,7 +283,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
 
         QV4::ScopedValue s(scope);
         for (quint32 ii = 0; ii < length; ++ii) {
-            s = properties->getIndexed(ii);
+            s = properties->get(ii);
             serialize(data, s, engine);
 
             QV4::String *str = s->as<String>();
@@ -318,7 +332,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
         ScopedValue v(scope);
         for (quint32 ii = 0; ii < size; ++ii) {
             v = deserialize(data, engine);
-            a->putIndexed(ii, v);
+            a->put(ii, v);
         }
         return a.asReturnedValue();
     }
@@ -344,7 +358,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
     case WorkerNumber:
         return QV4::Encode(popDouble(data));
     case WorkerDate:
-        return QV4::Encode(engine->newDateObject(QV4::Primitive::fromDouble(popDouble(data))));
+        return QV4::Encode(engine->newDateObject(QV4::Value::fromDouble(popDouble(data))));
     case WorkerRegexp:
     {
         quint32 flags = headersize(header);
@@ -353,6 +367,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
         data += ALIGN(length * sizeof(quint16));
         return Encode(engine->newRegExpObject(pattern, flags));
     }
+#if QT_CONFIG(qml_list_model)
     case WorkerListModel:
     {
         void *ptr = popPtr(data);
@@ -369,6 +384,8 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
         agent->setEngine(engine);
         return rv->asReturnedValue();
     }
+#endif
+#if QT_CONFIG(qml_sequence_object)
     case WorkerSequence:
     {
         ScopedValue value(scope);
@@ -387,6 +404,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
         QVariant seqVariant = QV4::SequencePrototype::toVariant(array, sequenceType, &succeeded);
         return QV4::SequencePrototype::fromVariant(engine, seqVariant, &succeeded);
     }
+#endif
     }
     Q_ASSERT(!"Unreachable");
     return QV4::Encode::undefined();

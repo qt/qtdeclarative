@@ -47,8 +47,7 @@ class QSGSimpleTextureNodePrivate : public QSGGeometryNodePrivate
 {
 public:
     QSGSimpleTextureNodePrivate()
-        : QSGGeometryNodePrivate()
-        , texCoordMode(QSGSimpleTextureNode::NoTransform)
+        : texCoordMode(QSGSimpleTextureNode::NoTransform)
         , isAtlasTexture(false)
         , ownsTexture(false)
     {}

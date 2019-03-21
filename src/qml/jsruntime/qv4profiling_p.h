@@ -57,17 +57,20 @@
 
 #include <QElapsedTimer>
 
-#ifdef QT_NO_QML_DEBUGGER
+#if !QT_CONFIG(qml_debug)
 
 #define Q_V4_PROFILE_ALLOC(engine, size, type) (!engine)
 #define Q_V4_PROFILE_DEALLOC(engine, size, type) (!engine)
-#define Q_V4_PROFILE(engine, function) (function->code(engine, function->codeData))
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 namespace Profiling {
 class Profiler {};
+class FunctionCallProfiler {
+public:
+    FunctionCallProfiler(ExecutionEngine *, Function *) {}
+};
 }
 }
 
@@ -84,12 +87,6 @@ QT_END_NAMESPACE
     (engine->profiler() &&\
             (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
         engine->profiler()->trackDealloc(size, type) : false)
-
-#define Q_V4_PROFILE(engine, function)\
-    (Q_UNLIKELY(engine->profiler()) &&\
-            (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureFunctionCall)) ?\
-        Profiling::FunctionCallProfiler::profileCall(engine->profiler(), engine, function) :\
-        function->code(engine, function->codeData))
 
 QT_BEGIN_NAMESPACE
 
@@ -142,7 +139,7 @@ struct MemoryAllocationProperties {
 class FunctionCall {
 public:
 
-    FunctionCall() : m_function(0), m_start(0), m_end(0)
+    FunctionCall() : m_function(nullptr), m_start(0), m_end(0)
     { Q_ASSERT_X(false, Q_FUNC_INFO, "Cannot construct a function call without function"); }
 
     FunctionCall(Function *function, qint64 start, qint64 end) :
@@ -230,23 +227,31 @@ public:
 
     bool trackAlloc(size_t size, MemoryType type)
     {
-        MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), (qint64)size, type};
-        m_memory_data.append(allocation);
-        return true;
+        if (size) {
+            MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), (qint64)size, type};
+            m_memory_data.append(allocation);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     bool trackDealloc(size_t size, MemoryType type)
     {
-        MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), -(qint64)size, type};
-        m_memory_data.append(allocation);
-        return true;
+        if (size) {
+            MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), -(qint64)size, type};
+            m_memory_data.append(allocation);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     quint64 featuresEnabled;
 
     void stopProfiling();
     void startProfiling(quint64 features);
-    void reportData(bool trackLocations);
+    void reportData();
     void setTimer(const QElapsedTimer &timer) { m_timer = timer; }
 
 signals:
@@ -270,19 +275,21 @@ public:
 
     // It's enough to ref() the function in the destructor as it will probably not disappear while
     // it's executing ...
-    FunctionCallProfiler(Profiler *profiler, Function *function) :
-        profiler(profiler), function(function), startTime(profiler->m_timer.nsecsElapsed())
-    {}
+    FunctionCallProfiler(ExecutionEngine *engine, Function *f)
+        : profiler(nullptr)
+    {
+        Profiler *p = engine->profiler();
+        if (Q_UNLIKELY(p) && (p->featuresEnabled & (1 << Profiling::FeatureFunctionCall))) {
+            profiler = p;
+            function = f;
+            startTime = profiler->m_timer.nsecsElapsed();
+        }
+    }
 
     ~FunctionCallProfiler()
     {
-        profiler->m_data.append(FunctionCall(function, startTime, profiler->m_timer.nsecsElapsed()));
-    }
-
-    static ReturnedValue profileCall(Profiler *profiler, ExecutionEngine *engine, Function *function)
-    {
-        FunctionCallProfiler callProfiler(profiler, function);
-        return function->code(engine, function->codeData);
+        if (profiler)
+            profiler->m_data.append(FunctionCall(function, startTime, profiler->m_timer.nsecsElapsed()));
     }
 
     Profiler *profiler;
@@ -305,6 +312,6 @@ Q_DECLARE_METATYPE(QV4::Profiling::FunctionLocationHash)
 Q_DECLARE_METATYPE(QVector<QV4::Profiling::FunctionCallProperties>)
 Q_DECLARE_METATYPE(QVector<QV4::Profiling::MemoryAllocationProperties>)
 
-#endif // QT_NO_QML_DEBUGGER
+#endif // QT_CONFIG(qml_debug)
 
 #endif // QV4PROFILING_H

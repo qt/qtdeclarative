@@ -47,14 +47,14 @@ QT_BEGIN_NAMESPACE
 
 bool QQuickDesignerSupportMetaInfo::isSubclassOf(QObject *object, const QByteArray &superTypeName)
 {
-    if (object == 0)
+    if (object == nullptr)
         return false;
 
     const QMetaObject *metaObject = object->metaObject();
 
     while (metaObject) {
-         QQmlType *qmlType =  QQmlMetaType::qmlType(metaObject);
-         if (qmlType && qmlType->qmlTypeName() == QLatin1String(superTypeName)) // ignore version numbers
+         QQmlType qmlType =  QQmlMetaType::qmlType(metaObject);
+         if (qmlType.qmlTypeName() == QLatin1String(superTypeName)) // ignore version numbers
              return true;
 
          if (metaObject->className() == superTypeName)

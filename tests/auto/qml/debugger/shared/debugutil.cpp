@@ -27,13 +27,12 @@
 ****************************************************************************/
 
 #include "debugutil_p.h"
+#include "qqmldebugprocess_p.h"
 
 #include <private/qqmldebugconnection_p.h>
 
 #include <QtCore/qeventloop.h>
 #include <QtCore/qtimer.h>
-#include <QtCore/qfileinfo.h>
-#include <QtCore/qdir.h>
 
 bool QQmlDebugTest::waitForSignal(QObject *receiver, const char *member, int timeout) {
     QEventLoop loop;
@@ -51,15 +50,23 @@ bool QQmlDebugTest::waitForSignal(QObject *receiver, const char *member, int tim
 QList<QQmlDebugClient *> QQmlDebugTest::createOtherClients(QQmlDebugConnection *connection)
 {
     QList<QQmlDebugClient *> ret;
-    foreach (const QString &service, QQmlDebuggingEnabler::debuggerServices()) {
+
+    static const auto debuggerServices
+            = QStringList({"V8Debugger", "QmlDebugger", "DebugMessages"});
+    static const auto inspectorServices
+            = QStringList({"QmlInspector"});
+    static const auto profilerServices
+            = QStringList({"CanvasFrameRate", "EngineControl", "DebugMessages"});
+
+    for (const QString &service : debuggerServices) {
         if (!connection->client(service))
             ret << new QQmlDebugClient(service, connection);
     }
-    foreach (const QString &service, QQmlDebuggingEnabler::inspectorServices()) {
+    for (const QString &service : inspectorServices) {
         if (!connection->client(service))
             ret << new QQmlDebugClient(service, connection);
     }
-    foreach (const QString &service, QQmlDebuggingEnabler::profilerServices()) {
+    for (const QString &service : profilerServices) {
         if (!connection->client(service))
             ret << new QQmlDebugClient(service, connection);
     }
@@ -91,6 +98,9 @@ QString QQmlDebugTest::connectionStateString(const QQmlDebugConnection *connecti
 QQmlDebugTestClient::QQmlDebugTestClient(const QString &s, QQmlDebugConnection *c)
     : QQmlDebugClient(s, c)
 {
+    connect(this, &QQmlDebugClient::stateChanged, this, [this](QQmlDebugClient::State newState) {
+        QCOMPARE(newState, state());
+    });
 }
 
 QByteArray QQmlDebugTestClient::waitForResponse()
@@ -104,201 +114,150 @@ QByteArray QQmlDebugTestClient::waitForResponse()
     return lastMsg;
 }
 
-void QQmlDebugTestClient::stateChanged(State stat)
-{
-    QCOMPARE(stat, state());
-    emit stateHasChanged();
-}
-
 void QQmlDebugTestClient::messageReceived(const QByteArray &ba)
 {
     lastMsg = ba;
     emit serverMessage(ba);
 }
 
-QQmlDebugProcess::QQmlDebugProcess(const QString &executable, QObject *parent)
-    : QObject(parent)
-    , m_executable(executable)
-    , m_started(false)
-    , m_port(0)
-    , m_maximumBindErrors(0)
-    , m_receivedBindErrors(0)
+QQmlDebugTest::ConnectResult QQmlDebugTest::connect(
+        const QString &executable, const QString &services, const QString &extraArgs,
+        bool block)
 {
-    m_process.setProcessChannelMode(QProcess::MergedChannels);
-    m_timer.setSingleShot(true);
-    m_timer.setInterval(5000);
-    connect(&m_process, SIGNAL(readyReadStandardOutput()), this, SLOT(processAppOutput()));
-    connect(&m_process, SIGNAL(errorOccurred(QProcess::ProcessError)),
-            this, SLOT(processError(QProcess::ProcessError)));
-    connect(&m_timer, SIGNAL(timeout()), SLOT(timeout()));
+    QStringList arguments;
+    arguments << QString::fromLatin1("-qmljsdebugger=port:13773,13783%3%4")
+                 .arg(block ? QStringLiteral(",block") : QString())
+                 .arg(services.isEmpty() ? services : (QStringLiteral(",services:") + services))
+              << extraArgs;
+
+    m_process = createProcess(executable);
+    if (!m_process)
+        return ProcessFailed;
+
+    m_process->start(QStringList() << arguments);
+    if (!m_process->waitForSessionStart())
+        return SessionFailed;
+
+    m_connection = createConnection();
+    if (!m_connection)
+        return ConnectionFailed;
+
+    m_clients = createClients();
+    if (m_clients.contains(nullptr))
+        return ClientsFailed;
+
+    ClientStateHandler stateHandler(m_clients, createOtherClients(m_connection), services.isEmpty()
+                                    ? QQmlDebugClient::Enabled : QQmlDebugClient::Unavailable);
+
+
+    const int port = m_process->debugPort();
+    m_connection->connectToHost(QLatin1String("127.0.0.1"), port);
+
+    QEventLoop loop;
+    QTimer timer;
+    QObject::connect(&stateHandler, &ClientStateHandler::allOk, &loop, &QEventLoop::quit);
+    QObject::connect(m_connection, &QQmlDebugConnection::disconnected, &loop, &QEventLoop::quit);
+    QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+
+    timer.start(5000);
+    loop.exec();
+
+    if (!stateHandler.allEnabled())
+        return EnableFailed;
+
+    if (!stateHandler.othersAsExpected())
+        return RestrictFailed;
+
+    return ConnectSuccess;
 }
 
-QQmlDebugProcess::~QQmlDebugProcess()
+QList<QQmlDebugClient *> QQmlDebugTest::createClients()
 {
-    stop();
+    return QList<QQmlDebugClient *>();
 }
 
-QString QQmlDebugProcess::state()
+QQmlDebugProcess *QQmlDebugTest::createProcess(const QString &executable)
 {
-    QString stateStr;
-    switch (m_process.state()) {
-    case QProcess::NotRunning: {
-        stateStr = "not running";
-        if (m_process.exitStatus() == QProcess::CrashExit)
-            stateStr += " (crashed!)";
-        else
-            stateStr += ", return value " + QString::number(m_process.exitCode());
-        break;
-    }
-    case QProcess::Starting: stateStr = "starting"; break;
-    case QProcess::Running: stateStr = "running"; break;
-    }
-    return stateStr;
+    return new QQmlDebugProcess(executable, this);
 }
 
-void QQmlDebugProcess::start(const QStringList &arguments)
+QQmlDebugConnection *QQmlDebugTest::createConnection()
 {
-#ifdef Q_OS_MAC
-    // make sure m_executable points to the actual binary even if it's inside an app bundle
-    QFileInfo binFile(m_executable);
-    if (!binFile.isExecutable()) {
-        QDir bundleDir(m_executable + ".app");
-        if (bundleDir.exists()) {
-            m_executable = bundleDir.absoluteFilePath("Contents/MacOS/" + binFile.baseName());
-            //qDebug() << Q_FUNC_INFO << "found bundled binary" << m_executable;
+    return new QQmlDebugConnection(this);
+}
+
+void QQmlDebugTest::cleanup()
+{
+    if (QTest::currentTestFailed()) {
+        const QString null = QStringLiteral("null");
+
+        qDebug() << "Process State:" << (m_process ? m_process->stateString() : null);
+        qDebug() << "Application Output:" << (m_process ? m_process->output() : null);
+        qDebug() << "Connection State:" << QQmlDebugTest::connectionStateString(m_connection);
+        for (QQmlDebugClient *client : m_clients) {
+            if (client)
+                qDebug() << client->name() << "State:" << QQmlDebugTest::clientStateString(client);
+            else
+                qDebug() << "Failed Client:" << null;
         }
     }
-#endif
-    m_mutex.lock();
-    m_port = 0;
-    m_process.setEnvironment(QProcess::systemEnvironment() + m_environment);
-    m_process.start(m_executable, arguments);
-    if (!m_process.waitForStarted()) {
-        qWarning() << "QML Debug Client: Could not launch app " << m_executable
-                   << ": " << m_process.errorString();
-        m_eventLoop.quit();
-    } else {
-        m_timer.start();
-    }
-    m_mutex.unlock();
-}
 
-void QQmlDebugProcess::stop()
-{
-    if (m_process.state() != QProcess::NotRunning) {
-        m_process.kill();
-        m_process.waitForFinished(5000);
+    qDeleteAll(m_clients);
+    m_clients.clear();
+
+    delete m_connection;
+    m_connection = nullptr;
+
+    if (m_process) {
+        m_process->stop();
+        delete m_process;
+        m_process = nullptr;
     }
 }
 
-void QQmlDebugProcess::setMaximumBindErrors(int ignore)
+ClientStateHandler::ClientStateHandler(const QList<QQmlDebugClient *> &clients,
+                                       const QList<QQmlDebugClient *> &others,
+                                       QQmlDebugClient::State expectedOthers) :
+    m_clients(clients), m_others(others), m_expectedOthers(expectedOthers)
 {
-    m_maximumBindErrors = ignore;
-}
-
-void QQmlDebugProcess::timeout()
-{
-    qWarning() << "Timeout while waiting for QML debugging messages "
-                  "in application output. Process is in state" << m_process.state() << ", Output:" << m_output << ".";
-    m_eventLoop.quit();
-}
-
-bool QQmlDebugProcess::waitForSessionStart()
-{
-    if (m_process.state() != QProcess::Running) {
-        qWarning() << "Could not start up " << m_executable;
-        return false;
+    for (QQmlDebugClient *client : m_clients) {
+        QObject::connect(client, &QQmlDebugClient::stateChanged,
+                         this, &ClientStateHandler::checkStates);
     }
-    m_eventLoop.exec();
-
-    return m_started;
-}
-
-int QQmlDebugProcess::debugPort() const
-{
-    return m_port;
-}
-
-bool QQmlDebugProcess::waitForFinished()
-{
-    return m_process.waitForFinished();
-}
-
-QProcess::ExitStatus QQmlDebugProcess::exitStatus() const
-{
-    return m_process.exitStatus();
-}
-
-void QQmlDebugProcess::addEnvironment(const QString &environment)
-{
-    m_environment.append(environment);
-}
-
-QString QQmlDebugProcess::output() const
-{
-    return m_output;
-}
-
-void QQmlDebugProcess::processAppOutput()
-{
-    m_mutex.lock();
-
-    bool outputFromAppItself = false;
-
-    QString newOutput = m_process.readAll();
-    m_output.append(newOutput);
-    m_outputBuffer.append(newOutput);
-
-    while (true) {
-        const int nlIndex = m_outputBuffer.indexOf(QLatin1Char('\n'));
-        if (nlIndex < 0) // no further complete lines
-            break;
-        const QString line = m_outputBuffer.left(nlIndex);
-        m_outputBuffer = m_outputBuffer.right(m_outputBuffer.size() - nlIndex - 1);
-
-        if (line.contains("QML Debugger:")) {
-            const QRegExp portRx("Waiting for connection on port (\\d+)");
-            if (portRx.indexIn(line) != -1) {
-                m_port = portRx.cap(1).toInt();
-                m_timer.stop();
-                m_started = true;
-                m_eventLoop.quit();
-                continue;
-            }
-            if (line.contains("Unable to listen")) {
-                if (++m_receivedBindErrors >= m_maximumBindErrors) {
-                    if (m_maximumBindErrors == 0)
-                        qWarning() << "App was unable to bind to port!";
-                    m_timer.stop();
-                    m_eventLoop.quit();
-                 }
-                 continue;
-            }
-        } else {
-            // set to true if there is output not coming from the debugger
-            outputFromAppItself = true;
-        }
+    for (QQmlDebugClient *client : m_others) {
+        QObject::connect(client, &QQmlDebugClient::stateChanged,
+                         this, &ClientStateHandler::checkStates);
     }
-    m_mutex.unlock();
-
-    if (outputFromAppItself)
-        emit readyReadStandardOutput();
 }
 
-void QQmlDebugProcess::processError(QProcess::ProcessError error)
+ClientStateHandler::~ClientStateHandler()
 {
-    if (!m_eventLoop.isRunning())
-       return;
+    qDeleteAll(m_others);
+}
 
-    qDebug() << "An error occurred while waiting for debug process to become available:";
-    switch (error) {
-    case QProcess::FailedToStart: qDebug() << "Process failed to start."; break;
-    case QProcess::Crashed: qDebug() << "Process crashed."; break;
-    case QProcess::Timedout: qDebug() << "Process timed out."; break;
-    case QProcess::WriteError: qDebug() << "Error while writing to process."; break;
-    case QProcess::ReadError: qDebug() << "Error while reading from process."; break;
-    case QProcess::UnknownError: qDebug() << "Unknown process error."; break;
+void ClientStateHandler::checkStates()
+{
+    for (QQmlDebugClient *client : m_clients) {
+        if (client->state() != QQmlDebugClient::Enabled)
+            return;
     }
 
-    m_eventLoop.exit();
+    m_allEnabled = true;
+
+    for (QQmlDebugClient *other : m_others) {
+        if (other->state() != m_expectedOthers)
+            return;
+    }
+
+    m_othersAsExpected = true;
+    emit allOk();
+}
+
+QString debugJsServerPath(const QString &selfPath)
+{
+    static const char *debugserver = "qqmldebugjsserver";
+    QString appPath = QCoreApplication::applicationDirPath();
+    const int position = appPath.lastIndexOf(selfPath);
+    return (position == -1 ? appPath : appPath.replace(position, selfPath.length(), debugserver))
+            + "/" + debugserver;
 }

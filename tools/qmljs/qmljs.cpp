@@ -32,23 +32,13 @@
 #include "private/qv4errorobject_p.h"
 #include "private/qv4globalobject_p.h"
 #include "private/qv4codegen_p.h"
-#if QT_CONFIG(qml_interpreter)
-#include "private/qv4isel_moth_p.h"
-#include "private/qv4vme_moth_p.h"
-#endif
 #include "private/qv4objectproto_p.h"
-#include "private/qv4isel_p.h"
 #include "private/qv4mm_p.h"
 #include "private/qv4context_p.h"
 #include "private/qv4script_p.h"
 #include "private/qv4string_p.h"
+#include "private/qv4module_p.h"
 #include "private/qqmlbuiltinfunctions_p.h"
-
-#ifdef V4_ENABLE_JIT
-#  include "private/qv4isel_masm_p.h"
-#else
-QT_REQUIRE_CONFIG(qml_interpreter);
-#endif // V4_ENABLE_JIT
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QFile>
@@ -87,34 +77,27 @@ int main(int argc, char *argv[])
     QStringList args = app.arguments();
     args.removeFirst();
 
-    enum {
-        use_masm,
-        use_moth
-    } mode;
-#ifdef V4_ENABLE_JIT
-    mode = use_masm;
-#else
-    mode = use_moth;
-#endif
-
     bool runAsQml = false;
+    bool runAsModule = false;
     bool cache = false;
 
     if (!args.isEmpty()) {
         if (args.constFirst() == QLatin1String("--jit")) {
-            mode = use_masm;
+            qputenv("QV4_JIT_CALL_THRESHOLD", QByteArray("0"));
             args.removeFirst();
         }
-
-#if QT_CONFIG(qml_interpreter)
         if (args.constFirst() == QLatin1String("--interpret")) {
-            mode = use_moth;
+            qputenv("QV4_FORCE_INTERPRETER", QByteArray("1"));
             args.removeFirst();
         }
-#endif
 
         if (args.constFirst() == QLatin1String("--qml")) {
             runAsQml = true;
+            args.removeFirst();
+        }
+
+        if (args.constFirst() == QLatin1String("--module")) {
+            runAsModule = true;
             args.removeFirst();
         }
 
@@ -129,79 +112,75 @@ int main(int argc, char *argv[])
         }
     }
 
-    switch (mode) {
-    case use_masm:
-    case use_moth: {
-        QV4::EvalISelFactory* iSelFactory = 0;
-        if (mode == use_moth) {
-#if QT_CONFIG(qml_interpreter)
-            iSelFactory = new QV4::Moth::ISelFactory;
-#endif
-#ifdef V4_ENABLE_JIT
-        } else {
-            iSelFactory = new QV4::JIT::ISelFactory<>;
-#endif // V4_ENABLE_JIT
-        }
+    QV4::ExecutionEngine vm;
 
-        QV4::ExecutionEngine vm(iSelFactory);
+    QV4::Scope scope(&vm);
+    QV4::ScopedContext ctx(scope, vm.rootContext());
 
-        QV4::Scope scope(&vm);
-        QV4::ScopedContext ctx(scope, vm.rootContext());
+    QV4::GlobalExtensions::init(vm.globalObject, QJSEngine::ConsoleExtension | QJSEngine::GarbageCollectionExtension);
 
-        QV4::GlobalExtensions::init(vm.globalObject, QJSEngine::ConsoleExtension | QJSEngine::GarbageCollectionExtension);
-
-        for (const QString &fn : qAsConst(args)) {
-            QFile file(fn);
-            if (file.open(QFile::ReadOnly)) {
-                QScopedPointer<QV4::Script> script;
-                if (cache && QFile::exists(fn + QLatin1Char('c'))) {
-                    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = iSelFactory->createUnitForLoading();
-                    QString error;
-                    if (unit->loadFromDisk(QUrl::fromLocalFile(fn), QFileInfo(fn).lastModified(), iSelFactory, &error)) {
-                        script.reset(new QV4::Script(&vm, nullptr, unit));
-                    } else {
-                        std::cout << "Error loading" << qPrintable(fn) << "from disk cache:" << qPrintable(error) << std::endl;
-                    }
-                }
-                if (!script) {
-                    const QString code = QString::fromUtf8(file.readAll());
-                    file.close();
-
-                    script.reset(new QV4::Script(ctx, code, fn));
-                    script->parseAsBinding = runAsQml;
-                    script->parse();
-                }
-                QV4::ScopedValue result(scope);
-                if (!scope.engine->hasException) {
-                    const auto unit = script->compilationUnit;
-                    if (cache && unit && !(unit->data->flags & QV4::CompiledData::Unit::StaticData)) {
-                        if (unit->data->sourceTimeStamp == 0) {
-                            const_cast<QV4::CompiledData::Unit*>(unit->data)->sourceTimeStamp = QFileInfo(fn).lastModified().toMSecsSinceEpoch();
-                        }
-                        QString saveError;
-                        if (!unit->saveToDisk(QUrl::fromLocalFile(fn), &saveError)) {
-                            std::cout << "Error saving JS cache file: " << qPrintable(saveError) << std::endl;
-                        }
-                    }
-                    result = script->run();
-                }
-                if (scope.engine->hasException) {
-                    QV4::StackTrace trace;
-                    QV4::ScopedValue ex(scope, scope.engine->catchException(&trace));
-                    showException(ctx, ex, trace);
-                    return EXIT_FAILURE;
-                }
-                if (!result->isUndefined()) {
-                    if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
-                        std::cout << "exit value: " << qPrintable(result->toQString()) << std::endl;
-                }
+    for (const QString &fn : qAsConst(args)) {
+        QV4::ScopedValue result(scope);
+        if (runAsModule) {
+            auto moduleUnit = vm.loadModule(QUrl::fromLocalFile(QFileInfo(fn).absoluteFilePath()));
+            if (moduleUnit) {
+                if (moduleUnit->instantiate(&vm))
+                    moduleUnit->evaluate();
             } else {
+                vm.throwError(QStringLiteral("Could not load module file"));
+            }
+        } else {
+            QFile file(fn);
+            if (!file.open(QFile::ReadOnly)) {
                 std::cerr << "Error: cannot open file " << fn.toUtf8().constData() << std::endl;
                 return EXIT_FAILURE;
             }
-        }
+            QScopedPointer<QV4::Script> script;
+            if (cache && QFile::exists(fn + QLatin1Char('c'))) {
+                QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Compiler::Codegen::createUnitForLoading();
+                QString error;
+                if (unit->loadFromDisk(QUrl::fromLocalFile(fn), QFileInfo(fn).lastModified(), &error)) {
+                    script.reset(new QV4::Script(&vm, nullptr, unit));
+                } else {
+                    std::cout << "Error loading" << qPrintable(fn) << "from disk cache:" << qPrintable(error) << std::endl;
+                }
+            }
+            if (!script) {
+                QByteArray ba = file.readAll();
+                const QString code = QString::fromUtf8(ba.constData(), ba.length());
+                file.close();
 
-        vm.memoryManager->dumpStats();
-    } return EXIT_SUCCESS;
-    } // switch (mode)
+                script.reset(new QV4::Script(ctx, QV4::Compiler::ContextType::Global, code, fn));
+                script->parseAsBinding = runAsQml;
+                script->parse();
+            }
+            if (!scope.engine->hasException) {
+                const auto unit = script->compilationUnit;
+                if (cache && unit && !(unit->unitData()->flags & QV4::CompiledData::Unit::StaticData)) {
+                    if (unit->unitData()->sourceTimeStamp == 0) {
+                        const_cast<QV4::CompiledData::Unit*>(unit->unitData())->sourceTimeStamp = QFileInfo(fn).lastModified().toMSecsSinceEpoch();
+                    }
+                    QString saveError;
+                    if (!unit->saveToDisk(QUrl::fromLocalFile(fn), &saveError)) {
+                        std::cout << "Error saving JS cache file: " << qPrintable(saveError) << std::endl;
+                    }
+                }
+//                QElapsedTimer t; t.start();
+                result = script->run();
+//                std::cout << t.elapsed() << " ms. elapsed" << std::endl;
+            }
+        }
+        if (scope.engine->hasException) {
+            QV4::StackTrace trace;
+            QV4::ScopedValue ex(scope, scope.engine->catchException(&trace));
+            showException(ctx, ex, trace);
+            return EXIT_FAILURE;
+        }
+        if (!result->isUndefined()) {
+            if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
+                std::cout << "exit value: " << qPrintable(result->toQString()) << std::endl;
+        }
+    }
+
+    return EXIT_SUCCESS;
 }

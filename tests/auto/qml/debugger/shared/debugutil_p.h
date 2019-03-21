@@ -1,4 +1,3 @@
-
 /****************************************************************************
 **
 ** Copyright (C) 2016 The Qt Company Ltd.
@@ -41,23 +40,43 @@
 // We mean it.
 //
 
+#include <../../../shared/util.h>
 #include <private/qqmldebugclient_p.h>
 
-#include <QtCore/qeventloop.h>
-#include <QtCore/qtimer.h>
-#include <QtCore/qthread.h>
-#include <QtCore/qprocess.h>
-#include <QtCore/qmutex.h>
-#include <QtTest/qtest.h>
-#include <QtQml/qqmlengine.h>
-
-class QQmlDebugTest
+class QQmlDebugProcess;
+class QQmlDebugTest : public QQmlDataTest
 {
+    Q_OBJECT
 public:
     static bool waitForSignal(QObject *receiver, const char *member, int timeout = 5000);
     static QList<QQmlDebugClient *> createOtherClients(QQmlDebugConnection *connection);
     static QString clientStateString(const QQmlDebugClient *client);
     static QString connectionStateString(const QQmlDebugConnection *connection);
+
+protected:
+    enum ConnectResult {
+        ConnectSuccess,
+        ProcessFailed,
+        SessionFailed,
+        ConnectionFailed,
+        ClientsFailed,
+        EnableFailed,
+        RestrictFailed
+    };
+
+    ConnectResult connect(const QString &executable, const QString &services,
+                          const QString &extraArgs, bool block);
+
+    virtual QQmlDebugProcess *createProcess(const QString &executable);
+    virtual QQmlDebugConnection *createConnection();
+    virtual QList<QQmlDebugClient *> createClients();
+
+    QQmlDebugProcess *m_process = nullptr;
+    QQmlDebugConnection *m_connection = nullptr;
+    QList<QQmlDebugClient *> m_clients;
+
+protected slots:
+    virtual void cleanup();
 };
 
 class QQmlDebugTestClient : public QQmlDebugClient
@@ -69,60 +88,13 @@ public:
     QByteArray waitForResponse();
 
 signals:
-    void stateHasChanged();
     void serverMessage(const QByteArray &);
 
 protected:
-    virtual void stateChanged(State state);
     virtual void messageReceived(const QByteArray &ba);
 
 private:
     QByteArray lastMsg;
-};
-
-class QQmlDebugProcess : public QObject
-{
-    Q_OBJECT
-public:
-    QQmlDebugProcess(const QString &executable, QObject *parent = 0);
-    ~QQmlDebugProcess();
-
-    QString state();
-
-    void addEnvironment(const QString &environment);
-
-    void start(const QStringList &arguments);
-    bool waitForSessionStart();
-    int debugPort() const;
-
-    bool waitForFinished();
-    QProcess::ExitStatus exitStatus() const;
-
-    QString output() const;
-    void stop();
-    void setMaximumBindErrors(int numErrors);
-
-signals:
-    void readyReadStandardOutput();
-
-private slots:
-    void timeout();
-    void processAppOutput();
-    void processError(QProcess::ProcessError error);
-
-private:
-    QString m_executable;
-    QProcess m_process;
-    QString m_outputBuffer;
-    QString m_output;
-    QTimer m_timer;
-    QEventLoop m_eventLoop;
-    QMutex m_mutex;
-    bool m_started;
-    QStringList m_environment;
-    int m_port;
-    int m_maximumBindErrors;
-    int m_receivedBindErrors;
 };
 
 class QQmlInspectorResultRecipient : public QObject
@@ -141,5 +113,34 @@ public:
         lastResult = result;
     }
 };
+
+class ClientStateHandler : public QObject
+{
+    Q_OBJECT
+public:
+    ClientStateHandler(const QList<QQmlDebugClient *> &clients,
+                       const QList<QQmlDebugClient *> &others,
+                       QQmlDebugClient::State expectedOthers);
+
+    ~ClientStateHandler();
+
+    bool allEnabled() const { return m_allEnabled; }
+    bool othersAsExpected() const { return m_othersAsExpected; }
+
+signals:
+    void allOk();
+
+private:
+    void checkStates();
+
+    const QList<QQmlDebugClient *> m_clients;
+    const QList<QQmlDebugClient *> m_others;
+    const QQmlDebugClient::State m_expectedOthers;
+
+    bool m_allEnabled = false;
+    bool m_othersAsExpected = false;
+};
+
+QString debugJsServerPath(const QString &selfPath);
 
 #endif // DEBUGUTIL_P_H

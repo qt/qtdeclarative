@@ -93,7 +93,7 @@ class QQuickContext2DFBOTile : public QQuickContext2DTile
 public:
     QQuickContext2DFBOTile();
     ~QQuickContext2DFBOTile();
-    virtual void setRect(const QRect& r) override;
+    void setRect(const QRect& r) override;
     QOpenGLFramebufferObject* fbo() const {return m_fbo;}
     void drawFinished() override;
 

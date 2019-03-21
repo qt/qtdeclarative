@@ -55,6 +55,7 @@
 #include <private/qv4variantobject_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4jscall_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -63,7 +64,7 @@ static void list_append(QQmlListProperty<QObject> *prop, QObject *o)
 {
     QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
     list->append(o);
-    static_cast<QQmlVMEMetaObject *>(prop->dummy1)->activate(prop->object, reinterpret_cast<quintptr>(prop->dummy2), 0);
+    static_cast<QQmlVMEMetaObject *>(prop->dummy1)->activate(prop->object, reinterpret_cast<quintptr>(prop->dummy2), nullptr);
 }
 
 static int list_count(QQmlListProperty<QObject> *prop)
@@ -82,11 +83,11 @@ static void list_clear(QQmlListProperty<QObject> *prop)
 {
     QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
     list->clear();
-    static_cast<QQmlVMEMetaObject *>(prop->dummy1)->activate(prop->object, reinterpret_cast<quintptr>(prop->dummy2), 0);
+    static_cast<QQmlVMEMetaObject *>(prop->dummy1)->activate(prop->object, reinterpret_cast<quintptr>(prop->dummy2), nullptr);
 }
 
 QQmlVMEVariantQObjectPtr::QQmlVMEVariantQObjectPtr()
-    : QQmlGuard<QObject>(0), m_target(0), m_index(-1)
+    : QQmlGuard<QObject>(nullptr), m_target(nullptr), m_index(-1)
 {
 }
 
@@ -105,12 +106,12 @@ void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
             QV4::Scope scope(v4);
             QV4::Scoped<QV4::MemberData> sp(scope, m_target->propertyAndMethodStorage.value());
             if (sp) {
-                QV4::MemberData::Index index{ sp->d(), sp->d()->values.values + m_index };
-                index.set(v4, QV4::Primitive::nullValue());
+                QV4::PropertyIndex index{ sp->d(), sp->d()->values.values + m_index };
+                index.set(v4, QV4::Value::nullValue());
             }
         }
 
-        m_target->activate(m_target->object, m_target->methodOffset() + m_index, 0);
+        m_target->activate(m_target->object, m_target->methodOffset() + m_index, nullptr);
     }
 }
 
@@ -149,7 +150,7 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
     if (metaObject.flag()) {
         // This is actually notify
         int sigIdx = metaObject->methodOffset() + aliasId + metaObject->compiledObject->nProperties;
-        metaObject->activate(metaObject->object, sigIdx, 0);
+        metaObject->activate(metaObject->object, sigIdx, nullptr);
     } else {
         const QV4::CompiledData::Alias *aliasData = &metaObject->compiledObject->aliasTable()[aliasId];
         if (!aliasData->isObjectAlias()) {
@@ -175,10 +176,10 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
 }
 
 
-QQmlInterceptorMetaObject::QQmlInterceptorMetaObject(QObject *obj, QQmlPropertyCache *cache)
+QQmlInterceptorMetaObject::QQmlInterceptorMetaObject(QObject *obj, const QQmlRefPointer<QQmlPropertyCache> &cache)
     : object(obj),
       cache(cache),
-      interceptors(0),
+      interceptors(nullptr),
       hasAssignedMetaObjectData(false)
 {
     QObjectPrivate *op = QObjectPrivate::get(obj);
@@ -313,24 +314,25 @@ QAbstractDynamicMetaObject *QQmlInterceptorMetaObject::toDynamicMetaObject(QObje
     return this;
 }
 
-QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
-                                     QQmlPropertyCache *cache, QV4::CompiledData::CompilationUnit *qmlCompilationUnit, int qmlObjectId)
+QQmlVMEMetaObject::QQmlVMEMetaObject(QV4::ExecutionEngine *engine,
+                                     QObject *obj,
+                                     const QQmlRefPointer<QQmlPropertyCache> &cache, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &qmlCompilationUnit, int qmlObjectId)
     : QQmlInterceptorMetaObject(obj, cache),
+      engine(engine),
       ctxt(QQmlData::get(obj, true)->outerContext),
-      aliasEndpoints(0), compilationUnit(qmlCompilationUnit), compiledObject(0)
+      aliasEndpoints(nullptr), compilationUnit(qmlCompilationUnit), compiledObject(nullptr)
 {
+    Q_ASSERT(engine);
     QQmlData::get(obj)->hasVMEMetaObject = true;
 
     if (compilationUnit && qmlObjectId >= 0) {
-        compiledObject = compilationUnit->data->objectAt(qmlObjectId);
+        compiledObject = compilationUnit->objectAt(qmlObjectId);
 
         if (compiledObject->nProperties || compiledObject->nFunctions) {
-            Q_ASSERT(cache && cache->engine);
-            QV4::ExecutionEngine *v4 = cache->engine;
             uint size = compiledObject->nProperties + compiledObject->nFunctions;
             if (size) {
-                QV4::Heap::MemberData *data = QV4::MemberData::allocate(v4, size);
-                propertyAndMethodStorage.set(v4, data);
+                QV4::Heap::MemberData *data = QV4::MemberData::allocate(engine, size);
+                propertyAndMethodStorage.set(engine, data);
                 std::fill(data->values.values, data->values.values + data->values.size, QV4::Encode::undefined());
             }
 
@@ -356,7 +358,7 @@ QV4::MemberData *QQmlVMEMetaObject::propertyAndMethodStorageAsMemberData() const
             // such as the varProperties array) will have been cleaned up, but the
             // QObject ptr will not yet have been deleted (eg, waiting on deleteLater).
             // In this situation, return 0.
-            return 0;
+            return nullptr;
     }
 
     return static_cast<QV4::MemberData*>(propertyAndMethodStorage.asManaged());
@@ -366,77 +368,77 @@ void QQmlVMEMetaObject::writeProperty(int id, int v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
-        md->set(cache->engine, id, QV4::Primitive::fromInt32(v));
+        md->set(engine, id, QV4::Value::fromInt32(v));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, bool v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
-        md->set(cache->engine, id, QV4::Primitive::fromBoolean(v));
+        md->set(engine, id, QV4::Value::fromBoolean(v));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, double v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
-        md->set(cache->engine, id, QV4::Primitive::fromDouble(v));
+        md->set(engine, id, QV4::Value::fromDouble(v));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QString& v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
-        md->set(cache->engine, id, cache->engine->newString(v));
+        md->set(engine, id, engine->newString(v));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QUrl& v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
-        md->set(cache->engine, id, cache->engine->newVariantObject(QVariant::fromValue(v)));
+        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QDate& v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
-        md->set(cache->engine, id, cache->engine->newVariantObject(QVariant::fromValue(v)));
+        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QDateTime& v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
-        md->set(cache->engine, id, cache->engine->newVariantObject(QVariant::fromValue(v)));
+        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QPointF& v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
-        md->set(cache->engine, id, cache->engine->newVariantObject(QVariant::fromValue(v)));
+        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QSizeF& v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
-        md->set(cache->engine, id, cache->engine->newVariantObject(QVariant::fromValue(v)));
+        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QRectF& v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
-        md->set(cache->engine, id, cache->engine->newVariantObject(QVariant::fromValue(v)));
+        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, QObject* v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
-        md->set(cache->engine, id, QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(cache->engine, v)));
+        md->set(engine, id, QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(engine, v)));
 
     QQmlVMEVariantQObjectPtr *guard = getQObjectGuardForProperty(id);
     if (v && !guard) {
@@ -453,7 +455,7 @@ int QQmlVMEMetaObject::readPropertyAsInt(int id) const
     if (!md)
         return 0;
 
-    QV4::Scope scope(cache->engine);
+    QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     if (!sv->isInt32())
         return 0;
@@ -466,7 +468,7 @@ bool QQmlVMEMetaObject::readPropertyAsBool(int id) const
     if (!md)
         return false;
 
-    QV4::Scope scope(cache->engine);
+    QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     if (!sv->isBoolean())
         return false;
@@ -479,7 +481,7 @@ double QQmlVMEMetaObject::readPropertyAsDouble(int id) const
     if (!md)
         return 0.0;
 
-    QV4::Scope scope(cache->engine);
+    QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     if (!sv->isDouble())
         return 0.0;
@@ -492,7 +494,7 @@ QString QQmlVMEMetaObject::readPropertyAsString(int id) const
     if (!md)
         return QString();
 
-    QV4::Scope scope(cache->engine);
+    QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     if (QV4::String *s = sv->stringValue())
         return s->toQString();
@@ -505,7 +507,7 @@ QUrl QQmlVMEMetaObject::readPropertyAsUrl(int id) const
     if (!md)
         return QUrl();
 
-    QV4::Scope scope(cache->engine);
+    QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
     if (!v || v->d()->data().type() != QVariant::Url)
@@ -519,7 +521,7 @@ QDate QQmlVMEMetaObject::readPropertyAsDate(int id) const
     if (!md)
         return QDate();
 
-    QV4::Scope scope(cache->engine);
+    QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
     if (!v || v->d()->data().type() != QVariant::Date)
@@ -533,7 +535,7 @@ QDateTime QQmlVMEMetaObject::readPropertyAsDateTime(int id)
     if (!md)
         return QDateTime();
 
-    QV4::Scope scope(cache->engine);
+    QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
     if (!v || v->d()->data().type() != QVariant::DateTime)
@@ -547,7 +549,7 @@ QSizeF QQmlVMEMetaObject::readPropertyAsSizeF(int id) const
     if (!md)
         return QSizeF();
 
-    QV4::Scope scope(cache->engine);
+    QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
     if (!v || v->d()->data().type() != QVariant::SizeF)
@@ -561,7 +563,7 @@ QPointF QQmlVMEMetaObject::readPropertyAsPointF(int id) const
     if (!md)
         return QPointF();
 
-    QV4::Scope scope(cache->engine);
+    QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
     if (!v || v->d()->data().type() != QVariant::PointF)
@@ -573,13 +575,13 @@ QObject* QQmlVMEMetaObject::readPropertyAsQObject(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
-        return 0;
+        return nullptr;
 
-    QV4::Scope scope(cache->engine);
+    QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::QObjectWrapper *wrapper = sv->as<QV4::QObjectWrapper>();
     if (!wrapper)
-        return 0;
+        return nullptr;
     return wrapper->object();
 }
 
@@ -587,14 +589,14 @@ QList<QObject *> *QQmlVMEMetaObject::readPropertyAsList(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
-        return 0;
+        return nullptr;
 
-    QV4::Scope scope(cache->engine);
+    QV4::Scope scope(engine);
     QV4::Scoped<QV4::VariantObject> v(scope, *(md->data() + id));
     if (!v || (int)v->d()->data().userType() != qMetaTypeId<QList<QObject *> >()) {
         QVariant variant(qVariantFromValue(QList<QObject*>()));
-        v = cache->engine->newVariantObject(variant);
-        md->set(cache->engine, id, v);
+        v = engine->newVariantObject(variant);
+        md->set(engine, id, v);
     }
     return static_cast<QList<QObject *> *>(v->d()->data().data());
 }
@@ -605,7 +607,7 @@ QRectF QQmlVMEMetaObject::readPropertyAsRectF(int id) const
     if (!md)
         return QRectF();
 
-    QV4::Scope scope(cache->engine);
+    QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
     if (!v || v->d()->data().type() != QVariant::RectF)
@@ -641,9 +643,8 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
 
                 if (t == QV4::CompiledData::Property::Var) {
                     // the context can be null if accessing var properties from cpp after re-parenting an item.
-                    QQmlEnginePrivate *ep = (ctxt == 0 || ctxt->engine == 0) ? 0 : QQmlEnginePrivate::get(ctxt->engine);
-                    QV8Engine *v8e = (ep == 0) ? 0 : ep->v8engine();
-                    if (v8e) {
+                    QQmlEnginePrivate *ep = (ctxt == nullptr || ctxt->engine == nullptr) ? nullptr : QQmlEnginePrivate::get(ctxt->engine);
+                    if (ep) {
                         if (c == QMetaObject::ReadProperty) {
                             *reinterpret_cast<QVariant *>(a[0]) = readPropertyAsVariant(id);
                         } else if (c == QMetaObject::WriteProperty) {
@@ -819,7 +820,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                             if (QV4::MemberData *md = propertyAndMethodStorageAsMemberData()) {
                                 const QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>();
                                 if (!v) {
-                                    md->set(cache->engine, id, cache->engine->newVariantObject(QVariant()));
+                                    md->set(engine, id, engine->newVariantObject(QVariant()));
                                     v = (md->data() + id)->as<QV4::VariantObject>();
                                     QQml_valueTypeProvider()->initValueType(fallbackMetaType, v->d()->data());
                                 }
@@ -835,7 +836,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 }
 
                 if (c == QMetaObject::WriteProperty && needActivate) {
-                    activate(object, methodOffset() + id, 0);
+                    activate(object, methodOffset() + id, nullptr);
                 }
 
                 return -1;
@@ -847,7 +848,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 const QV4::CompiledData::Alias *aliasData = &compiledObject->aliasTable()[id];
 
                 if ((aliasData->flags & QV4::CompiledData::Alias::AliasPointsToPointerObject) && c == QMetaObject::ReadProperty)
-                        *reinterpret_cast<void **>(a[0]) = 0;
+                        *reinterpret_cast<void **>(a[0]) = nullptr;
 
                 if (!ctxt) return -1;
 
@@ -898,7 +899,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     int rv = QMetaObject::metacall(valueType, c, valueTypePropertyIndex, a);
 
                     if (c == QMetaObject::WriteProperty)
-                        valueType->write(target, coreIndex, 0x00);
+                        valueType->write(target, coreIndex, nullptr);
 
                     return rv;
 
@@ -925,12 +926,14 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
             id -= plainSignals;
 
             if (id < methodCount) {
-                if (!ctxt->engine)
+                QQmlEngine *engine = ctxt->engine;
+                if (!engine)
                     return -1; // We can't run the method
 
-                QQmlEnginePrivate *ep = QQmlEnginePrivate::get(ctxt->engine);
+                QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+                QV4::ExecutionEngine *v4 = engine->handle();
                 ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
-                QV4::Scope scope(ep->v4engine());
+                QV4::Scope scope(v4);
 
 
                 QV4::ScopedFunctionObject function(scope, method(id));
@@ -949,20 +952,20 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 }
 
                 const unsigned int parameterCount = function->formalParameterCount();
-                QV4::ScopedCallData callData(scope, parameterCount);
-                callData->thisObject = ep->v8engine()->global();
+                QV4::JSCallData jsCallData(scope, parameterCount);
+                *jsCallData->thisObject = v4->global();
 
                 for (uint ii = 0; ii < parameterCount; ++ii)
-                    callData->args[ii] = scope.engine->fromVariant(*(QVariant *)a[ii + 1]);
+                    jsCallData->args[ii] = scope.engine->fromVariant(*(QVariant *)a[ii + 1]);
 
-                function->call(scope, callData);
+                QV4::ScopedValue result(scope, function->call(jsCallData));
                 if (scope.hasException()) {
                     QQmlError error = scope.engine->catchExceptionAsQmlError();
                     if (error.isValid())
                         ep->warning(error);
                     if (a[0]) *(QVariant *)a[0] = QVariant();
                 } else {
-                    if (a[0]) *(QVariant *)a[0] = scope.engine->toVariant(scope.result, 0);
+                    if (a[0]) *(QVariant *)a[0] = scope.engine->toVariant(result, 0);
                 }
 
                 ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
@@ -1002,7 +1005,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::readVarProperty(int id) const
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
         return (md->data() + id)->asReturnedValue();
-    return QV4::Primitive::undefinedValue().asReturnedValue();
+    return QV4::Value::undefinedValue().asReturnedValue();
 }
 
 QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id) const
@@ -1015,7 +1018,7 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id) const
         const QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>();
         if (v)
             return v->d()->data();
-        return cache->engine->toVariant(*(md->data() + id), -1);
+        return engine->toVariant(*(md->data() + id), -1);
     }
     return QVariant();
 }
@@ -1034,7 +1037,7 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
     if (oldVariant)
         oldVariant->removeVmePropertyReference();
 
-    QObject *valueObject = 0;
+    QObject *valueObject = nullptr;
     QQmlVMEVariantQObjectPtr *guard = getQObjectGuardForProperty(id);
 
     // And, if the new value is a scarce resource, we need to ensure that it does not get
@@ -1056,8 +1059,8 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
         guard->setGuardedValue(valueObject, this, id);
 
     // Write the value and emit change signal as appropriate.
-    md->set(cache->engine, id, value);
-    activate(object, methodOffset() + id, 0);
+    md->set(engine, id, value);
+    activate(object, methodOffset() + id, nullptr);
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
@@ -1075,17 +1078,17 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
 
         // And, if the new value is a scarce resource, we need to ensure that it does not get
         // automatically released by the engine until no other references to it exist.
-        QV4::Scope scope(cache->engine);
-        QV4::ScopedValue newv(scope, cache->engine->fromVariant(value));
+        QV4::Scope scope(engine);
+        QV4::ScopedValue newv(scope, engine->fromVariant(value));
         QV4::Scoped<QV4::VariantObject> v(scope, newv);
         if (!!v)
             v->addVmePropertyReference();
 
         // Write the value and emit change signal as appropriate.
         QVariant currentValue = readPropertyAsVariant(id);
-        md->set(cache->engine, id, newv);
+        md->set(engine, id, newv);
         if ((currentValue.userType() != value.userType() || currentValue != value))
-            activate(object, methodOffset() + id, 0);
+            activate(object, methodOffset() + id, nullptr);
     } else {
         bool needActivate = false;
         if (value.userType() == QMetaType::QObjectStar) {
@@ -1101,14 +1104,14 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
                                  v->d()->data() != value);
                 if (v)
                     v->removeVmePropertyReference();
-                md->set(cache->engine, id, cache->engine->newVariantObject(value));
+                md->set(engine, id, engine->newVariantObject(value));
                 v = static_cast<const QV4::VariantObject *>(md->data() + id);
                 v->addVmePropertyReference();
             }
         }
 
         if (needActivate)
-            activate(object, methodOffset() + id, 0);
+            activate(object, methodOffset() + id, nullptr);
     }
 }
 
@@ -1119,7 +1122,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::vmeMethod(int index) const
         return parentVMEMetaObject()->vmeMethod(index);
     }
     if (!compiledObject)
-        return QV4::Primitive::undefinedValue().asReturnedValue();
+        return QV4::Value::undefinedValue().asReturnedValue();
     const int plainSignals = compiledObject->nSignals + compiledObject->nProperties + compiledObject->nAliases;
     Q_ASSERT(index >= (methodOffset() + plainSignals) && index < (methodOffset() + plainSignals + int(compiledObject->nFunctions)));
     return method(index - methodOffset() - plainSignals);
@@ -1141,7 +1144,7 @@ void QQmlVMEMetaObject::setVmeMethod(int index, const QV4::Value &function)
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
         return;
-    md->set(cache->engine, methodIndex + compiledObject->nProperties, function);
+    md->set(engine, methodIndex + compiledObject->nProperties, function);
 }
 
 QV4::ReturnedValue QQmlVMEMetaObject::vmeProperty(int index) const
@@ -1165,15 +1168,13 @@ void QQmlVMEMetaObject::setVMEProperty(int index, const QV4::Value &v)
 
 void QQmlVMEMetaObject::ensureQObjectWrapper()
 {
-    Q_ASSERT(cache && cache->engine);
-    QV4::ExecutionEngine *v4 = cache->engine;
-    QV4::QObjectWrapper::wrap(v4, object);
+    Q_ASSERT(cache);
+    QV4::QObjectWrapper::wrap(engine, object);
 }
 
 void QQmlVMEMetaObject::mark(QV4::MarkStack *markStack)
 {
-    QV4::ExecutionEngine *v4 = cache ? cache->engine : 0;
-    if (v4 != markStack->engine)
+    if (engine != markStack->engine)
         return;
 
     propertyAndMethodStorage.markOnce(markStack);
@@ -1186,7 +1187,7 @@ bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex,
 {
     Q_ASSERT(compiledObject && (index >= propOffset() + int(compiledObject->nProperties)));
 
-    *target = 0;
+    *target = nullptr;
     *coreIndex = -1;
     *valueTypeIndex = -1;
 
@@ -1288,7 +1289,7 @@ QQmlVMEVariantQObjectPtr *QQmlVMEMetaObject::getQObjectGuardForProperty(int inde
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 QT_END_NAMESPACE

@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQml.Models 2.12
 
 Item {
     width: 800; height: 600
@@ -37,7 +38,7 @@ Item {
         ListElement { lColor: "brown" }
         ListElement { lColor: "thistle" }
     }
-    VisualDataModel { id: visualModel; model: rssModel; delegate: photoDelegate }
+    DelegateModel { id: visualModel; model: rssModel; delegate: photoDelegate }
 
     PathView {
         id: photoPathView

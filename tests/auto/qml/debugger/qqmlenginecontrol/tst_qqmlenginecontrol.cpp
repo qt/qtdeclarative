@@ -37,9 +37,6 @@
 #include <QtTest/qtest.h>
 #include <QtCore/qlibraryinfo.h>
 
-#define STR_PORT_FROM "13773"
-#define STR_PORT_TO "13783"
-
 class QQmlEngineBlocker : public QObject
 {
     Q_OBJECT
@@ -64,77 +61,37 @@ void QQmlEngineBlocker::blockEngine(int engineId, const QString &name)
     static_cast<QQmlEngineControlClient *>(parent())->blockEngine(engineId);
 }
 
-class tst_QQmlEngineControl : public QQmlDataTest
+class tst_QQmlEngineControl : public QQmlDebugTest
 {
     Q_OBJECT
 
-public:
-    tst_QQmlEngineControl()
-        : m_process(0)
-        , m_connection(0)
-        , m_client(0)
-    {}
-
 private:
-    QQmlDebugProcess *m_process;
-    QQmlDebugConnection *m_connection;
-    QQmlEngineControlClient *m_client;
+    ConnectResult connect(const QString &testFile, bool restrictServices);
+    QList<QQmlDebugClient *> createClients() override;
 
-    void connect(const QString &testFile, bool restrictServices);
     void engine_data();
+    QPointer<QQmlEngineControlClient> m_client;
 
 private slots:
-    void cleanup();
-
     void startEngine_data();
     void startEngine();
     void stopEngine_data();
     void stopEngine();
 };
 
-void tst_QQmlEngineControl::connect(const QString &testFile, bool restrictServices)
+QQmlDebugTest::ConnectResult tst_QQmlEngineControl::connect(const QString &file,
+                                                            bool restrictServices)
 {
-    const QString executable = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene";
-    QStringList arguments;
-    arguments << QString::fromLatin1("-qmljsdebugger=port:%1,%2,block%3")
-                 .arg(STR_PORT_FROM).arg(STR_PORT_TO)
-                 .arg(restrictServices ? QStringLiteral(",services:EngineControl") : QString());
-
-    arguments << QQmlDataTest::instance()->testFile(testFile);
-
-    m_process = new QQmlDebugProcess(executable, this);
-    m_process->start(QStringList() << arguments);
-    QVERIFY2(m_process->waitForSessionStart(), "Could not launch application, or did not get 'Waiting for connection'.");
-
-    m_connection = new QQmlDebugConnection();
-    m_client = new QQmlEngineControlClient(m_connection);
-    new QQmlEngineBlocker(m_client);
-    QList<QQmlDebugClient *> others = QQmlDebugTest::createOtherClients(m_connection);
-
-    const int port = m_process->debugPort();
-    m_connection->connectToHost(QLatin1String("127.0.0.1"), port);
-
-    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
-    foreach (QQmlDebugClient *other, others)
-        QCOMPARE(other->state(), restrictServices ? QQmlDebugClient::Unavailable :
-                                                    QQmlDebugClient::Enabled);
-    qDeleteAll(others);
+    return QQmlDebugTest::connect(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene",
+                                  restrictServices ? QStringLiteral("EngineControl") : QString(),
+                                  testFile(file), true);
 }
 
-void tst_QQmlEngineControl::cleanup()
+QList<QQmlDebugClient *> tst_QQmlEngineControl::createClients()
 {
-    if (QTest::currentTestFailed()) {
-        qDebug() << "Process State:" << (m_process ? m_process->state() : QLatin1String("null"));
-        qDebug() << "Application Output:" << (m_process ? m_process->output() : QLatin1String("null"));
-        qDebug() << "Connection State:" << QQmlDebugTest::connectionStateString(m_connection);
-        qDebug() << "Client State:" << QQmlDebugTest::clientStateString(m_client);
-    }
-    delete m_process;
-    m_process = 0;
-    delete m_client;
-    m_client = 0;
-    delete m_connection;
-    m_connection = 0;
+    m_client = new QQmlEngineControlClient(m_connection);
+    new QQmlEngineBlocker(m_client);
+    return QList<QQmlDebugClient *>({m_client});
 }
 
 void tst_QQmlEngineControl::engine_data()
@@ -152,14 +109,16 @@ void tst_QQmlEngineControl::startEngine_data()
 void tst_QQmlEngineControl::startEngine()
 {
     QFETCH(bool, restrictMode);
-
-    connect("test.qml", restrictMode);
+    QCOMPARE(connect("test.qml", restrictMode), ConnectSuccess);
 
     QTRY_VERIFY(!m_client->blockedEngines().empty());
     m_client->releaseEngine(m_client->blockedEngines().last());
+    QVERIFY(m_client->blockedEngines().isEmpty());
 
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(engineAdded(int,QString))),
              "No engine start message received in time.");
+
+    QVERIFY(m_client->blockedEngines().isEmpty());
 }
 
 void tst_QQmlEngineControl::stopEngine_data()
@@ -171,19 +130,23 @@ void tst_QQmlEngineControl::stopEngine()
 {
     QFETCH(bool, restrictMode);
 
-    connect("exit.qml", restrictMode);
+    QCOMPARE(connect("exit.qml", restrictMode), ConnectSuccess);
 
     QTRY_VERIFY(!m_client->blockedEngines().empty());
     m_client->releaseEngine(m_client->blockedEngines().last());
+    QVERIFY(m_client->blockedEngines().isEmpty());
 
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(engineAdded(int,QString))),
              "No engine start message received in time.");
+    QVERIFY(m_client->blockedEngines().isEmpty());
 
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(engineAboutToBeRemoved(int,QString))),
              "No engine about to stop message received in time.");
     m_client->releaseEngine(m_client->blockedEngines().last());
+    QVERIFY(m_client->blockedEngines().isEmpty());
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(engineRemoved(int,QString))),
              "No engine stop message received in time.");
+    QVERIFY(m_client->blockedEngines().isEmpty());
 }
 
 QTEST_MAIN(tst_QQmlEngineControl)

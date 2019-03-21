@@ -79,7 +79,7 @@ class Q_QML_PRIVATE_EXPORT QQmlComponentPrivate : public QObjectPrivate, public 
 
 public:
     QQmlComponentPrivate()
-        : typeData(0), progress(0.), start(-1), engine(0), creationContext(0), depthIncreased(false) {}
+        : progress(0.), start(-1), engine(nullptr), creationContext(nullptr) {}
 
     void loadUrl(const QUrl &newUrl, QQmlComponent::CompilationMode mode = QQmlComponent::PreferSynchronous);
 
@@ -88,18 +88,18 @@ public:
     void initializeObjectWithInitialProperties(QV4::QmlContext *qmlContext, const QV4::Value &valuemap, QObject *toCreate);
     static void setInitialProperties(QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o, const QV4::Value &v);
 
-    void incubateObject(
+    virtual void incubateObject(
             QQmlIncubator *incubationTask,
             QQmlComponent *component,
             QQmlEngine *engine,
             QQmlContextData *context,
             QQmlContextData *forContext);
 
-    QQmlTypeData *typeData;
+    QQmlRefPointer<QQmlTypeData> typeData;
     void typeDataReady(QQmlTypeData *) override;
     void typeDataProgress(QQmlTypeData *, qreal) override;
 
-    void fromTypeData(QQmlTypeData *data);
+    void fromTypeData(const QQmlRefPointer<QQmlTypeData> &data);
 
     QUrl url;
     qreal progress;
@@ -121,13 +121,21 @@ public:
     };
     ConstructionState state;
 
-    static void beginDeferred(QQmlEnginePrivate *enginePriv, QObject *object,
-                              ConstructionState *state);
+    struct DeferredState {
+        ~DeferredState() {
+            qDeleteAll(constructionStates);
+            constructionStates.clear();
+        }
+        QVector<ConstructionState *> constructionStates;
+    };
+
+    static void beginDeferred(QQmlEnginePrivate *enginePriv, QObject *object, DeferredState* deferredState);
+    static void completeDeferred(QQmlEnginePrivate *enginePriv, DeferredState *deferredState);
+
     static void complete(QQmlEnginePrivate *enginePriv, ConstructionState *state);
 
     QQmlEngine *engine;
     QQmlGuardedContextData creationContext;
-    bool depthIncreased;
 
     void clear();
 

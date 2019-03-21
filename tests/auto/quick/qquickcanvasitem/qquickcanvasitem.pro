@@ -5,6 +5,8 @@ TARGET=tst_qquickcanvasitem
 CONFIG += qmltestcase
 SOURCES += tst_qquickcanvasitem.cpp
 
+exists($$[QT_INSTALL_PLUGINS]/imageformats): DEFINES += HAS_IMAGE_FORMATS
+
 TESTDATA = data/*
 
 OTHER_FILES += \
@@ -50,7 +52,8 @@ OTHER_FILES += \
     data/transparent.png \
     data/transparent50.png \
     data/yellow.png \
-    data/yellow75.png
+    data/yellow75.png \
+    data/tst_invalidContext.qml
 
 
 CONFIG += insignificant_test # QTBUG-41043

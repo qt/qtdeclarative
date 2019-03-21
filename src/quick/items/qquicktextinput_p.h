@@ -115,10 +115,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION 6)
 
 public:
-    QQuickTextInput(QQuickItem * parent=0);
+    QQuickTextInput(QQuickItem * parent=nullptr);
     ~QQuickTextInput();
 
-    void componentComplete() Q_DECL_OVERRIDE;
+    void componentComplete() override;
 
     enum EchoMode {//To match QLineEdit::EchoMode
         Normal,
@@ -267,12 +267,12 @@ public:
     bool hasAcceptableInput() const;
 
 #if QT_CONFIG(im)
-    QVariant inputMethodQuery(Qt::InputMethodQuery property) const Q_DECL_OVERRIDE;
+    QVariant inputMethodQuery(Qt::InputMethodQuery property) const override;
     Q_REVISION(3) Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, QVariant argument) const;
 #endif
 
-    QRectF boundingRect() const Q_DECL_OVERRIDE;
-    QRectF clipRect() const Q_DECL_OVERRIDE;
+    QRectF boundingRect() const override;
+    QRectF clipRect() const override;
 
     bool canPaste() const;
 
@@ -363,26 +363,26 @@ private:
     void ensureActiveFocus();
 
 protected:
-    QQuickTextInput(QQuickTextInputPrivate &dd, QQuickItem *parent = 0);
+    QQuickTextInput(QQuickTextInputPrivate &dd, QQuickItem *parent = nullptr);
 
     void geometryChanged(const QRectF &newGeometry,
-                                 const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+                                 const QRectF &oldGeometry) override;
 
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseDoubleClickEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void keyPressEvent(QKeyEvent* ev) Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
+    void keyPressEvent(QKeyEvent* ev) override;
 #if QT_CONFIG(im)
-    void inputMethodEvent(QInputMethodEvent *) Q_DECL_OVERRIDE;
+    void inputMethodEvent(QInputMethodEvent *) override;
 #endif
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    bool event(QEvent *e) Q_DECL_OVERRIDE;
-    void focusOutEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
-    void focusInEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
-    void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
-    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) Q_DECL_OVERRIDE;
-    void updatePolish() Q_DECL_OVERRIDE;
+    void mouseUngrabEvent() override;
+    bool event(QEvent *e) override;
+    void focusOutEvent(QFocusEvent *event) override;
+    void focusInEvent(QFocusEvent *event) override;
+    void timerEvent(QTimerEvent *event) override;
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) override;
+    void updatePolish() override;
 
 public Q_SLOTS:
     void selectAll();

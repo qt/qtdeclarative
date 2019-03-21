@@ -91,62 +91,50 @@ struct ArrayVTable
 namespace Heap {
 
 #define ArrayDataMembers(class, Member) \
-    Member(class, NoMark, uint, type) \
+    Member(class, NoMark, ushort, type) \
+    Member(class, NoMark, ushort, unused) \
     Member(class, NoMark, uint, offset) \
     Member(class, NoMark, PropertyAttributes *, attrs) \
-    Member(class, NoMark, ReturnedValue, freeList) \
     Member(class, NoMark, SparseArray *, sparse) \
     Member(class, ValueArray, ValueArray, values)
 
 DECLARE_HEAP_OBJECT(ArrayData, Base) {
-    DECLARE_MARK_TABLE(ArrayData);
+    static void markObjects(Heap::Base *base, MarkStack *stack);
 
-    enum Type { Simple = 0, Complex = 1, Sparse = 2, Custom = 3 };
-
-    struct Index {
-        Heap::ArrayData *arrayData;
-        uint index;
-
-        void set(ExecutionEngine *e, Value newVal) {
-            arrayData->values.set(e, index, newVal);
-        }
-        const Value *operator->() const { return &arrayData->values[index]; }
-        const Value &operator*() const { return arrayData->values[index]; }
-        bool isNull() const { return !arrayData; }
-    };
+    enum Type { Simple = 0, Sparse = 1, Custom = 2 };
 
     bool isSparse() const { return type == Sparse; }
 
-    const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(Base::vtable()); }
+    const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(internalClass->vtable); }
 
     inline ReturnedValue get(uint i) const {
         return vtable()->get(this, i);
     }
     inline bool getProperty(uint index, Property *p, PropertyAttributes *attrs);
-    inline void setProperty(ExecutionEngine *e, uint index, const Property *p);
-    inline Index getValueOrSetter(uint index, PropertyAttributes *attrs);
+    inline void setProperty(EngineBase *e, uint index, const Property *p);
+    inline PropertyIndex getValueOrSetter(uint index, PropertyAttributes *attrs);
     inline PropertyAttributes attributes(uint i) const;
 
     bool isEmpty(uint i) const {
-        return get(i) == Primitive::emptyValue().asReturnedValue();
+        return get(i) == Value::emptyValue().asReturnedValue();
     }
 
     inline uint length() const {
         return vtable()->length(this);
     }
 
-    void setArrayData(ExecutionEngine *e, uint index, Value newVal) {
+    void setArrayData(EngineBase *e, uint index, Value newVal) {
         values.set(e, index, newVal);
     }
 
     uint mappedIndex(uint index) const;
 };
-V4_ASSERT_IS_TRIVIAL(ArrayData)
+Q_STATIC_ASSERT(std::is_trivial< ArrayData >::value);
 
 struct SimpleArrayData : public ArrayData {
-    uint mappedIndex(uint index) const { return (index + offset) % values.alloc; }
+    uint mappedIndex(uint index) const { index += offset; if (index >= values.alloc) index -= values.alloc; return index; }
     const Value &data(uint index) const { return values[mappedIndex(index)]; }
-    void setData(ExecutionEngine *e, uint index, Value newVal) {
+    void setData(EngineBase *e, uint index, Value newVal) {
         values.set(e, mappedIndex(index), newVal);
     }
 
@@ -154,7 +142,7 @@ struct SimpleArrayData : public ArrayData {
         return attrs ? attrs[i] : Attr_Data;
     }
 };
-V4_ASSERT_IS_TRIVIAL(SimpleArrayData)
+Q_STATIC_ASSERT(std::is_trivial< SimpleArrayData >::value);
 
 struct SparseArrayData : public ArrayData {
     void destroy() {
@@ -187,8 +175,6 @@ struct Q_QML_EXPORT ArrayData : public Managed
         IsArrayData = true
     };
 
-    typedef Heap::ArrayData::Index Index;
-
     uint alloc() const { return d()->values.alloc; }
     uint &alloc() { return d()->values.alloc; }
     void setAlloc(uint a) { d()->values.alloc = a; }
@@ -197,7 +183,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
     PropertyAttributes *attrs() const { return d()->attrs; }
     void setAttrs(PropertyAttributes *a) { d()->attrs = a; }
     const Value *arrayData() const { return d()->values.data(); }
-    void setArrayData(ExecutionEngine *e, uint index, Value newVal) {
+    void setArrayData(EngineBase *e, uint index, Value newVal) {
         d()->setArrayData(e, index, newVal);
     }
 
@@ -261,8 +247,6 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     V4_INTERNALCLASS(SparseArrayData)
     V4_NEEDS_DESTROY
 
-    ReturnedValue &freeList() { return d()->freeList; }
-    ReturnedValue freeList() const { return d()->freeList; }
     SparseArray *sparse() const { return d()->sparse; }
     void setSparse(SparseArray *s) { d()->sparse = s; }
 
@@ -304,13 +288,15 @@ bool ArrayData::getProperty(uint index, Property *p, PropertyAttributes *attrs)
     }
 
     *attrs = attributes(index);
-    p->value = *(Index{ this, mapped });
-    if (attrs->isAccessor())
-        p->set = *(Index{ this, mapped + 1 /*Object::SetterOffset*/ });
+    if (p) {
+        p->value = *(PropertyIndex{ this, values.values + mapped });
+        if (attrs->isAccessor())
+            p->set = *(PropertyIndex{ this, values.values + mapped + 1 /*Object::SetterOffset*/ });
+    }
     return true;
 }
 
-void ArrayData::setProperty(QV4::ExecutionEngine *e, uint index, const Property *p)
+void ArrayData::setProperty(QV4::EngineBase *e, uint index, const Property *p)
 {
     uint mapped = mappedIndex(index);
     Q_ASSERT(mapped != UINT_MAX);
@@ -326,16 +312,18 @@ inline PropertyAttributes ArrayData::attributes(uint i) const
     return static_cast<const SimpleArrayData *>(this)->attributes(i);
 }
 
-ArrayData::Index ArrayData::getValueOrSetter(uint index, PropertyAttributes *attrs)
+PropertyIndex ArrayData::getValueOrSetter(uint index, PropertyAttributes *attrs)
 {
     uint idx = mappedIndex(index);
     if (idx == UINT_MAX) {
         *attrs = Attr_Invalid;
-        return { 0, 0 };
+        return { nullptr, nullptr };
     }
 
     *attrs = attributes(index);
-    return { this, attrs->isAccessor() ? idx + 1 /* QV4::Object::SetterOffset*/ : idx };
+    if (attrs->isAccessor())
+        ++idx;
+    return { this, values.values + idx };
 }
 
 

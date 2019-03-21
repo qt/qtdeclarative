@@ -101,7 +101,7 @@ QT_BEGIN_NAMESPACE
     \l {Item::}{parent} value, use ParentChange instead.
 
 
-    \section2 Resetting property values
+    \section2 Resetting Property Values
 
     The \c undefined value can be used to reset the property value for a state.
     In the following example, when \c myText changes to the \e widerText
@@ -111,7 +111,7 @@ QT_BEGIN_NAMESPACE
     \snippet qml/propertychanges.qml reset
 
 
-    \section2 Immediate property changes in transitions
+    \section2 Immediate Property Changes in Transitions
 
     When \l{Animation and Transitions in Qt Quick}{Transitions} are used to animate
     state changes, they animate properties from their values in the current
@@ -180,7 +180,7 @@ public:
         rewindExpression = QQmlPropertyPrivate::signalExpression(property);
     }
 
-    bool override(QQuickStateActionEvent *other) override {
+    bool mayOverride(QQuickStateActionEvent *other) override {
         if (other == this)
             return true;
         if (other->type() != type())
@@ -208,18 +208,20 @@ public:
     bool isExplicit : 1;
 
     void decode();
-    void decodeBinding(const QString &propertyPrefix, const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding);
+    void decodeBinding(const QString &propertyPrefix, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &qmlUnit, const QV4::CompiledData::Binding *binding);
 
     class ExpressionChange {
     public:
         ExpressionChange(const QString &_name,
+                         const QV4::CompiledData::Binding *_binding,
                          QQmlBinding::Identifier _id,
                          const QString& _expr,
                          const QUrl &_url,
                          int _line,
                          int _column)
-            : name(_name), id(_id), expression(_expr), url(_url), line(_line), column(_column) {}
+            : name(_name), binding(_binding), id(_id), expression(_expr), url(_url), line(_line), column(_column) {}
         QString name;
+        const QV4::CompiledData::Binding *binding;
         QQmlBinding::Identifier id;
         QString expression;
         QUrl url;
@@ -234,19 +236,19 @@ public:
     QQmlProperty property(const QString &);
 };
 
-void QQuickPropertyChangesParser::verifyList(const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding)
+void QQuickPropertyChangesParser::verifyList(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
 {
     if (binding->type == QV4::CompiledData::Binding::Type_Object) {
-        error(qmlUnit->objectAt(binding->value.objectIndex), QQuickPropertyChanges::tr("PropertyChanges does not support creating state-specific objects."));
+        error(compilationUnit->objectAt(binding->value.objectIndex), QQuickPropertyChanges::tr("PropertyChanges does not support creating state-specific objects."));
         return;
     }
 
     if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty
         || binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
-        const QV4::CompiledData::Object *subObj = qmlUnit->objectAt(binding->value.objectIndex);
+        const QV4::CompiledData::Object *subObj = compilationUnit->objectAt(binding->value.objectIndex);
         const QV4::CompiledData::Binding *subBinding = subObj->bindingTable();
         for (quint32 i = 0; i < subObj->nBindings; ++i, ++subBinding) {
-            verifyList(qmlUnit, subBinding);
+            verifyList(compilationUnit, subBinding);
         }
     }
 }
@@ -257,43 +259,46 @@ void QQuickPropertyChangesPrivate::decode()
         return;
 
     for (const QV4::CompiledData::Binding *binding : qAsConst(bindings))
-        decodeBinding(QString(), compilationUnit->data, binding);
+        decodeBinding(QString(), compilationUnit, binding);
 
     bindings.clear();
 
     decoded = true;
 }
 
-void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding)
+void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
 {
     Q_Q(QQuickPropertyChanges);
 
-    QString propertyName = propertyPrefix + qmlUnit->stringAt(binding->propertyNameIndex);
+    QString propertyName = propertyPrefix + compilationUnit->stringAt(binding->propertyNameIndex);
 
     if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty
         || binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
         QString pre = propertyName + QLatin1Char('.');
-        const QV4::CompiledData::Object *subObj = qmlUnit->objectAt(binding->value.objectIndex);
+        const QV4::CompiledData::Object *subObj = compilationUnit->objectAt(binding->value.objectIndex);
         const QV4::CompiledData::Binding *subBinding = subObj->bindingTable();
         for (quint32 i = 0; i < subObj->nBindings; ++i, ++subBinding) {
-            decodeBinding(pre, qmlUnit, subBinding);
+            decodeBinding(pre, compilationUnit, subBinding);
         }
         return;
     }
 
-    QQmlProperty prop = property(propertyName);      //### better way to check for signal property?
-
-    if (prop.type() & QQmlProperty::SignalProperty) {
-        QQuickReplaceSignalHandler *handler = new QQuickReplaceSignalHandler;
-        handler->property = prop;
-        handler->expression.take(new QQmlBoundSignalExpression(object, QQmlPropertyPrivate::get(prop)->signalIndex(),
-                                                               QQmlContextData::get(qmlContext(q)), object, compilationUnit->runtimeFunctions.at(binding->value.compiledScriptIndex)));
-        signalReplacements << handler;
-        return;
+    if (propertyName.count() >= 3 &&
+        propertyName.at(0) == QLatin1Char('o') &&
+        propertyName.at(1) == QLatin1Char('n') &&
+        propertyName.at(2).isUpper()) {
+        QQmlProperty prop = property(propertyName);
+        if (prop.isSignalProperty()) {
+            QQuickReplaceSignalHandler *handler = new QQuickReplaceSignalHandler;
+            handler->property = prop;
+            handler->expression.take(new QQmlBoundSignalExpression(object, QQmlPropertyPrivate::get(prop)->signalIndex(),
+                                                                   QQmlContextData::get(qmlContext(q)), object, compilationUnit->runtimeFunctions.at(binding->value.compiledScriptIndex)));
+            signalReplacements << handler;
+            return;
+        }
     }
 
-    if (binding->type == QV4::CompiledData::Binding::Type_Script) {
-        QString expression = binding->valueAsString(qmlUnit);
+    if (binding->type == QV4::CompiledData::Binding::Type_Script || binding->isTranslationBinding()) {
         QUrl url = QUrl();
         int line = -1;
         int column = -1;
@@ -305,24 +310,34 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
             column = ddata->columnNumber;
         }
 
-        expressions << ExpressionChange(propertyName, binding->value.compiledScriptIndex, expression, url, line, column);
+        QString expression;
+        QQmlBinding::Identifier id = QQmlBinding::Invalid;
+
+        if (!binding->isTranslationBinding()) {
+            expression = binding->valueAsString(compilationUnit.data());
+            id = binding->value.compiledScriptIndex;
+        }
+        expressions << ExpressionChange(propertyName, binding, id, expression, url, line, column);
         return;
     }
 
     QVariant var;
     switch (binding->type) {
     case QV4::CompiledData::Binding::Type_Script:
-        Q_UNREACHABLE();
     case QV4::CompiledData::Binding::Type_Translation:
     case QV4::CompiledData::Binding::Type_TranslationById:
+        Q_UNREACHABLE();
     case QV4::CompiledData::Binding::Type_String:
-        var = binding->valueAsString(qmlUnit);
+        var = binding->valueAsString(compilationUnit.data());
         break;
     case QV4::CompiledData::Binding::Type_Number:
-        var = binding->valueAsNumber();
+        var = binding->valueAsNumber(compilationUnit->constants);
         break;
     case QV4::CompiledData::Binding::Type_Boolean:
         var = binding->valueAsBoolean();
+        break;
+    case QV4::CompiledData::Binding::Type_Null:
+        var = QVariant::fromValue(nullptr);
         break;
     default:
         break;
@@ -331,13 +346,13 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
     properties << qMakePair(propertyName, var);
 }
 
-void QQuickPropertyChangesParser::verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props)
+void QQuickPropertyChangesParser::verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &props)
 {
     for (int ii = 0; ii < props.count(); ++ii)
-        verifyList(qmlUnit, props.at(ii));
+        verifyList(compilationUnit, props.at(ii));
 }
 
-void QQuickPropertyChangesParser::applyBindings(QObject *obj, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+void QQuickPropertyChangesParser::applyBindings(QObject *obj, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     QQuickPropertyChangesPrivate *p =
         static_cast<QQuickPropertyChangesPrivate *>(QObjectPrivate::get(obj));
@@ -395,7 +410,10 @@ QQmlProperty
 QQuickPropertyChangesPrivate::property(const QString &property)
 {
     Q_Q(QQuickPropertyChanges);
-    QQmlProperty prop(object, property, qmlContext(q));
+    QQmlContextData *context = nullptr;
+    if (QQmlData *ddata = QQmlData::get(q))
+        context = ddata->outerContext;
+    QQmlProperty prop = QQmlPropertyPrivate::create(object, property, context);
     if (!prop.isValid()) {
         qmlWarning(q) << QQuickPropertyChanges::tr("Cannot assign to non-existent property \"%1\"").arg(property);
         return QQmlProperty();
@@ -415,9 +433,10 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
     ActionList list;
 
     for (int ii = 0; ii < d->properties.count(); ++ii) {
+        QQmlProperty prop = d->property(d->properties.at(ii).first);
 
-        QQuickStateAction a(d->object, d->properties.at(ii).first,
-                 qmlContext(this), d->properties.at(ii).second);
+        QQuickStateAction a(d->object, prop, d->properties.at(ii).first,
+                            d->properties.at(ii).second);
 
         if (a.property.isValid()) {
             a.restore = restoreEntryValues();
@@ -426,7 +445,6 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
     }
 
     for (int ii = 0; ii < d->signalReplacements.count(); ++ii) {
-
         QQuickReplaceSignalHandler *handler = d->signalReplacements.at(ii);
 
         if (handler->property.isValid()) {
@@ -452,14 +470,15 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
 
             QQmlContextData *context = QQmlContextData::get(qmlContext(this));
 
-            QQmlBinding *newBinding = 0;
-            if (e.id != QQmlBinding::Invalid) {
-                QV4::Scope scope(QQmlEnginePrivate::getV4Engine(qmlEngine(this)));
+            QQmlBinding *newBinding = nullptr;
+            if (e.binding && e.binding->isTranslationBinding()) {
+                newBinding = QQmlBinding::createTranslationBinding(d->compilationUnit, e.binding, object(), context);
+            } else if (e.id != QQmlBinding::Invalid) {
+                QV4::Scope scope(qmlEngine(this)->handle());
                 QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(scope.engine->rootContext(), context, object()));
                 newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(prop)->core,
                                                  d->compilationUnit->runtimeFunctions.at(e.id), object(), context, qmlContext);
             }
-//            QQmlBinding *newBinding = e.id != QQmlBinding::Invalid ? QQmlBinding::createBinding(e.id, object(), qmlContext(this)) : 0;
             if (!newBinding)
                 newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(prop)->core,
                                                  e.expression, object(), context, e.url.toString(), e.line);
@@ -638,7 +657,7 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
     }
 
     // adding a new expression.
-    expressionIterator.insert(ExpressionEntry(name, QQmlBinding::Invalid, expression, QUrl(), -1, -1));
+    expressionIterator.insert(ExpressionEntry(name, nullptr, QQmlBinding::Invalid, expression, QUrl(), -1, -1));
 
     if (state() && state()->isStateActive()) {
         if (hadValue) {

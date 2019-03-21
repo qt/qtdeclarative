@@ -88,8 +88,8 @@ class Q_QUICK_EXPORT QQuickSprite : public QQuickStochasticState
     Q_PROPERTY(int frameDurationVariation READ frameDurationVariation WRITE setFrameDurationVariation NOTIFY frameDurationVariationChanged)
 
 public:
-    explicit QQuickSprite(QObject *parent = 0);
-    ~QQuickSprite();
+    explicit QQuickSprite(QObject *parent = nullptr);
+    ~QQuickSprite() override;
 
     QUrl source() const
     {
@@ -161,11 +161,21 @@ public:
         return m_frameDurationVariation;
     }
 
-    int variedDuration() const Q_DECL_OVERRIDE;
+    int variedDuration() const override;
 
     bool frameSync() const
     {
         return m_frameSync;
+    }
+
+    void setDevicePixelRatio(qreal dpr)
+    {
+        m_devicePixelRatio = dpr;
+    }
+
+    qreal devicePixelRatio() const
+    {
+        return m_devicePixelRatio;
     }
 
 Q_SIGNALS:
@@ -308,6 +318,7 @@ private:
     friend class QQuickAnimatedSprite;
     friend class QQuickSpriteEngine;
     friend class QQuickStochasticEngine;
+
     int m_generatedCount;
     int m_framesPerRow;
     int m_rowY;
@@ -325,6 +336,7 @@ private:
     int m_frameDuration;
     int m_frameDurationVariation;
     bool m_frameSync;
+    qreal m_devicePixelRatio;
     QQuickPixmap m_pix;
 };
 

@@ -44,14 +44,16 @@
 #include <private/qqmlengine_p.h>
 #include <private/qv4compileddata_p.h>
 
+#include <cstdio>
+
+QT_REQUIRE_CONFIG(qml_debug);
+
 QT_BEGIN_NAMESPACE
 
 QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
 {
-    if (!QQmlEnginePrivate::qml_debugging_enabled
-            && printWarning) {
-        qDebug("QML debugging is enabled. Only use this in a safe environment.");
-    }
+    if (!QQmlEnginePrivate::qml_debugging_enabled && printWarning)
+        fprintf(stderr, "QML debugging is enabled. Only use this in a safe environment.\n");
     QQmlEnginePrivate::qml_debugging_enabled = true;
 }
 

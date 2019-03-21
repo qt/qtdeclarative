@@ -43,13 +43,6 @@ QtObject {
         interval: 1000
         onTriggered: {
             console.profileEnd();
-            endTimer.start();
         }
-    }
-
-    property var endTimer: Timer {
-        id: endTimer
-        interval: 1000
-        onTriggered: Qt.quit();
     }
 }

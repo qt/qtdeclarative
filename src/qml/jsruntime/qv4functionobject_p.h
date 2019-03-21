@@ -61,31 +61,42 @@ struct QQmlSourceLocation;
 
 namespace QV4 {
 
-struct BuiltinFunction;
+struct IndexedBuiltinFunction;
+struct JSCallData;
 
 namespace Heap {
 
+
 #define FunctionObjectMembers(class, Member) \
     Member(class, Pointer, ExecutionContext *, scope) \
-    Member(class, NoMark, Function *, function)
+    Member(class, NoMark, Function *, function) \
+    Member(class, NoMark, VTable::Call, jsCall) \
+    Member(class, NoMark, VTable::CallAsConstructor, jsConstruct) \
+    Member(class, NoMark, bool, canBeTailCalled)
 
 DECLARE_HEAP_OBJECT(FunctionObject, Object) {
-    DECLARE_MARK_TABLE(FunctionObject);
+    DECLARE_MARKOBJECTS(FunctionObject);
     enum {
+        Index_ProtoConstructor = 0,
         Index_Prototype = 0,
-        Index_ProtoConstructor = 0
+        Index_HasInstance = 1,
     };
 
-    void init(QV4::ExecutionContext *scope, QV4::String *name = 0, bool createProto = false);
-    void init(QV4::ExecutionContext *scope, QV4::Function *function, bool createProto = false);
-    void init(QV4::ExecutionContext *scope, const QString &name, bool createProto = false);
+    bool isConstructor() const {
+        return jsConstruct != nullptr;
+    }
+
+    Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, QV4::String *name, VTable::Call call);
+    void init(QV4::ExecutionContext *scope, QV4::String *name = nullptr);
+    void init(QV4::ExecutionContext *scope, QV4::Function *function, QV4::String *n = nullptr);
+    void init(QV4::ExecutionContext *scope, const QString &name);
     void init();
     void destroy();
 
+    void setFunction(Function *f);
+
     unsigned int formalParameterCount() { return function ? function->nFormals : 0; }
     unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
-
-    const QV4::Object *protoProperty() const { return propertyData(Index_Prototype)->as<QV4::Object>(); }
 };
 
 struct FunctionCtor : FunctionObject {
@@ -96,30 +107,49 @@ struct FunctionPrototype : FunctionObject {
     void init();
 };
 
-struct Q_QML_EXPORT OldBuiltinFunction : FunctionObject {
-    void init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(QV4::CallContext *));
-    ReturnedValue (*code)(QV4::CallContext *);
-};
-
-struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
-    void init(QV4::ExecutionContext *scope, QV4::String *name, void (*code)(const QV4::BuiltinFunction *, Scope &, CallData *));
-    void (*code)(const QV4::BuiltinFunction *, Scope &, CallData *);
-};
-
 struct IndexedBuiltinFunction : FunctionObject {
-    inline void init(QV4::ExecutionContext *scope, uint index, ReturnedValue (*code)(QV4::CallContext *ctx, uint index));
-    ReturnedValue (*code)(QV4::CallContext *, uint index);
+    inline void init(QV4::ExecutionContext *scope, uint index, VTable::Call call);
     uint index;
 };
 
-struct ScriptFunction : FunctionObject {
+struct ArrowFunction : FunctionObject {
     enum {
-        Index_Name = FunctionObject::Index_Prototype + 1,
+        Index_Name = Index_HasInstance + 1,
         Index_Length
     };
-    void init(QV4::ExecutionContext *scope, Function *function);
+    void init(QV4::ExecutionContext *scope, Function *function, QV4::String *name = nullptr);
+};
 
-    QV4::InternalClass *cachedClassForConstructor;
+#define ScriptFunctionMembers(class, Member) \
+    Member(class, Pointer, InternalClass *, cachedClassForConstructor)
+
+DECLARE_HEAP_OBJECT(ScriptFunction, ArrowFunction) {
+    DECLARE_MARKOBJECTS(ScriptFunction)
+    void init(QV4::ExecutionContext *scope, Function *function);
+};
+
+#define MemberFunctionMembers(class, Member) \
+    Member(class, Pointer, Object *, homeObject)
+
+DECLARE_HEAP_OBJECT(MemberFunction, ArrowFunction) {
+    DECLARE_MARKOBJECTS(MemberFunction)
+
+    void init(QV4::ExecutionContext *scope, Function *function, QV4::String *name = nullptr) {
+        ArrowFunction::init(scope, function, name);
+    }
+};
+
+#define ConstructorFunctionMembers(class, Member) \
+    Member(class, Pointer, Object *, homeObject)
+
+DECLARE_HEAP_OBJECT(ConstructorFunction, ScriptFunction) {
+    DECLARE_MARKOBJECTS(ConstructorFunction)
+    bool isDerivedConstructor;
+};
+
+struct DefaultClassConstructorFunction : FunctionObject
+{
+    bool isDerivedConstructor;
 };
 
 #define BoundFunctionMembers(class, Member) \
@@ -128,7 +158,7 @@ struct ScriptFunction : FunctionObject {
     Member(class, Pointer, MemberData *, boundArgs)
 
 DECLARE_HEAP_OBJECT(BoundFunction, FunctionObject) {
-    DECLARE_MARK_TABLE(BoundFunction);
+    DECLARE_MARKOBJECTS(BoundFunction);
 
     void init(QV4::ExecutionContext *scope, QV4::FunctionObject *target, const Value &boundThis, QV4::MemberData *boundArgs);
 };
@@ -144,7 +174,9 @@ struct Q_QML_EXPORT FunctionObject: Object {
     V4_INTERNALCLASS(FunctionObject)
     V4_PROTOTYPE(functionPrototype)
     V4_NEEDS_DESTROY
+    enum { NInlineProperties = 1 };
 
+    bool canBeTailCalled() const { return d()->canBeTailCalled; }
     Heap::ExecutionContext *scope() const { return d()->scope; }
     Function *function() const { return d()->function; }
 
@@ -152,25 +184,52 @@ struct Q_QML_EXPORT FunctionObject: Object {
     unsigned int formalParameterCount() const { return d()->formalParameterCount(); }
     unsigned int varCount() const { return d()->varCount(); }
 
-    void init(String *name, bool createProto);
+    void setName(String *name) {
+        defineReadonlyConfigurableProperty(engine()->id_name(), *name);
+    }
+    void createDefaultPrototypeProperty(uint protoConstructorSlot);
 
-    using Object::construct;
-    using Object::call;
-    static void construct(const Managed *that, Scope &scope, CallData *);
-    static void call(const Managed *that, Scope &scope, CallData *d);
+    inline ReturnedValue callAsConstructor(const JSCallData &data) const;
+    ReturnedValue callAsConstructor(const Value *argv, int argc, const Value *newTarget = nullptr) const {
+        if (!d()->jsConstruct)
+            return engine()->throwTypeError(QStringLiteral("Function is not a constructor."));
+        return d()->jsConstruct(this, argv, argc, newTarget ? newTarget : this);
+    }
+    inline ReturnedValue call(const JSCallData &data) const;
+    ReturnedValue call(const Value *thisObject, const Value *argv, int argc) const {
+        if (!d()->jsCall)
+            return engine()->throwTypeError(QStringLiteral("Function can only be called with |new|."));
+        return d()->jsCall(this, thisObject, argv, argc);
+    }
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
+    static Heap::FunctionObject *createConstructorFunction(ExecutionContext *scope, Function *function, Object *homeObject, bool isDerivedConstructor);
+    static Heap::FunctionObject *createMemberFunction(ExecutionContext *scope, Function *function, Object *homeObject, String *name);
+    static Heap::FunctionObject *createBuiltinFunction(ExecutionEngine *engine, StringOrSymbol *nameOrSymbol, VTable::Call code, int argumentCount);
 
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }
     bool isBinding() const;
     bool isBoundFunction() const;
+    bool isConstructor() const {
+        return d()->isConstructor();
+    }
+
+    ReturnedValue getHomeObject() const;
+
+    ReturnedValue protoProperty() const {
+        return getValueByIndex(Heap::FunctionObject::Index_Prototype);
+    }
+    bool hasHasInstanceProperty() const {
+        return !internalClass()->propertyData.at(Heap::FunctionObject::Index_HasInstance).isEmpty();
+    }
 
     QQmlSourceLocation sourceLocation() const;
 };
 
 template<>
 inline const FunctionObject *Value::as() const {
-    return isManaged() && m()->vtable()->isFunctionObject ? reinterpret_cast<const FunctionObject *>(this) : 0;
+    return isManaged() && m()->internalClass->vtable->isFunctionObject ? reinterpret_cast<const FunctionObject *>(this) : nullptr;
 }
 
 
@@ -178,8 +237,14 @@ struct FunctionCtor: FunctionObject
 {
     V4_OBJECT2(FunctionCtor, FunctionObject)
 
-    static void construct(const Managed *that, Scope &scope, CallData *callData);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+protected:
+    enum Type {
+        Type_Function,
+        Type_Generator
+    };
+    static QQmlRefPointer<CompiledData::CompilationUnit> parse(ExecutionEngine *engine, const Value *argv, int argc, Type t = Type_Function);
 };
 
 struct FunctionPrototype: FunctionObject
@@ -188,72 +253,81 @@ struct FunctionPrototype: FunctionObject
 
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_apply(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_call(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_bind(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_apply(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_call(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_bind(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_hasInstance(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
-struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
-    V4_OBJECT2(BuiltinFunction, FunctionObject)
-    V4_INTERNALCLASS(BuiltinFunction)
-
-    static Heap::BuiltinFunction *create(ExecutionContext *scope, String *name, void (*code)(const BuiltinFunction *, Scope &, CallData *))
-    {
-        return scope->engine()->memoryManager->allocObject<BuiltinFunction>(scope, name, code);
-    }
-
-    static void construct(const Managed *, Scope &scope, CallData *);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
-};
-
-struct IndexedBuiltinFunction: FunctionObject
+struct IndexedBuiltinFunction : FunctionObject
 {
     V4_OBJECT2(IndexedBuiltinFunction, FunctionObject)
-
-    static void construct(const Managed *m, Scope &scope, CallData *)
-    {
-        scope.result = static_cast<const IndexedBuiltinFunction *>(m)->engine()->throwTypeError();
-    }
-
-    static void call(const Managed *that, Scope &scope, CallData *callData);
 };
 
-void Heap::IndexedBuiltinFunction::init(QV4::ExecutionContext *scope, uint index,
-                                        ReturnedValue (*code)(QV4::CallContext *ctx, uint index))
+void Heap::IndexedBuiltinFunction::init(QV4::ExecutionContext *scope, uint index, VTable::Call call)
 {
     Heap::FunctionObject::init(scope);
+    this->jsCall = call;
     this->index = index;
-    this->code = code;
 }
 
+struct ArrowFunction : FunctionObject {
+    V4_OBJECT2(ArrowFunction, FunctionObject)
+    V4_INTERNALCLASS(ArrowFunction)
+    enum { NInlineProperties = 3 };
 
-struct ScriptFunction : FunctionObject {
-    V4_OBJECT2(ScriptFunction, FunctionObject)
-    V4_INTERNALCLASS(ScriptFunction)
-
-    static void construct(const Managed *, Scope &scope, CallData *callData);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
-
-    InternalClass *classForConstructor() const;
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
+struct ScriptFunction : ArrowFunction {
+    V4_OBJECT2(ScriptFunction, ArrowFunction)
+    V4_INTERNALCLASS(ScriptFunction)
+
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
+
+    Heap::InternalClass *classForConstructor() const;
+};
+
+struct MemberFunction : ArrowFunction {
+    V4_OBJECT2(MemberFunction, ArrowFunction)
+    V4_INTERNALCLASS(MemberFunction)
+};
+
+struct ConstructorFunction : ScriptFunction {
+    V4_OBJECT2(ConstructorFunction, ScriptFunction)
+    V4_INTERNALCLASS(ConstructorFunction)
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+};
+
+struct DefaultClassConstructorFunction : FunctionObject {
+    V4_OBJECT2(DefaultClassConstructorFunction, FunctionObject)
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+};
 
 struct BoundFunction: FunctionObject {
     V4_OBJECT2(BoundFunction, FunctionObject)
 
     static Heap::BoundFunction *create(ExecutionContext *scope, FunctionObject *target, const Value &boundThis, QV4::MemberData *boundArgs)
     {
-        return scope->engine()->memoryManager->allocObject<BoundFunction>(scope, target, boundThis, boundArgs);
+        return scope->engine()->memoryManager->allocate<BoundFunction>(scope, target, boundThis, boundArgs);
     }
 
     Heap::FunctionObject *target() const { return d()->target; }
     Value boundThis() const { return d()->boundThis; }
     Heap::MemberData *boundArgs() const { return d()->boundArgs; }
 
-    static void construct(const Managed *, Scope &scope, CallData *d);
-    static void call(const Managed *that, Scope &scope, CallData *dd);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
+
+inline bool FunctionObject::isBoundFunction() const
+{
+    return d()->vtable() == BoundFunction::staticVTable();
+}
+
 
 }
 

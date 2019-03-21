@@ -32,6 +32,8 @@
 #include <private/qqmldebugconnector_p.h>
 #include <private/qqmldebugconnection_p.h>
 
+#include <QtQml/qqmlengine.h>
+
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
 #include <QtNetwork/qhostaddress.h>
@@ -61,10 +63,8 @@ private slots:
 
 void tst_QQmlDebugLocal::initTestCase()
 {
-    fileName = QString::fromLatin1("tst_QQmlDebugLocal%1").arg(std::time(0));
+    fileName = QString::fromLatin1("tst_QQmlDebugLocal%1").arg(std::time(nullptr));
     QQmlDebugConnector::setPluginKey("QQmlDebugServer");
-    QTest::ignoreMessage(QtWarningMsg,
-                         "QML debugger: Cannot set plugin key after loading the plugin.");
     m_service = new QQmlDebugTestService("tst_QQmlDebugLocal::handshake()");
 
     const QString waitingMsg = QString("QML Debugger: Connecting to socket %1...").arg(fileName);
@@ -116,7 +116,7 @@ void tst_QQmlDebugLocal::state()
     QQmlDebugClient client2("tst_QQmlDebugLocal::state()", m_conn);
     QCOMPARE(client2.state(), QQmlDebugClient::NotConnected);
 
-    QQmlDebugClient client3("tst_QQmlDebugLocal::state3()", 0);
+    QQmlDebugClient client3("tst_QQmlDebugLocal::state3()", nullptr);
     QCOMPARE(client3.state(), QQmlDebugClient::NotConnected);
 }
 

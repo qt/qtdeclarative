@@ -77,7 +77,7 @@ class Q_AUTOTEST_EXPORT QQuickSpriteSequence : public QQuickItem
     Q_CLASSINFO("DefaultProperty", "sprites")
 
 public:
-    explicit QQuickSpriteSequence(QQuickItem *parent = 0);
+    explicit QQuickSpriteSequence(QQuickItem *parent = nullptr);
 
     QQmlListProperty<QQuickSprite> sprites();
 
@@ -105,7 +105,7 @@ private Q_SLOTS:
 
 protected:
     void reset();
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 private:
     void prepareNextFrame(QSGSpriteNode *node);
     QSGSpriteNode* initNode();

@@ -93,17 +93,16 @@ struct Q_QML_EXPORT QmlListWrapper : Object
 
     QVariant toVariant() const;
 
-    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
-    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
-    static bool put(Managed *m, String *name, const Value &value);
-    static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
 };
 
 struct PropertyListPrototype : Object
 {
     void init(ExecutionEngine *engine);
 
-    static void method_push(const BuiltinFunction *, Scope &, CallData *callData);
+    static ReturnedValue method_push(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 }

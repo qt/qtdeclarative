@@ -86,16 +86,7 @@ class Q_AUTOTEST_EXPORT QQuickTouchPoint : public QObject
 
 public:
     QQuickTouchPoint(bool qmlDefined = true)
-        : _id(0),
-          _x(0.0), _y(0.0),
-          _pressure(0.0),
-          _rotation(0),
-          _qmlDefined(qmlDefined),
-          _inUse(false),
-          _pressed(false),
-          _startX(0.0), _startY(0.0),
-          _previousX(0.0), _previousY(0.0),
-          _sceneX(0.0), _sceneY(0.0)
+        : _qmlDefined(qmlDefined)
     {}
 
     int pointId() const { return _id; }
@@ -171,33 +162,33 @@ Q_SIGNALS:
 
 private:
     friend class QQuickMultiPointTouchArea;
-    int _id;
-    qreal _x;
-    qreal _y;
-    qreal _pressure;
-    qreal _rotation;
+    int _id = 0;
+    qreal _x = 0.0;
+    qreal _y = 0.0;
+    qreal _pressure = 0.0;
+    qreal _rotation = 0;
     QSizeF _ellipseDiameters;
     QVector2D _velocity;
     QRectF _area;
     bool _qmlDefined;
-    bool _inUse;    //whether the point is currently in use (only valid when _qmlDefined == true)
-    bool _pressed;
-    qreal _startX;
-    qreal _startY;
-    qreal _previousX;
-    qreal _previousY;
-    qreal _sceneX;
-    qreal _sceneY;
+    bool _inUse = false;    //whether the point is currently in use (only valid when _qmlDefined == true)
+    bool _pressed = false;
+    qreal _startX = 0.0;
+    qreal _startY = 0.0;
+    qreal _previousX = 0.0;
+    qreal _previousY = 0.0;
+    qreal _sceneX = 0.0;
+    qreal _sceneY = 0.0;
     QPointingDeviceUniqueId _uniqueId;
 };
 
 class QQuickGrabGestureEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQmlListProperty<QObject> touchPoints READ touchPoints)
-    Q_PROPERTY(qreal dragThreshold READ dragThreshold)
+    Q_PROPERTY(QQmlListProperty<QObject> touchPoints READ touchPoints CONSTANT)
+    Q_PROPERTY(qreal dragThreshold READ dragThreshold CONSTANT)
 public:
-    QQuickGrabGestureEvent() : _grab(false), _dragThreshold(QGuiApplication::styleHints()->startDragDistance()) {}
+    QQuickGrabGestureEvent() : _dragThreshold(QGuiApplication::styleHints()->startDragDistance()) {}
 
     Q_INVOKABLE void grab() { _grab = true; }
     bool wantsGrab() const { return _grab; }
@@ -209,7 +200,7 @@ public:
 
 private:
     friend class QQuickMultiPointTouchArea;
-    bool _grab;
+    bool _grab = false;
     qreal _dragThreshold;
     QList<QObject*> _touchPoints;
 };
@@ -224,7 +215,7 @@ class Q_AUTOTEST_EXPORT QQuickMultiPointTouchArea : public QQuickItem
     Q_PROPERTY(bool mouseEnabled READ mouseEnabled WRITE setMouseEnabled NOTIFY mouseEnabledChanged)
 
 public:
-    QQuickMultiPointTouchArea(QQuickItem *parent=0);
+    QQuickMultiPointTouchArea(QQuickItem *parent=nullptr);
     ~QQuickMultiPointTouchArea();
 
     int minimumTouchPoints() const;
@@ -235,7 +226,7 @@ public:
     void setMouseEnabled(bool arg);
 
     QQmlListProperty<QQuickTouchPoint> touchPoints() {
-        return QQmlListProperty<QQuickTouchPoint>(this, 0, QQuickMultiPointTouchArea::touchPoint_append, QQuickMultiPointTouchArea::touchPoint_count, QQuickMultiPointTouchArea::touchPoint_at, 0);
+        return QQmlListProperty<QQuickTouchPoint>(this, nullptr, QQuickMultiPointTouchArea::touchPoint_append, QQuickMultiPointTouchArea::touchPoint_count, QQuickMultiPointTouchArea::touchPoint_at, nullptr);
     }
 
     static void touchPoint_append(QQmlListProperty<QQuickTouchPoint> *list, QQuickTouchPoint* touch) {
@@ -265,13 +256,13 @@ Q_SIGNALS:
     void mouseEnabledChanged();
 
 protected:
-    void touchEvent(QTouchEvent *) Q_DECL_OVERRIDE;
-    bool childMouseEventFilter(QQuickItem *receiver, QEvent *event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    void touchUngrabEvent() Q_DECL_OVERRIDE;
+    void touchEvent(QTouchEvent *) override;
+    bool childMouseEventFilter(QQuickItem *receiver, QEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseUngrabEvent() override;
+    void touchUngrabEvent() override;
 
     void addTouchPrototype(QQuickTouchPoint* prototype);
     void addTouchPoint(const QTouchEvent::TouchPoint *p);
@@ -285,10 +276,10 @@ protected:
     bool sendMouseEvent(QMouseEvent *event);
     bool shouldFilter(QEvent *event);
     void grabGesture();
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 #ifdef Q_OS_OSX
-    void hoverEnterEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
-    void hoverLeaveEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
+    void hoverEnterEvent(QHoverEvent *event) override;
+    void hoverLeaveEvent(QHoverEvent *event) override;
     void setTouchEventsEnabled(bool enable);
 #endif
 

@@ -53,10 +53,13 @@
 
 #include "qquicktextedit_p.h"
 #include "qquickimplicitsizeitem_p_p.h"
+#include "qquicktextutil_p.h"
 
 #include <QtQml/qqml.h>
 #include <QtCore/qlist.h>
 #include <private/qlazilyallocated_p.h>
+
+#include <limits>
 
 QT_BEGIN_NAMESPACE
 class QTextLayout;
@@ -73,7 +76,8 @@ public:
     typedef QQuickTextEdit Public;
 
     struct Node {
-        explicit Node(int startPos, QQuickTextNode* node)
+        explicit Node(int startPos = std::numeric_limits<int>::max(),
+                      QQuickTextNode *node = nullptr)
             : m_startPos(startPos), m_node(node), m_dirty(false) { }
         QQuickTextNode* textNode() const { return m_node; }
         void moveStartPos(int delta) { Q_ASSERT(m_startPos + delta > 0); m_startPos += delta; }
@@ -86,7 +90,7 @@ public:
         QQuickTextNode* m_node;
         bool m_dirty;
     };
-    typedef QList<Node*>::iterator TextNodeIterator;
+    typedef QList<Node>::iterator TextNodeIterator;
 
     struct ExtraData {
         ExtraData();
@@ -108,15 +112,11 @@ public:
     QQuickTextEditPrivate()
         : color(QRgb(0xFF000000)), selectionColor(QRgb(0xFF000080)), selectedTextColor(QRgb(0xFFFFFFFF))
         , textMargin(0.0), xoff(0), yoff(0)
-        , font(sourceFont), cursorComponent(0), cursorItem(0), document(0), control(0)
-        , quickDocument(0), lastSelectionStart(0), lastSelectionEnd(0), lineCount(0)
+        , font(sourceFont), cursorComponent(nullptr), cursorItem(nullptr), document(nullptr), control(nullptr)
+        , quickDocument(nullptr), lastSelectionStart(0), lastSelectionEnd(0), lineCount(0)
         , hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop)
         , format(QQuickTextEdit::PlainText), wrapMode(QQuickTextEdit::NoWrap)
-#if defined(QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
-        , renderType(QQuickTextEdit::QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
-#else
-        , renderType(QQuickTextEdit::QtRendering)
-#endif
+        , renderType(QQuickTextUtil::textRenderType<QQuickTextEdit>())
         , contentDirection(Qt::LayoutDirectionAuto)
         , mouseSelectionMode(QQuickTextEdit::SelectCharacters)
 #if QT_CONFIG(im)
@@ -131,11 +131,6 @@ public:
     {
     }
 
-    ~QQuickTextEditPrivate()
-    {
-        qDeleteAll(textNodeMap);
-    }
-
     static QQuickTextEditPrivate *get(QQuickTextEdit *item) {
         return static_cast<QQuickTextEditPrivate *>(QObjectPrivate::get(item)); }
 
@@ -146,8 +141,8 @@ public:
     void relayoutDocument();
     bool determineHorizontalAlignment();
     bool setHAlign(QQuickTextEdit::HAlignment, bool forceAlign = false);
-    void mirrorChange() Q_DECL_OVERRIDE;
-    qreal getImplicitWidth() const Q_DECL_OVERRIDE;
+    void mirrorChange() override;
+    qreal getImplicitWidth() const override;
     Qt::LayoutDirection textDirection(const QString &text) const;
     bool isLinkHoveredConnected();
 
@@ -189,7 +184,7 @@ public:
     QQuickTextDocumentWithImageResources *document;
     QQuickTextControl *control;
     QQuickTextDocument *quickDocument;
-    QList<Node*> textNodeMap;
+    QList<Node> textNodeMap;
 
     int lastSelectionStart;
     int lastSelectionEnd;

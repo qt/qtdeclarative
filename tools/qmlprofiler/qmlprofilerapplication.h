@@ -69,6 +69,7 @@ private:
     void run();
     void tryToConnect();
     void connected();
+    void disconnected();
     void processHasOutput();
     void processFinished();
 
@@ -90,8 +91,8 @@ private:
     } m_runMode;
 
     // LaunchMode
-    QString m_programPath;
-    QStringList m_programArguments;
+    QString m_executablePath;
+    QStringList m_arguments;
     QProcess *m_process;
 
     QString m_socketFile;
@@ -105,9 +106,9 @@ private:
     bool m_recording;
     bool m_interactive;
 
-    QQmlDebugConnection m_connection;
-    QmlProfilerClient m_qmlProfilerClient;
-    QmlProfilerData m_profilerData;
+    QScopedPointer<QQmlDebugConnection> m_connection;
+    QScopedPointer<QmlProfilerClient> m_qmlProfilerClient;
+    QScopedPointer<QmlProfilerData> m_profilerData;
     QTimer m_connectTimer;
     uint m_connectionAttempts;
 };

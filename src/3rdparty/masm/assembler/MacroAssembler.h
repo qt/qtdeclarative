@@ -39,10 +39,6 @@ namespace JSC { typedef MacroAssemblerARMv7 MacroAssemblerBase; };
 #elif CPU(ARM64)
 namespace JSC { typedef MacroAssemblerARM64 MacroAssemblerBase; };
 
-#elif CPU(ARM_TRADITIONAL)
-#include "MacroAssemblerARM.h"
-namespace JSC { typedef MacroAssemblerARM MacroAssemblerBase; };
-
 #elif CPU(MIPS)
 #include "MacroAssemblerMIPS.h"
 namespace JSC {
@@ -56,12 +52,6 @@ namespace JSC { typedef MacroAssemblerX86 MacroAssemblerBase; };
 #elif CPU(X86_64)
 #include "MacroAssemblerX86_64.h"
 namespace JSC { typedef MacroAssemblerX86_64 MacroAssemblerBase; };
-
-#elif CPU(SH4)
-#include "MacroAssemblerSH4.h"
-namespace JSC {
-typedef MacroAssemblerSH4 MacroAssemblerBase;
-};
 
 #else
 #error "The MacroAssembler is not supported on this platform."
@@ -805,12 +795,12 @@ public:
 
     Jump branchPtr(RelationalCondition cond, RegisterID left, RegisterID right)
     {
-        return branch64(cond, left, right);
+        return this->branch64(cond, left, right);
     }
 
     Jump branchPtr(RelationalCondition cond, RegisterID left, TrustedImmPtr right)
     {
-        return branch64(cond, left, TrustedImm64(right));
+        return this->branch64(cond, left, TrustedImm64(right));
     }
     
     Jump branchPtr(RelationalCondition cond, RegisterID left, Address right)
@@ -840,7 +830,7 @@ public:
     
     Jump branchTestPtr(ResultCondition cond, RegisterID reg, TrustedImm32 mask = TrustedImm32(-1))
     {
-        return branchTest64(cond, reg, mask);
+        return this->branchTest64(cond, reg, mask);
     }
 
     Jump branchTestPtr(ResultCondition cond, Address address, TrustedImm32 mask = TrustedImm32(-1))
@@ -1489,16 +1479,12 @@ public:
 typedef MacroAssembler<MacroAssemblerARMv7> DefaultMacroAssembler;
 #elif CPU(ARM64)
 typedef MacroAssembler<MacroAssemblerARM64> DefaultMacroAssembler;
-#elif CPU(ARM_TRADITIONAL)
-typedef MacroAssembler<MacroAssemblerARM> DefaultMacroAssembler;
 #elif CPU(MIPS)
 typedef MacroAssembler<MacroAssemblerMIPS> DefaultMacroAssembler;
 #elif CPU(X86)
 typedef MacroAssembler<MacroAssemblerX86> DefaultMacroAssembler;
 #elif CPU(X86_64)
 typedef MacroAssembler<MacroAssemblerX86_64> DefaultMacroAssembler;
-#elif CPU(SH4)
-typedef JSC::MacroAssemblerSH4 DefaultMacroAssembler;
 #endif
 
 } // namespace JSC

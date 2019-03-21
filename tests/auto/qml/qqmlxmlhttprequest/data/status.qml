@@ -11,6 +11,9 @@ QtObject {
     property bool headersReceived: false
     property bool loading: false
     property bool done: false
+    property bool onloadCalled: false
+    property bool onerrorCalled: false
+    property bool onloadendCalled: false
 
     property bool resetException: false
 
@@ -61,6 +64,16 @@ QtObject {
                 }
 
             }
+        }
+        x.onload = function() {
+            // test also that it was called after onreadystatechanged(DONE)
+            onloadCalled = (done === true) && (onerrorCalled === false);
+        }
+        x.onloadend = function() {
+            onloadendCalled = (done === true) && (onloadCalled === true || onerrorCalled === true);
+        }
+        x.onerror = function() {
+            onerrorCalled = (done === true) && (onloadCalled === false);
         }
 
         x.send()

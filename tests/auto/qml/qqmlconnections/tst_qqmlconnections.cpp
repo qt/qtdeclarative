@@ -55,6 +55,7 @@ private slots:
     void disabledAtStart();
     void clearImplicitTarget();
     void onWithoutASignal();
+    void noAcceleratedGlobalLookup();
 
 private:
     QQmlEngine engine;
@@ -70,7 +71,7 @@ void tst_qqmlconnections::defaultValues()
     QQmlComponent c(&engine, testFileUrl("test-connection3.qml"));
     QQmlConnections *item = qobject_cast<QQmlConnections*>(c.create());
 
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
     QVERIFY(!item->target());
 
     delete item;
@@ -82,9 +83,9 @@ void tst_qqmlconnections::properties()
     QQmlComponent c(&engine, testFileUrl("test-connection2.qml"));
     QQmlConnections *item = qobject_cast<QQmlConnections*>(c.create());
 
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
 
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
     QCOMPARE(item->target(), item);
 
     delete item;
@@ -96,7 +97,7 @@ void tst_qqmlconnections::connection()
     QQmlComponent c(&engine, testFileUrl("test-connection.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
 
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
 
     QCOMPARE(item->property("tested").toBool(), false);
     QCOMPARE(item->width(), 50.);
@@ -113,7 +114,7 @@ void tst_qqmlconnections::trimming()
     QQmlComponent c(&engine, testFileUrl("trimming.qml"));
     QObject *object = c.create();
 
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(object->property("tested").toString(), QString(""));
     int index = object->metaObject()->indexOfSignal("testMe(int,QString)");
@@ -133,7 +134,7 @@ void tst_qqmlconnections::targetChanged()
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("connection-targetchange.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
 
     QQmlConnections *connections = item->findChild<QQmlConnections*>("connections");
     QVERIFY(connections);
@@ -178,7 +179,7 @@ void tst_qqmlconnections::unknownSignals()
     QQmlEngine engine;
     QQmlComponent c(&engine, url);
     QObject *object = c.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     // check that connection is created (they are all runtime errors)
     QQmlConnections *connections = object->findChild<QQmlConnections*>("connections");
@@ -222,7 +223,7 @@ class TestObject : public QObject
     Q_PROPERTY(bool ran READ ran WRITE setRan)
 
 public:
-    TestObject(QObject *parent = 0) : QObject(parent), m_ran(false) {}
+    TestObject(QObject *parent = nullptr) : QObject(parent), m_ran(false) {}
     ~TestObject() {}
 
     bool ran() const { return m_ran; }
@@ -244,7 +245,7 @@ void tst_qqmlconnections::rewriteErrors()
         QQmlComponent c(&engine, testFileUrl("rewriteError-unnamed.qml"));
         QTest::ignoreMessage(QtWarningMsg, (c.url().toString() + ":5:35: QML Connections: Signal uses unnamed parameter followed by named parameter.").toLatin1());
         TestObject *obj = qobject_cast<TestObject*>(c.create());
-        QVERIFY(obj != 0);
+        QVERIFY(obj != nullptr);
         obj->unnamedArgumentSignal(1, .5, "hello");
         QCOMPARE(obj->ran(), false);
 
@@ -256,7 +257,7 @@ void tst_qqmlconnections::rewriteErrors()
         QQmlComponent c(&engine, testFileUrl("rewriteError-global.qml"));
         QTest::ignoreMessage(QtWarningMsg, (c.url().toString() + ":5:35: QML Connections: Signal parameter \"parseInt\" hides global variable.").toLatin1());
         TestObject *obj = qobject_cast<TestObject*>(c.create());
-        QVERIFY(obj != 0);
+        QVERIFY(obj != nullptr);
 
         obj->signalWithGlobalName(10);
         QCOMPARE(obj->ran(), false);
@@ -272,7 +273,7 @@ Q_OBJECT
 Q_PROPERTY(int intProp READ intProp WRITE setIntProp NOTIFY intPropChanged)
 
 public:
-    MyTestSingletonType(QObject *parent = 0) : QObject(parent), m_intProp(0), m_changeCount(0) {}
+    MyTestSingletonType(QObject *parent = nullptr) : QObject(parent), m_intProp(0), m_changeCount(0) {}
     ~MyTestSingletonType() {}
 
     Q_INVOKABLE int otherMethod(int val) { return val + 4; }
@@ -307,7 +308,7 @@ void tst_qqmlconnections::singletonTypeTarget()
     qmlRegisterSingletonType<MyTestSingletonType>("MyTestSingletonType", 1, 0, "Api", module_api_factory);
     QQmlComponent component(&engine, testFileUrl("singletontype-target.qml"));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(object->property("moduleIntPropChangedCount").toInt(), 0);
     QCOMPARE(object->property("moduleOtherSignalCount").toInt(), 0);
@@ -333,7 +334,7 @@ void tst_qqmlconnections::enableDisable_QTBUG_36350()
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("test-connection.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
 
     QQmlConnections *connections = item->findChild<QQmlConnections*>("connections");
     QVERIFY(connections);
@@ -361,7 +362,7 @@ void tst_qqmlconnections::disabledAtStart()
     QQmlComponent c(&engine, testFileUrl("disabled-at-start.qml"));
     QObject * const object = c.create();
 
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(object->property("tested").toBool(), false);
     const int index = object->metaObject()->indexOfSignal("testMe()");
@@ -379,7 +380,7 @@ void tst_qqmlconnections::clearImplicitTarget()
     QQmlComponent c(&engine, testFileUrl("test-connection-implicit.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
 
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
 
     // normal case: fire Connections
     item->setWidth(100.);
@@ -389,7 +390,7 @@ void tst_qqmlconnections::clearImplicitTarget()
     // clear the implicit target
     QQmlConnections *connections = item->findChild<QQmlConnections*>();
     QVERIFY(connections);
-    connections->setTarget(0);
+    connections->setTarget(nullptr);
 
     // target cleared: no longer fire Connections
     item->setWidth(150.);
@@ -405,6 +406,30 @@ void tst_qqmlconnections::onWithoutASignal()
     QVERIFY(c.isError()); // Cannot assign to non-existent property "on" expected
     QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(c.create()));
     QVERIFY(item == nullptr); // should parse error, and not give us an item (or crash).
+}
+
+class Proxy : public QObject
+{
+    Q_OBJECT
+public:
+    enum MyEnum { EnumValue = 20, AnotherEnumValue };
+    Q_ENUM(MyEnum)
+
+signals:
+    void someSignal();
+};
+
+void tst_qqmlconnections::noAcceleratedGlobalLookup()
+{
+    qRegisterMetaType<Proxy::MyEnum>();
+    qmlRegisterType<Proxy>("test.proxy", 1, 0, "Proxy");
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("override-proxy-type.qml"));
+    QVERIFY(c.isReady());
+    QScopedPointer<QObject> object(c.create());
+    const QVariant val = object->property("testEnum");
+    QCOMPARE(val.type(), QMetaType::Int);
+    QCOMPARE(val.toInt(), int(Proxy::EnumValue));
 }
 
 QTEST_MAIN(tst_qqmlconnections)

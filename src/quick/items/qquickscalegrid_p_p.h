@@ -65,13 +65,13 @@ class Q_AUTOTEST_EXPORT QQuickScaleGrid : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(int left READ left WRITE setLeft NOTIFY borderChanged)
-    Q_PROPERTY(int top READ top WRITE setTop NOTIFY borderChanged)
-    Q_PROPERTY(int right READ right WRITE setRight NOTIFY borderChanged)
-    Q_PROPERTY(int bottom READ bottom WRITE setBottom NOTIFY borderChanged)
+    Q_PROPERTY(int left READ left WRITE setLeft NOTIFY leftBorderChanged)
+    Q_PROPERTY(int top READ top WRITE setTop NOTIFY topBorderChanged)
+    Q_PROPERTY(int right READ right WRITE setRight NOTIFY rightBorderChanged)
+    Q_PROPERTY(int bottom READ bottom WRITE setBottom NOTIFY bottomBorderChanged)
 
 public:
-    QQuickScaleGrid(QObject *parent=0);
+    QQuickScaleGrid(QObject *parent=nullptr);
     ~QQuickScaleGrid();
 
     bool isNull() const;
@@ -90,6 +90,10 @@ public:
 
 Q_SIGNALS:
     void borderChanged();
+    void leftBorderChanged();
+    void topBorderChanged();
+    void rightBorderChanged();
+    void bottomBorderChanged();
 
 private:
     int _left;

@@ -89,20 +89,20 @@ const SparseArrayNode *SparseArrayNode::previousNode() const
 
 SparseArrayNode *SparseArrayNode::copy(SparseArray *d) const
 {
-    SparseArrayNode *n = d->createNode(size_left, 0, false);
+    SparseArrayNode *n = d->createNode(size_left, nullptr, false);
     n->value = value;
     n->setColor(color());
     if (left) {
         n->left = left->copy(d);
         n->left->setParent(n);
     } else {
-        n->left = 0;
+        n->left = nullptr;
     }
     if (right) {
         n->right = right->copy(d);
         n->right->setParent(n);
     } else {
-        n->right = 0;
+        n->right = nullptr;
     }
     return n;
 }
@@ -119,7 +119,7 @@ void SparseArray::rotateLeft(SparseArrayNode *x)
     SparseArrayNode *&root = header.left;
     SparseArrayNode *y = x->right;
     x->right = y->left;
-    if (y->left != 0)
+    if (y->left != nullptr)
         y->left->setParent(x);
     y->setParent(x->parent());
     if (x == root)
@@ -146,7 +146,7 @@ void SparseArray::rotateRight(SparseArrayNode *x)
     SparseArrayNode *&root = header.left;
     SparseArrayNode *y = x->left;
     x->left = y->right;
-    if (y->right != 0)
+    if (y->right != nullptr)
         y->right->setParent(x);
     y->setParent(x->parent());
     if (x == root)
@@ -209,7 +209,7 @@ void SparseArray::deleteNode(SparseArrayNode *z)
     SparseArrayNode *y = z;
     SparseArrayNode *x;
     SparseArrayNode *x_parent;
-    if (y->left == 0) {
+    if (y->left == nullptr) {
         x = y->right;
         if (y == mostLeftNode) {
             if (x)
@@ -217,11 +217,11 @@ void SparseArray::deleteNode(SparseArrayNode *z)
             else
                 mostLeftNode = y->parent();
         }
-    } else if (y->right == 0) {
+    } else if (y->right == nullptr) {
             x = y->left;
     } else {
         y = y->right;
-        while (y->left != 0)
+        while (y->left != nullptr)
             y = y->left;
         x = y->right;
     }
@@ -261,7 +261,7 @@ void SparseArray::deleteNode(SparseArrayNode *z)
         y->size_left = 0;
     }
     if (y->color() != SparseArrayNode::Red) {
-        while (x != root && (x == 0 || x->color() == SparseArrayNode::Black)) {
+        while (x != root && (x == nullptr || x->color() == SparseArrayNode::Black)) {
             if (x == x_parent->left) {
                 SparseArrayNode *w = x_parent->right;
                 if (w->color() == SparseArrayNode::Red) {
@@ -270,13 +270,13 @@ void SparseArray::deleteNode(SparseArrayNode *z)
                     rotateLeft(x_parent);
                     w = x_parent->right;
                 }
-                if ((w->left == 0 || w->left->color() == SparseArrayNode::Black) &&
-                    (w->right == 0 || w->right->color() == SparseArrayNode::Black)) {
+                if ((w->left == nullptr || w->left->color() == SparseArrayNode::Black) &&
+                    (w->right == nullptr || w->right->color() == SparseArrayNode::Black)) {
                     w->setColor(SparseArrayNode::Red);
                     x = x_parent;
                     x_parent = x_parent->parent();
                 } else {
-                    if (w->right == 0 || w->right->color() == SparseArrayNode::Black) {
+                    if (w->right == nullptr || w->right->color() == SparseArrayNode::Black) {
                         if (w->left)
                             w->left->setColor(SparseArrayNode::Black);
                         w->setColor(SparseArrayNode::Red);
@@ -298,13 +298,13 @@ void SparseArray::deleteNode(SparseArrayNode *z)
                 rotateRight(x_parent);
                 w = x_parent->left;
             }
-            if ((w->right == 0 || w->right->color() == SparseArrayNode::Black) &&
-                (w->left == 0 || w->left->color() == SparseArrayNode::Black)) {
+            if ((w->right == nullptr || w->right->color() == SparseArrayNode::Black) &&
+                (w->left == nullptr || w->left->color() == SparseArrayNode::Black)) {
                 w->setColor(SparseArrayNode::Red);
                 x = x_parent;
                 x_parent = x_parent->parent();
             } else {
-                if (w->left == 0 || w->left->color() == SparseArrayNode::Black) {
+                if (w->left == nullptr || w->left->color() == SparseArrayNode::Black) {
                     if (w->right)
                         w->right->setColor(SparseArrayNode::Black);
                     w->setColor(SparseArrayNode::Red);
@@ -363,8 +363,8 @@ SparseArrayNode *SparseArray::createNode(uint sl, SparseArrayNode *parent, bool 
     Q_CHECK_PTR(node);
 
     node->p = (quintptr)parent;
-    node->left = 0;
-    node->right = 0;
+    node->left = nullptr;
+    node->right = nullptr;
     node->size_left = sl;
     node->value = UINT_MAX;
     ++numEntries;
@@ -395,21 +395,23 @@ void SparseArray::freeTree(SparseArrayNode *root, int alignment)
 SparseArray::SparseArray()
     : numEntries(0)
 {
+    freeList = Encode(-1);
     header.p = 0;
-    header.left = 0;
-    header.right = 0;
+    header.left = nullptr;
+    header.right = nullptr;
     mostLeftNode = &header;
 }
 
 SparseArray::SparseArray(const SparseArray &other)
 {
     header.p = 0;
-    header.right = 0;
+    header.right = nullptr;
     if (other.header.left) {
         header.left = other.header.left->copy(this);
         header.left->setParent(&header);
         recalcMostLeftNode();
     }
+    freeList = other.freeList;
 }
 
 SparseArrayNode *SparseArray::insert(uint akey)

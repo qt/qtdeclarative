@@ -115,7 +115,7 @@ void tst_qqmllistreference::qmllistreference_invalid()
     QVERIFY(!r.canAt());
     QVERIFY(!r.canClear());
     QVERIFY(!r.canCount());
-    QVERIFY(!r.append(0));
+    QVERIFY(!r.append(nullptr));
     QVERIFY(!r.at(10));
     QVERIFY(!r.clear());
     QCOMPARE(r.count(), 0);
@@ -132,7 +132,7 @@ void tst_qqmllistreference::qmllistreference_invalid()
     QVERIFY(!r.canAt());
     QVERIFY(!r.canClear());
     QVERIFY(!r.canCount());
-    QVERIFY(!r.append(0));
+    QVERIFY(!r.append(nullptr));
     QVERIFY(!r.at(10));
     QVERIFY(!r.clear());
     QCOMPARE(r.count(), 0);
@@ -149,7 +149,7 @@ void tst_qqmllistreference::qmllistreference_invalid()
     QVERIFY(!r.canAt());
     QVERIFY(!r.canClear());
     QVERIFY(!r.canCount());
-    QVERIFY(!r.append(0));
+    QVERIFY(!r.append(nullptr));
     QVERIFY(!r.at(10));
     QVERIFY(!r.clear());
     QCOMPARE(r.count(), 0);
@@ -247,7 +247,7 @@ void tst_qqmllistreference::canAppend()
 
     {
     TestType tt;
-    tt.property.append = 0;
+    tt.property.append = nullptr;
     QQmlListReference ref(&tt, "data");
     QVERIFY(!ref.canAppend());
     }
@@ -276,7 +276,7 @@ void tst_qqmllistreference::canAt()
 
     {
     TestType tt;
-    tt.property.at = 0;
+    tt.property.at = nullptr;
     QQmlListReference ref(&tt, "data");
     QVERIFY(!ref.canAt());
     }
@@ -305,7 +305,7 @@ void tst_qqmllistreference::canClear()
 
     {
     TestType tt;
-    tt.property.clear = 0;
+    tt.property.clear = nullptr;
     QQmlListReference ref(&tt, "data");
     QVERIFY(!ref.canClear());
     }
@@ -334,7 +334,7 @@ void tst_qqmllistreference::canCount()
 
     {
     TestType tt;
-    tt.property.count = 0;
+    tt.property.count = nullptr;
     QQmlListReference ref(&tt, "data");
     QVERIFY(!ref.canCount());
     }
@@ -363,7 +363,7 @@ void tst_qqmllistreference::isReadable()
 
     {
     TestType tt;
-    tt.property.count = 0;
+    tt.property.count = nullptr;
     QQmlListReference ref(&tt, "data");
     QVERIFY(!ref.isReadable());
     }
@@ -392,7 +392,7 @@ void tst_qqmllistreference::isManipulable()
 
     {
     TestType tt;
-    tt.property.count = 0;
+    tt.property.count = nullptr;
     QQmlListReference ref(&tt, "data");
     QVERIFY(!ref.isManipulable());
     }
@@ -421,17 +421,17 @@ void tst_qqmllistreference::append()
     QVERIFY(!ref.append(&object));
     QCOMPARE(tt->data.count(), 1);
     QCOMPARE(tt->data.at(0), tt);
-    QVERIFY(ref.append(0));
+    QVERIFY(ref.append(nullptr));
     QCOMPARE(tt->data.count(), 2);
     QCOMPARE(tt->data.at(0), tt);
     QVERIFY(!tt->data.at(1));
     delete tt;
-    QVERIFY(!ref.append(0));
+    QVERIFY(!ref.append(nullptr));
     }
 
     {
     TestType tt;
-    tt.property.append = 0;
+    tt.property.append = nullptr;
     QQmlListReference ref(&tt, "data");
     QVERIFY(!ref.append(&tt));
     }
@@ -466,7 +466,7 @@ void tst_qqmllistreference::at()
     {
     TestType tt;
     tt.data.append(&tt);
-    tt.property.at = 0;
+    tt.property.at = nullptr;
     QQmlListReference ref(&tt, "data");
     QVERIFY(!ref.at(0));
     }
@@ -499,7 +499,7 @@ void tst_qqmllistreference::clear()
 
     {
     TestType tt;
-    tt.property.clear = 0;
+    tt.property.clear = nullptr;
     QQmlListReference ref(&tt, "data");
     QVERIFY(!ref.clear());
     }
@@ -534,7 +534,7 @@ void tst_qqmllistreference::count()
     {
     TestType tt;
     tt.data.append(&tt);
-    tt.property.count = 0;
+    tt.property.count = nullptr;
     QQmlListReference ref(&tt, "data");
     QCOMPARE(ref.count(), 0);
     }
@@ -626,17 +626,17 @@ void tst_qqmllistreference::listProperty()
     QQmlComponent component(&engine, testFileUrl("propertyList.qml"));
 
     QScopedPointer<QObject> object( component.create() );
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE( object->property("state").toString(), QStringLiteral("MyState2") );
     QQmlListReference list( object.data(), "states");
     QCOMPARE( list.count(), 2 );
 
     QQuickState* state1 = dynamic_cast<QQuickState*>( list.at( 0 ) );
-    QVERIFY(state1 != 0);
+    QVERIFY(state1 != nullptr);
     QCOMPARE( state1->name(), QStringLiteral("MyState1") );
     QQuickState* state2 = dynamic_cast<QQuickState*>( list.at( 1 ) );
-    QVERIFY(state2 != 0);
+    QVERIFY(state2 != nullptr);
 
     QCOMPARE( state2->name(), QStringLiteral("MyState2") );
 }

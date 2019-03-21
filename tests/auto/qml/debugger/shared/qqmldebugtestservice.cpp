@@ -48,5 +48,4 @@ void QQmlDebugTestService::stateAboutToBeChanged(QQmlDebugService::State)
 void QQmlDebugTestService::stateChanged(State)
 {
     Q_ASSERT(QThread::currentThread() != thread());
-    emit stateHasChanged();
 }

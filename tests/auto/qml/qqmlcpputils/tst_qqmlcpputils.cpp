@@ -102,7 +102,7 @@ void tst_qqmlcpputils::fastCast()
     }
 
     {
-        QObject *nullObj = 0;
+        QObject *nullObj = nullptr;
         QObject *obj = qmlobject_cast<QObject *>(nullObj);
         QCOMPARE(obj, nullObj); // shouldn't crash/assert.
     }

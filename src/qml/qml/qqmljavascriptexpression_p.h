@@ -62,17 +62,19 @@ struct QQmlSourceLocation;
 class QQmlDelayedError
 {
 public:
-    inline QQmlDelayedError() : nextError(0), prevError(0) {}
-    inline ~QQmlDelayedError() { removeError(); }
+    inline QQmlDelayedError() : nextError(nullptr), prevError(nullptr) {}
+    inline ~QQmlDelayedError() { (void)removeError(); }
 
     bool addError(QQmlEnginePrivate *);
 
-    inline void removeError() {
-        if (!prevError) return;
-        if (nextError) nextError->prevError = prevError;
-        *prevError = nextError;
-        nextError = 0;
-        prevError = 0;
+    Q_REQUIRED_RESULT inline QQmlError removeError() {
+        if (prevError) {
+            if (nextError) nextError->prevError = prevError;
+            *prevError = nextError;
+            nextError = nullptr;
+            prevError = nullptr;
+        }
+        return m_error;
     }
 
     inline bool isValid() const { return m_error.isValid(); }
@@ -103,7 +105,8 @@ public:
     virtual QString expressionIdentifier() const = 0;
     virtual void expressionChanged() = 0;
 
-    void evaluate(QV4::CallData *callData, bool *isUndefined, QV4::Scope &scope);
+    QV4::ReturnedValue evaluate(bool *isUndefined);
+    QV4::ReturnedValue evaluate(QV4::CallData *callData, bool *isUndefined);
 
     inline bool notifyOnValueChanged() const;
 
@@ -113,10 +116,9 @@ public:
     inline QObject *scopeObject() const;
     inline void setScopeObject(QObject *v);
 
-    QQmlSourceLocation sourceLocation() const;
-    void setSourceLocation(const QQmlSourceLocation &location);
+    virtual QQmlSourceLocation sourceLocation() const;
 
-    bool isValid() const { return context() != 0; }
+    bool isValid() const { return context() != nullptr; }
 
     QQmlContextData *context() const { return m_context; }
     void setContext(QQmlContextData *context);
@@ -160,13 +162,7 @@ protected:
     }
 
     void setupFunction(QV4::ExecutionContext *qmlContext, QV4::Function *f);
-
-private:
-    friend class QQmlContextData;
-    friend class QQmlPropertyCapture;
-    friend void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
-
-    QQmlDelayedError *m_error;
+    void setCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit);
 
     // We store some flag bits in the following flag pointers.
     //    activeGuards:flag1  - notifyOnValueChanged
@@ -174,6 +170,18 @@ private:
     QBiPointer<QObject, DeleteWatcher> m_scopeObject;
     QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> activeGuards;
     QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> permanentGuards;
+
+    void setTranslationsCaptured(bool captured) { m_error.setFlagValue(captured); }
+    bool translationsCaptured() const { return m_error.flag(); }
+
+private:
+    friend class QQmlContextData;
+    friend class QQmlPropertyCapture;
+    friend void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
+    friend class QQmlTranslationBinding;
+
+    // m_error:flag1 translationsCapturedDuringEvaluation
+    QFlagPointer<QQmlDelayedError> m_error;
 
     QQmlContextData *m_context;
     QQmlJavaScriptExpression **m_prevExpression;
@@ -183,18 +191,17 @@ private:
     QV4::PersistentValue m_qmlScope;
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_compilationUnit;
     QV4::Function *m_v4Function;
-    QQmlSourceLocation *m_sourceLocation; // used for Qt.binding() created functions
 };
 
 class QQmlPropertyCapture
 {
 public:
     QQmlPropertyCapture(QQmlEngine *engine, QQmlJavaScriptExpression *e, QQmlJavaScriptExpression::DeleteWatcher *w)
-    : engine(engine), expression(e), watcher(w), errorString(0) { }
+    : engine(engine), expression(e), watcher(w), errorString(nullptr) { }
 
     ~QQmlPropertyCapture()  {
         Q_ASSERT(guards.isEmpty());
-        Q_ASSERT(errorString == 0);
+        Q_ASSERT(errorString == nullptr);
     }
 
     enum Duration {
@@ -202,19 +209,21 @@ public:
         Permanently
     };
 
-    static void registerQmlDependencies(const QV4::CompiledData::Function *compiledFunction, const QV4::Scope &scope);
+    static void registerQmlDependencies(QV4::Heap::QmlContext *context, const QV4::ExecutionEngine *engine, const QV4::CompiledData::Function *compiledFunction);
     void captureProperty(QQmlNotifier *, Duration duration = OnlyOnce);
-    void captureProperty(QObject *, int, int, Duration duration = OnlyOnce);
+    void captureProperty(QObject *, int, int, Duration duration = OnlyOnce, bool doNotify = true);
+    void captureTranslation() { translationCaptured = true; }
 
     QQmlEngine *engine;
     QQmlJavaScriptExpression *expression;
     QQmlJavaScriptExpression::DeleteWatcher *watcher;
     QFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> guards;
     QStringList *errorString;
+    bool translationCaptured = false;
 };
 
 QQmlJavaScriptExpression::DeleteWatcher::DeleteWatcher(QQmlJavaScriptExpression *e)
-: _c(0), _w(0), _s(e)
+: _c(nullptr), _w(nullptr), _s(e)
 {
     if (e->m_scopeObject.isT1()) {
         _w = &_s;
@@ -228,14 +237,14 @@ QQmlJavaScriptExpression::DeleteWatcher::DeleteWatcher(QQmlJavaScriptExpression 
 
 QQmlJavaScriptExpression::DeleteWatcher::~DeleteWatcher()
 {
-    Q_ASSERT(*_w == 0 || (*_w == _s && _s->m_scopeObject.isT2()));
+    Q_ASSERT(*_w == nullptr || (*_w == _s && _s->m_scopeObject.isT2()));
     if (*_w && _s->m_scopeObject.asT2() == this)
         _s->m_scopeObject = _c;
 }
 
 bool QQmlJavaScriptExpression::DeleteWatcher::wasDeleted() const
 {
-    return *_w == 0;
+    return *_w == nullptr;
 }
 
 bool QQmlJavaScriptExpression::notifyOnValueChanged() const
@@ -257,24 +266,23 @@ void QQmlJavaScriptExpression::setScopeObject(QObject *v)
 
 bool QQmlJavaScriptExpression::hasError() const
 {
-    return m_error && m_error->isValid();
+    return !m_error.isNull() && m_error->isValid();
 }
 
 bool QQmlJavaScriptExpression::hasDelayedError() const
 {
-    return m_error;
+    return !m_error.isNull();
 }
 
 inline void QQmlJavaScriptExpression::clearError()
 {
-    if (m_error)
-        delete m_error;
-    m_error = 0;
+    delete m_error.data();
+    m_error = nullptr;
 }
 
 QQmlJavaScriptExpressionGuard::QQmlJavaScriptExpressionGuard(QQmlJavaScriptExpression *e)
     : QQmlNotifierEndpoint(QQmlNotifierEndpoint::QQmlJavaScriptExpressionGuard),
-      expression(e), next(0)
+      expression(e), next(nullptr)
 {
 }
 

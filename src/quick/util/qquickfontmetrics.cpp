@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick
     \since 5.4
     \ingroup qtquick-text-utility
-    \brief Provides metrics for a given font
+    \brief Provides metrics for a given font.
 
     FontMetrics calculates the size of characters and strings for a given font.
 
@@ -287,7 +287,7 @@ qreal QQuickFontMetrics::lineWidth() const
 */
 qreal QQuickFontMetrics::advanceWidth(const QString &text) const
 {
-    return m_metrics.width(text);
+    return m_metrics.horizontalAdvance(text);
 }
 
 /*!

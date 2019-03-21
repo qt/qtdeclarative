@@ -102,7 +102,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
     \qmltype ParticleSystem
     \instantiates QQuickParticleSystem
     \inqmlmodule QtQuick.Particles
-    \brief A system which includes particle painter, emitter, and affector types
+    \brief A system which includes particle painter, emitter, and affector types.
     \ingroup qtquick-particles
 
 */
@@ -378,7 +378,7 @@ QQuickParticleData* QQuickParticleGroupData::newDatum(bool respectsLimits)
         return data[idx];
     }
     if (respectsLimits)
-        return 0;
+        return nullptr;
 
     int oldSize = m_size;
     setSize(oldSize + 10);//###+1,10%,+10? Choose something non-arbitrarily
@@ -418,11 +418,11 @@ QQuickParticleData::QQuickParticleData()
     : index(0)
     , systemIndex(-1)
     , groupId(0)
-    , colorOwner(0)
-    , rotationOwner(0)
-    , deformationOwner(0)
-    , animationOwner(0)
-    , v8Datum(0)
+    , colorOwner(nullptr)
+    , rotationOwner(nullptr)
+    , deformationOwner(nullptr)
+    , animationOwner(nullptr)
+    , v8Datum(nullptr)
 {
     x = 0;
     y = 0;
@@ -455,7 +455,7 @@ QQuickParticleData::QQuickParticleData()
     color.b = 255;
     color.a = 255;
     r = 0;
-    delegate = 0;
+    delegate = nullptr;
     modelIndex = -1;
 }
 
@@ -477,7 +477,7 @@ QQuickParticleData &QQuickParticleData::operator=(const QQuickParticleData &othe
     index = other.index;
     systemIndex = other.systemIndex;
     // Lazily initialized
-    v8Datum = 0;
+    v8Datum = nullptr;
 
     return *this;
 }
@@ -526,7 +526,7 @@ void QQuickParticleData::clone(const QQuickParticleData& other)
 QQmlV4Handle QQuickParticleData::v4Value(QQuickParticleSystem* particleSystem)
 {
     if (!v8Datum)
-        v8Datum = new QQuickV4ParticleData(QQmlEnginePrivate::getV8Engine(qmlEngine(particleSystem)), this, particleSystem);
+        v8Datum = new QQuickV4ParticleData(qmlEngine(particleSystem)->handle(), this, particleSystem);
     return v8Datum->v4Value();
 }
 
@@ -564,9 +564,9 @@ void QQuickParticleData::extendLife(float time, QQuickParticleSystem* particleSy
 
 QQuickParticleSystem::QQuickParticleSystem(QQuickItem *parent) :
     QQuickItem(parent),
-    stateEngine(0),
+    stateEngine(nullptr),
     nextFreeGroupId(0),
-    m_animation(0),
+    m_animation(nullptr),
     m_running(true),
     initialized(0),
     particleCount(0),
@@ -768,9 +768,9 @@ void QQuickParticleSystem::reset()
     timeInt = 0;
     //Clear guarded pointers which have been deleted
     int cleared = 0;
-    cleared += m_emitters.removeAll(0);
-    cleared += m_painters.removeAll(0);
-    cleared += m_affectors.removeAll(0);
+    cleared += m_emitters.removeAll(nullptr);
+    cleared += m_painters.removeAll(nullptr);
+    cleared += m_affectors.removeAll(nullptr);
 
     bySysIdx.resize(0);
     initGroups();//Also clears all logical particles
@@ -945,7 +945,7 @@ void QQuickParticleSystem::createEngine()
     } else {
         if (stateEngine)
             delete stateEngine;
-        stateEngine = 0;
+        stateEngine = nullptr;
     }
 
 }
@@ -993,7 +993,7 @@ QQuickParticleData* QQuickParticleSystem::newDatum(int groupId, bool respectLimi
 
     QQuickParticleData* ret = groupData[groupId]->newDatum(respectLimits);
     if (!ret) {
-        return 0;
+        return nullptr;
     }
     if (sysIndex == -1) {
         if (ret->systemIndex == -1)
@@ -1056,9 +1056,9 @@ void QQuickParticleSystem::updateCurrentTime( int currentTime )
     dt = time - dt;
     needsReset.clear();
 
-    m_emitters.removeAll(0);
-    m_painters.removeAll(0);
-    m_affectors.removeAll(0);
+    m_emitters.removeAll(nullptr);
+    m_painters.removeAll(nullptr);
+    m_affectors.removeAll(nullptr);
 
     bool oldClear = m_empty;
     m_empty = true;

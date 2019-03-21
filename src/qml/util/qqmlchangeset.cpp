@@ -120,7 +120,7 @@ void QQmlChangeSet::remove(int index, int count)
 {
     QVector<Change> removes;
     removes.append(Change(index, count));
-    remove(&removes, 0);
+    remove(&removes, nullptr);
 }
 
 /*!

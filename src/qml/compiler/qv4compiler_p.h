@@ -51,8 +51,11 @@
 //
 
 #include <QtCore/qstring.h>
-#include "qv4jsir_p.h"
-#include <private/qjson_p.h>
+#include <QtCore/qhash.h>
+#include <QtCore/qstringlist.h>
+#include <private/qv4global_p.h>
+#include <private/qqmljsastfwd_p.h>
+#include <private/qv4compileddata_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -69,44 +72,63 @@ struct JSClassMember;
 
 namespace Compiler {
 
+struct Class;
+struct TemplateObject;
+
 struct Q_QML_PRIVATE_EXPORT StringTableGenerator {
     StringTableGenerator();
 
     int registerString(const QString &str);
     int getStringId(const QString &string) const;
     QString stringForIndex(int index) const { return strings.at(index); }
-    uint stringCount() const { return strings.size(); }
+    uint stringCount() const { return strings.size() - backingUnitTableSize; }
 
-    uint sizeOfTableAndData() const { return stringDataSize + strings.count() * sizeof(uint); }
+    uint sizeOfTableAndData() const { return stringDataSize + ((stringCount() * sizeof(uint) + 7) & ~7); }
+
+    void freeze() { frozen = true; }
 
     void clear();
 
+    void initializeFromBackingUnit(const CompiledData::Unit *unit);
+
     void serialize(CompiledData::Unit *unit);
+    QStringList allStrings() const { return strings.mid(backingUnitTableSize); }
 
 private:
     QHash<QString, int> stringToId;
     QStringList strings;
     uint stringDataSize;
+    uint backingUnitTableSize = 0;
+    bool frozen = false;
 };
 
 struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
-    JSUnitGenerator(IR::Module *module);
+    struct MemberInfo {
+        QString name;
+        bool isAccessor;
+    };
+
+    JSUnitGenerator(Module *module);
 
     int registerString(const QString &str) { return stringTable.registerString(str); }
     int getStringId(const QString &string) const { return stringTable.getStringId(string); }
     QString stringForIndex(int index) const { return stringTable.stringForIndex(index); }
 
-    uint registerGetterLookup(const QString &name);
-    uint registerSetterLookup(const QString &name);
-    uint registerGlobalGetterLookup(const QString &name);
-    uint registerIndexedGetterLookup();
-    uint registerIndexedSetterLookup();
+    int registerGetterLookup(const QString &name);
+    int registerGetterLookup(int nameIndex);
+    int registerSetterLookup(const QString &name);
+    int registerSetterLookup(int nameIndex);
+    int registerGlobalGetterLookup(const QString &name);
+    int registerGlobalGetterLookup(int nameIndex);
 
-    int registerRegExp(IR::RegExp *regexp);
+    int registerRegExp(QQmlJS::AST::RegExpLiteral *regexp);
 
     int registerConstant(ReturnedValue v);
+    ReturnedValue constant(int idx);
 
-    int registerJSClass(int count, IR::ExprList *args);
+    int registerJSClass(const QStringList &members);
+
+    int registerTranslation(const CompiledData::TranslationData &translation);
 
     enum GeneratorOption {
         GenerateWithStringTable,
@@ -114,21 +136,24 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
     };
 
     QV4::CompiledData::Unit *generateUnit(GeneratorOption option = GenerateWithStringTable);
-    // Returns bytes written
-    void writeFunction(char *f, IR::Function *irFunction) const;
+    void writeFunction(char *f, Context *irFunction) const;
+    void writeClass(char *f, const Class &c);
+    void writeTemplateObject(char *f, const TemplateObject &o);
+    void writeBlock(char *f, Context *irBlock) const;
 
     StringTableGenerator stringTable;
     QString codeGeneratorName;
 private:
-    CompiledData::Unit generateHeader(GeneratorOption option, QJsonPrivate::q_littleendian<quint32> *functionOffsets, uint *jsClassDataOffset);
+    CompiledData::Unit generateHeader(GeneratorOption option, quint32_le *functionOffsets, uint *jsClassDataOffset);
 
-    IR::Module *irModule;
+    Module *module;
 
     QList<CompiledData::Lookup> lookups;
     QVector<CompiledData::RegExp> regexps;
     QVector<ReturnedValue> constants;
     QByteArray jsClassData;
     QVector<int> jsClassOffsets;
+    QVector<CompiledData::TranslationData> translations;
 };
 
 }

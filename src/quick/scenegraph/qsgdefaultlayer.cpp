@@ -60,7 +60,7 @@ namespace
     public:
         BindableFbo(QOpenGLFramebufferObject *fbo, QSGDepthStencilBuffer *depthStencil);
         virtual ~BindableFbo();
-        void bind() const Q_DECL_OVERRIDE;
+        void bind() const override;
     private:
         QOpenGLFramebufferObject *m_fbo;
         QSGDepthStencilBuffer *m_depthStencil;
@@ -90,15 +90,15 @@ namespace
 
 QSGDefaultLayer::QSGDefaultLayer(QSGRenderContext *context)
     : QSGLayer()
-    , m_item(0)
+    , m_item(nullptr)
     , m_device_pixel_ratio(1)
     , m_format(GL_RGBA)
-    , m_renderer(0)
-    , m_fbo(0)
-    , m_secondaryFbo(0)
+    , m_renderer(nullptr)
+    , m_fbo(nullptr)
+    , m_secondaryFbo(nullptr)
     , m_transparentTexture(0)
 #ifdef QSG_DEBUG_FBO_OVERLAY
-    , m_debugOverlay(0)
+    , m_debugOverlay(nullptr)
 #endif
     , m_samples(0)
     , m_mipmap(false)
@@ -122,13 +122,13 @@ QSGDefaultLayer::~QSGDefaultLayer()
 void QSGDefaultLayer::invalidated()
 {
     delete m_renderer;
-    m_renderer = 0;
+    m_renderer = nullptr;
     delete m_fbo;
     delete m_secondaryFbo;
-    m_fbo = m_secondaryFbo = 0;
+    m_fbo = m_secondaryFbo = nullptr;
 #ifdef QSG_DEBUG_FBO_OVERLAY
     delete m_debugOverlay;
-    m_debugOverlay = 0;
+    m_debugOverlay = nullptr;
 #endif
     if (m_transparentTexture) {
         QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, &m_transparentTexture);
@@ -204,7 +204,7 @@ void QSGDefaultLayer::setItem(QSGNode *item)
     if (m_live && !m_item) {
         delete m_fbo;
         delete m_secondaryFbo;
-        m_fbo = m_secondaryFbo = 0;
+        m_fbo = m_secondaryFbo = nullptr;
         m_depthStencilBuffer.clear();
     }
 
@@ -228,7 +228,7 @@ void QSGDefaultLayer::setSize(const QSize &size)
     if (m_live && m_size.isNull()) {
         delete m_fbo;
         delete m_secondaryFbo;
-        m_fbo = m_secondaryFbo = 0;
+        m_fbo = m_secondaryFbo = nullptr;
         m_depthStencilBuffer.clear();
     }
 
@@ -252,7 +252,7 @@ void QSGDefaultLayer::setLive(bool live)
     if (m_live && (!m_item || m_size.isNull())) {
         delete m_fbo;
         delete m_secondaryFbo;
-        m_fbo = m_secondaryFbo = 0;
+        m_fbo = m_secondaryFbo = nullptr;
         m_depthStencilBuffer.clear();
     }
 
@@ -295,7 +295,7 @@ void QSGDefaultLayer::grab()
     if (!m_item || m_size.isNull()) {
         delete m_fbo;
         delete m_secondaryFbo;
-        m_fbo = m_secondaryFbo = 0;
+        m_fbo = m_secondaryFbo = nullptr;
         m_depthStencilBuffer.clear();
         m_dirtyTexture = false;
         return;
@@ -362,7 +362,7 @@ void QSGDefaultLayer::grab()
                 delete m_fbo;
                 delete m_secondaryFbo;
                 m_fbo = new QOpenGLFramebufferObject(m_size, format);
-                m_secondaryFbo = 0;
+                m_secondaryFbo = nullptr;
                 funcs->glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
                 updateBindOptions(true);
                 m_depthStencilBuffer = m_context->depthStencilBufferForFbo(m_fbo);

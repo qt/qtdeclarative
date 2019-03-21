@@ -114,7 +114,7 @@ public:
     };
     Q_ENUM(RenderStrategy)
 
-    QQuickCanvasItem(QQuickItem *parent = 0);
+    QQuickCanvasItem(QQuickItem *parent = nullptr);
     ~QQuickCanvasItem();
 
     bool isAvailable() const;
@@ -155,8 +155,8 @@ public:
     Q_INVOKABLE QString toDataURL(const QString& type = QLatin1String("image/png")) const;
     QQmlRefPointer<QQuickCanvasPixmap> loadedPixmap(const QUrl& url);
 
-    bool isTextureProvider() const Q_DECL_OVERRIDE;
-    QSGTextureProvider *textureProvider() const Q_DECL_OVERRIDE;
+    bool isTextureProvider() const override;
+    QSGTextureProvider *textureProvider() const override;
 
 Q_SIGNALS:
     void paint(const QRect &region);
@@ -185,13 +185,13 @@ private Q_SLOTS:
     void schedulePolish();
 
 protected:
-    void componentComplete() Q_DECL_OVERRIDE;
-    void itemChange(QQuickItem::ItemChange, const QQuickItem::ItemChangeData &) Q_DECL_OVERRIDE;
-    void updatePolish() Q_DECL_OVERRIDE;
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void releaseResources() Q_DECL_OVERRIDE;
-    bool event(QEvent *event) Q_DECL_OVERRIDE;
+    void componentComplete() override;
+    void itemChange(QQuickItem::ItemChange, const QQuickItem::ItemChangeData &) override;
+    void updatePolish() override;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void releaseResources() override;
+    bool event(QEvent *event) override;
 private:
     Q_DECLARE_PRIVATE(QQuickCanvasItem)
     Q_INVOKABLE void delayedCreate();

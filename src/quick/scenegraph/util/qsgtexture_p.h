@@ -83,7 +83,7 @@ class Q_QUICK_PRIVATE_EXPORT QSGPlainTexture : public QSGTexture
     Q_OBJECT
 public:
     QSGPlainTexture();
-    virtual ~QSGPlainTexture();
+    ~QSGPlainTexture() override;
 
     void setOwnsTexture(bool owns) { m_owns_texture = owns; }
     bool ownsTexture() const { return m_owns_texture; }

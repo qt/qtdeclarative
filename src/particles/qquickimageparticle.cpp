@@ -44,6 +44,7 @@
 #include <QtQuick/qsgtexturematerial.h>
 #include <QtQuick/qsgtexture.h>
 #include <QFile>
+#include <QRandomGenerator>
 #include "qquickimageparticle_p.h"
 #include "qquickparticleemitter_p.h"
 #include <private/qquicksprite_p.h>
@@ -66,7 +67,7 @@ class ImageMaterialData
 {
     public:
     ImageMaterialData()
-        : texture(0), colorTable(0)
+        : texture(nullptr), colorTable(nullptr)
     {}
 
     ~ImageMaterialData(){
@@ -470,7 +471,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     \instantiates QQuickImageParticle
     \inqmlmodule QtQuick.Particles
     \inherits ParticlePainter
-    \brief For visualizing logical particles using an image
+    \brief For visualizing logical particles using an image.
     \ingroup qtquick-particles
 
     This element renders a logical particle as an image. The image can be
@@ -700,7 +701,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     : QQuickParticlePainter(parent)
     , m_color_variation(0.0)
-    , m_material(0)
+    , m_material(nullptr)
     , m_alphaVariation(0.0)
     , m_alpha(1.0)
     , m_redVariation(0.0)
@@ -711,9 +712,9 @@ QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     , m_rotationVelocity(0)
     , m_rotationVelocityVariation(0)
     , m_autoRotation(false)
-    , m_xVector(0)
-    , m_yVector(0)
-    , m_spriteEngine(0)
+    , m_xVector(nullptr)
+    , m_yVector(nullptr)
+    , m_spriteEngine(nullptr)
     , m_spritesInterpolate(true)
     , m_explicitColor(false)
     , m_explicitRotation(false)
@@ -742,7 +743,7 @@ QQmlListProperty<QQuickSprite> QQuickImageParticle::sprites()
 void QQuickImageParticle::sceneGraphInvalidated()
 {
     m_nodes.clear();
-    m_material = 0;
+    m_material = nullptr;
 }
 
 void QQuickImageParticle::setImage(const QUrl &image)
@@ -1010,7 +1011,7 @@ void QQuickImageParticle::resetColor()
     for (auto groupId : groupIds()) {
         for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
             if (d->colorOwner == this) {
-                d->colorOwner = 0;
+                d->colorOwner = nullptr;
             }
         }
     }
@@ -1029,7 +1030,7 @@ void QQuickImageParticle::resetRotation()
     for (auto groupId : groupIds()) {
         for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
             if (d->rotationOwner == this) {
-                d->rotationOwner = 0;
+                d->rotationOwner = nullptr;
             }
         }
     }
@@ -1046,7 +1047,7 @@ void QQuickImageParticle::resetDeformation()
     for (auto groupId : groupIds()) {
         for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
             if (d->deformationOwner == this) {
-                d->deformationOwner = 0;
+                d->deformationOwner = nullptr;
             }
         }
     }
@@ -1054,8 +1055,8 @@ void QQuickImageParticle::resetDeformation()
         delete m_xVector;
     if (m_yVector)
         delete m_yVector;
-    m_xVector = 0;
-    m_yVector = 0;
+    m_xVector = nullptr;
+    m_yVector = nullptr;
 }
 
 void QQuickImageParticle::reset()
@@ -1075,7 +1076,7 @@ void QQuickImageParticle::createEngine()
                 this, SLOT(spriteAdvance(int)), Qt::DirectConnection);
         m_explicitAnimation = true;
     } else {
-        m_spriteEngine = 0;
+        m_spriteEngine = nullptr;
         m_explicitAnimation = false;
     }
     reset();
@@ -1297,7 +1298,7 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
 
     clearShadows();
     if (m_material)
-        m_material = 0;
+        m_material = nullptr;
 
     //Setup material
     QImage colortable;
@@ -1320,7 +1321,7 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
         m_material = SpriteMaterial::createMaterial();
         if (imageLoaded)
             getState<ImageMaterialData>(m_material)->texture = QSGPlainTexture::fromImage(image);
-        getState<ImageMaterialData>(m_material)->animSheetSize = QSizeF(image.size());
+        getState<ImageMaterialData>(m_material)->animSheetSize = QSizeF(image.size() / image.devicePixelRatioF());
         if (m_spriteEngine)
             m_spriteEngine->setCount(m_count);
         Q_FALLTHROUGH();
@@ -1472,12 +1473,12 @@ static inline bool isOpenGL(QSGRenderContext *rc)
 QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
 {
     if (!node && !isOpenGL(QQuickItemPrivate::get(this)->sceneGraphRenderContext()))
-        return 0;
+        return nullptr;
 
     if (m_pleaseReset){
         if (node)
             delete node;
-        node = 0;
+        node = nullptr;
 
         m_lastLevel = perfLevel;
         m_nodes.clear();
@@ -1486,7 +1487,7 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *node, UpdatePaintNodeData
         m_startsIdx.clear();
         m_lastIdxStart = 0;
 
-        m_material = 0;
+        m_material = nullptr;
 
         m_pleaseReset = false;
         m_startedImageLoading = 0;//Cancel a part-way build (may still have a pending load)
@@ -1508,7 +1509,7 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *node, UpdatePaintNodeData
 
 void QQuickImageParticle::prepareNextFrame(QSGNode **node)
 {
-    if (*node == 0){//TODO: Staggered loading (as emitted)
+    if (*node == nullptr){//TODO: Staggered loading (as emitted)
         buildParticleNodes(node);
         if (m_debugMode) {
             qDebug() << "QQuickImageParticle Feature level: " << perfLevel;
@@ -1521,7 +1522,7 @@ void QQuickImageParticle::prepareNextFrame(QSGNode **node)
             }
             qDebug() << "Total count: " << count;
         }
-        if (*node == 0)
+        if (*node == nullptr)
             return;
     }
     qint64 timeStamp = m_system->systemSync(this);
@@ -1729,9 +1730,9 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                 if (!datum->rotationOwner)
                     datum->rotationOwner = this;
                 rotation =
-                        (m_rotation + (m_rotationVariation - 2*((qreal)rand()/RAND_MAX)*m_rotationVariation) ) * CONV;
+                        (m_rotation + (m_rotationVariation - 2*QRandomGenerator::global()->bounded(m_rotationVariation)) ) * CONV;
                 rotationVelocity =
-                        (m_rotationVelocity + (m_rotationVelocityVariation - 2*((qreal)rand()/RAND_MAX)*m_rotationVelocityVariation) ) * CONV;
+                        (m_rotationVelocity + (m_rotationVelocityVariation - 2*QRandomGenerator::global()->bounded(m_rotationVelocityVariation)) ) * CONV;
                 autoRotate = m_autoRotation?1.0:0.0;
                 if (datum->rotationOwner == this) {
                     datum->rotation = rotation;
@@ -1750,10 +1751,10 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
             if (m_explicitColor) {
                 if (!datum->colorOwner)
                     datum->colorOwner = this;
-                color.r = m_color.red() * (1 - redVariation) + rand() % 256 * redVariation;
-                color.g = m_color.green() * (1 - greenVariation) + rand() % 256 * greenVariation;
-                color.b = m_color.blue() * (1 - blueVariation) + rand() % 256 * blueVariation;
-                color.a = m_alpha * m_color.alpha() * (1 - m_alphaVariation) + rand() % 256 * m_alphaVariation;
+                color.r = m_color.red() * (1 - redVariation) + QRandomGenerator::global()->bounded(256) * redVariation;
+                color.g = m_color.green() * (1 - greenVariation) + QRandomGenerator::global()->bounded(256) * greenVariation;
+                color.b = m_color.blue() * (1 - blueVariation) + QRandomGenerator::global()->bounded(256) * blueVariation;
+                color.a = m_alpha * m_color.alpha() * (1 - m_alphaVariation) + QRandomGenerator::global()->bounded(256) * m_alphaVariation;
                 if (datum->colorOwner == this)
                     datum->color = color;
                 else

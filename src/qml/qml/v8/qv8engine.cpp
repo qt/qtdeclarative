@@ -39,14 +39,21 @@
 
 #include "qv8engine_p.h"
 
+#if QT_CONFIG(qml_sequence_object)
 #include "qv4sequenceobject_p.h"
+#endif
+
 #include "private/qjsengine_p.h"
 
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmllist_p.h>
 #include <private/qqmlengine_p.h>
+#if QT_CONFIG(qml_xml_http_request)
 #include <private/qqmlxmlhttprequest_p.h>
+#endif
+#if QT_CONFIG(qml_locale)
 #include <private/qqmllocale_p.h>
+#endif
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
 #include <private/qqmlplatform_p.h>
@@ -78,6 +85,7 @@
 #include <private/qv4script_p.h>
 #include <private/qv4include_p.h>
 #include <private/qv4jsonobject_p.h>
+#include <private/qv4identifiertable_p.h>
 
 Q_DECLARE_METATYPE(QList<int>)
 
@@ -123,16 +131,19 @@ static void restoreJSValue(QDataStream &stream, void *data)
     }
 }
 
-QV8Engine::QV8Engine(QJSEngine* qq)
-    : q(qq)
-    , m_engine(0)
-    , m_xmlHttpRequestData(0)
-    , m_listModelData(0)
+QV8Engine::QV8Engine(QV4::ExecutionEngine *v4)
+    : m_engine(nullptr)
+    , m_v4Engine(v4)
+#if QT_CONFIG(qml_xml_http_request)
+    , m_xmlHttpRequestData(nullptr)
+#endif
 {
+#ifndef Q_OS_WASM // wasm does not have working simd QTBUG-63924
 #ifdef Q_PROCESSOR_X86_32
     if (!qCpuHasFeature(SSE2)) {
         qFatal("This program requires an X86 processor that supports SSE2 extension, at least a Pentium 4 or newer");
     }
+#endif
 #endif
 
     QML_MEMORY_SCOPE_STRING("QV8Engine::QV8Engine");
@@ -147,8 +158,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
         QMetaType::registerConverter<QJSValue, QStringList>(convertJSValueToVariantType<QStringList>);
     QMetaType::registerStreamOperators(qMetaTypeId<QJSValue>(), saveJSValue, restoreJSValue);
 
-    m_v4Engine = new QV4::ExecutionEngine;
-    m_v4Engine->v8Engine = this;
     m_delayedCallQueue.init(m_v4Engine);
 
     QV4::QObjectWrapper::initializeBindings(m_v4Engine);
@@ -159,15 +168,10 @@ QV8Engine::~QV8Engine()
     qDeleteAll(m_extensionData);
     m_extensionData.clear();
 
-#if QT_CONFIG(xmlstreamreader) && QT_CONFIG(qml_network)
+#if QT_CONFIG(qml_xml_http_request)
     qt_rem_qmlxmlhttprequest(m_v4Engine, m_xmlHttpRequestData);
-    m_xmlHttpRequestData = 0;
+    m_xmlHttpRequestData = nullptr;
 #endif
-
-    delete m_listModelData;
-    m_listModelData = 0;
-
-    delete m_v4Engine;
 }
 
 #if QT_CONFIG(qml_network)
@@ -187,14 +191,16 @@ void QV8Engine::initializeGlobal()
     QV4::Scope scope(m_v4Engine);
     QV4::GlobalExtensions::init(m_v4Engine->globalObject, QJSEngine::AllExtensions);
 
-    QV4::ScopedObject qt(scope, m_v4Engine->memoryManager->allocObject<QV4::QtObject>(m_engine));
+    QV4::ScopedObject qt(scope, m_v4Engine->memoryManager->allocate<QV4::QtObject>(m_engine));
     m_v4Engine->globalObject->defineDefaultProperty(QStringLiteral("Qt"), qt);
 
+#if QT_CONFIG(qml_locale)
     QQmlLocale::registerStringLocaleCompare(m_v4Engine);
     QQmlDateExtension::registerExtension(m_v4Engine);
     QQmlNumberExtension::registerExtension(m_v4Engine);
+#endif
 
-#if QT_CONFIG(xmlstreamreader) && QT_CONFIG(qml_network)
+#if QT_CONFIG(qml_xml_http_request)
     qt_add_domexceptions(m_v4Engine);
     m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(m_v4Engine);
 #endif
@@ -203,8 +209,10 @@ void QV8Engine::initializeGlobal()
 
     {
         for (uint i = 0; i < m_v4Engine->globalObject->internalClass()->size; ++i) {
-            if (m_v4Engine->globalObject->internalClass()->nameMap.at(i))
-                m_illegalNames.insert(m_v4Engine->globalObject->internalClass()->nameMap.at(i)->string);
+            if (m_v4Engine->globalObject->internalClass()->nameMap.at(i).isString()) {
+                QV4::PropertyKey id = m_v4Engine->globalObject->internalClass()->nameMap.at(i);
+                m_illegalNames.insert(id.toQString());
+            }
         }
     }
 }
@@ -217,25 +225,25 @@ static void freeze_recursive(QV4::ExecutionEngine *v4, QV4::Object *object)
     QV4::Scope scope(v4);
 
     bool instanceOfObject = false;
-    QV4::ScopedObject p(scope, object->prototype());
+    QV4::ScopedObject p(scope, object->getPrototypeOf());
     while (p) {
         if (p->d() == v4->objectPrototype()->d()) {
             instanceOfObject = true;
             break;
         }
-        p = p->prototype();
+        p = p->getPrototypeOf();
     }
     if (!instanceOfObject)
         return;
 
-    QV4::InternalClass *frozen = object->internalClass()->propertiesFrozen();
+    QV4::Heap::InternalClass *frozen = object->internalClass()->propertiesFrozen();
     if (object->internalClass() == frozen)
         return;
     object->setInternalClass(frozen);
 
     QV4::ScopedObject o(scope);
     for (uint i = 0; i < frozen->size; ++i) {
-        if (!frozen->nameMap.at(i))
+        if (!frozen->nameMap.at(i).isStringOrSymbol())
             continue;
         o = *object->propertyData(i);
         if (o)
@@ -290,11 +298,6 @@ void QV8Engine::setEngine(QQmlEngine *engine)
 {
     m_engine = engine;
     initQmlGlobalObject();
-}
-
-QV4::ReturnedValue QV8Engine::global()
-{
-    return m_v4Engine->globalObject->asReturnedValue();
 }
 
 void QV8Engine::startTimer(const QString &timerName)

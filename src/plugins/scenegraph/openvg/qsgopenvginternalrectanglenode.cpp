@@ -176,6 +176,12 @@ void QSGOpenVGInternalRectangleNode::setGradientStops(const QGradientStops &stop
     m_fillDirty = true;
 }
 
+void QSGOpenVGInternalRectangleNode::setGradientVertical(bool vertical)
+{
+    m_vertical = vertical;
+    m_fillDirty = true;
+}
+
 void QSGOpenVGInternalRectangleNode::setRadius(qreal radius)
 {
     m_radius = radius;
@@ -242,13 +248,13 @@ void QSGOpenVGInternalRectangleNode::render()
         } else {
             // Linear Gradient
             vgSetParameteri(m_rectanglePaint, VG_PAINT_TYPE, VG_PAINT_TYPE_LINEAR_GRADIENT);
-            const VGfloat verticalLinearGradient[] = {
+            const VGfloat linearGradient[] = {
                 0.0f,
                 0.0f,
-                0.0f,
-                static_cast<VGfloat>(m_rect.height())
+                m_vertical ? 0.0f : static_cast<VGfloat>(m_rect.width()),
+                m_vertical ? static_cast<VGfloat>(m_rect.height()) : 0.0f
             };
-            vgSetParameterfv(m_rectanglePaint, VG_PAINT_LINEAR_GRADIENT, 4, verticalLinearGradient);
+            vgSetParameterfv(m_rectanglePaint, VG_PAINT_LINEAR_GRADIENT, 4, linearGradient);
             vgSetParameteri(m_rectanglePaint, VG_PAINT_COLOR_RAMP_SPREAD_MODE, VG_COLOR_RAMP_SPREAD_PAD);
             vgSetParameteri(m_rectanglePaint, VG_PAINT_COLOR_RAMP_PREMULTIPLIED, false);
 

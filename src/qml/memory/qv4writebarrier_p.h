@@ -51,7 +51,7 @@
 //
 
 #include <private/qv4global_p.h>
-#include <private/qv4value_p.h>
+#include <private/qv4enginebase_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -84,14 +84,7 @@ static Q_CONSTEXPR inline bool isRequired() {
     return false;
 }
 
-inline void write(EngineBase *engine, Heap::Base *base, Value *slot, Value value)
-{
-    Q_UNUSED(engine);
-    Q_UNUSED(base);
-    *slot = value;
-}
-
-inline void write(EngineBase *engine, Heap::Base *base, Value *slot, Heap::Base *value)
+inline void write(EngineBase *engine, Heap::Base *base, ReturnedValue *slot, ReturnedValue value)
 {
     Q_UNUSED(engine);
     Q_UNUSED(base);
@@ -108,96 +101,6 @@ inline void write(EngineBase *engine, Heap::Base *base, Heap::Base **slot, Heap:
 #endif
 
 }
-
-namespace Heap {
-
-template <typename T, size_t o>
-struct Pointer {
-    static Q_CONSTEXPR size_t offset = o;
-    T operator->() const { return ptr; }
-    operator T () const { return ptr; }
-
-    Heap::Base *base() {
-        Heap::Base *base = reinterpret_cast<Heap::Base *>(this) - (offset/sizeof(Heap::Base));
-        Q_ASSERT(base->inUse());
-        return base;
-    }
-
-    void set(ExecutionEngine *e, T newVal) {
-        WriteBarrier::write(e, base(), reinterpret_cast<Heap::Base **>(&ptr), reinterpret_cast<Heap::Base *>(newVal));
-    }
-
-    template <typename Type>
-    Type *cast() { return static_cast<Type *>(ptr); }
-
-private:
-    T ptr;
-};
-typedef Pointer<char *, 0> V4PointerCheck;
-V4_ASSERT_IS_TRIVIAL(V4PointerCheck)
-
-}
-
-template <size_t offset>
-struct HeapValue : Value {
-    Heap::Base *base() {
-        Heap::Base *base = reinterpret_cast<Heap::Base *>(this) - (offset/sizeof(Heap::Base));
-        Q_ASSERT(base->inUse());
-        return base;
-    }
-
-    void set(ExecutionEngine *e, const Value &newVal) {
-        WriteBarrier::write(e, base(), this, newVal);
-    }
-    void set(ExecutionEngine *e, Heap::Base *b) {
-        WriteBarrier::write(e, base(), this, b);
-    }
-};
-
-template <size_t offset>
-struct ValueArray {
-    uint size;
-    uint alloc;
-    Value values[1];
-
-    Heap::Base *base() {
-        Heap::Base *base = reinterpret_cast<Heap::Base *>(this) - (offset/sizeof(Heap::Base));
-        Q_ASSERT(base->inUse());
-        return base;
-    }
-
-    void set(ExecutionEngine *e, uint index, Value v) {
-        WriteBarrier::write(e, base(), values + index, v);
-    }
-    void set(ExecutionEngine *e, uint index, Heap::Base *b) {
-        WriteBarrier::write(e, base(), values + index, b);
-    }
-    inline const Value &operator[] (uint index) const {
-        Q_ASSERT(index < alloc);
-        return values[index];
-    }
-    inline const Value *data() const {
-        return values;
-    }
-
-    void insertData(ExecutionEngine *e, uint index, Value v) {
-        for (uint i = size - 1; i > index; --i) {
-            values[i] = values[i - 1];
-        }
-        set(e, index, v);
-    }
-    void removeData(ExecutionEngine *e, uint index, int n = 1) {
-        Q_UNUSED(e);
-        for (uint i = index; i < size - n; ++i) {
-            values[i] = values[i + n];
-        }
-    }
-};
-
-// It's really important that the offset of values in this structure is
-// constant across all architecture,  otherwise JIT cross-compiled code will
-// have wrong offsets between host and target.
-Q_STATIC_ASSERT(offsetof(ValueArray<0>, values) == 8);
 
 }
 

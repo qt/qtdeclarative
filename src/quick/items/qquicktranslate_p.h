@@ -66,7 +66,7 @@ class Q_AUTOTEST_EXPORT QQuickTranslate : public QQuickTransform
     Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged)
 
 public:
-    QQuickTranslate(QObject *parent = 0);
+    QQuickTranslate(QObject *parent = nullptr);
     ~QQuickTranslate();
 
     qreal x() const;
@@ -75,7 +75,7 @@ public:
     qreal y() const;
     void setY(qreal);
 
-    void applyTo(QMatrix4x4 *matrix) const Q_DECL_OVERRIDE;
+    void applyTo(QMatrix4x4 *matrix) const override;
 
 Q_SIGNALS:
     void xChanged();
@@ -96,7 +96,7 @@ class Q_AUTOTEST_EXPORT QQuickScale : public QQuickTransform
     Q_PROPERTY(qreal yScale READ yScale WRITE setYScale NOTIFY yScaleChanged)
     Q_PROPERTY(qreal zScale READ zScale WRITE setZScale NOTIFY zScaleChanged)
 public:
-    QQuickScale(QObject *parent = 0);
+    QQuickScale(QObject *parent = nullptr);
     ~QQuickScale();
 
     QVector3D origin() const;
@@ -111,7 +111,7 @@ public:
     qreal zScale() const;
     void setZScale(qreal);
 
-    void applyTo(QMatrix4x4 *matrix) const Q_DECL_OVERRIDE;
+    void applyTo(QMatrix4x4 *matrix) const override;
 
 Q_SIGNALS:
     void originChanged();
@@ -133,7 +133,7 @@ class Q_AUTOTEST_EXPORT QQuickRotation : public QQuickTransform
     Q_PROPERTY(qreal angle READ angle WRITE setAngle NOTIFY angleChanged)
     Q_PROPERTY(QVector3D axis READ axis WRITE setAxis NOTIFY axisChanged)
 public:
-    QQuickRotation(QObject *parent = 0);
+    QQuickRotation(QObject *parent = nullptr);
     ~QQuickRotation();
 
     QVector3D origin() const;
@@ -146,7 +146,7 @@ public:
     void setAxis(const QVector3D &axis);
     void setAxis(Qt::Axis axis);
 
-    void applyTo(QMatrix4x4 *matrix) const Q_DECL_OVERRIDE;
+    void applyTo(QMatrix4x4 *matrix) const override;
 
 Q_SIGNALS:
     void originChanged();
@@ -164,13 +164,13 @@ class Q_AUTOTEST_EXPORT QQuickMatrix4x4 : public QQuickTransform
 
     Q_PROPERTY(QMatrix4x4 matrix READ matrix WRITE setMatrix NOTIFY matrixChanged)
 public:
-    QQuickMatrix4x4(QObject *parent = 0);
+    QQuickMatrix4x4(QObject *parent = nullptr);
     ~QQuickMatrix4x4();
 
     QMatrix4x4 matrix() const;
     void setMatrix(const QMatrix4x4& matrix);
 
-    void applyTo(QMatrix4x4 *matrix) const Q_DECL_OVERRIDE;
+    void applyTo(QMatrix4x4 *matrix) const override;
 
 Q_SIGNALS:
     void matrixChanged();

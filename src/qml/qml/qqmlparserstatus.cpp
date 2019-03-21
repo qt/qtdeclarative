@@ -81,13 +81,11 @@ QT_BEGIN_NAMESPACE
         void componentComplete();
     }
     \endcode
-
-    The \l {Qt Quick 1} version of this class is named QDeclarativeParserStatus.
 */
 
 /*! \internal */
 QQmlParserStatus::QQmlParserStatus()
-: d(0)
+: d(nullptr)
 {
 }
 
@@ -95,7 +93,7 @@ QQmlParserStatus::QQmlParserStatus()
 QQmlParserStatus::~QQmlParserStatus()
 {
     if(d)
-        (*d) = 0;
+        (*d) = nullptr;
 }
 
 /*!

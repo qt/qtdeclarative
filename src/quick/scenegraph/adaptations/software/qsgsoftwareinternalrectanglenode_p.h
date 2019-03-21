@@ -69,6 +69,7 @@ public:
     void setPenColor(const QColor &color) override;
     void setPenWidth(qreal width) override;
     void setGradientStops(const QGradientStops &stops) override;
+    void setGradientVertical(bool vertical) override;
     void setRadius(qreal radius) override;
     void setAntialiasing(bool antialiasing) override { Q_UNUSED(antialiasing) }
     void setAligned(bool aligned) override;
@@ -91,11 +92,12 @@ private:
     double m_radius;
     QPen m_pen;
     QBrush m_brush;
+    bool m_vertical;
 
     bool m_cornerPixmapIsDirty;
     QPixmap m_cornerPixmap;
 
-    int m_devicePixelRatio;
+    qreal m_devicePixelRatio;
 };
 
 QT_END_NAMESPACE

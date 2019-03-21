@@ -5,12 +5,7 @@ SOURCES += \
     $$PWD/qlocalclientconnection.cpp
 
 HEADERS += \
-    $$PWD/qlocalclientconnectionfactory.h \
-    $$PWD/../shared/qqmldebugserver.h \
-    $$PWD/../shared/qqmldebugserverconnection.h
-
-INCLUDEPATH += $$PWD \
-    $$PWD/../shared
+    $$PWD/qlocalclientconnectionfactory.h
 
 OTHER_FILES += \
     $$PWD/qlocalclientconnection.json

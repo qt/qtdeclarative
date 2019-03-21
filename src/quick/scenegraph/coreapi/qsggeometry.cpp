@@ -115,7 +115,7 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()
 
 /*!
     \class QSGGeometry::Attribute
-    \brief The QSGGeometry::Attribute describes a single vertex attribute in a QSGGeometry
+    \brief The QSGGeometry::Attribute describes a single vertex attribute in a QSGGeometry.
     \inmodule QtQuick
 
     The QSGGeometry::Attribute struct describes the attribute register position,
@@ -430,9 +430,9 @@ QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes,
     , m_index_count(0)
     , m_index_type(indexType)
     , m_attributes(attributes)
-    , m_data(0)
+    , m_data(nullptr)
     , m_index_data_offset(-1)
-    , m_server_data(0)
+    , m_server_data(nullptr)
     , m_owns_data(false)
     , m_index_usage_pattern(AlwaysUploadPattern)
     , m_vertex_usage_pattern(AlwaysUploadPattern)
@@ -529,7 +529,7 @@ QSGGeometry::~QSGGeometry()
 void *QSGGeometry::indexData()
 {
     return m_index_data_offset < 0
-            ? 0
+            ? nullptr
             : ((char *) m_data + m_index_data_offset);
 }
 
@@ -541,7 +541,7 @@ void *QSGGeometry::indexData()
 const void *QSGGeometry::indexData() const
 {
     return m_index_data_offset < 0
-            ? 0
+            ? nullptr
             : ((char *) m_data + m_index_data_offset);
 }
 
@@ -768,6 +768,19 @@ void QSGGeometry::updateColoredRectGeometry(QSGGeometry *g, const QRectF &rect)
     v[3].y = rect.bottom();
 }
 
+/*!
+  \enum QSGGeometry::AttributeType
+
+  This enum identifies several attribute types.
+
+  \value UnknownAttribute    Don't care
+  \value PositionAttribute   Position
+  \value ColorAttribute      Color
+  \value TexCoordAttribute   Texture coordinate
+  \value TexCoord1Attribute  Texture coordinate 1
+  \value TexCoord2Attribute  Texture coordinate 2
+
+ */
 
 /*!
     \enum QSGGeometry::DataPattern

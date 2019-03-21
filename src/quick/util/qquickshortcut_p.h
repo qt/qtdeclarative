@@ -74,7 +74,7 @@ class QQuickShortcut : public QObject, public QQmlParserStatus
     Q_PROPERTY(Qt::ShortcutContext context READ context WRITE setContext NOTIFY contextChanged FINAL)
 
 public:
-    explicit QQuickShortcut(QObject *parent = Q_NULLPTR);
+    explicit QQuickShortcut(QObject *parent = nullptr);
     ~QQuickShortcut();
 
     QVariant sequence() const;
@@ -106,9 +106,9 @@ Q_SIGNALS:
     void activatedAmbiguously();
 
 protected:
-    void classBegin() Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
-    bool event(QEvent *event) Q_DECL_OVERRIDE;
+    void classBegin() override;
+    void componentComplete() override;
+    bool event(QEvent *event) override;
 
     struct Shortcut {
         Shortcut() : id(0) { }

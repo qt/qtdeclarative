@@ -145,9 +145,6 @@ void QSGD3D12RenderLoop::windowDestroyed(QQuickWindow *window)
 
     rc->invalidate();
 
-    if (m_windows.isEmpty())
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-
     delete rc;
     delete engine;
 
@@ -461,6 +458,7 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
     data.rc->initialize(nullptr);
 
     wd->syncSceneGraph();
+    data.rc->endSync();
 
     if (profileFrames)
         syncTime = renderTimer.nsecsElapsed();

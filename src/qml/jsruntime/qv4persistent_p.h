@@ -81,7 +81,7 @@ struct Q_QML_EXPORT PersistentValueStorage
         Value &operator *();
     };
     Iterator begin() { return Iterator(firstPage, 0); }
-    Iterator end() { return Iterator(0, 0); }
+    Iterator end() { return Iterator(nullptr, 0); }
 
     static ExecutionEngine *getEngine(Value *v);
 
@@ -94,7 +94,7 @@ private:
 class Q_QML_EXPORT PersistentValue
 {
 public:
-    PersistentValue() : val(0) {}
+    PersistentValue() {}
     PersistentValue(const PersistentValue &other);
     PersistentValue &operator=(const PersistentValue &other);
     PersistentValue &operator=(const WeakValue &other);
@@ -117,19 +117,19 @@ public:
     }
     Managed *asManaged() const {
         if (!val)
-            return 0;
+            return nullptr;
         return val->managed();
     }
     template<typename T>
     T *as() const {
         if (!val)
-            return 0;
+            return nullptr;
         return val->as<T>();
     }
 
     ExecutionEngine *engine() const {
         if (!val)
-            return 0;
+            return nullptr;
         return PersistentValueStorage::getEngine(val);
     }
 
@@ -137,18 +137,18 @@ public:
     bool isNullOrUndefined() const { return !val || val->isNullOrUndefined(); }
     void clear() {
         PersistentValueStorage::free(val);
-        val = 0;
+        val = nullptr;
     }
     bool isEmpty() { return !val; }
 
 private:
-    Value *val;
+    Value *val = nullptr;
 };
 
 class Q_QML_EXPORT WeakValue
 {
 public:
-    WeakValue() : val(0) {}
+    WeakValue() {}
     WeakValue(const WeakValue &other);
     WeakValue(ExecutionEngine *engine, const Value &value);
     WeakValue &operator=(const WeakValue &other);
@@ -183,19 +183,19 @@ public:
     }
     Managed *asManaged() const {
         if (!val)
-            return 0;
+            return nullptr;
         return val->managed();
     }
     template <typename T>
     T *as() const {
         if (!val)
-            return 0;
+            return nullptr;
         return val->as<T>();
     }
 
     ExecutionEngine *engine() const {
         if (!val)
-            return 0;
+            return nullptr;
         return PersistentValueStorage::getEngine(val);
     }
 
@@ -206,7 +206,7 @@ public:
     void markOnce(MarkStack *markStack);
 
 private:
-    Value *val;
+    Value *val = nullptr;
 
 private:
     Q_NEVER_INLINE void allocVal(ExecutionEngine *engine);

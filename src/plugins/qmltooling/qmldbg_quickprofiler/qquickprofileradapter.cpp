@@ -38,12 +38,16 @@
 ****************************************************************************/
 
 #include "qquickprofileradapter.h"
-#include "qqmldebugpacket.h"
+
 #include <QCoreApplication>
+#include <private/qqmldebugconnector_p.h>
+#include <private/qversionedpacket_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qquickprofiler_p.h>
 
 QT_BEGIN_NAMESPACE
+
+using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 
 QQuickProfilerAdapter::QQuickProfilerAdapter(QObject *parent) :
     QQmlAbstractProfilerAdapter(parent), next(0)
@@ -148,10 +152,8 @@ static void qQuickProfilerDataToByteArrays(const QQuickProfilerData &data,
     }
 }
 
-qint64 QQuickProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages,
-                                           bool trackLocations)
+qint64 QQuickProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
 {
-    Q_UNUSED(trackLocations);
     while (next < m_data.size()) {
         if (m_data[next].time <= until && messages.length() <= s_numMessagesPerBatch)
             qQuickProfilerDataToByteArrays(m_data[next++], messages);

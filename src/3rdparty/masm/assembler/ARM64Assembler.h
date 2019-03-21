@@ -39,6 +39,10 @@
 #include <libkern/OSCacheControl.h>
 #endif
 
+#if OS(INTEGRITY)
+#include <INTEGRITY.h>
+#endif
+
 #define CHECK_DATASIZE_OF(datasize) ASSERT(datasize == 32 || datasize == 64)
 #define DATASIZE_OF(datasize) ((datasize == 64) ? Datasize_64 : Datasize_32)
 #define MEMOPSIZE_OF(datasize) ((datasize == 8 || datasize == 128) ? MemOpSize_8_or_128 : (datasize == 16) ? MemOpSize_16 : (datasize == 32) ? MemOpSize_32 : MemOpSize_64)
@@ -1976,6 +1980,13 @@ public:
     }
 
     template<int datasize>
+    ALWAYS_INLINE void stp(RegisterID rt, RegisterID rt2, RegisterID rn, unsigned pimm = 0)
+    {
+        CHECK_DATASIZE();
+        insn(loadStoreRegisterPairOffset(MEMPAIROPSIZE_INT(datasize), false, MemOp_STORE, pimm, rn, rt, rt2));
+    }
+
+    template<int datasize>
     ALWAYS_INLINE void str(RegisterID rt, RegisterID rn, RegisterID rm)
     {
         str<datasize>(rt, rn, rm, UXTX, 0);
@@ -3032,6 +3043,15 @@ public:
             linuxPageFlush(current, current + page);
 
         linuxPageFlush(current, end);
+#elif OS(QNX)
+#if !ENABLE(ASSEMBLER_WX_EXCLUSIVE)
+        msync(code, size, MS_INVALIDATE_ICACHE);
+#else
+        UNUSED_PARAM(code);
+        UNUSED_PARAM(size);
+#endif
+#elif OS(INTEGRITY)
+        ManageCaches((Address)code, size, ACCESS_DST_SYNC);
 #else
 #error "The cacheFlush support is missing on this platform."
 #endif
@@ -3685,6 +3705,23 @@ private:
     ALWAYS_INLINE static int loadStoreRegisterPairPreIndex(MemPairOpSize size, bool V, MemOp opc, int immediate, RegisterID rn, RegisterID rt, RegisterID rt2)
     {
         return loadStoreRegisterPairPreIndex(size, V, opc, immediate, rn, xOrZrAsFPR(rt), xOrZrAsFPR(rt2));
+    }
+
+    // 'V' means vector
+    ALWAYS_INLINE static int loadStoreRegisterPairOffset(MemPairOpSize size, bool V, MemOp opc, int immediate, RegisterID rn, FPRegisterID rt, FPRegisterID rt2)
+    {
+        ASSERT(size < 3);
+        ASSERT(opc == (opc & 1)); // Only load or store, load signed 64 is handled via size.
+        ASSERT(V || (size != MemPairOp_LoadSigned_32) || (opc == MemOp_LOAD)); // There isn't an integer store signed.
+        unsigned immedShiftAmount = memPairOffsetShift(V, size);
+        int imm7 = immediate >> immedShiftAmount;
+        ASSERT((imm7 << immedShiftAmount) == immediate && isInt7(imm7));
+        return (0x29000000 | size << 30 | V << 26 | opc << 22 | (imm7 & 0x7f) << 15 | rt2 << 10 | xOrSp(rn) << 5 | rt);
+    }
+
+    ALWAYS_INLINE static int loadStoreRegisterPairOffset(MemPairOpSize size, bool V, MemOp opc, int immediate, RegisterID rn, RegisterID rt, RegisterID rt2)
+    {
+        return loadStoreRegisterPairOffset(size, V, opc, immediate, rn, xOrZrAsFPR(rt), xOrZrAsFPR(rt2));
     }
 
     // 'V' means vector

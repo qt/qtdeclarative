@@ -129,14 +129,14 @@ public:
     void runInEngine(QV4DebugJob *job);
 
     // compile-time interface
-    void maybeBreakAtInstruction() Q_DECL_OVERRIDE;
+    void maybeBreakAtInstruction() override;
 
     // execution hooks
-    void enteringFunction() Q_DECL_OVERRIDE;
-    void leavingFunction(const QV4::ReturnedValue &retVal) Q_DECL_OVERRIDE;
-    void aboutToThrow() Q_DECL_OVERRIDE;
+    void enteringFunction() override;
+    void leavingFunction(const QV4::ReturnedValue &retVal) override;
+    void aboutToThrow() override;
 
-    bool pauseAtNextOpportunity() const Q_DECL_OVERRIDE;
+    bool pauseAtNextOpportunity() const override;
 
 signals:
     void debuggerPaused(QV4Debugger *self, QV4Debugger::PauseReason reason);
@@ -150,7 +150,7 @@ private:
     void runJobUnpaused();
 
     QV4::ExecutionEngine *m_engine;
-    QV4::PersistentValue m_currentContext;
+    QV4::CppStackFrame *m_currentFrame = 0;
     QMutex m_lock;
     QWaitCondition m_runningCondition;
     State m_state;

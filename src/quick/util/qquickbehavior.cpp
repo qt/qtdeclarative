@@ -57,7 +57,7 @@ class QQuickBehaviorPrivate : public QObjectPrivate, public QAnimationJobChangeL
 {
     Q_DECLARE_PUBLIC(QQuickBehavior)
 public:
-    QQuickBehaviorPrivate() : animation(0), animationInstance(0), enabled(true), finalized(false)
+    QQuickBehaviorPrivate() : animation(nullptr), animationInstance(nullptr), enabled(true), finalized(false)
       , blockRunningChanged(false) {}
 
     void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState) override;
@@ -77,7 +77,7 @@ public:
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
     \ingroup qtquick-interceptors
-    \brief Defines a default animation for a property change
+    \brief Defines a default animation for a property change.
 
     A Behavior defines the default animation to be applied whenever a
     particular property value changes.
@@ -171,9 +171,28 @@ void QQuickBehavior::setEnabled(bool enabled)
     emit enabledChanged();
 }
 
+/*!
+    \qmlproperty Variant QtQuick::Behavior::targetValue
+
+    This property holds the target value of the property being controlled by the Behavior.
+    This value is set by the Behavior before the animation is started.
+
+    \since QtQuick 2.13
+*/
+QVariant QQuickBehavior::targetValue() const
+{
+    Q_D(const QQuickBehavior);
+    return d->targetValue;
+}
+
 void QQuickBehavior::write(const QVariant &value)
 {
     Q_D(QQuickBehavior);
+    const bool targetValueHasChanged = d->targetValue != value;
+    if (targetValueHasChanged) {
+        d->targetValue = value;
+        emit targetValueChanged(); // emitting the signal here should allow
+    }                              // d->enabled to change if scripted by the user.
     bool bypass = !d->enabled || !d->finalized || QQmlEnginePrivate::designerMode();
     if (!bypass)
         qmlExecuteDeferred(this);
@@ -181,15 +200,12 @@ void QQuickBehavior::write(const QVariant &value)
         if (d->animationInstance)
             d->animationInstance->stop();
         QQmlPropertyPrivate::write(d->property, value, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
-        d->targetValue = value;
         return;
     }
 
     bool behaviorActive = d->animation->isRunning();
-    if (behaviorActive && value == d->targetValue)
+    if (behaviorActive && !targetValueHasChanged)
         return;
-
-    d->targetValue = value;
 
     if (d->animationInstance
             && (d->animationInstance->duration() != -1

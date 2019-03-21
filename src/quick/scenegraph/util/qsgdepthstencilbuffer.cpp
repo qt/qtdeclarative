@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 
 QSGDepthStencilBuffer::QSGDepthStencilBuffer(QOpenGLContext *context, const Format &format)
     : m_functions(context)
-    , m_manager(0)
+    , m_manager(nullptr)
     , m_format(format)
     , m_depthBuffer(0)
     , m_stencilBuffer(0)
@@ -57,20 +57,34 @@ QSGDepthStencilBuffer::~QSGDepthStencilBuffer()
         m_manager->m_buffers.remove(m_format);
 }
 
+#ifndef GL_DEPTH_STENCIL_ATTACHMENT
+#define GL_DEPTH_STENCIL_ATTACHMENT 0x821A
+#endif
+
 void QSGDepthStencilBuffer::attach()
 {
+#ifndef Q_OS_WASM
     m_functions.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                                           GL_RENDERBUFFER, m_depthBuffer);
     m_functions.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
                                           GL_RENDERBUFFER, m_stencilBuffer);
+#else
+    m_functions.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                          GL_RENDERBUFFER, m_stencilBuffer);
+#endif
 }
 
 void QSGDepthStencilBuffer::detach()
 {
+#ifndef Q_OS_WASM
     m_functions.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                                           GL_RENDERBUFFER, 0);
     m_functions.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
                                           GL_RENDERBUFFER, 0);
+#else
+    m_functions.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                          GL_RENDERBUFFER, 0);
+#endif
 }
 
 #ifndef GL_DEPTH24_STENCIL8_OES
@@ -81,12 +95,17 @@ void QSGDepthStencilBuffer::detach()
 #define GL_DEPTH_COMPONENT24_OES 0x81A6
 #endif
 
+#ifndef GL_DEPTH_STENCIL
+#define GL_DEPTH_STENCIL 0x84F9
+#endif
+
 QSGDefaultDepthStencilBuffer::QSGDefaultDepthStencilBuffer(QOpenGLContext *context, const Format &format)
     : QSGDepthStencilBuffer(context, format)
 {
     const GLsizei width = format.size.width();
     const GLsizei height = format.size.height();
 
+#ifndef Q_OS_WASM
     if (format.attachments == (DepthAttachment | StencilAttachment)
             && m_functions.hasOpenGLExtension(QOpenGLExtensions::PackedDepthStencil))
     {
@@ -138,6 +157,12 @@ QSGDefaultDepthStencilBuffer::QSGDefaultDepthStencilBuffer(QOpenGLContext *conte
             m_functions.glRenderbufferStorage(GL_RENDERBUFFER, internalFormat, width, height);
         }
     }
+#else
+    m_functions.glGenRenderbuffers(1, &m_depthBuffer);
+    m_functions.glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffer);
+    m_functions.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_STENCIL, width, height);
+    m_stencilBuffer = m_depthBuffer;
+#endif
 }
 
 QSGDefaultDepthStencilBuffer::~QSGDefaultDepthStencilBuffer()
@@ -160,7 +185,7 @@ QSGDepthStencilBufferManager::~QSGDepthStencilBufferManager()
     for (Hash::const_iterator it = m_buffers.constBegin(), cend = m_buffers.constEnd(); it != cend; ++it) {
         QSGDepthStencilBuffer *buffer = it.value().data();
         buffer->free();
-        buffer->m_manager = 0;
+        buffer->m_manager = nullptr;
     }
 }
 
@@ -174,7 +199,7 @@ QSharedPointer<QSGDepthStencilBuffer> QSGDepthStencilBufferManager::bufferForFor
 
 void QSGDepthStencilBufferManager::insertBuffer(const QSharedPointer<QSGDepthStencilBuffer> &buffer)
 {
-    Q_ASSERT(buffer->m_manager == 0);
+    Q_ASSERT(buffer->m_manager == nullptr);
     Q_ASSERT(!m_buffers.contains(buffer->m_format));
     buffer->m_manager = this;
     m_buffers.insert(buffer->m_format, buffer.toWeakRef());

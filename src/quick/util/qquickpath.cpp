@@ -55,12 +55,13 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickPathElement
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
-    \brief PathElement is the base path type
+    \brief PathElement is the base path type.
 
     This type is the base for all path types.  It cannot
     be instantiated.
 
-    \sa Path, PathAttribute, PathPercent, PathLine, PathQuad, PathCubic, PathArc, PathCurve, PathSvg
+    \sa Path, PathAttribute, PathPercent, PathLine, PathQuad, PathCubic, PathArc,
+        PathAngleArc, PathCurve, PathSvg
 */
 
 /*!
@@ -68,10 +69,10 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickPath
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
-    \brief Defines a path for use by \l PathView and \l Shape
+    \brief Defines a path for use by \l PathView and \l Shape.
 
     A Path is composed of one or more path segments - PathLine, PathQuad,
-    PathCubic, PathArc, PathCurve, PathSvg.
+    PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg.
 
     The spacing of the items along the Path can be adjusted via a
     PathPercent object.
@@ -121,6 +122,12 @@ QT_BEGIN_NAMESPACE
         \li Yes
         \li Yes
     \row
+        \li PathAngleArc
+        \li Yes
+        \li Yes
+        \li Yes
+        \li Yes
+    \row
         \li PathSvg
         \li Yes
         \li Yes
@@ -146,7 +153,10 @@ QT_BEGIN_NAMESPACE
         \li No
     \endtable
 
-    \sa PathView, Shape, PathAttribute, PathPercent, PathLine, PathMove, PathQuad, PathCubic, PathArc, PathCurve, PathSvg
+    \note Path is a non-visual type; it does not display anything on its own.
+    To draw a path, use \l Shape.
+
+    \sa PathView, Shape, PathAttribute, PathPercent, PathLine, PathMove, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg
 */
 QQuickPath::QQuickPath(QObject *parent)
  : QObject(*(new QQuickPathPrivate), parent)
@@ -233,6 +243,7 @@ bool QQuickPath::isClosed() const
         \li \l PathQuad - a quadratic Bezier curve to a given position with a control point.
         \li \l PathCubic - a cubic Bezier curve to a given position with two control points.
         \li \l PathArc - an arc to a given position with a radius.
+        \li \l PathAngleArc - an arc specified by center point, radii, and angles.
         \li \l PathSvg - a path specified as an SVG path data string.
         \li \l PathCurve - a point on a Catmull-Rom curve.
         \li \l PathAttribute - an attribute at a given position in the path.
@@ -245,7 +256,7 @@ bool QQuickPath::isClosed() const
 QQmlListProperty<QQuickPathElement> QQuickPath::pathElements()
 {
     return QQmlListProperty<QQuickPathElement>(this,
-                                               0,
+                                               nullptr,
                                                pathElements_append,
                                                pathElements_count,
                                                pathElements_at,
@@ -386,7 +397,12 @@ void QQuickPath::processPath()
     d->_pointCache.clear();
     d->prevBez.isValid = false;
 
-    d->_path = createPath(QPointF(), QPointF(), d->_attributes, d->pathLength, d->_attributePoints, &d->closed);
+    if (d->isShapePath) {
+        // This path is a ShapePath, so avoid extra overhead
+        d->_path = createShapePath(QPointF(), QPointF(), d->pathLength, &d->closed);
+    } else {
+        d->_path = createPath(QPointF(), QPointF(), d->_attributes, d->pathLength, d->_attributePoints, &d->closed);
+    }
 
     emit changed();
 }
@@ -478,6 +494,42 @@ QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &en
         *closed = length > 0 && startX == end.x() && startY == end.y();
     }
     pathLength = length;
+
+    return path;
+}
+
+QPainterPath QQuickPath::createShapePath(const QPointF &startPoint, const QPointF &endPoint, qreal &pathLength, bool *closed)
+{
+    Q_D(QQuickPath);
+
+    if (!d->componentComplete)
+        return QPainterPath();
+
+    QPainterPath path;
+
+    qreal startX = d->startX.isValid() ? d->startX.value : startPoint.x();
+    qreal startY = d->startY.isValid() ? d->startY.value : startPoint.y();
+    path.moveTo(startX, startY);
+
+    int index = 0;
+    for (QQuickCurve *curve : qAsConst(d->_pathCurves)) {
+        QQuickPathData data;
+        data.index = index;
+        data.endPoint = endPoint;
+        data.curves = d->_pathCurves;
+        curve->addToPath(path, data);
+        ++index;
+    }
+
+    if (closed) {
+        QPointF end = path.currentPosition();
+        *closed = startX == end.x() && startY == end.y();
+    }
+
+    // Note: Length of paths inside ShapePath is not used, so currently
+    // length is always 0. This avoids potentially heavy path.length()
+    //pathLength = path.length();
+    pathLength = 0;
 
     return path;
 }
@@ -946,7 +998,7 @@ bool QQuickCurve::hasRelativeY()
     \instantiates QQuickPathAttribute
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
-    \brief Specifies how to set an attribute at a given position in a Path
+    \brief Specifies how to set an attribute at a given position in a Path.
 
     The PathAttribute object allows attributes consisting of a name and
     a value to be specified for various points along a path.  The
@@ -1063,7 +1115,7 @@ void QQuickPathAttribute::setValue(qreal value)
     \instantiates QQuickPathLine
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
-    \brief Defines a straight line
+    \brief Defines a straight line.
 
     The example below creates a path consisting of a straight line from
     0,100 to 200,100:
@@ -1075,7 +1127,7 @@ void QQuickPathAttribute::setValue(qreal value)
     }
     \endqml
 
-    \sa Path, PathQuad, PathCubic, PathArc, PathCurve, PathSvg, PathMove
+    \sa Path, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg, PathMove
 */
 
 /*!
@@ -1122,7 +1174,7 @@ void QQuickPathLine::addToPath(QPainterPath &path, const QQuickPathData &data)
     \instantiates QQuickPathMove
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
-    \brief Moves the Path's position
+    \brief Moves the Path's position.
 
     The example below creates a path consisting of two horizontal lines with
     some empty space between them. All three segments have a width of 100:
@@ -1141,7 +1193,7 @@ void QQuickPathLine::addToPath(QPainterPath &path, const QQuickPathData &data)
     between the operations of drawing a straight line and moving the path
     position without drawing anything.
 
-    \sa Path, PathQuad, PathCubic, PathArc, PathCurve, PathSvg, PathLine
+    \sa Path, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg, PathLine
 */
 
 /*!
@@ -1180,7 +1232,7 @@ void QQuickPathMove::addToPath(QPainterPath &path, const QQuickPathData &data)
     \instantiates QQuickPathQuad
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
-    \brief Defines a quadratic Bezier curve with a control point
+    \brief Defines a quadratic Bezier curve with a control point.
 
     The following QML produces the path shown below:
     \table
@@ -1195,7 +1247,7 @@ void QQuickPathMove::addToPath(QPainterPath &path, const QQuickPathData &data)
     \endqml
     \endtable
 
-    \sa Path, PathCubic, PathLine, PathArc, PathCurve, PathSvg
+    \sa Path, PathCubic, PathLine, PathArc, PathAngleArc, PathCurve, PathSvg
 */
 
 /*!
@@ -1332,7 +1384,7 @@ void QQuickPathQuad::addToPath(QPainterPath &path, const QQuickPathData &data)
     \instantiates QQuickPathCubic
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
-    \brief Defines a cubic Bezier curve with two control points
+    \brief Defines a cubic Bezier curve with two control points.
 
     The following QML produces the path shown below:
     \table
@@ -1351,7 +1403,7 @@ void QQuickPathQuad::addToPath(QPainterPath &path, const QQuickPathData &data)
     \endqml
     \endtable
 
-    \sa Path, PathQuad, PathLine, PathArc, PathCurve, PathSvg
+    \sa Path, PathQuad, PathLine, PathArc, PathAngleArc, PathCurve, PathSvg
 */
 
 /*!
@@ -1556,7 +1608,7 @@ void QQuickPathCubic::addToPath(QPainterPath &path, const QQuickPathData &data)
     \instantiates QQuickPathCatmullRomCurve
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
-    \brief Defines a point on a Catmull-Rom curve
+    \brief Defines a point on a Catmull-Rom curve.
 
     PathCurve provides an easy way to specify a curve passing directly through a set of points.
     Typically multiple PathCurves are used in a series, as the following example demonstrates:
@@ -1702,7 +1754,7 @@ void QQuickPathCatmullRomCurve::addToPath(QPainterPath &path, const QQuickPathDa
     \instantiates QQuickPathArc
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
-    \brief Defines an arc with the given radius
+    \brief Defines an arc with the given radius.
 
     PathArc provides a simple way of specifying an arc that ends at a given position
     and uses the specified radius. It is modeled after the SVG elliptical arc command.
@@ -1717,7 +1769,7 @@ void QQuickPathCatmullRomCurve::addToPath(QPainterPath &path, const QQuickPathDa
     Note that a single PathArc cannot be used to specify a circle. Instead, you can
     use two PathArc elements, each specifying half of the circle.
 
-    \sa Path, PathLine, PathQuad, PathCubic, PathCurve, PathSvg
+    \sa Path, PathLine, PathQuad, PathCubic, PathAngleArc, PathCurve, PathSvg
 */
 
 /*!
@@ -1909,11 +1961,184 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
 /****************************************************************************/
 
 /*!
+    \qmltype PathAngleArc
+    \instantiates QQuickPathAngleArc
+    \inqmlmodule QtQuick
+    \ingroup qtquick-animation-paths
+    \brief Defines an arc with the given radii and center.
+
+    PathAngleArc provides a simple way of specifying an arc. While PathArc is designed
+    to work as part of a larger path (specifying start and end), PathAngleArc is designed
+    to make a path where the arc is primary (such as a circular progress indicator) more intuitive.
+
+    \sa Path, PathLine, PathQuad, PathCubic, PathCurve, PathSvg, PathArc
+*/
+
+/*!
+    \qmlproperty real QtQuick::PathAngleArc::centerX
+    \qmlproperty real QtQuick::PathAngleArc::centerY
+
+    Defines the center of the arc.
+*/
+
+qreal QQuickPathAngleArc::centerX() const
+{
+    return _centerX;
+}
+
+void QQuickPathAngleArc::setCenterX(qreal centerX)
+{
+    if (_centerX == centerX)
+        return;
+
+    _centerX = centerX;
+    emit centerXChanged();
+    emit changed();
+}
+
+qreal QQuickPathAngleArc::centerY() const
+{
+    return _centerY;
+}
+
+void QQuickPathAngleArc::setCenterY(qreal centerY)
+{
+    if (_centerY == centerY)
+        return;
+
+    _centerY = centerY;
+    emit centerYChanged();
+    emit changed();
+}
+
+/*!
+    \qmlproperty real QtQuick::PathAngleArc::radiusX
+    \qmlproperty real QtQuick::PathAngleArc::radiusY
+
+    Defines the radii of the ellipse of which the arc is part.
+*/
+
+qreal QQuickPathAngleArc::radiusX() const
+{
+    return _radiusX;
+}
+
+void QQuickPathAngleArc::setRadiusX(qreal radius)
+{
+    if (_radiusX == radius)
+        return;
+
+    _radiusX = radius;
+    emit radiusXChanged();
+    emit changed();
+}
+
+qreal QQuickPathAngleArc::radiusY() const
+{
+    return _radiusY;
+}
+
+void QQuickPathAngleArc::setRadiusY(qreal radius)
+{
+    if (_radiusY == radius)
+        return;
+
+    _radiusY = radius;
+    emit radiusYChanged();
+    emit changed();
+}
+
+/*!
+    \qmlproperty real QtQuick::PathAngleArc::startAngle
+
+    Defines the start angle of the arc.
+
+    The start angle is reported clockwise, with zero degrees at the 3 o'clock position.
+*/
+
+qreal QQuickPathAngleArc::startAngle() const
+{
+    return _startAngle;
+}
+
+void QQuickPathAngleArc::setStartAngle(qreal angle)
+{
+    if (_startAngle == angle)
+        return;
+
+    _startAngle = angle;
+    emit startAngleChanged();
+    emit changed();
+}
+
+/*!
+    \qmlproperty real QtQuick::PathAngleArc::sweepAngle
+
+    Defines the sweep angle of the arc.
+
+    The arc will begin at startAngle and continue sweepAngle degrees, with a value of 360
+    resulting in a full circle. Positive numbers are clockwise and negative numbers are counterclockwise.
+*/
+
+qreal QQuickPathAngleArc::sweepAngle() const
+{
+    return _sweepAngle;
+}
+
+void QQuickPathAngleArc::setSweepAngle(qreal angle)
+{
+    if (_sweepAngle == angle)
+        return;
+
+    _sweepAngle = angle;
+    emit sweepAngleChanged();
+    emit changed();
+}
+
+/*!
+    \qmlproperty bool QtQuick::PathAngleArc::moveToStart
+
+    Whether this element should be disconnected from the previous Path element (or startX/Y).
+
+    The default value is true. If set to false, the previous element's end-point
+    (or startX/Y if PathAngleArc is the first element) will be connected to the arc's
+    start-point with a straight line.
+*/
+
+bool QQuickPathAngleArc::moveToStart() const
+{
+    return _moveToStart;
+}
+
+void QQuickPathAngleArc::setMoveToStart(bool move)
+{
+    if (_moveToStart == move)
+        return;
+
+    _moveToStart = move;
+    emit moveToStartChanged();
+    emit changed();
+}
+
+void QQuickPathAngleArc::addToPath(QPainterPath &path, const QQuickPathData &)
+{
+    qreal x = _centerX - _radiusX;
+    qreal y = _centerY - _radiusY;
+    qreal width = _radiusX * 2;
+    qreal height = _radiusY * 2;
+    if (_moveToStart)
+        path.arcMoveTo(x, y, width, height, -_startAngle);
+    path.arcTo(x, y, width, height, -_startAngle, -_sweepAngle);
+}
+
+/****************************************************************************/
+
+/*!
     \qmltype PathSvg
     \instantiates QQuickPathSvg
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
-    \brief Defines a path using an SVG path data string
+    \brief Defines a path using an SVG path data string.
 
     The following QML produces the path shown below:
     \table
@@ -1933,7 +2158,7 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
     ShapePath can contain one or more PathSvg elements, or one or more other
     type of elements, but not both.
 
-    \sa Path, PathLine, PathQuad, PathCubic, PathArc, PathCurve
+    \sa Path, PathLine, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve
 */
 
 /*!
@@ -1972,7 +2197,7 @@ void QQuickPathSvg::addToPath(QPainterPath &path, const QQuickPathData &)
     \instantiates QQuickPathPercent
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
-    \brief Manipulates the way a path is interpreted
+    \brief Manipulates the way a path is interpreted.
 
     PathPercent allows you to manipulate the spacing between items on a
     PathView's path. You can use it to bunch together items on part of

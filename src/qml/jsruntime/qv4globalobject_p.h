@@ -69,23 +69,23 @@ struct Q_QML_EXPORT EvalFunction : FunctionObject
 {
     V4_OBJECT2(EvalFunction, FunctionObject)
 
-    void evalCall(Scope &scope, CallData *callData, bool directCall) const;
+    ReturnedValue evalCall(const Value *thisObject, const Value *argv, int argc, bool directCall) const;
 
-    static void call(const Managed *that, Scope &scope, CallData *callData);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct GlobalFunctions
 {
-    static void method_parseInt(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_parseFloat(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_isNaN(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_isFinite(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_decodeURI(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_decodeURIComponent(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_encodeURI(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_encodeURIComponent(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_escape(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_unescape(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_parseInt(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_parseFloat(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isNaN(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isFinite(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_decodeURI(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_decodeURIComponent(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_encodeURI(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_encodeURIComponent(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_escape(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_unescape(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 }

@@ -39,8 +39,10 @@
 
 #include "qquickimageprovider.h"
 
+#include "qquickimageprovider_p.h"
 #include "qquickpixmapcache_p.h"
 #include <QtQuick/private/qsgcontext_p.h>
+#include <private/qqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -108,7 +110,7 @@ QImage QQuickTextureFactory::image() const
 QQuickTextureFactory *QQuickTextureFactory::textureFactoryForImage(const QImage &image)
 {
     if (image.isNull())
-        return 0;
+        return nullptr;
     QQuickTextureFactory *texture = QSGContext::createTextureFactoryFromImage(image);
     if (texture)
         return texture;
@@ -160,7 +162,10 @@ QQuickTextureFactory *QQuickTextureFactory::textureFactoryForImage(const QImage 
     Constructs the image response
 */
 QQuickImageResponse::QQuickImageResponse()
+    : QObject(*(new QQuickImageResponsePrivate))
 {
+    qmlobject_connect(this, QQuickImageResponse, SIGNAL(finished()),
+                      this, QQuickImageResponse, SLOT(_q_finished()));
 }
 
 /*!
@@ -255,13 +260,13 @@ void QQuickImageResponse::cancel()
     If you want the rest of the URL to be case insensitive, you will have to take care
     of that yourself inside your image provider.
 
-    \section2 An example
+    \section2 An Example
 
     Here are two images. Their \c source values indicate they should be loaded by
     an image provider named "colors", and the images to be loaded are "yellow"
     and "red", respectively:
 
-    \snippet imageprovider/imageprovider-example.qml 0
+    \snippet imgprovider/imageprovider-example.qml 0
 
     When these images are loaded by QML, it looks for a matching image provider
     and calls its requestImage() or requestPixmap() method (depending on its
@@ -272,25 +277,14 @@ void QQuickImageResponse::cancel()
     requested by the above QML. This implementation dynamically
     generates QPixmap images that are filled with the requested color:
 
-    \snippet imageprovider/imageprovider.cpp 0
-    \codeline
-    \snippet imageprovider/imageprovider.cpp 1
+    \snippet imgprovider/imageprovider.cpp 0
 
     To make this provider accessible to QML, it is registered with the QML engine
     with a "colors" identifier:
 
-    \code
-    int main(int argc, char *argv[])
-    {
-        ...
-
-        QQuickView view;
-        QQmlEngine *engine = view.engine();
-        engine->addImageProvider(QLatin1String("colors"), new ColorPixmapProvider);
-
-        ...
-    }
-    \endcode
+    \snippet imgprovider/imageprovider.cpp 1
+    \codeline
+    \snippet imgprovider/imageprovider.cpp 2
 
     Now the images can be successfully loaded in QML:
 
@@ -301,7 +295,7 @@ void QQuickImageResponse::cancel()
     instead of registering it in the application \c main() function as shown above.
 
 
-    \section2 Asynchronous image loading
+    \section2 Asynchronous Image Loading
 
     Image providers that support QImage or Texture loading automatically include support
     for asychronous loading of images. To enable asynchronous loading for an
@@ -330,7 +324,7 @@ void QQuickImageResponse::cancel()
     See the \l {imageresponseprovider}{Image Response Provider Example} for a complete implementation.
 
 
-    \section2 Image caching
+    \section2 Image Caching
 
     Images returned by a QQuickImageProvider are automatically cached,
     similar to any image loaded by the QML engine. When an image with a
@@ -339,8 +333,6 @@ void QQuickImageResponse::cancel()
     be fetched from the image provider, and should not be cached at all, set the
     \c cache property to \c false for the relevant \l Image, \l BorderImage or
     \l AnimatedImage object.
-
-    The \l {Qt Quick 1} version of this class is named QDeclarativeImageProvider.
 
     \sa QQmlEngine::addImageProvider()
 */
@@ -444,7 +436,7 @@ QPixmap QQuickImageProvider::requestPixmap(const QString &id, QSize *size, const
 
 /*!
     Implement this method to return the texture with \a id. The default
-    implementation returns 0.
+    implementation returns \nullptr.
 
     The \a id is the requested image source, with the "image:" scheme and
     provider identifier removed. For example, if the image \l{Image::}{source}
@@ -469,7 +461,7 @@ QQuickTextureFactory *QQuickImageProvider::requestTexture(const QString &id, QSi
     Q_UNUSED(requestedSize);
     if (d->type == Texture)
         qWarning("ImageProvider supports Texture type but has not implemented requestTexture()");
-    return 0;
+    return nullptr;
 }
 
 /*!
@@ -484,7 +476,7 @@ QQuickTextureFactory *QQuickImageProvider::requestTexture(const QString &id, QSi
 */
 QQuickAsyncImageProvider::QQuickAsyncImageProvider()
  : QQuickImageProvider(ImageResponse, ForceAsynchronousImageLoading)
- , d(0) // just as a placeholder in case we need it for the future
+ , d(nullptr) // just as a placeholder in case we need it for the future
 {
     Q_UNUSED(d);
 }
@@ -515,15 +507,12 @@ class QQuickImageProviderOptionsPrivate : public QSharedData
 {
 public:
     QQuickImageProviderOptionsPrivate()
-     : autoTransform(QQuickImageProviderOptions::UsePluginDefaultTransform)
-     , preserveAspectRatioCrop(false)
-     , preserveAspectRatioFit(false)
     {
     }
 
-    QQuickImageProviderOptions::AutoTransform autoTransform;
-    bool preserveAspectRatioCrop;
-    bool preserveAspectRatioFit;
+    QQuickImageProviderOptions::AutoTransform autoTransform = QQuickImageProviderOptions::UsePluginDefaultTransform;
+    bool preserveAspectRatioCrop = false;
+    bool preserveAspectRatioFit = false;
 };
 
 /*!
@@ -683,13 +672,18 @@ QSize QQuickImageProviderWithOptions::loadSize(const QSize &originalSize, const 
         return res;
 
     const bool preserveAspectCropOrFit = options.preserveAspectRatioCrop() || options.preserveAspectRatioFit();
-    const bool force_scale = (format == "svg" || format == "svgz");
+    const bool formatIsSvg = (format == "svg" || format == "svgz");
+
+    if (!preserveAspectCropOrFit && formatIsSvg && !requestedSize.isEmpty())
+        return requestedSize;
 
     qreal ratio = 0.0;
-    if (requestedSize.width() && (preserveAspectCropOrFit || force_scale || requestedSize.width() < originalSize.width())) {
+    if (requestedSize.width() && (preserveAspectCropOrFit || formatIsSvg ||
+                                  requestedSize.width() < originalSize.width())) {
         ratio = qreal(requestedSize.width()) / originalSize.width();
     }
-    if (requestedSize.height() && (preserveAspectCropOrFit || force_scale || requestedSize.height() < originalSize.height())) {
+    if (requestedSize.height() && (preserveAspectCropOrFit || formatIsSvg ||
+                                   requestedSize.height() < originalSize.height())) {
         qreal hr = qreal(requestedSize.height()) / originalSize.height();
         if (ratio == 0.0)
             ratio = hr;

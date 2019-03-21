@@ -57,7 +57,7 @@ struct Update {
     Update(QQuickTimeLineValue *_g, qreal _v)
         : g(_g), v(_v) {}
     Update(const QQuickTimeLineCallback &_e)
-        : g(0), v(0), e(_e) {}
+        : g(nullptr), v(0), e(_e) {}
 
     QQuickTimeLineValue *g;
     qreal v;
@@ -104,11 +104,11 @@ struct QQuickTimeLinePrivate
     };
     struct TimeLine
     {
-        TimeLine() : length(0), consumedOpLength(0), base(0.) {}
+        TimeLine() {}
         QList<Op> ops;
-        int length;
-        int consumedOpLength;
-        qreal base;
+        int length = 0;
+        int consumedOpLength = 0;
+        qreal base = 0.;
     };
 
     int length;
@@ -133,7 +133,7 @@ struct QQuickTimeLinePrivate
 };
 
 QQuickTimeLinePrivate::QQuickTimeLinePrivate(QQuickTimeLine *parent)
-: length(0), syncPoint(0), q(parent), clockRunning(false), prevTime(0), order(0), syncMode(QQuickTimeLine::LocalSync), syncAdj(0), updateQueue(0)
+: length(0), syncPoint(0), q(parent), clockRunning(false), prevTime(0), order(0), syncMode(QQuickTimeLine::LocalSync), syncAdj(0), updateQueue(nullptr)
 {
 }
 
@@ -326,9 +326,9 @@ QQuickTimeLine::~QQuickTimeLine()
     for (QQuickTimeLinePrivate::Ops::Iterator iter = d->ops.begin();
             iter != d->ops.end();
             ++iter)
-        iter.key()->_t = 0;
+        iter.key()->_t = nullptr;
 
-    delete d; d = 0;
+    delete d; d = nullptr;
 }
 
 /*!
@@ -514,7 +514,7 @@ void QQuickTimeLine::reset(QQuickTimeLineValue &timeLineValue)
         return;
     }
     remove(&timeLineValue);
-    timeLineValue._t = 0;
+    timeLineValue._t = nullptr;
 }
 
 int QQuickTimeLine::duration() const
@@ -666,7 +666,7 @@ void QQuickTimeLine::complete()
 void QQuickTimeLine::clear()
 {
     for (QQuickTimeLinePrivate::Ops::const_iterator iter = d->ops.cbegin(), cend  = d->ops.cend(); iter != cend; ++iter)
-        iter.key()->_t = 0;
+        iter.key()->_t = nullptr;
     d->ops.clear();
     d->length = 0;
     d->syncPoint = 0;
@@ -800,7 +800,7 @@ int QQuickTimeLinePrivate::advance(int t)
 
             if (tl.ops.isEmpty()) {
                 iter = ops.erase(iter);
-                v->_t = 0;
+                v->_t = nullptr;
             } else {
                 if (tl.ops.first().type == Op::Pause && pauseTime != 0) {
                     int opPauseTime = tl.ops.first().length - tl.consumedOpLength;
@@ -826,7 +826,7 @@ int QQuickTimeLinePrivate::advance(int t)
                 v.e.d0(v.e.d1);
             }
         }
-        updateQueue = 0;
+        updateQueue = nullptr;
     } while(t);
 
     return pauseTime;
@@ -854,7 +854,7 @@ void QQuickTimeLine::remove(QQuickTimeLineObject *v)
     if (d->ops.isEmpty()) {
         stop();
         d->clockRunning = false;
-    } else if (/*!GfxClock::isActive()*/ state() != Running) {
+    } else if (state() != Running) { // was !GfxClock::isActive()
         stop();
         d->prevTime = 0;
         d->clockRunning = true;
@@ -913,7 +913,7 @@ void QQuickTimeLine::remove(QQuickTimeLineObject *v)
 
 
 QQuickTimeLineObject::QQuickTimeLineObject()
-: _t(0)
+: _t(nullptr)
 {
 }
 
@@ -921,12 +921,12 @@ QQuickTimeLineObject::~QQuickTimeLineObject()
 {
     if (_t) {
         _t->remove(this);
-        _t = 0;
+        _t = nullptr;
     }
 }
 
 QQuickTimeLineCallback::QQuickTimeLineCallback()
-: d0(0), d1(0), d2(0)
+: d0(nullptr), d1(nullptr), d2(nullptr)
 {
 }
 

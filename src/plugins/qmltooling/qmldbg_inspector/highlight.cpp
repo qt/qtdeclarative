@@ -100,7 +100,7 @@ void Highlight::adjust()
         return;
 
     bool success = false;
-    m_transform = m_item->itemTransform(0, &success);
+    m_transform = m_item->itemTransform(nullptr, &success);
     if (!success)
         m_transform = QTransform();
 
@@ -188,7 +188,7 @@ void SelectionHighlight::showName(const QPointF &displayPoint)
 {
     m_displayPoint = displayPoint;
     m_nameDisplayActive = true;
-    QTimer::singleShot(1500, this, SLOT(disableNameDisplay()));
+    QTimer::singleShot(1500, this, &SelectionHighlight::disableNameDisplay);
     update();
 }
 

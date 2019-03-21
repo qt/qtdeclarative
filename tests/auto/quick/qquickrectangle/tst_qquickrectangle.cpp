@@ -49,6 +49,7 @@ private slots:
     void gradient_border();
     void gradient_separate();
     void gradient_multiple();
+    void gradient_preset();
     void antialiasing();
 
 private:
@@ -70,6 +71,10 @@ void tst_qquickrectangle::color()
 
     QVERIFY(QTest::qWaitForWindowExposed(&view));
 
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QEXPECT_FAIL("", "Failure due to grabWindow not functional on offscreen/minimimal platforms", Abort);
+
     QImage image = view.grabWindow();
     QVERIFY(image.pixel(0,0) == QColor("#020202").rgba());
 }
@@ -80,7 +85,7 @@ void tst_qquickrectangle::gradient()
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(component.create());
     QVERIFY(rect);
 
-    QQuickGradient *grad = rect->gradient();
+    QQuickGradient *grad = qobject_cast<QQuickGradient *>(rect->gradient().toQObject());
     QVERIFY(grad);
 
     QQmlListProperty<QQuickGradientStop> stops = grad->stops();
@@ -99,7 +104,7 @@ void tst_qquickrectangle::gradient()
 
     QMetaObject::invokeMethod(rect, "resetGradient");
 
-    grad = rect->gradient();
+    grad = qobject_cast<QQuickGradient *>(rect->gradient().toQObject());
     QVERIFY(!grad);
 
     delete rect;
@@ -168,6 +173,29 @@ void tst_qquickrectangle::gradient_multiple()
     secondIsDirty = secondRectPriv->dirtyAttributes & QQuickItemPrivate::Content;
     QVERIFY(firstIsDirty);
     QVERIFY(secondIsDirty);
+}
+
+void tst_qquickrectangle::gradient_preset()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("gradient-preset.qml"));
+    view.show();
+
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickRectangle *enumRect = view.rootObject()->findChild<QQuickRectangle *>("enum");
+    QVERIFY(enumRect);
+    QVERIFY(enumRect->gradient().isNumber());
+    QCOMPARE(enumRect->gradient().toUInt(), QGradient::NightFade);
+
+    QQuickRectangle *stringRect = view.rootObject()->findChild<QQuickRectangle *>("string");
+    QVERIFY(stringRect);
+    QVERIFY(stringRect->gradient().isString());
+    QCOMPARE(stringRect->gradient().toString(), QLatin1String("NightFade"));
+
+    QQuickRectangle *invalidRect = view.rootObject()->findChild<QQuickRectangle *>("invalid");
+    QVERIFY(invalidRect);
+    QVERIFY(invalidRect->gradient().isUndefined());
 }
 
 void tst_qquickrectangle::antialiasing()

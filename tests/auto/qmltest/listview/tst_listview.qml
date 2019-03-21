@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -40,6 +50,7 @@
 
 import QtQuick 2.1
 import QtTest 1.1
+import "data"
 
 Item {
     id: top
@@ -151,6 +162,15 @@ Item {
         }
     }
 
+    ListView {
+        id: viewWithActionModel
+        property string funcResult
+        model: ListModel { ListElement { friendlyText: "one"; action: function(text) { viewWithActionModel.funcResult = text } } }
+        delegate: Item {
+            Component.onCompleted: action(model.friendlyText)
+        }
+    }
+
     Component {
         id: delegateModelAfterCreateComponent
         Rectangle {
@@ -183,6 +203,14 @@ Item {
         ListElement { component: "data/asynclistviewloader.qml" }
         ListElement { component: "data/asynclistviewloader.qml" }
         ListElement { component: "data/asynclistviewloader.qml" }
+    }
+
+    MultiDelegate {
+        id: multiDelegate
+    }
+
+    MultiDelegate2 {
+        id: multiDelegate2
     }
 
     TestCase {
@@ -339,6 +367,52 @@ Item {
         function test_forceLayoutForContentHeight() {
             singleElementList.heightForDelegate = 200;
             compare(singleElementList.contentHeightOnDelegateResize, 200);
+        }
+
+        function test_viewWithAction() {
+            compare(viewWithActionModel.funcResult, "one")
+        }
+
+        function test_multipleDelegates_data() {
+            return [
+                { y: 25, type: "Rectangle", value: "red" },
+                { y: 75, type: "Image", value: Qt.resolvedUrl("data/logo.png") },
+                { y: 125, type: "Text", value: "Hello" },
+                { y: 175, type: "Text", value: "World" },
+                { y: 225, type: "Rectangle", value: "green" },
+                { y: 275, type: "Image", value: Qt.resolvedUrl("data/logo.png") },
+                { y: 325, type: "Rectangle", value: "blue" },
+                { y: 375, type: "Item", value: "" }
+            ]
+        }
+
+        function test_multipleDelegates(row) {
+            var delegate = multiDelegate.itemAt(10, row.y)
+            verify(delegate.toString().includes(row.type))
+            switch (row.type) {
+                case "Rectangle": verify(Qt.colorEqual(delegate.color, row.value)); break
+                case "Text": compare(delegate.text, row.value); break
+                case "Image": compare(delegate.source, row.value); break
+                case "Item": break
+            }
+        }
+
+        function test_multipleDelegates2_data() {
+            return [
+                { y: 25, type: "1" },
+                { y: 75, type: "2" },
+                { y: 125, type: "3" },
+                { y: 175, type: "4" },
+                { y: 225, type: "4" },
+                { y: 275, type: "3" },
+                { y: 325, type: "4" },
+                { y: 375, type: "4" }
+            ]
+        }
+
+        function test_multipleDelegates2(row) {
+            var delegate = multiDelegate2.itemAt(10, row.y)
+            compare(delegate.choiceType, row.type)
         }
     }
 }

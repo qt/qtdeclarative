@@ -1,5 +1,7 @@
 TEMPLATE = subdirs
 
+SUBDIRS += qqmldebugjsserver
+
 PUBLICTESTS += \
     qdebugmessageservice \
     qqmlenginedebugservice \
@@ -10,7 +12,9 @@ PUBLICTESTS += \
     qqmlenginedebuginspectorintegrationtest \
     qqmlenginecontrol \
     qqmldebuggingenabler \
-    qqmlnativeconnector
+    qqmlnativeconnector \
+    qqmldebugprocess \
+    qqmlpreview
 
 PRIVATETESTS += \
     qqmldebugclient \
@@ -19,6 +23,9 @@ PRIVATETESTS += \
     qv4debugger
 
 SUBDIRS += $$PUBLICTESTS
+
+qqmldebugjs.depends = qqmldebugjsserver
+qqmlprofilerservice.depends = qqmldebugjsserver
 
 qtConfig(private_tests): \
     SUBDIRS += $$PRIVATETESTS

@@ -98,6 +98,8 @@ void tst_qmlmin::initTestCase()
     invalidFiles << "tests/auto/qml/qqmllanguage/data/insertedSemicolon.1.qml";
     invalidFiles << "tests/auto/qml/qqmllanguage/data/nonexistantProperty.5.qml";
     invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidRoot.1.qml";
+    invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidQmlEnumValue.1.qml";
+    invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidQmlEnumValue.2.qml";
     invalidFiles << "tests/auto/qml/qquickfolderlistmodel/data/dummy.qml";
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/qtbug_22843.js";
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/qtbug_22843.library.js";
@@ -123,6 +125,9 @@ void tst_qmlmin::initTestCase()
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/stringParsing_error.6.qml";
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/numberParsing_error.1.qml";
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/numberParsing_error.2.qml";
+    invalidFiles << "tests/auto/qml/parserstress/tests/ecma_3/FunExpr/fe-001.js";
+    invalidFiles << "tests/auto/qml/qjsengine/script/com/trolltech/syntaxerror/__init__.js";
+    invalidFiles << "tests/auto/qml/debugger/qqmlpreview/data/broken.qml";
 }
 
 QStringList tst_qmlmin::findFiles(const QDir &d)

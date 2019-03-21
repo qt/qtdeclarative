@@ -35,6 +35,7 @@ struct MatchResult {
     {
     }
 
+#if !CPU(X86_64) && !CPU(ARM64)
     explicit ALWAYS_INLINE MatchResult(EncodedMatchResult encoded)
     {
         union u {
@@ -48,6 +49,7 @@ struct MatchResult {
         start = value.split.start;
         end = value.split.end;
     }
+#endif
 
     ALWAYS_INLINE static MatchResult failed()
     {

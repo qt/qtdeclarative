@@ -69,13 +69,14 @@ class Q_AUTOTEST_EXPORT QQuickAnimatedImage : public QQuickImage
     Q_PROPERTY(bool playing READ isPlaying WRITE setPlaying NOTIFY playingChanged)
     Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
     Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY frameChanged)
-    Q_PROPERTY(int frameCount READ frameCount)
+    Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged)
+    Q_PROPERTY(qreal speed READ speed WRITE setSpeed NOTIFY speedChanged REVISION 11)
 
     // read-only for AnimatedImage
     Q_PROPERTY(QSize sourceSize READ sourceSize NOTIFY sourceSizeChanged)
 
 public:
-    QQuickAnimatedImage(QQuickItem *parent=0);
+    QQuickAnimatedImage(QQuickItem *parent=nullptr);
     ~QQuickAnimatedImage();
 
     bool isPlaying() const;
@@ -89,14 +90,19 @@ public:
 
     int frameCount() const;
 
+    qreal speed() const;
+    void setSpeed(qreal speed);
+
     // Extends QQuickImage's src property
-    void setSource(const QUrl&) Q_DECL_OVERRIDE;
+    void setSource(const QUrl&) override;
     virtual QSize sourceSize();
 
 Q_SIGNALS:
     void playingChanged();
     void pausedChanged();
     void frameChanged();
+    void frameCountChanged();
+    Q_REVISION(11) void speedChanged();
 
 private Q_SLOTS:
     void movieUpdate();
@@ -105,8 +111,8 @@ private Q_SLOTS:
     void onCacheChanged();
 
 protected:
-    void load() Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    void load() override;
+    void componentComplete() override;
 
 private:
     Q_DISABLE_COPY(QQuickAnimatedImage)

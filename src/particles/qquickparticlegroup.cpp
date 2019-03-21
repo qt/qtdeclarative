@@ -43,7 +43,7 @@
     \qmltype ParticleGroup
     \instantiates QQuickParticleGroup
     \inqmlmodule QtQuick.Particles
-    \brief For setting attributes on a logical particle group
+    \brief For setting attributes on a logical particle group.
     \ingroup qtquick-particles
 
     This element allows you to set timed transitions on particle groups.
@@ -91,7 +91,7 @@
 
 QQuickParticleGroup::QQuickParticleGroup(QObject* parent)
     : QQuickStochasticState(parent)
-    , m_system(0)
+    , m_system(nullptr)
 {
 
 }
@@ -107,9 +107,9 @@ QQmlListProperty<QObject> QQuickParticleGroup::particleChildren()
 {
     QQuickParticleSystem* system = qobject_cast<QQuickParticleSystem*>(parent());
     if (system)
-        return QQmlListProperty<QObject>(this, 0, &QQuickParticleSystem::statePropertyRedirect, 0, 0, 0);
+        return QQmlListProperty<QObject>(this, nullptr, &QQuickParticleSystem::statePropertyRedirect, nullptr, nullptr, nullptr);
     else
-        return QQmlListProperty<QObject>(this, 0, &delayedRedirect, 0, 0, 0);
+        return QQmlListProperty<QObject>(this, nullptr, &delayedRedirect, nullptr, nullptr, nullptr);
 }
 
 void QQuickParticleGroup::setSystem(QQuickParticleSystem* arg)

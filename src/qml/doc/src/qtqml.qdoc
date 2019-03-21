@@ -1,7 +1,7 @@
 ﻿/****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -11,8 +11,8 @@
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Free Documentation License Usage
 ** Alternatively, this file may be used under the terms of the GNU Free
@@ -20,7 +20,7 @@
 ** Foundation and appearing in the file included in the packaging of
 ** this file. Please review the following information to ensure
 ** the GNU Free Documentation License version 1.3 requirements
-** will be met: http://www.gnu.org/copyleft/fdl.html.
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -55,11 +55,12 @@ following directive:
 #include <QtQml>
 \endcode
 
-The QML types in Qt QML are available through the \c QtQML import. To use the
+The QML types in Qt QML are available through the \c QtQml import. To use the
 types, add the following import statement to your .qml file:
-\code
-import QtQml 2.0
-\endcode
+
+\qml \QtMinorVersion
+import QtQml 2.\1
+\endqml
 
 
 To link against the module, add this line to your \l qmake \c
@@ -134,12 +135,13 @@ the QML code to interact with C++ code.
 \section1 Licenses and Attributions
 
 Qt QML is available under commercial licenses from \l{The Qt Company}.
-In addition, it is available under the
+In addition, it is available under free software licenses. Since Qt 5.4,
+these free software licenses are
 \l{GNU Lesser General Public License, version 3}, or
 the \l{GNU General Public License, version 2}.
 See \l{Qt Licensing} for further details.
 
-Furthermore Qt QML potentially contains third party
+Furthermore Qt QML in Qt \QtVersion may contain third party
 modules under following permissive licenses:
 
 \generatelist{groupsbymodule attributions-qtqml}

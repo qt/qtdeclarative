@@ -123,6 +123,16 @@ Error setAttributes(MemoryRegion mr, bool writable, bool executable)
     return SetMemoryRegionAttributes(mr, attributes);
 }
 
+void OSAllocator::setMemoryAttributes(void* addr, size_t size, bool writable, bool executable)
+{
+    Address addressIterator = Address(addr);
+    for(int i=0; i<(size + ASP_PAGESIZE -1)/ASP_PAGESIZE; i++) {
+        const MRPair* pair = memoryRegionsContainer.getMRPair(addressIterator);
+        CheckSuccess(setAttributes(pair->vmr, writable, executable));
+        addressIterator += ASP_PAGESIZE;
+    }
+}
+
 void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, bool executable)
 {
     MemoryRegion VMR;
@@ -134,9 +144,9 @@ void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, 
     Address addressIterator = virtualStart;
     for(int i=0; i<(bytes + ASP_PAGESIZE -1)/ASP_PAGESIZE; i++) {
         MRPair pair;
+        pair.start = addressIterator;
         CheckSuccess(SplitMemoryRegion(VMR, ASP_PAGESIZE, &pair.vmr));
         CheckSuccess(setAttributes(pair.vmr, writable, executable));
-        pair.start = addressIterator;
 
         memoryRegionsContainer.insertMRPair(&pair);
         addressIterator += ASP_PAGESIZE;
@@ -229,4 +239,10 @@ void OSAllocator::releaseDecommitted(void* address, size_t bytes)
         memoryRegionsContainer.deleteMRPair(pair);
     }
 }
+
+bool OSAllocator::canAllocateExecutableMemory()
+{
+    return true;
+}
+
 } // namespace WTF

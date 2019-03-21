@@ -80,7 +80,7 @@ class Q_AUTOTEST_EXPORT QQuickFontMetrics : public QObject
     Q_PROPERTY(qreal strikeOutPosition READ strikeOutPosition NOTIFY fontChanged)
     Q_PROPERTY(qreal lineWidth READ lineWidth NOTIFY fontChanged)
 public:
-    explicit QQuickFontMetrics(QObject *parent = 0);
+    explicit QQuickFontMetrics(QObject *parent = nullptr);
     ~QQuickFontMetrics();
 
     QFont font() const;

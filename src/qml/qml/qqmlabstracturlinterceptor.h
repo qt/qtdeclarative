@@ -55,8 +55,8 @@ public:
         UrlString = 0x1000
     };
 
-    QQmlAbstractUrlInterceptor() {}
-    virtual ~QQmlAbstractUrlInterceptor() {}
+    QQmlAbstractUrlInterceptor() = default;
+    virtual ~QQmlAbstractUrlInterceptor() = default;
     virtual QUrl intercept(const QUrl &path, DataType type) = 0;
 };
 

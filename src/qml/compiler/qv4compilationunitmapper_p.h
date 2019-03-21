@@ -72,8 +72,6 @@ public:
     void close();
 
 private:
-    static bool verifyHeader(const QV4::CompiledData::Unit *header, QDateTime sourceTimeStamp, QString *errorString);
-
 #if defined(Q_OS_UNIX)
     size_t length;
 #endif

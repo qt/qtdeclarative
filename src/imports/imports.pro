@@ -1,29 +1,30 @@
 TEMPLATE = subdirs
 
-QT_FOR_CONFIG += quick-private
-
 SUBDIRS += \
     builtins \
     qtqml \
-    folderlistmodel \
-    models
+    models \
+    labsmodels
 
+qtConfig(thread): SUBDIRS += folderlistmodel
 qtHaveModule(sql): SUBDIRS += localstorage
 qtConfig(settings): SUBDIRS += settings
 qtConfig(statemachine): SUBDIRS += statemachine
 
 qtHaveModule(quick) {
+    QT_FOR_CONFIG += quick-private
+
     SUBDIRS += \
         layouts \
         qtquick2 \
         window \
-        testlib
+        wavefrontmesh
 
+    qtHaveModule(testlib): SUBDIRS += testlib
     qtConfig(systemsemaphore): SUBDIRS += sharedimage
     qtConfig(quick-particles): \
         SUBDIRS += particles
 
-    SUBDIRS += shapes
+    qtConfig(quick-path):qtConfig(thread): SUBDIRS += shapes
 }
 
-qtHaveModule(xmlpatterns) : SUBDIRS += xmllistmodel

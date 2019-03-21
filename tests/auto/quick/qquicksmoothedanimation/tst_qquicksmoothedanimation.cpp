@@ -64,7 +64,7 @@ void tst_qquicksmoothedanimation::defaultValues()
     QQmlComponent c(&engine, testFileUrl("smoothedanimation1.qml"));
     QQuickSmoothedAnimation *obj = qobject_cast<QQuickSmoothedAnimation*>(c.create());
 
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(obj->to(), 0.);
     QCOMPARE(obj->velocity(), 200.);
@@ -81,7 +81,7 @@ void tst_qquicksmoothedanimation::values()
     QQmlComponent c(&engine, testFileUrl("smoothedanimation2.qml"));
     QQuickSmoothedAnimation *obj = qobject_cast<QQuickSmoothedAnimation*>(c.create());
 
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(obj->to(), 10.);
     QCOMPARE(obj->velocity(), 200.);
@@ -98,7 +98,7 @@ void tst_qquicksmoothedanimation::disabled()
     QQmlComponent c(&engine, testFileUrl("smoothedanimation3.qml"));
     QQuickSmoothedAnimation *obj = qobject_cast<QQuickSmoothedAnimation*>(c.create());
 
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(obj->to(), 10.);
     QCOMPARE(obj->velocity(), 250.);
@@ -259,7 +259,7 @@ void tst_qquicksmoothedanimation::noStart()
     QQmlComponent c(&engine, testFileUrl("smoothedanimation1.qml"));
     QQuickSmoothedAnimation *obj = qobject_cast<QQuickSmoothedAnimation*>(c.create());
 
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     obj->start();
     QCOMPARE(obj->isRunning(), false);

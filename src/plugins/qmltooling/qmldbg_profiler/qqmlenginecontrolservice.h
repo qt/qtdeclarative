@@ -81,15 +81,15 @@ protected:
     QList<QJSEngine *> stoppingEngines;
     bool blockingMode;
 
-    void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
-    void engineAboutToBeAdded(QJSEngine *) Q_DECL_OVERRIDE;
-    void engineAboutToBeRemoved(QJSEngine *) Q_DECL_OVERRIDE;
-    void engineAdded(QJSEngine *) Q_DECL_OVERRIDE;
-    void engineRemoved(QJSEngine *) Q_DECL_OVERRIDE;
+    void messageReceived(const QByteArray &) override;
+    void engineAboutToBeAdded(QJSEngine *) override;
+    void engineAboutToBeRemoved(QJSEngine *) override;
+    void engineAdded(QJSEngine *) override;
+    void engineRemoved(QJSEngine *) override;
 
     void sendMessage(MessageType type, QJSEngine *engine);
 
-    void stateChanged(State) Q_DECL_OVERRIDE;
+    void stateChanged(State) override;
 };
 
 QT_END_NAMESPACE

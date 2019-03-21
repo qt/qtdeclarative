@@ -36,6 +36,7 @@
 #include <QVBoxLayout>
 #include <QTime>
 #include <QDebug>
+#include <QRandomGenerator>
 #include <QStaticText>
 
 int iterations = 20;
@@ -321,7 +322,7 @@ public:
         int len = strlen(chars);
         for (int i = 0; i < lines; ++i) {
             for (int j = 0; j < 60; j++) {
-                strings[i] += QChar(chars[rand() % len]);
+                strings[i] += QChar(chars[QRandomGenerator::global()->bounded(len)]);
             }
         }
     }

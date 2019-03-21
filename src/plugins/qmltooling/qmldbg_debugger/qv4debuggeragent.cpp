@@ -56,13 +56,13 @@ QV4Debugger *QV4DebuggerAgent::pausedDebugger() const
         if (debugger->state() == QV4Debugger::Paused)
             return debugger;
     }
-    return 0;
+    return nullptr;
 }
 
 bool QV4DebuggerAgent::isRunning() const
 {
     // "running" means none of the engines are paused.
-    return pausedDebugger() == 0;
+    return pausedDebugger() == nullptr;
 }
 
 void QV4DebuggerAgent::debuggerPaused(QV4Debugger *debugger, QV4Debugger::PauseReason reason)
@@ -79,20 +79,19 @@ void QV4DebuggerAgent::debuggerPaused(QV4Debugger *debugger, QV4Debugger::PauseR
     case QV4Debugger::PauseRequest:
     case QV4Debugger::BreakPointHit: {
         event.insert(QStringLiteral("event"), QStringLiteral("break"));
-        QVector<QV4::StackFrame> frames = debugger->stackTrace(1);
-        if (frames.isEmpty())
+        QV4::CppStackFrame *frame = debugger->engine()->currentStackFrame;
+        if (!frame)
             break;
 
-        const QV4::StackFrame &topFrame = frames.first();
-        body.insert(QStringLiteral("invocationText"), topFrame.function);
-        body.insert(QStringLiteral("sourceLine"), topFrame.line - 1);
-        if (topFrame.column > 0)
-            body.insert(QStringLiteral("sourceColumn"), topFrame.column);
+        body.insert(QStringLiteral("invocationText"), frame->function());
+        body.insert(QStringLiteral("sourceLine"), qAbs(frame->lineNumber()) - 1);
+//        if (frame->column > 0)
+//            body.insert(QStringLiteral("sourceColumn"), frame->column);
         QJsonArray breakPoints;
-        foreach (int breakPointId, breakPointIds(topFrame.source, topFrame.line))
+        foreach (int breakPointId, breakPointIds(frame->source(), frame->lineNumber()))
             breakPoints.push_back(breakPointId);
         body.insert(QStringLiteral("breakpoints"), breakPoints);
-        script.insert(QStringLiteral("name"), topFrame.source);
+        script.insert(QStringLiteral("name"), frame->source());
     } break;
     case QV4Debugger::Throwing:
         // TODO: complete this!

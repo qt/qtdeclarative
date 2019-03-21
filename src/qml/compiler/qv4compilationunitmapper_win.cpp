@@ -40,7 +40,7 @@
 #include "qv4compilationunitmapper_p.h"
 
 #include "qv4compileddata_p.h"
-#include <private/qdeferredcleanup_p.h>
+#include <QScopeGuard>
 #include <QFileInfo>
 #include <QDateTime>
 #include <qt_windows.h>
@@ -71,7 +71,7 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
         return nullptr;
     }
 
-    QDeferredCleanup fileHandleCleanup([handle]{
+    auto fileHandleCleanup = qScopeGuard([handle]{
         CloseHandle(handle);
     });
 
@@ -87,27 +87,22 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
         return nullptr;
     }
 
-    if (!verifyHeader(&header, sourceTimeStamp, errorString))
+    if (!header.verifyHeader(sourceTimeStamp, errorString))
         return nullptr;
-
-    const uint mappingFlags = header.flags & QV4::CompiledData::Unit::ContainsMachineCode
-                              ? PAGE_EXECUTE_READ : PAGE_READONLY;
-    const uint viewFlags = header.flags & QV4::CompiledData::Unit::ContainsMachineCode
-                           ? (FILE_MAP_READ | FILE_MAP_EXECUTE) : FILE_MAP_READ;
 
     // Data structure and qt version matched, so now we can access the rest of the file safely.
 
-    HANDLE fileMappingHandle = CreateFileMapping(handle, 0, mappingFlags, 0, 0, 0);
+    HANDLE fileMappingHandle = CreateFileMapping(handle, 0, PAGE_READONLY, 0, 0, 0);
     if (!fileMappingHandle) {
         *errorString = qt_error_string(GetLastError());
         return nullptr;
     }
 
-    QDeferredCleanup mappingCleanup([fileMappingHandle]{
+    auto mappingCleanup = qScopeGuard([fileMappingHandle]{
         CloseHandle(fileMappingHandle);
     });
 
-    dataPtr = MapViewOfFile(fileMappingHandle, viewFlags, 0, 0, 0);
+    dataPtr = MapViewOfFile(fileMappingHandle, FILE_MAP_READ, 0, 0, 0);
     if (!dataPtr) {
         *errorString = qt_error_string(GetLastError());
         return nullptr;
@@ -118,8 +113,15 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
 
 void CompilationUnitMapper::close()
 {
-    if (dataPtr != nullptr)
-        UnmapViewOfFile(dataPtr);
+    if (dataPtr != nullptr) {
+        // Do not unmap cache files that are built with the StaticData flag. That's the majority of
+        // them and it's necessary to benefit from the QString literal optimization. There might
+        // still be QString instances around that point into that memory area. The memory is backed
+        // on the disk, so the kernel is free to release the pages and all that remains is the
+        // address space allocation.
+        if (!(reinterpret_cast<CompiledData::Unit*>(dataPtr)->flags & CompiledData::Unit::StaticData))
+            UnmapViewOfFile(dataPtr);
+    }
     dataPtr = nullptr;
 }
 

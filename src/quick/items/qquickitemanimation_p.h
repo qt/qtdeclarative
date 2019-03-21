@@ -68,7 +68,7 @@ class Q_AUTOTEST_EXPORT QQuickParentAnimation : public QQuickAnimationGroup
     Q_PROPERTY(QQuickItem *via READ via WRITE setVia NOTIFY viaChanged)
 
 public:
-    QQuickParentAnimation(QObject *parent=0);
+    QQuickParentAnimation(QObject *parent=nullptr);
     virtual ~QQuickParentAnimation();
 
     QQuickItem *target() const;
@@ -89,7 +89,7 @@ protected:
     QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0) Q_DECL_OVERRIDE;
+                            QObject *defaultTarget = nullptr) override;
 };
 
 class QQuickAnchorAnimationPrivate;
@@ -102,7 +102,7 @@ class Q_AUTOTEST_EXPORT QQuickAnchorAnimation : public QQuickAbstractAnimation
     Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged)
 
 public:
-    QQuickAnchorAnimation(QObject *parent=0);
+    QQuickAnchorAnimation(QObject *parent=nullptr);
     virtual ~QQuickAnchorAnimation();
 
     QQmlListProperty<QQuickItem> targets();
@@ -121,7 +121,7 @@ protected:
     QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0) Q_DECL_OVERRIDE;
+                            QObject *defaultTarget = nullptr) override;
 };
 
 #if QT_CONFIG(quick_path)
@@ -145,7 +145,7 @@ class Q_AUTOTEST_EXPORT QQuickPathAnimation : public QQuickAbstractAnimation
     Q_PROPERTY(qreal endRotation READ endRotation WRITE setEndRotation NOTIFY endRotationChanged)
 
 public:
-    QQuickPathAnimation(QObject *parent=0);
+    QQuickPathAnimation(QObject *parent=nullptr);
     virtual ~QQuickPathAnimation();
 
     enum Orientation {
@@ -188,7 +188,7 @@ protected:
     QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0) Q_DECL_OVERRIDE;
+                            QObject *defaultTarget = nullptr) override;
 Q_SIGNALS:
     void durationChanged(int);
     void easingChanged(const QEasingCurve &);

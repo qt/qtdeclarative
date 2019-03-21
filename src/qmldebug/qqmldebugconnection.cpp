@@ -63,15 +63,15 @@ class QQmlDebugConnectionPrivate : public QObjectPrivate
 
 public:
     QQmlDebugConnectionPrivate();
-    QPacketProtocol *protocol;
-    QIODevice *device;
-    QLocalServer *server;
+    QPacketProtocol *protocol = nullptr;
+    QIODevice *device = nullptr;
+    QLocalServer *server = nullptr;
     QEventLoop handshakeEventLoop;
     QTimer handshakeTimer;
 
-    bool gotHello;
-    int currentDataStreamVersion;
-    int maximumDataStreamVersion;
+    bool gotHello = false;
+    int currentDataStreamVersion = QDataStream::Qt_4_7;
+    int maximumDataStreamVersion = QDataStream::Qt_DefaultCompiledVersion;
     QHash <QString, float> serverPlugins;
     QHash<QString, QQmlDebugClient *> plugins;
     QStringList removedPlugins;
@@ -81,10 +81,7 @@ public:
     void flush();
 };
 
-QQmlDebugConnectionPrivate::QQmlDebugConnectionPrivate() :
-    protocol(0), device(0), server(0), gotHello(false),
-    currentDataStreamVersion(QDataStream::Qt_4_7),
-    maximumDataStreamVersion(QDataStream::Qt_DefaultCompiledVersion)
+QQmlDebugConnectionPrivate::QQmlDebugConnectionPrivate()
 {
     handshakeTimer.setSingleShot(true);
     handshakeTimer.setInterval(3000);
@@ -262,7 +259,7 @@ QQmlDebugConnection::~QQmlDebugConnection()
     Q_D(QQmlDebugConnection);
     QHash<QString, QQmlDebugClient*>::iterator iter = d->plugins.begin();
     for (; iter != d->plugins.end(); ++iter)
-        iter.value()->stateChanged(QQmlDebugClient::NotConnected);
+        emit iter.value()->stateChanged(QQmlDebugClient::NotConnected);
 }
 
 int QQmlDebugConnection::currentDataStreamVersion() const
@@ -298,12 +295,12 @@ void QQmlDebugConnection::close()
 
         QHash<QString, QQmlDebugClient*>::iterator iter = d->plugins.begin();
         for (; iter != d->plugins.end(); ++iter)
-            iter.value()->stateChanged(QQmlDebugClient::NotConnected);
+            emit iter.value()->stateChanged(QQmlDebugClient::NotConnected);
     }
 
     if (d->device) {
         d->device->deleteLater();
-        d->device = 0;
+        d->device = nullptr;
     }
 }
 

@@ -43,6 +43,7 @@
 #include "qquicktextinput_p.h"
 #include "qquicktext_p.h"
 #include "qquickimplicitsizeitem_p_p.h"
+#include "qquicktextutil_p.h"
 
 #include <QtQml/qqml.h>
 #include <QtCore/qelapsedtimer.h>
@@ -98,9 +99,9 @@ public:
     QQuickTextInputPrivate()
         : hscroll(0)
         , vscroll(0)
-        , cursorItem(0)
-        , textNode(0)
-        , m_maskData(0)
+        , cursorItem(nullptr)
+        , textNode(nullptr)
+        , m_maskData(nullptr)
         , color(QRgb(0xFF000000))
         , selectionColor(QRgb(0xFF000080))
         , selectedTextColor(QRgb(0xFFFFFFFF))
@@ -122,11 +123,7 @@ public:
         , vAlign(QQuickTextInput::AlignTop)
         , wrapMode(QQuickTextInput::NoWrap)
         , m_echoMode(QQuickTextInput::Normal)
-#if defined(QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
-        , renderType(QQuickTextInput::QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
-#else
-        , renderType(QQuickTextInput::QtRendering)
-#endif
+        , renderType(QQuickTextUtil::textRenderType<QQuickTextInput>())
         , updateType(UpdatePaintNode)
         , mouseSelectionMode(QQuickTextInput::SelectCharacters)
         , m_layoutDirection(Qt::LayoutDirectionAuto)
@@ -165,6 +162,11 @@ public:
 
     ~QQuickTextInputPrivate()
     {
+        // If this control is used for password input, we don't want the
+        // password data to stay in the process memory, therefore we need
+        // to zero it out
+        if (m_echoMode != QQuickTextInput::Normal)
+            m_text.fill(0);
     }
 
     void init();
@@ -175,7 +177,7 @@ public:
     void updateVerticalScroll();
     bool determineHorizontalAlignment();
     bool setHAlign(QQuickTextInput::HAlignment, bool forceAlign = false);
-    void mirrorChange() Q_DECL_OVERRIDE;
+    void mirrorChange() override;
     bool sendMouseEventToInputContext(QMouseEvent *event);
 #if QT_CONFIG(im)
     Qt::InputMethodHints effectiveInputMethodHints() const;
@@ -454,7 +456,7 @@ public:
     void updateLayout();
     void updateBaselineOffset();
 
-    qreal getImplicitWidth() const Q_DECL_OVERRIDE;
+    qreal getImplicitWidth() const override;
 
     inline qreal padding() const { return extra.isAllocated() ? extra->padding : 0.0; }
     void setTopPadding(qreal value, bool reset = false);

@@ -69,7 +69,6 @@ namespace CompiledData {
 struct Unit;
 struct CompilationUnit;
 }
-typedef CompiledData::CompilationUnit *(*CompilationUnitFactoryFunction)();
 }
 namespace QmlIR {
 struct Document;
@@ -96,11 +95,23 @@ namespace QQmlPrivate
 {
     void Q_QML_EXPORT qdeclarativeelement_destructor(QObject *);
     template<typename T>
-    class QQmlElement : public T
+    class QQmlElement final : public T
     {
     public:
-        virtual ~QQmlElement() {
+        ~QQmlElement() override {
             QQmlPrivate::qdeclarativeelement_destructor(this);
+        }
+        static void operator delete(void *ptr) {
+            // We allocate memory from this class in QQmlType::create
+            // along with some additional memory.
+            // So we override the operator delete in order to avoid the
+            // sized operator delete to be called with a different size than
+            // the size that was allocated.
+            ::operator delete (ptr);
+        }
+        static void operator delete(void *, void *) {
+            // Deliberately empty placement delete operator.
+            // Silences MSVC warning C4291: no matching operator delete found
         }
     };
 
@@ -168,8 +179,8 @@ namespace QQmlPrivate
     class AttachedPropertySelector
     {
     public:
-        static inline QQmlAttachedPropertiesFunc func() { return 0; }
-        static inline const QMetaObject *metaObject() { return 0; }
+        static inline QQmlAttachedPropertiesFunc func() { return nullptr; }
+        static inline const QMetaObject *metaObject() { return nullptr; }
     };
     template<typename T>
     class AttachedPropertySelector<T, 1>
@@ -284,8 +295,8 @@ namespace QQmlPrivate
 
     struct CachedQmlUnit {
         const QV4::CompiledData::Unit *qmlData;
-        QV4::CompilationUnitFactoryFunction createCompilationUnit;
-        QmlIR::IRLoaderFunction loadIR;
+        void *unused1;
+        void *unused2;
     };
 
     typedef const CachedQmlUnit *(*QmlUnitCacheLookupFunction)(const QUrl &url);

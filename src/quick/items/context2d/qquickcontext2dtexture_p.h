@@ -146,7 +146,7 @@ protected:
     virtual QVector2D scaleFactor() const { return QVector2D(1, 1); }
 
     void paintWithoutTiles(QQuickContext2DCommandBuffer *ccb);
-    virtual QPaintDevice* beginPainting() {m_painting = true; return 0; }
+    virtual QPaintDevice* beginPainting() {m_painting = true; return nullptr; }
     virtual void endPainting() {m_painting = false;}
     virtual QQuickContext2DTile* createTile() const = 0;
     virtual void compositeTile(QQuickContext2DTile* tile) = 0;
@@ -168,6 +168,7 @@ protected:
     QSize m_canvasSize;
     QSize m_tileSize;
     QRect m_canvasWindow;
+    qreal m_canvasDevicePixelRatio;
 
     QMutex m_mutex;
     QWaitCondition m_condition;
@@ -188,21 +189,21 @@ class QQuickContext2DFBOTexture : public QQuickContext2DTexture
 public:
     QQuickContext2DFBOTexture();
     ~QQuickContext2DFBOTexture();
-    QQuickContext2DTile* createTile() const Q_DECL_OVERRIDE;
-    QPaintDevice* beginPainting() Q_DECL_OVERRIDE;
-    void endPainting() Q_DECL_OVERRIDE;
+    QQuickContext2DTile* createTile() const override;
+    QPaintDevice* beginPainting() override;
+    void endPainting() override;
     QRectF normalizedTextureSubRect() const;
-    QQuickCanvasItem::RenderTarget renderTarget() const Q_DECL_OVERRIDE;
-    void compositeTile(QQuickContext2DTile* tile) Q_DECL_OVERRIDE;
-    QSize adjustedTileSize(const QSize &ts) Q_DECL_OVERRIDE;
+    QQuickCanvasItem::RenderTarget renderTarget() const override;
+    void compositeTile(QQuickContext2DTile* tile) override;
+    QSize adjustedTileSize(const QSize &ts) override;
 
-    QSGTexture *textureForNextFrame(QSGTexture *, QQuickWindow *window) Q_DECL_OVERRIDE;
+    QSGTexture *textureForNextFrame(QSGTexture *, QQuickWindow *window) override;
 
 protected:
-    QVector2D scaleFactor() const Q_DECL_OVERRIDE;
+    QVector2D scaleFactor() const override;
 
 public Q_SLOTS:
-    void grabImage(const QRectF& region = QRectF()) Q_DECL_OVERRIDE;
+    void grabImage(const QRectF& region = QRectF()) override;
 
 private:
     bool doMultisampling() const;

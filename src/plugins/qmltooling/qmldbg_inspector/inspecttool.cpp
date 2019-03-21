@@ -62,8 +62,8 @@ InspectTool::InspectTool(QQuickWindowInspector *inspector, QQuickWindow *view) :
     m_contentItem(view->contentItem()),
     m_touchTimestamp(0),
     m_hoverHighlight(new HoverHighlight(inspector->overlay())),
-    m_lastItem(0),
-    m_lastClickedItem(0)
+    m_lastItem(nullptr),
+    m_lastClickedItem(nullptr)
 {
     //Timer to display selected item's name
     m_nameDisplayTimer.setSingleShot(true);

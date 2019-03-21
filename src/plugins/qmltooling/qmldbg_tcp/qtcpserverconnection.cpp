@@ -38,7 +38,8 @@
 ****************************************************************************/
 
 #include "qtcpserverconnectionfactory.h"
-#include "qqmldebugserver.h"
+
+#include <private/qqmldebugserver_p.h>
 
 #include <QtCore/qplugin.h>
 #include <QtNetwork/qtcpserver.h>
@@ -53,7 +54,7 @@ class QTcpServerConnection : public QQmlDebugServerConnection
 
 public:
     QTcpServerConnection();
-    ~QTcpServerConnection();
+    ~QTcpServerConnection() override;
 
     void setServer(QQmlDebugServer *server) override;
     bool setPortRange(int portFrom, int portTo, bool block, const QString &hostaddress) override;
@@ -69,24 +70,16 @@ private:
     void newConnection();
     bool listen();
 
-    int m_portFrom;
-    int m_portTo;
-    bool m_block;
+    int m_portFrom = 0;
+    int m_portTo = 0;
+    bool m_block = false;
     QString m_hostaddress;
-    QTcpSocket *m_socket;
-    QTcpServer *m_tcpServer;
-    QQmlDebugServer *m_debugServer;
+    QTcpSocket *m_socket = nullptr;
+    QTcpServer *m_tcpServer = nullptr;
+    QQmlDebugServer *m_debugServer = nullptr;
 };
 
-QTcpServerConnection::QTcpServerConnection() :
-    m_portFrom(0),
-    m_portTo(0),
-    m_block(false),
-    m_socket(0),
-    m_tcpServer(0),
-    m_debugServer(0)
-{
-}
+QTcpServerConnection::QTcpServerConnection() {}
 
 QTcpServerConnection::~QTcpServerConnection()
 {
@@ -115,7 +108,7 @@ void QTcpServerConnection::disconnect()
     }
 
     m_socket->deleteLater();
-    m_socket = 0;
+    m_socket = nullptr;
 }
 
 bool QTcpServerConnection::setPortRange(int portFrom, int portTo, bool block,
@@ -198,7 +191,7 @@ void QTcpServerConnection::newConnection()
 
 QQmlDebugServerConnection *QTcpServerConnectionFactory::create(const QString &key)
 {
-    return (key == QLatin1String("QTcpServerConnection") ? new QTcpServerConnection : 0);
+    return (key == QLatin1String("QTcpServerConnection") ? new QTcpServerConnection : nullptr);
 }
 
 QT_END_NAMESPACE

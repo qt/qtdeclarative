@@ -66,10 +66,10 @@ private:
 };
 QML_DECLARE_TYPE(Timer);
 
-Timer *Timer::m_timer = 0;
+Timer *Timer::m_timer = nullptr;
 
 Timer::Timer()
-    : m_component(0)
+    : m_component(nullptr)
     , m_willparent(false)
     , m_item(new QQuickItem)
 {

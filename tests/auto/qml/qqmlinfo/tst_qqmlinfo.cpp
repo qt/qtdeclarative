@@ -50,6 +50,7 @@ private slots:
     void types();
     void chaining();
     void messageTypes();
+    void component();
 
 private:
     QQmlEngine engine;
@@ -60,14 +61,14 @@ void tst_qqmlinfo::qmlObject()
     QQmlComponent component(&engine, testFileUrl("qmlObject.qml"));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QString message = component.url().toString() + ":3:1: QML QtObject: Test Message";
     QTest::ignoreMessage(QtInfoMsg, qPrintable(message));
     qmlInfo(object) << "Test Message";
 
     QObject *nested = qvariant_cast<QObject *>(object->property("nested"));
-    QVERIFY(nested != 0);
+    QVERIFY(nested != nullptr);
 
     message = component.url().toString() + ":6:13: QML QtObject: Second Test Message";
     QTest::ignoreMessage(QtInfoMsg, qPrintable(message));
@@ -79,12 +80,12 @@ void tst_qqmlinfo::nestedQmlObject()
     QQmlComponent component(&engine, testFileUrl("nestedQmlObject.qml"));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QObject *nested = qvariant_cast<QObject *>(object->property("nested"));
-    QVERIFY(nested != 0);
+    QVERIFY(nested != nullptr);
     QObject *nested2 = qvariant_cast<QObject *>(object->property("nested2"));
-    QVERIFY(nested2 != 0);
+    QVERIFY(nested2 != nullptr);
 
     QString message = component.url().toString() + ":5:13: QML NestedObject: Outer Object";
     QTest::ignoreMessage(QtInfoMsg, qPrintable(message));
@@ -100,12 +101,12 @@ void tst_qqmlinfo::nestedComponent()
     QQmlComponent component(&engine, testFileUrl("NestedComponent.qml"));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QObject *nested = qvariant_cast<QObject *>(object->property("nested"));
-    QVERIFY(nested != 0);
+    QVERIFY(nested != nullptr);
     QObject *nested2 = qvariant_cast<QObject *>(object->property("nested2"));
-    QVERIFY(nested2 != 0);
+    QVERIFY(nested2 != nullptr);
 
     QString message = component.url().toString() + ":10:9: QML NestedObject: Complex Object";
     QTest::ignoreMessage(QtInfoMsg, qPrintable(message));
@@ -130,7 +131,7 @@ void tst_qqmlinfo::nonQmlObject()
 void tst_qqmlinfo::nullObject()
 {
     QTest::ignoreMessage(QtInfoMsg, "<Unknown File>: Null Object Test Message");
-    qmlInfo(0) << "Null Object Test Message";
+    qmlInfo(nullptr) << "Null Object Test Message";
 }
 
 void tst_qqmlinfo::nonQmlContextedObject()
@@ -145,44 +146,44 @@ void tst_qqmlinfo::nonQmlContextedObject()
 void tst_qqmlinfo::types()
 {
     QTest::ignoreMessage(QtInfoMsg, "<Unknown File>: false");
-    qmlInfo(0) << false;
+    qmlInfo(nullptr) << false;
 
     QTest::ignoreMessage(QtInfoMsg, "<Unknown File>: 1.1");
-    qmlInfo(0) << 1.1;
+    qmlInfo(nullptr) << 1.1;
 
     QTest::ignoreMessage(QtInfoMsg, "<Unknown File>: 1.2");
-    qmlInfo(0) << 1.2f;
+    qmlInfo(nullptr) << 1.2f;
 
     QTest::ignoreMessage(QtInfoMsg, "<Unknown File>: 15");
-    qmlInfo(0) << 15;
+    qmlInfo(nullptr) << 15;
 
     QTest::ignoreMessage(QtInfoMsg, "<Unknown File>: 'b'");
-    qmlInfo(0) << QChar('b');
+    qmlInfo(nullptr) << QChar('b');
 
     QTest::ignoreMessage(QtInfoMsg, "<Unknown File>: \"Qt\"");
-    qmlInfo(0) << QByteArray("Qt");
+    qmlInfo(nullptr) << QByteArray("Qt");
 
     QTest::ignoreMessage(QtInfoMsg, "<Unknown File>: true");
-    qmlInfo(0) << bool(true);
+    qmlInfo(nullptr) << bool(true);
 
     //### do we actually want QUrl to show up in the output?
     //### why the extra space at the end?
     QTest::ignoreMessage(QtInfoMsg, "<Unknown File>: QUrl(\"http://www.qt-project.org\") ");
-    qmlInfo(0) << QUrl("http://www.qt-project.org");
+    qmlInfo(nullptr) << QUrl("http://www.qt-project.org");
 
     //### should this be quoted?
     QTest::ignoreMessage(QtInfoMsg, "<Unknown File>: hello");
-    qmlInfo(0) << QLatin1String("hello");
+    qmlInfo(nullptr) << QLatin1String("hello");
 
     //### should this be quoted?
     QTest::ignoreMessage(QtInfoMsg, "<Unknown File>: World");
     QString str("Hello World");
     QStringRef ref(&str, 6, 5);
-    qmlInfo(0) << ref;
+    qmlInfo(nullptr) << ref;
 
     //### should this be quoted?
     QTest::ignoreMessage(QtInfoMsg, "<Unknown File>: Quick");
-    qmlInfo(0) << QString ("Quick");
+    qmlInfo(nullptr) << QString ("Quick");
 }
 
 void tst_qqmlinfo::chaining()
@@ -190,7 +191,7 @@ void tst_qqmlinfo::chaining()
     QString str("Hello World");
     QStringRef ref(&str, 6, 5);
     QTest::ignoreMessage(QtInfoMsg, "<Unknown File>: false 1.1 1.2 15 hello 'b' World \"Qt\" true Quick QUrl(\"http://www.qt-project.org\") ");
-    qmlInfo(0) << false << ' '
+    qmlInfo(nullptr) << false << ' '
                << 1.1 << ' '
                << 1.2f << ' '
                << 15 << ' '
@@ -207,13 +208,26 @@ void tst_qqmlinfo::chaining()
 void tst_qqmlinfo::messageTypes()
 {
     QTest::ignoreMessage(QtDebugMsg, "<Unknown File>: debug");
-    qmlDebug(0) << QLatin1String("debug");
+    qmlDebug(nullptr) << QLatin1String("debug");
 
     QTest::ignoreMessage(QtInfoMsg, "<Unknown File>: info");
-    qmlInfo(0) << QLatin1String("info");
+    qmlInfo(nullptr) << QLatin1String("info");
 
     QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: warning");
-    qmlWarning(0) << QLatin1String("warning");
+    qmlWarning(nullptr) << QLatin1String("warning");
+}
+
+void tst_qqmlinfo::component()
+{
+    QQmlComponent component(&engine, testFileUrl("Component.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != nullptr);
+    QQmlComponent *delegate = qobject_cast<QQmlComponent*>(object->property("delegate").value<QObject*>());
+    QVERIFY(delegate);
+
+    QString message = component.url().toString() + ":4:34: QML Component: Delegate error";
+    QTest::ignoreMessage(QtInfoMsg, qPrintable(message));
+    qmlInfo(delegate) << "Delegate error";
 }
 
 QTEST_MAIN(tst_qqmlinfo)

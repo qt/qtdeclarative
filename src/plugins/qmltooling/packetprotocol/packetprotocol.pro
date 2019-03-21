@@ -1,10 +1,11 @@
 TARGET = QtPacketProtocol
-QT     = core-private qml-private
+QT     = core-private
 CONFIG += static internal_module
 
 HEADERS = \
     qpacketprotocol_p.h \
-    qpacket_p.h
+    qpacket_p.h \
+    qversionedpacket_p.h
 
 SOURCES = \
     qpacketprotocol.cpp \

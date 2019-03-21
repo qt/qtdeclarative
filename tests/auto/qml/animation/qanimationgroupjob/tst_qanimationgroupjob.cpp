@@ -71,10 +71,7 @@ class UncontrolledAnimation : public QObject, public QAbstractAnimationJob
 {
     Q_OBJECT
 public:
-    UncontrolledAnimation()
-        : id(0)
-    {
-    }
+    UncontrolledAnimation() { }
 
     int duration() const { return -1; /* not time driven */ }
 
@@ -96,7 +93,7 @@ protected:
     }
 
 private:
-    int id;
+    int id = 0;
 };
 
 class StateChangeListener: public QAnimationJobChangeListener
@@ -264,15 +261,18 @@ void tst_QAnimationGroupJob::addChildTwice()
 {
     QAbstractAnimationJob *subGroup;
     QAbstractAnimationJob *subGroup2;
-    QAnimationGroupJob *parent = new QSequentialAnimationGroupJob();
+    auto *parent = new QSequentialAnimationGroupJob();
 
     subGroup = new QAbstractAnimationJob;
     parent->appendAnimation(subGroup);
     parent->appendAnimation(subGroup);
-    QVERIFY(parent->firstChild() && !parent->firstChild()->nextSibling());
+    QVERIFY(parent->firstChild());
+    QVERIFY(!parent->firstChild()->nextSibling());
+    QVERIFY(!parent->firstChild()->previousSibling());
 
     parent->clear();
 
+    QCOMPARE(parent->currentAnimation(), nullptr);
     QVERIFY(!parent->firstChild());
 
     // adding the same item twice to a group will remove the item from its current position

@@ -37,209 +37,187 @@
 **
 ****************************************************************************/
 #include <qv4argumentsobject_p.h>
+#include <qv4arrayobject_p.h>
 #include <qv4alloca_p.h>
 #include <qv4scopedvalue_p.h>
 #include <qv4string_p.h>
 #include <qv4function_p.h>
+#include <qv4jscall_p.h>
+#include <qv4symbol_p.h>
 
 using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(ArgumentsObject);
+DEFINE_OBJECT_VTABLE(StrictArgumentsObject);
 
-void Heap::ArgumentsObject::init(QV4::CallContext *context)
+void Heap::StrictArgumentsObject::init(QV4::CppStackFrame *frame)
+
 {
+    Q_ASSERT(vtable() == QV4::StrictArgumentsObject::staticVTable());
     ExecutionEngine *v4 = internalClass->engine;
 
     Object::init();
-    fullyCreated = false;
+
+    Q_ASSERT(internalClass->verifyIndex(v4->id_callee()->propertyKey(), CalleePropertyIndex));
+    Q_ASSERT(internalClass->findValueOrSetter(v4->id_callee()->propertyKey()).index == CalleeSetterPropertyIndex);
+    Q_ASSERT(internalClass->verifyIndex(v4->symbol_iterator()->propertyKey(), SymbolIteratorPropertyIndex));
+    setProperty(v4, SymbolIteratorPropertyIndex, *v4->arrayProtoValues());
+    setProperty(v4, CalleePropertyIndex, *v4->thrower());
+    setProperty(v4, CalleeSetterPropertyIndex, *v4->thrower());
+
+    Scope scope(v4);
+    Scoped<QV4::StrictArgumentsObject> args(scope, this);
+    args->arrayReserve(frame->originalArgumentsCount);
+    args->arrayPut(0, frame->originalArguments, frame->originalArgumentsCount);
+
+    Q_ASSERT(args->internalClass()->verifyIndex(v4->id_length()->propertyKey(), LengthPropertyIndex));
+    setProperty(v4, LengthPropertyIndex, Value::fromInt32(frame->originalArgumentsCount));
+}
+
+void Heap::ArgumentsObject::init(QV4::CppStackFrame *frame)
+{
+    ExecutionEngine *v4 = internalClass->engine;
+
+    QV4::CallContext *context = static_cast<QV4::CallContext *>(frame->context());
+
+    Object::init();
     this->context.set(v4, context->d());
     Q_ASSERT(vtable() == QV4::ArgumentsObject::staticVTable());
 
-    Scope scope(v4);
-    Scoped<QV4::ArgumentsObject> args(scope, this);
+    Q_ASSERT(internalClass->verifyIndex(v4->id_callee()->propertyKey(), CalleePropertyIndex));
+    setProperty(v4, CalleePropertyIndex, context->d()->function);
+    Q_ASSERT(internalClass->verifyIndex(v4->id_length()->propertyKey(), LengthPropertyIndex));
+    setProperty(v4, LengthPropertyIndex, Value::fromInt32(context->argc()));
+    Q_ASSERT(internalClass->verifyIndex(v4->symbol_iterator()->propertyKey(), SymbolIteratorPropertyIndex));
+    setProperty(v4, SymbolIteratorPropertyIndex, *v4->arrayProtoValues());
 
-    if (context->d()->strictMode) {
-        Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(v4->id_callee()));
-        Q_ASSERT(CallerPropertyIndex == args->internalClass()->find(v4->id_caller()));
-        args->setProperty(CalleePropertyIndex + QV4::Object::GetterOffset, *v4->thrower());
-        args->setProperty(CalleePropertyIndex + QV4::Object::SetterOffset, *v4->thrower());
-        args->setProperty(CallerPropertyIndex + QV4::Object::GetterOffset, *v4->thrower());
-        args->setProperty(CallerPropertyIndex + QV4::Object::SetterOffset, *v4->thrower());
-
-        args->arrayReserve(context->argc());
-        args->arrayPut(0, context->args(), context->argc());
-        args->d()->fullyCreated = true;
-    } else {
-        Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(v4->id_callee()));
-        args->setProperty(CalleePropertyIndex, context->d()->function);
-    }
-    Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(v4->id_length()));
-    args->setProperty(LengthPropertyIndex, Primitive::fromInt32(context->d()->callData->argc));
+    fullyCreated = false;
+    argCount = frame->originalArgumentsCount;
+    uint nFormals = frame->v4Function->nFormals;
+    mapped = nFormals > 63 ? std::numeric_limits<quint64>::max() : (1ull << nFormals) - 1;
 }
 
 void ArgumentsObject::fullyCreate()
 {
-    if (fullyCreated())
+    if (d()->fullyCreated)
         return;
 
     Scope scope(engine());
 
-    uint argCount = context()->callData->argc;
-    uint numAccessors = qMin(context()->formalParameterCount(), argCount);
-    ArrayData::realloc(this, Heap::ArrayData::Sparse, argCount, true);
-    scope.engine->requireArgumentsAccessors(numAccessors);
-
-    Scoped<MemberData> md(scope, d()->mappedArguments);
-    if (numAccessors) {
-        d()->mappedArguments.set(scope.engine, md->allocate(scope.engine, numAccessors));
-        for (uint i = 0; i < numAccessors; ++i) {
-            d()->mappedArguments->values.set(scope.engine, i, context()->callData->args[i]);
-            arraySet(i, scope.engine->argumentsAccessors + i, Attr_Accessor);
-        }
-    }
-    arrayPut(numAccessors, context()->callData->args + numAccessors, argCount - numAccessors);
-    for (uint i = numAccessors; i < argCount; ++i)
-        setArrayAttributes(i, Attr_Data);
+    arrayReserve(d()->argCount);
+    arrayPut(0, context()->args(), d()->argCount);
+    // Use a sparse array, so that method_getElement() doesn't shortcut
+    initSparseArray();
 
     d()->fullyCreated = true;
 }
 
-bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, const Property *desc, PropertyAttributes attrs)
-{
-    fullyCreate();
-
-    Scope scope(engine);
-    ScopedProperty map(scope);
-    PropertyAttributes mapAttrs;
-    uint numAccessors = qMin(context()->formalParameterCount(), static_cast<uint>(context()->callData->argc));
-    bool isMapped = false;
-    if (arrayData() && index < numAccessors &&
-        arrayData()->attributes(index).isAccessor() &&
-        arrayData()->get(index) == scope.engine->argumentsAccessors[index].getter()->asReturnedValue())
-        isMapped = true;
-
-    if (isMapped) {
-        Q_ASSERT(arrayData());
-        mapAttrs = arrayData()->attributes(index);
-        arrayData()->getProperty(index, map, &mapAttrs);
-        setArrayAttributes(index, Attr_Data);
-        ArrayData::Index arrayIndex{ arrayData(), arrayData()->mappedIndex(index) };
-        arrayIndex.set(scope.engine, d()->mappedArguments->values[index]);
-    }
-
-    bool strict = engine->current->strictMode;
-    engine->current->strictMode = false;
-    bool result = Object::defineOwnProperty2(scope.engine, index, desc, attrs);
-    engine->current->strictMode = strict;
-
-    if (isMapped && attrs.isData()) {
-        Q_ASSERT(arrayData());
-        ScopedFunctionObject setter(scope, map->setter());
-        ScopedCallData callData(scope, 1);
-        callData->thisObject = this->asReturnedValue();
-        callData->args[0] = desc->value;
-        setter->call(scope, callData);
-
-        if (attrs.isWritable()) {
-            setArrayAttributes(index, mapAttrs);
-            arrayData()->setProperty(engine, index, map);
-        }
-    }
-
-    if (engine->current->strictMode && !result)
-        return engine->throwTypeError();
-    return result;
-}
-
-ReturnedValue ArgumentsObject::getIndexed(const Managed *m, uint index, bool *hasProperty)
-{
-    const ArgumentsObject *args = static_cast<const ArgumentsObject *>(m);
-    if (args->fullyCreated())
-        return Object::getIndexed(m, index, hasProperty);
-
-    if (index < static_cast<uint>(args->context()->callData->argc)) {
-        if (hasProperty)
-            *hasProperty = true;
-        return args->context()->callData->args[index].asReturnedValue();
-    }
-    if (hasProperty)
-        *hasProperty = false;
-    return Encode::undefined();
-}
-
-bool ArgumentsObject::putIndexed(Managed *m, uint index, const Value &value)
+bool ArgumentsObject::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *desc, PropertyAttributes attrs)
 {
     ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
-    if (!args->fullyCreated() && index >= static_cast<uint>(args->context()->callData->argc))
-        args->fullyCreate();
+    args->fullyCreate();
+    uint index = id.asArrayIndex();
 
-    if (args->fullyCreated())
-        return Object::putIndexed(m, index, value);
+    if (!args->isMapped(index))
+        return Object::virtualDefineOwnProperty(m, id, desc, attrs);
 
-    args->context()->callData->args[index] = value;
+    Scope scope(args);
+    PropertyAttributes cAttrs = attrs;
+    ScopedProperty cDesc(scope);
+    cDesc->copy(desc, attrs);
+
+    if (attrs.isData() && desc->value.isEmpty() && attrs.hasWritable() && !attrs.isWritable()) {
+        cDesc->value = args->context()->args()[index];
+        cAttrs.setType(PropertyAttributes::Data);
+    }
+
+    bool allowed = Object::virtualDefineOwnProperty(m, id, cDesc, cAttrs);
+    if (!allowed)
+        return false;
+
+    if (attrs.isAccessor()) {
+        args->removeMapping(index);
+    } else {
+        if (!desc->value.isEmpty())
+            args->context()->setArg(index, desc->value);
+        if (attrs.hasWritable() && !attrs.isWritable())
+            args->removeMapping(index);
+    }
     return true;
 }
 
-bool ArgumentsObject::deleteIndexedProperty(Managed *m, uint index)
-{
-    ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
-    if (!args->fullyCreated())
-        args->fullyCreate();
-    return Object::deleteIndexedProperty(m, index);
-}
-
-PropertyAttributes ArgumentsObject::queryIndexed(const Managed *m, uint index)
+ReturnedValue ArgumentsObject::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     const ArgumentsObject *args = static_cast<const ArgumentsObject *>(m);
-    if (args->fullyCreated())
-        return Object::queryIndexed(m, index);
+    uint index = id.asArrayIndex();
+    if (index < args->d()->argCount && !args->d()->fullyCreated) {
+        if (hasProperty)
+            *hasProperty = true;
+        return args->context()->args()[index].asReturnedValue();
+    }
 
-    uint numAccessors = qMin((int)args->context()->formalParameterCount(), args->context()->callData->argc);
-    uint argCount = args->context()->callData->argc;
-    if (index >= argCount)
-        return PropertyAttributes();
-    if (index >= numAccessors)
+    if (!args->isMapped(index))
+        return Object::virtualGet(m, id, receiver, hasProperty);
+    Q_ASSERT(index < static_cast<uint>(args->context()->function->formalParameterCount()));
+    if (hasProperty)
+        *hasProperty = true;
+    return args->context()->args()[index].asReturnedValue();
+}
+
+bool ArgumentsObject::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
+{
+    ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
+    uint index = id.asArrayIndex();
+
+    if (args == receiver && index < args->d()->argCount && !args->d()->fullyCreated) {
+        args->context()->setArg(index, value);
+        return true;
+    }
+
+    bool isMapped = (args == receiver && args->isMapped(index));
+    if (isMapped)
+        args->context()->setArg(index, value);
+
+    return Object::virtualPut(m, id, value, receiver);
+}
+
+bool ArgumentsObject::virtualDeleteProperty(Managed *m, PropertyKey id)
+{
+    ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
+    args->fullyCreate();
+    bool result = Object::virtualDeleteProperty(m, id);
+    if (result)
+        args->removeMapping(id.asArrayIndex());
+    return result;
+}
+
+PropertyAttributes ArgumentsObject::virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p)
+{
+    const ArgumentsObject *args = static_cast<const ArgumentsObject *>(m);
+    uint index = id.asArrayIndex();
+    if (index < args->d()->argCount && !args->d()->fullyCreated) {
+        p->value = args->context()->args()[index];
         return Attr_Data;
-    return Attr_Accessor;
-}
-
-DEFINE_OBJECT_VTABLE(ArgumentsGetterFunction);
-
-void ArgumentsGetterFunction::call(const Managed *getter, Scope &scope, CallData *callData)
-{
-    ExecutionEngine *v4 = static_cast<const ArgumentsGetterFunction *>(getter)->engine();
-    Scoped<ArgumentsGetterFunction> g(scope, static_cast<const ArgumentsGetterFunction *>(getter));
-    Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
-    if (!o) {
-        scope.result = v4->throwTypeError();
-        return;
     }
 
-    Q_ASSERT(g->index() < static_cast<unsigned>(o->context()->callData->argc));
-    scope.result = o->context()->callData->args[g->index()];
+    PropertyAttributes attrs = Object::virtualGetOwnProperty(m, id, p);
+    if (attrs.isEmpty() || !args->isMapped(index))
+        return attrs;
+
+    Q_ASSERT(index < static_cast<uint>(args->context()->function->formalParameterCount()));
+    if (p)
+        p->value = args->context()->args()[index];
+    return attrs;
 }
 
-DEFINE_OBJECT_VTABLE(ArgumentsSetterFunction);
-
-void ArgumentsSetterFunction::call(const Managed *setter, Scope &scope, CallData *callData)
-{
-    ExecutionEngine *v4 = static_cast<const ArgumentsSetterFunction *>(setter)->engine();
-    Scoped<ArgumentsSetterFunction> s(scope, static_cast<const ArgumentsSetterFunction *>(setter));
-    Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
-    if (!o) {
-        scope.result = v4->throwTypeError();
-        return;
-    }
-
-    Q_ASSERT(s->index() < static_cast<unsigned>(o->context()->callData->argc));
-    o->context()->callData->args[s->index()] = callData->argc ? callData->args[0].asReturnedValue() : Encode::undefined();
-    scope.result = Encode::undefined();
-}
-
-uint ArgumentsObject::getLength(const Managed *m)
+qint64 ArgumentsObject::virtualGetLength(const Managed *m)
 {
     const ArgumentsObject *a = static_cast<const ArgumentsObject *>(m);
-    if (a->propertyData(Heap::ArgumentsObject::LengthPropertyIndex)->isInteger())
-        return a->propertyData(Heap::ArgumentsObject::LengthPropertyIndex)->integerValue();
-    return Primitive::toUInt32(a->propertyData(Heap::ArgumentsObject::LengthPropertyIndex)->doubleValue());
+    return a->propertyData(Heap::ArgumentsObject::LengthPropertyIndex)->toLength();
+}
+
+OwnPropertyKeyIterator *ArgumentsObject::virtualOwnPropertyKeys(const Object *m, Value *target)
+{
+    static_cast<ArgumentsObject *>(const_cast<Object *>(m))->fullyCreate();
+    return Object::virtualOwnPropertyKeys(m, target);
 }

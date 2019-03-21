@@ -50,39 +50,8 @@
 
 QT_BEGIN_NAMESPACE
 
-
-void QQmlListModelWorkerAgent::Data::clearChange(int uid)
+QQmlListModelWorkerAgent::Sync::~Sync()
 {
-    for (int i=0 ; i < changes.count() ; ++i) {
-        if (changes[i].modelUid == uid) {
-            changes.removeAt(i);
-            --i;
-        }
-    }
-}
-
-void QQmlListModelWorkerAgent::Data::insertChange(int uid, int index, int count)
-{
-    Change c = { uid, Change::Inserted, index, count, 0, QVector<int>() };
-    changes << c;
-}
-
-void QQmlListModelWorkerAgent::Data::removeChange(int uid, int index, int count)
-{
-    Change c = { uid, Change::Removed, index, count, 0, QVector<int>() };
-    changes << c;
-}
-
-void QQmlListModelWorkerAgent::Data::moveChange(int uid, int index, int count, int to)
-{
-    Change c = { uid, Change::Moved, index, count, to, QVector<int>() };
-    changes << c;
-}
-
-void QQmlListModelWorkerAgent::Data::changedChange(int uid, int index, int count, const QVector<int> &roles)
-{
-    Change c = { uid, Change::Changed, index, count, 0, roles };
-    changes << c;
 }
 
 QQmlListModelWorkerAgent::QQmlListModelWorkerAgent(QQmlListModel *model)
@@ -117,7 +86,7 @@ void QQmlListModelWorkerAgent::release()
 
 void QQmlListModelWorkerAgent::modelDestroyed()
 {
-    m_orig = 0;
+    m_orig = nullptr;
 }
 
 int QQmlListModelWorkerAgent::count() const
@@ -167,8 +136,7 @@ void QQmlListModelWorkerAgent::move(int from, int to, int count)
 
 void QQmlListModelWorkerAgent::sync()
 {
-    Sync *s = new Sync(data, m_copy);
-    data.changes.clear();
+    Sync *s = new Sync(m_copy);
 
     mutex.lock();
     QCoreApplication::postEvent(this, s);
@@ -183,61 +151,14 @@ bool QQmlListModelWorkerAgent::event(QEvent *e)
         QMutexLocker locker(&mutex);
         if (m_orig) {
             Sync *s = static_cast<Sync *>(e);
-            const QList<Change> &changes = s->data.changes;
 
-            cc = m_orig->count() != s->list->count();
-
-            QHash<int, QQmlListModel *> targetModelDynamicHash;
-            QHash<int, ListModel *> targetModelStaticHash;
+            cc = (m_orig->count() != s->list->count());
 
             Q_ASSERT(m_orig->m_dynamicRoles == s->list->m_dynamicRoles);
             if (m_orig->m_dynamicRoles)
-                QQmlListModel::sync(s->list, m_orig, &targetModelDynamicHash);
+                QQmlListModel::sync(s->list, m_orig);
             else
-                ListModel::sync(s->list->m_listModel, m_orig->m_listModel, &targetModelStaticHash);
-
-            for (int ii = 0; ii < changes.count(); ++ii) {
-                const Change &change = changes.at(ii);
-
-                QQmlListModel *model = 0;
-                if (m_orig->m_dynamicRoles) {
-                    model = targetModelDynamicHash.value(change.modelUid);
-                } else {
-                    ListModel *lm = targetModelStaticHash.value(change.modelUid);
-                    if (lm)
-                        model = lm->m_modelCache;
-                }
-
-                if (model) {
-                    switch (change.type) {
-                    case Change::Inserted:
-                        model->beginInsertRows(
-                                    QModelIndex(), change.index, change.index + change.count - 1);
-                        model->endInsertRows();
-                        break;
-                    case Change::Removed:
-                        model->beginRemoveRows(
-                                    QModelIndex(), change.index, change.index + change.count - 1);
-                        model->endRemoveRows();
-                        break;
-                    case Change::Moved:
-                        model->beginMoveRows(
-                                    QModelIndex(),
-                                    change.index,
-                                    change.index + change.count - 1,
-                                    QModelIndex(),
-                                    change.to > change.index ? change.to + change.count : change.to);
-                        model->endMoveRows();
-                        break;
-                    case Change::Changed:
-                        emit model->dataChanged(
-                                    model->createIndex(change.index, 0),
-                                    model->createIndex(change.index + change.count - 1, 0),
-                                    change.roles);
-                        break;
-                    }
-                }
-            }
+                ListModel::sync(s->list->m_listModel, m_orig->m_listModel);
         }
 
         syncDone.wakeAll();

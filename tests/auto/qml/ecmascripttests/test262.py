@@ -1,39 +1,27 @@
 #!/usr/bin/env python
 #############################################################################
 ##
-## Copyright (C) 2015 The Qt Company Ltd.
-## Contact: http://www.qt.io/licensing/
+## Copyright (C) 2017 The Qt Company Ltd.
+## Contact: https://www.qt.io/licensing/
 ##
 ## This file is part of the test suite module of the Qt Toolkit.
 ##
-## $QT_BEGIN_LICENSE:BSD$
-## You may use this file under the terms of the BSD license as follows:
+## $QT_BEGIN_LICENSE:GPL-EXCEPT$
+## Commercial License Usage
+## Licensees holding valid commercial Qt licenses may use this file in
+## accordance with the commercial license agreement provided with the
+## Software or, alternatively, in accordance with the terms contained in
+## a written agreement between you and The Qt Company. For licensing terms
+## and conditions see https://www.qt.io/terms-conditions. For further
+## information use the contact form at https://www.qt.io/contact-us.
 ##
-## "Redistribution and use in source and binary forms, with or without
-## modification, are permitted provided that the following conditions are
-## met:
-##   * Redistributions of source code must retain the above copyright
-##     notice, this list of conditions and the following disclaimer.
-##   * Redistributions in binary form must reproduce the above copyright
-##     notice, this list of conditions and the following disclaimer in
-##     the documentation and/or other materials provided with the
-##     distribution.
-##   * Neither the name of The Qt Company Ltd nor the names of its
-##     contributors may be used to endorse or promote products derived
-##     from this software without specific prior written permission.
-##
-##
-## THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-## "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-## LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-## A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-## OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-## SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-## LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-## DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-## THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-## (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-## OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+## GNU General Public License Usage
+## Alternatively, this file may be used under the terms of the GNU
+## General Public License version 3 as published by the Free Software
+## Foundation with exceptions as appearing in the file LICENSE.GPL3-EXCEPT
+## included in the packaging of this file. Please review the following
+## information to ensure the GNU General Public License requirements will
+## be met: https://www.gnu.org/licenses/gpl-3.0.html.
 ##
 ## $QT_END_LICENSE$
 ##
@@ -73,6 +61,35 @@ from parseTestRecord import parseTestRecord, stripHeader
 
 from packagerConfig import *
 
+# excluded features that are still experimental and not part of any official standard
+# see also the features.txt file in test262/
+excludedFeatures = [
+    "BigInt",
+    "class-fields-public",
+    "class-fields-private",
+    "Promise.prototype.finally",
+    "async-iteration",
+    "Symbol.asyncIterator",
+    "object-rest",
+    "object-spread",
+    "optional-catch-binding",
+    "regexp-dotall",
+    "regexp-lookbehind",
+    "regexp-named-groups",
+    "regexp-unicode-property-escapes",
+    "Atomics",
+    "SharedArrayBuffer",
+    "Array.prototype.flatten",
+    "Array.prototype.flatMap",
+    "string-trimming",
+    "String.prototype.trimEnd",
+    "String.prototype.trimStart",
+    "numeric-separator-literal",
+
+    # optional features, not supported by us
+    "caller"
+]
+
 # ############# Helpers needed for parallel multi-process test execution ############
 
 def runTest(case, args):
@@ -107,19 +124,19 @@ class TestExpectations:
                 continue
             record = line.split()
             if len(record) == 1:
-                self.testsToSkip.append(record[0])
+                self.failingTests.append(record[0])
             else:
                 test = record[0]
                 expectation = record[1]
-                if expectation == "failing":
-                    self.failingTests.append(test)
+                if expectation == "skip":
+                    self.testsToSkip.append(test)
         f.close()
 
     def update(self, progress):
-        unexpectedPasses = [c.case.name[-1] for c in progress.failed_tests if c.case.IsNegative()]
+        unexpectedPasses = [c.case.name for c in progress.failed_tests if c.case.IsNegative()]
 
         # If a test fails that we expected to fail, then it actually passed unexpectedly.
-        failures = [c.case.name[-1] for c in progress.failed_tests if not c.case.IsNegative()]
+        failures = [c.case.name for c in progress.failed_tests if not c.case.IsNegative()]
         for failure in failures:
             if failure in self.failingTests:
                 unexpectedPasses.append(failure)
@@ -128,7 +145,7 @@ class TestExpectations:
         lines = f.read().splitlines()
         oldLen = len(lines)
         for result in unexpectedPasses:
-            expectationLine = result + " failing"
+            expectationLine = result
             try:
                 lines.remove(expectationLine)
             except ValueError:
@@ -289,14 +306,17 @@ class TestCase(object):
     f.close()
     testRecord = parseTestRecord(self.contents, name)
     self.test = testRecord["test"]
+    if 'features' in testRecord:
+        self.features = testRecord["features"];
+    else:
+        self.features = []
     del testRecord["test"]
     del testRecord["header"]
-    del testRecord["commentary"]
     self.testRecord = testRecord;
 
 
   def GetName(self):
-    return path.join(*self.name)
+    return self.name
 
   def GetMode(self):
     if self.strict_mode:
@@ -322,14 +342,20 @@ class TestCase(object):
   def IsNoStrict(self):
     return 'noStrict' in self.testRecord
 
+  def IsExperimental(self):
+    for f in self.features:
+        if excludedFeatures.count(f) >= 1:
+            return True;
+    return False
+
   def GetSource(self):
     # "var testDescrip = " + str(self.testRecord) + ';\n\n' + \
-    source = self.suite.GetInclude("cth.js") + \
+    source = self.suite.GetInclude("assert.js") + \
         self.suite.GetInclude("sta.js") + \
-        self.suite.GetInclude("ed.js") + \
-        self.suite.GetInclude("testBuiltInObject.js") + \
-        self.suite.GetInclude("testIntl.js") + \
         self.test + '\n'
+    if 'includes' in self.testRecord:
+        for inc in self.testRecord['includes']:
+            source += self.suite.GetInclude(inc);
 
     if self.strict_mode:
       source = '"use strict";\nvar strict_mode = true;\n' + source
@@ -415,13 +441,22 @@ class TestSuite(object):
 
   def __init__(self, root, strict_only, non_strict_only, unmarked_default, load_expectations):
     # TODO: derive from packagerConfig.py
-    self.test_root = path.join(root, 'test', 'suite')
-    self.lib_root = path.join(root, 'test', 'harness')
+    self.test_root = path.join(root, 'test')
+    self.lib_root = path.join(root, 'harness')
     self.strict_only = strict_only
     self.non_strict_only = non_strict_only
     self.unmarked_default = unmarked_default
     self.include_cache = { }
     self.expectations = TestExpectations(load_expectations)
+
+  def IsExcludedTest(self, path):
+    if path.startswith('annexB'):
+        return True;
+    if path.startswith('harness'):
+        return True;
+    if path.startswith('intl402'):
+        return True;
+    return False;
 
   def Validate(self):
     if not path.exists(self.test_root):
@@ -471,25 +506,25 @@ class TestSuite(object):
           else:
             logging.warning("Unexpected path %s", full_path)
             rel_path = full_path
-          if self.ShouldRun(rel_path, tests) and not rel_path.startswith("intl402" + os.sep):
+          if self.ShouldRun(rel_path, tests) and not self.IsExcludedTest(rel_path):
             basename = path.basename(full_path)[:-3]
-            name = rel_path.split(path.sep)[:-1] + [basename]
-            if EXCLUDE_LIST.count(basename) >= 1 or self.expectations.testsToSkip.count(basename) >= 1:
-              print 'Excluded: ' + basename
+            name = rel_path.replace('.js', '')
+            if EXCLUDE_LIST.count(basename) >= 1 or self.expectations.testsToSkip.count(name) >= 1:
+              print 'Excluded: ' + rel_path
             else:
               if not self.non_strict_only:
                 strict_case = TestCase(self, name, full_path, True)
-                if self.expectations.failingTests.count(basename) >= 1:
+                if self.expectations.failingTests.count(name) >= 1:
                     strict_case.NegateResult()
-                if not strict_case.IsNoStrict():
+                if not strict_case.IsNoStrict() and not strict_case.IsExperimental():
                   if strict_case.IsOnlyStrict() or \
                         self.unmarked_default in ['both', 'strict']:
                     cases.append(strict_case)
               if not self.strict_only:
                 non_strict_case = TestCase(self, name, full_path, False)
-                if self.expectations.failingTests.count(basename) >= 1:
+                if self.expectations.failingTests.count(name) >= 1:
                     non_strict_case.NegateResult()
-                if not non_strict_case.IsOnlyStrict():
+                if not non_strict_case.IsOnlyStrict() and not non_strict_case.IsExperimental():
                   if non_strict_case.IsNoStrict() or \
                         self.unmarked_default in ['both', 'non_strict']:
                     cases.append(non_strict_case)
@@ -564,10 +599,10 @@ class TestSuite(object):
 
 
 def Main():
-  # Some date tests rely on being run in pacific time.
   # Uncomment the next line for more logging info.
   #logging.basicConfig(level=logging.DEBUG)
-  os.environ["TZ"] = "PST8PDT"
+  # Some date tests rely on being run in pacific time and the USA's locale:
+  os.environ["TZ"] = "America/Los_Angeles" # it *matters* that this is (7m8s) *East* of PST's nominal meridian !
   os.environ["LANG"] = "en_US.UTF-8"
   os.environ["LC_TIME"] = "en_US.UTF-8"
   parser = BuildOptions()

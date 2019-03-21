@@ -51,7 +51,7 @@ void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
 void QQmlVMEMetaObjectEndpoint_callback(QQmlNotifierEndpoint *, void **);
 
 static Callback QQmlNotifier_callbacks[] = {
-    0,
+    nullptr,
     QQmlBoundSignal_callback,
     QQmlJavaScriptExpressionGuard_callback,
     QQmlVMEMetaObjectEndpoint_callback
@@ -59,9 +59,9 @@ static Callback QQmlNotifier_callbacks[] = {
 
 namespace {
     struct NotifyListTraversalData {
-        NotifyListTraversalData(QQmlNotifierEndpoint *ep = 0)
+        NotifyListTraversalData(QQmlNotifierEndpoint *ep = nullptr)
             : originalSenderPtr(0)
-            , disconnectWatch(0)
+            , disconnectWatch(nullptr)
             , endpoint(ep)
         {}
 
@@ -74,7 +74,7 @@ namespace {
 void QQmlNotifier::notify(QQmlData *ddata, int notifierIndex)
 {
     if (QQmlNotifierEndpoint *ep = ddata->notify(notifierIndex))
-        emitNotify(ep, Q_NULLPTR);
+        emitNotify(ep, nullptr);
 }
 
 void QQmlNotifier::emitNotify(QQmlNotifierEndpoint *endpoint, void **a)
@@ -90,24 +90,20 @@ void QQmlNotifier::emitNotify(QQmlNotifierEndpoint *endpoint, void **a)
         NotifyListTraversalData &data = stack[i];
 
         if (!data.endpoint->isNotifying()) {
-            data.originalSenderPtr = data.endpoint->senderPtr;
+            data.endpoint->startNotifying(&data.originalSenderPtr);
             data.disconnectWatch = &data.originalSenderPtr;
-            data.endpoint->senderPtr = qintptr(data.disconnectWatch) | 0x1;
         } else {
             data.disconnectWatch = (qintptr *)(data.endpoint->senderPtr & ~0x1);
         }
     }
 
     while (--i >= 0) {
-        const NotifyListTraversalData &data = stack.at(i);
+        NotifyListTraversalData &data = stack[i];
         if (*data.disconnectWatch) {
-
             Q_ASSERT(QQmlNotifier_callbacks[data.endpoint->callback]);
             QQmlNotifier_callbacks[data.endpoint->callback](data.endpoint, a);
-
             if (data.disconnectWatch == &data.originalSenderPtr && data.originalSenderPtr) {
-                // End of notifying, restore values
-                data.endpoint->senderPtr = data.originalSenderPtr;
+                data.endpoint->stopNotifying(&data.originalSenderPtr);
             }
         }
     }
@@ -117,7 +113,7 @@ void QQmlNotifier::emitNotify(QQmlNotifierEndpoint *endpoint, void **a)
     \a sourceSignal MUST be in the signal index range (see QObjectPrivate::signalIndex()).
     This is different from QMetaMethod::methodIndex().
 */
-void QQmlNotifierEndpoint::connect(QObject *source, int sourceSignal, QQmlEngine *engine)
+void QQmlNotifierEndpoint::connect(QObject *source, int sourceSignal, QQmlEngine *engine, bool doNotify)
 {
     disconnect();
 
@@ -137,13 +133,16 @@ void QQmlNotifierEndpoint::connect(QObject *source, int sourceSignal, QQmlEngine
                qPrintable(engineName));
     }
 
-    senderPtr = qintptr(source);
+    setSender(qintptr(source));
     this->sourceSignal = sourceSignal;
     QQmlPropertyPrivate::flushSignal(source, sourceSignal);
     QQmlData *ddata = QQmlData::get(source, true);
     ddata->addNotify(sourceSignal, this);
-    QObjectPrivate * const priv = QObjectPrivate::get(source);
-    priv->connectNotify(QMetaObjectPrivate::signal(source->metaObject(), sourceSignal));
+    if (doNotify) {
+        needsConnectNotify = doNotify;
+        QObjectPrivate * const priv = QObjectPrivate::get(source);
+        priv->connectNotify(QMetaObjectPrivate::signal(source->metaObject(), sourceSignal));
+    }
 }
 
 QT_END_NAMESPACE

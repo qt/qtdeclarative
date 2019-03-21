@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -59,54 +59,113 @@ namespace QV4 {
 
 namespace Heap {
 
-struct ArrayBufferCtor : FunctionObject {
+struct SharedArrayBufferCtor : FunctionObject {
     void init(QV4::ExecutionContext *scope);
 };
 
-struct Q_QML_PRIVATE_EXPORT ArrayBuffer : Object {
+struct ArrayBufferCtor : SharedArrayBufferCtor {
+    void init(QV4::ExecutionContext *scope);
+};
+
+struct Q_QML_PRIVATE_EXPORT SharedArrayBuffer : Object {
     void init(size_t length);
     void init(const QByteArray& array);
     void destroy();
     QTypedArrayData<char> *data;
+    bool isShared;
 
-    uint byteLength() const { return data->size; }
+    uint byteLength() const { return data ? data->size : 0; }
+
+    bool isDetachedBuffer() const { return !data; }
+    bool isSharedArrayBuffer() const { return isShared; }
 };
+
+struct Q_QML_PRIVATE_EXPORT ArrayBuffer : SharedArrayBuffer {
+    void init(size_t length) {
+        SharedArrayBuffer::init(length);
+        isShared = false;
+    }
+    void init(const QByteArray& array) {
+        SharedArrayBuffer::init(array);
+        isShared = false;
+    }
+    void detachArrayBuffer() {
+        if (data && !data->ref.deref())
+            QTypedArrayData<char>::deallocate(data);
+        data = nullptr;
+    }
+};
+
 
 }
 
-struct ArrayBufferCtor: FunctionObject
+struct SharedArrayBufferCtor : FunctionObject
 {
-    V4_OBJECT2(ArrayBufferCtor, FunctionObject)
+    V4_OBJECT2(SharedArrayBufferCtor, FunctionObject)
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
-
-    static void method_isView(const BuiltinFunction *, Scope &scope, CallData *callData);
-
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
-struct Q_QML_PRIVATE_EXPORT ArrayBuffer : Object
+struct ArrayBufferCtor : SharedArrayBufferCtor
 {
-    V4_OBJECT2(ArrayBuffer, Object)
+    V4_OBJECT2(ArrayBufferCtor, SharedArrayBufferCtor)
+
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
+
+    static ReturnedValue method_isView(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+};
+
+struct Q_QML_PRIVATE_EXPORT SharedArrayBuffer : Object
+{
+    V4_OBJECT2(SharedArrayBuffer, Object)
+    V4_NEEDS_DESTROY
+    V4_PROTOTYPE(sharedArrayBufferPrototype)
+
+    QByteArray asByteArray() const;
+    uint byteLength() const { return d()->byteLength(); }
+    char *data() { Q_ASSERT(d()->data); return d()->data->data(); }
+    const char *constData() { Q_ASSERT(d()->data); return d()->data->data(); }
+
+    bool isShared() { return d()->data->ref.isShared(); }
+    bool isDetachedBuffer() const { return !d()->data; }
+    bool isSharedArrayBuffer() const { return d()->isShared; }
+};
+
+struct Q_QML_PRIVATE_EXPORT ArrayBuffer : SharedArrayBuffer
+{
+    V4_OBJECT2(ArrayBuffer, SharedArrayBuffer)
     V4_NEEDS_DESTROY
     V4_PROTOTYPE(arrayBufferPrototype)
 
     QByteArray asByteArray() const;
     uint byteLength() const { return d()->byteLength(); }
-    char *data() { detach(); return d()->data ? d()->data->data() : 0; }
-    const char *constData() { detach(); return d()->data ? d()->data->data() : 0; }
+    char *data() { detach(); return d()->data ? d()->data->data() : nullptr; }
+    // ### is that detach needed?
+    const char *constData() { detach(); return d()->data ? d()->data->data() : nullptr; }
 
-private:
+    bool isShared() { return d()->data && d()->data->ref.isShared(); }
     void detach();
+    void detachArrayBuffer() { d()->detachArrayBuffer(); }
 };
 
-struct ArrayBufferPrototype: Object
+struct SharedArrayBufferPrototype : Object
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static void method_get_byteLength(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_slice(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_get_byteLength(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_slice(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+
+    static ReturnedValue slice(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc, bool shared);
+};
+
+struct ArrayBufferPrototype : SharedArrayBufferPrototype
+{
+    void init(ExecutionEngine *engine, Object *ctor);
+
+    static ReturnedValue method_get_byteLength(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_slice(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 

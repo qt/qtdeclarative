@@ -57,7 +57,7 @@ public:
     QQuickFramebufferObjectPrivate()
         : followsItemSize(true)
         , mirrorVertically(false)
-        , node(0)
+        , node(nullptr)
     {
     }
 
@@ -194,10 +194,10 @@ class QSGFramebufferObjectNode : public QSGTextureProvider, public QSGSimpleText
 
 public:
     QSGFramebufferObjectNode()
-        : window(0)
-        , fbo(0)
-        , msDisplayFbo(0)
-        , renderer(0)
+        : window(nullptr)
+        , fbo(nullptr)
+        , msDisplayFbo(nullptr)
+        , renderer(nullptr)
         , renderPending(true)
         , invalidatePending(false)
         , devicePixelRatio(1)
@@ -219,7 +219,7 @@ public:
         window->update();
     }
 
-    QSGTexture *texture() const Q_DECL_OVERRIDE
+    QSGTexture *texture() const override
     {
         return QSGSimpleTextureNode::texture();
     }
@@ -260,7 +260,7 @@ public:
     bool renderPending;
     bool invalidatePending;
 
-    int devicePixelRatio;
+    qreal devicePixelRatio;
 };
 
 static inline bool isOpenGL(QSGRenderContext *rc)
@@ -282,13 +282,13 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
     // that easily so with this logic, the renderer only goes away when
     // the scenegraph is invalidated or it is removed from the scene.
     if (!n && (width() <= 0 || height() <= 0))
-        return 0;
+        return nullptr;
 
     Q_D(QQuickFramebufferObject);
 
     if (!n) {
         if (!isOpenGL(d->sceneGraphRenderContext()))
-            return 0;
+            return nullptr;
         if (!d->node)
             d->node = new QSGFramebufferObjectNode;
         n = d->node;
@@ -312,14 +312,13 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
     n->devicePixelRatio = window()->effectiveDevicePixelRatio();
     desiredFboSize *= n->devicePixelRatio;
 
-    if (n->fbo && (d->followsItemSize || n->invalidatePending)) {
-        if (n->fbo->size() != desiredFboSize) {
-            delete n->fbo;
-            n->fbo = 0;
-            delete n->msDisplayFbo;
-            n->msDisplayFbo = 0;
-            n->invalidatePending = false;
-        }
+    if (n->fbo && ((d->followsItemSize && n->fbo->size() != desiredFboSize) || n->invalidatePending)) {
+        delete n->texture();
+        delete n->fbo;
+        n->fbo = nullptr;
+        delete n->msDisplayFbo;
+        n->msDisplayFbo = nullptr;
+        n->invalidatePending = false;
     }
 
     if (!n->fbo) {
@@ -369,10 +368,10 @@ QSGTextureProvider *QQuickFramebufferObject::textureProvider() const
     QQuickWindow *w = window();
     if (!w || !w->openglContext() || QThread::currentThread() != w->openglContext()->thread()) {
         qWarning("QQuickFramebufferObject::textureProvider: can only be queried on the rendering thread of an exposed window");
-        return 0;
+        return nullptr;
     }
     if (!isOpenGL(d->sceneGraphRenderContext()))
-        return 0;
+        return nullptr;
     if (!d->node)
         d->node = new QSGFramebufferObjectNode;
     return d->node;
@@ -387,13 +386,13 @@ void QQuickFramebufferObject::releaseResources()
     // forget about the node. Since it is the node we returned from updatePaintNode
     // it will be managed by the scene graph.
     Q_D(QQuickFramebufferObject);
-    d->node = 0;
+    d->node = nullptr;
 }
 
 void QQuickFramebufferObject::invalidateSceneGraph()
 {
     Q_D(QQuickFramebufferObject);
-    d->node = 0;
+    d->node = nullptr;
 }
 
 /*!
@@ -412,7 +411,7 @@ void QQuickFramebufferObject::invalidateSceneGraph()
  * GUI thread is blocked.
  */
 QQuickFramebufferObject::Renderer::Renderer()
-    : data(0)
+    : data(nullptr)
 {
 }
 
@@ -440,7 +439,7 @@ QQuickFramebufferObject::Renderer::~Renderer()
  */
 QOpenGLFramebufferObject *QQuickFramebufferObject::Renderer::framebufferObject() const
 {
-    return data ? ((QSGFramebufferObjectNode *) data)->fbo : 0;
+    return data ? ((QSGFramebufferObjectNode *) data)->fbo : nullptr;
 }
 
 /*!

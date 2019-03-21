@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \class QQuickTextDocument
     \since 5.1
-    \brief The QQuickTextDocument class provides access to the QTextDocument of QQuickTextEdit
+    \brief The QQuickTextDocument class provides access to the QTextDocument of QQuickTextEdit.
     \inmodule QtQuick
 
     This class provides access to the QTextDocument of QQuickTextEdit elements.

@@ -64,6 +64,7 @@ static char file_string[] = "file";
 
 #if defined(Q_OS_ANDROID)
 static char assets_string[] = "assets";
+static char content_string[] = "content";
 #endif
 
 class QQmlFilePrivate;
@@ -131,7 +132,7 @@ int QQmlFileNetworkReply::replyFinishedIndex = -1;
 int QQmlFileNetworkReply::replyDownloadProgressIndex = -1;
 
 QQmlFileNetworkReply::QQmlFileNetworkReply(QQmlEngine *e, QQmlFilePrivate *p, const QUrl &url)
-: m_engine(e), m_p(p), m_redirectCount(0), m_reply(0)
+: m_engine(e), m_p(p), m_redirectCount(0), m_reply(nullptr)
 {
     if (finishedIndex == -1) {
         finishedIndex = QMetaMethod::fromSignal(&QQmlFileNetworkReply::finished).methodIndex();
@@ -194,9 +195,9 @@ void QQmlFileNetworkReply::networkFinished()
     }
 
     m_reply->deleteLater();
-    m_reply = 0;
+    m_reply = nullptr;
 
-    m_p->reply = 0;
+    m_p->reply = nullptr;
     emit finished();
     delete this;
 }
@@ -210,7 +211,7 @@ void QQmlFileNetworkReply::networkDownloadProgress(qint64 a, qint64 b)
 QQmlFilePrivate::QQmlFilePrivate()
 : error(None)
 #if QT_CONFIG(qml_network)
-, reply(0)
+, reply(nullptr)
 #endif
 {
 }
@@ -237,7 +238,7 @@ QQmlFile::~QQmlFile()
     delete d->reply;
 #endif
     delete d;
-    d = 0;
+    d = nullptr;
 }
 
 bool QQmlFile::isNull() const
@@ -452,6 +453,8 @@ bool QQmlFile::isSynchronous(const QUrl &url)
 #if defined(Q_OS_ANDROID)
     } else if (scheme.length() == 6 && 0 == scheme.compare(QLatin1String(assets_string), Qt::CaseInsensitive)) {
         return true;
+    } else if (scheme.length() == 7 && 0 == scheme.compare(QLatin1String(content_string), Qt::CaseInsensitive)) {
+        return true;
 #endif
 
     } else {
@@ -492,7 +495,10 @@ bool QQmlFile::isSynchronous(const QString &url)
         return url.length() >= 8 /* assets:/ */ &&
                url.startsWith(QLatin1String(assets_string), Qt::CaseInsensitive) &&
                url[6] == QLatin1Char(':') && url[7] == QLatin1Char('/');
-
+    } else if (f == QLatin1Char('c') || f == QLatin1Char('C')) {
+        return url.length() >= 9 /* content:/ */ &&
+               url.startsWith(QLatin1String(content_string), Qt::CaseInsensitive) &&
+               url[7] == QLatin1Char(':') && url[8] == QLatin1Char('/');
     }
 #endif
 
@@ -556,7 +562,10 @@ bool QQmlFile::isLocalFile(const QString &url)
         return url.length() >= 8 /* assets:/ */ &&
                url.startsWith(QLatin1String(assets_string), Qt::CaseInsensitive) &&
                url[6] == QLatin1Char(':') && url[7] == QLatin1Char('/');
-
+    } else if (f == QLatin1Char('c') || f == QLatin1Char('C')) {
+        return url.length() >= 9 /* content:/ */ &&
+               url.startsWith(QLatin1String(content_string), Qt::CaseInsensitive) &&
+               url[7] == QLatin1Char(':') && url[8] == QLatin1Char('/');
     }
 #endif
 
@@ -580,6 +589,8 @@ QString QQmlFile::urlToLocalFileOrQrc(const QUrl& url)
         if (url.authority().isEmpty())
             return url.toString();
         return QString();
+    } else if (url.scheme().compare(QLatin1String("content"), Qt::CaseInsensitive) == 0) {
+        return url.toString();
     }
 #endif
 
@@ -603,6 +614,12 @@ empty string.
 */
 QString QQmlFile::urlToLocalFileOrQrc(const QString& url)
 {
+    if (url.startsWith(QLatin1String("qrc://"), Qt::CaseInsensitive)) {
+        if (url.length() > 6)
+            return QLatin1Char(':') + url.midRef(6);
+        return QString();
+    }
+
     if (url.startsWith(QLatin1String("qrc:"), Qt::CaseInsensitive)) {
         if (url.length() > 4)
             return QLatin1Char(':') + url.midRef(4);
@@ -611,6 +628,8 @@ QString QQmlFile::urlToLocalFileOrQrc(const QString& url)
 
 #if defined(Q_OS_ANDROID)
     else if (url.startsWith(QLatin1String("assets:"), Qt::CaseInsensitive)) {
+        return url;
+    } else if (url.startsWith(QLatin1String("content:"), Qt::CaseInsensitive)) {
         return url;
     }
 #endif

@@ -151,9 +151,11 @@ CanvasTestCase {
                    {mimeType:"image/bmp"},
                    {mimeType:"image/jpeg"},
                    {mimeType:"image/x-portable-pixmap"},
-                   //{mimeType:"image/tiff"}, QTBUG-23980
                    {mimeType:"image/xpm"},
                   ];
+       if (hasImageFormats)
+           imageTypes.push({ mimeType: "image/tiff" });
+
        for (var i = 0; i < imageTypes.length; i++) {
            ctx.fillStyle = "red";
            ctx.fillRect(0, 0, c.width, c.height);

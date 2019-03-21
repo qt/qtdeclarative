@@ -41,6 +41,7 @@
 #define QQMLJSAST_FWD_P_H
 
 #include "qqmljsglobal_p.h"
+#include "qqmljssourcelocation_p.h"
 
 #include <QtCore/qglobal.h>
 
@@ -59,27 +60,6 @@ QT_QML_BEGIN_NAMESPACE
 
 namespace QQmlJS { namespace AST {
 
-class SourceLocation
-{
-public:
-    explicit SourceLocation(quint32 offset = 0, quint32 length = 0, quint32 line = 0, quint32 column = 0)
-        : offset(offset), length(length),
-          startLine(line), startColumn(column)
-    { }
-
-    bool isValid() const { return length != 0; }
-
-    quint32 begin() const { return offset; }
-    quint32 end() const { return offset + length; }
-
-// attributes
-    // ### encode
-    quint32 offset;
-    quint32 length;
-    quint32 startLine;
-    quint32 startColumn;
-};
-
 class Visitor;
 class Node;
 class ExpressionNode;
@@ -89,22 +69,27 @@ class IdentifierExpression;
 class NullExpression;
 class TrueLiteral;
 class FalseLiteral;
+class SuperLiteral;
 class NumericLiteral;
 class StringLiteral;
+class TemplateLiteral;
 class RegExpLiteral;
-class ArrayLiteral;
-class ObjectLiteral;
-class ElementList;
+class Pattern;
+class ArrayPattern;
+class ObjectPattern;
+class PatternElement;
+class PatternElementList;
+class PatternProperty;
+class PatternPropertyList;
 class Elision;
-class PropertyAssignmentList;
-class PropertyGetterSetter;
-class PropertyNameAndValue;
 class PropertyName;
 class IdentifierPropertyName;
 class StringLiteralPropertyName;
 class NumericLiteralPropertyName;
+class ComputedPropertyName;
 class ArrayMemberExpression;
 class FieldMemberExpression;
+class TaggedTemplate;
 class NewMemberExpression;
 class NewExpression;
 class CallExpression;
@@ -123,20 +108,19 @@ class NotExpression;
 class BinaryExpression;
 class ConditionalExpression;
 class Expression; // ### rename
+class YieldExpression;
 class Block;
+class LeftHandSideExpression;
 class StatementList;
 class VariableStatement;
 class VariableDeclarationList;
-class VariableDeclaration;
 class EmptyStatement;
 class ExpressionStatement;
 class IfStatement;
 class DoWhileStatement;
 class WhileStatement;
 class ForStatement;
-class LocalForStatement;
 class ForEachStatement;
-class LocalForEachStatement;
 class ContinueStatement;
 class BreakStatement;
 class ReturnStatement;
@@ -154,14 +138,26 @@ class Finally;
 class FunctionDeclaration;
 class FunctionExpression;
 class FormalParameterList;
-class FunctionBody;
+class ExportSpecifier;
+class ExportsList;
+class ExportClause;
+class ExportDeclaration;
 class Program;
-class SourceElements;
-class SourceElement;
-class FunctionSourceElement;
-class StatementSourceElement;
+class ImportSpecifier;
+class ImportsList;
+class NamedImports;
+class NameSpaceImport;
+class NamedImport;
+class ImportClause;
+class FromClause;
+class ImportDeclaration;
+class ModuleItem;
+class ESModule;
 class DebuggerStatement;
 class NestedExpression;
+class ClassExpression;
+class ClassDeclaration;
+class ClassElementList;
 
 // ui elements
 class UiProgram;
@@ -179,8 +175,9 @@ class UiObjectMember;
 class UiObjectMemberList;
 class UiArrayMemberList;
 class UiQualifiedId;
-class UiQualifiedPragmaId;
 class UiHeaderItemList;
+class UiEnumDeclaration;
+class UiEnumMemberList;
 
 } } // namespace AST
 

@@ -70,26 +70,18 @@ public:
         return this - static_cast<const QQuickSpriteMaterial *>(other);
     }
 
-    QSGTexture *texture;
+    QSGTexture *texture = nullptr;
 
-    float animT;
-    float animX1;
-    float animY1;
-    float animX2;
-    float animY2;
-    float animW;
-    float animH;
+    float animT = 0.0f;
+    float animX1 = 0.0f;
+    float animY1 = 0.0f;
+    float animX2 = 0.0f;
+    float animY2 = 0.0f;
+    float animW = 1.0f;
+    float animH = 1.0f;
 };
 
 QQuickSpriteMaterial::QQuickSpriteMaterial()
-    : texture(0)
-    , animT(0.0f)
-    , animX1(0.0f)
-    , animY1(0.0f)
-    , animX2(0.0f)
-    , animY2(0.0f)
-    , animW(1.0f)
-    , animH(1.0f)
 {
     setFlag(Blending, true);
 }
@@ -103,13 +95,12 @@ class SpriteMaterialData : public QSGMaterialShader
 {
 public:
     SpriteMaterialData()
-        : QSGMaterialShader()
     {
         setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/sprite.vert"));
         setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/sprite.frag"));
     }
 
-    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *) Q_DECL_OVERRIDE
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *) override
     {
         QQuickSpriteMaterial *m = static_cast<QQuickSpriteMaterial *>(newEffect);
         m->texture->bind();
@@ -122,18 +113,18 @@ public:
             program()->setUniformValue(m_matrix_id, state.combinedMatrix());
     }
 
-    void initialize() Q_DECL_OVERRIDE {
+    void initialize() override {
         m_matrix_id = program()->uniformLocation("qt_Matrix");
         m_opacity_id = program()->uniformLocation("qt_Opacity");
         m_animData_id = program()->uniformLocation("animData");
         m_animPos_id = program()->uniformLocation("animPos");
     }
 
-    char const *const *attributeNames() const Q_DECL_OVERRIDE {
+    char const *const *attributeNames() const override {
         static const char *attr[] = {
            "vPos",
            "vTex",
-            0
+            nullptr
         };
         return attr;
     }

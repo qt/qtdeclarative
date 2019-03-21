@@ -72,7 +72,7 @@ class QSGSoftwareNinePatchNode;
 class QSGSoftwareSpriteNode;
 class QSGRenderNode;
 
-class QSGSoftwareRenderableNode
+class Q_QUICK_PRIVATE_EXPORT QSGSoftwareRenderableNode
 {
 public:
     enum NodeType {
@@ -104,6 +104,7 @@ public:
     bool isOpaque() const { return m_isOpaque; }
     bool isDirty() const { return m_isDirty; }
     bool isDirtyRegionEmpty() const;
+    QSGNode *handle() const { return m_handle.node; }
 
     void setTransform(const QTransform &transform);
     void setClipRegion(const QRegion &clipRegion, bool hasClipRegion = true);
@@ -123,6 +124,7 @@ public:
 
 private:
     union RenderableNodeHandle {
+        QSGNode *node;
         QSGSimpleRectNode *simpleRectNode;
         QSGSimpleTextureNode *simpleTextureNode;
         QSGSoftwareInternalImageNode *imageNode;

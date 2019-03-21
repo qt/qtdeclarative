@@ -78,7 +78,7 @@ QQuickDesignerSupport::~QQuickDesignerSupport()
 
 void QQuickDesignerSupport::refFromEffectItem(QQuickItem *referencedItem, bool hide)
 {
-    if (referencedItem == 0)
+    if (referencedItem == nullptr)
         return;
 
     QQuickItemPrivate::get(referencedItem)->refFromEffectItem(hide);
@@ -114,7 +114,7 @@ void QQuickDesignerSupport::refFromEffectItem(QQuickItem *referencedItem, bool h
 
 void QQuickDesignerSupport::derefFromEffectItem(QQuickItem *referencedItem, bool unhide)
 {
-    if (referencedItem == 0)
+    if (referencedItem == nullptr)
         return;
 
     delete m_itemTextureHash.take(referencedItem);
@@ -123,7 +123,7 @@ void QQuickDesignerSupport::derefFromEffectItem(QQuickItem *referencedItem, bool
 
 QImage QQuickDesignerSupport::renderImageForItem(QQuickItem *referencedItem, const QRectF &boundingRect, const QSize &imageSize)
 {
-    if (referencedItem == 0 || referencedItem->parentItem() == 0) {
+    if (referencedItem == nullptr || referencedItem->parentItem() == nullptr) {
         qDebug() << __FILE__ << __LINE__ << "Warning: Item can be rendered.";
         return QImage();
     }
@@ -131,7 +131,7 @@ QImage QQuickDesignerSupport::renderImageForItem(QQuickItem *referencedItem, con
     QSGLayer *renderTexture = m_itemTextureHash.value(referencedItem);
 
     Q_ASSERT(renderTexture);
-    if (renderTexture == 0)
+    if (renderTexture == nullptr)
          return QImage();
     renderTexture->setRect(boundingRect);
     renderTexture->setSize(imageSize);
@@ -150,7 +150,7 @@ QImage QQuickDesignerSupport::renderImageForItem(QQuickItem *referencedItem, con
 
 bool QQuickDesignerSupport::isDirty(QQuickItem *referencedItem, DirtyType dirtyType)
 {
-    if (referencedItem == 0)
+    if (referencedItem == nullptr)
         return false;
 
     return QQuickItemPrivate::get(referencedItem)->dirtyAttributes & dirtyType;
@@ -158,7 +158,7 @@ bool QQuickDesignerSupport::isDirty(QQuickItem *referencedItem, DirtyType dirtyT
 
 void QQuickDesignerSupport::addDirty(QQuickItem *referencedItem, QQuickDesignerSupport::DirtyType dirtyType)
 {
-    if (referencedItem == 0)
+    if (referencedItem == nullptr)
         return;
 
     QQuickItemPrivate::get(referencedItem)->dirtyAttributes |= dirtyType;
@@ -166,7 +166,7 @@ void QQuickDesignerSupport::addDirty(QQuickItem *referencedItem, QQuickDesignerS
 
 void QQuickDesignerSupport::resetDirty(QQuickItem *referencedItem)
 {
-    if (referencedItem == 0)
+    if (referencedItem == nullptr)
         return;
 
     QQuickItemPrivate::get(referencedItem)->dirtyAttributes = 0x0;
@@ -175,7 +175,7 @@ void QQuickDesignerSupport::resetDirty(QQuickItem *referencedItem)
 
 QTransform QQuickDesignerSupport::windowTransform(QQuickItem *referencedItem)
 {
-    if (referencedItem == 0)
+    if (referencedItem == nullptr)
         return QTransform();
 
     return QQuickItemPrivate::get(referencedItem)->itemToWindowTransform();
@@ -183,7 +183,7 @@ QTransform QQuickDesignerSupport::windowTransform(QQuickItem *referencedItem)
 
 QTransform QQuickDesignerSupport::parentTransform(QQuickItem *referencedItem)
 {
-    if (referencedItem == 0)
+    if (referencedItem == nullptr)
         return QTransform();
 
     QTransform parentTransform;
@@ -294,31 +294,31 @@ bool QQuickDesignerSupport::hasAnchor(QQuickItem *item, const QString &name)
         return false;
 
     if (name == QLatin1String("anchors.fill"))
-        return anchors(item)->fill() != 0;
+        return anchors(item)->fill() != nullptr;
 
     if (name == QLatin1String("anchors.centerIn"))
-        return anchors(item)->centerIn() != 0;
+        return anchors(item)->centerIn() != nullptr;
 
     if (name == QLatin1String("anchors.right"))
-        return anchors(item)->right().item != 0;
+        return anchors(item)->right().item != nullptr;
 
     if (name == QLatin1String("anchors.top"))
-        return anchors(item)->top().item != 0;
+        return anchors(item)->top().item != nullptr;
 
     if (name == QLatin1String("anchors.left"))
-        return anchors(item)->left().item != 0;
+        return anchors(item)->left().item != nullptr;
 
     if (name == QLatin1String("anchors.bottom"))
-        return anchors(item)->bottom().item != 0;
+        return anchors(item)->bottom().item != nullptr;
 
     if (name == QLatin1String("anchors.horizontalCenter"))
-        return anchors(item)->horizontalCenter().item != 0;
+        return anchors(item)->horizontalCenter().item != nullptr;
 
     if (name == QLatin1String("anchors.verticalCenter"))
-        return anchors(item)->verticalCenter().item != 0;
+        return anchors(item)->verticalCenter().item != nullptr;
 
     if (name == QLatin1String("anchors.baseline"))
-        return anchors(item)->baseline().item != 0;
+        return anchors(item)->baseline().item != nullptr;
 
     return anchors(item)->usedAnchors().testFlag(anchorLineFlagForName(name));
 }
@@ -337,7 +337,7 @@ QQuickItem *QQuickDesignerSupport::anchorCenterInTargetItem(QQuickItem *item)
 
 QPair<QString, QObject*> QQuickDesignerSupport::anchorLineTarget(QQuickItem *item, const QString &name, QQmlContext *context)
 {
-    QObject *targetObject = 0;
+    QObject *targetObject = nullptr;
     QString targetName;
 
     if (name == QLatin1String("anchors.fill")) {
@@ -383,13 +383,20 @@ void QQuickDesignerSupport::resetAnchor(QQuickItem *item, const QString &name)
     }
 }
 
-void QQuickDesignerSupport::emitComponentCompleteSignalForAttachedProperty(QQuickItem *item)
+void QQuickDesignerSupport::emitComponentCompleteSignalForAttachedProperty(QObject *object)
 {
-    QQmlData *data = QQmlData::get(item);
+    if (!object)
+        return;
+
+    QQmlData *data = QQmlData::get(object);
     if (data && data->context) {
         QQmlComponentAttached *componentAttached = data->context->componentAttached;
-        if (componentAttached) {
-            emit componentAttached->completed();
+        while (componentAttached) {
+            if (componentAttached->parent())
+                if (componentAttached->parent() == object)
+                    emit componentAttached->completed();
+
+            componentAttached = componentAttached->next;
         }
     }
 }

@@ -49,12 +49,40 @@ QSGSoftwareGlyphNode::QSGSoftwareGlyphNode()
     setGeometry(&m_geometry);
 }
 
+namespace {
+QRectF calculateBoundingRect(const QPointF &position, const QGlyphRun &glyphs)
+{
+    qreal minX = 0;
+    qreal minY = 0;
+    qreal maxX = 0;
+    qreal maxY = 0;
+
+    for (int i = 0, n = qMin(glyphs.glyphIndexes().size(), glyphs.positions().size()); i < n; ++i) {
+        QRectF glyphRect = glyphs.rawFont().boundingRect(glyphs.glyphIndexes()[i]);
+        glyphRect.translate(glyphs.positions()[i]);
+
+        if (i == 0) {
+            minX = glyphRect.left();
+            minY = glyphRect.top();
+            maxX = glyphRect.right();
+            maxY = glyphRect.bottom();
+        } else {
+            minX = qMin(glyphRect.left(), minX);
+            minY = qMin(glyphRect.top(), minY);
+            maxX = qMax(glyphRect.right(),maxX);
+            maxY = qMax(glyphRect.bottom(), maxY);
+        }
+    }
+    QRectF boundingRect(QPointF(minX, minY), QPointF(maxX, maxY));
+    return boundingRect.translated(position - QPointF(0.0, glyphs.rawFont().ascent()));
+}
+}
 
 void QSGSoftwareGlyphNode::setGlyphs(const QPointF &position, const QGlyphRun &glyphs)
 {
     m_position = position;
     m_glyphRun = glyphs;
-    m_bounding_rect = glyphs.boundingRect().translated(m_position - QPointF(0.0, glyphs.rawFont().ascent()));
+    m_bounding_rect = calculateBoundingRect(position, glyphs);
 }
 
 void QSGSoftwareGlyphNode::setColor(const QColor &color)
@@ -91,8 +119,8 @@ void QSGSoftwareGlyphNode::paint(QPainter *painter)
     QPointF pos = m_position - QPointF(0, m_glyphRun.rawFont().ascent());
 
     qreal offset = 1.0;
-    if (painter->device()->devicePixelRatio() != 0)
-        offset = 1.0 / painter->device()->devicePixelRatio();
+    if (painter->device()->devicePixelRatioF() > 0.0)
+        offset = 1.0 / painter->device()->devicePixelRatioF();
 
     switch (m_style) {
     case QQuickText::Normal: break;

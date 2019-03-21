@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquick-animation-properties
     \since 5.0
     \inherits Animation
-    \brief Animates changes in parent values
+    \brief Animates changes in parent values.
 
     ParentAnimation is used to animate a parent change for an \l Item.
 
@@ -211,7 +211,7 @@ struct QQuickParentAnimationData : public QAbstractAnimationAction
     //### reverse should probably apply on a per-action basis
     bool reverse;
     QList<QQuickParentChange *> pc;
-    void doAction() Q_DECL_OVERRIDE
+    void doAction() override
     {
         for (int ii = 0; ii < actions.count(); ++ii) {
             const QQuickStateAction &action = actions.at(ii);
@@ -371,7 +371,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
 
     if (data->actions.count()) {
         QSequentialAnimationGroupJob *topLevelGroup = new QSequentialAnimationGroupJob;
-        QActionAnimation *viaAction = d->via ? new QActionAnimation : 0;
+        QActionAnimation *viaAction = d->via ? new QActionAnimation : nullptr;
         QActionAnimation *targetAction = new QActionAnimation;
         //we'll assume the common case by far is to have children, and always create ag
         QParallelAnimationGroupJob *ag = new QParallelAnimationGroupJob;
@@ -409,7 +409,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
         delete data;
         delete viaData;
     }
-    return 0;
+    return nullptr;
 }
 
 /*!
@@ -418,7 +418,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-properties
     \inherits Animation
-    \brief Animates changes in anchor values
+    \brief Animates changes in anchor values.
 
     AnchorAnimation is used to animate an anchor change.
 
@@ -565,7 +565,7 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QQuickStateActions &act
     \ingroup qtquick-animation-properties
     \inherits Animation
     \since 5.0
-    \brief Animates an item along a path
+    \brief Animates an item along a path.
 
     When used in a transition, the path can be specified without start
     or end points, for example:
@@ -922,12 +922,12 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QQuickStateActions &actio
         pa->setEasingCurve(d->easingCurve);
         return initInstance(pa);
     } else {
-        pa->setFromSourcedValue(0);
-        pa->setAnimValue(0);
+        pa->setFromSourcedValue(nullptr);
+        pa->setAnimValue(nullptr);
         delete pa;
         delete data;
     }
-    return 0;
+    return nullptr;
 }
 
 void QQuickPathAnimationUpdater::setValue(qreal v)
@@ -955,7 +955,7 @@ void QQuickPathAnimationUpdater::setValue(qreal v)
 
     qreal angle;
     bool fixed = orientation == QQuickPathAnimation::Fixed;
-    QPointF currentPos = !painterPath.isEmpty() ? path->sequentialPointAt(painterPath, pathLength, attributePoints, prevBez, v, fixed ? 0 : &angle) : path->sequentialPointAt(v, fixed ? 0 : &angle);
+    QPointF currentPos = !painterPath.isEmpty() ? path->sequentialPointAt(painterPath, pathLength, attributePoints, prevBez, v, fixed ? nullptr : &angle) : path->sequentialPointAt(v, fixed ? nullptr : &angle);
 
     //adjust position according to anchor point
     if (!anchorPoint.isNull()) {

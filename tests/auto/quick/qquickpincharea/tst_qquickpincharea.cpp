@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -41,7 +41,7 @@ class tst_QQuickPinchArea: public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_QQuickPinchArea() : device(0) { }
+    tst_QQuickPinchArea() { }
 private slots:
     void initTestCase();
     void cleanupTestCase();
@@ -55,7 +55,7 @@ private slots:
 
 private:
     QQuickView *createView();
-    QTouchDevice *device;
+    QTouchDevice *device = nullptr;
 };
 void tst_QQuickPinchArea::initTestCase()
 {
@@ -76,19 +76,19 @@ void tst_QQuickPinchArea::pinchProperties()
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     QQuickPinchArea *pinchArea = window->rootObject()->findChild<QQuickPinchArea*>("pincharea");
     QQuickPinch *pinch = pinchArea->pinch();
-    QVERIFY(pinchArea != 0);
-    QVERIFY(pinch != 0);
+    QVERIFY(pinchArea != nullptr);
+    QVERIFY(pinch != nullptr);
 
     // target
     QQuickItem *blackRect = window->rootObject()->findChild<QQuickItem*>("blackrect");
-    QVERIFY(blackRect != 0);
+    QVERIFY(blackRect != nullptr);
     QCOMPARE(blackRect, pinch->target());
     QQuickItem *rootItem = qobject_cast<QQuickItem*>(window->rootObject());
-    QVERIFY(rootItem != 0);
+    QVERIFY(rootItem != nullptr);
     QSignalSpy targetSpy(pinch, SIGNAL(targetChanged()));
     pinch->setTarget(rootItem);
     QCOMPARE(targetSpy.count(),1);
@@ -201,20 +201,20 @@ void tst_QQuickPinchArea::scale()
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
     qApp->processEvents();
 
     QQuickPinchArea *pinchArea = window->rootObject()->findChild<QQuickPinchArea*>("pincharea");
     QQuickPinch *pinch = pinchArea->pinch();
-    QVERIFY(pinchArea != 0);
-    QVERIFY(pinch != 0);
+    QVERIFY(pinchArea != nullptr);
+    QVERIFY(pinch != nullptr);
 
     QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
-    QVERIFY(root != 0);
+    QVERIFY(root != nullptr);
 
     // target
     QQuickItem *blackRect = window->rootObject()->findChild<QQuickItem*>("blackrect");
-    QVERIFY(blackRect != 0);
+    QVERIFY(blackRect != nullptr);
 
     QPoint p1(80, 80);
     QPoint p2(100, 100);
@@ -268,20 +268,20 @@ void tst_QQuickPinchArea::pan()
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
     qApp->processEvents();
 
     QQuickPinchArea *pinchArea = window->rootObject()->findChild<QQuickPinchArea*>("pincharea");
     QQuickPinch *pinch = pinchArea->pinch();
-    QVERIFY(pinchArea != 0);
-    QVERIFY(pinch != 0);
+    QVERIFY(pinchArea != nullptr);
+    QVERIFY(pinch != nullptr);
 
     QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
-    QVERIFY(root != 0);
+    QVERIFY(root != nullptr);
 
     // target
     QQuickItem *blackRect = window->rootObject()->findChild<QQuickItem*>("blackrect");
-    QVERIFY(blackRect != 0);
+    QVERIFY(blackRect != nullptr);
 
     QPoint p1(80, 80);
     QPoint p2(100, 100);
@@ -374,23 +374,23 @@ void tst_QQuickPinchArea::retouch()
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
     qApp->processEvents();
 
     QQuickPinchArea *pinchArea = window->rootObject()->findChild<QQuickPinchArea*>("pincharea");
     QQuickPinch *pinch = pinchArea->pinch();
-    QVERIFY(pinchArea != 0);
-    QVERIFY(pinch != 0);
+    QVERIFY(pinchArea != nullptr);
+    QVERIFY(pinch != nullptr);
 
     QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
-    QVERIFY(root != 0);
+    QVERIFY(root != nullptr);
 
     QSignalSpy startedSpy(pinchArea, SIGNAL(pinchStarted(QQuickPinchEvent*)));
     QSignalSpy finishedSpy(pinchArea, SIGNAL(pinchFinished(QQuickPinchEvent*)));
 
     // target
     QQuickItem *blackRect = window->rootObject()->findChild<QQuickItem*>("blackrect");
-    QVERIFY(blackRect != 0);
+    QVERIFY(blackRect != nullptr);
 
     QPoint p1(80, 80);
     QPoint p2(100, 100);
@@ -465,20 +465,20 @@ void tst_QQuickPinchArea::cancel()
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
     qApp->processEvents();
 
     QQuickPinchArea *pinchArea = window->rootObject()->findChild<QQuickPinchArea*>("pincharea");
     QQuickPinch *pinch = pinchArea->pinch();
-    QVERIFY(pinchArea != 0);
-    QVERIFY(pinch != 0);
+    QVERIFY(pinchArea != nullptr);
+    QVERIFY(pinch != nullptr);
 
     QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
-    QVERIFY(root != 0);
+    QVERIFY(root != nullptr);
 
     // target
     QQuickItem *blackRect = window->rootObject()->findChild<QQuickItem*>("blackrect");
-    QVERIFY(blackRect != 0);
+    QVERIFY(blackRect != nullptr);
 
     QPoint p1(80, 80);
     QPoint p2(100, 100);
@@ -558,11 +558,11 @@ void tst_QQuickPinchArea::transformedPinchArea()
     view->setSource(testFileUrl("transformedPinchArea.qml"));
     view->show();
     QVERIFY(QTest::qWaitForWindowExposed(view));
-    QVERIFY(view->rootObject() != 0);
+    QVERIFY(view->rootObject() != nullptr);
     qApp->processEvents();
 
     QQuickPinchArea *pinchArea = view->rootObject()->findChild<QQuickPinchArea*>("pinchArea");
-    QVERIFY(pinchArea != 0);
+    QVERIFY(pinchArea != nullptr);
 
     const int threshold = qApp->styleHints()->startDragDistance();
 
@@ -588,7 +588,7 @@ void tst_QQuickPinchArea::transformedPinchArea()
 
 QQuickView *tst_QQuickPinchArea::createView()
 {
-    QQuickView *window = new QQuickView(0);
+    QQuickView *window = new QQuickView(nullptr);
     window->setGeometry(0,0,240,320);
 
     return window;

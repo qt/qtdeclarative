@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -11,8 +11,8 @@
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Free Documentation License Usage
 ** Alternatively, this file may be used under the terms of the GNU Free
@@ -20,7 +20,7 @@
 ** Foundation and appearing in the file included in the packaging of
 ** this file. Please review the following information to ensure
 ** the GNU Free Documentation License version 1.3 requirements
-** will be met: http://www.gnu.org/copyleft/fdl.html.
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -50,6 +50,7 @@ The set of QML object-type attribute types is as follows:
 \li signal handler attributes
 \li method attributes
 \li attached properties and attached signal handler attributes
+\li enumeration attributes
 \endlist
 
 These attributes are discussed in detail below.
@@ -448,13 +449,40 @@ right-hand-side of the property declaration must be a valid alias reference:
 [default] property alias <name>: <alias reference>
 \endcode
 
-Unlike an ordinary property, an alias can only refer to an object, or the
-property of an object, that is within the scope of the \l{QML Object Types}
-{type} within which the alias is declared. It cannot contain arbitrary
-JavaScript expressions and it cannot refer to objects declared outside of
-the scope of its type. Also note the \e {alias reference} is not optional,
-unlike the optional default value for an ordinary property; the alias reference
-must be provided when the alias is first declared.
+Unlike an ordinary property, an alias has the following restrictions:
+
+\list
+\li It can only refer to an object, or the
+    property of an object, that is within the scope of the \l{QML Object Types}
+    {type} within which the alias is declared.
+\li It cannot contain arbitrary
+    JavaScript expressions
+\li It cannot refer to objects declared outside of
+    the scope of its type.
+\li The \e {alias reference} is not optional,
+    unlike the optional default value for an ordinary property; the alias reference
+    must be provided when the alias is first declared.
+\li It cannot refer to \l {Attached Properties and Attached Signal Handlers}
+    {attached properties}.
+\li It cannot refer to grouped properties; the following code will not work:
+    \code
+    property alias color: rectangle.border.color
+
+    Rectangle {
+        id: rectangle
+    }
+    \endcode
+
+    However, aliases to \l {QML Basic Types}{value type} properties do work:
+    \code
+    property alias rectX: object.rectProperty.x
+
+    Item {
+        id: object
+        property rect rectProperty
+    }
+    \endcode
+\endlist
 
 For example, below is a \c Button type with a \c buttonText aliased property
 which is connected to the \c text object of the \l Text child:
@@ -510,6 +538,58 @@ Any object that use this type and refer to its \c color property will be
 referring to the alias rather than the ordinary \l {Rectangle::color} property.
 Internally, however, the rectangle can correctly set its \c color
 property and refer to the actual defined property rather than the alias.
+
+
+\section4 Property Aliases and Types
+
+Property aliases cannot have explicit type specifications. The type of a
+property alias is the \e declared type of the property or object it refers to.
+Therefore, if you create an alias to an object referenced via id with extra
+properties declared inline, the extra properties won't be accessible through
+the alias:
+
+\code
+// MyItem.qml
+Item {
+    property alias inner: innerItem
+
+    Item {
+        id: innerItem
+        property int extraProperty
+    }
+}
+\code
+
+You cannot initialize \a inner.extraProperty from outside of this component, as
+inner is only an \a Item:
+
+\code
+// main.qml
+MyItem {
+    inner.extraProperty: 5 // fails
+}
+\code
+
+However, if you extract the inner object into a separate component with a
+dedicated .qml file, you can instantiate that component instead and have all
+its properties available through the alias:
+
+\code
+// MainItem.qml
+Item {
+    // Now you can access inner.extraProperty, as inner is now an ExtraItem
+    property alias inner: innerItem
+
+    ExtraItem {
+        id: innerItem
+    }
+}
+
+// ExtraItem.qml
+Item {
+    property int extraProperty
+}
+\code
 
 
 \section3 Default Properties
@@ -856,8 +936,7 @@ are otherwise unavailable to the object. In particular, they allow objects to
 access properties or signals that are specifically relevant to the individual
 object.
 
-A QML type implementation may choose to \l {Providing Attached Objects for
-Data Annotations}{create an \e {attaching type} in C++} with
+A QML type implementation may choose to \l {Providing Attached Properties}{create an \e {attaching type} in C++} with
 particular properties and signals. Instances of this type can then be created
 and \e attached to specific objects at run time, allowing those objects to
 access the properties and signals of the attaching type. These are accessed by
@@ -974,5 +1053,42 @@ ListView {
 
 Now \c delegateItem.ListView.isCurrentItem correctly refers to the
 \c isCurrentItem attached property of the delegate.
+
+\section2 Enumeration Attributes
+
+Enumerations provide a fixed set of named choices. They can be declared in QML using the \c enum keyword:
+
+\qml
+// MyText.qml
+Text {
+    enum TextType {
+        Normal,
+        Heading
+    }
+}
+\endqml
+
+As shown above, enumeration types (e.g. \c TextType) and values (e.g. \c Normal) must begin with an uppercase letter.
+
+Values are referred to via \c {<Type>.<EnumerationType>.<Value>} or \c {<Type>.<Value>}.
+
+\qml
+// MyText.qml
+Text {
+    enum TextType {
+        Normal,
+        Heading
+    }
+
+    property int textType: MyText.TextType.Normal
+
+    font.bold: textType == MyText.TextType.Heading
+    font.pixelSize: textType == MyText.TextType.Heading ? 24 : 12
+}
+\endqml
+
+More information on enumeration usage in QML can be found in the \l {QML Basic Types} \l enumeration documentation.
+
+The ability to declare enumerations in QML was introduced in Qt 5.10.
 
 */

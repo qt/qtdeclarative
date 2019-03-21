@@ -52,42 +52,28 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickImageTextureProvider : public QSGTextureProvider
+QQuickImageTextureProvider::QQuickImageTextureProvider()
+    : m_texture(nullptr)
+    , m_smooth(false)
 {
-    Q_OBJECT
-public:
-    QQuickImageTextureProvider()
-        : m_texture(0)
-        , m_smooth(false)
-    {
+}
+
+void QQuickImageTextureProvider::updateTexture(QSGTexture *texture) {
+    if (m_texture == texture)
+        return;
+    m_texture = texture;
+    emit textureChanged();
+}
+
+QSGTexture *QQuickImageTextureProvider::texture() const {
+    if (m_texture) {
+        m_texture->setFiltering(m_smooth ? QSGTexture::Linear : QSGTexture::Nearest);
+        m_texture->setMipmapFiltering(m_mipmap ? QSGTexture::Linear : QSGTexture::None);
+        m_texture->setHorizontalWrapMode(QSGTexture::ClampToEdge);
+        m_texture->setVerticalWrapMode(QSGTexture::ClampToEdge);
     }
-
-    void updateTexture(QSGTexture *texture) {
-        if (m_texture == texture)
-            return;
-        m_texture = texture;
-        emit textureChanged();
-    }
-
-    QSGTexture *texture() const override {
-        if (m_texture) {
-            m_texture->setFiltering(m_smooth ? QSGTexture::Linear : QSGTexture::Nearest);
-            m_texture->setMipmapFiltering(m_mipmap ? QSGTexture::Linear : QSGTexture::None);
-            m_texture->setHorizontalWrapMode(QSGTexture::ClampToEdge);
-            m_texture->setVerticalWrapMode(QSGTexture::ClampToEdge);
-        }
-        return m_texture;
-    }
-
-    friend class QQuickImage;
-
-    QSGTexture *m_texture;
-    bool m_smooth;
-    bool m_mipmap;
-};
-
-#include "qquickimage.moc"
-#include "moc_qquickimage_p.cpp"
+    return m_texture;
+}
 
 QQuickImagePrivate::QQuickImagePrivate()
     : fillMode(QQuickImage::Stretch)
@@ -97,7 +83,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     , mipmap(false)
     , hAlign(QQuickImage::AlignHCenter)
     , vAlign(QQuickImage::AlignVCenter)
-    , provider(0)
+    , provider(nullptr)
 {
 }
 
@@ -107,7 +93,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \inherits Item
-    \brief Displays an image
+    \brief Displays an image.
 
     The Image type displays an image.
 
@@ -135,6 +121,49 @@ QQuickImagePrivate::QQuickImagePrivate()
 
     \clearfloat
 
+    \section1 OpenGL Texture Files
+
+    When the default OpenGL \l{Qt Quick Scene Graph}{scene graph} backend is in
+    use, images can also be supplied in compressed texture files. The content
+    must be a simple RGB(A) format 2D texture. Supported compression schemes
+    are only limited by the underlying OpenGL driver and GPU. The following
+    container file formats are supported:
+
+    \list
+    \li \c PKM (since Qt 5.10)
+    \li \c KTX (since Qt 5.11)
+    \li \c ASTC (since Qt 5.13)
+    \endlist
+
+    \note Semi-transparent original images require alpha pre-multiplication
+    prior to texture compression in order to be correctly displayed in Qt
+    Quick. This can be done with the following ImageMagick command
+    line:
+    \badcode
+    convert foo.png \( +clone -alpha Extract \) -channel RGB -compose Multiply -composite foo_pm.png
+    \endcode
+
+    \section1 Automatic Detection of File Extension
+
+    If the \l source URL indicates a non-existing local file or resource, the
+    Image element attempts to auto-detect the file extension. If an existing
+    file can be found by appending any of the supported image file extensions
+    to the \l source URL, then that file will be loaded.
+
+    If the OpenGL \l{Qt Quick Scene Graph}{scene graph} backend is in use, the
+    file search the attempts the OpenGL texture file extensions first. If the
+    search is unsuccessful, it attempts to search with the file extensions for
+    the \l{QImageReader::supportedImageFormats()}{conventional image file
+    types}. For example:
+
+    \snippet qml/image-ext.qml ext
+
+    This functionality facilitates deploying different image asset file types
+    on different target platforms. This can be useful in order to tune
+    application performance and adapt to different graphics hardware.
+
+    This functionality was introduced in Qt 5.11.
+
     \section1 Performance
 
     By default, locally available images are loaded immediately, and the user interface
@@ -154,7 +183,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     size bounded via the \l sourceSize property. This is especially important for content
     that is loaded from external sources or provided by the user.
 
-    \sa {Qt Quick Examples - Image Elements}, QQuickImageProvider
+    \sa {Qt Quick Examples - Image Elements}, QQuickImageProvider, QImageReader::setAutoDetectImageFormat()
 */
 
 QQuickImage::QQuickImage(QQuickItem *parent)
@@ -461,7 +490,7 @@ qreal QQuickImage::paintedHeight() const
 
     The URL may be absolute, or relative to the URL of the component.
 
-    \sa QQuickImageProvider
+    \sa QQuickImageProvider {OpenGL Texture Files} {Automatic Detection of File Extension}
 */
 
 /*!
@@ -583,7 +612,7 @@ QSGTextureProvider *QQuickImage::textureProvider() const
 
     if (!d->window || !d->sceneGraphRenderContext() || QThread::currentThread() != d->sceneGraphRenderContext()->thread()) {
         qWarning("QQuickImage::textureProvider: can only be queried on the rendering thread of an exposed window");
-        return 0;
+        return nullptr;
     }
 
     if (!d->provider) {
@@ -601,7 +630,7 @@ void QQuickImage::invalidateSceneGraph()
 {
     Q_D(QQuickImage);
     delete d->provider;
-    d->provider = 0;
+    d->provider = nullptr;
 }
 
 void QQuickImage::releaseResources()
@@ -609,7 +638,7 @@ void QQuickImage::releaseResources()
     Q_D(QQuickImage);
     if (d->provider) {
         QQuickWindowQObjectCleanupJob::schedule(window(), d->provider);
-        d->provider = 0;
+        d->provider = nullptr;
     }
 }
 
@@ -628,7 +657,7 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 
     if (!texture || width() <= 0 || height() <= 0) {
         delete oldNode;
-        return 0;
+        return nullptr;
     }
 
     QSGInternalImageNode *node = static_cast<QSGInternalImageNode *>(oldNode);
@@ -736,7 +765,7 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         || nsrect.isEmpty()
         || !qt_is_finite(nsrect.width()) || !qt_is_finite(nsrect.height())) {
         delete node;
-        return 0;
+        return nullptr;
     }
 
     if (d->pixmapChanged) {

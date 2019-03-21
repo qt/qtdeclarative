@@ -49,11 +49,12 @@
 # include <qopenglfunctions.h>
 # include <QtGui/qopenglcontext.h>
 # include <QtGui/qopenglfunctions.h>
+# include <QtGui/private/qopengltextureuploader_p.h>
 # include <private/qsgdefaultrendercontext_p.h>
 #endif
 #include <private/qsgmaterialshader_p.h>
 
-#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID) && !defined(__UCLIBC__)
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID) && defined(__GLIBC__)
 #define CAN_BACKTRACE_EXECINFO
 #endif
 
@@ -89,7 +90,7 @@ static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK"
 
 QT_BEGIN_NAMESPACE
 
-#if QT_CONFIG(opengl)
+#if QT_CONFIG(opengl) && !defined(QT_NO_DEBUG)
 inline static bool isPowerOfTwo(int x)
 {
     // Assumption: x >= 1
@@ -388,7 +389,7 @@ QSGTexture::~QSGTexture()
     it to a shader that operates on the texture coordinates 0-1 instead
     of the texture subrect inside the atlas.
 
-    If the texture is not part of a texture atlas, this function returns 0.
+    If the texture is not part of a texture atlas, this function returns \nullptr.
 
     Implementations of this function are recommended to return the same instance
     for multiple calls to limit memory usage.
@@ -399,7 +400,7 @@ QSGTexture::~QSGTexture()
 QSGTexture *QSGTexture::removedFromAtlas() const
 {
     Q_ASSERT_X(!isAtlasTexture(), "QSGTexture::removedFromAtlas()", "Called on a non-atlas texture");
-    return 0;
+    return nullptr;
 }
 
 /*!
@@ -659,17 +660,6 @@ QSGPlainTexture::~QSGPlainTexture()
 #endif
 }
 
-void qsg_swizzleBGRAToRGBA(QImage *image)
-{
-    const int width = image->width();
-    const int height = image->height();
-    for (int i = 0; i < height; ++i) {
-        uint *p = (uint *) image->scanLine(i);
-        for (int x = 0; x < width; ++x)
-            p[x] = ((p[x] << 16) & 0xff0000) | ((p[x] >> 16) & 0xff) | (p[x] & 0xff00ff00);
-    }
-}
-
 void QSGPlainTexture::setImage(const QImage &image)
 {
     m_image = image;
@@ -766,9 +756,7 @@ void QSGPlainTexture::bind()
 
     // ### TODO: check for out-of-memory situations...
 
-    QImage tmp = (m_image.format() == QImage::Format_RGB32 || m_image.format() == QImage::Format_ARGB32_Premultiplied)
-                 ? m_image
-                 : m_image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+    QOpenGLTextureUploader::BindOptions options = QOpenGLTextureUploader::PremultipliedAlphaBindOption;
 
     // Downscale the texture to fit inside the max texture limit if it is too big.
     // It would be better if the image was already downscaled to the right size,
@@ -782,75 +770,19 @@ void QSGPlainTexture::bind()
         max = rc->maxTextureSize();
     else
         funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
-    if (tmp.width() > max || tmp.height() > max) {
-        tmp = tmp.scaled(qMin(max, tmp.width()), qMin(max, tmp.height()), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-        m_texture_size = tmp.size();
-    }
+
+    m_texture_size = m_texture_size.boundedTo(QSize(max, max));
 
     // Scale to a power of two size if mipmapping is requested and the
     // texture is npot and npot textures are not properly supported.
     if (mipmapFiltering() != QSGTexture::None
-        && (!isPowerOfTwo(m_texture_size.width()) || !isPowerOfTwo(m_texture_size.height()))
         && !funcs->hasOpenGLFeature(QOpenGLFunctions::NPOTTextures)) {
-        tmp = tmp.scaled(qNextPowerOfTwo(m_texture_size.width()), qNextPowerOfTwo(m_texture_size.height()),
-                         Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-        m_texture_size = tmp.size();
+        options |= QOpenGLTextureUploader::PowerOfTwoBindOption;
     }
-
-    if (tmp.width() * 4 != tmp.bytesPerLine())
-        tmp = tmp.copy();
-
-    qint64 convertTime = 0;
-    if (profileFrames)
-        convertTime = qsg_renderer_timer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare,
-                              QQuickProfiler::SceneGraphTexturePrepareConvert);
 
     updateBindOptions(m_dirty_bind_options);
 
-    GLenum externalFormat = GL_RGBA;
-    GLenum internalFormat = GL_RGBA;
-
-#if defined(Q_OS_ANDROID) && !defined(Q_OS_ANDROID_EMBEDDED)
-    QString *deviceName =
-            static_cast<QString *>(QGuiApplication::platformNativeInterface()->nativeResourceForIntegration("AndroidDeviceName"));
-    static bool wrongfullyReportsBgra8888Support = deviceName != 0
-                                                    && (deviceName->compare(QLatin1String("samsung SM-T211"), Qt::CaseInsensitive) == 0
-                                                        || deviceName->compare(QLatin1String("samsung SM-T210"), Qt::CaseInsensitive) == 0
-                                                        || deviceName->compare(QLatin1String("samsung SM-T215"), Qt::CaseInsensitive) == 0);
-#else
-    static bool wrongfullyReportsBgra8888Support = false;
-#endif
-
-    if (context->hasExtension(QByteArrayLiteral("GL_EXT_bgra"))) {
-        externalFormat = GL_BGRA;
-#ifdef QT_OPENGL_ES
-        internalFormat = GL_BGRA;
-#else
-        if (context->isOpenGLES())
-            internalFormat = GL_BGRA;
-#endif // QT_OPENGL_ES
-    } else if (!wrongfullyReportsBgra8888Support
-               && (context->hasExtension(QByteArrayLiteral("GL_EXT_texture_format_BGRA8888"))
-                   || context->hasExtension(QByteArrayLiteral("GL_IMG_texture_format_BGRA8888")))) {
-        externalFormat = GL_BGRA;
-        internalFormat = GL_BGRA;
-#if defined(Q_OS_DARWIN) && !defined(Q_OS_OSX)
-    } else if (context->hasExtension(QByteArrayLiteral("GL_APPLE_texture_format_BGRA8888"))) {
-        externalFormat = GL_BGRA;
-        internalFormat = GL_RGBA;
-#endif
-    } else {
-        qsg_swizzleBGRAToRGBA(&tmp);
-    }
-
-    qint64 swizzleTime = 0;
-    if (profileFrames)
-        swizzleTime = qsg_renderer_timer.nsecsElapsed();
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare,
-                              QQuickProfiler::SceneGraphTexturePrepareSwizzle);
-
-    funcs->glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_texture_size.width(), m_texture_size.height(), 0, externalFormat, GL_UNSIGNED_BYTE, tmp.constBits());
+    QOpenGLTextureUploader::textureImage(GL_TEXTURE_2D, m_image, options, QSize(max, max));
 
     qint64 uploadTime = 0;
     if (profileFrames)
@@ -867,15 +799,11 @@ void QSGPlainTexture::bind()
     if (profileFrames) {
         mipmapTime = qsg_renderer_timer.nsecsElapsed();
         qCDebug(QSG_LOG_TIME_TEXTURE,
-                "plain texture uploaded in: %dms (%dx%d), bind=%d, convert=%d, swizzle=%d (%s->%s), upload=%d, mipmap=%d%s",
+                "plain texture uploaded in: %dms (%dx%d), bind=%d, upload=%d, mipmap=%d%s",
                 int(mipmapTime / 1000000),
                 m_texture_size.width(), m_texture_size.height(),
                 int(bindTime / 1000000),
-                int((convertTime - bindTime)/1000000),
-                int((swizzleTime - convertTime)/1000000),
-                (externalFormat == GL_BGRA ? "BGRA" : "RGBA"),
-                (internalFormat == GL_BGRA ? "BGRA" : "RGBA"),
-                int((uploadTime - swizzleTime)/1000000),
+                int((uploadTime - bindTime)/1000000),
                 int((mipmapTime - uploadTime)/1000000),
                 m_texture_size != m_image.size() ? " (scaled to GL_MAX_TEXTURE_SIZE)" : "");
     }

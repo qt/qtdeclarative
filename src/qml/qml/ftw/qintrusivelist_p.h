@@ -95,7 +95,7 @@ public:
 private:
     static inline N *nodeToN(QIntrusiveListNode *node);
 
-    QIntrusiveListNode *__first;
+    QIntrusiveListNode *__first = nullptr;
 };
 
 class QIntrusiveListNode
@@ -107,13 +107,13 @@ public:
     inline void remove();
     inline bool isInList() const;
 
-    QIntrusiveListNode *_next;
-    QIntrusiveListNode**_prev;
+    QIntrusiveListNode *_next = nullptr;
+    QIntrusiveListNode**_prev = nullptr;
 };
 
 template<class N, QIntrusiveListNode N::*member>
 QIntrusiveList<N, member>::iterator::iterator()
-: _value(0)
+: _value(nullptr)
 {
 }
 
@@ -165,7 +165,7 @@ typename QIntrusiveList<N, member>::iterator &QIntrusiveList<N, member>::iterato
 
 template<class N, QIntrusiveListNode N::*member>
 QIntrusiveList<N, member>::QIntrusiveList()
-: __first(0)
+
 {
 }
 
@@ -178,7 +178,7 @@ QIntrusiveList<N, member>::~QIntrusiveList()
 template<class N, QIntrusiveListNode N::*member>
 bool QIntrusiveList<N, member>::isEmpty() const
 {
-    return __first == 0;
+    return __first == nullptr;
 }
 
 template<class N, QIntrusiveListNode N::*member>
@@ -215,14 +215,14 @@ bool QIntrusiveList<N, member>::contains(N *n) const
 template<class N, QIntrusiveListNode N::*member>
 N *QIntrusiveList<N, member>::first() const
 {
-    return __first?nodeToN(__first):0;
+    return __first?nodeToN(__first):nullptr;
 }
 
 template<class N, QIntrusiveListNode N::*member>
 N *QIntrusiveList<N, member>::next(N *current)
 {
     QIntrusiveListNode *nextnode = (current->*member)._next;
-    N *nextstruct = nextnode?nodeToN(nextnode):0;
+    N *nextstruct = nextnode?nodeToN(nextnode):nullptr;
     return nextstruct;
 }
 
@@ -241,11 +241,10 @@ typename QIntrusiveList<N, member>::iterator QIntrusiveList<N, member>::end()
 template<class N, QIntrusiveListNode N::*member>
 N *QIntrusiveList<N, member>::nodeToN(QIntrusiveListNode *node)
 {
-    return (N *)((char *)node - ((char *)&(((N *)0)->*member) - (char *)0));
+    return (N *)((char *)node - ((char *)&(((N *)nullptr)->*member) - (char *)nullptr));
 }
 
 QIntrusiveListNode::QIntrusiveListNode()
-: _next(0), _prev(0)
 {
 }
 
@@ -258,13 +257,13 @@ void QIntrusiveListNode::remove()
 {
     if (_prev) *_prev = _next;
     if (_next) _next->_prev = _prev;
-    _prev = 0;
-    _next = 0;
+    _prev = nullptr;
+    _next = nullptr;
 }
 
 bool QIntrusiveListNode::isInList() const
 {
-    return _prev != 0;
+    return _prev != nullptr;
 }
 
 QT_END_NAMESPACE

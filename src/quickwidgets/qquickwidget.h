@@ -43,7 +43,6 @@
 #include <QtWidgets/qwidget.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtCore/qurl.h>
-#include <QtQml/qqmldebug.h>
 #include <QtQuickWidgets/qtquickwidgetsglobal.h>
 #include <QtGui/qimage.h>
 
@@ -64,10 +63,10 @@ class Q_QUICKWIDGETS_EXPORT QQuickWidget : public QWidget
     Q_PROPERTY(QUrl source READ source WRITE setSource DESIGNABLE true)
 
 public:
-    explicit QQuickWidget(QWidget *parent = Q_NULLPTR);
+    explicit QQuickWidget(QWidget *parent = nullptr);
     QQuickWidget(QQmlEngine* engine, QWidget *parent);
-    explicit QQuickWidget(const QUrl &source, QWidget *parent = Q_NULLPTR);
-    virtual ~QQuickWidget();
+    explicit QQuickWidget(const QUrl &source, QWidget *parent = nullptr);
+    ~QQuickWidget() override;
 
     QUrl source() const;
 
@@ -144,6 +143,7 @@ protected:
 
     bool event(QEvent *) override;
     void paintEvent(QPaintEvent *event) override;
+    bool focusNextPrevChild(bool next) override;
 
 private:
     Q_DISABLE_COPY(QQuickWidget)

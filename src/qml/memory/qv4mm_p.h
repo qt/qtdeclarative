@@ -58,8 +58,6 @@
 #include <private/qv4mmdefs_p.h>
 #include <QVector>
 
-//#define DETAILED_MM_STATS
-
 #define QV4_MM_MAXBLOCK_SHIFT "QV4_MM_MAXBLOCK_SHIFT"
 #define QV4_MM_MAX_CHUNK_SIZE "QV4_MM_MAX_CHUNK_SIZE"
 #define QV4_MM_STATS "QV4_MM_STATS"
@@ -71,60 +69,13 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct ChunkAllocator;
-
-template<typename T>
-struct StackAllocator {
-    Q_STATIC_ASSERT(sizeof(T) < Chunk::DataSize);
-    static const uint requiredSlots = (sizeof(T) + sizeof(HeapItem) - 1)/sizeof(HeapItem);
-
-    StackAllocator(ChunkAllocator *chunkAlloc);
-
-    T *allocate() {
-        HeapItem *m = nextFree;
-        if (Q_UNLIKELY(nextFree == lastInChunk)) {
-            nextChunk();
-        } else {
-            nextFree += requiredSlots;
-        }
-#if MM_DEBUG || !defined(QT_NO_DEBUG) || defined(QT_FORCE_ASSERTS)
-        Chunk *c = m->chunk();
-        Chunk::setBit(c->objectBitmap, m - c->realBase());
-#endif
-        return m->as<T>();
-    }
-    void free() {
-        if (Q_UNLIKELY(nextFree == firstInChunk)) {
-            prevChunk();
-        } else {
-            nextFree -= requiredSlots;
-        }
-#if MM_DEBUG || !defined(QT_NO_DEBUG) || defined(QT_FORCE_ASSERTS)
-        Chunk *c = nextFree->chunk();
-        Chunk::clearBit(c->objectBitmap, nextFree - c->realBase());
-#endif
-    }
-
-    void nextChunk();
-    void prevChunk();
-
-    void freeAll();
-
-    ChunkAllocator *chunkAllocator;
-    HeapItem *nextFree = 0;
-    HeapItem *firstInChunk = 0;
-    HeapItem *lastInChunk = 0;
-    std::vector<Chunk *> chunks;
-    uint currentChunk = 0;
-};
+struct MemorySegment;
 
 struct BlockAllocator {
-    BlockAllocator(ChunkAllocator *chunkAllocator)
-        : chunkAllocator(chunkAllocator)
+    BlockAllocator(ChunkAllocator *chunkAllocator, ExecutionEngine *engine)
+        : chunkAllocator(chunkAllocator), engine(engine)
     {
         memset(freeBins, 0, sizeof(freeBins));
-#if MM_DEBUG
-        memset(allocations, 0, sizeof(allocations));
-#endif
     }
 
     enum { NumBins = 8 };
@@ -132,10 +83,6 @@ struct BlockAllocator {
     static inline size_t binForSlots(size_t nSlots) {
         return nSlots >= NumBins ? NumBins - 1 : nSlots;
     }
-
-#if MM_DEBUG
-    void stats();
-#endif
 
     HeapItem *allocate(size_t size, bool forceAllocation = false);
 
@@ -153,26 +100,25 @@ struct BlockAllocator {
         return used;
     }
 
-    void sweep(ClassDestroyStatsCallback classCountPtr);
+    void sweep();
     void freeAll();
     void resetBlackBits();
     void collectGrayItems(MarkStack *markStack);
 
     // bump allocations
-    HeapItem *nextFree = 0;
+    HeapItem *nextFree = nullptr;
     size_t nFree = 0;
     size_t usedSlotsAfterLastSweep = 0;
     HeapItem *freeBins[NumBins];
     ChunkAllocator *chunkAllocator;
+    ExecutionEngine *engine;
     std::vector<Chunk *> chunks;
-#if MM_DEBUG
-    uint allocations[NumBins];
-#endif
+    uint *allocationStats = nullptr;
 };
 
 struct HugeItemAllocator {
-    HugeItemAllocator(ChunkAllocator *chunkAllocator)
-        : chunkAllocator(chunkAllocator)
+    HugeItemAllocator(ChunkAllocator *chunkAllocator, ExecutionEngine *engine)
+        : chunkAllocator(chunkAllocator), engine(engine)
     {}
 
     HeapItem *allocate(size_t size);
@@ -189,7 +135,9 @@ struct HugeItemAllocator {
     }
 
     ChunkAllocator *chunkAllocator;
+    ExecutionEngine *engine;
     struct HugeChunk {
+        MemorySegment *segment;
         Chunk *chunk;
         size_t size;
     };
@@ -211,226 +159,99 @@ public:
     Q_DECL_CONSTEXPR static inline std::size_t align(std::size_t size)
     { return (size + Chunk::SlotSize - 1) & ~(Chunk::SlotSize - 1); }
 
-    QV4::Heap::CallContext *allocSimpleCallContext()
+    template<typename ManagedType>
+    inline typename ManagedType::Data *allocManaged(std::size_t size, Heap::InternalClass *ic)
     {
-        Heap::CallContext *ctxt = stackAllocator.allocate();
-        memset(ctxt, 0, sizeof(Heap::SimpleCallContext));
-        ctxt->internalClass = SimpleCallContext::defaultInternalClass(engine);
-        Q_ASSERT(ctxt->internalClass && ctxt->internalClass->vtable);
-        ctxt->init();
-        return ctxt;
-
+        Q_STATIC_ASSERT(std::is_trivial< typename ManagedType::Data >::value);
+        size = align(size);
+        typename ManagedType::Data *d = static_cast<typename ManagedType::Data *>(allocData(size));
+        d->internalClass.set(engine, ic);
+        Q_ASSERT(d->internalClass && d->internalClass->vtable);
+        Q_ASSERT(ic->vtable == ManagedType::staticVTable());
+        return d;
     }
-    void freeSimpleCallContext()
-    { stackAllocator.free(); }
+
+    template<typename ManagedType>
+    inline typename ManagedType::Data *allocManaged(std::size_t size, InternalClass *ic)
+    {
+        return allocManaged<ManagedType>(size, ic->d());
+    }
 
     template<typename ManagedType>
     inline typename ManagedType::Data *allocManaged(std::size_t size)
     {
-        V4_ASSERT_IS_TRIVIAL(typename ManagedType::Data)
-        size = align(size);
-        Heap::Base *o = allocData(size);
-        InternalClass *ic = ManagedType::defaultInternalClass(engine);
-        ic = ic->changeVTable(ManagedType::staticVTable());
-        o->internalClass = ic;
-        Q_ASSERT(o->internalClass && o->internalClass->vtable);
-        return static_cast<typename ManagedType::Data *>(o);
+        Scope scope(engine);
+        Scoped<InternalClass> ic(scope, ManagedType::defaultInternalClass(engine));
+        return allocManaged<ManagedType>(size, ic);
+    }
+
+    template <typename ObjectType>
+    typename ObjectType::Data *allocateObject(Heap::InternalClass *ic)
+    {
+        Heap::Object *o = allocObjectWithMemberData(ObjectType::staticVTable(), ic->size);
+        o->internalClass.set(engine, ic);
+        Q_ASSERT(o->internalClass.get() && o->vtable());
+        Q_ASSERT(o->vtable() == ObjectType::staticVTable());
+        return static_cast<typename ObjectType::Data *>(o);
     }
 
     template <typename ObjectType>
     typename ObjectType::Data *allocateObject(InternalClass *ic)
     {
-        Heap::Object *o = allocObjectWithMemberData(ObjectType::staticVTable(), ic->size);
-        o->internalClass = ic;
-        Q_ASSERT(o->internalClass && o->internalClass->vtable);
-        Q_ASSERT(ic->vtable == ObjectType::staticVTable());
-        return static_cast<typename ObjectType::Data *>(o);
+        return allocateObject<ObjectType>(ic->d());
     }
 
     template <typename ObjectType>
     typename ObjectType::Data *allocateObject()
     {
-        InternalClass *ic = ObjectType::defaultInternalClass(engine);
+        Scope scope(engine);
+        Scoped<InternalClass> ic(scope,  ObjectType::defaultInternalClass(engine));
         ic = ic->changeVTable(ObjectType::staticVTable());
         ic = ic->changePrototype(ObjectType::defaultPrototype(engine)->d());
-        Heap::Object *o = allocObjectWithMemberData(ObjectType::staticVTable(), ic->size);
-        o->internalClass = ic;
-        Q_ASSERT(o->internalClass && o->internalClass->vtable);
-        Q_ASSERT(o->internalClass->prototype == ObjectType::defaultPrototype(engine)->d());
-        return static_cast<typename ObjectType::Data *>(o);
+        return allocateObject<ObjectType>(ic);
     }
 
     template <typename ManagedType, typename Arg1>
     typename ManagedType::Data *allocWithStringData(std::size_t unmanagedSize, Arg1 arg1)
     {
         typename ManagedType::Data *o = reinterpret_cast<typename ManagedType::Data *>(allocString(unmanagedSize));
-        o->internalClass = ManagedType::defaultInternalClass(engine);
+        o->internalClass.set(engine, ManagedType::defaultInternalClass(engine));
         Q_ASSERT(o->internalClass && o->internalClass->vtable);
         o->init(arg1);
         return o;
     }
 
-    template <typename ObjectType>
-    typename ObjectType::Data *allocObject(InternalClass *ic)
+    template <typename ObjectType, typename... Args>
+    typename ObjectType::Data *allocObject(Heap::InternalClass *ic, Args... args)
     {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->init();
-        return t->d();
+        typename ObjectType::Data *d = allocateObject<ObjectType>(ic);
+        d->init(args...);
+        return d;
     }
 
-    template <typename ObjectType>
-    typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype)
+    template <typename ObjectType, typename... Args>
+    typename ObjectType::Data *allocObject(InternalClass *ic, Args... args)
     {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
-        Q_UNUSED(prototype);
-        t->d_unchecked()->init();
-        return t->d();
+        typename ObjectType::Data *d = allocateObject<ObjectType>(ic);
+        d->init(args...);
+        return d;
     }
 
-    template <typename ObjectType, typename Arg1>
-    typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype, Arg1 arg1)
-    {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
-        Q_UNUSED(prototype);
-        t->d_unchecked()->init(arg1);
-        return t->d();
-    }
-
-    template <typename ObjectType, typename Arg1, typename Arg2>
-    typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype, Arg1 arg1, Arg2 arg2)
-    {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
-        Q_UNUSED(prototype);
-        t->d_unchecked()->init(arg1, arg2);
-        return t->d();
-    }
-
-    template <typename ObjectType, typename Arg1, typename Arg2, typename Arg3>
-    typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype, Arg1 arg1, Arg2 arg2, Arg3 arg3)
-    {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
-        Q_UNUSED(prototype);
-        t->d_unchecked()->init(arg1, arg2, arg3);
-        return t->d();
-    }
-
-    template <typename ObjectType, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
-    {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
-        Q_UNUSED(prototype);
-        t->d_unchecked()->init(arg1, arg2, arg3, arg4);
-        return t->d();
-    }
-
-    template <typename ObjectType>
-    typename ObjectType::Data *allocObject()
+    template <typename ObjectType, typename... Args>
+    typename ObjectType::Data *allocate(Args... args)
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        t->d_unchecked()->init();
+        t->d_unchecked()->init(args...);
         return t->d();
     }
 
-    template <typename ObjectType, typename Arg1>
-    typename ObjectType::Data *allocObject(Arg1 arg1)
-    {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        t->d_unchecked()->init(arg1);
-        return t->d();
-    }
-
-    template <typename ObjectType, typename Arg1, typename Arg2>
-    typename ObjectType::Data *allocObject(Arg1 arg1, Arg2 arg2)
-    {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        t->d_unchecked()->init(arg1, arg2);
-        return t->d();
-    }
-
-    template <typename ObjectType, typename Arg1, typename Arg2, typename Arg3>
-    typename ObjectType::Data *allocObject(Arg1 arg1, Arg2 arg2, Arg3 arg3)
-    {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        t->d_unchecked()->init(arg1, arg2, arg3);
-        return t->d();
-    }
-
-    template <typename ObjectType, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    typename ObjectType::Data *allocObject(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
-    {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        t->d_unchecked()->init(arg1, arg2, arg3, arg4);
-        return t->d();
-    }
-
-
-    template <typename ManagedType>
-    typename ManagedType::Data *alloc()
+    template <typename ManagedType, typename... Args>
+    typename ManagedType::Data *alloc(Args... args)
     {
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        t->d_unchecked()->init();
-        return t->d();
-    }
-
-    template <typename ManagedType, typename Arg1>
-    typename ManagedType::Data *alloc(Arg1 arg1)
-    {
-        Scope scope(engine);
-        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        t->d_unchecked()->init(arg1);
-        return t->d();
-    }
-
-    template <typename ManagedType, typename Arg1, typename Arg2>
-    typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2)
-    {
-        Scope scope(engine);
-        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        t->d_unchecked()->init(arg1, arg2);
-        return t->d();
-    }
-
-    template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3>
-    typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3)
-    {
-        Scope scope(engine);
-        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        t->d_unchecked()->init(arg1, arg2, arg3);
-        return t->d();
-    }
-
-    template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
-    {
-        Scope scope(engine);
-        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        t->d_unchecked()->init(arg1, arg2, arg3, arg4);
-        return t->d();
-    }
-
-    template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
-    typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
-    {
-        Scope scope(engine);
-        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        t->d_unchecked()->init(arg1, arg2, arg3, arg4, arg5);
+        t->d_unchecked()->init(args...);
         return t->d();
     }
 
@@ -445,15 +266,22 @@ public:
     // called when a JS object grows itself. Specifically: Heap::String::append
     void changeUnmanagedHeapSizeUsage(qptrdiff delta) { unmanagedHeapSize += delta; }
 
+    template<typename ManagedType>
+    typename ManagedType::Data *allocIC()
+    {
+        size_t size = align(sizeof(typename ManagedType::Data));
+        Heap::Base *b = *icAllocator.allocate(size, true);
+        return static_cast<typename ManagedType::Data *>(b);
+    }
+
+    void registerWeakMap(Heap::MapObject *map);
+    void registerWeakSet(Heap::SetObject *set);
+
 protected:
     /// expects size to be aligned
     Heap::Base *allocString(std::size_t unmanagedSize);
     Heap::Base *allocData(std::size_t size);
     Heap::Object *allocObjectWithMemberData(const QV4::VTable *vtable, uint nMembers);
-
-#ifdef DETAILED_MM_STATS
-    void willAllocate(std::size_t size);
-#endif // DETAILED_MM_STATS
 
 private:
     void collectFromJSStack(MarkStack *markStack) const;
@@ -465,12 +293,14 @@ private:
 public:
     QV4::ExecutionEngine *engine;
     ChunkAllocator *chunkAllocator;
-    StackAllocator<Heap::CallContext> stackAllocator;
     BlockAllocator blockAllocator;
+    BlockAllocator icAllocator;
     HugeItemAllocator hugeItemAllocator;
     PersistentValueStorage *m_persistentValues;
     PersistentValueStorage *m_weakValues;
     QVector<Value *> m_pendingFreedObjectWrapperValue;
+    Heap::MapObject *weakMaps = nullptr;
+    Heap::SetObject *weakSets = nullptr;
 
     std::size_t unmanagedHeapSize = 0; // the amount of bytes of heap that is not managed by the memory manager, but which is held onto by managed items.
     std::size_t unmanagedHeapSizeGCLimit;
@@ -479,6 +309,17 @@ public:
     bool gcBlocked = false;
     bool aggressiveGC = false;
     bool gcStats = false;
+    bool gcCollectorStats = false;
+
+    int allocationCount = 0;
+    size_t lastAllocRequestedSlots = 0;
+
+    struct {
+        size_t maxReservedMem = 0;
+        size_t maxAllocatedMem = 0;
+        size_t maxUsedMem = 0;
+        uint allocations[BlockAllocator::NumBins];
+    } statistics;
 };
 
 }

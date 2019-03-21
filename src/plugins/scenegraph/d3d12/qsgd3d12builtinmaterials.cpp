@@ -460,8 +460,8 @@ QSGD3D12Material::UpdateResults QSGD3D12SmoothTextureMaterial::updatePipeline(co
 QSGD3D12TextMaterial::QSGD3D12TextMaterial(StyleType styleType, QSGD3D12RenderContext *rc,
                                            const QRawFont &font, QFontEngine::GlyphFormat glyphFormat)
     : m_styleType(styleType),
-      m_font(font),
-      m_rc(rc)
+      m_rc(rc),
+      m_font(font)
 {
     setFlag(Blending, true);
 

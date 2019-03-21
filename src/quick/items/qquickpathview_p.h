@@ -180,6 +180,7 @@ public:
     Q_INVOKABLE void positionViewAtIndex(int index, int mode);
     Q_INVOKABLE int indexAt(qreal x, qreal y) const;
     Q_INVOKABLE QQuickItem *itemAt(qreal x, qreal y) const;
+    Q_REVISION(13) Q_INVOKABLE QQuickItem *itemAtIndex(int index) const;
 
     static QQuickPathViewAttached *qmlAttachedProperties(QObject *);
 

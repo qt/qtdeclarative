@@ -69,10 +69,11 @@ class Q_QUICK_PRIVATE_EXPORT QQuickBehavior : public QObject, public QQmlPropert
     Q_CLASSINFO("DefaultProperty", "animation")
     Q_PROPERTY(QQuickAbstractAnimation *animation READ animation WRITE setAnimation)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
+    Q_PROPERTY(QVariant targetValue READ targetValue NOTIFY targetValueChanged REVISION 13)
     Q_CLASSINFO("DeferredPropertyNames", "animation")
 
 public:
-    QQuickBehavior(QObject *parent=0);
+    QQuickBehavior(QObject *parent=nullptr);
     ~QQuickBehavior();
 
     void setTarget(const QQmlProperty &) override;
@@ -84,8 +85,11 @@ public:
     bool enabled() const;
     void setEnabled(bool enabled);
 
+    QVariant targetValue() const;
+
 Q_SIGNALS:
     void enabledChanged();
+    void targetValueChanged();
 
 private Q_SLOTS:
     void componentFinalized();

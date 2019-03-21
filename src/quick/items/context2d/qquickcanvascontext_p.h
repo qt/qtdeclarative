@@ -69,7 +69,7 @@ class QQuickCanvasContext : public QObject
     Q_OBJECT
 
 public:
-    QQuickCanvasContext(QObject *parent = 0);
+    QQuickCanvasContext(QObject *parent = nullptr);
     ~QQuickCanvasContext();
 
     virtual QStringList contextNames() const = 0;

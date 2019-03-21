@@ -54,6 +54,8 @@
 #include "private/qabstractanimationjob_p.h"
 #include <QtCore/qdebug.h>
 
+QT_REQUIRE_CONFIG(qml_animation);
+
 QT_BEGIN_NAMESPACE
 
 class Q_QML_PRIVATE_EXPORT QAnimationGroupJob : public QAbstractAnimationJob
@@ -61,7 +63,7 @@ class Q_QML_PRIVATE_EXPORT QAnimationGroupJob : public QAbstractAnimationJob
     Q_DISABLE_COPY(QAnimationGroupJob)
 public:
     QAnimationGroupJob();
-    ~QAnimationGroupJob();
+    ~QAnimationGroupJob() override;
 
     void appendAnimation(QAbstractAnimationJob *animation);
     void prependAnimation(QAbstractAnimationJob *animation);
@@ -70,7 +72,7 @@ public:
     QAbstractAnimationJob *firstChild() const { return m_firstChild; }
     QAbstractAnimationJob *lastChild() const { return m_lastChild; }
 
-    void clear();
+    virtual void clear();
 
     //called by QAbstractAnimationJob
     virtual void uncontrolledAnimationFinished(QAbstractAnimationJob *animation);
@@ -90,8 +92,8 @@ protected:
 
 private:
     //definition
-    QAbstractAnimationJob *m_firstChild;
-    QAbstractAnimationJob *m_lastChild;
+    QAbstractAnimationJob *m_firstChild = nullptr;
+    QAbstractAnimationJob *m_lastChild = nullptr;
 };
 
 QT_END_NAMESPACE

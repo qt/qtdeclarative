@@ -95,8 +95,8 @@ public:
     { return m_nextBinding.flag2(); }
 
     struct RefCount {
-        RefCount() : refCount(0) {}
-        int refCount;
+        RefCount() {}
+        int refCount = 0;
         void ref() { ++refCount; }
         int deref() { return --refCount; }
         operator int() const { return refCount; }

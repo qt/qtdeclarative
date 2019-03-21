@@ -41,7 +41,6 @@
 
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
-#include <qpa/qplatformdrag.h>
 #include <private/qquickitem_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <private/qquickitemchangelistener_p.h>
@@ -50,12 +49,13 @@
 #include <private/qv4scopedvalue_p.h>
 #include <QtCore/qmimedata.h>
 #include <QtQml/qqmlinfo.h>
-#include <QtGui/qdrag.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
 
 #if QT_CONFIG(draganddrop)
+#include <qpa/qplatformdrag.h>
+#include <QtGui/qdrag.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -67,8 +67,8 @@ public:
         return static_cast<QQuickDragAttachedPrivate *>(QObjectPrivate::get(attached)); }
 
     QQuickDragAttachedPrivate()
-        : attachedItem(0)
-        , mimeData(0)
+        : attachedItem(nullptr)
+        , mimeData(nullptr)
         , proposedAction(Qt::MoveAction)
         , supportedActions(Qt::MoveAction | Qt::CopyAction | Qt::LinkAction)
         , active(false)
@@ -82,8 +82,8 @@ public:
     {
     }
 
-    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) Q_DECL_OVERRIDE;
-    void itemParentChanged(QQuickItem *, QQuickItem *parent) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) override;
+    void itemParentChanged(QQuickItem *, QQuickItem *parent) override;
     void updatePosition();
     void restartDrag();
     void deliverEnterEvent();
@@ -123,7 +123,7 @@ public:
     \instantiates QQuickDrag
     \inqmlmodule QtQuick
     \ingroup qtquick-input
-    \brief For specifying drag and drop events for moved Items
+    \brief For specifying drag and drop events for moved Items.
 
     Using the Drag attached property, any Item can be made a source of drag and drop
     events within a scene.
@@ -231,7 +231,7 @@ void QQuickDragAttachedPrivate::deliverLeaveEvent()
     if (window) {
         QDragLeaveEvent event;
         deliverEvent(window, &event);
-        window = 0;
+        window = nullptr;
     }
 }
 
@@ -686,7 +686,7 @@ int QQuickDragAttached::drop()
         return acceptedAction;
     d->active = false;
 
-    QObject *target = 0;
+    QObject *target = nullptr;
 
     if (d->window) {
         QPoint scenePos = d->attachedItem->mapToScene(d->hotSpot).toPoint();
@@ -732,7 +732,7 @@ void QQuickDragAttached::cancel()
     d->deliverLeaveEvent();
 
     if (d->target) {
-        d->target = 0;
+        d->target = nullptr;
         emit targetChanged();
     }
 
@@ -772,6 +772,7 @@ Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedAct
         drag->setPixmap(QPixmap::fromImage(pixmapLoader.image()));
     }
 
+    drag->setHotSpot(hotSpot.toPoint());
     emit q->dragStarted();
 
     Qt::DropAction dropAction = drag->exec(supportedActions);
@@ -782,7 +783,7 @@ Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedAct
     deliverLeaveEvent();
 
     if (target) {
-        target = 0;
+        target = nullptr;
         emit q->targetChanged();
     }
 
@@ -835,7 +836,7 @@ void QQuickDragAttached::startDrag(QQmlV4Function *args)
 }
 
 QQuickDrag::QQuickDrag(QObject *parent)
-: QObject(parent), _target(0), _axis(XAndYAxis), _xmin(-FLT_MAX),
+: QObject(parent), _target(nullptr), _axis(XAndYAxis), _xmin(-FLT_MAX),
 _xmax(FLT_MAX), _ymin(-FLT_MAX), _ymax(FLT_MAX), _active(false), _filterChildren(false),
   _smoothed(true), _threshold(QGuiApplication::styleHints()->startDragDistance())
 {
@@ -860,9 +861,9 @@ void QQuickDrag::setTarget(QQuickItem *t)
 
 void QQuickDrag::resetTarget()
 {
-    if (_target == 0)
+    if (_target == nullptr)
         return;
-    _target = 0;
+    _target = nullptr;
     emit targetChanged();
 }
 

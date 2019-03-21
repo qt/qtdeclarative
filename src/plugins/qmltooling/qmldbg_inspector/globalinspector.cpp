@@ -40,11 +40,12 @@
 #include "globalinspector.h"
 #include "highlight.h"
 #include "inspecttool.h"
-#include "qqmldebugpacket.h"
 
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qabstractanimation_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qqmldebugconnector_p.h>
+#include <private/qversionedpacket_p.h>
 
 #include <QtGui/qwindow.h>
 
@@ -62,6 +63,8 @@
 // Response for "destroyObject" carries the <debugId_int> of the destroyed object.
 
 QT_BEGIN_NAMESPACE
+
+using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 
 const char REQUEST[] = "request";
 const char RESPONSE[] = "response";

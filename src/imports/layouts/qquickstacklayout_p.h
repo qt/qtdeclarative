@@ -56,16 +56,16 @@ public:
     int currentIndex() const;
     void setCurrentIndex(int index);
 
-    void componentComplete() Q_DECL_OVERRIDE;
-    QSizeF sizeHint(Qt::SizeHint whichSizeHint) const Q_DECL_OVERRIDE;
-    void setAlignment(QQuickItem *item, Qt::Alignment align)  Q_DECL_OVERRIDE;
-    void invalidate(QQuickItem *childItem = 0)  Q_DECL_OVERRIDE;
-    void updateLayoutItems()  Q_DECL_OVERRIDE;
-    void rearrange(const QSizeF &) Q_DECL_OVERRIDE;
+    void componentComplete() override;
+    QSizeF sizeHint(Qt::SizeHint whichSizeHint) const override;
+    void setAlignment(QQuickItem *item, Qt::Alignment align)  override;
+    void invalidate(QQuickItem *childItem = 0)  override;
+    void updateLayoutItems()  override;
+    void rearrange(const QSizeF &) override;
 
     // iterator
-    Q_INVOKABLE QQuickItem *itemAt(int index) const Q_DECL_OVERRIDE;
-    int itemCount() const Q_DECL_OVERRIDE;
+    Q_INVOKABLE QQuickItem *itemAt(int index) const override;
+    int itemCount() const override;
     int indexOf(QQuickItem *item) const;
 
 

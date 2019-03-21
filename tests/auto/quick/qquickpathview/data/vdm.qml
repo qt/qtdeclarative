@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQml.Models 2.12
 
 PathView {
     id: pathView
@@ -20,7 +21,7 @@ PathView {
         ListElement { value: "three" }
     }
 
-    model: VisualDataModel {
+    model: DelegateModel {
         delegate: Text { text: model.value }
         model : mo
     }

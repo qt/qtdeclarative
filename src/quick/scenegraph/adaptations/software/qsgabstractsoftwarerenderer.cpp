@@ -77,6 +77,11 @@ QSGSoftwareRenderableNode *QSGAbstractSoftwareRenderer::renderableNode(QSGNode *
     return m_nodes.value(node, nullptr);
 }
 
+const QLinkedList<QSGSoftwareRenderableNode*> &QSGAbstractSoftwareRenderer::renderableNodes() const
+{
+    return m_renderableNodes;
+}
+
 void QSGAbstractSoftwareRenderer::addNodeMapping(QSGNode *node, QSGSoftwareRenderableNode *renderableNode)
 {
     m_nodes.insert(node, renderableNode);
@@ -193,6 +198,12 @@ QRegion QSGAbstractSoftwareRenderer::optimizeRenderList()
         }
     }
 
+    if (m_obscuredRegion.contains(m_background->rect().toAlignedRect())) {
+        m_isOpaque = true;
+    } else {
+        m_isOpaque = false;
+    }
+
     // Empty dirtyRegion (for second pass)
     m_dirtyRegion = QRegion();
     m_obscuredRegion = QRegion();
@@ -227,11 +238,11 @@ void QSGAbstractSoftwareRenderer::setBackgroundColor(const QColor &color)
     renderableNode(m_background)->markMaterialDirty();
 }
 
-void QSGAbstractSoftwareRenderer::setBackgroundSize(const QSize &size)
+void QSGAbstractSoftwareRenderer::setBackgroundRect(const QRect &rect)
 {
-    if (m_background->rect().size().toSize() == size)
+    if (m_background->rect().toRect() == rect)
         return;
-    m_background->setRect(0.0f, 0.0f, size.width(), size.height());
+    m_background->setRect(rect);
     renderableNode(m_background)->markGeometryDirty();
     // Invalidate the whole scene when the background is resized
     markDirty();
@@ -242,21 +253,21 @@ QColor QSGAbstractSoftwareRenderer::backgroundColor()
     return m_background->color();
 }
 
-QSize QSGAbstractSoftwareRenderer::backgroundSize()
+QRect QSGAbstractSoftwareRenderer::backgroundRect()
 {
-    return m_background->rect().size().toSize();
+    return m_background->rect().toRect();
 }
 
 void QSGAbstractSoftwareRenderer::nodeAdded(QSGNode *node)
 {
-    qCDebug(lc2DRender) << "nodeAdded" << (void*)node;
+    qCDebug(lc2DRender, "nodeAdded %p", (void*)node);
 
     m_nodeUpdater->updateNodes(node);
 }
 
 void QSGAbstractSoftwareRenderer::nodeRemoved(QSGNode *node)
 {
-    qCDebug(lc2DRender) << "nodeRemoved" << (void*)node;
+    qCDebug(lc2DRender, "nodeRemoved %p", (void*)node);
 
     auto renderable = renderableNode(node);
     // remove mapping
@@ -280,7 +291,7 @@ void QSGAbstractSoftwareRenderer::nodeRemoved(QSGNode *node)
 
 void QSGAbstractSoftwareRenderer::nodeGeometryUpdated(QSGNode *node)
 {
-    qCDebug(lc2DRender) << "nodeGeometryUpdated";
+    qCDebug(lc2DRender, "nodeGeometryUpdated");
 
     // Mark node as dirty
     auto renderable = renderableNode(node);
@@ -293,7 +304,7 @@ void QSGAbstractSoftwareRenderer::nodeGeometryUpdated(QSGNode *node)
 
 void QSGAbstractSoftwareRenderer::nodeMaterialUpdated(QSGNode *node)
 {
-    qCDebug(lc2DRender) << "nodeMaterialUpdated";
+    qCDebug(lc2DRender, "nodeMaterialUpdated");
 
     // Mark node as dirty
     auto renderable = renderableNode(node);
@@ -306,7 +317,7 @@ void QSGAbstractSoftwareRenderer::nodeMaterialUpdated(QSGNode *node)
 
 void QSGAbstractSoftwareRenderer::nodeMatrixUpdated(QSGNode *node)
 {
-    qCDebug(lc2DRender) << "nodeMaterialUpdated";
+    qCDebug(lc2DRender, "nodeMaterialUpdated");
 
     // Update children nodes
     m_nodeUpdater->updateNodes(node);
@@ -314,7 +325,7 @@ void QSGAbstractSoftwareRenderer::nodeMatrixUpdated(QSGNode *node)
 
 void QSGAbstractSoftwareRenderer::nodeOpacityUpdated(QSGNode *node)
 {
-    qCDebug(lc2DRender) << "nodeOpacityUpdated";
+    qCDebug(lc2DRender, "nodeOpacityUpdated");
 
     // Update children nodes
     m_nodeUpdater->updateNodes(node);

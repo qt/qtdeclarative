@@ -43,6 +43,7 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QElapsedTimer>
 
+#include <private/qquickanimatorcontroller_p.h>
 #include <private/qquickwindow_p.h>
 #include <private/qquickprofiler_p.h>
 
@@ -91,10 +92,11 @@ void QSGOpenVGRenderLoop::windowDestroyed(QQuickWindow *window)
         rc->invalidate();
         delete vg;
         vg = nullptr;
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     } else if (vg && window == vg->window()) {
         vg->doneCurrent();
     }
+
+    delete d->animationController;
 }
 
 void QSGOpenVGRenderLoop::exposureChanged(QQuickWindow *window)
@@ -205,6 +207,7 @@ void QSGOpenVGRenderLoop::renderWindow(QQuickWindow *window)
     emit window->afterAnimating();
 
     cd->syncSceneGraph();
+    rc->endSync();
 
     if (profileFrames)
         syncTime = renderTimer.nsecsElapsed();

@@ -26,12 +26,12 @@
 **
 ****************************************************************************/
 
-#include "qqmlinspectorclient.h"
-#include "qqmlenginedebugclient.h"
 #include "../shared/debugutil_p.h"
 #include "../../../shared/util.h"
 
 #include <private/qqmldebugconnection_p.h>
+#include <private/qqmlenginedebugclient_p.h>
+#include <private/qqmlinspectorclient_p.h>
 
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
@@ -41,35 +41,21 @@
 #include <QtCore/qthread.h>
 #include <QtCore/qlibraryinfo.h>
 
-#define STR_PORT_FROM "3776"
-#define STR_PORT_TO "3786"
-
-class tst_QQmlEngineDebugInspectorIntegration : public QQmlDataTest
+class tst_QQmlEngineDebugInspectorIntegration : public QQmlDebugTest
 {
     Q_OBJECT
 
-public:
-    tst_QQmlEngineDebugInspectorIntegration()
-        : m_process(0)
-        , m_inspectorClient(0)
-        , m_engineDebugClient(0)
-        , m_recipient(0)
-    {
-    }
-
-
 private:
-    void init(bool restrictServices);
-    QmlDebugObjectReference findRootObject();
+    ConnectResult init(bool restrictServices);
+    QList<QQmlDebugClient *> createClients() override;
 
-    QQmlDebugProcess *m_process;
-    QQmlInspectorClient *m_inspectorClient;
-    QQmlEngineDebugClient *m_engineDebugClient;
-    QQmlInspectorResultRecipient *m_recipient;
+    QQmlEngineDebugObjectReference findRootObject();
+
+    QPointer<QQmlInspectorClient> m_inspectorClient;
+    QPointer<QQmlEngineDebugClient> m_engineDebugClient;
+    QPointer<QQmlInspectorResultRecipient> m_recipient;
 
 private slots:
-    void cleanup();
-
     void connect_data();
     void connect();
     void objectLocationLookup();
@@ -79,73 +65,42 @@ private slots:
     void destroyObject();
 };
 
-QmlDebugObjectReference tst_QQmlEngineDebugInspectorIntegration::findRootObject()
+QQmlEngineDebugObjectReference tst_QQmlEngineDebugInspectorIntegration::findRootObject()
 {
     bool success = false;
     m_engineDebugClient->queryAvailableEngines(&success);
 
     if (!QQmlDebugTest::waitForSignal(m_engineDebugClient, SIGNAL(result())))
-        return QmlDebugObjectReference();
+        return QQmlEngineDebugObjectReference();
 
-    m_engineDebugClient->queryRootContexts(m_engineDebugClient->engines()[0].debugId, &success);
+    m_engineDebugClient->queryRootContexts(m_engineDebugClient->engines()[0], &success);
     if (!QQmlDebugTest::waitForSignal(m_engineDebugClient, SIGNAL(result())))
-        return QmlDebugObjectReference();
+        return QQmlEngineDebugObjectReference();
 
     int count = m_engineDebugClient->rootContext().contexts.count();
     m_engineDebugClient->queryObject(
                 m_engineDebugClient->rootContext().contexts[count - 1].objects[0], &success);
     if (!QQmlDebugTest::waitForSignal(m_engineDebugClient, SIGNAL(result())))
-        return QmlDebugObjectReference();
+        return QQmlEngineDebugObjectReference();
     return m_engineDebugClient->object();
 }
 
-void tst_QQmlEngineDebugInspectorIntegration::init(bool restrictServices)
+QQmlDebugTest::ConnectResult tst_QQmlEngineDebugInspectorIntegration::init(bool restrictServices)
 {
-    const QString argument = QString::fromLatin1("-qmljsdebugger=port:%1,%2,block%3")
-            .arg(STR_PORT_FROM).arg(STR_PORT_TO)
-            .arg(restrictServices ? QStringLiteral(",services:QmlDebugger,QmlInspector") :
-                                    QString());
-
-    m_process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qml",
-                                     this);
-    m_process->start(QStringList() << argument << testFile("qtquick2.qml"));
-    QVERIFY2(m_process->waitForSessionStart(),
-             "Could not launch application, or did not get 'Waiting for connection'.");
-
-    QQmlDebugConnection *m_connection = new QQmlDebugConnection(this);
-    m_inspectorClient = new QQmlInspectorClient(m_connection);
-    m_engineDebugClient = new QQmlEngineDebugClient(m_connection);
-    m_recipient = new QQmlInspectorResultRecipient(this);
-    QObject::connect(m_inspectorClient, &QQmlInspectorClient::responseReceived,
-                     m_recipient, &QQmlInspectorResultRecipient::recordResponse);
-
-    QList<QQmlDebugClient *> others = QQmlDebugTest::createOtherClients(m_connection);
-
-    m_connection->connectToHost(QLatin1String("127.0.0.1"), m_process->debugPort());
-    QVERIFY(m_connection->waitForConnected());
-    foreach (QQmlDebugClient *other, others)
-        QCOMPARE(other->state(), restrictServices ? QQmlDebugClient::Unavailable :
-                                                    QQmlDebugClient::Enabled);
-    qDeleteAll(others);
-
-    QTRY_COMPARE(m_inspectorClient->state(), QQmlDebugClient::Enabled);
-    QTRY_COMPARE(m_engineDebugClient->state(), QQmlDebugClient::Enabled);
+    return QQmlDebugTest::connect(
+                QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qml",
+                restrictServices ? QStringLiteral("QmlDebugger,QmlInspector") : QString(),
+                testFile("qtquick2.qml"), true);
 }
 
-void tst_QQmlEngineDebugInspectorIntegration::cleanup()
+QList<QQmlDebugClient *> tst_QQmlEngineDebugInspectorIntegration::createClients()
 {
-    if (QTest::currentTestFailed()) {
-        qDebug() << "Process State:" << m_process->state();
-        qDebug() << "Application Output:" << m_process->output();
-    }
-    delete m_process;
-    m_process = 0;
-    delete m_engineDebugClient;
-    m_engineDebugClient = 0;
-    delete m_inspectorClient;
-    m_inspectorClient = 0;
-    delete m_recipient;
-    m_recipient = 0;
+    m_inspectorClient = new QQmlInspectorClient(m_connection);
+    m_engineDebugClient = new QQmlEngineDebugClient(m_connection);
+    m_recipient = new QQmlInspectorResultRecipient(m_inspectorClient);
+    QObject::connect(m_inspectorClient.data(), &QQmlInspectorClient::responseReceived,
+                     m_recipient.data(), &QQmlInspectorResultRecipient::recordResponse);
+    return QList<QQmlDebugClient *>({m_inspectorClient, m_engineDebugClient});
 }
 
 void tst_QQmlEngineDebugInspectorIntegration::connect_data()
@@ -158,15 +113,15 @@ void tst_QQmlEngineDebugInspectorIntegration::connect_data()
 void tst_QQmlEngineDebugInspectorIntegration::connect()
 {
     QFETCH(bool, restrictMode);
-    init(restrictMode);
+    QCOMPARE(init(restrictMode), ConnectSuccess);
 }
 
 void tst_QQmlEngineDebugInspectorIntegration::objectLocationLookup()
 {
-    init(true);
+    QCOMPARE(init(true), ConnectSuccess);
 
     bool success = false;
-    QmlDebugObjectReference rootObject = findRootObject();
+    QQmlEngineDebugObjectReference rootObject = findRootObject();
     QVERIFY(rootObject.debugId != -1);
     const QString fileName = QFileInfo(rootObject.source.url.toString()).fileName();
     int lineNumber = rootObject.source.lineNumber;
@@ -176,7 +131,7 @@ void tst_QQmlEngineDebugInspectorIntegration::objectLocationLookup()
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_engineDebugClient, SIGNAL(result())));
 
-    foreach (QmlDebugObjectReference child, rootObject.children) {
+    foreach (QQmlEngineDebugObjectReference child, rootObject.children) {
         success = false;
         lineNumber = child.source.lineNumber;
         columnNumber = child.source.columnNumber;
@@ -189,11 +144,12 @@ void tst_QQmlEngineDebugInspectorIntegration::objectLocationLookup()
 
 void tst_QQmlEngineDebugInspectorIntegration::select()
 {
-    init(true);
-    QmlDebugObjectReference rootObject = findRootObject();
+    QCOMPARE(init(true), ConnectSuccess);
+
+    QQmlEngineDebugObjectReference rootObject = findRootObject();
     QList<int> childIds;
     int requestId = 0;
-    foreach (const QmlDebugObjectReference &child, rootObject.children) {
+    foreach (const QQmlEngineDebugObjectReference &child, rootObject.children) {
         requestId = m_inspectorClient->select(QList<int>() << child.debugId);
         QTRY_COMPARE(m_recipient->lastResponseId, requestId);
         QVERIFY(m_recipient->lastResult);
@@ -206,7 +162,7 @@ void tst_QQmlEngineDebugInspectorIntegration::select()
 
 void tst_QQmlEngineDebugInspectorIntegration::createObject()
 {
-    init(true);
+    QCOMPARE(init(true), ConnectSuccess);
 
     QString qml = QLatin1String("Rectangle {\n"
                                 "  id: xxxyxxx\n"
@@ -215,7 +171,7 @@ void tst_QQmlEngineDebugInspectorIntegration::createObject()
                                 "  color: \"blue\"\n"
                                 "}");
 
-    QmlDebugObjectReference rootObject = findRootObject();
+    QQmlEngineDebugObjectReference rootObject = findRootObject();
     QVERIFY(rootObject.debugId != -1);
     QCOMPARE(rootObject.children.length(), 2);
 
@@ -233,8 +189,10 @@ void tst_QQmlEngineDebugInspectorIntegration::createObject()
 
 void tst_QQmlEngineDebugInspectorIntegration::moveObject()
 {
-    init(true);
-    QmlDebugObjectReference rootObject = findRootObject();
+    QCOMPARE(init(true), ConnectSuccess);
+
+    QCOMPARE(m_inspectorClient->state(), QQmlDebugClient::Enabled);
+    QQmlEngineDebugObjectReference rootObject = findRootObject();
     QVERIFY(rootObject.debugId != -1);
     QCOMPARE(rootObject.children.length(), 2);
 
@@ -256,8 +214,10 @@ void tst_QQmlEngineDebugInspectorIntegration::moveObject()
 
 void tst_QQmlEngineDebugInspectorIntegration::destroyObject()
 {
-    init(true);
-    QmlDebugObjectReference rootObject = findRootObject();
+    QCOMPARE(init(true), ConnectSuccess);
+
+    QCOMPARE(m_inspectorClient->state(), QQmlDebugClient::Enabled);
+    QQmlEngineDebugObjectReference rootObject = findRootObject();
     QVERIFY(rootObject.debugId != -1);
     QCOMPARE(rootObject.children.length(), 2);
 

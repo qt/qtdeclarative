@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
         argv2[i] = argv[i];
     argv2[argc] = strdup("-qmljsdebugger=native,services:NativeQmlDebugger");
     ++argc;
-    argv2[argc] = 0;
+    argv2[argc] = nullptr;
     Application app(argc, argv2);
     return QTest::qExec(&app, argc, argv);
 }

@@ -41,6 +41,7 @@
 #include <QQmlNetworkAccessManagerFactory>
 #include <QQmlExpression>
 #include <QQmlIncubationController>
+#include <QTemporaryDir>
 #include <private/qqmlengine_p.h>
 #include <QQmlAbstractUrlInterceptor>
 
@@ -51,6 +52,7 @@ public:
     tst_qqmlengine() {}
 
 private slots:
+    void initTestCase() override;
     void rootContext();
     void networkAccessManager();
     void synchronousNetworkAccessManager();
@@ -73,6 +75,11 @@ private slots:
     void urlInterceptor();
     void qmlContextProperties();
     void testGCCorruption();
+    void testGroupedPropertyRevisions();
+    void componentFromEval();
+    void qrcUrls();
+    void cppSignalAndEval();
+    void singletonInstance();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -80,7 +87,16 @@ public slots:
         static QObject *ptr = new QObject();
         return ptr;
     }
+
+private:
+    QTemporaryDir m_tempDir;
 };
+
+void tst_qqmlengine::initTestCase()
+{
+    QVERIFY2(m_tempDir.isValid(), qPrintable(m_tempDir.errorString()));
+    QQmlDataTest::initTestCase();
+}
 
 void tst_qqmlengine::rootContext()
 {
@@ -95,7 +111,7 @@ void tst_qqmlengine::rootContext()
 class NetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
 {
 public:
-    NetworkAccessManagerFactory() : manager(0) {}
+    NetworkAccessManagerFactory() : manager(nullptr) {}
 
     QNetworkAccessManager *create(QObject *parent) {
         manager = new QNetworkAccessManager(parent);
@@ -111,7 +127,7 @@ void tst_qqmlengine::networkAccessManager()
 
     // Test QQmlEngine created manager
     QPointer<QNetworkAccessManager> manager = engine->networkAccessManager();
-    QVERIFY(manager != 0);
+    QVERIFY(manager != nullptr);
     delete engine;
 
     // Test factory created manager
@@ -143,10 +159,10 @@ class ImmediateManager : public QNetworkAccessManager {
     Q_OBJECT
 
 public:
-    ImmediateManager(QObject *parent = 0) : QNetworkAccessManager(parent) {
+    ImmediateManager(QObject *parent = nullptr) : QNetworkAccessManager(parent) {
     }
 
-    QNetworkReply *createRequest(Operation, const QNetworkRequest & , QIODevice * outgoingData = 0) {
+    QNetworkReply *createRequest(Operation, const QNetworkRequest & , QIODevice * outgoingData = nullptr) {
         Q_UNUSED(outgoingData);
         return new ImmediateReply;
     }
@@ -200,17 +216,17 @@ void tst_qqmlengine::contextForObject()
     QQmlEngine *engine = new QQmlEngine;
 
     // Test null-object
-    QVERIFY(!QQmlEngine::contextForObject(0));
+    QVERIFY(!QQmlEngine::contextForObject(nullptr));
 
     // Test an object with no context
     QObject object;
     QVERIFY(!QQmlEngine::contextForObject(&object));
 
     // Test setting null-object
-    QQmlEngine::setContextForObject(0, engine->rootContext());
+    QQmlEngine::setContextForObject(nullptr, engine->rootContext());
 
     // Test setting null-context
-    QQmlEngine::setContextForObject(&object, 0);
+    QQmlEngine::setContextForObject(&object, nullptr);
 
     // Test setting context
     QQmlEngine::setContextForObject(&object, engine->rootContext());
@@ -224,7 +240,7 @@ void tst_qqmlengine::contextForObject()
     QCOMPARE(QQmlEngine::contextForObject(&object), engine->rootContext());
 
     // Delete context
-    delete engine; engine = 0;
+    delete engine; engine = nullptr;
     QVERIFY(!QQmlEngine::contextForObject(&object));
 }
 
@@ -286,9 +302,12 @@ void tst_qqmlengine::clearComponentCache()
 {
     QQmlEngine engine;
 
+    const QString fileName = m_tempDir.filePath(QStringLiteral("temp.qml"));
+    const QUrl fileUrl = QUrl::fromLocalFile(fileName);
+
     // Create original qml file
     {
-        QFile file("temp.qml");
+        QFile file(fileName);
         QVERIFY(file.open(QIODevice::WriteOnly));
         file.write("import QtQuick 2.0\nQtObject {\nproperty int test: 10\n}\n");
         file.close();
@@ -296,9 +315,9 @@ void tst_qqmlengine::clearComponentCache()
 
     // Test "test" property
     {
-        QQmlComponent component(&engine, "temp.qml");
+        QQmlComponent component(&engine, fileUrl);
         QObject *obj = component.create();
-        QVERIFY(obj != 0);
+        QVERIFY(obj != nullptr);
         QCOMPARE(obj->property("test").toInt(), 10);
         delete obj;
     }
@@ -311,7 +330,7 @@ void tst_qqmlengine::clearComponentCache()
         // Similar effects of lacking precision have been observed on some Linux systems.
         QThread::sleep(1);
 
-        QFile file("temp.qml");
+        QFile file(fileName);
         QVERIFY(file.open(QIODevice::WriteOnly));
         file.write("import QtQuick 2.0\nQtObject {\nproperty int test: 11\n}\n");
         file.close();
@@ -319,9 +338,9 @@ void tst_qqmlengine::clearComponentCache()
 
     // Test cache hit
     {
-        QQmlComponent component(&engine, "temp.qml");
+        QQmlComponent component(&engine, fileUrl);
         QObject *obj = component.create();
-        QVERIFY(obj != 0);
+        QVERIFY(obj != nullptr);
         QCOMPARE(obj->property("test").toInt(), 10);
         delete obj;
     }
@@ -331,12 +350,18 @@ void tst_qqmlengine::clearComponentCache()
 
     // Test cache refresh
     {
-        QQmlComponent component(&engine, "temp.qml");
+        QQmlComponent component(&engine, fileUrl);
         QObject *obj = component.create();
-        QVERIFY(obj != 0);
+        QVERIFY(obj != nullptr);
         QCOMPARE(obj->property("test").toInt(), 11);
         delete obj;
     }
+
+    // Regular Synchronous loading will leave us with an event posted
+    // to the gui thread and an extra refcount that will only be dropped after the
+    // event delivery. Call sendPostedEvents() to get rid of it so that
+    // the temporary directory can be removed.
+    QCoreApplication::sendPostedEvents();
 }
 
 struct ComponentCacheFunctions : public QObject, public QQmlIncubationController
@@ -350,7 +375,7 @@ public:
     Q_INVOKABLE void trim()
     {
         // Wait for any pending deletions to occur
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
         QCoreApplication::processEvents();
 
         // There might be JS function objects around that hold a last ref to the compilation unit that's
@@ -402,7 +427,7 @@ void tst_qqmlengine::trimComponentCache()
     QQmlComponent component(&engine, testFileUrl(file));
     QVERIFY(component.isReady());
     QScopedPointer<QObject> object(component.create());
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("success").toBool(), true);
 }
 
@@ -471,7 +496,7 @@ void tst_qqmlengine::repeatedCompilation()
         QQmlComponent component(&engine, testFileUrl("repeatedCompilation.qml"));
         QVERIFY(component.isReady());
         QScopedPointer<QObject> object(component.create());
-        QVERIFY(object != 0);
+        QVERIFY(object != nullptr);
         QCOMPARE(object->property("success").toBool(), true);
     }
 }
@@ -515,11 +540,11 @@ void tst_qqmlengine::outputWarningsToStandardError()
 
     QObject *o = c.create();
 
-    QVERIFY(o != 0);
+    QVERIFY(o != nullptr);
     delete o;
 
     QCOMPARE(messageHandler.messages().count(), 1);
-    QCOMPARE(messageHandler.messages().at(0), QLatin1String("<Unknown File>:1:48: Unable to assign [undefined] to int"));
+    QCOMPARE(messageHandler.messages().at(0), QLatin1String("<Unknown File>:1:32: Unable to assign [undefined] to int"));
     messageHandler.clear();
 
     engine.setOutputWarningsToStandardError(false);
@@ -527,7 +552,7 @@ void tst_qqmlengine::outputWarningsToStandardError()
 
     o = c.create();
 
-    QVERIFY(o != 0);
+    QVERIFY(o != nullptr);
     delete o;
 
     QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
@@ -536,9 +561,9 @@ void tst_qqmlengine::outputWarningsToStandardError()
 void tst_qqmlengine::objectOwnership()
 {
     {
-    QCOMPARE(QQmlEngine::objectOwnership(0), QQmlEngine::CppOwnership);
-    QQmlEngine::setObjectOwnership(0, QQmlEngine::JavaScriptOwnership);
-    QCOMPARE(QQmlEngine::objectOwnership(0), QQmlEngine::CppOwnership);
+    QCOMPARE(QQmlEngine::objectOwnership(nullptr), QQmlEngine::CppOwnership);
+    QQmlEngine::setObjectOwnership(nullptr, QQmlEngine::JavaScriptOwnership);
+    QCOMPARE(QQmlEngine::objectOwnership(nullptr), QQmlEngine::CppOwnership);
     }
 
     {
@@ -558,7 +583,7 @@ void tst_qqmlengine::objectOwnership()
     c.setData("import QtQuick 2.0; QtObject { property QtObject object: QtObject {} }", QUrl());
 
     QObject *o = c.create();
-    QVERIFY(o != 0);
+    QVERIFY(o != nullptr);
 
     QCOMPARE(QQmlEngine::objectOwnership(o), QQmlEngine::CppOwnership);
 
@@ -578,7 +603,7 @@ void tst_qqmlengine::objectOwnership()
             c.setData("import QtQuick 2.0; Item { property int data: test.createAQObjectForOwnershipTest() ? 0 : 1 }", QUrl());
             QVERIFY(c.isReady());
             QObject *o = c.create();
-            QVERIFY(o != 0);
+            QVERIFY(o != nullptr);
         }
         QTRY_VERIFY(spy.count());
     }
@@ -593,8 +618,8 @@ void tst_qqmlengine::objectOwnership()
             c.setData("import QtQuick 2.0; QtObject { property var object: { var i = test; test ? 0 : 1 }  }", QUrl());
             QVERIFY(c.isReady());
             QObject *o = c.create();
-            QVERIFY(o != 0);
-            engine.rootContext()->setContextProperty("test", 0);
+            QVERIFY(o != nullptr);
+            engine.rootContext()->setContextProperty("test", nullptr);
         }
         QTRY_VERIFY(spy.count());
     }
@@ -613,8 +638,8 @@ void tst_qqmlengine::multipleEngines()
         engine1.rootContext()->setContextProperty("object", &o);
         engine2.rootContext()->setContextProperty("object", &o);
 
-        QQmlExpression expr1(engine1.rootContext(), 0, QString("object.objectName"));
-        QQmlExpression expr2(engine2.rootContext(), 0, QString("object.objectName"));
+        QQmlExpression expr1(engine1.rootContext(), nullptr, QString("object.objectName"));
+        QQmlExpression expr2(engine2.rootContext(), nullptr, QString("object.objectName"));
 
         QCOMPARE(expr1.evaluate().toString(), QString("TestName"));
         QCOMPARE(expr2.evaluate().toString(), QString("TestName"));
@@ -624,13 +649,13 @@ void tst_qqmlengine::multipleEngines()
     {
         QQmlEngine engine1;
         engine1.rootContext()->setContextProperty("object", &o);
-        QQmlExpression expr1(engine1.rootContext(), 0, QString("object.objectName"));
+        QQmlExpression expr1(engine1.rootContext(), nullptr, QString("object.objectName"));
         QCOMPARE(expr1.evaluate().toString(), QString("TestName"));
     }
     {
         QQmlEngine engine1;
         engine1.rootContext()->setContextProperty("object", &o);
-        QQmlExpression expr1(engine1.rootContext(), 0, QString("object.objectName"));
+        QQmlExpression expr1(engine1.rootContext(), nullptr, QString("object.objectName"));
         QCOMPARE(expr1.evaluate().toString(), QString("TestName"));
     }
 }
@@ -721,6 +746,9 @@ public:
 
         if (url.path().endsWith("Test.2/qmldir"))//Special case
             return QUrl::fromLocalFile(m_base.path() + "interception/module/intercepted/qmldir");
+        // Special case: with 5.10 we always add the implicit import, so we need to explicitly handle this case now
+        if (url.path().endsWith("intercepted/qmldir"))
+            return url;
 
         QString alteredPath = url.path();
         int a = alteredPath.lastIndexOf('/');
@@ -839,11 +867,180 @@ void tst_qqmlengine::qmlContextProperties()
 
 void tst_qqmlengine::testGCCorruption()
 {
+#ifdef SKIP_GCCORRUPTION_TEST
+    QSKIP("Test too heavy for qemu");
+#endif
+
     QQmlEngine e;
 
     QQmlComponent c(&e, testFileUrl("testGCCorruption.qml"));
     QObject *o = c.create();
     QVERIFY2(o, qPrintable(c.errorString()));
+}
+
+void tst_qqmlengine::testGroupedPropertyRevisions()
+{
+    QQmlEngine e;
+
+    QQmlComponent c(&e, testFileUrl("testGroupedPropertiesRevision.1.qml"));
+    QScopedPointer<QObject> object(c.create());
+    QVERIFY2(object.data(), qPrintable(c.errorString()));
+    QQmlComponent c2(&e, testFileUrl("testGroupedPropertiesRevision.2.qml"));
+    QVERIFY(!c2.errorString().isEmpty());
+}
+
+void tst_qqmlengine::componentFromEval()
+{
+    QQmlEngine engine;
+    const QUrl testUrl = testFileUrl("EmptyComponent.qml");
+    QJSValue result = engine.evaluate("Qt.createComponent(\"" + testUrl.toString() + "\");");
+    QPointer<QQmlComponent> component(qobject_cast<QQmlComponent*>(result.toQObject()));
+    QVERIFY(!component.isNull());
+    QScopedPointer<QObject> item(component->create());
+    QVERIFY(!item.isNull());
+}
+
+void tst_qqmlengine::qrcUrls()
+{
+    QQmlEngine engine;
+    QQmlEnginePrivate *pEngine = QQmlEnginePrivate::get(&engine);
+
+    {
+        QQmlRefPointer<QQmlTypeData> oneQml(pEngine->typeLoader.getType(QUrl("qrc:/qrcurls.qml")));
+        QVERIFY(oneQml.data() != nullptr);
+        QQmlRefPointer<QQmlTypeData> twoQml(pEngine->typeLoader.getType(QUrl("qrc:///qrcurls.qml")));
+        QVERIFY(twoQml.data() != nullptr);
+        QCOMPARE(oneQml.data(), twoQml.data());
+    }
+
+    {
+        QQmlRefPointer<QQmlTypeData> oneJS(pEngine->typeLoader.getType(QUrl("qrc:/qrcurls.js")));
+        QVERIFY(oneJS.data() != nullptr);
+        QQmlRefPointer<QQmlTypeData> twoJS(pEngine->typeLoader.getType(QUrl("qrc:///qrcurls.js")));
+        QVERIFY(twoJS.data() != nullptr);
+        QCOMPARE(oneJS.data(), twoJS.data());
+    }
+}
+
+class ObjectCaller : public QObject
+{
+    Q_OBJECT
+signals:
+    void doubleReply(const double a);
+};
+
+void tst_qqmlengine::cppSignalAndEval()
+{
+    ObjectCaller objectCaller;
+    QQmlEngine engine;
+    engine.rootContext()->setContextProperty(QLatin1Literal("CallerCpp"), &objectCaller);
+    QQmlComponent c(&engine);
+    c.setData("import QtQuick 2.9\n"
+              "Item {\n"
+              "    property var r: 0\n"
+              "    Connections {\n"
+              "        target: CallerCpp;\n"
+              "        onDoubleReply: {\n"
+              "            eval('var z = 1');\n"
+              "            r = a;\n"
+              "        }\n"
+              "    }\n"
+              "}",
+              QUrl(QStringLiteral("qrc:/main.qml")));
+    QScopedPointer<QObject> object(c.create());
+    QVERIFY(!object.isNull());
+    emit objectCaller.doubleReply(1.1234);
+    QCOMPARE(object->property("r"), 1.1234);
+}
+
+class CppSingleton : public QObject {
+    Q_OBJECT
+public:
+    CppSingleton() {}
+
+    static QObject *create(QQmlEngine *qmlEngine, QJSEngine *jsEngine)
+    {
+        Q_UNUSED(qmlEngine);
+        Q_UNUSED(jsEngine);
+        return new CppSingleton();
+    }
+};
+
+class JsSingleton : public QObject {
+    Q_OBJECT
+public:
+    JsSingleton() {}
+
+    static QJSValue create(QQmlEngine *qmlEngine, QJSEngine *jsEngine)
+    {
+        Q_UNUSED(qmlEngine);
+        QJSValue value = jsEngine->newQObject(new JsSingleton());
+        return value;
+    }
+};
+
+class SomeQObjectClass : public QObject {
+    Q_OBJECT
+public:
+    SomeQObjectClass() : QObject(nullptr){}
+};
+
+void tst_qqmlengine::singletonInstance()
+{
+    QQmlEngine engine;
+
+    int cppSingletonTypeId = qmlRegisterSingletonType<CppSingleton>("Test", 1, 0, "CppSingleton", &CppSingleton::create);
+    int jsValueSingletonTypeId = qmlRegisterSingletonType("Test", 1, 0, "JsSingleton", &JsSingleton::create);
+
+    {
+        // Cpp QObject singleton type
+        QJSValue value = engine.singletonInstance<QJSValue>(cppSingletonTypeId);
+        QVERIFY(!value.isUndefined());
+        QVERIFY(value.isQObject());
+        QObject *instance = value.toQObject();
+        QVERIFY(instance);
+        QCOMPARE(instance->metaObject()->className(), "CppSingleton");
+    }
+
+    {
+        // QJSValue QObject singleton type
+        QJSValue value = engine.singletonInstance<QJSValue>(jsValueSingletonTypeId);
+        QVERIFY(!value.isUndefined());
+        QVERIFY(value.isQObject());
+        QObject *instance = value.toQObject();
+        QVERIFY(instance);
+        QCOMPARE(instance->metaObject()->className(), "JsSingleton");
+    }
+
+    {
+        // Invalid types
+        QJSValue value;
+        value = engine.singletonInstance<QJSValue>(-4711);
+        QVERIFY(value.isUndefined());
+        value = engine.singletonInstance<QJSValue>(1701);
+        QVERIFY(value.isUndefined());
+    }
+
+    {
+        // Valid, but non-singleton type
+        int typeId = qmlRegisterType<CppSingleton>("Test", 1, 0, "NotASingleton");
+        QJSValue value = engine.singletonInstance<QJSValue>(typeId);
+        QVERIFY(value.isUndefined());
+    }
+
+    {
+        // Cpp QObject singleton type
+        CppSingleton *instance = engine.singletonInstance<CppSingleton*>(cppSingletonTypeId);
+        QVERIFY(instance);
+        QCOMPARE(instance->metaObject()->className(), "CppSingleton");
+        QCOMPARE(instance, engine.singletonInstance<QJSValue>(cppSingletonTypeId).toQObject());
+    }
+
+    {
+        // Wrong destination type
+        SomeQObjectClass * instance = engine.singletonInstance<SomeQObjectClass*>(cppSingletonTypeId);
+        QVERIFY(!instance);
+    }
 }
 
 QTEST_MAIN(tst_qqmlengine)

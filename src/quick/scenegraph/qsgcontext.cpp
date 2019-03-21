@@ -143,7 +143,7 @@ public:
             qCDebug(QSG_LOG_INFO, "Animation Driver: using walltime");
     }
 
-    void start() Q_DECL_OVERRIDE
+    void start() override
     {
         m_time = 0;
         m_timer.start();
@@ -151,14 +151,14 @@ public:
         QAnimationDriver::start();
     }
 
-    qint64 elapsed() const Q_DECL_OVERRIDE
+    qint64 elapsed() const override
     {
         return m_mode == VSyncMode
                 ? qint64(m_time)
                 : qint64(m_time) + m_wallTime.elapsed();
     }
 
-    void advance() Q_DECL_OVERRIDE
+    void advance() override
     {
         qint64 delta = m_timer.restart();
 
@@ -363,13 +363,6 @@ void QSGRenderContext::registerFontengineForCleanup(QFontEngine *engine)
 }
 
 /*!
-    Factory function for texture objects.
-
-    If \a image is a valid image, the QSGTexture::setImage function
-    will be called with \a image as argument.
- */
-
-/*!
     Factory function for the scene graph renderers.
 
     The renderers are used for the toplevel renderer and once for every
@@ -379,7 +372,7 @@ void QSGRenderContext::registerFontengineForCleanup(QFontEngine *engine)
 QSGTexture *QSGRenderContext::textureForFactory(QQuickTextureFactory *factory, QQuickWindow *window)
 {
     if (!factory)
-        return 0;
+        return nullptr;
 
     m_mutex.lock();
     QSGTexture *texture = m_textures.value(factory);
@@ -402,6 +395,20 @@ void QSGRenderContext::textureFactoryDestroyed(QObject *o)
     m_mutex.lock();
     m_texturesToDelete << m_textures.take(static_cast<QQuickTextureFactory *>(o));
     m_mutex.unlock();
+}
+
+/*!
+    Return the texture corresponding to a texture factory.
+
+    This may optionally manipulate the texture in some way; for example by returning
+    an atlased texture.
+
+    This function is not a replacement for textureForFactory; both should be used
+    for a single texture (this might atlas, while the other might cache).
+*/
+QSGTexture *QSGRenderContext::compressedTextureForFactory(const QSGCompressedTextureFactory *) const
+{
+    return nullptr;
 }
 
 #include "qsgcontext.moc"

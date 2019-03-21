@@ -99,7 +99,7 @@ QT_BEGIN_NAMESPACE
     ranges is often quite small, which helps as well. If there is a need for faster random access
     then a skip list like index may be an appropriate addition.
 
-    \sa VisualDataModel
+    \sa DelegateModel
 */
 
 #ifdef QT_QML_VERIFY_MINIMAL
@@ -1253,7 +1253,7 @@ void QQmlListCompositor::listItemsRemoved(
 
     QVector<QQmlChangeSet::Change> removals;
     removals.append(QQmlChangeSet::Change(index, count));
-    listItemsRemoved(translatedRemovals, list, &removals, 0, 0);
+    listItemsRemoved(translatedRemovals, list, &removals, nullptr, nullptr);
 }
 
 /*!

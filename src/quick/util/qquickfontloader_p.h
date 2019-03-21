@@ -72,7 +72,7 @@ public:
     enum Status { Null = 0, Ready, Loading, Error };
     Q_ENUM(Status)
 
-    QQuickFontLoader(QObject *parent = 0);
+    QQuickFontLoader(QObject *parent = nullptr);
     ~QQuickFontLoader();
 
     QUrl source() const;

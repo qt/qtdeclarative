@@ -171,7 +171,7 @@ void QSGD3D12ShaderLinker::linkTextureSubRects()
     // texture bind point.
     for (Constant &c : constants) {
         if (c.specialType == QSGShaderEffectNode::VariableData::SubRect) {
-            if (c.value.type() == QMetaType::QByteArray) {
+            if (c.value.type() == QVariant::ByteArray) {
                 const QByteArray name = c.value.toByteArray();
                 if (!textureNameMap.contains(name))
                     qWarning("ShaderEffect: qt_SubRect_%s refers to unknown source texture", qPrintable(name));

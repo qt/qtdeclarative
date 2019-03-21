@@ -28,9 +28,11 @@
 #include <QtTest/QtTest>
 #include "../../shared/util.h"
 #include <QtQuick/qquickview.h>
+#include <QtQuickTest/QtQuickTest>
 #include <private/qabstractanimation_p.h>
 #include <private/qquickanimatedsprite_p.h>
 #include <private/qquickitem_p.h>
+#include <QtCore/qscopedpointer.h>
 #include <QtGui/qpainter.h>
 #include <QtGui/qopenglcontext.h>
 #include <QtGui/qopenglfunctions.h>
@@ -52,6 +54,8 @@ private slots:
     void test_largeAnimation();
     void test_reparenting();
     void test_changeSourceToSmallerImgKeepingBigFrameSize();
+    void test_infiniteLoops();
+    void test_implicitSize();
 };
 
 void tst_qquickanimatedsprite::initTestCase()
@@ -62,11 +66,11 @@ void tst_qquickanimatedsprite::initTestCase()
 
 void tst_qquickanimatedsprite::test_properties()
 {
-    QQuickView *window = new QQuickView(0);
+    QScopedPointer<QQuickView> window(new QQuickView);
 
     window->setSource(testFileUrl("basic.qml"));
     window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     QVERIFY(window->rootObject());
     QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
@@ -77,21 +81,24 @@ void tst_qquickanimatedsprite::test_properties()
     QVERIFY(sprite->interpolate());
     QCOMPARE(sprite->loops(), 30);
 
+    QSignalSpy finishedSpy(sprite, SIGNAL(finished()));
+    QVERIFY(finishedSpy.isValid());
+
     sprite->setRunning(false);
     QVERIFY(!sprite->running());
+    // The finished() signal shouldn't be emitted when running is manually set to false.
+    QCOMPARE(finishedSpy.count(), 0);
     sprite->setInterpolate(false);
     QVERIFY(!sprite->interpolate());
-
-    delete window;
 }
 
 void tst_qquickanimatedsprite::test_runningChangedSignal()
 {
-    QQuickView *window = new QQuickView(0);
+    QScopedPointer<QQuickView> window(new QQuickView);
 
     window->setSource(testFileUrl("runningChange.qml"));
     window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     QVERIFY(window->rootObject());
     QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
@@ -100,12 +107,15 @@ void tst_qquickanimatedsprite::test_runningChangedSignal()
     QVERIFY(!sprite->running());
 
     QSignalSpy runningChangedSpy(sprite, SIGNAL(runningChanged(bool)));
+    QSignalSpy finishedSpy(sprite, SIGNAL(finished()));
+    QVERIFY(finishedSpy.isValid());
+
     sprite->setRunning(true);
     QTRY_COMPARE(runningChangedSpy.count(), 1);
+    QCOMPARE(finishedSpy.count(), 0);
     QTRY_VERIFY(!sprite->running());
     QTRY_COMPARE(runningChangedSpy.count(), 2);
-
-    delete window;
+    QCOMPARE(finishedSpy.count(), 1);
 }
 
 template <typename T>
@@ -117,7 +127,7 @@ static bool isWithinRange(T min, T value, T max)
 
 void tst_qquickanimatedsprite::test_frameChangedSignal()
 {
-    QQuickView *window = new QQuickView(0);
+    QScopedPointer<QQuickView> window(new QQuickView);
 
     window->setSource(testFileUrl("frameChange.qml"));
     window->show();
@@ -126,7 +136,7 @@ void tst_qquickanimatedsprite::test_frameChangedSignal()
     QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
     QSignalSpy frameChangedSpy(sprite, SIGNAL(currentFrameChanged(int)));
     QVERIFY(sprite);
-    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     QVERIFY(!sprite->running());
     QVERIFY(!sprite->paused());
@@ -154,8 +164,6 @@ void tst_qquickanimatedsprite::test_frameChangedSignal()
         prevFrame = frame;
     }
     QCOMPARE(loopCounter, 3);
-
-    delete window;
 }
 
 void tst_qquickanimatedsprite::test_largeAnimation_data()
@@ -214,11 +222,11 @@ void tst_qquickanimatedsprite::test_largeAnimation()
 {
     QFETCH(bool, frameSync);
 
-    QQuickView *window = new QQuickView(0);
+    QScopedPointer<QQuickView> window(new QQuickView);
     window->engine()->addImageProvider(QLatin1String("test"), new AnimationImageProvider);
     window->setSource(testFileUrl("largeAnimation.qml"));
     window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     QVERIFY(window->rootObject());
     QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
@@ -264,7 +272,6 @@ void tst_qquickanimatedsprite::test_largeAnimation()
     maxTextureSize /= 512;
     QVERIFY(maxFrame > maxTextureSize); // make sure we go beyond the texture width limitation
     QCOMPARE(loopCounter, sprite->loops());
-    delete window;
 }
 
 void tst_qquickanimatedsprite::test_reparenting()
@@ -279,20 +286,20 @@ void tst_qquickanimatedsprite::test_reparenting()
     QVERIFY(sprite);
 
     QTRY_VERIFY(sprite->running());
-    sprite->setParentItem(0);
+    sprite->setParentItem(nullptr);
 
     sprite->setParentItem(window.rootObject());
     // don't crash (QTBUG-51162)
     sprite->polish();
-    QTRY_COMPARE(QQuickItemPrivate::get(sprite)->polishScheduled, true);
-    QTRY_COMPARE(QQuickItemPrivate::get(sprite)->polishScheduled, false);
+    QVERIFY(QQuickTest::qIsPolishScheduled(sprite));
+    QVERIFY(QQuickTest::qWaitForItemPolished(sprite));
 }
 
 class KillerThread : public QThread
 {
     Q_OBJECT
 protected:
-    void run() Q_DECL_OVERRIDE {
+    void run() override {
         sleep(3);
         qFatal("Either the GUI or the render thread is stuck in an infinite loop.");
     }
@@ -313,7 +320,7 @@ void tst_qquickanimatedsprite::test_changeSourceToSmallerImgKeepingBigFrameSize(
     QQmlProperty big(sprite, "big");
     big.write(QVariant::fromValue(false));
 
-    KillerThread *killer = new KillerThread;
+    QScopedPointer<KillerThread> killer(new KillerThread);
     killer->start(); // will kill us in case the GUI or render thread enters an infinite loop
 
     QTest::qWait(50); // let it draw with the new source.
@@ -322,7 +329,66 @@ void tst_qquickanimatedsprite::test_changeSourceToSmallerImgKeepingBigFrameSize(
 
     killer->terminate();
     killer->wait();
-    delete killer;
+}
+
+void tst_qquickanimatedsprite::test_implicitSize()
+{
+    QQuickView window;
+    window.setSource(testFileUrl("basic.qml"));
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(window.rootObject());
+
+    QQuickAnimatedSprite* sprite = window.rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
+    QVERIFY(sprite);
+    QCOMPARE(sprite->frameWidth(), 31);
+    QCOMPARE(sprite->frameHeight(), 30);
+    QCOMPARE(sprite->implicitWidth(), 31);
+    QCOMPARE(sprite->implicitHeight(), 30);
+
+    // Ensure that implicitWidth matches frameWidth.
+    QSignalSpy frameWidthChangedSpy(sprite, SIGNAL(frameWidthChanged(int)));
+    QVERIFY(frameWidthChangedSpy.isValid());
+
+    QSignalSpy frameImplicitWidthChangedSpy(sprite, SIGNAL(implicitWidthChanged()));
+    QVERIFY(frameImplicitWidthChangedSpy.isValid());
+
+    sprite->setFrameWidth(20);
+    QCOMPARE(frameWidthChangedSpy.count(), 1);
+    QCOMPARE(frameImplicitWidthChangedSpy.count(), 1);
+
+    // Ensure that implicitHeight matches frameHeight.
+    QSignalSpy frameHeightChangedSpy(sprite, SIGNAL(frameHeightChanged(int)));
+    QVERIFY(frameHeightChangedSpy.isValid());
+
+    QSignalSpy frameImplicitHeightChangedSpy(sprite, SIGNAL(implicitHeightChanged()));
+    QVERIFY(frameImplicitHeightChangedSpy.isValid());
+
+    sprite->setFrameHeight(20);
+    QCOMPARE(frameHeightChangedSpy.count(), 1);
+    QCOMPARE(frameImplicitHeightChangedSpy.count(), 1);
+}
+
+void tst_qquickanimatedsprite::test_infiniteLoops()
+{
+    QQuickView window;
+    window.setSource(testFileUrl("infiniteLoops.qml"));
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(window.rootObject());
+
+    QQuickAnimatedSprite* sprite = qobject_cast<QQuickAnimatedSprite*>(window.rootObject());
+    QVERIFY(sprite);
+
+    QTRY_VERIFY(sprite->running());
+
+    QSignalSpy finishedSpy(sprite, SIGNAL(finished()));
+    QVERIFY(finishedSpy.isValid());
+
+    // The finished() signal shouldn't be emitted for infinite animations.
+    const int previousFrame = sprite->currentFrame();
+    QTRY_VERIFY(sprite->currentFrame() != previousFrame);
+    QCOMPARE(finishedSpy.count(), 0);
 }
 
 QTEST_MAIN(tst_qquickanimatedsprite)

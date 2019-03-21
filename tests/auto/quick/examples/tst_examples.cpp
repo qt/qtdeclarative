@@ -36,7 +36,7 @@
 #include <QQmlEngine>
 #include <QQmlError>
 
-static QtMessageHandler testlibMsgHandler = 0;
+static QtMessageHandler testlibMsgHandler = nullptr;
 void msgHandlerFilter(QtMsgType type, const QMessageLogContext &ctxt, const QString &msg)
 {
     if (type == QtCriticalMsg || type == QtFatalMsg)
@@ -74,29 +74,20 @@ tst_examples::tst_examples()
 {
     // Add files to exclude here
     excludedFiles << "snippets/qml/listmodel/listmodel.qml"; //Just a ListModel, no root QQuickItem
-    excludedFiles << "examples/quick/demos/photosurface/photosurface.qml"; // root item is Window rather than Item
+    excludedFiles << "snippets/qml/tablemodel/fruit-example-delegatechooser.qml"; // Requires QtQuick.Controls import.
 
     // Add directories you want excluded here
     excludedDirs << "shared"; //Not an example
     excludedDirs << "snippets/qml/path"; //No root QQuickItem
     excludedDirs << "examples/qml/qmlextensionplugins"; //Requires special import search path
-    excludedDirs << "examples/quick/tutorials/gettingStartedQml"; //C++ example, but no cpp files in root dir
 
     // These snippets are not expected to run on their own.
     excludedDirs << "snippets/qml/visualdatamodel_rootindex";
     excludedDirs << "snippets/qml/qtbinding";
     excludedDirs << "snippets/qml/imports";
-    excludedFiles << "examples/quick/shapes/content/pathitem.qml"; // relies on resources
-    excludedFiles << "examples/quick/shapes/content/pathiteminteract.qml"; // relies on resources
-
-#ifdef QT_NO_XMLPATTERNS
-    excludedDirs << "demos/twitter";
-    excludedDirs << "demos/flickr";
-    excludedDirs << "demos/photoviewer";
-    excludedFiles << "snippets/qml/xmlrole.qml";
-    excludedFiles << "particles/itemparticle/particleview.qml";
-    excludedFiles << "views/visualdatamodel/slideshow.qml";
-#endif
+    excludedFiles << "snippets/qml/image-ext.qml";
+    excludedFiles << "examples/quick/shapes/content/main.qml"; // relies on resources
+    excludedFiles << "examples/quick/shapes/content/interactive.qml"; // relies on resources
 
 #if !QT_CONFIG(opengl)
     //No support for Particles

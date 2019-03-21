@@ -51,11 +51,13 @@
 // We mean it.
 //
 
-#include "qqmlconfigurabledebugservice.h"
+#include <private/qqmlconfigurabledebugservice_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmlprofilerdefinitions_p.h>
 #include <private/qqmlabstractprofileradapter_p.h>
 #include <private/qqmlboundsignal_p.h>
+#include <private/qqmldebugconnector_p.h>
+#include <private/qversionedpacket_p.h>
 
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qmetaobject.h>
@@ -70,6 +72,7 @@
 QT_BEGIN_NAMESPACE
 
 class QUrl;
+using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 
 class QQmlProfilerServiceImpl :
         public QQmlConfigurableDebugService<QQmlProfilerService>,
@@ -78,30 +81,30 @@ class QQmlProfilerServiceImpl :
     Q_OBJECT
 public:
 
-    void engineAboutToBeAdded(QJSEngine *engine) Q_DECL_OVERRIDE;
-    void engineAboutToBeRemoved(QJSEngine *engine) Q_DECL_OVERRIDE;
-    void engineAdded(QJSEngine *engine) Q_DECL_OVERRIDE;
-    void engineRemoved(QJSEngine *engine) Q_DECL_OVERRIDE;
+    void engineAboutToBeAdded(QJSEngine *engine) override;
+    void engineAboutToBeRemoved(QJSEngine *engine) override;
+    void engineAdded(QJSEngine *engine) override;
+    void engineRemoved(QJSEngine *engine) override;
 
-    void addGlobalProfiler(QQmlAbstractProfilerAdapter *profiler) Q_DECL_OVERRIDE;
-    void removeGlobalProfiler(QQmlAbstractProfilerAdapter *profiler) Q_DECL_OVERRIDE;
+    void addGlobalProfiler(QQmlAbstractProfilerAdapter *profiler) override;
+    void removeGlobalProfiler(QQmlAbstractProfilerAdapter *profiler) override;
 
     void startProfiling(QJSEngine *engine,
-                        quint64 features = std::numeric_limits<quint64>::max()) Q_DECL_OVERRIDE;
-    void stopProfiling(QJSEngine *engine) Q_DECL_OVERRIDE;
+                        quint64 features = std::numeric_limits<quint64>::max()) override;
+    void stopProfiling(QJSEngine *engine) override;
 
     QQmlProfilerServiceImpl(QObject *parent = 0);
-    ~QQmlProfilerServiceImpl() Q_DECL_OVERRIDE;
+    ~QQmlProfilerServiceImpl() override;
 
-    void dataReady(QQmlAbstractProfilerAdapter *profiler) Q_DECL_OVERRIDE;
+    void dataReady(QQmlAbstractProfilerAdapter *profiler) override;
 
 signals:
     void startFlushTimer();
     void stopFlushTimer();
 
 protected:
-    virtual void stateAboutToBeChanged(State state) Q_DECL_OVERRIDE;
-    virtual void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
+    void stateAboutToBeChanged(State state) override;
+    void messageReceived(const QByteArray &) override;
 
 private:
     friend class QQmlProfilerServiceFactory;
@@ -114,7 +117,9 @@ private:
     QElapsedTimer m_timer;
     QTimer m_flushTimer;
     bool m_waitingForStop;
-    bool m_useMessageTypes;
+
+    bool m_globalEnabled;
+    quint64 m_globalFeatures;
 
     QList<QQmlAbstractProfilerAdapter *> m_globalProfilers;
     QMultiHash<QJSEngine *, QQmlAbstractProfilerAdapter *> m_engineProfilers;

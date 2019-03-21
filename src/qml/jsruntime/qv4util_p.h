@@ -59,26 +59,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-template <typename T>
-struct TemporaryAssignment
-{
-    TemporaryAssignment(T &var, const T& temporaryValue)
-        : variable(var)
-        , savedValue(var)
-    {
-        variable = temporaryValue;
-    }
-    ~TemporaryAssignment()
-    {
-        variable = savedValue;
-    }
-    T &variable;
-    T savedValue;
-private:
-    TemporaryAssignment(const TemporaryAssignment<T>&);
-    TemporaryAssignment operator=(const TemporaryAssignment<T>&);
-};
-
 #if !defined(BROKEN_STD_VECTOR_BOOL_OR_BROKEN_STD_FIND)
 // Sanity:
 class BitVector

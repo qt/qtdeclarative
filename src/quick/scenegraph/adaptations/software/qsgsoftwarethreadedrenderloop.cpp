@@ -294,7 +294,7 @@ bool QSGSoftwareRenderThread::event(QEvent *e)
                 }
                 rc->invalidate();
                 QCoreApplication::processEvents();
-                QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+                QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
                 if (wme->destroying)
                     delete wd->animationController;
             }
@@ -330,6 +330,7 @@ bool QSGSoftwareRenderThread::event(QEvent *e)
                 softwareRenderer->setBackingStore(backingStore);
             rc->initialize(nullptr);
             wd->syncSceneGraph();
+            rc->endSync();
             wd->renderSceneGraph(wme->window->size());
             *wme->image = backingStore->handle()->toImage();
         }
@@ -443,6 +444,7 @@ void QSGSoftwareRenderThread::sync(bool inExpose)
 
         rc->initialize(nullptr);
         wd->syncSceneGraph();
+        rc->endSync();
 
         if (!hadRenderer && wd->renderer) {
             qCDebug(QSG_RASTER_LOG_RENDERLOOP, "RT - created renderer");
@@ -454,7 +456,7 @@ void QSGSoftwareRenderThread::sync(bool inExpose)
         // Process deferred deletes now, directly after the sync as deleteLater
         // on the GUI must now also have resulted in SG changes and the delete
         // is a safe operation.
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     }
 
     if (!inExpose) {
@@ -521,7 +523,7 @@ void QSGSoftwareRenderThread::syncAndRender()
         // rate of the current screen the window is on.
         int blockTime = vsyncDelta - (int) renderThrottleTimer.elapsed();
         if (blockTime > 0) {
-            qCDebug(QSG_RASTER_LOG_RENDERLOOP) <<  "RT - blocking for " << blockTime << "ms";
+            qCDebug(QSG_RASTER_LOG_RENDERLOOP, "RT - blocking for %d ms", blockTime);
             msleep(blockTime);
         }
         renderThrottleTimer.restart();

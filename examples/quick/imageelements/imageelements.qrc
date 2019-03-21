@@ -13,7 +13,9 @@
         <file>content/shadow.png</file>
         <file>content/ShadowRectangle.qml</file>
         <file>content/speaker.png</file>
+        <file>content/Uniflow_steam_engine.gif</file>
         <file>imageelements.qml</file>
+        <file>animatedimage.qml</file>
         <file>animatedsprite.qml</file>
         <file>borderimage.qml</file>
         <file>image.qml</file>

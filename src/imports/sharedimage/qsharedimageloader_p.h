@@ -58,10 +58,10 @@ class QSharedImageLoader : public QObject
 public:
     typedef QVector<QVariant> ImageParameters;
 
-    QSharedImageLoader(QObject *parent = Q_NULLPTR);
+    QSharedImageLoader(QObject *parent = nullptr);
     ~QSharedImageLoader();
 
-    QImage load(const QString &path, ImageParameters *params = Q_NULLPTR);
+    QImage load(const QString &path, ImageParameters *params = nullptr);
 
 protected:
     virtual QImage loadFile(const QString &path, ImageParameters *params);

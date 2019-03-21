@@ -45,6 +45,7 @@
 
 #include <private/qquickwindow_p.h>
 #include <QElapsedTimer>
+#include <private/qquickanimatorcontroller_p.h>
 #include <private/qquickprofiler_p.h>
 #include <private/qsgsoftwarerenderer_p.h>
 #include <qpa/qplatformbackingstore.h>
@@ -97,8 +98,9 @@ void QSGSoftwareRenderLoop::windowDestroyed(QQuickWindow *window)
 
     if (m_windows.size() == 0) {
         rc->invalidate();
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     }
+
+    delete d->animationController;
 }
 
 void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window, bool isNewExpose)
@@ -149,6 +151,7 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window, bool isNewExpose)
     emit window->afterAnimating();
 
     cd->syncSceneGraph();
+    rc->endSync();
 
     if (profileFrames)
         syncTime = renderTimer.nsecsElapsed();
@@ -195,7 +198,7 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window, bool isNewExpose)
                 int(polishTime / 1000000),
                 int((syncTime - polishTime) / 1000000),
                 int((renderTime - syncTime) / 1000000),
-                int((swapTime - renderTime) / 10000000),
+                int((swapTime - renderTime) / 1000000),
                 int(lastFrameTime.msecsTo(QTime::currentTime())));
         lastFrameTime = QTime::currentTime();
     }
