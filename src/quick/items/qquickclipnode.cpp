@@ -43,6 +43,8 @@
 #include <QtGui/qvector2d.h>
 #include <QtCore/qmath.h>
 
+QT_BEGIN_NAMESPACE
+
 QQuickDefaultClipNode::QQuickDefaultClipNode(const QRectF &rect)
     : m_rect(rect)
     , m_radius(0)
@@ -117,3 +119,4 @@ void QQuickDefaultClipNode::updateGeometry()
     markDirty(DirtyGeometry);
 }
 
+QT_END_NAMESPACE

@@ -53,6 +53,8 @@
 
 #include <private/qtquickglobal_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class Q_QUICK_PRIVATE_EXPORT QQuickDragAxis : public QObject
 {
     Q_OBJECT
@@ -82,5 +84,7 @@ private:
     qreal m_maximum;
     bool m_enabled;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQUICKDRAGAXIS_P_H
