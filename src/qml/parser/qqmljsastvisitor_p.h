@@ -54,7 +54,7 @@
 #include "qqmljsastfwd_p.h"
 #include "qqmljsglobal_p.h"
 
-QT_QML_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE
 
 namespace QQmlJS { namespace AST {
 
@@ -412,6 +412,6 @@ protected:
 
 } } // namespace AST
 
-QT_QML_END_NAMESPACE
+QT_END_NAMESPACE
 
 #endif // QQMLJSASTVISITOR_P_H

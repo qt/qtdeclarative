@@ -57,7 +57,7 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qstack.h>
 
-QT_QML_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 
@@ -257,6 +257,6 @@ private:
 
 } // end of namespace QQmlJS
 
-QT_QML_END_NAMESPACE
+QT_END_NAMESPACE
 
 #endif // LEXER_H
