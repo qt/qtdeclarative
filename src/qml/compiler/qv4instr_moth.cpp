@@ -287,6 +287,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << index << TRACE_SLOT;
         MOTH_END_INSTR(LoadGlobalLookup)
 
+        MOTH_BEGIN_INSTR(LoadQmlContextPropertyLookup)
+            d << index << TRACE_SLOT;
+        MOTH_END_INSTR(LoadQmlContextPropertyLookup)
+
         MOTH_BEGIN_INSTR(StoreNameSloppy)
             d << name;
         MOTH_END_INSTR(StoreNameSloppy)
@@ -327,26 +331,6 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(StoreSuperProperty)
             d << dumpRegister(property, nFormals);
         MOTH_END_INSTR(StoreSuperProperty)
-
-        MOTH_BEGIN_INSTR(StoreScopeObjectProperty)
-            d << dumpRegister(base, nFormals) << "[" << propertyIndex << "]";
-        MOTH_END_INSTR(StoreScopeObjectProperty)
-
-        MOTH_BEGIN_INSTR(LoadScopeObjectProperty)
-            d << dumpRegister(base, nFormals) << "[" << propertyIndex << "]" << (captureRequired ? " (capture)" : " (no capture)");
-        MOTH_END_INSTR(LoadScopeObjectProperty)
-
-        MOTH_BEGIN_INSTR(StoreContextObjectProperty)
-            d << dumpRegister(base, nFormals) << "[" << propertyIndex << "]";
-        MOTH_END_INSTR(StoreContextObjectProperty)
-
-        MOTH_BEGIN_INSTR(LoadContextObjectProperty)
-            d << dumpRegister(base, nFormals) << "[" << propertyIndex << "]" << (captureRequired ? " (capture)" : " (no capture)");
-        MOTH_END_INSTR(LoadContextObjectProperty)
-
-        MOTH_BEGIN_INSTR(LoadIdObject)
-            d << dumpRegister(base, nFormals) << "[" << index << "]";
-        MOTH_END_INSTR(LoadIdObject)
 
         MOTH_BEGIN_INSTR(Yield)
         MOTH_END_INSTR(Yield)
@@ -394,15 +378,9 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << index << dumpArguments(argc, argv, nFormals) << TRACE_SLOT;
         MOTH_END_INSTR(CallGlobalLookup)
 
-        MOTH_BEGIN_INSTR(CallScopeObjectProperty)
-            d << dumpRegister(base, nFormals) << "." << name << dumpArguments(argc, argv, nFormals)
-              << TRACE_SLOT;
-        MOTH_END_INSTR(CallScopeObjectProperty)
-
-        MOTH_BEGIN_INSTR(CallContextObjectProperty)
-            d << dumpRegister(base, nFormals) << "." << name << dumpArguments(argc, argv, nFormals)
-              << TRACE_SLOT;
-        MOTH_END_INSTR(CallContextObjectProperty)
+        MOTH_BEGIN_INSTR(CallQmlContextPropertyLookup)
+            d << index << dumpArguments(argc, argv, nFormals) << TRACE_SLOT;
+        MOTH_END_INSTR(CallQmlContextPropertyLookup)
 
         MOTH_BEGIN_INSTR(CallWithSpread)
             d << "new " << dumpRegister(func, nFormals) << dumpRegister(thisObject, nFormals)
@@ -728,14 +706,6 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(GetTemplateObject)
             d << index;
         MOTH_END_INSTR(GetTemplateObject)
-
-        MOTH_BEGIN_INSTR(LoadQmlContext)
-            d << dumpRegister(result, nFormals);
-        MOTH_END_INSTR(LoadQmlContext)
-
-        MOTH_BEGIN_INSTR(LoadQmlImportedScripts)
-            d << dumpRegister(result, nFormals);
-        MOTH_END_INSTR(LoadQmlImportedScripts)
 
         MOTH_BEGIN_INSTR(TailCall)
             d << dumpRegister(func, nFormals) << dumpRegister(thisObject, nFormals) << dumpArguments(argc, argv, nFormals);

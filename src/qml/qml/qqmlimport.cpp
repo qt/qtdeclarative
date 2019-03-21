@@ -1546,7 +1546,7 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
         QString localFileOrQrc = QQmlFile::urlToLocalFileOrQrc(qmldirUrl);
         Q_ASSERT(!localFileOrQrc.isEmpty());
 
-        QString dir = QQmlFile::urlToLocalFileOrQrc(resolveLocalUrl(base, importUri));
+        const QString dir = localFileOrQrc.left(localFileOrQrc.lastIndexOf(Slash) + 1);
         if (!typeLoader->directoryExists(dir)) {
             if (!isImplicitImport) {
                 QQmlError error;

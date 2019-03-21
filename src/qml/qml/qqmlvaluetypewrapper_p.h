@@ -112,6 +112,9 @@ public:
     static PropertyAttributes virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p);
     static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
     static ReturnedValue method_toString(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup);
+    static bool virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup, const Value &value);
+    static ReturnedValue lookupGetter(Lookup *lookup, ExecutionEngine *engine, const Value &object);
 
     static void initProto(ExecutionEngine *v4);
 };

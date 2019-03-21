@@ -282,7 +282,6 @@ struct Q_QML_PRIVATE_EXPORT CompiledFunctionOrExpression
     QQmlJS::AST::Node *parentNode = nullptr; // FunctionDeclaration, Statement or Expression
     QQmlJS::AST::Node *node = nullptr; // FunctionDeclaration, Statement or Expression
     quint32 nameIndex = 0;
-    bool disableAcceleratedLookups = false;
     CompiledFunctionOrExpression *next = nullptr;
 };
 
@@ -543,47 +542,16 @@ struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QV4::Compiler::Codegen
 {
     JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator, QV4::Compiler::Module *jsModule,
               QQmlJS::Engine *jsEngine, QQmlJS::AST::UiProgram *qmlRoot,
-              QQmlTypeNameCache *imports, const QV4::Compiler::StringTableGenerator *stringPool, const QSet<QString> &globalNames);
-
-    struct IdMapping
-    {
-        QString name;
-        int idIndex;
-        QQmlPropertyCache *type;
-    };
-    typedef QVector<IdMapping> ObjectIdMapping;
-
-    void beginContextScope(const ObjectIdMapping &objectIds, QQmlPropertyCache *contextObject);
-    void beginObjectScope(QQmlPropertyCache *scopeObject);
+              const QV4::Compiler::StringTableGenerator *stringPool, const QSet<QString> &globalNames);
 
     // Returns mapping from input functions to index in IR::Module::functions / compiledData->runtimeFunctions
     QVector<int> generateJSCodeForFunctionsAndBindings(const QList<CompiledFunctionOrExpression> &functions);
 
-    int defineFunction(const QString &name, AST::Node *ast,
-                       AST::FormalParameterList *formals,
-                       AST::StatementList *body) override;
-
-protected:
-    void beginFunctionBodyHook() override;
-    bool canAccelerateGlobalLookups() const override { return !_disableAcceleratedLookups; }
-    Reference fallbackNameLookup(const QString &name) override;
-
 private:
-    // returns nullptr if lookup needs to happen by name
-    QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name);
-
     QString sourceCode;
     QQmlJS::Engine *jsEngine; // needed for memory pool
     QQmlJS::AST::UiProgram *qmlRoot;
-    QQmlTypeNameCache *imports;
     const QV4::Compiler::StringTableGenerator *stringPool;
-
-    bool _disableAcceleratedLookups;
-    ObjectIdMapping _idObjects;
-    QQmlPropertyCache *_contextObject;
-    QQmlPropertyCache *_scopeObject;
-    int _qmlContextSlot;
-    int _importedScriptsSlot;
 };
 
 struct Q_QML_PRIVATE_EXPORT IRLoader {

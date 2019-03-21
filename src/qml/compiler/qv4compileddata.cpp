@@ -51,6 +51,8 @@
 #include <private/qqmlengine_p.h>
 #include <private/qv4vme_moth_p.h>
 #include <private/qv4module_p.h>
+#include <private/qv4qobjectwrapper_p.h>
+#include <private/qqmlvaluetypewrapper_p.h>
 #include "qv4compilationunitmapper_p.h"
 #include <QQmlPropertyMap>
 #include <QDateTime>
@@ -168,6 +170,8 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
                 l->setter = QV4::Lookup::setterGeneric;
             else if (type == CompiledData::Lookup::Type_GlobalGetter)
                 l->globalGetter = QV4::Lookup::globalGetterGeneric;
+            else if (type == CompiledData::Lookup::Type_QmlContextPropertyGetter)
+                l->qmlContextPropertyGetter = QQmlContextWrapper::resolveQmlContextPropertyLookupGetter;
             l->nameIndex = compiledLookups[i].nameIndex;
         }
     }
@@ -269,6 +273,24 @@ void CompilationUnit::unlink()
     }
 
     propertyCaches.clear();
+
+    if (runtimeLookups) {
+        for (uint i = 0; i < data->lookupTableSize; ++i) {
+            QV4::Lookup &l = runtimeLookups[i];
+            if (l.getter == QV4::QObjectWrapper::lookupGetter) {
+                if (QQmlPropertyCache *pc = l.qobjectLookup.propertyCache)
+                    pc->release();
+            } else if (l.getter == QQmlValueTypeWrapper::lookupGetter) {
+                if (QQmlPropertyCache *pc = l.qgadgetLookup.propertyCache)
+                    pc->release();
+            }
+
+            if (l.qmlContextPropertyGetter == QQmlContextWrapper::lookupScopeObjectProperty) {
+                if (QQmlPropertyCache *pc = l.qobjectLookup.propertyCache)
+                    pc->release();
+            }
+        }
+    }
 
     dependentScripts.clear();
 

@@ -1875,8 +1875,6 @@ bool Codegen::visit(CallExpression *ast)
     switch (base.type) {
     case Reference::Member:
     case Reference::Subscript:
-    case Reference::QmlScopeObject:
-    case Reference::QmlContextObject:
         base = base.asLValue();
         break;
     case Reference::Name:
@@ -1938,21 +1936,7 @@ bool Codegen::visit(CallExpression *ast)
 void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunction, int slotForThisObject)
 {
     //### Do we really need all these call instructions? can's we load the callee in a temp?
-    if (base.type == Reference::QmlScopeObject) {
-        Instruction::CallScopeObjectProperty call;
-        call.base = base.qmlBase.stackSlot();
-        call.name = base.qmlCoreIndex;
-        call.argc = calldata.argc;
-        call.argv = calldata.argv;
-        bytecodeGenerator->addTracingInstruction(call);
-    } else if (base.type == Reference::QmlContextObject) {
-        Instruction::CallContextObjectProperty call;
-        call.base = base.qmlBase.stackSlot();
-        call.name = base.qmlCoreIndex;
-        call.argc = calldata.argc;
-        call.argv = calldata.argv;
-        bytecodeGenerator->addTracingInstruction(call);
-    } else if (base.type == Reference::Member) {
+    if (base.type == Reference::Member) {
         if (!disable_lookups && useFastLookups) {
             Instruction::CallPropertyLookup call;
             call.base = base.propertyBase.stackSlot();
@@ -1982,11 +1966,19 @@ void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunctio
             call.argv = calldata.argv;
             bytecodeGenerator->addTracingInstruction(call);
         } else if (!disable_lookups && useFastLookups && base.global) {
-            Instruction::CallGlobalLookup call;
-            call.index = registerGlobalGetterLookup(base.nameAsIndex());
-            call.argc = calldata.argc;
-            call.argv = calldata.argv;
-            bytecodeGenerator->addTracingInstruction(call);
+            if (base.qmlGlobal) {
+                Instruction::CallQmlContextPropertyLookup call;
+                call.index = registerQmlContextPropertyGetterLookup(base.nameAsIndex());
+                call.argc = calldata.argc;
+                call.argv = calldata.argv;
+                bytecodeGenerator->addTracingInstruction(call);
+            } else {
+                Instruction::CallGlobalLookup call;
+                call.index = registerGlobalGetterLookup(base.nameAsIndex());
+                call.argc = calldata.argc;
+                call.argv = calldata.argv;
+                bytecodeGenerator->addTracingInstruction(call);
+            }
         } else {
             Instruction::CallName call;
             call.name = base.nameAsIndex();
@@ -2355,14 +2347,10 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, co
         return r;
     }
 
-    // This hook allows implementing QML lookup semantics
-    Reference fallback = fallbackNameLookup(name);
-    if (fallback.type != Reference::Invalid)
-        return fallback;
-
     Reference r = Reference::fromName(this, name);
-    r.global = useFastLookups && (resolved.type == Context::ResolvedName::Global);
-    if (!r.global && canAccelerateGlobalLookups() && m_globalNames.contains(name))
+    r.global = useFastLookups && (resolved.type == Context::ResolvedName::Global || resolved.type == Context::ResolvedName::QmlGlobal);
+    r.qmlGlobal = resolved.type == Context::ResolvedName::QmlGlobal;
+    if (!r.global && !r.qmlGlobal && m_globalNames.contains(name))
         r.global = true;
     return r;
 }
@@ -2376,12 +2364,6 @@ void Codegen::loadClosure(int closureId)
     } else {
         Reference::fromConst(this, Encode::undefined()).loadInAccumulator();
     }
-}
-
-Codegen::Reference Codegen::fallbackNameLookup(const QString &name)
-{
-    Q_UNUSED(name)
-    return Reference();
 }
 
 bool Codegen::visit(IdentifierExpression *ast)
@@ -3089,8 +3071,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         Instruction::Yield yield;
         bytecodeGenerator->addInstruction(yield);
     }
-
-    beginFunctionBodyHook();
 
     statementList(body);
 
@@ -4034,10 +4014,6 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
         return index == other.index;
     case Const:
         return constant == other.constant;
-    case QmlScopeObject:
-    case QmlContextObject:
-        return qmlCoreIndex == other.qmlCoreIndex && qmlNotifyIndex == other.qmlNotifyIndex
-                && capturePolicy == other.capturePolicy;
     }
     return true;
 }
@@ -4095,9 +4071,7 @@ Codegen::Reference Codegen::Reference::storeConsumeAccumulator() const
 
 Codegen::Reference Codegen::Reference::baseObject() const
 {
-    if (type == Reference::QmlScopeObject || type == Reference::QmlContextObject) {
-        return Reference::fromStackSlot(codegen, qmlBase.stackSlot());
-    } else if (type == Reference::Member) {
+    if (type == Reference::Member) {
         RValue rval = propertyBase;
         if (!rval.isValid())
             return Reference::fromConst(codegen, Encode::undefined());
@@ -4182,8 +4156,6 @@ bool Codegen::Reference::storeWipesAccumulator() const
     case Name:
     case Member:
     case Subscript:
-    case QmlScopeObject:
-    case QmlContextObject:
         return true;
     }
 }
@@ -4262,18 +4234,6 @@ void Codegen::Reference::storeAccumulator() const
         store.base = elementBase;
         store.index = elementSubscript.stackSlot();
         codegen->bytecodeGenerator->addTracingInstruction(store);
-    } return;
-    case QmlScopeObject: {
-        Instruction::StoreScopeObjectProperty store;
-        store.base = qmlBase;
-        store.propertyIndex = qmlCoreIndex;
-        codegen->bytecodeGenerator->addInstruction(store);
-    } return;
-    case QmlContextObject: {
-        Instruction::StoreContextObjectProperty store;
-        store.base = qmlBase;
-        store.propertyIndex = qmlCoreIndex;
-        codegen->bytecodeGenerator->addInstruction(store);
     } return;
     case Invalid:
     case Accumulator:
@@ -4389,9 +4349,15 @@ QT_WARNING_POP
             }
         }
         if (!disable_lookups && global) {
-            Instruction::LoadGlobalLookup load;
-            load.index = codegen->registerGlobalGetterLookup(nameAsIndex());
-            codegen->bytecodeGenerator->addTracingInstruction(load);
+            if (qmlGlobal) {
+                Instruction::LoadQmlContextPropertyLookup load;
+                load.index = codegen->registerQmlContextPropertyGetterLookup(nameAsIndex());
+                codegen->bytecodeGenerator->addTracingInstruction(load);
+            } else {
+                Instruction::LoadGlobalLookup load;
+                load.index = codegen->registerGlobalGetterLookup(nameAsIndex());
+                codegen->bytecodeGenerator->addTracingInstruction(load);
+            }
         } else {
             Instruction::LoadName load;
             load.name = nameAsIndex();
@@ -4424,24 +4390,6 @@ QT_WARNING_POP
         Instruction::LoadElement load;
         load.base = elementBase;
         codegen->bytecodeGenerator->addTracingInstruction(load);
-    } return;
-    case QmlScopeObject: {
-        Instruction::LoadScopeObjectProperty load;
-        load.base = qmlBase;
-        load.propertyIndex = qmlCoreIndex;
-        load.captureRequired = capturePolicy == CaptureAtRuntime;
-        codegen->bytecodeGenerator->addInstruction(load);
-        if (capturePolicy == CaptureAheadOfTime)
-            codegen->_context->scopeObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
-    } return;
-    case QmlContextObject: {
-        Instruction::LoadContextObjectProperty load;
-        load.base = qmlBase;
-        load.propertyIndex = qmlCoreIndex;
-        load.captureRequired = capturePolicy == CaptureAtRuntime;
-        codegen->bytecodeGenerator->addInstruction(load);
-        if (capturePolicy == CaptureAheadOfTime)
-            codegen->_context->contextObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
     } return;
     case Invalid:
         break;

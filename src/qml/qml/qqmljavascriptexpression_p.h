@@ -144,7 +144,6 @@ public:
     QQmlError error(QQmlEngine *) const;
     void clearError();
     void clearActiveGuards();
-    void clearPermanentGuards();
     QQmlDelayedError *delayedError();
 
     static QV4::ReturnedValue evalFunction(QQmlContextData *ctxt, QObject *scope,
@@ -152,14 +151,6 @@ public:
                                                      quint16 line);
 protected:
     void createQmlBinding(QQmlContextData *ctxt, QObject *scope, const QString &code, const QString &filename, quint16 line);
-
-    void cancelPermanentGuards() const
-    {
-        if (m_permanentDependenciesRegistered) {
-            for (QQmlJavaScriptExpressionGuard *it = permanentGuards.first(); it; it = permanentGuards.next(it))
-                it->cancelNotify();
-        }
-    }
 
     void setupFunction(QV4::ExecutionContext *qmlContext, QV4::Function *f);
     void setCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit);
@@ -169,7 +160,6 @@ protected:
     //    activeGuards:flag2  - useSharedContext
     QBiPointer<QObject, DeleteWatcher> m_scopeObject;
     QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> activeGuards;
-    QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> permanentGuards;
 
     void setTranslationsCaptured(bool captured) { m_error.setFlagValue(captured); }
     bool translationsCaptured() const { return m_error.flag(); }
@@ -186,7 +176,6 @@ private:
     QQmlContextData *m_context;
     QQmlJavaScriptExpression **m_prevExpression;
     QQmlJavaScriptExpression  *m_nextExpression;
-    bool m_permanentDependenciesRegistered = false;
 
     QV4::PersistentValue m_qmlScope;
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_compilationUnit;
@@ -204,14 +193,8 @@ public:
         Q_ASSERT(errorString == nullptr);
     }
 
-    enum Duration {
-        OnlyOnce,
-        Permanently
-    };
-
-    static void registerQmlDependencies(QV4::Heap::QmlContext *context, const QV4::ExecutionEngine *engine, const QV4::CompiledData::Function *compiledFunction);
-    void captureProperty(QQmlNotifier *, Duration duration = OnlyOnce);
-    void captureProperty(QObject *, int, int, Duration duration = OnlyOnce, bool doNotify = true);
+    void captureProperty(QQmlNotifier *);
+    void captureProperty(QObject *, int, int, bool doNotify = true);
     void captureTranslation() { translationCaptured = true; }
 
     QQmlEngine *engine;

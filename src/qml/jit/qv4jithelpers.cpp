@@ -70,6 +70,12 @@ ReturnedValue loadGlobalLookup(Function *f, ExecutionEngine *engine, int index)
     return l->globalGetter(l, engine);
 }
 
+ReturnedValue loadQmlContextPropertyLookup(Function *f, ExecutionEngine *engine, int index)
+{
+    Lookup *l = f->compilationUnit->runtimeLookups + index;
+    return l->qmlContextPropertyGetter(l, engine, nullptr);
+}
+
 ReturnedValue toObject(ExecutionEngine *engine, const Value &obj)
 {
     if (obj.isObject())

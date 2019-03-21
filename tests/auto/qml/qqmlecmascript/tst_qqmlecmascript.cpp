@@ -365,6 +365,7 @@ private slots:
     void numberToStringWithRadix();
     void tailCallWithArguments();
     void deleteSparseInIteration();
+    void saveAccumulatorBeforeToInt32();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -1608,7 +1609,7 @@ void tst_qqmlecmascript::aliasPropertyReset()
 
     // test that a manual write (of undefined) to a non-resettable property fails properly
     QUrl url = testFileUrl("aliasreset/aliasPropertyReset.error.1.qml");
-    QString warning1 = url.toString() + QLatin1String(": Error: Cannot assign [undefined] to int");
+    QString warning1 = url.toString() + QLatin1String(":15: Error: Cannot assign [undefined] to int");
     QQmlComponent e1(&engine, url);
     object = e1.create();
     QVERIFY(object != nullptr);
@@ -6474,7 +6475,8 @@ void tst_qqmlecmascript::signalHandlers()
 
     QMetaObject::invokeMethod(o.data(), "testSignalHandlerCall");
     QCOMPARE(o->property("count").toInt(), 1);
-    QCOMPARE(o->property("errorString").toString(), QLatin1String("TypeError: Property 'onTestSignal' of object [object Object] is not a function"));
+    QString scopeObjectAsString = o->property("scopeObjectAsString").toString();
+    QCOMPARE(o->property("errorString").toString(), QString("TypeError: Property 'onTestSignal' of object %1 is not a function").arg(scopeObjectAsString));
 
     QCOMPARE(o->property("funcCount").toInt(), 0);
     QMetaObject::invokeMethod(o.data(), "testSignalConnection");
@@ -8169,12 +8171,11 @@ void tst_qqmlecmascript::stackLimits()
 void tst_qqmlecmascript::idsAsLValues()
 {
     QQmlEngine engine;
-    QString err = QString(QLatin1String("%1:5 left-hand side of assignment operator is not an lvalue\n")).arg(testFileUrl("idAsLValue.qml").toString());
+    QString err = QString(QLatin1String("%1:5: Error: left-hand side of assignment operator is not an lvalue")).arg(testFileUrl("idAsLValue.qml").toString());
     QQmlComponent component(&engine, testFileUrl("idAsLValue.qml"));
-    QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(err));
     MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
     QVERIFY(!object);
-    QCOMPARE(component.errorString(), err);
 }
 
 void tst_qqmlecmascript::qtbug_34792()
@@ -8934,6 +8935,17 @@ void tst_qqmlecmascript::deleteSparseInIteration()
     QCOMPARE(value.property("0").toInt(), 1);
     QCOMPARE(value.property("1").toInt(), 2);
     QCOMPARE(value.property("2").toInt(), 4096);
+}
+
+void tst_qqmlecmascript::saveAccumulatorBeforeToInt32()
+{
+    QJSEngine engine;
+
+    // Infinite recursion produces a range error, but should not crash.
+    // Also, any GC runs in between should not trash the temporary results of "a+a".
+    const QJSValue value = engine.evaluate("function a(){a(a&a+a)}a()");
+    QVERIFY(value.isError());
+    QCOMPARE(value.toString(), QLatin1String("RangeError: Maximum call stack size exceeded."));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

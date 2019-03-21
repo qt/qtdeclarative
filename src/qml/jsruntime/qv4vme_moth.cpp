@@ -629,6 +629,14 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(LoadGlobalLookup)
 
+    MOTH_BEGIN_INSTR(LoadQmlContextPropertyLookup)
+        STORE_IP();
+        QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
+        acc = l->qmlContextPropertyGetter(l, engine, nullptr);
+        CHECK_EXCEPTION;
+        traceValue(acc, function, traceSlot);
+    MOTH_END_INSTR(LoadQmlContextPropertyLookup)
+
     MOTH_BEGIN_INSTR(StoreNameStrict)
         STORE_IP();
         STORE_ACC();
@@ -724,37 +732,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         Runtime::method_storeSuperProperty(engine, STACK_VALUE(property), accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreSuperProperty)
-
-    MOTH_BEGIN_INSTR(StoreScopeObjectProperty)
-        STORE_ACC();
-        Runtime::method_storeQmlScopeObjectProperty(engine, STACK_VALUE(base), propertyIndex, accumulator);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(StoreScopeObjectProperty)
-
-    MOTH_BEGIN_INSTR(LoadScopeObjectProperty)
-        STORE_IP();
-        acc = Runtime::method_loadQmlScopeObjectProperty(engine, STACK_VALUE(base), propertyIndex, captureRequired);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(LoadScopeObjectProperty)
-
-    MOTH_BEGIN_INSTR(StoreContextObjectProperty)
-        STORE_IP();
-        STORE_ACC();
-        Runtime::method_storeQmlContextObjectProperty(engine, STACK_VALUE(base), propertyIndex, accumulator);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(StoreContextObjectProperty)
-
-    MOTH_BEGIN_INSTR(LoadContextObjectProperty)
-        STORE_IP();
-        acc = Runtime::method_loadQmlContextObjectProperty(engine, STACK_VALUE(base), propertyIndex, captureRequired);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(LoadContextObjectProperty)
-
-    MOTH_BEGIN_INSTR(LoadIdObject)
-        STORE_IP();
-        acc = Runtime::method_loadQmlIdObject(engine, STACK_VALUE(base), index);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(LoadIdObject)
 
     MOTH_BEGIN_INSTR(Yield)
         frame->yield = code;
@@ -875,19 +852,12 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallGlobalLookup)
 
-    MOTH_BEGIN_INSTR(CallScopeObjectProperty)
+    MOTH_BEGIN_INSTR(CallQmlContextPropertyLookup)
         STORE_IP();
-        acc = Runtime::method_callQmlScopeObjectProperty(engine, stack + base, name, stack + argv, argc);
+        acc = Runtime::method_callQmlContextPropertyLookup(engine, index, stack + argv, argc);
         CHECK_EXCEPTION;
         traceValue(acc, function, traceSlot);
-    MOTH_END_INSTR(CallScopeObjectProperty)
-
-    MOTH_BEGIN_INSTR(CallContextObjectProperty)
-        STORE_IP();
-        acc = Runtime::method_callQmlContextObjectProperty(engine, stack + base, name, stack + argv, argc);
-        CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
-    MOTH_END_INSTR(CallContextObjectProperty)
+    MOTH_END_INSTR(CallQmlContextPropertyLookup)
 
     MOTH_BEGIN_INSTR(CallWithSpread)
         STORE_IP();
@@ -1524,14 +1494,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         debug_slowPath(engine);
 #endif // QT_CONFIG(qml_debug)
     MOTH_END_INSTR(Debug)
-
-    MOTH_BEGIN_INSTR(LoadQmlContext)
-        STACK_VALUE(result) = Runtime::method_loadQmlContext(static_cast<QV4::NoThrowEngine*>(engine));
-    MOTH_END_INSTR(LoadQmlContext)
-
-    MOTH_BEGIN_INSTR(LoadQmlImportedScripts)
-        STACK_VALUE(result) = Runtime::method_loadQmlImportedScripts(static_cast<QV4::NoThrowEngine*>(engine));
-    MOTH_END_INSTR(LoadQmlImportedScripts)
 
     handleUnwind:
         Q_ASSERT(engine->hasException || frame->unwindLevel);
