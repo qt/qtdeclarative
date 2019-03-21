@@ -53,11 +53,10 @@
 
 /*!
     \qmltype TableView
-    \instantiates QQuickTableView
     \inqmlmodule QtQuick
     \ingroup qtquick-views
     \inherits Flickable
-    \brief Provides a table view of items provided by the model.
+    \brief Provides a table view of items to display data from a model.
 
     A TableView has a \l model that defines the data to be displayed, and a
     \l delegate that defines how the data should be displayed.
@@ -72,8 +71,8 @@
 
     A TableView displays data from models created from built-in QML types
     such as ListModel and XmlListModel, which populates the first column only
-    in a TableView. To create models with multiple columns, create a model in
-    C++ that inherits QAbstractItemModel, and expose it to QML.
+    in a TableView. To create models with multiple columns, either use
+    \l TableModel or a C++ model that inherits QAbstractItemModel.
 
     \section1 Example Usage
 
@@ -90,7 +89,7 @@
 
     TableView recycles delegate items by default, instead of instantiating from
     the \l delegate whenever new rows and columns are flicked into view. This
-    can give a huge performance boost, depending on the complexity of the
+    approach gives a huge performance boost, depending on the complexity of the
     delegate.
 
     When an item is flicked out, it moves to the \e{reuse pool}, which is an
@@ -124,8 +123,8 @@
     \section1 Row heights and column widths
 
     When a new column is flicked into view, TableView will determine its width
-    by calling the \l columnWidthProvider function. TableView itself will never
-    store row height or column width, as it's designed to support large models
+    by calling the \l columnWidthProvider function. TableView does not store
+    row height or column width, as it's designed to support large models
     containing any number of rows and columns. Instead, it will ask the
     application whenever it needs to know.
 
@@ -139,9 +138,9 @@
     \note The calculated width of a column is discarded when it is flicked out
     of the viewport, and is recalculated if the column is flicked back in. The
     calculation is always based on the items that are visible when the column
-    is flicked in. This means that it can end up different each time, depending
-    on which row you're at when the column enters. You should therefore have the
-    same \c implicitWidth for all items in a column, or set
+    is flicked in. This means that column width can be different each time,
+    depending on which row you're at when the column enters. You should
+    therefore have the same \c implicitWidth for all items in a column, or set
     \l columnWidthProvider. The same logic applies for the row height
     calculation.
 
@@ -150,10 +149,11 @@
     must call \l forceLayout. This informs TableView that it needs to use the
     provider functions again to recalculate and update the layout.
 
-    Since Qt 5.13, if you want to hide a specific column, you can return \c 0 from the
-    \l columnWidthProvider for that column. Likewise, you can return 0 from the
-    \l rowHeightProvider to hide a row. If you return a negative number, TableView
-    will fall back to calculate the size based on the delegate items.
+    Since Qt 5.13, if you want to hide a specific column, you can return \c 0
+    from the \l columnWidthProvider for that column. Likewise, you can return 0
+    from the \l rowHeightProvider to hide a row. If you return a negative
+    number, TableView will fall back to calculate the size based on the delegate
+    items.
 
     \note The size of a row or column should be a whole number to avoid
     sub-pixel alignment of items.
@@ -167,11 +167,11 @@
 
     \section1 Overlays and underlays
 
-    Tableview inherits \l Flickable. And when new items are instantiated from the
-    delegate, it will parent them to the \l{Flickable::}{contentItem}
-    with a \c z value equal to \c 1. You can add your own items inside the
-    Tableview, as child items of the Flickable. By controlling their \c z
-    value, you can make them be on top of or underneath the table items.
+    All new items that are instantiated from the delegate are parented to the
+    \l{Flickable::}{contentItem} with the \c z value, \c 1. You can add your
+    own items inside the Tableview, as child items of the Flickable. By
+    controlling their \c z value, you can make them be on top of or
+    underneath the table items.
 
     Here is an example that shows how to add some text on top of the table, that
     moves together with the table as you flick:
@@ -181,6 +181,7 @@
 
 /*!
     \qmlproperty int QtQuick::TableView::rows
+    \readonly
 
     This property holds the number of rows in the table. This is
     equal to the number of rows in the model.
@@ -190,10 +191,11 @@
 
 /*!
     \qmlproperty int QtQuick::TableView::columns
+    \readonly
 
     This property holds the number of columns in the table. This is
     equal to the number of columns in the model. If the model is
-    a list, columns will be 1.
+    a list, columns will be \c 1.
 
     This property is read only.
 */
@@ -203,7 +205,7 @@
 
     This property holds the spacing between the rows.
 
-    The default value is 0.
+    The default value is \c 0.
 */
 
 /*!
@@ -211,20 +213,20 @@
 
     This property holds the spacing between the columns.
 
-    The default value is 0.
+    The default value is \c 0.
 */
 
 /*!
     \qmlproperty var QtQuick::TableView::rowHeightProvider
 
     This property can hold a function that returns the row height for each row
-    in the model. When assigned, it will be called whenever TableView needs to
-    know the height of a specific row. The function takes one argument, \c row,
-    for which the TableView needs to know the height.
+    in the model. It is called whenever TableView needs to know the height of
+    a specific row. The function takes one argument, \c row, for which the
+    TableView needs to know the height.
 
-    Since Qt 5.13, if you want to hide a specific row, you can return \c 0 height for
-    that row. If you return a negative number, TableView will fall back to
-    calculate the height based on the delegate items.
+    Since Qt 5.13, if you want to hide a specific row, you can return \c 0
+    height for that row. If you return a negative number, TableView calculates
+    the height based on the delegate items.
 
     \sa columnWidthProvider, {Row heights and column widths}
 */
@@ -233,13 +235,13 @@
     \qmlproperty var QtQuick::TableView::columnWidthProvider
 
     This property can hold a function that returns the column width for each
-    column in the model. When assigned, it is called whenever TableView needs
-    to know the width of a specific column. The function takes one argument,
-    \c column, for which the TableView needs to know the width.
+    column in the model. It is called whenever TableView needs to know the
+    width of a specific column. The function takes one argument, \c column,
+    for which the TableView needs to know the width.
 
-    Since Qt 5.13, if you want to hide a specific column, you can return \c 0 width for
-    that column. If you return a negative number, TableView will fall back to
-    calculate the width based on the delegate items.
+    Since Qt 5.13, if you want to hide a specific column, you can return \c 0
+    width for that column. If you return a negative number, TableView
+    calculates the width based on the delegate items.
 
     \sa rowHeightProvider, {Row heights and column widths}
 */
@@ -249,9 +251,9 @@
     This property holds the model that provides data for the table.
 
     The model provides the set of data that is used to create the items
-    in the view. Models can be created directly in QML using \l ListModel,
-    \l XmlListModel or \l ObjectModel, or provided by a custom C++ model
-    class. If it is a C++ model, it must be a subclass of \l QAbstractItemModel
+    in the view. Models can be created directly in QML using \l TableModel,
+    \l ListModel, \l XmlListModel, or \l ObjectModel, or provided by a custom
+    C++ model class. The C++ model must be a subclass of \l QAbstractItemModel
     or a simple list.
 
     \sa {qml-data-models}{Data Models}
@@ -265,10 +267,9 @@
     applies to \c row and \c column. Properties of the model are also available
     depending upon the type of \l {qml-data-models}{Data Model}.
 
-    A delegate should specify its size using \l [QML]{Item::implicitWidth}{implicitWidth} and
-    \l [QML]{Item::implicitHeight}{implicitHeight}.
-    The TableView lays out the items based on that information. Explicit width or
-    height settings are ignored and overwritten.
+    A delegate should specify its size using \l{Item::}{implicitWidth} and
+    \l {Item::}{implicitHeight}. The TableView lays out the items based on that
+    information. Explicit width or height settings are ignored and overwritten.
 
     \note Delegates are instantiated as needed and may be destroyed at any time.
     They are also reused if the \l reuseItems property is set to \c true. You
@@ -313,8 +314,8 @@
     always know the exact height of the table without loading all rows
     in the model, the \c contentHeight is usually an estimated height
     based on the rows it has seen so far. This estimate is recalculated
-    whenever new rows are flicked into view, which means that the content height
-    can change dynamically.
+    whenever new rows are flicked into view, which means that the content
+    height can change dynamically.
 
     If you know up front what the height of the table will be, assign a
     value to \c contentHeight explicitly, to avoid unnecessary calculations and
@@ -329,7 +330,7 @@
     Responding to changes in the model are batched so that they are handled
     only once per frame. This means the TableView delays showing any changes
     while a script is being run. The same is also true when changing
-    properties such as \l rowSpacing or \l {Item::anchors.leftMargin}{leftMargin}.
+    properties, such as \l rowSpacing or \l{Item::anchors.leftMargin}{leftMargin}.
 
     This method forces the TableView to immediately update the layout so
     that any recent changes take effect.
@@ -366,9 +367,9 @@
     item has been taken out of the pool and placed inside the content view,
     and the model properties such as index, row, and column have been updated.
 
-    Other properties that are not provided by the model does not change when an item
-    is reused. You should avoid storing any state inside a delegate, but if you do,
-    manually reset that state on receiving this signal.
+    Other properties that are not provided by the model does not change when an
+    item is reused. You should avoid storing any state inside a delegate, but if
+    you do, manually reset that state on receiving this signal.
 
     This signal is emitted when the item is reused, and not the first time the
     item is created.
