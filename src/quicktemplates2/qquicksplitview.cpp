@@ -248,8 +248,6 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    As the state is saved into a string, it can be written to any kind of file.
-
     \sa SplitHandle, {Customizing SplitView}, {Container Controls}
 */
 

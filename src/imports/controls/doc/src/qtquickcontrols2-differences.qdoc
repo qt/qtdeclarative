@@ -338,9 +338,19 @@
         \li
     \row
         \li \l [QML QtQuickControls1] {SplitView}
-        \li \mdash
+        \li \l [QML QtQuickControls2] {SplitView}
         \li
-        \li
+        \li \list
+                \li \b {Qt Quick Controls 1}: Uses \l Layout attached properties
+                    to specify size hints.
+                \li \b {Qt Quick Controls 2}: Uses dedicated
+                    \l [QML QtQuickControls2] {SplitView} attached properties
+                    to specify size hints.
+                    Allows \l {SplitView::saveState()}{saving} and
+                    \l {SplitView::restoreState()}{restoring} state.
+                    Separate attached \l SplitHandle API for managing split
+                    handles.
+            \endlist
     \row
         \li \l [QML QtQuickControls1] {StackView},\br
             \l [QML QtQuickControls1] {StackViewDelegate},\br
@@ -377,7 +387,8 @@
     \row
         \li \l [QML QtQuickControls1] {TableView}
         \li \mdash
-        \li
+        \li The new \l [QML QtQuick] {TableView} can be found in the Qt Quick
+            module.
         \li
     \row
         \li \l [QML QtQuickControls1] {TextArea}
