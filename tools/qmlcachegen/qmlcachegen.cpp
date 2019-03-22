@@ -200,7 +200,6 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
                                    &irDocument.jsGenerator, &irDocument.jsModule,
                                    &irDocument.jsParserEngine, irDocument.program,
                                    &irDocument.jsGenerator.stringTable, illegalNames);
-        v4CodeGen.setUseFastLookups(false); // Disable lookups in non-standalone (aka QML) mode
         for (QmlIR::Object *object: qAsConst(irDocument.objects)) {
             if (object->functionsAndExpressions->count == 0)
                 continue;
