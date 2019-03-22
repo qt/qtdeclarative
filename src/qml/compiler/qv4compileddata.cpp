@@ -98,18 +98,25 @@ CompilationUnit::CompilationUnit(const Unit *unitData, const QString &fileName, 
     setUnitData(unitData, nullptr, fileName, finalUrlString);
 }
 
-#ifndef V4_BOOTSTRAP
 CompilationUnit::~CompilationUnit()
 {
+#ifndef V4_BOOTSTRAP
     unlink();
+#endif
 
     if (data) {
         if (data->qmlUnit() != qmlData)
             free(const_cast<QmlUnit *>(qmlData));
         qmlData = nullptr;
 
+#ifndef V4_BOOTSTRAP
         if (!(data->flags & QV4::CompiledData::Unit::StaticData))
             free(const_cast<Unit *>(data));
+#else
+        // Unconditionally free the memory. In the dev tools we create units that have
+        // the flag set and will be saved to disk, so intended to persist later.
+        free(const_cast<Unit *>(data));
+#endif
     }
     data = nullptr;
 #if Q_BYTE_ORDER == Q_BIG_ENDIAN
@@ -120,6 +127,7 @@ CompilationUnit::~CompilationUnit()
     delete [] imports;
     imports = nullptr;
 }
+#ifndef V4_BOOTSTRAP
 
 QString CompilationUnit::localCacheFilePath(const QUrl &url)
 {
