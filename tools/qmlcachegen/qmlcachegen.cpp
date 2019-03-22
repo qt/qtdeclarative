@@ -301,7 +301,6 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
             QmlIR::JSCodeGen v4CodeGen(irDocument.code, &irDocument.jsGenerator,
                                        &irDocument.jsModule, &irDocument.jsParserEngine,
                                        irDocument.program, &irDocument.jsGenerator.stringTable, illegalNames);
-            v4CodeGen.setUseFastLookups(false); // Disable lookups in non-standalone (aka QML) mode
             v4CodeGen.generateFromProgram(inputFileName, inputFileUrl, sourceCode, program,
                                           &irDocument.jsModule, QV4::Compiler::ContextType::ScriptImportedByQML);
             QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();
