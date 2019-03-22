@@ -475,6 +475,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterUncreatableType<QQuickItemView, 13>(uri, 2, 13, itemViewName, itemViewMessage);
     qmlRegisterType<QQuickPathView, 13>(uri, 2, 13, "PathView");
     qmlRegisterType<QQuickGridView, 13>(uri, 2, 13, "GridView");
+#if QT_CONFIG(quick_tableview)
+    qmlRegisterType<QQuickTableView, 14>(uri, 2, 14, "TableView");
+#endif
 }
 
 static void initResources()
