@@ -97,6 +97,8 @@
     \sa StackView
 */
 
+QT_BEGIN_NAMESPACE
+
 QQuickStackLayout::QQuickStackLayout(QQuickItem *parent) :
     QQuickLayout(*new QQuickStackLayoutPrivate, parent)
 {
@@ -344,5 +346,7 @@ bool QQuickStackLayout::shouldIgnoreItem(QQuickItem *item) const
         d_func()->m_ignoredItems << item;
     return ignored;
 }
+
+QT_END_NAMESPACE
 
 #include "moc_qquickstacklayout_p.cpp"

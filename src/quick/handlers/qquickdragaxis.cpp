@@ -39,6 +39,8 @@
 #include "qquickdragaxis_p.h"
 #include <limits>
 
+QT_BEGIN_NAMESPACE
+
 QQuickDragAxis::QQuickDragAxis()
   : m_minimum(-std::numeric_limits<qreal>::max())
   , m_maximum(std::numeric_limits<qreal>::max())
@@ -73,3 +75,4 @@ void QQuickDragAxis::setEnabled(bool enabled)
     emit enabledChanged();
 }
 
+QT_END_NAMESPACE

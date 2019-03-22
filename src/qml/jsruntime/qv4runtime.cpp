@@ -1130,6 +1130,12 @@ ReturnedValue Runtime::LoadGlobalLookup::call(ExecutionEngine *engine, Function 
     return l->globalGetter(l, engine);
 }
 
+ReturnedValue Runtime::LoadQmlContextPropertyLookup::call(ExecutionEngine *engine, uint index)
+{
+    Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
+    return l->qmlContextPropertyGetter(l, engine, nullptr);
+}
+
 ReturnedValue Runtime::GetLookup::call(ExecutionEngine *engine, Function *f, const Value &base, int index)
 {
     Lookup *l = f->compilationUnit->runtimeLookups + index;
@@ -1390,16 +1396,41 @@ uint Runtime::CompareIn::call(ExecutionEngine *engine, const Value &left, const 
     return v->booleanValue();
 }
 
+static ReturnedValue throwPropertyIsNotAFunctionTypeError(ExecutionEngine *engine, Value *thisObject, const QString &propertyName)
+{
+    QString objectAsString = QStringLiteral("[null]");
+    if (!thisObject->isUndefined())
+        objectAsString = thisObject->toQStringNoThrow();
+    QString msg = QStringLiteral("Property '%1' of object %2 is not a function")
+                  .arg(propertyName, objectAsString);
+    return engine->throwTypeError(msg);
+}
 
 ReturnedValue Runtime::CallGlobalLookup::call(ExecutionEngine *engine, uint index, Value argv[], int argc)
 {
+    Scope scope(engine);
     Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
     Value function = Value::fromReturnedValue(l->globalGetter(l, engine));
-    if (!function.isFunctionObject())
-        return engine->throwTypeError();
-
     Value thisObject = Value::undefinedValue();
+    if (!function.isFunctionObject())
+        return throwPropertyIsNotAFunctionTypeError(engine, &thisObject,
+                                                    engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString());
+
     return static_cast<FunctionObject &>(function).call(&thisObject, argv, argc);
+}
+
+ReturnedValue Runtime::CallQmlContextPropertyLookup::call(ExecutionEngine *engine, uint index,
+                                                          Value *argv, int argc)
+{
+    Scope scope(engine);
+    ScopedValue thisObject(scope);
+    Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
+    Value function = Value::fromReturnedValue(l->qmlContextPropertyGetter(l, engine, thisObject));
+    if (!function.isFunctionObject())
+        return throwPropertyIsNotAFunctionTypeError(engine, thisObject,
+                                                    engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString());
+
+    return static_cast<FunctionObject &>(function).call(thisObject, argv, argc);
 }
 
 ReturnedValue Runtime::CallPossiblyDirectEval::call(ExecutionEngine *engine, Value *argv, int argc)
@@ -1412,13 +1443,8 @@ ReturnedValue Runtime::CallPossiblyDirectEval::call(ExecutionEngine *engine, Val
     if (engine->hasException)
         return Encode::undefined();
 
-    if (!function) {
-        QString objectAsString = QStringLiteral("[null]");
-        if (!thisObject->isUndefined())
-            objectAsString = thisObject->toQStringNoThrow();
-        QString msg = QStringLiteral("Property 'eval' of object %2 is not a function").arg(objectAsString);
-        return engine->throwTypeError(msg);
-    }
+    if (!function)
+        return throwPropertyIsNotAFunctionTypeError(engine, thisObject, QLatin1String("eval"));
 
     if (function->d() == engine->evalFunction()->d())
         return static_cast<EvalFunction *>(function.getPointer())->evalCall(thisObject, argv, argc, true);
@@ -1437,15 +1463,9 @@ ReturnedValue Runtime::CallName::call(ExecutionEngine *engine, int nameIndex, Va
     if (engine->hasException)
         return Encode::undefined();
 
-    if (!f) {
-        QString objectAsString = QStringLiteral("[null]");
-        if (!thisObject->isUndefined())
-            objectAsString = thisObject->toQStringNoThrow();
-        QString msg = QStringLiteral("Property '%1' of object %2 is not a function")
-                .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]->toQString(),
-                     objectAsString);
-        return engine->throwTypeError(msg);
-    }
+    if (!f)
+        return throwPropertyIsNotAFunctionTypeError(engine, thisObject,
+                                                    engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]->toQString());
 
     return f->call(thisObject, argv, argc);
 }
@@ -1534,41 +1554,6 @@ ReturnedValue Runtime::CallWithReceiver::call(ExecutionEngine *engine, const Val
     if (!func.isFunctionObject())
         return engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
     return static_cast<const FunctionObject &>(func).call(&thisObject, argv, argc);
-}
-
-ReturnedValue Runtime::CallQmlScopeObjectProperty::call(ExecutionEngine *engine, const Value &base,
-                                                         int propertyIndex, Value argv[], int argc)
-{
-    Scope scope(engine);
-    ScopedFunctionObject fo(scope, LoadQmlScopeObjectProperty::call(engine, base, propertyIndex,
-                                                                    /*captureRequired*/true));
-    if (!fo) {
-        QString error = QStringLiteral("Property '%1' of scope object is not a function").arg(propertyIndex);
-        return engine->throwTypeError(error);
-    }
-
-    QObject *qmlScopeObj = static_cast<const QmlContext *>(&base)->d()->qml()->scopeObject;
-    ScopedValue qmlScopeValue(scope, QObjectWrapper::wrap(engine, qmlScopeObj));
-    return fo->call(qmlScopeValue, argv, argc);
-}
-
-ReturnedValue Runtime::CallQmlContextObjectProperty::call(ExecutionEngine *engine,
-                                                           const Value &base,
-                                                           int propertyIndex,
-                                                           Value argv[],
-                                                           int argc)
-{
-    Scope scope(engine);
-    ScopedFunctionObject fo(scope, LoadQmlContextObjectProperty::call(engine, base, propertyIndex,
-                                                                      /*captureRequired*/true));
-    if (!fo) {
-        QString error = QStringLiteral("Property '%1' of context object is not a function").arg(propertyIndex);
-        return engine->throwTypeError(error);
-    }
-
-    QObject *qmlContextObj = static_cast<const QmlContext *>(&base)->d()->qml()->context->contextData()->contextObject;
-    ScopedValue qmlContextValue(scope, QObjectWrapper::wrap(engine, qmlContextObj));
-    return fo->call(qmlContextValue, argv, argc);
 }
 
 struct CallArgs {
@@ -2013,64 +1998,10 @@ QV4::ReturnedValue Runtime::CreateRestParameter::call(ExecutionEngine *engine, i
     return engine->newArrayObject(values, nValues)->asReturnedValue();
 }
 
-
-ReturnedValue Runtime::LoadQmlContext::call(ExecutionEngine *engine)
-{
-    Heap::QmlContext *ctx = engine->qmlContext();
-    Q_ASSERT(ctx);
-    return ctx->asReturnedValue();
-}
-
 ReturnedValue Runtime::RegexpLiteral::call(ExecutionEngine *engine, int id)
 {
     Heap::RegExpObject *ro = engine->newRegExpObject(engine->currentStackFrame->v4Function->compilationUnit->runtimeRegularExpressions[id].as<RegExp>());
     return ro->asReturnedValue();
-}
-
-ReturnedValue Runtime::LoadQmlScopeObjectProperty::call(ExecutionEngine *engine, const Value &context, int propertyIndex, Bool captureRequired)
-{
-    const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::getProperty(engine, c.d()->qml()->scopeObject, propertyIndex, captureRequired);
-}
-
-ReturnedValue Runtime::LoadQmlContextObjectProperty::call(ExecutionEngine *engine, const Value &context, int propertyIndex, Bool captureRequired)
-{
-    const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::getProperty(engine, (*c.d()->qml()->context)->contextObject, propertyIndex, captureRequired);
-}
-
-ReturnedValue Runtime::LoadQmlIdObject::call(ExecutionEngine *engine, const Value &c, uint index)
-{
-    const QmlContext &qmlContext = static_cast<const QmlContext &>(c);
-    QQmlContextData *context = *qmlContext.d()->qml()->context;
-    if (!context || index >= (uint)context->idValueCount)
-        return Encode::undefined();
-
-    QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : nullptr;
-    if (ep && ep->propertyCapture)
-        ep->propertyCapture->captureProperty(&context->idValues[index].bindings);
-
-    return QObjectWrapper::wrap(engine, context->idValues[index].data());
-}
-
-void Runtime::StoreQmlScopeObjectProperty::call(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)
-{
-    const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::setProperty(engine, c.d()->qml()->scopeObject, propertyIndex, value);
-}
-
-void Runtime::StoreQmlContextObjectProperty::call(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)
-{
-    const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::setProperty(engine, (*c.d()->qml()->context)->contextObject, propertyIndex, value);
-}
-
-ReturnedValue Runtime::LoadQmlImportedScripts::call(ExecutionEngine *engine)
-{
-    QQmlContextData *context = engine->callingQmlContext();
-    if (!context)
-        return Encode::undefined();
-    return context->importedScripts.value();
 }
 
 ReturnedValue Runtime::ToObject::call(ExecutionEngine *engine, const Value &obj)

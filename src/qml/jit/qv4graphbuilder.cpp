@@ -800,45 +800,10 @@ void GraphBuilder::generate_StoreSuperProperty(int property)
                env()->accumulator());
 }
 
-void GraphBuilder::generate_StoreScopeObjectProperty(int base, int propertyIndex)
+void GraphBuilder::generate_LoadQmlContextPropertyLookup(int propertyIndex, int /*traceSlot*/)
 {
-    createNode(opBuilder()->get<Meta::QMLStoreScopeObjectProperty>(),
-               env()->slot(base),
-               createConstant(propertyIndex),
-               env()->accumulator());
-}
-
-void GraphBuilder::generate_StoreContextObjectProperty(int base, int propertyIndex)
-{
-    createNode(opBuilder()->get<Meta::QMLStoreContextObjectProperty>(),
-               env()->slot(base),
-               createConstant(propertyIndex),
-               env()->accumulator());
-}
-
-void GraphBuilder::generate_LoadScopeObjectProperty(int propertyIndex, int base,
-                                                    int captureRequired)
-{
-    bindAcc(createNode(opBuilder()->get<Meta::QMLLoadScopeObjectProperty>(),
-                       env()->slot(base),
-                       createConstant(propertyIndex),
-                       createConstant(captureRequired)));
-}
-
-void GraphBuilder::generate_LoadContextObjectProperty(int propertyIndex, int base,
-                                                      int captureRequired)
-{
-    bindAcc(createNode(opBuilder()->get<Meta::QMLLoadContextObjectProperty>(),
-                       env()->slot(base),
-                       createConstant(propertyIndex),
-                       createConstant(captureRequired)));
-}
-
-void GraphBuilder::generate_LoadIdObject(int index, int base)
-{
-    bindAcc(createNode(opBuilder()->get<Meta::QMLLoadIdObject>(),
-                       env()->slot(base),
-                       createConstant(index)));
+    bindAcc(createNode(opBuilder()->get<Meta::QMLLoadQmlContextPropertyLookup>(),
+                       createConstant(propertyIndex)));
 }
 
 void GraphBuilder::generate_Yield() { Q_UNREACHABLE(); }
@@ -913,22 +878,12 @@ void GraphBuilder::generate_CallGlobalLookup(int index, int argc, int argv, int 
     finalizeCall(Meta::JSCallGlobalLookup, args, argc, argv);
 }
 
-void GraphBuilder::generate_CallScopeObjectProperty(int propIdx, int base, int argc, int argv,
-                                                    int /*traceSlot*/)
+void GraphBuilder::generate_CallQmlContextPropertyLookup(int index, int argc, int argv,
+                                                         int /*traceSlot*/)
 {
     VarArgNodes args;
-    args.append(env()->slot(base));
-    args.append(createConstant(propIdx));
-    finalizeCall(Meta::QMLCallScopeObjectProperty, args, argc, argv);
-}
-
-void GraphBuilder::generate_CallContextObjectProperty(int propIdx, int base, int argc, int argv,
-                                                      int /*traceSlot*/)
-{
-    VarArgNodes args;
-    args.append(env()->slot(base));
-    args.append(createConstant(propIdx));
-    finalizeCall(Meta::QMLCallContextObjectProperty, args, argc, argv);
+    args.append(createConstant(index));
+    finalizeCall(Meta::QMLCallQmlContextPropertyLookup, args, argc, argv);
 }
 
 void GraphBuilder::generate_SetUnwindHandler(int offset)
@@ -1634,17 +1589,6 @@ void GraphBuilder::generate_Sub(int lhs, int /*traceSlot*/)
     bindAcc(createNode(opBuilder()->get<Meta::JSSubtract>(),
                        env()->slot(lhs),
                        env()->accumulator()));
-}
-
-void GraphBuilder::generate_LoadQmlContext(int result)
-{
-    env()->bindNodeToSlot(createNode(opBuilder()->get<Meta::QMLLoadContext>()), result);
-}
-
-void GraphBuilder::generate_LoadQmlImportedScripts(int result)
-{
-    env()->bindNodeToSlot(createNode(opBuilder()->get<Meta::QMLLoadImportedScripts>()),
-                          result);
 }
 
 void GraphBuilder::generate_InitializeBlockDeadTemporalZone(int firstReg, int count)

@@ -669,6 +669,14 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(LoadGlobalLookup)
 
+    MOTH_BEGIN_INSTR(LoadQmlContextPropertyLookup)
+        STORE_IP();
+        QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
+        acc = l->qmlContextPropertyGetter(l, engine, nullptr);
+        CHECK_EXCEPTION;
+        traceValue(acc, function, traceSlot);
+    MOTH_END_INSTR(LoadQmlContextPropertyLookup)
+
     MOTH_BEGIN_INSTR(StoreNameStrict)
         STORE_IP();
         STORE_ACC();
@@ -719,7 +727,17 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(GetLookup)
         STORE_IP();
         STORE_ACC();
+
         QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
+
+        if (accumulator.isNullOrUndefined()) {
+            QString message = QStringLiteral("Cannot read property '%1' of %2")
+                    .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString())
+                    .arg(accumulator.toQStringNoThrow());
+            acc = engine->throwTypeError(message);
+            goto handleUnwind;
+        }
+
         acc = l->getter(l, engine, accumulator);
         CHECK_EXCEPTION;
         traceValue(acc, function, traceSlot);
@@ -754,37 +772,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         Runtime::StoreSuperProperty::call(engine, STACK_VALUE(property), accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreSuperProperty)
-
-    MOTH_BEGIN_INSTR(StoreScopeObjectProperty)
-        STORE_ACC();
-        Runtime::StoreQmlScopeObjectProperty::call(engine, STACK_VALUE(base), propertyIndex, accumulator);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(StoreScopeObjectProperty)
-
-    MOTH_BEGIN_INSTR(LoadScopeObjectProperty)
-        STORE_IP();
-        acc = Runtime::LoadQmlScopeObjectProperty::call(engine, STACK_VALUE(base), propertyIndex, captureRequired);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(LoadScopeObjectProperty)
-
-    MOTH_BEGIN_INSTR(StoreContextObjectProperty)
-        STORE_IP();
-        STORE_ACC();
-        Runtime::StoreQmlContextObjectProperty::call(engine, STACK_VALUE(base), propertyIndex, accumulator);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(StoreContextObjectProperty)
-
-    MOTH_BEGIN_INSTR(LoadContextObjectProperty)
-        STORE_IP();
-        acc = Runtime::LoadQmlContextObjectProperty::call(engine, STACK_VALUE(base), propertyIndex, captureRequired);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(LoadContextObjectProperty)
-
-    MOTH_BEGIN_INSTR(LoadIdObject)
-        STORE_IP();
-        acc = Runtime::LoadQmlIdObject::call(engine, STACK_VALUE(base), index);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(LoadIdObject)
 
     MOTH_BEGIN_INSTR(Yield)
         frame->yield = code;
@@ -852,11 +839,23 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(CallPropertyLookup)
         STORE_IP();
         Lookup *l = function->compilationUnit->runtimeLookups + lookupIndex;
+
+        if (stack[base].isNullOrUndefined()) {
+            QString message = QStringLiteral("Cannot call method '%1' of %2")
+                    .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString())
+                    .arg(stack[base].toQStringNoThrow());
+            acc = engine->throwTypeError(message);
+            goto handleUnwind;
+        }
+
         // ok to have the value on the stack here
         Value f = Value::fromReturnedValue(l->getter(l, engine, stack[base]));
 
         if (Q_UNLIKELY(!f.isFunctionObject())) {
-            acc = engine->throwTypeError();
+            QString message = QStringLiteral("Property '%1' of object %2 is not a function")
+                    .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString())
+                    .arg(stack[base].toQStringNoThrow());
+            acc = engine->throwTypeError(message);
             goto handleUnwind;
         }
 
@@ -893,19 +892,12 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallGlobalLookup)
 
-    MOTH_BEGIN_INSTR(CallScopeObjectProperty)
+    MOTH_BEGIN_INSTR(CallQmlContextPropertyLookup)
         STORE_IP();
-        acc = Runtime::CallQmlScopeObjectProperty::call(engine, stack[base], name, stack + argv, argc);
+        acc = Runtime::CallQmlContextPropertyLookup::call(engine, index, stack + argv, argc);
         CHECK_EXCEPTION;
         traceValue(acc, function, traceSlot);
-    MOTH_END_INSTR(CallScopeObjectProperty)
-
-    MOTH_BEGIN_INSTR(CallContextObjectProperty)
-        STORE_IP();
-        acc = Runtime::CallQmlContextObjectProperty::call(engine, stack[base], name, stack + argv, argc);
-        CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
-    MOTH_END_INSTR(CallContextObjectProperty)
+    MOTH_END_INSTR(CallQmlContextPropertyLookup)
 
     MOTH_BEGIN_INSTR(CallWithSpread)
         STORE_IP();
@@ -1519,14 +1511,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         debug_slowPath(engine);
 #endif // QT_CONFIG(qml_debug)
     MOTH_END_INSTR(Debug)
-
-    MOTH_BEGIN_INSTR(LoadQmlContext)
-        STACK_VALUE(result) = Runtime::LoadQmlContext::call(engine);
-    MOTH_END_INSTR(LoadQmlContext)
-
-    MOTH_BEGIN_INSTR(LoadQmlImportedScripts)
-        STACK_VALUE(result) = Runtime::LoadQmlImportedScripts::call(engine);
-    MOTH_END_INSTR(LoadQmlImportedScripts)
 
     handleUnwind:
         Q_ASSERT(engine->hasException || frame->unwindLevel);

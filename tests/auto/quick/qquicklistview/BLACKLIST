@@ -1,5 +1,7 @@
 [enforceRange_withoutHighlight]
 osx
+opensuse-42.3
+opensuse-leap
 #QTBUG-53863
 [populateTransitions]
 opensuse-42.1

@@ -56,7 +56,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_AUTOTEST_EXPORT QQuickDragHandler : public QQuickMultiPointHandler
+class Q_QUICK_PRIVATE_EXPORT QQuickDragHandler : public QQuickMultiPointHandler
 {
     Q_OBJECT
     Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT)

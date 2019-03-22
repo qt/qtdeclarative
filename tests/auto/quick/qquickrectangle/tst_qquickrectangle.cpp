@@ -134,14 +134,12 @@ void tst_qquickrectangle::gradient_separate()
 
     // Start off clean
     QQuickItemPrivate *rectPriv = QQuickItemPrivate::get(rect);
-    bool isDirty = rectPriv->dirtyAttributes & QQuickItemPrivate::Content;
-    QVERIFY(!isDirty);
+    QTRY_COMPARE(rectPriv->dirtyAttributes & QQuickItemPrivate::Content, 0);
 
     QMetaObject::invokeMethod(rect, "changeGradient");
 
     // Changing the gradient should have scheduled an update of the item.
-    isDirty = rectPriv->dirtyAttributes & QQuickItemPrivate::Content;
-    QVERIFY(isDirty);
+    QVERIFY((rectPriv->dirtyAttributes & QQuickItemPrivate::Content) != 0);
 }
 
 // When a gradient is changed, every Rectangle connected to it must update.

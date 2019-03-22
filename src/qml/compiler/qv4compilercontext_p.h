@@ -278,11 +278,6 @@ struct Context {
         }
     };
 
-    // Qml extension:
-    SmallSet<int> idObjectDependencies;
-    PropertyDependencyMap contextObjectPropertyDependencies;
-    PropertyDependencyMap scopeObjectPropertyDependencies;
-
     Context(Context *parent, ContextType type)
         : parent(parent)
         , contextType(type)
@@ -338,6 +333,7 @@ struct Context {
     struct ResolvedName {
         enum Type {
             Unresolved,
+            QmlGlobal,
             Global,
             Local,
             Stack,

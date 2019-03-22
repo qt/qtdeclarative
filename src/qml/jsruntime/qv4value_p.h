@@ -877,6 +877,22 @@ struct ValueArray {
 // have wrong offsets between host and target.
 Q_STATIC_ASSERT(offsetof(ValueArray<0>, values) == 8);
 
+class OptionalReturnedValue {
+    ReturnedValue value;
+public:
+
+    OptionalReturnedValue() : value(Value::emptyValue().asReturnedValue()) {}
+    explicit OptionalReturnedValue(ReturnedValue v)
+        : value(v)
+    {
+        Q_ASSERT(!Value::fromReturnedValue(v).isEmpty());
+    }
+
+    ReturnedValue operator->() const { return value; }
+    ReturnedValue operator*() const { return value; }
+    explicit operator bool() const { return !Value::fromReturnedValue(value).isEmpty(); }
+};
+
 }
 
 QT_END_NAMESPACE

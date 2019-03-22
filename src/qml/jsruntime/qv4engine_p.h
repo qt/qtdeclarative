@@ -572,6 +572,7 @@ public:
     ReturnedValue throwTypeError();
     ReturnedValue throwTypeError(const QString &message);
     ReturnedValue throwReferenceError(const Value &value);
+    ReturnedValue throwReferenceError(const QString &name);
     ReturnedValue throwReferenceError(const QString &value, const QString &fileName, int lineNumber, int column);
     ReturnedValue throwRangeError(const Value &value);
     ReturnedValue throwRangeError(const QString &message);

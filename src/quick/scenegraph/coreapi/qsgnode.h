@@ -96,7 +96,7 @@ public:
         // Uppermost 8 bits are reserved for internal use.
         IsVisitableNode             = 0x01000000
 #ifdef Q_CLANG_QDOC
-        InternalReserved            = 0x01000000
+        , InternalReserved            = 0x01000000
 #endif
     };
     Q_DECLARE_FLAGS(Flags, Flag)

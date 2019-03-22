@@ -54,6 +54,8 @@
 #include <private/qtquickglobal_p.h>
 #include <QtQuick/qsgnode.h>
 
+QT_BEGIN_NAMESPACE
+
 class Q_QUICK_PRIVATE_EXPORT QQuickDefaultClipNode : public QSGClipNode
 {
 public:
@@ -77,5 +79,7 @@ private:
 
     QSGGeometry m_geometry;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQUICKCLIPNODE_P_H

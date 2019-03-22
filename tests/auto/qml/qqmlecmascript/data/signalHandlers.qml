@@ -8,6 +8,8 @@ QtObject {
     signal testSignal
     onTestSignal: count++
 
+    readonly property string scopeObjectAsString: this.toString()
+
     property int funcCount: 0
     function testFunction() {
         funcCount++;

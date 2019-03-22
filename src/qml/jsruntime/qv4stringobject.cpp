@@ -130,7 +130,7 @@ PropertyKey StringObjectOwnPropertyKeyIterator::next(const QV4::Object *o, Prope
         return PropertyKey::fromArrayIndex(index);
     } else if (arrayIndex == slen) {
         if (s->arrayData()) {
-            arrayNode = s->sparseBegin();
+            SparseArrayNode *arrayNode = s->sparseBegin();
             // iterate until we're past the end of the string
             while (arrayNode && arrayNode->key() < slen)
                 arrayNode = arrayNode->nextNode();

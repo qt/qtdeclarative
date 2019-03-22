@@ -28,6 +28,7 @@
 
 #include <QtTest/QtTest>
 #include <QQmlApplicationEngine>
+#include <QQmlAbstractUrlInterceptor>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
 #include <private/qqmlimport_p.h>
@@ -43,6 +44,7 @@ private slots:
     void uiFormatLoading();
     void completeQmldirPaths_data();
     void completeQmldirPaths();
+    void interceptQmldir();
     void cleanup();
 };
 
@@ -184,6 +186,32 @@ void tst_QQmlImport::completeQmldirPaths()
 
     QCOMPARE(QQmlImports::completeQmldirPaths(uri, basePaths, majorVersion, minorVersion), expectedPaths);
 }
+
+class QmldirUrlInterceptor : public QQmlAbstractUrlInterceptor {
+public:
+    QUrl intercept(const QUrl &url, DataType type) override
+    {
+        if (type != UrlString && !url.isEmpty() && url.isValid()) {
+            QString str = url.toString(QUrl::None);
+            return str.replace(QStringLiteral("$(INTERCEPT)"), QStringLiteral("intercepted"));
+        }
+        return url;
+    }
+};
+
+void tst_QQmlImport::interceptQmldir()
+{
+    QQmlEngine engine;
+    QmldirUrlInterceptor interceptor;
+    engine.setUrlInterceptor(&interceptor);
+
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("interceptQmldir.qml"));
+    QVERIFY(component.isReady());
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+}
+
 
 QTEST_MAIN(tst_QQmlImport)
 

@@ -566,7 +566,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiQualifiedId *id)
 
 void IRBuilder::accept(QQmlJS::AST::Node *node)
 {
-    QQmlJS::AST::Node::acceptChild(node, this);
+    QQmlJS::AST::Node::accept(node, this);
 }
 
 bool IRBuilder::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, Object *declarationsOverride)
@@ -974,7 +974,6 @@ bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
         foe->node = funDecl;
         foe->parentNode = funDecl;
         foe->nameIndex = registerString(funDecl->name.toString());
-        foe->disableAcceleratedLookups = false;
         const int index = _object->functionsAndExpressions->append(foe);
 
         Function *f = New<Function>();
@@ -1098,7 +1097,6 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
         expr->parentNode = parentNode;
         expr->nameIndex = registerString(QLatin1String("expression for ")
                                          + stringAt(binding->propertyNameIndex));
-        expr->disableAcceleratedLookups = false;
         const int index = bindingsTarget()->functionsAndExpressions->append(expr);
         binding->value.compiledScriptIndex = index;
         // We don't need to store the binding script as string, except for script strings
@@ -1825,36 +1823,18 @@ char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, Binding
 
 JSCodeGen::JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
                      QV4::Compiler::Module *jsModule, QQmlJS::Engine *jsEngine,
-                     QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports,
+                     QQmlJS::AST::UiProgram *qmlRoot,
                      const QV4::Compiler::StringTableGenerator *stringPool, const QSet<QString> &globalNames)
     : QV4::Compiler::Codegen(jsUnitGenerator, /*strict mode*/false)
     , sourceCode(sourceCode)
     , jsEngine(jsEngine)
     , qmlRoot(qmlRoot)
-    , imports(imports)
     , stringPool(stringPool)
-    , _disableAcceleratedLookups(false)
-    , _contextObject(nullptr)
-    , _scopeObject(nullptr)
-    , _qmlContextSlot(-1)
-    , _importedScriptsSlot(-1)
 {
     m_globalNames = globalNames;
 
     _module = jsModule;
     _fileNameIsUrl = true;
-}
-
-void JSCodeGen::beginContextScope(const JSCodeGen::ObjectIdMapping &objectIds, QQmlPropertyCache *contextObject)
-{
-    _idObjects = objectIds;
-    _contextObject = contextObject;
-    _scopeObject = nullptr;
-}
-
-void JSCodeGen::beginObjectScope(QQmlPropertyCache *scopeObject)
-{
-    _scopeObject = scopeObject;
 }
 
 QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<CompiledFunctionOrExpression> &functions)
@@ -1921,7 +1901,6 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
             body = body->finish();
         }
 
-        _disableAcceleratedLookups = qmlFunction.disableAcceleratedLookups;
         int idx = defineFunction(name, function ? function : qmlFunction.parentNode,
                                  function ? function->formals : nullptr,
                                  body);
@@ -1929,391 +1908,6 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     }
 
     return runtimeFunctionIndices;
-}
-
-int JSCodeGen::defineFunction(const QString &name, AST::Node *ast, AST::FormalParameterList *formals, AST::StatementList *body)
-{
-    int qmlContextTemp = -1;
-    int importedScriptsTemp = -1;
-    qSwap(_qmlContextSlot, qmlContextTemp);
-    qSwap(_importedScriptsSlot, importedScriptsTemp);
-
-    int result = Codegen::defineFunction(name, ast, formals, body);
-
-    qSwap(_importedScriptsSlot, importedScriptsTemp);
-    qSwap(_qmlContextSlot, qmlContextTemp);
-
-    return result;
-}
-
-#ifndef V4_BOOTSTRAP
-QQmlPropertyData *JSCodeGen::lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name)
-{
-    QQmlPropertyData *pd = cache->property(name, /*object*/nullptr, /*context*/nullptr);
-
-    if (pd && !cache->isAllowedInRevision(pd))
-        return nullptr;
-
-    return pd;
-}
-
-enum MetaObjectResolverFlags {
-    AllPropertiesAreFinal      = 0x1,
-    LookupsIncludeEnums        = 0x2,
-    LookupsExcludeProperties   = 0x4,
-    ResolveTypeInformationOnly = 0x8
-};
-
-#if 0
-static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
-
-static void initScopedEnumResolver(QV4::IR::MemberExpressionResolver *resolver, const QQmlType &qmlType, int index);
-
-static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
-                                              const QV4::IR::MemberExpressionResolver *resolver,
-                                              QV4::IR::Member *member)
-{
-    QV4::IR::Type result = QV4::IR::VarType;
-
-    QQmlType type = resolver->qmlType;
-
-    if (member->name->constData()->isUpper()) {
-        bool ok = false;
-        int value = type.enumValue(qmlEngine, *member->name, &ok);
-        if (ok) {
-            member->setEnumValue(value);
-            return QV4::IR::SInt32Type;
-        } else {
-            int index = type.scopedEnumIndex(qmlEngine, *member->name, &ok);
-            if (ok) {
-                auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
-                newResolver->owner = resolver->owner;
-                initScopedEnumResolver(newResolver, type, index);
-                return QV4::IR::DiscoveredType(newResolver);
-            }
-        }
-    }
-
-    if (type.isCompositeSingleton()) {
-        QQmlRefPointer<QQmlTypeData> tdata = qmlEngine->typeLoader.getType(type.singletonInstanceInfo()->url);
-        Q_ASSERT(tdata);
-        tdata->release(); // Decrease the reference count added from QQmlTypeLoader::getType()
-        // When a singleton tries to reference itself, it may not be complete yet.
-        if (tdata->isComplete()) {
-            auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
-            newResolver->owner = resolver->owner;
-            initMetaObjectResolver(newResolver, qmlEngine->propertyCacheForType(tdata->compilationUnit()->metaTypeId));
-            newResolver->flags |= AllPropertiesAreFinal;
-            return newResolver->resolveMember(qmlEngine, newResolver, member);
-        }
-    }  else if (type.isSingleton()) {
-        const QMetaObject *singletonMeta = type.singletonInstanceInfo()->instanceMetaObject;
-        if (singletonMeta) { // QJSValue-based singletons cannot be accelerated
-            auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
-            newResolver->owner = resolver->owner;
-            initMetaObjectResolver(newResolver, qmlEngine->cache(singletonMeta));
-            member->kind = QV4::IR::Member::MemberOfSingletonObject;
-            return newResolver->resolveMember(qmlEngine, newResolver, member);
-        }
-    }
-#if 0
-    else if (const QMetaObject *attachedMeta = type->attachedPropertiesType(qmlEngine)) {
-        // Right now the attached property IDs are not stable and cannot be embedded in the
-        // code that is cached on disk.
-        QQmlPropertyCache *cache = qmlEngine->cache(attachedMeta);
-        auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
-        newResolver->owner = resolver->owner;
-        initMetaObjectResolver(newResolver, cache);
-        member->setAttachedPropertiesId(type->attachedPropertiesId(qmlEngine));
-        return newResolver->resolveMember(qmlEngine, newResolver, member);
-    }
-#endif
-
-    return result;
-}
-
-static void initQmlTypeResolver(QV4::IR::MemberExpressionResolver *resolver, const QQmlType &qmlType)
-{
-    Q_ASSERT(resolver);
-
-    resolver->resolveMember = &resolveQmlType;
-    resolver->qmlType = qmlType;
-    resolver->typenameCache = 0;
-    resolver->flags = 0;
-}
-
-static QV4::IR::DiscoveredType resolveImportNamespace(
-        QQmlEnginePrivate *, const QV4::IR::MemberExpressionResolver *resolver,
-        QV4::IR::Member *member)
-{
-    QV4::IR::Type result = QV4::IR::VarType;
-    QQmlTypeNameCache *typeNamespace = resolver->typenameCache;
-    const QQmlImportRef *importNamespace = resolver->import;
-
-    QQmlTypeNameCache::Result r = typeNamespace->query(*member->name, importNamespace);
-    if (r.isValid()) {
-        member->freeOfSideEffects = true;
-        if (r.scriptIndex != -1) {
-            // TODO: remember the index and replace with subscript later.
-            result = QV4::IR::VarType;
-        } else if (r.type.isValid()) {
-            // TODO: Propagate singleton information, so that it is loaded
-            // through the singleton getter in the run-time. Until then we
-            // can't accelerate access :(
-            if (!r.type.isSingleton()) {
-                auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
-                newResolver->owner = resolver->owner;
-                initQmlTypeResolver(newResolver, r.type);
-                return QV4::IR::DiscoveredType(newResolver);
-            }
-        } else {
-            Q_ASSERT(false); // How can this happen?
-        }
-    }
-
-    return result;
-}
-
-static void initImportNamespaceResolver(QV4::IR::MemberExpressionResolver *resolver,
-                                        QQmlTypeNameCache *imports, const QQmlImportRef *importNamespace)
-{
-    resolver->resolveMember = &resolveImportNamespace;
-    resolver->import = importNamespace;
-    resolver->typenameCache = imports;
-    resolver->flags = 0;
-}
-
-static QV4::IR::DiscoveredType resolveMetaObjectProperty(
-        QQmlEnginePrivate *qmlEngine, const QV4::IR::MemberExpressionResolver *resolver,
-        QV4::IR::Member *member)
-{
-    QV4::IR::Type result = QV4::IR::VarType;
-    QQmlPropertyCache *metaObject = resolver->propertyCache;
-
-    if (member->name->constData()->isUpper() && (resolver->flags & LookupsIncludeEnums)) {
-        const QMetaObject *mo = metaObject->createMetaObject();
-        QByteArray enumName = member->name->toUtf8();
-        for (int ii = mo->enumeratorCount() - 1; ii >= 0; --ii) {
-            QMetaEnum metaEnum = mo->enumerator(ii);
-            bool ok;
-            int value = metaEnum.keyToValue(enumName.constData(), &ok);
-            if (ok) {
-                member->setEnumValue(value);
-                return QV4::IR::SInt32Type;
-            }
-        }
-    }
-
-    if (member->kind != QV4::IR::Member::MemberOfIdObjectsArray && member->kind != QV4::IR::Member::MemberOfSingletonObject &&
-        qmlEngine && !(resolver->flags & LookupsExcludeProperties)) {
-        QQmlPropertyData *property = member->property;
-        if (!property && metaObject) {
-            if (QQmlPropertyData *candidate = metaObject->property(*member->name, /*object*/0, /*context*/0)) {
-                const bool isFinalProperty = (candidate->isFinal() || (resolver->flags & AllPropertiesAreFinal))
-                                             && !candidate->isFunction();
-
-                if (lookupHints()
-                    && !(resolver->flags & AllPropertiesAreFinal)
-                    && !candidate->isFinal()
-                    && !candidate->isFunction()
-                    && candidate->isDirect()) {
-                    qWarning() << "Hint: Access to property" << *member->name << "of" << metaObject->className() << "could be accelerated if it was marked as FINAL";
-                }
-
-                if (isFinalProperty && metaObject->isAllowedInRevision(candidate)) {
-                    property = candidate;
-                    member->inhibitTypeConversionOnWrite = true;
-                    if (!(resolver->flags & ResolveTypeInformationOnly))
-                        member->property = candidate; // Cache for next iteration and isel needs it.
-                }
-            }
-        }
-
-        if (property) {
-            // Enums cannot be mapped to IR types, they need to go through the run-time handling
-            // of accepting strings that will then be converted to the right values.
-            if (property->isEnum())
-                return QV4::IR::VarType;
-
-            switch (property->propType()) {
-            case QMetaType::Bool: result = QV4::IR::BoolType; break;
-            case QMetaType::Int: result = QV4::IR::SInt32Type; break;
-            case QMetaType::Double: result = QV4::IR::DoubleType; break;
-            case QMetaType::QString: result = QV4::IR::StringType; break;
-            default:
-                if (property->isQObject()) {
-                    if (QQmlPropertyCache *cache = qmlEngine->propertyCacheForType(property->propType())) {
-                        auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
-                        newResolver->owner = resolver->owner;
-                        initMetaObjectResolver(newResolver, cache);
-                        return QV4::IR::DiscoveredType(newResolver);
-                    }
-                } else if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(property->propType())) {
-                    if (QQmlPropertyCache *cache = qmlEngine->cache(valueTypeMetaObject)) {
-                        auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
-                        newResolver->owner = resolver->owner;
-                        initMetaObjectResolver(newResolver, cache);
-                        newResolver->flags |= ResolveTypeInformationOnly;
-                        return QV4::IR::DiscoveredType(newResolver);
-                    }
-                }
-                break;
-            }
-        }
-    }
-
-    return result;
-}
-
-static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject)
-{
-    Q_ASSERT(resolver);
-
-    resolver->resolveMember = &resolveMetaObjectProperty;
-    resolver->propertyCache = metaObject;
-    resolver->flags = 0;
-}
-
-static QV4::IR::DiscoveredType resolveScopedEnum(QQmlEnginePrivate *qmlEngine,
-                                              const QV4::IR::MemberExpressionResolver *resolver,
-                                              QV4::IR::Member *member)
-{
-    if (!member->name->constData()->isUpper())
-        return QV4::IR::VarType;
-
-    QQmlType type = resolver->qmlType;
-    int index = resolver->flags;
-
-    bool ok = false;
-    int value = type.scopedEnumValue(qmlEngine, index, *member->name, &ok);
-    if (!ok)
-        return QV4::IR::VarType;
-    member->setEnumValue(value);
-    return QV4::IR::SInt32Type;
-}
-
-static void initScopedEnumResolver(QV4::IR::MemberExpressionResolver *resolver, const QQmlType &qmlType, int index)
-{
-    Q_ASSERT(resolver);
-
-    resolver->resolveMember = &resolveScopedEnum;
-    resolver->qmlType = qmlType;
-    resolver->flags = index;
-}
-#endif
-
-#endif // V4_BOOTSTRAP
-
-void JSCodeGen::beginFunctionBodyHook()
-{
-    _qmlContextSlot = bytecodeGenerator->newRegister();
-    _importedScriptsSlot = bytecodeGenerator->newRegister();
-
-#ifndef V4_BOOTSTRAP
-    Instruction::LoadQmlContext load;
-    load.result = Reference::fromStackSlot(this, _qmlContextSlot).stackSlot();
-    bytecodeGenerator->addInstruction(load);
-
-#if 0
-    temp->type = QV4::IR::QObjectType;
-    temp->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
-    initMetaObjectResolver(temp->memberResolver, _scopeObject);
-    auto name = _block->NAME(QV4::IR::Name::builtin_qml_context, 0, 0);
-    name->type = temp->type;
-#endif
-
-    Instruction::LoadQmlImportedScripts loadScripts;
-    loadScripts.result = Reference::fromStackSlot(this, _importedScriptsSlot).stackSlot();
-    bytecodeGenerator->addInstruction(loadScripts);
-#endif
-}
-
-QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
-{
-#ifndef V4_BOOTSTRAP
-    if (_disableAcceleratedLookups)
-        return Reference();
-
-    // Implement QML lookup semantics in the current file context.
-    //
-    // Note: We do not check if properties of the qml scope object or context object
-    // are final. That's because QML tries to get as close as possible to lexical scoping,
-    // which means in terms of properties that only those visible at compile time are chosen.
-    // I.e. access to a "foo" property declared within the same QML component as "property int foo"
-    // will always access that instance and as integer. If a sub-type implements its own property string foo,
-    // then that one is not chosen for accesses from within this file, because it wasn't visible at compile
-    // time. This corresponds to the logic in QQmlPropertyCache::findProperty to find the property associated
-    // with the correct QML context.
-
-    // Look for IDs first.
-    for (const IdMapping &mapping : qAsConst(_idObjects)) {
-        if (name == mapping.name) {
-            if (_context->contextType == QV4::Compiler::ContextType::Binding)
-                _context->idObjectDependencies.insert(mapping.idIndex);
-
-            Instruction::LoadIdObject load;
-            load.base = Reference::fromStackSlot(this, _qmlContextSlot).stackSlot();
-            load.index = mapping.idIndex;
-
-            Reference result = Reference::fromAccumulator(this);
-            bytecodeGenerator->addInstruction(load);
-            result.isReadonly = true;
-            return result;
-        }
-    }
-
-    if (name.at(0).isUpper()) {
-        QQmlTypeNameCache::Result r = imports->query(name);
-        if (r.isValid()) {
-            if (r.scriptIndex != -1) {
-                Reference imports = Reference::fromStackSlot(this, _importedScriptsSlot);
-                return Reference::fromSubscript(imports, Reference::fromConst(this, QV4::Encode(r.scriptIndex)));
-            } else if (r.type.isValid()) {
-                return Reference::fromName(this, name);
-            } else {
-                Q_ASSERT(r.importNamespace);
-                return Reference::fromName(this, name);
-            }
-        }
-    }
-
-    if (_scopeObject) {
-        QQmlPropertyData *data = lookupQmlCompliantProperty(_scopeObject, name);
-        if (data) {
-            // Q_INVOKABLEs can't be FINAL, so we have to look them up at run-time
-            if (data->isFunction())
-                return Reference::fromName(this, name);
-
-            Reference base = Reference::fromStackSlot(this, _qmlContextSlot);
-            Reference::PropertyCapturePolicy capturePolicy;
-            if (!data->isConstant() && !data->isQmlBinding())
-                capturePolicy = Reference::CaptureAtRuntime;
-            else
-                capturePolicy = data->isConstant() ? Reference::DontCapture : Reference::CaptureAheadOfTime;
-            return Reference::fromQmlScopeObject(base, data->coreIndex(), data->notifyIndex(), capturePolicy);
-        }
-    }
-
-    if (_contextObject) {
-        QQmlPropertyData *data = lookupQmlCompliantProperty(_contextObject, name);
-        if (data) {
-            // Q_INVOKABLEs can't be FINAL, so we have to look them up at run-time
-            if (data->isFunction())
-                return Reference::fromName(this, name);
-
-            Reference base = Reference::fromStackSlot(this, _qmlContextSlot);
-            Reference::PropertyCapturePolicy capturePolicy;
-            if (!data->isConstant() && !data->isQmlBinding())
-                capturePolicy = Reference::CaptureAtRuntime;
-            else
-                capturePolicy = data->isConstant() ? Reference::DontCapture : Reference::CaptureAheadOfTime;
-            return Reference::fromQmlContextObject(base, data->coreIndex(), data->notifyIndex(), capturePolicy);
-        }
-    }
-#else
-    Q_UNUSED(name)
-#endif // V4_BOOTSTRAP
-    return Reference();
 }
 
 #ifndef V4_BOOTSTRAP
@@ -2435,7 +2029,6 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
             b->value.compiledScriptIndex = functionIndices.count() - 1;
 
             QmlIR::CompiledFunctionOrExpression *foe = pool->New<QmlIR::CompiledFunctionOrExpression>();
-            foe->disableAcceleratedLookups = true;
             foe->nameIndex = 0;
 
             QQmlJS::AST::ExpressionNode *expr;

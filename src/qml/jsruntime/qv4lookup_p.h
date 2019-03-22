@@ -68,8 +68,10 @@ struct Lookup {
     union {
         ReturnedValue (*getter)(Lookup *l, ExecutionEngine *engine, const Value &object);
         ReturnedValue (*globalGetter)(Lookup *l, ExecutionEngine *engine);
+        ReturnedValue (*qmlContextPropertyGetter)(Lookup *l, ExecutionEngine *engine, Value *thisObject);
         bool (*setter)(Lookup *l, ExecutionEngine *engine, Value &object, const Value &v);
     };
+    // NOTE: gc assumes the first two entries in the struct are pointers to heap objects or null
     union {
         struct {
             Heap::Base *h1;
@@ -119,6 +121,39 @@ struct Lookup {
             uint index;
             uint unused;
         } indexedLookup;
+        struct {
+            Heap::InternalClass *ic;
+            Heap::QObjectWrapper *staticQObject;
+            QQmlPropertyCache *propertyCache;
+            QQmlPropertyData *propertyData;
+        } qobjectLookup;
+        struct {
+            Heap::InternalClass *ic;
+            quintptr unused;
+            QQmlPropertyCache *propertyCache;
+            QQmlPropertyData *propertyData;
+        } qgadgetLookup;
+        struct {
+            quintptr unused1;
+            quintptr unused2;
+            int scriptIndex;
+        } qmlContextScriptLookup;
+        struct {
+            Heap::Object *singleton;
+            quintptr unused;
+        } qmlContextSingletonLookup;
+        struct {
+            quintptr unused1;
+            quintptr unused2;
+            int objectId;
+        } qmlContextIdObjectLookup;
+        struct {
+            // Same as protoLookup, as used for global lookups
+            quintptr reserved1;
+            quintptr reserved2;
+            quintptr reserved3;
+            ReturnedValue (*getterTrampoline)(Lookup *l, ExecutionEngine *engine);
+        } qmlContextGlobalLookup;
     };
     uint nameIndex;
 

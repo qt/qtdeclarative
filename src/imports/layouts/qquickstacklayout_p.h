@@ -42,6 +42,8 @@
 
 #include <qquicklayout_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQuickStackLayoutPrivate;
 
 class QQuickStackLayout : public QQuickLayout
@@ -104,5 +106,7 @@ private:
     int currentIndex;
     bool explicitCurrentIndex;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQUICKSTACKLAYOUT_H

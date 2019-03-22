@@ -123,12 +123,10 @@ enum OpKind: uint16_t {
     JSDeleteName,
     JSIn,
     JSInstanceOf,
-    /* ok, these are qml object ops, but we don't care for now and treat them a s JS */
-    QMLLoadScopeObjectProperty,
-    QMLStoreScopeObjectProperty,
-    QMLLoadContextObjectProperty,
-    QMLStoreContextObjectProperty,
-    QMLLoadIdObject,
+
+    /* ok, these are qml object ops, but we don't care for now and treat them as JS */
+    QMLLoadQmlContextPropertyLookup,
+    QMLCallQmlContextPropertyLookup,
 
     JSEqual,
     JSGreaterThan,
@@ -168,16 +166,11 @@ enum OpKind: uint16_t {
     JSCreateClass,
     JSConstruct,
     JSConstructWithSpread,
-    /* ok, these are qml vararg calls, but we don't care for now and treat them as JS */
-    QMLCallScopeObjectProperty,
-    QMLCallContextObjectProperty,
 
     JSTypeofName,
     JSTypeofValue,
     JSDeclareVar,
     JSDestructureRestElement,
-    QMLLoadContext,
-    QMLLoadImportedScripts,
     JSThisToObject,
     JSCreateMappedArgumentsObject,
     JSCreateUnmappedArgumentsObject,

@@ -184,16 +184,31 @@ public:
             Member,
             Subscript,
             Import,
-            QmlScopeObject,
-            QmlContextObject,
-            LastLValue = QmlContextObject,
+            LastLValue = Import,
             Const
         } type = Invalid;
 
         bool isLValue() const { return !isReadonly && type > Accumulator; }
 
-        Reference(Codegen *cg, Type type = Invalid) : type(type), constant(0), codegen(cg) {}
-        Reference(): constant(0) {}
+        Reference(Codegen *cg, Type t = Invalid) : Reference()
+        {
+            type = t;
+            codegen = cg;
+        }
+
+        Reference() :
+            constant(0),
+            isArgOrEval(false),
+            isReadonly(false),
+            isReferenceToConst(false),
+            requiresTDZCheck(false),
+            subscriptRequiresTDZCheck(false),
+            stackSlotIsLocalOrArgument(false),
+            isVolatile(false),
+            global(false),
+            qmlGlobal(false)
+        {}
+
         Reference(const Reference &) = default;
         Reference(Reference &&) = default;
         Reference &operator =(const Reference &) = default;
@@ -206,10 +221,6 @@ public:
         bool isValid() const { return type != Invalid; }
         bool loadTriggersSideEffect() const {
             switch (type) {
-            case QmlScopeObject:
-                return capturePolicy != DontCapture;
-            case QmlContextObject:
-                return capturePolicy != DontCapture;
             case Name:
             case Member:
             case Subscript:
@@ -227,28 +238,6 @@ public:
         bool isRegister() const {
             return isStackSlot();
         }
-
-        enum PropertyCapturePolicy {
-            /*
-                We're reading a property from the scope or context object, but it's a CONSTANT property,
-                so we don't need to register a dependency at all.
-            */
-            DontCapture,
-            /*
-                We're reading the property of a QObject, and we know that it's the
-                scope object or context object, which we know very well. Instead of registering a
-                property capture every time, we can do that ahead of time and then register all those
-                captures in one shot in registerQmlDependencies().
-            */
-            CaptureAheadOfTime,
-            /*
-                We're reading the property of a QObject, and we're not quite sure where
-                the QObject comes from or what it is. So, when reading that property at run-time,
-                make sure that we capture where we read that property so that if it changes we can
-                re-evaluate the entire expression.
-            */
-            CaptureAtRuntime
-        };
 
         static Reference fromAccumulator(Codegen *cg) {
             return Reference(cg, Accumulator);
@@ -316,22 +305,6 @@ public:
             r.isReadonly = true;
             return r;
         }
-        static Reference fromQmlScopeObject(const Reference &base, qint16 coreIndex, qint16 notifyIndex, PropertyCapturePolicy capturePolicy) {
-            Reference r(base.codegen, QmlScopeObject);
-            r.qmlBase = base.storeOnStack().stackSlot();
-            r.qmlCoreIndex = coreIndex;
-            r.qmlNotifyIndex = notifyIndex;
-            r.capturePolicy = capturePolicy;
-            return r;
-        }
-        static Reference fromQmlContextObject(const Reference &base, qint16 coreIndex, qint16 notifyIndex, PropertyCapturePolicy capturePolicy) {
-            Reference r(base.codegen, QmlContextObject);
-            r.qmlBase = base.storeOnStack().stackSlot();
-            r.qmlCoreIndex = coreIndex;
-            r.qmlNotifyIndex = notifyIndex;
-            r.capturePolicy = capturePolicy;
-            return r;
-        }
         static Reference fromThis(Codegen *cg) {
             Reference r = fromStackSlot(cg, CallData::This);
             r.isReadonly = true;
@@ -386,24 +359,20 @@ public:
                 Moth::StackSlot elementBase;
                 RValue elementSubscript;
             };
-            struct { // QML scope/context object case
-                Moth::StackSlot qmlBase;
-                qint16 qmlCoreIndex;
-                qint16 qmlNotifyIndex;
-                PropertyCapturePolicy capturePolicy;
-            };
             Moth::StackSlot property; // super property
         };
         QString name;
-        mutable bool isArgOrEval = false;
-        bool isReadonly = false;
-        bool isReferenceToConst = false;
-        bool requiresTDZCheck = false;
-        bool subscriptRequiresTDZCheck = false;
-        bool stackSlotIsLocalOrArgument = false;
-        bool isVolatile = false;
-        bool global = false;
         Codegen *codegen = nullptr;
+
+        quint32 isArgOrEval:1;
+        quint32 isReadonly:1;
+        quint32 isReferenceToConst:1;
+        quint32 requiresTDZCheck:1;
+        quint32 subscriptRequiresTDZCheck:1;
+        quint32 stackSlotIsLocalOrArgument:1;
+        quint32 isVolatile:1;
+        quint32 global:1;
+        quint32 qmlGlobal:1;
 
     private:
         void storeAccumulator() const;
@@ -499,6 +468,10 @@ protected:
         void setResult(const Reference &result) {
             _result = result;
         }
+
+        void setResult(Reference &&result) {
+            _result = std::move(result);
+        }
     };
 
     void enterContext(AST::Node *node);
@@ -532,6 +505,7 @@ public:
     int registerGetterLookup(int nameIndex) { return jsUnitGenerator->registerGetterLookup(nameIndex); }
     int registerSetterLookup(int nameIndex) { return jsUnitGenerator->registerSetterLookup(nameIndex); }
     int registerGlobalGetterLookup(int nameIndex) { return jsUnitGenerator->registerGlobalGetterLookup(nameIndex); }
+    int registerQmlContextPropertyGetterLookup(int nameIndex) { return jsUnitGenerator->registerQmlContextPropertyGetterLookup(nameIndex); }
 
     // Returns index in _module->functions
     virtual int defineFunction(const QString &name, AST::Node *ast,
@@ -544,9 +518,22 @@ protected:
     void condition(AST::ExpressionNode *ast, const BytecodeGenerator::Label *iftrue,
                    const BytecodeGenerator::Label *iffalse,
                    bool trueBlockFollowsCondition);
-    Reference expression(AST::ExpressionNode *ast);
 
-    void accept(AST::Node *node);
+    inline Reference expression(AST::ExpressionNode *ast)
+    {
+        if (!ast || hasError)
+            return Reference();
+
+        pushExpr();
+        ast->accept(this);
+        return popResult();
+    }
+
+    inline void accept(AST::Node *node)
+    {
+        if (!hasError && node)
+            node->accept(this);
+    }
 
     void program(AST::Program *ast);
     void statementList(AST::StatementList *ast);
@@ -560,12 +547,6 @@ protected:
     void destructurePattern(AST::Pattern *p, const Reference &rhs);
 
     Reference referenceForPropertyName(const Codegen::Reference &object, AST::PropertyName *name);
-
-    // Hooks provided to implement QML lookup semantics
-    virtual bool canAccelerateGlobalLookups() const { return true; }
-    virtual Reference fallbackNameLookup(const QString &name);
-
-    virtual void beginFunctionBodyHook() {}
 
     void emitReturn(const Reference &expr);
 
@@ -670,6 +651,11 @@ protected:
     bool throwSyntaxErrorOnEvalOrArgumentsInStrictMode(const Reference &r, const AST::SourceLocation &loc);
     virtual void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail);
     virtual void throwReferenceError(const AST::SourceLocation &loc, const QString &detail);
+    void throwRecursionDepthError() override
+    {
+        throwSyntaxError(AST::SourceLocation(),
+                         QStringLiteral("Maximum statement or expression depth exceeded"));
+    }
 
 public:
     QList<DiagnosticMessage> errors() const;
@@ -684,6 +670,7 @@ public:
     void handleCall(Reference &base, Arguments calldata, int slotForFunction, int slotForThisObject);
 
     Arguments pushTemplateArgs(AST::TemplateLiteral *args);
+    bool handleTaggedTemplate(Reference base, AST::TaggedTemplate *ast);
     void createTemplateObject(AST::TemplateLiteral *t);
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
@@ -714,13 +701,40 @@ public:
         m_globalNames = globalNames;
     }
 
+    static const char *s_globalNames[];
 
 protected:
     friend class ScanFunctions;
     friend struct ControlFlow;
     friend struct ControlFlowCatch;
     friend struct ControlFlowFinally;
-    Result _expr;
+
+    inline void setExprResult(const Reference &result) { m_expressions.back().setResult(result); }
+    inline void setExprResult(Reference &&result) { m_expressions.back().setResult(std::move(result)); }
+    inline Reference exprResult() const { return m_expressions.back().result(); }
+
+    inline bool exprAccept(Format f) { return m_expressions.back().accept(f); }
+
+    inline const Result &currentExpr() const { return m_expressions.back(); }
+
+    inline void pushExpr(Result &&expr) { m_expressions.push_back(std::move(expr)); }
+    inline void pushExpr(const Result &expr) { m_expressions.push_back(expr); }
+    inline void pushExpr() { m_expressions.emplace_back(); }
+
+    inline Result popExpr()
+    {
+        const Result result = m_expressions.back();
+        m_expressions.pop_back();
+        return result;
+    }
+
+    inline Reference popResult() {
+        const Reference result = m_expressions.back().result();
+        m_expressions.pop_back();
+        return result;
+    }
+
+    std::vector<Result> m_expressions;
     VolatileMemoryLocations _volatileMemoryLocations;
     Module *_module;
     int _returnAddress;
@@ -769,33 +783,8 @@ protected:
         bool _onoff;
     };
 
-    class RecursionDepthCheck {
-    public:
-        RecursionDepthCheck(Codegen *cg, const AST::SourceLocation &loc)
-            : _cg(cg)
-        {
-#ifdef QT_NO_DEBUG
-            const int depthLimit = 4000; // limit to ~1000 deep
-#else
-            const int depthLimit = 1000; // limit to ~250 deep
-#endif // QT_NO_DEBUG
-
-            ++_cg->_recursionDepth;
-            if (_cg->_recursionDepth > depthLimit)
-                _cg->throwSyntaxError(loc, QStringLiteral("Maximum statement or expression depth exceeded"));
-        }
-
-        ~RecursionDepthCheck()
-        { --_cg->_recursionDepth; }
-
-    private:
-        Codegen *_cg;
-    };
-    int _recursionDepth = 0;
-    friend class RecursionDepthCheck;
-
 private:
-    VolatileMemoryLocations scanVolatileMemoryLocations(AST::Node *ast) const;
+    VolatileMemoryLocations scanVolatileMemoryLocations(AST::Node *ast);
     void handleConstruct(const Reference &base, AST::ArgumentList *args);
 };
 

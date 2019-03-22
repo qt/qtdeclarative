@@ -614,16 +614,8 @@ bool Parser::parse(int startToken)
     program = 0;
 
     do {
-        if (++tos == stack_size) {
+        if (++tos == stack_size)
             reallocateStack();
-            if (stack_size > 10000) {
-                // We're now in some serious right-recursive stuff, which will probably result in
-                // an AST that's so deep that recursively visiting it will run out of stack space.
-                const QString msg = QCoreApplication::translate("QQmlParser", "Maximum statement or expression depth exceeded");
-                diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, token_buffer[0].loc, msg));
-                return false;
-            }
-        }
 
         state_stack[tos] = action;
 
