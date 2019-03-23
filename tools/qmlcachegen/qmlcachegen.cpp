@@ -204,7 +204,6 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
                                    &irDocument.jsGenerator, &irDocument.jsModule,
                                    &irDocument.jsParserEngine, irDocument.program,
                                    &irDocument.jsGenerator.stringTable, illegalNames);
-        v4CodeGen.setUseFastLookups(false); // Disable lookups in non-standalone (aka QML) mode
         for (QmlIR::Object *object: qAsConst(irDocument.objects)) {
             if (object->functionsAndExpressions->count == 0)
                 continue;
@@ -236,8 +235,6 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
 
         if (!saveFunction(irDocument.javaScriptCompilationUnit, &error->message))
             return false;
-
-        free(unit);
     }
     return true;
 }
@@ -245,7 +242,6 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
 static bool compileJSFile(const QString &inputFileName, const QString &inputFileUrl, SaveFunction saveFunction, Error *error)
 {
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit;
-    QScopedPointer<QV4::CompiledData::Unit, QScopedPointerPodDeleter> unitDataToFree;
 
     QString sourceCode;
     {
@@ -327,7 +323,6 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
             generator.generate(irDocument);
             QV4::CompiledData::Unit *unitData = const_cast<QV4::CompiledData::Unit*>(irDocument.javaScriptCompilationUnit->data);
             unitData->flags |= QV4::CompiledData::Unit::StaticData;
-            unitDataToFree.reset(unitData);
             unit = irDocument.javaScriptCompilationUnit;
         }
     }

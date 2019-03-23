@@ -159,17 +159,15 @@ void tst_qquickrectangle::gradient_multiple()
     // Start off clean
     QQuickItemPrivate *firstRectPriv = QQuickItemPrivate::get(firstRect);
     QQuickItemPrivate *secondRectPriv = QQuickItemPrivate::get(secondRect);
-    bool firstIsDirty = firstRectPriv->dirtyAttributes & QQuickItemPrivate::Content;
+    QTRY_VERIFY(!(firstRectPriv->dirtyAttributes & QQuickItemPrivate::Content));
     bool secondIsDirty = secondRectPriv->dirtyAttributes & QQuickItemPrivate::Content;
-    QVERIFY(!firstIsDirty);
     QVERIFY(!secondIsDirty);
 
     QMetaObject::invokeMethod(view.rootObject(), "changeGradient");
 
     // Changing the gradient should have scheduled an update of both items
-    firstIsDirty = firstRectPriv->dirtyAttributes & QQuickItemPrivate::Content;
+    QTRY_VERIFY(firstRectPriv->dirtyAttributes & QQuickItemPrivate::Content);
     secondIsDirty = secondRectPriv->dirtyAttributes & QQuickItemPrivate::Content;
-    QVERIFY(firstIsDirty);
     QVERIFY(secondIsDirty);
 }
 

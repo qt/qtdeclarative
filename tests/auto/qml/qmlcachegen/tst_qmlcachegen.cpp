@@ -38,7 +38,9 @@
 #include <private/qqmlcomponent_p.h>
 #include <qtranslator.h>
 
-class tst_qmlcachegen: public QObject
+#include "../../shared/util.h"
+
+class tst_qmlcachegen: public QQmlDataTest
 {
     Q_OBJECT
 
@@ -66,6 +68,9 @@ private slots:
     void enums();
 
     void sourceFileIndices();
+
+    void reproducibleCache_data();
+    void reproducibleCache();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -353,12 +358,13 @@ static QQmlPrivate::CachedQmlUnit *temporaryModifiedCachedUnit = nullptr;
 
 void tst_qmlcachegen::versionChecksForAheadOfTimeUnits()
 {
-    QVERIFY(QFile::exists(":/versionchecks.qml"));
-    QCOMPARE(QFileInfo(":/versionchecks.qml").size(), 0);
+    QVERIFY(QFile::exists(":/data/versionchecks.qml"));
+    QCOMPARE(QFileInfo(":/data/versionchecks.qml").size(), 0);
 
     Q_ASSERT(!temporaryModifiedCachedUnit);
     QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
-    const QV4::CompiledData::Unit *originalUnit = QQmlMetaType::findCachedCompilationUnit(QUrl("qrc:/versionchecks.qml"), &error);
+    const QV4::CompiledData::Unit *originalUnit = QQmlMetaType::findCachedCompilationUnit(
+            QUrl("qrc:/data/versionchecks.qml"), &error);
     QVERIFY(originalUnit);
     QV4::CompiledData::Unit *tweakedUnit = (QV4::CompiledData::Unit *)malloc(originalUnit->unitSize);
     memcpy(reinterpret_cast<void *>(tweakedUnit), reinterpret_cast<const void *>(originalUnit), originalUnit->unitSize);
@@ -366,7 +372,7 @@ void tst_qmlcachegen::versionChecksForAheadOfTimeUnits()
     temporaryModifiedCachedUnit = new QQmlPrivate::CachedQmlUnit{tweakedUnit, nullptr, nullptr};
 
     auto testHandler = [](const QUrl &url) -> const QQmlPrivate::CachedQmlUnit * {
-        if (url == QUrl("qrc:/versionchecks.qml"))
+        if (url == QUrl("qrc:/data/versionchecks.qml"))
             return temporaryModifiedCachedUnit;
         return nullptr;
     };
@@ -374,15 +380,18 @@ void tst_qmlcachegen::versionChecksForAheadOfTimeUnits()
 
     {
         QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
-        QVERIFY(!QQmlMetaType::findCachedCompilationUnit(QUrl("qrc:/versionchecks.qml"), &error));
+        QVERIFY(!QQmlMetaType::findCachedCompilationUnit(QUrl("qrc:/data/versionchecks.qml"), &error));
         QCOMPARE(error, QQmlMetaType::CachedUnitLookupError::VersionMismatch);
     }
 
     {
         QQmlEngine engine;
-        QQmlComponent component(&engine, QUrl("qrc:/versionchecks.qml"));
+        QQmlComponent component(&engine, QUrl("qrc:/data/versionchecks.qml"));
         QCOMPARE(component.status(), QQmlComponent::Error);
-        QCOMPARE(component.errorString(), QString("qrc:/versionchecks.qml:-1 File was compiled ahead of time with an incompatible version of Qt and the original file cannot be found. Please recompile\n"));
+        QCOMPARE(component.errorString(),
+                 QString("qrc:/data/versionchecks.qml:-1 File was compiled ahead of time with an "
+                         "incompatible version of Qt and the original file cannot be found. Please "
+                         "recompile\n"));
     }
 
     Q_ASSERT(temporaryModifiedCachedUnit);
@@ -402,12 +411,12 @@ void tst_qmlcachegen::retainedResources()
 
 void tst_qmlcachegen::workerScripts()
 {
-    QVERIFY(QFile::exists(":/workerscripts/worker.js"));
-    QVERIFY(QFile::exists(":/workerscripts/worker.qml"));
-    QCOMPARE(QFileInfo(":/workerscripts/worker.js").size(), 0);
+    QVERIFY(QFile::exists(":/workerscripts/data/worker.js"));
+    QVERIFY(QFile::exists(":/workerscripts/data/worker.qml"));
+    QCOMPARE(QFileInfo(":/workerscripts/data/worker.js").size(), 0);
 
     QQmlEngine engine;
-    CleanlyLoadingComponent component(&engine, QUrl("qrc:///workerscripts/worker.qml"));
+    CleanlyLoadingComponent component(&engine, QUrl("qrc:///workerscripts/data/worker.qml"));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QTRY_VERIFY(obj->property("success").toBool());
@@ -504,7 +513,7 @@ void tst_qmlcachegen::trickyPaths()
 void tst_qmlcachegen::qrcScriptImport()
 {
     QQmlEngine engine;
-    CleanlyLoadingComponent component(&engine, QUrl("qrc:///jsimport.qml"));
+    CleanlyLoadingComponent component(&engine, QUrl("qrc:///data/jsimport.qml"));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QTRY_COMPARE(obj->property("value").toInt(), 42);
@@ -567,14 +576,14 @@ void tst_qmlcachegen::fsScriptImport()
 void tst_qmlcachegen::moduleScriptImport()
 {
     QQmlEngine engine;
-    CleanlyLoadingComponent component(&engine, QUrl("qrc:///jsmoduleimport.qml"));
+    CleanlyLoadingComponent component(&engine, QUrl("qrc:///data/jsmoduleimport.qml"));
     QVERIFY2(!component.isError(), qPrintable(component.errorString()));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QTRY_VERIFY(obj->property("ok").toBool());
 
-    QVERIFY(QFile::exists(":/script.mjs"));
-    QCOMPARE(QFileInfo(":/script.mjs").size(), 0);
+    QVERIFY(QFile::exists(":/data/script.mjs"));
+    QCOMPARE(QFileInfo(":/data/script.mjs").size(), 0);
 
     {
         auto componentPrivate = QQmlComponentPrivate::get(&component);
@@ -587,7 +596,8 @@ void tst_qmlcachegen::moduleScriptImport()
         QVERIFY(unitData->flags & QV4::CompiledData::Unit::IsESModule);
 
         QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
-        const QV4::CompiledData::Unit *unitFromResources = QQmlMetaType::findCachedCompilationUnit(QUrl("qrc:/script.mjs"), &error);
+        const QV4::CompiledData::Unit *unitFromResources = QQmlMetaType::findCachedCompilationUnit(
+                QUrl("qrc:/data/script.mjs"), &error);
         QVERIFY(unitFromResources);
 
         QCOMPARE(unitFromResources, compilationUnit->unitData());
@@ -597,7 +607,7 @@ void tst_qmlcachegen::moduleScriptImport()
 void tst_qmlcachegen::enums()
 {
     QQmlEngine engine;
-    CleanlyLoadingComponent component(&engine, QUrl("qrc:///Enums.qml"));
+    CleanlyLoadingComponent component(&engine, QUrl("qrc:///data/Enums.qml"));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QTRY_COMPARE(obj->property("value").toInt(), 200);
@@ -605,14 +615,48 @@ void tst_qmlcachegen::enums()
 
 void tst_qmlcachegen::sourceFileIndices()
 {
-    QVERIFY(QFile::exists(":/versionchecks.qml"));
-    QCOMPARE(QFileInfo(":/versionchecks.qml").size(), 0);
+    QVERIFY(QFile::exists(":/data/versionchecks.qml"));
+    QCOMPARE(QFileInfo(":/data/versionchecks.qml").size(), 0);
 
     QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
-    const QV4::CompiledData::Unit *unitFromResources = QQmlMetaType::findCachedCompilationUnit(QUrl("qrc:/versionchecks.qml"), &error);
+    const QV4::CompiledData::Unit *unitFromResources = QQmlMetaType::findCachedCompilationUnit(
+            QUrl("qrc:/data/versionchecks.qml"), &error);
     QVERIFY(unitFromResources);
     QVERIFY(unitFromResources->flags & QV4::CompiledData::Unit::PendingTypeCompilation);
     QCOMPARE(uint(unitFromResources->sourceFileIndex), uint(0));
+}
+
+void tst_qmlcachegen::reproducibleCache_data()
+{
+    QTest::addColumn<QString>("filePath");
+
+    QDir dir(dataDirectory());
+    for (const QString &entry : dir.entryList(QDir::Files)) {
+        QVERIFY(entry.endsWith(".qml") || entry.endsWith(".js") || entry.endsWith(".mjs"));
+        QTest::newRow(entry.toUtf8().constData()) << dir.filePath(entry);
+    }
+}
+
+void tst_qmlcachegen::reproducibleCache()
+{
+    QFETCH(QString, filePath);
+
+    QFile file(filePath);
+    QVERIFY(file.exists());
+
+    auto generate = [](const QString &path) {
+        if (!generateCache(path))
+            return QByteArray();
+        QFile generated(path + 'c');
+        [&](){ QVERIFY(generated.open(QIODevice::ReadOnly)); }();
+        const QByteArray result = generated.readAll();
+        generated.remove();
+        return result;
+    };
+
+    const QByteArray contents1 = generate(file.fileName());
+    const QByteArray contents2 = generate(file.fileName());
+    QCOMPARE(contents1, contents2);
 }
 
 QTEST_GUILESS_MAIN(tst_qmlcachegen)

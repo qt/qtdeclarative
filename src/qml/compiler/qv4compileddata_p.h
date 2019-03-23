@@ -1090,11 +1090,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit final : public CompilationUnitBase
     const QmlUnit *qmlData = nullptr;
 public:
     CompilationUnit(const Unit *unitData = nullptr, const QString &fileName = QString(), const QString &finalUrlString = QString());
-#ifdef V4_BOOTSTRAP
-    ~CompilationUnit() {}
-#else
     ~CompilationUnit();
-#endif
 
     void addref()
     {
