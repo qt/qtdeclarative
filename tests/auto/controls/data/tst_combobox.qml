@@ -85,6 +85,17 @@ TestCase {
         MouseArea { }
     }
 
+    Component {
+        id: customPopup
+        Popup {
+            width: 100
+            implicitHeight: contentItem.implicitHeight
+            contentItem: TextInput {
+                anchors.fill: parent
+            }
+        }
+    }
+
     function init() {
         // QTBUG-61225: Move the mouse away to avoid QQuickWindowPrivate::flushFrameSynchronousEvents()
         // delivering interfering hover events based on the last mouse position from earlier tests. For
@@ -1679,5 +1690,45 @@ TestCase {
         keyRelease(data.key)
         compare(container.releasedKeys, ++releasedKeys)
         compare(container.lastReleasedKey, data.key)
+    }
+
+    function test_popupFocus_QTBUG_74661() {
+        var control = createTemporaryObject(comboBox, testCase)
+        verify(control)
+
+        var popup = createTemporaryObject(customPopup, testCase)
+        verify(popup)
+
+        control.popup = popup
+
+        var openedSpy = signalSpy.createObject(control, {target: popup, signalName: "opened"})
+        verify(openedSpy.valid)
+
+        var closedSpy = signalSpy.createObject(control, {target: popup, signalName: "closed"})
+        verify(closedSpy.valid)
+
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+
+        // show popup
+        keyClick(Qt.Key_Space)
+        openedSpy.wait()
+        compare(openedSpy.count, 1)
+
+        popup.contentItem.forceActiveFocus()
+        verify(popup.contentItem.activeFocus)
+
+        // type something in the text field
+        keyClick(Qt.Key_Space)
+        keyClick(Qt.Key_H)
+        keyClick(Qt.Key_I)
+        compare(popup.contentItem.text, " hi")
+
+        compare(closedSpy.count, 0)
+
+        // hide popup
+        keyClick(Qt.Key_Escape)
+        closedSpy.wait()
+        compare(closedSpy.count, 1)
     }
 }
