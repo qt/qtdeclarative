@@ -59,6 +59,7 @@ private slots:
     void radialGrad();
     void conicalGrad();
     void renderPolyline();
+    void renderMultiline();
 };
 
 tst_QQuickShape::tst_QQuickShape()
@@ -339,6 +340,35 @@ void tst_QQuickShape::renderPolyline()
         QTest::qWait(5000);
         const QString &tempLocation = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
         actualImg.save(tempLocation + QLatin1String("/pathitem7.png"));
+    }
+    QVERIFY2(res, qPrintable(errorMessage));
+}
+
+void tst_QQuickShape::renderMultiline()
+{
+    QScopedPointer<QQuickView> window(createView());
+
+    window->setSource(testFileUrl("pathitem8.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QEXPECT_FAIL("", "Failure due to grabWindow not functional on offscreen/minimimal platforms", Abort);
+
+    QImage img = window->grabWindow();
+    QVERIFY(!img.isNull());
+
+    QImage refImg(testFileUrl("pathitem8.png").toLocalFile());
+    QVERIFY(!refImg.isNull());
+
+    QString errorMessage;
+    const QImage actualImg = img.convertToFormat(refImg.format());
+    const bool res = QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage);
+    if (!res) { // For visual inspection purposes.
+        QTest::qWait(5000);
+        const QString &tempLocation = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+        actualImg.save(tempLocation + QLatin1String("/pathitem8.png"));
     }
     QVERIFY2(res, qPrintable(errorMessage));
 }
