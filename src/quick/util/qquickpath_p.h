@@ -424,6 +424,27 @@ private:
     qreal _value = 0;
 };
 
+class Q_QUICK_PRIVATE_EXPORT QQuickPathPolyline : public QQuickCurve
+{
+    Q_OBJECT
+    Q_PROPERTY(QPointF start READ start NOTIFY startChanged)
+    Q_PROPERTY(QVariantList path READ path WRITE setPath NOTIFY pathChanged)
+public:
+    QQuickPathPolyline(QObject *parent=nullptr);
+
+    QVariantList path() const;
+    void setPath(const QVariantList &path);
+    QPointF start() const;
+    void addToPath(QPainterPath &path, const QQuickPathData &data) override;
+
+Q_SIGNALS:
+    void pathChanged();
+    void startChanged();
+
+private:
+    QVector<QPointF> m_path;
+};
+
 struct QQuickCachedBezier
 {
     QQuickCachedBezier() {}
@@ -545,6 +566,7 @@ QML_DECLARE_TYPE(QQuickPathArc)
 QML_DECLARE_TYPE(QQuickPathAngleArc)
 QML_DECLARE_TYPE(QQuickPathSvg)
 QML_DECLARE_TYPE(QQuickPathPercent)
+QML_DECLARE_TYPE(QQuickPathPolyline)
 QML_DECLARE_TYPE(QQuickPath)
 
 #endif // QQUICKPATH_H

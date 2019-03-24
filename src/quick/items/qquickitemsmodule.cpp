@@ -227,6 +227,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPathArc>("QtQuick",2,0,"PathArc");
     qmlRegisterType<QQuickPathSvg>("QtQuick",2,0,"PathSvg");
     qmlRegisterType<QQuickPath, 14>(uri, 2, 14, "Path");
+    qmlRegisterType<QQuickPathPolyline>("QtQuick", 2, 14, "PathPolyline");
 #endif
 #if QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickPathView>(uri,major,minor,"PathView");

@@ -1,6 +1,6 @@
-/****************************************************************************
+﻿/****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -34,6 +34,7 @@
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlincubator.h>
 #include <QtQuickShapes/private/qquickshape_p.h>
+#include <QStandardPaths>
 
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
@@ -57,6 +58,7 @@ private slots:
     void renderWithMultipleSp();
     void radialGrad();
     void conicalGrad();
+    void renderPolyline();
 };
 
 tst_QQuickShape::tst_QQuickShape()
@@ -71,6 +73,7 @@ tst_QQuickShape::tst_QQuickShape()
     qmlRegisterType<QQuickShapeLinearGradient>(uri, 1, 0, "LinearGradient");
     qmlRegisterType<QQuickShapeRadialGradient>(uri, 1, 0, "RadialGradient");
     qmlRegisterType<QQuickShapeConicalGradient>(uri, 1, 0, "ConicalGradient");
+    qmlRegisterType<QQuickPathPolyline>(uri, 1, 0, "PathPolyline");
 }
 
 void tst_QQuickShape::initValues()
@@ -309,6 +312,35 @@ void tst_QQuickShape::conicalGrad()
     const QImage actualImg = img.convertToFormat(refImg.format());
     QVERIFY2(QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage),
              qPrintable(errorMessage));
+}
+
+void tst_QQuickShape::renderPolyline()
+{
+    QScopedPointer<QQuickView> window(createView());
+
+    window->setSource(testFileUrl("pathitem7.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QEXPECT_FAIL("", "Failure due to grabWindow not functional on offscreen/minimimal platforms", Abort);
+
+    QImage img = window->grabWindow();
+    QVERIFY(!img.isNull());
+
+    QImage refImg(testFileUrl("pathitem3.png").toLocalFile()); // It's a recreation of pathitem3 using PathPolyline
+    QVERIFY(!refImg.isNull());
+
+    QString errorMessage;
+    const QImage actualImg = img.convertToFormat(refImg.format());
+    const bool res = QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage);
+    if (!res) { // For visual inspection purposes.
+        QTest::qWait(5000);
+        const QString &tempLocation = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+        actualImg.save(tempLocation + QLatin1String("/pathitem7.png"));
+    }
+    QVERIFY2(res, qPrintable(errorMessage));
 }
 
 QTEST_MAIN(tst_QQuickShape)
