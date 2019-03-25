@@ -291,37 +291,39 @@
 /*!
     \qmlproperty real QtQuick::TableView::contentWidth
 
-    This property holds the width of the \l view, which is also
-    the width of the table (including margins). As a TableView cannot
-    always know the exact width of the table without loading all columns
-    in the model, the \c contentWidth is usually an estimated width based on
-    the columns it has seen so far. This estimate is recalculated whenever
-    new columns are flicked into view, which means that the content width
-    can change dynamically.
+    This property holds the table width required to accommodate the number of
+    columns in the model. This is usually not the same as the \c width of the
+    \l view, which means that the table's width could be larger or smaller than
+    the viewport width. As a TableView cannot always know the exact width of
+    the table without loading all columns in the model, the \c contentWidth is
+    usually an estimate based on the columns it has seen so far. This estimate
+    is recalculated whenever new columns are flicked into view, which means
+    that the content width can change dynamically.
 
-    If you know up front what the width of the table will be, assign a value
-    to \c contentWidth explicitly, to avoid unnecessary calculations and
-    updates to the TableView.
+    If you know what the width of the table will be, assign a value to
+    \c contentWidth, to avoid unnecessary calculations and updates to the
+    TableView.
 
-    \sa contentHeight
+    \sa contentHeight, columnWidthProvider
 */
 
 /*!
     \qmlproperty real QtQuick::TableView::contentHeight
 
-    This property holds the height of the \l view, which is also
-    the height of the table (including margins). As a TableView cannot
-    always know the exact height of the table without loading all rows
-    in the model, the \c contentHeight is usually an estimated height
-    based on the rows it has seen so far. This estimate is recalculated
-    whenever new rows are flicked into view, which means that the content
-    height can change dynamically.
+    This property holds the table height required to accommodate the number of
+    rows in the data model. This is usually not the same as the \c height of the
+    \c view, which means that the table's height could be larger or smaller than the
+    viewport height. As a TableView cannot always know the exact height of the
+    table without loading all rows in the model, the \c contentHeight is
+    usually an estimate based on the rows it has seen so far. This estimate is
+    recalculated whenever new rows are flicked into view, which means that
+    the content height can change dynamically.
 
-    If you know up front what the height of the table will be, assign a
-    value to \c contentHeight explicitly, to avoid unnecessary calculations and
-    updates to the TableView.
+    If you know what the height of the table will be, assign a
+    value to \c contentHeight, to avoid unnecessary calculations and updates to
+    the TableView.
 
-    \sa contentWidth
+    \sa contentWidth, rowHeightProvider
 */
 
 /*!
