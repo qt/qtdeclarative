@@ -1048,12 +1048,12 @@ bool MemoryManager::shouldRunGC() const
     return false;
 }
 
-size_t dumpBins(BlockAllocator *b, bool printOutput = true)
+static size_t dumpBins(BlockAllocator *b, const char *title)
 {
     const QLoggingCategory &stats = lcGcAllocatorStats();
     size_t totalSlotMem = 0;
-    if (printOutput)
-        qDebug(stats) << "Slot map:";
+    if (title)
+        qDebug(stats) << "Slot map for" << title << "allocator:";
     for (uint i = 0; i < BlockAllocator::NumBins; ++i) {
         uint nEntries = 0;
         HeapItem *h = b->freeBins[i];
@@ -1062,7 +1062,7 @@ size_t dumpBins(BlockAllocator *b, bool printOutput = true)
             totalSlotMem += h->freeData.availableSlots;
             h = h->freeData.next;
         }
-        if (printOutput)
+        if (title)
             qDebug(stats) << "    number of entries in slot" << i << ":" << nEntries;
     }
     SDUMP() << "    large slot map";
@@ -1072,7 +1072,7 @@ size_t dumpBins(BlockAllocator *b, bool printOutput = true)
         h = h->freeData.next;
     }
 
-    if (printOutput)
+    if (title)
         qDebug(stats) << "  total mem in bins" << totalSlotMem*Chunk::SlotSize;
     return totalSlotMem*Chunk::SlotSize;
 }
@@ -1113,7 +1113,8 @@ void MemoryManager::runGC()
         size_t oldChunks = blockAllocator.chunks.size();
         qDebug(stats) << "Allocated" << totalMem << "bytes in" << oldChunks << "chunks";
         qDebug(stats) << "Fragmented memory before GC" << (totalMem - usedBefore);
-        dumpBins(&blockAllocator);
+        dumpBins(&blockAllocator, "Block");
+        dumpBins(&icAllocator, "InternalClass");
 
         QElapsedTimer t;
         t.start();
@@ -1131,7 +1132,8 @@ void MemoryManager::runGC()
             qDebug(stats) << "   new unmanaged heap:" << unmanagedHeapSize;
             qDebug(stats) << "   unmanaged heap limit:" << unmanagedHeapSizeGCLimit;
         }
-        size_t memInBins = dumpBins(&blockAllocator);
+        size_t memInBins = dumpBins(&blockAllocator, "Block")
+                + dumpBins(&icAllocator, "InternalClasss");
         qDebug(stats) << "Marked object in" << markTime << "us.";
         qDebug(stats) << "   " << markStackSize << "objects marked";
         qDebug(stats) << "Sweeped object in" << sweepTime << "us.";
@@ -1153,7 +1155,8 @@ void MemoryManager::runGC()
         qDebug(stats) << "Used memory after GC:" << usedAfter;
         qDebug(stats) << "Freed up bytes      :" << (usedBefore - usedAfter);
         qDebug(stats) << "Freed up chunks     :" << (oldChunks - blockAllocator.chunks.size());
-        size_t lost = blockAllocator.allocatedMem() - memInBins - usedAfter;
+        size_t lost = blockAllocator.allocatedMem() + icAllocator.allocatedMem()
+                - memInBins - usedAfter;
         if (lost)
             qDebug(stats) << "!!!!!!!!!!!!!!!!!!!!! LOST MEM:" << lost << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
         if (largeItemsBefore || largeItemsAfter) {
@@ -1175,7 +1178,9 @@ void MemoryManager::runGC()
     if (aggressiveGC) {
         // ensure we don't 'loose' any memory
         Q_ASSERT(blockAllocator.allocatedMem()
-                 == blockAllocator.usedMem() + dumpBins(&blockAllocator, false));
+                 == blockAllocator.usedMem() + dumpBins(&blockAllocator, nullptr));
+        Q_ASSERT(icAllocator.allocatedMem()
+                 == icAllocator.usedMem() + dumpBins(&icAllocator, nullptr));
     }
 
     usedSlotsAfterLastFullSweep = blockAllocator.usedSlotsAfterLastSweep + icAllocator.usedSlotsAfterLastSweep;
