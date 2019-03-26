@@ -1111,6 +1111,7 @@ void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::Arg
         QV4::CompiledData::TranslationData translationData;
         translationData.number = -1;
         translationData.commentIndex = 0; // empty string
+        translationData.padding = 0;
 
         if (!args || !args->expression)
             return; // no arguments, stop
@@ -1151,6 +1152,7 @@ void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::Arg
         QV4::CompiledData::TranslationData translationData;
         translationData.number = -1;
         translationData.commentIndex = 0; // empty string, but unused
+        translationData.padding = 0;
 
         if (!args || !args->expression)
             return; // no arguments, stop

@@ -57,7 +57,7 @@
 
 #include <QtCore/qstring.h>
 
-QT_QML_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE
 
 #define QQMLJS_DECLARE_AST_NODE(name) \
   enum { K = Kind_##name };
@@ -3395,6 +3395,6 @@ public:
 
 
 
-QT_QML_END_NAMESPACE
+QT_END_NAMESPACE
 
 #endif

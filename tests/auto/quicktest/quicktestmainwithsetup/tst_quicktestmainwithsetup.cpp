@@ -35,6 +35,14 @@
 
 #include "../../shared/util.h"
 
+class QmlRegisterTypeCppType : public QObject
+{
+    Q_OBJECT
+
+public:
+    QmlRegisterTypeCppType() {}
+};
+
 class CustomTestSetup : public QObject
 {
     Q_OBJECT
@@ -45,6 +53,12 @@ public:
 public slots:
     void qmlEngineAvailable(QQmlEngine *qmlEngine)
     {
+        // Test that modules are successfully imported by the TestCaseCollector that
+        // parses the QML files (but doesn't run them). For that to happen, qmlEngineAvailable()
+        // must be called before TestCaseCollector does its thing.
+        qmlRegisterType<QmlRegisterTypeCppType>("QmlRegisterTypeCppModule", 1, 0, "QmlRegisterTypeCppType");
+        qmlEngine->addImportPath(QString::fromUtf8(QT_QMLTEST_DATADIR) + "/../imports");
+
         qmlEngine->rootContext()->setContextProperty("qmlEngineAvailableCalled", true);
     }
 };

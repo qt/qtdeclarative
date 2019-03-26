@@ -242,6 +242,8 @@ private slots:
     void importModuleWithLexicallyScopedVars();
     void importExportErrors();
 
+    void equality();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -4786,6 +4788,14 @@ void tst_QJSEngine::importExportErrors()
         QVERIFY(result.isError());
         QCOMPARE(result.property("lineNumber").toInt(), 2);
     }
+}
+
+void tst_QJSEngine::equality()
+{
+    QJSEngine engine;
+    QJSValue ok = engine.evaluate("(0 < 0) ? 'ko' : 'ok'");
+    QVERIFY(ok.isString());
+    QCOMPARE(ok.toString(), QString("ok"));
 }
 
 QTEST_MAIN(tst_QJSEngine)

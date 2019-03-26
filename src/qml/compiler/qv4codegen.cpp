@@ -1739,59 +1739,46 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
     return Reference::fromAccumulator(this);
 }
 
-static QSOperator::Op operatorForSwappedOperands(QSOperator::Op oper)
-{
-    switch (oper) {
-    case QSOperator::StrictEqual: return QSOperator::StrictEqual;
-    case QSOperator::StrictNotEqual: return QSOperator::StrictNotEqual;
-    case QSOperator::Equal: return QSOperator::Equal;
-    case QSOperator::NotEqual: return QSOperator::NotEqual;
-    case QSOperator::Gt: return QSOperator::Le;
-    case QSOperator::Ge: return QSOperator::Lt;
-    case QSOperator::Lt: return QSOperator::Ge;
-    case QSOperator::Le: return QSOperator::Gt;
-    default: Q_UNIMPLEMENTED(); return QSOperator::Invalid;
-    }
-}
-
 Codegen::Reference Codegen::jumpBinop(QSOperator::Op oper, Reference &left, Reference &right)
 {
-    if (left.isConstant()) {
-        oper = operatorForSwappedOperands(oper);
-        qSwap(left, right);
-    }
+    // See if we can generate specialized comparison instructions:
+    if (oper == QSOperator::Equal || oper == QSOperator::NotEqual) {
+        // Because == and != are reflexive, we can do the following:
+        if (left.isConstant() && !right.isConstant())
+            qSwap(left, right); // null==a -> a==null
 
-    if (right.isConstant() && (oper == QSOperator::Equal || oper == QSOperator::NotEqual)) {
-        Value c = Value::fromReturnedValue(right.constant);
-        if (c.isNull() || c.isUndefined()) {
-            left.loadInAccumulator();
-            if (oper == QSOperator::Equal) {
-                Instruction::CmpEqNull cmp;
-                bytecodeGenerator->addInstruction(cmp);
-                addCJump();
-                return Reference();
-            } else if (oper == QSOperator::NotEqual) {
-                Instruction::CmpNeNull cmp;
-                bytecodeGenerator->addInstruction(cmp);
-                addCJump();
-                return Reference();
-            }
-        } else if (c.isInt32()) {
-            left.loadInAccumulator();
-            if (oper == QSOperator::Equal) {
-                Instruction::CmpEqInt cmp;
-                cmp.lhs = c.int_32();
-                bytecodeGenerator->addInstruction(cmp);
-                addCJump();
-                return Reference();
-            } else if (oper == QSOperator::NotEqual) {
-                Instruction::CmpNeInt cmp;
-                cmp.lhs = c.int_32();
-                bytecodeGenerator->addInstruction(cmp);
-                addCJump();
-                return Reference();
-            }
+        if (right.isConstant()) {
+            Value c = Value::fromReturnedValue(right.constant);
+            if (c.isNull() || c.isUndefined()) {
+                left.loadInAccumulator();
+                if (oper == QSOperator::Equal) {
+                    Instruction::CmpEqNull cmp;
+                    bytecodeGenerator->addInstruction(cmp);
+                    addCJump();
+                    return Reference();
+                } else if (oper == QSOperator::NotEqual) {
+                    Instruction::CmpNeNull cmp;
+                    bytecodeGenerator->addInstruction(cmp);
+                    addCJump();
+                    return Reference();
+                }
+            } else if (c.isInt32()) {
+                left.loadInAccumulator();
+                if (oper == QSOperator::Equal) {
+                    Instruction::CmpEqInt cmp;
+                    cmp.lhs = c.int_32();
+                    bytecodeGenerator->addInstruction(cmp);
+                    addCJump();
+                    return Reference();
+                } else if (oper == QSOperator::NotEqual) {
+                    Instruction::CmpNeInt cmp;
+                    cmp.lhs = c.int_32();
+                    bytecodeGenerator->addInstruction(cmp);
+                    addCJump();
+                    return Reference();
+                }
 
+            }
         }
     }
 

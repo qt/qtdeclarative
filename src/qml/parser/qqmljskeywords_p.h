@@ -53,7 +53,7 @@
 
 #include "qqmljslexer_p.h"
 
-QT_QML_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 
@@ -918,6 +918,6 @@ int Lexer::classify(const QChar *s, int n, int parseModeFlags) {
 
 } // namespace QQmlJS
 
-QT_QML_END_NAMESPACE
+QT_END_NAMESPACE
 
 #endif // QQMLJSKEYWORDS_P_H

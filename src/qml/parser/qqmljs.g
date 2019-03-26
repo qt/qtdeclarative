@@ -249,7 +249,7 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qstring.h>
 
-QT_QML_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 
@@ -486,7 +486,7 @@ protected:
 
 using namespace QQmlJS;
 
-QT_QML_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE
 
 void Parser::reallocateStack()
 {
@@ -4476,12 +4476,12 @@ ExportSpecifier: IdentifierName T_AS IdentifierName;
     return false;
 }
 
-QT_QML_END_NAMESPACE
+QT_END_NAMESPACE
 
 
 ./
 /:
-QT_QML_END_NAMESPACE
+QT_END_NAMESPACE
 
 
 

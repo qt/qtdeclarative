@@ -58,7 +58,7 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qset.h>
 
-QT_QML_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 
@@ -150,6 +150,6 @@ double integerFromString(const char *buf, int size, int radix);
 
 } // end of namespace QQmlJS
 
-QT_QML_END_NAMESPACE
+QT_END_NAMESPACE
 
 #endif // QQMLJSENGINE_P_H
