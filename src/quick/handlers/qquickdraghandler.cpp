@@ -103,7 +103,7 @@ bool QQuickDragHandler::targetContainsCentroid()
 
 QPointF QQuickDragHandler::targetCentroidPosition()
 {
-    QPointF pos = m_centroid.position();
+    QPointF pos = centroid().position();
     if (target() != parentItem())
         pos = parentItem()->mapToItem(target(), pos);
     return pos;
@@ -154,7 +154,7 @@ void QQuickDragHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     if (active()) {
         // Calculate drag delta, taking into account the axis enabled constraint
         // i.e. if xAxis is not enabled, then ignore the horizontal component of the actual movement
-        QVector2D accumulatedDragDelta = QVector2D(m_centroid.scenePosition() - m_centroid.scenePressPosition());
+        QVector2D accumulatedDragDelta = QVector2D(centroid().scenePosition() - centroid().scenePressPosition());
         if (!m_xAxis.enabled())
             accumulatedDragDelta.setX(0);
         if (!m_yAxis.enabled())
@@ -170,9 +170,9 @@ void QQuickDragHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         QVector <QQuickEventPoint *> chosenPoints;
 
         if (event->isPressEvent())
-            m_pressedInsideTarget = target() && m_currentPoints.count() > 0;
+            m_pressedInsideTarget = target() && currentPoints().count() > 0;
 
-        for (const QQuickHandlerPoint &p : m_currentPoints) {
+        for (const QQuickHandlerPoint &p : currentPoints()) {
             if (!allOverThreshold)
                 break;
             QQuickEventPoint *point = event->pointById(p.id());

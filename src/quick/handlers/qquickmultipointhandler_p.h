@@ -58,6 +58,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickMultiPointHandlerPrivate;
+
 class Q_QUICK_PRIVATE_EXPORT QQuickMultiPointHandler : public QQuickPointerDeviceHandler
 {
     Q_OBJECT
@@ -68,13 +70,13 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMultiPointHandler : public QQuickPointerDevic
 public:
     explicit QQuickMultiPointHandler(QQuickItem *parent = nullptr, int minimumPointCount = 2, int maximumPointCount = -1);
 
-    int minimumPointCount() const { return m_minimumPointCount; }
+    int minimumPointCount() const;
     void setMinimumPointCount(int c);
 
-    int maximumPointCount() const { return m_maximumPointCount >= 0 ? m_maximumPointCount : m_minimumPointCount; }
+    int maximumPointCount() const;
     void setMaximumPointCount(int maximumPointCount);
 
-    QQuickHandlerPoint centroid() const { return m_centroid; }
+    const QQuickHandlerPoint &centroid() const;
 
 signals:
     void minimumPointCountChanged();
@@ -94,6 +96,8 @@ protected:
     void handlePointerEventImpl(QQuickPointerEvent *event) override;
     void onActiveChanged() override;
     void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point) override;
+    QVector<QQuickHandlerPoint> &currentPoints();
+    QQuickHandlerPoint &mutableCentroid();
     bool hasCurrentPoints(QQuickPointerEvent *event);
     QVector<QQuickEventPoint *> eligiblePoints(QQuickPointerEvent *event);
     qreal averageTouchPointDistance(const QPointF &ref);
@@ -106,11 +110,7 @@ protected:
     bool grabPoints(QVector<QQuickEventPoint *> points);
     void moveTarget(QPointF pos);
 
-protected:
-    QVector<QQuickHandlerPoint> m_currentPoints;
-    QQuickHandlerPoint m_centroid;
-    int m_minimumPointCount;
-    int m_maximumPointCount;
+    Q_DECLARE_PRIVATE(QQuickMultiPointHandler)
 };
 
 QT_END_NAMESPACE

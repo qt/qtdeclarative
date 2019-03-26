@@ -3,6 +3,7 @@ HEADERS += \
     $$PWD/qquickhandlerpoint_p.h \
     $$PWD/qquickhoverhandler_p.h \
     $$PWD/qquickmultipointhandler_p.h \
+    $$PWD/qquickmultipointhandler_p_p.h \
     $$PWD/qquickpinchhandler_p.h \
     $$PWD/qquickpointerdevicehandler_p.h \
     $$PWD/qquickpointerdevicehandler_p_p.h \
