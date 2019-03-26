@@ -658,11 +658,10 @@ Heap::InternalClass *InternalClass::frozen()
     return f;
 }
 
-Heap::InternalClass *InternalClass::propertiesFrozen() const
+Heap::InternalClass *InternalClass::propertiesFrozen()
 {
     Scope scope(engine);
-    Scoped<QV4::InternalClass> frozen(scope, engine->internalClasses(EngineBase::Class_Empty)->changeVTable(vtable));
-    frozen = frozen->changePrototype(prototype);
+    Scoped<QV4::InternalClass> frozen(scope, this);
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
         if (!nameMap.at(i).isValid())
@@ -671,7 +670,7 @@ Heap::InternalClass *InternalClass::propertiesFrozen() const
             attrs.setWritable(false);
             attrs.setConfigurable(false);
         }
-        frozen = frozen->addMember(nameMap.at(i), attrs);
+        frozen = frozen->changeMember(nameMap.at(i), attrs);
     }
     return frozen->d();
 }

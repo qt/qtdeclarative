@@ -428,7 +428,7 @@ struct InternalClass : Base {
 
     Q_REQUIRED_RESULT InternalClass *sealed();
     Q_REQUIRED_RESULT InternalClass *frozen();
-    Q_REQUIRED_RESULT InternalClass *propertiesFrozen() const;
+    Q_REQUIRED_RESULT InternalClass *propertiesFrozen();
 
     Q_REQUIRED_RESULT InternalClass *asProtoClass();
 
