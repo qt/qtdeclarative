@@ -247,8 +247,12 @@ struct SharedInternalClassData {
         Q_ASSERT(pos == d->size());
         if (pos == d->alloc())
             d->grow();
-        d->setSize(d->size() + 1);
-        d->set(pos, value);
+        if (pos >= d->alloc()) {
+            qBadAlloc();
+        } else {
+            d->setSize(d->size() + 1);
+            d->set(pos, value);
+        }
     }
 
     void set(uint pos, T value) {

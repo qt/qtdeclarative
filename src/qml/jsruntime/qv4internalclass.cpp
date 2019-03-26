@@ -145,7 +145,7 @@ SharedInternalClassDataPrivate<PropertyKey>::SharedInternalClassDataPrivate(cons
       data(nullptr)
 {
     if (other.alloc()) {
-        int s = other.size();
+        const uint s = other.size();
         data = MemberData::allocate(engine, other.alloc(), other.data);
         setSize(s);
     }
@@ -164,8 +164,8 @@ SharedInternalClassDataPrivate<PropertyKey>::SharedInternalClassDataPrivate(cons
 
 void SharedInternalClassDataPrivate<PropertyKey>::grow()
 {
-    uint a = alloc() * 2;
-    int s = size();
+    const uint a = alloc() * 2;
+    const uint s = size();
     data = MemberData::allocate(engine, a, data);
     setSize(s);
     Q_ASSERT(alloc() >= a);
@@ -209,10 +209,11 @@ SharedInternalClassDataPrivate<PropertyAttributes>::SharedInternalClassDataPriva
         const SharedInternalClassDataPrivate<PropertyAttributes> &other, uint pos,
         PropertyAttributes value)
     : refcount(1),
-      m_alloc(pos + 8),
+      m_alloc(qMin(other.m_alloc, pos + 8)),
       m_size(pos + 1),
       m_engine(other.m_engine)
 {
+    Q_ASSERT(m_size <= m_alloc);
     m_engine->memoryManager->changeUnmanagedHeapSizeUsage(m_alloc * sizeof(PropertyAttributes));
     data = new PropertyAttributes[m_alloc];
     if (other.data)
@@ -244,22 +245,29 @@ SharedInternalClassDataPrivate<PropertyAttributes>::~SharedInternalClassDataPriv
 }
 
 void SharedInternalClassDataPrivate<PropertyAttributes>::grow() {
+    uint alloc;
     if (!m_alloc) {
-        m_alloc = 4;
-        m_engine->memoryManager->changeUnmanagedHeapSizeUsage(
-                2 * m_alloc * sizeof(PropertyAttributes));
+        alloc = 8;
+        m_engine->memoryManager->changeUnmanagedHeapSizeUsage(alloc * sizeof(PropertyAttributes));
     } else {
+        // yes, signed. We don't want to deal with stuff > 2G
+        const uint currentSize = m_alloc * sizeof(PropertyAttributes);
+        if (currentSize < uint(std::numeric_limits<int>::max() / 2))
+            alloc = m_alloc * 2;
+        else
+            alloc = std::numeric_limits<int>::max() / sizeof(PropertyAttributes);
+
         m_engine->memoryManager->changeUnmanagedHeapSizeUsage(
-                m_alloc * sizeof(PropertyAttributes));
+                (alloc - m_alloc) * sizeof(PropertyAttributes));
     }
 
-    auto *n = new PropertyAttributes[m_alloc * 2];
+    auto *n = new PropertyAttributes[alloc];
     if (data) {
         memcpy(n, data, m_alloc*sizeof(PropertyAttributes));
         delete [] data;
     }
     data = n;
-    m_alloc *= 2;
+    m_alloc = alloc;
 }
 
 namespace Heap {
