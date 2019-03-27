@@ -486,6 +486,39 @@ TestCase {
         compare(button.hovered, false)
     }
 
+    function test_hoverWhilePressed_data() {
+        return [
+            { tag: "up" },
+            { tag: "down" },
+        ]
+    }
+
+    // QTBUG-74688
+    function test_hoverWhilePressed(data) {
+        var control = createTemporaryObject(spinBox, testCase, { hoverEnabled: true, value: 50 })
+        verify(control)
+
+        var button = control[data.tag]
+        compare(control.hovered, false)
+        compare(button.hovered, false)
+
+        // Hover over the indicator. It should be hovered.
+        var buttonXCenter = button.indicator.x + button.indicator.width / 2
+        var buttonYCenter = button.indicator.y + button.indicator.height / 2
+        mouseMove(control, buttonXCenter, buttonYCenter)
+        compare(button.hovered, true)
+
+        // Press on the indicator and then move the mouse outside of it.
+        mousePress(control, buttonXCenter, buttonYCenter)
+        compare(button.hovered, true)
+        mouseMove(control, buttonXCenter - button.indicator.width, buttonYCenter - button.indicator.height)
+        // It should not be pressed or hovered.
+        compare(button.pressed, false)
+        compare(button.hovered, false)
+
+        mouseRelease(control)
+    }
+
     function test_valueFromText_data() {
         return [
             { tag: "editable", editable: true },
