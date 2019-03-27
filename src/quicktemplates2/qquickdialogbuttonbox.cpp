@@ -295,6 +295,7 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
             if (firstRole != secondRole && firstRole != QPlatformDialogHelper::InvalidRole && secondRole != QPlatformDialogHelper::InvalidRole) {
                 const int *l = m_layout;
                 while (*l != QPlatformDialogHelper::EOL) {
+                    // Unset the Reverse flag.
                     const int role = (*l & ~QPlatformDialogHelper::Reverse);
                     if (role == firstRole)
                         return true;
@@ -305,14 +306,14 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
             }
 
             if (firstRole == secondRole)
-                return first < second;
+                return false;
 
             return firstRole != QPlatformDialogHelper::InvalidRole;
         }
         const int *m_layout;
     };
 
-    std::sort(buttons.begin(), buttons.end(), ButtonLayout(static_cast<QPlatformDialogHelper::ButtonLayout>(buttonLayout)));
+    std::stable_sort(buttons.begin(), buttons.end(), ButtonLayout(static_cast<QPlatformDialogHelper::ButtonLayout>(buttonLayout)));
 
     for (int i = 0; i < buttons.count() - 1; ++i)
         q->insertItem(i, buttons.at(i));
