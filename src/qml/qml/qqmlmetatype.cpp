@@ -261,7 +261,8 @@ public:
 
     int index;
     mutable volatile bool isSetup:1;
-    mutable volatile bool isEnumSetup:1;
+    mutable volatile bool isEnumFromCacheSetup:1;
+    mutable volatile bool isEnumFromBaseSetup:1;
     mutable bool haveSuperType:1;
     mutable QList<QQmlProxyMetaObject::ProxyData> metaObjects;
     mutable QStringHash<int> enums;
@@ -367,7 +368,8 @@ QHash<const QMetaObject *, int> QQmlTypePrivate::attachedPropertyIds;
 QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
 : refCount(1), regType(type), iid(nullptr), typeId(0), listId(0), revision(0),
     containsRevisionedAttributes(false), baseMetaObject(nullptr),
-    index(-1), isSetup(false), isEnumSetup(false), haveSuperType(false)
+    index(-1), isSetup(false), isEnumFromCacheSetup(false), isEnumFromBaseSetup(false),
+    haveSuperType(false)
 {
     switch (type) {
     case QQmlType::CppType:
@@ -829,19 +831,24 @@ void QQmlTypePrivate::init() const
 
 void QQmlTypePrivate::initEnums(const QQmlPropertyCache *cache) const
 {
-    if (isEnumSetup) return;
+    if ((isEnumFromBaseSetup || !baseMetaObject)
+           && (isEnumFromCacheSetup || !cache)) {
+        return;
+    }
 
     init();
 
     QMutexLocker lock(metaTypeDataLock());
-    if (isEnumSetup) return;
 
-    if (cache)
+    if (!isEnumFromCacheSetup && cache) {
         insertEnumsFromPropertyCache(cache);
-    if (baseMetaObject) // could be singleton type without metaobject
-        insertEnums(baseMetaObject);
+        isEnumFromCacheSetup = true;
+    }
 
-    isEnumSetup = true;
+    if (!isEnumFromBaseSetup && baseMetaObject) { // could be singleton type without metaobject
+        insertEnums(baseMetaObject);
+        isEnumFromBaseSetup = true;
+    }
 }
 
 void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
