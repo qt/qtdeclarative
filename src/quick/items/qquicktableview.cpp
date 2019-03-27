@@ -1398,6 +1398,22 @@ void QQuickTableViewPrivate::processLoadRequest()
 
 void QQuickTableViewPrivate::processRebuildTable()
 {
+    Q_Q(QQuickTableView);
+
+    if (rebuildState == RebuildState::Begin) {
+        if (Q_UNLIKELY(lcTableViewDelegateLifecycle().isDebugEnabled())) {
+            qCDebug(lcTableViewDelegateLifecycle()) << "begin rebuild:" << q;
+            if (rebuildOptions & RebuildOption::All)
+                qCDebug(lcTableViewDelegateLifecycle()) << "RebuildOption::All, options:" << rebuildOptions;
+            else if (rebuildOptions & RebuildOption::ViewportOnly)
+                qCDebug(lcTableViewDelegateLifecycle()) << "RebuildOption::ViewportOnly, options:" << rebuildOptions;
+            else if (rebuildOptions & RebuildOption::LayoutOnly)
+                qCDebug(lcTableViewDelegateLifecycle()) << "RebuildOption::LayoutOnly, options:" << rebuildOptions;
+            else
+                Q_TABLEVIEW_UNREACHABLE(rebuildOptions);
+        }
+    }
+
     moveToNextRebuildState();
 
     if (rebuildState == RebuildState::LoadInitalTable) {
@@ -1408,12 +1424,11 @@ void QQuickTableViewPrivate::processRebuildTable()
 
     if (rebuildState == RebuildState::VerifyTable) {
         if (loadedItems.isEmpty()) {
-            qCDebug(lcTableViewDelegateLifecycle()) << "no items loaded, meaning empty model, all rows or columns hidden, or no delegate";
+            qCDebug(lcTableViewDelegateLifecycle()) << "no items loaded!";
             rebuildState = RebuildState::Done;
+        } else if (!moveToNextRebuildState()) {
             return;
         }
-        if (!moveToNextRebuildState())
-            return;
     }
 
     if (rebuildState == RebuildState::LayoutTable) {
@@ -1453,6 +1468,7 @@ void QQuickTableViewPrivate::processRebuildTable()
     }
 
     Q_TABLEVIEW_ASSERT(rebuildState == RebuildState::Done, int(rebuildState));
+    qCDebug(lcTableViewDelegateLifecycle()) << "rebuild complete:" << q;
 }
 
 bool QQuickTableViewPrivate::moveToNextRebuildState()
@@ -1532,12 +1548,30 @@ void QQuickTableViewPrivate::beginRebuildTable()
     loadedTableInnerRect = QRect();
     clearEdgeSizeCache();
 
-    if (topLeft.x() == kEdgeIndexAtEnd || topLeft.y() == kEdgeIndexAtEnd) {
-        // No visible columns or rows, so nothing to load
+    if (!model) {
+        qCDebug(lcTableViewDelegateLifecycle()) << "no model found, leaving table empty";
         return;
     }
 
-    loadInitialTopLeftItem(topLeft, topLeftPos);
+    if (model->count() == 0) {
+        qCDebug(lcTableViewDelegateLifecycle()) << "empty model found, leaving table empty";
+        return;
+    }
+
+    if (tableModel && !tableModel->delegate()) {
+        qCDebug(lcTableViewDelegateLifecycle()) << "no delegate found, leaving table empty";
+        return;
+    }
+
+    if (topLeft.x() == kEdgeIndexAtEnd || topLeft.y() == kEdgeIndexAtEnd) {
+        qCDebug(lcTableViewDelegateLifecycle()) << "no visible rows or columns, leaving table empty";
+        return;
+    }
+
+    // Load top-left item. After loaded, loadItemsInsideRect() will take
+    // care of filling out the rest of the table.
+    loadRequest.begin(topLeft, topLeftPos, QQmlIncubator::AsynchronousIfNested);
+    processLoadRequest();
     loadAndUnloadVisibleEdges();
 }
 
@@ -1557,19 +1591,6 @@ void QQuickTableViewPrivate::layoutAfterLoadingInitialTable()
     updateAverageEdgeSize();
     updateContentWidth();
     updateContentHeight();
-}
-
-void QQuickTableViewPrivate::loadInitialTopLeftItem(const QPoint &cell, const QPointF &pos)
-{
-    Q_TABLEVIEW_ASSERT(loadedItems.isEmpty(), "");
-
-    if (tableModel && !tableModel->delegate())
-        return;
-
-    // Load top-left item. After loaded, loadItemsInsideRect() will take
-    // care of filling out the rest of the table.
-    loadRequest.begin(cell, pos, QQmlIncubator::AsynchronousIfNested);
-    processLoadRequest();
 }
 
 void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
