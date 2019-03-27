@@ -231,57 +231,47 @@ bool QQmlValueTypeProvider::store(int, const void *, void *, size_t) { return fa
 bool QQmlValueTypeProvider::read(const QVariant&, void *, int) { return false; }
 bool QQmlValueTypeProvider::write(int, const void *, QVariant&) { return false; }
 
-Q_GLOBAL_STATIC(QQmlValueTypeProvider, nullValueTypeProvider)
-static QQmlValueTypeProvider *valueTypeProvider = nullptr;
+struct ValueTypeProviderList {
+    QQmlValueTypeProvider nullProvider;
+    QQmlValueTypeProvider *head = &nullProvider;
+};
 
-static QQmlValueTypeProvider **getValueTypeProvider(void)
-{
-    if (valueTypeProvider == nullptr) {
-        valueTypeProvider = nullValueTypeProvider;
-    }
-
-    return &valueTypeProvider;
-}
+Q_GLOBAL_STATIC(ValueTypeProviderList, valueTypeProviders)
 
 Q_QML_PRIVATE_EXPORT void QQml_addValueTypeProvider(QQmlValueTypeProvider *newProvider)
 {
-    static QQmlValueTypeProvider **providerPtr = getValueTypeProvider();
-    newProvider->next = *providerPtr;
-    *providerPtr = newProvider;
+    if (ValueTypeProviderList *providers = valueTypeProviders()) {
+        newProvider->next = providers->head;
+        providers->head = newProvider;
+    }
 }
 
 Q_QML_PRIVATE_EXPORT void QQml_removeValueTypeProvider(QQmlValueTypeProvider *oldProvider)
 {
-    if (oldProvider == nullValueTypeProvider) {
-        // don't remove the null provider
-        // we get here when the QtQml library is being unloaded
-        return;
-    }
+    if (ValueTypeProviderList *providers = valueTypeProviders()) {
+        QQmlValueTypeProvider *prev = providers->head;
+        if (prev == oldProvider) {
+            providers->head = oldProvider->next;
+            return;
+        }
 
-    // the only entry with next = 0 is the null provider
-    Q_ASSERT(oldProvider->next);
-
-    QQmlValueTypeProvider *prev = valueTypeProvider;
-    if (prev == oldProvider) {
-        valueTypeProvider = oldProvider->next;
-        return;
-    }
-
-    // singly-linked list removal
-    for ( ; prev; prev = prev->next) {
-        if (prev->next != oldProvider)
-            continue;               // this is not the provider you're looking for
-        prev->next = oldProvider->next;
-        return;
+        // singly-linked list removal
+        for (; prev; prev = prev->next) {
+            if (prev->next != oldProvider)
+                continue;               // this is not the provider you're looking for
+            prev->next = oldProvider->next;
+            return;
+        }
     }
 
     qWarning("QQml_removeValueTypeProvider: was asked to remove provider %p but it was not found", oldProvider);
 }
 
-Q_AUTOTEST_EXPORT QQmlValueTypeProvider *QQml_valueTypeProvider(void)
+Q_AUTOTEST_EXPORT QQmlValueTypeProvider *QQml_valueTypeProvider()
 {
-    static QQmlValueTypeProvider **providerPtr = getValueTypeProvider();
-    return *providerPtr;
+    if (ValueTypeProviderList *providers = valueTypeProviders())
+        return providers->head;
+    return nullptr;
 }
 
 QQmlColorProvider::~QQmlColorProvider() {}
