@@ -812,7 +812,7 @@ QQuickColorAnimation::~QQuickColorAnimation()
             // States are defined here...
         ]
 
-        transition: Transition {
+        transitions: Transition {
             ColorAnimation { from: "#c0c0c0"; duration: 2000 }
         }
     }
