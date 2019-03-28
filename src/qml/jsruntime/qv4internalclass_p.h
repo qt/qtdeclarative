@@ -247,8 +247,12 @@ struct SharedInternalClassData {
         Q_ASSERT(pos == d->size());
         if (pos == d->alloc())
             d->grow();
-        d->setSize(d->size() + 1);
-        d->set(pos, value);
+        if (pos >= d->alloc()) {
+            qBadAlloc();
+        } else {
+            d->setSize(d->size() + 1);
+            d->set(pos, value);
+        }
     }
 
     void set(uint pos, T value) {
@@ -428,7 +432,7 @@ struct InternalClass : Base {
 
     Q_REQUIRED_RESULT InternalClass *sealed();
     Q_REQUIRED_RESULT InternalClass *frozen();
-    Q_REQUIRED_RESULT InternalClass *propertiesFrozen() const;
+    Q_REQUIRED_RESULT InternalClass *propertiesFrozen();
 
     Q_REQUIRED_RESULT InternalClass *asProtoClass();
 

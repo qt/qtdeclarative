@@ -139,7 +139,9 @@ void GeneratorPrototype::init(ExecutionEngine *engine, Object *ctor)
     Scope scope(engine);
     ScopedValue v(scope);
 
-    ScopedObject ctorProto(scope, engine->newObject(engine->newInternalClass(Object::staticVTable(), engine->functionPrototype())));
+    Scoped<InternalClass> ic(scope, engine->newInternalClass(
+                                            Object::staticVTable(), engine->functionPrototype()));
+    ScopedObject ctorProto(scope, engine->newObject(ic->d()));
 
     ctor->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(1));
     ctor->defineReadonlyProperty(engine->id_prototype(), ctorProto);

@@ -104,6 +104,7 @@ private slots:
     void offset_data();
     void offset();
     void setCurrentIndex();
+    void setCurrentIndexWrap();
     void resetModel();
     void propertyChanges();
     void pathChanges();
@@ -1136,6 +1137,28 @@ void tst_QQuickPathView::setCurrentIndex()
     pathview->setCurrentIndex(3);
     QTRY_COMPARE(pathview->currentIndex(), 3);
     QCOMPARE(currentIndexSpy.count(), 1);
+}
+
+void tst_QQuickPathView::setCurrentIndexWrap()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("pathview5.qml"));
+    window->show();
+    qApp->processEvents();
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
+    QVERIFY(pathview);
+
+    // set current index to last item
+    pathview->setCurrentIndex(4);
+    // set currentIndex to first item, then quickly set it back (QTBUG-74508)
+    QSignalSpy currentIndexSpy(pathview, SIGNAL(currentIndexChanged()));
+    QSignalSpy movementStartedSpy(pathview, SIGNAL(movementStarted()));
+    pathview->setCurrentIndex(0);
+    pathview->setCurrentIndex(4);
+    QCOMPARE(pathview->currentIndex(), 4);
+    QCOMPARE(currentIndexSpy.count(), 2);
+    QCOMPARE(movementStartedSpy.count(), 0);
 }
 
 void tst_QQuickPathView::resetModel()

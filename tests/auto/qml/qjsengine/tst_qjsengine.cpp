@@ -236,6 +236,7 @@ private slots:
     void importExportErrors();
 
     void equality();
+    void aggressiveGc();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -4630,6 +4631,18 @@ void tst_QJSEngine::equality()
     QJSValue ok = engine.evaluate("(0 < 0) ? 'ko' : 'ok'");
     QVERIFY(ok.isString());
     QCOMPARE(ok.toString(), QString("ok"));
+}
+
+void tst_QJSEngine::aggressiveGc()
+{
+    const QByteArray origAggressiveGc = qgetenv("QV4_MM_AGGRESSIVE_GC");
+    qputenv("QV4_MM_AGGRESSIVE_GC", "true");
+    {
+        QJSEngine engine; // ctor crashes if core allocation methods don't properly scope things.
+        QJSValue obj = engine.newObject();
+        QVERIFY(obj.isObject());
+    }
+    qputenv("QV4_MM_AGGRESSIVE_GC", origAggressiveGc);
 }
 
 QTEST_MAIN(tst_QJSEngine)
