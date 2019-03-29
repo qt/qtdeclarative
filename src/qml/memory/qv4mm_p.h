@@ -264,13 +264,13 @@ public:
     size_t getLargeItemsMem() const;
 
     // called when a JS object grows itself. Specifically: Heap::String::append
+    // and InternalClassDataPrivate<PropertyAttributes>.
     void changeUnmanagedHeapSizeUsage(qptrdiff delta) { unmanagedHeapSize += delta; }
 
     template<typename ManagedType>
     typename ManagedType::Data *allocIC()
     {
-        size_t size = align(sizeof(typename ManagedType::Data));
-        Heap::Base *b = *icAllocator.allocate(size, true);
+        Heap::Base *b = *allocate(&icAllocator, align(sizeof(typename ManagedType::Data)));
         return static_cast<typename ManagedType::Data *>(b);
     }
 
@@ -284,11 +284,51 @@ protected:
     Heap::Object *allocObjectWithMemberData(const QV4::VTable *vtable, uint nMembers);
 
 private:
+    enum {
+        MinUnmanagedHeapSizeGCLimit = 128 * 1024
+    };
+
     void collectFromJSStack(MarkStack *markStack) const;
     void mark();
     void sweep(bool lastSweep = false, ClassDestroyStatsCallback classCountPtr = nullptr);
     bool shouldRunGC() const;
     void collectRoots(MarkStack *markStack);
+
+    HeapItem *allocate(BlockAllocator *allocator, std::size_t size)
+    {
+        bool didGCRun = false;
+        if (aggressiveGC) {
+            runGC();
+            didGCRun = true;
+        }
+
+        if (unmanagedHeapSize > unmanagedHeapSizeGCLimit) {
+            if (!didGCRun)
+                runGC();
+
+            if (3*unmanagedHeapSizeGCLimit <= 4 * unmanagedHeapSize) {
+                // more than 75% full, raise limit
+                unmanagedHeapSizeGCLimit = std::max(unmanagedHeapSizeGCLimit,
+                                                    unmanagedHeapSize) * 2;
+            } else if (unmanagedHeapSize * 4 <= unmanagedHeapSizeGCLimit) {
+                // less than 25% full, lower limit
+                unmanagedHeapSizeGCLimit = qMax(std::size_t(MinUnmanagedHeapSizeGCLimit),
+                                                unmanagedHeapSizeGCLimit/2);
+            }
+            didGCRun = true;
+        }
+
+        if (size > Chunk::DataSize)
+            return hugeItemAllocator.allocate(size);
+
+        if (HeapItem *m = allocator->allocate(size))
+            return m;
+
+        if (!didGCRun && shouldRunGC())
+            runGC();
+
+        return allocator->allocate(size, true);
+    }
 
 public:
     QV4::ExecutionEngine *engine;

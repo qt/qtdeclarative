@@ -93,8 +93,6 @@
 #include <pthread_np.h>
 #endif
 
-#define MIN_UNMANAGED_HEAPSIZE_GC_LIMIT std::size_t(128 * 1024)
-
 Q_LOGGING_CATEGORY(lcGcStats, "qt.qml.gc.statistics")
 Q_DECLARE_LOGGING_CATEGORY(lcGcStats)
 Q_LOGGING_CATEGORY(lcGcAllocatorStats, "qt.qml.gc.allocatorStats")
@@ -759,7 +757,7 @@ MemoryManager::MemoryManager(ExecutionEngine *engine)
     , hugeItemAllocator(chunkAllocator, engine)
     , m_persistentValues(new PersistentValueStorage(engine))
     , m_weakValues(new PersistentValueStorage(engine))
-    , unmanagedHeapSizeGCLimit(MIN_UNMANAGED_HEAPSIZE_GC_LIMIT)
+    , unmanagedHeapSizeGCLimit(MinUnmanagedHeapSizeGCLimit)
     , aggressiveGC(!qEnvironmentVariableIsEmpty("QV4_MM_AGGRESSIVE_GC"))
     , gcStats(lcGcStats().isDebugEnabled())
     , gcCollectorStats(lcGcAllocatorStats().isDebugEnabled())
@@ -779,35 +777,9 @@ Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
     lastAllocRequestedSlots = stringSize >> Chunk::SlotSizeShift;
     ++allocationCount;
 #endif
-
-    bool didGCRun = false;
-    if (aggressiveGC) {
-        runGC();
-        didGCRun = true;
-    }
-
     unmanagedHeapSize += unmanagedSize;
-    if (unmanagedHeapSize > unmanagedHeapSizeGCLimit) {
-        if (!didGCRun)
-            runGC();
 
-        if (3*unmanagedHeapSizeGCLimit <= 4*unmanagedHeapSize)
-            // more than 75% full, raise limit
-            unmanagedHeapSizeGCLimit = std::max(unmanagedHeapSizeGCLimit, unmanagedHeapSize) * 2;
-        else if (unmanagedHeapSize * 4 <= unmanagedHeapSizeGCLimit)
-            // less than 25% full, lower limit
-            unmanagedHeapSizeGCLimit = qMax(MIN_UNMANAGED_HEAPSIZE_GC_LIMIT, unmanagedHeapSizeGCLimit/2);
-        didGCRun = true;
-    }
-
-    HeapItem *m = blockAllocator.allocate(stringSize);
-    if (!m) {
-        if (!didGCRun && shouldRunGC())
-            runGC();
-        m = blockAllocator.allocate(stringSize, true);
-    }
-
-//    qDebug() << "allocated string" << m;
+    HeapItem *m = allocate(&blockAllocator, stringSize);
     memset(m, 0, stringSize);
     return *m;
 }
@@ -819,32 +791,11 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
     ++allocationCount;
 #endif
 
-    bool didRunGC = false;
-    if (aggressiveGC) {
-        runGC();
-        didRunGC = true;
-    }
-
     Q_ASSERT(size >= Chunk::SlotSize);
     Q_ASSERT(size % Chunk::SlotSize == 0);
 
-//    qDebug() << "unmanagedHeapSize:" << unmanagedHeapSize << "limit:" << unmanagedHeapSizeGCLimit << "unmanagedSize:" << unmanagedSize;
-
-    if (size > Chunk::DataSize) {
-        HeapItem *h = hugeItemAllocator.allocate(size);
-//        qDebug() << "allocating huge item" << h;
-        return *h;
-    }
-
-    HeapItem *m = blockAllocator.allocate(size);
-    if (!m) {
-        if (!didRunGC && shouldRunGC())
-            runGC();
-        m = blockAllocator.allocate(size, true);
-    }
-
+    HeapItem *m = allocate(&blockAllocator, size);
     memset(m, 0, size);
-//    qDebug() << "allocating data" << m;
     return *m;
 }
 

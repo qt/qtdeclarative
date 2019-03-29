@@ -754,6 +754,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
     bool once = true;
     int elideStart = 0;
     int elideEnd = 0;
+    bool noBreakLastLine = multilineElide && (wrapMode == QQuickText::Wrap || wrapMode == QQuickText::WordWrap);
 
     int eos = multilengthEos;
 
@@ -786,11 +787,15 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
         QRectF unelidedRect;
         QTextLine line = layout.createLine();
         for (visibleCount = 1; ; ++visibleCount) {
+            if (noBreakLastLine && visibleCount == maxLineCount)
+                layout.engine()->option.setWrapMode(QTextOption::WrapAnywhere);
             if (customLayout) {
                 setupCustomLineGeometry(line, naturalHeight);
             } else {
                 setLineGeometry(line, lineWidth, naturalHeight);
             }
+            if (noBreakLastLine && visibleCount == maxLineCount)
+                layout.engine()->option.setWrapMode(QTextOption::WrapMode(wrapMode));
 
             unelidedRect = br.united(line.naturalTextRect());
 
@@ -1247,7 +1252,7 @@ void QQuickTextPrivate::ensureDoc()
     if (!extra.isAllocated() || !extra->doc) {
         Q_Q(QQuickText);
         extra.value().doc = new QQuickTextDocumentWithImageResources(q);
-        extra->doc->setPageSize(QSizeF(q->width(), -1));
+        extra->doc->setPageSize(QSizeF(0, 0));
         extra->doc->setDocumentMargin(0);
         extra->doc->setBaseUrl(q->baseUrl());
         qmlobject_connect(extra->doc, QQuickTextDocumentWithImageResources, SIGNAL(imagesLoaded()),

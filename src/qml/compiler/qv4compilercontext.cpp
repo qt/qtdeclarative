@@ -190,7 +190,7 @@ Context::ResolvedName Context::resolveName(const QString &name, const QQmlJS::AS
     if (c->contextType == ContextType::Eval)
         return result;
 
-    if (c->contextType == ContextType::Binding)
+    if (c->contextType == ContextType::Binding || c->contextType == ContextType::ScriptImportedByQML)
         result.type = ResolvedName::QmlGlobal;
     else
         result.type = ResolvedName::Global;

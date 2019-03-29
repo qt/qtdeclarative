@@ -201,7 +201,6 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compi
     }
 
     Codegen cg(unitGenerator, /*strict mode*/false);
-    cg.setUseFastLookups(false);
     cg.generateFromProgram(fileName, finalUrl, source, program, module, contextType);
     errors = cg.qmlErrors();
     if (!errors.isEmpty()) {
