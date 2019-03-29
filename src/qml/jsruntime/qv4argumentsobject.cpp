@@ -116,6 +116,9 @@ bool ArgumentsObject::virtualDefineOwnProperty(Managed *m, PropertyKey id, const
 {
     ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
     args->fullyCreate();
+    if (!id.isArrayIndex())
+        return Object::virtualDefineOwnProperty(m, id, desc, attrs);
+
     uint index = id.asArrayIndex();
 
     if (!args->isMapped(index))
@@ -148,35 +151,41 @@ bool ArgumentsObject::virtualDefineOwnProperty(Managed *m, PropertyKey id, const
 
 ReturnedValue ArgumentsObject::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
-    const ArgumentsObject *args = static_cast<const ArgumentsObject *>(m);
-    uint index = id.asArrayIndex();
-    if (index < args->d()->argCount && !args->d()->fullyCreated) {
-        if (hasProperty)
-            *hasProperty = true;
-        return args->context()->args()[index].asReturnedValue();
+    if (id.isArrayIndex()) {
+        const ArgumentsObject *args = static_cast<const ArgumentsObject *>(m);
+        uint index = id.asArrayIndex();
+        if (index < args->d()->argCount && !args->d()->fullyCreated) {
+            if (hasProperty)
+                *hasProperty = true;
+            return args->context()->args()[index].asReturnedValue();
+        }
+
+        if (args->isMapped(index)) {
+            Q_ASSERT(index < static_cast<uint>(args->context()->function->formalParameterCount()));
+            if (hasProperty)
+                *hasProperty = true;
+            return args->context()->args()[index].asReturnedValue();
+        }
     }
 
-    if (!args->isMapped(index))
-        return Object::virtualGet(m, id, receiver, hasProperty);
-    Q_ASSERT(index < static_cast<uint>(args->context()->function->formalParameterCount()));
-    if (hasProperty)
-        *hasProperty = true;
-    return args->context()->args()[index].asReturnedValue();
+    return Object::virtualGet(m, id, receiver, hasProperty);
 }
 
 bool ArgumentsObject::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
-    ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
-    uint index = id.asArrayIndex();
+    if (id.isArrayIndex()) {
+        ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
+        uint index = id.asArrayIndex();
 
-    if (args == receiver && index < args->d()->argCount && !args->d()->fullyCreated) {
-        args->context()->setArg(index, value);
-        return true;
+        if (args == receiver && index < args->d()->argCount && !args->d()->fullyCreated) {
+            args->context()->setArg(index, value);
+            return true;
+        }
+
+        bool isMapped = (args == receiver && args->isMapped(index));
+        if (isMapped)
+            args->context()->setArg(index, value);
     }
-
-    bool isMapped = (args == receiver && args->isMapped(index));
-    if (isMapped)
-        args->context()->setArg(index, value);
 
     return Object::virtualPut(m, id, value, receiver);
 }
@@ -186,13 +195,16 @@ bool ArgumentsObject::virtualDeleteProperty(Managed *m, PropertyKey id)
     ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
     args->fullyCreate();
     bool result = Object::virtualDeleteProperty(m, id);
-    if (result)
+    if (result && id.isArrayIndex())
         args->removeMapping(id.asArrayIndex());
     return result;
 }
 
 PropertyAttributes ArgumentsObject::virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p)
 {
+    if (!id.isArrayIndex())
+        return Object::virtualGetOwnProperty(m, id, p);
+
     const ArgumentsObject *args = static_cast<const ArgumentsObject *>(m);
     uint index = id.asArrayIndex();
     if (index < args->d()->argCount && !args->d()->fullyCreated) {

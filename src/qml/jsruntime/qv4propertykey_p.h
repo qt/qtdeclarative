@@ -113,8 +113,8 @@ public:
     static PropertyKey invalid() { PropertyKey key; key.val = 0; return key; }
     static PropertyKey fromArrayIndex(uint idx) { PropertyKey key; key.val = ArrayIndexMask | static_cast<quint64>(idx); return key; }
     bool isStringOrSymbol() const { return isManaged() && val != 0; }
-    uint asArrayIndex() const { return (isManaged() || val == 0) ? std::numeric_limits<uint>::max() : static_cast<uint>(val & 0xffffffff); }
-    uint isArrayIndex() const { return !isManaged() && val != 0 && static_cast<uint>(val & 0xffffffff) != std::numeric_limits<uint>::max(); }
+    uint asArrayIndex() const { Q_ASSERT(isArrayIndex()); return static_cast<uint>(val & 0xffffffff); }
+    uint isArrayIndex() const { return !isManaged() && val != 0; }
     bool isValid() const { return val != 0; }
     static PropertyKey fromStringOrSymbol(Heap::StringOrSymbol *b)
     { PropertyKey key; key.setM(b); return key; }

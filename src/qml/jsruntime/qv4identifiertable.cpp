@@ -216,9 +216,8 @@ PropertyKey IdentifierTable::asPropertyKeyImpl(const Heap::String *str)
 
 Heap::StringOrSymbol *IdentifierTable::resolveId(PropertyKey i) const
 {
-    uint arrayIdx = i.asArrayIndex();
-    if (arrayIdx < UINT_MAX)
-        return engine->newString(QString::number(arrayIdx));
+    if (i.isArrayIndex())
+        return engine->newString(QString::number(i.asArrayIndex()));
     if (!i.isValid())
         return nullptr;
 

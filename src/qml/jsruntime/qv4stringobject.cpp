@@ -152,13 +152,14 @@ PropertyAttributes StringObject::virtualGetOwnProperty(const Managed *m, Propert
     if (attributes != Attr_Invalid)
         return attributes;
 
-    const StringObject *s = static_cast<const StringObject *>(m);
-    uint slen = s->d()->string->toQString().length();
-    uint index = id.asArrayIndex();
-    if (index < slen) {
-        if (p)
-            p->value = s->getIndex(index);
-        return Attr_NotConfigurable|Attr_NotWritable;
+    if (id.isArrayIndex()) {
+        const uint index = id.asArrayIndex();
+        const auto s = static_cast<const StringObject *>(m);
+        if (index < uint(s->d()->string->toQString().length())) {
+            if (p)
+                p->value = s->getIndex(index);
+            return Attr_NotConfigurable|Attr_NotWritable;
+        }
     }
     return Object::virtualGetOwnProperty(m, id, p);
 }

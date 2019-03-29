@@ -1659,9 +1659,8 @@ static QV4::ReturnedValue variantMapToJS(QV4::ExecutionEngine *v4, const QVarian
         s = v4->newIdentifier(it.key());
         key = s->propertyKey();
         v = variantToJS(v4, it.value());
-        uint idx = key->asArrayIndex();
-        if (idx < UINT_MAX)
-            o->arraySet(idx, v);
+        if (key->isArrayIndex())
+            o->arraySet(key->asArrayIndex(), v);
         else
             o->insertMember(s, v);
     }
