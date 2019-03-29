@@ -1082,6 +1082,12 @@ extern "C" Q_QML_EXPORT char *qt_v4StackTrace(void *executionContext)
     return v4StackTrace(reinterpret_cast<const ExecutionContext *>(executionContext));
 }
 
+extern "C" Q_QML_EXPORT char *qt_v4StackTraceForEngine(void *executionEngine)
+{
+    auto engine = (reinterpret_cast<const ExecutionEngine *>(executionEngine));
+    return v4StackTrace(engine->currentContext());
+}
+
 QUrl ExecutionEngine::resolvedUrl(const QString &file)
 {
     QUrl src(file);
