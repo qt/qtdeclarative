@@ -310,6 +310,10 @@ public:
     inline int leftColumn() const { return loadedColumns.firstKey(); }
     inline int rightColumn() const { return loadedColumns.lastKey(); }
 
+    QQuickTableView *rootSyncView() const;
+
+    bool updateTableRecursive();
+    void updateTable();
     void relayoutTable();
     void relayoutTableItems();
 
