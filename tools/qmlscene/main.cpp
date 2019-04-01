@@ -612,6 +612,19 @@ int main(int argc, char ** argv)
                 fprintf(stderr, "%s\n", qPrintable(component->errorString()));
                 return -1;
             }
+
+            // Set default surface format before creating the window
+            QSurfaceFormat surfaceFormat;
+            if (options.multisample)
+                surfaceFormat.setSamples(16);
+            if (options.transparent)
+                surfaceFormat.setAlphaBufferSize(8);
+            if (options.coreProfile) {
+                surfaceFormat.setVersion(4, 1);
+                surfaceFormat.setProfile(QSurfaceFormat::CoreProfile);
+            }
+            QSurfaceFormat::setDefaultFormat(surfaceFormat);
+
             QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow *>(topLevel));
             if (window) {
                 engine.setIncubationController(window->incubationController());
@@ -635,18 +648,10 @@ int main(int argc, char ** argv)
                 if (options.verbose)
                     new DiagnosticGlContextCreationListener(window.data());
 #endif
-                QSurfaceFormat surfaceFormat = window->requestedFormat();
-                if (options.multisample)
-                    surfaceFormat.setSamples(16);
                 if (options.transparent) {
-                    surfaceFormat.setAlphaBufferSize(8);
                     window->setClearBeforeRendering(true);
                     window->setColor(QColor(Qt::transparent));
                     window->setFlags(Qt::FramelessWindowHint);
-                }
-                if (options.coreProfile) {
-                    surfaceFormat.setVersion(4, 1);
-                    surfaceFormat.setProfile(QSurfaceFormat::CoreProfile);
                 }
                 window->setFormat(surfaceFormat);
 

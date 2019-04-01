@@ -69,12 +69,25 @@ Heap::MemberData *MemberData::allocate(ExecutionEngine *e, uint n, Heap::MemberD
     size_t alloc = MemoryManager::align(sizeof(Heap::MemberData) + (n - 1)*sizeof(Value));
     // round up to next power of two to avoid quadratic behaviour for very large objects
     alloc = nextPowerOfTwo(alloc);
-    Heap::MemberData *m = e->memoryManager->allocManaged<MemberData>(alloc);
-    if (old)
+
+    // The above code can overflow in a number of interesting ways. All of those are unsigned,
+    // and therefore defined behavior. Still, apply some sane bounds.
+    if (alloc > std::numeric_limits<int>::max())
+        alloc = std::numeric_limits<int>::max();
+
+    Heap::MemberData *m;
+    if (old) {
+        const size_t oldSize = sizeof(Heap::MemberData) + (old->values.size - 1) * sizeof(Value);
+        if (oldSize > alloc)
+            alloc = oldSize;
+        m = e->memoryManager->allocManaged<MemberData>(alloc);
         // no write barrier required here
-        memcpy(m, old, sizeof(Heap::MemberData) + (old->values.size - 1) * sizeof(Value));
-    else
+        memcpy(m, old, oldSize);
+    } else {
+        m = e->memoryManager->allocManaged<MemberData>(alloc);
         m->init();
+    }
+
     m->values.alloc = static_cast<uint>((alloc - sizeof(Heap::MemberData) + sizeof(Value))/sizeof(Value));
     m->values.size = m->values.alloc;
     return m;

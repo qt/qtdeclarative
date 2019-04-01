@@ -464,11 +464,17 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsObjects[TypeError_Ctor] = memoryManager->allocate<TypeErrorCtor>(global);
     jsObjects[URIError_Ctor] = memoryManager->allocate<URIErrorCtor>(global);
     jsObjects[IteratorProto] = memoryManager->allocate<IteratorPrototype>();
-    jsObjects[ForInIteratorProto] = memoryManager->allocObject<ForInIteratorPrototype>(newInternalClass(ForInIteratorPrototype::staticVTable(), iteratorPrototype()));
-    jsObjects[MapIteratorProto] = memoryManager->allocObject<MapIteratorPrototype>(newInternalClass(SetIteratorPrototype::staticVTable(), iteratorPrototype()));
-    jsObjects[SetIteratorProto] = memoryManager->allocObject<SetIteratorPrototype>(newInternalClass(SetIteratorPrototype::staticVTable(), iteratorPrototype()));
-    jsObjects[ArrayIteratorProto] = memoryManager->allocObject<ArrayIteratorPrototype>(newInternalClass(ArrayIteratorPrototype::staticVTable(), iteratorPrototype()));
-    jsObjects[StringIteratorProto] = memoryManager->allocObject<StringIteratorPrototype>(newInternalClass(StringIteratorPrototype::staticVTable(), iteratorPrototype()));
+
+    ic = newInternalClass(ForInIteratorPrototype::staticVTable(), iteratorPrototype());
+    jsObjects[ForInIteratorProto] = memoryManager->allocObject<ForInIteratorPrototype>(ic);
+    ic = newInternalClass(SetIteratorPrototype::staticVTable(), iteratorPrototype());
+    jsObjects[MapIteratorProto] = memoryManager->allocObject<MapIteratorPrototype>(ic);
+    ic = newInternalClass(SetIteratorPrototype::staticVTable(), iteratorPrototype());
+    jsObjects[SetIteratorProto] = memoryManager->allocObject<SetIteratorPrototype>(ic);
+    ic = newInternalClass(ArrayIteratorPrototype::staticVTable(), iteratorPrototype());
+    jsObjects[ArrayIteratorProto] = memoryManager->allocObject<ArrayIteratorPrototype>(ic);
+    ic = newInternalClass(StringIteratorPrototype::staticVTable(), iteratorPrototype());
+    jsObjects[StringIteratorProto] = memoryManager->allocObject<StringIteratorPrototype>(ic);
 
     str = newString(QStringLiteral("get [Symbol.species]"));
     jsObjects[GetSymbolSpecies] = FunctionObject::createBuiltinFunction(this, str, ArrayPrototype::method_get_species, 0);

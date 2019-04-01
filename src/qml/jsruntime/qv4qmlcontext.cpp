@@ -465,10 +465,23 @@ ReturnedValue QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(Lookup *
             return static_cast<Heap::CallContext*>(ctx.d())->locals[index].asReturnedValue();
     }
 
-    Scoped<QQmlContextWrapper> qmlContext(scope, engine->qmlContext()->qml());
     bool hasProperty = false;
-    ScopedValue result(scope, QQmlContextWrapper::getPropertyAndBase(qmlContext, name, /*receiver*/nullptr,
-                                                                     &hasProperty, base, l));
+    ScopedValue result(scope);
+
+    Scoped<QmlContext> callingQmlContext(scope, engine->qmlContext());
+    if (callingQmlContext) {
+        Scoped<QQmlContextWrapper> qmlContextWrapper(scope, callingQmlContext->d()->qml());
+        result = QQmlContextWrapper::getPropertyAndBase(qmlContextWrapper, name, /*receiver*/nullptr, &hasProperty,
+                                                        base, l);
+    } else {
+        // Code path typical to worker scripts, compiled with lookups but no qml context.
+        result = l->resolveGlobalGetter(engine);
+        if (l->globalGetter != Lookup::globalGetterGeneric) {
+            hasProperty = true;
+            l->qmlContextGlobalLookup.getterTrampoline = l->globalGetter;
+            l->qmlContextPropertyGetter = QQmlContextWrapper::lookupInGlobalObject;
+        }
+    }
     if (!hasProperty)
         return engine->throwReferenceError(name.toQString());
     return result->asReturnedValue();

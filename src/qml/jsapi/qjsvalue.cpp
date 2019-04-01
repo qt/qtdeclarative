@@ -1368,7 +1368,7 @@ QObject *QJSValue::toQObject() const
   \since 5.8
 
  * If this QJSValue is a QMetaObject, returns the QMetaObject pointer
- * that the QJSValue represents; otherwise, returns 0.
+ * that the QJSValue represents; otherwise, returns \nullptr.
  *
  * \sa isQMetaObject()
  */

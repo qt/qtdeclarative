@@ -2392,10 +2392,6 @@ void QQuickPathViewPrivate::snapToIndex(int index, MovementReason reason)
         return;
 
     qreal targetOffset = std::fmod(qreal(modelCount - index), qreal(modelCount));
-
-    if (offset == targetOffset)
-        return;
-
     moveReason = reason;
     offsetAdj = 0.0;
     tl.reset(moveOffset);
