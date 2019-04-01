@@ -384,8 +384,13 @@ bool QQuickMultiPointHandler::grabPoints(QVector<QQuickEventPoint *> points)
 void QQuickMultiPointHandler::moveTarget(QPointF pos)
 {
     Q_D(QQuickMultiPointHandler);
-    target()->setPosition(pos);
-    d->centroid.m_position = target()->mapFromScene(d->centroid.m_scenePosition);
+    if (QQuickItem *t = target()) {
+        d->xMetaProperty().write(t, pos.x());
+        d->yMetaProperty().write(t, pos.y());
+        d->centroid.m_position = t->mapFromScene(d->centroid.m_scenePosition);
+    } else {
+        qWarning() << "moveTarget: target is null";
+    }
 }
 
 QQuickMultiPointHandlerPrivate::QQuickMultiPointHandlerPrivate(int minPointCount, int maxPointCount)
@@ -393,6 +398,26 @@ QQuickMultiPointHandlerPrivate::QQuickMultiPointHandlerPrivate(int minPointCount
   , minimumPointCount(minPointCount)
   , maximumPointCount(maxPointCount)
 {
+}
+
+QMetaProperty &QQuickMultiPointHandlerPrivate::xMetaProperty() const
+{
+    Q_Q(const QQuickMultiPointHandler);
+    if (!xProperty.isValid() && q->target()) {
+        const QMetaObject *targetMeta = q->target()->metaObject();
+        xProperty = targetMeta->property(targetMeta->indexOfProperty("x"));
+    }
+    return xProperty;
+}
+
+QMetaProperty &QQuickMultiPointHandlerPrivate::yMetaProperty() const
+{
+    Q_Q(const QQuickMultiPointHandler);
+    if (!yProperty.isValid() && q->target()) {
+        const QMetaObject *targetMeta = q->target()->metaObject();
+        yProperty = targetMeta->property(targetMeta->indexOfProperty("y"));
+    }
+    return yProperty;
 }
 
 QT_END_NAMESPACE

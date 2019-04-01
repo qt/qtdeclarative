@@ -67,10 +67,15 @@ public:
 
     QQuickMultiPointHandlerPrivate(int minPointCount, int maxPointCount);
 
+    QMetaProperty &xMetaProperty() const;
+    QMetaProperty &yMetaProperty() const;
+
     QVector<QQuickHandlerPoint> currentPoints;
     QQuickHandlerPoint centroid;
     int minimumPointCount;
     int maximumPointCount;
+    mutable QMetaProperty xProperty;
+    mutable QMetaProperty yProperty;
 };
 
 QT_END_NAMESPACE
