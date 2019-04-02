@@ -77,6 +77,55 @@ class QMetaObjectBuilder;
 class QQmlVMEMetaObject;
 class QQmlPropertyCacheMethodArguments;
 
+class RefCountedMetaObject {
+public:
+    enum OwnershipMode {
+        StaticMetaObject,
+        SharedMetaObject
+    };
+
+    struct Data {
+        ~Data() { if (mode == SharedMetaObject) ::free(const_cast<QMetaObject *>(mo)); }
+        const QMetaObject *mo = nullptr;
+        int ref = 1;
+        OwnershipMode mode;
+    } *d;
+
+    RefCountedMetaObject()
+        : d(nullptr)
+    {}
+
+    RefCountedMetaObject(const QMetaObject *mo, OwnershipMode mode)
+        : d(new Data) {
+        d->mo = mo;
+        d->mode = mode;
+    }
+    ~RefCountedMetaObject() {
+        if (d && !--d->ref)
+            delete d;
+    }
+    RefCountedMetaObject(const RefCountedMetaObject &other)
+        : d(other.d)
+    {
+        if (d && d->ref > 0)
+            ++d->ref;
+    }
+    RefCountedMetaObject &operator =(const RefCountedMetaObject &other)
+    {
+        if (d == other.d)
+            return *this;
+        if (d && !--d->ref)
+            delete d;
+        d = other.d;
+        if (d && d->ref > 0)
+            ++d->ref;
+        return *this;
+    }
+    operator const QMetaObject *() const { return d ? d->mo : nullptr; }
+    const QMetaObject * operator ->() const { return d ? d->mo : nullptr; }
+    bool isShared() const { return d && d->mode == SharedMetaObject; }
+};
+
 class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount
 {
 public:
@@ -129,7 +178,7 @@ public:
 
     QString defaultPropertyName() const;
     QQmlPropertyData *defaultProperty() const;
-    QQmlPropertyCache *parent() const;
+    inline QQmlPropertyCache *parent() const;
     // is used by the Qml Designer
     void setParent(QQmlPropertyCache *newParent);
 
@@ -241,7 +290,7 @@ private:
 
     bool _hasPropertyOverrides : 1;
     bool _ownMetaObject : 1;
-    const QMetaObject *_metaObject;
+    RefCountedMetaObject _metaObject;
     QByteArray _dynamicClassName;
     QByteArray _dynamicStringData;
     QString _defaultPropertyName;
@@ -268,9 +317,10 @@ inline const QMetaObject *QQmlPropertyCache::metaObject() const
 // QML
 inline const QMetaObject *QQmlPropertyCache::firstCppMetaObject() const
 {
-    while (_parent && (_metaObject == nullptr || _ownMetaObject))
-        return _parent->firstCppMetaObject();
-    return _metaObject;
+    const QQmlPropertyCache *p = this;
+    while (!p->_metaObject || p->_metaObject.isShared())
+        p = p->parent();
+    return p->_metaObject;
 }
 
 inline QQmlPropertyData *QQmlPropertyCache::property(int index) const

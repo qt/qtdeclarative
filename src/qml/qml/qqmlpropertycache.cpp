@@ -203,8 +203,8 @@ Creates a new empty QQmlPropertyCache.
 */
 QQmlPropertyCache::QQmlPropertyCache()
     : _parent(nullptr), propertyIndexCacheStart(0), methodIndexCacheStart(0),
-      signalHandlerIndexCacheStart(0), _hasPropertyOverrides(false), _ownMetaObject(false),
-      _metaObject(nullptr), argumentsCache(nullptr), _jsFactoryMethodIndex(-1)
+      signalHandlerIndexCacheStart(0), _hasPropertyOverrides(false),
+      argumentsCache(nullptr), _jsFactoryMethodIndex(-1)
 {
 }
 
@@ -245,8 +245,6 @@ QQmlPropertyCache::~QQmlPropertyCache()
     stringCache.clear();
     if (_parent) _parent->release();
 
-    if (_ownMetaObject) free(const_cast<QMetaObject *>(_metaObject));
-    _metaObject = nullptr;
     _parent = nullptr;
 }
 
@@ -279,7 +277,7 @@ QQmlPropertyCache *QQmlPropertyCache::copyAndReserve(int propertyCount, int meth
     rv->methodIndexCache.reserve(methodCount);
     rv->signalHandlerIndexCache.reserve(signalCount);
     rv->enumCache.reserve(enumCount);
-    rv->_metaObject = nullptr;
+    rv->_metaObject = RefCountedMetaObject();
 
     return rv;
 }
@@ -388,12 +386,10 @@ void QQmlPropertyCache::appendEnum(const QString &name, const QVector<QQmlEnumVa
 const QMetaObject *QQmlPropertyCache::createMetaObject()
 {
     if (!_metaObject) {
-        _ownMetaObject = true;
-
         QMetaObjectBuilder builder;
         toMetaObjectBuilder(builder);
         builder.setSuperClass(_parent->createMetaObject());
-        _metaObject = builder.toMetaObject();
+        _metaObject = RefCountedMetaObject(builder.toMetaObject(), RefCountedMetaObject::SharedMetaObject);
     }
 
     return _metaObject;
@@ -463,7 +459,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
                                QQmlPropertyData::Flags methodFlags,
                                QQmlPropertyData::Flags signalFlags)
 {
-    _metaObject = metaObject;
+    _metaObject = RefCountedMetaObject(metaObject, RefCountedMetaObject::StaticMetaObject);
 
     bool dynamicMetaObject = isDynamicMetaObject(metaObject);
 
@@ -669,12 +665,6 @@ void QQmlPropertyCache::resolve(QQmlPropertyData *data) const
 
     if (!data->isFunction()) {
         if (data->propType() == QMetaType::UnknownType) {
-            QQmlPropertyCache *p = _parent;
-            while (p && (!mo || _ownMetaObject)) {
-                mo = p->_metaObject;
-                p = p->_parent;
-            }
-
             int propOffset = mo->propertyOffset();
             if (mo && data->coreIndex() < propOffset + mo->propertyCount()) {
                 while (data->coreIndex() < propOffset) {
@@ -1085,7 +1075,7 @@ bool QQmlPropertyCache::isDynamicMetaObject(const QMetaObject *mo)
 
 const char *QQmlPropertyCache::className() const
 {
-    if (!_ownMetaObject && _metaObject)
+    if (_metaObject)
         return _metaObject->className();
     else
         return _dynamicClassName.constData();
@@ -1407,7 +1397,7 @@ QByteArray QQmlPropertyCache::checksum(bool *ok)
     }
 
     // Generate a checksum on the meta-object data only on C++ types.
-    if (!_metaObject || _ownMetaObject) {
+    if (!_metaObject || _metaObject.isShared()) {
         *ok = false;
         return _checksum;
     }
