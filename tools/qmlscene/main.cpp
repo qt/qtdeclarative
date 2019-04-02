@@ -522,7 +522,8 @@ int main(int argc, char ** argv)
                 options.resizeViewToRootItem = true;
             else if (lowerArgument == QLatin1String("--multisample"))
                 options.multisample = true;
-            else if (lowerArgument == QLatin1String("--core-profile"))
+            else if (lowerArgument == QLatin1String("--core-profile")
+                    || qEnvironmentVariableIsSet("QMLSCENE_CORE_PROFILE"))
                 options.coreProfile = true;
             else if (lowerArgument == QLatin1String("--verbose"))
                 options.verbose = true;
