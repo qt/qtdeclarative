@@ -124,15 +124,18 @@ QQmlPropertyData::flagsForProperty(const QMetaProperty &p)
     return flags;
 }
 
+static void populate(QQmlPropertyData *data, const QMetaProperty &p)
+{
+    Q_ASSERT(p.revision() <= Q_INT16_MAX);
+    data->setCoreIndex(p.propertyIndex());
+    data->setNotifyIndex(QMetaObjectPrivate::signalIndex(p.notifySignal()));
+    data->setFlags(fastFlagsForProperty(p));
+    data->setRevision(p.revision());
+}
+
 void QQmlPropertyData::lazyLoad(const QMetaProperty &p)
 {
-    setCoreIndex(p.propertyIndex());
-    setNotifyIndex(QMetaObjectPrivate::signalIndex(p.notifySignal()));
-    Q_ASSERT(p.revision() <= Q_INT16_MAX);
-    setRevision(p.revision());
-
-    setFlags(fastFlagsForProperty(p));
-
+    populate(this, p);
     int type = static_cast<int>(p.type());
     if (type == QMetaType::QObjectStar) {
         setPropType(type);
@@ -149,13 +152,9 @@ void QQmlPropertyData::lazyLoad(const QMetaProperty &p)
 
 void QQmlPropertyData::load(const QMetaProperty &p)
 {
+    populate(this, p);
     setPropType(p.userType());
-    setCoreIndex(p.propertyIndex());
-    setNotifyIndex(QMetaObjectPrivate::signalIndex(p.notifySignal()));
-    setFlags(fastFlagsForProperty(p));
     flagsForPropertyType(propType(), m_flags);
-    Q_ASSERT(p.revision() <= Q_INT16_MAX);
-    setRevision(p.revision());
 }
 
 void QQmlPropertyData::load(const QMetaMethod &m)
@@ -166,18 +165,18 @@ void QQmlPropertyData::load(const QMetaMethod &m)
     setPropType(m.returnType());
 
     m_flags.type = Flags::FunctionType;
-    if (m.methodType() == QMetaMethod::Signal)
+    if (m.methodType() == QMetaMethod::Signal) {
         m_flags.isSignal = true;
-    else if (m.methodType() == QMetaMethod::Constructor) {
+    } else if (m.methodType() == QMetaMethod::Constructor) {
         m_flags.isConstructor = true;
         setPropType(QMetaType::QObjectStar);
     }
 
-    if (m.parameterCount()) {
+    const int paramCount = m.parameterCount();
+    if (paramCount) {
         m_flags.hasArguments = true;
-        if ((m.parameterCount() == 1) && (m.parameterTypes().constFirst() == "QQmlV4Function*")) {
+        if ((paramCount == 1) && (m.parameterTypes().constFirst() == "QQmlV4Function*"))
             m_flags.isV4Function = true;
-        }
     }
 
     if (m.attributes() & QMetaMethod::Cloned)
@@ -189,16 +188,7 @@ void QQmlPropertyData::load(const QMetaMethod &m)
 
 void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
 {
-    setCoreIndex(m.methodIndex());
-    setPropType(QMetaType::Void);
-    setArguments(nullptr);
-    m_flags.type = Flags::FunctionType;
-    if (m.methodType() == QMetaMethod::Signal)
-        m_flags.isSignal = true;
-    else if (m.methodType() == QMetaMethod::Constructor) {
-        m_flags.isConstructor = true;
-        setPropType(QMetaType::QObjectStar);
-    }
+    load(m);
 
     const char *returnType = m.typeName();
     if (!returnType)
@@ -206,20 +196,6 @@ void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
     if ((*returnType != 'v') || (qstrcmp(returnType+1, "oid") != 0)) {
         m_flags.notFullyResolved = true;
     }
-
-    const int paramCount = m.parameterCount();
-    if (paramCount) {
-        m_flags.hasArguments = true;
-        if ((paramCount == 1) && (m.parameterTypes().constFirst() == "QQmlV4Function*")) {
-            m_flags.isV4Function = true;
-        }
-    }
-
-    if (m.attributes() & QMetaMethod::Cloned)
-        m_flags.isCloned = true;
-
-    Q_ASSERT(m.revision() <= Q_INT16_MAX);
-    setRevision(m.revision());
 }
 
 /*!
