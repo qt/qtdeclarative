@@ -241,6 +241,7 @@ private:
     friend class QQuickWidget;
     friend class QQuickRenderControl;
     friend class QQuickAnimatorController;
+    friend class QQuickWidgetPrivate;
     Q_DISABLE_COPY(QQuickWindow)
 };
 
