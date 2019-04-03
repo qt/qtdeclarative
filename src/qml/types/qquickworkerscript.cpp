@@ -39,10 +39,6 @@
 
 #include "qtqmlglobal_p.h"
 #include "qquickworkerscript_p.h"
-#if QT_CONFIG(qml_list_model)
-#include "qqmllistmodel_p.h"
-#include "qqmllistmodelworkeragent_p.h"
-#endif
 #include <private/qqmlengine_p.h>
 #include <private/qqmlexpression_p.h>
 
