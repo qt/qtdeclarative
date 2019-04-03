@@ -2017,8 +2017,8 @@ bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
     qCDebug(DBG_TOUCH) << event;
     Q_Q(QQuickWindow);
 
-    if (q->mouseGrabberItem())
-        q->mouseGrabberItem()->ungrabMouse();
+    if (QQuickItem *grabber = q->mouseGrabberItem())
+        sendUngrabEvent(grabber, true);
     cancelTouchMouseSynthesis();
 
     // A TouchCancel event will typically not contain any points.

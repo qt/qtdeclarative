@@ -37,6 +37,7 @@
 #include <QtQml/qqmlincubator.h>
 #include <QtQuick/private/qquickitemview_p_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
+#include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQml/private/qqmlobjectmodel_p.h>
 #include <QtQml/private/qqmllistmodel_p.h>
@@ -273,6 +274,7 @@ private slots:
 
     void addOnCompleted();
     void setPositionOnLayout();
+    void touchCancel();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -328,6 +330,7 @@ private:
 
     QQuickView *m_view;
     QString testForView;
+    QTouchDevice *touchDevice = QTest::createTouchDevice();
 };
 
 class TestObject : public QObject
@@ -8943,6 +8946,37 @@ void tst_QQuickListView::useDelegateChooserWithoutDefault()
     window->setSource(testFileUrl("usechooserwithoutdefault.qml"));
     window->show();
 };
+
+void tst_QQuickListView::touchCancel() // QTBUG-74679
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("delegateWithMouseArea.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = qobject_cast<QQuickListView *>(window->rootObject());
+    QVERIFY(listview);
+    QQuickMouseArea *mouseArea = listview->currentItem()->findChild<QQuickMouseArea *>();
+    QVERIFY(mouseArea);
+
+    QPoint p1(300, 300);
+    QTest::touchEvent(window.data(), touchDevice).press(0, p1, window.data());
+    QQuickTouchUtils::flush(window.data());
+    QTRY_VERIFY(mouseArea->pressed());
+    // and because Flickable filtered it, QQuickFlickablePrivate::pressed
+    // should be true, but it's not easily tested here
+
+    QTouchEvent cancelEvent(QEvent::TouchCancel);
+    cancelEvent.setDevice(touchDevice);
+    QCoreApplication::sendEvent(window.data(), &cancelEvent);
+    // now QQuickWindowPrivate::sendUngrabEvent() will be called, Flickable will filter it,
+    // QQuickFlickablePrivate::pressed will be set to false, and that will allow setCurrentIndex() to make it move
+    QQuickTouchUtils::flush(window.data());
+
+    listview->setCurrentIndex(1);
+    // ensure that it actually moves (animates) to the second delegate
+    QTRY_COMPARE(listview->contentY(), 500.0);
+}
 
 QTEST_MAIN(tst_QQuickListView)
 
