@@ -184,7 +184,7 @@ class QQuickComboBoxDelegateModel : public QQmlDelegateModel
 {
 public:
     explicit QQuickComboBoxDelegateModel(QQuickComboBox *combo);
-    QString stringValue(int index, const QString &role) override;
+    QString stringValue(int index, const QString &role);
 
 private:
     QQuickComboBox *combo = nullptr;
