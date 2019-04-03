@@ -249,9 +249,10 @@ public:
 
     static QList<QQmlError> qmlErrorFromDiagnostics(const QString &fileName, const QList<QQmlJS::DiagnosticMessage> &diagnosticMessages);
 
-    static void registerBaseTypes(const char *uri, int versionMajor, int versionMinor);
-    static void registerQtQuick2Types(const char *uri, int versionMajor, int versionMinor);
-    static void defineQtQuick2Module();
+    static void defineModule();
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    static void registerQuickTypes();
+#endif
 
     static bool designerMode();
     static void activateDesignerMode();

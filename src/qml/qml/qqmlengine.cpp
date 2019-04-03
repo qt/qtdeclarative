@@ -86,19 +86,10 @@
 #if QT_CONFIG(qml_animation)
 #include <private/qqmltimer_p.h>
 #endif
-#if QT_CONFIG(qml_list_model)
-#include <private/qqmllistmodel_p.h>
-#endif
 #include <private/qqmlplatform_p.h>
-#include <private/qquickpackage_p.h>
-#if QT_CONFIG(qml_delegate_model)
-#include <private/qqmldelegatemodel_p.h>
-#endif
-#include <private/qqmlobjectmodel_p.h>
 #if QT_CONFIG(qml_worker_script)
 #include <private/qquickworkerscript_p.h>
 #endif
-#include <private/qqmlinstantiator_p.h>
 #include <private/qqmlloggingcategory_p.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
@@ -115,13 +106,6 @@
 Q_DECLARE_METATYPE(QQmlProperty)
 
 QT_BEGIN_NAMESPACE
-
-void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
-{
-    QQmlEnginePrivate::registerBaseTypes(uri, versionMajor, versionMinor);
-    QQmlEnginePrivate::registerQtQuick2Types(uri, versionMajor, versionMinor);
-    QQmlValueTypeFactory::registerValueTypes(uri, versionMajor, versionMinor);
-}
 
 // Declared in qqml.h
 int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
@@ -215,63 +199,54 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
 bool QQmlEnginePrivate::qml_debugging_enabled = false;
 bool QQmlEnginePrivate::s_designerMode = false;
 
-// these types are part of the QML language
-void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int versionMinor)
+void QQmlEnginePrivate::defineModule()
 {
-    qmlRegisterType<QQmlComponent>(uri,versionMajor,versionMinor,"Component");
-    qmlRegisterType<QObject>(uri,versionMajor,versionMinor,"QtObject");
-    qmlRegisterType<QQmlBind>(uri, versionMajor, versionMinor,"Binding");
-    qmlRegisterType<QQmlBind,8>(uri, versionMajor, (versionMinor < 8 ? 8 : versionMinor), "Binding"); //Only available in >=2.8
-    qmlRegisterCustomType<QQmlConnections>(uri, versionMajor, 0, "Connections", new QQmlConnectionsParser);
-    if (!strcmp(uri, "QtQuick"))
-        qmlRegisterCustomType<QQmlConnections,1>(uri, versionMajor, 7, "Connections", new QQmlConnectionsParser); //Only available in QtQuick >=2.7
-    else
-        qmlRegisterCustomType<QQmlConnections,1>(uri, versionMajor, 3, "Connections", new QQmlConnectionsParser); //Only available in QtQml >=2.3
+    const char uri[] = "QtQml";
+
+    qmlRegisterType<QQmlComponent>(uri, 2, 0, "Component");
+    qmlRegisterType<QObject>(uri, 2, 0, "QtObject");
+    qmlRegisterType<QQmlBind>(uri, 2, 0, "Binding");
+    qmlRegisterType<QQmlBind, 8>(uri, 2, 8, "Binding"); // Only available in >= 2.8
+    qmlRegisterCustomType<QQmlConnections>(uri, 2, 0, "Connections", new QQmlConnectionsParser);
+    qmlRegisterCustomType<QQmlConnections, 1>(uri, 2, 3, "Connections", new QQmlConnectionsParser); // Only available in QtQml >= 2.3
 #if QT_CONFIG(qml_animation)
-    qmlRegisterType<QQmlTimer>(uri, versionMajor, versionMinor,"Timer");
+    qmlRegisterType<QQmlTimer>(uri, 2, 0, "Timer");
 #endif
-    qmlRegisterType<QQmlInstantiator>(uri, versionMajor, (versionMinor < 1 ? 1 : versionMinor), "Instantiator"); //Only available in >=2.1
-    qmlRegisterType<QQmlInstanceModel>();
 
-    qmlRegisterType<QQmlLoggingCategory>(uri, versionMajor, 8, "LoggingCategory"); //Only available in >=2.8
-    qmlRegisterType<QQmlLoggingCategory,1>(uri, versionMajor, 12, "LoggingCategory"); //Only available in >=2.12
-}
+    qmlRegisterType<QQmlLoggingCategory>(uri, 2, 8, "LoggingCategory"); // Only available in >= 2.8
+    qmlRegisterType<QQmlLoggingCategory, 1>(uri, 2, 12, "LoggingCategory"); // Only available in >= 2.12
 
-
-// These QtQuick types' implementation resides in the QtQml module
-void QQmlEnginePrivate::registerQtQuick2Types(const char *uri, int versionMajor, int versionMinor)
-{
-#if QT_CONFIG(qml_list_model)
-    qmlRegisterType<QQmlListElement>(uri, versionMajor, versionMinor, "ListElement"); // Now in QtQml.Models, here for compatibility
-    qmlRegisterCustomType<QQmlListModel>(uri, versionMajor, versionMinor, "ListModel", new QQmlListModelParser); // Now in QtQml.Models, here for compatibility
-#endif
-#if QT_CONFIG(qml_worker_script)
-    qmlRegisterType<QQuickWorkerScript>(uri, versionMajor, versionMinor, "WorkerScript");
-#endif
-    qmlRegisterType<QQuickPackage>(uri, versionMajor, versionMinor, "Package");
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-#if QT_CONFIG(qml_delegate_model)
-    qmlRegisterType<QQmlDelegateModel>(uri, versionMajor, versionMinor, "VisualDataModel");
-    qmlRegisterType<QQmlDelegateModelGroup>(uri, versionMajor, versionMinor, "VisualDataGroup");
-#endif
-    qmlRegisterType<QQmlObjectModel>(uri, versionMajor, versionMinor, "VisualItemModel");
-#endif // < Qt 6
-}
-
-void QQmlEnginePrivate::defineQtQuick2Module()
-{
-    // register the base types into the QtQuick namespace
-    registerBaseTypes("QtQuick",2,0);
-
-    // register the QtQuick2 types which are implemented in the QtQml module.
-    registerQtQuick2Types("QtQuick",2,0);
 #if QT_CONFIG(qml_locale)
-    qmlRegisterUncreatableType<QQmlLocale>("QtQuick", 2, 0, "Locale", QQmlEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
+    qmlRegisterUncreatableType<QQmlLocale>(uri, 2, 2, "Locale", QQmlEngine::tr("Locale cannot be instantiated. Use Qt.locale()"));
 #endif
-
-    // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
-    qmlRegisterModule("QtQuick", 2, QT_VERSION_MINOR);
 }
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+void QQmlEnginePrivate::registerQuickTypes()
+{
+    // Don't add anything here. These are only for backwards compatibility.
+
+    const char uri[] = "QtQuick";
+
+    qmlRegisterType<QQmlComponent>(uri, 2, 0, "Component");
+    qmlRegisterType<QObject>(uri, 2, 0, "QtObject");
+    qmlRegisterType<QQmlBind>(uri, 2, 0, "Binding");
+    qmlRegisterType<QQmlBind, 8>(uri, 2, 8, "Binding");
+    qmlRegisterCustomType<QQmlConnections>(uri, 2, 0, "Connections", new QQmlConnectionsParser);
+    qmlRegisterCustomType<QQmlConnections, 1>(uri, 2, 7, "Connections", new QQmlConnectionsParser);
+#if QT_CONFIG(qml_animation)
+    qmlRegisterType<QQmlTimer>(uri, 2, 0,"Timer");
+#endif
+    qmlRegisterType<QQmlLoggingCategory>(uri, 2, 8, "LoggingCategory");
+    qmlRegisterType<QQmlLoggingCategory, 1>(uri, 2, 12, "LoggingCategory");
+#if QT_CONFIG(qml_worker_script)
+    qmlRegisterType<QQuickWorkerScript>(uri, 2, 0, "WorkerScript");
+#endif
+#if QT_CONFIG(qml_locale)
+    qmlRegisterUncreatableType<QQmlLocale>(uri, 2, 0, "Locale", QQmlEngine::tr("Locale cannot be instantiated. Use Qt.locale()"));
+#endif
+}
+#endif // QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 
 bool QQmlEnginePrivate::designerMode()
 {
@@ -976,14 +951,6 @@ void QQmlEnginePrivate::init()
 
     if (baseModulesUninitialized) {
         qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component"); // required for the Compiler.
-        registerBaseTypes("QtQml", 2, 0); // import which provides language building blocks.
-#if QT_CONFIG(qml_locale)
-        qmlRegisterUncreatableType<QQmlLocale>("QtQml", 2, 2, "Locale", QQmlEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
-#endif
-
-        // Auto-increment the import to stay in sync with ALL future QtQml minor versions from 5.11 onward
-        qmlRegisterModule("QtQml", 2, QT_VERSION_MINOR);
-
         QQmlData::init();
         baseModulesUninitialized = false;
     }

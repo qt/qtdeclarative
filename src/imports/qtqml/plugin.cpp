@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 Research In Motion.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the plugins of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,36 +37,55 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLMODELSMODULE_H
-#define QQMLMODELSMODULE_H
+#include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/private/qqmlengine_p.h>
+#include <QtQml/private/qqmlcomponentattached_p.h>
+#include <QtQml/private/qqmlbind_p.h>
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <private/qtqmlglobal_p.h>
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#include <QtQml/private/qqmlmodelsmodule_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlModelsModule
+/*!
+    \qmlmodule QtQml 2.\QtMinorVersion
+    \title Qt QML Base Types
+    \ingroup qmlmodules
+    \brief Provides basic QML types
+    \since 5.0
+
+    This QML module contains basic QML types.
+
+    To use the types in this module, import the module with the following line:
+
+    \qml \QtMinorVersion
+    import QtQml 2.\1
+    \endqml
+*/
+
+//![class decl]
+class QtQmlPlugin : public QQmlExtensionPlugin
 {
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
+    QtQmlPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
+    void registerTypes(const char *uri) override
+    {
+        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQml"));
+        QQmlEnginePrivate::defineModule();
+
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    static void registerQmlTypes();
-    static void registerQuickTypes();
+        QQmlModelsModule::registerQmlTypes();
 #endif
 
-    static void defineModule();
-    static void defineLabsModule();
+        // Auto-increment the import to stay in sync with ALL future QtQml minor versions from 5.11 onward
+        qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
+    }
 };
+//![class decl]
 
 QT_END_NAMESPACE
 
-#endif
+#include "plugin.moc"

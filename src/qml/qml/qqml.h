@@ -606,8 +606,6 @@ QObject *qmlAttachedPropertiesObject(const QObject *obj, bool create = true)
     return qmlAttachedPropertiesObject(&idx, obj, &T::staticMetaObject, create);
 }
 
-Q_QML_EXPORT void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor);
-
 inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName,
                                 QJSValue (*callback)(QQmlEngine *, QJSEngine *))
 {
