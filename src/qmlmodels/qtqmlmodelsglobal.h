@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 Research In Motion.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,62 +37,23 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLINSTANTIATOR_P_P_H
-#define QQMLINSTANTIATOR_P_P_H
+#ifndef QTQMLMODELSGLOBAL_H
+#define QTQMLMODELSGLOBAL_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qqmlinstantiator_p.h"
-#include <QObject>
-#include <private/qobject_p.h>
-#include <private/qqmlchangeset_p.h>
-#include <private/qqmlobjectmodel_p.h>
+#include <QtQml/qtqmlglobal.h>
+#include <QtQmlModels/qtqmlmodels-config.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlInstantiatorPrivate : public QObjectPrivate
-{
-    Q_DECLARE_PUBLIC(QQmlInstantiator)
-
-public:
-    QQmlInstantiatorPrivate();
-    ~QQmlInstantiatorPrivate();
-
-    void clear();
-    void regenerate();
-#if QT_CONFIG(qml_delegate_model)
-    void makeModel();
+#if !defined(QT_STATIC)
+#  if defined(QT_BUILD_QMLMODELS_LIB)
+#    define Q_QMLMODELS_EXPORT Q_DECL_EXPORT
+#  else
+#    define Q_QMLMODELS_EXPORT Q_DECL_IMPORT
+#  endif
+#else
+#  define Q_QMLMODELS_EXPORT
 #endif
-    void _q_createdItem(int, QObject *);
-    void _q_modelUpdated(const QQmlChangeSet &, bool);
-    QObject *modelObject(int index, bool async);
-
-    static QQmlInstantiatorPrivate *get(QQmlInstantiator *instantiator) { return instantiator->d_func(); }
-    static const QQmlInstantiatorPrivate *get(const QQmlInstantiator *instantiator) { return instantiator->d_func(); }
-
-    bool componentComplete:1;
-    bool effectiveReset:1;
-    bool active:1;
-    bool async:1;
-#if QT_CONFIG(qml_delegate_model)
-    bool ownModel:1;
-#endif
-    int requestedIndex;
-    QVariant model;
-    QQmlInstanceModel *instanceModel;
-    QQmlComponent *delegate;
-    QVector<QPointer<QObject> > objects;
-};
 
 QT_END_NAMESPACE
-
-#endif // QQMLCREATOR_P_P_H
+#endif // QTQMLMODELSGLOBAL_H

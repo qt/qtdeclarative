@@ -25,8 +25,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QtQml/private/qqmlobjectmodel_p.h>
-#include <QtQml/private/qqmlchangeset_p.h>
+#include <QtQmlModels/private/qqmlobjectmodel_p.h>
+#include <QtQmlModels/private/qqmlchangeset_p.h>
 #include <QtTest/qsignalspy.h>
 #include <QtTest/qtest.h>
 

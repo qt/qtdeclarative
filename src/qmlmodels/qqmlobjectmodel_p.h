@@ -51,7 +51,7 @@
 // We mean it.
 //
 
-#include <private/qtqmlglobal_p.h>
+#include <private/qtqmlmodelsglobal_p.h>
 #include <private/qqmlincubator_p.h>
 #include <QtQml/qqml.h>
 #include <QtCore/qobject.h>
@@ -62,7 +62,7 @@ class QObject;
 class QQmlChangeSet;
 class QAbstractItemModel;
 
-class Q_QML_PRIVATE_EXPORT QQmlInstanceModel : public QObject
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlInstanceModel : public QObject
 {
     Q_OBJECT
 
@@ -104,7 +104,7 @@ private:
 
 class QQmlObjectModelAttached;
 class QQmlObjectModelPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlObjectModel : public QQmlInstanceModel
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlObjectModel : public QQmlInstanceModel
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlObjectModel)

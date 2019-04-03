@@ -43,9 +43,9 @@
 #include <QtQml/QQmlComponent>
 #include <QtQml/QQmlInfo>
 #include <QtQml/QQmlError>
-#include <QtQml/private/qqmlobjectmodel_p.h>
+#include <QtQmlModels/private/qqmlobjectmodel_p.h>
 #if QT_CONFIG(qml_delegate_model)
-#include <QtQml/private/qqmldelegatemodel_p.h>
+#include <QtQmlModels/private/qqmldelegatemodel_p.h>
 #endif
 
 QT_BEGIN_NAMESPACE

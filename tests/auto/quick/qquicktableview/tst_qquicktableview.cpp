@@ -38,8 +38,8 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlincubator.h>
-#include <QtQml/private/qqmlobjectmodel_p.h>
-#include <QtQml/private/qqmllistmodel_p.h>
+#include <QtQmlModels/private/qqmlobjectmodel_p.h>
+#include <QtQmlModels/private/qqmllistmodel_p.h>
 
 #include "testmodel.h"
 

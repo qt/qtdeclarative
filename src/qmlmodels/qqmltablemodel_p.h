@@ -54,14 +54,14 @@
 #include <QtCore/QObject>
 #include <QtCore/QAbstractTableModel>
 #include <QtQml/qqml.h>
-#include <QtQml/private/qtqmlglobal_p.h>
-#include <QtQml/private/qqmltablemodelcolumn_p.h>
+#include <QtQmlModels/private/qtqmlmodelsglobal_p.h>
+#include <QtQmlModels/private/qqmltablemodelcolumn_p.h>
 #include <QtQml/QJSValue>
 #include <QtQml/QQmlListProperty>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlTableModel : public QAbstractTableModel, public QQmlParserStatus
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlTableModel : public QAbstractTableModel, public QQmlParserStatus
 {
     Q_OBJECT
     Q_PROPERTY(int columnCount READ columnCount NOTIFY columnCountChanged FINAL)

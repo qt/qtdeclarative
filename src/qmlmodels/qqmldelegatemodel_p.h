@@ -51,15 +51,13 @@
 // We mean it.
 //
 
-#include <private/qtqmlglobal_p.h>
+#include <private/qtqmlmodelsglobal_p.h>
 #include <private/qqmllistcompositor_p.h>
 #include <private/qqmlobjectmodel_p.h>
 #include <private/qqmlincubator_p.h>
 
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qstringlist.h>
-
-#include <private/qqmlglobal_p.h>
 
 QT_REQUIRE_CONFIG(qml_delegate_model);
 
@@ -73,7 +71,7 @@ class QQmlDelegateModelAttached;
 class QQmlDelegateModelPrivate;
 
 
-class Q_QML_PRIVATE_EXPORT QQmlDelegateModel : public QQmlInstanceModel, public QQmlParserStatus
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModel : public QQmlInstanceModel, public QQmlParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlDelegateModel)
@@ -159,7 +157,7 @@ private:
 };
 
 class QQmlDelegateModelGroupPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlDelegateModelGroup : public QObject
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModelGroup : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count NOTIFY countChanged)

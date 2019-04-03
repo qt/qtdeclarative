@@ -51,8 +51,8 @@
 // We mean it.
 //
 
-#include <QtQml/private/qqmldelegatemodel_p.h>
-#include <QtQml/private/qqmldelegatemodel_p_p.h>
+#include <QtQmlModels/private/qqmldelegatemodel_p.h>
+#include <QtQmlModels/private/qqmldelegatemodel_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -79,7 +79,7 @@ public:
     QQmlTableInstanceModel *tableInstanceModel = nullptr;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlTableInstanceModel : public QQmlInstanceModel
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlTableInstanceModel : public QQmlInstanceModel
 {
     Q_OBJECT
 

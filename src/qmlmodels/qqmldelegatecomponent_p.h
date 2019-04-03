@@ -51,7 +51,7 @@
 // We mean it.
 //
 
-#include <private/qtqmlglobal_p.h>
+#include <private/qtqmlmodelsglobal_p.h>
 #include <qqmlcomponent.h>
 
 QT_REQUIRE_CONFIG(qml_delegate_model);
@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
 // TODO: consider making QQmlAbstractDelegateComponent public API
 class QQmlAbstractDelegateComponentPrivate;
 class QQmlAdaptorModel;
-class Q_QML_PRIVATE_EXPORT QQmlAbstractDelegateComponent : public QQmlComponent
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlAbstractDelegateComponent : public QQmlComponent
 {
     Q_OBJECT
 public:
@@ -81,7 +81,7 @@ private:
     Q_DISABLE_COPY(QQmlAbstractDelegateComponent)
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDelegateChoice : public QObject
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateChoice : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QVariant roleValue READ roleValue WRITE setRoleValue NOTIFY roleValueChanged)
@@ -120,7 +120,7 @@ private:
     QQmlComponent *m_delegate = nullptr;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDelegateChooser : public QQmlAbstractDelegateComponent
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateChooser : public QQmlAbstractDelegateComponent
 {
     Q_OBJECT
     Q_PROPERTY(QString role READ role WRITE setRole NOTIFY roleChanged)

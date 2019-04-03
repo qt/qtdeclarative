@@ -30,7 +30,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/qquickview.h>
 #include <QtQml/private/qqmltimer_p.h>
-#include <QtQml/private/qqmllistmodel_p.h>
+#include <QtQmlModels/private/qqmllistmodel_p.h>
 #include <QtQml/private/qanimationgroupjob_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquickitemanimation_p.h>

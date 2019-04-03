@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qqmlmodelsmodule_p.h"
+#include <private/qtqmlmodelsglobal_p.h>
 #include <QtCore/qitemselectionmodel.h>
 #if QT_CONFIG(qml_list_model)
 #include <private/qqmllistmodel_p.h>

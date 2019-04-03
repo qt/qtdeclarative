@@ -53,11 +53,11 @@
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qvector.h>
-#include <QtQml/private/qtqmlglobal_p.h>
+#include <QtQmlModels/private/qtqmlmodelsglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlChangeSet
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlChangeSet
 {
 public:
     struct MoveKey
@@ -153,8 +153,8 @@ inline uint qHash(const QQmlChangeSet::MoveKey &key) { return qHash(qMakePair(ke
 inline bool operator ==(const QQmlChangeSet::MoveKey &l, const QQmlChangeSet::MoveKey &r) {
     return l.moveId == r.moveId && l.offset == r.offset; }
 
-Q_QML_PRIVATE_EXPORT QDebug operator <<(QDebug debug, const QQmlChangeSet::Change &change);
-Q_QML_PRIVATE_EXPORT QDebug operator <<(QDebug debug, const QQmlChangeSet &change);
+Q_QMLMODELS_PRIVATE_EXPORT QDebug operator <<(QDebug debug, const QQmlChangeSet::Change &change);
+Q_QMLMODELS_PRIVATE_EXPORT QDebug operator <<(QDebug debug, const QQmlChangeSet &change);
 
 QT_END_NAMESPACE
 

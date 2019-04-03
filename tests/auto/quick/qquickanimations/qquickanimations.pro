@@ -8,7 +8,7 @@ macx:CONFIG -= app_bundle
 
 TESTDATA = data/*
 
-QT += core-private gui-private  qml-private quick-private testlib
+QT += core-private gui-private  qml-private quick-private testlib qmlmodels-private
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
 
 OTHER_FILES += \

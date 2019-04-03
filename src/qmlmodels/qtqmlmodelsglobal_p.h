@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 Research In Motion.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLMODELSMODULE_H
-#define QQMLMODELSMODULE_H
+#ifndef QTQMLMODELSGLOBAL_P_H
+#define QTQMLMODELSGLOBAL_P_H
 
 //
 //  W A R N I N G
@@ -51,22 +51,11 @@
 // We mean it.
 //
 
-#include <private/qtqmlglobal_p.h>
+#include <QtQml/private/qtqmlglobal_p.h>
+#include <QtQmlModels/qtqmlmodelsglobal.h>
+#include <QtQmlModels/private/qtqmlmodels-config_p.h>
 
-QT_BEGIN_NAMESPACE
+#define Q_QMLMODELS_PRIVATE_EXPORT Q_QMLMODELS_EXPORT
+#define Q_QMLMODELS_AUTOTEST_EXPORT Q_AUTOTEST_EXPORT
 
-class Q_QML_PRIVATE_EXPORT QQmlModelsModule
-{
-public:
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    static void registerQmlTypes();
-    static void registerQuickTypes();
-#endif
-
-    static void defineModule();
-    static void defineLabsModule();
-};
-
-QT_END_NAMESPACE
-
-#endif
+#endif // QTQMLMODELSGLOBAL_P_H

@@ -51,7 +51,7 @@
 // We mean it.
 //
 
-#include <qqml.h>
+#include <private/qtqmlmodelsglobal_p.h>
 #include <private/qqmlcustomparser_p.h>
 
 #include <QtCore/QObject>
@@ -77,11 +77,12 @@ namespace QV4 {
 struct ModelObject;
 }
 
-class Q_QML_PRIVATE_EXPORT QQmlListModel : public QAbstractListModel
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlListModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     Q_PROPERTY(bool dynamicRoles READ dynamicRoles WRITE setDynamicRoles)
+    Q_PROPERTY(QObject *agent READ agent CONSTANT REVISION(14))
 
 public:
     QQmlListModel(QObject *parent=nullptr);
@@ -134,7 +135,7 @@ private:
 
     inline bool canMove(int from, int to, int n) const { return !(from+n > count() || to+n > count() || from < 0 || to < 0 || n < 0); }
 
-    QQmlListModelWorkerAgent *m_agent;
+    mutable QQmlListModelWorkerAgent *m_agent;
     mutable QV4::ExecutionEngine *m_engine;
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_compilationUnit;
     bool m_mainThread;

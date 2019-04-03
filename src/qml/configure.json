@@ -149,12 +149,6 @@
             "section": "QML",
             "output": [ "privateFeature" ]
         },
-        "qml-list-model": {
-            "label": "QML list model",
-            "purpose": "Provides the ListModel QML type.",
-            "section": "QML",
-            "output": [ "privateFeature" ]
-        },
         "qml-xml-http-request": {
             "label": "QML XML http request",
             "purpose": "Provides support for sending XML http requests.",
@@ -178,12 +172,6 @@
             "condition": "features.animation",
             "output": [ "privateFeature" ]
         },
-        "qml-delegate-model": {
-            "label": "QML delegate model",
-            "purpose": "Provides the DelegateModel QML type.",
-            "section": "QML",
-            "output": [ "privateFeature" ]
-        },
         "qml-worker-script": {
             "label": "QML WorkerScript",
             "purpose": "Enables the use of threads in QML.",
@@ -201,10 +189,8 @@
                 "qml-debug",
                 "qml-jit",
                 "qml-sequence-object",
-                "qml-list-model",
                 "qml-xml-http-request",
-                "qml-locale",
-                "qml-delegate-model"
+                "qml-locale"
             ]
         }
     ]

@@ -39,7 +39,7 @@
 #include <QtQuick/qquickview.h>
 #include <private/qquicklistview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
-#include <QtQml/private/qqmldelegatemodel_p.h>
+#include <QtQmlModels/private/qqmldelegatemodel_p.h>
 #include <private/qqmlvaluetype_p.h>
 #include <private/qqmlchangeset_p.h>
 #include <private/qqmlengine_p.h>

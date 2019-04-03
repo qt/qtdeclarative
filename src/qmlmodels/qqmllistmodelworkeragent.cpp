@@ -66,9 +66,17 @@ QQmlListModelWorkerAgent::~QQmlListModelWorkerAgent()
     mutex.unlock();
 }
 
+QV4::ExecutionEngine *QQmlListModelWorkerAgent::engine() const
+{
+    return m_copy->m_engine;
+}
+
 void QQmlListModelWorkerAgent::setEngine(QV4::ExecutionEngine *eng)
 {
-    m_copy->m_engine = eng;
+    if (eng != m_copy->m_engine) {
+        m_copy->m_engine = eng;
+        emit engineChanged(eng);
+    }
 }
 
 void QQmlListModelWorkerAgent::addref()

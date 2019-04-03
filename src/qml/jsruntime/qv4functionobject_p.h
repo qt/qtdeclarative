@@ -87,11 +87,11 @@ DECLARE_HEAP_OBJECT(FunctionObject, Object) {
     }
 
     Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, QV4::String *name, VTable::Call call);
-    void init(QV4::ExecutionContext *scope, QV4::String *name = nullptr);
-    void init(QV4::ExecutionContext *scope, QV4::Function *function, QV4::String *n = nullptr);
-    void init(QV4::ExecutionContext *scope, const QString &name);
-    void init();
-    void destroy();
+    Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, QV4::String *name = nullptr);
+    Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, QV4::Function *function, QV4::String *n = nullptr);
+    Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, const QString &name);
+    Q_QML_PRIVATE_EXPORT void init();
+    Q_QML_PRIVATE_EXPORT void destroy();
 
     void setFunction(Function *f);
 
@@ -260,7 +260,7 @@ struct FunctionPrototype: FunctionObject
     static ReturnedValue method_hasInstance(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
-struct IndexedBuiltinFunction : FunctionObject
+struct Q_QML_PRIVATE_EXPORT IndexedBuiltinFunction : FunctionObject
 {
     V4_OBJECT2(IndexedBuiltinFunction, FunctionObject)
 };

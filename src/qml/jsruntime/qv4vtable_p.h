@@ -58,7 +58,7 @@ namespace QV4 {
 
 struct Lookup;
 
-struct OwnPropertyKeyIterator {
+struct Q_QML_PRIVATE_EXPORT OwnPropertyKeyIterator {
     virtual ~OwnPropertyKeyIterator() = 0;
     virtual PropertyKey next(const Object *o, Property *p = nullptr, PropertyAttributes *attrs = nullptr) = 0;
 };

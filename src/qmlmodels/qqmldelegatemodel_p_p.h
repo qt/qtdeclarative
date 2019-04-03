@@ -69,7 +69,7 @@ typedef QQmlListCompositor Compositor;
 class QQmlDelegateModelAttachedMetaObject;
 class QQmlAbstractDelegateComponent;
 
-class Q_QML_PRIVATE_EXPORT QQmlDelegateModelItemMetaType : public QQmlRefCount
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModelItemMetaType : public QQmlRefCount
 {
 public:
     QQmlDelegateModelItemMetaType(QV4::ExecutionEngine *engine, QQmlDelegateModel *model, const QStringList &groupNames);

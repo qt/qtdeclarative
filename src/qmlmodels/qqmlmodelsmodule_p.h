@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2016 Research In Motion.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKLISTMODELWORKERAGENT_P_H
-#define QQUICKLISTMODELWORKERAGENT_P_H
+#ifndef QQMLMODELSMODULE_H
+#define QQMLMODELSMODULE_H
 
 //
 //  W A R N I N G
@@ -51,90 +51,22 @@
 // We mean it.
 //
 
-#include <qqml.h>
-
-#include <QEvent>
-#include <QMutex>
-#include <QWaitCondition>
-
-#include <private/qv8engine_p.h>
-
-QT_REQUIRE_CONFIG(qml_list_model);
+#include <private/qtqmlmodelsglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-
-class QQmlListModel;
-
-class QQmlListModelWorkerAgent : public QObject
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlModelsModule
 {
-    Q_OBJECT
-    Q_PROPERTY(int count READ count)
-
 public:
-    QQmlListModelWorkerAgent(QQmlListModel *);
-    ~QQmlListModelWorkerAgent();
-    void setEngine(QV4::ExecutionEngine *eng);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    static void registerQmlTypes();
+    static void registerQuickTypes();
+#endif
 
-    void addref();
-    void release();
-
-    int count() const;
-
-    Q_INVOKABLE void clear();
-    Q_INVOKABLE void remove(QQmlV4Function *args);
-    Q_INVOKABLE void append(QQmlV4Function *args);
-    Q_INVOKABLE void insert(QQmlV4Function *args);
-    Q_INVOKABLE QJSValue get(int index) const;
-    Q_INVOKABLE void set(int index, const QJSValue &value);
-    Q_INVOKABLE void setProperty(int index, const QString& property, const QVariant& value);
-    Q_INVOKABLE void move(int from, int to, int count);
-    Q_INVOKABLE void sync();
-
-    struct VariantRef
-    {
-        VariantRef() : a(nullptr) {}
-        VariantRef(const VariantRef &r) : a(r.a) { if (a) a->addref(); }
-        VariantRef(QQmlListModelWorkerAgent *_a) : a(_a) { if (a) a->addref(); }
-        ~VariantRef() { if (a) a->release(); }
-
-        VariantRef &operator=(const VariantRef &o) {
-            if (o.a) o.a->addref();
-            if (a) a->release();
-            a = o.a;
-            return *this;
-        }
-
-        QQmlListModelWorkerAgent *a;
-    };
-
-    void modelDestroyed();
-protected:
-    bool event(QEvent *) override;
-
-private:
-    friend class QQuickWorkerScriptEnginePrivate;
-    friend class QQmlListModel;
-
-    struct Sync : public QEvent {
-        Sync(QQmlListModel *l)
-            : QEvent(QEvent::User)
-            , list(l)
-        {}
-        ~Sync();
-        QQmlListModel *list;
-    };
-
-    QAtomicInt m_ref;
-    QQmlListModel *m_orig;
-    QQmlListModel *m_copy;
-    QMutex mutex;
-    QWaitCondition syncDone;
+    static void defineModule();
+    static void defineLabsModule();
 };
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QQmlListModelWorkerAgent::VariantRef)
-
-#endif // QQUICKLISTMODELWORKERAGENT_P_H
-
+#endif

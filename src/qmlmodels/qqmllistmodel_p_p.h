@@ -52,6 +52,7 @@
 //
 
 #include "qqmllistmodel_p.h"
+#include <private/qtqmlmodelsglobal_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlopenmetaobject_p.h>
 #include <private/qv4qobjectwrapper_p.h>

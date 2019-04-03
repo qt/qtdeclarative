@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qqmldelegatecomponent_p.h"
-#include <QtQml/private/qqmladaptormodel_p.h>
+#include <QtQmlModels/private/qqmladaptormodel_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -53,12 +53,12 @@
 
 #include <QtCore/QObject>
 #include <QtQml/qqml.h>
-#include <QtQml/private/qtqmlglobal_p.h>
+#include <QtQmlModels/private/qtqmlmodelsglobal_p.h>
 #include <QtQml/qjsvalue.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_AUTOTEST_EXPORT QQmlTableModelColumn : public QObject
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlTableModelColumn : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QJSValue display READ display WRITE setDisplay NOTIFY displayChanged FINAL)

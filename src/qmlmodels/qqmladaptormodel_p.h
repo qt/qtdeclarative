@@ -53,10 +53,12 @@
 
 #include <QtCore/qabstractitemmodel.h>
 
-#include "private/qqmllistaccessor_p.h"
 #include <private/qqmlglobal_p.h>
+#include <private/qqmllistaccessor_p.h>
+#include <private/qtqmlmodelsglobal_p.h>
 #include <private/qqmlguard_p.h>
 #include <private/qqmlnullablevalue_p.h>
+#include <private/qqmlpropertycache_p.h>
 
 QT_REQUIRE_CONFIG(qml_delegate_model);
 
@@ -68,7 +70,7 @@ class QQmlDelegateModel;
 class QQmlDelegateModelItem;
 class QQmlDelegateModelItemMetaType;
 
-class Q_QML_PRIVATE_EXPORT QQmlAdaptorModel : public QQmlStrongJSQObjectReference<QObject>
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlAdaptorModel : public QQmlStrongJSQObjectReference<QObject>
 {
 public:
     class Accessors

@@ -38,8 +38,11 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlextensionplugin.h>
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include <QtQml/private/qqmlengine_p.h>
-#include <QtQml/private/qqmlmodelsmodule_p.h>
+#include <QtQmlModels/private/qqmlmodelsmodule_p.h>
+#endif // QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 
 #include <private/qtquick2_p.h>
 

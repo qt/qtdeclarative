@@ -43,7 +43,7 @@
 #include <QtCore/QTimer>
 
 #include <QtQml/private/qqmlincubator_p.h>
-#include <QtQml/private/qqmlchangeset_p.h>
+#include <QtQmlModels/private/qqmlchangeset_p.h>
 #include <QtQml/private/qqmlcomponent_p.h>
 
 QT_BEGIN_NAMESPACE

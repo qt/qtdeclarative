@@ -4,7 +4,9 @@ include($$OUT_PWD/qml/qtqml-config.pri)
 include($$OUT_PWD/quick/qtquick-config.pri)
 QT_FOR_CONFIG += qml qml-private quick-private
 SUBDIRS += \
-    qml
+    qml \
+    qmlmodels
+
 
 qtHaveModule(gui):qtConfig(qml-animation) {
     SUBDIRS += \

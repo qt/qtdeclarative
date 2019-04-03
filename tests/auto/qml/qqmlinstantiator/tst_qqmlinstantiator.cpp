@@ -31,7 +31,7 @@
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
-#include <QtQml/private/qqmlinstantiator_p.h>
+#include <QtQmlModels/private/qqmlinstantiator_p.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlincubator.h>
 #include "../../shared/util.h"

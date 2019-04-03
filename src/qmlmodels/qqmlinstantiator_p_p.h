@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2016 Research In Motion.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the plugins of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,55 +37,62 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/private/qqmlengine_p.h>
-#include <QtQml/private/qqmlcomponentattached_p.h>
-#include <QtQml/private/qqmlbind_p.h>
+#ifndef QQMLINSTANTIATOR_P_P_H
+#define QQMLINSTANTIATOR_P_P_H
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-#include <QtQmlModels/private/qqmlmodelsmodule_p.h>
-#endif
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include "qqmlinstantiator_p.h"
+#include <QObject>
+#include <private/qobject_p.h>
+#include <private/qqmlchangeset_p.h>
+#include <private/qqmlobjectmodel_p.h>
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmlmodule QtQml 2.\QtMinorVersion
-    \title Qt QML Base Types
-    \ingroup qmlmodules
-    \brief Provides basic QML types
-    \since 5.0
-
-    This QML module contains basic QML types.
-
-    To use the types in this module, import the module with the following line:
-
-    \qml \QtMinorVersion
-    import QtQml 2.\1
-    \endqml
-*/
-
-//![class decl]
-class QtQmlPlugin : public QQmlExtensionPlugin
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlInstantiatorPrivate : public QObjectPrivate
 {
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_DECLARE_PUBLIC(QQmlInstantiator)
+
 public:
-    QtQmlPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQml"));
-        QQmlEnginePrivate::defineModule();
+    QQmlInstantiatorPrivate();
+    ~QQmlInstantiatorPrivate();
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-        QQmlModelsModule::registerQmlTypes();
+    void clear();
+    void regenerate();
+#if QT_CONFIG(qml_delegate_model)
+    void makeModel();
 #endif
+    void _q_createdItem(int, QObject *);
+    void _q_modelUpdated(const QQmlChangeSet &, bool);
+    QObject *modelObject(int index, bool async);
 
-        // Auto-increment the import to stay in sync with ALL future QtQml minor versions from 5.11 onward
-        qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
-    }
+    static QQmlInstantiatorPrivate *get(QQmlInstantiator *instantiator) { return instantiator->d_func(); }
+    static const QQmlInstantiatorPrivate *get(const QQmlInstantiator *instantiator) { return instantiator->d_func(); }
+
+    bool componentComplete:1;
+    bool effectiveReset:1;
+    bool active:1;
+    bool async:1;
+#if QT_CONFIG(qml_delegate_model)
+    bool ownModel:1;
+#endif
+    int requestedIndex;
+    QVariant model;
+    QQmlInstanceModel *instanceModel;
+    QQmlComponent *delegate;
+    QVector<QPointer<QObject> > objects;
 };
-//![class decl]
 
 QT_END_NAMESPACE
 
-#include "plugin.moc"
+#endif // QQMLCREATOR_P_P_H
