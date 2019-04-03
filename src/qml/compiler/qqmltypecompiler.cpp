@@ -44,7 +44,6 @@
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlcomponent_p.h>
-#include <private/qqmldelegatecomponent_p.h>
 
 #define COMPILE_EXCEPTION(token, desc) \
     { \
@@ -781,6 +780,23 @@ QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(QQmlTypeCompiler *t
 {
 }
 
+static bool isUsableComponent(const QMetaObject *metaObject)
+{
+    // The metaObject is a component we're interested in if it either is a QQmlComponent itself
+    // or if any of its parents is a QQmlAbstractDelegateComponent. We don't want to include
+    // qqmldelegatecomponent_p.h because it belongs to QtQmlModels.
+
+    if (metaObject == &QQmlComponent::staticMetaObject)
+        return true;
+
+    for (; metaObject; metaObject = metaObject->superClass()) {
+        if (qstrcmp(metaObject->className(), "QQmlAbstractDelegateComponent") == 0)
+            return true;
+    }
+
+    return false;
+}
+
 void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlIR::Object *obj, QQmlPropertyCache *propertyCache)
 {
     QmlIR::PropertyResolver propertyResolver(propertyCache);
@@ -802,15 +818,9 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
             firstMetaObject = tr->type.metaObject();
         else if (tr->compilationUnit)
             firstMetaObject = tr->compilationUnit->rootPropertyCache()->firstCppMetaObject();
-        // 1: test for QQmlComponent
-        if (firstMetaObject && firstMetaObject == &QQmlComponent::staticMetaObject)
+        if (isUsableComponent(firstMetaObject))
             continue;
-        // 2: test for QQmlAbstractDelegateComponent
-        while (firstMetaObject && firstMetaObject != &QQmlAbstractDelegateComponent::staticMetaObject)
-            firstMetaObject = firstMetaObject->superClass();
-        if (firstMetaObject)
-            continue;
-        // if here, not a QQmlComponent or a QQmlAbstractDelegateComponent, so needs wrapping
+        // if here, not a QQmlComponent, so needs wrapping
 
         QQmlPropertyData *pd = nullptr;
         if (binding->propertyNameIndex != quint32(0)) {
