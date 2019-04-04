@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV4SEQUENCEWRAPPER_P_H
-#define QV4SEQUENCEWRAPPER_P_H
+#ifndef QQMLWORKERSCRIPTMODULE_P_H
+#define QQMLWORKERSCRIPTMODULE_P_H
 
 //
 //  W A R N I N G
@@ -51,39 +51,19 @@
 // We mean it.
 //
 
-#include <QtCore/qglobal.h>
-#include <QtCore/qvariant.h>
-
-#include "qv4value_p.h"
-#include "qv4object_p.h"
-#include "qv4context_p.h"
-#include "qv4string_p.h"
-
-QT_REQUIRE_CONFIG(qml_sequence_object);
+#include <private/qtqmlworkerscriptglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-namespace QV4 {
-
-struct Q_QML_PRIVATE_EXPORT SequencePrototype : public QV4::Object
+class Q_QMLWORKERSCRIPT_PRIVATE_EXPORT QQmlWorkerScriptModule
 {
-    V4_PROTOTYPE(arrayPrototype)
-    void init();
-
-    static ReturnedValue method_valueOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_sort(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-
-    static bool isSequenceType(int sequenceTypeId);
-    static ReturnedValue newSequence(QV4::ExecutionEngine *engine, int sequenceTypeId, QObject *object, int propertyIndex, bool readOnly, bool *succeeded);
-    static ReturnedValue fromVariant(QV4::ExecutionEngine *engine, const QVariant& v, bool *succeeded);
-    static int metaTypeForSequence(const Object *object);
-    static QVariant toVariant(Object *object);
-    static QVariant toVariant(const Value &array, int typeHint, bool *succeeded);
-    static void* getRawContainerPtr(const Object *object, int typeHint);
+public:
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    static void registerQuickTypes();
+#endif
+    static void defineModule();
 };
-
-}
 
 QT_END_NAMESPACE
 
-#endif // QV4SEQUENCEWRAPPER_P_H
+#endif // QQMLWORKERSCRIPTMODULE_P_H

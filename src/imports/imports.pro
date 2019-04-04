@@ -1,4 +1,5 @@
 TEMPLATE = subdirs
+QT_FOR_CONFIG += qml-private
 
 SUBDIRS += \
     builtins \
@@ -6,6 +7,7 @@ SUBDIRS += \
     models \
     labsmodels
 
+qtConfig(qml-worker-script): SUBDIRS += workerscript
 qtConfig(thread): SUBDIRS += folderlistmodel
 qtHaveModule(sql): SUBDIRS += localstorage
 qtConfig(settings): SUBDIRS += settings

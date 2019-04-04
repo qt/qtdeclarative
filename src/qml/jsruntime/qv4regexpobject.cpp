@@ -198,13 +198,6 @@ QString RegExpObject::toString() const
     return p;
 }
 
-QString RegExpObject::source() const
-{
-    Scope scope(engine());
-    ScopedValue s(scope, get(scope.engine->id_source()));
-    return s->toQString();
-}
-
 ReturnedValue RegExpObject::builtinExec(ExecutionEngine *engine, const String *str)
 {
     QString s = str->toQString();

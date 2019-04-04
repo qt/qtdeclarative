@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the plugins of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,53 +37,45 @@
 **
 ****************************************************************************/
 
-#ifndef QV4SEQUENCEWRAPPER_P_H
-#define QV4SEQUENCEWRAPPER_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtCore/qglobal.h>
-#include <QtCore/qvariant.h>
-
-#include "qv4value_p.h"
-#include "qv4object_p.h"
-#include "qv4context_p.h"
-#include "qv4string_p.h"
-
-QT_REQUIRE_CONFIG(qml_sequence_object);
+#include <QtQmlWorkerScript/private/qqmlworkerscriptmodule_p.h>
+#include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
-namespace QV4 {
+/*!
+    \qmlmodule QtQml.WorkerScript 2.\QtMinorVersion
+    \title Qt QML WorkerScript QML Types
+    \ingroup qmlmodules
+    \brief Provides QML types for worker scripts
+    \since 5.14
 
-struct Q_QML_PRIVATE_EXPORT SequencePrototype : public QV4::Object
+    This QML module contains types for using worker scripts.
+
+    To use the types in this module, import the module with the following line:
+
+    \qml \QtMinorVersion
+    import QtQml.WorkerScript 2.\1
+    \endqml
+*/
+
+class QtQmlWorkerScriptPlugin : public QQmlExtensionPlugin
 {
-    V4_PROTOTYPE(arrayPrototype)
-    void init();
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+public:
+    QtQmlWorkerScriptPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
+    void registerTypes(const char *uri) override
+    {
+        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQml.WorkerScript"));
 
-    static ReturnedValue method_valueOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_sort(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+        QQmlWorkerScriptModule::defineModule();
 
-    static bool isSequenceType(int sequenceTypeId);
-    static ReturnedValue newSequence(QV4::ExecutionEngine *engine, int sequenceTypeId, QObject *object, int propertyIndex, bool readOnly, bool *succeeded);
-    static ReturnedValue fromVariant(QV4::ExecutionEngine *engine, const QVariant& v, bool *succeeded);
-    static int metaTypeForSequence(const Object *object);
-    static QVariant toVariant(Object *object);
-    static QVariant toVariant(const Value &array, int typeHint, bool *succeeded);
-    static void* getRawContainerPtr(const Object *object, int typeHint);
+        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
+        qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
+    }
 };
-
-}
 
 QT_END_NAMESPACE
 
-#endif // QV4SEQUENCEWRAPPER_P_H
+#include "plugin.moc"

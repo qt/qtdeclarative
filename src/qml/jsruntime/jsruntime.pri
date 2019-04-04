@@ -42,7 +42,6 @@ SOURCES += \
     $$PWD/qv4objectiterator.cpp \
     $$PWD/qv4regexp.cpp \
     $$PWD/qv4runtimecodegen.cpp \
-    $$PWD/qv4serialize.cpp \
     $$PWD/qv4script.cpp \
     $$PWD/qv4symbol.cpp \
     $$PWD/qv4setobject.cpp \
@@ -109,7 +108,6 @@ HEADERS += \
     $$PWD/qv4property_p.h \
     $$PWD/qv4objectiterator_p.h \
     $$PWD/qv4regexp_p.h \
-    $$PWD/qv4serialize_p.h \
     $$PWD/qv4script_p.h \
     $$PWD/qv4symbol_p.h \
     $$PWD/qv4setobject_p.h \

@@ -87,9 +87,6 @@
 #include <private/qqmltimer_p.h>
 #endif
 #include <private/qqmlplatform_p.h>
-#if QT_CONFIG(qml_worker_script)
-#include <private/qquickworkerscript_p.h>
-#endif
 #include <private/qqmlloggingcategory_p.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
@@ -239,9 +236,6 @@ void QQmlEnginePrivate::registerQuickTypes()
 #endif
     qmlRegisterType<QQmlLoggingCategory>(uri, 2, 8, "LoggingCategory");
     qmlRegisterType<QQmlLoggingCategory, 1>(uri, 2, 12, "LoggingCategory");
-#if QT_CONFIG(qml_worker_script)
-    qmlRegisterType<QQuickWorkerScript>(uri, 2, 0, "WorkerScript");
-#endif
 #if QT_CONFIG(qml_locale)
     qmlRegisterUncreatableType<QQmlLocale>(uri, 2, 0, "Locale", QQmlEngine::tr("Locale cannot be instantiated. Use Qt.locale()"));
 #endif
@@ -967,16 +961,6 @@ void QQmlEnginePrivate::init()
 
     rootContext = new QQmlContext(q,true);
 }
-
-#if QT_CONFIG(qml_worker_script)
-QQuickWorkerScriptEngine *QQmlEnginePrivate::getWorkerScriptEngine()
-{
-    Q_Q(QQmlEngine);
-    if (!workerScriptEngine)
-        workerScriptEngine = new QQuickWorkerScriptEngine(q);
-    return workerScriptEngine;
-}
-#endif
 
 /*!
   \class QQmlEngine

@@ -7,6 +7,8 @@ SUBDIRS += \
     qml \
     qmlmodels
 
+qtConfig(qml-worker-script): \
+    SUBDIRS += qmlworkerscript
 
 qtHaveModule(gui):qtConfig(qml-animation) {
     SUBDIRS += \

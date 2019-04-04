@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qtqmlglobal_p.h"
+#include "qtqmlworkerscriptglobal_p.h"
 #include "qquickworkerscript_p.h"
 #include <private/qqmlengine_p.h>
 #include <private/qqmlexpression_p.h>
@@ -618,7 +618,11 @@ QQuickWorkerScriptEngine *QQuickWorkerScript::engine()
             return nullptr;
         }
 
-        m_engine = QQmlEnginePrivate::get(engine)->getWorkerScriptEngine();
+        QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
+        if (enginePrivate->workerScriptEngine == nullptr)
+            enginePrivate->workerScriptEngine = new QQuickWorkerScriptEngine(engine);
+        m_engine = qobject_cast<QQuickWorkerScriptEngine *>(enginePrivate->workerScriptEngine);
+        Q_ASSERT(m_engine);
         m_scriptId = m_engine->registerWorkerScript(this);
 
         if (m_source.isValid())

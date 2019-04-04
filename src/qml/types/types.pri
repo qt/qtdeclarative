@@ -8,13 +8,6 @@ HEADERS += \
     $$PWD/qqmlconnections_p.h \
     $$PWD/qqmlmodelindexvaluetype_p.h
 
-qtConfig(qml-worker-script) {
-    SOURCES += \
-        $$PWD/qquickworkerscript.cpp
-    HEADERS += \
-        $$PWD/qquickworkerscript_p.h
-}
-
 qtConfig(qml-animation) {
     SOURCES += \
         $$PWD/qqmltimer.cpp

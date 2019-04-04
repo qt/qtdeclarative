@@ -94,7 +94,6 @@ class QQmlTypeNameCache;
 class QQmlComponentAttached;
 class QQmlCleanup;
 class QQmlDelayedError;
-class QQuickWorkerScriptEngine;
 class QQmlObjectCreator;
 class QDir;
 class QQmlIncubator;
@@ -154,8 +153,7 @@ public:
     QV4::ExecutionEngine *v4engine() const { return q_func()->handle(); }
 
 #if QT_CONFIG(qml_worker_script)
-    QQuickWorkerScriptEngine *getWorkerScriptEngine();
-    QQuickWorkerScriptEngine *workerScriptEngine;
+    QThread *workerScriptEngine;
 #endif
 
     QUrl baseUrl;
