@@ -1704,7 +1704,6 @@ void QQuickTableViewPrivate::scheduleRebuildTable(RebuildOptions options) {
         return;
     }
 
-    rebuildScheduled = true;
     scheduledRebuildOptions |= options;
     q_func()->polish();
 }
@@ -1758,7 +1757,7 @@ void QQuickTableViewPrivate::updatePolish()
 
 void QQuickTableViewPrivate::fixup(QQuickFlickablePrivate::AxisData &data, qreal minExtent, qreal maxExtent)
 {
-    if (rebuildScheduled || rebuildState != RebuildState::Done)
+    if (scheduledRebuildOptions || rebuildState != RebuildState::Done)
         return;
 
     QQuickFlickablePrivate::fixup(data, minExtent, maxExtent);
@@ -1850,13 +1849,12 @@ void QQuickTableViewPrivate::syncWithPendingChanges()
 
 void QQuickTableViewPrivate::syncRebuildOptions()
 {
-    if (!rebuildScheduled)
+    if (!scheduledRebuildOptions)
         return;
 
     rebuildState = RebuildState::Begin;
     rebuildOptions = scheduledRebuildOptions;
     scheduledRebuildOptions = RebuildOption::None;
-    rebuildScheduled = false;
 
     if (loadedItems.isEmpty()) {
         // If we have no items from before, we cannot just rebuild the viewport, but need
@@ -2245,7 +2243,7 @@ void QQuickTableView::viewportMoved(Qt::Orientations orientation)
         d->scheduleRebuildTable(options);
     }
 
-    if (d->rebuildScheduled) {
+    if (d->scheduledRebuildOptions) {
         // No reason to do anything, since we're about to rebuild the whole table anyway.
         // Besides, calling updatePolish, which will start the rebuild, can easily cause
         // binding loops to happen since we usually end up modifying the geometry of the

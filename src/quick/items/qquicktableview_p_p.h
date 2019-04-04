@@ -249,7 +249,6 @@ public:
     bool columnRowPositionsInvalid = false;
     bool layoutWarningIssued = false;
     bool polishing = false;
-    bool rebuildScheduled = true;
 
     QJSValue rowHeightProvider;
     QJSValue columnWidthProvider;

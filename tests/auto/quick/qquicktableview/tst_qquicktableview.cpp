@@ -601,8 +601,7 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
 
     // Since we move the viewport more than a page, tableview
     // will jump to the new position and do a rebuild.
-    QVERIFY(tableViewPrivate->polishScheduled);
-    QVERIFY(tableViewPrivate->rebuildScheduled);
+    QVERIFY(tableViewPrivate->scheduledRebuildOptions);
     WAIT_UNTIL_POLISHED;
 
     // Check that the average cell size is now matching the
@@ -654,7 +653,7 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
     // Since we move the viewport more than a page, tableview
     // will jump to the new position and do a rebuild.
     QVERIFY(tableViewPrivate->polishScheduled);
-    QVERIFY(tableViewPrivate->rebuildScheduled);
+    QVERIFY(tableViewPrivate->scheduledRebuildOptions);
     WAIT_UNTIL_POLISHED;
 
     // We should now have the same content width/height as when we started
@@ -689,7 +688,6 @@ void tst_QQuickTableView::checkPageFlicking()
     QCOMPARE(tableViewPrivate->averageEdgeSize.width(), cellWidth);
     QCOMPARE(tableViewPrivate->averageEdgeSize.height(), cellHeight);
 
-    QVERIFY(!tableViewPrivate->rebuildScheduled);
     QCOMPARE(tableViewPrivate->scheduledRebuildOptions, QQuickTableViewPrivate::RebuildOption::None);
 
     // Flick 5000 columns to the right, and check that this triggers a
@@ -699,7 +697,6 @@ void tst_QQuickTableView::checkPageFlicking()
     const qreal flickToColumnInPixels = ((cellWidth + columnSpacing) * flickToColumn) - columnSpacing;
     tableView->setContentX(flickToColumnInPixels);
 
-    QVERIFY(tableViewPrivate->rebuildScheduled);
     QVERIFY(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::ViewportOnly);
     QVERIFY(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftColumn);
     QVERIFY(!(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftRow));
@@ -721,7 +718,6 @@ void tst_QQuickTableView::checkPageFlicking()
     const qreal flickToRowInPixels = ((cellHeight + rowSpacing) * flickToRow) - rowSpacing;
     tableView->setContentY(flickToRowInPixels);
 
-    QVERIFY(tableViewPrivate->rebuildScheduled);
     QVERIFY(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::ViewportOnly);
     QVERIFY(!(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftColumn));
     QVERIFY(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftRow);
@@ -1942,7 +1938,7 @@ void tst_QQuickTableView::checkChangingModelFromDelegate()
 
     // And since the QML code tried to add another row as well, we
     // expect rebuildScheduled to be true, and a polish event to be pending.
-    QCOMPARE(tableViewPrivate->rebuildScheduled, true);
+    QVERIFY(tableViewPrivate->scheduledRebuildOptions);
     QCOMPARE(tableViewPrivate->polishScheduled, true);
     WAIT_UNTIL_POLISHED;
 
@@ -2025,7 +2021,7 @@ void tst_QQuickTableView::checkTableviewInsideAsyncLoader()
     QCOMPARE(loader->status(), QQuickLoader::Ready);
 
     // Check that TableView has finished building
-    QCOMPARE(tableViewPrivate->rebuildScheduled, false);
+    QVERIFY(!tableViewPrivate->scheduledRebuildOptions);
     QCOMPARE(tableViewPrivate->rebuildState, QQuickTableViewPrivate::RebuildState::Done);
 
     // Check that all expected delegate items have been loaded
