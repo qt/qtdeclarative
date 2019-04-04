@@ -1453,7 +1453,7 @@ ReturnedValue Runtime::method_callProperty(ExecutionEngine *engine, Value *base,
 
     if (!f) {
         QString error = QStringLiteral("Property '%1' of object %2 is not a function")
-                .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]->toQString(),
+                .arg(name->toQString(),
                      base->toQStringNoThrow());
         return engine->throwTypeError(error);
     }
