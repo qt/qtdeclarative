@@ -100,7 +100,7 @@ public:
     }
 
 Q_SIGNALS:
-    void emitFollowParticles(QQmlV4Handle particles, QQmlV4Handle followed);
+    void emitFollowParticles(const QJSValue &particles, const QJSValue &followed);
 
     void particlesPerParticlePerSecondChanged(int arg);
 

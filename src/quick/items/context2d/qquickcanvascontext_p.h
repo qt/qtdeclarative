@@ -56,7 +56,7 @@
 QT_REQUIRE_CONFIG(quick_canvas);
 
 #include <QtQuick/qquickitem.h>
-#include <private/qv8engine_p.h>
+#include <QtQml/private/qv4value_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -80,6 +80,7 @@ public:
     virtual void prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth, bool antialiasing);
     virtual void flush();
 
+    virtual QV4::ExecutionEngine *v4Engine() const = 0;
     virtual void setV4Engine(QV4::ExecutionEngine *engine) = 0;
     virtual QV4::ReturnedValue v4value() const = 0;
 

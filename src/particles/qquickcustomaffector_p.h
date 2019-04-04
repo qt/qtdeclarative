@@ -108,7 +108,7 @@ public:
 
 
 Q_SIGNALS:
-    void affectParticles(QQmlV4Handle particles, qreal dt);
+    void affectParticles(const QJSValue &particles, qreal dt);
 
     void positionChanged(QQuickDirection * arg);
 

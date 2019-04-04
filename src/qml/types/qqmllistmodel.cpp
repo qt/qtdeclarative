@@ -2545,7 +2545,7 @@ void QQmlListModel::append(QQmlV4Function *args)
 
     \sa append()
 */
-QQmlV4Handle QQmlListModel::get(int index) const
+QJSValue QQmlListModel::get(int index) const
 {
     QV4::Scope scope(engine());
     QV4::ScopedValue result(scope, QV4::Value::undefinedValue());
@@ -2568,7 +2568,7 @@ QQmlV4Handle QQmlListModel::get(int index) const
         }
     }
 
-    return QQmlV4Handle(result);
+    return QJSValue(engine(), result->asReturnedValue());
 }
 
 /*!
@@ -2587,10 +2587,10 @@ QQmlV4Handle QQmlListModel::get(int index) const
 
     \sa append()
 */
-void QQmlListModel::set(int index, const QQmlV4Handle &handle)
+void QQmlListModel::set(int index, const QJSValue &value)
 {
     QV4::Scope scope(engine());
-    QV4::ScopedObject object(scope, handle);
+    QV4::ScopedObject object(scope, QJSValuePrivate::getValue(&value));
 
     if (!object) {
         qmlWarning(this) << tr("set: value is not an object");

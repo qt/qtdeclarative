@@ -42,7 +42,6 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlvmemetaobject_p.h>
-#include <private/qv8engine_p.h>
 
 #include <private/qmetaobject_p.h>
 #include <private/qmetaobjectbuilder_p.h>
@@ -99,8 +98,6 @@ static void flagsForPropertyType(int propType, QQmlPropertyData::Flags &flags)
         flags.type = QQmlPropertyData::Flags::QmlBindingType;
     } else if (propType == qMetaTypeId<QJSValue>()) {
         flags.type = QQmlPropertyData::Flags::QJSValueType;
-    } else if (propType == qMetaTypeId<QQmlV4Handle>()) {
-        flags.type = QQmlPropertyData::Flags::V4HandleType;
     } else {
         QQmlMetaType::TypeCategory cat = QQmlMetaType::typeCategory(propType);
 

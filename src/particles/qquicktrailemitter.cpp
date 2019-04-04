@@ -40,6 +40,7 @@
 #include "qquicktrailemitter_p.h"
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
+#include <private/qjsvalue_p.h>
 #include <QRandomGenerator>
 #include <cmath>
 QT_BEGIN_NAMESPACE
@@ -127,7 +128,8 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
 
 bool QQuickTrailEmitter::isEmitFollowConnected()
 {
-    IS_SIGNAL_CONNECTED(this, QQuickTrailEmitter, emitFollowParticles, (QQmlV4Handle,QQmlV4Handle));
+    IS_SIGNAL_CONNECTED(this, QQuickTrailEmitter, emitFollowParticles,
+                        (const QJSValue &, const QJSValue &));
 }
 
 void QQuickTrailEmitter::recalcParticlesPerSecond(){
@@ -275,10 +277,12 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
             for (int i=0; i<toEmit.size(); i++)
                 array->put(i, (v = toEmit[i]->v4Value(m_system)));
 
+            QJSValue particles;
+            QJSValuePrivate::setValue(&particles, v4, array);
             if (isEmitFollowConnected())
-                emitFollowParticles(QQmlV4Handle(array), d->v4Value(m_system));//A chance for many arbitrary JS changes
+                emit emitFollowParticles(particles, QJSValue(v4, d->v4Value(m_system)));//A chance for many arbitrary JS changes
             else if (isEmitConnected())
-                emitParticles(QQmlV4Handle(array));//A chance for arbitrary JS changes
+                emit emitParticles(particles);//A chance for arbitrary JS changes
         }
         m_lastEmission[d->index] = pt;
     }

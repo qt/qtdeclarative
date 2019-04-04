@@ -39,8 +39,6 @@
 
 #include "qqmlxmlhttprequest_p.h"
 
-#include <private/qv8engine_p.h>
-
 #include "qqmlengine.h"
 #include "qqmlengine_p.h"
 #include <private/qqmlrefcount_p.h>

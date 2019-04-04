@@ -51,7 +51,6 @@
 // We mean it.
 //
 
-#include <private/qv8engine_p.h>
 #include <private/qv4persistent_p.h>
 #include <private/qv4value_p.h>
 
@@ -63,7 +62,7 @@ class QQuickV4ParticleData {
 public:
     QQuickV4ParticleData(QV4::ExecutionEngine*, QQuickParticleData*, QQuickParticleSystem *system);
     ~QQuickV4ParticleData();
-    QQmlV4Handle v4Value() const;
+    QV4::ReturnedValue v4Value() const;
 private:
     QV4::PersistentValue m_v4Value;
 };

@@ -50,7 +50,6 @@
 #include <private/qqmlvaluetypewrapper_p.h>
 #include <private/qqmllistwrapper_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
-#include <private/qv8engine_p.h>
 
 #include <private/qv4arraybuffer_p.h>
 #include <private/qv4functionobject_p.h>
@@ -165,10 +164,6 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
         double v = 0;
         property.readProperty(object, &v);
         return QV4::Encode(v);
-    } else if (property.isV4Handle()) {
-        QQmlV4Handle handle;
-        property.readProperty(object, &handle);
-        return handle;
     } else if (property.propType() == qMetaTypeId<QJSValue>()) {
         QJSValue v;
         property.readProperty(object, &v);
@@ -1194,15 +1189,14 @@ DEFINE_OBJECT_VTABLE(QObjectWrapper);
 
 namespace {
 
-template<typename A, typename B, typename C, typename D, typename E,
-         typename F, typename G, typename H>
-class MaxSizeOf8 {
+template<typename A, typename B, typename C, typename D, typename E, typename F, typename G>
+class MaxSizeOf7 {
     template<typename Z, typename X>
     struct SMax {
         char dummy[sizeof(Z) > sizeof(X) ? sizeof(Z) : sizeof(X)];
     };
 public:
-    static const size_t Size = sizeof(SMax<A, SMax<B, SMax<C, SMax<D, SMax<E, SMax<F, SMax<G, H> > > > > > >);
+    static const size_t Size = sizeof(SMax<A, SMax<B, SMax<C, SMax<D, SMax<E, SMax<F, G> > > > > >);
 };
 
 struct CallArgument {
@@ -1235,14 +1229,13 @@ private:
         std::vector<QUrl> *stdVectorQUrlPtr;
         std::vector<QModelIndex> *stdVectorQModelIndexPtr;
 
-        char allocData[MaxSizeOf8<QVariant,
-                                QString,
-                                QList<QObject *>,
-                                QJSValue,
-                                QQmlV4Handle,
-                                QJsonArray,
-                                QJsonObject,
-                                QJsonValue>::Size];
+        char allocData[MaxSizeOf7<QVariant,
+                                  QString,
+                                  QList<QObject *>,
+                                  QJSValue,
+                                  QJsonArray,
+                                  QJsonObject,
+                                  QJsonValue>::Size];
         qint64 q_for_alignment;
     };
 
@@ -1253,7 +1246,6 @@ private:
         QVariant *qvariantPtr;
         QList<QObject *> *qlistPtr;
         QJSValue *qjsValuePtr;
-        QQmlV4Handle *handlePtr;
         QJsonArray *jsonArrayPtr;
         QJsonObject *jsonObjectPtr;
         QJsonValue *jsonValuePtr;
@@ -1725,9 +1717,6 @@ void CallArgument::initAsType(int callType)
     } else if (callType == qMetaTypeId<QList<QObject *> >()) {
         type = callType;
         qlistPtr = new (&allocData) QList<QObject *>();
-    } else if (callType == qMetaTypeId<QQmlV4Handle>()) {
-        type = callType;
-        handlePtr = new (&allocData) QQmlV4Handle;
     } else if (callType == QMetaType::QJsonArray) {
         type = callType;
         jsonArrayPtr = new (&allocData) QJsonArray();
@@ -1828,9 +1817,6 @@ bool CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
                     return false;
             }
         }
-    } else if (callType == qMetaTypeId<QQmlV4Handle>()) {
-        handlePtr = new (&allocData) QQmlV4Handle(value.asReturnedValue());
-        type = callType;
     } else if (callType == QMetaType::QJsonArray) {
         QV4::ScopedArrayObject a(scope, value);
         jsonArrayPtr = new (&allocData) QJsonArray(QV4::JsonObject::toJsonArray(a));
@@ -1955,8 +1941,6 @@ QV4::ReturnedValue CallArgument::toValue(QV4::ExecutionEngine *engine)
             array->arrayPut(ii, (v = QV4::QObjectWrapper::wrap(scope.engine, list.at(ii))));
         array->setArrayLengthUnchecked(list.count());
         return array.asReturnedValue();
-    } else if (type == qMetaTypeId<QQmlV4Handle>()) {
-        return *handlePtr;
     } else if (type == QMetaType::QJsonArray) {
         return QV4::JsonObject::fromJsonArray(scope.engine, *jsonArrayPtr);
     } else if (type == QMetaType::QJsonObject) {

@@ -647,12 +647,10 @@ void QQuickWorkerScript::componentComplete()
 bool QQuickWorkerScript::event(QEvent *event)
 {
     if (event->type() == (QEvent::Type)WorkerDataEvent::WorkerData) {
-        QQmlEngine *engine = qmlEngine(this);
-        if (engine) {
+        if (QQmlEngine *engine = qmlEngine(this)) {
+            QV4::ExecutionEngine *v4 = engine->handle();
             WorkerDataEvent *workerEvent = static_cast<WorkerDataEvent *>(event);
-            QV4::Scope scope(engine->handle());
-            QV4::ScopedValue value(scope, QV4::Serialize::deserialize(workerEvent->data(), scope.engine));
-            emit message(QQmlV4Handle(value));
+            emit message(QJSValue(v4, QV4::Serialize::deserialize(workerEvent->data(), v4)));
         }
         return true;
     } else if (event->type() == (QEvent::Type)WorkerErrorEvent::WorkerError) {

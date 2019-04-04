@@ -59,7 +59,6 @@
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qstringlist.h>
 
-#include <private/qv8engine_p.h>
 #include <private/qqmlglobal_p.h>
 
 QT_REQUIRE_CONFIG(qml_delegate_model);
@@ -179,7 +178,7 @@ public:
     bool defaultInclude() const;
     void setDefaultInclude(bool include);
 
-    Q_INVOKABLE QQmlV4Handle get(int index);
+    Q_INVOKABLE QJSValue get(int index);
 
 public Q_SLOTS:
     void insert(QQmlV4Function *);
@@ -195,7 +194,7 @@ Q_SIGNALS:
     void countChanged();
     void nameChanged();
     void defaultIncludeChanged();
-    void changed(const QQmlV4Handle &removed, const QQmlV4Handle &inserted);
+    void changed(const QJSValue &removed, const QJSValue &inserted);
 private:
     Q_DECLARE_PRIVATE(QQmlDelegateModelGroup)
 };

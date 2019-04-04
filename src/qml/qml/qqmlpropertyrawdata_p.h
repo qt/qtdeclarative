@@ -74,7 +74,7 @@ public:
             QListType            = 4, // Property type is a QML list
             QmlBindingType       = 5, // Property type is a QQmlBinding*
             QJSValueType         = 6, // Property type is a QScriptValue
-            V4HandleType         = 7, // Property type is a QQmlV4Handle
+                                      // Gap, used to be V4HandleType
             VarPropertyType      = 8, // Property type is a "var" property of VMEMO
             QVariantType         = 9  // Property is a QVariant
         };
@@ -143,7 +143,6 @@ public:
     bool isQList() const { return _flags.type == Flags::QListType; }
     bool isQmlBinding() const { return _flags.type == Flags::QmlBindingType; }
     bool isQJSValue() const { return _flags.type == Flags::QJSValueType; }
-    bool isV4Handle() const { return _flags.type == Flags::V4HandleType; }
     bool isVarProperty() const { return _flags.type == Flags::VarPropertyType; }
     bool isQVariant() const { return _flags.type == Flags::QVariantType; }
     bool isVMEFunction() const { return _flags.isVMEFunction; }
@@ -330,7 +329,6 @@ void QQmlPropertyRawData::Flags::copyPropertyTypeFlags(QQmlPropertyRawData::Flag
     case QListType:
     case QmlBindingType:
     case QJSValueType:
-    case V4HandleType:
     case QVariantType:
         type = from.type;
     }

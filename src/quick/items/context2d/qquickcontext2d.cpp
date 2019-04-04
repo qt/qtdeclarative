@@ -56,7 +56,6 @@
 #include <private/qquickimage_p_p.h>
 
 #include <qqmlinfo.h>
-#include <private/qv8engine_p.h>
 
 #include <qqmlengine.h>
 #include <private/qv4domerrors_p.h>
@@ -4550,6 +4549,11 @@ void QQuickContext2D::reset()
     m_stateStack.push(newState);
     popState();
     m_buffer->clearRect(QRectF(0, 0, m_canvas->width(), m_canvas->height()));
+}
+
+QV4::ExecutionEngine *QQuickContext2D::v4Engine() const
+{
+    return m_v4engine;
 }
 
 void QQuickContext2D::setV4Engine(QV4::ExecutionEngine *engine)

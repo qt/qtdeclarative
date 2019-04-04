@@ -56,9 +56,9 @@
 QT_REQUIRE_CONFIG(quick_canvas);
 
 #include <QtQuick/qquickitem.h>
-#include <private/qv8engine_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <QtCore/QThread>
+#include <QtCore/qmutex.h>
 #include <QtGui/QImage>
 
 QT_BEGIN_NAMESPACE
@@ -93,7 +93,7 @@ class QQuickCanvasItem : public QQuickItem
 
     Q_PROPERTY(bool available READ isAvailable NOTIFY availableChanged)
     Q_PROPERTY(QString contextType READ contextType WRITE setContextType NOTIFY contextTypeChanged)
-    Q_PROPERTY(QQmlV4Handle context READ context NOTIFY contextChanged)
+    Q_PROPERTY(QJSValue context READ context NOTIFY contextChanged)
     Q_PROPERTY(QSizeF canvasSize READ canvasSize WRITE setCanvasSize NOTIFY canvasSizeChanged)
     Q_PROPERTY(QSize tileSize READ tileSize WRITE setTileSize NOTIFY tileSizeChanged)
     Q_PROPERTY(QRectF canvasWindow READ canvasWindow WRITE setCanvasWindow NOTIFY canvasWindowChanged)
@@ -122,7 +122,7 @@ public:
     QString contextType() const;
     void setContextType(const QString &contextType);
 
-    QQmlV4Handle context() const;
+    QJSValue context() const;
 
     QSizeF canvasSize() const;
     void setCanvasSize(const QSizeF &);
