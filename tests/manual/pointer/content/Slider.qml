@@ -51,8 +51,8 @@ Item {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.margins: 10
-        anchors.topMargin: 30
-        anchors.bottomMargin: 30
+        anchors.topMargin: label.height + 6
+        anchors.bottomMargin: valueLabel.height + 4
         anchors.horizontalCenter: parent.horizontalCenter
         width: 10
         color: "black"
@@ -98,6 +98,7 @@ Item {
     }
 
     Text {
+        id: valueLabel
         font.pointSize: 16
         color: "red"
         anchors.bottom: parent.bottom
