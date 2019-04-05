@@ -364,7 +364,7 @@ void tst_qquickanchors::reset()
     const QMetaObject *meta = itemPrivate->anchors()->metaObject();
     QMetaProperty p = meta->property(meta->indexOfProperty(side.toUtf8().constData()));
 
-    QVERIFY(p.write(itemPrivate->anchors(), qVariantFromValue(anchorLine)));
+    QVERIFY(p.write(itemPrivate->anchors(), QVariant::fromValue(anchorLine)));
     QCOMPARE(itemPrivate->anchors()->usedAnchors().testFlag(anchor), true);
 
     QVERIFY(p.reset(itemPrivate->anchors()));
@@ -423,7 +423,7 @@ void tst_qquickanchors::nullItem()
     QMetaProperty p = meta->property(meta->indexOfProperty(side.toUtf8().constData()));
 
     QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML Item: Cannot anchor to a null item.");
-    QVERIFY(p.write(itemPrivate->anchors(), qVariantFromValue(anchor)));
+    QVERIFY(p.write(itemPrivate->anchors(), QVariant::fromValue(anchor)));
 
     delete item;
 }

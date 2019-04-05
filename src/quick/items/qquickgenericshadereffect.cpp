@@ -123,8 +123,8 @@ void QQuickGenericShaderEffect::setBlending(bool enable)
 
 QVariant QQuickGenericShaderEffect::mesh() const
 {
-    return m_mesh ? qVariantFromValue(static_cast<QObject *>(m_mesh))
-                  : qVariantFromValue(m_meshResolution);
+    return m_mesh ? QVariant::fromValue(static_cast<QObject *>(m_mesh))
+                  : QVariant::fromValue(m_meshResolution);
 }
 
 void QQuickGenericShaderEffect::setMesh(const QVariant &mesh)

@@ -375,7 +375,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
         QV4::ScopedValue rv(scope, QV4::QObjectWrapper::wrap(engine, agent));
         // ### Find a better solution then the ugly property
         QQmlListModelWorkerAgent::VariantRef ref(agent);
-        QVariant var = qVariantFromValue(ref);
+        QVariant var = QVariant::fromValue(ref);
         QV4::ScopedValue v(scope, scope.engine->fromVariant(var));
         QV4::ScopedString s(scope, engine->newString(QStringLiteral("__qml:hidden:ref")));
         rv->as<Object>()->defineReadonlyProperty(s, v);

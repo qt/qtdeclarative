@@ -1322,7 +1322,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
                    && !value.as<ArrayObject>() && !value.as<FunctionObject>()) {
             return QVariant::fromValue(QV4::JsonObject::toJsonObject(object));
         } else if (QV4::QObjectWrapper *wrapper = object->as<QV4::QObjectWrapper>()) {
-            return qVariantFromValue<QObject *>(wrapper->object());
+            return QVariant::fromValue<QObject *>(wrapper->object());
         } else if (object->as<QV4::QQmlContextWrapper>()) {
             return QVariant();
         } else if (QV4::QQmlTypeWrapper *w = object->as<QV4::QQmlTypeWrapper>()) {
@@ -1353,7 +1353,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
                 }
             }
 
-            return qVariantFromValue<QList<QObject*> >(list);
+            return QVariant::fromValue<QList<QObject*> >(list);
         } else if (typeHint == QMetaType::QJsonArray) {
             return QVariant::fromValue(QV4::JsonObject::toJsonArray(a));
         }

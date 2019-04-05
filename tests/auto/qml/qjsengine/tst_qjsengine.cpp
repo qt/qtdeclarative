@@ -1582,13 +1582,13 @@ void tst_QJSEngine::valueConversion_QVariant()
         QCOMPARE(val.toString(), str);
     }
     {
-        QJSValue val = eng.toScriptValue(qVariantFromValue((QObject*)this));
+        QJSValue val = eng.toScriptValue(QVariant::fromValue((QObject*)this));
         QVERIFY(!val.isVariant());
         QVERIFY(val.isQObject());
         QCOMPARE(val.toQObject(), (QObject*)this);
     }
     {
-        QVariant var = qVariantFromValue(QPoint(123, 456));
+        QVariant var = QVariant::fromValue(QPoint(123, 456));
         QJSValue val = eng.toScriptValue(var);
         QVERIFY(!val.isVariant());
         QCOMPARE(val.toVariant(), var);

@@ -524,7 +524,7 @@ void tst_QQmlEngineDebugService::watch_property()
     QCOMPARE(spy.count(), 1);
 
     QCOMPARE(spy.at(0).at(0).value<QByteArray>(), prop.name.toUtf8());
-    QCOMPARE(spy.at(0).at(1).value<QVariant>(), qVariantFromValue(origWidth*2));
+    QCOMPARE(spy.at(0).at(1).value<QVariant>(), QVariant::fromValue(origWidth*2));
 }
 
 void tst_QQmlEngineDebugService::watch_object()
@@ -772,11 +772,11 @@ void tst_QQmlEngineDebugService::queryObject()
         }
 
         // test specific property values
-        QCOMPARE(findProperty(rect.properties, "width").value, qVariantFromValue(500));
-        QCOMPARE(findProperty(rect.properties, "height").value, qVariantFromValue(600));
-        QCOMPARE(findProperty(rect.properties, "color").value, qVariantFromValue(QColor("blue")));
+        QCOMPARE(findProperty(rect.properties, "width").value, QVariant::fromValue(500));
+        QCOMPARE(findProperty(rect.properties, "height").value, QVariant::fromValue(600));
+        QCOMPARE(findProperty(rect.properties, "color").value, QVariant::fromValue(QColor("blue")));
 
-        QCOMPARE(findProperty(text.properties, "color").value, qVariantFromValue(QColor("blue")));
+        QCOMPARE(findProperty(text.properties, "color").value, QVariant::fromValue(QColor("blue")));
     } else {
         foreach (const QQmlEngineDebugObjectReference &child, obj.children) {
             QVERIFY(!child.className.isEmpty());
@@ -851,11 +851,11 @@ void tst_QQmlEngineDebugService::queryObjectsForLocation()
         }
 
         // test specific property values
-        QCOMPARE(findProperty(rect.properties, "width").value, qVariantFromValue(500));
-        QCOMPARE(findProperty(rect.properties, "height").value, qVariantFromValue(600));
-        QCOMPARE(findProperty(rect.properties, "color").value, qVariantFromValue(QColor("blue")));
+        QCOMPARE(findProperty(rect.properties, "width").value, QVariant::fromValue(500));
+        QCOMPARE(findProperty(rect.properties, "height").value, QVariant::fromValue(600));
+        QCOMPARE(findProperty(rect.properties, "color").value, QVariant::fromValue(QColor("blue")));
 
-        QCOMPARE(findProperty(text.properties, "color").value, qVariantFromValue(QColor("blue")));
+        QCOMPARE(findProperty(text.properties, "color").value, QVariant::fromValue(QColor("blue")));
     } else {
         foreach (const QQmlEngineDebugObjectReference &child, obj.children) {
             QVERIFY(!child.className.isEmpty());
@@ -1004,15 +1004,15 @@ void tst_QQmlEngineDebugService::queryExpressionResult_data()
     QTest::addColumn<QString>("expr");
     QTest::addColumn<QVariant>("result");
 
-    QTest::newRow("width + 50") << "width + 50" << qVariantFromValue(60);
-    QTest::newRow("blueRect.width") << "blueRect.width" << qVariantFromValue(500);
-    QTest::newRow("bad expr") << "aeaef" << qVariantFromValue(QString("<undefined>"));
-    QTest::newRow("QObject*") << "varObj" << qVariantFromValue(QString("<unnamed object>"));
-    QTest::newRow("list of QObject*") << "varObjList" << qVariantFromValue(QVariantList() << QVariant(QString("<unnamed object>")));
+    QTest::newRow("width + 50") << "width + 50" << QVariant::fromValue(60);
+    QTest::newRow("blueRect.width") << "blueRect.width" << QVariant::fromValue(500);
+    QTest::newRow("bad expr") << "aeaef" << QVariant::fromValue(QString("<undefined>"));
+    QTest::newRow("QObject*") << "varObj" << QVariant::fromValue(QString("<unnamed object>"));
+    QTest::newRow("list of QObject*") << "varObjList" << QVariant::fromValue(QVariantList() << QVariant(QString("<unnamed object>")));
     QVariantMap map;
     map.insert(QLatin1String("rect"), QVariant(QLatin1String("<unnamed object>")));
-    QTest::newRow("varObjMap") << "varObjMap" << qVariantFromValue(map);
-    QTest::newRow("simpleVar") << "simpleVar" << qVariantFromValue(10.05);
+    QTest::newRow("varObjMap") << "varObjMap" << QVariant::fromValue(map);
+    QTest::newRow("simpleVar") << "simpleVar" << QVariant::fromValue(10.05);
 }
 
 void tst_QQmlEngineDebugService::queryExpressionResultInRootContext()
@@ -1052,15 +1052,15 @@ void tst_QQmlEngineDebugService::queryExpressionResultBC_data()
     QTest::addColumn<QString>("expr");
     QTest::addColumn<QVariant>("result");
 
-    QTest::newRow("width + 50") << "width + 50" << qVariantFromValue(60);
-    QTest::newRow("blueRect.width") << "blueRect.width" << qVariantFromValue(500);
-    QTest::newRow("bad expr") << "aeaef" << qVariantFromValue(QString("<undefined>"));
-    QTest::newRow("QObject*") << "varObj" << qVariantFromValue(QString("<unnamed object>"));
-    QTest::newRow("list of QObject*") << "varObjList" << qVariantFromValue(QVariantList() << QVariant(QString("<unnamed object>")));
+    QTest::newRow("width + 50") << "width + 50" << QVariant::fromValue(60);
+    QTest::newRow("blueRect.width") << "blueRect.width" << QVariant::fromValue(500);
+    QTest::newRow("bad expr") << "aeaef" << QVariant::fromValue(QString("<undefined>"));
+    QTest::newRow("QObject*") << "varObj" << QVariant::fromValue(QString("<unnamed object>"));
+    QTest::newRow("list of QObject*") << "varObjList" << QVariant::fromValue(QVariantList() << QVariant(QString("<unnamed object>")));
     QVariantMap map;
     map.insert(QLatin1String("rect"), QVariant(QLatin1String("<unnamed object>")));
-    QTest::newRow("varObjMap") << "varObjMap" << qVariantFromValue(map);
-    QTest::newRow("simpleVar") << "simpleVar" << qVariantFromValue(10.05);
+    QTest::newRow("varObjMap") << "varObjMap" << QVariant::fromValue(map);
+    QTest::newRow("simpleVar") << "simpleVar" << QVariant::fromValue(10.05);
 }
 
 void tst_QQmlEngineDebugService::setBindingForObject()

@@ -413,7 +413,7 @@ void QQuickCustomParticle::buildData(QQuickOpenGLShaderEffectNode *rootNode)
     for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
         for (int i = 0; i < m_common.uniformData[shaderType].size(); ++i) {
             if (m_common.uniformData[shaderType].at(i).name == "qt_Timestamp")
-                m_common.uniformData[shaderType][i].value = qVariantFromValue(m_lastTime);
+                m_common.uniformData[shaderType][i].value = QVariant::fromValue(m_lastTime);
         }
     }
     m_common.updateMaterial(rootNode, static_cast<QQuickOpenGLShaderEffectMaterial *>(rootNode->material()),

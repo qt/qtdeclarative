@@ -1451,8 +1451,8 @@ void tst_qqmllanguage::dynamicObjectProperties()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
 
-    QCOMPARE(object->property("objectProperty"), qVariantFromValue((QObject*)nullptr));
-    QVERIFY(object->property("objectProperty2") != qVariantFromValue((QObject*)nullptr));
+    QCOMPARE(object->property("objectProperty"), QVariant::fromValue((QObject*)nullptr));
+    QVERIFY(object->property("objectProperty2") != QVariant::fromValue((QObject*)nullptr));
     }
     {
     QQmlComponent component(&engine, testFileUrl("dynamicObjectProperties.2.qml"));
@@ -1460,7 +1460,7 @@ void tst_qqmllanguage::dynamicObjectProperties()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
 
-    QVERIFY(object->property("objectProperty") != qVariantFromValue((QObject*)nullptr));
+    QVERIFY(object->property("objectProperty") != QVariant::fromValue((QObject*)nullptr));
     }
 }
 
@@ -1729,7 +1729,7 @@ void tst_qqmllanguage::aliasProperties()
         // Write through alias
         MyQmlObject *v2 = new MyQmlObject();
         v2->setParent(object.data());
-        object->setProperty("aliasObject", qVariantFromValue(v2));
+        object->setProperty("aliasObject", QVariant::fromValue(v2));
         MyQmlObject *v3 =
             qvariant_cast<MyQmlObject *>(object->property("aliasObject"));
         QVERIFY(v3 != nullptr);

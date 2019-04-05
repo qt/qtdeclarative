@@ -594,7 +594,7 @@ QList<QObject *> *QQmlVMEMetaObject::readPropertyAsList(int id) const
     QV4::Scope scope(engine);
     QV4::Scoped<QV4::VariantObject> v(scope, *(md->data() + id));
     if (!v || (int)v->d()->data().userType() != qMetaTypeId<QList<QObject *> >()) {
-        QVariant variant(qVariantFromValue(QList<QObject*>()));
+        QVariant variant(QVariant::fromValue(QList<QObject*>()));
         v = engine->newVariantObject(variant);
         md->set(engine, id, v);
     }

@@ -899,15 +899,15 @@ void tst_QQuickRepeater::destroyCount()
     QQuickRepeater *repeater = findItem<QQuickRepeater>(rootObject, "repeater");
     QVERIFY(repeater);
 
-    repeater->setProperty("model", qVariantFromValue<int>(3));
+    repeater->setProperty("model", QVariant::fromValue<int>(3));
     QCOMPARE(repeater->property("componentCount").toInt(), 3);
-    repeater->setProperty("model", qVariantFromValue<int>(0));
+    repeater->setProperty("model", QVariant::fromValue<int>(0));
     QCOMPARE(repeater->property("componentCount").toInt(), 0);
-    repeater->setProperty("model", qVariantFromValue<int>(4));
+    repeater->setProperty("model", QVariant::fromValue<int>(4));
     QCOMPARE(repeater->property("componentCount").toInt(), 4);
 
     QStringListModel model;
-    repeater->setProperty("model", qVariantFromValue<QStringListModel *>(&model));
+    repeater->setProperty("model", QVariant::fromValue<QStringListModel *>(&model));
     QCOMPARE(repeater->property("componentCount").toInt(), 0);
     QStringList list;
     list << "1" << "2" << "3" << "4";
@@ -915,7 +915,7 @@ void tst_QQuickRepeater::destroyCount()
     QCOMPARE(repeater->property("componentCount").toInt(), 4);
     model.insertRows(2,1);
     QModelIndex index = model.index(2);
-    model.setData(index, qVariantFromValue<QString>(QStringLiteral("foobar")));
+    model.setData(index, QVariant::fromValue<QString>(QStringLiteral("foobar")));
     QCOMPARE(repeater->property("componentCount").toInt(), 5);
 
     model.removeRows(2,1);

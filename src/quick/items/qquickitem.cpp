@@ -8393,7 +8393,7 @@ void QQuickItemLayer::activateEffect()
         m_effect->stackAfter(m_effectSource);
     }
     m_effect->setVisible(m_item->isVisible());
-    m_effect->setProperty(m_name, qVariantFromValue<QObject *>(m_effectSource));
+    m_effect->setProperty(m_name, QVariant::fromValue<QObject *>(m_effectSource));
     QQuickItemPrivate::get(m_effect)->setTransparentForPositioner(true);
     m_effectComponent->completeCreate();
 }
@@ -8690,7 +8690,7 @@ void QQuickItemLayer::setName(const QByteArray &name) {
         return;
     if (m_effect) {
         m_effect->setProperty(m_name, QVariant());
-        m_effect->setProperty(name, qVariantFromValue<QObject *>(m_effectSource));
+        m_effect->setProperty(name, QVariant::fromValue<QObject *>(m_effectSource));
     }
     m_name = name;
     emit nameChanged(name);
