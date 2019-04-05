@@ -31,6 +31,8 @@
 #include <QtQuick/QQuickView>
 #include <QtTest>
 #include <QAbstractAnimation>
+#include <QScopedPointer>
+
 const qreal EPSILON = 0.0001;
 
 bool extremelyFuzzyCompare(qreal a, qreal b, qreal e)//For cases which can have larger variances
@@ -55,17 +57,18 @@ bool myFuzzyGEQ(qreal a, qreal b)
 
 QQuickView* createView(const QUrl &filename, int additionalWait=0)
 {
-    QQuickView *view = new QQuickView(0);
+    QScopedPointer<QQuickView> view(new QQuickView(nullptr));
 
     view->setSource(filename);
     if (view->status() != QQuickView::Ready)
-        return 0;
+        return nullptr;
     view->show();
-    QTest::qWaitForWindowExposed(view);
+    if (!QTest::qWaitForWindowExposed(view.data()))
+        return nullptr;
     if (additionalWait)
         QTest::qWait(additionalWait);
 
-    return view;
+    return view.take();
 }
 
 void ensureAnimTime(int requiredTime, QAbstractAnimation* anim)//With consistentTiming, who knows how long an animation really takes...

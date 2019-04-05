@@ -252,7 +252,7 @@ void tst_HoverHandler::movingItemWithHoverHandler()
     QTRY_COMPARE(window->isVisible(), false);
     QCursor::setPos(paddlePos);
     window->show();
-    QTest::qWaitForWindowExposed(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QTRY_COMPARE(paddleHH->isHovered(), true);
 
