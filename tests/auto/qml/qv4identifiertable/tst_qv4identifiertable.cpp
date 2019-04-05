@@ -67,8 +67,8 @@ void tst_qv4identifiertable::sweepFirstEntryInBucket()
     table.asPropertyKey(entry2);
     table.asPropertyKey(entry3);
 
-    QCOMPARE(table.size, 3);
-    QCOMPARE(table.alloc, 5);
+    QCOMPARE(table.size, 3u);
+    QCOMPARE(table.alloc, 5u);
 
     QCOMPARE(table.entriesByHash[0], entry1);
     QCOMPARE(table.entriesByHash[1], entry2);
