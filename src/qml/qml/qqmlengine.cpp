@@ -957,7 +957,7 @@ void QQmlEnginePrivate::init()
     qRegisterMetaType<QList<int> >();
     qRegisterMetaType<QQmlBinding*>();
 
-    v8engine()->setEngine(q);
+    q->handle()->setQmlEngine(q);
 
     rootContext = new QQmlContext(q,true);
 }

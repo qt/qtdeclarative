@@ -2516,7 +2516,7 @@ bool QQmlTypeData::loadFromSource()
     m_document.reset(new QmlIR::Document(isDebugging()));
     m_document->jsModule.sourceTimeStamp = m_backupSourceCode.sourceTimeStamp();
     QQmlEngine *qmlEngine = typeLoader()->engine();
-    QmlIR::IRBuilder compiler(qmlEngine->handle()->v8Engine->illegalNames());
+    QmlIR::IRBuilder compiler(qmlEngine->handle()->illegalNames());
 
     QString sourceError;
     const QString source = m_backupSourceCode.readAll(&sourceError);

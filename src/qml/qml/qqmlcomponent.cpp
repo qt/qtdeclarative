@@ -72,7 +72,7 @@ namespace {
 
 QT_BEGIN_NAMESPACE
 
-class QQmlComponentExtension : public QV8Engine::Deletable
+class QQmlComponentExtension : public QV4::ExecutionEngine::Deletable
 {
 public:
     QQmlComponentExtension(QV4::ExecutionEngine *v4);

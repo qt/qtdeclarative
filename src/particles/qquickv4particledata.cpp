@@ -290,7 +290,7 @@ struct QV4ParticleData : public QV4::Object
 
 DEFINE_OBJECT_VTABLE(QV4ParticleData);
 
-class QV4ParticleDataDeletable : public QV8Engine::Deletable
+class QV4ParticleDataDeletable : public QV4::ExecutionEngine::Deletable
 {
 public:
     QV4ParticleDataDeletable(QV4::ExecutionEngine *engine);

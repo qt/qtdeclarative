@@ -72,13 +72,17 @@ QV4Include::QV4Include(const QUrl &url, QV4::ExecutionEngine *engine,
     m_resultObject.set(v4, resultValue(v4));
 
 #if QT_CONFIG(qml_network)
-    m_network = engine->v8Engine->networkAccessManager();
+    if (QQmlEngine *qmlEngine = engine->qmlEngine()) {
+        m_network = qmlEngine->networkAccessManager();
 
-    QNetworkRequest request;
-    request.setUrl(url);
+        QNetworkRequest request;
+        request.setUrl(url);
 
-    m_reply = m_network->get(request);
-    QObject::connect(m_reply, SIGNAL(finished()), this, SLOT(finished()));
+        m_reply = m_network->get(request);
+        QObject::connect(m_reply, SIGNAL(finished()), this, SLOT(finished()));
+    } else {
+        finished();
+    }
 #else
     finished();
 #endif
@@ -197,7 +201,7 @@ void QV4Include::finished()
 }
 
 /*
-    Documented in qv8engine.cpp
+    Documented in qv4engine.cpp
 */
 QV4::ReturnedValue QV4Include::method_include(const QV4::FunctionObject *b, const QV4::Value *, const QV4::Value *argv, int argc)
 {

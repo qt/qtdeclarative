@@ -76,7 +76,6 @@
 
 #include <private/qobject_p.h>
 
-#include <private/qv8engine_p.h>
 #include <private/qjsengine_p.h>
 #include <private/qqmldirparser_p.h>
 
@@ -149,7 +148,6 @@ public:
     QQmlDelayedError *erroredBindings;
     int inProgressCreations;
 
-    QV8Engine *v8engine() const { return q_func()->handle()->v8Engine; }
     QV4::ExecutionEngine *v4engine() const { return q_func()->handle(); }
 
 #if QT_CONFIG(qml_worker_script)
@@ -240,7 +238,6 @@ public:
     static void warning(QQmlEnginePrivate *, const QQmlError &);
     static void warning(QQmlEnginePrivate *, const QList<QQmlError> &);
 
-    inline static QV8Engine *getV8Engine(QQmlEngine *e);
     inline static QV4::ExecutionEngine *getV4Engine(QQmlEngine *e);
     inline static QQmlEnginePrivate *get(QQmlEngine *e);
     inline static const QQmlEnginePrivate *get(const QQmlEngine *e);
@@ -386,13 +383,6 @@ QQmlPropertyCache *QQmlEnginePrivate::cache(const QQmlType &type, int minorVersi
 
     Locker locker(this);
     return QQmlMetaType::propertyCache(type, minorVersion);
-}
-
-QV8Engine *QQmlEnginePrivate::getV8Engine(QQmlEngine *e)
-{
-    Q_ASSERT(e);
-
-    return e->handle()->v8Engine;
 }
 
 QV4::ExecutionEngine *QQmlEnginePrivate::getV4Engine(QQmlEngine *e)

@@ -55,7 +55,6 @@
 #include <QtCore/QObject>
 #include <private/qqmlmetaobject_p.h>
 #include <private/qmetaobject_p.h>
-#include <private/qv8engine_p.h>
 
 QT_BEGIN_NAMESPACE
 

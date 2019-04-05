@@ -146,7 +146,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
         document->jsModule.fileName = typeData->urlString();
         document->jsModule.finalUrl = typeData->finalUrlString();
         QmlIR::JSCodeGen v4CodeGenerator(document->code, &document->jsGenerator, &document->jsModule, &document->jsParserEngine,
-                                         document->program, &document->jsGenerator.stringTable, engine->v8engine()->illegalNames());
+                                         document->program, &document->jsGenerator.stringTable, engine->v4engine()->illegalNames());
         QQmlJSCodeGenerator jsCodeGen(this, &v4CodeGenerator);
         if (!jsCodeGen.generateCodeForComponents())
             return nullptr;
@@ -298,7 +298,7 @@ SignalHandlerConverter::SignalHandlerConverter(QQmlTypeCompiler *typeCompiler)
     , qmlObjects(*typeCompiler->qmlObjects())
     , imports(typeCompiler->imports())
     , customParsers(typeCompiler->customParserCache())
-    , illegalNames(typeCompiler->enginePrivate()->v8engine()->illegalNames())
+    , illegalNames(typeCompiler->enginePrivate()->v4engine()->illegalNames())
     , propertyCaches(typeCompiler->propertyCaches())
 {
 }

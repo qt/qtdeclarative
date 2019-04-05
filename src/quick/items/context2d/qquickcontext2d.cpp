@@ -473,7 +473,7 @@ static QFont qt_font_from_string(const QString& fontString, const QFont &current
     return newFont;
 }
 
-class QQuickContext2DEngineData : public QV8Engine::Deletable
+class QQuickContext2DEngineData : public QV4::ExecutionEngine::Deletable
 {
 public:
     QQuickContext2DEngineData(QV4::ExecutionEngine *engine);

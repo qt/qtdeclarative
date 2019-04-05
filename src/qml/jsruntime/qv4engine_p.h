@@ -53,13 +53,16 @@
 #include "qv4global_p.h"
 #include "qv4managed_p.h"
 #include "qv4context_p.h"
+#include "qv4stackframe_p.h"
 #include <private/qintrusivelist_p.h>
 #include "qv4enginebase_p.h"
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmljsengine_p.h>
+#include <private/qqmldelayedcallqueue_p.h>
+#include <QtCore/qelapsedtimer.h>
+#include <QtCore/qmutex.h>
 
 #include "qv4function_p.h"
-#include <private/qv8engine_p.h>
 #include <private/qv4compileddata_p.h>
 
 namespace WTF {
@@ -67,9 +70,65 @@ class BumpPointerAllocator;
 class PageAllocation;
 }
 
+#define V4_DEFINE_EXTENSION(dataclass, datafunction) \
+    static inline dataclass *datafunction(QV4::ExecutionEngine *engine) \
+    { \
+        static int extensionId = -1; \
+        if (extensionId == -1) { \
+            QV4::ExecutionEngine::registrationMutex()->lock(); \
+            if (extensionId == -1) \
+                extensionId = QV4::ExecutionEngine::registerExtension(); \
+            QV4::ExecutionEngine::registrationMutex()->unlock(); \
+        } \
+        dataclass *rv = (dataclass *)engine->extensionData(extensionId); \
+        if (!rv) { \
+            rv = new dataclass(engine); \
+            engine->setExtensionData(extensionId, rv); \
+        } \
+        return rv; \
+    } \
+
+
 QT_BEGIN_NAMESPACE
 
-class QV8Engine;
+namespace QV4 { struct QObjectMethod; }
+
+// Used to allow a QObject method take and return raw V4 handles without having to expose
+// 48 in the public API.
+// Use like this:
+//     class MyClass : public QObject {
+//         Q_OBJECT
+//         ...
+//         Q_INVOKABLE void myMethod(QQmlV4Function*);
+//     };
+// The QQmlV8Function - and consequently the arguments and return value - only remains
+// valid during the call.  If the return value isn't set within myMethod(), the will return
+// undefined.
+
+class QQmlV4Function
+{
+public:
+    int length() const { return callData->argc(); }
+    QV4::ReturnedValue operator[](int idx) const { return (idx < callData->argc() ? callData->args[idx].asReturnedValue() : QV4::Encode::undefined()); }
+    void setReturnValue(QV4::ReturnedValue rv) { *retVal = rv; }
+    QV4::ExecutionEngine *v4engine() const { return e; }
+private:
+    friend struct QV4::QObjectMethod;
+    QQmlV4Function();
+    QQmlV4Function(const QQmlV4Function &);
+    QQmlV4Function &operator=(const QQmlV4Function &);
+
+    QQmlV4Function(QV4::CallData *callData, QV4::Value *retVal, QV4::ExecutionEngine *e)
+        : callData(callData), retVal(retVal), e(e)
+    {
+        callData->thisObject = QV4::Encode::undefined();
+    }
+
+    QV4::CallData *callData;
+    QV4::Value *retVal;
+    QV4::ExecutionEngine *e;
+};
+
 class QQmlError;
 class QJSEngine;
 class QQmlEngine;
@@ -127,8 +186,7 @@ public:
     Function *globalCode;
 
     QJSEngine *jsEngine() const { return publicEngine; }
-    QQmlEngine *qmlEngine() const { return v8Engine ? v8Engine->engine() : nullptr; }
-    QV8Engine *v8Engine;
+    QQmlEngine *qmlEngine() const { return m_qmlEngine; }
     QJSEngine *publicEngine;
 
     enum JSObjects {
@@ -599,6 +657,44 @@ public:
     }
 
     QV4::ReturnedValue global();
+    void initQmlGlobalObject();
+    void initializeGlobal();
+
+    void freezeObject(const QV4::Value &value);
+
+    // Return the list of illegal id names (the names of the properties on the global object)
+    const QSet<QString> &illegalNames() const;
+
+#if QT_CONFIG(qml_xml_http_request)
+    void *xmlHttpRequestData() const { return m_xmlHttpRequestData; }
+#endif
+
+    void setQmlEngine(QQmlEngine *engine);
+
+    QQmlDelayedCallQueue *delayedCallQueue() { return &m_delayedCallQueue; }
+
+    // used for console.time(), console.timeEnd()
+    void startTimer(const QString &timerName);
+    qint64 stopTimer(const QString &timerName, bool *wasRunning);
+
+    // used for console.count()
+    int consoleCountHelper(const QString &file, quint16 line, quint16 column);
+
+    struct Deletable {
+        virtual ~Deletable() {}
+    };
+
+    static QMutex *registrationMutex();
+    static int registerExtension();
+
+    void setExtensionData(int, Deletable *);
+    Deletable *extensionData(int index) const
+    {
+        if (index < m_extensionData.count())
+            return m_extensionData[index];
+        else
+            return nullptr;
+    }
 
     double localTZA = 0.0; // local timezone, initialized at startup
 
@@ -616,10 +712,26 @@ private:
     QScopedPointer<QV4::Debugging::Debugger> m_debugger;
     QScopedPointer<QV4::Profiling::Profiler> m_profiler;
 #endif
+    QSet<QString> m_illegalNames;
     int jitCallCountThreshold;
 
     // used by generated Promise objects to handle 'then' events
     QScopedPointer<QV4::Promise::ReactionHandler> m_reactionHandler;
+
+#if QT_CONFIG(qml_xml_http_request)
+    void *m_xmlHttpRequestData;
+#endif
+
+    QQmlEngine *m_qmlEngine;
+
+    QQmlDelayedCallQueue m_delayedCallQueue;
+
+    QElapsedTimer m_time;
+    QHash<QString, qint64> m_startedTimers;
+
+    QHash<QString, quint32> m_consoleCount;
+
+    QVector<Deletable *> m_extensionData;
 };
 
 #define CHECK_STACK_LIMITS(v4) if ((v4)->checkStackLimits()) return Encode::undefined(); \

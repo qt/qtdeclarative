@@ -57,7 +57,7 @@
 #include <QMutex>
 #include <QWaitCondition>
 
-#include <private/qv8engine_p.h>
+#include <private/qv4engine_p.h>
 
 QT_REQUIRE_CONFIG(qml_list_model);
 

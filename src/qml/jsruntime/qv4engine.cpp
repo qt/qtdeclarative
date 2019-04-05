@@ -102,7 +102,6 @@
 #include "qv4dataview_p.h"
 #include "qv4promiseobject_p.h"
 #include "qv4typedarray_p.h"
-#include <private/qv8engine_p.h>
 #include <private/qjsvalue_p.h>
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
@@ -110,9 +109,16 @@
 #include <private/qqmllistwrapper_p.h>
 #include <private/qqmllist_p.h>
 #include <private/qqmltypeloader_p.h>
+#include <private/qqmlmemoryprofiler_p.h>
+#include <private/qqmlbuiltinfunctions_p.h>
 #if QT_CONFIG(qml_locale)
 #include <private/qqmllocale_p.h>
 #endif
+#if QT_CONFIG(qml_xml_http_request)
+#include <private/qv4domerrors_p.h>
+#include <private/qqmlxmlhttprequest_p.h>
+#endif
+#include <private/qv4sqlerrors_p.h>
 #include <qqmlfile.h>
 
 #if USE(PTHREADS)
@@ -129,6 +135,8 @@
 #include <valgrind/memcheck.h>
 #endif
 
+Q_DECLARE_METATYPE(QList<int>)
+
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
@@ -142,6 +150,43 @@ ReturnedValue throwTypeError(const FunctionObject *b, const QV4::Value *, const 
 
 qint32 ExecutionEngine::maxCallDepth = -1;
 
+template <typename ReturnType>
+ReturnType convertJSValueToVariantType(const QJSValue &value)
+{
+    return value.toVariant().value<ReturnType>();
+}
+
+static void saveJSValue(QDataStream &stream, const void *data)
+{
+    const QJSValue *jsv = reinterpret_cast<const QJSValue *>(data);
+    quint32 isNullOrUndefined = 0;
+    if (jsv->isNull())
+        isNullOrUndefined |= 0x1;
+    if (jsv->isUndefined())
+        isNullOrUndefined |= 0x2;
+    stream << isNullOrUndefined;
+    if (!isNullOrUndefined)
+        reinterpret_cast<const QJSValue*>(data)->toVariant().save(stream);
+}
+
+static void restoreJSValue(QDataStream &stream, void *data)
+{
+    QJSValue *jsv = reinterpret_cast<QJSValue*>(data);
+
+    quint32 isNullOrUndefined;
+    stream >> isNullOrUndefined;
+
+    if (isNullOrUndefined & 0x1) {
+        *jsv = QJSValue(QJSValue::NullValue);
+    } else if (isNullOrUndefined & 0x2) {
+        *jsv = QJSValue();
+    } else {
+        QVariant v;
+        v.load(stream);
+        QJSValuePrivate::setVariant(jsv, v);
+    }
+}
+
 ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     : executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
@@ -149,7 +194,6 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     , jsStack(new WTF::PageAllocation)
     , gcStack(new WTF::PageAllocation)
     , globalCode(nullptr)
-    , v8Engine(nullptr)
     , publicEngine(jsEngine)
     , m_engineId(engineSerial.fetchAndAddOrdered(1))
     , regExpCache(nullptr)
@@ -157,6 +201,10 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 #if QT_CONFIG(qml_jit)
     , m_canAllocateExecutableMemory(OSAllocator::canAllocateExecutableMemory())
 #endif
+#if QT_CONFIG(qml_xml_http_request)
+    , m_xmlHttpRequestData(nullptr)
+#endif
+    , m_qmlEngine(nullptr)
 {
     memoryManager = new QV4::MemoryManager(this);
 
@@ -643,11 +691,28 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     pd->set = thrower();
     functionPrototype()->insertMember(id_caller(), pd, Attr_Accessor|Attr_ReadOnly_ButConfigurable);
     functionPrototype()->insertMember(id_arguments(), pd, Attr_Accessor|Attr_ReadOnly_ButConfigurable);
+
+    QML_MEMORY_SCOPE_STRING("QV4Engine::QV4Engine");
+    qMetaTypeId<QJSValue>();
+    qMetaTypeId<QList<int> >();
+
+    if (!QMetaType::hasRegisteredConverterFunction<QJSValue, QVariantMap>())
+        QMetaType::registerConverter<QJSValue, QVariantMap>(convertJSValueToVariantType<QVariantMap>);
+    if (!QMetaType::hasRegisteredConverterFunction<QJSValue, QVariantList>())
+        QMetaType::registerConverter<QJSValue, QVariantList>(convertJSValueToVariantType<QVariantList>);
+    if (!QMetaType::hasRegisteredConverterFunction<QJSValue, QStringList>())
+        QMetaType::registerConverter<QJSValue, QStringList>(convertJSValueToVariantType<QStringList>);
+    QMetaType::registerStreamOperators(qMetaTypeId<QJSValue>(), saveJSValue, restoreJSValue);
+
+    QV4::QObjectWrapper::initializeBindings(this);
+
+    m_delayedCallQueue.init(this);
 }
 
 ExecutionEngine::~ExecutionEngine()
 {
     modules.clear();
+    qDeleteAll(m_extensionData);
     delete m_multiplyWrappedQObjects;
     m_multiplyWrappedQObjects = nullptr;
     delete identifierTable;
@@ -664,6 +729,11 @@ ExecutionEngine::~ExecutionEngine()
     delete jsStack;
     gcStack->deallocate();
     delete gcStack;
+
+#if QT_CONFIG(qml_xml_http_request)
+    qt_rem_qmlxmlhttprequest(this, m_xmlHttpRequestData);
+    m_xmlHttpRequestData = nullptr;
+#endif
 }
 
 ExecutionContext *ExecutionEngine::currentContext() const
@@ -1750,6 +1820,133 @@ QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::loadModule(const 
     return newModule;
 }
 
+void ExecutionEngine::initQmlGlobalObject()
+{
+    initializeGlobal();
+    freezeObject(*globalObject);
+}
+
+void ExecutionEngine::initializeGlobal()
+{
+    QV4::Scope scope(this);
+    QV4::GlobalExtensions::init(globalObject, QJSEngine::AllExtensions);
+
+    QV4::ScopedObject qt(scope, memoryManager->allocate<QV4::QtObject>(qmlEngine()));
+    globalObject->defineDefaultProperty(QStringLiteral("Qt"), qt);
+
+#if QT_CONFIG(qml_locale)
+    QQmlLocale::registerStringLocaleCompare(this);
+    QQmlDateExtension::registerExtension(this);
+    QQmlNumberExtension::registerExtension(this);
+#endif
+
+#if QT_CONFIG(qml_xml_http_request)
+    qt_add_domexceptions(this);
+    m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(this);
+#endif
+
+    qt_add_sqlexceptions(this);
+
+    {
+        for (uint i = 0; i < globalObject->internalClass()->size; ++i) {
+            if (globalObject->internalClass()->nameMap.at(i).isString()) {
+                QV4::PropertyKey id = globalObject->internalClass()->nameMap.at(i);
+                m_illegalNames.insert(id.toQString());
+            }
+        }
+    }
+}
+
+const QSet<QString> &ExecutionEngine::illegalNames() const
+{
+    return m_illegalNames;
+}
+
+void ExecutionEngine::setQmlEngine(QQmlEngine *engine)
+{
+    m_qmlEngine = engine;
+    initQmlGlobalObject();
+}
+
+static void freeze_recursive(QV4::ExecutionEngine *v4, QV4::Object *object)
+{
+    if (object->as<QV4::QObjectWrapper>())
+        return;
+
+    QV4::Scope scope(v4);
+
+    bool instanceOfObject = false;
+    QV4::ScopedObject p(scope, object->getPrototypeOf());
+    while (p) {
+        if (p->d() == v4->objectPrototype()->d()) {
+            instanceOfObject = true;
+            break;
+        }
+        p = p->getPrototypeOf();
+    }
+    if (!instanceOfObject)
+        return;
+
+    QV4::Heap::InternalClass *frozen = object->internalClass()->propertiesFrozen();
+    if (object->internalClass() == frozen)
+        return;
+    object->setInternalClass(frozen);
+
+    QV4::ScopedObject o(scope);
+    for (uint i = 0; i < frozen->size; ++i) {
+        if (!frozen->nameMap.at(i).isStringOrSymbol())
+            continue;
+        o = *object->propertyData(i);
+        if (o)
+            freeze_recursive(v4, o);
+    }
+}
+
+void ExecutionEngine::freezeObject(const QV4::Value &value)
+{
+    QV4::Scope scope(this);
+    QV4::ScopedObject o(scope, value);
+    freeze_recursive(this, o);
+}
+
+void ExecutionEngine::startTimer(const QString &timerName)
+{
+    if (!m_time.isValid())
+        m_time.start();
+    m_startedTimers[timerName] = m_time.elapsed();
+}
+
+qint64 ExecutionEngine::stopTimer(const QString &timerName, bool *wasRunning)
+{
+    if (!m_startedTimers.contains(timerName)) {
+        *wasRunning = false;
+        return 0;
+    }
+    *wasRunning = true;
+    qint64 startedAt = m_startedTimers.take(timerName);
+    return m_time.elapsed() - startedAt;
+}
+
+int ExecutionEngine::consoleCountHelper(const QString &file, quint16 line, quint16 column)
+{
+    const QString key = file + QString::number(line) + QString::number(column);
+    int number = m_consoleCount.value(key, 0);
+    number++;
+    m_consoleCount.insert(key, number);
+    return number;
+}
+
+void ExecutionEngine::setExtensionData(int index, Deletable *data)
+{
+    if (m_extensionData.count() <= index)
+        m_extensionData.resize(index + 1);
+
+    if (m_extensionData.at(index))
+        delete m_extensionData.at(index);
+
+    m_extensionData[index] = data;
+}
+
 // Converts a JS value to a meta-type.
 // data must point to a place that can store a value of the given type.
 // Returns true if conversion succeeded, false otherwise.
@@ -1994,6 +2191,25 @@ static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const QV4::Value &v
     if (!wrapper)
         return nullptr;
     return wrapper->object();
+}
+
+struct QV4EngineRegistrationData
+{
+    QV4EngineRegistrationData() : extensionCount(0) {}
+
+    QMutex mutex;
+    int extensionCount;
+};
+Q_GLOBAL_STATIC(QV4EngineRegistrationData, registrationData);
+
+QMutex *ExecutionEngine::registrationMutex()
+{
+    return &registrationData()->mutex;
+}
+
+int ExecutionEngine::registerExtension()
+{
+    return registrationData()->extensionCount++;
 }
 
 QT_END_NAMESPACE
