@@ -39,7 +39,6 @@
 
 #include "qv4serialize_p.h"
 
-#include <private/qv8engine_p.h>
 #if QT_CONFIG(qml_list_model)
 #include <private/qqmllistmodel_p.h>
 #include <private/qqmllistmodelworkeragent_p.h>

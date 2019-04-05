@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qqmldelayedcallqueue_p.h"
-#include <private/qv8engine_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 #include <private/qv4value_p.h>

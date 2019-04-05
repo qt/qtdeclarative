@@ -41,7 +41,6 @@
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmldata_p.h>
 #include <private/qmetaobjectbuilder_p.h>
-#include <private/qv8engine_p.h>
 #include <qqmlengine.h>
 #include <qdebug.h>
 

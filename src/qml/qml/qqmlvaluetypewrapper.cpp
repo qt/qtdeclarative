@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qqmlvaluetypewrapper_p.h"
-#include <private/qv8engine_p.h>
+
 #include <private/qqmlvaluetype_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlglobal_p.h>

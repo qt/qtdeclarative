@@ -57,7 +57,6 @@
 #include <QtCore/qstringlist.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtQuick/qquickitem.h>
-#include <QtQml/private/qv8engine_p.h>
 
 QT_BEGIN_NAMESPACE
 

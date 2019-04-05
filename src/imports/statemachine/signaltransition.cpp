@@ -47,7 +47,6 @@
 #include <QQmlExpression>
 
 #include <private/qv4qobjectwrapper_p.h>
-#include <private/qv8engine_p.h>
 #include <private/qjsvalue_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qqmlcontext_p.h>

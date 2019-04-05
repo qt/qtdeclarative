@@ -63,7 +63,6 @@
 #include "qv4qobjectwrapper_p.h"
 #include "qv4symbol_p.h"
 #include "qv4generatorobject_p.h"
-#include <private/qv8engine_p.h>
 #endif
 
 #include <QtCore/QDebug>
