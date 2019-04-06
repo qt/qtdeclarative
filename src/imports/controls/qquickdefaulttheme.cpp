@@ -60,7 +60,7 @@ void QQuickDefaultTheme::initialize(QQuickTheme *theme)
     systemPalette.setColor(QPalette::Highlight, QColor::fromRgba(0xFF0066FF));
     systemPalette.setColor(QPalette::Disabled, QPalette::Highlight, QColor::fromRgba(0xFFF0F6FF));
 
-    systemPalette.setColor(QPalette::HighlightedText, QColor::fromRgba(0xFFFFFFFF));
+    systemPalette.setColor(QPalette::HighlightedText, QColor::fromRgba(0xFF090909));
 
     systemPalette.setColor(QPalette::Light, QColor::fromRgba(0xFFF6F6F6));
 

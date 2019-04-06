@@ -129,7 +129,7 @@ QT_BEGIN_NAMESPACE
 
     It is possible to create an instance of ScrollBar without using the
     attached property API. This is useful when the behavior of the attached
-    scoll bar is not sufficient or a \l Flickable is not in use. In the
+    scroll bar is not sufficient or a \l Flickable is not in use. In the
     following example, horizontal and vertical scroll bars are used to
     scroll over the text without using \l Flickable:
 
