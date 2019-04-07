@@ -1494,19 +1494,6 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
     }
 }
 
-static inline int QMetaObject_methods(const QMetaObject *metaObject)
-{
-    struct Private
-    {
-        int revision;
-        int className;
-        int classInfoCount, classInfoData;
-        int methodCount, methodData;
-    };
-
-    return reinterpret_cast<const Private *>(metaObject->d.data)->methodCount;
-}
-
 /*
 Returns the next related method, if one, or 0.
 */
@@ -1524,11 +1511,11 @@ static const QQmlPropertyData * RelatedMethod(const QQmlObjectOrGadget &object,
         return propertyCache->method(current->overrideIndex());
     } else {
         const QMetaObject *mo = object.metaObject();
-        int methodOffset = mo->methodCount() - QMetaObject_methods(mo);
+        int methodOffset = mo->methodOffset();
 
         while (methodOffset > current->overrideIndex()) {
             mo = mo->superClass();
-            methodOffset -= QMetaObject_methods(mo);
+            methodOffset -= QMetaObjectPrivate::get(mo)->methodCount;
         }
 
         // If we've been called before with the same override index, then
@@ -1544,7 +1531,7 @@ static const QQmlPropertyData * RelatedMethod(const QQmlObjectOrGadget &object,
         for (int ii = current->overrideIndex() - 1; ii >= methodOffset; --ii) {
             if (methodName == mo->method(ii).name()) {
                 dummy.setOverload(true);
-                dummy.setOverrideIndexIsProperty(0);
+                dummy.setOverrideIndexIsProperty(false);
                 dummy.setOverrideIndex(ii);
                 return &dummy;
             }
@@ -2178,7 +2165,7 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
         for (int ii = d()->index - 1; ii >= methodOffset; --ii) {
             if (methodName == mo->method(ii).name()) {
                 method.setOverload(true);
-                method.setOverrideIndexIsProperty(0);
+                method.setOverrideIndexIsProperty(false);
                 method.setOverrideIndex(ii);
                 break;
             }
