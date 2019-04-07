@@ -66,16 +66,14 @@ public:
         : QQmlMetaObject(propertyCache)
         , ptr(gadget)
     {}
+    QQmlObjectOrGadget(const QMetaObject* metaObject)
+        : QQmlMetaObject(metaObject)
+    {}
 
     void metacall(QMetaObject::Call type, int index, void **argv) const;
 
 private:
     QBiPointer<QObject, void> ptr;
-
-protected:
-    QQmlObjectOrGadget(const QMetaObject* metaObject)
-        : QQmlMetaObject(metaObject)
-    {}
 };
 
 QT_END_NAMESPACE

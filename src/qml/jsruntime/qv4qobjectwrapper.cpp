@@ -39,7 +39,7 @@
 
 #include "qv4qobjectwrapper_p.h"
 
-#include <private/qqmlstaticmetaobject_p.h>
+#include <private/qqmlobjectorgadget_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlbinding_p.h>
@@ -1599,8 +1599,7 @@ static QV4::ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQ
         QQmlMetaObject::ArgTypeStorage storage;
 
         if (data.isConstructor())
-            args = static_cast<const QQmlStaticMetaObject&>(object).constructorParameterTypes(
-                        data.coreIndex(), &storage, &unknownTypeError);
+            args = object.constructorParameterTypes(data.coreIndex(), &storage, &unknownTypeError);
         else
             args = object.methodParameterTypes(data.coreIndex(), &storage, &unknownTypeError);
 
@@ -2292,7 +2291,7 @@ ReturnedValue QMetaObjectWrapper::constructInternal(const Value *argv, int argc)
 ReturnedValue QMetaObjectWrapper::callConstructor(const QQmlPropertyData &data, QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const {
 
     const QMetaObject* mo = d()->metaObject;
-    const QQmlStaticMetaObject object(mo);
+    const QQmlObjectOrGadget object(mo);
     return CallPrecise(object, data, engine, callArgs, QMetaObject::CreateInstance);
 }
 
@@ -2300,7 +2299,7 @@ ReturnedValue QMetaObjectWrapper::callConstructor(const QQmlPropertyData &data, 
 ReturnedValue QMetaObjectWrapper::callOverloadedConstructor(QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const {
     const int numberOfConstructors = d()->constructorCount;
     const int argumentCount = callArgs->argc();
-    const QQmlStaticMetaObject object(d()->metaObject);
+    const QQmlObjectOrGadget object(d()->metaObject);
 
     QQmlPropertyData best;
     int bestParameterScore = INT_MAX;

@@ -39,7 +39,6 @@ SOURCES += \
     $$PWD/qqmlmetaobject.cpp \
     $$PWD/qqmlnotifier.cpp \
     $$PWD/qqmlobjectorgadget.cpp \
-    $$PWD/qqmlstaticmetaobject.cpp \
     $$PWD/qqmltypenotavailable.cpp \
     $$PWD/qqmltypenamecache.cpp \
     $$PWD/qqmlscriptstring.cpp \
@@ -130,7 +129,6 @@ HEADERS += \
     $$PWD/qqmlmetaobject_p.h \
     $$PWD/qqmlnotifier_p.h \
     $$PWD/qqmlobjectorgadget_p.h \
-    $$PWD/qqmlstaticmetaobject_p.h \
     $$PWD/qqmltypenotavailable_p.h \
     $$PWD/qqmltypenamecache_p.h \
     $$PWD/qqmlscriptstring.h \

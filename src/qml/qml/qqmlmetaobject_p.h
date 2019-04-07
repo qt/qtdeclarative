@@ -92,6 +92,8 @@ public:
     int methodReturnType(const QQmlPropertyData &data, QByteArray *unknownTypeError) const;
     int *methodParameterTypes(int index, ArgTypeStorage *argStorage,
                               QByteArray *unknownTypeError) const;
+    int *constructorParameterTypes(int index, ArgTypeStorage *dummy, QByteArray *unknownTypeError) const;
+
 
     static bool canConvert(const QQmlMetaObject &from, const QQmlMetaObject &to);
 

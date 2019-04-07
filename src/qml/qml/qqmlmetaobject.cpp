@@ -176,6 +176,13 @@ int *QQmlMetaObject::methodParameterTypes(int index, ArgTypeStorage *argStorage,
     return methodParameterTypes(m, argStorage, unknownTypeError);
 }
 
+int *QQmlMetaObject::constructorParameterTypes(int index, ArgTypeStorage *dummy,
+                                                     QByteArray *unknownTypeError) const
+{
+    QMetaMethod m = _m->constructor(index);
+    return methodParameterTypes(m, dummy, unknownTypeError);
+}
+
 int *QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, ArgTypeStorage *argStorage,
                                           QByteArray *unknownTypeError) const
 {

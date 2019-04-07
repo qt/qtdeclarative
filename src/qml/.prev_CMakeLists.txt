@@ -282,7 +282,6 @@ qt_internal_add_module(Qml
         qml/qqmlscriptdata.cpp qml/qqmlscriptdata_p.h
         qml/qqmlscriptstring.cpp qml/qqmlscriptstring.h qml/qqmlscriptstring_p.h
         qml/qqmlsourcecoordinate_p.h
-        qml/qqmlstaticmetaobject.cpp qml/qqmlstaticmetaobject_p.h
         qml/qqmlstringconverters.cpp qml/qqmlstringconverters_p.h
         qml/qqmltype.cpp qml/qqmltype_p.h
         qml/qqmltype_p_p.h
