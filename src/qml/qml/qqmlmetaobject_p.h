@@ -74,7 +74,7 @@ class Q_QML_EXPORT QQmlMetaObject
 public:
     typedef QVarLengthArray<int, 9> ArgTypeStorage;
 
-    inline QQmlMetaObject();
+    inline QQmlMetaObject() = default;
     inline QQmlMetaObject(QObject *);
     inline QQmlMetaObject(const QMetaObject *);
     inline QQmlMetaObject(QQmlPropertyCache *);
@@ -87,10 +87,7 @@ public:
     inline const char *className() const;
     inline int propertyCount() const;
 
-    inline bool hasMetaObject() const;
     inline const QMetaObject *metaObject() const;
-
-    QQmlPropertyCache *propertyCache(QQmlEnginePrivate *) const;
 
     int methodReturnType(const QQmlPropertyData &data, QByteArray *unknownTypeError) const;
     int *methodParameterTypes(int index, ArgTypeStorage *argStorage,
@@ -103,23 +100,16 @@ public:
     static void resolveGadgetMethodOrPropertyIndex(QMetaObject::Call type, const QMetaObject **metaObject, int *index);
 
 protected:
-    QBiPointer<QQmlPropertyCache, const QMetaObject> _m;
+    const QMetaObject *_m = nullptr;
     int *methodParameterTypes(const QMetaMethod &method, ArgTypeStorage *argStorage,
                               QByteArray *unknownTypeError) const;
 
 };
 
-QQmlMetaObject::QQmlMetaObject()
-{
-}
-
 QQmlMetaObject::QQmlMetaObject(QObject *o)
 {
-    if (o) {
-        QQmlData *ddata = QQmlData::get(o, false);
-        if (ddata && ddata->propertyCache) _m = ddata->propertyCache;
-        else _m = o->metaObject();
-    }
+    if (o)
+        _m = o->metaObject();
 }
 
 QQmlMetaObject::QQmlMetaObject(const QMetaObject *m)
@@ -128,8 +118,9 @@ QQmlMetaObject::QQmlMetaObject(const QMetaObject *m)
 }
 
 QQmlMetaObject::QQmlMetaObject(QQmlPropertyCache *m)
-    : _m(m)
 {
+    if (m)
+        _m = m->createMetaObject();
 }
 
 QQmlMetaObject::QQmlMetaObject(const QQmlMetaObject &o)
@@ -145,41 +136,26 @@ QQmlMetaObject &QQmlMetaObject::operator=(const QQmlMetaObject &o)
 
 bool QQmlMetaObject::isNull() const
 {
-    return _m.isNull();
+    return !_m;
 }
 
 const char *QQmlMetaObject::className() const
 {
-    if (_m.isNull()) {
+    if (!_m)
         return nullptr;
-    } else if (_m.isT1()) {
-        return _m.asT1()->className();
-    } else {
-        return _m.asT2()->className();
-    }
+    return metaObject()->className();
 }
 
 int QQmlMetaObject::propertyCount() const
 {
-    if (_m.isNull()) {
+    if (!_m)
         return 0;
-    } else if (_m.isT1()) {
-        return _m.asT1()->propertyCount();
-    } else {
-        return _m.asT2()->propertyCount();
-    }
-}
-
-bool QQmlMetaObject::hasMetaObject() const
-{
-    return _m.isT2() || (!_m.isNull() && _m.asT1()->metaObject());
+    return metaObject()->propertyCount();
 }
 
 const QMetaObject *QQmlMetaObject::metaObject() const
 {
-    if (_m.isNull()) return nullptr;
-    if (_m.isT1()) return _m.asT1()->createMetaObject();
-    else return _m.asT2();
+    return _m;
 }
 
 QT_END_NAMESPACE

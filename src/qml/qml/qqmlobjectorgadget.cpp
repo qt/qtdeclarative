@@ -44,14 +44,13 @@ QT_BEGIN_NAMESPACE
 void QQmlObjectOrGadget::metacall(QMetaObject::Call type, int index, void **argv) const
 {
     if (ptr.isNull()) {
-        const QMetaObject *metaObject = _m.asT2();
-        metaObject->d.static_metacall(nullptr, type, index, argv);
+        _m->d.static_metacall(nullptr, type, index, argv);
     }
     else if (ptr.isT1()) {
         QMetaObject::metacall(ptr.asT1(), type, index, argv);
     }
     else {
-        const QMetaObject *metaObject = _m.asT1()->metaObject();
+        const QMetaObject *metaObject = _m;
         QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(type, &metaObject, &index);
         metaObject->d.static_metacall(reinterpret_cast<QObject*>(ptr.asT2()), type, index, argv);
     }

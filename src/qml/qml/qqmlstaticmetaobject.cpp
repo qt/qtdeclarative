@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 int *QQmlStaticMetaObject::constructorParameterTypes(int index, ArgTypeStorage *dummy,
                                                      QByteArray *unknownTypeError) const
 {
-    QMetaMethod m = _m.asT2()->constructor(index);
+    QMetaMethod m = _m->constructor(index);
     return methodParameterTypes(m, dummy, unknownTypeError);
 }
 
