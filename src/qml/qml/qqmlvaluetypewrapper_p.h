@@ -70,15 +70,6 @@ struct QQmlValueTypeWrapper : Object {
     void init() { Object::init(); }
     void destroy();
 
-    QQmlPropertyCache *propertyCache() const { return m_propertyCache; }
-    void setPropertyCache(QQmlPropertyCache *c) {
-        if (c)
-            c->addref();
-        if (m_propertyCache)
-            m_propertyCache->release();
-        m_propertyCache = c;
-    }
-
     void setValueType(QQmlValueType *valueType)
     {
         Q_ASSERT(valueType != nullptr);
@@ -101,13 +92,23 @@ struct QQmlValueTypeWrapper : Object {
         return m_gadgetPtr;
     }
 
+    void setMetaObject(const QMetaObject *metaObject)
+    {
+        m_metaObject = metaObject;
+    }
+    const QMetaObject *metaObject() const
+    {
+        return m_metaObject;
+    }
+
+
     void setValue(const QVariant &value) const;
     QVariant toVariant() const;
 
 private:
     mutable void *m_gadgetPtr;
     QQmlValueType *m_valueType;
-    QQmlPropertyCache *m_propertyCache;
+    const QMetaObject *m_metaObject;
 };
 
 }
@@ -128,6 +129,8 @@ public:
     bool isEqual(const QVariant& value) const;
     int typeId() const;
     bool write(QObject *target, int propertyIndex) const;
+
+    QQmlPropertyData dataForPropertyKey(PropertyKey id) const;
 
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);

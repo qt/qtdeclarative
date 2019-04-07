@@ -2032,7 +2032,7 @@ void Heap::QObjectMethod::init(QV4::ExecutionContext *scope)
 const QMetaObject *Heap::QObjectMethod::metaObject()
 {
     if (valueTypeWrapper)
-        return valueTypeWrapper->propertyCache()->createMetaObject();
+        return valueTypeWrapper->metaObject();
     return object()->metaObject();
 }
 

@@ -126,9 +126,11 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
         } qobjectLookup;
         struct {
             Heap::InternalClass *ic;
-            quintptr unused;
-            QQmlPropertyCache *propertyCache;
-            QQmlPropertyData *propertyData;
+            quintptr metaObject; // a (const QMetaObject* & 1) or nullptr
+            const QtPrivate::QMetaTypeInterface *metaType; // cannot use QMetaType; class must be trivial
+            quint16 coreIndex;
+            bool isFunction;
+            bool isEnum;
         } qgadgetLookup;
         struct {
             quintptr unused1;

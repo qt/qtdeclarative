@@ -322,12 +322,7 @@ void ExecutableCompilationUnit::unlink()
                     || l.getter == QQmlTypeWrapper::lookupSingletonProperty) {
                 if (QQmlPropertyCache *pc = l.qobjectLookup.propertyCache)
                     pc->release();
-            } else if (l.getter == QQmlValueTypeWrapper::lookupGetter
-                       || l.getter == QQmlTypeWrapper::lookupSingletonProperty) {
-                if (QQmlPropertyCache *pc = l.qgadgetLookup.propertyCache)
-                    pc->release();
             }
-
             if (l.qmlContextPropertyGetter == QQmlContextWrapper::lookupScopeObjectProperty
                     || l.qmlContextPropertyGetter == QQmlContextWrapper::lookupContextObjectProperty) {
                 if (QQmlPropertyCache *pc = l.qobjectLookup.propertyCache)
