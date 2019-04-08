@@ -496,6 +496,9 @@ int main(int argc, char ** argv)
     QCoreApplication::setOrganizationDomain(QStringLiteral("qt-project.org"));
     QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
 
+    if (qEnvironmentVariableIsSet("QMLSCENE_CORE_PROFILE"))
+        options.coreProfile = true;
+
     const QStringList arguments = QCoreApplication::arguments();
     for (int i = 1, size = arguments.size(); i < size; ++i) {
         if (!arguments.at(i).startsWith(QLatin1Char('-'))) {
@@ -522,8 +525,7 @@ int main(int argc, char ** argv)
                 options.resizeViewToRootItem = true;
             else if (lowerArgument == QLatin1String("--multisample"))
                 options.multisample = true;
-            else if (lowerArgument == QLatin1String("--core-profile")
-                    || qEnvironmentVariableIsSet("QMLSCENE_CORE_PROFILE"))
+            else if (lowerArgument == QLatin1String("--core-profile"))
                 options.coreProfile = true;
             else if (lowerArgument == QLatin1String("--verbose"))
                 options.verbose = true;
