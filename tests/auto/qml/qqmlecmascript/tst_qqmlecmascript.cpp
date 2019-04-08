@@ -366,6 +366,7 @@ private slots:
     void tailCallWithArguments();
     void deleteSparseInIteration();
     void saveAccumulatorBeforeToInt32();
+    void intMinDividedByMinusOne();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8946,6 +8947,22 @@ void tst_qqmlecmascript::saveAccumulatorBeforeToInt32()
     const QJSValue value = engine.evaluate("function a(){a(a&a+a)}a()");
     QVERIFY(value.isError());
     QCOMPARE(value.toString(), QLatin1String("RangeError: Maximum call stack size exceeded."));
+}
+
+void tst_qqmlecmascript::intMinDividedByMinusOne()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(QByteArray("import QtQml 2.2\n"
+                                 "QtObject {\n"
+                                 "   property int intMin: -2147483648\n"
+                                 "   property int minusOne: -1\n"
+                                 "   property double doesNotFitInInt: intMin / minusOne\n"
+                                 "}"), QUrl());
+    QVERIFY(component.isReady());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QCOMPARE(object->property("doesNotFitInInt").toUInt(), 2147483648u);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
