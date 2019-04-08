@@ -1942,6 +1942,7 @@ ReturnedValue Runtime::method_div(const Value &left, const Value &right)
         int lval = left.integerValue();
         int rval = right.integerValue();
         if (rval != 0 // division by zero should result in a NaN
+                && !(lval == std::numeric_limits<int>::min() && rval == -1) // doesn't fit in int
                 && (lval % rval == 0)  // fractions can't be stored in an int
                 && !(lval == 0 && rval < 0)) // 0 / -something results in -0.0
             return Encode(int(lval / rval));
