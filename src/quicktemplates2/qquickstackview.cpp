@@ -343,6 +343,35 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
+    \section1 Size
+
+    StackView does not inherit an implicit size from items that are pushed onto
+    it. This means that using it as the \l {Popup::}{contentItem} of a
+    \l Dialog, for example, will not work as expected:
+
+    \code
+    Dialog {
+        StackView {
+            initialItem: Rectangle {
+                width: 200
+                height: 200
+                color: "salmon"
+            }
+        }
+    }
+    \endcode
+
+    There are several ways to ensure that StackView has a size in this
+    situation:
+
+    \list
+        \li Set \l implicitWidth and \l implicitHeight on the StackView itself.
+        \li Set \l implicitWidth and \l implicitHeight on the \l Rectangle.
+        \li Set \l {Popup::}{contentWidth} and \l {Popup::}{contentHeight} on
+            the Dialog.
+        \li Give the Dialog a size.
+    \endlist
+
     \sa {Customizing StackView}, {Navigation Controls}, {Container Controls},
         {Focus Management in Qt Quick Controls 2}
 */
