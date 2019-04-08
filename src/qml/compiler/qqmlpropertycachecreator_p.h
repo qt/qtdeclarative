@@ -692,11 +692,6 @@ inline QQmlCompileError QQmlPropertyCacheAliasCreator<ObjectContainer>::property
         const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, int *minorVersion,
         QQmlPropertyData::Flags *propertyFlags)
 {
-    const int targetObjectIndex = objectForId(component, alias.targetObjectId);
-    Q_ASSERT(targetObjectIndex >= 0);
-
-    const CompiledObject &targetObject = *objectContainer->objectAt(targetObjectIndex);
-
     *type = 0;
     bool writable = false;
     bool resettable = false;
@@ -704,11 +699,36 @@ inline QQmlCompileError QQmlPropertyCacheAliasCreator<ObjectContainer>::property
     propertyFlags->isAlias = true;
 
     if (alias.aliasToLocalAlias) {
-        auto targetAlias = targetObject.aliasesBegin();
-        for (uint i = 0; i < alias.localAliasIndex; ++i)
-            ++targetAlias;
-        return propertyDataForAlias(component, *targetAlias, type, minorVersion, propertyFlags);
-    } else if (alias.encodedMetaPropertyIndex == -1) {
+        const QV4::CompiledData::Alias *lastAlias = &alias;
+        QVarLengthArray<const QV4::CompiledData::Alias *, 4> seenAliases({lastAlias});
+
+        do {
+            const CompiledObject *targetObject = objectContainer->objectAt(
+                    objectForId(component, lastAlias->targetObjectId));
+            Q_ASSERT(targetObject);
+
+            auto nextAlias = targetObject->aliasesBegin();
+            for (uint i = 0; i < lastAlias->localAliasIndex; ++i)
+                ++nextAlias;
+
+            const QV4::CompiledData::Alias *targetAlias = &(*nextAlias);
+            if (seenAliases.contains(targetAlias)) {
+                return QQmlCompileError(targetAlias->location,
+                                        QQmlPropertyCacheCreatorBase::tr("Cyclic alias"));
+            }
+
+            seenAliases.append(targetAlias);
+            lastAlias = targetAlias;
+        } while (lastAlias->aliasToLocalAlias);
+
+        return propertyDataForAlias(component, *lastAlias, type, minorVersion, propertyFlags);
+    }
+
+    const int targetObjectIndex = objectForId(component, alias.targetObjectId);
+    Q_ASSERT(targetObjectIndex >= 0);
+    const CompiledObject &targetObject = *objectContainer->objectAt(targetObjectIndex);
+
+    if (alias.encodedMetaPropertyIndex == -1) {
         Q_ASSERT(alias.flags & QV4::CompiledData::Alias::AliasPointsToPointerObject);
         auto *typeRef = objectContainer->resolvedType(targetObject.inheritedTypeNameIndex);
         if (!typeRef) {
