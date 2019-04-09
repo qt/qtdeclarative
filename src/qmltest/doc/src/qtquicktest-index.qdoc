@@ -165,6 +165,10 @@
                 and \l {QQmlFileSelector::setExtraSelectors}{extra file selectors}
                 will have been set on the engine by this point.
 
+                This function is called once for each QML test file,
+                so any arguments are unique to that test. For example, this
+                means that each QML test file will have its own QML engine.
+
                 This function can be used to \l {Choosing the Correct Integration
                 Method Between C++ and QML}{register QML types} and
                 \l {QQmlEngine::addImportPath()}{add import paths},
@@ -176,10 +180,6 @@
                 Use this function to clean up before everything will start to be destructed.
             \li Qt 5.12
     \endtable
-
-    Each function will be called once for each \c tst_*.qml file, so any
-    arguments are unique to that test. For example, this means that each QML
-    test file will have its own QML engine.
 
     The following example demonstrates how the macro can be used to set context
     properties on the QML engine:
