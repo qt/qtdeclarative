@@ -2025,13 +2025,11 @@ void QQuickTableViewPrivate::syncWithPendingChanges()
     Q_Q(QQuickTableView);
     viewportRect = QRectF(q->contentX(), q->contentY(), q->width(), q->height());
 
-    // Sync rebuild options first, in case we schedule a rebuild from one of the
-    // other sync calls above. If so, we need to start a new rebuild from the top.
-    syncRebuildOptions();
-
     syncModel();
     syncDelegate();
     syncSyncView();
+
+    syncRebuildOptions();
 }
 
 void QQuickTableViewPrivate::syncRebuildOptions()
@@ -2121,7 +2119,6 @@ void QQuickTableViewPrivate::syncSyncView()
 
             assignedSyncView->d_func()->syncChildren.append(q);
             scheduledRebuildOptions |= RebuildOption::ViewportOnly;
-            q->polish();
         }
 
         syncView = assignedSyncView;
@@ -2134,6 +2131,21 @@ void QQuickTableViewPrivate::syncSyncView()
         q->setColumnSpacing(syncView->columnSpacing());
     if (syncVertically)
         q->setRowSpacing(syncView->rowSpacing());
+
+    if (syncView && loadedItems.isEmpty() && !tableSize.isEmpty()) {
+        // When we have a syncView, we can sometimes temporarily end up with no loaded items.
+        // This can happen if the syncView has a model with more rows or columns than us, in
+        // which case the viewport can end up in a place where we have no rows or columns to
+        // show. In that case, check now if the viewport has been flicked back again, and
+        // that we can rebuild the table with a visible top-left cell.
+        const auto syncView_d = syncView->d_func();
+        if (!syncView_d->loadedItems.isEmpty()) {
+            if (syncHorizontally && syncView_d->leftColumn() <= tableSize.width() - 1)
+                scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::ViewportOnly;
+            else if (syncVertically && syncView_d->topRow() <= tableSize.height() - 1)
+                scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::ViewportOnly;
+        }
+    }
 }
 
 void QQuickTableViewPrivate::connectToModel()
