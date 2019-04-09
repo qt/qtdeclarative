@@ -357,12 +357,12 @@ TestCase {
         tumbler.forceActiveFocus();
         keyClick(Qt.Key_Down);
         tryCompare(tumblerView, "offset", 3.0);
+        tryCompare(tumbler, "moving", false);
         firstItemCenterPos = itemCenterPos(0);
         firstItem = tumblerView.itemAt(firstItemCenterPos.x, firstItemCenterPos.y);
         verify(firstItem);
         // Test QTBUG-40298.
         actualPos = testCase.mapFromItem(firstItem, 0, 0);
-        tryCompare(tumbler, "moving", false);
         fuzzyCompare(actualPos.x, tumbler.leftPadding, 0.0001);
         fuzzyCompare(actualPos.y, tumbler.topPadding, 0.0001);
 

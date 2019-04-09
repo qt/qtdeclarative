@@ -288,9 +288,12 @@ TestCase {
         verify(button)
 
         // The button should never go outside of the box.
-        var buttonPosInBox = button.mapToItem(control, 0, 0)
-        verify(buttonPosInBox.x >= 0)
-        verify(buttonPosInBox.x + button.width < control.width)
+        tryVerify(function() { return button.mapToItem(control, 0, 0).x >= 0 },
+            1000, "Expected left edge of button to be within left edge of DialogButtonBox (i.e. greater than or equal to 0)" +
+                ", but it's " + button.mapToItem(control, 0, 0).x)
+        tryVerify(function() { return button.mapToItem(control, 0, 0).x + button.width <= control.width },
+            1000, "Expected right edge of button to be within right edge of DialogButtonBox (i.e. less than or equal to " +
+                control.width + "), but it's " + (button.mapToItem(control, 0, 0).x + button.width))
     }
 
     Component {
@@ -333,11 +336,12 @@ TestCase {
         verify(button)
 
         // The button should never go outside of the box.
-        var buttonPosInBox = button.mapToItem(box, 0, 0)
-        verify(buttonPosInBox.x >= 0, "Expected button to be inside left edge "
-            + "of DialogButtonBox, but it's " + buttonPosInBox.x)
-        verify(buttonPosInBox.x + button.width <= box.width, "Expected button to be inside right edge "
-            + "of DialogButtonBox (" + box.width + "), but it's " + (buttonPosInBox.x + button.width))
+        tryVerify(function() { return button.mapToItem(box, 0, 0).x >= 0 },
+            1000, "Expected left edge of button to be within left edge of DialogButtonBox (i.e. greater than or equal to 0)" +
+                ", but it's " + button.mapToItem(box, 0, 0).x)
+        tryVerify(function() { return button.mapToItem(box, 0, 0).x + button.width <= box.width },
+            1000, "Expected right edge of button to be within right edge of DialogButtonBox (i.e. less than or equal to " +
+                box.width + "), but it's " + (button.mapToItem(box, 0, 0).x + button.width))
         compare(box.width, dialog.width)
         // There's a single button and we align it to the right.
         compare(box.contentItem.width, button.width)
@@ -360,27 +364,6 @@ TestCase {
                 DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
             }
         }
-    }
-
-    // QTBUG-72886
-    function test_oneCustomButtonChangeText() {
-        var control = createTemporaryObject(customButtonBox, testCase, {})
-        verify(control)
-
-        var listView = control.contentItem
-        waitForRendering(listView)
-
-        var button = control.okButton
-        verify(button)
-        button.text = "some longer text";
-
-        // The button should never go outside of the box.
-        tryVerify(function() { return button.mapToItem(control, 0, 0).x >= 0 },
-            1000, "Expected left edge of button to be within left edge of DialogButtonBox (i.e. greater than or equal to 0)" +
-                ", but it's " + button.mapToItem(control, 0, 0).x)
-        tryVerify(function() { return button.mapToItem(control, 0, 0).x + button.width <= control.width },
-            1000, "Expected right edge of button to be within right edge of DialogButtonBox (i.e. less than or equal to " +
-                control.width + "), but it's " + (button.mapToItem(control, 0, 0).x + button.width))
     }
 
     Component {
@@ -406,16 +389,25 @@ TestCase {
         }
     }
 
+    function test_changeCustomButtonText_data() {
+        return [
+            { tag: "oneButton", component: customButtonBox },
+            { tag: "twoButtons", component: customButtonBoxTwoButtons },
+        ]
+    }
+
     // QTBUG-72886
-    function test_twoCustomButtonsChangeText() {
-        var control = createTemporaryObject(customButtonBoxTwoButtons, testCase, {})
+    function test_changeCustomButtonText(data) {
+        var control = createTemporaryObject(customButtonBox, testCase, {})
         verify(control)
 
         var listView = control.contentItem
         waitForRendering(listView)
 
         var button = control.okButton
+        verify(button)
         button.text = "some longer text";
+
         // The button should never go outside of the box.
         tryVerify(function() { return button.mapToItem(control, 0, 0).x >= 0 },
             1000, "Expected left edge of button to be within left edge of DialogButtonBox (i.e. greater than or equal to 0)" +
@@ -424,7 +416,6 @@ TestCase {
             1000, "Expected right edge of button to be within right edge of DialogButtonBox (i.e. less than or equal to " +
                 control.width + "), but it's " + (button.mapToItem(control, 0, 0).x + button.width))
     }
-
 
     Component {
         id: noRolesDialog
