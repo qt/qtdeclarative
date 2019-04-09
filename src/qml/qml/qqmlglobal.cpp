@@ -262,9 +262,9 @@ Q_QML_PRIVATE_EXPORT void QQml_removeValueTypeProvider(QQmlValueTypeProvider *ol
             prev->next = oldProvider->next;
             return;
         }
-    }
 
-    qWarning("QQml_removeValueTypeProvider: was asked to remove provider %p but it was not found", oldProvider);
+        qWarning("QQml_removeValueTypeProvider: was asked to remove provider %p but it was not found", oldProvider);
+    }
 }
 
 Q_AUTOTEST_EXPORT QQmlValueTypeProvider *QQml_valueTypeProvider()
