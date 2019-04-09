@@ -76,14 +76,23 @@
 
     \section1 Example Usage
 
+    \section2 C++ Models
+
     The following example shows how to create a model from C++ with multiple
     columns:
 
-    \snippet qml/tableview/tablemodel.cpp 0
+    \snippet qml/tableview/cpp-tablemodel.cpp 0
 
     And then how to use it from QML:
 
-    \snippet qml/tableview/tablemodel.qml 0
+    \snippet qml/tableview/cpp-tablemodel.qml 0
+
+    \section2 QML Models
+
+    For prototyping and displaying very simple data (from a web API, for
+    example), \l TableModel can be used:
+
+    \snippet qml/tableview/qml-tablemodel.qml 0
 
     \section1 Reusing items
 
