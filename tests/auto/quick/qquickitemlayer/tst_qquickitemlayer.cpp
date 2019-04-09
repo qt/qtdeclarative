@@ -51,9 +51,8 @@ public:
         view.setSource(testFileUrl(fileName));
 
         view.showNormal();
-        QTest::qWaitForWindowExposed(&view);
-
-        return view.grabWindow();
+        return QTest::qWaitForWindowExposed(&view)
+            ? view.grabWindow() : QImage();
     }
 
 private slots:
@@ -153,6 +152,7 @@ void tst_QQuickItemLayer::layerSmooth()
         QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
 
     QImage fb = runTest("Smooth.qml");
+    QVERIFY(!fb.size().isEmpty());
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
     QCOMPARE(fb.pixel(fb.width() - 1, 0), qRgb(0, 0, 0xff));
 
@@ -177,6 +177,7 @@ void tst_QQuickItemLayer::layerEnabled()
         QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
 
     QImage fb = runTest("Enabled.qml");
+    QVERIFY(!fb.size().isEmpty());
     // Verify the banding
     QCOMPARE(fb.pixel(0, 0), fb.pixel(0, 1));
     // Verify the gradient
@@ -212,6 +213,7 @@ void tst_QQuickItemLayer::layerEffect()
         QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
 
     QImage fb = runTest("Effect.qml");
+    QVERIFY(!fb.size().isEmpty());
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
     QCOMPARE(fb.pixel(fb.width() - 1, 0), qRgb(0, 0xff, 0));
 }
@@ -229,6 +231,7 @@ void tst_QQuickItemLayer::layerSourceRect()
         QSKIP("Only OpenGL Renderer supports GLSL ShaderEffects");
 
     QImage fb = runTest("SourceRect.qml");
+    QVERIFY(!fb.size().isEmpty());
 
     // Check that the edges are converted to blue
     QCOMPARE(fb.pixel(0, 0), qRgb(0, 0, 0xff));
@@ -253,6 +256,7 @@ void tst_QQuickItemLayer::layerIsTextureProvider()
         QSKIP("Only OpenGL Renderer supports GLSL ShaderEffects");
 
     QImage fb = runTest("TextureProvider.qml");
+    QVERIFY(!fb.size().isEmpty());
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
     QCOMPARE(fb.pixel(fb.width() - 1, 0), qRgb(0, 0xff, 0));
 }
@@ -448,6 +452,7 @@ void tst_QQuickItemLayer::changeSamplerName()
         QSKIP("Only OpenGL Renderer supports GLSL ShaderEffects");
 
     QImage fb = runTest("SamplerNameChange.qml");
+    QVERIFY(!fb.size().isEmpty());
     QCOMPARE(fb.pixel(0, 0), qRgb(0, 0, 0xff));
 }
 
@@ -459,6 +464,7 @@ void tst_QQuickItemLayer::itemEffect()
         QSKIP("Only OpenGL Renderer supports GLSL ShaderEffects");
 
     QImage fb = runTest("ItemEffect.qml");
+    QVERIFY(!fb.size().isEmpty());
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
     QCOMPARE(fb.pixel(199, 0), qRgb(0xff, 0, 0));
     QCOMPARE(fb.pixel(0, 199), qRgb(0, 0, 0xff));
@@ -472,6 +478,7 @@ void tst_QQuickItemLayer::rectangleEffect()
         QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
 
     QImage fb = runTest("RectangleEffect.qml");
+    QVERIFY(!fb.size().isEmpty());
     QCOMPARE(fb.pixel(0, 0), qRgb(0, 0xff, 0));
     QCOMPARE(fb.pixel(199, 0), qRgb(0, 0xff, 0));
     QCOMPARE(fb.pixel(0, 199), qRgb(0, 0xff, 0));

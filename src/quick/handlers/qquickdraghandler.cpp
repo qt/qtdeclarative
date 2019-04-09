@@ -112,14 +112,13 @@ QPointF QQuickDragHandler::targetCentroidPosition()
 void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point)
 {
     QQuickMultiPointHandler::onGrabChanged(grabber, transition, point);
-    if (grabber == this && transition == QQuickEventPoint::GrabExclusive) {
+    if (grabber == this && transition == QQuickEventPoint::GrabExclusive && target()) {
         // In case the grab got handed over from another grabber, we might not get the Press.
         if (!m_pressedInsideTarget) {
-            if (target())
+            if (target() != parentItem())
                 m_pressTargetPos = QPointF(target()->width(), target()->height()) / 2;
         } else if (m_pressTargetPos.isNull()) {
-            if (target())
-                m_pressTargetPos = targetCentroidPosition();
+            m_pressTargetPos = targetCentroidPosition();
         }
     }
 }

@@ -134,7 +134,7 @@ void tst_qquickrectangle::gradient_separate()
 
     // Start off clean
     QQuickItemPrivate *rectPriv = QQuickItemPrivate::get(rect);
-    QTRY_COMPARE(rectPriv->dirtyAttributes & QQuickItemPrivate::Content, 0);
+    QTRY_COMPARE(rectPriv->dirtyAttributes & QQuickItemPrivate::Content, 0u);
 
     QMetaObject::invokeMethod(rect, "changeGradient");
 

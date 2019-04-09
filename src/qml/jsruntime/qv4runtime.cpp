@@ -1501,7 +1501,7 @@ ReturnedValue Runtime::CallProperty::call(ExecutionEngine *engine, const Value &
 
     if (!f) {
         QString error = QStringLiteral("Property '%1' of object %2 is not a function")
-                .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]->toQString(),
+                .arg(name->toQString(),
                      base->toQStringNoThrow());
         return engine->throwTypeError(error);
     }
@@ -2085,6 +2085,7 @@ ReturnedValue Runtime::Div::call(const Value &left, const Value &right)
         int lval = left.integerValue();
         int rval = right.integerValue();
         if (rval != 0 // division by zero should result in a NaN
+                && !(lval == std::numeric_limits<int>::min() && rval == -1) // doesn't fit in int
                 && (lval % rval == 0)  // fractions can't be stored in an int
                 && !(lval == 0 && rval < 0)) // 0 / -something results in -0.0
             return Encode(int(lval / rval));

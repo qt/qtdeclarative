@@ -55,6 +55,7 @@ private slots:
     void defaultPropertyValues();
     void touchDrag();
     void mouseDrag();
+    void dragFromMargin();
     void touchDragMulti();
     void touchDragMultiSliders_data();
     void touchDragMultiSliders();
@@ -249,6 +250,38 @@ void tst_DragHandler::mouseDrag()
     QCOMPARE(ball->mapToScene(ballCenter).toPoint(), p1);
     QCOMPARE(translationChangedSpy.count(), 1);
     QCOMPARE(centroidChangedSpy.count(), 5);
+}
+
+void tst_DragHandler::dragFromMargin() // QTBUG-74966
+{
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "dragMargin.qml");
+    QQuickView * window = windowPtr.data();
+
+    QQuickItem *draggableItem = window->rootObject()->childItems().first();
+    QVERIFY(draggableItem);
+    QQuickDragHandler *dragHandler = draggableItem->findChild<QQuickDragHandler*>();
+    QVERIFY(dragHandler);
+
+    QPointF originalPos = draggableItem->position();
+    QPointF scenePressPos = originalPos - QPointF(10, 0);
+    QPoint p1 = scenePressPos.toPoint();
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QVERIFY(!dragHandler->active());
+    QCOMPARE(dragHandler->centroid().scenePosition(), scenePressPos);
+    QCOMPARE(dragHandler->centroid().scenePressPosition(), scenePressPos);
+    p1 += QPoint(dragThreshold * 2, 0);
+    QTest::mouseMove(window, p1);
+    QTRY_VERIFY(dragHandler->active());
+    QCOMPARE(dragHandler->centroid().scenePressPosition(), scenePressPos);
+    QCOMPARE(dragHandler->centroid().sceneGrabPosition(), p1);
+    QCOMPARE(dragHandler->translation().x(), 0.0); // hmm that's odd
+    QCOMPARE(dragHandler->translation().y(), 0.0);
+    QCOMPARE(draggableItem->position(), originalPos + QPointF(dragThreshold * 2, 0));
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTRY_VERIFY(!dragHandler->active());
+    QCOMPARE(dragHandler->centroid().pressedButtons(), Qt::NoButton);
 }
 
 void tst_DragHandler::touchDragMulti()

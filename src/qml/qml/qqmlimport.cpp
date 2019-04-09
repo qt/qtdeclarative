@@ -1263,7 +1263,7 @@ bool QQmlImportsPrivate::locateQmldir(const QString &uri, int vmaj, int vmin, QQ
             QString url;
             const QStringRef absolutePath = absoluteFilePath.leftRef(absoluteFilePath.lastIndexOf(Slash) + 1);
             if (absolutePath.at(0) == Colon)
-                url = QLatin1String("qrc://") + absolutePath.mid(1);
+                url = QLatin1String("qrc") + absolutePath;
             else
                 url = QUrl::fromLocalFile(absolutePath.toString()).toString();
 

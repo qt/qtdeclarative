@@ -120,7 +120,8 @@ public:
 
     int index;
     mutable volatile bool isSetup:1;
-    mutable volatile bool isEnumSetup:1;
+    mutable volatile bool isEnumFromCacheSetup:1;
+    mutable volatile bool isEnumFromBaseSetup:1;
     mutable bool haveSuperType:1;
     mutable QList<QQmlProxyMetaObject::ProxyData> metaObjects;
     mutable QStringHash<int> enums;
