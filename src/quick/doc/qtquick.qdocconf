@@ -43,7 +43,6 @@ headerdirs  += ..\
                ../../quickwidgets
 
 sourcedirs  += .. \
-               ../../imports/testlib \
                ../../quickwidgets
 
 exampledirs +=  ../../../examples/quick \
