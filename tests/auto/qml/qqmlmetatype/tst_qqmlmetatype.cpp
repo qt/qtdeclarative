@@ -66,6 +66,9 @@ private slots:
     void normalizeUrls();
     void unregisterAttachedProperties();
     void revisionedGroupedProperties();
+
+    void enumsInRecursiveImport_data();
+    void enumsInRecursiveImport();
 };
 
 class TestType : public QObject
@@ -626,6 +629,35 @@ void tst_qqmlmetatype::revisionedGroupedProperties()
         QQmlComponent invalid(&engine, testFileUrl("revisionedGroupedPropertiesInvalid.qml"));
         QVERIFY(invalid.isError());
     }
+}
+
+void tst_qqmlmetatype::enumsInRecursiveImport_data()
+{
+    QTest::addColumn<QString>("importPath");
+    QTest::addColumn<QUrl>("componentUrl");
+
+    QTest::addRow("data directory") << dataDirectory()
+                                    << testFileUrl("enumsInRecursiveImport.qml");
+
+    // The qrc case behaves differently because we failed to detect the recursion in type loading
+    // due to varying numbers of slashes after the "qrc:" in the URLs.
+    QTest::addRow("resources") << QStringLiteral("qrc:/data")
+                               << QUrl("qrc:/data/enumsInRecursiveImport.qml");
+}
+
+void tst_qqmlmetatype::enumsInRecursiveImport()
+{
+    QFETCH(QString, importPath);
+    QFETCH(QUrl, componentUrl);
+
+    qmlClearTypeRegistrations();
+    QQmlEngine engine;
+    engine.addImportPath(importPath);
+    QQmlComponent c(&engine, componentUrl);
+    QVERIFY(c.isReady());
+    QScopedPointer<QObject> obj(c.create());
+    QVERIFY(!obj.isNull());
+    QTRY_COMPARE(obj->property("color").toString(), QString("green"));
 }
 
 QTEST_MAIN(tst_qqmlmetatype)

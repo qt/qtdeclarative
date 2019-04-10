@@ -96,7 +96,7 @@
     \code
     var german = Qt.locale("de_DE");
     var d;
-    d = Number.fromLocaleString(german, "1234,56)   // d == 1234.56
+    d = Number.fromLocaleString(german, "1234,56")   // d == 1234.56
     d = Number.fromLocaleString(german, "1.234,56") // d == 1234.56
     d = Number.fromLocaleString(german, "1234.56")  // throws exception
     d = Number.fromLocaleString(german, "1.234")    // d == 1234.0

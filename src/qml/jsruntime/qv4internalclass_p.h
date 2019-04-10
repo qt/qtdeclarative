@@ -457,7 +457,7 @@ private:
     InternalClass *addMemberImpl(PropertyKey identifier, PropertyAttributes data, InternalClassEntry *entry);
 
     void removeChildEntry(InternalClass *child);
-    friend struct ExecutionEngine;
+    friend struct ::QV4::ExecutionEngine;
 };
 
 inline

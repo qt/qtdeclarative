@@ -64,7 +64,7 @@ class QQuickRectanglePrivate : public QQuickItemPrivate
 
 public:
     QQuickRectanglePrivate() :
-    color(Qt::white), gradient(0), pen(0), radius(0)
+    color(Qt::white), gradient(QJSValue::UndefinedValue), pen(0), radius(0)
     {
     }
 

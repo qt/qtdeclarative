@@ -118,7 +118,8 @@ QJSValue QQmlType::SingletonInstanceInfo::scriptApi(QQmlEngine *e) const
 QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
     : regType(type), iid(nullptr), typeId(0), listId(0), revision(0),
     containsRevisionedAttributes(false), baseMetaObject(nullptr),
-    index(-1), isSetup(false), isEnumSetup(false), haveSuperType(false)
+    index(-1), isSetup(false), isEnumFromCacheSetup(false), isEnumFromBaseSetup(false),
+    haveSuperType(false)
 {
     switch (type) {
     case QQmlType::CppType:
@@ -347,19 +348,24 @@ void QQmlTypePrivate::init() const
 
 void QQmlTypePrivate::initEnums(const QQmlPropertyCache *cache) const
 {
-    if (isEnumSetup) return;
+    if ((isEnumFromBaseSetup || !baseMetaObject)
+            && (isEnumFromCacheSetup || !cache)) {
+        return;
+    }
 
     init();
 
     QMutexLocker lock(QQmlMetaType::typeRegistrationLock());
-    if (isEnumSetup) return;
 
-    if (cache)
+    if (!isEnumFromCacheSetup && cache) {
         insertEnumsFromPropertyCache(cache);
-    if (baseMetaObject) // could be singleton type without metaobject
-        insertEnums(baseMetaObject);
+        isEnumFromCacheSetup = true;
+    }
 
-    isEnumSetup = true;
+    if (!isEnumFromBaseSetup && baseMetaObject) { // could be singleton type without metaobject
+        insertEnums(baseMetaObject);
+        isEnumFromBaseSetup = true;
+    }
 }
 
 void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const

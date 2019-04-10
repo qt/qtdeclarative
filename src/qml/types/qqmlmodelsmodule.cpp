@@ -74,9 +74,11 @@ void QQmlModelsModule::defineLabsModule()
 {
     const char uri[] = "Qt.labs.qmlmodels";
 
+#if QT_CONFIG(qml_delegate_model)
     qmlRegisterUncreatableType<QQmlAbstractDelegateComponent>(uri, 1, 0, "AbstractDelegateComponent", QQmlAbstractDelegateComponent::tr("Cannot create instance of abstract class AbstractDelegateComponent."));
     qmlRegisterType<QQmlDelegateChooser>(uri, 1, 0, "DelegateChooser");
     qmlRegisterType<QQmlDelegateChoice>(uri, 1, 0, "DelegateChoice");
+#endif
     qmlRegisterType<QQmlTableModel>(uri, 1, 0, "TableModel");
     qmlRegisterType<QQmlTableModelColumn>(uri, 1, 0, "TableModelColumn");
 }
