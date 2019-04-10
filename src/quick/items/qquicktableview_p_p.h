@@ -70,6 +70,25 @@ static const qreal kDefaultRowHeight = 50;
 static const qreal kDefaultColumnWidth = 50;
 
 class FxTableItem;
+class QQuickTableSectionSizeProviderPrivate;
+
+class Q_QUICK_PRIVATE_EXPORT QQuickTableSectionSizeProvider : public QObject {
+    Q_OBJECT
+
+public:
+    QQuickTableSectionSizeProvider(QObject *parent=nullptr);
+    void setSize(int section, qreal size);
+    qreal size(int section);
+    bool resetSize(int section);
+    void resetAll();
+
+Q_SIGNALS:
+    void sizeChanged();
+
+private:
+    Q_DISABLE_COPY(QQuickTableSectionSizeProvider)
+    Q_DECLARE_PRIVATE(QQuickTableSectionSizeProvider)
+};
 
 class Q_QML_AUTOTEST_EXPORT QQuickTableViewPrivate : public QQuickFlickablePrivate
 {
@@ -256,6 +275,8 @@ public:
 
     QJSValue rowHeightProvider;
     QJSValue columnWidthProvider;
+    QQuickTableSectionSizeProvider rowHeights;
+    QQuickTableSectionSizeProvider columnWidths;
 
     EdgeRange cachedNextVisibleEdgeIndex[4];
     EdgeRange cachedColumnWidth;

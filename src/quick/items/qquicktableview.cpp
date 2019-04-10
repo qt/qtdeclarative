@@ -2625,6 +2625,71 @@ void QQuickTableView::componentComplete()
     d_func()->registerCallbackWhenBindingsAreEvaluated();
 }
 
+class QObjectPrivate;
+class QQuickTableSectionSizeProviderPrivate : public QObjectPrivate {
+public:
+    QQuickTableSectionSizeProviderPrivate();
+    ~QQuickTableSectionSizeProviderPrivate();
+    QHash<int, qreal> hash;
+};
+
+QQuickTableSectionSizeProvider::QQuickTableSectionSizeProvider(QObject *parent)
+    : QObject (*(new QQuickTableSectionSizeProviderPrivate), parent)
+{
+}
+
+void QQuickTableSectionSizeProvider::setSize(int section, qreal size)
+{
+    Q_D(QQuickTableSectionSizeProvider);
+    if (section < 0 || size < 0) {
+        qmlWarning(this) << "setSize: section or size less than zero";
+        return;
+    }
+    if (qFuzzyCompare(QQuickTableSectionSizeProvider::size(section), size))
+        return;
+    d->hash.insert(section, size);
+    emit sizeChanged();
+}
+
+// return -1.0 if no valid explicit size retrieved
+qreal QQuickTableSectionSizeProvider::size(int section)
+{
+    Q_D(QQuickTableSectionSizeProvider);
+    auto it = d->hash.find(section);
+    if (it != d->hash.end())
+        return *it;
+    return -1.0;
+}
+
+// return true if section is valid
+bool QQuickTableSectionSizeProvider::resetSize(int section)
+{
+    Q_D(QQuickTableSectionSizeProvider);
+    if (d->hash.empty())
+        return false;
+
+    auto ret = d->hash.remove(section);
+    if (ret)
+        emit sizeChanged();
+    return ret;
+}
+
+void QQuickTableSectionSizeProvider::resetAll()
+{
+    Q_D(QQuickTableSectionSizeProvider);
+    d->hash.clear();
+    emit sizeChanged();
+}
+
+QQuickTableSectionSizeProviderPrivate::QQuickTableSectionSizeProviderPrivate()
+    : QObjectPrivate()
+{
+}
+
+QQuickTableSectionSizeProviderPrivate::~QQuickTableSectionSizeProviderPrivate()
+{
+
+}
 #include "moc_qquicktableview_p.cpp"
 
 QT_END_NAMESPACE
