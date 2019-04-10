@@ -177,8 +177,8 @@ QQmlTypePrivate::~QQmlTypePrivate()
 }
 
 QQmlType::QQmlType() = default;
-QQmlType::QQmlType(const QQmlType &other) = default;
-QQmlType::QQmlType(QQmlType &&other) = default;
+QQmlType::QQmlType(const QQmlType &) = default;
+QQmlType::QQmlType(QQmlType &&) = default;
 QQmlType &QQmlType::operator =(const QQmlType &other) = default;
 QQmlType &QQmlType::operator =(QQmlType &&other) = default;
 QQmlType::QQmlType(const QQmlTypePrivate *priv) : d(priv) {}
