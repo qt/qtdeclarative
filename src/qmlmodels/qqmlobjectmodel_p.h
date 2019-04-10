@@ -56,6 +56,8 @@
 #include <QtQml/qqml.h>
 #include <QtCore/qobject.h>
 
+QT_REQUIRE_CONFIG(qml_object_model);
+
 QT_BEGIN_NAMESPACE
 
 class QObject;

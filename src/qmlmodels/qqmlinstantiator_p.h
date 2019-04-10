@@ -55,6 +55,8 @@
 #include <QtQml/qqmlparserstatus.h>
 #include <QtQmlModels/private/qtqmlmodelsglobal_p.h>
 
+QT_REQUIRE_CONFIG(qml_object_model);
+
 QT_BEGIN_NAMESPACE
 
 class QQmlInstantiatorPrivate;

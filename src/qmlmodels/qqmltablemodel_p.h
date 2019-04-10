@@ -59,6 +59,8 @@
 #include <QtQml/QJSValue>
 #include <QtQml/QQmlListProperty>
 
+QT_REQUIRE_CONFIG(qml_table_model);
+
 QT_BEGIN_NAMESPACE
 
 class Q_QMLMODELS_PRIVATE_EXPORT QQmlTableModel : public QAbstractTableModel, public QQmlParserStatus
