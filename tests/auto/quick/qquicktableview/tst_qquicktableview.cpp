@@ -57,17 +57,17 @@ static const char *kModelDataBindingProp = "modelDataBinding";
 
 Q_DECLARE_METATYPE(QMarginsF);
 
-#define DECLARE_TABLEVIEW_VARIABLES \
-    auto tableView = view->rootObject()->property(kTableViewPropName).value<QQuickTableView *>(); \
-    QVERIFY(tableView); \
-    auto tableViewPrivate = QQuickTableViewPrivate::get(tableView); \
-    Q_UNUSED(tableViewPrivate)
+#define GET_QML_TABLEVIEW(PROPNAME) \
+    auto PROPNAME = view->rootObject()->property(#PROPNAME).value<QQuickTableView *>(); \
+    QVERIFY(PROPNAME); \
+    auto PROPNAME ## Private = QQuickTableViewPrivate::get(PROPNAME); \
+    Q_UNUSED(PROPNAME ## Private)
 
 #define LOAD_TABLEVIEW(fileName) \
     view->setSource(testFileUrl(fileName)); \
     view->show(); \
     QVERIFY(QTest::qWaitForWindowActive(view)); \
-    DECLARE_TABLEVIEW_VARIABLES
+    GET_QML_TABLEVIEW(tableView)
 
 #define LOAD_TABLEVIEW_ASYNC(fileName) \
     view->setSource(testFileUrl("asyncloader.qml")); \
@@ -77,7 +77,7 @@ Q_DECLARE_METATYPE(QMarginsF);
     loader->setSource(QUrl::fromLocalFile("data/" fileName)); \
     QTRY_VERIFY(loader->item()); \
     QCOMPARE(loader->status(), QQuickLoader::Status::Ready); \
-    DECLARE_TABLEVIEW_VARIABLES
+    GET_QML_TABLEVIEW(tableView)
 
 #define WAIT_UNTIL_POLISHED \
     QVERIFY(QQuickTest::qIsPolishScheduled(tableView)); \
@@ -162,6 +162,11 @@ private slots:
     void hideRowsAndColumns_data();
     void hideRowsAndColumns();
     void checkThatRevisionedPropertiesCannotBeUsedInOldImports();
+    void checkSyncView_rootView_data();
+    void checkSyncView_rootView();
+    void checkSyncView_childViews_data();
+    void checkSyncView_childViews();
+    void checkSyncView_differentSizedModels();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -2146,6 +2151,244 @@ void tst_QQuickTableView::checkThatRevisionedPropertiesCannotBeUsedInOldImports(
     const int resolvedColumn = view->rootObject()->property("resolvedDelegateColumn").toInt();
     QCOMPARE(resolvedRow, 42);
     QCOMPARE(resolvedColumn, 42);
+}
+
+void tst_QQuickTableView::checkSyncView_rootView_data()
+{
+    QTest::addColumn<qreal>("flickToPos");
+
+    QTest::newRow("pos:110") << 110.;
+    QTest::newRow("pos:2010") << 2010.;
+}
+
+void tst_QQuickTableView::checkSyncView_rootView()
+{
+    // Check that if you flick on the root tableview (the view that has
+    // no other view as syncView), all the other tableviews will sync
+    // their content view position according to their syncDirection flag.
+    QFETCH(qreal, flickToPos);
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewH);
+    GET_QML_TABLEVIEW(tableViewV);
+    GET_QML_TABLEVIEW(tableViewHV);
+    QQuickTableView *views[] = {tableViewH, tableViewV, tableViewHV};
+
+    auto model = TestModelAsVariant(100, 100);
+
+    tableView->setModel(model);
+    for (auto view : views)
+        view->setModel(model);
+
+    tableView->setContentX(flickToPos);
+    tableView->setContentY(flickToPos);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that geometry properties are mirrored
+    QCOMPARE(tableViewH->columnSpacing(), tableView->columnSpacing());
+    QCOMPARE(tableViewH->rowSpacing(), 0);
+    QCOMPARE(tableViewH->contentWidth(), tableView->contentWidth());
+    QCOMPARE(tableViewV->columnSpacing(), 0);
+    QCOMPARE(tableViewV->rowSpacing(), tableView->rowSpacing());
+    QCOMPARE(tableViewV->contentHeight(), tableView->contentHeight());
+
+    // Check that viewport is in sync after the flick
+    QCOMPARE(tableView->contentX(), flickToPos);
+    QCOMPARE(tableView->contentY(), flickToPos);
+    QCOMPARE(tableViewH->contentX(), tableView->contentX());
+    QCOMPARE(tableViewH->contentY(), 0);
+    QCOMPARE(tableViewV->contentX(), 0);
+    QCOMPARE(tableViewV->contentY(), tableView->contentY());
+    QCOMPARE(tableViewHV->contentX(), tableView->contentX());
+    QCOMPARE(tableViewHV->contentY(), tableView->contentY());
+
+    // Check that topLeft cell is in sync after the flick
+    QCOMPARE(tableViewHPrivate->leftColumn(), tableViewPrivate->leftColumn());
+    QCOMPARE(tableViewHPrivate->rightColumn(), tableViewPrivate->rightColumn());
+    QCOMPARE(tableViewHPrivate->topRow(), 0);
+    QCOMPARE(tableViewVPrivate->leftColumn(), 0);
+    QCOMPARE(tableViewVPrivate->topRow(), tableViewPrivate->topRow());
+    QCOMPARE(tableViewHVPrivate->leftColumn(), tableViewPrivate->leftColumn());
+    QCOMPARE(tableViewHVPrivate->topRow(), tableViewPrivate->topRow());
+
+    // Check that the geometry of the tables are in sync after the flick
+    QCOMPARE(tableViewHPrivate->loadedTableOuterRect.left(), tableViewPrivate->loadedTableOuterRect.left());
+    QCOMPARE(tableViewHPrivate->loadedTableOuterRect.right(), tableViewPrivate->loadedTableOuterRect.right());
+    QCOMPARE(tableViewHPrivate->loadedTableOuterRect.top(), 0);
+
+    QCOMPARE(tableViewVPrivate->loadedTableOuterRect.top(), tableViewPrivate->loadedTableOuterRect.top());
+    QCOMPARE(tableViewVPrivate->loadedTableOuterRect.bottom(), tableViewPrivate->loadedTableOuterRect.bottom());
+    QCOMPARE(tableViewVPrivate->loadedTableOuterRect.left(), 0);
+
+    QCOMPARE(tableViewHVPrivate->loadedTableOuterRect, tableViewPrivate->loadedTableOuterRect);
+}
+
+void tst_QQuickTableView::checkSyncView_childViews_data()
+{
+    QTest::addColumn<int>("viewIndexToFlick");
+    QTest::addColumn<qreal>("flickToPos");
+
+    QTest::newRow("tableViewH, pos:100") << 0 << 100.;
+    QTest::newRow("tableViewV, pos:100") << 1 << 100.;
+    QTest::newRow("tableViewHV, pos:100") << 2 << 100.;
+    QTest::newRow("tableViewH, pos:2000") << 0 << 2000.;
+    QTest::newRow("tableViewV, pos:2000") << 1 << 2000.;
+    QTest::newRow("tableViewHV, pos:2000") << 2 << 2000.;
+}
+
+void tst_QQuickTableView::checkSyncView_childViews()
+{
+    // Check that if you flick on a tableview that has a syncView, the
+    // syncView will move to the new position as well, which will also
+    // recursivly move all other connected child views of the syncView.
+    QFETCH(int, viewIndexToFlick);
+    QFETCH(qreal, flickToPos);
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewH);
+    GET_QML_TABLEVIEW(tableViewV);
+    GET_QML_TABLEVIEW(tableViewHV);
+    QQuickTableView *views[] = {tableViewH, tableViewV, tableViewHV};
+    QQuickTableView *viewToFlick = views[viewIndexToFlick];
+    QQuickTableViewPrivate *viewToFlickPrivate = QQuickTableViewPrivate::get(viewToFlick);
+
+    auto model = TestModelAsVariant(100, 100);
+
+    tableView->setModel(model);
+    for (auto view : views)
+        view->setModel(model);
+
+    viewToFlick->setContentX(flickToPos);
+    viewToFlick->setContentY(flickToPos);
+
+    WAIT_UNTIL_POLISHED;
+
+    // The view the user flicks on can always be flicked in both directions
+    // (unless is has a flickingDirection set, which is not the case here).
+    QCOMPARE(viewToFlick->contentX(), flickToPos);
+    QCOMPARE(viewToFlick->contentY(), flickToPos);
+
+    // The root view (tableView) will move in sync according
+    // to the syncDirection of the view being flicked.
+    if (viewToFlick->syncDirection() & Qt::Horizontal) {
+        QCOMPARE(tableView->contentX(), flickToPos);
+        QCOMPARE(tableViewPrivate->leftColumn(), viewToFlickPrivate->leftColumn());
+        QCOMPARE(tableViewPrivate->rightColumn(), viewToFlickPrivate->rightColumn());
+        QCOMPARE(tableViewPrivate->loadedTableOuterRect.left(), viewToFlickPrivate->loadedTableOuterRect.left());
+        QCOMPARE(tableViewPrivate->loadedTableOuterRect.right(), viewToFlickPrivate->loadedTableOuterRect.right());
+    } else {
+        QCOMPARE(tableView->contentX(), 0);
+        QCOMPARE(tableViewPrivate->leftColumn(), 0);
+        QCOMPARE(tableViewPrivate->loadedTableOuterRect.left(), 0);
+    }
+
+    if (viewToFlick->syncDirection() & Qt::Vertical) {
+        QCOMPARE(tableView->contentY(), flickToPos);
+        QCOMPARE(tableViewPrivate->topRow(), viewToFlickPrivate->topRow());
+        QCOMPARE(tableViewPrivate->bottomRow(), viewToFlickPrivate->bottomRow());
+        QCOMPARE(tableViewPrivate->loadedTableOuterRect.top(), viewToFlickPrivate->loadedTableOuterRect.top());
+        QCOMPARE(tableViewPrivate->loadedTableOuterRect.bottom(), viewToFlickPrivate->loadedTableOuterRect.bottom());
+    } else {
+        QCOMPARE(tableView->contentY(), 0);
+        QCOMPARE(tableViewPrivate->topRow(), 0);
+        QCOMPARE(tableViewPrivate->loadedTableOuterRect.top(), 0);
+    }
+
+    // The other views should continue to stay in sync with
+    // the root view, unless it was the view being flicked.
+    if (viewToFlick != tableViewH) {
+        QCOMPARE(tableViewH->contentX(), tableView->contentX());
+        QCOMPARE(tableViewH->contentY(), 0);
+        QCOMPARE(tableViewHPrivate->leftColumn(), tableViewPrivate->leftColumn());
+        QCOMPARE(tableViewHPrivate->rightColumn(), tableViewPrivate->rightColumn());
+        QCOMPARE(tableViewHPrivate->loadedTableOuterRect.left(), tableViewPrivate->loadedTableOuterRect.left());
+        QCOMPARE(tableViewHPrivate->loadedTableOuterRect.right(), tableViewPrivate->loadedTableOuterRect.right());
+        QCOMPARE(tableViewHPrivate->topRow(), 0);
+        QCOMPARE(tableViewHPrivate->loadedTableOuterRect.top(), 0);
+    }
+
+    if (viewToFlick != tableViewV) {
+        QCOMPARE(tableViewV->contentX(), 0);
+        QCOMPARE(tableViewV->contentY(), tableView->contentY());
+        QCOMPARE(tableViewVPrivate->topRow(), tableViewPrivate->topRow());
+        QCOMPARE(tableViewVPrivate->bottomRow(), tableViewPrivate->bottomRow());
+        QCOMPARE(tableViewVPrivate->loadedTableOuterRect.top(), tableViewPrivate->loadedTableOuterRect.top());
+        QCOMPARE(tableViewVPrivate->loadedTableOuterRect.bottom(), tableViewPrivate->loadedTableOuterRect.bottom());
+        QCOMPARE(tableViewVPrivate->leftColumn(), 0);
+        QCOMPARE(tableViewVPrivate->loadedTableOuterRect.left(), 0);
+    }
+
+    if (viewToFlick != tableViewHV) {
+        QCOMPARE(tableViewHV->contentX(), tableView->contentX());
+        QCOMPARE(tableViewHV->contentY(), tableView->contentY());
+        QCOMPARE(tableViewHVPrivate->leftColumn(), tableViewPrivate->leftColumn());
+        QCOMPARE(tableViewHVPrivate->rightColumn(), tableViewPrivate->rightColumn());
+        QCOMPARE(tableViewHVPrivate->topRow(), tableViewPrivate->topRow());
+        QCOMPARE(tableViewHVPrivate->bottomRow(), tableViewPrivate->bottomRow());
+        QCOMPARE(tableViewHVPrivate->loadedTableOuterRect, tableViewPrivate->loadedTableOuterRect);
+    }
+}
+
+void tst_QQuickTableView::checkSyncView_differentSizedModels()
+{
+    // Check that you can have two tables in a syncView relation, where
+    // the sync "child" has fewer rows/columns than the syncView. In that
+    // case, it will be possible to flick the syncView further out than
+    // the child have rows/columns to follow. This causes some extra
+    // challenges for TableView to ensure that they are still kept in
+    // sync once you later flick the syncView back to a point where both
+    // tables ends up visible. This test will check this sitiation.
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewH);
+    GET_QML_TABLEVIEW(tableViewV);
+    GET_QML_TABLEVIEW(tableViewHV);
+
+    auto tableViewModel = TestModelAsVariant(100, 100);
+    auto tableViewHModel = TestModelAsVariant(100, 50);
+    auto tableViewVModel = TestModelAsVariant(50, 100);
+    auto tableViewHVModel = TestModelAsVariant(5, 5);
+
+    tableView->setModel(tableViewModel);
+    tableViewH->setModel(tableViewHModel);
+    tableViewV->setModel(tableViewVModel);
+    tableViewHV->setModel(tableViewHVModel);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Flick far out, beyond the smaller tables, which will
+    // also force a rebuild (and as such, cause layout properties
+    // like average cell width to be temporarily out of sync).
+    tableView->setContentX(5000);
+    QVERIFY(tableViewPrivate->scheduledRebuildOptions);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that the smaller tables are now flicked out of view
+    qreal leftEdge = tableViewPrivate->loadedTableOuterRect.left();
+    QVERIFY(tableViewHPrivate->loadedTableOuterRect.right() < leftEdge);
+    QVERIFY(tableViewHVPrivate->loadedTableOuterRect.right() < leftEdge);
+
+    // Flick slowly back so that we don't trigger a rebuild (since
+    // we want to check that we stay in sync also when not rebuilding).
+    while (tableView->contentX() > 200) {
+        tableView->setContentX(tableView->contentX() - 200);
+        QVERIFY(!tableViewPrivate->rebuildOptions);
+        QVERIFY(!tableViewPrivate->polishScheduled);
+    }
+
+    leftEdge = tableViewPrivate->loadedTableOuterRect.left();
+    const int leftColumn = tableViewPrivate->leftColumn();
+    QCOMPARE(tableViewHPrivate->loadedTableOuterRect.left(), leftEdge);
+    QCOMPARE(tableViewHPrivate->leftColumn(), leftColumn);
+
+    // Because the tableView was fast flicked and then slowly flicked back, the
+    // left column is now 49, which is actually far too high, since we're almost
+    // at the beginning of the content view. But this "miscalculation" is expected
+    // when the column widths are increasing for each column, like they do in this
+    // test. In that case, the algorithm that predicts where each column should end
+    // up gets slightly confused. Anyway, check that tableViewHV, that has only
+    // 5 columns, is not showing any columns, since it should always stay in sync with
+    // syncView regardless of the content view position.
+    QVERIFY(tableViewHVPrivate->loadedColumns.isEmpty());
 }
 
 QTEST_MAIN(tst_QQuickTableView)
