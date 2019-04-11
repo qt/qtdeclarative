@@ -30,6 +30,7 @@ QML_FILES += \
     $$PWD/ElevationEffect.qml \
     $$PWD/Frame.qml \
     $$PWD/GroupBox.qml \
+    $$PWD/HorizontalHeaderView.qml \
     $$PWD/ItemDelegate.qml \
     $$PWD/Label.qml \
     $$PWD/Menu.qml \
@@ -68,4 +69,5 @@ QML_FILES += \
     $$PWD/ToolButton.qml \
     $$PWD/ToolSeparator.qml \
     $$PWD/ToolTip.qml \
-    $$PWD/Tumbler.qml
+    $$PWD/Tumbler.qml \
+    $$PWD/VerticalHeaderView.qml

@@ -198,6 +198,10 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterUncreatableType<QQuickSplitHandleAttached>(uri, 2, 13, "SplitHandle",
         QStringLiteral("SplitHandle is only available as an attached property."));
 
+    // QtQuick.Controls 2.15 (new types in Qt 5.15)
+    qmlRegisterType(resolvedUrl(QStringLiteral("HorizontalHeaderView.qml")), uri, 2, 15, "HorizontalHeaderView");
+    qmlRegisterType(resolvedUrl(QStringLiteral("VerticalHeaderView.qml")), uri, 2, 15, "VerticalHeaderView");
+
     // Register the latest version, even if there are no new types or new revisions for existing types yet.
     // Before Qt 5.12, we would do the following:
     //

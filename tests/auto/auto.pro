@@ -14,6 +14,7 @@ SUBDIRS += \
     qquickapplicationwindow \
     qquickcolor \
     qquickdrawer \
+    qquickheaderview \
     qquickiconimage \
     qquickiconlabel \
     qquickimaginestyle \

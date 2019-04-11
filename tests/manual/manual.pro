@@ -3,6 +3,7 @@ SUBDIRS += \
     buttons \
     gifs \
     fonts \
+    headerview \
     screenshots \
     styles \
     testbench
