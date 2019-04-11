@@ -96,8 +96,9 @@ private:
 static void printDisassembledOutputWithCalls(QByteArray processedOutput,
                                              const QHash<const void*, const char*>& functions)
 {
-    for (QHash<const void*, const char*>::ConstIterator it = functions.begin(), end = functions.end();
-         it != end; ++it) {
+    const auto symbols = Runtime::symbolTable();
+    const QByteArray padding("                          ; ");
+    for (auto it = functions.begin(), end = functions.end(); it != end; ++it) {
         const QByteArray ptrString = "0x" + QByteArray::number(quintptr(it.key()), 16);
         int idx = 0;
         while (idx >= 0) {
@@ -107,7 +108,9 @@ static void printDisassembledOutputWithCalls(QByteArray processedOutput,
             idx = processedOutput.indexOf('\n', idx);
             if (idx < 0)
                 break;
-            processedOutput = processedOutput.insert(idx, QByteArrayLiteral("                          ; ") + it.value());
+            const char *functionName = it.value();
+            processedOutput = processedOutput.insert(
+                    idx, padding + QByteArray(functionName ? functionName : symbols[it.key()]));
         }
     }
 
@@ -302,27 +305,29 @@ void JIT::PlatformAssemblerCommon::passPointerAsArg(void *ptr, int arg)
         storePtr(TrustedImmPtr(ptr), argStackAddress(arg));
 }
 
-void PlatformAssemblerCommon::callRuntime(const char *functionName, const void *funcPtr)
+void PlatformAssemblerCommon::callRuntime(const void *funcPtr, const char *functionName)
 {
 #ifndef QT_NO_DEBUG
     Q_ASSERT(remainingArgcForCall == 0);
     remainingArgcForCall = NoCall;
 #endif
-    callRuntimeUnchecked(functionName, funcPtr);
+    callRuntimeUnchecked(funcPtr, functionName);
     if (argcOnStackForCall > 0) {
         addPtr(TrustedImm32(argcOnStackForCall), StackPointerRegister);
         argcOnStackForCall = 0;
     }
 }
 
-void PlatformAssemblerCommon::callRuntimeUnchecked(const char *functionName, const void *funcPtr)
+void PlatformAssemblerCommon::callRuntimeUnchecked(const void *funcPtr, const char *functionName)
 {
+    Q_ASSERT(functionName || Runtime::symbolTable().contains(funcPtr));
     functions.insert(funcPtr, functionName);
     callAbsolute(funcPtr);
 }
 
-void PlatformAssemblerCommon::tailCallRuntime(const char *functionName, const void *funcPtr)
+void PlatformAssemblerCommon::tailCallRuntime(const void *funcPtr, const char *functionName)
 {
+    Q_ASSERT(functionName || Runtime::symbolTable().contains(funcPtr));
     functions.insert(funcPtr, functionName);
     setTailCallArg(EngineRegister, 1);
     setTailCallArg(CppStackFrameRegister, 0);

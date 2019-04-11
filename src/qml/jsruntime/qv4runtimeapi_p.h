@@ -501,6 +501,8 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
         static const int tailCall_argv       = -3;
         static const int tailCall_argc       = -4;
     };
+
+    static QHash<const void *, const char *> symbolTable();
 };
 
 static_assert(std::is_standard_layout<Runtime>::value, "Runtime needs to be standard layout in order for us to be able to use offsetof");
