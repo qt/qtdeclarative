@@ -417,7 +417,7 @@ QString ConstantPayload::debugString() const
 QString ConstantPayload::debugString(QV4::Value v)
 {
     if (v.isManaged())
-        return QString().sprintf("Ptr: %p", v.heapObject());
+        return QString::asprintf("Ptr: %p", v.heapObject());
     if (v.isEmpty())
         return QStringLiteral("empty");
     return v.toQStringNoThrow();

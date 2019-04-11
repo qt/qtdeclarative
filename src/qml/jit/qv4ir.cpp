@@ -78,7 +78,7 @@ QString Function::name() const
     if (auto n = v4Function()->name())
         name = n->toQString();
     if (name.isEmpty())
-        name.sprintf("%p", static_cast<void *>(v4Function()));
+        name = QString::asprintf("%p", v4Function());
     auto loc = v4Function()->sourceLocation();
     return name + QStringLiteral(" (%1:%2:%3)").arg(loc.sourceFile, QString::number(loc.line),
                                                     QString::number(loc.column));
@@ -159,7 +159,7 @@ QByteArray Dumper::dump(const Function *f)
             name = n->toQString();
         fo[QLatin1String("_searchKey")] = QStringLiteral("function %1").arg(name);
         if (name.isEmpty())
-            name.sprintf("%p", static_cast<void *>(f->v4Function()));
+            name = QString::asprintf("%p", f->v4Function());
         fo[QLatin1String("name")] = name;
     }
 
