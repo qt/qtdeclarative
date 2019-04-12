@@ -81,19 +81,26 @@ QQmlValueTypeFactoryImpl::~QQmlValueTypeFactoryImpl()
 
 bool QQmlValueTypeFactoryImpl::isValueType(int idx)
 {
-    if (idx >= (int)QVariant::UserType) {
-        return (valueType(idx) != nullptr);
-    } else if (idx >= 0
-            && idx != QVariant::StringList
-            && idx != QMetaType::QObjectStar
-            && idx != QMetaType::VoidStar
-            && idx != QMetaType::Nullptr
-            && idx != QMetaType::QVariant
-            && idx != QMetaType::QLocale) {
+    if (idx >= QMetaType::User)
+        return valueType(idx) != nullptr;
+
+    if (idx < 0)
+        return false;
+
+    // Qt internal types
+    switch (idx) {
+    case QMetaType::QStringList:
+    case QMetaType::QObjectStar:
+    case QMetaType::VoidStar:
+    case QMetaType::Nullptr:
+    case QMetaType::QVariant:
+    case QMetaType::QLocale:
+    case QMetaType::QImage:  // scarce type, keep as QVariant
+    case QMetaType::QPixmap: // scarce type, keep as QVariant
+        return false;
+    default:
         return true;
     }
-
-    return false;
 }
 
 const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
