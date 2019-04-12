@@ -94,6 +94,13 @@ private slots:
     void scrollable();
     void disableWhenTriggered_data();
     void disableWhenTriggered();
+    void menuItemWidth_data();
+    void menuItemWidth();
+    void menuItemWidthAfterMenuWidthChanged_data();
+    void menuItemWidthAfterMenuWidthChanged();
+    void menuItemWidthAfterImplicitWidthChanged_data();
+    void menuItemWidthAfterImplicitWidthChanged();
+    void menuItemWidthAfterRetranslate();
 };
 
 void tst_QQuickMenu::defaults()
@@ -1665,6 +1672,149 @@ void tst_QQuickMenu::disableWhenTriggered()
             subMenuItem->mapToScene(QPointF(subMenuItem->width() / 2, subMenuItem->height() / 2)).toPoint());
         QCOMPARE(subMenuItem->isEnabled(), false);
         QTRY_VERIFY(!menu->isVisible());
+    }
+}
+
+void tst_QQuickMenu::menuItemWidth_data()
+{
+    QTest::addColumn<bool>("mirrored");
+
+    QTest::newRow("non-mirrored") << false;
+    QTest::newRow("mirrored") << true;
+}
+
+void tst_QQuickMenu::menuItemWidth()
+{
+    QFETCH(bool, mirrored);
+
+    QQuickApplicationHelper helper(this, QLatin1String("menuItemWidths.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    if (mirrored)
+        window->setLocale(QLocale("ar_EG"));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+    menu->open();
+    QTRY_VERIFY(menu->isOpened());
+    for (int i = 0; i < menu->count(); ++i)
+        QCOMPARE(menu->itemAt(i)->width(), menu->availableWidth());
+}
+
+void tst_QQuickMenu::menuItemWidthAfterMenuWidthChanged_data()
+{
+    QTest::addColumn<bool>("mirrored");
+
+    QTest::newRow("non-mirrored") << false;
+    QTest::newRow("mirrored") << true;
+}
+
+void tst_QQuickMenu::menuItemWidthAfterMenuWidthChanged()
+{
+    QFETCH(bool, mirrored);
+
+    QQuickApplicationHelper helper(this, QLatin1String("menuItemWidths.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    if (mirrored)
+        window->setLocale(QLocale("ar_EG"));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+    menu->open();
+    QTRY_VERIFY(menu->isOpened());
+    for (int i = 0; i < menu->count(); ++i) {
+        // Check that the width of menu items is correct before we resize the menu.
+        const QQuickItem *item = menu->itemAt(i);
+        QVERIFY2(qFuzzyCompare(item->width(), menu->availableWidth()),
+            qPrintable(QString::fromLatin1("Expected width of %1 to be %2, but it's %3")
+                .arg(item->objectName()).arg(menu->availableWidth()).arg(item->width())));
+    }
+
+    menu->setWidth(menu->width() + 10);
+
+    // Check that the width of menu items is correct after we resize the menu.
+    for (int i = 0; i < menu->count(); ++i) {
+        // Check that the width of menu items is correct after we resize the menu.
+        const QQuickItem *item = menu->itemAt(i);
+        QVERIFY2(qFuzzyCompare(item->width(), menu->availableWidth()),
+            qPrintable(QString::fromLatin1("Expected width of %1 to be %2, but it's %3")
+                .arg(item->objectName()).arg(menu->availableWidth()).arg(item->width())));
+    }
+}
+
+void tst_QQuickMenu::menuItemWidthAfterImplicitWidthChanged_data()
+{
+    QTest::addColumn<bool>("mirrored");
+
+    QTest::newRow("non-mirrored") << false;
+    QTest::newRow("mirrored") << true;
+}
+
+void tst_QQuickMenu::menuItemWidthAfterImplicitWidthChanged()
+{
+    QFETCH(bool, mirrored);
+
+    QQuickApplicationHelper helper(this, QLatin1String("menuItemWidths.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    if (mirrored)
+        window->setLocale(QLocale("ar_EG"));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+    menu->open();
+    QTRY_VERIFY(menu->isOpened());
+    // Check that the width of the menu item is correct before we change its font size.
+    QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem*>(menu->itemAt(0));
+    QCOMPARE(menuItem->width(), menu->availableWidth());
+
+    // Add some text to increase the implicitWidth of the MenuItem.
+    const qreal oldImplicitWidth = menuItem->implicitWidth();
+    for (int i = 0; menuItem->implicitWidth() <= oldImplicitWidth; ++i) {
+        menuItem->setText(menuItem->text() + QLatin1String("---"));
+        if (i == 100)
+            QFAIL("Shouldn't need 100 iterations to increase MenuItem's implicitWidth; something is wrong here");
+    }
+
+    // Check that the width of the menu item is correct after we change its font size.
+    QCOMPARE(menuItem->width(), menu->availableWidth());
+}
+
+void tst_QQuickMenu::menuItemWidthAfterRetranslate()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("menuItemWidths.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+    menu->open();
+    QTRY_VERIFY(menu->isOpened());
+    for (int i = 0; i < menu->count(); ++i) {
+        // Check that the width of each menu item is correct before we retranslate.
+        const QQuickItem *item = menu->itemAt(i);
+        QVERIFY2(qFuzzyCompare(item->width(), menu->availableWidth()),
+            qPrintable(QString::fromLatin1("Expected width of %1 to be %2, but it's %3")
+                .arg(item->objectName()).arg(menu->availableWidth()).arg(item->width())));
+    }
+
+    // Call retranslate() and cause all bindings to be re-evaluated.
+    helper.engine.retranslate();
+
+    for (int i = 0; i < menu->count(); ++i) {
+        // Check that the width of each menu item is correct after we retranslate.
+        const QQuickItem *item = menu->itemAt(i);
+        QVERIFY2(qFuzzyCompare(item->width(), menu->availableWidth()),
+            qPrintable(QString::fromLatin1("Expected width of %1 to be %2, but it's %3")
+                .arg(item->objectName()).arg(menu->availableWidth()).arg(item->width())));
     }
 }
 
