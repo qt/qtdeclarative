@@ -362,8 +362,10 @@ void QQuickSpinBoxPrivate::handleMove(const QPointF &point)
     QQuickControlPrivate::handleMove(point);
     QQuickItem *ui = up->indicator();
     QQuickItem *di = down->indicator();
-    up->setPressed(ui && ui->isEnabled() && ui->contains(ui->mapFromItem(q, point)));
-    down->setPressed(di && di->isEnabled() && di->contains(di->mapFromItem(q, point)));
+    up->setHovered(ui && ui->isEnabled() && ui->contains(ui->mapFromItem(q, point)));
+    up->setPressed(up->isHovered());
+    down->setHovered(di && di->isEnabled() && di->contains(di->mapFromItem(q, point)));
+    down->setPressed(down->isHovered());
 
     bool pressed = up->isPressed() || down->isPressed();
     q->setAccessibleProperty("pressed", pressed);
