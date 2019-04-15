@@ -77,6 +77,7 @@ static QQmlApplicationEngine *qae = nullptr;
 static int exitTimerId = -1;
 #endif
 bool verboseMode = false;
+static const QString iconResourcePath(QStringLiteral(":/qt-project.org/QmlRuntime/resources/qml-64.png"));
 
 static void loadConf(const QString &override, bool quiet) // Terminates app on failure
 {
@@ -134,7 +135,10 @@ void noFilesGiven();
 class LoaderApplication : public QGuiApplication
 {
 public:
-    LoaderApplication(int& argc, char **argv) : QGuiApplication(argc, argv) {}
+    LoaderApplication(int& argc, char **argv) : QGuiApplication(argc, argv)
+    {
+        setWindowIcon(QIcon(iconResourcePath));
+    }
 
     bool event(QEvent *ev) override
     {
@@ -450,6 +454,7 @@ int main(int argc, char *argv[])
 #ifdef QT_WIDGETS_LIB
     case QmlApplicationTypeWidget:
         app = new QApplication(argc, argv);
+        static_cast<QApplication *>(app)->setWindowIcon(QIcon(iconResourcePath));
         break;
 #endif // QT_WIDGETS_LIB
 #endif // QT_GUI_LIB

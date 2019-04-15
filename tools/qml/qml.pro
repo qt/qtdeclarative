@@ -8,10 +8,14 @@ RESOURCES += qml.qrc
 
 QMAKE_TARGET_DESCRIPTION = QML Runtime
 
+ICON = resources/qml64.png
+win32 {
+    RC_ICONS = resources/qml.ico
+}
 mac {
-    OTHER_FILES += Info.plist
-    QMAKE_INFO_PLIST = Info.plist
-    ICON = qml.icns
+    OTHER_FILES += resources/Info.plist
+    QMAKE_INFO_PLIST = resources/Info.plist
+    ICON = resources/qml.icns
 }
 
 qtConfig(qml-debug): DEFINES += QT_QML_DEBUG_NO_WARNING
