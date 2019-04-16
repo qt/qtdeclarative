@@ -1556,10 +1556,10 @@ bool QQuickComboBox::eventFilter(QObject *object, QEvent *event)
         break;
     }
     case QEvent::FocusOut:
-        if (qGuiApp->focusObject() != this) {
+        if (qGuiApp->focusObject() != this && (!d->popup || !d->popup->hasActiveFocus())) {
             // Only close the popup if focus was transferred somewhere else
-            // than to the popup button (which normally means that the user
-            // clicked on the popup button to open it, not close it.
+            // than to the popup or the popup button (which normally means that
+            // the user clicked on the popup button to open it, not close it).
             d->hidePopup(false);
             setPressed(false);
         }
@@ -1589,9 +1589,9 @@ void QQuickComboBox::focusOutEvent(QFocusEvent *event)
     Q_D(QQuickComboBox);
     QQuickControl::focusOutEvent(event);
 
-    if (qGuiApp->focusObject() != d->contentItem) {
+    if (qGuiApp->focusObject() != d->contentItem && (!d->popup || !d->popup->hasActiveFocus())) {
         // Only close the popup if focus was transferred
-        // somewhere else than to the inner line edit (which is
+        // somewhere else than to the popup or the inner line edit (which is
         // normally done from QQuickComboBox::focusInEvent).
         d->hidePopup(false);
         setPressed(false);

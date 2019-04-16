@@ -103,6 +103,22 @@ QT_BEGIN_NAMESPACE
      }
     \endcode
 
+    If the \l contentItem has no implicit size and only one child, Pane will
+    use the implicit size of that child. For example, in the following code,
+    the Pane will assume the size of the Rectangle:
+
+    \code
+    Pane {
+        Item {
+            Rectangle {
+                implicitWidth: 200
+                implicitHeight: 200
+                color: "salmon"
+            }
+        }
+    }
+    \endcode
+
     \sa {Customizing Pane}, {Container Controls},
         {Focus Management in Qt Quick Controls 2}, {Event Handling}
 */
