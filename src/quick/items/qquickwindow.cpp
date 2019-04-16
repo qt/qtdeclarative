@@ -2543,7 +2543,7 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QQuickPointerEvent *event, 
             if (point->grabberPointerHandler())
                 cancelTouchMouseSynthesis();
         } else {
-            qCWarning(DBG_TOUCH_TARGET) << "during delivery of touch press, synth-mouse ID" << touchMouseId << "is missing from" << event;
+            qCWarning(DBG_TOUCH_TARGET) << "during delivery of touch press, synth-mouse ID" << hex << touchMouseId << "is missing from" << event;
         }
     }
     for (int i = 0; i < pointCount; ++i) {
