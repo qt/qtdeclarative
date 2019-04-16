@@ -161,7 +161,7 @@ void tst_qquickwidget::showHide()
 
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
-    QVERIFY(childView->quickWindow()->isVisible());
+    QVERIFY(!childView->quickWindow()->isVisible()); // this window is always not visible see QTBUG-65761
     QVERIFY(childView->quickWindow()->visibility() != QWindow::Hidden);
 
     window.hide();
@@ -612,7 +612,7 @@ void tst_qquickwidget::synthMouseFromTouch()
     childView->resize(300, 300);
     window.show();
     QVERIFY(QTest::qWaitForWindowActive(&window));
-    QVERIFY(childView->quickWindow()->isVisible());
+    QVERIFY(!childView->quickWindow()->isVisible()); // this window is always not visible see QTBUG-65761
     QVERIFY(item->isVisible());
 
     QPoint p1 = QPoint(20, 20);

@@ -94,7 +94,8 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #elif defined(Q_PROCESSOR_X86_64) && (QT_POINTER_SIZE == 8) \
     && (defined(Q_OS_WIN) || defined(Q_OS_LINUX) || defined(Q_OS_QNX) || defined(Q_OS_MAC) || defined(Q_OS_FREEBSD))
 #  define V4_ENABLE_JIT
-#elif defined(Q_PROCESSOR_ARM_32) && (QT_POINTER_SIZE == 4)
+#elif defined(Q_PROCESSOR_ARM_32) && (QT_POINTER_SIZE == 4) \
+    && (defined(Q_OS_LINUX) || defined(Q_OS_QNX) || defined(Q_OS_FREEBSD) || defined(Q_OS_INTEGRITY))
 #  if defined(thumb2) || defined(__thumb2__) || ((defined(__thumb) || defined(__thumb__)) && __TARGET_ARCH_THUMB-0 == 4)
 #    define V4_ENABLE_JIT
 #  elif defined(__ARM_ARCH_ISA_THUMB) && __ARM_ARCH_ISA_THUMB == 2 // clang 3.5 and later will set this if the core supports the Thumb-2 ISA.

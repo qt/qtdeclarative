@@ -70,7 +70,7 @@ IdentifierTable::~IdentifierTable()
 {
     free(entriesByHash);
     free(entriesById);
-    for (auto &h : idHashes)
+    for (const auto &h : qAsConst(idHashes))
         h->identifierTable = nullptr;
 }
 

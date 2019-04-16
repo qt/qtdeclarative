@@ -6,3 +6,6 @@ opensuse-leap
 [populateTransitions]
 opensuse-42.1
 #QTBUG-65964
+
+[contentHeightWithDelayRemove]
+osx-10.12
