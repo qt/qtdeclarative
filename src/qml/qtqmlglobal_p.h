@@ -57,7 +57,7 @@
 #  include <QtQml/private/qtqml-config_p.h>
 #endif
 
-#define Q_QML_PRIVATE_API_VERSION 3
+#define Q_QML_PRIVATE_API_VERSION 4
 
 #define Q_QML_PRIVATE_EXPORT Q_QML_EXPORT
 
