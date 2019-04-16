@@ -29,6 +29,7 @@
 #include <QtTest/QtTest>
 #include <QtCore/qprocess.h>
 #include <QtCore/qtemporaryfile.h>
+#include <private/qv4global_p.h>
 
 class tst_QV4Assembler : public QObject
 {
@@ -36,6 +37,7 @@ class tst_QV4Assembler : public QObject
 
 private slots:
     void perfMapFile();
+    void jitEnabled();
 };
 
 void tst_QV4Assembler::perfMapFile()
@@ -82,6 +84,26 @@ void tst_QV4Assembler::perfMapFile()
         functions.append(fields[2]);
     }
     QVERIFY(functions.contains("foo\n"));
+#endif
+}
+
+#ifdef V4_ENABLE_JIT
+#define JIT_ENABLED 1
+#else
+#define JIT_ENABLED 0
+#endif
+
+void tst_QV4Assembler::jitEnabled()
+{
+#if defined(Q_OS_IOS) || defined(Q_OS_TVOS)
+    /* JIT should be disabled on iOS and tvOS. */
+    QCOMPARE(JIT_ENABLED, 0);
+#elif defined(Q_OS_WIN) && defined(Q_PROCESSOR_ARM)
+    /* JIT should be disabled Windows on ARM/ARM64 for now. */
+    QCOMPARE(JIT_ENABLED, 0);
+#else
+    /* JIT should be enabled on all other architectures/OSes tested in CI. */
+    QCOMPARE(JIT_ENABLED, 1);
 #endif
 }
 
