@@ -44,6 +44,8 @@
 
 #include <QQmlApplicationEngine>
 #include <QQmlComponent>
+#include <QCommandLineOption>
+#include <QCommandLineParser>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -288,8 +290,6 @@ void quietMessageHandler(QtMsgType type, const QMessageLogContext &ctxt, const Q
     }
 }
 
-
-// ### Should command line arguments have translations? Qt creator doesn't, so maybe it's not worth it.
 enum QmlApplicationType {
     QmlApplicationTypeUnknown
     , QmlApplicationTypeCore
@@ -317,45 +317,6 @@ void printVersion()
     exit(0);
 }
 
-void printUsage()
-{
-    printf("Usage: qml [options] [files] [-- args]\n");
-    printf("\n");
-    printf("Any unknown argument before '--' will be treated as a QML file to be loaded.\n");
-    printf("Any number of QML files can be loaded. They will share the same engine.\n");
-    printf("'gui' application type is only available if the QtGui module is available.\n");
-    printf("'widget' application type is only available if the QtWidgets module is available.\n");
-    printf("\n");
-    printf("General Options:\n");
-    printf("\t-h, -help..................... Print this usage information and exit.\n");
-    printf("\t-v, -version.................. Print the version information and exit.\n");
-#ifdef QT_GUI_LIB
-#ifndef QT_WIDGETS_LIB
-    printf("\t-apptype [core|gui] .......... Select which application class to use. Default is gui.\n");
-#else
-    printf("\t-apptype [core|gui|widget] ... Select which application class to use. Default is gui.\n");
-#endif // QT_WIDGETS_LIB
-#endif // QT_GUI_LIB
-    printf("\t-quiet ....................... Suppress all output.\n");
-    printf("\t-I [path] .................... Prepend the given path to the import paths.\n");
-    printf("\t-f [file] .................... Load the given file as a QML file.\n");
-    printf("\t-config [file] ............... Load the given file as the configuration file.\n");
-    printf("\t-- ........................... Arguments after this one are ignored by the launcher, but may be used within the QML application.\n");
-    printf("\tGL options:\n");
-    printf("\t-desktop.......................Force use of desktop GL (AA_UseDesktopOpenGL)\n");
-    printf("\t-gles..........................Force use of GLES (AA_UseOpenGLES)\n");
-    printf("\t-software......................Force use of software rendering (AA_UseOpenGLES)\n");
-    printf("\t-scaling.......................Enable High DPI scaling (AA_EnableHighDpiScaling)\n");
-    printf("\t-no-scaling....................Disable High DPI scaling (AA_DisableHighDpiScaling)\n");
-    printf("\tDebugging options:\n");
-    printf("\t-verbose ..................... Print information about what qml is doing, like specific file urls being loaded.\n");
-    printf("\t-translation [file] .......... Load the given file as the translations file.\n");
-    printf("\t-dummy-data [directory] ...... Load QML files from the given directory as context properties.\n");
-    printf("\t-slow-animations ............. Run all animations in slow motion.\n");
-    printf("\t-fixed-animations ............ Run animations off animation tick rather than wall time.\n");
-    exit(0);
-}
-
 void noFilesGiven()
 {
     if (!quietMode)
@@ -368,7 +329,7 @@ void getAppFlags(int &argc, char **argv)
 {
 #ifdef QT_GUI_LIB
     for (int i=0; i<argc; i++) {
-        if (!strcmp(argv[i], "-apptype")) { // Must be done before application, as it selects application
+        if (!strcmp(argv[i], "--apptype") || !strcmp(argv[i], "-a") || !strcmp(argv[i], "-apptype")) {
             applicationType = QmlApplicationTypeUnknown;
             if (i+1 < argc) {
                 if (!strcmp(argv[i+1], "core"))
@@ -379,15 +340,6 @@ void getAppFlags(int &argc, char **argv)
                 else if (!strcmp(argv[i+1], "widget"))
                     applicationType = QmlApplicationTypeWidget;
 #endif // QT_WIDGETS_LIB
-            }
-
-            if (applicationType == QmlApplicationTypeUnknown) {
-#ifndef QT_WIDGETS_LIB
-                printf("-apptype must be followed by one of the following: core gui\n");
-#else
-                printf("-apptype must be followed by one of the following: core gui widget\n");
-#endif // QT_WIDGETS_LIB
-                printUsage();
             }
             for (int j=i; j<argc-2; j++)
                 argv[j] = argv[j+2];
@@ -442,9 +394,6 @@ int main(int argc, char *argv[])
     getAppFlags(argc, argv);
     QCoreApplication *app = nullptr;
     switch (applicationType) {
-    case QmlApplicationTypeCore:
-        app = new QCoreApplication(argc, argv);
-        break;
 #ifdef QT_GUI_LIB
     case QmlApplicationTypeGui:
         app = new LoaderApplication(argc, argv);
@@ -456,8 +405,10 @@ int main(int argc, char *argv[])
         break;
 #endif // QT_WIDGETS_LIB
 #endif // QT_GUI_LIB
-    default:
-        Q_ASSERT_X(false, Q_FUNC_INFO, "impossible case");
+    case QmlApplicationTypeCore:
+        Q_FALLTHROUGH();
+    default: // QmlApplicationTypeUnknown: not allowed, but we'll exit after checking apptypeOption below
+        app = new QCoreApplication(argc, argv);
         break;
     }
 
@@ -475,67 +426,124 @@ int main(int argc, char *argv[])
     QString dummyDir;
 
     // Handle main arguments
-    const QStringList argList = app->arguments();
-    for (int i = 1; i < argList.count(); i++) {
-        const QString &arg = argList[i];
-        if (arg == QLatin1String("-quiet"))
-            quietMode = true;
-        else if (arg == QLatin1String("-v") || arg == QLatin1String("-version"))
-            printVersion();
-        else if (arg == QLatin1String("-h") || arg == QLatin1String("-help"))
-            printUsage();
-        else if (arg == QLatin1String("--"))
-            break;
-        else if (arg == QLatin1String("-verbose"))
-            verboseMode = true;
-#if QT_CONFIG(qml_animation)
-        else if (arg == QLatin1String("-slow-animations"))
-            QUnifiedTimer::instance()->setSlowModeEnabled(true);
-        else if (arg == QLatin1String("-fixed-animations"))
-            QUnifiedTimer::instance()->setConsistentTiming(true);
-#endif
-        else if (arg == QLatin1String("-I")) {
-            if (i+1 == argList.count())
-                continue; // Invalid usage, but just ignore it
-            e.addImportPath(argList[i+1]);
-            i++;
-        } else if (arg == QLatin1String("-f")) {
-            if (i+1 == argList.count())
-                continue; // Invalid usage, but just ignore it
-            files << argList[i+1];
-            i++;
-        } else if (arg == QLatin1String("-config")){
-            if (i+1 == argList.count())
-                continue; // Invalid usage, but just ignore it
-            confFile = argList[i+1];
-            i++;
-        } else if (arg == QLatin1String("-translation")){
-            if (i+1 == argList.count())
-                continue; // Invalid usage, but just ignore it
-            translationFile = argList[i+1];
-            i++;
-        } else if (arg == QLatin1String("-dummy-data")){
-            if (i+1 == argList.count())
-                continue; // Invalid usage, but just ignore it
-            dummyDir = argList[i+1];
-            i++;
-        } else if (arg == QLatin1String("-gles")) {
-            QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
-        } else if (arg == QLatin1String("-software")) {
-            QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
-        } else if (arg == QLatin1String("-desktop")) {
-            QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
-        } else if (arg == QLatin1String("-scaling")) {
-            QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-        } else if (arg == QLatin1String("-no-scaling")) {
-            QCoreApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
-        } else {
-            files << arg;
-        }
-    }
+    QCommandLineParser parser;
+    parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
+    parser.setOptionsAfterPositionalArgumentsMode(QCommandLineParser::ParseAsPositionalArguments);
+    const QCommandLineOption helpOption = parser.addHelpOption();
+    const QCommandLineOption versionOption = parser.addVersionOption();
+#ifdef QT_GUI_LIB
+    QCommandLineOption apptypeOption(QStringList() << QStringLiteral("a") << QStringLiteral("apptype"),
+        QCoreApplication::translate("main", "Select which application class to use. Default is gui."),
+#ifdef QT_WIDGETS_LIB
+        QStringLiteral("core|gui|widget"));
+#else
+        QStringLiteral("core|gui"));
+#endif // QT_WIDGETS_LIB
+    parser.addOption(apptypeOption); // Just for the help text... we've already handled this argument above
+#endif // QT_GUI_LIB
+    QCommandLineOption importOption(QStringLiteral("I"),
+        QCoreApplication::translate("main", "Prepend the given path to the import paths."), QStringLiteral("path"));
+    parser.addOption(importOption);
+    QCommandLineOption qmlFileOption(QStringLiteral("f"),
+        QCoreApplication::translate("main", "Load the given file as a QML file."), QStringLiteral("file"));
+    parser.addOption(qmlFileOption);
+    QCommandLineOption configOption(QStringList() << QStringLiteral("c") << QStringLiteral("config"),
+        QCoreApplication::translate("main", "Load the given file as the configuration file."), QStringLiteral("file"));
+    parser.addOption(configOption);
+    QCommandLineOption translationOption(QStringLiteral("translation"),
+        QCoreApplication::translate("main", "Load the given file as the translations file."), QStringLiteral("file"));
+    parser.addOption(translationOption);
+    QCommandLineOption dummyDataOption(QStringLiteral("dummy-data"),
+        QCoreApplication::translate("main", "Load QML files from the given directory as context properties."), QStringLiteral("file"));
+    parser.addOption(dummyDataOption);
+    // OpenGL options
+    QCommandLineOption glDesktopOption(QStringLiteral("desktop"),
+        QCoreApplication::translate("main", "Force use of desktop OpenGL (AA_UseDesktopOpenGL)."));
+    parser.addOption(glDesktopOption);
+    QCommandLineOption glEsOption(QStringLiteral("gles"),
+        QCoreApplication::translate("main", "Force use of GLES (AA_UseOpenGLES)."));
+    parser.addOption(glEsOption);
+    QCommandLineOption glSoftwareOption(QStringLiteral("software"),
+        QCoreApplication::translate("main", "Force use of software rendering (AA_UseSoftwareOpenGL)."));
+    parser.addOption(glSoftwareOption);
+    QCommandLineOption scalingOption(QStringLiteral("scaling"),
+        QCoreApplication::translate("main", "Enable High DPI scaling (AA_EnableHighDpiScaling)."));
+    parser.addOption(scalingOption);
+    QCommandLineOption noScalingOption(QStringLiteral("no-scaling"),
+        QCoreApplication::translate("main", "Disable High DPI scaling (AA_DisableHighDpiScaling)."));
+    parser.addOption(noScalingOption);
+    // Debugging and verbosity options
+    QCommandLineOption quietOption(QStringLiteral("quiet"),
+        QCoreApplication::translate("main", "Suppress all output."));
+    parser.addOption(quietOption);
+    QCommandLineOption verboseOption(QStringLiteral("verbose"),
+        QCoreApplication::translate("main", "Print information about what qml is doing, like specific file URLs being loaded."));
+    parser.addOption(verboseOption);
+    QCommandLineOption slowAnimationsOption(QStringLiteral("slow-animations"),
+        QCoreApplication::translate("main", "Run all animations in slow motion."));
+    parser.addOption(slowAnimationsOption);
+    QCommandLineOption fixedAnimationsOption(QStringLiteral("fixed-animations"),
+        QCoreApplication::translate("main", "Run animations off animation tick rather than wall time."));
+    parser.addOption(fixedAnimationsOption);
+    // Positional arguments
+    parser.addPositionalArgument("files",
+        QCoreApplication::translate("main", "Any number of QML files can be loaded. They will share the same engine."), "[files...]");
+    parser.addPositionalArgument("args",
+        QCoreApplication::translate("main", "Arguments after '--' are ignored, but passed through to the application.arguments variable in QML."), "[-- args...]");
 
-    if (quietMode && verboseMode)
+    if (!parser.parse(QCoreApplication::arguments())) {
+        qWarning() << parser.errorText();
+        exit(1);
+    }
+    if (parser.isSet(versionOption))
+        parser.showVersion();
+    if (parser.isSet(helpOption))
+        parser.showHelp();
+    if (applicationType == QmlApplicationTypeUnknown) {
+#ifdef QT_WIDGETS_LIB
+        qWarning() << QCoreApplication::translate("main", "--apptype must be followed by one of the following: core gui widget\n");
+#else
+        qWarning() << QCoreApplication::translate("main", "--apptype must be followed by one of the following: core gui\n");
+#endif // QT_WIDGETS_LIB
+        parser.showHelp();
+    }
+    if (parser.isSet(verboseOption))
+        verboseMode = true;
+    if (parser.isSet(quietOption)) {
+        quietMode = true;
         verboseMode = false;
+    }
+#if QT_CONFIG(qml_animation)
+    if (parser.isSet(slowAnimationsOption))
+        QUnifiedTimer::instance()->setSlowModeEnabled(true);
+    if (parser.isSet(fixedAnimationsOption))
+        QUnifiedTimer::instance()->setConsistentTiming(true);
+#endif
+    if (parser.isSet(glEsOption))
+        QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
+    if (parser.isSet(glSoftwareOption))
+        QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
+    if (parser.isSet(glDesktopOption))
+        QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+    if (parser.isSet(scalingOption))
+        QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    if (parser.isSet(noScalingOption))
+        QCoreApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
+    for (const QString &importPath : parser.values(importOption))
+        e.addImportPath(importPath);
+    files << parser.values(qmlFileOption);
+    if (parser.isSet(configOption))
+        confFile = parser.value(configOption);
+    if (parser.isSet(translationOption))
+        translationFile = parser.value(translationOption);
+    if (parser.isSet(dummyDataOption))
+        dummyDir = parser.value(dummyDataOption);
+    for (QString posArg : parser.positionalArguments()) {
+        if (posArg == QLatin1String("--"))
+            break;
+        else
+            files << posArg;
+    }
 
 #if QT_CONFIG(translation)
     // Need to be installed before QQmlApplicationEngine's automatic translation loading
