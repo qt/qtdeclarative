@@ -57,6 +57,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4persistent_p.h>
 #include <private/qqmlrefcount_p.h>
+#include <qqmlprivate.h>
 #include <qjsengine.h>
 #include <qvector.h>
 
@@ -265,7 +266,7 @@ public:
     }
 
     bool hasExtendedData() const { return extendedData != nullptr; }
-    QHash<int, QObject *> *attachedProperties() const;
+    QHash<QQmlAttachedPropertiesFunc, QObject *> *attachedProperties() const;
 
     static inline bool wasDeleted(const QObject *);
 

@@ -277,7 +277,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
                         QQmlAttachedPropertiesFunc func = r.type.attachedPropertiesFunction(enginePrivate);
                         if (!func) return; // Not an attachable type
 
-                        currentObject = qmlAttachedPropertiesObjectById(r.type.attachedPropertiesId(enginePrivate), currentObject);
+                        currentObject = qmlAttachedPropertiesObject(currentObject, func);
                         if (!currentObject) return; // Something is broken with the attachable type
                     } else if (r.importNamespace) {
                         if ((ii + 1) == path.count()) return; // No type following the namespace
@@ -289,7 +289,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
                         QQmlAttachedPropertiesFunc func = r.type.attachedPropertiesFunction(enginePrivate);
                         if (!func) return; // Not an attachable type
 
-                        currentObject = qmlAttachedPropertiesObjectById(r.type.attachedPropertiesId(enginePrivate), currentObject);
+                        currentObject = qmlAttachedPropertiesObject(currentObject, func);
                         if (!currentObject) return; // Something is broken with the attachable type
 
                     } else if (r.scriptIndex != -1) {

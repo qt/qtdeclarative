@@ -224,7 +224,6 @@ public:
         QQmlCustomParser *customParser;
         QQmlAttachedPropertiesFunc attachedPropertiesFunc;
         const QMetaObject *attachedPropertiesType;
-        int attachedPropertiesId;
         int propertyValueSourceCast;
         int propertyValueInterceptorCast;
         bool registerEnumClassesUnscoped;
@@ -268,8 +267,6 @@ public:
     mutable QStringHash<int> enums;
     mutable QStringHash<int> scopedEnumIndex; // maps from enum name to index in scopedEnums
     mutable QList<QStringHash<int>*> scopedEnums;
-
-    static QHash<const QMetaObject *, int> attachedPropertyIds;
 
     struct PropertyCacheByMinorVersion
     {
@@ -362,8 +359,6 @@ QJSValue QQmlType::SingletonInstanceInfo::scriptApi(QQmlEngine *e) const
 {
     return scriptApis.value(e);
 }
-
-QHash<const QMetaObject *, int> QQmlTypePrivate::attachedPropertyIds;
 
 QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
 : refCount(1), regType(type), iid(nullptr), typeId(0), listId(0), revision(0),
@@ -498,14 +493,6 @@ QQmlType::QQmlType(QQmlMetaTypeData *data, const QString &elementName, const QQm
     d->baseMetaObject = type.metaObject;
     d->extraData.cd->attachedPropertiesFunc = type.attachedPropertiesFunction;
     d->extraData.cd->attachedPropertiesType = type.attachedPropertiesMetaObject;
-    if (d->extraData.cd->attachedPropertiesType) {
-        auto iter = QQmlTypePrivate::attachedPropertyIds.find(d->baseMetaObject);
-        if (iter == QQmlTypePrivate::attachedPropertyIds.end())
-            iter = QQmlTypePrivate::attachedPropertyIds.insert(d->baseMetaObject, d->index);
-        d->extraData.cd->attachedPropertiesId = *iter;
-    } else {
-        d->extraData.cd->attachedPropertiesId = -1;
-    }
     d->extraData.cd->parserStatusCast = type.parserStatusCast;
     d->extraData.cd->propertyValueSourceCast = type.valueSourceCast;
     d->extraData.cd->propertyValueInterceptorCast = type.valueInterceptorCast;
@@ -571,16 +558,8 @@ QQmlType::QQmlType(QQmlTypePrivate *priv)
 
 QQmlType::~QQmlType()
 {
-    if (d && !d->refCount.deref()) {
-        // If attached properties were successfully registered, deregister them.
-        // (They may not have been registered if some other type used the same baseMetaObject)
-        if (d->regType == CppType && d->extraData.cd->attachedPropertiesType) {
-            auto it = QQmlTypePrivate::attachedPropertyIds.find(d->baseMetaObject);
-            if (it != QQmlTypePrivate::attachedPropertyIds.end() && *it == d->index)
-                QQmlTypePrivate::attachedPropertyIds.erase(it);
-        }
+    if (d && !d->refCount.deref())
         delete d;
-    }
 }
 
 QHashedString QQmlType::module() const
@@ -1228,7 +1207,7 @@ int QQmlType::attachedPropertiesId(QQmlEnginePrivate *engine) const
     if (!d)
         return -1;
     if (d->regType == CppType)
-        return d->extraData.cd->attachedPropertiesId;
+        return d->extraData.cd->attachedPropertiesType ? d->index : -1;
 
     QQmlType base;
     if (d->regType == CompositeType)
@@ -2186,6 +2165,16 @@ QQmlAttachedPropertiesFunc QQmlMetaType::attachedPropertiesFuncById(QQmlEnginePr
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     return data->types.at(id).attachedPropertiesFunction(engine);
+}
+
+QQmlAttachedPropertiesFunc QQmlMetaType::attachedPropertiesFunc(QQmlEnginePrivate *engine,
+                                                                const QMetaObject *mo)
+{
+    QMutexLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+
+    QQmlType type(data->metaObjectToType.value(mo));
+    return type.attachedPropertiesFunction(engine);
 }
 
 QMetaProperty QQmlMetaType::defaultProperty(const QMetaObject *metaObject)

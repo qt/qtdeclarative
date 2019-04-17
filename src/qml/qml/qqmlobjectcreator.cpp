@@ -793,8 +793,8 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
             else
                 return false;
         }
-        const int id = attachedType.attachedPropertiesId(QQmlEnginePrivate::get(engine));
-        QObject *qmlObject = qmlAttachedPropertiesObjectById(id, _qobject);
+        QObject *qmlObject = qmlAttachedPropertiesObject(
+                _qobject, attachedType.attachedPropertiesFunction(QQmlEnginePrivate::get(engine)));
         if (!populateInstance(binding->value.objectIndex, qmlObject, qmlObject, /*value type property*/nullptr))
             return false;
         return true;
