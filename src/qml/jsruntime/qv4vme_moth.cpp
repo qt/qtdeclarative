@@ -61,7 +61,9 @@
 
 #include "qv4alloca_p.h"
 
+#if QT_CONFIG(qml_jit)
 #include <private/qv4baselinejit_p.h>
+#endif
 
 #undef COUNT_INSTRUCTIONS
 
@@ -499,7 +501,7 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
     Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling
     QV4::Debugging::Debugger *debugger = engine->debugger();
 
-#ifdef V4_ENABLE_JIT
+#if QT_CONFIG(qml_jit)
     if (debugger == nullptr) {
         if (function->jittedCode == nullptr) {
             if (engine->canJIT(function)) {
@@ -514,7 +516,7 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
             }
         }
     }
-#endif // V4_ENABLE_JIT
+#endif // QT_CONFIG(qml_jit)
 
     // interpreter
     if (debugger)

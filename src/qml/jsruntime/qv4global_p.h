@@ -82,53 +82,9 @@ inline bool isfinite(double d) { return _finite(d); }
 inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #endif
 
-// Decide whether to enable or disable the JIT
-
-// White list architectures
-//
-// NOTE: This should match the logic in qv4targetplatform_p.h!
-
-#if defined(Q_PROCESSOR_X86_32) && (QT_POINTER_SIZE == 4) \
-    && (defined(Q_OS_WIN) || defined(Q_OS_LINUX) || defined(Q_OS_QNX) || defined(Q_OS_FREEBSD))
-#  define V4_ENABLE_JIT
-#elif defined(Q_PROCESSOR_X86_64) && (QT_POINTER_SIZE == 8) \
-    && (defined(Q_OS_WIN) || defined(Q_OS_LINUX) || defined(Q_OS_QNX) || defined(Q_OS_MAC) || defined(Q_OS_FREEBSD))
-#  define V4_ENABLE_JIT
-#elif defined(Q_PROCESSOR_ARM_32) && (QT_POINTER_SIZE == 4) \
-    && (defined(Q_OS_LINUX) || defined(Q_OS_QNX) || defined(Q_OS_FREEBSD) || defined(Q_OS_INTEGRITY))
-#  if defined(thumb2) || defined(__thumb2__) || ((defined(__thumb) || defined(__thumb__)) && __TARGET_ARCH_THUMB-0 == 4)
-#    define V4_ENABLE_JIT
-#  elif defined(__ARM_ARCH_ISA_THUMB) && __ARM_ARCH_ISA_THUMB == 2 // clang 3.5 and later will set this if the core supports the Thumb-2 ISA.
-#    define V4_ENABLE_JIT
-#  endif
-#elif defined(Q_PROCESSOR_ARM_64) && (QT_POINTER_SIZE == 8)
-#  if defined(Q_OS_LINUX) || defined(Q_OS_QNX) || defined(Q_OS_INTEGRITY)
-#    define V4_ENABLE_JIT
-#  endif
-//#elif defined(Q_PROCESSOR_MIPS_32) && defined(Q_OS_LINUX)
-//#  define V4_ENABLE_JIT
-#endif
-
-// check FPU with double precision on ARM platform
-#if (defined(Q_PROCESSOR_ARM_64) || defined(Q_PROCESSOR_ARM_32)) && defined(V4_ENABLE_JIT) && defined(__ARM_FP) && (__ARM_FP <= 0x04)
-#  undef V4_ENABLE_JIT
-#endif
-
-// Black list some platforms
-#if defined(V4_ENABLE_JIT)
-#if defined(Q_OS_IOS) || defined(Q_OS_TVOS)
-#    undef V4_ENABLE_JIT
-#endif
-#endif
-
-// For debug purposes: add CONFIG+=force-compile-jit to qmake's command-line to always compile the JIT.
-#if defined(V4_FORCE_COMPILE_JIT) && !defined(V4_ENABLE_JIT)
-#  define V4_ENABLE_JIT
-#endif
-
 // Do certain things depending on whether the JIT is enabled or disabled
 
-#ifdef V4_ENABLE_JIT
+#if QT_CONFIG(qml_jit)
 #define ENABLE_YARR_JIT 1
 #define ENABLE_JIT 1
 #define ENABLE_ASSEMBLER 1

@@ -53,6 +53,7 @@
 #else
 #  define QT_FEATURE_qml_debug -1
 #  define QT_FEATURE_qml_sequence_object 1
+#  define QT_FEATURE_qml_jit -1
 #  define QT_FEATURE_qml_tracing -1
 #endif
 

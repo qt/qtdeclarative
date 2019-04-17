@@ -55,6 +55,8 @@
 #include <private/qv4function_p.h>
 #include <QHash>
 
+QT_REQUIRE_CONFIG(qml_jit);
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {

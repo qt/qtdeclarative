@@ -56,7 +56,7 @@
 #include <private/qv4instr_moth_p.h>
 #include <private/qv4bytecodehandler_p.h>
 
-//QT_REQUIRE_CONFIG(qml_jit);
+QT_REQUIRE_CONFIG(qml_jit);
 
 QT_BEGIN_NAMESPACE
 
@@ -65,7 +65,6 @@ namespace JIT {
 
 class BaselineAssembler;
 
-#ifdef V4_ENABLE_JIT
 class BaselineJIT final: public Moth::ByteCodeHandler
 {
 public:
@@ -214,7 +213,6 @@ private:
     QScopedPointer<BaselineAssembler> as;
     QSet<int> labels;
 };
-#endif // V4_ENABLE_JIT
 
 } // namespace JIT
 } // namespace QV4

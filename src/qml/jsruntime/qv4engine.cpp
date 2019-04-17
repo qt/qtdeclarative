@@ -165,7 +165,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     , m_engineId(engineSerial.fetchAndAddOrdered(1))
     , regExpCache(nullptr)
     , m_multiplyWrappedQObjects(nullptr)
-#if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
+#if QT_CONFIG(qml_jit)
     , m_canAllocateExecutableMemory(OSAllocator::canAllocateExecutableMemory())
 #endif
 {
