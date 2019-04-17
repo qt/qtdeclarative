@@ -131,7 +131,9 @@ public:
 
     QQmlAttachedPropertiesFunc attachedPropertiesFunction(QQmlEnginePrivate *engine) const;
     const QMetaObject *attachedPropertiesType(QQmlEnginePrivate *engine) const;
-    int attachedPropertiesId(QQmlEnginePrivate *engine) const;
+#if QT_DEPRECATED_SINCE(5, 14)
+    QT_DEPRECATED int attachedPropertiesId(QQmlEnginePrivate *engine) const;
+#endif
 
     int parserStatusCast() const;
     const char *interfaceIId() const;

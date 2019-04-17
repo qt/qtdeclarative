@@ -579,9 +579,11 @@ namespace QtQml {
     Q_QML_EXPORT void qmlExecuteDeferred(QObject *);
     Q_QML_EXPORT QQmlContext *qmlContext(const QObject *);
     Q_QML_EXPORT QQmlEngine *qmlEngine(const QObject *);
-    Q_QML_EXPORT QObject *qmlAttachedPropertiesObjectById(int, const QObject *, bool create = true);
-    Q_QML_EXPORT QObject *qmlAttachedPropertiesObject(int *, const QObject *,
-                                                      const QMetaObject *, bool create);
+#if QT_DEPRECATED_SINCE(5, 14)
+    Q_QML_EXPORT QT_DEPRECATED QObject *qmlAttachedPropertiesObjectById(int, const QObject *, bool create = true);
+    Q_QML_EXPORT QT_DEPRECATED QObject *qmlAttachedPropertiesObject(
+            int *, const QObject *, const QMetaObject *, bool create);
+#endif
     Q_QML_EXPORT QQmlAttachedPropertiesFunc qmlAttachedPropertiesFunction(QObject *,
                                                                           const QMetaObject *);
     Q_QML_EXPORT QObject *qmlAttachedPropertiesObject(QObject *, QQmlAttachedPropertiesFunc func,

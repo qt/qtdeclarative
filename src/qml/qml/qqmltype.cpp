@@ -650,6 +650,7 @@ const QMetaObject *QQmlType::attachedPropertiesType(QQmlEnginePrivate *engine) c
     return base.attachedPropertiesType(engine);
 }
 
+#if QT_DEPRECATED_SINCE(5, 14)
 /*
 This is the id passed to qmlAttachedPropertiesById().  This is different from the index
 for the case that a single class is registered under two or more names (eg. Item in
@@ -667,6 +668,7 @@ int QQmlType::attachedPropertiesId(QQmlEnginePrivate *engine) const
         base = resolveCompositeBaseType(engine);
     return base.attachedPropertiesId(engine);
 }
+#endif
 
 int QQmlType::parserStatusCast() const
 {

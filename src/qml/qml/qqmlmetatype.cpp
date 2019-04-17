@@ -899,6 +899,7 @@ int QQmlMetaType::listType(int id)
         return 0;
 }
 
+#if QT_DEPRECATED_SINCE(5, 14)
 int QQmlMetaType::attachedPropertiesFuncId(QQmlEnginePrivate *engine, const QMetaObject *mo)
 {
     QQmlMetaTypeDataPtr data;
@@ -920,6 +921,7 @@ QQmlAttachedPropertiesFunc QQmlMetaType::attachedPropertiesFuncById(QQmlEnginePr
     QQmlMetaTypeDataPtr data;
     return data->types.at(id).attachedPropertiesFunction(engine);
 }
+#endif
 
 QQmlAttachedPropertiesFunc QQmlMetaType::attachedPropertiesFunc(QQmlEnginePrivate *engine,
                                                                 const QMetaObject *mo)

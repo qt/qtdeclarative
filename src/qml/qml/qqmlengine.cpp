@@ -1625,6 +1625,7 @@ static QObject *resolveAttachedProperties(QQmlAttachedPropertiesFunc pf, QQmlDat
     return rv;
 }
 
+#if QT_DEPRECATED_SINCE(5, 14)
 QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool create)
 {
     QQmlData *data = QQmlData::get(object, create);
@@ -1652,6 +1653,7 @@ QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
 
     return qmlAttachedPropertiesObjectById(*idCache, object, create);
 }
+#endif
 
 QQmlAttachedPropertiesFunc qmlAttachedPropertiesFunction(QObject *object,
                                                          const QMetaObject *attachedMetaObject)
