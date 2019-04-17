@@ -4593,6 +4593,34 @@ void tst_QJSEngine::stringReplace()
     val = engine.evaluate("'x'.replace(/()()()()()()()()()(x)/, '$10')");
     QVERIFY(val.isString());
     QCOMPARE(val.toString(), QString("x"));
+
+    val = engine.evaluate("'123'.replace(/\\.0*$|(\\.\\d*[1-9])(0+)$/, '$1')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("123"));
+
+    val = engine.evaluate("'123.00'.replace(/\\.0*$|(\\.\\d*[1-9])(0+)$/, '$1')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("123"));
+
+    val = engine.evaluate("'123.0'.replace(/\\.0*$|(\\.\\d*[1-9])(0+)$/, '$1')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("123"));
+
+    val = engine.evaluate("'123.'.replace(/\\.0*$|(\\.\\d*[1-9])(0+)$/, '$1')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("123"));
+
+    val = engine.evaluate("'123.50'.replace(/\\.0*$|(\\.\\d*[1-9])(0+)$/, '$1')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("123.5"));
+
+    val = engine.evaluate("'123.05'.replace(/\\.0*$|(\\.\\d*[1-9])(0+)$/, '$1')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("123.05"));
+
+    val = engine.evaluate("'0.050'.replace(/\\.0*$|(\\.\\d*[1-9])(0+)$/, '$1')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("0.05"));
 }
 
 void tst_QJSEngine::protoChanges_QTBUG68369()

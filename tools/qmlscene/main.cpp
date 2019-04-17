@@ -42,6 +42,7 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlfileselector.h>
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
@@ -361,6 +362,7 @@ static void usage()
 #endif
     puts("  --textrendertype [qt|native].......Select the default render type for text-like elements.");
     puts("  -I <path> ........................ Add <path> to the list of import paths");
+    puts("  -S <selector> .....................Add <selector> to the list of QQmlFileSelector selectors");
     puts("  -P <path> ........................ Add <path> to the list of plugin paths");
     puts("  -translation <translationfile> ... Set the language to run in");
 
@@ -457,6 +459,7 @@ int main(int argc, char ** argv)
     Options options;
 
     QStringList imports;
+    QStringList customSelectors;
     QStringList pluginPaths;
 
     // Parse arguments for application attributes to be applied before Q[Gui]Application creation.
@@ -529,6 +532,8 @@ int main(int argc, char ** argv)
                 options.verbose = true;
             else if (lowerArgument == QLatin1String("-i") && i + 1 < size)
                 imports.append(arguments.at(++i));
+            else if (lowerArgument == QLatin1String("-s") && i + 1 < size)
+                customSelectors.append(arguments.at(++i));
             else if (lowerArgument == QLatin1String("-p") && i + 1 < size)
                 pluginPaths.append(arguments.at(++i));
             else if (lowerArgument == QLatin1String("--apptype"))
@@ -584,6 +589,8 @@ int main(int argc, char ** argv)
             // TODO: as soon as the engine construction completes, the debug service is
             // listening for connections.  But actually we aren't ready to debug anything.
             QQmlEngine engine;
+            QQmlFileSelector* selector = new QQmlFileSelector(&engine, &engine);
+            selector->setExtraSelectors(customSelectors);
             QPointer<QQmlComponent> component = new QQmlComponent(&engine);
             for (int i = 0; i < imports.size(); ++i)
                 engine.addImportPath(imports.at(i));

@@ -693,7 +693,10 @@ QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *
     } else if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject && property->isFunction()) {
         return noError;
     } else if (QQmlValueTypeFactory::isValueType(property->propType())) {
-        return QQmlCompileError(binding->location, tr("Unexpected object assignment for property \"%1\"").arg(propertyName));
+        auto typeName = QMetaType::typeName(property->propType());
+        return QQmlCompileError(binding->location, tr("Can not assign value of type \"%1\" to property \"%2\", expecting an object")
+                                                      .arg(typeName ? QString::fromLatin1(typeName) : QString::fromLatin1("<unknown type>"))
+                                                      .arg(propertyName));
     } else if (property->propType() == qMetaTypeId<QQmlScriptString>()) {
         return QQmlCompileError(binding->valueLocation, tr("Invalid property assignment: script expected"));
     } else {

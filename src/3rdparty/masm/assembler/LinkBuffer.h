@@ -245,7 +245,7 @@ protected:
 
     inline void linkCode(void* ownerUID, JITCompilationEffort);
 
-    inline void performFinalization();
+    virtual void performFinalization();
 
 #if DUMP_LINK_STATISTICS
     static void dumpLinkStatistics(void* code, size_t initialSize, size_t finalSize);
@@ -344,7 +344,7 @@ inline void LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::linkCode
 }
 
 template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
-inline void LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::performFinalization()
+void LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::performFinalization()
 {
     // NOTE: This function is specialized in LinkBuffer<MacroAssemblerARMv7>
 #ifndef NDEBUG
@@ -395,7 +395,7 @@ public:
         linkCode(ownerUID, effort);
     }
 
-    inline void performFinalization();
+    virtual void performFinalization() override final;
     inline void makeExecutable();
 
     inline void linkCode(void* ownerUID, JITCompilationEffort);
@@ -420,7 +420,7 @@ private:
 };
 
 template <typename MacroAssembler>
-inline void BranchCompactingLinkBuffer<MacroAssembler>::performFinalization()
+void BranchCompactingLinkBuffer<MacroAssembler>::performFinalization()
 {
 #ifndef NDEBUG
     ASSERT(!m_completed);

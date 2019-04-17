@@ -4892,10 +4892,18 @@ void QQuickWindow::scheduleRenderJob(QRunnable *job, RenderStage stage)
     } else if (stage == AfterSwapStage) {
         d->afterSwapJobs << job;
     } else if (stage == NoStage) {
-        if (isExposed())
-            d->windowManager->postJob(this, job);
-        else
+        if (d->renderControl && openglContext()
+#if QT_CONFIG(opengl)
+            && openglContext()->thread() == QThread::currentThread()
+#endif
+            ) {
+            job->run();
             delete job;
+        } else if (isExposed()) {
+            d->windowManager->postJob(this, job);
+        } else {
+            delete job;
+        }
     }
     d->renderJobMutex.unlock();
 }

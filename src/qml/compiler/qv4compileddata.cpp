@@ -470,8 +470,10 @@ Heap::Module *CompilationUnit::instantiate(ExecutionEngine *engine)
     ScopedString importName(scope);
 
     const uint importCount = data->importEntryTableSize;
-    imports = new const Value *[importCount];
-    memset(imports, 0, importCount * sizeof(Value *));
+    if (importCount > 0) {
+        imports = new const Value *[importCount];
+        memset(imports, 0, importCount * sizeof(Value *));
+    }
     for (uint i = 0; i < importCount; ++i) {
         const CompiledData::ImportEntry &entry = data->importEntryTable()[i];
         auto dependentModuleUnit = engine->loadModule(QUrl(stringAt(entry.moduleRequest)), this);
@@ -897,6 +899,8 @@ bool ResolvedTypeReference::addToHash(QCryptographicHash *hash, QQmlEngine *engi
         hash->addData(createPropertyCache(engine)->checksum(&ok));
         return ok;
     }
+    if (!compilationUnit)
+        return false;
     hash->addData(compilationUnit->unitData()->md5Checksum, sizeof(compilationUnit->unitData()->md5Checksum));
     return true;
 }

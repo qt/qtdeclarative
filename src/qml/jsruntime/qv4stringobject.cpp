@@ -766,9 +766,8 @@ static void appendReplacementString(QString *result, const QString &input, const
             i += skip;
             if (substStart != JSC::Yarr::offsetNoMatch && substEnd != JSC::Yarr::offsetNoMatch)
                 *result += input.midRef(substStart, substEnd - substStart);
-            else {
+            else if (skip == 0) // invalid capture reference. Taken as literal value
                 *result += replaceValue.at(i);
-            }
         } else {
             *result += replaceValue.at(i);
         }
