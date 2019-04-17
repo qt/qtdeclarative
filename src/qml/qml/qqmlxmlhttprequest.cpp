@@ -68,8 +68,6 @@
 
 using namespace QV4;
 
-#if QT_CONFIG(xmlstreamreader) && QT_CONFIG(qml_network)
-
 #define V4THROW_REFERENCE(string) \
     do { \
         ScopedObject error(scope, scope.engine->newReferenceErrorObject(QStringLiteral(string))); \
@@ -2064,7 +2062,5 @@ void *qt_add_qmlxmlhttprequest(ExecutionEngine *v4)
 }
 
 QT_END_NAMESPACE
-
-#endif // xmlstreamreader && qml_network
 
 #include <qqmlxmlhttprequest.moc>
