@@ -367,6 +367,7 @@ private slots:
     void deleteSparseInIteration();
     void saveAccumulatorBeforeToInt32();
     void intMinDividedByMinusOne();
+    void undefinedPropertiesInObjectWrapper();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8956,6 +8957,15 @@ void tst_qqmlecmascript::intMinDividedByMinusOne()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
     QCOMPARE(object->property("doesNotFitInInt").toUInt(), 2147483648u);
+}
+
+void tst_qqmlecmascript::undefinedPropertiesInObjectWrapper()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFile("undefinedPropertiesInObjectWrapper.qml"));
+    QVERIFY(component.isReady());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
