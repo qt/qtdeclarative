@@ -209,6 +209,12 @@ QT_WARNING_POP
         addJumpInstruction(Instruction::JumpTrue()).link(target);
     }
 
+    void checkException()
+    {
+        Instruction::CheckException chk;
+        addInstruction(chk);
+    }
+
     void setUnwindHandler(ExceptionHandler *handler)
     {
         currentExceptionHandler = handler;

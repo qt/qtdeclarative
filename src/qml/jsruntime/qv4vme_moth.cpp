@@ -347,7 +347,7 @@ static struct InstrCount {
 #undef CHECK_EXCEPTION
 #endif
 #define CHECK_EXCEPTION \
-    if (engine->hasException) \
+    if (engine->hasException || engine->isInterrupted) \
         goto handleUnwind
 
 static inline Heap::CallContext *getScope(QV4::Value *stack, int level)
@@ -1013,6 +1013,10 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             code += offset;
     MOTH_END_INSTR(JumpNotUndefined)
 
+    MOTH_BEGIN_INSTR(CheckException)
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(CheckException)
+
     MOTH_BEGIN_INSTR(CmpEqNull)
         acc = Encode(ACC.isNullOrUndefined());
     MOTH_END_INSTR(CmpEqNull)
@@ -1363,7 +1367,10 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(Debug)
 
     handleUnwind:
-        Q_ASSERT(engine->hasException || frame->unwindLevel);
+        // We do start the exception handler in case of isInterrupted. The exception handler will
+        // immediately abort, due to the same isInterrupted. We don't skip the exception handler
+        // because the current behavior is easier to implement in the JIT.
+        Q_ASSERT(engine->hasException || engine->isInterrupted || frame->unwindLevel);
         if (!frame->unwindHandler) {
             acc = Encode::undefined();
             return acc;

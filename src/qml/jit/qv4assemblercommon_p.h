@@ -619,6 +619,9 @@ public:
         for (Jump j : catchyJumps)
             j.link(this);
 
+        // We don't need to check for isInterrupted here because if that is set,
+        // then the first checkException() in any exception handler will find another "exception"
+        // and jump out of the exception handler.
         loadPtr(exceptionHandlerAddress(), ScratchRegister);
         Jump exitFunction = branchPtr(Equal, ScratchRegister, TrustedImmPtr(0));
         jump(ScratchRegister);
@@ -633,6 +636,8 @@ public:
 
     void checkException()
     {
+        // This actually reads 4 bytes, starting at hasException.
+        // Therefore, it also reads the isInterrupted flag, and triggers an exception on that.
         addCatchyJump(
                     branch32(NotEqual,
                              Address(EngineRegister, offsetof(EngineBase, hasException)),

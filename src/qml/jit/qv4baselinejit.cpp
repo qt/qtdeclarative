@@ -794,6 +794,11 @@ void BaselineJIT::generate_JumpNotUndefined(int offset)
     labels.insert(as->jumpNotUndefined(absoluteOffset(offset)));
 }
 
+void BaselineJIT::generate_CheckException()
+{
+    as->checkException();
+}
+
 void BaselineJIT::generate_CmpEqNull() { as->cmpeqNull(); }
 void BaselineJIT::generate_CmpNeNull() { as->cmpneNull(); }
 void BaselineJIT::generate_CmpEqInt(int lhs) { as->cmpeqInt(lhs); }

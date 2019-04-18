@@ -163,6 +163,7 @@ public:
     void generate_JumpFalse(int offset) override;
     void generate_JumpNoException(int offset) override;
     void generate_JumpNotUndefined(int offset) override;
+    void generate_CheckException() override;
     void generate_CmpEqNull() override;
     void generate_CmpNeNull() override;
     void generate_CmpEqInt(int lhs) override;

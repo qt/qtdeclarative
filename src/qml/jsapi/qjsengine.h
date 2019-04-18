@@ -113,6 +113,9 @@ public:
 
     void installExtensions(Extensions extensions, const QJSValue &object = QJSValue());
 
+    void setInterrupted(bool interrupted);
+    bool isInterrupted() const;
+
     QV4::ExecutionEngine *handle() const { return m_v4Engine; }
 
     void throwError(const QString &message);

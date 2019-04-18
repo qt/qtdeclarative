@@ -1201,6 +1201,7 @@ bool Codegen::visit(ArrayPattern *ast)
                 lhsValue.loadInAccumulator();
                 pushAccumulator();
 
+                bytecodeGenerator->checkException();
                 bytecodeGenerator->jump().link(in);
                 end.link();
             }
@@ -3201,11 +3202,13 @@ bool Codegen::visit(DoWhileStatement *ast)
     cond.link();
     if (AST::cast<TrueLiteral *>(ast->expression)) {
         // do {} while (true) -> just jump back to the loop body, no need to generate a condition
+        bytecodeGenerator->checkException();
         bytecodeGenerator->jump().link(body);
     } else if (AST::cast<FalseLiteral *>(ast->expression)) {
         // do {} while (false) -> fall through, no need to generate a condition
     } else {
         TailCallBlocker blockTailCalls(this);
+        bytecodeGenerator->checkException();
         condition(ast->expression, &body, &end, false);
     }
 
@@ -3322,6 +3325,7 @@ bool Codegen::visit(ForEachStatement *ast)
             setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
         }
 
+        bytecodeGenerator->checkException();
         bytecodeGenerator->jump().link(in);
 
       error:
@@ -3370,6 +3374,7 @@ bool Codegen::visit(ForStatement *ast)
         bytecodeGenerator->addInstruction(clone);
     }
     statement(ast->expression);
+    bytecodeGenerator->checkException();
     bytecodeGenerator->jump().link(cond);
 
     end.link();
@@ -3651,6 +3656,8 @@ bool Codegen::visit(WhileStatement *ast)
     BytecodeGenerator::Label cond = bytecodeGenerator->label();
     ControlFlowLoop flow(this, &end, &cond);
     bytecodeGenerator->addLoopStart(cond);
+
+    bytecodeGenerator->checkException();
 
     if (!AST::cast<TrueLiteral *>(ast->expression)) {
         TailCallBlocker blockTailCalls(this);
