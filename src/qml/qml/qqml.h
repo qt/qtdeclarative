@@ -582,6 +582,10 @@ namespace QtQml {
     Q_QML_EXPORT QObject *qmlAttachedPropertiesObjectById(int, const QObject *, bool create = true);
     Q_QML_EXPORT QObject *qmlAttachedPropertiesObject(int *, const QObject *,
                                                       const QMetaObject *, bool create);
+    Q_QML_EXPORT QQmlAttachedPropertiesFunc qmlAttachedPropertiesFunction(QObject *,
+                                                                          const QMetaObject *);
+    Q_QML_EXPORT QObject *qmlAttachedPropertiesObject(QObject *, QQmlAttachedPropertiesFunc func,
+                                                      bool create = true);
 #ifndef Q_QDOC
 }
 
@@ -602,8 +606,9 @@ Q_QML_EXPORT void qmlRegisterModule(const char *uri, int versionMajor, int versi
 template<typename T>
 QObject *qmlAttachedPropertiesObject(const QObject *obj, bool create = true)
 {
-    static int idx = -1;
-    return qmlAttachedPropertiesObject(&idx, obj, &T::staticMetaObject, create);
+    QObject *mutableObj = const_cast<QObject *>(obj);
+    return qmlAttachedPropertiesObject(
+            mutableObj, qmlAttachedPropertiesFunction(mutableObj, &T::staticMetaObject), create);
 }
 
 Q_QML_EXPORT void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor);

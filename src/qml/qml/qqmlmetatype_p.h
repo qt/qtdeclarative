@@ -119,6 +119,8 @@ public:
     static int listType(int);
     static int attachedPropertiesFuncId(QQmlEnginePrivate *engine, const QMetaObject *);
     static QQmlAttachedPropertiesFunc attachedPropertiesFuncById(QQmlEnginePrivate *, int);
+    static QQmlAttachedPropertiesFunc attachedPropertiesFunc(QQmlEnginePrivate *,
+                                                             const QMetaObject *);
 
     enum TypeCategory { Unknown, Object, List };
     static TypeCategory typeCategory(int);
