@@ -236,20 +236,6 @@ struct IdentifierTable;
 class RegExpCache;
 class MultiplyWrappedQObjectMap;
 
-enum class ObservedTraceValues : quint8 {
-    Integer = 1 << 0,
-    Boolean = 1 << 1,
-    Double  = 1 << 2,
-    Other   = 1 << 3,
-    TypeMask = Integer | Boolean | Double | Other,
-
-    TruePathTaken  = 1 << 0,
-    FalsePathTaken = 1 << 1,
-
-    ArrayWasAccessed          = 1 << 7,
-    ArrayAccessNeededFallback = 1 << 6,
-};
-
 enum PropertyFlag {
     Attr_Data = 0,
     Attr_Accessor = 0x1,

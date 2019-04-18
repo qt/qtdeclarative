@@ -79,7 +79,7 @@ QT_BEGIN_NAMESPACE
 // Also change the comment behind the number to describe the latest change. This has the added
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
-#define QV4_DATA_STRUCTURE_VERSION 0x22 // Add trace slot to UPlus
+#define QV4_DATA_STRUCTURE_VERSION 0x23 // Remove trace slots
 
 class QIODevice;
 class QQmlPropertyData;
@@ -295,10 +295,6 @@ struct Function
 
     quint32_le nLabelInfos;
     size_t labelInfosOffset() const { return lineNumberOffset() + nLineNumbers * sizeof(CodeOffsetToLine); }
-
-    typedef quint16_le TraceInfoCount;
-    TraceInfoCount nTraceInfos;
-    static constexpr TraceInfoCount NoTracing() { return TraceInfoCount::max(); }
 
     // Keep all unaligned data at the end
     quint8 flags;

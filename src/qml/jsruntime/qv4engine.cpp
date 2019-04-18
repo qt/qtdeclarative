@@ -138,8 +138,6 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcTracingAll, "qt.v4.tracing.all")
-
 using namespace QV4;
 
 #ifndef V4_BOOTSTRAP
@@ -658,13 +656,6 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
 ExecutionEngine::~ExecutionEngine()
 {
-    if (Q_UNLIKELY(lcTracingAll().isDebugEnabled())) {
-        for (auto cu : compilationUnits) {
-            for (auto f : qAsConst(cu->runtimeFunctions))
-                qCDebug(lcTracingAll).noquote().nospace() << f->traceInfoToString();
-        }
-    }
-
     modules.clear();
     delete m_multiplyWrappedQObjects;
     m_multiplyWrappedQObjects = nullptr;

@@ -350,82 +350,6 @@ static struct InstrCount {
     if (engine->hasException) \
         goto handleUnwind
 
-static inline void traceJumpTakesTruePath(bool truePathTaken, Function *f, int slot)
-{
-#if QT_CONFIG(qml_tracing)
-    quint8 *traceInfo = f->traceInfo(slot);
-    Q_ASSERT(traceInfo);
-    *traceInfo |= truePathTaken ? quint8(ObservedTraceValues::TruePathTaken)
-                                : quint8(ObservedTraceValues::FalsePathTaken);
-#else
-    Q_UNUSED(truePathTaken);
-    Q_UNUSED(f);
-    Q_UNUSED(slot);
-#endif
-}
-
-static inline void traceValue(ReturnedValue acc, Function *f, int slot)
-{
-#if QT_CONFIG(qml_tracing)
-    quint8 *traceInfo = f->traceInfo(slot);
-    Q_ASSERT(traceInfo);
-    switch (Primitive::fromReturnedValue(acc).type()) {
-    case QV4::Value::Integer_Type:
-        *traceInfo |= quint8(ObservedTraceValues::Integer);
-        break;
-    case QV4::Value::Boolean_Type:
-        *traceInfo |= quint8(ObservedTraceValues::Boolean);
-        break;
-    case QV4::Value::Double_Type:
-        *traceInfo |= quint8(ObservedTraceValues::Double);
-        break;
-    default:
-        *traceInfo |= quint8(ObservedTraceValues::Other);
-        break;
-    }
-#else
-    Q_UNUSED(acc);
-    Q_UNUSED(f);
-    Q_UNUSED(slot);
-#endif
-}
-
-static inline void traceIntValue(Function *f, int slot)
-{
-#if QT_CONFIG(qml_tracing)
-    quint8 *traceInfo = f->traceInfo(slot);
-    Q_ASSERT(traceInfo);
-    *traceInfo |= quint8(ObservedTraceValues::Integer);
-#else
-    Q_UNUSED(f);
-    Q_UNUSED(slot);
-#endif
-}
-
-static inline void traceDoubleValue(Function *f, int slot)
-{
-#if QT_CONFIG(qml_tracing)
-    quint8 *traceInfo = f->traceInfo(slot);
-    Q_ASSERT(traceInfo);
-    *traceInfo |= quint8(ObservedTraceValues::Double);
-#else
-    Q_UNUSED(f);
-    Q_UNUSED(slot);
-#endif
-}
-
-static inline void traceOtherValue(Function *f, int slot)
-{
-#if QT_CONFIG(qml_tracing)
-    quint8 *traceInfo = f->traceInfo(slot);
-    Q_ASSERT(traceInfo);
-    *traceInfo |= quint8(ObservedTraceValues::Other);
-#else
-    Q_UNUSED(f);
-    Q_UNUSED(slot);
-#endif
-}
-
 static inline Heap::CallContext *getScope(QV4::Value *stack, int level)
 {
     Heap::ExecutionContext *scope = static_cast<ExecutionContext &>(stack[CallData::Context]).d();
@@ -504,16 +428,10 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
 #if QT_CONFIG(qml_jit)
     if (debugger == nullptr) {
         if (function->jittedCode == nullptr) {
-            if (engine->canJIT(function)) {
-#if QT_CONFIG(qml_tracing)
-                if (function->tracingEnabled())
-                    runTracingJit(function);
-                else
-#endif
-                    QV4::JIT::BaselineJIT(function).generate();
-            } else {
+            if (engine->canJIT(function))
+                QV4::JIT::BaselineJIT(function).generate();
+            else
                 ++function->interpreterCallCount;
-            }
         }
     }
 #endif // QT_CONFIG(qml_jit)
@@ -525,22 +443,6 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
     ReturnedValue result;
     if (function->jittedCode != nullptr && debugger == nullptr) {
         result = function->jittedCode(frame, engine);
-        if (QV4::Value::fromReturnedValue(result).isEmpty()) { // de-optimize!
-            if (ShowWhenDeoptimiationHappens) {
-                // This is debug code, which is disabled by default, and completely removed by the
-                // compiler.
-                fprintf(stderr, "*********************** DEOPT! %s ***********************\n"
-                                "*** deopt IP: %d, line: %d\n",
-                        function->name()->toQString().toUtf8().constData(),
-                        frame->instructionPointer,
-                        frame->lineNumber());
-            }
-            delete function->codeRef;
-            function->codeRef = nullptr;
-            function->jittedCode = nullptr;
-            function->interpreterCallCount = 0; // reset to restart tracing: apparently we didn't have enough info before
-            result = interpret(frame, engine, function->codeData + frame->instructionPointer);
-        }
     } else {
         // interpreter
         result = interpret(frame, engine, function->codeData);
@@ -558,11 +460,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     QV4::Value &accumulator = frame->jsFrame->accumulator;
     QV4::ReturnedValue acc = accumulator.asReturnedValue();
     Value *stack = reinterpret_cast<Value *>(frame->jsFrame);
-
-    if (function->tracingEnabled()) {
-        for (int i = 0; i < int(function->nFormals); ++i)
-            traceValue(frame->jsFrame->argument(i), function, i);
-    }
 
     MOTH_JUMP_TABLE;
 
@@ -622,7 +519,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         auto cc = static_cast<Heap::CallContext *>(stack[CallData::Context].m());
         Q_ASSERT(cc->type != QV4::Heap::CallContext::Type_GlobalContext);
         acc = cc->locals[index].asReturnedValue();
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(LoadLocal)
 
     MOTH_BEGIN_INSTR(StoreLocal)
@@ -635,7 +531,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(LoadScopedLocal)
         auto cc = getScope(stack, scope);
         acc = cc->locals[index].asReturnedValue();
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(LoadScopedLocal)
 
     MOTH_BEGIN_INSTR(StoreScopedLocal)
@@ -660,7 +555,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         STORE_IP();
         acc = Runtime::LoadName::call(engine, name);
         CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(LoadName)
 
     MOTH_BEGIN_INSTR(LoadGlobalLookup)
@@ -668,7 +562,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
         acc = l->globalGetter(l, engine);
         CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(LoadGlobalLookup)
 
     MOTH_BEGIN_INSTR(LoadQmlContextPropertyLookup)
@@ -676,7 +569,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
         acc = l->qmlContextPropertyGetter(l, engine, nullptr);
         CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(LoadQmlContextPropertyLookup)
 
     MOTH_BEGIN_INSTR(StoreNameStrict)
@@ -696,25 +588,14 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(LoadElement)
         STORE_IP();
         STORE_ACC();
-#if QT_CONFIG(qml_tracing)
-        acc = Runtime::LoadElement_Traced::call(engine, STACK_VALUE(base), accumulator, function->traceInfo(traceSlot));
-        traceValue(acc, function, traceSlot);
-#else
-        Q_UNUSED(traceSlot);
         acc = Runtime::LoadElement::call(engine, STACK_VALUE(base), accumulator);
-#endif
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadElement)
 
     MOTH_BEGIN_INSTR(StoreElement)
         STORE_IP();
         STORE_ACC();
-#if QT_CONFIG(qml_tracing)
-        Runtime::StoreElement_traced::call(engine, STACK_VALUE(base), STACK_VALUE(index), accumulator, function->traceInfo(traceSlot));
-#else
-        Q_UNUSED(traceSlot);
         Runtime::StoreElement::call(engine, STACK_VALUE(base), STACK_VALUE(index), accumulator);
-#endif
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreElement)
 
@@ -723,7 +604,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         STORE_ACC();
         acc = Runtime::LoadProperty::call(engine, accumulator, name);
         CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(LoadProperty)
 
     MOTH_BEGIN_INSTR(GetLookup)
@@ -742,7 +622,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
         acc = l->getter(l, engine, accumulator);
         CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(GetLookup)
 
     MOTH_BEGIN_INSTR(StoreProperty)
@@ -816,7 +695,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         Value undef = Value::undefinedValue();
         acc = static_cast<const FunctionObject &>(func).call(&undef, stack + argv, argc);
         CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallWithReceiver)
@@ -828,14 +706,12 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         }
         acc = static_cast<const FunctionObject &>(func).call(stack + thisObject, stack + argv, argc);
         CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallWithReceiver)
 
     MOTH_BEGIN_INSTR(CallProperty)
         STORE_IP();
         acc = Runtime::CallProperty::call(engine, stack[base], name, stack + argv, argc);
         CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallPropertyLookup)
@@ -863,49 +739,42 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
         acc = static_cast<FunctionObject &>(f).call(stack + base, stack + argv, argc);
         CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallPropertyLookup)
 
     MOTH_BEGIN_INSTR(CallElement)
         STORE_IP();
         acc = Runtime::CallElement::call(engine, stack[base], STACK_VALUE(index), stack + argv, argc);
         CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallElement)
 
     MOTH_BEGIN_INSTR(CallName)
         STORE_IP();
         acc = Runtime::CallName::call(engine, name, stack + argv, argc);
         CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallName)
 
     MOTH_BEGIN_INSTR(CallPossiblyDirectEval)
         STORE_IP();
         acc = Runtime::CallPossiblyDirectEval::call(engine, stack + argv, argc);
         CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallPossiblyDirectEval)
 
     MOTH_BEGIN_INSTR(CallGlobalLookup)
         STORE_IP();
         acc = Runtime::CallGlobalLookup::call(engine, index, stack + argv, argc);
         CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallGlobalLookup)
 
     MOTH_BEGIN_INSTR(CallQmlContextPropertyLookup)
         STORE_IP();
         acc = Runtime::CallQmlContextPropertyLookup::call(engine, index, stack + argv, argc);
         CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallQmlContextPropertyLookup)
 
     MOTH_BEGIN_INSTR(CallWithSpread)
         STORE_IP();
         acc = Runtime::CallWithSpread::call(engine, STACK_VALUE(func), STACK_VALUE(thisObject), stack + argv, argc);
         CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallWithSpread)
 
     MOTH_BEGIN_INSTR(TailCall)
@@ -1120,7 +989,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             takeJump = ACC.int_32();
         else
             takeJump = ACC.toBoolean();
-        traceJumpTakesTruePath(takeJump, function, traceSlot);
         if (takeJump)
             code += offset;
     MOTH_END_INSTR(JumpTrue)
@@ -1131,7 +999,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             takeJump = !ACC.int_32();
         else
             takeJump = !ACC.toBoolean();
-        traceJumpTakesTruePath(!takeJump, function, traceSlot);
         if (takeJump)
             code += offset;
     MOTH_END_INSTR(JumpFalse)
@@ -1291,12 +1158,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(UNot)
 
     MOTH_BEGIN_INSTR(UPlus)
-        if (Q_LIKELY(ACC.isNumber())) {
-            if (ACC.isDouble())
-                traceDoubleValue(function, traceSlot);
-            else
-                traceIntValue(function, traceSlot);
-        } else {
+        if (Q_UNLIKELY(!ACC.isNumber())) {
             acc = Encode(ACC.toNumberImpl());
             CHECK_EXCEPTION;
         }
@@ -1307,17 +1169,14 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             int a = ACC.int_32();
             if (a == 0 || a == std::numeric_limits<int>::min()) {
                 acc = Encode(-static_cast<double>(a));
-                traceDoubleValue(function, traceSlot);
             } else {
-                acc = sub_int32(0, ACC.int_32(), function->traceInfo(traceSlot));
+                acc = sub_int32(0, ACC.int_32());
             }
         } else if (ACC.isDouble()) {
             acc ^= (1ull << 63); // simply flip sign bit
-            traceDoubleValue(function, traceSlot);
         } else {
             acc = Encode(-ACC.toNumberImpl());
             CHECK_EXCEPTION;
-            traceOtherValue(function, traceSlot);
         }
     MOTH_END_INSTR(UMinus)
 
@@ -1328,57 +1187,49 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(Increment)
         if (Q_LIKELY(ACC.integerCompatible())) {
-            acc = add_int32(ACC.int_32(), 1, function->traceInfo(traceSlot));
+            acc = add_int32(ACC.int_32(), 1);
         } else if (ACC.isDouble()) {
             acc = QV4::Encode(ACC.doubleValue() + 1.);
-            traceDoubleValue(function, traceSlot);
         } else {
             acc = Encode(ACC.toNumberImpl() + 1.);
             CHECK_EXCEPTION;
-            traceDoubleValue(function, traceSlot);
         }
     MOTH_END_INSTR(Increment)
 
     MOTH_BEGIN_INSTR(Decrement)
         if (Q_LIKELY(ACC.integerCompatible())) {
-            acc = sub_int32(ACC.int_32(), 1, function->traceInfo(traceSlot));
+            acc = sub_int32(ACC.int_32(), 1);
         } else if (ACC.isDouble()) {
             acc = QV4::Encode(ACC.doubleValue() - 1.);
-            traceDoubleValue(function, traceSlot);
         } else {
             acc = Encode(ACC.toNumberImpl() - 1.);
             CHECK_EXCEPTION;
-            traceDoubleValue(function, traceSlot);
         }
     MOTH_END_INSTR(Decrement)
 
     MOTH_BEGIN_INSTR(Add)
         const Value left = STACK_VALUE(lhs);
         if (Q_LIKELY(Value::integerCompatible(left, ACC))) {
-            acc = add_int32(left.int_32(), ACC.int_32(), function->traceInfo(traceSlot));
+            acc = add_int32(left.int_32(), ACC.int_32());
         } else if (left.isNumber() && ACC.isNumber()) {
             acc = Encode(left.asDouble() + ACC.asDouble());
-            traceDoubleValue(function, traceSlot);
         } else {
             STORE_ACC();
             acc = Runtime::Add::call(engine, left, accumulator);
             CHECK_EXCEPTION;
-            traceOtherValue(function, traceSlot);
         }
     MOTH_END_INSTR(Add)
 
     MOTH_BEGIN_INSTR(Sub)
         const Value left = STACK_VALUE(lhs);
         if (Q_LIKELY(Value::integerCompatible(left, ACC))) {
-            acc = sub_int32(left.int_32(), ACC.int_32(), function->traceInfo(traceSlot));
+            acc = sub_int32(left.int_32(), ACC.int_32());
         } else if (left.isNumber() && ACC.isNumber()) {
             acc = Encode(left.asDouble() - ACC.asDouble());
-            traceDoubleValue(function, traceSlot);
         } else {
             STORE_ACC();
             acc = Runtime::Sub::call(left, accumulator);
             CHECK_EXCEPTION;
-            traceOtherValue(function, traceSlot);
         }
     MOTH_END_INSTR(Sub)
 
@@ -1395,15 +1246,13 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(Mul)
         const Value left = STACK_VALUE(lhs);
         if (Q_LIKELY(Value::integerCompatible(left, ACC))) {
-            acc = mul_int32(left.int_32(), ACC.int_32(), function->traceInfo(traceSlot));
+            acc = mul_int32(left.int_32(), ACC.int_32());
         } else if (left.isNumber() && ACC.isNumber()) {
             acc = Encode(left.asDouble() * ACC.asDouble());
-            traceDoubleValue(function, traceSlot);
         } else {
             STORE_ACC();
             acc = Runtime::Mul::call(left, accumulator);
             CHECK_EXCEPTION;
-            traceOtherValue(function, traceSlot);
         }
     MOTH_END_INSTR(Mul)
 
@@ -1417,7 +1266,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         STORE_ACC();
         acc = Runtime::Mod::call(STACK_VALUE(lhs), accumulator);
         CHECK_EXCEPTION;
-        traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(Mod)
 
     MOTH_BEGIN_INSTR(BitAnd)

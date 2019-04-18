@@ -154,10 +154,6 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     {
         static void call(ExecutionEngine *, const Value &, const Value &, const Value &);
     };
-    struct Q_QML_PRIVATE_EXPORT StoreElement_traced : Method<Throws::Yes>
-    {
-        static void call(ExecutionEngine *, const Value &, const Value &, const Value &, quint8 *);
-    };
     struct Q_QML_PRIVATE_EXPORT LoadProperty : Method<Throws::Yes>
     {
         static ReturnedValue call(ExecutionEngine *, const Value &, int);
@@ -169,10 +165,6 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     struct Q_QML_PRIVATE_EXPORT LoadElement : Method<Throws::Yes>
     {
         static ReturnedValue call(ExecutionEngine *, const Value &, const Value &);
-    };
-    struct Q_QML_PRIVATE_EXPORT LoadElement_Traced : Method<Throws::Yes>
-    {
-        static ReturnedValue call(ExecutionEngine *, const Value &, const Value &, quint8 *);
     };
     struct Q_QML_PRIVATE_EXPORT LoadSuperProperty : Method<Throws::Yes>
     {
