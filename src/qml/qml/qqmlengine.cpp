@@ -1057,7 +1057,7 @@ QQmlEngine::~QQmlEngine()
     // XXX TODO: performance -- store list of singleton types separately?
     QList<QQmlType> singletonTypes = QQmlMetaType::qmlSingletonTypes();
     for (const QQmlType &currType : singletonTypes)
-        currType.singletonInstanceInfo()->destroy(this);
+        d->destroySingletonInstance(currType);
 
     delete d->rootContext;
     d->rootContext = nullptr;
@@ -1402,23 +1402,13 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
 template<>
 QJSValue QQmlEngine::singletonInstance<QJSValue>(int qmlTypeId)
 {
+    Q_D(QQmlEngine);
     QQmlType type = QQmlMetaType::qmlType(qmlTypeId, QQmlMetaType::TypeIdCategory::QmlType);
 
     if (!type.isValid() || !type.isSingleton())
         return QJSValue();
 
-    QQmlType::SingletonInstanceInfo* info = type.singletonInstanceInfo();
-    info->init(this);
-
-    if (QObject* o = info->qobjectApi(this))
-        return this->newQObject(o);
-    else {
-        QJSValue value = info->scriptApi(this);
-        if (!value.isUndefined())
-            return value;
-    }
-
-    return QJSValue();
+    return d->singletonInstance<QJSValue>(type);
 }
 
 /*!
@@ -2443,6 +2433,67 @@ void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::CompiledData::Compi
 
     Locker locker(this);
     m_compositeTypes.remove(compilationUnit->metaTypeId);
+}
+
+template<>
+QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
+{
+    Q_Q(QQmlEngine);
+
+    QJSValue value = singletonInstances.value(type);
+    if (!value.isUndefined()) {
+        return value;
+    }
+
+    QQmlType::SingletonInstanceInfo *siinfo = type.singletonInstanceInfo();
+    Q_ASSERT(siinfo != nullptr);
+
+    if (siinfo->scriptCallback) {
+        value = siinfo->scriptCallback(q, q);
+        if (value.isQObject()) {
+            QObject *o = value.toQObject();
+            // even though the object is defined in C++, qmlContext(obj) and qmlEngine(obj)
+            // should behave identically to QML singleton types.
+            q->setContextForObject(o, new QQmlContext(q->rootContext(), q));
+        }
+        singletonInstances.insert(type, value);
+
+    } else if (siinfo->qobjectCallback) {
+        QObject *o = siinfo->qobjectCallback(q, q);
+        if (!o) {
+            qFatal("qmlRegisterSingletonType(): \"%s\" is not available because the callback function returns a null pointer.",
+                   qPrintable(QString::fromUtf8(type.typeName())));
+        }
+        // if this object can use a property cache, create it now
+        QQmlData::ensurePropertyCache(q, o);
+        // even though the object is defined in C++, qmlContext(obj) and qmlEngine(obj)
+        // should behave identically to QML singleton types.
+        q->setContextForObject(o, new QQmlContext(q->rootContext(), q));
+        value = q->newQObject(o);
+        singletonInstances.insert(type, value);
+
+    } else if (!siinfo->url.isEmpty()) {
+        QQmlComponent component(q, siinfo->url, QQmlComponent::PreferSynchronous);
+        QObject *o = component.beginCreate(q->rootContext());
+        value = q->newQObject(o);
+        singletonInstances.insert(type, value);
+        component.completeCreate();
+    }
+
+    return value;
+}
+
+void QQmlEnginePrivate::destroySingletonInstance(const QQmlType &type)
+{
+    Q_ASSERT(type.isSingleton() || type.isCompositeSingleton());
+
+    QObject* o = singletonInstances.take(type).toQObject();
+    if (o) {
+        QQmlData *ddata = QQmlData::get(o, false);
+        if (type.singletonInstanceInfo()->url.isEmpty() && ddata && ddata->indestructible && ddata->explicitIndestructibleSet)
+            return;
+        delete o;
+    }
 }
 
 bool QQmlEnginePrivate::isTypeLoaded(const QUrl &url) const

@@ -231,17 +231,17 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
             } else if (r.type.isValid()) {
                 if (lookup) {
                     if (r.type.isSingleton()) {
-                        QQmlEngine *e = v4->qmlEngine();
-                        QQmlType::SingletonInstanceInfo *siinfo = r.type.singletonInstanceInfo();
-                        siinfo->init(e);
-                        if (siinfo->qobjectApi(e)) {
+                        QQmlEnginePrivate *e = QQmlEnginePrivate::get(v4->qmlEngine());
+                        if (r.type.isQObjectSingleton() || r.type.isCompositeSingleton()) {
+                            e->singletonInstance<QObject*>(r.type);
                             lookup->qmlContextSingletonLookup.singleton =
                                     static_cast<Heap::Object*>(
                                         Value::fromReturnedValue(
                                             QQmlTypeWrapper::create(v4, nullptr, r.type)
                                         ).heapObject());
                         } else {
-                            QV4::ScopedObject o(scope, QJSValuePrivate::convertedToValue(v4, siinfo->scriptApi(e)));
+                            QJSValue singleton = e->singletonInstance<QJSValue>(r.type);
+                            QV4::ScopedObject o(scope, QJSValuePrivate::convertedToValue(v4, singleton));
                             lookup->qmlContextSingletonLookup.singleton = o->d();
                         }
                         lookup->qmlContextPropertyGetter = QQmlContextWrapper::lookupSingleton;
