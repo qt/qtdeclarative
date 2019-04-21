@@ -77,6 +77,11 @@ typedef void (*IRLoaderFunction)(Document *, const QQmlPrivate::CachedQmlUnit *)
 
 typedef QObject *(*QQmlAttachedPropertiesFunc)(QObject *);
 
+inline uint qHash(QQmlAttachedPropertiesFunc func, uint seed = 0)
+{
+    return qHash(quintptr(func), seed);
+}
+
 template <typename TYPE>
 class QQmlTypeInfo
 {

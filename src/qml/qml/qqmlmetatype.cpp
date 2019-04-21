@@ -143,12 +143,6 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->baseMetaObject = type.metaObject;
     d->extraData.cd->attachedPropertiesFunc = type.attachedPropertiesFunction;
     d->extraData.cd->attachedPropertiesType = type.attachedPropertiesMetaObject;
-    if (d->extraData.cd->attachedPropertiesType) {
-        d->extraData.cd->attachedPropertiesId = data->attachedPropertyId(d->baseMetaObject,
-                                                                         d->index);
-    } else {
-        d->extraData.cd->attachedPropertiesId = -1;
-    }
     d->extraData.cd->parserStatusCast = type.parserStatusCast;
     d->extraData.cd->propertyValueSourceCast = type.valueSourceCast;
     d->extraData.cd->propertyValueInterceptorCast = type.valueInterceptorCast;
@@ -599,19 +593,6 @@ void QQmlMetaType::registerUndeletableType(const QQmlType &dtype)
     data->undeletableTypes.insert(dtype);
 }
 
-int QQmlMetaType::registerAttachedPropertyId(const QMetaObject *metaObject, int index)
-{
-    QQmlMetaTypeDataPtr data;
-    return data->attachedPropertyId(metaObject, index);
-}
-
-bool QQmlMetaType::unregisterAttachedPropertyId(const QMetaObject *metaObject, int index)
-{
-    QQmlMetaTypeDataPtr data;
-    // This is run from the QQmlType dtor. QQmlTypes in user code can outlive QQmlMetaTypeData.
-    return data ? data->removeAttachedPropertyId(metaObject, index) : false;
-}
-
 static bool namespaceContainsRegistrations(const QQmlMetaTypeData *data, const QString &uri,
                                            int majorVersion)
 {
@@ -936,6 +917,15 @@ QQmlAttachedPropertiesFunc QQmlMetaType::attachedPropertiesFuncById(QQmlEnginePr
         return nullptr;
     QQmlMetaTypeDataPtr data;
     return data->types.at(id).attachedPropertiesFunction(engine);
+}
+
+QQmlAttachedPropertiesFunc QQmlMetaType::attachedPropertiesFunc(QQmlEnginePrivate *engine,
+                                                                const QMetaObject *mo)
+{
+    QQmlMetaTypeDataPtr data;
+
+    QQmlType type(data->metaObjectToType.value(mo));
+    return type.attachedPropertiesFunction(engine);
 }
 
 QMetaProperty QQmlMetaType::defaultProperty(const QMetaObject *metaObject)

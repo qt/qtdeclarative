@@ -88,9 +88,6 @@ public:
 
     static void registerUndeletableType(const QQmlType &dtype);
 
-    static int registerAttachedPropertyId(const QMetaObject *metaObject, int index);
-    static bool unregisterAttachedPropertyId(const QMetaObject *metaObject, int index);
-
     static QList<QString> qmlTypeNames();
     static QList<QQmlType> qmlTypes();
     static QList<QQmlType> qmlSingletonTypes();
@@ -124,6 +121,8 @@ public:
     static int listType(int);
     static int attachedPropertiesFuncId(QQmlEnginePrivate *engine, const QMetaObject *);
     static QQmlAttachedPropertiesFunc attachedPropertiesFuncById(QQmlEnginePrivate *, int);
+    static QQmlAttachedPropertiesFunc attachedPropertiesFunc(QQmlEnginePrivate *,
+                                                             const QMetaObject *);
 
     enum TypeCategory { Unknown, Object, List };
     static TypeCategory typeCategory(int);

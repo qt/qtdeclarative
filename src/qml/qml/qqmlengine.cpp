@@ -1617,27 +1617,36 @@ QQmlEngine *qmlEngine(const QObject *obj)
     return data->context->engine;
 }
 
-QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool create)
+static QObject *resolveAttachedProperties(QQmlAttachedPropertiesFunc pf, QQmlData *data,
+                                          QObject *object, bool create)
 {
-    QQmlData *data = QQmlData::get(object, create);
-    if (!data)
-        return nullptr; // Attached properties are only on objects created by QML, unless explicitly requested (create==true)
-
-    QObject *rv = data->hasExtendedData()?data->attachedProperties()->value(id):0;
-    if (rv || !create)
-        return rv;
-
-    QQmlEnginePrivate *engine = QQmlEnginePrivate::get(data->context);
-    QQmlAttachedPropertiesFunc pf = QQmlMetaType::attachedPropertiesFuncById(engine, id);
     if (!pf)
         return nullptr;
 
-    rv = pf(const_cast<QObject *>(object));
+    QObject *rv = data->hasExtendedData() ? data->attachedProperties()->value(pf) : 0;
+    if (rv || !create)
+        return rv;
+
+    rv = pf(object);
 
     if (rv)
-        data->attachedProperties()->insert(id, rv);
+        data->attachedProperties()->insert(pf, rv);
 
     return rv;
+}
+
+QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool create)
+{
+    QQmlData *data = QQmlData::get(object, create);
+
+    // Attached properties are only on objects created by QML,
+    // unless explicitly requested (create==true)
+    if (!data)
+        return nullptr;
+
+    QQmlEnginePrivate *engine = QQmlEnginePrivate::get(data->context);
+    return resolveAttachedProperties(QQmlMetaType::attachedPropertiesFuncById(engine, id), data,
+                                     const_cast<QObject *>(object), create);
 }
 
 QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
@@ -1652,6 +1661,29 @@ QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
         return nullptr;
 
     return qmlAttachedPropertiesObjectById(*idCache, object, create);
+}
+
+QQmlAttachedPropertiesFunc qmlAttachedPropertiesFunction(QObject *object,
+                                                         const QMetaObject *attachedMetaObject)
+{
+    QQmlEngine *engine = object ? qmlEngine(object) : nullptr;
+    return QQmlMetaType::attachedPropertiesFunc(engine ? QQmlEnginePrivate::get(engine) : nullptr,
+                                                attachedMetaObject);
+}
+
+QObject *qmlAttachedPropertiesObject(QObject *object, QQmlAttachedPropertiesFunc func, bool create)
+{
+    if (!object)
+        return nullptr;
+
+    QQmlData *data = QQmlData::get(object, create);
+
+    // Attached properties are only on objects created by QML,
+    // unless explicitly requested (create==true)
+    if (!data)
+        return nullptr;
+
+    return resolveAttachedProperties(func, data, object, create);
 }
 
 } // namespace QtQml
@@ -1694,7 +1726,7 @@ public:
     QQmlDataExtended();
     ~QQmlDataExtended();
 
-    QHash<int, QObject *> attachedProperties;
+    QHash<QQmlAttachedPropertiesFunc, QObject *> attachedProperties;
 };
 
 QQmlDataExtended::QQmlDataExtended()
@@ -1840,7 +1872,7 @@ void QQmlData::disconnectNotifiers()
     }
 }
 
-QHash<int, QObject *> *QQmlData::attachedProperties() const
+QHash<QQmlAttachedPropertiesFunc, QObject *> *QQmlData::attachedProperties() const
 {
     if (!extendedData) extendedData = new QQmlDataExtended;
     return &extendedData->attachedProperties;

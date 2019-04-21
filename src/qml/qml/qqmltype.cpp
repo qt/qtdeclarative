@@ -156,10 +156,6 @@ QQmlTypePrivate::~QQmlTypePrivate()
     qDeleteAll(scopedEnums);
     switch (regType) {
     case QQmlType::CppType:
-        // If attached properties were successfully registered, deregister them.
-        // (They may not have been registered if some other type used the same baseMetaObject)
-        if (extraData.cd->attachedPropertiesType)
-            QQmlMetaType::unregisterAttachedPropertyId(baseMetaObject, index);
         delete extraData.cd->customParser;
         delete extraData.cd;
         break;
@@ -718,7 +714,7 @@ int QQmlType::attachedPropertiesId(QQmlEnginePrivate *engine) const
     if (!d)
         return -1;
     if (d->regType == CppType)
-        return d->extraData.cd->attachedPropertiesId;
+        return d->extraData.cd->attachedPropertiesType ? d->index : -1;
 
     QQmlType base;
     if (d->regType == CompositeType)

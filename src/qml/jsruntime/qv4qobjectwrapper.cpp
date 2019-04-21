@@ -851,7 +851,7 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
     if (!ddata || !ddata->propertyCache) {
         QQmlPropertyData local;
         QQmlPropertyData *property = QQmlPropertyCache::property(engine->jsEngine(), qobj, name, qmlContext, local);
-        return getProperty(engine, qobj, property);
+        return property ? getProperty(engine, qobj, property) : QV4::Encode::undefined();
     }
     QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobj, qmlContext);
 

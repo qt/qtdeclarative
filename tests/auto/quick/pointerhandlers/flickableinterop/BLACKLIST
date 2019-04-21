@@ -2,3 +2,5 @@
 windows gcc
 [touchDragFlickableBehindSlider]
 windows gcc
+[touchDragFlickableBehindButton]
+windows gcc
