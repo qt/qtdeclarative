@@ -145,8 +145,6 @@ TestCase {
     }
 
     function test_objects() {
-        skip("Temporarily skipping test failures that result from QTBUG-74919")
-
         var control = createTemporaryObject(emptyBox, testCase)
         verify(control)
 
@@ -175,8 +173,6 @@ TestCase {
     }
 
     function test_qobjects() {
-        skip("Temporarily skipping test failures that result from QTBUG-74919")
-
         var control = createTemporaryObject(emptyBox, testCase, {textRole: "text"})
         verify(control)
 
@@ -275,8 +271,6 @@ TestCase {
     }
 
     function test_textRole(data) {
-        skip("Temporarily skipping test failures that result from QTBUG-74919")
-
         var control = createTemporaryObject(emptyBox, testCase)
         verify(control)
 
