@@ -242,9 +242,6 @@ ReturnedValue Lookup::getter0Inlinegetter0Inline(Lookup *l, ExecutionEngine *eng
             return o->inlinePropertyDataWithOffset(l->objectLookupTwoClasses.offset)->asReturnedValue();
         if (l->objectLookupTwoClasses.ic2 == o->internalClass)
             return o->inlinePropertyDataWithOffset(l->objectLookupTwoClasses.offset2)->asReturnedValue();
-        Value obj = Value::fromHeapObject(o);
-        Value str = Value::fromHeapObject(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
-        return static_cast<Object &>(obj).get(&static_cast<String &>(str));
     }
     l->getter = getterFallback;
     return getterFallback(l, engine, object);
@@ -260,9 +257,6 @@ ReturnedValue Lookup::getter0Inlinegetter0MemberData(Lookup *l, ExecutionEngine 
             return o->inlinePropertyDataWithOffset(l->objectLookupTwoClasses.offset)->asReturnedValue();
         if (l->objectLookupTwoClasses.ic2 == o->internalClass)
             return o->memberData->values.data()[l->objectLookupTwoClasses.offset2].asReturnedValue();
-        Value obj = Value::fromHeapObject(o);
-        Value str = Value::fromHeapObject(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
-        return static_cast<Object &>(obj).get(&static_cast<String &>(str));
     }
     l->getter = getterFallback;
     return getterFallback(l, engine, object);
@@ -278,9 +272,6 @@ ReturnedValue Lookup::getter0MemberDatagetter0MemberData(Lookup *l, ExecutionEng
             return o->memberData->values.data()[l->objectLookupTwoClasses.offset].asReturnedValue();
         if (l->objectLookupTwoClasses.ic2 == o->internalClass)
             return o->memberData->values.data()[l->objectLookupTwoClasses.offset2].asReturnedValue();
-        Value obj = Value::fromHeapObject(o);
-        Value str = Value::fromHeapObject(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
-        return static_cast<Object &>(obj).get(&static_cast<String &>(str));
     }
     l->getter = getterFallback;
     return getterFallback(l, engine, object);
@@ -296,9 +287,7 @@ ReturnedValue Lookup::getterProtoTwoClasses(Lookup *l, ExecutionEngine *engine, 
             return l->protoLookupTwoClasses.data->asReturnedValue();
         if (l->protoLookupTwoClasses.protoId2 == o->internalClass->protoId)
             return l->protoLookupTwoClasses.data2->asReturnedValue();
-        Value obj = Value::fromHeapObject(o);
-        Value str = Value::fromHeapObject(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
-        return static_cast<Object &>(obj).get(&static_cast<String &>(str));
+        return getterFallback(l, engine, object);
     }
     l->getter = getterFallback;
     return getterFallback(l, engine, object);
