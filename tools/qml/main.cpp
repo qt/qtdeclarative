@@ -68,19 +68,34 @@
 #include <cstring>
 #include <cstdlib>
 
-#define VERSION_MAJ 1
-#define VERSION_MIN 1
-#define VERSION_STR "1.1"
-
 #define FILE_OPEN_EVENT_WAIT_TIME 3000 // ms
+
+enum QmlApplicationType {
+    QmlApplicationTypeUnknown
+    , QmlApplicationTypeCore
+#ifdef QT_GUI_LIB
+    , QmlApplicationTypeGui
+#ifdef QT_WIDGETS_LIB
+    , QmlApplicationTypeWidget
+#endif // QT_WIDGETS_LIB
+#endif // QT_GUI_LIB
+};
+
+static QmlApplicationType applicationType =
+#ifndef QT_GUI_LIB
+    QmlApplicationTypeCore;
+#else
+    QmlApplicationTypeGui;
+#endif // QT_GUI_LIB
 
 static Config *conf = nullptr;
 static QQmlApplicationEngine *qae = nullptr;
 #if defined(Q_OS_DARWIN) || defined(QT_GUI_LIB)
 static int exitTimerId = -1;
 #endif
-bool verboseMode = false;
 static const QString iconResourcePath(QStringLiteral(":/qt-project.org/QmlRuntime/resources/qml-64.png"));
+static bool verboseMode = false;
+static bool quietMode = false;
 
 static void loadConf(const QString &override, bool quiet) // Terminates app on failure
 {
@@ -130,9 +145,14 @@ static void loadConf(const QString &override, bool quiet) // Terminates app on f
     }
 }
 
-#ifdef QT_GUI_LIB
+void noFilesGiven()
+{
+    if (!quietMode)
+        printf("qml: No files specified. Terminating.\n");
+    exit(1);
+}
 
-void noFilesGiven();
+#ifdef QT_GUI_LIB
 
 // Loads qml after receiving a QFileOpenEvent
 class LoaderApplication : public QGuiApplication
@@ -181,8 +201,8 @@ public:
         connect(e, &QQmlEngine::exit, this, &LoadWatcher::exit);
     }
 
-    bool earlyExit = false;
     int returnCode = 0;
+    bool earlyExit = false;
 
 public Q_SLOTS:
     void checkFinished(QObject *o, const QUrl &url)
@@ -223,8 +243,8 @@ private:
     void checkForWindow(QObject *o);
 
 private:
-    int expectedFileCount;
     bool haveWindow = false;
+    int expectedFileCount;
 };
 
 void LoadWatcher::contain(QObject *o, const QUrl &containPath)
@@ -288,40 +308,6 @@ void quietMessageHandler(QtMsgType type, const QMessageLogContext &ctxt, const Q
     default:
         ;
     }
-}
-
-enum QmlApplicationType {
-    QmlApplicationTypeUnknown
-    , QmlApplicationTypeCore
-#ifdef QT_GUI_LIB
-    , QmlApplicationTypeGui
-#ifdef QT_WIDGETS_LIB
-    , QmlApplicationTypeWidget
-#endif // QT_WIDGETS_LIB
-#endif // QT_GUI_LIB
-};
-
-#ifndef QT_GUI_LIB
-QmlApplicationType applicationType = QmlApplicationTypeCore;
-#else
-QmlApplicationType applicationType = QmlApplicationTypeGui;
-#endif // QT_GUI_LIB
-bool quietMode = false;
-void printVersion()
-{
-    printf("qml binary version ");
-    printf(VERSION_STR);
-    printf("\nbuilt with Qt version ");
-    printf(QT_VERSION_STR);
-    printf("\n");
-    exit(0);
-}
-
-void noFilesGiven()
-{
-    if (!quietMode)
-        printf("qml: No files specified. Terminating.\n");
-    exit(1);
 }
 
 // Called before application initialization, removes arguments it uses
