@@ -49,6 +49,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QLoggingCategory>
 #include <QStringList>
 #include <QScopedPointer>
 #include <QDebug>
@@ -304,8 +305,8 @@ void quietMessageHandler(QtMsgType type, const QMessageLogContext &ctxt, const Q
         exit(-1);
     case QtCriticalMsg:
     case QtDebugMsg:
+    case QtInfoMsg:
     case QtWarningMsg:
-    default:
         ;
     }
 }
@@ -551,8 +552,10 @@ int main(int argc, char *argv[])
         printf("qml: Translation file specified, but Qt built without translation support.\n");
 #endif
 
-    if (quietMode)
+    if (quietMode) {
         qInstallMessageHandler(quietMessageHandler);
+        QLoggingCategory::setFilterRules(QStringLiteral("*=false"));
+    }
 
     if (files.count() <= 0) {
 #if defined(Q_OS_DARWIN)
