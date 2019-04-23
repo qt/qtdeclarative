@@ -59,7 +59,7 @@
 
 #include <cstring>
 
-QT_QML_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 
@@ -251,6 +251,6 @@ public:
 
 } // namespace QQmlJS
 
-QT_QML_END_NAMESPACE
+QT_END_NAMESPACE
 
 #endif

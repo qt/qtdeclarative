@@ -38,6 +38,8 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/private/qqmlengine_p.h>
+#include <QtQml/private/qqmlmodelsmodule_p.h>
 
 #include <private/qtquick2_p.h>
 
@@ -55,7 +57,14 @@ public:
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick"));
         Q_UNUSED(uri);
         moduleDefined = true;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+        QQmlEnginePrivate::registerQuickTypes();
+        QQmlModelsModule::registerQuickTypes();
+#endif
         QQmlQtQuick2Module::defineModule();
+
+        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
+        qmlRegisterModule("QtQuick", 2, QT_VERSION_MINOR);
     }
 
     ~QtQuick2Plugin() override

@@ -141,6 +141,13 @@ struct RegisteredPlugin {
 
 struct StringRegisteredPluginMap : public QMap<QString, RegisteredPlugin> {
     QMutex mutex;
+
+    ~StringRegisteredPluginMap()
+    {
+        QMutexLocker lock(&mutex);
+        for (const RegisteredPlugin &plugin : qAsConst(*this))
+            delete plugin.loader;
+    }
 };
 
 Q_GLOBAL_STATIC(StringRegisteredPluginMap, qmlEnginePluginsWithRegisteredTypes); // stores the uri and the PluginLoaders
@@ -789,7 +796,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
                     *typeRecursionDetected = true;
             } else {
                 QQmlType returnType = QQmlMetaType::typeForUrl(
-                        qmlUrl, type, registrationType == QQmlType::CompositeSingletonType, nullptr);
+                        qmlUrl, type, registrationType == QQmlType::CompositeSingletonType, errors);
                 if (type_return)
                     *type_return = returnType;
                 return returnType.isValid();
@@ -1256,7 +1263,7 @@ bool QQmlImportsPrivate::locateQmldir(const QString &uri, int vmaj, int vmin, QQ
             QString url;
             const QStringRef absolutePath = absoluteFilePath.leftRef(absoluteFilePath.lastIndexOf(Slash) + 1);
             if (absolutePath.at(0) == Colon)
-                url = QLatin1String("qrc://") + absolutePath.mid(1);
+                url = QLatin1String("qrc") + absolutePath;
             else
                 url = QUrl::fromLocalFile(absolutePath.toString()).toString();
 
@@ -1471,7 +1478,7 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
         QString localFileOrQrc = QQmlFile::urlToLocalFileOrQrc(qmldirUrl);
         Q_ASSERT(!localFileOrQrc.isEmpty());
 
-        QString dir = QQmlFile::urlToLocalFileOrQrc(resolveLocalUrl(base, importUri));
+        const QString dir = localFileOrQrc.left(localFileOrQrc.lastIndexOf(Slash) + 1);
         if (!typeLoader->directoryExists(dir)) {
             if (!isImplicitImport) {
                 QQmlError error;

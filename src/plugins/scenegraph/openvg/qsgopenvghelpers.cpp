@@ -220,10 +220,10 @@ void qDrawTiled(VGImage image, const QSize imageSize, const QRectF &targetRect, 
 void qDrawBorderImage(VGImage image, const QSizeF &textureSize, const QRectF &targetRect, const QRectF &innerTargetRect, const QRectF &subSourceRect)
 {
     // Create normalized margins
-    QMarginsF margins(qMax(innerTargetRect.left() - targetRect.left(), 0.0),
-                      qMax(innerTargetRect.top() - targetRect.top(), 0.0),
-                      qMax(targetRect.right() - innerTargetRect.right(), 0.0),
-                      qMax(targetRect.bottom() - innerTargetRect.bottom(), 0.0));
+    QMarginsF margins(qMax(innerTargetRect.left() - targetRect.left(), qreal(0.0)),
+                      qMax(innerTargetRect.top() - targetRect.top(), qreal(0.0)),
+                      qMax(targetRect.right() - innerTargetRect.right(), qreal(0.0)),
+                      qMax(targetRect.bottom() - innerTargetRect.bottom(), qreal(0.0)));
 
     QRectF sourceRect(0, 0, textureSize.width(), textureSize.height());
 

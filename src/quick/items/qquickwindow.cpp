@@ -2025,8 +2025,8 @@ bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
     qCDebug(DBG_TOUCH) << event;
     Q_Q(QQuickWindow);
 
-    if (q->mouseGrabberItem())
-        q->mouseGrabberItem()->ungrabMouse();
+    if (QQuickItem *grabber = q->mouseGrabberItem())
+        sendUngrabEvent(grabber, true);
     cancelTouchMouseSynthesis();
 
     // A TouchCancel event will typically not contain any points.
@@ -4892,10 +4892,18 @@ void QQuickWindow::scheduleRenderJob(QRunnable *job, RenderStage stage)
     } else if (stage == AfterSwapStage) {
         d->afterSwapJobs << job;
     } else if (stage == NoStage) {
-        if (isExposed())
-            d->windowManager->postJob(this, job);
-        else
+        if (d->renderControl && openglContext()
+#if QT_CONFIG(opengl)
+            && openglContext()->thread() == QThread::currentThread()
+#endif
+            ) {
+            job->run();
             delete job;
+        } else if (isExposed()) {
+            d->windowManager->postJob(this, job);
+        } else {
+            delete job;
+        }
     }
     d->renderJobMutex.unlock();
 }

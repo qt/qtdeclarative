@@ -267,20 +267,14 @@ void QQuickPinchHandler::onActiveChanged()
 {
     QQuickMultiPointHandler::onActiveChanged();
     if (active()) {
-        m_startMatrix = QMatrix4x4();
-        m_startAngles = angles(m_centroid.sceneGrabPosition());
-        m_startDistance = averageTouchPointDistance(m_centroid.sceneGrabPosition());
+        m_startAngles = angles(centroid().sceneGrabPosition());
+        m_startDistance = averageTouchPointDistance(centroid().sceneGrabPosition());
         m_activeRotation = 0;
         m_activeTranslation = QVector2D();
         if (const QQuickItem *t = target()) {
             m_startScale = t->scale(); // TODO incompatible with independent x/y scaling
             m_startRotation = t->rotation();
-            QVector3D xformOrigin(t->transformOriginPoint());
-            m_startMatrix.translate(float(t->x()), float(t->y()));
-            m_startMatrix.translate(xformOrigin);
-            m_startMatrix.scale(float(m_startScale));
-            m_startMatrix.rotate(float(m_startRotation), 0, 0, -1);
-            m_startMatrix.translate(-xformOrigin);
+            m_startPos = t->position();
         } else {
             m_startScale = m_accumulatedScale;
             m_startRotation = 0;
@@ -294,7 +288,7 @@ void QQuickPinchHandler::onActiveChanged()
 void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 {
     if (Q_UNLIKELY(lcPinchHandler().isDebugEnabled())) {
-        for (const QQuickHandlerPoint &p : m_currentPoints)
+        for (const QQuickHandlerPoint &p : currentPoints())
             qCDebug(lcPinchHandler) << hex << p.id() << p.sceneGrabPosition() << "->" << p.scenePosition();
     }
     QQuickMultiPointHandler::handlePointerEventImpl(event);
@@ -302,13 +296,13 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     qreal dist = 0;
 #if QT_CONFIG(gestures)
     if (const auto gesture = event->asPointerNativeGestureEvent()) {
-        m_centroid.reset(event->point(0));
+        mutableCentroid().reset(event->point(0));
         switch (gesture->type()) {
         case Qt::EndNativeGesture:
             m_activeScale = 1;
             m_activeRotation = 0;
             m_activeTranslation = QVector2D();
-            m_centroid.reset();
+            mutableCentroid().reset();
             setActive(false);
             emit updated();
             return;
@@ -333,7 +327,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     {
         const bool containsReleasedPoints = event->isReleaseEvent();
         QVector<QQuickEventPoint *> chosenPoints;
-        for (const QQuickHandlerPoint &p : m_currentPoints) {
+        for (const QQuickHandlerPoint &p : currentPoints()) {
             QQuickEventPoint *ep = event->pointById(p.id());
             chosenPoints << ep;
         }
@@ -341,8 +335,8 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
             // Verify that at least one of the points has moved beyond threshold needed to activate the handler
             int numberOfPointsDraggedOverThreshold = 0;
             QVector2D accumulatedDrag;
-            const QVector2D currentCentroid(m_centroid.scenePosition());
-            const QVector2D pressCentroid(m_centroid.scenePressPosition());
+            const QVector2D currentCentroid(centroid().scenePosition());
+            const QVector2D pressCentroid(centroid().scenePressPosition());
 
             QStyleHints *styleHints = QGuiApplication::styleHints();
             const int dragThreshold = styleHints->startDragDistance();
@@ -410,9 +404,9 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
             }
 
             const bool requiredNumberOfPointsDraggedOverThreshold = numberOfPointsDraggedOverThreshold >= minimumPointCount() && numberOfPointsDraggedOverThreshold <= maximumPointCount();
-            accumulatedMovementMagnitude /= m_currentPoints.count();
+            accumulatedMovementMagnitude /= currentPoints().count();
 
-            QVector2D avgDrag = accumulatedDrag / m_currentPoints.count();
+            QVector2D avgDrag = accumulatedDrag / currentPoints().count();
             if (!xAxis()->enabled())
                 avgDrag.setX(0);
             if (!yAxis()->enabled())
@@ -445,12 +439,12 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         // avoid mapping the minima and maxima, as they might have unmappable values
         // such as -inf/+inf. Because of this we perform the bounding to min/max in local coords.
         // 1. scale
-        dist = averageTouchPointDistance(m_centroid.scenePosition());
+        dist = averageTouchPointDistance(centroid().scenePosition());
         m_activeScale = dist / m_startDistance;
         m_activeScale = qBound(m_minimumScale/m_startScale, m_activeScale, m_maximumScale/m_startScale);
 
         // 2. rotate
-        QVector<PointData> newAngles = angles(m_centroid.scenePosition());
+        QVector<PointData> newAngles = angles(centroid().scenePosition());
         const qreal angleDelta = averageAngleDelta(m_startAngles, newAngles);
         m_activeRotation += angleDelta;
         m_startAngles = std::move(newAngles);
@@ -465,25 +459,15 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     m_accumulatedScale = m_startScale * m_activeScale;
 
     if (target() && target()->parentItem()) {
-        const QPointF centroidParentPos = target()->parentItem()->mapFromScene(m_centroid.scenePosition());
+        const QPointF centroidParentPos = target()->parentItem()->mapFromScene(centroid().scenePosition());
         // 3. Drag/translate
-        const QPointF centroidStartParentPos = target()->parentItem()->mapFromScene(m_centroid.sceneGrabPosition());
+        const QPointF centroidStartParentPos = target()->parentItem()->mapFromScene(centroid().sceneGrabPosition());
         m_activeTranslation = QVector2D(centroidParentPos - centroidStartParentPos);
         // apply rotation + scaling around the centroid - then apply translation.
-        QMatrix4x4 mat;
-
-        const QVector3D centroidParentVector(centroidParentPos);
-        mat.translate(centroidParentVector);
-        mat.rotate(float(m_activeRotation), 0, 0, 1);
-        mat.scale(float(m_activeScale));
-        mat.translate(-centroidParentVector);
-        mat.translate(QVector3D(m_activeTranslation));
-
-        mat = mat * m_startMatrix;
-
-        QPointF xformOriginPoint = target()->transformOriginPoint();
-        QPointF pos = mat * xformOriginPoint;
-        pos -= xformOriginPoint;
+        QPointF pos = QQuickItemPrivate::get(target())->adjustedPosForTransform(centroidParentPos,
+                                                                                m_startPos, m_activeTranslation,
+                                                                                m_startScale, m_activeScale,
+                                                                                m_startRotation, m_activeRotation);
 
         if (xAxis()->enabled())
             pos.setX(qBound(xAxis()->minimum(), pos.x(), xAxis()->maximum()));
@@ -498,10 +482,10 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         target()->setRotation(rotation);
         target()->setScale(m_accumulatedScale);
     } else {
-        m_activeTranslation = QVector2D(m_centroid.scenePosition() - m_centroid.scenePressPosition());
+        m_activeTranslation = QVector2D(centroid().scenePosition() - centroid().scenePressPosition());
     }
 
-    qCDebug(lcPinchHandler) << "centroid" << m_centroid.scenePressPosition() << "->"  << m_centroid.scenePosition()
+    qCDebug(lcPinchHandler) << "centroid" << centroid().scenePressPosition() << "->"  << centroid().scenePosition()
                             << ", distance" << m_startDistance << "->" << dist
                             << ", startScale" << m_startScale << "->" << m_accumulatedScale
                             << ", activeRotation" << m_activeRotation

@@ -132,19 +132,6 @@ private:
     QV4::ExecutionEngine *e;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlV4Handle
-{
-public:
-    QQmlV4Handle() : d(QV4::Encode::undefined()) {}
-    explicit QQmlV4Handle(const QV4::Value &v) : d(v.asReturnedValue()) {}
-    explicit QQmlV4Handle(QV4::ReturnedValue v) : d(v) {}
-
-    operator QV4::ReturnedValue() const { return d; }
-
-private:
-    quint64 d;
-};
-
 class QObject;
 class QQmlEngine;
 class QNetworkAccessManager;
@@ -237,7 +224,5 @@ inline QV8Engine::Deletable *QV8Engine::extensionData(int index) const
 
 
 QT_END_NAMESPACE
-
-Q_DECLARE_METATYPE(QQmlV4Handle)
 
 #endif // QQMLV8ENGINE_P_H

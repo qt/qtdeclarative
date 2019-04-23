@@ -71,6 +71,7 @@ public:
 
     void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail) override;
     void throwReferenceError(const AST::SourceLocation &loc, const QString &detail) override;
+
 private:
     ExecutionEngine *engine;
 };

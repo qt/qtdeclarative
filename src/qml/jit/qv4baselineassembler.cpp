@@ -208,17 +208,20 @@ public:
         isNumber.link(this);
     }
 
+    // this converts both the lhs and the accumulator to int32
     void toInt32LhsAcc(Address lhs, RegisterID lhsTarget)
     {
         load64(lhs, lhsTarget);
         urshift64(lhsTarget, TrustedImm32(Value::QuickType_Shift), ScratchRegister2);
         auto lhsIsInt = branch32(Equal, TrustedImm32(Value::QT_Int), ScratchRegister2);
 
-        pushAligned(AccumulatorRegister);
+        const Address accumulatorStackAddress(JSStackFrameRegister,
+                                              offsetof(CallData, accumulator));
+        storeAccumulator(accumulatorStackAddress);
         move(lhsTarget, registerForArg(0));
         callHelper(toInt32Helper);
         move(ReturnValueRegister, lhsTarget);
-        popAligned(AccumulatorRegister);
+        loadAccumulator(accumulatorStackAddress);
 
         lhsIsInt.link(this);
         urshift64(AccumulatorRegister, TrustedImm32(Value::QuickType_Shift), ScratchRegister2);
@@ -498,6 +501,7 @@ public:
         isNumber.link(this);
     }
 
+    // this converts both the lhs and the accumulator to int32
     void toInt32LhsAcc(Address lhs, RegisterID lhsTarget)
     {
         bool accumulatorNeedsSaving = AccumulatorRegisterValue == ReturnValueRegisterValue
@@ -510,32 +514,28 @@ public:
         auto lhsIsInt = jump();
 
         lhsIsNotInt.link(this);
-        if (accumulatorNeedsSaving) {
-            push(AccumulatorRegisterTag);
-            push(AccumulatorRegisterValue);
-        }
+
+        // Save accumulator from being garbage collected, no matter if we will reuse the register.
+        const Address accumulatorStackAddress(JSStackFrameRegister,
+                                              offsetof(CallData, accumulator));
+        storeAccumulator(accumulatorStackAddress);
 
         if (ArgInRegCount < 2) {
-            if (!accumulatorNeedsSaving)
-                subPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+            subPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
             push(lhsTarget);
             load32(lhs, lhsTarget);
             push(lhsTarget);
         } else {
-            if (accumulatorNeedsSaving)
-                subPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
             move(lhsTarget, registerForArg(1));
             load32(lhs, registerForArg(0));
         }
         callHelper(toInt32Helper);
         move(ReturnValueRegisterValue, lhsTarget);
-        if (accumulatorNeedsSaving) {
-            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
-            pop(AccumulatorRegisterValue);
-            pop(AccumulatorRegisterTag);
-        } else if (ArgInRegCount < 2) {
+        if (ArgInRegCount < 2)
             addPtr(TrustedImm32(4 * PointerSize), StackPointerRegister);
-        }
+
+        if (accumulatorNeedsSaving) // otherwise it's still the same
+            loadAccumulator(accumulatorStackAddress);
 
         lhsIsInt.link(this);
 

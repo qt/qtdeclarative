@@ -276,7 +276,7 @@ public:
     void requestMoreIfNecessary();
     QObject *object(Compositor::Group group, int index, QQmlIncubator::IncubationMode incubationMode);
     QQmlDelegateModel::ReleaseFlags release(QObject *object);
-    QString stringValue(Compositor::Group group, int index, const QString &name);
+    QVariant variantValue(Compositor::Group group, int index, const QString &name);
     void emitCreatedPackage(QQDMIncubationTask *incubationTask, QQuickPackage *package);
     void emitInitPackage(QQDMIncubationTask *incubationTask, QQuickPackage *package);
     void emitCreatedItem(QQDMIncubationTask *incubationTask, QObject *item) {
@@ -378,7 +378,7 @@ public:
     bool isValid() const override;
     QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
     ReleaseFlags release(QObject *item) override;
-    QString stringValue(int index, const QString &role) override;
+    QVariant variantValue(int index, const QString &role) override;
     QList<QByteArray> watchedRoles() const { return m_watchedRoles; }
     void setWatchedRoles(const QList<QByteArray> &roles) override;
     QQmlIncubator::Status incubationStatus(int index) override;

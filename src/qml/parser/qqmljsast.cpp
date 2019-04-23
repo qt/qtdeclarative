@@ -41,7 +41,7 @@
 
 #include "qqmljsastvisitor_p.h"
 
-QT_QML_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE
 
 namespace QQmlJS { namespace AST {
 
@@ -63,21 +63,6 @@ ClassExpression *asAnonymousClassDefinition(Node *n)
     if (!c || !c->name.isNull())
         return nullptr;
     return c;
-}
-
-
-void Node::accept(Visitor *visitor)
-{
-    if (visitor->preVisit(this)) {
-        accept0(visitor);
-    }
-    visitor->postVisit(this);
-}
-
-void Node::accept(Node *node, Visitor *visitor)
-{
-    if (node)
-        node->accept(visitor);
 }
 
 ExpressionNode *Node::expressionCast()
@@ -1489,6 +1474,6 @@ LeftHandSideExpression *LeftHandSideExpression::leftHandSideExpressionCast()
 
 } } // namespace QQmlJS::AST
 
-QT_QML_END_NAMESPACE
+QT_END_NAMESPACE
 
 

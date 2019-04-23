@@ -584,7 +584,6 @@ namespace QtQml {
                                                       const QMetaObject *, bool create);
 #ifndef Q_QDOC
 }
-#endif
 
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_CLANG("-Wheader-hygiene")
@@ -593,6 +592,8 @@ QT_WARNING_DISABLE_CLANG("-Wheader-hygiene")
 using namespace QtQml;
 
 QT_WARNING_POP
+
+#endif // Q_QDOC
 
 //The C++ version of protected namespaces in qmldir
 Q_QML_EXPORT bool qmlProtectModule(const char* uri, int majVersion);
@@ -604,8 +605,6 @@ QObject *qmlAttachedPropertiesObject(const QObject *obj, bool create = true)
     static int idx = -1;
     return qmlAttachedPropertiesObject(&idx, obj, &T::staticMetaObject, create);
 }
-
-Q_QML_EXPORT void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor);
 
 inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName,
                                 QJSValue (*callback)(QQmlEngine *, QJSEngine *))

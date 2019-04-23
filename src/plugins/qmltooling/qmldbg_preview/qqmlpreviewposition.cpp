@@ -42,14 +42,47 @@
 #include <QtGui/qwindow.h>
 #include <QtGui/qscreen.h>
 #include <QtGui/qguiapplication.h>
+#include <private/qhighdpiscaling_p.h>
 
 QT_BEGIN_NAMESPACE
 
-static const QSize availableScreenSize(const QPoint &point)
+static QVector<QQmlPreviewPosition::ScreenData> initScreensData()
 {
-    if (const QScreen *screen = QGuiApplication::screenAt(point))
-        return screen->availableGeometry().size();
-    return QSize();
+    QVector<QQmlPreviewPosition::ScreenData> screensData;
+
+    for (QScreen *screen : QGuiApplication::screens()) {
+        QQmlPreviewPosition::ScreenData sd{screen->name(), screen->size()};
+        screensData.append(sd);
+    }
+    return screensData;
+}
+
+static QScreen *findScreen(const QString &nameOfScreen)
+{
+    for (QScreen *screen : QGuiApplication::screens()) {
+        if (screen->name() == nameOfScreen)
+            return screen;
+    }
+    return nullptr;
+}
+
+static QDataStream &operator<<(QDataStream &out, const QQmlPreviewPosition::ScreenData &screenData)
+{
+    out << screenData.name;
+    out << screenData.size;
+    return out;
+}
+
+static QDataStream &operator>>(QDataStream &in, QQmlPreviewPosition::ScreenData &screenData)
+{
+    in >> screenData.name;
+    in >> screenData.size;
+    return in;
+}
+
+bool QQmlPreviewPosition::ScreenData::operator==(const QQmlPreviewPosition::ScreenData &other) const
+{
+    return other.size == size && other.name == name;
 }
 
 QQmlPreviewPosition::QQmlPreviewPosition()
@@ -62,20 +95,36 @@ QQmlPreviewPosition::QQmlPreviewPosition()
     });
 }
 
-void QQmlPreviewPosition::setPosition(const QPoint &point)
+QQmlPreviewPosition::~QQmlPreviewPosition()
 {
-    m_hasPosition = true;
-    m_lastWindowPosition = point;
-    m_savePositionTimer.start();
+    saveWindowPosition();
+}
+
+void QQmlPreviewPosition::takePosition(QWindow *window, InitializeState state)
+{
+    Q_ASSERT(window);
+    // only save the position if we already tried to get the last saved position
+    if (m_initializeState == PositionInitialized) {
+        m_hasPosition = true;
+        auto screen = window->screen();
+        auto nativePosition = QHighDpiScaling::mapPositionToNative(window->framePosition(),
+                                                                   screen->handle());
+        m_lastWindowPosition = {screen->name(), nativePosition};
+
+        m_savePositionTimer.start();
+    }
+    if (state == InitializePosition)
+        m_initializeState = InitializePosition;
 }
 
 void QQmlPreviewPosition::saveWindowPosition()
 {
     if (m_hasPosition) {
+        const QByteArray positionAsByteArray = fromPositionToByteArray(m_lastWindowPosition);
         if (!m_settingsKey.isNull())
-            m_settings.setValue(m_settingsKey, m_lastWindowPosition);
+            m_settings.setValue(m_settingsKey, positionAsByteArray);
 
-        m_settings.setValue(QLatin1String("global_lastpostion"), m_lastWindowPosition);
+        m_settings.setValue(QLatin1String("global_lastpostion"), positionAsByteArray);
     }
 }
 
@@ -85,29 +134,86 @@ void QQmlPreviewPosition::loadWindowPositionSettings(const QUrl &url)
 
     if (m_settings.contains(m_settingsKey)) {
         m_hasPosition = true;
-        m_lastWindowPosition = m_settings.value(m_settingsKey).toPoint();
+        readLastPositionFromByteArray(m_settings.value(m_settingsKey).toByteArray());
     }
 }
 
 void QQmlPreviewPosition::initLastSavedWindowPosition(QWindow *window)
 {
-    if (m_positionedWindows.contains(window))
-        return;
+    Q_ASSERT(window);
+    m_initializeState = PositionInitialized;
+    if (m_currentInitScreensData.isEmpty())
+        m_currentInitScreensData = initScreensData();
+    // if it is the first time we just use the fall back from a last shown qml file
     if (!m_hasPosition) {
-        // in case there was nothing saved, we do not want to set anything
         if (!m_settings.contains(QLatin1String("global_lastpostion")))
             return;
-        m_lastWindowPosition = m_settings.value(QLatin1String("global_lastpostion")).toPoint();
+        readLastPositionFromByteArray(m_settings.value(QLatin1String("global_lastpostion"))
+                                              .toByteArray());
     }
-    if (QGuiApplication::screenAt(m_lastWindowPosition))
-        window->setFramePosition(m_lastWindowPosition);
-
-    m_positionedWindows.append(window);
+    setPosition(m_lastWindowPosition, window);
 }
 
-const QSize QQmlPreviewPosition::currentScreenSize(QWindow *window)
+QByteArray QQmlPreviewPosition::fromPositionToByteArray(
+        const QQmlPreviewPosition::Position &position)
 {
-    return availableScreenSize(window->position());
+    QByteArray array;
+    QDataStream stream(&array, QIODevice::WriteOnly);
+    stream.setVersion(QDataStream::Qt_5_12);
+
+    const quint16 majorVersion = 1;
+    const quint16 minorVersion = 0;
+
+    stream << majorVersion
+           << minorVersion
+           << m_currentInitScreensData
+           << position.screenName
+           << position.nativePosition;
+    return array;
+}
+
+void QQmlPreviewPosition::readLastPositionFromByteArray(const QByteArray &array)
+{
+    QDataStream stream(array);
+    stream.setVersion(QDataStream::Qt_5_12);
+
+    // no version check for 1.0
+    //const quint16 currentMajorVersion = 1;
+    quint16 majorVersion = 0;
+    quint16 minorVersion = 0;
+
+    stream >> majorVersion >> minorVersion;
+
+    QVector<ScreenData> initScreensData;
+    stream >> initScreensData;
+
+    if (m_currentInitScreensData != initScreensData)
+        return;
+
+    QString nameOfScreen;
+    stream >> nameOfScreen;
+
+    QScreen *screen = findScreen(nameOfScreen);
+    if (!screen)
+        return;
+
+    QPoint nativePosition;
+    stream >> nativePosition;
+    if (nativePosition.isNull())
+        return;
+    m_lastWindowPosition = {nameOfScreen, nativePosition};
+}
+
+void QQmlPreviewPosition::setPosition(const QQmlPreviewPosition::Position &position,
+                                      QWindow *window)
+{
+    if (position.nativePosition.isNull())
+        return;
+    if (QScreen *screen = findScreen(position.screenName)) {
+        window->setScreen(screen);
+        window->setFramePosition(QHighDpiScaling::mapPositionFromNative(position.nativePosition,
+                                                                        screen->handle()));
+    }
 }
 
 QT_END_NAMESPACE

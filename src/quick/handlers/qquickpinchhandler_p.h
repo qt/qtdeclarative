@@ -59,7 +59,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_AUTOTEST_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
+class Q_QUICK_PRIVATE_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
 {
     Q_OBJECT
     Q_PROPERTY(qreal minimumScale READ minimumScale WRITE setMinimumScale NOTIFY minimumScaleChanged)
@@ -158,7 +158,6 @@ private:
     qreal m_accumulatedStartCentroidDistance = 0;
     QVector<PointData> m_startAngles;
     QQuickMatrix4x4 m_transform;
-    QMatrix4x4 m_startMatrix;
 };
 
 QT_END_NAMESPACE

@@ -89,19 +89,19 @@ public:
     QQmlPropertyCache *copy();
 
     QQmlPropertyCache *copyAndAppend(const QMetaObject *,
-                QQmlPropertyRawData::Flags propertyFlags = QQmlPropertyData::Flags(),
-                QQmlPropertyRawData::Flags methodFlags = QQmlPropertyData::Flags(),
-                QQmlPropertyRawData::Flags signalFlags = QQmlPropertyData::Flags());
+                QQmlPropertyData::Flags propertyFlags = QQmlPropertyData::Flags(),
+                QQmlPropertyData::Flags methodFlags = QQmlPropertyData::Flags(),
+                QQmlPropertyData::Flags signalFlags = QQmlPropertyData::Flags());
     QQmlPropertyCache *copyAndAppend(const QMetaObject *, int typeMinorVersion,
-                QQmlPropertyRawData::Flags propertyFlags = QQmlPropertyData::Flags(),
-                QQmlPropertyRawData::Flags methodFlags = QQmlPropertyData::Flags(),
-                QQmlPropertyRawData::Flags signalFlags = QQmlPropertyData::Flags());
+                QQmlPropertyData::Flags propertyFlags = QQmlPropertyData::Flags(),
+                QQmlPropertyData::Flags methodFlags = QQmlPropertyData::Flags(),
+                QQmlPropertyData::Flags signalFlags = QQmlPropertyData::Flags());
 
     QQmlPropertyCache *copyAndReserve(int propertyCount,
                                       int methodCount, int signalCount, int enumCount);
-    void appendProperty(const QString &, QQmlPropertyRawData::Flags flags, int coreIndex,
+    void appendProperty(const QString &, QQmlPropertyData::Flags flags, int coreIndex,
                         int propType, int revision, int notifyIndex);
-    void appendSignal(const QString &, QQmlPropertyRawData::Flags, int coreIndex,
+    void appendSignal(const QString &, QQmlPropertyData::Flags, int coreIndex,
                       const int *types = nullptr, const QList<QByteArray> &names = QList<QByteArray>());
     void appendMethod(const QString &, QQmlPropertyData::Flags flags, int coreIndex,
                       const QList<QByteArray> &names = QList<QByteArray>());
@@ -187,9 +187,9 @@ private:
     inline QQmlPropertyCache *copy(int reserve);
 
     void append(const QMetaObject *, int typeMinorVersion,
-                QQmlPropertyRawData::Flags propertyFlags = QQmlPropertyRawData::Flags(),
-                QQmlPropertyRawData::Flags methodFlags = QQmlPropertyData::Flags(),
-                QQmlPropertyRawData::Flags signalFlags = QQmlPropertyData::Flags());
+                QQmlPropertyData::Flags propertyFlags = QQmlPropertyData::Flags(),
+                QQmlPropertyData::Flags methodFlags = QQmlPropertyData::Flags(),
+                QQmlPropertyData::Flags signalFlags = QQmlPropertyData::Flags());
 
     QQmlPropertyCacheMethodArguments *createArgumentsObject(int count, const QList<QByteArray> &names);
 
@@ -242,8 +242,6 @@ private:
     int _jsFactoryMethodIndex;
     QByteArray _checksum;
 };
-
-typedef QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCachePtr;
 
 inline QQmlPropertyData *QQmlPropertyCache::ensureResolved(QQmlPropertyData *p) const
 {

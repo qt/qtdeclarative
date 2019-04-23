@@ -55,6 +55,8 @@
     \li decodeURIComponent(encodedURIComponent)
     \li encodeURI(uri)
     \li encodeURIComponent(uriComponent)
+    \li escape(string)
+    \li unescape(string)
     \endlist
 
     \section2 Constructor Properties
@@ -63,11 +65,20 @@
     \li Object
     \li Function
     \li Array
+    \li ArrayBuffer
     \li String
     \li Boolean
     \li Number
+    \li DataView
     \li Date
+    \li Promise
     \li RegExp
+    \li Map
+    \li WeakMap
+    \li Set
+    \li WeakSet
+    \li SharedArrayBuffer
+    \li Symbol
     \li Error
     \li EvalError
     \li RangeError
@@ -80,8 +91,11 @@
     \section2 Other Properties
 
     \list
+    \li Atomics
     \li Math
     \li JSON
+    \li Reflect
+    \li Proxy
     \endlist
 
     \section1 The Object Object
@@ -92,12 +106,19 @@
 
     \list
     \li getPrototypeOf(O)
+    \li setPrototypeOf(O, P)
     \li getOwnPropertyDescriptor(O, P)
+    \li getOwnPropertyDescriptors(O)
     \li getOwnPropertyNames(O)
+    \li getOwnPropertySymbols(O)
+    \li assign(O [, Properties])
     \li create(O [, Properties])
     \li defineProperty(O, P, Attributes)
     \li defineProperties(O, Properties)
+    \li entries(O)
+    \li is(V1, V2)
     \li keys(O)
+    \li values(O)
     \li seal(O)
     \li isSealed(O)
     \li freeze(O)
@@ -117,6 +138,8 @@
     \li hasOwnProperty(V)
     \li isPrototypeOf(V)
     \li propertyIsEnumerable(V)
+    \li __defineGetter__(P, F)
+    \li __defineSetter__(P, F)
     \endlist
 
     \section1 Function Objects
@@ -130,6 +153,7 @@
     \li apply(thisArg, argArray)
     \li call(thisArg [, arg1 [, arg2, ...]])
     \li bind((thisArg [, arg1 [, arg2, …]])
+    \li [Symbol.hasInstance](O)
     \endlist
 
     \section1 Array Objects
@@ -142,9 +166,14 @@
     \li toString()
     \li toLocaleString()
     \li concat([item1 [, item2 [, ...]]])
+    \li copyWithin([item1 [, item2 [, ...]]])
+    \li entries()
+    \li fill(item [, index1 [, index2]])
     \li join(separator)
     \li find(callbackfn [, thisArg]) // ECMAScript 6: Added in Qt 5.9
     \li findIndex(callbackfn [, thisArg]) // ECMAScript 6: Added in Qt 5.9
+    \li includes(item)
+    \li keys()
     \li pop()
     \li push([item1 [, item2 [, ...]]])
     \li reverse()
@@ -162,6 +191,8 @@
     \li filter(callbackfn [, thisArg])
     \li reduce(callbackfn [, initialValue])
     \li reduceRight(callbackfn [, initialValue])
+    \li values()
+    \li [Symbol.iterator]()
     \endlist
 
     \section1 String Objects
@@ -175,6 +206,7 @@
     \li valueOf()
     \li charAt(pos)
     \li charCodeAt(pos)
+    \li codePointAt(pos)
     \li concat([string1 [, string2 [, ...]]])
     \li endsWith(searchString [, endPosition ]) // ECMAScript 6: Added in Qt 5.8
     \li includes(searchString [, position ]) // ECMAScript 6: Added in 5.8
@@ -182,18 +214,23 @@
     \li lastIndexOf(searchString, position)
     \li localeCompare(that)
     \li match(regexp)
+    \li normalize()
+    \li padEnd(length [, string])
+    \li padStart(length [, string])
     \li repeat(count) // ECMAScript 6: Added in Qt 5.9
     \li replace(searchValue, replaceValue)
     \li search(regexp)
     \li slice(start, end)
     \li split(separator, limit)
     \li startsWith(searchString [, position ]) // ECMAScript 6: Added in Qt 5.8
+    \li substr(start, length)
     \li substring(start, end)
     \li toLowerCase()
     \li toLocaleLowerCase()
     \li toUpperCase()
     \li toLocaleUpperCase()
     \li trim()
+    \li [Symbol.iterator]()
     \endlist
 
     Additionally, the QML engine adds the following functions to the \l String prototype:
@@ -222,6 +259,7 @@
     \list
     \li toString(radix)
     \li toLocaleString()
+    \li valueOf()
     \li toFixed(fractionDigits)
     \li toExponential(fractionDigits)
     \li toPrecision(precision)
@@ -245,12 +283,16 @@
     \li MAX_VALUE
     \li MIN_VALUE
     \li EPSILON // ECMAScript 6: Added in Qt 5.8
+    \li MAX_SAFE_INTEGER
+    \li MIN_SAFE_INTEGER
     \endlist
 
     \section3 Function Properties
 
     \list
     \li isFinite(x) // ECMAScript 6: Added in Qt 5.8
+    \li isInteger(x)
+    \li isSafeInteger(x)
     \li isNaN(x) // ECMAScript 6: Added in Qt 5.8
     \endlist
 
@@ -274,14 +316,27 @@
     \list
     \li abs(x)
     \li acos(x)
+    \li acosh(x)
     \li asin(x)
+    \li asinh(x)
     \li atan(x)
+    \li atanh(x)
     \li atan2(y, x)
+    \li cbrt(x)
     \li ceil(x)
+    \li clz32(x)
     \li cos(x)
+    \li cosh(x)
     \li exp(x)
+    \li expm1(x)
     \li floor(x)
+    \li fround(x)
+    \li hypot(x, y)
+    \li imul(x, y)
     \li log(x)
+    \li log10(x)
+    \li log1p(x)
+    \li log2(x)
     \li max([value1 [, value2 [, ...]]])
     \li min([value1 [, value2 [, ...]]])
     \li pow(x, y)
@@ -289,8 +344,11 @@
     \li round(x)
     \li sign(x) // ECMAScript 6: Added in Qt 5.8
     \li sin(x)
+    \li sinh(x)
     \li sqrt(x)
     \li tan(x)
+    \li tanh(x)
+    \li trunc(x)
     \endlist
 
     \section1 Date Objects
@@ -338,11 +396,14 @@
     \li setUTCDate(date)
     \li setMonth(month [, date])
     \li setUTCMonth(month [, date])
+    \li setYear(year)
     \li setFullYear(year [, month [, date]])
     \li setUTCFullYear(year [, month [, date]])
     \li toUTCString()
+    \li toGMTString()
     \li toISOString()
     \li toJSON()
+    \li [Symbol.toPrimitive](hint)
     \endlist
 
     Additionally, the QML engine adds the following functions to the \l Date prototype:

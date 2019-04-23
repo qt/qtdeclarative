@@ -44,7 +44,6 @@
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlcomponent_p.h>
-#include <private/qqmldelegatecomponent_p.h>
 
 #define COMPILE_EXCEPTION(token, desc) \
     { \
@@ -146,8 +145,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
         document->jsModule.fileName = typeData->urlString();
         document->jsModule.finalUrl = typeData->finalUrlString();
         QmlIR::JSCodeGen v4CodeGenerator(document->code, &document->jsGenerator, &document->jsModule, &document->jsParserEngine,
-                                         document->program, typeNameCache.data(), &document->jsGenerator.stringTable, engine->v8engine()->illegalNames());
-        v4CodeGenerator.setUseFastLookups(false);
+                                         document->program, &document->jsGenerator.stringTable, engine->v8engine()->illegalNames());
         QQmlJSCodeGenerator jsCodeGen(this, &v4CodeGenerator);
         if (!jsCodeGen.generateCodeForComponents())
             return nullptr;
@@ -767,10 +765,6 @@ void QQmlScriptStringScanner::scan()
             if (!pd || pd->propType() != scriptStringMetaType)
                 continue;
 
-            QmlIR::CompiledFunctionOrExpression *foe = obj->functionsAndExpressions->slowAt(binding->value.compiledScriptIndex);
-            if (foe)
-                foe->disableAcceleratedLookups = true;
-
             QString script = compiler->bindingAsString(obj, binding->value.compiledScriptIndex);
             binding->stringIndex = compiler->registerString(script);
         }
@@ -784,6 +778,23 @@ QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(QQmlTypeCompiler *t
     , qmlObjects(typeCompiler->qmlObjects())
     , propertyCaches(std::move(typeCompiler->takePropertyCaches()))
 {
+}
+
+static bool isUsableComponent(const QMetaObject *metaObject)
+{
+    // The metaObject is a component we're interested in if it either is a QQmlComponent itself
+    // or if any of its parents is a QQmlAbstractDelegateComponent. We don't want to include
+    // qqmldelegatecomponent_p.h because it belongs to QtQmlModels.
+
+    if (metaObject == &QQmlComponent::staticMetaObject)
+        return true;
+
+    for (; metaObject; metaObject = metaObject->superClass()) {
+        if (qstrcmp(metaObject->className(), "QQmlAbstractDelegateComponent") == 0)
+            return true;
+    }
+
+    return false;
 }
 
 void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlIR::Object *obj, QQmlPropertyCache *propertyCache)
@@ -807,15 +818,9 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
             firstMetaObject = tr->type.metaObject();
         else if (tr->compilationUnit)
             firstMetaObject = tr->compilationUnit->rootPropertyCache()->firstCppMetaObject();
-        // 1: test for QQmlComponent
-        if (firstMetaObject && firstMetaObject == &QQmlComponent::staticMetaObject)
+        if (isUsableComponent(firstMetaObject))
             continue;
-        // 2: test for QQmlAbstractDelegateComponent
-        while (firstMetaObject && firstMetaObject != &QQmlAbstractDelegateComponent::staticMetaObject)
-            firstMetaObject = firstMetaObject->superClass();
-        if (firstMetaObject)
-            continue;
-        // if here, not a QQmlComponent or a QQmlAbstractDelegateComponent, so needs wrapping
+        // if here, not a QQmlComponent, so needs wrapping
 
         QQmlPropertyData *pd = nullptr;
         if (binding->propertyNameIndex != quint32(0)) {
@@ -1324,24 +1329,6 @@ bool QQmlJSCodeGenerator::compileComponent(int contextObject)
         contextObject = componentBinding->value.objectIndex;
     }
 
-    QmlIR::JSCodeGen::ObjectIdMapping idMapping;
-    idMapping.reserve(obj->namedObjectsInComponent.size());
-    for (int i = 0; i < obj->namedObjectsInComponent.size(); ++i) {
-        const int objectIndex = obj->namedObjectsInComponent.at(i);
-        QmlIR::JSCodeGen::IdMapping m;
-        const QmlIR::Object *obj = qmlObjects.at(objectIndex);
-        m.name = stringAt(obj->idNameIndex);
-        m.idIndex = obj->id;
-        m.type = propertyCaches->at(objectIndex);
-
-        auto *tref = resolvedType(obj->inheritedTypeNameIndex);
-        if (tref && tref->isFullyDynamicType)
-            m.type = nullptr;
-
-        idMapping << m;
-    }
-    v4CodeGen->beginContextScope(idMapping, propertyCaches->at(contextObject));
-
     if (!compileJavaScriptCodeInObjectsRecursively(contextObject, contextObject))
         return false;
 
@@ -1355,16 +1342,9 @@ bool QQmlJSCodeGenerator::compileJavaScriptCodeInObjectsRecursively(int objectIn
         return true;
 
     if (object->functionsAndExpressions->count > 0) {
-        QQmlPropertyCache *scopeObject = propertyCaches->at(scopeObjectIndex);
-        v4CodeGen->beginObjectScope(scopeObject);
-
         QList<QmlIR::CompiledFunctionOrExpression> functionsToCompile;
-        for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next) {
-            const bool haveCustomParser = customParsers.contains(object->inheritedTypeNameIndex);
-            if (haveCustomParser)
-                foe->disableAcceleratedLookups = true;
+        for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next)
             functionsToCompile << *foe;
-        }
         const QVector<int> runtimeFunctionIndices = v4CodeGen->generateJSCodeForFunctionsAndBindings(functionsToCompile);
         const QList<QQmlError> jsErrors = v4CodeGen->qmlErrors();
         if (!jsErrors.isEmpty()) {

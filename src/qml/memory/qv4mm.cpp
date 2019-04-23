@@ -93,8 +93,6 @@
 #include <pthread_np.h>
 #endif
 
-#define MIN_UNMANAGED_HEAPSIZE_GC_LIMIT std::size_t(128 * 1024)
-
 Q_LOGGING_CATEGORY(lcGcStats, "qt.qml.gc.statistics")
 Q_DECLARE_LOGGING_CATEGORY(lcGcStats)
 Q_LOGGING_CATEGORY(lcGcAllocatorStats, "qt.qml.gc.allocatorStats")
@@ -759,7 +757,7 @@ MemoryManager::MemoryManager(ExecutionEngine *engine)
     , hugeItemAllocator(chunkAllocator, engine)
     , m_persistentValues(new PersistentValueStorage(engine))
     , m_weakValues(new PersistentValueStorage(engine))
-    , unmanagedHeapSizeGCLimit(MIN_UNMANAGED_HEAPSIZE_GC_LIMIT)
+    , unmanagedHeapSizeGCLimit(MinUnmanagedHeapSizeGCLimit)
     , aggressiveGC(!qEnvironmentVariableIsEmpty("QV4_MM_AGGRESSIVE_GC"))
     , gcStats(lcGcStats().isDebugEnabled())
     , gcCollectorStats(lcGcAllocatorStats().isDebugEnabled())
@@ -779,35 +777,9 @@ Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
     lastAllocRequestedSlots = stringSize >> Chunk::SlotSizeShift;
     ++allocationCount;
 #endif
-
-    bool didGCRun = false;
-    if (aggressiveGC) {
-        runGC();
-        didGCRun = true;
-    }
-
     unmanagedHeapSize += unmanagedSize;
-    if (unmanagedHeapSize > unmanagedHeapSizeGCLimit) {
-        if (!didGCRun)
-            runGC();
 
-        if (3*unmanagedHeapSizeGCLimit <= 4*unmanagedHeapSize)
-            // more than 75% full, raise limit
-            unmanagedHeapSizeGCLimit = std::max(unmanagedHeapSizeGCLimit, unmanagedHeapSize) * 2;
-        else if (unmanagedHeapSize * 4 <= unmanagedHeapSizeGCLimit)
-            // less than 25% full, lower limit
-            unmanagedHeapSizeGCLimit = qMax(MIN_UNMANAGED_HEAPSIZE_GC_LIMIT, unmanagedHeapSizeGCLimit/2);
-        didGCRun = true;
-    }
-
-    HeapItem *m = blockAllocator.allocate(stringSize);
-    if (!m) {
-        if (!didGCRun && shouldRunGC())
-            runGC();
-        m = blockAllocator.allocate(stringSize, true);
-    }
-
-//    qDebug() << "allocated string" << m;
+    HeapItem *m = allocate(&blockAllocator, stringSize);
     memset(m, 0, stringSize);
     return *m;
 }
@@ -819,32 +791,11 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
     ++allocationCount;
 #endif
 
-    bool didRunGC = false;
-    if (aggressiveGC) {
-        runGC();
-        didRunGC = true;
-    }
-
     Q_ASSERT(size >= Chunk::SlotSize);
     Q_ASSERT(size % Chunk::SlotSize == 0);
 
-//    qDebug() << "unmanagedHeapSize:" << unmanagedHeapSize << "limit:" << unmanagedHeapSizeGCLimit << "unmanagedSize:" << unmanagedSize;
-
-    if (size > Chunk::DataSize) {
-        HeapItem *h = hugeItemAllocator.allocate(size);
-//        qDebug() << "allocating huge item" << h;
-        return *h;
-    }
-
-    HeapItem *m = blockAllocator.allocate(size);
-    if (!m) {
-        if (!didRunGC && shouldRunGC())
-            runGC();
-        m = blockAllocator.allocate(size, true);
-    }
-
+    HeapItem *m = allocate(&blockAllocator, size);
     memset(m, 0, size);
-//    qDebug() << "allocating data" << m;
     return *m;
 }
 
@@ -1048,12 +999,12 @@ bool MemoryManager::shouldRunGC() const
     return false;
 }
 
-size_t dumpBins(BlockAllocator *b, bool printOutput = true)
+static size_t dumpBins(BlockAllocator *b, const char *title)
 {
     const QLoggingCategory &stats = lcGcAllocatorStats();
     size_t totalSlotMem = 0;
-    if (printOutput)
-        qDebug(stats) << "Slot map:";
+    if (title)
+        qDebug(stats) << "Slot map for" << title << "allocator:";
     for (uint i = 0; i < BlockAllocator::NumBins; ++i) {
         uint nEntries = 0;
         HeapItem *h = b->freeBins[i];
@@ -1062,7 +1013,7 @@ size_t dumpBins(BlockAllocator *b, bool printOutput = true)
             totalSlotMem += h->freeData.availableSlots;
             h = h->freeData.next;
         }
-        if (printOutput)
+        if (title)
             qDebug(stats) << "    number of entries in slot" << i << ":" << nEntries;
     }
     SDUMP() << "    large slot map";
@@ -1072,7 +1023,7 @@ size_t dumpBins(BlockAllocator *b, bool printOutput = true)
         h = h->freeData.next;
     }
 
-    if (printOutput)
+    if (title)
         qDebug(stats) << "  total mem in bins" << totalSlotMem*Chunk::SlotSize;
     return totalSlotMem*Chunk::SlotSize;
 }
@@ -1113,7 +1064,8 @@ void MemoryManager::runGC()
         size_t oldChunks = blockAllocator.chunks.size();
         qDebug(stats) << "Allocated" << totalMem << "bytes in" << oldChunks << "chunks";
         qDebug(stats) << "Fragmented memory before GC" << (totalMem - usedBefore);
-        dumpBins(&blockAllocator);
+        dumpBins(&blockAllocator, "Block");
+        dumpBins(&icAllocator, "InternalClass");
 
         QElapsedTimer t;
         t.start();
@@ -1131,7 +1083,8 @@ void MemoryManager::runGC()
             qDebug(stats) << "   new unmanaged heap:" << unmanagedHeapSize;
             qDebug(stats) << "   unmanaged heap limit:" << unmanagedHeapSizeGCLimit;
         }
-        size_t memInBins = dumpBins(&blockAllocator);
+        size_t memInBins = dumpBins(&blockAllocator, "Block")
+                + dumpBins(&icAllocator, "InternalClasss");
         qDebug(stats) << "Marked object in" << markTime << "us.";
         qDebug(stats) << "   " << markStackSize << "objects marked";
         qDebug(stats) << "Sweeped object in" << sweepTime << "us.";
@@ -1153,7 +1106,8 @@ void MemoryManager::runGC()
         qDebug(stats) << "Used memory after GC:" << usedAfter;
         qDebug(stats) << "Freed up bytes      :" << (usedBefore - usedAfter);
         qDebug(stats) << "Freed up chunks     :" << (oldChunks - blockAllocator.chunks.size());
-        size_t lost = blockAllocator.allocatedMem() - memInBins - usedAfter;
+        size_t lost = blockAllocator.allocatedMem() + icAllocator.allocatedMem()
+                - memInBins - usedAfter;
         if (lost)
             qDebug(stats) << "!!!!!!!!!!!!!!!!!!!!! LOST MEM:" << lost << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
         if (largeItemsBefore || largeItemsAfter) {
@@ -1175,7 +1129,9 @@ void MemoryManager::runGC()
     if (aggressiveGC) {
         // ensure we don't 'loose' any memory
         Q_ASSERT(blockAllocator.allocatedMem()
-                 == blockAllocator.usedMem() + dumpBins(&blockAllocator, false));
+                 == blockAllocator.usedMem() + dumpBins(&blockAllocator, nullptr));
+        Q_ASSERT(icAllocator.allocatedMem()
+                 == icAllocator.usedMem() + dumpBins(&icAllocator, nullptr));
     }
 
     usedSlotsAfterLastFullSweep = blockAllocator.usedSlotsAfterLastSweep + icAllocator.usedSlotsAfterLastSweep;

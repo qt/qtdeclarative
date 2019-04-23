@@ -710,8 +710,8 @@ void QQuickOpenGLShaderEffect::setBlending(bool enable)
 
 QVariant QQuickOpenGLShaderEffect::mesh() const
 {
-    return m_mesh ? qVariantFromValue(static_cast<QObject *>(m_mesh))
-                  : qVariantFromValue(m_meshResolution);
+    return m_mesh ? QVariant::fromValue(static_cast<QObject *>(m_mesh))
+                  : QVariant::fromValue(m_meshResolution);
 }
 
 void QQuickOpenGLShaderEffect::setMesh(const QVariant &mesh)

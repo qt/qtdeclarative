@@ -5122,6 +5122,40 @@ void QQuickItemPrivate::transformChanged()
 #endif
 }
 
+QPointF QQuickItemPrivate::adjustedPosForTransform(const QPointF &centroidParentPos,
+                                                   const QPointF &startPos,
+                                                   const QVector2D &activeTranslation,  //[0,0] means no additional translation from startPos
+                                                   qreal startScale,
+                                                   qreal activeScale,                   // 1.0 means no additional scale from startScale
+                                                   qreal startRotation,
+                                                   qreal activeRotation)                // 0.0 means no additional rotation from startRotation
+{
+    Q_Q(QQuickItem);
+    QVector3D xformOrigin(q->transformOriginPoint());
+    QMatrix4x4 startMatrix;
+    startMatrix.translate(float(startPos.x()), float(startPos.y()));
+    startMatrix.translate(xformOrigin);
+    startMatrix.scale(float(startScale));
+    startMatrix.rotate(float(startRotation), 0, 0, -1);
+    startMatrix.translate(-xformOrigin);
+
+    const QVector3D centroidParentVector(centroidParentPos);
+    QMatrix4x4 mat;
+    mat.translate(centroidParentVector);
+    mat.rotate(float(activeRotation), 0, 0, 1);
+    mat.scale(float(activeScale));
+    mat.translate(-centroidParentVector);
+    mat.translate(QVector3D(activeTranslation));
+
+    mat = mat * startMatrix;
+
+    QPointF xformOriginPoint = q->transformOriginPoint();
+    QPointF pos = mat * xformOriginPoint;
+    pos -= xformOriginPoint;
+
+    return pos;
+}
+
 bool QQuickItemPrivate::filterKeyEvent(QKeyEvent *e, bool post)
 {
     if (!extra.isAllocated() || !extra->keyHandler)
@@ -8359,7 +8393,7 @@ void QQuickItemLayer::activateEffect()
         m_effect->stackAfter(m_effectSource);
     }
     m_effect->setVisible(m_item->isVisible());
-    m_effect->setProperty(m_name, qVariantFromValue<QObject *>(m_effectSource));
+    m_effect->setProperty(m_name, QVariant::fromValue<QObject *>(m_effectSource));
     QQuickItemPrivate::get(m_effect)->setTransparentForPositioner(true);
     m_effectComponent->completeCreate();
 }
@@ -8656,7 +8690,7 @@ void QQuickItemLayer::setName(const QByteArray &name) {
         return;
     if (m_effect) {
         m_effect->setProperty(m_name, QVariant());
-        m_effect->setProperty(name, qVariantFromValue<QObject *>(m_effectSource));
+        m_effect->setProperty(name, QVariant::fromValue<QObject *>(m_effectSource));
     }
     m_name = name;
     emit nameChanged(name);

@@ -76,6 +76,18 @@
 
 QT_BEGIN_NAMESPACE
 
+// override setVisble to prevent accidental offscreen window being created
+// by base class.
+class QQuickOffcreenWindowPrivate: public QQuickWindowPrivate {
+public:
+    void setVisible(bool visible) override {
+        Q_Q(QWindow);
+        // this stays always invisible
+        visibility = visible ? QWindow::Windowed : QWindow::Hidden;
+        q->visibilityChanged(visibility); // workaround for QTBUG-49054
+    }
+};
+
 class QQuickWidgetRenderControl : public QQuickRenderControl
 {
 public:
@@ -94,7 +106,7 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     Q_Q(QQuickWidget);
 
     renderControl = new QQuickWidgetRenderControl(q);
-    offscreenWindow = new QQuickWindow(renderControl);
+    offscreenWindow = new QQuickWindow(*new QQuickOffcreenWindowPrivate(),renderControl);
     offscreenWindow->setTitle(QString::fromLatin1("Offscreen"));
     // Do not call create() on offscreenWindow.
 
@@ -1321,12 +1333,9 @@ void QQuickWidget::showEvent(QShowEvent *)
             triggerUpdate();
         }
     }
-    QWindowPrivate *offscreenPrivate = QWindowPrivate::get(d->offscreenWindow);
-    if (!offscreenPrivate->visible) {
-        offscreenPrivate->visible = true;
-        emit d->offscreenWindow->visibleChanged(true);
-        offscreenPrivate->updateVisibility();
-    }
+
+    // note offscreenWindow  is "QQuickOffScreenWindow" instance
+    d->offscreenWindow->setVisible(true);
     if (QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>())
         service->setParentWindow(d->offscreenWindow, window()->windowHandle());
 }
@@ -1337,12 +1346,8 @@ void QQuickWidget::hideEvent(QHideEvent *)
     Q_D(QQuickWidget);
     if (!d->offscreenWindow->isPersistentSceneGraph())
         d->invalidateRenderControl();
-    QWindowPrivate *offscreenPrivate = QWindowPrivate::get(d->offscreenWindow);
-    if (offscreenPrivate->visible) {
-        offscreenPrivate->visible = false;
-        emit d->offscreenWindow->visibleChanged(false);
-        offscreenPrivate->updateVisibility();
-    }
+    // note offscreenWindow  is "QQuickOffScreenWindow" instance
+    d->offscreenWindow->setVisible(false);
     if (QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>())
         service->setParentWindow(d->offscreenWindow, d->offscreenWindow);
 }

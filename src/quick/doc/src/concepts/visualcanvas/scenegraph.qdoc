@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -269,7 +269,7 @@ animations, process events, etc.
 \endlist
 
 The threaded renderer is currently used by default on Windows with
-opengl32.dll, Linux with non-Mesa based drivers, \macos, mobile
+opengl32.dll, Linux with non-Mesa based drivers, mobile
 platforms, and Embedded Linux with EGLFS but this is subject to
 change. It is possible to force use of the threaded renderer by
 setting \c {QSG_RENDER_LOOP=threaded} in the environment.
@@ -277,12 +277,18 @@ setting \c {QSG_RENDER_LOOP=threaded} in the environment.
 \section2 Non-threaded Render Loops ("basic" and "windows")
 
 The non-threaded render loop is currently used by default on Windows
-with ANGLE or a non-default opengl32 implementation and Linux with
+with ANGLE or a non-default opengl32 implementation, \macos, and Linux with
 Mesa drivers. For the latter this is mostly a precautionary measure,
 as not all combinations of OpenGL drivers and windowing systems have
 been tested. At the same time implementations like ANGLE or Mesa
 llvmpipe are not able to function properly with threaded rendering at
 all so not using threaded rendering is essential for these.
+
+On macOS, the threaded render loop is not supported when building
+with XCode 10 (10.14 SDK) or later, since this opts in to layer-backed
+views on macOS 10.14. You can build with Xcode 9 (10.13 SDK) to opt
+out of layer-backing, in which case the threaded render loop is
+available and used by default.
 
 By default \c windows is used for non-threaded rendering on Windows
 with ANGLE, while \c basic is used for all other platforms when

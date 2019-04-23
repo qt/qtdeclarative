@@ -41,6 +41,9 @@
 
 #include "qv4vme_moth_p.h"
 #include "qv4graphbuilder_p.h"
+#include "qv4lowering_p.h"
+#include "qv4mi_p.h"
+#include "qv4schedulers_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -72,6 +75,15 @@ void Moth::runTracingJit(QV4::Function *function)
 
     IR::GraphBuilder::buildGraph(&irFunction);
     irFunction.dump(QStringLiteral("initial IR"));
+    irFunction.verify();
+
+    IR::GenericLowering(irFunction).lower();
+    irFunction.dump(QStringLiteral("after generic lowering"));
+    irFunction.verify();
+
+    IR::NodeScheduler scheduler(&irFunction);
+    QScopedPointer<IR::MIFunction> miFunction(scheduler.buildMIFunction());
+    miFunction->dump(QStringLiteral("initial MI"));
     irFunction.verify();
 }
 

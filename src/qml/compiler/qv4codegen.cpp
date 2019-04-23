@@ -100,9 +100,10 @@ Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
     , hasError(false)
 {
     jsUnitGenerator->codeGeneratorName = QStringLiteral("moth");
+    pushExpr();
 }
 
-const char *globalNames[] = {
+const char *Codegen::s_globalNames[] = {
     "isNaN",
     "parseFloat",
     "String",
@@ -182,7 +183,7 @@ void Codegen::generateFromProgram(const QString &fileName,
         //
         // Since this can be called from the loader thread we can't get the list
         // directly from the engine, so let's hardcode the most important ones here
-        for (const char **g = globalNames; *g != nullptr; ++g)
+        for (const char **g = s_globalNames; *g != nullptr; ++g)
             m_globalNames << QString::fromLatin1(*g);
     }
 
@@ -264,7 +265,7 @@ Context *Codegen::enterBlock(Node *node)
 Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
 {
     if (hasError)
-        return _expr.result();
+        return exprResult();
 
     if (expr.isConstant()) {
         auto v = Value::fromReturnedValue(expr.constant);
@@ -293,8 +294,8 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
     }
     case UPlus: {
         expr.loadInAccumulator();
-        Instruction::UPlus uplus;
-        bytecodeGenerator->addInstruction(uplus);
+        Instruction::UPlus uplus = {};
+        bytecodeGenerator->addTracingInstruction(uplus);
         return Reference::fromAccumulator(this);
     }
     case Not: {
@@ -310,11 +311,11 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
         return Reference::fromAccumulator(this);
     }
     case PostIncrement:
-        if (!_expr.accept(nx) || requiresReturnValue) {
+        if (!exprAccept(nx) || requiresReturnValue) {
             Reference e = expr.asLValue();
             e.loadInAccumulator();
-            Instruction::UPlus uplus;
-            bytecodeGenerator->addInstruction(uplus);
+            Instruction::UPlus uplus = {};
+            bytecodeGenerator->addTracingInstruction(uplus);
             Reference originalValue = Reference::fromStackSlot(this).storeRetainAccumulator();
             Instruction::Increment inc = {};
             bytecodeGenerator->addTracingInstruction(inc);
@@ -330,17 +331,17 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
         e.loadInAccumulator();
         Instruction::Increment inc = {};
         bytecodeGenerator->addTracingInstruction(inc);
-        if (_expr.accept(nx))
+        if (exprAccept(nx))
             return e.storeConsumeAccumulator();
         else
             return e.storeRetainAccumulator();
     }
     case PostDecrement:
-        if (!_expr.accept(nx) || requiresReturnValue) {
+        if (!exprAccept(nx) || requiresReturnValue) {
             Reference e = expr.asLValue();
             e.loadInAccumulator();
-            Instruction::UPlus uplus;
-            bytecodeGenerator->addInstruction(uplus);
+            Instruction::UPlus uplus = {};
+            bytecodeGenerator->addTracingInstruction(uplus);
             Reference originalValue = Reference::fromStackSlot(this).storeRetainAccumulator();
             Instruction::Decrement dec = {};
             bytecodeGenerator->addTracingInstruction(dec);
@@ -356,7 +357,7 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
         e.loadInAccumulator();
         Instruction::Decrement dec = {};
         bytecodeGenerator->addTracingInstruction(dec);
-        if (_expr.accept(nx))
+        if (exprAccept(nx))
             return e.storeConsumeAccumulator();
         else
             return e.storeRetainAccumulator();
@@ -368,22 +369,13 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
 
 void Codegen::addCJump()
 {
-    bytecodeGenerator->addCJumpInstruction(_expr.trueBlockFollowsCondition(),
-                                           _expr.iftrue(), _expr.iffalse());
-}
-
-void Codegen::accept(Node *node)
-{
-    if (hasError)
-        return;
-
-    if (node)
-        node->accept(this);
+    const Result &expression = currentExpr();
+    bytecodeGenerator->addCJumpInstruction(expression.trueBlockFollowsCondition(),
+                                           expression.iftrue(), expression.iffalse());
 }
 
 void Codegen::statement(Statement *ast)
 {
-    RecursionDepthCheck depthCheck(this, ast->lastSourceLocation());
     RegisterScope scope(this);
 
     bytecodeGenerator->setLocation(ast->firstSourceLocation());
@@ -399,23 +391,21 @@ void Codegen::statement(ExpressionNode *ast)
     if (! ast) {
         return;
     } else {
-        RecursionDepthCheck depthCheck(this, ast->lastSourceLocation());
         RegisterScope scope(this);
 
-        Result r(nx);
-        qSwap(_expr, r);
+        pushExpr(Result(nx));
         VolatileMemoryLocations vLocs = scanVolatileMemoryLocations(ast);
         qSwap(_volatileMemoryLocations, vLocs);
 
         accept(ast);
 
         qSwap(_volatileMemoryLocations, vLocs);
-        qSwap(_expr, r);
+        Reference result = popResult();
 
         if (hasError)
             return;
-        if (r.result().loadTriggersSideEffect())
-            r.result().loadInAccumulator(); // triggers side effects
+        if (result.loadTriggersSideEffect())
+            result.loadInAccumulator(); // triggers side effects
     }
 }
 
@@ -428,11 +418,9 @@ void Codegen::condition(ExpressionNode *ast, const BytecodeGenerator::Label *ift
     if (!ast)
         return;
 
-    RecursionDepthCheck depthCheck(this, ast->lastSourceLocation());
-    Result r(iftrue, iffalse, trueBlockFollowsCondition);
-    qSwap(_expr, r);
+    pushExpr(Result(iftrue, iffalse, trueBlockFollowsCondition));
     accept(ast);
-    qSwap(_expr, r);
+    Result r = popExpr();
 
     if (hasError)
         return;
@@ -448,18 +436,6 @@ void Codegen::condition(ExpressionNode *ast, const BytecodeGenerator::Label *ift
         else
             bytecodeGenerator->jumpTrue().link(*r.iftrue());
     }
-}
-
-Codegen::Reference Codegen::expression(ExpressionNode *ast)
-{
-    RecursionDepthCheck depthCheck(this, ast->lastSourceLocation());
-    Result r;
-    if (ast) {
-        qSwap(_expr, r);
-        accept(ast);
-        qSwap(_expr, r);
-    }
-    return r.result();
 }
 
 void Codegen::program(Program *ast)
@@ -875,17 +851,13 @@ bool Codegen::visit(ExportDeclaration *ast)
     Reference exportedValue;
 
     if (auto *fdecl = AST::cast<FunctionDeclaration*>(ast->variableStatementOrDeclaration)) {
-        Result r;
-        qSwap(_expr, r);
+        pushExpr();
         visit(static_cast<FunctionExpression*>(fdecl));
-        qSwap(_expr, r);
-        exportedValue = r.result();
+        exportedValue = popResult();
     } else if (auto *classDecl = AST::cast<ClassDeclaration*>(ast->variableStatementOrDeclaration)) {
-        Result r;
-        qSwap(_expr, r);
+        pushExpr();
         visit(static_cast<ClassExpression*>(classDecl));
-        qSwap(_expr, r);
-        exportedValue = r.result();
+        exportedValue = popResult();
     } else if (ExpressionNode *expr = ast->variableStatementOrDeclaration->expressionCast()) {
         exportedValue = expression(expr);
     }
@@ -1068,7 +1040,7 @@ bool Codegen::visit(ClassExpression *ast)
         (void) ctor.storeRetainAccumulator();
     }
 
-    _expr.setResult(Reference::fromAccumulator(this));
+    setExprResult(Reference::fromAccumulator(this));
     return false;
 }
 
@@ -1151,7 +1123,7 @@ bool Codegen::visit(ArrayPattern *ast)
     }
 
     if (!it) {
-        _expr.setResult(Reference::fromAccumulator(this));
+        setExprResult(Reference::fromAccumulator(this));
         return false;
     }
     Q_ASSERT(it->element && it->element->type == PatternElement::SpreadElement);
@@ -1246,7 +1218,7 @@ bool Codegen::visit(ArrayPattern *ast)
     }
 
     array.loadInAccumulator();
-    _expr.setResult(Reference::fromAccumulator(this));
+    setExprResult(Reference::fromAccumulator(this));
 
     return false;
 }
@@ -1262,7 +1234,7 @@ bool Codegen::visit(ArrayMemberExpression *ast)
         return false;
     if (base.isSuper()) {
         Reference index = expression(ast->expression).storeOnStack();
-        _expr.setResult(Reference::fromSuperProperty(index));
+        setExprResult(Reference::fromSuperProperty(index));
         return false;
     }
     base = base.storeOnStack();
@@ -1272,17 +1244,17 @@ bool Codegen::visit(ArrayMemberExpression *ast)
         QString s = str->value.toString();
         uint arrayIndex = QV4::String::toArrayIndex(s);
         if (arrayIndex == UINT_MAX) {
-            _expr.setResult(Reference::fromMember(base, str->value.toString()));
+            setExprResult(Reference::fromMember(base, str->value.toString()));
             return false;
         }
         Reference index = Reference::fromConst(this, QV4::Encode(arrayIndex));
-        _expr.setResult(Reference::fromSubscript(base, index));
+        setExprResult(Reference::fromSubscript(base, index));
         return false;
     }
     Reference index = expression(ast->expression);
     if (hasError)
         return false;
-    _expr.setResult(Reference::fromSubscript(base, index));
+    setExprResult(Reference::fromSubscript(base, index));
     return false;
 }
 
@@ -1313,12 +1285,13 @@ bool Codegen::visit(BinaryExpression *ast)
     TailCallBlocker blockTailCalls(this);
 
     if (ast->op == QSOperator::And) {
-        if (_expr.accept(cx)) {
+        if (exprAccept(cx)) {
             auto iftrue = bytecodeGenerator->newLabel();
-            condition(ast->left, &iftrue, _expr.iffalse(), true);
+            condition(ast->left, &iftrue, currentExpr().iffalse(), true);
             iftrue.link();
             blockTailCalls.unblock();
-            condition(ast->right, _expr.iftrue(), _expr.iffalse(), _expr.trueBlockFollowsCondition());
+            const Result &expr = currentExpr();
+            condition(ast->right, expr.iftrue(), expr.iffalse(), expr.trueBlockFollowsCondition());
         } else {
             auto iftrue = bytecodeGenerator->newLabel();
             auto endif = bytecodeGenerator->newLabel();
@@ -1340,15 +1313,16 @@ bool Codegen::visit(BinaryExpression *ast)
 
             endif.link();
 
-            _expr.setResult(Reference::fromAccumulator(this));
+            setExprResult(Reference::fromAccumulator(this));
         }
         return false;
     } else if (ast->op == QSOperator::Or) {
-        if (_expr.accept(cx)) {
+        if (exprAccept(cx)) {
             auto iffalse = bytecodeGenerator->newLabel();
-            condition(ast->left, _expr.iftrue(), &iffalse, false);
+            condition(ast->left, currentExpr().iftrue(), &iffalse, false);
             iffalse.link();
-            condition(ast->right, _expr.iftrue(), _expr.iffalse(), _expr.trueBlockFollowsCondition());
+            const Result &expr = currentExpr();
+            condition(ast->right, expr.iftrue(), expr.iffalse(), expr.trueBlockFollowsCondition());
         } else {
             auto iffalse = bytecodeGenerator->newLabel();
             auto endif = bytecodeGenerator->newLabel();
@@ -1370,7 +1344,7 @@ bool Codegen::visit(BinaryExpression *ast)
 
             endif.link();
 
-            _expr.setResult(Reference::fromAccumulator(this));
+            setExprResult(Reference::fromAccumulator(this));
         }
         return false;
     } else if (ast->op == QSOperator::Assign) {
@@ -1381,9 +1355,9 @@ bool Codegen::visit(BinaryExpression *ast)
                 return false;
             right = right.storeOnStack();
             destructurePattern(p, right);
-            if (!_expr.accept(nx)) {
+            if (!exprAccept(nx)) {
                 right.loadInAccumulator();
-                _expr.setResult(Reference::fromAccumulator(this));
+                setExprResult(Reference::fromAccumulator(this));
             }
             return false;
         }
@@ -1403,10 +1377,10 @@ bool Codegen::visit(BinaryExpression *ast)
         if (hasError)
             return false;
         r.loadInAccumulator();
-        if (_expr.accept(nx))
-            _expr.setResult(left.storeConsumeAccumulator());
+        if (exprAccept(nx))
+            setExprResult(left.storeConsumeAccumulator());
         else
-            _expr.setResult(left.storeRetainAccumulator());
+            setExprResult(left.storeRetainAccumulator());
         return false;
     }
 
@@ -1449,7 +1423,7 @@ bool Codegen::visit(BinaryExpression *ast)
             return false;
 
         binopHelper(baseOp(ast->op), tempLeft, right).loadInAccumulator();
-        _expr.setResult(left.storeRetainAccumulator());
+        setExprResult(left.storeRetainAccumulator());
 
         break;
     }
@@ -1461,7 +1435,7 @@ bool Codegen::visit(BinaryExpression *ast)
             Reference right = expression(ast->right);
             if (hasError)
                 return false;
-            _expr.setResult(binopHelper(static_cast<QSOperator::Op>(ast->op), right, left));
+            setExprResult(binopHelper(static_cast<QSOperator::Op>(ast->op), right, left));
             break;
         }
         // intentional fall-through!
@@ -1487,7 +1461,7 @@ bool Codegen::visit(BinaryExpression *ast)
         Reference right;
         if (AST::NumericLiteral *rhs = AST::cast<AST::NumericLiteral *>(ast->right)) {
             visit(rhs);
-            right = _expr.result();
+            right = exprResult();
         } else {
             left = left.storeOnStack(); // force any loads of the lhs, so the rhs won't clobber it
             right = expression(ast->right);
@@ -1495,7 +1469,7 @@ bool Codegen::visit(BinaryExpression *ast)
         if (hasError)
             return false;
 
-        _expr.setResult(binopHelper(static_cast<QSOperator::Op>(ast->op), left, right));
+        setExprResult(binopHelper(static_cast<QSOperator::Op>(ast->op), left, right));
 
         break;
     }
@@ -1672,7 +1646,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     }
     case QSOperator::StrictEqual: {
-        if (_expr.accept(cx))
+        if (exprAccept(cx))
             return jumpBinop(oper, left, right);
 
         Instruction::CmpStrictEqual cmp;
@@ -1683,7 +1657,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     }
     case QSOperator::StrictNotEqual: {
-        if (_expr.accept(cx))
+        if (exprAccept(cx))
             return jumpBinop(oper, left, right);
 
         Instruction::CmpStrictNotEqual cmp;
@@ -1694,7 +1668,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     }
     case QSOperator::Equal: {
-        if (_expr.accept(cx))
+        if (exprAccept(cx))
             return jumpBinop(oper, left, right);
 
         Instruction::CmpEq cmp;
@@ -1705,7 +1679,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     }
     case QSOperator::NotEqual: {
-        if (_expr.accept(cx))
+        if (exprAccept(cx))
             return jumpBinop(oper, left, right);
 
         Instruction::CmpNe cmp;
@@ -1716,7 +1690,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     }
     case QSOperator::Gt: {
-        if (_expr.accept(cx))
+        if (exprAccept(cx))
             return jumpBinop(oper, left, right);
 
         Instruction::CmpGt cmp;
@@ -1727,7 +1701,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     }
     case QSOperator::Ge: {
-        if (_expr.accept(cx))
+        if (exprAccept(cx))
             return jumpBinop(oper, left, right);
 
         Instruction::CmpGe cmp;
@@ -1738,7 +1712,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     }
     case QSOperator::Lt: {
-        if (_expr.accept(cx))
+        if (exprAccept(cx))
             return jumpBinop(oper, left, right);
 
         Instruction::CmpLt cmp;
@@ -1749,7 +1723,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     }
     case QSOperator::Le:
-        if (_expr.accept(cx))
+        if (exprAccept(cx))
             return jumpBinop(oper, left, right);
 
         Instruction::CmpLe cmp;
@@ -1765,59 +1739,46 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
     return Reference::fromAccumulator(this);
 }
 
-static QSOperator::Op operatorForSwappedOperands(QSOperator::Op oper)
-{
-    switch (oper) {
-    case QSOperator::StrictEqual: return QSOperator::StrictEqual;
-    case QSOperator::StrictNotEqual: return QSOperator::StrictNotEqual;
-    case QSOperator::Equal: return QSOperator::Equal;
-    case QSOperator::NotEqual: return QSOperator::NotEqual;
-    case QSOperator::Gt: return QSOperator::Le;
-    case QSOperator::Ge: return QSOperator::Lt;
-    case QSOperator::Lt: return QSOperator::Ge;
-    case QSOperator::Le: return QSOperator::Gt;
-    default: Q_UNIMPLEMENTED(); return QSOperator::Invalid;
-    }
-}
-
 Codegen::Reference Codegen::jumpBinop(QSOperator::Op oper, Reference &left, Reference &right)
 {
-    if (left.isConstant()) {
-        oper = operatorForSwappedOperands(oper);
-        qSwap(left, right);
-    }
+    // See if we can generate specialized comparison instructions:
+    if (oper == QSOperator::Equal || oper == QSOperator::NotEqual) {
+        // Because == and != are reflexive, we can do the following:
+        if (left.isConstant() && !right.isConstant())
+            qSwap(left, right); // null==a -> a==null
 
-    if (right.isConstant() && (oper == QSOperator::Equal || oper == QSOperator::NotEqual)) {
-        Value c = Value::fromReturnedValue(right.constant);
-        if (c.isNull() || c.isUndefined()) {
-            left.loadInAccumulator();
-            if (oper == QSOperator::Equal) {
-                Instruction::CmpEqNull cmp;
-                bytecodeGenerator->addInstruction(cmp);
-                addCJump();
-                return Reference();
-            } else if (oper == QSOperator::NotEqual) {
-                Instruction::CmpNeNull cmp;
-                bytecodeGenerator->addInstruction(cmp);
-                addCJump();
-                return Reference();
-            }
-        } else if (c.isInt32()) {
-            left.loadInAccumulator();
-            if (oper == QSOperator::Equal) {
-                Instruction::CmpEqInt cmp;
-                cmp.lhs = c.int_32();
-                bytecodeGenerator->addInstruction(cmp);
-                addCJump();
-                return Reference();
-            } else if (oper == QSOperator::NotEqual) {
-                Instruction::CmpNeInt cmp;
-                cmp.lhs = c.int_32();
-                bytecodeGenerator->addInstruction(cmp);
-                addCJump();
-                return Reference();
-            }
+        if (right.isConstant()) {
+            Value c = Value::fromReturnedValue(right.constant);
+            if (c.isNull() || c.isUndefined()) {
+                left.loadInAccumulator();
+                if (oper == QSOperator::Equal) {
+                    Instruction::CmpEqNull cmp;
+                    bytecodeGenerator->addInstruction(cmp);
+                    addCJump();
+                    return Reference();
+                } else if (oper == QSOperator::NotEqual) {
+                    Instruction::CmpNeNull cmp;
+                    bytecodeGenerator->addInstruction(cmp);
+                    addCJump();
+                    return Reference();
+                }
+            } else if (c.isInt32()) {
+                left.loadInAccumulator();
+                if (oper == QSOperator::Equal) {
+                    Instruction::CmpEqInt cmp;
+                    cmp.lhs = c.int_32();
+                    bytecodeGenerator->addInstruction(cmp);
+                    addCJump();
+                    return Reference();
+                } else if (oper == QSOperator::NotEqual) {
+                    Instruction::CmpNeInt cmp;
+                    cmp.lhs = c.int_32();
+                    bytecodeGenerator->addInstruction(cmp);
+                    addCJump();
+                    return Reference();
+                }
 
+            }
         }
     }
 
@@ -1902,8 +1863,6 @@ bool Codegen::visit(CallExpression *ast)
     switch (base.type) {
     case Reference::Member:
     case Reference::Subscript:
-    case Reference::QmlScopeObject:
-    case Reference::QmlContextObject:
         base = base.asLValue();
         break;
     case Reference::Name:
@@ -1953,7 +1912,7 @@ bool Codegen::visit(CallExpression *ast)
             bytecodeGenerator->addInstruction(call);
         }
 
-        _expr.setResult(Reference::fromAccumulator(this));
+        setExprResult(Reference::fromAccumulator(this));
         return false;
 
     }
@@ -1965,21 +1924,7 @@ bool Codegen::visit(CallExpression *ast)
 void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunction, int slotForThisObject)
 {
     //### Do we really need all these call instructions? can's we load the callee in a temp?
-    if (base.type == Reference::QmlScopeObject) {
-        Instruction::CallScopeObjectProperty call;
-        call.base = base.qmlBase.stackSlot();
-        call.name = base.qmlCoreIndex;
-        call.argc = calldata.argc;
-        call.argv = calldata.argv;
-        bytecodeGenerator->addTracingInstruction(call);
-    } else if (base.type == Reference::QmlContextObject) {
-        Instruction::CallContextObjectProperty call;
-        call.base = base.qmlBase.stackSlot();
-        call.name = base.qmlCoreIndex;
-        call.argc = calldata.argc;
-        call.argv = calldata.argv;
-        bytecodeGenerator->addTracingInstruction(call);
-    } else if (base.type == Reference::Member) {
+    if (base.type == Reference::Member) {
         if (!disable_lookups && useFastLookups) {
             Instruction::CallPropertyLookup call;
             call.base = base.propertyBase.stackSlot();
@@ -2009,11 +1954,19 @@ void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunctio
             call.argv = calldata.argv;
             bytecodeGenerator->addTracingInstruction(call);
         } else if (!disable_lookups && useFastLookups && base.global) {
-            Instruction::CallGlobalLookup call;
-            call.index = registerGlobalGetterLookup(base.nameAsIndex());
-            call.argc = calldata.argc;
-            call.argv = calldata.argv;
-            bytecodeGenerator->addTracingInstruction(call);
+            if (base.qmlGlobal) {
+                Instruction::CallQmlContextPropertyLookup call;
+                call.index = registerQmlContextPropertyGetterLookup(base.nameAsIndex());
+                call.argc = calldata.argc;
+                call.argv = calldata.argv;
+                bytecodeGenerator->addTracingInstruction(call);
+            } else {
+                Instruction::CallGlobalLookup call;
+                call.index = registerGlobalGetterLookup(base.nameAsIndex());
+                call.argc = calldata.argc;
+                call.argv = calldata.argv;
+                bytecodeGenerator->addTracingInstruction(call);
+            }
         } else {
             Instruction::CallName call;
             call.name = base.nameAsIndex();
@@ -2046,7 +1999,7 @@ void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunctio
         bytecodeGenerator->addTracingInstruction(call);
     }
 
-    _expr.setResult(Reference::fromAccumulator(this));
+    setExprResult(Reference::fromAccumulator(this));
 }
 
 Codegen::Arguments Codegen::pushArgs(ArgumentList *args)
@@ -2142,7 +2095,7 @@ bool Codegen::visit(ConditionalExpression *ast)
     ko.loadInAccumulator();
 
     jump_endif.link();
-    _expr.setResult(Reference::fromAccumulator(this));
+    setExprResult(Reference::fromAccumulator(this));
 
     return false;
 }
@@ -2172,7 +2125,7 @@ bool Codegen::visit(DeleteExpression *ast)
             throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
             return false;
         }
-        _expr.setResult(Reference::fromConst(this, QV4::Encode(false)));
+        setExprResult(Reference::fromConst(this, QV4::Encode(false)));
         return false;
     case Reference::Name: {
         if (_context->isStrict) {
@@ -2182,7 +2135,7 @@ bool Codegen::visit(DeleteExpression *ast)
         Instruction::DeleteName del;
         del.name = expr.nameAsIndex();
         bytecodeGenerator->addInstruction(del);
-        _expr.setResult(Reference::fromAccumulator(this));
+        setExprResult(Reference::fromAccumulator(this));
         return false;
     }
     case Reference::Member: {
@@ -2197,7 +2150,7 @@ bool Codegen::visit(DeleteExpression *ast)
         del.base = expr.propertyBase.stackSlot();
         del.index = index.stackSlot();
         bytecodeGenerator->addInstruction(del);
-        _expr.setResult(Reference::fromAccumulator(this));
+        setExprResult(Reference::fromAccumulator(this));
         return false;
     }
     case Reference::Subscript: {
@@ -2207,14 +2160,14 @@ bool Codegen::visit(DeleteExpression *ast)
         del.base = expr.elementBase;
         del.index = expr.elementSubscript.stackSlot();
         bytecodeGenerator->addInstruction(del);
-        _expr.setResult(Reference::fromAccumulator(this));
+        setExprResult(Reference::fromAccumulator(this));
         return false;
     }
     default:
         break;
     }
     // [[11.4.1]] Return true if it's not a reference
-    _expr.setResult(Reference::fromConst(this, QV4::Encode(true)));
+    setExprResult(Reference::fromConst(this, QV4::Encode(true)));
     return false;
 }
 
@@ -2223,7 +2176,7 @@ bool Codegen::visit(FalseLiteral *)
     if (hasError)
         return false;
 
-    _expr.setResult(Reference::fromConst(this, QV4::Encode(false)));
+    setExprResult(Reference::fromConst(this, QV4::Encode(false)));
     return false;
 }
 
@@ -2232,7 +2185,7 @@ bool Codegen::visit(SuperLiteral *)
     if (hasError)
         return false;
 
-    _expr.setResult(Reference::fromSuper(this));
+    setExprResult(Reference::fromSuper(this));
     return false;
 }
 
@@ -2250,12 +2203,12 @@ bool Codegen::visit(FieldMemberExpression *ast)
             if (_context->isArrowFunction || _context->contextType == ContextType::Eval) {
                 Reference r = referenceForName(QStringLiteral("new.target"), false);
                 r.isReadonly = true;
-                _expr.setResult(r);
+                setExprResult(r);
                 return false;
             }
 
             Reference r = Reference::fromStackSlot(this, CallData::NewTarget);
-            _expr.setResult(r);
+            setExprResult(r);
             return false;
         }
     }
@@ -2268,10 +2221,10 @@ bool Codegen::visit(FieldMemberExpression *ast)
         load.stringId = registerString(ast->name.toString());
         bytecodeGenerator->addInstruction(load);
         Reference property = Reference::fromAccumulator(this).storeOnStack();
-        _expr.setResult(Reference::fromSuperProperty(property));
+        setExprResult(Reference::fromSuperProperty(property));
         return false;
     }
-    _expr.setResult(Reference::fromMember(base, ast->name.toString()));
+    setExprResult(Reference::fromMember(base, ast->name.toString()));
     return false;
 }
 
@@ -2281,12 +2234,15 @@ bool Codegen::visit(TaggedTemplate *ast)
         return false;
 
     RegisterScope scope(this);
+    return handleTaggedTemplate(expression(ast->base), ast);
+}
 
-    int functionObject = -1, thisObject = -1;
-
-    Reference base = expression(ast->base);
+bool Codegen::handleTaggedTemplate(Reference base, TaggedTemplate *ast)
+{
     if (hasError)
         return false;
+
+    int functionObject = -1, thisObject = -1;
     switch (base.type) {
     case Reference::Member:
     case Reference::Subscript:
@@ -2347,7 +2303,7 @@ bool Codegen::visit(FunctionExpression *ast)
     if (hasError)
         return false;
     loadClosure(function);
-    _expr.setResult(Reference::fromAccumulator(this));
+    setExprResult(Reference::fromAccumulator(this));
     return false;
 }
 
@@ -2379,14 +2335,10 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, co
         return r;
     }
 
-    // This hook allows implementing QML lookup semantics
-    Reference fallback = fallbackNameLookup(name);
-    if (fallback.type != Reference::Invalid)
-        return fallback;
-
     Reference r = Reference::fromName(this, name);
-    r.global = useFastLookups && (resolved.type == Context::ResolvedName::Global);
-    if (!r.global && canAccelerateGlobalLookups() && m_globalNames.contains(name))
+    r.global = useFastLookups && (resolved.type == Context::ResolvedName::Global || resolved.type == Context::ResolvedName::QmlGlobal);
+    r.qmlGlobal = resolved.type == Context::ResolvedName::QmlGlobal;
+    if (!r.global && !r.qmlGlobal && m_globalNames.contains(name))
         r.global = true;
     return r;
 }
@@ -2402,18 +2354,12 @@ void Codegen::loadClosure(int closureId)
     }
 }
 
-Codegen::Reference Codegen::fallbackNameLookup(const QString &name)
-{
-    Q_UNUSED(name)
-    return Reference();
-}
-
 bool Codegen::visit(IdentifierExpression *ast)
 {
     if (hasError)
         return false;
 
-    _expr.setResult(referenceForName(ast->name.toString(), false, ast->firstSourceLocation()));
+    setExprResult(referenceForName(ast->name.toString(), false, ast->firstSourceLocation()));
     return false;
 }
 
@@ -2463,7 +2409,7 @@ void Codegen::handleConstruct(const Reference &base, ArgumentList *arguments)
         // set the result up as the thisObject
         Reference::fromAccumulator(this).storeOnStack(CallData::This);
 
-    _expr.setResult(Reference::fromAccumulator(this));
+    setExprResult(Reference::fromAccumulator(this));
 }
 
 bool Codegen::visit(NewExpression *ast)
@@ -2512,7 +2458,7 @@ bool Codegen::visit(NotExpression *ast)
         return false;
 
     TailCallBlocker blockTailCalls(this);
-    _expr.setResult(unop(Not, expression(ast->expression)));
+    setExprResult(unop(Not, expression(ast->expression)));
     return false;
 }
 
@@ -2521,10 +2467,10 @@ bool Codegen::visit(NullExpression *)
     if (hasError)
         return false;
 
-    if (_expr.accept(cx))
-        bytecodeGenerator->jump().link(*_expr.iffalse());
+    if (exprAccept(cx))
+        bytecodeGenerator->jump().link(*currentExpr().iffalse());
     else
-        _expr.setResult(Reference::fromConst(this, Encode::null()));
+        setExprResult(Reference::fromConst(this, Encode::null()));
 
     return false;
 }
@@ -2534,7 +2480,7 @@ bool Codegen::visit(NumericLiteral *ast)
     if (hasError)
         return false;
 
-    _expr.setResult(Reference::fromConst(this, QV4::Encode::smallestNumber(ast->value)));
+    setExprResult(Reference::fromConst(this, QV4::Encode::smallestNumber(ast->value)));
     return false;
 }
 
@@ -2646,8 +2592,7 @@ bool Codegen::visit(ObjectPattern *ast)
     call.argc = argc;
     call.args = Moth::StackSlot::createRegister(args);
     bytecodeGenerator->addInstruction(call);
-    Reference result = Reference::fromAccumulator(this);
-    _expr.setResult(result);
+    setExprResult(Reference::fromAccumulator(this));
     return false;
 }
 
@@ -2666,7 +2611,7 @@ bool Codegen::visit(PostDecrementExpression *ast)
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->decrementToken))
         return false;
 
-    _expr.setResult(unop(PostDecrement, expr));
+    setExprResult(unop(PostDecrement, expr));
 
     return false;
 }
@@ -2686,7 +2631,7 @@ bool Codegen::visit(PostIncrementExpression *ast)
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->incrementToken))
         return false;
 
-    _expr.setResult(unop(PostIncrement, expr));
+    setExprResult(unop(PostIncrement, expr));
     return false;
 }
 
@@ -2704,7 +2649,7 @@ bool Codegen::visit(PreDecrementExpression *ast)
 
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->decrementToken))
         return false;
-    _expr.setResult(unop(PreDecrement, expr));
+    setExprResult(unop(PreDecrement, expr));
     return false;
 }
 
@@ -2723,7 +2668,7 @@ bool Codegen::visit(PreIncrementExpression *ast)
 
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->incrementToken))
         return false;
-    _expr.setResult(unop(PreIncrement, expr));
+    setExprResult(unop(PreIncrement, expr));
     return false;
 }
 
@@ -2734,7 +2679,7 @@ bool Codegen::visit(RegExpLiteral *ast)
 
     auto r = Reference::fromStackSlot(this);
     r.isReadonly = true;
-    _expr.setResult(r);
+    setExprResult(r);
 
     Instruction::MoveRegExp instr;
     instr.regExpId = jsUnitGenerator->registerRegExp(ast);
@@ -2750,7 +2695,7 @@ bool Codegen::visit(StringLiteral *ast)
 
     auto r = Reference::fromAccumulator(this);
     r.isReadonly = true;
-    _expr.setResult(r);
+    setExprResult(r);
 
     Instruction::LoadRuntimeString instr;
     instr.stringId = registerString(ast->value.toString());
@@ -2800,7 +2745,7 @@ bool Codegen::visit(TemplateLiteral *ast)
     auto r = Reference::fromAccumulator(this);
     r.isReadonly = true;
 
-    _expr.setResult(r);
+    setExprResult(r);
     return false;
 
 }
@@ -2813,10 +2758,10 @@ bool Codegen::visit(ThisExpression *)
     if (_context->isArrowFunction) {
         Reference r = referenceForName(QStringLiteral("this"), false);
         r.isReadonly = true;
-        _expr.setResult(r);
+        setExprResult(r);
         return false;
     }
-    _expr.setResult(Reference::fromThis(this));
+    setExprResult(Reference::fromThis(this));
     return false;
 }
 
@@ -2826,7 +2771,7 @@ bool Codegen::visit(TildeExpression *ast)
         return false;
 
     TailCallBlocker blockTailCalls(this);
-    _expr.setResult(unop(Compl, expression(ast->expression)));
+    setExprResult(unop(Compl, expression(ast->expression)));
     return false;
 }
 
@@ -2835,7 +2780,7 @@ bool Codegen::visit(TrueLiteral *)
     if (hasError)
         return false;
 
-    _expr.setResult(Reference::fromConst(this, QV4::Encode(true)));
+    setExprResult(Reference::fromConst(this, QV4::Encode(true)));
     return false;
 }
 
@@ -2861,7 +2806,7 @@ bool Codegen::visit(TypeOfExpression *ast)
         Instruction::TypeofValue instr;
         bytecodeGenerator->addInstruction(instr);
     }
-    _expr.setResult(Reference::fromAccumulator(this));
+    setExprResult(Reference::fromAccumulator(this));
 
     return false;
 }
@@ -2872,7 +2817,7 @@ bool Codegen::visit(UnaryMinusExpression *ast)
         return false;
 
     TailCallBlocker blockTailCalls(this);
-    _expr.setResult(unop(UMinus, expression(ast->expression)));
+    setExprResult(unop(UMinus, expression(ast->expression)));
     return false;
 }
 
@@ -2882,7 +2827,7 @@ bool Codegen::visit(UnaryPlusExpression *ast)
         return false;
 
     TailCallBlocker blockTailCalls(this);
-    _expr.setResult(unop(UPlus, expression(ast->expression)));
+    setExprResult(unop(UPlus, expression(ast->expression)));
     return false;
 }
 
@@ -2895,7 +2840,7 @@ bool Codegen::visit(VoidExpression *ast)
     TailCallBlocker blockTailCalls(this);
 
     statement(ast->expression);
-    _expr.setResult(Reference::fromConst(this, Encode::undefined()));
+    setExprResult(Reference::fromConst(this, Encode::undefined()));
     return false;
 }
 
@@ -2909,7 +2854,7 @@ bool Codegen::visit(FunctionDeclaration * ast)
 
     if (_functionContext->contextType == ContextType::Binding)
         referenceForName(ast->name.toString(), true).loadInAccumulator();
-    _expr.accept(nx);
+    exprAccept(nx);
     return false;
 }
 
@@ -2965,7 +2910,7 @@ bool Codegen::visit(YieldExpression *ast)
         done.link();
 
         lhsValue.loadInAccumulator();
-        _expr.setResult(acc);
+        setExprResult(acc);
         return false;
     }
 
@@ -2976,7 +2921,7 @@ bool Codegen::visit(YieldExpression *ast)
     BytecodeGenerator::Jump jump = bytecodeGenerator->addJumpInstruction(resume);
     emitReturn(acc);
     jump.link();
-    _expr.setResult(acc);
+    setExprResult(acc);
     return false;
 }
 
@@ -3114,8 +3059,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         Instruction::Yield yield;
         bytecodeGenerator->addInstruction(yield);
     }
-
-    beginFunctionBodyHook();
 
     statementList(body);
 
@@ -3855,8 +3798,14 @@ QQmlRefPointer<CompiledData::CompilationUnit> Codegen::createUnitForLoading()
 class Codegen::VolatileMemoryLocationScanner: protected QQmlJS::AST::Visitor
 {
     VolatileMemoryLocations locs;
+    Codegen *parent;
 
 public:
+    VolatileMemoryLocationScanner(Codegen *parent) :
+        QQmlJS::AST::Visitor(parent->recursionDepth()),
+        parent(parent)
+    {}
+
     Codegen::VolatileMemoryLocations scan(AST::Node *s)
     {
         s->accept(this);
@@ -3921,25 +3870,41 @@ public:
         }
     }
 
+    void throwRecursionDepthError() override
+    {
+        parent->throwRecursionDepthError();
+    }
+
 private:
-    void collectIdentifiers(QVector<QStringView> &ids, AST::Node *node) const {
+    void collectIdentifiers(QVector<QStringView> &ids, AST::Node *node) {
         class Collector: public QQmlJS::AST::Visitor {
+        private:
             QVector<QStringView> &ids;
+            VolatileMemoryLocationScanner *parent;
+
         public:
-            Collector(QVector<QStringView> &ids): ids(ids) {}
-            virtual bool visit(IdentifierExpression *ie) {
+            Collector(QVector<QStringView> &ids, VolatileMemoryLocationScanner *parent) :
+                QQmlJS::AST::Visitor(parent->recursionDepth()), ids(ids), parent(parent)
+            {}
+
+            bool visit(IdentifierExpression *ie) final {
                 ids.append(ie->name);
                 return false;
             }
+
+            void throwRecursionDepthError() final
+            {
+                parent->throwRecursionDepthError();
+            }
         };
-        Collector collector(ids);
+        Collector collector(ids, this);
         node->accept(&collector);
     }
 };
 
-Codegen::VolatileMemoryLocations Codegen::scanVolatileMemoryLocations(AST::Node *ast) const
+Codegen::VolatileMemoryLocations Codegen::scanVolatileMemoryLocations(AST::Node *ast)
 {
-    VolatileMemoryLocationScanner scanner;
+    VolatileMemoryLocationScanner scanner(this);
     return scanner.scan(ast);
 }
 
@@ -4041,10 +4006,6 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
         return index == other.index;
     case Const:
         return constant == other.constant;
-    case QmlScopeObject:
-    case QmlContextObject:
-        return qmlCoreIndex == other.qmlCoreIndex && qmlNotifyIndex == other.qmlNotifyIndex
-                && capturePolicy == other.capturePolicy;
     }
     return true;
 }
@@ -4102,9 +4063,7 @@ Codegen::Reference Codegen::Reference::storeConsumeAccumulator() const
 
 Codegen::Reference Codegen::Reference::baseObject() const
 {
-    if (type == Reference::QmlScopeObject || type == Reference::QmlContextObject) {
-        return Reference::fromStackSlot(codegen, qmlBase.stackSlot());
-    } else if (type == Reference::Member) {
+    if (type == Reference::Member) {
         RValue rval = propertyBase;
         if (!rval.isValid())
             return Reference::fromConst(codegen, Encode::undefined());
@@ -4189,8 +4148,6 @@ bool Codegen::Reference::storeWipesAccumulator() const
     case Name:
     case Member:
     case Subscript:
-    case QmlScopeObject:
-    case QmlContextObject:
         return true;
     }
 }
@@ -4269,18 +4226,6 @@ void Codegen::Reference::storeAccumulator() const
         store.base = elementBase;
         store.index = elementSubscript.stackSlot();
         codegen->bytecodeGenerator->addTracingInstruction(store);
-    } return;
-    case QmlScopeObject: {
-        Instruction::StoreScopeObjectProperty store;
-        store.base = qmlBase;
-        store.propertyIndex = qmlCoreIndex;
-        codegen->bytecodeGenerator->addInstruction(store);
-    } return;
-    case QmlContextObject: {
-        Instruction::StoreContextObjectProperty store;
-        store.base = qmlBase;
-        store.propertyIndex = qmlCoreIndex;
-        codegen->bytecodeGenerator->addInstruction(store);
     } return;
     case Invalid:
     case Accumulator:
@@ -4396,9 +4341,15 @@ QT_WARNING_POP
             }
         }
         if (!disable_lookups && global) {
-            Instruction::LoadGlobalLookup load;
-            load.index = codegen->registerGlobalGetterLookup(nameAsIndex());
-            codegen->bytecodeGenerator->addTracingInstruction(load);
+            if (qmlGlobal) {
+                Instruction::LoadQmlContextPropertyLookup load;
+                load.index = codegen->registerQmlContextPropertyGetterLookup(nameAsIndex());
+                codegen->bytecodeGenerator->addTracingInstruction(load);
+            } else {
+                Instruction::LoadGlobalLookup load;
+                load.index = codegen->registerGlobalGetterLookup(nameAsIndex());
+                codegen->bytecodeGenerator->addTracingInstruction(load);
+            }
         } else {
             Instruction::LoadName load;
             load.name = nameAsIndex();
@@ -4431,24 +4382,6 @@ QT_WARNING_POP
         Instruction::LoadElement load;
         load.base = elementBase;
         codegen->bytecodeGenerator->addTracingInstruction(load);
-    } return;
-    case QmlScopeObject: {
-        Instruction::LoadScopeObjectProperty load;
-        load.base = qmlBase;
-        load.propertyIndex = qmlCoreIndex;
-        load.captureRequired = capturePolicy == CaptureAtRuntime;
-        codegen->bytecodeGenerator->addInstruction(load);
-        if (capturePolicy == CaptureAheadOfTime)
-            codegen->_context->scopeObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
-    } return;
-    case QmlContextObject: {
-        Instruction::LoadContextObjectProperty load;
-        load.base = qmlBase;
-        load.propertyIndex = qmlCoreIndex;
-        load.captureRequired = capturePolicy == CaptureAtRuntime;
-        codegen->bytecodeGenerator->addInstruction(load);
-        if (capturePolicy == CaptureAheadOfTime)
-            codegen->_context->contextObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
     } return;
     case Invalid:
         break;

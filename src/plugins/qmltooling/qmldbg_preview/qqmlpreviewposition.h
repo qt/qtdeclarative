@@ -56,6 +56,8 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qtimer.h>
 #include <QtCore/qsettings.h>
+#include <QtCore/qsize.h>
+#include <QtCore/qdatastream.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -64,23 +66,46 @@ class QWindow;
 class QQmlPreviewPosition
 {
 public:
-    QQmlPreviewPosition();
+    class ScreenData {
+    public:
+        bool operator==(const QQmlPreviewPosition::ScreenData &other) const;
+        QString name;
+        QSize size;
+    };
+    class Position {
+    public:
+        QString screenName;
+        QPoint nativePosition;
+    };
+    enum InitializeState {
+        InitializePosition,
+        PositionInitialized
+    };
 
-    void setPosition(const QPoint &point);
-    void saveWindowPosition();
-    void loadWindowPositionSettings(const QUrl &url);
+    QQmlPreviewPosition();
+    ~QQmlPreviewPosition();
+
+
+    void takePosition(QWindow *window, InitializeState state = PositionInitialized);
     void initLastSavedWindowPosition(QWindow *window);
-    static const QSize currentScreenSize(QWindow *window);
+    void loadWindowPositionSettings(const QUrl &url);
 
 private:
+    void setPosition(const QQmlPreviewPosition::Position &position, QWindow *window);
+    QByteArray fromPositionToByteArray(const Position &position);
+    void readLastPositionFromByteArray(const QByteArray &array);
+    void saveWindowPosition();
+
     bool m_hasPosition = false;
-    QPoint m_lastWindowPosition;
+    InitializeState m_initializeState = InitializePosition;
     QSettings m_settings;
     QString m_settingsKey;
     QTimer m_savePositionTimer;
+    Position m_lastWindowPosition;
     QVector<QWindow *> m_positionedWindows;
-};
 
+    QVector<ScreenData> m_currentInitScreensData;
+};
 
 QT_END_NAMESPACE
 

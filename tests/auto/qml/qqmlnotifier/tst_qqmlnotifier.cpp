@@ -349,7 +349,7 @@ void tst_qqmlnotifier::deleteFromHandler()
         QQmlEngine engine;
         QQmlComponent component(&engine, testFileUrl("objectRenamer.qml"));
         QPointer<QObject> mess = component.create();
-        QObject::connect(mess, &QObject::objectNameChanged, [&]() { delete mess; });
+        QObject::connect(mess.data(), &QObject::objectNameChanged, [&]() { delete mess; });
         QTRY_VERIFY(mess.isNull()); // BANG!
     } else {
         QProcess process;

@@ -80,7 +80,7 @@ Q_SIGNALS:
 
 public Q_SLOTS:
 
-    QQmlV4Handle typeName(const QVariant& v) const
+    QJSValue typeName(const QVariant& v) const
     {
         QString name(v.typeName());
         if (v.canConvert<QObject*>()) {
@@ -97,27 +97,23 @@ public Q_SLOTS:
 
         QQmlEngine *engine = qmlEngine(this);
         QV4::ExecutionEngine *v4 = engine->handle();
-        QV4::Scope scope(v4);
-        QV4::ScopedValue s(scope, v4->newString(name));
-        return QQmlV4Handle(s);
+        return QJSValue(v4, v4->newString(name)->asReturnedValue());
     }
 
     bool compare(const QVariant& act, const QVariant& exp) const {
         return act == exp;
     }
 
-    QQmlV4Handle callerFile(int frameIndex = 0) const
+    QJSValue callerFile(int frameIndex = 0) const
     {
         QQmlEngine *engine = qmlEngine(this);
         QV4::ExecutionEngine *v4 = engine->handle();
         QV4::Scope scope(v4);
 
         QVector<QV4::StackFrame> stack = v4->stackTrace(frameIndex + 2);
-        if (stack.size() > frameIndex + 1) {
-            QV4::ScopedValue s(scope, v4->newString(stack.at(frameIndex + 1).source));
-            return QQmlV4Handle(s);
-        }
-        return QQmlV4Handle();
+        return (stack.size() > frameIndex + 1)
+                ? QJSValue(v4, v4->newString(stack.at(frameIndex + 1).source)->asReturnedValue())
+                : QJSValue();
     }
     int callerLine(int frameIndex = 0) const
     {

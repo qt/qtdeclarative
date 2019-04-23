@@ -31,7 +31,6 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlcomponent.h>
-#include <private/qv8engine_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include <QCryptographicHash>
 #include "../../shared/util.h"

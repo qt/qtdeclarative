@@ -6637,7 +6637,7 @@ void tst_QQuickGridView::contentHeightWithDelayRemove()
         QCOMPARE(qRound(gridview->contentHeight()), qRound(initialContentHeight));
         QTRY_COMPARE(qRound(gridview->contentHeight()), eventualContentHeight);
     } else {
-        QCOMPARE(qRound(gridview->contentHeight()), eventualContentHeight);
+        QTRY_COMPARE(qRound(gridview->contentHeight()), eventualContentHeight);
     }
 
     delete window;

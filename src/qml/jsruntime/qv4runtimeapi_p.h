@@ -58,7 +58,6 @@ namespace QV4 {
 
 typedef uint Bool;
 
-
 struct Q_QML_PRIVATE_EXPORT Runtime {
     typedef ReturnedValue (*UnaryOperation)(const Value &value);
     typedef ReturnedValue (*BinaryOperation)(const Value &left, const Value &right);
@@ -84,6 +83,10 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
 
     /* call */
     struct Q_QML_PRIVATE_EXPORT CallGlobalLookup : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, uint, Value[], int);
+    };
+    struct Q_QML_PRIVATE_EXPORT CallQmlContextPropertyLookup : Method<Throws::Yes>
     {
         static ReturnedValue call(ExecutionEngine *, uint, Value[], int);
     };
@@ -186,6 +189,10 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     struct Q_QML_PRIVATE_EXPORT LoadGlobalLookup : Method<Throws::Yes>
     {
         static ReturnedValue call(ExecutionEngine *, Function *, int);
+    };
+    struct Q_QML_PRIVATE_EXPORT LoadQmlContextPropertyLookup : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, uint);
     };
     struct Q_QML_PRIVATE_EXPORT GetLookup : Method<Throws::Yes>
     {
@@ -493,45 +500,6 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     struct Q_QML_PRIVATE_EXPORT GetTemplateObject : PureMethod
     {
         static ReturnedValue call(Function *, int);
-    };
-
-    /* qml */
-    struct Q_QML_PRIVATE_EXPORT LoadQmlContext : Method<Throws::No>
-    {
-        static ReturnedValue call(ExecutionEngine *);
-    };
-    struct Q_QML_PRIVATE_EXPORT LoadQmlImportedScripts : Method<Throws::No>
-    {
-        static ReturnedValue call(ExecutionEngine *);
-    };
-    struct Q_QML_PRIVATE_EXPORT LoadQmlScopeObjectProperty : Method<Throws::Yes>
-    {
-        static ReturnedValue call(ExecutionEngine *, const Value &, int, Bool);
-    };
-    struct Q_QML_PRIVATE_EXPORT LoadQmlContextObjectProperty : Method<Throws::Yes>
-    {
-        static ReturnedValue call(ExecutionEngine *, const Value &, int, Bool);
-    };
-    struct Q_QML_PRIVATE_EXPORT LoadQmlIdObject : Method<Throws::Yes>
-    {
-        static ReturnedValue call(ExecutionEngine *, const Value &, uint);
-    };
-    struct Q_QML_PRIVATE_EXPORT CallQmlScopeObjectProperty : Method<Throws::Yes>
-    {
-        static ReturnedValue call(ExecutionEngine *, const Value &, int, Value[], int);
-    };
-    struct Q_QML_PRIVATE_EXPORT CallQmlContextObjectProperty : Method<Throws::Yes>
-    {
-        static ReturnedValue call(ExecutionEngine *, const Value &, int, Value[], int);
-    };
-
-    struct Q_QML_PRIVATE_EXPORT StoreQmlScopeObjectProperty : Method<Throws::Yes>
-    {
-        static void call(ExecutionEngine *, const Value &, int, const Value &);
-    };
-    struct Q_QML_PRIVATE_EXPORT StoreQmlContextObjectProperty : Method<Throws::Yes>
-    {
-        static void call(ExecutionEngine *, const Value &, int, const Value &);
     };
 
     struct StackOffsets {

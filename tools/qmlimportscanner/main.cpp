@@ -89,13 +89,13 @@ QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, con
 {
     QVariantList imports;
 
-    // extract uri and version from the imports (which look like "import Foo.Bar 1.2.3")
+    // Extract uri and version from the imports (which look like "import Foo.Bar 1.2.3")
     for (QQmlJS::AST::UiHeaderItemList *headerItemIt = headerItemList; headerItemIt; headerItemIt = headerItemIt->next) {
         QVariantMap import;
         QQmlJS::AST::UiImport *importNode = QQmlJS::AST::cast<QQmlJS::AST::UiImport *>(headerItemIt->headerItem);
         if (!importNode)
             continue;
-        // handle directory imports
+        // Handle directory imports
         if (!importNode->fileName.isEmpty()) {
             QString name = importNode->fileName.toString();
             import[nameLiteral()] = name;
@@ -137,7 +137,7 @@ QVariantMap pluginsForModulePath(const QString &modulePath) {
 
     qmldirFile.open(QIODevice::ReadOnly | QIODevice::Text);
 
-    // a qml import may contain several plugins
+    // A qml import may contain several plugins
     QString plugins;
     QString classnames;
     QStringList dependencies;
@@ -206,7 +206,7 @@ QPair<QString, QString> resolveImportPath(const QString &uri, const QString &ver
             }
         }
 
-        // remove the last version digit; stop if there are none left
+        // Remove the last version digit; stop if there are none left
         if (ver.isEmpty())
             break;
 
@@ -426,7 +426,7 @@ QVariantList findQmlImportsInDirectory(const QString &qmlDir)
         if (std::find_if(blacklist.cbegin(), blacklist.cend(), pathStartsWith(path)) != blacklist.cend())
             continue;
 
-        // skip obvious build output directories
+        // Skip obvious build output directories
         if (path.contains(QLatin1String("Debug-iphoneos")) || path.contains(QLatin1String("Release-iphoneos")) ||
             path.contains(QLatin1String("Debug-iphonesimulator")) || path.contains(QLatin1String("Release-iphonesimulator"))
 #ifdef Q_OS_WIN
@@ -455,30 +455,29 @@ QSet<QString> importModulePaths(const QVariantList &imports) {
     return ret;
 }
 
-// Find Qml Imports Recursively from a root set of qml files.
+// Find qml imports recursively from a root set of qml files.
 // The directories in qmlDirs are searched recursively.
 // The files in qmlFiles parsed directly.
 QVariantList findQmlImportsRecursively(const QStringList &qmlDirs, const QStringList &scanFiles)
 {
     QVariantList ret;
 
-    // scan all app root qml directories for imports
+    // Scan all app root qml directories for imports
     for (const QString &qmlDir : qmlDirs) {
         QVariantList imports = findQmlImportsInDirectory(qmlDir);
         ret = mergeImports(ret, imports);
     }
 
-    // scan app qml files for imports
+    // Scan app qml files for imports
     for (const QString &file : scanFiles) {
         QVariantList imports = findQmlImportsInFile(file);
         ret = mergeImports(ret, imports);
     }
 
-
-    // get the paths to theimports found in the app qml
+    // Get the paths to the imports found in the app qml
     QSet<QString> toVisit = importModulePaths(ret);
 
-    // recursivly scan for import dependencies.
+    // Recursively scan for import dependencies.
     QSet<QString> visited;
     while (!toVisit.isEmpty()) {
         QString qmlDir = *toVisit.begin();

@@ -51,7 +51,6 @@
 #include "qv4variantobject_p.h"
 #include "qv4regexpobject_p.h"
 #include "qv4errorobject_p.h"
-#include "private/qv8engine_p.h"
 #include <private/qv4mm_p.h>
 #include <private/qv4jscall_p.h>
 #include <private/qv4qobjectwrapper_p.h>
@@ -1368,7 +1367,7 @@ QObject *QJSValue::toQObject() const
   \since 5.8
 
  * If this QJSValue is a QMetaObject, returns the QMetaObject pointer
- * that the QJSValue represents; otherwise, returns 0.
+ * that the QJSValue represents; otherwise, returns \nullptr.
  *
  * \sa isQMetaObject()
  */

@@ -242,6 +242,9 @@ private slots:
     void importModuleWithLexicallyScopedVars();
     void importExportErrors();
 
+    void equality();
+    void aggressiveGc();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -1579,13 +1582,13 @@ void tst_QJSEngine::valueConversion_QVariant()
         QCOMPARE(val.toString(), str);
     }
     {
-        QJSValue val = eng.toScriptValue(qVariantFromValue((QObject*)this));
+        QJSValue val = eng.toScriptValue(QVariant::fromValue((QObject*)this));
         QVERIFY(!val.isVariant());
         QVERIFY(val.isQObject());
         QCOMPARE(val.toQObject(), (QObject*)this);
     }
     {
-        QVariant var = qVariantFromValue(QPoint(123, 456));
+        QVariant var = QVariant::fromValue(QPoint(123, 456));
         QJSValue val = eng.toScriptValue(var);
         QVERIFY(!val.isVariant());
         QCOMPARE(val.toVariant(), var);
@@ -4590,6 +4593,34 @@ void tst_QJSEngine::stringReplace()
     val = engine.evaluate("'x'.replace(/()()()()()()()()()(x)/, '$10')");
     QVERIFY(val.isString());
     QCOMPARE(val.toString(), QString("x"));
+
+    val = engine.evaluate("'123'.replace(/\\.0*$|(\\.\\d*[1-9])(0+)$/, '$1')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("123"));
+
+    val = engine.evaluate("'123.00'.replace(/\\.0*$|(\\.\\d*[1-9])(0+)$/, '$1')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("123"));
+
+    val = engine.evaluate("'123.0'.replace(/\\.0*$|(\\.\\d*[1-9])(0+)$/, '$1')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("123"));
+
+    val = engine.evaluate("'123.'.replace(/\\.0*$|(\\.\\d*[1-9])(0+)$/, '$1')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("123"));
+
+    val = engine.evaluate("'123.50'.replace(/\\.0*$|(\\.\\d*[1-9])(0+)$/, '$1')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("123.5"));
+
+    val = engine.evaluate("'123.05'.replace(/\\.0*$|(\\.\\d*[1-9])(0+)$/, '$1')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("123.05"));
+
+    val = engine.evaluate("'0.050'.replace(/\\.0*$|(\\.\\d*[1-9])(0+)$/, '$1')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("0.05"));
 }
 
 void tst_QJSEngine::protoChanges_QTBUG68369()
@@ -4786,6 +4817,26 @@ void tst_QJSEngine::importExportErrors()
         QVERIFY(result.isError());
         QCOMPARE(result.property("lineNumber").toInt(), 2);
     }
+}
+
+void tst_QJSEngine::equality()
+{
+    QJSEngine engine;
+    QJSValue ok = engine.evaluate("(0 < 0) ? 'ko' : 'ok'");
+    QVERIFY(ok.isString());
+    QCOMPARE(ok.toString(), QString("ok"));
+}
+
+void tst_QJSEngine::aggressiveGc()
+{
+    const QByteArray origAggressiveGc = qgetenv("QV4_MM_AGGRESSIVE_GC");
+    qputenv("QV4_MM_AGGRESSIVE_GC", "true");
+    {
+        QJSEngine engine; // ctor crashes if core allocation methods don't properly scope things.
+        QJSValue obj = engine.newObject();
+        QVERIFY(obj.isObject());
+    }
+    qputenv("QV4_MM_AGGRESSIVE_GC", origAggressiveGc);
 }
 
 QTEST_MAIN(tst_QJSEngine)

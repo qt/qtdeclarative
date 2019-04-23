@@ -55,17 +55,21 @@
 #include <QtCore/QAbstractTableModel>
 #include <QtQml/qqml.h>
 #include <QtQml/private/qtqmlglobal_p.h>
+#include <QtQml/private/qqmltablemodelcolumn_p.h>
 #include <QtQml/QJSValue>
+#include <QtQml/QQmlListProperty>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlTableModel : public QAbstractTableModel
+class Q_QML_PRIVATE_EXPORT QQmlTableModel : public QAbstractTableModel, public QQmlParserStatus
 {
     Q_OBJECT
     Q_PROPERTY(int columnCount READ columnCount NOTIFY columnCountChanged FINAL)
     Q_PROPERTY(int rowCount READ rowCount NOTIFY rowCountChanged FINAL)
     Q_PROPERTY(QVariant rows READ rows WRITE setRows NOTIFY rowsChanged FINAL)
-    Q_PROPERTY(QJSValue roleDataProvider READ roleDataProvider WRITE setRoleDataProvider NOTIFY roleDataProviderChanged)
+    Q_PROPERTY(QQmlListProperty<QQmlTableModelColumn> columns READ columns CONSTANT FINAL)
+    Q_INTERFACES(QQmlParserStatus)
+    Q_CLASSINFO("DefaultProperty", "columns")
 
 public:
     QQmlTableModel(QObject *parent = nullptr);
@@ -82,8 +86,12 @@ public:
     Q_INVOKABLE void removeRow(int rowIndex, int rows = 1);
     Q_INVOKABLE void setRow(int rowIndex, const QVariant &row);
 
-    QJSValue roleDataProvider() const;
-    void setRoleDataProvider(QJSValue roleDataProvider);
+    QQmlListProperty<QQmlTableModelColumn> columns();
+
+    static void columns_append(QQmlListProperty<QQmlTableModelColumn> *property, QQmlTableModelColumn *value);
+    static int columns_count(QQmlListProperty<QQmlTableModelColumn> *property);
+    static QQmlTableModelColumn *columns_at(QQmlListProperty<QQmlTableModelColumn> *property, int index);
+    static void columns_clear(QQmlListProperty<QQmlTableModelColumn> *property);
 
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -98,57 +106,61 @@ Q_SIGNALS:
     void columnCountChanged();
     void rowCountChanged();
     void rowsChanged();
-    void roleDataProviderChanged();
 
 private:
-    class ColumnPropertyInfo
+    class ColumnRoleMetadata
     {
     public:
-        ColumnPropertyInfo();
-        ColumnPropertyInfo(const QString &name, QVariant::Type type, const QString &typeName);
+        ColumnRoleMetadata();
+        ColumnRoleMetadata(bool isStringRole, const QString &name, QVariant::Type type, const QString &typeName);
 
         bool isValid() const;
 
+        // If this is false, it's a function role.
+        bool isStringRole = false;
         QString name;
         QVariant::Type type = QVariant::Invalid;
         QString typeName;
     };
 
-    struct ColumnProperties
+    struct ColumnMetadata
     {
-        QVector<ColumnPropertyInfo> infoForProperties;
-        // If there was a display role found in this column, it'll be stored here.
-        // The index is into infoForProperties.
-        int explicitDisplayRoleIndex = -1;
+        // Key = role name that will be made visible to the delegate
+        // Value = metadata about that role, including actual name in the model data, type, etc.
+        QHash<QString, ColumnRoleMetadata> roles;
     };
 
     enum NewRowOperationFlag {
         OtherOperation, // insert(), set(), etc.
+        SetRowsOperation,
         AppendOperation
     };
 
+    void doSetRows(const QVariantList &rowsAsVariantList);
+    ColumnRoleMetadata fetchColumnRoleData(const QString &roleNameKey,
+        QQmlTableModelColumn *tableModelColumn, int columnIndex) const;
+    void fetchColumnMetadata();
+
     bool validateRowType(const char *functionName, const QVariant &row) const;
     bool validateNewRow(const char *functionName, const QVariant &row,
-        int rowIndex, NewRowOperationFlag appendFlag = OtherOperation) const;
+        int rowIndex, NewRowOperationFlag operation = OtherOperation) const;
     bool validateRowIndex(const char *functionName, const char *argumentName, int rowIndex) const;
-    bool validateColumnPropertyTypes(const char *functionName, const QVariantMap &column, int columnIndex) const;
-    bool validateColumnPropertyType(const char *functionName, const QString &propertyName,
-        const QVariant &propertyValue, const ColumnPropertyInfo &expectedPropertyFormat, int columnIndex) const;
-
-    ColumnPropertyInfo findColumnPropertyInfo(int columnIndex, const QString &columnPropertyNameFromRole) const;
-    QString columnPropertyNameFromRole(int columnIndex, int role) const;
 
     void doInsert(int rowIndex, const QVariant &row);
 
+    void classBegin() override;
+    void componentComplete() override;
+
+    bool componentCompleted = false;
     QVariantList mRows;
+    QList<QQmlTableModelColumn *> mColumns;
     int mRowCount = 0;
     int mColumnCount = 0;
     // Each entry contains information about the properties of the column at that index.
-    QVector<ColumnProperties> mColumnProperties;
+    QVector<ColumnMetadata> mColumnMetadata;
     // key = property index (0 to number of properties across all columns)
     // value = role name
     QHash<int, QByteArray> mRoleNames;
-    QJSValue mRoleDataProvider;
 };
 
 QT_END_NAMESPACE

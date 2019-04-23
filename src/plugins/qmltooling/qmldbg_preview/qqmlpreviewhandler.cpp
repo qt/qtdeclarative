@@ -106,16 +106,9 @@ static void closeAllWindows()
 
 bool QQmlPreviewHandler::eventFilter(QObject *obj, QEvent *event)
 {
-    if (event->type() == QEvent::Show) {
-        if (QWindow *window = qobject_cast<QQuickWindow*>(obj)) {
-            m_lastPosition.initLastSavedWindowPosition(window);
-        }
-    }
-    if (m_currentWindow && (event->type() == QEvent::Move || event->type() == QEvent::Resize) &&
+    if (m_currentWindow && (event->type() == QEvent::Move) &&
             qobject_cast<QQuickWindow*>(obj) == m_currentWindow) {
-        // we always start with factor 1 so calculate and save the origin as it would be not scaled
-        m_lastPosition.setPosition(m_currentWindow->framePosition() *
-                                    QHighDpiScaling::factor(m_currentWindow));
+        m_lastPosition.takePosition(m_currentWindow);
     }
 
     return QObject::eventFilter(obj, event);
@@ -196,49 +189,38 @@ void QQmlPreviewHandler::rerun()
 
 void QQmlPreviewHandler::zoom(qreal newFactor)
 {
+    m_zoomFactor = newFactor;
+    QTimer::singleShot(0, this, &QQmlPreviewHandler::doZoom);
+}
+
+void QQmlPreviewHandler::doZoom()
+{
     if (!m_currentWindow)
         return;
-    if (qFuzzyIsNull(newFactor)) {
+    if (qFuzzyIsNull(m_zoomFactor)) {
         emit error(QString::fromLatin1("Zooming with factor: %1 will result in nothing " \
-                                       "so it will be ignored.").arg(newFactor));
+                                       "so it will be ignored.").arg(m_zoomFactor));
         return;
     }
-    QString errorMessage;
+
     bool resetZoom = false;
-
-    if (newFactor < 0) {
+    if (m_zoomFactor < 0) {
         resetZoom = true;
-        newFactor = 1.0;
+        m_zoomFactor = 1.0;
     }
 
-    // On single-window devices we allow any scale factor as the window will adapt to the screen.
-    if (m_supportsMultipleWindows) {
-        const QSize newAvailableScreenSize = QQmlPreviewPosition::currentScreenSize(m_currentWindow)
-                * QHighDpiScaling::factor(m_currentWindow) / newFactor;
-        if (m_currentWindow->size().width() > newAvailableScreenSize.width()) {
-            errorMessage = QString::fromLatin1(
-                        "Zooming with factor: "
-                        "%1 will result in a too wide preview.").arg(newFactor);
-        }
-        if (m_currentWindow->size().height() > newAvailableScreenSize.height()) {
-            errorMessage = QString::fromLatin1(
-                        "Zooming with factor: "
-                        "%1 will result in a too heigh preview.").arg(newFactor);
-        }
-    }
+    m_currentWindow->setGeometry(m_currentWindow->geometry());
 
-    if (errorMessage.isEmpty()) {
-        const QPoint newToOriginMappedPosition = m_currentWindow->position() *
-                QHighDpiScaling::factor(m_currentWindow) / newFactor;
-        m_currentWindow->destroy();
-        QHighDpiScaling::setScreenFactor(m_currentWindow->screen(), newFactor);
-        if (resetZoom)
-            QHighDpiScaling::updateHighDpiScaling();
-        m_currentWindow->setPosition(newToOriginMappedPosition);
-        m_currentWindow->show();
-    } else {
-        emit error(errorMessage);
-    }
+    m_lastPosition.takePosition(m_currentWindow, QQmlPreviewPosition::InitializePosition);
+    m_currentWindow->destroy();
+
+    for (QScreen *screen : QGuiApplication::screens())
+        QHighDpiScaling::setScreenFactor(screen, m_zoomFactor);
+    if (resetZoom)
+        QHighDpiScaling::updateHighDpiScaling();
+
+    m_currentWindow->show();
+    m_lastPosition.initLastSavedWindowPosition(m_currentWindow);
 }
 
 void QQmlPreviewHandler::removeTranslators()

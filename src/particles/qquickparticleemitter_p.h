@@ -135,7 +135,7 @@ public:
     void setVelocityFromMovement(qreal s);
     void componentComplete() override;
 Q_SIGNALS:
-    void emitParticles(QQmlV4Handle particles);
+    void emitParticles(const QJSValue &particles);
     void particlesPerSecondChanged(qreal);
     void particleDurationChanged(int);
     void enabledChanged(bool);

@@ -118,7 +118,8 @@ QJSValue QQmlType::SingletonInstanceInfo::scriptApi(QQmlEngine *e) const
 QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
     : regType(type), iid(nullptr), typeId(0), listId(0), revision(0),
     containsRevisionedAttributes(false), baseMetaObject(nullptr),
-    index(-1), isSetup(false), isEnumSetup(false), haveSuperType(false)
+    index(-1), isSetup(false), isEnumFromCacheSetup(false), isEnumFromBaseSetup(false),
+    haveSuperType(false)
 {
     switch (type) {
     case QQmlType::CppType:
@@ -176,8 +177,8 @@ QQmlTypePrivate::~QQmlTypePrivate()
 }
 
 QQmlType::QQmlType() = default;
-QQmlType::QQmlType(const QQmlType &other) = default;
-QQmlType::QQmlType(QQmlType &&other) = default;
+QQmlType::QQmlType(const QQmlType &) = default;
+QQmlType::QQmlType(QQmlType &&) = default;
 QQmlType &QQmlType::operator =(const QQmlType &other) = default;
 QQmlType &QQmlType::operator =(QQmlType &&other) = default;
 QQmlType::QQmlType(const QQmlTypePrivate *priv) : d(priv) {}
@@ -347,19 +348,24 @@ void QQmlTypePrivate::init() const
 
 void QQmlTypePrivate::initEnums(const QQmlPropertyCache *cache) const
 {
-    if (isEnumSetup) return;
+    if ((isEnumFromBaseSetup || !baseMetaObject)
+            && (isEnumFromCacheSetup || !cache)) {
+        return;
+    }
 
     init();
 
     QMutexLocker lock(QQmlMetaType::typeRegistrationLock());
-    if (isEnumSetup) return;
 
-    if (cache)
+    if (!isEnumFromCacheSetup && cache) {
         insertEnumsFromPropertyCache(cache);
-    if (baseMetaObject) // could be singleton type without metaobject
-        insertEnums(baseMetaObject);
+        isEnumFromCacheSetup = true;
+    }
 
-    isEnumSetup = true;
+    if (!isEnumFromBaseSetup && baseMetaObject) { // could be singleton type without metaobject
+        insertEnums(baseMetaObject);
+        isEnumFromBaseSetup = true;
+    }
 }
 
 void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
@@ -501,25 +507,6 @@ void QQmlTypePrivate::setName(const QString &uri, const QString &element)
     module = uri;
     elementName = element;
     name = uri.isEmpty() ? element : (uri + QLatin1Char('/') + element);
-}
-
-QQmlPropertyCache *QQmlTypePrivate::propertyCacheForMinorVersion(int minorVersion) const
-{
-    for (int i = 0; i < propertyCaches.count(); ++i)
-        if (propertyCaches.at(i).minorVersion == minorVersion)
-            return propertyCaches.at(i).cache.data();
-    return nullptr;
-}
-
-void QQmlTypePrivate::setPropertyCacheForMinorVersion(int minorVersion, QQmlPropertyCache *cache)
-{
-    for (int i = 0; i < propertyCaches.count(); ++i) {
-        if (propertyCaches.at(i).minorVersion == minorVersion) {
-            propertyCaches[i].cache = cache;
-            return;
-        }
-    }
-    propertyCaches.append(PropertyCacheByMinorVersion(cache, minorVersion));
 }
 
 QByteArray QQmlType::typeName() const

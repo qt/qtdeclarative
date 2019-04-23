@@ -44,6 +44,7 @@
 #include "qv4object_p.h"
 #include "qv4identifiertable_p.h"
 #include "qv4value_p.h"
+#include "qv4mm_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -144,7 +145,7 @@ SharedInternalClassDataPrivate<PropertyKey>::SharedInternalClassDataPrivate(cons
       data(nullptr)
 {
     if (other.alloc()) {
-        int s = other.size();
+        const uint s = other.size();
         data = MemberData::allocate(engine, other.alloc(), other.data);
         setSize(s);
     }
@@ -163,8 +164,8 @@ SharedInternalClassDataPrivate<PropertyKey>::SharedInternalClassDataPrivate(cons
 
 void SharedInternalClassDataPrivate<PropertyKey>::grow()
 {
-    uint a = alloc() * 2;
-    int s = size();
+    const uint a = alloc() * 2;
+    const uint s = size();
     data = MemberData::allocate(engine, a, data);
     setSize(s);
     Q_ASSERT(alloc() >= a);
@@ -204,7 +205,70 @@ void SharedInternalClassDataPrivate<PropertyKey>::mark(MarkStack *s)
         data->mark(s);
 }
 
+SharedInternalClassDataPrivate<PropertyAttributes>::SharedInternalClassDataPrivate(
+        const SharedInternalClassDataPrivate<PropertyAttributes> &other, uint pos,
+        PropertyAttributes value)
+    : refcount(1),
+      m_alloc(qMin(other.m_alloc, pos + 8)),
+      m_size(pos + 1),
+      m_engine(other.m_engine)
+{
+    Q_ASSERT(m_size <= m_alloc);
+    m_engine->memoryManager->changeUnmanagedHeapSizeUsage(m_alloc * sizeof(PropertyAttributes));
+    data = new PropertyAttributes[m_alloc];
+    if (other.data)
+        memcpy(data, other.data, (m_size - 1) * sizeof(PropertyAttributes));
+    data[pos] = value;
+}
 
+SharedInternalClassDataPrivate<PropertyAttributes>::SharedInternalClassDataPrivate(
+        const SharedInternalClassDataPrivate<PropertyAttributes> &other)
+    : refcount(1),
+      m_alloc(other.m_alloc),
+      m_size(other.m_size),
+      m_engine(other.m_engine)
+{
+    if (m_alloc) {
+        m_engine->memoryManager->changeUnmanagedHeapSizeUsage(m_alloc * sizeof(PropertyAttributes));
+        data = new PropertyAttributes[m_alloc];
+        memcpy(data, other.data, m_size*sizeof(PropertyAttributes));
+    } else {
+        data = nullptr;
+    }
+}
+
+SharedInternalClassDataPrivate<PropertyAttributes>::~SharedInternalClassDataPrivate()
+{
+    m_engine->memoryManager->changeUnmanagedHeapSizeUsage(
+            -qptrdiff(m_alloc * sizeof(PropertyAttributes)));
+    delete [] data;
+}
+
+void SharedInternalClassDataPrivate<PropertyAttributes>::grow() {
+    uint alloc;
+    if (!m_alloc) {
+        alloc = 8;
+        m_engine->memoryManager->changeUnmanagedHeapSizeUsage(alloc * sizeof(PropertyAttributes));
+    } else {
+        // yes, signed. We don't want to deal with stuff > 2G
+        const uint currentSize = m_alloc * sizeof(PropertyAttributes);
+        if (currentSize < uint(std::numeric_limits<int>::max() / 2))
+            alloc = m_alloc * 2;
+        else
+            alloc = std::numeric_limits<int>::max() / sizeof(PropertyAttributes);
+
+        m_engine->memoryManager->changeUnmanagedHeapSizeUsage(
+                (alloc - m_alloc) * sizeof(PropertyAttributes));
+    }
+
+    auto *n = new PropertyAttributes[alloc];
+    if (data) {
+        memcpy(n, data, m_alloc*sizeof(PropertyAttributes));
+        delete [] data;
+    }
+    data = n;
+    m_alloc = alloc;
+}
 
 namespace Heap {
 
@@ -257,11 +321,15 @@ void InternalClass::init(Heap::InternalClass *other)
 
 void InternalClass::destroy()
 {
-#ifndef QT_NO_DEBUG
     for (const auto &t : transitions) {
-        Q_ASSERT(!t.lookup || !t.lookup->isMarked());
-    }
+        if (t.lookup) {
+#ifndef QT_NO_DEBUG
+            Q_ASSERT(t.lookup->parent == this);
 #endif
+            t.lookup->parent = nullptr;
+        }
+    }
+
     if (parent && parent->engine && parent->isMarked())
         parent->removeChildEntry(this);
 
@@ -598,11 +666,10 @@ Heap::InternalClass *InternalClass::frozen()
     return f;
 }
 
-Heap::InternalClass *InternalClass::propertiesFrozen() const
+Heap::InternalClass *InternalClass::propertiesFrozen()
 {
     Scope scope(engine);
-    Scoped<QV4::InternalClass> frozen(scope, engine->internalClasses(EngineBase::Class_Empty)->changeVTable(vtable));
-    frozen = frozen->changePrototype(prototype);
+    Scoped<QV4::InternalClass> frozen(scope, this);
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
         if (!nameMap.at(i).isValid())
@@ -611,7 +678,7 @@ Heap::InternalClass *InternalClass::propertiesFrozen() const
             attrs.setWritable(false);
             attrs.setConfigurable(false);
         }
-        frozen = frozen->addMember(nameMap.at(i), attrs);
+        frozen = frozen->changeMember(nameMap.at(i), attrs);
     }
     return frozen->d();
 }
@@ -659,8 +726,6 @@ void InternalClass::markObjects(Heap::Base *b, MarkStack *stack)
     Heap::InternalClass *ic = static_cast<Heap::InternalClass *>(b);
     if (ic->prototype)
         ic->prototype->mark(stack);
-    if (ic->parent)
-        ic->parent->mark(stack);
 
     ic->nameMap.mark(stack);
 }

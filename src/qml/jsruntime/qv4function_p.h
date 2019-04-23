@@ -94,7 +94,6 @@ public:
     Heap::InternalClass *internalClass;
     uint nFormals;
     int interpreterCallCount = 0;
-    bool hasQmlDependencies;
     bool isEval = false;
 
     static Function *create(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function);

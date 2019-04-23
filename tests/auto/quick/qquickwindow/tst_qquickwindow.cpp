@@ -1645,11 +1645,11 @@ void tst_qquickwindow::focusReason()
     window->setTitle(QTest::currentTestFunction());
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
-    QQuickItem *firstItem = new QQuickItem;
+    QScopedPointer<QQuickItem> firstItem(new QQuickItem);
     firstItem->setSize(QSizeF(100, 100));
     firstItem->setParentItem(window->contentItem());
 
-    QQuickItem *secondItem = new QQuickItem;
+    QScopedPointer<QQuickItem> secondItem(new QQuickItem);
     secondItem->setSize(QSizeF(100, 100));
     secondItem->setParentItem(window->contentItem());
 
@@ -1673,7 +1673,7 @@ void tst_qquickwindow::ignoreUnhandledMouseEvents()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
-    QQuickItem *item = new QQuickItem;
+    QScopedPointer<QQuickItem> item(new QQuickItem);
     item->setSize(QSizeF(100, 100));
     item->setParentItem(window->contentItem());
 
@@ -1883,8 +1883,8 @@ void tst_qquickwindow::hideThenDelete()
     QFETCH(bool, persistentSG);
     QFETCH(bool, persistentGL);
 
-    QSignalSpy *openglDestroyed = nullptr;
-    QSignalSpy *sgInvalidated = nullptr;
+    QScopedPointer<QSignalSpy> openglDestroyed;
+    QScopedPointer<QSignalSpy> sgInvalidated;
 
     {
         QQuickWindow window;
@@ -1903,10 +1903,10 @@ void tst_qquickwindow::hideThenDelete()
         const bool isGL = window.rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL;
 #if QT_CONFIG(opengl)
         if (isGL)
-            openglDestroyed = new QSignalSpy(window.openglContext(), SIGNAL(aboutToBeDestroyed()));
+            openglDestroyed.reset(new QSignalSpy(window.openglContext(), SIGNAL(aboutToBeDestroyed())));
 #endif
 
-        sgInvalidated = new QSignalSpy(&window, SIGNAL(sceneGraphInvalidated()));
+        sgInvalidated.reset(new QSignalSpy(&window, SIGNAL(sceneGraphInvalidated())));
 
         window.hide();
 
@@ -1951,7 +1951,7 @@ void tst_qquickwindow::showHideAnimate()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("showHideAnimate.qml"));
-    QQuickItem* created = qobject_cast<QQuickItem *>(component.create());
+    QScopedPointer<QQuickItem> created(qobject_cast<QQuickItem *>(component.create()));
 
     QVERIFY(created);
 
@@ -2293,7 +2293,7 @@ void tst_qquickwindow::contentItemSize()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray("import QtQuick 2.1\n Rectangle { anchors.fill: parent }"), QUrl());
-    QQuickItem *rect = qobject_cast<QQuickItem *>(component.create());
+    QScopedPointer<QQuickItem> rect(qobject_cast<QQuickItem *>(component.create()));
     QVERIFY(rect);
     rect->setParentItem(window.contentItem());
     QCOMPARE(QSizeF(rect->width(), rect->height()), size);

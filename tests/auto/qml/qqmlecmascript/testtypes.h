@@ -50,7 +50,6 @@
 #include <QtQml/qqmlcomponent.h>
 
 #include <private/qqmlengine_p.h>
-#include <private/qv8engine_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 
 class MyQmlAttachedObject : public QObject
@@ -797,11 +796,11 @@ public:
     Q_INVOKABLE void method_real(qreal a) { invoke(10); m_actuals << a; }
     Q_INVOKABLE void method_QString(QString a) { invoke(11); m_actuals << a; }
     Q_INVOKABLE void method_QPointF(QPointF a) { invoke(12); m_actuals << a; }
-    Q_INVOKABLE void method_QObject(QObject *a) { invoke(13); m_actuals << qVariantFromValue(a); }
-    Q_INVOKABLE void method_QScriptValue(QJSValue a) { invoke(14); m_actuals << qVariantFromValue(a); }
-    Q_INVOKABLE void method_intQScriptValue(int a, QJSValue b) { invoke(15); m_actuals << a << qVariantFromValue(b); }
+    Q_INVOKABLE void method_QObject(QObject *a) { invoke(13); m_actuals << QVariant::fromValue(a); }
+    Q_INVOKABLE void method_QScriptValue(QJSValue a) { invoke(14); m_actuals << QVariant::fromValue(a); }
+    Q_INVOKABLE void method_intQScriptValue(int a, QJSValue b) { invoke(15); m_actuals << a << QVariant::fromValue(b); }
     Q_INVOKABLE void method_QByteArray(QByteArray value) { invoke(29); m_actuals << value; }
-    Q_INVOKABLE QJSValue method_intQJSValue(int a, QJSValue b) { invoke(30); m_actuals << a << qVariantFromValue(b); return b.call(); }
+    Q_INVOKABLE QJSValue method_intQJSValue(int a, QJSValue b) { invoke(30); m_actuals << a << QVariant::fromValue(b); return b.call(); }
     Q_INVOKABLE QJSValue method_intQJSValue(int a, int b) { m_actuals << a << b; return QJSValue();} // Should never be called.
 
     Q_INVOKABLE void method_overload(int a) { invoke(16); m_actuals << a; }

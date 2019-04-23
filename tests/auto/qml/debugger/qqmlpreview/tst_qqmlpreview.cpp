@@ -319,12 +319,12 @@ void tst_QQmlPreview::zoom()
     QTRY_VERIFY(m_files.contains(testFile(file)));
     float baseZoomFactor = -1;
     QTRY_VERIFY_WITH_TIMEOUT((baseZoomFactor = parseZoomFactor(m_process->output())) > 0, 30000);
-    m_client->triggerZoom(2.0f);
-    verifyZoomFactor(m_process, baseZoomFactor * 2.0f);
-    m_client->triggerZoom(1.5f);
-    verifyZoomFactor(m_process, baseZoomFactor * 1.5f);
-    m_client->triggerZoom(0.5f);
-    verifyZoomFactor(m_process, baseZoomFactor * 0.5f);
+
+    for (auto testZoomFactor : {2.0f, 1.5f, 0.5f}) {
+        m_client->triggerZoom(testZoomFactor);
+        verifyZoomFactor(m_process, baseZoomFactor * testZoomFactor);
+    }
+
     m_client->triggerZoom(-1.0f);
     verifyZoomFactor(m_process, baseZoomFactor);
     m_process->stop();
@@ -338,7 +338,7 @@ void tst_QQmlPreview::fps()
     QVERIFY(m_client);
     m_client->triggerLoad(testFileUrl(file));
     if (QGuiApplication::platformName() != "offscreen") {
-        QTRY_VERIFY(m_frameStats.numSyncs > 10);
+        QTRY_VERIFY_WITH_TIMEOUT(m_frameStats.numSyncs > 10, 10000);
         QVERIFY(m_frameStats.minSync <= m_frameStats.maxSync);
         QVERIFY(m_frameStats.totalSync / m_frameStats.numSyncs >= m_frameStats.minSync - 1);
         QVERIFY(m_frameStats.totalSync / m_frameStats.numSyncs <= m_frameStats.maxSync);

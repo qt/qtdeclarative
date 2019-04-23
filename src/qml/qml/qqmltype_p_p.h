@@ -120,23 +120,13 @@ public:
 
     int index;
     mutable volatile bool isSetup:1;
-    mutable volatile bool isEnumSetup:1;
+    mutable volatile bool isEnumFromCacheSetup:1;
+    mutable volatile bool isEnumFromBaseSetup:1;
     mutable bool haveSuperType:1;
     mutable QList<QQmlProxyMetaObject::ProxyData> metaObjects;
     mutable QStringHash<int> enums;
     mutable QStringHash<int> scopedEnumIndex; // maps from enum name to index in scopedEnums
     mutable QList<QStringHash<int>*> scopedEnums;
-
-    struct PropertyCacheByMinorVersion
-    {
-        PropertyCacheByMinorVersion() : cache(nullptr), minorVersion(-1) {}
-        explicit PropertyCacheByMinorVersion(QQmlPropertyCache *pc, int ver) : cache(pc), minorVersion(ver) {}
-        QQmlPropertyCachePtr cache;
-        int minorVersion;
-    };
-    QVector<PropertyCacheByMinorVersion> propertyCaches;
-    QQmlPropertyCache *propertyCacheForMinorVersion(int minorVersion) const;
-    void setPropertyCacheForMinorVersion(int minorVersion, QQmlPropertyCache *cache);
 
     void setName(const QString &uri, const QString &element);
 

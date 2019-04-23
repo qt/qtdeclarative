@@ -57,7 +57,8 @@ using namespace QV4::Compiler;
 using namespace QQmlJS::AST;
 
 ScanFunctions::ScanFunctions(Codegen *cg, const QString &sourceCode, ContextType defaultProgramType)
-    : _cg(cg)
+    : QQmlJS::AST::Visitor(cg->recursionDepth())
+    , _cg(cg)
     , _sourceCode(sourceCode)
     , _context(nullptr)
     , _allowFuncDecls(true)
@@ -94,25 +95,6 @@ void ScanFunctions::leaveEnvironment()
 {
     _contextStack.pop();
     _context = _contextStack.isEmpty() ? nullptr : _contextStack.top();
-}
-
-bool ScanFunctions::preVisit(Node *ast)
-{
-    if (_cg->hasError)
-        return false;
-    ++_recursionDepth;
-
-    if (_recursionDepth > 1000) {
-        _cg->throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Maximum statement or expression depth exceeded"));
-        return false;
-    }
-
-    return true;
-}
-
-void ScanFunctions::postVisit(Node *)
-{
-    --_recursionDepth;
 }
 
 void ScanFunctions::checkDirectivePrologue(StatementList *ast)
@@ -759,9 +741,9 @@ void ScanFunctions::calcEscapingVariables()
         if (c->contextType != ContextType::ESModule)
             continue;
         for (const auto &entry: c->exportEntries) {
-            auto m = c->members.find(entry.localName);
-            if (m != c->members.end())
-                m->canEscape = true;
+            auto mIt = c->members.constFind(entry.localName);
+            if (mIt != c->members.constEnd())
+                mIt->canEscape = true;
         }
         break;
     }
@@ -777,8 +759,8 @@ void ScanFunctions::calcEscapingVariables()
             }
             Q_ASSERT(c != inner);
             while (c) {
-                Context::MemberMap::const_iterator it = c->members.find(var);
-                if (it != c->members.end()) {
+                Context::MemberMap::const_iterator it = c->members.constFind(var);
+                if (it != c->members.constEnd()) {
                     if (c->parent || it->isLexicallyScoped()) {
                         it->canEscape = true;
                         c->requiresExecutionContext = true;
@@ -834,15 +816,17 @@ void ScanFunctions::calcEscapingVariables()
             // add an escaping 'this' variable
             c->addLocalVar(QStringLiteral("this"), Context::VariableDefinition, VariableScope::Let);
             c->requiresExecutionContext = true;
-            auto m = c->members.find(QStringLiteral("this"));
-            m->canEscape = true;
+            auto mIt = c->members.constFind(QStringLiteral("this"));
+            Q_ASSERT(mIt != c->members.constEnd());
+            mIt->canEscape = true;
         }
         if (c->innerFunctionAccessesNewTarget) {
             // add an escaping 'new.target' variable
             c->addLocalVar(QStringLiteral("new.target"), Context::VariableDefinition, VariableScope::Let);
             c->requiresExecutionContext = true;
-            auto m = c->members.find(QStringLiteral("new.target"));
-            m->canEscape = true;
+            auto mIt = c->members.constFind(QStringLiteral("new.target"));
+            Q_ASSERT(mIt != c->members.constEnd());
+            mIt->canEscape = true;
         }
         if (c->allVarsEscape && c->contextType == ContextType::Block && c->members.isEmpty())
             c->allVarsEscape = false;
@@ -863,8 +847,9 @@ void ScanFunctions::calcEscapingVariables()
         }
         if (c->contextType == ContextType::Block && c->isCatchBlock) {
             c->requiresExecutionContext = true;
-            auto m = c->members.find(c->caughtVariable);
-            m->canEscape = true;
+            auto mIt = c->members.constFind(c->caughtVariable);
+            Q_ASSERT(mIt != c->members.constEnd());
+            mIt->canEscape = true;
         }
         const QLatin1String exprForOn("expression for on");
         if (c->contextType == ContextType::Binding && c->name.length() > exprForOn.size() &&
@@ -873,7 +858,7 @@ void ScanFunctions::calcEscapingVariables()
             // we don't know if the code is a signal handler or not.
             c->requiresExecutionContext = true;
         if (c->allVarsEscape) {
-            for (auto &m : c->members)
+            for (const auto &m : qAsConst(c->members))
                 m.canEscape = true;
         }
     }
@@ -892,4 +877,9 @@ void ScanFunctions::calcEscapingVariables()
             }
         }
     }
+}
+
+void ScanFunctions::throwRecursionDepthError()
+{
+    _cg->throwRecursionDepthError();
 }

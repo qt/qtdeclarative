@@ -1121,7 +1121,7 @@ void tst_QJSValue::toQObject_nonQObject_data()
     QTest::newRow("array") << engine->newArray();
     QTest::newRow("date") << engine->evaluate("new Date(124)");
     QTest::newRow("variant(12345)") << engine->toScriptValue(QVariant(12345));
-    QTest::newRow("variant((QObject*)0)") << engine->toScriptValue(qVariantFromValue((QObject*)nullptr));
+    QTest::newRow("variant((QObject*)0)") << engine->toScriptValue(QVariant::fromValue((QObject*)nullptr));
     QTest::newRow("newQObject(0)") << engine->newQObject(nullptr);
 }
 
@@ -2327,7 +2327,7 @@ void tst_QJSValue::castToPointer()
         QBrush *bp = qjsvalue_cast<QBrush*>(v);
         QVERIFY(!bp);
 
-        QJSValue v2 = eng.toScriptValue(qVariantFromValue(cp));
+        QJSValue v2 = eng.toScriptValue(QVariant::fromValue(cp));
         QCOMPARE(qjsvalue_cast<QColor*>(v2), cp);
     }
 }

@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.13
 import Qt.labs.qmlmodels 1.0
 
 Item {
@@ -38,80 +38,101 @@ Item {
     property alias tableView: tableView
 
     function appendRow(personName, personAge) {
-        testModel.appendRow([
-            { name: personName },
-            { age: personAge }
-        ])
+        testModel.appendRow({
+            name: personName,
+            age: personAge
+        })
+    }
+
+    function appendRowExtraData() {
+        testModel.appendRow({
+            name: "Foo",
+            age: 99,
+            nonExistentRole: 123
+        })
     }
 
     function appendRowInvalid1() {
-        testModel.appendRow([
-            { name: "Foo" },
-            { age: 99 },
-            { nonExistentRole: 123 }
-        ])
+        testModel.appendRow(123)
     }
 
     function appendRowInvalid2() {
-        testModel.appendRow(123)
+        testModel.appendRow({
+            name: "Foo",
+            age: []
+        })
     }
 
     function appendRowInvalid3() {
         testModel.appendRow([
-            { name: "Foo" },
-            { age: [] }
+            { name: "Bar" },
+            { age: "111" }
         ])
     }
 
     function insertRow(personName, personAge, rowIndex) {
-        testModel.insertRow(rowIndex, [
-            { name: personName },
-            { age: personAge }]
-        )
+        testModel.insertRow(rowIndex, {
+            name: personName,
+            age: personAge
+        })
+    }
+
+    function insertRowExtraData() {
+        testModel.insertRow(0, {
+            name: "Foo",
+            age: 99,
+            nonExistentRole: 123
+        })
     }
 
     function insertRowInvalid1() {
-        testModel.insertRow(0, [
-            { name: "Foo" },
-            { age: 99 },
-            { nonExistentRole: 123 }
-        ])
+        testModel.insertRow(0, 123)
     }
 
     function insertRowInvalid2() {
-        testModel.insertRow(0, 123)
+        testModel.insertRow(0, {
+            name: "Foo",
+            age: []
+        })
     }
 
     function insertRowInvalid3() {
         testModel.insertRow(0, [
-            { name: "Foo" },
-            { age: [] }
+            { name: "Bar" },
+            { age: "111" }
         ])
     }
 
     function setRow(rowIndex, personName, personAge) {
-        testModel.setRow(rowIndex, [
-            { name: personName },
-            { age: personAge }]
-        )
+        testModel.setRow(rowIndex, {
+            name: personName,
+            age: personAge
+        })
+    }
+
+    function setRowExtraData() {
+        testModel.setRow(0, {
+            name: "Foo",
+            age: 99,
+            nonExistentRole: 123
+        })
     }
 
     function setRowInvalid1() {
-        testModel.setRow(0, [
-            { name: "Foo" },
-            { age: 99 },
-            { nonExistentRole: 123 }
-        ])
+        testModel.setRow(0, 123)
     }
 
     function setRowInvalid2() {
-        testModel.setRow(0, 123)
+        testModel.setRow(0, {
+            name: "Foo",
+            age: []
+        })
     }
 
     function setRowInvalid3() {
         testModel.setRow(0, [
-            { name: "Foo" },
-            { age: [] }
+            { name: "Bar" },
+            { age: "111" }
         ])
     }
 

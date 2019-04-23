@@ -83,7 +83,6 @@ private:
 };
 
 class QQmlV4Function;
-class QQmlV4Handle;
 class Q_AUTOTEST_EXPORT QQuickWorkerScript : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
@@ -102,7 +101,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void sourceChanged();
-    void message(const QQmlV4Handle &messageObject);
+    void message(const QJSValue &messageObject);
 
 protected:
     void classBegin() override;

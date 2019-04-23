@@ -45,7 +45,6 @@
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <private/qquickitemchangelistener_p.h>
 #include <private/qquickpixmapcache_p.h>
-#include <private/qv8engine_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <QtCore/qmimedata.h>
 #include <QtQml/qqmlinfo.h>

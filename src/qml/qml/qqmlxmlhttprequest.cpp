@@ -39,8 +39,6 @@
 
 #include "qqmlxmlhttprequest_p.h"
 
-#include <private/qv8engine_p.h>
-
 #include "qqmlengine.h"
 #include "qqmlengine_p.h"
 #include <private/qqmlrefcount_p.h>
@@ -69,8 +67,6 @@
 #include <private/qv4jsonobject_p.h>
 
 using namespace QV4;
-
-#if QT_CONFIG(xmlstreamreader) && QT_CONFIG(qml_network)
 
 #define V4THROW_REFERENCE(string) \
     do { \
@@ -2066,7 +2062,5 @@ void *qt_add_qmlxmlhttprequest(ExecutionEngine *v4)
 }
 
 QT_END_NAMESPACE
-
-#endif // xmlstreamreader && qml_network
 
 #include <qqmlxmlhttprequest.moc>

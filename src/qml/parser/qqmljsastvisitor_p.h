@@ -54,14 +54,40 @@
 #include "qqmljsastfwd_p.h"
 #include "qqmljsglobal_p.h"
 
-QT_QML_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE
 
 namespace QQmlJS { namespace AST {
 
 class QML_PARSER_EXPORT Visitor
 {
 public:
-    Visitor();
+    class RecursionDepthCheck
+    {
+        Q_DISABLE_COPY(RecursionDepthCheck)
+    public:
+        RecursionDepthCheck(RecursionDepthCheck &&) = delete;
+        RecursionDepthCheck &operator=(RecursionDepthCheck &&) = delete;
+
+        RecursionDepthCheck(Visitor *visitor) : m_visitor(visitor)
+        {
+            ++(m_visitor->m_recursionDepth);
+        }
+
+        ~RecursionDepthCheck()
+        {
+            --(m_visitor->m_recursionDepth);
+        }
+
+        bool operator()() const {
+            return m_visitor->m_recursionDepth < s_recursionLimit;
+        }
+
+    private:
+        static const quint16 s_recursionLimit = 4096;
+        Visitor *m_visitor;
+    };
+
+    Visitor(quint16 parentRecursionDepth = 0);
     virtual ~Visitor();
 
     virtual bool preVisit(Node *) { return true; }
@@ -374,10 +400,18 @@ public:
 
     virtual bool visit(DebuggerStatement *) { return true; }
     virtual void endVisit(DebuggerStatement *) {}
+
+    virtual void throwRecursionDepthError() = 0;
+
+    quint16 recursionDepth() const { return m_recursionDepth; }
+
+protected:
+    quint16 m_recursionDepth = 0;
+    friend class RecursionDepthCheck;
 };
 
 } } // namespace AST
 
-QT_QML_END_NAMESPACE
+QT_END_NAMESPACE
 
 #endif // QQMLJSASTVISITOR_P_H

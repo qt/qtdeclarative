@@ -1,5 +1,5 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource prefix="/">
-<file alias="Bäh.qml">umlaut.qml</file>
+<file alias="Bäh.qml">data/umlaut.qml</file>
 </qresource>
 </RCC>

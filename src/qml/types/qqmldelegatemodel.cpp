@@ -1127,7 +1127,7 @@ QQmlIncubator::Status QQmlDelegateModel::incubationStatus(int index)
     return QQmlIncubator::Ready;
 }
 
-QString QQmlDelegateModelPrivate::stringValue(Compositor::Group group, int index, const QString &name)
+QVariant QQmlDelegateModelPrivate::variantValue(QQmlListCompositor::Group group, int index, const QString &name)
 {
     Compositor::iterator it = m_compositor.find(group, index);
     if (QQmlAdaptorModel *model = it.list<QQmlAdaptorModel>()) {
@@ -1139,20 +1139,20 @@ QString QQmlDelegateModelPrivate::stringValue(Compositor::Group group, int index
         while (dot > 0) {
             QObject *obj = qvariant_cast<QObject*>(value);
             if (!obj)
-                return QString();
-            int from = dot+1;
+                return QVariant();
+            const int from = dot + 1;
             dot = name.indexOf(QLatin1Char('.'), from);
             value = obj->property(name.midRef(from, dot - from).toUtf8());
         }
-        return value.toString();
+        return value;
     }
-    return QString();
+    return QVariant();
 }
 
-QString QQmlDelegateModel::stringValue(int index, const QString &name)
+QVariant QQmlDelegateModel::variantValue(int index, const QString &role)
 {
     Q_D(QQmlDelegateModel);
-    return d->stringValue(d->m_compositorGroup, index, name);
+    return d->variantValue(d->m_compositorGroup, index, role);
 }
 
 int QQmlDelegateModel::indexOf(QObject *item, QObject *) const
@@ -2419,17 +2419,15 @@ void QQmlDelegateModelGroupPrivate::setModel(QQmlDelegateModel *m, Compositor::G
 bool QQmlDelegateModelGroupPrivate::isChangedConnected()
 {
     Q_Q(QQmlDelegateModelGroup);
-    IS_SIGNAL_CONNECTED(q, QQmlDelegateModelGroup, changed, (const QQmlV4Handle &,const QQmlV4Handle &));
+    IS_SIGNAL_CONNECTED(q, QQmlDelegateModelGroup, changed, (const QJSValue &,const QJSValue &));
 }
 
 void QQmlDelegateModelGroupPrivate::emitChanges(QV4::ExecutionEngine *v4)
 {
     Q_Q(QQmlDelegateModelGroup);
     if (isChangedConnected() && !changeSet.isEmpty()) {
-        QV4::Scope scope(v4);
-        QV4::ScopedValue removed(scope, engineData(scope.engine)->array(v4, changeSet.removes()));
-        QV4::ScopedValue inserted(scope, engineData(scope.engine)->array(v4, changeSet.inserts()));
-        emit q->changed(QQmlV4Handle(removed), QQmlV4Handle(inserted));
+        emit q->changed(QJSValue(v4, engineData(v4)->array(v4, changeSet.removes())),
+                        QJSValue(v4, engineData(v4)->array(v4, changeSet.inserts())));
     }
     if (changeSet.difference() != 0)
         emit q->countChanged();
@@ -2607,18 +2605,18 @@ void QQmlDelegateModelGroup::setDefaultInclude(bool include)
     \endlist
 */
 
-QQmlV4Handle QQmlDelegateModelGroup::get(int index)
+QJSValue QQmlDelegateModelGroup::get(int index)
 {
     Q_D(QQmlDelegateModelGroup);
     if (!d->model)
-        return QQmlV4Handle(QV4::Encode::undefined());
+        return QJSValue();
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
     if (!model->m_context || !model->m_context->isValid()) {
-        return QQmlV4Handle(QV4::Encode::undefined());
+        return QJSValue();
     } else if (index < 0 || index >= model->m_compositor.count(d->group)) {
         qmlWarning(this) << tr("get: index out of range");
-        return QQmlV4Handle(QV4::Encode::undefined());
+        return QJSValue();
     }
 
     Compositor::iterator it = model->m_compositor.find(d->group, index);
@@ -2630,7 +2628,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
         cacheItem = model->m_adaptorModel.createItem(
                 model->m_cacheMetaType, it.modelIndex());
         if (!cacheItem)
-            return QQmlV4Handle(QV4::Encode::undefined());
+            return QJSValue();
         cacheItem->groups = it->flags;
 
         model->m_cache.insert(it.cacheIndex, cacheItem);
@@ -2646,7 +2644,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
     o->setPrototypeOf(p);
     ++cacheItem->scriptRef;
 
-    return QQmlV4Handle(o);
+    return QJSValue(v4, o->asReturnedValue());
 }
 
 bool QQmlDelegateModelGroupPrivate::parseIndex(const QV4::Value &value, int *index, Compositor::Group *group) const
@@ -3338,9 +3336,9 @@ QQmlInstanceModel::ReleaseFlags QQmlPartsModel::release(QObject *item)
     return flags;
 }
 
-QString QQmlPartsModel::stringValue(int index, const QString &role)
+QVariant QQmlPartsModel::variantValue(int index, const QString &role)
 {
-    return QQmlDelegateModelPrivate::get(m_model)->stringValue(m_compositorGroup, index, role);
+    return QQmlDelegateModelPrivate::get(m_model)->variantValue(m_compositorGroup, index, role);
 }
 
 void QQmlPartsModel::setWatchedRoles(const QList<QByteArray> &roles)

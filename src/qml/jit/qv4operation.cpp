@@ -223,11 +223,7 @@ inline Operation *createOperation(Operation::Kind kind, QQmlJS::MemoryPool *stat
     case K::JSDeleteName:                    return get(1, 1, 1, 1, 1, 2, any,     F::CanThrow);
     case K::JSIn:                            return get(2, 1, 1, 1, 1, 2, any,     F::CanThrow);
     case K::JSInstanceOf:                    return get(2, 1, 1, 1, 1, 2, any,     F::CanThrow);
-    case K::QMLLoadScopeObjectProperty:      return get(3, 1, 1, 1, 1, 2, any,     F::CanThrow);
-    case K::QMLStoreScopeObjectProperty:     return get(3, 1, 1, 0, 1, 2, none,    F::CanThrow);
-    case K::QMLLoadContextObjectProperty:    return get(3, 1, 1, 1, 1, 2, any,     F::CanThrow);
-    case K::QMLStoreContextObjectProperty:   return get(3, 1, 1, 1, 1, 2, none,    F::CanThrow);
-    case K::QMLLoadIdObject:                 return get(2, 1, 1, 1, 1, 2, any,     F::CanThrow);
+    case K::QMLLoadQmlContextPropertyLookup: return get(1, 1, 1, 1, 1, 2, any,     F::CanThrow);
 
     case K::JSEqual:                         return get(2, 1, 1, 1, 1, 2, boolean, F::CanThrow);
     case K::JSGreaterThan:                   return get(2, 1, 1, 1, 1, 2, boolean, F::CanThrow);
@@ -263,8 +259,6 @@ inline Operation *createOperation(Operation::Kind kind, QQmlJS::MemoryPool *stat
     case K::JSTypeofValue:                   return get(1, 0, 0, 1, 0, 0, any,     F::Pure);
     case K::JSDeclareVar:                    return get(2, 1, 1, 1, 1, 2, any,     F::CanThrow);
     case K::JSDestructureRestElement:        return get(1, 1, 1, 1, 1, 2, any,     F::CanThrow);
-    case K::QMLLoadContext:                  return get(0, 0, 0, 1, 0, 0, any,     F::NoFlags);
-    case K::QMLLoadImportedScripts:          return get(0, 0, 0, 1, 0, 0, any,     F::NoFlags);
 
     case K::JSCreateCallContext:             return get(0, 1, 1, 0, 1, 1, none,    F::NoFlags);
     case K::JSCreateCatchContext:            return get(2, 1, 1, 1, 1, 1, none,    F::NoFlags);
@@ -423,7 +417,7 @@ QString ConstantPayload::debugString() const
 QString ConstantPayload::debugString(QV4::Value v)
 {
     if (v.isManaged())
-        return QString().sprintf("Ptr: %p", v.heapObject());
+        return QString::asprintf("Ptr: %p", v.heapObject());
     if (v.isEmpty())
         return QStringLiteral("empty");
     return v.toQStringNoThrow();
@@ -518,18 +512,12 @@ static ReturnValue operateOnRuntimeCall(Operation::Kind kind, bool abortOnMissin
     case K::JSDeleteName:                    return M<R::DeleteName>::doIt();
     case K::JSIn:                            return M<R::In>::doIt();
     case K::JSInstanceOf:                    return M<R::Instanceof>::doIt();
-    case K::QMLLoadScopeObjectProperty:      return M<R::LoadQmlScopeObjectProperty>::doIt();
-    case K::QMLStoreScopeObjectProperty:     return M<R::StoreQmlScopeObjectProperty>::doIt();
-    case K::QMLLoadContextObjectProperty:    return M<R::LoadQmlContextObjectProperty>::doIt();
-    case K::QMLStoreContextObjectProperty:   return M<R::StoreQmlContextObjectProperty>::doIt();
-    case K::QMLLoadIdObject:                 return M<R::LoadQmlIdObject>::doIt();
+    case K::QMLLoadQmlContextPropertyLookup: return M<R::LoadQmlContextPropertyLookup>::doIt();
 
     case K::JSTypeofName:                    return M<R::TypeofName>::doIt();
     case K::JSTypeofValue:                   return M<R::TypeofValue>::doIt();
     case K::JSDeclareVar:                    return M<R::DeclareVar>::doIt();
     case K::JSDestructureRestElement:        return M<R::DestructureRestElement>::doIt();
-    case K::QMLLoadContext:                  return M<R::LoadQmlContext>::doIt();
-    case K::QMLLoadImportedScripts:          return M<R::LoadQmlImportedScripts>::doIt();
     case K::JSThisToObject:                  return M<R::ConvertThisToObject>::doIt();
     case K::JSCreateMappedArgumentsObject:   return M<R::CreateMappedArgumentsObject>::doIt();
     case K::JSCreateUnmappedArgumentsObject: return M<R::CreateUnmappedArgumentsObject>::doIt();

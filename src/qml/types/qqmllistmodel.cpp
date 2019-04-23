@@ -52,6 +52,7 @@
 #include <private/qv4dateobject_p.h>
 #include <private/qv4objectiterator_p.h>
 #include <private/qv4alloca_p.h>
+#include <private/qv4lookup_p.h>
 
 #include <qqmlcontext.h>
 #include <qqmlinfo.h>
@@ -1604,13 +1605,18 @@ ReturnedValue ModelObject::virtualGet(const Managed *m, PropertyKey id, const Va
     if (QQmlEngine *qmlEngine = that->engine()->qmlEngine()) {
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(qmlEngine);
         if (ep && ep->propertyCapture)
-            ep->propertyCapture->captureProperty(that->object(), -1, role->index,
-                                                 QQmlPropertyCapture::OnlyOnce, false);
+            ep->propertyCapture->captureProperty(that->object(), -1, role->index, /*doNotify=*/ false);
     }
 
     const int elementIndex = that->d()->elementIndex();
     QVariant value = that->d()->m_model->data(elementIndex, role->index);
     return that->engine()->fromVariant(value);
+}
+
+ReturnedValue ModelObject::virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup)
+{
+    lookup->getter = Lookup::getterFallback;
+    return lookup->getter(lookup, engine, *object);
 }
 
 struct ModelObjectOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
@@ -2539,7 +2545,7 @@ void QQmlListModel::append(QQmlV4Function *args)
 
     \sa append()
 */
-QQmlV4Handle QQmlListModel::get(int index) const
+QJSValue QQmlListModel::get(int index) const
 {
     QV4::Scope scope(engine());
     QV4::ScopedValue result(scope, QV4::Value::undefinedValue());
@@ -2562,7 +2568,7 @@ QQmlV4Handle QQmlListModel::get(int index) const
         }
     }
 
-    return QQmlV4Handle(result);
+    return QJSValue(engine(), result->asReturnedValue());
 }
 
 /*!
@@ -2581,10 +2587,10 @@ QQmlV4Handle QQmlListModel::get(int index) const
 
     \sa append()
 */
-void QQmlListModel::set(int index, const QQmlV4Handle &handle)
+void QQmlListModel::set(int index, const QJSValue &value)
 {
     QV4::Scope scope(engine());
-    QV4::ScopedObject object(scope, handle);
+    QV4::ScopedObject object(scope, QJSValuePrivate::getValue(&value));
 
     if (!object) {
         qmlWarning(this) << tr("set: value is not an object");

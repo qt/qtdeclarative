@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -51,10 +51,11 @@
 // We mean it.
 //
 
-#include <QtCore/qobject.h>
-#include <QtCore/qglobal.h>
+#include <private/qtquickglobal_p.h>
 
-class Q_AUTOTEST_EXPORT QQuickDragAxis : public QObject
+QT_BEGIN_NAMESPACE
+
+class Q_QUICK_PRIVATE_EXPORT QQuickDragAxis : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(qreal minimum READ minimum WRITE setMinimum NOTIFY minimumChanged)
@@ -83,5 +84,7 @@ private:
     qreal m_maximum;
     bool m_enabled;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQUICKDRAGAXIS_P_H

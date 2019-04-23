@@ -122,7 +122,7 @@ public:
 
     QQmlIncubator::Status incubationStatus(int index) override;
 
-    QString stringValue(int, const QString &) override { Q_UNREACHABLE(); return QString(); }
+    QVariant variantValue(int, const QString &) override { Q_UNREACHABLE(); return QVariant(); }
     void setWatchedRoles(const QList<QByteArray> &) override { Q_UNREACHABLE(); }
     int indexOf(QObject *, QObject *) const override { Q_UNREACHABLE(); return 0; }
 

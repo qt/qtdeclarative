@@ -375,6 +375,11 @@ public:
 
     bool setProtoFromNewTarget(const Value *newTarget);
 
+    ReturnedValue resolveLookupGetter(ExecutionEngine *engine, Lookup *lookup) const
+    { return vtable()->resolveLookupGetter(this, engine, lookup); }
+    ReturnedValue resolveLookupSetter(ExecutionEngine *engine, Lookup *lookup, const Value &value)
+    { return vtable()->resolveLookupSetter(this, engine, lookup, value); }
+
 protected:
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver,bool *hasProperty);
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
@@ -389,6 +394,8 @@ protected:
     static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
     static qint64 virtualGetLength(const Managed *m);
     static ReturnedValue virtualInstanceOf(const Object *typeObject, const Value &var);
+    static ReturnedValue virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup);
+    static bool virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup, const Value &value);
 public:
     // qv4runtime uses this directly
     static ReturnedValue checkedInstanceOf(ExecutionEngine *engine, const FunctionObject *typeObject, const Value &var);
@@ -408,7 +415,6 @@ struct ObjectOwnPropertyKeyIterator : OwnPropertyKeyIterator
     uint arrayIndex = 0;
     uint memberIndex = 0;
     bool iterateOverSymbols = false;
-    SparseArrayNode *arrayNode = nullptr;
     ~ObjectOwnPropertyKeyIterator() override = default;
     PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
 

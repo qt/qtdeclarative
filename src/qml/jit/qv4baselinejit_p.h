@@ -97,6 +97,7 @@ public:
     void generate_LoadClosure(int value) override;
     void generate_LoadName(int name, int traceSlot) override;
     void generate_LoadGlobalLookup(int index, int traceSlot) override;
+    void generate_LoadQmlContextPropertyLookup(int index, int traceSlot) override;
     void generate_StoreNameSloppy(int name) override;
     void generate_StoreNameStrict(int name) override;
     void generate_LoadElement(int base, int traceSlot) override;
@@ -107,15 +108,6 @@ public:
     void generate_SetLookup(int index, int base) override;
     void generate_LoadSuperProperty(int property) override;
     void generate_StoreSuperProperty(int property) override;
-    void generate_StoreScopeObjectProperty(int base,
-                                           int propertyIndex) override;
-    void generate_StoreContextObjectProperty(int base,
-                                             int propertyIndex) override;
-    void generate_LoadScopeObjectProperty(int propertyIndex, int base,
-                                          int captureRequired) override;
-    void generate_LoadContextObjectProperty(int propertyIndex, int base,
-                                            int captureRequired) override;
-    void generate_LoadIdObject(int index, int base) override;
     void generate_Yield() override;
     void generate_YieldStar() override;
     void generate_Resume(int) override;
@@ -128,8 +120,7 @@ public:
     void generate_CallName(int name, int argc, int argv, int traceSlot) override;
     void generate_CallPossiblyDirectEval(int argc, int argv, int traceSlot) override;
     void generate_CallGlobalLookup(int index, int argc, int argv, int traceSlot) override;
-    void generate_CallScopeObjectProperty(int propIdx, int base, int argc, int argv, int traceSlot) override;
-    void generate_CallContextObjectProperty(int propIdx, int base, int argc, int argv, int traceSlot) override;
+    void generate_CallQmlContextPropertyLookup(int index, int argc, int argv, int traceSlot) override;
     void generate_CallWithSpread(int func, int thisObject, int argc, int argv, int traceSlot) override;
     void generate_TailCall(int func, int thisObject, int argc, int argv) override;
     void generate_Construct(int func, int argc, int argv) override;
@@ -188,7 +179,7 @@ public:
     void generate_CmpIn(int lhs) override;
     void generate_CmpInstanceOf(int lhs) override;
     void generate_UNot() override;
-    void generate_UPlus() override;
+    void generate_UPlus(int) override;
     void generate_UMinus(int traceSlot) override;
     void generate_UCompl() override;
     void generate_Increment(int traceSlot) override;
@@ -211,8 +202,6 @@ public:
     void generate_Div(int lhs) override;
     void generate_Mod(int lhs, int traceSlot) override;
     void generate_Sub(int lhs, int traceSlot) override;
-    void generate_LoadQmlContext(int result) override;
-    void generate_LoadQmlImportedScripts(int result) override;
     void generate_InitializeBlockDeadTemporalZone(int firstReg, int count) override;
     void generate_ThrowOnNullOrUndefined() override;
     void generate_GetTemplateObject(int index) override;

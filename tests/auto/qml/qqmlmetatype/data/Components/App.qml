@@ -26,40 +26,32 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import Qt.labs.qmlmodels 1.0
+import QtQml 2.0
 
-Item {
-    id: root
-    width: 200
-    height: 200
+import Components 1.0
 
-    property alias testModel: testModel
+QtObject {
+    id: mainRect
 
-    TableModel {
-        id: testModel
-        objectName: "testModel"
-        rows: [
-            [ { name: "Rex" }, { age: 3 } ],
-            [ { name: "Buster" }, { age: 5 } ]
-        ]
-        roleDataProvider: function(index, role, cellData) {
-            if (role === "display") {
-                // Age will now be in dog years
-                if (cellData.hasOwnProperty("age"))
-                    return (cellData.age * 7);
-                else if (index.column === 0)
-                    return (cellData.name);
-            }
-            return cellData;
-        }
+    property int appState: App.AppState.Blue
+    property string color: "blue"
+
+    enum AppState {
+        Red,
+        Green,
+        Blue
     }
-    TableView {
-        anchors.fill: parent
-        model: testModel
-        delegate: Text {
-            id: textItem
-            text: model.display
-        }
+
+    onAppStateChanged: {
+        if (appState === App.AppState.Green)
+            mainRect.color = "green"
+        else if (appState === App.AppState.Red)
+            mainRect.color = "red"
+    }
+
+    property Timer timer: Timer {
+        onTriggered: appState = App.AppState.Green
+        running: true
+        interval: 100
     }
 }

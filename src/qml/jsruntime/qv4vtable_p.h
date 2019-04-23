@@ -56,6 +56,8 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+struct Lookup;
+
 struct OwnPropertyKeyIterator {
     virtual ~OwnPropertyKeyIterator() = 0;
     virtual PropertyKey next(const Object *o, Property *p = nullptr, PropertyAttributes *attrs = nullptr) = 0;
@@ -83,6 +85,9 @@ struct VTable
 
     typedef ReturnedValue (*Call)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     typedef ReturnedValue (*CallAsConstructor)(const FunctionObject *, const Value *argv, int argc, const Value *newTarget);
+
+    typedef ReturnedValue (*ResolveLookupGetter)(const Object *, ExecutionEngine *, Lookup *);
+    typedef bool (*ResolveLookupSetter)(Object *, ExecutionEngine *, Lookup *, const Value &);
 
     const VTable * const parent;
     quint16 inlinePropertyOffset;
@@ -118,6 +123,9 @@ struct VTable
 
     Call call;
     CallAsConstructor callAsConstructor;
+
+    ResolveLookupGetter resolveLookupGetter;
+    ResolveLookupSetter resolveLookupSetter;
 };
 
 
@@ -142,6 +150,9 @@ protected:
 
     static constexpr VTable::Call virtualCall = nullptr;
     static constexpr VTable::CallAsConstructor virtualCallAsConstructor = nullptr;
+
+    static constexpr VTable::ResolveLookupGetter virtualResolveLookupGetter = nullptr;
+    static constexpr VTable::ResolveLookupSetter virtualResolveLookupSetter = nullptr;
 };
 
 #define DEFINE_MANAGED_VTABLE_INT(classname, parentVTable) \
@@ -181,6 +192,9 @@ protected:
     \
     classname::virtualCall,                 \
     classname::virtualCallAsConstructor,    \
+    \
+    classname::virtualResolveLookupGetter,  \
+    classname::virtualResolveLookupSetter   \
 }
 
 #define DEFINE_MANAGED_VTABLE(classname) \

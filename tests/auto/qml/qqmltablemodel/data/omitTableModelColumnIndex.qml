@@ -28,14 +28,20 @@
 
 import Qt.labs.qmlmodels 1.0
 
-import "TestUtils.js" as TestUtils
-
 TableModel {
-    id: testModel
+    objectName: "testModel"
+
+    TableModelColumn { display: "name" }
+    TableModelColumn { display: "age" }
+
     rows: [
-        [
-            { name: "John", display: "foo" },
-            { age: 22, display: "bar" }
-        ]
+        {
+            name: "John",
+            age: 22
+        },
+        {
+            name: "Oliver",
+            age: 33
+        }
     ]
 }

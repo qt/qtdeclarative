@@ -58,6 +58,11 @@ QT_BEGIN_NAMESPACE
 class Q_QML_PRIVATE_EXPORT QQmlModelsModule
 {
 public:
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    static void registerQmlTypes();
+    static void registerQuickTypes();
+#endif
+
     static void defineModule();
     static void defineLabsModule();
 };

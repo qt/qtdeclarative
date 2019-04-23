@@ -400,7 +400,7 @@ void QQmlEngineDebugClient::decode(QPacket &ds,
             QQmlEngineDebugObjectReference obj;
             obj.name = data.value.toString();
             obj.className = prop.valueTypeName;
-            prop.value = qVariantFromValue(obj);
+            prop.value = QVariant::fromValue(obj);
             break;
         }
         case QQmlObjectProperty::Unknown:

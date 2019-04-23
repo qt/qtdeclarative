@@ -55,17 +55,8 @@ QSet<QString> illegalNames;
 
 void setupIllegalNames()
 {
-    // #### this in incomplete
-    illegalNames.insert(QStringLiteral("Math"));
-    illegalNames.insert(QStringLiteral("Array"));
-    illegalNames.insert(QStringLiteral("String"));
-    illegalNames.insert(QStringLiteral("Function"));
-    illegalNames.insert(QStringLiteral("Boolean"));
-    illegalNames.insert(QStringLiteral("Number"));
-    illegalNames.insert(QStringLiteral("Date"));
-    illegalNames.insert(QStringLiteral("RegExp"));
-    illegalNames.insert(QStringLiteral("Error"));
-    illegalNames.insert(QStringLiteral("Object"));
+    for (const char **g = QV4::Compiler::Codegen::s_globalNames; *g != nullptr; ++g)
+        illegalNames.insert(QString::fromLatin1(*g));
 }
 
 struct Error
@@ -212,16 +203,13 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
         QmlIR::JSCodeGen v4CodeGen(irDocument.code,
                                    &irDocument.jsGenerator, &irDocument.jsModule,
                                    &irDocument.jsParserEngine, irDocument.program,
-                                   /*import cache*/nullptr, &irDocument.jsGenerator.stringTable, illegalNames);
-        v4CodeGen.setUseFastLookups(false); // Disable lookups in non-standalone (aka QML) mode
+                                   &irDocument.jsGenerator.stringTable, illegalNames);
         for (QmlIR::Object *object: qAsConst(irDocument.objects)) {
             if (object->functionsAndExpressions->count == 0)
                 continue;
             QList<QmlIR::CompiledFunctionOrExpression> functionsToCompile;
-            for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next) {
-                foe->disableAcceleratedLookups = true;
+            for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next)
                 functionsToCompile << *foe;
-            }
             const QVector<int> runtimeFunctionIndices = v4CodeGen.generateJSCodeForFunctionsAndBindings(functionsToCompile);
             QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();
             if (!jsErrors.isEmpty()) {
@@ -247,8 +235,6 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
 
         if (!saveFunction(irDocument.javaScriptCompilationUnit, &error->message))
             return false;
-
-        free(unit);
     }
     return true;
 }
@@ -256,7 +242,6 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
 static bool compileJSFile(const QString &inputFileName, const QString &inputFileUrl, SaveFunction saveFunction, Error *error)
 {
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit;
-    QScopedPointer<QV4::CompiledData::Unit, QScopedPointerPodDeleter> unitDataToFree;
 
     QString sourceCode;
     {
@@ -319,9 +304,7 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
         {
             QmlIR::JSCodeGen v4CodeGen(irDocument.code, &irDocument.jsGenerator,
                                        &irDocument.jsModule, &irDocument.jsParserEngine,
-                                       irDocument.program, /*import cache*/nullptr,
-                                       &irDocument.jsGenerator.stringTable, illegalNames);
-            v4CodeGen.setUseFastLookups(false); // Disable lookups in non-standalone (aka QML) mode
+                                       irDocument.program, &irDocument.jsGenerator.stringTable, illegalNames);
             v4CodeGen.generateFromProgram(inputFileName, inputFileUrl, sourceCode, program,
                                           &irDocument.jsModule, QV4::Compiler::ContextType::ScriptImportedByQML);
             QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();
@@ -339,7 +322,6 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
             generator.generate(irDocument);
             QV4::CompiledData::Unit *unitData = const_cast<QV4::CompiledData::Unit*>(irDocument.javaScriptCompilationUnit->data);
             unitData->flags |= QV4::CompiledData::Unit::StaticData;
-            unitDataToFree.reset(unitData);
             unit = irDocument.javaScriptCompilationUnit;
         }
     }

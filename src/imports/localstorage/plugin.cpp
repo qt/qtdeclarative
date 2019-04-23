@@ -41,7 +41,6 @@
 #include <QtQml/qqml.h>
 #include <private/qqmlengine_p.h>
 #include <QDebug>
-#include <private/qv8engine_p.h>
 #include <QtSql/qsqldatabase.h>
 #include <QtSql/qsqlquery.h>
 #include <QtSql/qsqlerror.h>

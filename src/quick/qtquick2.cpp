@@ -183,7 +183,6 @@ void QQmlQtQuick2Module::defineModule()
     QQuick_initializeProviders();
 
     QQuickUtilModule::defineModule();
-    QQmlEnginePrivate::defineQtQuick2Module();
     QQuickItemsModule::defineModule();
 
     qmlRegisterUncreatableType<QQuickApplication>("QtQuick",2,0,"Application", QQuickApplication::tr("Application is an abstract class"));

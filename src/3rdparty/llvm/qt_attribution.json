@@ -1,0 +1,14 @@
+[
+    {
+        "Id": "llvm-adt",
+        "Name": "LLVM: ADT",
+        "QDocModule": "qtqml",
+        "QtUsage": "An intrusively linked list, used in the tracing JIT to hold lists of instructions",
+
+        "Path": "src/3rdparty/llvm",
+        "License": "UIUC 3-clause \"New\" or \"Revised\" License",
+        "LicenseId": "BSD-3-Clause",
+        "LicenseFile": "LICENSE.TXT",
+        "Copyright": "Copyright (c) 2003-2017 University of Illinois at Urbana-Champaign."
+    }
+]

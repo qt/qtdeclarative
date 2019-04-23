@@ -29,8 +29,6 @@
 import QtQuick 2.12
 import Qt.labs.qmlmodels 1.0
 
-import "TestUtils.js" as TestUtils
-
 Item {
     id: root
     width: 200
@@ -41,21 +39,37 @@ Item {
 
     function setRows() {
         testModel.rows = [
-            [
-                { name: "John" },
-                { age: 22 }
-            ],
-            [
-                { name: "Oliver" },
-                { age: 33 }
-            ]
+            {
+                name: "John",
+                age: 22
+            },
+            {
+                name: "Oliver",
+                age: 33
+            }
         ]
+    }
+
+    function appendJohn() {
+        testModel.appendRow({
+            name: "John",
+            age: 22
+        })
+    }
+
+    function appendOliver() {
+        testModel.appendRow({
+            name: "Oliver",
+            age: 33
+        })
     }
 
     TableModel {
         id: testModel
         objectName: "testModel"
-        roleDataProvider: TestUtils.testModelRoleDataProvider
+
+        TableModelColumn { display: "name" }
+        TableModelColumn { display: "age" }
     }
     TableView {
         id: tableView

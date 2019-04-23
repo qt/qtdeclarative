@@ -187,10 +187,13 @@ Context::ResolvedName Context::resolveName(const QString &name, const QQmlJS::AS
     }
 
     // ### can we relax the restrictions here?
-    if (c->contextType == ContextType::Eval || c->contextType == ContextType::Binding)
+    if (c->contextType == ContextType::Eval)
         return result;
 
-    result.type = ResolvedName::Global;
+    if (c->contextType == ContextType::Binding || c->contextType == ContextType::ScriptImportedByQML)
+        result.type = ResolvedName::QmlGlobal;
+    else
+        result.type = ResolvedName::Global;
     return result;
 }
 

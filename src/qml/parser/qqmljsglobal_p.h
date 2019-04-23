@@ -53,8 +53,6 @@
 #include <QtCore/qglobal.h>
 
 #ifdef QT_CREATOR
-#  define QT_QML_BEGIN_NAMESPACE
-#  define QT_QML_END_NAMESPACE
 
 #  ifdef QDECLARATIVEJS_BUILD_DIR
 #    define QML_PARSER_EXPORT Q_DECL_EXPORT
@@ -65,8 +63,6 @@
 #  endif // QQMLJS_BUILD_DIR
 
 #else // !QT_CREATOR
-#  define QT_QML_BEGIN_NAMESPACE QT_BEGIN_NAMESPACE
-#  define QT_QML_END_NAMESPACE QT_END_NAMESPACE
 #  ifndef QT_STATIC
 #    if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
        // QmlDevTools is a static library

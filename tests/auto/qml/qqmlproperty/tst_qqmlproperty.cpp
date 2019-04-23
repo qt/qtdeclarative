@@ -1624,7 +1624,7 @@ void tst_qqmlproperty::writeObjectToList()
 
     MyQmlObject *object = new MyQmlObject;
     QQmlProperty prop(container, "children");
-    prop.write(qVariantFromValue(object));
+    prop.write(QVariant::fromValue(object));
     QCOMPARE(list.count(), 1);
     QCOMPARE(list.at(0), qobject_cast<QObject*>(object));
 }
@@ -1641,13 +1641,13 @@ void tst_qqmlproperty::writeListToList()
     QList<QObject*> objList;
     objList << new MyQmlObject() << new MyQmlObject() << new MyQmlObject() << new MyQmlObject();
     QQmlProperty prop(container, "children");
-    prop.write(qVariantFromValue(objList));
+    prop.write(QVariant::fromValue(objList));
     QCOMPARE(list.count(), 4);
 
     //XXX need to try this with read/write prop (for read-only it correctly doesn't write)
     /*QList<MyQmlObject*> typedObjList;
     typedObjList << new MyQmlObject();
-    prop.write(qVariantFromValue(&typedObjList));
+    prop.write(QVariant::fromValue(&typedObjList));
     QCOMPARE(container->children()->size(), 1);*/
 }
 

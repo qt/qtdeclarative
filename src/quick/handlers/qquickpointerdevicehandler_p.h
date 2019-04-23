@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickPointerDeviceHandlerPrivate;
 
-class Q_AUTOTEST_EXPORT QQuickPointerDeviceHandler : public QQuickPointerHandler
+class Q_QUICK_PRIVATE_EXPORT QQuickPointerDeviceHandler : public QQuickPointerHandler
 {
     Q_OBJECT
     Q_PROPERTY(QQuickPointerDevice::DeviceTypes acceptedDevices READ acceptedDevices WRITE setAcceptedDevices NOTIFY acceptedDevicesChanged)

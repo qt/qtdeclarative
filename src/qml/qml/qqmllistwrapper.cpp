@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qqmllistwrapper_p.h"
-#include <private/qv8engine_p.h>
 #include <private/qqmllist_p.h>
 #include <private/qv4objectproto_p.h>
 #include <qv4objectiterator_p.h>

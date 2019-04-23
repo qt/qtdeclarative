@@ -299,6 +299,7 @@ private slots:
     void retrieveQmlTypeId();
 
     void polymorphicFunctionLookup();
+    void anchorsToParentInPropertyChanges();
 
 private:
     QQmlEngine engine;
@@ -360,7 +361,7 @@ private:
             } \
             file.close(); \
         } else { \
-            QCOMPARE(expected, actual); \
+            QCOMPARE(actual, expected); \
         } \
     }
 
@@ -613,6 +614,10 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("badCompositeRegistration.2") << "badCompositeRegistration.2.qml" << "badCompositeRegistration.2.errors.txt" << false;
 
     QTest::newRow("assignComponentToWrongType") << "assignComponentToWrongType.qml" << "assignComponentToWrongType.errors.txt" << false;
+    QTest::newRow("cyclicAlias") << "cyclicAlias.qml" << "cyclicAlias.errors.txt" << false;
+
+    QTest::newRow("fuzzed.1") << "fuzzed.1.qml" << "fuzzed.1.errors.txt" << false;
+    QTest::newRow("fuzzed.2") << "fuzzed.2.qml" << "fuzzed.2.errors.txt" << false;
 }
 
 
@@ -623,6 +628,7 @@ void tst_qqmllanguage::errors()
     QFETCH(bool, create);
 
     QQmlComponent component(&engine, testFileUrl(file));
+    QTRY_VERIFY(!component.isLoading());
 
     QScopedPointer<QObject> object;
 
@@ -1450,8 +1456,8 @@ void tst_qqmllanguage::dynamicObjectProperties()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
 
-    QCOMPARE(object->property("objectProperty"), qVariantFromValue((QObject*)nullptr));
-    QVERIFY(object->property("objectProperty2") != qVariantFromValue((QObject*)nullptr));
+    QCOMPARE(object->property("objectProperty"), QVariant::fromValue((QObject*)nullptr));
+    QVERIFY(object->property("objectProperty2") != QVariant::fromValue((QObject*)nullptr));
     }
     {
     QQmlComponent component(&engine, testFileUrl("dynamicObjectProperties.2.qml"));
@@ -1459,7 +1465,7 @@ void tst_qqmllanguage::dynamicObjectProperties()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
 
-    QVERIFY(object->property("objectProperty") != qVariantFromValue((QObject*)nullptr));
+    QVERIFY(object->property("objectProperty") != QVariant::fromValue((QObject*)nullptr));
     }
 }
 
@@ -1728,7 +1734,7 @@ void tst_qqmllanguage::aliasProperties()
         // Write through alias
         MyQmlObject *v2 = new MyQmlObject();
         v2->setParent(object.data());
-        object->setProperty("aliasObject", qVariantFromValue(v2));
+        object->setProperty("aliasObject", QVariant::fromValue(v2));
         MyQmlObject *v3 =
             qvariant_cast<MyQmlObject *>(object->property("aliasObject"));
         QVERIFY(v3 != nullptr);
@@ -5022,6 +5028,8 @@ void tst_qqmllanguage::thisInQmlScope()
     QVERIFY(!o.isNull());
     QCOMPARE(o->property("x"), QVariant(42));
     QCOMPARE(o->property("y"), QVariant(42));
+    QCOMPARE(o->property("a"), QVariant(42));
+    QCOMPARE(o->property("b"), QVariant(42));
 }
 
 void tst_qqmllanguage::valueTypeGroupPropertiesInBehavior()
@@ -5067,6 +5075,16 @@ void tst_qqmllanguage::polymorphicFunctionLookup()
     QVERIFY(!o.isNull());
 
     QVERIFY(o->property("ok").toBool());
+}
+
+void tst_qqmllanguage::anchorsToParentInPropertyChanges()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("anchorsToParentInPropertyChagnes.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    QTRY_COMPARE(o->property("edgeWidth").toInt(), 200);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

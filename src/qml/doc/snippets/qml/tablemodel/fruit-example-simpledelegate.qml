@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -65,32 +65,37 @@ Window {
         boundsBehavior: Flickable.StopAtBounds
 
         model: TableModel {
+            TableModelColumn { display: "checked" }
+            TableModelColumn { display: "amount" }
+            TableModelColumn { display: "fruitType" }
+            TableModelColumn { display: "fruitName" }
+            TableModelColumn { display: "fruitPrice" }
+
             // Each row is one type of fruit that can be ordered
 //![rows]
             rows: [
-                [
-                    // Each object (line) is one cell/column,
-                    // and each property in that object is a role.
-                    { checked: false, checkable: true },
-                    { amount: 1 },
-                    { fruitType: "Apple" },
-                    { fruitName: "Granny Smith" },
-                    { fruitPrice: 1.50 }
-                ],
-                [
-                    { checked: true, checkable: true },
-                    { amount: 4 },
-                    { fruitType: "Orange" },
-                    { fruitName: "Navel" },
-                    { fruitPrice: 2.50 }
-                ],
-                [
-                    { checked: false, checkable: true },
-                    { amount: 1 },
-                    { fruitType: "Banana" },
-                    { fruitName: "Cavendish" },
-                    { fruitPrice: 3.50 }
-                ]
+                {
+                    // Each property is one cell/column.
+                    checked: false,
+                    amount: 1,
+                    fruitType: "Apple",
+                    fruitName: "Granny Smith",
+                    fruitPrice: 1.50
+                },
+                {
+                    checked: true,
+                    amount: 4,
+                    fruitType: "Orange",
+                    fruitName: "Navel",
+                    fruitPrice: 2.50
+                },
+                {
+                    checked: false,
+                    amount: 1,
+                    fruitType: "Banana",
+                    fruitName: "Cavendish",
+                    fruitPrice: 3.50
+                }
             ]
 //![rows]
         }
@@ -100,7 +105,6 @@ Window {
             padding: 12
             selectByMouse: true
 
-            // TODO: the property used here is undefined
             onAccepted: model.display = text
 
             Rectangle {

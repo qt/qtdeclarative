@@ -42,7 +42,6 @@
 
 #include <private/qqmldebugconnector_p.h>
 #include <private/qv4debugging_p.h>
-#include <private/qv8engine_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4debugging_p.h>
 #include <private/qv4script_p.h>

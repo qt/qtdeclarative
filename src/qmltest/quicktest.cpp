@@ -575,6 +575,13 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
             qmlFileSelector->setExtraSelectors(fileSelectors);
         }
 
+        // Do this down here so that import paths, plugin paths, file selectors, etc. are available
+        // in case the user needs access to them. Do it _before_ the TestCaseCollector parses the
+        // QML files though, because it attempts to import modules, which might not be available
+        // if qmlRegisterType()/QQmlEngine::addImportPath() are called in qmlEngineAvailable().
+        if (setup)
+            maybeInvokeSetupMethod(setup, "qmlEngineAvailable(QQmlEngine*)", Q_ARG(QQmlEngine*, &engine));
+
         TestCaseCollector testCaseCollector(fi, &engine);
         if (!testCaseCollector.errors().isEmpty()) {
             for (const QQmlError &error : testCaseCollector.errors())
@@ -605,11 +612,6 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
                          &eventLoop, SLOT(quit()));
         view.rootContext()->setContextProperty
             (QLatin1String("qtest"), QTestRootObject::instance()); // Deprecated. Use QTestRootObject from Qt.test.qtestroot instead
-
-        // Do this down here so that import paths, plugin paths,
-        // file selectors, etc. are available in case the user needs access to them.
-        if (setup)
-            maybeInvokeSetupMethod(setup, "qmlEngineAvailable(QQmlEngine*)", Q_ARG(QQmlEngine*, view.engine()));
 
         view.setObjectName(fi.baseName());
         view.setTitle(view.objectName());

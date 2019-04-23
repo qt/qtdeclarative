@@ -470,11 +470,17 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsObjects[TypeError_Ctor] = memoryManager->allocate<TypeErrorCtor>(global);
     jsObjects[URIError_Ctor] = memoryManager->allocate<URIErrorCtor>(global);
     jsObjects[IteratorProto] = memoryManager->allocate<IteratorPrototype>();
-    jsObjects[ForInIteratorProto] = memoryManager->allocObject<ForInIteratorPrototype>(newInternalClass(ForInIteratorPrototype::staticVTable(), iteratorPrototype()));
-    jsObjects[MapIteratorProto] = memoryManager->allocObject<MapIteratorPrototype>(newInternalClass(SetIteratorPrototype::staticVTable(), iteratorPrototype()));
-    jsObjects[SetIteratorProto] = memoryManager->allocObject<SetIteratorPrototype>(newInternalClass(SetIteratorPrototype::staticVTable(), iteratorPrototype()));
-    jsObjects[ArrayIteratorProto] = memoryManager->allocObject<ArrayIteratorPrototype>(newInternalClass(ArrayIteratorPrototype::staticVTable(), iteratorPrototype()));
-    jsObjects[StringIteratorProto] = memoryManager->allocObject<StringIteratorPrototype>(newInternalClass(StringIteratorPrototype::staticVTable(), iteratorPrototype()));
+
+    ic = newInternalClass(ForInIteratorPrototype::staticVTable(), iteratorPrototype());
+    jsObjects[ForInIteratorProto] = memoryManager->allocObject<ForInIteratorPrototype>(ic);
+    ic = newInternalClass(SetIteratorPrototype::staticVTable(), iteratorPrototype());
+    jsObjects[MapIteratorProto] = memoryManager->allocObject<MapIteratorPrototype>(ic);
+    ic = newInternalClass(SetIteratorPrototype::staticVTable(), iteratorPrototype());
+    jsObjects[SetIteratorProto] = memoryManager->allocObject<SetIteratorPrototype>(ic);
+    ic = newInternalClass(ArrayIteratorPrototype::staticVTable(), iteratorPrototype());
+    jsObjects[ArrayIteratorProto] = memoryManager->allocObject<ArrayIteratorPrototype>(ic);
+    ic = newInternalClass(StringIteratorPrototype::staticVTable(), iteratorPrototype());
+    jsObjects[StringIteratorProto] = memoryManager->allocObject<StringIteratorPrototype>(ic);
 
     str = newString(QStringLiteral("get [Symbol.species]"));
     jsObjects[GetSymbolSpecies] = FunctionObject::createBuiltinFunction(this, str, ArrayPrototype::method_get_species, 0);
@@ -1076,6 +1082,12 @@ extern "C" Q_QML_EXPORT char *qt_v4StackTrace(void *executionContext)
     return v4StackTrace(reinterpret_cast<const ExecutionContext *>(executionContext));
 }
 
+extern "C" Q_QML_EXPORT char *qt_v4StackTraceForEngine(void *executionEngine)
+{
+    auto engine = (reinterpret_cast<const ExecutionEngine *>(executionEngine));
+    return v4StackTrace(engine->currentContext());
+}
+
 QUrl ExecutionEngine::resolvedUrl(const QString &file)
 {
     QUrl src(file);
@@ -1186,6 +1198,14 @@ ReturnedValue ExecutionEngine::throwTypeError(const QString &message)
 {
     Scope scope(this);
     ScopedObject error(scope, newTypeErrorObject(message));
+    return throwError(error);
+}
+
+ReturnedValue ExecutionEngine::throwReferenceError(const QString &name)
+{
+    Scope scope(this);
+    QString msg = name + QLatin1String(" is not defined");
+    ScopedObject error(scope, newReferenceErrorObject(msg));
     return throwError(error);
 }
 
@@ -1302,7 +1322,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
                    && !value.as<ArrayObject>() && !value.as<FunctionObject>()) {
             return QVariant::fromValue(QV4::JsonObject::toJsonObject(object));
         } else if (QV4::QObjectWrapper *wrapper = object->as<QV4::QObjectWrapper>()) {
-            return qVariantFromValue<QObject *>(wrapper->object());
+            return QVariant::fromValue<QObject *>(wrapper->object());
         } else if (object->as<QV4::QQmlContextWrapper>()) {
             return QVariant();
         } else if (QV4::QQmlTypeWrapper *w = object->as<QV4::QQmlTypeWrapper>()) {
@@ -1333,7 +1353,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
                 }
             }
 
-            return qVariantFromValue<QList<QObject*> >(list);
+            return QVariant::fromValue<QList<QObject*> >(list);
         } else if (typeHint == QMetaType::QJsonArray) {
             return QVariant::fromValue(QV4::JsonObject::toJsonArray(a));
         }
@@ -1524,6 +1544,10 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
             case QMetaType::QLocale:
                 return QQmlLocale::wrap(this, *reinterpret_cast<const QLocale*>(ptr));
 #endif
+            case QMetaType::QPixmap:
+            case QMetaType::QImage:
+                // Scarce value types
+                return QV4::Encode(newVariantObject(variant));
             default:
                 break;
         }
@@ -1639,9 +1663,8 @@ static QV4::ReturnedValue variantMapToJS(QV4::ExecutionEngine *v4, const QVarian
         s = v4->newIdentifier(it.key());
         key = s->propertyKey();
         v = variantToJS(v4, it.value());
-        uint idx = key->asArrayIndex();
-        if (idx < UINT_MAX)
-            o->arraySet(idx, v);
+        if (key->isArrayIndex())
+            o->arraySet(key->asArrayIndex(), v);
         else
             o->insertMember(s, v);
     }

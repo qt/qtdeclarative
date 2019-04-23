@@ -40,6 +40,7 @@
 #include "qquickparticleemitter_p.h"
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
+#include <private/qjsvalue_p.h>
 #include <QRandomGenerator>
 QT_BEGIN_NAMESPACE
 
@@ -257,7 +258,7 @@ QQuickParticleEmitter::~QQuickParticleEmitter()
 
 bool QQuickParticleEmitter::isEmitConnected()
 {
-    IS_SIGNAL_CONNECTED(this, QQuickParticleEmitter, emitParticles, (QQmlV4Handle));
+    IS_SIGNAL_CONNECTED(this, QQuickParticleEmitter, emitParticles, (const QJSValue &));
 }
 
 void QQuickParticleEmitter::reclaculateGroupId() const
@@ -496,7 +497,9 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
         for (int i=0; i<toEmit.size(); i++)
             array->put(i, (v = toEmit[i]->v4Value(m_system)));
 
-        emitParticles(QQmlV4Handle(array));//A chance for arbitrary JS changes
+        QJSValue particles;
+        QJSValuePrivate::setValue(&particles, v4, array);
+        emit emitParticles(particles);//A chance for arbitrary JS changes
     }
 
     m_last_emission = pt;

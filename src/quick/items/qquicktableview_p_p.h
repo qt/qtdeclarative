@@ -188,10 +188,11 @@ public:
 
     enum class RebuildOption {
         None = 0,
-        ViewportOnly = 0x1,
-        CalculateNewTopLeftRow = 0x2,
-        CalculateNewTopLeftColumn = 0x4,
-        All = 0x8,
+        LayoutOnly = 0x1,
+        ViewportOnly = 0x2,
+        CalculateNewTopLeftRow = 0x4,
+        CalculateNewTopLeftColumn = 0x8,
+        All = 0x10,
     };
     Q_DECLARE_FLAGS(RebuildOptions, RebuildOption)
 
@@ -246,10 +247,8 @@ public:
     QQmlTableInstanceModel::ReusableFlag reusableFlag = QQmlTableInstanceModel::Reusable;
 
     bool blockItemCreatedCallback = false;
-    bool columnRowPositionsInvalid = false;
     bool layoutWarningIssued = false;
     bool polishing = false;
-    bool rebuildScheduled = true;
 
     QJSValue rowHeightProvider;
     QJSValue columnWidthProvider;
@@ -342,7 +341,6 @@ public:
     void releaseLoadedItems(QQmlTableInstanceModel::ReusableFlag reusableFlag);
 
     void unloadItem(const QPoint &cell);
-    void loadInitialTopLeftItem(const QPoint &cell, const QPointF &pos);
     void loadEdge(Qt::Edge edge, QQmlIncubator::IncubationMode incubationMode);
     void unloadEdge(Qt::Edge edge);
     void loadAndUnloadVisibleEdges();
@@ -357,7 +355,6 @@ public:
     void layoutAfterLoadingInitialTable();
 
     void scheduleRebuildTable(QQuickTableViewPrivate::RebuildOptions options);
-    void invalidateColumnRowPositions();
 
     int resolveImportVersion();
     void createWrapperModel();

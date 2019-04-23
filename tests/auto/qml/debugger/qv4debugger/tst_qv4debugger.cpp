@@ -36,7 +36,6 @@
 #include <QQmlComponent>
 #include <private/qv4engine_p.h>
 #include <private/qv4debugging_p.h>
-#include <private/qv8engine_p.h>
 #include <private/qv4objectiterator_p.h>
 #include <private/qv4string_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>

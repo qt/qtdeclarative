@@ -130,7 +130,7 @@ PropertyKey StringObjectOwnPropertyKeyIterator::next(const QV4::Object *o, Prope
         return PropertyKey::fromArrayIndex(index);
     } else if (arrayIndex == slen) {
         if (s->arrayData()) {
-            arrayNode = s->sparseBegin();
+            SparseArrayNode *arrayNode = s->sparseBegin();
             // iterate until we're past the end of the string
             while (arrayNode && arrayNode->key() < slen)
                 arrayNode = arrayNode->nextNode();
@@ -152,13 +152,14 @@ PropertyAttributes StringObject::virtualGetOwnProperty(const Managed *m, Propert
     if (attributes != Attr_Invalid)
         return attributes;
 
-    const StringObject *s = static_cast<const StringObject *>(m);
-    uint slen = s->d()->string->toQString().length();
-    uint index = id.asArrayIndex();
-    if (index < slen) {
-        if (p)
-            p->value = s->getIndex(index);
-        return Attr_NotConfigurable|Attr_NotWritable;
+    if (id.isArrayIndex()) {
+        const uint index = id.asArrayIndex();
+        const auto s = static_cast<const StringObject *>(m);
+        if (index < uint(s->d()->string->toQString().length())) {
+            if (p)
+                p->value = s->getIndex(index);
+            return Attr_NotConfigurable|Attr_NotWritable;
+        }
     }
     return Object::virtualGetOwnProperty(m, id, p);
 }
@@ -765,9 +766,8 @@ static void appendReplacementString(QString *result, const QString &input, const
             i += skip;
             if (substStart != JSC::Yarr::offsetNoMatch && substEnd != JSC::Yarr::offsetNoMatch)
                 *result += input.midRef(substStart, substEnd - substStart);
-            else {
+            else if (skip == 0) // invalid capture reference. Taken as literal value
                 *result += replaceValue.at(i);
-            }
         } else {
             *result += replaceValue.at(i);
         }

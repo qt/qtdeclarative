@@ -760,11 +760,11 @@ void tst_qqmllistmodel::set()
     RUNEXPR("model.set(0, {test:true})");
 
     QCOMPARE(RUNEXPR("model.get(0).test").toBool(), true); // triggers creation of model cache
-    QCOMPARE(model.data(0, 0), qVariantFromValue(true));
+    QCOMPARE(model.data(0, 0), QVariant::fromValue(true));
 
     RUNEXPR("model.set(0, {test:false})");
     QCOMPARE(RUNEXPR("model.get(0).test").toBool(), false); // tests model cache is updated
-    QCOMPARE(model.data(0, 0), qVariantFromValue(false));
+    QCOMPARE(model.data(0, 0), QVariant::fromValue(false));
 
     QString warning = QString::fromLatin1("<Unknown File>: Can't create role for unsupported data type");
     if (isValidErrorMessage(warning, dynamicRoles))

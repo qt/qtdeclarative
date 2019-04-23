@@ -103,7 +103,9 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     ctor->defineDefaultProperty(QStringLiteral("from"), method_from, 1);
     ctor->addSymbolSpecies();
 
-    ScopedObject unscopables(scope, engine->newObject(engine->classes[EngineBase::Class_Empty]->changeVTable(QV4::Object::staticVTable())));
+    Scoped<InternalClass> ic(scope, engine->classes[EngineBase::Class_Empty]
+                                            ->changeVTable(QV4::Object::staticVTable()));
+    ScopedObject unscopables(scope, engine->newObject(ic->d()));
     ScopedString name(scope);
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString(), method_toString, 0);

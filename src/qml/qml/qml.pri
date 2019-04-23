@@ -102,7 +102,6 @@ HEADERS += \
     $$PWD/qqmlpropertycachevector_p.h \
     $$PWD/qqmlpropertydata_p.h \
     $$PWD/qqmlpropertyindex_p.h \
-    $$PWD/qqmlpropertyrawdata_p.h \
     $$PWD/qqmlmetaobject_p.h \
     $$PWD/qqmlnotifier_p.h \
     $$PWD/qqmlobjectorgadget_p.h \

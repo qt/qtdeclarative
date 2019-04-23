@@ -38,9 +38,9 @@
 ****************************************************************************/
 
 #include "qquickcustomaffector_p.h"
-#include <private/qv8engine_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
+#include <private/qjsvalue_p.h>
 #include <QQmlEngine>
 #include <QDebug>
 QT_BEGIN_NAMESPACE
@@ -103,7 +103,7 @@ QQuickCustomAffector::QQuickCustomAffector(QQuickItem *parent) :
 
 bool QQuickCustomAffector::isAffectConnected()
 {
-    IS_SIGNAL_CONNECTED(this, QQuickCustomAffector, affectParticles, (QQmlV4Handle,qreal));
+    IS_SIGNAL_CONNECTED(this, QQuickCustomAffector, affectParticles, (const QJSValue &, qreal));
 }
 
 void QQuickCustomAffector::affectSystem(qreal dt)
@@ -156,23 +156,26 @@ void QQuickCustomAffector::affectSystem(qreal dt)
     for (int i=0; i<toAffect.size(); i++)
         array->put(i, (v = toAffect[i]->v4Value(m_system)));
 
-    if (dt >= simulationCutoff || dt <= simulationDelta) {
+    const auto doAffect = [&](qreal dt) {
         affectProperties(toAffect, dt);
-        emit affectParticles(QQmlV4Handle(array), dt);
+        QJSValue particles;
+        QJSValuePrivate::setValue(&particles, v4, array);
+        emit affectParticles(particles, dt);
+    };
+
+    if (dt >= simulationCutoff || dt <= simulationDelta) {
+        doAffect(dt);
     } else {
         int realTime = m_system->timeInt;
         m_system->timeInt -= dt * 1000.0;
         while (dt > simulationDelta) {
             m_system->timeInt += simulationDelta * 1000.0;
             dt -= simulationDelta;
-            affectProperties(toAffect, simulationDelta);
-            emit affectParticles(QQmlV4Handle(array), simulationDelta);
+            doAffect(simulationDelta);
         }
         m_system->timeInt = realTime;
-        if (dt > 0.0) {
-            affectProperties(toAffect, dt);
-            emit affectParticles(QQmlV4Handle(array), dt);
-        }
+        if (dt > 0.0)
+            doAffect(dt);
     }
 
     foreach (QQuickParticleData* d, toAffect)

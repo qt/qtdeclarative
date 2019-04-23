@@ -44,7 +44,7 @@
 #include <QtCore/qhash.h>
 #include <QtCore/qdebug.h>
 
-QT_QML_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 
@@ -155,4 +155,4 @@ QStringRef Engine::newStringRef(const QChar *chars, int size)
 
 } // end of namespace QQmlJS
 
-QT_QML_END_NAMESPACE
+QT_END_NAMESPACE

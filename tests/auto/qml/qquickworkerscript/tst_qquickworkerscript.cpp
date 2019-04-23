@@ -92,14 +92,14 @@ void tst_QQuickWorkerScript::source()
     QCOMPARE(worker->source(), source);
     QVERIFY(QMetaObject::invokeMethod(worker.data(), "testSend", Q_ARG(QVariant, value)));
     waitForEchoMessage(worker.data());
-    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker.data()).value<QVariant>(), qVariantFromValue(QString("Hello_World")));
+    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker.data()).value<QVariant>(), QVariant::fromValue(QString("Hello_World")));
 
     source = testFileUrl("script_module.mjs");
     worker->setSource(source);
     QCOMPARE(worker->source(), source);
     QVERIFY(QMetaObject::invokeMethod(worker.data(), "testSend", Q_ARG(QVariant, value)));
     waitForEchoMessage(worker.data());
-    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker.data()).value<QVariant>(), qVariantFromValue(QString("Hello from the module")));
+    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker.data()).value<QVariant>(), QVariant::fromValue(QString("Hello from the module")));
 
     qApp->processEvents();
 }
@@ -141,15 +141,15 @@ void tst_QQuickWorkerScript::messaging_data()
     QTest::addColumn<QVariant>("value");
 
     QTest::newRow("invalid") << QVariant();
-    QTest::newRow("bool") << qVariantFromValue(true);
-    QTest::newRow("int") << qVariantFromValue(1001);
-    QTest::newRow("real") << qVariantFromValue(10334.375);
-    QTest::newRow("string") << qVariantFromValue(QString("More cheeeese, Gromit!"));
-    QTest::newRow("variant list") << qVariantFromValue((QVariantList() << "a" << "b" << "c"));
-    QTest::newRow("date time") << qVariantFromValue(QDateTime::currentDateTime());
-    QTest::newRow("regexp") << qVariantFromValue(QRegExp("^\\d\\d?$", Qt::CaseInsensitive,
+    QTest::newRow("bool") << QVariant::fromValue(true);
+    QTest::newRow("int") << QVariant::fromValue(1001);
+    QTest::newRow("real") << QVariant::fromValue(10334.375);
+    QTest::newRow("string") << QVariant::fromValue(QString("More cheeeese, Gromit!"));
+    QTest::newRow("variant list") << QVariant::fromValue((QVariantList() << "a" << "b" << "c"));
+    QTest::newRow("date time") << QVariant::fromValue(QDateTime::currentDateTime());
+    QTest::newRow("regexp") << QVariant::fromValue(QRegExp("^\\d\\d?$", Qt::CaseInsensitive,
                                                          QRegExp::RegExp2));
-    QTest::newRow("regularexpression") << qVariantFromValue(QRegularExpression(
+    QTest::newRow("regularexpression") << QVariant::fromValue(QRegularExpression(
             "^\\d\\d?$", QRegularExpression::CaseInsensitiveOption));
 }
 
@@ -165,9 +165,9 @@ void tst_QQuickWorkerScript::messaging_sendQObjectList()
 
     QVariantList objects;
     for (int i=0; i<3; i++)
-        objects << qVariantFromValue(new QObject(this));
+        objects << QVariant::fromValue(new QObject(this));
 
-    QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, qVariantFromValue(objects))));
+    QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, QVariant::fromValue(objects))));
     waitForEchoMessage(worker);
 
     const QMetaObject *mo = worker->metaObject();
@@ -193,10 +193,10 @@ void tst_QQuickWorkerScript::messaging_sendJsObject()
     map.insert("name", "zyz");
     map.insert("spell power", 3101);
 
-    QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, qVariantFromValue(map))));
+    QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, QVariant::fromValue(map))));
     waitForEchoMessage(worker);
 
-    QVariant result = qVariantFromValue(false);
+    QVariant result = QVariant::fromValue(false);
     QVERIFY(QMetaObject::invokeMethod(worker, "compareLiteralResponse", Qt::DirectConnection,
             Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, jsObject)));
     QVERIFY(result.toBool());

@@ -65,7 +65,6 @@ QT_REQUIRE_CONFIG(quick_canvas);
 #include <QtCore/qstring.h>
 #include <QtCore/qstack.h>
 #include <QtCore/qqueue.h>
-#include <private/qv8engine_p.h>
 #include <QtCore/QWaitCondition>
 
 #include <private/qv4value_p.h>
@@ -199,6 +198,7 @@ public:
     QImage toImage(const QRectF& bounds) override;
 
     QV4::ReturnedValue v4value() const override;
+    QV4::ExecutionEngine *v4Engine() const override;
     void setV4Engine(QV4::ExecutionEngine *eng) override;
 
     QQuickCanvasItem* canvas() const { return m_canvas; }

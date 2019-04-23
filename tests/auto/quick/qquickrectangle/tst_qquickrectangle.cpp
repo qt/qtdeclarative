@@ -134,14 +134,12 @@ void tst_qquickrectangle::gradient_separate()
 
     // Start off clean
     QQuickItemPrivate *rectPriv = QQuickItemPrivate::get(rect);
-    bool isDirty = rectPriv->dirtyAttributes & QQuickItemPrivate::Content;
-    QVERIFY(!isDirty);
+    QTRY_COMPARE(rectPriv->dirtyAttributes & QQuickItemPrivate::Content, 0u);
 
     QMetaObject::invokeMethod(rect, "changeGradient");
 
     // Changing the gradient should have scheduled an update of the item.
-    isDirty = rectPriv->dirtyAttributes & QQuickItemPrivate::Content;
-    QVERIFY(isDirty);
+    QVERIFY((rectPriv->dirtyAttributes & QQuickItemPrivate::Content) != 0);
 }
 
 // When a gradient is changed, every Rectangle connected to it must update.
@@ -161,17 +159,15 @@ void tst_qquickrectangle::gradient_multiple()
     // Start off clean
     QQuickItemPrivate *firstRectPriv = QQuickItemPrivate::get(firstRect);
     QQuickItemPrivate *secondRectPriv = QQuickItemPrivate::get(secondRect);
-    bool firstIsDirty = firstRectPriv->dirtyAttributes & QQuickItemPrivate::Content;
+    QTRY_VERIFY(!(firstRectPriv->dirtyAttributes & QQuickItemPrivate::Content));
     bool secondIsDirty = secondRectPriv->dirtyAttributes & QQuickItemPrivate::Content;
-    QVERIFY(!firstIsDirty);
     QVERIFY(!secondIsDirty);
 
     QMetaObject::invokeMethod(view.rootObject(), "changeGradient");
 
     // Changing the gradient should have scheduled an update of both items
-    firstIsDirty = firstRectPriv->dirtyAttributes & QQuickItemPrivate::Content;
+    QTRY_VERIFY(firstRectPriv->dirtyAttributes & QQuickItemPrivate::Content);
     secondIsDirty = secondRectPriv->dirtyAttributes & QQuickItemPrivate::Content;
-    QVERIFY(firstIsDirty);
     QVERIFY(secondIsDirty);
 }
 

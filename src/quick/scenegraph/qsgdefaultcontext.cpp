@@ -62,6 +62,8 @@
 
 #include <private/qqmlglobal_p.h>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 namespace QSGMultisampleAntialiasing {
@@ -158,11 +160,9 @@ void QSGDefaultContext::renderContextInitialized(QSGRenderContext *renderContext
         qCDebug(QSG_LOG_INFO, "GL_RENDERER:       %s",
                 (const char*)funcs->glGetString(GL_RENDERER));
         qCDebug(QSG_LOG_INFO, "GL_VERSION:        %s", (const char*)funcs->glGetString(GL_VERSION));
-        QSet<QByteArray> exts = openglRenderContext->openglContext()->extensions();
-        QByteArray all;
-        for (const QByteArray &e : qAsConst(exts))
-            all += ' ' + e;
-        qCDebug(QSG_LOG_INFO, "GL_EXTENSIONS:    %s", all.constData());
+        QByteArrayList exts = openglRenderContext->openglContext()->extensions().toList();
+        std::sort(exts.begin(), exts.end());
+        qCDebug(QSG_LOG_INFO, "GL_EXTENSIONS:    %s", exts.join(' ').constData());
         qCDebug(QSG_LOG_INFO, "Max Texture Size: %d", openglRenderContext->maxTextureSize());
         qCDebug(QSG_LOG_INFO, "Debug context:    %s",
                 format.testOption(QSurfaceFormat::DebugContext) ? "true" : "false");

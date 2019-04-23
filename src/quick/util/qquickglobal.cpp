@@ -41,7 +41,6 @@
 #include <private/qquickvaluetypes_p.h>
 #include <private/qquickapplication_p.h>
 #include <private/qqmlglobal_p.h>
-#include <private/qv8engine_p.h>
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/qdesktopservices.h>
@@ -274,7 +273,7 @@ public:
         return QMatrix4x4();
     }
 
-    static QFont fontFromObject(QQmlV4Handle object, QV4::ExecutionEngine *v4, bool *ok)
+    static QFont fontFromObject(const QV4::Value &object, QV4::ExecutionEngine *v4, bool *ok)
     {
         if (ok)
             *ok = false;
@@ -373,7 +372,7 @@ public:
         return retn;
     }
 
-    static QMatrix4x4 matrix4x4FromObject(QQmlV4Handle object, QV4::ExecutionEngine *v4, bool *ok)
+    static QMatrix4x4 matrix4x4FromObject(const QV4::Value &object, QV4::ExecutionEngine *v4, bool *ok)
     {
         if (ok)
             *ok = false;
@@ -639,7 +638,7 @@ public:
         return false;
     }
 
-    bool variantFromJsObject(int type, QQmlV4Handle object, QV4::ExecutionEngine *v4, QVariant *v) override
+    bool variantFromJsObject(int type, const QV4::Value &object, QV4::ExecutionEngine *v4, QVariant *v) override
     {
         QV4::Scope scope(v4);
 #ifndef QT_NO_DEBUG

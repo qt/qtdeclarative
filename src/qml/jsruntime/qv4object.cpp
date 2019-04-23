@@ -320,8 +320,11 @@ bool Object::virtualDeleteProperty(Managed *m, PropertyKey id)
 PropertyKey ObjectOwnPropertyKeyIterator::next(const Object *o, Property *pd, PropertyAttributes *attrs)
 {
     if (arrayIndex != UINT_MAX && o->arrayData()) {
-        if (!arrayIndex)
-            arrayNode = o->sparseBegin();
+        SparseArrayNode *arrayNode = nullptr;
+        if (o->arrayType() == Heap::ArrayData::Sparse) {
+            SparseArray *sparse = o->arrayData()->sparse;
+            arrayNode = arrayIndex ? sparse->lowerBound(arrayIndex) : sparse->begin();
+        }
 
         // sparse arrays
         if (arrayNode) {
@@ -339,7 +342,6 @@ PropertyKey ObjectOwnPropertyKeyIterator::next(const Object *o, Property *pd, Pr
                     *attrs = a;
                 return PropertyKey::fromArrayIndex(k);
             }
-            arrayNode = nullptr;
             arrayIndex = UINT_MAX;
         }
         // dense arrays
@@ -404,8 +406,8 @@ ReturnedValue Object::internalGet(PropertyKey id, const Value *receiver, bool *h
 {
     Heap::Object *o = d();
 
-    uint index = id.asArrayIndex();
-    if (index != UINT_MAX) {
+    if (id.isArrayIndex()) {
+        const uint index = id.asArrayIndex();
         Scope scope(this);
         PropertyAttributes attrs;
         ScopedProperty pd(scope);
@@ -429,8 +431,6 @@ ReturnedValue Object::internalGet(PropertyKey id, const Value *receiver, bool *h
                 break;
         }
     } else {
-        Q_ASSERT(!id.isArrayIndex());
-
         while (1) {
             auto idx = o->internalClass->findValueOrGetter(id);
             if (idx.isValid()) {
@@ -468,14 +468,13 @@ bool Object::internalPut(PropertyKey id, const Value &value, Value *receiver)
         if (d()->internalClass->vtable->getOwnProperty == Object::virtualGetOwnProperty) {
             // This object standard methods in the vtable, so we can take a shortcut
             // and avoid the calls to getOwnProperty and defineOwnProperty
-            uint index = id.asArrayIndex();
 
             PropertyAttributes attrs;
             PropertyIndex propertyIndex{nullptr, nullptr};
 
-            if (index != UINT_MAX) {
+            if (id.isArrayIndex()) {
                 if (arrayData())
-                    propertyIndex = arrayData()->getValueOrSetter(index, &attrs);
+                    propertyIndex = arrayData()->getValueOrSetter(id.asArrayIndex(), &attrs);
             } else {
                 auto member = internalClass()->findValueOrSetter(id);
                 if (member.isValid()) {
@@ -544,12 +543,11 @@ bool Object::internalPut(PropertyKey id, const Value &value, Value *receiver)
 
     if (r->internalClass()->vtable->defineOwnProperty == virtualDefineOwnProperty) {
         // standard object, we can avoid some more checks
-        uint index = id.asArrayIndex();
-        if (index == UINT_MAX) {
+        if (id.isArrayIndex()) {
+            r->arraySet(id.asArrayIndex(), value);
+        } else {
             ScopedStringOrSymbol s(scope, id.asStringOrSymbol());
             r->insertMember(s, value);
-        } else {
-            r->arraySet(index, value);
         }
         return true;
     }
@@ -732,6 +730,95 @@ ReturnedValue Object::virtualInstanceOf(const Object *typeObject, const Value &v
         return engine->throwTypeError();
 
     return checkedInstanceOf(engine, function, var);
+}
+
+ReturnedValue Object::virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup)
+{
+    Heap::Object *obj = object->d();
+    PropertyKey name = engine->identifierTable->asPropertyKey(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[lookup->nameIndex]);
+    if (name.isArrayIndex()) {
+        lookup->indexedLookup.index = name.asArrayIndex();
+        lookup->getter = Lookup::getterIndexed;
+        return lookup->getter(lookup, engine, *object);
+    }
+
+    auto index = obj->internalClass->findValueOrGetter(name);
+    if (index.isValid()) {
+        PropertyAttributes attrs = index.attrs;
+        uint nInline = obj->vtable()->nInlineProperties;
+        if (attrs.isData()) {
+            if (index.index < obj->vtable()->nInlineProperties) {
+                index.index += obj->vtable()->inlinePropertyOffset;
+                lookup->getter = Lookup::getter0Inline;
+            } else {
+                index.index -= nInline;
+                lookup->getter = Lookup::getter0MemberData;
+            }
+        } else {
+            lookup->getter = Lookup::getterAccessor;
+        }
+        lookup->objectLookup.ic = obj->internalClass;
+        lookup->objectLookup.offset = index.index;
+        return lookup->getter(lookup, engine, *object);
+    }
+
+    lookup->protoLookup.protoId = obj->internalClass->protoId;
+    lookup->resolveProtoGetter(name, obj->prototype());
+    return lookup->getter(lookup, engine, *object);
+}
+
+bool Object::virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup, const Value &value)
+{
+    Scope scope(engine);
+    ScopedString name(scope, scope.engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[lookup->nameIndex]);
+
+    Heap::InternalClass *c = object->internalClass();
+    PropertyKey key = name->toPropertyKey();
+    auto idx = c->findValueOrSetter(key);
+    if (idx.isValid()) {
+        if (object->isArrayObject() && idx.index == Heap::ArrayObject::LengthPropertyIndex) {
+            Q_ASSERT(!idx.attrs.isAccessor());
+            lookup->setter = Lookup::arrayLengthSetter;
+            return lookup->setter(lookup, engine, *object, value);
+        } else if (idx.attrs.isData() && idx.attrs.isWritable()) {
+            lookup->objectLookup.ic = object->internalClass();
+            lookup->objectLookup.index = idx.index;
+            const auto nInline = object->d()->vtable()->nInlineProperties;
+            if (idx.index < nInline) {
+                lookup->setter = Lookup::setter0Inline;
+                lookup->objectLookup.offset = idx.index + object->d()->vtable()->inlinePropertyOffset;
+            } else {
+                lookup->setter = Lookup::setter0MemberData;
+                lookup->objectLookup.offset = idx.index - nInline;
+            }
+            return lookup->setter(lookup, engine, *object, value);
+        } else {
+            // ### handle setter
+            lookup->setter = Lookup::setterFallback;
+        }
+        return lookup->setter(lookup, engine, *object, value);
+    }
+
+    lookup->insertionLookup.protoId = c->protoId;
+    if (!object->put(key, value)) {
+        lookup->setter = Lookup::setterFallback;
+        return false;
+    }
+
+    if (object->internalClass() == c) {
+        // ### setter in the prototype, should handle this
+        lookup->setter = Lookup::setterFallback;
+        return true;
+    }
+    idx = object->internalClass()->findValueOrSetter(key);
+    if (!idx.isValid() || idx.attrs.isAccessor()) { // ### can this even happen?
+        lookup->setter = Lookup::setterFallback;
+        return false;
+    }
+    lookup->insertionLookup.newClass = object->internalClass();
+    lookup->insertionLookup.offset = idx.index;
+    lookup->setter = Lookup::setterInsert;
+    return true;
 }
 
 ReturnedValue Object::checkedInstanceOf(ExecutionEngine *engine, const FunctionObject *f, const Value &var)
