@@ -53,6 +53,7 @@
 #include <QtQuick/qquickwindow.h>
 #include <QtGui/QOpenGLShaderProgram>
 #include <QtGui/QOpenGLContext>
+#include <QtCore/QRunnable>
 
 //! [7]
 Squircle::Squircle()
@@ -93,10 +94,23 @@ void Squircle::handleWindowChanged(QQuickWindow *win)
 //! [6]
 void Squircle::cleanup()
 {
-    if (m_renderer) {
-        delete m_renderer;
-        m_renderer = nullptr;
-    }
+    delete m_renderer;
+    m_renderer = nullptr;
+}
+
+class CleanupJob : public QRunnable
+{
+public:
+    CleanupJob(SquircleRenderer *renderer) : m_renderer(renderer) { }
+    void run() override { delete m_renderer; }
+private:
+    SquircleRenderer *m_renderer;
+};
+
+void Squircle::releaseResources()
+{
+    window()->scheduleRenderJob(new CleanupJob(m_renderer), QQuickWindow::BeforeSynchronizingStage);
+    m_renderer = nullptr;
 }
 
 SquircleRenderer::~SquircleRenderer()

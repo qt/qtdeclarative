@@ -63,7 +63,7 @@ class QSGD3D12RenderContext : public QSGRenderContext, public QSGRendererInterfa
 public:
     QSGD3D12RenderContext(QSGContext *ctx);
     bool isValid() const override;
-    void initialize(void *context) override;
+    void initialize(const InitParams *params) override;
     void invalidate() override;
     void renderNextFrame(QSGRenderer *renderer, uint fbo) override;
     QSGTexture *createTexture(const QImage &image, uint flags) const override;

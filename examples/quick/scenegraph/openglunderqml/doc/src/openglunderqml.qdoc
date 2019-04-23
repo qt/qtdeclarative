@@ -112,8 +112,11 @@
 
     \snippet scenegraph/openglunderqml/squircle.cpp 6
 
-    In the \c cleanup() function we delete the renderer which in turn
-    cleans up its own resources.
+    In the \c cleanup() function we delete the renderer which in turn cleans up
+    its own resources. This is complemented by reimplementing \l
+    QQuickWindow::releaseResources() since just connecting to the
+    sceneGraphInvalidated() signal is not sufficient on its own to handle all
+    cases.
 
     \snippet scenegraph/openglunderqml/squircle.cpp 8
 

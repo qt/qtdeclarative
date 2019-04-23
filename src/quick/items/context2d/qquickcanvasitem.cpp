@@ -769,7 +769,8 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
 
     QSGInternalImageNode *node = static_cast<QSGInternalImageNode *>(oldNode);
     if (!node) {
-        node = QQuickWindowPrivate::get(window())->context->sceneGraphContext()->createInternalImageNode();
+        QSGRenderContext *rc = QQuickWindowPrivate::get(window())->context;
+        node = rc->sceneGraphContext()->createInternalImageNode(rc);
         d->node = node;
     }
 

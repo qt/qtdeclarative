@@ -54,20 +54,32 @@ public:
         Software,
         OpenGL,
         Direct3D12,
-        OpenVG
+        OpenVG,
+        OpenGLRhi,
+        Direct3D11Rhi,
+        VulkanRhi,
+        MetalRhi,
+        NullRhi,
     };
 
     enum Resource {
         DeviceResource,
         CommandQueueResource,
         CommandListResource,
-        PainterResource
+        PainterResource,
+        RhiResource,
+        PhysicalDeviceResource,
+        OpenGLContextResource,
+        DeviceContextResource,
+        CommandEncoderResource,
+        VulkanInstanceResource
     };
 
     enum ShaderType {
         UnknownShadingLanguage,
         GLSL,
-        HLSL
+        HLSL,
+        RhiShader
     };
 
     enum ShaderCompilationType {
@@ -93,6 +105,8 @@ public:
     virtual ShaderType shaderType() const = 0;
     virtual ShaderCompilationTypes shaderCompilationType() const = 0;
     virtual ShaderSourceTypes shaderSourceType() const = 0;
+
+    static bool isApiRhiBased(GraphicsApi api);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRendererInterface::ShaderCompilationTypes)

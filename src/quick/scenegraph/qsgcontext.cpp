@@ -332,13 +332,38 @@ QSGRenderContext::~QSGRenderContext()
 {
 }
 
-void QSGRenderContext::initialize(void *context)
+void QSGRenderContext::initialize(const InitParams *params)
 {
-    Q_UNUSED(context);
+    Q_UNUSED(params);
 }
 
 void QSGRenderContext::invalidate()
 {
+}
+
+void QSGRenderContext::beginRhiFrame(QSGRenderer *renderer, QRhiRenderTarget *rt, QRhiRenderPassDescriptor *rp,
+                                     QRhiCommandBuffer *cb,
+                                     RenderPassCallback mainPassRecordingStart,
+                                     RenderPassCallback mainPassRecordingEnd,
+                                     void *callbackUserData)
+{
+    Q_UNUSED(renderer);
+    Q_UNUSED(rt);
+    Q_UNUSED(rp);
+    Q_UNUSED(cb);
+    Q_UNUSED(mainPassRecordingStart);
+    Q_UNUSED(mainPassRecordingEnd);
+    Q_UNUSED(callbackUserData);
+}
+
+void QSGRenderContext::renderNextRhiFrame(QSGRenderer *renderer)
+{
+    Q_UNUSED(renderer);
+}
+
+void QSGRenderContext::endRhiFrame(QSGRenderer *renderer)
+{
+    Q_UNUSED(renderer);
 }
 
 void QSGRenderContext::endSync()
@@ -360,6 +385,11 @@ void QSGRenderContext::registerFontengineForCleanup(QFontEngine *engine)
 {
     engine->ref.ref();
     m_fontEnginesToClean << engine;
+}
+
+QRhi *QSGRenderContext::rhi() const
+{
+    return nullptr;
 }
 
 /*!

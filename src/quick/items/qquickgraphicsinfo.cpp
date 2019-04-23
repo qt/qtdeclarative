@@ -96,6 +96,12 @@ QQuickGraphicsInfo *QQuickGraphicsInfo::qmlAttachedProperties(QObject *object)
     \li GraphicsInfo.Software - Qt Quick's software renderer based on QPainter with the raster paint engine
     \li GraphicsInfo.OpenGL - OpenGL or OpenGL ES
     \li GraphicsInfo.Direct3D12 - Direct3D 12
+    \li GraphicsInfo.OpenVG - OpenVG
+    \li GraphicsInfo.OpenGLRhi - OpenGL on top of QRhi, a graphics abstraction layer
+    \li GraphicsInfo.Direct3D11Rhi - Direct3D 11 on top of QRhi, a graphics abstraction layer
+    \li GraphicsInfo.VulkanRhi - Vulkan on top of QRhi, a graphics abstraction layer
+    \li GraphicsInfo.MetalRhi - Metal on top of QRhi, a graphics abstraction layer
+    \li GraphicsInfo.NullRhi - Null (no output) on top of QRhi, a graphics abstraction layer
     \endlist
  */
 
@@ -109,6 +115,7 @@ QQuickGraphicsInfo *QQuickGraphicsInfo::qmlAttachedProperties(QObject *object)
     \li GraphicsInfo.UnknownShadingLanguage - Not yet known due to no window and scenegraph associated
     \li GraphicsInfo.GLSL - GLSL or GLSL ES
     \li GraphicsInfo.HLSL - HLSL
+    \li GraphicsInfo.RhiShader - QShader
     \endlist
 
     \note The value is only up-to-date once the item is associated with a

@@ -40,6 +40,7 @@
 #include "qsgrenderloop_p.h"
 #include "qsgthreadedrenderloop_p.h"
 #include "qsgwindowsrenderloop_p.h"
+#include "qsgrhisupport_p.h"
 #include <private/qquickanimatorcontroller_p.h>
 
 #include <QtCore/QCoreApplication>
@@ -50,6 +51,7 @@
 #include <QtGui/QOffscreenSurface>
 #include <QtGui/private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
+#include <QPlatformSurfaceEvent>
 
 #include <QtQml/private/qqmlglobal_p.h>
 
@@ -59,23 +61,35 @@
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <private/qquickprofiler_p.h>
 
+#include <private/qsgrhishadereffectnode_p.h>
+
 #if QT_CONFIG(opengl)
-# include <QtGui/QOpenGLContext>
-# include <private/qsgdefaultrendercontext_p.h>
+#include <QtGui/QOpenGLContext>
 #if QT_CONFIG(quick_shadereffect)
-# include <private/qquickopenglshadereffectnode_p.h>
+#include <private/qquickopenglshadereffectnode_p.h>
 #endif
+#include <private/qsgdefaultrendercontext_p.h>
 #endif
 
 #ifdef Q_OS_WIN
-#  include <QtCore/qt_windows.h>
+#include <QtCore/qt_windows.h>
 #endif
 
 QT_BEGIN_NAMESPACE
 
 extern bool qsg_useConsistentTiming();
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
-#if QT_CONFIG(opengl)
+
+// ### We do not yet support using Qt Quick with QRhi (and Vulkan, D3D
+// or Metal) in -no-opengl builds as of Qt 5.14. This is due to to the
+// widespread direct OpenGL usage all over the place in qsgdefault*
+// and the related classes. To be cleaned up in Qt 6 when the direct
+// GL code path is removed.
+
+#if QT_CONFIG(opengl) /* || QT_CONFIG(vulkan) || defined(Q_OS_WIN) || defined(Q_OS_DARWIN) */
+
+#define ENABLE_DEFAULT_BACKEND
+
 /*
     expectations for this manager to work:
      - one opengl context to render multiple windows
@@ -88,15 +102,11 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_BAD_GUI_RENDER_LOOP);
 DEFINE_BOOL_CONFIG_OPTION(qmlForceThreadedRenderer, QML_FORCE_THREADED_RENDERER); // Might trigger graphics driver threading bugs, use at own risk
 #endif
+
 QSGRenderLoop *QSGRenderLoop::s_instance = nullptr;
 
 QSGRenderLoop::~QSGRenderLoop()
 {
-}
-
-QSurface::SurfaceType QSGRenderLoop::windowSurfaceType() const
-{
-    return QSurface::OpenGLSurface;
 }
 
 void QSGRenderLoop::cleanup()
@@ -112,18 +122,36 @@ void QSGRenderLoop::cleanup()
     }
     delete s_instance;
     s_instance = nullptr;
+
+#ifdef ENABLE_DEFAULT_BACKEND
+    QSGRhiSupport::instance()->cleanup();
+    QSGRhiProfileConnection::instance()->cleanup();
+#endif
 }
 
-/*!
- * Non-threaded render loops immediately run the job if there is a context.
- */
+QSurface::SurfaceType QSGRenderLoop::windowSurfaceType() const
+{
+#ifdef ENABLE_DEFAULT_BACKEND
+    return QSGRhiSupport::instance()->windowSurfaceType();
+#else
+    return QSurface::RasterSurface;
+#endif
+}
+
 void QSGRenderLoop::postJob(QQuickWindow *window, QRunnable *job)
 {
     Q_ASSERT(job);
-#if QT_CONFIG(opengl)
+#ifdef ENABLE_DEFAULT_BACKEND
     Q_ASSERT(window);
-    if (window->openglContext()) {
-        window->openglContext()->makeCurrent(window);
+    if (!QSGRhiSupport::instance()->isRhiEnabled()) {
+        if (window->openglContext()) {
+            window->openglContext()->makeCurrent(window);
+            job->run();
+        }
+    } else {
+        // ### needs https://codereview.qt-project.org/c/qt/qtbase/+/265231
+//        if (window->rhi())
+//            window->rhi()->makeThreadLocalNativeContextCurrent();
         job->run();
     }
 #else
@@ -132,7 +160,8 @@ void QSGRenderLoop::postJob(QQuickWindow *window, QRunnable *job)
 #endif
     delete job;
 }
-#if QT_CONFIG(opengl)
+
+#ifdef ENABLE_DEFAULT_BACKEND
 class QSGGuiThreadRenderLoop : public QSGRenderLoop
 {
     Q_OBJECT
@@ -160,6 +189,10 @@ public:
     QSGContext *sceneGraphContext() const override;
     QSGRenderContext *createRenderContext(QSGContext *) const override { return rc; }
 
+    void releaseSwapchain(QQuickWindow *window);
+
+    bool eventFilter(QObject *watched, QEvent *event) override;
+
     struct WindowData {
         bool updatePending : 1;
         bool grabOnly : 1;
@@ -167,13 +200,16 @@ public:
 
     QHash<QQuickWindow *, WindowData> m_windows;
 
-    QOpenGLContext *gl;
+    QOpenGLContext *gl = nullptr;
+    QOffscreenSurface *offscreenSurface = nullptr;
+    QRhi *rhi = nullptr;
     QSGContext *sg;
     QSGRenderContext *rc;
 
     QImage grabContent;
 };
 #endif
+
 QSGRenderLoop *QSGRenderLoop::instance()
 {
     if (!s_instance) {
@@ -183,28 +219,64 @@ QSGRenderLoop *QSGRenderLoop::instance()
             const_cast<QLoggingCategory &>(QSG_LOG_INFO()).setEnabled(QtDebugMsg, true);
 
         s_instance = QSGContext::createWindowManager();
-#if QT_CONFIG(opengl)
+#ifdef ENABLE_DEFAULT_BACKEND
         if (!s_instance) {
+            QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
 
-            enum RenderLoopType {
-                BasicRenderLoop,
-                ThreadedRenderLoop,
-                WindowsRenderLoop
-            };
-
-            RenderLoopType loopType = BasicRenderLoop;
-
+            QSGRenderLoopType loopType;
+            if (rhiSupport->isRhiEnabled() && rhiSupport->rhiBackend() != QRhi::OpenGLES2) {
+                loopType = ThreadedRenderLoop;
+            } else {
+                loopType = BasicRenderLoop;
 #ifdef Q_OS_WIN
-            // With desktop OpenGL (opengl32.dll), use threaded. Otherwise (ANGLE) use windows.
-            if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL
-                && QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL))
-                loopType = ThreadedRenderLoop;
-            else
-                loopType = WindowsRenderLoop;
+                // With desktop OpenGL (opengl32.dll), use threaded. Otherwise (ANGLE) use windows.
+                if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL
+                        && QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL))
+                {
+                    loopType = ThreadedRenderLoop;
+                } else {
+                    loopType = WindowsRenderLoop;
+                }
 #else
-            if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL))
-                loopType = ThreadedRenderLoop;
+                if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL))
+                    loopType = ThreadedRenderLoop;
 #endif
+            }
+
+            if (rhiSupport->isRhiEnabled()) {
+                // no 'windows' because that's not yet ported to the rhi
+                if (loopType == WindowsRenderLoop)
+                    loopType = BasicRenderLoop;
+
+                switch (rhiSupport->rhiBackend()) {
+                case QRhi::Vulkan:
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+                    // ### to be investigated (Mesa/Gnome deadlocks on
+                    // resize with threaded+Vulkan (but not threaded+GL))
+                    loopType = BasicRenderLoop;
+#endif
+                    break;
+
+                case QRhi::D3D11:
+                    // D3D11 is forced to 'basic' always for now. The threaded loop's model may
+                    // not be suitable for DXGI due to the possibility of having the main
+                    // thread blocked while issuing a Present. To be investigated.
+                    loopType = BasicRenderLoop;
+                    break;
+
+                case QRhi::Null:
+                    loopType = BasicRenderLoop;
+                    break;
+
+                default:
+                    break;
+                }
+            }
+
+            // The environment variables can always override. This is good
+            // because in some situations it makes perfect sense to try out a
+            // render loop that is otherwise disabled by default.
+
             if (qmlNoThreadedRenderer())
                 loopType = BasicRenderLoop;
             else if (qmlForceThreadedRenderer())
@@ -275,14 +347,15 @@ void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window,
     if (!signalEmitted)
         qFatal("%s", qPrintable(untranslatedMessage));
 }
-#if QT_CONFIG(opengl)
+
+#ifdef ENABLE_DEFAULT_BACKEND
 QSGGuiThreadRenderLoop::QSGGuiThreadRenderLoop()
-    : gl(nullptr)
 {
     if (qsg_useConsistentTiming()) {
         QUnifiedTimer::instance(true)->setConsistentTiming(true);
         qCDebug(QSG_LOG_INFO, "using fixed animation steps");
     }
+
     sg = QSGContext::createDefaultContext();
     rc = sg->createRenderContext();
 }
@@ -318,36 +391,84 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
 
     bool current = false;
-    QScopedPointer<QOffscreenSurface> offscreenSurface;
     if (gl) {
         QSurface *surface = window;
         // There may be no platform window if the window got closed.
-        if (!window->handle()) {
-            offscreenSurface.reset(new QOffscreenSurface);
-            offscreenSurface->setFormat(gl->format());
-            offscreenSurface->create();
-            surface = offscreenSurface.data();
-        }
-        current = gl->makeCurrent(surface);
+        if (!window->handle())
+            surface = offscreenSurface;
+        if (!rhi)
+            current = gl->makeCurrent(surface);
+        else
+            current = true;
     }
     if (Q_UNLIKELY(!current))
         qCDebug(QSG_LOG_RENDERLOOP, "cleanup without an OpenGL context");
 
-#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
-    if (current)
-        QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
+#if QT_CONFIG(quick_shadereffect)
+    QSGRhiShaderEffectNode::cleanupMaterialTypeCache();
+#if QT_CONFIG(opengl)
+    QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
 #endif
+#endif
+
+    if (d->swapchain) {
+        if (window->handle()) {
+            // We get here when exiting via QCoreApplication::quit() instead of
+            // through QWindow::close().
+            releaseSwapchain(window);
+        } else {
+            qWarning("QSGGuiThreadRenderLoop cleanup with QQuickWindow %p swapchain %p still alive, this should not happen.",
+                     window, d->swapchain);
+        }
+    }
 
     d->cleanupNodesOnShutdown();
     if (m_windows.size() == 0) {
         rc->invalidate();
+        d->rhi = nullptr;
+        delete rhi;
+        rhi = nullptr;
         delete gl;
         gl = nullptr;
+        delete offscreenSurface;
+        offscreenSurface = nullptr;
     } else if (gl && window == gl->surface() && current) {
-        gl->doneCurrent();
+        if (!rhi)
+            gl->doneCurrent();
     }
 
     delete d->animationController;
+}
+
+void QSGGuiThreadRenderLoop::releaseSwapchain(QQuickWindow *window)
+{
+    QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+    delete wd->rpDescForSwapchain;
+    wd->rpDescForSwapchain = nullptr;
+    delete wd->swapchain;
+    wd->swapchain = nullptr;
+    delete wd->depthStencilForSwapchain;
+    wd->depthStencilForSwapchain = nullptr;
+    wd->hasActiveSwapchain = wd->hasRenderableSwapchain = wd->swapchainJustBecameRenderable = false;
+}
+
+bool QSGGuiThreadRenderLoop::eventFilter(QObject *watched, QEvent *event)
+{
+    switch (event->type()) {
+    case QEvent::PlatformSurface:
+        // this is the proper time to tear down the swapchain (while the native window and surface are still around)
+        if (static_cast<QPlatformSurfaceEvent *>(event)->surfaceEventType() == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
+            QQuickWindow *w = qobject_cast<QQuickWindow *>(watched);
+            if (w) {
+                releaseSwapchain(w);
+                w->removeEventFilter(this);
+            }
+        }
+        break;
+    default:
+        break;
+    }
+    return QObject::eventFilter(watched, event);
 }
 
 void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
@@ -364,8 +485,35 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         return;
 
     bool current = false;
+    QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
+    int rhiSampleCount = 1;
+    const bool enableRhi = rhiSupport->isRhiEnabled();
 
-    if (!gl) {
+    if (enableRhi && !rhi) {
+        offscreenSurface = rhiSupport->maybeCreateOffscreenSurface(window);
+        rhi = rhiSupport->createRhi(window, offscreenSurface);
+        if (rhi) {
+            if (rhiSupport->isProfilingRequested())
+                QSGRhiProfileConnection::instance()->initialize(rhi);
+
+            current = true;
+
+            // The sample count cannot vary between windows as we use the same
+            // rendercontext for all of them. Decide it here and now.
+            rhiSampleCount = rhiSupport->chooseSampleCountForWindowWithRhi(window, rhi);
+
+            cd->rhi = rhi; // set this early in case something hooked up to rc initialized() accesses it
+
+            QSGDefaultRenderContext::InitParams rcParams;
+            rcParams.rhi = rhi;
+            rcParams.sampleCount = rhiSampleCount;
+            rcParams.initialSurfacePixelSize = window->size() * window->effectiveDevicePixelRatio();
+            rcParams.maybeSurface = window;
+            cd->context->initialize(&rcParams);
+        } else {
+            handleContextCreationFailure(window, false);
+        }
+    } else if (!enableRhi && !gl) {
         gl = new QOpenGLContext();
         gl->setFormat(window->requestedFormat());
         gl->setScreen(window->screen());
@@ -377,15 +525,50 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             gl = nullptr;
             handleContextCreationFailure(window, isEs);
         } else {
+            if (!offscreenSurface) {
+                offscreenSurface = new QOffscreenSurface;
+                offscreenSurface->setFormat(gl->format());
+                offscreenSurface->create();
+            }
             cd->fireOpenGLContextCreated(gl);
             current = gl->makeCurrent(window);
         }
         if (current) {
-            auto openglRenderContext = static_cast<QSGDefaultRenderContext *>(cd->context);
-            openglRenderContext->initialize(gl);
+            QSGDefaultRenderContext::InitParams rcParams;
+            rcParams.sampleCount = qMax(1, gl->format().samples());
+            rcParams.openGLContext = gl;
+            rcParams.initialSurfacePixelSize = window->size() * window->effectiveDevicePixelRatio();
+            rcParams.maybeSurface = window;
+            cd->context->initialize(&rcParams);
         }
     } else {
-        current = gl->makeCurrent(window);
+        if (!rhi)
+            current = gl->makeCurrent(window);
+        else
+            current = true;
+    }
+
+    if (enableRhi && rhi && !cd->swapchain) {
+        // if it's not the first window then the rhi is not yet stored to
+        // QQuickWindowPrivate, do it now
+        cd->rhi = rhi;
+
+        QRhiSwapChain::Flags flags = QRhiSwapChain::UsedAsTransferSource; // may be used in a grab
+
+        cd->swapchain = rhi->newSwapChain();
+        cd->depthStencilForSwapchain = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil,
+                                                            QSize(),
+                                                            rhiSampleCount,
+                                                            QRhiRenderBuffer::UsedWithSwapChainOnly);
+        cd->swapchain->setWindow(window);
+        cd->swapchain->setDepthStencil(cd->depthStencilForSwapchain);
+        qDebug("MSAA sample count for the swapchain is %d", rhiSampleCount);
+        cd->swapchain->setSampleCount(rhiSampleCount);
+        cd->swapchain->setFlags(flags);
+        cd->rpDescForSwapchain = cd->swapchain->newCompatibleRenderPassDescriptor();
+        cd->swapchain->setRenderPassDescriptor(cd->rpDescForSwapchain);
+
+        window->installEventFilter(this);
     }
 
     bool lastDirtyWindow = true;
@@ -407,6 +590,17 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         if (!m_windows.contains(window))
             return;
     }
+
+    QSize effectiveOutputSize; // always prefer what the surface tells us, not the QWindow
+    if (cd->swapchain) {
+        effectiveOutputSize = cd->swapchain->surfacePixelSize();
+        // An update request could still be delivered right before we get an
+        // unexpose. With Vulkan on Windows for example attempting to render
+        // leads to failures at this stage since the surface size is already 0.
+        if (effectiveOutputSize.isEmpty())
+            return;
+    }
+
     QElapsedTimer renderTimer;
     qint64 renderTime = 0, syncTime = 0, polishTime = 0;
     bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled();
@@ -424,6 +618,41 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 
     emit window->afterAnimating();
 
+    // Begin the frame before syncing -> sync is where we may invoke
+    // updatePaintNode() on the items and they may want to do resource updates.
+    // Also relevant for applications that connect to the before/afterSynchronizing
+    // signals and want to do graphics stuff already there.
+    if (cd->swapchain) {
+        Q_ASSERT(!effectiveOutputSize.isEmpty());
+        const QSize previousOutputSize = cd->swapchain->currentPixelSize();
+        if (previousOutputSize != effectiveOutputSize || cd->swapchainJustBecameRenderable) {
+            if (cd->swapchainJustBecameRenderable)
+                qDebug("just became exposed");
+            cd->swapchainJustBecameRenderable = false;
+            cd->depthStencilForSwapchain->setPixelSize(effectiveOutputSize);
+
+            cd->depthStencilForSwapchain->build();
+            cd->hasActiveSwapchain = cd->swapchain->buildOrResize();
+
+            cd->hasRenderableSwapchain = cd->hasActiveSwapchain;
+            if (!cd->hasActiveSwapchain)
+                qWarning("Failed to build or resize swapchain");
+            else
+                qDebug() << "rhi swapchain size" << effectiveOutputSize;
+        }
+
+        Q_ASSERT(rhi == cd->rhi);
+        QRhi::FrameOpResult frameResult = rhi->beginFrame(cd->swapchain);
+        if (frameResult != QRhi::FrameOpSuccess) {
+            if (frameResult == QRhi::FrameOpDeviceLost)
+                qWarning("Device lost");
+            else if (frameResult == QRhi::FrameOpError)
+                qWarning("Failed to start frame");
+            // out of date is not worth warning about - it may happen even during resizing on some platforms
+            return;
+        }
+    }
+
     cd->syncSceneGraph();
     if (lastDirtyWindow)
         rc->endSync();
@@ -433,7 +662,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
                               QQuickProfiler::SceneGraphRenderLoopSync);
 
-    cd->renderSceneGraph(window->size());
+    cd->renderSceneGraph(window->size(), effectiveOutputSize);
 
     if (profileFrames)
         renderTime = renderTimer.nsecsElapsed();
@@ -441,17 +670,27 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
                               QQuickProfiler::SceneGraphRenderLoopRender);
 
     if (data.grabOnly) {
-        bool alpha = window->format().alphaBufferSize() > 0 && window->color().alpha() != 255;
-        grabContent = qt_gl_read_framebuffer(window->size() * window->effectiveDevicePixelRatio(), alpha, alpha);
+        const bool alpha = window->format().alphaBufferSize() > 0 && window->color().alpha() != 255;
+        if (cd->swapchain)
+            grabContent = rhiSupport->grabAndBlockInCurrentFrame(rhi, cd->swapchain);
+        else
+            grabContent = qt_gl_read_framebuffer(window->size() * window->effectiveDevicePixelRatio(), alpha, alpha);
         grabContent.setDevicePixelRatio(window->effectiveDevicePixelRatio());
         data.grabOnly = false;
     }
 
-    if (alsoSwap && window->isVisible()) {
+    const bool needsPresent = alsoSwap && window->isVisible();
+    if (cd->swapchain) {
+        QRhi::EndFrameFlags flags = 0;
+        if (!needsPresent)
+            flags |= QRhi::SkipPresent;
+        rhi->endFrame(cd->swapchain, flags);
+    } else if (needsPresent) {
         if (!cd->customRenderStage || !cd->customRenderStage->swap())
             gl->swapBuffers(window);
-        cd->fireFrameSwapped();
     }
+    if (needsPresent)
+        cd->fireFrameSwapped();
 
     qint64 swapTime = 0;
     if (profileFrames)
@@ -472,6 +711,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         lastFrameTime = QTime::currentTime();
     }
 
+    QSGRhiProfileConnection::instance()->send(rhi);
+
     // Might have been set during syncSceneGraph()
     if (data.updatePending)
         maybeUpdate(window);
@@ -479,7 +720,26 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 
 void QSGGuiThreadRenderLoop::exposureChanged(QQuickWindow *window)
 {
-    if (window->isExposed()) {
+    QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+
+    // This is tricker than used to be. We want to detect having an empty
+    // surface size (which may be the case even when window->size() is
+    // non-empty, on some platforms with some graphics APIs!) as well as the
+    // case when the window just became "newly exposed" (e.g. after a
+    // minimize-restore on Windows, or when switching between fully obscured -
+    // not fully obscured on macOS)
+
+    if (!window->isExposed() || (wd->hasActiveSwapchain && wd->swapchain->surfacePixelSize().isEmpty()))
+        wd->hasRenderableSwapchain = false;
+
+    if (window->isExposed() && !wd->hasRenderableSwapchain && wd->hasActiveSwapchain
+            && !wd->swapchain->surfacePixelSize().isEmpty())
+    {
+        wd->hasRenderableSwapchain = true;
+        wd->swapchainJustBecameRenderable = true;
+    }
+
+    if (window->isExposed() && (!rhi || !wd->hasActiveSwapchain || wd->hasRenderableSwapchain)) {
         m_windows[window].updatePending = true;
         renderWindow(window);
     }
@@ -527,7 +787,7 @@ void QSGGuiThreadRenderLoop::handleUpdateRequest(QQuickWindow *window)
     renderWindow(window);
 }
 
-#endif
+#endif // ENABLE_DEFAULT_BACKEND
 
 #include "qsgrenderloop.moc"
 #include "moc_qsgrenderloop_p.cpp"

@@ -52,15 +52,28 @@
 //
 
 #include <QtQuick/private/qsgcontext_p.h>
+#include <QtGui/private/qshader_p.h>
+
+#if QT_CONFIG(opengl)
 #include <QtQuick/private/qsgdepthstencilbuffer_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
+class QRhi;
+class QRhiCommandBuffer;
 class QOpenGLContext;
 class QSGMaterialShader;
+class QSGMaterialRhiShader;
 class QOpenGLFramebufferObject;
+class QSGDepthStencilBufferManager;
+class QSGDepthStencilBuffer;
 
-namespace QSGAtlasTexture {
+namespace QSGOpenGLAtlasTexture {
+    class Manager;
+}
+
+namespace QSGRhiAtlasTexture {
     class Manager;
 }
 
@@ -70,12 +83,34 @@ class Q_QUICK_PRIVATE_EXPORT QSGDefaultRenderContext : public QSGRenderContext
 public:
     QSGDefaultRenderContext(QSGContext *context);
 
+    QRhi *rhi() const override { return m_rhi; }
     QOpenGLContext *openglContext() const { return m_gl; }
-    bool isValid() const override { return m_gl; }
+    bool isValid() const override { return m_gl || m_rhi; }
 
-    void initialize(void *context) override;
+    static const int INIT_PARAMS_MAGIC = 0x50E;
+    struct InitParams : public QSGRenderContext::InitParams {
+        int sType = INIT_PARAMS_MAGIC; // help discovering broken code passing something else as 'context'
+        QRhi *rhi = nullptr;
+        int sampleCount = 1; // 1, 4, 8, ...
+        QOpenGLContext *openGLContext = nullptr; // ### Qt 6: remove
+        // only used as a hint f.ex. in the texture atlas init
+        QSize initialSurfacePixelSize;
+        // The first window that will be used with this rc, if available.
+        // Only a hint, to help picking better values for atlases.
+        QSurface *maybeSurface = nullptr;
+    };
+
+    void initialize(const QSGRenderContext::InitParams *params) override;
     void invalidate() override;
     void renderNextFrame(QSGRenderer *renderer, uint fboId) override;
+
+    void beginRhiFrame(QSGRenderer *renderer, QRhiRenderTarget *rt, QRhiRenderPassDescriptor *rp,
+                       QRhiCommandBuffer *cb,
+                       RenderPassCallback mainPassRecordingStart,
+                       RenderPassCallback mainPassRecordingEnd,
+                       void *callbackUserData) override;
+    void renderNextRhiFrame(QSGRenderer *renderer) override;
+    void endRhiFrame(QSGRenderer *renderer) override;
 
     QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font) override;
 
@@ -88,6 +123,7 @@ public:
 
     virtual void compileShader(QSGMaterialShader *shader, QSGMaterial *material, const char *vertexCode = nullptr, const char *fragmentCode = nullptr);
     virtual void initializeShader(QSGMaterialShader *shader);
+    virtual void initializeRhiShader(QSGMaterialRhiShader *shader, QShader::Variant shaderVariant);
 
     void setAttachToGraphicsContext(bool attach) override;
 
@@ -97,16 +133,27 @@ public:
     int maxTextureSize() const override { return m_maxTextureSize; }
     bool separateIndexBuffer() const;
 
+    int msaaSampleCount() const { return m_initParams.sampleCount; }
+
+    QRhiCommandBuffer *currentFrameCommandBuffer() const {
+        // may be null if not in an active frame, but returning null is valid then
+        return m_currentFrameCommandBuffer;
+    }
+
 protected:
     static QString fontKey(const QRawFont &font);
 
+    InitParams m_initParams;
+    QRhi *m_rhi;
     QOpenGLContext *m_gl;
     QSGDepthStencilBufferManager *m_depthStencilManager;
     int m_maxTextureSize;
     bool m_brokenIBOs;
     bool m_serializedRender;
     bool m_attachToGLContext;
-    QSGAtlasTexture::Manager *m_atlasManager;
+    QSGOpenGLAtlasTexture::Manager *m_glAtlasManager;
+    QSGRhiAtlasTexture::Manager *m_rhiAtlasManager;
+    QRhiCommandBuffer *m_currentFrameCommandBuffer;
 };
 
 QT_END_NAMESPACE

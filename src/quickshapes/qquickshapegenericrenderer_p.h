@@ -244,7 +244,7 @@ public:
 
 #if QT_CONFIG(opengl)
 
-class QQuickShapeLinearGradientShader : public QSGMaterialShader
+ class QQuickShapeLinearGradientShader : public QSGMaterialShader
 {
 public:
     QQuickShapeLinearGradientShader();
@@ -253,13 +253,28 @@ public:
     void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
     char const *const *attributeNames() const override;
 
-    static QSGMaterialType type;
-
 private:
     int m_opacityLoc = -1;
     int m_matrixLoc = -1;
     int m_gradStartLoc = -1;
     int m_gradEndLoc = -1;
+};
+
+#endif // QT_CONFIG(opengl)
+
+class QQuickShapeLinearGradientRhiShader : public QSGMaterialRhiShader
+{
+public:
+    QQuickShapeLinearGradientRhiShader();
+
+    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial,
+                           QSGMaterial *oldMaterial) override;
+    void updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+                            QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+
+private:
+    QVector2D m_gradA;
+    QVector2D m_gradB;
 };
 
 class QQuickShapeLinearGradientMaterial : public QSGMaterial
@@ -273,26 +288,20 @@ public:
         // the vertex data. The shader will rely on the fact that
         // vertexCoord.xy is the Shape-space coordinate and so no modifications
         // are welcome.
-        setFlag(Blending | RequiresFullMatrix);
+        setFlag(Blending | RequiresFullMatrix | SupportsRhiShader);
     }
 
-    QSGMaterialType *type() const override
-    {
-        return &QQuickShapeLinearGradientShader::type;
-    }
-
+    QSGMaterialType *type() const override;
     int compare(const QSGMaterial *other) const override;
-
-    QSGMaterialShader *createShader() const override
-    {
-        return new QQuickShapeLinearGradientShader;
-    }
+    QSGMaterialShader *createShader() const override;
 
     QQuickShapeGenericStrokeFillNode *node() const { return m_node; }
 
 private:
     QQuickShapeGenericStrokeFillNode *m_node;
 };
+
+#if QT_CONFIG(opengl)
 
 class QQuickShapeRadialGradientShader : public QSGMaterialShader
 {
@@ -303,8 +312,6 @@ public:
     void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
     char const *const *attributeNames() const override;
 
-    static QSGMaterialType type;
-
 private:
     int m_opacityLoc = -1;
     int m_matrixLoc = -1;
@@ -314,32 +321,45 @@ private:
     int m_focalRadiusLoc = -1;
 };
 
+#endif // QT_CONFIG(opengl)
+
+class QQuickShapeRadialGradientRhiShader : public QSGMaterialRhiShader
+{
+public:
+    QQuickShapeRadialGradientRhiShader();
+
+    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial,
+                           QSGMaterial *oldMaterial) override;
+    void updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+                            QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+
+private:
+    QVector2D m_focalPoint;
+    QVector2D m_focalToCenter;
+    float m_centerRadius;
+    float m_focalRadius;
+};
+
 class QQuickShapeRadialGradientMaterial : public QSGMaterial
 {
 public:
     QQuickShapeRadialGradientMaterial(QQuickShapeGenericStrokeFillNode *node)
         : m_node(node)
     {
-        setFlag(Blending | RequiresFullMatrix);
+        setFlag(Blending | RequiresFullMatrix | SupportsRhiShader);
     }
 
-    QSGMaterialType *type() const override
-    {
-        return &QQuickShapeRadialGradientShader::type;
-    }
-
+    QSGMaterialType *type() const override;
     int compare(const QSGMaterial *other) const override;
-
-    QSGMaterialShader *createShader() const override
-    {
-        return new QQuickShapeRadialGradientShader;
-    }
+    QSGMaterialShader *createShader() const override;
 
     QQuickShapeGenericStrokeFillNode *node() const { return m_node; }
 
 private:
     QQuickShapeGenericStrokeFillNode *m_node;
 };
+
+#if QT_CONFIG(opengl)
 
 class QQuickShapeConicalGradientShader : public QSGMaterialShader
 {
@@ -350,13 +370,28 @@ public:
     void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
     char const *const *attributeNames() const override;
 
-    static QSGMaterialType type;
-
 private:
     int m_opacityLoc = -1;
     int m_matrixLoc = -1;
     int m_angleLoc = -1;
     int m_translationPointLoc = -1;
+};
+
+#endif // QT_CONFIG(opengl)
+
+class QQuickShapeConicalGradientRhiShader : public QSGMaterialRhiShader
+{
+public:
+    QQuickShapeConicalGradientRhiShader();
+
+    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial,
+                           QSGMaterial *oldMaterial) override;
+    void updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+                            QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+
+private:
+    QVector2D m_centerPoint;
+    float m_angle;
 };
 
 class QQuickShapeConicalGradientMaterial : public QSGMaterial
@@ -365,28 +400,18 @@ public:
     QQuickShapeConicalGradientMaterial(QQuickShapeGenericStrokeFillNode *node)
         : m_node(node)
     {
-        setFlag(Blending | RequiresFullMatrix);
+        setFlag(Blending | RequiresFullMatrix | SupportsRhiShader);
     }
 
-    QSGMaterialType *type() const override
-    {
-        return &QQuickShapeConicalGradientShader::type;
-    }
-
+    QSGMaterialType *type() const override;
     int compare(const QSGMaterial *other) const override;
-
-    QSGMaterialShader *createShader() const override
-    {
-        return new QQuickShapeConicalGradientShader;
-    }
+    QSGMaterialShader *createShader() const override;
 
     QQuickShapeGenericStrokeFillNode *node() const { return m_node; }
 
 private:
     QQuickShapeGenericStrokeFillNode *m_node;
 };
-
-#endif // QT_CONFIG(opengl)
 
 QT_END_NAMESPACE
 

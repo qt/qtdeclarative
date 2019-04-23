@@ -65,7 +65,7 @@ namespace QSGCompressedAtlasTexture
 {
 
 Atlas::Atlas(const QSize &size, uint format)
-    : QSGAtlasTexture::AtlasBase(size)
+    : QSGOpenGLAtlasTexture::AtlasBase(size)
     , m_format(format)
 {
 }
@@ -117,7 +117,7 @@ void Atlas::uploadPendingTexture(int i)
 }
 
 Texture::Texture(Atlas *atlas, const QRect &textureRect, const QByteArray &data, int dataLength, int dataOffset, const QSize &size)
-    : QSGAtlasTexture::TextureBase(atlas, textureRect)
+    : QSGOpenGLAtlasTexture::TextureBase(atlas, textureRect)
     , m_nonatlas_texture(nullptr)
     , m_data(data)
     , m_size(size)

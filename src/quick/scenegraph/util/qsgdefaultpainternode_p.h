@@ -53,7 +53,7 @@
 
 #include <private/qsgadaptationlayer_p.h>
 #include "qsgtexturematerial.h"
-#include "qsgtexture_p.h"
+#include "qsgplaintexture_p.h"
 
 #include <QtQuick/qquickpainteditem.h>
 
@@ -64,9 +64,11 @@ QT_BEGIN_NAMESPACE
 class QOpenGLFramebufferObject;
 class QOpenGLPaintDevice;
 class QSGDefaultRenderContext;
+class QSGPainterTexturePrivate;
 
 class Q_QUICK_PRIVATE_EXPORT QSGPainterTexture : public QSGPlainTexture
 {
+    Q_DECLARE_PRIVATE(QSGPainterTexture)
 public:
     QSGPainterTexture();
 
@@ -76,6 +78,13 @@ public:
 
 private:
     QRect m_dirty_rect;
+};
+
+class QSGPainterTexturePrivate : public QSGPlainTexturePrivate
+{
+    Q_DECLARE_PUBLIC(QSGPainterTexture)
+public:
+    void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGDefaultPainterNode : public QSGPainterNode

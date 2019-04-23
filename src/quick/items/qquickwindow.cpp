@@ -52,8 +52,9 @@
 #include <private/qquickpointerhandler_p.h>
 
 #include <QtQuick/private/qsgrenderer_p.h>
-#include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qsgplaintexture_p.h>
 #include <private/qsgrenderloop_p.h>
+#include <private/qsgrhisupport_p.h>
 #include <private/qquickrendercontrol_p.h>
 #include <private/qquickanimatorcontroller_p.h>
 #include <private/qquickprofiler_p.h>
@@ -84,6 +85,8 @@
 #ifndef QT_NO_DEBUG_STREAM
 #include <private/qdebug_p.h>
 #endif
+
+#include <QtGui/private/qrhi_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -451,11 +454,34 @@ void QQuickWindowPrivate::syncSceneGraph()
     runAndClearJobs(&afterSynchronizingJobs);
 }
 
-void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
+void QQuickWindowPrivate::emitBeforeRenderPassRecording(void *ud)
+{
+    QQuickWindow *w = reinterpret_cast<QQuickWindow *>(ud);
+    emit w->beforeRenderPassRecording();
+}
+
+void QQuickWindowPrivate::emitAfterRenderPassRecording(void *ud)
+{
+    QQuickWindow *w = reinterpret_cast<QQuickWindow *>(ud);
+    emit w->afterRenderPassRecording();
+}
+
+void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfaceSize)
 {
     Q_Q(QQuickWindow);
     if (!renderer)
         return;
+
+    if (rhi) {
+        // ### no offscreen ("renderTargetId") support yet
+        context->beginRhiFrame(renderer,
+                               swapchain->currentFrameRenderTarget(),
+                               rpDescForSwapchain,
+                               swapchain->currentFrameCommandBuffer(),
+                               emitBeforeRenderPassRecording,
+                               emitAfterRenderPassRecording,
+                               q);
+    }
 
     animationController->advance();
     emit q->beforeRendering();
@@ -469,24 +495,40 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
             renderer->setDeviceRect(rect);
             renderer->setViewportRect(rect);
             if (QQuickRenderControl::renderWindowFor(q)) {
-                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size));
+                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size), false);
                 renderer->setDevicePixelRatio(devicePixelRatio);
             } else {
-                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), rect.size()));
+                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), rect.size()), false);
                 renderer->setDevicePixelRatio(1);
             }
         } else {
-            QRect rect(QPoint(0, 0), devicePixelRatio * size);
+            QSize pixelSize;
+            QSizeF logicalSize;
+            if (surfaceSize.isEmpty()) {
+                pixelSize = size * devicePixelRatio;
+                logicalSize = size;
+            } else {
+                pixelSize = surfaceSize;
+                logicalSize = QSizeF(surfaceSize) / devicePixelRatio;
+            }
+            QRect rect(QPoint(0, 0), pixelSize);
             renderer->setDeviceRect(rect);
             renderer->setViewportRect(rect);
-            renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size));
+            const bool flipY = rhi ? !rhi->isYUpInNDC() : false;
+            renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), logicalSize), flipY);
             renderer->setDevicePixelRatio(devicePixelRatio);
         }
 
-        context->renderNextFrame(renderer, fboId);
+        if (rhi)
+            context->renderNextRhiFrame(renderer);
+        else
+            context->renderNextFrame(renderer, fboId);
     }
     emit q->afterRendering();
     runAndClearJobs(&afterRenderingJobs);
+
+    if (rhi)
+        context->endRhiFrame(renderer);
 }
 
 QQuickWindowPrivate::QQuickWindowPrivate()
@@ -522,6 +564,9 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , renderTargetId(0)
     , vaoHelper(nullptr)
     , incubationController(nullptr)
+    , hasActiveSwapchain(false)
+    , hasRenderableSwapchain(false)
+    , swapchainJustBecameRenderable(false)
 {
 #if QT_CONFIG(quick_draganddrop)
     dragGrabber = new QQuickDragGrabber;
@@ -538,6 +583,7 @@ QQuickWindowPrivate::~QQuickWindowPrivate()
 void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 {
     q_ptr = c;
+
 
     Q_Q(QQuickWindow);
 
@@ -576,6 +622,10 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 
     q->setSurfaceType(windowManager ? windowManager->windowSurfaceType() : QSurface::OpenGLSurface);
     q->setFormat(sg->defaultSurfaceFormat());
+#if QT_CONFIG(vulkan)
+    if (q->surfaceType() == QSurface::VulkanSurface)
+        q->setVulkanInstance(QSGRhiSupport::vulkanInstance());
+#endif
 
     animationController = new QQuickAnimatorController(q);
 
@@ -3628,24 +3678,20 @@ void QQuickWindow::setTransientParent_helper(QQuickWindow *window)
 /*!
     Returns the OpenGL context used for rendering.
 
-    If the scene graph is not ready, or the scene graph is not using OpenGL,
-    this function will return null.
-
-    \note If using a scene graph adaptation other than OpenGL this
-    function will return nullptr.
+    \note If the scene graph is not ready, or the scene graph is not using
+    OpenGL (or RHI over OpenGL), this function will return null.
 
     \sa sceneGraphInitialized(), sceneGraphInvalidated()
  */
-
 QOpenGLContext *QQuickWindow::openglContext() const
 {
 #if QT_CONFIG(opengl)
     Q_D(const QQuickWindow);
     if (d->context && d->context->isValid()) {
         QSGRendererInterface *rif = d->context->sceneGraphContext()->rendererInterface(d->context);
-        if (rif && rif->graphicsApi() == QSGRendererInterface::OpenGL) {
-            auto openglRenderContext = static_cast<const QSGDefaultRenderContext *>(d->context);
-            return openglRenderContext->openglContext();
+        if (rif) {
+            return reinterpret_cast<QOpenGLContext *>(rif->getResource(const_cast<QQuickWindow *>(this),
+                                                                       QSGRendererInterface::OpenGLContextResource));
         }
     }
 #endif
@@ -3778,6 +3824,8 @@ bool QQuickWindow::isSceneGraphInitialized() const
     This function only has an effect when using the default OpenGL scene
     graph adaptation.
 
+    \note This function has no effect when running on the RHI graphics abstraction.
+
     \warning
     This function can only be called from the thread doing
     the rendering.
@@ -3786,6 +3834,9 @@ bool QQuickWindow::isSceneGraphInitialized() const
 void QQuickWindow::setRenderTarget(QOpenGLFramebufferObject *fbo)
 {
     Q_D(QQuickWindow);
+    if (d->rhi)
+        return;
+
     if (d->context && QThread::currentThread() != d->context->thread()) {
         qWarning("QQuickWindow::setRenderTarget: Cannot set render target from outside the rendering thread");
         return;
@@ -3867,9 +3918,11 @@ QSize QQuickWindow::renderTargetSize() const
     The default is to render to the surface of the window, in which
     case the render target is 0.
 
-    \note
-    This function will return nullptr when not using the OpenGL scene
+    \note This function will return nullptr when not using the OpenGL scene
     graph adaptation.
+
+    \note This function has no effect and returns nullptr when running on the
+    RHI graphics abstraction.
  */
 QOpenGLFramebufferObject *QQuickWindow::renderTarget() const
 {
@@ -3895,12 +3948,23 @@ QImage QQuickWindow::grabWindow()
     Q_D(QQuickWindow);
 
     if (!isVisible() && !d->renderControl) {
+        // backends like software and d3d12 can grab regardless of the window state
         if (d->windowManager && (d->windowManager->flags() & QSGRenderLoop::SupportsGrabWithoutExpose))
             return d->windowManager->grab(this);
     }
 
-#if QT_CONFIG(opengl)
     if (!isVisible() && !d->renderControl) {
+        if (d->rhi) {
+            // ### we may need a full offscreen round when non-exposed...
+
+            if (d->renderControl)
+                return d->renderControl->grab();
+            else if (d->windowManager)
+                return d->windowManager->grab(this);
+            return QImage();
+        }
+
+#if QT_CONFIG(opengl)
         auto openglRenderContext = static_cast<QSGDefaultRenderContext *>(d->context);
         if (!openglRenderContext->openglContext()) {
             if (!handle() || !size().isValid()) {
@@ -3913,7 +3977,9 @@ QImage QQuickWindow::grabWindow()
             context.setShareContext(qt_gl_global_share_context());
             context.create();
             context.makeCurrent(this);
-            d->context->initialize(&context);
+            QSGDefaultRenderContext::InitParams rcParams;
+            rcParams.openGLContext = &context;
+            d->context->initialize(&rcParams);
 
             d->polishItems();
             d->syncSceneGraph();
@@ -3928,8 +3994,9 @@ QImage QQuickWindow::grabWindow()
 
             return image;
         }
-    }
 #endif
+    }
+
     if (d->renderControl)
         return d->renderControl->grab();
     else if (d->windowManager)
@@ -4067,6 +4134,17 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     The OpenGL context used for rendering the scene graph will be bound
     at this point.
 
+    When using the RHI and a graphics API other than OpenGL, the signal is
+    emitted after the preparations for the frame have been done, meaning there
+    is a command buffer in recording mode, where applicable. If desired, the
+    slot function connected to this signal can query native resources like the
+    command before via QSGRendererInterface. Note however that the recording of
+    the main render pass is not yet started at this point and it is not
+    possible to add commands within that pass. Instead, use
+    beforeRenderPassRecording() for that. However, connecting to this signal is
+    still important if the recording of copy type of commands is desired since
+    those cannot be enqueued within a render pass.
+
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
@@ -4088,6 +4166,15 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     The OpenGL context used for rendering the scene graph will be bound at this point.
 
+    When using the RHI and a graphics API other than OpenGL, the signal is
+    emitted after scene graph has added its commands to the command buffer,
+    which is not yet submitted to the graphics queue. If desired, the slot
+    function connected to this signal can query native resources, like the
+    command buffer, before via QSGRendererInterface. Note however that the
+    render pass (or passes) are already recorded at this point and it is not
+    possible to add more commands within the scenegraph's pass. Instead, use
+    afterRenderPassRecording() for that.
+
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
@@ -4100,14 +4187,68 @@ QQmlIncubationController *QQuickWindow::incubationController() const
  */
 
 /*!
+    \fn void QQuickWindow::beforeRenderPassRecording()
+
+    This signal is emitted before the scenegraph starts recording commands for
+    the main render pass. (Layers have their own passes and are fully recorded
+    by the time this signal is emitted.) The render pass is already active on
+    the command buffer when the signal is emitted.
+
+    This signal is applicable when using the RHI graphics abstraction with the
+    scenegraph. It is emitted later than beforeRendering() and it guarantees
+    that not just the frame, but also the recording of the scenegraph's main
+    render pass is active. This allows inserting commands without having to
+    generate an entire, separate render pass (which would typically clear the
+    attached images). The native graphics objects can be queried via
+    QSGRendererInterface.
+
+    \note Resource updates (uploads, copies) typically cannot be enqueued from
+    within a render pass. Therefore, more complex user rendering will need to
+    connect to both the beforeRendering() and this signals.
+
+    \warning This signal is emitted from the scene graph rendering thread. If your
+    slot function needs to finish before execution continues, you must make sure that
+    the connection is direct (see Qt::ConnectionType).
+
+    \since 5.14
+*/
+
+/*!
+    \fn void QQuickWindow::afterRenderPassRecording()
+
+    This signal is emitted after the scenegraph has recorded the commands for
+    its main render pass, but the pass is not yet finalized on the command
+    buffer.
+
+    This signal is applicable when using the RHI graphics abstraction with the
+    scenegraph. It is emitted earlier than afterRendering() and it guarantees
+    that not just the frame, but also the recording of the scenegraph's main
+    render pass is still active. This allows inserting commands without having
+    to generate an entire, separate render pass (which would typically clear
+    the attached images). The native graphics objects can be queried via
+    QSGRendererInterface.
+
+    \note Resource updates (uploads, copies) typically cannot be enqueued from
+    within a render pass. Therefore, more complex user rendering will need to
+    connect to both the beforeRendering() and this signals.
+
+    \warning This signal is emitted from the scene graph rendering thread. If your
+    slot function needs to finish before execution continues, you must make sure that
+    the connection is direct (see Qt::ConnectionType).
+
+    \since 5.14
+*/
+
+/*!
     \fn void QQuickWindow::afterAnimating()
 
     This signal is emitted on the gui thread before requesting the render thread to
     perform the synchronization of the scene graph.
 
-    Unlike the other similar signals, this one is emitted on the gui thread instead
-    of the render thread. It can be used to synchronize external animation systems
-    with the QML content.
+    Unlike the other similar signals, this one is emitted on the gui thread
+    instead of the render thread. It can be used to synchronize external
+    animation systems with the QML content. At the same time this means that
+    this signal is not suitable for triggering graphics operations.
 
     \since 5.3
  */
@@ -4167,7 +4308,15 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     The color buffer is cleared by default.
 
-    \sa beforeRendering()
+    \warning This flag is ignored completely when running with the RHI graphics
+    abstraction instead of using OpenGL directly. As explicit clear commands
+    simply do not exist in some modern APIs, the scene graph cannot offer this
+    flexibility anymore. The images associated with a render target will always
+    get cleared when a render pass starts. As a solution, an alternative to
+    disabling scene graph issued clears is provided in form of the
+    beforeRenderPassRecording() signal.
+
+    \sa beforeRendering(), beforeRenderPassRecording()
  */
 
 void QQuickWindow::setClearBeforeRendering(bool enabled)
@@ -4271,12 +4420,15 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
     \note This function only has an effect when using the default OpenGL scene graph
     adaptation.
 
+    \note This function has no effect when running on the RHI graphics abstraction.
+
     \sa sceneGraphInitialized(), QSGTexture
  */
 QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, CreateTextureOptions options) const
 {
 #if QT_CONFIG(opengl)
-    if (openglContext()) {
+    Q_D(const QQuickWindow);
+    if (!d->rhi && openglContext()) {
         QSGPlainTexture *texture = new QSGPlainTexture();
         texture->setTextureId(id);
         texture->setHasAlphaChannel(options & TextureHasAlphaChannel);
@@ -4379,14 +4531,18 @@ void QQuickWindow::setDefaultAlphaBuffer(bool useAlpha)
     \note This function only has an effect when using the default OpenGL scene graph
     adaptation.
 
-    \sa QQuickWindow::beforeRendering()
+    \note This function has no effect when running on the RHI graphics
+    abstraction. With the RHI, the functions to call when enqueuing native
+    graphics commands are beginExternalCommands() and endExternalCommands().
+
+    \sa QQuickWindow::beforeRendering(), beginExternalCommands(), endExternalCommands()
  */
 void QQuickWindow::resetOpenGLState()
 {
-    if (!openglContext())
-        return;
-
     Q_D(QQuickWindow);
+
+    if (d->rhi || !openglContext())
+        return;
 
     QOpenGLContext *ctx = openglContext();
     QOpenGLFunctions *gl = ctx->functions();
@@ -4434,6 +4590,111 @@ void QQuickWindow::resetOpenGLState()
     QOpenGLFramebufferObject::bindDefault();
 }
 #endif
+
+/*!
+    \struct QQuickWindow::GraphicsStateInfo
+    \inmodule QtQuick
+    \since 5.14
+
+    \brief Describes some of the RHI's graphics state at the point of a
+    \l{QQuickWindow::beginExternalCommands()}{beginExternalCommands()} call.
+ */
+
+/*!
+    \return a pointer to a GraphicsStateInfo struct describing some of the
+    RHI's internal state, in particular, the double or tripple buffering status
+    of the backend (such as, the Vulkan or Metal integrations). This is
+    relevant when the underlying graphics APIs is Vulkan or Metal, and the
+    external rendering code wishes to perform double or tripple buffering of
+    its own often-changing resources, such as, uniform buffers, in order to
+    avoid stalling the pipeline.
+ */
+const QQuickWindow::GraphicsStateInfo *QQuickWindow::graphicsStateInfo()
+{
+    Q_D(QQuickWindow);
+    if (d->rhi) {
+        d->rhiStateInfo.currentFrameSlot = d->rhi->currentFrameSlot();
+        d->rhiStateInfo.framesInFlight = d->rhi->resourceLimit(QRhi::FramesInFlight);
+    }
+    return &d->rhiStateInfo;
+}
+
+/*!
+    When mixing raw graphics (OpenGL, Vulkan, Metal, etc.) commands with scene
+    graph rendering, it is necessary to call this function before recording
+    commands to the command buffer used by the scene graph to render its main
+    render pass. This is to avoid clobbering state.
+
+    In practice this function is often called from a slot connected to the
+    beforeRenderPassRecording() or afterRenderPassRecording() signals.
+
+    The function does not need to be called when recording commands to the
+    application's own command buffer (such as, a VkCommandBuffer or
+    MTLCommandBuffer + MTLRenderCommandEncoder created and managed by the
+    application, not retrieved from the scene graph). With graphics APIs where
+    no native command buffer concept is exposed (OpenGL, Direct 3D 11),
+    beginExternalCommands() and endExternalCommands() together provide a
+    replacement for resetOpenGLState().
+
+    \note This function has no effect when the scene graph is using OpenGL
+    directly and the RHI graphics abstraction layer is not in use. Refer to
+    resetOpenGLState() in that case.
+
+    \sa endExternalCommands()
+
+    \since 5.14
+ */
+void QQuickWindow::beginExternalCommands()
+{
+#if QT_CONFIG(opengl) /* || QT_CONFIG(vulkan) || defined(Q_OS_WIN) || defined(Q_OS_DARWIN) */
+    Q_D(QQuickWindow);
+    if (d->rhi && d->context && d->context->isValid()) {
+        QSGDefaultRenderContext *rc = static_cast<QSGDefaultRenderContext *>(d->context);
+        QRhiCommandBuffer *cb = rc->currentFrameCommandBuffer();
+        if (cb)
+            cb->beginExternal();
+    }
+#endif
+}
+
+/*!
+    When mixing raw graphics (OpenGL, Vulkan, Metal, etc.) commands with scene
+    graph rendering, it is necessary to call this function after recording
+    commands to the command buffer used by the scene graph to render its main
+    render pass. This is to avoid clobbering state.
+
+    In practice this function is often called from a slot connected to the
+    beforeRenderPassRecording() or afterRenderPassRecording() signals.
+
+    The function does not need to be called when recording commands to the
+    application's own command buffer (such as, a VkCommandBuffer or
+    MTLCommandBuffer + MTLRenderCommandEncoder created and managed by the
+    application, not retrieved from the scene graph). With graphics APIs where
+    no native command buffer concept is exposed (OpenGL, Direct 3D 11),
+    beginExternalCommands() and endExternalCommands() together provide a
+    replacement for resetOpenGLState().
+
+    \note This function has no effect when the scene graph is using OpenGL
+    directly and the RHI graphics abstraction layer is not in use. Refer to
+    resetOpenGLState() in that case.
+
+    \sa beginExternalCommands()
+
+    \since 5.14
+ */
+void QQuickWindow::endExternalCommands()
+{
+#if QT_CONFIG(opengl) /* || QT_CONFIG(vulkan) || defined(Q_OS_WIN) || defined(Q_OS_DARWIN) */
+    Q_D(QQuickWindow);
+    if (d->rhi && d->context && d->context->isValid()) {
+        QSGDefaultRenderContext *rc = static_cast<QSGDefaultRenderContext *>(d->context);
+        QRhiCommandBuffer *cb = rc->currentFrameCommandBuffer();
+        if (cb)
+            cb->endExternal();
+    }
+#endif
+}
+
 /*!
     \qmlproperty string Window::title
 
@@ -5019,6 +5280,10 @@ void QQuickWindow::setSceneGraphBackend(QSGRendererInterface::GraphicsApi api)
     default:
         break;
     }
+#if QT_CONFIG(opengl) /* || QT_CONFIG(vulkan) || defined(Q_OS_WIN) || defined(Q_OS_DARWIN) */
+    if (QSGRendererInterface::isApiRhiBased(api))
+        QSGRhiSupport::configure(api);
+#endif
 }
 
 /*!

@@ -78,6 +78,7 @@ public:
     QRect m_viewport_rect;
 
     QMatrix4x4 m_projection_matrix;
+    QMatrix4x4 m_projection_matrix_native_ndc;
     uint m_mirrored : 1;
 };
 

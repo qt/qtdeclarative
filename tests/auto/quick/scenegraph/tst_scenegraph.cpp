@@ -70,16 +70,17 @@ public:
 
     QColor color() const { return m_color; }
 
-    QSGNode *updatePaintNode(QSGNode *old, UpdatePaintNodeData *)
+    QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
     {
-        if (old)
-            delete old;
+        delete node;
+        node = new QSGNode;
 
-        QSGNode *node = new QSGNode();
-
-        for (int y=0; y<height(); ++y) {
-            for (int x=0; x<width(); ++x) {
-                QSGSimpleRectNode *rn = new QSGSimpleRectNode();
+        const int w = width();
+        const int h = height();
+        QQuickWindow *win = window();
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                QSGRectangleNode *rn = win->createRectangleNode();
                 rn->setRect(x, y, 1, 1);
                 rn->setColor(m_color);
                 node->appendChildNode(rn);
@@ -90,7 +91,7 @@ public:
     }
 
 Q_SIGNALS:
-    void colorChanged(const QColor &c   );
+    void colorChanged(const QColor &c);
 
 private:
     QColor m_color;
@@ -117,7 +118,8 @@ private slots:
 private:
     bool m_brokenMipmapSupport;
     QQuickView *createView(const QString &file, QWindow *parent = nullptr, int x = -1, int y = -1, int w = -1, int h = -1);
-    bool isRunningOnOpenGL();
+    bool isRunningOnOpenGLDirectly();
+    bool isRunningOnRhi();
 };
 
 template <typename T> class ScopedList : public QList<T> {
@@ -402,7 +404,7 @@ void tst_SceneGraph::render_data()
           << "render_bug37422.qml"
           << "render_OpacityThroughBatchRoot.qml";
     if (!m_brokenMipmapSupport)
-          files << "render_Mipmap.qml";
+        files << "render_Mipmap.qml";
 
     QRegExp sampleCount("#samples: *(\\d+)");
     //                          X:int   Y:int   R:float       G:float       B:float       Error:float
@@ -444,8 +446,8 @@ void tst_SceneGraph::render_data()
 
 void tst_SceneGraph::render()
 {
-    if (!isRunningOnOpenGL())
-        QSKIP("Skipping complex rendering tests due to not running with OpenGL");
+    if (!isRunningOnOpenGLDirectly() && !isRunningOnRhi())
+        QSKIP("Skipping complex rendering tests due to not running with OpenGL or QRhi");
 
     QFETCH(QString, file);
     QFETCH(QList<Sample>, baseStage);
@@ -495,7 +497,7 @@ void tst_SceneGraph::render()
 // current on the other window.
 void tst_SceneGraph::hideWithOtherContext()
 {
-    if (!isRunningOnOpenGL())
+    if (!isRunningOnOpenGLDirectly())
         QSKIP("Skipping OpenGL context test due to not running with OpenGL");
 
     QWindow window;
@@ -559,18 +561,37 @@ void tst_SceneGraph::createTextureFromImage()
     QCOMPARE(texture->hasAlphaChannel(), expectedAlpha);
 }
 
-bool tst_SceneGraph::isRunningOnOpenGL()
+bool tst_SceneGraph::isRunningOnOpenGLDirectly()
 {
-    bool retval = false;
-    QQuickView dummy;
-    dummy.show();
-    if (!QTest::qWaitForWindowExposed(&dummy)) {
-        [](){ QFAIL("Could not show a QQuickView"); }();
-        return false;
+    static bool retval = false;
+    static bool decided = false;
+    if (!decided) {
+        decided = true;
+        QQuickView dummy;
+        dummy.show();
+        QTest::qWaitForWindowExposed(&dummy);
+        retval = dummy.rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL;
+        dummy.hide();
     }
-    if (dummy.rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL)
-        retval = true;
-    dummy.hide();
+    return retval;
+}
+
+bool tst_SceneGraph::isRunningOnRhi()
+{
+    static bool retval = false;
+    static bool decided = false;
+    if (!decided) {
+        decided = true;
+        QQuickView dummy;
+        dummy.show();
+        if (!QTest::qWaitForWindowExposed(&dummy)) {
+            [](){ QFAIL("Could not show a QQuickView"); }();
+            return false;
+        }
+        QSGRendererInterface::GraphicsApi api = dummy.rendererInterface()->graphicsApi();
+        retval = QSGRendererInterface::isApiRhiBased(api);
+        dummy.hide();
+    }
     return retval;
 }
 

@@ -8,13 +8,19 @@
         <file>shaders/lineargradient.frag</file>
         <file>shaders/lineargradient_core.vert</file>
         <file>shaders/lineargradient_core.frag</file>
+        <file>shaders_ng/lineargradient.vert.qsb</file>
+        <file>shaders_ng/lineargradient.frag.qsb</file>
         <file>shaders/radialgradient.vert</file>
         <file>shaders/radialgradient.frag</file>
         <file>shaders/radialgradient_core.vert</file>
         <file>shaders/radialgradient_core.frag</file>
+        <file>shaders_ng/radialgradient.vert.qsb</file>
+        <file>shaders_ng/radialgradient.frag.qsb</file>
         <file>shaders/conicalgradient.vert</file>
         <file>shaders/conicalgradient.frag</file>
         <file>shaders/conicalgradient_core.vert</file>
         <file>shaders/conicalgradient_core.frag</file>
+        <file>shaders_ng/conicalgradient.vert.qsb</file>
+        <file>shaders_ng/conicalgradient.frag.qsb</file>
     </qresource>
 </RCC>

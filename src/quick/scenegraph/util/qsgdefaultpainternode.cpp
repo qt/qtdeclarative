@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 #define QT_MINIMUM_DYNAMIC_FBO_SIZE 64U
 
 QSGPainterTexture::QSGPainterTexture()
-    : QSGPlainTexture()
+    : QSGPlainTexture(*(new QSGPainterTexturePrivate))
 {
     m_retain_image = true;
 }
@@ -71,6 +71,16 @@ void QSGPainterTexture::bind()
     QSGPlainTexture::bind();
 
     m_dirty_rect = QRect();
+}
+
+void QSGPainterTexturePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
+{
+    Q_Q(QSGPainterTexture);
+    if (!q->m_dirty_rect.isNull()) {
+        q->setImage(q->m_image);
+        q->m_dirty_rect = QRect();
+    }
+    QSGPlainTexturePrivate::updateRhiTexture(rhi, resourceUpdates);
 }
 
 QSGDefaultPainterNode::QSGDefaultPainterNode(QQuickPaintedItem *item)
@@ -126,6 +136,7 @@ void QSGDefaultPainterNode::paint()
             return;
         painter.begin(&m_image);
     } else {
+        Q_ASSERT(!m_context->rhi());
         if (!m_gl_device) {
             m_gl_device = new QOpenGLPaintDevice(m_fboSize);
             m_gl_device->setPaintFlipped(true);
@@ -237,7 +248,7 @@ void QSGDefaultPainterNode::updateGeometry()
 
 void QSGDefaultPainterNode::updateRenderTarget()
 {
-    if (!m_extensionsChecked) {
+    if (!m_extensionsChecked && !m_context->rhi()) {
         QOpenGLExtensions *e = static_cast<QOpenGLExtensions *>(QOpenGLContext::currentContext()->functions());
         m_multisamplingSupported = e->hasOpenGLExtension(QOpenGLExtensions::FramebufferMultisample)
             && e->hasOpenGLExtension(QOpenGLExtensions::FramebufferBlit);
@@ -250,7 +261,10 @@ void QSGDefaultPainterNode::updateRenderTarget()
     if (m_preferredRenderTarget == QQuickPaintedItem::Image) {
         m_actualRenderTarget = QQuickPaintedItem::Image;
     } else {
-        if (!m_multisamplingSupported && m_smoothPainting)
+        // Image is the only option when there is no multisample framebuffer
+        // support and smooth painting is wanted, and when using the RHI. The
+        // latter may change in the future.
+        if ((!m_multisamplingSupported && m_smoothPainting) || m_context->rhi())
             m_actualRenderTarget = QQuickPaintedItem::Image;
         else
             m_actualRenderTarget = m_preferredRenderTarget;
@@ -265,7 +279,9 @@ void QSGDefaultPainterNode::updateRenderTarget()
     }
 
     if (m_actualRenderTarget == QQuickPaintedItem::FramebufferObject ||
-            m_actualRenderTarget == QQuickPaintedItem::InvertedYFramebufferObject) {
+            m_actualRenderTarget == QQuickPaintedItem::InvertedYFramebufferObject)
+    {
+        Q_ASSERT(!m_context->rhi());
         const QOpenGLContext *ctx = m_context->openglContext();
         if (m_fbo && !m_dirtyGeometry && (!ctx->format().samples() || !m_multisamplingSupported))
             return;

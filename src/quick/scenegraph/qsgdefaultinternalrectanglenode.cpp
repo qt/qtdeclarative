@@ -105,14 +105,61 @@ void SmoothColorMaterialShader::initialize()
     m_pixelSizeLoc = program()->uniformLocation("pixelSize");
 }
 
+
+class SmoothColorMaterialRhiShader : public QSGMaterialRhiShader
+{
+public:
+    SmoothColorMaterialRhiShader();
+
+    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+};
+
+SmoothColorMaterialRhiShader::SmoothColorMaterialRhiShader()
+{
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/smoothcolor.vert.qsb"));
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/smoothcolor.frag.qsb"));
+}
+
+bool SmoothColorMaterialRhiShader::updateUniformData(const RenderState &state, QSGMaterial *, QSGMaterial *oldMaterial)
+{
+    bool changed = false;
+    QByteArray *buf = state.uniformData();
+
+    if (state.isMatrixDirty()) {
+        const QMatrix4x4 m = state.combinedMatrix();
+        memcpy(buf->data(), m.constData(), 64);
+        changed = true;
+    }
+
+    if (oldMaterial == nullptr) {
+        // The viewport is constant, so set the pixel size uniform only once.
+        const QRect r = state.viewportRect();
+        const QVector2D v(2.0f / r.width(), 2.0f / r.height());
+        Q_ASSERT(sizeof(v) == 8);
+        memcpy(buf->data() + 64, &v, 8);
+        changed = true;
+    }
+
+    if (state.isOpacityDirty()) {
+        const float opacity = state.opacity();
+        memcpy(buf->data() + 72, &opacity, 4);
+        changed = true;
+    }
+
+    return changed;
+}
+
+
 QSGSmoothColorMaterial::QSGSmoothColorMaterial()
 {
     setFlag(RequiresFullMatrixExceptTranslate, true);
     setFlag(Blending, true);
+    setFlag(SupportsRhiShader, true);
 }
 
 int QSGSmoothColorMaterial::compare(const QSGMaterial *) const
 {
+    // all state in vertex attributes -> all smoothcolor materials are equal
     return 0;
 }
 
@@ -124,7 +171,10 @@ QSGMaterialType *QSGSmoothColorMaterial::type() const
 
 QSGMaterialShader *QSGSmoothColorMaterial::createShader() const
 {
-    return new SmoothColorMaterialShader;
+    if (flags().testFlag(RhiShaderWanted))
+        return new SmoothColorMaterialRhiShader;
+    else
+        return new SmoothColorMaterialShader;
 }
 
 QSGDefaultInternalRectangleNode::QSGDefaultInternalRectangleNode()

@@ -49,7 +49,7 @@
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qsgcontextplugin_p.h>
 #if QT_CONFIG(opengl)
-#include <QtQuick/private/qsgdefaultdistancefieldglyphcache_p.h>
+#include <QtQuick/private/qsgopengldistancefieldglyphcache_p.h>
 #include <QtQuick/private/qsgdefaultglyphnode_p.h>
 #include <QtQuick/private/qsgdefaultinternalimagenode_p.h>
 #include <QtQuick/private/qsgdefaultinternalrectanglenode_p.h>
@@ -65,8 +65,15 @@
 #include <QtQuick/private/qsgrendernode_p.h>
 #include <QtQuick/private/qsgtexturematerial_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qsgplaintexture_p.h>
 #include <QtQuick/private/qsgthreadedrenderloop_p.h>
 #include <QtQuick/private/qsgwindowsrenderloop_p.h>
+
+#include <QtQuick/private/qsgrhiatlastexture_p.h>
+#include <QtQuick/private/qsgrhidistancefieldglyphcache_p.h>
+#include <QtQuick/private/qsgrhilayer_p.h>
+#include <QtQuick/private/qsgrhishadereffectnode_p.h>
+#include <QtQuick/private/qsgrhitextureglyphcache_p.h>
 
 #undef signals
 #undef slots

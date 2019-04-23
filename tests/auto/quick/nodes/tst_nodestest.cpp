@@ -39,7 +39,7 @@
 
 #include <QtQuick/qsgsimplerectnode.h>
 #include <QtQuick/qsgsimpletexturenode.h>
-#include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qsgplaintexture_p.h>
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
@@ -99,7 +99,10 @@ void NodesTest::initTestCase()
     auto rc = renderLoop->createRenderContext(renderLoop->sceneGraphContext());
     renderContext = static_cast<QSGDefaultRenderContext *>(rc);
     QVERIFY(renderContext);
-    renderContext->initialize(context);
+    QSGDefaultRenderContext::InitParams rcParams;
+    rcParams.openGLContext = context;
+    rcParams.initialSurfacePixelSize = QSize(512, 512); // dummy, make up something
+    renderContext->initialize(&rcParams);
     QVERIFY(renderContext->isValid());
 }
 

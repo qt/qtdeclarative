@@ -49,7 +49,7 @@
 #include <QtGui/private/qimage_p.h>
 #include <qpa/qplatformintegration.h>
 
-#include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qsgtexturereader_p.h>
 
 #include <QQuickWindow>

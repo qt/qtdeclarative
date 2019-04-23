@@ -44,9 +44,13 @@
 
 #include <QtQuick/private/qsgbatchrenderer_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
-#include <QtQuick/private/qsgatlastexture_p.h>
+#include <QtQuick/private/qsgrhiatlastexture_p.h>
+#include <QtQuick/private/qsgrhidistancefieldglyphcache_p.h>
+#include <QtQuick/private/qsgmaterialrhishader_p.h>
+
+#include <QtQuick/private/qsgopenglatlastexture_p.h>
 #include <QtQuick/private/qsgcompressedtexture_p.h>
-#include <QtQuick/private/qsgdefaultdistancefieldglyphcache_p.h>
+#include <QtQuick/private/qsgopengldistancefieldglyphcache_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -54,68 +58,81 @@ QT_BEGIN_NAMESPACE
 
 QSGDefaultRenderContext::QSGDefaultRenderContext(QSGContext *context)
     : QSGRenderContext(context)
+    , m_rhi(nullptr)
     , m_gl(nullptr)
     , m_depthStencilManager(nullptr)
     , m_maxTextureSize(0)
     , m_brokenIBOs(false)
     , m_serializedRender(false)
     , m_attachToGLContext(true)
-    , m_atlasManager(nullptr)
+    , m_glAtlasManager(nullptr)
+    , m_rhiAtlasManager(nullptr)
+    , m_currentFrameCommandBuffer(nullptr)
 {
-
 }
 
 /*!
     Initializes the scene graph render context with the GL context \a context. This also
     emits the ready() signal so that the QML graph can start building scene graph nodes.
  */
-void QSGDefaultRenderContext::initialize(void *context)
+void QSGDefaultRenderContext::initialize(const QSGRenderContext::InitParams *params)
 {
     if (!m_sg)
         return;
 
-    QOpenGLContext *openglContext = static_cast<QOpenGLContext *>(context);
+    const InitParams *initParams = static_cast<const InitParams *>(params);
+    if (initParams->sType != INIT_PARAMS_MAGIC)
+        qFatal("QSGDefaultRenderContext: Invalid parameters passed to initialize()");
 
-    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
-    funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_maxTextureSize);
+    m_initParams = *initParams;
 
-    // Sanity check the surface format, in case it was overridden by the application
-    QSurfaceFormat requested = m_sg->defaultSurfaceFormat();
-    QSurfaceFormat actual = openglContext->format();
-    if (requested.depthBufferSize() > 0 && actual.depthBufferSize() <= 0)
-        qWarning("QSGContext::initialize: depth buffer support missing, expect rendering errors");
-    if (requested.stencilBufferSize() > 0 && actual.stencilBufferSize() <= 0)
-        qWarning("QSGContext::initialize: stencil buffer support missing, expect rendering errors");
+    m_rhi = m_initParams.rhi;
+    if (m_rhi) {
+        m_maxTextureSize = m_rhi->resourceLimit(QRhi::TextureSizeMax);
+        if (!m_rhiAtlasManager)
+            m_rhiAtlasManager = new QSGRhiAtlasTexture::Manager(this, m_initParams.initialSurfacePixelSize, m_initParams.maybeSurface);
+    } else {
+        QOpenGLFunctions *funcs = m_rhi ? nullptr : QOpenGLContext::currentContext()->functions();
+        funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_maxTextureSize);
 
-    if (!m_atlasManager)
-        m_atlasManager = new QSGAtlasTexture::Manager();
-
-    Q_ASSERT_X(!m_gl, "QSGRenderContext::initialize", "already initialized!");
-    m_gl = openglContext;
-    if (m_attachToGLContext) {
-        Q_ASSERT(!openglContext->property(QSG_RENDERCONTEXT_PROPERTY).isValid());
-        openglContext->setProperty(QSG_RENDERCONTEXT_PROPERTY, QVariant::fromValue(this));
-    }
-    m_sg->renderContextInitialized(this);
+        // Sanity check the surface format, in case it was overridden by the application
+        QSurfaceFormat requested = m_sg->defaultSurfaceFormat();
+        QSurfaceFormat actual = m_initParams.openGLContext->format();
+        if (requested.depthBufferSize() > 0 && actual.depthBufferSize() <= 0)
+            qWarning("QSGContext::initialize: depth buffer support missing, expect rendering errors");
+        if (requested.stencilBufferSize() > 0 && actual.stencilBufferSize() <= 0)
+            qWarning("QSGContext::initialize: stencil buffer support missing, expect rendering errors");
 
 #ifdef Q_OS_LINUX
-    const char *vendor = (const char *) funcs->glGetString(GL_VENDOR);
-    if (vendor && strstr(vendor, "nouveau"))
-        m_brokenIBOs = true;
-    const char *renderer = (const char *) funcs->glGetString(GL_RENDERER);
-    if (renderer && strstr(renderer, "llvmpipe"))
-        m_serializedRender = true;
-    if (vendor && renderer && strstr(vendor, "Hisilicon Technologies") && strstr(renderer, "Immersion.16"))
-        m_brokenIBOs = true;
+        const char *vendor = (const char *) funcs->glGetString(GL_VENDOR);
+        if (vendor && strstr(vendor, "nouveau"))
+            m_brokenIBOs = true;
+        const char *renderer = (const char *) funcs->glGetString(GL_RENDERER);
+        if (renderer && strstr(renderer, "llvmpipe"))
+            m_serializedRender = true;
+        if (vendor && renderer && strstr(vendor, "Hisilicon Technologies") && strstr(renderer, "Immersion.16"))
+            m_brokenIBOs = true;
 #endif
+
+        Q_ASSERT_X(!m_gl, "QSGRenderContext::initialize", "already initialized!");
+        m_gl = m_initParams.openGLContext;
+        if (m_attachToGLContext) {
+            Q_ASSERT(!m_gl->property(QSG_RENDERCONTEXT_PROPERTY).isValid());
+            m_gl->setProperty(QSG_RENDERCONTEXT_PROPERTY, QVariant::fromValue(this));
+        }
+
+        if (!m_glAtlasManager)
+            m_glAtlasManager = new QSGOpenGLAtlasTexture::Manager(m_initParams.initialSurfacePixelSize);
+    }
+
+    m_sg->renderContextInitialized(this);
 
     emit initialized();
 }
 
-
 void QSGDefaultRenderContext::invalidate()
 {
-    if (!m_gl)
+    if (!m_gl && !m_rhi)
         return;
 
     qDeleteAll(m_texturesToDelete);
@@ -138,11 +155,18 @@ void QSGDefaultRenderContext::invalidate()
        deferred deleted last.
 
        Another alternative would be to use a QPointer in
-       QSGAtlasTexture::Texture, but this seemed simpler.
+       QSGOpenGLAtlasTexture::Texture, but this seemed simpler.
      */
-    m_atlasManager->invalidate();
-    m_atlasManager->deleteLater();
-    m_atlasManager = nullptr;
+    if (m_glAtlasManager) {
+        m_glAtlasManager->invalidate();
+        m_glAtlasManager->deleteLater();
+        m_glAtlasManager = nullptr;
+    }
+    if (m_rhiAtlasManager) {
+        m_rhiAtlasManager->invalidate();
+        m_rhiAtlasManager->deleteLater();
+        m_rhiAtlasManager = nullptr;
+    }
 
     // The following piece of code will read/write to the font engine's caches,
     // potentially from different threads. However, this is safe because this
@@ -151,7 +175,7 @@ void QSGDefaultRenderContext::invalidate()
     // sequence. (see qsgdefaultglyphnode_p.cpp's init())
     for (QSet<QFontEngine *>::const_iterator it = m_fontEnginesToClean.constBegin(),
          end = m_fontEnginesToClean.constEnd(); it != end; ++it) {
-        (*it)->clearGlyphCache(m_gl);
+        (*it)->clearGlyphCache(m_gl ? (void *) m_gl : (void *) m_rhi);
         if (!(*it)->ref.deref())
             delete *it;
     }
@@ -163,12 +187,15 @@ void QSGDefaultRenderContext::invalidate()
     qDeleteAll(m_glyphCaches);
     m_glyphCaches.clear();
 
-    if (m_gl->property(QSG_RENDERCONTEXT_PROPERTY) == QVariant::fromValue(this))
+    if (m_gl && m_gl->property(QSG_RENDERCONTEXT_PROPERTY) == QVariant::fromValue(this))
         m_gl->setProperty(QSG_RENDERCONTEXT_PROPERTY, QVariant());
+
     m_gl = nullptr;
+    m_rhi = nullptr;
 
     if (m_sg)
         m_sg->renderContextInvalidated(this);
+
     emit invalidated();
 }
 
@@ -183,6 +210,33 @@ void QSGDefaultRenderContext::renderNextFrame(QSGRenderer *renderer, uint fboId)
 
     if (m_serializedRender)
         qsg_framerender_mutex.unlock();
+}
+
+void QSGDefaultRenderContext::beginRhiFrame(QSGRenderer *renderer, QRhiRenderTarget *rt, QRhiRenderPassDescriptor *rp,
+                                            QRhiCommandBuffer *cb,
+                                            RenderPassCallback mainPassRecordingStart,
+                                            RenderPassCallback mainPassRecordingEnd,
+                                            void *callbackUserData)
+{
+    Q_ASSERT(!m_currentFrameCommandBuffer);
+
+    renderer->setRenderTarget(rt);
+    renderer->setRenderPassDescriptor(rp);
+    renderer->setCommandBuffer(cb);
+    renderer->setRenderPassRecordingCallbacks(mainPassRecordingStart, mainPassRecordingEnd, callbackUserData);
+
+    m_currentFrameCommandBuffer = cb;
+}
+
+void QSGDefaultRenderContext::renderNextRhiFrame(QSGRenderer *renderer)
+{
+    renderer->renderScene();
+}
+
+void QSGDefaultRenderContext::endRhiFrame(QSGRenderer *renderer)
+{
+    Q_UNUSED(renderer);
+    m_currentFrameCommandBuffer = nullptr;
 }
 
 /*!
@@ -226,13 +280,21 @@ QSGTexture *QSGDefaultRenderContext::createTexture(const QImage &image, uint fla
 
     // The atlas implementation is only supported from the render thread and
     // does not support mipmaps.
-    if (!mipmap && atlas && openglContext() && QThread::currentThread() == openglContext()->thread()) {
-        QSGTexture *t = m_atlasManager->create(image, alpha);
-        if (t)
-            return t;
+    if (m_rhi) {
+        if (!mipmap && atlas && QThread::currentThread() == m_rhi->thread()) {
+            QSGTexture *t = m_rhiAtlasManager->create(image, alpha);
+            if (t)
+                return t;
+        }
+    } else {
+        if (!mipmap && atlas && openglContext() && QThread::currentThread() == openglContext()->thread()) {
+            QSGTexture *t = m_glAtlasManager->create(image, alpha);
+            if (t)
+                return t;
+        }
     }
 
-    QSGPlainTexture *texture = new QSGPlainTexture();
+    QSGPlainTexture *texture = new QSGPlainTexture;
     texture->setImage(image);
     if (texture->hasAlphaChannel() && !alpha)
         texture->setHasAlphaChannel(false);
@@ -247,9 +309,15 @@ QSGRenderer *QSGDefaultRenderContext::createRenderer()
 
 QSGTexture *QSGDefaultRenderContext::compressedTextureForFactory(const QSGCompressedTextureFactory *factory) const
 {
-    // The atlas implementation is only supported from the render thread
-    if (openglContext() && QThread::currentThread() == openglContext()->thread())
-        return m_atlasManager->create(factory);
+    // This is only used for atlasing compressed textures. Returning null implies no atlas.
+
+    if (m_rhi) {
+        // ###
+    } else if (openglContext() && QThread::currentThread() == openglContext()->thread()) {
+        // The atlas implementation is only supported from the render thread
+        return m_glAtlasManager->create(factory);
+    }
+
     return nullptr;
 }
 
@@ -307,6 +375,11 @@ void QSGDefaultRenderContext::initializeShader(QSGMaterialShader *shader)
     shader->initialize();
 }
 
+void QSGDefaultRenderContext::initializeRhiShader(QSGMaterialRhiShader *shader, QShader::Variant shaderVariant)
+{
+    QSGMaterialRhiShaderPrivate::get(shader)->prepare(shaderVariant);
+}
+
 void QSGDefaultRenderContext::setAttachToGraphicsContext(bool attach)
 {
     Q_ASSERT(!isValid());
@@ -320,6 +393,9 @@ QSGDefaultRenderContext *QSGDefaultRenderContext::from(QOpenGLContext *context)
 
 bool QSGDefaultRenderContext::separateIndexBuffer() const
 {
+    if (m_rhi)
+        return true;
+
     // WebGL: A given WebGLBuffer object may only be bound to one of
     // the ARRAY_BUFFER or ELEMENT_ARRAY_BUFFER target in its
     // lifetime. An attempt to bind a buffer object to the other
@@ -335,7 +411,10 @@ QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(con
     QString key = fontKey(font);
     QSGDistanceFieldGlyphCache *cache = m_glyphCaches.value(key, 0);
     if (!cache) {
-        cache = new QSGDefaultDistanceFieldGlyphCache(openglContext(), font);
+        if (m_rhi)
+            cache = new QSGRhiDistanceFieldGlyphCache(m_rhi, font);
+        else
+            cache = new QSGOpenGLDistanceFieldGlyphCache(openglContext(), font);
         m_glyphCaches.insert(key, cache);
     }
 

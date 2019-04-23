@@ -52,7 +52,7 @@
 #include <QOpenGLFunctions>
 #include <QSGRendererInterface>
 #include <QtQuick/private/qsgshadersourcebuilder_p.h>
-#include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qsgplaintexture_p.h>
 #include <private/qqmlglobal_p.h>
 #include <QtQml/qqmlinfo.h>
 #include <cmath>

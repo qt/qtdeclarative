@@ -103,6 +103,8 @@ private slots:
     void handleWindowChanged(QQuickWindow *win);
 
 private:
+    void releaseResources() override;
+
     qreal m_t;
     SquircleRenderer *m_renderer;
 };

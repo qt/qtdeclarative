@@ -99,8 +99,9 @@ QSGInternalRectangleNode *QSGSoftwareContext::createInternalRectangleNode()
     return new QSGSoftwareInternalRectangleNode();
 }
 
-QSGInternalImageNode *QSGSoftwareContext::createInternalImageNode()
+QSGInternalImageNode *QSGSoftwareContext::createInternalImageNode(QSGRenderContext *renderContext)
 {
+    Q_UNUSED(renderContext);
     return new QSGSoftwareInternalImageNode();
 }
 

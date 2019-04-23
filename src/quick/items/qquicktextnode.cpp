@@ -160,7 +160,7 @@ void QQuickTextNode::addRectangleNode(const QRectF &rect, const QColor &color)
 void QQuickTextNode::addImage(const QRectF &rect, const QImage &image)
 {
     QSGRenderContext *sg = QQuickItemPrivate::get(m_ownerElement)->sceneGraphRenderContext();
-    QSGInternalImageNode *node = sg->sceneGraphContext()->createInternalImageNode();
+    QSGInternalImageNode *node = sg->sceneGraphContext()->createInternalImageNode(sg);
     QSGTexture *texture = sg->createTexture(image);
     if (m_ownerElement->smooth())
         texture->setFiltering(QSGTexture::Linear);

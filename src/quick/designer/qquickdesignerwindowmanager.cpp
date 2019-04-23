@@ -39,10 +39,10 @@
 
 #include "qquickdesignerwindowmanager_p.h"
 #include "private/qquickwindow_p.h"
-#if QT_CONFIG(opengl)
-# include <QtQuick/private/qsgdefaultrendercontext_p.h>
-#endif
 #include <QtQuick/QQuickWindow>
+#if QT_CONFIG(opengl)
+#include <private/qsgdefaultrendercontext_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -74,7 +74,12 @@ void QQuickDesignerWindowManager::makeOpenGLContext(QQuickWindow *window)
         m_openGlContext->create();
         if (!m_openGlContext->makeCurrent(window))
             qWarning("QQuickWindow: makeCurrent() failed...");
-        m_renderContext->initialize(m_openGlContext.data());
+        QSGDefaultRenderContext::InitParams params;
+        params.sampleCount = qMax(1, m_openGlContext->format().samples());
+        params.openGLContext = m_openGlContext.data();
+        params.initialSurfacePixelSize = window->size() * window->effectiveDevicePixelRatio();
+        params.maybeSurface = window;
+        m_renderContext->initialize(&params);
     } else {
         m_openGlContext->makeCurrent(window);
     }
