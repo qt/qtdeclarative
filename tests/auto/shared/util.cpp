@@ -53,7 +53,9 @@ QQmlDataTest::QQmlDataTest() :
     m_dataDirectory(QTest::qFindTestData("data", QT_QMLTEST_DATADIR, 0)),
 #endif
 
-    m_dataDirectoryUrl(QUrl::fromLocalFile(m_dataDirectory + QLatin1Char('/')))
+    m_dataDirectoryUrl(m_dataDirectory.startsWith(QLatin1Char(':'))
+        ? QUrl(QLatin1String("qrc") + m_dataDirectory)
+        : QUrl::fromLocalFile(m_dataDirectory + QLatin1Char('/')))
 {
     m_instance = this;
 }
@@ -67,7 +69,8 @@ void QQmlDataTest::initTestCase()
 {
     QVERIFY2(!m_dataDirectory.isEmpty(), "'data' directory not found");
     m_directory = QFileInfo(m_dataDirectory).absolutePath();
-    QVERIFY2(QDir::setCurrent(m_directory), qPrintable(QLatin1String("Could not chdir to ") + m_directory));
+    if (m_dataDirectoryUrl.scheme() != QLatin1String("qrc"))
+        QVERIFY2(QDir::setCurrent(m_directory), qPrintable(QLatin1String("Could not chdir to ") + m_directory));
 }
 
 QString QQmlDataTest::testFile(const QString &fileName) const
