@@ -1866,14 +1866,16 @@ bool QQuickTableViewPrivate::updateTableRecursive()
         return false;
     }
 
-    updateTable();
+    const bool updateComplete = updateTable();
+    if (!updateComplete)
+        return false;
 
     for (auto syncChild : qAsConst(syncChildren)) {
         auto syncChild_d = syncChild->d_func();
         syncChild_d->scheduledRebuildOptions |= rebuildOptions;
 
-        const bool updated = syncChild_d->updateTableRecursive();
-        if (!updated)
+        const bool descendantUpdateComplete = syncChild_d->updateTableRecursive();
+        if (!descendantUpdateComplete)
             return false;
     }
 
@@ -1882,11 +1884,13 @@ bool QQuickTableViewPrivate::updateTableRecursive()
     return true;
 }
 
-void QQuickTableViewPrivate::updateTable()
+bool QQuickTableViewPrivate::updateTable()
 {
     // Whenever something changes, e.g viewport moves, spacing is set to a
     // new value, model changes etc, this function will end up being called. Here
     // we check what needs to be done, and load/unload cells accordingly.
+    // If we cannot complete the update (because we need to wait for an item
+    // to load async), we return false.
 
     Q_TABLEVIEW_ASSERT(!polishing, "recursive updatePolish() calls are not allowed!");
     QBoolBlocker polishGuard(polishing, true);
@@ -1896,25 +1900,27 @@ void QQuickTableViewPrivate::updateTable()
         // as an atomic operation, which means that we don't continue doing anything else until all
         // items have been received and laid out. Note that updatePolish is then called once more
         // after the loadRequest has completed to handle anything that might have occurred in-between.
-        return;
+        return false;
     }
 
     if (rebuildState != RebuildState::Done) {
         processRebuildTable();
-        return;
+        return rebuildState == RebuildState::Done;
     }
 
     syncWithPendingChanges();
 
     if (rebuildState == RebuildState::Begin) {
         processRebuildTable();
-        return;
+        return rebuildState == RebuildState::Done;
     }
 
     if (loadedItems.isEmpty())
-        return;
+        return !loadRequest.isActive();
 
     loadAndUnloadVisibleEdges();
+
+    return !loadRequest.isActive();
 }
 
 void QQuickTableViewPrivate::fixup(QQuickFlickablePrivate::AxisData &data, qreal minExtent, qreal maxExtent)
