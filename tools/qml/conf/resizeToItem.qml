@@ -1,6 +1,6 @@
 /*****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -52,6 +52,6 @@ import QmlRuntime.Config 1.0
 Configuration {
     PartialScene {
         itemType: "QQuickItem"
-        container: "qtquick.qml"
+        container: "content/resizeWindowToItem.qml"
     }
 }

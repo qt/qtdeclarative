@@ -95,12 +95,13 @@ static QQmlApplicationEngine *qae = nullptr;
 static int exitTimerId = -1;
 #endif
 static const QString iconResourcePath(QStringLiteral(":/qt-project.org/QmlRuntime/resources/qml-64.png"));
+static const QString confResourcePath(QStringLiteral(":/qt-project.org/QmlRuntime/conf/"));
 static bool verboseMode = false;
 static bool quietMode = false;
 
 static void loadConf(const QString &override, bool quiet) // Terminates app on failure
 {
-    const QString defaultFileName = QLatin1String("configuration.qml");
+    const QString defaultFileName = QLatin1String("default.qml");
     QUrl settingsUrl;
     bool builtIn = false; //just for keeping track of the warning
     if (override.isEmpty()) {
@@ -110,29 +111,38 @@ static void loadConf(const QString &override, bool quiet) // Terminates app on f
             settingsUrl = QUrl::fromLocalFile(fi.absoluteFilePath());
         } else {
             // ### If different built-in configs are needed per-platform, just apply QFileSelector to the qrc conf.qml path
-            settingsUrl = QUrl(QLatin1String("qrc:///qt-project.org/QmlRuntime/conf/") + defaultFileName);
+            fi.setFile(confResourcePath + defaultFileName);
+            settingsUrl = QUrl::fromLocalFile(fi.absoluteFilePath());
             builtIn = true;
         }
     } else {
         QFileInfo fi;
-        fi.setFile(override);
-        if (!fi.exists()) {
-            printf("qml: Couldn't find required configuration file: %s\n",
-                    qPrintable(QDir::toNativeSeparators(fi.absoluteFilePath())));
-            exit(1);
+        fi.setFile(confResourcePath + override + QLatin1String(".qml"));
+        if (fi.exists()) {
+            settingsUrl = QUrl::fromLocalFile(fi.absoluteFilePath());
+            builtIn = true;
+        } else {
+            fi.setFile(override);
+            if (!fi.exists()) {
+                printf("qml: Couldn't find required configuration file: %s\n",
+                       qPrintable(QDir::toNativeSeparators(fi.absoluteFilePath())));
+                exit(1);
+            }
+            settingsUrl = QUrl::fromLocalFile(fi.absoluteFilePath());
         }
-        settingsUrl = QUrl::fromLocalFile(fi.absoluteFilePath());
     }
 
     if (!quiet) {
         printf("qml: %s\n", QLibraryInfo::build());
-        if (builtIn)
-            printf("qml: Using built-in configuration.\n");
-        else
-            printf("qml: Using configuration file: %s\n",
+        if (builtIn) {
+            printf("qml: Using built-in configuration: %s\n",
+                   qPrintable(override.isEmpty() ? defaultFileName : override));
+        } else {
+            printf("qml: Using configuration: %s\n",
                     qPrintable(settingsUrl.isLocalFile()
                     ? QDir::toNativeSeparators(settingsUrl.toLocalFile())
                     : settingsUrl.toString()));
+        }
     }
 
     // TODO: When we have better engine control, ban QtQuick* imports on this engine
@@ -151,6 +161,15 @@ void noFilesGiven()
     if (!quietMode)
         printf("qml: No files specified. Terminating.\n");
     exit(1);
+}
+
+static void listConfFiles()
+{
+    QDir confResourceDir(confResourcePath);
+    printf("%s\n", qPrintable(QCoreApplication::translate("main", "Built-in configurations:")));
+    for (const QFileInfo &fi : confResourceDir.entryInfoList(QDir::Files))
+        printf("  %s\n", qPrintable(fi.baseName()));
+    exit(0);
 }
 
 #ifdef QT_GUI_LIB
@@ -435,8 +454,11 @@ int main(int argc, char *argv[])
         QCoreApplication::translate("main", "Load the given file as a QML file."), QStringLiteral("file"));
     parser.addOption(qmlFileOption);
     QCommandLineOption configOption(QStringList() << QStringLiteral("c") << QStringLiteral("config"),
-        QCoreApplication::translate("main", "Load the given file as the configuration file."), QStringLiteral("file"));
+        QCoreApplication::translate("main", "Load the given built-in configuration or configuration file."), QStringLiteral("file"));
     parser.addOption(configOption);
+    QCommandLineOption listConfOption(QStringList() << QStringLiteral("list-conf"),
+                                      QCoreApplication::translate("main", "List the built-in configurations."));
+    parser.addOption(listConfOption);
     QCommandLineOption translationOption(QStringLiteral("translation"),
         QCoreApplication::translate("main", "Load the given file as the translations file."), QStringLiteral("file"));
     parser.addOption(translationOption);
@@ -486,6 +508,8 @@ int main(int argc, char *argv[])
         parser.showVersion();
     if (parser.isSet(helpOption))
         parser.showHelp();
+    if (parser.isSet(listConfOption))
+        listConfFiles();
     if (applicationType == QmlApplicationTypeUnknown) {
 #ifdef QT_WIDGETS_LIB
         qWarning() << QCoreApplication::translate("main", "--apptype must be followed by one of the following: core gui widget\n");
