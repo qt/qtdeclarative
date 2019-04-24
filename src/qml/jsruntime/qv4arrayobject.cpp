@@ -258,7 +258,7 @@ ReturnedValue ArrayPrototype::method_from(const FunctionObject *builtin, const V
                 mapArguments[0] = *nextValue;
                 mapArguments[1] = Value::fromDouble(k);
                 mappedValue = mapfn->call(thisArg, mapArguments, 2);
-                if (scope.engine->hasException)
+                if (scope.hasException())
                     return Runtime::IteratorClose::call(scope.engine, iterator, Value::fromBoolean(false));
             } else {
                 mappedValue = *nextValue;
@@ -271,7 +271,7 @@ ReturnedValue ArrayPrototype::method_from(const FunctionObject *builtin, const V
                 scope.engine->throwTypeError(QString::fromLatin1("Cannot redefine property: %1").arg(k));
             }
 
-            if (scope.engine->hasException) {
+            if (scope.hasException()) {
                 ScopedValue falsey(scope, Encode(false));
                 return Runtime::IteratorClose::call(scope.engine, iterator, falsey);
             }
@@ -423,7 +423,7 @@ ReturnedValue ArrayPrototype::method_concat(const FunctionObject *b, const Value
         } else if (eltAsObj && eltAsObj->isConcatSpreadable()) {
             const uint startIndex = result->getLength();
             const uint len = eltAsObj->getLength();
-            if (scope.engine->hasException)
+            if (scope.hasException())
                 return Encode::undefined();
 
             for (uint i = 0; i < len; ++i) {

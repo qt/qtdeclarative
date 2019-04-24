@@ -297,7 +297,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
     if (!argc || !argv[0].isObject()) {
         // ECMA 6 22.2.1.1
         qint64 l = argc ? argv[0].toIndex() : 0;
-        if (scope.engine->hasException)
+        if (scope.hasException())
             return Encode::undefined();
         // ### lift UINT_MAX restriction
         if (l < 0 || l > UINT_MAX)
@@ -307,7 +307,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
             scope.engine->throwRangeError(QStringLiteral("Non integer length for typed array."));
         uint byteLength = len * operations[that->d()->type].bytesPerElement;
         Scoped<ArrayBuffer> buffer(scope, scope.engine->newArrayBuffer(byteLength));
-        if (scope.engine->hasException)
+        if (scope.hasException())
             return Encode::undefined();
 
         Scoped<TypedArray> array(scope, TypedArray::create(scope.engine, that->d()->type));
@@ -330,7 +330,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
         uint destByteLength = byteLength*destElementSize/srcElementSize;
 
         Scoped<ArrayBuffer> newBuffer(scope, scope.engine->newArrayBuffer(destByteLength));
-        if (scope.engine->hasException)
+        if (scope.hasException())
             return Encode::undefined();
 
         Scoped<TypedArray> array(scope, TypedArray::create(scope.engine, that->d()->type));
@@ -380,7 +380,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
                 return scope.engine->throwRangeError(QStringLiteral("new TypedArray: invalid length"));
         } else {
             double l = qBound(0., argv[2].toInteger(), (double)UINT_MAX);
-            if (scope.engine->hasException)
+            if (scope.hasException())
                 return Encode::undefined();
             if (buffer->isDetachedBuffer())
                 return scope.engine->throwTypeError();
@@ -403,7 +403,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
 
     ScopedObject o(scope, argc ? argv[0] : Value::undefinedValue());
     uint l = (uint) qBound(0., ScopedValue(scope, o->get(scope.engine->id_length()))->toInteger(), (double)UINT_MAX);
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return scope.engine->throwTypeError();
 
     uint elementSize = operations[that->d()->type].bytesPerElement;
@@ -411,7 +411,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
     if (mul_overflow(size_t(l), size_t(elementSize), &bufferSize))
         return scope.engine->throwRangeError(QLatin1String("new TypedArray: invalid length"));
     Scoped<ArrayBuffer> newBuffer(scope, scope.engine->newArrayBuffer(bufferSize));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return Encode::undefined();
 
     Scoped<TypedArray> array(scope, TypedArray::create(scope.engine, that->d()->type));
@@ -425,10 +425,10 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
     while (idx < l) {
         val = o->get(idx);
         val = val->convertedToNumber();
-        if (scope.engine->hasException)
+        if (scope.hasException())
             return Encode::undefined();
         array->d()->type->write(b, val);
-        if (scope.engine->hasException)
+        if (scope.hasException())
             return Encode::undefined();
         ++idx;
         b += elementSize;
@@ -1393,7 +1393,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
     Scoped<ArrayBuffer> buffer(scope, a->d()->buffer);
 
     double doffset = argc >= 2 ? argv[1].toInteger() : 0;
-    if (scope.engine->hasException)
+    if (scope.hasException())
         RETURN_UNDEFINED();
     if (!buffer || buffer->isDetachedBuffer())
         return scope.engine->throwTypeError();
@@ -1407,12 +1407,12 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
     if (!srcTypedArray) {
         // src is a regular object
         ScopedObject o(scope, argv[0].toObject(scope.engine));
-        if (scope.engine->hasException || !o)
+        if (scope.hasException() || !o)
             return scope.engine->throwTypeError();
 
         double len = ScopedValue(scope, o->get(scope.engine->id_length()))->toNumber();
         uint l = (uint)len;
-        if (scope.engine->hasException || l != len)
+        if (scope.hasException() || l != len)
             return scope.engine->throwTypeError();
 
         const uint aLength = a->length();
@@ -1432,7 +1432,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
             if (scope.hasException() || buffer->isDetachedBuffer())
                 return scope.engine->throwTypeError();
             a->d()->type->write(b, val);
-            if (scope.engine->hasException)
+            if (scope.hasException())
                 RETURN_UNDEFINED();
             ++idx;
             b += elementSize;
@@ -1554,7 +1554,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_subarray(const FunctionObject
     if (end < begin)
         end = begin;
 
-    if (scope.engine->hasException)
+    if (scope.hasException())
         RETURN_UNDEFINED();
 
     int newLen = end - begin;
@@ -1707,7 +1707,7 @@ ReturnedValue IntrinsicTypedArrayCtor::method_from(const FunctionObject *f, cons
             }
             // Retrieve the next value. If the iteration ends, we're done here.
             done = Value::fromReturnedValue(Runtime::IteratorNext::call(scope.engine, lengthIterator, nextValue));
-            if (scope.engine->hasException)
+            if (scope.hasException())
                 return Runtime::IteratorClose::call(scope.engine, lengthIterator, Value::fromBoolean(false));
             if (done->toBoolean()) {
                 break;
@@ -1740,21 +1740,21 @@ ReturnedValue IntrinsicTypedArrayCtor::method_from(const FunctionObject *f, cons
         ScopedValue mappedValue(scope, Value::undefinedValue());
         for (qint64 k = 0; k < iterableLength; ++k) {
             done = Value::fromReturnedValue(Runtime::IteratorNext::call(scope.engine, iterator, nextValue));
-            if (scope.engine->hasException)
+            if (scope.hasException())
                 return Runtime::IteratorClose::call(scope.engine, iterator, Value::fromBoolean(false));
 
             if (mapfn) {
                 mapArguments[0] = *nextValue;
                 mapArguments[1] = Value::fromDouble(k);
                 mappedValue = mapfn->call(thisArg, mapArguments, 2);
-                if (scope.engine->hasException)
+                if (scope.hasException())
                     return Runtime::IteratorClose::call(scope.engine, iterator, Value::fromBoolean(false));
             } else {
                 mappedValue = *nextValue;
             }
 
             a->put(k, mappedValue);
-            if (scope.engine->hasException)
+            if (scope.hasException())
                 return Runtime::IteratorClose::call(scope.engine, iterator, Value::fromBoolean(false));
         }
         return a.asReturnedValue();

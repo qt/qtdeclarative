@@ -128,14 +128,14 @@ ReturnedValue Reflect::method_defineProperty(const FunctionObject *f, const Valu
 
     ScopedObject O(scope, argv[0]);
     ScopedPropertyKey name(scope, (argc > 1 ? argv[1] : Value::undefinedValue()).toPropertyKey(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     ScopedValue attributes(scope, argc > 2 ? argv[2] : Value::undefinedValue());
     ScopedProperty pd(scope);
     PropertyAttributes attrs;
     ObjectPrototype::toPropertyDescriptor(scope.engine, attributes, pd, &attrs);
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     bool result = O->defineOwnProperty(name, pd, attrs);
@@ -199,7 +199,7 @@ ReturnedValue Reflect::method_has(const FunctionObject *f, const Value *, const 
     const Value *index = argc > 1 ? &argv[1] : &undef;
 
     ScopedPropertyKey name(scope, index->toPropertyKey(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return false;
 
     return Encode(o->hasProperty(name));
@@ -268,7 +268,7 @@ ReturnedValue Reflect::method_set(const FunctionObject *f, const Value *, const 
     ScopedValue receiver(scope, argc >3 ? argv[3] : argv[0]);
 
     ScopedPropertyKey propertyKey(scope, index->toPropertyKey(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return false;
     bool result = o->put(propertyKey, val, receiver);
     return Encode(result);

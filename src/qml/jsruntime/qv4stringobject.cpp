@@ -266,14 +266,14 @@ ReturnedValue StringCtor::method_raw(const FunctionObject *f, const Value *, con
     while (1) {
         val = raw->get(nextIndex);
         result += val->toQString();
-        if (scope.engine->hasException)
+        if (scope.hasException())
             return Encode::undefined();
         if (nextIndex + 1 == literalSegments)
             return scope.engine->newString(result)->asReturnedValue();
 
         if (nextIndex < static_cast<uint>(argc))
             result += argv[nextIndex].toQString();
-        if (scope.engine->hasException)
+        if (scope.hasException())
             return Encode::undefined();
         ++nextIndex;
     }
@@ -895,13 +895,13 @@ ReturnedValue StringPrototype::method_search(const FunctionObject *b, const Valu
 {
     Scope scope(b);
     QString string = getThisString(scope.engine, thisObject);
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     Scoped<RegExpObject> regExp(scope, argc ? argv[0] : Value::undefinedValue());
     if (!regExp) {
         regExp = scope.engine->regExpCtor()->callAsConstructor(argv, 1);
-        if (scope.engine->hasException)
+        if (scope.hasException())
             return QV4::Encode::undefined();
 
         Q_ASSERT(regExp);

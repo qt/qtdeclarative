@@ -957,7 +957,7 @@ ReturnedValue JsonObject::method_stringify(const FunctionObject *b, const Value 
 
     ScopedValue arg0(scope, argc ? argv[0] : Value::undefinedValue());
     QString result = stringify.Str(QString(), arg0);
-    if (result.isEmpty() || scope.engine->hasException)
+    if (result.isEmpty() || scope.hasException())
         RETURN_UNDEFINED();
     return Encode(scope.engine->newString(result));
 }

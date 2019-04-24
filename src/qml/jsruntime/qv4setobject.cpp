@@ -90,7 +90,7 @@ ReturnedValue WeakSetCtor::construct(const FunctionObject *f, const Value *argv,
                     return a.asReturnedValue();
 
                 adder->call(a, nextValue, 1);
-                if (scope.engine->hasException) {
+                if (scope.hasException()) {
                     ScopedValue falsey(scope, Encode(false));
                     return Runtime::IteratorClose::call(scope.engine, iter, falsey);
                 }

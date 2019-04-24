@@ -797,8 +797,7 @@ bool QObjectWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, 
         return false;
     }
 
-
-    if (scope.engine->hasException || QQmlData::wasDeleted(that->d()->object()))
+    if (scope.hasException() || QQmlData::wasDeleted(that->d()->object()))
         return false;
 
     QQmlRefPointer<QQmlContextData> qmlContext = scope.engine->callingQmlContext();

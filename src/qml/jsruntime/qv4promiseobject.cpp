@@ -235,7 +235,7 @@ void ReactionHandler::executeResolveThenable(ResolveThenableEvent *event)
     jsCallData.args[1] = reject;
     jsCallData.thisObject = event->thenable.as<QV4::Object>();
     event->then.as<const FunctionObject>()->call(jsCallData);
-    if (scope.engine->hasException) {
+    if (scope.hasException()) {
         JSCallArguments rejectCallData(scope, 1);
         rejectCallData.args[0] = scope.engine->catchException();
         Scoped<RejectWrapper> reject {scope, scope.engine->memoryManager->allocate<QV4::RejectWrapper>()};
@@ -428,7 +428,7 @@ ReturnedValue PromiseCtor::virtualCallAsConstructor(const FunctionObject *f, con
         THROW_TYPE_ERROR(); // throw a TypeError exception
 
     Scoped<PromiseObject> a(scope, scope.engine->newPromiseObject());
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return Encode::undefined();
 
     a->d()->state = Heap::PromiseObject::Pending;  //4. Set promise.[[PromiseState]] to "pending"
@@ -447,7 +447,7 @@ ReturnedValue PromiseCtor::virtualCallAsConstructor(const FunctionObject *f, con
 
     executor->call(jsCallData); // 9. Let completion be Call(executor, undefined, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
 
-    if (scope.engine->hasException) {
+    if (scope.hasException()) {
         ScopedValue exception {scope, scope.engine->catchException()};
         JSCallArguments callData {scope, 1};
         callData.args[0] = exception;
@@ -1032,7 +1032,7 @@ ReturnedValue ResolveWrapper::virtualCall(const FunctionObject *f, const Value *
         // 8. Let then be Get(resolution, then)
         ScopedFunctionObject thenAction { scope, resolutionObject->get(thenName)};
         // 9. If then is an abrupt completion, then
-        if (scope.engine->hasException) {
+        if (scope.hasException()) {
             // Return RecjectPromise(promise, then.[[Value]]
             ScopedValue thenValue {scope, scope.engine->catchException()};
             promise->d()->setState(Heap::PromiseObject::Rejected);

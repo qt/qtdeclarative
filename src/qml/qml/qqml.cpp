@@ -974,7 +974,7 @@ bool AOTCompiledContext::callQmlContextPropertyLookup(
     }
 
     function->call(nullptr, args, types, argc);
-    return !scope.engine->hasException;
+    return !scope.hasException();
 }
 
 void AOTCompiledContext::initCallQmlContextPropertyLookup(uint index) const
@@ -1056,7 +1056,7 @@ bool AOTCompiledContext::callObjectPropertyLookup(
     }
 
     function->call(object, args, types, argc);
-    return !scope.engine->hasException;
+    return !scope.hasException();
 }
 
 void AOTCompiledContext::initCallObjectPropertyLookup(uint index) const

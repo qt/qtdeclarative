@@ -2815,7 +2815,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_font(const QV4::FunctionObject 
     CHECK_CONTEXT_SETTER(r)
 
     QV4::ScopedString s(scope, argc ? argv[0] : QV4::Value::undefinedValue(), QV4::ScopedString::Convert);
-    if (scope.engine->hasException)
+    if (scope.hasException())
         RETURN_UNDEFINED();
     QFont font = qt_font_from_string(s->toQString(), r->d()->context()->state.font);
     if (font != r->d()->context()->state.font) {
@@ -2867,7 +2867,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_textAlign(const QV4::FunctionOb
     CHECK_CONTEXT_SETTER(r)
 
     QV4::ScopedString s(scope, argc ? argv[0] : QV4::Value::undefinedValue(), QV4::ScopedString::Convert);
-    if (scope.engine->hasException)
+    if (scope.hasException())
         RETURN_UNDEFINED();
     QString textAlign = s->toQString();
 
@@ -2934,7 +2934,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_textBaseline(const QV4::Functio
     QV4::Scoped<QQuickJSContext2D> r(scope, *thisObject);
     CHECK_CONTEXT_SETTER(r)
     QV4::ScopedString s(scope, argc ? argv[0] : QV4::Value::undefinedValue(), QV4::ScopedString::Convert);
-    if (scope.engine->hasException)
+    if (scope.hasException())
         RETURN_UNDEFINED();
     QString textBaseline = s->toQString();
 

@@ -554,11 +554,11 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
         script.strictMode = v4->globalCode->isStrict();
     script.inheritContext = true;
     script.parse();
-    if (!scope.engine->hasException)
+    if (!scope.hasException())
         result = script.run();
     if (exceptionStackTrace)
         exceptionStackTrace->clear();
-    if (scope.engine->hasException) {
+    if (scope.hasException()) {
         QV4::StackTrace trace;
         result = v4->catchException(&trace);
         if (exceptionStackTrace) {

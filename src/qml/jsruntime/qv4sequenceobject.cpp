@@ -385,7 +385,7 @@ public:
             argv[0] = m_v4->fromVariant(lhs);
             argv[1] = m_v4->fromVariant(rhs);
             QV4::ScopedValue result(scope, compare->call(m_v4->globalObject, argv, 2));
-            if (scope.engine->hasException)
+            if (scope.hasException())
                 return false;
             return result->toNumber() < 0;
         }

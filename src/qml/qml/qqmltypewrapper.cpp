@@ -317,7 +317,7 @@ bool QQmlTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value,
     Q_ASSERT(m->as<QQmlTypeWrapper>());
     QQmlTypeWrapper *w = static_cast<QQmlTypeWrapper *>(m);
     QV4::Scope scope(w);
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return false;
 
     ScopedString name(scope, id.asStringOrSymbol());

@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
                 script->parseAsBinding = runAsQml;
                 script->parse();
             }
-            if (!scope.engine->hasException) {
+            if (!scope.hasException()) {
                 const auto unit = script->compilationUnit;
                 if (cache && unit && !(unit->unitData()->flags & QV4::CompiledData::Unit::StaticData)) {
                     if (unit->unitData()->sourceTimeStamp == 0) {
@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
 //                std::cout << t.elapsed() << " ms. elapsed" << std::endl;
             }
         }
-        if (scope.engine->hasException) {
+        if (scope.hasException()) {
             QV4::StackTrace trace;
             QV4::ScopedValue ex(scope, scope.engine->catchException(&trace));
             showException(ctx, ex, trace);

@@ -2641,7 +2641,7 @@ static inline bool evaluate_error(QV4::ExecutionEngine *v4, const QV4::Value &o,
     program.inheritContext = true;
 
     QV4::ScopedFunctionObject function(scope, program.run());
-    if (scope.engine->hasException) {
+    if (scope.hasException()) {
         scope.engine->catchException();
         return true;
     }
@@ -2649,7 +2649,7 @@ static inline bool evaluate_error(QV4::ExecutionEngine *v4, const QV4::Value &o,
     jsCallData.args[0] = o;
     *jsCallData.thisObject = v4->global();
     function->call(jsCallData);
-    if (scope.engine->hasException) {
+    if (scope.hasException()) {
         scope.engine->catchException();
         return true;
     }
@@ -2667,7 +2667,7 @@ static inline bool evaluate_value(QV4::ExecutionEngine *v4, const QV4::Value &o,
     program.inheritContext = true;
 
     QV4::ScopedFunctionObject function(scope, program.run());
-    if (scope.engine->hasException) {
+    if (scope.hasException()) {
         scope.engine->catchException();
         return false;
     }
@@ -2679,7 +2679,7 @@ static inline bool evaluate_value(QV4::ExecutionEngine *v4, const QV4::Value &o,
     jsCallData.args[0] = o;
     *jsCallData.thisObject = v4->global();
     value = function->call(jsCallData);
-    if (scope.engine->hasException) {
+    if (scope.hasException()) {
         scope.engine->catchException();
         return false;
     }
@@ -2698,7 +2698,7 @@ static inline QV4::ReturnedValue evaluate(QV4::ExecutionEngine *v4, const QV4::V
     program.inheritContext = true;
 
     QV4::ScopedFunctionObject function(scope, program.run());
-    if (scope.engine->hasException) {
+    if (scope.hasException()) {
         scope.engine->catchException();
         return QV4::Encode::undefined();
     }
@@ -2708,7 +2708,7 @@ static inline QV4::ReturnedValue evaluate(QV4::ExecutionEngine *v4, const QV4::V
     jsCallData.args[0] = o;
     *jsCallData.thisObject = v4->global();
     QV4::ScopedValue result(scope, function->call(jsCallData));
-    if (scope.engine->hasException) {
+    if (scope.hasException()) {
         scope.engine->catchException();
         return QV4::Encode::undefined();
     }

@@ -330,7 +330,7 @@ Bool Runtime::DeleteProperty_NoThrow::call(ExecutionEngine *engine, const Value 
 {
     Scope scope(engine);
     ScopedObject o(scope, base.toObject(engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return Encode::undefined();
     Q_ASSERT(o);
 
@@ -1587,11 +1587,11 @@ static CallArgs createSpreadArguments(Scope &scope, Value *argv, int argc)
         // spread element
         ++i;
         it = Runtime::GetIterator::call(scope.engine, argv[i], /* ForInIterator */ 1);
-        if (scope.engine->hasException)
+        if (scope.hasException())
             return { nullptr, 0 };
         while (1) {
             done = Runtime::IteratorNext::call(scope.engine, it, v);
-            if (scope.engine->hasException)
+            if (scope.hasException())
                 return { nullptr, 0 };
             Q_ASSERT(done->isBoolean());
             if (done->booleanValue())

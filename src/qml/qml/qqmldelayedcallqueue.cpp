@@ -76,7 +76,7 @@ void QQmlDelayedCallQueue::DelayedFunctionCall::execute(QV4::ExecutionEngine *en
 
         callback->call(jsCallData);
 
-        if (scope.engine->hasException) {
+        if (scope.hasException()) {
             QQmlError error = scope.engine->catchExceptionAsQmlError();
             error.setDescription(error.description() + QLatin1String(" (exception occurred during delayed function evaluation)"));
             QQmlEnginePrivate::warning(QQmlEnginePrivate::get(scope.engine->qmlEngine()), error);

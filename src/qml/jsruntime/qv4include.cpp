@@ -173,9 +173,9 @@ void QV4Include::finished()
         QV4::Script script(v4, qml, /*parse as QML binding*/false, code, m_url.toString());
 
         script.parse();
-        if (!scope.engine->hasException)
+        if (!scope.hasException())
             script.run();
-        if (scope.engine->hasException) {
+        if (scope.hasException()) {
             QV4::ScopedValue ex(scope, scope.engine->catchException());
             resultObj->put(status, QV4::ScopedValue(scope, QV4::Value::fromInt32(Exception)));
             QV4::ScopedString exception(scope, v4->newString(QStringLiteral("exception")));
@@ -245,9 +245,9 @@ QJSValue QV4Include::method_include(QV4::ExecutionEngine *engine, const QUrl &ur
 
         if (!script.isNull()) {
             script->parse();
-            if (!scope.engine->hasException)
+            if (!scope.hasException())
                 script->run();
-            if (scope.engine->hasException) {
+            if (scope.hasException()) {
                 QV4::ScopedValue ex(scope, scope.engine->catchException());
                 result = resultValue(scope.engine, Exception);
                 QV4::ScopedString exception(scope, scope.engine->newString(QStringLiteral("exception")));

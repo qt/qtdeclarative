@@ -1594,7 +1594,7 @@ void QQmlXMLHttpRequest::dispatchCallbackNow(Object *thisObj, bool done, bool er
         QV4::JSCallArguments jsCallData(scope);
         callback->call(jsCallData);
 
-        if (scope.engine->hasException) {
+        if (scope.hasException()) {
             QQmlError error = scope.engine->catchExceptionAsQmlError();
             QQmlEnginePrivate *qmlEnginePrivate = scope.engine->qmlEngine() ? QQmlEnginePrivate::get(scope.engine->qmlEngine()) : nullptr;
             QQmlEnginePrivate::warning(qmlEnginePrivate, error);

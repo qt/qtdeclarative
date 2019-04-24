@@ -306,7 +306,7 @@ ReturnedValue NumberPrototype::method_toPrecision(const FunctionObject *b, const
 {
     Scope scope(b);
     ScopedValue v(scope, thisNumberValue(scope.engine, thisObject));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
     double d = v->asDouble();
 
@@ -314,7 +314,7 @@ ReturnedValue NumberPrototype::method_toPrecision(const FunctionObject *b, const
         return Encode(v->toString(scope.engine));
 
     int precision = argv[0].toInt32();
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     if (std::isnan(d))

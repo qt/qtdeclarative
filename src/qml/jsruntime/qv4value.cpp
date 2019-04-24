@@ -109,7 +109,7 @@ double Value::toNumberImpl(Value val)
             Scope scope(val.objectValue()->engine());
             ScopedValue protectThis(scope, val);
             ScopedValue prim(scope, RuntimeHelpers::toPrimitive(val, NUMBER_HINT));
-            if (scope.engine->hasException)
+            if (scope.hasException())
                 return 0;
             return prim->toNumber();
         }

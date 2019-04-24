@@ -460,7 +460,7 @@ ReturnedValue Object::internalGet(PropertyKey id, const Value *receiver, bool *h
 bool Object::internalPut(PropertyKey id, const Value &value, Value *receiver)
 {
     Scope scope(this);
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return false;
 
     Object *r = receiver->objectValue();
@@ -523,7 +523,7 @@ bool Object::internalPut(PropertyKey id, const Value &value, Value *receiver)
         jsCallData.args[0] = value;
         *jsCallData.thisObject = *receiver;
         setter->call(jsCallData);
-        return !scope.engine->hasException;
+        return !scope.hasException();
     }
 
     // Data property
@@ -566,7 +566,7 @@ bool Object::internalDeleteProperty(PropertyKey id)
     if (id.isArrayIndex()) {
         uint index = id.asArrayIndex();
         Scope scope(engine());
-        if (scope.engine->hasException)
+        if (scope.hasException())
             return false;
 
         Scoped<ArrayData> ad(scope, arrayData());

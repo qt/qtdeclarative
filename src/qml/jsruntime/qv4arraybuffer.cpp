@@ -67,13 +67,13 @@ ReturnedValue SharedArrayBufferCtor::virtualCallAsConstructor(const FunctionObje
         return scope.engine->throwTypeError();
 
     qint64 len = argc ? argv[0].toIndex() : 0;
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return Encode::undefined();
     if (len < 0 || len >= INT_MAX)
         return scope.engine->throwRangeError(QStringLiteral("SharedArrayBuffer: Invalid length."));
 
     Scoped<SharedArrayBuffer> a(scope, scope.engine->memoryManager->allocate<SharedArrayBuffer>(len));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return Encode::undefined();
 
     return a->asReturnedValue();
@@ -105,7 +105,7 @@ ReturnedValue ArrayBufferCtor::virtualCallAsConstructor(const FunctionObject *f,
         if (o)
             a->setPrototypeOf(o);
     }
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return Encode::undefined();
 
     return a->asReturnedValue();

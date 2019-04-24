@@ -137,7 +137,7 @@ ReturnedValue ObjectPrototype::method_getPrototypeOf(const FunctionObject *b, co
         return scope.engine->throwTypeError();
 
     ScopedObject o(scope, argv[0].toObject(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     ScopedObject p(scope, o->getPrototypeOf());
@@ -160,7 +160,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(const FunctionObj
         return scope.engine->throwTypeError();
 
     ScopedObject O(scope, argv[0].toObject(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     if (ArgumentsObject::isNonStrictArgumentsObject(O))
@@ -168,7 +168,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(const FunctionObj
 
     ScopedValue v(scope, argc > 1 ? argv[1] : Value::undefinedValue());
     ScopedPropertyKey name(scope, v->toPropertyKey(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     ScopedProperty desc(scope);
@@ -183,7 +183,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptors(const FunctionOb
         return scope.engine->throwTypeError();
 
     ScopedObject o(scope, argv[0].toObject(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return Encode::undefined();
 
     ScopedObject descriptors(scope, scope.engine->newObject());
@@ -212,7 +212,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyNames(const FunctionObject *
         return scope.engine->throwTypeError();
 
     ScopedObject O(scope, argv[0].toObject(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     return Encode(getOwnPropertyNames(scope.engine, argv[0]));
@@ -252,7 +252,7 @@ ReturnedValue ObjectPrototype::method_assign(const FunctionObject *b, const Valu
         return scope.engine->throwTypeError();
 
     ScopedObject to(scope, argv[0].toObject(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     if (argc == 1)
@@ -263,7 +263,7 @@ ReturnedValue ObjectPrototype::method_assign(const FunctionObject *b, const Valu
             continue;
 
         ScopedObject from(scope, argv[i].toObject(scope.engine));
-        if (scope.engine->hasException)
+        if (scope.hasException())
         return QV4::Encode::undefined();
         QV4::ScopedArrayObject keys(scope, QV4::ObjectPrototype::getOwnPropertyNames(scope.engine, from));
         quint32 length = keys->getLength();
@@ -284,7 +284,7 @@ ReturnedValue ObjectPrototype::method_assign(const FunctionObject *b, const Valu
 
             propValue = from->get(nextKey);
             to->set(nextKey, propValue, Object::DoThrowOnRejection);
-            if (scope.engine->hasException)
+            if (scope.hasException())
         return QV4::Encode::undefined();
         }
     }
@@ -322,14 +322,14 @@ ReturnedValue ObjectPrototype::method_defineProperty(const FunctionObject *b, co
 
     ScopedObject O(scope, argv[0]);
     ScopedPropertyKey name(scope, (argc > 1 ? argv[1] : Value::undefinedValue()).toPropertyKey(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     ScopedValue attributes(scope, argc > 2 ? argv[2] : Value::undefinedValue());
     ScopedProperty pd(scope);
     PropertyAttributes attrs;
     toPropertyDescriptor(scope.engine, attributes, pd, &attrs);
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     if (!O->defineOwnProperty(name, pd, attrs))
@@ -347,7 +347,7 @@ ReturnedValue ObjectPrototype::method_defineProperties(const FunctionObject *b, 
     ScopedObject O(scope, argv[0]);
 
     ScopedObject o(scope, argv[1].toObject(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     ScopedValue val(scope);
@@ -364,7 +364,7 @@ ReturnedValue ObjectPrototype::method_defineProperties(const FunctionObject *b, 
         PropertyAttributes nattrs;
         val = o->getValue(pd->value, attrs);
         toPropertyDescriptor(scope.engine, val, n, &nattrs);
-        if (scope.engine->hasException)
+        if (scope.hasException())
         return QV4::Encode::undefined();
         bool ok = O->defineOwnProperty(key, n, nattrs);
         if (!ok)
@@ -381,7 +381,7 @@ ReturnedValue ObjectPrototype::method_entries(const FunctionObject *f, const Val
         return scope.engine->throwTypeError();
 
     ScopedObject o(scope, argv[0].toObject(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return Encode::undefined();
 
     ScopedArrayObject a(scope, scope.engine->newArrayObject());
@@ -405,7 +405,7 @@ ReturnedValue ObjectPrototype::method_entries(const FunctionObject *f, const Val
         entry = a->get(PropertyKey::fromArrayIndex(i));
         name = entry->get(PropertyKey::fromArrayIndex(0));
         value = o->get(name->toPropertyKey());
-        if (scope.engine->hasException)
+        if (scope.hasException())
             return Encode::undefined();
         entry->push_back(value);
     }
@@ -560,7 +560,7 @@ ReturnedValue ObjectPrototype::method_keys(const FunctionObject *b, const Value 
         return scope.engine->throwTypeError();
 
     ScopedObject o(scope, argv[0].toObject(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     ScopedArrayObject a(scope, scope.engine->newArrayObject());
@@ -602,7 +602,7 @@ ReturnedValue ObjectPrototype::method_values(const FunctionObject *f, const Valu
         return scope.engine->throwTypeError();
 
     ScopedObject o(scope, argv[0].toObject(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     ScopedArrayObject a(scope, scope.engine->newArrayObject());
@@ -679,10 +679,10 @@ ReturnedValue ObjectPrototype::method_hasOwnProperty(const FunctionObject *b, co
 {
     Scope scope(b);
     ScopedPropertyKey P(scope, (argc ? argv[0] : Value::undefinedValue()).toPropertyKey(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
     ScopedObject O(scope, thisObject->toObject(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
     bool r = O->getOwnProperty(P) != Attr_Invalid;
     return Encode(r);
@@ -696,7 +696,7 @@ ReturnedValue ObjectPrototype::method_isPrototypeOf(const FunctionObject *b, con
 
     ScopedObject V(scope, argv[0]);
     ScopedObject O(scope, thisObject->toObject(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
     ScopedObject proto(scope, V->getPrototypeOf());
     while (proto) {
@@ -711,11 +711,11 @@ ReturnedValue ObjectPrototype::method_propertyIsEnumerable(const FunctionObject 
 {
     Scope scope(b);
     ScopedPropertyKey p(scope, (argc ? argv[0] : Value::undefinedValue()).toPropertyKey(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     ScopedObject o(scope, thisObject->toObject(scope.engine));
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
     PropertyAttributes attrs = o->getOwnProperty(p);
     return Encode(attrs.isEnumerable());
@@ -732,7 +732,7 @@ ReturnedValue ObjectPrototype::method_defineGetter(const FunctionObject *b, cons
         THROW_TYPE_ERROR();
 
     ScopedString prop(scope, argv[0], ScopedString::Convert);
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     ScopedObject o(scope, thisObject);
@@ -762,7 +762,7 @@ ReturnedValue ObjectPrototype::method_defineSetter(const FunctionObject *b, cons
         THROW_TYPE_ERROR();
 
     ScopedString prop(scope, argv[0], ScopedString::Convert);
-    if (scope.engine->hasException)
+    if (scope.hasException())
         return QV4::Encode::undefined();
 
     ScopedObject o(scope, thisObject);
