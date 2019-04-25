@@ -301,6 +301,8 @@ private slots:
     void polymorphicFunctionLookup();
     void anchorsToParentInPropertyChanges();
 
+    void typeWrapperToVariant();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -5083,6 +5085,19 @@ void tst_qqmllanguage::anchorsToParentInPropertyChanges()
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
     QTRY_COMPARE(o->property("edgeWidth").toInt(), 200);
+}
+
+void tst_qqmllanguage::typeWrapperToVariant()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("typeWrapperToVariant.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    QObject *connections = qvariant_cast<QObject *>(o->property("connections"));
+    QVERIFY(connections);
+    QObject *target = qvariant_cast<QObject *>(connections->property("target"));
+    QVERIFY(target);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
