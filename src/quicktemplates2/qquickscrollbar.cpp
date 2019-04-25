@@ -40,6 +40,9 @@
 
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/private/qquickflickable_p.h>
+#if QT_CONFIG(accessibility)
+#include <QtQuick/private/qquickaccessibleattached_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -724,8 +727,19 @@ void QQuickScrollBar::accessibilityActiveChanged(bool active)
     QQuickControl::accessibilityActiveChanged(active);
 
     Q_D(QQuickScrollBar);
-    if (active)
+    if (active) {
         setAccessibleProperty("pressed", d->pressed);
+
+        if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(this)) {
+            connect(accessibleAttached, &QQuickAccessibleAttached::increaseAction, this, &QQuickScrollBar::increase);
+            connect(accessibleAttached, &QQuickAccessibleAttached::decreaseAction, this, &QQuickScrollBar::decrease);
+        }
+    } else {
+        if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(this)) {
+            disconnect(accessibleAttached, &QQuickAccessibleAttached::increaseAction, this, &QQuickScrollBar::increase);
+            disconnect(accessibleAttached, &QQuickAccessibleAttached::decreaseAction, this, &QQuickScrollBar::decrease);
+        }
+    }
 }
 
 QAccessible::Role QQuickScrollBar::accessibleRole() const
