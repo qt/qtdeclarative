@@ -2593,6 +2593,10 @@ void QQmlMetaType::freeUnusedTypesAndCaches()
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
+    // in case this is being called during program exit, `data` might be destructed already
+    if (!data)
+        return;
+
     {
         bool deletedAtLeastOneType;
         do {
