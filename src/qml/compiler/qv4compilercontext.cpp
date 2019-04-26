@@ -428,7 +428,7 @@ bool Context::canUseTracingJit() const
 
     //### the next condition should be refined and have the IR distinguish between escaping and
     //    non-escaping locals
-    return !hasTry && !requiresExecutionContext && !hasNestedFunctions;
+    return !requiresExecutionContext && !hasNestedFunctions;
 #else
     return false;
 #endif
