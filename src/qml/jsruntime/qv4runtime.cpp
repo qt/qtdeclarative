@@ -1767,8 +1767,8 @@ void Runtime::CloneBlockContext::call(ExecutionEngine *engine)
 void Runtime::PushScriptContext::call(ExecutionEngine *engine, int index)
 {
     Q_ASSERT(engine->currentStackFrame->isJSTypesFrame());
-    Q_ASSERT(engine->currentStackFrame->context()->d()->type == Heap::ExecutionContext::Type_GlobalContext ||
-             engine->currentStackFrame->context()->d()->type == Heap::ExecutionContext::Type_QmlContext);
+    Q_ASSERT(engine->currentContext()->d()->type == Heap::ExecutionContext::Type_GlobalContext ||
+             engine->currentContext()->d()->type == Heap::ExecutionContext::Type_QmlContext);
     ReturnedValue c = ExecutionContext::newBlockContext(engine->currentStackFrame, index)->asReturnedValue();
     engine->setScriptContext(c);
     static_cast<JSTypesStackFrame *>(engine->currentStackFrame)->jsFrame->context = c;
