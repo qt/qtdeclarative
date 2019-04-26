@@ -38,28 +38,18 @@
 ****************************************************************************/
 #include "qv4identifiertable_p.h"
 #include "qv4symbol_p.h"
+#include <private/qprimefornumbits_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-
-static const uchar prime_deltas[] = {
-    0,  0,  1,  3,  1,  5,  3,  3,  1,  9,  7,  5,  3,  9, 25,  3,
-    1, 21,  3, 21,  7, 15,  9,  5,  3, 29, 15,  0,  0,  0,  0,  0
-};
-
-static inline int primeForNumBits(int numBits)
-{
-    return (1 << numBits) + prime_deltas[numBits];
-}
-
 
 IdentifierTable::IdentifierTable(ExecutionEngine *engine, int numBits)
     : engine(engine)
     , size(0)
     , numBits(numBits)
 {
-    alloc = primeForNumBits(numBits);
+    alloc = qPrimeForNumBits(numBits);
     entriesByHash = (Heap::StringOrSymbol **)malloc(alloc*sizeof(Heap::StringOrSymbol *));
     entriesById = (Heap::StringOrSymbol **)malloc(alloc*sizeof(Heap::StringOrSymbol *));
     memset(entriesByHash, 0, alloc*sizeof(Heap::String *));
@@ -87,7 +77,7 @@ void IdentifierTable::addEntry(Heap::StringOrSymbol *str)
 
     if (grow) {
         ++numBits;
-        int newAlloc = primeForNumBits(numBits);
+        int newAlloc = qPrimeForNumBits(numBits);
         Heap::StringOrSymbol **newEntries = (Heap::StringOrSymbol **)malloc(newAlloc*sizeof(Heap::String *));
         memset(newEntries, 0, newAlloc*sizeof(Heap::StringOrSymbol *));
         for (uint i = 0; i < alloc; ++i) {
