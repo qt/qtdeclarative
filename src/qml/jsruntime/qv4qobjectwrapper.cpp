@@ -560,9 +560,9 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
 
         QQmlContextData *callingQmlContext = scope.engine->callingQmlContext();
         if (!QQmlPropertyPrivate::write(object, *property, v, callingQmlContext)) {
-            const char *valueType = nullptr;
-            if (v.userType() == QVariant::Invalid) valueType = "null";
-            else valueType = QMetaType::typeName(v.userType());
+            const char *valueType = (v.userType() == QMetaType::UnknownType)
+                    ? "an unknown type"
+                    : QMetaType::typeName(v.userType());
 
             const char *targetTypeName = QMetaType::typeName(property->propType());
             if (!targetTypeName)
