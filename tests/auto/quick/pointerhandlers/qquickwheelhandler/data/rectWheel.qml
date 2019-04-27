@@ -39,5 +39,7 @@ Rectangle {
         }
     }
 
-    WheelHandler { }
+    WheelHandler {
+        activeTimeout: 0.5
+    }
 }

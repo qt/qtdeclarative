@@ -47,8 +47,8 @@ Rectangle {
         WheelHandler {
             id: innerWheelHandler
             objectName: "innerWheelHandler"
-            // should deactivate because events go to the outer handler, not because of timeout
-            activeTimeout: 1
+            // TODO should ideally deactivate because events go to the outer handler, not because of timeout
+            activeTimeout: 0.5
             property: "x"
         }
     }
