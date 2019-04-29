@@ -4,7 +4,6 @@ SUBDIRS += \
     builtins \
     qtqml \
     models \
-    labsanimation \
     labsmodels
 
 qtConfig(thread): SUBDIRS += folderlistmodel
@@ -16,6 +15,7 @@ qtHaveModule(quick) {
     QT_FOR_CONFIG += quick-private
 
     SUBDIRS += \
+        labsanimation \
         layouts \
         qtquick2 \
         window \
