@@ -42,6 +42,9 @@ private slots:
     void binding();
     void whenAfterValue();
     void restoreBinding();
+    void restoreBindingValue();
+    void restoreBindingVarValue();
+    void restoreBindingJSValue();
     void restoreBindingWithLoop();
     void restoreBindingWithoutCrash();
     void deletedObject();
@@ -132,6 +135,78 @@ void tst_qqmlbinding::restoreBinding()
     QCOMPARE(myItem->x(), qreal(100-49));
 
     delete rect;
+}
+
+void tst_qqmlbinding::restoreBindingValue()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("restoreBinding2.qml"));
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));
+    QVERIFY(!rect.isNull());
+
+    auto myItem = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("myItem"));
+    QVERIFY(myItem != nullptr);
+
+    QCOMPARE(myItem->height(), 100);
+    myItem->setProperty("when", QVariant(false));
+    QCOMPARE(myItem->height(), 300); // make sure the original value was restored
+
+    myItem->setProperty("when", QVariant(true));
+    QCOMPARE(myItem->height(), 100); // make sure the value specified in Binding is set
+    rect->setProperty("boundValue", 200);
+    QCOMPARE(myItem->height(), 200); // make sure the changed binding value is set
+    myItem->setProperty("when", QVariant(false));
+    // make sure that the original value is back, not e.g. the value from before the
+    // change (i.e. 100)
+    QCOMPARE(myItem->height(), 300);
+}
+
+void tst_qqmlbinding::restoreBindingVarValue()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("restoreBinding3.qml"));
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));
+    QVERIFY(!rect.isNull());
+
+    auto myItem = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("myItem"));
+    QVERIFY(myItem != nullptr);
+
+    QCOMPARE(myItem->property("foo"), 13);
+    myItem->setProperty("when", QVariant(false));
+    QCOMPARE(myItem->property("foo"), 42); // make sure the original value was restored
+
+    myItem->setProperty("when", QVariant(true));
+    QCOMPARE(myItem->property("foo"), 13); // make sure the value specified in Binding is set
+    rect->setProperty("boundValue", 31337);
+    QCOMPARE(myItem->property("foo"), 31337); // make sure the changed binding value is set
+    myItem->setProperty("when", QVariant(false));
+    // make sure that the original value is back, not e.g. the value from before the
+    // change (i.e. 100)
+    QCOMPARE(myItem->property("foo"), 42);
+}
+
+void tst_qqmlbinding::restoreBindingJSValue()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("restoreBinding4.qml"));
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));
+    QVERIFY(!rect.isNull());
+
+    auto myItem = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("myItem"));
+    QVERIFY(myItem != nullptr);
+
+    QCOMPARE(myItem->property("fooCheck"), false);
+    myItem->setProperty("when", QVariant(false));
+    QCOMPARE(myItem->property("fooCheck"), true); // make sure the original value was restored
+
+    myItem->setProperty("when", QVariant(true));
+    QCOMPARE(myItem->property("fooCheck"), false); // make sure the value specified in Binding is set
+    rect->setProperty("boundValue", 31337);
+    QCOMPARE(myItem->property("fooCheck"), false); // make sure the changed binding value is set
+    myItem->setProperty("when", QVariant(false));
+    // make sure that the original value is back, not e.g. the value from before the change
+    QCOMPARE(myItem->property("fooCheck"), true);
+
 }
 
 void tst_qqmlbinding::restoreBindingWithLoop()

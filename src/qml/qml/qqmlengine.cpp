@@ -204,6 +204,7 @@ void QQmlEnginePrivate::defineModule()
     qmlRegisterType<QObject>(uri, 2, 0, "QtObject");
     qmlRegisterType<QQmlBind>(uri, 2, 0, "Binding");
     qmlRegisterType<QQmlBind, 8>(uri, 2, 8, "Binding"); // Only available in >= 2.8
+    qmlRegisterType<QQmlBind, 14>(uri, 2, 14, "Binding");
     qmlRegisterCustomType<QQmlConnections>(uri, 2, 0, "Connections", new QQmlConnectionsParser);
     qmlRegisterCustomType<QQmlConnections, 1>(uri, 2, 3, "Connections", new QQmlConnectionsParser); // Only available in QtQml >= 2.3
 #if QT_CONFIG(qml_animation)

@@ -60,6 +60,15 @@ QT_BEGIN_NAMESPACE
 class QQmlBindPrivate;
 class Q_AUTOTEST_EXPORT QQmlBind : public QObject, public QQmlPropertyValueSource, public QQmlParserStatus
 {
+public:
+    enum RestorationMode {
+        RestoreNone    = 0x0,
+        RestoreBinding = 0x1,
+        RestoreValue   = 0x2,
+        RestoreBindingOrValue = RestoreBinding | RestoreValue
+    };
+
+private:
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlBind)
     Q_INTERFACES(QQmlParserStatus)
@@ -69,6 +78,9 @@ class Q_AUTOTEST_EXPORT QQmlBind : public QObject, public QQmlPropertyValueSourc
     Q_PROPERTY(QVariant value READ value WRITE setValue)
     Q_PROPERTY(bool when READ when WRITE setWhen)
     Q_PROPERTY(bool delayed READ delayed WRITE setDelayed REVISION 8)
+    Q_PROPERTY(RestorationMode restoreMode READ restoreMode WRITE setRestoreMode
+               NOTIFY restoreModeChanged REVISION 14)
+    Q_ENUM(RestorationMode)
 
 public:
     QQmlBind(QObject *parent=nullptr);
@@ -88,6 +100,12 @@ public:
 
     bool delayed() const;
     void setDelayed(bool);
+
+    RestorationMode restoreMode() const;
+    void setRestoreMode(RestorationMode);
+
+Q_SIGNALS:
+    void restoreModeChanged();
 
 protected:
     void setTarget(const QQmlProperty &) override;
