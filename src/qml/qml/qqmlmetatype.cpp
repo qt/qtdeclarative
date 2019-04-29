@@ -76,6 +76,8 @@ public:
     const QQmlMetaTypeData *operator->() const { return data; }
     operator const QQmlMetaTypeData *() const { return data; }
 
+    bool isValid() const { return data != nullptr; }
+
 private:
     QMutexLocker locker;
     LockedData *data = nullptr;
@@ -1205,6 +1207,10 @@ void QQmlMetaType::unregisterType(int typeIndex)
 void QQmlMetaType::freeUnusedTypesAndCaches()
 {
     QQmlMetaTypeDataPtr data;
+
+    // in case this is being called during program exit, `data` might be destructed already
+    if (!data.isValid())
+        return;
 
     bool deletedAtLeastOneType;
     do {

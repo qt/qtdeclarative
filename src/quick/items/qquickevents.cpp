@@ -1135,10 +1135,10 @@ void QQuickEventTouchPoint::reset(const QTouchEvent::TouchPoint &tp, ulong times
 struct PointVelocityData {
     QVector2D velocity;
     QPointF pos;
-    ulong timestamp;
+    ulong timestamp = 0;
 };
 
-typedef QMap<quint64, PointVelocityData*> PointDataForPointIdMap;
+typedef QMap<quint64, PointVelocityData> PointDataForPointIdMap;
 Q_GLOBAL_STATIC(PointDataForPointIdMap, g_previousPointData)
 static const int PointVelocityAgeLimit = 500; // milliseconds
 
@@ -1149,42 +1149,36 @@ static const int PointVelocityAgeLimit = 500; // milliseconds
 */
 QVector2D QQuickEventPoint::estimatedVelocity() const
 {
-    PointVelocityData *prevPoint = g_previousPointData->value(m_pointId);
-    if (!prevPoint) {
+    auto prevPointIt = g_previousPointData->find(m_pointId);
+    auto end = g_previousPointData->end();
+    if (prevPointIt == end) {
         // cleanup events older than PointVelocityAgeLimit
-        auto end = g_previousPointData->end();
         for (auto it = g_previousPointData->begin(); it != end; ) {
-            PointVelocityData *data = it.value();
-            if (m_timestamp - data->timestamp > PointVelocityAgeLimit) {
+            if (m_timestamp - it->timestamp > PointVelocityAgeLimit)
                 it = g_previousPointData->erase(it);
-                delete data;
-            } else {
+            else
                 ++it;
-            }
         }
-        // TODO optimize: stop this dynamic memory thrashing
-        prevPoint = new PointVelocityData;
-        prevPoint->velocity = QVector2D();
-        prevPoint->timestamp = 0;
-        prevPoint->pos = QPointF();
-        g_previousPointData->insert(m_pointId, prevPoint);
+        prevPointIt = g_previousPointData->insert(m_pointId, PointVelocityData());
     }
-    const ulong timeElapsed = m_timestamp - prevPoint->timestamp;
+
+    auto &prevPoint = prevPointIt.value();
+    const ulong timeElapsed = m_timestamp - prevPoint.timestamp;
     if (timeElapsed == 0)   // in case we call estimatedVelocity() twice on the same QQuickEventPoint
         return m_velocity;
 
     QVector2D newVelocity;
-    if (prevPoint->timestamp != 0)
-        newVelocity = QVector2D(m_scenePos - prevPoint->pos)/timeElapsed;
+    if (prevPoint.timestamp != 0)
+        newVelocity = QVector2D(m_scenePos - prevPoint.pos) / timeElapsed;
 
     // VERY simple kalman filter: does a weighted average
     // where the older velocities get less and less significant
     static const float KalmanGain = 0.7f;
     QVector2D filteredVelocity = newVelocity * KalmanGain + m_velocity * (1.0f - KalmanGain);
 
-    prevPoint->velocity = filteredVelocity;
-    prevPoint->pos = m_scenePos;
-    prevPoint->timestamp = m_timestamp;
+    prevPoint.velocity = filteredVelocity;
+    prevPoint.pos = m_scenePos;
+    prevPoint.timestamp = m_timestamp;
     return filteredVelocity;
 }
 

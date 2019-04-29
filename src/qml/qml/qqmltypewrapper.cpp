@@ -95,9 +95,8 @@ QObject* QQmlTypeWrapper::singletonObject() const
 
 QVariant QQmlTypeWrapper::toVariant() const
 {
-    // Only Singleton type wrappers can be converted to a variant.
     if (!isSingleton())
-        return QVariant();
+        return QVariant::fromValue<QObject *>(d()->object);
 
     QQmlEnginePrivate *e = QQmlEnginePrivate::get(engine()->qmlEngine());
     const QQmlType type = d()->type();

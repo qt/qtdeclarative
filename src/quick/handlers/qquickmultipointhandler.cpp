@@ -70,13 +70,14 @@ bool QQuickMultiPointHandler::wantsPointerEvent(QQuickPointerEvent *event)
     if (!QQuickPointerDeviceHandler::wantsPointerEvent(event))
         return false;
 
-#if QT_CONFIG(gestures)
-    if (event->asPointerNativeGestureEvent())
-        return true;
-#endif
-
     if (event->asPointerScrollEvent())
         return false;
+
+    bool ret = false;
+#if QT_CONFIG(gestures)
+    if (event->asPointerNativeGestureEvent() && event->point(0)->state() != QQuickEventPoint::Released)
+        ret = true;
+#endif
 
     // If points were pressed or released within parentItem, reset stored state
     // and check eligible points again. This class of handlers is intended to
@@ -97,7 +98,7 @@ bool QQuickMultiPointHandler::wantsPointerEvent(QQuickPointerEvent *event)
         return true;
     }
 
-    const bool ret = (candidatePoints.size() >= minimumPointCount() && candidatePoints.size() <= maximumPointCount());
+    ret = ret || (candidatePoints.size() >= minimumPointCount() && candidatePoints.size() <= maximumPointCount());
     if (ret) {
         const int c = candidatePoints.count();
         d->currentPoints.resize(c);
