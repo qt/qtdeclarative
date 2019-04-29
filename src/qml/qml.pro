@@ -4,6 +4,9 @@ QT = core-private
 qtConfig(qml-network): \
     QT += network
 
+TRACEPOINT_PROVIDER = $$PWD/qtqml.tracepoints
+CONFIG += qt_tracepoints
+
 DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 
 msvc:equals(QT_ARCH, i386): QMAKE_LFLAGS += /BASE:0x66000000

@@ -57,6 +57,8 @@
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qjsvalue_p.h>
 
+#include <qtqml_tracepoints_p.h>
+
 QT_USE_NAMESPACE
 
 namespace {
@@ -1130,6 +1132,9 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 {
     const QV4::CompiledData::Object *obj = compilationUnit->objectAt(index);
     QQmlObjectCreationProfiler profiler(sharedState->profiler.profiler, obj);
+    Q_TRACE(QQmlObjectCreator_createInstance_entry, compilationUnit.data(), obj, context->url());
+    QString typeName;
+    Q_TRACE_EXIT(QQmlObjectCreator_createInstance_exit, typeName);
 
     ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
 
@@ -1143,8 +1148,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     if (obj->flags & QV4::CompiledData::Object::IsComponent) {
         isComponent = true;
         QQmlComponent *component = new QQmlComponent(engine, compilationUnit.data(), index, parent);
-        Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
-                         compilationUnit.data(), obj, QStringLiteral("<component>"), context->url()));
+        typeName = QStringLiteral("<component>");
         QQmlComponentPrivate::get(component)->creationContext = context;
         instance = component;
         ddata = QQmlData::get(instance, /*create*/true);
@@ -1155,8 +1159,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         installPropertyCache = !typeRef->isFullyDynamicType;
         QQmlType type = typeRef->type;
         if (type.isValid()) {
-            Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
-                             compilationUnit.data(), obj, type.qmlTypeName(), context->url()));
+            typeName = type.qmlTypeName();
 
             void *ddataMemory = nullptr;
             type.create(&instance, &ddataMemory, sizeof(QQmlData));
@@ -1188,9 +1191,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             sharedState->allCreatedObjects.push(instance);
         } else {
             Q_ASSERT(typeRef->compilationUnit);
-            Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
-                             compilationUnit.data(), obj, typeRef->compilationUnit->fileName(),
-                             context->url()));
+            typeName = typeRef->compilationUnit->fileName();
             if (typeRef->compilationUnit->unitData()->isSingleton())
             {
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
@@ -1217,6 +1218,11 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
         ddata = QQmlData::get(instance, /*create*/true);
     }
+
+    Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
+        compilationUnit.data(), obj, typeName, context->url()));
+    Q_UNUSED(typeName); // only relevant for tracing
+
     ddata->lineNumber = obj->location.line;
     ddata->columnNumber = obj->location.column;
 
