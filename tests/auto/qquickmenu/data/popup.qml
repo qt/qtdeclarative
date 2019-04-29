@@ -53,7 +53,7 @@ import QtQuick.Controls 2.12
 
 ApplicationWindow {
     width: 400
-    height: 400
+    height: 600
 
     property alias menu: menu
     property alias menuItem1: menuItem1
