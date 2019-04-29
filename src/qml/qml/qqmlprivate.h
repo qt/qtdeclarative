@@ -190,16 +190,13 @@ namespace QQmlPrivate
     template<typename T>
     class AttachedPropertySelector<T, 1>
     {
-        static inline QObject *attachedProperties(QObject *obj) {
-            return T::qmlAttachedProperties(obj);
-        }
         template<typename ReturnType>
         static inline const QMetaObject *attachedPropertiesMetaObject(ReturnType *(*)(QObject *)) {
             return &ReturnType::staticMetaObject;
         }
     public:
         static inline QQmlAttachedPropertiesFunc func() {
-            return &attachedProperties;
+            return QQmlAttachedPropertiesFunc(&T::qmlAttachedProperties);
         }
         static inline const QMetaObject *metaObject() {
             return attachedPropertiesMetaObject(&T::qmlAttachedProperties);
