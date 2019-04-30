@@ -368,6 +368,7 @@ private slots:
     void saveAccumulatorBeforeToInt32();
     void intMinDividedByMinusOne();
     void undefinedPropertiesInObjectWrapper();
+    void hugeRegexpQuantifiers();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8973,6 +8974,16 @@ void tst_qqmlecmascript::undefinedPropertiesInObjectWrapper()
     QVERIFY(component.isReady());
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
+}
+
+void tst_qqmlecmascript::hugeRegexpQuantifiers()
+{
+    QJSEngine engine;
+    QJSValue value = engine.evaluate("/({3072140529})?{3072140529}/");
+
+    // It's a regular expression, but it won't match anything.
+    // The RegExp compiler also shouldn't crash.
+    QVERIFY(value.isRegExp());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
