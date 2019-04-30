@@ -432,6 +432,10 @@ bool QQuickTableViewPrivate::EdgeRange::containsIndex(Qt::Edge edge, int index)
 QQuickTableViewPrivate::QQuickTableViewPrivate()
     : QQuickFlickablePrivate()
 {
+    QObject::connect(&columnWidths, &QQuickTableSectionSizeProvider::sizeChanged,
+                            [this] { this->forceLayout();});
+    QObject::connect(&rowHeights, &QQuickTableSectionSizeProvider::sizeChanged,
+                            [this] { this->forceLayout();});
 }
 
 QQuickTableViewPrivate::~QQuickTableViewPrivate()
@@ -1280,6 +1284,10 @@ qreal QQuickTableViewPrivate::getColumnWidth(int column)
     if (syncHorizontally)
         return syncView->d_func()->getColumnWidth(column);
 
+    auto cw = columnWidths.size(column);
+    if (cw >= 0)
+        return cw;
+
     if (columnWidthProvider.isUndefined())
         return noExplicitColumnWidth;
 
@@ -1316,6 +1324,10 @@ qreal QQuickTableViewPrivate::getRowHeight(int row)
 
     if (syncVertically)
         return syncView->d_func()->getRowHeight(row);
+
+    auto rh = rowHeights.size(row);
+    if (rh >= 0)
+        return rh;
 
     if (rowHeightProvider.isUndefined())
         return noExplicitRowHeight;
