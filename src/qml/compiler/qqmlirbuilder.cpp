@@ -1558,15 +1558,12 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = output.javaScriptCompilationUnit;
 
-    const QV4::CompiledData::Unit *jsUnit = nullptr;
-    std::function<QV4::CompiledData::QmlUnit *(QV4::CompiledData::QmlUnit *, uint)> unitFinalizer
-            = [](QV4::CompiledData::QmlUnit *unit, uint) {
-        return unit;
-    };
+    QV4::CompiledData::Unit *jsUnit = nullptr;
+    const bool finalize = !compilationUnit->data;
 
     // We may already have unit data if we're loading an ahead-of-time generated cache file.
-    if (compilationUnit->data) {
-        jsUnit = compilationUnit->data;
+    if (!finalize) {
+        jsUnit = const_cast<QV4::CompiledData::Unit *>(compilationUnit->data);
 #ifndef V4_BOOTSTRAP
         output.javaScriptCompilationUnit->dynamicStrings = output.jsGenerator.stringTable.allStrings();
 #endif
@@ -1599,20 +1596,6 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
 #endif
         createdUnit->sourceFileIndex = output.jsGenerator.stringTable.getStringId(output.jsModule.fileName);
         createdUnit->finalUrlIndex = output.jsGenerator.stringTable.getStringId(output.jsModule.finalUrl);
-
-        // Combine the qml data into the general unit data.
-        unitFinalizer = [&jsUnit](QV4::CompiledData::QmlUnit *qmlUnit, uint qmlDataSize) {
-            void *ptr = const_cast<QV4::CompiledData::Unit*>(jsUnit);
-            QV4::CompiledData::Unit *newUnit = (QV4::CompiledData::Unit *)realloc(ptr, jsUnit->unitSize + qmlDataSize);
-            jsUnit = newUnit;
-            newUnit->offsetToQmlUnit = newUnit->unitSize;
-            newUnit->unitSize += qmlDataSize;
-            memcpy(const_cast<QV4::CompiledData::QmlUnit *>(newUnit->qmlUnit()), qmlUnit, qmlDataSize);
-            free(const_cast<QV4::CompiledData::QmlUnit*>(qmlUnit));
-            qmlUnit = nullptr;
-            newUnit->generateChecksum();
-            return const_cast<QV4::CompiledData::QmlUnit*>(newUnit->qmlUnit());
-        };
     }
 
     // No more new strings after this point, we're calculating offsets.
@@ -1779,7 +1762,16 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         }
     }
 
-    qmlUnit = unitFinalizer(qmlUnit, totalSize);
+    if (finalize) {
+        // Combine the qml data into the general unit data.
+        jsUnit = static_cast<QV4::CompiledData::Unit *>(realloc(jsUnit, jsUnit->unitSize + totalSize));
+        jsUnit->offsetToQmlUnit = jsUnit->unitSize;
+        jsUnit->unitSize += totalSize;
+        memcpy(jsUnit->qmlUnit(), qmlUnit, totalSize);
+        free(qmlUnit);
+        jsUnit->generateChecksum();
+        qmlUnit = jsUnit->qmlUnit();
+    }
 
     static const bool showStats = qEnvironmentVariableIsSet("QML_SHOW_UNIT_STATS");
     if (showStats) {
