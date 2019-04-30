@@ -338,7 +338,6 @@ public:
 
     bool updateTableRecursive();
     bool updateTable();
-    void relayoutTable();
     void relayoutTableItems();
 
     void layoutVerticalEdge(Qt::Edge tableEdge);

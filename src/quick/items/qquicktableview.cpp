@@ -1217,19 +1217,6 @@ bool QQuickTableViewPrivate::isRowHidden(int row)
     return qFuzzyIsNull(getRowHeight(row));
 }
 
-void QQuickTableViewPrivate::relayoutTable()
-{
-    clearEdgeSizeCache();
-    relayoutTableItems();
-    syncLoadedTableRectFromLoadedTable();
-    enforceTableAtOrigin();
-    updateContentWidth();
-    updateContentHeight();
-    // Return back to updatePolish to loadAndUnloadVisibleEdges()
-    // since the re-layout might have caused some edges to be pushed
-    // out, while others might have been pushed in.
-}
-
 void QQuickTableViewPrivate::relayoutTableItems()
 {
     qCDebug(lcTableViewDelegateLifecycle);
@@ -1695,7 +1682,9 @@ void QQuickTableViewPrivate::layoutAfterLoadingInitialTable()
         // columns, since during the process, we didn't have all the items
         // available yet for the calculation. So we do it now. The exception
         // is if we specifically only requested a relayout.
-        relayoutTable();
+        clearEdgeSizeCache();
+        relayoutTableItems();
+        syncLoadedTableRectFromLoadedTable();
     }
 
     updateAverageEdgeSize();
