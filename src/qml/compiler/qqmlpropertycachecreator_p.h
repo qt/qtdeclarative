@@ -704,8 +704,9 @@ inline QQmlCompileError QQmlPropertyCacheAliasCreator<ObjectContainer>::property
         QVarLengthArray<const QV4::CompiledData::Alias *, 4> seenAliases({lastAlias});
 
         do {
-            const CompiledObject *targetObject = objectContainer->objectAt(
-                    objectForId(component, lastAlias->targetObjectId));
+            const int targetObjectIndex = objectForId(component, lastAlias->targetObjectId);
+            Q_ASSERT(targetObjectIndex >= 0);
+            const CompiledObject *targetObject = objectContainer->objectAt(targetObjectIndex);
             Q_ASSERT(targetObject);
 
             auto nextAlias = targetObject->aliasesBegin();

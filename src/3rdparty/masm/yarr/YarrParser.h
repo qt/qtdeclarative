@@ -703,7 +703,8 @@ private:
         ASSERT(!hasError(m_errorCode));
         ASSERT(min <= max);
 
-        if (min == UINT_MAX) {
+        const unsigned quantifyLimit = 1 << 24;
+        if (min > quantifyLimit || (max != quantifyInfinite && max > quantifyLimit)) {
             m_errorCode = ErrorCode::QuantifierTooLarge;
             return;
         }

@@ -321,6 +321,8 @@ private slots:
     void lastLineOfConditional();
 
     void readThis();
+    void signalParameters();
+
 private:
     QV4Debugger *debugger() const
     {
@@ -896,6 +898,31 @@ void tst_qv4debugger::readThis()
     QCOMPARE(a.value("name").toString(), QStringLiteral("a"));
     QCOMPARE(a.value("type").toString(), QStringLiteral("number"));
     QCOMPARE(a.value("value").toInt(), 5);
+}
+
+void tst_qv4debugger::signalParameters()
+{
+    QQmlEngine engine;
+    QV4::ExecutionEngine *v4 = engine.handle();
+    v4->setDebugger(new QV4Debugger(v4));
+
+    QQmlComponent component(&engine);
+    component.setData("import QtQml 2.12\n"
+                      "QtObject {\n"
+                      "    id: root\n"
+                      "    property string result\n"
+                      "    signal signalWithArg(string textArg)\n"
+                      "    property Connections connections : Connections {\n"
+                      "        target: root\n"
+                      "        onSignalWithArg: { root.result = textArg; }\n"
+                      "    }\n"
+                      "    Component.onCompleted: signalWithArg('something')\n"
+                      "}", QUrl("test.qml"));
+
+    QVERIFY(component.isReady());
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj);
+    QCOMPARE(obj->property("result").toString(), QLatin1String("something"));
 }
 
 QTEST_MAIN(tst_qv4debugger)
