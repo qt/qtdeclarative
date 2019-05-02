@@ -1057,7 +1057,7 @@ QQmlEngine::~QQmlEngine()
     // XXX TODO: performance -- store list of singleton types separately?
     QList<QQmlType> singletonTypes = QQmlMetaType::qmlSingletonTypes();
     for (const QQmlType &currType : singletonTypes)
-        currType.singletonInstanceInfo()->destroy(this);
+        d->destroySingletonInstance(currType);
 
     delete d->rootContext;
     d->rootContext = nullptr;
@@ -1402,23 +1402,13 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
 template<>
 QJSValue QQmlEngine::singletonInstance<QJSValue>(int qmlTypeId)
 {
+    Q_D(QQmlEngine);
     QQmlType type = QQmlMetaType::qmlType(qmlTypeId, QQmlMetaType::TypeIdCategory::QmlType);
 
     if (!type.isValid() || !type.isSingleton())
         return QJSValue();
 
-    QQmlType::SingletonInstanceInfo* info = type.singletonInstanceInfo();
-    info->init(this);
-
-    if (QObject* o = info->qobjectApi(this))
-        return this->newQObject(o);
-    else {
-        QJSValue value = info->scriptApi(this);
-        if (!value.isUndefined())
-            return value;
-    }
-
-    return QJSValue();
+    return d->singletonInstance<QJSValue>(type);
 }
 
 /*!
@@ -1617,27 +1607,37 @@ QQmlEngine *qmlEngine(const QObject *obj)
     return data->context->engine;
 }
 
-QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool create)
+static QObject *resolveAttachedProperties(QQmlAttachedPropertiesFunc pf, QQmlData *data,
+                                          QObject *object, bool create)
 {
-    QQmlData *data = QQmlData::get(object, create);
-    if (!data)
-        return nullptr; // Attached properties are only on objects created by QML, unless explicitly requested (create==true)
-
-    QObject *rv = data->hasExtendedData()?data->attachedProperties()->value(id):0;
-    if (rv || !create)
-        return rv;
-
-    QQmlEnginePrivate *engine = QQmlEnginePrivate::get(data->context);
-    QQmlAttachedPropertiesFunc pf = QQmlMetaType::attachedPropertiesFuncById(engine, id);
     if (!pf)
         return nullptr;
 
-    rv = pf(const_cast<QObject *>(object));
+    QObject *rv = data->hasExtendedData() ? data->attachedProperties()->value(pf) : 0;
+    if (rv || !create)
+        return rv;
+
+    rv = pf(object);
 
     if (rv)
-        data->attachedProperties()->insert(id, rv);
+        data->attachedProperties()->insert(pf, rv);
 
     return rv;
+}
+
+#if QT_DEPRECATED_SINCE(5, 14)
+QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool create)
+{
+    QQmlData *data = QQmlData::get(object, create);
+
+    // Attached properties are only on objects created by QML,
+    // unless explicitly requested (create==true)
+    if (!data)
+        return nullptr;
+
+    QQmlEnginePrivate *engine = QQmlEnginePrivate::get(data->context);
+    return resolveAttachedProperties(QQmlMetaType::attachedPropertiesFuncById(engine, id), data,
+                                     const_cast<QObject *>(object), create);
 }
 
 QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
@@ -1652,6 +1652,30 @@ QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
         return nullptr;
 
     return qmlAttachedPropertiesObjectById(*idCache, object, create);
+}
+#endif
+
+QQmlAttachedPropertiesFunc qmlAttachedPropertiesFunction(QObject *object,
+                                                         const QMetaObject *attachedMetaObject)
+{
+    QQmlEngine *engine = object ? qmlEngine(object) : nullptr;
+    return QQmlMetaType::attachedPropertiesFunc(engine ? QQmlEnginePrivate::get(engine) : nullptr,
+                                                attachedMetaObject);
+}
+
+QObject *qmlAttachedPropertiesObject(QObject *object, QQmlAttachedPropertiesFunc func, bool create)
+{
+    if (!object)
+        return nullptr;
+
+    QQmlData *data = QQmlData::get(object, create);
+
+    // Attached properties are only on objects created by QML,
+    // unless explicitly requested (create==true)
+    if (!data)
+        return nullptr;
+
+    return resolveAttachedProperties(func, data, object, create);
 }
 
 } // namespace QtQml
@@ -1694,7 +1718,7 @@ public:
     QQmlDataExtended();
     ~QQmlDataExtended();
 
-    QHash<int, QObject *> attachedProperties;
+    QHash<QQmlAttachedPropertiesFunc, QObject *> attachedProperties;
 };
 
 QQmlDataExtended::QQmlDataExtended()
@@ -1840,7 +1864,7 @@ void QQmlData::disconnectNotifiers()
     }
 }
 
-QHash<int, QObject *> *QQmlData::attachedProperties() const
+QHash<QQmlAttachedPropertiesFunc, QObject *> *QQmlData::attachedProperties() const
 {
     if (!extendedData) extendedData = new QQmlDataExtended;
     return &extendedData->attachedProperties;
@@ -2411,6 +2435,67 @@ void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::CompiledData::Compi
 
     Locker locker(this);
     m_compositeTypes.remove(compilationUnit->metaTypeId);
+}
+
+template<>
+QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
+{
+    Q_Q(QQmlEngine);
+
+    QJSValue value = singletonInstances.value(type);
+    if (!value.isUndefined()) {
+        return value;
+    }
+
+    QQmlType::SingletonInstanceInfo *siinfo = type.singletonInstanceInfo();
+    Q_ASSERT(siinfo != nullptr);
+
+    if (siinfo->scriptCallback) {
+        value = siinfo->scriptCallback(q, q);
+        if (value.isQObject()) {
+            QObject *o = value.toQObject();
+            // even though the object is defined in C++, qmlContext(obj) and qmlEngine(obj)
+            // should behave identically to QML singleton types.
+            q->setContextForObject(o, new QQmlContext(q->rootContext(), q));
+        }
+        singletonInstances.insert(type, value);
+
+    } else if (siinfo->qobjectCallback) {
+        QObject *o = siinfo->qobjectCallback(q, q);
+        if (!o) {
+            qFatal("qmlRegisterSingletonType(): \"%s\" is not available because the callback function returns a null pointer.",
+                   qPrintable(QString::fromUtf8(type.typeName())));
+        }
+        // if this object can use a property cache, create it now
+        QQmlData::ensurePropertyCache(q, o);
+        // even though the object is defined in C++, qmlContext(obj) and qmlEngine(obj)
+        // should behave identically to QML singleton types.
+        q->setContextForObject(o, new QQmlContext(q->rootContext(), q));
+        value = q->newQObject(o);
+        singletonInstances.insert(type, value);
+
+    } else if (!siinfo->url.isEmpty()) {
+        QQmlComponent component(q, siinfo->url, QQmlComponent::PreferSynchronous);
+        QObject *o = component.beginCreate(q->rootContext());
+        value = q->newQObject(o);
+        singletonInstances.insert(type, value);
+        component.completeCreate();
+    }
+
+    return value;
+}
+
+void QQmlEnginePrivate::destroySingletonInstance(const QQmlType &type)
+{
+    Q_ASSERT(type.isSingleton() || type.isCompositeSingleton());
+
+    QObject* o = singletonInstances.take(type).toQObject();
+    if (o) {
+        QQmlData *ddata = QQmlData::get(o, false);
+        if (type.singletonInstanceInfo()->url.isEmpty() && ddata && ddata->indestructible && ddata->explicitIndestructibleSet)
+            return;
+        delete o;
+    }
 }
 
 bool QQmlEnginePrivate::isTypeLoaded(const QUrl &url) const

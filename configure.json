@@ -1,6 +1,7 @@
 {
     "subconfigs": [
         "src/qml",
+        "src/qmlmodels",
         "src/quick"
     ]
 }

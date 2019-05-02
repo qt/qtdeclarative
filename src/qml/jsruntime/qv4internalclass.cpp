@@ -45,27 +45,18 @@
 #include "qv4identifiertable_p.h"
 #include "qv4value_p.h"
 #include "qv4mm_p.h"
+#include <private/qprimefornumbits_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-
-static const uchar prime_deltas[] = {
-    0,  0,  1,  3,  1,  5,  3,  3,  1,  9,  7,  5,  3,  9, 25,  3,
-    1, 21,  3, 21,  7, 15,  9,  5,  3, 29, 15,  0,  0,  0,  0,  0
-};
-
-static inline int primeForNumBits(int numBits)
-{
-    return (1 << numBits) + prime_deltas[numBits];
-}
 
 PropertyHashData::PropertyHashData(int numBits)
     : refCount(1)
     , size(0)
     , numBits(numBits)
 {
-    alloc = primeForNumBits(numBits);
+    alloc = qPrimeForNumBits(numBits);
     entries = (PropertyHash::Entry *)malloc(alloc*sizeof(PropertyHash::Entry));
     memset(entries, 0, alloc*sizeof(PropertyHash::Entry));
 }

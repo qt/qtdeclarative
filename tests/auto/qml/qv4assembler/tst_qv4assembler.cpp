@@ -140,23 +140,17 @@ void tst_QV4Assembler::functionTable()
 #endif
 }
 
-#ifdef V4_ENABLE_JIT
-#define JIT_ENABLED 1
-#else
-#define JIT_ENABLED 0
-#endif
-
 void tst_QV4Assembler::jitEnabled()
 {
 #if defined(Q_OS_IOS) || defined(Q_OS_TVOS)
     /* JIT should be disabled on iOS and tvOS. */
-    QCOMPARE(JIT_ENABLED, 0);
+    QVERIFY(!QT_CONFIG(qml_jit));
 #elif defined(Q_OS_WIN) && defined(Q_PROCESSOR_ARM)
     /* JIT should be disabled Windows on ARM/ARM64 for now. */
-    QCOMPARE(JIT_ENABLED, 0);
+    QVERIFY(!QT_CONFIG(qml_jit));
 #else
     /* JIT should be enabled on all other architectures/OSes tested in CI. */
-    QCOMPARE(JIT_ENABLED, 1);
+    QVERIFY(QT_CONFIG(qml_jit));
 #endif
 }
 

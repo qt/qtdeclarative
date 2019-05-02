@@ -1,4 +1,4 @@
-qtc_run: return()
+if(qtc_run|lupdate_run): return()
 
 qtPrepareTool(QML_CACHEGEN, qmlcachegen, _FILTER)
 qtPrepareTool(QMAKE_RCC, rcc, _DEP)

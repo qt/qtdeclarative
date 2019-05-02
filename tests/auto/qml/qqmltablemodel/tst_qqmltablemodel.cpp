@@ -30,7 +30,7 @@
 #include <QtTest/qsignalspy.h>
 #include <QtCore/qregularexpression.h>
 #include <QtQml/private/qqmlengine_p.h>
-#include <QtQml/private/qqmltablemodel_p.h>
+#include <QtQmlModels/private/qqmltablemodel_p.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>

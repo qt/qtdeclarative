@@ -4,4 +4,4 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_qqmlchangeset.cpp
 
-QT += core-private gui-private qml-private testlib
+QT += core-private gui-private qml-private testlib qmlmodels-private

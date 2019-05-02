@@ -231,17 +231,17 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
             } else if (r.type.isValid()) {
                 if (lookup) {
                     if (r.type.isSingleton()) {
-                        QQmlEngine *e = v4->qmlEngine();
-                        QQmlType::SingletonInstanceInfo *siinfo = r.type.singletonInstanceInfo();
-                        siinfo->init(e);
-                        if (siinfo->qobjectApi(e)) {
+                        QQmlEnginePrivate *e = QQmlEnginePrivate::get(v4->qmlEngine());
+                        if (r.type.isQObjectSingleton() || r.type.isCompositeSingleton()) {
+                            e->singletonInstance<QObject*>(r.type);
                             lookup->qmlContextSingletonLookup.singleton =
                                     static_cast<Heap::Object*>(
                                         Value::fromReturnedValue(
                                             QQmlTypeWrapper::create(v4, nullptr, r.type)
                                         ).heapObject());
                         } else {
-                            QV4::ScopedObject o(scope, QJSValuePrivate::convertedToValue(v4, siinfo->scriptApi(e)));
+                            QJSValue singleton = e->singletonInstance<QJSValue>(r.type);
+                            QV4::ScopedObject o(scope, QJSValuePrivate::convertedToValue(v4, singleton));
                             lookup->qmlContextSingletonLookup.singleton = o->d();
                         }
                         lookup->qmlContextPropertyGetter = QQmlContextWrapper::lookupSingleton;
@@ -457,11 +457,17 @@ ReturnedValue QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(Lookup *
     // into the handler expression through the locals of the call context. So for onClicked: { ... }
     // the parameters of the clicked signal are injected and we must allow for them to be found here
     // before any other property from the QML context.
-    ExecutionContext &ctx = static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context);
-    if (ctx.d()->type == Heap::ExecutionContext::Type_CallContext) {
-        uint index = ctx.d()->internalClass->indexOfValueOrGetter(name);
-        if (index < UINT_MAX)
-            return static_cast<Heap::CallContext*>(ctx.d())->locals[index].asReturnedValue();
+    for (Heap::ExecutionContext *ctx = engine->currentContext()->d(); ctx; ctx = ctx->outer) {
+        if (ctx->type == Heap::ExecutionContext::Type_CallContext) {
+            const uint index = ctx->internalClass->indexOfValueOrGetter(name);
+            if (index < std::numeric_limits<uint>::max())
+                return static_cast<Heap::CallContext *>(ctx)->locals[index].asReturnedValue();
+        }
+
+        // Skip only block contexts within the current call context.
+        // Other contexts need a regular QML property lookup. See below.
+        if (ctx->type != Heap::ExecutionContext::Type_BlockContext)
+            break;
     }
 
     bool hasProperty = false;

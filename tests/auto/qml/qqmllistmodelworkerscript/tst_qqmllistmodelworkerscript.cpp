@@ -29,7 +29,7 @@
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQml/private/qqmlengine_p.h>
-#include <QtQml/private/qqmllistmodel_p.h>
+#include <QtQmlModels/private/qqmllistmodel_p.h>
 #include <QtQml/private/qqmlexpression_p.h>
 #include <QQmlComponent>
 

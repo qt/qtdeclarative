@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -120,6 +120,7 @@
 #include "handlers/qquickpinchhandler_p.h"
 #include "handlers/qquickpointhandler_p.h"
 #include "handlers/qquicktaphandler_p.h"
+#include "handlers/qquickwheelhandler_p.h"
 
 QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(lcTransient)
@@ -475,6 +476,12 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterUncreatableType<QQuickItemView, 13>(uri, 2, 13, itemViewName, itemViewMessage);
     qmlRegisterType<QQuickPathView, 13>(uri, 2, 13, "PathView");
     qmlRegisterType<QQuickGridView, 13>(uri, 2, 13, "GridView");
+#if QT_CONFIG(quick_tableview)
+    qmlRegisterType<QQuickTableView, 14>(uri, 2, 14, "TableView");
+#endif
+#if QT_CONFIG(wheelevent)
+    qmlRegisterType<QQuickWheelHandler>(uri, 2, 14, "WheelHandler");
+#endif
 }
 
 static void initResources()

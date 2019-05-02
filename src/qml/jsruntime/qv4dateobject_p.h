@@ -96,7 +96,7 @@ struct DateObject: Object {
     double date() const { return d()->date; }
     void setDate(double date) { d()->date = date; }
 
-    QDateTime toQDateTime() const;
+    Q_QML_PRIVATE_EXPORT QDateTime toQDateTime() const;
 };
 
 template<>

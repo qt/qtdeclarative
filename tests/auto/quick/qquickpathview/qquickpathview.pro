@@ -9,5 +9,5 @@ include (../shared/util.pri)
 
 TESTDATA = data/*
 
-QT += core-private gui-private qml-private quick-private testlib qmltest
+QT += core-private gui-private qml-private quick-private testlib qmltest qmlmodels-private
 qtHaveModule(widgets): QT += widgets

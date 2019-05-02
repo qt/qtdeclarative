@@ -424,7 +424,6 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     Q_ASSERT(function->lineNumberOffset() == currentOffset);
     currentOffset += function->nLineNumbers * sizeof(CompiledData::CodeOffsetToLine);
 
-    function->nTraceInfos = irFunction->nTraceInfos;
     function->nRegisters = irFunction->registerCountInFunction;
 
     if (!irFunction->labelInfo.empty()) {

@@ -9,4 +9,4 @@ include (../../shared/util.pri)
 
 TESTDATA = data/*
 
-QT += core-private gui-private qml-private testlib
+QT += core-private gui-private qml-private testlib qmlmodels-private

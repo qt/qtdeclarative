@@ -517,9 +517,9 @@ QString QQmlBinding::expressionIdentifier() const
 {
     if (auto f = function()) {
         QString url = f->sourceFile();
-        quint16 lineNumber = f->compiledFunction->location.line;
-        quint16 columnNumber = f->compiledFunction->location.column;
-        return url + QString::asprintf(":%u:%u", uint(lineNumber), uint(columnNumber));
+        uint lineNumber = f->compiledFunction->location.line;
+        uint columnNumber = f->compiledFunction->location.column;
+        return url + QString::asprintf(":%u:%u", lineNumber, columnNumber);
     }
 
     return QStringLiteral("[native code]");

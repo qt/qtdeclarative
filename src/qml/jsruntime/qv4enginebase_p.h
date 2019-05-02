@@ -69,9 +69,23 @@ struct Q_QML_EXPORT EngineBase {
     CppStackFrame *currentStackFrame = nullptr;
 
     Value *jsStackTop = nullptr;
+
+    // The JIT expects hasException and isInterrupted to be in the same 32bit word in memory.
     quint8 hasException = false;
-    quint8 writeBarrierActive = false;
+    // isInterrupted is expected to be set from a different thread
+#if defined(Q_ATOMIC_INT8_IS_SUPPORTED)
+    QAtomicInteger<quint8> isInterrupted = false;
     quint16 unused = 0;
+#elif defined(Q_ATOMIC_INT16_IS_SUPPORTED)
+    quint8 unused = 0;
+    QAtomicInteger<quint16> isInterrupted = false;
+#elif defined(V4_BOOTSTRAP)
+    // We don't need the isInterrupted flag when bootstrapping.
+    quint8 unused[3];
+#else
+#   error V4 needs either 8bit or 16bit atomics.
+#endif
+
     quint8 isExecutingInRegExpJIT = false;
     quint8 padding[3];
     MemoryManager *memoryManager = nullptr;
@@ -136,6 +150,10 @@ Q_STATIC_ASSERT(offsetof(EngineBase, jsStackTop) == offsetof(EngineBase, current
 Q_STATIC_ASSERT(offsetof(EngineBase, hasException) == offsetof(EngineBase, jsStackTop) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(EngineBase, memoryManager) == offsetof(EngineBase, hasException) + 8);
 Q_STATIC_ASSERT(offsetof(EngineBase, runtime) == offsetof(EngineBase, memoryManager) + QT_POINTER_SIZE);
+
+#ifndef V4_BOOTSTRAP
+Q_STATIC_ASSERT(offsetof(EngineBase, isInterrupted) + sizeof(EngineBase::isInterrupted) <= offsetof(EngineBase, hasException) + 4);
+#endif
 
 }
 

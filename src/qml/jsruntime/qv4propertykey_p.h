@@ -124,7 +124,7 @@ public:
         return m();
     }
 
-    bool isString() const;
+    Q_QML_EXPORT bool isString() const;
     bool isSymbol() const;
     bool isCanonicalNumericIndexString() const;
 

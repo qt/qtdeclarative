@@ -52,11 +52,14 @@
 //
 
 #include <private/qhashedstring_p.h>
+#include <private/qprimefornumbits_p.h>
+
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 
 class QStringHashData;
-class Q_AUTOTEST_EXPORT QStringHashNode
+class QStringHashNode
 {
 public:
     QStringHashNode()
@@ -154,12 +157,20 @@ public:
     }
 };
 
-class Q_AUTOTEST_EXPORT QStringHashData
+class QStringHashData
 {
+    Q_DISABLE_COPY_MOVE(QStringHashData)
 public:
-    QStringHashData() {}
+    QStringHashData() = default;
+    ~QStringHashData() = default;
 
-    QStringHashNode **buckets = nullptr;
+    /*
+        A QHash has initially around pow(2, MinNumBits) buckets. For
+        example, if MinNumBits is 4, it has 17 buckets.
+    */
+    enum { MinNumBits = 4 };
+
+    QStringHashNode **buckets = nullptr; // life cycle managed by QStringHash
     int numBuckets = 0;
     int size = 0;
     short numBits = 0;
@@ -174,13 +185,51 @@ public:
         QStringHashNode *n;
         StringHash *p;
     };
-    void rehashToBits(short);
-    void rehashToSize(int);
-    void rehashNode(QStringHashNode **newBuckets, int nb, QStringHashNode *node);
 
-private:
-    QStringHashData(const QStringHashData &);
-    QStringHashData &operator=(const QStringHashData &);
+    void rehashToBits(short bits)
+    {
+        numBits = qMax(short(MinNumBits), bits);
+
+        int nb = qPrimeForNumBits(numBits);
+        if (nb == numBuckets && buckets)
+            return;
+
+        QStringHashNode **newBuckets = new QStringHashNode *[nb];
+        ::memset(newBuckets, 0, sizeof(QStringHashNode *) * nb);
+
+        // Preserve the existing order within buckets so that items with the
+        // same key will retain the same find/findNext order
+        for (int i = 0; i < numBuckets; ++i) {
+            QStringHashNode *bucket = buckets[i];
+            if (bucket)
+                rehashNode(newBuckets, nb, bucket);
+        }
+
+        delete [] buckets;
+        buckets = newBuckets;
+        numBuckets = nb;
+    }
+
+    void rehashToSize(int size)
+    {
+        short bits = qMax(short(MinNumBits), numBits);
+        while (qPrimeForNumBits(bits) < size)
+            bits++;
+
+        if (bits > numBits)
+            rehashToBits(bits);
+    }
+
+    void rehashNode(QStringHashNode **newBuckets, int nb, QStringHashNode *node)
+    {
+        QStringHashNode *next = node->next.data();
+        if (next)
+            rehashNode(newBuckets, nb, next);
+
+        int bucket = node->hash % nb;
+        node->next = newBuckets[bucket];
+        newBuckets[bucket] = node;
+    }
 };
 
 // For a supplied key type, in what form do we need to keep a hashed version?

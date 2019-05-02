@@ -118,6 +118,8 @@ public:
     bool isInterface() const;
     bool isComposite() const;
     bool isCompositeSingleton() const;
+    bool isQObjectSingleton() const;
+    bool isQJSValueSingleton() const;
 
     int typeId() const;
     int qListTypeId() const;
@@ -129,7 +131,9 @@ public:
 
     QQmlAttachedPropertiesFunc attachedPropertiesFunction(QQmlEnginePrivate *engine) const;
     const QMetaObject *attachedPropertiesType(QQmlEnginePrivate *engine) const;
-    int attachedPropertiesId(QQmlEnginePrivate *engine) const;
+#if QT_DEPRECATED_SINCE(5, 14)
+    QT_DEPRECATED int attachedPropertiesId(QQmlEnginePrivate *engine) const;
+#endif
 
     int parserStatusCast() const;
     const char *interfaceIId() const;
@@ -138,28 +142,13 @@ public:
 
     int index() const;
 
-    class Q_QML_PRIVATE_EXPORT SingletonInstanceInfo
+    struct Q_QML_PRIVATE_EXPORT SingletonInstanceInfo
     {
-    public:
-        SingletonInstanceInfo()
-            : scriptCallback(nullptr), qobjectCallback(nullptr), instanceMetaObject(nullptr) {}
-
-        QJSValue (*scriptCallback)(QQmlEngine *, QJSEngine *);
-        QObject *(*qobjectCallback)(QQmlEngine *, QJSEngine *);
-        const QMetaObject *instanceMetaObject;
+        QJSValue (*scriptCallback)(QQmlEngine *, QJSEngine *) = nullptr;
+        QObject *(*qobjectCallback)(QQmlEngine *, QJSEngine *) = nullptr;
+        const QMetaObject *instanceMetaObject = nullptr;
         QString typeName;
         QUrl url; // used by composite singletons
-
-        void setQObjectApi(QQmlEngine *, QObject *);
-        QObject *qobjectApi(QQmlEngine *) const;
-        void setScriptApi(QQmlEngine *, const QJSValue &);
-        QJSValue scriptApi(QQmlEngine *) const;
-
-        void init(QQmlEngine *);
-        void destroy(QQmlEngine *);
-
-        QHash<QQmlEngine *, QJSValue> scriptApis;
-        QHash<QQmlEngine *, QObject *> qobjectApis;
     };
     SingletonInstanceInfo *singletonInstanceInfo() const;
 

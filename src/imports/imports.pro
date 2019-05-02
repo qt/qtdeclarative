@@ -15,6 +15,7 @@ qtHaveModule(quick) {
     QT_FOR_CONFIG += quick-private
 
     SUBDIRS += \
+        labsanimation \
         layouts \
         qtquick2 \
         window \

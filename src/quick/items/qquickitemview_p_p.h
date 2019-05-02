@@ -59,9 +59,9 @@ QT_REQUIRE_CONFIG(quick_itemview);
 #include "qquickitemviewfxitem_p_p.h"
 #include "qquickitemviewtransition_p.h"
 #include "qquickflickable_p_p.h"
-#include <QtQml/private/qqmlobjectmodel_p.h>
-#include <QtQml/private/qqmldelegatemodel_p.h>
-#include <QtQml/private/qqmlchangeset_p.h>
+#include <QtQmlModels/private/qqmlobjectmodel_p.h>
+#include <QtQmlModels/private/qqmldelegatemodel_p.h>
+#include <QtQmlModels/private/qqmlchangeset_p.h>
 
 
 QT_BEGIN_NAMESPACE

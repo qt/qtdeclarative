@@ -58,8 +58,6 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Moth {
 
-void runTracingJit(QV4::Function *function);
-
 class VME
 {
 public:

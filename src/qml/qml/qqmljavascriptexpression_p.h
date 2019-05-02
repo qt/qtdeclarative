@@ -182,7 +182,7 @@ private:
     QV4::Function *m_v4Function;
 };
 
-class QQmlPropertyCapture
+class Q_QML_PRIVATE_EXPORT QQmlPropertyCapture
 {
 public:
     QQmlPropertyCapture(QQmlEngine *engine, QQmlJavaScriptExpression *e, QQmlJavaScriptExpression::DeleteWatcher *w)

@@ -39,11 +39,6 @@
 
 #include "qv4serialize_p.h"
 
-#if QT_CONFIG(qml_list_model)
-#include <private/qqmllistmodel_p.h>
-#include <private/qqmllistmodelworkeragent_p.h>
-#endif
-
 #include <private/qv4value_p.h>
 #include <private/qv4dateobject_p.h>
 #include <private/qv4regexpobject_p.h>
@@ -85,9 +80,7 @@ enum Type {
     WorkerNumber,
     WorkerDate,
     WorkerRegexp,
-#if QT_CONFIG(qml_list_model)
     WorkerListModel,
-#endif
 #if QT_CONFIG(qml_sequence_object)
     WorkerSequence
 #endif
@@ -235,18 +228,15 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
     } else if (const QObjectWrapper *qobjectWrapper = v.as<QV4::QObjectWrapper>()) {
         // XXX TODO: Generalize passing objects between the main thread and worker scripts so
         // that others can trivially plug in their elements.
-#if QT_CONFIG(qml_list_model)
-        QQmlListModel *lm = qobject_cast<QQmlListModel *>(qobjectWrapper->object());
-        if (lm && lm->agent()) {
-            QQmlListModelWorkerAgent *agent = lm->agent();
-            agent->addref();
-            push(data, valueheader(WorkerListModel));
-            push(data, (void *)agent);
-            return;
+        if (QObject *lm = qobjectWrapper->object()) {
+            if (QObject *agent = qvariant_cast<QObject *>(lm->property("agent"))) {
+                if (QMetaObject::invokeMethod(agent, "addref")) {
+                    push(data, valueheader(WorkerListModel));
+                    push(data, (void *)agent);
+                    return;
+                }
+            }
         }
-#else
-        Q_UNUSED(qobjectWrapper);
-#endif
         // No other QObject's are allowed to be sent
         push(data, valueheader(WorkerUndefined));
     } else if (const Object *o = v.as<Object>()) {
@@ -297,6 +287,41 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
         push(data, valueheader(WorkerUndefined));
     }
 }
+
+struct VariantRef
+{
+    VariantRef() : obj(nullptr) {}
+    VariantRef(const VariantRef &r) : obj(r.obj) { addref(); }
+    VariantRef(QObject *a) : obj(a) { addref(); }
+    ~VariantRef() { release(); }
+
+    VariantRef &operator=(const VariantRef &o) {
+        o.addref();
+        release();
+        obj = o.obj;
+        return *this;
+    }
+
+    void addref() const
+    {
+        if (obj)
+            QMetaObject::invokeMethod(obj, "addref");
+    }
+
+    void release() const
+    {
+        if (obj)
+            QMetaObject::invokeMethod(obj, "release");
+
+    }
+
+    QObject *obj;
+};
+
+QT_END_NAMESPACE
+Q_DECLARE_METATYPE(VariantRef)
+Q_DECLARE_METATYPE(QV4::ExecutionEngine *)
+QT_BEGIN_NAMESPACE
 
 ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
 {
@@ -366,24 +391,21 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
         data += ALIGN(length * sizeof(quint16));
         return Encode(engine->newRegExpObject(pattern, flags));
     }
-#if QT_CONFIG(qml_list_model)
     case WorkerListModel:
     {
-        void *ptr = popPtr(data);
-        QQmlListModelWorkerAgent *agent = (QQmlListModelWorkerAgent *)ptr;
+        QObject *agent = reinterpret_cast<QObject *>(popPtr(data));
         QV4::ScopedValue rv(scope, QV4::QObjectWrapper::wrap(engine, agent));
         // ### Find a better solution then the ugly property
-        QQmlListModelWorkerAgent::VariantRef ref(agent);
+        VariantRef ref(agent);
         QVariant var = QVariant::fromValue(ref);
         QV4::ScopedValue v(scope, scope.engine->fromVariant(var));
         QV4::ScopedString s(scope, engine->newString(QStringLiteral("__qml:hidden:ref")));
         rv->as<Object>()->defineReadonlyProperty(s, v);
 
-        agent->release();
-        agent->setEngine(engine);
+        QMetaObject::invokeMethod(agent, "release");
+        agent->setProperty("engine", QVariant::fromValue(engine));
         return rv->asReturnedValue();
     }
-#endif
 #if QT_CONFIG(qml_sequence_object)
     case WorkerSequence:
     {
@@ -423,4 +445,3 @@ ReturnedValue Serialize::deserialize(const QByteArray &data, ExecutionEngine *en
 }
 
 QT_END_NAMESPACE
-

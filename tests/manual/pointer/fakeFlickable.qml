@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -30,39 +30,34 @@ import QtQuick 2.12
 import "content"
 
 Rectangle {
+    id: root
     color: "#444"
     width: 480
-    height: 480
+    height: 640
 
     FakeFlickable {
         id: ff
         anchors.fill: parent
+        anchors.leftMargin: 20
         anchors.rightMargin: rightSB.width
-        Row {
-            Item {
-                width: 100
-                height: 400
-                Slider {
-                    id: slider
-                    label: "font size"
-                    anchors.fill: parent
-                    maximumValue: 36
-                    value: 14
-                }
-            }
-            Text {
-                id: text
-                color: "beige"
-                font.family: "mono"
-                font.pointSize: slider.value
-                onTextChanged: console.log("text geom " + width + "x" + height +
-                    ", parent " + parent + " geom " + parent.width + "x" + parent.height)
-            }
+
+        Text {
+            id: text
+            color: "beige"
+            font.family: "mono"
+            font.pointSize: slider.value
+            onTextChanged: console.log("text geom " + width + "x" + height +
+                                       ", parent " + parent + " geom " + parent.width + "x" + parent.height)
         }
 
-
-        onFlickStarted: console.log("flick started with velocity " + velocity)
-        onFlickEnded: console.log("flick ended with velocity " + velocity)
+        onFlickStarted: {
+            root.border.color = "green"
+            console.log("flick started with velocity " + velocity)
+        }
+        onFlickEnded: {
+            root.border.color = "transparent"
+            console.log("flick ended with velocity " + velocity)
+        }
 
         Component.onCompleted: {
             var request = new XMLHttpRequest()
@@ -99,6 +94,19 @@ Rectangle {
         anchors {
             right: parent.right
             bottom: parent.bottom
+        }
+    }
+
+    LeftDrawer {
+        width: 100
+        anchors.verticalCenter: parent.verticalCenter
+        Slider {
+            id: slider
+            label: "font\nsize"
+            anchors.fill: parent
+            anchors.margins: 10
+            maximumValue: 36
+            value: 14
         }
     }
 }

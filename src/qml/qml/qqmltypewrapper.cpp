@@ -89,25 +89,21 @@ QObject* QQmlTypeWrapper::singletonObject() const
     if (!isSingleton())
         return nullptr;
 
-    QQmlEngine *e = engine()->qmlEngine();
-    QQmlType::SingletonInstanceInfo *siinfo = d()->type().singletonInstanceInfo();
-    siinfo->init(e);
-    return siinfo->qobjectApi(e);
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(engine()->qmlEngine());
+    return e->singletonInstance<QObject*>(d()->type());
 }
 
 QVariant QQmlTypeWrapper::toVariant() const
 {
-    // Only Singleton type wrappers can be converted to a variant.
     if (!isSingleton())
-        return QVariant();
+        return QVariant::fromValue<QObject *>(d()->object);
 
-    QQmlEngine *e = engine()->qmlEngine();
-    QQmlType::SingletonInstanceInfo *siinfo = d()->type().singletonInstanceInfo();
-    siinfo->init(e);
-    if (QObject *qobjectSingleton = siinfo->qobjectApi(e))
-        return QVariant::fromValue<QObject*>(qobjectSingleton);
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(engine()->qmlEngine());
+    const QQmlType type = d()->type();
+    if (type.isQJSValueSingleton())
+        return QVariant::fromValue<QJSValue>(e->singletonInstance<QJSValue>(type));
 
-    return QVariant::fromValue<QJSValue>(siinfo->scriptApi(e));
+    return QVariant::fromValue<QObject*>(e->singletonInstance<QObject*>(type));
 }
 
 
@@ -195,50 +191,51 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
 
         // singleton types are handled differently to other types.
         if (type.isSingleton()) {
-            QQmlEngine *e = v4->qmlEngine();
-            QQmlType::SingletonInstanceInfo *siinfo = type.singletonInstanceInfo();
-            siinfo->init(e);
+            QQmlEnginePrivate *e = QQmlEnginePrivate::get(v4->qmlEngine());
+            QJSValue scriptSingleton;
+            if (type.isQObjectSingleton() || type.isCompositeSingleton()) {
+                if (QObject *qobjectSingleton = e->singletonInstance<QObject*>(type)) {
+                    // check for enum value
+                    const bool includeEnums = w->d()->mode == Heap::QQmlTypeWrapper::IncludeEnums;
+                    if (includeEnums && name->startsWithUpper()) {
+                        bool ok = false;
+                        int value = enumForSingleton(v4, name, qobjectSingleton, type, &ok);
+                        if (ok)
+                            return QV4::Value::fromInt32(value).asReturnedValue();
 
-            QObject *qobjectSingleton = siinfo->qobjectApi(e);
-            if (qobjectSingleton) {
-
-                // check for enum value
-                const bool includeEnums = w->d()->mode == Heap::QQmlTypeWrapper::IncludeEnums;
-                if (includeEnums && name->startsWithUpper()) {
-                    bool ok = false;
-                    int value = enumForSingleton(v4, name, qobjectSingleton, type, &ok);
-                    if (ok)
-                        return QV4::Value::fromInt32(value).asReturnedValue();
-
-                    value = type.scopedEnumIndex(QQmlEnginePrivate::get(v4->qmlEngine()), name, &ok);
-                    if (ok) {
-                        Scoped<QQmlScopedEnumWrapper> enumWrapper(scope, v4->memoryManager->allocate<QQmlScopedEnumWrapper>());
-                        enumWrapper->d()->typePrivate = type.priv();
-                        QQmlType::refHandle(enumWrapper->d()->typePrivate);
-                        enumWrapper->d()->scopeEnumIndex = value;
-                        return enumWrapper.asReturnedValue();
+                        value = type.scopedEnumIndex(QQmlEnginePrivate::get(v4->qmlEngine()), name, &ok);
+                        if (ok) {
+                            Scoped<QQmlScopedEnumWrapper> enumWrapper(scope, v4->memoryManager->allocate<QQmlScopedEnumWrapper>());
+                            enumWrapper->d()->typePrivate = type.priv();
+                            QQmlType::refHandle(enumWrapper->d()->typePrivate);
+                            enumWrapper->d()->scopeEnumIndex = value;
+                            return enumWrapper.asReturnedValue();
+                        }
                     }
+
+                    // check for property.
+                    bool ok;
+                    const ReturnedValue result = QV4::QObjectWrapper::getQmlProperty(v4, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, &ok);
+                    if (hasProperty)
+                        *hasProperty = ok;
+
+                    // Warn when attempting to access a lowercased enum value, singleton case
+                    if (!ok && includeEnums && !name->startsWithUpper()) {
+                        enumForSingleton(v4, name, qobjectSingleton, type, &ok);
+                        if (ok)
+                            return throwLowercaseEnumError(v4, name, type);
+                    }
+
+                    return result;
                 }
-
-                // check for property.
-                bool ok;
-                const ReturnedValue result = QV4::QObjectWrapper::getQmlProperty(v4, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, &ok);
-                if (hasProperty)
-                    *hasProperty = ok;
-
-                // Warn when attempting to access a lowercased enum value, singleton case
-                if (!ok && includeEnums && !name->startsWithUpper()) {
-                    enumForSingleton(v4, name, qobjectSingleton, type, &ok);
-                    if (ok)
-                        return throwLowercaseEnumError(v4, name, type);
+            } else if (type.isQJSValueSingleton()) {
+                QJSValue scriptSingleton = e->singletonInstance<QJSValue>(type);
+                if (!scriptSingleton.isUndefined()) {
+                    // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
+                    QV4::ScopedObject o(scope, QJSValuePrivate::convertedToValue(v4, scriptSingleton));
+                    if (!!o)
+                        return o->get(name);
                 }
-
-                return result;
-            } else if (!siinfo->scriptApi(e).isUndefined()) {
-                // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
-                QV4::ScopedObject o(scope, QJSValuePrivate::convertedToValue(v4, siinfo->scriptApi(e)));
-                if (!!o)
-                    return o->get(name);
             }
 
             // Fall through to base implementation
@@ -263,7 +260,9 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
                 // Fall through to base implementation
 
             } else if (w->d()->object) {
-                QObject *ao = qmlAttachedPropertiesObjectById(type.attachedPropertiesId(QQmlEnginePrivate::get(v4->qmlEngine())), object);
+                QObject *ao = qmlAttachedPropertiesObject(
+                        object,
+                        type.attachedPropertiesFunction(QQmlEnginePrivate::get(v4->qmlEngine())));
                 if (ao)
                     return QV4::QObjectWrapper::getQmlProperty(v4, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty);
 
@@ -335,26 +334,28 @@ bool QQmlTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value,
     if (type.isValid() && !type.isSingleton() && w->d()->object) {
         QObject *object = w->d()->object;
         QQmlEngine *e = scope.engine->qmlEngine();
-        QObject *ao = qmlAttachedPropertiesObjectById(type.attachedPropertiesId(QQmlEnginePrivate::get(e)), object);
+        QObject *ao = qmlAttachedPropertiesObject(
+                object, type.attachedPropertiesFunction(QQmlEnginePrivate::get(e)));
         if (ao)
             return QV4::QObjectWrapper::setQmlProperty(scope.engine, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, value);
         return false;
     } else if (type.isSingleton()) {
-        QQmlEngine *e = scope.engine->qmlEngine();
-        QQmlType::SingletonInstanceInfo *siinfo = type.singletonInstanceInfo();
-        siinfo->init(e);
+        QQmlEnginePrivate *e = QQmlEnginePrivate::get(scope.engine->qmlEngine());
+        if (type.isQObjectSingleton() || type.isCompositeSingleton()) {
+            if (QObject *qobjectSingleton = e->singletonInstance<QObject*>(type))
+                return QV4::QObjectWrapper::setQmlProperty(scope.engine, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, value);
 
-        QObject *qobjectSingleton = siinfo->qobjectApi(e);
-        if (qobjectSingleton) {
-            return QV4::QObjectWrapper::setQmlProperty(scope.engine, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, value);
-        } else if (!siinfo->scriptApi(e).isUndefined()) {
-            QV4::ScopedObject apiprivate(scope, QJSValuePrivate::convertedToValue(scope.engine, siinfo->scriptApi(e)));
-            if (!apiprivate) {
-                QString error = QLatin1String("Cannot assign to read-only property \"") + name->toQString() + QLatin1Char('\"');
-                scope.engine->throwError(error);
-                return false;
-            } else {
-                return apiprivate->put(name, value);
+        } else {
+            QJSValue scriptSingleton = e->singletonInstance<QJSValue>(type);
+            if (!scriptSingleton.isUndefined()) {
+                QV4::ScopedObject apiprivate(scope, QJSValuePrivate::convertedToValue(scope.engine, scriptSingleton));
+                if (!apiprivate) {
+                    QString error = QLatin1String("Cannot assign to read-only property \"") + name->toQString() + QLatin1Char('\"');
+                    scope.engine->throwError(error);
+                    return false;
+                } else {
+                    return apiprivate->put(name, value);
+                }
             }
         }
     }
@@ -446,27 +447,25 @@ ReturnedValue QQmlTypeWrapper::virtualResolveLookupGetter(const Object *object, 
     if (type.isValid()) {
 
         if (type.isSingleton()) {
-            QQmlEngine *e = engine->qmlEngine();
-            QQmlType::SingletonInstanceInfo *siinfo = type.singletonInstanceInfo();
-            siinfo->init(e);
-
-            QObject *qobjectSingleton = siinfo->qobjectApi(e);
-            if (qobjectSingleton) {
-
-                const bool includeEnums = w->d()->mode == Heap::QQmlTypeWrapper::IncludeEnums;
-                if (!includeEnums || !name->startsWithUpper()) {
-                    QQmlData *ddata = QQmlData::get(qobjectSingleton, false);
-                    if (ddata && ddata->propertyCache) {
-                        ScopedValue val(scope, Value::fromReturnedValue(QV4::QObjectWrapper::wrap(engine, qobjectSingleton)));
-                        QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobjectSingleton, qmlContext);
-                        if (property) {
-                            lookup->qobjectLookup.ic = This->internalClass();
-                            lookup->qobjectLookup.staticQObject = static_cast<Heap::QObjectWrapper *>(val->heapObject());
-                            lookup->qobjectLookup.propertyCache = ddata->propertyCache;
-                            lookup->qobjectLookup.propertyCache->addref();
-                            lookup->qobjectLookup.propertyData = property;
-                            lookup->getter = QV4::QObjectWrapper::lookupGetter;
-                            return lookup->getter(lookup, engine, *This);
+            QQmlEnginePrivate *e = QQmlEnginePrivate::get(engine->qmlEngine());
+            if (type.isQObjectSingleton() || type.isCompositeSingleton()) {
+                if (QObject *qobjectSingleton = e->singletonInstance<QObject*>(type)) {
+                    const bool includeEnums = w->d()->mode == Heap::QQmlTypeWrapper::IncludeEnums;
+                    if (!includeEnums || !name->startsWithUpper()) {
+                        QQmlData *ddata = QQmlData::get(qobjectSingleton, false);
+                        if (ddata && ddata->propertyCache) {
+                            ScopedValue val(scope, Value::fromReturnedValue(QV4::QObjectWrapper::wrap(engine, qobjectSingleton)));
+                            QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobjectSingleton, qmlContext);
+                            if (property) {
+                                lookup->qobjectLookup.ic = This->internalClass();
+                                lookup->qobjectLookup.staticQObject = static_cast<Heap::QObjectWrapper *>(val->heapObject());
+                                lookup->qobjectLookup.propertyCache = ddata->propertyCache;
+                                lookup->qobjectLookup.propertyCache->addref();
+                                lookup->qobjectLookup.propertyData = property;
+                                lookup->getter = QV4::QObjectWrapper::lookupGetter;
+                                return lookup->getter(lookup, engine, *This);
+                            }
+                            // Fall through to base implementation
                         }
                         // Fall through to base implementation
                     }

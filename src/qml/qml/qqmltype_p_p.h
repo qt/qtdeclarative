@@ -83,7 +83,6 @@ public:
         QQmlCustomParser *customParser;
         QQmlAttachedPropertiesFunc attachedPropertiesFunc;
         const QMetaObject *attachedPropertiesType;
-        int attachedPropertiesId;
         int propertyValueSourceCast;
         int propertyValueInterceptorCast;
         bool registerEnumClassesUnscoped;

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -26,7 +26,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.14
+import Qt.labs.animation 1.0
 
 Item {
     id: root
@@ -42,8 +43,16 @@ Item {
         objectName: label.text + " DragHandler"
         target: knob
         xAxis.enabled: false
-        yAxis.minimum: slot.y
-        yAxis.maximum: slot.height + slot.y - knob.height
+    }
+
+    WheelHandler {
+        id: wheelHandler
+        objectName: label.text + " WheelHandler"
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+        invertible: false   // Don't let the system "natural scrolling" setting affect this
+        rotationScale: -0.5 // But make it go consistently in the same direction as the fingers or wheel, a bit slow
+        target: knob
+        property: "y"
     }
 
     Rectangle {
@@ -51,8 +60,8 @@ Item {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.margins: 10
-        anchors.topMargin: 30
-        anchors.bottomMargin: 30
+        anchors.topMargin: label.height + 6
+        anchors.bottomMargin: valueLabel.height + 4
         anchors.horizontalCenter: parent.horizontalCenter
         width: 10
         color: "black"
@@ -82,10 +91,10 @@ Item {
         height: root.width / 2
         width: implicitWidth / implicitHeight * height
         property bool programmatic: false
-        property real multiplier: root.maximumValue / (dragHandler.yAxis.maximum - dragHandler.yAxis.minimum)
-        onYChanged: if (!programmatic) root.value = root.maximumValue - (knob.y - dragHandler.yAxis.minimum) * multiplier
+        property real multiplier: root.maximumValue / (ybr.maximum - ybr.minimum)
+        onYChanged: if (!programmatic) root.value = root.maximumValue - (knob.y - ybr.minimum) * multiplier
         transformOrigin: Item.Center
-        function setValue(value) { knob.y = dragHandler.yAxis.maximum - value / knob.multiplier }
+        function setValue(value) { knob.y = ybr.maximum - value / knob.multiplier }
         TapHandler {
             id: tap
             objectName: label.text + " TapHandler"
@@ -95,9 +104,15 @@ Item {
                 root.tapped
             }
         }
+        BoundaryRule on y {
+            id: ybr
+            minimum: slot.y
+            maximum: slot.height + slot.y - knob.height
+        }
     }
 
     Text {
+        id: valueLabel
         font.pointSize: 16
         color: "red"
         anchors.bottom: parent.bottom

@@ -549,8 +549,8 @@ void tst_qqmlmetatype::unregisterAttachedProperties()
         c.setData("import QtQuick 2.2\n Item { }", dummy);
 
         const QQmlType attachedType = QQmlMetaType::qmlType("QtQuick/KeyNavigation", 2, 2);
-        QCOMPARE(attachedType.attachedPropertiesId(QQmlEnginePrivate::get(&e)),
-                 attachedType.index());
+        QCOMPARE(attachedType.attachedPropertiesType(QQmlEnginePrivate::get(&e)),
+                 attachedType.metaObject());
 
         QVERIFY(c.create());
     }
@@ -568,8 +568,8 @@ void tst_qqmlmetatype::unregisterAttachedProperties()
                   "Item { KeyNavigation.up: null }", dummy);
 
         const QQmlType attachedType = QQmlMetaType::qmlType("QtQuick/KeyNavigation", 2, 2);
-        QCOMPARE(attachedType.attachedPropertiesId(QQmlEnginePrivate::get(&e)),
-                 attachedType.index());
+        QCOMPARE(attachedType.attachedPropertiesType(QQmlEnginePrivate::get(&e)),
+                 attachedType.metaObject());
 
         QVERIFY(c.create());
     }

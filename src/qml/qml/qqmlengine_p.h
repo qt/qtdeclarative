@@ -229,6 +229,10 @@ public:
     bool isTypeLoaded(const QUrl &url) const;
     bool isScriptLoaded(const QUrl &url) const;
 
+    template <typename T>
+    T singletonInstance(const QQmlType &type);
+    void destroySingletonInstance(const QQmlType &type);
+
     void sendQuit();
     void sendExit(int retCode = 0);
     void warning(const QQmlError &);
@@ -262,6 +266,8 @@ public:
     mutable QMutex networkAccessManagerMutex;
 
 private:
+    QHash<QQmlType, QJSValue> singletonInstances;
+
     // These members must be protected by a QQmlEnginePrivate::Locker as they are required by
     // the threaded loader.  Only access them through their respective accessor methods.
     QHash<int, QV4::CompiledData::CompilationUnit *> m_compositeTypes;
@@ -435,6 +441,14 @@ QQmlEnginePrivate *QQmlEnginePrivate::get(QV4::ExecutionEngine *e)
     if (!qmlEngine)
         return nullptr;
     return get(qmlEngine);
+}
+
+template<>
+Q_QML_PRIVATE_EXPORT QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type);
+
+template<typename T>
+T QQmlEnginePrivate::singletonInstance(const QQmlType &type) {
+    return qobject_cast<T>(singletonInstance<QJSValue>(type).toQObject());
 }
 
 QT_END_NAMESPACE

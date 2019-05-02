@@ -123,31 +123,6 @@ public:
             return nullptr;
         return compilationUnit->runtimeFunctions[compiledFunction->nestedFunctionIndex];
     }
-
-    Q_NEVER_INLINE QString traceInfoToString();
-
-    quint8 *traceInfo(uint i)
-    {
-#if QT_CONFIG(qml_tracing)
-        Q_ASSERT((tracingEnabled() && i < traceInfoCount()) || (i == 0));
-        return reinterpret_cast<quint8 *>(this) + sizeof(Function) + i;
-#else
-        Q_UNUSED(i);
-        return nullptr;
-#endif
-    }
-
-    quint32 traceInfoCount() const
-    { return compiledFunction->nTraceInfos; }
-
-    bool tracingEnabled() const
-    {
-#if QT_CONFIG(qml_tracing)
-        return traceInfoCount() != CompiledData::Function::NoTracing();
-#else
-        return false;
-#endif
-    }
 };
 
 }

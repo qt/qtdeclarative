@@ -54,9 +54,9 @@
 #include "qquicktableview_p.h"
 
 #include <QtCore/qtimer.h>
-#include <QtQml/private/qqmltableinstancemodel_p.h>
+#include <QtQmlModels/private/qqmltableinstancemodel_p.h>
 #include <QtQml/private/qqmlincubator_p.h>
-#include <QtQml/private/qqmlchangeset_p.h>
+#include <QtQmlModels/private/qqmlchangeset_p.h>
 #include <QtQml/qqmlinfo.h>
 
 #include <QtQuick/private/qquickflickable_p_p.h>
@@ -70,6 +70,25 @@ static const qreal kDefaultRowHeight = 50;
 static const qreal kDefaultColumnWidth = 50;
 
 class FxTableItem;
+class QQuickTableSectionSizeProviderPrivate;
+
+class Q_QUICK_PRIVATE_EXPORT QQuickTableSectionSizeProvider : public QObject {
+    Q_OBJECT
+
+public:
+    QQuickTableSectionSizeProvider(QObject *parent=nullptr);
+    void setSize(int section, qreal size);
+    qreal size(int section);
+    bool resetSize(int section);
+    void resetAll();
+
+Q_SIGNALS:
+    void sizeChanged();
+
+private:
+    Q_DISABLE_COPY(QQuickTableSectionSizeProvider)
+    Q_DECLARE_PRIVATE(QQuickTableSectionSizeProvider)
+};
 
 class Q_QML_AUTOTEST_EXPORT QQuickTableViewPrivate : public QQuickFlickablePrivate
 {
@@ -249,9 +268,15 @@ public:
     bool blockItemCreatedCallback = false;
     bool layoutWarningIssued = false;
     bool polishing = false;
+    bool syncVertically = false;
+    bool syncHorizontally = false;
+    bool inSetLocalViewportPos = false;
+    bool inSyncViewportPosRecursive = false;
 
     QJSValue rowHeightProvider;
     QJSValue columnWidthProvider;
+    QQuickTableSectionSizeProvider rowHeights;
+    QQuickTableSectionSizeProvider columnWidths;
 
     EdgeRange cachedNextVisibleEdgeIndex[4];
     EdgeRange cachedColumnWidth;
@@ -270,6 +295,11 @@ public:
     QQmlNullableValue<qreal> explicitContentHeight;
 
     QSizeF averageEdgeSize;
+
+    QPointer<QQuickTableView> assignedSyncView;
+    QPointer<QQuickTableView> syncView;
+    QList<QPointer<QQuickTableView> > syncChildren;
+    Qt::Orientations assignedSyncDirection = Qt::Horizontal | Qt::Vertical;
 
     const static QPoint kLeft;
     const static QPoint kRight;
@@ -303,6 +333,10 @@ public:
     inline int leftColumn() const { return loadedColumns.firstKey(); }
     inline int rightColumn() const { return loadedColumns.lastKey(); }
 
+    QQuickTableView *rootSyncView() const;
+
+    bool updateTableRecursive();
+    bool updateTable();
     void relayoutTable();
     void relayoutTableItems();
 
@@ -349,7 +383,6 @@ public:
 
     void processRebuildTable();
     bool moveToNextRebuildState();
-    QPoint calculateNewTopLeft();
     void calculateTopLeft(QPoint &topLeft, QPointF &topLeftPos);
     void beginRebuildTable();
     void layoutAfterLoadingInitialTable();
@@ -369,6 +402,7 @@ public:
     inline void syncDelegate();
     inline void syncModel();
     inline void syncRebuildOptions();
+    inline void syncSyncView();
 
     void connectToModel();
     void disconnectFromModel();
@@ -381,6 +415,11 @@ public:
     void columnsRemovedCallback(const QModelIndex &parent, int begin, int end);
     void layoutChangedCallback(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint);
     void modelResetCallback();
+
+    void scheduleRebuildIfFastFlick();
+    void setLocalViewportX(qreal contentX);
+    void setLocalViewportY(qreal contentY);
+    void syncViewportPosRecursive();
 
     void _q_componentFinalized();
     void registerCallbackWhenBindingsAreEvaluated();

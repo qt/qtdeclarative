@@ -138,8 +138,6 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcTracingAll, "qt.v4.tracing.all")
-
 using namespace QV4;
 
 #ifndef V4_BOOTSTRAP
@@ -165,7 +163,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     , m_engineId(engineSerial.fetchAndAddOrdered(1))
     , regExpCache(nullptr)
     , m_multiplyWrappedQObjects(nullptr)
-#if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
+#if QT_CONFIG(qml_jit)
     , m_canAllocateExecutableMemory(OSAllocator::canAllocateExecutableMemory())
 #endif
 {
@@ -175,7 +173,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
         bool ok = false;
         maxCallDepth = qEnvironmentVariableIntValue("QV4_MAX_CALL_DEPTH", &ok);
         if (!ok || maxCallDepth <= 0) {
-#ifdef QT_NO_DEBUG
+#if defined(QT_NO_DEBUG) && !defined(__SANITIZE_ADDRESS__) && !QT_HAS_FEATURE(address_sanitizer)
             maxCallDepth = 1234;
 #else
             // no (tail call) optimization is done, so there'll be a lot mare stack frames active
@@ -658,13 +656,6 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
 ExecutionEngine::~ExecutionEngine()
 {
-    if (Q_UNLIKELY(lcTracingAll().isDebugEnabled())) {
-        for (auto cu : compilationUnits) {
-            for (auto f : qAsConst(cu->runtimeFunctions))
-                qCDebug(lcTracingAll).noquote().nospace() << f->traceInfoToString();
-        }
-    }
-
     modules.clear();
     delete m_multiplyWrappedQObjects;
     m_multiplyWrappedQObjects = nullptr;

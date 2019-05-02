@@ -40,7 +40,7 @@
 #include <QtQuick/private/qquickitemview_p_p.h>
 #include <QtQuick/private/qquickgridview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
-#include <QtQml/private/qqmllistmodel_p.h>
+#include <QtQmlModels/private/qqmllistmodel_p.h>
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
 #include "../shared/visualtestutil.h"

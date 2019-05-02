@@ -291,7 +291,7 @@ private:
     squeeze(const Container &numbers)
     {
         typedef typename QIntegerForSize<sizeof(Number) / 2>::Signed Small;
-        foreach (Number item, numbers) {
+        for (Number item : numbers) {
             if (!squeezable<Number, Small>(item))
                 return false;
         }

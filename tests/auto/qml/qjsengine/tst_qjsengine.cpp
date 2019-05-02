@@ -245,6 +245,9 @@ private slots:
     void equality();
     void aggressiveGc();
 
+    void interrupt_data();
+    void interrupt();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -4837,6 +4840,82 @@ void tst_QJSEngine::aggressiveGc()
         QVERIFY(obj.isObject());
     }
     qputenv("QV4_MM_AGGRESSIVE_GC", origAggressiveGc);
+}
+
+void tst_QJSEngine::interrupt_data()
+{
+    QTest::addColumn<int>("jitThreshold");
+    QTest::addColumn<QString>("code");
+
+    const int big = (1 << 24);
+    for (int i = 0; i <= big; i += big) {
+        const char *mode = i ? "interpret" : "jit";
+        QTest::addRow("for with content / %s", mode)   << i << "var a = 0; for (;;) { a += 2; }";
+        QTest::addRow("for empty / %s", mode)          << i << "for (;;) {}";
+        QTest::addRow("for continue / %s", mode)       << i << "for (;;) { continue; }";
+        QTest::addRow("while with content / %s", mode) << i << "var a = 0; while (true) { a += 2; }";
+        QTest::addRow("while empty / %s", mode)        << i << "while (true) {}";
+        QTest::addRow("while continue / %s", mode)     << i << "while (true) { continue; }";
+        QTest::addRow("do with content / %s", mode)    << i << "var a = 0; do { a += 2; } while (true);";
+        QTest::addRow("do empty / %s", mode)           << i << "do {} while (true);";
+        QTest::addRow("do continue / %s", mode)        << i << "do { continue; } while (true);";
+        QTest::addRow("nested loops / %s", mode)       << i << "while (true) { for (;;) {} }";
+        QTest::addRow("labeled continue / %s", mode)   << i << "a: while (true) { for (;;) { continue a; } }";
+        QTest::addRow("labeled break / %s", mode)      << i << "while (true) { a: for (;;) { break a; } }";
+        QTest::addRow("tail call / %s", mode)          << i << "'use strict';\nfunction x() { return x(); }; x();";
+    }
+}
+
+class TemporaryJitThreshold
+{
+    Q_DISABLE_COPY_MOVE(TemporaryJitThreshold)
+public:
+    TemporaryJitThreshold(int threshold) {
+        m_wasSet = qEnvironmentVariableIsSet(m_envVar);
+        m_value = qgetenv(m_envVar);
+        qputenv(m_envVar, QByteArray::number(threshold));
+    }
+
+    ~TemporaryJitThreshold()
+    {
+        if (m_wasSet)
+            qputenv(m_envVar, m_value);
+        else
+            qunsetenv(m_envVar);
+    }
+
+private:
+    const char *m_envVar = "QV4_JIT_CALL_THRESHOLD";
+    bool m_wasSet = false;
+    QByteArray m_value;
+};
+
+void tst_QJSEngine::interrupt()
+{
+    QFETCH(int, jitThreshold);
+    QFETCH(QString, code);
+
+    TemporaryJitThreshold threshold(jitThreshold);
+    Q_UNUSED(threshold);
+
+    QJSEngine *engineInThread = nullptr;
+    QScopedPointer<QThread> worker(QThread::create([&engineInThread, &code, jitThreshold](){
+        QJSEngine jsEngine;
+        engineInThread = &jsEngine;
+        QJSValue result = jsEngine.evaluate(code);
+        QVERIFY(jsEngine.isInterrupted());
+        QVERIFY(result.isError());
+        QCOMPARE(result.toString(), QString::fromLatin1("Error: Interrupted"));
+        engineInThread = nullptr;
+    }));
+    worker->start();
+
+    QTRY_VERIFY(engineInThread);
+
+    engineInThread->setInterrupted(true);
+
+    QVERIFY(worker->wait());
+    QVERIFY(!engineInThread);
 }
 
 QTEST_MAIN(tst_QJSEngine)

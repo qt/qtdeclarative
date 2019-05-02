@@ -41,7 +41,6 @@
 #include "qquickrepeater_p_p.h"
 
 #include <private/qqmlglobal_p.h>
-#include <private/qqmllistaccessor_p.h>
 #include <private/qqmlchangeset_p.h>
 #include <private/qqmldelegatemodel_p.h>
 

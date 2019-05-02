@@ -35,8 +35,8 @@
 #include <QtQml/qqmlincubator.h>
 #include <private/qquickrepeater_p.h>
 #include <QtQuick/private/qquicktext_p.h>
-#include <QtQml/private/qqmllistmodel_p.h>
-#include <QtQml/private/qqmlobjectmodel_p.h>
+#include <QtQmlModels/private/qqmllistmodel_p.h>
+#include <QtQmlModels/private/qqmlobjectmodel_p.h>
 #include <QtGui/qstandarditemmodel.h>
 
 #include "../../shared/util.h"

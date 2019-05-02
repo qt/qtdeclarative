@@ -175,12 +175,7 @@ Q_QML_EXPORT QJSValue QQmlEngine::singletonInstance<QJSValue>(int qmlTypeId);
 
 template<typename T>
 T QQmlEngine::singletonInstance(int qmlTypeId) {
-    QJSValue instance = singletonInstance<QJSValue>(qmlTypeId);
-    if (!instance.isQObject())
-        return nullptr;
-
-    QObject *object = instance.toQObject();
-    return qobject_cast<T>(object);
+    return qobject_cast<T>(singletonInstance<QJSValue>(qmlTypeId).toQObject());
 }
 
 QT_END_NAMESPACE

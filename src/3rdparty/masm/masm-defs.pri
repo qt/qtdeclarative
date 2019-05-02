@@ -33,10 +33,6 @@ disassembler {
     DEFINES += WTF_USE_UDIS86=0
 }
 
-force-compile-jit {
-    DEFINES += V4_FORCE_COMPILE_JIT
-}
-
 INCLUDEPATH += $$PWD/disassembler
 INCLUDEPATH += $$PWD/disassembler/udis86
 INCLUDEPATH += $$_OUT_PWD

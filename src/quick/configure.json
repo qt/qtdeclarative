@@ -2,7 +2,8 @@
     "module": "quick",
     "depends": [
         "qml-private",
-        "gui-private"
+        "gui-private",
+        "qmlmodels-private"
     ],
     "testDir": "../../config.tests",
 

@@ -279,9 +279,9 @@ void QQuickPinchHandler::onActiveChanged()
             m_startScale = m_accumulatedScale;
             m_startRotation = 0;
         }
-        qCInfo(lcPinchHandler) << "activated with starting scale" << m_startScale << "rotation" << m_startRotation;
+        qCDebug(lcPinchHandler) << "activated with starting scale" << m_startScale << "rotation" << m_startRotation;
     } else {
-        qCInfo(lcPinchHandler) << "deactivated with scale" << m_activeScale << "rotation" << m_activeRotation;
+        qCDebug(lcPinchHandler) << "deactivated with scale" << m_activeScale << "rotation" << m_activeRotation;
     }
 }
 

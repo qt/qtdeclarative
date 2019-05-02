@@ -51,70 +51,6 @@
 
 QT_BEGIN_NAMESPACE
 
-void QQmlType::SingletonInstanceInfo::init(QQmlEngine *e)
-{
-    if (scriptCallback && scriptApi(e).isUndefined()) {
-        QJSValue value = scriptCallback(e, e);
-        if (value.isQObject()) {
-            QObject *o = value.toQObject();
-            // even though the object is defined in C++, qmlContext(obj) and qmlEngine(obj)
-            // should behave identically to QML singleton types.
-            e->setContextForObject(o, new QQmlContext(e->rootContext(), e));
-        }
-        setScriptApi(e, value);
-    } else if (qobjectCallback && !qobjectApi(e)) {
-        QObject *o = qobjectCallback(e, e);
-        setQObjectApi(e, o);
-        if (!o) {
-            qFatal("qmlRegisterSingletonType(): \"%s\" is not available because the callback function returns a null pointer.", qPrintable(typeName));
-        }
-        // if this object can use a property cache, create it now
-        QQmlData::ensurePropertyCache(e, o);
-        // even though the object is defined in C++, qmlContext(obj) and qmlEngine(obj)
-        // should behave identically to QML singleton types.
-        e->setContextForObject(o, new QQmlContext(e->rootContext(), e));
-    } else if (!url.isEmpty() && !qobjectApi(e)) {
-        QQmlComponent component(e, url, QQmlComponent::PreferSynchronous);
-        QObject *o = component.beginCreate(e->rootContext());
-        setQObjectApi(e, o);
-        if (o)
-            component.completeCreate();
-    }
-}
-
-void QQmlType::SingletonInstanceInfo::destroy(QQmlEngine *e)
-{
-    // cleans up the engine-specific singleton instances if they exist.
-    scriptApis.remove(e);
-    QObject *o = qobjectApis.take(e);
-    if (o) {
-        QQmlData *ddata = QQmlData::get(o, false);
-        if (url.isEmpty() && ddata && ddata->indestructible && ddata->explicitIndestructibleSet)
-            return;
-        delete o;
-    }
-}
-
-void QQmlType::SingletonInstanceInfo::setQObjectApi(QQmlEngine *e, QObject *o)
-{
-    qobjectApis.insert(e, o);
-}
-
-QObject *QQmlType::SingletonInstanceInfo::qobjectApi(QQmlEngine *e) const
-{
-    return qobjectApis.value(e);
-}
-
-void QQmlType::SingletonInstanceInfo::setScriptApi(QQmlEngine *e, const QJSValue &v)
-{
-    scriptApis.insert(e, v);
-}
-
-QJSValue QQmlType::SingletonInstanceInfo::scriptApi(QQmlEngine *e) const
-{
-    return scriptApis.value(e);
-}
-
 QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
     : regType(type), iid(nullptr), typeId(0), listId(0), revision(0),
     containsRevisionedAttributes(false), baseMetaObject(nullptr),
@@ -156,10 +92,6 @@ QQmlTypePrivate::~QQmlTypePrivate()
     qDeleteAll(scopedEnums);
     switch (regType) {
     case QQmlType::CppType:
-        // If attached properties were successfully registered, deregister them.
-        // (They may not have been registered if some other type used the same baseMetaObject)
-        if (extraData.cd->attachedPropertiesType)
-            QQmlMetaType::unregisterAttachedPropertyId(baseMetaObject, index);
         delete extraData.cd->customParser;
         delete extraData.cd;
         break;
@@ -640,6 +572,16 @@ bool QQmlType::isCompositeSingleton() const
     return d && d->regType == CompositeSingletonType;
 }
 
+bool QQmlType::isQObjectSingleton() const
+{
+    return d && d->regType == SingletonType && d->extraData.sd->singletonInstanceInfo->qobjectCallback;
+}
+
+bool QQmlType::isQJSValueSingleton() const
+{
+    return d && d->regType == SingletonType && d->extraData.sd->singletonInstanceInfo->scriptCallback;
+}
+
 int QQmlType::typeId() const
 {
     return d ? d->typeId : -1;
@@ -708,6 +650,7 @@ const QMetaObject *QQmlType::attachedPropertiesType(QQmlEnginePrivate *engine) c
     return base.attachedPropertiesType(engine);
 }
 
+#if QT_DEPRECATED_SINCE(5, 14)
 /*
 This is the id passed to qmlAttachedPropertiesById().  This is different from the index
 for the case that a single class is registered under two or more names (eg. Item in
@@ -718,13 +661,14 @@ int QQmlType::attachedPropertiesId(QQmlEnginePrivate *engine) const
     if (!d)
         return -1;
     if (d->regType == CppType)
-        return d->extraData.cd->attachedPropertiesId;
+        return d->extraData.cd->attachedPropertiesType ? d->index : -1;
 
     QQmlType base;
     if (d->regType == CompositeType)
         base = resolveCompositeBaseType(engine);
     return base.attachedPropertiesId(engine);
 }
+#endif
 
 int QQmlType::parserStatusCast() const
 {

@@ -53,8 +53,6 @@
 
 #undef ENABLE_ALL_ASSEMBLERS_FOR_REFACTORING_PURPOSES
 
-#ifdef V4_ENABLE_JIT
-
 QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace JIT {
@@ -366,5 +364,3 @@ void PlatformAssemblerCommon::storeInt32AsValue(int srcInt, Address destAddr)
 } // QV4 namepsace
 
 QT_END_NAMESPACE
-
-#endif // V4_ENABLE_JIT

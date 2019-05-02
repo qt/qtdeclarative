@@ -64,7 +64,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct Lookup {
+struct Q_QML_PRIVATE_EXPORT Lookup {
     union {
         ReturnedValue (*getter)(Lookup *l, ExecutionEngine *engine, const Value &object);
         ReturnedValue (*globalGetter)(Lookup *l, ExecutionEngine *engine);

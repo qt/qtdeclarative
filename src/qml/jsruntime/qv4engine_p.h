@@ -464,7 +464,7 @@ public:
     // but any time a QObject is wrapped a second time in another engine, we have to do
     // bookkeeping.
     MultiplyWrappedQObjectMap *m_multiplyWrappedQObjects;
-#if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
+#if QT_CONFIG(qml_jit)
     const bool m_canAllocateExecutableMemory;
 #endif
 
@@ -595,7 +595,7 @@ public:
 
     bool canJIT(Function *f = nullptr)
     {
-#if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
+#if QT_CONFIG(qml_jit)
         if (!m_canAllocateExecutableMemory)
             return false;
         if (f)

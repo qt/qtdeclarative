@@ -1,6 +1,6 @@
 TARGET = QtQuick
 
-QT = core-private gui-private qml-private
+QT = core-private gui-private qml-private qmlmodels-private
 qtConfig(qml-network): \
     QT_PRIVATE += network
 
