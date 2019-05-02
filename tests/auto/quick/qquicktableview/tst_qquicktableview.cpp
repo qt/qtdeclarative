@@ -123,6 +123,9 @@ private slots:
     void checkContentWidthAndHeight();
     void checkPageFlicking();
     void checkExplicitContentWidthAndHeight();
+    void checkExtents_origin();
+    void checkExtents_endExtent();
+    void checkExtents_moveTableToEdge();
     void checkContentXY();
     void noDelegate();
     void changeDelegateDuringUpdate();
@@ -758,6 +761,164 @@ void tst_QQuickTableView::checkExplicitContentWidthAndHeight()
     tableView->setContentY(500);
     QCOMPARE(tableView->contentWidth(), 1000);
     QCOMPARE(tableView->contentHeight(), 1000);
+}
+
+void tst_QQuickTableView::checkExtents_origin()
+{
+    // Check that if the beginning of the content view doesn't match the
+    // actual size of the table, origin will be adjusted to make it fit.
+    LOAD_TABLEVIEW("contentwidthheight.qml");
+
+    const int rows = 10;
+    const int columns = rows;
+    const qreal columnWidth = 100;
+    const qreal rowHeight = 100;
+    const qreal actualTableSize = columns * columnWidth;
+
+    // Set a content size that is far too large
+    // compared to the size of the table.
+    tableView->setContentWidth(actualTableSize * 2);
+    tableView->setContentHeight(actualTableSize * 2);
+    tableView->setRowSpacing(0);
+    tableView->setColumnSpacing(0);
+    tableView->setLeftMargin(0);
+    tableView->setRightMargin(0);
+    tableView->setTopMargin(0);
+    tableView->setBottomMargin(0);
+
+    auto model = TestModelAsVariant(rows, columns);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Flick slowly to column 5 (to avoid rebuilds). Flick two columns at a
+    // time to ensure that we create a gap before TableView gets a chance to
+    // adjust endExtent first. This gap on the right side will make TableView
+    // move the table to move to the edge. Because of this, the table will not
+    // be aligned at the start of the content view when we next flick back again.
+    // And this will cause origin to move.
+    for (int x = 0; x <= 6; x += 2) {
+        tableView->setContentX(x * columnWidth);
+        tableView->setContentY(x * rowHeight);
+    }
+
+    // Check that the table has now been moved one column to the right
+    // (One column because that's how far outside the table we ended up flicking above).
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect.right(), actualTableSize + columnWidth);
+
+    // Flick back one column at a time so that TableView detects that the first
+    // column is not at the origin before the "table move" logic kicks in. This
+    // will make TableView adjust the origin.
+    for (int x = 6; x >= 0; x -= 1) {
+        tableView->setContentX(x * columnWidth);
+        tableView->setContentY(x * rowHeight);
+    }
+
+    // The origin will be moved with the same offset that the table was
+    // moved on the right side earlier, which is one column length.
+    QCOMPARE(tableViewPrivate->origin.x(), columnWidth);
+    QCOMPARE(tableViewPrivate->origin.y(), rowHeight);
+}
+
+void tst_QQuickTableView::checkExtents_endExtent()
+{
+    // Check that if we the content view size doesn't match the actual size
+    // of the table, endExtent will be adjusted to make it fit (so that
+    // e.g the the flicking will bounce to a stop at the edge of the table).
+    LOAD_TABLEVIEW("contentwidthheight.qml");
+
+    const int rows = 10;
+    const int columns = rows;
+    const qreal columnWidth = 100;
+    const qreal rowHeight = 100;
+    const qreal actualTableSize = columns * columnWidth;
+
+    // Set a content size that is far too large
+    // compared to the size of the table.
+    tableView->setContentWidth(actualTableSize * 2);
+    tableView->setContentHeight(actualTableSize * 2);
+    tableView->setRowSpacing(0);
+    tableView->setColumnSpacing(0);
+    tableView->setLeftMargin(0);
+    tableView->setRightMargin(0);
+    tableView->setTopMargin(0);
+    tableView->setBottomMargin(0);
+
+    auto model = TestModelAsVariant(rows, columns);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Flick slowly to column 5 (to avoid rebuilds). This will flick the table to
+    // the last column in the model. But since there still is a lot space left in
+    // the content view, endExtent will be set accordingly to compensate.
+    for (int x = 1; x <= 5; x++)
+        tableView->setContentX(x * columnWidth);
+    QCOMPARE(tableViewPrivate->rightColumn(), columns - 1);
+    qreal expectedEndExtentWidth = actualTableSize - tableView->contentWidth();
+    QCOMPARE(tableViewPrivate->endExtent.width(), expectedEndExtentWidth);
+
+    for (int y = 1; y <= 5; y++)
+        tableView->setContentY(y * rowHeight);
+    QCOMPARE(tableViewPrivate->bottomRow(), rows - 1);
+    qreal expectedEndExtentHeight = actualTableSize - tableView->contentHeight();
+    QCOMPARE(tableViewPrivate->endExtent.height(), expectedEndExtentHeight);
+}
+
+void tst_QQuickTableView::checkExtents_moveTableToEdge()
+{
+    // Check that if we the content view size doesn't match the actual
+    // size of the table, and we fast-flick the viewport to outside
+    // the table, we end up moving the table back into the viewport to
+    // avoid any visual glitches.
+    LOAD_TABLEVIEW("contentwidthheight.qml");
+
+    const int rows = 10;
+    const int columns = rows;
+    const qreal columnWidth = 100;
+    const qreal rowHeight = 100;
+    const qreal actualTableSize = columns * columnWidth;
+
+    // Set a content size that is far to large
+    // compared to the size of the table.
+    tableView->setContentWidth(actualTableSize * 2);
+    tableView->setContentHeight(actualTableSize * 2);
+    tableView->setRowSpacing(0);
+    tableView->setColumnSpacing(0);
+    tableView->setLeftMargin(0);
+    tableView->setRightMargin(0);
+    tableView->setTopMargin(0);
+    tableView->setBottomMargin(0);
+
+    auto model = TestModelAsVariant(rows, columns);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Flick slowly to column 5 (to avoid rebuilds). Flick two columns at a
+    // time to ensure that we create a gap before TableView gets a chance to
+    // adjust endExtent first. This gap on the right side will make TableView
+    // move the table to the edge (in addition to adjusting the extents, but that
+    // will happen in a subsequent polish, and is not for this test verify).
+    for (int x = 0; x <= 6; x += 2)
+        tableView->setContentX(x * columnWidth);
+    QCOMPARE(tableViewPrivate->rightColumn(), columns - 1);
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect, tableViewPrivate->viewportRect);
+
+    for (int y = 0; y <= 6; y += 2)
+        tableView->setContentY(y * rowHeight);
+    QCOMPARE(tableViewPrivate->bottomRow(), rows - 1);
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect, tableViewPrivate->viewportRect);
+
+    for (int x = 6; x >= 0; x -= 2)
+        tableView->setContentX(x * columnWidth);
+    QCOMPARE(tableViewPrivate->leftColumn(), 0);
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect, tableViewPrivate->viewportRect);
+
+    for (int y = 6; y >= 0; y -= 2)
+        tableView->setContentY(y * rowHeight);
+    QCOMPARE(tableViewPrivate->topRow(), 0);
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect, tableViewPrivate->viewportRect);
 }
 
 void tst_QQuickTableView::checkContentXY()
