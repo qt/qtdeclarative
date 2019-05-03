@@ -1,0 +1,98 @@
+Qt 5.13 introduces many new features and improvements as well as bugfixes
+over the 5.12.x series. For more details, refer to the online documentation
+included in this distribution. The documentation is also available online:
+
+  https://doc.qt.io/qt-5/index.html
+
+The Qt version 5.13 series is binary compatible with the 5.12.x series.
+Applications compiled for 5.12 will continue to run with 5.13.
+
+Some of the changes listed in this file include issue tracking numbers
+corresponding to tasks in the Qt Bug Tracker:
+
+  https://bugreports.qt.io/
+
+Each of these identifiers can be entered in the bug tracker to obtain more
+information about a particular change.
+
+****************************************************************************
+*                   Important Behavior Changes                             *
+****************************************************************************
+
+ - [QTBUG-68278] The Canvas requestAnimationFrame callback now gets passed a
+   millisecond timestamp instead of seconds.
+
+****************************************************************************
+*                                  QtQml                                   *
+****************************************************************************
+
+ - Nested arrays are not flattened anymore when printed through console.log()
+   and friends.
+ - [QTBUG-72098] Assigning JavaScript null to incompatibly typed properties
+   generates a compile warning now. In future versions of Qt this will
+   become an error.
+ - [QTBUG-60057] QVariant's debug stream operator is now used in console.log()
+   and friends.  This often includes more information than before, and
+   works better for custom types.
+ - [QTBUG-74068] Qt.include() is deprecated in favor of ECMAScript modules.
+ - [QTBUG-60338] Added support for QSequentialIterable in QML, meaning
+   that the engine understands many sequential value types (such as lists
+   of Q_GADGETS) and is able to convert them to JS arrays.
+ - [QTBUG-66504] QmlDebug has new features to improve integration with
+   external tools and IDEs.
+ - [QTBUG-50061] Global exception handlers are now called reliably by
+   unwinding JIT-generated code via a function table.
+ - [QTBUG-72294] Fixed a function table error on WinRT.
+ - [QTBUG-72430] Added the QTQUICK_COMPILER_RETAINED_RESOURCES option to
+   retain sources when generating QML cache files.
+ - [QTBUG-72930] A Component can no longer be assigned to properties of other types.
+ - [QTBUG-71838] LocalStorage now returns the new database version
+   from changeVersion() without reopening the connection.
+
+ - qml:
+   * [QTBUG-70826][QTBUG-74662] The QML Runtime tool now has an updated
+     application icon and a default window icon. QtQuick applications can
+     still use QWindow::setIcon() to override the window icon.
+
+ - qmlscene:
+   * [QDS-589] qmlscene now supports file selectors.
+
+****************************************************************************
+*                                 QtQuick                                  *
+****************************************************************************
+
+ - Item Views:
+   * Added itemAtIndex() to GridView, ListView and PathView to fetch a visible
+     delegate by index.
+
+ - TableView:
+   * Added support for hiding rows and columns by setting their size to 0 from
+     the columnsWidthProvider/rowHeightProvider.
+
+ - Text:
+   * [QTBUG-32525][QTBUG-70748] Inline images in a QTextDocumentLayout are
+     now displayed in Text and friends.
+   * [QTBUG-68711] Fixed Keys.onShortcutOverride for TextEdit
+   * [QTBUG-50587] Fixed persistentSelection for readonly TextEdit
+   * [QTBUG-72736] Text wrapping no longer breaks on the last line if right
+     elide is enabled
+
+ - Window:
+   * [QTBUG-67903] Added the Window.transientParent property.  QtQuick normally
+     guesses the transient parent relationship from the nesting of declarations,
+     but now you can override this "magic" by setting it explicitly.
+   * [QTBUG-73929] Fixed a race condition when closing windows.
+
+****************************************************************************
+*                               QtQuickTest                                *
+****************************************************************************
+
+ - [QTBUG-71224] Added QQuickTest::qWaitForItemPolished() for verifying that
+   updatePolish() was called on an item.
+ - [QTBUG-71224] Added qIsPolishScheduled() function to allow checking if
+   updatePolish() has been called on an item since the last call to its
+   polish() function. This is useful to verify that a polish has been
+   scheduled.
+ - Added TestCase.isPolishScheduled() function to allow checking whether
+   updatePolish() has been called on an item since the last call to its polish()
+   function. This is useful to verify that a polish has been scheduled.
