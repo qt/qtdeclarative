@@ -714,12 +714,21 @@ void QQuickTableViewPrivate::enforceTableAtOrigin()
 
 void QQuickTableViewPrivate::updateAverageEdgeSize()
 {
-    const int loadedRowCount = loadedRows.count();
-    const int loadedColumnCount = loadedColumns.count();
-    const qreal accRowSpacing = (loadedRowCount - 1) * cellSpacing.height();
-    const qreal accColumnSpacing = (loadedColumnCount - 1) * cellSpacing.width();
-    averageEdgeSize.setHeight((loadedTableOuterRect.height() - accRowSpacing) / loadedRowCount);
-    averageEdgeSize.setWidth((loadedTableOuterRect.width() - accColumnSpacing) / loadedColumnCount);
+    if (explicitContentWidth.isValid()) {
+        const qreal accColumnSpacing = (tableSize.width() - 1) * cellSpacing.width();
+        averageEdgeSize.setWidth((explicitContentWidth - accColumnSpacing) / tableSize.width());
+    } else {
+        const qreal accColumnSpacing = (loadedColumns.count() - 1) * cellSpacing.width();
+        averageEdgeSize.setWidth((loadedTableOuterRect.width() - accColumnSpacing) / loadedColumns.count());
+    }
+
+    if (explicitContentHeight.isValid()) {
+        const qreal accRowSpacing = (tableSize.height() - 1) * cellSpacing.height();
+        averageEdgeSize.setHeight((explicitContentHeight - accRowSpacing) / tableSize.height());
+    } else {
+        const qreal accRowSpacing = (loadedRows.count() - 1) * cellSpacing.height();
+        averageEdgeSize.setHeight((loadedTableOuterRect.height() - accRowSpacing) / loadedRows.count());
+    }
 }
 
 void QQuickTableViewPrivate::syncLoadedTableRectFromLoadedTable()
