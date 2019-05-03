@@ -49,7 +49,7 @@
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/private/qlazilyallocated_p.h>
-#include <QtQml/private/qqmldelegatemodel_p.h>
+#include <private/qqmldelegatemodel_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qquickitemview_p.h>

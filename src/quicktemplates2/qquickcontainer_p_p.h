@@ -50,7 +50,7 @@
 
 #include <QtQuickTemplates2/private/qquickcontainer_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
-#include <QtQml/private/qqmlobjectmodel_p.h>
+#include <private/qqmlobjectmodel_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -53,7 +53,7 @@
 #include <QtQml/private/qv4scopedvalue_p.h>
 #include <QtQml/private/qv4variantobject_p.h>
 #include <QtQml/private/qv4qobjectwrapper_p.h>
-#include <QtQml/private/qqmlobjectmodel_p.h>
+#include <private/qqmlobjectmodel_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/private/qquickitemview_p.h>
