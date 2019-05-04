@@ -202,10 +202,6 @@ void tst_cursor::scrollBar()
     const QPoint scrollBarPos(window->width() - scrollBar->width() / 2, window->height() / 2);
     QTest::mouseMove(window, scrollBarPos);
 
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QEXPECT_FAIL("", "Active status behaves differently in offscreen/minimal platforms", Continue);
-
     QVERIFY(scrollBar->isActive());
     QCOMPARE(window->cursor().shape(), scrollBar->cursor().shape());
     QCOMPARE(scrollBar->cursor().shape(), Qt::CursorShape::ArrowCursor);
