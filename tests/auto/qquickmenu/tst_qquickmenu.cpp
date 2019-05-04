@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#include <qtest.h>
-#include <QtTest/QSignalSpy>
+#include <QtTest/qtest.h>
+#include <QtTest/qsignalspy.h>
 #include <QtGui/qcursor.h>
 #include <QtGui/qstylehints.h>
 #include <QtQml/qqmlengine.h>
@@ -45,6 +45,7 @@
 #include <QtQuick/private/qquickitem_p.h>
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
+#include "../shared/qtest_quickcontrols.h"
 
 #include <QtQuickTemplates2/private/qquickaction_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
@@ -93,6 +94,13 @@ private slots:
     void scrollable();
     void disableWhenTriggered_data();
     void disableWhenTriggered();
+    void menuItemWidth_data();
+    void menuItemWidth();
+    void menuItemWidthAfterMenuWidthChanged_data();
+    void menuItemWidthAfterMenuWidthChanged();
+    void menuItemWidthAfterImplicitWidthChanged_data();
+    void menuItemWidthAfterImplicitWidthChanged();
+    void menuItemWidthAfterRetranslate();
 };
 
 void tst_QQuickMenu::defaults()
@@ -152,6 +160,7 @@ void tst_QQuickMenu::mouse()
     menu->open();
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QTRY_VERIFY(menu->isOpened());
 
     QQuickItem *firstItem = menu->itemAt(0);
     QSignalSpy clickedSpy(firstItem, SIGNAL(clicked()));
@@ -160,16 +169,18 @@ void tst_QQuickMenu::mouse()
 
     // Ensure that presses cause the current index to change,
     // so that the highlight acts as a way of illustrating press state.
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(firstItem->width() / 2, firstItem->height() / 2));
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier,
+        QPoint(menu->leftPadding() + firstItem->width() / 2, menu->topPadding() + firstItem->height() / 2));
     QVERIFY(firstItem->hasActiveFocus());
     QCOMPARE(menu->currentIndex(), 0);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(0));
     QVERIFY(menu->isVisible());
 
-    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(firstItem->width() / 2, firstItem->height() / 2));
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier,
+        QPoint(menu->leftPadding() + firstItem->width() / 2, menu->topPadding() + firstItem->height() / 2));
     QCOMPARE(clickedSpy.count(), 1);
     QCOMPARE(triggeredSpy.count(), 1);
-    QCOMPARE(visibleSpy.count(), 1);
+    QTRY_COMPARE(visibleSpy.count(), 1);
     QVERIFY(!menu->isVisible());
     QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
     QCOMPARE(menu->currentIndex(), -1);
@@ -179,13 +190,14 @@ void tst_QQuickMenu::mouse()
     QCOMPARE(visibleSpy.count(), 2);
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QTRY_VERIFY(menu->isOpened());
 
     // Ensure that we have enough space to click outside of the menu.
     QVERIFY(window->width() > menu->contentItem()->width());
     QVERIFY(window->height() > menu->contentItem()->height());
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
         QPoint(menu->contentItem()->width() + 1, menu->contentItem()->height() + 1));
-    QCOMPARE(visibleSpy.count(), 3);
+    QTRY_COMPARE(visibleSpy.count(), 3);
     QVERIFY(!menu->isVisible());
     QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
 
@@ -193,16 +205,19 @@ void tst_QQuickMenu::mouse()
     QCOMPARE(visibleSpy.count(), 4);
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QTRY_VERIFY(menu->isOpened());
 
     // Hover-highlight through the menu items one by one
     QQuickItem *prevHoverItem = nullptr;
     QQuickItem *listView = menu->contentItem();
-    for (int y = 0; y < listView->height(); ++y) {
+    for (int y = menu->topPadding(); y < listView->height(); ++y) {
         QQuickItem *hoverItem = nullptr;
         QVERIFY(QMetaObject::invokeMethod(listView, "itemAt", Q_RETURN_ARG(QQuickItem *, hoverItem), Q_ARG(qreal, 0), Q_ARG(qreal, listView->property("contentY").toReal() + y)));
         if (!hoverItem || !hoverItem->isVisible() || hoverItem == prevHoverItem)
             continue;
-        QTest::mouseMove(window, QPoint(hoverItem->x() + hoverItem->width() / 2, hoverItem->y() + hoverItem->height() / 2));
+        QTest::mouseMove(window, QPoint(
+            menu->leftPadding() + hoverItem->x() + hoverItem->width() / 2,
+            menu->topPadding() + hoverItem->y() + hoverItem->height() / 2));
         QTRY_VERIFY(hoverItem->property("highlighted").toBool());
         if (prevHoverItem)
             QVERIFY(!prevHoverItem->property("highlighted").toBool());
@@ -275,6 +290,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QCOMPARE(visibleSpy.count(), 1);
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QTRY_VERIFY(menu->isOpened());
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->property("highlighted").toBool());
     QCOMPARE(menu->currentIndex(), -1);
@@ -304,7 +320,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QSignalSpy secondTriggeredSpy(secondItem, SIGNAL(triggered()));
     QTest::keyClick(window, Qt::Key_Space);
     QCOMPARE(secondTriggeredSpy.count(), 1);
-    QCOMPARE(visibleSpy.count(), 2);
+    QTRY_COMPARE(visibleSpy.count(), 2);
     QVERIFY(!menu->isVisible());
     QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
@@ -321,6 +337,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     menu->open();
     QCOMPARE(visibleSpy.count(), 3);
     QVERIFY(menu->isVisible());
+    QTRY_VERIFY(menu->isOpened());
     // Give the first item focus.
     QTest::keyClick(window, Qt::Key_Tab);
     QVERIFY(firstItem->hasActiveFocus());
@@ -333,7 +350,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QSignalSpy firstTriggeredSpy(firstItem, SIGNAL(triggered()));
     QTest::keyClick(window, Qt::Key_Return);
     QCOMPARE(firstTriggeredSpy.count(), 1);
-    QCOMPARE(visibleSpy.count(), 4);
+    QTRY_COMPARE(visibleSpy.count(), 4);
     QVERIFY(!menu->isVisible());
     QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
@@ -349,6 +366,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QCOMPARE(visibleSpy.count(), 5);
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QTRY_VERIFY(menu->isOpened());
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->hasVisualFocus());
     QVERIFY(!firstItem->isHighlighted());
@@ -422,7 +440,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QVERIFY(!thirdItem->isHighlighted());
 
     QTest::keyClick(window, Qt::Key_Escape);
-    QCOMPARE(visibleSpy.count(), 6);
+    QTRY_COMPARE(visibleSpy.count(), 6);
     QVERIFY(!menu->isVisible());
 }
 
@@ -458,6 +476,7 @@ void tst_QQuickMenu::disabledMenuItemKeyNavigation()
     menu->setFocus(true);
     menu->open();
     QVERIFY(menu->isVisible());
+    QTRY_VERIFY(menu->isOpened());
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->property("highlighted").toBool());
     QCOMPARE(menu->currentIndex(), -1);
@@ -486,7 +505,7 @@ void tst_QQuickMenu::disabledMenuItemKeyNavigation()
     QCOMPARE(firstItem->focusReason(), Qt::BacktabFocusReason);
 
     QTest::keyClick(window, Qt::Key_Escape);
-    QVERIFY(!menu->isVisible());
+    QTRY_VERIFY(!menu->isVisible());
 }
 
 void tst_QQuickMenu::mnemonics()
@@ -559,6 +578,7 @@ void tst_QQuickMenu::menuButton()
         menuButton->mapToScene(QPointF(menuButton->width() / 2, menuButton->height() / 2)).toPoint());
     QCOMPARE(visibleSpy.count(), 1);
     QVERIFY(menu->isVisible());
+    QTRY_VERIFY(menu->isOpened());
 
     QTest::keyClick(window, Qt::Key_Tab);
     QQuickItem *firstItem = menu->itemAt(0);
@@ -634,6 +654,7 @@ void tst_QQuickMenu::menuSeparator()
 
     menu->open();
     QVERIFY(menu->isVisible());
+    QTRY_VERIFY(menu->isOpened());
 
     // Key navigation skips separators
     QTest::keyClick(window, Qt::Key_Down);
@@ -761,24 +782,30 @@ void tst_QQuickMenu::popup()
     QCOMPARE(menu->parentItem(), window->contentItem());
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
-    QTRY_COMPARE(menu->x(), 11);
-    QTRY_COMPARE(menu->y(), 22);
+    const qreal elevenOrLeftMargin = qMax(qreal(11), menu->leftMargin());
+    const qreal twentyTwoOrTopMargin = qMax(qreal(22), menu->topMargin());
+    // If the Menu has large margins, it may be moved to stay within them.
+    // QTBUG-75503: QTRY_COMPARE doesn't use qFuzzyCompare() in all cases,
+    // meaning a lot of these comparisons could trigger a 10 second wait;
+    // use QTRY_VERIFY and qFuzzyCompare instead.
+    QTRY_VERIFY(qFuzzyCompare(menu->x(), elevenOrLeftMargin));
+    QTRY_VERIFY(qFuzzyCompare(menu->y(), twentyTwoOrTopMargin));
     menu->close();
 
     QVERIFY(QMetaObject::invokeMethod(window, "popupAtPos", Q_ARG(QVariant, QPointF(33, 44))));
     QCOMPARE(menu->parentItem(), window->contentItem());
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
-    QTRY_COMPARE(menu->x(), 33);
-    QTRY_COMPARE(menu->y(), 44);
+    QTRY_VERIFY(qFuzzyCompare(menu->x(), 33));
+    QTRY_VERIFY(qFuzzyCompare(menu->y(), 44));
     menu->close();
 
     QVERIFY(QMetaObject::invokeMethod(window, "popupAtCoord", Q_ARG(QVariant, 55), Q_ARG(QVariant, 66)));
     QCOMPARE(menu->parentItem(), window->contentItem());
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
-    QTRY_COMPARE(menu->x(), 55);
-    QTRY_COMPARE(menu->y(), 66);
+    QTRY_VERIFY(qFuzzyCompare(menu->x(), 55));
+    QTRY_VERIFY(qFuzzyCompare(menu->y(), 66));
     menu->close();
 
     menu->setParentItem(nullptr);
@@ -786,8 +813,8 @@ void tst_QQuickMenu::popup()
     QCOMPARE(menu->parentItem(), button);
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
-    QTRY_COMPARE(menu->x(), button->mapFromScene(QPointF(11, 22)).x());
-    QTRY_COMPARE(menu->y(), button->mapFromScene(QPointF(11, 22)).y());
+    QTRY_VERIFY(qFuzzyCompare(menu->x(), button->mapFromScene(QPointF(elevenOrLeftMargin, twentyTwoOrTopMargin)).x()));
+    QTRY_VERIFY(qFuzzyCompare(menu->y(), button->mapFromScene(QPointF(elevenOrLeftMargin, twentyTwoOrTopMargin)).y()));
     menu->close();
 
     menu->setParentItem(nullptr);
@@ -795,8 +822,10 @@ void tst_QQuickMenu::popup()
     QCOMPARE(menu->parentItem(), button);
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
-    QTRY_COMPARE(menu->x(), -11);
-    QTRY_COMPARE(menu->y(), -22);
+    // Don't need to worry about margins here because we're opening close
+    // to the center of the window.
+    QTRY_VERIFY(qFuzzyCompare(menu->x(), -11));
+    QTRY_VERIFY(qFuzzyCompare(menu->y(), -22));
     QCOMPARE(menu->popupItem()->position(), button->mapToScene(QPointF(-11, -22)));
     menu->close();
 
@@ -805,12 +834,13 @@ void tst_QQuickMenu::popup()
     QCOMPARE(menu->parentItem(), button);
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
-    QTRY_COMPARE(menu->x(), -33);
-    QTRY_COMPARE(menu->y(), -44);
+    QTRY_VERIFY(qFuzzyCompare(menu->x(), -33));
+    QTRY_VERIFY(qFuzzyCompare(menu->y(), -44));
     QCOMPARE(menu->popupItem()->position(), button->mapToScene(QPointF(-33, -44)));
     menu->close();
 
-    cursorPos = window->mapToGlobal(QPoint(12, window->height() / 2));
+    const qreal twelveOrLeftMargin = qMax(qreal(12), menu->leftMargin());
+    cursorPos = window->mapToGlobal(QPoint(twelveOrLeftMargin, window->height() / 2));
     QCursor::setPos(cursorPos);
     QTRY_COMPARE(QCursor::pos(), cursorPos);
 
@@ -821,22 +851,22 @@ void tst_QQuickMenu::popup()
         QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtCursor", Q_ARG(QVariant, QVariant::fromValue(menuItem))));
         QCOMPARE(menu->currentIndex(), menuItems.indexOf(menuItem));
         QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
-        QTRY_COMPARE(menu->x(), 12);
-        QTRY_COMPARE(menu->y(), window->height() / 2 + menu->topPadding() - menuItem->y());
+        QTRY_VERIFY(qFuzzyCompare(menu->x(), twelveOrLeftMargin));
+        QTRY_VERIFY(qFuzzyCompare(menu->y(), window->height() / 2 - menu->topPadding() - menuItem->y()));
         menu->close();
 
         QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtPos", Q_ARG(QVariant, QPointF(33, window->height() / 3)), Q_ARG(QVariant, QVariant::fromValue(menuItem))));
         QCOMPARE(menu->currentIndex(), menuItems.indexOf(menuItem));
         QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
-        QTRY_COMPARE(menu->x(), 33);
-        QTRY_COMPARE(menu->y(), window->height() / 3 + menu->topPadding() - menuItem->y());
+        QTRY_VERIFY(qFuzzyCompare(menu->x(), 33));
+        QTRY_VERIFY(qFuzzyCompare(menu->y(), window->height() / 3 - menu->topPadding() - menuItem->y()));
         menu->close();
 
         QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtCoord", Q_ARG(QVariant, 55), Q_ARG(QVariant, window->height() / 3 * 2), Q_ARG(QVariant, QVariant::fromValue(menuItem))));
         QCOMPARE(menu->currentIndex(), menuItems.indexOf(menuItem));
         QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
-        QTRY_COMPARE(menu->x(), 55);
-        QTRY_COMPARE(menu->y(), window->height() / 3 * 2 + menu->topPadding() - menuItem->y());
+        QTRY_VERIFY(qFuzzyCompare(menu->x(), 55));
+        QTRY_COMPARE_WITH_TIMEOUT(menu->y(), window->height() / 3 * 2 - menu->topPadding() - menuItem->y(), 500);
         menu->close();
 
         menu->setParentItem(nullptr);
@@ -844,8 +874,8 @@ void tst_QQuickMenu::popup()
         QCOMPARE(menu->parentItem(), button);
         QCOMPARE(menu->currentIndex(), menuItems.indexOf(menuItem));
         QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
-        QTRY_COMPARE(menu->x(), button->mapFromScene(QPoint(12, window->height() / 2)).x());
-        QTRY_COMPARE(menu->y(), button->mapFromScene(QPoint(12, window->height() / 2)).y() + menu->topPadding() - menuItem->y());
+        QTRY_VERIFY(qFuzzyCompare(menu->x(), button->mapFromScene(QPoint(twelveOrLeftMargin, window->height() / 2)).x()));
+        QTRY_VERIFY(qFuzzyCompare(menu->y(), button->mapFromScene(QPoint(twelveOrLeftMargin, window->height() / 2)).y() - menu->topPadding() - menuItem->y()));
         menu->close();
 
         menu->setParentItem(nullptr);
@@ -853,9 +883,9 @@ void tst_QQuickMenu::popup()
         QCOMPARE(menu->parentItem(), button);
         QCOMPARE(menu->currentIndex(), menuItems.indexOf(menuItem));
         QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
-        QTRY_COMPARE(menu->x(), -11);
-        QTRY_COMPARE(menu->y(), -22 + menu->topPadding() - menuItem->y());
-        QCOMPARE(menu->popupItem()->position(), button->mapToScene(QPointF(-11, -22 + menu->topPadding() - menuItem->y())));
+        QTRY_VERIFY(qFuzzyCompare(menu->x(), -11));
+        QTRY_VERIFY(qFuzzyCompare(menu->y(), -22 - menu->topPadding() - menuItem->y()));
+        QCOMPARE(menu->popupItem()->position(), button->mapToScene(QPointF(-11, -22 - menu->topPadding() - menuItem->y())));
         menu->close();
 
         menu->setParentItem(nullptr);
@@ -863,9 +893,9 @@ void tst_QQuickMenu::popup()
         QCOMPARE(menu->parentItem(), button);
         QCOMPARE(menu->currentIndex(), menuItems.indexOf(menuItem));
         QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
-        QTRY_COMPARE(menu->x(), -33);
-        QTRY_COMPARE(menu->y(), -44 + menu->topPadding() - menuItem->y());
-        QCOMPARE(menu->popupItem()->position(), button->mapToScene(QPointF(-33, -44 + menu->topPadding() - menuItem->y())));
+        QTRY_VERIFY(qFuzzyCompare(menu->x(), -33));
+        QTRY_VERIFY(qFuzzyCompare(menu->y(), -44 - menu->topPadding() - menuItem->y()));
+        QCOMPARE(menu->popupItem()->position(), button->mapToScene(QPointF(-33, -44 - menu->topPadding() - menuItem->y())));
         menu->close();
     }
 
@@ -1030,6 +1060,7 @@ void tst_QQuickMenu::subMenuMouse()
 
     mainMenu->open();
     QVERIFY(mainMenu->isVisible());
+    QTRY_VERIFY(mainMenu->isOpened());
     QVERIFY(!subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
@@ -1039,8 +1070,9 @@ void tst_QQuickMenu::subMenuMouse()
     QVERIFY(subMenu1Item);
     QCOMPARE(subMenu1Item->subMenu(), subMenu1);
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, subMenu1Item->mapToScene(QPoint(1, 1)).toPoint());
-    QCOMPARE(mainMenu->isVisible(), cascade);
+    QTRY_COMPARE(mainMenu->isVisible(), cascade);
     QVERIFY(subMenu1->isVisible());
+    QTRY_VERIFY(subMenu1->isOpened());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
 
@@ -1053,8 +1085,10 @@ void tst_QQuickMenu::subMenuMouse()
     QVERIFY(subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
-    if (cascade)
+    if (cascade) {
         QTRY_VERIFY(subSubMenu1->isVisible());
+        QTRY_VERIFY(subSubMenu1->isOpened());
+    }
 
     // close the sub-sub-menu with mouse hover over another parent menu item
     QQuickMenuItem *subMenuItem1 = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(0));
@@ -1064,7 +1098,7 @@ void tst_QQuickMenu::subMenuMouse()
     QCOMPARE(mainMenu->isVisible(), cascade);
     QVERIFY(subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
-    QVERIFY(!subSubMenu1->isVisible());
+    QTRY_VERIFY(!subSubMenu1->isVisible());
 
     // re-open the sub-sub-menu with mouse hover
     QTest::mouseMove(window, subSubMenu1Item->mapToScene(QPoint(1, 1)).toPoint());
@@ -1072,24 +1106,24 @@ void tst_QQuickMenu::subMenuMouse()
     QVERIFY(subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
-    if (cascade)
+    if (cascade) {
         QTRY_VERIFY(subSubMenu1->isVisible());
+        QTRY_VERIFY(subSubMenu1->isOpened());
+    }
 
     // close sub-menu and sub-sub-menu with mouse hover in the main menu
     QQuickMenuItem *mainMenuItem1 = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(0));
     QVERIFY(mainMenuItem1);
     QTest::mouseMove(window, mainMenuItem1->mapToScene(QPoint(1, 1)).toPoint());
     QCOMPARE(mainMenu->isVisible(), cascade);
-    QCOMPARE(subMenu1->isVisible(), !cascade);
+    QTRY_COMPARE(subMenu1->isVisible(), !cascade);
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
 
     // close all menus by click triggering an item
-    QQuickMenuItem *subSubMenuItem1 = qobject_cast<QQuickMenuItem *>(subSubMenu1->itemAt(0));
-    QVERIFY(subSubMenuItem1);
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, subSubMenuItem1->mapToScene(QPoint(1, 1)).toPoint());
-    QVERIFY(!mainMenu->isVisible());
-    QVERIFY(!subMenu1->isVisible());
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, mainMenuItem1->mapToScene(QPoint(1, 1)).toPoint());
+    QTRY_VERIFY(!mainMenu->isVisible());
+    QTRY_VERIFY(!subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
 }
@@ -1133,7 +1167,9 @@ void tst_QQuickMenu::subMenuDisabledMouse()
 
     // Open the sub-menu with a mouse click.
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, menuItem1->mapToScene(QPoint(1, 1)).toPoint());
-    QCOMPARE(mainMenu->isVisible(), cascade);
+    // Need to use the TRY variant here when cascade is false,
+    // as e.g. Material style menus have transitions and don't close immediately.
+    QTRY_COMPARE(mainMenu->isVisible(), cascade);
     QVERIFY(subMenu->isVisible());
     QVERIFY(menuItem1->isHighlighted());
     // Now the sub-menu is open. The current behavior is that the first menu item
@@ -1148,8 +1184,8 @@ void tst_QQuickMenu::subMenuDisabledMouse()
 
     // Close all menus by clicking on the item that isn't disabled.
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, subMenuItem2->mapToScene(QPoint(1, 1)).toPoint());
-    QVERIFY(!mainMenu->isVisible());
-    QVERIFY(!subMenu->isVisible());
+    QTRY_VERIFY(!mainMenu->isVisible());
+    QTRY_VERIFY(!subMenu->isVisible());
 }
 
 void tst_QQuickMenu::subMenuKeyboard_data()
@@ -1194,11 +1230,12 @@ void tst_QQuickMenu::subMenuKeyboard()
 
     mainMenu->open();
     QVERIFY(mainMenu->isVisible());
+    QTRY_VERIFY(mainMenu->isOpened());
     QVERIFY(!subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
 
-    // navigate to the sub-menu item and trigger it
+    // navigate to the sub-menu item and trigger it to open the sub-menu
     QQuickMenuItem *subMenu1Item = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(1));
     QVERIFY(subMenu1Item);
     QVERIFY(!subMenu1Item->isHighlighted());
@@ -1207,8 +1244,9 @@ void tst_QQuickMenu::subMenuKeyboard()
     QTest::keyClick(window, Qt::Key_Down);
     QVERIFY(subMenu1Item->isHighlighted());
     QTest::keyClick(window, Qt::Key_Space);
-    QCOMPARE(mainMenu->isVisible(), cascade);
+    QTRY_COMPARE(mainMenu->isVisible(), cascade);
     QVERIFY(subMenu1->isVisible());
+    QTRY_VERIFY(subMenu1->isOpened());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
 
@@ -1221,15 +1259,16 @@ void tst_QQuickMenu::subMenuKeyboard()
     QTest::keyClick(window, Qt::Key_Down);
     QTest::keyClick(window, Qt::Key_Down);
     QVERIFY(subSubMenu1Item->isHighlighted());
-    QCOMPARE(mainMenu->isVisible(), cascade);
+    QTRY_COMPARE(mainMenu->isVisible(), cascade);
     QVERIFY(subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
     QTest::keyClick(window, mirrored ? Qt::Key_Left : Qt::Key_Right);
     QCOMPARE(mainMenu->isVisible(), cascade);
-    QCOMPARE(subMenu1->isVisible(), cascade);
+    QTRY_COMPARE(subMenu1->isVisible(), cascade);
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(subSubMenu1->isVisible());
+    QTRY_VERIFY(subSubMenu1->isOpened());
 
     // navigate within the sub-sub-menu
     QQuickMenuItem *subSubMenuItem1 = qobject_cast<QQuickMenuItem *>(subSubMenu1->itemAt(0));
@@ -1248,7 +1287,7 @@ void tst_QQuickMenu::subMenuKeyboard()
     QCOMPARE(mainMenu->isVisible(), cascade);
     QVERIFY(subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
-    QVERIFY(!subSubMenu1->isVisible());
+    QTRY_VERIFY(!subSubMenu1->isVisible());
 
     // navigate within the sub-menu
     QQuickMenuItem *subMenuItem1 = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(0));
@@ -1266,11 +1305,11 @@ void tst_QQuickMenu::subMenuKeyboard()
     // close the menus with esc
     QTest::keyClick(window, Qt::Key_Escape);
     QCOMPARE(mainMenu->isVisible(), cascade);
-    QVERIFY(!subMenu1->isVisible());
+    QTRY_VERIFY(!subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
     QTest::keyClick(window, Qt::Key_Escape);
-    QVERIFY(!mainMenu->isVisible());
+    QTRY_VERIFY(!mainMenu->isVisible());
     QVERIFY(!subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
@@ -1310,6 +1349,7 @@ void tst_QQuickMenu::subMenuDisabledKeyboard()
 
     mainMenu->open();
     QVERIFY(mainMenu->isVisible());
+    QTRY_VERIFY(mainMenu->isOpened());
     QVERIFY(!menuItem1->isHighlighted());
     QVERIFY(!subMenu->isVisible());
 
@@ -1330,10 +1370,10 @@ void tst_QQuickMenu::subMenuDisabledKeyboard()
 
     // Close the menus with escape.
     QTest::keyClick(window, Qt::Key_Escape);
-    QCOMPARE(mainMenu->isVisible(), cascade);
-    QVERIFY(!subMenu->isVisible());
+    QTRY_COMPARE(mainMenu->isVisible(), cascade);
+    QTRY_VERIFY(!subMenu->isVisible());
     QTest::keyClick(window, Qt::Key_Escape);
-    QVERIFY(!mainMenu->isVisible());
+    QTRY_VERIFY(!mainMenu->isVisible());
     QVERIFY(!subMenu->isVisible());
 }
 
@@ -1365,11 +1405,16 @@ void tst_QQuickMenu::subMenuPosition()
     QQuickApplicationHelper helper(this, QLatin1String("subMenus.qml"));
     QQuickApplicationWindow *window = helper.appWindow;
 
+    // Ensure that the default size of the window fits three menus side by side.
+    QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
+    QVERIFY(mainMenu);
+    window->setWidth(mainMenu->width() * 3 + mainMenu->leftMargin() + mainMenu->rightMargin());
+
     // the default size of the window fits three menus side by side.
     // when testing flipping, we resize the window so that the first
     // sub-menu fits, but the second doesn't
     if (flip)
-        window->setWidth(window->width() - 200);
+        window->setWidth(window->width() - mainMenu->width());
 
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -1379,8 +1424,6 @@ void tst_QQuickMenu::subMenuPosition()
     if (mirrored)
         window->setLocale(QLocale("ar_EG"));
 
-    QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
-    QVERIFY(mainMenu);
     mainMenu->setCascade(cascade);
     QCOMPARE(mainMenu->cascade(), cascade);
     mainMenu->setOverlap(overlap);
@@ -1410,10 +1453,11 @@ void tst_QQuickMenu::subMenuPosition()
     // choose the main menu position so that there's room for the
     // sub-menus to cascade to the left when mirrored
     if (mirrored)
-        mainMenu->setX(window->width() - 200);
+        mainMenu->setX(window->width() - mainMenu->width());
 
     mainMenu->open();
     QVERIFY(mainMenu->isVisible());
+    QTRY_VERIFY(mainMenu->isOpened());
     QVERIFY(!subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
@@ -1423,19 +1467,23 @@ void tst_QQuickMenu::subMenuPosition()
     QVERIFY(subMenu1Item);
     QCOMPARE(subMenu1Item->subMenu(), subMenu1);
     emit subMenu1Item->triggered();
-    QCOMPARE(mainMenu->isVisible(), cascade);
+    QTRY_COMPARE(mainMenu->isVisible(), cascade);
     QVERIFY(subMenu1->isVisible());
+    QTRY_VERIFY(subMenu1->isOpened());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
 
     if (cascade) {
         QCOMPARE(subMenu1->parentItem(), subMenu1Item);
         // vertically aligned to the parent menu item
-        QCOMPARE(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + subMenu1Item->y() - subMenu1->topPadding());
-        if (mirrored)
-            QCOMPARE(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() - subMenu1->width() + overlap); // on the left of the parent menu
-        else
-            QCOMPARE(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + mainMenu->width() - overlap); // on the right of the parent menu
+        QCOMPARE(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + subMenu1Item->y());
+        if (mirrored) {
+            // on the left of the parent menu
+            QCOMPARE(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() - subMenu1->width() + overlap);
+        } else {
+            // on the right of the parent menu
+            QCOMPARE(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + mainMenu->width() - overlap);
+        }
     } else {
         QCOMPARE(subMenu1->parentItem(), mainMenu->parentItem());
         // centered over the parent menu
@@ -1448,19 +1496,23 @@ void tst_QQuickMenu::subMenuPosition()
     QVERIFY(subSubMenu1Item);
     QCOMPARE(subSubMenu1Item->subMenu(), subSubMenu1);
     emit subSubMenu1Item->triggered();
-    QCOMPARE(mainMenu->isVisible(), cascade);
-    QCOMPARE(subMenu1->isVisible(), cascade);
+    QTRY_COMPARE(mainMenu->isVisible(), cascade);
+    QTRY_COMPARE(subMenu1->isVisible(), cascade);
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(subSubMenu1->isVisible());
+    QTRY_VERIFY(subSubMenu1->isOpened());
 
     if (cascade) {
         QCOMPARE(subSubMenu1->parentItem(), subSubMenu1Item);
         // vertically aligned to the parent menu item
-        QCOMPARE(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + subSubMenu1Item->y() - subSubMenu1->topPadding());
-        if (mirrored != flip)
-            QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() - subSubMenu1->width() + overlap); // on the left of the parent menu
-        else
-            QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + subMenu1->width() - overlap); // on the right of the parent menu
+        QCOMPARE(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + subSubMenu1Item->y());
+        if (mirrored != flip) {
+            // on the left of the parent menu
+            QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() - subSubMenu1->width() + overlap);
+        } else {
+            // on the right of the parent menu
+            QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + subMenu1->width() - overlap);
+        }
     } else {
         QCOMPARE(subSubMenu1->parentItem(), subMenu1->parentItem());
         // centered over the parent menu
@@ -1590,6 +1642,7 @@ void tst_QQuickMenu::disableWhenTriggered()
 
     menu->open();
     QVERIFY(menu->isVisible());
+    QTRY_VERIFY(menu->isOpened());
 
     QPointer<QQuickMenuItem> menuItem = qobject_cast<QQuickMenuItem*>(menu->itemAt(menuItemIndex));
     QVERIFY(menuItem);
@@ -1599,7 +1652,7 @@ void tst_QQuickMenu::disableWhenTriggered()
         QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
             menuItem->mapToScene(QPointF(menuItem->width() / 2, menuItem->height() / 2)).toPoint());
         QCOMPARE(menuItem->isEnabled(), false);
-        QVERIFY(!menu->isVisible());
+        QTRY_VERIFY(!menu->isVisible());
     } else {
         // Click a sub-menu item.
         QPointer<QQuickMenu> subMenu = menuItem->subMenu();
@@ -1618,10 +1671,153 @@ void tst_QQuickMenu::disableWhenTriggered()
         QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
             subMenuItem->mapToScene(QPointF(subMenuItem->width() / 2, subMenuItem->height() / 2)).toPoint());
         QCOMPARE(subMenuItem->isEnabled(), false);
-        QVERIFY(!menu->isVisible());
+        QTRY_VERIFY(!menu->isVisible());
     }
 }
 
-QTEST_MAIN(tst_QQuickMenu)
+void tst_QQuickMenu::menuItemWidth_data()
+{
+    QTest::addColumn<bool>("mirrored");
+
+    QTest::newRow("non-mirrored") << false;
+    QTest::newRow("mirrored") << true;
+}
+
+void tst_QQuickMenu::menuItemWidth()
+{
+    QFETCH(bool, mirrored);
+
+    QQuickApplicationHelper helper(this, QLatin1String("menuItemWidths.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    if (mirrored)
+        window->setLocale(QLocale("ar_EG"));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+    menu->open();
+    QTRY_VERIFY(menu->isOpened());
+    for (int i = 0; i < menu->count(); ++i)
+        QCOMPARE(menu->itemAt(i)->width(), menu->availableWidth());
+}
+
+void tst_QQuickMenu::menuItemWidthAfterMenuWidthChanged_data()
+{
+    QTest::addColumn<bool>("mirrored");
+
+    QTest::newRow("non-mirrored") << false;
+    QTest::newRow("mirrored") << true;
+}
+
+void tst_QQuickMenu::menuItemWidthAfterMenuWidthChanged()
+{
+    QFETCH(bool, mirrored);
+
+    QQuickApplicationHelper helper(this, QLatin1String("menuItemWidths.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    if (mirrored)
+        window->setLocale(QLocale("ar_EG"));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+    menu->open();
+    QTRY_VERIFY(menu->isOpened());
+    for (int i = 0; i < menu->count(); ++i) {
+        // Check that the width of menu items is correct before we resize the menu.
+        const QQuickItem *item = menu->itemAt(i);
+        QVERIFY2(qFuzzyCompare(item->width(), menu->availableWidth()),
+            qPrintable(QString::fromLatin1("Expected width of %1 to be %2, but it's %3")
+                .arg(item->objectName()).arg(menu->availableWidth()).arg(item->width())));
+    }
+
+    menu->setWidth(menu->width() + 10);
+
+    // Check that the width of menu items is correct after we resize the menu.
+    for (int i = 0; i < menu->count(); ++i) {
+        // Check that the width of menu items is correct after we resize the menu.
+        const QQuickItem *item = menu->itemAt(i);
+        QVERIFY2(qFuzzyCompare(item->width(), menu->availableWidth()),
+            qPrintable(QString::fromLatin1("Expected width of %1 to be %2, but it's %3")
+                .arg(item->objectName()).arg(menu->availableWidth()).arg(item->width())));
+    }
+}
+
+void tst_QQuickMenu::menuItemWidthAfterImplicitWidthChanged_data()
+{
+    QTest::addColumn<bool>("mirrored");
+
+    QTest::newRow("non-mirrored") << false;
+    QTest::newRow("mirrored") << true;
+}
+
+void tst_QQuickMenu::menuItemWidthAfterImplicitWidthChanged()
+{
+    QFETCH(bool, mirrored);
+
+    QQuickApplicationHelper helper(this, QLatin1String("menuItemWidths.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    if (mirrored)
+        window->setLocale(QLocale("ar_EG"));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+    menu->open();
+    QTRY_VERIFY(menu->isOpened());
+    // Check that the width of the menu item is correct before we change its font size.
+    QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem*>(menu->itemAt(0));
+    QCOMPARE(menuItem->width(), menu->availableWidth());
+
+    // Add some text to increase the implicitWidth of the MenuItem.
+    const qreal oldImplicitWidth = menuItem->implicitWidth();
+    for (int i = 0; menuItem->implicitWidth() <= oldImplicitWidth; ++i) {
+        menuItem->setText(menuItem->text() + QLatin1String("---"));
+        if (i == 100)
+            QFAIL("Shouldn't need 100 iterations to increase MenuItem's implicitWidth; something is wrong here");
+    }
+
+    // Check that the width of the menu item is correct after we change its font size.
+    QCOMPARE(menuItem->width(), menu->availableWidth());
+}
+
+void tst_QQuickMenu::menuItemWidthAfterRetranslate()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("menuItemWidths.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+    menu->open();
+    QTRY_VERIFY(menu->isOpened());
+    for (int i = 0; i < menu->count(); ++i) {
+        // Check that the width of each menu item is correct before we retranslate.
+        const QQuickItem *item = menu->itemAt(i);
+        QVERIFY2(qFuzzyCompare(item->width(), menu->availableWidth()),
+            qPrintable(QString::fromLatin1("Expected width of %1 to be %2, but it's %3")
+                .arg(item->objectName()).arg(menu->availableWidth()).arg(item->width())));
+    }
+
+    // Call retranslate() and cause all bindings to be re-evaluated.
+    helper.engine.retranslate();
+
+    for (int i = 0; i < menu->count(); ++i) {
+        // Check that the width of each menu item is correct after we retranslate.
+        const QQuickItem *item = menu->itemAt(i);
+        QVERIFY2(qFuzzyCompare(item->width(), menu->availableWidth()),
+            qPrintable(QString::fromLatin1("Expected width of %1 to be %2, but it's %3")
+                .arg(item->objectName()).arg(menu->availableWidth()).arg(item->width())));
+    }
+}
+
+QTEST_QUICKCONTROLS_MAIN(tst_QQuickMenu)
 
 #include "tst_qquickmenu.moc"

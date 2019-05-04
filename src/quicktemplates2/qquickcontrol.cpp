@@ -1626,8 +1626,9 @@ void QQuickControl::setBackground(QQuickItem *background)
     }
     \endcode
 
-    \note The content item is automatically resized to fit within the
-    \l padding of the control.
+    \note The content item is automatically positioned and resized to fit
+    within the \l padding of the control. Bindings to the \l x, \l y, \l width,
+    and \l height properties of the contentItem are not respected.
 
     \note Most controls use the implicit size of the content item to calculate
     the implicit size of the control itself. If you replace the content item
