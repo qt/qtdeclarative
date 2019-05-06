@@ -53,10 +53,7 @@
 #include <private/qv4compilercontrolflow_p.h>
 #include <private/qv4bytecodegenerator_p.h>
 #include <private/qv4compilerscanfunctions_p.h>
-
-#ifndef V4_BOOTSTRAP
-#  include <qqmlerror.h>
-#endif
+#include <qqmlerror.h>
 
 #include <cmath>
 #include <iostream>
@@ -3947,8 +3944,6 @@ Codegen::VolatileMemoryLocations Codegen::scanVolatileMemoryLocations(AST::Node 
 }
 
 
-#ifndef V4_BOOTSTRAP
-
 QList<QQmlError> Codegen::qmlErrors() const
 {
     QList<QQmlError> qmlErrors;
@@ -3971,8 +3966,6 @@ QList<QQmlError> Codegen::qmlErrors() const
 
     return qmlErrors;
 }
-
-#endif // V4_BOOTSTRAP
 
 bool Codegen::RValue::operator==(const RValue &other) const
 {
