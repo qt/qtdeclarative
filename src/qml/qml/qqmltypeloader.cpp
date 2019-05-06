@@ -52,6 +52,7 @@
 #include <private/qqmlpropertyvalidator_p.h>
 #include <private/qqmlpropertycachecreator_p.h>
 #include <private/qv4module_p.h>
+#include <private/qqmlirloader_p.h>
 
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
@@ -2502,7 +2503,7 @@ void QQmlTypeData::dataReceived(const SourceCodeData &data)
 void QQmlTypeData::initializeFromCachedUnit(const QV4::CompiledData::Unit *unit)
 {
     m_document.reset(new QmlIR::Document(isDebugging()));
-    QmlIR::IRLoader loader(unit, m_document.data());
+    QQmlIRLoader loader(unit, m_document.data());
     loader.load();
     m_document->jsModule.fileName = urlString();
     m_document->jsModule.finalUrl = finalUrlString();
@@ -2544,7 +2545,7 @@ bool QQmlTypeData::loadFromSource()
 void QQmlTypeData::restoreIR(QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit)
 {
     m_document.reset(new QmlIR::Document(isDebugging()));
-    QmlIR::IRLoader loader(unit->unitData(), m_document.data());
+    QQmlIRLoader loader(unit->unitData(), m_document.data());
     loader.load();
     m_document->jsModule.fileName = urlString();
     m_document->jsModule.finalUrl = finalUrlString();

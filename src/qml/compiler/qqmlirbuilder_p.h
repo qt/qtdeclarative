@@ -65,11 +65,11 @@ QT_BEGIN_NAMESPACE
 class QQmlPropertyCache;
 class QQmlContextData;
 class QQmlTypeNameCache;
+struct QQmlIRLoader;
 
 namespace QmlIR {
 
 struct Document;
-struct IRLoader;
 
 template <typename T>
 struct PoolList
@@ -347,7 +347,7 @@ public:
     const quint32 *namedObjectsInComponentTable() const { return namedObjectsInComponent.begin(); }
 
 private:
-    friend struct IRLoader;
+    friend struct ::QQmlIRLoader;
 
     PoolList<Property> *properties;
     PoolList<Alias> *aliases;
@@ -522,21 +522,6 @@ private:
     QQmlJS::Engine *jsEngine; // needed for memory pool
     QQmlJS::AST::UiProgram *qmlRoot;
     const QV4::Compiler::StringTableGenerator *stringPool;
-};
-
-struct Q_QML_PRIVATE_EXPORT IRLoader {
-    IRLoader(const QV4::CompiledData::Unit *unit, QmlIR::Document *output);
-
-    void load();
-
-private:
-    QmlIR::Object *loadObject(const QV4::CompiledData::Object *serializedObject);
-
-    template <typename _Tp> _Tp *New() { return pool->New<_Tp>(); }
-
-    const QV4::CompiledData::Unit *unit;
-    QmlIR::Document *output;
-    QQmlJS::MemoryPool *pool;
 };
 
 } // namespace QmlIR

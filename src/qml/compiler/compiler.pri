@@ -28,6 +28,7 @@ SOURCES += \
 !qmldevtools_build {
 
 HEADERS += \
+    $$PWD/qqmlirloader_p.h \
     $$PWD/qqmlpropertyresolver_p.h \
     $$PWD/qqmltypecompiler_p.h \
     $$PWD/qqmlpropertycachecreator_p.h \
@@ -36,6 +37,7 @@ HEADERS += \
 
 
 SOURCES += \
+    $$PWD/qqmlirloader.cpp \
     $$PWD/qqmlpropertyresolver.cpp \
     $$PWD/qqmltypecompiler.cpp \
     $$PWD/qqmlpropertycachecreator.cpp \
