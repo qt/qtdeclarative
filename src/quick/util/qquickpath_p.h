@@ -445,6 +445,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPath : public QObject, public QQmlParserStatu
     Q_PROPERTY(qreal startX READ startX WRITE setStartX NOTIFY startXChanged)
     Q_PROPERTY(qreal startY READ startY WRITE setStartY NOTIFY startYChanged)
     Q_PROPERTY(bool closed READ isClosed NOTIFY changed)
+    Q_PROPERTY(QSizeF scale READ scale WRITE setScale NOTIFY scaleChanged REVISION 14)
     Q_CLASSINFO("DefaultProperty", "pathElements")
     Q_INTERFACES(QQmlParserStatus)
 public:
@@ -470,10 +471,14 @@ public:
     QPointF sequentialPointAt(qreal p, qreal *angle = nullptr) const;
     void invalidateSequentialHistory() const;
 
+    QSizeF scale() const;
+    void setScale(const QSizeF &scale);
+
 Q_SIGNALS:
     void changed();
     void startXChanged();
     void startYChanged();
+    Q_REVISION(14) void scaleChanged();
 
 protected:
     QQuickPath(QQuickPathPrivate &dd, QObject *parent = nullptr);

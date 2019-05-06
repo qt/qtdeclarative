@@ -84,6 +84,7 @@ public:
     QQmlNullableValue<qreal> startX;
     QQmlNullableValue<qreal> startY;
     qreal pathLength = 0;
+    QSizeF scale = QSizeF(1, 1);
     bool closed = false;
     bool componentComplete = true;
     bool isShapePath = false;

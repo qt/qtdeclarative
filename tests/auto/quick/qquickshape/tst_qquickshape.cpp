@@ -66,7 +66,7 @@ tst_QQuickShape::tst_QQuickShape()
 
     const char *uri = "tst_qquickpathitem";
     qmlRegisterType<QQuickShape>(uri, 1, 0, "Shape");
-    qmlRegisterType<QQuickShapePath>(uri, 1, 0, "ShapePath");
+    qmlRegisterType<QQuickShapePath, 14>(uri, 1, 0, "ShapePath");
     qmlRegisterUncreatableType<QQuickShapeGradient>(uri, 1, 0, "ShapeGradient", QQuickShapeGradient::tr("ShapeGradient is an abstract base class"));
     qmlRegisterType<QQuickShapeLinearGradient>(uri, 1, 0, "LinearGradient");
     qmlRegisterType<QQuickShapeRadialGradient>(uri, 1, 0, "RadialGradient");

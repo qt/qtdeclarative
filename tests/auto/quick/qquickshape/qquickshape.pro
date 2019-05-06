@@ -8,6 +8,7 @@ include (../../shared/util.pri)
 include (../shared/util.pri)
 
 TESTDATA = data/*
+DISTFILES = data/*
 
 QT += core-private gui-private  qml-private quick-private testlib quickshapes-private
 qtHaveModule(widgets): QT += widgets

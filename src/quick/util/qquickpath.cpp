@@ -407,6 +407,19 @@ void QQuickPath::processPath()
     emit changed();
 }
 
+inline static void scalePath(QPainterPath &path, const QSizeF &scale)
+{
+    const qreal xscale = scale.width();
+    const qreal yscale = scale.height();
+    if (xscale == 1 && yscale ==  1)
+        return;
+
+    for (int i = 0; i < path.elementCount(); ++i) {
+        const QPainterPath::Element &element = path.elementAt(i);
+        path.setElementPositionAt(i, element.x * xscale, element.y * yscale);
+    }
+}
+
 QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &endPoint, const QStringList &attributes, qreal &pathLength, QList<AttributePoint> &attributePoints, bool *closed)
 {
     Q_D(QQuickPath);
@@ -465,7 +478,7 @@ QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &en
         d->_attributePoints.last().values[percentString] = 1;
         interpolate(d->_attributePoints.count() - 1, percentString, 1);
     }
-
+    scalePath(path, d->scale);
 
     // Adjust percent
     qreal length = path.length();
@@ -491,7 +504,7 @@ QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &en
 
     if (closed) {
         QPointF end = path.currentPosition();
-        *closed = length > 0 && startX == end.x() && startY == end.y();
+        *closed = length > 0 && startX * d->scale.width() == end.x() && startY * d->scale.height() == end.y();
     }
     pathLength = length;
 
@@ -525,6 +538,7 @@ QPainterPath QQuickPath::createShapePath(const QPointF &startPoint, const QPoint
         QPointF end = path.currentPosition();
         *closed = startX == end.x() && startY == end.y();
     }
+    scalePath(path, d->scale);
 
     // Note: Length of paths inside ShapePath is not used, so currently
     // length is always 0. This avoids potentially heavy path.length()
@@ -721,6 +735,33 @@ void QQuickPath::invalidateSequentialHistory() const
 {
     Q_D(const QQuickPath);
     d->prevBez.isValid = false;
+}
+
+/*!
+    \qmlproperty size QtQuick::Path::scale
+
+    This property holds the scale factor for the path.
+    The width and height of \a scale can be different, to
+    achieve anisotropic scaling.
+
+    \note Setting this property will not affect the border width.
+
+    \since QtQuick 2.14
+*/
+QSizeF QQuickPath::scale() const
+{
+    Q_D(const QQuickPath);
+    return d->scale;
+}
+
+void QQuickPath::setScale(const QSizeF &scale)
+{
+    Q_D(QQuickPath);
+    if (scale == d->scale)
+        return;
+    d->scale = scale;
+    emit scaleChanged();
+    processPath();
 }
 
 QPointF QQuickPath::sequentialPointAt(qreal p, qreal *angle) const
