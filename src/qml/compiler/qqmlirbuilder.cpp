@@ -1570,9 +1570,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
     // We may already have unit data if we're loading an ahead-of-time generated cache file.
     if (compilationUnit->data) {
         jsUnit = compilationUnit->data;
-#ifndef V4_BOOTSTRAP
         output.javaScriptCompilationUnit->dynamicStrings = output.jsGenerator.stringTable.allStrings();
-#endif
     } else {
         QV4::CompiledData::Unit *createdUnit;
         jsUnit = createdUnit = output.jsGenerator.generateUnit();

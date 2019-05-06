@@ -1089,6 +1089,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit final : public CompilationUnitBase
 {
     const Unit *data = nullptr;
     const QmlUnit *qmlData = nullptr;
+    QStringList dynamicStrings;
 public:
     CompilationUnit(const Unit *unitData = nullptr, const QString &fileName = QString(), const QString &finalUrlString = QString());
     ~CompilationUnit();
@@ -1113,6 +1114,13 @@ public:
     const Unit *unitData() const { return data; }
     void setUnitData(const Unit *unitData, const QmlUnit *qmlUnit = nullptr,
                      const QString &fileName = QString(), const QString &finalUrlString = QString());
+
+    QString stringAt(int index) const
+    {
+        if (uint(index) >= data->stringTableSize)
+            return dynamicStrings.at(index - data->stringTableSize);
+        return data->stringAtInternal(index);
+    }
 
 #ifndef V4_BOOTSTRAP
     QIntrusiveListNode nextCompilationUnit;
@@ -1176,7 +1184,6 @@ public:
     bool isRegisteredWithEngine = false;
 
     QScopedPointer<CompilationUnitMapper> backingFile;
-    QStringList dynamicStrings;
 
     // --- interface for QQmlPropertyCacheCreator
     typedef Object CompiledObject;
@@ -1184,12 +1191,6 @@ public:
     const Object *objectAt(int index) const { return qmlData->objectAt(index); }
     int importCount() const { return qmlData->nImports; }
     const Import *importAt(int index) const { return qmlData->importAt(index); }
-    QString stringAt(int index) const
-    {
-        if (uint(index) >= data->stringTableSize)
-            return dynamicStrings.at(index - data->stringTableSize);
-        return data->stringAtInternal(index);
-    }
 
     Heap::Object *templateObjectAt(int index) const;
 
@@ -1230,10 +1231,7 @@ public:
 protected:
     quint32 totalStringCount() const
     { return data->stringTableSize; }
-
-#else // V4_BOOTSTRAP
-    QString stringAt(int index) const { return data->stringAtInternal(index); }
-#endif // V4_BOOTSTRAP
+#endif
 
 private:
     void destroy();
