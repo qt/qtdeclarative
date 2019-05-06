@@ -508,32 +508,6 @@ private:
     char *writeBindings(char *bindingPtr, const Object *o, BindingFilter filter) const;
 };
 
-#ifndef V4_BOOTSTRAP
-struct Q_QML_EXPORT PropertyResolver
-{
-    PropertyResolver(const QQmlRefPointer<QQmlPropertyCache> &cache)
-        : cache(cache)
-    {}
-
-    QQmlPropertyData *property(int index) const
-    {
-        return cache->property(index);
-    }
-
-    enum RevisionCheck {
-        CheckRevision,
-        IgnoreRevision
-    };
-
-    QQmlPropertyData *property(const QString &name, bool *notInRevision = nullptr, RevisionCheck check = CheckRevision) const;
-
-    // This code must match the semantics of QQmlPropertyPrivate::findSignalByName
-    QQmlPropertyData *signal(const QString &name, bool *notInRevision) const;
-
-    QQmlRefPointer<QQmlPropertyCache> cache;
-};
-#endif
-
 struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QV4::Compiler::Codegen
 {
     JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator, QV4::Compiler::Module *jsModule,

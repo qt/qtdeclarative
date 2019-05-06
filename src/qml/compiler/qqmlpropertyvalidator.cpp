@@ -41,6 +41,7 @@
 
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlstringconverters_p.h>
+#include <private/qqmlpropertyresolver_p.h>
 #include <QtCore/qdatetime.h>
 
 QT_BEGIN_NAMESPACE
@@ -121,7 +122,7 @@ QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex,
         groupProperties.insert(pos, binding);
     }
 
-    QmlIR::PropertyResolver propertyResolver(propertyCache);
+    QQmlPropertyResolver propertyResolver(propertyCache);
 
     QString defaultPropertyName;
     QQmlPropertyData *defaultProperty = nullptr;
@@ -164,7 +165,7 @@ QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex,
                 pd = propertyResolver.signal(name, &notInRevision);
             } else {
                 pd = propertyResolver.property(name, &notInRevision,
-                                               QmlIR::PropertyResolver::CheckRevision);
+                                               QQmlPropertyResolver::CheckRevision);
             }
 
             if (notInRevision) {

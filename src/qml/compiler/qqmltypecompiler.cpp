@@ -44,6 +44,7 @@
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qqmlpropertyresolver_p.h>
 
 #define COMPILE_EXCEPTION(token, desc) \
     { \
@@ -357,7 +358,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         if (!QmlIR::IRBuilder::isSignalPropertyName(propertyName))
             continue;
 
-        QmlIR::PropertyResolver resolver(propertyCache);
+        QQmlPropertyResolver resolver(propertyCache);
 
         Q_ASSERT(propertyName.startsWith(QLatin1String("on")));
         propertyName.remove(0, 2);
@@ -513,7 +514,7 @@ bool QQmlEnumTypeResolver::resolveEnumBindings()
             continue;
         const QmlIR::Object *obj = qmlObjects.at(i);
 
-        QmlIR::PropertyResolver resolver(propertyCache);
+        QQmlPropertyResolver resolver(propertyCache);
 
         for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
             if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
@@ -722,7 +723,7 @@ void QQmlAliasAnnotator::annotateBindingsToAliases()
 
         const QmlIR::Object *obj = qmlObjects.at(i);
 
-        QmlIR::PropertyResolver resolver(propertyCache);
+        QQmlPropertyResolver resolver(propertyCache);
         QQmlPropertyData *defaultProperty = obj->indexOfDefaultPropertyOrAlias != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
 
         for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
@@ -754,7 +755,7 @@ void QQmlScriptStringScanner::scan()
 
         const QmlIR::Object *obj = qmlObjects.at(i);
 
-        QmlIR::PropertyResolver resolver(propertyCache);
+        QQmlPropertyResolver resolver(propertyCache);
         QQmlPropertyData *defaultProperty = obj->indexOfDefaultPropertyOrAlias != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
 
         for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
@@ -799,7 +800,7 @@ static bool isUsableComponent(const QMetaObject *metaObject)
 
 void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlIR::Object *obj, QQmlPropertyCache *propertyCache)
 {
-    QmlIR::PropertyResolver propertyResolver(propertyCache);
+    QQmlPropertyResolver propertyResolver(propertyCache);
 
     QQmlPropertyData *defaultProperty = obj->indexOfDefaultPropertyOrAlias != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
 
@@ -1110,7 +1111,7 @@ QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolv
                 break;
             }
 
-            QmlIR::PropertyResolver resolver(targetCache);
+            QQmlPropertyResolver resolver(targetCache);
 
             QQmlPropertyData *targetProperty = resolver.property(property.toString());
 
@@ -1224,7 +1225,7 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
 
     QQmlCustomParser *customParser = customParsers.value(obj->inheritedTypeNameIndex);
 
-    QmlIR::PropertyResolver propertyResolver(propertyCache);
+    QQmlPropertyResolver propertyResolver(propertyCache);
 
     QStringList deferredPropertyNames;
     {
@@ -1263,7 +1264,8 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
                 continue;
 
             bool notInRevision = false;
-            pd = propertyResolver.property(name, &notInRevision, QmlIR::PropertyResolver::CheckRevision);
+            pd = propertyResolver.property(name, &notInRevision,
+                                           QQmlPropertyResolver::CheckRevision);
         }
 
         bool seenSubObjectWithId = false;
