@@ -294,8 +294,9 @@ void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
 
     updatingCurrent = true;
 
+    int count = contentModel->count();
     bool currentChanged = false;
-    if (index == currentIndex) {
+    if (index == currentIndex && (index != 0 || count == 1)) {
         q->setCurrentIndex(currentIndex - 1);
     } else if (index < currentIndex) {
         --currentIndex;
@@ -308,7 +309,6 @@ void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
 
     q->itemRemoved(index, item);
 
-    int count = contentModel->count();
     for (int i = index; i < count; ++i)
         q->itemMoved(i, itemAt(i));
 
