@@ -83,6 +83,7 @@ public:
     QAccessible::State state() const override;
     QAccessible::Role role() const override;
     QString text(QAccessible::Text) const override;
+    void setText(QAccessible::Text, const QString &text) override;
 
     bool isAccessible() const;
 
