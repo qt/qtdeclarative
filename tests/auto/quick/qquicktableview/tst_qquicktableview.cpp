@@ -79,9 +79,10 @@ Q_DECLARE_METATYPE(QMarginsF);
     QCOMPARE(loader->status(), QQuickLoader::Status::Ready); \
     GET_QML_TABLEVIEW(tableView)
 
-#define WAIT_UNTIL_POLISHED \
-    QVERIFY(QQuickTest::qIsPolishScheduled(tableView)); \
-    QVERIFY(QQuickTest::qWaitForItemPolished(tableView))
+#define WAIT_UNTIL_POLISHED_ARG(item) \
+    QVERIFY(QQuickTest::qIsPolishScheduled(item)); \
+    QVERIFY(QQuickTest::qWaitForItemPolished(item))
+#define WAIT_UNTIL_POLISHED WAIT_UNTIL_POLISHED_ARG(tableView)
 
 class tst_QQuickTableView : public QQmlDataTest
 {
@@ -167,6 +168,8 @@ private slots:
     void checkSyncView_childViews_data();
     void checkSyncView_childViews();
     void checkSyncView_differentSizedModels();
+    void checkSyncView_connect_late_data();
+    void checkSyncView_connect_late();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -2389,6 +2392,99 @@ void tst_QQuickTableView::checkSyncView_differentSizedModels()
     // 5 columns, is not showing any columns, since it should always stay in sync with
     // syncView regardless of the content view position.
     QVERIFY(tableViewHVPrivate->loadedColumns.isEmpty());
+}
+
+void tst_QQuickTableView::checkSyncView_connect_late_data()
+{
+    QTest::addColumn<qreal>("flickToPos");
+
+    QTest::newRow("pos:110") << 110.;
+    QTest::newRow("pos:2010") << 2010.;
+}
+
+void tst_QQuickTableView::checkSyncView_connect_late()
+{
+    // Check that if you assign a syncView to a TableView late, and
+    // after the views have been flicked around, they will still end up in sync.
+    QFETCH(qreal, flickToPos);
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewH);
+    GET_QML_TABLEVIEW(tableViewV);
+    GET_QML_TABLEVIEW(tableViewHV);
+    QQuickTableView *views[] = {tableViewH, tableViewV, tableViewHV};
+
+    auto model = TestModelAsVariant(100, 100);
+
+    tableView->setModel(model);
+
+    // Start with no syncView connections
+    for (auto view : views) {
+        view->setSyncView(nullptr);
+        view->setModel(model);
+    }
+
+    WAIT_UNTIL_POLISHED;
+
+    tableView->setContentX(flickToPos);
+    tableView->setContentY(flickToPos);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that viewport is not in sync after the flick
+    QCOMPARE(tableView->contentX(), flickToPos);
+    QCOMPARE(tableView->contentY(), flickToPos);
+    QCOMPARE(tableViewH->contentX(), 0);
+    QCOMPARE(tableViewH->contentY(), 0);
+    QCOMPARE(tableViewV->contentX(), 0);
+    QCOMPARE(tableViewV->contentY(), 0);
+    QCOMPARE(tableViewHV->contentX(), 0);
+    QCOMPARE(tableViewHV->contentY(), 0);
+
+    // Assign the syncView late. This should make
+    // all the views end up in sync.
+    for (auto view : views) {
+        view->setSyncView(tableView);
+        WAIT_UNTIL_POLISHED_ARG(view);
+    }
+
+    // Check that geometry properties are mirrored
+    QCOMPARE(tableViewH->columnSpacing(), tableView->columnSpacing());
+    QCOMPARE(tableViewH->rowSpacing(), 0);
+    QCOMPARE(tableViewH->contentWidth(), tableView->contentWidth());
+    QCOMPARE(tableViewV->columnSpacing(), 0);
+    QCOMPARE(tableViewV->rowSpacing(), tableView->rowSpacing());
+    QCOMPARE(tableViewV->contentHeight(), tableView->contentHeight());
+
+    // Check that viewport is in sync after the flick
+    QCOMPARE(tableView->contentX(), flickToPos);
+    QCOMPARE(tableView->contentY(), flickToPos);
+    QCOMPARE(tableViewH->contentX(), tableView->contentX());
+    QCOMPARE(tableViewH->contentY(), 0);
+    QCOMPARE(tableViewV->contentX(), 0);
+    QCOMPARE(tableViewV->contentY(), tableView->contentY());
+    QCOMPARE(tableViewHV->contentX(), tableView->contentX());
+    QCOMPARE(tableViewHV->contentY(), tableView->contentY());
+
+    // Check that topLeft cell is in sync after the flick
+    QCOMPARE(tableViewHPrivate->leftColumn(), tableViewPrivate->leftColumn());
+    QCOMPARE(tableViewHPrivate->rightColumn(), tableViewPrivate->rightColumn());
+    QCOMPARE(tableViewHPrivate->topRow(), 0);
+    QCOMPARE(tableViewVPrivate->leftColumn(), 0);
+    QCOMPARE(tableViewVPrivate->topRow(), tableViewPrivate->topRow());
+    QCOMPARE(tableViewHVPrivate->leftColumn(), tableViewPrivate->leftColumn());
+    QCOMPARE(tableViewHVPrivate->topRow(), tableViewPrivate->topRow());
+
+    // Check that the geometry of the tables are in sync after the flick
+    QCOMPARE(tableViewHPrivate->loadedTableOuterRect.left(), tableViewPrivate->loadedTableOuterRect.left());
+    QCOMPARE(tableViewHPrivate->loadedTableOuterRect.right(), tableViewPrivate->loadedTableOuterRect.right());
+    QCOMPARE(tableViewHPrivate->loadedTableOuterRect.top(), 0);
+
+    QCOMPARE(tableViewVPrivate->loadedTableOuterRect.top(), tableViewPrivate->loadedTableOuterRect.top());
+    QCOMPARE(tableViewVPrivate->loadedTableOuterRect.bottom(), tableViewPrivate->loadedTableOuterRect.bottom());
+    QCOMPARE(tableViewVPrivate->loadedTableOuterRect.left(), 0);
+
+    QCOMPARE(tableViewHVPrivate->loadedTableOuterRect, tableViewPrivate->loadedTableOuterRect);
+
 }
 
 QTEST_MAIN(tst_QQuickTableView)

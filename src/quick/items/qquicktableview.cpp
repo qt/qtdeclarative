@@ -1644,10 +1644,15 @@ void QQuickTableViewPrivate::beginRebuildTable()
     loadedTableInnerRect = QRect();
     clearEdgeSizeCache();
 
-    if (syncHorizontally)
+    if (syncHorizontally) {
         setLocalViewportX(syncView->contentX());
-    if (syncVertically)
+        viewportRect.moveLeft(syncView->d_func()->viewportRect.left());
+    }
+
+    if (syncVertically) {
         setLocalViewportY(syncView->contentY());
+        viewportRect.moveTop(syncView->d_func()->viewportRect.top());
+    }
 
     if (!model) {
         qCDebug(lcTableViewDelegateLifecycle()) << "no model found, leaving table empty";
