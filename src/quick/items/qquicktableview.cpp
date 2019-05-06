@@ -305,9 +305,7 @@
     \l view, which means that the table's width could be larger or smaller than
     the viewport width. As a TableView cannot always know the exact width of
     the table without loading all columns in the model, the \c contentWidth is
-    usually an estimate based on the columns it has seen so far. This estimate
-    is recalculated whenever new columns are flicked into view, which means
-    that the content width can change dynamically.
+    usually an estimate based on the initially loaded table.
 
     If you know what the width of the table will be, assign a value to
     \c contentWidth, to avoid unnecessary calculations and updates to the
@@ -324,9 +322,7 @@
     \c view, which means that the table's height could be larger or smaller than the
     viewport height. As a TableView cannot always know the exact height of the
     table without loading all rows in the model, the \c contentHeight is
-    usually an estimate based on the rows it has seen so far. This estimate is
-    recalculated whenever new rows are flicked into view, which means that
-    the content height can change dynamically.
+    usually an estimate based on the initially loaded table.
 
     If you know what the height of the table will be, assign a
     value to \c contentHeight, to avoid unnecessary calculations and updates to
@@ -1539,19 +1535,6 @@ void QQuickTableViewPrivate::processLoadRequest()
     if (rebuildState == RebuildState::Done) {
         // Loading of this edge was not done as a part of a rebuild, but
         // instead as an incremental build after e.g a flick.
-        switch (loadRequest.edge()) {
-        case Qt::LeftEdge:
-        case Qt::TopEdge:
-            break;
-        case Qt::RightEdge:
-            updateAverageEdgeSize();
-            updateContentWidth();
-            break;
-        case Qt::BottomEdge:
-            updateAverageEdgeSize();
-            updateContentHeight();
-            break;
-        }
         updateExtents();
         drainReusePoolAfterLoadRequest();
     }
@@ -1838,9 +1821,23 @@ void QQuickTableViewPrivate::layoutAfterLoadingInitialTable()
         syncLoadedTableRectFromLoadedTable();
     }
 
-    updateAverageEdgeSize();
-    updateContentWidth();
-    updateContentHeight();
+    if (syncView || rebuildOptions.testFlag(RebuildOption::All)) {
+        // We try to limit how often we update the content size. The main reason is that is has a
+        // tendency to cause flicker in the viewport if it happens while flicking. But another just
+        // as valid reason is that we actually never really know what the size of the full table will
+        // ever be. Even if e.g spacing changes, and we normally would assume that the size of the table
+        // would increase accordingly, the model might also at some point have removed/hidden/resized
+        // rows/columns outside the viewport. This would also affect the size, but since we don't load
+        // rows or columns outside the viewport, this information is ignored. And even if we did, we
+        // might also have been fast-flicked to a new location at some point, and started a new rebuild
+        // there based on a new guesstimated top-left cell. Either way, changing the content size
+        // based on the currently visible row/columns/spacing can be really off. So instead of pretending
+        // that we know what the actual size of the table is, we just keep the first guesstimate.
+        updateAverageEdgeSize();
+        updateContentWidth();
+        updateContentHeight();
+    }
+
     updateExtents();
 }
 
@@ -1856,8 +1853,6 @@ void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
             unloadItem(QPoint(column, r.key()));
         loadedColumns.remove(column);
         syncLoadedTableRectFromLoadedTable();
-        updateAverageEdgeSize();
-        updateContentWidth();
         break; }
     case Qt::TopEdge:
     case Qt::BottomEdge: {
@@ -1866,8 +1861,6 @@ void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
             unloadItem(QPoint(c.key(), row));
         loadedRows.remove(row);
         syncLoadedTableRectFromLoadedTable();
-        updateAverageEdgeSize();
-        updateContentHeight();
         break; }
     }
 
