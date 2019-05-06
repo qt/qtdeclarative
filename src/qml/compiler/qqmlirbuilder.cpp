@@ -48,12 +48,6 @@
 #include <QCryptographicHash>
 #include <cmath>
 
-#ifndef V4_BOOTSTRAP
-#include <private/qqmlglobal_p.h>
-#include <private/qqmltypeloader_p.h>
-#include <private/qqmlengine_p.h>
-#endif
-
 #ifdef CONST
 #undef CONST
 #endif
@@ -61,11 +55,6 @@
 QT_USE_NAMESPACE
 
 static const quint32 emptyStringIndex = 0;
-
-#if 0 //ndef V4_BOOTSTRAP
-DEFINE_BOOL_CONFIG_OPTION(lookupHints, QML_LOOKUP_HINTS);
-#endif // V4_BOOTSTRAP
-
 using namespace QmlIR;
 
 #define COMPILE_EXCEPTION(location, desc) \
@@ -1586,18 +1575,14 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         // definitely not suitable for StaticData access.
         createdUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
 
-#ifndef V4_BOOTSTRAP
         if (dependencyHasher) {
-            QCryptographicHash hash(QCryptographicHash::Md5);
-            if (dependencyHasher(&hash)) {
-                QByteArray checksum = hash.result();
-                Q_ASSERT(checksum.size() == sizeof(createdUnit->dependencyMD5Checksum));
-                memcpy(createdUnit->dependencyMD5Checksum, checksum.constData(), sizeof(createdUnit->dependencyMD5Checksum));
+            const QByteArray checksum = dependencyHasher();
+            if (checksum.size() == sizeof(createdUnit->dependencyMD5Checksum)) {
+                memcpy(createdUnit->dependencyMD5Checksum, checksum.constData(),
+                       sizeof(createdUnit->dependencyMD5Checksum));
             }
         }
-#else
-        Q_UNUSED(dependencyHasher);
-#endif
+
         createdUnit->sourceFileIndex = output.jsGenerator.stringTable.getStringId(output.jsModule.fileName);
         createdUnit->finalUrlIndex = output.jsGenerator.stringTable.getStringId(output.jsModule.finalUrl);
 

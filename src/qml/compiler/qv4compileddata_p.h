@@ -51,6 +51,7 @@
 //
 
 #include <QtCore/qstring.h>
+#include <QtCore/qcryptographichash.h>
 #include <QVector>
 #include <QStringList>
 #include <QHash>
@@ -1057,11 +1058,9 @@ struct ResolvedTypeReferenceMap: public QMap<int, ResolvedTypeReference*>
 {
     bool addToHash(QCryptographicHash *hash, QQmlEngine *engine) const;
 };
-
-using DependentTypesHasher = std::function<bool(QCryptographicHash *)>;
-#else
-struct DependentTypesHasher {};
 #endif
+
+using DependentTypesHasher = std::function<QByteArray()>;
 
 // index is per-object binding index
 typedef QVector<QQmlPropertyData*> BindingPropertyData;

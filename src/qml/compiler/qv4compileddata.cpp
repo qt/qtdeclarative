@@ -425,13 +425,10 @@ bool CompilationUnit::verifyChecksum(const DependentTypesHasher &dependencyHashe
         }
         return true;
     }
-    QCryptographicHash hash(QCryptographicHash::Md5);
-    if (!dependencyHasher(&hash))
-        return false;
-    QByteArray checksum = hash.result();
-    Q_ASSERT(checksum.size() == sizeof(data->dependencyMD5Checksum));
-    return memcmp(data->dependencyMD5Checksum, checksum.constData(),
-                  sizeof(data->dependencyMD5Checksum)) == 0;
+    const QByteArray checksum = dependencyHasher();
+    return checksum.size() == sizeof(data->dependencyMD5Checksum)
+            && memcmp(data->dependencyMD5Checksum, checksum.constData(),
+                      sizeof(data->dependencyMD5Checksum)) == 0;
 }
 
 QStringList CompilationUnit::moduleRequests() const

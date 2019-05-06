@@ -2357,10 +2357,12 @@ void QQmlTypeData::done()
 
     QQmlEngine *const engine = typeLoader()->engine();
 
-    const auto dependencyHasher = [engine, &resolvedTypeCache, this](QCryptographicHash *hash) {
-        if (!resolvedTypeCache.addToHash(hash, engine))
-            return false;
-        return ::addTypeReferenceChecksumsToHash(m_compositeSingletons, hash, engine);
+    const auto dependencyHasher = [engine, &resolvedTypeCache, this]() {
+        QCryptographicHash hash(QCryptographicHash::Md5);
+        return (resolvedTypeCache.addToHash(&hash, engine)
+                    && ::addTypeReferenceChecksumsToHash(m_compositeSingletons, &hash, engine))
+                ? hash.result()
+                : QByteArray();
     };
 
     // verify if any dependencies changed if we're using a cache
