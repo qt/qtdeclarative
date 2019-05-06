@@ -26,7 +26,7 @@
 #ifndef MacroAssemblerARM64_h
 #define MacroAssemblerARM64_h
 
-#if ENABLE(ASSEMBLER) && (CPU(ARM64) || defined(V4_BOOTSTRAP))
+#if ENABLE(ASSEMBLER) && CPU(ARM64)
 
 #include "ARM64Assembler.h"
 #include "AbstractMacroAssembler.h"
@@ -210,33 +210,6 @@ public:
     // FIXME: Get reasonable implementations for these
     static bool shouldBlindForSpecificArch(uint32_t value) { return value >= 0x00ffffff; }
     static bool shouldBlindForSpecificArch(uint64_t value) { return value >= 0x00ffffff; }
-
-#if defined(V4_BOOTSTRAP)
-    void loadPtr(ImplicitAddress address, RegisterID dest)
-    {
-        load64(address, dest);
-    }
-
-    void subPtr(TrustedImm32 imm, RegisterID dest)
-    {
-        sub64(imm, dest);
-    }
-
-    void addPtr(TrustedImm32 imm, RegisterID dest)
-    {
-        add64(imm, dest);
-    }
-
-    void addPtr(TrustedImm32 imm, RegisterID src, RegisterID dest)
-    {
-        add64(imm, src, dest);
-    }
-
-    void storePtr(RegisterID src, ImplicitAddress address)
-    {
-        store64(src, address);
-    }
-#endif
 
     // Integer operations:
 
@@ -2822,7 +2795,6 @@ public:
         return branch32(cond, left, dataTempRegister);
     }
 
-#if !defined(V4_BOOTSTRAP)
     PatchableJump patchableBranchPtr(RelationalCondition cond, Address left, TrustedImmPtr right)
     {
         m_makeJumpPatchable = true;
@@ -2830,7 +2802,6 @@ public:
         m_makeJumpPatchable = false;
         return PatchableJump(result);
     }
-#endif
 
     PatchableJump patchableBranchTest32(ResultCondition cond, RegisterID reg, TrustedImm32 mask = TrustedImm32(-1))
     {
