@@ -2225,7 +2225,7 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
         QV4::CompiledData::Unit *qmlUnit = reinterpret_cast<QV4::CompiledData::Unit *>(malloc(readOnlyQmlUnit->unitSize));
         memcpy(qmlUnit, readOnlyQmlUnit, readOnlyQmlUnit->unitSize);
         qmlUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
-        QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = td->compilationUnit();
+        QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit = td->compilationUnit();
         compilationUnit->setUnitData(qmlUnit);
 
         const QV4::CompiledData::Object *rootObject = compilationUnit->objectAt(/*root object*/0);
@@ -2235,9 +2235,9 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
             const QV4::CompiledData::Binding *binding = rootObject->bindingTable() + i;
             if (compilationUnit->stringAt(binding->propertyNameIndex) != QString("scriptProperty"))
                 continue;
-            QCOMPARE(binding->valueAsScriptString(compilationUnit.data()), QString("intProperty"));
+            QCOMPARE(compilationUnit->bindingValueAsScriptString(binding), QString("intProperty"));
             const_cast<QV4::CompiledData::Binding*>(binding)->stringIndex = 0; // empty string index
-            QVERIFY(binding->valueAsScriptString(compilationUnit.data()).isEmpty());
+            QVERIFY(compilationUnit->bindingValueAsScriptString(binding).isEmpty());
             break;
         }
         QVERIFY(i < rootObject->nBindings);

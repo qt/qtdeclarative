@@ -184,7 +184,7 @@ void SignalTransition::connectTriggered()
     m_signalExpression = expression;
 }
 
-void SignalTransitionParser::verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &props)
+void SignalTransitionParser::verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &props)
 {
     for (int ii = 0; ii < props.count(); ++ii) {
         const QV4::CompiledData::Binding *binding = props.at(ii);
@@ -203,7 +203,9 @@ void SignalTransitionParser::verifyBindings(const QQmlRefPointer<QV4::CompiledDa
     }
 }
 
-void SignalTransitionParser::applyBindings(QObject *object, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+void SignalTransitionParser::applyBindings(
+        QObject *object, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+        const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     SignalTransition *st = qobject_cast<SignalTransition*>(object);
     st->m_compilationUnit = compilationUnit;

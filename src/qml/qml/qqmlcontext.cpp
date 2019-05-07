@@ -845,7 +845,7 @@ QQmlContextPrivate *QQmlContextData::asQQmlContextPrivate()
     return QQmlContextPrivate::get(asQQmlContext());
 }
 
-void QQmlContextData::initFromTypeCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit, int subComponentIndex)
+void QQmlContextData::initFromTypeCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, int subComponentIndex)
 {
     typeCompilationUnit = unit;
     componentObjectIndex = subComponentIndex == -1 ? /*root object*/0 : subComponentIndex;

@@ -1548,15 +1548,12 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
     output.jsGenerator.stringTable.registerString(output.jsModule.fileName);
     output.jsGenerator.stringTable.registerString(output.jsModule.finalUrl);
 
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = output.javaScriptCompilationUnit;
-
     QV4::CompiledData::Unit *jsUnit = nullptr;
-    const bool finalize = !compilationUnit->data;
 
     // We may already have unit data if we're loading an ahead-of-time generated cache file.
-    if (!finalize) {
-        jsUnit = const_cast<QV4::CompiledData::Unit *>(compilationUnit->data);
-        output.javaScriptCompilationUnit->dynamicStrings = output.jsGenerator.stringTable.allStrings();
+    if (output.javaScriptCompilationUnit.data) {
+        jsUnit = const_cast<QV4::CompiledData::Unit *>(output.javaScriptCompilationUnit.data);
+        output.javaScriptCompilationUnit.dynamicStrings = output.jsGenerator.stringTable.allStrings();
     } else {
         QV4::CompiledData::Unit *createdUnit;
         jsUnit = createdUnit = output.jsGenerator.generateUnit();
@@ -1748,7 +1745,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         }
     }
 
-    if (finalize) {
+    if (!output.javaScriptCompilationUnit.data) {
         // Combine the qml data into the general unit data.
         jsUnit = static_cast<QV4::CompiledData::Unit *>(realloc(jsUnit, jsUnit->unitSize + totalSize));
         jsUnit->offsetToQmlUnit = jsUnit->unitSize;
@@ -1781,7 +1778,8 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         qDebug() << "    " << totalStringSize << "bytes total strings";
     }
 
-    compilationUnit->setUnitData(jsUnit, qmlUnit, output.jsModule.fileName, output.jsModule.finalUrl);
+    output.javaScriptCompilationUnit.setUnitData(jsUnit, qmlUnit, output.jsModule.fileName,
+                                                 output.jsModule.finalUrl);
 }
 
 char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, BindingFilter filter) const

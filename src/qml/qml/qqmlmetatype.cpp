@@ -499,7 +499,7 @@ QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterComposit
     return QQmlType(priv);
 }
 
-void QQmlMetaType::registerInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit)
+void QQmlMetaType::registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
 {
     QByteArray name = compilationUnit->rootPropertyCache()->className();
 
@@ -526,7 +526,7 @@ void QQmlMetaType::registerInternalCompositeType(QV4::CompiledData::CompilationU
     data->qmlLists.insert(lst_type, ptr_type);
 }
 
-void QQmlMetaType::unregisterInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit)
+void QQmlMetaType::unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
 {
     int ptr_type = compilationUnit->metaTypeId;
     int lst_type = compilationUnit->listMetaTypeId;

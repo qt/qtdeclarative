@@ -509,7 +509,7 @@ static bool executeTest(const QByteArray &data, bool runAsModule = false, const 
         QVector<QUrl> modulesToLoad = { rootModuleUrl };
         while (!modulesToLoad.isEmpty()) {
             QUrl url = modulesToLoad.takeFirst();
-            QQmlRefPointer<QV4::CompiledData::CompilationUnit> module;
+            QQmlRefPointer<QV4::ExecutableCompilationUnit> module;
 
             QFile f(url.toLocalFile());
             if (f.open(QIODevice::ReadOnly)) {

@@ -52,7 +52,7 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(Module);
 
-void Heap::Module::init(ExecutionEngine *engine, CompiledData::CompilationUnit *moduleUnit)
+void Heap::Module::init(ExecutionEngine *engine, ExecutableCompilationUnit *moduleUnit)
 {
     Object::init();
 
@@ -106,7 +106,7 @@ void Module::evaluate()
         return;
     d()->evaluated = true;
 
-    CompiledData::CompilationUnit *unit = d()->unit;
+    ExecutableCompilationUnit *unit = d()->unit;
 
     unit->evaluateModuleRequests();
 

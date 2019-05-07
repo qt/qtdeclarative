@@ -201,14 +201,14 @@ public:
 
     QPointer<QObject> object;
     QList<const QV4::CompiledData::Binding *> bindings;
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
 
     bool decoded : 1;
     bool restore : 1;
     bool isExplicit : 1;
 
     void decode();
-    void decodeBinding(const QString &propertyPrefix, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &qmlUnit, const QV4::CompiledData::Binding *binding);
+    void decodeBinding(const QString &propertyPrefix, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &qmlUnit, const QV4::CompiledData::Binding *binding);
 
     class ExpressionChange {
     public:
@@ -236,7 +236,7 @@ public:
     QQmlProperty property(const QString &);
 };
 
-void QQuickPropertyChangesParser::verifyList(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
+void QQuickPropertyChangesParser::verifyList(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
 {
     if (binding->type == QV4::CompiledData::Binding::Type_Object) {
         error(compilationUnit->objectAt(binding->value.objectIndex), QQuickPropertyChanges::tr("PropertyChanges does not support creating state-specific objects."));
@@ -266,7 +266,7 @@ void QQuickPropertyChangesPrivate::decode()
     decoded = true;
 }
 
-void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
+void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
 {
     Q_Q(QQuickPropertyChanges);
 
@@ -314,7 +314,7 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
         QQmlBinding::Identifier id = QQmlBinding::Invalid;
 
         if (!binding->isTranslationBinding()) {
-            expression = binding->valueAsString(compilationUnit.data());
+            expression = compilationUnit->bindingValueAsString(binding);
             id = binding->value.compiledScriptIndex;
         }
         expressions << ExpressionChange(propertyName, binding, id, expression, url, line, column);
@@ -328,7 +328,7 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
     case QV4::CompiledData::Binding::Type_TranslationById:
         Q_UNREACHABLE();
     case QV4::CompiledData::Binding::Type_String:
-        var = binding->valueAsString(compilationUnit.data());
+        var = compilationUnit->bindingValueAsString(binding);
         break;
     case QV4::CompiledData::Binding::Type_Number:
         var = binding->valueAsNumber(compilationUnit->constants);
@@ -346,13 +346,13 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
     properties << qMakePair(propertyName, var);
 }
 
-void QQuickPropertyChangesParser::verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &props)
+void QQuickPropertyChangesParser::verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &props)
 {
     for (int ii = 0; ii < props.count(); ++ii)
         verifyList(compilationUnit, props.at(ii));
 }
 
-void QQuickPropertyChangesParser::applyBindings(QObject *obj, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+void QQuickPropertyChangesParser::applyBindings(QObject *obj, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     QQuickPropertyChangesPrivate *p =
         static_cast<QQuickPropertyChangesPrivate *>(QObjectPrivate::get(obj));

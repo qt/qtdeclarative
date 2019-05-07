@@ -76,8 +76,8 @@ class QQmlDataExtended;
 class QQmlNotifierEndpoint;
 
 namespace QV4 {
+class ExecutableCompilationUnit;
 namespace CompiledData {
-struct CompilationUnit;
 struct Binding;
 }
 }
@@ -226,14 +226,14 @@ public:
         ~DeferredData();
         unsigned int deferredIdx;
         QMultiHash<int, const QV4::CompiledData::Binding *> bindings;
-        QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;//Not always the same as the other compilation unit
+        QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;//Not always the same as the other compilation unit
         QQmlContextData *context;//Could be either context or outerContext
         Q_DISABLE_COPY(DeferredData);
     };
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
     QVector<DeferredData *> deferredData;
 
-    void deferData(int objectIndex, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, QQmlContextData *);
+    void deferData(int objectIndex, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, QQmlContextData *);
     void releaseDeferredData();
 
     QV4::WeakValue jsWrapper;

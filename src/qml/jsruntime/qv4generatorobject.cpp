@@ -58,7 +58,7 @@ ReturnedValue GeneratorFunctionCtor::virtualCallAsConstructor(const FunctionObje
 {
     ExecutionEngine *engine = f->engine();
 
-    QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit = parse(engine, argv, argc, Type_Generator);
+    QQmlRefPointer<ExecutableCompilationUnit> compilationUnit = parse(engine, argv, argc, Type_Generator);
     if (engine->hasException)
         return Encode::undefined();
 

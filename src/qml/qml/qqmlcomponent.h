@@ -59,9 +59,7 @@ class QQmlComponentPrivate;
 class QQmlComponentAttached;
 
 namespace QV4 {
-namespace CompiledData {
-struct CompilationUnit;
-}
+class ExecutableCompilationUnit;
 }
 
 class Q_QML_EXPORT QQmlComponent : public QObject
@@ -128,7 +126,8 @@ protected:
     Q_INVOKABLE void incubateObject(QQmlV4Function *);
 
 private:
-    QQmlComponent(QQmlEngine *, QV4::CompiledData::CompilationUnit *compilationUnit, int, QObject *parent);
+    QQmlComponent(QQmlEngine *, QV4::ExecutableCompilationUnit *compilationUnit, int,
+                  QObject *parent);
 
     Q_DISABLE_COPY(QQmlComponent)
     friend class QQmlTypeData;

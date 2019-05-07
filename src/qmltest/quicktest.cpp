@@ -70,6 +70,7 @@
 #include <QtQml/QQmlFileSelector>
 
 #include <private/qqmlcomponent_p.h>
+#include <private/qv4executablecompilationunit_p.h>
 
 #ifdef QT_QMLTEST_WITH_WIDGETS
 #include <QtWidgets/QApplication>
@@ -290,7 +291,8 @@ public:
         m_errors += component.errors();
 
         if (component.isReady()) {
-            QQmlRefPointer<CompilationUnit> rootCompilationUnit = QQmlComponentPrivate::get(&component)->compilationUnit;
+            QQmlRefPointer<QV4::ExecutableCompilationUnit> rootCompilationUnit
+                    = QQmlComponentPrivate::get(&component)->compilationUnit;
             TestCaseEnumerationResult result = enumerateTestCases(rootCompilationUnit.data());
             m_testCases = result.testCases + result.finalizedPartialTestCases();
             m_errors += result.errors;
@@ -330,7 +332,8 @@ private:
         }
     };
 
-    TestCaseEnumerationResult enumerateTestCases(CompilationUnit *compilationUnit, const Object *object = nullptr)
+    TestCaseEnumerationResult enumerateTestCases(QV4::ExecutableCompilationUnit *compilationUnit,
+                                                 const Object *object = nullptr)
     {
         QQmlType testCaseType;
         for (quint32 i = 0, count = compilationUnit->importCount(); i < count; ++i) {
@@ -353,7 +356,9 @@ private:
         if (!object) // Start at root of compilation unit if not enumerating a specific child
             object = compilationUnit->objectAt(0);
 
-        if (CompilationUnit *superTypeUnit = compilationUnit->resolvedTypes.value(object->inheritedTypeNameIndex)->compilationUnit.data()) {
+        if (QV4::ExecutableCompilationUnit *superTypeUnit
+            = compilationUnit->resolvedTypes.value(object->inheritedTypeNameIndex)
+                      ->compilationUnit.data()) {
             // We have a non-C++ super type, which could indicate we're a subtype of a TestCase
             if (testCaseType.isValid() && superTypeUnit->url() == testCaseType.sourceUrl())
                 result.isTestCase = true;

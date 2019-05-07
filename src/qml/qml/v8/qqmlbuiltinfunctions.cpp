@@ -1950,7 +1950,8 @@ ReturnedValue GlobalExtensions::method_qsTr(const FunctionObject *b, const Value
         CppStackFrame *frame = scope.engine->currentStackFrame;
         // The first non-empty source URL in the call stack determines the translation context.
         while (frame && context.isEmpty()) {
-            if (CompiledData::CompilationUnit *unit = frame->v4Function->compilationUnit) {
+            if (CompiledData::CompilationUnitBase *baseUnit = frame->v4Function->compilationUnit) {
+                const auto *unit = static_cast<const CompiledData::CompilationUnit *>(baseUnit);
                 QString fileName = unit->fileName();
                 QUrl url(unit->fileName());
                 if (url.isValid() && url.isRelative()) {

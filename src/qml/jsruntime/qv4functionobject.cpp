@@ -135,13 +135,13 @@ void Heap::FunctionObject::setFunction(Function *f)
 {
     if (f) {
         function = f;
-        function->compilationUnit->addref();
+        function->executableCompilationUnit()->addref();
     }
 }
 void Heap::FunctionObject::destroy()
 {
     if (function)
-        function->compilationUnit->release();
+        function->executableCompilationUnit()->release();
     Object::destroy();
 }
 
@@ -229,7 +229,7 @@ void Heap::FunctionCtor::init(QV4::ExecutionContext *scope)
 }
 
 // 15.3.2
-QQmlRefPointer<CompiledData::CompilationUnit> FunctionCtor::parse(ExecutionEngine *engine, const Value *argv, int argc, Type t)
+QQmlRefPointer<ExecutableCompilationUnit> FunctionCtor::parse(ExecutionEngine *engine, const Value *argv, int argc, Type t)
 {
     QString arguments;
     QString body;
@@ -273,14 +273,15 @@ QQmlRefPointer<CompiledData::CompilationUnit> FunctionCtor::parse(ExecutionEngin
     if (engine->hasException)
         return nullptr;
 
-    return cg.generateCompilationUnit();
+    return ExecutableCompilationUnit::create(cg.generateCompilationUnit());
 }
 
 ReturnedValue FunctionCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
     ExecutionEngine *engine = f->engine();
 
-    QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit = parse(engine, argv, argc, Type_Function);
+    QQmlRefPointer<ExecutableCompilationUnit> compilationUnit
+            = parse(engine, argv, argc, Type_Function);
     if (engine->hasException)
         return Encode::undefined();
 

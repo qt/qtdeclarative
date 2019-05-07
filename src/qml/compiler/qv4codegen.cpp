@@ -3783,26 +3783,14 @@ QList<QQmlJS::DiagnosticMessage> Codegen::errors() const
     return _errors;
 }
 
-QQmlRefPointer<CompiledData::CompilationUnit> Codegen::generateCompilationUnit(bool generateUnitData)
+QV4::CompiledData::CompilationUnit Codegen::generateCompilationUnit(
+        bool generateUnitData)
 {
-    CompiledData::Unit *unitData = nullptr;
-    if (generateUnitData)
-        unitData = jsUnitGenerator->generateUnit();
-    CompiledData::CompilationUnit *compilationUnit = new CompiledData::CompilationUnit(unitData);
-
-    QQmlRefPointer<CompiledData::CompilationUnit> unit;
-    unit.adopt(compilationUnit);
-    return unit;
+    return QV4::CompiledData::CompilationUnit(
+            generateUnitData ? jsUnitGenerator->generateUnit() : nullptr);
 }
 
-QQmlRefPointer<CompiledData::CompilationUnit> Codegen::createUnitForLoading()
-{
-    QQmlRefPointer<CompiledData::CompilationUnit> result;
-    result.adopt(new CompiledData::CompilationUnit);
-    return result;
-}
-
-QQmlRefPointer<CompiledData::CompilationUnit> Codegen::compileModule(
+CompiledData::CompilationUnit Codegen::compileModule(
         bool debugMode, const QString &url, const QString &sourceCode,
         const QDateTime &sourceTimeStamp, QList<QQmlJS::DiagnosticMessage> *diagnostics)
 {
@@ -3817,7 +3805,7 @@ QQmlRefPointer<CompiledData::CompilationUnit> Codegen::compileModule(
         *diagnostics = parser.diagnosticMessages();
 
     if (!parsed)
-        return nullptr;
+        return CompiledData::CompilationUnit();
 
     QQmlJS::AST::ESModule *moduleNode = QQmlJS::AST::cast<QQmlJS::AST::ESModule*>(parser.rootNode());
     if (!moduleNode) {
@@ -3840,7 +3828,7 @@ QQmlRefPointer<CompiledData::CompilationUnit> Codegen::compileModule(
         *diagnostics << errors;
 
     if (!errors.isEmpty())
-        return nullptr;
+        return CompiledData::CompilationUnit();
 
     return cg.generateCompilationUnit();
 }

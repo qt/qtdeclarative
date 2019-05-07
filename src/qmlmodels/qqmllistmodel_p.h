@@ -137,7 +137,7 @@ private:
 
     mutable QQmlListModelWorkerAgent *m_agent;
     mutable QV4::ExecutionEngine *m_engine;
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_compilationUnit;
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> m_compilationUnit;
     bool m_mainThread;
     bool m_primary;
 
@@ -188,13 +188,13 @@ public:
 
     QQmlListModelParser() : QQmlCustomParser(QQmlCustomParser::AcceptsSignalHandlers) {}
 
-    void verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
-    void applyBindings(QObject *obj, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
+    void verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
+    void applyBindings(QObject *obj, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
 
 private:
-    bool verifyProperty(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding);
+    bool verifyProperty(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding);
     // returns true if a role was set
-    bool applyProperty(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex);
+    bool applyProperty(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex);
 
     static bool definesEmptyList(const QString &);
 

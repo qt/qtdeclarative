@@ -178,7 +178,7 @@ QQmlType QQmlType::resolveCompositeBaseType(QQmlEnginePrivate *engine) const
     QQmlRefPointer<QQmlTypeData> td(engine->typeLoader.getType(sourceUrl()));
     if (td.isNull() || !td->isComplete())
         return QQmlType();
-    QV4::CompiledData::CompilationUnit *compilationUnit = td->compilationUnit();
+    QV4::ExecutableCompilationUnit *compilationUnit = td->compilationUnit();
     const QMetaObject *mo = compilationUnit->rootPropertyCache()->firstCppMetaObject();
     return QQmlMetaType::qmlType(mo);
 }
@@ -192,7 +192,7 @@ QQmlPropertyCache *QQmlType::compositePropertyCache(QQmlEnginePrivate *engine) c
     QQmlRefPointer<QQmlTypeData> td(engine->typeLoader.getType(sourceUrl()));
     if (td.isNull() || !td->isComplete())
         return nullptr;
-    QV4::CompiledData::CompilationUnit *compilationUnit = td->compilationUnit();
+    QV4::ExecutableCompilationUnit *compilationUnit = td->compilationUnit();
     return compilationUnit->rootPropertyCache().data();
 }
 

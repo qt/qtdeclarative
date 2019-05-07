@@ -379,7 +379,7 @@ struct Q_QML_PRIVATE_EXPORT Document
     QVector<Object*> objects;
     QV4::Compiler::JSUnitGenerator jsGenerator;
 
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> javaScriptCompilationUnit;
+    QV4::CompiledData::CompilationUnit javaScriptCompilationUnit;
 
     int registerString(const QString &str) { return jsGenerator.registerString(str); }
     QString stringAt(int index) const { return jsGenerator.stringForIndex(index); }

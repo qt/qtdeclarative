@@ -33,6 +33,7 @@
 #include <private/qv4engine_p.h>
 #include <private/qv4codegen_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qv4executablecompilationunit_p.h>
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QQmlFileSelector>
@@ -118,7 +119,8 @@ struct TestCompiler
     {
         closeMapping();
         testFilePath = baseDirectory + QStringLiteral("/test.qml");
-        cacheFilePath = QV4::CompiledData::CompilationUnit::localCacheFilePath(QUrl::fromLocalFile(testFilePath));
+        cacheFilePath = QV4::ExecutableCompilationUnit::localCacheFilePath(
+                QUrl::fromLocalFile(testFilePath));
         mappedFile.setFileName(cacheFilePath);
     }
 
@@ -185,8 +187,10 @@ struct TestCompiler
 
     bool verify()
     {
-        QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Compiler::Codegen::createUnitForLoading();
-        return unit->loadFromDisk(QUrl::fromLocalFile(testFilePath), QFileInfo(testFilePath).lastModified(), &lastErrorString);
+        QQmlRefPointer<QV4::ExecutableCompilationUnit> unit
+                = QV4::ExecutableCompilationUnit::create();
+        return unit->loadFromDisk(QUrl::fromLocalFile(testFilePath),
+                                  QFileInfo(testFilePath).lastModified(), &lastErrorString);
     }
 
     void closeMapping()
@@ -263,8 +267,9 @@ void tst_qmldiskcache::loadLocalAsFallback()
         f.write(reinterpret_cast<const char *>(&unit), sizeof(unit));
     }
 
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Compiler::Codegen::createUnitForLoading();
-    bool loaded = unit->loadFromDisk(QUrl::fromLocalFile(testCompiler.testFilePath), QFileInfo(testCompiler.testFilePath).lastModified(),
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> unit = QV4::ExecutableCompilationUnit::create();
+    bool loaded = unit->loadFromDisk(QUrl::fromLocalFile(testCompiler.testFilePath),
+                                     QFileInfo(testCompiler.testFilePath).lastModified(),
                                      &testCompiler.lastErrorString);
     QVERIFY2(loaded, qPrintable(testCompiler.lastErrorString));
     QCOMPARE(unit->objectCount(), 1);
@@ -572,7 +577,8 @@ void tst_qmldiskcache::fileSelectors()
         QVERIFY(!obj.isNull());
         QCOMPARE(obj->property("value").toInt(), 42);
 
-        QFile cacheFile(QV4::CompiledData::CompilationUnit::localCacheFilePath(QUrl::fromLocalFile(testFilePath)));
+        QFile cacheFile(QV4::ExecutableCompilationUnit::localCacheFilePath(
+                QUrl::fromLocalFile(testFilePath)));
         QVERIFY2(cacheFile.exists(), qPrintable(cacheFile.fileName()));
     }
 
@@ -587,7 +593,8 @@ void tst_qmldiskcache::fileSelectors()
         QVERIFY(!obj.isNull());
         QCOMPARE(obj->property("value").toInt(), 100);
 
-        QFile cacheFile(QV4::CompiledData::CompilationUnit::localCacheFilePath(QUrl::fromLocalFile(selectedTestFilePath)));
+        QFile cacheFile(QV4::ExecutableCompilationUnit::localCacheFilePath(
+                QUrl::fromLocalFile(selectedTestFilePath)));
         QVERIFY2(cacheFile.exists(), qPrintable(cacheFile.fileName()));
     }
 }
@@ -737,7 +744,8 @@ void tst_qmldiskcache::stableOrderOfDependentCompositeTypes()
     QVERIFY2(firstDependentTypeClassName.contains("QMLTYPE"), firstDependentTypeClassName.constData());
     QVERIFY2(secondDependentTypeClassName.contains("QMLTYPE"), secondDependentTypeClassName.constData());
 
-    const QString testFileCachePath = QV4::CompiledData::CompilationUnit::localCacheFilePath(QUrl::fromLocalFile(testFilePath));
+    const QString testFileCachePath = QV4::ExecutableCompilationUnit::localCacheFilePath(
+            QUrl::fromLocalFile(testFilePath));
     QVERIFY(QFile::exists(testFileCachePath));
     QDateTime initialCacheTimeStamp = QFileInfo(testFileCachePath).lastModified();
 
@@ -815,7 +823,8 @@ void tst_qmldiskcache::singletonDependency()
         QCOMPARE(obj->property("value").toInt(), 42);
     }
 
-    const QString testFileCachePath = QV4::CompiledData::CompilationUnit::localCacheFilePath(QUrl::fromLocalFile(testFilePath));
+    const QString testFileCachePath = QV4::ExecutableCompilationUnit::localCacheFilePath(
+            QUrl::fromLocalFile(testFilePath));
     QVERIFY(QFile::exists(testFileCachePath));
     QDateTime initialCacheTimeStamp = QFileInfo(testFileCachePath).lastModified();
 
@@ -872,7 +881,8 @@ void tst_qmldiskcache::cppRegisteredSingletonDependency()
         QCOMPARE(value.toInt(), 42);
     }
 
-    const QString testFileCachePath = QV4::CompiledData::CompilationUnit::localCacheFilePath(QUrl::fromLocalFile(testFilePath));
+    const QString testFileCachePath = QV4::ExecutableCompilationUnit::localCacheFilePath(
+            QUrl::fromLocalFile(testFilePath));
     QVERIFY(QFile::exists(testFileCachePath));
     QDateTime initialCacheTimeStamp = QFileInfo(testFileCachePath).lastModified();
 

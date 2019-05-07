@@ -1743,7 +1743,7 @@ ReturnedValue ExecutionEngine::global()
     return globalObject->asReturnedValue();
 }
 
-QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(const QUrl &url)
+QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(const QUrl &url)
 {
     QFile f(QQmlFile::urlToLocalFileOrQrc(url));
     if (!f.open(QIODevice::ReadOnly)) {
@@ -1760,7 +1760,8 @@ QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(con
 }
 
 
-QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(const QUrl &url, const QString &sourceCode, const QDateTime &sourceTimeStamp)
+QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(
+        const QUrl &url, const QString &sourceCode, const QDateTime &sourceTimeStamp)
 {
     QList<QQmlJS::DiagnosticMessage> diagnostics;
     auto unit = Compiler::Codegen::compileModule(/*debugMode*/debugger() != nullptr, url.toString(),
@@ -1774,10 +1775,11 @@ QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(con
                       << ": warning: " << m.message;
         }
     }
-    return unit;
+
+    return ExecutableCompilationUnit::create(std::move(unit));
 }
 
-void ExecutionEngine::injectModule(const QQmlRefPointer<CompiledData::CompilationUnit> &moduleUnit)
+void ExecutionEngine::injectModule(const QQmlRefPointer<ExecutableCompilationUnit> &moduleUnit)
 {
     // Injection can happen from the QML type loader thread for example, but instantiation and
     // evaluation must be limited to the ExecutionEngine's thread.
@@ -1785,7 +1787,7 @@ void ExecutionEngine::injectModule(const QQmlRefPointer<CompiledData::Compilatio
     modules.insert(moduleUnit->finalUrl(), moduleUnit);
 }
 
-QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::moduleForUrl(const QUrl &_url, const CompiledData::CompilationUnit *referrer) const
+QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::moduleForUrl(const QUrl &_url, const ExecutableCompilationUnit *referrer) const
 {
     QUrl url = QQmlTypeLoader::normalize(_url);
     if (referrer)
@@ -1798,7 +1800,7 @@ QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::moduleForUrl(cons
     return *existingModule;
 }
 
-QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::loadModule(const QUrl &_url, const CompiledData::CompilationUnit *referrer)
+QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::loadModule(const QUrl &_url, const ExecutableCompilationUnit *referrer)
 {
     QUrl url = QQmlTypeLoader::normalize(_url);
     if (referrer)

@@ -316,7 +316,7 @@ QAbstractDynamicMetaObject *QQmlInterceptorMetaObject::toDynamicMetaObject(QObje
 
 QQmlVMEMetaObject::QQmlVMEMetaObject(QV4::ExecutionEngine *engine,
                                      QObject *obj,
-                                     const QQmlRefPointer<QQmlPropertyCache> &cache, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &qmlCompilationUnit, int qmlObjectId)
+                                     const QQmlRefPointer<QQmlPropertyCache> &cache, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &qmlCompilationUnit, int qmlObjectId)
     : QQmlInterceptorMetaObject(obj, cache),
       engine(engine),
       ctxt(QQmlData::get(obj, true)->outerContext),

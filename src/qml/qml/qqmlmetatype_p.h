@@ -61,6 +61,8 @@ class QQmlTypeModule;
 class QMutex;
 class QQmlError;
 
+namespace QV4 { class ExecutableCompilationUnit; }
+
 class Q_QML_PRIVATE_EXPORT QQmlMetaType
 {
 public:
@@ -78,8 +80,8 @@ public:
 
     static void unregisterType(int type);
 
-    static void registerInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit);
-    static void unregisterInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit);
+    static void registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
+    static void unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
 
     static void registerModule(const char *uri, int versionMajor, int versionMinor);
     static bool protectModule(const char *uri, int majVersion);

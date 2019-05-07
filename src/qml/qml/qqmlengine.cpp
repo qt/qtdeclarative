@@ -1770,7 +1770,7 @@ void QQmlData::NotifyList::layout()
     todo = nullptr;
 }
 
-void QQmlData::deferData(int objectIndex, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, QQmlContextData *context)
+void QQmlData::deferData(int objectIndex, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, QQmlContextData *context)
 {
     QQmlData::DeferredData *deferData = new QQmlData::DeferredData;
     deferData->deferredIdx = objectIndex;
@@ -2407,7 +2407,7 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t, int minorVe
     }
 }
 
-void QQmlEnginePrivate::registerInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit)
+void QQmlEnginePrivate::registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
 {
     compilationUnit->isRegisteredWithEngine = true;
 
@@ -2417,7 +2417,7 @@ void QQmlEnginePrivate::registerInternalCompositeType(QV4::CompiledData::Compila
     m_compositeTypes.insert(compilationUnit->metaTypeId, compilationUnit);
 }
 
-void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit)
+void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
 {
     compilationUnit->isRegisteredWithEngine = false;
 

@@ -219,8 +219,8 @@ public:
     QQmlMetaObject metaObjectForType(int) const;
     QQmlPropertyCache *propertyCacheForType(int);
     QQmlPropertyCache *rawPropertyCacheForType(int, int minorVersion = -1);
-    void registerInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit);
-    void unregisterInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit);
+    void registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
+    void unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
 
     bool isTypeLoaded(const QUrl &url) const;
     bool isScriptLoaded(const QUrl &url) const;
@@ -265,7 +265,7 @@ private:
 
     // These members must be protected by a QQmlEnginePrivate::Locker as they are required by
     // the threaded loader.  Only access them through their respective accessor methods.
-    QHash<int, QV4::CompiledData::CompilationUnit *> m_compositeTypes;
+    QHash<int, QV4::ExecutableCompilationUnit *> m_compositeTypes;
     static bool s_designerMode;
 
     // These members is protected by the full QQmlEnginePrivate::mutex mutex

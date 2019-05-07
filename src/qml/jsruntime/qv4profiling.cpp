@@ -49,7 +49,7 @@ namespace Profiling {
 FunctionLocation FunctionCall::resolveLocation() const
 {
     return FunctionLocation(m_function->name()->toQString(),
-                            m_function->compilationUnit->fileName(),
+                            m_function->executableCompilationUnit()->fileName(),
                             m_function->compiledFunction->location.line,
                             m_function->compiledFunction->location.column);
 }

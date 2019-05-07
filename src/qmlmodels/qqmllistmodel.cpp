@@ -314,7 +314,7 @@ QString StringOrTranslation::toString(const QQmlListModel *owner) const
     }
     if (!owner)
         return QString();
-    return d.asT2()->valueAsString(owner->m_compilationUnit.data());
+    return owner->m_compilationUnit->bindingValueAsString(d.asT2());
 }
 
 QString StringOrTranslation::asString() const
@@ -2676,7 +2676,7 @@ void QQmlListModel::sync()
     qmlWarning(this) << "List sync() can only be called from a WorkerScript";
 }
 
-bool QQmlListModelParser::verifyProperty(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
+bool QQmlListModelParser::verifyProperty(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
 {
     if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
         const quint32 targetObjectIndex = binding->value.objectIndex;
@@ -2707,7 +2707,7 @@ bool QQmlListModelParser::verifyProperty(const QQmlRefPointer<QV4::CompiledData:
                 return false;
         }
     } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
-        QString scriptStr = binding->valueAsScriptString(compilationUnit.data());
+        QString scriptStr = compilationUnit->bindingValueAsScriptString(binding);
         if (!binding->isFunctionExpression() && !definesEmptyList(scriptStr)) {
             QByteArray script = scriptStr.toUtf8();
             bool ok;
@@ -2722,7 +2722,9 @@ bool QQmlListModelParser::verifyProperty(const QQmlRefPointer<QV4::CompiledData:
     return true;
 }
 
-bool QQmlListModelParser::applyProperty(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex)
+bool QQmlListModelParser::applyProperty(
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+        const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex)
 {
     const QString elementName = compilationUnit->stringAt(binding->propertyNameIndex);
 
@@ -2759,7 +2761,7 @@ bool QQmlListModelParser::applyProperty(const QQmlRefPointer<QV4::CompiledData::
         if (binding->isTranslationBinding()) {
             value = QVariant::fromValue<const QV4::CompiledData::Binding*>(binding);
         } else if (binding->evaluatesToString()) {
-            value = binding->valueAsString(compilationUnit.data());
+            value = compilationUnit->bindingValueAsString(binding);
         } else if (binding->type == QV4::CompiledData::Binding::Type_Number) {
             value = binding->valueAsNumber(compilationUnit->constants);
         } else if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
@@ -2767,7 +2769,7 @@ bool QQmlListModelParser::applyProperty(const QQmlRefPointer<QV4::CompiledData::
         } else if (binding->type == QV4::CompiledData::Binding::Type_Null) {
             value = QVariant::fromValue(nullptr);
         } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
-            QString scriptStr = binding->valueAsScriptString(compilationUnit.data());
+            QString scriptStr = compilationUnit->bindingValueAsScriptString(binding);
             if (definesEmptyList(scriptStr)) {
                 const ListLayout::Role &role = model->getOrCreateListRole(elementName);
                 ListModel *emptyModel = new ListModel(role.subLayout, nullptr);
@@ -2802,7 +2804,7 @@ bool QQmlListModelParser::applyProperty(const QQmlRefPointer<QV4::CompiledData::
     return roleSet;
 }
 
-void QQmlListModelParser::verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+void QQmlListModelParser::verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     listElementTypeName = QString(); // unknown
 
@@ -2817,7 +2819,7 @@ void QQmlListModelParser::verifyBindings(const QQmlRefPointer<QV4::CompiledData:
     }
 }
 
-void QQmlListModelParser::applyBindings(QObject *obj, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+void QQmlListModelParser::applyBindings(QObject *obj, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     QQmlListModel *rv = static_cast<QQmlListModel *>(obj);
 

@@ -550,7 +550,8 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
 /*!
     \internal
 */
-QQmlComponent::QQmlComponent(QQmlEngine *engine, QV4::CompiledData::CompilationUnit *compilationUnit, int start, QObject *parent)
+QQmlComponent::QQmlComponent(QQmlEngine *engine, QV4::ExecutableCompilationUnit *compilationUnit,
+                             int start, QObject *parent)
     : QQmlComponent(engine, parent)
 {
     Q_D(QQmlComponent);

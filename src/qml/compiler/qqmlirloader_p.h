@@ -52,6 +52,7 @@
 //
 
 #include <private/qv4compileddata_p.h>
+#include <private/qqmljsmemorypool_p.h>
 
 QT_BEGIN_NAMESPACE
 
