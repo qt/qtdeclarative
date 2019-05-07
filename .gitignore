@@ -32,6 +32,7 @@ wrapper.bat
 *.*#
 core
 .qmake.cache
+.qmake.stash
 .qmake.vars
 *.prl
 tags

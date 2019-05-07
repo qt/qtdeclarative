@@ -128,12 +128,18 @@ public:
             case QAccessible::Button:
             case QAccessible::MenuItem:
             case QAccessible::PageTab:
-            case QAccessible::EditableText:
             case QAccessible::SpinBox:
             case QAccessible::ComboBox:
             case QAccessible::Terminal:
             case QAccessible::ScrollBar:
                 m_state.focusable = true;
+                break;
+            case QAccessible::EditableText:
+                m_state.editable = true;
+                m_state.focusable = true;
+                break;
+            case QAccessible::StaticText:
+                m_state.readOnly = true;
                 break;
             default:
                 break;

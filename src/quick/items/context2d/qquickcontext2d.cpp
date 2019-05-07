@@ -2001,7 +2001,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_miterLimit(const QV4::FunctionO
     \since QtQuick 2.11
     Returns an array of qreals representing the dash pattern of the line.
 
-    \sa setLineDash()
+    \sa setLineDash(), lineDashOffset
   */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_getLineDash(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *, int)
 {
@@ -2023,7 +2023,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_getLineDash(const QV4::Fun
 /*!
     \qmlmethod QtQuick::Context2D::setLineDash(array pattern)
     \since QtQuick 2.11
-    Sets the dash pattern to the given pattern
+    Sets the dash pattern to the given pattern.
 
     \a pattern a list of numbers that specifies distances to alternately draw a line and a gap.
 
@@ -2042,7 +2042,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_getLineDash(const QV4::Fun
     \endcode
     \endtable
 
-    \sa setLineDash
+    \sa getLineDash(), lineDashOffset
   */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_setLineDash(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {
@@ -2084,8 +2084,10 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_setLineDash(const QV4::Fun
     \qmlproperty real QtQuick::Context2D::lineDashOffset
     \since QtQuick 2.11
 
-     Holds the current line dash offset
-     The default line dash ofset value is 0
+     Holds the current line dash offset.
+     The default line dash offset value is \c 0.
+
+     \sa getLineDash(), setLineDash()
  */
 QV4::ReturnedValue QQuickJSContext2D::method_get_lineDashOffset(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *, int)
 {
