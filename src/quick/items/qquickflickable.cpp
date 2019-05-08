@@ -1909,6 +1909,9 @@ void QQuickFlickable::cancelFlick()
 
 void QQuickFlickablePrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
 {
+    if (!prop || !prop->data)
+        return;
+
     if (QQuickItem *i = qmlobject_cast<QQuickItem *>(o)) {
         i->setParentItem(static_cast<QQuickFlickablePrivate*>(prop->data)->contentItem);
     } else if (QQuickPointerHandler *pointerHandler = qmlobject_cast<QQuickPointerHandler *>(o)) {
