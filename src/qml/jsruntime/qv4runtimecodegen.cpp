@@ -37,6 +37,7 @@
 **
 ****************************************************************************/
 
+#include "qv4engine_p.h"
 #include "qv4runtimecodegen_p.h"
 #include "qv4compilerscanfunctions_p.h"
 

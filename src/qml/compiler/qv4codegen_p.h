@@ -52,12 +52,15 @@
 
 #include "private/qv4global_p.h"
 #include <private/qqmljsastvisitor_p.h>
+#include <private/qqmljsengine_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qv4compiler_p.h>
 #include <private/qv4compilercontext_p.h>
 #include <private/qv4util_p.h>
 #include <private/qv4bytecodegenerator_p.h>
 #include <private/qv4stackframe_p.h>
+
+#include <QtQml/qqmlerror.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -683,6 +686,9 @@ public:
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> generateCompilationUnit(bool generateUnitData = true);
     static QQmlRefPointer<QV4::CompiledData::CompilationUnit> createUnitForLoading();
+    static QQmlRefPointer<CompiledData::CompilationUnit> compileModule(
+            bool debugMode, const QString &url, const QString &sourceCode,
+            const QDateTime &sourceTimeStamp, QList<DiagnosticMessage> *diagnostics);
 
     Context *currentContext() const { return _context; }
     BytecodeGenerator *generator() const { return bytecodeGenerator; }

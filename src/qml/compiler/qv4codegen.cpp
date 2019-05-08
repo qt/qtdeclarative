@@ -45,6 +45,8 @@
 #include <QtCore/QStack>
 #include <QScopeGuard>
 #include <private/qqmljsast_p.h>
+#include <private/qqmljslexer_p.h>
+#include <private/qqmljsparser_p.h>
 #include <private/qv4string_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4compilercontext_p.h>
@@ -3798,6 +3800,49 @@ QQmlRefPointer<CompiledData::CompilationUnit> Codegen::createUnitForLoading()
     QQmlRefPointer<CompiledData::CompilationUnit> result;
     result.adopt(new CompiledData::CompilationUnit);
     return result;
+}
+
+QQmlRefPointer<CompiledData::CompilationUnit> Codegen::compileModule(
+        bool debugMode, const QString &url, const QString &sourceCode,
+        const QDateTime &sourceTimeStamp, QList<QQmlJS::DiagnosticMessage> *diagnostics)
+{
+    QQmlJS::Engine ee;
+    QQmlJS::Lexer lexer(&ee);
+    lexer.setCode(sourceCode, /*line*/1, /*qml mode*/false);
+    QQmlJS::Parser parser(&ee);
+
+    const bool parsed = parser.parseModule();
+
+    if (diagnostics)
+        *diagnostics = parser.diagnosticMessages();
+
+    if (!parsed)
+        return nullptr;
+
+    QQmlJS::AST::ESModule *moduleNode = QQmlJS::AST::cast<QQmlJS::AST::ESModule*>(parser.rootNode());
+    if (!moduleNode) {
+        // if parsing was successful, and we have no module, then
+        // the file was empty.
+        if (diagnostics)
+            diagnostics->clear();
+        return nullptr;
+    }
+
+    using namespace QV4::Compiler;
+    Compiler::Module compilerModule(debugMode);
+    compilerModule.unitFlags |= CompiledData::Unit::IsESModule;
+    compilerModule.sourceTimeStamp = sourceTimeStamp;
+    JSUnitGenerator jsGenerator(&compilerModule);
+    Codegen cg(&jsGenerator, /*strictMode*/true);
+    cg.generateFromModule(url, url, sourceCode, moduleNode, &compilerModule);
+    auto errors = cg.errors();
+    if (diagnostics)
+        *diagnostics << errors;
+
+    if (!errors.isEmpty())
+        return nullptr;
+
+    return cg.generateCompilationUnit();
 }
 
 class Codegen::VolatileMemoryLocationScanner: protected QQmlJS::AST::Visitor

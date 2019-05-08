@@ -262,7 +262,8 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
         QList<QQmlJS::DiagnosticMessage> diagnostics;
         // Precompiled files are relocatable and the final location will be set when loading.
         QString url;
-        unit = QV4::ExecutionEngine::compileModule(/*debugMode*/false, url, sourceCode, QDateTime(), &diagnostics);
+        unit = QV4::Compiler::Codegen::compileModule(/*debugMode*/false, url, sourceCode,
+                                                     QDateTime(), &diagnostics);
         error->appendDiagnostics(inputFileName, diagnostics);
         if (!unit)
             return false;

@@ -38,9 +38,9 @@
 ****************************************************************************/
 
 #include "qv4global_p.h"
-#include "qv4engine_p.h"
 #include "qv4runtime_p.h"
 #ifndef V4_BOOTSTRAP
+#include "qv4engine_p.h"
 #include "qv4object_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4globalobject_p.h"
@@ -2170,6 +2170,7 @@ ReturnedValue Runtime::LessEqual::call(const Value &left, const Value &right)
     return Encode(r);
 }
 
+#ifndef V4_BOOTSTRAP
 struct LazyScope
 {
     ExecutionEngine *engine = nullptr;
@@ -2189,6 +2190,7 @@ struct LazyScope
         **scopedValue = value;
     }
 };
+#endif
 
 Bool Runtime::CompareEqual::call(const Value &left, const Value &right)
 {

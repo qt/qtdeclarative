@@ -3,6 +3,7 @@ INCLUDEPATH += $$OUT_PWD
 
 !qmldevtools_build {
 SOURCES += \
+    $$PWD/qv4engine.cpp \
     $$PWD/qv4context.cpp \
     $$PWD/qv4persistent.cpp \
     $$PWD/qv4lookup.cpp \
@@ -149,7 +150,6 @@ HEADERS += \
     $$PWD/qv4functiontable_p.h
 
 SOURCES += \
-    $$PWD/qv4engine.cpp \
     $$PWD/qv4runtime.cpp \
     $$PWD/qv4string.cpp \
     $$PWD/qv4value.cpp \

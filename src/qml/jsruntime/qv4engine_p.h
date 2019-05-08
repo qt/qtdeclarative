@@ -58,11 +58,9 @@
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmljsengine_p.h>
 
-#ifndef V4_BOOTSTRAP
-#  include "qv4function_p.h"
-#  include <private/qv8engine_p.h>
-#  include <private/qv4compileddata_p.h>
-#endif
+#include "qv4function_p.h"
+#include <private/qv8engine_p.h>
+#include <private/qv4compileddata_p.h>
 
 namespace WTF {
 class BumpPointerAllocator;
@@ -128,13 +126,8 @@ public:
 
     Function *globalCode;
 
-#ifdef V4_BOOTSTRAP
-    QJSEngine *jsEngine() const;
-    QQmlEngine *qmlEngine() const;
-#else // !V4_BOOTSTRAP
     QJSEngine *jsEngine() const { return publicEngine; }
     QQmlEngine *qmlEngine() const { return v8Engine ? v8Engine->engine() : nullptr; }
-#endif // V4_BOOTSTRAP
     QV8Engine *v8Engine;
     QJSEngine *publicEngine;
 
@@ -438,9 +431,7 @@ public:
     Symbol *symbol_unscopables() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_unscopables); }
     Symbol *symbol_revokableProxy() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_revokableProxy); }
 
-#ifndef V4_BOOTSTRAP
     QIntrusiveList<CompiledData::CompilationUnit, &CompiledData::CompilationUnit::nextCompilationUnit> compilationUnits;
-#endif
 
     quint32 m_engineId;
 
@@ -611,8 +602,6 @@ public:
 
     double localTZA = 0.0; // local timezone, initialized at startup
 
-    static QQmlRefPointer<CompiledData::CompilationUnit> compileModule(bool debugMode, const QString &url, const QString &sourceCode, const QDateTime &sourceTimeStamp, QList<QQmlJS::DiagnosticMessage> *diagnostics);
-#ifndef V4_BOOTSTRAP
     QQmlRefPointer<CompiledData::CompilationUnit> compileModule(const QUrl &url);
     QQmlRefPointer<CompiledData::CompilationUnit> compileModule(const QUrl &url, const QString &sourceCode, const QDateTime &sourceTimeStamp);
 
@@ -621,7 +610,6 @@ public:
     void injectModule(const QQmlRefPointer<CompiledData::CompilationUnit> &moduleUnit);
     QQmlRefPointer<CompiledData::CompilationUnit> moduleForUrl(const QUrl &_url, const CompiledData::CompilationUnit *referrer = nullptr) const;
     QQmlRefPointer<CompiledData::CompilationUnit> loadModule(const QUrl &_url, const CompiledData::CompilationUnit *referrer = nullptr);
-#endif
 
 private:
 #if QT_CONFIG(qml_debug)

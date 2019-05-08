@@ -3049,7 +3049,8 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 
     if (m_isModule) {
         QList<QQmlJS::DiagnosticMessage> diagnostics;
-        unit = QV4::ExecutionEngine::compileModule(isDebugging(), urlString(), source, data.sourceTimeStamp(), &diagnostics);
+        unit = QV4::Compiler::Codegen::compileModule(isDebugging(), urlString(), source,
+                                                     data.sourceTimeStamp(), &diagnostics);
         QList<QQmlError> errors = QQmlEnginePrivate::qmlErrorFromDiagnostics(urlString(), diagnostics);
         if (!errors.isEmpty()) {
             setError(errors);
