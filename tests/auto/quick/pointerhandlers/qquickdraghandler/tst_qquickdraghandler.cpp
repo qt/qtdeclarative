@@ -56,6 +56,8 @@ private slots:
     void touchDrag();
     void mouseDrag();
     void dragFromMargin();
+    void snapMode_data();
+    void snapMode();
     void touchDragMulti();
     void touchDragMultiSliders_data();
     void touchDragMultiSliders();
@@ -282,6 +284,78 @@ void tst_DragHandler::dragFromMargin() // QTBUG-74966
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
     QTRY_VERIFY(!dragHandler->active());
     QCOMPARE(dragHandler->centroid().pressedButtons(), Qt::NoButton);
+}
+
+void tst_DragHandler::snapMode_data()
+{
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    QTest::addColumn<QString>("subTree");
+    QTest::addColumn<int>("snapMode");
+    QTest::addColumn<QPoint>("startDragPos");
+    QTest::addColumn<QPoint>("dragMovement");
+    QTest::addColumn<QPoint>("expectedMovement");
+
+    struct TestEntry {
+        const char *desc;
+        const char *subTree;
+        QQuickDragHandler::SnapMode mode;
+        QPoint startDragPos;
+        QPoint dragMovement;
+        QPoint expectedMovement;
+    };
+
+    TestEntry testdata[] = {
+        {"outside the target", "rect1", QQuickDragHandler::SnapAuto, QPoint(45, -10), QPoint(dragThreshold*2, 0), QPoint(dragThreshold*2, 0)},
+        {"inside the  target", "rect1", QQuickDragHandler::SnapAuto, QPoint(45,  10), QPoint(dragThreshold*2, 0), QPoint(dragThreshold*2, 0)},
+        {"outside the target", "rect1", QQuickDragHandler::SnapAlways, QPoint(45, -10), QPoint(dragThreshold*2, 0), QPoint(dragThreshold*2, -50-10)},
+        {"outside the target", "rect1", QQuickDragHandler::NoSnap, QPoint(45, -10), QPoint(dragThreshold*2, 0), QPoint(dragThreshold*2, 0)},
+        {"outside the target", "rect1", QQuickDragHandler::SnapIfPressedOutsideTarget, QPoint(45, -10), QPoint(dragThreshold*2, 0), QPoint(dragThreshold*2, -50-10)},
+        {"inside the target", "rect1", QQuickDragHandler::SnapIfPressedOutsideTarget, QPoint(45, 10), QPoint(dragThreshold*2, 0), QPoint(dragThreshold*2, 0)},
+        //targets y pos moves from -25 to (25 + dragThreshold*2) because of snapping to center:
+        {"outside target, should snap", "rect2", QQuickDragHandler::SnapAuto, QPoint(45, 50), QPoint(0, dragThreshold*2), QPoint(0, 25 + 25 + dragThreshold*2)},
+        {"inside target, shouldn't snap", "rect2", QQuickDragHandler::SnapAuto, QPoint(45, 10), QPoint(0, dragThreshold*2), QPoint(0, dragThreshold*2)}
+    };
+
+    for (const TestEntry& e : testdata) {
+        const QMetaEnum menum = QMetaEnum::fromType<QQuickDragHandler::SnapMode>();
+        const QString dataTag = QString::fromLatin1("%1, %2, %3").arg(e.subTree).arg(menum.valueToKey(e.mode)).arg(e.desc);
+        QTest::newRow(dataTag.toUtf8().constData()) << e.subTree << (int)e.mode
+                << e.startDragPos << e.dragMovement << e.expectedMovement;
+    }
+}
+
+void tst_DragHandler::snapMode()
+{
+    QFETCH(QString, subTree);
+    QFETCH(QPoint, startDragPos);
+    QFETCH(QPoint, dragMovement);
+    QFETCH(int, snapMode);
+    QFETCH(QPoint, expectedMovement);
+
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "snapMode.qml");
+    QQuickView * window = windowPtr.data();
+
+    QQuickItem *rect1 = window->rootObject()->findChild<QQuickItem*>(subTree);
+    QVERIFY(rect1);
+    QQuickItem *rect1b = rect1->childItems().first();
+    QVERIFY(rect1b);
+    QQuickDragHandler *dragHandler1 = rect1->findChild<QQuickDragHandler*>();
+    QVERIFY(dragHandler1);
+    dragHandler1->setSnapMode((QQuickDragHandler::SnapMode)snapMode);
+    QQuickItem *dragTarget = dragHandler1->target();
+    QPointF oldTargetPos = dragTarget->position();
+
+    QPoint p1 = rect1->mapToScene(QPointF(startDragPos)).toPoint();
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QVERIFY(!dragHandler1->active());
+    p1 += dragMovement;
+    QTest::mouseMove(window, p1);
+    QTRY_VERIFY(dragHandler1->active());
+    QCOMPARE(dragTarget->position(), oldTargetPos + expectedMovement);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTRY_VERIFY(!dragHandler1->active());
+    QCOMPARE(dragHandler1->centroid().pressedButtons(), Qt::NoButton);
 }
 
 void tst_DragHandler::touchDragMulti()
