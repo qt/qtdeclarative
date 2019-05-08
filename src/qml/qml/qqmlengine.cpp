@@ -944,7 +944,11 @@ void QQmlEnginePrivate::init()
     Q_Q(QQmlEngine);
 
     if (baseModulesUninitialized) {
-        qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component"); // required for the Compiler.
+
+        // required for the Compiler.
+        qmlRegisterType<QObject>("QML", 1, 0, "QtObject");
+        qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component");
+
         QQmlData::init();
         baseModulesUninitialized = false;
     }
