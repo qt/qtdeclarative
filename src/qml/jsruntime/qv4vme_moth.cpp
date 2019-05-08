@@ -65,6 +65,8 @@
 #include <private/qv4baselinejit_p.h>
 #endif
 
+#include <qtqml_tracepoints_p.h>
+
 #undef COUNT_INSTRUCTIONS
 
 enum { ShowWhenDeoptimiationHappens = 0 };
@@ -422,6 +424,10 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
     CHECK_STACK_LIMITS(engine);
 
     Function *function = frame->v4Function;
+    Q_TRACE_SCOPE(QQmlV4_function_call, engine, function->name()->toQString(),
+                  function->compilationUnit->fileName(),
+                  function->compiledFunction->location.line,
+                  function->compiledFunction->location.column);
     Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling
     QV4::Debugging::Debugger *debugger = engine->debugger();
 

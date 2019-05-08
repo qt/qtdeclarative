@@ -904,6 +904,10 @@ struct Unit
         return reinterpret_cast<const QmlUnit *>(reinterpret_cast<const char *>(this) + offsetToQmlUnit);
     }
 
+    QmlUnit *qmlUnit() {
+        return reinterpret_cast<QmlUnit *>(reinterpret_cast<char *>(this) + offsetToQmlUnit);
+    }
+
     bool isSingleton() const {
         return flags & Unit::IsSingleton;
     }
