@@ -230,7 +230,6 @@ void Unit::generateChecksum()
 
 bool Unit::verifyHeader(QDateTime expectedSourceTimeStamp, QString *errorString) const
 {
-#ifndef V4_BOOTSTRAP
     if (strncmp(magic, CompiledData::magic_str, sizeof(magic))) {
         *errorString = QStringLiteral("Magic bytes in the header do not match");
         return false;
@@ -268,11 +267,6 @@ bool Unit::verifyHeader(QDateTime expectedSourceTimeStamp, QString *errorString)
 #endif
 
     return true;
-#else
-    Q_UNUSED(expectedSourceTimeStamp)
-    Q_UNUSED(errorString)
-    return false;
-#endif
 }
 
 Location &Location::operator=(const QQmlJS::AST::SourceLocation &astLocation)
