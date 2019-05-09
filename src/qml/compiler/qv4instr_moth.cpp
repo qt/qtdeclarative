@@ -56,9 +56,7 @@ int InstrInfo::size(Instr::Type type)
 
 static QByteArray alignedNumber(int n) {
     QByteArray number = QByteArray::number(n);
-    while (number.size() < 8)
-        number.prepend(' ');
-    return number;
+    return number.prepend(8 - number.size(), ' ');
 }
 
 static QByteArray alignedLineNumber(int line) {
@@ -81,25 +79,6 @@ static QByteArray rawBytes(const char *data, int n)
     while (ba.size() < 25)
         ba += ' ';
     return ba;
-}
-
-static QString toString(QV4::ReturnedValue v)
-{
-#ifdef V4_BOOTSTRAP
-    return QStringLiteral("string-const(%1)").arg(v);
-#else // !V4_BOOTSTRAP
-    Value val = Value::fromReturnedValue(v);
-    QString result;
-    if (val.isInt32())
-        result = QLatin1String("int ");
-    else if (val.isDouble())
-        result = QLatin1String("double ");
-    if (val.isEmpty())
-        result += QLatin1String("empty");
-    else
-        result += val.toQStringNoThrow();
-    return result;
-#endif // V4_BOOTSTRAP
 }
 
 #define ABSOLUTE_OFFSET() \
@@ -127,16 +106,6 @@ namespace Moth {
 const int InstrInfo::argumentCount[] = {
     FOR_EACH_MOTH_INSTR_ALL(MOTH_COLLECT_NARGS)
 };
-
-
-void dumpConstantTable(const Value *constants, uint count)
-{
-    QDebug d = qDebug();
-    d.nospace();
-    for (uint i = 0; i < count; ++i)
-        d << alignedNumber(int(i)).constData() << ":    "
-          << toString(constants[i].asReturnedValue()).toUtf8().constData() << "\n";
-}
 
 QString dumpRegister(int reg, int nFormals)
 {

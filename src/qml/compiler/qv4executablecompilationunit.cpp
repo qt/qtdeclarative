@@ -87,6 +87,31 @@ QString ExecutableCompilationUnit::localCacheFilePath(const QUrl &url)
     return directory + QString::fromUtf8(fileNameHash.result().toHex()) + QLatin1Char('.') + cacheFileSuffix;
 }
 
+static QString toString(QV4::ReturnedValue v)
+{
+    Value val = Value::fromReturnedValue(v);
+    QString result;
+    if (val.isInt32())
+        result = QLatin1String("int ");
+    else if (val.isDouble())
+        result = QLatin1String("double ");
+    if (val.isEmpty())
+        result += QLatin1String("empty");
+    else
+        result += val.toQStringNoThrow();
+    return result;
+}
+
+static void dumpConstantTable(const Value *constants, uint count)
+{
+    QDebug d = qDebug();
+    d.nospace() << right;
+    for (uint i = 0; i < count; ++i) {
+        d << qSetFieldWidth(8) << i << qSetFieldWidth(0) << ":    "
+          << toString(constants[i].asReturnedValue()).toUtf8().constData() << "\n";
+    }
+}
+
 QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
 {
     this->engine = engine;
@@ -185,7 +210,7 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
     if (showCode) {
         qDebug() << "=== Constant table";
-        Moth::dumpConstantTable(constants, data->constantTableSize);
+        dumpConstantTable(constants, data->constantTableSize);
         qDebug() << "=== String table";
         for (uint i = 0, end = totalStringCount(); i < end; ++i)
             qDebug() << "    " << i << ":" << runtimeStrings[i]->toQString();
