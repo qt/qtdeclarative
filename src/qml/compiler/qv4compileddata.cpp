@@ -949,7 +949,7 @@ void CompilationUnit::destroy()
 
 void Unit::generateChecksum()
 {
-#ifndef V4_BOOTSTRAP
+#ifndef QT_CRYPTOGRAPHICHASH_ONLY_SHA1
     QCryptographicHash hash(QCryptographicHash::Md5);
 
     const int checksummableDataOffset = offsetof(QV4::CompiledData::Unit, md5Checksum) + sizeof(md5Checksum);
