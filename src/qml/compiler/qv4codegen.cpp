@@ -47,7 +47,7 @@
 #include <private/qqmljsast_p.h>
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
-#include <private/qv4string_p.h>
+#include <private/qv4stringtoarrayindex_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4compilercontext_p.h>
 #include <private/qv4compilercontrolflow_p.h>
@@ -1245,7 +1245,7 @@ bool Codegen::visit(ArrayMemberExpression *ast)
         return false;
     if (AST::StringLiteral *str = AST::cast<AST::StringLiteral *>(ast->expression)) {
         QString s = str->value.toString();
-        uint arrayIndex = QV4::String::toArrayIndex(s);
+        uint arrayIndex = stringToArrayIndex(s);
         if (arrayIndex == UINT_MAX) {
             setExprResult(Reference::fromMember(base, str->value.toString()));
             return false;
@@ -2515,7 +2515,7 @@ bool Codegen::visit(ObjectPattern *ast)
         if (cname || p->type != PatternProperty::Literal)
             break;
         QString name = p->name->asString();
-        uint arrayIndex = QV4::String::toArrayIndex(name);
+        uint arrayIndex = stringToArrayIndex(name);
         if (arrayIndex != UINT_MAX)
             break;
         if (members.contains(name))

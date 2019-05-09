@@ -37,6 +37,7 @@ SOURCES += \
     $$PWD/qv4reflect.cpp \
     $$PWD/qv4regexpobject.cpp \
     $$PWD/qv4stackframe.cpp \
+    $$PWD/qv4string.cpp \
     $$PWD/qv4stringiterator.cpp \
     $$PWD/qv4stringobject.cpp \
     $$PWD/qv4variantobject.cpp \
@@ -103,6 +104,7 @@ HEADERS += \
     $$PWD/qv4regexpobject_p.h \
     $$PWD/qv4runtimecodegen_p.h \
     $$PWD/qv4stackframe_p.h \
+    $$PWD/qv4string_p.h \
     $$PWD/qv4stringiterator_p.h \
     $$PWD/qv4stringobject_p.h \
     $$PWD/qv4variantobject_p.h \
@@ -144,14 +146,13 @@ HEADERS += \
     $$PWD/qv4runtime_p.h \
     $$PWD/qv4runtimeapi_p.h \
     $$PWD/qv4value_p.h \
-    $$PWD/qv4string_p.h \
+    $$PWD/qv4stringtoarrayindex_p.h \
     $$PWD/qv4util_p.h \
     $$PWD/qv4value_p.h \
     $$PWD/qv4functiontable_p.h
 
 SOURCES += \
     $$PWD/qv4runtime.cpp \
-    $$PWD/qv4string.cpp \
     $$PWD/qv4value.cpp \
     $$PWD/qv4executableallocator.cpp
 

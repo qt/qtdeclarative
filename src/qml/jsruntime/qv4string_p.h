@@ -54,6 +54,7 @@
 #include "qv4managed_p.h"
 #include <QtCore/private/qnumeric_p.h>
 #include "qv4enginebase_p.h"
+#include "qv4stringtoarrayindex_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -242,40 +243,11 @@ protected:
 #endif
 
 public:
-    static uint toArrayIndex(const QString &str);
-
-private:
-    static inline uint toUInt(const QChar *ch) { return ch->unicode(); }
-    static inline uint toUInt(const char *ch) { return static_cast<unsigned char>(*ch); }
-
-    template <typename T>
-    static inline uint toArrayIndex(const T *ch, const T *end)
-    {
-        uint i = toUInt(ch) - '0';
-        if (i > 9)
-            return UINT_MAX;
-        ++ch;
-        // reject "01", "001", ...
-        if (i == 0 && ch != end)
-            return UINT_MAX;
-
-        while (ch < end) {
-            uint x = toUInt(ch) - '0';
-            if (x > 9)
-                return UINT_MAX;
-            if (mul_overflow(i, uint(10), &i) || add_overflow(i, x, &i)) // i = i * 10 + x
-                return UINT_MAX;
-            ++ch;
-        }
-        return i;
-    }
-
-public:
     template <typename T>
     static inline uint calculateHashValue(const T *ch, const T* end, uint *subtype)
     {
         // array indices get their number as hash value
-        uint h = toArrayIndex(ch, end);
+        uint h = stringToArrayIndex(ch, end);
         if (h != UINT_MAX) {
             if (subtype)
                 *subtype = Heap::StringOrSymbol::StringType_ArrayIndex;
@@ -283,12 +255,12 @@ public:
         }
 
         while (ch < end) {
-            h = 31 * h + toUInt(ch);
+            h = 31 * h + charToUInt(ch);
             ++ch;
         }
 
         if (subtype)
-            *subtype = (toUInt(ch) == '@') ? Heap::StringOrSymbol::StringType_Symbol : Heap::StringOrSymbol::StringType_Regular;
+            *subtype = (charToUInt(ch) == '@') ? Heap::StringOrSymbol::StringType_Symbol : Heap::StringOrSymbol::StringType_Regular;
         return h;
     }
 };

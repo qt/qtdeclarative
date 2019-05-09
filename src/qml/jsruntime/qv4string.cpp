@@ -256,8 +256,3 @@ qint64 String::virtualGetLength(const Managed *m)
 }
 
 #endif // V4_BOOTSTRAP
-
-uint String::toArrayIndex(const QString &str)
-{
-    return QV4::String::toArrayIndex(str.constData(), str.constData() + str.length());
-}

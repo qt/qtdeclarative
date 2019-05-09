@@ -49,7 +49,6 @@
 #include <private/qqmljsast_p.h>
 #include <private/qv4compilercontext_p.h>
 #include <private/qv4codegen_p.h>
-#include <private/qv4string_p.h>
 
 QT_USE_NAMESPACE
 using namespace QV4;
