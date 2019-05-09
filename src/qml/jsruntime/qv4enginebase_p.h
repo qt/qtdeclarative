@@ -79,9 +79,6 @@ struct Q_QML_EXPORT EngineBase {
 #elif defined(Q_ATOMIC_INT16_IS_SUPPORTED)
     quint8 unused = 0;
     QAtomicInteger<quint16> isInterrupted = false;
-#elif defined(V4_BOOTSTRAP)
-    // We don't need the isInterrupted flag when bootstrapping.
-    quint8 unused[3];
 #else
 #   error V4 needs either 8bit or 16bit atomics.
 #endif

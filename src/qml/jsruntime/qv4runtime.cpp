@@ -1175,8 +1175,14 @@ Bool RuntimeHelpers::strictEqual(const Value &x, const Value &y)
 
     if (x.isNumber())
         return y.isNumber() && x.asDouble() == y.asDouble();
-    if (x.isManaged())
+    if (x.isManaged()) {
+#ifdef V4_BOOTSTRAP
+        Q_UNIMPLEMENTED();
+        return false;
+#else
         return y.isManaged() && x.cast<Managed>()->isEqualTo(y.cast<Managed>());
+#endif
+    }
     return false;
 }
 
