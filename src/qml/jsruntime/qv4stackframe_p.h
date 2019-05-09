@@ -52,6 +52,7 @@
 
 #include <private/qv4context_p.h>
 #include <private/qv4enginebase_p.h>
+#include <private/qv4calldata_p.h>
 #ifndef V4_BOOTSTRAP
 #include <private/qv4function_p.h>
 #endif
@@ -59,55 +60,6 @@
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-
-struct CallData
-{
-    enum Offsets {
-        Function = 0,
-        Context = 1,
-        Accumulator = 2,
-        This = 3,
-        NewTarget = 4,
-        Argc = 5,
-
-        LastOffset = Argc,
-        OffsetCount = LastOffset + 1
-    };
-
-    Value function;
-    Value context;
-    Value accumulator;
-    Value thisObject;
-    Value newTarget;
-    Value _argc;
-
-    int argc() const {
-        Q_ASSERT(_argc.isInteger());
-        return _argc.int_32();
-    }
-
-    void setArgc(int argc) {
-        Q_ASSERT(argc >= 0);
-        _argc.setInt_32(argc);
-    }
-
-    inline ReturnedValue argument(int i) const {
-        return i < argc() ? args[i].asReturnedValue() : Value::undefinedValue().asReturnedValue();
-    }
-
-    Value args[1];
-
-    static Q_DECL_CONSTEXPR int HeaderSize() { return offsetof(CallData, args) / sizeof(QV4::Value); }
-};
-
-Q_STATIC_ASSERT(std::is_standard_layout<CallData>::value);
-Q_STATIC_ASSERT(offsetof(CallData, function   ) == CallData::Function    * sizeof(Value));
-Q_STATIC_ASSERT(offsetof(CallData, context    ) == CallData::Context     * sizeof(Value));
-Q_STATIC_ASSERT(offsetof(CallData, accumulator) == CallData::Accumulator * sizeof(Value));
-Q_STATIC_ASSERT(offsetof(CallData, thisObject ) == CallData::This        * sizeof(Value));
-Q_STATIC_ASSERT(offsetof(CallData, newTarget  ) == CallData::NewTarget   * sizeof(Value));
-Q_STATIC_ASSERT(offsetof(CallData, _argc      ) == CallData::Argc        * sizeof(Value));
-Q_STATIC_ASSERT(offsetof(CallData, args       ) == 6 * sizeof(Value));
 
 struct Q_QML_EXPORT CppStackFrame {
     EngineBase *engine;

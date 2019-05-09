@@ -58,7 +58,7 @@
 #include <private/qv4compilercontext_p.h>
 #include <private/qv4util_p.h>
 #include <private/qv4bytecodegenerator_p.h>
-#include <private/qv4stackframe_p.h>
+#include <private/qv4calldata_p.h>
 
 #include <QtQml/qqmlerror.h>
 

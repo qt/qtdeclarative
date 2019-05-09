@@ -143,6 +143,7 @@ qtConfig(qml-sequence-object) {
 
 
 HEADERS += \
+    $$PWD/qv4calldata_p.h \
     $$PWD/qv4runtime_p.h \
     $$PWD/qv4runtimeapi_p.h \
     $$PWD/qv4value_p.h \

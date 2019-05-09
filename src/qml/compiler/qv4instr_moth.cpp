@@ -39,7 +39,7 @@
 
 #include "qv4instr_moth_p.h"
 #include <private/qv4compileddata_p.h>
-#include <private/qv4stackframe_p.h>
+#include <private/qv4calldata_p.h>
 
 using namespace QV4;
 using namespace QV4::Moth;
