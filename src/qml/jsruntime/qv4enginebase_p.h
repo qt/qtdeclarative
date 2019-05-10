@@ -147,10 +147,7 @@ Q_STATIC_ASSERT(offsetof(EngineBase, jsStackTop) == offsetof(EngineBase, current
 Q_STATIC_ASSERT(offsetof(EngineBase, hasException) == offsetof(EngineBase, jsStackTop) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(EngineBase, memoryManager) == offsetof(EngineBase, hasException) + 8);
 Q_STATIC_ASSERT(offsetof(EngineBase, runtime) == offsetof(EngineBase, memoryManager) + QT_POINTER_SIZE);
-
-#ifndef V4_BOOTSTRAP
 Q_STATIC_ASSERT(offsetof(EngineBase, isInterrupted) + sizeof(EngineBase::isInterrupted) <= offsetof(EngineBase, hasException) + 4);
-#endif
 
 }
 

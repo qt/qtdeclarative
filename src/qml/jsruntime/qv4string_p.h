@@ -105,7 +105,6 @@ struct Q_QML_PRIVATE_EXPORT StringOrSymbol : Base
 struct Q_QML_PRIVATE_EXPORT String : StringOrSymbol {
     static void markObjects(Heap::Base *that, MarkStack *markStack);
 
-#ifndef V4_BOOTSTRAP
     const VTable *vtable() const {
         return internalClass->vtable;
     }
@@ -141,11 +140,9 @@ struct Q_QML_PRIVATE_EXPORT String : StringOrSymbol {
 
 private:
     static void append(const String *data, QChar *ch);
-#endif
 };
 Q_STATIC_ASSERT(std::is_trivial< String >::value);
 
-#ifndef V4_BOOTSTRAP
 struct ComplexString : String {
     void init(String *l, String *n);
     void init(String *ref, int from, int len);
@@ -163,12 +160,10 @@ inline
 int String::length() const {
     return text ? text->size : static_cast<const ComplexString *>(this)->len;
 }
-#endif
 
 }
 
 struct Q_QML_PRIVATE_EXPORT StringOrSymbol : public Managed {
-#ifndef V4_BOOTSTRAP
     V4_MANAGED(StringOrSymbol, Managed)
     V4_NEEDS_DESTROY
     enum {
@@ -185,11 +180,9 @@ public:
     inline QString toQString() const {
         return d()->toQString();
     }
-#endif
 };
 
 struct Q_QML_PRIVATE_EXPORT String : public StringOrSymbol {
-#ifndef V4_BOOTSTRAP
     V4_MANAGED(String, StringOrSymbol)
     Q_MANAGED_TYPE(String)
     V4_INTERNALCLASS(String)
@@ -240,7 +233,6 @@ struct Q_QML_PRIVATE_EXPORT String : public StringOrSymbol {
 protected:
     static bool virtualIsEqualTo(Managed *that, Managed *o);
     static qint64 virtualGetLength(const Managed *m);
-#endif
 
 public:
     template <typename T>
@@ -265,7 +257,6 @@ public:
     }
 };
 
-#ifndef V4_BOOTSTRAP
 struct ComplexString : String {
     typedef QV4::Heap::ComplexString Data;
     QV4::Heap::ComplexString *d_unchecked() const { return static_cast<QV4::Heap::ComplexString *>(m()); }
@@ -304,8 +295,6 @@ inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
 {
     return v.toString(e)->asReturnedValue();
 }
-#endif
-
 
 }
 

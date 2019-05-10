@@ -53,9 +53,7 @@
 #include <private/qv4context_p.h>
 #include <private/qv4enginebase_p.h>
 #include <private/qv4calldata_p.h>
-#ifndef V4_BOOTSTRAP
 #include <private/qv4function_p.h>
-#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -107,7 +105,6 @@ struct Q_QML_EXPORT CppStackFrame {
         engine->jsStackTop = savedStackTop;
     }
 
-#ifndef V4_BOOTSTRAP
     static uint requiredJSStackFrameSize(uint nRegisters) {
         return CallData::HeaderSize() + nRegisters;
     }
@@ -150,7 +147,6 @@ struct Q_QML_EXPORT CppStackFrame {
                 *v = Value::emptyValue().asReturnedValue();
         }
     }
-#endif
 
     QString source() const;
     QString function() const;

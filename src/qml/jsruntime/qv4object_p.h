@@ -543,13 +543,11 @@ inline const ArrayObject *Value::as() const {
     return isManaged() && m()->internalClass->vtable->type == Managed::Type_ArrayObject ? static_cast<const ArrayObject *>(this) : nullptr;
 }
 
-#ifndef V4_BOOTSTRAP
 template<>
 inline ReturnedValue value_convert<Object>(ExecutionEngine *e, const Value &v)
 {
     return v.toObject(e)->asReturnedValue();
 }
-#endif
 
 }
 
