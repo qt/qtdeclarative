@@ -57,7 +57,6 @@
 #include <QHash>
 #include <QUrl>
 
-#include <private/qv4value_p.h>
 #include <private/qv4executableallocator_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmlnullablevalue_p.h>
@@ -521,13 +520,6 @@ struct Q_QML_PRIVATE_EXPORT Binding
 
     bool isTranslationBinding() const { return type == Type_Translation || type == Type_TranslationById; }
     bool evaluatesToString() const { return type == Type_String || isTranslationBinding(); }
-
-    double valueAsNumber(const Value *constantTable) const
-    {
-        if (type != Type_Number)
-            return 0.0;
-        return constantTable[value.constantValueIndex].doubleValue();
-    }
 
     bool valueAsBoolean() const
     {

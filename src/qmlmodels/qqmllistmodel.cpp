@@ -2763,7 +2763,7 @@ bool QQmlListModelParser::applyProperty(
         } else if (binding->evaluatesToString()) {
             value = compilationUnit->bindingValueAsString(binding);
         } else if (binding->type == QV4::CompiledData::Binding::Type_Number) {
-            value = binding->valueAsNumber(compilationUnit->constants);
+            value = compilationUnit->bindingValueAsNumber(binding);
         } else if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
             value = binding->valueAsBoolean();
         } else if (binding->type == QV4::CompiledData::Binding::Type_Null) {

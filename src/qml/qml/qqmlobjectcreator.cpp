@@ -406,7 +406,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     switch (propertyType) {
     case QMetaType::QVariant: {
         if (binding->type == QV4::CompiledData::Binding::Type_Number) {
-            double n = binding->valueAsNumber(compilationUnit->constants);
+            double n = compilationUnit->bindingValueAsNumber(binding);
             if (double(int(n)) == n) {
                 if (property->isVarProperty()) {
                     _vmeMetaObject->setVMEProperty(property->coreIndex(), QV4::Value::fromInt32(int(n)));
@@ -481,7 +481,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     break;
     case QVariant::UInt: {
         assertType(QV4::CompiledData::Binding::Type_Number);
-        double d = binding->valueAsNumber(compilationUnit->constants);
+        double d = compilationUnit->bindingValueAsNumber(binding);
         uint value = uint(d);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
         break;
@@ -489,7 +489,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     break;
     case QVariant::Int: {
         assertType(QV4::CompiledData::Binding::Type_Number);
-        double d = binding->valueAsNumber(compilationUnit->constants);
+        double d = compilationUnit->bindingValueAsNumber(binding);
         int value = int(d);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
         break;
@@ -497,13 +497,13 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     break;
     case QMetaType::Float: {
         assertType(QV4::CompiledData::Binding::Type_Number);
-        float value = float(binding->valueAsNumber(compilationUnit->constants));
+        float value = float(compilationUnit->bindingValueAsNumber(binding));
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Double: {
         assertType(QV4::CompiledData::Binding::Type_Number);
-        double value = binding->valueAsNumber(compilationUnit->constants);
+        double value = compilationUnit->bindingValueAsNumber(binding);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
@@ -651,12 +651,12 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         if (property->propType() == qMetaTypeId<QList<qreal> >()) {
             assertType(QV4::CompiledData::Binding::Type_Number);
             QList<qreal> value;
-            value.append(binding->valueAsNumber(compilationUnit->constants));
+            value.append(compilationUnit->bindingValueAsNumber(binding));
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         } else if (property->propType() == qMetaTypeId<QList<int> >()) {
             assertType(QV4::CompiledData::Binding::Type_Number);
-            double n = binding->valueAsNumber(compilationUnit->constants);
+            double n = compilationUnit->bindingValueAsNumber(binding);
             QList<int> value;
             value.append(int(n));
             property->writeProperty(_qobject, &value, propertyWriteFlags);
@@ -687,7 +687,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
                 value = QJSValue(binding->valueAsBoolean());
             } else if (binding->type == QV4::CompiledData::Binding::Type_Number) {
-                double n = binding->valueAsNumber(compilationUnit->constants);
+                double n = compilationUnit->bindingValueAsNumber(binding);
                 if (double(int(n)) == n) {
                     value = QJSValue(int(n));
                 } else
@@ -842,7 +842,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
         ss.d.data()->columnNumber = binding->location.column;
         ss.d.data()->isStringLiteral = binding->type == QV4::CompiledData::Binding::Type_String;
         ss.d.data()->isNumberLiteral = binding->type == QV4::CompiledData::Binding::Type_Number;
-        ss.d.data()->numberValue = binding->valueAsNumber(compilationUnit->constants);
+        ss.d.data()->numberValue = compilationUnit->bindingValueAsNumber(binding);
 
         QQmlPropertyData::WriteFlags propertyWriteFlags = QQmlPropertyData::BypassInterceptor |
                                                             QQmlPropertyData::RemoveBindingOnAliasWrite;

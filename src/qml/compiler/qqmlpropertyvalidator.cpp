@@ -397,7 +397,7 @@ QQmlCompileError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache
     break;
     case QVariant::UInt: {
         if (binding->type == QV4::CompiledData::Binding::Type_Number) {
-            double d = binding->valueAsNumber(compilationUnit->constants);
+            double d = compilationUnit->bindingValueAsNumber(binding);
             if (double(uint(d)) == d)
                 return noError;
         }
@@ -406,7 +406,7 @@ QQmlCompileError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache
     break;
     case QVariant::Int: {
         if (binding->type == QV4::CompiledData::Binding::Type_Number) {
-            double d = binding->valueAsNumber(compilationUnit->constants);
+            double d = compilationUnit->bindingValueAsNumber(binding);
             if (double(int(d)) == d)
                 return noError;
         }
@@ -571,7 +571,7 @@ QQmlCompileError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache
         } else if (property->propType() == qMetaTypeId<QList<int> >()) {
             bool ok = (binding->type == QV4::CompiledData::Binding::Type_Number);
             if (ok) {
-                double n = binding->valueAsNumber(compilationUnit->constants);
+                double n = compilationUnit->bindingValueAsNumber(binding);
                 if (double(int(n)) != n)
                     ok = false;
             }

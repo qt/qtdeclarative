@@ -331,7 +331,7 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
         var = compilationUnit->bindingValueAsString(binding);
         break;
     case QV4::CompiledData::Binding::Type_Number:
-        var = binding->valueAsNumber(compilationUnit->constants);
+        var = compilationUnit->bindingValueAsNumber(binding);
         break;
     case QV4::CompiledData::Binding::Type_Boolean:
         var = binding->valueAsBoolean();

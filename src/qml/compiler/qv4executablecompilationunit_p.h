@@ -244,6 +244,12 @@ public:
 
     QString bindingValueAsString(const CompiledData::Binding *binding) const;
     QString bindingValueAsScriptString(const CompiledData::Binding *binding) const;
+    double bindingValueAsNumber(const CompiledData::Binding *binding) const
+    {
+        if (binding->type != CompiledData::Binding::Type_Number)
+            return 0.0;
+        return constants[binding->value.constantValueIndex].doubleValue();
+    }
 
 protected:
     quint32 totalStringCount() const
