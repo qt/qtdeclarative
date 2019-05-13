@@ -93,7 +93,7 @@ void Heap::Object::setUsedAsProto()
     internalClass.set(internalClass->engine, internalClass->asProtoClass());
 }
 
-ReturnedValue Object::getValueAccessor(const Value &thisObject, const Value &v, PropertyAttributes attrs)
+ReturnedValue Object::getValueAccessor(const Value *thisObject, const Value &v, PropertyAttributes attrs)
 {
     if (!attrs.isAccessor())
         return v.asReturnedValue();
@@ -103,7 +103,8 @@ ReturnedValue Object::getValueAccessor(const Value &thisObject, const Value &v, 
 
     Scope scope(f->engine());
     JSCallData jsCallData(scope);
-    *jsCallData->thisObject = thisObject;
+    if (thisObject)
+        *jsCallData->thisObject = *thisObject;
     return f->call(jsCallData);
 }
 
@@ -415,7 +416,7 @@ ReturnedValue Object::internalGet(PropertyKey id, const Value *receiver, bool *h
             if (o->arrayData && o->arrayData->getProperty(index, pd, &attrs)) {
                 if (hasProperty)
                     *hasProperty = true;
-                return Object::getValue(*receiver, pd->value, attrs);
+                return Object::getValue(receiver, pd->value, attrs);
             }
             if (o->internalClass->vtable->type == Type_StringObject) {
                 ScopedString str(scope, static_cast<Heap::StringObject *>(o)->getIndex(index));
@@ -438,7 +439,7 @@ ReturnedValue Object::internalGet(PropertyKey id, const Value *receiver, bool *h
             if (idx.isValid()) {
                 if (hasProperty)
                     *hasProperty = true;
-                return Object::getValue(*receiver, *o->propertyData(idx.index), idx.attrs);
+                return Object::getValue(receiver, *o->propertyData(idx.index), idx.attrs);
             }
             o = o->prototype();
             if (!o || o->internalClass->vtable->get != Object::virtualGet)
