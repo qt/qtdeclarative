@@ -1565,9 +1565,6 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
                 break;
             }
         }
-        // This unit's memory was allocated with malloc on the heap, so it's
-        // definitely not suitable for StaticData access.
-        createdUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
 
         if (dependencyHasher) {
             const QByteArray checksum = dependencyHasher();

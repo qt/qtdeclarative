@@ -82,14 +82,8 @@ CompilationUnit::~CompilationUnit()
             free(const_cast<QmlUnit *>(qmlData));
         qmlData = nullptr;
 
-#ifndef V4_BOOTSTRAP
         if (!(data->flags & QV4::CompiledData::Unit::StaticData))
             free(const_cast<Unit *>(data));
-#else
-        // Unconditionally free the memory. In the dev tools we create units that have
-        // the flag set and will be saved to disk, so intended to persist later.
-        free(const_cast<Unit *>(data));
-#endif
     }
     data = nullptr;
 #if Q_BYTE_ORDER == Q_BIG_ENDIAN
@@ -113,16 +107,9 @@ bool CompilationUnit::saveToDisk(const QString &outputFileName, QString *errorSt
         return false;
     }
 
-    QByteArray modifiedUnit;
-    modifiedUnit.resize(data->unitSize);
-    memcpy(modifiedUnit.data(), data, data->unitSize);
-    const char *dataPtr = modifiedUnit.data();
-    Unit *unitPtr;
-    memcpy(&unitPtr, &dataPtr, sizeof(unitPtr));
-    unitPtr->flags |= Unit::StaticData;
-
-    qint64 headerWritten = cacheFile.write(modifiedUnit);
-    if (headerWritten != modifiedUnit.size()) {
+    SaveableUnitPointer saveable(this);
+    qint64 headerWritten = cacheFile.write(saveable.data<char>(), saveable.size());
+    if (headerWritten != saveable.size()) {
         *errorString = cacheFile.errorString();
         return false;
     }

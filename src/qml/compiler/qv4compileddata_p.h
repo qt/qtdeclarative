@@ -1158,6 +1158,49 @@ public:
     bool saveToDisk(const QString &outputFileName, QString *errorString) const;
 };
 
+class SaveableUnitPointer
+{
+    Q_DISABLE_COPY_MOVE(SaveableUnitPointer)
+public:
+    SaveableUnitPointer(const CompilationUnit *unit, quint32 temporaryFlags = Unit::StaticData) :
+          unit(unit)
+    {
+        quint32_le &unitFlags = mutableFlags();
+        quint32 origFlags = unitFlags;
+        unitFlags |= temporaryFlags;
+        changedFlags = origFlags ^ unitFlags;
+    }
+
+    ~SaveableUnitPointer()
+    {
+        mutableFlags() ^= changedFlags;
+    }
+
+    const CompilationUnit *operator->() const { return unit; }
+    const CompilationUnit &operator*() const { return *unit; }
+    operator const CompilationUnit *() { return unit; }
+
+    template<typename Char>
+    const Char *data() const
+    {
+        Q_STATIC_ASSERT(sizeof(Char) == 1);
+        const Char *dataPtr;
+        memcpy(&dataPtr, &unit->data, sizeof(dataPtr));
+        return dataPtr;
+    }
+
+    quint32 size() const
+    {
+        return unit->data->unitSize;
+    }
+
+private:
+    quint32_le &mutableFlags() { return const_cast<Unit *>(unit->unitData())->flags; };
+    const CompilationUnit *unit;
+    quint32 changedFlags;
+};
+
+
 } // CompiledData namespace
 } // QV4 namespace
 
