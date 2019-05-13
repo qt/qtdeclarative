@@ -72,8 +72,8 @@ Heap::MemberData *MemberData::allocate(ExecutionEngine *e, uint n, Heap::MemberD
 
     // The above code can overflow in a number of interesting ways. All of those are unsigned,
     // and therefore defined behavior. Still, apply some sane bounds.
-    if (alloc > std::numeric_limits<int>::max())
-        alloc = std::numeric_limits<int>::max();
+    if (alloc > size_t(std::numeric_limits<int>::max()))
+        alloc = size_t(std::numeric_limits<int>::max());
 
     Heap::MemberData *m;
     if (old) {
