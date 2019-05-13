@@ -76,12 +76,24 @@ public:
     QString typeNamespace() const;
     void setTypeNamespace(const QString &s);
 
+    static void checkNonRelative(const char *item, const QString &typeName, const QString &fileName)
+    {
+        if (fileName.startsWith(QLatin1Char('/')) || fileName.contains(QLatin1Char(':'))) {
+            qWarning() << item << typeName
+                       << "is specified with non-relative URL" << fileName << "in a qmldir file."
+                       << "URLs in qmldir files should be relative to the qmldir file's directory.";
+        }
+    }
+
     struct Plugin
     {
         Plugin() {}
 
         Plugin(const QString &name, const QString &path)
-            : name(name), path(path) {}
+            : name(name), path(path)
+        {
+            checkNonRelative("Plugin", name, path);
+        }
 
         QString name;
         QString path;
@@ -93,7 +105,10 @@ public:
 
         Component(const QString &typeName, const QString &fileName, int majorVersion, int minorVersion)
             : typeName(typeName), fileName(fileName), majorVersion(majorVersion), minorVersion(minorVersion),
-            internal(false), singleton(false) {}
+            internal(false), singleton(false)
+        {
+            checkNonRelative("Component", typeName, fileName);
+        }
 
         QString typeName;
         QString fileName;
@@ -108,7 +123,10 @@ public:
         Script() {}
 
         Script(const QString &nameSpace, const QString &fileName, int majorVersion, int minorVersion)
-            : nameSpace(nameSpace), fileName(fileName), majorVersion(majorVersion), minorVersion(minorVersion) {}
+            : nameSpace(nameSpace), fileName(fileName), majorVersion(majorVersion), minorVersion(minorVersion)
+        {
+            checkNonRelative("Script", nameSpace, fileName);
+        }
 
         QString nameSpace;
         QString fileName;
