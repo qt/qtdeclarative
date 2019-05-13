@@ -162,7 +162,7 @@ QQuickItemView::QQuickItemView(QQuickFlickablePrivate &dd, QQuickItem *parent)
 QQuickItemView::~QQuickItemView()
 {
     Q_D(QQuickItemView);
-    d->clear();
+    d->clear(true);
     if (d->ownModel)
         delete d->model;
     delete d->header;
@@ -1662,7 +1662,7 @@ void QQuickItemViewPrivate::updateCurrent(int modelIndex)
     releaseItem(oldCurrentItem);
 }
 
-void QQuickItemViewPrivate::clear()
+void QQuickItemViewPrivate::clear(bool onDestruction)
 {
     Q_Q(QQuickItemView);
     currentChanges.reset();
@@ -1683,7 +1683,7 @@ void QQuickItemViewPrivate::clear()
     currentItem = nullptr;
     if (oldCurrentItem)
         emit q->currentItemChanged();
-    createHighlight();
+    createHighlight(onDestruction);
     trackedItem = nullptr;
 
     if (requestedIndex >= 0) {
@@ -2352,15 +2352,16 @@ void QQuickItemView::destroyingItem(QObject *object)
 bool QQuickItemViewPrivate::releaseItem(FxViewItem *item)
 {
     Q_Q(QQuickItemView);
-    if (!item || !model)
+    if (!item)
         return true;
     if (trackedItem == item)
         trackedItem = nullptr;
     item->trackGeometry(false);
 
-    QQmlInstanceModel::ReleaseFlags flags = model->release(item->item);
-    if (item->item) {
-        if (flags == 0) {
+    QQmlInstanceModel::ReleaseFlags flags = {};
+    if (model && item->item) {
+        flags = model->release(item->item);
+        if (!flags) {
             // item was not destroyed, and we no longer reference it.
             QQuickItemPrivate::get(item->item)->setCulled(true);
             unrequestedItems.insert(item->item, model->indexOf(item->item, q));

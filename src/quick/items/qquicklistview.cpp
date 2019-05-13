@@ -81,7 +81,7 @@ public:
     FxViewItem *snapItemAt(qreal pos);
 
     void init() override;
-    void clear() override;
+    void clear(bool onDestruction) override;
 
     bool addVisibleItems(qreal fillFrom, qreal fillTo, qreal bufferFrom, qreal bufferTo, bool doBuffer) override;
     bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo) override;
@@ -98,7 +98,7 @@ public:
     void adjustFirstItem(qreal forwards, qreal backwards, int) override;
     void updateSizeChangesBeforeVisiblePos(FxViewItem *item, ChangeResult *removeResult) override;
 
-    void createHighlight() override;
+    void createHighlight(bool onDestruction = false) override;
     void updateHighlight() override;
     void resetHighlightPosition() override;
     bool movingFromHighlight() override;
@@ -575,7 +575,7 @@ void QQuickListViewPrivate::init()
     ::memset(sectionCache, 0, sizeof(QQuickItem*) * sectionCacheSize);
 }
 
-void QQuickListViewPrivate::clear()
+void QQuickListViewPrivate::clear(bool onDestruction)
 {
     for (int i = 0; i < sectionCacheSize; ++i) {
         delete sectionCache[i];
@@ -587,7 +587,7 @@ void QQuickListViewPrivate::clear()
     releaseSectionItem(nextSectionItem);
     nextSectionItem = nullptr;
     lastVisibleSection = QString();
-    QQuickItemViewPrivate::clear();
+    QQuickItemViewPrivate::clear(onDestruction);
 }
 
 FxViewItem *QQuickListViewPrivate::newViewItem(int modelIndex, QQuickItem *item)
@@ -634,7 +634,7 @@ void QQuickListViewPrivate::initializeViewItem(FxViewItem *item)
 bool QQuickListViewPrivate::releaseItem(FxViewItem *item)
 {
     if (!item || !model)
-        return true;
+        return QQuickItemViewPrivate::releaseItem(item);
 
     QPointer<QQuickItem> it = item->item;
     QQuickListViewAttached *att = static_cast<QQuickListViewAttached*>(item->attached);
@@ -876,9 +876,8 @@ void QQuickListViewPrivate::updateSizeChangesBeforeVisiblePos(FxViewItem *item, 
         QQuickItemViewPrivate::updateSizeChangesBeforeVisiblePos(item, removeResult);
 }
 
-void QQuickListViewPrivate::createHighlight()
+void QQuickListViewPrivate::createHighlight(bool onDestruction)
 {
-    Q_Q(QQuickListView);
     bool changed = false;
     if (highlight) {
         if (trackedItem == highlight)
@@ -896,6 +895,10 @@ void QQuickListViewPrivate::createHighlight()
         changed = true;
     }
 
+    if (onDestruction)
+        return;
+
+    Q_Q(QQuickListView);
     if (currentItem) {
         QQuickItem *item = createHighlightItem();
         if (item) {
