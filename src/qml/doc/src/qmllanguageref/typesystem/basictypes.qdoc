@@ -44,6 +44,10 @@ Basic types can be used to refer to:
 \li A value that contains a simple set of property-value pairs (e.g. \l size refers to a value with \c width and \c height attributes)
 \endlist
 
+When a variable or property holds a basic type and it is assigned to another
+variable or property, then a copy of the value is made. In JavaScript, this
+value is called a primitive value.
+
 \sa {qtqml-typesystem-topic.html}{The QML Type System}
 
 
