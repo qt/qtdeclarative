@@ -64,6 +64,7 @@
 #include <QtGui/qpainter.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qmatrix4x4.h>
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qabstractanimation.h>
 #include <QtCore/QLibraryInfo>
@@ -632,24 +633,27 @@ static QMouseEvent *touchToMouseEvent(QEvent::Type type, const QTouchEvent::Touc
     return me;
 }
 
-bool QQuickWindowPrivate::checkIfDoubleClicked(ulong newPressEventTimestamp)
+bool QQuickWindowPrivate::checkIfDoubleTapped(ulong newPressEventTimestamp, QPoint newPressPos)
 {
-    bool doubleClicked;
+    bool doubleClicked = false;
 
-    if (touchMousePressTimestamp == 0) {
-        // just initialize the variable
-        touchMousePressTimestamp = newPressEventTimestamp;
-        doubleClicked = false;
-    } else {
-        ulong timeBetweenPresses = newPressEventTimestamp - touchMousePressTimestamp;
-        ulong doubleClickInterval = static_cast<ulong>(QGuiApplication::styleHints()->
-                mouseDoubleClickInterval());
-        doubleClicked = timeBetweenPresses < doubleClickInterval;
+    if (touchMousePressTimestamp > 0) {
+        QPoint distanceBetweenPresses = newPressPos - touchMousePressPos;
+        const int doubleTapDistance = QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::TouchDoubleTapDistance).toInt();
+        doubleClicked = (qAbs(distanceBetweenPresses.x()) <= doubleTapDistance) && (qAbs(distanceBetweenPresses.y()) <= doubleTapDistance);
+
         if (doubleClicked) {
-            touchMousePressTimestamp = 0;
-        } else {
-            touchMousePressTimestamp = newPressEventTimestamp;
+            ulong timeBetweenPresses = newPressEventTimestamp - touchMousePressTimestamp;
+            ulong doubleClickInterval = static_cast<ulong>(QGuiApplication::styleHints()->
+                    mouseDoubleClickInterval());
+            doubleClicked = timeBetweenPresses < doubleClickInterval;
         }
+    }
+    if (doubleClicked) {
+        touchMousePressTimestamp = 0;
+    } else {
+        touchMousePressTimestamp = newPressEventTimestamp;
+        touchMousePressPos = newPressPos;
     }
 
     return doubleClicked;
@@ -707,7 +711,9 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
                 if (auto pointerEventPoint = pointerEvent->pointById(p.id()))
                     pointerEventPoint->setGrabberItem(item);
 
-                if (checkIfDoubleClicked(event->timestamp())) {
+                if (checkIfDoubleTapped(event->timestamp(), p.screenPos().toPoint())) {
+                    // since we synth the mouse event from from touch, we respect the
+                    // QPlatformTheme::TouchDoubleTapDistance instead of QPlatformTheme::MouseDoubleClickDistance
                     QScopedPointer<QMouseEvent> mouseDoubleClick(touchToMouseEvent(QEvent::MouseButtonDblClick, p, event.data(), item, false));
                     QCoreApplication::sendEvent(item, mouseDoubleClick.data());
                     event->setAccepted(mouseDoubleClick->isAccepted());
@@ -722,6 +728,12 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
         // Touch point was there before and moved
         } else if (touchMouseDevice == device && p.id() == touchMouseId) {
             if (p.state() & Qt::TouchPointMoved) {
+                if (touchMousePressTimestamp != 0) {
+                    const int doubleTapDistance = QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::TouchDoubleTapDistance).toInt();
+                    const QPoint moveDelta = p.screenPos().toPoint() - touchMousePressPos;
+                    if (moveDelta.x() >= doubleTapDistance || moveDelta.y() >= doubleTapDistance)
+                        touchMousePressTimestamp = 0;   // Got dragged too far, dismiss the double tap
+                }
                 if (QQuickItem *mouseGrabberItem = q->mouseGrabberItem()) {
                     QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseMove, p, event.data(), mouseGrabberItem, false));
                     QCoreApplication::sendEvent(item, me.data());
