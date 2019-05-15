@@ -55,7 +55,7 @@ Rectangle {
 
     Timer {
         id: timer
-        running: cursor.parent.activeFocus && !cursor.parent.readOnly
+        running: cursor.parent.activeFocus && !cursor.parent.readOnly && interval != 0
         repeat: true
         interval: Qt.styleHints.cursorFlashTime / 2
         onTriggered: cursor.opacity = !cursor.opacity ? 1 : 0
