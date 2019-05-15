@@ -135,8 +135,9 @@ public:
 #endif
     int touchMouseId;
     QQuickPointerDevice *touchMouseDevice;
-    bool checkIfDoubleClicked(ulong newPressEventTimestamp);
+    bool checkIfDoubleTapped(ulong newPressEventTimestamp, QPoint newPressPos);
     ulong touchMousePressTimestamp;
+    QPoint touchMousePressPos;      // in screen coordiantes
     void cancelTouchMouseSynthesis();
 
     // Mouse positions are saved in widget coordinates

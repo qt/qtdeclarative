@@ -81,6 +81,7 @@ private slots:
     void cppSignalAndEval();
     void singletonInstance();
     void aggressiveGc();
+    void cachedGetterLookup_qtbug_75335();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1054,6 +1055,16 @@ void tst_qqmlengine::aggressiveGc()
         QVERIFY(obj.isObject());
     }
     qputenv("QV4_MM_AGGRESSIVE_GC", origAggressiveGc);
+}
+
+void tst_qqmlengine::cachedGetterLookup_qtbug_75335()
+{
+    QQmlEngine engine;
+    const QUrl testUrl = testFileUrl("CachedGetterLookup.qml");
+    QQmlComponent component(&engine, testUrl);
+    QVERIFY(component.isReady());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != nullptr);
 }
 
 QTEST_MAIN(tst_qqmlengine)
