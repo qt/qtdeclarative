@@ -89,7 +89,7 @@ struct Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectCommon
 
     ~QQuickOpenGLShaderEffectCommon();
 
-    void disconnectPropertySignals(QQuickItem *item, Key::ShaderType shaderType);
+    void disconnectPropertySignals(QObject *item, Key::ShaderType shaderType);
     void connectPropertySignals(QQuickItem *item, const QMetaObject *itemMetaObject, Key::ShaderType shaderType);
     void updateParseLog(bool ignoreAttributes);
     void lookThroughShaderCode(QQuickItem *item, const QMetaObject *itemMetaObject, Key::ShaderType shaderType, const QByteArray &code);

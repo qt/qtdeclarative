@@ -46,4 +46,15 @@ Item {
         text: "A multi-line text edit\nTesting Accessibility."
         Accessible.role: Accessible.EditableText
     }
+
+    Text {
+        x: 100
+        y: 160
+        width: 100
+        height: 40
+        text : "Hello 3"
+        Accessible.name: text
+        Accessible.description: "description"
+    }
+
 }

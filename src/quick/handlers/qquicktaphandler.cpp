@@ -381,35 +381,50 @@ void QQuickTapHandler::updateTimeHeld()
 */
 
 /*!
-    \qmlsignal QtQuick::TapHandler::tapped
+    \qmlsignal QtQuick::TapHandler::tapped(EventPoint eventPoint)
 
     This signal is emitted each time the \c parent Item is tapped.
 
     That is, if you press and release a touchpoint or button within a time
     period less than \l longPressThreshold, while any movement does not exceed
     the drag threshold, then the \c tapped signal will be emitted at the time
-    of release.
+    of release.  The \c eventPoint signal parameter contains information
+    from the release event about the point that was tapped:
+
+    \snippet pointerHandlers/tapHandlerOnTapped.qml 0
+
+    \note At the time this signal is emitted, \l point has been reset
+    (all coordinates are \c 0).
 */
 
 /*!
-    \qmlsignal QtQuick::TapHandler::singleTapped
+    \qmlsignal QtQuick::TapHandler::singleTapped(EventPoint eventPoint)
     \since 5.11
 
     This signal is emitted when the \c parent Item is tapped once.
     After an amount of time greater than QStyleHints::mouseDoubleClickInterval,
     it can be tapped again; but if the time until the next tap is less,
-    \l tapCount will increase.
+    \l tapCount will increase. The \c eventPoint signal parameter contains
+    information from the release event about the point that was tapped.
+
+    \note At the time this signal is emitted, \l point has been reset
+    (all coordinates are \c 0).
 */
 
 /*!
-    \qmlsignal QtQuick::TapHandler::doubleTapped
+    \qmlsignal QtQuick::TapHandler::doubleTapped(EventPoint eventPoint)
     \since 5.11
 
     This signal is emitted when the \c parent Item is tapped twice within a
     short span of time (QStyleHints::mouseDoubleClickInterval) and distance
     (QPlatformTheme::MouseDoubleClickDistance or
     QPlatformTheme::TouchDoubleTapDistance). This signal always occurs after
-    \l singleTapped, \l tapped, and \l tapCountChanged.
+    \l singleTapped, \l tapped, and \l tapCountChanged. The \c eventPoint
+    signal parameter contains information from the release event about the
+    point that was tapped.
+
+    \note At the time this signal is emitted, \l point has been reset
+    (all coordinates are \c 0).
 */
 
 /*!

@@ -477,11 +477,11 @@ void QQuickOpenGLShaderEffectMaterial::updateTextures() const
     }
 }
 
-void QQuickOpenGLShaderEffectMaterial::invalidateTextureProvider(QSGTextureProvider *provider)
+void QQuickOpenGLShaderEffectMaterial::invalidateTextureProvider(const QObject *provider)
 {
     for (int i = 0; i < textureProviders.size(); ++i) {
         if (provider == textureProviders.at(i))
-            textureProviders[i] = 0;
+            textureProviders[i] = nullptr;
     }
 }
 
@@ -505,10 +505,10 @@ void QQuickOpenGLShaderEffectNode::markDirtyTexture()
     Q_EMIT dirtyTexture();
 }
 
-void QQuickOpenGLShaderEffectNode::textureProviderDestroyed(QObject *object)
+void QQuickOpenGLShaderEffectNode::textureProviderDestroyed(const QObject *object)
 {
     Q_ASSERT(material());
-    static_cast<QQuickOpenGLShaderEffectMaterial *>(material())->invalidateTextureProvider(static_cast<QSGTextureProvider *>(object));
+    static_cast<QQuickOpenGLShaderEffectMaterial *>(material())->invalidateTextureProvider(object);
 }
 
 void QQuickOpenGLShaderEffectNode::preprocess()

@@ -49,6 +49,7 @@
 #include <QMimeData>
 #include <private/qquicktextcontrol_p.h>
 #include "../../shared/util.h"
+#include "../shared/viewtestutil.h"
 #include "../../shared/platformquirks.h"
 #include "../../shared/platforminputcontext.h"
 #include <private/qinputmethod_p.h>
@@ -62,6 +63,11 @@
 Q_DECLARE_METATYPE(QQuickTextEdit::SelectionMode)
 Q_DECLARE_METATYPE(Qt::Key)
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
+
+static bool isPlatformWayland()
+{
+    return !QGuiApplication::platformName().compare(QLatin1String("wayland"), Qt::CaseInsensitive);
+}
 
 QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& actual)
 {
@@ -133,6 +139,7 @@ private slots:
     void positionAt_data();
     void positionAt();
 
+    void linkHover();
     void linkInteraction();
 
     void cursorDelegate_data();
@@ -2536,10 +2543,59 @@ void tst_qquicktextedit::positionAt()
     QVERIFY(texteditObject->positionAt(x0 / 2, y1) > 0);
 }
 
+#if QT_CONFIG(cursor)
+void tst_qquicktextedit::linkHover()
+{
+    if (isPlatformWayland())
+         QSKIP("Wayland: QCursor::setPos() doesn't work.");
+
+    QQuickView window(testFileUrl("linkInteraction.qml"));
+    window.setFlag(Qt::FramelessWindowHint);
+    QVERIFY(window.rootObject() != nullptr);
+    QQuickViewTestUtil::centerOnScreen(&window);
+    QQuickViewTestUtil::moveMouseAway(&window);
+    window.show();
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+    QQuickTextEdit *texteditObject = qobject_cast<QQuickTextEdit *>(window.rootObject());
+    QVERIFY(texteditObject != nullptr);
+
+    QSignalSpy hover(texteditObject, SIGNAL(linkHovered(QString)));
+
+    const QString link("http://example.com/");
+    const QPoint linkPos = window.mapToGlobal(texteditObject->positionToRectangle(7).center().toPoint());
+    const QPoint textPos = window.mapToGlobal(texteditObject->positionToRectangle(2).center().toPoint());
+
+    QCursor::setPos(linkPos);
+    QTRY_COMPARE(hover.count(), 1);
+    QCOMPARE(window.cursor().shape(), Qt::PointingHandCursor);
+    QCOMPARE(hover.last()[0].toString(), link);
+
+    QCursor::setPos(textPos);
+    QTRY_COMPARE(hover.count(), 2);
+    QCOMPARE(window.cursor().shape(), Qt::IBeamCursor);
+    QCOMPARE(hover.last()[0].toString(), QString());
+
+    texteditObject->setCursor(Qt::OpenHandCursor);
+
+    QCursor::setPos(linkPos);
+    QTRY_COMPARE(hover.count(), 3);
+    QCOMPARE(window.cursor().shape(), Qt::PointingHandCursor);
+    QCOMPARE(hover.last()[0].toString(), link);
+
+    QCursor::setPos(textPos);
+    QTRY_COMPARE(hover.count(), 4);
+    QCOMPARE(window.cursor().shape(), Qt::OpenHandCursor);
+    QCOMPARE(hover.last()[0].toString(), QString());
+}
+#endif
+
 void tst_qquicktextedit::linkInteraction()
 {
     QQuickView window(testFileUrl("linkInteraction.qml"));
     QVERIFY(window.rootObject() != nullptr);
+    QQuickViewTestUtil::centerOnScreen(&window);
+    QQuickViewTestUtil::moveMouseAway(&window);
     window.show();
     window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));

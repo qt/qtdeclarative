@@ -312,7 +312,7 @@ void tst_QQuickAccessible::basicPropertiesTest()
 
     QAccessibleInterface *item = iface->child(0);
     QVERIFY(item);
-    QCOMPARE(item->childCount(), 4);
+    QCOMPARE(item->childCount(), 5);
     QCOMPARE(item->rect().size(), QSize(400, 400));
     QCOMPARE(item->role(), QAccessible::Client);
     QCOMPARE(iface->indexOfChild(item), 0);
@@ -381,6 +381,30 @@ void tst_QQuickAccessible::basicPropertiesTest()
     QCOMPARE(textEdit->text(QAccessible::Value), newText);
     QEXPECT_FAIL("", "multi line is not implemented", Continue);
     QCOMPARE(textInput->state().multiLine, 1);
+
+    // Text "Hello 3"
+    QAccessibleInterface *text3 = item->child(4);
+    QVERIFY(text3);
+    QCOMPARE(text3->childCount(), 0);
+    QCOMPARE(text3->text(QAccessible::Name), QLatin1String("Hello 3"));
+    QCOMPARE(text3->role(), QAccessible::StaticText);
+    QCOMPARE(item->indexOfChild(text3), 4);
+    QCOMPARE(text3->state().editable, 0);
+    QCOMPARE(text3->state().readOnly, 0);
+    // test implicit state values due to role change
+    QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(text3->object());
+    attached->setRole(QAccessible::StaticText);
+    QCOMPARE(text3->role(), QAccessible::StaticText);
+    QCOMPARE(text3->state().readOnly, 1);
+
+    // see if implicit changes back
+    attached->setRole(QAccessible::EditableText);
+    QEXPECT_FAIL("", "EditableText does not implicitly set readOnly to false", Continue);
+    QCOMPARE(text3->state().readOnly, 0);
+    // explicitly set state
+    attached->set_readOnly(false);
+    attached->setRole(QAccessible::StaticText);
+    QCOMPARE(text3->state().readOnly, 0);
 
     delete window;
     QTestAccessibility::clearEvents();

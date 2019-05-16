@@ -353,6 +353,11 @@ protected:
         m_mouseEvents << *event;
     }
 
+    void mouseDoubleClickEvent(QMouseEvent *event) override {
+        qCDebug(lcTests) << event;
+        m_mouseEvents << *event;
+    }
+
 public:
     QList<QMouseEvent> m_mouseEvents;
     QList<QTouchEvent> m_touchEvents;
@@ -401,6 +406,8 @@ private slots:
     void mouseFromTouch_basic();
     void synthMouseFromTouch_data();
     void synthMouseFromTouch();
+    void synthMouseDoubleClickFromTouch_data();
+    void synthMouseDoubleClickFromTouch();
 
     void clearWindow();
 
@@ -1239,6 +1246,55 @@ void tst_qquickwindow::synthMouseFromTouch()
     QCOMPARE(window->m_mouseEvents.count(), 0);
     for (const QMouseEvent &ev : item->m_mouseEvents)
         QCOMPARE(ev.source(), Qt::MouseEventSynthesizedByQt);
+}
+
+void tst_qquickwindow::synthMouseDoubleClickFromTouch_data()
+{
+    QTest::addColumn<QPoint>("movement");
+    QTest::addColumn<QPoint>("distanceBetweenPresses");
+    QTest::addColumn<bool>("expectedSynthesizedDoubleClickEvent");
+
+    QTest::newRow("normal") << QPoint(0, 0) << QPoint(0, 0) << true;
+    QTest::newRow("with 1 pixel wiggle") << QPoint(1, 1) << QPoint(1, 1) << true;
+    QTest::newRow("too much distance to second tap") << QPoint(0, 0) << QPoint(50, 0) << false;
+    QTest::newRow("too much drag") << QPoint(50, 0) << QPoint(0, 0) << false;
+    QTest::newRow("too much drag and too much distance to second tap") << QPoint(50, 0) << QPoint(50, 0) << false;
+}
+
+void tst_qquickwindow::synthMouseDoubleClickFromTouch()
+{
+    QFETCH(QPoint, movement);
+    QFETCH(QPoint, distanceBetweenPresses);
+    QFETCH(bool, expectedSynthesizedDoubleClickEvent);
+
+    QCoreApplication::setAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents, true);
+    QScopedPointer<MouseRecordingWindow> window(new MouseRecordingWindow);
+    QScopedPointer<MouseRecordingItem> item(new MouseRecordingItem(false, nullptr));
+    item->setParentItem(window->contentItem());
+    window->resize(250, 250);
+    window->setPosition(100, 100);
+    window->setTitle(QTest::currentTestFunction());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QTest::qWait(100);
+
+    QPoint p1 = item->mapToScene(item->clipRect().center()).toPoint();
+    QTest::touchEvent(window.data(), touchDevice).press(0, p1, window.data());
+    QTest::touchEvent(window.data(), touchDevice).move(0, p1 + movement, window.data());
+    QTest::touchEvent(window.data(), touchDevice).release(0, p1 + movement, window.data());
+
+    QPoint p2 = p1 + distanceBetweenPresses;
+    QTest::touchEvent(window.data(), touchDevice).press(1, p2, window.data());
+    QTest::touchEvent(window.data(), touchDevice).move(1, p2 + movement, window.data());
+    QTest::touchEvent(window.data(), touchDevice).release(1, p2 + movement, window.data());
+
+    const int eventCount = item->m_mouseEvents.count();
+    QVERIFY(eventCount >= 2);
+
+    const int nDoubleClicks = std::count_if(item->m_mouseEvents.constBegin(), item->m_mouseEvents.constEnd(), [](const QMouseEvent &ev) { return (ev.type() == QEvent::MouseButtonDblClick); } );
+    const bool foundDoubleClick = (nDoubleClicks == 1);
+    QCOMPARE(foundDoubleClick, expectedSynthesizedDoubleClickEvent);
+
 }
 
 void tst_qquickwindow::clearWindow()
