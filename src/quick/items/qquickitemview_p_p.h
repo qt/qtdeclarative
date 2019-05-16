@@ -191,6 +191,8 @@ public:
     qreal calculatedMinExtent() const;
     qreal calculatedMaxExtent() const;
 
+    void applyDelegateChange();
+
     void applyPendingChanges();
     bool applyModelChanges(ChangeResult *insertionResult, ChangeResult *removalResult);
     bool applyRemovalChange(const QQmlChangeSet::Change &removal, ChangeResult *changeResult, int *removedCount);
