@@ -185,7 +185,7 @@ void QQuickActionPrivate::setShortcut(const QVariant &var)
     for (QQuickActionPrivate::ShortcutEntry *entry : qAsConst(shortcutEntries))
         entry->ungrab();
 
-    vshortcut = var.toString();
+    vshortcut = var;
     keySequence = variantToKeySequence(var);
 
     defaultShortcutEntry->grab(keySequence, enabled);
