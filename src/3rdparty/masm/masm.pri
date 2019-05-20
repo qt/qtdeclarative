@@ -77,7 +77,6 @@ SOURCES += $$PWD/disassembler/ARM64Disassembler.cpp
 SOURCES += $$PWD/disassembler/ARM64/A64DOpcode.cpp
 HEADERS += $$PWD/disassembler/ARM64/A64DOpcode.h
 
-!qmldevtools_build {
 SOURCES += $$PWD/yarr/YarrCanonicalizeUCS2.cpp \
            $$PWD/yarr/YarrCanonicalizeUnicode.cpp \
            $$PWD/yarr/YarrInterpreter.cpp \
@@ -94,7 +93,6 @@ HEADERS += $$PWD/yarr/Yarr.h \
            $$PWD/yarr/YarrPattern.h \
            $$PWD/yarr/YarrSyntaxChecker.h \
            $$PWD/yarr/YarrUnicodeProperties.h
-}
 
 #
 # Generate RegExpJitTables.h

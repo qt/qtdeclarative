@@ -54,7 +54,7 @@
 #include "qv4managed_p.h"
 #include <QtCore/private/qnumeric_p.h>
 #include "qv4enginebase_p.h"
-#include "qv4stringtoarrayindex_p.h"
+#include <private/qv4stringtoarrayindex_p.h>
 
 QT_BEGIN_NAMESPACE
 

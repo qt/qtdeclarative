@@ -50,7 +50,6 @@
 // We mean it.
 //
 
-#include "qv4global_p.h"
 #include <QtCore/QBitArray>
 #include <algorithm>
 #include <vector>

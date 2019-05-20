@@ -2,6 +2,7 @@ INCLUDEPATH += $$PWD
 INCLUDEPATH += $$OUT_PWD
 
 HEADERS += \
+    $$PWD/qv4alloca_p.h \
     $$PWD/qv4bytecodegenerator_p.h \
     $$PWD/qv4compileddata_p.h \
     $$PWD/qv4compiler_p.h \
@@ -11,7 +12,11 @@ HEADERS += \
     $$PWD/qv4codegen_p.h \
     $$PWD/qqmlirbuilder_p.h \
     $$PWD/qv4instr_moth_p.h \
-    $$PWD/qv4bytecodehandler_p.h
+    $$PWD/qv4bytecodehandler_p.h \
+    $$PWD/qv4calldata_p.h \
+    $$PWD/qv4util_p.h \
+    $$PWD/qv4staticvalue_p.h \
+    $$PWD/qv4stringtoarrayindex_p.h
 
 SOURCES += \
     $$PWD/qv4bytecodegenerator.cpp \
@@ -23,30 +28,6 @@ SOURCES += \
     $$PWD/qqmlirbuilder.cpp \
     $$PWD/qv4instr_moth.cpp \
     $$PWD/qv4bytecodehandler.cpp
-
-!qmldevtools_build {
-
-HEADERS += \
-    $$PWD/qqmlirloader_p.h \
-    $$PWD/qqmlpropertyresolver_p.h \
-    $$PWD/qqmltypecompiler_p.h \
-    $$PWD/qqmlpropertycachecreator_p.h \
-    $$PWD/qqmlpropertyvalidator_p.h \
-    $$PWD/qv4compilationunitmapper_p.h \
-    $$PWD/qv4executablecompilationunit_p.h
-
-SOURCES += \
-    $$PWD/qqmlirloader.cpp \
-    $$PWD/qqmlpropertyresolver.cpp \
-    $$PWD/qqmltypecompiler.cpp \
-    $$PWD/qqmlpropertycachecreator.cpp \
-    $$PWD/qqmlpropertyvalidator.cpp \
-    $$PWD/qv4compilationunitmapper.cpp \
-    $$PWD/qv4executablecompilationunit.cpp
-
-unix: SOURCES += $$PWD/qv4compilationunitmapper_unix.cpp
-else: SOURCES += $$PWD/qv4compilationunitmapper_win.cpp
-}
 
 gcc {
     equals(QT_GCC_MAJOR_VERSION, 5): QMAKE_CXXFLAGS += -fno-strict-aliasing

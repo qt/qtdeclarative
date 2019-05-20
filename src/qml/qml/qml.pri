@@ -52,7 +52,12 @@ SOURCES += \
     $$PWD/qqmlfileselector.cpp \
     $$PWD/qqmlobjectcreator.cpp \
     $$PWD/qqmldelayedcallqueue.cpp \
-    $$PWD/qqmlloggingcategory.cpp
+    $$PWD/qqmlloggingcategory.cpp \
+    $$PWD/qqmlirloader.cpp \
+    $$PWD/qqmlpropertyresolver.cpp \
+    $$PWD/qqmltypecompiler.cpp \
+    $$PWD/qqmlpropertycachecreator.cpp \
+    $$PWD/qqmlpropertyvalidator.cpp
 
 HEADERS += \
     $$PWD/qqmlglobal_p.h \
@@ -132,7 +137,12 @@ HEADERS += \
     $$PWD/qqmlfileselector.h \
     $$PWD/qqmlobjectcreator_p.h \
     $$PWD/qqmldelayedcallqueue_p.h \
-    $$PWD/qqmlloggingcategory_p.h
+    $$PWD/qqmlloggingcategory_p.h \
+    $$PWD/qqmlirloader_p.h \
+    $$PWD/qqmlpropertyresolver_p.h \
+    $$PWD/qqmltypecompiler_p.h \
+    $$PWD/qqmlpropertycachecreator_p.h \
+    $$PWD/qqmlpropertyvalidator_p.h
 
 qtConfig(qml-xml-http-request) {
     HEADERS += \

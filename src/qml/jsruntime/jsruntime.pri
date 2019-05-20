@@ -1,7 +1,6 @@
 INCLUDEPATH += $$PWD
 INCLUDEPATH += $$OUT_PWD
 
-!qmldevtools_build {
 SOURCES += \
     $$PWD/qv4engine.cpp \
     $$PWD/qv4context.cpp \
@@ -60,13 +59,15 @@ SOURCES += \
     $$PWD/qv4module.cpp \
     $$PWD/qv4promiseobject.cpp \
     $$PWD/qv4runtime.cpp \
-    $$PWD/qv4value.cpp
+    $$PWD/qv4value.cpp \
+    $$PWD/qv4compilationunitmapper.cpp \
+    $$PWD/qv4executablecompilationunit.cpp \
+    $$PWD/qv4executableallocator.cpp
 
 qtConfig(qml-debug): SOURCES += $$PWD/qv4profiling.cpp
 
 HEADERS += \
     $$PWD/qv4global_p.h \
-    $$PWD/qv4alloca_p.h \
     $$PWD/qv4engine_p.h \
     $$PWD/qv4enginebase_p.h \
     $$PWD/qv4context_p.h \
@@ -133,7 +134,11 @@ HEADERS += \
     $$PWD/qv4module_p.h \
     $$PWD/qv4promiseobject_p.h \
     $$PWD/qv4runtime_p.h \
-    $$PWD/qv4value_p.h
+    $$PWD/qv4value_p.h \
+    $$PWD/qv4compilationunitmapper_p.h \
+    $$PWD/qv4executablecompilationunit_p.h \
+    $$PWD/qv4functiontable_p.h \
+    $$PWD/qv4runtimeapi_p.h
 
 qtConfig(qml-sequence-object) {
     HEADERS += \
@@ -143,24 +148,10 @@ qtConfig(qml-sequence-object) {
         $$PWD/qv4sequenceobject.cpp
 }
 
-}
+unix: SOURCES += $$PWD/qv4compilationunitmapper_unix.cpp
+else: SOURCES += $$PWD/qv4compilationunitmapper_win.cpp
 
-
-HEADERS += \
-    $$PWD/qv4calldata_p.h \
-    $$PWD/qv4runtimeapi_p.h \
-    $$PWD/qv4stringtoarrayindex_p.h \
-    $$PWD/qv4util_p.h \
-    $$PWD/qv4functiontable_p.h \
-    $$PWD/qv4staticvalue_p.h
-
-SOURCES += \
-    $$PWD/qv4executableallocator.cpp
-
-qmldevtools_build {
-    SOURCES += \
-        $$PWD/qv4functiontable_noop.cpp
-} else:win32 {
+win32 {
     !winrt:equals(QT_ARCH, x86_64) {
         SOURCES += \
             $$PWD/qv4functiontable_win64.cpp
