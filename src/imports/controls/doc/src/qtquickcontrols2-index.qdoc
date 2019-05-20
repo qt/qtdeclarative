@@ -140,7 +140,7 @@
     Furthermore Qt Quick Controls 2 potentially contains third party
     modules under following permissive licenses:
 
-    \generatelist{groupsbymodule attributions-qtquickcontrols2}
+    \generatelist{groupsbymodule attributions-qtquickcontrols}
 
     \section1 Topics
 
