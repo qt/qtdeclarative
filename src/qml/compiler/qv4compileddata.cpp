@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qv4compileddata_p.h"
-#include <private/qv4value_p.h>
+#include <private/qv4staticvalue_p.h>
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
 #include <QCryptographicHash>
@@ -144,13 +144,13 @@ void CompilationUnit::setUnitData(const Unit *unitData, const QmlUnit *qmlUnit,
     qmlData = qmlUnit ? qmlUnit : data->qmlUnit();
 
 #if Q_BYTE_ORDER == Q_BIG_ENDIAN
-    Value *bigEndianConstants = new Value[data->constantTableSize];
+    StaticValue *bigEndianConstants = new StaticValue[data->constantTableSize];
     const quint64_le *littleEndianConstants = data->constants();
     for (uint i = 0; i < data->constantTableSize; ++i)
-        bigEndianConstants[i] = Value::fromReturnedValue(littleEndianConstants[i]);
+        bigEndianConstants[i] = StaticValue::fromReturnedValue(littleEndianConstants[i]);
     constants = bigEndianConstants;
 #else
-    constants = reinterpret_cast<const Value*>(data->constants());
+    constants = reinterpret_cast<const StaticValue*>(data->constants());
 #endif
 
     m_fileName = !fileName.isEmpty() ? fileName : stringAt(data->sourceFileIndex);

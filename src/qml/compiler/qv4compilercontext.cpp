@@ -156,7 +156,7 @@ Context::ResolvedName Context::resolveName(const QString &name, const QQmlJS::AS
                 result.isConst = false;
                 return result;
             } else {
-                result.index = argIdx + sizeof(CallData)/sizeof(Value) - 1;
+                result.index = argIdx + sizeof(CallData) / sizeof(StaticValue) - 1;
                 result.scope = 0;
                 result.type = ResolvedName::Stack;
                 result.isConst = false;

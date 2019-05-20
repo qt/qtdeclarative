@@ -49,7 +49,7 @@ using namespace QV4::Moth;
 
 BaselineJIT::BaselineJIT(Function *function)
     : function(function)
-    , as(new BaselineAssembler(function->compilationUnit->constants))
+      , as(new BaselineAssembler(&(function->compilationUnit->constants->asValue<Value>())))
 {}
 
 BaselineJIT::~BaselineJIT()

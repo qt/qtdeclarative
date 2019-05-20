@@ -88,6 +88,7 @@ struct Document;
 }
 
 namespace QV4 {
+struct StaticValue;
 
 namespace Heap {
 struct Module;
@@ -1070,10 +1071,10 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnitBase
 
     // pointers either to data->constants() or little-endian memory copy.
     QV4::Heap::String **runtimeStrings = nullptr; // Array
-    const Value* constants = nullptr;
-    QV4::Value *runtimeRegularExpressions = nullptr;
+    const StaticValue* constants = nullptr;
+    QV4::StaticValue *runtimeRegularExpressions = nullptr;
     QV4::Heap::InternalClass **runtimeClasses = nullptr;
-    const Value** imports = nullptr;
+    const StaticValue** imports = nullptr;
 };
 
 Q_STATIC_ASSERT(std::is_standard_layout<CompilationUnitBase>::value);

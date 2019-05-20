@@ -258,7 +258,8 @@ public:
         }
         static Reference fromArgument(Codegen *cg, int index, bool isVolatile) {
             Reference r(cg, StackSlot);
-            r.theStackSlot = Moth::StackSlot::createRegister(index + sizeof(CallData)/sizeof(Value) - 1);
+            r.theStackSlot = Moth::StackSlot::createRegister(
+                    index + sizeof(CallData) / sizeof(StaticValue) - 1);
             r.stackSlotIsLocalOrArgument = true;
             r.isVolatile = isVolatile;
             return r;

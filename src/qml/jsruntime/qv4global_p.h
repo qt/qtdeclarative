@@ -63,10 +63,6 @@
 #include <qtqmlglobal.h>
 #include <private/qtqmlglobal_p.h>
 
-#ifdef QT_QML_BOOTSTRAPPED
-#define V4_BOOTSTRAP
-#endif
-
 #if defined(Q_CC_MSVC)
 #include <float.h>
 #include <math.h>

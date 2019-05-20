@@ -41,6 +41,8 @@
 #include <private/qv4compileddata_p.h>
 #include <private/qv4calldata_p.h>
 
+#include <QtCore/qdebug.h>
+
 using namespace QV4;
 using namespace QV4::Moth;
 
@@ -110,9 +112,9 @@ const int InstrInfo::argumentCount[] = {
 QString dumpRegister(int reg, int nFormals)
 {
     Q_STATIC_ASSERT(offsetof(CallData, function) == 0);
-    Q_STATIC_ASSERT(offsetof(CallData, context) == sizeof(Value));
-    Q_STATIC_ASSERT(offsetof(CallData, accumulator) == 2*sizeof(Value));
-    Q_STATIC_ASSERT(offsetof(CallData, thisObject) == 3*sizeof(Value));
+    Q_STATIC_ASSERT(offsetof(CallData, context) == sizeof(StaticValue));
+    Q_STATIC_ASSERT(offsetof(CallData, accumulator) == 2*sizeof(StaticValue));
+    Q_STATIC_ASSERT(offsetof(CallData, thisObject) == 3*sizeof(StaticValue));
     if (reg == CallData::Function)
         return QStringLiteral("(function)");
     else if (reg == CallData::Context)

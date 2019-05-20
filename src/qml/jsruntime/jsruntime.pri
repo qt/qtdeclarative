@@ -58,7 +58,9 @@ SOURCES += \
     $$PWD/qv4mapiterator.cpp \
     $$PWD/qv4estable.cpp \
     $$PWD/qv4module.cpp \
-    $$PWD/qv4promiseobject.cpp
+    $$PWD/qv4promiseobject.cpp \
+    $$PWD/qv4runtime.cpp \
+    $$PWD/qv4value.cpp
 
 qtConfig(qml-debug): SOURCES += $$PWD/qv4profiling.cpp
 
@@ -129,7 +131,9 @@ HEADERS += \
     $$PWD/qv4estable_p.h \
     $$PWD/qv4vtable_p.h \
     $$PWD/qv4module_p.h \
-    $$PWD/qv4promiseobject_p.h
+    $$PWD/qv4promiseobject_p.h \
+    $$PWD/qv4runtime_p.h \
+    $$PWD/qv4value_p.h
 
 qtConfig(qml-sequence-object) {
     HEADERS += \
@@ -144,17 +148,13 @@ qtConfig(qml-sequence-object) {
 
 HEADERS += \
     $$PWD/qv4calldata_p.h \
-    $$PWD/qv4runtime_p.h \
     $$PWD/qv4runtimeapi_p.h \
-    $$PWD/qv4value_p.h \
     $$PWD/qv4stringtoarrayindex_p.h \
     $$PWD/qv4util_p.h \
-    $$PWD/qv4value_p.h \
-    $$PWD/qv4functiontable_p.h
+    $$PWD/qv4functiontable_p.h \
+    $$PWD/qv4staticvalue_p.h
 
 SOURCES += \
-    $$PWD/qv4runtime.cpp \
-    $$PWD/qv4value.cpp \
     $$PWD/qv4executableallocator.cpp
 
 qmldevtools_build {

@@ -51,7 +51,7 @@
 // We mean it.
 //
 
-#include <private/qv4value_p.h>
+#include <private/qv4staticvalue_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -71,12 +71,12 @@ struct CallData
         OffsetCount = LastOffset + 1
     };
 
-    Value function;
-    Value context;
-    Value accumulator;
-    Value thisObject;
-    Value newTarget;
-    Value _argc;
+    StaticValue function;
+    StaticValue context;
+    StaticValue accumulator;
+    StaticValue thisObject;
+    StaticValue newTarget;
+    StaticValue _argc;
 
     int argc() const {
         Q_ASSERT(_argc.isInteger());
@@ -89,22 +89,32 @@ struct CallData
     }
 
     inline ReturnedValue argument(int i) const {
-        return i < argc() ? args[i].asReturnedValue() : Value::undefinedValue().asReturnedValue();
+        return i < argc() ? args[i].asReturnedValue()
+                          : StaticValue::undefinedValue().asReturnedValue();
     }
 
-    Value args[1];
+    StaticValue args[1];
 
-    static Q_DECL_CONSTEXPR int HeaderSize() { return offsetof(CallData, args) / sizeof(QV4::Value); }
+    static Q_DECL_CONSTEXPR int HeaderSize()
+    {
+        return offsetof(CallData, args) / sizeof(QV4::StaticValue);
+    }
+
+    template<typename Value>
+    Value *argValues();
+
+    template<typename Value>
+    const Value *argValues() const;
 };
 
 Q_STATIC_ASSERT(std::is_standard_layout<CallData>::value);
-Q_STATIC_ASSERT(offsetof(CallData, function   ) == CallData::Function    * sizeof(Value));
-Q_STATIC_ASSERT(offsetof(CallData, context    ) == CallData::Context     * sizeof(Value));
-Q_STATIC_ASSERT(offsetof(CallData, accumulator) == CallData::Accumulator * sizeof(Value));
-Q_STATIC_ASSERT(offsetof(CallData, thisObject ) == CallData::This        * sizeof(Value));
-Q_STATIC_ASSERT(offsetof(CallData, newTarget  ) == CallData::NewTarget   * sizeof(Value));
-Q_STATIC_ASSERT(offsetof(CallData, _argc      ) == CallData::Argc        * sizeof(Value));
-Q_STATIC_ASSERT(offsetof(CallData, args       ) == 6 * sizeof(Value));
+Q_STATIC_ASSERT(offsetof(CallData, function   ) == CallData::Function    * sizeof(StaticValue));
+Q_STATIC_ASSERT(offsetof(CallData, context    ) == CallData::Context     * sizeof(StaticValue));
+Q_STATIC_ASSERT(offsetof(CallData, accumulator) == CallData::Accumulator * sizeof(StaticValue));
+Q_STATIC_ASSERT(offsetof(CallData, thisObject ) == CallData::This        * sizeof(StaticValue));
+Q_STATIC_ASSERT(offsetof(CallData, newTarget  ) == CallData::NewTarget   * sizeof(StaticValue));
+Q_STATIC_ASSERT(offsetof(CallData, _argc      ) == CallData::Argc        * sizeof(StaticValue));
+Q_STATIC_ASSERT(offsetof(CallData, args       ) == 6 * sizeof(StaticValue));
 
 } // namespace QV4
 

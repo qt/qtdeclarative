@@ -30,7 +30,7 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qv4codegen_p.h>
-#include <private/qv4value_p.h>
+#include <private/qv4staticvalue_p.h>
 #include <private/qqmlirbuilder_p.h>
 
 #include <QtCore/QCoreApplication>

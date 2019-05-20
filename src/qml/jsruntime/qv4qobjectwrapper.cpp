@@ -1271,7 +1271,8 @@ static QV4::ReturnedValue CallMethod(const QQmlObjectOrGadget &object, int index
         QVarLengthArray<CallArgument, 9> args(argCount + 1);
         args[0].initAsType(returnType);
         for (int ii = 0; ii < argCount; ++ii) {
-            if (!args[ii + 1].fromValue(argTypes[ii], engine, callArgs->args[ii])) {
+            if (!args[ii + 1].fromValue(argTypes[ii], engine,
+                                        callArgs->args[ii].asValue<QV4::Value>())) {
                 qWarning() << QString::fromLatin1("Could not convert argument %1 at").arg(ii);
                 const StackTrace stack = engine->stackTrace();
                 for (const StackFrame &frame : stack) {
@@ -1616,8 +1617,10 @@ static QV4::ReturnedValue CallOverloaded(const QQmlObjectOrGadget &object, const
             continue; // We already have a better option
 
         int methodMatchScore = 0;
-        for (int ii = 0; ii < methodArgumentCount; ++ii)
-            methodMatchScore += MatchScore((v = callArgs->args[ii]), methodArgTypes[ii]);
+        for (int ii = 0; ii < methodArgumentCount; ++ii) {
+            methodMatchScore += MatchScore((v = Value::fromStaticValue(callArgs->args[ii])),
+                                           methodArgTypes[ii]);
+        }
 
         if (bestParameterScore > methodParameterScore || bestMatchScore > methodMatchScore) {
             best = *attempt;
@@ -2253,8 +2256,10 @@ ReturnedValue QMetaObjectWrapper::callOverloadedConstructor(QV4::ExecutionEngine
             continue; // We already have a better option
 
         int methodMatchScore = 0;
-        for (int ii = 0; ii < methodArgumentCount; ++ii)
-            methodMatchScore += MatchScore((v = callArgs->args[ii]), methodArgTypes[ii]);
+        for (int ii = 0; ii < methodArgumentCount; ++ii) {
+            methodMatchScore += MatchScore((v = Value::fromStaticValue(callArgs->args[ii])),
+                                           methodArgTypes[ii]);
+        }
 
         if (bestParameterScore > methodParameterScore || bestMatchScore > methodMatchScore) {
             best = attempt;

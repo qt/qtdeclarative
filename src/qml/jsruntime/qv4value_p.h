@@ -57,8 +57,10 @@
 #include "qv4global_p.h"
 #include <private/qv4heap_p.h>
 #include <private/qv4internalclass_p.h>
+#include <private/qv4staticvalue_p.h>
 
 #include <private/qnumeric_p.h>
+#include <private/qv4calldata_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -68,101 +70,40 @@ namespace Heap {
     struct Base;
 }
 
-struct Q_QML_PRIVATE_EXPORT Value
+struct Q_QML_PRIVATE_EXPORT Value : public StaticValue
 {
-    /*
-        We use 8 bytes for a value and a different variant of NaN boxing. A Double
-        NaN (actually -qNaN) is indicated by a number that has the top 13 bits set, and for a
-        signalling NaN it is the top 14 bits. The other values are usually set to 0 by the
-        processor, and are thus free for us to store other data. We keep pointers in there for
-        managed objects, and encode the other types using the free space given to use by the unused
-        bits for NaN values. This also works for pointers on 64 bit systems, as they all currently
-        only have 48 bits of addressable memory. (Note: we do leave the lower 49 bits available for
-        pointers.)
+    using HeapBasePtr = Heap::Base *;
+    using ManagedPtr = Managed *;
 
-        We xor Doubles with (0xffff8000 << 32). That has the effect that no doubles will
-        get encoded with bits 63-49 all set to 0. We then use bit 48 to distinguish between
-        managed/undefined (0), or Null/Int/Bool/Empty (1). So, storing a 49 bit pointer will leave
-        the top 15 bits 0, which is exactly the 'natural' representation of pointers. If bit 49 is
-        set, bit 48 indicates Empty (0) or integer-convertible (1). Then the 3 bit below that are
-        used to encode Null/Int/Bool.
+    Value() = default;
+    constexpr Value(quint64 val) : StaticValue(val) {}
 
-        Undefined is encoded as a managed pointer with value 0. This is the same as a nullptr.
-
-        Specific bit-sequences:
-        0 = always 0
-        1 = always 1
-        x = stored value
-        a,b,c,d = specific bit values, see notes
-
-        32109876 54321098 76543210 98765432 10987654 32109876 54321098 76543210 |
-        66665555 55555544 44444444 33333333 33222222 22221111 11111100 00000000 | JS Value
-        ------------------------------------------------------------------------+--------------
-        00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 | Undefined
-        00000000 0000000x xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | Managed (heap pointer)
-        a0000000 0000bc00 00000000 00000000 00000000 00000000 00000000 00000000 | NaN/Inf
-        dddddddd ddddddxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | double
-        00000000 00000010 00000000 00000000 00000000 00000000 00000000 00000000 | empty (non-sparse array hole)
-        00000000 00000010 10000000 00000000 00000000 00000000 00000000 00000000 | Null
-        00000000 00000011 00000000 00000000 00000000 00000000 00000000 0000000x | Bool
-        00000000 00000011 10000000 00000000 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | Int
-
-        Notes:
-        - a: xor-ed signbit, always 1 for NaN
-        - bc, xor-ed values: 11 = inf, 10 = sNaN, 01 = qNaN, 00 = boxed value
-        - d: xor-ed bits, where at least one bit is set, so: (val >> (64-14)) > 0
-        - Undefined maps to C++ nullptr, so the "default" initialization is the same for both C++
-          and JS
-        - Managed has the left 15 bits set to 0, so: (val >> (64-15)) == 0
-        - empty, Null, Bool, and Int have the left 14 bits set to 0, and bit 49 set to 1,
-          so: (val >> (64-15)) == 1
-        - Null, Bool, and Int have bit 48 set, indicating integer-convertible
-        - xoring _val with NaNEncodeMask will convert to a double in "natural" representation, where
-          any non double results in a NaN
-        - on 32bit we can use the fact that addresses are 32bits wide, so the tag part (bits 32 to
-          63) are zero. No need to shift.
-    */
-
-    quint64 _val;
-
-    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR quint64 &rawValueRef() { return _val; }
-    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR quint64 rawValue() const { return _val; }
-    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setRawValue(quint64 raw) { _val = raw; }
-
-#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-    static inline int valueOffset() { return 0; }
-    static inline int tagOffset() { return 4; }
-#else // !Q_LITTLE_ENDIAN
-    static inline int valueOffset() { return 4; }
-    static inline int tagOffset() { return 0; }
-#endif
-    static inline constexpr quint64 tagValue(quint32 tag, quint32 value) { return quint64(tag) << 32 | value; }
-    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setTagValue(quint32 tag, quint32 value) { _val = quint64(tag) << 32 | value; }
-    QML_NEARLY_ALWAYS_INLINE constexpr quint32 value() const { return _val & quint64(~quint32(0)); }
-    QML_NEARLY_ALWAYS_INLINE constexpr quint32 tag() const { return _val >> 32; }
-    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setTag(quint32 tag) { setTagValue(tag, value()); }
+    static constexpr Value fromStaticValue(StaticValue staticValue)
+    {
+        return {staticValue._val};
+    }
 
 #if QT_POINTER_SIZE == 8
-    QML_NEARLY_ALWAYS_INLINE Heap::Base *m() const
+    QML_NEARLY_ALWAYS_INLINE HeapBasePtr m() const
     {
-        Heap::Base *b;
+        HeapBasePtr b;
         memcpy(&b, &_val, 8);
         return b;
     }
-    QML_NEARLY_ALWAYS_INLINE void setM(Heap::Base *b)
+    QML_NEARLY_ALWAYS_INLINE void setM(HeapBasePtr b)
     {
         memcpy(&_val, &b, 8);
     }
 #elif QT_POINTER_SIZE == 4
-    QML_NEARLY_ALWAYS_INLINE Heap::Base *m() const
+    QML_NEARLY_ALWAYS_INLINE HeapBasePtr m() const
     {
-        Q_STATIC_ASSERT(sizeof(Heap::Base*) == sizeof(quint32));
-        Heap::Base *b;
+        Q_STATIC_ASSERT(sizeof(HeapBasePtr) == sizeof(quint32));
+        HeapBasePtr b;
         quint32 v = value();
         memcpy(&b, &v, 4);
         return b;
     }
-    QML_NEARLY_ALWAYS_INLINE void setM(Heap::Base *b)
+    QML_NEARLY_ALWAYS_INLINE void setM(HeapBasePtr b)
     {
         quint32 v;
         memcpy(&v, &b, 4);
@@ -172,204 +113,11 @@ struct Q_QML_PRIVATE_EXPORT Value
 #  error "unsupported pointer size"
 #endif
 
-    QML_NEARLY_ALWAYS_INLINE constexpr int int_32() const
-    {
-        return int(value());
-    }
-    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setInt_32(int i)
-    {
-        setTagValue(quint32(ValueTypeInternal::Integer), quint32(i));
-    }
-    QML_NEARLY_ALWAYS_INLINE uint uint_32() const { return value(); }
-
-    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setEmpty()
-    {
-        setTagValue(quint32(ValueTypeInternal::Empty), 0);
-    }
-
-    // ### Fix for 32 bit (easiest solution is to set highest bit to 1 for mananged/undefined/integercompatible
-    // and use negative numbers here
-    enum QuickType {
-        QT_ManagedOrUndefined = 0,
-        QT_ManagedOrUndefined1 = 1,
-        QT_ManagedOrUndefined2 = 2,
-        QT_ManagedOrUndefined3 = 3,
-        QT_Empty = 4,
-        QT_Null = 5,
-        QT_Bool = 6,
-        QT_Int = 7
-        // all other values are doubles
-    };
-
-    enum Type {
-        Undefined_Type = 0,
-        Managed_Type = 1,
-        Empty_Type = 4,
-        Null_Type = 5,
-        Boolean_Type = 6,
-        Integer_Type = 7,
-        Double_Type = 8
-    };
-
-    inline Type type() const {
-        int t = quickType();
-        if (t < QT_Empty)
-            return _val ? Managed_Type : Undefined_Type;
-        if (t > QT_Int)
-            return Double_Type;
-        return static_cast<Type>(t);
-    }
-
-    // Shared between 32-bit and 64-bit encoding
-    enum {
-        Tag_Shift = 32
-    };
-
-    // Used only by 64-bit encoding
-    static const quint64 NaNEncodeMask = 0xfffc000000000000ull;
-    enum {
-        IsDouble_Shift = 64-14,
-        IsManagedOrUndefined_Shift = 64-15,
-        IsIntegerConvertible_Shift = 64-15,
-        IsIntegerOrBool_Shift = 64-16,
-        QuickType_Shift = 64 - 17,
-        IsPositiveIntShift = 31
-    };
-
-    static const quint64 Immediate_Mask_64 = 0x00020000u; // bit 49
-
-    enum class ValueTypeInternal_64 {
-        Empty            = Immediate_Mask_64 | 0,
-        Null             = Immediate_Mask_64 | 0x08000u,
-        Boolean          = Immediate_Mask_64 | 0x10000u,
-        Integer          = Immediate_Mask_64 | 0x18000u
-    };
-
-    // Used only by 32-bit encoding
-    enum Masks {
-        SilentNaNBit           =                  0x00040000,
-        NotDouble_Mask         =                  0x7ffa0000,
-    };
-    static const quint64 Immediate_Mask_32 = NotDouble_Mask | 0x00020000u | SilentNaNBit;
-
-    enum class ValueTypeInternal_32 {
-        Empty            = Immediate_Mask_32 | 0,
-        Null             = Immediate_Mask_32 | 0x08000u,
-        Boolean          = Immediate_Mask_32 | 0x10000u,
-        Integer          = Immediate_Mask_32 | 0x18000u
-    };
-
-    enum {
-        Managed_Type_Internal = 0
-    };
-
-    using ValueTypeInternal = ValueTypeInternal_64;
-
-    enum {
-        NaN_Mask = 0x7ff80000,
-    };
-
-    inline quint64 quickType() const { return (_val >> QuickType_Shift); }
-
-    // used internally in property
-    inline bool isEmpty() const { return tag() == quint32(ValueTypeInternal::Empty); }
-    inline bool isNull() const { return tag() == quint32(ValueTypeInternal::Null); }
-    inline bool isBoolean() const { return tag() == quint32(ValueTypeInternal::Boolean); }
-    inline bool isInteger() const { return tag() == quint32(ValueTypeInternal::Integer); }
-    inline bool isNullOrUndefined() const { return isNull() || isUndefined(); }
-    inline bool isNumber() const { return quickType() >= QT_Int; }
-
-    inline bool isUndefined() const { return _val == 0; }
-    inline bool isDouble() const { return (_val >> IsDouble_Shift); }
-    inline bool isManaged() const
-    {
-#if QT_POINTER_SIZE == 4
-        return value() && tag() == Managed_Type_Internal;
-#else
-        return _val && ((_val >> IsManagedOrUndefined_Shift) == 0);
-#endif
-    }
-    inline bool isManagedOrUndefined() const
-    {
-#if QT_POINTER_SIZE == 4
-        return tag() == Managed_Type_Internal;
-#else
-        return ((_val >> IsManagedOrUndefined_Shift) == 0);
-#endif
-    }
-
-    inline bool isIntOrBool() const {
-        return (_val >> IsIntegerOrBool_Shift) == 3;
-    }
-
-    inline bool integerCompatible() const {
-        Q_ASSERT(!isEmpty());
-        return (_val >> IsIntegerConvertible_Shift) == 1;
-    }
-    static inline bool integerCompatible(Value a, Value b) {
-        return a.integerCompatible() && b.integerCompatible();
-    }
-    static inline bool bothDouble(Value a, Value b) {
-        return a.isDouble() && b.isDouble();
-    }
-    inline bool isNaN() const { return (tag() & 0x7ffc0000  ) == 0x00040000; }
-
-    inline bool isPositiveInt() const {
-#if QT_POINTER_SIZE == 4
-        return isInteger() && int_32() >= 0;
-#else
-        return (_val >> IsPositiveIntShift) == (quint64(ValueTypeInternal::Integer) << 1);
-#endif
-    }
-
-    QML_NEARLY_ALWAYS_INLINE double doubleValue() const {
-        Q_ASSERT(isDouble());
-        double d;
-        Value v = *this;
-        v._val ^= NaNEncodeMask;
-        memcpy(&d, &v._val, 8);
-        return d;
-    }
-    QML_NEARLY_ALWAYS_INLINE void setDouble(double d) {
-        if (qt_is_nan(d))
-            d = qt_qnan();
-        memcpy(&_val, &d, 8);
-        _val ^= NaNEncodeMask;
-        Q_ASSERT(isDouble());
-    }
     inline bool isString() const;
     inline bool isStringOrSymbol() const;
     inline bool isSymbol() const;
     inline bool isObject() const;
     inline bool isFunctionObject() const;
-    inline bool isInt32() {
-        if (tag() == quint32(ValueTypeInternal::Integer))
-            return true;
-        if (isDouble()) {
-            double d = doubleValue();
-            if (isInt32(d)) {
-                setInt_32(int(d));
-                return true;
-            }
-        }
-        return false;
-    }
-    QML_NEARLY_ALWAYS_INLINE static bool isInt32(double d) {
-        int i = int(d);
-        return (i == d && !(d == 0 && std::signbit(d)));
-    }
-    double asDouble() const {
-        if (tag() == quint32(ValueTypeInternal::Integer))
-            return int_32();
-        return doubleValue();
-    }
-
-    bool booleanValue() const {
-        return int_32();
-    }
-    int integerValue() const {
-        return int_32();
-    }
 
     QML_NEARLY_ALWAYS_INLINE String *stringValue() const {
         if (!isString())
@@ -391,16 +139,16 @@ struct Q_QML_PRIVATE_EXPORT Value
             return nullptr;
         return reinterpret_cast<Object*>(const_cast<Value *>(this));
     }
-    QML_NEARLY_ALWAYS_INLINE Managed *managed() const {
+    QML_NEARLY_ALWAYS_INLINE ManagedPtr managed() const {
         if (!isManaged())
             return nullptr;
         return reinterpret_cast<Managed*>(const_cast<Value *>(this));
     }
-    QML_NEARLY_ALWAYS_INLINE Heap::Base *heapObject() const {
+    QML_NEARLY_ALWAYS_INLINE Value::HeapBasePtr heapObject() const {
         return isManagedOrUndefined() ? m() : nullptr;
     }
 
-    static inline Value fromHeapObject(Heap::Base *m)
+    static inline Value fromHeapObject(HeapBasePtr m)
     {
         Value v;
         v.setM(m);
@@ -443,12 +191,6 @@ struct Q_QML_PRIVATE_EXPORT Value
     static Heap::Object *toObject(ExecutionEngine *e, Value val);
 
     inline bool isPrimitive() const;
-    inline bool tryIntegerConversion() {
-        bool b = integerCompatible();
-        if (b)
-            setTagValue(quint32(ValueTypeInternal::Integer), value());
-        return b;
-    }
 
     template <typename T>
     const T *as() const {
@@ -482,13 +224,12 @@ struct Q_QML_PRIVATE_EXPORT Value
         return static_cast<const T *>(managed());
     }
 
-#ifndef V4_BOOTSTRAP
     uint asArrayLength(bool *ok) const;
-#endif
 
-    ReturnedValue *data_ptr() { return &_val; }
-    constexpr ReturnedValue asReturnedValue() const { return _val; }
-    static Value fromReturnedValue(ReturnedValue val) { Value v; v._val = val; return v; }
+    static constexpr Value fromReturnedValue(ReturnedValue val)
+    {
+        return fromStaticValue(StaticValue::fromReturnedValue(val));
+    }
 
     // As per ES specs
     bool sameValue(Value other) const;
@@ -496,21 +237,45 @@ struct Q_QML_PRIVATE_EXPORT Value
 
     inline void mark(MarkStack *markStack);
 
-    inline static constexpr Value emptyValue() { return { tagValue(quint32(ValueTypeInternal::Empty), 0) }; }
-    static inline constexpr Value fromBoolean(bool b) { return { tagValue(quint32(ValueTypeInternal::Boolean), b) }; }
-    static inline constexpr Value fromInt32(int i) { return { tagValue(quint32(ValueTypeInternal::Integer), quint32(i)) }; }
-    inline static constexpr Value undefinedValue() { return { 0 }; }
-    static inline constexpr Value nullValue() { return { tagValue(quint32(ValueTypeInternal::Null), 0) }; }
-    static inline Value fromDouble(double d);
-    static inline Value fromUInt32(uint i);
-
-    static double toInteger(double d);
-    static int toInt32(double d);
-    static unsigned int toUInt32(double d);
+    static double toInteger(double d) { return StaticValue::toInteger(d); }
+    static int toInt32(double d) { return StaticValue::toInt32(d); }
+    static unsigned int toUInt32(double d) { return StaticValue::toUInt32(d); }
+    inline static constexpr Value emptyValue()
+    {
+        return fromStaticValue(StaticValue::emptyValue());
+    }
+    static inline constexpr Value fromBoolean(bool b)
+    {
+        return fromStaticValue(StaticValue::fromBoolean(b));
+    }
+    static inline constexpr Value fromInt32(int i)
+    {
+        return fromStaticValue(StaticValue::fromInt32(i));
+    }
+    inline static constexpr Value undefinedValue()
+    {
+        return fromStaticValue(StaticValue::undefinedValue());
+    }
+    static inline constexpr Value nullValue()
+    {
+        return fromStaticValue(StaticValue::nullValue());
+    }
+    static inline Value fromDouble(double d)
+    {
+        return fromStaticValue(StaticValue::fromDouble(d));
+    }
+    static inline Value fromUInt32(uint i)
+    {
+        return fromStaticValue(StaticValue::fromUInt32(i));
+    }
 
     Value &operator =(const ScopedValue &v);
-    Value &operator=(ReturnedValue v) { _val = v; return *this; }
-    Value &operator=(Managed *m) {
+    Value &operator=(ReturnedValue v)
+    {
+        StaticValue::operator=(v);
+        return *this;
+    }
+    Value &operator=(ManagedPtr m) {
         if (!m) {
             setM(nullptr);
         } else {
@@ -518,7 +283,7 @@ struct Q_QML_PRIVATE_EXPORT Value
         }
         return *this;
     }
-    Value &operator=(Heap::Base *o) {
+    Value &operator=(HeapBasePtr o) {
         setM(o);
         return *this;
     }
@@ -526,43 +291,88 @@ struct Q_QML_PRIVATE_EXPORT Value
     template<typename T>
     Value &operator=(const Scoped<T> &t);
 };
-Q_STATIC_ASSERT(std::is_trivial< Value >::value);
+Q_STATIC_ASSERT(std::is_trivial<Value>::value);
+Q_STATIC_ASSERT(sizeof(Value) == sizeof(StaticValue));
+
+template<>
+inline StaticValue &StaticValue::operator=<Value>(const Value &value)
+{
+    _val = value._val;
+    return *this;
+}
+
+template<typename Managed>
+inline StaticValue &StaticValue::operator=(const Managed &m)
+{
+    *static_cast<Value *>(this) = m;
+    return *this;
+}
+
+template<>
+inline Value &StaticValue::asValue<Value>()
+{
+    return *static_cast<Value *>(this);
+}
+
+template<>
+inline const Value &StaticValue::asValue<Value>() const
+{
+    return *static_cast<const Value *>(this);
+}
+
+template<>
+inline Value *CallData::argValues<Value>()
+{
+    return static_cast<Value *>(static_cast<StaticValue *>(args));
+}
+
+template<>
+inline const Value *CallData::argValues<Value>() const
+{
+    return static_cast<const Value *>(static_cast<const StaticValue *>(args));
+}
+
+template<typename HeapBase>
+inline Encode::Encode(HeapBase *o)
+{
+    val = Value::fromHeapObject(o).asReturnedValue();
+}
 
 inline void Value::mark(MarkStack *markStack)
 {
-    Heap::Base *o = heapObject();
+    HeapBasePtr o = heapObject();
     if (o)
         o->mark(markStack);
 }
 
 inline bool Value::isString() const
 {
-    Heap::Base *b = heapObject();
+    HeapBasePtr b = heapObject();
     return b && b->internalClass->vtable->isString;
 }
 
 bool Value::isStringOrSymbol() const
 {
-    Heap::Base *b = heapObject();
+    HeapBasePtr b = heapObject();
     return b && b->internalClass->vtable->isStringOrSymbol;
 }
 
 bool Value::isSymbol() const
 {
-    Heap::Base *b = heapObject();
+    HeapBasePtr b = heapObject();
     return b && b->internalClass->vtable->isStringOrSymbol && !b->internalClass->vtable->isString;
 }
 
 inline bool Value::isObject() const
 
 {
-    Heap::Base *b = heapObject();
+    HeapBasePtr b = heapObject();
     return b && b->internalClass->vtable->isObject;
 }
 
 inline bool Value::isFunctionObject() const
 {
-    Heap::Base *b = heapObject();
+    HeapBasePtr b = heapObject();
     return b && b->internalClass->vtable->isFunctionObject;
 }
 
@@ -592,150 +402,11 @@ inline ReturnedValue Value::convertedToNumber() const
 inline
 ReturnedValue Heap::Base::asReturnedValue() const
 {
-    return Value::fromHeapObject(const_cast<Heap::Base *>(this)).asReturnedValue();
-}
-
-inline Value Value::fromDouble(double d)
-{
-    Value v;
-    v.setDouble(d);
-    return v;
-}
-
-inline Value Value::fromUInt32(uint i)
-{
-    Value v;
-    if (i < INT_MAX) {
-        v.setTagValue(quint32(ValueTypeInternal::Integer), i);
-    } else {
-        v.setDouble(i);
-    }
-    return v;
-}
-
-struct Double {
-    quint64 d;
-
-    Double(double dbl) {
-        memcpy(&d, &dbl, sizeof(double));
-    }
-
-    int sign() const {
-        return (d >> 63) ? -1 : 1;
-    }
-
-    bool isDenormal() const {
-        return static_cast<int>((d << 1) >> 53) == 0;
-    }
-
-    int exponent() const {
-        return static_cast<int>((d << 1) >> 53) - 1023;
-    }
-
-    quint64 significant() const {
-        quint64 m = (d << 12) >> 12;
-        if (!isDenormal())
-            m |= (static_cast<quint64>(1) << 52);
-        return m;
-    }
-
-    static int toInt32(double d) {
-        int i = static_cast<int>(d);
-        if (i == d)
-                return i;
-        return Double(d).toInt32();
-    }
-
-    int toInt32() {
-        int e = exponent() - 52;
-        if (e < 0) {
-            if (e <= -53)
-                return 0;
-            return sign() * static_cast<int>(significant() >> -e);
-        } else {
-            if (e > 31)
-                return 0;
-            return sign() * (static_cast<int>(significant()) << e);
-        }
-    }
-};
-
-inline double Value::toInteger(double d)
-{
-    if (std::isnan(d))
-        return +0;
-    else if (!d || std::isinf(d))
-        return d;
-    return d >= 0 ? std::floor(d) : std::ceil(d);
-}
-
-inline int Value::toInt32(double value)
-{
-    return Double::toInt32(value);
-}
-
-inline unsigned int Value::toUInt32(double d)
-{
-    return static_cast<uint>(toInt32(d));
+    return Value::fromHeapObject(const_cast<Value::HeapBasePtr>(this)).asReturnedValue();
 }
 
 // For source compat with older code in other modules
 using Primitive = Value;
-
-struct Encode {
-    static constexpr ReturnedValue undefined() {
-        return Value::undefinedValue().asReturnedValue();
-    }
-    static constexpr ReturnedValue null() {
-        return Value::nullValue().asReturnedValue();
-    }
-
-    explicit constexpr Encode(bool b)
-        : val(Value::fromBoolean(b).asReturnedValue())
-    {
-    }
-    explicit Encode(double d) {
-        val = Value::fromDouble(d).asReturnedValue();
-    }
-    explicit constexpr Encode(int i)
-        : val(Value::fromInt32(i).asReturnedValue())
-    {
-    }
-    explicit Encode(uint i) {
-        val = Value::fromUInt32(i).asReturnedValue();
-    }
-    explicit constexpr Encode(ReturnedValue v)
-        : val(v)
-    {
-    }
-    constexpr Encode(Value v)
-        : val(v.asReturnedValue())
-    {
-    }
-
-    explicit Encode(Heap::Base *o) {
-        val = Value::fromHeapObject(o).asReturnedValue();
-    }
-
-    explicit Encode(Value *o) {
-        Q_ASSERT(o);
-        val = o->asReturnedValue();
-    }
-
-    static ReturnedValue smallestNumber(double d) {
-        if (Value::isInt32(d))
-            return Encode(static_cast<int>(d));
-        else
-            return Encode(d);
-    }
-
-    constexpr operator ReturnedValue() const {
-        return val;
-    }
-    quint64 val;
-private:
-    explicit Encode(void *);
-};
 
 template<typename T>
 ReturnedValue value_convert(ExecutionEngine *e, const Value &v);
@@ -793,8 +464,8 @@ inline double Value::toInteger() const
 template <size_t o>
 struct HeapValue : Value {
     static Q_CONSTEXPR size_t offset = o;
-    Heap::Base *base() {
-        Heap::Base *base = reinterpret_cast<Heap::Base *>(this) - (offset/sizeof(Heap::Base));
+    HeapBasePtr base() {
+        HeapBasePtr base = reinterpret_cast<HeapBasePtr>(this) - (offset/sizeof(Heap::Base));
         Q_ASSERT(base->inUse());
         return base;
     }
@@ -802,7 +473,7 @@ struct HeapValue : Value {
     void set(EngineBase *e, const Value &newVal) {
         WriteBarrier::write(e, base(), data_ptr(), newVal.asReturnedValue());
     }
-    void set(EngineBase *e, Heap::Base *b) {
+    void set(EngineBase *e, HeapBasePtr b) {
         WriteBarrier::write(e, base(), data_ptr(), b->asReturnedValue());
     }
 };
@@ -814,8 +485,9 @@ struct ValueArray {
     uint alloc;
     Value values[1];
 
-    Heap::Base *base() {
-        Heap::Base *base = reinterpret_cast<Heap::Base *>(this) - (offset/sizeof(Heap::Base));
+    Value::HeapBasePtr base() {
+        Value::HeapBasePtr base = reinterpret_cast<Value::HeapBasePtr>(this)
+                - (offset/sizeof(Heap::Base));
         Q_ASSERT(base->inUse());
         return base;
     }
@@ -823,7 +495,7 @@ struct ValueArray {
     void set(EngineBase *e, uint index, Value v) {
         WriteBarrier::write(e, base(), values[index].data_ptr(), v.asReturnedValue());
     }
-    void set(EngineBase *e, uint index, Heap::Base *b) {
+    void set(EngineBase *e, uint index, Value::HeapBasePtr b) {
         WriteBarrier::write(e, base(), values[index].data_ptr(), Value::fromHeapObject(b).asReturnedValue());
     }
     inline const Value &operator[] (uint index) const {
@@ -852,12 +524,12 @@ struct ValueArray {
         const Value *end = v + alloc;
         if (alloc > 32*1024) {
             // drain from time to time to avoid overflows in the js stack
-            Heap::Base **currentBase = markStack->top;
+            Value::HeapBasePtr *currentBase = markStack->top;
             while (v < end) {
                 v->mark(markStack);
                 ++v;
                 if (markStack->top >= currentBase + 32*1024) {
-                    Heap::Base **oldBase = markStack->base;
+                    Value::HeapBasePtr *oldBase = markStack->base;
                     markStack->base = currentBase;
                     markStack->drain();
                     markStack->base = oldBase;

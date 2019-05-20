@@ -103,7 +103,7 @@ ReturnedValue BooleanPrototype::method_toString(const FunctionObject *b, const V
     if (exception)
         return v4->throwTypeError();
 
-    return Encode(result ? v4->id_true() : v4->id_false());
+    return (result ? v4->id_true() : v4->id_false())->asReturnedValue();
 }
 
 ReturnedValue BooleanPrototype::method_valueOf(const FunctionObject *b, const Value *thisObject, const Value *, int)

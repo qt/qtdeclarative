@@ -102,7 +102,7 @@ static QString toString(QV4::ReturnedValue v)
     return result;
 }
 
-static void dumpConstantTable(const Value *constants, uint count)
+static void dumpConstantTable(const StaticValue *constants, uint count)
 {
     QDebug d = qDebug();
     d.nospace() << right;
@@ -320,7 +320,7 @@ void ExecutableCompilationUnit::markObjects(QV4::MarkStack *markStack)
     }
     if (runtimeRegularExpressions) {
         for (uint i = 0; i < data->regexpTableSize; ++i)
-            runtimeRegularExpressions[i].mark(markStack);
+            Value::fromStaticValue(runtimeRegularExpressions[i]).mark(markStack);
     }
     if (runtimeClasses) {
         for (uint i = 0; i < data->jsClassTableSize; ++i)
@@ -458,8 +458,8 @@ Heap::Module *ExecutableCompilationUnit::instantiate(ExecutionEngine *engine)
 
     const uint importCount = data->importEntryTableSize;
     if (importCount > 0) {
-        imports = new const Value *[importCount];
-        memset(imports, 0, importCount * sizeof(Value *));
+        imports = new const StaticValue *[importCount];
+        memset(imports, 0, importCount * sizeof(StaticValue *));
     }
     for (uint i = 0; i < importCount; ++i) {
         const CompiledData::ImportEntry &entry = data->importEntryTable()[i];
@@ -517,7 +517,7 @@ const Value *ExecutableCompilationUnit::resolveExportRecursively(
         if (index == UINT_MAX)
             return nullptr;
         if (index >= module()->scope->locals.size)
-            return imports[index - module()->scope->locals.size];
+            return &(imports[index - module()->scope->locals.size]->asValue<Value>());
         return &module()->scope->locals[index];
     }
 

@@ -365,7 +365,7 @@ static inline Heap::CallContext *getScope(QV4::Value *stack, int level)
 
 static inline const QV4::Value &constant(Function *function, int index)
 {
-    return function->compilationUnit->constants[index];
+    return function->compilationUnit->constants[index].asValue<Value>();
 }
 
 static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)
@@ -463,7 +463,7 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
 QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine, const char *code)
 {
     QV4::Function *function = frame->v4Function;
-    QV4::Value &accumulator = frame->jsFrame->accumulator;
+    QV4::Value &accumulator = frame->jsFrame->accumulator.asValue<Value>();
     QV4::ReturnedValue acc = accumulator.asReturnedValue();
     Value *stack = reinterpret_cast<Value *>(frame->jsFrame);
 

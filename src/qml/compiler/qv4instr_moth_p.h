@@ -51,7 +51,7 @@
 // We mean it.
 //
 #include <private/qv4global_p.h>
-#include <private/qv4runtime_p.h>
+#include <private/qv4staticvalue_p.h>
 #include <private/qv4compileddata_p.h> // for CompiledData::CodeOffsetToLine used by the dumper
 #include <qendian.h>
 

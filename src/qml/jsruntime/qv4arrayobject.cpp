@@ -175,7 +175,8 @@ static ScopedObject createObjectFromCtorOrArray(Scope &scope, ScopedFunctionObje
         // this isn't completely kosher. for instance:
         // Array.from.call(Object, []).constructor == Object
         // is expected by the tests, but naturally, we get Number.
-        ScopedValue argument(scope, useLen ? QV4::Encode(len) : Value::undefinedValue());
+        ScopedValue argument(scope, useLen ? Value::fromReturnedValue(QV4::Encode(len))
+                                           : Value::undefinedValue());
         a = ctor->callAsConstructor(argument, useLen ? 1 : 0);
     } else {
         a = scope.engine->newArrayObject(len);

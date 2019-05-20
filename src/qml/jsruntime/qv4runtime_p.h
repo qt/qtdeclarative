@@ -116,14 +116,12 @@ struct Q_QML_PRIVATE_EXPORT RuntimeHelpers {
 
 
 // type conversion and testing
-#ifndef V4_BOOTSTRAP
 inline ReturnedValue RuntimeHelpers::toPrimitive(const Value &value, TypeHint typeHint)
 {
     if (!value.isObject())
         return value.asReturnedValue();
     return RuntimeHelpers::objectDefaultValue(&reinterpret_cast<const Object &>(value), typeHint);
 }
-#endif
 
 inline double RuntimeHelpers::toNumber(const Value &value)
 {

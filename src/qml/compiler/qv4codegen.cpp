@@ -48,7 +48,7 @@
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qv4stringtoarrayindex_p.h>
-#include <private/qv4value_p.h>
+#include <private/qv4staticvalue_p.h>
 #include <private/qv4compilercontext_p.h>
 #include <private/qv4compilercontrolflow_p.h>
 #include <private/qv4bytecodegenerator_p.h>
@@ -267,13 +267,26 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
         return exprResult();
 
     if (expr.isConstant()) {
-        auto v = Value::fromReturnedValue(expr.constant);
+        auto v = StaticValue::fromReturnedValue(expr.constant);
         if (v.isNumber()) {
             switch (op) {
             case Not:
                 return Reference::fromConst(this, Encode(!v.toBoolean()));
             case UMinus:
-                return Reference::fromConst(this, Runtime::UMinus::call(v));
+                // This duplicates some of the logic from Runtime::UMinus::call()
+                ReturnedValue r;
+                if (v.isInteger()) {
+                    int intVal = v.integerValue();
+                    if (intVal && intVal != std::numeric_limits<int>::min())
+                        r = QV4::Encode(-intVal);
+                    else
+                        r = QV4::Encode(-double(intVal));
+                } else if (v.isDouble()) {
+                    r = QV4::Encode(-v.doubleValue());
+                } else {
+                    r = QV4::Encode(-v.int_32());
+                }
+                return Reference::fromConst(this, r);
             case UPlus:
                 return expr;
             case Compl:
@@ -1006,7 +1019,7 @@ bool Codegen::visit(ClassExpression *ast)
             return false;
         r.storeOnStack(heritage.stackSlot());
     } else {
-        Reference::fromConst(this, Value::emptyValue().asReturnedValue()).loadInAccumulator();
+        Reference::fromConst(this, StaticValue::emptyValue().asReturnedValue()).loadInAccumulator();
         heritage.storeConsumeAccumulator();
     }
 
@@ -1083,7 +1096,7 @@ bool Codegen::visit(ArrayPattern *ast)
             if (args == -1)
                 args = temp;
             if (!arg) {
-                auto c = Reference::fromConst(this, Value::emptyValue().asReturnedValue());
+                auto c = Reference::fromConst(this, StaticValue::emptyValue().asReturnedValue());
                 (void) c.storeOnStack(temp);
             } else {
                 RegisterScope scope(this);
@@ -1144,7 +1157,8 @@ bool Codegen::visit(ArrayPattern *ast)
 
     while (it) {
         for (Elision *elision = it->elision; elision; elision = elision->next) {
-            Reference::fromConst(this, Value::emptyValue().asReturnedValue()).loadInAccumulator();
+            Reference::fromConst(
+                    this, StaticValue::emptyValue().asReturnedValue()).loadInAccumulator();
             pushAccumulator();
         }
 
@@ -1538,9 +1552,9 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
     }
     case QSOperator::BitAnd:
         if (right.isConstant()) {
-            int rightAsInt = Value::fromReturnedValue(right.constant).toInt32();
+            int rightAsInt = StaticValue::fromReturnedValue(right.constant).toInt32();
             if (left.isConstant()) {
-                int result = Value::fromReturnedValue(left.constant).toInt32() & rightAsInt;
+                int result = StaticValue::fromReturnedValue(left.constant).toInt32() & rightAsInt;
                 return Reference::fromConst(this, Encode(result));
             }
             left.loadInAccumulator();
@@ -1556,9 +1570,9 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     case QSOperator::BitOr:
         if (right.isConstant()) {
-            int rightAsInt = Value::fromReturnedValue(right.constant).toInt32();
+            int rightAsInt = StaticValue::fromReturnedValue(right.constant).toInt32();
             if (left.isConstant()) {
-                int result = Value::fromReturnedValue(left.constant).toInt32() | rightAsInt;
+                int result = StaticValue::fromReturnedValue(left.constant).toInt32() | rightAsInt;
                 return Reference::fromConst(this, Encode(result));
             }
             left.loadInAccumulator();
@@ -1574,9 +1588,9 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     case QSOperator::BitXor:
         if (right.isConstant()) {
-            int rightAsInt = Value::fromReturnedValue(right.constant).toInt32();
+            int rightAsInt = StaticValue::fromReturnedValue(right.constant).toInt32();
             if (left.isConstant()) {
-                int result = Value::fromReturnedValue(left.constant).toInt32() ^ rightAsInt;
+                int result = StaticValue::fromReturnedValue(left.constant).toInt32() ^ rightAsInt;
                 return Reference::fromConst(this, Encode(result));
             }
             left.loadInAccumulator();
@@ -1594,7 +1608,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         if (right.isConstant()) {
             left.loadInAccumulator();
             Instruction::UShrConst ushr;
-            ushr.rhs = Value::fromReturnedValue(right.constant).toInt32() & 0x1f;
+            ushr.rhs = StaticValue::fromReturnedValue(right.constant).toInt32() & 0x1f;
             bytecodeGenerator->addInstruction(ushr);
         } else {
             right.loadInAccumulator();
@@ -1607,7 +1621,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         if (right.isConstant()) {
             left.loadInAccumulator();
             Instruction::ShrConst shr;
-            shr.rhs = Value::fromReturnedValue(right.constant).toInt32() & 0x1f;
+            shr.rhs = StaticValue::fromReturnedValue(right.constant).toInt32() & 0x1f;
             bytecodeGenerator->addInstruction(shr);
         } else {
             right.loadInAccumulator();
@@ -1620,7 +1634,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         if (right.isConstant()) {
             left.loadInAccumulator();
             Instruction::ShlConst shl;
-            shl.rhs = Value::fromReturnedValue(right.constant).toInt32() & 0x1f;
+            shl.rhs = StaticValue::fromReturnedValue(right.constant).toInt32() & 0x1f;
             bytecodeGenerator->addInstruction(shl);
         } else {
             right.loadInAccumulator();
@@ -1748,7 +1762,7 @@ Codegen::Reference Codegen::jumpBinop(QSOperator::Op oper, Reference &left, Refe
             qSwap(left, right); // null==a -> a==null
 
         if (right.isConstant()) {
-            Value c = Value::fromReturnedValue(right.constant);
+            StaticValue c = StaticValue::fromReturnedValue(right.constant);
             if (c.isNull() || c.isUndefined()) {
                 left.loadInAccumulator();
                 if (oper == QSOperator::Equal) {
@@ -2022,7 +2036,9 @@ Codegen::Arguments Codegen::pushArgs(ArgumentList *args)
     argc = 0;
     for (ArgumentList *it = args; it; it = it->next) {
         if (it->isSpreadElement) {
-            Reference::fromConst(this, Value::emptyValue().asReturnedValue()).storeOnStack(calldata + argc);
+            Reference::fromConst(
+                    this,
+                    StaticValue::emptyValue().asReturnedValue()).storeOnStack(calldata + argc);
             ++argc;
         }
         RegisterScope scope(this);
@@ -2999,7 +3015,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     functionEndsWithReturn = endsWithReturn(_module, body);
 
     // reserve the js stack frame (Context & js Function & accumulator)
-    bytecodeGenerator->newRegisterArray(sizeof(CallData)/sizeof(Value) - 1 + _context->arguments.size());
+    bytecodeGenerator->newRegisterArray(
+            sizeof(CallData) / sizeof(StaticValue) - 1 + _context->arguments.size());
 
     bool _inFormalParameterList = false;
     qSwap(_inFormalParameterList, inFormalParameterList);
@@ -4314,7 +4331,7 @@ QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // the loads below are empty str
             Instruction::LoadUndefined load;
             codegen->bytecodeGenerator->addInstruction(load);
         } else {
-            Value p = Value::fromReturnedValue(constant);
+            StaticValue p = StaticValue::fromReturnedValue(constant);
             if (p.isNumber()) {
                 double d = p.asDouble();
                 int i = static_cast<int>(d);
@@ -4325,7 +4342,7 @@ QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // the loads below are empty str
                         return;
                     }
                     Instruction::LoadInt load;
-                    load.value = Value::fromReturnedValue(constant).toInt32();
+                    load.value = StaticValue::fromReturnedValue(constant).toInt32();
                     codegen->bytecodeGenerator->addInstruction(load);
                     return;
                 }

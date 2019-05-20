@@ -39,7 +39,6 @@
 
 #include "qv4global_p.h"
 #include "qv4runtime_p.h"
-#ifndef V4_BOOTSTRAP
 #include "qv4engine_p.h"
 #include "qv4object_p.h"
 #include "qv4objectproto_p.h"
@@ -63,7 +62,6 @@
 #include "qv4qobjectwrapper_p.h"
 #include "qv4symbol_p.h"
 #include "qv4generatorobject_p.h"
-#endif
 
 #include <QtCore/QDebug>
 #include <cassert>
@@ -221,8 +219,6 @@ void RuntimeCounters::count(const char *func, uint tag1, uint tag2)
 }
 
 #endif // QV4_COUNT_RUNTIME_FUNCTIONS
-
-#ifndef V4_BOOTSTRAP
 
 static QV4::Lookup *runtimeLookup(Function *f, uint i)
 {
@@ -1026,7 +1022,8 @@ static Object *getSuperBase(Scope &scope)
         return nullptr;
     }
 
-    ScopedFunctionObject f(scope, scope.engine->currentStackFrame->jsFrame->function);
+    ScopedFunctionObject f(
+            scope, Value::fromStaticValue(scope.engine->currentStackFrame->jsFrame->function));
     ScopedObject homeObject(scope, f->getHomeObject());
     if (!homeObject) {
         ScopedContext ctx(scope, static_cast<ExecutionContext *>(&scope.engine->currentStackFrame->jsFrame->context));
@@ -1064,7 +1061,8 @@ ReturnedValue Runtime::LoadSuperProperty::call(ExecutionEngine *engine, const Va
     ScopedPropertyKey key(scope, property.toPropertyKey(engine));
     if (engine->hasException)
         return Encode::undefined();
-    return base->get(key, &engine->currentStackFrame->jsFrame->thisObject);
+    return base->get(
+            key, &(engine->currentStackFrame->jsFrame->thisObject.asValue<Value>()));
 }
 
 void Runtime::StoreSuperProperty::call(ExecutionEngine *engine, const Value &property, const Value &value)
@@ -1076,7 +1074,8 @@ void Runtime::StoreSuperProperty::call(ExecutionEngine *engine, const Value &pro
     ScopedPropertyKey key(scope, property.toPropertyKey(engine));
     if (engine->hasException)
         return;
-    bool result = base->put(key, value, &engine->currentStackFrame->jsFrame->thisObject);
+    bool result = base->put(
+            key, value, &(engine->currentStackFrame->jsFrame->thisObject.asValue<Value>()));
     if (!result && engine->currentStackFrame->v4Function->isStrict())
         engine->throwTypeError();
 }
@@ -1128,8 +1127,6 @@ ReturnedValue Runtime::LoadSuperConstructor::call(ExecutionEngine *engine, const
     return c->asReturnedValue();
 }
 
-#endif // V4_BOOTSTRAP
-
 uint RuntimeHelpers::equalHelper(const Value &x, const Value &y)
 {
     Q_ASSERT(x.type() != y.type() || (x.isManaged() && (x.isString() != y.isString())));
@@ -1151,9 +1148,6 @@ uint RuntimeHelpers::equalHelper(const Value &x, const Value &y)
     } else if (y.isBoolean()) {
         return Runtime::CompareEqual::call(x, Value::fromDouble((double) y.booleanValue()));
     } else {
-#ifdef V4_BOOTSTRAP
-        Q_UNIMPLEMENTED();
-#else
         Object *xo = x.objectValue();
         Object *yo = y.objectValue();
         if (yo && (x.isNumber() || x.isString())) {
@@ -1165,7 +1159,6 @@ uint RuntimeHelpers::equalHelper(const Value &x, const Value &y)
             ScopedValue px(scope, RuntimeHelpers::objectDefaultValue(xo, PREFERREDTYPE_HINT));
             return Runtime::CompareEqual::call(px, y);
         }
-#endif
     }
 
     return false;
@@ -1182,12 +1175,7 @@ Bool RuntimeHelpers::strictEqual(const Value &x, const Value &y)
     if (x.isNumber())
         return y.isNumber() && x.asDouble() == y.asDouble();
     if (x.isManaged()) {
-#ifdef V4_BOOTSTRAP
-        Q_UNIMPLEMENTED();
-        return false;
-#else
         return y.isManaged() && x.cast<Managed>()->isEqualTo(y.cast<Managed>());
-#endif
     }
     return false;
 }
@@ -1202,26 +1190,17 @@ QV4::Bool Runtime::CompareGreaterThan::call(const Value &l, const Value &r)
     String *sl = l.stringValue();
     String *sr = r.stringValue();
     if (sl && sr) {
-#ifdef V4_BOOTSTRAP
-        Q_UNIMPLEMENTED();
-        return false;
-#else
         return sr->lessThan(sl);
-#endif
     }
 
     Object *ro = r.objectValue();
     Object *lo = l.objectValue();
     if (ro || lo) {
-#ifdef V4_BOOTSTRAP
-        Q_UNIMPLEMENTED();
-#else
         QV4::ExecutionEngine *e = (lo ? lo : ro)->engine();
         QV4::Scope scope(e);
         QV4::ScopedValue pl(scope, lo ? RuntimeHelpers::objectDefaultValue(lo, QV4::NUMBER_HINT) : l.asReturnedValue());
         QV4::ScopedValue pr(scope, ro ? RuntimeHelpers::objectDefaultValue(ro, QV4::NUMBER_HINT) : r.asReturnedValue());
         return Runtime::CompareGreaterThan::call(pl, pr);
-#endif
     }
 
     double dl = RuntimeHelpers::toNumber(l);
@@ -1239,26 +1218,17 @@ QV4::Bool Runtime::CompareLessThan::call(const Value &l, const Value &r)
     String *sl = l.stringValue();
     String *sr = r.stringValue();
     if (sl && sr) {
-#ifdef V4_BOOTSTRAP
-        Q_UNIMPLEMENTED();
-        return false;
-#else
         return sl->lessThan(sr);
-#endif
     }
 
     Object *ro = r.objectValue();
     Object *lo = l.objectValue();
     if (ro || lo) {
-#ifdef V4_BOOTSTRAP
-        Q_UNIMPLEMENTED();
-#else
         QV4::ExecutionEngine *e = (lo ? lo : ro)->engine();
         QV4::Scope scope(e);
         QV4::ScopedValue pl(scope, lo ? RuntimeHelpers::objectDefaultValue(lo, QV4::NUMBER_HINT) : l.asReturnedValue());
         QV4::ScopedValue pr(scope, ro ? RuntimeHelpers::objectDefaultValue(ro, QV4::NUMBER_HINT) : r.asReturnedValue());
         return Runtime::CompareLessThan::call(pl, pr);
-#endif
     }
 
     double dl = RuntimeHelpers::toNumber(l);
@@ -1276,26 +1246,17 @@ QV4::Bool Runtime::CompareGreaterEqual::call(const Value &l, const Value &r)
     String *sl = l.stringValue();
     String *sr = r.stringValue();
     if (sl && sr) {
-#ifdef V4_BOOTSTRAP
-        Q_UNIMPLEMENTED();
-        return false;
-#else
         return !sl->lessThan(sr);
-#endif
     }
 
     Object *ro = r.objectValue();
     Object *lo = l.objectValue();
     if (ro || lo) {
-#ifdef V4_BOOTSTRAP
-        Q_UNIMPLEMENTED();
-#else
         QV4::ExecutionEngine *e = (lo ? lo : ro)->engine();
         QV4::Scope scope(e);
         QV4::ScopedValue pl(scope, lo ? RuntimeHelpers::objectDefaultValue(lo, QV4::NUMBER_HINT) : l.asReturnedValue());
         QV4::ScopedValue pr(scope, ro ? RuntimeHelpers::objectDefaultValue(ro, QV4::NUMBER_HINT) : r.asReturnedValue());
         return Runtime::CompareGreaterEqual::call(pl, pr);
-#endif
     }
 
     double dl = RuntimeHelpers::toNumber(l);
@@ -1313,26 +1274,17 @@ QV4::Bool Runtime::CompareLessEqual::call(const Value &l, const Value &r)
     String *sl = l.stringValue();
     String *sr = r.stringValue();
     if (sl && sr) {
-#ifdef V4_BOOTSTRAP
-        Q_UNIMPLEMENTED();
-        return false;
-#else
         return !sr->lessThan(sl);
-#endif
     }
 
     Object *ro = r.objectValue();
     Object *lo = l.objectValue();
     if (ro || lo) {
-#ifdef V4_BOOTSTRAP
-        Q_UNIMPLEMENTED();
-#else
         QV4::ExecutionEngine *e = (lo ? lo : ro)->engine();
         QV4::Scope scope(e);
         QV4::ScopedValue pl(scope, lo ? RuntimeHelpers::objectDefaultValue(lo, QV4::NUMBER_HINT) : l.asReturnedValue());
         QV4::ScopedValue pr(scope, ro ? RuntimeHelpers::objectDefaultValue(ro, QV4::NUMBER_HINT) : r.asReturnedValue());
         return Runtime::CompareLessEqual::call(pl, pr);
-#endif
     }
 
     double dl = RuntimeHelpers::toNumber(l);
@@ -1340,7 +1292,6 @@ QV4::Bool Runtime::CompareLessEqual::call(const Value &l, const Value &r)
     return dl <= dr;
 }
 
-#ifndef V4_BOOTSTRAP
 Bool Runtime::CompareInstanceof::call(ExecutionEngine *engine, const Value &left, const Value &right)
 {
     TRACE2(left, right);
@@ -1623,7 +1574,8 @@ ReturnedValue Runtime::TailCall::call(CppStackFrame *frame, ExecutionEngine *eng
     }
 
     memcpy(frame->jsFrame->args, argv, argc * sizeof(Value));
-    frame->init(engine, fo.function(), frame->jsFrame->args, argc, frame->callerCanHandleTailCall);
+    frame->init(engine, fo.function(), frame->jsFrame->argValues<Value>(), argc,
+                frame->callerCanHandleTailCall);
     frame->setupJSFrame(frame->savedStackTop, fo, fo.scope(), thisObject, Primitive::undefinedValue());
     engine->jsStackTop = frame->savedStackTop + frame->requiredJSStackFrameSize();
     frame->pendingTailCall = true;
@@ -1685,12 +1637,12 @@ void Runtime::PushCallContext::call(CppStackFrame *frame)
 ReturnedValue Runtime::PushWithContext::call(ExecutionEngine *engine, const Value &acc)
 {
     CallData *jsFrame = engine->currentStackFrame->jsFrame;
-    Value &newAcc = jsFrame->accumulator;
+    Value &newAcc = jsFrame->accumulator.asValue<Value>();
     newAcc = Value::fromHeapObject(acc.toObject(engine));
     if (!engine->hasException) {
         Q_ASSERT(newAcc.isObject());
         const Object &obj = static_cast<const Object &>(newAcc);
-        Value &context = jsFrame->context;
+        Value &context = jsFrame->context.asValue<Value>();
         auto ec = static_cast<const ExecutionContext *>(&context);
         context = ec->newWithContext(obj.d())->asReturnedValue();
     }
@@ -1711,7 +1663,8 @@ void Runtime::PushBlockContext::call(ExecutionEngine *engine, int index)
 void Runtime::CloneBlockContext::call(ExecutionEngine *engine)
 {
     auto frame = engine->currentStackFrame;
-    auto context = static_cast<Heap::CallContext *>(frame->jsFrame->context.m());
+    auto context = static_cast<Heap::CallContext *>(
+            Value::fromStaticValue(frame->jsFrame->context).m());
     frame->jsFrame->context =
             ExecutionContext::cloneBlockContext(engine, context)->asReturnedValue();
 }
@@ -1971,7 +1924,9 @@ QV4::ReturnedValue Runtime::CreateRestParameter::call(ExecutionEngine *engine, i
 
 ReturnedValue Runtime::RegexpLiteral::call(ExecutionEngine *engine, int id)
 {
-    Heap::RegExpObject *ro = engine->newRegExpObject(engine->currentStackFrame->v4Function->compilationUnit->runtimeRegularExpressions[id].as<RegExp>());
+    const auto val
+            = engine->currentStackFrame->v4Function->compilationUnit->runtimeRegularExpressions[id];
+    Heap::RegExpObject *ro = engine->newRegExpObject(Value::fromStaticValue(val).as<RegExp>());
     return ro->asReturnedValue();
 }
 
@@ -1992,7 +1947,6 @@ ReturnedValue Runtime::ToNumber::call(ExecutionEngine *, const Value &v)
 {
     return Encode(v.toNumber());
 }
-#endif // V4_BOOTSTRAP
 
 ReturnedValue Runtime::UMinus::call(const Value &value)
 {
@@ -2010,7 +1964,6 @@ ReturnedValue Runtime::UMinus::call(const Value &value)
 
 // binary operators
 
-#ifndef V4_BOOTSTRAP
 ReturnedValue Runtime::Add::call(ExecutionEngine *engine, const Value &left, const Value &right)
 {
     TRACE2(left, right);
@@ -2156,8 +2109,6 @@ ReturnedValue Runtime::UShr::call(const Value &left, const Value &right)
     return Encode(res);
 }
 
-#endif // V4_BOOTSTRAP
-
 ReturnedValue Runtime::GreaterThan::call(const Value &left, const Value &right)
 {
     TRACE2(left, right);
@@ -2190,7 +2141,6 @@ ReturnedValue Runtime::LessEqual::call(const Value &left, const Value &right)
     return Encode(r);
 }
 
-#ifndef V4_BOOTSTRAP
 struct LazyScope
 {
     ExecutionEngine *engine = nullptr;
@@ -2210,7 +2160,6 @@ struct LazyScope
         **scopedValue = value;
     }
 };
-#endif
 
 Bool Runtime::CompareEqual::call(const Value &left, const Value &right)
 {
@@ -2219,11 +2168,9 @@ Bool Runtime::CompareEqual::call(const Value &left, const Value &right)
     Value lhs = left;
     Value rhs = right;
 
-#ifndef V4_BOOTSTRAP
     LazyScope scope;
     Value *lhsGuard = nullptr;
     Value *rhsGuard = nullptr;
-#endif
 
   redo:
     if (lhs.asReturnedValue() == rhs.asReturnedValue())
@@ -2253,7 +2200,6 @@ Bool Runtime::CompareEqual::call(const Value &left, const Value &right)
         case QV4::Value::QT_ManagedOrUndefined1:
         case QV4::Value::QT_ManagedOrUndefined2:
         case QV4::Value::QT_ManagedOrUndefined3: {
-#ifndef V4_BOOTSTRAP
             // RHS: Managed
             Heap::Base *l = lhs.m();
             Heap::Base *r = rhs.m();
@@ -2271,7 +2217,6 @@ Bool Runtime::CompareEqual::call(const Value &left, const Value &right)
                 lhs = lhsGuard->asReturnedValue();
                 break;
             }
-#endif
             return false;
         }
         case QV4::Value::QT_Empty:
@@ -2283,16 +2228,12 @@ Bool Runtime::CompareEqual::call(const Value &left, const Value &right)
             rhs = Value::fromDouble(rhs.int_32());
             // fall through
         default: // double
-#ifndef V4_BOOTSTRAP
             if (lhs.m()->internalClass->vtable->isStringOrSymbol) {
                 return lhs.m()->internalClass->vtable->isString ? (RuntimeHelpers::toNumber(lhs) == rhs.doubleValue()) : false;
             } else {
                 scope.set(&lhsGuard, RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT), lhs.m()->internalClass->engine);
                 lhs = lhsGuard->asReturnedValue();
             }
-#else
-            Q_UNIMPLEMENTED();
-#endif
         }
         goto redo;
     case QV4::Value::QT_Empty:

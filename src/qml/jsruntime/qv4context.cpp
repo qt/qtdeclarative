@@ -71,7 +71,8 @@ Heap::CallContext *ExecutionContext::newBlockContext(CppStackFrame *frame, int b
 
     Heap::ExecutionContext *outer = static_cast<Heap::ExecutionContext *>(frame->context()->m());
     c->outer.set(v4, outer);
-    c->function.set(v4, static_cast<Heap::FunctionObject *>(frame->jsFrame->function.m()));
+    c->function.set(v4, static_cast<Heap::FunctionObject *>(
+                                Value::fromStaticValue(frame->jsFrame->function).m()));
 
     c->locals.size = nLocals;
     c->locals.alloc = nLocals;
@@ -108,7 +109,8 @@ Heap::CallContext *ExecutionContext::newCallContext(CppStackFrame *frame)
     c->init();
 
     c->outer.set(v4, outer);
-    c->function.set(v4, static_cast<Heap::FunctionObject *>(frame->jsFrame->function.m()));
+    c->function.set(v4, static_cast<Heap::FunctionObject *>(
+                                Value::fromStaticValue(frame->jsFrame->function).m()));
 
     const CompiledData::Function *compiledFunction = function->compiledFunction;
     uint nLocals = compiledFunction->nLocals;
