@@ -1773,10 +1773,6 @@ PropertyDefinition: PropertyName T_COLON AssignmentExpression_In;
 /.
     case $rule_number: {
         AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(1).PropertyName, sym(3).Expression);
-        if (auto *f = asAnonymousFunctionDefinition(sym(3).Expression)) {
-            if (!AST::cast<AST::ComputedPropertyName *>(sym(1).PropertyName))
-                f->name = driver->newStringRef(sym(1).PropertyName->asString());
-        }
         if (auto *c = asAnonymousClassDefinition(sym(3).Expression)) {
             if (!AST::cast<AST::ComputedPropertyName *>(sym(1).PropertyName))
                 c->name = driver->newStringRef(sym(1).PropertyName->asString());
