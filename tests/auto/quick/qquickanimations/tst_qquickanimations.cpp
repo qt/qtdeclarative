@@ -109,6 +109,7 @@ private slots:
     void unsetAnimatorProxyJobWindow();
     void finished();
     void replacingTransitions();
+    void animationJobSelfDestruction();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -1721,6 +1722,26 @@ void tst_qquickanimations::replacingTransitions()
     QTRY_COMPARE(addTrans->running(), false);
     QTRY_COMPARE(displaceTrans->running(), false);
     QCOMPARE(model->count(), 3);
+}
+
+void tst_qquickanimations::animationJobSelfDestruction()
+{
+    // Don't crash
+    QQmlEngine engine;
+    engine.clearComponentCache();
+    QQmlComponent c(&engine, testFileUrl("animationJobSelfDestructionBug.qml"));
+    QScopedPointer<QQuickWindow> win(qobject_cast<QQuickWindow*>(c.create()));
+    if (!c.errors().isEmpty())
+        qDebug() << c.errorString();
+    QVERIFY(win);
+    win->setTitle(QTest::currentTestFunction());
+    win->show();
+    QVERIFY(QTest::qWaitForWindowExposed(win.data()));
+    QQmlTimer *timer = win->property("timer").value<QQmlTimer*>();
+    QVERIFY(timer);
+    QCOMPARE(timer->isRunning(), false);
+    timer->start();
+    QTest::qWait(1000);
 }
 
 QTEST_MAIN(tst_qquickanimations)

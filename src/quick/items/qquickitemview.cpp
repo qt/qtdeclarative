@@ -2225,7 +2225,10 @@ bool QQuickItemViewPrivate::prepareNonVisibleItemTransition(FxViewItem *item, co
     if (item->scheduledTransitionType() == QQuickItemViewTransitioner::MoveTransition)
         repositionItemAt(item, item->index, 0);
 
-    if (item->prepareTransition(transitioner, viewBounds)) {
+    bool success = false;
+    ACTION_IF_DELETED(item, success = item->prepareTransition(transitioner, viewBounds), return success);
+
+    if (success) {
         item->releaseAfterTransition = true;
         return true;
     }

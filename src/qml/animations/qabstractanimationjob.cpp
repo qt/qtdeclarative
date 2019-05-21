@@ -263,7 +263,6 @@ QAbstractAnimationJob::QAbstractAnimationJob()
     , m_currentLoopStartTime(0)
     , m_nextSibling(nullptr)
     , m_previousSibling(nullptr)
-    , m_wasDeleted(nullptr)
     , m_hasRegisteredTimer(false)
     , m_isPause(false)
     , m_isGroup(false)
@@ -277,9 +276,6 @@ QAbstractAnimationJob::QAbstractAnimationJob()
 
 QAbstractAnimationJob::~QAbstractAnimationJob()
 {
-    if (m_wasDeleted)
-        *m_wasDeleted = true;
-
     //we can't call stop here. Otherwise we get pure virtual calls
     if (m_state != Stopped) {
         State oldState = m_state;

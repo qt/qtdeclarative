@@ -56,6 +56,8 @@ QQuickItemViewFxItem::QQuickItemViewFxItem(QQuickItem *item, bool ownItem, QQuic
 QQuickItemViewFxItem::~QQuickItemViewFxItem()
 {
     delete transitionableItem;
+    transitionableItem = nullptr;
+
     if (ownItem && item) {
         trackGeometry(false);
         item->setParentItem(0);

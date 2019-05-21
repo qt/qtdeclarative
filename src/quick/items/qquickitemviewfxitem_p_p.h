@@ -54,6 +54,7 @@
 #include <QtQuick/private/qtquickglobal_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemviewtransition_p.h>
+#include <private/qanimationjobutil_p.h>
 
 QT_REQUIRE_CONFIG(quick_itemview);
 
@@ -94,6 +95,7 @@ public:
 
     virtual bool contains(qreal x, qreal y) const = 0;
 
+    SelfDeletable m_selfDeletable;
     int index = -1;
     QPointer<QQuickItem> item;
     bool ownItem;
