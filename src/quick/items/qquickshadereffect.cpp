@@ -864,6 +864,8 @@ QString QQuickShaderEffect::parseLog() // for OpenGL-based autotests
 void QQuickShaderEffectPrivate::updatePolish()
 {
     Q_Q(QQuickShaderEffect);
+    if (!qmlEngine(q))
+        return;
 #if QT_CONFIG(opengl)
     if (q->m_glImpl) {
         q->m_glImpl->maybeUpdateShaders();
