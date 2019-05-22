@@ -9,3 +9,7 @@ opensuse-42.1
 
 [contentHeightWithDelayRemove]
 osx-10.12
+
+#QTBUG-75960
+[currentIndex]
+osx-10.12
