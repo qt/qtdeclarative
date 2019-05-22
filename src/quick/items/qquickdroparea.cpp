@@ -43,6 +43,8 @@
 
 #include <private/qv4arraybuffer_p.h>
 
+#include <QtCore/qregularexpression.h>
+
 QT_BEGIN_NAMESPACE
 
 QQuickDropAreaDrag::QQuickDropAreaDrag(QQuickDropAreaPrivate *d, QObject *parent)
@@ -68,7 +70,7 @@ public:
     QStringList getKeys(const QMimeData *mimeData) const;
 
     QStringList keys;
-    QRegExp keyRegExp;
+    QRegularExpression keyRegExp;
     QPointF dragPosition;
     QQuickDropAreaDrag *drag;
     QPointer<QObject> source;
@@ -155,13 +157,15 @@ void QQuickDropArea::setKeys(const QStringList &keys)
         d->keys = keys;
 
         if (keys.isEmpty()) {
-            d->keyRegExp = QRegExp();
+            d->keyRegExp = QRegularExpression();
         } else {
-            QString pattern = QLatin1Char('(') + QRegExp::escape(keys.first());
+            QString pattern = QLatin1Char('(') + QRegularExpression::escape(keys.first());
             for (int i = 1; i < keys.count(); ++i)
-                pattern += QLatin1Char('|') + QRegExp::escape(keys.at(i));
+                pattern += QLatin1Char('|') + QRegularExpression::escape(keys.at(i));
             pattern += QLatin1Char(')');
-            d->keyRegExp = QRegExp(pattern.replace(QLatin1String("\\*"), QLatin1String(".+")));
+            d->keyRegExp = QRegularExpression(
+                    QRegularExpression::anchoredPattern(pattern.replace(QLatin1String("\\*"),
+                                                                        QLatin1String(".+"))));
         }
         emit keysChanged();
     }
@@ -229,12 +233,11 @@ void QQuickDropArea::dragMoveEvent(QDragMoveEvent *event)
 
 bool QQuickDropAreaPrivate::hasMatchingKey(const QStringList &keys) const
 {
-    if (keyRegExp.isEmpty())
+    if (keyRegExp.pattern().isEmpty())
         return true;
 
-    QRegExp copy = keyRegExp;
     for (const QString &key : keys) {
-        if (copy.exactMatch(key))
+        if (key.contains(keyRegExp))
             return true;
     }
     return false;
