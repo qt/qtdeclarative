@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -47,53 +47,10 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-//! [document]
 import QtQuick 2.14
-
-
-//! [parent begin]
-Rectangle {
-//! [parent begin]
-    width: 300; height: 300
-    id: screen
-
-Column {
-    anchors.centerIn:parent
-
-//! [int validator]
-Column {
-    spacing: 10
-
-    Text {
-        text: "Enter a value from 0 to 2000"
-    }
-    TextInput {
-        focus: true
-        validator: IntValidator { bottom:0; top: 2000}
-    }
+//![0]
+TextInput {
+    id: hexNumber
+    validator: RegularExpressionValidator { regularExpression: /[0-9A-F]+/ }
 }
-//! [int validator]
-
-//! [regexp validator]
-Column {
-    spacing: 10
-
-    Text {
-        text: "Which basket?"
-    }
-    TextInput {
-        focus: true
-        validator: RegularExpressionValidator { regularExpression: /fruit basket/ }
-    }
-}
-//! [regexp validator]
-
-//end of column
-}
-
-//! [parent end]
-}
-//! [parent end]
-
-//! [document]
-
+//![0]

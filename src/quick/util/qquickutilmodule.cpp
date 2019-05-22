@@ -103,6 +103,9 @@ void QQuickUtilModule::defineModule()
     qmlRegisterType<QQuickIntValidator>("QtQuick",2,0,"IntValidator");
     qmlRegisterType<QQuickDoubleValidator>("QtQuick",2,0,"DoubleValidator");
     qmlRegisterType<QRegExpValidator>("QtQuick",2,0,"RegExpValidator");
+#if QT_CONFIG(regularexpression)
+    qmlRegisterType<QRegularExpressionValidator>("QtQuick", 2, 14, "RegularExpressionValidator");
+#endif
 #endif
 
     qmlRegisterUncreatableType<QQuickAnimator>("QtQuick", 2, 2, "Animator", QQuickAbstractAnimation::tr("Animator is an abstract class"));
