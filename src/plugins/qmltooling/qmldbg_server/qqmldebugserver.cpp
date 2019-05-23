@@ -355,11 +355,12 @@ void QQmlDebugServerImpl::parseArguments()
             if (argsNext == argsItEnd)
                 break;
             if (ok) {
-                const QString nextArgument = argsNext->toString();
-
-                if (nextArgument.contains(QRegularExpression(QLatin1String("^\\s*\\d+\\s*$")))) {
-                    portTo = nextArgument.toInt(&ok);
+                portTo = argsNext->toString().toInt(&ok);
+                if (ok) {
                     ++argsIt;
+                } else {
+                    portTo = portFrom;
+                    ok = true;
                 }
             }
         } else if (strArgument.startsWith(QLatin1String("host:"))) {
