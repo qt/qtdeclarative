@@ -97,12 +97,12 @@ public:
                              QQmlEnginePrivate *enginePrivate,
                              const ObjectContainer *objectContainer, const QQmlImports *imports);
 
-    QQmlCompileError buildMetaObjects();
+    QQmlJS::DiagnosticMessage buildMetaObjects();
 
 protected:
-    QQmlCompileError buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context);
-    QQmlRefPointer<QQmlPropertyCache> propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlCompileError *error) const;
-    QQmlCompileError createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlRefPointer<QQmlPropertyCache> &baseTypeCache);
+    QQmlJS::DiagnosticMessage buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context);
+    QQmlRefPointer<QQmlPropertyCache> propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlJS::DiagnosticMessage *error) const;
+    QQmlJS::DiagnosticMessage createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlRefPointer<QQmlPropertyCache> &baseTypeCache);
 
     QString stringAt(int index) const { return objectContainer->stringAt(index); }
 
@@ -128,14 +128,14 @@ inline QQmlPropertyCacheCreator<ObjectContainer>::QQmlPropertyCacheCreator(QQmlP
 }
 
 template <typename ObjectContainer>
-inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjects()
+inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjects()
 {
     QQmlBindingInstantiationContext context;
     return buildMetaObjectRecursively(/*root object*/0, context);
 }
 
 template <typename ObjectContainer>
-inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context)
+inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context)
 {
     const CompiledObject *obj = objectContainer->objectAt(objectIndex);
 
@@ -155,8 +155,8 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObje
                         auto *typeRef = objectContainer->resolvedType(obj->inheritedTypeNameIndex);
                         Q_ASSERT(typeRef);
                         QQmlRefPointer<QQmlPropertyCache> baseTypeCache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
-                        QQmlCompileError error = createMetaObject(context.referencingObjectIndex, obj, baseTypeCache);
-                        if (error.isSet())
+                        QQmlJS::DiagnosticMessage error = createMetaObject(context.referencingObjectIndex, obj, baseTypeCache);
+                        if (error.isValid())
                             return error;
                     }
                 } else {
@@ -170,16 +170,16 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObje
 
     QQmlRefPointer<QQmlPropertyCache> baseTypeCache;
     {
-        QQmlCompileError error;
+        QQmlJS::DiagnosticMessage error;
         baseTypeCache = propertyCacheForObject(obj, context, &error);
-        if (error.isSet())
+        if (error.isValid())
             return error;
     }
 
     if (baseTypeCache) {
         if (needVMEMetaObject) {
-            QQmlCompileError error = createMetaObject(objectIndex, obj, baseTypeCache);
-            if (error.isSet())
+            QQmlJS::DiagnosticMessage error = createMetaObject(objectIndex, obj, baseTypeCache);
+            if (error.isValid())
                 return error;
         } else {
             propertyCaches->set(objectIndex, baseTypeCache);
@@ -200,18 +200,18 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObje
                 if (!context.resolveInstantiatingProperty())
                     pendingGroupPropertyBindings->append(context);
 
-                QQmlCompileError error = buildMetaObjectRecursively(binding->value.objectIndex, context);
-                if (error.isSet())
+                QQmlJS::DiagnosticMessage error = buildMetaObjectRecursively(binding->value.objectIndex, context);
+                if (error.isValid())
                     return error;
             }
     }
 
-    QQmlCompileError noError;
+    QQmlJS::DiagnosticMessage noError;
     return noError;
 }
 
 template <typename ObjectContainer>
-inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContainer>::propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlCompileError *error) const
+inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContainer>::propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlJS::DiagnosticMessage *error) const
 {
     if (context.instantiatingProperty) {
         return context.instantiatingPropertyCache(enginePrivate);
@@ -221,15 +221,15 @@ inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContaine
 
         if (typeRef->isFullyDynamicType) {
             if (obj->propertyCount() > 0 || obj->aliasCount() > 0) {
-                *error = QQmlCompileError(obj->location, QQmlPropertyCacheCreatorBase::tr("Fully dynamic types cannot declare new properties."));
+                *error = qQmlCompileError(obj->location, QQmlPropertyCacheCreatorBase::tr("Fully dynamic types cannot declare new properties."));
                 return nullptr;
             }
             if (obj->signalCount() > 0) {
-                *error = QQmlCompileError(obj->location, QQmlPropertyCacheCreatorBase::tr("Fully dynamic types cannot declare new signals."));
+                *error = qQmlCompileError(obj->location, QQmlPropertyCacheCreatorBase::tr("Fully dynamic types cannot declare new signals."));
                 return nullptr;
             }
             if (obj->functionCount() > 0) {
-                *error = QQmlCompileError(obj->location, QQmlPropertyCacheCreatorBase::tr("Fully Dynamic types cannot declare new functions."));
+                *error = qQmlCompileError(obj->location, QQmlPropertyCacheCreatorBase::tr("Fully Dynamic types cannot declare new functions."));
                 return nullptr;
             }
         }
@@ -256,7 +256,7 @@ inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContaine
 
         const QMetaObject *attachedMo = qmltype.attachedPropertiesType(enginePrivate);
         if (!attachedMo) {
-            *error = QQmlCompileError(context.instantiatingBinding->location, QQmlPropertyCacheCreatorBase::tr("Non-existent attached object"));
+            *error = qQmlCompileError(context.instantiatingBinding->location, QQmlPropertyCacheCreatorBase::tr("Non-existent attached object"));
             return nullptr;
         }
         return enginePrivate->cache(attachedMo);
@@ -265,7 +265,7 @@ inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContaine
 }
 
 template <typename ObjectContainer>
-inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlRefPointer<QQmlPropertyCache> &baseTypeCache)
+inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlRefPointer<QQmlPropertyCache> &baseTypeCache)
 {
     QQmlRefPointer<QQmlPropertyCache> cache;
     cache.adopt(baseTypeCache->copyAndReserve(obj->propertyCount() + obj->aliasCount(),
@@ -335,7 +335,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
         bool notInRevision = false;
         QQmlPropertyData *d = resolver.property(stringAt(p->nameIndex), &notInRevision);
         if (d && d->isFinal())
-            return QQmlCompileError(p->location, QQmlPropertyCacheCreatorBase::tr("Cannot override FINAL property"));
+            return qQmlCompileError(p->location, QQmlPropertyCacheCreatorBase::tr("Cannot override FINAL property"));
     }
 
     auto a = obj->aliasesBegin();
@@ -344,7 +344,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
         bool notInRevision = false;
         QQmlPropertyData *d = resolver.property(stringAt(a->nameIndex), &notInRevision);
         if (d && d->isFinal())
-            return QQmlCompileError(a->location, QQmlPropertyCacheCreatorBase::tr("Cannot override FINAL property"));
+            return qQmlCompileError(a->location, QQmlPropertyCacheCreatorBase::tr("Cannot override FINAL property"));
     }
 
     int effectivePropertyIndex = cache->propertyIndexCacheStart;
@@ -438,7 +438,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
                     const QString customTypeName = stringAt(param->customTypeNameIndex);
                     QQmlType qmltype;
                     if (!imports->resolveType(customTypeName, &qmltype, nullptr, nullptr, nullptr))
-                        return QQmlCompileError(s->location, QQmlPropertyCacheCreatorBase::tr("Invalid signal parameter type: %1").arg(customTypeName));
+                        return qQmlCompileError(s->location, QQmlPropertyCacheCreatorBase::tr("Invalid signal parameter type: %1").arg(customTypeName));
 
                     if (qmltype.isComposite()) {
                         QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
@@ -461,7 +461,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
 
         QString signalName = stringAt(s->nameIndex);
         if (seenSignals.contains(signalName))
-            return QQmlCompileError(s->location, QQmlPropertyCacheCreatorBase::tr("Duplicate signal name: invalid override of property change signal or superclass signal"));
+            return qQmlCompileError(s->location, QQmlPropertyCacheCreatorBase::tr("Duplicate signal name: invalid override of property change signal or superclass signal"));
         seenSignals.insert(signalName);
 
         cache->appendSignal(signalName, flags, effectiveMethodIndex++,
@@ -477,7 +477,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
 
         const QString slotName = stringAt(function->nameIndex);
         if (seenSignals.contains(slotName))
-            return QQmlCompileError(function->location, QQmlPropertyCacheCreatorBase::tr("Duplicate method name: invalid override of property change signal or superclass signal"));
+            return qQmlCompileError(function->location, QQmlPropertyCacheCreatorBase::tr("Duplicate method name: invalid override of property change signal or superclass signal"));
         // Note: we don't append slotName to the seenSignals list, since we don't
         // protect against overriding change signals or methods with properties.
 
@@ -517,7 +517,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
 
             QQmlType qmltype;
             if (!imports->resolveType(stringAt(p->customTypeNameIndex), &qmltype, nullptr, nullptr, nullptr)) {
-                return QQmlCompileError(p->location, QQmlPropertyCacheCreatorBase::tr("Invalid property type"));
+                return qQmlCompileError(p->location, QQmlPropertyCacheCreatorBase::tr("Invalid property type"));
             }
 
             Q_ASSERT(qmltype.isValid());
@@ -561,7 +561,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
         effectiveSignalIndex++;
     }
 
-    QQmlCompileError noError;
+    QQmlJS::DiagnosticMessage noError;
     return noError;
 }
 
@@ -575,11 +575,11 @@ public:
 
     void appendAliasPropertiesToMetaObjects();
 
-    QQmlCompileError appendAliasesToPropertyCache(const CompiledObject &component, int objectIndex);
+    QQmlJS::DiagnosticMessage appendAliasesToPropertyCache(const CompiledObject &component, int objectIndex);
 
 private:
     void appendAliasPropertiesInMetaObjectsWithinComponent(const CompiledObject &component, int firstObjectIndex);
-    QQmlCompileError propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, int *rev, QQmlPropertyData::Flags *propertyFlags);
+    QQmlJS::DiagnosticMessage propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, int *rev, QQmlPropertyData::Flags *propertyFlags);
 
     void collectObjectsWithAliasesRecursively(int objectIndex, QVector<int> *objectsWithAliases) const;
 
@@ -690,7 +690,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::collectObjectsWithAl
 }
 
 template <typename ObjectContainer>
-inline QQmlCompileError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias(
+inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias(
         const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, int *minorVersion,
         QQmlPropertyData::Flags *propertyFlags)
 {
@@ -716,7 +716,7 @@ inline QQmlCompileError QQmlPropertyCacheAliasCreator<ObjectContainer>::property
 
             const QV4::CompiledData::Alias *targetAlias = &(*nextAlias);
             if (seenAliases.contains(targetAlias)) {
-                return QQmlCompileError(targetAlias->location,
+                return qQmlCompileError(targetAlias->location,
                                         QQmlPropertyCacheCreatorBase::tr("Cyclic alias"));
             }
 
@@ -738,7 +738,8 @@ inline QQmlCompileError QQmlPropertyCacheAliasCreator<ObjectContainer>::property
             // Can be caused by the alias target not being a valid id or property. E.g.:
             // property alias dataValue: dataVal
             // invalidAliasComponent { id: dataVal }
-            return QQmlCompileError(targetObject.location, QQmlPropertyCacheCreatorBase::tr("Invalid alias target"));
+            return qQmlCompileError(targetObject.location,
+                                    QQmlPropertyCacheCreatorBase::tr("Invalid alias target"));
         }
 
         if (typeRef->type.isValid())
@@ -784,16 +785,16 @@ inline QQmlCompileError QQmlPropertyCacheAliasCreator<ObjectContainer>::property
 
     propertyFlags->isWritable = !(alias.flags & QV4::CompiledData::Property::IsReadOnly) && writable;
     propertyFlags->isResettable = resettable;
-    return QQmlCompileError();
+    return QQmlJS::DiagnosticMessage();
 }
 
 template <typename ObjectContainer>
-inline QQmlCompileError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesToPropertyCache(
+inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesToPropertyCache(
         const CompiledObject &component, int objectIndex)
 {
     const CompiledObject &object = *objectContainer->objectAt(objectIndex);
     if (!object.aliasCount())
-        return QQmlCompileError();
+        return QQmlJS::DiagnosticMessage();
 
     QQmlPropertyCache *propertyCache = propertyCaches->at(objectIndex);
     Q_ASSERT(propertyCache);
@@ -810,8 +811,8 @@ inline QQmlCompileError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAl
         int type = 0;
         int minorVersion = 0;
         QQmlPropertyData::Flags propertyFlags;
-        QQmlCompileError error = propertyDataForAlias(component, *alias, &type, &minorVersion, &propertyFlags);
-        if (error.isSet())
+        QQmlJS::DiagnosticMessage error = propertyDataForAlias(component, *alias, &type, &minorVersion, &propertyFlags);
+        if (error.isValid())
             return error;
 
         const QString propertyName = objectContainer->stringAt(alias->nameIndex);
@@ -823,7 +824,7 @@ inline QQmlCompileError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAl
                                       type, minorVersion, effectiveSignalIndex++);
     }
 
-    return QQmlCompileError();
+    return QQmlJS::DiagnosticMessage();
 }
 
 template <typename ObjectContainer>

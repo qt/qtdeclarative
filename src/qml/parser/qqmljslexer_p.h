@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 
 class Engine;
-class DiagnosticMessage;
+struct DiagnosticMessage;
 class Directives;
 
 class QML_PARSER_EXPORT Lexer: public QQmlJSGrammar

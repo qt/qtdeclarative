@@ -86,7 +86,6 @@ class QQmlTypeData;
 class QQmlTypeLoader;
 class QQmlExtensionInterface;
 class QQmlProfiler;
-struct QQmlCompileError;
 
 namespace QmlIR {
 struct Document;
@@ -154,8 +153,8 @@ protected:
     // Can be called from within callbacks
     void setError(const QQmlError &);
     void setError(const QList<QQmlError> &errors);
-    void setError(const QQmlCompileError &error);
-    void setError(const QVector<QQmlCompileError> &errors);
+    void setError(const QQmlJS::DiagnosticMessage &error);
+    void setError(const QVector<QQmlJS::DiagnosticMessage> &errors);
     void setError(const QString &description);
     void addDependency(QQmlDataBlob *);
 
@@ -481,7 +480,7 @@ private:
     void restoreIR(QV4::CompiledData::CompilationUnit &&unit);
     void continueLoadFromIR();
     void resolveTypes();
-    QQmlCompileError buildTypeResolutionCaches(
+    QQmlJS::DiagnosticMessage buildTypeResolutionCaches(
             QQmlRefPointer<QQmlTypeNameCache> *typeNameCache,
             QV4::ResolvedTypeReferenceMap *resolvedTypeCache
             ) const;

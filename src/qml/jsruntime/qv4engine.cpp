@@ -42,6 +42,7 @@
 #include <private/qv4compiler_p.h>
 #include <private/qv4compilercontext_p.h>
 #include <private/qv4codegen_p.h>
+#include <private/qqmljsdiagnosticmessage_p.h>
 
 #include <QtCore/QTextStream>
 #include <QDateTime>
@@ -1766,10 +1767,10 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(
                                                  sourceCode, sourceTimeStamp, &diagnostics);
     for (const QQmlJS::DiagnosticMessage &m : diagnostics) {
         if (m.isError()) {
-            throwSyntaxError(m.message, url.toString(), m.loc.startLine, m.loc.startColumn);
+            throwSyntaxError(m.message, url.toString(), m.line, m.column);
             return nullptr;
         } else {
-            qWarning() << url << ':' << m.loc.startLine << ':' << m.loc.startColumn
+            qWarning() << url << ':' << m.line << ':' << m.column
                       << ": warning: " << m.message;
         }
     }

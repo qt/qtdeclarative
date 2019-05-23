@@ -374,13 +374,12 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, Documen
         if (!parseResult || !diagnosticMessages.isEmpty()) {
             // Extract errors from the parser
             for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
-
                 if (m.isWarning()) {
-                    qWarning("%s:%d : %s", qPrintable(url), m.loc.startLine, qPrintable(m.message));
+                    qWarning("%s:%d : %s", qPrintable(url), m.line, qPrintable(m.message));
                     continue;
                 }
 
-                recordError(m.loc, m.message);
+                errors << m;
             }
             return false;
         }
@@ -1502,7 +1501,8 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
 void IRBuilder::recordError(const QQmlJS::AST::SourceLocation &location, const QString &description)
 {
     QQmlJS::DiagnosticMessage error;
-    error.loc = location;
+    error.line = location.startLine;
+    error.column = location.startColumn;
     error.message = description;
     errors << error;
 }

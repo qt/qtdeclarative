@@ -54,13 +54,12 @@
 #include <private/qqmljsastvisitor_p.h>
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljsast_p.h>
+#include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qv4compiler_p.h>
 #include <private/qv4compilercontext_p.h>
 #include <private/qv4util_p.h>
 #include <private/qv4bytecodegenerator_p.h>
 #include <private/qv4calldata_p.h>
-
-#include <QtQml/qqmlerror.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -673,7 +672,7 @@ protected:
 
 public:
     QList<DiagnosticMessage> errors() const;
-    QList<QQmlError> qmlErrors() const;
+    QUrl url() const;
 
     Reference binopHelper(QSOperator::Op oper, Reference &left, Reference &right);
     Reference jumpBinop(QSOperator::Op oper, Reference &left, Reference &right);

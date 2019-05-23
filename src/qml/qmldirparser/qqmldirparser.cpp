@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qqmldirparser_p.h"
-#include "qqmlerror.h"
 
 #include <QtCore/QtDebug>
 
@@ -297,8 +296,8 @@ bool QQmlDirParser::parse(const QString &source)
 void QQmlDirParser::reportError(quint16 line, quint16 column, const QString &description)
 {
     QQmlJS::DiagnosticMessage error;
-    error.loc.startLine = line;
-    error.loc.startColumn = column;
+    error.line = line;
+    error.column = column;
     error.message = description;
     _errors.append(error);
 }
@@ -311,27 +310,20 @@ bool QQmlDirParser::hasError() const
     return false;
 }
 
-void QQmlDirParser::setError(const QQmlError &e)
+void QQmlDirParser::setError(const QQmlJS::DiagnosticMessage &e)
 {
     _errors.clear();
-    reportError(e.line(), e.column(), e.description());
+    reportError(e.line, e.column, e.message);
 }
 
-QList<QQmlError> QQmlDirParser::errors(const QString &uri) const
+QList<QQmlJS::DiagnosticMessage> QQmlDirParser::errors(const QString &uri) const
 {
-    QUrl url(uri);
-    QList<QQmlError> errors;
+    QList<QQmlJS::DiagnosticMessage> errors;
     const int numErrors = _errors.size();
     errors.reserve(numErrors);
     for (int i = 0; i < numErrors; ++i) {
-        const QQmlJS::DiagnosticMessage &msg = _errors.at(i);
-        QQmlError e;
-        QString description = msg.message;
-        description.replace(QLatin1String("$$URI$$"), uri);
-        e.setDescription(description);
-        e.setUrl(url);
-        e.setLine(msg.loc.startLine);
-        e.setColumn(msg.loc.startColumn);
+        QQmlJS::DiagnosticMessage e = _errors.at(i);
+        e.message.replace(QLatin1String("$$URI$$"), uri);
         errors << e;
     }
     return errors;

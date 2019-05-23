@@ -67,6 +67,7 @@ HEADERS += qtqmlglobal.h \
            qtqmlglobal_p.h
 
 #modules
+include(common/common.pri)
 include(util/util.pri)
 include(memory/memory.pri)
 include(parser/parser.pri)

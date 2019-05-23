@@ -39,16 +39,15 @@
 
 #include "qqmlerror.h"
 #include "qqmlsourcecoordinate_p.h"
+#include <private/qqmljsdiagnosticmessage_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qvector.h>
 
-#ifndef QT_NO_QOBJECT
 #include <QtCore/qobject.h>
 #include <QtCore/qpointer.h>
-#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -77,25 +76,13 @@ QT_BEGIN_NAMESPACE
 
     \sa QQuickView::errors(), QQmlComponent::errors()
 */
-class QQmlErrorPrivate
+class QQmlErrorPrivate : public QQmlJS::DiagnosticMessage
 {
 public:
-    QQmlErrorPrivate();
-
+    QQmlErrorPrivate() { type = QtWarningMsg; }
     QUrl url;
-    QString description;
-    quint16 line;
-    quint16 column;
-    QtMsgType messageType;
-#ifndef QT_NO_QOBJECT
     QPointer<QObject> object;
-#endif
 };
-
-QQmlErrorPrivate::QQmlErrorPrivate()
-: line(0), column(0), messageType(QtMsgType::QtWarningMsg)
-{
-}
 
 /*!
     Creates an empty error object.
@@ -126,13 +113,11 @@ QQmlError &QQmlError::operator=(const QQmlError &other)
         if (!d)
             d = new QQmlErrorPrivate;
         d->url = other.d->url;
-        d->description = other.d->description;
+        d->message = other.d->message;
         d->line = other.d->line;
         d->column = other.d->column;
-#ifndef QT_NO_QOBJECT
         d->object = other.d->object;
-#endif
-        d->messageType = other.d->messageType;
+        d->type = other.d->type;
     }
     return *this;
 }
@@ -179,7 +164,7 @@ void QQmlError::setUrl(const QUrl &url)
 QString QQmlError::description() const
 {
     if (d)
-        return d->description;
+        return d->message;
     return QString();
 }
 
@@ -190,7 +175,7 @@ void QQmlError::setDescription(const QString &description)
 {
     if (!d)
         d = new QQmlErrorPrivate;
-    d->description = description;
+    d->message = description;
 }
 
 /*!
@@ -199,7 +184,7 @@ void QQmlError::setDescription(const QString &description)
 int QQmlError::line() const
 {
     if (d)
-        return qmlSourceCoordinate(d->line);
+        return qmlConvertSourceCoordinate<quint32, int>(d->line);
     return -1;
 }
 
@@ -210,7 +195,7 @@ void QQmlError::setLine(int line)
 {
     if (!d)
         d = new QQmlErrorPrivate;
-    d->line = qmlSourceCoordinate(line);
+    d->line = qmlConvertSourceCoordinate<int, quint32>(line);
 }
 
 /*!
@@ -219,7 +204,7 @@ void QQmlError::setLine(int line)
 int QQmlError::column() const
 {
     if (d)
-        return qmlSourceCoordinate(d->column);
+        return qmlConvertSourceCoordinate<quint32, int>(d->column);
     return -1;
 }
 
@@ -230,10 +215,9 @@ void QQmlError::setColumn(int column)
 {
     if (!d)
         d = new QQmlErrorPrivate;
-    d->column = qmlSourceCoordinate(column);
+    d->column = qmlConvertSourceCoordinate<int, quint32>(column);
 }
 
-#ifndef QT_NO_QOBJECT
 /*!
     Returns the nearest object where this error occurred.
     Exceptions in bound property expressions set this to the object
@@ -256,7 +240,6 @@ void QQmlError::setObject(QObject *object)
         d = new QQmlErrorPrivate;
     d->object = object;
 }
-#endif // QT_NO_QOBJECT
 
 /*!
     \since 5.9
@@ -266,7 +249,7 @@ void QQmlError::setObject(QObject *object)
 QtMsgType QQmlError::messageType() const
 {
     if (d)
-        return d->messageType;
+        return d->type;
     return QtMsgType::QtWarningMsg;
 }
 
@@ -280,7 +263,7 @@ void QQmlError::setMessageType(QtMsgType messageType)
 {
     if (!d)
         d = new QQmlErrorPrivate;
-    d->messageType = messageType;
+    d->type = messageType;
 }
 
 /*!

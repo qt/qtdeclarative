@@ -69,10 +69,8 @@ public:
     int column() const;
     void setColumn(int);
 
-#ifndef QT_NO_QOBJECT
     QObject *object() const;
     void setObject(QObject *);
-#endif
 
     QtMsgType messageType() const;
     void setMessageType(QtMsgType messageType);

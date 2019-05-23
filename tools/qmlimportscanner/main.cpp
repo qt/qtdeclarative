@@ -32,6 +32,7 @@
 #include <private/qv4codegen_p.h>
 #include <private/qv4staticvalue_p.h>
 #include <private/qqmlirbuilder_p.h>
+#include <private/qqmljsdiagnosticmessage_p.h>
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDir>
@@ -272,7 +273,7 @@ QVariantList findQmlImportsInQmlCode(const QString &filePath, const QString &cod
         const auto diagnosticMessages = parser.diagnosticMessages();
         for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
             std::cerr << QDir::toNativeSeparators(filePath).toStdString() << ':'
-                      << m.loc.startLine << ':' << m.message.toStdString() << std::endl;
+                      << m.line << ':' << m.message.toStdString() << std::endl;
         }
         return QVariantList();
     }

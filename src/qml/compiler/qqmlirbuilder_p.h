@@ -526,16 +526,15 @@ private:
 
 } // namespace QmlIR
 
-struct QQmlCompileError
+inline QQmlJS::DiagnosticMessage qQmlCompileError(const QV4::CompiledData::Location &location,
+                                                  const QString &description)
 {
-    QQmlCompileError() {}
-    QQmlCompileError(const QV4::CompiledData::Location &location, const QString &description)
-        : location(location), description(description) {}
-    QV4::CompiledData::Location location;
-    QString description;
-
-    bool isSet() const { return !description.isEmpty(); }
-};
+    QQmlJS::DiagnosticMessage error;
+    error.line = location.line;
+    error.column = location.column;
+    error.message = description;
+    return error;
+}
 
 QT_END_NAMESPACE
 

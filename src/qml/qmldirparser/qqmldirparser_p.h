@@ -56,10 +56,10 @@
 #include <QtCore/QDebug>
 #include <private/qqmljsengine_p.h>
 #include <private/qv4global_p.h>
+#include <private/qqmljsdiagnosticmessage_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlError;
 class QQmlEngine;
 class Q_QML_PRIVATE_EXPORT QQmlDirParser
 {
@@ -70,8 +70,8 @@ public:
     bool parse(const QString &source);
 
     bool hasError() const;
-    void setError(const QQmlError &);
-    QList<QQmlError> errors(const QString &uri) const;
+    void setError(const QQmlJS::DiagnosticMessage &);
+    QList<QQmlJS::DiagnosticMessage> errors(const QString &uri) const;
 
     QString typeNamespace() const;
     void setTypeNamespace(const QString &s);

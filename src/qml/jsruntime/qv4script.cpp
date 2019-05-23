@@ -108,10 +108,10 @@ void Script::parse()
     const auto diagnosticMessages = parser.diagnosticMessages();
     for (const DiagnosticMessage &m : diagnosticMessages) {
         if (m.isError()) {
-            valueScope.engine->throwSyntaxError(m.message, sourceFile, m.loc.startLine, m.loc.startColumn);
+            valueScope.engine->throwSyntaxError(m.message, sourceFile, m.line, m.column);
             return;
         } else {
-            qWarning() << sourceFile << ':' << m.loc.startLine << ':' << m.loc.startColumn
+            qWarning() << sourceFile << ':' << m.line << ':' << m.column
                       << ": warning: " << m.message;
         }
     }
@@ -203,10 +203,19 @@ QV4::CompiledData::CompilationUnit Script::precompile(
 
     Codegen cg(unitGenerator, /*strict mode*/false);
     cg.generateFromProgram(fileName, finalUrl, source, program, module, contextType);
-    errors = cg.qmlErrors();
-    if (!errors.isEmpty()) {
-        if (reportedErrors)
-            *reportedErrors << errors;
+    const auto v4Errors = cg.errors();
+    if (!v4Errors.isEmpty()) {
+        const QUrl url = cg.url();
+        if (reportedErrors) {
+            for (const auto &v4Error : v4Errors) {
+                QQmlError error;
+                error.setUrl(url);
+                error.setLine(v4Error.line);
+                error.setColumn(v4Error.column);
+                error.setDescription(v4Error.message);
+                reportedErrors->append(error);
+            }
+        }
         return nullptr;
     }
 

@@ -63,7 +63,7 @@ static bool lint_file(const QString &filename, bool silent)
     if (!success && !silent) {
         const auto diagnosticMessages = parser.diagnosticMessages();
         for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
-            qWarning("%s:%d : %s", qPrintable(filename), m.loc.startLine, qPrintable(m.message));
+            qWarning("%s:%d : %s", qPrintable(filename), m.line, qPrintable(m.message));
         }
     }
 

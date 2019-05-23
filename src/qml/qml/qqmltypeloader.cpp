@@ -458,25 +458,25 @@ void QQmlDataBlob::setError(const QList<QQmlError> &errors)
         tryDone();
 }
 
-void QQmlDataBlob::setError(const QQmlCompileError &error)
+void QQmlDataBlob::setError(const QQmlJS::DiagnosticMessage &error)
 {
     QQmlError e;
-    e.setColumn(error.location.column);
-    e.setLine(error.location.line);
-    e.setDescription(error.description);
+    e.setColumn(error.column);
+    e.setLine(error.line);
+    e.setDescription(error.message);
     e.setUrl(url());
     setError(e);
 }
 
-void QQmlDataBlob::setError(const QVector<QQmlCompileError> &errors)
+void QQmlDataBlob::setError(const QVector<QQmlJS::DiagnosticMessage> &errors)
 {
     QList<QQmlError> finalErrors;
     finalErrors.reserve(errors.count());
-    for (const QQmlCompileError &error: errors) {
+    for (const auto &error : errors) {
         QQmlError e;
-        e.setColumn(error.location.column);
-        e.setLine(error.location.line);
-        e.setDescription(error.description);
+        e.setColumn(error.column);
+        e.setLine(error.line);
+        e.setDescription(error.message);
         e.setUrl(url());
         finalErrors << e;
     }
@@ -1576,7 +1576,17 @@ bool QQmlTypeLoaderQmldirContent::hasError() const
 
 QList<QQmlError> QQmlTypeLoaderQmldirContent::errors(const QString &uri) const
 {
-    return m_parser.errors(uri);
+    QList<QQmlError> errors;
+    const QUrl url(uri);
+    for (const auto parseError : m_parser.errors(uri)) {
+        QQmlError error;
+        error.setUrl(url);
+        error.setLine(parseError.line);
+        error.setColumn(parseError.column);
+        error.setDescription(parseError.message);
+        errors.append(error);
+    }
+    return errors;
 }
 
 QString QQmlTypeLoaderQmldirContent::typeNamespace() const
@@ -1593,7 +1603,11 @@ void QQmlTypeLoaderQmldirContent::setContent(const QString &location, const QStr
 
 void QQmlTypeLoaderQmldirContent::setError(const QQmlError &error)
 {
-    m_parser.setError(error);
+    QQmlJS::DiagnosticMessage parseError;
+    parseError.line = error.line();
+    parseError.column = error.column();
+    parseError.message = error.description();
+    m_parser.setError(parseError);
 }
 
 QQmlDirComponents QQmlTypeLoaderQmldirContent::components() const
@@ -2240,8 +2254,8 @@ void QQmlTypeData::createTypeAndPropertyCaches(
         QQmlPropertyCacheCreator<QV4::ExecutableCompilationUnit> propertyCacheCreator(
                 &m_compiledData->propertyCaches, &pendingGroupPropertyBindings, engine,
                 m_compiledData.data(), &m_importCache);
-        QQmlCompileError error = propertyCacheCreator.buildMetaObjects();
-        if (error.isSet()) {
+        QQmlJS::DiagnosticMessage error = propertyCacheCreator.buildMetaObjects();
+        if (error.isValid()) {
             setError(error);
             return;
         }
@@ -2342,8 +2356,8 @@ void QQmlTypeData::done()
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
     QV4::ResolvedTypeReferenceMap resolvedTypeCache;
     {
-        QQmlCompileError error = buildTypeResolutionCaches(&typeNameCache, &resolvedTypeCache);
-        if (error.isSet()) {
+        QQmlJS::DiagnosticMessage error = buildTypeResolutionCaches(&typeNameCache, &resolvedTypeCache);
+        if (error.isValid()) {
             setError(error);
             return;
         }
@@ -2383,7 +2397,7 @@ void QQmlTypeData::done()
         {
         // Sanity check property bindings
             QQmlPropertyValidator validator(enginePrivate, m_importCache, m_compiledData);
-            QVector<QQmlCompileError> errors = validator.validate();
+            QVector<QQmlJS::DiagnosticMessage> errors = validator.validate();
             if (!errors.isEmpty()) {
                 setError(errors);
                 return;
@@ -2527,8 +2541,8 @@ bool QQmlTypeData::loadFromSource()
         for (const QQmlJS::DiagnosticMessage &msg : qAsConst(compiler.errors)) {
             QQmlError e;
             e.setUrl(url());
-            e.setLine(msg.loc.startLine);
-            e.setColumn(msg.loc.startColumn);
+            e.setLine(msg.line);
+            e.setColumn(msg.column);
             e.setDescription(msg.message);
             errors << e;
         }
@@ -2767,7 +2781,7 @@ void QQmlTypeData::resolveTypes()
         loadImplicitImport();
 }
 
-QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(
+QQmlJS::DiagnosticMessage QQmlTypeData::buildTypeResolutionCaches(
         QQmlRefPointer<QQmlTypeNameCache> *typeNameCache,
         QV4::ResolvedTypeReferenceMap *resolvedTypeCache
         ) const
@@ -2790,7 +2804,7 @@ QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(
         QQmlType qmlType = resolvedType->type;
         if (resolvedType->typeData) {
             if (resolvedType->needsCreation && qmlType.isCompositeSingleton()) {
-                return QQmlCompileError(resolvedType->location, tr("Composite Singleton Type %1 is not creatable.").arg(qmlType.qmlTypeName()));
+                return qQmlCompileError(resolvedType->location, tr("Composite Singleton Type %1 is not creatable.").arg(qmlType.qmlTypeName()));
             }
             ref->compilationUnit = resolvedType->typeData->compilationUnit();
         } else if (qmlType.isValid()) {
@@ -2801,7 +2815,7 @@ QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(
                 QString reason = ref->type.noCreationReason();
                 if (reason.isEmpty())
                     reason = tr("Element is not creatable.");
-                return QQmlCompileError(resolvedType->location, reason);
+                return qQmlCompileError(resolvedType->location, reason);
             }
 
             if (ref->type.containsRevisionedAttributes()) {
@@ -2814,7 +2828,7 @@ QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(
         ref->doDynamicTypeCheck();
         resolvedTypeCache->insert(resolvedType.key(), ref.take());
     }
-    QQmlCompileError noError;
+    QQmlJS::DiagnosticMessage noError;
     return noError;
 }
 

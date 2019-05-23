@@ -2109,15 +2109,15 @@ QList<QQmlError> QQmlEnginePrivate::qmlErrorFromDiagnostics(const QString &fileN
     QList<QQmlError> errors;
     for (const DiagnosticMessage &m : diagnosticMessages) {
         if (m.isWarning()) {
-            qWarning("%s:%d : %s", qPrintable(fileName), m.loc.startLine, qPrintable(m.message));
+            qWarning("%s:%d : %s", qPrintable(fileName), m.line, qPrintable(m.message));
             continue;
         }
 
         QQmlError error;
         error.setUrl(QUrl(fileName));
         error.setDescription(m.message);
-        error.setLine(m.loc.startLine);
-        error.setColumn(m.loc.startColumn);
+        error.setLine(m.line);
+        error.setColumn(m.column);
         errors << error;
     }
     return errors;

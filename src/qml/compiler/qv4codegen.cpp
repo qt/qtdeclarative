@@ -53,7 +53,8 @@
 #include <private/qv4compilercontrolflow_p.h>
 #include <private/qv4bytecodegenerator_p.h>
 #include <private/qv4compilerscanfunctions_p.h>
-#include <qqmlerror.h>
+#include <private/qv4stringtoarrayindex_p.h>
+#include <private/qqmljsdiagnosticmessage_p.h>
 
 #include <cmath>
 #include <iostream>
@@ -3777,7 +3778,8 @@ void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
     hasError = true;
     QQmlJS::DiagnosticMessage error;
     error.message = detail;
-    error.loc = loc;
+    error.line = loc.startLine;
+    error.column = loc.startColumn;
     _errors << error;
 }
 
@@ -3789,7 +3791,8 @@ void Codegen::throwReferenceError(const SourceLocation &loc, const QString &deta
     hasError = true;
     QQmlJS::DiagnosticMessage error;
     error.message = detail;
-    error.loc = loc;
+    error.line = loc.startLine;
+    error.column = loc.startColumn;
     _errors << error;
 }
 
@@ -3961,28 +3964,9 @@ Codegen::VolatileMemoryLocations Codegen::scanVolatileMemoryLocations(AST::Node 
     return scanner.scan(ast);
 }
 
-
-QList<QQmlError> Codegen::qmlErrors() const
+QUrl Codegen::url() const
 {
-    QList<QQmlError> qmlErrors;
-
-    // Short circuit to avoid costly (de)heap allocation of QUrl if there are no errors.
-    if (_errors.size() == 0)
-        return qmlErrors;
-
-    qmlErrors.reserve(_errors.size());
-
-    QUrl url(_fileNameIsUrl ? QUrl(_module->fileName) : QUrl::fromLocalFile(_module->fileName));
-    for (const QQmlJS::DiagnosticMessage &msg: qAsConst(_errors)) {
-        QQmlError e;
-        e.setUrl(url);
-        e.setLine(msg.loc.startLine);
-        e.setColumn(msg.loc.startColumn);
-        e.setDescription(msg.message);
-        qmlErrors << e;
-    }
-
-    return qmlErrors;
+    return QUrl(_fileNameIsUrl ? QUrl(_module->fileName) : QUrl::fromLocalFile(_module->fileName));
 }
 
 bool Codegen::RValue::operator==(const RValue &other) const

@@ -60,17 +60,25 @@ class QQmlPropertyValidator
 public:
     QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, const QQmlImports &imports, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit);
 
-    QVector<QQmlCompileError> validate();
+    QVector<QQmlJS::DiagnosticMessage> validate();
 
 private:
-    QVector<QQmlCompileError> validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty = false) const;
-    QQmlCompileError validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding) const;
-    QQmlCompileError validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding) const;
+    QVector<QQmlJS::DiagnosticMessage> validateObject(
+            int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding,
+            bool populatingValueTypeGroupProperty = false) const;
+    QQmlJS::DiagnosticMessage validateLiteralBinding(
+            QQmlPropertyCache *propertyCache, QQmlPropertyData *property,
+            const QV4::CompiledData::Binding *binding) const;
+    QQmlJS::DiagnosticMessage validateObjectBinding(
+            QQmlPropertyData *property, const QString &propertyName,
+            const QV4::CompiledData::Binding *binding) const;
 
     bool canCoerce(int to, QQmlPropertyCache *fromMo) const;
 
-    Q_REQUIRED_RESULT QVector<QQmlCompileError> recordError(const QV4::CompiledData::Location &location, const QString &description) const;
-    Q_REQUIRED_RESULT QVector<QQmlCompileError> recordError(const QQmlCompileError &error) const;
+    Q_REQUIRED_RESULT QVector<QQmlJS::DiagnosticMessage> recordError(
+            const QV4::CompiledData::Location &location, const QString &description) const;
+    Q_REQUIRED_RESULT QVector<QQmlJS::DiagnosticMessage> recordError(
+            const QQmlJS::DiagnosticMessage &error) const;
     QString stringAt(int index) const { return compilationUnit->stringAt(index); }
     QV4::ResolvedTypeReference *resolvedType(int id) const
     {

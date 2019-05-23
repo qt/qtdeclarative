@@ -245,6 +245,7 @@
 #include <private/qqmljsgrammar_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsengine_p.h>
+#include <private/qqmljsdiagnosticmessage_p.h>
 
 #include <QtCore/qlist.h>
 #include <QtCore/qstring.h>
@@ -365,7 +366,7 @@ public:
     inline DiagnosticMessage diagnosticMessage() const
     {
         for (const DiagnosticMessage &d : diagnostic_messages) {
-            if (d.kind != DiagnosticMessage::Warning)
+            if (d.type != QtWarningMsg)
                 return d;
         }
 
@@ -376,10 +377,10 @@ public:
     { return diagnosticMessage().message; }
 
     inline int errorLineNumber() const
-    { return diagnosticMessage().loc.startLine; }
+    { return diagnosticMessage().line; }
 
     inline int errorColumnNumber() const
-    { return diagnosticMessage().loc.startColumn; }
+    { return diagnosticMessage().column; }
 
 protected:
     bool parse(int startToken);
@@ -403,11 +404,22 @@ protected:
     void pushToken(int token);
     int lookaheadToken(Lexer *lexer);
 
+    static DiagnosticMessage compileError(const AST::SourceLocation &location,
+                                          const QString &message, QtMsgType kind = QtCriticalMsg)
+    {
+        DiagnosticMessage error;
+        error.line = location.startLine;
+        error.column = location.startColumn;
+        error.message = message;
+        error.type = kind;
+        return error;
+    }
+
     void syntaxError(const AST::SourceLocation &location, const char *message) {
-        diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, location, QLatin1String(message)));
+        diagnostic_messages.append(compileError(location, QLatin1String(message)));
      }
      void syntaxError(const AST::SourceLocation &location, const QString &message) {
-         diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, location, message));
+        diagnostic_messages.append(compileError(location, message));
       }
 
 protected:
@@ -840,7 +852,7 @@ UiImportHead: T_IMPORT ImportId;
         if (node) {
             node->importToken = loc(1);
         } else {
-           diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, loc(1),
+            diagnostic_messages.append(compileError(loc(1),
              QLatin1String("Expected a qualified name id or a string literal")));
 
             return false; // ### remove me
@@ -1332,8 +1344,8 @@ UiQualifiedId: MemberExpression;
 /.
     case $rule_number: {
       if (AST::ArrayMemberExpression *mem = AST::cast<AST::ArrayMemberExpression *>(sym(1).Expression)) {
-        diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Warning, mem->lbracketToken,
-          QLatin1String("Ignored annotation")));
+        diagnostic_messages.append(compileError(mem->lbracketToken,
+          QLatin1String("Ignored annotation"), QtWarningMsg));
 
         sym(1).Expression = mem->base;
       }
@@ -1343,7 +1355,7 @@ UiQualifiedId: MemberExpression;
       } else {
         sym(1).UiQualifiedId = 0;
 
-        diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, loc(1),
+        diagnostic_messages.append(compileError(loc(1),
           QLatin1String("Expected a qualified name id")));
 
         return false; // ### recover
@@ -1590,7 +1602,7 @@ RegularExpressionLiteral: T_DIVIDE_EQ;
     scan_regexp: {
         bool rx = lexer->scanRegExp(prefix);
         if (!rx) {
-            diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, location(lexer), lexer->errorMessage()));
+            diagnostic_messages.append(compileError(location(lexer), lexer->errorMessage()));
             return false;
         }
 
@@ -4420,7 +4432,7 @@ ExportSpecifier: IdentifierName T_AS IdentifierName;
             yylloc.length = 0;
 
             //const QString msg = QCoreApplication::translate("QQmlParser", "Missing `;'");
-            //diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Warning, yylloc, msg));
+            //diagnostic_messages.append(compileError(yyloc, msg, QtWarningMsg));
 
             first_token = &token_buffer[0];
             last_token = &token_buffer[1];
@@ -4457,7 +4469,7 @@ ExportSpecifier: IdentifierName T_AS IdentifierName;
                 msg = QCoreApplication::translate("QQmlParser", "Syntax error");
             else
                 msg = QCoreApplication::translate("QQmlParser", "Unexpected token `%1'").arg(QLatin1String(spell[token]));
-            diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, token_buffer[0].loc, msg));
+            diagnostic_messages.append(compileError(token_buffer[0].loc, msg));
 
             action = errorState;
             goto _Lcheck_token;
@@ -4488,7 +4500,7 @@ ExportSpecifier: IdentifierName T_AS IdentifierName;
                 qDebug() << "Parse error, trying to recover (2).";
 #endif
                 const QString msg = QCoreApplication::translate("QQmlParser", "Expected token `%1'").arg(QLatin1String(spell[*tk]));
-                diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, token_buffer[0].loc, msg));
+                diagnostic_messages.append(compileError(token_buffer[0].loc, msg));
 
                 pushToken(*tk);
                 goto _Lcheck_token;
@@ -4503,7 +4515,7 @@ ExportSpecifier: IdentifierName T_AS IdentifierName;
             int a = t_action(errorState, tk);
             if (a > 0 && t_action(a, yytoken)) {
                 const QString msg = QCoreApplication::translate("QQmlParser", "Expected token `%1'").arg(QLatin1String(spell[tk]));
-                diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, token_buffer[0].loc, msg));
+                diagnostic_messages.append(compileError(token_buffer[0].loc, msg));
 
                 pushToken(tk);
                 goto _Lcheck_token;
@@ -4511,7 +4523,7 @@ ExportSpecifier: IdentifierName T_AS IdentifierName;
         }
 
         const QString msg = QCoreApplication::translate("QQmlParser", "Syntax error");
-        diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, token_buffer[0].loc, msg));
+        diagnostic_messages.append(compileError(token_buffer[0].loc, msg));
     }
 
     return false;

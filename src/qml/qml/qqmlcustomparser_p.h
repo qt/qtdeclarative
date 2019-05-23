@@ -83,7 +83,7 @@ public:
     virtual void verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) = 0;
     virtual void applyBindings(QObject *, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) = 0;
 
-    QVector<QQmlCompileError> errors() const { return exceptions; }
+    QVector<QQmlJS::DiagnosticMessage> errors() const { return exceptions; }
 
 protected:
     void error(const QV4::CompiledData::Binding *binding, const QString& description)
@@ -97,7 +97,7 @@ protected:
     const QMetaObject *resolveType(const QString&) const;
 
 private:
-    QVector<QQmlCompileError> exceptions;
+    QVector<QQmlJS::DiagnosticMessage> exceptions;
     QQmlEnginePrivate *engine;
     const QQmlPropertyValidator *validator;
     Flags m_flags;
