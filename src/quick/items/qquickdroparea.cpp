@@ -43,8 +43,6 @@
 
 #include <private/qv4arraybuffer_p.h>
 
-#if QT_CONFIG(draganddrop)
-
 QT_BEGIN_NAMESPACE
 
 QQuickDropAreaDrag::QQuickDropAreaDrag(QQuickDropAreaPrivate *d, QObject *parent)
@@ -619,5 +617,3 @@ void QQuickDropEvent::accept(QQmlV4Function *args)
 QT_END_NAMESPACE
 
 #include "moc_qquickdroparea_p.cpp"
-
-#endif // draganddrop

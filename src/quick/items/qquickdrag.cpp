@@ -52,7 +52,6 @@
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
 
-#if QT_CONFIG(draganddrop)
 #include <qpa/qplatformdrag.h>
 #include <QtGui/qdrag.h>
 
@@ -996,5 +995,3 @@ QQuickDragAttached *QQuickDrag::qmlAttachedProperties(QObject *obj)
 QT_END_NAMESPACE
 
 #include "moc_qquickdrag_p.cpp"
-
-#endif // draganddrop

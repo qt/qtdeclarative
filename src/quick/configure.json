@@ -1,6 +1,7 @@
 {
     "module": "quick",
     "depends": [
+        "core-private",
         "qml-private",
         "gui-private",
         "qmlmodels-private"
@@ -179,6 +180,18 @@
             "section": "Qt Quick",
             "output": [
                 "privateFeature"
+            ]
+        },
+        "quick-draganddrop": {
+            "label": "Drag & Drop",
+            "purpose": "Drag and drop support for Qt Quick",
+            "section": "Qt Quick",
+            "condition": [
+                "features.draganddrop",
+                "features.regularexpression"
+            ],
+            "output": [
+                "publicFeature"
             ]
         }
     },

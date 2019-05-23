@@ -55,7 +55,7 @@
 
 #include <QtGui/qevent.h>
 
-#if QT_CONFIG(draganddrop)
+QT_REQUIRE_CONFIG(quick_draganddrop);
 
 QT_BEGIN_NAMESPACE
 
@@ -189,7 +189,5 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickDropEvent)
 QML_DECLARE_TYPE(QQuickDropArea)
-
-#endif // draganddrop
 
 #endif // QQUICKDROPAREA_P_H

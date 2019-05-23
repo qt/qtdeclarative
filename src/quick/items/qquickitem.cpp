@@ -4163,7 +4163,7 @@ void QQuickItem::hoverLeaveEvent(QHoverEvent *event)
     Q_UNUSED(event);
 }
 
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
 /*!
     This event handler can be reimplemented in a subclass to receive drag-enter
     events for an item. The event information is provided by the
@@ -4231,7 +4231,7 @@ void QQuickItem::dropEvent(QDropEvent *event)
 {
     Q_UNUSED(event);
 }
-#endif // draganddrop
+#endif // quick_draganddrop
 
 /*!
     Reimplement this method to filter the mouse events that are received by
@@ -8118,7 +8118,7 @@ bool QQuickItem::event(QEvent *ev)
         wheelEvent(static_cast<QWheelEvent*>(ev));
         break;
 #endif
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
     case QEvent::DragEnter:
         dragEnterEvent(static_cast<QDragEnterEvent*>(ev));
         break;
@@ -8131,7 +8131,7 @@ bool QQuickItem::event(QEvent *ev)
     case QEvent::Drop:
         dropEvent(static_cast<QDropEvent*>(ev));
         break;
-#endif // draganddrop
+#endif // quick_draganddrop
 #if QT_CONFIG(gestures)
     case QEvent::NativeGesture:
         ev->ignore();

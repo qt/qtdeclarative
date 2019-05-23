@@ -110,8 +110,10 @@
 #include "qquickshadereffect_p.h"
 #include "qquickshadereffectmesh_p.h"
 #endif
+#if QT_CONFIG(quick_draganddrop)
 #include "qquickdrag_p.h"
 #include "qquickdroparea_p.h"
+#endif
 #include "qquickmultipointtoucharea_p.h"
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 
@@ -305,7 +307,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPathInterpolator>("QtQuick",2,0,"PathInterpolator");
 #endif
 
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
     qmlRegisterType<QQuickDropArea>("QtQuick", 2, 0, "DropArea");
     qmlRegisterType<QQuickDropEvent>();
     qmlRegisterType<QQuickDropAreaDrag>();

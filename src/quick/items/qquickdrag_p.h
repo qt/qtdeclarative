@@ -60,7 +60,7 @@
 #include <QtCore/qstringlist.h>
 #include <QtCore/qurl.h>
 
-#if QT_CONFIG(draganddrop)
+QT_REQUIRE_CONFIG(quick_draganddrop);
 
 QT_BEGIN_NAMESPACE
 
@@ -317,7 +317,5 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickDrag)
 QML_DECLARE_TYPEINFO(QQuickDrag, QML_HAS_ATTACHED_PROPERTIES)
-
-#endif // draganddrop
 
 #endif

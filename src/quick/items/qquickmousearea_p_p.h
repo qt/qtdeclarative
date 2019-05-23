@@ -97,7 +97,7 @@ public:
     bool overThreshold : 1;
     Qt::MouseButtons pressed;
     int pressAndHoldInterval;
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
     QQuickDrag *drag;
 #endif
     QPointer<QQuickPointerMask> mask;

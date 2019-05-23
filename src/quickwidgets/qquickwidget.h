@@ -134,7 +134,7 @@ protected:
     void wheelEvent(QWheelEvent *) override;
 #endif
 
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
     void dragEnterEvent(QDragEnterEvent *) override;
     void dragMoveEvent(QDragMoveEvent *) override;
     void dragLeaveEvent(QDragLeaveEvent *) override;

@@ -75,7 +75,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
     Q_PROPERTY(Qt::MouseButtons pressedButtons READ pressedButtons NOTIFY pressedButtonsChanged)
     Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
     Q_PROPERTY(bool hoverEnabled READ hoverEnabled WRITE setHoverEnabled NOTIFY hoverEnabledChanged)
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
     Q_PROPERTY(QQuickDrag *drag READ drag CONSTANT) //### add flicking to QQuickDrag or add a QQuickFlick ???
 #endif
     Q_PROPERTY(bool preventStealing READ preventStealing WRITE setPreventStealing NOTIFY preventStealingChanged)
@@ -111,7 +111,7 @@ public:
     bool hoverEnabled() const;
     void setHoverEnabled(bool h);
 
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
     QQuickDrag *drag();
 #endif
 

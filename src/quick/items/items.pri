@@ -52,8 +52,6 @@ HEADERS += \
     $$PWD/qquickstateoperations_p.h \
     $$PWD/qquickimplicitsizeitem_p.h \
     $$PWD/qquickimplicitsizeitem_p_p.h \
-    $$PWD/qquickdrag_p.h \
-    $$PWD/qquickdroparea_p.h \
     $$PWD/qquickmultipointtoucharea_p.h \
     $$PWD/qquickscreen_p.h \
     $$PWD/qquickwindowattached_p.h \
@@ -95,8 +93,6 @@ SOURCES += \
     $$PWD/qquickstateoperations.cpp \
     $$PWD/qquickimplicitsizeitem.cpp \
     $$PWD/qquickaccessibleattached.cpp \
-    $$PWD/qquickdrag.cpp \
-    $$PWD/qquickdroparea.cpp \
     $$PWD/qquickmultipointtoucharea.cpp \
     $$PWD/qquickwindowmodule.cpp \
     $$PWD/qquickscreen.cpp \
@@ -104,6 +100,16 @@ SOURCES += \
     $$PWD/qquickrendercontrol.cpp \
     $$PWD/qquickgraphicsinfo.cpp \
     $$PWD/qquickitemgrabresult.cpp
+
+qtConfig(quick-draganddrop) {
+    HEADERS += \
+        $$PWD/qquickdrag_p.h \
+        $$PWD/qquickdroparea_p.h \
+
+    SOURCES += \
+        $$PWD/qquickdrag.cpp \
+        $$PWD/qquickdroparea.cpp \
+}
 
 qtConfig(quick-animatedimage) {
     HEADERS += \

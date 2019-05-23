@@ -129,7 +129,7 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     if (!engine.isNull() && !engine.data()->incubationController())
         engine.data()->setIncubationController(offscreenWindow->incubationController());
 
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
     q->setAcceptDrops(true);
 #endif
 
@@ -1530,7 +1530,7 @@ bool QQuickWidget::event(QEvent *e)
     return QWidget::event(e);
 }
 
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
 
 /*! \reimp */
 void QQuickWidget::dragEnterEvent(QDragEnterEvent *e)
@@ -1565,7 +1565,7 @@ void QQuickWidget::dropEvent(QDropEvent *e)
     d->offscreenWindow->event(e);
 }
 
-#endif // draganddrop
+#endif // quick_draganddrop
 
 // TODO: try to separate the two cases of
 // 1. render() unconditionally without sync

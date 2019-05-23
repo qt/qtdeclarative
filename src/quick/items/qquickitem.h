@@ -433,7 +433,7 @@ protected:
     virtual void hoverEnterEvent(QHoverEvent *event);
     virtual void hoverMoveEvent(QHoverEvent *event);
     virtual void hoverLeaveEvent(QHoverEvent *event);
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
     virtual void dragEnterEvent(QDragEnterEvent *);
     virtual void dragMoveEvent(QDragMoveEvent *);
     virtual void dragLeaveEvent(QDragLeaveEvent *);

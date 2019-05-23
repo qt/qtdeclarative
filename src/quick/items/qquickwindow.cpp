@@ -45,7 +45,9 @@
 #include "qquickitem_p.h"
 #include "qquickevents_p_p.h"
 
+#if QT_CONFIG(quick_draganddrop)
 #include <private/qquickdrag_p.h>
+#endif
 #include <private/qquickhoverhandler_p.h>
 #include <private/qquickpointerhandler_p.h>
 
@@ -496,7 +498,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
 #if QT_CONFIG(cursor)
     , cursorItem(nullptr)
 #endif
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
     , dragGrabber(nullptr)
 #endif
     , touchMouseId(-1)
@@ -524,7 +526,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , vaoHelper(nullptr)
     , incubationController(nullptr)
 {
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
     dragGrabber = new QQuickDragGrabber;
 #endif
 }
@@ -1346,7 +1348,7 @@ QQuickWindow::~QQuickWindow()
     }
 
     delete d->incubationController; d->incubationController = nullptr;
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
     delete d->dragGrabber; d->dragGrabber = nullptr;
 #endif
     QQuickRootItem *root = d->contentItem;
@@ -1635,7 +1637,7 @@ bool QQuickWindow::event(QEvent *e)
         d->clearHover();
         d->lastMousePosition = QPointF();
         break;
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
     case QEvent::DragEnter:
     case QEvent::DragLeave:
     case QEvent::DragMove:
@@ -2714,7 +2716,7 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     }
 }
 
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
 void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *event)
 {
     grabber->resetTarget();
@@ -2837,7 +2839,7 @@ bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
 
     return accepted;
 }
-#endif // draganddrop
+#endif // quick_draganddrop
 
 #if QT_CONFIG(cursor)
 void QQuickWindowPrivate::updateCursor(const QPointF &scenePos)

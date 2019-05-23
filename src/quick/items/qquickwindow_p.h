@@ -130,7 +130,7 @@ public:
 #if QT_CONFIG(cursor)
     QQuickItem *cursorItem;
 #endif
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
     QQuickDragGrabber *dragGrabber;
 #endif
     int touchMouseId;
@@ -186,7 +186,7 @@ public:
                         Qt::KeyboardModifiers modifiers, ulong timestamp, bool accepted);
     bool clearHover(ulong timestamp = 0);
 
-#if QT_CONFIG(draganddrop)
+#if QT_CONFIG(quick_draganddrop)
     void deliverDragEvent(QQuickDragGrabber *, QEvent *);
     bool deliverDragEvent(QQuickDragGrabber *, QQuickItem *, QDragMoveEvent *);
 #endif
