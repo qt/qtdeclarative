@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
     \code
     class MyObject : public QObject, public QQmlParserStatus
     {
-        Q_OBJECT
+        \Q_OBJECT
         Q_INTERFACES(QQmlParserStatus)
 
     public:
