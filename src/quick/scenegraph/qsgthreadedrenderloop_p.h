@@ -124,6 +124,9 @@ private:
 
 
     QSGContext *sg;
+    // Set of contexts that have been created but are now owned by
+    // a rendering thread yet, as the window has never been exposed.
+    mutable QSet<QSGRenderContext*> pendingRenderContexts;
     QAnimationDriver *m_animation_driver;
     QList<Window> m_windows;
 

@@ -258,7 +258,7 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
         xs[1].tx = innerSourceRect.left();
         xs += 2;
     }
-    if (innerTargetRect.width() != 0) {
+    if (innerTargetRect.width() != 0 && hTiles > 0) {
         xs[0].x = innerTargetRect.left();
         xs[0].tx = innerSourceRect.x() + (subSourceRect.left() - floorLeft) * innerSourceRect.width();
         ++xs;
@@ -299,7 +299,7 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
         ys[1].ty = innerSourceRect.top();
         ys += 2;
     }
-    if (innerTargetRect.height() != 0) {
+    if (innerTargetRect.height() != 0 && vTiles > 0) {
         ys[0].y = innerTargetRect.top();
         ys[0].ty = innerSourceRect.y() + (subSourceRect.top() - floorTop) * innerSourceRect.height();
         ++ys;
