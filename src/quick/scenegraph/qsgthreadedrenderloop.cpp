@@ -770,12 +770,15 @@ QSGThreadedRenderLoop::QSGThreadedRenderLoop()
 
 QSGThreadedRenderLoop::~QSGThreadedRenderLoop()
 {
+    qDeleteAll(pendingRenderContexts);
     delete sg;
 }
 
 QSGRenderContext *QSGThreadedRenderLoop::createRenderContext(QSGContext *sg) const
 {
-    return sg->createRenderContext();
+    auto context = sg->createRenderContext();
+    pendingRenderContexts.insert(context);
+    return context;
 }
 
 void QSGThreadedRenderLoop::maybePostPolishRequest(Window *w)
@@ -935,7 +938,10 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
         Window win;
         win.window = window;
         win.actualWindowFormat = window->format();
-        win.thread = new QSGRenderThread(this, QQuickWindowPrivate::get(window)->context);
+        auto renderContext = QQuickWindowPrivate::get(window)->context;
+        // The thread assumes ownership, so we don't need to delete it later.
+        pendingRenderContexts.remove(renderContext);
+        win.thread = new QSGRenderThread(this, renderContext);
         win.updateDuringSync = false;
         win.forceRenderPass = true; // also covered by polishAndSync(inExpose=true), but doesn't hurt
         m_windows << win;

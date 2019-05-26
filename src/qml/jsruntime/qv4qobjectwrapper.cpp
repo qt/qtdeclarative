@@ -870,7 +870,6 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
     }
 
     lookup->qobjectLookup.ic = This->internalClass();
-    lookup->qobjectLookup.staticQObject = nullptr;
     lookup->qobjectLookup.propertyCache = ddata->propertyCache;
     lookup->qobjectLookup.propertyCache->addref();
     lookup->qobjectLookup.propertyData = property;

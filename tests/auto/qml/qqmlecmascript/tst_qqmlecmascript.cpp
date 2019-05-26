@@ -369,6 +369,7 @@ private slots:
     void intMinDividedByMinusOne();
     void undefinedPropertiesInObjectWrapper();
     void hugeRegexpQuantifiers();
+    void singletonTypeWrapperLookup();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8984,6 +8985,55 @@ void tst_qqmlecmascript::hugeRegexpQuantifiers()
     // It's a regular expression, but it won't match anything.
     // The RegExp compiler also shouldn't crash.
     QVERIFY(value.isRegExp());
+}
+
+struct CppSingleton1 : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int testVar MEMBER testVar CONSTANT)
+public:
+    const int testVar = 0;
+};
+
+struct CppSingleton2 : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int testVar MEMBER testVar CONSTANT)
+public:
+    const int testVar = 1;
+};
+
+void tst_qqmlecmascript::singletonTypeWrapperLookup()
+{
+    QQmlEngine engine;
+
+    auto singletonTypeId1 = qmlRegisterSingletonType<CppSingleton1>("Test.Singletons", 1, 0, "CppSingleton1",
+                                                                    [](QQmlEngine *, QJSEngine *) -> QObject * {
+            return new CppSingleton1;
+    });
+
+    auto singletonTypeId2 = qmlRegisterSingletonType<CppSingleton2>("Test.Singletons", 1, 0, "CppSingleton2",
+                                                                    [](QQmlEngine *, QJSEngine *) -> QObject * {
+            return new CppSingleton2;
+    });
+
+    auto cleanup = qScopeGuard([&]() {
+       qmlUnregisterType(singletonTypeId1);
+       qmlUnregisterType(singletonTypeId2);
+    });
+
+    QQmlComponent component(&engine, testFileUrl("SingletonLookupTest.qml"));
+    QScopedPointer<QObject> test(component.create());
+    QVERIFY2(!test.isNull(), qPrintable(component.errorString()));
+
+    auto singleton1 = engine.singletonInstance<CppSingleton1*>(singletonTypeId1);
+    QVERIFY(singleton1);
+
+    auto singleton2 = engine.singletonInstance<CppSingleton2*>(singletonTypeId2);
+    QVERIFY(singleton2);
+
+    QCOMPARE(test->property("firstLookup").toInt(), singleton1->testVar);
+    QCOMPARE(test->property("secondLookup").toInt(), singleton2->testVar);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

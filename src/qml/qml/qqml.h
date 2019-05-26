@@ -606,9 +606,12 @@ Q_QML_EXPORT void qmlRegisterModule(const char *uri, int versionMajor, int versi
 template<typename T>
 QObject *qmlAttachedPropertiesObject(const QObject *obj, bool create = true)
 {
-    QObject *mutableObj = const_cast<QObject *>(obj);
-    return qmlAttachedPropertiesObject(
-            mutableObj, qmlAttachedPropertiesFunction(mutableObj, &T::staticMetaObject), create);
+    // We don't need a concrete object to resolve the function. As T is a C++ type, it and all its
+    // super types should be registered as CppType (or not at all). We only need the object and its
+    // QML engine to resolve composite types. Therefore, the function is actually a static property
+    // of the C++ type system and we can cache it here for improved performance on further lookups.
+    static const auto func = qmlAttachedPropertiesFunction(nullptr, &T::staticMetaObject);
+    return qmlAttachedPropertiesObject(const_cast<QObject *>(obj), func, create);
 }
 
 Q_QML_EXPORT void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor);
