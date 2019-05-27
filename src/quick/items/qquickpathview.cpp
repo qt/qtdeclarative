@@ -438,7 +438,7 @@ void QQuickPathViewPrivate::updateItem(QQuickItem *item, qreal percent)
         att->setOnPath(percent < 1.0);
     }
     QQuickItemPrivate::get(item)->setCulled(percent >= 1.0);
-    QPointF pf = path->pointAt(qMin(percent, qreal(1.0)));
+    QPointF pf = path->pointAtPercent(qMin(percent, qreal(1.0)));
     item->setX(pf.x() - item->width()/2);
     item->setY(pf.y() - item->height()/2);
 }
@@ -1584,12 +1584,12 @@ QPointF QQuickPathViewPrivate::pointNear(const QPointF &point, qreal *nearPercen
     qreal res = pathLength / samples;
 
     qreal mindist = 1e10; // big number
-    QPointF nearPoint = path->pointAt(0);
+    QPointF nearPoint = path->pointAtPercent(0);
     qreal nearPc = 0;
 
     // get rough pos
     for (qreal i=1; i < samples; i++) {
-        QPointF pt = path->pointAt(i/samples);
+        QPointF pt = path->pointAtPercent(i/samples);
         QPointF diff = pt - point;
         qreal dist = diff.x()*diff.x() + diff.y()*diff.y();
         if (dist < mindist) {
@@ -1602,7 +1602,7 @@ QPointF QQuickPathViewPrivate::pointNear(const QPointF &point, qreal *nearPercen
     // now refine
     qreal approxPc = nearPc;
     for (qreal i = approxPc-1.0; i < approxPc+1.0; i += 1/(2*res)) {
-        QPointF pt = path->pointAt(i/samples);
+        QPointF pt = path->pointAtPercent(i/samples);
         QPointF diff = pt - point;
         qreal dist = diff.x()*diff.x() + diff.y()*diff.y();
         if (dist < mindist) {

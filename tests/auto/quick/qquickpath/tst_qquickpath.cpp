@@ -99,13 +99,13 @@ void tst_QuickPath::arc(QSizeF scale)
     QPainterPath path = obj->path();
     QVERIFY(path != QPainterPath());
 
-    QPointF pos = obj->pointAt(0);
+    QPointF pos = obj->pointAtPercent(0);
     QCOMPARE(pos, QPointF(0,0));
-    pos = obj->pointAt(.25);
+    pos = obj->pointAtPercent(.25);
     compare(pos, scale, __LINE__, 38.9244897744, 7.85853964341);
-    pos = obj->pointAt(.75);
+    pos = obj->pointAtPercent(.75);
     compare(pos, scale, __LINE__, 92.141460356592, 61.07551022559);
-    pos = obj->pointAt(1);
+    pos = obj->pointAtPercent(1);
     QCOMPARE(pos, QPointF(100 * scale.width(), 100 * scale.height()));
 }
 
@@ -140,18 +140,18 @@ void tst_QuickPath::angleArc(QSizeF scale)
     QPainterPath path = obj->path();
     QVERIFY(path != QPainterPath());
 
-    QPointF pos = obj->pointAt(0);
+    QPointF pos = obj->pointAtPercent(0);
     compare(pos, scale, __LINE__, 135.35533905867, 135.35533905867);
-    pos = obj->pointAt(.25);
+    pos = obj->pointAtPercent(.25);
     compare(pos, scale, __LINE__, 119.46222180396, 146.07068621369);
-    pos = obj->pointAt(.75);
+    pos = obj->pointAtPercent(.75);
     compare(pos, scale, __LINE__, 80.537778196007, 146.07068621366);
-    pos = obj->pointAt(1);
+    pos = obj->pointAtPercent(1);
     compare(pos, scale, __LINE__, 64.644660941173, 135.35533905867);
 
     // if moveToStart is false, we should have a line starting from startX/Y
     arc->setMoveToStart(false);
-    pos = obj->pointAt(0);
+    pos = obj->pointAtPercent(0);
     QCOMPARE(pos, QPointF(0,0));
 }
 
@@ -280,13 +280,13 @@ void tst_QuickPath::svg(QSizeF scale)
     QPainterPath path = obj->path();
     QVERIFY(path != QPainterPath());
 
-    QPointF pos = obj->pointAt(0);
+    QPointF pos = obj->pointAtPercent(0);
     QCOMPARE(pos, QPointF(200 * scale.width(),300 * scale.height()));
-    pos = obj->pointAt(.25);
+    pos = obj->pointAtPercent(.25);
     QCOMPARE(pos.toPoint(), QPoint(400 * scale.width(),175 * scale.height()));  //fuzzy compare
-    pos = obj->pointAt(.75);
+    pos = obj->pointAtPercent(.75);
     QCOMPARE(pos.toPoint(), QPoint(800 * scale.width(),425 * scale.height())); //fuzzy compare
-    pos = obj->pointAt(1);
+    pos = obj->pointAtPercent(1);
     QCOMPARE(pos, QPointF(1000 * scale.width(),300 * scale.height()));
 }
 
@@ -329,10 +329,10 @@ void tst_QuickPath::line(QSizeF scale)
     for (int i = 0; i < 167; ++i) {
         qreal t = i / 167.0;
 
-        QPointF p1 = path1->pointAt(t);
+        QPointF p1 = path1->pointAtPercent(t);
         QCOMPARE(p1.x(), p1.y());
 
-        QPointF p2 = path2->pointAt(t);
+        QPointF p2 = path2->pointAtPercent(t);
         QCOMPARE(p1.toPoint(), p2.toPoint());
     }
 }

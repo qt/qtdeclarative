@@ -900,9 +900,28 @@ QPointF QQuickPath::backwardsPointAt(const QPainterPath &path, const qreal &path
     return QPointF(0,0);
 }
 
-QPointF QQuickPath::pointAt(qreal p) const
+/*!
+   \qmlmethod point Path::pointAtPercent(real t)
+
+    Returns the point at the percentage \a t of the current path.
+    The argument \a t has to be between 0 and 1.
+
+    \note Similarly to other percent methods in \l QPainterPath,
+    the percentage measurement is not linear with regards to the length,
+    if curves are present in the path.
+    When curves are present, the percentage argument is mapped to the \c t
+    parameter of the Bezier equations.
+
+   \sa QPainterPath::pointAt
+
+   \since QtQuick 2.14
+*/
+QPointF QQuickPath::pointAtPercent(qreal t) const
 {
     Q_D(const QQuickPath);
+    if (d->isShapePath)                     // this since ShapePath does not calculate the length at all,
+        return d->_path.pointAtPercent(t);  // in order to be faster.
+
     if (d->_pointCache.isEmpty()) {
         createPointCache();
         if (d->_pointCache.isEmpty())
@@ -910,7 +929,7 @@ QPointF QQuickPath::pointAt(qreal p) const
     }
 
     const int segmentCount = d->_pointCache.size() - 1;
-    qreal idxf = p*segmentCount;
+    qreal idxf = t*segmentCount;
     int idx1 = qFloor(idxf);
     qreal delta = idxf - idx1;
     if (idx1 > segmentCount)

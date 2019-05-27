@@ -488,7 +488,7 @@ public:
     QPainterPath path() const;
     QStringList attributes() const;
     qreal attributeAt(const QString &, qreal) const;
-    QPointF pointAt(qreal) const;
+    Q_REVISION(14) Q_INVOKABLE QPointF pointAtPercent(qreal t) const;
     QPointF sequentialPointAt(qreal p, qreal *angle = nullptr) const;
     void invalidateSequentialHistory() const;
 
