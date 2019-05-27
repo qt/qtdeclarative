@@ -7265,11 +7265,13 @@ QList<int> tst_QQuickListView::toIntList(const QVariantList &list)
 
 void tst_QQuickListView::matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes)
 {
+    const QSet<int> expectedIndexSet(expectedIndexes.cbegin(), expectedIndexes.cend());
     for (int i=0; i<indexLists.count(); i++) {
-        QSet<int> current = indexLists[i].value<QList<int> >().toSet();
-        if (current != expectedIndexes.toSet())
+        const auto &currentList = indexLists[i].value<QList<int> >();
+        const QSet<int> current(currentList.cbegin(), currentList.cend());
+        if (current != expectedIndexSet)
             qDebug() << "Cannot match actual targets" << current << "with expected" << expectedIndexes;
-        QCOMPARE(current, expectedIndexes.toSet());
+        QCOMPARE(current, expectedIndexSet);
     }
 }
 

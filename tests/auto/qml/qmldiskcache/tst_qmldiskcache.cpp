@@ -645,10 +645,21 @@ void tst_qmldiskcache::localAliases()
     }
 }
 
+static QSet<QString> entrySet(const QDir &dir)
+{
+    const auto &list = dir.entryList(QDir::Files | QDir::NoDotAndDotDot);
+    return QSet<QString>(list.cbegin(), list.cend());
+}
+
+static QSet<QString> entrySet(const QDir &dir, const QStringList &filters)
+{
+    const auto &list = dir.entryList(filters);
+    return QSet<QString>(list.cbegin(), list.cend());
+}
+
 void tst_qmldiskcache::cacheResources()
 {
-    const QSet<QString> existingFiles =
-        m_qmlCacheDirectory.entryList(QDir::Files | QDir::NoDotAndDotDot).toSet();
+    const QSet<QString> existingFiles = entrySet(m_qmlCacheDirectory);
 
     QQmlEngine engine;
 
@@ -659,8 +670,7 @@ void tst_qmldiskcache::cacheResources()
         QCOMPARE(obj->property("value").toInt(), 20);
     }
 
-    const QSet<QString> entries =
-        m_qmlCacheDirectory.entryList(QDir::NoDotAndDotDot | QDir::Files).toSet().subtract(existingFiles);
+    const QSet<QString> entries = entrySet(m_qmlCacheDirectory).subtract(existingFiles);
     QCOMPARE(entries.count(), 1);
 
     QDateTime cacheFileTimeStamp;
@@ -689,8 +699,7 @@ void tst_qmldiskcache::cacheResources()
     }
 
     {
-        const QSet<QString> entries =
-            m_qmlCacheDirectory.entryList(QDir::NoDotAndDotDot | QDir::Files).toSet().subtract(existingFiles);
+        const QSet<QString> entries = entrySet(m_qmlCacheDirectory).subtract(existingFiles);
         QCOMPARE(entries.count(), 1);
 
         QCOMPARE(QFileInfo(m_qmlCacheDirectory.absoluteFilePath(*entries.cbegin())).lastModified().toMSecsSinceEpoch(),
@@ -914,8 +923,7 @@ void tst_qmldiskcache::cppRegisteredSingletonDependency()
 
 void tst_qmldiskcache::cacheModuleScripts()
 {
-    const QSet<QString> existingFiles =
-        m_qmlCacheDirectory.entryList(QDir::Files | QDir::NoDotAndDotDot).toSet();
+    const QSet<QString> existingFiles = entrySet(m_qmlCacheDirectory);
 
     QQmlEngine engine;
 
@@ -936,8 +944,7 @@ void tst_qmldiskcache::cacheModuleScripts()
         QVERIFY(!compilationUnit->backingFile.isNull());
     }
 
-    const QSet<QString> entries =
-         m_qmlCacheDirectory.entryList(QStringList("*.mjsc")).toSet().subtract(existingFiles);
+    const QSet<QString> entries = entrySet(m_qmlCacheDirectory, QStringList("*.mjsc"));
 
     QCOMPARE(entries.count(), 1);
 

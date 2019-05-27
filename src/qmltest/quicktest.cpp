@@ -559,7 +559,7 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
     // Register the test object
     qmlRegisterSingletonType<QTestRootObject>("Qt.test.qtestroot", 1, 0, "QTestRootObject", testRootObject);
 
-    QSet<QString> commandLineTestFunctions = QTest::testFunctions.toSet();
+    QSet<QString> commandLineTestFunctions(QTest::testFunctions.cbegin(), QTest::testFunctions.cend());
     const bool filteringTestFunctions = !commandLineTestFunctions.isEmpty();
 
     // Scan through all of the "tst_*.qml" files and run each of them
@@ -601,7 +601,7 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
             continue;
         }
 
-        const QSet<QString> availableTestSet = availableTestFunctions.toSet();
+        const QSet<QString> availableTestSet(availableTestFunctions.cbegin(), availableTestFunctions.cend());
         if (filteringTestFunctions && !availableTestSet.intersects(commandLineTestFunctions))
             continue;
         commandLineTestFunctions.subtract(availableTestSet);

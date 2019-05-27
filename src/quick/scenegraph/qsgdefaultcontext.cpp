@@ -160,7 +160,7 @@ void QSGDefaultContext::renderContextInitialized(QSGRenderContext *renderContext
         qCDebug(QSG_LOG_INFO, "GL_RENDERER:       %s",
                 (const char*)funcs->glGetString(GL_RENDERER));
         qCDebug(QSG_LOG_INFO, "GL_VERSION:        %s", (const char*)funcs->glGetString(GL_VERSION));
-        QByteArrayList exts = openglRenderContext->openglContext()->extensions().toList();
+        QByteArrayList exts = openglRenderContext->openglContext()->extensions().values();
         std::sort(exts.begin(), exts.end());
         qCDebug(QSG_LOG_INFO, "GL_EXTENSIONS:    %s", exts.join(' ').constData());
         qCDebug(QSG_LOG_INFO, "Max Texture Size: %d", openglRenderContext->maxTextureSize());

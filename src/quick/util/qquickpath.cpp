@@ -570,7 +570,7 @@ void QQuickPath::gatherAttributes()
             attributes.insert(attribute->name());
     }
 
-    d->_attributes = attributes.toList();
+    d->_attributes = attributes.values();
 }
 
 void QQuickPath::componentComplete()
@@ -603,7 +603,7 @@ QStringList QQuickPath::attributes() const
                 qobject_cast<QQuickPathAttribute *>(pathElement))
                 attrs.insert(attribute->name());
         }
-        return attrs.toList();
+        return attrs.values();
     }
     return d->_attributes;
 }

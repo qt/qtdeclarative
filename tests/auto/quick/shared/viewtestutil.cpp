@@ -328,7 +328,8 @@ QQuickViewTestUtil::ListRange QQuickViewTestUtil::ListRange::operator+(const Lis
 
 bool QQuickViewTestUtil::ListRange::operator==(const ListRange &other) const
 {
-    return indexes.toSet() == other.indexes.toSet();
+    return QSet<int>(indexes.cbegin(), indexes.cend())
+        == QSet<int>(other.indexes.cbegin(), other.indexes.cend());
 }
 
 bool QQuickViewTestUtil::ListRange::operator!=(const ListRange &other) const

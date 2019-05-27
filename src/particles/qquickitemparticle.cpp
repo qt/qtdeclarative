@@ -230,13 +230,13 @@ void QQuickItemParticle::reset()
 
     // delete all managed items which had their logical particles cleared
     // but leave it alone if the logical particle is maintained
-    QSet<QQuickItem*> lost = QSet<QQuickItem*>::fromList(m_managed);
+    QSet<QQuickItem*> lost = QSet<QQuickItem*>(m_managed.cbegin(), m_managed.cend());
     for (auto groupId : groupIds()) {
         for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
             lost.remove(d->delegate);
         }
     }
-    m_deletables.append(lost.toList());
+    m_deletables.append(lost.values());
     //TODO: This doesn't yet handle calling detach on taken particles in the system reset case
     processDeletables();
 }
