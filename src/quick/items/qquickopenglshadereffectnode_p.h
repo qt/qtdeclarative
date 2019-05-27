@@ -159,7 +159,7 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void markDirtyTexture();
-    void textureProviderDestroyed(const QObject *object);
+    void textureProviderDestroyed(QObject *object);
 };
 
 QT_END_NAMESPACE

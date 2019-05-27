@@ -515,6 +515,20 @@ QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
         m_impl = new QQuickGenericShaderEffect(this, this);
 }
 
+QQuickShaderEffect::~QQuickShaderEffect()
+{
+    // Delete the implementations now, while they still have have
+    // valid references back to us.
+#if QT_CONFIG(opengl)
+    auto *glImpl = m_glImpl;
+    m_glImpl = nullptr;
+    delete glImpl;
+#endif
+    auto *impl = m_impl;
+    m_impl = nullptr;
+    delete impl;
+}
+
 /*!
     \qmlproperty string QtQuick::ShaderEffect::fragmentShader
 
