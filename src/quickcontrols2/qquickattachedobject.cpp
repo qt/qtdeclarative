@@ -48,8 +48,8 @@ static QQuickAttachedObject *attachedObject(const QMetaObject *type, QObject *ob
 {
     if (!object)
         return nullptr;
-    int idx = -1;
-    return qobject_cast<QQuickAttachedObject *>(qmlAttachedPropertiesObject(&idx, object, type, create));
+    auto func = qmlAttachedPropertiesFunction(object, type);
+    return qobject_cast<QQuickAttachedObject *>(qmlAttachedPropertiesObject(object, func, create));
 }
 
 static QQuickAttachedObject *findAttachedParent(const QMetaObject *type, QObject *object)
