@@ -54,11 +54,8 @@
 #include "qv4runtime_p.h"
 #include "qv4engine_p.h"
 #include "qv4context_p.h"
-
-#if !defined(V4_BOOTSTRAP)
 #include "qv4object_p.h"
 #include "qv4internalclass_p.h"
-#endif
 
 QT_BEGIN_NAMESPACE
 

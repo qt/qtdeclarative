@@ -244,7 +244,7 @@ protected:
         Type_Function,
         Type_Generator
     };
-    static QQmlRefPointer<CompiledData::CompilationUnit> parse(ExecutionEngine *engine, const Value *argv, int argc, Type t = Type_Function);
+    static QQmlRefPointer<ExecutableCompilationUnit> parse(ExecutionEngine *engine, const Value *argv, int argc, Type t = Type_Function);
 };
 
 struct FunctionPrototype: FunctionObject

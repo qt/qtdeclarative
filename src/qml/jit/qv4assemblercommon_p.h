@@ -449,7 +449,7 @@ public:
     // r6 is used by MacroAssemblerARMv7
     static const RegisterID JSStackFrameRegister     = JSC::ARMRegisters::r8;
     static const RegisterID CppStackFrameRegister    = JSC::ARMRegisters::r10;
-#if CPU(ARM_THUMB2) || defined(V4_BOOTSTRAP)
+#if CPU(ARM_THUMB2)
     static const RegisterID FramePointerRegister     = JSC::ARMRegisters::r7;
     static const RegisterID EngineRegister           = JSC::ARMRegisters::r11;
 #else // Thumbs down

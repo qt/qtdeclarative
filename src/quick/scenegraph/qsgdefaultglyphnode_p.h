@@ -53,6 +53,7 @@
 
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qsgbasicglyphnode_p.h>
+#include <qlinkedlist.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -54,6 +54,7 @@
 #include "qv4managed_p.h"
 #include <QtCore/private/qnumeric_p.h>
 #include "qv4enginebase_p.h"
+#include "qv4stringtoarrayindex_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -104,7 +105,6 @@ struct Q_QML_PRIVATE_EXPORT StringOrSymbol : Base
 struct Q_QML_PRIVATE_EXPORT String : StringOrSymbol {
     static void markObjects(Heap::Base *that, MarkStack *markStack);
 
-#ifndef V4_BOOTSTRAP
     const VTable *vtable() const {
         return internalClass->vtable;
     }
@@ -140,11 +140,9 @@ struct Q_QML_PRIVATE_EXPORT String : StringOrSymbol {
 
 private:
     static void append(const String *data, QChar *ch);
-#endif
 };
 Q_STATIC_ASSERT(std::is_trivial< String >::value);
 
-#ifndef V4_BOOTSTRAP
 struct ComplexString : String {
     void init(String *l, String *n);
     void init(String *ref, int from, int len);
@@ -162,12 +160,10 @@ inline
 int String::length() const {
     return text ? text->size : static_cast<const ComplexString *>(this)->len;
 }
-#endif
 
 }
 
 struct Q_QML_PRIVATE_EXPORT StringOrSymbol : public Managed {
-#ifndef V4_BOOTSTRAP
     V4_MANAGED(StringOrSymbol, Managed)
     V4_NEEDS_DESTROY
     enum {
@@ -184,11 +180,9 @@ public:
     inline QString toQString() const {
         return d()->toQString();
     }
-#endif
 };
 
 struct Q_QML_PRIVATE_EXPORT String : public StringOrSymbol {
-#ifndef V4_BOOTSTRAP
     V4_MANAGED(String, StringOrSymbol)
     Q_MANAGED_TYPE(String)
     V4_INTERNALCLASS(String)
@@ -239,43 +233,13 @@ struct Q_QML_PRIVATE_EXPORT String : public StringOrSymbol {
 protected:
     static bool virtualIsEqualTo(Managed *that, Managed *o);
     static qint64 virtualGetLength(const Managed *m);
-#endif
-
-public:
-    static uint toArrayIndex(const QString &str);
-
-private:
-    static inline uint toUInt(const QChar *ch) { return ch->unicode(); }
-    static inline uint toUInt(const char *ch) { return static_cast<unsigned char>(*ch); }
-
-    template <typename T>
-    static inline uint toArrayIndex(const T *ch, const T *end)
-    {
-        uint i = toUInt(ch) - '0';
-        if (i > 9)
-            return UINT_MAX;
-        ++ch;
-        // reject "01", "001", ...
-        if (i == 0 && ch != end)
-            return UINT_MAX;
-
-        while (ch < end) {
-            uint x = toUInt(ch) - '0';
-            if (x > 9)
-                return UINT_MAX;
-            if (mul_overflow(i, uint(10), &i) || add_overflow(i, x, &i)) // i = i * 10 + x
-                return UINT_MAX;
-            ++ch;
-        }
-        return i;
-    }
 
 public:
     template <typename T>
     static inline uint calculateHashValue(const T *ch, const T* end, uint *subtype)
     {
         // array indices get their number as hash value
-        uint h = toArrayIndex(ch, end);
+        uint h = stringToArrayIndex(ch, end);
         if (h != UINT_MAX) {
             if (subtype)
                 *subtype = Heap::StringOrSymbol::StringType_ArrayIndex;
@@ -283,17 +247,16 @@ public:
         }
 
         while (ch < end) {
-            h = 31 * h + toUInt(ch);
+            h = 31 * h + charToUInt(ch);
             ++ch;
         }
 
         if (subtype)
-            *subtype = (toUInt(ch) == '@') ? Heap::StringOrSymbol::StringType_Symbol : Heap::StringOrSymbol::StringType_Regular;
+            *subtype = (charToUInt(ch) == '@') ? Heap::StringOrSymbol::StringType_Symbol : Heap::StringOrSymbol::StringType_Regular;
         return h;
     }
 };
 
-#ifndef V4_BOOTSTRAP
 struct ComplexString : String {
     typedef QV4::Heap::ComplexString Data;
     QV4::Heap::ComplexString *d_unchecked() const { return static_cast<QV4::Heap::ComplexString *>(m()); }
@@ -332,8 +295,6 @@ inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
 {
     return v.toString(e)->asReturnedValue();
 }
-#endif
-
 
 }
 

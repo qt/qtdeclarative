@@ -56,6 +56,8 @@
 #include <QtQmlModels/private/qtqmlmodelsglobal_p.h>
 #include <QtQml/qjsvalue.h>
 
+QT_REQUIRE_CONFIG(qml_table_model);
+
 QT_BEGIN_NAMESPACE
 
 class Q_QMLMODELS_PRIVATE_EXPORT QQmlTableModelColumn : public QObject

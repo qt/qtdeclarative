@@ -374,7 +374,7 @@ public:
     }
 };
 
-#if CPU(ARM_THUMB2) || CPU(ARM64) || defined(V4_BOOTSTRAP)
+#if CPU(ARM_THUMB2) || CPU(ARM64)
 
 template <typename T>
 struct BranchCompactingExecutableOffsetCalculator {
@@ -509,7 +509,7 @@ inline void BranchCompactingLinkBuffer<MacroAssembler>::linkCode(void* ownerUID,
     m_executableMemory->shrink(m_size);
 }
 
-#if CPU(ARM_THUMB2) || defined(V4_BOOTSTRAP)
+#if CPU(ARM_THUMB2)
 template <>
 class LinkBuffer<JSC::MacroAssembler<MacroAssemblerARMv7>> : public BranchCompactingLinkBuffer<JSC::MacroAssembler<MacroAssemblerARMv7>>
 {
@@ -520,7 +520,7 @@ public:
 };
 #endif
 
-#if CPU(ARM64) || defined(V4_BOOTSTRAP)
+#if CPU(ARM64)
 template <>
 class LinkBuffer<JSC::MacroAssembler<MacroAssemblerARM64>> : public BranchCompactingLinkBuffer<JSC::MacroAssembler<MacroAssemblerARM64>>
 {

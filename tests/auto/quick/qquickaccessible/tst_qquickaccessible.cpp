@@ -130,7 +130,7 @@ void tst_QQuickAccessible::commonTests_data()
 {
     QTest::addColumn<QString>("accessibleRoleFileName");
 
-    QTest::newRow("StaticText") << "statictext.qml";
+    QTest::newRow("Text") << "text.qml";
     QTest::newRow("PushButton") << "pushbutton.qml";
 }
 
@@ -302,7 +302,7 @@ void tst_QQuickAccessible::basicPropertiesTest()
     QCOMPARE(app->childCount(), 0);
 
     QQuickView *window = new QQuickView();
-    window->setSource(testFileUrl("statictext.qml"));
+    window->setSource(testFileUrl("text.qml"));
     window->show();
     QCOMPARE(app->childCount(), 1);
 
@@ -312,7 +312,7 @@ void tst_QQuickAccessible::basicPropertiesTest()
 
     QAccessibleInterface *item = iface->child(0);
     QVERIFY(item);
-    QCOMPARE(item->childCount(), 2);
+    QCOMPARE(item->childCount(), 5);
     QCOMPARE(item->rect().size(), QSize(400, 400));
     QCOMPARE(item->role(), QAccessible::Client);
     QCOMPARE(iface->indexOfChild(item), 0);
@@ -338,9 +338,73 @@ void tst_QQuickAccessible::basicPropertiesTest()
     QCOMPARE(text2->rect().y(), item->rect().y() + 40);
     QCOMPARE(text2->role(), QAccessible::StaticText);
     QCOMPARE(item->indexOfChild(text2), 1);
+    QCOMPARE(text2->state().editable, 0);
+    QCOMPARE(text2->state().readOnly, 1);
 
     QCOMPARE(iface->indexOfChild(text2), -1);
     QCOMPARE(text2->indexOfChild(item), -1);
+
+    // TextInput
+    QAccessibleInterface *textInput = item->child(2);
+    QVERIFY(textInput);
+    QCOMPARE(textInput->childCount(), 0);
+    QCOMPARE(textInput->role(), QAccessible::EditableText);
+    QCOMPARE(textInput->state().editable, 1);
+    QCOMPARE(textInput->state().readOnly, 0);
+    QCOMPARE(textInput->state().multiLine, 0);
+    QCOMPARE(textInput->state().focusable, 1);
+    QCOMPARE(textInput->text(QAccessible::Value), "A text input");
+    auto textInterface = textInput->textInterface();
+    QVERIFY(textInterface);
+    auto editableTextInterface = textInput->editableTextInterface();
+    QEXPECT_FAIL("", "EditableTextInterface is not implemented", Continue);
+    QVERIFY(editableTextInterface);
+    auto newText = QString("a new text");
+    textInput->setText(QAccessible::Value, newText);
+    QCOMPARE(textInput->text(QAccessible::Value), newText);
+
+    // TextEdit
+    QAccessibleInterface *textEdit = item->child(3);
+    QVERIFY(textEdit);
+    QCOMPARE(textEdit->childCount(), 0);
+    QCOMPARE(textEdit->role(), QAccessible::EditableText);
+    QCOMPARE(textEdit->state().editable, 1);
+    QCOMPARE(textEdit->state().readOnly, 0);
+    QCOMPARE(textEdit->state().focusable, 1);
+    QCOMPARE(textEdit->text(QAccessible::Value), "A multi-line text edit\nTesting Accessibility.");
+    auto textEditTextInterface = textEdit->textInterface();
+    QVERIFY(textEditTextInterface);
+    auto textEditEditableTextInterface = textEdit->editableTextInterface();
+    QEXPECT_FAIL("", "EditableTextInterface is not implemented", Continue);
+    QVERIFY(textEditEditableTextInterface);
+    textEdit->setText(QAccessible::Value, newText);
+    QCOMPARE(textEdit->text(QAccessible::Value), newText);
+    QEXPECT_FAIL("", "multi line is not implemented", Continue);
+    QCOMPARE(textInput->state().multiLine, 1);
+
+    // Text "Hello 3"
+    QAccessibleInterface *text3 = item->child(4);
+    QVERIFY(text3);
+    QCOMPARE(text3->childCount(), 0);
+    QCOMPARE(text3->text(QAccessible::Name), QLatin1String("Hello 3"));
+    QCOMPARE(text3->role(), QAccessible::StaticText);
+    QCOMPARE(item->indexOfChild(text3), 4);
+    QCOMPARE(text3->state().editable, 0);
+    QCOMPARE(text3->state().readOnly, 0);
+    // test implicit state values due to role change
+    QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(text3->object());
+    attached->setRole(QAccessible::StaticText);
+    QCOMPARE(text3->role(), QAccessible::StaticText);
+    QCOMPARE(text3->state().readOnly, 1);
+
+    // see if implicit changes back
+    attached->setRole(QAccessible::EditableText);
+    QEXPECT_FAIL("", "EditableText does not implicitly set readOnly to false", Continue);
+    QCOMPARE(text3->state().readOnly, 0);
+    // explicitly set state
+    attached->set_readOnly(false);
+    attached->setRole(QAccessible::StaticText);
+    QCOMPARE(text3->state().readOnly, 0);
 
     delete window;
     QTestAccessibility::clearEvents();

@@ -65,11 +65,11 @@ QT_BEGIN_NAMESPACE
 class QQmlPropertyCache;
 class QQmlContextData;
 class QQmlTypeNameCache;
+struct QQmlIRLoader;
 
 namespace QmlIR {
 
 struct Document;
-struct IRLoader;
 
 template <typename T>
 struct PoolList
@@ -347,7 +347,7 @@ public:
     const quint32 *namedObjectsInComponentTable() const { return namedObjectsInComponent.begin(); }
 
 private:
-    friend struct IRLoader;
+    friend struct ::QQmlIRLoader;
 
     PoolList<Property> *properties;
     PoolList<Alias> *aliases;
@@ -379,7 +379,7 @@ struct Q_QML_PRIVATE_EXPORT Document
     QVector<Object*> objects;
     QV4::Compiler::JSUnitGenerator jsGenerator;
 
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> javaScriptCompilationUnit;
+    QV4::CompiledData::CompilationUnit javaScriptCompilationUnit;
 
     int registerString(const QString &str) { return jsGenerator.registerString(str); }
     QString stringAt(int index) const { return jsGenerator.stringForIndex(index); }
@@ -508,32 +508,6 @@ private:
     char *writeBindings(char *bindingPtr, const Object *o, BindingFilter filter) const;
 };
 
-#ifndef V4_BOOTSTRAP
-struct Q_QML_EXPORT PropertyResolver
-{
-    PropertyResolver(const QQmlRefPointer<QQmlPropertyCache> &cache)
-        : cache(cache)
-    {}
-
-    QQmlPropertyData *property(int index) const
-    {
-        return cache->property(index);
-    }
-
-    enum RevisionCheck {
-        CheckRevision,
-        IgnoreRevision
-    };
-
-    QQmlPropertyData *property(const QString &name, bool *notInRevision = nullptr, RevisionCheck check = CheckRevision) const;
-
-    // This code must match the semantics of QQmlPropertyPrivate::findSignalByName
-    QQmlPropertyData *signal(const QString &name, bool *notInRevision) const;
-
-    QQmlRefPointer<QQmlPropertyCache> cache;
-};
-#endif
-
 struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QV4::Compiler::Codegen
 {
     JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator, QV4::Compiler::Module *jsModule,
@@ -548,21 +522,6 @@ private:
     QQmlJS::Engine *jsEngine; // needed for memory pool
     QQmlJS::AST::UiProgram *qmlRoot;
     const QV4::Compiler::StringTableGenerator *stringPool;
-};
-
-struct Q_QML_PRIVATE_EXPORT IRLoader {
-    IRLoader(const QV4::CompiledData::Unit *unit, QmlIR::Document *output);
-
-    void load();
-
-private:
-    QmlIR::Object *loadObject(const QV4::CompiledData::Object *serializedObject);
-
-    template <typename _Tp> _Tp *New() { return pool->New<_Tp>(); }
-
-    const QV4::CompiledData::Unit *unit;
-    QmlIR::Document *output;
-    QQmlJS::MemoryPool *pool;
 };
 
 } // namespace QmlIR

@@ -52,12 +52,15 @@
 
 #include "private/qv4global_p.h"
 #include <private/qqmljsastvisitor_p.h>
+#include <private/qqmljsengine_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qv4compiler_p.h>
 #include <private/qv4compilercontext_p.h>
 #include <private/qv4util_p.h>
 #include <private/qv4bytecodegenerator_p.h>
-#include <private/qv4stackframe_p.h>
+#include <private/qv4calldata_p.h>
+
+#include <QtQml/qqmlerror.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -659,9 +662,7 @@ protected:
 
 public:
     QList<DiagnosticMessage> errors() const;
-#ifndef V4_BOOTSTRAP
     QList<QQmlError> qmlErrors() const;
-#endif
 
     Reference binopHelper(QSOperator::Op oper, Reference &left, Reference &right);
     Reference jumpBinop(QSOperator::Op oper, Reference &left, Reference &right);
@@ -681,8 +682,10 @@ public:
 
     Reference referenceForName(const QString &name, bool lhs, const QQmlJS::AST::SourceLocation &accessLocation = QQmlJS::AST::SourceLocation());
 
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> generateCompilationUnit(bool generateUnitData = true);
-    static QQmlRefPointer<QV4::CompiledData::CompilationUnit> createUnitForLoading();
+    QV4::CompiledData::CompilationUnit generateCompilationUnit(bool generateUnitData = true);
+    static QV4::CompiledData::CompilationUnit compileModule(
+            bool debugMode, const QString &url, const QString &sourceCode,
+            const QDateTime &sourceTimeStamp, QList<DiagnosticMessage> *diagnostics);
 
     Context *currentContext() const { return _context; }
     BytecodeGenerator *generator() const { return bytecodeGenerator; }

@@ -62,8 +62,17 @@ class Q_QUICK_PRIVATE_EXPORT QQuickDragHandler : public QQuickMultiPointHandler
     Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT)
     Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT)
     Q_PROPERTY(QVector2D translation READ translation NOTIFY translationChanged)
+    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged)
 
 public:
+    enum SnapMode {
+        NoSnap = 0,
+        SnapAuto,
+        SnapIfPressedOutsideTarget,
+        SnapAlways
+    };
+    Q_ENUM(SnapMode)
+
     explicit QQuickDragHandler(QQuickItem *parent = nullptr);
 
     void handlePointerEventImpl(QQuickPointerEvent *event) override;
@@ -73,11 +82,14 @@ public:
 
     QVector2D translation() const { return m_translation; }
     void setTranslation(const QVector2D &trans);
+    QQuickDragHandler::SnapMode snapMode() const;
+    void setSnapMode(QQuickDragHandler::SnapMode mode);
 
     void enforceConstraints();
 
 Q_SIGNALS:
     void translationChanged();
+    void snapModeChanged();
 
 protected:
     void onActiveChanged() override;
@@ -97,6 +109,7 @@ private:
 
     QQuickDragAxis m_xAxis;
     QQuickDragAxis m_yAxis;
+    QQuickDragHandler::SnapMode m_snapMode = SnapAuto;
     bool m_pressedInsideTarget = false;
 
     friend class QQuickDragAxis;

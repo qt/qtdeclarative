@@ -1653,13 +1653,17 @@ void QQuickText::setText(const QString &n)
     if (d->text == n)
         return;
 
-    d->richText = d->format == RichText;
+    d->markdownText = d->format == MarkdownText;
+    d->richText = d->format == RichText || d->markdownText;
     d->styledText = d->format == StyledText || (d->format == AutoText && Qt::mightBeRichText(n));
     d->text = n;
     if (isComponentComplete()) {
         if (d->richText) {
             d->ensureDoc();
-            d->extra->doc->setText(n);
+            if (d->markdownText)
+                d->extra->doc->setMarkdownText(n);
+            else
+                d->extra->doc->setText(n);
             d->rightToLeftText = d->extra->doc->toPlainText().isRightToLeft();
         } else {
             d->clearFormats();
@@ -2146,7 +2150,8 @@ void QQuickText::setTextFormat(TextFormat format)
         return;
     d->format = format;
     bool wasRich = d->richText;
-    d->richText = format == RichText;
+    d->markdownText = format == MarkdownText;
+    d->richText = format == RichText || d->markdownText;
     d->styledText = format == StyledText || (format == AutoText && Qt::mightBeRichText(d->text));
 
     if (isComponentComplete()) {
@@ -2687,7 +2692,10 @@ void QQuickText::componentComplete()
     if (d->updateOnComponentComplete) {
         if (d->richText) {
             d->ensureDoc();
-            d->extra->doc->setText(d->text);
+            if (d->markdownText)
+                d->extra->doc->setMarkdownText(d->text);
+            else
+                d->extra->doc->setText(d->text);
             d->rightToLeftText = d->extra->doc->toPlainText().isRightToLeft();
         } else {
             d->rightToLeftText = d->text.isRightToLeft();

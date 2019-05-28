@@ -51,7 +51,6 @@
 // We mean it.
 //
 #include <private/qv4global_p.h>
-#include <private/qv4value_p.h>
 #include <private/qv4runtime_p.h>
 #include <private/qv4compileddata_p.h> // for CompiledData::CodeOffsetToLine used by the dumper
 #include <qendian.h>
@@ -534,7 +533,6 @@ inline bool operator!=(const StackSlot &l, const StackSlot &r) { return l.stackS
 
 // When making changes to the instructions, make sure to bump QV4_DATA_STRUCTURE_VERSION in qv4compileddata_p.h
 
-void dumpConstantTable(const Value *constants, uint count);
 void dumpBytecode(const char *bytecode, int len, int nLocals, int nFormals, int startLine = 1,
                   const QVector<CompiledData::CodeOffsetToLine> &lineNumberMapping = QVector<CompiledData::CodeOffsetToLine>());
 inline void dumpBytecode(const QByteArray &bytecode, int nLocals, int nFormals, int startLine = 1,

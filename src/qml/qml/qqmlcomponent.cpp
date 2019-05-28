@@ -72,7 +72,7 @@ namespace {
 
 QT_BEGIN_NAMESPACE
 
-class QQmlComponentExtension : public QV8Engine::Deletable
+class QQmlComponentExtension : public QV4::ExecutionEngine::Deletable
 {
 public:
     QQmlComponentExtension(QV4::ExecutionEngine *v4);
@@ -550,7 +550,8 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
 /*!
     \internal
 */
-QQmlComponent::QQmlComponent(QQmlEngine *engine, QV4::CompiledData::CompilationUnit *compilationUnit, int start, QObject *parent)
+QQmlComponent::QQmlComponent(QQmlEngine *engine, QV4::ExecutableCompilationUnit *compilationUnit,
+                             int start, QObject *parent)
     : QQmlComponent(engine, parent)
 {
     Q_D(QQmlComponent);

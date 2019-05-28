@@ -868,7 +868,7 @@ QQmlPropertyCacheMethodArguments *QQmlPropertyCache::createArgumentsObject(int a
 QString QQmlPropertyCache::signalParameterStringForJS(QV4::ExecutionEngine *engine, const QList<QByteArray> &parameterNameList, QString *errorString)
 {
     bool unnamedParameter = false;
-    const QSet<QString> &illegalNames = engine->v8Engine->illegalNames();
+    const QSet<QString> &illegalNames = engine->illegalNames();
     QString parameters;
 
     for (int i = 0; i < parameterNameList.count(); ++i) {

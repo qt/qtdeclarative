@@ -97,10 +97,7 @@ public:
     using MacroAssemblerBase::load32;
 
 
-#if defined(V4_BOOTSTRAP)
-    using MacroAssemblerBase::loadPtr;
-    using MacroAssemblerBase::storePtr;
-#elif CPU(X86_64) || CPU(ARM64)
+#if CPU(X86_64) || CPU(ARM64)
     using MacroAssemblerBase::add64;
     using MacroAssemblerBase::sub64;
     using MacroAssemblerBase::xor64;
@@ -214,14 +211,12 @@ public:
         store32(value, addressForPoke(index));
     }
 
-#if !defined(V4_BOOTSTRAP)
     void poke(TrustedImmPtr imm, int index = 0)
     {
         storePtr(imm, addressForPoke(index));
     }
-#endif
 
-#if (CPU(X86_64) || CPU(ARM64)) && !defined(V4_BOOTSTRAP)
+#if CPU(X86_64) || CPU(ARM64)
     void peek64(RegisterID dest, int index = 0)
     {
         load64(Address(MacroAssemblerBase::stackPointerRegister, (index * sizeof(void*))), dest);
@@ -352,7 +347,6 @@ public:
         return !(this->random() & (BlindingModulus - 1));
     }
 
-#if !defined(V4_BOOTSTRAP)
     // Ptr methods
     // On 32-bit platforms (i.e. x86), these methods directly map onto their 32-bit equivalents.
     // FIXME: should this use a test for 32-bitness instead of this specific exception?
@@ -877,7 +871,7 @@ public:
     {
         return branchSub64(cond, src1, src2, dest);
     }
-#endif // !defined(V4_BOOTSTRAP)
+#endif // !CPU(X86_64) && !CPU(ARM64)
 
 #if ENABLE(JIT_CONSTANT_BLINDING)
     using MacroAssemblerBase::and64;
@@ -1100,8 +1094,6 @@ public:
     }
 
 #endif
-
-#endif // !CPU(X86_64)
 
 #if ENABLE(JIT_CONSTANT_BLINDING)
     bool shouldBlind(Imm32 imm)

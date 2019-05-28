@@ -40,7 +40,7 @@
 import QtQuick 2.12
 
 Rectangle {
-    width: 100
+    width: 110
     height: 40
     border.width: 1
     color: "lightgreen"

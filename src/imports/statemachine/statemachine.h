@@ -69,6 +69,9 @@ public:
     bool isRunning() const;
     void setRunning(bool running);
 
+private Q_SLOTS:
+    void checkChildMode();
+
 Q_SIGNALS:
     void childrenChanged();
     /*!

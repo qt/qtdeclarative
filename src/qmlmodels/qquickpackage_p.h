@@ -52,6 +52,9 @@
 //
 
 #include <qqml.h>
+#include <QtQmlModels/private/qtqmlmodelsglobal_p.h>
+
+QT_REQUIRE_CONFIG(qml_delegate_model);
 
 QT_BEGIN_NAMESPACE
 

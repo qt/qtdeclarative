@@ -48,7 +48,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlAdaptorModelEngineData : public QV8Engine::Deletable
+class QQmlAdaptorModelEngineData : public QV4::ExecutionEngine::Deletable
 {
 public:
     QQmlAdaptorModelEngineData(QV4::ExecutionEngine *v4);

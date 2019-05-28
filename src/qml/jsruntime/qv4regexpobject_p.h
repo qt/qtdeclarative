@@ -101,7 +101,7 @@ DECLARE_HEAP_OBJECT(RegExpCtor, FunctionObject) {
 
 }
 
-struct RegExpObject: Object {
+struct Q_QML_PRIVATE_EXPORT RegExpObject: Object {
     V4_OBJECT2(RegExpObject, Object)
     Q_MANAGED_TYPE(RegExpObject)
     V4_INTERNALCLASS(RegExpObject)
@@ -145,7 +145,12 @@ struct RegExpObject: Object {
     QRegularExpression toQRegularExpression() const;
 #endif
     QString toString() const;
-    QString source() const;
+    QString source() const
+    {
+        Scope scope(engine());
+        ScopedValue s(scope, get(scope.engine->id_source()));
+        return s->toQString();
+    }
 
     Heap::RegExp *value() const { return d()->value; }
     uint flags() const { return d()->value->flags; }

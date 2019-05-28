@@ -161,6 +161,7 @@ public:
     bool updateOnComponentComplete:1;
     bool richText:1;
     bool styledText:1;
+    bool markdownText:1;
     bool widthExceeded:1;
     bool heightExceeded:1;
     bool internalWidthUpdate:1;

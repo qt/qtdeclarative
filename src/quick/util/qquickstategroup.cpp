@@ -130,6 +130,8 @@ QQuickStateGroup::~QQuickStateGroup()
     Q_D(const QQuickStateGroup);
     for (int i = 0; i < d->states.count(); ++i)
         d->states.at(i)->setStateGroup(nullptr);
+    if (d->nullState)
+        d->nullState->setStateGroup(nullptr);
 }
 
 QList<QQuickState *> QQuickStateGroup::states() const

@@ -41,7 +41,6 @@
 #include "qjsengine_p.h"
 #include "qjsvalue.h"
 #include "qjsvalue_p.h"
-#include "private/qv8engine_p.h"
 
 #include "private/qv4engine_p.h"
 #include "private/qv4mm_p.h"
@@ -348,7 +347,6 @@ QJSEngine::QJSEngine(QObject *parent)
     : QObject(*new QJSEnginePrivate, parent)
     , m_v4Engine(new QV4::ExecutionEngine(this))
 {
-    m_v4Engine->v8Engine = new QV8Engine(m_v4Engine);
     checkForApplicationInstance();
 
     QJSEnginePrivate::addToDebugServer(this);
@@ -361,7 +359,6 @@ QJSEngine::QJSEngine(QJSEnginePrivate &dd, QObject *parent)
     : QObject(dd, parent)
     , m_v4Engine(new QV4::ExecutionEngine(this))
 {
-    m_v4Engine->v8Engine = new QV8Engine(m_v4Engine);
     checkForApplicationInstance();
 }
 
@@ -375,7 +372,6 @@ QJSEngine::QJSEngine(QJSEnginePrivate &dd, QObject *parent)
 QJSEngine::~QJSEngine()
 {
     QJSEnginePrivate::removeFromDebugServer(this);
-    delete m_v4Engine->v8Engine;
     delete m_v4Engine;
 }
 

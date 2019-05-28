@@ -38,9 +38,9 @@
 ****************************************************************************/
 
 #include "qv4global_p.h"
-#include "qv4engine_p.h"
 #include "qv4runtime_p.h"
 #ifndef V4_BOOTSTRAP
+#include "qv4engine_p.h"
 #include "qv4object_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4globalobject_p.h"
@@ -224,6 +224,11 @@ void RuntimeCounters::count(const char *func, uint tag1, uint tag2)
 
 #ifndef V4_BOOTSTRAP
 
+static QV4::Lookup *runtimeLookup(Function *f, uint i)
+{
+    return f->executableCompilationUnit()->runtimeLookups + i;
+}
+
 void RuntimeHelpers::numberToString(QString *result, double num, int radix)
 {
     Q_ASSERT(result);
@@ -314,7 +319,8 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
 
 ReturnedValue Runtime::Closure::call(ExecutionEngine *engine, int functionId)
 {
-    QV4::Function *clos = static_cast<CompiledData::CompilationUnit*>(engine->currentStackFrame->v4Function->compilationUnit)->runtimeFunctions[functionId];
+    QV4::Function *clos = engine->currentStackFrame->v4Function->executableCompilationUnit()
+                                  ->runtimeFunctions[functionId];
     Q_ASSERT(clos);
     ExecutionContext *current = static_cast<ExecutionContext *>(&engine->currentStackFrame->jsFrame->context);
     if (clos->isGenerator())
@@ -620,7 +626,7 @@ QV4::ReturnedValue RuntimeHelpers::addHelper(ExecutionEngine *engine, const Valu
 
 ReturnedValue Runtime::GetTemplateObject::call(Function *function, int index)
 {
-    return function->compilationUnit->templateObjectAt(index)->asReturnedValue();
+    return function->executableCompilationUnit()->templateObjectAt(index)->asReturnedValue();
 }
 
 void Runtime::StoreProperty::call(ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)
@@ -1077,33 +1083,33 @@ void Runtime::StoreSuperProperty::call(ExecutionEngine *engine, const Value &pro
 
 ReturnedValue Runtime::LoadGlobalLookup::call(ExecutionEngine *engine, Function *f, int index)
 {
-    Lookup *l = f->compilationUnit->runtimeLookups + index;
+    Lookup *l = runtimeLookup(f, index);
     return l->globalGetter(l, engine);
 }
 
 ReturnedValue Runtime::LoadQmlContextPropertyLookup::call(ExecutionEngine *engine, uint index)
 {
-    Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
+    Lookup *l = runtimeLookup(engine->currentStackFrame->v4Function, index);
     return l->qmlContextPropertyGetter(l, engine, nullptr);
 }
 
 ReturnedValue Runtime::GetLookup::call(ExecutionEngine *engine, Function *f, const Value &base, int index)
 {
-    Lookup *l = f->compilationUnit->runtimeLookups + index;
+    Lookup *l = runtimeLookup(f, index);
     return l->getter(l, engine, base);
 }
 
 void Runtime::SetLookupSloppy::call(Function *f, const Value &base, int index, const Value &value)
 {
     ExecutionEngine *engine = f->internalClass->engine;
-    QV4::Lookup *l = f->compilationUnit->runtimeLookups + index;
+    QV4::Lookup *l = runtimeLookup(f, index);
     l->setter(l, engine, const_cast<Value &>(base), value);
 }
 
 void Runtime::SetLookupStrict::call(Function *f, const Value &base, int index, const Value &value)
 {
     ExecutionEngine *engine = f->internalClass->engine;
-    QV4::Lookup *l = f->compilationUnit->runtimeLookups + index;
+    QV4::Lookup *l = runtimeLookup(f, index);
     if (!l->setter(l, engine, const_cast<Value &>(base), value))
         engine->throwTypeError();
 }
@@ -1175,8 +1181,14 @@ Bool RuntimeHelpers::strictEqual(const Value &x, const Value &y)
 
     if (x.isNumber())
         return y.isNumber() && x.asDouble() == y.asDouble();
-    if (x.isManaged())
+    if (x.isManaged()) {
+#ifdef V4_BOOTSTRAP
+        Q_UNIMPLEMENTED();
+        return false;
+#else
         return y.isManaged() && x.cast<Managed>()->isEqualTo(y.cast<Managed>());
+#endif
+    }
     return false;
 }
 
@@ -1360,12 +1372,13 @@ static ReturnedValue throwPropertyIsNotAFunctionTypeError(ExecutionEngine *engin
 ReturnedValue Runtime::CallGlobalLookup::call(ExecutionEngine *engine, uint index, Value argv[], int argc)
 {
     Scope scope(engine);
-    Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
+    Lookup *l = runtimeLookup(engine->currentStackFrame->v4Function, index);
     Value function = Value::fromReturnedValue(l->globalGetter(l, engine));
     Value thisObject = Value::undefinedValue();
-    if (!function.isFunctionObject())
+    if (!function.isFunctionObject()) {
         return throwPropertyIsNotAFunctionTypeError(engine, &thisObject,
                                                     engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString());
+    }
 
     return static_cast<FunctionObject &>(function).call(&thisObject, argv, argc);
 }
@@ -1375,11 +1388,12 @@ ReturnedValue Runtime::CallQmlContextPropertyLookup::call(ExecutionEngine *engin
 {
     Scope scope(engine);
     ScopedValue thisObject(scope);
-    Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
+    Lookup *l = runtimeLookup(engine->currentStackFrame->v4Function, index);
     Value function = Value::fromReturnedValue(l->qmlContextPropertyGetter(l, engine, thisObject));
-    if (!function.isFunctionObject())
+    if (!function.isFunctionObject()) {
         return throwPropertyIsNotAFunctionTypeError(engine, thisObject,
                                                     engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString());
+    }
 
     return static_cast<FunctionObject &>(function).call(thisObject, argv, argc);
 }
@@ -1414,9 +1428,11 @@ ReturnedValue Runtime::CallName::call(ExecutionEngine *engine, int nameIndex, Va
     if (engine->hasException)
         return Encode::undefined();
 
-    if (!f)
-        return throwPropertyIsNotAFunctionTypeError(engine, thisObject,
-                                                    engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]->toQString());
+    if (!f) {
+        return throwPropertyIsNotAFunctionTypeError(
+                engine, thisObject, engine->currentStackFrame->v4Function->compilationUnit
+                                            ->runtimeStrings[nameIndex]->toQString());
+    }
 
     return f->call(thisObject, argv, argc);
 }
@@ -1425,7 +1441,9 @@ ReturnedValue Runtime::CallProperty::call(ExecutionEngine *engine, const Value &
 {
     const Value *base = &baseRef;
     Scope scope(engine);
-    ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+    ScopedString name(
+            scope,
+            engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
     ScopedObject lookupObject(scope, base);
 
     if (!lookupObject) {
@@ -1463,7 +1481,7 @@ ReturnedValue Runtime::CallProperty::call(ExecutionEngine *engine, const Value &
 
 ReturnedValue Runtime::CallPropertyLookup::call(ExecutionEngine *engine, const Value &base, uint index, Value *argv, int argc)
 {
-    Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
+    Lookup *l = runtimeLookup(engine->currentStackFrame->v4Function, index);
     // ok to have the value on the stack here
     Value f = Value::fromReturnedValue(l->getter(l, engine, base));
 
@@ -1783,7 +1801,8 @@ ReturnedValue Runtime::ObjectLiteral::call(ExecutionEngine *engine, int classId,
         if (arg != ObjectLiteralArgument::Value) {
             Q_ASSERT(args[2].isInteger());
             int functionId = args[2].integerValue();
-            QV4::Function *clos = static_cast<CompiledData::CompilationUnit*>(engine->currentStackFrame->v4Function->compilationUnit)->runtimeFunctions[functionId];
+            QV4::Function *clos = engine->currentStackFrame->v4Function->executableCompilationUnit()
+                                          ->runtimeFunctions[functionId];
             Q_ASSERT(clos);
 
             PropertyKey::FunctionNamePrefix prefix = PropertyKey::None;
@@ -1827,7 +1846,8 @@ ReturnedValue Runtime::ObjectLiteral::call(ExecutionEngine *engine, int classId,
 ReturnedValue Runtime::CreateClass::call(ExecutionEngine *engine, int classIndex,
                                           const Value &superClass, Value computedNames[])
 {
-    const CompiledData::CompilationUnit *unit = engine->currentStackFrame->v4Function->compilationUnit;
+    const QV4::ExecutableCompilationUnit *unit
+            = engine->currentStackFrame->v4Function->executableCompilationUnit();
     const QV4::CompiledData::Class *cls = unit->unitData()->classAt(classIndex);
 
     Scope scope(engine);
@@ -2170,6 +2190,7 @@ ReturnedValue Runtime::LessEqual::call(const Value &left, const Value &right)
     return Encode(r);
 }
 
+#ifndef V4_BOOTSTRAP
 struct LazyScope
 {
     ExecutionEngine *engine = nullptr;
@@ -2189,6 +2210,7 @@ struct LazyScope
         **scopedValue = value;
     }
 };
+#endif
 
 Bool Runtime::CompareEqual::call(const Value &left, const Value &right)
 {

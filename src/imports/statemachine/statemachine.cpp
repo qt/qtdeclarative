@@ -51,6 +51,7 @@ StateMachine::StateMachine(QObject *parent)
     : QStateMachine(parent), m_completed(false), m_running(false)
 {
     connect(this, SIGNAL(runningChanged(bool)), SIGNAL(qmlRunningChanged()));
+    connect(this, SIGNAL(childModeChanged()), SLOT(checkChildMode()));
 }
 
 bool StateMachine::isRunning() const
@@ -64,6 +65,15 @@ void StateMachine::setRunning(bool running)
         QStateMachine::setRunning(running);
     else
         m_running = running;
+}
+
+void StateMachine::checkChildMode()
+{
+    if (childMode() != QState::ExclusiveStates) {
+        qmlWarning(this) << "Setting the childMode of a StateMachine to anything else than\n"
+                            "QState.ExclusiveStates will result in an invalid state machine,\n"
+                            "and can lead to incorrect behavior!";
+    }
 }
 
 void StateMachine::componentComplete()
@@ -128,6 +138,9 @@ QQmlListProperty<QObject> StateMachine::children()
     stop when the error state is entered.  If no error state applies to the
     erroneous state, the machine will stop executing and an error message will
     be printed to the console.
+
+    \warning Setting the childMode of a StateMachine to anything else than QState::ExclusiveStates
+    will result in an invalid state machine, and can lead to incorrect behavior.
 
     \clearfloat
 

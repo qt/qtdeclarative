@@ -66,7 +66,7 @@ public:
     typedef MacroAssemblerCodePtr CodePtr;
     typedef MacroAssemblerCodeRef CodeRef;
 
-#if !CPU(ARM_THUMB2) && !CPU(ARM64) && !defined(V4_BOOTSTRAP)
+#if !CPU(ARM_THUMB2) && !CPU(ARM64)
     class Jump;
 #endif
 
@@ -328,7 +328,7 @@ public:
         friend class AbstractMacroAssembler;
         friend struct DFG::OSRExit;
 
-#if CPU(ARM_THUMB2) || CPU(ARM64) || defined(V4_BOOTSTRAP)
+#if CPU(ARM_THUMB2) || CPU(ARM64)
         using Jump = typename AssemblerType::template Jump<Label>;
         friend Jump;
 #else
@@ -461,7 +461,7 @@ public:
         AssemblerLabel m_label;
     };
 
-#if CPU(ARM_THUMB2) || CPU(ARM64) || defined(V4_BOOTSTRAP)
+#if CPU(ARM_THUMB2) || CPU(ARM64)
     using Jump = typename AssemblerType::template Jump<Label>;
     friend Jump;
 #endif
@@ -516,7 +516,7 @@ public:
     // into the code buffer - it is typically used to link the jump, setting the
     // relative offset such that when executed it will jump to the desired
     // destination.
-#if !CPU(ARM_THUMB2) && !CPU(ARM64) && !defined(V4_BOOTSTRAP)
+#if !CPU(ARM_THUMB2) && !CPU(ARM64)
     class Jump {
         template<class TemplateAssemblerType>
         friend class AbstractMacroAssembler;
@@ -528,7 +528,7 @@ public:
         {
         }
         
-#if CPU(ARM_THUMB2) || defined(V4_BOOTSTRAP)
+#if CPU(ARM_THUMB2)
         // Fixme: this information should be stored in the instruction stream, not in the Jump object.
         Jump(AssemblerLabel jmp, ARMv7Assembler::JumpType type = ARMv7Assembler::JumpNoCondition, ARMv7Assembler::Condition condition = ARMv7Assembler::ConditionInvalid)
             : m_label(jmp)
@@ -621,7 +621,7 @@ public:
 
     private:
         AssemblerLabel m_label;
-#if CPU(ARM_THUMB2) || defined(V4_BOOTSTRAP)
+#if CPU(ARM_THUMB2)
         ARMv7Assembler::JumpType m_type;
         ARMv7Assembler::Condition m_condition;
 #endif
@@ -878,12 +878,10 @@ protected:
         AssemblerType::repatchPointer(dataLabelPtr.dataLocation(), value);
     }
     
-#if !defined(V4_BOOTSTRAP)
     static void* readPointer(CodeLocationDataLabelPtr dataLabelPtr)
     {
         return AssemblerType::readPointer(dataLabelPtr.dataLocation());
     }
-#endif
     
     static void replaceWithLoad(CodeLocationConvertibleLoad label)
     {

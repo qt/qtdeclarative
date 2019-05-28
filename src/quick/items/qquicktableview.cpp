@@ -305,9 +305,7 @@
     \l view, which means that the table's width could be larger or smaller than
     the viewport width. As a TableView cannot always know the exact width of
     the table without loading all columns in the model, the \c contentWidth is
-    usually an estimate based on the columns it has seen so far. This estimate
-    is recalculated whenever new columns are flicked into view, which means
-    that the content width can change dynamically.
+    usually an estimate based on the initially loaded table.
 
     If you know what the width of the table will be, assign a value to
     \c contentWidth, to avoid unnecessary calculations and updates to the
@@ -324,9 +322,7 @@
     \c view, which means that the table's height could be larger or smaller than the
     viewport height. As a TableView cannot always know the exact height of the
     table without loading all rows in the model, the \c contentHeight is
-    usually an estimate based on the rows it has seen so far. This estimate is
-    recalculated whenever new rows are flicked into view, which means that
-    the content height can change dynamically.
+    usually an estimate based on the initially loaded table.
 
     If you know what the height of the table will be, assign a
     value to \c contentHeight, to avoid unnecessary calculations and updates to
@@ -616,6 +612,7 @@ void QQuickTableViewPrivate::updateContentWidth()
     Q_Q(QQuickTableView);
 
     if (syncHorizontally) {
+        QBoolBlocker fixupGuard(inUpdateContentSize, true);
         q->QQuickFlickable::setContentWidth(syncView->contentWidth());
         return;
     }
@@ -632,6 +629,8 @@ void QQuickTableViewPrivate::updateContentWidth()
     const qreal remainingSpacing = columnsRemaining * cellSpacing.width();
     const qreal estimatedRemainingWidth = remainingColumnWidths + remainingSpacing;
     const qreal estimatedWidth = loadedTableOuterRect.right() + estimatedRemainingWidth;
+
+    QBoolBlocker fixupGuard(inUpdateContentSize, true);
     q->QQuickFlickable::setContentWidth(estimatedWidth);
 }
 
@@ -640,6 +639,7 @@ void QQuickTableViewPrivate::updateContentHeight()
     Q_Q(QQuickTableView);
 
     if (syncVertically) {
+        QBoolBlocker fixupGuard(inUpdateContentSize, true);
         q->QQuickFlickable::setContentHeight(syncView->contentHeight());
         return;
     }
@@ -656,64 +656,204 @@ void QQuickTableViewPrivate::updateContentHeight()
     const qreal remainingSpacing = rowsRemaining * cellSpacing.height();
     const qreal estimatedRemainingHeight = remainingRowHeights + remainingSpacing;
     const qreal estimatedHeight = loadedTableOuterRect.bottom() + estimatedRemainingHeight;
+
+    QBoolBlocker fixupGuard(inUpdateContentSize, true);
     q->QQuickFlickable::setContentHeight(estimatedHeight);
 }
 
-void QQuickTableViewPrivate::enforceTableAtOrigin()
+void QQuickTableViewPrivate::updateExtents()
 {
-    // Gaps before the first row/column can happen if rows/columns
-    // changes size while flicking e.g because of spacing changes or
-    // changes to a column maxWidth/row maxHeight. Check for this, and
-    // move the whole table rect accordingly.
-    bool layoutNeeded = false;
-    const qreal flickMargin = 50;
+    // When rows or columns outside the viewport are removed or added, or a rebuild
+    // forces us to guesstimate a new top-left, the edges of the table might end up
+    // out of sync with the edges of the content view. We detect this situation here, and
+    // move the origin to ensure that there will never be gaps at the end of the table.
+    // Normally we detect that the size of the whole table is not going to be equal to the
+    // size of the content view already when we load the last row/column, and especially
+    // before it's flicked completely inside the viewport. For those cases we simply adjust
+    // the origin/endExtent, to give a smooth flicking experience.
+    // But if flicking fast (e.g with a scrollbar), it can happen that the viewport ends up
+    // outside the end of the table in just one viewport update. To avoid a "blink" in the
+    // viewport when that happens, we "move" the loaded table into the viewport to cover it.
+    Q_Q(QQuickTableView);
 
-    const bool noMoreColumns = nextVisibleEdgeIndexAroundLoadedTable(Qt::LeftEdge) == kEdgeIndexAtEnd;
-    const bool noMoreRows = nextVisibleEdgeIndexAroundLoadedTable(Qt::TopEdge) == kEdgeIndexAtEnd;
+    bool tableMovedHorizontally = false;
+    bool tableMovedVertically = false;
 
-    if (noMoreColumns) {
-        if (!qFuzzyIsNull(loadedTableOuterRect.left())) {
-            // There are no more columns, but the table rect
-            // is not at origin. So we move it there.
-            loadedTableOuterRect.moveLeft(0);
-            layoutNeeded = true;
+    const int nextLeftColumn = nextVisibleEdgeIndexAroundLoadedTable(Qt::LeftEdge);
+    const int nextRightColumn = nextVisibleEdgeIndexAroundLoadedTable(Qt::RightEdge);
+    const int nextTopRow = nextVisibleEdgeIndexAroundLoadedTable(Qt::TopEdge);
+    const int nextBottomRow = nextVisibleEdgeIndexAroundLoadedTable(Qt::BottomEdge);
+
+    if (syncHorizontally) {
+        const auto syncView_d = syncView->d_func();
+        origin.rx() = syncView_d->origin.x();
+        endExtent.rwidth() = syncView_d->endExtent.width();
+        hData.markExtentsDirty();
+    } else if (nextLeftColumn == kEdgeIndexAtEnd) {
+        // There are no more columns to load on the left side of the table.
+        // In that case, we ensure that the origin match the beginning of the table.
+        if (loadedTableOuterRect.left() > viewportRect.left()) {
+            // We have a blank area at the left end of the viewport. In that case we don't have time to
+            // wait for the viewport to move (after changing origin), since that will take an extra
+            // update cycle, which will be visible as a blink. Instead, unless the blank spot is just
+            // us overshooting, we brute force the loaded table inside the already existing viewport.
+            if (loadedTableOuterRect.left() > origin.x()) {
+                const qreal diff = loadedTableOuterRect.left() - origin.x();
+                loadedTableOuterRect.moveLeft(loadedTableOuterRect.left() - diff);
+                loadedTableInnerRect.moveLeft(loadedTableInnerRect.left() - diff);
+                tableMovedHorizontally = true;
+            }
         }
-    } else {
-        if (loadedTableOuterRect.left() <= 0) {
-            // The table rect is at origin, or outside. But we still have
-            // more visible columns to the left. So we need to make some
-            // space so that they can be flicked in.
-            loadedTableOuterRect.moveLeft(flickMargin);
-            layoutNeeded = true;
+        origin.rx() = loadedTableOuterRect.left();
+        hData.markExtentsDirty();
+    } else if (loadedTableOuterRect.left() <= origin.x() + cellSpacing.width()) {
+        // The table rect is at the origin, or outside, but we still have more
+        // visible columns to the left. So we try to guesstimate how much space
+        // the rest of the columns will occupy, and move the origin accordingly.
+        const int columnsRemaining = nextLeftColumn + 1;
+        const qreal remainingColumnWidths = columnsRemaining * averageEdgeSize.width();
+        const qreal remainingSpacing = columnsRemaining * cellSpacing.width();
+        const qreal estimatedRemainingWidth = remainingColumnWidths + remainingSpacing;
+        origin.rx() = loadedTableOuterRect.left() - estimatedRemainingWidth;
+        hData.markExtentsDirty();
+    } else if (nextRightColumn == kEdgeIndexAtEnd) {
+        // There are no more columns to load on the right side of the table.
+        // In that case, we ensure that the end of the content view match the end of the table.
+        if (loadedTableOuterRect.right() < viewportRect.right()) {
+            // We have a blank area at the right end of the viewport. In that case we don't have time to
+            // wait for the viewport to move (after changing endExtent), since that will take an extra
+            // update cycle, which will be visible as a blink. Instead, unless the blank spot is just
+            // us overshooting, we brute force the loaded table inside the already existing viewport.
+            const qreal w = qMin(viewportRect.right(), q->contentWidth() + endExtent.width());
+            if (loadedTableOuterRect.right() < w) {
+                const qreal diff = loadedTableOuterRect.right() - w;
+                loadedTableOuterRect.moveRight(loadedTableOuterRect.right() - diff);
+                loadedTableInnerRect.moveRight(loadedTableInnerRect.right() - diff);
+                tableMovedHorizontally = true;
+            }
         }
+        endExtent.rwidth() = loadedTableOuterRect.right() - q->contentWidth();
+        hData.markExtentsDirty();
+    } else if (loadedTableOuterRect.right() >= q->contentWidth() + endExtent.width() - cellSpacing.width()) {
+        // The right-most column is outside the end of the content view, and we
+        // still have more visible columns in the model. This can happen if the application
+        // has set a fixed content width.
+        const int columnsRemaining = tableSize.width() - nextRightColumn;
+        const qreal remainingColumnWidths = columnsRemaining * averageEdgeSize.width();
+        const qreal remainingSpacing = columnsRemaining * cellSpacing.width();
+        const qreal estimatedRemainingWidth = remainingColumnWidths + remainingSpacing;
+        const qreal pixelsOutsideContentWidth = loadedTableOuterRect.right() - q->contentWidth();
+        endExtent.rwidth() = pixelsOutsideContentWidth + estimatedRemainingWidth;
+        hData.markExtentsDirty();
     }
 
-    if (noMoreRows) {
-        if (!qFuzzyIsNull(loadedTableOuterRect.top())) {
-            loadedTableOuterRect.moveTop(0);
-            layoutNeeded = true;
+    if (syncVertically) {
+        const auto syncView_d = syncView->d_func();
+        origin.ry() = syncView_d->origin.y();
+        endExtent.rheight() = syncView_d->endExtent.height();
+        vData.markExtentsDirty();
+    } else if (nextTopRow == kEdgeIndexAtEnd) {
+        // There are no more rows to load on the top side of the table.
+        // In that case, we ensure that the origin match the beginning of the table.
+        if (loadedTableOuterRect.top() > viewportRect.top()) {
+            // We have a blank area at the top of the viewport. In that case we don't have time to
+            // wait for the viewport to move (after changing origin), since that will take an extra
+            // update cycle, which will be visible as a blink. Instead, unless the blank spot is just
+            // us overshooting, we brute force the loaded table inside the already existing viewport.
+            if (loadedTableOuterRect.top() > origin.y()) {
+                const qreal diff = loadedTableOuterRect.top() - origin.y();
+                loadedTableOuterRect.moveTop(loadedTableOuterRect.top() - diff);
+                loadedTableInnerRect.moveTop(loadedTableInnerRect.top() - diff);
+                tableMovedVertically = true;
+            }
         }
-    } else {
-        if (loadedTableOuterRect.top() <= 0) {
-            loadedTableOuterRect.moveTop(flickMargin);
-            layoutNeeded = true;
+        origin.ry() = loadedTableOuterRect.top();
+        vData.markExtentsDirty();
+    } else if (loadedTableOuterRect.top() <= origin.y() + cellSpacing.height()) {
+        // The table rect is at the origin, or outside, but we still have more
+        // visible rows at the top. So we try to guesstimate how much space
+        // the rest of the rows will occupy, and move the origin accordingly.
+        const int rowsRemaining = nextTopRow + 1;
+        const qreal remainingRowHeights = rowsRemaining * averageEdgeSize.height();
+        const qreal remainingSpacing = rowsRemaining * cellSpacing.height();
+        const qreal estimatedRemainingHeight = remainingRowHeights + remainingSpacing;
+        origin.ry() = loadedTableOuterRect.top() - estimatedRemainingHeight;
+        vData.markExtentsDirty();
+    } else if (nextBottomRow == kEdgeIndexAtEnd) {
+        // There are no more rows to load on the bottom side of the table.
+        // In that case, we ensure that the end of the content view match the end of the table.
+        if (loadedTableOuterRect.bottom() < viewportRect.bottom()) {
+            // We have a blank area at the bottom of the viewport. In that case we don't have time to
+            // wait for the viewport to move (after changing endExtent), since that will take an extra
+            // update cycle, which will be visible as a blink. Instead, unless the blank spot is just
+            // us overshooting, we brute force the loaded table inside the already existing viewport.
+            const qreal h = qMin(viewportRect.bottom(), q->contentHeight() + endExtent.height());
+            if (loadedTableOuterRect.bottom() < h) {
+                const qreal diff = loadedTableOuterRect.bottom() - h;
+                loadedTableOuterRect.moveBottom(loadedTableOuterRect.bottom() - diff);
+                loadedTableInnerRect.moveBottom(loadedTableInnerRect.bottom() - diff);
+                tableMovedVertically = true;
+            }
         }
+        endExtent.rheight() = loadedTableOuterRect.bottom() - q->contentHeight();
+        vData.markExtentsDirty();
+    } else if (loadedTableOuterRect.bottom() >= q->contentHeight() + endExtent.height() - cellSpacing.height()) {
+        // The bottom-most row is outside the end of the content view, and we
+        // still have more visible rows in the model. This can happen if the application
+        // has set a fixed content height.
+        const int rowsRemaining = tableSize.height() - nextBottomRow;
+        const qreal remainingRowHeigts = rowsRemaining * averageEdgeSize.height();
+        const qreal remainingSpacing = rowsRemaining * cellSpacing.height();
+        const qreal estimatedRemainingHeight = remainingRowHeigts + remainingSpacing;
+        const qreal pixelsOutsideContentHeight = loadedTableOuterRect.bottom() - q->contentHeight();
+        endExtent.rheight() = pixelsOutsideContentHeight + estimatedRemainingHeight;
+        vData.markExtentsDirty();
     }
 
-    if (layoutNeeded) {
-        qCDebug(lcTableViewDelegateLifecycle);
+    if (tableMovedHorizontally || tableMovedVertically) {
+        qCDebug(lcTableViewDelegateLifecycle) << "move table to" << loadedTableOuterRect;
+
+        // relayoutTableItems() will take care of moving the existing
+        // delegate items into the new loadedTableOuterRect.
         relayoutTableItems();
+
+        // Inform the sync children that they need to rebuild to stay in sync
+        for (auto syncChild : qAsConst(syncChildren)) {
+            auto syncChild_d = syncChild->d_func();
+            syncChild_d->scheduledRebuildOptions |= RebuildOption::ViewportOnly;
+            if (tableMovedHorizontally)
+                syncChild_d->scheduledRebuildOptions |= RebuildOption::CalculateNewTopLeftColumn;
+            if (tableMovedVertically)
+                syncChild_d->scheduledRebuildOptions |= RebuildOption::CalculateNewTopLeftRow;
+        }
+    }
+
+    if (hData.minExtentDirty || vData.minExtentDirty) {
+        qCDebug(lcTableViewDelegateLifecycle) << "move origin and endExtent to:" << origin << endExtent;
+        // updateBeginningEnd() will let the new extents take effect. This will also change the
+        // visualArea of the flickable, which again will cause any attached scrollbars to adjust
+        // the position of the handle. Note the latter will cause the viewport to move once more.
+        updateBeginningEnd();
     }
 }
 
 void QQuickTableViewPrivate::updateAverageEdgeSize()
 {
-    const int loadedRowCount = loadedRows.count();
-    const int loadedColumnCount = loadedColumns.count();
-    const qreal accRowSpacing = (loadedRowCount - 1) * cellSpacing.height();
-    const qreal accColumnSpacing = (loadedColumnCount - 1) * cellSpacing.width();
-    averageEdgeSize.setHeight((loadedTableOuterRect.height() - accRowSpacing) / loadedRowCount);
-    averageEdgeSize.setWidth((loadedTableOuterRect.width() - accColumnSpacing) / loadedColumnCount);
+    if (explicitContentWidth.isValid()) {
+        const qreal accColumnSpacing = (tableSize.width() - 1) * cellSpacing.width();
+        averageEdgeSize.setWidth((explicitContentWidth - accColumnSpacing) / tableSize.width());
+    } else {
+        const qreal accColumnSpacing = (loadedColumns.count() - 1) * cellSpacing.width();
+        averageEdgeSize.setWidth((loadedTableOuterRect.width() - accColumnSpacing) / loadedColumns.count());
+    }
+
+    if (explicitContentHeight.isValid()) {
+        const qreal accRowSpacing = (tableSize.height() - 1) * cellSpacing.height();
+        averageEdgeSize.setHeight((explicitContentHeight - accRowSpacing) / tableSize.height());
+    } else {
+        const qreal accRowSpacing = (loadedRows.count() - 1) * cellSpacing.height();
+        averageEdgeSize.setHeight((loadedTableOuterRect.height() - accRowSpacing) / loadedRows.count());
+    }
 }
 
 void QQuickTableViewPrivate::syncLoadedTableRectFromLoadedTable()
@@ -770,13 +910,12 @@ void QQuickTableViewPrivate::forceLayout()
 
     scheduleRebuildTable(rebuildOptions);
 
-    if (polishing) {
+    auto rootView = rootSyncView();
+    const bool updated = rootView->d_func()->updateTableRecursive();
+    if (!updated) {
         qWarning() << "TableView::forceLayout(): Cannot do an immediate re-layout during an ongoing layout!";
-        q_func()->polish();
-        return;
+        rootView->polish();
     }
-
-    updatePolish();
 }
 
 void QQuickTableViewPrivate::syncLoadedTableFromLoadRequest()
@@ -1212,19 +1351,6 @@ bool QQuickTableViewPrivate::isRowHidden(int row)
     return qFuzzyIsNull(getRowHeight(row));
 }
 
-void QQuickTableViewPrivate::relayoutTable()
-{
-    clearEdgeSizeCache();
-    relayoutTableItems();
-    syncLoadedTableRectFromLoadedTable();
-    enforceTableAtOrigin();
-    updateContentWidth();
-    updateContentHeight();
-    // Return back to updatePolish to loadAndUnloadVisibleEdges()
-    // since the re-layout might have caused some edges to be pushed
-    // out, while others might have been pushed in.
-}
-
 void QQuickTableViewPrivate::relayoutTableItems()
 {
     qCDebug(lcTableViewDelegateLifecycle);
@@ -1409,20 +1535,7 @@ void QQuickTableViewPrivate::processLoadRequest()
     if (rebuildState == RebuildState::Done) {
         // Loading of this edge was not done as a part of a rebuild, but
         // instead as an incremental build after e.g a flick.
-        switch (loadRequest.edge()) {
-        case Qt::LeftEdge:
-        case Qt::TopEdge:
-            enforceTableAtOrigin();
-            break;
-        case Qt::RightEdge:
-            updateAverageEdgeSize();
-            updateContentWidth();
-            break;
-        case Qt::BottomEdge:
-            updateAverageEdgeSize();
-            updateContentHeight();
-            break;
-        }
+        updateExtents();
         drainReusePoolAfterLoadRequest();
     }
 
@@ -1637,16 +1750,29 @@ void QQuickTableViewPrivate::beginRebuildTable()
     else if (rebuildOptions & RebuildOption::ViewportOnly)
         releaseLoadedItems(reusableFlag);
 
+    if (rebuildOptions & RebuildOption::All) {
+        origin = QPointF(0, 0);
+        endExtent = QSizeF(0, 0);
+        hData.markExtentsDirty();
+        vData.markExtentsDirty();
+        updateBeginningEnd();
+    }
+
     loadedColumns.clear();
     loadedRows.clear();
     loadedTableOuterRect = QRect();
     loadedTableInnerRect = QRect();
     clearEdgeSizeCache();
 
-    if (syncHorizontally)
+    if (syncHorizontally) {
         setLocalViewportX(syncView->contentX());
-    if (syncVertically)
+        viewportRect.moveLeft(syncView->d_func()->viewportRect.left());
+    }
+
+    if (syncVertically) {
         setLocalViewportY(syncView->contentY());
+        viewportRect.moveTop(syncView->d_func()->viewportRect.top());
+    }
 
     if (!model) {
         qCDebug(lcTableViewDelegateLifecycle()) << "no model found, leaving table empty";
@@ -1690,12 +1816,29 @@ void QQuickTableViewPrivate::layoutAfterLoadingInitialTable()
         // columns, since during the process, we didn't have all the items
         // available yet for the calculation. So we do it now. The exception
         // is if we specifically only requested a relayout.
-        relayoutTable();
+        clearEdgeSizeCache();
+        relayoutTableItems();
+        syncLoadedTableRectFromLoadedTable();
     }
 
-    updateAverageEdgeSize();
-    updateContentWidth();
-    updateContentHeight();
+    if (syncView || rebuildOptions.testFlag(RebuildOption::All)) {
+        // We try to limit how often we update the content size. The main reason is that is has a
+        // tendency to cause flicker in the viewport if it happens while flicking. But another just
+        // as valid reason is that we actually never really know what the size of the full table will
+        // ever be. Even if e.g spacing changes, and we normally would assume that the size of the table
+        // would increase accordingly, the model might also at some point have removed/hidden/resized
+        // rows/columns outside the viewport. This would also affect the size, but since we don't load
+        // rows or columns outside the viewport, this information is ignored. And even if we did, we
+        // might also have been fast-flicked to a new location at some point, and started a new rebuild
+        // there based on a new guesstimated top-left cell. Either way, changing the content size
+        // based on the currently visible row/columns/spacing can be really off. So instead of pretending
+        // that we know what the actual size of the table is, we just keep the first guesstimate.
+        updateAverageEdgeSize();
+        updateContentWidth();
+        updateContentHeight();
+    }
+
+    updateExtents();
 }
 
 void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
@@ -1710,8 +1853,6 @@ void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
             unloadItem(QPoint(column, r.key()));
         loadedColumns.remove(column);
         syncLoadedTableRectFromLoadedTable();
-        updateAverageEdgeSize();
-        updateContentWidth();
         break; }
     case Qt::TopEdge:
     case Qt::BottomEdge: {
@@ -1720,8 +1861,6 @@ void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
             unloadItem(QPoint(c.key(), row));
         loadedRows.remove(row);
         syncLoadedTableRectFromLoadedTable();
-        updateAverageEdgeSize();
-        updateContentHeight();
         break; }
     }
 
@@ -1925,8 +2064,17 @@ bool QQuickTableViewPrivate::updateTable()
 
 void QQuickTableViewPrivate::fixup(QQuickFlickablePrivate::AxisData &data, qreal minExtent, qreal maxExtent)
 {
-    if (scheduledRebuildOptions || rebuildState != RebuildState::Done)
+    if (inUpdateContentSize) {
+        // We update the content size dynamically as we load and unload edges.
+        // Unfortunately, this also triggers a call to this function. The base
+        // implementation will do things like start a momentum animation or move
+        // the content view somewhere else, which causes glitches. This can
+        // especially happen if flicking on one of the syncView children, which triggers
+        // an update to our content size. In that case, the base implementation don't know
+        // that the view is being indirectly dragged, and will therefore do strange things as
+        // it tries to 'fixup' the geometry. So we use a guard to prevent this from happening.
         return;
+    }
 
     QQuickFlickablePrivate::fixup(data, minExtent, maxExtent);
 }
@@ -2011,13 +2159,11 @@ void QQuickTableViewPrivate::syncWithPendingChanges()
     Q_Q(QQuickTableView);
     viewportRect = QRectF(q->contentX(), q->contentY(), q->width(), q->height());
 
-    // Sync rebuild options first, in case we schedule a rebuild from one of the
-    // other sync calls above. If so, we need to start a new rebuild from the top.
-    syncRebuildOptions();
-
     syncModel();
     syncDelegate();
     syncSyncView();
+
+    syncRebuildOptions();
 }
 
 void QQuickTableViewPrivate::syncRebuildOptions()
@@ -2107,7 +2253,6 @@ void QQuickTableViewPrivate::syncSyncView()
 
             assignedSyncView->d_func()->syncChildren.append(q);
             scheduledRebuildOptions |= RebuildOption::ViewportOnly;
-            q->polish();
         }
 
         syncView = assignedSyncView;
@@ -2120,6 +2265,21 @@ void QQuickTableViewPrivate::syncSyncView()
         q->setColumnSpacing(syncView->columnSpacing());
     if (syncVertically)
         q->setRowSpacing(syncView->rowSpacing());
+
+    if (syncView && loadedItems.isEmpty() && !tableSize.isEmpty()) {
+        // When we have a syncView, we can sometimes temporarily end up with no loaded items.
+        // This can happen if the syncView has a model with more rows or columns than us, in
+        // which case the viewport can end up in a place where we have no rows or columns to
+        // show. In that case, check now if the viewport has been flicked back again, and
+        // that we can rebuild the table with a visible top-left cell.
+        const auto syncView_d = syncView->d_func();
+        if (!syncView_d->loadedItems.isEmpty()) {
+            if (syncHorizontally && syncView_d->leftColumn() <= tableSize.width() - 1)
+                scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::ViewportOnly;
+            else if (syncVertically && syncView_d->topRow() <= tableSize.height() - 1)
+                scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::ViewportOnly;
+        }
+    }
 }
 
 void QQuickTableViewPrivate::connectToModel()
@@ -2254,7 +2414,6 @@ void QQuickTableViewPrivate::modelResetCallback()
 void QQuickTableViewPrivate::scheduleRebuildIfFastFlick()
 {
     Q_Q(QQuickTableView);
-
     // If the viewport has moved more than one page vertically or horizontally, we switch
     // strategy from refilling edges around the current table to instead rebuild the table
     // from scratch inside the new viewport. This will greatly improve performance when flicking
@@ -2343,6 +2502,26 @@ QQuickTableView::QQuickTableView(QQuickTableViewPrivate &dd, QQuickItem *parent)
     : QQuickFlickable(dd, parent)
 {
     setFlag(QQuickItem::ItemIsFocusScope);
+}
+
+qreal QQuickTableView::minXExtent() const
+{
+    return QQuickFlickable::minXExtent() - d_func()->origin.x();
+}
+
+qreal QQuickTableView::maxXExtent() const
+{
+    return QQuickFlickable::maxXExtent() - d_func()->endExtent.width();
+}
+
+qreal QQuickTableView::minYExtent() const
+{
+    return QQuickFlickable::minYExtent() - d_func()->origin.y();
+}
+
+qreal QQuickTableView::maxYExtent() const
+{
+    return QQuickFlickable::maxYExtent() - d_func()->endExtent.height();
 }
 
 int QQuickTableView::rows() const

@@ -36,11 +36,11 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <qv4engine_p.h>
+
 #include <qv4runtime_p.h>
-#include <qv4string_p.h>
 #include <qv4propertykey_p.h>
 #ifndef V4_BOOTSTRAP
+#include <qv4string_p.h>
 #include <qv4symbol_p.h>
 #include <qv4object_p.h>
 #include <qv4objectproto_p.h>
@@ -248,7 +248,6 @@ QV4::PropertyKey Value::toPropertyKey(ExecutionEngine *e) const
     ScopedStringOrSymbol s(scope, v);
     return s->toPropertyKey();
 }
-#endif // V4_BOOTSTRAP
 
 bool Value::sameValue(Value other) const {
     if (_val == other._val)
@@ -285,7 +284,6 @@ bool Value::sameValueZero(Value other) const {
     return false;
 }
 
-#ifndef V4_BOOTSTRAP
 Heap::String *Value::toString(ExecutionEngine *e, Value val)
 {
     return RuntimeHelpers::convertToString(e, val);

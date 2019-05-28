@@ -87,9 +87,6 @@
 #include <private/qqmltimer_p.h>
 #endif
 #include <private/qqmlplatform_p.h>
-#if QT_CONFIG(qml_worker_script)
-#include <private/qquickworkerscript_p.h>
-#endif
 #include <private/qqmlloggingcategory_p.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
@@ -207,6 +204,7 @@ void QQmlEnginePrivate::defineModule()
     qmlRegisterType<QObject>(uri, 2, 0, "QtObject");
     qmlRegisterType<QQmlBind>(uri, 2, 0, "Binding");
     qmlRegisterType<QQmlBind, 8>(uri, 2, 8, "Binding"); // Only available in >= 2.8
+    qmlRegisterType<QQmlBind, 14>(uri, 2, 14, "Binding");
     qmlRegisterCustomType<QQmlConnections>(uri, 2, 0, "Connections", new QQmlConnectionsParser);
     qmlRegisterCustomType<QQmlConnections, 1>(uri, 2, 3, "Connections", new QQmlConnectionsParser); // Only available in QtQml >= 2.3
 #if QT_CONFIG(qml_animation)
@@ -239,9 +237,6 @@ void QQmlEnginePrivate::registerQuickTypes()
 #endif
     qmlRegisterType<QQmlLoggingCategory>(uri, 2, 8, "LoggingCategory");
     qmlRegisterType<QQmlLoggingCategory, 1>(uri, 2, 12, "LoggingCategory");
-#if QT_CONFIG(qml_worker_script)
-    qmlRegisterType<QQuickWorkerScript>(uri, 2, 0, "WorkerScript");
-#endif
 #if QT_CONFIG(qml_locale)
     qmlRegisterUncreatableType<QQmlLocale>(uri, 2, 0, "Locale", QQmlEngine::tr("Locale cannot be instantiated. Use Qt.locale()"));
 #endif
@@ -950,7 +945,11 @@ void QQmlEnginePrivate::init()
     Q_Q(QQmlEngine);
 
     if (baseModulesUninitialized) {
-        qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component"); // required for the Compiler.
+
+        // required for the Compiler.
+        qmlRegisterType<QObject>("QML", 1, 0, "QtObject");
+        qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component");
+
         QQmlData::init();
         baseModulesUninitialized = false;
     }
@@ -963,20 +962,10 @@ void QQmlEnginePrivate::init()
     qRegisterMetaType<QList<int> >();
     qRegisterMetaType<QQmlBinding*>();
 
-    v8engine()->setEngine(q);
+    q->handle()->setQmlEngine(q);
 
     rootContext = new QQmlContext(q,true);
 }
-
-#if QT_CONFIG(qml_worker_script)
-QQuickWorkerScriptEngine *QQmlEnginePrivate::getWorkerScriptEngine()
-{
-    Q_Q(QQmlEngine);
-    if (!workerScriptEngine)
-        workerScriptEngine = new QQuickWorkerScriptEngine(q);
-    return workerScriptEngine;
-}
-#endif
 
 /*!
   \class QQmlEngine
@@ -1782,7 +1771,7 @@ void QQmlData::NotifyList::layout()
     todo = nullptr;
 }
 
-void QQmlData::deferData(int objectIndex, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, QQmlContextData *context)
+void QQmlData::deferData(int objectIndex, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, QQmlContextData *context)
 {
     QQmlData::DeferredData *deferData = new QQmlData::DeferredData;
     deferData->deferredIdx = objectIndex;
@@ -2419,7 +2408,7 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t, int minorVe
     }
 }
 
-void QQmlEnginePrivate::registerInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit)
+void QQmlEnginePrivate::registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
 {
     compilationUnit->isRegisteredWithEngine = true;
 
@@ -2429,7 +2418,7 @@ void QQmlEnginePrivate::registerInternalCompositeType(QV4::CompiledData::Compila
     m_compositeTypes.insert(compilationUnit->metaTypeId, compilationUnit);
 }
 
-void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit)
+void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
 {
     compilationUnit->isRegisteredWithEngine = false;
 

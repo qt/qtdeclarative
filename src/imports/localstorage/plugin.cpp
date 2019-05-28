@@ -85,7 +85,7 @@ QT_BEGIN_NAMESPACE
 }
 
 
-class QQmlSqlDatabaseData : public QV8Engine::Deletable
+class QQmlSqlDatabaseData : public QV4::ExecutionEngine::Deletable
 {
 public:
     QQmlSqlDatabaseData(QV4::ExecutionEngine *engine);

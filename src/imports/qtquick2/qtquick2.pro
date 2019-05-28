@@ -8,4 +8,6 @@ SOURCES += \
 
 QT += quick-private qml-private qmlmodels-private
 
+qtConfig(qml-worker-script): QT += qmlworkerscript-private
+
 load(qml_plugin)

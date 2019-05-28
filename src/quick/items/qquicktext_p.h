@@ -121,6 +121,7 @@ public:
     Q_ENUM(TextStyle)
     enum TextFormat { PlainText = Qt::PlainText,
                        RichText = Qt::RichText,
+                       MarkdownText = Qt::MarkdownText,
                        AutoText = Qt::AutoText,
                        StyledText = 4 };
     Q_ENUM(TextFormat)

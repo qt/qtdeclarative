@@ -374,6 +374,7 @@ private Q_SLOTS:
     void updateWholeDocument();
     void invalidateBlock(const QTextBlock &block);
     void updateCursor();
+    void q_linkHovered(const QString &link);
     void q_updateAlignment();
     void updateSize();
     void triggerPreprocess();

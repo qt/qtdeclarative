@@ -114,13 +114,46 @@ void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEvent
     QQuickMultiPointHandler::onGrabChanged(grabber, transition, point);
     if (grabber == this && transition == QQuickEventPoint::GrabExclusive && target()) {
         // In case the grab got handed over from another grabber, we might not get the Press.
-        if (!m_pressedInsideTarget) {
-            if (target() != parentItem())
+
+        auto isDescendant = [](QQuickItem *parent, QQuickItem *target) {
+            return (target != parent) && !target->isAncestorOf(parent);
+        };
+        if (m_snapMode == SnapAlways
+            || (m_snapMode == SnapIfPressedOutsideTarget && !m_pressedInsideTarget)
+            || (m_snapMode == SnapAuto && !m_pressedInsideTarget && isDescendant(parentItem(), target()))
+            ) {
                 m_pressTargetPos = QPointF(target()->width(), target()->height()) / 2;
         } else if (m_pressTargetPos.isNull()) {
             m_pressTargetPos = targetCentroidPosition();
         }
     }
+}
+
+/*!
+    \qmlproperty enumeration QtQuick.DragHandler::snapMode
+
+    This property holds the snap mode.
+
+    The snap mode configures snapping of the \l target item's center to the event point.
+
+    Possible values:
+    \value DragHandler.SnapNever Never snap
+    \value DragHandler.SnapAuto The \l target snaps if the event point was pressed outside of the \l target
+                                item \e and the \l target is a descendant of \l parentItem (default)
+    \value DragHandler.SnapWhenPressedOutsideTarget The \l target snaps if the event point was pressed outside of the \l target
+    \value DragHandler.SnapAlways Always snap
+*/
+QQuickDragHandler::SnapMode QQuickDragHandler::snapMode() const
+{
+    return m_snapMode;
+}
+
+void QQuickDragHandler::setSnapMode(QQuickDragHandler::SnapMode mode)
+{
+    if (mode == m_snapMode)
+        return;
+    m_snapMode = mode;
+    emit snapModeChanged();
 }
 
 void QQuickDragHandler::onActiveChanged()

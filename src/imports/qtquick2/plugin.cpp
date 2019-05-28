@@ -42,6 +42,9 @@
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include <QtQml/private/qqmlengine_p.h>
 #include <QtQmlModels/private/qqmlmodelsmodule_p.h>
+#if QT_CONFIG(qml_worker_script)
+#include <QtQmlWorkerScript/private/qqmlworkerscriptmodule_p.h>
+#endif
 #endif // QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 
 #include <private/qtquick2_p.h>
@@ -63,6 +66,9 @@ public:
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         QQmlEnginePrivate::registerQuickTypes();
         QQmlModelsModule::registerQuickTypes();
+#if QT_CONFIG(qml_worker_script)
+        QQmlWorkerScriptModule::registerQuickTypes();
+#endif
 #endif
         QQmlQtQuick2Module::defineModule();
 

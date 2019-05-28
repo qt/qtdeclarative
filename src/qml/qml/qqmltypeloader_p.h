@@ -70,6 +70,7 @@
 #include <private/qqmldirparser_p.h>
 #include <private/qflagpointer_p.h>
 #include <private/qqmlirbuilder_p.h>
+#include <private/qv4executablecompilationunit_p.h>
 
 #include <private/qv4value_p.h>
 #include <private/qv4script_p.h>
@@ -453,7 +454,7 @@ public:
 
     const QList<ScriptReference> &resolvedScripts() const;
 
-    QV4::CompiledData::CompilationUnit *compilationUnit() const;
+    QV4::ExecutableCompilationUnit *compilationUnit() const;
 
     // Used by QQmlComponent to get notifications
     struct TypeDataCallback {
@@ -477,18 +478,18 @@ protected:
 private:
     bool tryLoadFromDiskCache();
     bool loadFromSource();
-    void restoreIR(QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit);
+    void restoreIR(QV4::CompiledData::CompilationUnit &&unit);
     void continueLoadFromIR();
     void resolveTypes();
     QQmlCompileError buildTypeResolutionCaches(
             QQmlRefPointer<QQmlTypeNameCache> *typeNameCache,
-            QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache
+            QV4::ResolvedTypeReferenceMap *resolvedTypeCache
             ) const;
     void compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
-                 QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache,
+                 QV4::ResolvedTypeReferenceMap *resolvedTypeCache,
                  const QV4::CompiledData::DependentTypesHasher &dependencyHasher);
     void createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
-                                      const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
+                                      const QV4::ResolvedTypeReferenceMap &resolvedTypeCache);
     bool resolveType(const QString &typeName, int &majorVersion, int &minorVersion,
                      TypeReference &ref, int lineNumber = -1, int columnNumber = -1,
                      bool reportErrors = true,
@@ -512,7 +513,7 @@ private:
     QMap<int, TypeReference> m_resolvedTypes;
     bool m_typesResolved:1;
 
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_compiledData;
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> m_compiledData;
 
     QList<TypeDataCallback *> m_callbacks;
 
@@ -542,7 +543,7 @@ public:
 
     QV4::ReturnedValue scriptValueForContext(QQmlContextData *parentCtxt);
 
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit() const { return m_precompiledScript; }
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit() const { return m_precompiledScript; }
 
 protected:
     void clear() override; // From QQmlCleanup
@@ -554,7 +555,7 @@ private:
     QQmlContextData *qmlContextDataForContext(QQmlContextData *parentQmlContextData);
 
     bool m_loaded;
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_precompiledScript;
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> m_precompiledScript;
     QV4::PersistentValue m_value;
 };
 
@@ -587,7 +588,7 @@ protected:
 
 private:
     void scriptImported(const QQmlRefPointer<QQmlScriptBlob> &blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace) override;
-    void initializeFromCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit);
+    void initializeFromCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit);
 
     QList<ScriptReference> m_scripts;
     QQmlRefPointer<QQmlScriptData> m_scriptData;

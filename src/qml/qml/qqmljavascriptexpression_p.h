@@ -153,7 +153,7 @@ protected:
     void createQmlBinding(QQmlContextData *ctxt, QObject *scope, const QString &code, const QString &filename, quint16 line);
 
     void setupFunction(QV4::ExecutionContext *qmlContext, QV4::Function *f);
-    void setCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit);
+    void setCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit);
 
     // We store some flag bits in the following flag pointers.
     //    activeGuards:flag1  - notifyOnValueChanged
@@ -178,7 +178,7 @@ private:
     QQmlJavaScriptExpression  *m_nextExpression;
 
     QV4::PersistentValue m_qmlScope;
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_compilationUnit;
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> m_compilationUnit;
     QV4::Function *m_v4Function;
 };
 

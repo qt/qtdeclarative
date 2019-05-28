@@ -65,7 +65,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct SequencePrototype : public QV4::Object
+struct Q_QML_PRIVATE_EXPORT SequencePrototype : public QV4::Object
 {
     V4_PROTOTYPE(arrayPrototype)
     void init();

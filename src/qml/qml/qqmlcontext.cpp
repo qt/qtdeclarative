@@ -438,23 +438,20 @@ QUrl QQmlContext::resolvedUrl(const QUrl &src)
 
 QUrl QQmlContextData::resolvedUrl(const QUrl &src)
 {
-    QQmlContextData *ctxt = this;
-
     QUrl resolved;
     if (src.isRelative() && !src.isEmpty()) {
-        if (ctxt) {
-            while(ctxt) {
-                if (ctxt->url().isValid())
-                    break;
-                else
-                    ctxt = ctxt->parent;
-            }
+        QQmlContextData *ctxt = this;
+        do {
+            if (ctxt->url().isValid())
+                break;
+            else
+                ctxt = ctxt->parent;
+        } while (ctxt);
 
-            if (ctxt)
-                resolved = ctxt->url().resolved(src);
-            else if (engine)
-                resolved = engine->baseUrl().resolved(src);
-        }
+        if (ctxt)
+            resolved = ctxt->url().resolved(src);
+        else if (engine)
+            resolved = engine->baseUrl().resolved(src);
     } else {
         resolved = src;
     }
@@ -845,7 +842,7 @@ QQmlContextPrivate *QQmlContextData::asQQmlContextPrivate()
     return QQmlContextPrivate::get(asQQmlContext());
 }
 
-void QQmlContextData::initFromTypeCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit, int subComponentIndex)
+void QQmlContextData::initFromTypeCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, int subComponentIndex)
 {
     typeCompilationUnit = unit;
     componentObjectIndex = subComponentIndex == -1 ? /*root object*/0 : subComponentIndex;

@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qtqmlglobal_p.h"
+#include "qtqmlworkerscriptglobal_p.h"
 #include "qquickworkerscript_p.h"
 #include <private/qqmlengine_p.h>
 #include <private/qqmlexpression_p.h>
@@ -57,7 +57,6 @@
 #include "qqmlnetworkaccessmanagerfactory.h"
 #endif
 
-#include <private/qv8engine_p.h>
 #include <private/qv4serialize_p.h>
 
 #include <private/qv4value_p.h>
@@ -125,6 +124,15 @@ private:
     QQmlError m_error;
 };
 
+struct WorkerScript : public QV4::ExecutionEngine {
+    WorkerScript(int id, QQuickWorkerScriptEnginePrivate *parent);
+
+    QQuickWorkerScriptEnginePrivate *p = nullptr;
+    QUrl source;
+    QQuickWorkerScript *owner = nullptr;
+    int id = -1;
+};
+
 class QQuickWorkerScriptEnginePrivate : public QObject
 {
     Q_OBJECT
@@ -139,23 +147,6 @@ public:
 
     QMutex m_lock;
     QWaitCondition m_wait;
-
-    struct WorkerScript : public QV8Engine {
-        WorkerScript(int id, QQuickWorkerScriptEnginePrivate *parent);
-        ~WorkerScript() override;
-
-#if QT_CONFIG(qml_network)
-        QNetworkAccessManager *networkAccessManager() override;
-#endif
-
-        QQuickWorkerScriptEnginePrivate *p = nullptr;
-        QUrl source;
-        QQuickWorkerScript *owner = nullptr;
-#if QT_CONFIG(qml_network)
-        QScopedPointer<QNetworkAccessManager> accessManager;
-#endif
-        int id = -1;
-    };
 
     QHash<int, WorkerScript *> workers;
     QV4::ReturnedValue getWorker(WorkerScript *);
@@ -185,7 +176,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(const QV4
                                                                        const QV4::Value *, const QV4::Value *argv, int argc)
 {
     QV4::Scope scope(b);
-    WorkerScript *script = static_cast<WorkerScript *>(scope.engine->v8Engine);
+    WorkerScript *script = static_cast<WorkerScript *>(scope.engine);
 
     QV4::ScopedValue v(scope, argc > 0 ? argv[0] : QV4::Value::undefinedValue());
     QByteArray data = QV4::Serialize::serialize(v, scope.engine);
@@ -230,21 +221,20 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     if (!script)
         return;
 
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(script);
-    QV4::Scope scope(v4);
+    QV4::Scope scope(script);
     QV4::ScopedString v(scope);
-    QV4::ScopedObject worker(scope, v4->globalObject->get((v = v4->newString(QStringLiteral("WorkerScript")))));
+    QV4::ScopedObject worker(scope, script->globalObject->get((v = script->newString(QStringLiteral("WorkerScript")))));
     QV4::ScopedFunctionObject onmessage(scope);
     if (worker)
-        onmessage = worker->get((v = v4->newString(QStringLiteral("onMessage"))));
+        onmessage = worker->get((v = script->newString(QStringLiteral("onMessage"))));
 
     if (!onmessage)
         return;
 
-    QV4::ScopedValue value(scope, QV4::Serialize::deserialize(data, v4));
+    QV4::ScopedValue value(scope, QV4::Serialize::deserialize(data, script));
 
     QV4::JSCallData jsCallData(scope, 1);
-    *jsCallData->thisObject = v4->global();
+    *jsCallData->thisObject = script->global();
     jsCallData->args[0] = value;
     onmessage->call(jsCallData);
     if (scope.hasException()) {
@@ -264,35 +254,33 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
     if (!script)
         return;
 
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(script);
-
     script->source = url;
 
     if (fileName.endsWith(QLatin1String(".mjs"))) {
-        auto moduleUnit = v4->loadModule(url);
+        auto moduleUnit = script->loadModule(url);
         if (moduleUnit) {
-            if (moduleUnit->instantiate(v4))
+            if (moduleUnit->instantiate(script))
                 moduleUnit->evaluate();
         } else {
-            v4->throwError(QStringLiteral("Could not load module file"));
+            script->throwError(QStringLiteral("Could not load module file"));
         }
     } else {
         QString error;
-        QV4::Scope scope(v4);
+        QV4::Scope scope(script);
         QScopedPointer<QV4::Script> program;
-        program.reset(QV4::Script::createFromFileOrCache(v4, /*qmlContext*/nullptr, fileName, url, &error));
+        program.reset(QV4::Script::createFromFileOrCache(script, /*qmlContext*/nullptr, fileName, url, &error));
         if (program.isNull()) {
             if (!error.isEmpty())
                 qWarning().nospace() << error;
             return;
         }
 
-        if (!v4->hasException)
+        if (!script->hasException)
             program->run();
     }
 
-    if (v4->hasException) {
-        QQmlError error = v4->catchExceptionAsQmlError();
+    if (script->hasException) {
+        QQmlError error = script->catchExceptionAsQmlError();
         reportScriptException(script, error);
     }
 }
@@ -389,45 +377,22 @@ QQuickWorkerScriptEngine::~QQuickWorkerScriptEngine()
     d->deleteLater();
 }
 
-QQuickWorkerScriptEnginePrivate::WorkerScript::WorkerScript(int id, QQuickWorkerScriptEnginePrivate *parent)
-    : QV8Engine(new QV4::ExecutionEngine)
-    , p(parent)
+WorkerScript::WorkerScript(int id, QQuickWorkerScriptEnginePrivate *parent)
+    : p(parent)
     , id(id)
 {
-    m_v4Engine->v8Engine = this;
-
     initQmlGlobalObject();
 
-    QV4::Scope scope(m_v4Engine);
+    QV4::Scope scope(this);
     QV4::ScopedObject api(scope, scope.engine->newObject());
-    QV4::ScopedString name(scope, m_v4Engine->newString(QStringLiteral("sendMessage")));
-    QV4::ScopedValue sendMessage(scope, QV4::FunctionObject::createBuiltinFunction(m_v4Engine, name, method_sendMessage, 1));
+    QV4::ScopedString name(scope, newString(QStringLiteral("sendMessage")));
+    QV4::ScopedValue sendMessage(scope, QV4::FunctionObject::createBuiltinFunction(this, name, QQuickWorkerScriptEnginePrivate::method_sendMessage, 1));
     api->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("sendMessage"))), sendMessage);
-    m_v4Engine->globalObject->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("WorkerScript"))), api);
+    globalObject->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("WorkerScript"))), api);
 }
-
-QQuickWorkerScriptEnginePrivate::WorkerScript::~WorkerScript()
-{
-    delete m_v4Engine;
-}
-
-#if QT_CONFIG(qml_network)
-QNetworkAccessManager *QQuickWorkerScriptEnginePrivate::WorkerScript::networkAccessManager()
-{
-    if (!accessManager) {
-        if (p->qmlengine && p->qmlengine->networkAccessManagerFactory()) {
-            accessManager.reset(p->qmlengine->networkAccessManagerFactory()->create(p));
-        } else {
-            accessManager.reset(new QNetworkAccessManager(p));
-        }
-    }
-    return accessManager.data();
-}
-#endif
 
 int QQuickWorkerScriptEngine::registerWorkerScript(QQuickWorkerScript *owner)
 {
-    typedef QQuickWorkerScriptEnginePrivate::WorkerScript WorkerScript;
     WorkerScript *script = new WorkerScript(d->m_nextId++, d);
 
     script->owner = owner;
@@ -441,8 +406,7 @@ int QQuickWorkerScriptEngine::registerWorkerScript(QQuickWorkerScript *owner)
 
 void QQuickWorkerScriptEngine::removeWorkerScript(int id)
 {
-    QQuickWorkerScriptEnginePrivate::WorkerScript* script = d->workers.value(id);
-    if (script) {
+    if (WorkerScript *script = d->workers.value(id)) {
         script->owner = nullptr;
         QCoreApplication::postEvent(d, new WorkerRemoveEvent(id));
     }
@@ -618,7 +582,11 @@ QQuickWorkerScriptEngine *QQuickWorkerScript::engine()
             return nullptr;
         }
 
-        m_engine = QQmlEnginePrivate::get(engine)->getWorkerScriptEngine();
+        QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
+        if (enginePrivate->workerScriptEngine == nullptr)
+            enginePrivate->workerScriptEngine = new QQuickWorkerScriptEngine(engine);
+        m_engine = qobject_cast<QQuickWorkerScriptEngine *>(enginePrivate->workerScriptEngine);
+        Q_ASSERT(m_engine);
         m_scriptId = m_engine->registerWorkerScript(this);
 
         if (m_source.isValid())

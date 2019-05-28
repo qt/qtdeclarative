@@ -90,8 +90,8 @@
             "purpose": "Provides a JIT for QML and JavaScript",
             "section": "QML",
             "condition": [
-                "   (arch.i386   && tests.pointer_32bit)
-                 || (arch.x86_64 && tests.pointer_64bit)
+                "   (arch.i386   && tests.pointer_32bit && features.sse2)
+                 || (arch.x86_64 && tests.pointer_64bit && features.sse2)
                  || (arch.arm    && tests.pointer_32bit && tests.arm_fp && tests.arm_thumb
                      && (config.linux || config.ios || config.tvos || config.qnx))
                  || (arch.arm64  && tests.pointer_64bit && tests.arm_fp

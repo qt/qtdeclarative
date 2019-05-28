@@ -39,6 +39,7 @@
 
 #include "qqmlvaluetype_p.h"
 
+#include <QtCore/qmutex.h>
 #include <private/qqmlglobal_p.h>
 #include <QtCore/qdebug.h>
 #include <private/qmetaobjectbuilder_p.h>

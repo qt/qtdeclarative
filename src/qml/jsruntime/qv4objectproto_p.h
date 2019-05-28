@@ -74,7 +74,7 @@ struct ObjectCtor: FunctionObject
     static ReturnedValue virtualCall(const FunctionObject *m, const Value *thisObject, const Value *argv, int argc);
 };
 
-struct ObjectPrototype: Object
+struct Q_QML_PRIVATE_EXPORT ObjectPrototype: Object
 {
     void init(ExecutionEngine *engine, Object *ctor);
 

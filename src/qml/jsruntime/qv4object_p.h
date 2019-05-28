@@ -185,22 +185,22 @@ struct Q_QML_EXPORT Object: Managed {
     //
     // helpers
     //
-    static ReturnedValue getValue(const Value &thisObject, const Value &v, PropertyAttributes attrs) {
+    static ReturnedValue getValue(const Value *thisObject, const Value &v, PropertyAttributes attrs) {
         if (attrs.isData())
             return v.asReturnedValue();
         return getValueAccessor(thisObject, v, attrs);
     }
     ReturnedValue getValue(const Value &v, PropertyAttributes attrs) const {
-        return getValue(*this, v, attrs);
+        return getValue(this, v, attrs);
     }
     ReturnedValue getValueByIndex(uint propertyIndex) const {
         PropertyAttributes attrs = internalClass()->propertyData.at(propertyIndex);
         const Value *v = propertyData(propertyIndex);
         if (!attrs.isAccessor())
             return v->asReturnedValue();
-        return getValueAccessor(*this, *v, attrs);
+        return getValueAccessor(this, *v, attrs);
     }
-    static ReturnedValue getValueAccessor(const Value &thisObject, const Value &v, PropertyAttributes attrs);
+    static ReturnedValue getValueAccessor(const Value *thisObject, const Value &v, PropertyAttributes attrs);
 
     bool putValue(uint memberIndex, PropertyAttributes attrs, const Value &value);
 
@@ -543,13 +543,11 @@ inline const ArrayObject *Value::as() const {
     return isManaged() && m()->internalClass->vtable->type == Managed::Type_ArrayObject ? static_cast<const ArrayObject *>(this) : nullptr;
 }
 
-#ifndef V4_BOOTSTRAP
 template<>
 inline ReturnedValue value_convert<Object>(ExecutionEngine *e, const Value &v)
 {
     return v.toObject(e)->asReturnedValue();
 }
-#endif
 
 }
 
