@@ -662,7 +662,7 @@ LOCALE_STRING_PROPERTY(exponential)
 LOCALE_STRING_PROPERTY(amText)
 LOCALE_STRING_PROPERTY(pmText)
 
-class QV4LocaleDataDeletable : public QV8Engine::Deletable
+class QV4LocaleDataDeletable : public QV4::ExecutionEngine::Deletable
 {
 public:
     QV4LocaleDataDeletable(QV4::ExecutionEngine *engine);

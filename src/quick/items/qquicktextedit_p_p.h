@@ -207,6 +207,7 @@ public:
     Qt::InputMethodHints inputMethodHints;
 #endif
     UpdateType updateType;
+    Qt::CursorShape cursorToRestoreAfterHover = Qt::IBeamCursor;
 
     bool dirty : 1;
     bool richText : 1;

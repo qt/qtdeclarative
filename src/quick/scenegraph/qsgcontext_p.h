@@ -194,7 +194,7 @@ protected:
     QPointer<QSGContext> m_sg;
 
     QMutex m_mutex;
-    QHash<QQuickTextureFactory *, QSGTexture *> m_textures;
+    QHash<QObject *, QSGTexture *> m_textures;
     QSet<QSGTexture *> m_texturesToDelete;
     QHash<QString, QSGDistanceFieldGlyphCache *> m_glyphCaches;
 

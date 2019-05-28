@@ -59,6 +59,7 @@
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmlcontext_p.h>
 #include <private/qqmlboundsignalexpressionpointer_p.h>
+#include <private/qqmlpropertydata_p.h>
 
 QT_BEGIN_NAMESPACE
 

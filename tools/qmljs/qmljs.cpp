@@ -137,7 +137,8 @@ int main(int argc, char *argv[])
             }
             QScopedPointer<QV4::Script> script;
             if (cache && QFile::exists(fn + QLatin1Char('c'))) {
-                QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Compiler::Codegen::createUnitForLoading();
+                QQmlRefPointer<QV4::ExecutableCompilationUnit> unit
+                        = QV4::ExecutableCompilationUnit::create();
                 QString error;
                 if (unit->loadFromDisk(QUrl::fromLocalFile(fn), QFileInfo(fn).lastModified(), &error)) {
                     script.reset(new QV4::Script(&vm, nullptr, unit));

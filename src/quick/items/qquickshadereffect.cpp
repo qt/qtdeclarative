@@ -795,7 +795,8 @@ bool QQuickShaderEffect::event(QEvent *e)
         return QQuickItem::event(e);
     }
 #endif
-    m_impl->handleEvent(e);
+    if (m_impl)
+        m_impl->handleEvent(e);
     return QQuickItem::event(e);
 }
 

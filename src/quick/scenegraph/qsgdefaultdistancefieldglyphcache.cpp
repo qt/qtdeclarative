@@ -41,6 +41,7 @@
 
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qbuffer.h>
+#include <QtCore/qendian.h>
 #include <QtQml/qqmlfile.h>
 
 #include <QtGui/private/qdistancefield_p.h>

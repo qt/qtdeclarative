@@ -39,18 +39,14 @@
 
 #include "qv4string_p.h"
 #include "qv4value_p.h"
-#ifndef V4_BOOTSTRAP
 #include "qv4identifiertable_p.h"
 #include "qv4runtime_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4stringobject_p.h"
-#endif
 #include <QtCore/QHash>
 #include <QtCore/private/qnumeric_p.h>
 
 using namespace QV4;
-
-#ifndef V4_BOOTSTRAP
 
 void Heap::StringOrSymbol::markObjects(Heap::Base *that, MarkStack *markStack)
 {
@@ -253,11 +249,4 @@ void Heap::StringOrSymbol::createHashValue() const
 qint64 String::virtualGetLength(const Managed *m)
 {
     return static_cast<const String *>(m)->d()->length();
-}
-
-#endif // V4_BOOTSTRAP
-
-uint String::toArrayIndex(const QString &str)
-{
-    return QV4::String::toArrayIndex(str.constData(), str.constData() + str.length());
 }

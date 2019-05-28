@@ -54,7 +54,6 @@
 #include "qv4value_p.h"
 #include "qv4enginebase_p.h"
 #include <private/qv4heap_p.h>
-#include <private/qv4writebarrier_p.h>
 #include <private/qv4vtable_p.h>
 
 QT_BEGIN_NAMESPACE

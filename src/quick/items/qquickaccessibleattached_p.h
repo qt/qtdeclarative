@@ -69,6 +69,7 @@ QT_BEGIN_NAMESPACE
     bool P() const { return m_state.P ; } \
     void set_ ## P(bool arg) \
     { \
+        m_stateExplicitlySet.P = true; \
         if (m_state.P == arg) \
             return; \
         m_state.P = arg; \
@@ -111,35 +112,7 @@ public:
     ~QQuickAccessibleAttached();
 
     QAccessible::Role role() const { return m_role; }
-    void setRole(QAccessible::Role role)
-    {
-        if (role != m_role) {
-            m_role = role;
-            Q_EMIT roleChanged();
-            // There is no way to signify role changes at the moment.
-            // QAccessible::updateAccessibility(parent(), 0, QAccessible::);
-
-            switch (role) {
-            case QAccessible::CheckBox:
-            case QAccessible::RadioButton:
-                m_state.focusable = true;
-                m_state.checkable = true;
-                break;
-            case QAccessible::Button:
-            case QAccessible::MenuItem:
-            case QAccessible::PageTab:
-            case QAccessible::EditableText:
-            case QAccessible::SpinBox:
-            case QAccessible::ComboBox:
-            case QAccessible::Terminal:
-            case QAccessible::ScrollBar:
-                m_state.focusable = true;
-                break;
-            default:
-                break;
-            }
-        }
-    }
+    void setRole(QAccessible::Role role);
     QString name() const {
         if (m_state.passwordEdit)
             return QString();
@@ -241,6 +214,7 @@ private:
 
     QAccessible::Role m_role;
     QAccessible::State m_state;
+    QAccessible::State m_stateExplicitlySet;
     QString m_name;
     QString m_description;
 

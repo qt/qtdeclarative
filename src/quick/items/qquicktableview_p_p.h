@@ -251,6 +251,9 @@ public:
     QRectF loadedTableOuterRect;
     QRectF loadedTableInnerRect;
 
+    QPointF origin = QPointF(0, 0);
+    QSizeF endExtent = QSizeF(0, 0);
+
     QRectF viewportRect = QRectF(0, 0, -1, -1);
 
     QSize tableSize;
@@ -272,6 +275,7 @@ public:
     bool syncHorizontally = false;
     bool inSetLocalViewportPos = false;
     bool inSyncViewportPosRecursive = false;
+    bool inUpdateContentSize = false;
 
     QJSValue rowHeightProvider;
     QJSValue columnWidthProvider;
@@ -337,7 +341,6 @@ public:
 
     bool updateTableRecursive();
     bool updateTable();
-    void relayoutTable();
     void relayoutTableItems();
 
     void layoutVerticalEdge(Qt::Edge tableEdge);
@@ -350,7 +353,7 @@ public:
     void updateAverageEdgeSize();
     void forceLayout();
 
-    void enforceTableAtOrigin();
+    void updateExtents();
     void syncLoadedTableRectFromLoadedTable();
     void syncLoadedTableFromLoadRequest();
 

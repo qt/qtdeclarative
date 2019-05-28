@@ -76,7 +76,6 @@
 
 #include <private/qobject_p.h>
 
-#include <private/qv8engine_p.h>
 #include <private/qjsengine_p.h>
 #include <private/qqmldirparser_p.h>
 
@@ -94,7 +93,6 @@ class QQmlTypeNameCache;
 class QQmlComponentAttached;
 class QQmlCleanup;
 class QQmlDelayedError;
-class QQuickWorkerScriptEngine;
 class QQmlObjectCreator;
 class QDir;
 class QQmlIncubator;
@@ -150,12 +148,10 @@ public:
     QQmlDelayedError *erroredBindings;
     int inProgressCreations;
 
-    QV8Engine *v8engine() const { return q_func()->handle()->v8Engine; }
     QV4::ExecutionEngine *v4engine() const { return q_func()->handle(); }
 
 #if QT_CONFIG(qml_worker_script)
-    QQuickWorkerScriptEngine *getWorkerScriptEngine();
-    QQuickWorkerScriptEngine *workerScriptEngine;
+    QThread *workerScriptEngine;
 #endif
 
     QUrl baseUrl;
@@ -223,8 +219,8 @@ public:
     QQmlMetaObject metaObjectForType(int) const;
     QQmlPropertyCache *propertyCacheForType(int);
     QQmlPropertyCache *rawPropertyCacheForType(int, int minorVersion = -1);
-    void registerInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit);
-    void unregisterInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit);
+    void registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
+    void unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
 
     bool isTypeLoaded(const QUrl &url) const;
     bool isScriptLoaded(const QUrl &url) const;
@@ -242,7 +238,6 @@ public:
     static void warning(QQmlEnginePrivate *, const QQmlError &);
     static void warning(QQmlEnginePrivate *, const QList<QQmlError> &);
 
-    inline static QV8Engine *getV8Engine(QQmlEngine *e);
     inline static QV4::ExecutionEngine *getV4Engine(QQmlEngine *e);
     inline static QQmlEnginePrivate *get(QQmlEngine *e);
     inline static const QQmlEnginePrivate *get(const QQmlEngine *e);
@@ -270,7 +265,7 @@ private:
 
     // These members must be protected by a QQmlEnginePrivate::Locker as they are required by
     // the threaded loader.  Only access them through their respective accessor methods.
-    QHash<int, QV4::CompiledData::CompilationUnit *> m_compositeTypes;
+    QHash<int, QV4::ExecutableCompilationUnit *> m_compositeTypes;
     static bool s_designerMode;
 
     // These members is protected by the full QQmlEnginePrivate::mutex mutex
@@ -316,8 +311,8 @@ Returns true if the calling thread is the QQmlEngine thread.
 */
 bool QQmlEnginePrivate::isEngineThread() const
 {
-    Q_Q(const QQmlEngine);
-    return QThread::currentThread() == q->thread();
+
+    return QThread::currentThread() == q_ptr->thread();
 }
 
 /*!
@@ -342,8 +337,6 @@ the instance directly if not.
 template<typename T>
 void QQmlEnginePrivate::deleteInEngineThread(T *value)
 {
-    Q_Q(QQmlEngine);
-
     Q_ASSERT(value);
     if (isEngineThread()) {
         delete value;
@@ -359,7 +352,7 @@ void QQmlEnginePrivate::deleteInEngineThread(T *value)
         toDeleteInEngineThread.append(i);
         mutex.unlock();
         if (wasEmpty)
-            QCoreApplication::postEvent(q, new QEvent(QEvent::User));
+            QCoreApplication::postEvent(q_ptr, new QEvent(QEvent::User));
     }
 }
 
@@ -388,13 +381,6 @@ QQmlPropertyCache *QQmlEnginePrivate::cache(const QQmlType &type, int minorVersi
 
     Locker locker(this);
     return QQmlMetaType::propertyCache(type, minorVersion);
-}
-
-QV8Engine *QQmlEnginePrivate::getV8Engine(QQmlEngine *e)
-{
-    Q_ASSERT(e);
-
-    return e->handle()->v8Engine;
 }
 
 QV4::ExecutionEngine *QQmlEnginePrivate::getV4Engine(QQmlEngine *e)

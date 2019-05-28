@@ -390,6 +390,49 @@ QQuickAccessibleAttached::~QQuickAccessibleAttached()
 {
 }
 
+void QQuickAccessibleAttached::setRole(QAccessible::Role role)
+{
+    if (role != m_role) {
+        m_role = role;
+        Q_EMIT roleChanged();
+        // There is no way to signify role changes at the moment.
+        // QAccessible::updateAccessibility(parent(), 0, QAccessible::);
+
+        switch (role) {
+        case QAccessible::CheckBox:
+        case QAccessible::RadioButton:
+            if (!m_stateExplicitlySet.focusable)
+                m_state.focusable = true;
+            if (!m_stateExplicitlySet.checkable)
+                m_state.checkable = true;
+            break;
+        case QAccessible::Button:
+        case QAccessible::MenuItem:
+        case QAccessible::PageTab:
+        case QAccessible::SpinBox:
+        case QAccessible::ComboBox:
+        case QAccessible::Terminal:
+        case QAccessible::ScrollBar:
+            if (!m_stateExplicitlySet.focusable)
+                m_state.focusable = true;
+            break;
+        case QAccessible::EditableText:
+            if (!m_stateExplicitlySet.editable)
+                m_state.editable = true;
+            if (!m_stateExplicitlySet.focusable)
+                m_state.focusable = true;
+            break;
+        case QAccessible::StaticText:
+            if (!m_stateExplicitlySet.readOnly) {
+                m_state.readOnly = true;
+            }
+            break;
+        default:
+            break;
+        }
+    }
+}
+
 QQuickAccessibleAttached *QQuickAccessibleAttached::qmlAttachedProperties(QObject *obj)
 {
     return new QQuickAccessibleAttached(obj);

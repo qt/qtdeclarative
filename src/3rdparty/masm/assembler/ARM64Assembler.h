@@ -26,7 +26,7 @@
 #ifndef ARM64Assembler_h
 #define ARM64Assembler_h
 
-#if ENABLE(ASSEMBLER) && (CPU(ARM64) || defined(V4_BOOTSTRAP))
+#if ENABLE(ASSEMBLER) && CPU(ARM64)
 
 #include "AssemblerBuffer.h"
 #include "AbstractMacroAssembler.h"
@@ -3021,10 +3021,7 @@ public:
 
     static void cacheFlush(void* code, size_t size)
     {
-#if defined(V4_BOOTSTRAP)
-        UNUSED_PARAM(code)
-        UNUSED_PARAM(size)
-#elif OS(IOS)
+#if OS(IOS)
         sys_cache_control(kCacheFunctionPrepareForExecution, code, size);
 #elif OS(LINUX)
         size_t page = pageSize();

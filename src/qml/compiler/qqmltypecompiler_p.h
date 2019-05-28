@@ -81,7 +81,7 @@ struct QQmlTypeCompiler
 public:
     QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *document,
                      const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
-                     QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache,
+                     QV4::ResolvedTypeReferenceMap *resolvedTypeCache,
                      const QV4::CompiledData::DependentTypesHasher &dependencyHasher);
 
     // --- interface used by QQmlPropertyCacheCreator
@@ -91,10 +91,10 @@ public:
     QString stringAt(int idx) const;
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsBegin(const QmlIR::Object *object) const { return object->functionsBegin(); }
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsEnd(const QmlIR::Object *object) const { return object->functionsEnd(); }
-    QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypes = nullptr;
+    QV4::ResolvedTypeReferenceMap *resolvedTypes = nullptr;
     // ---
 
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compile();
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> compile();
 
     QList<QQmlError> compilationErrors() const { return errors; }
     void recordError(QQmlError error);
@@ -118,7 +118,6 @@ public:
     QQmlJS::MemoryPool *memoryPool();
     QStringRef newStringRef(const QString &string);
     const QV4::Compiler::StringTableGenerator *stringPool() const;
-    void setBindingPropertyDataPerObject(const QVector<QV4::CompiledData::BindingPropertyData> &propertyData);
 
     const QHash<int, QQmlCustomParser*> &customParserCache() const { return customParsers; }
 
@@ -126,7 +125,7 @@ public:
 
     void addImport(const QString &module, const QString &qualifier, int majorVersion, int minorVersion);
 
-    QV4::CompiledData::ResolvedTypeReference *resolvedType(int id) const
+    QV4::ResolvedTypeReference *resolvedType(int id) const
     {
         return resolvedTypes->value(id);
     }
@@ -157,12 +156,12 @@ protected:
     void recordError(const QQmlCompileError &error)
     { compiler->recordError(error); }
 
-    QV4::CompiledData::ResolvedTypeReference *resolvedType(int id) const
+    QV4::ResolvedTypeReference *resolvedType(int id) const
     { return compiler->resolvedType(id); }
     bool containsResolvedType(int id) const
     { return compiler->resolvedTypes->contains(id); }
-    QV4::CompiledData::ResolvedTypeReferenceMap::iterator insertResolvedType(
-            int id, QV4::CompiledData::ResolvedTypeReference *value)
+    QV4::ResolvedTypeReferenceMap::iterator insertResolvedType(
+            int id, QV4::ResolvedTypeReference *value)
     { return compiler->resolvedTypes->insert(id, value); }
 
     QQmlTypeCompiler *compiler;

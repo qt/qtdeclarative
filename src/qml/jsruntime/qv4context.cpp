@@ -60,7 +60,7 @@ Heap::CallContext *ExecutionContext::newBlockContext(CppStackFrame *frame, int b
 {
     Function *function = frame->v4Function;
 
-    Heap::InternalClass *ic = function->compilationUnit->runtimeBlocks.at(blockIndex);
+    Heap::InternalClass *ic = function->executableCompilationUnit()->runtimeBlocks.at(blockIndex);
     uint nLocals = ic->size;
     size_t requiredMemory = sizeof(CallContext::Data) - sizeof(Value) + sizeof(Value) * nLocals;
 
@@ -76,7 +76,7 @@ Heap::CallContext *ExecutionContext::newBlockContext(CppStackFrame *frame, int b
     c->locals.size = nLocals;
     c->locals.alloc = nLocals;
 
-    c->setupLocalTemporalDeadZone(function->compilationUnit->unitData()->blockAt(blockIndex));
+    c->setupLocalTemporalDeadZone(function->executableCompilationUnit()->unitData()->blockAt(blockIndex));
 
     return c;
 }

@@ -40,7 +40,6 @@
 #include <qv4compiler_p.h>
 #include <qv4compileddata_p.h>
 #include <qv4codegen_p.h>
-#include <private/qv4string_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4alloca_p.h>
 #include <private/qqmljslexer_p.h>

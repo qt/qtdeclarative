@@ -80,7 +80,7 @@ struct Q_QML_EXPORT Script {
         if (qml)
             qmlContext.set(engine, *qml);
     }
-    Script(ExecutionEngine *engine, QmlContext *qml, const QQmlRefPointer<CompiledData::CompilationUnit> &compilationUnit);
+    Script(ExecutionEngine *engine, QmlContext *qml, const QQmlRefPointer<ExecutableCompilationUnit> &compilationUnit);
     ~Script();
     QString sourceFile;
     int line;
@@ -92,7 +92,7 @@ struct Q_QML_EXPORT Script {
     bool parsed;
     QV4::Compiler::ContextType contextType = QV4::Compiler::ContextType::Eval;
     QV4::PersistentValue qmlContext;
-    QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit;
+    QQmlRefPointer<ExecutableCompilationUnit> compilationUnit;
     Function *vmFunction;
     bool parseAsBinding;
 
@@ -101,8 +101,10 @@ struct Q_QML_EXPORT Script {
 
     Function *function();
 
-    static QQmlRefPointer<CompiledData::CompilationUnit> precompile(QV4::Compiler::Module *module, QQmlJS::Engine *jsEngine, Compiler::JSUnitGenerator *unitGenerator,
-            const QString &fileName, const QString &finalUrl, const QString &source,
+    static QV4::CompiledData::CompilationUnit precompile(
+            QV4::Compiler::Module *module, QQmlJS::Engine *jsEngine,
+            Compiler::JSUnitGenerator *unitGenerator, const QString &fileName,
+            const QString &finalUrl, const QString &source,
             QList<QQmlError> *reportedErrors = nullptr,
             QV4::Compiler::ContextType contextType = QV4::Compiler::ContextType::Global);
     static Script *createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlContext, const QString &fileName, const QUrl &originalUrl, QString *error);

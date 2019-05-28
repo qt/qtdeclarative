@@ -3,6 +3,7 @@ INCLUDEPATH += $$OUT_PWD
 
 !qmldevtools_build {
 SOURCES += \
+    $$PWD/qv4engine.cpp \
     $$PWD/qv4context.cpp \
     $$PWD/qv4persistent.cpp \
     $$PWD/qv4lookup.cpp \
@@ -36,13 +37,13 @@ SOURCES += \
     $$PWD/qv4reflect.cpp \
     $$PWD/qv4regexpobject.cpp \
     $$PWD/qv4stackframe.cpp \
+    $$PWD/qv4string.cpp \
     $$PWD/qv4stringiterator.cpp \
     $$PWD/qv4stringobject.cpp \
     $$PWD/qv4variantobject.cpp \
     $$PWD/qv4objectiterator.cpp \
     $$PWD/qv4regexp.cpp \
     $$PWD/qv4runtimecodegen.cpp \
-    $$PWD/qv4serialize.cpp \
     $$PWD/qv4script.cpp \
     $$PWD/qv4symbol.cpp \
     $$PWD/qv4setobject.cpp \
@@ -103,13 +104,13 @@ HEADERS += \
     $$PWD/qv4regexpobject_p.h \
     $$PWD/qv4runtimecodegen_p.h \
     $$PWD/qv4stackframe_p.h \
+    $$PWD/qv4string_p.h \
     $$PWD/qv4stringiterator_p.h \
     $$PWD/qv4stringobject_p.h \
     $$PWD/qv4variantobject_p.h \
     $$PWD/qv4property_p.h \
     $$PWD/qv4objectiterator_p.h \
     $$PWD/qv4regexp_p.h \
-    $$PWD/qv4serialize_p.h \
     $$PWD/qv4script_p.h \
     $$PWD/qv4symbol_p.h \
     $$PWD/qv4setobject_p.h \
@@ -142,18 +143,17 @@ qtConfig(qml-sequence-object) {
 
 
 HEADERS += \
+    $$PWD/qv4calldata_p.h \
     $$PWD/qv4runtime_p.h \
     $$PWD/qv4runtimeapi_p.h \
     $$PWD/qv4value_p.h \
-    $$PWD/qv4string_p.h \
+    $$PWD/qv4stringtoarrayindex_p.h \
     $$PWD/qv4util_p.h \
     $$PWD/qv4value_p.h \
     $$PWD/qv4functiontable_p.h
 
 SOURCES += \
-    $$PWD/qv4engine.cpp \
     $$PWD/qv4runtime.cpp \
-    $$PWD/qv4string.cpp \
     $$PWD/qv4value.cpp \
     $$PWD/qv4executableallocator.cpp
 

@@ -63,6 +63,7 @@
 #include "qv4profiling_p.h"
 #include "qv4mapobject_p.h"
 #include "qv4setobject_p.h"
+#include "qv4writebarrier_p.h"
 
 //#define MM_STATS
 

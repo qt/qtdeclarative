@@ -53,6 +53,7 @@
 #include <private/qqmlvaluetype_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlmetaobject_p.h>
+#include <private/qqmlpropertyresolver_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -323,7 +324,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
 
     int varPropCount = 0;
 
-    QmlIR::PropertyResolver resolver(baseTypeCache);
+    QQmlPropertyResolver resolver(baseTypeCache);
 
     auto p = obj->propertiesBegin();
     auto pend = obj->propertiesEnd();

@@ -45,16 +45,15 @@
 #include <QtCore/QStack>
 #include <QScopeGuard>
 #include <private/qqmljsast_p.h>
-#include <private/qv4string_p.h>
+#include <private/qqmljslexer_p.h>
+#include <private/qqmljsparser_p.h>
+#include <private/qv4stringtoarrayindex_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4compilercontext_p.h>
 #include <private/qv4compilercontrolflow_p.h>
 #include <private/qv4bytecodegenerator_p.h>
 #include <private/qv4compilerscanfunctions_p.h>
-
-#ifndef V4_BOOTSTRAP
-#  include <qqmlerror.h>
-#endif
+#include <qqmlerror.h>
 
 #include <cmath>
 #include <iostream>
@@ -1243,7 +1242,7 @@ bool Codegen::visit(ArrayMemberExpression *ast)
         return false;
     if (AST::StringLiteral *str = AST::cast<AST::StringLiteral *>(ast->expression)) {
         QString s = str->value.toString();
-        uint arrayIndex = QV4::String::toArrayIndex(s);
+        uint arrayIndex = stringToArrayIndex(s);
         if (arrayIndex == UINT_MAX) {
             setExprResult(Reference::fromMember(base, str->value.toString()));
             return false;
@@ -2513,7 +2512,7 @@ bool Codegen::visit(ObjectPattern *ast)
         if (cname || p->type != PatternProperty::Literal)
             break;
         QString name = p->name->asString();
-        uint arrayIndex = QV4::String::toArrayIndex(name);
+        uint arrayIndex = stringToArrayIndex(name);
         if (arrayIndex != UINT_MAX)
             break;
         if (members.contains(name))
@@ -3781,23 +3780,54 @@ QList<QQmlJS::DiagnosticMessage> Codegen::errors() const
     return _errors;
 }
 
-QQmlRefPointer<CompiledData::CompilationUnit> Codegen::generateCompilationUnit(bool generateUnitData)
+QV4::CompiledData::CompilationUnit Codegen::generateCompilationUnit(
+        bool generateUnitData)
 {
-    CompiledData::Unit *unitData = nullptr;
-    if (generateUnitData)
-        unitData = jsUnitGenerator->generateUnit();
-    CompiledData::CompilationUnit *compilationUnit = new CompiledData::CompilationUnit(unitData);
-
-    QQmlRefPointer<CompiledData::CompilationUnit> unit;
-    unit.adopt(compilationUnit);
-    return unit;
+    return QV4::CompiledData::CompilationUnit(
+            generateUnitData ? jsUnitGenerator->generateUnit() : nullptr);
 }
 
-QQmlRefPointer<CompiledData::CompilationUnit> Codegen::createUnitForLoading()
+CompiledData::CompilationUnit Codegen::compileModule(
+        bool debugMode, const QString &url, const QString &sourceCode,
+        const QDateTime &sourceTimeStamp, QList<QQmlJS::DiagnosticMessage> *diagnostics)
 {
-    QQmlRefPointer<CompiledData::CompilationUnit> result;
-    result.adopt(new CompiledData::CompilationUnit);
-    return result;
+    QQmlJS::Engine ee;
+    QQmlJS::Lexer lexer(&ee);
+    lexer.setCode(sourceCode, /*line*/1, /*qml mode*/false);
+    QQmlJS::Parser parser(&ee);
+
+    const bool parsed = parser.parseModule();
+
+    if (diagnostics)
+        *diagnostics = parser.diagnosticMessages();
+
+    if (!parsed)
+        return CompiledData::CompilationUnit();
+
+    QQmlJS::AST::ESModule *moduleNode = QQmlJS::AST::cast<QQmlJS::AST::ESModule*>(parser.rootNode());
+    if (!moduleNode) {
+        // if parsing was successful, and we have no module, then
+        // the file was empty.
+        if (diagnostics)
+            diagnostics->clear();
+        return nullptr;
+    }
+
+    using namespace QV4::Compiler;
+    Compiler::Module compilerModule(debugMode);
+    compilerModule.unitFlags |= CompiledData::Unit::IsESModule;
+    compilerModule.sourceTimeStamp = sourceTimeStamp;
+    JSUnitGenerator jsGenerator(&compilerModule);
+    Codegen cg(&jsGenerator, /*strictMode*/true);
+    cg.generateFromModule(url, url, sourceCode, moduleNode, &compilerModule);
+    auto errors = cg.errors();
+    if (diagnostics)
+        *diagnostics << errors;
+
+    if (!errors.isEmpty())
+        return CompiledData::CompilationUnit();
+
+    return cg.generateCompilationUnit();
 }
 
 class Codegen::VolatileMemoryLocationScanner: protected QQmlJS::AST::Visitor
@@ -3914,8 +3944,6 @@ Codegen::VolatileMemoryLocations Codegen::scanVolatileMemoryLocations(AST::Node 
 }
 
 
-#ifndef V4_BOOTSTRAP
-
 QList<QQmlError> Codegen::qmlErrors() const
 {
     QList<QQmlError> qmlErrors;
@@ -3938,8 +3966,6 @@ QList<QQmlError> Codegen::qmlErrors() const
 
     return qmlErrors;
 }
-
-#endif // V4_BOOTSTRAP
 
 bool Codegen::RValue::operator==(const RValue &other) const
 {

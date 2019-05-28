@@ -65,6 +65,8 @@
 #include <private/qv4baselinejit_p.h>
 #endif
 
+#include <qtqml_tracepoints_p.h>
+
 #undef COUNT_INSTRUCTIONS
 
 enum { ShowWhenDeoptimiationHappens = 0 };
@@ -422,6 +424,10 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
     CHECK_STACK_LIMITS(engine);
 
     Function *function = frame->v4Function;
+    Q_TRACE_SCOPE(QQmlV4_function_call, engine, function->name()->toQString(),
+                  function->compilationUnit->fileName(),
+                  function->compiledFunction->location.line,
+                  function->compiledFunction->location.column);
     Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling
     QV4::Debugging::Debugger *debugger = engine->debugger();
 
@@ -559,14 +565,14 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(LoadGlobalLookup)
         STORE_IP();
-        QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
+        QV4::Lookup *l = function->executableCompilationUnit()->runtimeLookups + index;
         acc = l->globalGetter(l, engine);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadGlobalLookup)
 
     MOTH_BEGIN_INSTR(LoadQmlContextPropertyLookup)
         STORE_IP();
-        QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
+        QV4::Lookup *l = function->executableCompilationUnit()->runtimeLookups + index;
         acc = l->qmlContextPropertyGetter(l, engine, nullptr);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadQmlContextPropertyLookup)
@@ -610,7 +616,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         STORE_IP();
         STORE_ACC();
 
-        QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
+        QV4::Lookup *l = function->executableCompilationUnit()->runtimeLookups + index;
 
         if (accumulator.isNullOrUndefined()) {
             QString message = QStringLiteral("Cannot read property '%1' of %2")
@@ -634,7 +640,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(SetLookup)
         STORE_IP();
         STORE_ACC();
-        QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
+        QV4::Lookup *l = function->executableCompilationUnit()->runtimeLookups + index;
         if (!l->setter(l, engine, STACK_VALUE(base), accumulator) && function->isStrict())
             engine->throwTypeError();
         CHECK_EXCEPTION;
@@ -716,7 +722,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(CallPropertyLookup)
         STORE_IP();
-        Lookup *l = function->compilationUnit->runtimeLookups + lookupIndex;
+        Lookup *l = function->executableCompilationUnit()->runtimeLookups + lookupIndex;
 
         if (stack[base].isNullOrUndefined()) {
             QString message = QStringLiteral("Cannot call method '%1' of %2")

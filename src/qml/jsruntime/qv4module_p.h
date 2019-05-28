@@ -60,7 +60,7 @@ namespace QV4 {
 namespace Heap {
 
 #define ModuleMembers(class, Member) \
-    Member(class, NoMark, CompiledData::CompilationUnit *, unit) \
+    Member(class, NoMark, ExecutableCompilationUnit *, unit) \
     Member(class, Pointer, CallContext *, scope) \
     Member(class, HeapValue, HeapValue, self) \
     Member(class, NoMark, bool, evaluated)
@@ -68,7 +68,7 @@ namespace Heap {
 DECLARE_EXPORTED_HEAP_OBJECT(Module, Object) {
     DECLARE_MARKOBJECTS(Module)
 
-    void init(ExecutionEngine *engine, CompiledData::CompilationUnit *moduleUnit);
+    void init(ExecutionEngine *engine, ExecutableCompilationUnit *moduleUnit);
 };
 
 }

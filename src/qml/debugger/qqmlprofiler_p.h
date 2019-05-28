@@ -171,10 +171,11 @@ public:
             : Location(ref->sourceLocation()), locationType(Binding), sent(false)
         {
             function = ref;
-            function->compilationUnit->addref();
+            function->executableCompilationUnit()->addref();
         }
 
-        RefLocation(QV4::CompiledData::CompilationUnit *ref, const QUrl &url, const QV4::CompiledData::Object *obj, const QString &type)
+        RefLocation(QV4::ExecutableCompilationUnit *ref, const QUrl &url,
+                    const QV4::CompiledData::Object *obj, const QString &type)
             : Location(QQmlSourceLocation(type, obj->location.line, obj->location.column), url),
               locationType(Creating), sent(false)
         {
@@ -230,7 +231,7 @@ public:
 
             switch (locationType) {
             case Binding:
-                function->compilationUnit->addref();
+                function->executableCompilationUnit()->addref();
                 break;
             case Creating:
                 unit->addref();
@@ -254,7 +255,7 @@ public:
 
             switch (locationType) {
             case Binding:
-                function->compilationUnit->release();
+                function->executableCompilationUnit()->release();
                 break;
             case Creating:
                 unit->release();
@@ -284,7 +285,7 @@ public:
         RangeType locationType;
         union {
             QV4::Function *function;
-            QV4::CompiledData::CompilationUnit *unit;
+            QV4::ExecutableCompilationUnit *unit;
             QQmlBoundSignalExpression *boundSignal;
             QQmlDataBlob *blob;
             void *something;
@@ -356,7 +357,7 @@ public:
     }
 
     void updateCreating(const QV4::CompiledData::Object *obj,
-                        QV4::CompiledData::CompilationUnit *ref,
+                        QV4::ExecutableCompilationUnit *ref,
                         const QUrl &url, const QString &type)
     {
         quintptr locationId(id(obj));
@@ -492,7 +493,7 @@ public:
         Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileCreating, profiler, endRange<QQmlProfilerDefinitions::Creating>());
     }
 
-    void update(QV4::CompiledData::CompilationUnit *ref, const QV4::CompiledData::Object *obj,
+    void update(QV4::ExecutableCompilationUnit *ref, const QV4::CompiledData::Object *obj,
                 const QString &typeName, const QUrl &url)
     {
         profiler->updateCreating(obj, ref, url, typeName);

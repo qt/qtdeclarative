@@ -80,8 +80,8 @@ public:
     void clearErrors();
     Flags flags() const { return m_flags; }
 
-    virtual void verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) = 0;
-    virtual void applyBindings(QObject *, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) = 0;
+    virtual void verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) = 0;
+    virtual void applyBindings(QObject *, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) = 0;
 
     QVector<QQmlCompileError> errors() const { return exceptions; }
 

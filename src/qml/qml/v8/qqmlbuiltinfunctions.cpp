@@ -47,7 +47,6 @@
 #if QT_CONFIG(qml_locale)
 #include <private/qqmllocale_p.h>
 #endif
-#include <private/qv8engine_p.h>
 #include <private/qqmldelayedcallqueue_p.h>
 #include <QFileInfo>
 
@@ -1684,10 +1683,8 @@ ReturnedValue ConsoleObject::method_time(const FunctionObject *b, const Value *,
     if (argc != 1)
         THROW_GENERIC_ERROR("console.time(): Invalid arguments");
 
-    QV8Engine *v8engine = scope.engine->v8Engine;
-
     QString name = argv[0].toQStringNoThrow();
-    v8engine->startTimer(name);
+    scope.engine->startTimer(name);
     return QV4::Encode::undefined();
 }
 
@@ -1697,11 +1694,9 @@ ReturnedValue ConsoleObject::method_timeEnd(const FunctionObject *b, const Value
     if (argc != 1)
         THROW_GENERIC_ERROR("console.timeEnd(): Invalid arguments");
 
-    QV8Engine *v8engine = scope.engine->v8Engine;
-
     QString name = argv[0].toQStringNoThrow();
     bool wasRunning;
-    qint64 elapsed = v8engine->stopTimer(name, &wasRunning);
+    qint64 elapsed = scope.engine->stopTimer(name, &wasRunning);
     if (wasRunning) {
         qDebug("%s: %llims", qPrintable(name), elapsed);
     }
@@ -1717,13 +1712,12 @@ ReturnedValue ConsoleObject::method_count(const FunctionObject *b, const Value *
 
     Scope scope(b);
     QV4::ExecutionEngine *v4 = scope.engine;
-    QV8Engine *v8engine = scope.engine->v8Engine;
 
     QV4::CppStackFrame *frame = v4->currentStackFrame;
 
     QString scriptName = frame->source();
 
-    int value = v8engine->consoleCountHelper(scriptName, frame->lineNumber(), 0);
+    int value = v4->consoleCountHelper(scriptName, frame->lineNumber(), 0);
     QString message = name + QLatin1String(": ") + QString::number(value);
 
     QMessageLogger(qPrintable(scriptName), frame->lineNumber(),
@@ -1956,7 +1950,8 @@ ReturnedValue GlobalExtensions::method_qsTr(const FunctionObject *b, const Value
         CppStackFrame *frame = scope.engine->currentStackFrame;
         // The first non-empty source URL in the call stack determines the translation context.
         while (frame && context.isEmpty()) {
-            if (CompiledData::CompilationUnit *unit = frame->v4Function->compilationUnit) {
+            if (CompiledData::CompilationUnitBase *baseUnit = frame->v4Function->compilationUnit) {
+                const auto *unit = static_cast<const CompiledData::CompilationUnit *>(baseUnit);
                 QString fileName = unit->fileName();
                 QUrl url(unit->fileName());
                 if (url.isValid() && url.isRelative()) {
@@ -2147,8 +2142,7 @@ function.
 */
 ReturnedValue QtObject::method_callLater(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
-    QV8Engine *v8engine = b->engine()->v8Engine;
-    return v8engine->delayedCallQueue()->addUniquelyAndExecuteLater(b, thisObject, argv, argc);
+    return b->engine()->delayedCallQueue()->addUniquelyAndExecuteLater(b, thisObject, argv, argc);
 }
 
 QT_END_NAMESPACE

@@ -763,6 +763,8 @@ struct QObjectWrapperOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
     ~QObjectWrapperOwnPropertyKeyIterator() override = default;
     PropertyKey next(const QV4::Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
 
+private:
+    QSet<QByteArray> m_alreadySeen;
 };
 
 PropertyKey QObjectWrapperOwnPropertyKeyIterator::next(const QV4::Object *o, Property *pd, PropertyAttributes *attrs)
@@ -803,6 +805,11 @@ PropertyKey QObjectWrapperOwnPropertyKeyIterator::next(const QV4::Object *o, Pro
             ++propertyIndex;
             if (method.access() == QMetaMethod::Private || (preventDestruction && (index == deleteLaterIdx || index == destroyedIdx1 || index == destroyedIdx2)))
                 continue;
+            // filter out duplicates due to overloads:
+            if (m_alreadySeen.contains(method.name()))
+                continue;
+            else
+                m_alreadySeen.insert(method.name());
             ExecutionEngine *thatEngine = that->engine();
             Scope scope(thatEngine);
             ScopedString methodName(scope, thatEngine->newString(QString::fromUtf8(method.name())));

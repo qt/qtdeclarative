@@ -123,7 +123,7 @@ DEFINE_OBJECT_VTABLE(QV4::DelegateModelGroupFunction);
 
 
 
-class QQmlDelegateModelEngineData : public QV8Engine::Deletable
+class QQmlDelegateModelEngineData : public QV4::ExecutionEngine::Deletable
 {
 public:
     QQmlDelegateModelEngineData(QV4::ExecutionEngine *v4);

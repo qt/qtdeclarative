@@ -48,6 +48,7 @@
 #include <private/qversionedpacket_p.h>
 
 #include <QtGui/qwindow.h>
+#include <QtCore/qregularexpression.h>
 
 //INSPECTOR SERVICE PROTOCOL
 // <HEADER><COMMAND><DATA>
@@ -273,8 +274,10 @@ QString GlobalInspector::titleForItem(QQuickItem *item) const
     QString className = QLatin1String(item->metaObject()->className());
     QString objectStringId = idStringForObject(item);
 
-    className.remove(QRegExp(QLatin1String("_QMLTYPE_\\d+")));
-    className.remove(QRegExp(QLatin1String("_QML_\\d+")));
+#if QT_CONFIG(regularexpression)
+    className.remove(QRegularExpression(QLatin1String("_QMLTYPE_\\d+")));
+    className.remove(QRegularExpression(QLatin1String("_QML_\\d+")));
+#endif
     if (className.startsWith(QLatin1String("QQuick")))
         className = className.mid(6);
 

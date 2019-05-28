@@ -122,7 +122,7 @@ public:
 
     void setProgramSource(const QQuickOpenGLShaderEffectMaterialKey &source);
     void updateTextures() const;
-    void invalidateTextureProvider(QSGTextureProvider *provider);
+    void invalidateTextureProvider(const QObject *provider);
 
     static void cleanupMaterialCache();
 
@@ -159,7 +159,7 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void markDirtyTexture();
-    void textureProviderDestroyed(QObject *object);
+    void textureProviderDestroyed(const QObject *object);
 };
 
 QT_END_NAMESPACE

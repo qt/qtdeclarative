@@ -105,7 +105,7 @@ public:
     qreal progress;
 
     int start;
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
 
     struct ConstructionState {
         ConstructionState()

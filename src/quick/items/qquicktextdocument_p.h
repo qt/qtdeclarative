@@ -73,6 +73,9 @@ public:
     virtual ~QQuickTextDocumentWithImageResources();
 
     void setText(const QString &);
+#if QT_CONFIG(textmarkdownreader)
+    void setMarkdownText(const QString &);
+#endif
     int resourcesLoading() const { return outstanding; }
 
     QSizeF intrinsicSize(QTextDocument *doc, int posInDocument, const QTextFormat &format) override;

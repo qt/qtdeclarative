@@ -19,3 +19,4 @@ OTHER_FILES += data/DragAnywhereSlider.qml \
     data/grabberstate.qml \
     data/multipleSliders.qml \
     data/reparenting.qml \
+    data/snapMode.qml \

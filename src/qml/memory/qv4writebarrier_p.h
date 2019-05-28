@@ -51,7 +51,6 @@
 //
 
 #include <private/qv4global_p.h>
-#include <private/qv4enginebase_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -60,6 +59,7 @@ QT_BEGIN_NAMESPACE
 #define WRITEBARRIER(x) (1/WRITEBARRIER_##x == 1)
 
 namespace QV4 {
+struct EngineBase;
 
 namespace WriteBarrier {
 

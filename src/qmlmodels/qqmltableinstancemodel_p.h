@@ -54,6 +54,8 @@
 #include <QtQmlModels/private/qqmldelegatemodel_p.h>
 #include <QtQmlModels/private/qqmldelegatemodel_p_p.h>
 
+QT_REQUIRE_CONFIG(qml_table_model);
+
 QT_BEGIN_NAMESPACE
 
 class QQmlTableInstanceModel;

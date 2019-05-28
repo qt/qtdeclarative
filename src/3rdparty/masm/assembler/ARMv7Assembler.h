@@ -27,7 +27,7 @@
 #ifndef ARMAssembler_h
 #define ARMAssembler_h
 
-#if ENABLE(ASSEMBLER) && (CPU(ARM_THUMB2) || defined(V4_BOOTSTRAP))
+#if ENABLE(ASSEMBLER) && CPU(ARM_THUMB2)
 
 #include "AssemblerBuffer.h"
 #include "MacroAssemblerCodeRef.h"
@@ -2166,7 +2166,6 @@ public:
         linkJumpAbsolute(location, to);
     }
 
-#if !defined(V4_BOOTSTRAP)
     static void linkCall(void* code, AssemblerLabel from, void* to)
     {
         ASSERT(!(reinterpret_cast<intptr_t>(code) & 1));
@@ -2175,14 +2174,12 @@ public:
 
         setPointer(reinterpret_cast<uint16_t*>(reinterpret_cast<intptr_t>(code) + from.m_offset) - 1, to, false);
     }
-#endif
 
     static void linkPointer(void* code, AssemblerLabel where, void* value)
     {
         setPointer(reinterpret_cast<char*>(code) + where.m_offset, value, false);
     }
 
-#if !defined(V4_BOOTSTRAP)
     static void relinkJump(void* from, void* to)
     {
         ASSERT(!(reinterpret_cast<intptr_t>(from) & 1));
@@ -2205,7 +2202,6 @@ public:
     {
         return readPointer(reinterpret_cast<uint16_t*>(from) - 1);
     }
-#endif
 
     static void repatchInt32(void* where, int32_t value)
     {
@@ -2234,7 +2230,6 @@ public:
         cacheFlush(location, sizeof(uint16_t) * 2);
     }
 
-#if !defined(V4_BOOTSTRAP)
     static void repatchPointer(void* where, void* value)
     {
         ASSERT(!(reinterpret_cast<intptr_t>(where) & 1));
@@ -2246,7 +2241,6 @@ public:
     {
         return reinterpret_cast<void*>(readInt32(where));
     }
-#endif
 
     static void replaceWithJump(void* instructionStart, void* to)
     {
@@ -2321,7 +2315,7 @@ public:
 
     unsigned debugOffset() { return m_formatter.debugOffset(); }
 
-#if OS(LINUX) && !defined(V4_BOOTSTRAP)
+#if OS(LINUX)
     static inline void linuxPageFlush(uintptr_t begin, uintptr_t end)
     {
         asm volatile(
@@ -2341,10 +2335,7 @@ public:
 
     static void cacheFlush(void* code, size_t size)
     {
-#if defined(V4_BOOTSTRAP)
-        UNUSED_PARAM(code)
-        UNUSED_PARAM(size)
-#elif OS(IOS)
+#if OS(IOS)
         sys_cache_control(kCacheFunctionPrepareForExecution, code, size);
 #elif OS(LINUX)
         size_t page = pageSize();
@@ -2662,11 +2653,6 @@ private:
     
     static void linkBX(uint16_t* instruction, void* target)
     {
-#if defined(V4_BOOTSTRAP)
-        UNUSED_PARAM(instruction);
-        UNUSED_PARAM(target);
-        RELEASE_ASSERT_NOT_REACHED();
-#else
         // FIMXE: this should be up in the MacroAssembler layer. :-(
         ASSERT(!(reinterpret_cast<intptr_t>(instruction) & 1));
         ASSERT(!(reinterpret_cast<intptr_t>(target) & 1));
@@ -2679,7 +2665,6 @@ private:
         instruction[-3] = twoWordOp5i6Imm4Reg4EncodedImmFirst(OP_MOVT, hi16);
         instruction[-2] = twoWordOp5i6Imm4Reg4EncodedImmSecond(JUMP_TEMPORARY_REGISTER, hi16);
         instruction[-1] = OP_BX | (JUMP_TEMPORARY_REGISTER << 3);
-#endif
     }
     
     void linkConditionalBX(Condition cond, uint16_t* instruction, void* target)
@@ -2712,9 +2697,6 @@ private:
             instruction[-3] = OP_NOP_T2b;
             linkJumpT4(instruction, target);
         } else {
-#if defined(V4_BOOTSTRAP)
-            RELEASE_ASSERT_NOT_REACHED();
-#else
             const uint16_t JUMP_TEMPORARY_REGISTER = ARMRegisters::ip;
             ARMThumbImmediate lo16 = ARMThumbImmediate::makeUInt16(static_cast<uint16_t>(reinterpret_cast<uint32_t>(target) + 1));
             ARMThumbImmediate hi16 = ARMThumbImmediate::makeUInt16(static_cast<uint16_t>(reinterpret_cast<uint32_t>(target) >> 16));
@@ -2723,7 +2705,6 @@ private:
             instruction[-3] = twoWordOp5i6Imm4Reg4EncodedImmFirst(OP_MOVT, hi16);
             instruction[-2] = twoWordOp5i6Imm4Reg4EncodedImmSecond(JUMP_TEMPORARY_REGISTER, hi16);
             instruction[-1] = OP_BX | (JUMP_TEMPORARY_REGISTER << 3);
-#endif
         }
     }
     

@@ -73,7 +73,8 @@ ReturnedValue Function::call(const Value *thisObject, const Value *argv, int arg
     return result;
 }
 
-Function *Function::create(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function)
+Function *Function::create(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
+                           const CompiledData::Function *function)
 {
     return new Function(engine, unit, function);
 }
@@ -83,7 +84,8 @@ void Function::destroy()
     delete this;
 }
 
-Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function)
+Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
+                   const CompiledData::Function *function)
     : FunctionData(unit)
     , compiledFunction(function)
     , codeData(function->code())
@@ -146,8 +148,11 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
 
     // first locals
     const quint32_le *localsIndices = compiledFunction->localsTable();
-    for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
-        internalClass = internalClass->addMember(engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
+    for (quint32 i = 0; i < compiledFunction->nLocals; ++i) {
+        internalClass = internalClass->addMember(
+                engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[localsIndices[i]]),
+                Attr_NotConfigurable);
+    }
 
     Scope scope(engine);
     ScopedString arg(scope);

@@ -147,6 +147,11 @@ private:
     Q_DISABLE_COPY(QQuickTableView)
     Q_DECLARE_PRIVATE(QQuickTableView)
 
+    qreal minXExtent() const override;
+    qreal maxXExtent() const override;
+    qreal minYExtent() const override;
+    qreal maxYExtent() const override;
+
     Q_PRIVATE_SLOT(d_func(), void _q_componentFinalized())
 };
 

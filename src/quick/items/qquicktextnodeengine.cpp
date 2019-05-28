@@ -1011,6 +1011,17 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
                 break;
             };
 
+            switch (block.blockFormat().marker()) {
+            case QTextBlockFormat::Checked:
+                listItemBullet = QChar(0x2612); // Checked checkbox
+                break;
+            case QTextBlockFormat::Unchecked:
+                listItemBullet = QChar(0x2610); // Unchecked checkbox
+                break;
+            case QTextBlockFormat::NoMarker:
+                break;
+            }
+
             QSizeF size(fontMetrics.horizontalAdvance(listItemBullet), fontMetrics.height());
             qreal xoff = fontMetrics.horizontalAdvance(QLatin1Char(' '));
             if (block.textDirection() == Qt::LeftToRight)

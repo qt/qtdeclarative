@@ -89,7 +89,7 @@ private:
     QJSValue m_signal;
     QQmlScriptString m_guard;
     bool m_complete;
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_compilationUnit;
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> m_compilationUnit;
     QList<const QV4::CompiledData::Binding *> m_bindings;
     QQmlBoundSignalExpressionPointer m_signalExpression;
 };
@@ -97,8 +97,8 @@ private:
 class SignalTransitionParser : public QQmlCustomParser
 {
 public:
-    void verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &props) override;
-    void applyBindings(QObject *object, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
+    void verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &props) override;
+    void applyBindings(QObject *object, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
 };
 
 QT_END_NAMESPACE

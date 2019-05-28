@@ -144,19 +144,19 @@ public:
 
     FunctionCall(Function *function, qint64 start, qint64 end) :
         m_function(function), m_start(start), m_end(end)
-    { m_function->compilationUnit->addref(); }
+    { m_function->executableCompilationUnit()->addref(); }
 
     FunctionCall(const FunctionCall &other) :
         m_function(other.m_function), m_start(other.m_start), m_end(other.m_end)
-    { m_function->compilationUnit->addref(); }
+    { m_function->executableCompilationUnit()->addref(); }
 
     ~FunctionCall()
-    { m_function->compilationUnit->release(); }
+    { m_function->executableCompilationUnit()->release(); }
 
     FunctionCall &operator=(const FunctionCall &other) {
         if (&other != this) {
-            other.m_function->compilationUnit->addref();
-            m_function->compilationUnit->release();
+            other.m_function->executableCompilationUnit()->addref();
+            m_function->executableCompilationUnit()->release();
             m_function = other.m_function;
             m_start = other.m_start;
             m_end = other.m_end;
@@ -189,22 +189,22 @@ public:
         SentMarker(const SentMarker &other) : m_function(other.m_function)
         {
             if (m_function)
-                m_function->compilationUnit->addref();
+                m_function->executableCompilationUnit()->addref();
         }
 
         ~SentMarker()
         {
             if (m_function)
-                m_function->compilationUnit->release();
+                m_function->executableCompilationUnit()->release();
         }
 
         SentMarker &operator=(const SentMarker &other)
         {
             if (&other != this) {
                 if (m_function)
-                    m_function->compilationUnit->release();
+                    m_function->executableCompilationUnit()->release();
                 m_function = other.m_function;
-                m_function->compilationUnit->addref();
+                m_function->executableCompilationUnit()->addref();
             }
             return *this;
         }
@@ -213,7 +213,7 @@ public:
         {
             Q_ASSERT(m_function == nullptr);
             m_function = function;
-            m_function->compilationUnit->addref();
+            m_function->executableCompilationUnit()->addref();
         }
 
         bool isValid() const

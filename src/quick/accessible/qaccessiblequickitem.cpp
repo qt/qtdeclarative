@@ -382,6 +382,22 @@ QString QAccessibleQuickItem::text(QAccessible::Text textType) const
     return QString();
 }
 
+void QAccessibleQuickItem::setText(QAccessible::Text textType, const QString &text)
+{
+    if (role() != QAccessible::EditableText)
+        return;
+    if (textType != QAccessible::Value)
+        return;
+
+    if (QTextDocument *doc = textDocument()) {
+        doc->setPlainText(text);
+        return;
+    }
+    auto textPropertyName = "text";
+    if (object()->metaObject()->indexOfProperty(textPropertyName) >= 0)
+        object()->setProperty(textPropertyName, text);
+}
+
 void *QAccessibleQuickItem::interface_cast(QAccessible::InterfaceType t)
 {
     QAccessible::Role r = role();

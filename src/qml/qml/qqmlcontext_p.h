@@ -66,7 +66,7 @@
 #include <private/qflagpointer_p.h>
 #include <private/qqmlguard_p.h>
 
-#include <private/qv4compileddata_p.h>
+#include <private/qv4executablecompilationunit_p.h>
 #include <private/qv4identifier_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -152,12 +152,12 @@ public:
     QQmlIncubatorPrivate *incubator;
 
     // Compilation unit for contexts that belong to a compiled type.
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> typeCompilationUnit;
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> typeCompilationUnit;
 
     // object index in CompiledData::Unit to component that created this context
     int componentObjectIndex;
 
-    void initFromTypeCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit, int subComponentIndex);
+    void initFromTypeCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, int subComponentIndex);
 
     // flag indicates whether the context owns the cache (after mutation) or not.
     mutable QV4::IdentifierHash propertyNameCache;

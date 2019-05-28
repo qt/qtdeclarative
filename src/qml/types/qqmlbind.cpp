@@ -43,6 +43,8 @@
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlmetatype_p.h>
+#include <private/qqmlvmemetaobject_p.h>
+#include <private/qv4persistent_p.h>
 
 #include <qqmlengine.h>
 #include <qqmlcontext.h>
@@ -60,7 +62,21 @@ QT_BEGIN_NAMESPACE
 class QQmlBindPrivate : public QObjectPrivate
 {
 public:
-    QQmlBindPrivate() : obj(nullptr), componentComplete(true), delayed(false), pendingEval(false) {}
+    QQmlBindPrivate()
+        : obj(nullptr)
+        , prevBind(QQmlAbstractBinding::Ptr())
+        , prevIsVariant(false)
+        , componentComplete(true)
+        , delayed(false)
+        , pendingEval(false)
+        , restoreBinding(true)
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+        , restoreValue(false)
+        , restoreModeExplicit(false)
+#else
+        , restoreValue(true)
+#endif
+    {}
     ~QQmlBindPrivate() { }
 
     QQmlNullableValue<bool> when;
@@ -69,11 +85,20 @@ public:
     QQmlNullableValue<QVariant> value;
     QQmlProperty prop;
     QQmlAbstractBinding::Ptr prevBind;
+    QV4::PersistentValue v4Value;
+    QVariant prevValue;
+    bool prevIsVariant:1;
     bool componentComplete:1;
     bool delayed:1;
     bool pendingEval:1;
+    bool restoreBinding:1;
+    bool restoreValue:1;
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+    bool restoreModeExplicit:1;
+#endif
 
     void validate(QObject *binding) const;
+    void clearPrev();
 };
 
 void QQmlBindPrivate::validate(QObject *binding) const
@@ -323,6 +348,57 @@ void QQmlBind::setDelayed(bool delayed)
         eval();
 }
 
+/*!
+    \qmlproperty enumeration QtQml::Binding::restoreMode
+    \since 5.14
+
+    This property can be used to describe if and how the original value should
+    be restored when the binding is disabled.
+
+    The possible values are:
+    \list
+    \li Binding.RestoreNone The original value is not restored at all
+    \li Binding.RestoreBinding The original value is restored if it was another
+        binding. In that case the old binding is in effect again.
+    \li Binding.RestoreValue The original value is restored if it was a plain
+        value rather than a binding.
+    \li Binding.RestoreBindingOrValue The original value is always restored.
+    \list
+
+    \warning The default value is Binding.RestoreBinding. This will change in
+    Qt 5.15 to Binding.RestoreBindingOrValue.
+
+    If you rely on any specific behavior regarding the restoration of plain
+    values when bindings get disabled you should migrate to explicitly set the
+    restoreMode.
+
+    Reliance on a restoreMode that doesn't restore the previous binding or value
+    for a specific property results in a run-time warning.
+*/
+QQmlBind::RestorationMode QQmlBind::restoreMode() const
+{
+    Q_D(const QQmlBind);
+    unsigned result = RestoreNone;
+    if (d->restoreValue)
+        result |= RestoreValue;
+    if (d->restoreBinding)
+        result |= RestoreBinding;
+    return RestorationMode(result);
+}
+
+void QQmlBind::setRestoreMode(RestorationMode newMode)
+{
+    Q_D(QQmlBind);
+    if (newMode != restoreMode()) {
+        d->restoreValue = (newMode & RestoreValue);
+        d->restoreBinding = (newMode & RestoreBinding);
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+        d->restoreModeExplicit = true;
+#endif
+        emit restoreModeChanged();
+    }
+}
+
 void QQmlBind::setTarget(const QQmlProperty &p)
 {
     Q_D(QQmlBind);
@@ -358,6 +434,14 @@ void QQmlBind::prepareEval()
     }
 }
 
+void QQmlBindPrivate::clearPrev()
+{
+    prevBind = nullptr;
+    v4Value.clear();
+    prevValue.clear();
+    prevIsVariant = false;
+}
+
 void QQmlBind::eval()
 {
     Q_D(QQmlBind);
@@ -369,16 +453,64 @@ void QQmlBind::eval()
         if (!d->when) {
             //restore any previous binding
             if (d->prevBind) {
-                QQmlAbstractBinding::Ptr p = d->prevBind;
-                d->prevBind = nullptr;
-                QQmlPropertyPrivate::setBinding(p.data());
+                if (d->restoreBinding) {
+                    QQmlAbstractBinding::Ptr p = d->prevBind;
+                    d->clearPrev(); // Do that before setBinding(), as setBinding() may recurse.
+                    QQmlPropertyPrivate::setBinding(p.data());
+                }
+            } else if (!d->v4Value.isEmpty()) {
+                if (d->restoreValue) {
+                    auto propPriv = QQmlPropertyPrivate::get(d->prop);
+                    QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(propPriv->object);
+                    Q_ASSERT(vmemo);
+                    vmemo->setVMEProperty(propPriv->core.coreIndex(), *d->v4Value.valueRef());
+                    d->clearPrev();
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+                } else if (!d->restoreModeExplicit) {
+                    qmlWarning(this)
+                            << "Not restoring previous value because restoreMode has not been set."
+                            << "This behavior is deprecated."
+                            << "In Qt < 5.15 the default is Binding.RestoreBinding."
+                            << "In Qt >= 5.15 the default is Binding.RestoreBindingOrValue.";
+#endif
+                }
+            } else if (d->prevIsVariant) {
+                if (d->restoreValue) {
+                    d->prop.write(d->prevValue);
+                    d->clearPrev();
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+                } else if (!d->restoreModeExplicit) {
+                    qmlWarning(this)
+                            << "Not restoring previous value because restoreMode has not been set."
+                            << "This behavior is deprecated."
+                            << "In Qt < 5.15 the default is Binding.RestoreBinding."
+                            << "In Qt >= 5.15 the default is Binding.RestoreBindingOrValue.";
+#endif
+                }
             }
             return;
         }
 
         //save any set binding for restoration
-        if (!d->prevBind)
+        if (!d->prevBind && d->v4Value.isEmpty() && !d->prevIsVariant) {
+            // try binding first
             d->prevBind = QQmlPropertyPrivate::binding(d->prop);
+
+            if (!d->prevBind) { // nope, try a V4 value next
+                auto propPriv = QQmlPropertyPrivate::get(d->prop);
+                auto propData = propPriv->core;
+                if (!propPriv->valueTypeData.isValid() && propData.isVarProperty()) {
+                    QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(propPriv->object);
+                    Q_ASSERT(vmemo);
+                    auto retVal = vmemo->vmeProperty(propData.coreIndex());
+                    d->v4Value = QV4::PersistentValue(vmemo->engine, retVal);
+                } else { // nope, use the meta object to get a QVariant
+                    d->prevValue = d->prop.read();
+                    d->prevIsVariant = true;
+                }
+            }
+        }
+
         QQmlPropertyPrivate::removeBinding(d->prop);
     }
 

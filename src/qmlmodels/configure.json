@@ -6,6 +6,12 @@
     ],
 
     "features": {
+        "qml-object-model" : {
+            "label": "QML list model",
+            "purpose": "Provides the ObjectModel and Instantiator QML types.",
+            "section": "QML",
+            "output": [ "privateFeature" ]
+        },
         "qml-list-model": {
             "label": "QML list model",
             "purpose": "Provides the ListModel QML type.",
@@ -15,6 +21,13 @@
         "qml-delegate-model": {
             "label": "QML delegate model",
             "purpose": "Provides the DelegateModel QML type.",
+            "section": "QML",
+            "condition": "features.qml-object-model",
+            "output": [ "privateFeature" ]
+        },
+        "qml-table-model": {
+            "label": "QML table model",
+            "purpose": "Provides the TableModel QML type.",
             "section": "QML",
             "output": [ "privateFeature" ]
         }

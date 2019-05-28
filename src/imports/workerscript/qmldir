@@ -1,0 +1,3 @@
+module QtQml.WorkerScript
+plugin workerscriptsplugin
+classname QtQmlWorkerScriptPlugin
