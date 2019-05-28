@@ -683,7 +683,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     ScopedFunctionObject t(scope, memoryManager->allocate<FunctionObject>(rootContext(), nullptr, ::throwTypeError));
     t->defineReadonlyProperty(id_length(), Value::fromInt32(0));
-    t->setInternalClass(t->internalClass()->frozen());
+    t->setInternalClass(t->internalClass()->cryopreserved());
     jsObjects[ThrowerObject] = t;
 
     ScopedProperty pd(scope);
@@ -1872,7 +1872,7 @@ void ExecutionEngine::setQmlEngine(QQmlEngine *engine)
 
 static void freeze_recursive(QV4::ExecutionEngine *v4, QV4::Object *object)
 {
-    if (object->as<QV4::QObjectWrapper>())
+    if (object->as<QV4::QObjectWrapper>() || object->internalClass()->isFrozen)
         return;
 
     QV4::Scope scope(v4);
@@ -1889,10 +1889,8 @@ static void freeze_recursive(QV4::ExecutionEngine *v4, QV4::Object *object)
     if (!instanceOfObject)
         return;
 
-    QV4::Heap::InternalClass *frozen = object->internalClass()->propertiesFrozen();
-    if (object->internalClass() == frozen)
-        return;
-    object->setInternalClass(frozen);
+    Heap::InternalClass *frozen = object->internalClass()->frozen();
+    object->setInternalClass(frozen); // Immediately assign frozen to prevent it from getting GC'd
 
     QV4::ScopedObject o(scope);
     for (uint i = 0; i < frozen->size; ++i) {
