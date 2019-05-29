@@ -2572,7 +2572,8 @@ void qmlUnregisterType(int typeIndex)
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     {
-        const QQmlTypePrivate *d = data->types.value(typeIndex).priv();
+        const QQmlType type = data->types.value(typeIndex);
+        const QQmlTypePrivate *d = type.priv();
         if (d) {
             removeQQmlTypePrivate(data->idToType, d);
             removeQQmlTypePrivate(data->nameToType, d);
@@ -2584,6 +2585,7 @@ void qmlUnregisterType(int typeIndex)
                  modulePrivate->remove(d);
             }
             data->types[typeIndex] = QQmlType();
+            data->undeletableTypes.remove(type);
         }
     }
 }
