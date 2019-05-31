@@ -62,9 +62,6 @@ void QQmlApplicationEnginePrivate::cleanUp()
         obj->disconnect(q);
 
     qDeleteAll(objects);
-#if QT_CONFIG(translation)
-    qDeleteAll(translators);
-#endif
 }
 
 void QQmlApplicationEnginePrivate::init()
@@ -75,13 +72,11 @@ void QQmlApplicationEnginePrivate::init()
     q->connect(q, &QQmlApplicationEngine::exit, QCoreApplication::instance(),
                &QCoreApplication::exit, Qt::QueuedConnection);
 #if QT_CONFIG(translation)
-    QTranslator* qtTranslator = new QTranslator;
-    if (qtTranslator->load(QLocale(), QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath), QLatin1String(".qm"))) {
+    QTranslator* qtTranslator = new QTranslator(q);
+    if (qtTranslator->load(QLocale(), QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath), QLatin1String(".qm")))
         QCoreApplication::installTranslator(qtTranslator);
-        translators << qtTranslator;
-    } else {
+    else
         delete qtTranslator;
-    }
 #endif
     new QQmlFileSelector(q,q);
     QCoreApplication::instance()->setProperty("__qml_using_qqmlapplicationengine", QVariant(true));
@@ -95,13 +90,12 @@ void QQmlApplicationEnginePrivate::loadTranslations(const QUrl &rootFile)
 
     QFileInfo fi(QQmlFile::urlToLocalFileOrQrc(rootFile));
 
-    QTranslator *translator = new QTranslator;
-    if (translator->load(QLocale(), QLatin1String("qml"), QLatin1String("_"), fi.path() + QLatin1String("/i18n"), QLatin1String(".qm"))) {
+    Q_Q(QQmlApplicationEngine);
+    QTranslator *translator = new QTranslator(q);
+    if (translator->load(QLocale(), QLatin1String("qml"), QLatin1String("_"), fi.path() + QLatin1String("/i18n"), QLatin1String(".qm")))
         QCoreApplication::installTranslator(translator);
-        translators << translator;
-    } else {
+    else
         delete translator;
-    }
 #else
     Q_UNUSED(rootFile)
 #endif
