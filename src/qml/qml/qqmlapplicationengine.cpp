@@ -76,9 +76,12 @@ void QQmlApplicationEnginePrivate::init()
                &QCoreApplication::exit, Qt::QueuedConnection);
 #if QT_CONFIG(translation)
     QTranslator* qtTranslator = new QTranslator;
-    if (qtTranslator->load(QLocale(), QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath), QLatin1String(".qm")))
+    if (qtTranslator->load(QLocale(), QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath), QLatin1String(".qm"))) {
         QCoreApplication::installTranslator(qtTranslator);
-    translators << qtTranslator;
+        translators << qtTranslator;
+    } else {
+        delete qtTranslator;
+    }
 #endif
     new QQmlFileSelector(q,q);
     QCoreApplication::instance()->setProperty("__qml_using_qqmlapplicationengine", QVariant(true));
