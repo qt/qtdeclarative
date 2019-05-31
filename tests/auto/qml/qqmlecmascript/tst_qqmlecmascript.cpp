@@ -8270,7 +8270,9 @@ void tst_qqmlecmascript::varPropertyAccessOnObjectWithInvalidContext()
 void tst_qqmlecmascript::importedScriptsAccessOnObjectWithInvalidContext()
 {
     QQmlEngine engine;
-    QQmlComponent component(&engine, testFileUrl("importedScriptsAccessOnObjectWithInvalidContext.qml"));
+    const QUrl url = testFileUrl("importedScriptsAccessOnObjectWithInvalidContext.qml");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(url.toString() + ":29: TypeError: Cannot read property 'Foo' of null"));
+    QQmlComponent component(&engine, url);
     QScopedPointer<QObject> obj(component.create());
     if (obj.isNull())
        qDebug() << component.errors().first().toString();
