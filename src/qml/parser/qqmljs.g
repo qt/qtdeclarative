@@ -1110,6 +1110,23 @@ UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T
     } break;
 ./
 
+UiObjectMember: T_READONLY T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_AUTOMATIC_SEMICOLON;
+UiObjectMember: T_READONLY T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_SEMICOLON;
+/.
+    case $rule_number: {
+        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(5).UiQualifiedId->finish(), stringRef(7));
+        node->isReadonlyMember = true;
+        node->readonlyToken = loc(1);
+        node->typeModifier = stringRef(3);
+        node->propertyToken = loc(2);
+        node->typeModifierToken = loc(3);
+        node->typeToken = loc(5);
+        node->identifierToken = loc(7);
+        node->semicolonToken = loc(8);
+        sym(1).Node = node;
+    } break;
+./
+
 UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_AUTOMATIC_SEMICOLON;
 UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_SEMICOLON;
 /.
@@ -1214,6 +1231,34 @@ UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T
         binding->colonToken = loc(7);
         binding->lbracketToken = loc(8);
         binding->rbracketToken = loc(10);
+
+        node->binding = binding;
+
+        sym(1).Node = node;
+    } break;
+./
+
+UiObjectMember: T_READONLY T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_COLON T_LBRACKET UiArrayMemberList T_RBRACKET;
+/.
+    case $rule_number: {
+        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(5).UiQualifiedId->finish(), stringRef(7));
+        node->isReadonlyMember = true;
+        node->readonlyToken = loc(1);
+        node->typeModifier = stringRef(3);
+        node->propertyToken = loc(2);
+        node->typeModifierToken = loc(3);
+        node->typeToken = loc(5);
+        node->identifierToken = loc(7);
+        node->semicolonToken = loc(8); // insert a fake ';' before ':'
+
+        AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(7));
+        propertyName->identifierToken = loc(7);
+        propertyName->next = 0;
+
+        AST::UiArrayBinding *binding = new (pool) AST::UiArrayBinding(propertyName, sym(10).UiArrayMemberList->finish());
+        binding->colonToken = loc(8);
+        binding->lbracketToken = loc(9);
+        binding->rbracketToken = loc(11);
 
         node->binding = binding;
 
