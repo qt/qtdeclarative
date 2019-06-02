@@ -121,16 +121,17 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
 
     Also, note that Repeater is \l {Item}-based, and can only repeat \l {Item}-derived objects.
     For example, it cannot be used to repeat QtObjects:
-    \code
-    //bad code
+
+    \qml
+    // bad code:
     Item {
-        Can't repeat QtObject as it doesn't derive from Item.
+        // Can't repeat QtObject as it doesn't derive from Item.
         Repeater {
             model: 10
             QtObject {}
         }
     }
-    \endcode
+    \endqml
  */
 
 /*!
