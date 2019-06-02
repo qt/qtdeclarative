@@ -449,9 +449,6 @@ void tst_qquickwidget::reparentToNewWindow()
     qqw->setParent(&window2);
     qqw->show();
 
-    if (QGuiApplication::platformName() == QLatin1String("offscreen"))
-        QEXPECT_FAIL("", "afterRendering not emitted after reparenting on offscreen", Continue);
-
     QTRY_VERIFY(afterRenderingSpy.size() > 0);
 
     QImage img = qqw->grabFramebuffer();
