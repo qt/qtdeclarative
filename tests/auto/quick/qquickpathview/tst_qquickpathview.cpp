@@ -1490,11 +1490,11 @@ void tst_QQuickPathView::undefinedPath()
 
     // QPainterPath warnings are only received if QT_NO_DEBUG is not defined
     if (QLibraryInfo::isDebugBuild()) {
-        QString warning1("QPainterPath::moveTo: Adding point where x or y is NaN or Inf, ignoring call");
-        QTest::ignoreMessage(QtWarningMsg,qPrintable(warning1));
+        QRegularExpression warning1("^QPainterPath::moveTo:.*ignoring call$");
+        QTest::ignoreMessage(QtWarningMsg, warning1);
 
-        QString warning2("QPainterPath::lineTo: Adding point where x or y is NaN or Inf, ignoring call");
-        QTest::ignoreMessage(QtWarningMsg,qPrintable(warning2));
+        QRegularExpression warning2("^QPainterPath::lineTo:.*ignoring call$");
+        QTest::ignoreMessage(QtWarningMsg, warning2);
     }
 
     QQmlComponent c(&engine, testFileUrl("undefinedpath.qml"));
