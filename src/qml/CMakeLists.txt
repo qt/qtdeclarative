@@ -357,7 +357,7 @@ extend_target(Qml CONDITION WIN32 AND NOT WINRT
 #### Keys ignored in scope 6:.:.:qml.pro:solaris-cc_x_:
 # QMAKE_CXXFLAGS_RELEASE = "--O2"
 
-extend_target(Qml CONDITION GCC AND isEqual(QT_ARCH,"mips")
+extend_target(Qml CONDITION GCC AND (TEST_architecture_arch STREQUAL "mips")
     COMPILE_OPTIONS
         -fno-reorder-blocks
 )
@@ -422,7 +422,7 @@ extend_target(Qml CONDITION QT_FEATURE_qml_animation
         animations
 )
 
-extend_target(Qml CONDITION GCC AND QT_GCC_MAJOR_VERSION___equals___5
+extend_target(Qml CONDITION (GCC) AND ((QT_COMPILER_VERSION_MAJOR STREQUAL 5))
     COMPILE_OPTIONS
         -fno-strict-aliasing
 )
@@ -498,22 +498,22 @@ extend_target(Qml CONDITION QT_FEATURE_clock_gettime AND linux-_x_ OR hpux-_x_ O
         rt
 )
 
-extend_target(Qml CONDITION (disassembler) AND (isEqual(QT_ARCH,"i386" OR isEqual(QT_ARCH,"x86_64")))
+extend_target(Qml CONDITION (disassembler) AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64")) # special case
     DEFINES
         WTF_USE_UDIS86=1
 )
 
-extend_target(Qml CONDITION (disassembler) AND (isEqual(QT_ARCH,"arm"))
+extend_target(Qml CONDITION (TEST_architecture_arch STREQUAL "arm") AND disassembler
     DEFINES
         WTF_USE_ARMV7_DISASSEMBLER=1
 )
 
-extend_target(Qml CONDITION (disassembler) AND (isEqual(QT_ARCH,"arm64"))
+extend_target(Qml CONDITION (TEST_architecture_arch STREQUAL "arm64") AND disassembler
     DEFINES
         WTF_USE_ARM64_DISASSEMBLER=1
 )
 
-extend_target(Qml CONDITION (disassembler) AND (isEqual(QT_ARCH,"mips"))
+extend_target(Qml CONDITION (TEST_architecture_arch STREQUAL "mips") AND disassembler
     DEFINES
         WTF_USE_MIPS32_DISASSEMBLER=1
 )
@@ -528,12 +528,12 @@ extend_target(Qml CONDITION (CMAKE_BUILD_TYPE STREQUAL Release)
         NDEBUG
 )
 
-extend_target(Qml CONDITION (NOT ICC AND NOT CLANG AND GCC) AND (greaterThan(QT_GCC_MAJOR_VERSION, 6))
+extend_target(Qml CONDITION (NOT ICC AND NOT CLANG AND GCC) AND ((QT_COMPILER_VERSION_MAJOR STRGREATER 6))
     COMPILE_OPTIONS
         -Wno-expansion-to-defined
 )
 
-#### Keys ignored in scope 61:.:../3rdparty/masm:../3rdparty/masm/masm-defs.pri:greaterThan(QT_GCC_MAJOR_VERSION, 6):
+#### Keys ignored in scope 61:.:../3rdparty/masm:../3rdparty/masm/masm-defs.pri:(QT_COMPILER_VERSION_MAJOR STRGREATER 6):
 # QMAKE_CXXFLAGS_WARN_ON = "-Wno-expansion-to-defined"
 
 extend_target(Qml CONDITION WINRT
@@ -585,7 +585,7 @@ extend_target(Qml CONDITION (NOT c++11 AND NOT ICC) AND (CLANG)
         -Wno-c++11-extensions
 )
 
-extend_target(Qml CONDITION (((NOT c++11 AND NOT ICC) AND (NOT (CLANG))) AND (GCC)) AND (greaterThan(QT_GCC_MAJOR_VERSION,4) OR greaterThan(QT_GCC_MINOR_VERSION, 5))
+extend_target(Qml CONDITION (((NOT c++11 AND NOT ICC) AND (NOT (CLANG))) AND (GCC)) AND ((QT_COMPILER_VERSION_MAJOR STRGREATER 4) OR (QT_COMPILER_VERSION_MINOR STRGREATER 5))
     COMPILE_OPTIONS
         -Wno-c++0x-compat
 )
