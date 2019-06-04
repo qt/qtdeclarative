@@ -17,7 +17,7 @@ function createSpriteObjects() {
 
 //![local]
     component = Qt.createComponent("Sprite.qml");
-    sprite = component.createObject(appWindow, {"x": 100, "y": 100});
+    sprite = component.createObject(appWindow, {x: 100, y: 100});
 
     if (sprite == null) {
         // Error Handling
@@ -32,7 +32,7 @@ function createSpriteObjects() {
 //![finishCreation]
 function finishCreation() {
     if (component.status == Component.Ready) {
-        sprite = component.createObject(appWindow, {"x": 100, "y": 100});
+        sprite = component.createObject(appWindow, {x: 100, y: 100});
         if (sprite == null) {
             // Error Handling
             console.log("Error creating object");
