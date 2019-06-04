@@ -1,0 +1,56 @@
+# Generated from quickshapes.pro.
+
+#####################################################################
+## QuickShapes Module:
+#####################################################################
+
+add_qt_module(QuickShapes
+    SOURCES
+        qquickshape.cpp qquickshape_p.h
+        qquickshape_p_p.h
+        qquickshapegenericrenderer.cpp qquickshapegenericrenderer_p.h
+        qquickshapesglobal.h qquickshapesglobal_p.h
+        qquickshapesoftwarerenderer.cpp qquickshapesoftwarerenderer_p.h
+    LIBRARIES
+        Qt::GuiPrivate
+        Qt::QuickPrivate
+    PUBLIC_LIBRARIES
+        Qt::Core
+        Qt::Gui
+        Qt::Qml
+        Qt::Quick
+)
+
+# Resources:
+add_qt_resource(QuickShapes "qtquickshapes" PREFIX "/qt-project.org/shapes" FILES
+    shaders/blit.frag
+    shaders/blit.vert
+    shaders/blit_core.frag
+    shaders/blit_core.vert
+    shaders/conicalgradient.frag
+    shaders/conicalgradient.vert
+    shaders/conicalgradient_core.frag
+    shaders/conicalgradient_core.vert
+    shaders/lineargradient.frag
+    shaders/lineargradient.vert
+    shaders/lineargradient_core.frag
+    shaders/lineargradient_core.vert
+    shaders/radialgradient.frag
+    shaders/radialgradient.vert
+    shaders/radialgradient_core.frag
+    shaders/radialgradient_core.vert)
+
+
+#### Keys ignored in scope 1:.:.:quickshapes.pro:<TRUE>:
+# CONFIG = "simd" "optimize_full" "internal_module"
+# _LOADED = "qt_module"
+
+## Scopes:
+#####################################################################
+
+extend_target(QuickShapes CONDITION QT_FEATURE_opengl
+    SOURCES
+        qquicknvprfunctions.cpp qquicknvprfunctions_p.h
+        qquicknvprfunctions_p_p.h
+        qquickshapenvprrenderer.cpp qquickshapenvprrenderer_p.h
+)

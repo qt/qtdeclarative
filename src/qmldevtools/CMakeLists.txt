@@ -1,0 +1,69 @@
+# Generated from qmldevtools.pro.
+
+#####################################################################
+## QmlDevTools Module:
+#####################################################################
+
+add_qt_module(QmlDevTools
+    NO_SYNC_QT
+    SOURCES
+        ../qml/compiler/qqmlirbuilder.cpp ../qml/compiler/qqmlirbuilder_p.h
+        ../qml/compiler/qv4alloca_p.h
+        ../qml/compiler/qv4bytecodegenerator.cpp ../qml/compiler/qv4bytecodegenerator_p.h
+        ../qml/compiler/qv4bytecodehandler.cpp ../qml/compiler/qv4bytecodehandler_p.h
+        ../qml/compiler/qv4calldata_p.h
+        ../qml/compiler/qv4codegen.cpp ../qml/compiler/qv4codegen_p.h
+        ../qml/compiler/qv4compileddata.cpp ../qml/compiler/qv4compileddata_p.h
+        ../qml/compiler/qv4compiler.cpp ../qml/compiler/qv4compiler_p.h
+        ../qml/compiler/qv4compilercontext.cpp ../qml/compiler/qv4compilercontext_p.h
+        ../qml/compiler/qv4compilercontrolflow_p.h
+        ../qml/compiler/qv4compilerscanfunctions.cpp ../qml/compiler/qv4compilerscanfunctions_p.h
+        ../qml/compiler/qv4instr_moth.cpp ../qml/compiler/qv4instr_moth_p.h
+        ../qml/compiler/qv4staticvalue_p.h
+        ../qml/compiler/qv4stringtoarrayindex_p.h
+        ../qml/compiler/qv4util_p.h
+        ../qml/parser/qqmljsast.cpp ../qml/parser/qqmljsast_p.h
+        ../qml/parser/qqmljsastfwd_p.h
+        ../qml/parser/qqmljsastvisitor.cpp ../qml/parser/qqmljsastvisitor_p.h
+        ../qml/parser/qqmljsengine_p.cpp ../qml/parser/qqmljsengine_p.h ../qml/parser/qqmljsengine_p.h
+        ../qml/parser/qqmljsglobal_p.h ../qml/parser/qqmljsglobal_p.h
+        ../qml/parser/qqmljskeywords_p.h
+        ../qml/parser/qqmljslexer.cpp ../qml/parser/qqmljslexer_p.h
+        ../qml/parser/qqmljsmemorypool_p.h
+        ../qml/parser/qqmljssourcelocation_p.h
+        ../qml/qmldirparser/qqmldirparser.cpp ../qml/qmldirparser/qqmldirparser_p.h
+        ../qml/qmldirparser/qqmlerror.cpp ../qml/qmldirparser/qqmlerror.h
+        ../qml/qmldirparser/qqmlsourcecoordinate_p.h
+    INCLUDE_DIRECTORIES
+        ${CMAKE_CURRENT_BUILD_DIR}/../qml
+        ${CMAKE_CURRENT_BUILD_DIR}/../qml/compiler
+        ${CMAKE_CURRENT_BUILD_DIR}/../qml/qmldirparser
+        ../qml/compiler
+        ../qml/qmldirparser
+    LIBRARIES
+        Qt::CorePrivate
+        Qt::QmlPrivate # special case
+    PUBLIC_LIBRARIES
+        Qt::Core
+        Qt::Qml # special case
+)
+
+#### Keys ignored in scope 1:.:.:qmldevtools.pro:<TRUE>:
+# CONFIG = "minimal_syncqt" "internal_module" "generated_privates" "qlalr"
+# MODULE_INCNAME = "QtQml"
+# _LOADED = "qt_module"
+# _OPTION = "host_build"
+
+## Scopes:
+#####################################################################
+
+#### Keys ignored in scope 2:.:.:qmldevtools.pro:ICC:
+# WERROR = "-ww2415"
+
+#### Keys ignored in scope 3:.:.:qmldevtools.pro:CLANG AND greaterThan(QT_CLANG_MAJOR_VERSION,3 OR greaterThan(QT_CLANG_MINOR_VERSION,3)):
+# WERROR = "-Wno-error=unused-const-variable"
+
+extend_target(QmlDevTools CONDITION (GCC) AND ((QT_COMPILER_VERSION_MAJOR STREQUAL 5))
+    COMPILE_OPTIONS
+        -fno-strict-aliasing
+)

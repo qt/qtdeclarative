@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qt_module(Quick
+    PLUGIN_TYPES scenegraph
     SOURCES
         handlers/qquickdragaxis.cpp handlers/qquickdragaxis_p.h
         handlers/qquickdraghandler.cpp handlers/qquickdraghandler_p.h
@@ -498,3 +499,4 @@ extend_target(Quick CONDITION QT_FEATURE_wheelevent
 add_qt_docs(
     doc/qtquick.qdocconf
 )
+

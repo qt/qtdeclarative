@@ -1,0 +1,29 @@
+# Generated from qmltooling.pro.
+
+add_subdirectory(packetprotocol)
+#add_subdirectory(qmldbg_native)
+#add_subdirectory(qmldbg_messages)
+#add_subdirectory(qmldbg_profiler)
+#add_subdirectory(qmldbg_debugger)
+#add_subdirectory(qmldbg_nativedebugger)
+
+#if(QT_FEATURE_thread)
+    #add_subdirectory(qmldbg_server)
+#endif()
+
+#if(QT_FEATURE_qml_network)
+    #add_subdirectory(qmldbg_tcp)
+
+    #if(QT_FEATURE_localserver)
+        #add_subdirectory(qmldbg_local)
+    #endif()
+#endif()
+
+#if(TARGET Qt::Quick)
+    #add_subdirectory(qmldbg_inspector)
+    #add_subdirectory(qmldbg_quickprofiler)
+
+    #if(QT_FEATURE_qml_network)
+        #add_subdirectory(qmldbg_preview)
+    #endif()
+#endif()

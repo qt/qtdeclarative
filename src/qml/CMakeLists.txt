@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qt_module(Qml
+    PLUGIN_TYPES qmltooling
     SOURCES
         ../3rdparty/llvm/include/llvm-c/DataTypes.h
         ../3rdparty/llvm/include/llvm/ADT/PointerIntPair.h
@@ -600,3 +601,4 @@ qt_create_tracepoints(Qml qtqml.tracepoints)
 add_qt_docs(
     doc/qtqml.qdocconf
 )
+

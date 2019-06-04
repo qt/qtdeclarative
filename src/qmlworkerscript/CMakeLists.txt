@@ -1,0 +1,95 @@
+# Generated from qmlworkerscript.pro.
+
+#####################################################################
+## QmlWorkerScript Module:
+#####################################################################
+
+add_qt_module(QmlWorkerScript
+    SOURCES
+        qqmlworkerscriptmodule.cpp qqmlworkerscriptmodule_p.h
+        qquickworkerscript.cpp qquickworkerscript_p.h
+        qtqmlworkerscriptglobal.h qtqmlworkerscriptglobal_p.h
+        qv4serialize.cpp qv4serialize_p.h
+    DEFINES
+        BUILDING_QT__
+        ENABLE_ASSEMBLER_WX_EXCLUSIVE=1
+        ENABLE_DFG_JIT=0
+        ENABLE_DFG_JIT_UTILITY_METHODS=1
+        ENABLE_JIT_CONSTANT_BLINDING=0
+        ENABLE_LLINT=0
+        JS_EXPORT_PRIVATE= # special case
+        QT_NO_FOREACH
+        QT_NO_INTEGER_EVENT_COORDINATES
+        QT_NO_URL_CAST_FROM_STRING
+        WTFInvokeCrashHook=qmlWTFInvokeCrashHook
+        WTFReportAssertionFailure=qmlWTFReportAssertionFailure
+        WTFReportAssertionFailureWithMessage=qmlWTFReportAssertionFailureWithMessage
+        WTFReportBacktrace=qmlWTFReportBacktrace
+        WTF_EXPORT_PRIVATE= # special case
+    INCLUDE_DIRECTORIES
+        ../3rdparty/masm
+        ../3rdparty/masm/assembler
+        ../3rdparty/masm/disassembler
+        ../3rdparty/masm/disassembler/udis86
+        ../3rdparty/masm/jit
+        ../3rdparty/masm/runtime
+        ../3rdparty/masm/stubs
+        ../3rdparty/masm/stubs/runtime
+        ../3rdparty/masm/stubs/wtf
+        ../3rdparty/masm/wtf
+    LIBRARIES
+        Qt::CorePrivate
+        Qt::QmlPrivate
+    PUBLIC_LIBRARIES
+        Qt::Core
+        Qt::Qml
+)
+
+#### Keys ignored in scope 1:.:.:qmlworkerscript.pro:<TRUE>:
+# _LOADED = "qt_module"
+
+## Scopes:
+#####################################################################
+
+extend_target(QmlWorkerScript CONDITION WIN32
+    DEFINES
+        NOMINMAX
+)
+
+extend_target(QmlWorkerScript CONDITION (disassembler) AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64")) # special case
+    DEFINES
+        WTF_USE_UDIS86=1
+)
+
+extend_target(QmlWorkerScript CONDITION (TEST_architecture_arch STREQUAL "arm") AND disassembler
+    DEFINES
+        WTF_USE_ARMV7_DISASSEMBLER=1
+)
+
+extend_target(QmlWorkerScript CONDITION (TEST_architecture_arch STREQUAL "arm64") AND disassembler
+    DEFINES
+        WTF_USE_ARM64_DISASSEMBLER=1
+)
+
+extend_target(QmlWorkerScript CONDITION (TEST_architecture_arch STREQUAL "mips") AND disassembler
+    DEFINES
+        WTF_USE_MIPS32_DISASSEMBLER=1
+)
+
+extend_target(QmlWorkerScript CONDITION NOT disassembler
+    DEFINES
+        WTF_USE_UDIS86=0
+)
+
+extend_target(QmlWorkerScript CONDITION (CMAKE_BUILD_TYPE STREQUAL Release)
+    DEFINES
+        NDEBUG
+)
+
+extend_target(QmlWorkerScript CONDITION (NOT ICC AND NOT CLANG AND GCC) AND ((QT_COMPILER_VERSION_MAJOR STRGREATER 6))
+    COMPILE_OPTIONS
+        -Wno-expansion-to-defined
+)
+
+#### Keys ignored in scope 12:.:../3rdparty/masm:../3rdparty/masm/masm-defs.pri:(QT_COMPILER_VERSION_MAJOR STRGREATER 6):
+# QMAKE_CXXFLAGS_WARN_ON = "-Wno-expansion-to-defined"

@@ -24,7 +24,7 @@ qt_feature("quick_animatedimage" PRIVATE
     SECTION "Qt Quick"
     LABEL "AnimatedImage item"
     PURPOSE "Provides the AnimatedImage item."
-    CONDITION module.gui AND QT_FEATURE_movie OR FIXME
+    CONDITION TARGET Qt::Gui AND QT_FEATURE_movie
 )
 qt_feature("quick_canvas" PRIVATE
     SECTION "Qt Quick"
@@ -72,7 +72,7 @@ qt_feature("quick_particles" PRIVATE
     SECTION "Qt Quick"
     LABEL "Particle support"
     PURPOSE "Provides a particle system."
-    CONDITION module.gui AND QT_FEATURE_quick_shadereffect AND QT_FEATURE_quick_sprite AND QT_FEATURE_opengl OR FIXME
+    CONDITION TARGET Qt::Gui AND QT_FEATURE_quick_shadereffect AND QT_FEATURE_quick_sprite AND QT_FEATURE_opengl
 )
 qt_feature("quick_path" PRIVATE
     SECTION "Qt Quick"
