@@ -1207,7 +1207,7 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
     \js
         var component = Qt.createComponent("Button.qml");
         if (component.status == Component.Ready)
-            component.createObject(parent, {"x": 100, "y": 100});
+            component.createObject(parent, {x: 100, y: 100});
     \endjs
 
     Dynamically created instances can be deleted with the \c destroy() method.

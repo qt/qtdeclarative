@@ -54,6 +54,7 @@ private slots:
     void noSubstitutionTemplateLiteral();
     void templateLiteral();
     void leadingSemicolonInClass();
+    void templatedReadonlyProperty();
 
 private:
     QStringList excludedDirs;
@@ -287,6 +288,15 @@ void tst_qqmlparser::leadingSemicolonInClass()
     lexer.setCode(QLatin1String("class X{;n(){}}"), 1);
     QQmlJS::Parser parser(&engine);
     QVERIFY(parser.parseProgram());
+}
+
+void tst_qqmlparser::templatedReadonlyProperty()
+{
+    QQmlJS::Engine engine;
+    QQmlJS::Lexer lexer(&engine);
+    lexer.setCode(QLatin1String("A { readonly property list<B> listfoo: [ C{} ] }"), 1);
+    QQmlJS::Parser parser(&engine);
+    QVERIFY(parser.parse());
 }
 
 QTEST_MAIN(tst_qqmlparser)

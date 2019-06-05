@@ -50,6 +50,9 @@ private slots:
     void application();
     void applicationProperties();
     void removeObjectsWhenDestroyed();
+    void loadTranslation_data();
+    void loadTranslation();
+
 private:
     QString buildDir;
     QString srcDir;
@@ -241,6 +244,30 @@ void tst_qqmlapplicationengine::removeObjectsWhenDestroyed()
     QCOMPARE(test->rootObjects().size(), 0);
 }
 
+void tst_qqmlapplicationengine::loadTranslation_data()
+{
+    QTest::addColumn<QUrl>("qmlUrl");
+    QTest::addColumn<QString>("translation");
+
+    QTest::newRow("local file") << testFileUrl("loadTranslation.qml")
+                                  << QStringLiteral("translated");
+    QTest::newRow("qrc") << QUrl(QLatin1String("qrc:///data/loadTranslation.qml"))
+                                  << QStringLiteral("translated");
+}
+
+void tst_qqmlapplicationengine::loadTranslation()
+{
+    QFETCH(QUrl, qmlUrl);
+    QFETCH(QString, translation);
+
+    QQmlApplicationEngine test(qmlUrl);
+    QVERIFY(!test.rootObjects().isEmpty());
+
+    QObject *rootObject = test.rootObjects().first();
+    QVERIFY(rootObject);
+
+    QCOMPARE(rootObject->property("translation").toString(), translation);
+}
 
 QTEST_MAIN(tst_qqmlapplicationengine)
 
