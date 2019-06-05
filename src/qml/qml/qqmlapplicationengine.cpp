@@ -76,7 +76,7 @@ void QQmlApplicationEnginePrivate::init()
                &QCoreApplication::exit, Qt::QueuedConnection);
 #if QT_CONFIG(translation)
     QTranslator* qtTranslator = new QTranslator;
-    if (qtTranslator->load(QLocale(), QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
+    if (qtTranslator->load(QLocale(), QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath), QLatin1String(".qm")))
         QCoreApplication::installTranslator(qtTranslator);
     translators << qtTranslator;
 #endif
@@ -90,10 +90,10 @@ void QQmlApplicationEnginePrivate::loadTranslations(const QUrl &rootFile)
     if (rootFile.scheme() != QLatin1String("file") && rootFile.scheme() != QLatin1String("qrc"))
         return;
 
-    QFileInfo fi(rootFile.toLocalFile());
+    QFileInfo fi(QQmlFile::urlToLocalFileOrQrc(rootFile));
 
     QTranslator *translator = new QTranslator;
-    if (translator->load(QLocale(), QLatin1String("qml"), QLatin1String("_"), fi.path() + QLatin1String("/i18n"))) {
+    if (translator->load(QLocale(), QLatin1String("qml"), QLatin1String("_"), fi.path() + QLatin1String("/i18n"), QLatin1String(".qm"))) {
         QCoreApplication::installTranslator(translator);
         translators << translator;
     } else {
@@ -180,6 +180,9 @@ void QQmlApplicationEnginePrivate::finishLoad(QQmlComponent *c)
   \list
   \li Connecting Qt.quit() to QCoreApplication::quit()
   \li Automatically loads translation files from an i18n directory adjacent to the main QML file.
+      \list
+          \li Translation files must have "qml_" prefix e.g. qml_ja_JP.qm.
+      \endlist
   \li Automatically sets an incubation controller if the scene contains a QQuickWindow.
   \li Automatically sets a \c QQmlFileSelector as the url interceptor, applying file selectors to all
   QML files and assets.
