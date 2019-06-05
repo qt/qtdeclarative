@@ -2,8 +2,6 @@
 
 add_subdirectory(qml)
 add_subdirectory(qmlmodels)
-add_subdirectory(plugins)
-#add_subdirectory(imports)
 
 if(QT_FEATURE_qml_worker_script)
     add_subdirectory(qmlworkerscript)
@@ -13,6 +11,7 @@ if(TARGET Qt::Gui AND QT_FEATURE_qml_animation)
     add_subdirectory(quick)
     add_subdirectory(quickshapes)
 
+    find_package(Qt6 ${PROJECT_VERSION} CONFIG COMPONENTS Test) # special case
     if(QT_FEATURE_testlib AND TARGET Qt::Test) # special case
         add_subdirectory(qmltest)
     endif()
@@ -26,6 +25,12 @@ if(TARGET Qt::Gui AND QT_FEATURE_qml_animation)
     endif()
 endif()
 
+# special case begin
+# These need to be included here since they have dependencies on the modules
+# specified above.
+add_subdirectory(plugins)
+add_subdirectory(imports)
+
 if(QT_FEATURE_qml_devtools)
     add_subdirectory(qmldevtools)
 endif()
@@ -36,3 +41,4 @@ if(QT_FEATURE_qml_network)
         add_subdirectory(qmldebug)
     endif()
 endif()
+# special case end

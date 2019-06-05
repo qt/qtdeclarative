@@ -1,0 +1,25 @@
+# Generated from qtqml.pro.
+
+#####################################################################
+## qmlplugin Plugin:
+#####################################################################
+
+add_qml_module(qmlplugin
+    TARGET_PATH "QtQml"
+    IMPORT_VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
+    SOURCES
+        plugin.cpp
+    LIBRARIES
+        Qt::QmlModelsPrivate
+        Qt::QmlPrivate
+        Qt::CorePrivate # special case
+    PUBLIC_LIBRARIES
+        Qt::Qml
+        Qt::QmlModels
+)
+
+#### Keys ignored in scope 1:.:.:qtqml.pro:<TRUE>:
+# CXX_MODULE = "qml"
+# IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
+# TARGETPATH = "QtQml"
+# _LOADED = "qml_plugin"

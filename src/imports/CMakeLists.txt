@@ -1,0 +1,47 @@
+# Generated from imports.pro.
+
+add_subdirectory(builtins)
+add_subdirectory(qtqml)
+add_subdirectory(models)
+add_subdirectory(labsmodels)
+add_subdirectory(folderlistmodel)
+
+if(QT_FEATURE_qml_worker_script)
+    add_subdirectory(workerscript)
+endif()
+
+if(TARGET Qt::Sql)
+    add_subdirectory(localstorage)
+endif()
+
+if(QT_FEATURE_settings)
+    add_subdirectory(settings)
+endif()
+
+if(QT_FEATURE_statemachine)
+    add_subdirectory(statemachine)
+endif()
+
+if(TARGET Qt::Quick)
+    add_subdirectory(labsanimation)
+    add_subdirectory(layouts)
+    add_subdirectory(qtquick2)
+    add_subdirectory(window)
+    add_subdirectory(wavefrontmesh)
+
+    if(TARGET Qt::Test)
+        add_subdirectory(testlib)
+    endif()
+
+    if(QT_FEATURE_systemsemaphore)
+        add_subdirectory(sharedimage)
+    endif()
+
+    if(QT_FEATURE_quick_particles)
+        add_subdirectory(particles)
+    endif()
+
+    if(QT_FEATURE_quick_path AND QT_FEATURE_thread)
+        add_subdirectory(shapes)
+    endif()
+endif()
