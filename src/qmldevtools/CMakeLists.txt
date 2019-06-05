@@ -5,6 +5,8 @@
 #####################################################################
 
 add_qt_module(QmlDevTools
+    STATIC
+    INTERNAL_MODULE
     NO_SYNC_QT
     SOURCES
         ../qml/compiler/qqmlirbuilder.cpp ../qml/compiler/qqmlirbuilder_p.h
@@ -35,18 +37,34 @@ add_qt_module(QmlDevTools
         ../qml/qmldirparser/qqmlerror.cpp ../qml/qmldirparser/qqmlerror.h
         ../qml/qmldirparser/qqmlsourcecoordinate_p.h
     INCLUDE_DIRECTORIES
-        ${CMAKE_CURRENT_BUILD_DIR}/../qml
-        ${CMAKE_CURRENT_BUILD_DIR}/../qml/compiler
-        ${CMAKE_CURRENT_BUILD_DIR}/../qml/qmldirparser
+        ${CMAKE_CURRENT_BINARY_DIR}/../qml
+        ${CMAKE_CURRENT_BINARY_DIR}/../qml/compiler
+        ${CMAKE_CURRENT_BINARY_DIR}/../qml/qmldirparser
         ../qml/compiler
         ../qml/qmldirparser
     LIBRARIES
         Qt::CorePrivate
-        Qt::QmlPrivate # special case
     PUBLIC_LIBRARIES
         Qt::Core
-        Qt::Qml # special case
 )
+
+# special case begin
+# Need to generate the parser files as in Qml module.
+set(_qt_qlalr_flags "--no-debug" "--qt")
+qt_process_qlalr("${CMAKE_CURRENT_SOURCE_DIR}/../qml/parser/qqmljs.g" QmlDevTools "${_qt_qlalr_flags}")
+
+# Need to propagate some of the include directories from Qml via QmlDevToolsPrivate
+# for other tools, and also for the main QmlDevTools module,
+# until we fix the script to handle internal_module to create only one single Private module.
+qt_internal_module_info(qml_module "Qml")
+set(_qml_dev_tools_private_includes
+        ${qml_module_include_dir}
+        ${qml_module_include_dir}/${PROJECT_VERSION}
+        ${qml_module_include_dir}/${PROJECT_VERSION}/${qml_module}
+    )
+target_include_directories(QmlDevTools PRIVATE ${_qml_dev_tools_private_includes})
+target_include_directories(QmlDevToolsPrivate INTERFACE ${_qml_dev_tools_private_includes})
+# special case end
 
 #### Keys ignored in scope 1:.:.:qmldevtools.pro:<TRUE>:
 # CONFIG = "minimal_syncqt" "internal_module" "generated_privates" "qlalr"

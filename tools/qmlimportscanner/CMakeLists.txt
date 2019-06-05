@@ -1,0 +1,23 @@
+# Generated from qmlimportscanner.pro.
+
+#####################################################################
+## qmlimportscanner Tool:
+#####################################################################
+
+add_qt_tool(qmlimportscanner
+    TOOLS_TARGET Qml # special case
+    SOURCES
+        main.cpp
+    DEFINES
+        QT_NO_CAST_FROM_ASCII
+        QT_NO_CAST_TO_ASCII
+    LIBRARIES
+        Qt::QmlDevToolsPrivate
+    PUBLIC_LIBRARIES
+        Qt::QmlDevTools
+)
+
+#### Keys ignored in scope 1:.:.:qmlimportscanner.pro:<TRUE>:
+# QMAKE_TARGET_DESCRIPTION = "QML" "Import" "Scanner"
+# _LOADED = "qt_tool"
+# _OPTION = "host_build"

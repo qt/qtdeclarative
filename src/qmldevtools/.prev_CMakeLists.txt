@@ -5,6 +5,8 @@
 #####################################################################
 
 add_qt_module(QmlDevTools
+    STATIC
+    INTERNAL_MODULE
     NO_SYNC_QT
     SOURCES
         ../qml/compiler/qqmlirbuilder.cpp ../qml/compiler/qqmlirbuilder_p.h
@@ -35,9 +37,9 @@ add_qt_module(QmlDevTools
         ../qml/qmldirparser/qqmlerror.cpp ../qml/qmldirparser/qqmlerror.h
         ../qml/qmldirparser/qqmlsourcecoordinate_p.h
     INCLUDE_DIRECTORIES
-        ${CMAKE_CURRENT_BUILD_DIR}/../qml
-        ${CMAKE_CURRENT_BUILD_DIR}/../qml/compiler
-        ${CMAKE_CURRENT_BUILD_DIR}/../qml/qmldirparser
+        ${CMAKE_CURRENT_BINARY_DIR}/../qml
+        ${CMAKE_CURRENT_BINARY_DIR}/../qml/compiler
+        ${CMAKE_CURRENT_BINARY_DIR}/../qml/qmldirparser
         ../qml/compiler
         ../qml/qmldirparser
     LIBRARIES

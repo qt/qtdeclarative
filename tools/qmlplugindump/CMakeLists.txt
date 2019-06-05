@@ -1,0 +1,41 @@
+# Generated from qmlplugindump.pro.
+
+#####################################################################
+## qmlplugindump Tool:
+#####################################################################
+
+add_qt_tool(qmlplugindump
+    TOOLS_TARGET Qml # special case
+    SOURCES
+        main.cpp
+        qmlstreamwriter.cpp qmlstreamwriter.h
+        qmltypereader.cpp qmltypereader.h
+    LIBRARIES
+        Qt::CorePrivate
+        Qt::QmlPrivate
+        Qt::QuickPrivate
+    PUBLIC_LIBRARIES
+        Qt::Qml
+        Qt::Quick
+)
+
+#### Keys ignored in scope 1:.:.:qmlplugindump.pro:<TRUE>:
+# QMAKE_TARGET_DESCRIPTION = "QML" "Plugin" "Metadata" "Dumper"
+# QTPLUGIN.platforms = "qminimal"
+# _LOADED = "qt_tool"
+
+## Scopes:
+#####################################################################
+
+extend_target(qmlplugindump CONDITION TARGET Qt::Widgets
+    PUBLIC_LIBRARIES
+        Qt::Widgets
+)
+
+extend_target(qmlplugindump CONDITION APPLE_OSX
+    LINK_OPTIONS
+        "-Wl,-sectcreate,__TEXT,__info_plist,${CMAKE_CURRENT_SOURCE_DIR}/Info.plist" # special case
+)
+
+#### Keys ignored in scope 3:.:.:qmlplugindump.pro:APPLE_OSX:
+# CONFIG = "-app_bundle"

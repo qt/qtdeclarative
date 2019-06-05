@@ -1,0 +1,19 @@
+# Generated from qmlmin.pro.
+
+#####################################################################
+## qmlmin Tool:
+#####################################################################
+
+add_qt_tool(qmlmin
+    SOURCES
+        main.cpp
+    LIBRARIES
+        Qt::QmlDevToolsPrivate
+    PUBLIC_LIBRARIES
+        Qt::QmlDevTools
+)
+
+#### Keys ignored in scope 1:.:.:qmlmin.pro:<TRUE>:
+# QMAKE_TARGET_DESCRIPTION = "QML/JS" "Minifier"
+# _LOADED = "qt_tool"
+# _OPTION = "host_build"
