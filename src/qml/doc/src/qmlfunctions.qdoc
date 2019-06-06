@@ -564,6 +564,14 @@
    \sa {Choosing the Correct Integration Method Between C++ and QML}
 */
 
+
+/*!
+   \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, std::function<QObject*(QQmlEngine *, QJSEngine *)> callback)
+   \relates QQmlEngine
+
+   \overload qmlRegisterSingletonType
+*/
+
 /*!
    \fn int qmlRegisterSingletonType(const QUrl &url, const char *uri, int versionMajor, int versionMinor, const char *qmlName)
    \relates QQmlEngine

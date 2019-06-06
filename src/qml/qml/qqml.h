@@ -624,13 +624,13 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
 
         uri, versionMajor, versionMinor, typeName,
 
-        callback, nullptr, nullptr, 0, 0
+        callback, nullptr, nullptr, 0, 0, {}
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
 }
 
-enum { QmlCurrentSingletonTypeRegistrationVersion = 2 };
+enum { QmlCurrentSingletonTypeRegistrationVersion = 3 };
 template <typename T>
 inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName,
                                 QObject *(*callback)(QQmlEngine *, QJSEngine *))
@@ -642,7 +642,26 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
 
         uri, versionMajor, versionMinor, typeName,
 
-        nullptr, callback, &T::staticMetaObject, qRegisterNormalizedMetaType<T *>(pointerName.constData()), 0
+        nullptr, nullptr, &T::staticMetaObject, qRegisterNormalizedMetaType<T *>(pointerName.constData()), 0, callback
+    };
+
+    return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
+}
+
+template <typename T, typename F, typename std::enable_if<std::is_convertible<F, std::function<QObject *(QQmlEngine *, QJSEngine *)>>::value
+                                                 && !std::is_convertible<F, QObject *(*)(QQmlEngine *, QJSEngine *)>::value, void>::type* = nullptr>
+inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName,
+                                    F&& callback)
+{
+
+    QML_GETTYPENAMES
+
+    QQmlPrivate::RegisterSingletonType api = {
+        QmlCurrentSingletonTypeRegistrationVersion,
+
+        uri, versionMajor, versionMinor, typeName,
+
+        nullptr, nullptr, &T::staticMetaObject, qRegisterNormalizedMetaType<T *>(pointerName.constData()), 0, callback
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);

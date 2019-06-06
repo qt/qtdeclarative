@@ -1015,6 +1015,25 @@ void tst_qqmlengine::singletonInstance()
     }
 
     {
+        int data = 30;
+        auto id = qmlRegisterSingletonType<CppSingleton>("Qt.test",1,0,"CapturingLambda",[data](QQmlEngine*, QJSEngine*){ // register qobject singleton with capturing lambda
+                auto o = new CppSingleton;
+                o->setProperty("data", data);
+                return o;
+        });
+        QJSValue value = engine.singletonInstance<QJSValue>(id);
+        QVERIFY(!value.isUndefined());
+        QVERIFY(value.isQObject());
+        QObject *instance = value.toQObject();
+        QVERIFY(instance);
+        QCOMPARE(instance->metaObject()->className(), "CppSingleton");
+        QCOMPARE(instance->property("data"), data);
+    }
+    {
+        qmlRegisterSingletonType<CppSingleton>("Qt.test",1,0,"NotAmbiguous", [](QQmlEngine* qeng, QJSEngine* jeng) -> QObject* {return CppSingleton::create(qeng, jeng);}); // test that overloads for qmlRegisterSingleton are not ambiguous
+    }
+
+    {
         // Invalid types
         QJSValue value;
         value = engine.singletonInstance<QJSValue>(-4711);

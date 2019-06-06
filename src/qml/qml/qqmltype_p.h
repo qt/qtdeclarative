@@ -51,6 +51,8 @@
 // We mean it.
 //
 
+#include <functional>
+
 #include <private/qtqmlglobal_p.h>
 #include <private/qqmlrefcount_p.h>
 
@@ -145,7 +147,7 @@ public:
     struct Q_QML_PRIVATE_EXPORT SingletonInstanceInfo
     {
         QJSValue (*scriptCallback)(QQmlEngine *, QJSEngine *) = nullptr;
-        QObject *(*qobjectCallback)(QQmlEngine *, QJSEngine *) = nullptr;
+        std::function<QObject *(QQmlEngine *, QJSEngine *)> qobjectCallback = {};
         const QMetaObject *instanceMetaObject = nullptr;
         QString typeName;
         QUrl url; // used by composite singletons

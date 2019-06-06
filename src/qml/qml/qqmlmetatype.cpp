@@ -107,7 +107,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->version_maj = type.versionMajor;
     d->version_min = type.versionMinor;
 
-    if (type.qobjectApi) {
+    if (type.qobjectApi || (type.version >= 3 && type.generalizedQobjectApi)) {
         if (type.version >= 1) // static metaobject added in version 1
             d->baseMetaObject = type.instanceMetaObject;
         if (type.version >= 2) // typeId added in version 2
@@ -118,10 +118,14 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
 
     d->extraData.sd->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
     d->extraData.sd->singletonInstanceInfo->scriptCallback = type.scriptApi;
-    d->extraData.sd->singletonInstanceInfo->qobjectCallback = type.qobjectApi;
+    if (type.version >= 3) {
+        d->extraData.sd->singletonInstanceInfo->qobjectCallback = type.generalizedQobjectApi;
+    } else {
+        d->extraData.sd->singletonInstanceInfo->qobjectCallback = type.qobjectApi;
+    }
     d->extraData.sd->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
     d->extraData.sd->singletonInstanceInfo->instanceMetaObject
-            = (type.qobjectApi && type.version >= 1) ? type.instanceMetaObject : nullptr;
+            = ((type.qobjectApi || (type.version >= 3 && type.generalizedQobjectApi) ) && type.version >= 1) ? type.instanceMetaObject : nullptr;
 
     return d;
 }
