@@ -44,7 +44,6 @@
 #include <QtCore/QSet>
 #include <QtCore/QBuffer>
 #include <QtCore/QBitArray>
-#include <QtCore/QLinkedList>
 #include <QtCore/QStack>
 #include <private/qqmljsast_p.h>
 #include <private/qv4compilercontext_p.h>

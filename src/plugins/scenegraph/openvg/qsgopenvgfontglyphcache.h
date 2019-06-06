@@ -42,7 +42,6 @@
 
 #include <QtGui/QGlyphRun>
 #include <QtCore/QSet>
-#include <QtCore/QLinkedList>
 #include <VG/openvg.h>
 
 QT_BEGIN_NAMESPACE

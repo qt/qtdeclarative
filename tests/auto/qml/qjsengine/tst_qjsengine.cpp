@@ -1443,12 +1443,10 @@ public:
 Q_DECLARE_METATYPE(Foo)
 Q_DECLARE_METATYPE(Foo*)
 
-Q_DECLARE_METATYPE(QLinkedList<QString>)
 Q_DECLARE_METATYPE(QList<Foo>)
 Q_DECLARE_METATYPE(QVector<QChar>)
 Q_DECLARE_METATYPE(QStack<int>)
 Q_DECLARE_METATYPE(QQueue<char>)
-Q_DECLARE_METATYPE(QLinkedList<QStack<int> >)
 
 void tst_QJSEngine::valueConversion_basic()
 {
