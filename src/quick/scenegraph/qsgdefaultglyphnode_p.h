@@ -77,7 +77,7 @@ private:
     void setGlyphNodeType(DefaultGlyphNodeType type) { m_glyphNodeType = type; }
 
     DefaultGlyphNodeType m_glyphNodeType;
-    QLinkedList<QSGNode *> m_nodesToDelete;
+    QVector<QSGNode *> m_nodesToDelete;
 
     struct GlyphInfo {
         QVector<quint32> indexes;

@@ -77,11 +77,6 @@ QSGSoftwareRenderableNode *QSGAbstractSoftwareRenderer::renderableNode(QSGNode *
     return m_nodes.value(node, nullptr);
 }
 
-const QLinkedList<QSGSoftwareRenderableNode*> &QSGAbstractSoftwareRenderer::renderableNodes() const
-{
-    return m_renderableNodes;
-}
-
 void QSGAbstractSoftwareRenderer::addNodeMapping(QSGNode *node, QSGSoftwareRenderableNode *renderableNode)
 {
     m_nodes.insert(node, renderableNode);

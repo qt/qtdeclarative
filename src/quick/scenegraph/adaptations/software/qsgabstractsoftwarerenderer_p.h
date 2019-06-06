@@ -54,7 +54,6 @@
 #include <private/qsgrenderer_p.h>
 
 #include <QtCore/QHash>
-#include <QtCore/QLinkedList>
 
 QT_BEGIN_NAMESPACE
 
@@ -88,7 +87,6 @@ protected:
     QRect backgroundRect();
     // only known after calling optimizeRenderList()
     bool isOpaque() const { return m_isOpaque; }
-    const QLinkedList<QSGSoftwareRenderableNode*> &renderableNodes() const;
 
 private:
     void nodeAdded(QSGNode *node);
@@ -99,7 +97,7 @@ private:
     void nodeOpacityUpdated(QSGNode *node);
 
     QHash<QSGNode*, QSGSoftwareRenderableNode*> m_nodes;
-    QLinkedList<QSGSoftwareRenderableNode*> m_renderableNodes;
+    QVector<QSGSoftwareRenderableNode*> m_renderableNodes;
 
     QSGSimpleRectNode *m_background;
 
