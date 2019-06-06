@@ -40,6 +40,10 @@
 #include <libkern/OSCacheControl.h>
 #endif
 
+#if OS(RTEMS)
+#include <rtems/rtems/cache.h>
+#endif
+
 namespace JSC {
 
 namespace ARMRegisters {
@@ -2359,6 +2363,8 @@ public:
 #elif OS(QNX)
 #if !ENABLE(ASSEMBLER_WX_EXCLUSIVE)
         msync(code, size, MS_INVALIDATE_ICACHE);
+#elif OS(RTEMS)
+        rtems_cache_flush_multiple_data_lines(code, size);
 #else
         UNUSED_PARAM(code);
         UNUSED_PARAM(size);
