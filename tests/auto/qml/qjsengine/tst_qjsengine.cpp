@@ -4892,6 +4892,7 @@ private:
 
 void tst_QJSEngine::interrupt()
 {
+#if QT_CONFIG(cxx11_future)
     QFETCH(int, jitThreshold);
     QFETCH(QString, code);
 
@@ -4916,6 +4917,9 @@ void tst_QJSEngine::interrupt()
 
     QVERIFY(worker->wait());
     QVERIFY(!engineInThread);
+#else
+    QSKIP("This test requires C++11 futures");
+#endif
 }
 
 QTEST_MAIN(tst_QJSEngine)
