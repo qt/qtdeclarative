@@ -112,7 +112,11 @@ enum {
 
 struct MemorySegment {
     enum {
+#ifdef Q_OS_RTEMS
+        NumChunks = sizeof(quint64),
+#else
         NumChunks = 8*sizeof(quint64),
+#endif
         SegmentSize = NumChunks*Chunk::ChunkSize,
     };
 
