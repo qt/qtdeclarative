@@ -39,6 +39,7 @@
 
 #if OS(LINUX)
 #include <sys/syscall.h>
+#include <linux/limits.h>
 #ifndef MFD_CLOEXEC
 #define MFD_CLOEXEC         0x0001U
 #endif
