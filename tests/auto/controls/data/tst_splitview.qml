@@ -1851,13 +1851,21 @@ TestCase {
         }
     }
 
-    function test_saveAndRestoreState() {
-        var control = createTemporaryObject(threeSizedItemsComponent, testCase)
+    function test_saveAndRestoreState_data() {
+        return [
+            { tag: "Horizontal", orientation: Qt.Horizontal, propertyName: "preferredWidth", propertyValue: 123 },
+            { tag: "Vertical", orientation: Qt.Vertical, propertyName: "preferredHeight", propertyValue: 234 }
+        ]
+    }
+
+    function test_saveAndRestoreState(data) {
+        var control = createTemporaryObject(threeSizedItemsComponent, testCase, { orientation: data.orientation })
         verify(control)
+        compare(control.orientation, data.orientation)
 
         var lastItem = control.itemAt(2)
         verify(lastItem)
-        lastItem.SplitView.preferredWidth = 123
+        lastItem.SplitView[data.propertyName] = data.propertyValue
 
         // Save the state.
         var settings = createTemporaryObject(settingsComponent, testCase)
@@ -1868,14 +1876,14 @@ TestCase {
         control = createTemporaryObject(threeSizedItemsComponent, testCase)
         lastItem = control.itemAt(2)
         verify(lastItem)
-        compare(lastItem.SplitView.preferredWidth, -1)
+        compare(lastItem.SplitView[data.propertyName], -1)
 
         settings = createTemporaryObject(settingsComponent, testCase)
         verify(settings)
 
         // Restore the state.
         control.restoreState(settings.value("splitView"))
-        compare(lastItem.SplitView.preferredWidth, 123)
+        compare(lastItem.SplitView[data.propertyName], data.propertyValue)
     }
 
     function test_changePreferredSizeDuringLayout() {
