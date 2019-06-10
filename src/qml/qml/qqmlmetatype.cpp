@@ -1193,7 +1193,8 @@ QQmlPropertyCache *QQmlMetaType::propertyCache(const QQmlType &type, int minorVe
 void QQmlMetaType::unregisterType(int typeIndex)
 {
     QQmlMetaTypeDataPtr data;
-    if (const QQmlTypePrivate *d = data->types.value(typeIndex).priv()) {
+    const QQmlType type = data->types.value(typeIndex);
+    if (const QQmlTypePrivate *d = type.priv()) {
         removeQQmlTypePrivate(data->idToType, d);
         removeQQmlTypePrivate(data->nameToType, d);
         removeQQmlTypePrivate(data->urlToType, d);
@@ -1203,6 +1204,7 @@ void QQmlMetaType::unregisterType(int typeIndex)
             module->remove(d);
         data->clearPropertyCachesForMinorVersion(typeIndex);
         data->types[typeIndex] = QQmlType();
+        data->undeletableTypes.remove(type);
     }
 }
 

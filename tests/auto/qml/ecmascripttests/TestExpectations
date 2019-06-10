@@ -712,8 +712,6 @@ language/statements/generators/yield-identifier-non-strict.js sloppyFails
 language/statements/let/block-local-closure-set-before-initialization.js fails
 language/statements/let/function-local-closure-set-before-initialization.js fails
 language/statements/let/global-closure-set-before-initialization.js fails
-language/statements/throw/S12.13_A2_T6.js strictFails
-language/statements/try/S12.14_A18_T6.js strictFails
 language/statements/try/scope-catch-block-lex-open.js fails
 language/statements/variable/binding-resolution.js sloppyFails
 language/statements/with/unscopables-inc-dec.js sloppyFails

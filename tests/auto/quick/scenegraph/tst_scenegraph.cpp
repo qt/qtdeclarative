@@ -564,7 +564,10 @@ bool tst_SceneGraph::isRunningOnOpenGL()
     bool retval = false;
     QQuickView dummy;
     dummy.show();
-    QTest::qWaitForWindowExposed(&dummy);
+    if (!QTest::qWaitForWindowExposed(&dummy)) {
+        [](){ QFAIL("Could not show a QQuickView"); }();
+        return false;
+    }
     if (dummy.rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL)
         retval = true;
     dummy.hide();

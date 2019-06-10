@@ -120,7 +120,7 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
         } indexedLookup;
         struct {
             Heap::InternalClass *ic;
-            Heap::QObjectWrapper *staticQObject;
+            Heap::InternalClass *qmlTypeIc; // only used when lookup goes through QQmlTypeWrapper
             QQmlPropertyCache *propertyCache;
             QQmlPropertyData *propertyData;
         } qobjectLookup;

@@ -1073,6 +1073,7 @@ bool Codegen::visit(Expression *ast)
     TailCallBlocker blockTailCalls(this);
     statement(ast->left);
     blockTailCalls.unblock();
+    clearExprResultName(); // The name only holds for the left part
     accept(ast->right);
     return false;
 }
@@ -2537,7 +2538,7 @@ bool Codegen::visit(ObjectPattern *ast)
 
         {
             RegisterScope innerScope(this);
-            Reference value = expression(p->initializer);
+            Reference value = expression(p->initializer, name);
             if (hasError)
                 return false;
             value.loadInAccumulator();
@@ -2979,7 +2980,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         // already defined
         return leaveContext();
 
-    _context->name = name;
+    _context->name = name.isEmpty() ? currentExpr().result().name : name;
     _module->functions.append(_context);
     _context->functionIndex = _module->functions.count() - 1;
 
