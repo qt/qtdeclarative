@@ -292,7 +292,6 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
                         ScopedValue val(scope, base ? *base : Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, scopeObject)));
                         const QObjectWrapper *That = static_cast<const QObjectWrapper *>(val->objectValue());
                         lookup->qobjectLookup.ic = That->internalClass();
-                        lookup->qobjectLookup.staticQObject = nullptr;
                         lookup->qobjectLookup.propertyCache = ddata->propertyCache;
                         lookup->qobjectLookup.propertyCache->addref();
                         lookup->qobjectLookup.propertyData = propertyData;
@@ -325,7 +324,6 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
                             ScopedValue val(scope, base ? *base : Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, context->contextObject)));
                             const QObjectWrapper *That = static_cast<const QObjectWrapper *>(val->objectValue());
                             lookup->qobjectLookup.ic = That->internalClass();
-                            lookup->qobjectLookup.staticQObject = nullptr;
                             lookup->qobjectLookup.propertyCache = ddata->propertyCache;
                             lookup->qobjectLookup.propertyCache->addref();
                             lookup->qobjectLookup.propertyData = propertyData;

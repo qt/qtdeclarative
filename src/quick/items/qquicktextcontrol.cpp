@@ -1403,7 +1403,7 @@ QVariant QQuickTextControl::inputMethodQuery(Qt::InputMethodQuery property, QVar
     case Qt::ImAnchorPosition:
         return QVariant(d->cursor.anchor() - block.position());
     case Qt::ImAbsolutePosition:
-        return QVariant(d->cursor.anchor());
+        return QVariant(d->cursor.position());
     case Qt::ImTextAfterCursor:
     {
         int maxLength = argument.isValid() ? argument.toInt() : 1024;

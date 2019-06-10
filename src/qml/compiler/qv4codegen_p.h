@@ -199,8 +199,9 @@ public:
             codegen = cg;
         }
 
-        Reference() :
+        Reference(const QString &name = QString()) :
             constant(0),
+            name(name),
             isArgOrEval(false),
             isReadonly(false),
             isReferenceToConst(false),
@@ -418,6 +419,11 @@ protected:
         bool _trueBlockFollowsCondition = false;
 
     public:
+        explicit Result(const QString &name)
+            : _result(name)
+            , _requested(ex)
+        {}
+
         explicit Result(const Reference &lrvalue)
             : _result(lrvalue)
             , _requested(ex)
@@ -476,6 +482,10 @@ protected:
         void setResult(Reference &&result) {
             _result = std::move(result);
         }
+
+        void clearResultName() {
+            _result.name.clear();
+        }
     };
 
     void enterContext(AST::Node *node);
@@ -523,12 +533,12 @@ protected:
                    const BytecodeGenerator::Label *iffalse,
                    bool trueBlockFollowsCondition);
 
-    inline Reference expression(AST::ExpressionNode *ast)
+    inline Reference expression(AST::ExpressionNode *ast, const QString &name = QString())
     {
         if (!ast || hasError)
             return Reference();
 
-        pushExpr();
+        pushExpr(name);
         ast->accept(this);
         return popResult();
     }
@@ -716,6 +726,7 @@ protected:
     inline void setExprResult(const Reference &result) { m_expressions.back().setResult(result); }
     inline void setExprResult(Reference &&result) { m_expressions.back().setResult(std::move(result)); }
     inline Reference exprResult() const { return m_expressions.back().result(); }
+    inline void clearExprResultName() { m_expressions.back().clearResultName(); }
 
     inline bool exprAccept(Format f) { return m_expressions.back().accept(f); }
 
@@ -723,7 +734,7 @@ protected:
 
     inline void pushExpr(Result &&expr) { m_expressions.push_back(std::move(expr)); }
     inline void pushExpr(const Result &expr) { m_expressions.push_back(expr); }
-    inline void pushExpr() { m_expressions.emplace_back(); }
+    inline void pushExpr(const QString &name = QString()) { m_expressions.emplace_back(name); }
 
     inline Result popExpr()
     {

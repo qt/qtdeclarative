@@ -505,7 +505,7 @@ void QQuickOpenGLShaderEffectNode::markDirtyTexture()
     Q_EMIT dirtyTexture();
 }
 
-void QQuickOpenGLShaderEffectNode::textureProviderDestroyed(const QObject *object)
+void QQuickOpenGLShaderEffectNode::textureProviderDestroyed(QObject *object)
 {
     Q_ASSERT(material());
     static_cast<QQuickOpenGLShaderEffectMaterial *>(material())->invalidateTextureProvider(object);

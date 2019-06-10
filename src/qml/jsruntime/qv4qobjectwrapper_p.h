@@ -231,8 +231,7 @@ inline ReturnedValue QObjectWrapper::lookupGetterImpl(Lookup *lookup, ExecutionE
     if (!o || o->internalClass != lookup->qobjectLookup.ic)
         return revertLookup();
 
-    const Heap::QObjectWrapper *This = lookup->qobjectLookup.staticQObject ? lookup->qobjectLookup.staticQObject :
-                                                                             static_cast<const Heap::QObjectWrapper *>(o);
+    const Heap::QObjectWrapper *This = static_cast<const Heap::QObjectWrapper *>(o);
     QObject *qobj = This->object();
     if (QQmlData::wasDeleted(qobj))
         return QV4::Encode::undefined();

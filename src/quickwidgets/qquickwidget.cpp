@@ -1314,9 +1314,13 @@ void QQuickWidget::mouseDoubleClickEvent(QMouseEvent *e)
 void QQuickWidget::showEvent(QShowEvent *)
 {
     Q_D(QQuickWidget);
+    bool shouldTriggerUpdate = true;
+
     if (!d->useSoftwareRenderer) {
         d->createContext();
+
         if (d->offscreenWindow->openglContext()) {
+            shouldTriggerUpdate = false;
             d->render(true);
             // render() may have led to a QQuickWindow::update() call (for
             // example, having a scene with a QQuickFramebufferObject::Renderer
@@ -1329,10 +1333,11 @@ void QQuickWidget::showEvent(QShowEvent *)
                 d->updatePending = false;
                 update();
             }
-        } else {
-            triggerUpdate();
         }
     }
+
+    if (shouldTriggerUpdate)
+        triggerUpdate();
 
     // note offscreenWindow  is "QQuickOffScreenWindow" instance
     d->offscreenWindow->setVisible(true);

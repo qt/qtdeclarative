@@ -163,7 +163,7 @@ public:
     int mapFromModel(int modelIndex) const;
 
     virtual void init();
-    virtual void clear();
+    virtual void clear(bool onDestruction=false);
     virtual void updateViewport();
 
     void regenerate(bool orientationChanged=false);
@@ -327,7 +327,7 @@ protected:
     virtual bool hasStickyHeader() const { return false; }
     virtual bool hasStickyFooter() const { return false; }
 
-    virtual void createHighlight() = 0;
+    virtual void createHighlight(bool onDestruction = false) = 0;
     virtual void updateHighlight() = 0;
     virtual void resetHighlightPosition() = 0;
     virtual bool movingFromHighlight() { return false; }

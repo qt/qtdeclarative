@@ -868,6 +868,9 @@ void QQuickTableViewPrivate::syncLoadedTableRectFromLoadedTable()
 
 void QQuickTableViewPrivate::forceLayout()
 {
+    if (loadedItems.isEmpty())
+        return;
+
     clearEdgeSizeCache();
     RebuildOptions rebuildOptions = RebuildOption::LayoutOnly;
 

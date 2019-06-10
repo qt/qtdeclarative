@@ -191,7 +191,7 @@ public:
     void resetFirstItemPosition(qreal pos = 0.0) override;
     void adjustFirstItem(qreal forwards, qreal backwards, int changeBeforeVisible) override;
 
-    void createHighlight() override;
+    void createHighlight(bool onDestruction = false) override;
     void updateHighlight() override;
     void resetHighlightPosition() override;
 
@@ -696,9 +696,8 @@ void QQuickGridViewPrivate::adjustFirstItem(qreal forwards, qreal backwards, int
     gridItem->setPosition(gridItem->colPos(), gridItem->rowPos() + ((moveCount / columns) * rowSize()));
 }
 
-void QQuickGridViewPrivate::createHighlight()
+void QQuickGridViewPrivate::createHighlight(bool onDestruction)
 {
-    Q_Q(QQuickGridView);
     bool changed = false;
     if (highlight) {
         if (trackedItem == highlight)
@@ -714,6 +713,10 @@ void QQuickGridViewPrivate::createHighlight()
         changed = true;
     }
 
+    if (onDestruction)
+        return;
+
+    Q_Q(QQuickGridView);
     if (currentItem) {
         QQuickItem *item = createHighlightItem();
         if (item) {
