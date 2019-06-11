@@ -338,7 +338,7 @@ private:
         QQmlType testCaseType;
         for (quint32 i = 0, count = compilationUnit->importCount(); i < count; ++i) {
             const Import *import = compilationUnit->importAt(i);
-            if (compilationUnit->stringAt(import->uriIndex) != QLatin1Literal("QtTest"))
+            if (compilationUnit->stringAt(import->uriIndex) != QLatin1String("QtTest"))
                 continue;
 
             QString testCaseTypeName(QStringLiteral("TestCase"));
@@ -368,7 +368,7 @@ private:
             if (result.isTestCase) {
                 // Look for override of name in this type
                 for (auto binding = object->bindingsBegin(); binding != object->bindingsEnd(); ++binding) {
-                    if (compilationUnit->stringAt(binding->propertyNameIndex) == QLatin1Literal("name")) {
+                    if (compilationUnit->stringAt(binding->propertyNameIndex) == QLatin1String("name")) {
                         if (binding->type == QV4::CompiledData::Binding::Type_String) {
                             result.testCaseName = compilationUnit->stringAt(binding->stringIndex);
                         } else {
@@ -387,10 +387,10 @@ private:
                 auto functionsEnd = compilationUnit->objectFunctionsEnd(object);
                 for (auto function = compilationUnit->objectFunctionsBegin(object); function != functionsEnd; ++function) {
                     QString functionName = compilationUnit->stringAt(function->nameIndex);
-                    if (!(functionName.startsWith(QLatin1Literal("test_")) || functionName.startsWith(QLatin1Literal("benchmark_"))))
+                    if (!(functionName.startsWith(QLatin1String("test_")) || functionName.startsWith(QLatin1String("benchmark_"))))
                         continue;
 
-                    if (functionName.endsWith(QLatin1Literal("_data")))
+                    if (functionName.endsWith(QLatin1String("_data")))
                         continue;
 
                     result.testFunctions << functionName;

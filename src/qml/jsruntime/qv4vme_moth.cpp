@@ -206,7 +206,7 @@ int qt_v4DebuggerHook(const char *json)
         return ProtocolVersion; // Version number.
     }
 
-    int version = ob.value(QLatin1Literal("version")).toString().toInt();
+    int version = ob.value(QLatin1String("version")).toString().toInt();
     if (version != ProtocolVersion) {
         return -WrongProtocol;
     }

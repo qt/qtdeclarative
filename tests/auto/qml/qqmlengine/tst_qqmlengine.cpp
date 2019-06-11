@@ -935,7 +935,7 @@ void tst_qqmlengine::cppSignalAndEval()
 {
     ObjectCaller objectCaller;
     QQmlEngine engine;
-    engine.rootContext()->setContextProperty(QLatin1Literal("CallerCpp"), &objectCaller);
+    engine.rootContext()->setContextProperty(QLatin1String("CallerCpp"), &objectCaller);
     QQmlComponent c(&engine);
     c.setData("import QtQuick 2.9\n"
               "Item {\n"
