@@ -214,7 +214,7 @@ template <typename T>
 ReturnedValue atomicLoad(char *data)
 {
     typename QAtomicOps<T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
-    T val = QAtomicOps<T>::load(*mem);
+    T val = QAtomicOps<T>::loadRelaxed(*mem);
     return typeToValue(val);
 }
 
@@ -223,7 +223,7 @@ ReturnedValue atomicStore(char *data, Value v)
 {
     T value = valueToType<T>(v);
     typename QAtomicOps<T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
-    QAtomicOps<T>::store(*mem, value);
+    QAtomicOps<T>::storeRelaxed(*mem, value);
     return typeToValue(value);
 }
 
