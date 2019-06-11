@@ -61,7 +61,7 @@ T.RadioButton {
     bottomInset: background ? -background.bottomInset || 0 : 0
 
     indicator: Image {
-        x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
+        x: control.text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
 
         source: Imagine.url + "radiobutton-indicator"

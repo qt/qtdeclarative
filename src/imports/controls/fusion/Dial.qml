@@ -57,19 +57,19 @@ T.Dial {
     }
 
     handle: KnobImpl {
-        x: background.x + background.width / 2 - handle.width / 2
-        y: background.y + background.height / 2 - handle.height / 2
+        x: control.background.x + control.background.width / 2 - control.handle.width / 2
+        y: control.background.y + control.background.height / 2 - control.handle.height / 2
         width: control.width / 7
         height: control.height / 7
         palette: control.palette
         transform: [
             Translate {
-                y: -Math.min(background.width, background.height) * 0.42 + handle.height
+                y: -Math.min(control.background.width, control.background.height) * 0.42 + control.handle.height
             },
             Rotation {
                 angle: control.angle
-                origin.x: handle.width / 2
-                origin.y: handle.height / 2
+                origin.x: control.handle.width / 2
+                origin.y: control.handle.height / 2
             }
         ]
     }

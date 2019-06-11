@@ -56,44 +56,44 @@ Rectangle {
     gradient: Gradient {
         GradientStop {
             position: 0
-            color: Qt.darker(Fusion.grooveColor(control.palette), 1.1)
+            color: Qt.darker(Fusion.grooveColor(indicator.control.palette), 1.1)
         }
         GradientStop {
             position: 1
-            color: Qt.lighter(Fusion.grooveColor(control.palette), 1.1)
+            color: Qt.lighter(Fusion.grooveColor(indicator.control.palette), 1.1)
         }
     }
 
     Rectangle {
-        x: control.mirrored ? handle.x : 0
-        width: control.mirrored ? parent.width - handle.x : handle.x + handle.width
+        x: indicator.control.mirrored ? handle.x : 0
+        width: indicator.control.mirrored ? parent.width - handle.x : handle.x + handle.width
         height: parent.height
 
-        opacity: control.checked ? 1 : 0
+        opacity: indicator.control.checked ? 1 : 0
         Behavior on opacity {
-            enabled: !control.down
+            enabled: !indicator.control.down
             NumberAnimation { duration: 80 }
         }
 
         radius: 2
-        border.color: Qt.darker(Fusion.highlightedOutline(control.palette), 1.1)
-        border.width: control.enabled ? 1 : 0
+        border.color: Qt.darker(Fusion.highlightedOutline(indicator.control.palette), 1.1)
+        border.width: indicator.control.enabled ? 1 : 0
 
         gradient: Gradient {
             GradientStop {
                 position: 0
-                color: Fusion.highlight(control.palette)
+                color: Fusion.highlight(indicator.control.palette)
             }
             GradientStop {
                 position: 1
-                color: Qt.lighter(Fusion.highlight(control.palette), 1.2)
+                color: Qt.lighter(Fusion.highlight(indicator.control.palette), 1.2)
             }
         }
     }
 
     Rectangle {
         id: handle
-        x: Math.max(0, Math.min(parent.width - width, control.visualPosition * parent.width - (width / 2)))
+        x: Math.max(0, Math.min(parent.width - width, indicator.control.visualPosition * parent.width - (width / 2)))
         y: (parent.height - height) / 2
         width: 20
         height: 16
@@ -102,11 +102,11 @@ Rectangle {
         gradient: Gradient {
             GradientStop {
                 position: 0
-                color: Fusion.gradientStart(Fusion.buttonColor(control.palette, control.visualFocus, control.pressed, control.hovered))
+                color: Fusion.gradientStart(Fusion.buttonColor(indicator.control.palette, indicator.control.visualFocus, indicator.control.pressed, indicator.control.hovered))
             }
             GradientStop {
                 position: 1
-                color: Fusion.gradientStop(Fusion.buttonColor(control.palette, control.visualFocus, control.pressed, control.hovered))
+                color: Fusion.gradientStop(Fusion.buttonColor(indicator.control.palette, indicator.control.visualFocus, indicator.control.pressed, indicator.control.hovered))
             }
         }
         border.width: 1
@@ -115,7 +115,7 @@ Rectangle {
         Rectangle {
             width: parent.width
             height: parent.height
-            border.color: control.visualFocus ? Fusion.highlightedOutline(control.palette) : Fusion.outline(control.palette)
+            border.color: indicator.control.visualFocus ? Fusion.highlightedOutline(indicator.control.palette) : Fusion.outline(indicator.control.palette)
             color: "transparent"
             radius: 2
 
@@ -130,7 +130,7 @@ Rectangle {
         }
 
         Behavior on x {
-            enabled: !control.down
+            enabled: !indicator.control.down
             SmoothedAnimation { velocity: 200 }
         }
     }

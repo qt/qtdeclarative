@@ -53,22 +53,22 @@ Item {
         height: 14
         radius: height / 2
         y: parent.height / 2 - height / 2
-        color: control.enabled ? (control.checked ? control.Material.switchCheckedTrackColor : control.Material.switchUncheckedTrackColor)
-                               : control.Material.switchDisabledTrackColor
+        color: indicator.control.enabled ? (indicator.control.checked ? indicator.control.Material.switchCheckedTrackColor : indicator.control.Material.switchUncheckedTrackColor)
+                               : indicator.control.Material.switchDisabledTrackColor
     }
 
     Rectangle {
         id: handle
-        x: Math.max(0, Math.min(parent.width - width, control.visualPosition * parent.width - (width / 2)))
+        x: Math.max(0, Math.min(parent.width - width, indicator.control.visualPosition * parent.width - (width / 2)))
         y: (parent.height - height) / 2
         width: 20
         height: 20
         radius: width / 2
-        color: control.enabled ? (control.checked ? control.Material.switchCheckedHandleColor : control.Material.switchUncheckedHandleColor)
-                               : control.Material.switchDisabledHandleColor
+        color: indicator.control.enabled ? (indicator.control.checked ? indicator.control.Material.switchCheckedHandleColor : indicator.control.Material.switchUncheckedHandleColor)
+                               : indicator.control.Material.switchDisabledHandleColor
 
         Behavior on x {
-            enabled: !control.pressed
+            enabled: !indicator.control.pressed
             SmoothedAnimation {
                 duration: 300
             }

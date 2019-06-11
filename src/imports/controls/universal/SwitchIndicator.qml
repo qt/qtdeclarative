@@ -39,6 +39,7 @@ import QtQuick.Templates 2.12 as T
 import QtQuick.Controls.Universal 2.12
 
 Item {
+    id: indicator
     implicitWidth: 44
     implicitHeight: 20
 
@@ -47,13 +48,13 @@ Item {
         height: parent.height
 
         radius: 10
-        color: !control.enabled ? "transparent" :
-                control.pressed ? control.Universal.baseMediumColor :
-                control.checked ? control.Universal.accent : "transparent"
-        border.color: !control.enabled ? control.Universal.baseLowColor :
-                       control.checked && !control.pressed ? control.Universal.accent :
-                       control.hovered && !control.checked && !control.pressed ? control.Universal.baseHighColor : control.Universal.baseMediumColor
-        opacity: control.hovered && control.checked && !control.pressed ? (control.Universal.theme === Universal.Light ? 0.7 : 0.9) : 1.0
+        color: !indicator.control.enabled ? "transparent" :
+                indicator.control.pressed ? indicator.control.Universal.baseMediumColor :
+                indicator.control.checked ? indicator.control.Universal.accent : "transparent"
+        border.color: !indicator.control.enabled ? indicator.control.Universal.baseLowColor :
+                       indicator.control.checked && !indicator.control.pressed ? indicator.control.Universal.accent :
+                       indicator.control.hovered && !indicator.control.checked && !indicator.control.pressed ? indicator.control.Universal.baseHighColor : indicator.control.Universal.baseMediumColor
+        opacity: indicator.control.hovered && indicator.control.checked && !indicator.control.pressed ? (indicator.control.Universal.theme === Universal.Light ? 0.7 : 0.9) : 1.0
         border.width: 2
     }
 
@@ -64,16 +65,16 @@ Item {
         height: 10
         radius: 5
 
-        color: !control.enabled ? control.Universal.baseLowColor :
-                control.pressed || control.checked ? control.Universal.chromeWhiteColor :
-                control.hovered && !control.checked ? control.Universal.baseHighColor : control.Universal.baseMediumHighColor
+        color: !indicator.control.enabled ? indicator.control.Universal.baseLowColor :
+                indicator.control.pressed || indicator.control.checked ? indicator.control.Universal.chromeWhiteColor :
+                indicator.control.hovered && !indicator.control.checked ? indicator.control.Universal.baseHighColor : indicator.control.Universal.baseMediumHighColor
 
         x: Math.max(5, Math.min(parent.width - width - 5,
-                                control.visualPosition * parent.width - (width / 2)))
+                                indicator.control.visualPosition * parent.width - (width / 2)))
         y: (parent.height - height) / 2
 
         Behavior on x {
-            enabled: !control.pressed
+            enabled: !indicator.control.pressed
             SmoothedAnimation { velocity: 200 }
         }
     }

@@ -159,7 +159,7 @@ T.ComboBox {
         }
 
         background: Rectangle {
-            color: popup.palette.window
+            color: control.popup.palette.window
             border.color: Fusion.outline(control.palette)
 
             Rectangle {

@@ -64,8 +64,8 @@ T.Dial {
         implicitWidth: 14
         implicitHeight: 14
 
-        x: background.x + background.width / 2 - handle.width / 2
-        y: background.y + background.height / 2 - handle.height / 2
+        x: control.background.x + control.background.width / 2 - control.handle.width / 2
+        y: control.background.y + control.background.height / 2 - control.handle.height / 2
 
         radius: width / 2
         color: !control.enabled ? control.Universal.baseLowColor :
@@ -74,12 +74,12 @@ T.Dial {
 
         transform: [
             Translate {
-                y: -background.height * 0.4 + handle.height / 2
+                y: -control.background.height * 0.4 + control.handle.height / 2
             },
             Rotation {
                 angle: control.angle
-                origin.x: handle.width / 2
-                origin.y: handle.height / 2
+                origin.x: control.handle.width / 2
+                origin.y: control.handle.height / 2
             }
         ]
     }

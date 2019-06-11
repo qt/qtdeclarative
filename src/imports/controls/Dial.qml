@@ -56,8 +56,8 @@ T.Dial {
     }
 
     handle: ColorImage {
-        x: background.x + background.width / 2 - handle.width / 2
-        y: background.y + background.height / 2 - handle.height / 2
+        x: control.background.x + control.background.width / 2 - control.handle.width / 2
+        y: control.background.y + control.background.height / 2 - control.handle.height / 2
         width: 14
         height: 10
         defaultColor: "#353637"
@@ -67,12 +67,12 @@ T.Dial {
         opacity: control.enabled ? 1 : 0.3
         transform: [
             Translate {
-                y: -Math.min(background.width, background.height) * 0.4 + handle.height / 2
+                y: -Math.min(control.background.width, control.background.height) * 0.4 + control.handle.height / 2
             },
             Rotation {
                 angle: control.angle
-                origin.x: handle.width / 2
-                origin.y: handle.height / 2
+                origin.x: control.handle.width / 2
+                origin.y: control.handle.height / 2
             }
         ]
     }

@@ -235,9 +235,9 @@ Item {
         // the size of the parent, so we don't need to worry about the extra padding
         // in the parent Item
         BoxShadow {
-            offsetY: _shadow[0].offset
-            blurRadius: _shadow[0].blur
-            spreadRadius: _shadow[0].spread
+            offsetY: effect._shadow[0].offset
+            blurRadius: effect._shadow[0].blur
+            spreadRadius: effect._shadow[0].spread
             color: Qt.rgba(0,0,0, 0.2)
 
             fullWidth: effect.fullWidth
@@ -246,9 +246,9 @@ Item {
         }
 
         BoxShadow {
-            offsetY: _shadow[1].offset
-            blurRadius: _shadow[1].blur
-            spreadRadius: _shadow[1].spread
+            offsetY: effect._shadow[1].offset
+            blurRadius: effect._shadow[1].blur
+            spreadRadius: effect._shadow[1].spread
             color: Qt.rgba(0,0,0, 0.14)
 
             fullWidth: effect.fullWidth
@@ -257,9 +257,9 @@ Item {
         }
 
         BoxShadow {
-            offsetY: _shadow[2].offset
-            blurRadius: _shadow[2].blur
-            spreadRadius: _shadow[2].spread
+            offsetY: effect._shadow[2].offset
+            blurRadius: effect._shadow[2].blur
+            spreadRadius: effect._shadow[2].spread
             color: Qt.rgba(0,0,0, 0.12)
 
             fullWidth: effect.fullWidth
@@ -272,8 +272,8 @@ Item {
 
             x: (parent.width - width)/2
             y: (parent.height - height)/2
-            width: sourceItem.width
-            height: sourceItem.height
+            width: effect.sourceItem.width
+            height: effect.sourceItem.height
         }
     }
 }

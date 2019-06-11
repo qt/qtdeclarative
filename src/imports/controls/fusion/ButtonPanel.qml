@@ -55,11 +55,11 @@ Rectangle {
         id: buttonGradient
         GradientStop {
             position: 0
-            color: Fusion.gradientStart(Fusion.buttonColor(control.palette, panel.highlighted, control.down, control.hovered))
+            color: Fusion.gradientStart(Fusion.buttonColor(panel.control.palette, panel.highlighted, panel.control.down, panel.control.hovered))
         }
         GradientStop {
             position: 1
-            color: Fusion.gradientStop(Fusion.buttonColor(control.palette, panel.highlighted, control.down, control.hovered))
+            color: Fusion.gradientStop(Fusion.buttonColor(panel.control.palette, panel.highlighted, panel.control.down, panel.control.hovered))
         }
     }
 

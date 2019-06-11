@@ -63,31 +63,31 @@ Rectangle {
     gradient: Gradient {
         GradientStop {
             position: 0
-            color: Qt.darker(Fusion.grooveColor(control.palette), 1.1)
+            color: Qt.darker(Fusion.grooveColor(groove.control.palette), 1.1)
         }
         GradientStop {
             position: 1
-            color: Qt.lighter(Fusion.grooveColor(control.palette), 1.1)
+            color: Qt.lighter(Fusion.grooveColor(groove.control.palette), 1.1)
         }
     }
 
     Rectangle {
-        x: control.horizontal ? groove.offset * parent.width : 0
-        y: control.horizontal ? 0 : groove.visualProgress * parent.height
-        width: control.horizontal ? groove.progress * parent.width - groove.offset * parent.width : 5
-        height: control.horizontal ? 5 : groove.progress * parent.height - groove.offset * parent.height
+        x: groove.control.horizontal ? groove.offset * parent.width : 0
+        y: groove.control.horizontal ? 0 : groove.visualProgress * parent.height
+        width: groove.control.horizontal ? groove.progress * parent.width - groove.offset * parent.width : 5
+        height: groove.control.horizontal ? 5 : groove.progress * parent.height - groove.offset * parent.height
 
         radius: 2
-        border.color: Qt.darker(Fusion.highlightedOutline(control.palette), 1.1)
+        border.color: Qt.darker(Fusion.highlightedOutline(groove.control.palette), 1.1)
 
         gradient: Gradient {
             GradientStop {
                 position: 0
-                color: Fusion.highlight(control.palette)
+                color: Fusion.highlight(groove.control.palette)
             }
             GradientStop {
                 position: 1
-                color: Qt.lighter(Fusion.highlight(control.palette), 1.2)
+                color: Qt.lighter(Fusion.highlight(groove.control.palette), 1.2)
             }
         }
     }

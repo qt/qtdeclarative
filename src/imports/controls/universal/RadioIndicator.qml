@@ -38,6 +38,7 @@ import QtQuick 2.12
 import QtQuick.Controls.Universal 2.12
 
 Rectangle {
+    id: indicator
     implicitWidth: 20
     implicitHeight: 20
     radius: width / 2
@@ -56,11 +57,11 @@ Rectangle {
         height: parent.height
 
         radius: width / 2
-        opacity: control.checked ? 1 : 0
+        opacity: indicator.control.checked ? 1 : 0
         color: "transparent"
         border.width: 2 // RadioButtonBorderThemeThickness
-        border.color: !control.enabled ? control.Universal.baseLowColor :
-                       control.down ? control.Universal.baseMediumColor : control.Universal.accent
+        border.color: !indicator.control.enabled ? indicator.control.Universal.baseLowColor :
+                       indicator.control.down ? indicator.control.Universal.baseMediumColor : indicator.control.Universal.accent
     }
 
     Rectangle {
@@ -71,9 +72,9 @@ Rectangle {
         height: parent.height / 2
 
         radius: width / 2
-        opacity: control.checked ? 1 : 0
-        color: !control.enabled ? control.Universal.baseLowColor :
-                control.down ? control.Universal.baseMediumColor :
-                control.hovered ? control.Universal.baseHighColor : control.Universal.baseMediumHighColor
+        opacity: indicator.control.checked ? 1 : 0
+        color: !indicator.control.enabled ? indicator.control.Universal.baseLowColor :
+                indicator.control.down ? indicator.control.Universal.baseMediumColor :
+                indicator.control.hovered ? indicator.control.Universal.baseHighColor : indicator.control.Universal.baseMediumHighColor
     }
 }

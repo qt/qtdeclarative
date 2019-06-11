@@ -59,7 +59,7 @@ Rectangle {
         width: parent.width - 2
         height: 1
         color: Fusion.topShadow
-        visible: control.enabled && !control.down
+        visible: indicator.control.enabled && !indicator.control.down
     }
 
     ColorImage {
@@ -67,7 +67,7 @@ Rectangle {
         y: (parent.height - height) / 2
         color: Color.transparent(indicator.checkMarkColor, 210 / 255)
         source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Fusion/images/checkmark.png"
-        visible: control.checkState === Qt.Checked || (control.checked && control.checkState === undefined)
+        visible: indicator.control.checkState === Qt.Checked || (indicator.control.checked && indicator.control.checkState === undefined)
     }
 
     Rectangle {
@@ -75,7 +75,7 @@ Rectangle {
         width: parent.width - 6
         height: parent.width - 6
 
-        visible: control.checkState === Qt.PartiallyChecked
+        visible: indicator.control.checkState === Qt.PartiallyChecked
 
         gradient: Gradient {
             GradientStop {

@@ -145,8 +145,8 @@ T.SpinBox {
         Rectangle {
             x: control.mirrored ? 1 : parent.width - width - 1
             y: 1
-            width: Math.max(up.indicator ? up.indicator.width : 0,
-                            down.indicator ? down.indicator.width : 0) + 1
+            width: Math.max(control.up.indicator ? control.up.indicator.width : 0,
+                            control.down.indicator ? control.down.indicator.width : 0) + 1
             height: parent.height - 2
 
             radius: 2

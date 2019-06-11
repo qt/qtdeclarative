@@ -69,11 +69,11 @@ T.Tumbler {
         model: control.model
         delegate: control.delegate
         path: Path {
-            startX: contentItem.width / 2
-            startY: -contentItem.delegateHeight / 2
+            startX: control.contentItem.width / 2
+            startY: -control.contentItem.delegateHeight / 2
             PathLine {
-                x: contentItem.width / 2
-                y: (control.visibleItemCount + 1) * contentItem.delegateHeight - contentItem.delegateHeight / 2
+                x: control.contentItem.width / 2
+                y: (control.visibleItemCount + 1) * control.contentItem.delegateHeight - control.contentItem.delegateHeight / 2
             }
         }
 

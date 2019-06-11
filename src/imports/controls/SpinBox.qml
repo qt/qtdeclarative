@@ -77,9 +77,9 @@ T.SpinBox {
         inputMethodHints: control.inputMethodHints
 
         Rectangle {
-            x: -6 - (down.indicator ? 1 : 0)
+            x: -6 - (control.down.indicator ? 1 : 0)
             y: -6
-            width: control.width - (up.indicator ? up.indicator.width - 1 : 0) - (down.indicator ? down.indicator.width - 1 : 0)
+            width: control.width - (control.up.indicator ? control.up.indicator.width - 1 : 0) - (control.down.indicator ? control.down.indicator.width - 1 : 0)
             height: control.height
             visible: control.activeFocus
             color: "transparent"
@@ -93,7 +93,7 @@ T.SpinBox {
         height: parent.height
         implicitWidth: 40
         implicitHeight: 40
-        color: up.pressed ? control.palette.mid : control.palette.button
+        color: control.up.pressed ? control.palette.mid : control.palette.button
 
         Rectangle {
             x: (parent.width - width) / 2
@@ -116,7 +116,7 @@ T.SpinBox {
         height: parent.height
         implicitWidth: 40
         implicitHeight: 40
-        color: down.pressed ? control.palette.mid : control.palette.button
+        color: control.down.pressed ? control.palette.mid : control.palette.button
 
         Rectangle {
             x: (parent.width - width) / 2

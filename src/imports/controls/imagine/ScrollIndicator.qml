@@ -98,13 +98,13 @@ T.ScrollIndicator {
     transitions: [
         Transition {
             to: "active"
-            NumberAnimation { targets: [contentItem, background]; property: "opacity"; to: 1.0 }
+            NumberAnimation { targets: [contentItem, control.background]; property: "opacity"; to: 1.0 }
         },
         Transition {
             from: "active"
             SequentialAnimation {
                 PauseAnimation { duration: 5000 }
-                NumberAnimation { targets: [contentItem, background]; property: "opacity"; to: 0.0 }
+                NumberAnimation { targets: [contentItem, control.background]; property: "opacity"; to: 0.0 }
             }
         }
     ]

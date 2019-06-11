@@ -75,7 +75,7 @@ Rectangle {
         source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Material/images/check.png"
         fillMode: Image.PreserveAspectFit
 
-        scale: checkState === Qt.Checked ? 1 : 0
+        scale: indicatorItem.checkState === Qt.Checked ? 1 : 0
         Behavior on scale { NumberAnimation { duration: 100 } }
     }
 
@@ -85,18 +85,18 @@ Rectangle {
         width: 12
         height: 3
 
-        scale: checkState === Qt.PartiallyChecked ? 1 : 0
+        scale: indicatorItem.checkState === Qt.PartiallyChecked ? 1 : 0
         Behavior on scale { NumberAnimation { duration: 100 } }
     }
 
     states: [
         State {
             name: "checked"
-            when: checkState === Qt.Checked
+            when: indicatorItem.checkState === Qt.Checked
         },
         State {
             name: "partiallychecked"
-            when: checkState === Qt.PartiallyChecked
+            when: indicatorItem.checkState === Qt.PartiallyChecked
         }
     ]
 
