@@ -1577,6 +1577,7 @@ bool QQuickWindowPrivate::clearHover(ulong timestamp)
     bool accepted = false;
     for (QQuickItem* item : qAsConst(hoverItems)) {
         accepted = sendHoverEvent(QEvent::HoverLeave, item, pos, pos, QGuiApplication::keyboardModifiers(), timestamp, true) || accepted;
+#if QT_CONFIG(cursor)
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
         if (itemPrivate->hasPointerHandlers()) {
             pos = q->mapFromGlobal(QCursor::pos());
@@ -1588,6 +1589,7 @@ bool QQuickWindowPrivate::clearHover(ulong timestamp)
                 if (QQuickHoverHandler *hh = qmlobject_cast<QQuickHoverHandler *>(h))
                     hh->handlePointerEvent(pointerEvent);
         }
+#endif
     }
     hoverItems.clear();
     return accepted;
@@ -1626,7 +1628,9 @@ bool QQuickWindow::event(QEvent *e)
             QGuiApplication::keyboardModifiers(), 0L, accepted);
         d->lastMousePosition = enter->windowPos();
         enter->setAccepted(accepted);
+#if QT_CONFIG(cursor)
         d->updateCursor(mapFromGlobal(QCursor::pos()));
+#endif
         return delivered;
     }
         break;
