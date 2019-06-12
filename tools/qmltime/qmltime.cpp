@@ -29,7 +29,7 @@
 #include <QQmlComponent>
 #include <QDebug>
 #include <QGuiApplication>
-#include <QTime>
+#include <QElapsedTimer>
 #include <QQmlContext>
 #include <QQuickView>
 #include <QQuickItem>
@@ -119,7 +119,7 @@ void Timer::setWillParent(bool p)
 
 void Timer::runTest(QQmlContext *context, uint iterations)
 {
-    QTime t;
+    QElapsedTimer t;
     t.start();
     for (uint ii = 0; ii < iterations; ++ii) {
         QObject *o = m_component->create(context);

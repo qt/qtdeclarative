@@ -29,7 +29,7 @@
 #include <QtCore/qabstractanimation.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qmath.h>
-#include <QtCore/qdatetime.h>
+#include <QtCore/qelapsedtimer.h>
 #include <QtCore/qpointer.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qtextstream.h>
@@ -76,7 +76,7 @@ QVector<int> RenderStatistics::timesPerFrames;
 
 void RenderStatistics::updateStats()
 {
-    static QTime time;
+    static QElapsedTimer time;
     static int frames;
     static int lastTime;
 

@@ -554,7 +554,7 @@ void QQuickStochasticEngine::restart(int index)
     bool randomStart = (m_startTimes.at(index) == NINF);
     m_startTimes[index] = m_timeOffset;
     if (m_addAdvance)
-        m_startTimes[index] += m_advanceTime.elapsed();
+        m_startTimes[index] += m_advanceTimer.elapsed();
     if (randomStart)
         m_startTimes[index] -= QRandomGenerator::global()->bounded(m_duration.at(index));
     int time = m_duration.at(index) + m_startTimes.at(index);
@@ -574,12 +574,12 @@ void QQuickSpriteEngine::restart(int index) //Reimplemented to recognize and han
     } else {
         m_startTimes[index] = m_timeOffset;
         if (m_addAdvance)
-            m_startTimes[index] += m_advanceTime.elapsed();
+            m_startTimes[index] += m_advanceTimer.elapsed();
         if (randomStart)
             m_startTimes[index] -= QRandomGenerator::global()->bounded(m_duration.at(index));
         int time = spriteDuration(index) + m_startTimes.at(index);
         if (randomStart) {
-            int curTime = m_timeOffset + (m_addAdvance ? m_advanceTime.elapsed() : 0);
+            int curTime = m_timeOffset + (m_addAdvance ? m_advanceTimer.elapsed() : 0);
             while (time < curTime) //Fast forward through psuedostates as needed
                 time += spriteDuration(index);
         }
@@ -623,10 +623,10 @@ void QQuickSpriteEngine::advance(int idx) //Reimplemented to recognize and handl
         }
         //just go past the pseudostate logic
     } else if (m_startTimes.at(idx) + m_duration.at(idx)
-            > int(m_timeOffset + (m_addAdvance ? m_advanceTime.elapsed() : 0))) {
+            > int(m_timeOffset + (m_addAdvance ? m_advanceTimer.elapsed() : 0))) {
         //only a pseduostate ended
         emit stateChanged(idx);
-        addToUpdateList(spriteStart(idx) + spriteDuration(idx) + (m_addAdvance ? m_advanceTime.elapsed() : 0), idx);
+        addToUpdateList(spriteStart(idx) + spriteDuration(idx) + (m_addAdvance ? m_advanceTimer.elapsed() : 0), idx);
         return;
     }
     int nextIdx = nextState(m_things.at(idx), idx);
@@ -685,7 +685,7 @@ uint QQuickStochasticEngine::updateSprites(uint time)//### would returning a lis
     }
 
     m_stateUpdates.remove(0, i);
-    m_advanceTime.start();
+    m_advanceTimer.start();
     m_addAdvance = true;
     if (m_stateUpdates.isEmpty())
         return uint(-1);
