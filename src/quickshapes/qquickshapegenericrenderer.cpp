@@ -361,6 +361,9 @@ void QQuickShapeGenericRenderer::endSync(bool async)
                 });
                 didKickOffAsync = true;
 #if QT_CONFIG(thread)
+                // qtVectorPathForPath() initializes a unique_ptr without locking.
+                // Do that before starting the threads as otherwise we get a race condition.
+                qtVectorPathForPath(r->path);
                 pathWorkThreadPool->start(r);
 #endif
             } else {
@@ -391,6 +394,9 @@ void QQuickShapeGenericRenderer::endSync(bool async)
                 });
                 didKickOffAsync = true;
 #if QT_CONFIG(thread)
+                // qtVectorPathForPath() initializes a unique_ptr without locking.
+                // Do that before starting the threads as otherwise we get a race condition.
+                qtVectorPathForPath(r->path);
                 pathWorkThreadPool->start(r);
 #endif
             } else {
