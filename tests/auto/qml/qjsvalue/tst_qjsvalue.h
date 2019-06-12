@@ -35,8 +35,6 @@
 #include <qjsvalue.h>
 #include <QtTest/QtTest>
 
-Q_DECLARE_METATYPE(QVariant)
-
 class tst_QJSValue : public QObject
 {
     Q_OBJECT
@@ -142,6 +140,8 @@ private slots:
     void valueOfWithClosure();
     void nestedObjectToVariant_data();
     void nestedObjectToVariant();
+
+    void deleteFromDifferentThread();
 
 private:
     void newEngine()
