@@ -269,13 +269,6 @@ bool Unit::verifyHeader(QDateTime expectedSourceTimeStamp, QString *errorString)
     return true;
 }
 
-Location &Location::operator=(const QQmlJS::AST::SourceLocation &astLocation)
-{
-    line = astLocation.startLine;
-    column = astLocation.startColumn;
-    return *this;
-}
-
 }
 
 }

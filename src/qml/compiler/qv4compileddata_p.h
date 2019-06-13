@@ -63,7 +63,6 @@
 #include <private/qv4identifier_p.h>
 #include <private/qflagpointer_p.h>
 #include <private/qendian_p.h>
-#include <private/qqmljsastfwd_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -127,8 +126,6 @@ struct Location
     };
 
     Location() : _dummy(0) { }
-
-    Location &operator=(const QQmlJS::AST::SourceLocation &astLocation);
 
     inline bool operator<(const Location &other) const {
         return line < other.line ||
