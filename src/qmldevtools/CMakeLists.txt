@@ -58,9 +58,9 @@ qt_process_qlalr("${CMAKE_CURRENT_SOURCE_DIR}/../qml/parser/qqmljs.g" QmlDevTool
 # until we fix the script to handle internal_module to create only one single Private module.
 qt_internal_module_info(qml_module "Qml")
 set(_qml_dev_tools_private_includes
-        ${qml_module_include_dir}
-        ${qml_module_include_dir}/${PROJECT_VERSION}
-        ${qml_module_include_dir}/${PROJECT_VERSION}/${qml_module}
+        $<BUILD_INTERFACE:${qml_module_include_dir}>
+        $<BUILD_INTERFACE:${qml_module_include_dir}/${PROJECT_VERSION}>
+        $<BUILD_INTERFACE:${qml_module_include_dir}/${PROJECT_VERSION}/${qml_module}>
     )
 target_include_directories(QmlDevTools PRIVATE ${_qml_dev_tools_private_includes})
 target_include_directories(QmlDevToolsPrivate INTERFACE ${_qml_dev_tools_private_includes})

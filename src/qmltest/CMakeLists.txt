@@ -17,6 +17,9 @@ add_qt_module(QuickTest
         QT_NO_URL_CAST_FROM_STRING
     LIBRARIES
         Qt::TestPrivate
+        Qt::Quick # special case
+        Qt::QuickPrivate # special case
+        Qt::QmlPrivate # special case
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Test
