@@ -44,8 +44,6 @@
 #include "qquickitem_p.h"
 #include "qquickitemchangelistener_p.h"
 
-#include <private/qqmlmemoryprofiler_p.h>
-
 #include <QtQml/qqmlengine.h>
 #include <private/qqmlengine_p.h>
 #include <private/qv4qobjectwrapper_p.h>
@@ -101,7 +99,6 @@ void QQuickViewPrivate::execute()
         component = nullptr;
     }
     if (!source.isEmpty()) {
-        QML_MEMORY_SCOPE_URL(engine.data()->baseUrl().resolved(source));
         component = new QQmlComponent(engine.data(), source, q);
         if (!component->isLoading()) {
             q->continueExecute();

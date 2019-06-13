@@ -75,7 +75,6 @@
 
 #include <QtQuick/private/qquickpixmapcache_p.h>
 
-#include <private/qqmlmemoryprofiler_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugconnector_p.h>
 #if QT_CONFIG(opengl)
@@ -420,7 +419,6 @@ void forceUpdate(QQuickItem *item)
 
 void QQuickWindowPrivate::syncSceneGraph()
 {
-    QML_MEMORY_SCOPE_STRING("SceneGraph");
     Q_Q(QQuickWindow);
 
     animationController->beforeNodeSync();
@@ -455,7 +453,6 @@ void QQuickWindowPrivate::syncSceneGraph()
 
 void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
 {
-    QML_MEMORY_SCOPE_STRING("SceneGraph");
     Q_Q(QQuickWindow);
     if (!renderer)
         return;

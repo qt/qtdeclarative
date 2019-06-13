@@ -47,7 +47,6 @@
 #include <private/qv4codegen_p.h>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlprofiler_p.h>
-#include <private/qqmlmemoryprofiler_p.h>
 #include <private/qqmltypecompiler_p.h>
 #include <private/qqmlpropertyvalidator_p.h>
 #include <private/qqmlpropertycachecreator_p.h>
@@ -921,7 +920,6 @@ void QQmlTypeLoaderThread::loadWithCachedUnitThread(QQmlDataBlob *b, const QV4::
 
 void QQmlTypeLoaderThread::callCompletedMain(QQmlDataBlob *b)
 {
-    QML_MEMORY_SCOPE_URL(b->url());
 #ifdef DATABLOB_DEBUG
     qWarning("QQmlTypeLoaderThread: %s completed() callback", qPrintable(b->urlString()));
 #endif
@@ -1147,8 +1145,6 @@ void QQmlTypeLoader::loadThread(QQmlDataBlob *blob)
         return;
     }
 
-    QML_MEMORY_SCOPE_URL(blob->m_url);
-
     if (QQmlFile::isSynchronous(blob->m_url)) {
         const QString fileName = QQmlFile::urlToLocalFileOrQrc(blob->m_url);
         if (!QQml_isFileCaseCorrect(fileName)) {
@@ -1278,7 +1274,6 @@ void QQmlTypeLoader::initializeEngine(QQmlExtensionInterface *iface,
 
 void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QByteArray &data)
 {
-    QML_MEMORY_SCOPE_URL(blob->url());
     QQmlDataBlob::SourceCodeData d;
     d.inlineSourceCode = QString::fromUtf8(data);
     d.hasInlineSourceCode = true;
@@ -1287,7 +1282,6 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QByteArray &data)
 
 void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QString &fileName)
 {
-    QML_MEMORY_SCOPE_URL(blob->url());
     QQmlDataBlob::SourceCodeData d;
     d.fileInfo = QFileInfo(fileName);
     setData(blob, d);
@@ -1295,7 +1289,6 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QString &fileName)
 
 void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::SourceCodeData &d)
 {
-    QML_MEMORY_SCOPE_URL(blob->url());
     QQmlCompilingProfiler prof(profiler(), blob);
 
     blob->m_inCallback = true;
@@ -1315,7 +1308,6 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::SourceCodeD
 
 void QQmlTypeLoader::setCachedUnit(QQmlDataBlob *blob, const QV4::CompiledData::Unit *unit)
 {
-    QML_MEMORY_SCOPE_URL(blob->url());
     QQmlCompilingProfiler prof(profiler(), blob);
 
     blob->m_inCallback = true;

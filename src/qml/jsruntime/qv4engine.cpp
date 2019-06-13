@@ -109,7 +109,6 @@
 #include <private/qqmllistwrapper_p.h>
 #include <private/qqmllist_p.h>
 #include <private/qqmltypeloader_p.h>
-#include <private/qqmlmemoryprofiler_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 #if QT_CONFIG(qml_locale)
 #include <private/qqmllocale_p.h>
@@ -692,7 +691,6 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     functionPrototype()->insertMember(id_caller(), pd, Attr_Accessor|Attr_ReadOnly_ButConfigurable);
     functionPrototype()->insertMember(id_arguments(), pd, Attr_Accessor|Attr_ReadOnly_ButConfigurable);
 
-    QML_MEMORY_SCOPE_STRING("QV4Engine::QV4Engine");
     qMetaTypeId<QJSValue>();
     qMetaTypeId<QList<int> >();
 
