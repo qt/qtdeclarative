@@ -621,9 +621,9 @@ public:
 
         loadPtr(exceptionHandlerAddress(), ScratchRegister);
         Jump exitFunction = branchPtr(Equal, ScratchRegister, TrustedImmPtr(0));
+        loadUndefined();
         jump(ScratchRegister);
         exitFunction.link(this);
-        loadUndefined();
 
         if (functionExit.isSet())
             jump(functionExit);

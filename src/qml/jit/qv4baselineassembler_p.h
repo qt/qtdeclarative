@@ -152,6 +152,7 @@ public:
     void passInt32AsArg(int value, int arg);
     void callRuntime(const char *functionName, const void *funcPtr, CallResultDestination dest);
     void saveAccumulatorInFrame();
+    void loadAccumulatorFromFrame();
     void jsTailCall(int func, int thisObject, int argc, int argv);
 
     // exception/context stuff
