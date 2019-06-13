@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 //![0]
-import QtQuick 2.8
+import QtQuick 2.12
 
 Item {
     width: 200; height: 200
@@ -59,7 +59,7 @@ Item {
         color: "green"
         radius: 5
 
-        Drag.active: dragArea.drag.active
+        Drag.active: dragHandler.active
         Drag.dragType: Drag.Automatic
         Drag.supportedActions: Qt.CopyAction
         Drag.mimeData: {
@@ -72,14 +72,14 @@ Item {
             text: "Drag me"
         }
 
-        MouseArea {
-            id: dragArea
-            anchors.fill: parent
-
-            drag.target: parent
-            onPressed: parent.grabToImage(function(result) {
-                parent.Drag.imageSource = result.url
-            })
+        DragHandler {
+            id: dragHandler
+            onActiveChanged:
+                if (active) {
+                    parent.grabToImage(function(result) {
+                        parent.Drag.imageSource = result.url;
+                    })
+                }
         }
     }
 }
