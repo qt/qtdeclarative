@@ -95,6 +95,7 @@ private:
     QSGTextureMaterial m_material;
     QRectF m_rect;
     QRectF m_sourceRect;
+    QSize m_textureSize;
     TextureCoordinatesTransformMode m_texCoordMode;
     uint m_isAtlasTexture : 1;
     uint m_ownsTexture : 1;
