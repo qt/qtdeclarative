@@ -244,6 +244,7 @@ private slots:
 
     void equality();
     void aggressiveGc();
+    void noAccumulatorInTemplateLiteral();
 
     void interrupt_data();
     void interrupt();
@@ -4836,6 +4837,23 @@ void tst_QJSEngine::aggressiveGc()
         QJSEngine engine; // ctor crashes if core allocation methods don't properly scope things.
         QJSValue obj = engine.newObject();
         QVERIFY(obj.isObject());
+    }
+    qputenv("QV4_MM_AGGRESSIVE_GC", origAggressiveGc);
+}
+
+void tst_QJSEngine::noAccumulatorInTemplateLiteral()
+{
+    const QByteArray origAggressiveGc = qgetenv("QV4_MM_AGGRESSIVE_GC");
+    qputenv("QV4_MM_AGGRESSIVE_GC", "true");
+    {
+        QJSEngine engine;
+
+        // getTemplateLiteral should not save the accumulator as it's garbage and trashes
+        // the next GC run. Instead, we want to see the stack overflow error.
+        QJSValue value = engine.evaluate("function a(){\nS=o=>s\nFunction``\na()}a()");
+
+        QVERIFY(value.isError());
+        QCOMPARE(value.toString(), "RangeError: Maximum call stack size exceeded.");
     }
     qputenv("QV4_MM_AGGRESSIVE_GC", origAggressiveGc);
 }

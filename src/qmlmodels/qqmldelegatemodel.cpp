@@ -1344,6 +1344,11 @@ void QQmlDelegateModel::_q_itemsInserted(int index, int count)
     const QList<QQmlDelegateModelItem *> cache = d->m_cache;
     for (int i = 0, c = cache.count();  i < c; ++i) {
         QQmlDelegateModelItem *item = cache.at(i);
+        // layout change triggered by changing the modelIndex might have
+        // already invalidated this item in d->m_cache and deleted it.
+        if (!d->m_cache.isSharedWith(cache) && !d->m_cache.contains(item))
+            continue;
+
         if (item->modelIndex() >= index) {
             const int newIndex = item->modelIndex() + count;
             const int row = newIndex;
@@ -1487,7 +1492,7 @@ void QQmlDelegateModel::_q_itemsRemoved(int index, int count)
         QQmlDelegateModelItem *item = cache.at(i);
         // layout change triggered by removal of a previous item might have
         // already invalidated this item in d->m_cache and deleted it
-        if (!d->m_cache.contains(item))
+        if (!d->m_cache.isSharedWith(cache) && !d->m_cache.contains(item))
             continue;
 
         if (item->modelIndex() >= index + count) {
@@ -1542,6 +1547,11 @@ void QQmlDelegateModel::_q_itemsMoved(int from, int to, int count)
     const QList<QQmlDelegateModelItem *> cache = d->m_cache;
     for (int i = 0, c = cache.count();  i < c; ++i) {
         QQmlDelegateModelItem *item = cache.at(i);
+        // layout change triggered by changing the modelIndex might have
+        // already invalidated this item in d->m_cache and deleted it.
+        if (!d->m_cache.isSharedWith(cache) && !d->m_cache.contains(item))
+            continue;
+
         if (item->modelIndex() >= from && item->modelIndex() < from + count) {
             const int newIndex = item->modelIndex() - from + to;
             const int row = newIndex;
@@ -1634,6 +1644,11 @@ void QQmlDelegateModel::_q_modelReset()
         const QList<QQmlDelegateModelItem *> cache = d->m_cache;
         for (int i = 0, c = cache.count();  i < c; ++i) {
             QQmlDelegateModelItem *item = cache.at(i);
+            // layout change triggered by changing the modelIndex might have
+            // already invalidated this item in d->m_cache and deleted it.
+            if (!d->m_cache.isSharedWith(cache) && !d->m_cache.contains(item))
+                continue;
+
             if (item->modelIndex() != -1)
                 item->setModelIndex(-1, -1, -1);
         }
