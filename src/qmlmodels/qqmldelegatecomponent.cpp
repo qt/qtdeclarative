@@ -199,10 +199,44 @@ bool QQmlDelegateChoice::match(int row, int column, const QVariant &value) const
     The DelegateChooser is a special \l Component type intended for those scenarios where a Component is required
     by a view and used as a delegate.
     DelegateChooser encapsulates a set of \l {DelegateChoice}s.
-    These choices are used determine the delegate that will be instantiated for each
+    These choices are used to determine the delegate that will be instantiated for each
     item in the model.
     The selection of the choice is performed based on the value that a model item has for \l role,
     and also based on index.
+
+    DelegateChooser is commonly used when a view needs to display a set of delegates that are significantly
+    different from each other. For example, a typical phone settings view might include toggle switches,
+    sliders, radio buttons, and other visualizations based on the type of each setting. In this case, DelegateChooser
+    could provide an easy way to associate a different type of delegate with each setting:
+
+    \qml \QtMinorVersion
+    import QtQuick 2.\1
+    import QtQuick.Controls 2.\1
+    import Qt.labs.qmlmodels 1.0
+
+    ListView {
+        width: 200; height: 400
+
+        ListModel {
+            id: listModel
+            ListElement { type: "info"; ... }
+            ListElement { type: "switch"; ... }
+            ListElement { type: "swipe"; ... }
+            ListElement { type: "switch"; ... }
+        }
+
+        DelegateChooser {
+            id: chooser
+            role: "type"
+            DelegateChoice { roleValue: "info"; ItemDelegate { ... } }
+            DelegateChoice { roleValue: "switch"; SwitchDelegate { ... } }
+            DelegateChoice { roleValue: "swipe"; SwipeDelegate { ... } }
+        }
+
+        model: listModel
+        delegate: chooser
+    }
+    \endqml
 
     \note This type is intended to transparently work only with TableView and any DelegateModel-based view.
     Views (including user-defined views) that aren't internally based on a DelegateModel need to explicitly support

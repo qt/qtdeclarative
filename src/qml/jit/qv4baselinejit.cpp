@@ -897,7 +897,6 @@ void BaselineJIT::generate_ThrowOnNullOrUndefined()
 
 void BaselineJIT::generate_GetTemplateObject(int index)
 {
-    STORE_ACC();
     as->prepareCallWithArgCount(2);
     as->passInt32AsArg(index, 1);
     as->passFunctionAsArg(0);
