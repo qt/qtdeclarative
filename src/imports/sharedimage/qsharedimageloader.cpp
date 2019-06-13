@@ -173,7 +173,8 @@ QImage QSharedImageLoaderPrivate::load(const QString &path, QSharedImageLoader::
         if (img.isNull())
             return nil;
         size_t size = sizeof(SharedImageHeader) + img.sizeInBytes();
-        if (size > std::numeric_limits<int>::max()) {
+        const size_t intMax = std::numeric_limits<int>::max();
+        if (size > intMax) {
             qCDebug(lcSharedImage) << "Image" << path << "to large to load";
             return nil;
         } else if (shm->create(int(size))) {
