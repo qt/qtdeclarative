@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <private/qtqmlglobal_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qqmljsmemorypool_p.h>
 

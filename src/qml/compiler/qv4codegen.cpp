@@ -43,6 +43,7 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
 #include <QtCore/QStack>
+#include <QtCore/qurl.h>
 #include <QScopeGuard>
 #include <private/qqmljsast_p.h>
 #include <private/qqmljslexer_p.h>

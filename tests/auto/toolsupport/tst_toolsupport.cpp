@@ -35,6 +35,7 @@
 #include <private/qobject_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qv4string_p.h>
+#include <private/qqmlrefcount_p.h>
 #include <qobject.h>
 
 #if defined(Q_CC_GNU) || defined(Q_CC_MSVC)

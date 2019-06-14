@@ -20,7 +20,6 @@ HEADERS += \
 
 SOURCES += \
     $$PWD/qv4bytecodegenerator.cpp \
-    $$PWD/qv4compileddata.cpp \
     $$PWD/qv4compiler.cpp \
     $$PWD/qv4compilercontext.cpp \
     $$PWD/qv4compilerscanfunctions.cpp \
