@@ -150,16 +150,6 @@ QString Binding::escapedString(const QString &string)
     return tmp;
 }
 
-void CompilationUnit::unlink()
-{
-    free(runtimeStrings);
-    runtimeStrings = nullptr;
-    delete [] runtimeRegularExpressions;
-    runtimeRegularExpressions = nullptr;
-    free(runtimeClasses);
-    runtimeClasses = nullptr;
-}
-
 }
 
 }

@@ -323,7 +323,12 @@ void ExecutableCompilationUnit::unlink()
         f->destroy();
     runtimeFunctions.clear();
 
-    CompiledData::CompilationUnit::unlink();
+    free(runtimeStrings);
+    runtimeStrings = nullptr;
+    delete [] runtimeRegularExpressions;
+    runtimeRegularExpressions = nullptr;
+    free(runtimeClasses);
+    runtimeClasses = nullptr;
 }
 
 void ExecutableCompilationUnit::markObjects(QV4::MarkStack *markStack)

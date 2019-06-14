@@ -1136,8 +1136,6 @@ public:
     Heap::Module *module() const { return m_module; }
     void setModule(Heap::Module *module) { m_module = module; }
 
-    void unlink();
-
 private:
     QString m_fileName; // initialized from data->sourceFileIndex
     QString m_finalUrlString; // initialized from data->finalUrlIndex
