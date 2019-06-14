@@ -42,7 +42,6 @@
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
 #include <QCryptographicHash>
-#include <QSaveFile>
 #include <QScopeGuard>
 #include <QFileInfo>
 
@@ -77,38 +76,6 @@ CompilationUnit::~CompilationUnit()
 
     delete [] imports;
     imports = nullptr;
-}
-
-bool CompilationUnit::saveToDisk(const QString &outputFileName, QString *errorString) const
-{
-    errorString->clear();
-
-#if QT_CONFIG(temporaryfile)
-    // Foo.qml -> Foo.qmlc
-    QSaveFile cacheFile(outputFileName);
-    if (!cacheFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        *errorString = cacheFile.errorString();
-        return false;
-    }
-
-    SaveableUnitPointer saveable(this);
-    qint64 headerWritten = cacheFile.write(saveable.data<char>(), saveable.size());
-    if (headerWritten != saveable.size()) {
-        *errorString = cacheFile.errorString();
-        return false;
-    }
-
-    if (!cacheFile.commit()) {
-        *errorString = cacheFile.errorString();
-        return false;
-    }
-
-    return true;
-#else
-    Q_UNUSED(outputFileName)
-    *errorString = QStringLiteral("features.temporaryfile is disabled.");
-    return false;
-#endif // QT_CONFIG(temporaryfile)
 }
 
 void CompilationUnit::setUnitData(const Unit *unitData, const QmlUnit *qmlUnit,

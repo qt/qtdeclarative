@@ -52,6 +52,12 @@
 
 #include <QtCore/qstring.h>
 #include <QtCore/qcryptographichash.h>
+#include <QtCore/qscopeguard.h>
+
+#if QT_CONFIG(temporaryfile)
+#include <QtCore/qsavefile.h>
+#endif
+
 #include <QVector>
 #include <QStringList>
 #include <QHash>
@@ -1140,51 +1146,71 @@ private:
     QString m_finalUrlString; // initialized from data->finalUrlIndex
 
     Heap::Module *m_module = nullptr;
-
-public:
-    bool saveToDisk(const QString &outputFileName, QString *errorString) const;
 };
 
 class SaveableUnitPointer
 {
     Q_DISABLE_COPY_MOVE(SaveableUnitPointer)
 public:
-    SaveableUnitPointer(const CompilationUnit *unit, quint32 temporaryFlags = Unit::StaticData) :
-          unit(unit)
+    SaveableUnitPointer(const Unit *unit, quint32 temporaryFlags = Unit::StaticData) :
+          unit(unit),
+          temporaryFlags(temporaryFlags)
     {
-        quint32_le &unitFlags = mutableFlags();
-        quint32 origFlags = unitFlags;
-        unitFlags |= temporaryFlags;
-        changedFlags = origFlags ^ unitFlags;
     }
 
-    ~SaveableUnitPointer()
+    ~SaveableUnitPointer() = default;
+
+    template<typename Char>
+    bool saveToDisk(const std::function<bool(const Char *, quint32)> &writer) const
     {
-        mutableFlags() ^= changedFlags;
+        auto cleanup = qScopeGuard([this]() { mutableFlags() ^= temporaryFlags; });
+        mutableFlags() |= temporaryFlags;
+        return writer(data<Char>(), size());
     }
 
-    const CompilationUnit *operator->() const { return unit; }
-    const CompilationUnit &operator*() const { return *unit; }
-    operator const CompilationUnit *() { return unit; }
+    static bool writeDataToFile(const QString &outputFileName, const char *data, quint32 size,
+                                QString *errorString)
+    {
+#if QT_CONFIG(temporaryfile)
+        QSaveFile cacheFile(outputFileName);
+        if (!cacheFile.open(QIODevice::WriteOnly | QIODevice::Truncate)
+                || cacheFile.write(data, size) != size
+                || !cacheFile.commit()) {
+            *errorString = cacheFile.errorString();
+            return false;
+        }
+
+        errorString->clear();
+        return true;
+#else
+        Q_UNUSED(outputFileName)
+        *errorString = QStringLiteral("features.temporaryfile is disabled.");
+        return false;
+#endif
+    }
+
+private:
+    const Unit *unit;
+    quint32 temporaryFlags;
+
+    quint32_le &mutableFlags() const
+    {
+        return const_cast<Unit *>(unit)->flags;
+    }
 
     template<typename Char>
     const Char *data() const
     {
         Q_STATIC_ASSERT(sizeof(Char) == 1);
         const Char *dataPtr;
-        memcpy(&dataPtr, &unit->data, sizeof(dataPtr));
+        memcpy(&dataPtr, &unit, sizeof(dataPtr));
         return dataPtr;
     }
 
     quint32 size() const
     {
-        return unit->data->unitSize;
+        return unit->unitSize;
     }
-
-private:
-    quint32_le &mutableFlags() { return const_cast<Unit *>(unit->unitData())->flags; };
-    const CompilationUnit *unit;
-    quint32 changedFlags;
 };
 
 

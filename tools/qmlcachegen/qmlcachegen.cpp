@@ -233,7 +233,7 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
         const quint32 saveFlags
                 = QV4::CompiledData::Unit::StaticData
                 | QV4::CompiledData::Unit::PendingTypeCompilation;
-        QV4::CompiledData::SaveableUnitPointer saveable(&irDocument.javaScriptCompilationUnit,
+        QV4::CompiledData::SaveableUnitPointer saveable(irDocument.javaScriptCompilationUnit.data,
                                                         saveFlags);
         if (!saveFunction(saveable, &error->message))
             return false;
@@ -327,7 +327,7 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
         }
     }
 
-    return saveFunction(QV4::CompiledData::SaveableUnitPointer(&unit), &error->message);
+    return saveFunction(QV4::CompiledData::SaveableUnitPointer(unit.data), &error->message);
 }
 
 static bool saveUnitAsCpp(const QString &inputFileName, const QString &outputFileName,
@@ -366,27 +366,28 @@ static bool saveUnitAsCpp(const QString &inputFileName, const QString &outputFil
     if (!writeStr(QByteArrayLiteral(" {\nextern const unsigned char qmlData alignas(16) [] = {\n")))
         return false;
 
-    QByteArray hexifiedData;
-    {
-        QTextStream stream(&hexifiedData);
-        const uchar *begin = unit.data<uchar>();
-        const uchar *end = begin + unit.size();
-        stream << hex;
-        int col = 0;
-        for (const uchar *data = begin; data < end; ++data, ++col) {
-            if (data > begin)
-                stream << ',';
-            if (col % 8 == 0) {
-                stream << '\n';
-                col = 0;
+    unit.saveToDisk<uchar>([&writeStr](const uchar *begin, quint32 size) {
+        QByteArray hexifiedData;
+        {
+            QTextStream stream(&hexifiedData);
+            const uchar *end = begin + size;
+            stream << hex;
+            int col = 0;
+            for (const uchar *data = begin; data < end; ++data, ++col) {
+                if (data > begin)
+                    stream << ',';
+                if (col % 8 == 0) {
+                    stream << '\n';
+                    col = 0;
+                }
+                stream << "0x" << *data;
             }
-            stream << "0x" << *data;
+            stream << '\n';
         }
-        stream << '\n';
-    };
+        return writeStr(hexifiedData);
+    });
 
-    if (!writeStr(hexifiedData))
-        return false;
+
 
     if (!writeStr("};\n}\n}\n"))
         return false;
@@ -527,7 +528,11 @@ int main(int argc, char **argv)
     } else {
         saveFunction = [outputFileName](const QV4::CompiledData::SaveableUnitPointer &unit,
                                         QString *errorString) {
-            return unit->saveToDisk(outputFileName, errorString);
+            return unit.saveToDisk<char>(
+                    [&outputFileName, errorString](const char *data, quint32 size) {
+                        return QV4::CompiledData::SaveableUnitPointer::writeDataToFile(
+                                outputFileName, data, size, errorString);
+            });
         };
     }
 
