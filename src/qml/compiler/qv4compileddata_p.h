@@ -812,7 +812,6 @@ static_assert(sizeof(QmlUnit) == 16, "QmlUnit structure needs to have the expect
 
 enum { QmlCompileHashSpace = 48 };
 static const char magic_str[] = "qv4cdata";
-extern const char qml_compile_hash[QmlCompileHashSpace + 1];
 
 struct Unit
 {
@@ -875,8 +874,6 @@ struct Unit
     quint32_le finalUrlIndex;
 
     quint32_le offsetToQmlUnit;
-
-    bool verifyHeader(QDateTime expectedSourceTimeStamp, QString *errorString) const;
 
     /* QML specific fields */
 

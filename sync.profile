@@ -11,5 +11,5 @@
     "QtQmlWorkerScript" => "$basedir/src/qmlworkerscript",
 );
 %inject_headers = (
-    "$basedir/src/qml" => [ "^qqmljsgrammar_p.h", "^qqmljsparser_p.h" ],
+    "$basedir/src/qml" => [ "^qqmljsgrammar_p.h", "^qqmljsparser_p.h", "^qml_compile_hash_p.h" ],
 );

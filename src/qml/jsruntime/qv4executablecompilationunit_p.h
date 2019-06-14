@@ -251,6 +251,9 @@ public:
         return constants[binding->value.constantValueIndex].doubleValue();
     }
 
+    static bool verifyHeader(const CompiledData::Unit *unit, QDateTime expectedSourceTimeStamp,
+                             QString *errorString);
+
 protected:
     quint32 totalStringCount() const
     { return data->stringTableSize; }
