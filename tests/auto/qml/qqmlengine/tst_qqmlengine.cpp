@@ -1037,6 +1037,46 @@ void tst_qqmlengine::singletonInstance()
     {
         qmlRegisterSingletonType<CppSingleton>("Qt.test",1,0,"NotAmbiguous", [](QQmlEngine* qeng, QJSEngine* jeng) -> QObject* {return CppSingleton::create(qeng, jeng);}); // test that overloads for qmlRegisterSingleton are not ambiguous
     }
+    {
+        // Register QObject* directly
+        CppSingleton single;
+        int id = qmlRegisterSingletonInstance("Qt.test", 1, 0, "CppOwned",
+                                                                &single);
+        QQmlEngine engine2;
+        CppSingleton *singlePtr = engine2.singletonInstance<CppSingleton *>(id);
+        QVERIFY(singlePtr);
+        QCOMPARE(&single, singlePtr);
+        QVERIFY(engine2.objectOwnership(singlePtr) == QQmlEngine::CppOwnership);
+    }
+
+    {
+        CppSingleton single;
+        QQmlEngine engineA;
+        QQmlEngine engineB;
+        int id = qmlRegisterSingletonInstance("Qt.test", 1, 0, "CppOwned", &single);
+        auto singlePtr = engineA.singletonInstance<CppSingleton *>(id);
+        QVERIFY(singlePtr);
+        singlePtr = engineA.singletonInstance<CppSingleton *>(id); // accessing the singleton multiple times from the same engine is fine
+        QVERIFY(singlePtr);
+        QTest::ignoreMessage(QtMsgType::QtCriticalMsg, "<Unknown File>: qmlRegisterSingletonType(): \"CppOwned\" is not available because the callback function returns a null pointer.");
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, "<Unknown File>: Singleton registered by registerSingletonInstance must only be accessed from one engine");
+        QCOMPARE(&single, singlePtr);
+        auto noSinglePtr = engineB.singletonInstance<CppSingleton *>(id);
+        QVERIFY(!noSinglePtr);
+    }
+
+    {
+        CppSingleton single;
+        QThread newThread {};
+        single.moveToThread(&newThread);
+        QCOMPARE(single.thread(), &newThread);
+        QQmlEngine engineB;
+        int id = qmlRegisterSingletonInstance("Qt.test", 1, 0, "CppOwned", &single);
+        QTest::ignoreMessage(QtMsgType::QtCriticalMsg, "<Unknown File>: qmlRegisterSingletonType(): \"CppOwned\" is not available because the callback function returns a null pointer.");
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, "<Unknown File>: Registered object must live in the same thread as the engine it was registered with");
+        auto noSinglePtr = engineB.singletonInstance<CppSingleton *>(id);
+        QVERIFY(!noSinglePtr);
+    }
 
     {
         // Invalid types
