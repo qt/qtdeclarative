@@ -126,6 +126,25 @@ void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
     }
 }
 
+void QV4::Compiler::JSUnitGenerator::generateUnitChecksum(QV4::CompiledData::Unit *unit)
+{
+#ifndef QT_CRYPTOGRAPHICHASH_ONLY_SHA1
+    QCryptographicHash hash(QCryptographicHash::Md5);
+
+    const int checksummableDataOffset
+            = offsetof(QV4::CompiledData::Unit, md5Checksum) + sizeof(unit->md5Checksum);
+
+    const char *dataPtr = reinterpret_cast<const char *>(unit) + checksummableDataOffset;
+    hash.addData(dataPtr, unit->unitSize - checksummableDataOffset);
+
+    QByteArray checksum = hash.result();
+    Q_ASSERT(checksum.size() == sizeof(unit->md5Checksum));
+    memcpy(unit->md5Checksum, checksum.constData(), sizeof(unit->md5Checksum));
+#else
+    memset(unit->md5Checksum, 0, sizeof(unit->md5Checksum));
+#endif
+}
+
 QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QV4::Compiler::Module *module)
     : module(module)
 {
@@ -392,7 +411,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     if (option == GenerateWithStringTable)
         stringTable.serialize(unit);
 
-    unit->generateChecksum();
+    generateUnitChecksum(unit);
 
     return unit;
 }

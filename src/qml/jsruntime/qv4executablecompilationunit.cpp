@@ -60,6 +60,7 @@
 #include <QtCore/qstandardpaths.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qscopeguard.h>
+#include <QtCore/qcryptographichash.h>
 
 #if defined(QML_COMPILE_HASH)
 #  ifdef Q_OS_LINUX

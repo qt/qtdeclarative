@@ -103,6 +103,8 @@ private:
 };
 
 struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
+    static void generateUnitChecksum(CompiledData::Unit *unit);
+
     struct MemberInfo {
         QString name;
         bool isAccessor;

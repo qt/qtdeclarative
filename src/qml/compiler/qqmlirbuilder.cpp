@@ -1749,7 +1749,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         jsUnit->unitSize += totalSize;
         memcpy(jsUnit->qmlUnit(), qmlUnit, totalSize);
         free(qmlUnit);
-        jsUnit->generateChecksum();
+        QV4::Compiler::JSUnitGenerator::generateUnitChecksum(jsUnit);
         qmlUnit = jsUnit->qmlUnit();
     }
 

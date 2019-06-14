@@ -51,7 +51,6 @@
 //
 
 #include <QtCore/qstring.h>
-#include <QtCore/qcryptographichash.h>
 #include <QtCore/qscopeguard.h>
 
 #if QT_CONFIG(temporaryfile)
@@ -832,8 +831,6 @@ struct Unit
     char libraryVersionHash[QmlCompileHashSpace];
 
     char md5Checksum[16]; // checksum of all bytes following this field.
-    void generateChecksum();
-
     char dependencyMD5Checksum[16];
 
     enum : unsigned int {

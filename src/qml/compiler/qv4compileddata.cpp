@@ -41,7 +41,6 @@
 #include <private/qv4staticvalue_p.h>
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
-#include <QCryptographicHash>
 #include <QScopeGuard>
 #include <QFileInfo>
 
@@ -159,24 +158,6 @@ void CompilationUnit::unlink()
     runtimeRegularExpressions = nullptr;
     free(runtimeClasses);
     runtimeClasses = nullptr;
-}
-
-void Unit::generateChecksum()
-{
-#ifndef QT_CRYPTOGRAPHICHASH_ONLY_SHA1
-    QCryptographicHash hash(QCryptographicHash::Md5);
-
-    const int checksummableDataOffset = offsetof(QV4::CompiledData::Unit, md5Checksum) + sizeof(md5Checksum);
-
-    const char *dataPtr = reinterpret_cast<const char *>(this) + checksummableDataOffset;
-    hash.addData(dataPtr, unitSize - checksummableDataOffset);
-
-    QByteArray checksum = hash.result();
-    Q_ASSERT(checksum.size() == sizeof(md5Checksum));
-    memcpy(md5Checksum, checksum.constData(), sizeof(md5Checksum));
-#else
-    memset(md5Checksum, 0, sizeof(md5Checksum));
-#endif
 }
 
 }
