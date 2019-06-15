@@ -1224,13 +1224,13 @@ QVariant QQuickSplitView::saveState()
             cborMap[QLatin1String("preferredWidth")] = static_cast<double>(attachedPrivate->m_preferredWidth);
 
             qCDebug(qlcQQuickSplitViewState).nospace() << "- wrote preferredWidth of "
-                << attachedPrivate->m_preferredWidth << " for split item at index " << i;
+                << attachedPrivate->m_preferredWidth << " for split item " << item << " at index " << i;
         }
         if (attachedPrivate->m_isPreferredHeightSet) {
             cborMap[QLatin1String("preferredHeight")] = static_cast<double>(attachedPrivate->m_preferredHeight);
 
             qCDebug(qlcQQuickSplitViewState).nospace() << "- wrote preferredHeight of "
-                << attachedPrivate->m_preferredHeight << " for split item at index " << i;
+                << attachedPrivate->m_preferredHeight << " for split item " << item << " at index " << i;
         }
 
         cborArray.append(cborMap);
@@ -1280,7 +1280,7 @@ bool QQuickSplitView::restoreState(const QVariant &state)
         QCborMap cborMap(it->toMap());
         const int splitItemIndex = cborMap.value(QLatin1String("index")).toInteger();
         const bool isPreferredWidthSet = cborMap.contains(QLatin1String("preferredWidth"));
-        const bool isPreferredHeightSet = cborMap.contains(QLatin1String("preferredWidth"));
+        const bool isPreferredHeightSet = cborMap.contains(QLatin1String("preferredHeight"));
 
         QQuickItem *item = qobject_cast<QQuickItem*>(d->contentModel->object(splitItemIndex));
         // If the split item does not have a preferred size specified in QML, it could still have
@@ -1299,7 +1299,7 @@ bool QQuickSplitView::restoreState(const QVariant &state)
 
         const QQuickSplitViewAttachedPrivate *attachedPrivate = QQuickSplitViewAttachedPrivate::get(attached);
         qCDebug(qlcQQuickSplitViewState).nospace()
-            << "- restored the following state for split item at index " << splitItemIndex
+            << "- restored the following state for split item " << item << " at index " << splitItemIndex
             << ": preferredWidthSet=" << attachedPrivate->m_isPreferredWidthSet
             << " preferredWidth=" << attachedPrivate->m_preferredWidth
             << " preferredHeightSet=" << attachedPrivate->m_isPreferredHeightSet
