@@ -78,6 +78,7 @@ private slots:
     void importsChildPlugin2();
     void importsChildPlugin21();
     void parallelPluginImport();
+    void multiSingleton();
 
 private:
     QString m_importsDirectory;
@@ -771,6 +772,20 @@ void tst_qqmlmoduleplugin::parallelPluginImport()
 
     worker.wait();
 }
+
+void tst_qqmlmoduleplugin::multiSingleton()
+{
+    QQmlEngine engine;
+    QObject obj;
+    engine.rootContext()->setContextProperty("tracker", &obj);
+    engine.addImportPath(m_importsDirectory);
+    QQmlComponent component(&engine, testFileUrl("multiSingleton.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != nullptr);
+    QCOMPARE(obj.objectName(), QLatin1String("first"));
+    delete object;
+}
+
 
 QTEST_MAIN(tst_qqmlmoduleplugin)
 
