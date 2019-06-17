@@ -58,6 +58,7 @@
 %token T_MINUS "-"              T_MINUS_EQ "-="             T_MINUS_MINUS "--"
 %token T_NEW "new"              T_NOT "!"                   T_NOT_EQ "!="
 %token T_NOT_EQ_EQ "!=="        T_NUMERIC_LITERAL "numeric literal"     T_OR "|"
+%token T_VERSION_NUMBER "version number"
 %token T_OR_EQ "|="             T_OR_OR "||"                T_PLUS "+"
 %token T_PLUS_EQ "+="           T_PLUS_PLUS "++"            T_QUESTION "?"
 %token T_RBRACE "}"             T_RBRACKET "]"              T_REMAINDER "%"
@@ -315,6 +316,7 @@ public:
       AST::UiArrayMemberList *UiArrayMemberList;
       AST::UiQualifiedId *UiQualifiedId;
       AST::UiEnumMemberList *UiEnumMemberList;
+      AST::UiVersionSpecifier *UiVersionSpecifier;
     };
 
 public:
@@ -802,20 +804,47 @@ UiImport: UiImportHead T_SEMICOLON;
     } break;
 ./
 
-UiImport: UiImportHead T_NUMERIC_LITERAL T_AUTOMATIC_SEMICOLON;
-UiImport: UiImportHead T_NUMERIC_LITERAL T_SEMICOLON;
+UiVersionSpecifier: T_VERSION_NUMBER T_DOT T_VERSION_NUMBER;
 /.
     case $rule_number: {
-        sym(1).UiImport->versionToken = loc(2);
+        auto version = new (pool) AST::UiVersionSpecifier(sym(1).dval, sym(3).dval);
+        version->majorToken = loc(1);
+        version->minorToken = loc(3);
+        sym(1).UiVersionSpecifier = version;
+    } break;
+./
+
+
+UiVersionSpecifier: T_VERSION_NUMBER;
+/.
+    case $rule_number: {
+        auto version = new (pool) AST::UiVersionSpecifier(sym(1).dval, 0);
+        version->majorToken = loc(1);
+        sym(1).UiVersionSpecifier = version;
+    } break;
+./
+
+UiImport: UiImportHead UiVersionSpecifier T_AUTOMATIC_SEMICOLON;
+UiImport: UiImportHead UiVersionSpecifier T_SEMICOLON;
+/.
+    case $rule_number: {
+        auto versionToken = loc(2);
+        auto version = sym(2).UiVersionSpecifier;
+        sym(1).UiImport->version = version;
+        if (version->minorToken.isValid()) {
+            versionToken.length += version->minorToken.length + (version->minorToken.offset - versionToken.offset - versionToken.length);
+        }
+        sym(1).UiImport->versionToken = versionToken;
         sym(1).UiImport->semicolonToken = loc(3);
     } break;
 ./
 
-UiImport: UiImportHead T_NUMERIC_LITERAL T_AS QmlIdentifier T_AUTOMATIC_SEMICOLON;
-UiImport: UiImportHead T_NUMERIC_LITERAL T_AS QmlIdentifier T_SEMICOLON;
+UiImport: UiImportHead UiVersionSpecifier  T_AS QmlIdentifier T_AUTOMATIC_SEMICOLON;
+UiImport: UiImportHead UiVersionSpecifier  T_AS QmlIdentifier T_SEMICOLON;
 /.
     case $rule_number: {
         sym(1).UiImport->versionToken = loc(2);
+        sym(1).UiImport->version = sym(2).UiVersionSpecifier;
         sym(1).UiImport->asToken = loc(3);
         sym(1).UiImport->importIdToken = loc(4);
         sym(1).UiImport->importId = stringRef(4);
