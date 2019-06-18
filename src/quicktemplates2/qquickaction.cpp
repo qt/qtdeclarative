@@ -487,7 +487,7 @@ void QQuickAction::setCheckable(bool checkable)
 
     \code
     Action {
-        sequence: "Ctrl+E,Ctrl+W"
+        shortcut: "Ctrl+E,Ctrl+W"
         onTriggered: edit.wrapMode = TextEdit.Wrap
     }
     \endcode
