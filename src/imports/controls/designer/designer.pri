@@ -48,4 +48,4 @@ AUX_QML_FILES += \
     $$PWD/TumblerSpecifics.qml
 
 AUX_QML_FILES += \
-    $$PWD/images/*.png
+    $$files($$PWD/images/*.png)
