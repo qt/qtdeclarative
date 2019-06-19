@@ -48,6 +48,13 @@
 #include <QOpenGLFunctions>
 #include <QLoggingCategory>
 
+#if defined(QT_STATIC)
+static void initResources()
+{
+    Q_INIT_RESOURCE(qtquickshapes);
+}
+#endif
+
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(QQSHAPE_LOG_TIME_DIRTY_SYNC, "qt.shape.time.sync")
@@ -662,7 +669,7 @@ struct QQuickShapeResourceInitializer
     QQuickShapeResourceInitializer()
     {
 #if defined(QT_STATIC)
-        Q_INIT_RESOURCE(qtquickshapes);
+        initResources();
 #endif
     }
 };

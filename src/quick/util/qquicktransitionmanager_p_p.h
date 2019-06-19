@@ -52,6 +52,7 @@
 //
 
 #include "qquickanimation_p.h"
+#include <private/qanimationjobutil_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -70,6 +71,7 @@ public:
 
     void cancel();
 
+    SelfDeletable m_selfDeletable;
 protected:
     virtual void finished();
 
