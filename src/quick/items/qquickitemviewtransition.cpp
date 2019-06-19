@@ -61,7 +61,6 @@ public:
     QPointF m_toPos;
     QQuickItemViewTransitioner::TransitionType m_type;
     bool m_isTarget;
-    bool *m_wasDeleted;
 
 protected:
     void finished() override;
@@ -73,14 +72,11 @@ QQuickItemViewTransitionJob::QQuickItemViewTransitionJob()
     , m_item(nullptr)
     , m_type(QQuickItemViewTransitioner::NoTransition)
     , m_isTarget(false)
-    , m_wasDeleted(nullptr)
 {
 }
 
 QQuickItemViewTransitionJob::~QQuickItemViewTransitionJob()
 {
-    if (m_wasDeleted)
-        *m_wasDeleted = true;
     if (m_transitioner)
         m_transitioner->runningJobs.remove(this);
 }
@@ -138,13 +134,7 @@ void QQuickItemViewTransitionJob::finished()
     QQuickTransitionManager::finished();
 
     if (m_transitioner) {
-        bool deleted = false;
-        m_wasDeleted = &deleted;
-        m_transitioner->finishedTransition(this, m_item);
-        if (deleted)
-            return;
-        m_wasDeleted = nullptr;
-
+        RETURN_IF_DELETED(m_transitioner->finishedTransition(this, m_item));
         m_transitioner = nullptr;
     }
 
@@ -482,7 +472,7 @@ bool QQuickItemViewTransitionableItem::prepareTransition(QQuickItemViewTransitio
         // if transition type is not valid, the previous transition still has to be
         // canceled so that the item can move immediately to the right position
         item->setPosition(nextTransitionTo);
-        stopTransition();
+        ACTION_IF_DELETED(this, stopTransition(), return false);
     }
 
     prepared = true;
@@ -501,12 +491,12 @@ void QQuickItemViewTransitionableItem::startTransition(QQuickItemViewTransitione
 
     if (!transition || transition->m_type != nextTransitionType || transition->m_isTarget != isTransitionTarget) {
         if (transition)
-            transition->cancel();
+            RETURN_IF_DELETED(transition->cancel());
         delete transition;
         transition = new QQuickItemViewTransitionJob;
     }
 
-    transition->startTransition(this, index, transitioner, nextTransitionType, nextTransitionTo, isTransitionTarget);
+    RETURN_IF_DELETED(transition->startTransition(this, index, transitioner, nextTransitionType, nextTransitionTo, isTransitionTarget));
     clearCurrentScheduledTransition();
 }
 
@@ -558,7 +548,7 @@ void QQuickItemViewTransitionableItem::clearCurrentScheduledTransition()
 void QQuickItemViewTransitionableItem::stopTransition()
 {
     if (transition)
-        transition->cancel();
+        RETURN_IF_DELETED(transition->cancel());
     clearCurrentScheduledTransition();
     resetNextTransitionPos();
 }
