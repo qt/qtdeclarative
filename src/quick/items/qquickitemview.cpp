@@ -1874,15 +1874,21 @@ void QQuickItemViewPrivate::layout()
 
         prepareVisibleItemTransitions();
 
-        for (QList<FxViewItem*>::Iterator it = releasePendingTransition.begin();
-             it != releasePendingTransition.end(); ) {
-            FxViewItem *item = *it;
-            if (prepareNonVisibleItemTransition(item, viewBounds)) {
-                ++it;
-            } else {
-                releaseItem(item);
-                it = releasePendingTransition.erase(it);
+        for (auto it = releasePendingTransition.begin(); it != releasePendingTransition.end(); ) {
+            auto old_count = releasePendingTransition.count();
+            auto success = prepareNonVisibleItemTransition(*it, viewBounds);
+            // prepareNonVisibleItemTransition() may invalidate iterators while in fast flicking
+            // invisible animating items are kicked in or out the viewPort
+            // use old_count to test if the abrupt erasure occurs
+            if (old_count > releasePendingTransition.count()) {
+                continue;
             }
+            if (!success) {
+                releaseItem(*it);
+                it = releasePendingTransition.erase(it);
+                continue;
+            }
+            ++it;
         }
 
         for (int i=0; i<visibleItems.count(); i++)
