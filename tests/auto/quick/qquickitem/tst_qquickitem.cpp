@@ -1622,7 +1622,7 @@ void tst_qquickitem::hoverEvent()
     QTest::mouseMove(window, inside);
     QTest::mouseMove(window, outside);
 
-    const bool shouldReceiveHoverEvents = visible && enabled && acceptHoverEvents;
+    const bool shouldReceiveHoverEvents = visible && acceptHoverEvents;
     if (shouldReceiveHoverEvents) {
         QCOMPARE(item->hoverEnterCount, 1);
         QCOMPARE(item->hoverMoveCount, 2);

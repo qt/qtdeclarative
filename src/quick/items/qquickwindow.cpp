@@ -2152,7 +2152,9 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
         QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
         for (int ii = children.count() - 1; ii >= 0; --ii) {
             QQuickItem *child = children.at(ii);
-            if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
+            if (!child->isVisible() || QQuickItemPrivate::get(child)->culled)
+                continue;
+            if (!child->isEnabled() && !QQuickItemPrivate::get(child)->subtreeHoverEnabled)
                 continue;
             if (deliverHoverEvent(child, scenePos, lastScenePos, modifiers, timestamp, accepted))
                 return true;
