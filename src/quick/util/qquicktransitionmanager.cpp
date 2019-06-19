@@ -47,6 +47,7 @@
 #include <private/qqmlproperty_p.h>
 
 #include <QtCore/qdebug.h>
+#include <private/qanimationjobutil_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -79,6 +80,7 @@ void QQuickTransitionManager::setState(QQuickState *s)
 QQuickTransitionManager::~QQuickTransitionManager()
 {
     delete d->transitionInstance;
+    d->transitionInstance = nullptr;
     delete d; d = nullptr;
 }
 
@@ -129,7 +131,7 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
                                       QQuickTransition *transition,
                                       QObject *defaultTarget)
 {
-    cancel();
+    RETURN_IF_DELETED(cancel());
 
     // The copy below is ON PURPOSE, because firing actions might involve scripts that modify the list.
     QQuickStateOperation::ActionList applyList = list;
@@ -154,7 +156,6 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
     //
     // This doesn't catch everything, and it might be a little fragile in
     // some cases - but whatcha going to do?
-
     if (transition && !d->bindingsList.isEmpty()) {
 
         // Apply all the property and binding changes
@@ -258,7 +259,7 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
 void QQuickTransitionManager::cancel()
 {
     if (d->transitionInstance && d->transitionInstance->isRunning())
-        d->transitionInstance->stop();
+        RETURN_IF_DELETED(d->transitionInstance->stop());
 
     for (const QQuickStateAction &action : qAsConst(d->bindingsList)) {
         if (action.toBinding && action.deletableToBinding) {
