@@ -51,20 +51,40 @@
 // We mean it.
 //
 
+#include <type_traits>
+
 QT_REQUIRE_CONFIG(qml_animation);
 
-#define RETURN_IF_DELETED(func) \
+// SelfDeletable is used for self-destruction detection along with
+// ACTION_IF_DELETED and RETURN_IF_DELETED macros. While using, the objects
+// under test should have a member m_selfDeletable of type SelfDeletable
+struct SelfDeletable {
+    ~SelfDeletable() {
+        if (m_wasDeleted)
+            *m_wasDeleted = true;
+    }
+    bool *m_wasDeleted = nullptr;
+};
+
+// \param p pointer to object under test, which should have a member m_selfDeletable of type SelfDeletable
+// \param func statements or functions that to be executed under test.
+// \param action post process if p was deleted under test.
+#define ACTION_IF_DELETED(p, func, action) \
 { \
-    bool *prevWasDeleted = m_wasDeleted; \
+    static_assert(std::is_same<decltype((p)->m_selfDeletable), SelfDeletable>::value, "m_selfDeletable must be SelfDeletable");\
+    bool *prevWasDeleted = (p)->m_selfDeletable.m_wasDeleted; \
     bool wasDeleted = false; \
-    m_wasDeleted = &wasDeleted; \
-    func; \
+    (p)->m_selfDeletable.m_wasDeleted = &wasDeleted; \
+    {func;} \
     if (wasDeleted) { \
         if (prevWasDeleted) \
             *prevWasDeleted = true; \
-        return; \
+        {action;} \
     } \
-    m_wasDeleted = prevWasDeleted; \
+    (p)->m_selfDeletable.m_wasDeleted = prevWasDeleted; \
 }
+
+#define RETURN_IF_DELETED(func) \
+ACTION_IF_DELETED(this, func, return)
 
 #endif // QANIMATIONJOBUTIL_P_H

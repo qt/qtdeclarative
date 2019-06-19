@@ -156,6 +156,10 @@ void QSGDefaultImageNode::setTexture(QSGTexture *texture)
     m_isAtlasTexture = texture->isAtlasTexture();
     if (wasAtlas || m_isAtlasTexture)
         dirty |= DirtyGeometry;
+    // The geometry has also changed if the texture size changed.
+    if (m_textureSize != texture->textureSize())
+        dirty |= DirtyGeometry;
+    m_textureSize = texture->textureSize();
     markDirty(dirty);
 }
 
