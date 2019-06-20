@@ -167,6 +167,8 @@ public:
     mutable QQmlNetworkAccessManagerFactory *networkAccessManagerFactory;
 #endif
     QHash<QString,QSharedPointer<QQmlImageProviderBase> > imageProviders;
+    QSharedPointer<QQmlImageProviderBase> imageProvider(const QString &providerId) const;
+
 
     QQmlAbstractUrlInterceptor* urlInterceptor;
 

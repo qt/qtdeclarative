@@ -61,7 +61,7 @@ class QQuickImageResponsePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickImageResponse)
 public:
-    bool finished = false;
+    QAtomicInteger<qint32> finished = false;
 
     void _q_finished() { finished = true; }
 };

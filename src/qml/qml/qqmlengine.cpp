@@ -1169,6 +1169,12 @@ void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
     }
 }
 
+QSharedPointer<QQmlImageProviderBase> QQmlEnginePrivate::imageProvider(const QString &providerId) const
+{
+    QMutexLocker locker(&mutex);
+    return imageProviders.value(providerId.toLower());
+}
+
 #if QT_CONFIG(qml_network)
 /*!
   Sets the \a factory to use for creating QNetworkAccessManager(s).
