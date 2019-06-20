@@ -251,7 +251,7 @@ void tst_librarymetrics_performance::compilation()
     }
 
     // sort the list
-    qSort(nResults);
+    std::sort(nResults.begin(), nResults.end());
 
     // remove IGNORE_N_OUTLIERS*2 from ONLY the worst end (remove gc interference)
     for (int i = 0; i < IGNORE_N_OUTLIERS; ++i) {
@@ -300,7 +300,7 @@ void tst_librarymetrics_performance::instantiation_cached()
     }
 
     // sort the list
-    qSort(nResults);
+    std::sort(nResults.begin(), nResults.end());
 
     // remove IGNORE_N_OUTLIERS*2 from ONLY the worst end (remove gc interference)
     for (int i = 0; i < IGNORE_N_OUTLIERS; ++i) {
@@ -357,7 +357,7 @@ void tst_librarymetrics_performance::instantiation()
     }
 
     // sort the list
-    qSort(nResults);
+    std::sort(nResults.begin(), nResults.end());
 
     // remove IGNORE_N_OUTLIERS*2 from ONLY the worst end (remove gc interference)
     for (int i = 0; i < IGNORE_N_OUTLIERS; ++i) {
@@ -423,7 +423,7 @@ void tst_librarymetrics_performance::positioners()
     }
 
     // sort the list
-    qSort(nResults);
+    std::sort(nResults.begin(), nResults.end());
 
     // remove IGNORE_N_OUTLIERS*2 from ONLY the worst end (remove gc interference)
     for (int i = 0; i < IGNORE_N_OUTLIERS; ++i) {
