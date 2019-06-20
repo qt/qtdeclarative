@@ -6,7 +6,7 @@ SUBDIRS += \
     models \
     labsmodels
 
-qtConfig(thread): SUBDIRS += folderlistmodel
+SUBDIRS += folderlistmodel
 qtHaveModule(sql): SUBDIRS += localstorage
 qtConfig(settings): SUBDIRS += settings
 qtConfig(statemachine): SUBDIRS += statemachine
