@@ -1717,8 +1717,14 @@ void QQuickItemViewPrivate::refill()
 void QQuickItemViewPrivate::refill(qreal from, qreal to)
 {
     Q_Q(QQuickItemView);
-    if (!isValid() || !q->isComponentComplete())
+    if (!model || !model->isValid() || !q->isComponentComplete())
         return;
+    if (!model->count()) {
+        updateHeader();
+        updateFooter();
+        updateViewport();
+        return;
+    }
 
     do {
         bufferPause.stop();

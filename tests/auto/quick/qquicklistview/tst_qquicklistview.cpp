@@ -152,6 +152,7 @@ private slots:
     void headerChangesViewport();
     void footer();
     void footer_data();
+    void footer2();
     void extents();
     void extents_data();
     void resetModel_headerFooter();
@@ -4136,6 +4137,21 @@ void tst_QQuickListView::footer_data()
         << QPointF(0, -320)
         << QPointF(0, -20)
         << QPointF(0, -(30 * 20) - 10);
+}
+
+void tst_QQuickListView::footer2() // QTBUG-31677
+{
+    QQuickView *window = getView();
+    window->setSource(testFileUrl("footer2.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listview != nullptr);
+
+    QQuickItem *footer = listview->footerItem();
+    QVERIFY(footer != nullptr);
+    QTRY_COMPARE(footer->y(), 0.0);
 }
 
 class LVAccessor : public QQuickListView
