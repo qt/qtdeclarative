@@ -202,8 +202,8 @@ QT_BEGIN_NAMESPACE
     SplitView.preferredWidth and \c SplitView.preferredHeight properties can be
     serialized using the \l saveState() and \l restoreState() functions:
 
-    \code
-    import QtQuick.Controls 2.5
+    \qml \QtMinorVersion
+    import QtQuick.Controls 2.\1
     import Qt.labs.settings 1.0
 
     ApplicationWindow {
@@ -222,13 +222,13 @@ QT_BEGIN_NAMESPACE
             // ...
         }
     }
-    \endcode
+    \endqml
 
     Alternatively, the \l {Settings::}{value()} and \l {Settings::}{setValue()}
     functions of \l Settings can be used:
 
-    \code
-    import QtQuick.Controls 2.5
+    \qml \QtMinorVersion
+    import QtQuick.Controls 2.\1
     import Qt.labs.settings 1.0
 
     ApplicationWindow {
@@ -246,7 +246,7 @@ QT_BEGIN_NAMESPACE
             // ...
         }
     }
-    \endcode
+    \endqml
 
     \sa SplitHandle, {Customizing SplitView}, {Container Controls}
 */
