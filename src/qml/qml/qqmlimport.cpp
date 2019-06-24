@@ -1020,13 +1020,6 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
     return true;
 }
 
-#if defined(QT_SHARED) || !QT_CONFIG(library)
-static inline QString msgCannotLoadPlugin(const QString &uri, const QString &why)
-{
-    return QQmlImportDatabase::tr("plugin cannot be loaded for module \"%1\": %2").arg(uri, why);
-}
-#endif
-
 /*
 Import an extension defined by a qmldir file.
 
@@ -1086,9 +1079,11 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
                         // XXX TODO: should we leave the import plugin error alone?
                         // Here, we pop it off the top and coalesce it into this error's message.
                         // The reason is that the lower level may add url and line/column numbering information.
-                        QQmlError poppedError = errors->takeFirst();
                         QQmlError error;
-                        error.setDescription(msgCannotLoadPlugin(uri, poppedError.description()));
+                        error.setDescription(
+                                QQmlImportDatabase::tr(
+                                        "plugin cannot be loaded for module \"%1\": %2")
+                                        .arg(uri, errors->takeFirst().description()));
                         error.setUrl(QUrl::fromLocalFile(qmldirFilePath));
                         errors->prepend(error);
                     }
