@@ -3282,6 +3282,8 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms)
 
     ps->setSampleCount(m_gstate.sampleCount);
 
+    ps->setLineWidth(m_gstate.lineWidth);
+
     //qDebug("building new ps %p", ps);
     if (!ps->build()) {
         qWarning("Failed to build graphics pipeline state");
@@ -3634,7 +3636,10 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
     e->srb = m_shaderManager->srb(bindings);
 
     m_gstate.drawMode = QSGGeometry::DrawingMode(g->drawingMode());
+    m_gstate.lineWidth = g->lineWidth();
+
     const bool hasPipeline = ensurePipelineState(e, sms);
+
     if (pendingGStatePop)
         m_gstate = m_gstateStack.pop();
 
@@ -3651,19 +3656,38 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
     return true;
 }
 
+void Renderer::checkLineWidth(QSGGeometry *g)
+{
+    if (g->drawingMode() == QSGGeometry::DrawLines || g->drawingMode() == QSGGeometry::DrawLineLoop
+            || g->drawingMode() == QSGGeometry::DrawLineStrip)
+    {
+        if (g->lineWidth() != 1.0f) {
+            static bool checkedWideLineSupport = false;
+            if (!checkedWideLineSupport) {
+                checkedWideLineSupport = true;
+                if (!m_rhi->isFeatureSupported(QRhi::WideLines))
+                    qWarning("Line widths other than 1 are not supported by the graphics API");
+            }
+        }
+    } else if (g->drawingMode() == QSGGeometry::DrawPoints) {
+        if (g->lineWidth() != 1.0f) {
+            static bool warnedPointSize = false;
+            if (!warnedPointSize) {
+                warnedPointSize = true;
+                qWarning("Point size is not controllable by QSGGeometry. "
+                         "Set gl_PointSize from the vertex shader instead.");
+            }
+        }
+    }
+}
+
 void Renderer::renderMergedBatch(PreparedRenderBatch *renderBatch) // split prepare-render (RHI only)
 {
     const Batch *batch = renderBatch->batch;
     Element *e = batch->first;
     QSGGeometryNode *gn = e->node;
     QSGGeometry *g = gn->geometry();
-
-    if (g->drawingMode() == QSGGeometry::DrawLineStrip || g->drawingMode() == QSGGeometry::DrawLineLoop
-            || g->drawingMode() == QSGGeometry::DrawLines || g->drawingMode() == QSGGeometry::DrawPoints)
-    {
-        if (g->lineWidth() != 1.0f)
-            qWarning("Line width and point size other than 1 not supported");
-    }
+    checkLineWidth(g);
 
     if (batch->clipState.type & ClipState::StencilClip)
         enqueueStencilDraw(batch);
@@ -3804,11 +3828,14 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
         ubufOffset += aligned(ubufSize, m_ubufAlignment);
 
         const QSGGeometry::DrawingMode prevDrawMode = m_gstate.drawMode;
+        const float prevLineWidth = m_gstate.lineWidth;
         m_gstate.drawMode = QSGGeometry::DrawingMode(g->drawingMode());
+        m_gstate.lineWidth = g->lineWidth();
+
         // Do not bother even looking up the ps if the topology has not changed
         // since everything else is the same for all elements in the batch.
         // (except if the material modified blend state)
-        if (!ps || m_gstate.drawMode != prevDrawMode || pendingGStatePop) {
+        if (!ps || m_gstate.drawMode != prevDrawMode || m_gstate.lineWidth != prevLineWidth || pendingGStatePop) {
             if (!ensurePipelineState(e, sms)) {
                 if (pendingGStatePop)
                     m_gstate = m_gstateStack.pop();
@@ -3856,14 +3883,8 @@ void Renderer::renderUnmergedBatch(PreparedRenderBatch *renderBatch) // split pr
     while (e) {
         gn = e->node;
         QSGGeometry *g = gn->geometry();
+        checkLineWidth(g);
         const int effectiveIndexSize = m_uint32IndexForRhi ? sizeof(quint32) : g->sizeOfIndex();
-
-        if (g->drawingMode() == QSGGeometry::DrawLineStrip || g->drawingMode() == QSGGeometry::DrawLineLoop
-                || g->drawingMode() == QSGGeometry::DrawLines || g->drawingMode() == QSGGeometry::DrawPoints)
-        {
-            if (g->lineWidth() != 1.0f)
-                qWarning("Line width and point size other than 1 not supported");
-        }
 
         setGraphicsPipeline(cb, batch, e);
 
@@ -4753,7 +4774,8 @@ bool operator==(const GraphicsState &a, const GraphicsState &b) Q_DECL_NOTHROW
             && a.usesScissor == b.usesScissor
             && a.stencilTest == b.stencilTest
             && a.sampleCount == b.sampleCount
-            && a.drawMode == b.drawMode;
+            && a.drawMode == b.drawMode
+            && a.lineWidth == b.lineWidth;
 }
 
 bool operator!=(const GraphicsState &a, const GraphicsState &b) Q_DECL_NOTHROW

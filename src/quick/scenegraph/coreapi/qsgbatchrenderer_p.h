@@ -691,6 +691,7 @@ struct GraphicsState
     bool stencilTest = false;
     int sampleCount = 1;
     QSGGeometry::DrawingMode drawMode = QSGGeometry::DrawTriangles;
+    float lineWidth = 1.0f;
 };
 
 bool operator==(const GraphicsState &a, const GraphicsState &b) Q_DECL_NOTHROW;
@@ -779,6 +780,7 @@ private:
                                    const Batch *batch, int ubufOffset, int ubufRegionSize);
     void updateMaterialStaticData(ShaderManager::Shader *sms, const QSGMaterialRhiShader::RenderState &renderState,
                                   QSGMaterial *material, Batch *batch, bool *gstateChanged);
+    void checkLineWidth(QSGGeometry *g);
     bool prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *renderBatch);
     void renderMergedBatch(PreparedRenderBatch *renderBatch);
     bool prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *renderBatch);
