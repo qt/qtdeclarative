@@ -756,13 +756,13 @@ QQmlDataBlob::ThreadData::ThreadData()
 
 QQmlDataBlob::Status QQmlDataBlob::ThreadData::status() const
 {
-    return QQmlDataBlob::Status((_p.load() & TD_STATUS_MASK) >> TD_STATUS_SHIFT);
+    return QQmlDataBlob::Status((_p.loadRelaxed() & TD_STATUS_MASK) >> TD_STATUS_SHIFT);
 }
 
 void QQmlDataBlob::ThreadData::setStatus(QQmlDataBlob::Status status)
 {
     while (true) {
-        int d = _p.load();
+        int d = _p.loadRelaxed();
         int nd = (d & ~TD_STATUS_MASK) | ((status << TD_STATUS_SHIFT) & TD_STATUS_MASK);
         if (d == nd || _p.testAndSetOrdered(d, nd)) return;
     }
@@ -770,13 +770,13 @@ void QQmlDataBlob::ThreadData::setStatus(QQmlDataBlob::Status status)
 
 bool QQmlDataBlob::ThreadData::isAsync() const
 {
-    return _p.load() & TD_ASYNC_MASK;
+    return _p.loadRelaxed() & TD_ASYNC_MASK;
 }
 
 void QQmlDataBlob::ThreadData::setIsAsync(bool v)
 {
     while (true) {
-        int d = _p.load();
+        int d = _p.loadRelaxed();
         int nd = (d & ~TD_ASYNC_MASK) | (v?TD_ASYNC_MASK:0);
         if (d == nd || _p.testAndSetOrdered(d, nd)) return;
     }
@@ -784,13 +784,13 @@ void QQmlDataBlob::ThreadData::setIsAsync(bool v)
 
 quint8 QQmlDataBlob::ThreadData::progress() const
 {
-    return quint8((_p.load() & TD_PROGRESS_MASK) >> TD_PROGRESS_SHIFT);
+    return quint8((_p.loadRelaxed() & TD_PROGRESS_MASK) >> TD_PROGRESS_SHIFT);
 }
 
 void QQmlDataBlob::ThreadData::setProgress(quint8 v)
 {
     while (true) {
-        int d = _p.load();
+        int d = _p.loadRelaxed();
         int nd = (d & ~TD_PROGRESS_MASK) | ((v << TD_PROGRESS_SHIFT) & TD_PROGRESS_MASK);
         if (d == nd || _p.testAndSetOrdered(d, nd)) return;
     }

@@ -69,24 +69,24 @@ int QQmlTypeModule::majorVersion() const
 
 int QQmlTypeModule::minimumMinorVersion() const
 {
-    return d->minMinorVersion.load();
+    return d->minMinorVersion.loadRelaxed();
 }
 
 int QQmlTypeModule::maximumMinorVersion() const
 {
-    return d->maxMinorVersion.load();
+    return d->maxMinorVersion.loadRelaxed();
 }
 
 void QQmlTypeModule::addMinorVersion(int version)
 {
-    for (int oldVersion = d->minMinorVersion.load();
+    for (int oldVersion = d->minMinorVersion.loadRelaxed();
          oldVersion > version && !d->minMinorVersion.testAndSetOrdered(oldVersion, version);
-         oldVersion = d->minMinorVersion.load()) {
+         oldVersion = d->minMinorVersion.loadRelaxed()) {
     }
 
-    for (int oldVersion = d->maxMinorVersion.load();
+    for (int oldVersion = d->maxMinorVersion.loadRelaxed();
          oldVersion < version && !d->maxMinorVersion.testAndSetOrdered(oldVersion, version);
-         oldVersion = d->maxMinorVersion.load()) {
+         oldVersion = d->maxMinorVersion.loadRelaxed()) {
     }
 }
 
@@ -125,12 +125,12 @@ void QQmlTypeModule::remove(const QQmlTypePrivate *type)
 
 bool QQmlTypeModule::isLocked() const
 {
-    return d->locked.load() != 0;
+    return d->locked.loadRelaxed() != 0;
 }
 
 void QQmlTypeModule::lock()
 {
-    d->locked.store(1);
+    d->locked.storeRelaxed(1);
 }
 
 QQmlType QQmlTypeModule::type(const QHashedStringRef &name, int minor) const
