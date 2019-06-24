@@ -454,6 +454,7 @@ bool QSGRenderThread::event(QEvent *e)
             const bool alpha = ce->window->format().alphaBufferSize() > 0 && ce->window->color().alpha() != 255;
             const QSize readbackSize = windowSize * ce->window->effectiveDevicePixelRatio();
             if (rhi) {
+                rhi->makeThreadLocalNativeContextCurrent();
                 syncAndRender(ce->image);
             } else {
                 gl->makeCurrent(ce->window);
@@ -482,12 +483,10 @@ bool QSGRenderThread::event(QEvent *e)
         WMJobEvent *ce = static_cast<WMJobEvent *>(e);
         Q_ASSERT(ce->window == window);
         if (window) {
-            if (rhi) {
-                // ### needs https://codereview.qt-project.org/c/qt/qtbase/+/265231
-                //rhi->makeThreadLocalNativeContextCurrent();
-            } else {
+            if (rhi)
+                rhi->makeThreadLocalNativeContextCurrent();
+            else
                 gl->makeCurrent(window);
-            }
             ce->job->run();
             delete ce->job;
             ce->job = nullptr;
@@ -543,6 +542,8 @@ void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor, 
     bool current = true;
     if (gl)
         current = gl->makeCurrent(fallback ? static_cast<QSurface *>(fallback) : static_cast<QSurface *>(window));
+    else if (rhi)
+        rhi->makeThreadLocalNativeContextCurrent();
 
     if (Q_UNLIKELY(!current)) {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- cleanup without an OpenGL context");
@@ -610,10 +611,12 @@ void QSGRenderThread::sync(bool inExpose, bool inGrab)
 
     Q_ASSERT_X(wm->m_lockedForSync, "QSGRenderThread::sync()", "sync triggered on bad terms as gui is not already locked...");
 
-    bool current = false;
+    bool current = true;
     if (gl) {
         if (windowSize.width() > 0 && windowSize.height() > 0)
             current = gl->makeCurrent(window);
+        else
+            current = false;
         // Check for context loss.
         if (!current && !gl->isValid()) {
             QQuickWindowPrivate::get(window)->cleanupNodesOnShutdown();
@@ -629,7 +632,12 @@ void QSGRenderThread::sync(bool inExpose, bool inGrab)
             }
         }
     } else {
-        current = true;
+        // With the rhi making the (OpenGL) context current serves only one
+        // purpose: to enable external OpenGL rendering connected to one of
+        // the QQuickWindow signals (beforeSynchronizing, beforeRendering,
+        // etc.) to function like it did on the direct OpenGL path. For our
+        // own rendering this call would not be necessary.
+        rhi->makeThreadLocalNativeContextCurrent();
     }
     if (current) {
         QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
@@ -758,12 +766,14 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
         d->animationController->unlock();
     }
 
-    bool current = false;
+    bool current = true;
     if (d->renderer && windowSize.width() > 0 && windowSize.height() > 0) {
         if (gl)
             current = gl->makeCurrent(window);
-        else
-            current = true;
+        else if (rhi)
+            rhi->makeThreadLocalNativeContextCurrent();
+    } else {
+        current = false;
     }
     // Check for context loss (GL, RHI case handled after the beginFrame() above)
     if (gl) {
@@ -892,6 +902,7 @@ void QSGRenderThread::run()
                     }
                 }
                 if (!sgrc->rhi() && windowSize.width() > 0 && windowSize.height() > 0) {
+                    rhi->makeThreadLocalNativeContextCurrent();
                     QSGDefaultRenderContext::InitParams rcParams;
                     rcParams.rhi = rhi;
                     rcParams.sampleCount = rhiSampleCount;

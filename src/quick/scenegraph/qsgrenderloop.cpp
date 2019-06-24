@@ -149,9 +149,9 @@ void QSGRenderLoop::postJob(QQuickWindow *window, QRunnable *job)
             job->run();
         }
     } else {
-        // ### needs https://codereview.qt-project.org/c/qt/qtbase/+/265231
-//        if (window->rhi())
-//            window->rhi()->makeThreadLocalNativeContextCurrent();
+        QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
+        if (cd->rhi)
+            cd->rhi->makeThreadLocalNativeContextCurrent();
         job->run();
     }
 #else
@@ -396,10 +396,12 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
         // There may be no platform window if the window got closed.
         if (!window->handle())
             surface = offscreenSurface;
-        if (!rhi)
-            current = gl->makeCurrent(surface);
-        else
+        if (rhi) {
+            rhi->makeThreadLocalNativeContextCurrent();
             current = true;
+        } else {
+            current = gl->makeCurrent(surface);
+        }
     }
     if (Q_UNLIKELY(!current))
         qCDebug(QSG_LOG_RENDERLOOP, "cleanup without an OpenGL context");
@@ -497,6 +499,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
                 QSGRhiProfileConnection::instance()->initialize(rhi);
 
             current = true;
+            rhi->makeThreadLocalNativeContextCurrent();
 
             // The sample count cannot vary between windows as we use the same
             // rendercontext for all of them. Decide it here and now.
@@ -542,10 +545,17 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             cd->context->initialize(&rcParams);
         }
     } else {
-        if (!rhi)
-            current = gl->makeCurrent(window);
-        else
+        if (rhi) {
             current = true;
+            // With the rhi making the (OpenGL) context current serves only one
+            // purpose: to enable external OpenGL rendering connected to one of
+            // the QQuickWindow signals (beforeSynchronizing, beforeRendering,
+            // etc.) to function like it did on the direct OpenGL path. For our
+            // own rendering this call would not be necessary.
+            rhi->makeThreadLocalNativeContextCurrent();
+        } else {
+            current = gl->makeCurrent(window);
+        }
     }
 
     if (enableRhi && rhi && !cd->swapchain) {
