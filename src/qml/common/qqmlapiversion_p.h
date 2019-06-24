@@ -37,56 +37,20 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLJSDIAGNOSTICMESSAGE_P_H
-#define QQMLJSDIAGNOSTICMESSAGE_P_H
+#ifndef QQMLAPIVERSION_P_H
+#define QQMLAPIVERSION_P_H
 
 //
 //  W A R N I N G
 //  -------------
 //
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
+// This file is not part of the Qt API. It exists purely as an
+// implementation detail. This header file may change from version to
 // version without notice, or even be removed.
 //
 // We mean it.
 //
 
-#include <QtCore/qlogging.h>
-#include <QtCore/qstring.h>
+#define Q_QML_PRIVATE_API_VERSION 5
 
-// Include the API version here, to avoid complications when querying it for the
-// QQmlSourceLocation -> line/column change.
-#include <private/qqmlapiversion_p.h>
-
-QT_BEGIN_NAMESPACE
-
-namespace QQmlJS {
-struct DiagnosticMessage
-{
-    QString message;
-    QtMsgType type = QtCriticalMsg;
-    quint32 line = 0;
-    quint32 column = 0;
-
-    bool isError() const
-    {
-        return type == QtCriticalMsg;
-    }
-
-    bool isWarning() const
-    {
-        return type == QtWarningMsg;
-    }
-
-    bool isValid() const
-    {
-        return !message.isEmpty();
-    }
-};
-} // namespace QQmlJS
-
-Q_DECLARE_TYPEINFO(QQmlJS::DiagnosticMessage, Q_MOVABLE_TYPE);
-
-QT_END_NAMESPACE
-
-#endif // QQMLJSDIAGNOSTICMESSAGE_P_H
+#endif // QQMLAPIVERSION_P_H
