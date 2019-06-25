@@ -11,5 +11,8 @@ opensuse-42.1
 osx-10.12
 
 #QTBUG-75960
+#QTBUG-76652
 [currentIndex]
 osx-10.12
+opensuse-leap
+ubuntu-18.04
