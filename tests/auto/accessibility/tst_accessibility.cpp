@@ -132,10 +132,10 @@ void tst_accessibility::a11y()
 
     QString fn = name;
 #if !QT_CONFIG(accessibility)
-    if (name == QLatin1Literal("dayofweekrow")
-            || name == QLatin1Literal("monthgrid")
-            || name == QLatin1Literal("weeknumbercolumn"))
-        fn += QLatin1Literal("-2");
+    if (name == QLatin1String("dayofweekrow")
+            || name == QLatin1String("monthgrid")
+            || name == QLatin1String("weeknumbercolumn"))
+        fn += QLatin1String("-2");
 #endif
 
     QQmlComponent component(&engine);
@@ -154,9 +154,9 @@ void tst_accessibility::a11y()
 
 #if QT_CONFIG(accessibility)
     QQuickAccessibleAttached *acc = QQuickAccessibleAttached::attachedProperties(item);
-    if (name != QLatin1Literal("dayofweekrow")
-            && name != QLatin1Literal("monthgrid")
-            && name != QLatin1Literal("weeknumbercolumn")) {
+    if (name != QLatin1String("dayofweekrow")
+            && name != QLatin1String("monthgrid")
+            && name != QLatin1String("weeknumbercolumn")) {
         if (QAccessible::isActive()) {
             QVERIFY(acc);
         } else {
