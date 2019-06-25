@@ -130,8 +130,7 @@ void tst_parserstress::ecmascript()
         QCOMPARE(component.errors().at(1).line(), 142);
 
     } else {
-
-        QVERIFY(!component.isError());
+        QVERIFY2(!component.isError(), qPrintable(component.errorString()));
     }
 }
 

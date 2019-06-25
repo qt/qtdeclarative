@@ -78,7 +78,7 @@ void tst_qqmlstatemachine::tst_cppObjectSignal()
     CppObject cppObject;
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("cppsignal.qml"));
-    QVERIFY(!component.isError());
+    QVERIFY2(!component.isError(), qPrintable(component.errorString()));
 
     QQmlContext *ctxt = engine.rootContext();
     ctxt->setContextProperty("_cppObject", &cppObject);
