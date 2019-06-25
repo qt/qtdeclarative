@@ -57,13 +57,53 @@
 #include <QImage>
 #include <QThreadPool>
 
-class AsyncImageResponse : public QQuickImageResponse, public QRunnable
+class AsyncImageResponseRunnable : public QObject, public QRunnable
+{
+    Q_OBJECT
+
+signals:
+    void done(QImage image);
+
+public:
+    AsyncImageResponseRunnable(const QString &id, const QSize &requestedSize)
+        : m_id(id), m_requestedSize(requestedSize) {}
+
+    void run() override
+    {
+        auto image = QImage(50, 50, QImage::Format_RGB32);
+        if (m_id == QLatin1String("slow")) {
+            qDebug() << "Slow, red, sleeping for 5 seconds";
+            QThread::sleep(5);
+            image.fill(Qt::red);
+        } else {
+            qDebug() << "Fast, blue, sleeping for 1 second";
+            QThread::sleep(1);
+            image.fill(Qt::blue);
+        }
+        if (m_requestedSize.isValid())
+            image = image.scaled(m_requestedSize);
+
+        emit done(image);
+    }
+
+private:
+    QString m_id;
+    QSize m_requestedSize;
+};
+
+class AsyncImageResponse : public QQuickImageResponse
 {
     public:
-        AsyncImageResponse(const QString &id, const QSize &requestedSize)
-         : m_id(id), m_requestedSize(requestedSize)
+        AsyncImageResponse(const QString &id, const QSize &requestedSize, QThreadPool *pool)
         {
-            setAutoDelete(false);
+            auto runnable = new AsyncImageResponseRunnable(id, requestedSize);
+            connect(runnable, &AsyncImageResponseRunnable::done, this, &AsyncImageResponse::handleDone);
+            pool->start(runnable);
+        }
+
+        void handleDone(QImage image) {
+            m_image = image;
+            emit finished();
         }
 
         QQuickTextureFactory *textureFactory() const override
@@ -71,26 +111,6 @@ class AsyncImageResponse : public QQuickImageResponse, public QRunnable
             return QQuickTextureFactory::textureFactoryForImage(m_image);
         }
 
-        void run() override
-        {
-            m_image = QImage(50, 50, QImage::Format_RGB32);
-            if (m_id == "slow") {
-                qDebug() << "Slow, red, sleeping for 5 seconds";
-                QThread::sleep(5);
-                m_image.fill(Qt::red);
-            } else {
-                qDebug() << "Fast, blue, sleeping for 1 second";
-                QThread::sleep(1);
-                m_image.fill(Qt::blue);
-            }
-            if (m_requestedSize.isValid())
-                m_image = m_image.scaled(m_requestedSize);
-
-            emit finished();
-        }
-
-        QString m_id;
-        QSize m_requestedSize;
         QImage m_image;
 };
 
@@ -99,8 +119,7 @@ class AsyncImageProvider : public QQuickAsyncImageProvider
 public:
     QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize) override
     {
-        AsyncImageResponse *response = new AsyncImageResponse(id, requestedSize);
-        pool.start(response);
+        AsyncImageResponse *response = new AsyncImageResponse(id, requestedSize, &pool);
         return response;
     }
 
