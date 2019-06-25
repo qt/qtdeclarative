@@ -70,6 +70,7 @@ public:
     void setWindow(QQuickWindow *window) { m_window = window; }
 
 public slots:
+    void init();
     void paint();
 
 private:

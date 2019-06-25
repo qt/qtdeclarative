@@ -102,15 +102,21 @@ public:
 
     void initialize(const QSGRenderContext::InitParams *params) override;
     void invalidate() override;
-    void renderNextFrame(QSGRenderer *renderer, uint fboId) override;
 
-    void beginRhiFrame(QSGRenderer *renderer, QRhiRenderTarget *rt, QRhiRenderPassDescriptor *rp,
-                       QRhiCommandBuffer *cb,
-                       RenderPassCallback mainPassRecordingStart,
-                       RenderPassCallback mainPassRecordingEnd,
-                       void *callbackUserData) override;
+    void beginNextFrame(QSGRenderer *renderer,
+                        RenderPassCallback mainPassRecordingStart,
+                        RenderPassCallback mainPassRecordingEnd,
+                        void *callbackUserData) override;
+    void renderNextFrame(QSGRenderer *renderer, uint fboId) override;
+    void endNextFrame(QSGRenderer *renderer) override;
+
+    void beginNextRhiFrame(QSGRenderer *renderer,
+                           QRhiRenderTarget *rt, QRhiRenderPassDescriptor *rp, QRhiCommandBuffer *cb,
+                           RenderPassCallback mainPassRecordingStart,
+                           RenderPassCallback mainPassRecordingEnd,
+                           void *callbackUserData) override;
     void renderNextRhiFrame(QSGRenderer *renderer) override;
-    void endRhiFrame(QSGRenderer *renderer) override;
+    void endNextRhiFrame(QSGRenderer *renderer) override;
 
     QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font) override;
 

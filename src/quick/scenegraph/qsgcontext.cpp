@@ -341,11 +341,27 @@ void QSGRenderContext::invalidate()
 {
 }
 
-void QSGRenderContext::beginRhiFrame(QSGRenderer *renderer, QRhiRenderTarget *rt, QRhiRenderPassDescriptor *rp,
-                                     QRhiCommandBuffer *cb,
-                                     RenderPassCallback mainPassRecordingStart,
-                                     RenderPassCallback mainPassRecordingEnd,
-                                     void *callbackUserData)
+void QSGRenderContext::beginNextFrame(QSGRenderer *renderer,
+                                      RenderPassCallback mainPassRecordingStart,
+                                      RenderPassCallback mainPassRecordingEnd,
+                                      void *callbackUserData)
+{
+    Q_UNUSED(renderer);
+    Q_UNUSED(mainPassRecordingStart);
+    Q_UNUSED(mainPassRecordingEnd);
+    Q_UNUSED(callbackUserData);
+}
+
+void QSGRenderContext::endNextFrame(QSGRenderer *renderer)
+{
+    Q_UNUSED(renderer);
+}
+
+void QSGRenderContext::beginNextRhiFrame(QSGRenderer *renderer,
+                                         QRhiRenderTarget *rt, QRhiRenderPassDescriptor *rp, QRhiCommandBuffer *cb,
+                                         RenderPassCallback mainPassRecordingStart,
+                                         RenderPassCallback mainPassRecordingEnd,
+                                         void *callbackUserData)
 {
     Q_UNUSED(renderer);
     Q_UNUSED(rt);
@@ -361,7 +377,7 @@ void QSGRenderContext::renderNextRhiFrame(QSGRenderer *renderer)
     Q_UNUSED(renderer);
 }
 
-void QSGRenderContext::endRhiFrame(QSGRenderer *renderer)
+void QSGRenderContext::endNextRhiFrame(QSGRenderer *renderer)
 {
     Q_UNUSED(renderer);
 }

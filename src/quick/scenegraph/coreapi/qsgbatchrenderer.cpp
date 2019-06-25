@@ -3984,6 +3984,9 @@ void Renderer::renderBatches()
 
         bindable()->clear(clearMode());
 
+        if (m_renderPassRecordingCallbacks.start)
+            m_renderPassRecordingCallbacks.start(m_renderPassRecordingCallbacks.userData);
+
         if (Q_LIKELY(renderOpaque)) {
             for (int i=0; i<m_opaqueBatches.size(); ++i) {
                 Batch *b = m_opaqueBatches.at(i);
@@ -4019,6 +4022,9 @@ void Renderer::renderBatches()
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glDepthMask(true);
+
+        if (m_renderPassRecordingCallbacks.end)
+            m_renderPassRecordingCallbacks.end(m_renderPassRecordingCallbacks.userData);
 
     } else {
         // RHI path

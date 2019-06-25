@@ -201,6 +201,14 @@ void QSGDefaultRenderContext::invalidate()
 
 static QBasicMutex qsg_framerender_mutex;
 
+void QSGDefaultRenderContext::beginNextFrame(QSGRenderer *renderer,
+                                             RenderPassCallback mainPassRecordingStart,
+                                             RenderPassCallback mainPassRecordingEnd,
+                                             void *callbackUserData)
+{
+    renderer->setRenderPassRecordingCallbacks(mainPassRecordingStart, mainPassRecordingEnd, callbackUserData);
+}
+
 void QSGDefaultRenderContext::renderNextFrame(QSGRenderer *renderer, uint fboId)
 {
     if (m_serializedRender)
@@ -212,11 +220,16 @@ void QSGDefaultRenderContext::renderNextFrame(QSGRenderer *renderer, uint fboId)
         qsg_framerender_mutex.unlock();
 }
 
-void QSGDefaultRenderContext::beginRhiFrame(QSGRenderer *renderer, QRhiRenderTarget *rt, QRhiRenderPassDescriptor *rp,
-                                            QRhiCommandBuffer *cb,
-                                            RenderPassCallback mainPassRecordingStart,
-                                            RenderPassCallback mainPassRecordingEnd,
-                                            void *callbackUserData)
+void QSGDefaultRenderContext::endNextFrame(QSGRenderer *renderer)
+{
+    Q_UNUSED(renderer);
+}
+
+void QSGDefaultRenderContext::beginNextRhiFrame(QSGRenderer *renderer, QRhiRenderTarget *rt, QRhiRenderPassDescriptor *rp,
+                                                QRhiCommandBuffer *cb,
+                                                RenderPassCallback mainPassRecordingStart,
+                                                RenderPassCallback mainPassRecordingEnd,
+                                                void *callbackUserData)
 {
     Q_ASSERT(!m_currentFrameCommandBuffer);
 
@@ -233,7 +246,7 @@ void QSGDefaultRenderContext::renderNextRhiFrame(QSGRenderer *renderer)
     renderer->renderScene();
 }
 
-void QSGDefaultRenderContext::endRhiFrame(QSGRenderer *renderer)
+void QSGDefaultRenderContext::endNextRhiFrame(QSGRenderer *renderer)
 {
     Q_UNUSED(renderer);
     m_currentFrameCommandBuffer = nullptr;

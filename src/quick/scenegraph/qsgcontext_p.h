@@ -171,15 +171,24 @@ public:
     struct InitParams { };
     virtual void initialize(const InitParams *params);
     virtual void invalidate();
-    virtual void renderNextFrame(QSGRenderer *renderer, uint fboId) = 0; // legacy, GL-only
+
     using RenderPassCallback = void (*)(void *);
-    virtual void beginRhiFrame(QSGRenderer *renderer, QRhiRenderTarget *rt, QRhiRenderPassDescriptor *rp,
-                               QRhiCommandBuffer *cb,
-                               RenderPassCallback mainPassRecordingStart,
-                               RenderPassCallback mainPassRecordingEnd,
-                               void *callbackUserData); // RHI only
+
+    virtual void beginNextFrame(QSGRenderer *renderer,
+                                RenderPassCallback mainPassRecordingStart,
+                                RenderPassCallback mainPassRecordingEnd,
+                                void *callbackUserData);
+    virtual void renderNextFrame(QSGRenderer *renderer, uint fboId) = 0;
+    virtual void endNextFrame(QSGRenderer *renderer);
+
+    virtual void beginNextRhiFrame(QSGRenderer *renderer,
+                                   QRhiRenderTarget *rt, QRhiRenderPassDescriptor *rp, QRhiCommandBuffer *cb,
+                                   RenderPassCallback mainPassRecordingStart,
+                                   RenderPassCallback mainPassRecordingEnd,
+                                   void *callbackUserData);
     virtual void renderNextRhiFrame(QSGRenderer *renderer);
-    virtual void endRhiFrame(QSGRenderer *renderer); // RHI only
+    virtual void endNextRhiFrame(QSGRenderer *renderer);
+
     virtual void endSync();
 
     virtual QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font);

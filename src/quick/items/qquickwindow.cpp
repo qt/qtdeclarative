@@ -474,13 +474,18 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
 
     if (rhi) {
         // ### no offscreen ("renderTargetId") support yet
-        context->beginRhiFrame(renderer,
-                               swapchain->currentFrameRenderTarget(),
-                               rpDescForSwapchain,
-                               swapchain->currentFrameCommandBuffer(),
-                               emitBeforeRenderPassRecording,
-                               emitAfterRenderPassRecording,
-                               q);
+        context->beginNextRhiFrame(renderer,
+                                   swapchain->currentFrameRenderTarget(),
+                                   rpDescForSwapchain,
+                                   swapchain->currentFrameCommandBuffer(),
+                                   emitBeforeRenderPassRecording,
+                                   emitAfterRenderPassRecording,
+                                   q);
+    } else {
+        context->beginNextFrame(renderer,
+                                emitBeforeRenderPassRecording,
+                                emitAfterRenderPassRecording,
+                                q);
     }
 
     animationController->advance();
@@ -528,7 +533,9 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
     runAndClearJobs(&afterRenderingJobs);
 
     if (rhi)
-        context->endRhiFrame(renderer);
+        context->endNextRhiFrame(renderer);
+    else
+        context->endNextFrame(renderer);
 }
 
 QQuickWindowPrivate::QQuickWindowPrivate()
@@ -4202,6 +4209,11 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     attached images). The native graphics objects can be queried via
     QSGRendererInterface.
 
+    When not running with the RHI (and using OpenGL directly), the signal is
+    emitted after the renderer has cleared the render target. This makes it
+    possible to create appliations that function identically both with and
+    without the RHI.
+
     \note Resource updates (uploads, copies) typically cannot be enqueued from
     within a render pass. Therefore, more complex user rendering will need to
     connect to both the beforeRendering() and this signals.
@@ -4227,6 +4239,11 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     to generate an entire, separate render pass (which would typically clear
     the attached images). The native graphics objects can be queried via
     QSGRendererInterface.
+
+    When not running with the RHI (and using OpenGL directly), the signal is
+    emitted after the renderer has finished its rendering, but before
+    afterRendering(). This makes it possible to create appliations that
+    function identically both with and without the RHI.
 
     \note Resource updates (uploads, copies) typically cannot be enqueued from
     within a render pass. Therefore, more complex user rendering will need to

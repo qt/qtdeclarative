@@ -94,17 +94,18 @@
 
     \snippet scenegraph/openglunderqml/squircle.cpp 3
 
-    The default behavior of the scene graph is to clear the
-    framebuffer before rendering. Since we render before the scene
-    graph, we need to turn this clearing off. This means that we need
-    to clear ourselves in the \c paint() function.
+    The default behavior of the scene graph is to clear the framebuffer before
+    rendering. This is fine since we will insert our own rendering code after
+    this clear is enqueued. Make sure however that we clear to the desired
+    color (black).
 
     \snippet scenegraph/openglunderqml/squircle.cpp 9
 
-    We use the \c sync() function to initialize the renderer and to
-    copy the state in our item into the renderer. When the renderer is
-    created, we also connect the \l QQuickWindow::beforeRendering() to
-    the renderer's \c paint() slot.
+    We use the \c sync() function to initialize the renderer and to copy the
+    state in our item into the renderer. When the renderer is created, we also
+    connect the \l QQuickWindow::beforeRendering() and \l
+    QQuickWindow::beforeRenderPassRecording() to the renderer's \c init() and
+    \c paint() slots.
 
     \note The \l QQuickWindow::beforeSynchronizing() signal is emitted
     on the rendering thread while the GUI thread is blocked, so it is
@@ -127,22 +128,13 @@
 
     \snippet scenegraph/openglunderqml/squircle.cpp 4
 
-    In the SquircleRenderer's \c paint() function we start by
-    initializing the shader program. By initializing the shader
-    program here, we make sure that the OpenGL context is bound and
-    that we are on the correct thread.
+    In the SquircleRenderer's \c init() function we start by initializing the
+    shader program if not yet done. The OpenGL context is current on the thread
+    when the slot is invoked.
 
     \snippet scenegraph/openglunderqml/squircle.cpp 5
 
-    We use the shader program to draw the squircle. At the end of the
-    \c paint function we release the program and disable the
-    attributes we used so that the OpenGL context is in a "clean"
-    state for the scene graph to pick it up.
-
-    \note If tracking the changes in the OpenGL context's state is not
-    feasible, one can use the function \l
-    QQuickWindow::resetOpenGLState() which will reset all state that
-    the scene graph relies on.
+    We use the shader program to draw the squircle in \c paint().
 
     \snippet scenegraph/openglunderqml/main.cpp 1
 
