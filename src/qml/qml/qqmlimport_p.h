@@ -203,7 +203,7 @@ private:
     QQmlImportsPrivate *d;
 };
 
-class QQmlImportDatabase
+class Q_QML_PRIVATE_EXPORT QQmlImportDatabase
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlImportDatabase)
 public:
@@ -214,6 +214,8 @@ public:
 
 #if QT_CONFIG(library)
     bool importDynamicPlugin(const QString &filePath, const QString &uri, const QString &importNamespace, int vmaj, QList<QQmlError> *errors);
+    bool removeDynamicPlugin(const QString &filePath);
+    QStringList dynamicPlugins() const;
 #endif
 
     QStringList importPathList(PathType type = LocalOrRemote) const;

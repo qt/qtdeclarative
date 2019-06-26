@@ -2141,6 +2141,40 @@ bool QQmlImportDatabase::importDynamicPlugin(const QString &filePath, const QStr
     return true;
 }
 
+bool QQmlImportDatabase::removeDynamicPlugin(const QString &filePath)
+{
+    StringRegisteredPluginMap *plugins = qmlEnginePluginsWithRegisteredTypes();
+    QMutexLocker lock(&plugins->mutex);
+
+    auto it = plugins->find(QFileInfo(filePath).absoluteFilePath());
+    if (it == plugins->end())
+        return false;
+
+    QPluginLoader *loader = it->loader;
+    if (!loader)
+        return false;
+
+    if (!loader->unload()) {
+        qWarning("Unloading %s failed: %s", qPrintable(it->uri),
+                 qPrintable(loader->errorString()));
+    }
+
+    delete loader;
+    plugins->erase(it);
+    return true;
+}
+
+QStringList QQmlImportDatabase::dynamicPlugins() const
+{
+    StringRegisteredPluginMap *plugins = qmlEnginePluginsWithRegisteredTypes();
+    QMutexLocker lock(&plugins->mutex);
+    QStringList results;
+    for (auto it = plugins->constBegin(), end = plugins->constEnd(); it != end; ++it) {
+        if (it->loader != nullptr)
+            results.append(it.key());
+    }
+    return results;
+}
 #endif // QT_CONFIG(library)
 
 void QQmlImportDatabase::clearDirCache()
