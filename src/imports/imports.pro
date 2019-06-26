@@ -25,6 +25,6 @@ qtHaveModule(quick) {
     qtConfig(quick-particles): \
         SUBDIRS += particles
 
-    qtConfig(quick-path):qtConfig(thread): SUBDIRS += shapes
+    qtConfig(quick-path): SUBDIRS += shapes
 }
 
