@@ -539,7 +539,6 @@ ReturnedValue QQmlContextWrapper::lookupIdObject(Lookup *l, ExecutionEngine *eng
 
 ReturnedValue QQmlContextWrapper::lookupScopeObjectProperty(Lookup *l, ExecutionEngine *engine, Value *base)
 {
-    Q_UNUSED(base)
     Scope scope(engine);
     Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
     if (!qmlContext)
@@ -560,12 +559,15 @@ ReturnedValue QQmlContextWrapper::lookupScopeObjectProperty(Lookup *l, Execution
     };
 
     ScopedValue obj(scope, QV4::QObjectWrapper::wrap(engine, scopeObject));
+
+    if (base)
+        *base = obj;
+
     return QObjectWrapper::lookupGetterImpl(l, engine, obj, /*useOriginalProperty*/ true, revertLookup);
 }
 
 ReturnedValue QQmlContextWrapper::lookupContextObjectProperty(Lookup *l, ExecutionEngine *engine, Value *base)
 {
-    Q_UNUSED(base)
     Scope scope(engine);
     Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
     if (!qmlContext)
@@ -590,6 +592,10 @@ ReturnedValue QQmlContextWrapper::lookupContextObjectProperty(Lookup *l, Executi
     };
 
     ScopedValue obj(scope, QV4::QObjectWrapper::wrap(engine, contextObject));
+
+    if (base)
+        *base = obj;
+
     return QObjectWrapper::lookupGetterImpl(l, engine, obj, /*useOriginalProperty*/ true, revertLookup);
 }
 
