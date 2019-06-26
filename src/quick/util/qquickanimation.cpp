@@ -903,7 +903,7 @@ void QActionAnimation::updateState(State newState, State oldState)
 
 void QActionAnimation::debugAnimation(QDebug d) const
 {
-    d << "ActionAnimation(" << hex << (const void *) this << dec << ")";
+    d << "ActionAnimation(" << Qt::hex << (const void *) this << Qt::dec << ")";
 
     if (animAction) {
         int indentLevel = 1;
@@ -1996,7 +1996,7 @@ void QQuickBulkValueAnimator::topLevelAnimationLoopChanged()
 
 void QQuickBulkValueAnimator::debugAnimation(QDebug d) const
 {
-    d << "BulkValueAnimation(" << hex << (const void *) this << dec << ")" << "duration:" << duration();
+    d << "BulkValueAnimation(" << Qt::hex << (const void *) this << Qt::dec << ")" << "duration:" << duration();
 
     if (animValue) {
         int indentLevel = 1;

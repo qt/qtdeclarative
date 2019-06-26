@@ -364,7 +364,7 @@ void QSGDefaultRenderContext::compileShader(QSGMaterialShader *shader, QSGMateri
         p->addCacheableShaderFromSourceCode(QOpenGLShader::Fragment, fragmentCode ? fragmentCode : shader->fragmentShader());
         p->link();
         if (!p->isLinked())
-            qWarning() << "shader compilation failed:" << endl << p->log();
+            qWarning() << "shader compilation failed:" << Qt::endl << p->log();
     } else {
         shader->compile();
     }

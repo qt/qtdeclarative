@@ -195,7 +195,7 @@ void QmlPreviewApplication::processFinished()
 void QmlPreviewApplication::logError(const QString &error)
 {
     QTextStream err(stderr);
-    err << "Error: " << error << endl;
+    err << "Error: " << error << Qt::endl;
 }
 
 void QmlPreviewApplication::logStatus(const QString &status)
@@ -203,7 +203,7 @@ void QmlPreviewApplication::logStatus(const QString &status)
     if (!m_verbose)
         return;
     QTextStream err(stderr);
-    err << status << endl;
+    err << status << Qt::endl;
 }
 
 void QmlPreviewApplication::serveRequest(const QString &path)

@@ -290,7 +290,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 {
     if (Q_UNLIKELY(lcPinchHandler().isDebugEnabled())) {
         for (const QQuickHandlerPoint &p : currentPoints())
-            qCDebug(lcPinchHandler) << hex << p.id() << p.sceneGrabPosition() << "->" << p.scenePosition();
+            qCDebug(lcPinchHandler) << Qt::hex << p.id() << p.sceneGrabPosition() << "->" << p.scenePosition();
     }
     QQuickMultiPointHandler::handlePointerEventImpl(event);
 

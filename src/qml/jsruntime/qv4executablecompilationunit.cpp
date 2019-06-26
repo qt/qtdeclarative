@@ -125,7 +125,7 @@ static QString toString(QV4::ReturnedValue v)
 static void dumpConstantTable(const StaticValue *constants, uint count)
 {
     QDebug d = qDebug();
-    d.nospace() << right;
+    d.nospace() << Qt::right;
     for (uint i = 0; i < count; ++i) {
         d << qSetFieldWidth(8) << i << qSetFieldWidth(0) << ":    "
           << toString(constants[i].asReturnedValue()).toUtf8().constData() << "\n";

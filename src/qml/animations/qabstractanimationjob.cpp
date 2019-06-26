@@ -641,7 +641,7 @@ void QAbstractAnimationJob::removeAnimationChangeListener(QAnimationJobChangeLis
 
 void QAbstractAnimationJob::debugAnimation(QDebug d) const
 {
-    d << "AbstractAnimationJob(" << hex << (const void *) this << dec << ") state:"
+    d << "AbstractAnimationJob(" << Qt::hex << (const void *) this << Qt::dec << ") state:"
       << m_state << "duration:" << duration();
 }
 
