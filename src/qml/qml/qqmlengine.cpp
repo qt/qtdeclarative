@@ -2251,6 +2251,7 @@ void QQmlEngine::setPluginPathList(const QStringList &paths)
     d->importDatabase.setPluginPathList(paths);
 }
 
+#if QT_CONFIG(library)
 /*!
   Imports the plugin named \a filePath with the \a uri provided.
   Returns true if the plugin was successfully imported; otherwise returns false.
@@ -2264,6 +2265,7 @@ bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList
     Q_D(QQmlEngine);
     return d->importDatabase.importDynamicPlugin(filePath, uri, QString(), -1, errors);
 }
+#endif
 
 /*!
   \property QQmlEngine::offlineStoragePath

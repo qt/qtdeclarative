@@ -114,7 +114,9 @@ public:
 
     bool addNamedBundle(const QString &name, const QString &fileName);
 
+#if QT_CONFIG(library)
     bool importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors);
+#endif
 
 #if QT_CONFIG(qml_network)
     void setNetworkAccessManagerFactory(QQmlNetworkAccessManagerFactory *);

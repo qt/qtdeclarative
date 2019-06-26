@@ -1068,7 +1068,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
         int dynamicPluginsFound = 0;
         int staticPluginsFound = 0;
 
-#if defined(QT_SHARED)
+#if QT_CONFIG(library)
         const auto qmldirPlugins = qmldir.plugins();
         for (const QQmlDirParser::Plugin &plugin : qmldirPlugins) {
             QString resolvedFilePath = database->resolvePlugin(typeLoader, qmldirPath, plugin.path, plugin.name);
@@ -1091,7 +1091,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
                 }
             }
         }
-#endif // QT_SHARED
+#endif // QT_CONFIG(library)
 
         if (dynamicPluginsFound < qmldirPluginCount) {
             // Check if the missing plugins can be resolved statically. We do this by looking at
@@ -2015,13 +2015,13 @@ bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &ba
     return true;
 }
 
+#if QT_CONFIG(library)
 /*!
     \internal
 */
 bool QQmlImportDatabase::importDynamicPlugin(const QString &filePath, const QString &uri,
                                              const QString &typeNamespace, int vmaj, QList<QQmlError> *errors)
 {
-#if QT_CONFIG(library)
     QFileInfo fileInfo(filePath);
     const QString absoluteFilePath = fileInfo.absoluteFilePath();
 
@@ -2099,15 +2099,9 @@ bool QQmlImportDatabase::importDynamicPlugin(const QString &filePath, const QStr
     }
 
     return true;
-#else
-    Q_UNUSED(filePath);
-    Q_UNUSED(uri);
-    Q_UNUSED(typeNamespace);
-    Q_UNUSED(vmaj);
-    Q_UNUSED(errors);
-    return false;
-#endif
 }
+
+#endif // QT_CONFIG(library)
 
 void QQmlImportDatabase::clearDirCache()
 {

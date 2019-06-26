@@ -212,7 +212,9 @@ public:
     QQmlImportDatabase(QQmlEngine *);
     ~QQmlImportDatabase();
 
+#if QT_CONFIG(library)
     bool importDynamicPlugin(const QString &filePath, const QString &uri, const QString &importNamespace, int vmaj, QList<QQmlError> *errors);
+#endif
 
     QStringList importPathList(PathType type = LocalOrRemote) const;
     void setImportPathList(const QStringList &paths);

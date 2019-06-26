@@ -55,9 +55,7 @@ void qmlClearTypeRegistrations() // Declared in qqml.h
 {
     QQmlMetaType::clearTypeRegistrations();
     QQmlEnginePrivate::baseModulesUninitialized = true; //So the engine re-registers its types
-#if QT_CONFIG(library)
     qmlClearEnginePlugins();
-#endif
 }
 
 //From qqml.h
