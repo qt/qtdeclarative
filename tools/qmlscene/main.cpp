@@ -271,6 +271,10 @@ static bool checkVersion(const QUrl &url)
     QTextStream stream(&f);
     bool codeFound= false;
     while (!codeFound) {
+        if (stream.atEnd()) {
+            fprintf(stderr, "qmlscene: no code found in file '%s'.\n", qPrintable(fileName));
+            return false;
+        }
         QString line = stream.readLine();
         if (line.contains(QLatin1Char('{'))) {
             codeFound = true;
@@ -690,6 +694,8 @@ int main(int argc, char ** argv)
             // QQuickView if one was created. That case is tracked by
             // QPointer, so it is safe to delete the component here.
             delete component;
+        } else {
+            exitCode = 1;
         }
     }
 
