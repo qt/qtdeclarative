@@ -80,7 +80,6 @@ public:
     bool useTextureResizeWorkaround() const;
     bool useTextureUploadWorkaround() const;
     bool createFullSizeTextures() const;
-    int maxTextureSize() const;
 
     void setMaxTextureCount(int max) { m_maxTextureCount = max; }
     int maxTextureCount() const { return m_maxTextureCount; }
@@ -106,9 +105,10 @@ private:
 
     TextureInfo *textureInfo(int index)
     {
+        Q_ASSERT(m_maxTextureWidth > 0 && m_maxTextureHeight > 0);
         for (int i = m_textures.count(); i <= index; ++i) {
             if (createFullSizeTextures())
-                m_textures.append(QRect(0, 0, maxTextureSize(), maxTextureSize()));
+                m_textures.append(QRect(0, 0, m_maxTextureWidth, m_maxTextureWidth));
             else
                 m_textures.append(TextureInfo());
         }
@@ -136,7 +136,8 @@ private:
         m_blitProgram->link();
     }
 
-    mutable int m_maxTextureSize;
+    int m_maxTextureWidth;
+    int m_maxTextureHeight;
     int m_maxTextureCount;
     bool m_coreProfile;
 
