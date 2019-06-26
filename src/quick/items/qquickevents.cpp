@@ -851,7 +851,7 @@ void QQuickEventPoint::setGrabberItem(QQuickItem *grabber)
         if (oldGrabberHandler && !oldGrabberHandler->approveGrabTransition(this, grabber))
             return;
         if (Q_UNLIKELY(lcPointerGrab().isDebugEnabled())) {
-            qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << hex << m_pointId << pointStateString(this) << "@" << m_scenePos
+            qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << Qt::hex << m_pointId << pointStateString(this) << "@" << m_scenePos
                                    << ": grab" << m_exclusiveGrabber << "->" << grabber;
         }
         QQuickItem *oldGrabberItem = grabberItem();
@@ -892,10 +892,10 @@ void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber, b
     if (Q_UNLIKELY(lcPointerGrab().isDebugEnabled())) {
         if (exclusive) {
             if (m_exclusiveGrabber != grabber)
-                qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << hex << m_pointId << pointStateString(this)
+                qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << Qt::hex << m_pointId << pointStateString(this)
                                        << ": grab (exclusive)" << m_exclusiveGrabber << "->" << grabber;
         } else {
-            qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << hex << m_pointId << pointStateString(this)
+            qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << Qt::hex << m_pointId << pointStateString(this)
                                    << ": grab (passive)" << grabber;
         }
     }
@@ -954,7 +954,7 @@ void QQuickEventPoint::cancelExclusiveGrabImpl(QTouchEvent *cancelEvent)
     if (m_exclusiveGrabber.isNull())
         return;
     if (Q_UNLIKELY(lcPointerGrab().isDebugEnabled())) {
-        qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << hex << m_pointId << pointStateString(this)
+        qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << Qt::hex << m_pointId << pointStateString(this)
                                << ": grab (exclusive)" << m_exclusiveGrabber << "-> nullptr";
     }
     if (auto handler = grabberPointerHandler()) {
@@ -977,7 +977,7 @@ void QQuickEventPoint::cancelPassiveGrab(QQuickPointerHandler *handler)
 {
     if (removePassiveGrabber(handler)) {
         if (Q_UNLIKELY(lcPointerGrab().isDebugEnabled())) {
-            qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << hex << m_pointId << pointStateString(this)
+            qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << Qt::hex << m_pointId << pointStateString(this)
                                    << ": grab (passive)" << handler << "removed";
         }
         handler->onGrabChanged(handler, CancelGrabPassive, this);
@@ -1956,7 +1956,7 @@ Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickEventPoint *eve
     dbg << "QQuickEventPoint(accepted:" << event->isAccepted()
         << " state:";
     QtDebugUtils::formatQEnum(dbg, event->state());
-    dbg << " scenePos:" << event->scenePosition() << " id:" << hex << event->pointId() << dec
+    dbg << " scenePos:" << event->scenePosition() << " id:" << Qt::hex << event->pointId() << Qt::dec
         << " timeHeld:" << event->timeHeld() << ')';
     return dbg;
 }

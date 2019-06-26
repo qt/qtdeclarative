@@ -696,7 +696,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
             if (!item->contains(pos))
                 break;
 
-            qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << hex << p.id() << "->" << item;
+            qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << Qt::hex << p.id() << "->" << item;
             QScopedPointer<QMouseEvent> mousePress(touchToMouseEvent(QEvent::MouseButtonPress, p, event.data(), item, false));
 
             // Send a single press and see if that's accepted
@@ -738,7 +738,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
                     QCoreApplication::sendEvent(item, me.data());
                     event->setAccepted(me->isAccepted());
                     if (me->isAccepted()) {
-                        qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << hex << p.id() << "->" << mouseGrabberItem;
+                        qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << Qt::hex << p.id() << "->" << mouseGrabberItem;
                     }
                     return event->isAccepted();
                 } else {
@@ -2465,7 +2465,7 @@ void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerTouchEvent *event)
         QQuickEventPoint *point = event->point(i);
         if (point->state() == QQuickEventPoint::Released) {
             int id = point->pointId();
-            qCDebug(DBG_TOUCH_TARGET) << "TP" << hex << id << "released";
+            qCDebug(DBG_TOUCH_TARGET) << "TP" << Qt::hex << id << "released";
             point->setGrabberItem(nullptr);
             if (id == touchMouseId)
                 cancelTouchMouseSynthesis();
@@ -2562,7 +2562,7 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QQuickPointerEvent *event, 
             if (point->grabberPointerHandler())
                 cancelTouchMouseSynthesis();
         } else {
-            qCWarning(DBG_TOUCH_TARGET) << "during delivery of touch press, synth-mouse ID" << hex << touchMouseId << "is missing from" << event;
+            qCWarning(DBG_TOUCH_TARGET) << "during delivery of touch press, synth-mouse ID" << Qt::hex << touchMouseId << "is missing from" << event;
         }
     }
     for (int i = 0; i < pointCount; ++i) {
@@ -2704,7 +2704,7 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
             if (point.state() == Qt::TouchPointPressed) {
                 if (auto *tp = ptEvent->pointById(point.id())) {
                     if (tp->exclusiveGrabber() == item) {
-                        qCDebug(DBG_TOUCH_TARGET) << "TP" << hex << point.id() << "disassociated";
+                        qCDebug(DBG_TOUCH_TARGET) << "TP" << Qt::hex << point.id() << "disassociated";
                         tp->setGrabberItem(nullptr);
                     }
                 }
@@ -2983,7 +2983,7 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
                                     qCDebug(DBG_TOUCH) << "touch event intercepted as synth mouse event by childMouseEventFilter of " << filteringParent;
                                     skipDelivery.append(filteringParent);
                                     if (t != QEvent::MouseButtonRelease) {
-                                        qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << hex << tp.id() << "->" << filteringParent;
+                                        qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << Qt::hex << tp.id() << "->" << filteringParent;
                                         pointerEventInstance(dev)->pointById(tp.id())->setGrabberItem(filteringParent);
                                         touchMouseUnset = false; // We want to leave touchMouseId and touchMouseDevice set
                                         if (mouseEvent->isAccepted())

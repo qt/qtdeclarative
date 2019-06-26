@@ -249,7 +249,7 @@ bool QQuickPointerHandler::approveGrabTransition(QQuickEventPoint *point, QObjec
                 allowed = true;
         }
     }
-    qCDebug(lcPointerHandlerGrab) << "point" << hex << point->pointId() << "permission" <<
+    qCDebug(lcPointerHandlerGrab) << "point" << Qt::hex << point->pointId() << "permission" <<
             QMetaEnum::fromType<GrabPermissions>().valueToKeys(grabPermissions()) <<
             ':' << this << (allowed ? "approved to" : "denied to") << proposedGrabber;
     return allowed;
@@ -473,7 +473,7 @@ bool QQuickPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
 bool QQuickPointerHandler::wantsEventPoint(QQuickEventPoint *point)
 {
     bool ret = point->exclusiveGrabber() == this || point->passiveGrabbers().contains(this) || parentContains(point);
-    qCDebug(lcPointerHandlerDispatch) << hex << point->pointId() << "@" << point->scenePosition()
+    qCDebug(lcPointerHandlerDispatch) << Qt::hex << point->pointId() << "@" << point->scenePosition()
                                       << metaObject()->className() << objectName() << ret;
     return ret;
 }

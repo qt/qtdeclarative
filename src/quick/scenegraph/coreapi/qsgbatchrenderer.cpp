@@ -248,13 +248,13 @@ void qsg_dumpShadowRoots(Node *n)
     QByteArray ind(indent, ' ');
 
     if (n->type() == QSGNode::ClipNodeType || n->isBatchRoot) {
-        qDebug() << ind.constData() << "[X]" << n->sgNode << hex << uint(n->sgNode->flags());
+        qDebug() << ind.constData() << "[X]" << n->sgNode << Qt::hex << uint(n->sgNode->flags());
         qsg_dumpShadowRoots(n->rootInfo(), indent);
     } else {
         QDebug d = qDebug();
-        d << ind.constData() << "[ ]" << n->sgNode << hex << uint(n->sgNode->flags());
+        d << ind.constData() << "[ ]" << n->sgNode << Qt::hex << uint(n->sgNode->flags());
         if (n->type() == QSGNode::GeometryNodeType)
-            d << "order" << dec << n->element()->order;
+            d << "order" << Qt::dec << n->element()->order;
     }
 
     SHADOWNODE_TRAVERSE(n)
@@ -1971,7 +1971,7 @@ void Renderer::uploadBatch(Batch *b)
                     iDump << "  -- Index Data, count:" << b->indexCount;
                     for (int i=0; i<b->indexCount; ++i) {
                         if ((i % 24) == 0)
-                           iDump << endl << "  --- ";
+                           iDump << Qt::endl << "  --- ";
                         iDump << id[i];
                     }
                 }
@@ -2490,8 +2490,8 @@ void Renderer::updateLineWidth(QSGGeometry *g)
 void Renderer::renderBatches()
 {
     if (Q_UNLIKELY(debug_render())) {
-        qDebug().nospace() << "Rendering:" << endl
-                           << " -> Opaque: " << qsg_countNodesInBatches(m_opaqueBatches) << " nodes in " << m_opaqueBatches.size() << " batches..." << endl
+        qDebug().nospace() << "Rendering:" << Qt::endl
+                           << " -> Opaque: " << qsg_countNodesInBatches(m_opaqueBatches) << " nodes in " << m_opaqueBatches.size() << " batches..." << Qt::endl
                            << " -> Alpha: " << qsg_countNodesInBatches(m_alphaBatches) << " nodes in " << m_alphaBatches.size() << " batches...";
     }
 
