@@ -73,6 +73,7 @@ private slots:
     void disabledWriteWhileRunning();
     void aliasedProperty();
     void innerBehaviorOverwritten();
+    void safeToDelete();
 };
 
 void tst_qquickbehaviors::simpleBehavior()
@@ -597,6 +598,16 @@ void tst_qquickbehaviors::innerBehaviorOverwritten()
     QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(c.create()));
     QVERIFY(item->property("behaviorTriggered").toBool());
 }
+
+// QTBUG-76749
+void tst_qquickbehaviors::safeToDelete()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("delete.qml"));
+    QVERIFY(c.create());
+}
+
+
 
 QTEST_MAIN(tst_qquickbehaviors)
 
