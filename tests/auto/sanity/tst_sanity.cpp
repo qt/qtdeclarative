@@ -122,7 +122,11 @@ public:
         if (!parser.parse()) {
             const auto diagnosticMessages = parser.diagnosticMessages();
             for (const QQmlJS::DiagnosticMessage &msg : diagnosticMessages)
+#if Q_QML_PRIVATE_API_VERSION < 5
                 m_errors += QString("%s:%d : %s").arg(m_fileName).arg(msg.loc.startLine).arg(msg.message);
+#else
+                m_errors += QString("%s:%d : %s").arg(m_fileName).arg(msg.line).arg(msg.message);
+#endif
             return false;
         }
 
