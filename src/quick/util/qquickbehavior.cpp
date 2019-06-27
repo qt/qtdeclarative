@@ -143,7 +143,7 @@ void QQuickBehavior::setAnimation(QQuickAbstractAnimation *animation)
 
 void QQuickBehaviorPrivate::animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState,QAbstractAnimationJob::State)
 {
-    if (!blockRunningChanged)
+    if (!blockRunningChanged && animation)
         animation->notifyRunningChanged(newState == QAbstractAnimationJob::Running);
 }
 
