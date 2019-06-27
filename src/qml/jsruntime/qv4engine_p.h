@@ -170,10 +170,6 @@ public:
 
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 
-    enum {
-        JSStackLimit = 4*1024*1024,
-        GCStackLimit = 2*1024*1024
-    };
     WTF::PageAllocation *jsStack;
 
     WTF::PageAllocation *gcStack;
@@ -641,6 +637,9 @@ public:
     bool metaTypeFromJS(const Value *value, int type, void *data);
     QV4::ReturnedValue metaTypeToJS(int type, const void *data);
 
+    int maxJSStackSize() const;
+    int maxGCStackSize() const;
+
     bool checkStackLimits();
 
     bool canJIT(Function *f = nullptr)
@@ -734,6 +733,9 @@ private:
     QHash<QString, quint32> m_consoleCount;
 
     QVector<Deletable *> m_extensionData;
+
+    int m_maxJSStackSize = 4 * 1024 * 1024;
+    int m_maxGCStackSize = 2 * 1024 * 1024;
 };
 
 #define CHECK_STACK_LIMITS(v4) if ((v4)->checkStackLimits()) return Encode::undefined(); \

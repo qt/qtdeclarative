@@ -847,7 +847,7 @@ MarkStack::MarkStack(ExecutionEngine *engine)
 {
     base = (Heap::Base **)engine->gcStack->base();
     top = base;
-    limit = base + ExecutionEngine::GCStackLimit/sizeof(Heap::Base)*3/4;
+    limit = base + engine->maxGCStackSize()/sizeof(Heap::Base)*3/4;
 }
 
 void MarkStack::drain()

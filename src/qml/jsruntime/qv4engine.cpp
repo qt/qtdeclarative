@@ -206,10 +206,19 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 #endif
     , m_qmlEngine(nullptr)
 {
+    bool ok = false;
+    const int envMaxJSStackSize = qEnvironmentVariableIntValue("QV4_JS_MAX_STACK_SIZE", &ok);
+    if (ok && envMaxJSStackSize > 0)
+        m_maxJSStackSize = envMaxJSStackSize;
+
+    const int envMaxGCStackSize = qEnvironmentVariableIntValue("QV4_GC_MAX_STACK_SIZE", &ok);
+    if (ok && envMaxGCStackSize > 0)
+        m_maxGCStackSize = envMaxGCStackSize;
+
     memoryManager = new QV4::MemoryManager(this);
 
     if (maxCallDepth == -1) {
-        bool ok = false;
+        ok = false;
         maxCallDepth = qEnvironmentVariableIntValue("QV4_MAX_CALL_DEPTH", &ok);
         if (!ok || maxCallDepth <= 0) {
 #if defined(QT_NO_DEBUG) && !defined(__SANITIZE_ADDRESS__) && !QT_HAS_FEATURE(address_sanitizer)
@@ -223,24 +232,24 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     Q_ASSERT(maxCallDepth > 0);
 
     // reserve space for the JS stack
-    // we allow it to grow to a bit more than JSStackLimit, as we can overshoot due to ScopedValues
+    // we allow it to grow to a bit more than m_maxJSStackSize, as we can overshoot due to ScopedValues
     // allocated outside of JIT'ed methods.
-    *jsStack = WTF::PageAllocation::allocate(JSStackLimit + 256*1024, WTF::OSAllocator::JSVMStackPages,
+    *jsStack = WTF::PageAllocation::allocate(m_maxJSStackSize + 256*1024, WTF::OSAllocator::JSVMStackPages,
                                              /* writable */ true, /* executable */ false,
                                              /* includesGuardPages */ true);
     jsStackBase = (Value *)jsStack->base();
 #ifdef V4_USE_VALGRIND
-    VALGRIND_MAKE_MEM_UNDEFINED(jsStackBase, JSStackLimit + 256*1024);
+    VALGRIND_MAKE_MEM_UNDEFINED(jsStackBase, m_maxJSStackSize + 256*1024);
 #endif
 
     jsStackTop = jsStackBase;
 
-    *gcStack = WTF::PageAllocation::allocate(GCStackLimit, WTF::OSAllocator::JSVMStackPages,
+    *gcStack = WTF::PageAllocation::allocate(m_maxGCStackSize, WTF::OSAllocator::JSVMStackPages,
                                              /* writable */ true, /* executable */ false,
                                              /* includesGuardPages */ true);
 
     {
-        bool ok = false;
+        ok = false;
         jitCallCountThreshold = qEnvironmentVariableIntValue("QV4_JIT_CALL_THRESHOLD", &ok);
         if (!ok)
             jitCallCountThreshold = 3;
@@ -258,7 +267,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsSymbols = jsAlloca(NJSSymbols);
 
     // set up stack limits
-    jsStackLimit = jsStackBase + JSStackLimit/sizeof(Value);
+    jsStackLimit = jsStackBase + m_maxJSStackSize/sizeof(Value);
 
     identifierTable = new IdentifierTable(this);
 
@@ -1735,6 +1744,16 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
         return variantToJS(this, *reinterpret_cast<const QVariant*>(data));
     }
     return fromVariant(variant);
+}
+
+int ExecutionEngine::maxJSStackSize() const
+{
+    return m_maxJSStackSize;
+}
+
+int ExecutionEngine::maxGCStackSize() const
+{
+    return m_maxGCStackSize;
 }
 
 ReturnedValue ExecutionEngine::global()
