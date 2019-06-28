@@ -147,9 +147,7 @@ bool ExecutableAllocator::ChunkOfPages::contains(Allocation *alloc) const
 }
 
 ExecutableAllocator::ExecutableAllocator()
-    : mutex(QMutex::NonRecursive)
-{
-}
+    = default;
 
 ExecutableAllocator::~ExecutableAllocator()
 {

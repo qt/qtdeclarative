@@ -74,7 +74,7 @@ public:
     static const QJSEnginePrivate* get(const QJSEngine*e) { return e->d_func(); }
     static QJSEnginePrivate* get(QV4::ExecutionEngine *e);
 
-    QJSEnginePrivate() : mutex(QMutex::Recursive) {}
+    QJSEnginePrivate() = default;
     ~QJSEnginePrivate() override;
 
     static void addToDebugServer(QJSEngine *q);
@@ -105,7 +105,7 @@ public:
     };
 
     // Shared by QQmlEngine
-    mutable QMutex mutex;
+    mutable QRecursiveMutex mutex;
 
 
     // These methods may be called from the QML loader thread
