@@ -318,6 +318,7 @@ namespace QQmlPrivate
     };
 
     int Q_QML_EXPORT qmlregister(RegistrationType, void *);
+    void Q_QML_EXPORT qmlunregister(RegistrationType, quintptr);
 }
 
 QT_END_NAMESPACE

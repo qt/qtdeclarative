@@ -27,6 +27,7 @@ OTHER_FILES += \
     data/dotproperty.qml \
     data/Double.qml \
     data/doubleRegistrationBug.qml \
+    data/fastFlickingBug.qml \
     data/looping.qml \
     data/mixedtype1.qml \
     data/mixedtype2.qml \
