@@ -176,7 +176,9 @@ public:
         }
     }
 
-    static int registerAutoParentFunction(QQmlPrivate::RegisterAutoParent &autoparent);
+    static int registerAutoParentFunction(const QQmlPrivate::RegisterAutoParent &autoparent);
+    static void unregisterAutoParentFunction(const QQmlPrivate::AutoParentFunction &function);
+
     static int registerUnitCacheHook(const QQmlPrivate::RegisterQmlUnitCacheHook &hookRegistration);
     static void clearTypeRegistrations();
 

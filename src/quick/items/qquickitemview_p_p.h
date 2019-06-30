@@ -287,7 +287,7 @@ public:
             : item(i), moveKey(k) {}
     };
     QQuickItemViewTransitioner *transitioner;
-    QList<FxViewItem *> releasePendingTransition;
+    QVector<FxViewItem *> releasePendingTransition;
 
     mutable qreal minExtent;
     mutable qreal maxExtent;

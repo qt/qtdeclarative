@@ -99,6 +99,8 @@ public Q_SLOTS:
 
 protected:
     void run() override;
+    void runOnce();
+    void initiateScan();
     void getFileInfos(const QString &path);
     void findChangeRange(const QList<FileProperty> &list, int &fromIndex, int &toIndex);
 
@@ -106,6 +108,7 @@ private:
     QMutex mutex;
     QWaitCondition condition;
     volatile bool abort;
+    bool scanPending;
 
 #if QT_CONFIG(filesystemwatcher)
     QFileSystemWatcher *watcher;

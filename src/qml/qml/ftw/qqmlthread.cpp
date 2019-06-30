@@ -104,14 +104,18 @@ QQmlThreadPrivate::MainObject::MainObject(QQmlThreadPrivate *p)
 // Trigger mainEvent in main thread.  Must be called from thread.
 void QQmlThreadPrivate::triggerMainEvent()
 {
+#if QT_CONFIG(thread)
     Q_ASSERT(q->isThisThread());
+#endif
     QCoreApplication::postEvent(&m_mainObject, new QEvent(QEvent::User));
 }
 
 // Trigger even in thread.  Must be called from main thread.
 void QQmlThreadPrivate::triggerThreadEvent()
 {
+#if QT_CONFIG(thread)
     Q_ASSERT(!q->isThisThread());
+#endif
     QCoreApplication::postEvent(this, new QEvent(QEvent::User));
 }
 
@@ -353,6 +357,12 @@ void QQmlThread::internalCallMethodInThread(Message *message)
 
 void QQmlThread::internalCallMethodInMain(Message *message)
 {
+#if !QT_CONFIG(thread)
+    message->call(this);
+    delete message;
+    return;
+#endif
+
     Q_ASSERT(isThisThread());
 
     d->lock();
@@ -397,7 +407,9 @@ void QQmlThread::internalPostMethodToThread(Message *message)
 
 void QQmlThread::internalPostMethodToMain(Message *message)
 {
+#if QT_CONFIG(thread)
     Q_ASSERT(isThisThread());
+#endif
     d->lock();
     bool wasEmpty = d->mainList.isEmpty();
     d->mainList.append(message);
@@ -408,7 +420,9 @@ void QQmlThread::internalPostMethodToMain(Message *message)
 
 void QQmlThread::waitForNextMessage()
 {
+#if QT_CONFIG(thread)
     Q_ASSERT(!isThisThread());
+#endif
     d->lock();
     Q_ASSERT(d->m_mainThreadWaiting == false);
 

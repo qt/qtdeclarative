@@ -5,10 +5,10 @@ SUBDIRS += \
     builtins \
     qtqml \
     models \
-    labsmodels
+    labsmodels \
+    folderlistmodel
 
 qtConfig(qml-worker-script): SUBDIRS += workerscript
-qtConfig(thread): SUBDIRS += folderlistmodel
 qtHaveModule(sql): SUBDIRS += localstorage
 qtConfig(settings): SUBDIRS += settings
 qtConfig(statemachine): SUBDIRS += statemachine
