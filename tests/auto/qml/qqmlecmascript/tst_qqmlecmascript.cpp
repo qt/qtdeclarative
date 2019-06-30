@@ -370,6 +370,7 @@ private slots:
     void undefinedPropertiesInObjectWrapper();
     void hugeRegexpQuantifiers();
     void singletonTypeWrapperLookup();
+    void getThisObject();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -9055,6 +9056,17 @@ void tst_qqmlecmascript::singletonTypeWrapperLookup()
 
     QCOMPARE(test->property("firstLookup").toInt(), singleton1->testVar);
     QCOMPARE(test->property("secondLookup").toInt(), singleton2->testVar);
+}
+
+void tst_qqmlecmascript::getThisObject()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("getThis.qml"));
+    QVERIFY(component.isReady());
+    QScopedPointer<QObject> test(component.create());
+    QVERIFY(!test.isNull());
+
+    QTRY_COMPARE(qvariant_cast<QObject *>(test->property("self")), test.data());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

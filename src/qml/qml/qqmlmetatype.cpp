@@ -285,13 +285,19 @@ void QQmlMetaType::clearTypeRegistrations()
     data->undeletableTypes.clear();
 }
 
-int QQmlMetaType::registerAutoParentFunction(QQmlPrivate::RegisterAutoParent &autoparent)
+int QQmlMetaType::registerAutoParentFunction(const QQmlPrivate::RegisterAutoParent &autoparent)
 {
     QQmlMetaTypeDataPtr data;
 
     data->parentFunctions.append(autoparent.function);
 
     return data->parentFunctions.count() - 1;
+}
+
+void QQmlMetaType::unregisterAutoParentFunction(const QQmlPrivate::AutoParentFunction &function)
+{
+    QQmlMetaTypeDataPtr data;
+    data->parentFunctions.removeOne(function);
 }
 
 QQmlType QQmlMetaType::registerInterface(const QQmlPrivate::RegisterInterface &type)

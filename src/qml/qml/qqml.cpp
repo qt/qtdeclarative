@@ -111,4 +111,24 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
     return dtype.index();
 }
 
+void QQmlPrivate::qmlunregister(RegistrationType type, quintptr data)
+{
+    switch (type) {
+    case AutoParentRegistration:
+        QQmlMetaType::unregisterAutoParentFunction(reinterpret_cast<AutoParentFunction>(data));
+        break;
+    case QmlUnitCacheHookRegistration:
+        QQmlMetaType::removeCachedUnitLookupFunction(
+                reinterpret_cast<QmlUnitCacheLookupFunction>(data));
+        break;
+    case TypeRegistration:
+    case InterfaceRegistration:
+    case SingletonRegistration:
+    case CompositeRegistration:
+    case CompositeSingletonRegistration:
+        QQmlMetaType::unregisterType(data);
+        break;
+    }
+}
+
 QT_END_NAMESPACE
