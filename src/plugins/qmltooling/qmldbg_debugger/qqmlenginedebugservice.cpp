@@ -233,11 +233,9 @@ QVariant QQmlEngineDebugServiceImpl::valueContents(QVariant value) const
 
     if (value.type() == QVariant::Map) {
         QVariantMap contents;
-        QMapIterator<QString, QVariant> i(value.toMap());
-         while (i.hasNext()) {
-             i.next();
+        const auto map = value.toMap();
+        for (auto i = map.cbegin(), end = map.cend(); i != end; ++i)
              contents.insert(i.key(), valueContents(i.value()));
-         }
         return contents;
     }
 
