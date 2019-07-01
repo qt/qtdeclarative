@@ -452,10 +452,7 @@ void QQuickState::removeAllEntriesFromRevertList(QObject *target)
      Q_D(QQuickState);
 
      if (isStateActive()) {
-         QMutableListIterator<QQuickSimpleAction> revertListIterator(d->revertList);
-
-         while (revertListIterator.hasNext()) {
-             QQuickSimpleAction &simpleAction = revertListIterator.next();
+         const auto actionMatchesTarget = [target](QQuickSimpleAction &simpleAction) {
              if (simpleAction.property().object() == target) {
                  QQmlPropertyPrivate::removeBinding(simpleAction.property());
 
@@ -463,9 +460,14 @@ void QQuickState::removeAllEntriesFromRevertList(QObject *target)
                  if (simpleAction.binding())
                      QQmlPropertyPrivate::setBinding(simpleAction.binding());
 
-                 revertListIterator.remove();
+                 return true;
              }
-         }
+             return false;
+         };
+
+         d->revertList.erase(std::remove_if(d->revertList.begin(), d->revertList.end(),
+                                            actionMatchesTarget),
+                             d->revertList.end());
      }
 }
 
