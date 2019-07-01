@@ -75,7 +75,7 @@ QString mangledIdentifier(const QString &str)
             || (c >= QLatin1Char('a') && c <= QLatin1Char('z'))
             || (c >= QLatin1Char('A') && c <= QLatin1Char('Z'))
             || c == QLatin1Char('_')) {
-            mangled += c;
+            mangled += QChar(c);
         } else {
             mangled += QLatin1String("_0x") + QString::number(c, 16) + QLatin1Char('_');
         }
