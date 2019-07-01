@@ -94,14 +94,14 @@ public:
     QQmlContextData *finalize(QQmlInstantiationInterrupt &interrupt);
     void clear();
 
-    QQmlComponentAttached **componentAttachment() const { return &sharedState->componentAttached; }
+    QQmlComponentAttached **componentAttachment() { return &sharedState->componentAttached; }
 
-    QList<QQmlEnginePrivate::FinalizeCallback> *finalizeCallbacks() const { return &sharedState->finalizeCallbacks; }
+    QList<QQmlEnginePrivate::FinalizeCallback> *finalizeCallbacks() { return &sharedState->finalizeCallbacks; }
 
     QList<QQmlError> errors;
 
     QQmlContextData *parentContextData() const { return parentContext.contextData(); }
-    QFiniteStack<QPointer<QObject> > &allCreatedObjects() const { return sharedState->allCreatedObjects; }
+    QFiniteStack<QPointer<QObject> > &allCreatedObjects() { return sharedState->allCreatedObjects; }
 
 private:
     QQmlObjectCreator(QQmlContextData *contextData, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, QQmlObjectCreatorSharedState *inheritedSharedState);
