@@ -813,7 +813,7 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
     if (ddata->notifyList &&
         QThread::currentThreadId() != QObjectPrivate::get(object)->threadData->threadId.loadRelaxed()) {
 
-        if (!QObjectPrivate::get(object)->threadData->thread)
+        if (!QObjectPrivate::get(object)->threadData->thread.loadAcquire())
             return;
 
         QMetaMethod m = QMetaObjectPrivate::signal(object->metaObject(), index);
@@ -849,7 +849,7 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
 
         QQmlThreadNotifierProxyObject *mpo = new QQmlThreadNotifierProxyObject;
         mpo->target = object;
-        mpo->moveToThread(QObjectPrivate::get(object)->threadData->thread);
+        mpo->moveToThread(QObjectPrivate::get(object)->threadData->thread.loadAcquire());
         QCoreApplication::postEvent(mpo, ev);
 
     } else {

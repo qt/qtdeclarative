@@ -349,7 +349,7 @@ static struct InstrCount {
 #undef CHECK_EXCEPTION
 #endif
 #define CHECK_EXCEPTION \
-    if (engine->hasException || engine->isInterrupted) \
+    if (engine->hasException || engine->isInterrupted.loadAcquire()) \
         goto handleUnwind
 
 static inline Heap::CallContext *getScope(QV4::Value *stack, int level)
@@ -1376,7 +1376,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         // We do start the exception handler in case of isInterrupted. The exception handler will
         // immediately abort, due to the same isInterrupted. We don't skip the exception handler
         // because the current behavior is easier to implement in the JIT.
-        Q_ASSERT(engine->hasException || engine->isInterrupted || frame->unwindLevel);
+        Q_ASSERT(engine->hasException || engine->isInterrupted.loadAcquire() || frame->unwindLevel);
         if (!frame->unwindHandler) {
             acc = Encode::undefined();
             return acc;

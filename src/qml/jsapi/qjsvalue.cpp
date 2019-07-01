@@ -769,7 +769,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
     ScopedValue result(scope, f->call(jsCallData));
     if (engine->hasException)
         result = engine->catchException();
-    if (engine->isInterrupted)
+    if (engine->isInterrupted.loadAcquire())
         result = engine->newErrorObject(QStringLiteral("Interrupted"));
 
     return QJSValue(engine, result->asReturnedValue());
@@ -827,7 +827,7 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
     ScopedValue result(scope, f->call(jsCallData));
     if (engine->hasException)
         result = engine->catchException();
-    if (engine->isInterrupted)
+    if (engine->isInterrupted.loadAcquire())
         result = engine->newErrorObject(QStringLiteral("Interrupted"));
 
     return QJSValue(engine, result->asReturnedValue());
@@ -877,7 +877,7 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
     ScopedValue result(scope, f->callAsConstructor(jsCallData));
     if (engine->hasException)
         result = engine->catchException();
-    if (engine->isInterrupted)
+    if (engine->isInterrupted.loadAcquire())
         result = engine->newErrorObject(QStringLiteral("Interrupted"));
 
     return QJSValue(engine, result->asReturnedValue());

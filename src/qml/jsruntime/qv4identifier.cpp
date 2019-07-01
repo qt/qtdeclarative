@@ -82,7 +82,7 @@ IdentifierHash::IdentifierHash(ExecutionEngine *engine)
 
 void IdentifierHash::detach()
 {
-    if (!d || d->refCount == 1)
+    if (!d || d->refCount.loadAcquire() == 1)
         return;
     IdentifierHashData *newData = new IdentifierHashData(d);
     if (d && !d->refCount.deref())
