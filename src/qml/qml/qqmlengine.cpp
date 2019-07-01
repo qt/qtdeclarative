@@ -1171,8 +1171,9 @@ void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
 
 QSharedPointer<QQmlImageProviderBase> QQmlEnginePrivate::imageProvider(const QString &providerId) const
 {
+    const QString providerIdLower = providerId.toLower();
     QMutexLocker locker(&mutex);
-    return imageProviders.value(providerId.toLower());
+    return imageProviders.value(providerIdLower);
 }
 
 #if QT_CONFIG(qml_network)
@@ -1264,8 +1265,10 @@ QNetworkAccessManager *QQmlEngine::networkAccessManager() const
 void QQmlEngine::addImageProvider(const QString &providerId, QQmlImageProviderBase *provider)
 {
     Q_D(QQmlEngine);
+    QString providerIdLower = providerId.toLower();
+    QSharedPointer<QQmlImageProviderBase> sp(provider);
     QMutexLocker locker(&d->mutex);
-    d->imageProviders.insert(providerId.toLower(), QSharedPointer<QQmlImageProviderBase>(provider));
+    d->imageProviders.insert(std::move(providerIdLower), std::move(sp));
 }
 
 /*!
@@ -1276,8 +1279,9 @@ void QQmlEngine::addImageProvider(const QString &providerId, QQmlImageProviderBa
 QQmlImageProviderBase *QQmlEngine::imageProvider(const QString &providerId) const
 {
     Q_D(const QQmlEngine);
+    const QString providerIdLower = providerId.toLower();
     QMutexLocker locker(&d->mutex);
-    return d->imageProviders.value(providerId.toLower()).data();
+    return d->imageProviders.value(providerIdLower).data();
 }
 
 /*!
@@ -1288,8 +1292,9 @@ QQmlImageProviderBase *QQmlEngine::imageProvider(const QString &providerId) cons
 void QQmlEngine::removeImageProvider(const QString &providerId)
 {
     Q_D(QQmlEngine);
+    const QString providerIdLower = providerId.toLower();
     QMutexLocker locker(&d->mutex);
-    d->imageProviders.take(providerId.toLower());
+    d->imageProviders.take(providerIdLower);
 }
 
 /*!
