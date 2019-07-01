@@ -64,6 +64,7 @@ tst_qmlmin::tst_qmlmin()
 
 void tst_qmlmin::initTestCase()
 {
+#if QT_CONFIG(process) && !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     qmlminPath = QLibraryInfo::location(QLibraryInfo::BinariesPath) + QLatin1String("/qmlmin");
 #ifdef Q_OS_WIN
     qmlminPath += QLatin1String(".exe");
@@ -129,6 +130,7 @@ void tst_qmlmin::initTestCase()
     invalidFiles << "tests/auto/qml/qjsengine/script/com/trolltech/syntaxerror/__init__.js";
     invalidFiles << "tests/auto/qml/debugger/qqmlpreview/data/broken.qml";
     invalidFiles << "tests/auto/qml/qqmllanguage/data/fuzzed.2.qml";
+#endif
 }
 
 QStringList tst_qmlmin::findFiles(const QDir &d)
