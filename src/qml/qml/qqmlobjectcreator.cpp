@@ -1353,7 +1353,8 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
                       QQmlPropertyData::DontRemoveBinding);
         if (!b->isValueTypeProxy()) {
             QQmlBinding *binding = static_cast<QQmlBinding*>(b.data());
-            if (!binding->hasError() && !binding->hasDependencies())
+            if (!binding->hasError() && !binding->hasDependencies()
+                && binding->context() && !binding->context()->unresolvedNames)
                 b->removeFromObject();
         }
 
