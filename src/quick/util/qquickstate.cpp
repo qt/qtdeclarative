@@ -192,7 +192,7 @@ bool QQuickState::isNamed() const
 bool QQuickState::isWhenKnown() const
 {
     Q_D(const QQuickState);
-    return d->when != nullptr;
+    return d->whenKnown;
 }
 
 /*!
@@ -219,15 +219,16 @@ bool QQuickState::isWhenKnown() const
     }
     \endqml
 */
-QQmlBinding *QQuickState::when() const
+bool QQuickState::when() const
 {
     Q_D(const QQuickState);
-    return d->when.data();
+    return d->when;
 }
 
-void QQuickState::setWhen(QQmlBinding *when)
+void QQuickState::setWhen(bool when)
 {
     Q_D(QQuickState);
+    d->whenKnown = true;
     d->when = when;
     if (d->group)
         d->group->updateAutoState();

@@ -152,7 +152,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickState : public QObject
     Q_OBJECT
 
     Q_PROPERTY(QString name READ name WRITE setName)
-    Q_PROPERTY(QQmlBinding *when READ when WRITE setWhen)
+    Q_PROPERTY(bool when READ when WRITE setWhen)
     Q_PROPERTY(QString extend READ extends WRITE setExtends)
     Q_PROPERTY(QQmlListProperty<QQuickStateOperation> changes READ changes)
     Q_CLASSINFO("DefaultProperty", "changes")
@@ -166,11 +166,9 @@ public:
     void setName(const QString &);
     bool isNamed() const;
 
-    /*'when' is a QQmlBinding to limit state changes oscillation
-     due to the unpredictable order of evaluation of bound expressions*/
     bool isWhenKnown() const;
-    QQmlBinding *when() const;
-    void setWhen(QQmlBinding *);
+    bool when() const;
+    void setWhen(bool);
 
     QString extends() const;
     void setExtends(const QString &);

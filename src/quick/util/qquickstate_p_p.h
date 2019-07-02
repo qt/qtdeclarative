@@ -203,12 +203,13 @@ class QQuickStatePrivate : public QObjectPrivate
 
 public:
     QQuickStatePrivate()
-    : named(false), inState(false), group(nullptr) {}
+        : when(false), whenKnown(false), named(false), inState(false), group(nullptr) {}
 
     typedef QList<QQuickSimpleAction> SimpleActionList;
 
     QString name;
-    QQmlBinding::Ptr when;
+    bool when;
+    bool whenKnown;
     bool named;
 
     struct OperationGuard : public QQmlGuard<QQuickStateOperation>
