@@ -46,6 +46,7 @@ private slots:
     void builtins();
     void singleton();
     void compositeWithinSingleton();
+    void compositeWithEnum();
 
     void plugin_data();
     void plugin();
@@ -133,6 +134,21 @@ void tst_qmlplugindump::compositeWithinSingleton()
     const QString &result = dumper.readAllStandardOutput();
     QVERIFY2(result.contains(QLatin1String("exports: [\"Composite 1.0\"]")), qPrintable(result));
     QVERIFY2(result.contains(QLatin1String("exportMetaObjectRevisions: [0]")), qPrintable(result));
+}
+
+void tst_qmlplugindump::compositeWithEnum()
+{
+    QProcess dumper;
+    QStringList args;
+    args << QLatin1String("dumper.CompositeWithEnum") << QLatin1String("1.0")
+         << QLatin1String(QT_QMLTEST_DIR "/data");
+    dumper.start(qmlplugindumpPath, args);
+    QVERIFY2(dumper.waitForStarted(), qPrintable(dumper.errorString()));
+    QVERIFY2(dumper.waitForFinished(), qPrintable(dumper.errorString()));
+
+    const QString &result = dumper.readAllStandardOutput();
+    QVERIFY2(result.contains(QLatin1String("exports: [\"Animal 1.0\"]")), qPrintable(result));
+    QVERIFY2(result.contains(QLatin1String("Enum {")), qPrintable(result));
 }
 
 void tst_qmlplugindump::plugin_data()

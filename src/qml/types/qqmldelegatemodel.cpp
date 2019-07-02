@@ -2656,10 +2656,10 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
         model->m_cacheMetaType->initializePrototype();
     QV4::ExecutionEngine *v4 = model->m_cacheMetaType->v4Engine;
     QV4::Scope scope(v4);
+    ++cacheItem->scriptRef;
     QV4::ScopedObject o(scope, v4->memoryManager->allocate<QQmlDelegateModelItemObject>(cacheItem));
     QV4::ScopedObject p(scope, model->m_cacheMetaType->modelItemProto.value());
     o->setPrototypeOf(p);
-    ++cacheItem->scriptRef;
 
     return QQmlV4Handle(o);
 }
