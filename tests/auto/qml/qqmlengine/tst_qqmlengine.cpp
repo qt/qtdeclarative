@@ -428,7 +428,7 @@ void tst_qqmlengine::trimComponentCache()
     engine.setIncubationController(&componentCache);
 
     QQmlComponent component(&engine, testFileUrl(file));
-    QVERIFY(component.isReady());
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
     QCOMPARE(object->property("success").toBool(), true);
@@ -742,13 +742,17 @@ public:
     CustomSelector(const QUrl &base):m_base(base){}
     virtual QUrl intercept(const QUrl &url, QQmlAbstractUrlInterceptor::DataType d)
     {
-        if (url.scheme() != QStringLiteral("file"))
+        if ((url.scheme() != QStringLiteral("file") && url.scheme() != QStringLiteral("qrc"))
+            || url.path().contains("QtQml"))
             return url;
         if (!m_interceptionPoints.contains(d))
             return url;
 
-        if (url.path().endsWith("Test.2/qmldir"))//Special case
-            return QUrl::fromLocalFile(m_base.path() + "interception/module/intercepted/qmldir");
+        if (url.path().endsWith("Test.2/qmldir")) {//Special case
+            QUrl url = m_base;
+            url.setPath(m_base.path() + "interception/module/intercepted/qmldir");
+            return url;
+        }
         // Special case: with 5.10 we always add the implicit import, so we need to explicitly handle this case now
         if (url.path().endsWith("intercepted/qmldir"))
             return url;
@@ -836,7 +840,7 @@ void tst_qqmlengine::urlInterceptor()
     QFETCH(QString, expectedAbsoluteUrl);
 
     QQmlEngine e;
-    e.addImportPath(testFileUrl("interception/imports").toLocalFile());
+    e.addImportPath(testFileUrl("interception/imports").url());
     CustomSelector cs(testFileUrl(""));
     cs.m_interceptionPoints = interceptionPoint;
     e.setUrlInterceptor(&cs);
