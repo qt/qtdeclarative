@@ -34,6 +34,7 @@ Rectangle {
     property alias pressed: tap.pressed
     property bool checked: false
     property alias gesturePolicy: tap.gesturePolicy
+    property point tappedPosition: Qt.point(0, 0)
     signal tapped
     signal canceled
 
@@ -51,6 +52,7 @@ Rectangle {
         longPressThreshold: 100 // CI can be insanely slow, so don't demand a timely release to generate onTapped
         onTapped: {
             tapFlash.start()
+            root.tappedPosition = point.scenePosition
             root.tapped()
         }
         onCanceled: root.canceled()

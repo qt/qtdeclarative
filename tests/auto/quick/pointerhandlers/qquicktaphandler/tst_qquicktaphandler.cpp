@@ -107,6 +107,8 @@ void tst_TapHandler::touchGesturePolicyDragThreshold()
 
     QQuickItem *buttonDragThreshold = window->rootObject()->findChild<QQuickItem*>("DragThreshold");
     QVERIFY(buttonDragThreshold);
+    QQuickTapHandler *tapHandler = buttonDragThreshold->findChild<QQuickTapHandler*>();
+    QVERIFY(tapHandler);
     QSignalSpy dragThresholdTappedSpy(buttonDragThreshold, SIGNAL(tapped()));
 
     // DragThreshold button stays pressed while touchpoint stays within dragThreshold, emits tapped on release
@@ -122,6 +124,8 @@ void tst_TapHandler::touchGesturePolicyDragThreshold()
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(!buttonDragThreshold->property("pressed").toBool());
     QCOMPARE(dragThresholdTappedSpy.count(), 1);
+    QCOMPARE(buttonDragThreshold->property("tappedPosition").toPoint(), p1);
+    QCOMPARE(tapHandler->point().position(), QPointF());
 
     // DragThreshold button is no longer pressed if touchpoint goes beyond dragThreshold
     dragThresholdTappedSpy.clear();
@@ -152,6 +156,8 @@ void tst_TapHandler::mouseGesturePolicyDragThreshold()
 
     QQuickItem *buttonDragThreshold = window->rootObject()->findChild<QQuickItem*>("DragThreshold");
     QVERIFY(buttonDragThreshold);
+    QQuickTapHandler *tapHandler = buttonDragThreshold->findChild<QQuickTapHandler*>();
+    QVERIFY(tapHandler);
     QSignalSpy dragThresholdTappedSpy(buttonDragThreshold, SIGNAL(tapped()));
 
     // DragThreshold button stays pressed while mouse stays within dragThreshold, emits tapped on release
@@ -164,6 +170,8 @@ void tst_TapHandler::mouseGesturePolicyDragThreshold()
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
     QTRY_VERIFY(!buttonDragThreshold->property("pressed").toBool());
     QTRY_COMPARE(dragThresholdTappedSpy.count(), 1);
+    QCOMPARE(buttonDragThreshold->property("tappedPosition").toPoint(), p1);
+    QCOMPARE(tapHandler->point().position(), QPointF());
 
     // DragThreshold button is no longer pressed if mouse goes beyond dragThreshold
     dragThresholdTappedSpy.clear();
