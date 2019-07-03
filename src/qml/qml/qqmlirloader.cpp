@@ -188,11 +188,12 @@ QmlIR::Object *QQmlIRLoader::loadObject(const QV4::CompiledData::Object *seriali
         f->index = functionIndices.count() - 1;
         f->location = compiledFunction->location;
         f->nameIndex = compiledFunction->nameIndex;
+        f->returnType = compiledFunction->returnType;
 
         f->formals.allocate(pool, int(compiledFunction->nFormals));
-        const quint32_le *formalNameIdx = compiledFunction->formalsTable();
+        const QV4::CompiledData::Parameter *formalNameIdx = compiledFunction->formalsTable();
         for (uint i = 0; i < compiledFunction->nFormals; ++i, ++formalNameIdx)
-            f->formals[i] = *formalNameIdx;
+            *static_cast<QV4::CompiledData::Parameter*>(&f->formals[i]) = *formalNameIdx;
 
         object->functions->append(f);
     }

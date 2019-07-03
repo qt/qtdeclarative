@@ -1511,6 +1511,31 @@ void UiVersionSpecifier::accept0(Visitor *visitor)
     }
     visitor->endVisit(this);
 }
+
+QString Type::toString() const
+{
+    QString result;
+    toString(&result);
+    return result;
+}
+
+void Type::toString(QString *out) const
+{
+    for (QQmlJS::AST::UiQualifiedId *it = typeId; it; it = it->next) {
+        out->append(it->name);
+
+        if (it->next)
+            out->append(QLatin1Char('.'));
+    }
+
+    if (typeArguments) {
+        out->append(QLatin1Char('<'));
+        if (auto subType = static_cast<TypeArgumentList*>(typeArguments)->typeId)
+            subType->toString(out);
+        out->append(QLatin1Char('>'));
+    };
+}
+
 } } // namespace QQmlJS::AST
 
 QT_END_NAMESPACE

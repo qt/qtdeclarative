@@ -680,10 +680,8 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
         else if (expr->isGenerator)
             _context->isGenerator = true;
 
-        if (expr->typeAnnotation) {
-            _cg->throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Type annotations are not supported (yet)."));
-            return false;
-        }
+        if (expr->typeAnnotation)
+            _context->returnType = expr->typeAnnotation->type->toString();
     }
 
 
@@ -700,10 +698,6 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
 
     const BoundNames boundNames = formals ? formals->boundNames() : BoundNames();
     for (int i = 0; i < boundNames.size(); ++i) {
-        if (auto type = boundNames.at(i).typeAnnotation) {
-            _cg->throwSyntaxError(type->firstSourceLocation(), QLatin1String("Type annotations are not supported (yet)."));
-            return false;
-        }
         const QString &arg = boundNames.at(i).id;
         if (_context->isStrict || !isSimpleParameterList) {
             bool duplicate = (boundNames.indexOf(arg, i + 1) != -1);
@@ -721,6 +715,7 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
         if (!_context->arguments.contains(arg))
             _context->addLocalVar(arg, Context::VariableDefinition, VariableScope::Var);
     }
+
     return true;
 }
 

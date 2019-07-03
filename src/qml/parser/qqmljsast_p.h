@@ -364,6 +364,9 @@ public:
     SourceLocation lastSourceLocation() const override
     { return typeArguments ? typeArguments->lastSourceLocation() : typeId->lastSourceLocation(); }
 
+    QString toString() const;
+    void toString(QString *out) const;
+
 // attributes
     UiQualifiedId *typeId;
     Node *typeArguments; // TypeArgumentList
@@ -838,6 +841,7 @@ struct QML_PARSER_EXPORT BoundName
         : id(id), typeAnnotation(typeAnnotation)
     {}
     BoundName() = default;
+    QString typeName() const { return typeAnnotation ? typeAnnotation->type->toString() : QString(); }
 };
 
 struct BoundNames : public QVector<BoundName>

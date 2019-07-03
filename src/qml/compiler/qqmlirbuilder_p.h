@@ -221,6 +221,10 @@ struct Parameter : public QV4::CompiledData::Parameter
     Parameter *next;
 
     bool init(QV4::Compiler::JSUnitGenerator *stringGenerator, const QString &parameterName, const QString &typeName);
+    static bool init(QV4::CompiledData::Parameter *param, const QV4::Compiler::JSUnitGenerator *stringGenerator,
+                     int parameterNameIndex, int typeNameIndex);
+    static bool initType(QV4::CompiledData::ParameterType *paramType,
+                         const QV4::Compiler::JSUnitGenerator *stringGenerator, int typeNameIndex);
 
     static QV4::CompiledData::BuiltinType stringToBuiltinType(const QString &typeName);
 };
@@ -265,11 +269,12 @@ struct Function
     QV4::CompiledData::Location location;
     int nameIndex;
     quint32 index; // index in parsedQML::functions
-    FixedPoolArray<int> formals;
+    FixedPoolArray<Parameter> formals;
+    QV4::CompiledData::ParameterType returnType;
 
     // --- QQmlPropertyCacheCreator interface
-    const int *formalsBegin() const { return formals.begin(); }
-    const int *formalsEnd() const { return formals.end(); }
+    const Parameter *formalsBegin() const { return formals.begin(); }
+    const Parameter *formalsEnd() const { return formals.end(); }
     // ---
 
     Function *next;

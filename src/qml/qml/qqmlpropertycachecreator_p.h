@@ -453,14 +453,23 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
         // protect against overriding change signals or methods with properties.
 
         QList<QByteArray> parameterNames;
+        QVector<int> parameterTypes;
         auto formal = function->formalsBegin();
         auto end = function->formalsEnd();
         for ( ; formal != end; ++formal) {
             flags.hasArguments = true;
-            parameterNames << stringAt(*formal).toUtf8();
+            parameterNames << stringAt(formal->nameIndex).toUtf8();
+            int type = metaTypeForParameter(formal->type);
+            if (type == QMetaType::UnknownType)
+                type = QMetaType::QVariant;
+            parameterTypes << type;
         }
 
-        cache->appendMethod(slotName, flags, effectiveMethodIndex++, parameterNames);
+        int returnType = metaTypeForParameter(function->returnType);
+        if (returnType == QMetaType::UnknownType)
+            returnType = QMetaType::QVariant;
+
+        cache->appendMethod(slotName, flags, effectiveMethodIndex++, returnType, parameterNames, parameterTypes);
     }
 
 

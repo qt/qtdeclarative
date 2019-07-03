@@ -66,19 +66,31 @@ using namespace QmlIR;
 bool Parameter::init(QV4::Compiler::JSUnitGenerator *stringGenerator, const QString &parameterName,
                      const QString &typeName)
 {
-    nameIndex = stringGenerator->registerString(parameterName);
-    type.indexIsBuiltinType = false;
-    type.typeNameIndexOrBuiltinType = 0;
+    return init(this, stringGenerator, stringGenerator->registerString(parameterName), stringGenerator->registerString(typeName));
+}
+
+bool Parameter::init(QV4::CompiledData::Parameter *param, const QV4::Compiler::JSUnitGenerator *stringGenerator,
+                     int parameterNameIndex, int typeNameIndex)
+{
+    param->nameIndex = parameterNameIndex;
+    return initType(&param->type, stringGenerator, typeNameIndex);
+}
+
+bool Parameter::initType(QV4::CompiledData::ParameterType *paramType, const QV4::Compiler::JSUnitGenerator *stringGenerator, int typeNameIndex)
+{
+    paramType->indexIsBuiltinType = false;
+    paramType->typeNameIndexOrBuiltinType = 0;
+    const QString typeName = stringGenerator->stringForIndex(typeNameIndex);
     auto builtinType = stringToBuiltinType(typeName);
     if (builtinType == QV4::CompiledData::BuiltinType::InvalidBuiltin) {
         if (typeName.isEmpty() || !typeName.at(0).isUpper())
             return false;
-        type.indexIsBuiltinType = false;
-        type.typeNameIndexOrBuiltinType = stringGenerator->registerString(typeName);
-        Q_ASSERT(quint32(stringGenerator->getStringId(typeName)) < (1u << 31));
+        paramType->indexIsBuiltinType = false;
+        paramType->typeNameIndexOrBuiltinType = typeNameIndex;
+        Q_ASSERT(quint32(typeNameIndex) < (1u << 31));
     } else {
-        type.indexIsBuiltinType = true;
-        type.typeNameIndexOrBuiltinType = static_cast<quint32>(builtinType);
+        paramType->indexIsBuiltinType = true;
+        paramType->typeNameIndexOrBuiltinType = static_cast<quint32>(builtinType);
         Q_ASSERT(quint32(builtinType) < (1u << 31));
     }
     return true;
@@ -909,13 +921,16 @@ bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
         f->index = index;
         f->nameIndex = registerString(funDecl->name.toString());
 
+        QString returnTypeName = funDecl->typeAnnotation ? funDecl->typeAnnotation->type->toString() : QString();
+        Parameter::initType(&f->returnType, jsGenerator, registerString(returnTypeName));
+
         const QQmlJS::AST::BoundNames formals = funDecl->formals ? funDecl->formals->formals() : QQmlJS::AST::BoundNames();
         int formalsCount = formals.size();
         f->formals.allocate(pool, formalsCount);
 
         int i = 0;
         for (const auto &arg : formals) {
-            f->formals[i] = registerString(arg.id);
+            f->formals[i].init(jsGenerator, arg.id, arg.typeName());
             ++i;
         }
 
