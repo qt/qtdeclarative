@@ -56,6 +56,7 @@ private slots:
     void qmlSingletonWithinModule();
     void multiSingletonModule();
     void implicitComponentModule();
+    void qrcRootPathUrl();
 };
 
 void tst_QQMLTypeLoader::testLoadComplete()
@@ -501,6 +502,13 @@ void tst_QQMLTypeLoader::implicitComponentModule()
     QVERIFY(!obj.isNull());
 
     checkCleanCacheLoad(QLatin1String("implicitComponentModule"));
+}
+
+void tst_QQMLTypeLoader::qrcRootPathUrl()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("qrcRootPath.qml"));
+    QCOMPARE(component.status(), QQmlComponent::Ready);
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)
