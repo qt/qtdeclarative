@@ -16,19 +16,21 @@
             "label": "QML list model",
             "purpose": "Provides the ListModel QML type.",
             "section": "QML",
+            "condition": "features.qml-itemmodel",
             "output": [ "privateFeature" ]
         },
         "qml-delegate-model": {
             "label": "QML delegate model",
             "purpose": "Provides the DelegateModel QML type.",
             "section": "QML",
-            "condition": "features.qml-object-model",
+            "condition": "features.qml-object-model && features.qml-itemmodel",
             "output": [ "privateFeature" ]
         },
         "qml-table-model": {
             "label": "QML table model",
             "purpose": "Provides the TableModel QML type.",
             "section": "QML",
+            "condition": "features.qml-itemmodel",
             "output": [ "privateFeature" ]
         }
     },
