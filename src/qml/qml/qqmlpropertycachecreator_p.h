@@ -782,7 +782,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>:
         }
     }
 
-    propertyFlags->isWritable = !(alias.flags & QV4::CompiledData::Property::IsReadOnly) && writable;
+    propertyFlags->isWritable = !(alias.flags & QV4::CompiledData::Alias::IsReadOnly) && writable;
     propertyFlags->isResettable = resettable;
     return QQmlJS::DiagnosticMessage();
 }
