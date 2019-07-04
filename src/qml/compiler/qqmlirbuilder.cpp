@@ -848,8 +848,6 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             }
 
             param->nameIndex = registerString(p->name.toString());
-            param->location.line = p->identifierToken.startLine;
-            param->location.column = p->identifierToken.startColumn;
             signal->parameters->append(param);
             p = p->next;
         }
