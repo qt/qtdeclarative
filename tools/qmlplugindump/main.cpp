@@ -478,8 +478,12 @@ public:
             }
         }
 
-        for (const QMetaObject *meta : qAsConst(objectsToMerge))
+        for (const QMetaObject *meta : qAsConst(objectsToMerge)) {
+            for (int index = meta->enumeratorOffset(); index < meta->enumeratorCount(); ++index)
+                dump(meta->enumerator(index));
+
             writeMetaContent(meta, &knownAttributes);
+        }
 
         qml->writeEndObject();
     }
