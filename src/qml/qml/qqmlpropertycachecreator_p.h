@@ -547,7 +547,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
                 propertyFlags.type = QQmlPropertyData::Flags::QListType;
         }
 
-        if (!(p->flags & QV4::CompiledData::Property::IsReadOnly) && p->type != QV4::CompiledData::Property::CustomList)
+        if (!p->isReadOnly && p->type != QV4::CompiledData::Property::CustomList)
             propertyFlags.isWritable = true;
 
 

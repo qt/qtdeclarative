@@ -906,9 +906,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             }
 
             Property *property = New<Property>();
-            property->flags = 0;
-            if (node->isReadonlyMember)
-                property->flags |= QV4::CompiledData::Property::IsReadOnly;
+            property->isReadOnly = node->isReadonlyMember;
             property->type = type;
             if (type >= QV4::CompiledData::Property::Custom)
                 property->customTypeNameIndex = registerString(memberType);
@@ -1037,7 +1035,7 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
     binding->valueLocation.line = loc.startLine;
     binding->valueLocation.column = loc.startColumn;
     binding->type = QV4::CompiledData::Binding::Type_Invalid;
-    if (_propertyDeclaration && (_propertyDeclaration->flags & QV4::CompiledData::Property::IsReadOnly))
+    if (_propertyDeclaration && _propertyDeclaration->isReadOnly)
         binding->flags |= QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration;
 
     QQmlJS::AST::ExpressionStatement *exprStmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement *>(statement);
@@ -1268,7 +1266,7 @@ void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLo
 
     binding->flags = 0;
 
-    if (_propertyDeclaration && (_propertyDeclaration->flags & QV4::CompiledData::Property::IsReadOnly))
+    if (_propertyDeclaration && _propertyDeclaration->isReadOnly)
         binding->flags |= QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration;
 
     // No type name on the initializer means it must be a group property

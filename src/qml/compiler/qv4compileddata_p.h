@@ -645,14 +645,10 @@ struct Property
                 Vector2D, Vector3D, Vector4D, Matrix4x4, Quaternion,
                 Custom, CustomList };
 
-    enum Flags : unsigned int {
-        IsReadOnly = 0x1
-    };
-
     quint32_le nameIndex;
     union {
         quint32_le_bitfield<0, 31> type;
-        quint32_le_bitfield<31, 1> flags; // readonly
+        quint32_le_bitfield<31, 1> isReadOnly;
     };
     quint32_le customTypeNameIndex; // If type >= Custom
     Location location;
