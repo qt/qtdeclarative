@@ -1157,6 +1157,10 @@ void QQuickAbstractButton::accessibilityActiveChanged(bool active)
 
 QAccessible::Role QQuickAbstractButton::accessibleRole() const
 {
+    Q_D(const QQuickAbstractButton);
+    if (d->checkable) {
+        return QAccessible::CheckBox;
+    }
     return QAccessible::Button;
 }
 #endif

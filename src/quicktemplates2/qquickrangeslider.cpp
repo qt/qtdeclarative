@@ -752,7 +752,6 @@ qreal QQuickRangeSlider::valueAt(qreal position) const
     \qmlproperty bool QtQuick.Controls::RangeSlider::first.hovered
     \qmlproperty real QtQuick.Controls::RangeSlider::first.implicitHandleWidth
     \qmlproperty real QtQuick.Controls::RangeSlider::first.implicitHandleHeight
-    \qmlsignal void QtQuick.Controls::RangeSlider::moved()
 
     \table
     \header
@@ -801,21 +800,26 @@ qreal QQuickRangeSlider::valueAt(qreal position) const
         \li implicitHandleHeight
         \li This property holds the implicit height of the first handle.
             This property was introduced in QtQuick.Controls 2.5.
-    \row
-        \li moved()
-        \li This signal is emitted when the first handle has been interactively moved
-            by the user by either touch, mouse, or keys.
-
-            This signal was introduced in QtQuick.Controls 2.5.
     \endtable
 
-    \sa first.increase(), first.decrease()
+    \sa first.moved(), first.increase(), first.decrease()
 */
 QQuickRangeSliderNode *QQuickRangeSlider::first() const
 {
     Q_D(const QQuickRangeSlider);
     return d->first;
 }
+
+/*!
+    \qmlsignal void QtQuick.Controls::RangeSlider::first.moved()
+    \qmlsignal void QtQuick.Controls::RangeSlider::second.moved()
+    \since QtQuick.Controls 2.5
+
+    This signal is emitted when either the first or second handle has been
+    interactively moved by the user by either touch, mouse, or keys.
+
+    \sa first, second
+*/
 
 /*!
     \qmlpropertygroup QtQuick.Controls::RangeSlider::second
@@ -827,7 +831,6 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
     \qmlproperty bool QtQuick.Controls::RangeSlider::second.hovered
     \qmlproperty real QtQuick.Controls::RangeSlider::second.implicitHandleWidth
     \qmlproperty real QtQuick.Controls::RangeSlider::second.implicitHandleHeight
-    \qmlsignal void QtQuick.Controls::RangeSlider::moved()
 
     \table
     \header
@@ -876,15 +879,9 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
         \li implicitHandleHeight
         \li This property holds the implicit height of the second handle.
             This property was introduced in QtQuick.Controls 2.5.
-    \row
-        \li moved()
-        \li This signal is emitted when the second handle has been interactively moved
-            by the user by either touch, mouse, or keys.
-
-            This signal was introduced in QtQuick.Controls 2.5.
     \endtable
 
-    \sa second.increase(), second.decrease()
+    \sa second.moved(), second.increase(), second.decrease()
 */
 QQuickRangeSliderNode *QQuickRangeSlider::second() const
 {

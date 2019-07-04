@@ -243,13 +243,6 @@ void QQuickCheckBox::nextCheckState()
         QQuickAbstractButton::nextCheckState();
 }
 
-#if QT_CONFIG(accessibility)
-QAccessible::Role QQuickCheckBox::accessibleRole() const
-{
-    return QAccessible::CheckBox;
-}
-#endif
-
 QT_END_NAMESPACE
 
 #include "moc_qquickcheckbox_p.cpp"

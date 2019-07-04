@@ -84,10 +84,6 @@ protected:
     void buttonChange(ButtonChange change) override;
     void nextCheckState() override;
 
-#if QT_CONFIG(accessibility)
-    QAccessible::Role accessibleRole() const override;
-#endif
-
 private:
     Q_DISABLE_COPY(QQuickCheckBox)
     Q_DECLARE_PRIVATE(QQuickCheckBox)
