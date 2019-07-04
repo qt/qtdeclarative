@@ -767,33 +767,33 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
     static const struct TypeNameToType {
         const char *name;
         size_t nameLength;
-        QV4::CompiledData::Property::Type type;
+        QV4::CompiledData::BuiltinType type;
     } propTypeNameToTypes[] = {
-        { "int", strlen("int"), QV4::CompiledData::Property::Int },
-        { "bool", strlen("bool"), QV4::CompiledData::Property::Bool },
-        { "double", strlen("double"), QV4::CompiledData::Property::Real },
-        { "real", strlen("real"), QV4::CompiledData::Property::Real },
-        { "string", strlen("string"), QV4::CompiledData::Property::String },
-        { "url", strlen("url"), QV4::CompiledData::Property::Url },
-        { "color", strlen("color"), QV4::CompiledData::Property::Color },
+        { "int", strlen("int"), QV4::CompiledData::BuiltinType::Int },
+        { "bool", strlen("bool"), QV4::CompiledData::BuiltinType::Bool },
+        { "double", strlen("double"), QV4::CompiledData::BuiltinType::Real },
+        { "real", strlen("real"), QV4::CompiledData::BuiltinType::Real },
+        { "string", strlen("string"), QV4::CompiledData::BuiltinType::String },
+        { "url", strlen("url"), QV4::CompiledData::BuiltinType::Url },
+        { "color", strlen("color"), QV4::CompiledData::BuiltinType::Color },
         // Internally QTime, QDate and QDateTime are all supported.
         // To be more consistent with JavaScript we expose only
         // QDateTime as it matches closely with the Date JS type.
         // We also call it "date" to match.
         // { "time", strlen("time"), Property::Time },
         // { "date", strlen("date"), Property::Date },
-        { "date", strlen("date"), QV4::CompiledData::Property::DateTime },
-        { "rect", strlen("rect"), QV4::CompiledData::Property::Rect },
-        { "point", strlen("point"), QV4::CompiledData::Property::Point },
-        { "size", strlen("size"), QV4::CompiledData::Property::Size },
-        { "font", strlen("font"), QV4::CompiledData::Property::Font },
-        { "vector2d", strlen("vector2d"), QV4::CompiledData::Property::Vector2D },
-        { "vector3d", strlen("vector3d"), QV4::CompiledData::Property::Vector3D },
-        { "vector4d", strlen("vector4d"), QV4::CompiledData::Property::Vector4D },
-        { "quaternion", strlen("quaternion"), QV4::CompiledData::Property::Quaternion },
-        { "matrix4x4", strlen("matrix4x4"), QV4::CompiledData::Property::Matrix4x4 },
-        { "variant", strlen("variant"), QV4::CompiledData::Property::Variant },
-        { "var", strlen("var"), QV4::CompiledData::Property::Var }
+        { "date", strlen("date"), QV4::CompiledData::BuiltinType::DateTime },
+        { "rect", strlen("rect"), QV4::CompiledData::BuiltinType::Rect },
+        { "point", strlen("point"), QV4::CompiledData::BuiltinType::Point },
+        { "size", strlen("size"), QV4::CompiledData::BuiltinType::Size },
+        { "font", strlen("font"), QV4::CompiledData::BuiltinType::Font },
+        { "vector2d", strlen("vector2d"), QV4::CompiledData::BuiltinType::Vector2D },
+        { "vector3d", strlen("vector3d"), QV4::CompiledData::BuiltinType::Vector3D },
+        { "vector4d", strlen("vector4d"), QV4::CompiledData::BuiltinType::Vector4D },
+        { "quaternion", strlen("quaternion"), QV4::CompiledData::BuiltinType::Quaternion },
+        { "matrix4x4", strlen("matrix4x4"), QV4::CompiledData::BuiltinType::Matrix4x4 },
+        { "variant", strlen("variant"), QV4::CompiledData::BuiltinType::Variant },
+        { "var", strlen("var"), QV4::CompiledData::BuiltinType::Var }
     };
     static const int propTypeNameToTypesCount = sizeof(propTypeNameToTypes) /
                                                 sizeof(propTypeNameToTypes[0]);
@@ -845,7 +845,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             } else {
                 // the parameter is a known basic type
                 param->indexIsBuiltinType = true;
-                param->typeNameIndexOrBuiltinType = type->type;
+                param->typeNameIndexOrBuiltinType = static_cast<quint32>(type->type);
                 Q_ASSERT(quint32(type->type) < (1u << 31));
             }
 

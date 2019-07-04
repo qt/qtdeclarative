@@ -85,7 +85,7 @@ struct QQmlPropertyCacheCreatorBase
 public:
     static QAtomicInt classIndexCounter;
 
-    static int metaTypeForPropertyType(QV4::CompiledData::Property::Type type);
+    static int metaTypeForPropertyType(QV4::CompiledData::BuiltinType type);
 };
 
 template <typename ObjectContainer>
@@ -304,7 +304,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
     auto p = obj->propertiesBegin();
     auto pend = obj->propertiesEnd();
     for ( ; p != pend; ++p) {
-        if (p->builtinType() == QV4::CompiledData::Property::Var)
+        if (p->builtinType() == QV4::CompiledData::BuiltinType::Var)
             varPropCount++;
 
         bool notInRevision = false;
@@ -406,7 +406,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
                 names.append(stringAt(param->nameIndex).toUtf8());
                 if (param->indexIsBuiltinType) {
                     // built-in type
-                    paramTypes[i + 1] = metaTypeForPropertyType(static_cast<QV4::CompiledData::Property::Type>(int(param->typeNameIndexOrBuiltinType)));
+                    paramTypes[i + 1] = metaTypeForPropertyType(static_cast<QV4::CompiledData::BuiltinType>(int(param->typeNameIndexOrBuiltinType)));
                 } else {
                     // lazily resolved type
                     const QString customTypeName = stringAt(param->typeNameIndexOrBuiltinType);
@@ -477,16 +477,16 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
         int propertTypeMinorVersion = 0;
         QQmlPropertyData::Flags propertyFlags;
 
-        const QV4::CompiledData::Property::Type type = p->builtinType();
+        const QV4::CompiledData::BuiltinType type = p->builtinType();
 
-        if (type == QV4::CompiledData::Property::Var)
+        if (type == QV4::CompiledData::BuiltinType::Var)
             propertyFlags.type = QQmlPropertyData::Flags::VarPropertyType;
 
 
-        if (type != QV4::CompiledData::Property::InvalidBuiltin) {
+        if (type != QV4::CompiledData::BuiltinType::InvalidBuiltin) {
             propertyType = metaTypeForPropertyType(type);
 
-            if (type == QV4::CompiledData::Property::Variant)
+            if (type == QV4::CompiledData::BuiltinType::Variant)
                 propertyFlags.type = QQmlPropertyData::Flags::QVariantType;
         } else {
             Q_ASSERT(!p->isBuiltinType);
