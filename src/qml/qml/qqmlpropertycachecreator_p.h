@@ -304,7 +304,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
     auto p = obj->propertiesBegin();
     auto pend = obj->propertiesEnd();
     for ( ; p != pend; ++p) {
-        if (p->type == QV4::CompiledData::Property::Var)
+        if (p->builtinType() == QV4::CompiledData::Property::Var)
             varPropCount++;
 
         bool notInRevision = false;
@@ -477,20 +477,22 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
         int propertTypeMinorVersion = 0;
         QQmlPropertyData::Flags propertyFlags;
 
-        if (p->type == QV4::CompiledData::Property::Var) {
-            propertyType = QMetaType::QVariant;
-            propertyFlags.type = QQmlPropertyData::Flags::VarPropertyType;
-        } else if (p->type < QV4::CompiledData::Property::Custom) {
-            propertyType = metaTypeForPropertyType(static_cast<QV4::CompiledData::Property::Type>(quint32(p->type)));
+        const QV4::CompiledData::Property::Type type = p->builtinType();
 
-            if (p->type == QV4::CompiledData::Property::Variant)
+        if (type == QV4::CompiledData::Property::Var)
+            propertyFlags.type = QQmlPropertyData::Flags::VarPropertyType;
+
+
+        if (type != QV4::CompiledData::Property::InvalidBuiltin) {
+            propertyType = metaTypeForPropertyType(type);
+
+            if (type == QV4::CompiledData::Property::Variant)
                 propertyFlags.type = QQmlPropertyData::Flags::QVariantType;
         } else {
-            Q_ASSERT(p->type == QV4::CompiledData::Property::CustomList ||
-                     p->type == QV4::CompiledData::Property::Custom);
+            Q_ASSERT(!p->isBuiltinType);
 
             QQmlType qmltype;
-            if (!imports->resolveType(stringAt(p->customTypeNameIndex), &qmltype, nullptr, nullptr, nullptr)) {
+            if (!imports->resolveType(stringAt(p->builtinTypeOrTypeNameIndex), &qmltype, nullptr, nullptr, nullptr)) {
                 return qQmlCompileError(p->location, QQmlPropertyCacheCreatorBase::tr("Invalid property type"));
             }
 
@@ -502,27 +504,27 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
 
                 auto compilationUnit = tdata->compilationUnit();
 
-                if (p->type == QV4::CompiledData::Property::Custom) {
-                    propertyType = compilationUnit->metaTypeId;
-                } else {
+                if (p->isList) {
                     propertyType = compilationUnit->listMetaTypeId;
+                } else {
+                    propertyType = compilationUnit->metaTypeId;
                 }
             } else {
-                if (p->type == QV4::CompiledData::Property::Custom) {
+                if (p->isList) {
+                    propertyType = qmltype.qListTypeId();
+                } else {
                     propertyType = qmltype.typeId();
                     propertTypeMinorVersion = qmltype.minorVersion();
-                } else {
-                    propertyType = qmltype.qListTypeId();
                 }
             }
 
-            if (p->type == QV4::CompiledData::Property::Custom)
-                propertyFlags.type = QQmlPropertyData::Flags::QObjectDerivedType;
-            else
+            if (p->isList)
                 propertyFlags.type = QQmlPropertyData::Flags::QListType;
+            else
+                propertyFlags.type = QQmlPropertyData::Flags::QObjectDerivedType;
         }
 
-        if (!p->isReadOnly && p->type != QV4::CompiledData::Property::CustomList)
+        if (!p->isReadOnly && !p->isList)
             propertyFlags.isWritable = true;
 
 

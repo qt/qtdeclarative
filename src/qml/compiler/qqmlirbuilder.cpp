@@ -872,13 +872,15 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
         } else {
             const QStringRef &name = node->name;
 
+            Property *property = New<Property>();
+            property->isReadOnly = node->isReadonlyMember;
+
             bool typeFound = false;
-            QV4::CompiledData::Property::Type type = QV4::CompiledData::Property::Var;
 
             for (int ii = 0; !typeFound && ii < propTypeNameToTypesCount; ++ii) {
                 const TypeNameToType *t = propTypeNameToTypes + ii;
                 if (memberType == QLatin1String(t->name, static_cast<int>(t->nameLength))) {
-                    type = t->type;
+                    property->setBuiltinType(t->type);
                     typeFound = true;
                 }
             }
@@ -886,11 +888,10 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             if (!typeFound && memberType.at(0).isUpper()) {
                 const QStringRef &typeModifier = node->typeModifier;
 
-                if (typeModifier.isEmpty()) {
-                    type = QV4::CompiledData::Property::Custom;
-                } else if (typeModifier == QLatin1String("list")) {
-                    type = QV4::CompiledData::Property::CustomList;
-                } else {
+                property->setCustomType(registerString(memberType));
+                if (typeModifier == QLatin1String("list")) {
+                    property->isList = true;
+                } else if (!typeModifier.isEmpty()) {
                     recordError(node->typeModifierToken, QCoreApplication::translate("QQmlParser","Invalid property type modifier"));
                     return false;
                 }
@@ -904,14 +905,6 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
                 recordError(node->typeToken, QCoreApplication::translate("QQmlParser","Expected property type"));
                 return false;
             }
-
-            Property *property = New<Property>();
-            property->isReadOnly = node->isReadonlyMember;
-            property->type = type;
-            if (type >= QV4::CompiledData::Property::Custom)
-                property->customTypeNameIndex = registerString(memberType);
-            else
-                property->customTypeNameIndex = emptyStringIndex;
 
             const QString propName = name.toString();
             property->nameIndex = registerString(propName);
@@ -1530,7 +1523,7 @@ bool IRBuilder::isStatementNodeScript(QQmlJS::AST::Statement *statement)
 
 bool IRBuilder::isRedundantNullInitializerForPropertyDeclaration(Property *property, QQmlJS::AST::Statement *statement)
 {
-    if (property->type != QV4::CompiledData::Property::Custom)
+    if (property->isBuiltinType || property->isList)
         return false;
     QQmlJS::AST::ExpressionStatement *exprStmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement *>(statement);
     if (!exprStmt)

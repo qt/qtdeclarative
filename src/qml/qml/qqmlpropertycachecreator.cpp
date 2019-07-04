@@ -69,8 +69,7 @@ int QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(QV4::CompiledData::Pro
     case QV4::CompiledData::Property::Vector4D: return QMetaType::QVector4D;
     case QV4::CompiledData::Property::Matrix4x4: return QMetaType::QMatrix4x4;
     case QV4::CompiledData::Property::Quaternion: return QMetaType::QQuaternion;
-    case QV4::CompiledData::Property::Custom: break;
-    case QV4::CompiledData::Property::CustomList: break;
+    case QV4::CompiledData::Property::InvalidBuiltin: break;
     };
     return QMetaType::UnknownType;
 }
