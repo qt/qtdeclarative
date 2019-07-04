@@ -67,9 +67,6 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
     if (!QQuickPointerDeviceHandler::wantsPointerEvent(event))
         return false;
-    if (event->device()->pointerType() != QQuickPointerDevice::Finger &&
-            (event->buttons() & acceptedButtons()) == 0 && (event->button() & acceptedButtons()) == 0)
-        return false;
 
     if (m_pointInfo.m_id) {
         // We already know which one we want, so check whether it's there.
