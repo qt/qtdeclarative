@@ -100,7 +100,7 @@ void tst_accessibility::a11y_data()
     QTest::newRow("StackView") << "stackview" << QAccessible::LayeredPane << "";
     QTest::newRow("SwipeDelegate") << "swipedelegate" << QAccessible::ListItem << "SwipeDelegate";
     QTest::newRow("SwipeView") << "swipeview" << QAccessible::PageTabList << "";
-    QTest::newRow("Switch") << "switch" << QAccessible::Button << "Switch";
+    QTest::newRow("Switch") << "switch" << QAccessible::CheckBox << "Switch";
     QTest::newRow("SwitchDelegate") << "switchdelegate" << QAccessible::ListItem << "SwitchDelegate";
     QTest::newRow("TabBar") << "tabbar" << QAccessible::PageTabList << "";
     QTest::newRow("TabButton") << "tabbutton" << QAccessible::PageTab << "TabButton";
@@ -109,7 +109,7 @@ void tst_accessibility::a11y_data()
     QTest::newRow("ToolBar") << "toolbar" << QAccessible::ToolBar << "";
     QTest::newRow("ToolButton") << "toolbutton" << QAccessible::Button << "ToolButton";
     QTest::newRow("ToolTip") << "tooltip" << QAccessible::ToolTip << "ToolTip";
-    QTest::newRow("Tumbler") << "tumbler" << QAccessible::NoRole << ""; // (TODO)
+    QTest::newRow("Tumbler") << "tumbler" << QAccessible::NoRole << ""; // TODO
 
     QTest::newRow("DayOfWeekRow") << "dayofweekrow" << QAccessible::NoRole << "DayOfWeekRow";
     QTest::newRow("MonthGrid") << "monthgrid" << QAccessible::NoRole << "MonthGrid";

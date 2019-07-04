@@ -185,7 +185,7 @@ void QQuickActionPrivate::setShortcut(const QVariant &var)
     for (QQuickActionPrivate::ShortcutEntry *entry : qAsConst(shortcutEntries))
         entry->ungrab();
 
-    vshortcut = var.toString();
+    vshortcut = var;
     keySequence = variantToKeySequence(var);
 
     defaultShortcutEntry->grab(keySequence, enabled);
@@ -487,7 +487,7 @@ void QQuickAction::setCheckable(bool checkable)
 
     \code
     Action {
-        sequence: "Ctrl+E,Ctrl+W"
+        shortcut: "Ctrl+E,Ctrl+W"
         onTriggered: edit.wrapMode = TextEdit.Wrap
     }
     \endcode
