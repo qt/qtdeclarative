@@ -165,4 +165,33 @@ TestCase {
         keyClick(Qt.Key_A, Qt.ControlModifier)
         compare(spy.count, 1)
     }
+
+    Component {
+        id: shortcutBinding
+        Item {
+            Action {
+                id: action
+                shortcut: StandardKey.Copy
+            }
+
+            Shortcut {
+                id: indirectShortcut
+                sequence: action.shortcut
+            }
+
+            Shortcut {
+                id: directShortcut
+                sequence: StandardKey.Copy
+            }
+
+            property alias indirect: indirectShortcut;
+            property alias direct: directShortcut
+        }
+    }
+
+    function test_shortcutBinding() {
+        var container = createTemporaryObject(shortcutBinding, testCase);
+        verify(container)
+        compare(container.indirect.nativeText, container.direct.nativeText);
+    }
 }

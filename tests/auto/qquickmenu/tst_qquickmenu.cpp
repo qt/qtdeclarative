@@ -1105,8 +1105,9 @@ void tst_QQuickMenu::subMenuMouse()
     QCOMPARE(mainMenu->isVisible(), cascade);
     QVERIFY(subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
-    QVERIFY(!subSubMenu1->isVisible());
-    if (cascade) {
+    if (!cascade) {
+        QVERIFY(!subSubMenu1->isVisible());
+    } else {
         QTRY_VERIFY(subSubMenu1->isVisible());
         QTRY_VERIFY(subSubMenu1->isOpened());
     }

@@ -78,7 +78,8 @@ QT_BEGIN_NAMESPACE
         \li If only a single item is used within a ScrollView, the content size is
             automatically calculated based on the implicit size of its contained item.
             However, if more than one item is used (or an implicit size is not
-            provided), the \l contentWidth and \l contentHeight properties must
+            provided), the \l {QtQuick.Controls::Pane::}{contentWidth} and
+            \l {QtQuick.Controls::Pane::}{contentHeight} properties must
             be set to the combined size of its contained items.
         \li If the content size is less than or equal to the size of the ScrollView,
             it will not be flickable.

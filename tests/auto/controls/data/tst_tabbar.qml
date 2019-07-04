@@ -270,6 +270,29 @@ TestCase {
         compare(contentChildrenSpy.count, 12)
     }
 
+    function test_removeCurrent() {
+        var control = createTemporaryObject(tabBar, testCase)
+
+        control.addItem(tabButton.createObject(control, {text: "1"}))
+        control.addItem(tabButton.createObject(control, {text: "2"}))
+        control.addItem(tabButton.createObject(control, {text: "3"}))
+        control.currentIndex = 1
+        compare(control.count, 3)
+        compare(control.currentIndex, 1)
+
+        control.removeItem(1)
+        compare(control.count, 2)
+        compare(control.currentIndex, 0)
+
+        control.removeItem(0)
+        compare(control.count, 1)
+        compare(control.currentIndex, 0)
+
+        control.removeItem(0)
+        compare(control.count, 0)
+        compare(control.currentIndex, -1)
+    }
+
     Component {
         id: contentBar
         TabBar {
