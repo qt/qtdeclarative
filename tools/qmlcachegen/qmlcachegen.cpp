@@ -65,6 +65,7 @@ struct Error
     void print();
     Error augment(const QString &contextErrorMessage) const;
     void appendDiagnostics(const QString &inputFileName, const QList<QQmlJS::DiagnosticMessage> &diagnostics);
+    void appendDiagnostic(const QString &inputFileName, const DiagnosticMessage &diagnostic);
 };
 
 void Error::print()
@@ -94,13 +95,17 @@ QString diagnosticErrorMessage(const QString &fileName, const QQmlJS::Diagnostic
     return message;
 }
 
+void Error::appendDiagnostic(const QString &inputFileName, const DiagnosticMessage &diagnostic)
+{
+    if (!message.isEmpty())
+        message += QLatin1Char('\n');
+    message += diagnosticErrorMessage(inputFileName, diagnostic);
+}
+
 void Error::appendDiagnostics(const QString &inputFileName, const QList<DiagnosticMessage> &diagnostics)
 {
-    for (const QQmlJS::DiagnosticMessage &parseError: diagnostics) {
-        if (!message.isEmpty())
-            message += QLatin1Char('\n');
-        message += diagnosticErrorMessage(inputFileName, parseError);
-    }
+    for (const QQmlJS::DiagnosticMessage &diagnostic: diagnostics)
+        appendDiagnostic(inputFileName, diagnostic);
 }
 
 // Ensure that ListElement objects keep all property assignments in their string form
@@ -211,9 +216,8 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
             for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next)
                 functionsToCompile << *foe;
             const QVector<int> runtimeFunctionIndices = v4CodeGen.generateJSCodeForFunctionsAndBindings(functionsToCompile);
-            QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();
-            if (!jsErrors.isEmpty()) {
-                error->appendDiagnostics(inputFileName, jsErrors);
+            if (v4CodeGen.hasError()) {
+                error->appendDiagnostic(inputFileName, v4CodeGen.error());
                 return false;
             }
 
@@ -310,9 +314,8 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
                                        irDocument.program, &irDocument.jsGenerator.stringTable, illegalNames);
             v4CodeGen.generateFromProgram(inputFileName, inputFileUrl, sourceCode, program,
                                           &irDocument.jsModule, QV4::Compiler::ContextType::ScriptImportedByQML);
-            QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();
-            if (!jsErrors.isEmpty()) {
-                error->appendDiagnostics(inputFileName, jsErrors);
+            if (v4CodeGen.hasError()) {
+                error->appendDiagnostic(inputFileName, v4CodeGen.error());
                 return false;
             }
 

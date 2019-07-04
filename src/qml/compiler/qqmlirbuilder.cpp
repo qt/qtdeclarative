@@ -1836,7 +1836,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     }
     scan.leaveEnvironment();
 
-    if (hasError)
+    if (hasError())
         return QVector<int>();
 
     _context = nullptr;

@@ -203,18 +203,15 @@ QV4::CompiledData::CompilationUnit Script::precompile(
 
     Codegen cg(unitGenerator, /*strict mode*/false);
     cg.generateFromProgram(fileName, finalUrl, source, program, module, contextType);
-    const auto v4Errors = cg.errors();
-    if (!v4Errors.isEmpty()) {
-        const QUrl url = cg.url();
+    if (cg.hasError()) {
         if (reportedErrors) {
-            for (const auto &v4Error : v4Errors) {
-                QQmlError error;
-                error.setUrl(url);
-                error.setLine(v4Error.line);
-                error.setColumn(v4Error.column);
-                error.setDescription(v4Error.message);
-                reportedErrors->append(error);
-            }
+            const auto v4Error = cg.error();
+            QQmlError error;
+            error.setUrl(cg.url());
+            error.setLine(v4Error.line);
+            error.setColumn(v4Error.column);
+            error.setDescription(v4Error.message);
+            reportedErrors->append(error);
         }
         return nullptr;
     }
