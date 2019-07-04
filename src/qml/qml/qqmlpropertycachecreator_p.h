@@ -429,13 +429,12 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
             auto end = s->parametersEnd();
             for ( ; param != end; ++param, ++i) {
                 names.append(stringAt(param->nameIndex).toUtf8());
-                if (param->type < builtinTypeCount) {
+                if (param->indexIsBuiltinType) {
                     // built-in type
-                    paramTypes[i + 1] = builtinTypes[param->type].metaType;
+                    paramTypes[i + 1] = builtinTypes[param->typeNameIndexOrBuiltinType].metaType;
                 } else {
                     // lazily resolved type
-                    Q_ASSERT(param->type == QV4::CompiledData::Property::Custom);
-                    const QString customTypeName = stringAt(param->customTypeNameIndex);
+                    const QString customTypeName = stringAt(param->typeNameIndexOrBuiltinType);
                     QQmlType qmltype;
                     if (!imports->resolveType(customTypeName, &qmltype, nullptr, nullptr, nullptr))
                         return qQmlCompileError(s->location, QQmlPropertyCacheCreatorBase::tr("Invalid signal parameter type: %1").arg(customTypeName));

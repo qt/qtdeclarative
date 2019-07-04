@@ -833,8 +833,9 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
                 if (memberType.at(0).isUpper()) {
                     // Must be a QML object type.
                     // Lazily determine type during compilation.
-                    param->type = QV4::CompiledData::Property::Custom;
-                    param->customTypeNameIndex = registerString(memberType);
+                    param->indexIsBuiltinType = false;
+                    param->typeNameIndexOrBuiltinType = registerString(memberType);
+                    Q_ASSERT(quint32(jsGenerator->getStringId(memberType)) < (1u << 31));
                 } else {
                     QString errStr = QCoreApplication::translate("QQmlParser","Invalid signal parameter type: ");
                     errStr.append(memberType);
@@ -843,8 +844,9 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
                 }
             } else {
                 // the parameter is a known basic type
-                param->type = type->type;
-                param->customTypeNameIndex = emptyStringIndex;
+                param->indexIsBuiltinType = true;
+                param->typeNameIndexOrBuiltinType = type->type;
+                Q_ASSERT(quint32(type->type) < (1u << 31));
             }
 
             param->nameIndex = registerString(p->name.toString());
