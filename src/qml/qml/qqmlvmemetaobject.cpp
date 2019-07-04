@@ -640,7 +640,6 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
 
             if (id < propertyCount) {
                 const QV4::CompiledData::Property::Type t = static_cast<QV4::CompiledData::Property::Type>(qint32(compiledObject->propertyTable()[id].type));
-                bool needActivate = false;
 
                 if (t == QV4::CompiledData::Property::Var) {
                     // the context can be null if accessing var properties from cpp after re-parenting an item.
@@ -728,7 +727,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         }
 
                     } else if (c == QMetaObject::WriteProperty) {
-
+                        bool needActivate = false;
                         switch(t) {
                         case QV4::CompiledData::Property::Int:
                             needActivate = *reinterpret_cast<int *>(a[0]) != readPropertyAsInt(id);
@@ -804,12 +803,10 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         case QV4::CompiledData::Property::Var:
                             Q_UNREACHABLE();
                         }
+
+                        if (needActivate)
+                            activate(object, methodOffset() + id, nullptr);
                     }
-
-                }
-
-                if (c == QMetaObject::WriteProperty && needActivate) {
-                    activate(object, methodOffset() + id, nullptr);
                 }
 
                 return -1;
