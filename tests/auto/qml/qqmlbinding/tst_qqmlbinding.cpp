@@ -54,6 +54,7 @@ private slots:
     void disabledOnReadonlyProperty();
     void delayed();
     void bindingOverwriting();
+    void bindToQmlComponent();
 
 private:
     QQmlEngine engine;
@@ -392,6 +393,13 @@ void tst_qqmlbinding::bindingOverwriting()
 
     QLoggingCategory::setFilterRules(QString());
     QCOMPARE(messageHandler.messages().count(), 2);
+}
+
+void tst_qqmlbinding::bindToQmlComponent()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("bindToQMLComponent.qml"));
+    QVERIFY(c.create());
 }
 
 QTEST_MAIN(tst_qqmlbinding)
