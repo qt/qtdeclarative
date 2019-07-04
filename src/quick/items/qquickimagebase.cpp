@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 // if they're not happy with our implementation of it.
 bool QQuickImageBasePrivate::updateDevicePixelRatio(qreal targetDevicePixelRatio)
 {
-    // QQuickImageProvider and SVG can generate a high resolution image when
+    // QQuickImageProvider and SVG and PDF can generate a high resolution image when
     // sourceSize is set (this function is only called if it's set).
     // If sourceSize is not set then the provider default size will be used, as usual.
     bool setDevicePixelRatio = false;
@@ -64,7 +64,8 @@ bool QQuickImageBasePrivate::updateDevicePixelRatio(qreal targetDevicePixelRatio
     } else {
         QString stringUrl = url.path(QUrl::PrettyDecoded);
         if (stringUrl.endsWith(QLatin1String("svg")) ||
-            stringUrl.endsWith(QLatin1String("svgz"))) {
+            stringUrl.endsWith(QLatin1String("svgz")) ||
+            stringUrl.endsWith(QLatin1String("pdf"))) {
             setDevicePixelRatio = true;
         }
     }
