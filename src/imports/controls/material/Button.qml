@@ -78,7 +78,6 @@ T.Button {
             control.highlighted ? control.Material.primaryHighlightedTextColor : control.Material.foreground
     }
 
-    // TODO: Add a proper ripple/ink effect for mouse/touch input and focus state
     background: Rectangle {
         implicitWidth: 64
         implicitHeight: control.Material.buttonHeight
@@ -113,7 +112,7 @@ T.Button {
             pressed: control.pressed
             anchor: control
             active: control.down || control.visualFocus || control.hovered
-            color: control.Material.rippleColor
+            color: control.flat && control.highlighted ? control.Material.highlightedRippleColor : control.Material.rippleColor
         }
     }
 }
