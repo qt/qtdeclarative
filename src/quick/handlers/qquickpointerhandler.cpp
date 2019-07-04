@@ -113,6 +113,47 @@ void QQuickPointerHandler::setMargin(qreal pointDistanceThreshold)
 }
 
 /*!
+    \qmlproperty int PointerHandler::dragThreshold
+    \since 5.15
+
+    The distance in pixels that the user must drag an event point in order to
+    have it treated as a drag gesture.
+
+    The default value depends on the platform and screen resolution.
+    It can be reset back to the default value by setting it to undefined.
+    The behavior when a drag gesture begins varies in different handlers.
+*/
+int QQuickPointerHandler::dragThreshold() const
+{
+    Q_D(const QQuickPointerHandler);
+    if (d->dragThreshold < 0)
+        return qApp->styleHints()->startDragDistance();
+    return d->dragThreshold;
+}
+
+void QQuickPointerHandler::setDragThreshold(int t)
+{
+    Q_D(QQuickPointerHandler);
+    if (d->dragThreshold == t)
+        return;
+
+    if (t > std::numeric_limits<qint16>::max())
+        qWarning() << "drag threshold cannot exceed" << std::numeric_limits<qint16>::max();
+    d->dragThreshold = qint16(t);
+    emit dragThresholdChanged();
+}
+
+void QQuickPointerHandler::resetDragThreshold()
+{
+    Q_D(QQuickPointerHandler);
+    if (d->dragThreshold < 0)
+        return;
+
+    d->dragThreshold = -1;
+    emit dragThresholdChanged();
+}
+
+/*!
     Notification that the grab has changed in some way which is relevant to this handler.
     The \a grabber (subject) will be the Input Handler whose state is changing,
     or null if the state change regards an Item.
@@ -545,6 +586,34 @@ QQuickPointerHandlerPrivate::QQuickPointerHandlerPrivate()
   , hadKeepMouseGrab(false)
   , hadKeepTouchGrab(false)
 {
+}
+
+template <typename TEventPoint>
+bool QQuickPointerHandlerPrivate::dragOverThreshold(qreal d, Qt::Axis axis, const TEventPoint *p) const
+{
+    Q_Q(const QQuickPointerHandler);
+    QStyleHints *styleHints = qApp->styleHints();
+    bool overThreshold = qAbs(d) > q->dragThreshold();
+    const bool dragVelocityLimitAvailable = (styleHints->startDragVelocity() > 0);
+    if (!overThreshold && dragVelocityLimitAvailable) {
+        qreal velocity = qreal(axis == Qt::XAxis ? p->velocity().x() : p->velocity().y());
+        overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
+    }
+    return overThreshold;
+}
+
+bool QQuickPointerHandlerPrivate::dragOverThreshold(QVector2D delta) const
+{
+    Q_Q(const QQuickPointerHandler);
+    const float threshold = q->dragThreshold();
+    return qAbs(delta.x()) > threshold || qAbs(delta.y()) > threshold;
+}
+
+bool QQuickPointerHandlerPrivate::dragOverThreshold(const QQuickEventPoint *point) const
+{
+    QPointF delta = point->scenePosition() - point->scenePressPosition();
+    return (dragOverThreshold(delta.x(), Qt::XAxis, point) ||
+            dragOverThreshold(delta.y(), Qt::YAxis, point));
 }
 
 QT_END_NAMESPACE

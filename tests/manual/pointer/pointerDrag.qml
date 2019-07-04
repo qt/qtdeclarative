@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.15
 import "content"
 
 Rectangle {
@@ -74,7 +74,14 @@ Rectangle {
             label: "DragHandler"
             objectName: "dragSquircle1"
             DragHandler {
-
+                dragThreshold: ckZeroDragThreshold1.checked ? 0 : undefined
+            }
+            CheckBox {
+                id: ckZeroDragThreshold1
+                label: " Zero threshold"
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: 20
+                checked: false
             }
         }
 
@@ -99,7 +106,16 @@ Rectangle {
                 id: tap2
                 gesturePolicy: root.globalGesturePolicy
             }
-            DragHandler { }
+            DragHandler {
+                dragThreshold: ckZeroDragThreshold2.checked ? 0 : undefined
+            }
+            CheckBox {
+                id: ckZeroDragThreshold2
+                label: " Zero threshold"
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: 32
+                checked: false
+            }
         }
 
         TextBox {
@@ -107,7 +123,16 @@ Rectangle {
             width: 100; height: 100
             label: "DragHandler\nTapHandler"
             color: queryColor(tap3.pressed)
-            DragHandler { }
+            DragHandler {
+                dragThreshold: ckZeroDragThreshold3.checked ? 0 : undefined
+            }
+            CheckBox {
+                id: ckZeroDragThreshold3
+                label: " Zero threshold"
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: 32
+                checked: false
+            }
             TapHandler {
                 id: tap3
                 gesturePolicy: root.globalGesturePolicy
@@ -118,7 +143,16 @@ Rectangle {
             x: 400; y: 0
             width: 100; height: 100
             label: "DragHandler"
-            DragHandler { }
+            DragHandler {
+                dragThreshold: ckZeroDragThreshold4.checked ? 0 : undefined
+            }
+            CheckBox {
+                id: ckZeroDragThreshold4
+                label: " Zero threshold"
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: 20
+                checked: false
+            }
 
             TextBox {
                 label: "TapHandler"
@@ -145,6 +179,13 @@ Rectangle {
                 label: " Greedy ↓"
                 checked: true
             }
+            CheckBox {
+                id: ckZeroDragThreshold5
+                label: " Zero threshold"
+                x: 10
+                anchors.bottom: ckGreedyDrag.top
+                checked: false
+            }
             TapHandler {
                 id: tap5
                 gesturePolicy: root.globalGesturePolicy
@@ -159,6 +200,7 @@ Rectangle {
                 DragHandler {
                     grabPermissions: ckGreedyDrag ? DragHandler.CanTakeOverFromAnything :
                         DragHandler.CanTakeOverFromItems | DragHandler.CanTakeOverFromHandlersOfDifferentType | DragHandler.ApprovesTakeOverByAnything
+                    dragThreshold: ckZeroDragThreshold5.checked ? 0 : undefined
                 }
             }
         }
@@ -174,7 +216,16 @@ Rectangle {
                 label: "DragHandler"
                 x: (parent.width - width)/2
                 y: 60
-                DragHandler { }
+                DragHandler {
+                    dragThreshold: ckZeroDragThreshold6.checked ? 0 : undefined
+                }
+            }
+            CheckBox {
+                id: ckZeroDragThreshold6
+                label: " Zero threshold"
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: 20
+                checked: false
             }
         }
 

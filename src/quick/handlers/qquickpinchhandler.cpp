@@ -43,6 +43,7 @@
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qquickitem_p.h>
 #include <private/qguiapplication_p.h>
+#include <private/qquickmultipointhandler_p_p.h>
 #include <private/qquickwindow_p.h>
 #include <QEvent>
 #include <QMouseEvent>
@@ -338,8 +339,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
             const QVector2D currentCentroid(centroid().scenePosition());
             const QVector2D pressCentroid(centroid().scenePressPosition());
 
-            QStyleHints *styleHints = QGuiApplication::styleHints();
-            const int dragThreshold = styleHints->startDragDistance();
+            const int dragThreshold = QQuickPointerHandler::dragThreshold();
             const int dragThresholdSquared = dragThreshold * dragThreshold;
 
             double accumulatedCentroidDistance = 0;     // Used to detect scale
@@ -399,7 +399,8 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
                     point->setAccepted(false); // don't stop propagation
                     setPassiveGrab(point);
                 }
-                if (QQuickWindowPrivate::dragOverThreshold(point))
+                Q_D(QQuickMultiPointHandler);
+                if (d->dragOverThreshold(point))
                     ++numberOfPointsDraggedOverThreshold;
             }
 
