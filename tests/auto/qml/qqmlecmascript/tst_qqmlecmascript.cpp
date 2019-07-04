@@ -356,6 +356,7 @@ private slots:
     void callPropertyOnUndefined();
     void jumpStrictNotEqualUndefined();
     void removeBindingsWithNoDependencies();
+    void preserveBindingWithUnresolvedNames();
     void temporaryDeadZone();
     void importLexicalVariables_data();
     void importLexicalVariables();
@@ -8841,6 +8842,18 @@ void tst_qqmlecmascript::removeBindingsWithNoDependencies()
         QVERIFY(!proxy->subBindings());
     }
 
+}
+
+void tst_qqmlecmascript::preserveBindingWithUnresolvedNames()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("preserveBindingWithUnresolvedNames.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QCOMPARE(object->property("testTypeOf").toString(), QString("undefined"));
+    QObject obj;
+    engine.rootContext()->setContextProperty("contextProp", &obj);
+    QCOMPARE(object->property("testTypeOf").toString(), QString("object"));
 }
 
 void tst_qqmlecmascript::temporaryDeadZone()
