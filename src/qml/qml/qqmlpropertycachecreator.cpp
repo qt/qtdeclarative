@@ -45,6 +45,36 @@ QT_BEGIN_NAMESPACE
 
 QAtomicInt QQmlPropertyCacheCreatorBase::classIndexCounter(0);
 
+
+int QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(QV4::CompiledData::Property::Type type)
+{
+    switch (type) {
+    case QV4::CompiledData::Property::Var: return QMetaType::QVariant;
+    case QV4::CompiledData::Property::Variant: return QMetaType::QVariant;
+    case QV4::CompiledData::Property::Int: return QMetaType::Int;
+    case QV4::CompiledData::Property::Bool: return QMetaType::Bool;
+    case QV4::CompiledData::Property::Real: return QMetaType::Double;
+    case QV4::CompiledData::Property::String: return QMetaType::QString;
+    case QV4::CompiledData::Property::Url: return QMetaType::QUrl;
+    case QV4::CompiledData::Property::Color: return QMetaType::QColor;
+    case QV4::CompiledData::Property::Font: return QMetaType::QFont;
+    case QV4::CompiledData::Property::Time: return QMetaType::QTime;
+    case QV4::CompiledData::Property::Date: return QMetaType::QDate;
+    case QV4::CompiledData::Property::DateTime: return QMetaType::QDateTime;
+    case QV4::CompiledData::Property::Rect: return QMetaType::QRectF;
+    case QV4::CompiledData::Property::Point: return QMetaType::QPointF;
+    case QV4::CompiledData::Property::Size: return QMetaType::QSizeF;
+    case QV4::CompiledData::Property::Vector2D: return QMetaType::QVector2D;
+    case QV4::CompiledData::Property::Vector3D: return QMetaType::QVector3D;
+    case QV4::CompiledData::Property::Vector4D: return QMetaType::QVector4D;
+    case QV4::CompiledData::Property::Matrix4x4: return QMetaType::QMatrix4x4;
+    case QV4::CompiledData::Property::Quaternion: return QMetaType::QQuaternion;
+    case QV4::CompiledData::Property::Custom: break;
+    case QV4::CompiledData::Property::CustomList: break;
+    };
+    return QMetaType::UnknownType;
+}
+
 QQmlBindingInstantiationContext::QQmlBindingInstantiationContext(int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding,
                                                                  const QString &instantiatingPropertyName, QQmlPropertyCache *referencingObjectPropertyCache)
     : referencingObjectIndex(referencingObjectIndex)

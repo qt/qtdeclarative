@@ -57,6 +57,7 @@
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4jscall_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qqmlpropertycachecreator_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -656,35 +657,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     }
 
                 } else {
-                    int fallbackMetaType = QMetaType::UnknownType;
-                    switch (t) {
-                    case QV4::CompiledData::Property::Font:
-                        fallbackMetaType = QMetaType::QFont;
-                        break;
-                    case QV4::CompiledData::Property::Time:
-                        fallbackMetaType = QMetaType::QTime;
-                        break;
-                    case QV4::CompiledData::Property::Color:
-                        fallbackMetaType = QMetaType::QColor;
-                        break;
-                    case QV4::CompiledData::Property::Vector2D:
-                        fallbackMetaType = QMetaType::QVector2D;
-                        break;
-                    case QV4::CompiledData::Property::Vector3D:
-                        fallbackMetaType = QMetaType::QVector3D;
-                        break;
-                    case QV4::CompiledData::Property::Vector4D:
-                        fallbackMetaType = QMetaType::QVector4D;
-                        break;
-                    case QV4::CompiledData::Property::Matrix4x4:
-                        fallbackMetaType = QMetaType::QMatrix4x4;
-                        break;
-                    case QV4::CompiledData::Property::Quaternion:
-                        fallbackMetaType = QMetaType::QQuaternion;
-                        break;
-                    default: break;
-                    }
-
+                    const int fallbackMetaType = QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(t);
 
                     if (c == QMetaObject::ReadProperty) {
                         switch (t) {

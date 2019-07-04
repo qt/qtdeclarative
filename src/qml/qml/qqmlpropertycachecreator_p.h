@@ -84,6 +84,8 @@ struct QQmlPropertyCacheCreatorBase
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyCacheCreatorBase)
 public:
     static QAtomicInt classIndexCounter;
+
+    static int metaTypeForPropertyType(QV4::CompiledData::Property::Type type);
 };
 
 template <typename ObjectContainer>
@@ -275,33 +277,6 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
     propertyCaches->set(objectIndex, cache);
     propertyCaches->setNeedsVMEMetaObject(objectIndex);
 
-    struct TypeData {
-        QV4::CompiledData::Property::Type dtype;
-        int metaType;
-    } builtinTypes[] = {
-    { QV4::CompiledData::Property::Var, QMetaType::QVariant },
-    { QV4::CompiledData::Property::Variant, QMetaType::QVariant },
-    { QV4::CompiledData::Property::Int, QMetaType::Int },
-    { QV4::CompiledData::Property::Bool, QMetaType::Bool },
-    { QV4::CompiledData::Property::Real, QMetaType::Double },
-    { QV4::CompiledData::Property::String, QMetaType::QString },
-    { QV4::CompiledData::Property::Url, QMetaType::QUrl },
-    { QV4::CompiledData::Property::Color, QMetaType::QColor },
-    { QV4::CompiledData::Property::Font, QMetaType::QFont },
-    { QV4::CompiledData::Property::Time, QMetaType::QTime },
-    { QV4::CompiledData::Property::Date, QMetaType::QDate },
-    { QV4::CompiledData::Property::DateTime, QMetaType::QDateTime },
-    { QV4::CompiledData::Property::Rect, QMetaType::QRectF },
-    { QV4::CompiledData::Property::Point, QMetaType::QPointF },
-    { QV4::CompiledData::Property::Size, QMetaType::QSizeF },
-    { QV4::CompiledData::Property::Vector2D, QMetaType::QVector2D },
-    { QV4::CompiledData::Property::Vector3D, QMetaType::QVector3D },
-    { QV4::CompiledData::Property::Vector4D, QMetaType::QVector4D },
-    { QV4::CompiledData::Property::Matrix4x4, QMetaType::QMatrix4x4 },
-    { QV4::CompiledData::Property::Quaternion, QMetaType::QQuaternion }
-};
-    static const uint builtinTypeCount = sizeof(builtinTypes) / sizeof(TypeData);
-
     QByteArray newClassName;
 
     if (objectIndex == /*root object*/0) {
@@ -431,7 +406,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
                 names.append(stringAt(param->nameIndex).toUtf8());
                 if (param->indexIsBuiltinType) {
                     // built-in type
-                    paramTypes[i + 1] = builtinTypes[param->typeNameIndexOrBuiltinType].metaType;
+                    paramTypes[i + 1] = metaTypeForPropertyType(static_cast<QV4::CompiledData::Property::Type>(int(param->typeNameIndexOrBuiltinType)));
                 } else {
                     // lazily resolved type
                     const QString customTypeName = stringAt(param->typeNameIndexOrBuiltinType);
@@ -505,8 +480,8 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
         if (p->type == QV4::CompiledData::Property::Var) {
             propertyType = QMetaType::QVariant;
             propertyFlags.type = QQmlPropertyData::Flags::VarPropertyType;
-        } else if (p->type < builtinTypeCount) {
-            propertyType = builtinTypes[p->type].metaType;
+        } else if (p->type < QV4::CompiledData::Property::Custom) {
+            propertyType = metaTypeForPropertyType(static_cast<QV4::CompiledData::Property::Type>(quint32(p->type)));
 
             if (p->type == QV4::CompiledData::Property::Variant)
                 propertyFlags.type = QQmlPropertyData::Flags::QVariantType;
