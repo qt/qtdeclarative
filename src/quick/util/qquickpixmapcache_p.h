@@ -188,8 +188,8 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPixmap::Options)
 
-// This class will disappear with Qt6 and will just be the regular QQuickImageProvider
-// ### Qt 6: Remove this class and fold it with QQuickImageProvider
+// ### Qt 6: This should be made public in Qt 6. It's functionality can't be merged into
+// QQuickImageProvider without breaking source compatibility.
 class Q_QUICK_PRIVATE_EXPORT QQuickImageProviderWithOptions : public QQuickAsyncImageProvider
 {
 public:
