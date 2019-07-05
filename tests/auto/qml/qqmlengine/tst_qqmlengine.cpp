@@ -835,7 +835,7 @@ void tst_qqmlengine::urlInterceptor()
     QFETCH(QString, expectedAbsoluteUrl);
 
     QQmlEngine e;
-    e.setImportPathList(QStringList() << testFileUrl("interception/imports").toLocalFile());
+    e.addImportPath(testFileUrl("interception/imports").toLocalFile());
     CustomSelector cs(testFileUrl(""));
     cs.m_interceptionPoints = interceptionPoint;
     e.setUrlInterceptor(&cs);
