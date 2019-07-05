@@ -68,15 +68,15 @@ class Geometry;
 class QSGTextMaskMaterial: public QSGMaterial
 {
 public:
-    QSGTextMaskMaterial(const QRawFont &font, QFontEngine::GlyphFormat glyphFormat = QFontEngine::Format_None);
+    QSGTextMaskMaterial(const QVector4D &color, const QRawFont &font, QFontEngine::GlyphFormat glyphFormat = QFontEngine::Format_None);
     virtual ~QSGTextMaskMaterial();
 
     QSGMaterialType *type() const override;
     QSGMaterialShader *createShader() const override;
     int compare(const QSGMaterial *other) const override;
 
-    void setColor(const QColor &c) { m_color = QVector4D(c.redF(), c.greenF(), c.blueF(), c.alphaF()); }
-    void setColor(const QVector4D &color) { m_color = color; }
+    void setColor(const QColor &c) { setColor(QVector4D(c.redF(), c.greenF(), c.blueF(), c.alphaF())); }
+    void setColor(const QVector4D &color);
     const QVector4D &color() const { return m_color; }
 
     QSGTexture *texture() const { return m_texture; }
@@ -94,6 +94,7 @@ public:
 
 private:
     void init(QFontEngine::GlyphFormat glyphFormat);
+    void updateCache(QFontEngine::GlyphFormat glyphFormat);
 
     QSGPlainTexture *m_texture;
     QExplicitlySharedDataPointer<QFontEngineGlyphCache> m_glyphCache;

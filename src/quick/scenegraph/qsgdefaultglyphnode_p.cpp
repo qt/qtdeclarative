@@ -399,10 +399,11 @@ public:
     }
 };
 
-QSGTextMaskMaterial::QSGTextMaskMaterial(const QRawFont &font, QFontEngine::GlyphFormat glyphFormat)
+QSGTextMaskMaterial::QSGTextMaskMaterial(const QVector4D &color, const QRawFont &font, QFontEngine::GlyphFormat glyphFormat)
     : m_texture(nullptr)
     , m_glyphCache(nullptr)
     , m_font(font)
+    , m_color(color)
 {
     init(glyphFormat);
 }
@@ -412,12 +413,30 @@ QSGTextMaskMaterial::~QSGTextMaskMaterial()
     delete m_texture;
 }
 
+void QSGTextMaskMaterial::setColor(const QVector4D &color)
+{
+    if (m_color == color)
+        return;
+
+    m_color = color;
+
+    // If it is an RGB cache, then the pen color is actually part of the cache key
+    // so it has to be updated
+    if (m_glyphCache != nullptr && m_glyphCache->glyphFormat() == QFontEngine::Format_ARGB)
+        updateCache(QFontEngine::Format_ARGB);
+}
+
 void QSGTextMaskMaterial::init(QFontEngine::GlyphFormat glyphFormat)
 {
     Q_ASSERT(m_font.isValid());
 
     setFlag(Blending, true);
 
+    updateCache(glyphFormat);
+}
+
+void QSGTextMaskMaterial::updateCache(QFontEngine::GlyphFormat glyphFormat)
+{
     QOpenGLContext *ctx = const_cast<QOpenGLContext *>(QOpenGLContext::currentContext());
     Q_ASSERT(ctx != nullptr);
 
@@ -437,20 +456,21 @@ void QSGTextMaskMaterial::init(QFontEngine::GlyphFormat glyphFormat)
 
         qreal devicePixelRatio = qsg_device_pixel_ratio(ctx);
 
-
         QTransform glyphCacheTransform = QTransform::fromScale(devicePixelRatio, devicePixelRatio);
         if (!fontEngine->supportsTransformation(glyphCacheTransform))
             glyphCacheTransform = QTransform();
 
-        m_glyphCache = fontEngine->glyphCache(ctx, glyphFormat, glyphCacheTransform);
+        QColor color = glyphFormat == QFontEngine::Format_ARGB ? QColor::fromRgbF(m_color.x(), m_color.y(), m_color.z(), m_color.w()) : QColor();
+        m_glyphCache = fontEngine->glyphCache(ctx, glyphFormat, glyphCacheTransform, color);
         if (!m_glyphCache || int(m_glyphCache->glyphFormat()) != glyphFormat) {
-            m_glyphCache = new QOpenGLTextureGlyphCache(glyphFormat, glyphCacheTransform);
+            m_glyphCache = new QOpenGLTextureGlyphCache(glyphFormat, glyphCacheTransform, color);
             fontEngine->setGlyphCache(ctx, m_glyphCache.data());
             auto sg = QSGDefaultRenderContext::from(ctx);
             Q_ASSERT(sg);
             sg->registerFontengineForCleanup(fontEngine);
         }
     }
+
 }
 
 void QSGTextMaskMaterial::populate(const QPointF &p,
@@ -629,7 +649,7 @@ int QSGTextMaskMaterial::cacheTextureHeight() const
 
 
 QSGStyledTextMaterial::QSGStyledTextMaterial(const QRawFont &font)
-    : QSGTextMaskMaterial(font, QFontEngine::Format_A8)
+    : QSGTextMaskMaterial(QVector4D(), font, QFontEngine::Format_A8)
 {
 }
 

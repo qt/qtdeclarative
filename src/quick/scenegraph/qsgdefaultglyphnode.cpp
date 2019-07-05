@@ -75,7 +75,7 @@ void QSGDefaultGlyphNode::update()
     QMargins margins(0, 0, 0, 0);
 
     if (m_style == QQuickText::Normal) {
-        m_material = new QSGTextMaskMaterial(font);
+        m_material = new QSGTextMaskMaterial(QVector4D(m_color.redF(), m_color.greenF(), m_color.blueF(), m_color.alphaF()), font);
     } else if (m_style == QQuickText::Outline) {
         QSGOutlinedTextMaterial *material = new QSGOutlinedTextMaterial(font);
         material->setStyleColor(m_styleColor);
