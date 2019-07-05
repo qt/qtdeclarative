@@ -136,10 +136,10 @@ QmlIR::Object *QQmlIRLoader::loadObject(const QV4::CompiledData::Object *seriali
         QmlIR::Signal *s = pool->New<QmlIR::Signal>();
         s->nameIndex = serializedSignal->nameIndex;
         s->location = serializedSignal->location;
-        s->parameters = pool->New<QmlIR::PoolList<QmlIR::SignalParameter> >();
+        s->parameters = pool->New<QmlIR::PoolList<QmlIR::Parameter> >();
 
         for (uint i = 0; i < serializedSignal->nParameters; ++i) {
-            QmlIR::SignalParameter *p = pool->New<QmlIR::SignalParameter>();
+            QmlIR::Parameter *p = pool->New<QmlIR::Parameter>();
             *static_cast<QV4::CompiledData::Parameter*>(p) = *serializedSignal->parameterAt(i);
             s->parameters->append(p);
         }

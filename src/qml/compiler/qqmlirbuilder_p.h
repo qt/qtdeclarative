@@ -216,22 +216,26 @@ struct Enum
 };
 
 
-struct SignalParameter : public QV4::CompiledData::Parameter
+struct Parameter : public QV4::CompiledData::Parameter
 {
-    SignalParameter *next;
+    Parameter *next;
+
+    bool init(QV4::Compiler::JSUnitGenerator *stringGenerator, const QString &parameterName, const QString &typeName);
+
+    static QV4::CompiledData::BuiltinType stringToBuiltinType(const QString &typeName);
 };
 
 struct Signal
 {
     int nameIndex;
     QV4::CompiledData::Location location;
-    PoolList<SignalParameter> *parameters;
+    PoolList<Parameter> *parameters;
 
     QStringList parameterStringList(const QV4::Compiler::StringTableGenerator *stringPool) const;
 
     int parameterCount() const { return parameters->count; }
-    PoolList<SignalParameter>::Iterator parametersBegin() const { return parameters->begin(); }
-    PoolList<SignalParameter>::Iterator parametersEnd() const { return parameters->end(); }
+    PoolList<Parameter>::Iterator parametersBegin() const { return parameters->begin(); }
+    PoolList<Parameter>::Iterator parametersEnd() const { return parameters->end(); }
 
     Signal *next;
 };

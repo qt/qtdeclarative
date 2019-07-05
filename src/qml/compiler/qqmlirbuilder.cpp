@@ -63,6 +63,72 @@ using namespace QmlIR;
         return false; \
     }
 
+bool Parameter::init(QV4::Compiler::JSUnitGenerator *stringGenerator, const QString &parameterName,
+                     const QString &typeName)
+{
+    nameIndex = stringGenerator->registerString(parameterName);
+    type.indexIsBuiltinType = false;
+    type.typeNameIndexOrBuiltinType = 0;
+    auto builtinType = stringToBuiltinType(typeName);
+    if (builtinType == QV4::CompiledData::BuiltinType::InvalidBuiltin) {
+        if (typeName.isEmpty() || !typeName.at(0).isUpper())
+            return false;
+        type.indexIsBuiltinType = false;
+        type.typeNameIndexOrBuiltinType = stringGenerator->registerString(typeName);
+        Q_ASSERT(quint32(stringGenerator->getStringId(typeName)) < (1u << 31));
+    } else {
+        type.indexIsBuiltinType = true;
+        type.typeNameIndexOrBuiltinType = static_cast<quint32>(builtinType);
+        Q_ASSERT(quint32(builtinType) < (1u << 31));
+    }
+    return true;
+}
+
+QV4::CompiledData::BuiltinType Parameter::stringToBuiltinType(const QString &typeName)
+{
+    static const struct TypeNameToType {
+        const char *name;
+        size_t nameLength;
+        QV4::CompiledData::BuiltinType type;
+    } propTypeNameToTypes[] = {
+        { "int", strlen("int"), QV4::CompiledData::BuiltinType::Int },
+        { "bool", strlen("bool"), QV4::CompiledData::BuiltinType::Bool },
+        { "double", strlen("double"), QV4::CompiledData::BuiltinType::Real },
+        { "real", strlen("real"), QV4::CompiledData::BuiltinType::Real },
+        { "string", strlen("string"), QV4::CompiledData::BuiltinType::String },
+        { "url", strlen("url"), QV4::CompiledData::BuiltinType::Url },
+        { "color", strlen("color"), QV4::CompiledData::BuiltinType::Color },
+        // Internally QTime, QDate and QDateTime are all supported.
+        // To be more consistent with JavaScript we expose only
+        // QDateTime as it matches closely with the Date JS type.
+        // We also call it "date" to match.
+        // { "time", strlen("time"), Property::Time },
+        // { "date", strlen("date"), Property::Date },
+        { "date", strlen("date"), QV4::CompiledData::BuiltinType::DateTime },
+        { "rect", strlen("rect"), QV4::CompiledData::BuiltinType::Rect },
+        { "point", strlen("point"), QV4::CompiledData::BuiltinType::Point },
+        { "size", strlen("size"), QV4::CompiledData::BuiltinType::Size },
+        { "font", strlen("font"), QV4::CompiledData::BuiltinType::Font },
+        { "vector2d", strlen("vector2d"), QV4::CompiledData::BuiltinType::Vector2D },
+        { "vector3d", strlen("vector3d"), QV4::CompiledData::BuiltinType::Vector3D },
+        { "vector4d", strlen("vector4d"), QV4::CompiledData::BuiltinType::Vector4D },
+        { "quaternion", strlen("quaternion"), QV4::CompiledData::BuiltinType::Quaternion },
+        { "matrix4x4", strlen("matrix4x4"), QV4::CompiledData::BuiltinType::Matrix4x4 },
+        { "variant", strlen("variant"), QV4::CompiledData::BuiltinType::Variant },
+        { "var", strlen("var"), QV4::CompiledData::BuiltinType::Var }
+    };
+    static const int propTypeNameToTypesCount = sizeof(propTypeNameToTypes) /
+                                                sizeof(propTypeNameToTypes[0]);
+
+    for (int typeIndex = 0; typeIndex < propTypeNameToTypesCount; ++typeIndex) {
+        const TypeNameToType *t = propTypeNameToTypes + typeIndex;
+        if (typeName == QLatin1String(t->name, static_cast<int>(t->nameLength))) {
+            return t->type;
+        }
+    }
+    return QV4::CompiledData::BuiltinType::InvalidBuiltin;
+}
+
 void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, const QQmlJS::AST::SourceLocation &loc)
 {
     inheritedTypeNameIndex = typeNameIndex;
@@ -247,7 +313,7 @@ QStringList Signal::parameterStringList(const QV4::Compiler::StringTableGenerato
 {
     QStringList result;
     result.reserve(parameters->count);
-    for (SignalParameter *param = parameters->first; param; param = param->next)
+    for (Parameter *param = parameters->first; param; param = param->next)
         result << stringPool->stringForIndex(param->nameIndex);
     return result;
 }
@@ -764,40 +830,6 @@ bool IRBuilder::visit(QQmlJS::AST::UiEnumDeclaration *node)
 
 bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
 {
-    static const struct TypeNameToType {
-        const char *name;
-        size_t nameLength;
-        QV4::CompiledData::BuiltinType type;
-    } propTypeNameToTypes[] = {
-        { "int", strlen("int"), QV4::CompiledData::BuiltinType::Int },
-        { "bool", strlen("bool"), QV4::CompiledData::BuiltinType::Bool },
-        { "double", strlen("double"), QV4::CompiledData::BuiltinType::Real },
-        { "real", strlen("real"), QV4::CompiledData::BuiltinType::Real },
-        { "string", strlen("string"), QV4::CompiledData::BuiltinType::String },
-        { "url", strlen("url"), QV4::CompiledData::BuiltinType::Url },
-        { "color", strlen("color"), QV4::CompiledData::BuiltinType::Color },
-        // Internally QTime, QDate and QDateTime are all supported.
-        // To be more consistent with JavaScript we expose only
-        // QDateTime as it matches closely with the Date JS type.
-        // We also call it "date" to match.
-        // { "time", strlen("time"), Property::Time },
-        // { "date", strlen("date"), Property::Date },
-        { "date", strlen("date"), QV4::CompiledData::BuiltinType::DateTime },
-        { "rect", strlen("rect"), QV4::CompiledData::BuiltinType::Rect },
-        { "point", strlen("point"), QV4::CompiledData::BuiltinType::Point },
-        { "size", strlen("size"), QV4::CompiledData::BuiltinType::Size },
-        { "font", strlen("font"), QV4::CompiledData::BuiltinType::Font },
-        { "vector2d", strlen("vector2d"), QV4::CompiledData::BuiltinType::Vector2D },
-        { "vector3d", strlen("vector3d"), QV4::CompiledData::BuiltinType::Vector3D },
-        { "vector4d", strlen("vector4d"), QV4::CompiledData::BuiltinType::Vector4D },
-        { "quaternion", strlen("quaternion"), QV4::CompiledData::BuiltinType::Quaternion },
-        { "matrix4x4", strlen("matrix4x4"), QV4::CompiledData::BuiltinType::Matrix4x4 },
-        { "variant", strlen("variant"), QV4::CompiledData::BuiltinType::Variant },
-        { "var", strlen("var"), QV4::CompiledData::BuiltinType::Var }
-    };
-    static const int propTypeNameToTypesCount = sizeof(propTypeNameToTypes) /
-                                                sizeof(propTypeNameToTypes[0]);
-
     if (node->type == QQmlJS::AST::UiPublicMember::Signal) {
         Signal *signal = New<Signal>();
         QString signalName = node->name.toString();
@@ -807,7 +839,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
         signal->location.line = loc.startLine;
         signal->location.column = loc.startColumn;
 
-        signal->parameters = New<PoolList<SignalParameter> >();
+        signal->parameters = New<PoolList<Parameter> >();
 
         QQmlJS::AST::UiParameterList *p = node->parameters;
         while (p) {
@@ -818,38 +850,13 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
                 return false;
             }
 
-            const TypeNameToType *type = nullptr;
-            for (int typeIndex = 0; typeIndex < propTypeNameToTypesCount; ++typeIndex) {
-                const TypeNameToType *t = propTypeNameToTypes + typeIndex;
-                if (memberType == QLatin1String(t->name, static_cast<int>(t->nameLength))) {
-                    type = t;
-                    break;
-                }
+            Parameter *param = New<Parameter>();
+            if (!param->init(jsGenerator, p->name.toString(), memberType)) {
+                QString errStr = QCoreApplication::translate("QQmlParser","Invalid signal parameter type: ");
+                errStr.append(memberType);
+                recordError(node->typeToken, errStr);
+                return false;
             }
-
-            SignalParameter *param = New<SignalParameter>();
-
-            if (!type) {
-                if (memberType.at(0).isUpper()) {
-                    // Must be a QML object type.
-                    // Lazily determine type during compilation.
-                    param->indexIsBuiltinType = false;
-                    param->typeNameIndexOrBuiltinType = registerString(memberType);
-                    Q_ASSERT(quint32(jsGenerator->getStringId(memberType)) < (1u << 31));
-                } else {
-                    QString errStr = QCoreApplication::translate("QQmlParser","Invalid signal parameter type: ");
-                    errStr.append(memberType);
-                    recordError(node->typeToken, errStr);
-                    return false;
-                }
-            } else {
-                // the parameter is a known basic type
-                param->indexIsBuiltinType = true;
-                param->typeNameIndexOrBuiltinType = static_cast<quint32>(type->type);
-                Q_ASSERT(quint32(type->type) < (1u << 31));
-            }
-
-            param->nameIndex = registerString(p->name.toString());
             signal->parameters->append(param);
             p = p->next;
         }
@@ -875,15 +882,10 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             Property *property = New<Property>();
             property->isReadOnly = node->isReadonlyMember;
 
-            bool typeFound = false;
-
-            for (int ii = 0; !typeFound && ii < propTypeNameToTypesCount; ++ii) {
-                const TypeNameToType *t = propTypeNameToTypes + ii;
-                if (memberType == QLatin1String(t->name, static_cast<int>(t->nameLength))) {
-                    property->setBuiltinType(t->type);
-                    typeFound = true;
-                }
-            }
+            QV4::CompiledData::BuiltinType builtinPropertyType = Parameter::stringToBuiltinType(memberType);
+            bool typeFound = builtinPropertyType != QV4::CompiledData::BuiltinType::InvalidBuiltin;
+            if (typeFound)
+                property->setBuiltinType(builtinPropertyType);
 
             if (!typeFound && memberType.at(0).isUpper()) {
                 const QStringRef &typeModifier = node->typeModifier;
@@ -1696,7 +1698,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
             signalToWrite->nParameters = s->parameters->count;
 
             QV4::CompiledData::Parameter *parameterToWrite = reinterpret_cast<QV4::CompiledData::Parameter*>(signalPtr + sizeof(*signalToWrite));
-            for (SignalParameter *param = s->parameters->first; param; param = param->next, ++parameterToWrite)
+            for (Parameter *param = s->parameters->first; param; param = param->next, ++parameterToWrite)
                 *parameterToWrite = *param;
 
             int size = QV4::CompiledData::Signal::calculateSize(s->parameters->count);
