@@ -74,21 +74,9 @@ static int memfdForUsage(size_t bytes, OSAllocator::Usage usage)
         break;
     }
 
-    // try to get our own library name by giving dladdr a pointer pointing to
-    // something we know to be in it (using a pointer to string data)
-    static const char *libname = [=]() {
-        Dl_info info;
-        if (dladdr(type, &info) == 0)
-            info.dli_fname = nullptr;
-        return info.dli_fname;
-    }();
-
     char buf[PATH_MAX];
     strcpy(buf, type);
-    if (libname)
-        strcat(buf, libname);
-    else
-        strcat(buf, "QtQml");
+    strcat(buf, "QtQml");
 
     int fd = syscall(SYS_memfd_create, buf, MFD_CLOEXEC);
     if (fd != -1) {
