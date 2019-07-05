@@ -111,8 +111,6 @@ public:
 
     inline QRectF convertToNormalizedSourceRect(const QRectF &rect) const;
 
-    bool hasDirtyOptions() const;
-
     // ### Qt 6: make these virtual
     int comparisonKey() const;
     QRhiTexture *rhiTexture() const;
