@@ -3699,6 +3699,14 @@ void tst_qqmllanguage::signalParameterTypes()
     QVERIFY(obj != nullptr);
     QVERIFY(obj->property("success").toBool());
     }
+
+    // dynamic signal connections
+    {
+    QQmlComponent component(&engine, testFileUrl("signalParameterTypes.3.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj != nullptr);
+    QVERIFY(obj->property("success").toBool());
+    }
 }
 
 void tst_qqmllanguage::functionParameterTypes()

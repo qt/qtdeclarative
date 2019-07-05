@@ -3237,10 +3237,10 @@ public:
     void accept0(Visitor *) override;
 
     SourceLocation firstSourceLocation() const override
-    { return propertyTypeToken; }
+    { return colonToken.isValid() ? identifierToken : propertyTypeToken; }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : identifierToken; }
+    { return next ? next->lastSourceLocation() : (colonToken.isValid() ? propertyTypeToken : identifierToken); }
 
     inline UiParameterList *finish ()
     {
@@ -3256,6 +3256,7 @@ public:
     SourceLocation commaToken;
     SourceLocation propertyTypeToken;
     SourceLocation identifierToken;
+    SourceLocation colonToken;
 };
 
 class QML_PARSER_EXPORT UiPublicMember: public UiObjectMember

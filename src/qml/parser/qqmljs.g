@@ -1116,6 +1116,17 @@ UiParameterList: UiPropertyType QmlIdentifier;
     } break;
 ./
 
+UiParameterList: QmlIdentifier T_COLON UiPropertyType;
+/.
+    case $rule_number: {
+        AST::UiParameterList *node = new (pool) AST::UiParameterList(sym(3).UiQualifiedId->finish(), stringRef(1));
+        node->identifierToken = loc(1);
+        node->colonToken = loc(2);
+        node->propertyTypeToken = loc(3);
+        sym(1).Node = node;
+    } break;
+./
+
 UiParameterList: UiParameterList T_COMMA UiPropertyType QmlIdentifier;
 /.
     case $rule_number: {
