@@ -116,6 +116,8 @@ protected:
     QQmlRefPointer<QQmlPropertyCache> propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlJS::DiagnosticMessage *error) const;
     QQmlJS::DiagnosticMessage createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlRefPointer<QQmlPropertyCache> &baseTypeCache);
 
+    int metaTypeForParameter(const QV4::CompiledData::ParameterType &param, QString *customTypeName = nullptr);
+
     QString stringAt(int index) const { return objectContainer->stringAt(index); }
 
     QQmlEnginePrivate * const enginePrivate;
@@ -414,29 +416,13 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
             auto end = s->parametersEnd();
             for ( ; param != end; ++param, ++i) {
                 names.append(stringAt(param->nameIndex).toUtf8());
-                const auto &type = param->type;
-                if (type.indexIsBuiltinType) {
-                    // built-in type
-                    paramTypes[i + 1] = metaTypeForPropertyType(static_cast<QV4::CompiledData::BuiltinType>(int(type.typeNameIndexOrBuiltinType)));
-                } else {
-                    // lazily resolved type
-                    const QString customTypeName = stringAt(type.typeNameIndexOrBuiltinType);
-                    QQmlType qmltype;
-                    if (!imports->resolveType(customTypeName, &qmltype, nullptr, nullptr, nullptr))
-                        return qQmlCompileError(s->location, QQmlPropertyCacheCreatorBase::tr("Invalid signal parameter type: %1").arg(customTypeName));
 
-                    if (qmltype.isComposite()) {
-                        QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
-                        Q_ASSERT(tdata);
-                        Q_ASSERT(tdata->isComplete());
+                QString customTypeName;
+                auto type = metaTypeForParameter(param->type, &customTypeName);
+                if (type == QMetaType::UnknownType)
+                    return qQmlCompileError(s->location, QQmlPropertyCacheCreatorBase::tr("Invalid signal parameter type: %1").arg(customTypeName));
 
-                        auto compilationUnit = tdata->compilationUnit();
-
-                        paramTypes[i + 1] = compilationUnit->metaTypeId;
-                    } else {
-                        paramTypes[i + 1] = qmltype.typeId();
-                    }
-                }
+                paramTypes[i + 1] = type;
             }
         }
 
@@ -550,6 +536,35 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
 
     QQmlJS::DiagnosticMessage noError;
     return noError;
+}
+
+template <typename ObjectContainer>
+inline int QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter(const QV4::CompiledData::ParameterType &param,
+                                                                           QString *customTypeName)
+{
+    if (param.indexIsBuiltinType) {
+        // built-in type
+        return metaTypeForPropertyType(static_cast<QV4::CompiledData::BuiltinType>(int(param.typeNameIndexOrBuiltinType)));
+    }
+
+    // lazily resolved type
+    const QString typeName = stringAt(param.typeNameIndexOrBuiltinType);
+    if (customTypeName)
+        *customTypeName = typeName;
+    QQmlType qmltype;
+    if (!imports->resolveType(typeName, &qmltype, nullptr, nullptr, nullptr))
+        return QMetaType::UnknownType;
+
+    if (!qmltype.isComposite())
+        return qmltype.typeId();
+
+    QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
+    Q_ASSERT(tdata);
+    Q_ASSERT(tdata->isComplete());
+
+    auto compilationUnit = tdata->compilationUnit();
+
+    return compilationUnit->metaTypeId;
 }
 
 template <typename ObjectContainer>
