@@ -44,7 +44,6 @@
 #include <private/qv4lookup_p.h>
 #include <private/qv4qmlcontext_p.h>
 #include <private/qv4identifiertable_p.h>
-#include <private/qv4instr_moth_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qv4qobjectwrapper_p.h>
