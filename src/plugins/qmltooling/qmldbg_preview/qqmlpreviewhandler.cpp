@@ -93,7 +93,9 @@ QQmlPreviewHandler::QQmlPreviewHandler(QObject *parent) : QObject(parent)
 
 QQmlPreviewHandler::~QQmlPreviewHandler()
 {
+#if QT_CONFIG(translation)
     removeTranslators();
+#endif
     clear();
 }
 
@@ -223,6 +225,7 @@ void QQmlPreviewHandler::doZoom()
     m_lastPosition.initLastSavedWindowPosition(m_currentWindow);
 }
 
+#if QT_CONFIG(translation)
 void QQmlPreviewHandler::removeTranslators()
 {
     if (!m_qtTranslator.isNull()) {
@@ -255,6 +258,7 @@ void QQmlPreviewHandler::language(const QUrl &context, const QLocale &locale)
     for (QQmlEngine *engine : qAsConst(m_engines))
         engine->retranslate();
 }
+#endif
 
 void QQmlPreviewHandler::clear()
 {
