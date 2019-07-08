@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLJSENGINE_P_H
-#define QQMLJSENGINE_P_H
+#ifndef QQMLJSFIXEDPOOLARRAY_P_H
+#define QQMLJSFIXEDPOOLARRAY_P_H
 
 //
 //  W A R N I N G
@@ -51,84 +51,90 @@
 // We mean it.
 //
 
-#include "qqmljsglobal_p.h"
-#include "qqmljssourcelocation_p.h"
-
+#include <QtCore/qglobal.h>
 #include <private/qqmljsmemorypool_p.h>
-
-#include <QtCore/qstring.h>
-#include <QtCore/qset.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 
-class Lexer;
-class MemoryPool;
-
-class QML_PARSER_EXPORT Directives {
-public:
-    virtual ~Directives() {}
-
-    virtual void pragmaLibrary()
-    {
-    }
-
-    virtual void importFile(const QString &jsfile, const QString &module, int line, int column)
-    {
-        Q_UNUSED(jsfile);
-        Q_UNUSED(module);
-        Q_UNUSED(line);
-        Q_UNUSED(column);
-    }
-
-    virtual void importModule(const QString &uri, const QString &version, const QString &module, int line, int column)
-    {
-        Q_UNUSED(uri);
-        Q_UNUSED(version);
-        Q_UNUSED(module);
-        Q_UNUSED(line);
-        Q_UNUSED(column);
-    }
-};
-
-class QML_PARSER_EXPORT Engine
+template <typename T>
+class FixedPoolArray
 {
-    Lexer *_lexer;
-    Directives *_directives;
-    MemoryPool _pool;
-    QList<AST::SourceLocation> _comments;
-    QString _extraCode;
-    QString _code;
+    T *data;
+    int count = 0;
 
 public:
-    Engine();
-    ~Engine();
+    FixedPoolArray()
+        : data(nullptr)
+    {}
 
-    void setCode(const QString &code);
-    const QString &code() const { return _code; }
+    FixedPoolArray(MemoryPool *pool, int size)
+    { allocate(pool, size); }
 
-    void addComment(int pos, int len, int line, int col);
-    QList<AST::SourceLocation> comments() const;
+    void allocate(MemoryPool *pool, int size)
+    {
+        count = size;
+        data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
+    }
 
-    Lexer *lexer() const;
-    void setLexer(Lexer *lexer);
+    void allocate(MemoryPool *pool, const QVector<T> &vector)
+    {
+        count = vector.count();
+        data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
 
-    Directives *directives() const;
-    void setDirectives(Directives *directives);
+        if (QTypeInfo<T>::isComplex) {
+            for (int i = 0; i < count; ++i)
+                new (data + i) T(vector.at(i));
+        } else {
+            memcpy(data, static_cast<const void*>(vector.constData()), count * sizeof(T));
+        }
+    }
 
-    MemoryPool *pool();
+    template <typename Container>
+    void allocate(MemoryPool *pool, const Container &container)
+    {
+        count = container.count();
+        data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
+        typename Container::ConstIterator it = container.constBegin();
+        for (int i = 0; i < count; ++i)
+            new (data + i) T(*it++);
+    }
 
-    inline QStringRef midRef(int position, int size) { return _code.midRef(position, size); }
+    int size() const
+    { return count; }
 
-    QStringRef newStringRef(const QString &s);
-    QStringRef newStringRef(const QChar *chars, int size);
+    const T &at(int index) const {
+        Q_ASSERT(index >= 0 && index < count);
+        return data[index];
+    }
+
+    T &at(int index) {
+        Q_ASSERT(index >= 0 && index < count);
+        return data[index];
+    }
+
+    T &operator[](int index) {
+        return at(index);
+    }
+
+
+    int indexOf(const T &value) const {
+        for (int i = 0; i < count; ++i)
+            if (data[i] == value)
+                return i;
+        return -1;
+    }
+
+    const T *begin() const { return data; }
+    const T *end() const { return data + count; }
+
+    T *begin() { return data; }
+    T *end() { return data + count; }
 };
 
-double integerFromString(const char *buf, int size, int radix);
-
-} // end of namespace QQmlJS
+} // namespace QQmlJS
 
 QT_END_NAMESPACE
 
-#endif // QQMLJSENGINE_P_H
+#endif // QQMLJSFIXEDPOOLARRAY_P_H

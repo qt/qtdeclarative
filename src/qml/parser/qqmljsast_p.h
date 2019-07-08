@@ -53,7 +53,8 @@
 
 #include "qqmljsastvisitor_p.h"
 #include "qqmljsglobal_p.h"
-#include "qqmljsmemorypool_p.h"
+
+#include <private/qqmljsmemorypool_p.h>
 
 #include <QtCore/qstring.h>
 
