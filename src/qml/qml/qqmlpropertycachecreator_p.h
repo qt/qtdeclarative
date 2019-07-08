@@ -57,6 +57,16 @@
 
 QT_BEGIN_NAMESPACE
 
+inline QQmlJS::DiagnosticMessage qQmlCompileError(const QV4::CompiledData::Location &location,
+                                                  const QString &description)
+{
+    QQmlJS::DiagnosticMessage error;
+    error.line = location.line;
+    error.column = location.column;
+    error.message = description;
+    return error;
+}
+
 struct QQmlBindingInstantiationContext {
     QQmlBindingInstantiationContext() {}
     QQmlBindingInstantiationContext(int referencingObjectIndex,

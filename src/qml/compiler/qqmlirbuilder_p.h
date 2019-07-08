@@ -526,16 +526,6 @@ private:
 
 } // namespace QmlIR
 
-inline QQmlJS::DiagnosticMessage qQmlCompileError(const QV4::CompiledData::Location &location,
-                                                  const QString &description)
-{
-    QQmlJS::DiagnosticMessage error;
-    error.line = location.line;
-    error.column = location.column;
-    error.message = description;
-    return error;
-}
-
 QT_END_NAMESPACE
 
 #endif // QQMLIRBUILDER_P_H
