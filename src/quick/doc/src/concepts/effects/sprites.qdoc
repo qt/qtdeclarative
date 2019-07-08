@@ -144,7 +144,7 @@ these situations, a warning will be output to the console containing the maximum
 There are several tools to help turn a set of images into sprite sheets. Here are some examples:
 \list
  \li Photoshop plugin: \l http://www.johnwordsworth.com/projects/photoshop-sprite-sheet-generator-script
- \li Gimp plugin: \l http://registry.gimp.org/node/20943
+ \li Gimp's SpriteSheet plugin
  \li Cmd-line tool: \l http://www.imagemagick.org/script/montage.php
 \endlist
 
