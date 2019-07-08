@@ -1445,8 +1445,12 @@ void QQmlObjectCreator::clear()
         return;
     Q_ASSERT(phase != Startup);
 
-    while (!sharedState->allCreatedObjects.isEmpty())
-        delete sharedState->allCreatedObjects.pop();
+    while (!sharedState->allCreatedObjects.isEmpty()) {
+        auto object = sharedState->allCreatedObjects.pop();
+        if (engine->objectOwnership(object) != QQmlEngine::CppOwnership) {
+            delete object;
+        }
+    }
 
     while (sharedState->componentAttached) {
         QQmlComponentAttached *a = sharedState->componentAttached;
