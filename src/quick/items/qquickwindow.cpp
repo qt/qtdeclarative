@@ -702,7 +702,7 @@ bool QQuickWindowPrivate::checkIfDoubleTapped(ulong newPressEventTimestamp, QPoi
 
     if (touchMousePressTimestamp > 0) {
         QPoint distanceBetweenPresses = newPressPos - touchMousePressPos;
-        const int doubleTapDistance = QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::TouchDoubleTapDistance).toInt();
+        const int doubleTapDistance = QGuiApplication::styleHints()->touchDoubleTapDistance();
         doubleClicked = (qAbs(distanceBetweenPresses.x()) <= doubleTapDistance) && (qAbs(distanceBetweenPresses.y()) <= doubleTapDistance);
 
         if (doubleClicked) {

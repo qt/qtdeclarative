@@ -78,8 +78,8 @@ int QQuickTapHandler::m_touchMultiTapDistanceSquared(-1);
     \l gesturePolicy to \c TapHandler.ReleaseWithinBounds.
 
     For multi-tap gestures (double-tap, triple-tap etc.), the distance moved
-    must not exceed QPlatformTheme::MouseDoubleClickDistance with mouse and
-    QPlatformTheme::TouchDoubleTapDistance with touch, and the time between
+    must not exceed QStyleHints::mouseDoubleClickDistance() with mouse and
+    QStyleHints::touchDoubleTapDistance() with touch, and the time between
     taps must not exceed QStyleHints::mouseDoubleClickInterval().
 
     \sa MouseArea
@@ -90,11 +90,9 @@ QQuickTapHandler::QQuickTapHandler(QQuickItem *parent)
 {
     if (m_mouseMultiClickDistanceSquared < 0) {
         m_multiTapInterval = qApp->styleHints()->mouseDoubleClickInterval() / 1000.0;
-        m_mouseMultiClickDistanceSquared = QGuiApplicationPrivate::platformTheme()->
-                    themeHint(QPlatformTheme::MouseDoubleClickDistance).toInt();
+        m_mouseMultiClickDistanceSquared = qApp->styleHints()->mouseDoubleClickDistance();
         m_mouseMultiClickDistanceSquared *= m_mouseMultiClickDistanceSquared;
-        m_touchMultiTapDistanceSquared = QGuiApplicationPrivate::platformTheme()->
-                    themeHint(QPlatformTheme::TouchDoubleTapDistance).toInt();
+        m_touchMultiTapDistanceSquared = qApp->styleHints()->touchDoubleTapDistance();
         m_touchMultiTapDistanceSquared *= m_touchMultiTapDistanceSquared;
     }
 }
@@ -410,9 +408,9 @@ void QQuickTapHandler::updateTimeHeld()
     \since 5.11
 
     This signal is emitted when the \c parent Item is tapped twice within a
-    short span of time (QStyleHints::mouseDoubleClickInterval) and distance
-    (QPlatformTheme::MouseDoubleClickDistance or
-    QPlatformTheme::TouchDoubleTapDistance). This signal always occurs after
+    short span of time (QStyleHints::mouseDoubleClickInterval()) and distance
+    (QStyleHints::mouseDoubleClickDistance() or
+    QStyleHints::touchDoubleTapDistance()). This signal always occurs after
     \l singleTapped, \l tapped, and \l tapCountChanged. The \c eventPoint
     signal parameter contains information from the release event about the
     point that was tapped.
