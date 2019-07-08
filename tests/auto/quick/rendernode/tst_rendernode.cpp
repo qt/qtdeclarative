@@ -61,6 +61,9 @@ private slots:
     void renderOrder();
     void messUpState();
     void matrix();
+
+private:
+    bool isRunningOnRhi() const;
 };
 
 class ClearNode : public QSGRenderNode
@@ -218,6 +221,9 @@ void tst_rendernode::renderOrder()
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
 
+    if (isRunningOnRhi())
+        QSKIP("Render nodes not yet supported with QRhi");
+
     QImage fb = runTest("RenderOrder.qml");
 
     const qreal scaleFactor = QGuiApplication::primaryScreen()->devicePixelRatio();
@@ -246,6 +252,9 @@ void tst_rendernode::messUpState()
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
+    if (isRunningOnRhi())
+        QSKIP("Render nodes not yet supported with QRhi");
 
     QImage fb = runTest("MessUpState.qml");
     int x1 = 0;
@@ -304,6 +313,9 @@ void tst_rendernode::matrix()
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
 
+    if (isRunningOnRhi())
+        QSKIP("Render nodes not yet supported with QRhi");
+
     qmlRegisterType<StateRecordingRenderNodeItem>("RenderNode", 1, 0, "StateRecorder");
     StateRecordingRenderNode::matrices.clear();
     runTest("matrix.qml");
@@ -351,6 +363,21 @@ void tst_rendernode::matrix()
     }
 }
 
+bool tst_rendernode::isRunningOnRhi() const
+{
+    static bool retval = false;
+    static bool decided = false;
+    if (!decided) {
+        decided = true;
+        QQuickView dummy;
+        dummy.show();
+        QTest::qWaitForWindowExposed(&dummy);
+        QSGRendererInterface::GraphicsApi api = dummy.rendererInterface()->graphicsApi();
+        retval = QSGRendererInterface::isApiRhiBased(api);
+        dummy.hide();
+    }
+    return retval;
+}
 
 QTEST_MAIN(tst_rendernode)
 

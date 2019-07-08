@@ -116,6 +116,51 @@ void FlatColorMaterialShader::initialize()
 }
 
 
+class FlatColorMaterialRhiShader : public QSGMaterialRhiShader
+{
+public:
+    FlatColorMaterialRhiShader();
+
+    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+};
+
+FlatColorMaterialRhiShader::FlatColorMaterialRhiShader()
+{
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/flatcolor.vert.qsb"));
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/flatcolor.frag.qsb"));
+}
+
+bool FlatColorMaterialRhiShader::updateUniformData(const RenderState &state,
+                                                   QSGMaterial *newMaterial,
+                                                   QSGMaterial *oldMaterial)
+{
+    Q_ASSERT(!oldMaterial || newMaterial->type() == oldMaterial->type());
+    QSGFlatColorMaterial *oldMat = static_cast<QSGFlatColorMaterial *>(oldMaterial);
+    QSGFlatColorMaterial *mat = static_cast<QSGFlatColorMaterial *>(newMaterial);
+    bool changed = false;
+    QByteArray *buf = state.uniformData();
+
+    if (state.isMatrixDirty()) {
+        const QMatrix4x4 m = state.combinedMatrix();
+        memcpy(buf->data(), m.constData(), 64);
+        changed = true;
+    }
+
+    const QColor &c = mat->color();
+    if (!oldMat || c != oldMat->color() || state.isOpacityDirty()) {
+        const float opacity = state.opacity() * c.alphaF();
+        QVector4D v(c.redF() * opacity,
+                    c.greenF() * opacity,
+                    c.blueF() * opacity,
+                    opacity);
+        Q_ASSERT(sizeof(v) == 16);
+        memcpy(buf->data() + 64, &v, 16);
+        changed = true;
+    }
+
+    return changed;
+}
+
 
 /*!
     \class QSGFlatColorMaterial
@@ -126,7 +171,7 @@ void FlatColorMaterialShader::initialize()
     \inmodule QtQuick
     \ingroup qtquick-scenegraph-materials
 
-    \warning This utility class is only functional when running with the OpenGL
+    \warning This utility class is only functional when running with the default
     backend of the Qt Quick scenegraph.
 
     The flat color material will fill every pixel in a geometry using
@@ -150,9 +195,8 @@ void FlatColorMaterialShader::initialize()
 
 QSGFlatColorMaterial::QSGFlatColorMaterial() : m_color(QColor(255, 255, 255))
 {
+    setFlag(SupportsRhiShader, true);
 }
-
-
 
 /*!
     \fn const QColor &QSGFlatColorMaterial::color() const
@@ -193,7 +237,10 @@ QSGMaterialType *QSGFlatColorMaterial::type() const
 
 QSGMaterialShader *QSGFlatColorMaterial::createShader() const
 {
-    return new FlatColorMaterialShader;
+    if (flags().testFlag(RhiShaderWanted))
+        return new FlatColorMaterialRhiShader;
+    else
+        return new FlatColorMaterialShader;
 }
 
 

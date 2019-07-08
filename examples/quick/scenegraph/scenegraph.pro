@@ -16,5 +16,13 @@ SUBDIRS += \
         rendernode \
         threadedanimation
 
+macos {
+    SUBDIRS += metalunderqml
+}
+
+win32 {
+    SUBDIRS += d3d11underqml
+}
+
 EXAMPLE_FILES += \
     shared

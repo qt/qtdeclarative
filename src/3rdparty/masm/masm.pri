@@ -126,8 +126,3 @@ QMAKE_EXTRA_COMPILERS += retgen
         }
     }
 }
-
-linux {
-    requires(qtConfig(dlopen))
-    QMAKE_USE_PRIVATE += libdl
-}

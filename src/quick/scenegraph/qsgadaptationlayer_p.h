@@ -64,6 +64,7 @@
 #include <QtGui/private/qdatabuffer_p.h>
 #include <private/qdistancefield_p.h>
 #include <private/qintrusivelist_p.h>
+#include <QtGui/private/qshader_p.h>
 
 // ### remove
 #include <QtQuick/private/qquicktext_p.h>
@@ -82,6 +83,7 @@ class QSGRootNode;
 class QSGSpriteNode;
 class QSGRenderNode;
 class QSGRenderContext;
+class QRhiTexture;
 
 class Q_QUICK_PRIVATE_EXPORT QSGNodeVisitorEx
 {
@@ -216,6 +218,9 @@ public:
 Q_SIGNALS:
     void updateRequested();
     void scheduledUpdateCompleted();
+
+protected:
+    QSGLayer(QSGTexturePrivate &dd);
 };
 
 #if QT_CONFIG(quick_sprite)
@@ -266,27 +271,26 @@ public:
             Sampler,
             Texture // for APIs with separate texture and sampler objects
         };
-        struct InputParameter {
-            InputParameter() {}
-            // Semantics use the D3D keys (POSITION, TEXCOORD).
-            // Attribute name based APIs can map based on pre-defined names.
-            QByteArray semanticName;
-            int semanticIndex = 0;
-        };
         struct Variable {
             Variable() {}
             VariableType type = Constant;
             QByteArray name;
             uint offset = 0; // for cbuffer members
             uint size = 0; // for cbuffer members
-            int bindPoint = 0; // for textures and samplers; for register-based APIs
+            int bindPoint = 0; // for textures/samplers, where applicable
         };
 
-        QByteArray blob; // source or bytecode
+        QString name; // optional, f.ex. the filename, used for debugging purposes only
+        QByteArray blob; // source or bytecode (when not using QRhi)
+        QShader rhiShader;
         Type type;
-        QVector<InputParameter> inputParameters;
         QVector<Variable> variables;
         uint constantDataSize;
+
+        // Vertex inputs are not tracked here as QSGGeometry::AttributeSet
+        // hardwires that anyways so it is up to the shader to provide
+        // compatible inputs (e.g. compatible with
+        // QSGGeometry::defaultAttributes_TexturedPoint2D()).
     };
 
     virtual void prepareShaderCode(ShaderInfo::Type typeHint, const QByteArray &src, ShaderInfo *result) = 0;
@@ -298,7 +302,6 @@ Q_SIGNALS:
 };
 
 #ifndef QT_NO_DEBUG_STREAM
-Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInfo::InputParameter &p);
 Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInfo::Variable &v);
 #endif
 
@@ -439,10 +442,18 @@ public:
 
     struct Texture {
         uint textureId = 0;
+        QRhiTexture *texture = nullptr;
         QSize size;
+        bool rhiBased = false;
 
-        Texture() : size(QSize()) { }
-        bool operator == (const Texture &other) const { return textureId == other.textureId; }
+        bool operator == (const Texture &other) const {
+            if (rhiBased != other.rhiBased)
+                return false;
+            if (rhiBased)
+                return texture == other.texture;
+            else
+                return textureId == other.textureId;
+        }
     };
 
     const QRawFont &referenceFont() const { return m_referenceFont; }
@@ -474,6 +485,8 @@ public:
     virtual void unregisterOwnerElement(QQuickItem *ownerElement);
     virtual void processPendingGlyphs();
 
+    virtual bool eightBitFormatIsAlphaSwizzled() const = 0;
+
 protected:
     struct GlyphPosition {
         glyph_t glyph;
@@ -501,6 +514,7 @@ protected:
     inline void removeGlyph(glyph_t glyph);
 
     void updateTexture(uint oldTex, uint newTex, const QSize &newTexSize);
+    void updateRhiTexture(QRhiTexture *oldTex, QRhiTexture *newTex, const QSize &newTexSize);
 
     inline bool containsGlyph(glyph_t glyph);
     uint textureIdForGlyph(glyph_t glyph) const;

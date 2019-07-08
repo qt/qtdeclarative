@@ -50,10 +50,8 @@ bool ResourceFileMapper::isEmpty() const
 QStringList ResourceFileMapper::resourcePaths(const QString &fileName)
 {
     const QString absPath = QDir::cleanPath(QDir::current().absoluteFilePath(fileName));
-    QHashIterator<QString, QString> it(qrcPathToFileSystemPath);
     QStringList resourcePaths;
-    while (it.hasNext()) {
-        it.next();
+    for (auto it = qrcPathToFileSystemPath.cbegin(), end = qrcPathToFileSystemPath.cend(); it != end; ++it) {
         if (QFileInfo(it.value()) == QFileInfo(absPath))
             resourcePaths.append(it.key());
     }

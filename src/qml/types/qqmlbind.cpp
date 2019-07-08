@@ -241,7 +241,7 @@ void QQmlBind::setObject(QObject *obj)
     }
     d->obj = obj;
     if (d->componentComplete) {
-        d->prop = QQmlProperty(d->obj, d->propName);
+        d->prop = QQmlProperty(d->obj, d->propName, qmlContext(this));
         d->validate(this);
     }
     eval();
@@ -287,7 +287,7 @@ void QQmlBind::setProperty(const QString &p)
     }
     d->propName = p;
     if (d->componentComplete) {
-        d->prop = QQmlProperty(d->obj, d->propName);
+        d->prop = QQmlProperty(d->obj, d->propName, qmlContext(this));
         d->validate(this);
     }
     eval();
@@ -416,7 +416,7 @@ void QQmlBind::componentComplete()
     Q_D(QQmlBind);
     d->componentComplete = true;
     if (!d->prop.isValid()) {
-        d->prop = QQmlProperty(d->obj, d->propName);
+        d->prop = QQmlProperty(d->obj, d->propName, qmlContext(this));
         d->validate(this);
     }
     eval();

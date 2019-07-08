@@ -55,6 +55,7 @@ private slots:
     void templateLiteral();
     void leadingSemicolonInClass();
     void templatedReadonlyProperty();
+    void qmlImportInJSRequiresFullVersion();
 
 private:
     QStringList excludedDirs;
@@ -297,6 +298,40 @@ void tst_qqmlparser::templatedReadonlyProperty()
     lexer.setCode(QLatin1String("A { readonly property list<B> listfoo: [ C{} ] }"), 1);
     QQmlJS::Parser parser(&engine);
     QVERIFY(parser.parse());
+}
+
+void tst_qqmlparser::qmlImportInJSRequiresFullVersion()
+{
+    {
+        QQmlJS::Engine engine;
+        QQmlJS::Lexer lexer(&engine);
+        lexer.setCode(QLatin1String(".import Test 1.0 as T"), 0, false);
+        QQmlJS::Parser parser(&engine);
+        bool b = parser.parseProgram();
+        qDebug() << parser.errorMessage();
+        QVERIFY(b);
+    }
+    {
+        QQmlJS::Engine engine;
+        QQmlJS::Lexer lexer(&engine);
+        lexer.setCode(QLatin1String(".import Test 1 as T"), 0, false);
+        QQmlJS::Parser parser(&engine);
+        QVERIFY(!parser.parseProgram());
+    }
+    {
+        QQmlJS::Engine engine;
+        QQmlJS::Lexer lexer(&engine);
+        lexer.setCode(QLatin1String(".import Test 1 as T"), 0, false);
+        QQmlJS::Parser parser(&engine);
+        QVERIFY(!parser.parseProgram());
+    }
+    {
+        QQmlJS::Engine engine;
+        QQmlJS::Lexer lexer(&engine);
+        lexer.setCode(QLatin1String(".import Test as T"), 0, false);
+        QQmlJS::Parser parser(&engine);
+        QVERIFY(!parser.parseProgram());
+    }
 }
 
 QTEST_MAIN(tst_qqmlparser)

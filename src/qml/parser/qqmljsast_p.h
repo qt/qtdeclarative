@@ -234,7 +234,6 @@ public:
         Kind_PatternProperty,
         Kind_PatternPropertyList,
 
-
         Kind_UiArrayBinding,
         Kind_UiImport,
         Kind_UiObjectBinding,
@@ -251,7 +250,8 @@ public:
         Kind_UiSourceElement,
         Kind_UiHeaderItemList,
         Kind_UiEnumDeclaration,
-        Kind_UiEnumMemberList
+        Kind_UiEnumMemberList,
+        Kind_UiVersionSpecifier
     };
 
     inline Node() {}
@@ -492,7 +492,30 @@ public:
     SourceLocation literalToken;
 };
 
-class QML_PARSER_EXPORT StringLiteral: public LeftHandSideExpression
+class QML_PARSER_EXPORT UiVersionSpecifier : public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(UiVersionSpecifier)
+
+    UiVersionSpecifier(int majorum, int minorum) : majorVersion(majorum), minorVersion(minorum) { kind = K; }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override { return majorToken; }
+
+    SourceLocation lastSourceLocation() const override
+    {
+        return minorToken.isValid() ? minorToken : majorToken;
+    }
+
+    // attributes:
+    int majorVersion;
+    int minorVersion;
+    SourceLocation majorToken;
+    SourceLocation minorToken;
+};
+
+class QML_PARSER_EXPORT StringLiteral : public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(StringLiteral)
@@ -2855,6 +2878,7 @@ public:
     SourceLocation asToken;
     SourceLocation importIdToken;
     SourceLocation semicolonToken;
+    UiVersionSpecifier *version = nullptr;
 };
 
 class QML_PARSER_EXPORT UiObjectMember: public Node

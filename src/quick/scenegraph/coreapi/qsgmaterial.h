@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -41,94 +41,11 @@
 #define QSGMATERIAL_H
 
 #include <QtQuick/qtquickglobal.h>
-#if QT_CONFIG(opengl)
-# include <QtGui/qopenglshaderprogram.h>
-#endif
-#include <QtGui/QMatrix4x4>
-#include <QtCore/QRect>
+#include <QtQuick/qsgmaterialshader.h>
+#include <QtQuick/qsgmaterialrhishader.h>
+#include <QtQuick/qsgmaterialtype.h>
 
 QT_BEGIN_NAMESPACE
-
-class QSGMaterial;
-class QSGMaterialShaderPrivate;
-
-namespace QSGBatchRenderer {
-    class ShaderManager;
-}
-
-class Q_QUICK_EXPORT QSGMaterialShader
-{
-public:
-    class Q_QUICK_EXPORT RenderState {
-    public:
-        enum DirtyState
-        {
-            DirtyMatrix             = 0x0001,
-            DirtyOpacity            = 0x0002,
-            DirtyCachedMaterialData = 0x0004,
-            DirtyAll                = 0xFFFF
-        };
-        Q_DECLARE_FLAGS(DirtyStates, DirtyState)
-
-        inline DirtyStates dirtyStates() const { return m_dirty; }
-
-        inline bool isMatrixDirty() const { return m_dirty & DirtyMatrix; }
-        inline bool isOpacityDirty() const { return m_dirty & DirtyOpacity; }
-        bool isCachedMaterialDataDirty() const { return m_dirty & DirtyCachedMaterialData; }
-
-        float opacity() const;
-        QMatrix4x4 combinedMatrix() const;
-        QMatrix4x4 modelViewMatrix() const;
-        QMatrix4x4 projectionMatrix() const;
-        QRect viewportRect() const;
-        QRect deviceRect() const;
-        float determinant() const;
-        float devicePixelRatio() const;
-#if QT_CONFIG(opengl)
-        QOpenGLContext *context() const;
-#endif
-    private:
-        friend class QSGRenderer;
-        DirtyStates m_dirty;
-        const void *m_data;
-    };
-
-    QSGMaterialShader();
-    virtual ~QSGMaterialShader();
-
-    virtual void activate();
-    virtual void deactivate();
-    // First time a material is used, oldMaterial is null.
-    virtual void updateState(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial);
-    virtual char const *const *attributeNames() const = 0; // Array must end with null.
-#if QT_CONFIG(opengl)
-    inline QOpenGLShaderProgram *program() { return &m_program; }
-#endif
-protected:
-    Q_DECLARE_PRIVATE(QSGMaterialShader)
-    QSGMaterialShader(QSGMaterialShaderPrivate &dd);
-
-    friend class QSGDefaultRenderContext;
-    friend class QSGBatchRenderer::ShaderManager;
-#if QT_CONFIG(opengl)
-    void setShaderSourceFile(QOpenGLShader::ShaderType type, const QString &sourceFile);
-    void setShaderSourceFiles(QOpenGLShader::ShaderType type, const QStringList &sourceFiles);
-
-    virtual void compile();
-#endif
-    virtual void initialize() { }
-#if QT_CONFIG(opengl)
-    virtual const char *vertexShader() const;
-    virtual const char *fragmentShader() const;
-#endif
-private:
-#if QT_CONFIG(opengl)
-    QOpenGLShaderProgram m_program;
-#endif
-    QScopedPointer<QSGMaterialShaderPrivate> d_ptr;
-};
-
-struct QSGMaterialType { };
 
 class Q_QUICK_EXPORT QSGMaterial
 {
@@ -139,7 +56,11 @@ public:
         RequiresFullMatrixExceptTranslate = 0x0004 | RequiresDeterminant, // Allow precalculated translation
         RequiresFullMatrix  = 0x0008 | RequiresFullMatrixExceptTranslate,
 
-        CustomCompileStep   = 0x0010
+        CustomCompileStep   = 0x0010,
+
+        SupportsRhiShader = 0x0020,
+
+        RhiShaderWanted = 0x1000 // // ### Qt 6: remove
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -160,7 +81,6 @@ private:
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGMaterial::Flags)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGMaterialShader::RenderState::DirtyStates)
 
 QT_END_NAMESPACE
 

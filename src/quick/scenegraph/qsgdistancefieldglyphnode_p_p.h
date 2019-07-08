@@ -52,10 +52,13 @@
 //
 
 #include <QtQuick/qsgmaterial.h>
+#include <QtQuick/private/qsgplaintexture_p.h>
 #include "qsgdistancefieldglyphnode_p.h"
 #include "qsgadaptationlayer_p.h"
 
 QT_BEGIN_NAMESPACE
+
+class QSGPlainTexture;
 
 class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldTextMaterial: public QSGMaterial
 {
@@ -82,6 +85,8 @@ public:
     QSize textureSize() const { return m_size; }
 
     bool updateTextureSize();
+    bool updateTextureSizeAndWrapper();
+    QSGTexture *wrapperTexture() const { return m_sgTexture; }
 
 protected:
     QSize m_size;
@@ -89,6 +94,7 @@ protected:
     QSGDistanceFieldGlyphCache *m_glyph_cache;
     const QSGDistanceFieldGlyphCache::Texture *m_texture;
     qreal m_fontScale;
+    QSGPlainTexture *m_sgTexture;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldStyledTextMaterial : public QSGDistanceFieldTextMaterial

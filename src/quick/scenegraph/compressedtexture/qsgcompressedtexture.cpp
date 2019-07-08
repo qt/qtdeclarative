@@ -44,13 +44,15 @@
 #include <QOpenGLFunctions>
 #include <QDebug>
 #include <QtQuick/private/qquickwindow_p.h>
+#include <QtGui/private/qrhi_p.h>
 
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(QSG_LOG_TEXTUREIO, "qt.scenegraph.textureio");
 
 QSGCompressedTexture::QSGCompressedTexture(const QTextureFileData &texData)
-    : m_textureData(texData)
+    : QSGTexture(*(new QSGCompressedTexturePrivate)),
+      m_textureData(texData)
 {
     m_size = m_textureData.size();
     m_hasAlpha = !formatIsOpaque(m_textureData.glInternalFormat());
@@ -68,6 +70,8 @@ QSGCompressedTexture::~QSGCompressedTexture()
         funcs->glDeleteTextures(1, &m_textureId);
     }
 #endif
+
+    delete m_texture;
 }
 
 int QSGCompressedTexture::textureId() const
@@ -83,6 +87,20 @@ int QSGCompressedTexture::textureId() const
     }
 #endif
     return m_textureId;
+}
+
+int QSGCompressedTexturePrivate::comparisonKey() const
+{
+    Q_Q(const QSGCompressedTexture);
+    // not textureId() as that would create an id when not yet done - that's not wanted here
+    if (q->m_textureId)
+        return q->m_textureId;
+
+    if (q->m_texture)
+        return int(qintptr(q->m_texture));
+
+    // two textures (and so materials) with not-yet-created texture underneath are never equal
+    return int(qintptr(q));
 }
 
 QSize QSGCompressedTexture::textureSize() const
@@ -143,6 +161,165 @@ void QSGCompressedTexture::bind()
     updateBindOptions(true);
     m_uploaded = true;
 #endif // QT_CONFIG(opengl)
+}
+
+static QPair<QRhiTexture::Format, bool> toRhiCompressedFormat(uint glinternalformat)
+{
+    switch (glinternalformat) {
+    case QOpenGLTexture::RGB_DXT1:
+        return { QRhiTexture::BC1, false };
+    case QOpenGLTexture::SRGB_DXT1:
+        return { QRhiTexture::BC1, true };
+
+    case QOpenGLTexture::RGBA_DXT3:
+        return { QRhiTexture::BC3, false };
+    case QOpenGLTexture::SRGB_Alpha_DXT3:
+        return { QRhiTexture::BC3, true };
+
+    case QOpenGLTexture::RGBA_DXT5:
+        return { QRhiTexture::BC5, false };
+    case QOpenGLTexture::SRGB_Alpha_DXT5:
+        return { QRhiTexture::BC5, true };
+
+    case QOpenGLTexture::RGB8_ETC2:
+        return { QRhiTexture::ETC2_RGB8, false };
+    case QOpenGLTexture::SRGB8_ETC2:
+        return { QRhiTexture::ETC2_RGB8, true };
+
+    case QOpenGLTexture::RGB8_PunchThrough_Alpha1_ETC2:
+        return { QRhiTexture::ETC2_RGB8A1, false };
+    case QOpenGLTexture::SRGB8_PunchThrough_Alpha1_ETC2:
+        return { QRhiTexture::ETC2_RGB8A1, true };
+
+    case QOpenGLTexture::RGBA8_ETC2_EAC:
+        return { QRhiTexture::ETC2_RGBA8, false };
+    case QOpenGLTexture::SRGB8_Alpha8_ETC2_EAC:
+        return { QRhiTexture::ETC2_RGBA8, true };
+
+    case QOpenGLTexture::RGBA_ASTC_4x4:
+        return { QRhiTexture::ASTC_4x4, false };
+    case QOpenGLTexture::SRGB8_Alpha8_ASTC_4x4:
+        return { QRhiTexture::ASTC_4x4, true };
+
+    case QOpenGLTexture::RGBA_ASTC_5x4:
+        return { QRhiTexture::ASTC_5x4, false };
+    case QOpenGLTexture::SRGB8_Alpha8_ASTC_5x4:
+        return { QRhiTexture::ASTC_5x4, true };
+
+    case QOpenGLTexture::RGBA_ASTC_5x5:
+        return { QRhiTexture::ASTC_5x5, false };
+    case QOpenGLTexture::SRGB8_Alpha8_ASTC_5x5:
+        return { QRhiTexture::ASTC_5x5, true };
+
+    case QOpenGLTexture::RGBA_ASTC_6x5:
+        return { QRhiTexture::ASTC_6x5, false };
+    case QOpenGLTexture::SRGB8_Alpha8_ASTC_6x5:
+        return { QRhiTexture::ASTC_6x5, true };
+
+    case QOpenGLTexture::RGBA_ASTC_6x6:
+        return { QRhiTexture::ASTC_6x6, false };
+    case QOpenGLTexture::SRGB8_Alpha8_ASTC_6x6:
+        return { QRhiTexture::ASTC_6x6, true };
+
+    case QOpenGLTexture::RGBA_ASTC_8x5:
+        return { QRhiTexture::ASTC_8x5, false };
+    case QOpenGLTexture::SRGB8_Alpha8_ASTC_8x5:
+        return { QRhiTexture::ASTC_8x5, true };
+
+    case QOpenGLTexture::RGBA_ASTC_8x6:
+        return { QRhiTexture::ASTC_8x6, false };
+    case QOpenGLTexture::SRGB8_Alpha8_ASTC_8x6:
+        return { QRhiTexture::ASTC_8x6, true };
+
+    case QOpenGLTexture::RGBA_ASTC_8x8:
+        return { QRhiTexture::ASTC_8x8, false };
+    case QOpenGLTexture::SRGB8_Alpha8_ASTC_8x8:
+        return { QRhiTexture::ASTC_8x8, true };
+
+    case QOpenGLTexture::RGBA_ASTC_10x5:
+        return { QRhiTexture::ASTC_10x5, false };
+    case QOpenGLTexture::SRGB8_Alpha8_ASTC_10x5:
+        return { QRhiTexture::ASTC_10x5, true };
+
+    case QOpenGLTexture::RGBA_ASTC_10x6:
+        return { QRhiTexture::ASTC_10x6, false };
+    case QOpenGLTexture::SRGB8_Alpha8_ASTC_10x6:
+        return { QRhiTexture::ASTC_10x6, true };
+
+    case QOpenGLTexture::RGBA_ASTC_10x8:
+        return { QRhiTexture::ASTC_10x8, false };
+    case QOpenGLTexture::SRGB8_Alpha8_ASTC_10x8:
+        return { QRhiTexture::ASTC_10x8, true };
+
+    case QOpenGLTexture::RGBA_ASTC_10x10:
+        return { QRhiTexture::ASTC_10x10, false };
+    case QOpenGLTexture::SRGB8_Alpha8_ASTC_10x10:
+        return { QRhiTexture::ASTC_10x10, true };
+
+    case QOpenGLTexture::RGBA_ASTC_12x10:
+        return { QRhiTexture::ASTC_12x10, false };
+    case QOpenGLTexture::SRGB8_Alpha8_ASTC_12x10:
+        return { QRhiTexture::ASTC_12x10, true };
+
+    case QOpenGLTexture::RGBA_ASTC_12x12:
+        return { QRhiTexture::ASTC_12x12, false };
+    case QOpenGLTexture::SRGB8_Alpha8_ASTC_12x12:
+        return { QRhiTexture::ASTC_12x12, true };
+
+    default:
+        return { QRhiTexture::UnknownFormat, false };
+    }
+}
+
+QRhiTexture *QSGCompressedTexturePrivate::rhiTexture() const
+{
+    Q_Q(const QSGCompressedTexture);
+    return q->m_texture;
+}
+
+void QSGCompressedTexturePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
+{
+    Q_Q(QSGCompressedTexture);
+    if (q->m_uploaded)
+        return;
+
+    q->m_uploaded = true; // even if fails, no point in trying again
+
+    if (!q->m_textureData.isValid()) {
+        qCDebug(QSG_LOG_TEXTUREIO, "Invalid texture data for %s", q->m_textureData.logName().constData());
+        return;
+    }
+
+    const QPair<QRhiTexture::Format, bool> fmt = toRhiCompressedFormat(q->m_textureData.glInternalFormat());
+    if (fmt.first == QRhiTexture::UnknownFormat) {
+        qWarning("Unknown compressed format 0x%x", q->m_textureData.glInternalFormat());
+        return;
+    }
+
+    QRhiTexture::Flags texFlags = 0;
+    if (fmt.second)
+        texFlags |= QRhiTexture::sRGB;
+
+    if (!rhi->isTextureFormatSupported(fmt.first, texFlags)) {
+        qWarning("Unsupported compressed format 0x%x", q->m_textureData.glInternalFormat());
+        return;
+    }
+
+    if (!q->m_texture) {
+        q->m_texture = rhi->newTexture(fmt.first, q->m_size, 1, texFlags);
+        if (!q->m_texture->build()) {
+            qWarning("Failed to create QRhiTexture for compressed data");
+            delete q->m_texture;
+            q->m_texture = nullptr;
+            return;
+        }
+    }
+
+    // only upload mip level 0 since we never do mipmapping for compressed textures (for now?)
+    resourceUpdates->uploadTexture(q->m_texture, QRhiTextureUploadEntry(0, 0,
+        { q->m_textureData.data().constData() + q->m_textureData.dataOffset(), q->m_textureData.dataLength() }));
+
+    q->m_textureData = QTextureFileData(); // Release this memory, not needed anymore
 }
 
 QTextureFileData QSGCompressedTexture::textureData() const

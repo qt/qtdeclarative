@@ -57,58 +57,50 @@ LineEditExtension::LineEditExtension(QObject *object)
 
 int LineEditExtension::leftMargin() const
 {
-    int l, r, t, b;
-    m_lineedit->getTextMargins(&l, &t, &r, &b);
-    return l;
+    return m_lineedit->textMargins().left();
 }
 
-void LineEditExtension::setLeftMargin(int m)
+void LineEditExtension::setLeftMargin(int l)
 {
-    int l, r, t, b;
-    m_lineedit->getTextMargins(&l, &t, &r, &b);
-    m_lineedit->setTextMargins(m, t, r, b);
+    QMargins m = m_lineedit->textMargins();
+    m.setLeft(l);
+    m_lineedit->setTextMargins(m);
 }
 
 int LineEditExtension::rightMargin() const
 {
-    int l, r, t, b;
-    m_lineedit->getTextMargins(&l, &t, &r, &b);
-    return r;
+    return m_lineedit->textMargins().right();
 }
 
-void LineEditExtension::setRightMargin(int m)
+void LineEditExtension::setRightMargin(int r)
 {
-    int l, r, t, b;
-    m_lineedit->getTextMargins(&l, &t, &r, &b);
-    m_lineedit->setTextMargins(l, t, m, b);
+    QMargins m = m_lineedit->textMargins();
+    m.setRight(r);
+    m_lineedit->setTextMargins(m);
 }
 
 int LineEditExtension::topMargin() const
 {
-    int l, r, t, b;
-    m_lineedit->getTextMargins(&l, &t, &r, &b);
-    return t;
+    return m_lineedit->textMargins().top();
 }
 
-void LineEditExtension::setTopMargin(int m)
+void LineEditExtension::setTopMargin(int t)
 {
-    int l, r, t, b;
-    m_lineedit->getTextMargins(&l, &t, &r, &b);
-    m_lineedit->setTextMargins(l, m, r, b);
+    QMargins m = m_lineedit->textMargins();
+    m.setTop(t);
+    m_lineedit->setTextMargins(m);
 }
 
 int LineEditExtension::bottomMargin() const
 {
-    int l, r, t, b;
-    m_lineedit->getTextMargins(&l, &t, &r, &b);
-    return b;
+    return m_lineedit->textMargins().bottom();
 }
 
-void LineEditExtension::setBottomMargin(int m)
+void LineEditExtension::setBottomMargin(int b)
 {
-    int l, r, t, b;
-    m_lineedit->getTextMargins(&l, &t, &r, &b);
-    m_lineedit->setTextMargins(l, t, r, m);
+    QMargins m = m_lineedit->textMargins();
+    m.setBottom(b);
+    m_lineedit->setTextMargins(m);
 }
 
 

@@ -86,6 +86,7 @@ private slots:
     void keyNavigation_RightToLeft();
     void keyNavigation_skipNotVisible();
     void keyNavigation_implicitSetting();
+    void keyNavigation_implicitDestroy();
     void keyNavigation_focusReason();
     void keyNavigation_loop();
     void layoutMirroring();
@@ -2162,6 +2163,29 @@ void tst_QQuickItem::keyNavigation_implicitSetting()
     QVERIFY(item->hasActiveFocus());
 
     delete window;
+}
+
+// QTBUG-75399
+void tst_QQuickItem::keyNavigation_implicitDestroy()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("keynavigationtest_implicitDestroy.qml"));
+    view.show();
+
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+
+    QQuickItem *root = view.rootObject();
+    QVERIFY(QMetaObject::invokeMethod(root, "createImplicitKeyNavigation"));
+
+    // process events is necessary to trigger upcoming memory access violation
+    QTest::qWait(0);
+
+    QVERIFY(root->hasActiveFocus());
+
+    QKeyEvent keyPress = QKeyEvent(QEvent::KeyPress, Qt::Key_Down, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(&view, &keyPress); // <-- access violation happens here
+    // this should fail the test, even if the access violation does not occur
+    QVERIFY(!keyPress.isAccepted());
 }
 
 void tst_QQuickItem::keyNavigation_focusReason()

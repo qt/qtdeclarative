@@ -52,25 +52,28 @@
 //
 
 #include <private/qtexturefiledata_p.h>
-#include <QSGTexture>
-#include <QtQuick/private/qsgcontext_p.h>
+#include <private/qsgcontext_p.h>
+#include <private/qsgtexture_p.h>
 #include <QQuickTextureFactory>
 #include <QOpenGLFunctions>
 
 QT_BEGIN_NAMESPACE
 
+class QSGCompressedTexturePrivate;
+
 class Q_QUICK_PRIVATE_EXPORT QSGCompressedTexture : public QSGTexture
 {
+    Q_DECLARE_PRIVATE(QSGCompressedTexture)
     Q_OBJECT
 public:
     QSGCompressedTexture(const QTextureFileData& texData);
     virtual ~QSGCompressedTexture();
 
-    int textureId() const override;
     QSize textureSize() const override;
     bool hasAlphaChannel() const override;
     bool hasMipmaps() const override;
 
+    int textureId() const override;
     void bind() override;
 
     QTextureFileData textureData() const;
@@ -81,13 +84,23 @@ protected:
     QTextureFileData m_textureData;
     QSize m_size;
     mutable uint m_textureId = 0;
+    QRhiTexture *m_texture = nullptr;
     bool m_hasAlpha = false;
     bool m_uploaded = false;
 };
 
-namespace QSGAtlasTexture {
+namespace QSGOpenGLAtlasTexture {
     class Manager;
 }
+
+class QSGCompressedTexturePrivate : public QSGTexturePrivate
+{
+    Q_DECLARE_PUBLIC(QSGCompressedTexture)
+public:
+    int comparisonKey() const override;
+    QRhiTexture *rhiTexture() const override;
+    void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
+};
 
 class Q_QUICK_PRIVATE_EXPORT QSGCompressedTextureFactory : public QQuickTextureFactory
 {
@@ -101,7 +114,7 @@ protected:
     QTextureFileData m_textureData;
 
 private:
-    friend class QSGAtlasTexture::Manager;
+    friend class QSGOpenGLAtlasTexture::Manager;
 };
 
 QT_END_NAMESPACE

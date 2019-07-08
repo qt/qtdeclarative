@@ -45,8 +45,9 @@
 #include <QtQuick/private/qsgdefaultglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p_p.h>
-#include <QtQuick/private/qsgrenderloop_p.h>
-#include <QtQuick/private/qsgdefaultlayer_p.h>
+#include <QtQuick/private/qsgopengllayer_p.h>
+#include <QtQuick/private/qsgrhisupport_p.h>
+#include <QtQuick/private/qsgrhilayer_p.h>
 #include <QtQuick/private/qsgdefaultrendercontext_p.h>
 #include <QtQuick/private/qsgdefaultrectanglenode_p.h>
 #include <QtQuick/private/qsgdefaultimagenode_p.h>
@@ -54,24 +55,28 @@
 #if QT_CONFIG(quick_sprite)
 #include <QtQuick/private/qsgdefaultspritenode_p.h>
 #endif
+#include <QtQuick/private/qsgrhishadereffectnode_p.h>
 
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QOpenGLFramebufferObject>
 
-#include <QtQuick/QQuickWindow>
+#include <QtQuick/private/qquickwindow_p.h>
 
 #include <private/qqmlglobal_p.h>
 
 #include <algorithm>
+
+#include <QtGui/private/qrhi_p.h>
+#include <QtGui/private/qrhigles2_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QSGMultisampleAntialiasing {
     class ImageNode : public QSGDefaultInternalImageNode {
     public:
+        ImageNode(QSGDefaultRenderContext *rc) : QSGDefaultInternalImageNode(rc) { }
         void setAntialiasing(bool) override { }
     };
-
 
     class RectangleNode : public QSGDefaultInternalRectangleNode {
     public:
@@ -118,7 +123,7 @@ void QSGDefaultContext::renderContextInitialized(QSGRenderContext *renderContext
 {
     m_mutex.lock();
 
-    auto openglRenderContext = static_cast<const QSGDefaultRenderContext *>(renderContext);
+    auto rc = static_cast<const QSGDefaultRenderContext *>(renderContext);
     if (m_antialiasingMethod == UndecidedAntialiasing) {
         if (Q_UNLIKELY(qEnvironmentVariableIsSet("QSG_ANTIALIASING_METHOD"))) {
             const QByteArray aaType = qgetenv("QSG_ANTIALIASING_METHOD");
@@ -127,12 +132,8 @@ void QSGDefaultContext::renderContextInitialized(QSGRenderContext *renderContext
             else if (aaType == "vertex")
                 m_antialiasingMethod = VertexAntialiasing;
         }
-        if (m_antialiasingMethod == UndecidedAntialiasing) {
-            if (openglRenderContext->openglContext()->format().samples() > 0)
-                m_antialiasingMethod = MsaaAntialiasing;
-            else
-                m_antialiasingMethod = VertexAntialiasing;
-        }
+        if (m_antialiasingMethod == UndecidedAntialiasing)
+            m_antialiasingMethod = rc->msaaSampleCount() > 1 ? MsaaAntialiasing : VertexAntialiasing;
     }
 
     // With OpenGL ES, except for Angle on Windows, use GrayAntialiasing, unless
@@ -141,15 +142,23 @@ void QSGDefaultContext::renderContextInitialized(QSGRenderContext *renderContext
     if (!m_distanceFieldAntialiasingDecided) {
         m_distanceFieldAntialiasingDecided = true;
 #ifndef Q_OS_WIN32
-        if (openglRenderContext->openglContext()->isOpenGLES())
-            m_distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
+        if (rc->rhi()) {
+            if (rc->rhi()->backend() == QRhi::OpenGLES2
+                    && static_cast<const QRhiGles2NativeHandles *>(rc->rhi()->nativeHandles())->context->isOpenGLES())
+            {
+                    m_distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
+            }
+        } else {
+            if (rc->openglContext()->isOpenGLES())
+                m_distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
+        }
 #endif
     }
 
     static bool dumped = false;
-    if (!dumped && QSG_LOG_INFO().isDebugEnabled()) {
+    if (!dumped && QSG_LOG_INFO().isDebugEnabled() && !rc->rhi()) {
         dumped = true;
-        QSurfaceFormat format = openglRenderContext->openglContext()->format();
+        QSurfaceFormat format = rc->openglContext()->format();
         QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
         qCDebug(QSG_LOG_INFO, "R/G/B/A Buffers:   %d %d %d %d", format.redBufferSize(),
                 format.greenBufferSize(), format.blueBufferSize(), format.alphaBufferSize());
@@ -160,10 +169,10 @@ void QSGDefaultContext::renderContextInitialized(QSGRenderContext *renderContext
         qCDebug(QSG_LOG_INFO, "GL_RENDERER:       %s",
                 (const char*)funcs->glGetString(GL_RENDERER));
         qCDebug(QSG_LOG_INFO, "GL_VERSION:        %s", (const char*)funcs->glGetString(GL_VERSION));
-        QByteArrayList exts = openglRenderContext->openglContext()->extensions().values();
+        QByteArrayList exts = rc->openglContext()->extensions().values();
         std::sort(exts.begin(), exts.end());
         qCDebug(QSG_LOG_INFO, "GL_EXTENSIONS:    %s", exts.join(' ').constData());
-        qCDebug(QSG_LOG_INFO, "Max Texture Size: %d", openglRenderContext->maxTextureSize());
+        qCDebug(QSG_LOG_INFO, "Max Texture Size: %d", rc->maxTextureSize());
         qCDebug(QSG_LOG_INFO, "Debug context:    %s",
                 format.testOption(QSurfaceFormat::DebugContext) ? "true" : "false");
     }
@@ -187,11 +196,11 @@ QSGInternalRectangleNode *QSGDefaultContext::createInternalRectangleNode()
             : new QSGDefaultInternalRectangleNode;
 }
 
-QSGInternalImageNode *QSGDefaultContext::createInternalImageNode()
+QSGInternalImageNode *QSGDefaultContext::createInternalImageNode(QSGRenderContext *renderContext)
 {
     return m_antialiasingMethod == MsaaAntialiasing
-            ? new QSGMultisampleAntialiasing::ImageNode
-            : new QSGDefaultInternalImageNode;
+            ? new QSGMultisampleAntialiasing::ImageNode(static_cast<QSGDefaultRenderContext *>(renderContext))
+            : new QSGDefaultInternalImageNode(static_cast<QSGDefaultRenderContext *>(renderContext));
 }
 
 QSGPainterNode *QSGDefaultContext::createPainterNode(QQuickPaintedItem *item)
@@ -202,7 +211,7 @@ QSGPainterNode *QSGDefaultContext::createPainterNode(QQuickPaintedItem *item)
 QSGGlyphNode *QSGDefaultContext::createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode)
 {
     if (m_distanceFieldDisabled || preferNativeGlyphNode) {
-        return new QSGDefaultGlyphNode;
+        return new QSGDefaultGlyphNode(rc);
     } else {
         QSGDistanceFieldGlyphNode *node = new QSGDistanceFieldGlyphNode(rc);
         node->setPreferredAntialiasingMode(m_distanceFieldAntialiasing);
@@ -212,7 +221,11 @@ QSGGlyphNode *QSGDefaultContext::createGlyphNode(QSGRenderContext *rc, bool pref
 
 QSGLayer *QSGDefaultContext::createLayer(QSGRenderContext *renderContext)
 {
-    return new QSGDefaultLayer(renderContext);
+    auto rc = static_cast<const QSGDefaultRenderContext *>(renderContext);
+    if (rc->rhi())
+        return new QSGRhiLayer(renderContext);
+    else
+        return new QSGOpenGLLayer(renderContext);
 }
 
 QSurfaceFormat QSGDefaultContext::defaultSurfaceFormat() const
@@ -275,24 +288,73 @@ QSGSpriteNode *QSGDefaultContext::createSpriteNode()
 }
 #endif
 
+QSGGuiThreadShaderEffectManager *QSGDefaultContext::createGuiThreadShaderEffectManager()
+{
+    if (QSGRhiSupport::instance()->isRhiEnabled())
+        return new QSGRhiGuiThreadShaderEffectManager;
+
+    return nullptr;
+}
+
+QSGShaderEffectNode *QSGDefaultContext::createShaderEffectNode(QSGRenderContext *renderContext,
+                                                               QSGGuiThreadShaderEffectManager *mgr)
+{
+    if (QSGRhiSupport::instance()->isRhiEnabled()) {
+        return new QSGRhiShaderEffectNode(static_cast<QSGDefaultRenderContext *>(renderContext),
+                                          static_cast<QSGRhiGuiThreadShaderEffectManager *>(mgr));
+    }
+
+    return nullptr;
+}
+
 QSGRendererInterface::GraphicsApi QSGDefaultContext::graphicsApi() const
 {
-    return OpenGL;
+    return QSGRhiSupport::instance()->graphicsApi();
+}
+
+void *QSGDefaultContext::getResource(QQuickWindow *window, Resource resource) const
+{
+    if (!window)
+        return nullptr;
+
+    // Unlike the graphicsApi and shaderType and similar queries, getting a
+    // native resource is only possible when there is an initialized
+    // rendercontext, or rather, only within rendering a frame, as per
+    // QSGRendererInterface docs. This is good since getting some things is
+    // only possible within a beginFrame - endFrame with the RHI.
+
+    const QSGDefaultRenderContext *rc = static_cast<const QSGDefaultRenderContext *>(
+                QQuickWindowPrivate::get(window)->context);
+    QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
+
+    switch (resource) {
+    case OpenGLContextResource:
+        if (rhiSupport->graphicsApi() == OpenGL)
+            return rc->openglContext();
+        else
+            return const_cast<void *>(rhiSupport->rifResource(resource, rc));
+#if QT_CONFIG(vulkan)
+    case VulkanInstanceResource:
+        return window->vulkanInstance();
+#endif
+    default:
+        return const_cast<void *>(rhiSupport->rifResource(resource, rc));
+    }
 }
 
 QSGRendererInterface::ShaderType QSGDefaultContext::shaderType() const
 {
-    return GLSL;
+    return QSGRhiSupport::instance()->isRhiEnabled() ? RhiShader : GLSL;
 }
 
 QSGRendererInterface::ShaderCompilationTypes QSGDefaultContext::shaderCompilationType() const
 {
-    return RuntimeCompilation;
+    return QSGRhiSupport::instance()->isRhiEnabled() ? OfflineCompilation : RuntimeCompilation;
 }
 
 QSGRendererInterface::ShaderSourceTypes QSGDefaultContext::shaderSourceType() const
 {
-    return ShaderSourceString | ShaderSourceFile;
+    return QSGRhiSupport::instance()->isRhiEnabled() ? ShaderSourceFile : (ShaderSourceString | ShaderSourceFile);
 }
 
 QT_END_NAMESPACE

@@ -62,6 +62,10 @@
 
 QT_BEGIN_NAMESPACE
 
+// Single-threaded render loop with a custom animation driver. Like a
+// combination of basic+threaded but still working on the main thread. Only
+// compatible with direct OpenGL, no RHI support here.
+
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
 #define RLDEBUG(x) qCDebug(QSG_LOG_RENDERLOOP, x)
@@ -188,8 +192,14 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
         RLDEBUG(" - making current");
         bool current = m_gl->makeCurrent(window);
         RLDEBUG(" - initializing SG");
-        if (current)
-            m_rc->initialize(m_gl);
+        if (current) {
+            QSGDefaultRenderContext::InitParams rcParams;
+            rcParams.sampleCount = qMax(1, m_gl->format().samples());
+            rcParams.openGLContext = m_gl;
+            rcParams.initialSurfacePixelSize = window->size() * window->effectiveDevicePixelRatio();
+            rcParams.maybeSurface = window;
+            m_rc->initialize(&rcParams);
+        }
     }
 
     WindowData data;
@@ -440,10 +450,16 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
         if (!m_gl->isValid()) {
             d->cleanupNodesOnShutdown();
             m_rc->invalidate();
-            if (m_gl->create() && m_gl->makeCurrent(window))
-                m_rc->initialize(m_gl);
-            else
+            if (m_gl->create() && m_gl->makeCurrent(window)) {
+                QSGDefaultRenderContext::InitParams rcParams;
+                rcParams.sampleCount = qMax(1, m_gl->format().samples());
+                rcParams.openGLContext = m_gl;
+                rcParams.initialSurfacePixelSize = window->size() * window->effectiveDevicePixelRatio();
+                rcParams.maybeSurface = window;
+                m_rc->initialize(&rcParams);
+            } else {
                 return;
+            }
         }
     }
 

@@ -58,6 +58,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QSGDefaultRenderContext;
+
 class Q_QUICK_PRIVATE_EXPORT QSGSmoothTextureMaterial : public QSGTextureMaterial
 {
 public:
@@ -73,7 +75,7 @@ protected:
 class Q_QUICK_PRIVATE_EXPORT QSGDefaultInternalImageNode : public QSGBasicInternalImageNode
 {
 public:
-    QSGDefaultInternalImageNode();
+    QSGDefaultInternalImageNode(QSGDefaultRenderContext *rc);
 
     void setMipmapFiltering(QSGTexture::Filtering filtering) override;
     void setFiltering(QSGTexture::Filtering filtering) override;
@@ -87,6 +89,7 @@ public:
     bool supportsWrap(const QSize &size) const override;
 
 private:
+    QSGDefaultRenderContext *m_rc;
     QSGOpaqueTextureMaterial m_material;
     QSGTextureMaterial m_materialO;
     QSGSmoothTextureMaterial m_smoothMaterial;

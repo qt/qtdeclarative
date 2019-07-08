@@ -57,6 +57,10 @@
 
 QT_BEGIN_NAMESPACE
 
+// Note: this legacy ShaderEffect implementation is used only when running
+// directly with OpenGL. This is going to go away in the future (Qt 6?), since
+// the RHI path uses QQuickGenericShaderEffect always.
+
 namespace {
 
     enum VariableQualifier {

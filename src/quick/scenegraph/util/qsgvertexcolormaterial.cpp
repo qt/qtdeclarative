@@ -51,8 +51,6 @@ public:
     void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
     char const *const *attributeNames() const override;
 
-    static QSGMaterialType type;
-
 private:
     void initialize() override;
 #if QT_CONFIG(opengl)
@@ -60,8 +58,6 @@ private:
     int m_opacity_id;
 #endif
 };
-
-QSGMaterialType QSGVertexColorMaterialShader::type;
 
 QSGVertexColorMaterialShader::QSGVertexColorMaterialShader()
 {
@@ -99,6 +95,43 @@ void QSGVertexColorMaterialShader::initialize()
 }
 
 
+class QSGVertexColorMaterialRhiShader : public QSGMaterialRhiShader
+{
+public:
+    QSGVertexColorMaterialRhiShader();
+
+    bool updateUniformData(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
+};
+
+QSGVertexColorMaterialRhiShader::QSGVertexColorMaterialRhiShader()
+{
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/vertexcolor.vert.qsb"));
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/vertexcolor.frag.qsb"));
+}
+
+bool QSGVertexColorMaterialRhiShader::updateUniformData(const RenderState &state,
+                                                        QSGMaterial * /*newEffect*/,
+                                                        QSGMaterial * /*oldEffect*/)
+{
+    bool changed = false;
+    QByteArray *buf = state.uniformData();
+
+    if (state.isMatrixDirty()) {
+        const QMatrix4x4 m = state.combinedMatrix();
+        memcpy(buf->data(), m.constData(), 64);
+        changed = true;
+    }
+
+    if (state.isOpacityDirty()) {
+        const float opacity = state.opacity();
+        memcpy(buf->data() + 64, &opacity, 4);
+        changed = true;
+    }
+
+    return changed;
+}
+
+
 /*!
     \class QSGVertexColorMaterial
     \brief The QSGVertexColorMaterial class provides a convenient way of rendering per-vertex
@@ -107,8 +140,8 @@ void QSGVertexColorMaterialShader::initialize()
     \inmodule QtQuick
     \ingroup qtquick-scenegraph-materials
 
-    \warning This utility class is only functional when running with the OpenGL
-    backend of the Qt Quick scenegraph.
+    \warning This utility class is only functional when running with the
+    default backend of the Qt Quick scenegraph.
 
     The vertex color material will give each vertex in a geometry a color. Pixels between
     vertices will be linearly interpolated. The colors can contain transparency.
@@ -135,6 +168,7 @@ void QSGVertexColorMaterialShader::initialize()
 QSGVertexColorMaterial::QSGVertexColorMaterial()
 {
     setFlag(Blending, true);
+    setFlag(SupportsRhiShader, true);
 }
 
 
@@ -158,7 +192,8 @@ int QSGVertexColorMaterial::compare(const QSGMaterial * /* other */) const
 
 QSGMaterialType *QSGVertexColorMaterial::type() const
 {
-    return &QSGVertexColorMaterialShader::type;
+    static QSGMaterialType type;
+    return &type;
 }
 
 
@@ -169,7 +204,10 @@ QSGMaterialType *QSGVertexColorMaterial::type() const
 
 QSGMaterialShader *QSGVertexColorMaterial::createShader() const
 {
-    return new QSGVertexColorMaterialShader;
+    if (flags().testFlag(RhiShaderWanted))
+        return new QSGVertexColorMaterialRhiShader;
+    else
+        return new QSGVertexColorMaterialShader;
 }
 
 QT_END_NAMESPACE

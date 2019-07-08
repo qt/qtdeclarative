@@ -47,18 +47,21 @@ class tst_qqmlextensionplugin : public QObject
 {
     Q_OBJECT
 
-    bool isDuplicate(QString file, const QList<QString> & files) {
-#ifndef DEBUG_SUFFIX
-        Q_UNUSED(file)
-        Q_UNUSED(files)
-        return false;
-#else
+    static QStringList removeDuplicates(QStringList files) {
+#ifdef DEBUG_SUFFIX
+        const auto isDuplicate = [files] (QString file) {
 # ifdef QT_DEBUG
-        return !file.endsWith(DEBUG_SUFFIX) && files.contains(file.replace(SUFFIX, DEBUG_SUFFIX));
+            return !file.endsWith(DEBUG_SUFFIX) && files.contains(file.replace(SUFFIX, DEBUG_SUFFIX));
 # else
-        return file.endsWith(DEBUG_SUFFIX) && files.contains(file.replace(DEBUG_SUFFIX, SUFFIX));
+            return file.endsWith(DEBUG_SUFFIX) && files.contains(file.replace(DEBUG_SUFFIX, SUFFIX));
 # endif
+        };
+
+        files.erase(std::remove_if(files.begin(), files.end(), isDuplicate),
+                    files.end());
+
 #endif
+        return files;
     }
 
 public:
@@ -84,12 +87,7 @@ void tst_qqmlextensionplugin::iidCheck_data()
         }
     }
 
-    for (QMutableListIterator<QString> it(files); it.hasNext(); ) {
-        QString file = it.next();
-        if (isDuplicate(file, files)) {
-            it.remove();
-        }
-    }
+    files = removeDuplicates(std::move(files));
 
     QTest::addColumn<QString>("filePath");
     foreach (const QString &file, files) {

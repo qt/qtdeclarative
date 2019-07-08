@@ -169,10 +169,13 @@ struct Options
     bool multisample = false;
     bool coreProfile = false;
     bool verbose = false;
+    bool rhi = false;
+    bool rhiBackendSet = false;
     QVector<Qt::ApplicationAttribute> applicationAttributes;
     QString translationFile;
     QmlApplicationType applicationType = DefaultQmlApplicationType;
     QQuickWindow::TextRenderType textRenderType;
+    QString rhiBackend;
 };
 
 #if defined(QMLSCENE_BUNDLE)
@@ -349,24 +352,26 @@ static void usage()
     puts("  --transparent .................... Make the window transparent");
     puts("  --multisample .................... Enable multisampling (OpenGL anti-aliasing)");
     puts("  --core-profile ................... Request a core profile OpenGL context");
+    puts("  --rhi [vulkan|metal|d3d11|gl] .... Use the Qt graphics abstraction (RHI) instead of OpenGL directly.\n"
+         "                                .... Backend has platform specific defaults. Specify to override.");
     puts("  --no-version-detection ........... Do not try to detect the version of the .qml file");
     puts("  --slow-animations ................ Run all animations in slow motion");
     puts("  --resize-to-root ................. Resize the window to the size of the root item");
     puts("  --quit ........................... Quit immediately after starting");
     puts("  --disable-context-sharing ........ Disable the use of a shared GL context for QtQuick Windows\n"
-         "                            .........(remove AA_ShareOpenGLContexts)");
-    puts("  --desktop..........................Force use of desktop GL (AA_UseDesktopOpenGL)");
-    puts("  --gles.............................Force use of GLES (AA_UseOpenGLES)");
-    puts("  --software.........................Force use of software rendering (AA_UseOpenGLES)");
-    puts("  --scaling..........................Enable High DPI scaling (AA_EnableHighDpiScaling)");
-    puts("  --no-scaling.......................Disable High DPI scaling (AA_DisableHighDpiScaling)");
-    puts("  --verbose..........................Print version and graphical diagnostics for the run-time");
+         "                            ........ (remove AA_ShareOpenGLContexts)");
+    puts("  --desktop......................... Force use of desktop GL (AA_UseDesktopOpenGL)");
+    puts("  --gles............................ Force use of GLES (AA_UseOpenGLES)");
+    puts("  --software........................ Force use of software rendering (AA_UseOpenGLES)");
+    puts("  --scaling......................... Enable High DPI scaling (AA_EnableHighDpiScaling)");
+    puts("  --no-scaling...................... Disable High DPI scaling (AA_DisableHighDpiScaling)");
+    puts("  --verbose......................... Print version and graphical diagnostics for the run-time");
 #ifdef QT_WIDGETS_LIB
-    puts("  --apptype [gui|widgets] ...........Select which application class to use. Default is widgets.");
+    puts("  --apptype [gui|widgets] .......... Select which application class to use. Default is widgets.");
 #endif
-    puts("  --textrendertype [qt|native].......Select the default render type for text-like elements.");
+    puts("  --textrendertype [qt|native]...... Select the default render type for text-like elements.");
     puts("  -I <path> ........................ Add <path> to the list of import paths");
-    puts("  -S <selector> .....................Add <selector> to the list of QQmlFileSelector selectors");
+    puts("  -S <selector> .................... Add <selector> to the list of QQmlFileSelector selectors");
     puts("  -P <path> ........................ Add <path> to the list of plugin paths");
     puts("  -translation <translationfile> ... Set the language to run in");
 
@@ -550,7 +555,13 @@ int main(int argc, char ** argv)
                 options.resizeViewToRootItem = true;
             else if (lowerArgument == QLatin1String("--verbose"))
                 options.verbose = true;
-            else if (lowerArgument == QLatin1String("-i") && i + 1 < size)
+            else if (lowerArgument == QLatin1String("--rhi")) {
+                options.rhi = true;
+                if (i + 1 < size && !arguments.at(i + 1).startsWith(QLatin1Char('-'))) {
+                    options.rhiBackendSet = true;
+                    options.rhiBackend = arguments.at(++i);
+                }
+            } else if (lowerArgument == QLatin1String("-i") && i + 1 < size)
                 imports.append(arguments.at(++i));
             else if (lowerArgument == QLatin1String("-s") && i + 1 < size)
                 customSelectors.append(arguments.at(++i));
@@ -591,6 +602,14 @@ int main(int argc, char ** argv)
     QQuickWindow::setTextRenderType(options.textRenderType);
 
     QUnifiedTimer::instance()->setSlowModeEnabled(options.slowAnimations);
+
+    if (options.rhi) {
+        qputenv("QSG_RHI", "1");
+        if (options.rhiBackendSet)
+            qputenv("QSG_RHI_BACKEND", options.rhiBackend.toLatin1());
+        else
+            qunsetenv("QSG_RHI_BACKEND");
+    }
 
     if (options.url.isEmpty())
 #if defined(QMLSCENE_BUNDLE)

@@ -38,23 +38,20 @@
 ****************************************************************************/
 
 #include "qsgtexturematerial_p.h"
-#include "qsgtexture_p.h"
+#include <private/qsgtexture_p.h>
 #if QT_CONFIG(opengl)
 # include <QtGui/qopenglshaderprogram.h>
 # include <QtGui/qopenglfunctions.h>
 #endif
+#include <QtGui/private/qrhi_p.h>
 
 QT_BEGIN_NAMESPACE
 
-#if QT_CONFIG(opengl)
 inline static bool isPowerOfTwo(int x)
 {
     // Assumption: x >= 1
     return x == (x & -x);
 }
-#endif
-
-QSGMaterialType QSGOpaqueTextureMaterialShader::type;
 
 QSGOpaqueTextureMaterialShader::QSGOpaqueTextureMaterialShader()
 {
@@ -122,6 +119,59 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
 }
 
 
+QSGOpaqueTextureMaterialRhiShader::QSGOpaqueTextureMaterialRhiShader()
+{
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/opaquetexture.vert.qsb"));
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/opaquetexture.frag.qsb"));
+}
+
+bool QSGOpaqueTextureMaterialRhiShader::updateUniformData(const RenderState &state, QSGMaterial *, QSGMaterial *)
+{
+    bool changed = false;
+    QByteArray *buf = state.uniformData();
+
+    if (state.isMatrixDirty()) {
+        const QMatrix4x4 m = state.combinedMatrix();
+        memcpy(buf->data(), m.constData(), 64);
+        changed = true;
+    }
+
+    return changed;
+}
+
+void QSGOpaqueTextureMaterialRhiShader::updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+                                                           QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+{
+    if (binding != 1)
+        return;
+
+#ifdef QT_NO_DEBUG
+    Q_UNUSED(oldMaterial);
+#endif
+    Q_ASSERT(oldMaterial == nullptr || newMaterial->type() == oldMaterial->type());
+    QSGOpaqueTextureMaterial *tx = static_cast<QSGOpaqueTextureMaterial *>(newMaterial);
+    QSGTexture *t = tx->texture();
+
+    t->setFiltering(tx->filtering());
+    t->setMipmapFiltering(tx->mipmapFiltering());
+    t->setAnisotropyLevel(tx->anisotropyLevel());
+
+    t->setHorizontalWrapMode(tx->horizontalWrapMode());
+    t->setVerticalWrapMode(tx->verticalWrapMode());
+    if (!state.rhi()->isFeatureSupported(QRhi::NPOTTextureRepeat)) {
+        QSize size = t->textureSize();
+        const bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
+        if (isNpot) {
+            t->setHorizontalWrapMode(QSGTexture::ClampToEdge);
+            t->setVerticalWrapMode(QSGTexture::ClampToEdge);
+        }
+    }
+
+    t->updateRhiTexture(state.rhi(), state.resourceUpdateBatch());
+    *texture = t;
+}
+
+
 /*!
     \class QSGOpaqueTextureMaterial
     \brief The QSGOpaqueTextureMaterial class provides a convenient way of
@@ -129,8 +179,8 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
     \inmodule QtQuick
     \ingroup qtquick-scenegraph-materials
 
-    \warning This utility class is only functional when running with the OpenGL
-    backend of the Qt Quick scenegraph.
+    \warning This utility class is only functional when running with the
+    default backend of the Qt Quick scenegraph.
 
     The opaque textured material will fill every pixel in a geometry with
     the supplied texture. The material does not respect the opacity of the
@@ -175,6 +225,7 @@ QSGOpaqueTextureMaterial::QSGOpaqueTextureMaterial()
     , m_vertical_wrap(QSGTexture::ClampToEdge)
     , m_anisotropy_level(QSGTexture::AnisotropyNone)
 {
+    setFlag(SupportsRhiShader, true);
 }
 
 
@@ -183,7 +234,8 @@ QSGOpaqueTextureMaterial::QSGOpaqueTextureMaterial()
  */
 QSGMaterialType *QSGOpaqueTextureMaterial::type() const
 {
-    return &QSGOpaqueTextureMaterialShader::type;
+    static QSGMaterialType type;
+    return &type;
 }
 
 /*!
@@ -191,9 +243,11 @@ QSGMaterialType *QSGOpaqueTextureMaterial::type() const
  */
 QSGMaterialShader *QSGOpaqueTextureMaterial::createShader() const
 {
-    return new QSGOpaqueTextureMaterialShader;
+    if (flags().testFlag(RhiShaderWanted))
+        return new QSGOpaqueTextureMaterialRhiShader;
+    else
+        return new QSGOpaqueTextureMaterialShader;
 }
-
 
 
 /*!
@@ -323,7 +377,7 @@ int QSGOpaqueTextureMaterial::compare(const QSGMaterial *o) const
 {
     Q_ASSERT(o && type() == o->type());
     const QSGOpaqueTextureMaterial *other = static_cast<const QSGOpaqueTextureMaterial *>(o);
-    if (int diff = m_texture->textureId() - other->texture()->textureId())
+    if (int diff = m_texture->comparisonKey() - other->texture()->comparisonKey())
         return diff;
     return int(m_filtering) - int(other->m_filtering);
 }
@@ -337,8 +391,8 @@ int QSGOpaqueTextureMaterial::compare(const QSGMaterial *o) const
     \inmodule QtQuick
     \ingroup qtquick-scenegraph-materials
 
-    \warning This utility class is only functional when running with the OpenGL
-    backend of the Qt Quick scenegraph.
+    \warning This utility class is only functional when running with the
+    default backend of the Qt Quick scenegraph.
 
     The textured material will fill every pixel in a geometry with
     the supplied texture.
@@ -363,20 +417,15 @@ int QSGOpaqueTextureMaterial::compare(const QSGMaterial *o) const
     a material in the scene graph.
  */
 
-QSGMaterialType QSGTextureMaterialShader::type;
-
-
-
 /*!
     \internal
  */
 
 QSGMaterialType *QSGTextureMaterial::type() const
 {
-    return &QSGTextureMaterialShader::type;
+    static QSGMaterialType type;
+    return &type;
 }
-
-
 
 /*!
     \internal
@@ -384,11 +433,14 @@ QSGMaterialType *QSGTextureMaterial::type() const
 
 QSGMaterialShader *QSGTextureMaterial::createShader() const
 {
-    return new QSGTextureMaterialShader;
+    if (flags().testFlag(RhiShaderWanted))
+        return new QSGTextureMaterialRhiShader;
+    else
+        return new QSGTextureMaterialShader;
 }
 
+
 QSGTextureMaterialShader::QSGTextureMaterialShader()
-    : QSGOpaqueTextureMaterialShader()
 {
 #if QT_CONFIG(opengl)
     setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/texture.frag"));
@@ -411,6 +463,29 @@ void QSGTextureMaterialShader::initialize()
 #if QT_CONFIG(opengl)
     m_opacity_id = program()->uniformLocation("opacity");
 #endif
+}
+
+
+QSGTextureMaterialRhiShader::QSGTextureMaterialRhiShader()
+{
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/texture.vert.qsb"));
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/texture.frag.qsb"));
+}
+
+bool QSGTextureMaterialRhiShader::updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+{
+    bool changed = false;
+    QByteArray *buf = state.uniformData();
+
+    if (state.isOpacityDirty()) {
+        const float opacity = state.opacity();
+        memcpy(buf->data() + 64, &opacity, 4);
+        changed = true;
+    }
+
+    changed |= QSGOpaqueTextureMaterialRhiShader::updateUniformData(state, newMaterial, oldMaterial);
+
+    return changed;
 }
 
 QT_END_NAMESPACE

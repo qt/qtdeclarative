@@ -75,9 +75,11 @@ public:
     inline void setViewportRect(const QSize &size) { setViewportRect(QRect(QPoint(), size)); }
     QRect viewportRect() const;
 
-    void setProjectionMatrixToRect(const QRectF &rect);
+    void setProjectionMatrixToRect(const QRectF &rect, bool flipY = false);
     void setProjectionMatrix(const QMatrix4x4 &matrix);
+    void setProjectionMatrixWithNativeNDC(const QMatrix4x4 &matrix);
     QMatrix4x4 projectionMatrix() const;
+    QMatrix4x4 projectionMatrixWithNativeNDC() const;
 
     void setClearColor(const QColor &color);
     QColor clearColor() const;

@@ -55,13 +55,13 @@ QT_BEGIN_NAMESPACE
     the Direct3D or Vulkan device) that is used by the scenegraph.
 
     QSGRendererInterface's functions have varying availability. API and
-    language queries, like graphicsApi() or shaderType() are always available,
-    meaning it is sufficient to construct a QQuickWindow or QQuickView, and the
-    graphics API or shading language in use can be queried right after via
-    QQuickWindow::rendererInterface(). This guarantees that utilities like the
-    GraphicsInfo QML type are able to report the correct values as early as
-    possible, without having conditional property values - depending on for
-    instance shaderType() - evaluate to unexpected values.
+    language queries, such as, graphicsApi() or shaderType() are always
+    available, meaning it is sufficient to construct a QQuickWindow or
+    QQuickView, and the graphics API or shading language in use can be queried
+    right after via QQuickWindow::rendererInterface(). This guarantees that
+    utilities like the GraphicsInfo QML type are able to report the correct
+    values as early as possible, without having conditional property values -
+    depending on for instance shaderType() - evaluate to unexpected values.
 
     Engine-specific accessors, like getResource(), are however available only
     after the scenegraph is initialized. Additionally, there may be
@@ -78,14 +78,62 @@ QT_BEGIN_NAMESPACE
     \value OpenGL OpenGL ES 2.0 or higher
     \value Direct3D12 Direct3D 12
     \value OpenVG OpenVG via EGL
+    \value OpenGLRhi OpenGL ES 2.0 or higher via a graphics abstraction layer
+    \value Direct3D11Rhi Direct3D 11 via a graphics abstraction layer
+    \value VulkanRhi Vulkan 1.0 via a graphics abstraction layer
+    \value MetalRhi Metal via a graphics abstraction layer
+    \value NullRhi Null (no output) via a graphics abstraction layer
   */
 
 /*!
     \enum QSGRendererInterface::Resource
-    \value DeviceResource The graphics device, when applicable.
-    \value CommandQueueResource The graphics command queue used by the scenegraph, when applicable.
-    \value CommandListResource The command list or buffer used by the scenegraph, when applicable.
-    \value PainterResource The active QPainter used by the scenegraph, when running with the software backend.
+
+    \value DeviceResource The resource is a pointer to the graphics device,
+    when applicable. For example, a \c{VkDevice *}, \c{MTLDevice *} or
+    \c{ID3D11Device *}. Note that with Vulkan the returned value is a pointer
+    to the VkDevice, not the handle itself. This is because Vulkan handles may
+    not be pointers, and may use a different size from the architecture's
+    pointer size so merely casting to/from \c{void *} is wrong.
+
+    \value CommandQueueResource The resource is a pointer to the graphics
+    command queue used by the scenegraph, when applicable. For example, a
+    \c{VkQueue *} or \c{MTLCommandQueue *}. Note that with Vulkan the returned
+    value is a pointer to the VkQueue, not the handle itself.
+
+    \value CommandListResource The resource is a pointer to the command list or
+    buffer used by the scenegraph, when applicable. For example, a
+    \c{VkCommandBuffer *} or \c{MTLCommandBuffer *}. This object has limited
+    validity, and is only valid while the scene graph is preparing the next
+    frame. Note that with Vulkan the returned value is a pointer to the
+    VkCommandBuffer, not the handle itself.
+
+    \value PainterResource The resource is a pointer to the active QPainter
+    used by the scenegraph, when running with the software backend.
+
+    \value RhiResource The resource is a pointer to the QRhi instance used by
+    the scenegraph, when applicable.
+
+    \value PhysicalDeviceResource The resource is a pointer to the pysical
+    device object used by the scenegraph, when applicable. For example, a
+    \c{VkPhysicalDevice *}. Note that with Vulkan the returned value is a
+    pointer to the VkPhysicalDevice, not the handle itself.
+
+    \value OpenGLContextResource The resource is a pointer to the
+    QOpenGLContext used by the scenegraph (on the render thread), when
+    applicable.
+
+    \value DeviceContextResource The resource is a pointer to the device
+    context used by the scenegraph, when applicable. For example, a
+    \c{ID3D11DeviceContext *}.
+
+    \value CommandEncoderResource The resource is a pointer to the currently
+    active render command encoder object used by the scenegraph, when
+    applicable. For example, a \c{MTLRenderCommandEncoder *}. This object has
+    limited validity, and is only valid while the scene graph is recording a
+    render pass for the next frame.
+
+    \value VulkanInstanceResource The resource is a pointer to the
+    QVulkanInstance used by the scenegraph, when applicable.
  */
 
 /*!
@@ -93,6 +141,8 @@ QT_BEGIN_NAMESPACE
     \value UnknownShadingLanguage Not yet known due to no window and scenegraph associated
     \value GLSL GLSL or GLSL ES
     \value HLSL HLSL
+    \value RhiShader Consumes QShader instances containing shader
+    variants for multiple target languages and bytecode formats
  */
 
 /*!
@@ -161,6 +211,30 @@ void *QSGRendererInterface::getResource(QQuickWindow *window, const char *resour
     Q_UNUSED(window);
     Q_UNUSED(resource);
     return nullptr;
+}
+
+/*!
+    \return true if \a api is based on a graphics abstraction layer (QRhi)
+    instead of directly calling the native graphics API.
+
+    \note This function can be called on any thread.
+ */
+bool QSGRendererInterface::isApiRhiBased(GraphicsApi api)
+{
+    switch (api) {
+    case OpenGLRhi:
+        Q_FALLTHROUGH();
+    case Direct3D11Rhi:
+        Q_FALLTHROUGH();
+    case VulkanRhi:
+        Q_FALLTHROUGH();
+    case MetalRhi:
+        Q_FALLTHROUGH();
+    case NullRhi:
+        return true;
+    default:
+        return false;
+    }
 }
 
 /*!

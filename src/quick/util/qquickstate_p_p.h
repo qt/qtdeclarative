@@ -232,9 +232,8 @@ public:
     }
     static void operations_clear(QQmlListProperty<QQuickStateOperation> *prop) {
         QList<OperationGuard> *list = static_cast<QList<OperationGuard> *>(prop->data);
-        QMutableListIterator<OperationGuard> listIterator(*list);
-        while(listIterator.hasNext())
-            listIterator.next()->setState(nullptr);
+        for (auto &e : *list)
+            e->setState(nullptr);
         list->clear();
     }
     static int operations_count(QQmlListProperty<QQuickStateOperation> *prop) {

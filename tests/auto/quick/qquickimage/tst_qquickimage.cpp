@@ -45,6 +45,7 @@
 #include <QQuickWindow>
 #include <QQuickView>
 #include <QQuickImageProvider>
+#include <QQmlAbstractUrlInterceptor>
 
 #include "../../shared/util.h"
 #include "../../shared/testhttpserver.h"
@@ -95,6 +96,7 @@ private slots:
     void highDpiFillModesAndSizes_data();
     void highDpiFillModesAndSizes();
     void hugeImages();
+    void urlInterceptor();
 
 private:
     QQmlEngine engine;
@@ -1098,6 +1100,36 @@ void tst_qquickimage::hugeImages()
     QCOMPARE(contents.pixel(99, 99), qRgba(255, 0, 0, 255));
     QCOMPARE(contents.pixel(100, 0), qRgba(0, 0, 255, 255));
     QCOMPARE(contents.pixel(199, 99), qRgba(0, 0, 255, 255));
+}
+
+
+class MyInterceptor : public QQmlAbstractUrlInterceptor
+{
+public:
+    MyInterceptor(QUrl url) : QQmlAbstractUrlInterceptor(), m_url(url) {}
+    QUrl intercept(const QUrl &url, QQmlAbstractUrlInterceptor::DataType type)
+    {
+        if (url.scheme() == "interceptthis")
+            return m_url;
+        return url;
+    }
+
+    QUrl m_url;
+};
+
+void tst_qquickimage::urlInterceptor()
+{
+    QQmlEngine engine;
+    MyInterceptor interceptor {testFileUrl("colors.png")};
+    engine.setUrlInterceptor(&interceptor);
+
+    QQmlComponent c(&engine);
+
+    c.setData("import QtQuick 2.12; Image { objectName: \"item\"; source: width == 0 ? \"interceptthis:doesNotExist\" : \"interceptthis:doesNotExist\"}", QUrl{});
+    QScopedPointer<QQuickImage> object { qobject_cast<QQuickImage*>(c.create())};
+    QVERIFY(object);
+    QTRY_COMPARE(object->status(), QQuickImage::Ready);
+    QTRY_COMPARE(object->progress(), 1.0);
 }
 
 QTEST_MAIN(tst_qquickimage)

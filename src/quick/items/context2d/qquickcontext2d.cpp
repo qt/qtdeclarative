@@ -4290,7 +4290,8 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
         m_renderTarget = QQuickCanvasItem::Image;
     }
 
-    // Disable Framebuffer Object based rendering when not running with OpenGL
+    // Disable Framebuffer Object based rendering when not running with OpenGL.
+    // Same goes for the RHI based code path (regardless of the backend in use).
     if (m_renderTarget == QQuickCanvasItem::FramebufferObject) {
         QSGRendererInterface *rif = canvasItem->window()->rendererInterface();
         if (rif && rif->graphicsApi() != QSGRendererInterface::OpenGL)

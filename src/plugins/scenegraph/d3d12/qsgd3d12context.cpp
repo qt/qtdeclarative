@@ -61,8 +61,9 @@ QSGInternalRectangleNode *QSGD3D12Context::createInternalRectangleNode()
     return new QSGD3D12InternalRectangleNode;
 }
 
-QSGInternalImageNode *QSGD3D12Context::createInternalImageNode()
+QSGInternalImageNode *QSGD3D12Context::createInternalImageNode(QSGRenderContext *renderContext)
 {
+    Q_UNUSED(renderContext);
     return new QSGD3D12InternalImageNode;
 }
 

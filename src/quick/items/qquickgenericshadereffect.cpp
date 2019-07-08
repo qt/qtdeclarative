@@ -44,11 +44,11 @@
 
 QT_BEGIN_NAMESPACE
 
-// The generic shader effect is used when the scenegraph backend indicates
-// SupportsShaderEffectNode. This, unlike the monolithic and interconnected (e.g.
-// with particles) OpenGL variant, passes most of the work to a scenegraph node
-// created via the adaptation layer, thus allowing different implementation in
-// the backends.
+// The generic shader effect is used whenever on the RHI code path, or when the
+// scenegraph backend indicates SupportsShaderEffectNode. This, unlike the
+// monolithic and interconnected (e.g. with particles) OpenGL variant, passes
+// most of the work to a scenegraph node created via the adaptation layer, thus
+// allowing different implementation in the backends.
 
 QQuickGenericShaderEffect::QQuickGenericShaderEffect(QQuickShaderEffect *item, QObject *parent)
     : QObject(parent)
@@ -254,6 +254,10 @@ QSGNode *QQuickGenericShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQui
     if (!node) {
         QSGRenderContext *rc = QQuickWindowPrivate::get(m_item->window())->context;
         node = rc->sceneGraphContext()->createShaderEffectNode(rc, mgr);
+        if (!node) {
+            qWarning("No shader effect node");
+            return nullptr;
+        }
         m_dirty = QSGShaderEffectNode::DirtyShaderAll;
     }
 
@@ -445,7 +449,7 @@ bool QQuickGenericShaderEffect::updateShader(Shader shaderType, const QByteArray
             // provided and monitored like with an application-provided shader.
             QSGGuiThreadShaderEffectManager::ShaderInfo::Variable v;
             v.name = QByteArrayLiteral("source");
-            v.bindPoint = 0;
+            v.bindPoint = 0; // fake
             v.type = texturesSeparate ? QSGGuiThreadShaderEffectManager::ShaderInfo::Texture
                                       : QSGGuiThreadShaderEffectManager::ShaderInfo::Sampler;
             m_shaders[shaderType].shaderInfo.variables.append(v);
@@ -559,7 +563,7 @@ QT_WARNING_POP
         } else {
             // Do not warn for dynamic properties.
             if (!m_item->property(v.name.constData()).isValid())
-                qWarning("ShaderEffect: '%s' does not have a matching property!", v.name.constData());
+                qWarning("ShaderEffect: '%s' does not have a matching property", v.name.constData());
         }
 
         vd.value = m_item->property(v.name.constData());

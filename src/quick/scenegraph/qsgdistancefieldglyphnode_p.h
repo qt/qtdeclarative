@@ -60,7 +60,8 @@ QT_BEGIN_NAMESPACE
 
 class QSGRenderContext;
 class QSGDistanceFieldTextMaterial;
-class QSGDistanceFieldGlyphNode: public QSGGlyphNode, public QSGDistanceFieldGlyphConsumer
+
+class QSGDistanceFieldGlyphNode : public QSGGlyphNode, public QSGDistanceFieldGlyphConsumer
 {
 public:
     QSGDistanceFieldGlyphNode(QSGRenderContext *context);

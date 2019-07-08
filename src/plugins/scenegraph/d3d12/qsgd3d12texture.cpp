@@ -69,6 +69,12 @@ void QSGD3D12Texture::create(const QImage &image, uint flags)
     m_createPending = true;
 }
 
+QSGD3D12Texture::QSGD3D12Texture(QSGD3D12Engine *engine)
+    : QSGTexture(*(new QSGD3D12TexturePrivate)),
+      m_engine(engine)
+{
+}
+
 QSGD3D12Texture::~QSGD3D12Texture()
 {
     if (m_id)
@@ -78,6 +84,12 @@ QSGD3D12Texture::~QSGD3D12Texture()
 int QSGD3D12Texture::textureId() const
 {
     return m_id;
+}
+
+int QSGD3D12TexturePrivate::comparisonKey() const
+{
+    Q_Q(const QSGD3D12Texture);
+    return q->m_id;
 }
 
 QSize QSGD3D12Texture::textureSize() const
