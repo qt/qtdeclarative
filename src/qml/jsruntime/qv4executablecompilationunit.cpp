@@ -783,7 +783,7 @@ QString ExecutableCompilationUnit::bindingValueAsString(const CompiledData::Bind
     case Binding::Type_Boolean:
         return binding->value.b ? QStringLiteral("true") : QStringLiteral("false");
     case Binding::Type_Number:
-        return QString::number(bindingValueAsNumber(binding));
+        return QString::number(bindingValueAsNumber(binding), 'g', QLocale::FloatingPointShortest);
     case Binding::Type_Invalid:
         return QString();
 #if !QT_CONFIG(translation)
