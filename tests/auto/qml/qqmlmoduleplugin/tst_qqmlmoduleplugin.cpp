@@ -34,6 +34,10 @@
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qjsonarray.h>
 #include <QDebug>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QCborMap>
+#include <QCborValue>
+#endif
 
 #if defined(Q_OS_MAC)
 // For _PC_CASE_SENSITIVE
@@ -130,8 +134,7 @@ QByteArray SecondStaticPlugin::metaData;
 template <typename PluginType>
 void registerStaticPlugin(const char *uri)
 {
-    QStaticPlugin plugin;
-    plugin.instance = []() {
+    auto instanceFunctor = []() {
         static PluginType plugin;
         return static_cast<QObject*>(&plugin);
     };
@@ -142,12 +145,28 @@ void registerStaticPlugin(const char *uri)
     uris.append(uri);
     md.insert(QStringLiteral("uri"), uris);
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    PluginType::metaData.append(QLatin1String("QTMETADATA !"));
+    PluginType::metaData.append(char(0)); // current version
+    PluginType::metaData.append(char(QT_VERSION_MAJOR));
+    PluginType::metaData.append(char(QT_VERSION_MINOR));
+    PluginType::metaData.append(char(qPluginArchRequirements()));
+    PluginType::metaData.append(QCborValue(QCborMap::fromJsonObject(md)).toCbor());
+
+    auto rawMetaDataFunctor = []() -> QPluginMetaData {
+        return {reinterpret_cast<const uchar *>(PluginType::metaData.constData()), size_t(PluginType::metaData.length())};
+    };
+    QStaticPlugin plugin(instanceFunctor, rawMetaDataFunctor);
+#else
     PluginType::metaData.append(QLatin1String("QTMETADATA  "));
     PluginType::metaData.append(QJsonDocument(md).toBinaryData());
 
+    QStaticPlugin plugin;
+    plugin.instance = instanceFunctor;
     plugin.rawMetaData = []() {
         return PluginType::metaData.constData();
     };
+#endif
     qRegisterStaticPluginFunction(plugin);
 };
 
