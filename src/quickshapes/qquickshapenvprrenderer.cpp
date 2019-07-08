@@ -712,8 +712,8 @@ void QQuickShapeNvprRenderNode::renderFill(ShapePathRenderData *d)
         } else {
             Q_UNREACHABLE();
         }
-        const QQuickShapeGradientCache::Key cacheKey(d->fillGradient.stops, spread);
-        QSGTexture *tx = QQuickShapeGradientCache::currentCache()->get(cacheKey);
+        const QQuickShapeGradientCacheKey cacheKey(d->fillGradient.stops, spread);
+        QSGTexture *tx = QQuickShapeGradientOpenGLCache::currentCache()->get(cacheKey);
         tx->bind();
     } else {
         mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatSolid);

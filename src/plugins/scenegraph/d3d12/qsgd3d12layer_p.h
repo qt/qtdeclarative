@@ -52,13 +52,16 @@
 //
 
 #include <private/qsgadaptationlayer_p.h>
+#include <private/qsgtexture_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QSGD3D12RenderContext;
+class QSGD3D12LayerPrivate;
 
 class QSGD3D12Layer : public QSGLayer
 {
+    Q_DECLARE_PRIVATE(QSGD3D12Layer)
     Q_OBJECT
 
 public:
@@ -112,6 +115,13 @@ private:
     bool m_recursive = false;
     bool m_dirtyTexture = true;
     bool m_updateContentPending = false;
+};
+
+class QSGD3D12LayerPrivate : public QSGTexturePrivate
+{
+    Q_DECLARE_PUBLIC(QSGD3D12Layer)
+public:
+    int comparisonKey() const override;
 };
 
 QT_END_NAMESPACE

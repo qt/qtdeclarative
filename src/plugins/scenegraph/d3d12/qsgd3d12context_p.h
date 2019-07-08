@@ -62,7 +62,7 @@ public:
 
     QSGRenderContext *createRenderContext() override;
     QSGInternalRectangleNode *createInternalRectangleNode() override;
-    QSGInternalImageNode *createInternalImageNode() override;
+    QSGInternalImageNode *createInternalImageNode(QSGRenderContext *renderContext) override;
     QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
     QSGGlyphNode *createGlyphNode(QSGRenderContext *renderContext, bool preferNativeGlyphNode) override;
     QSGLayer *createLayer(QSGRenderContext *renderContext) override;

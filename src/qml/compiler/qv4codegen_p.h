@@ -534,7 +534,7 @@ protected:
 
     inline Reference expression(AST::ExpressionNode *ast, const QString &name = QString())
     {
-        if (!ast || hasError)
+        if (!ast || hasError())
             return Reference();
 
         pushExpr(name);
@@ -544,7 +544,7 @@ protected:
 
     inline void accept(AST::Node *node)
     {
-        if (!hasError && node)
+        if (!hasError() && node)
             node->accept(this);
     }
 
@@ -671,7 +671,15 @@ protected:
     }
 
 public:
-    QList<DiagnosticMessage> errors() const;
+    enum ErrorType {
+        NoError,
+        SyntaxError,
+        ReferenceError
+    };
+
+    ErrorType errorType() const { return _errorType; }
+    bool hasError() const { return _errorType != NoError; }
+    DiagnosticMessage error() const;
     QUrl url() const;
 
     Reference binopHelper(QSOperator::Op oper, Reference &left, Reference &right);
@@ -770,8 +778,8 @@ protected:
     ControlFlow *controlFlow = nullptr;
 
     bool _fileNameIsUrl;
-    bool hasError;
-    QList<QQmlJS::DiagnosticMessage> _errors;
+    ErrorType _errorType = NoError;
+    QQmlJS::DiagnosticMessage _error;
 
     class TailCallBlocker
     {
@@ -800,6 +808,7 @@ protected:
 private:
     VolatileMemoryLocations scanVolatileMemoryLocations(AST::Node *ast);
     void handleConstruct(const Reference &base, AST::ArgumentList *args);
+    void throwError(ErrorType errorType, const AST::SourceLocation &loc, const QString &detail);
 };
 
 }

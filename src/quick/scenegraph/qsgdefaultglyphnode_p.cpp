@@ -71,6 +71,28 @@ static inline QVector4D qsg_premultiply(const QVector4D &c, float globalOpacity)
     return QVector4D(c.x() * o, c.y() * o, c.z() * o, o);
 }
 
+static inline qreal qt_sRGB_to_linear_RGB(qreal f)
+{
+    return f > 0.04045 ? qPow((f + 0.055) / 1.055, 2.4) : f / 12.92;
+}
+
+static inline QVector4D qt_sRGB_to_linear_RGB(const QVector4D &color)
+{
+    return QVector4D(qt_sRGB_to_linear_RGB(color.x()),
+                     qt_sRGB_to_linear_RGB(color.y()),
+                     qt_sRGB_to_linear_RGB(color.z()),
+                     color.w());
+}
+
+static inline qreal fontSmoothingGamma()
+{
+    static qreal fontSmoothingGamma = QGuiApplicationPrivate::platformIntegration()->styleHint(QPlatformIntegration::FontSmoothingGamma).toReal();
+    return fontSmoothingGamma;
+}
+
+
+// ***** legacy (GL) material shader implementations
+
 static inline qreal qsg_device_pixel_ratio(QOpenGLContext *ctx)
 {
     qreal devicePixelRatio = 1;
@@ -122,12 +144,6 @@ QSGTextMaskShader::QSGTextMaskShader(QFontEngine::GlyphFormat glyphFormat)
     setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/textmask.frag"));
 }
 
-static inline qreal fontSmoothingGamma()
-{
-    static qreal fontSmoothingGamma = QGuiApplicationPrivate::platformIntegration()->styleHint(QPlatformIntegration::FontSmoothingGamma).toReal();
-    return fontSmoothingGamma;
-}
-
 void QSGTextMaskShader::initialize()
 {
     m_matrix_id = program()->uniformLocation("matrix");
@@ -149,8 +165,8 @@ void QSGTextMaskShader::updateState(const RenderState &state, QSGMaterial *newEf
     if (updated
             || oldMaterial == nullptr
             || oldMaterial->texture()->textureId() != material->texture()->textureId()) {
-        program()->setUniformValue(m_textureScale_id, QVector2D(1.0 / material->cacheTextureWidth(),
-                                                               1.0 / material->cacheTextureHeight()));
+        program()->setUniformValue(m_textureScale_id, QVector2D(1.0 / material->openglGlyphCache()->width(),
+                                                               1.0 / material->openglGlyphCache()->height()));
         QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
         funcs->glBindTexture(GL_TEXTURE_2D, material->texture()->textureId());
 
@@ -263,19 +279,6 @@ void QSG24BitTextMaskShader::deactivate()
         funcs->glDisable(GL_FRAMEBUFFER_SRGB);
 }
 
-static inline qreal qt_sRGB_to_linear_RGB(qreal f)
-{
-    return f > 0.04045 ? qPow((f + 0.055) / 1.055, 2.4) : f / 12.92;
-}
-
-static inline QVector4D qt_sRGB_to_linear_RGB(const QVector4D &color)
-{
-    return QVector4D(qt_sRGB_to_linear_RGB(color.x()),
-                     qt_sRGB_to_linear_RGB(color.y()),
-                     qt_sRGB_to_linear_RGB(color.z()),
-                     color.w());
-}
-
 void QSG24BitTextMaskShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
     QSGTextMaskShader::updateState(state, newEffect, oldEffect);
@@ -371,12 +374,12 @@ void QSGStyledTextShader::updateState(const RenderState &state,
     if (updated
             || oldMaterial == nullptr
             || oldMaterial->texture()->textureId() != material->texture()->textureId()) {
-        program()->setUniformValue(m_textureScale_id, QVector2D(1.0 / material->cacheTextureWidth(),
-                                                                1.0 / material->cacheTextureHeight()));
+        program()->setUniformValue(m_textureScale_id, QVector2D(1.0 / material->openglGlyphCache()->width(),
+                                                                1.0 / material->openglGlyphCache()->height()));
         QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
         funcs->glBindTexture(GL_TEXTURE_2D, material->texture()->textureId());
 
-        // Set the mag/min filters to be linear. We only need to do this when the texture
+        // Set the mag/min filters to be nearest. We only need to do this when the texture
         // has been recreated.
         if (updated) {
             funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -399,8 +402,294 @@ public:
     }
 };
 
-QSGTextMaskMaterial::QSGTextMaskMaterial(const QRawFont &font, QFontEngine::GlyphFormat glyphFormat)
-    : m_texture(nullptr)
+
+// ***** RHI shader implementations
+
+class QSGTextMaskRhiShader : public QSGMaterialRhiShader
+{
+public:
+    QSGTextMaskRhiShader(QFontEngine::GlyphFormat glyphFormat);
+
+    bool updateUniformData(const RenderState &state,
+                           QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    void updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+                            QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+
+protected:
+    QFontEngine::GlyphFormat m_glyphFormat;
+};
+
+QSGTextMaskRhiShader::QSGTextMaskRhiShader(QFontEngine::GlyphFormat glyphFormat)
+    : m_glyphFormat(glyphFormat)
+{
+    setShaderFileName(VertexStage,
+                      QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/textmask.vert.qsb"));
+    setShaderFileName(FragmentStage,
+                      QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/textmask.frag.qsb"));
+}
+
+bool QSGTextMaskRhiShader::updateUniformData(const RenderState &state,
+                                             QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+{
+    Q_ASSERT(oldMaterial == nullptr || newMaterial->type() == oldMaterial->type());
+    QSGTextMaskMaterial *mat = static_cast<QSGTextMaskMaterial *>(newMaterial);
+    QSGTextMaskMaterial *oldMat = static_cast<QSGTextMaskMaterial *>(oldMaterial);
+
+    // updateUniformData() is called before updateSampledImage() by the
+    // renderer. Hence updating the glyph cache stuff here.
+    const bool updated = mat->ensureUpToDate();
+    Q_ASSERT(mat->texture());
+    Q_ASSERT(oldMat == nullptr || oldMat->texture());
+
+    bool changed = false;
+    QByteArray *buf = state.uniformData();
+    Q_ASSERT(buf->size() >= 92);
+
+    if (state.isMatrixDirty()) {
+        const QMatrix4x4 m = state.combinedMatrix();
+        memcpy(buf->data(), m.constData(), 64);
+        changed = true;
+    }
+
+    if (updated || !oldMat || oldMat->texture()->rhiTexture() != mat->texture()->rhiTexture()) {
+        const QVector2D textureScale = QVector2D(1.0f / mat->rhiGlyphCache()->width(),
+                                                 1.0f / mat->rhiGlyphCache()->height());
+        memcpy(buf->data() + 64 + 16, &textureScale, 8);
+        changed = true;
+    }
+
+    if (!oldMat) {
+        float dpr = state.devicePixelRatio();
+        memcpy(buf->data() + 64 + 16 + 8, &dpr, 4);
+    }
+
+    // move texture uploads/copies onto the renderer's soon-to-be-committed list
+    mat->rhiGlyphCache()->commitResourceUpdates(state.resourceUpdateBatch());
+
+    return changed;
+}
+
+void QSGTextMaskRhiShader::updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+                                              QSGMaterial *newMaterial, QSGMaterial *)
+{
+    Q_UNUSED(state);
+    if (binding != 1)
+        return;
+
+    QSGTextMaskMaterial *mat = static_cast<QSGTextMaskMaterial *>(newMaterial);
+    QSGTexture *t = mat->texture();
+    t->setFiltering(QSGTexture::Nearest);
+    *texture = t;
+}
+
+class QSG8BitTextMaskRhiShader : public QSGTextMaskRhiShader
+{
+public:
+    QSG8BitTextMaskRhiShader(QFontEngine::GlyphFormat glyphFormat, bool alphaTexture)
+        : QSGTextMaskRhiShader(glyphFormat)
+    {
+        if (alphaTexture)
+            setShaderFileName(FragmentStage,
+                              QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/8bittextmask_a.frag.qsb"));
+        else
+            setShaderFileName(FragmentStage,
+                              QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/8bittextmask.frag.qsb"));
+    }
+
+    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+};
+
+bool QSG8BitTextMaskRhiShader::updateUniformData(const RenderState &state,
+                                                 QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+{
+    bool changed = QSGTextMaskRhiShader::updateUniformData(state, newMaterial, oldMaterial);
+
+    QSGTextMaskMaterial *mat = static_cast<QSGTextMaskMaterial *>(newMaterial);
+    QSGTextMaskMaterial *oldMat = static_cast<QSGTextMaskMaterial *>(oldMaterial);
+
+    QByteArray *buf = state.uniformData();
+    Q_ASSERT(buf->size() >= 80);
+
+    if (oldMat == nullptr || mat->color() != oldMat->color() || state.isOpacityDirty()) {
+        const QVector4D color = qsg_premultiply(mat->color(), state.opacity());
+        memcpy(buf->data() + 64, &color, 16);
+        changed = true;
+    }
+
+    return changed;
+}
+
+class QSG24BitTextMaskRhiShader : public QSGTextMaskRhiShader
+{
+public:
+    QSG24BitTextMaskRhiShader(QFontEngine::GlyphFormat glyphFormat)
+        : QSGTextMaskRhiShader(glyphFormat)
+    {
+        setFlag(UpdatesGraphicsPipelineState, true);
+        setShaderFileName(FragmentStage,
+                          QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/24bittextmask.frag.qsb"));
+    }
+
+    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    bool updateGraphicsPipelineState(const RenderState &state, GraphicsPipelineState *ps,
+                                     QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+};
+
+// ### gamma correction (sRGB) Unsurprisingly, the GL approach is not portable
+// to anything else - it just does not work that way, there is no opt-in/out
+// switch and magic winsys-provided maybe-sRGB buffers. When requesting an sRGB
+// QRhiSwapChain (which we do not do), it is full sRGB, with the sRGB
+// framebuffer update and blending always on... Could we do gamma correction in
+// the shader for text? (but that's bad for blending?)
+
+bool QSG24BitTextMaskRhiShader::updateUniformData(const RenderState &state,
+                                                  QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+{
+    bool changed = QSGTextMaskRhiShader::updateUniformData(state, newMaterial, oldMaterial);
+
+    QSGTextMaskMaterial *mat = static_cast<QSGTextMaskMaterial *>(newMaterial);
+    QSGTextMaskMaterial *oldMat = static_cast<QSGTextMaskMaterial *>(oldMaterial);
+
+    QByteArray *buf = state.uniformData();
+    Q_ASSERT(buf->size() >= 92);
+
+    if (oldMat == nullptr || mat->color() != oldMat->color() || state.isOpacityDirty()) {
+        // shader takes vec4 but uses alpha only; coloring happens via the blend constant
+        const QVector4D color = qsg_premultiply(mat->color(), state.opacity());
+        memcpy(buf->data() + 64, &color, 16);
+        changed = true;
+    }
+
+    return changed;
+}
+
+bool QSG24BitTextMaskRhiShader::updateGraphicsPipelineState(const RenderState &state, GraphicsPipelineState *ps,
+                                                            QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+{
+    Q_UNUSED(state);
+    Q_UNUSED(oldMaterial);
+    QSGTextMaskMaterial *mat = static_cast<QSGTextMaskMaterial *>(newMaterial);
+
+    ps->blendEnable = true;
+    ps->srcColor = GraphicsPipelineState::ConstantColor;
+    ps->dstColor = GraphicsPipelineState::OneMinusSrcColor;
+
+    QVector4D color = qsg_premultiply(mat->color(), state.opacity());
+    //        if (useSRGB())
+    //            color = qt_sRGB_to_linear_RGB(color);
+
+    // this is dynamic state but it's - magic! - taken care of by the renderer
+    ps->blendConstant = QColor::fromRgbF(color.x(), color.y(), color.z(), color.w());
+
+    return true;
+}
+
+class QSG32BitColorTextRhiShader : public QSGTextMaskRhiShader
+{
+public:
+    QSG32BitColorTextRhiShader(QFontEngine::GlyphFormat glyphFormat)
+        : QSGTextMaskRhiShader(glyphFormat)
+    {
+        setShaderFileName(FragmentStage,
+                          QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/32bitcolortext.frag.qsb"));
+    }
+
+    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+};
+
+bool QSG32BitColorTextRhiShader::updateUniformData(const RenderState &state,
+                                                   QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+{
+    bool changed = QSGTextMaskRhiShader::updateUniformData(state, newMaterial, oldMaterial);
+
+    QSGTextMaskMaterial *mat = static_cast<QSGTextMaskMaterial *>(newMaterial);
+    QSGTextMaskMaterial *oldMat = static_cast<QSGTextMaskMaterial *>(oldMaterial);
+
+    QByteArray *buf = state.uniformData();
+    Q_ASSERT(buf->size() >= 92);
+
+    if (oldMat == nullptr || mat->color() != oldMat->color() || state.isOpacityDirty()) {
+        // shader takes vec4 but uses alpha only
+        const QVector4D color(0, 0, 0, mat->color().w() * state.opacity());
+        memcpy(buf->data() + 64, &color, 16);
+        changed = true;
+    }
+
+    return changed;
+}
+
+class QSGStyledTextRhiShader : public QSG8BitTextMaskRhiShader
+{
+public:
+    QSGStyledTextRhiShader(QFontEngine::GlyphFormat glyphFormat, bool alphaTexture)
+        : QSG8BitTextMaskRhiShader(glyphFormat, alphaTexture)
+    {
+        setShaderFileName(VertexStage,
+                          QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/styledtext.vert.qsb"));
+        if (alphaTexture)
+            setShaderFileName(FragmentStage,
+                              QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/styledtext_a.frag.qsb"));
+        else
+            setShaderFileName(FragmentStage,
+                              QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/styledtext.frag.qsb"));
+    }
+
+    bool updateUniformData(const RenderState &state,
+                           QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+};
+
+bool QSGStyledTextRhiShader::updateUniformData(const RenderState &state,
+                                               QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+{
+    bool changed = QSG8BitTextMaskRhiShader::updateUniformData(state, newMaterial, oldMaterial);
+
+    QSGStyledTextMaterial *mat = static_cast<QSGStyledTextMaterial *>(newMaterial);
+    QSGStyledTextMaterial *oldMat = static_cast<QSGStyledTextMaterial *>(oldMaterial);
+
+    QByteArray *buf = state.uniformData();
+    Q_ASSERT(buf->size() >= 120);
+
+    // matrix..dpr + 1 float padding (vec4 must be aligned to 16)
+    const int startOffset = 64 + 16 + 8 + 4 + 4;
+
+    if (oldMat == nullptr || mat->styleColor() != oldMat->styleColor() || state.isOpacityDirty()) {
+        const QVector4D styleColor = qsg_premultiply(mat->styleColor(), state.opacity());
+        memcpy(buf->data() + startOffset, &styleColor, 16);
+        changed = true;
+    }
+
+    if (oldMat == nullptr || oldMat->styleShift() != mat->styleShift()) {
+        const QVector2D v = mat->styleShift();
+        memcpy(buf->data() + startOffset + 16, &v, 8);
+        changed = true;
+    }
+
+    return changed;
+}
+
+class QSGOutlinedTextRhiShader : public QSGStyledTextRhiShader
+{
+public:
+    QSGOutlinedTextRhiShader(QFontEngine::GlyphFormat glyphFormat, bool alphaTexture)
+        : QSGStyledTextRhiShader(glyphFormat, alphaTexture)
+    {
+        setShaderFileName(VertexStage,
+                          QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/outlinedtext.vert.qsb"));
+        if (alphaTexture)
+            setShaderFileName(FragmentStage,
+                              QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/outlinedtext_a.frag.qsb"));
+        else
+            setShaderFileName(FragmentStage,
+                              QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/outlinedtext.frag.qsb"));
+    }
+};
+
+
+// ***** common material stuff
+
+QSGTextMaskMaterial::QSGTextMaskMaterial(QSGRenderContext *rc, const QRawFont &font, QFontEngine::GlyphFormat glyphFormat)
+    : m_rc(qobject_cast<QSGDefaultRenderContext *>(rc))
+    , m_texture(nullptr)
     , m_glyphCache(nullptr)
     , m_font(font)
 {
@@ -416,10 +705,11 @@ void QSGTextMaskMaterial::init(QFontEngine::GlyphFormat glyphFormat)
 {
     Q_ASSERT(m_font.isValid());
 
+    setFlag(SupportsRhiShader, true);
     setFlag(Blending, true);
 
-    QOpenGLContext *ctx = const_cast<QOpenGLContext *>(QOpenGLContext::currentContext());
-    Q_ASSERT(ctx != nullptr);
+    Q_ASSERT(m_rc);
+    m_rhi = m_rc->rhi();
 
     // The following piece of code will read/write to the font engine's caches,
     // potentially from different threads. However, this is safe because this
@@ -435,20 +725,36 @@ void QSGTextMaskMaterial::init(QFontEngine::GlyphFormat glyphFormat)
                         : QFontEngine::Format_A32;
         }
 
-        qreal devicePixelRatio = qsg_device_pixel_ratio(ctx);
-
+        QOpenGLContext *ctx = nullptr;
+        qreal devicePixelRatio;
+        void *cacheKey;
+        if (m_rhi) {
+            cacheKey = m_rhi;
+            // ### no idea what the QWindow is (esp. since we are not even
+            // rendering at this point), and anyway is the original logic correct
+            // even...
+            devicePixelRatio = qGuiApp->devicePixelRatio();
+        } else {
+            ctx = const_cast<QOpenGLContext *>(QOpenGLContext::currentContext());
+            Q_ASSERT(ctx != nullptr);
+            cacheKey = ctx;
+            devicePixelRatio = qsg_device_pixel_ratio(ctx);
+        }
 
         QTransform glyphCacheTransform = QTransform::fromScale(devicePixelRatio, devicePixelRatio);
         if (!fontEngine->supportsTransformation(glyphCacheTransform))
             glyphCacheTransform = QTransform();
 
-        m_glyphCache = fontEngine->glyphCache(ctx, glyphFormat, glyphCacheTransform);
+        m_glyphCache = fontEngine->glyphCache(cacheKey, glyphFormat, glyphCacheTransform);
+
         if (!m_glyphCache || int(m_glyphCache->glyphFormat()) != glyphFormat) {
-            m_glyphCache = new QOpenGLTextureGlyphCache(glyphFormat, glyphCacheTransform);
-            fontEngine->setGlyphCache(ctx, m_glyphCache.data());
-            auto sg = QSGDefaultRenderContext::from(ctx);
-            Q_ASSERT(sg);
-            sg->registerFontengineForCleanup(fontEngine);
+            if (m_rhi)
+                m_glyphCache = new QSGRhiTextureGlyphCache(m_rhi, glyphFormat, glyphCacheTransform);
+            else
+                m_glyphCache = new QOpenGLTextureGlyphCache(glyphFormat, glyphCacheTransform);
+
+            fontEngine->setGlyphCache(cacheKey, m_glyphCache.data());
+            m_rc->registerFontengineForCleanup(fontEngine);
         }
     }
 }
@@ -558,21 +864,45 @@ QSGMaterialType *QSGTextMaskMaterial::type() const
     }
 }
 
-QOpenGLTextureGlyphCache *QSGTextMaskMaterial::glyphCache() const
+QTextureGlyphCache *QSGTextMaskMaterial::glyphCache() const
 {
-    return static_cast<QOpenGLTextureGlyphCache*>(m_glyphCache.data());
+    return static_cast<QTextureGlyphCache *>(m_glyphCache.data());
+}
+
+QOpenGLTextureGlyphCache *QSGTextMaskMaterial::openglGlyphCache() const
+{
+    return static_cast<QOpenGLTextureGlyphCache *>(glyphCache());
+}
+
+QSGRhiTextureGlyphCache *QSGTextMaskMaterial::rhiGlyphCache() const
+{
+    return static_cast<QSGRhiTextureGlyphCache *>(glyphCache());
 }
 
 QSGMaterialShader *QSGTextMaskMaterial::createShader() const
 {
-    switch (QFontEngine::GlyphFormat glyphFormat = glyphCache()->glyphFormat()) {
-    case QFontEngine::Format_ARGB:
-        return new QSG32BitColorTextShader(glyphFormat);
-    case QFontEngine::Format_A32:
-        return new QSG24BitTextMaskShader(glyphFormat);
-    case QFontEngine::Format_A8:
-    default:
-        return new QSG8BitTextMaskShader(glyphFormat);
+    if (flags().testFlag(RhiShaderWanted)) {
+        QSGRhiTextureGlyphCache *gc = rhiGlyphCache();
+        const QFontEngine::GlyphFormat glyphFormat = gc->glyphFormat();
+        switch (glyphFormat) {
+        case QFontEngine::Format_ARGB:
+            return new QSG32BitColorTextRhiShader(glyphFormat);
+        case QFontEngine::Format_A32:
+            return new QSG24BitTextMaskRhiShader(glyphFormat);
+        case QFontEngine::Format_A8:
+        default:
+            return new QSG8BitTextMaskRhiShader(glyphFormat, gc->eightBitFormatIsAlphaSwizzled());
+        }
+    } else {
+        switch (QFontEngine::GlyphFormat glyphFormat = glyphCache()->glyphFormat()) {
+        case QFontEngine::Format_ARGB:
+            return new QSG32BitColorTextShader(glyphFormat);
+        case QFontEngine::Format_A32:
+            return new QSG24BitTextMaskShader(glyphFormat);
+        case QFontEngine::Format_A8:
+        default:
+            return new QSG8BitTextMaskShader(glyphFormat);
+        }
     }
 }
 
@@ -600,36 +930,40 @@ int QSGTextMaskMaterial::compare(const QSGMaterial *o) const
 
 bool QSGTextMaskMaterial::ensureUpToDate()
 {
-    QSize glyphCacheSize(glyphCache()->width(), glyphCache()->height());
-    if (glyphCacheSize != m_size) {
-        if (m_texture)
-            delete m_texture;
-        m_texture = new QSGPlainTexture();
-        m_texture->setTextureId(glyphCache()->texture());
-        m_texture->setTextureSize(QSize(glyphCache()->width(), glyphCache()->height()));
-        m_texture->setOwnsTexture(false);
+    if (m_rhi) {
+        QSGRhiTextureGlyphCache *gc = rhiGlyphCache();
+        QSize glyphCacheSize(gc->width(), gc->height());
+        if (glyphCacheSize != m_size) {
+            if (m_texture)
+                delete m_texture;
+            m_texture = new QSGPlainTexture;
+            m_texture->setTexture(gc->texture());
+            m_texture->setTextureSize(QSize(gc->width(), gc->height()));
+            m_texture->setOwnsTexture(false);
+            m_size = glyphCacheSize;
+            return true;
+        }
+        return false;
 
-        m_size = glyphCacheSize;
-
-        return true;
     } else {
+        QSize glyphCacheSize(openglGlyphCache()->width(), openglGlyphCache()->height());
+        if (glyphCacheSize != m_size) {
+            if (m_texture)
+                delete m_texture;
+            m_texture = new QSGPlainTexture();
+            m_texture->setTextureId(openglGlyphCache()->texture());
+            m_texture->setTextureSize(QSize(openglGlyphCache()->width(), openglGlyphCache()->height()));
+            m_texture->setOwnsTexture(false);
+            m_size = glyphCacheSize;
+            return true;
+        }
         return false;
     }
 }
 
-int QSGTextMaskMaterial::cacheTextureWidth() const
-{
-    return glyphCache()->width();
-}
 
-int QSGTextMaskMaterial::cacheTextureHeight() const
-{
-    return glyphCache()->height();
-}
-
-
-QSGStyledTextMaterial::QSGStyledTextMaterial(const QRawFont &font)
-    : QSGTextMaskMaterial(font, QFontEngine::Format_A8)
+QSGStyledTextMaterial::QSGStyledTextMaterial(QSGRenderContext *rc, const QRawFont &font)
+    : QSGTextMaskMaterial(rc, font, QFontEngine::Format_A8)
 {
 }
 
@@ -641,7 +975,12 @@ QSGMaterialType *QSGStyledTextMaterial::type() const
 
 QSGMaterialShader *QSGStyledTextMaterial::createShader() const
 {
-    return new QSGStyledTextShader(glyphCache()->glyphFormat());
+    if (flags().testFlag(RhiShaderWanted)) {
+        QSGRhiTextureGlyphCache *gc = rhiGlyphCache();
+        return new QSGStyledTextRhiShader(gc->glyphFormat(), gc->eightBitFormatIsAlphaSwizzled());
+    } else {
+        return new QSGStyledTextShader(glyphCache()->glyphFormat());
+    }
 }
 
 int QSGStyledTextMaterial::compare(const QSGMaterial *o) const
@@ -658,8 +997,8 @@ int QSGStyledTextMaterial::compare(const QSGMaterial *o) const
 }
 
 
-QSGOutlinedTextMaterial::QSGOutlinedTextMaterial(const QRawFont &font)
-    : QSGStyledTextMaterial(font)
+QSGOutlinedTextMaterial::QSGOutlinedTextMaterial(QSGRenderContext *rc, const QRawFont &font)
+    : QSGStyledTextMaterial(rc, font)
 {
 }
 
@@ -671,7 +1010,12 @@ QSGMaterialType *QSGOutlinedTextMaterial::type() const
 
 QSGMaterialShader *QSGOutlinedTextMaterial::createShader() const
 {
-    return new QSGOutlinedTextShader(glyphCache()->glyphFormat());
+    if (flags().testFlag(RhiShaderWanted)) {
+        QSGRhiTextureGlyphCache *gc = rhiGlyphCache();
+        return new QSGOutlinedTextRhiShader(gc->glyphFormat(), gc->eightBitFormatIsAlphaSwizzled());
+    } else {
+        return new QSGOutlinedTextShader(glyphCache()->glyphFormat());
+    }
 }
 
 QT_END_NAMESPACE

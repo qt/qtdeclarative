@@ -46,6 +46,8 @@
 
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlfile.h>
+#include <QtQml/qqmlabstracturlinterceptor.h>
+
 
 QT_BEGIN_NAMESPACE
 
@@ -244,6 +246,9 @@ void QQuickImageBase::load()
         d->devicePixelRatio = 1.0;
 
         QUrl loadUrl = d->url;
+        QQmlEngine* engine = qmlEngine(this);
+        if (engine && engine->urlInterceptor())
+            loadUrl = engine->urlInterceptor()->intercept(loadUrl, QQmlAbstractUrlInterceptor::UrlString);
 
         bool updatedDevicePixelRatio = false;
         if (d->sourcesize.isValid())

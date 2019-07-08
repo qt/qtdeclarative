@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 class QSGDefaultGlyphNode : public QSGBasicGlyphNode
 {
 public:
-    QSGDefaultGlyphNode();
+    QSGDefaultGlyphNode(QSGRenderContext *context);
     ~QSGDefaultGlyphNode();
     void setMaterialColor(const QColor &color) override;
     void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) override;
@@ -76,6 +76,7 @@ private:
 
     void setGlyphNodeType(DefaultGlyphNodeType type) { m_glyphNodeType = type; }
 
+    QSGRenderContext *m_context;
     DefaultGlyphNodeType m_glyphNodeType;
     QVector<QSGNode *> m_nodesToDelete;
 

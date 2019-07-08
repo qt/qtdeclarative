@@ -51,17 +51,19 @@
 // We mean it.
 //
 
-#include <qsgtexture.h>
+#include <private/qsgtexture_p.h>
 #include <basetsd.h>
 
 QT_BEGIN_NAMESPACE
 
 class QSGD3D12Engine;
+class QSGD3D12TexturePrivate;
 
 class QSGD3D12Texture : public QSGTexture
 {
+    Q_DECLARE_PRIVATE(QSGD3D12Texture)
 public:
-    QSGD3D12Texture(QSGD3D12Engine *engine) : m_engine(engine) { }
+    QSGD3D12Texture(QSGD3D12Engine *engine);
     ~QSGD3D12Texture();
 
     void create(const QImage &image, uint flags);
@@ -80,6 +82,13 @@ protected:
     bool m_createdWithMipMaps = false;
     uint m_id = 0;
     bool m_alphaWanted = false;
+};
+
+class QSGD3D12TexturePrivate : public QSGTexturePrivate
+{
+    Q_DECLARE_PUBLIC(QSGD3D12Texture)
+public:
+    int comparisonKey() const override;
 };
 
 QT_END_NAMESPACE

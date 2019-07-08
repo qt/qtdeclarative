@@ -75,6 +75,7 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qelapsedtimer.h>
+#include <QtCore/qpointer.h>
 
 #if QT_CONFIG(quick_shadereffect)
 #include <QtQuick/private/qquickshadereffectsource_p.h>
@@ -687,12 +688,12 @@ public:
         : leftSet(false), rightSet(false), upSet(false), downSet(false),
           tabSet(false), backtabSet(false) {}
 
-    QQuickItem *left = nullptr;
-    QQuickItem *right = nullptr;
-    QQuickItem *up = nullptr;
-    QQuickItem *down = nullptr;
-    QQuickItem *tab = nullptr;
-    QQuickItem *backtab = nullptr;
+    QPointer<QQuickItem> left;
+    QPointer<QQuickItem> right;
+    QPointer<QQuickItem> up;
+    QPointer<QQuickItem> down;
+    QPointer<QQuickItem> tab;
+    QPointer<QQuickItem> backtab;
     bool leftSet : 1;
     bool rightSet : 1;
     bool upSet : 1;

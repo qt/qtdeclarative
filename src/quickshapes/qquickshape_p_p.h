@@ -63,6 +63,7 @@
 QT_BEGIN_NAMESPACE
 
 class QSGPlainTexture;
+class QRhi;
 
 class QQuickAbstractPathRenderer
 {
@@ -186,44 +187,56 @@ public:
     bool syncTimingActive = false;
 };
 
-#if QT_CONFIG(opengl)
-
-class QQuickShapeGradientCache : public QOpenGLSharedResource
+struct QQuickShapeGradientCacheKey
 {
-public:
-    struct Key {
-        Key(const QGradientStops &stops, QQuickShapeGradient::SpreadMode spread)
-            : stops(stops), spread(spread)
-        { }
-        QGradientStops stops;
-        QQuickShapeGradient::SpreadMode spread;
-        bool operator==(const Key &other) const
-        {
-            return spread == other.spread && stops == other.stops;
-        }
-    };
-
-    QQuickShapeGradientCache(QOpenGLContext *context) : QOpenGLSharedResource(context->shareGroup()) { }
-    ~QQuickShapeGradientCache();
-
-    void invalidateResource() override;
-    void freeResource(QOpenGLContext *) override;
-
-    QSGTexture *get(const Key &grad);
-
-    static QQuickShapeGradientCache *currentCache();
-
-private:
-    QHash<Key, QSGPlainTexture *> m_cache;
+    QQuickShapeGradientCacheKey(const QGradientStops &stops, QQuickShapeGradient::SpreadMode spread)
+        : stops(stops), spread(spread)
+    { }
+    QGradientStops stops;
+    QQuickShapeGradient::SpreadMode spread;
+    bool operator==(const QQuickShapeGradientCacheKey &other) const
+    {
+        return spread == other.spread && stops == other.stops;
+    }
 };
 
-inline uint qHash(const QQuickShapeGradientCache::Key &v, uint seed = 0)
+inline uint qHash(const QQuickShapeGradientCacheKey &v, uint seed = 0)
 {
     uint h = seed + v.spread;
     for (int i = 0; i < 3 && i < v.stops.count(); ++i)
         h += v.stops[i].second.rgba();
     return h;
 }
+
+class QQuickShapeGradientCache
+{
+public:
+    ~QQuickShapeGradientCache();
+    static QQuickShapeGradientCache *cacheForRhi(QRhi *rhi);
+    QSGTexture *get(const QQuickShapeGradientCacheKey &grad);
+
+private:
+    QHash<QQuickShapeGradientCacheKey, QSGPlainTexture *> m_textures;
+};
+
+#if QT_CONFIG(opengl)
+
+class QQuickShapeGradientOpenGLCache : public QOpenGLSharedResource
+{
+public:
+    QQuickShapeGradientOpenGLCache(QOpenGLContext *context) : QOpenGLSharedResource(context->shareGroup()) { }
+    ~QQuickShapeGradientOpenGLCache();
+
+    void invalidateResource() override;
+    void freeResource(QOpenGLContext *) override;
+
+    QSGTexture *get(const QQuickShapeGradientCacheKey &grad);
+
+    static QQuickShapeGradientOpenGLCache *currentCache();
+
+private:
+    QHash<QQuickShapeGradientCacheKey, QSGPlainTexture *> m_cache;
+};
 
 #endif // QT_CONFIG(opengl)
 

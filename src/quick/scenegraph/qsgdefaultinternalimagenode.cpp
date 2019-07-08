@@ -38,10 +38,12 @@
 ****************************************************************************/
 
 #include "qsgdefaultinternalimagenode_p.h"
+#include <private/qsgdefaultrendercontext_p.h>
 #include <private/qsgmaterialshader_p.h>
 #include <private/qsgtexturematerial_p.h>
 #include <QtGui/qopenglfunctions.h>
 #include <QtCore/qmath.h>
+#include <QtGui/private/qrhi_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,9 +61,18 @@ protected:
     int m_pixelSizeLoc;
 };
 
+class SmoothTextureMaterialRhiShader : public QSGTextureMaterialRhiShader
+{
+public:
+    SmoothTextureMaterialRhiShader();
+
+    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+};
+
 
 QSGSmoothTextureMaterial::QSGSmoothTextureMaterial()
 {
+    setFlag(SupportsRhiShader, true);
     setFlag(RequiresFullMatrixExceptTranslate, true);
     setFlag(Blending, true);
 }
@@ -79,7 +90,10 @@ QSGMaterialType *QSGSmoothTextureMaterial::type() const
 
 QSGMaterialShader *QSGSmoothTextureMaterial::createShader() const
 {
-    return new SmoothTextureMaterialShader;
+    if (flags().testFlag(RhiShaderWanted))
+        return new SmoothTextureMaterialRhiShader;
+    else
+        return new SmoothTextureMaterialShader;
 }
 
 SmoothTextureMaterialShader::SmoothTextureMaterialShader()
@@ -116,7 +130,33 @@ void SmoothTextureMaterialShader::initialize()
     QSGTextureMaterialShader::initialize();
 }
 
-QSGDefaultInternalImageNode::QSGDefaultInternalImageNode()
+SmoothTextureMaterialRhiShader::SmoothTextureMaterialRhiShader()
+{
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/smoothtexture.vert.qsb"));
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/smoothtexture.frag.qsb"));
+}
+
+bool SmoothTextureMaterialRhiShader::updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+{
+    bool changed = false;
+    QByteArray *buf = state.uniformData();
+
+    if (!oldMaterial) {
+        // The viewport is constant, so set the pixel size uniform only once (per batches with the same material).
+        const QRect r = state.viewportRect();
+        const QVector2D v(2.0f / r.width(), 2.0f / r.height());
+        memcpy(buf->data() + 64 + 8, &v, 8);
+        changed = true;
+    }
+
+    changed |= QSGTextureMaterialRhiShader::updateUniformData(state, newMaterial, oldMaterial);
+
+    return changed;
+}
+
+
+QSGDefaultInternalImageNode::QSGDefaultInternalImageNode(QSGDefaultRenderContext *rc)
+    : m_rc(rc)
 {
     setMaterial(&m_materialO);
     setOpaqueMaterial(&m_material);
@@ -209,14 +249,19 @@ bool QSGDefaultInternalImageNode::supportsWrap(const QSize &size) const
 {
     bool wrapSupported = true;
 
-    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    if (m_rc->rhi()) {
+        wrapSupported = m_rc->rhi()->isFeatureSupported(QRhi::NPOTTextureRepeat)
+                || (isPowerOfTwo(size.width()) && isPowerOfTwo(size.height()));
+    } else {
+        QOpenGLContext *ctx = QOpenGLContext::currentContext();
 #ifndef QT_OPENGL_ES_2
-    if (ctx->isOpenGLES())
+        if (ctx->isOpenGLES())
 #endif
-    {
-        bool npotSupported = ctx->functions()->hasOpenGLFeature(QOpenGLFunctions::NPOTTextureRepeat);
-        const bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
-        wrapSupported = npotSupported || !isNpot;
+        {
+            bool npotSupported = ctx->functions()->hasOpenGLFeature(QOpenGLFunctions::NPOTTextureRepeat);
+            const bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
+            wrapSupported = npotSupported || !isNpot;
+        }
     }
 
     return wrapSupported;

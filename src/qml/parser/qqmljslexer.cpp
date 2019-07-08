@@ -47,6 +47,7 @@
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/QScopedValueRollback>
 
 QT_BEGIN_NAMESPACE
 Q_CORE_EXPORT double qstrtod(const char *s00, char const **se, bool *ok);
@@ -271,12 +272,25 @@ int Lexer::lex()
             ++_bracesCount;
         Q_FALLTHROUGH();
     case T_SEMICOLON:
+        _importState = ImportState::NoQmlImport;
+        Q_FALLTHROUGH();
     case T_QUESTION:
     case T_COLON:
     case T_TILDE:
         _delimited = true;
         break;
+    case T_AUTOMATIC_SEMICOLON:
+    case T_AS:
+        _importState = ImportState::NoQmlImport;
+        Q_FALLTHROUGH();
     default:
+        if (isBinop(_tokenKind))
+            _delimited = true;
+        break;
+
+    case T_IMPORT:
+        if (qmlMode() || (_handlingDirectives && previousTokenKind == T_DOT))
+            _importState = ImportState::SawImport;
         if (isBinop(_tokenKind))
             _delimited = true;
         break;
@@ -620,6 +634,8 @@ again:
         return T_DIVIDE_;
 
     case '.':
+        if (_importState == ImportState::SawImport)
+            return T_DOT;
         if (isDecimalDigit(_char.unicode()))
             return scanNumber(ch);
         if (_char == QLatin1Char('.')) {
@@ -730,7 +746,10 @@ again:
     case '7':
     case '8':
     case '9':
-        return scanNumber(ch);
+        if (_importState == ImportState::SawImport)
+            return scanVersionNumber(ch);
+        else
+            return scanNumber(ch);
 
     default: {
         uint c = ch.unicode();
@@ -1148,6 +1167,26 @@ int Lexer::scanNumber(QChar ch)
     return T_NUMERIC_LITERAL;
 }
 
+int Lexer::scanVersionNumber(QChar ch)
+{
+    if (ch == QLatin1Char('0')) {
+        _tokenValue = 0;
+        return T_VERSION_NUMBER;
+    }
+
+    int acc = 0;
+    acc += ch.digitValue();
+
+    while (_char.isDigit()) {
+        acc *= 10;
+        acc += _char.digitValue();
+        scanChar(); // consume the digit
+    }
+
+    _tokenValue = acc;
+    return T_VERSION_NUMBER;
+}
+
 bool Lexer::scanRegExp(RegExpBodyPrefix prefix)
 {
     _tokenText.resize(0);
@@ -1410,6 +1449,7 @@ bool Lexer::scanDirectives(Directives *directives, DiagnosticMessage *error)
         error->column = tokenStartColumn();
     };
 
+    QScopedValueRollback<bool> directivesGuard(_handlingDirectives, true);
     Q_ASSERT(!_qmlMode);
 
     lex(); // fetch the first token
@@ -1465,8 +1505,7 @@ bool Lexer::scanDirectives(Directives *directives, DiagnosticMessage *error)
                 }
 
             } else if (_tokenKind == T_IDENTIFIER) {
-                // .import T_IDENTIFIER (. T_IDENTIFIER)* T_NUMERIC_LITERAL as T_IDENTIFIER
-
+                // .import T_IDENTIFIER (. T_IDENTIFIER)* T_VERSION_NUMBER . T_VERSION_NUMBER as T_IDENTIFIER
                 while (true) {
                     if (!isUriToken(_tokenKind)) {
                         setError(QCoreApplication::translate("QQmlParser","Invalid module URI"));
@@ -1492,12 +1531,25 @@ bool Lexer::scanDirectives(Directives *directives, DiagnosticMessage *error)
                     }
                 }
 
-                if (_tokenKind != T_NUMERIC_LITERAL) {
+                if (_tokenKind != T_VERSION_NUMBER) {
                     setError(QCoreApplication::translate("QQmlParser","Module import requires a version"));
                     return false; // expected the module version number
                 }
 
                 version = tokenText();
+                lex();
+                if (_tokenKind != T_DOT) {
+                    setError(QCoreApplication::translate( "QQmlParser", "Module import requires a minor version (missing dot)"));
+                    return false; // expected the module version number
+                }
+                version += QLatin1Char('.');
+
+                lex();
+                if (_tokenKind != T_VERSION_NUMBER) {
+                    setError(QCoreApplication::translate( "QQmlParser", "Module import requires a minor version (missing number)"));
+                    return false; // expected the module version number
+                }
+                version += tokenText();
             }
 
             //

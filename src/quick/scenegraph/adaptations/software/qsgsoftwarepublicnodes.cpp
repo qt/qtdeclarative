@@ -41,6 +41,7 @@
 #include "qsgsoftwarelayer_p.h"
 #include "qsgsoftwarepixmaptexture_p.h"
 #include "qsgsoftwareinternalimagenode_p.h"
+#include <private/qsgplaintexture_p.h>
 
 QT_BEGIN_NAMESPACE
 

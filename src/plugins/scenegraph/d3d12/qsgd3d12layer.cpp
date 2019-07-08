@@ -53,7 +53,8 @@ QT_BEGIN_NAMESPACE
 DECLARE_DEBUG_VAR(render)
 
 QSGD3D12Layer::QSGD3D12Layer(QSGD3D12RenderContext *rc)
-    : m_rc(rc)
+    : QSGLayer(*(new QSGD3D12LayerPrivate)),
+      m_rc(rc)
 {
     if (Q_UNLIKELY(debug_render()))
         qDebug("new layer %p", this);
@@ -72,6 +73,12 @@ QSGD3D12Layer::~QSGD3D12Layer()
 int QSGD3D12Layer::textureId() const
 {
     return m_rt; // not a texture id per se but will do
+}
+
+int QSGD3D12LayerPrivate::comparisonKey() const
+{
+    Q_Q(const QSGD3D12Layer);
+    return q->m_rt;
 }
 
 QSize QSGD3D12Layer::textureSize() const

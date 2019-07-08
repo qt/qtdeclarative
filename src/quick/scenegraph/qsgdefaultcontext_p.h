@@ -67,7 +67,7 @@ public:
     void renderContextInvalidated(QSGRenderContext *) override;
     QSGRenderContext *createRenderContext() override;
     QSGInternalRectangleNode *createInternalRectangleNode() override;
-    QSGInternalImageNode *createInternalImageNode() override;
+    QSGInternalImageNode *createInternalImageNode(QSGRenderContext *renderContext) override;
     QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
     QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) override;
     QSGLayer *createLayer(QSGRenderContext *renderContext) override;
@@ -79,11 +79,15 @@ public:
 #if QT_CONFIG(quick_sprite)
     QSGSpriteNode *createSpriteNode() override;
 #endif
+    QSGGuiThreadShaderEffectManager *createGuiThreadShaderEffectManager() override;
+    QSGShaderEffectNode *createShaderEffectNode(QSGRenderContext *renderContext,
+                                                QSGGuiThreadShaderEffectManager *mgr) override;
 
     void setDistanceFieldEnabled(bool enabled);
     bool isDistanceFieldEnabled() const;
 
     GraphicsApi graphicsApi() const override;
+    void *getResource(QQuickWindow *window, Resource resource) const override;
     ShaderType shaderType() const override;
     ShaderCompilationTypes shaderCompilationType() const override;
     ShaderSourceTypes shaderSourceType() const override;

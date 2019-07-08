@@ -1472,6 +1472,12 @@ LeftHandSideExpression *LeftHandSideExpression::leftHandSideExpressionCast()
     return this;
 }
 
+void UiVersionSpecifier::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+    }
+    visitor->endVisit(this);
+}
 } } // namespace QQmlJS::AST
 
 QT_END_NAMESPACE

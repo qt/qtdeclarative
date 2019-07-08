@@ -41,7 +41,7 @@
 #include "qquickcontext2dtile_p.h"
 #include "qquickcanvasitem_p.h"
 #include <private/qquickitem_p.h>
-#include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qsgplaintexture_p.h>
 #include "qquickcontext2dcommandbuffer_p.h"
 #include <QOpenGLPaintDevice>
 #if QT_CONFIG(opengl)

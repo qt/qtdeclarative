@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/scenegraph/metalunderqml">
+        <file>main.qml</file>
+        <file>squircle.vert</file>
+        <file>squircle.frag</file>
+    </qresource>
+</RCC>

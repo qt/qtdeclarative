@@ -306,6 +306,19 @@ void QSGDistanceFieldGlyphCache::updateTexture(uint oldTex, uint newTex, const Q
     }
 }
 
+void QSGDistanceFieldGlyphCache::updateRhiTexture(QRhiTexture *oldTex, QRhiTexture *newTex, const QSize &newTexSize)
+{
+    int count = m_textures.count();
+    for (int i = 0; i < count; ++i) {
+        Texture &tex = m_textures[i];
+        if (tex.texture == oldTex) {
+            tex.texture = newTex;
+            tex.size = newTexSize;
+            return;
+        }
+    }
+}
+
 #if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
 #include <QtGui/qopenglfunctions.h>
 
@@ -526,14 +539,6 @@ void QSGNodeVisitorEx::visitChildren(QSGNode *node)
 }
 
 #ifndef QT_NO_DEBUG_STREAM
-QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInfo::InputParameter &p)
-{
-    QDebugStateSaver saver(debug);
-    debug.space();
-    debug << p.semanticName << "semindex" << p.semanticIndex;
-    return debug;
-}
-
 QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInfo::Variable &v)
 {
     QDebugStateSaver saver(debug);
@@ -563,6 +568,14 @@ QDebug operator<<(QDebug debug, const QSGShaderEffectNode::VariableData &vd)
     return debug;
 }
 #endif
+
+/*!
+    \internal
+ */
+QSGLayer::QSGLayer(QSGTexturePrivate &dd)
+    : QSGDynamicTexture(dd)
+{
+}
 
 QT_END_NAMESPACE
 

@@ -214,6 +214,7 @@ void QQuickWindowModule::defineModule()
     qmlRegisterRevision<QWindow,13>(uri, 2, 13);
     qmlRegisterRevision<QQuickWindow,13>(uri, 2, 13);
     qmlRegisterType<QQuickWindowQmlImpl,13>(uri, 2, 13, "Window");
+    qmlRegisterRevision<QQuickWindow,14>(uri, 2, 14);
 }
 
 QT_END_NAMESPACE

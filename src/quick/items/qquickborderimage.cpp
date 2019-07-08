@@ -647,7 +647,7 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
     bool updatePixmap = d->pixmapChanged;
     d->pixmapChanged = false;
     if (!node) {
-        node = d->sceneGraphContext()->createInternalImageNode();
+        node = d->sceneGraphContext()->createInternalImageNode(d->sceneGraphRenderContext());
         updatePixmap = true;
     }
 

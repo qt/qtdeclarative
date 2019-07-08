@@ -663,7 +663,7 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     QSGInternalImageNode *node = static_cast<QSGInternalImageNode *>(oldNode);
     if (!node) {
         d->pixmapChanged = true;
-        node = d->sceneGraphContext()->createInternalImageNode();
+        node = d->sceneGraphContext()->createInternalImageNode(d->sceneGraphRenderContext());
     }
 
     QRectF targetRect;

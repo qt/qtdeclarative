@@ -64,15 +64,22 @@ public:
     void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
     char const *const *attributeNames() const override;
 
-    static QSGMaterialType type;
-
 protected:
     void initialize() override;
 
     int m_matrix_id;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGTextureMaterialShader : public QSGOpaqueTextureMaterialShader
+class Q_QUICK_PRIVATE_EXPORT QSGOpaqueTextureMaterialRhiShader : public QSGMaterialRhiShader
+{
+public:
+    QSGOpaqueTextureMaterialRhiShader();
+
+    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    void updateSampledImage(const RenderState &state, int binding, QSGTexture **texture, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+};
+
+class QSGTextureMaterialShader : public QSGOpaqueTextureMaterialShader
 {
 public:
     QSGTextureMaterialShader();
@@ -80,10 +87,16 @@ public:
     void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
     void initialize() override;
 
-    static QSGMaterialType type;
-
 protected:
     int m_opacity_id;
+};
+
+class QSGTextureMaterialRhiShader : public QSGOpaqueTextureMaterialRhiShader
+{
+public:
+    QSGTextureMaterialRhiShader();
+
+    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
 QT_END_NAMESPACE

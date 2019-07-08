@@ -55,18 +55,17 @@
 
 #include <private/qsgrenderloop_p.h>
 #include <private/qtquickglobal_p.h>
-#include <QtQuick/private/qsgcontext_p.h>
+#include <private/qsgcontext_p.h>
 
 #if QT_CONFIG(opengl)
 # include <QtGui/QOpenGLContext>
 #endif
 
-
 QT_BEGIN_NAMESPACE
 
 class QQuickWindow;
 class QSGContext;
-class QSGRenderContext;
+class QSGDefaultRenderContext;
 class QAnimationDriver;
 
 class QQuickDesignerWindowManager : public QSGRenderLoop

@@ -89,6 +89,10 @@ class QSGImageNode;
 class QSGNinePatchNode;
 class QSGSpriteNode;
 class QSGRenderContext;
+class QRhi;
+class QRhiRenderTarget;
+class QRhiRenderPassDescriptor;
+class QRhiCommandBuffer;
 
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERLOOP)
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_COMPILATION)
@@ -119,7 +123,7 @@ public:
 
     QSGInternalRectangleNode *createInternalRectangleNode(const QRectF &rect, const QColor &c);
     virtual QSGInternalRectangleNode *createInternalRectangleNode() = 0;
-    virtual QSGInternalImageNode *createInternalImageNode() = 0;
+    virtual QSGInternalImageNode *createInternalImageNode(QSGRenderContext *renderContext) = 0;
     virtual QSGPainterNode *createPainterNode(QQuickPaintedItem *item) = 0;
     virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) = 0;
     virtual QSGLayer *createLayer(QSGRenderContext *renderContext) = 0;
@@ -164,9 +168,27 @@ public:
     QSGContext *sceneGraphContext() const { return m_sg; }
     virtual bool isValid() const { return true; }
 
-    virtual void initialize(void *context);
+    struct InitParams { };
+    virtual void initialize(const InitParams *params);
     virtual void invalidate();
+
+    using RenderPassCallback = void (*)(void *);
+
+    virtual void beginNextFrame(QSGRenderer *renderer,
+                                RenderPassCallback mainPassRecordingStart,
+                                RenderPassCallback mainPassRecordingEnd,
+                                void *callbackUserData);
     virtual void renderNextFrame(QSGRenderer *renderer, uint fboId) = 0;
+    virtual void endNextFrame(QSGRenderer *renderer);
+
+    virtual void beginNextRhiFrame(QSGRenderer *renderer,
+                                   QRhiRenderTarget *rt, QRhiRenderPassDescriptor *rp, QRhiCommandBuffer *cb,
+                                   RenderPassCallback mainPassRecordingStart,
+                                   RenderPassCallback mainPassRecordingEnd,
+                                   void *callbackUserData);
+    virtual void renderNextRhiFrame(QSGRenderer *renderer);
+    virtual void endNextRhiFrame(QSGRenderer *renderer);
+
     virtual void endSync();
 
     virtual QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font);
@@ -181,6 +203,8 @@ public:
     virtual int maxTextureSize() const = 0;
 
     void registerFontengineForCleanup(QFontEngine *engine);
+
+    virtual QRhi *rhi() const;
 
 Q_SIGNALS:
     void initialized();

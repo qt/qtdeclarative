@@ -62,6 +62,10 @@ QT_BEGIN_NAMESPACE
 
 class QSGBindable;
 class QSGNodeUpdater;
+class QRhiRenderTarget;
+class QRhiCommandBuffer;
+class QRhiRenderPassDescriptor;
+class QRhiResourceUpdateBatch;
 
 Q_QUICK_PRIVATE_EXPORT bool qsg_test_and_clear_fatal_render_error();
 Q_QUICK_PRIVATE_EXPORT void qsg_set_fatal_renderer_error();
@@ -69,11 +73,10 @@ Q_QUICK_PRIVATE_EXPORT void qsg_set_fatal_renderer_error();
 class Q_QUICK_PRIVATE_EXPORT QSGRenderer : public QSGAbstractRenderer
 {
 public:
-
     QSGRenderer(QSGRenderContext *context);
     virtual ~QSGRenderer();
 
-    // Accessed by QSGMaterialShader::RenderState.
+    // Accessed by QSGMaterial[Rhi]Shader::RenderState.
     QMatrix4x4 currentProjectionMatrix() const { return m_current_projection_matrix; }
     QMatrix4x4 currentModelViewMatrix() const { return m_current_model_view_matrix; }
     QMatrix4x4 currentCombinedMatrix() const { return m_current_projection_matrix * m_current_model_view_matrix; }
@@ -92,10 +95,34 @@ public:
     QSGNodeUpdater *nodeUpdater() const;
     void setNodeUpdater(QSGNodeUpdater *updater);
     inline QSGMaterialShader::RenderState state(QSGMaterialShader::RenderState::DirtyStates dirty) const;
+    inline QSGMaterialRhiShader::RenderState rhiState(QSGMaterialRhiShader::RenderState::DirtyStates dirty) const;
     virtual void setCustomRenderMode(const QByteArray &) { }
     virtual void releaseCachedResources() { }
 
     void clearChangedFlag() { m_changed_emitted = false; }
+
+    // Accessed by QSGMaterialRhiShader::RenderState.
+    QByteArray *currentUniformData() const { return m_current_uniform_data; }
+    QRhiResourceUpdateBatch *currentResourceUpdateBatch() const { return m_current_resource_update_batch; }
+    QRhi *currentRhi() const { return m_rhi; }
+
+    void setRenderTarget(QRhiRenderTarget *rt) { m_rt = rt; }
+    QRhiRenderTarget *renderTarget() const { return m_rt; }
+
+    void setCommandBuffer(QRhiCommandBuffer *cb) { m_cb = cb; }
+    QRhiCommandBuffer *commandBuffer() const { return m_cb; }
+
+    void setRenderPassDescriptor(QRhiRenderPassDescriptor *rpDesc) { m_rp_desc = rpDesc; }
+    QRhiRenderPassDescriptor *renderPassDescriptor() const { return m_rp_desc; }
+
+    void setRenderPassRecordingCallbacks(QSGRenderContext::RenderPassCallback start,
+                                         QSGRenderContext::RenderPassCallback end,
+                                         void *userData)
+    {
+        m_renderPassRecordingCallbacks.start = start;
+        m_renderPassRecordingCallbacks.end = end;
+        m_renderPassRecordingCallbacks.userData = userData;
+    }
 
 protected:
     virtual void render() = 0;
@@ -107,13 +134,26 @@ protected:
     void addNodesToPreprocess(QSGNode *node);
     void removeNodesToPreprocess(QSGNode *node);
 
-    QMatrix4x4 m_current_projection_matrix;
+    QMatrix4x4 m_current_projection_matrix; // includes adjustment, where applicable, so can be treated as Y up in NDC always
+    QMatrix4x4 m_current_projection_matrix_native_ndc; // Vulkan has Y down in normalized device coordinates, others Y up...
     QMatrix4x4 m_current_model_view_matrix;
     qreal m_current_opacity;
     qreal m_current_determinant;
     qreal m_device_pixel_ratio;
 
     QSGRenderContext *m_context;
+
+    QByteArray *m_current_uniform_data;
+    QRhiResourceUpdateBatch *m_current_resource_update_batch;
+    QRhi *m_rhi;
+    QRhiRenderTarget *m_rt;
+    QRhiCommandBuffer *m_cb;
+    QRhiRenderPassDescriptor *m_rp_desc;
+    struct {
+        QSGRenderContext::RenderPassCallback start = nullptr;
+        QSGRenderContext::RenderPassCallback end = nullptr;
+        void *userData = nullptr;
+    } m_renderPassRecordingCallbacks;
 
 private:
     QSGNodeUpdater *m_node_updater;
@@ -151,6 +191,14 @@ private:
 QSGMaterialShader::RenderState QSGRenderer::state(QSGMaterialShader::RenderState::DirtyStates dirty) const
 {
     QSGMaterialShader::RenderState s;
+    s.m_dirty = dirty;
+    s.m_data = this;
+    return s;
+}
+
+QSGMaterialRhiShader::RenderState QSGRenderer::rhiState(QSGMaterialRhiShader::RenderState::DirtyStates dirty) const
+{
+    QSGMaterialRhiShader::RenderState s;
     s.m_dirty = dirty;
     s.m_data = this;
     return s;
