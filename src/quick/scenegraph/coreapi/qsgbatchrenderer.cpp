@@ -2329,7 +2329,7 @@ void Renderer::uploadBatch(Batch *b)
                     iDump << "  -- Index Data, count:" << b->indexCount;
                     for (int i=0; i<b->indexCount; ++i) {
                         if ((i % 24) == 0)
-                            iDump << endl << "  --- ";
+                            iDump << Qt::endl << "  --- ";
                         iDump << id[i];
                     }
                 }

@@ -195,7 +195,7 @@ static bool fuzzyCompareColor(QRgb x, QRgb y, QByteArray *errorMessage)
     enum { fuzz = 4 };
     if (qAbs(qRed(x) - qRed(y)) >= fuzz || qAbs(qGreen(x) - qGreen(y)) >= fuzz || qAbs(qBlue(x) - qBlue(y)) >= fuzz) {
         QString s;
-        QDebug(&s).nospace() << hex << "Color mismatch 0x" << x << " 0x" << y << dec << " (fuzz=" << fuzz << ").";
+        QDebug(&s).nospace() << Qt::hex << "Color mismatch 0x" << x << " 0x" << y << Qt::dec << " (fuzz=" << fuzz << ").";
         *errorMessage = s.toLocal8Bit();
         return false;
     }
