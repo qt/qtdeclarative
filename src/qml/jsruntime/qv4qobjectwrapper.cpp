@@ -57,6 +57,7 @@
 #include <private/qv4variantobject_p.h>
 #include <private/qv4identifiertable_p.h>
 #include <private/qv4lookup_p.h>
+#include <private/qv4qmlcontext_p.h>
 
 #if QT_CONFIG(qml_sequence_object)
 #include <private/qv4sequenceobject_p.h>

@@ -28,6 +28,7 @@
 
 #include <QtTest/QtTest>
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlfile.h>
 #include <QtQml/qqmlnetworkaccessmanagerfactory.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
@@ -35,6 +36,7 @@
 #include <QtCore/qprocess.h>
 #endif
 #include <QtQml/private/qqmlengine_p.h>
+#include <QtQml/private/qqmltypedata_p.h>
 #include <QtQml/private/qqmltypeloader_p.h>
 #include "../../shared/testhttpserver.h"
 #include "../../shared/util.h"

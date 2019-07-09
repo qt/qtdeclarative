@@ -55,6 +55,7 @@
 #include <private/qqmlvaluetypeproxybinding_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
+#include <private/qqmlscriptdata_p.h>
 #include <private/qjsvalue_p.h>
 
 #include <qtqml_tracepoints_p.h>

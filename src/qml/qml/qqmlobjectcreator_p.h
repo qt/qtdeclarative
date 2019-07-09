@@ -57,6 +57,7 @@
 #include <private/qfinitestack_p.h>
 #include <private/qrecursionwatcher_p.h>
 #include <private/qqmlprofiler_p.h>
+#include <private/qv4qmlcontext_p.h>
 
 #include <qpointer.h>
 

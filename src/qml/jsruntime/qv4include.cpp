@@ -50,6 +50,7 @@
 #include <QtQml/qqmlfile.h>
 
 #include <private/qqmlengine_p.h>
+#include <private/qqmlirbuilder_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4script_p.h>

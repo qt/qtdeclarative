@@ -48,6 +48,7 @@
 #include <private/qqmlengine_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
+#include <private/qqmlscriptdata_p.h>
 #include <private/qv4module_p.h>
 #include <private/qv4compilationunitmapper_p.h>
 #include <private/qml_compile_hash_p.h>

@@ -37,6 +37,7 @@
 **
 ****************************************************************************/
 
+#include <QtQml/qqmlfile.h>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QTranslator>
 #include <QQmlComponent>

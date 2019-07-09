@@ -1,7 +1,14 @@
 SOURCES += \
     $$PWD/qqml.cpp \
+    $$PWD/qqmldatablob.cpp \
+    $$PWD/qqmldirdata.cpp \
     $$PWD/qqmlerror.cpp \
     $$PWD/qqmlopenmetaobject.cpp \
+    $$PWD/qqmlscriptblob.cpp \
+    $$PWD/qqmlscriptdata.cpp \
+    $$PWD/qqmltypedata.cpp \
+    $$PWD/qqmltypeloaderqmldircontent.cpp \
+    $$PWD/qqmltypeloaderthread.cpp \
     $$PWD/qqmlvmemetaobject.cpp \
     $$PWD/qqmlengine.cpp \
     $$PWD/qqmlexpression.cpp \
@@ -61,8 +68,15 @@ SOURCES += \
     $$PWD/qqmlpropertyvalidator.cpp
 
 HEADERS += \
+    $$PWD/qqmldatablob_p.h \
+    $$PWD/qqmldirdata_p.h \
     $$PWD/qqmlglobal_p.h \
     $$PWD/qqmlopenmetaobject_p.h \
+    $$PWD/qqmlscriptblob_p.h \
+    $$PWD/qqmlscriptdata_p.h \
+    $$PWD/qqmltypedata_p.h \
+    $$PWD/qqmltypeloaderqmldircontent_p.h \
+    $$PWD/qqmltypeloaderthread_p.h \
     $$PWD/qqmlvmemetaobject_p.h \
     $$PWD/qqml.h \
     $$PWD/qqmlproperty.h \
@@ -161,6 +175,14 @@ qtConfig(qml-locale) {
 
     SOURCES += \
         $$PWD/qqmllocale.cpp
+}
+
+qtConfig(qml-network) {
+    HEADERS += \
+        $$PWD/qqmltypeloadernetworkreplyproxy_p.h
+
+    SOURCES += \
+        $$PWD/qqmltypeloadernetworkreplyproxy.cpp
 }
 
 include(ftw/ftw.pri)

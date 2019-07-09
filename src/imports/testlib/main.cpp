@@ -37,6 +37,7 @@
 **
 ****************************************************************************/
 
+#include <private/qv4scopedvalue_p.h>
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
 #include <QtQml/qjsvalue.h>

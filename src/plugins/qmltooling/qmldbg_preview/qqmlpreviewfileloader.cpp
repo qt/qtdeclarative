@@ -40,6 +40,8 @@
 #include "qqmlpreviewfileloader.h"
 #include "qqmlpreviewservice.h"
 
+#include <QtQml/qqmlfile.h>
+
 #include <QtCore/qlibraryinfo.h>
 #include <QtCore/qstandardpaths.h>
 

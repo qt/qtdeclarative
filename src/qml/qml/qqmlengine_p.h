@@ -66,6 +66,7 @@
 #include <private/qintrusivelist_p.h>
 #include <private/qrecyclepool_p.h>
 #include <private/qfieldlist_p.h>
+#include <private/qv4engine_p.h>
 
 #include <QtCore/qlist.h>
 #include <QtCore/qpair.h>

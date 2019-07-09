@@ -46,6 +46,7 @@
 #include "qqmlscriptstring_p.h"
 #include "qqmlbinding_p.h"
 #include <private/qqmlsourcecoordinate_p.h>
+#include <private/qv4qmlcontext_p.h>
 
 #include <QtCore/qdebug.h>
 

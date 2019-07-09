@@ -79,7 +79,6 @@ QT_BEGIN_NAMESPACE
 class QIODevice;
 class QQmlPropertyData;
 class QQmlTypeNameCache;
-class QQmlScriptData;
 class QQmlType;
 class QQmlEngine;
 

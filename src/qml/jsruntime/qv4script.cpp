@@ -52,6 +52,7 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmlengine_p.h>
+#include <private/qqmlirbuilder_p.h>
 #include <private/qv4profiling_p.h>
 #include <qv4runtimecodegen_p.h>
 

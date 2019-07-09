@@ -47,6 +47,7 @@
 #include <private/qv4alloca_p.h>
 #include <private/qv4runtime_p.h>
 #include <private/qv4object_p.h>
+#include <private/qv4script_p.h>
 #include <private/qqmlcomponentattached_p.h>
 #include <private/qv4objectiterator_p.h>
 #include <private/qqmlabstractbinding_p.h>

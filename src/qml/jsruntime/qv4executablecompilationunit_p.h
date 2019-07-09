@@ -61,6 +61,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlScriptData;
 class QQmlEnginePrivate;
 namespace QV4 {
 
