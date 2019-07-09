@@ -62,6 +62,7 @@ struct PromiseCapability;
 namespace Promise {
 
 struct ReactionEvent;
+struct ResolveThenableEvent;
 
 class ReactionHandler : public QObject
 {
@@ -69,13 +70,15 @@ class ReactionHandler : public QObject
 
 public:
     ReactionHandler(QObject *parent = nullptr);
-    virtual ~ReactionHandler();
+    virtual ~ReactionHandler() override;
 
     void addReaction(ExecutionEngine *e, const Value *reaction, const Value *value);
+    void addResolveThenable(ExecutionEngine *e, const PromiseObject *promise, const Object *thenable, const FunctionObject *then);
 
 protected:
-    void customEvent(QEvent *event);
+    void customEvent(QEvent *event) override;
     void executeReaction(ReactionEvent *event);
+    void executeResolveThenable(ResolveThenableEvent *event);
 };
 
 } // Promise
