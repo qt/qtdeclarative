@@ -318,59 +318,6 @@ QStringList Signal::parameterStringList(const QV4::Compiler::StringTableGenerato
     return result;
 }
 
-static void replaceWithSpace(QString &str, int idx, int n)
-{
-    QChar *data = str.data() + idx;
-    const QChar space(QLatin1Char(' '));
-    for (int ii = 0; ii < n; ++ii)
-        *data++ = space;
-}
-
-void Document::removeScriptPragmas(QString &script)
-{
-    const QLatin1String pragma("pragma");
-    const QLatin1String library("library");
-
-    QQmlJS::Lexer l(nullptr);
-    l.setCode(script, 0);
-
-    int token = l.lex();
-
-    while (true) {
-        if (token != QQmlJSGrammar::T_DOT)
-            return;
-
-        int startOffset = l.tokenOffset();
-        int startLine = l.tokenStartLine();
-
-        token = l.lex();
-
-        if (token != QQmlJSGrammar::T_PRAGMA ||
-            l.tokenStartLine() != startLine ||
-            script.midRef(l.tokenOffset(), l.tokenLength()) != pragma)
-            return;
-
-        token = l.lex();
-
-        if (token != QQmlJSGrammar::T_IDENTIFIER ||
-            l.tokenStartLine() != startLine)
-            return;
-
-        const QStringRef pragmaValue = script.midRef(l.tokenOffset(), l.tokenLength());
-        int endOffset = l.tokenLength() + l.tokenOffset();
-
-        token = l.lex();
-        if (l.tokenStartLine() == startLine)
-            return;
-
-        if (pragmaValue == library) {
-            replaceWithSpace(script, startOffset, endOffset - startOffset);
-        } else {
-            return;
-        }
-    }
-}
-
 Document::Document(bool debugMode)
     : jsModule(debugMode)
     , program(nullptr)

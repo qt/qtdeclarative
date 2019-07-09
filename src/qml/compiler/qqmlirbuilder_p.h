@@ -388,8 +388,6 @@ struct Q_QML_PRIVATE_EXPORT Document
 
     int registerString(const QString &str) { return jsGenerator.registerString(str); }
     QString stringAt(int index) const { return jsGenerator.stringForIndex(index); }
-
-    static void removeScriptPragmas(QString &script);
 };
 
 class Q_QML_PRIVATE_EXPORT ScriptDirectivesCollector : public QQmlJS::Directives

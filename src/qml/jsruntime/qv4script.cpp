@@ -245,7 +245,6 @@ Script *Script::createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlCo
 
     QByteArray data = f.readAll();
     QString sourceCode = QString::fromUtf8(data);
-    QmlIR::Document::removeScriptPragmas(sourceCode);
 
     auto result = new QV4::Script(engine, qmlContext, /*parseAsBinding*/false, sourceCode, originalUrl.toString());
     result->contextType = QV4::Compiler::ContextType::ScriptImportedByQML;
