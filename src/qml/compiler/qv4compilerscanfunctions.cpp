@@ -52,6 +52,7 @@
 QT_USE_NAMESPACE
 using namespace QV4;
 using namespace QV4::Compiler;
+using namespace QQmlJS;
 using namespace QQmlJS::AST;
 
 static CompiledData::Location location(const QQmlJS::AST::SourceLocation &astLocation)

@@ -56,6 +56,7 @@ QT_USE_NAMESPACE
 
 static const quint32 emptyStringIndex = 0;
 using namespace QmlIR;
+using namespace QQmlJS;
 
 #define COMPILE_EXCEPTION(location, desc) \
     { \

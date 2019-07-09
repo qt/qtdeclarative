@@ -52,7 +52,6 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmlengine_p.h>
-#include <private/qqmlirbuilder_p.h>
 #include <private/qv4profiling_p.h>
 #include <qv4runtimecodegen_p.h>
 
@@ -61,6 +60,7 @@
 #include <QScopedValueRollback>
 
 using namespace QV4;
+using namespace QQmlJS;
 
 Script::Script(ExecutionEngine *v4, QmlContext *qml, const QQmlRefPointer<ExecutableCompilationUnit> &compilationUnit)
     : line(1), column(0), context(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)

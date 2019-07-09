@@ -39,7 +39,6 @@
 
 #include "qqmltypecompiler_p.h"
 
-#include <private/qqmlirbuilder_p.h>
 #include <private/qqmlobjectcreator_p.h>
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlvmemetaobject_p.h>

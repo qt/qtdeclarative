@@ -40,8 +40,11 @@
 #include "qqmlpropertyvalidator_p.h"
 
 #include <private/qqmlcustomparser_p.h>
+#include <private/qqmlirbuilder_p.h>
 #include <private/qqmlstringconverters_p.h>
+#include <private/qqmlpropertycachecreator_p.h>
 #include <private/qqmlpropertyresolver_p.h>
+
 #include <QtCore/qdatetime.h>
 
 QT_BEGIN_NAMESPACE

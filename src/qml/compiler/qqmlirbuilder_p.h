@@ -269,7 +269,7 @@ struct Function
     QV4::CompiledData::Location location;
     int nameIndex;
     quint32 index; // index in parsedQML::functions
-    FixedPoolArray<Parameter> formals;
+    QQmlJS::FixedPoolArray<Parameter> formals;
     QV4::CompiledData::ParameterType returnType;
 
     // --- QQmlPropertyCacheCreator interface
@@ -350,9 +350,9 @@ public:
     QString bindingAsString(Document *doc, int scriptIndex) const;
 
     PoolList<CompiledFunctionOrExpression> *functionsAndExpressions;
-    FixedPoolArray<int> runtimeFunctionIndices;
+    QQmlJS::FixedPoolArray<int> runtimeFunctionIndices;
 
-    FixedPoolArray<quint32> namedObjectsInComponent;
+    QQmlJS::FixedPoolArray<quint32> namedObjectsInComponent;
     int namedObjectsInComponentCount() const { return namedObjectsInComponent.size(); }
     const quint32 *namedObjectsInComponentTable() const { return namedObjectsInComponent.begin(); }
 
@@ -440,7 +440,7 @@ public:
 
     void throwRecursionDepthError() override
     {
-        recordError(AST::SourceLocation(),
+        recordError(QQmlJS::AST::SourceLocation(),
                     QStringLiteral("Maximum statement or expression depth exceeded"));
     }
 
@@ -459,13 +459,19 @@ public:
     QStringRef textRefAt(const QQmlJS::AST::SourceLocation &first,
                          const QQmlJS::AST::SourceLocation &last) const;
 
-    void setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST::Statement *statement, AST::Node *parentNode);
+    void setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST::Statement *statement,
+                         QQmlJS::AST::Node *parentNode);
     void tryGeneratingTranslationBinding(const QStringRef &base, QQmlJS::AST::ArgumentList *args, QV4::CompiledData::Binding *binding);
 
-    void appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Statement *value, AST::Node *parentNode);
+    void appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Statement *value,
+                       QQmlJS::AST::Node *parentNode);
     void appendBinding(QQmlJS::AST::UiQualifiedId *name, int objectIndex, bool isOnAssignment = false);
-    void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, QQmlJS::AST::Statement *value, AST::Node *parentNode);
-    void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, int objectIndex, bool isListItem = false, bool isOnAssignment = false);
+    void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation,
+                       const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex,
+                       QQmlJS::AST::Statement *value, QQmlJS::AST::Node *parentNode);
+    void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation,
+                       const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex,
+                       int objectIndex, bool isListItem = false, bool isOnAssignment = false);
 
     bool appendAlias(QQmlJS::AST::UiPublicMember *node);
 

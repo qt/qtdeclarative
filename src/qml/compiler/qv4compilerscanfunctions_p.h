@@ -62,8 +62,6 @@
 
 QT_BEGIN_NAMESPACE
 
-using namespace QQmlJS;
-
 namespace QV4 {
 
 namespace Moth {
@@ -83,84 +81,87 @@ class ScanFunctions: protected QQmlJS::AST::Visitor
     typedef QScopedValueRollback<bool> TemporaryBoolAssignment;
 public:
     ScanFunctions(Codegen *cg, const QString &sourceCode, ContextType defaultProgramType);
-    void operator()(AST::Node *node);
+    void operator()(QQmlJS::AST::Node *node);
 
     void enterGlobalEnvironment(ContextType compilationMode);
-    void enterEnvironment(AST::Node *node, ContextType compilationMode, const QString &name);
+    void enterEnvironment(QQmlJS::AST::Node *node, ContextType compilationMode,
+                          const QString &name);
     void leaveEnvironment();
 
-    void enterQmlFunction(AST::FunctionDeclaration *ast)
+    void enterQmlFunction(QQmlJS::AST::FunctionDeclaration *ast)
     { enterFunction(ast, false); }
 
 protected:
     using Visitor::visit;
     using Visitor::endVisit;
 
-    void checkDirectivePrologue(AST::StatementList *ast);
+    void checkDirectivePrologue(QQmlJS::AST::StatementList *ast);
 
-    void checkName(const QStringRef &name, const AST::SourceLocation &loc);
+    void checkName(const QStringRef &name, const QQmlJS::AST::SourceLocation &loc);
 
-    bool visit(AST::Program *ast) override;
-    void endVisit(AST::Program *) override;
+    bool visit(QQmlJS::AST::Program *ast) override;
+    void endVisit(QQmlJS::AST::Program *) override;
 
-    bool visit(AST::ESModule *ast) override;
-    void endVisit(AST::ESModule *) override;
+    bool visit(QQmlJS::AST::ESModule *ast) override;
+    void endVisit(QQmlJS::AST::ESModule *) override;
 
-    bool visit(AST::ExportDeclaration *declaration) override;
-    bool visit(AST::ImportDeclaration *declaration) override;
+    bool visit(QQmlJS::AST::ExportDeclaration *declaration) override;
+    bool visit(QQmlJS::AST::ImportDeclaration *declaration) override;
 
-    bool visit(AST::CallExpression *ast) override;
-    bool visit(AST::PatternElement *ast) override;
-    bool visit(AST::IdentifierExpression *ast) override;
-    bool visit(AST::ExpressionStatement *ast) override;
-    bool visit(AST::FunctionExpression *ast) override;
-    bool visit(AST::TemplateLiteral *ast) override;
-    bool visit(AST::SuperLiteral *) override;
-    bool visit(AST::FieldMemberExpression *) override;
-    bool visit(AST::ArrayPattern *) override;
+    bool visit(QQmlJS::AST::CallExpression *ast) override;
+    bool visit(QQmlJS::AST::PatternElement *ast) override;
+    bool visit(QQmlJS::AST::IdentifierExpression *ast) override;
+    bool visit(QQmlJS::AST::ExpressionStatement *ast) override;
+    bool visit(QQmlJS::AST::FunctionExpression *ast) override;
+    bool visit(QQmlJS::AST::TemplateLiteral *ast) override;
+    bool visit(QQmlJS::AST::SuperLiteral *) override;
+    bool visit(QQmlJS::AST::FieldMemberExpression *) override;
+    bool visit(QQmlJS::AST::ArrayPattern *) override;
 
-    bool enterFunction(AST::FunctionExpression *ast, bool enterName);
+    bool enterFunction(QQmlJS::AST::FunctionExpression *ast, bool enterName);
 
-    void endVisit(AST::FunctionExpression *) override;
+    void endVisit(QQmlJS::AST::FunctionExpression *) override;
 
-    bool visit(AST::ObjectPattern *ast) override;
+    bool visit(QQmlJS::AST::ObjectPattern *ast) override;
 
-    bool visit(AST::PatternProperty *ast) override;
-    void endVisit(AST::PatternProperty *) override;
+    bool visit(QQmlJS::AST::PatternProperty *ast) override;
+    void endVisit(QQmlJS::AST::PatternProperty *) override;
 
-    bool visit(AST::FunctionDeclaration *ast) override;
-    void endVisit(AST::FunctionDeclaration *) override;
+    bool visit(QQmlJS::AST::FunctionDeclaration *ast) override;
+    void endVisit(QQmlJS::AST::FunctionDeclaration *) override;
 
-    bool visit(AST::ClassExpression *ast) override;
-    void endVisit(AST::ClassExpression *) override;
+    bool visit(QQmlJS::AST::ClassExpression *ast) override;
+    void endVisit(QQmlJS::AST::ClassExpression *) override;
 
-    bool visit(AST::ClassDeclaration *ast) override;
-    void endVisit(AST::ClassDeclaration *) override;
+    bool visit(QQmlJS::AST::ClassDeclaration *ast) override;
+    void endVisit(QQmlJS::AST::ClassDeclaration *) override;
 
-    bool visit(AST::DoWhileStatement *ast) override;
-    bool visit(AST::ForStatement *ast) override;
-    void endVisit(AST::ForStatement *) override;
-    bool visit(AST::ForEachStatement *ast) override;
-    void endVisit(AST::ForEachStatement *) override;
+    bool visit(QQmlJS::AST::DoWhileStatement *ast) override;
+    bool visit(QQmlJS::AST::ForStatement *ast) override;
+    void endVisit(QQmlJS::AST::ForStatement *) override;
+    bool visit(QQmlJS::AST::ForEachStatement *ast) override;
+    void endVisit(QQmlJS::AST::ForEachStatement *) override;
 
-    bool visit(AST::ThisExpression *ast) override;
+    bool visit(QQmlJS::AST::ThisExpression *ast) override;
 
-    bool visit(AST::Block *ast) override;
-    void endVisit(AST::Block *ast) override;
+    bool visit(QQmlJS::AST::Block *ast) override;
+    void endVisit(QQmlJS::AST::Block *ast) override;
 
-    bool visit(AST::CaseBlock *ast) override;
-    void endVisit(AST::CaseBlock *ast) override;
+    bool visit(QQmlJS::AST::CaseBlock *ast) override;
+    void endVisit(QQmlJS::AST::CaseBlock *ast) override;
 
-    bool visit(AST::Catch *ast) override;
-    void endVisit(AST::Catch *ast) override;
+    bool visit(QQmlJS::AST::Catch *ast) override;
+    void endVisit(QQmlJS::AST::Catch *ast) override;
 
-    bool visit(AST::WithStatement *ast) override;
-    void endVisit(AST::WithStatement *ast) override;
+    bool visit(QQmlJS::AST::WithStatement *ast) override;
+    void endVisit(QQmlJS::AST::WithStatement *ast) override;
 
     void throwRecursionDepthError() override;
 
 protected:
-    bool enterFunction(AST::Node *ast, const QString &name, AST::FormalParameterList *formals, AST::StatementList *body, bool enterName);
+    bool enterFunction(QQmlJS::AST::Node *ast, const QString &name,
+                       QQmlJS::AST::FormalParameterList *formals,
+                       QQmlJS::AST::StatementList *body, bool enterName);
 
     void calcEscapingVariables();
 // fields:
@@ -173,7 +174,7 @@ protected:
     ContextType defaultProgramType;
 
 private:
-    static constexpr AST::Node *astNodeForGlobalEnvironment = nullptr;
+    static constexpr QQmlJS::AST::Node *astNodeForGlobalEnvironment = nullptr;
 };
 
 }

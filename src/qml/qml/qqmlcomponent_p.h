@@ -60,6 +60,7 @@
 #include "qqmlerror.h"
 #include "qqml.h"
 #include <private/qqmlobjectcreator_p.h>
+#include <private/qqmltypedata_p.h>
 
 #include <QtCore/QString>
 #include <QtCore/QStringList>

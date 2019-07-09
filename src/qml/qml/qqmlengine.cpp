@@ -59,6 +59,7 @@
 #include "qqmlincubator.h"
 #include "qqmlabstracturlinterceptor.h"
 #include <private/qqmlboundsignal_p.h>
+#include <private/qqmljsdiagnosticmessage_p.h>
 #include <QtCore/qstandardpaths.h>
 #include <QtCore/qsettings.h>
 #include <QtCore/qmetaobject.h>
@@ -2115,10 +2116,11 @@ void QQmlEnginePrivate::warning(QQmlEnginePrivate *engine, const QList<QQmlError
         dumpwarning(error);
 }
 
-QList<QQmlError> QQmlEnginePrivate::qmlErrorFromDiagnostics(const QString &fileName, const QList<DiagnosticMessage> &diagnosticMessages)
+QList<QQmlError> QQmlEnginePrivate::qmlErrorFromDiagnostics(
+        const QString &fileName, const QList<QQmlJS::DiagnosticMessage> &diagnosticMessages)
 {
     QList<QQmlError> errors;
-    for (const DiagnosticMessage &m : diagnosticMessages) {
+    for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
         if (m.isWarning()) {
             qWarning("%s:%d : %s", qPrintable(fileName), m.line, qPrintable(m.message));
             continue;

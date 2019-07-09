@@ -63,8 +63,6 @@
 
 QT_BEGIN_NAMESPACE
 
-using namespace QQmlJS;
-
 namespace QV4 {
 
 namespace Moth {
@@ -93,14 +91,14 @@ public:
     void generateFromProgram(const QString &fileName,
                              const QString &finalUrl,
                              const QString &sourceCode,
-                             AST::Program *ast,
+                             QQmlJS::AST::Program *ast,
                              Module *module,
                              ContextType contextType = ContextType::Global);
 
     void generateFromModule(const QString &fileName,
                             const QString &finalUrl,
                             const QString &sourceCode,
-                            AST::ESModule *ast,
+                            QQmlJS::AST::ESModule *ast,
                             Module *module);
 
 public:
@@ -487,10 +485,10 @@ protected:
         }
     };
 
-    void enterContext(AST::Node *node);
+    void enterContext(QQmlJS::AST::Node *node);
     int leaveContext();
 public:
-    Context *enterBlock(AST::Node *node);
+    Context *enterBlock(QQmlJS::AST::Node *node);
     int leaveBlock() { return leaveContext(); }
 protected:
     void leaveLoop();
@@ -521,18 +519,18 @@ public:
     int registerQmlContextPropertyGetterLookup(int nameIndex) { return jsUnitGenerator->registerQmlContextPropertyGetterLookup(nameIndex); }
 
     // Returns index in _module->functions
-    virtual int defineFunction(const QString &name, AST::Node *ast,
-                               AST::FormalParameterList *formals,
-                               AST::StatementList *body);
+    virtual int defineFunction(const QString &name, QQmlJS::AST::Node *ast,
+                               QQmlJS::AST::FormalParameterList *formals,
+                               QQmlJS::AST::StatementList *body);
 
 protected:
-    void statement(AST::Statement *ast);
-    void statement(AST::ExpressionNode *ast);
-    void condition(AST::ExpressionNode *ast, const BytecodeGenerator::Label *iftrue,
+    void statement(QQmlJS::AST::Statement *ast);
+    void statement(QQmlJS::AST::ExpressionNode *ast);
+    void condition(QQmlJS::AST::ExpressionNode *ast, const BytecodeGenerator::Label *iftrue,
                    const BytecodeGenerator::Label *iffalse,
                    bool trueBlockFollowsCondition);
 
-    inline Reference expression(AST::ExpressionNode *ast, const QString &name = QString())
+    inline Reference expression(QQmlJS::AST::ExpressionNode *ast, const QString &name = QString())
     {
         if (!ast || hasError())
             return Reference();
@@ -542,133 +540,134 @@ protected:
         return popResult();
     }
 
-    inline void accept(AST::Node *node)
+    inline void accept(QQmlJS::AST::Node *node)
     {
         if (!hasError() && node)
             node->accept(this);
     }
 
-    void program(AST::Program *ast);
-    void statementList(AST::StatementList *ast);
-    void variableDeclaration(AST::PatternElement *ast);
-    void variableDeclarationList(AST::VariableDeclarationList *ast);
+    void program(QQmlJS::AST::Program *ast);
+    void statementList(QQmlJS::AST::StatementList *ast);
+    void variableDeclaration(QQmlJS::AST::PatternElement *ast);
+    void variableDeclarationList(QQmlJS::AST::VariableDeclarationList *ast);
 
-    Reference targetForPatternElement(AST::PatternElement *p);
-    void initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &baseRef = Reference(), bool isDefinition = false);
-    void destructurePropertyList(const Reference &object, AST::PatternPropertyList *bindingList, bool isDefinition = false);
-    void destructureElementList(const Reference &array, AST::PatternElementList *bindingList, bool isDefinition = false);
-    void destructurePattern(AST::Pattern *p, const Reference &rhs);
+    Reference targetForPatternElement(QQmlJS::AST::PatternElement *p);
+    void initializeAndDestructureBindingElement(QQmlJS::AST::PatternElement *e, const Reference &baseRef = Reference(), bool isDefinition = false);
+    void destructurePropertyList(const Reference &object, QQmlJS::AST::PatternPropertyList *bindingList, bool isDefinition = false);
+    void destructureElementList(const Reference &array, QQmlJS::AST::PatternElementList *bindingList, bool isDefinition = false);
+    void destructurePattern(QQmlJS::AST::Pattern *p, const Reference &rhs);
 
-    Reference referenceForPropertyName(const Codegen::Reference &object, AST::PropertyName *name);
+    Reference referenceForPropertyName(const Codegen::Reference &object, QQmlJS::AST::PropertyName *name);
 
     void emitReturn(const Reference &expr);
 
     // nodes
-    bool visit(AST::ArgumentList *ast) override;
-    bool visit(AST::CaseBlock *ast) override;
-    bool visit(AST::CaseClause *ast) override;
-    bool visit(AST::CaseClauses *ast) override;
-    bool visit(AST::Catch *ast) override;
-    bool visit(AST::DefaultClause *ast) override;
-    bool visit(AST::Elision *ast) override;
-    bool visit(AST::Finally *ast) override;
-    bool visit(AST::FormalParameterList *ast) override;
-    bool visit(AST::Program *ast) override;
-    bool visit(AST::StatementList *ast) override;
-    bool visit(AST::UiArrayMemberList *ast) override;
-    bool visit(AST::UiImport *ast) override;
-    bool visit(AST::UiHeaderItemList *ast) override;
-    bool visit(AST::UiPragma *ast) override;
-    bool visit(AST::UiObjectInitializer *ast) override;
-    bool visit(AST::UiObjectMemberList *ast) override;
-    bool visit(AST::UiParameterList *ast) override;
-    bool visit(AST::UiProgram *ast) override;
-    bool visit(AST::UiQualifiedId *ast) override;
-    bool visit(AST::VariableDeclarationList *ast) override;
+    bool visit(QQmlJS::AST::ArgumentList *ast) override;
+    bool visit(QQmlJS::AST::CaseBlock *ast) override;
+    bool visit(QQmlJS::AST::CaseClause *ast) override;
+    bool visit(QQmlJS::AST::CaseClauses *ast) override;
+    bool visit(QQmlJS::AST::Catch *ast) override;
+    bool visit(QQmlJS::AST::DefaultClause *ast) override;
+    bool visit(QQmlJS::AST::Elision *ast) override;
+    bool visit(QQmlJS::AST::Finally *ast) override;
+    bool visit(QQmlJS::AST::FormalParameterList *ast) override;
+    bool visit(QQmlJS::AST::Program *ast) override;
+    bool visit(QQmlJS::AST::StatementList *ast) override;
+    bool visit(QQmlJS::AST::UiArrayMemberList *ast) override;
+    bool visit(QQmlJS::AST::UiImport *ast) override;
+    bool visit(QQmlJS::AST::UiHeaderItemList *ast) override;
+    bool visit(QQmlJS::AST::UiPragma *ast) override;
+    bool visit(QQmlJS::AST::UiObjectInitializer *ast) override;
+    bool visit(QQmlJS::AST::UiObjectMemberList *ast) override;
+    bool visit(QQmlJS::AST::UiParameterList *ast) override;
+    bool visit(QQmlJS::AST::UiProgram *ast) override;
+    bool visit(QQmlJS::AST::UiQualifiedId *ast) override;
+    bool visit(QQmlJS::AST::VariableDeclarationList *ast) override;
 
-    bool visit(AST::PatternElement *ast) override;
-    bool visit(AST::PatternElementList *ast) override;
-    bool visit(AST::PatternProperty *ast) override;
-    bool visit(AST::PatternPropertyList *ast) override;
+    bool visit(QQmlJS::AST::PatternElement *ast) override;
+    bool visit(QQmlJS::AST::PatternElementList *ast) override;
+    bool visit(QQmlJS::AST::PatternProperty *ast) override;
+    bool visit(QQmlJS::AST::PatternPropertyList *ast) override;
 
-    bool visit(AST::ExportDeclaration *ast) override;
+    bool visit(QQmlJS::AST::ExportDeclaration *ast) override;
 
-    bool visit(AST::TypeAnnotation *ast) override;
+    bool visit(QQmlJS::AST::TypeAnnotation *ast) override;
 
     // expressions
-    bool visit(AST::Expression *ast) override;
-    bool visit(AST::ArrayPattern *ast) override;
-    bool visit(AST::ArrayMemberExpression *ast) override;
-    bool visit(AST::BinaryExpression *ast) override;
-    bool visit(AST::CallExpression *ast) override;
-    bool visit(AST::ConditionalExpression *ast) override;
-    bool visit(AST::DeleteExpression *ast) override;
-    bool visit(AST::FalseLiteral *ast) override;
-    bool visit(AST::SuperLiteral *ast) override;
-    bool visit(AST::FieldMemberExpression *ast) override;
-    bool visit(AST::TaggedTemplate *ast) override;
-    bool visit(AST::FunctionExpression *ast) override;
-    bool visit(AST::IdentifierExpression *ast) override;
-    bool visit(AST::NestedExpression *ast) override;
-    bool visit(AST::NewExpression *ast) override;
-    bool visit(AST::NewMemberExpression *ast) override;
-    bool visit(AST::NotExpression *ast) override;
-    bool visit(AST::NullExpression *ast) override;
-    bool visit(AST::NumericLiteral *ast) override;
-    bool visit(AST::ObjectPattern *ast) override;
-    bool visit(AST::PostDecrementExpression *ast) override;
-    bool visit(AST::PostIncrementExpression *ast) override;
-    bool visit(AST::PreDecrementExpression *ast) override;
-    bool visit(AST::PreIncrementExpression *ast) override;
-    bool visit(AST::RegExpLiteral *ast) override;
-    bool visit(AST::StringLiteral *ast) override;
-    bool visit(AST::TemplateLiteral *ast) override;
-    bool visit(AST::ThisExpression *ast) override;
-    bool visit(AST::TildeExpression *ast) override;
-    bool visit(AST::TrueLiteral *ast) override;
-    bool visit(AST::TypeOfExpression *ast) override;
-    bool visit(AST::UnaryMinusExpression *ast) override;
-    bool visit(AST::UnaryPlusExpression *ast) override;
-    bool visit(AST::VoidExpression *ast) override;
-    bool visit(AST::FunctionDeclaration *ast) override;
-    bool visit(AST::YieldExpression *ast) override;
-    bool visit(AST::ClassExpression *ast) override;
-    bool visit(AST::ClassDeclaration *ast) override;
+    bool visit(QQmlJS::AST::Expression *ast) override;
+    bool visit(QQmlJS::AST::ArrayPattern *ast) override;
+    bool visit(QQmlJS::AST::ArrayMemberExpression *ast) override;
+    bool visit(QQmlJS::AST::BinaryExpression *ast) override;
+    bool visit(QQmlJS::AST::CallExpression *ast) override;
+    bool visit(QQmlJS::AST::ConditionalExpression *ast) override;
+    bool visit(QQmlJS::AST::DeleteExpression *ast) override;
+    bool visit(QQmlJS::AST::FalseLiteral *ast) override;
+    bool visit(QQmlJS::AST::SuperLiteral *ast) override;
+    bool visit(QQmlJS::AST::FieldMemberExpression *ast) override;
+    bool visit(QQmlJS::AST::TaggedTemplate *ast) override;
+    bool visit(QQmlJS::AST::FunctionExpression *ast) override;
+    bool visit(QQmlJS::AST::IdentifierExpression *ast) override;
+    bool visit(QQmlJS::AST::NestedExpression *ast) override;
+    bool visit(QQmlJS::AST::NewExpression *ast) override;
+    bool visit(QQmlJS::AST::NewMemberExpression *ast) override;
+    bool visit(QQmlJS::AST::NotExpression *ast) override;
+    bool visit(QQmlJS::AST::NullExpression *ast) override;
+    bool visit(QQmlJS::AST::NumericLiteral *ast) override;
+    bool visit(QQmlJS::AST::ObjectPattern *ast) override;
+    bool visit(QQmlJS::AST::PostDecrementExpression *ast) override;
+    bool visit(QQmlJS::AST::PostIncrementExpression *ast) override;
+    bool visit(QQmlJS::AST::PreDecrementExpression *ast) override;
+    bool visit(QQmlJS::AST::PreIncrementExpression *ast) override;
+    bool visit(QQmlJS::AST::RegExpLiteral *ast) override;
+    bool visit(QQmlJS::AST::StringLiteral *ast) override;
+    bool visit(QQmlJS::AST::TemplateLiteral *ast) override;
+    bool visit(QQmlJS::AST::ThisExpression *ast) override;
+    bool visit(QQmlJS::AST::TildeExpression *ast) override;
+    bool visit(QQmlJS::AST::TrueLiteral *ast) override;
+    bool visit(QQmlJS::AST::TypeOfExpression *ast) override;
+    bool visit(QQmlJS::AST::UnaryMinusExpression *ast) override;
+    bool visit(QQmlJS::AST::UnaryPlusExpression *ast) override;
+    bool visit(QQmlJS::AST::VoidExpression *ast) override;
+    bool visit(QQmlJS::AST::FunctionDeclaration *ast) override;
+    bool visit(QQmlJS::AST::YieldExpression *ast) override;
+    bool visit(QQmlJS::AST::ClassExpression *ast) override;
+    bool visit(QQmlJS::AST::ClassDeclaration *ast) override;
 
     // statements
-    bool visit(AST::Block *ast) override;
-    bool visit(AST::BreakStatement *ast) override;
-    bool visit(AST::ContinueStatement *ast) override;
-    bool visit(AST::DebuggerStatement *ast) override;
-    bool visit(AST::DoWhileStatement *ast) override;
-    bool visit(AST::EmptyStatement *ast) override;
-    bool visit(AST::ExpressionStatement *ast) override;
-    bool visit(AST::ForEachStatement *ast) override;
-    bool visit(AST::ForStatement *ast) override;
-    bool visit(AST::IfStatement *ast) override;
-    bool visit(AST::LabelledStatement *ast) override;
-    bool visit(AST::ReturnStatement *ast) override;
-    bool visit(AST::SwitchStatement *ast) override;
-    bool visit(AST::ThrowStatement *ast) override;
-    bool visit(AST::TryStatement *ast) override;
-    bool visit(AST::VariableStatement *ast) override;
-    bool visit(AST::WhileStatement *ast) override;
-    bool visit(AST::WithStatement *ast) override;
+    bool visit(QQmlJS::AST::Block *ast) override;
+    bool visit(QQmlJS::AST::BreakStatement *ast) override;
+    bool visit(QQmlJS::AST::ContinueStatement *ast) override;
+    bool visit(QQmlJS::AST::DebuggerStatement *ast) override;
+    bool visit(QQmlJS::AST::DoWhileStatement *ast) override;
+    bool visit(QQmlJS::AST::EmptyStatement *ast) override;
+    bool visit(QQmlJS::AST::ExpressionStatement *ast) override;
+    bool visit(QQmlJS::AST::ForEachStatement *ast) override;
+    bool visit(QQmlJS::AST::ForStatement *ast) override;
+    bool visit(QQmlJS::AST::IfStatement *ast) override;
+    bool visit(QQmlJS::AST::LabelledStatement *ast) override;
+    bool visit(QQmlJS::AST::ReturnStatement *ast) override;
+    bool visit(QQmlJS::AST::SwitchStatement *ast) override;
+    bool visit(QQmlJS::AST::ThrowStatement *ast) override;
+    bool visit(QQmlJS::AST::TryStatement *ast) override;
+    bool visit(QQmlJS::AST::VariableStatement *ast) override;
+    bool visit(QQmlJS::AST::WhileStatement *ast) override;
+    bool visit(QQmlJS::AST::WithStatement *ast) override;
 
     // ui object members
-    bool visit(AST::UiArrayBinding *ast) override;
-    bool visit(AST::UiObjectBinding *ast) override;
-    bool visit(AST::UiObjectDefinition *ast) override;
-    bool visit(AST::UiPublicMember *ast) override;
-    bool visit(AST::UiScriptBinding *ast) override;
-    bool visit(AST::UiSourceElement *ast) override;
+    bool visit(QQmlJS::AST::UiArrayBinding *ast) override;
+    bool visit(QQmlJS::AST::UiObjectBinding *ast) override;
+    bool visit(QQmlJS::AST::UiObjectDefinition *ast) override;
+    bool visit(QQmlJS::AST::UiPublicMember *ast) override;
+    bool visit(QQmlJS::AST::UiScriptBinding *ast) override;
+    bool visit(QQmlJS::AST::UiSourceElement *ast) override;
 
-    bool throwSyntaxErrorOnEvalOrArgumentsInStrictMode(const Reference &r, const AST::SourceLocation &loc);
-    virtual void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail);
-    virtual void throwReferenceError(const AST::SourceLocation &loc, const QString &detail);
+    bool throwSyntaxErrorOnEvalOrArgumentsInStrictMode(const Reference &r,
+                                                       const QQmlJS::AST::SourceLocation &loc);
+    virtual void throwSyntaxError(const QQmlJS::AST::SourceLocation &loc, const QString &detail);
+    virtual void throwReferenceError(const QQmlJS::AST::SourceLocation &loc, const QString &detail);
     void throwRecursionDepthError() override
     {
-        throwSyntaxError(AST::SourceLocation(),
+        throwSyntaxError(QQmlJS::AST::SourceLocation(),
                          QStringLiteral("Maximum statement or expression depth exceeded"));
     }
 
@@ -681,31 +680,33 @@ public:
 
     ErrorType errorType() const { return _errorType; }
     bool hasError() const { return _errorType != NoError; }
-    DiagnosticMessage error() const;
+    QQmlJS::DiagnosticMessage error() const;
     QUrl url() const;
 
     Reference binopHelper(QSOperator::Op oper, Reference &left, Reference &right);
     Reference jumpBinop(QSOperator::Op oper, Reference &left, Reference &right);
     struct Arguments { int argc; int argv; bool hasSpread; };
-    Arguments pushArgs(AST::ArgumentList *args);
+    Arguments pushArgs(QQmlJS::AST::ArgumentList *args);
     void handleCall(Reference &base, Arguments calldata, int slotForFunction, int slotForThisObject);
 
-    Arguments pushTemplateArgs(AST::TemplateLiteral *args);
-    bool handleTaggedTemplate(Reference base, AST::TaggedTemplate *ast);
-    void createTemplateObject(AST::TemplateLiteral *t);
+    Arguments pushTemplateArgs(QQmlJS::AST::TemplateLiteral *args);
+    bool handleTaggedTemplate(Reference base, QQmlJS::AST::TaggedTemplate *ast);
+    void createTemplateObject(QQmlJS::AST::TemplateLiteral *t);
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
 
-    void handleTryCatch(AST::TryStatement *ast);
-    void handleTryFinally(AST::TryStatement *ast);
+    void handleTryCatch(QQmlJS::AST::TryStatement *ast);
+    void handleTryFinally(QQmlJS::AST::TryStatement *ast);
 
 
-    Reference referenceForName(const QString &name, bool lhs, const QQmlJS::AST::SourceLocation &accessLocation = QQmlJS::AST::SourceLocation());
+    Reference referenceForName(
+            const QString &name, bool lhs,
+            const QQmlJS::AST::SourceLocation &accessLocation = QQmlJS::AST::SourceLocation());
 
     QV4::CompiledData::CompilationUnit generateCompilationUnit(bool generateUnitData = true);
     static QV4::CompiledData::CompilationUnit compileModule(
             bool debugMode, const QString &url, const QString &sourceCode,
-            const QDateTime &sourceTimeStamp, QList<DiagnosticMessage> *diagnostics);
+            const QDateTime &sourceTimeStamp, QList<QQmlJS::DiagnosticMessage> *diagnostics);
 
     Context *currentContext() const { return _context; }
     BytecodeGenerator *generator() const { return bytecodeGenerator; }
@@ -764,7 +765,7 @@ protected:
     int _returnAddress;
     Context *_context;
     Context *_functionContext = nullptr;
-    AST::LabelledStatement *_labelledStatement;
+    QQmlJS::AST::LabelledStatement *_labelledStatement;
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
     BytecodeGenerator *bytecodeGenerator = nullptr;
     Moth::BytecodeGenerator::Label *_returnLabel = nullptr;
@@ -808,9 +809,10 @@ protected:
     };
 
 private:
-    VolatileMemoryLocations scanVolatileMemoryLocations(AST::Node *ast);
-    void handleConstruct(const Reference &base, AST::ArgumentList *args);
-    void throwError(ErrorType errorType, const AST::SourceLocation &loc, const QString &detail);
+    VolatileMemoryLocations scanVolatileMemoryLocations(QQmlJS::AST::Node *ast);
+    void handleConstruct(const Reference &base, QQmlJS::AST::ArgumentList *args);
+    void throwError(ErrorType errorType, const QQmlJS::AST::SourceLocation &loc,
+                    const QString &detail);
 };
 
 }

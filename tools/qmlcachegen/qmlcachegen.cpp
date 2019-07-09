@@ -45,6 +45,8 @@
 
 #include <algorithm>
 
+using namespace QQmlJS;
+
 int filterResourceFile(const QString &input, const QString &output);
 bool generateLoader(const QStringList &compiledFiles, const QStringList &retainedFiles,
                     const QString &output, const QStringList &resourceFileMappings,

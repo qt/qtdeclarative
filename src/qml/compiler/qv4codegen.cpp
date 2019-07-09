@@ -69,6 +69,7 @@ static const bool disable_lookups = false;
 QT_USE_NAMESPACE
 using namespace QV4;
 using namespace QV4::Compiler;
+using namespace QQmlJS;
 using namespace QQmlJS::AST;
 
 static inline void setJumpOutLocation(QV4::Moth::BytecodeGenerator *bytecodeGenerator,

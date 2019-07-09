@@ -41,9 +41,11 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmlpropertycachecreator_p.h>
 #include <private/qqmlpropertyvalidator_p.h>
+#include <private/qqmlirbuilder_p.h>
 #include <private/qqmlirloader_p.h>
 #include <private/qqmlscriptblob_p.h>
 #include <private/qqmlscriptdata_p.h>
+#include <private/qqmltypecompiler_p.h>
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qcryptographichash.h>

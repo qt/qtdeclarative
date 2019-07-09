@@ -42,6 +42,7 @@
 #include "qv4compilerscanfunctions_p.h"
 
 using namespace QV4;
+using namespace QQmlJS;
 
 void RuntimeCodegen::generateFromFunctionExpression(const QString &fileName,
                                                     const QString &sourceCode,
