@@ -50,6 +50,8 @@
 // We mean it.
 //
 
+#include <functional>
+
 #include <QtCore/qstring.h>
 #include <QtCore/qscopeguard.h>
 #include <QtCore/qvector.h>
