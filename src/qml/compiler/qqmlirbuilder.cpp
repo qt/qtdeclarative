@@ -1746,19 +1746,11 @@ char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, Binding
     return bindingPtr;
 }
 
-JSCodeGen::JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
-                     QV4::Compiler::Module *jsModule, QQmlJS::Engine *jsEngine,
-                     QQmlJS::AST::UiProgram *qmlRoot,
-                     const QV4::Compiler::StringTableGenerator *stringPool, const QSet<QString> &globalNames)
-    : QV4::Compiler::Codegen(jsUnitGenerator, /*strict mode*/false)
-    , sourceCode(sourceCode)
-    , jsEngine(jsEngine)
-    , qmlRoot(qmlRoot)
-    , stringPool(stringPool)
+JSCodeGen::JSCodeGen(Document *document, const QSet<QString> &globalNames)
+    : QV4::Compiler::Codegen(&document->jsGenerator, /*strict mode*/false), document(document)
 {
     m_globalNames = globalNames;
-
-    _module = jsModule;
+    _module = &document->jsModule;
     _fileNameIsUrl = true;
 }
 
@@ -1766,17 +1758,17 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
 {
     auto qmlName = [&](const CompiledFunctionOrExpression &c) {
         if (c.nameIndex != 0)
-            return stringPool->stringForIndex(c.nameIndex);
+            return document->stringAt(c.nameIndex);
         else
             return QStringLiteral("%qml-expression-entry");
     };
     QVector<int> runtimeFunctionIndices(functions.size());
 
-    QV4::Compiler::ScanFunctions scan(this, sourceCode, QV4::Compiler::ContextType::Global);
+    QV4::Compiler::ScanFunctions scan(this, document->code, QV4::Compiler::ContextType::Global);
     scan.enterGlobalEnvironment(QV4::Compiler::ContextType::Binding);
     for (const CompiledFunctionOrExpression &f : functions) {
-        Q_ASSERT(f.node != qmlRoot);
-        Q_ASSERT(f.parentNode && f.parentNode != qmlRoot);
+        Q_ASSERT(f.node != document->program);
+        Q_ASSERT(f.parentNode && f.parentNode != document->program);
         QQmlJS::AST::FunctionDeclaration *function = QQmlJS::AST::cast<QQmlJS::AST::FunctionDeclaration*>(f.node);
 
         if (function) {
@@ -1799,7 +1791,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     for (int i = 0; i < functions.count(); ++i) {
         const CompiledFunctionOrExpression &qmlFunction = functions.at(i);
         QQmlJS::AST::Node *node = qmlFunction.node;
-        Q_ASSERT(node != qmlRoot);
+        Q_ASSERT(node != document->program);
 
         QQmlJS::AST::FunctionDeclaration *function = QQmlJS::AST::cast<QQmlJS::AST::FunctionDeclaration*>(node);
 
@@ -1814,7 +1806,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
             body = function->body;
         } else {
             // Synthesize source elements.
-            QQmlJS::MemoryPool *pool = jsEngine->pool();
+            QQmlJS::MemoryPool *pool = document->jsParserEngine.pool();
 
             QQmlJS::AST::Statement *stmt = node->statementCast();
             if (!stmt) {
@@ -1833,4 +1825,59 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     }
 
     return runtimeFunctionIndices;
+}
+
+bool JSCodeGen::generateCodeForComponents(const QVector<quint32> &componentRoots)
+{
+    for (int i = 0; i < componentRoots.count(); ++i) {
+        if (!compileComponent(componentRoots.at(i)))
+            return false;
+    }
+
+    return compileComponent(/*root object*/0);
+}
+
+bool JSCodeGen::compileComponent(int contextObject)
+{
+    const QmlIR::Object *obj = document->objects.at(contextObject);
+    if (obj->flags & QV4::CompiledData::Object::IsComponent) {
+        Q_ASSERT(obj->bindingCount() == 1);
+        const QV4::CompiledData::Binding *componentBinding = obj->firstBinding();
+        Q_ASSERT(componentBinding->type == QV4::CompiledData::Binding::Type_Object);
+        contextObject = componentBinding->value.objectIndex;
+    }
+
+    return compileJavaScriptCodeInObjectsRecursively(contextObject, contextObject);
+}
+
+bool JSCodeGen::compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex)
+{
+    QmlIR::Object *object = document->objects.at(objectIndex);
+    if (object->flags & QV4::CompiledData::Object::IsComponent)
+        return true;
+
+    if (object->functionsAndExpressions->count > 0) {
+        QList<QmlIR::CompiledFunctionOrExpression> functionsToCompile;
+        for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next)
+            functionsToCompile << *foe;
+        const QVector<int> runtimeFunctionIndices = generateJSCodeForFunctionsAndBindings(functionsToCompile);
+        if (hasError())
+            return false;
+
+        object->runtimeFunctionIndices.allocate(document->jsParserEngine.pool(),
+                                                runtimeFunctionIndices);
+    }
+
+    for (const QmlIR::Binding *binding = object->firstBinding(); binding; binding = binding->next) {
+        if (binding->type < QV4::CompiledData::Binding::Type_Object)
+            continue;
+
+        int target = binding->value.objectIndex;
+        int scope = binding->type == QV4::CompiledData::Binding::Type_Object ? target : scopeObjectIndex;
+
+        if (!compileJavaScriptCodeInObjectsRecursively(binding->value.objectIndex, scope))
+            return false;
+    }
+
+    return true;
 }

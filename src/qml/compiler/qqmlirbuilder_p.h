@@ -518,18 +518,17 @@ private:
 
 struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QV4::Compiler::Codegen
 {
-    JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator, QV4::Compiler::Module *jsModule,
-              QQmlJS::Engine *jsEngine, QQmlJS::AST::UiProgram *qmlRoot,
-              const QV4::Compiler::StringTableGenerator *stringPool, const QSet<QString> &globalNames);
+    JSCodeGen(Document *document, const QSet<QString> &globalNames);
 
     // Returns mapping from input functions to index in IR::Module::functions / compiledData->runtimeFunctions
     QVector<int> generateJSCodeForFunctionsAndBindings(const QList<CompiledFunctionOrExpression> &functions);
 
+    bool generateCodeForComponents(const QVector<quint32> &componentRoots);
+    bool compileComponent(int contextObject);
+    bool compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex);
+
 private:
-    QString sourceCode;
-    QQmlJS::Engine *jsEngine; // needed for memory pool
-    QQmlJS::AST::UiProgram *qmlRoot;
-    const QV4::Compiler::StringTableGenerator *stringPool;
+    Document *document;
 };
 
 } // namespace QmlIR

@@ -309,24 +309,6 @@ private:
     bool _seenObjectWithId;
 };
 
-// ### merge with QtQml::JSCodeGen and operate directly on object->functionsAndExpressions once old compiler is gone.
-class QQmlJSCodeGenerator : public QQmlCompilePass
-{
-public:
-    QQmlJSCodeGenerator(QQmlTypeCompiler *typeCompiler, QmlIR::JSCodeGen *v4CodeGen);
-
-    bool generateCodeForComponents();
-
-private:
-    bool compileComponent(int componentRoot);
-    bool compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex);
-
-    const QHash<int, QQmlCustomParser*> &customParsers;
-    const QVector<QmlIR::Object*> &qmlObjects;
-    const QQmlPropertyCacheVector * const propertyCaches;
-    QmlIR::JSCodeGen * const v4CodeGen;
-};
-
 class QQmlDefaultPropertyMerger : public QQmlCompilePass
 {
 public:
