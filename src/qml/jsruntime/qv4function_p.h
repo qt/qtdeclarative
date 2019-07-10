@@ -93,7 +93,7 @@ public:
         return static_cast<QV4::ExecutableCompilationUnit *>(compilationUnit);
     }
 
-    QV4::Heap::String *runtimeString(uint i)
+    QV4::Heap::String *runtimeString(uint i) const
     {
         return compilationUnit->runtimeStrings[i];
     }
@@ -120,7 +120,7 @@ public:
     void updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters);
 
     inline Heap::String *name() const {
-        return compilationUnit->runtimeStrings[compiledFunction->nameIndex];
+        return runtimeString(compiledFunction->nameIndex);
     }
 
     static QString prettyName(const Function *function, const void *address);
