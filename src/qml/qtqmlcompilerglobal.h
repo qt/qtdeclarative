@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,51 +37,22 @@
 **
 ****************************************************************************/
 
-#include "qv4engine_p.h"
-#include "qv4runtimecodegen_p.h"
-#include <private/qv4compilerscanfunctions_p.h>
+#ifndef QTQMLCOMPILERGLOBAL_H
+#define QTQMLCOMPILERGLOBAL_H
 
-using namespace QV4;
-using namespace QQmlJS;
+#include <QtCore/qglobal.h>
 
-void RuntimeCodegen::generateFromFunctionExpression(const QString &fileName,
-                                                    const QString &sourceCode,
-                                                    AST::FunctionExpression *ast,
-                                                    Compiler::Module *module)
-{
-    _module = module;
-    _module->fileName = fileName;
-    _module->finalUrl = fileName;
-    _context = nullptr;
+QT_BEGIN_NAMESPACE
 
-    Compiler::ScanFunctions scan(this, sourceCode, Compiler::ContextType::Global);
-    // fake a global environment
-    scan.enterEnvironment(nullptr, Compiler::ContextType::Function, QString());
-    scan(ast);
-    scan.leaveEnvironment();
+#if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB) || defined(QT_STATIC)
+#  define Q_QMLCOMPILER_EXPORT
+#else
+#  if defined(QT_BUILD_QML_LIB)
+#    define Q_QMLCOMPILER_EXPORT Q_DECL_EXPORT
+#  else
+#    define Q_QMLCOMPILER_EXPORT Q_DECL_IMPORT
+#  endif
+#endif
 
-    if (hasError())
-        return;
-
-    int index = defineFunction(ast->name.toString(), ast, ast->formals, ast->body);
-    _module->rootContext = _module->functions.at(index);
-}
-
-void RuntimeCodegen::throwSyntaxError(const AST::SourceLocation &loc, const QString &detail)
-{
-    if (hasError())
-        return;
-
-    Codegen::throwSyntaxError(loc, detail);
-    engine->throwSyntaxError(detail, _module->fileName, loc.startLine, loc.startColumn);
-}
-
-void RuntimeCodegen::throwReferenceError(const AST::SourceLocation &loc, const QString &detail)
-{
-    if (hasError())
-        return;
-
-    Codegen::throwReferenceError(loc, detail);
-    engine->throwReferenceError(detail, _module->fileName, loc.startLine, loc.startColumn);
-}
-
+QT_END_NAMESPACE
+#endif // QTQMLCOMPILERGLOBAL_H

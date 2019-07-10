@@ -46,6 +46,7 @@
 #include <QtCore/qalgorithms.h>
 #include <QtCore/private/qnumeric_p.h>
 #include <QtCore/qloggingcategory.h>
+#include <private/qv4alloca_p.h>
 #include <qqmlengine.h>
 #include "PageReservation.h"
 #include "PageAllocation.h"
@@ -59,7 +60,6 @@
 #include <iostream>
 #include <cstdlib>
 #include <algorithm>
-#include "qv4alloca_p.h"
 #include "qv4profiling_p.h"
 #include "qv4mapobject_p.h"
 #include "qv4setobject_p.h"

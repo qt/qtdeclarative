@@ -53,6 +53,7 @@
 #include "qv4global_p.h"
 #include <private/qv4executablecompilationunit_p.h>
 #include <private/qv4context_p.h>
+#include <private/qv4string_p.h>
 
 namespace JSC {
 class MacroAssemblerCodeRef;

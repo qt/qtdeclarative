@@ -48,7 +48,6 @@
 #include <private/qqmljsast_p.h>
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
-#include <private/qv4stringtoarrayindex_p.h>
 #include <private/qv4staticvalue_p.h>
 #include <private/qv4compilercontext_p.h>
 #include <private/qv4compilercontrolflow_p.h>

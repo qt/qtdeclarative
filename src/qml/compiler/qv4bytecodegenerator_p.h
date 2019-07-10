@@ -62,6 +62,11 @@ class SourceLocation;
 }
 
 namespace QV4 {
+
+namespace Compiler {
+struct Context;
+}
+
 namespace Moth {
 
 class BytecodeGenerator {

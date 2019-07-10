@@ -2,21 +2,17 @@ INCLUDEPATH += $$PWD
 INCLUDEPATH += $$OUT_PWD
 
 HEADERS += \
-    $$PWD/qv4alloca_p.h \
     $$PWD/qv4bytecodegenerator_p.h \
-    $$PWD/qv4compileddata_p.h \
     $$PWD/qv4compiler_p.h \
     $$PWD/qv4compilercontext_p.h \
     $$PWD/qv4compilercontrolflow_p.h \
+    $$PWD/qv4compilerglobal_p.h \
     $$PWD/qv4compilerscanfunctions_p.h \
     $$PWD/qv4codegen_p.h \
     $$PWD/qqmlirbuilder_p.h \
     $$PWD/qv4instr_moth_p.h \
     $$PWD/qv4bytecodehandler_p.h \
-    $$PWD/qv4calldata_p.h \
-    $$PWD/qv4util_p.h \
-    $$PWD/qv4staticvalue_p.h \
-    $$PWD/qv4stringtoarrayindex_p.h
+    $$PWD/qv4util_p.h
 
 SOURCES += \
     $$PWD/qv4bytecodegenerator.cpp \

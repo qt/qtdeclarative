@@ -64,6 +64,7 @@
 
 #include <private/qendian_p.h>
 #include <private/qv4staticvalue_p.h>
+#include <functional>
 
 QT_BEGIN_NAMESPACE
 
@@ -1123,10 +1124,10 @@ struct CompilationUnitBase
     }
 
     // pointers either to data->constants() or little-endian memory copy.
-    QV4::Heap::String **runtimeStrings = nullptr; // Array
+    Heap::String **runtimeStrings = nullptr; // Array
     const StaticValue* constants = nullptr;
     QV4::StaticValue *runtimeRegularExpressions = nullptr;
-    QV4::Heap::InternalClass **runtimeClasses = nullptr;
+    Heap::InternalClass **runtimeClasses = nullptr;
     const StaticValue** imports = nullptr;
 };
 

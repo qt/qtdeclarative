@@ -50,7 +50,7 @@
 // We mean it.
 //
 
-#include "private/qv4global_p.h"
+#include <private/qtqmlcompilerglobal_p.h>
 #include <private/qqmljsastvisitor_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsengine_p.h>

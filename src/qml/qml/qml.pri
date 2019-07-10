@@ -79,6 +79,7 @@ HEADERS += \
     $$PWD/qqmltypeloaderthread_p.h \
     $$PWD/qqmlvmemetaobject_p.h \
     $$PWD/qqml.h \
+    $$PWD/qqmlerror.h \
     $$PWD/qqmlproperty.h \
     $$PWD/qqmlcomponent.h \
     $$PWD/qqmlcomponent_p.h \

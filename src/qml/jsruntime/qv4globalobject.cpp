@@ -49,14 +49,14 @@
 #include "qv4string_p.h"
 #include "qv4jscall_p.h"
 
-#include <qv4codegen_p.h>
+#include <private/qv4codegen_p.h>
+#include <private/qv4alloca_p.h>
 #include "private/qlocale_tools_p.h"
 #include "private/qtools_p.h"
 
 #include <QtCore/QDebug>
 #include <QtCore/QString>
 #include <iostream>
-#include "qv4alloca_p.h"
 
 #include <wtf/MathExtras.h>
 

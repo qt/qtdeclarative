@@ -39,7 +39,7 @@
 
 #include "qv4compilationunitmapper_p.h"
 
-#include "qv4compileddata_p.h"
+#include <private/qv4compileddata_p.h>
 #include <QFileInfo>
 #include <QDateTime>
 #include <QCoreApplication>

@@ -38,11 +38,11 @@
 ****************************************************************************/
 
 #include "qv4vme_moth_p.h"
-#include "qv4instr_moth_p.h"
 
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qjsonobject.h>
 
+#include <private/qv4instr_moth_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4debugging_p.h>
 #include <private/qv4function_p.h>
@@ -56,10 +56,9 @@
 #include <private/qv4profiling_p.h>
 #include <private/qv4jscall_p.h>
 #include <private/qv4generatorobject_p.h>
+#include <private/qv4alloca_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 #include <iostream>
-
-#include "qv4alloca_p.h"
 
 #if QT_CONFIG(qml_jit)
 #include <private/qv4baselinejit_p.h>

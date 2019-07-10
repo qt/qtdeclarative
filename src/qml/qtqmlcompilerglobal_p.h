@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,51 +37,23 @@
 **
 ****************************************************************************/
 
-#include "qv4engine_p.h"
-#include "qv4runtimecodegen_p.h"
-#include <private/qv4compilerscanfunctions_p.h>
+#ifndef QTQMLCOMPILERGLOBAL_P_H
+#define QTQMLCOMPILERGLOBAL_P_H
 
-using namespace QV4;
-using namespace QQmlJS;
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-void RuntimeCodegen::generateFromFunctionExpression(const QString &fileName,
-                                                    const QString &sourceCode,
-                                                    AST::FunctionExpression *ast,
-                                                    Compiler::Module *module)
-{
-    _module = module;
-    _module->fileName = fileName;
-    _module->finalUrl = fileName;
-    _context = nullptr;
+#include <QtCore/private/qglobal_p.h>
+#include <qtqmlcompilerglobal.h>
 
-    Compiler::ScanFunctions scan(this, sourceCode, Compiler::ContextType::Global);
-    // fake a global environment
-    scan.enterEnvironment(nullptr, Compiler::ContextType::Function, QString());
-    scan(ast);
-    scan.leaveEnvironment();
+#define Q_QMLCOMPILER_PRIVATE_EXPORT Q_QMLCOMPILER_EXPORT
 
-    if (hasError())
-        return;
-
-    int index = defineFunction(ast->name.toString(), ast, ast->formals, ast->body);
-    _module->rootContext = _module->functions.at(index);
-}
-
-void RuntimeCodegen::throwSyntaxError(const AST::SourceLocation &loc, const QString &detail)
-{
-    if (hasError())
-        return;
-
-    Codegen::throwSyntaxError(loc, detail);
-    engine->throwSyntaxError(detail, _module->fileName, loc.startLine, loc.startColumn);
-}
-
-void RuntimeCodegen::throwReferenceError(const AST::SourceLocation &loc, const QString &detail)
-{
-    if (hasError())
-        return;
-
-    Codegen::throwReferenceError(loc, detail);
-    engine->throwReferenceError(detail, _module->fileName, loc.startLine, loc.startColumn);
-}
-
+#endif // QTQMLCOMPILERGLOBAL_P_H

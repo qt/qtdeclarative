@@ -38,8 +38,8 @@
 ****************************************************************************/
 
 #include <qv4compiler_p.h>
-#include <qv4compileddata_p.h>
 #include <qv4codegen_p.h>
+#include <private/qv4compileddata_p.h>
 #include <private/qv4staticvalue_p.h>
 #include <private/qv4alloca_p.h>
 #include <private/qqmljslexer_p.h>

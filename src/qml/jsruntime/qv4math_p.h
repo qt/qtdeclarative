@@ -52,7 +52,7 @@
 
 #include <qglobal.h>
 
-#include <QtQml/private/qv4staticvalue_p.h>
+#include <private/qv4staticvalue_p.h>
 #include <QtCore/qnumeric.h>
 #include <QtCore/private/qnumeric_p.h>
 #include <cmath>

@@ -50,13 +50,23 @@
 // We mean it.
 //
 
-#include <QtQml/private/qtqmlglobal_p.h>
-#include <QtQml/private/qv4global_p.h>
 #include <QtCore/private/qnumeric_p.h>
+
+#ifdef QT_NO_DEBUG
+#define QV4_NEARLY_ALWAYS_INLINE Q_ALWAYS_INLINE
+#else
+#define QV4_NEARLY_ALWAYS_INLINE inline
+#endif
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
+
+// ReturnedValue is used to return values from runtime methods
+// the type has to be a primitive type (no struct or union), so that the compiler
+// will return it in a register on all platforms.
+// It will be returned in rax on x64, [eax,edx] on x86 and [r0,r1] on arm
+typedef quint64 ReturnedValue;
 
 struct Double {
     quint64 d;
@@ -105,7 +115,7 @@ struct Double {
     }
 };
 
-struct Q_QML_PRIVATE_EXPORT StaticValue
+struct StaticValue
 {
     StaticValue() = default;
     constexpr StaticValue(quint64 val) : _val(val) {}
@@ -180,9 +190,9 @@ struct Q_QML_PRIVATE_EXPORT StaticValue
 
     quint64 _val;
 
-    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR quint64 &rawValueRef() { return _val; }
-    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR quint64 rawValue() const { return _val; }
-    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setRawValue(quint64 raw) { _val = raw; }
+    QV4_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR quint64 &rawValueRef() { return _val; }
+    QV4_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR quint64 rawValue() const { return _val; }
+    QV4_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setRawValue(quint64 raw) { _val = raw; }
 
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
     static inline int valueOffset() { return 0; }
@@ -192,22 +202,22 @@ struct Q_QML_PRIVATE_EXPORT StaticValue
     static inline int tagOffset() { return 0; }
 #endif
     static inline constexpr quint64 tagValue(quint32 tag, quint32 value) { return quint64(tag) << 32 | value; }
-    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setTagValue(quint32 tag, quint32 value) { _val = quint64(tag) << 32 | value; }
-    QML_NEARLY_ALWAYS_INLINE constexpr quint32 value() const { return _val & quint64(~quint32(0)); }
-    QML_NEARLY_ALWAYS_INLINE constexpr quint32 tag() const { return _val >> 32; }
-    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setTag(quint32 tag) { setTagValue(tag, value()); }
+    QV4_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setTagValue(quint32 tag, quint32 value) { _val = quint64(tag) << 32 | value; }
+    QV4_NEARLY_ALWAYS_INLINE constexpr quint32 value() const { return _val & quint64(~quint32(0)); }
+    QV4_NEARLY_ALWAYS_INLINE constexpr quint32 tag() const { return _val >> 32; }
+    QV4_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setTag(quint32 tag) { setTagValue(tag, value()); }
 
-    QML_NEARLY_ALWAYS_INLINE constexpr int int_32() const
+    QV4_NEARLY_ALWAYS_INLINE constexpr int int_32() const
     {
         return int(value());
     }
-    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setInt_32(int i)
+    QV4_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setInt_32(int i)
     {
         setTagValue(quint32(ValueTypeInternal::Integer), quint32(i));
     }
-    QML_NEARLY_ALWAYS_INLINE uint uint_32() const { return value(); }
+    QV4_NEARLY_ALWAYS_INLINE uint uint_32() const { return value(); }
 
-    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setEmpty()
+    QV4_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setEmpty()
     {
         setTagValue(quint32(ValueTypeInternal::Empty), 0);
     }
@@ -353,7 +363,7 @@ struct Q_QML_PRIVATE_EXPORT StaticValue
 #endif
     }
 
-    QML_NEARLY_ALWAYS_INLINE double doubleValue() const {
+    QV4_NEARLY_ALWAYS_INLINE double doubleValue() const {
         Q_ASSERT(isDouble());
         double d;
         StaticValue v = *this;
@@ -362,7 +372,7 @@ struct Q_QML_PRIVATE_EXPORT StaticValue
         return d;
     }
 
-    QML_NEARLY_ALWAYS_INLINE void setDouble(double d) {
+    QV4_NEARLY_ALWAYS_INLINE void setDouble(double d) {
         if (qt_is_nan(d))
             d = qt_qnan();
         memcpy(&_val, &d, 8);
@@ -383,7 +393,7 @@ struct Q_QML_PRIVATE_EXPORT StaticValue
         return false;
     }
 
-    QML_NEARLY_ALWAYS_INLINE static bool isInt32(double d) {
+    QV4_NEARLY_ALWAYS_INLINE static bool isInt32(double d) {
         int i = int(d);
         return (i == d && !(d == 0 && std::signbit(d)));
     }

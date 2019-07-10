@@ -280,7 +280,7 @@ struct Function
     Function *next;
 };
 
-struct Q_QML_PRIVATE_EXPORT CompiledFunctionOrExpression
+struct Q_QMLCOMPILER_PRIVATE_EXPORT CompiledFunctionOrExpression
 {
     CompiledFunctionOrExpression()
     {}
@@ -291,7 +291,7 @@ struct Q_QML_PRIVATE_EXPORT CompiledFunctionOrExpression
     CompiledFunctionOrExpression *next = nullptr;
 };
 
-struct Q_QML_PRIVATE_EXPORT Object
+struct Q_QMLCOMPILER_PRIVATE_EXPORT Object
 {
     Q_DECLARE_TR_FUNCTIONS(Object)
 public:
@@ -367,7 +367,7 @@ private:
     PoolList<Function> *functions;
 };
 
-struct Q_QML_PRIVATE_EXPORT Pragma
+struct Q_QMLCOMPILER_PRIVATE_EXPORT Pragma
 {
     enum PragmaType {
         PragmaSingleton = 0x1
@@ -377,7 +377,7 @@ struct Q_QML_PRIVATE_EXPORT Pragma
     QV4::CompiledData::Location location;
 };
 
-struct Q_QML_PRIVATE_EXPORT Document
+struct Q_QMLCOMPILER_PRIVATE_EXPORT Document
 {
     Document(bool debugMode);
     QString code;
@@ -395,7 +395,7 @@ struct Q_QML_PRIVATE_EXPORT Document
     QString stringAt(int index) const { return jsGenerator.stringForIndex(index); }
 };
 
-class Q_QML_PRIVATE_EXPORT ScriptDirectivesCollector : public QQmlJS::Directives
+class Q_QMLCOMPILER_PRIVATE_EXPORT ScriptDirectivesCollector : public QQmlJS::Directives
 {
     QmlIR::Document *document;
     QQmlJS::Engine *engine;
@@ -409,7 +409,7 @@ public:
     void importModule(const QString &uri, const QString &version, const QString &module, int lineNumber, int column) override;
 };
 
-struct Q_QML_PRIVATE_EXPORT IRBuilder : public QQmlJS::AST::Visitor
+struct Q_QMLCOMPILER_PRIVATE_EXPORT IRBuilder : public QQmlJS::AST::Visitor
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlCodeGenerator)
 public:
@@ -513,7 +513,7 @@ public:
     QV4::Compiler::JSUnitGenerator *jsGenerator;
 };
 
-struct Q_QML_PRIVATE_EXPORT QmlUnitGenerator
+struct Q_QMLCOMPILER_PRIVATE_EXPORT QmlUnitGenerator
 {
     void generate(Document &output, const QV4::CompiledData::DependentTypesHasher &dependencyHasher = QV4::CompiledData::DependentTypesHasher());
 
@@ -522,7 +522,7 @@ private:
     char *writeBindings(char *bindingPtr, const Object *o, BindingFilter filter) const;
 };
 
-struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QV4::Compiler::Codegen
+struct Q_QMLCOMPILER_PRIVATE_EXPORT JSCodeGen : public QV4::Compiler::Codegen
 {
     JSCodeGen(Document *document, const QSet<QString> &globalNames);
 

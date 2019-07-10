@@ -50,7 +50,6 @@
 // We mean it.
 //
 
-#include "private/qv4global_p.h"
 #include <private/qqmljsastvisitor_p.h>
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljsast_p.h>
@@ -79,7 +78,7 @@ struct ControlFlow;
 struct ControlFlowCatch;
 struct ControlFlowFinally;
 
-class Q_QML_PRIVATE_EXPORT Codegen: protected QQmlJS::AST::Visitor
+class Q_QMLCOMPILER_PRIVATE_EXPORT Codegen: protected QQmlJS::AST::Visitor
 {
 protected:
     using BytecodeGenerator = QV4::Moth::BytecodeGenerator;

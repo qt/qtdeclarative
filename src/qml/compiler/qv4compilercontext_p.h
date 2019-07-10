@@ -50,7 +50,6 @@
 // We mean it.
 //
 
-#include "private/qv4global_p.h"
 #include <private/qqmljsast_p.h>
 #include <private/qv4compileddata_p.h>
 #include <QtCore/QStringList>
@@ -62,8 +61,13 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+namespace Moth {
+class BytecodeGenerator;
+}
+
 namespace Compiler {
 
+class Codegen;
 struct ControlFlow;
 
 enum class ContextType {
