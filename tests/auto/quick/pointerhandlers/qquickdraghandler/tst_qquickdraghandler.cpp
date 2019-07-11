@@ -54,6 +54,7 @@ private slots:
 
     void defaultPropertyValues();
     void touchDrag();
+    void mouseDrag_data();
     void mouseDrag();
     void dragFromMargin();
     void touchDragMulti();
@@ -193,8 +194,22 @@ void tst_DragHandler::touchDrag()
     QCOMPARE(centroidChangedSpy.count(), 5);
 }
 
+void tst_DragHandler::mouseDrag_data()
+{
+    QTest::addColumn<Qt::MouseButtons>("acceptedButtons");
+    QTest::addColumn<Qt::MouseButtons>("dragButton");
+    QTest::newRow("left: drag") << Qt::MouseButtons(Qt::LeftButton) << Qt::MouseButtons(Qt::LeftButton);
+    QTest::newRow("right: don't drag") << Qt::MouseButtons(Qt::LeftButton) << Qt::MouseButtons(Qt::RightButton);
+    QTest::newRow("left: don't drag") << Qt::MouseButtons(Qt::RightButton | Qt::MiddleButton) << Qt::MouseButtons(Qt::LeftButton);
+    QTest::newRow("right or middle: drag") << Qt::MouseButtons(Qt::RightButton | Qt::MiddleButton) << Qt::MouseButtons(Qt::MiddleButton);
+}
+
 void tst_DragHandler::mouseDrag()
 {
+    QFETCH(Qt::MouseButtons, acceptedButtons);
+    QFETCH(Qt::MouseButtons, dragButton);
+    bool shouldDrag = bool(acceptedButtons & dragButton);
+
     const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
     QScopedPointer<QQuickView> windowPtr;
     createView(windowPtr, "draggables.qml");
@@ -204,6 +219,7 @@ void tst_DragHandler::mouseDrag()
     QVERIFY(ball);
     QQuickDragHandler *dragHandler = ball->findChild<QQuickDragHandler*>();
     QVERIFY(dragHandler);
+    dragHandler->setAcceptedButtons(acceptedButtons); // QTBUG-76875
 
     QSignalSpy translationChangedSpy(dragHandler, SIGNAL(translationChanged()));
     QSignalSpy centroidChangedSpy(dragHandler, SIGNAL(centroidChanged()));
@@ -211,45 +227,57 @@ void tst_DragHandler::mouseDrag()
     QPointF ballCenter = ball->clipRect().center();
     QPointF scenePressPos = ball->mapToScene(ballCenter);
     QPoint p1 = scenePressPos.toPoint();
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTest::mousePress(window, static_cast<Qt::MouseButton>(int(dragButton)), Qt::NoModifier, p1);
     QVERIFY(!dragHandler->active());
-    QCOMPARE(dragHandler->centroid().position(), ballCenter);
-    QCOMPARE(dragHandler->centroid().pressPosition(), ballCenter);
-    QCOMPARE(dragHandler->centroid().scenePosition(), scenePressPos);
-    QCOMPARE(dragHandler->centroid().scenePressPosition(), scenePressPos);
-    QCOMPARE(dragHandler->centroid().velocity(), QVector2D());
-    QCOMPARE(centroidChangedSpy.count(), 1);
+    if (shouldDrag) {
+        QCOMPARE(dragHandler->centroid().position(), ballCenter);
+        QCOMPARE(dragHandler->centroid().pressPosition(), ballCenter);
+        QCOMPARE(dragHandler->centroid().scenePosition(), scenePressPos);
+        QCOMPARE(dragHandler->centroid().scenePressPosition(), scenePressPos);
+        QCOMPARE(dragHandler->centroid().velocity(), QVector2D());
+        QCOMPARE(centroidChangedSpy.count(), 1);
+    }
     p1 += QPoint(dragThreshold, 0);
     QTest::mouseMove(window, p1);
-    QTRY_VERIFY(dragHandler->centroid().velocity().x() > 0);
-    QCOMPARE(centroidChangedSpy.count(), 2);
-    QVERIFY(!dragHandler->active());
+    if (shouldDrag) {
+        QTRY_VERIFY(dragHandler->centroid().velocity().x() > 0);
+        QCOMPARE(centroidChangedSpy.count(), 2);
+        QVERIFY(!dragHandler->active());
+    }
     p1 += QPoint(1, 0);
     QTest::mouseMove(window, p1);
-    QTRY_VERIFY(dragHandler->active());
+    if (shouldDrag)
+        QTRY_VERIFY(dragHandler->active());
+    else
+        QVERIFY(!dragHandler->active());
     QCOMPARE(translationChangedSpy.count(), 0);
-    QCOMPARE(centroidChangedSpy.count(), 3);
+    if (shouldDrag)
+        QCOMPARE(centroidChangedSpy.count(), 3);
     QCOMPARE(dragHandler->translation().x(), 0.0);
     QPointF sceneGrabPos = p1;
-    QCOMPARE(dragHandler->centroid().sceneGrabPosition(), sceneGrabPos);
+    if (shouldDrag)
+        QCOMPARE(dragHandler->centroid().sceneGrabPosition(), sceneGrabPos);
     p1 += QPoint(19, 0);
     QTest::mouseMove(window, p1);
-    QTRY_VERIFY(dragHandler->active());
-    QCOMPARE(dragHandler->centroid().position(), ballCenter);
-    QCOMPARE(dragHandler->centroid().pressPosition(), ballCenter);
-    QCOMPARE(dragHandler->centroid().scenePosition(), ball->mapToScene(ballCenter));
-    QCOMPARE(dragHandler->centroid().scenePressPosition(), scenePressPos);
-    QCOMPARE(dragHandler->centroid().sceneGrabPosition(), sceneGrabPos);
-    QCOMPARE(dragHandler->translation().x(), dragThreshold + 20.0);
-    QCOMPARE(dragHandler->translation().y(), 0.0);
-    QVERIFY(dragHandler->centroid().velocity().x() > 0);
-    QCOMPARE(centroidChangedSpy.count(), 4);
-    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QVERIFY(shouldDrag ? dragHandler->active() : !dragHandler->active());
+    if (shouldDrag) {
+        QCOMPARE(dragHandler->centroid().position(), ballCenter);
+        QCOMPARE(dragHandler->centroid().pressPosition(), ballCenter);
+        QCOMPARE(dragHandler->centroid().scenePosition(), ball->mapToScene(ballCenter));
+        QCOMPARE(dragHandler->centroid().scenePressPosition(), scenePressPos);
+        QCOMPARE(dragHandler->centroid().sceneGrabPosition(), sceneGrabPos);
+        QCOMPARE(dragHandler->translation().x(), dragThreshold + 20.0);
+        QCOMPARE(dragHandler->translation().y(), 0.0);
+        QVERIFY(dragHandler->centroid().velocity().x() > 0);
+        QCOMPARE(centroidChangedSpy.count(), 4);
+    }
+    QTest::mouseRelease(window, static_cast<Qt::MouseButton>(int(dragButton)), Qt::NoModifier, p1);
     QTRY_VERIFY(!dragHandler->active());
     QCOMPARE(dragHandler->centroid().pressedButtons(), Qt::NoButton);
-    QCOMPARE(ball->mapToScene(ballCenter).toPoint(), p1);
-    QCOMPARE(translationChangedSpy.count(), 1);
-    QCOMPARE(centroidChangedSpy.count(), 5);
+    if (shouldDrag)
+        QCOMPARE(ball->mapToScene(ballCenter).toPoint(), p1);
+    QCOMPARE(translationChangedSpy.count(), shouldDrag ? 1 : 0);
+    QCOMPARE(centroidChangedSpy.count(), shouldDrag ? 5 : 0);
 }
 
 void tst_DragHandler::dragFromMargin() // QTBUG-74966

@@ -56,6 +56,7 @@ private slots:
     void touchDrag();
     void touchesThenPinch();
     void unloadHandlerWithPassiveGrab();
+    void dragHandlerInParentStealingGrabFromItem();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -299,6 +300,48 @@ void tst_MptaInterop::unloadHandlerWithPassiveGrab()
     QCOMPARE(window->mouseGrabberItem(), mpta);
     QTRY_VERIFY(handler.isNull()); // it got unloaded
     QTest::mouseRelease(window, Qt::LeftButton, 0, point); // QTBUG-73819: don't crash
+}
+
+void tst_MptaInterop::dragHandlerInParentStealingGrabFromItem() // QTBUG-75025
+{
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "dragParentOfMPTA.qml");
+    QQuickView * window = windowPtr.data();
+    auto pointerEvent = QQuickWindowPrivate::get(window)->pointerEventInstance(QQuickPointerDevice::genericMouseDevice());
+
+    QPointer<QQuickPointerHandler> handler = window->rootObject()->findChild<QQuickPointerHandler*>();
+    QVERIFY(handler);
+    QQuickMultiPointTouchArea *mpta = window->rootObject()->findChild<QQuickMultiPointTouchArea*>();
+    QVERIFY(mpta);
+
+    // In QTBUG-75025 there is a QQ Controls Button; the MPTA here stands in for that,
+    // simply as an Item that grabs the mouse.  The bug has nothing to do with MPTA specifically.
+
+    QPoint point(20, 20);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, point);
+    QCOMPARE(window->mouseGrabberItem(), mpta);
+    QCOMPARE(window->rootObject()->property("touchpointPressed").toBool(), true);
+
+    // Start dragging
+    // DragHandler keeps monitoring, due to its passive grab,
+    // and eventually steals the exclusive grab from MPTA
+    int dragStoleGrab = 0;
+    for (int i = 0; i < 4; ++i) {
+        point += QPoint(dragThreshold / 2, 0);
+        QTest::mouseMove(window, point);
+        if (!dragStoleGrab && pointerEvent->point(0)->exclusiveGrabber() == handler)
+            dragStoleGrab = i;
+    }
+    if (dragStoleGrab)
+        qCDebug(lcPointerTests, "DragHandler stole the grab after %d events", dragStoleGrab);
+    QVERIFY(dragStoleGrab > 1);
+    QCOMPARE(handler->active(), true);
+    QCOMPARE(window->rootObject()->property("touchpointPressed").toBool(), false);
+
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, point);
+    QCOMPARE(handler->active(), false);
+    QCOMPARE(window->rootObject()->property("touchpointPressed").toBool(), false);
 }
 
 QTEST_MAIN(tst_MptaInterop)
