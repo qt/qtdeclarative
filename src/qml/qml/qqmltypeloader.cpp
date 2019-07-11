@@ -625,7 +625,11 @@ bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import, QL
 
         bool incomplete = false;
 
-        QUrl qmldirUrl = finalUrl().resolved(QUrl(importUri + QLatin1String("/qmldir")));
+        QUrl importUrl(importUri);
+        QString path = importUrl.path();
+        path.append(QLatin1String(path.endsWith(QLatin1Char('/')) ? "qmldir" : "/qmldir"));
+        importUrl.setPath(path);
+        QUrl qmldirUrl = finalUrl().resolved(importUrl);
         if (!QQmlImports::isLocal(qmldirUrl)) {
             // This is a remote file; the import is currently incomplete
             incomplete = true;
