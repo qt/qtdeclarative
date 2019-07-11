@@ -1845,6 +1845,9 @@ void QQuickItemViewPrivate::layout()
     forceLayout = false;
 
     if (transitioner && transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) {
+        // Give the view one more chance to refill itself,
+        // in case its size is changed such that more delegates become visible after component completed
+        refill();
         for (FxViewItem *item : qAsConst(visibleItems)) {
             if (!item->transitionScheduledOrRunning())
                 item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::PopulateTransition, true);
