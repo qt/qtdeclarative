@@ -597,7 +597,7 @@ void SingleTest::run()
 
 void SingleTest::runExternalTest()
 {
-    auto runTest = [=] (const char *header, TestCase::Result *result) {
+    auto runTest = [this] (const char *header, TestCase::Result *result) {
         QTemporaryFile tempFile;
         tempFile.open();
         tempFile.write(header);
