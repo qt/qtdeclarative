@@ -52,10 +52,12 @@
 //
 
 #include <private/qv4compileddata_p.h>
+#include <private/qv4identifier_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <private/qintrusivelist_p.h>
 #include <private/qqmlpropertycachevector_p.h>
 #include <private/qqmltype_p.h>
+#include <private/qqmlnullablevalue_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -250,6 +252,9 @@ public:
             return 0.0;
         return constants[binding->value.constantValueIndex].doubleValue();
     }
+
+    static bool verifyHeader(const CompiledData::Unit *unit, QDateTime expectedSourceTimeStamp,
+                             QString *errorString);
 
 protected:
     quint32 totalStringCount() const

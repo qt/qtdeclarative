@@ -52,7 +52,7 @@
 #include <qsgsimplerectnode.h>
 #include <qsgsimpletexturenode.h>
 #include <private/qsgrendernode_p.h>
-#include <private/qsgtexture_p.h>
+#include <private/qsgplaintexture_p.h>
 
 #include <qmath.h>
 

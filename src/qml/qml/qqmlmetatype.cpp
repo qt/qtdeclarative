@@ -107,7 +107,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->version_maj = type.versionMajor;
     d->version_min = type.versionMinor;
 
-    if (type.qobjectApi) {
+    if (type.qobjectApi || (type.version >= 3 && type.generalizedQobjectApi)) {
         if (type.version >= 1) // static metaobject added in version 1
             d->baseMetaObject = type.instanceMetaObject;
         if (type.version >= 2) // typeId added in version 2
@@ -118,10 +118,14 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
 
     d->extraData.sd->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
     d->extraData.sd->singletonInstanceInfo->scriptCallback = type.scriptApi;
-    d->extraData.sd->singletonInstanceInfo->qobjectCallback = type.qobjectApi;
+    if (type.version >= 3) {
+        d->extraData.sd->singletonInstanceInfo->qobjectCallback = type.generalizedQobjectApi;
+    } else {
+        d->extraData.sd->singletonInstanceInfo->qobjectCallback = type.qobjectApi;
+    }
     d->extraData.sd->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
     d->extraData.sd->singletonInstanceInfo->instanceMetaObject
-            = (type.qobjectApi && type.version >= 1) ? type.instanceMetaObject : nullptr;
+            = ((type.qobjectApi || (type.version >= 3 && type.generalizedQobjectApi) ) && type.version >= 1) ? type.instanceMetaObject : nullptr;
 
     return d;
 }
@@ -281,13 +285,19 @@ void QQmlMetaType::clearTypeRegistrations()
     data->undeletableTypes.clear();
 }
 
-int QQmlMetaType::registerAutoParentFunction(QQmlPrivate::RegisterAutoParent &autoparent)
+int QQmlMetaType::registerAutoParentFunction(const QQmlPrivate::RegisterAutoParent &autoparent)
 {
     QQmlMetaTypeDataPtr data;
 
     data->parentFunctions.append(autoparent.function);
 
     return data->parentFunctions.count() - 1;
+}
+
+void QQmlMetaType::unregisterAutoParentFunction(const QQmlPrivate::AutoParentFunction &function)
+{
+    QQmlMetaTypeDataPtr data;
+    data->parentFunctions.removeOne(function);
 }
 
 QQmlType QQmlMetaType::registerInterface(const QQmlPrivate::RegisterInterface &type)
@@ -1193,7 +1203,8 @@ QQmlPropertyCache *QQmlMetaType::propertyCache(const QQmlType &type, int minorVe
 void QQmlMetaType::unregisterType(int typeIndex)
 {
     QQmlMetaTypeDataPtr data;
-    if (const QQmlTypePrivate *d = data->types.value(typeIndex).priv()) {
+    const QQmlType type = data->types.value(typeIndex);
+    if (const QQmlTypePrivate *d = type.priv()) {
         removeQQmlTypePrivate(data->idToType, d);
         removeQQmlTypePrivate(data->nameToType, d);
         removeQQmlTypePrivate(data->urlToType, d);
@@ -1203,6 +1214,7 @@ void QQmlMetaType::unregisterType(int typeIndex)
             module->remove(d);
         data->clearPropertyCachesForMinorVersion(typeIndex);
         data->types[typeIndex] = QQmlType();
+        data->undeletableTypes.remove(type);
     }
 }
 
@@ -1324,7 +1336,7 @@ const QV4::CompiledData::Unit *QQmlMetaType::findCachedCompilationUnit(const QUr
     for (const auto lookup : qAsConst(data->lookupCachedQmlUnit)) {
         if (const QQmlPrivate::CachedQmlUnit *unit = lookup(uri)) {
             QString error;
-            if (!unit->qmlData->verifyHeader(QDateTime(), &error)) {
+            if (!QV4::ExecutableCompilationUnit::verifyHeader(unit->qmlData, QDateTime(), &error)) {
                 qCDebug(DBG_DISK_CACHE) << "Error loading pre-compiled file " << uri << ":" << error;
                 if (status)
                     *status = CachedUnitLookupError::VersionMismatch;

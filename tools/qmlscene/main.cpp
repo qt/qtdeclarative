@@ -29,7 +29,7 @@
 #include <QtCore/qabstractanimation.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qmath.h>
-#include <QtCore/qdatetime.h>
+#include <QtCore/qelapsedtimer.h>
 #include <QtCore/qpointer.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qtextstream.h>
@@ -76,7 +76,7 @@ QVector<int> RenderStatistics::timesPerFrames;
 
 void RenderStatistics::updateStats()
 {
-    static QTime time;
+    static QElapsedTimer time;
     static int frames;
     static int lastTime;
 
@@ -169,10 +169,13 @@ struct Options
     bool multisample = false;
     bool coreProfile = false;
     bool verbose = false;
+    bool rhi = false;
+    bool rhiBackendSet = false;
     QVector<Qt::ApplicationAttribute> applicationAttributes;
     QString translationFile;
     QmlApplicationType applicationType = DefaultQmlApplicationType;
     QQuickWindow::TextRenderType textRenderType;
+    QString rhiBackend;
 };
 
 #if defined(QMLSCENE_BUNDLE)
@@ -271,6 +274,10 @@ static bool checkVersion(const QUrl &url)
     QTextStream stream(&f);
     bool codeFound= false;
     while (!codeFound) {
+        if (stream.atEnd()) {
+            fprintf(stderr, "qmlscene: no code found in file '%s'.\n", qPrintable(fileName));
+            return false;
+        }
         QString line = stream.readLine();
         if (line.contains(QLatin1Char('{'))) {
             codeFound = true;
@@ -345,24 +352,26 @@ static void usage()
     puts("  --transparent .................... Make the window transparent");
     puts("  --multisample .................... Enable multisampling (OpenGL anti-aliasing)");
     puts("  --core-profile ................... Request a core profile OpenGL context");
+    puts("  --rhi [vulkan|metal|d3d11|gl] .... Use the Qt graphics abstraction (RHI) instead of OpenGL directly.\n"
+         "                                .... Backend has platform specific defaults. Specify to override.");
     puts("  --no-version-detection ........... Do not try to detect the version of the .qml file");
     puts("  --slow-animations ................ Run all animations in slow motion");
     puts("  --resize-to-root ................. Resize the window to the size of the root item");
     puts("  --quit ........................... Quit immediately after starting");
     puts("  --disable-context-sharing ........ Disable the use of a shared GL context for QtQuick Windows\n"
-         "                            .........(remove AA_ShareOpenGLContexts)");
-    puts("  --desktop..........................Force use of desktop GL (AA_UseDesktopOpenGL)");
-    puts("  --gles.............................Force use of GLES (AA_UseOpenGLES)");
-    puts("  --software.........................Force use of software rendering (AA_UseOpenGLES)");
-    puts("  --scaling..........................Enable High DPI scaling (AA_EnableHighDpiScaling)");
-    puts("  --no-scaling.......................Disable High DPI scaling (AA_DisableHighDpiScaling)");
-    puts("  --verbose..........................Print version and graphical diagnostics for the run-time");
+         "                            ........ (remove AA_ShareOpenGLContexts)");
+    puts("  --desktop......................... Force use of desktop GL (AA_UseDesktopOpenGL)");
+    puts("  --gles............................ Force use of GLES (AA_UseOpenGLES)");
+    puts("  --software........................ Force use of software rendering (AA_UseOpenGLES)");
+    puts("  --scaling......................... Enable High DPI scaling (AA_EnableHighDpiScaling)");
+    puts("  --no-scaling...................... Disable High DPI scaling (AA_DisableHighDpiScaling)");
+    puts("  --verbose......................... Print version and graphical diagnostics for the run-time");
 #ifdef QT_WIDGETS_LIB
-    puts("  --apptype [gui|widgets] ...........Select which application class to use. Default is widgets.");
+    puts("  --apptype [gui|widgets] .......... Select which application class to use. Default is widgets.");
 #endif
-    puts("  --textrendertype [qt|native].......Select the default render type for text-like elements.");
+    puts("  --textrendertype [qt|native]...... Select the default render type for text-like elements.");
     puts("  -I <path> ........................ Add <path> to the list of import paths");
-    puts("  -S <selector> .....................Add <selector> to the list of QQmlFileSelector selectors");
+    puts("  -S <selector> .................... Add <selector> to the list of QQmlFileSelector selectors");
     puts("  -P <path> ........................ Add <path> to the list of plugin paths");
     puts("  -translation <translationfile> ... Set the language to run in");
 
@@ -477,6 +486,12 @@ int main(int argc, char ** argv)
             options.applicationAttributes.append(Qt::AA_EnableHighDpiScaling);
         } else if (!qstrcmp(arg, "--no-scaling")) {
             options.applicationAttributes.append(Qt::AA_DisableHighDpiScaling);
+        } else if (!qstrcmp(arg, "--transparent")) {
+            options.transparent = true;
+        } else if (!qstrcmp(arg, "--multisample")) {
+            options.multisample = true;
+        } else if (!qstrcmp(arg, "--core-profile")) {
+            options.coreProfile = true;
         } else if (!qstrcmp(arg, "--apptype")) {
             if (++i >= argc)
                 usage();
@@ -484,6 +499,23 @@ int main(int argc, char ** argv)
                 options.applicationType = Options::QmlApplicationTypeGui;
         }
     }
+
+    if (qEnvironmentVariableIsSet("QMLSCENE_CORE_PROFILE"))
+        options.coreProfile = true;
+
+    // Set default surface format before creating the window
+    QSurfaceFormat surfaceFormat;
+    surfaceFormat.setStencilBufferSize(8);
+    surfaceFormat.setDepthBufferSize(24);
+    if (options.multisample)
+        surfaceFormat.setSamples(16);
+    if (options.transparent)
+        surfaceFormat.setAlphaBufferSize(8);
+    if (options.coreProfile) {
+        surfaceFormat.setVersion(4, 1);
+        surfaceFormat.setProfile(QSurfaceFormat::CoreProfile);
+    }
+    QSurfaceFormat::setDefaultFormat(surfaceFormat);
 
     for (Qt::ApplicationAttribute a : qAsConst(options.applicationAttributes))
         QCoreApplication::setAttribute(a);
@@ -499,9 +531,6 @@ int main(int argc, char ** argv)
     QCoreApplication::setOrganizationDomain(QStringLiteral("qt-project.org"));
     QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
 
-    if (qEnvironmentVariableIsSet("QMLSCENE_CORE_PROFILE"))
-        options.coreProfile = true;
-
     const QStringList arguments = QCoreApplication::arguments();
     for (int i = 1, size = arguments.size(); i < size; ++i) {
         if (!arguments.at(i).startsWith(QLatin1Char('-'))) {
@@ -512,8 +541,6 @@ int main(int argc, char ** argv)
                 options.maximized = true;
             else if (lowerArgument == QLatin1String("--fullscreen"))
                 options.fullscreen = true;
-            else if (lowerArgument == QLatin1String("--transparent"))
-                options.transparent = true;
             else if (lowerArgument == QLatin1String("--clip"))
                 options.clip = true;
             else if (lowerArgument == QLatin1String("--no-version-detection"))
@@ -526,13 +553,15 @@ int main(int argc, char ** argv)
                 options.translationFile = QLatin1String(argv[++i]);
             else if (lowerArgument == QLatin1String("--resize-to-root"))
                 options.resizeViewToRootItem = true;
-            else if (lowerArgument == QLatin1String("--multisample"))
-                options.multisample = true;
-            else if (lowerArgument == QLatin1String("--core-profile"))
-                options.coreProfile = true;
             else if (lowerArgument == QLatin1String("--verbose"))
                 options.verbose = true;
-            else if (lowerArgument == QLatin1String("-i") && i + 1 < size)
+            else if (lowerArgument == QLatin1String("--rhi")) {
+                options.rhi = true;
+                if (i + 1 < size && !arguments.at(i + 1).startsWith(QLatin1Char('-'))) {
+                    options.rhiBackendSet = true;
+                    options.rhiBackend = arguments.at(++i);
+                }
+            } else if (lowerArgument == QLatin1String("-i") && i + 1 < size)
                 imports.append(arguments.at(++i));
             else if (lowerArgument == QLatin1String("-s") && i + 1 < size)
                 customSelectors.append(arguments.at(++i));
@@ -573,6 +602,14 @@ int main(int argc, char ** argv)
     QQuickWindow::setTextRenderType(options.textRenderType);
 
     QUnifiedTimer::instance()->setSlowModeEnabled(options.slowAnimations);
+
+    if (options.rhi) {
+        qputenv("QSG_RHI", "1");
+        if (options.rhiBackendSet)
+            qputenv("QSG_RHI_BACKEND", options.rhiBackend.toLatin1());
+        else
+            qunsetenv("QSG_RHI_BACKEND");
+    }
 
     if (options.url.isEmpty())
 #if defined(QMLSCENE_BUNDLE)
@@ -622,18 +659,6 @@ int main(int argc, char ** argv)
                 fprintf(stderr, "%s\n", qPrintable(component->errorString()));
                 return -1;
             }
-
-            // Set default surface format before creating the window
-            QSurfaceFormat surfaceFormat;
-            if (options.multisample)
-                surfaceFormat.setSamples(16);
-            if (options.transparent)
-                surfaceFormat.setAlphaBufferSize(8);
-            if (options.coreProfile) {
-                surfaceFormat.setVersion(4, 1);
-                surfaceFormat.setProfile(QSurfaceFormat::CoreProfile);
-            }
-            QSurfaceFormat::setDefaultFormat(surfaceFormat);
 
             QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow *>(topLevel));
             if (window) {
@@ -690,6 +715,8 @@ int main(int argc, char ** argv)
             // QQuickView if one was created. That case is tracked by
             // QPointer, so it is safe to delete the component here.
             delete component;
+        } else {
+            exitCode = 1;
         }
     }
 

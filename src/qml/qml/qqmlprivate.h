@@ -51,6 +51,8 @@
 // We mean it.
 //
 
+#include <functional>
+
 #include <QtQml/qtqmlglobal.h>
 
 #include <QtCore/qglobal.h>
@@ -276,6 +278,7 @@ namespace QQmlPrivate
         const QMetaObject *instanceMetaObject; // new in version 1
         int typeId; // new in version 2
         int revision; // new in version 2
+        std::function<QObject*(QQmlEngine *, QJSEngine *)> generalizedQobjectApi; // new in version 3
         // If this is extended ensure "version" is bumped!!!
     };
 
@@ -318,6 +321,7 @@ namespace QQmlPrivate
     };
 
     int Q_QML_EXPORT qmlregister(RegistrationType, void *);
+    void Q_QML_EXPORT qmlunregister(RegistrationType, quintptr);
 }
 
 QT_END_NAMESPACE

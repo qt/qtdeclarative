@@ -83,8 +83,8 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
     {
         QQmlPropertyCacheCreator<QQmlTypeCompiler> propertyCacheBuilder(&m_propertyCaches, &pendingGroupPropertyBindings,
                                                                         engine, this, imports());
-        QQmlCompileError error = propertyCacheBuilder.buildMetaObjects();
-        if (error.isSet()) {
+        QQmlJS::DiagnosticMessage error = propertyCacheBuilder.buildMetaObjects();
+        if (error.isValid()) {
             recordError(error);
             return nullptr;
         }
@@ -173,12 +173,6 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
         return nullptr;
 }
 
-void QQmlTypeCompiler::recordError(QQmlError error)
-{
-    error.setUrl(url());
-    errors << error;
-}
-
 void QQmlTypeCompiler::recordError(const QV4::CompiledData::Location &location, const QString &description)
 {
     QQmlError error;
@@ -189,9 +183,14 @@ void QQmlTypeCompiler::recordError(const QV4::CompiledData::Location &location, 
     errors << error;
 }
 
-void QQmlTypeCompiler::recordError(const QQmlCompileError &error)
+void QQmlTypeCompiler::recordError(const QQmlJS::DiagnosticMessage &message)
 {
-    recordError(error.location, error.description);
+    QQmlError error;
+    error.setDescription(message.message);
+    error.setLine(message.line);
+    error.setColumn(message.column);
+    error.setUrl(url());
+    errors << error;
 }
 
 QString QQmlTypeCompiler::stringAt(int idx) const
@@ -1020,17 +1019,17 @@ bool QQmlComponentAndAliasResolver::resolveAliases(int componentIndex)
 
         for (int objectIndex: qAsConst(_objectsWithAliases)) {
 
-            QQmlCompileError error;
+            QQmlJS::DiagnosticMessage error;
             const auto result = resolveAliasesInObject(objectIndex, &error);
 
-            if (error.isSet()) {
+            if (error.isValid()) {
                 recordError(error);
                 return false;
             }
 
             if (result == AllAliasesResolved) {
-                QQmlCompileError error = aliasCacheCreator.appendAliasesToPropertyCache(*qmlObjects->at(componentIndex), objectIndex);
-                if (error.isSet()) {
+                QQmlJS::DiagnosticMessage error = aliasCacheCreator.appendAliasesToPropertyCache(*qmlObjects->at(componentIndex), objectIndex);
+                if (error.isValid()) {
                     recordError(error);
                     return false;
                 }
@@ -1058,7 +1057,9 @@ bool QQmlComponentAndAliasResolver::resolveAliases(int componentIndex)
     return true;
 }
 
-QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex, QQmlCompileError *error)
+QQmlComponentAndAliasResolver::AliasResolutionResult
+QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
+                                                      QQmlJS::DiagnosticMessage *error)
 {
     const QmlIR::Object * const obj = qmlObjects->at(objectIndex);
     if (!obj->aliasCount())
@@ -1076,7 +1077,9 @@ QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolv
         const int idIndex = alias->idIndex;
         const int targetObjectIndex = _idToObjectIndex.value(idIndex, -1);
         if (targetObjectIndex == -1) {
-            *error = QQmlCompileError(alias->referenceLocation, tr("Invalid alias reference. Unable to find id \"%1\"").arg(stringAt(idIndex)));
+            *error = qQmlCompileError(
+                    alias->referenceLocation,
+                    tr("Invalid alias reference. Unable to find id \"%1\"").arg(stringAt(idIndex)));
             break;
         }
 
@@ -1104,7 +1107,9 @@ QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolv
         } else {
             QQmlPropertyCache *targetCache = propertyCaches.at(targetObjectIndex);
             if (!targetCache) {
-                *error = QQmlCompileError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(property.toString()));
+                *error = qQmlCompileError(
+                        alias->referenceLocation,
+                        tr("Invalid alias target location: %1").arg(property.toString()));
                 break;
             }
 
@@ -1139,7 +1144,9 @@ QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolv
             }
 
             if (!targetProperty || targetProperty->coreIndex() > 0x0000FFFF) {
-                *error = QQmlCompileError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(property.toString()));
+                *error = qQmlCompileError(
+                        alias->referenceLocation,
+                        tr("Invalid alias target location: %1").arg(property.toString()));
                 break;
             }
 
@@ -1148,14 +1155,18 @@ QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolv
             if (!subProperty.isEmpty()) {
                 const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(targetProperty->propType());
                 if (!valueTypeMetaObject) {
-                    *error = QQmlCompileError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(subProperty.toString()));
+                    *error = qQmlCompileError(
+                            alias->referenceLocation,
+                            tr("Invalid alias target location: %1").arg(subProperty.toString()));
                     break;
                 }
 
                 int valueTypeIndex =
                         valueTypeMetaObject->indexOfProperty(subProperty.toString().toUtf8().constData());
                 if (valueTypeIndex == -1) {
-                    *error = QQmlCompileError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(subProperty.toString()));
+                    *error = qQmlCompileError(
+                            alias->referenceLocation,
+                            tr("Invalid alias target location: %1").arg(subProperty.toString()));
                     break;
                 }
                 Q_ASSERT(valueTypeIndex <= 0x0000FFFF);
@@ -1345,10 +1356,8 @@ bool QQmlJSCodeGenerator::compileJavaScriptCodeInObjectsRecursively(int objectIn
         for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next)
             functionsToCompile << *foe;
         const QVector<int> runtimeFunctionIndices = v4CodeGen->generateJSCodeForFunctionsAndBindings(functionsToCompile);
-        const QList<QQmlError> jsErrors = v4CodeGen->qmlErrors();
-        if (!jsErrors.isEmpty()) {
-            for (const QQmlError &e : jsErrors)
-                compiler->recordError(e);
+        if (v4CodeGen->hasError()) {
+            compiler->recordError(v4CodeGen->error());
             return false;
         }
 

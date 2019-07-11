@@ -113,25 +113,25 @@ QQmlRefCount::QQmlRefCount()
 
 QQmlRefCount::~QQmlRefCount()
 {
-    Q_ASSERT(refCount.load() == 0);
+    Q_ASSERT(refCount.loadRelaxed() == 0);
 }
 
 void QQmlRefCount::addref() const
 {
-    Q_ASSERT(refCount.load() > 0);
+    Q_ASSERT(refCount.loadRelaxed() > 0);
     refCount.ref();
 }
 
 void QQmlRefCount::release() const
 {
-    Q_ASSERT(refCount.load() > 0);
+    Q_ASSERT(refCount.loadRelaxed() > 0);
     if (!refCount.deref())
         delete this;
 }
 
 int QQmlRefCount::count() const
 {
-    return refCount.load();
+    return refCount.loadRelaxed();
 }
 
 template<class T>

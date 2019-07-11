@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 //! [document]
-import QtQuick 2.0
+import QtQuick 2.14
 
 
 //! [parent begin]
@@ -83,7 +83,7 @@ Column {
     }
     TextInput {
         focus: true
-        validator: RegExpValidator { regExp: /fruit basket/ }
+        validator: RegularExpressionValidator { regularExpression: /fruit basket/ }
     }
 }
 //! [regexp validator]

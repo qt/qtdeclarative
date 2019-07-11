@@ -494,6 +494,12 @@ int main(int argc, char *argv[])
     QCommandLineOption fixedAnimationsOption(QStringLiteral("fixed-animations"),
         QCoreApplication::translate("main", "Run animations off animation tick rather than wall time."));
     parser.addOption(fixedAnimationsOption);
+    QCommandLineOption rhiOption(QStringList() << QStringLiteral("r") << QStringLiteral("rhi"),
+        QCoreApplication::translate("main", "Use the Qt graphics abstraction (RHI) instead of OpenGL directly. "
+                                    "Backend is one of: default, vulkan, metal, d3d11, gl"),
+                                 QStringLiteral("backend"));
+    parser.addOption(rhiOption);
+
     // Positional arguments
     parser.addPositionalArgument("files",
         QCoreApplication::translate("main", "Any number of QML files can be loaded. They will share the same engine."), "[files...]");
@@ -549,6 +555,14 @@ int main(int argc, char *argv[])
         translationFile = parser.value(translationOption);
     if (parser.isSet(dummyDataOption))
         dummyDir = parser.value(dummyDataOption);
+    if (parser.isSet(rhiOption)) {
+        qputenv("QSG_RHI", "1");
+        const QString rhiBackend = parser.value(rhiOption);
+        if (rhiBackend == QLatin1String("default"))
+            qunsetenv("QSG_RHI_BACKEND");
+        else
+            qputenv("QSG_RHI_BACKEND", rhiBackend.toLatin1());
+    }
     for (QString posArg : parser.positionalArguments()) {
         if (posArg == QLatin1String("--"))
             break;

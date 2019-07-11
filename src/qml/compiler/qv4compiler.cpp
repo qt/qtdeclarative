@@ -44,6 +44,7 @@
 #include <private/qv4alloca_p.h>
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsast_p.h>
+#include <private/qml_compile_hash_p.h>
 #include <QCryptographicHash>
 
 // Efficient implementation that takes advantage of powers of two.
@@ -123,6 +124,25 @@ void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
 
         stringData += QV4::CompiledData::String::calculateSize(qstr);
     }
+}
+
+void QV4::Compiler::JSUnitGenerator::generateUnitChecksum(QV4::CompiledData::Unit *unit)
+{
+#ifndef QT_CRYPTOGRAPHICHASH_ONLY_SHA1
+    QCryptographicHash hash(QCryptographicHash::Md5);
+
+    const int checksummableDataOffset
+            = offsetof(QV4::CompiledData::Unit, md5Checksum) + sizeof(unit->md5Checksum);
+
+    const char *dataPtr = reinterpret_cast<const char *>(unit) + checksummableDataOffset;
+    hash.addData(dataPtr, unit->unitSize - checksummableDataOffset);
+
+    QByteArray checksum = hash.result();
+    Q_ASSERT(checksum.size() == sizeof(unit->md5Checksum));
+    memcpy(unit->md5Checksum, checksum.constData(), sizeof(unit->md5Checksum));
+#else
+    memset(unit->md5Checksum, 0, sizeof(unit->md5Checksum));
+#endif
 }
 
 QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QV4::Compiler::Module *module)
@@ -391,7 +411,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     if (option == GenerateWithStringTable)
         stringTable.serialize(unit);
 
-    unit->generateChecksum();
+    generateUnitChecksum(unit);
 
     return unit;
 }
@@ -580,7 +600,7 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     unit.flags |= module->unitFlags;
     unit.version = QV4_DATA_STRUCTURE_VERSION;
     unit.qtVersion = QT_VERSION;
-    qstrcpy(unit.libraryVersionHash, CompiledData::qml_compile_hash);
+    qstrcpy(unit.libraryVersionHash, QML_COMPILE_HASH);
     memset(unit.md5Checksum, 0, sizeof(unit.md5Checksum));
     memset(unit.dependencyMD5Checksum, 0, sizeof(unit.dependencyMD5Checksum));
 

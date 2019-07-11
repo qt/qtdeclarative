@@ -64,7 +64,7 @@ bool QSGD3D12RenderContext::isValid() const
     return m_engine != nullptr;
 }
 
-void QSGD3D12RenderContext::initialize(void *)
+void QSGD3D12RenderContext::initialize(const InitParams *)
 {
     if (m_initialized)
         return;

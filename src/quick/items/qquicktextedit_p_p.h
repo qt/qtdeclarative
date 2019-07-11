@@ -127,7 +127,7 @@ public:
         , focusOnPress(true), persistentSelection(false), requireImplicitWidth(false)
         , selectByMouse(false), canPaste(false), canPasteValid(false), hAlignImplicit(true)
         , textCached(true), inLayout(false), selectByKeyboard(false), selectByKeyboardSet(false)
-        , hadSelection(false)
+        , hadSelection(false), markdownText(false)
     {
     }
 
@@ -225,6 +225,7 @@ public:
     bool selectByKeyboard:1;
     bool selectByKeyboardSet:1;
     bool hadSelection : 1;
+    bool markdownText : 1;
 };
 
 QT_END_NAMESPACE

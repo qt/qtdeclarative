@@ -59,7 +59,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QTranslator;
 class QFileSelector;
 class Q_QML_PRIVATE_EXPORT QQmlApplicationEnginePrivate : public QQmlEnginePrivate
 {
@@ -74,10 +73,6 @@ public:
     void loadTranslations(const QUrl &rootFile);
     void finishLoad(QQmlComponent *component);
     QList<QObject *> objects;
-
-#if QT_CONFIG(translation)
-    QList<QTranslator *> translators;
-#endif
 };
 
 QT_END_NAMESPACE

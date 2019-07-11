@@ -65,6 +65,7 @@ struct Error
     void print();
     Error augment(const QString &contextErrorMessage) const;
     void appendDiagnostics(const QString &inputFileName, const QList<QQmlJS::DiagnosticMessage> &diagnostics);
+    void appendDiagnostic(const QString &inputFileName, const DiagnosticMessage &diagnostic);
 };
 
 void Error::print()
@@ -82,9 +83,9 @@ Error Error::augment(const QString &contextErrorMessage) const
 QString diagnosticErrorMessage(const QString &fileName, const QQmlJS::DiagnosticMessage &m)
 {
     QString message;
-    message = fileName + QLatin1Char(':') + QString::number(m.loc.startLine) + QLatin1Char(':');
-    if (m.loc.startColumn > 0)
-        message += QString::number(m.loc.startColumn) + QLatin1Char(':');
+    message = fileName + QLatin1Char(':') + QString::number(m.line) + QLatin1Char(':');
+    if (m.column > 0)
+        message += QString::number(m.column) + QLatin1Char(':');
 
     if (m.isError())
         message += QLatin1String(" error: ");
@@ -94,13 +95,17 @@ QString diagnosticErrorMessage(const QString &fileName, const QQmlJS::Diagnostic
     return message;
 }
 
+void Error::appendDiagnostic(const QString &inputFileName, const DiagnosticMessage &diagnostic)
+{
+    if (!message.isEmpty())
+        message += QLatin1Char('\n');
+    message += diagnosticErrorMessage(inputFileName, diagnostic);
+}
+
 void Error::appendDiagnostics(const QString &inputFileName, const QList<DiagnosticMessage> &diagnostics)
 {
-    for (const QQmlJS::DiagnosticMessage &parseError: diagnostics) {
-        if (!message.isEmpty())
-            message += QLatin1Char('\n');
-        message += diagnosticErrorMessage(inputFileName, parseError);
-    }
+    for (const QQmlJS::DiagnosticMessage &diagnostic: diagnostics)
+        appendDiagnostic(inputFileName, diagnostic);
 }
 
 // Ensure that ListElement objects keep all property assignments in their string form
@@ -211,9 +216,8 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
             for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next)
                 functionsToCompile << *foe;
             const QVector<int> runtimeFunctionIndices = v4CodeGen.generateJSCodeForFunctionsAndBindings(functionsToCompile);
-            QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();
-            if (!jsErrors.isEmpty()) {
-                error->appendDiagnostics(inputFileName, jsErrors);
+            if (v4CodeGen.hasError()) {
+                error->appendDiagnostic(inputFileName, v4CodeGen.error());
                 return false;
             }
 
@@ -233,7 +237,7 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
         const quint32 saveFlags
                 = QV4::CompiledData::Unit::StaticData
                 | QV4::CompiledData::Unit::PendingTypeCompilation;
-        QV4::CompiledData::SaveableUnitPointer saveable(&irDocument.javaScriptCompilationUnit,
+        QV4::CompiledData::SaveableUnitPointer saveable(irDocument.javaScriptCompilationUnit.data,
                                                         saveFlags);
         if (!saveFunction(saveable, &error->message))
             return false;
@@ -310,9 +314,8 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
                                        irDocument.program, &irDocument.jsGenerator.stringTable, illegalNames);
             v4CodeGen.generateFromProgram(inputFileName, inputFileUrl, sourceCode, program,
                                           &irDocument.jsModule, QV4::Compiler::ContextType::ScriptImportedByQML);
-            QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();
-            if (!jsErrors.isEmpty()) {
-                error->appendDiagnostics(inputFileName, jsErrors);
+            if (v4CodeGen.hasError()) {
+                error->appendDiagnostic(inputFileName, v4CodeGen.error());
                 return false;
             }
 
@@ -327,7 +330,7 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
         }
     }
 
-    return saveFunction(QV4::CompiledData::SaveableUnitPointer(&unit), &error->message);
+    return saveFunction(QV4::CompiledData::SaveableUnitPointer(unit.data), &error->message);
 }
 
 static bool saveUnitAsCpp(const QString &inputFileName, const QString &outputFileName,
@@ -366,27 +369,28 @@ static bool saveUnitAsCpp(const QString &inputFileName, const QString &outputFil
     if (!writeStr(QByteArrayLiteral(" {\nextern const unsigned char qmlData alignas(16) [] = {\n")))
         return false;
 
-    QByteArray hexifiedData;
-    {
-        QTextStream stream(&hexifiedData);
-        const uchar *begin = unit.data<uchar>();
-        const uchar *end = begin + unit.size();
-        stream << hex;
-        int col = 0;
-        for (const uchar *data = begin; data < end; ++data, ++col) {
-            if (data > begin)
-                stream << ',';
-            if (col % 8 == 0) {
-                stream << '\n';
-                col = 0;
+    unit.saveToDisk<uchar>([&writeStr](const uchar *begin, quint32 size) {
+        QByteArray hexifiedData;
+        {
+            QTextStream stream(&hexifiedData);
+            const uchar *end = begin + size;
+            stream << Qt::hex;
+            int col = 0;
+            for (const uchar *data = begin; data < end; ++data, ++col) {
+                if (data > begin)
+                    stream << ',';
+                if (col % 8 == 0) {
+                    stream << '\n';
+                    col = 0;
+                }
+                stream << "0x" << *data;
             }
-            stream << "0x" << *data;
+            stream << '\n';
         }
-        stream << '\n';
-    };
+        return writeStr(hexifiedData);
+    });
 
-    if (!writeStr(hexifiedData))
-        return false;
+
 
     if (!writeStr("};\n}\n}\n"))
         return false;
@@ -527,7 +531,11 @@ int main(int argc, char **argv)
     } else {
         saveFunction = [outputFileName](const QV4::CompiledData::SaveableUnitPointer &unit,
                                         QString *errorString) {
-            return unit->saveToDisk(outputFileName, errorString);
+            return unit.saveToDisk<char>(
+                    [&outputFileName, errorString](const char *data, quint32 size) {
+                        return QV4::CompiledData::SaveableUnitPointer::writeDataToFile(
+                                outputFileName, data, size, errorString);
+            });
         };
     }
 

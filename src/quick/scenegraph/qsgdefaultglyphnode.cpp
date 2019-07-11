@@ -42,8 +42,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QSGDefaultGlyphNode::QSGDefaultGlyphNode()
-    : m_glyphNodeType(RootGlyphNode)
+QSGDefaultGlyphNode::QSGDefaultGlyphNode(QSGRenderContext *context)
+    : m_context(context)
+    , m_glyphNodeType(RootGlyphNode)
     , m_dirtyGeometry(false)
 {
     setFlag(UsePreprocess);
@@ -75,14 +76,14 @@ void QSGDefaultGlyphNode::update()
     QMargins margins(0, 0, 0, 0);
 
     if (m_style == QQuickText::Normal) {
-        m_material = new QSGTextMaskMaterial(font);
+        m_material = new QSGTextMaskMaterial(m_context, font);
     } else if (m_style == QQuickText::Outline) {
-        QSGOutlinedTextMaterial *material = new QSGOutlinedTextMaterial(font);
+        QSGOutlinedTextMaterial *material = new QSGOutlinedTextMaterial(m_context, font);
         material->setStyleColor(m_styleColor);
         m_material = material;
         margins = QMargins(1, 1, 1, 1);
     } else {
-        QSGStyledTextMaterial *material = new QSGStyledTextMaterial(font);
+        QSGStyledTextMaterial *material = new QSGStyledTextMaterial(m_context, font);
         if (m_style == QQuickText::Sunken) {
             material->setStyleShift(QVector2D(0, -1));
             margins.setTop(1);
@@ -158,7 +159,7 @@ void QSGDefaultGlyphNode::updateGeometry()
         subNodeGlyphRun.setGlyphIndexes(glyphInfo.indexes);
         subNodeGlyphRun.setPositions(glyphInfo.positions);
 
-        QSGDefaultGlyphNode *subNode = new QSGDefaultGlyphNode();
+        QSGDefaultGlyphNode *subNode = new QSGDefaultGlyphNode(m_context);
         subNode->setGlyphNodeType(SubGlyphNode);
         subNode->setColor(m_color);
         subNode->setStyle(m_style);

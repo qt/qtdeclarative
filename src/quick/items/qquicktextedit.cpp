@@ -194,6 +194,11 @@ QString QQuickTextEdit::text() const
             d->text = d->control->toHtml();
         else
 #endif
+#if QT_CONFIG(textmarkdownwriter)
+        if (d->markdownText)
+            d->text = d->control->toMarkdown();
+        else
+#endif
             d->text = d->control->toPlainText();
         d->textCached = true;
     }
@@ -407,6 +412,7 @@ void QQuickTextEdit::setText(const QString &text)
 
     d->document->clearResources();
     d->richText = d->format == RichText || (d->format == AutoText && Qt::mightBeRichText(text));
+    d->markdownText = d->format == MarkdownText;
     if (!isComponentComplete()) {
         d->text = text;
     } else if (d->richText) {
@@ -415,6 +421,8 @@ void QQuickTextEdit::setText(const QString &text)
 #else
         d->control->setPlainText(text);
 #endif
+    } else if (d->markdownText) {
+        d->control->setMarkdownText(text);
     } else {
         d->control->setPlainText(text);
     }
@@ -486,6 +494,7 @@ void QQuickTextEdit::setTextFormat(TextFormat format)
 
     bool wasRich = d->richText;
     d->richText = format == RichText || (format == AutoText && (wasRich || Qt::mightBeRichText(text())));
+    d->markdownText = format == MarkdownText;
 
 #if QT_CONFIG(texthtmlparser)
     if (isComponentComplete()) {
@@ -1463,8 +1472,12 @@ void QQuickTextEdit::componentComplete()
         d->control->setHtml(d->text);
     else
 #endif
-    if (!d->text.isEmpty())
-        d->control->setPlainText(d->text);
+    if (!d->text.isEmpty()) {
+        if (d->markdownText)
+            d->control->setMarkdownText(d->text);
+        else
+            d->control->setPlainText(d->text);
+    }
 
     if (d->dirty) {
         d->determineHorizontalAlignment();
@@ -2310,6 +2323,7 @@ void QQuickTextEditPrivate::init()
     QObject::connect(document, &QQuickTextDocumentWithImageResources::contentsChange, q, &QQuickTextEdit::q_contentsChange);
     QObject::connect(document->documentLayout(), &QAbstractTextDocumentLayout::updateBlock, q, &QQuickTextEdit::invalidateBlock);
     QObject::connect(control, &QQuickTextControl::linkHovered, q, &QQuickTextEdit::q_linkHovered);
+    QObject::connect(control, &QQuickTextControl::markerHovered, q, &QQuickTextEdit::q_markerHovered);
 
     document->setDefaultFont(font);
     document->setDocumentMargin(textMargin);
@@ -2593,6 +2607,19 @@ void QQuickTextEdit::q_linkHovered(const QString &link)
     emit linkHovered(link);
 #if QT_CONFIG(cursor)
     if (link.isEmpty()) {
+        setCursor(d->cursorToRestoreAfterHover);
+    } else if (cursor().shape() != Qt::PointingHandCursor) {
+        d->cursorToRestoreAfterHover = cursor().shape();
+        setCursor(Qt::PointingHandCursor);
+    }
+#endif
+}
+
+void QQuickTextEdit::q_markerHovered(bool hovered)
+{
+    Q_D(QQuickTextEdit);
+#if QT_CONFIG(cursor)
+    if (!hovered) {
         setCursor(d->cursorToRestoreAfterHover);
     } else if (cursor().shape() != Qt::PointingHandCursor) {
         d->cursorToRestoreAfterHover = cursor().shape();

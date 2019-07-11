@@ -44,6 +44,9 @@
 #include <private/qquickopenglshadereffect_p.h>
 #endif
 #include <private/qquickgenericshadereffect_p.h>
+#if QT_CONFIG(opengl) /* || QT_CONFIG(vulkan) || defined(Q_OS_WIN) || defined(Q_OS_DARWIN) */
+#include <private/qsgrhisupport_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -506,13 +509,34 @@ QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
 {
     setFlag(QQuickItem::ItemHasContents);
 
-#if QT_CONFIG(opengl)
-    if (!qsg_backend_flags().testFlag(QSGContextFactoryInterface::SupportsShaderEffectNode))
-        m_glImpl = new QQuickOpenGLShaderEffect(this, this);
-
-    if (!m_glImpl)
-#endif
+#if QT_CONFIG(opengl) /* || QT_CONFIG(vulkan) || defined(Q_OS_WIN) || defined(Q_OS_DARWIN) */
+    if (QSGRhiSupport::instance()->isRhiEnabled()) {
         m_impl = new QQuickGenericShaderEffect(this, this);
+    } else
+#endif
+    {
+#if QT_CONFIG(opengl)
+        if (!qsg_backend_flags().testFlag(QSGContextFactoryInterface::SupportsShaderEffectNode))
+            m_glImpl = new QQuickOpenGLShaderEffect(this, this);
+
+        if (!m_glImpl)
+#endif
+            m_impl = new QQuickGenericShaderEffect(this, this);
+    }
+}
+
+QQuickShaderEffect::~QQuickShaderEffect()
+{
+    // Delete the implementations now, while they still have have
+    // valid references back to us.
+#if QT_CONFIG(opengl)
+    auto *glImpl = m_glImpl;
+    m_glImpl = nullptr;
+    delete glImpl;
+#endif
+    auto *impl = m_impl;
+    m_impl = nullptr;
+    delete impl;
 }
 
 /*!
@@ -865,6 +889,8 @@ QString QQuickShaderEffect::parseLog() // for OpenGL-based autotests
 void QQuickShaderEffectPrivate::updatePolish()
 {
     Q_Q(QQuickShaderEffect);
+    if (!qmlEngine(q))
+        return;
 #if QT_CONFIG(opengl)
     if (q->m_glImpl) {
         q->m_glImpl->maybeUpdateShaders();

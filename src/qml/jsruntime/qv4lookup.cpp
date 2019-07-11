@@ -77,8 +77,13 @@ ReturnedValue Lookup::resolvePrimitiveGetter(ExecutionEngine *engine, const Valu
     primitiveLookup.type = object.type();
     switch (primitiveLookup.type) {
     case Value::Undefined_Type:
-    case Value::Null_Type:
-        return engine->throwTypeError();
+    case Value::Null_Type: {
+        Scope scope(engine);
+        ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+        const QString message = QStringLiteral("Cannot read property '%1' of %2").arg(name->toQString())
+            .arg(QLatin1String(primitiveLookup.type == Value::Undefined_Type ? "undefined" : "null"));
+        return engine->throwTypeError(message);
+    }
     case Value::Boolean_Type:
         primitiveLookup.proto = engine->booleanPrototype()->d();
         break;

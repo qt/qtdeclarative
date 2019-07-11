@@ -58,7 +58,7 @@ QT_REQUIRE_CONFIG(quick_sprite);
 #include <QObject>
 #include <QVector>
 #include <QTimer>
-#include <QTime>
+#include <QElapsedTimer>
 #include <QList>
 #include <QQmlListProperty>
 #include <QImage>
@@ -254,7 +254,7 @@ protected:
     QVector<int> m_startTimes;
     QVector<QPair<uint, QVector<int> > > m_stateUpdates;//### This could be done faster - priority queue?
 
-    QTime m_advanceTime;
+    QElapsedTimer m_advanceTimer;
     uint m_timeOffset;
     QString m_globalGoal;
     int m_maxFrames;

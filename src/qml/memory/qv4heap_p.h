@@ -234,7 +234,7 @@ struct QQmlQPointer {
     }
 
     T *data() const {
-        return d == nullptr || d->strongref.load() == 0 ? nullptr : qObject;
+        return d == nullptr || d->strongref.loadRelaxed() == 0 ? nullptr : qObject;
     }
     operator T*() const { return data(); }
     inline T* operator->() const { return data(); }
@@ -247,7 +247,7 @@ struct QQmlQPointer {
     }
     bool isNull() const Q_DECL_NOTHROW
     {
-        return d == nullptr || qObject == nullptr || d->strongref.load() == 0;
+        return d == nullptr || qObject == nullptr || d->strongref.loadRelaxed() == 0;
     }
 
 private:

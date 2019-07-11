@@ -1,5 +1,6 @@
 SOURCES += \
     $$PWD/qqml.cpp \
+    $$PWD/qqmlerror.cpp \
     $$PWD/qqmlopenmetaobject.cpp \
     $$PWD/qqmlvmemetaobject.cpp \
     $$PWD/qqmlengine.cpp \
@@ -142,7 +143,8 @@ HEADERS += \
     $$PWD/qqmlpropertyresolver_p.h \
     $$PWD/qqmltypecompiler_p.h \
     $$PWD/qqmlpropertycachecreator_p.h \
-    $$PWD/qqmlpropertyvalidator_p.h
+    $$PWD/qqmlpropertyvalidator_p.h \
+    $$PWD/qqmlsourcecoordinate_p.h
 
 qtConfig(qml-xml-http-request) {
     HEADERS += \

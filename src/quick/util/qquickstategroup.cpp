@@ -348,10 +348,9 @@ bool QQuickStateGroupPrivate::updateAutoState()
         QQuickState *state = states.at(ii);
         if (state->isWhenKnown()) {
             if (state->isNamed()) {
-                if (state->when() && state->when()->evaluate().toBool()) {
+                if (state->when()) {
                     if (stateChangeDebug())
-                        qWarning() << "Setting auto state due to:"
-                                   << state->when()->expression();
+                        qWarning() << "Setting auto state due to expression";
                     if (currentState != state->name()) {
                         q->setState(state->name());
                         return true;

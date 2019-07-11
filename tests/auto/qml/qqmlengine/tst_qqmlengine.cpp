@@ -835,7 +835,7 @@ void tst_qqmlengine::urlInterceptor()
     QFETCH(QString, expectedAbsoluteUrl);
 
     QQmlEngine e;
-    e.setImportPathList(QStringList() << testFileUrl("interception/imports").toLocalFile());
+    e.addImportPath(testFileUrl("interception/imports").toLocalFile());
     CustomSelector cs(testFileUrl(""));
     cs.m_interceptionPoints = interceptionPoint;
     e.setUrlInterceptor(&cs);
@@ -935,7 +935,7 @@ void tst_qqmlengine::cppSignalAndEval()
 {
     ObjectCaller objectCaller;
     QQmlEngine engine;
-    engine.rootContext()->setContextProperty(QLatin1Literal("CallerCpp"), &objectCaller);
+    engine.rootContext()->setContextProperty(QLatin1String("CallerCpp"), &objectCaller);
     QQmlComponent c(&engine);
     c.setData("import QtQuick 2.9\n"
               "Item {\n"
@@ -1012,6 +1012,25 @@ void tst_qqmlengine::singletonInstance()
         QObject *instance = value.toQObject();
         QVERIFY(instance);
         QCOMPARE(instance->metaObject()->className(), "JsSingleton");
+    }
+
+    {
+        int data = 30;
+        auto id = qmlRegisterSingletonType<CppSingleton>("Qt.test",1,0,"CapturingLambda",[data](QQmlEngine*, QJSEngine*){ // register qobject singleton with capturing lambda
+                auto o = new CppSingleton;
+                o->setProperty("data", data);
+                return o;
+        });
+        QJSValue value = engine.singletonInstance<QJSValue>(id);
+        QVERIFY(!value.isUndefined());
+        QVERIFY(value.isQObject());
+        QObject *instance = value.toQObject();
+        QVERIFY(instance);
+        QCOMPARE(instance->metaObject()->className(), "CppSingleton");
+        QCOMPARE(instance->property("data"), data);
+    }
+    {
+        qmlRegisterSingletonType<CppSingleton>("Qt.test",1,0,"NotAmbiguous", [](QQmlEngine* qeng, QJSEngine* jeng) -> QObject* {return CppSingleton::create(qeng, jeng);}); // test that overloads for qmlRegisterSingleton are not ambiguous
     }
 
     {

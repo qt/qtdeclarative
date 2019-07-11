@@ -548,7 +548,7 @@ Therefore, if you create an alias to an object referenced via id with extra
 properties declared inline, the extra properties won't be accessible through
 the alias:
 
-\code
+\qml
 // MyItem.qml
 Item {
     property alias inner: innerItem
@@ -558,23 +558,23 @@ Item {
         property int extraProperty
     }
 }
-\code
+\endqml
 
 You cannot initialize \a inner.extraProperty from outside of this component, as
 inner is only an \a Item:
 
-\code
+\qml
 // main.qml
 MyItem {
     inner.extraProperty: 5 // fails
 }
-\code
+\endqml
 
 However, if you extract the inner object into a separate component with a
 dedicated .qml file, you can instantiate that component instead and have all
 its properties available through the alias:
 
-\code
+\qml
 // MainItem.qml
 Item {
     // Now you can access inner.extraProperty, as inner is now an ExtraItem
@@ -589,8 +589,7 @@ Item {
 Item {
     property int extraProperty
 }
-\code
-
+\endqml
 
 \section3 Default Properties
 

@@ -132,6 +132,12 @@ QSGRenderer::QSGRenderer(QSGRenderContext *context)
     , m_current_determinant(1)
     , m_device_pixel_ratio(1)
     , m_context(context)
+    , m_current_uniform_data(nullptr)
+    , m_current_resource_update_batch(nullptr)
+    , m_rhi(nullptr)
+    , m_rt(nullptr)
+    , m_cb(nullptr)
+    , m_rp_desc(nullptr)
     , m_node_updater(nullptr)
     , m_bindable(nullptr)
     , m_changed_emitted(false)
@@ -184,21 +190,30 @@ bool QSGRenderer::isMirrored() const
 
 void QSGRenderer::renderScene(uint fboId)
 {
-#if QT_CONFIG(opengl)
-    if (fboId) {
-        QSGBindableFboId bindable(fboId);
-        renderScene(bindable);
-    } else {
+    if (m_rt) {
         class B : public QSGBindable
         {
         public:
-            void bind() const override { QOpenGLFramebufferObject::bindDefault(); }
+            void bind() const override { }
         } bindable;
         renderScene(bindable);
-    }
+    } else {
+#if QT_CONFIG(opengl)
+        if (fboId) {
+            QSGBindableFboId bindable(fboId);
+            renderScene(bindable);
+        } else {
+            class B : public QSGBindable
+            {
+            public:
+                void bind() const override { QOpenGLFramebufferObject::bindDefault(); }
+            } bindable;
+            renderScene(bindable);
+        }
 #else
-    Q_UNUSED(fboId)
+        Q_UNUSED(fboId)
 #endif
+    }
 }
 
 void QSGRenderer::renderScene(const QSGBindable &bindable)

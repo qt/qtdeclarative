@@ -121,9 +121,14 @@ private:
 
     void handleExposure(QQuickWindow *w);
     void handleObscurity(Window *w);
+    void releaseSwapchain(QQuickWindow *window);
 
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
     QSGContext *sg;
+    // Set of contexts that have been created but are now owned by
+    // a rendering thread yet, as the window has never been exposed.
+    mutable QSet<QSGRenderContext*> pendingRenderContexts;
     QAnimationDriver *m_animation_driver;
     QList<Window> m_windows;
 

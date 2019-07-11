@@ -48,7 +48,12 @@ public:
     inline QString testFile(const char *fileName) const
         { return testFile(QLatin1String(fileName)); }
     inline QUrl testFileUrl(const QString &fileName) const
-        { return QUrl::fromLocalFile(testFile(fileName)); }
+        {
+            const QString fn = testFile(fileName);
+            return fn.startsWith(QLatin1Char(':'))
+                ? QUrl(QLatin1String("qrc") + fn)
+                : QUrl::fromLocalFile(fn);
+        }
     inline QUrl testFileUrl(const char *fileName) const
         { return testFileUrl(QLatin1String(fileName)); }
 

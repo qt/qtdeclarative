@@ -38,7 +38,6 @@
 #include <QtTest/qtest.h>
 #include <QtTest/qtestsystem.h>
 #include <QtCore/qprocess.h>
-#include <QtCore/qtimer.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qmutex.h>
@@ -162,8 +161,6 @@ private:
     void targetData();
     bool waitForClientSignal(const char *signal, int timeout = 30000);
     void checkVersionParameters();
-
-    QTime t;
 };
 
 
@@ -171,7 +168,6 @@ private:
 void tst_QQmlDebugJS::initTestCase()
 {
     QQmlDebugTest::initTestCase();
-    t.start();
 }
 
 QQmlDebugTest::ConnectResult tst_QQmlDebugJS::init(bool qmlscene, const QString &qmlFile,

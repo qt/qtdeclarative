@@ -32,6 +32,7 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QQmlComponent>
+#include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qqmldirparser_p.h>
 #include <QDebug>
 
@@ -56,12 +57,21 @@ tst_qqmldirparser::tst_qqmldirparser()
 
 namespace {
 
-    QStringList toStringList(const QList<QQmlError> &errors)
+    QStringList toStringList(const QList<QQmlJS::DiagnosticMessage> &errors)
     {
         QStringList rv;
 
-        foreach (const QQmlError &e, errors)
-            rv.append(e.toString());
+        for (const QQmlJS::DiagnosticMessage &e : errors)  {
+            QString errorString = QLatin1String("qmldir");
+            if (e.line > 0) {
+                errorString += QLatin1Char(':') + QString::number(e.line);
+                if (e.column > 0)
+                    errorString += QLatin1Char(':') + QString::number(e.column);
+            }
+
+            errorString += QLatin1String(": ") + e.message;
+            rv.append(errorString);
+        }
 
         return rv;
     }

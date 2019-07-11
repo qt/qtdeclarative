@@ -56,7 +56,6 @@
 QT_REQUIRE_CONFIG(quick_sprite);
 
 #include <QtQuick/QQuickItem>
-#include <QTime>
 
 QT_BEGIN_NAMESPACE
 

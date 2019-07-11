@@ -44,7 +44,6 @@
 #include <QtCore/QSet>
 #include <QtCore/QBuffer>
 #include <QtCore/QBitArray>
-#include <QtCore/QLinkedList>
 #include <QtCore/QStack>
 #include <private/qqmljsast_p.h>
 #include <private/qv4compilercontext_p.h>
@@ -54,6 +53,15 @@ QT_USE_NAMESPACE
 using namespace QV4;
 using namespace QV4::Compiler;
 using namespace QQmlJS::AST;
+
+static CompiledData::Location location(const QQmlJS::AST::SourceLocation &astLocation)
+{
+    CompiledData::Location target;
+    target.line = astLocation.startLine;
+    target.column = astLocation.startColumn;
+    return target;
+}
+
 
 ScanFunctions::ScanFunctions(Codegen *cg, const QString &sourceCode, ContextType defaultProgramType)
     : QQmlJS::AST::Visitor(cg->recursionDepth())
@@ -176,7 +184,7 @@ bool ScanFunctions::visit(ExportDeclaration *declaration)
         Compiler::ExportEntry entry;
         entry.moduleRequest = declaration->fromClause->moduleSpecifier.toString();
         entry.importName = QStringLiteral("*");
-        entry.location = declaration->firstSourceLocation();
+        entry.location = location(declaration->firstSourceLocation());
         _context->exportEntries << entry;
     } else if (declaration->exportClause) {
         for (ExportsList *it = declaration->exportClause->exportsList; it; it = it->next) {
@@ -189,7 +197,7 @@ bool ScanFunctions::visit(ExportDeclaration *declaration)
 
             entry.moduleRequest = module;
             entry.exportName = spec->exportedIdentifier.toString();
-            entry.location = it->firstSourceLocation();
+            entry.location = location(it->firstSourceLocation());
 
             _context->exportEntries << entry;
         }
@@ -204,7 +212,7 @@ bool ScanFunctions::visit(ExportDeclaration *declaration)
             Compiler::ExportEntry entry;
             entry.localName = name;
             entry.exportName = name;
-            entry.location = vstmt->firstSourceLocation();
+            entry.location = location(vstmt->firstSourceLocation());
             _context->exportEntries << entry;
         }
     } else if (auto *classDecl = AST::cast<AST::ClassDeclaration*>(declaration->variableStatementOrDeclaration)) {
@@ -213,7 +221,7 @@ bool ScanFunctions::visit(ExportDeclaration *declaration)
             Compiler::ExportEntry entry;
             entry.localName = name;
             entry.exportName = name;
-            entry.location = classDecl->firstSourceLocation();
+            entry.location = location(classDecl->firstSourceLocation());
             _context->exportEntries << entry;
             if (declaration->exportDefault)
                 localNameForDefaultExport = entry.localName;
@@ -232,7 +240,7 @@ bool ScanFunctions::visit(ExportDeclaration *declaration)
             Compiler::ExportEntry entry;
             entry.localName = functionName;
             entry.exportName = functionName;
-            entry.location = fdef->firstSourceLocation();
+            entry.location = location(fdef->firstSourceLocation());
             _context->exportEntries << entry;
             if (declaration->exportDefault)
                 localNameForDefaultExport = entry.localName;
@@ -244,7 +252,7 @@ bool ScanFunctions::visit(ExportDeclaration *declaration)
         entry.localName = localNameForDefaultExport;
         _context->localNameForDefaultExport = localNameForDefaultExport;
         entry.exportName = QStringLiteral("default");
-        entry.location = declaration->firstSourceLocation();
+        entry.location = location(declaration->firstSourceLocation());
         _context->exportEntries << entry;
     }
 
@@ -269,7 +277,7 @@ bool ScanFunctions::visit(ImportDeclaration *declaration)
             entry.moduleRequest = module;
             entry.importName = QStringLiteral("default");
             entry.localName = import->importedDefaultBinding.toString();
-            entry.location = declaration->firstSourceLocation();
+            entry.location = location(declaration->firstSourceLocation());
             _context->importEntries << entry;
         }
 
@@ -278,7 +286,7 @@ bool ScanFunctions::visit(ImportDeclaration *declaration)
             entry.moduleRequest = module;
             entry.importName = QStringLiteral("*");
             entry.localName = import->nameSpaceImport->importedBinding.toString();
-            entry.location = declaration->firstSourceLocation();
+            entry.location = location(declaration->firstSourceLocation());
             _context->importEntries << entry;
         }
 
@@ -291,7 +299,7 @@ bool ScanFunctions::visit(ImportDeclaration *declaration)
                     entry.importName = it->importSpecifier->identifier.toString();
                 else
                     entry.importName = entry.localName;
-                entry.location = declaration->firstSourceLocation();
+                entry.location = location(declaration->firstSourceLocation());
                 _context->importEntries << entry;
             }
         }

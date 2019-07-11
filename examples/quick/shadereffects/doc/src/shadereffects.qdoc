@@ -52,10 +52,18 @@
     \snippet shadereffects/shadereffects.qml fragment
 
     In order to support multiple graphics APIs, not just OpenGL, the shader
-    source is not embedded into QML. Instead, file selectors are used to select
-    the correct variant at runtime. Based on the Qt Quick backend in use, Qt
-    will automatically select either \c{shaders/wobble.frag} with the GLSL
-    source code or \c{shaders/+hlsl/wobble.frag} with the HLSL source code.
+    source is not embedded into QML. When running with the graphics API
+    independent scene graph, the actual file in use is a pre-generated shader
+    pack containing multiple variants of the shader code. The appropriate
+    shader is then chosen by Qt Quick, regardless of running on Vulkan, Metal,
+    Direct 3D, or OpenGL. Qt automatically selects the file under the \c qsb
+    selector, for example \c{shaders/+qsb/wobble.frag}, when present.
+
+    On the traditional code path, which can mean using OpenGL or Direct3D 12,
+    file selectors are used to select the correct variant at runtime. Based on
+    the Qt Quick backend in use, Qt will automatically select either
+    \c{shaders/wobble.frag} with the GLSL source code or
+    \c{shaders/+hlsl/wobble.frag} with the HLSL source code.
 
     \note For simplicity shader source code is used in all variants of the
     files. However, with the Direct3D backend of Qt Quick pre-compiled shaders

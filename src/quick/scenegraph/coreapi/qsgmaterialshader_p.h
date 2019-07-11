@@ -1,5 +1,6 @@
 /****************************************************************************
 **
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Copyright (C) 2016 Klaralvdalens Datakonsult AB (KDAB).
 ** Contact: https://www.qt.io/licensing/
 **
@@ -52,7 +53,7 @@
 //
 
 #include <private/qtquickglobal_p.h>
-#include <QOpenGLShader>
+#include "qsgmaterial.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -66,11 +67,6 @@ public:
     mutable QHash<QOpenGLShader::ShaderType, QByteArray> m_sources;
 #endif
 };
-
-#ifndef QT_NO_DEBUG
-Q_QUICK_PRIVATE_EXPORT bool qsg_test_and_clear_material_failure();
-Q_QUICK_PRIVATE_EXPORT void qsg_set_material_failure();
-#endif
 
 QT_END_NAMESPACE
 

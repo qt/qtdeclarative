@@ -178,8 +178,10 @@ class UiQualifiedId;
 class UiHeaderItemList;
 class UiEnumDeclaration;
 class UiEnumMemberList;
+class UiVersionSpecifier;
 
-} } // namespace AST
+} // namespace AST
+} // namespace QQmlJS
 
 QT_END_NAMESPACE
 

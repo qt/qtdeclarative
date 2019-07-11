@@ -100,12 +100,15 @@ add_qt_module(Quick
         scenegraph/coreapi/qsgabstractrenderer.cpp scenegraph/coreapi/qsgabstractrenderer.h scenegraph/coreapi/qsgabstractrenderer_p.h
         scenegraph/coreapi/qsggeometry.cpp scenegraph/coreapi/qsggeometry.h scenegraph/coreapi/qsggeometry_p.h
         scenegraph/coreapi/qsgmaterial.cpp scenegraph/coreapi/qsgmaterial.h
-        scenegraph/coreapi/qsgmaterialshader_p.h
+        scenegraph/coreapi/qsgmaterialrhishader.cpp scenegraph/coreapi/qsgmaterialrhishader.h scenegraph/coreapi/qsgmaterialrhishader_p.h
+        scenegraph/coreapi/qsgmaterialshader.cpp scenegraph/coreapi/qsgmaterialshader.h scenegraph/coreapi/qsgmaterialshader_p.h
+        scenegraph/coreapi/qsgmaterialtype.h
         scenegraph/coreapi/qsgnode.cpp scenegraph/coreapi/qsgnode.h scenegraph/coreapi/qsgnode_p.h
         scenegraph/coreapi/qsgnodeupdater.cpp scenegraph/coreapi/qsgnodeupdater_p.h
         scenegraph/coreapi/qsgrenderer.cpp scenegraph/coreapi/qsgrenderer_p.h
         scenegraph/coreapi/qsgrendererinterface.cpp scenegraph/coreapi/qsgrendererinterface.h
         scenegraph/coreapi/qsgrendernode.cpp scenegraph/coreapi/qsgrendernode.h scenegraph/coreapi/qsgrendernode_p.h
+        scenegraph/coreapi/qsgtexture.cpp scenegraph/coreapi/qsgtexture.h scenegraph/coreapi/qsgtexture_p.h
         scenegraph/qsgadaptationlayer.cpp scenegraph/qsgadaptationlayer_p.h
         scenegraph/qsgbasicglyphnode.cpp scenegraph/qsgbasicglyphnode_p.h
         scenegraph/qsgbasicinternalimagenode.cpp scenegraph/qsgbasicinternalimagenode_p.h
@@ -118,11 +121,11 @@ add_qt_module(Quick
         scenegraph/util/qsgflatcolormaterial.cpp scenegraph/util/qsgflatcolormaterial.h
         scenegraph/util/qsgimagenode.cpp scenegraph/util/qsgimagenode.h
         scenegraph/util/qsgninepatchnode.cpp scenegraph/util/qsgninepatchnode.h
+        scenegraph/util/qsgplaintexture.cpp scenegraph/util/qsgplaintexture_p.h
         scenegraph/util/qsgrectanglenode.cpp scenegraph/util/qsgrectanglenode.h
         scenegraph/util/qsgsimplematerial.cpp scenegraph/util/qsgsimplematerial.h
         scenegraph/util/qsgsimplerectnode.cpp scenegraph/util/qsgsimplerectnode.h
         scenegraph/util/qsgsimpletexturenode.cpp scenegraph/util/qsgsimpletexturenode.h
-        scenegraph/util/qsgtexture.cpp scenegraph/util/qsgtexture.h scenegraph/util/qsgtexture_p.h
         scenegraph/util/qsgtexturematerial.cpp scenegraph/util/qsgtexturematerial.h scenegraph/util/qsgtexturematerial_p.h
         scenegraph/util/qsgtextureprovider.cpp scenegraph/util/qsgtextureprovider.h
         scenegraph/util/qsgtexturereader.cpp scenegraph/util/qsgtexturereader_p.h
@@ -254,7 +257,52 @@ add_qt_resource(Quick "scenegraph" PREFIX "/qt-project.org/scenegraph" BASE "sce
     shaders/vertexcolor_core.frag
     shaders/vertexcolor_core.vert
     shaders/visualization.frag
-    shaders/visualization.vert)
+    shaders/visualization.vert
+    shaders_ng/24bittextmask.frag.qsb
+    shaders_ng/32bitcolortext.frag.qsb
+    shaders_ng/8bittextmask.frag.qsb
+    shaders_ng/8bittextmask_a.frag.qsb
+    shaders_ng/distancefieldoutlinetext.frag.qsb
+    shaders_ng/distancefieldoutlinetext.vert.qsb
+    shaders_ng/distancefieldoutlinetext_a.frag.qsb
+    shaders_ng/distancefieldshiftedtext.frag.qsb
+    shaders_ng/distancefieldshiftedtext.vert.qsb
+    shaders_ng/distancefieldshiftedtext_a.frag.qsb
+    shaders_ng/distancefieldtext.frag.qsb
+    shaders_ng/distancefieldtext.vert.qsb
+    shaders_ng/distancefieldtext_a.frag.qsb
+    shaders_ng/flatcolor.frag.qsb
+    shaders_ng/flatcolor.vert.qsb
+    shaders_ng/hiqsubpixeldistancefieldtext.frag.qsb
+    shaders_ng/hiqsubpixeldistancefieldtext.vert.qsb
+    shaders_ng/hiqsubpixeldistancefieldtext_a.frag.qsb
+    shaders_ng/loqsubpixeldistancefieldtext.frag.qsb
+    shaders_ng/loqsubpixeldistancefieldtext.vert.qsb
+    shaders_ng/loqsubpixeldistancefieldtext_a.frag.qsb
+    shaders_ng/opaquetexture.frag.qsb
+    shaders_ng/opaquetexture.vert.qsb
+    shaders_ng/outlinedtext.frag.qsb
+    shaders_ng/outlinedtext.vert.qsb
+    shaders_ng/outlinedtext_a.frag.qsb
+    shaders_ng/shadereffect.frag.qsb
+    shaders_ng/shadereffect.vert.qsb
+    shaders_ng/smoothcolor.frag.qsb
+    shaders_ng/smoothcolor.vert.qsb
+    shaders_ng/smoothtexture.frag.qsb
+    shaders_ng/smoothtexture.vert.qsb
+    shaders_ng/sprite.frag.qsb
+    shaders_ng/sprite.vert.qsb
+    shaders_ng/stencilclip.frag.qsb
+    shaders_ng/stencilclip.vert.qsb
+    shaders_ng/styledtext.frag.qsb
+    shaders_ng/styledtext.vert.qsb
+    shaders_ng/styledtext_a.frag.qsb
+    shaders_ng/textmask.frag.qsb
+    shaders_ng/textmask.vert.qsb
+    shaders_ng/texture.frag.qsb
+    shaders_ng/texture.vert.qsb
+    shaders_ng/vertexcolor.frag.qsb
+    shaders_ng/vertexcolor.vert.qsb)
 add_qt_resource(Quick "items" PREFIX "/qt-project.org/items" BASE "items" FILES
     shaders/shadereffect.frag
     shaders/shadereffect.vert
@@ -266,9 +314,17 @@ add_qt_resource(Quick "items" PREFIX "/qt-project.org/items" BASE "items" FILES
     shaders/shadereffectfallback_core.vert)
 
 
+if(ANDROID)
+    set_property(TARGET Quick APPEND PROPERTY QT_ANDROID_LIB_DEPENDENCIES
+        lib/libQt5QuickParticles.so
+    )
+    set_property(TARGET Quick APPEND PROPERTY QT_ANDROID_BUNDLED_FILES
+        lib/libQt5QuickParticles.so
+        qml
+    )
+endif()
+
 #### Keys ignored in scope 1:.:.:quick.pro:<TRUE>:
-# ANDROID_BUNDLED_FILES = "qml" "lib/libQt5QuickParticles.so"
-# ANDROID_LIB_DEPENDENCIES = "lib/libQt5QuickParticles.so"
 # MODULE_PLUGIN_TYPES = "scenegraph"
 # _LOADED = "qt_module"
 
@@ -355,22 +411,28 @@ extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FE
         scenegraph/coreapi/qsgbatchrenderer.cpp scenegraph/coreapi/qsgbatchrenderer_p.h
         scenegraph/coreapi/qsgshaderrewriter.cpp
         scenegraph/qsgdefaultcontext.cpp scenegraph/qsgdefaultcontext_p.h
-        scenegraph/qsgdefaultdistancefieldglyphcache.cpp scenegraph/qsgdefaultdistancefieldglyphcache_p.h
         scenegraph/qsgdefaultglyphnode.cpp scenegraph/qsgdefaultglyphnode_p.cpp scenegraph/qsgdefaultglyphnode_p.h
         scenegraph/qsgdefaultglyphnode_p_p.h
         scenegraph/qsgdefaultinternalimagenode.cpp scenegraph/qsgdefaultinternalimagenode_p.h
         scenegraph/qsgdefaultinternalrectanglenode.cpp scenegraph/qsgdefaultinternalrectanglenode_p.h
-        scenegraph/qsgdefaultlayer.cpp scenegraph/qsgdefaultlayer_p.h
         scenegraph/qsgdefaultrendercontext.cpp scenegraph/qsgdefaultrendercontext_p.h
         scenegraph/qsgdistancefieldglyphnode.cpp scenegraph/qsgdistancefieldglyphnode_p.cpp scenegraph/qsgdistancefieldglyphnode_p.h
         scenegraph/qsgdistancefieldglyphnode_p_p.h
+        scenegraph/qsgopengldistancefieldglyphcache.cpp scenegraph/qsgopengldistancefieldglyphcache_p.h
+        scenegraph/qsgopengllayer.cpp scenegraph/qsgopengllayer_p.h
+        scenegraph/qsgrhidistancefieldglyphcache.cpp scenegraph/qsgrhidistancefieldglyphcache_p.h
+        scenegraph/qsgrhilayer.cpp scenegraph/qsgrhilayer_p.h
+        scenegraph/qsgrhishadereffectnode.cpp scenegraph/qsgrhishadereffectnode_p.h
+        scenegraph/qsgrhisupport.cpp scenegraph/qsgrhisupport_p.h
+        scenegraph/qsgrhitextureglyphcache.cpp scenegraph/qsgrhitextureglyphcache_p.h
         scenegraph/qsgwindowsrenderloop.cpp scenegraph/qsgwindowsrenderloop_p.h
-        scenegraph/util/qsgatlastexture.cpp scenegraph/util/qsgatlastexture_p.h
         scenegraph/util/qsgdefaultimagenode.cpp scenegraph/util/qsgdefaultimagenode_p.h
         scenegraph/util/qsgdefaultninepatchnode.cpp scenegraph/util/qsgdefaultninepatchnode_p.h
         scenegraph/util/qsgdefaultpainternode.cpp scenegraph/util/qsgdefaultpainternode_p.h
         scenegraph/util/qsgdefaultrectanglenode.cpp scenegraph/util/qsgdefaultrectanglenode_p.h
         scenegraph/util/qsgdepthstencilbuffer.cpp scenegraph/util/qsgdepthstencilbuffer_p.h
+        scenegraph/util/qsgopenglatlastexture.cpp scenegraph/util/qsgopenglatlastexture_p.h
+        scenegraph/util/qsgrhiatlastexture.cpp scenegraph/util/qsgrhiatlastexture_p.h
         scenegraph/util/qsgshadersourcebuilder.cpp scenegraph/util/qsgshadersourcebuilder_p.h
 )
 

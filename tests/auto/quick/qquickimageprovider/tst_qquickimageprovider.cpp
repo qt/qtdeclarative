@@ -33,6 +33,7 @@
 #include <QImageReader>
 #include <QWaitCondition>
 #include <QThreadPool>
+#include <private/qqmlengine_p.h>
 
 Q_DECLARE_METATYPE(QQuickImageProvider*);
 
@@ -66,6 +67,8 @@ private slots:
 
     void asyncTextureTest();
     void instantAsyncTextureTest();
+
+    void asyncImageThreadSafety();
 
 private:
     QString newImageFileName() const;
@@ -448,21 +451,56 @@ void tst_qquickimageprovider::threadTest()
     foreach (QQuickImage *img, images) {
         QCOMPARE(img->status(), QQuickImage::Loading);
     }
-    provider->ok = true;
-    provider->cond.wakeAll();
+    {
+        QMutexLocker lock(&provider->mutex);
+        provider->ok = true;
+        provider->cond.wakeAll();
+    }
     QTest::qWait(250);
     foreach (QQuickImage *img, images) {
         QTRY_COMPARE(img->status(), QQuickImage::Ready);
     }
 }
 
-class TestImageResponse : public QQuickImageResponse, public QRunnable
+class TestImageResponseRunner : public QObject, public QRunnable {
+
+    Q_OBJECT
+
+public:
+    Q_SIGNAL void finished(QQuickTextureFactory *texture);
+    TestImageResponseRunner(QMutex *lock, QWaitCondition *condition, bool *ok, const QString &id, const QSize &requestedSize)
+        : m_lock(lock), m_condition(condition), m_ok(ok), m_id(id), m_requestedSize(requestedSize) {}
+    void run()
+    {
+        m_lock->lock();
+        if (!(*m_ok)) {
+            m_condition->wait(m_lock);
+        }
+        m_lock->unlock();
+        QImage image(50, 50, QImage::Format_RGB32);
+        image.fill(QColor(m_id).rgb());
+        if (m_requestedSize.isValid())
+            image = image.scaled(m_requestedSize);
+        emit finished(QQuickTextureFactory::textureFactoryForImage(image));
+    }
+
+private:
+    QMutex *m_lock;
+    QWaitCondition *m_condition;
+    bool *m_ok;
+    QString m_id;
+    QSize m_requestedSize;
+};
+
+class TestImageResponse : public QQuickImageResponse
 {
     public:
-        TestImageResponse(QMutex *lock, QWaitCondition *condition, bool *ok, const QString &id, const QSize &requestedSize)
+        TestImageResponse(QMutex *lock, QWaitCondition *condition, bool *ok, const QString &id, const QSize &requestedSize, QThreadPool *pool)
          : m_lock(lock), m_condition(condition), m_ok(ok), m_id(id), m_requestedSize(requestedSize), m_texture(nullptr)
         {
-            setAutoDelete(false);
+            auto runnable = new TestImageResponseRunner(m_lock, m_condition, m_ok, m_id, m_requestedSize);
+            QObject::connect(runnable, &TestImageResponseRunner::finished, this, &TestImageResponse::handleResponse);
+            pool->start(runnable);
         }
 
         QQuickTextureFactory *textureFactory() const
@@ -470,18 +508,8 @@ class TestImageResponse : public QQuickImageResponse, public QRunnable
             return m_texture;
         }
 
-        void run()
-        {
-            m_lock->lock();
-            if (!(*m_ok)) {
-                m_condition->wait(m_lock);
-            }
-            m_lock->unlock();
-            QImage image(50, 50, QImage::Format_RGB32);
-            image.fill(QColor(m_id).rgb());
-            if (m_requestedSize.isValid())
-                image = image.scaled(m_requestedSize);
-            m_texture = QQuickTextureFactory::textureFactoryForImage(image);
+        void handleResponse(QQuickTextureFactory *factory) {
+            this->m_texture = factory;
             emit finished();
         }
 
@@ -505,8 +533,7 @@ class TestAsyncProvider : public QQuickAsyncImageProvider
 
         QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize)
         {
-            TestImageResponse *response = new TestImageResponse(&lock, &condition, &ok, id, requestedSize);
-            pool.start(response);
+            TestImageResponse *response = new TestImageResponse(&lock, &condition, &ok, id, requestedSize, &pool);
             return response;
         }
 
@@ -544,8 +571,11 @@ void tst_qquickimageprovider::asyncTextureTest()
     foreach (QQuickImage *img, images) {
         QTRY_COMPARE(img->status(), QQuickImage::Loading);
     }
-    provider->ok = true;
-    provider->condition.wakeAll();
+    {
+        QMutexLocker lock(&provider->lock);
+        provider->ok = true;
+        provider->condition.wakeAll();
+    }
     foreach (QQuickImage *img, images) {
         QTRY_COMPARE(img->status(), QQuickImage::Ready);
     }
@@ -613,6 +643,115 @@ void tst_qquickimageprovider::instantAsyncTextureTest()
     for (QQuickImage *img: images) {
         QTRY_COMPARE(img->status(), QQuickImage::Ready);
     }
+}
+
+
+class WaitingAsyncImageResponse : public QQuickImageResponse, public QRunnable
+{
+public:
+    WaitingAsyncImageResponse(QMutex *providerRemovedMutex, QWaitCondition *providerRemovedCond, bool *providerRemoved, QMutex *imageRequestedMutex,  QWaitCondition *imageRequestedCond, bool *imageRequested)
+        : m_providerRemovedMutex(providerRemovedMutex), m_providerRemovedCond(providerRemovedCond), m_providerRemoved(providerRemoved),
+          m_imageRequestedMutex(imageRequestedMutex),  m_imageRequestedCondition(imageRequestedCond),  m_imageRequested(imageRequested)
+    {
+        setAutoDelete(false);
+    }
+
+    void run() override
+    {
+        m_imageRequestedMutex->lock();
+        *m_imageRequested  = true;
+        m_imageRequestedCondition->wakeAll();
+        m_imageRequestedMutex->unlock();
+        m_providerRemovedMutex->lock();
+        while (!*m_providerRemoved)
+            m_providerRemovedCond->wait(m_providerRemovedMutex);
+        m_providerRemovedMutex->unlock();
+        emit finished();
+    }
+
+    QQuickTextureFactory *textureFactory() const
+    {
+        QImage image(50, 50, QImage::Format_RGB32);
+        auto texture = QQuickTextureFactory::textureFactoryForImage(image);
+        return texture;
+    }
+
+    QMutex *m_providerRemovedMutex;
+    QWaitCondition *m_providerRemovedCond;
+    bool *m_providerRemoved;
+    QMutex *m_imageRequestedMutex;
+    QWaitCondition *m_imageRequestedCondition;
+    bool *m_imageRequested;
+
+};
+
+class WaitingAsyncProvider : public QQuickAsyncImageProvider
+{
+public:
+    WaitingAsyncProvider(QMutex *providerRemovedMutex, QWaitCondition *providerRemovedCond, bool *providerRemoved, QMutex *imageRequestedMutex, QWaitCondition *imageRequestedCond, bool *imageRequested)
+        : m_providerRemovedMutex(providerRemovedMutex), m_providerRemovedCond(providerRemovedCond), m_providerRemoved(providerRemoved),
+          m_imageRequestedMutex(imageRequestedMutex),  m_imageRequestedCondition(imageRequestedCond),  m_imageRequested(imageRequested)
+    {
+    }
+
+    ~WaitingAsyncProvider() {}
+
+    QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize)
+    {
+        auto response = new WaitingAsyncImageResponse(m_providerRemovedMutex, m_providerRemovedCond, m_providerRemoved, m_imageRequestedMutex, m_imageRequestedCondition, m_imageRequested);
+        pool.start(response);
+        return response;
+    }
+
+    QMutex *m_providerRemovedMutex;
+    QWaitCondition *m_providerRemovedCond;
+    bool *m_providerRemoved;
+    QMutex *m_imageRequestedMutex;
+    QWaitCondition *m_imageRequestedCondition;
+    bool *m_imageRequested;
+    QThreadPool pool;
+};
+
+
+// QTBUG-76527
+void tst_qquickimageprovider::asyncImageThreadSafety()
+{
+    QQmlEngine engine;
+    QMutex providerRemovedMutex;
+    bool providerRemoved = false;
+    QWaitCondition providerRemovedCond;
+    QMutex imageRequestedMutex;
+    bool imageRequested = false;
+    QWaitCondition imageRequestedCond;
+    auto imageProvider = new WaitingAsyncProvider(&providerRemovedMutex, &providerRemovedCond, &providerRemoved, &imageRequestedMutex, &imageRequestedCond, &imageRequested);
+    engine.addImageProvider("test_waiting", imageProvider);
+    QVERIFY(engine.imageProvider("test_waiting") != nullptr);
+    auto privateEngine = QQmlEnginePrivate::get(&engine);
+
+    QString componentStr = "import QtQuick 2.0\nItem { \n"
+                           "Image { source: \"image://test_waiting/blue\"; }\n"
+                           " }";
+    QQmlComponent component(&engine);
+    component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QWeakPointer<QQmlImageProviderBase> observer = privateEngine->imageProvider("test_waiting").toWeakRef();
+    QVERIFY(!observer.isNull()); // engine still own the object
+    imageRequestedMutex.lock();
+    while (!imageRequested)
+        imageRequestedCond.wait(&imageRequestedMutex);
+    imageRequestedMutex.unlock();
+    engine.removeImageProvider("test_waiting");
+
+    QVERIFY(engine.imageProvider("test_waiting") == nullptr);
+    QVERIFY(!observer.isNull()); // lifetime has been extended
+
+    providerRemovedMutex.lock();
+    providerRemoved = true;
+    providerRemovedCond.wakeAll();
+    providerRemovedMutex.unlock();
+
+    QTRY_VERIFY(observer.isNull()); // once the reply has finished, the imageprovider gets deleted
 }
 
 

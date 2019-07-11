@@ -57,7 +57,7 @@
 
 #include <QtQuick/QSGTexture>
 #include <QtQuick/private/qsgareaallocator_p.h>
-#include <QtQuick/private/qsgatlastexture_p.h>
+#include <QtQuick/private/qsgopenglatlastexture_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -67,7 +67,7 @@ namespace QSGCompressedAtlasTexture {
 
 class Texture;
 
-class Atlas : public QSGAtlasTexture::AtlasBase
+class Atlas : public QSGOpenGLAtlasTexture::AtlasBase
 {
 public:
     Atlas(const QSize &size, uint format);
@@ -84,7 +84,7 @@ private:
     uint m_format;
 };
 
-class Texture : public QSGAtlasTexture::TextureBase
+class Texture : public QSGOpenGLAtlasTexture::TextureBase
 {
     Q_OBJECT
 public:

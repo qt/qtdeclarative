@@ -9,13 +9,15 @@ add_qt_module(QmlDevTools
     INTERNAL_MODULE
     NO_SYNC_QT
     SOURCES
+        ../qml/common/qqmlapiversion_p.h
+        ../qml/common/qqmljsdiagnosticmessage_p.h
         ../qml/compiler/qqmlirbuilder.cpp ../qml/compiler/qqmlirbuilder_p.h
         ../qml/compiler/qv4alloca_p.h
         ../qml/compiler/qv4bytecodegenerator.cpp ../qml/compiler/qv4bytecodegenerator_p.h
         ../qml/compiler/qv4bytecodehandler.cpp ../qml/compiler/qv4bytecodehandler_p.h
         ../qml/compiler/qv4calldata_p.h
         ../qml/compiler/qv4codegen.cpp ../qml/compiler/qv4codegen_p.h
-        ../qml/compiler/qv4compileddata.cpp ../qml/compiler/qv4compileddata_p.h
+        ../qml/compiler/qv4compileddata_p.h
         ../qml/compiler/qv4compiler.cpp ../qml/compiler/qv4compiler_p.h
         ../qml/compiler/qv4compilercontext.cpp ../qml/compiler/qv4compilercontext_p.h
         ../qml/compiler/qv4compilercontrolflow_p.h
@@ -34,8 +36,6 @@ add_qt_module(QmlDevTools
         ../qml/parser/qqmljsmemorypool_p.h
         ../qml/parser/qqmljssourcelocation_p.h
         ../qml/qmldirparser/qqmldirparser.cpp ../qml/qmldirparser/qqmldirparser_p.h
-        ../qml/qmldirparser/qqmlerror.cpp ../qml/qmldirparser/qqmlerror.h
-        ../qml/qmldirparser/qqmlsourcecoordinate_p.h
     INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_BINARY_DIR}/../qml
         ${CMAKE_CURRENT_BINARY_DIR}/../qml/compiler

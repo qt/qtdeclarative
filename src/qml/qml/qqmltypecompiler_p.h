@@ -97,9 +97,8 @@ public:
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compile();
 
     QList<QQmlError> compilationErrors() const { return errors; }
-    void recordError(QQmlError error);
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
-    void recordError(const QQmlCompileError &error);
+    void recordError(const QQmlJS::DiagnosticMessage &error);
 
     int registerString(const QString &str);
     int registerConstant(QV4::ReturnedValue v);
@@ -153,7 +152,7 @@ struct QQmlCompilePass
 protected:
     void recordError(const QV4::CompiledData::Location &location, const QString &description) const
     { compiler->recordError(location, description); }
-    void recordError(const QQmlCompileError &error)
+    void recordError(const QQmlJS::DiagnosticMessage &error)
     { compiler->recordError(error); }
 
     QV4::ResolvedTypeReference *resolvedType(int id) const
@@ -276,7 +275,7 @@ protected:
         AllAliasesResolved
     };
 
-    AliasResolutionResult resolveAliasesInObject(int objectIndex, QQmlCompileError *error);
+    AliasResolutionResult resolveAliasesInObject(int objectIndex, QQmlJS::DiagnosticMessage *error);
 
     QQmlEnginePrivate *enginePrivate;
     QQmlJS::MemoryPool *pool;

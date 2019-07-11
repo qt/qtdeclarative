@@ -162,7 +162,7 @@ QQuickItemView::QQuickItemView(QQuickFlickablePrivate &dd, QQuickItem *parent)
 QQuickItemView::~QQuickItemView()
 {
     Q_D(QQuickItemView);
-    d->clear();
+    d->clear(true);
     if (d->ownModel)
         delete d->model;
     delete d->header;
@@ -1662,7 +1662,7 @@ void QQuickItemViewPrivate::updateCurrent(int modelIndex)
     releaseItem(oldCurrentItem);
 }
 
-void QQuickItemViewPrivate::clear()
+void QQuickItemViewPrivate::clear(bool onDestruction)
 {
     Q_Q(QQuickItemView);
     currentChanges.reset();
@@ -1683,7 +1683,7 @@ void QQuickItemViewPrivate::clear()
     currentItem = nullptr;
     if (oldCurrentItem)
         emit q->currentItemChanged();
-    createHighlight();
+    createHighlight(onDestruction);
     trackedItem = nullptr;
 
     if (requestedIndex >= 0) {
@@ -1724,8 +1724,14 @@ void QQuickItemViewPrivate::refill()
 void QQuickItemViewPrivate::refill(qreal from, qreal to)
 {
     Q_Q(QQuickItemView);
-    if (!isValid() || !q->isComponentComplete())
+    if (!model || !model->isValid() || !q->isComponentComplete())
         return;
+    if (!model->count()) {
+        updateHeader();
+        updateFooter();
+        updateViewport();
+        return;
+    }
 
     do {
         bufferPause.stop();
@@ -1881,15 +1887,21 @@ void QQuickItemViewPrivate::layout()
 
         prepareVisibleItemTransitions();
 
-        for (QList<FxViewItem*>::Iterator it = releasePendingTransition.begin();
-             it != releasePendingTransition.end(); ) {
-            FxViewItem *item = *it;
-            if (prepareNonVisibleItemTransition(item, viewBounds)) {
-                ++it;
-            } else {
-                releaseItem(item);
-                it = releasePendingTransition.erase(it);
+        for (auto it = releasePendingTransition.begin(); it != releasePendingTransition.end(); ) {
+            auto old_count = releasePendingTransition.count();
+            auto success = prepareNonVisibleItemTransition(*it, viewBounds);
+            // prepareNonVisibleItemTransition() may invalidate iterators while in fast flicking
+            // invisible animating items are kicked in or out the viewPort
+            // use old_count to test if the abrupt erasure occurs
+            if (old_count > releasePendingTransition.count()) {
+                continue;
             }
+            if (!success) {
+                releaseItem(*it);
+                it = releasePendingTransition.erase(it);
+                continue;
+            }
+            ++it;
         }
 
         for (int i=0; i<visibleItems.count(); i++)
@@ -2232,7 +2244,10 @@ bool QQuickItemViewPrivate::prepareNonVisibleItemTransition(FxViewItem *item, co
     if (item->scheduledTransitionType() == QQuickItemViewTransitioner::MoveTransition)
         repositionItemAt(item, item->index, 0);
 
-    if (item->prepareTransition(transitioner, viewBounds)) {
+    bool success = false;
+    ACTION_IF_DELETED(item, success = item->prepareTransition(transitioner, viewBounds), return success);
+
+    if (success) {
         item->releaseAfterTransition = true;
         return true;
     }
@@ -2352,15 +2367,16 @@ void QQuickItemView::destroyingItem(QObject *object)
 bool QQuickItemViewPrivate::releaseItem(FxViewItem *item)
 {
     Q_Q(QQuickItemView);
-    if (!item || !model)
+    if (!item)
         return true;
     if (trackedItem == item)
         trackedItem = nullptr;
     item->trackGeometry(false);
 
-    QQmlInstanceModel::ReleaseFlags flags = model->release(item->item);
-    if (item->item) {
-        if (flags == 0) {
+    QQmlInstanceModel::ReleaseFlags flags = {};
+    if (model && item->item) {
+        flags = model->release(item->item);
+        if (!flags) {
             // item was not destroyed, and we no longer reference it.
             QQuickItemPrivate::get(item->item)->setCulled(true);
             unrequestedItems.insert(item->item, model->indexOf(item->item, q));

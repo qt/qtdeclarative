@@ -1009,9 +1009,10 @@ void QQuickTextInput::setAutoScroll(bool b)
     an acceptable or intermediate state. The accepted signal will only be sent
     if the text is in an acceptable state when enter is pressed.
 
-    Currently supported validators are IntValidator, DoubleValidator and
-    RegExpValidator. An example of using validators is shown below, which allows
-    input of integers between 11 and 31 into the text input:
+    Currently supported validators are IntValidator, DoubleValidator,
+    RegExpValidator and RegularExpressionValidator. An example of using
+    validators is shown below, which allows input of integers between 11 and 31
+    into the text input:
 
     \code
     import QtQuick 2.0

@@ -48,7 +48,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 2.7
+import QtQuick 2.14
 import QtQuick.Window 2.0
 import QtQuick.LocalStorage 2.0
 import "Database.js" as JS
@@ -143,8 +143,8 @@ Item {
                         font.pixelSize: 22
                         activeFocusOnPress: true
                         activeFocusOnTab: true
-                        validator: RegExpValidator {
-                            regExp: /[0-9/,:.]+/
+                        validator: RegularExpressionValidator {
+                            regularExpression: /[0-9/,:.]+/
                         }
                         onEditingFinished: {
                             if (dateInput.text == "") {
@@ -174,8 +174,8 @@ Item {
                         font.pixelSize: 22
                         activeFocusOnPress: true
                         activeFocusOnTab: true
-                        validator: RegExpValidator {
-                            regExp: /\d{1,3}/
+                        validator: RegularExpressionValidator {
+                            regularExpression: /\d{1,3}/
                         }
                         onEditingFinished: {
                             if (distInput.text == "") {

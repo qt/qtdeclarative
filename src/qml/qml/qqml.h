@@ -608,9 +608,12 @@ Q_QML_EXPORT void qmlRegisterModule(const char *uri, int versionMajor, int versi
 template<typename T>
 QObject *qmlAttachedPropertiesObject(const QObject *obj, bool create = true)
 {
-    QObject *mutableObj = const_cast<QObject *>(obj);
-    return qmlAttachedPropertiesObject(
-            mutableObj, qmlAttachedPropertiesFunction(mutableObj, &T::staticMetaObject), create);
+    // We don't need a concrete object to resolve the function. As T is a C++ type, it and all its
+    // super types should be registered as CppType (or not at all). We only need the object and its
+    // QML engine to resolve composite types. Therefore, the function is actually a static property
+    // of the C++ type system and we can cache it here for improved performance on further lookups.
+    static const auto func = qmlAttachedPropertiesFunction(nullptr, &T::staticMetaObject);
+    return qmlAttachedPropertiesObject(const_cast<QObject *>(obj), func, create);
 }
 
 inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName,
@@ -621,13 +624,13 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
 
         uri, versionMajor, versionMinor, typeName,
 
-        callback, nullptr, nullptr, 0, 0
+        callback, nullptr, nullptr, 0, 0, {}
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
 }
 
-enum { QmlCurrentSingletonTypeRegistrationVersion = 2 };
+enum { QmlCurrentSingletonTypeRegistrationVersion = 3 };
 template <typename T>
 inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName,
                                 QObject *(*callback)(QQmlEngine *, QJSEngine *))
@@ -639,7 +642,26 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
 
         uri, versionMajor, versionMinor, typeName,
 
-        nullptr, callback, &T::staticMetaObject, qRegisterNormalizedMetaType<T *>(pointerName.constData()), 0
+        nullptr, nullptr, &T::staticMetaObject, qRegisterNormalizedMetaType<T *>(pointerName.constData()), 0, callback
+    };
+
+    return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
+}
+
+template <typename T, typename F, typename std::enable_if<std::is_convertible<F, std::function<QObject *(QQmlEngine *, QJSEngine *)>>::value
+                                                 && !std::is_convertible<F, QObject *(*)(QQmlEngine *, QJSEngine *)>::value, void>::type* = nullptr>
+inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName,
+                                    F&& callback)
+{
+
+    QML_GETTYPENAMES
+
+    QQmlPrivate::RegisterSingletonType api = {
+        QmlCurrentSingletonTypeRegistrationVersion,
+
+        uri, versionMajor, versionMinor, typeName,
+
+        nullptr, nullptr, &T::staticMetaObject, qRegisterNormalizedMetaType<T *>(pointerName.constData()), 0, callback
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);

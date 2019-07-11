@@ -290,7 +290,6 @@ void InternalClass::init(ExecutionEngine *engine)
 void InternalClass::init(Heap::InternalClass *other)
 {
     Base::init();
-    Q_ASSERT(!other->isFrozen);
     new (&propertyTable) PropertyHash(other->propertyTable);
     new (&nameMap) SharedInternalClassData<PropertyKey>(other->nameMap);
     new (&propertyData) SharedInternalClassData<PropertyAttributes>(other->propertyData);
@@ -564,22 +563,6 @@ Heap::InternalClass *InternalClass::sealed()
     if (isSealed)
         return this;
 
-    bool alreadySealed = !extensible;
-    for (uint i = 0; i < size; ++i) {
-        PropertyAttributes attrs = propertyData.at(i);
-        if (attrs.isEmpty())
-            continue;
-        if (attrs.isConfigurable()) {
-            alreadySealed = false;
-            break;
-        }
-    }
-
-    if (alreadySealed) {
-        isSealed = true;
-        return this;
-    }
-
     Transition temp = { { PropertyKey::invalid() }, nullptr, InternalClassTransition::Sealed };
     Transition &t = lookupOrInsertTransition(temp);
 
@@ -592,14 +575,15 @@ Heap::InternalClass *InternalClass::sealed()
     Scoped<QV4::InternalClass> ic(scope, engine->newClass(this));
     Heap::InternalClass *s = ic->d();
 
-    for (uint i = 0; i < size; ++i) {
-        PropertyAttributes attrs = propertyData.at(i);
-        if (attrs.isEmpty())
-            continue;
-        attrs.setConfigurable(false);
-        s->propertyData.set(i, attrs);
+    if (!isFrozen) { // freezing also makes all properties non-configurable
+        for (uint i = 0; i < size; ++i) {
+            PropertyAttributes attrs = propertyData.at(i);
+            if (attrs.isEmpty())
+                continue;
+            attrs.setConfigurable(false);
+            s->propertyData.set(i, attrs);
+        }
     }
-    s->extensible = false;
     s->isSealed = true;
 
     t.lookup = s;
@@ -611,28 +595,11 @@ Heap::InternalClass *InternalClass::frozen()
     if (isFrozen)
         return this;
 
-    bool alreadyFrozen = !extensible;
-    for (uint i = 0; i < size; ++i) {
-        PropertyAttributes attrs = propertyData.at(i);
-        if (attrs.isEmpty())
-            continue;
-        if ((attrs.isData() && attrs.isWritable()) || attrs.isConfigurable()) {
-            alreadyFrozen = false;
-            break;
-        }
-    }
-
-    if (alreadyFrozen) {
-        isSealed = true;
-        isFrozen = true;
-        return this;
-    }
-
     Transition temp = { { PropertyKey::invalid() }, nullptr, InternalClassTransition::Frozen };
     Transition &t = lookupOrInsertTransition(temp);
 
     if (t.lookup) {
-        Q_ASSERT(t.lookup && t.lookup->isSealed && t.lookup->isFrozen);
+        Q_ASSERT(t.lookup && t.lookup->isFrozen);
         return t.lookup;
     }
 
@@ -649,29 +616,42 @@ Heap::InternalClass *InternalClass::frozen()
         attrs.setConfigurable(false);
         f->propertyData.set(i, attrs);
     }
-    f->extensible = false;
-    f->isSealed = true;
     f->isFrozen = true;
 
     t.lookup = f;
     return f;
 }
 
-Heap::InternalClass *InternalClass::propertiesFrozen()
+InternalClass *InternalClass::canned()
 {
+    // scope the intermediate result to prevent it from getting garbage collected
     Scope scope(engine);
-    Scoped<QV4::InternalClass> frozen(scope, this);
+    Scoped<QV4::InternalClass> ic(scope, sealed());
+    return ic->d()->nonExtensible();
+}
+
+InternalClass *InternalClass::cryopreserved()
+{
+    // scope the intermediate result to prevent it from getting garbage collected
+    Scope scope(engine);
+    Scoped<QV4::InternalClass> ic(scope, frozen());
+    return ic->d()->canned();
+}
+
+bool InternalClass::isImplicitlyFrozen() const
+{
+    if (isFrozen)
+        return true;
+
     for (uint i = 0; i < size; ++i) {
-        PropertyAttributes attrs = propertyData.at(i);
-        if (!nameMap.at(i).isValid())
+        const PropertyAttributes attrs = propertyData.at(i);
+        if (attrs.isEmpty())
             continue;
-        if (!attrs.isEmpty()) {
-            attrs.setWritable(false);
-            attrs.setConfigurable(false);
-        }
-        frozen = frozen->changeMember(nameMap.at(i), attrs);
+        if ((attrs.isData() && attrs.isWritable()) || attrs.isConfigurable())
+            return false;
     }
-    return frozen->d();
+
+    return true;
 }
 
 Heap::InternalClass *InternalClass::asProtoClass()

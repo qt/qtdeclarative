@@ -55,9 +55,7 @@ void qmlClearTypeRegistrations() // Declared in qqml.h
 {
     QQmlMetaType::clearTypeRegistrations();
     QQmlEnginePrivate::baseModulesUninitialized = true; //So the engine re-registers its types
-#if QT_CONFIG(library)
     qmlClearEnginePlugins();
-#endif
 }
 
 //From qqml.h
@@ -111,6 +109,26 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
 
     QQmlMetaType::registerUndeletableType(dtype);
     return dtype.index();
+}
+
+void QQmlPrivate::qmlunregister(RegistrationType type, quintptr data)
+{
+    switch (type) {
+    case AutoParentRegistration:
+        QQmlMetaType::unregisterAutoParentFunction(reinterpret_cast<AutoParentFunction>(data));
+        break;
+    case QmlUnitCacheHookRegistration:
+        QQmlMetaType::removeCachedUnitLookupFunction(
+                reinterpret_cast<QmlUnitCacheLookupFunction>(data));
+        break;
+    case TypeRegistration:
+    case InterfaceRegistration:
+    case SingletonRegistration:
+    case CompositeRegistration:
+    case CompositeSingletonRegistration:
+        QQmlMetaType::unregisterType(data);
+        break;
+    }
 }
 
 QT_END_NAMESPACE

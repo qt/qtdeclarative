@@ -53,6 +53,7 @@
 #include <QtQuick/qquickwindow.h>
 #include <QtGui/QOpenGLShaderProgram>
 #include <QtGui/QOpenGLContext>
+#include <QtCore/QRunnable>
 
 //! [7]
 Squircle::Squircle()
@@ -82,10 +83,9 @@ void Squircle::handleWindowChanged(QQuickWindow *win)
         connect(win, &QQuickWindow::beforeSynchronizing, this, &Squircle::sync, Qt::DirectConnection);
         connect(win, &QQuickWindow::sceneGraphInvalidated, this, &Squircle::cleanup, Qt::DirectConnection);
 //! [1]
-        // If we allow QML to do the clearing, they would clear what we paint
-        // and nothing would show.
 //! [3]
-        win->setClearBeforeRendering(false);
+        // Ensure we start with cleared to black. The squircle's blend mode relies on this.
+        win->setColor(Qt::black);
     }
 }
 //! [3]
@@ -93,10 +93,23 @@ void Squircle::handleWindowChanged(QQuickWindow *win)
 //! [6]
 void Squircle::cleanup()
 {
-    if (m_renderer) {
-        delete m_renderer;
-        m_renderer = nullptr;
-    }
+    delete m_renderer;
+    m_renderer = nullptr;
+}
+
+class CleanupJob : public QRunnable
+{
+public:
+    CleanupJob(SquircleRenderer *renderer) : m_renderer(renderer) { }
+    void run() override { delete m_renderer; }
+private:
+    SquircleRenderer *m_renderer;
+};
+
+void Squircle::releaseResources()
+{
+    window()->scheduleRenderJob(new CleanupJob(m_renderer), QQuickWindow::BeforeSynchronizingStage);
+    m_renderer = nullptr;
 }
 
 SquircleRenderer::~SquircleRenderer()
@@ -110,7 +123,8 @@ void Squircle::sync()
 {
     if (!m_renderer) {
         m_renderer = new SquircleRenderer();
-        connect(window(), &QQuickWindow::beforeRendering, m_renderer, &SquircleRenderer::paint, Qt::DirectConnection);
+        connect(window(), &QQuickWindow::beforeRendering, m_renderer, &SquircleRenderer::init, Qt::DirectConnection);
+        connect(window(), &QQuickWindow::beforeRenderPassRecording, m_renderer, &SquircleRenderer::paint, Qt::DirectConnection);
     }
     m_renderer->setViewportSize(window()->size() * window()->devicePixelRatio());
     m_renderer->setT(m_t);
@@ -119,9 +133,12 @@ void Squircle::sync()
 //! [9]
 
 //! [4]
-void SquircleRenderer::paint()
+void SquircleRenderer::init()
 {
     if (!m_program) {
+        QSGRendererInterface *rif = m_window->rendererInterface();
+        Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::OpenGL || rif->graphicsApi() == QSGRendererInterface::OpenGLRhi);
+
         initializeOpenGLFunctions();
 
         m_program = new QOpenGLShaderProgram();
@@ -146,7 +163,15 @@ void SquircleRenderer::paint()
         m_program->link();
 
     }
+}
+
 //! [4] //! [5]
+void SquircleRenderer::paint()
+{
+    // Play nice with the RHI. Not strictly needed when the scenegraph uses
+    // OpenGL directly.
+    m_window->beginExternalCommands();
+
     m_program->bind();
 
     m_program->enableAttributeArray(0);
@@ -157,15 +182,17 @@ void SquircleRenderer::paint()
         -1, 1,
         1, 1
     };
+
+    // This example relies on (deprecated) client-side pointers for the vertex
+    // input. Therefore, we have to make sure no vertex buffer is bound.
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     m_program->setAttributeArray(0, GL_FLOAT, values, 2);
     m_program->setUniformValue("t", (float) m_t);
 
     glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 
     glDisable(GL_DEPTH_TEST);
-
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -178,5 +205,7 @@ void SquircleRenderer::paint()
     // Not strictly needed for this example, but generally useful for when
     // mixing with raw OpenGL.
     m_window->resetOpenGLState();
+
+    m_window->endExternalCommands();
 }
 //! [5]

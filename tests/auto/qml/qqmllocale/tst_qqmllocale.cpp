@@ -1214,10 +1214,9 @@ private:
 
 void tst_qqmllocale::localeAsCppProperty()
 {
-    QQmlComponent component(&engine);
     qmlRegisterType<Calendar>("Test", 1, 0, "Calendar");
-    component.setData("import QtQml 2.2\nimport Test 1.0\nCalendar { locale: Qt.locale('en_GB'); property var testLocale }", QUrl());
-    QVERIFY(!component.isError());
+    QQmlComponent component(&engine, testFileUrl("localeAsCppProperty.qml"));
+    QVERIFY2(!component.isError(), qPrintable(component.errorString()));
     QTRY_VERIFY(component.isReady());
 
     Calendar *item = qobject_cast<Calendar*>(component.create());

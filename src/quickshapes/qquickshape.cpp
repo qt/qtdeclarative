@@ -42,11 +42,19 @@
 #include "qquickshapegenericrenderer_p.h"
 #include "qquickshapenvprrenderer_p.h"
 #include "qquickshapesoftwarerenderer_p.h"
-#include <private/qsgtexture_p.h>
+#include <private/qsgplaintexture_p.h>
 #include <private/qquicksvgparser_p.h>
 #include <QtGui/private/qdrawhelper_p.h>
 #include <QOpenGLFunctions>
 #include <QLoggingCategory>
+#include <QtGui/private/qrhi_p.h>
+
+#if defined(QT_STATIC)
+static void initResources()
+{
+    Q_INIT_RESOURCE(qtquickshapes);
+}
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -575,12 +583,14 @@ void QQuickShapePath::resetFillGradient()
 
     \list
 
-    \li When running with the default, OpenGL backend of Qt Quick, both the
-    generic, triangulation-based and the NVIDIA-specific
-    \c{GL_NV_path_rendering} methods are available. By default only the generic
-    approach is used. Setting Shape.vendorExtensionsEnabled property to \c true
-    leads to using NV_path_rendering on NVIDIA systems, and the generic method
-    on others.
+    \li When running with the OpenGL backend of Qt Quick, both the generic,
+    triangulation-based and the NVIDIA-specific \c{GL_NV_path_rendering}
+    methods are available. By default only the generic approach is used.
+    Setting Shape.vendorExtensionsEnabled property to \c true leads to using
+    NV_path_rendering on NVIDIA systems when running directly on OpenGL, and
+    the generic method on others. When OpenGL is not used directly by the scene
+    graph, for example because it is using the graphics abstraction layer
+    (QRhi), only the generic shape renderer is available.
 
     \li The \c software backend is fully supported. The path is rendered via
     QPainter::strokePath() and QPainter::fillPath() in this case.
@@ -662,7 +672,7 @@ struct QQuickShapeResourceInitializer
     QQuickShapeResourceInitializer()
     {
 #if defined(QT_STATIC)
-        Q_INIT_RESOURCE(qtquickshapes);
+        initResources();
 #endif
     }
 };
@@ -1002,7 +1012,12 @@ void QQuickShapePrivate::createRenderer()
         renderer = new QQuickShapeSoftwareRenderer;
         break;
     default:
-        qWarning("No path backend for this graphics API yet");
+        if (QSGRendererInterface::isApiRhiBased(ri->graphicsApi())) {
+            rendererType = QQuickShape::GeometryRenderer;
+            renderer = new QQuickShapeGenericRenderer(q);
+        } else {
+            qWarning("No path backend for this graphics API yet");
+        }
         break;
     }
 }
@@ -1038,7 +1053,13 @@ QSGNode *QQuickShapePrivate::createNode()
                     static_cast<QQuickShapeSoftwareRenderNode *>(node));
         break;
     default:
-        qWarning("No path backend for this graphics API yet");
+        if (QSGRendererInterface::isApiRhiBased(ri->graphicsApi())) {
+            node = new QQuickShapeGenericNode;
+            static_cast<QQuickShapeGenericRenderer *>(renderer)->setRootNode(
+                static_cast<QQuickShapeGenericNode *>(node));
+        } else {
+            qWarning("No path backend for this graphics API yet");
+        }
         break;
     }
 
@@ -1492,45 +1513,7 @@ void QQuickShapeConicalGradient::setAngle(qreal v)
     }
 }
 
-#if QT_CONFIG(opengl)
-
-// contexts sharing with each other get the same cache instance
-class QQuickShapeGradientCacheWrapper
-{
-public:
-    QQuickShapeGradientCache *get(QOpenGLContext *context)
-    {
-        return m_resource.value<QQuickShapeGradientCache>(context);
-    }
-
-private:
-    QOpenGLMultiGroupSharedResource m_resource;
-};
-
-QQuickShapeGradientCache *QQuickShapeGradientCache::currentCache()
-{
-    static QQuickShapeGradientCacheWrapper qt_path_gradient_caches;
-    return qt_path_gradient_caches.get(QOpenGLContext::currentContext());
-}
-
-// let QOpenGLContext manage the lifetime of the cached textures
-QQuickShapeGradientCache::~QQuickShapeGradientCache()
-{
-    m_cache.clear();
-}
-
-void QQuickShapeGradientCache::invalidateResource()
-{
-    m_cache.clear();
-}
-
-void QQuickShapeGradientCache::freeResource(QOpenGLContext *)
-{
-    qDeleteAll(m_cache);
-    m_cache.clear();
-}
-
-static void generateGradientColorTable(const QQuickShapeGradientCache::Key &gradient,
+static void generateGradientColorTable(const QQuickShapeGradientCacheKey &gradient,
                                        uint *colorTable, int size, float opacity)
 {
     int pos = 0;
@@ -1581,7 +1564,98 @@ static void generateGradientColorTable(const QQuickShapeGradientCache::Key &grad
     colorTable[size-1] = last_color;
 }
 
-QSGTexture *QQuickShapeGradientCache::get(const Key &grad)
+QQuickShapeGradientCache::~QQuickShapeGradientCache()
+{
+    qDeleteAll(m_textures);
+}
+
+QQuickShapeGradientCache *QQuickShapeGradientCache::cacheForRhi(QRhi *rhi)
+{
+    static QHash<QRhi *, QQuickShapeGradientCache *> caches;
+    auto it = caches.constFind(rhi);
+    if (it != caches.constEnd())
+        return *it;
+
+    QQuickShapeGradientCache *cache = new QQuickShapeGradientCache;
+    rhi->addCleanupCallback([cache](QRhi *rhi) {
+        caches.remove(rhi);
+        delete cache;
+    });
+    caches.insert(rhi, cache);
+    return cache;
+}
+
+QSGTexture *QQuickShapeGradientCache::get(const QQuickShapeGradientCacheKey &grad)
+{
+    QSGPlainTexture *tx = m_textures[grad];
+    if (!tx) {
+        static const int W = 1024; // texture size is 1024x1
+        QImage gradTab(W, 1, QImage::Format_RGBA8888_Premultiplied);
+        generateGradientColorTable(grad, reinterpret_cast<uint *>(gradTab.bits()), W, 1.0f);
+        tx = new QSGPlainTexture;
+        tx->setImage(gradTab);
+        switch (grad.spread) {
+        case QQuickShapeGradient::PadSpread:
+            tx->setHorizontalWrapMode(QSGTexture::ClampToEdge);
+            tx->setVerticalWrapMode(QSGTexture::ClampToEdge);
+            break;
+        case QQuickShapeGradient::RepeatSpread:
+            tx->setHorizontalWrapMode(QSGTexture::Repeat);
+            tx->setVerticalWrapMode(QSGTexture::Repeat);
+            break;
+        case QQuickShapeGradient::ReflectSpread:
+            tx->setHorizontalWrapMode(QSGTexture::MirroredRepeat);
+            tx->setVerticalWrapMode(QSGTexture::MirroredRepeat);
+            break;
+        default:
+            qWarning("Unknown gradient spread mode %d", grad.spread);
+            break;
+        }
+        tx->setFiltering(QSGTexture::Linear);
+        m_textures[grad] = tx;
+    }
+    return tx;
+}
+
+#if QT_CONFIG(opengl)
+
+// contexts sharing with each other get the same cache instance
+class QQuickShapeGradientCacheWrapper
+{
+public:
+    QQuickShapeGradientOpenGLCache *get(QOpenGLContext *context)
+    {
+        return m_resource.value<QQuickShapeGradientOpenGLCache>(context);
+    }
+
+private:
+    QOpenGLMultiGroupSharedResource m_resource;
+};
+
+QQuickShapeGradientOpenGLCache *QQuickShapeGradientOpenGLCache::currentCache()
+{
+    static QQuickShapeGradientCacheWrapper qt_path_gradient_caches;
+    return qt_path_gradient_caches.get(QOpenGLContext::currentContext());
+}
+
+// let QOpenGLContext manage the lifetime of the cached textures
+QQuickShapeGradientOpenGLCache::~QQuickShapeGradientOpenGLCache()
+{
+    m_cache.clear();
+}
+
+void QQuickShapeGradientOpenGLCache::invalidateResource()
+{
+    m_cache.clear();
+}
+
+void QQuickShapeGradientOpenGLCache::freeResource(QOpenGLContext *)
+{
+    qDeleteAll(m_cache);
+    m_cache.clear();
+}
+
+QSGTexture *QQuickShapeGradientOpenGLCache::get(const QQuickShapeGradientCacheKey &grad)
 {
     QSGPlainTexture *tx = m_cache[grad];
     if (!tx) {

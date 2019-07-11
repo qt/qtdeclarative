@@ -74,6 +74,7 @@ private slots:
     void aliasedProperty();
     void innerBehaviorOverwritten();
     void oneWay();
+    void safeToDelete();
 };
 
 void tst_qquickbehaviors::simpleBehavior()
@@ -646,6 +647,16 @@ void tst_qquickbehaviors::oneWay()
     QTRY_COMPARE(myRect->x(), qreal(0));
     QCOMPARE(myAnimation->isRunning(), false);
 }
+
+// QTBUG-76749
+void tst_qquickbehaviors::safeToDelete()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("delete.qml"));
+    QVERIFY(c.create());
+}
+
+
 
 QTEST_MAIN(tst_qquickbehaviors)
 

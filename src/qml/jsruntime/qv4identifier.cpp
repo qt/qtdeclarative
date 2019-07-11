@@ -50,7 +50,7 @@ IdentifierHashData::IdentifierHashData(IdentifierTable *table, int numBits)
     , numBits(numBits)
     , identifierTable(table)
 {
-    refCount.store(1);
+    refCount.storeRelaxed(1);
     alloc = qPrimeForNumBits(numBits);
     entries = (IdentifierHashEntry *)malloc(alloc*sizeof(IdentifierHashEntry));
     memset(entries, 0, alloc*sizeof(IdentifierHashEntry));
@@ -62,7 +62,7 @@ IdentifierHashData::IdentifierHashData(IdentifierHashData *other)
     , numBits(other->numBits)
     , identifierTable(other->identifierTable)
 {
-    refCount.store(1);
+    refCount.storeRelaxed(1);
     alloc = other->alloc;
     entries = (IdentifierHashEntry *)malloc(alloc*sizeof(IdentifierHashEntry));
     memcpy(entries, other->entries, alloc*sizeof(IdentifierHashEntry));
@@ -82,7 +82,7 @@ IdentifierHash::IdentifierHash(ExecutionEngine *engine)
 
 void IdentifierHash::detach()
 {
-    if (!d || d->refCount == 1)
+    if (!d || d->refCount.loadAcquire() == 1)
         return;
     IdentifierHashData *newData = new IdentifierHashData(d);
     if (d && !d->refCount.deref())

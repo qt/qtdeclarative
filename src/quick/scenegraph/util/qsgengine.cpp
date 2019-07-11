@@ -42,7 +42,7 @@
 #include <QtQuick/qsgtexture.h>
 #include <private/qsgcontext_p.h>
 #include <private/qsgrenderer_p.h>
-#include <private/qsgtexture_p.h>
+#include <private/qsgplaintexture_p.h>
 
 #if QT_CONFIG(opengl)
 # include <QtGui/QOpenGLContext>
@@ -126,12 +126,29 @@ void QSGEngine::initialize(QOpenGLContext *context)
 #endif
     if (d->sgRenderContext && !d->sgRenderContext->isValid()) {
         d->sgRenderContext->setAttachToGraphicsContext(false);
-        d->sgRenderContext->initialize(context);
+#if QT_CONFIG(opengl)
+        QSGDefaultRenderContext *rc = qobject_cast<QSGDefaultRenderContext *>(d->sgRenderContext.data());
+        if (rc) {
+            QSGDefaultRenderContext::InitParams params;
+            params.sampleCount = qMax(1, context->format().samples());
+            params.openGLContext = context;
+            // leave the size hint and surface unset, we do not know, that's fine
+            rc->initialize(&params);
+        } else {
+            d->sgRenderContext->initialize(nullptr);
+        }
+#else
+        d->sgRenderContext->initialize(nullptr);
+#endif
 #if QT_CONFIG(opengl)
         if (context)
             connect(context, &QOpenGLContext::aboutToBeDestroyed, this, &QSGEngine::invalidate);
 #endif
     }
+
+#if !QT_CONFIG(opengl)
+    Q_UNUSED(context);
+#endif
 }
 
 /*!

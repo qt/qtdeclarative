@@ -100,7 +100,12 @@ void QQmlCustomParser::clearErrors()
 */
 void QQmlCustomParser::error(const QV4::CompiledData::Location &location, const QString &description)
 {
-    exceptions << QQmlCompileError(location, description);
+    QQmlJS::DiagnosticMessage error;
+    error.line = location.line;
+    error.column = location.column;
+    error.message = description;
+
+    exceptions << error;
 }
 
 struct StaticQtMetaObject : public QObject

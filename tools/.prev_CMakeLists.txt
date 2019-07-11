@@ -11,7 +11,7 @@ if(QT_FEATURE_qml_devtools)
     endif()
 endif()
 
-if(QT_FEATURE_thread AND NOT ANDROID OR android_app AND NOT WASM)
+if(QT_FEATURE_thread AND NOT ANDROID OR android_app AND NOT WASM AND NOT rtems)
     add_subdirectory(qml)
 
     if(QT_FEATURE_qml_profiler)

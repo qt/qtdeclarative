@@ -75,7 +75,7 @@ QString mangledIdentifier(const QString &str)
             || (c >= QLatin1Char('a') && c <= QLatin1Char('z'))
             || (c >= QLatin1Char('A') && c <= QLatin1Char('Z'))
             || c == QLatin1Char('_')) {
-            mangled += c;
+            mangled += QChar(c);
         } else {
             mangled += QLatin1String("_0x") + QString::number(c, 16) + QLatin1Char('_');
         }
@@ -365,6 +365,7 @@ bool generateLoader(const QStringList &compiledFiles, const QStringList &sortedR
 
         stream << "struct Registry {\n";
         stream << "    Registry();\n";
+        stream << "    ~Registry();\n";
         stream << "    QHash<QString, const QQmlPrivate::CachedQmlUnit*> resourcePathToCachedUnit;\n";
         stream << "    static const QQmlPrivate::CachedQmlUnit *lookupCachedUnit(const QUrl &url);\n";
         stream << "};\n\n";
@@ -387,7 +388,11 @@ bool generateLoader(const QStringList &compiledFiles, const QStringList &sortedR
         if (!resourceRegisterCall.isEmpty())
             stream << resourceRegisterCall;
 
-        stream << "}\n";
+        stream << "}\n\n";
+        stream << "Registry::~Registry() {\n";
+        stream << "    QQmlPrivate::qmlunregister(QQmlPrivate::QmlUnitCacheHookRegistration, quintptr(&lookupCachedUnit));\n";
+        stream << "}\n\n";
+
         stream << "const QQmlPrivate::CachedQmlUnit *Registry::lookupCachedUnit(const QUrl &url) {\n";
         stream << "    if (url.scheme() != QLatin1String(\"qrc\"))\n";
         stream << "        return nullptr;\n";

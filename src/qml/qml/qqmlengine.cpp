@@ -811,9 +811,9 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
     // marshalled back onto the QObject's thread and handled by QML from there.  This is tested
     // by the qqmlecmascript::threadSignal() autotest.
     if (ddata->notifyList &&
-        QThread::currentThreadId() != QObjectPrivate::get(object)->threadData->threadId.load()) {
+        QThread::currentThreadId() != QObjectPrivate::get(object)->threadData->threadId.loadRelaxed()) {
 
-        if (!QObjectPrivate::get(object)->threadData->thread)
+        if (!QObjectPrivate::get(object)->threadData->thread.loadAcquire())
             return;
 
         QMetaMethod m = QMetaObjectPrivate::signal(object->metaObject(), index);
@@ -849,7 +849,7 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
 
         QQmlThreadNotifierProxyObject *mpo = new QQmlThreadNotifierProxyObject;
         mpo->target = object;
-        mpo->moveToThread(QObjectPrivate::get(object)->threadData->thread);
+        mpo->moveToThread(QObjectPrivate::get(object)->threadData->thread.loadAcquire());
         QCoreApplication::postEvent(mpo, ev);
 
     } else {
@@ -1169,6 +1169,13 @@ void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
     }
 }
 
+QSharedPointer<QQmlImageProviderBase> QQmlEnginePrivate::imageProvider(const QString &providerId) const
+{
+    const QString providerIdLower = providerId.toLower();
+    QMutexLocker locker(&mutex);
+    return imageProviders.value(providerIdLower);
+}
+
 #if QT_CONFIG(qml_network)
 /*!
   Sets the \a factory to use for creating QNetworkAccessManager(s).
@@ -1258,8 +1265,10 @@ QNetworkAccessManager *QQmlEngine::networkAccessManager() const
 void QQmlEngine::addImageProvider(const QString &providerId, QQmlImageProviderBase *provider)
 {
     Q_D(QQmlEngine);
+    QString providerIdLower = providerId.toLower();
+    QSharedPointer<QQmlImageProviderBase> sp(provider);
     QMutexLocker locker(&d->mutex);
-    d->imageProviders.insert(providerId.toLower(), QSharedPointer<QQmlImageProviderBase>(provider));
+    d->imageProviders.insert(std::move(providerIdLower), std::move(sp));
 }
 
 /*!
@@ -1270,8 +1279,9 @@ void QQmlEngine::addImageProvider(const QString &providerId, QQmlImageProviderBa
 QQmlImageProviderBase *QQmlEngine::imageProvider(const QString &providerId) const
 {
     Q_D(const QQmlEngine);
+    const QString providerIdLower = providerId.toLower();
     QMutexLocker locker(&d->mutex);
-    return d->imageProviders.value(providerId.toLower()).data();
+    return d->imageProviders.value(providerIdLower).data();
 }
 
 /*!
@@ -1282,8 +1292,9 @@ QQmlImageProviderBase *QQmlEngine::imageProvider(const QString &providerId) cons
 void QQmlEngine::removeImageProvider(const QString &providerId)
 {
     Q_D(QQmlEngine);
+    const QString providerIdLower = providerId.toLower();
     QMutexLocker locker(&d->mutex);
-    d->imageProviders.take(providerId.toLower());
+    d->imageProviders.take(providerIdLower);
 }
 
 /*!
@@ -2109,15 +2120,15 @@ QList<QQmlError> QQmlEnginePrivate::qmlErrorFromDiagnostics(const QString &fileN
     QList<QQmlError> errors;
     for (const DiagnosticMessage &m : diagnosticMessages) {
         if (m.isWarning()) {
-            qWarning("%s:%d : %s", qPrintable(fileName), m.loc.startLine, qPrintable(m.message));
+            qWarning("%s:%d : %s", qPrintable(fileName), m.line, qPrintable(m.message));
             continue;
         }
 
         QQmlError error;
         error.setUrl(QUrl(fileName));
         error.setDescription(m.message);
-        error.setLine(m.loc.startLine);
-        error.setColumn(m.loc.startColumn);
+        error.setLine(m.line);
+        error.setColumn(m.column);
         errors << error;
     }
     return errors;
@@ -2245,6 +2256,7 @@ void QQmlEngine::setPluginPathList(const QStringList &paths)
     d->importDatabase.setPluginPathList(paths);
 }
 
+#if QT_CONFIG(library)
 /*!
   Imports the plugin named \a filePath with the \a uri provided.
   Returns true if the plugin was successfully imported; otherwise returns false.
@@ -2258,6 +2270,7 @@ bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList
     Q_D(QQmlEngine);
     return d->importDatabase.importDynamicPlugin(filePath, uri, QString(), -1, errors);
 }
+#endif
 
 /*!
   \property QQmlEngine::offlineStoragePath

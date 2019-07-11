@@ -70,6 +70,7 @@ public:
     void setWindow(QQuickWindow *window) { m_window = window; }
 
 public slots:
+    void init();
     void paint();
 
 private:
@@ -103,6 +104,8 @@ private slots:
     void handleWindowChanged(QQuickWindow *win);
 
 private:
+    void releaseResources() override;
+
     qreal m_t;
     SquircleRenderer *m_renderer;
 };

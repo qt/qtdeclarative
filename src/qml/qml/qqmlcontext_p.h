@@ -104,6 +104,8 @@ public:
 
     static int context_count(QQmlListProperty<QObject> *);
     static QObject *context_at(QQmlListProperty<QObject> *, int);
+
+    void dropDestroyedQObject(const QString &name, QObject *destroyed);
 };
 
 class QQmlComponentAttached;

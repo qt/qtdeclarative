@@ -77,11 +77,6 @@ QSGSoftwareRenderableNode *QSGAbstractSoftwareRenderer::renderableNode(QSGNode *
     return m_nodes.value(node, nullptr);
 }
 
-const QLinkedList<QSGSoftwareRenderableNode*> &QSGAbstractSoftwareRenderer::renderableNodes() const
-{
-    return m_renderableNodes;
-}
-
 void QSGAbstractSoftwareRenderer::addNodeMapping(QSGNode *node, QSGSoftwareRenderableNode *renderableNode)
 {
     m_nodes.insert(node, renderableNode);
@@ -238,12 +233,13 @@ void QSGAbstractSoftwareRenderer::setBackgroundColor(const QColor &color)
     renderableNode(m_background)->markMaterialDirty();
 }
 
-void QSGAbstractSoftwareRenderer::setBackgroundRect(const QRect &rect)
+void QSGAbstractSoftwareRenderer::setBackgroundRect(const QRect &rect, qreal devicePixelRatio)
 {
-    if (m_background->rect().toRect() == rect)
+    if (m_background->rect().toRect() == rect && m_devicePixelRatio == devicePixelRatio)
         return;
     m_background->setRect(rect);
-    renderableNode(m_background)->markGeometryDirty();
+    m_devicePixelRatio = devicePixelRatio;
+        renderableNode(m_background)->markGeometryDirty();
     // Invalidate the whole scene when the background is resized
     markDirty();
 }

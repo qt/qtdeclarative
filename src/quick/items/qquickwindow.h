@@ -66,6 +66,7 @@ class QQuickRenderControl;
 class QSGRectangleNode;
 class QSGImageNode;
 class QSGNinePatchNode;
+class QRhi;
 
 class Q_QUICK_EXPORT QQuickWindow : public QWindow
 {
@@ -135,6 +136,13 @@ public:
 #if QT_CONFIG(opengl)
     void resetOpenGLState();
 #endif
+    struct GraphicsStateInfo {
+        int currentFrameSlot = 0;
+        int framesInFlight = 0;
+    };
+    const GraphicsStateInfo *graphicsStateInfo();
+    void beginExternalCommands();
+    void endExternalCommands();
     QQmlIncubationController *incubationController() const;
 
 #if QT_CONFIG(accessibility)
@@ -198,6 +206,8 @@ Q_SIGNALS:
     Q_REVISION(1) void activeFocusItemChanged();
     Q_REVISION(2) void sceneGraphError(QQuickWindow::SceneGraphError error, const QString &message);
 
+    Q_REVISION(14) void beforeRenderPassRecording();
+    Q_REVISION(14) void afterRenderPassRecording();
 
 public Q_SLOTS:
     void update();

@@ -67,7 +67,6 @@ class QSGD3D12ShaderLinker
 public:
     void reset(const QByteArray &vertBlob, const QByteArray &fragBlob);
 
-    void feedVertexInput(const QSGShaderEffectNode::ShaderData &shader);
     void feedConstants(const QSGShaderEffectNode::ShaderData &shader, const QSet<int> *dirtyIndices = nullptr);
     void feedSamplers(const QSGShaderEffectNode::ShaderData &shader);
     void feedTextures(const QSGShaderEffectNode::ShaderData &shader, const QSet<int> *dirtyIndices = nullptr);

@@ -69,6 +69,9 @@ private slots:
     void triangles();
     void triangleStrip();
     void triangleFan();
+
+private:
+    bool isRunningOnRhi() const;
 };
 
 class DrawingModeItem : public QQuickItem
@@ -260,6 +263,9 @@ void tst_drawingmodes::lineLoop()
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
 
+    if (isRunningOnRhi())
+        QSKIP("Line loops are not supported by some modern graphics APIs - skipping test");
+
     QImage fb = runTest("DrawingModes.qml");
 
     QCOMPARE(fb.width(), 200);
@@ -350,6 +356,9 @@ void tst_drawingmodes::triangleFan()
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
 
+    if (isRunningOnRhi())
+        QSKIP("Triangle fans are not supported by some modern graphics APIs - skipping test");
+
     QImage fb = runTest("DrawingModes.qml");
 
     QCOMPARE(fb.width(), 200);
@@ -366,6 +375,22 @@ void tst_drawingmodes::triangleFan()
     QVERIFY(hasPixelAround(fb, 62, 100));
     QVERIFY(hasPixelAround(fb, 50, 125));
     QVERIFY(!hasPixelAround(fb, 37, 100));
+}
+
+bool tst_drawingmodes::isRunningOnRhi() const
+{
+    static bool retval = false;
+    static bool decided = false;
+    if (!decided) {
+        decided = true;
+        QQuickView dummy;
+        dummy.show();
+        QTest::qWaitForWindowExposed(&dummy);
+        QSGRendererInterface::GraphicsApi api = dummy.rendererInterface()->graphicsApi();
+        retval = QSGRendererInterface::isApiRhiBased(api);
+        dummy.hide();
+    }
+    return retval;
 }
 
 

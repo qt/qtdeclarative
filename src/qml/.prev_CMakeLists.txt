@@ -65,13 +65,15 @@ add_qt_module(Qml
         ../3rdparty/masm/yarr/YarrPattern.cpp ../3rdparty/masm/yarr/YarrPattern.h
         ../3rdparty/masm/yarr/YarrSyntaxChecker.cpp ../3rdparty/masm/yarr/YarrSyntaxChecker.h
         ../3rdparty/masm/yarr/YarrUnicodeProperties.h
+        common/qqmlapiversion_p.h
+        common/qqmljsdiagnosticmessage_p.h
         compiler/qqmlirbuilder.cpp compiler/qqmlirbuilder_p.h
         compiler/qv4alloca_p.h
         compiler/qv4bytecodegenerator.cpp compiler/qv4bytecodegenerator_p.h
         compiler/qv4bytecodehandler.cpp compiler/qv4bytecodehandler_p.h
         compiler/qv4calldata_p.h
         compiler/qv4codegen.cpp compiler/qv4codegen_p.h
-        compiler/qv4compileddata.cpp compiler/qv4compileddata_p.h
+        compiler/qv4compileddata_p.h
         compiler/qv4compiler.cpp compiler/qv4compiler_p.h
         compiler/qv4compilercontext.cpp compiler/qv4compilercontext_p.h
         compiler/qv4compilercontrolflow_p.h
@@ -84,7 +86,6 @@ add_qt_module(Qml
         debugger/qqmldebugconnector_p.h
         debugger/qqmldebugserviceinterfaces_p.h
         debugger/qqmldebugstatesdelegate_p.h
-        debugger/qqmlmemoryprofiler_p.h
         debugger/qqmlprofiler_p.h
         jsapi/qjsengine.cpp jsapi/qjsengine.h jsapi/qjsengine_p.h
         jsapi/qjsvalue.cpp jsapi/qjsvalue.h jsapi/qjsvalue_p.h
@@ -207,6 +208,7 @@ add_qt_module(Qml
         qml/qqmlengine.cpp qml/qqmlengine.h qml/qqmlengine_p.h
         qml/qqmlenumdata_p.h
         qml/qqmlenumvalue_p.h
+        qml/qqmlerror.cpp
         qml/qqmlexpression.cpp qml/qqmlexpression.h qml/qqmlexpression_p.h
         qml/qqmlextensioninterface.h
         qml/qqmlextensionplugin.cpp qml/qqmlextensionplugin.h qml/qqmlextensionplugin_p.h
@@ -246,6 +248,7 @@ add_qt_module(Qml
         qml/qqmlpropertyvaluesource.cpp qml/qqmlpropertyvaluesource.h
         qml/qqmlproxymetaobject.cpp qml/qqmlproxymetaobject_p.h
         qml/qqmlscriptstring.cpp qml/qqmlscriptstring.h qml/qqmlscriptstring_p.h
+        qml/qqmlsourcecoordinate_p.h
         qml/qqmlstaticmetaobject.cpp qml/qqmlstaticmetaobject_p.h
         qml/qqmlstringconverters.cpp qml/qqmlstringconverters_p.h
         qml/qqmltype.cpp qml/qqmltype_p.h
@@ -267,8 +270,6 @@ add_qt_module(Qml
         qml/v8/qv4domerrors.cpp qml/v8/qv4domerrors_p.h
         qml/v8/qv4sqlerrors.cpp qml/v8/qv4sqlerrors_p.h
         qmldirparser/qqmldirparser.cpp qmldirparser/qqmldirparser_p.h
-        qmldirparser/qqmlerror.cpp qmldirparser/qqmlerror.h
-        qmldirparser/qqmlsourcecoordinate_p.h
         qtqmlglobal.h qtqmlglobal_p.h
         types/qqmlbind.cpp types/qqmlbind_p.h
         types/qqmlconnections.cpp types/qqmlconnections_p.h
@@ -291,10 +292,10 @@ add_qt_module(Qml
         WTFReportBacktrace=qmlWTFReportBacktrace
         WTF_EXPORT_PRIVATE=""
     INCLUDE_DIRECTORIES
-        ${CMAKE_CURRENT_BUILD_DIR}/compiler
-        ${CMAKE_CURRENT_BUILD_DIR}/jsruntime
-        ${CMAKE_CURRENT_BUILD_DIR}/memory
-        ${CMAKE_CURRENT_BUILD_DIR}/qmldirparser
+        ${CMAKE_CURRENT_BINARY_DIR}/compiler
+        ${CMAKE_CURRENT_BINARY_DIR}/jsruntime
+        ${CMAKE_CURRENT_BINARY_DIR}/memory
+        ${CMAKE_CURRENT_BINARY_DIR}/qmldirparser
         ../3rdparty/llvm/include
         ../3rdparty/masm
         ../3rdparty/masm/assembler
@@ -398,7 +399,7 @@ extend_target(Qml CONDITION QT_FEATURE_qml_jit
         jit/qv4baselineassembler.cpp jit/qv4baselineassembler_p.h
         jit/qv4baselinejit.cpp jit/qv4baselinejit_p.h
     INCLUDE_DIRECTORIES
-        ${CMAKE_CURRENT_BUILD_DIR}/jit
+        ${CMAKE_CURRENT_BINARY_DIR}/jit
         jit
 )
 
@@ -433,7 +434,6 @@ extend_target(Qml CONDITION QT_FEATURE_qml_debug
         debugger/qqmldebugservice.cpp debugger/qqmldebugservice_p.h
         debugger/qqmldebugservicefactory_p.h
         debugger/qqmldebugserviceinterfaces.cpp
-        debugger/qqmlmemoryprofiler.cpp
         debugger/qqmlprofiler.cpp
         debugger/qqmlprofilerdefinitions_p.h
         jsruntime/qv4profiling.cpp
@@ -527,7 +527,7 @@ extend_target(Qml CONDITION (NOT ICC AND NOT CLANG AND GCC) AND ((QT_COMPILER_VE
         -Wno-expansion-to-defined
 )
 
-#### Keys ignored in scope 61:.:../3rdparty/masm:../3rdparty/masm/masm-defs.pri:(QT_COMPILER_VERSION_MAJOR STRGREATER 6):
+#### Keys ignored in scope 62:.:../3rdparty/masm:../3rdparty/masm/masm-defs.pri:(QT_COMPILER_VERSION_MAJOR STRGREATER 6):
 # QMAKE_CXXFLAGS_WARN_ON = "-Wno-expansion-to-defined"
 
 extend_target(Qml CONDITION WINRT
@@ -556,7 +556,7 @@ extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
         ../3rdparty/masm/disassembler/udis86/udis86_syn-intel.c
 )
 
-#### Keys ignored in scope 69:.:../3rdparty/masm:../3rdparty/masm/masm.pri:DEFINES___contains___WTF_USE_UDIS86=1:
+#### Keys ignored in scope 70:.:../3rdparty/masm:../3rdparty/masm/masm.pri:DEFINES___contains___WTF_USE_UDIS86=1:
 # ITAB = "$$PWD/disassembler/udis86/optable.xml"
 # QMAKE_EXTRA_COMPILERS = "udis86"
 # QMAKE_EXTRA_TARGETS = "udis86_tab_cfile"
@@ -567,10 +567,10 @@ extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
 # udis86_tab_cfile.depends = "udis86_itab.h"
 # udis86_tab_cfile.target = "$$OUT_PWD/udis86_itab.c"
 
-#### Keys ignored in scope 71:.:../3rdparty/masm:../3rdparty/masm/masm.pri:(CMAKE_BUILD_TYPE STREQUAL Debug):
+#### Keys ignored in scope 72:.:../3rdparty/masm:../3rdparty/masm/masm.pri:(CMAKE_BUILD_TYPE STREQUAL Debug):
 # GENERATEDDIR = "$$GENERATEDDIR/debug"
 
-#### Keys ignored in scope 72:.:../3rdparty/masm:../3rdparty/masm/masm.pri:else:
+#### Keys ignored in scope 73:.:../3rdparty/masm:../3rdparty/masm/masm.pri:else:
 # GENERATEDDIR = "$$GENERATEDDIR/release"
 
 extend_target(Qml CONDITION (NOT c++11 AND NOT ICC) AND (CLANG)
@@ -582,11 +582,6 @@ extend_target(Qml CONDITION (NOT c++11 AND NOT ICC) AND (CLANG)
 extend_target(Qml CONDITION (((NOT c++11 AND NOT ICC) AND (NOT (CLANG))) AND (GCC)) AND ((QT_COMPILER_VERSION_MAJOR STRGREATER 4) OR (QT_COMPILER_VERSION_MINOR STRGREATER 5))
     COMPILE_OPTIONS
         -Wno-c++0x-compat
-)
-
-extend_target(Qml CONDITION LINUX
-    LIBRARIES
-        ${CMAKE_DL_LIBS}
 )
 
 

@@ -57,6 +57,7 @@ QT_REQUIRE_CONFIG(quick_sprite);
 
 #include "qquickitem_p.h"
 #include "qquicksprite_p.h"
+#include <QElapsedTimer>
 
 QT_BEGIN_NAMESPACE
 
@@ -78,7 +79,7 @@ public:
     }
     QList<QQuickSprite*> m_sprites;
     QQuickSpriteEngine* m_spriteEngine;
-    QTime m_timestamp;
+    QElapsedTimer m_timestamp;
     int m_curFrame;
     bool m_pleaseReset;
     bool m_running;

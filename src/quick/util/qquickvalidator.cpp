@@ -206,9 +206,13 @@ void QQuickDoubleValidator::resetLocaleName()
     \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
     \brief Provides a string validator.
+    \deprecated
 
     The RegExpValidator type provides a validator, which counts as valid any string which
     matches a specified regular expression.
+
+    RegExpValidator is deprecated since it is based on the deprecated \l {QRegExp}. Use
+    \l RegularExpressionValidator instead.
 */
 /*!
    \qmlproperty regExp QtQuick::RegExpValidator::regExp
@@ -223,6 +227,48 @@ void QQuickDoubleValidator::resetLocaleName()
    Below you can find an example of a \l TextInput object with a RegExpValidator specified:
 
    \snippet qml/regexp.qml 0
+
+   Some more examples of regular expressions:
+
+   \list
+   \li A list of numbers with one to three positions separated by a comma:
+       \badcode
+       /\d{1,3}(?:,\d{1,3})+$/
+       \endcode
+
+   \li An amount consisting of up to 3 numbers before the decimal point, and
+       1 to 2 after the decimal point:
+       \badcode
+       /(\d{1,3})([.,]\d{1,2})?$/
+       \endcode
+   \endlist
+*/
+/*!
+    \qmltype RegularExpressionValidator
+    \instantiates QRegularExpressionValidator
+    \inqmlmodule QtQuick
+    \ingroup qtquick-text-utility
+    \brief Provides a string validator.
+    \since 5.14
+
+    The RegularExpressionValidator type provides a validator, that counts as valid any string which
+    matches a specified regular expression.
+*/
+/*!
+   \qmlproperty regularExpression QtQuick::RegularExpressionValidator::regularExpression
+
+   This property holds the regular expression used for validation.
+
+   Note that this property should be a regular expression in JS syntax, e.g /a/ for the regular
+   expression matching "a".
+
+   By default, this property contains a regular expression with the pattern \c{.*} that matches any
+   string.
+
+   Below you can find an example of a \l TextInput object with a RegularExpressionValidator
+   specified:
+
+   \snippet qml/regularexpression.qml 0
 
    Some more examples of regular expressions:
 

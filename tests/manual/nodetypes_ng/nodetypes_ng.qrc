@@ -1,0 +1,38 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>SimpleRect.qml</file>
+        <file>Rects.qml</file>
+        <file>LotsOfRects.qml</file>
+        <file>MultiClipRects.qml</file>
+        <file>Images.qml</file>
+        <file>Painter.qml</file>
+        <file>CompressedImages.qml</file>
+        <file>Text.qml</file>
+        <file>DistanceFieldText.qml</file>
+        <file>Layers.qml</file>
+        <file>ShaderEffectSource.qml</file>
+        <file>AtlasedImages.qml</file>
+        <file>ShaderEffect.qml</file>
+        <file>ShaderEffectNoAnim.qml</file>
+        <file>MoreWindows.qml</file>
+        <file>LotsOfNodes.qml</file>
+        <file>qt.png</file>
+        <file>face-smile.png</file>
+        <file>car_etc2_nomips.ktx</file>
+        <file>qt_bc1_10mips.ktx</file>
+        <file>arrow-down.png</file>
+        <file>arrow-up.png</file>
+        <file>minus-sign.png</file>
+        <file>plus-sign.png</file>
+        <file>blacknwhite.png</file>
+        <file>wobble.vert.qsb</file>
+        <file>wobble.frag.qsb</file>
+        <file>shadow_pass1.frag.qsb</file>
+        <file>shadow_pass2.frag.qsb</file>
+        <file>wobble_legacy_gl.vert</file>
+        <file>wobble_legacy_gl.frag</file>
+        <file>shadow_pass1_legacy_gl.frag</file>
+        <file>shadow_pass2_legacy_gl.frag</file>
+    </qresource>
+</RCC>

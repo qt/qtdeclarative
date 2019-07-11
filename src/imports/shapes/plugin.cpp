@@ -69,6 +69,9 @@ public:
 
         // revision in Qt 5.11: added containsMode property
         qmlRegisterType<QQuickShape, 11>(uri, 1, 11, "Shape");
+
+        // revision in Qt 5.14: added scale property
+        qmlRegisterType<QQuickShapePath, 14>(uri, 1, 14, "ShapePath"); // QTBUG-61942
     }
 };
 

@@ -50,7 +50,6 @@
 #include <private/qqmldebugconnector_p.h>
 #include <private/qquickprofiler_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
-#include <private/qqmlmemoryprofiler_p.h>
 
 #include <QtQml/qqmlengine.h>
 #include <private/qqmlengine_p.h>
@@ -252,7 +251,6 @@ void QQuickWidgetPrivate::execute()
         component = nullptr;
     }
     if (!source.isEmpty()) {
-        QML_MEMORY_SCOPE_URL(engine.data()->baseUrl().resolved(source));
         component = new QQmlComponent(engine.data(), source, q);
         if (!component->isLoading()) {
             q->continueExecute();
@@ -1087,14 +1085,14 @@ void QQuickWidgetPrivate::setRootObject(QObject *obj)
         root = sgItem;
         sgItem->setParentItem(offscreenWindow->contentItem());
     } else if (qobject_cast<QWindow *>(obj)) {
-        qWarning() << "QQuickWidget does not support using windows as a root item." << endl
-                   << endl
-                   << "If you wish to create your root window from QML, consider using QQmlApplicationEngine instead." << endl;
+        qWarning() << "QQuickWidget does not support using windows as a root item." << Qt::endl
+                   << Qt::endl
+                   << "If you wish to create your root window from QML, consider using QQmlApplicationEngine instead." << Qt::endl;
     } else {
-        qWarning() << "QQuickWidget only supports loading of root objects that derive from QQuickItem." << endl
-                   << endl
-                   << "Ensure your QML code is written for QtQuick 2, and uses a root that is or" << endl
-                   << "inherits from QtQuick's Item (not a Timer, QtObject, etc)." << endl;
+        qWarning() << "QQuickWidget only supports loading of root objects that derive from QQuickItem." << Qt::endl
+                   << Qt::endl
+                   << "Ensure your QML code is written for QtQuick 2, and uses a root that is or" << Qt::endl
+                   << "inherits from QtQuick's Item (not a Timer, QtObject, etc)." << Qt::endl;
         delete obj;
         root = nullptr;
     }
@@ -1314,9 +1312,13 @@ void QQuickWidget::mouseDoubleClickEvent(QMouseEvent *e)
 void QQuickWidget::showEvent(QShowEvent *)
 {
     Q_D(QQuickWidget);
+    bool shouldTriggerUpdate = true;
+
     if (!d->useSoftwareRenderer) {
         d->createContext();
+
         if (d->offscreenWindow->openglContext()) {
+            shouldTriggerUpdate = false;
             d->render(true);
             // render() may have led to a QQuickWindow::update() call (for
             // example, having a scene with a QQuickFramebufferObject::Renderer
@@ -1329,10 +1331,11 @@ void QQuickWidget::showEvent(QShowEvent *)
                 d->updatePending = false;
                 update();
             }
-        } else {
-            triggerUpdate();
         }
     }
+
+    if (shouldTriggerUpdate)
+        triggerUpdate();
 
     // note offscreenWindow  is "QQuickOffScreenWindow" instance
     d->offscreenWindow->setVisible(true);

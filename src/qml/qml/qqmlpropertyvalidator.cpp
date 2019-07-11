@@ -57,7 +57,7 @@ QQmlPropertyValidator::QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, c
     bindingPropertyDataPerObject->resize(compilationUnit->objectCount());
 }
 
-QVector<QQmlCompileError> QQmlPropertyValidator::validate()
+QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::validate()
 {
     return validateObject(/*root object*/0, /*instantiatingBinding*/nullptr);
 }
@@ -80,7 +80,8 @@ struct BindingFinder
     }
 };
 
-QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty) const
+QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::validateObject(
+        int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty) const
 {
     const QV4::CompiledData::Object *obj = compilationUnit->objectAt(objectIndex);
 
@@ -93,7 +94,7 @@ QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex,
 
     QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex);
     if (!propertyCache)
-        return QVector<QQmlCompileError>();
+        return QVector<QQmlJS::DiagnosticMessage>();
 
     QQmlCustomParser *customParser = nullptr;
     if (auto typeRef = resolvedType(obj->inheritedTypeNameIndex)) {
@@ -203,7 +204,7 @@ QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex,
                     = pd
                       && QQmlValueTypeFactory::metaObjectForMetaType(pd->propType())
                       && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment);
-            const QVector<QQmlCompileError> subObjectValidatorErrors
+            const QVector<QQmlJS::DiagnosticMessage> subObjectValidatorErrors
                     = validateObject(binding->value.objectIndex, binding,
                                      populatingValueTypeGroupProperty);
             if (!subObjectValidatorErrors.isEmpty())
@@ -260,12 +261,12 @@ QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex,
             }
 
             if (binding->type < QV4::CompiledData::Binding::Type_Script) {
-                QQmlCompileError bindingError = validateLiteralBinding(propertyCache, pd, binding);
-                if (bindingError.isSet())
+                QQmlJS::DiagnosticMessage bindingError = validateLiteralBinding(propertyCache, pd, binding);
+                if (bindingError.isValid())
                     return recordError(bindingError);
             } else if (binding->type == QV4::CompiledData::Binding::Type_Object) {
-                QQmlCompileError bindingError = validateObjectBinding(pd, name, binding);
-                if (bindingError.isSet())
+                QQmlJS::DiagnosticMessage bindingError = validateObjectBinding(pd, name, binding);
+                if (bindingError.isValid())
                     return recordError(bindingError);
             } else if (binding->isGroupProperty()) {
                 if (QQmlValueTypeFactory::isValueType(pd->propType())) {
@@ -316,24 +317,24 @@ QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex,
         customParser->validator = nullptr;
         customParser->engine = nullptr;
         customParser->imports = (QQmlImports*)nullptr;
-        QVector<QQmlCompileError> parserErrors = customParser->errors();
+        QVector<QQmlJS::DiagnosticMessage> parserErrors = customParser->errors();
         if (!parserErrors.isEmpty())
             return parserErrors;
     }
 
     (*bindingPropertyDataPerObject)[objectIndex] = collectedBindingPropertyData;
 
-    QVector<QQmlCompileError> noError;
+    QVector<QQmlJS::DiagnosticMessage> noError;
     return noError;
 }
 
-QQmlCompileError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding) const
+QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding) const
 {
     if (property->isQList()) {
-        return QQmlCompileError(binding->valueLocation, tr("Cannot assign primitives to lists"));
+        return qQmlCompileError(binding->valueLocation, tr("Cannot assign primitives to lists"));
     }
 
-    QQmlCompileError noError;
+    QQmlJS::DiagnosticMessage noError;
 
     if (property->isEnum()) {
         if (binding->flags & QV4::CompiledData::Binding::IsResolvedEnum)
@@ -348,7 +349,7 @@ QQmlCompileError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache
             p.enumerator().keyToValue(value.toUtf8().constData(), &ok);
 
         if (!ok) {
-            return QQmlCompileError(binding->valueLocation, tr("Invalid property assignment: unknown enumeration"));
+            return qQmlCompileError(binding->valueLocation, tr("Invalid property assignment: unknown enumeration"));
         }
         return noError;
     }
@@ -365,7 +366,7 @@ QQmlCompileError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache
             enginePrivate->warning(warning);
             return noError;
         }
-        return QQmlCompileError(binding->valueLocation, error);
+        return qQmlCompileError(binding->valueLocation, error);
     };
 
     switch (property->propType()) {
@@ -629,23 +630,23 @@ bool QQmlPropertyValidator::canCoerce(int to, QQmlPropertyCache *fromMo) const
     return false;
 }
 
-QVector<QQmlCompileError> QQmlPropertyValidator::recordError(const QV4::CompiledData::Location &location, const QString &description) const
+QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::recordError(const QV4::CompiledData::Location &location, const QString &description) const
 {
-    QVector<QQmlCompileError> errors;
-    errors.append(QQmlCompileError(location, description));
+    QVector<QQmlJS::DiagnosticMessage> errors;
+    errors.append(qQmlCompileError(location, description));
     return errors;
 }
 
-QVector<QQmlCompileError> QQmlPropertyValidator::recordError(const QQmlCompileError &error) const
+QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::recordError(const QQmlJS::DiagnosticMessage &error) const
 {
-    QVector<QQmlCompileError> errors;
+    QVector<QQmlJS::DiagnosticMessage> errors;
     errors.append(error);
     return errors;
 }
 
-QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding) const
+QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding) const
 {
-    QQmlCompileError noError;
+    QQmlJS::DiagnosticMessage noError;
 
     if (binding->flags & QV4::CompiledData::Binding::IsOnAssignment) {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Object);
@@ -669,7 +670,7 @@ QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *
         }
 
         if (!isValueSource && !isPropertyInterceptor) {
-            return QQmlCompileError(binding->valueLocation, tr("\"%1\" cannot operate on \"%2\"").arg(stringAt(targetObject->inheritedTypeNameIndex)).arg(propertyName));
+            return qQmlCompileError(binding->valueLocation, tr("\"%1\" cannot operate on \"%2\"").arg(stringAt(targetObject->inheritedTypeNameIndex)).arg(propertyName));
         }
 
         return noError;
@@ -687,7 +688,7 @@ QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *
         if (!QQmlMetaType::isInterface(listType)) {
             QQmlPropertyCache *source = propertyCaches.at(binding->value.objectIndex);
             if (!canCoerce(listType, source)) {
-                return QQmlCompileError(binding->valueLocation, tr("Cannot assign object to list property \"%1\"").arg(propertyName));
+                return qQmlCompileError(binding->valueLocation, tr("Cannot assign object to list property \"%1\"").arg(propertyName));
             }
         }
         return noError;
@@ -695,11 +696,11 @@ QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *
         return noError;
     } else if (QQmlValueTypeFactory::isValueType(property->propType())) {
         auto typeName = QMetaType::typeName(property->propType());
-        return QQmlCompileError(binding->location, tr("Can not assign value of type \"%1\" to property \"%2\", expecting an object")
+        return qQmlCompileError(binding->location, tr("Can not assign value of type \"%1\" to property \"%2\", expecting an object")
                                                       .arg(typeName ? QString::fromLatin1(typeName) : QString::fromLatin1("<unknown type>"))
                                                       .arg(propertyName));
     } else if (property->propType() == qMetaTypeId<QQmlScriptString>()) {
-        return QQmlCompileError(binding->valueLocation, tr("Invalid property assignment: script expected"));
+        return qQmlCompileError(binding->valueLocation, tr("Invalid property assignment: script expected"));
     } else {
         // We want to use the raw metaObject here as the raw metaobject is the
         // actual property type before we applied any extensions that might
@@ -719,7 +720,7 @@ QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *
         }
 
         if (!isAssignable) {
-            return QQmlCompileError(binding->valueLocation, tr("Cannot assign object of type \"%1\" to property of type \"%2\" as the former is neither the same as the latter nor a sub-class of it.")
+            return qQmlCompileError(binding->valueLocation, tr("Cannot assign object of type \"%1\" to property of type \"%2\" as the former is neither the same as the latter nor a sub-class of it.")
                     .arg(stringAt(compilationUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex)).arg(QLatin1String(QMetaType::typeName(property->propType()))));
         }
     }

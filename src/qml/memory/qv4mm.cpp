@@ -112,7 +112,11 @@ enum {
 
 struct MemorySegment {
     enum {
+#ifdef Q_OS_RTEMS
+        NumChunks = sizeof(quint64),
+#else
         NumChunks = 8*sizeof(quint64),
+#endif
         SegmentSize = NumChunks*Chunk::ChunkSize,
     };
 
@@ -219,7 +223,8 @@ Chunk *MemorySegment::allocate(size_t size)
             pageReservation.commit(candidate, size);
             for (uint i = 0; i < requiredChunks; ++i)
                 setBit(candidate - base + i);
-            DEBUG << "allocated chunk " << candidate << hex << size;
+            DEBUG << "allocated chunk " << candidate << Qt::hex << size;
+
             return candidate;
         }
     }
@@ -847,7 +852,7 @@ MarkStack::MarkStack(ExecutionEngine *engine)
 {
     base = (Heap::Base **)engine->gcStack->base();
     top = base;
-    limit = base + ExecutionEngine::GCStackLimit/sizeof(Heap::Base)*3/4;
+    limit = base + engine->maxGCStackSize()/sizeof(Heap::Base)*3/4;
 }
 
 void MarkStack::drain()
@@ -1020,7 +1025,7 @@ static size_t dumpBins(BlockAllocator *b, const char *title)
     SDUMP() << "    large slot map";
     HeapItem *h = b->freeBins[BlockAllocator::NumBins - 1];
     while (h) {
-        SDUMP() << "        " << hex << (quintptr(h)/32) << h->freeData.availableSlots;
+        SDUMP() << "        " << Qt::hex << (quintptr(h)/32) << h->freeData.availableSlots;
         h = h->freeData.next;
     }
 

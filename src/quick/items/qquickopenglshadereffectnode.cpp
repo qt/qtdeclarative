@@ -366,7 +366,6 @@ class QQuickOpenGLShaderEffectMaterialCache : public QObject
 public:
     static QQuickOpenGLShaderEffectMaterialCache *get(bool create = true) {
         QOpenGLContext *ctx = QOpenGLContext::currentContext();
-        Q_ASSERT(ctx);
         QQuickOpenGLShaderEffectMaterialCache *me = ctx->findChild<QQuickOpenGLShaderEffectMaterialCache *>(QStringLiteral("__qt_ShaderEffectCache"), Qt::FindDirectChildrenOnly);
         if (!me && create) {
             me = new QQuickOpenGLShaderEffectMaterialCache();
@@ -505,7 +504,7 @@ void QQuickOpenGLShaderEffectNode::markDirtyTexture()
     Q_EMIT dirtyTexture();
 }
 
-void QQuickOpenGLShaderEffectNode::textureProviderDestroyed(const QObject *object)
+void QQuickOpenGLShaderEffectNode::textureProviderDestroyed(QObject *object)
 {
     Q_ASSERT(material());
     static_cast<QQuickOpenGLShaderEffectMaterial *>(material())->invalidateTextureProvider(object);

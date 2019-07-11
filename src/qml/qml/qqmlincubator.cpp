@@ -42,7 +42,6 @@
 #include "qqmlincubator_p.h"
 
 #include "qqmlexpression_p.h"
-#include "qqmlmemoryprofiler_p.h"
 #include "qqmlobjectcreator_p.h"
 
 void QQmlEnginePrivate::incubate(QQmlIncubator &i, QQmlContextData *forContext)
@@ -271,8 +270,6 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
 {
     if (!compilationUnit)
         return;
-
-    QML_MEMORY_SCOPE_URL(compilationUnit->finalUrl());
 
     QExplicitlySharedDataPointer<QQmlIncubatorPrivate> protectThis(this);
 

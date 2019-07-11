@@ -939,7 +939,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
 
             auto bindingTarget = _bindingTarget;
             auto valueTypeProperty = _valueTypeProperty;
-            auto assignBinding = [qmlBinding, bindingTarget, targetProperty, subprop, bindingProperty, valueTypeProperty](QQmlObjectCreatorSharedState *sharedState) -> bool {
+            auto assignBinding = [qmlBinding, bindingTarget, targetProperty, subprop, bindingProperty, valueTypeProperty](QQmlObjectCreatorSharedState *sharedState) mutable -> bool {
                 if (!qmlBinding->setTarget(bindingTarget, *targetProperty, subprop) && targetProperty->isAlias())
                     return false;
 
@@ -1384,7 +1384,8 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
                       QQmlPropertyData::DontRemoveBinding);
         if (!b->isValueTypeProxy()) {
             QQmlBinding *binding = static_cast<QQmlBinding*>(b.data());
-            if (!binding->hasError() && !binding->hasDependencies())
+            if (!binding->hasError() && !binding->hasDependencies()
+                && binding->context() && !binding->context()->unresolvedNames)
                 b->removeFromObject();
         }
 

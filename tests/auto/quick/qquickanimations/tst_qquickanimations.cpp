@@ -40,6 +40,7 @@
 #include <QtQuick/private/qquickanimatorjob_p.h>
 #include <QtQuick/private/qquickpathinterpolator_p.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquicklistview_p.h>
 #include <QEasingCurve>
 
 #include <limits.h>
@@ -109,6 +110,8 @@ private slots:
     void unsetAnimatorProxyJobWindow();
     void finished();
     void replacingTransitions();
+    void animationJobSelfDestruction();
+    void fastFlickingBug();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -1721,6 +1724,54 @@ void tst_qquickanimations::replacingTransitions()
     QTRY_COMPARE(addTrans->running(), false);
     QTRY_COMPARE(displaceTrans->running(), false);
     QCOMPARE(model->count(), 3);
+}
+
+void tst_qquickanimations::animationJobSelfDestruction()
+{
+    // Don't crash
+    QQmlEngine engine;
+    engine.clearComponentCache();
+    QQmlComponent c(&engine, testFileUrl("animationJobSelfDestructionBug.qml"));
+    QScopedPointer<QQuickWindow> win(qobject_cast<QQuickWindow*>(c.create()));
+    if (!c.errors().isEmpty())
+        qDebug() << c.errorString();
+    QVERIFY(win);
+    win->setTitle(QTest::currentTestFunction());
+    win->show();
+    QVERIFY(QTest::qWaitForWindowExposed(win.data()));
+    QQmlTimer *timer = win->property("timer").value<QQmlTimer*>();
+    QVERIFY(timer);
+    QCOMPARE(timer->isRunning(), false);
+    timer->start();
+    QTest::qWait(1000);
+}
+
+void tst_qquickanimations::fastFlickingBug()
+{
+    // Don't crash
+    QQmlEngine engine;
+    engine.clearComponentCache();
+    QQmlComponent c(&engine, testFileUrl("fastFlickingBug.qml"));
+    QScopedPointer<QQuickWindow> win(qobject_cast<QQuickWindow*>(c.create()));
+    if (!c.errors().isEmpty())
+        qDebug() << c.errorString();
+    QVERIFY(win);
+    win->setTitle(QTest::currentTestFunction());
+    win->show();
+    QVERIFY(QTest::qWaitForWindowExposed(win.data()));
+    auto timer = win->property("timer").value<QQmlTimer*>();
+    QVERIFY(timer);
+    QCOMPARE(timer->isRunning(), false);
+    auto listView = win->property("listView").value<QQuickFlickable*>();
+    QVERIFY(listView);
+    timer->start();
+    // flick listView up and down quickly in the middle of a slow transition
+    for (int sign = 1; timer->isRunning(); sign *= -1) {
+        listView->flick(0, sign * 4000);
+        qApp->processEvents();
+        QTest::qWait(53);
+        qApp->processEvents();
+    }
 }
 
 QTEST_MAIN(tst_qquickanimations)

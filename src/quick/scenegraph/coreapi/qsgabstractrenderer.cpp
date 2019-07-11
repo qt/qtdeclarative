@@ -224,18 +224,33 @@ QRect QSGAbstractRenderer::viewportRect() const
     Convenience method that calls setProjectionMatrix() with an
     orthographic matrix generated from \a rect.
 
+    \a flipY must be \c true when the graphics API uses Y down in its
+    normalized device coordinate system (for example, Vulkan), \c false
+    otherwise.
+
     \sa setProjectionMatrix(), projectionMatrix()
  */
-void QSGAbstractRenderer::setProjectionMatrixToRect(const QRectF &rect)
+void QSGAbstractRenderer::setProjectionMatrixToRect(const QRectF &rect, bool flipY)
 {
     QMatrix4x4 matrix;
     matrix.ortho(rect.x(),
                  rect.x() + rect.width(),
-                 rect.y() + rect.height(),
-                 rect.y(),
+                 flipY ? rect.y() : rect.y() + rect.height(),
+                 flipY ? rect.y() + rect.height() : rect.y(),
                  1,
                  -1);
     setProjectionMatrix(matrix);
+
+    if (flipY) {
+        matrix.setToIdentity();
+        matrix.ortho(rect.x(),
+                     rect.x() + rect.width(),
+                     rect.y() + rect.height(),
+                     rect.y(),
+                     1,
+                     -1);
+    }
+    setProjectionMatrixWithNativeNDC(matrix);
 }
 
 /*!
@@ -250,6 +265,15 @@ void QSGAbstractRenderer::setProjectionMatrix(const QMatrix4x4 &matrix)
 }
 
 /*!
+    \internal
+ */
+void QSGAbstractRenderer::setProjectionMatrixWithNativeNDC(const QMatrix4x4 &matrix)
+{
+    Q_D(QSGAbstractRenderer);
+    d->m_projection_matrix_native_ndc = matrix;
+}
+
+/*!
     Returns the projection matrix
 
     \sa setProjectionMatrix(), setProjectionMatrixToRect()
@@ -258,6 +282,15 @@ QMatrix4x4 QSGAbstractRenderer::projectionMatrix() const
 {
     Q_D(const QSGAbstractRenderer);
     return d->m_projection_matrix;
+}
+
+/*!
+    \internal
+ */
+QMatrix4x4 QSGAbstractRenderer::projectionMatrixWithNativeNDC() const
+{
+    Q_D(const QSGAbstractRenderer);
+    return d->m_projection_matrix_native_ndc;
 }
 
 /*!

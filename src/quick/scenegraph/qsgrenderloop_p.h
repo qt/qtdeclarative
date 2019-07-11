@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRenderLoop_P_H
-#define QSGRenderLoop_P_H
+#ifndef QSGRENDERLOOP_P_H
+#define QSGRENDERLOOP_P_H
 
 //
 //  W A R N I N G
@@ -124,6 +124,13 @@ private:
     QSet<QQuickWindow *> m_windows;
 };
 
+enum QSGRenderLoopType
+{
+    BasicRenderLoop,
+    ThreadedRenderLoop,
+    WindowsRenderLoop
+};
+
 QT_END_NAMESPACE
 
-#endif // QSGRenderLoop_P_H
+#endif // QSGRENDERLOOP_P_H

@@ -292,7 +292,6 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
                         ScopedValue val(scope, base ? *base : Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, scopeObject)));
                         const QObjectWrapper *That = static_cast<const QObjectWrapper *>(val->objectValue());
                         lookup->qobjectLookup.ic = That->internalClass();
-                        lookup->qobjectLookup.staticQObject = nullptr;
                         lookup->qobjectLookup.propertyCache = ddata->propertyCache;
                         lookup->qobjectLookup.propertyCache->addref();
                         lookup->qobjectLookup.propertyData = propertyData;
@@ -325,7 +324,6 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
                             ScopedValue val(scope, base ? *base : Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, context->contextObject)));
                             const QObjectWrapper *That = static_cast<const QObjectWrapper *>(val->objectValue());
                             lookup->qobjectLookup.ic = That->internalClass();
-                            lookup->qobjectLookup.staticQObject = nullptr;
                             lookup->qobjectLookup.propertyCache = ddata->propertyCache;
                             lookup->qobjectLookup.propertyCache->addref();
                             lookup->qobjectLookup.propertyData = propertyData;
@@ -540,7 +538,6 @@ ReturnedValue QQmlContextWrapper::lookupIdObject(Lookup *l, ExecutionEngine *eng
 
 ReturnedValue QQmlContextWrapper::lookupScopeObjectProperty(Lookup *l, ExecutionEngine *engine, Value *base)
 {
-    Q_UNUSED(base)
     Scope scope(engine);
     Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
     if (!qmlContext)
@@ -561,12 +558,15 @@ ReturnedValue QQmlContextWrapper::lookupScopeObjectProperty(Lookup *l, Execution
     };
 
     ScopedValue obj(scope, QV4::QObjectWrapper::wrap(engine, scopeObject));
+
+    if (base)
+        *base = obj;
+
     return QObjectWrapper::lookupGetterImpl(l, engine, obj, /*useOriginalProperty*/ true, revertLookup);
 }
 
 ReturnedValue QQmlContextWrapper::lookupContextObjectProperty(Lookup *l, ExecutionEngine *engine, Value *base)
 {
-    Q_UNUSED(base)
     Scope scope(engine);
     Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
     if (!qmlContext)
@@ -591,6 +591,10 @@ ReturnedValue QQmlContextWrapper::lookupContextObjectProperty(Lookup *l, Executi
     };
 
     ScopedValue obj(scope, QV4::QObjectWrapper::wrap(engine, contextObject));
+
+    if (base)
+        *base = obj;
+
     return QObjectWrapper::lookupGetterImpl(l, engine, obj, /*useOriginalProperty*/ true, revertLookup);
 }
 

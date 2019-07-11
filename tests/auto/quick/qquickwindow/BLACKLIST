@@ -1,6 +1,3 @@
 [openglContextCreatedSignal]
 opensuse-42.3
 opensuse-leap
-# QTBUG-62177
-[attachedProperty]
-osx

@@ -72,5 +72,54 @@
         <file>shaders/sprite.vert</file>
         <file>shaders/sprite_core.frag</file>
         <file>shaders/sprite_core.vert</file>
+
+        <file>shaders_ng/vertexcolor.vert.qsb</file>
+        <file>shaders_ng/vertexcolor.frag.qsb</file>
+        <file>shaders_ng/flatcolor.vert.qsb</file>
+        <file>shaders_ng/flatcolor.frag.qsb</file>
+        <file>shaders_ng/smoothcolor.vert.qsb</file>
+        <file>shaders_ng/smoothcolor.frag.qsb</file>
+        <file>shaders_ng/stencilclip.vert.qsb</file>
+        <file>shaders_ng/stencilclip.frag.qsb</file>
+        <file>shaders_ng/texture.vert.qsb</file>
+        <file>shaders_ng/texture.frag.qsb</file>
+        <file>shaders_ng/opaquetexture.vert.qsb</file>
+        <file>shaders_ng/opaquetexture.frag.qsb</file>
+        <file>shaders_ng/smoothtexture.vert.qsb</file>
+        <file>shaders_ng/smoothtexture.frag.qsb</file>
+
+        <file>shaders_ng/textmask.vert.qsb</file>
+        <file>shaders_ng/textmask.frag.qsb</file>
+        <file>shaders_ng/8bittextmask.frag.qsb</file>
+        <file>shaders_ng/8bittextmask_a.frag.qsb</file>
+        <file>shaders_ng/24bittextmask.frag.qsb</file>
+        <file>shaders_ng/32bitcolortext.frag.qsb</file>
+        <file>shaders_ng/outlinedtext.vert.qsb</file>
+        <file>shaders_ng/outlinedtext.frag.qsb</file>
+        <file>shaders_ng/outlinedtext_a.frag.qsb</file>
+        <file>shaders_ng/styledtext.vert.qsb</file>
+        <file>shaders_ng/styledtext.frag.qsb</file>
+        <file>shaders_ng/styledtext_a.frag.qsb</file>
+
+        <file>shaders_ng/distancefieldtext.vert.qsb</file>
+        <file>shaders_ng/distancefieldtext.frag.qsb</file>
+        <file>shaders_ng/distancefieldtext_a.frag.qsb</file>
+        <file>shaders_ng/distancefieldshiftedtext.vert.qsb</file>
+        <file>shaders_ng/distancefieldshiftedtext.frag.qsb</file>
+        <file>shaders_ng/distancefieldshiftedtext_a.frag.qsb</file>
+        <file>shaders_ng/distancefieldoutlinetext.vert.qsb</file>
+        <file>shaders_ng/distancefieldoutlinetext.frag.qsb</file>
+        <file>shaders_ng/distancefieldoutlinetext_a.frag.qsb</file>
+        <file>shaders_ng/hiqsubpixeldistancefieldtext.vert.qsb</file>
+        <file>shaders_ng/hiqsubpixeldistancefieldtext.frag.qsb</file>
+        <file>shaders_ng/hiqsubpixeldistancefieldtext_a.frag.qsb</file>
+        <file>shaders_ng/loqsubpixeldistancefieldtext.vert.qsb</file>
+        <file>shaders_ng/loqsubpixeldistancefieldtext.frag.qsb</file>
+        <file>shaders_ng/loqsubpixeldistancefieldtext_a.frag.qsb</file>
+
+        <file>shaders_ng/shadereffect.vert.qsb</file>
+        <file>shaders_ng/shadereffect.frag.qsb</file>
+        <file>shaders_ng/sprite.vert.qsb</file>
+        <file>shaders_ng/sprite.frag.qsb</file>
     </qresource>
 </RCC>

@@ -203,12 +203,13 @@ class QQuickStatePrivate : public QObjectPrivate
 
 public:
     QQuickStatePrivate()
-    : named(false), inState(false), group(nullptr) {}
+        : when(false), whenKnown(false), named(false), inState(false), group(nullptr) {}
 
     typedef QList<QQuickSimpleAction> SimpleActionList;
 
     QString name;
-    QQmlBinding::Ptr when;
+    bool when;
+    bool whenKnown;
     bool named;
 
     struct OperationGuard : public QQmlGuard<QQuickStateOperation>
@@ -231,9 +232,8 @@ public:
     }
     static void operations_clear(QQmlListProperty<QQuickStateOperation> *prop) {
         QList<OperationGuard> *list = static_cast<QList<OperationGuard> *>(prop->data);
-        QMutableListIterator<OperationGuard> listIterator(*list);
-        while(listIterator.hasNext())
-            listIterator.next()->setState(nullptr);
+        for (auto &e : *list)
+            e->setState(nullptr);
         list->clear();
     }
     static int operations_count(QQmlListProperty<QQuickStateOperation> *prop) {

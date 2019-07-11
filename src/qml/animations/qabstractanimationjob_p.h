@@ -52,6 +52,7 @@
 //
 
 #include <private/qtqmlglobal_p.h>
+#include <private/qanimationjobutil_p.h>
 #include <QtCore/QObject>
 #include <QtCore/private/qabstractanimation_p.h>
 #include <vector>
@@ -130,6 +131,7 @@ public:
     bool isRenderThreadJob() const { return m_isRenderThreadJob; }
     bool isRenderThreadProxy() const { return m_isRenderThreadProxy; }
 
+    SelfDeletable m_selfDeletable;
 protected:
     virtual void updateCurrentTime(int) {}
     virtual void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
@@ -174,7 +176,6 @@ protected:
     QAbstractAnimationJob *m_previousSibling;
     QQmlAnimationTimer *m_timer = nullptr;
 
-    bool *m_wasDeleted;
     bool m_hasRegisteredTimer:1;
     bool m_isPause:1;
     bool m_isGroup:1;

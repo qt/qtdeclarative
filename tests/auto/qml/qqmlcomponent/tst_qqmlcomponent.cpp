@@ -635,9 +635,11 @@ void tst_qqmlcomponent::relativeUrl_data()
 {
     QTest::addColumn<QUrl>("url");
 
+#if !defined(Q_OS_ANDROID)
     QTest::addRow("fromLocalFile") << QUrl::fromLocalFile("data/QtObjectComponent.qml");
     QTest::addRow("fromLocalFileHash") << QUrl::fromLocalFile("data/QtObjectComponent#2.qml");
     QTest::addRow("constructor") << QUrl("data/QtObjectComponent.qml");
+#endif
     QTest::addRow("absolute") << QUrl::fromLocalFile(QFINDTESTDATA("data/QtObjectComponent.qml"));
     QTest::addRow("qrc") << QUrl("qrc:/data/QtObjectComponent.qml");
 }

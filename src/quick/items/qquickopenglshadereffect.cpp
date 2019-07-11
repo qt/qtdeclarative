@@ -57,6 +57,10 @@
 
 QT_BEGIN_NAMESPACE
 
+// Note: this legacy ShaderEffect implementation is used only when running
+// directly with OpenGL. This is going to go away in the future (Qt 6?), since
+// the RHI path uses QQuickGenericShaderEffect always.
+
 namespace {
 
     enum VariableQualifier {
@@ -221,7 +225,7 @@ QQuickOpenGLShaderEffectCommon::~QQuickOpenGLShaderEffectCommon()
         clearSignalMappers(shaderType);
 }
 
-void QQuickOpenGLShaderEffectCommon::disconnectPropertySignals(QObject *obj, Key::ShaderType shaderType)
+void QQuickOpenGLShaderEffectCommon::disconnectPropertySignals(QQuickItem *item, Key::ShaderType shaderType)
 {
     for (int i = 0; i < uniformData[shaderType].size(); ++i) {
         if (signalMappers[shaderType].at(i) == 0)
@@ -229,11 +233,12 @@ void QQuickOpenGLShaderEffectCommon::disconnectPropertySignals(QObject *obj, Key
         const UniformData &d = uniformData[shaderType].at(i);
         auto mapper = signalMappers[shaderType].at(i);
         void *a = mapper;
-        QObjectPrivate::disconnect(obj, mapper->signalIndex(), &a);
+        QObjectPrivate::disconnect(item, mapper->signalIndex(), &a);
         if (d.specialType == UniformData::Sampler || d.specialType == UniformData::SamplerExternal) {
             QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
             if (source) {
-                QQuickItemPrivate::get(source)->derefWindow();
+                if (item->window())
+                    QQuickItemPrivate::get(source)->derefWindow();
                 QObject::disconnect(source, SIGNAL(destroyed(QObject*)), host, SLOT(sourceDestroyed(QObject*)));
             }
         }

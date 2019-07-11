@@ -41,7 +41,7 @@
 #include "qquickcontext2dtile_p.h"
 #include "qquickcanvasitem_p.h"
 #include <private/qquickitem_p.h>
-#include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qsgplaintexture_p.h>
 #include "qquickcontext2dcommandbuffer_p.h"
 #include <QOpenGLPaintDevice>
 #if QT_CONFIG(opengl)
@@ -238,15 +238,8 @@ void QQuickContext2DTexture::paintWithoutTiles(QQuickContext2DCommandBuffer *ccb
 
     QPainter p;
     p.begin(device);
-    if (m_antialiasing)
-        p.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing | QPainter::TextAntialiasing, true);
-    else
-        p.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing | QPainter::TextAntialiasing, false);
-
-    if (m_smooth)
-        p.setRenderHint(QPainter::SmoothPixmapTransform, true);
-    else
-        p.setRenderHint(QPainter::SmoothPixmapTransform, false);
+    p.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing, m_antialiasing);
+    p.setRenderHint(QPainter::SmoothPixmapTransform, m_smooth);
 
     p.setCompositionMode(QPainter::CompositionMode_SourceOver);
 

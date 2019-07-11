@@ -393,10 +393,20 @@ void tst_QQuickMouseArea::dragging()
     QTRY_COMPARE(blackRect->x(), 61.0);
     QCOMPARE(blackRect->y(), 61.0);
 
+    qreal relativeX = mouseRegion->mouseX();
+    qreal relativeY = mouseRegion->mouseY();
+    for (int i = 0; i < 20; i++) {
+        p += QPoint(1, 1);
+        QTest::mouseMove(&window, p);
+    }
+    QTRY_VERIFY(drag->active());
+    QTRY_COMPARE(mouseRegion->mouseX(), relativeX);
+    QCOMPARE(mouseRegion->mouseY(), relativeY);
+
     QTest::mouseRelease(&window, button, Qt::NoModifier, p);
     QTRY_VERIFY(!drag->active());
-    QTRY_COMPARE(blackRect->x(), 61.0);
-    QCOMPARE(blackRect->y(), 61.0);
+    QTRY_COMPARE(blackRect->x(), 81.0);
+    QCOMPARE(blackRect->y(), 81.0);
 }
 
 void tst_QQuickMouseArea::dragSmoothed()

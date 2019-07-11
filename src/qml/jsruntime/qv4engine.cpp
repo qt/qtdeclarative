@@ -42,6 +42,7 @@
 #include <private/qv4compiler_p.h>
 #include <private/qv4compilercontext_p.h>
 #include <private/qv4codegen_p.h>
+#include <private/qqmljsdiagnosticmessage_p.h>
 
 #include <QtCore/QTextStream>
 #include <QDateTime>
@@ -109,7 +110,6 @@
 #include <private/qqmllistwrapper_p.h>
 #include <private/qqmllist_p.h>
 #include <private/qqmltypeloader_p.h>
-#include <private/qqmlmemoryprofiler_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 #if QT_CONFIG(qml_locale)
 #include <private/qqmllocale_p.h>
@@ -206,10 +206,19 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 #endif
     , m_qmlEngine(nullptr)
 {
+    bool ok = false;
+    const int envMaxJSStackSize = qEnvironmentVariableIntValue("QV4_JS_MAX_STACK_SIZE", &ok);
+    if (ok && envMaxJSStackSize > 0)
+        m_maxJSStackSize = envMaxJSStackSize;
+
+    const int envMaxGCStackSize = qEnvironmentVariableIntValue("QV4_GC_MAX_STACK_SIZE", &ok);
+    if (ok && envMaxGCStackSize > 0)
+        m_maxGCStackSize = envMaxGCStackSize;
+
     memoryManager = new QV4::MemoryManager(this);
 
     if (maxCallDepth == -1) {
-        bool ok = false;
+        ok = false;
         maxCallDepth = qEnvironmentVariableIntValue("QV4_MAX_CALL_DEPTH", &ok);
         if (!ok || maxCallDepth <= 0) {
 #if defined(QT_NO_DEBUG) && !defined(__SANITIZE_ADDRESS__) && !QT_HAS_FEATURE(address_sanitizer)
@@ -223,24 +232,24 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     Q_ASSERT(maxCallDepth > 0);
 
     // reserve space for the JS stack
-    // we allow it to grow to a bit more than JSStackLimit, as we can overshoot due to ScopedValues
+    // we allow it to grow to a bit more than m_maxJSStackSize, as we can overshoot due to ScopedValues
     // allocated outside of JIT'ed methods.
-    *jsStack = WTF::PageAllocation::allocate(JSStackLimit + 256*1024, WTF::OSAllocator::JSVMStackPages,
+    *jsStack = WTF::PageAllocation::allocate(m_maxJSStackSize + 256*1024, WTF::OSAllocator::JSVMStackPages,
                                              /* writable */ true, /* executable */ false,
                                              /* includesGuardPages */ true);
     jsStackBase = (Value *)jsStack->base();
 #ifdef V4_USE_VALGRIND
-    VALGRIND_MAKE_MEM_UNDEFINED(jsStackBase, JSStackLimit + 256*1024);
+    VALGRIND_MAKE_MEM_UNDEFINED(jsStackBase, m_maxJSStackSize + 256*1024);
 #endif
 
     jsStackTop = jsStackBase;
 
-    *gcStack = WTF::PageAllocation::allocate(GCStackLimit, WTF::OSAllocator::JSVMStackPages,
+    *gcStack = WTF::PageAllocation::allocate(m_maxGCStackSize, WTF::OSAllocator::JSVMStackPages,
                                              /* writable */ true, /* executable */ false,
                                              /* includesGuardPages */ true);
 
     {
-        bool ok = false;
+        ok = false;
         jitCallCountThreshold = qEnvironmentVariableIntValue("QV4_JIT_CALL_THRESHOLD", &ok);
         if (!ok)
             jitCallCountThreshold = 3;
@@ -258,7 +267,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsSymbols = jsAlloca(NJSSymbols);
 
     // set up stack limits
-    jsStackLimit = jsStackBase + JSStackLimit/sizeof(Value);
+    jsStackLimit = jsStackBase + m_maxJSStackSize/sizeof(Value);
 
     identifierTable = new IdentifierTable(this);
 
@@ -683,7 +692,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     ScopedFunctionObject t(scope, memoryManager->allocate<FunctionObject>(rootContext(), nullptr, ::throwTypeError));
     t->defineReadonlyProperty(id_length(), Value::fromInt32(0));
-    t->setInternalClass(t->internalClass()->frozen());
+    t->setInternalClass(t->internalClass()->cryopreserved());
     jsObjects[ThrowerObject] = t;
 
     ScopedProperty pd(scope);
@@ -692,7 +701,6 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     functionPrototype()->insertMember(id_caller(), pd, Attr_Accessor|Attr_ReadOnly_ButConfigurable);
     functionPrototype()->insertMember(id_arguments(), pd, Attr_Accessor|Attr_ReadOnly_ButConfigurable);
 
-    QML_MEMORY_SCOPE_STRING("QV4Engine::QV4Engine");
     qMetaTypeId<QJSValue>();
     qMetaTypeId<QList<int> >();
 
@@ -1738,6 +1746,16 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
     return fromVariant(variant);
 }
 
+int ExecutionEngine::maxJSStackSize() const
+{
+    return m_maxJSStackSize;
+}
+
+int ExecutionEngine::maxGCStackSize() const
+{
+    return m_maxGCStackSize;
+}
+
 ReturnedValue ExecutionEngine::global()
 {
     return globalObject->asReturnedValue();
@@ -1768,10 +1786,10 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(
                                                  sourceCode, sourceTimeStamp, &diagnostics);
     for (const QQmlJS::DiagnosticMessage &m : diagnostics) {
         if (m.isError()) {
-            throwSyntaxError(m.message, url.toString(), m.loc.startLine, m.loc.startColumn);
+            throwSyntaxError(m.message, url.toString(), m.line, m.column);
             return nullptr;
         } else {
-            qWarning() << url << ':' << m.loc.startLine << ':' << m.loc.startColumn
+            qWarning() << url << ':' << m.line << ':' << m.column
                       << ": warning: " << m.message;
         }
     }
@@ -1872,7 +1890,7 @@ void ExecutionEngine::setQmlEngine(QQmlEngine *engine)
 
 static void freeze_recursive(QV4::ExecutionEngine *v4, QV4::Object *object)
 {
-    if (object->as<QV4::QObjectWrapper>())
+    if (object->as<QV4::QObjectWrapper>() || object->internalClass()->isFrozen)
         return;
 
     QV4::Scope scope(v4);
@@ -1889,10 +1907,8 @@ static void freeze_recursive(QV4::ExecutionEngine *v4, QV4::Object *object)
     if (!instanceOfObject)
         return;
 
-    QV4::Heap::InternalClass *frozen = object->internalClass()->propertiesFrozen();
-    if (object->internalClass() == frozen)
-        return;
-    object->setInternalClass(frozen);
+    Heap::InternalClass *frozen = object->internalClass()->frozen();
+    object->setInternalClass(frozen); // Immediately assign frozen to prevent it from getting GC'd
 
     QV4::ScopedObject o(scope);
     for (uint i = 0; i < frozen->size; ++i) {

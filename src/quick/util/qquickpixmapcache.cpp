@@ -49,7 +49,7 @@
 #include <QtGui/private/qimage_p.h>
 #include <qpa/qplatformintegration.h>
 
-#include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qsgtexturereader_p.h>
 
 #include <QQuickWindow>
@@ -207,7 +207,7 @@ protected:
 private:
     friend class QQuickPixmapReaderThreadObject;
     void processJobs();
-    void processJob(QQuickPixmapReply *, const QUrl &, const QString &, QQuickImageProvider::ImageType, QQuickImageProvider *);
+    void processJob(QQuickPixmapReply *, const QUrl &, const QString &, QQuickImageProvider::ImageType, const QSharedPointer<QQuickImageProvider> &);
 #if QT_CONFIG(qml_network)
     void networkRequestDone(QNetworkReply *);
 #endif
@@ -683,10 +683,11 @@ void QQuickPixmapReader::processJobs()
                 const QUrl url = job->url;
                 QString localFile;
                 QQuickImageProvider::ImageType imageType = QQuickImageProvider::Invalid;
-                QQuickImageProvider *provider = nullptr;
+                QSharedPointer<QQuickImageProvider> provider;
 
                 if (url.scheme() == QLatin1String("image")) {
-                    provider = static_cast<QQuickImageProvider *>(engine->imageProvider(imageProviderId(url)));
+                    QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
+                    provider = enginePrivate->imageProvider(imageProviderId(url)).staticCast<QQuickImageProvider>();
                     if (provider)
                         imageType = provider->imageType();
 
@@ -721,7 +722,7 @@ void QQuickPixmapReader::processJobs()
 }
 
 void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &url, const QString &localFile,
-                                    QQuickImageProvider::ImageType imageType, QQuickImageProvider *provider)
+                                    QQuickImageProvider::ImageType imageType, const QSharedPointer<QQuickImageProvider> &provider)
 {
     // fetch
     if (url.scheme() == QLatin1String("image")) {
@@ -737,7 +738,8 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
             return;
         }
 
-        QQuickImageProviderWithOptions *providerV2 = QQuickImageProviderWithOptions::checkedCast(provider);
+        // This is safe because we ensure that provider does outlive providerV2 and it does not escape the function
+        QQuickImageProviderWithOptions *providerV2 = QQuickImageProviderWithOptions::checkedCast(provider.get());
 
         switch (imageType) {
             case QQuickImageProvider::Invalid:
@@ -817,17 +819,24 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                 if (providerV2) {
                     response = providerV2->requestImageResponse(imageId(url), runningJob->requestSize, runningJob->providerOptions);
                 } else {
-                    QQuickAsyncImageProvider *asyncProvider = static_cast<QQuickAsyncImageProvider*>(provider);
+                    QQuickAsyncImageProvider *asyncProvider = static_cast<QQuickAsyncImageProvider*>(provider.get());
                     response = asyncProvider->requestImageResponse(imageId(url), runningJob->requestSize);
                 }
 
+                {
+                    QObject::connect(response, SIGNAL(finished()), threadObject, SLOT(asyncResponseFinished()));
+                    // as the response object can outlive the provider QSharedPointer, we have to extend the pointee's lifetime by that of the response
+                    // we do this by capturing a copy of the QSharedPointer in a lambda, and dropping it once the lambda has been called
+                    auto provider_copy = provider; // capturing provider would capture it as a const reference, and copy capture with initializer is only available in C++14
+                    QObject::connect(response, &QQuickImageResponse::destroyed, response, [provider_copy]() {
+                        // provider_copy will be deleted when the connection gets deleted
+                    });
+                }
                 // Might be that the async provider was so quick it emitted the signal before we
                 // could connect to it.
-                if (static_cast<QQuickImageResponsePrivate*>(QObjectPrivate::get(response))->finished) {
+                if (static_cast<QQuickImageResponsePrivate*>(QObjectPrivate::get(response))->finished.loadAcquire()) {
                     QMetaObject::invokeMethod(threadObject, "asyncResponseFinished",
                                               Qt::QueuedConnection, Q_ARG(QQuickImageResponse*, response));
-                } else {
-                    QObject::connect(response, SIGNAL(finished()), threadObject, SLOT(asyncResponseFinished()));
                 }
 
                 asyncResponses.insert(response, runningJob);
@@ -1270,8 +1279,10 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
         QSize readSize;
 
         QQuickImageProvider::ImageType imageType = QQuickImageProvider::Invalid;
-        QQuickImageProvider *provider = static_cast<QQuickImageProvider *>(engine->imageProvider(imageProviderId(url)));
-        QQuickImageProviderWithOptions *providerV2 = QQuickImageProviderWithOptions::checkedCast(provider);
+        QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
+        QSharedPointer<QQuickImageProvider> provider = enginePrivate->imageProvider(imageProviderId(url)).dynamicCast<QQuickImageProvider>();
+        // it is safe to use get() as providerV2 does not escape and is outlived by provider
+        QQuickImageProviderWithOptions *providerV2 = QQuickImageProviderWithOptions::checkedCast(provider.get());
         if (provider)
             imageType = provider->imageType();
 
@@ -1570,7 +1581,8 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QSize &reques
 
     if (iter == store->m_cache.end()) {
         if (url.scheme() == QLatin1String("image")) {
-            if (QQuickImageProvider *provider = static_cast<QQuickImageProvider *>(engine->imageProvider(imageProviderId(url)))) {
+            QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
+            if (auto provider = enginePrivate->imageProvider(imageProviderId(url)).staticCast<QQuickImageProvider>()) {
                 const bool threadedPixmaps = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedPixmaps);
                 if (!threadedPixmaps && provider->imageType() == QQuickImageProvider::Pixmap) {
                     // pixmaps can only be loaded synchronously

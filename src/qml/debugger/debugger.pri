@@ -14,7 +14,6 @@ qtConfig(qml-debug) {
         $$PWD/qqmldebugconnector.cpp \
         $$PWD/qqmldebugservice.cpp \
         $$PWD/qqmlabstractprofileradapter.cpp \
-        $$PWD/qqmlmemoryprofiler.cpp \
         $$PWD/qqmlprofiler.cpp \
         $$PWD/qqmldebugserviceinterfaces.cpp
 }
@@ -24,7 +23,6 @@ HEADERS += \
     $$PWD/qqmldebugserviceinterfaces_p.h \
     $$PWD/qqmldebugstatesdelegate_p.h \
     $$PWD/qqmldebug.h \
-    $$PWD/qqmlmemoryprofiler_p.h \
     $$PWD/qqmlprofiler_p.h
 
 INCLUDEPATH += $$PWD

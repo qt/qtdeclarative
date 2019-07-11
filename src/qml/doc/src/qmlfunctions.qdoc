@@ -538,7 +538,7 @@
    Alternatively, you can use a C++11 lambda:
 
    \code
-   qmlRegisterSingletonType<SingletonTypeExample>("Qt.example.qjsvalueApi", 1, 0, "MyApi", [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject * {
+   qmlRegisterSingletonType<SingletonTypeExample>("Qt.example.qobjectSingleton", 1, 0, "MyApi", [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject * {
        Q_UNUSED(engine)
        Q_UNUSED(scriptEngine)
 
@@ -562,6 +562,14 @@
    \endqml
 
    \sa {Choosing the Correct Integration Method Between C++ and QML}
+*/
+
+
+/*!
+   \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, std::function<QObject*(QQmlEngine *, QJSEngine *)> callback)
+   \relates QQmlEngine
+
+   \overload qmlRegisterSingletonType
 */
 
 /*!

@@ -244,6 +244,7 @@ private slots:
 
     void equality();
     void aggressiveGc();
+    void noAccumulatorInTemplateLiteral();
 
     void interrupt_data();
     void interrupt();
@@ -1443,12 +1444,10 @@ public:
 Q_DECLARE_METATYPE(Foo)
 Q_DECLARE_METATYPE(Foo*)
 
-Q_DECLARE_METATYPE(QLinkedList<QString>)
 Q_DECLARE_METATYPE(QList<Foo>)
 Q_DECLARE_METATYPE(QVector<QChar>)
 Q_DECLARE_METATYPE(QStack<int>)
 Q_DECLARE_METATYPE(QQueue<char>)
-Q_DECLARE_METATYPE(QLinkedList<QStack<int> >)
 
 void tst_QJSEngine::valueConversion_basic()
 {
@@ -4842,6 +4841,23 @@ void tst_QJSEngine::aggressiveGc()
     qputenv("QV4_MM_AGGRESSIVE_GC", origAggressiveGc);
 }
 
+void tst_QJSEngine::noAccumulatorInTemplateLiteral()
+{
+    const QByteArray origAggressiveGc = qgetenv("QV4_MM_AGGRESSIVE_GC");
+    qputenv("QV4_MM_AGGRESSIVE_GC", "true");
+    {
+        QJSEngine engine;
+
+        // getTemplateLiteral should not save the accumulator as it's garbage and trashes
+        // the next GC run. Instead, we want to see the stack overflow error.
+        QJSValue value = engine.evaluate("function a(){\nS=o=>s\nFunction``\na()}a()");
+
+        QVERIFY(value.isError());
+        QCOMPARE(value.toString(), "RangeError: Maximum call stack size exceeded.");
+    }
+    qputenv("QV4_MM_AGGRESSIVE_GC", origAggressiveGc);
+}
+
 void tst_QJSEngine::interrupt_data()
 {
     QTest::addColumn<int>("jitThreshold");
@@ -4892,6 +4908,7 @@ private:
 
 void tst_QJSEngine::interrupt()
 {
+#if QT_CONFIG(cxx11_future)
     QFETCH(int, jitThreshold);
     QFETCH(QString, code);
 
@@ -4916,6 +4933,9 @@ void tst_QJSEngine::interrupt()
 
     QVERIFY(worker->wait());
     QVERIFY(!engineInThread);
+#else
+    QSKIP("This test requires C++11 futures");
+#endif
 }
 
 QTEST_MAIN(tst_QJSEngine)

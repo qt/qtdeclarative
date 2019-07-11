@@ -32,6 +32,7 @@
 #include <private/qv4codegen_p.h>
 #include <private/qv4staticvalue_p.h>
 #include <private/qqmlirbuilder_p.h>
+#include <private/qqmljsdiagnosticmessage_p.h>
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDir>
@@ -85,7 +86,7 @@ void printUsage(const QString &appNameIn)
         << '\n';
 }
 
-QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, const QString &code, const QString &path)
+QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, const QString &path)
 {
     QVariantList imports;
 
@@ -119,7 +120,8 @@ QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, con
             if (!name.isEmpty())
                 import[nameLiteral()] = name;
             import[typeLiteral()] = moduleLiteral();
-            import[versionLiteral()] = code.mid(importNode->versionToken.offset, importNode->versionToken.length);
+            auto versionString = importNode->version ? QString::number(importNode->version->majorVersion) + QLatin1Char('.') + QString::number(importNode->version->minorVersion) : QString();
+            import[versionLiteral()] = versionString;
         }
 
         imports.append(import);
@@ -272,11 +274,11 @@ QVariantList findQmlImportsInQmlCode(const QString &filePath, const QString &cod
         const auto diagnosticMessages = parser.diagnosticMessages();
         for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
             std::cerr << QDir::toNativeSeparators(filePath).toStdString() << ':'
-                      << m.loc.startLine << ':' << m.message.toStdString() << std::endl;
+                      << m.line << ':' << m.message.toStdString() << std::endl;
         }
         return QVariantList();
     }
-    return findImportsInAst(parser.ast()->headers, code, filePath);
+    return findImportsInAst(parser.ast()->headers, filePath);
 }
 
 // Scan a single qml file for import statements

@@ -12,6 +12,7 @@ QT += core-private gui-private  qml-private quick-private testlib qmlmodels-priv
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
 
 OTHER_FILES += \
+    data/animationJobSelfDestructionBug.qml\
     data/attached.qml \
     data/badproperty1.qml \
     data/badproperty2.qml \
@@ -26,6 +27,7 @@ OTHER_FILES += \
     data/dotproperty.qml \
     data/Double.qml \
     data/doubleRegistrationBug.qml \
+    data/fastFlickingBug.qml \
     data/looping.qml \
     data/mixedtype1.qml \
     data/mixedtype2.qml \

@@ -424,6 +424,27 @@ private:
     qreal _value = 0;
 };
 
+class Q_QUICK_PRIVATE_EXPORT QQuickPathPolyline : public QQuickCurve
+{
+    Q_OBJECT
+    Q_PROPERTY(QPointF start READ start NOTIFY startChanged)
+    Q_PROPERTY(QVariantList path READ path WRITE setPath NOTIFY pathChanged)
+public:
+    QQuickPathPolyline(QObject *parent=nullptr);
+
+    QVariantList path() const;
+    void setPath(const QVariantList &path);
+    QPointF start() const;
+    void addToPath(QPainterPath &path, const QQuickPathData &data) override;
+
+Q_SIGNALS:
+    void pathChanged();
+    void startChanged();
+
+private:
+    QVector<QPointF> m_path;
+};
+
 struct QQuickCachedBezier
 {
     QQuickCachedBezier() {}
@@ -445,6 +466,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPath : public QObject, public QQmlParserStatu
     Q_PROPERTY(qreal startX READ startX WRITE setStartX NOTIFY startXChanged)
     Q_PROPERTY(qreal startY READ startY WRITE setStartY NOTIFY startYChanged)
     Q_PROPERTY(bool closed READ isClosed NOTIFY changed)
+    Q_PROPERTY(QSizeF scale READ scale WRITE setScale NOTIFY scaleChanged REVISION 14)
     Q_CLASSINFO("DefaultProperty", "pathElements")
     Q_INTERFACES(QQmlParserStatus)
 public:
@@ -466,14 +488,18 @@ public:
     QPainterPath path() const;
     QStringList attributes() const;
     qreal attributeAt(const QString &, qreal) const;
-    QPointF pointAt(qreal) const;
+    Q_REVISION(14) Q_INVOKABLE QPointF pointAtPercent(qreal t) const;
     QPointF sequentialPointAt(qreal p, qreal *angle = nullptr) const;
     void invalidateSequentialHistory() const;
+
+    QSizeF scale() const;
+    void setScale(const QSizeF &scale);
 
 Q_SIGNALS:
     void changed();
     void startXChanged();
     void startYChanged();
+    Q_REVISION(14) void scaleChanged();
 
 protected:
     QQuickPath(QQuickPathPrivate &dd, QObject *parent = nullptr);
@@ -540,6 +566,7 @@ QML_DECLARE_TYPE(QQuickPathArc)
 QML_DECLARE_TYPE(QQuickPathAngleArc)
 QML_DECLARE_TYPE(QQuickPathSvg)
 QML_DECLARE_TYPE(QQuickPathPercent)
+QML_DECLARE_TYPE(QQuickPathPolyline)
 QML_DECLARE_TYPE(QQuickPath)
 
 #endif // QQUICKPATH_H

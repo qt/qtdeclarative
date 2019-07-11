@@ -62,9 +62,6 @@ void QQmlApplicationEnginePrivate::cleanUp()
         obj->disconnect(q);
 
     qDeleteAll(objects);
-#if QT_CONFIG(translation)
-    qDeleteAll(translators);
-#endif
 }
 
 void QQmlApplicationEnginePrivate::init()
@@ -75,10 +72,11 @@ void QQmlApplicationEnginePrivate::init()
     q->connect(q, &QQmlApplicationEngine::exit, QCoreApplication::instance(),
                &QCoreApplication::exit, Qt::QueuedConnection);
 #if QT_CONFIG(translation)
-    QTranslator* qtTranslator = new QTranslator;
-    if (qtTranslator->load(QLocale(), QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
+    QTranslator* qtTranslator = new QTranslator(q);
+    if (qtTranslator->load(QLocale(), QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath), QLatin1String(".qm")))
         QCoreApplication::installTranslator(qtTranslator);
-    translators << qtTranslator;
+    else
+        delete qtTranslator;
 #endif
     new QQmlFileSelector(q,q);
     QCoreApplication::instance()->setProperty("__qml_using_qqmlapplicationengine", QVariant(true));
@@ -90,15 +88,14 @@ void QQmlApplicationEnginePrivate::loadTranslations(const QUrl &rootFile)
     if (rootFile.scheme() != QLatin1String("file") && rootFile.scheme() != QLatin1String("qrc"))
         return;
 
-    QFileInfo fi(rootFile.toLocalFile());
+    QFileInfo fi(QQmlFile::urlToLocalFileOrQrc(rootFile));
 
-    QTranslator *translator = new QTranslator;
-    if (translator->load(QLocale(), QLatin1String("qml"), QLatin1String("_"), fi.path() + QLatin1String("/i18n"))) {
+    Q_Q(QQmlApplicationEngine);
+    QTranslator *translator = new QTranslator(q);
+    if (translator->load(QLocale(), QLatin1String("qml"), QLatin1String("_"), fi.path() + QLatin1String("/i18n"), QLatin1String(".qm")))
         QCoreApplication::installTranslator(translator);
-        translators << translator;
-    } else {
+    else
         delete translator;
-    }
 #else
     Q_UNUSED(rootFile)
 #endif
@@ -180,6 +177,9 @@ void QQmlApplicationEnginePrivate::finishLoad(QQmlComponent *c)
   \list
   \li Connecting Qt.quit() to QCoreApplication::quit()
   \li Automatically loads translation files from an i18n directory adjacent to the main QML file.
+      \list
+          \li Translation files must have "qml_" prefix e.g. qml_ja_JP.qm.
+      \endlist
   \li Automatically sets an incubation controller if the scene contains a QQuickWindow.
   \li Automatically sets a \c QQmlFileSelector as the url interceptor, applying file selectors to all
   QML files and assets.

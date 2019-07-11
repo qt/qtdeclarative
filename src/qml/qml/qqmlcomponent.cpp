@@ -64,7 +64,6 @@
 #include <QThreadStorage>
 #include <QtCore/qdebug.h>
 #include <qqmlinfo.h>
-#include "qqmlmemoryprofiler_p.h"
 
 namespace {
     QThreadStorage<int> creationDepth;
@@ -774,7 +773,6 @@ QQmlComponent::QQmlComponent(QQmlComponentPrivate &dd, QObject *parent)
 QObject *QQmlComponent::create(QQmlContext *context)
 {
     Q_D(QQmlComponent);
-    QML_MEMORY_SCOPE_URL(url());
 
     if (!context)
         context = d->engine->rootContext();
@@ -1206,7 +1204,7 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
     \js
         var component = Qt.createComponent("Button.qml");
         if (component.status == Component.Ready)
-            component.createObject(parent, {"x": 100, "y": 100});
+            component.createObject(parent, {x: 100, y: 100});
     \endjs
 
     Dynamically created instances can be deleted with the \c destroy() method.

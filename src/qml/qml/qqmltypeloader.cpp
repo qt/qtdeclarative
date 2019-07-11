@@ -47,7 +47,6 @@
 #include <private/qv4codegen_p.h>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlprofiler_p.h>
-#include <private/qqmlmemoryprofiler_p.h>
 #include <private/qqmltypecompiler_p.h>
 #include <private/qqmlpropertyvalidator_p.h>
 #include <private/qqmlpropertycachecreator_p.h>
@@ -459,25 +458,25 @@ void QQmlDataBlob::setError(const QList<QQmlError> &errors)
         tryDone();
 }
 
-void QQmlDataBlob::setError(const QQmlCompileError &error)
+void QQmlDataBlob::setError(const QQmlJS::DiagnosticMessage &error)
 {
     QQmlError e;
-    e.setColumn(error.location.column);
-    e.setLine(error.location.line);
-    e.setDescription(error.description);
+    e.setColumn(error.column);
+    e.setLine(error.line);
+    e.setDescription(error.message);
     e.setUrl(url());
     setError(e);
 }
 
-void QQmlDataBlob::setError(const QVector<QQmlCompileError> &errors)
+void QQmlDataBlob::setError(const QVector<QQmlJS::DiagnosticMessage> &errors)
 {
     QList<QQmlError> finalErrors;
     finalErrors.reserve(errors.count());
-    for (const QQmlCompileError &error: errors) {
+    for (const auto &error : errors) {
         QQmlError e;
-        e.setColumn(error.location.column);
-        e.setLine(error.location.line);
-        e.setDescription(error.description);
+        e.setColumn(error.column);
+        e.setLine(error.line);
+        e.setDescription(error.message);
         e.setUrl(url());
         finalErrors << e;
     }
@@ -757,13 +756,13 @@ QQmlDataBlob::ThreadData::ThreadData()
 
 QQmlDataBlob::Status QQmlDataBlob::ThreadData::status() const
 {
-    return QQmlDataBlob::Status((_p.load() & TD_STATUS_MASK) >> TD_STATUS_SHIFT);
+    return QQmlDataBlob::Status((_p.loadRelaxed() & TD_STATUS_MASK) >> TD_STATUS_SHIFT);
 }
 
 void QQmlDataBlob::ThreadData::setStatus(QQmlDataBlob::Status status)
 {
     while (true) {
-        int d = _p.load();
+        int d = _p.loadRelaxed();
         int nd = (d & ~TD_STATUS_MASK) | ((status << TD_STATUS_SHIFT) & TD_STATUS_MASK);
         if (d == nd || _p.testAndSetOrdered(d, nd)) return;
     }
@@ -771,13 +770,13 @@ void QQmlDataBlob::ThreadData::setStatus(QQmlDataBlob::Status status)
 
 bool QQmlDataBlob::ThreadData::isAsync() const
 {
-    return _p.load() & TD_ASYNC_MASK;
+    return _p.loadRelaxed() & TD_ASYNC_MASK;
 }
 
 void QQmlDataBlob::ThreadData::setIsAsync(bool v)
 {
     while (true) {
-        int d = _p.load();
+        int d = _p.loadRelaxed();
         int nd = (d & ~TD_ASYNC_MASK) | (v?TD_ASYNC_MASK:0);
         if (d == nd || _p.testAndSetOrdered(d, nd)) return;
     }
@@ -785,13 +784,13 @@ void QQmlDataBlob::ThreadData::setIsAsync(bool v)
 
 quint8 QQmlDataBlob::ThreadData::progress() const
 {
-    return quint8((_p.load() & TD_PROGRESS_MASK) >> TD_PROGRESS_SHIFT);
+    return quint8((_p.loadRelaxed() & TD_PROGRESS_MASK) >> TD_PROGRESS_SHIFT);
 }
 
 void QQmlDataBlob::ThreadData::setProgress(quint8 v)
 {
     while (true) {
-        int d = _p.load();
+        int d = _p.loadRelaxed();
         int nd = (d & ~TD_PROGRESS_MASK) | ((v << TD_PROGRESS_SHIFT) & TD_PROGRESS_MASK);
         if (d == nd || _p.testAndSetOrdered(d, nd)) return;
     }
@@ -921,7 +920,6 @@ void QQmlTypeLoaderThread::loadWithCachedUnitThread(QQmlDataBlob *b, const QV4::
 
 void QQmlTypeLoaderThread::callCompletedMain(QQmlDataBlob *b)
 {
-    QML_MEMORY_SCOPE_URL(b->url());
 #ifdef DATABLOB_DEBUG
     qWarning("QQmlTypeLoaderThread: %s completed() callback", qPrintable(b->urlString()));
 #endif
@@ -1147,8 +1145,6 @@ void QQmlTypeLoader::loadThread(QQmlDataBlob *blob)
         return;
     }
 
-    QML_MEMORY_SCOPE_URL(blob->m_url);
-
     if (QQmlFile::isSynchronous(blob->m_url)) {
         const QString fileName = QQmlFile::urlToLocalFileOrQrc(blob->m_url);
         if (!QQml_isFileCaseCorrect(fileName)) {
@@ -1278,7 +1274,6 @@ void QQmlTypeLoader::initializeEngine(QQmlExtensionInterface *iface,
 
 void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QByteArray &data)
 {
-    QML_MEMORY_SCOPE_URL(blob->url());
     QQmlDataBlob::SourceCodeData d;
     d.inlineSourceCode = QString::fromUtf8(data);
     d.hasInlineSourceCode = true;
@@ -1287,7 +1282,6 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QByteArray &data)
 
 void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QString &fileName)
 {
-    QML_MEMORY_SCOPE_URL(blob->url());
     QQmlDataBlob::SourceCodeData d;
     d.fileInfo = QFileInfo(fileName);
     setData(blob, d);
@@ -1295,7 +1289,6 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QString &fileName)
 
 void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::SourceCodeData &d)
 {
-    QML_MEMORY_SCOPE_URL(blob->url());
     QQmlCompilingProfiler prof(profiler(), blob);
 
     blob->m_inCallback = true;
@@ -1315,7 +1308,6 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::SourceCodeD
 
 void QQmlTypeLoader::setCachedUnit(QQmlDataBlob *blob, const QV4::CompiledData::Unit *unit)
 {
-    QML_MEMORY_SCOPE_URL(blob->url());
     QQmlCompilingProfiler prof(profiler(), blob);
 
     blob->m_inCallback = true;
@@ -1584,7 +1576,17 @@ bool QQmlTypeLoaderQmldirContent::hasError() const
 
 QList<QQmlError> QQmlTypeLoaderQmldirContent::errors(const QString &uri) const
 {
-    return m_parser.errors(uri);
+    QList<QQmlError> errors;
+    const QUrl url(uri);
+    for (const auto parseError : m_parser.errors(uri)) {
+        QQmlError error;
+        error.setUrl(url);
+        error.setLine(parseError.line);
+        error.setColumn(parseError.column);
+        error.setDescription(parseError.message);
+        errors.append(error);
+    }
+    return errors;
 }
 
 QString QQmlTypeLoaderQmldirContent::typeNamespace() const
@@ -1601,7 +1603,11 @@ void QQmlTypeLoaderQmldirContent::setContent(const QString &location, const QStr
 
 void QQmlTypeLoaderQmldirContent::setError(const QQmlError &error)
 {
-    m_parser.setError(error);
+    QQmlJS::DiagnosticMessage parseError;
+    parseError.line = error.line();
+    parseError.column = error.column();
+    parseError.message = error.description();
+    m_parser.setError(parseError);
 }
 
 QQmlDirComponents QQmlTypeLoaderQmldirContent::components() const
@@ -2248,8 +2254,8 @@ void QQmlTypeData::createTypeAndPropertyCaches(
         QQmlPropertyCacheCreator<QV4::ExecutableCompilationUnit> propertyCacheCreator(
                 &m_compiledData->propertyCaches, &pendingGroupPropertyBindings, engine,
                 m_compiledData.data(), &m_importCache);
-        QQmlCompileError error = propertyCacheCreator.buildMetaObjects();
-        if (error.isSet()) {
+        QQmlJS::DiagnosticMessage error = propertyCacheCreator.buildMetaObjects();
+        if (error.isValid()) {
             setError(error);
             return;
         }
@@ -2350,8 +2356,8 @@ void QQmlTypeData::done()
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
     QV4::ResolvedTypeReferenceMap resolvedTypeCache;
     {
-        QQmlCompileError error = buildTypeResolutionCaches(&typeNameCache, &resolvedTypeCache);
-        if (error.isSet()) {
+        QQmlJS::DiagnosticMessage error = buildTypeResolutionCaches(&typeNameCache, &resolvedTypeCache);
+        if (error.isValid()) {
             setError(error);
             return;
         }
@@ -2391,7 +2397,7 @@ void QQmlTypeData::done()
         {
         // Sanity check property bindings
             QQmlPropertyValidator validator(enginePrivate, m_importCache, m_compiledData);
-            QVector<QQmlCompileError> errors = validator.validate();
+            QVector<QQmlJS::DiagnosticMessage> errors = validator.validate();
             if (!errors.isEmpty()) {
                 setError(errors);
                 return;
@@ -2535,8 +2541,8 @@ bool QQmlTypeData::loadFromSource()
         for (const QQmlJS::DiagnosticMessage &msg : qAsConst(compiler.errors)) {
             QQmlError e;
             e.setUrl(url());
-            e.setLine(msg.loc.startLine);
-            e.setColumn(msg.loc.startColumn);
+            e.setLine(msg.line);
+            e.setColumn(msg.column);
             e.setDescription(msg.message);
             errors << e;
         }
@@ -2775,7 +2781,7 @@ void QQmlTypeData::resolveTypes()
         loadImplicitImport();
 }
 
-QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(
+QQmlJS::DiagnosticMessage QQmlTypeData::buildTypeResolutionCaches(
         QQmlRefPointer<QQmlTypeNameCache> *typeNameCache,
         QV4::ResolvedTypeReferenceMap *resolvedTypeCache
         ) const
@@ -2798,7 +2804,7 @@ QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(
         QQmlType qmlType = resolvedType->type;
         if (resolvedType->typeData) {
             if (resolvedType->needsCreation && qmlType.isCompositeSingleton()) {
-                return QQmlCompileError(resolvedType->location, tr("Composite Singleton Type %1 is not creatable.").arg(qmlType.qmlTypeName()));
+                return qQmlCompileError(resolvedType->location, tr("Composite Singleton Type %1 is not creatable.").arg(qmlType.qmlTypeName()));
             }
             ref->compilationUnit = resolvedType->typeData->compilationUnit();
         } else if (qmlType.isValid()) {
@@ -2809,7 +2815,7 @@ QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(
                 QString reason = ref->type.noCreationReason();
                 if (reason.isEmpty())
                     reason = tr("Element is not creatable.");
-                return QQmlCompileError(resolvedType->location, reason);
+                return qQmlCompileError(resolvedType->location, reason);
             }
 
             if (ref->type.containsRevisionedAttributes()) {
@@ -2822,7 +2828,7 @@ QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(
         ref->doDynamicTypeCheck();
         resolvedTypeCache->insert(resolvedType.key(), ref.take());
     }
-    QQmlCompileError noError;
+    QQmlJS::DiagnosticMessage noError;
     return noError;
 }
 

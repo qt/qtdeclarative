@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qt_module(QuickShapes
+    INTERNAL_MODULE
     SOURCES
         qquickshape.cpp qquickshape_p.h
         qquickshape_p_p.h
@@ -38,7 +39,13 @@ add_qt_resource(QuickShapes "qtquickshapes" PREFIX "/qt-project.org/shapes" FILE
     shaders/radialgradient.frag
     shaders/radialgradient.vert
     shaders/radialgradient_core.frag
-    shaders/radialgradient_core.vert)
+    shaders/radialgradient_core.vert
+    shaders_ng/conicalgradient.frag.qsb
+    shaders_ng/conicalgradient.vert.qsb
+    shaders_ng/lineargradient.frag.qsb
+    shaders_ng/lineargradient.vert.qsb
+    shaders_ng/radialgradient.frag.qsb
+    shaders_ng/radialgradient.vert.qsb)
 
 
 #### Keys ignored in scope 1:.:.:quickshapes.pro:<TRUE>:

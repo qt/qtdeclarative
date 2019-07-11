@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.2
+import QtQuick 2.12
 
 /*
     The test verifies that batching does not interfere with overlapping
@@ -71,7 +71,9 @@ RenderTestBase
         width: 100
         height: 9
         y: 10
-        fragmentShader: "varying highp vec2 qt_TexCoord0; void main() { gl_FragColor = vec4(1, 0, 0, 1); }"
+        fragmentShader: GraphicsInfo.shaderType === GraphicsInfo.GLSL
+                        ? "varying highp vec2 qt_TexCoord0; void main() { gl_FragColor = vec4(1, 0, 0, 1); }"
+                        : "file:data/render_bug37422.frag.qsb"
 
         Rectangle {
             width: 5

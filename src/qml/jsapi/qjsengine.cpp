@@ -490,7 +490,7 @@ void QJSEngine::setInterrupted(bool interrupted)
 */
 bool QJSEngine::isInterrupted() const
 {
-    return m_v4Engine->isInterrupted;
+    return m_v4Engine->isInterrupted.loadAcquire();
 }
 
 static QUrl urlForFileName(const QString &fileName)
@@ -550,7 +550,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
         result = script.run();
     if (scope.engine->hasException)
         result = v4->catchException();
-    if (v4->isInterrupted)
+    if (v4->isInterrupted.loadAcquire())
         result = v4->newErrorObject(QStringLiteral("Interrupted"));
 
     QJSValue retval(v4, result->asReturnedValue());
@@ -590,7 +590,7 @@ QJSValue QJSEngine::importModule(const QString &fileName)
     if (m_v4Engine->hasException)
         return QJSValue(m_v4Engine, m_v4Engine->catchException());
     moduleUnit->evaluate();
-    if (!m_v4Engine->isInterrupted)
+    if (!m_v4Engine->isInterrupted.loadAcquire())
         return QJSValue(m_v4Engine, moduleNamespace->asReturnedValue());
 
     return QJSValue(

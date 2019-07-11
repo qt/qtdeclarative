@@ -206,8 +206,8 @@ public:
             axisData->move.setValue(-flickable->contentX());
         else
             axisData->move.setValue(-flickable->contentY());
-        cancel();
         active = false;
+        cancel();
     }
 
 protected:

@@ -317,6 +317,12 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
         d->propertyValues[idx] = value;
         QMetaObject::activate(this, d->notifyIndex, idx, nullptr);
     }
+
+    if (auto *obj = qvariant_cast<QObject *>(value)) {
+        connect(obj, &QObject::destroyed, this, [d, name](QObject *destroyed) {
+            d->dropDestroyedQObject(name, destroyed);
+        });
+    }
 }
 
 /*!
@@ -522,6 +528,17 @@ QObject *QQmlContextPrivate::context_at(QQmlListProperty<QObject> *prop, int ind
     } else {
         return ((const QList<QObject*> *)d->propertyValues.at(contextProperty).constData())->at(index);
     }
+}
+
+void QQmlContextPrivate::dropDestroyedQObject(const QString &name, QObject *destroyed)
+{
+    const int idx = data->propertyNames().value(name);
+    Q_ASSERT(idx >= 0);
+    if (qvariant_cast<QObject *>(propertyValues[idx]) != destroyed)
+        return;
+
+    propertyValues[idx] = QVariant::fromValue<QObject *>(nullptr);
+    QMetaObject::activate(q_func(), notifyIndex, idx, nullptr);
 }
 
 
