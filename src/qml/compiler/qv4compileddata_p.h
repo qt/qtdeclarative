@@ -77,7 +77,6 @@ QT_BEGIN_NAMESPACE
 #define QV4_DATA_STRUCTURE_VERSION 0x24 // Collect function parameter types
 
 class QIODevice;
-class QQmlPropertyData;
 class QQmlTypeNameCache;
 class QQmlType;
 class QQmlEngine;
@@ -1094,9 +1093,6 @@ struct TypeReferenceMap : QHash<int, TypeReference>
 };
 
 using DependentTypesHasher = std::function<QByteArray()>;
-
-// index is per-object binding index
-typedef QVector<QQmlPropertyData*> BindingPropertyData;
 
 // This is how this hooks into the existing structures:
 

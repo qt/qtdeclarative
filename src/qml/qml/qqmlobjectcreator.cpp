@@ -736,7 +736,7 @@ void QQmlObjectCreator::setupBindings(bool applyDeferredBindings)
     QQmlListProperty<void> savedList;
     qSwap(_currentList, savedList);
 
-    const QV4::CompiledData::BindingPropertyData &propertyData = compilationUnit->bindingPropertyDataPerObject.at(_compiledObjectIndex);
+    const QV4::BindingPropertyData &propertyData = compilationUnit->bindingPropertyDataPerObject.at(_compiledObjectIndex);
 
     if (_compiledObject->idNameIndex) {
         const QQmlPropertyData *idProperty = propertyData.last();

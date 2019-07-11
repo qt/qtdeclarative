@@ -65,6 +65,9 @@ class QQmlScriptData;
 class QQmlEnginePrivate;
 namespace QV4 {
 
+// index is per-object binding index
+typedef QVector<QQmlPropertyData*> BindingPropertyData;
+
 class CompilationUnitMapper;
 struct ResolvedTypeReference;
 // map from name index
@@ -132,7 +135,7 @@ public:
     // index is object index. This allows fast access to the
     // property data when initializing bindings, avoiding expensive
     // lookups by string (property name).
-    QVector<CompiledData::BindingPropertyData> bindingPropertyDataPerObject;
+    QVector<BindingPropertyData> bindingPropertyDataPerObject;
 
     // mapping from component object index (CompiledData::Unit object index that points to component) to identifier hash of named objects
     // this is initialized on-demand by QQmlContextData
