@@ -73,8 +73,7 @@ public:
 #endif
         QQmlQtQuick2Module::defineModule();
 
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
-        qmlRegisterModule("QtQuick", 2, QT_VERSION_MINOR);
+        qmlRegisterModule("QtQuick", 2, 15);
     }
 
     ~QtQuick2Plugin() override

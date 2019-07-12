@@ -60,8 +60,7 @@ public:
         qmlRegisterType<QQuickFolderListModel,1>(uri,2,1,"FolderListModel");
         qmlRegisterType<QQuickFolderListModel,2>(uri,2,2,"FolderListModel");
 
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
-        qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
+        qmlRegisterModule(uri, 2, 15);
 
         // revision in Qt 5.11: added status property
         qmlRegisterType<QQuickFolderListModel,11>(uri, 2, 11, "FolderListModel");
