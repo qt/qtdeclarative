@@ -102,8 +102,8 @@ void QQmlModelsModule::defineModule()
     const char uri[] = "QtQml.Models";
 
 #if QT_CONFIG(qml_list_model)
-    qmlRegisterType<QQmlListElement>(uri, 2, 1, "ListElement");
-    qmlRegisterCustomType<QQmlListModel>(uri, 2, 1, "ListModel", new QQmlListModelParser);
+    qmlRegisterType<QQmlListElement>(uri, 2, 0, "ListElement");
+    qmlRegisterCustomType<QQmlListModel>(uri, 2, 0, "ListModel", new QQmlListModelParser);
 #endif
 #if QT_CONFIG(qml_delegate_model)
     qmlRegisterType<QQmlDelegateModel>(uri, 2, 1, "DelegateModel");
