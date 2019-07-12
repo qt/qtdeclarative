@@ -53,17 +53,16 @@
 #include <private/qqmlimport_p.h>
 #include <private/qqmltypenamecache_p.h>
 #include <private/qv4compileddata_p.h>
-#include <private/qqmltypecompiler_p.h>
 #include <private/qfinitestack_p.h>
 #include <private/qrecursionwatcher_p.h>
 #include <private/qqmlprofiler_p.h>
+#include <private/qv4qmlcontext_p.h>
 
 #include <qpointer.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlAbstractBinding;
-struct QQmlTypeCompiler;
 class QQmlInstantiationInterrupt;
 class QQmlIncubatorPrivate;
 

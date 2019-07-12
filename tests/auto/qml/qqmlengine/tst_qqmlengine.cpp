@@ -43,6 +43,7 @@
 #include <QQmlIncubationController>
 #include <QTemporaryDir>
 #include <private/qqmlengine_p.h>
+#include <private/qqmltypedata_p.h>
 #include <QQmlAbstractUrlInterceptor>
 
 class tst_qqmlengine : public QQmlDataTest

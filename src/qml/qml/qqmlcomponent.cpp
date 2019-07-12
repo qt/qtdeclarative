@@ -569,6 +569,12 @@ void QQmlComponent::setData(const QByteArray &data, const QUrl &url)
 {
     Q_D(QQmlComponent);
 
+    if (!d->engine) {
+        // ###Qt6: In Qt 6, it should be impossible for users to create a QQmlComponent without an engine, and we can remove this check
+        qWarning("QQmlComponent: Must provide an engine before calling setData");
+        return;
+    }
+
     d->clear();
 
     d->url = url;
@@ -773,6 +779,12 @@ QQmlComponent::QQmlComponent(QQmlComponentPrivate &dd, QObject *parent)
 QObject *QQmlComponent::create(QQmlContext *context)
 {
     Q_D(QQmlComponent);
+
+    if (!d->engine) {
+        // ###Qt6: In Qt 6, it should be impossible for users to create a QQmlComponent without an engine, and we can remove this check
+        qWarning("QQmlComponent: Must provide an engine before calling create");
+        return nullptr;
+    }
 
     if (!context)
         context = d->engine->rootContext();

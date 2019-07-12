@@ -59,8 +59,8 @@ Rectangle {
 
 //! [signal declaration]
     signal trigger
-    signal send (string notice)
-    signal perform (string task, variant object)
+    signal send(notice: string)
+    signal perform(task: string, object: variant)
 //! [signal declaration]
 
 //! [signal handler declaration]
@@ -88,7 +88,7 @@ Rectangle {
 Rectangle {
     id: messenger
 
-    signal send( string person, string notice)
+    signal send(person: string, notice: string)
 
     onSend: {
         console.log("For " + person + ", the notice is: " + notice)
@@ -102,7 +102,7 @@ Rectangle {
 Rectangle {
     id: relay
 
-    signal send( string person, string notice)
+    signal send(person: string, notice: string)
     onSend: console.log("Send signal to: " + person + ", " + notice)
 
     Component.onCompleted: {

@@ -19,31 +19,6 @@ gcc:isEqual(QT_ARCH, "mips"): QMAKE_CXXFLAGS += -fno-reorder-blocks
 
 DEFINES += QT_NO_FOREACH
 
-!build_pass {
-    # Create a header containing a hash that describes this library.  For a
-    # released version of Qt, we'll use the .tag file that is updated by git
-    # archive with the commit hash. For unreleased versions, we'll ask git
-    # describe. Note that it won't update unless qmake is run again, even if
-    # the commit change also changed something in this library.
-    tagFile = $$PWD/../../.tag
-    tag =
-    exists($$tagFile) {
-        tag = $$cat($$tagFile, singleline)
-        QMAKE_INTERNAL_INCLUDED_FILES += $$tagFile
-    }
-    !equals(tag, "$${LITERAL_DOLLAR}Format:%H$${LITERAL_DOLLAR}") {
-        QML_COMPILE_HASH = $$tag
-    } else:exists($$PWD/../../.git) {
-        commit = $$system(git rev-parse HEAD)
-        QML_COMPILE_HASH = $$commit
-    }
-    compile_hash_contents = \
-        "// Generated file, DO NOT EDIT" \
-        "$${LITERAL_HASH}define QML_COMPILE_HASH \"$$QML_COMPILE_HASH\"" \
-        "$${LITERAL_HASH}define QML_COMPILE_HASH_LENGTH $$str_size($$QML_COMPILE_HASH)"
-    write_file("$$OUT_PWD/qml_compile_hash_p.h", compile_hash_contents)|error()
-}
-
 exists("qqml_enable_gcov") {
     QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage -fno-elide-constructors
     LIBS_PRIVATE += -lgcov
@@ -64,7 +39,9 @@ greaterThan(QT_CLANG_MAJOR_VERSION, 3)|greaterThan(QT_CLANG_MINOR_VERSION, 3)| \
     WERROR += -Wno-error=unused-const-variable
 
 HEADERS += qtqmlglobal.h \
-           qtqmlglobal_p.h
+           qtqmlglobal_p.h \
+           qtqmlcompilerglobal.h \
+           qtqmlcompilerglobal_p.h
 
 #modules
 include(common/common.pri)

@@ -403,6 +403,15 @@ public:
     virtual bool visit(DebuggerStatement *) { return true; }
     virtual void endVisit(DebuggerStatement *) {}
 
+    virtual bool visit(Type *) { return true; }
+    virtual void endVisit(Type *) {}
+
+    virtual bool visit(TypeArgumentList *) { return true; }
+    virtual void endVisit(TypeArgumentList *) {}
+
+    virtual bool visit(TypeAnnotation *) { return true; }
+    virtual void endVisit(TypeAnnotation *) {}
+
     virtual void throwRecursionDepthError() = 0;
 
     quint16 recursionDepth() const { return m_recursionDepth; }

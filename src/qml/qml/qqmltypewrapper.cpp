@@ -42,6 +42,7 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmlcontext_p.h>
 #include <private/qqmlmetaobject_p.h>
+#include <private/qqmltypedata_p.h>
 
 #include <private/qjsvalue_p.h>
 #include <private/qv4functionobject_p.h>

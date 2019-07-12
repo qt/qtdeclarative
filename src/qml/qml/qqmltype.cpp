@@ -48,6 +48,7 @@
 #include <private/qqmldata_p.h>
 #include <private/qqmlmetatypedata_p.h>
 #include <private/qqmlpropertycache_p.h>
+#include <private/qqmltypedata_p.h>
 
 QT_BEGIN_NAMESPACE
 

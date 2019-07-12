@@ -49,6 +49,7 @@
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
+#include <private/qv4qmlcontext_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4variantobject_p.h>
 #include <private/qv4jscall_p.h>

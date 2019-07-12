@@ -34,6 +34,7 @@
 #include <private/qv4codegen_p.h>
 #include <private/qqmlcomponent_p.h>
 #include <private/qv4executablecompilationunit_p.h>
+#include <private/qqmlscriptdata_p.h>
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QQmlFileSelector>

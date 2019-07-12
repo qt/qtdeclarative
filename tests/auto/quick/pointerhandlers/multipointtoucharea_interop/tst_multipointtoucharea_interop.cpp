@@ -136,7 +136,6 @@ void tst_MptaInterop::touchDrag()
 // TODO touchesThenPinch_data with press/release sequences somehow: vectors of touchpoint IDs? or a string representation?
 void tst_MptaInterop::touchesThenPinch()
 {
-    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
     QScopedPointer<QQuickView> windowPtr;
     createView(windowPtr, "pinchDragMPTA.qml");
     QQuickView * window = windowPtr.data();

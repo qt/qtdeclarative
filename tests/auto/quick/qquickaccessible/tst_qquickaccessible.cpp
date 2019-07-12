@@ -338,7 +338,7 @@ void tst_QQuickAccessible::basicPropertiesTest()
     QCOMPARE(text2->rect().y(), item->rect().y() + 40);
     QCOMPARE(text2->role(), QAccessible::StaticText);
     QCOMPARE(item->indexOfChild(text2), 1);
-    QCOMPARE(text2->state().editable, 0);
+    QCOMPARE(text2->state().editable, 0u);
     QCOMPARE(text2->state().readOnly, 1);
 
     QCOMPARE(iface->indexOfChild(text2), -1);

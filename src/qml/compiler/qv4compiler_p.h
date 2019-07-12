@@ -53,9 +53,10 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qhash.h>
 #include <QtCore/qstringlist.h>
-#include <private/qv4global_p.h>
+#include <private/qv4compilerglobal_p.h>
 #include <private/qqmljsastfwd_p.h>
 #include <private/qv4compileddata_p.h>
+#include <private/qv4staticvalue_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -72,10 +73,12 @@ struct JSClassMember;
 
 namespace Compiler {
 
+struct Context;
+struct Module;
 struct Class;
 struct TemplateObject;
 
-struct Q_QML_PRIVATE_EXPORT StringTableGenerator {
+struct Q_QMLCOMPILER_PRIVATE_EXPORT StringTableGenerator {
     StringTableGenerator();
 
     int registerString(const QString &str);
@@ -102,7 +105,7 @@ private:
     bool frozen = false;
 };
 
-struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
+struct Q_QMLCOMPILER_PRIVATE_EXPORT JSUnitGenerator {
     static void generateUnitChecksum(CompiledData::Unit *unit);
 
     struct MemberInfo {

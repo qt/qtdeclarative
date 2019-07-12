@@ -40,8 +40,11 @@
 #include "qqmlpropertyvalidator_p.h"
 
 #include <private/qqmlcustomparser_p.h>
+#include <private/qqmlirbuilder_p.h>
 #include <private/qqmlstringconverters_p.h>
+#include <private/qqmlpropertycachecreator_p.h>
 #include <private/qqmlpropertyresolver_p.h>
+
 #include <QtCore/qdatetime.h>
 
 QT_BEGIN_NAMESPACE
@@ -136,7 +139,7 @@ QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::validateObject(
         defaultProperty = propertyCache->defaultProperty();
     }
 
-    QV4::CompiledData::BindingPropertyData collectedBindingPropertyData(obj->nBindings);
+    QV4::BindingPropertyData collectedBindingPropertyData(obj->nBindings);
 
     binding = obj->bindingTable();
     for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {

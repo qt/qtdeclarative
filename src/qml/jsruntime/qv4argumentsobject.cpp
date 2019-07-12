@@ -38,12 +38,13 @@
 ****************************************************************************/
 #include <qv4argumentsobject_p.h>
 #include <qv4arrayobject_p.h>
-#include <qv4alloca_p.h>
 #include <qv4scopedvalue_p.h>
 #include <qv4string_p.h>
 #include <qv4function_p.h>
 #include <qv4jscall_p.h>
 #include <qv4symbol_p.h>
+
+#include <private/qv4alloca_p.h>
 
 using namespace QV4;
 

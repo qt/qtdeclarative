@@ -55,7 +55,7 @@ Item {
     id: item
     width: 100; height: 100
 
-    signal qmlSignal(string msg)
+    signal qmlSignal(msg: string)
 
     MouseArea {
         anchors.fill: parent

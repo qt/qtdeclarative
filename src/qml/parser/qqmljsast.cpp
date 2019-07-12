@@ -131,7 +131,7 @@ FormalParameterList *ExpressionNode::reparseAsFormalParameterList(MemoryPool *po
     }
     AST::PatternElement *binding = nullptr;
     if (AST::IdentifierExpression *idExpr = AST::cast<AST::IdentifierExpression *>(expr)) {
-        binding = new (pool) AST::PatternElement(idExpr->name, rhs);
+        binding = new (pool) AST::PatternElement(idExpr->name, /*type annotation*/nullptr, rhs);
         binding->identifierToken = idExpr->identifierToken;
     } else if (AST::Pattern *p = expr->patternCast()) {
         SourceLocation loc;
@@ -961,6 +961,7 @@ void FunctionDeclaration::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
         accept(formals, visitor);
+        accept(typeAnnotation, visitor);
         accept(body, visitor);
     }
 
@@ -971,6 +972,7 @@ void FunctionExpression::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
         accept(formals, visitor);
+        accept(typeAnnotation, visitor);
         accept(body, visitor);
     }
 
@@ -982,9 +984,9 @@ FunctionExpression *FunctionExpression::asFunctionDefinition()
     return this;
 }
 
-QStringList FormalParameterList::formals() const
+BoundNames FormalParameterList::formals() const
 {
-    QStringList formals;
+    BoundNames formals;
     int i = 0;
     for (const FormalParameterList *it = this; it; it = it->next) {
         if (it->element) {
@@ -992,18 +994,18 @@ QStringList FormalParameterList::formals() const
             int duplicateIndex = formals.indexOf(name);
             if (duplicateIndex >= 0) {
                 // change the name of the earlier argument to enforce the lookup semantics from the spec
-                formals[duplicateIndex] += QLatin1String("#") + QString::number(i);
+                formals[duplicateIndex].id += QLatin1String("#") + QString::number(i);
             }
-            formals += name;
+            formals += {name, it->element->typeAnnotation};
         }
         ++i;
     }
     return formals;
 }
 
-QStringList FormalParameterList::boundNames() const
+BoundNames FormalParameterList::boundNames() const
 {
-    QStringList names;
+    BoundNames names;
     for (const FormalParameterList *it = this; it; it = it->next) {
         if (it->element)
             it->element->boundNames(&names);
@@ -1271,6 +1273,35 @@ void UiQualifiedId::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
+void Type::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(typeId, visitor);
+        accept(typeArguments, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
+void TypeArgumentList::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        for (TypeArgumentList *it = this; it; it = it->next)
+            accept(it->typeId, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
+void TypeAnnotation::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(type, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
 void UiImport::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
@@ -1339,13 +1370,14 @@ void PatternElement::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
         accept(bindingTarget, visitor);
+        accept(typeAnnotation, visitor);
         accept(initializer, visitor);
     }
 
     visitor->endVisit(this);
 }
 
-void PatternElement::boundNames(QStringList *names)
+void PatternElement::boundNames(BoundNames *names)
 {
     if (bindingTarget) {
         if (PatternElementList *e = elementList())
@@ -1353,7 +1385,7 @@ void PatternElement::boundNames(QStringList *names)
         else if (PatternPropertyList *p = propertyList())
             p->boundNames(names);
     } else {
-        names->append(bindingIdentifier.toString());
+        names->append({bindingIdentifier.toString(), typeAnnotation});
     }
 }
 
@@ -1369,7 +1401,7 @@ void PatternElementList::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-void PatternElementList::boundNames(QStringList *names)
+void PatternElementList::boundNames(BoundNames *names)
 {
     for (PatternElementList *it = this; it; it = it->next) {
         if (it->element)
@@ -1382,13 +1414,14 @@ void PatternProperty::accept0(Visitor *visitor)
     if (visitor->visit(this)) {
         accept(name, visitor);
         accept(bindingTarget, visitor);
+        accept(typeAnnotation, visitor);
         accept(initializer, visitor);
     }
 
     visitor->endVisit(this);
 }
 
-void PatternProperty::boundNames(QStringList *names)
+void PatternProperty::boundNames(BoundNames *names)
 {
     PatternElement::boundNames(names);
 }
@@ -1404,7 +1437,7 @@ void PatternPropertyList::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-void PatternPropertyList::boundNames(QStringList *names)
+void PatternPropertyList::boundNames(BoundNames *names)
 {
     for (PatternPropertyList *it = this; it; it = it->next)
         it->property->boundNames(names);
@@ -1478,6 +1511,31 @@ void UiVersionSpecifier::accept0(Visitor *visitor)
     }
     visitor->endVisit(this);
 }
+
+QString Type::toString() const
+{
+    QString result;
+    toString(&result);
+    return result;
+}
+
+void Type::toString(QString *out) const
+{
+    for (QQmlJS::AST::UiQualifiedId *it = typeId; it; it = it->next) {
+        out->append(it->name);
+
+        if (it->next)
+            out->append(QLatin1Char('.'));
+    }
+
+    if (typeArguments) {
+        out->append(QLatin1Char('<'));
+        if (auto subType = static_cast<TypeArgumentList*>(typeArguments)->typeId)
+            subType->toString(out);
+        out->append(QLatin1Char('>'));
+    };
+}
+
 } } // namespace QQmlJS::AST
 
 QT_END_NAMESPACE

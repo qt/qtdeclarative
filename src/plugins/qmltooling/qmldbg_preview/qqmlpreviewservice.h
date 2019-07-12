@@ -99,7 +99,9 @@ signals:
     void rerun();
     void clearCache();
     void zoom(qreal factor);
+#if QT_CONFIG(translation)
     void language(const QUrl &context, const QLocale &locale);
+#endif
 
 private:
     QScopedPointer<QQmlPreviewFileEngineHandler> m_fileEngine;

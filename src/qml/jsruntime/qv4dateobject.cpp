@@ -52,8 +52,6 @@
 
 #include <time.h>
 
-#include <private/qqmljsengine_p.h>
-
 #include <wtf/MathExtras.h>
 
 #if defined(Q_OS_LINUX) && QT_CONFIG(timezone)

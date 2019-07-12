@@ -100,9 +100,9 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
         ic = ic->addMember(engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
 
-    const quint32_le *formalsIndices = compiledFunction->formalsTable();
+    const CompiledData::Parameter *formalsIndices = compiledFunction->formalsTable();
     for (quint32 i = 0; i < compiledFunction->nFormals; ++i)
-        ic = ic->addMember(engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[formalsIndices[i]]), Attr_NotConfigurable);
+        ic = ic->addMember(engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[formalsIndices[i].nameIndex]), Attr_NotConfigurable);
     internalClass = ic->d();
 
     nFormals = compiledFunction->nFormals;

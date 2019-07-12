@@ -39,8 +39,6 @@
 #include <qv4engine_p.h>
 
 #include <private/qv4compileddata_p.h>
-#include <private/qv4compiler_p.h>
-#include <private/qv4compilercontext_p.h>
 #include <private/qv4codegen_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
 

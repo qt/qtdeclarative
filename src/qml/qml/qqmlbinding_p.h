@@ -63,6 +63,7 @@
 
 #include <private/qqmlabstractbinding_p.h>
 #include <private/qqmljavascriptexpression_p.h>
+#include <private/qv4functionobject_p.h>
 
 QT_BEGIN_NAMESPACE
 

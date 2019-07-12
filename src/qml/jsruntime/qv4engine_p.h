@@ -57,7 +57,6 @@
 #include <private/qintrusivelist_p.h>
 #include "qv4enginebase_p.h"
 #include <private/qqmlrefcount_p.h>
-#include <private/qqmljsengine_p.h>
 #include <private/qqmldelayedcallqueue_p.h>
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qmutex.h>
