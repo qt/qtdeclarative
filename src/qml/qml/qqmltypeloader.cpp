@@ -517,6 +517,9 @@ bool QQmlTypeLoader::Blob::updateQmldir(const QQmlRefPointer<QQmlQmldirData> &da
     if (!m_importCache.updateQmldirContent(typeLoader()->importDatabase(), import->uri, import->qualifier, qmldirIdentifier, qmldirUrl, errors))
         return false;
 
+    if (!loadImportDependencies(import, qmldirIdentifier, errors))
+        return false;
+
     import->priority = data->priority(this);
 
     // Release this reference at destruction
@@ -571,6 +574,9 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
             // This is a local library import
             if (!m_importCache.addLibraryImport(importDatabase, import->uri, import->qualifier, import->majorVersion,
                                           import->minorVersion, qmldirFilePath, qmldirUrl, false, errors))
+                return false;
+
+            if (!loadImportDependencies(import, qmldirFilePath, errors))
                 return false;
 
             if (!import->qualifier.isEmpty()) {
@@ -675,6 +681,21 @@ void QQmlTypeLoader::Blob::dependencyComplete(QQmlDataBlob *blob)
             setError(errors);
         }
     }
+}
+
+bool QQmlTypeLoader::Blob::loadImportDependencies(PendingImportPtr currentImport, const QString &qmldirUri, QList<QQmlError> *errors)
+{
+    const QQmlTypeLoaderQmldirContent qmldir = typeLoader()->qmldirContent(qmldirUri);
+    for (const QString &implicitImports: qmldir.imports()) {
+        auto dependencyImport = std::make_shared<PendingImport>();
+        dependencyImport->uri = implicitImports;
+        dependencyImport->qualifier = currentImport->qualifier;
+        dependencyImport->majorVersion = currentImport->majorVersion;
+        dependencyImport->minorVersion = currentImport->minorVersion;
+        if (!addImport(dependencyImport, errors))
+            return false;
+    }
+    return true;
 }
 
 bool QQmlTypeLoader::Blob::isDebugging() const

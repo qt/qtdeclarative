@@ -122,6 +122,8 @@ public:
 
         void dependencyComplete(QQmlDataBlob *) override;
 
+        bool loadImportDependencies(PendingImportPtr currentImport, const QString &qmldirUri, QList<QQmlError> *errors);
+
     protected:
         virtual QString stringAt(int) const { return QString(); }
 
