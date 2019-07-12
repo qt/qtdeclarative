@@ -51,16 +51,15 @@ const QString &QQmlQmldirData::content() const
     return m_content;
 }
 
-const QV4::CompiledData::Import *QQmlQmldirData::import(QQmlTypeLoader::Blob *blob) const
+QQmlTypeLoader::Blob::PendingImportPtr QQmlQmldirData::import(QQmlTypeLoader::Blob *blob) const
 {
-    QHash<QQmlTypeLoader::Blob *, const QV4::CompiledData::Import *>::const_iterator it =
-            m_imports.find(blob);
+    auto it = m_imports.find(blob);
     if (it == m_imports.end())
         return nullptr;
     return *it;
 }
 
-void QQmlQmldirData::setImport(QQmlTypeLoader::Blob *blob, const QV4::CompiledData::Import *import)
+void QQmlQmldirData::setImport(QQmlTypeLoader::Blob *blob, QQmlTypeLoader::Blob::PendingImportPtr import)
 {
     m_imports[blob] = import;
 }

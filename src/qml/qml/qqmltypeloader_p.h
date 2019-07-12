@@ -61,6 +61,8 @@
 #include <QtCore/qcache.h>
 #include <QtCore/qmutex.h>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlScriptBlob;
@@ -87,11 +89,31 @@ public:
 
         void setCachedUnitStatus(QQmlMetaType::CachedUnitLookupError status) { m_cachedUnitStatus = status; }
 
+        struct PendingImport
+        {
+            QV4::CompiledData::Import::ImportType type = QV4::CompiledData::Import::ImportType::ImportLibrary;
+
+            QString uri;
+            QString qualifier;
+
+            int majorVersion = -1;
+            int minorVersion = -1;
+
+            QV4::CompiledData::Location location;
+
+            int priority = 0;
+
+            PendingImport() = default;
+            PendingImport(Blob *blob, const QV4::CompiledData::Import *import);
+        };
+        using PendingImportPtr = std::shared_ptr<PendingImport>;
+
     protected:
         bool addImport(const QV4::CompiledData::Import *import, QList<QQmlError> *errors);
+        bool addImport(PendingImportPtr import, QList<QQmlError> *errors);
 
-        bool fetchQmldir(const QUrl &url, const QV4::CompiledData::Import *import, int priority, QList<QQmlError> *errors);
-        bool updateQmldir(const QQmlRefPointer<QQmlQmldirData> &data, const QV4::CompiledData::Import *import, QList<QQmlError> *errors);
+        bool fetchQmldir(const QUrl &url, PendingImportPtr import, int priority, QList<QQmlError> *errors);
+        bool updateQmldir(const QQmlRefPointer<QQmlQmldirData> &data, PendingImportPtr import, QList<QQmlError> *errors);
 
     private:
         virtual bool qmldirDataAvailable(const QQmlRefPointer<QQmlQmldirData> &, QList<QQmlError> *);
@@ -109,7 +131,7 @@ public:
         static bool diskCacheForced();
 
         QQmlImports m_importCache;
-        QHash<const QV4::CompiledData::Import*, int> m_unresolvedImports;
+        QVector<PendingImportPtr> m_unresolvedImports;
         QVector<QQmlRefPointer<QQmlQmldirData>> m_qmldirs;
         QQmlMetaType::CachedUnitLookupError m_cachedUnitStatus = QQmlMetaType::CachedUnitLookupError::NoError;
     };
