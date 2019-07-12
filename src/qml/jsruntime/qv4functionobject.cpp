@@ -59,10 +59,10 @@
 #include "private/qqmlbuiltinfunctions_p.h"
 #include <private/qv4jscall_p.h>
 #include <private/qv4vme_moth_p.h>
+#include <private/qv4alloca_p.h>
 
 #include <QtCore/QDebug>
 #include <algorithm>
-#include "qv4alloca_p.h"
 #include "qv4profiling_p.h"
 
 using namespace QV4;

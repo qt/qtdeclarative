@@ -34,12 +34,19 @@
 #endif
 #include <QCoreApplication>
 
-#include <private/qv4staticvalue_p.h>
+#ifndef QT_BOOTSTRAPPED
+#include <QLibraryInfo>
+#endif
+
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsengine_p.h>
+#include <private/qqmljsastvisitor_p.h>
+#include <private/qqmljsast_p.h>
 
-static bool lint_file(const QString &filename, bool silent)
+#include "findunqualified.h"
+
+static bool lint_file(const QString &filename, const bool silent, const bool warnUnqualied, QStringList const &qmltypeDirs)
 {
     QFile file(filename);
     if (!file.open(QFile::ReadOnly)) {
@@ -67,6 +74,13 @@ static bool lint_file(const QString &filename, bool silent)
         }
     }
 
+    if (success && !isJavaScript && warnUnqualied) {
+        auto root = parser.rootNode();
+        FindUnqualifiedIDVisitor v { qmltypeDirs, code, filename};
+        root->accept(&v);
+        success = v.check();
+    }
+
     return success;
 }
 
@@ -80,8 +94,20 @@ int main(int argv, char *argc[])
     parser.setApplicationDescription(QLatin1String("QML syntax verifier"));
     parser.addHelpOption();
     parser.addVersionOption();
+
     QCommandLineOption silentOption(QStringList() << "s" << "silent", QLatin1String("Don't output syntax errors"));
     parser.addOption(silentOption);
+
+    QCommandLineOption checkUnqualified(QStringList() << "U" << "check-unqualified", QLatin1String("Warn about unqualified identifiers"));
+    parser.addOption(checkUnqualified);
+
+    QCommandLineOption qmltypesDirsOption(
+            QStringList() << "I"
+                          << "qmldirs",
+            QLatin1String("Look for qmltypes files in specified directory"),
+            QLatin1String("directory"));
+    parser.addOption(qmltypesDirsOption);
+
     parser.addPositionalArgument(QLatin1String("files"), QLatin1String("list of qml or js files to verify"));
 
     parser.process(app);
@@ -92,8 +118,18 @@ int main(int argv, char *argc[])
     }
 
     bool silent = parser.isSet(silentOption);
+    bool warnUnqualified = parser.isSet(checkUnqualified);
+    // use host qml import path as a sane default if nothing else has been provided
+    QStringList qmltypeDirs = parser.isSet(qmltypesDirsOption) ? parser.values(qmltypesDirsOption)
+#ifndef QT_BOOTSTRAPPED
+                                                               : QStringList{QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath)};
+#else
+                                                               : QStringList{};
+#endif
 #else
     bool silent = false;
+    bool warnUnqualified = false;
+    QStringList qmltypeDirs {};
 #endif
     bool success = true;
 #if QT_CONFIG(commandlineparser)
@@ -102,7 +138,7 @@ int main(int argv, char *argc[])
     const auto arguments = app.arguments();
     for (const QString &filename : arguments)
 #endif
-        success &= lint_file(filename, silent);
+        success &= lint_file(filename, silent, warnUnqualified, qmltypeDirs);
 
     return success ? 0 : -1;
 }

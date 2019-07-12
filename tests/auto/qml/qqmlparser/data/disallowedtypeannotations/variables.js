@@ -1,0 +1,2 @@
+
+var x: string = "ko"

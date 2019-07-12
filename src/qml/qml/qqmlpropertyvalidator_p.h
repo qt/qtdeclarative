@@ -50,7 +50,13 @@
 // We mean it.
 //
 
-#include <private/qqmltypecompiler_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qqmlimport_p.h>
+#include <private/qqmljsdiagnosticmessage_p.h>
+#include <private/qqmlpropertycache_p.h>
+#include <private/qv4compileddata_p.h>
+
+#include <QtCore/qcoreapplication.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -91,7 +97,7 @@ private:
     const QV4::CompiledData::Unit *qmlUnit;
     const QQmlPropertyCacheVector &propertyCaches;
 
-    QVector<QV4::CompiledData::BindingPropertyData> * const bindingPropertyDataPerObject;
+    QVector<QV4::BindingPropertyData> * const bindingPropertyDataPerObject;
 };
 
 QT_END_NAMESPACE

@@ -120,6 +120,7 @@ private slots:
     void setNonExistentInitialProperty();
     void relativeUrl_data();
     void relativeUrl();
+    void setDataNoEngineNoSegfault();
 
 private:
     QQmlEngine engine;
@@ -653,6 +654,17 @@ void tst_qqmlcomponent::relativeUrl()
     // data/QtObjectComponent.qml refers to the data/QtObjectComponent.qml in the current working directory.
     component.loadUrl(url);
     QVERIFY2(!component.isError(), qPrintable(component.errorString()));
+}
+
+void tst_qqmlcomponent::setDataNoEngineNoSegfault()
+{
+    QQmlEngine eng;
+    QQmlComponent comp;
+    QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Must provide an engine before calling setData");
+    comp.setData("import QtQuick 1.0; QtObject { }", QUrl(""));
+    QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Must provide an engine before calling create");
+    auto c = comp.create();
+    QVERIFY(!c);
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

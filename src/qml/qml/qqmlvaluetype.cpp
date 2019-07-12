@@ -43,7 +43,9 @@
 #include <private/qqmlglobal_p.h>
 #include <QtCore/qdebug.h>
 #include <private/qmetaobjectbuilder_p.h>
+#if QT_CONFIG(qml_itemmodel)
 #include <private/qqmlmodelindexvaluetype_p.h>
+#endif
 #include <private/qmetatype_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -69,8 +71,10 @@ QQmlValueTypeFactoryImpl::QQmlValueTypeFactoryImpl()
 {
     std::fill_n(valueTypes, int(QVariant::UserType), nullptr);
 
+#if QT_CONFIG(qml_itemmodel)
     // See types wrapped in qqmlmodelindexvaluetype_p.h
     qRegisterMetaType<QItemSelectionRange>();
+#endif
 }
 
 QQmlValueTypeFactoryImpl::~QQmlValueTypeFactoryImpl()
@@ -120,13 +124,17 @@ const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
         return &QQmlRectFValueType::staticMetaObject;
     case QVariant::EasingCurve:
         return &QQmlEasingValueType::staticMetaObject;
+#if QT_CONFIG(qml_itemmodel)
     case QVariant::ModelIndex:
         return &QQmlModelIndexValueType::staticMetaObject;
     case QVariant::PersistentModelIndex:
         return &QQmlPersistentModelIndexValueType::staticMetaObject;
+#endif
     default:
+#if QT_CONFIG(qml_itemmodel)
         if (t == qMetaTypeId<QItemSelectionRange>())
             return &QQmlItemSelectionRangeValueType::staticMetaObject;
+#endif
 
         if (const QMetaObject *mo = QQml_valueTypeProvider()->metaObjectForMetaType(t))
             return mo;

@@ -50,7 +50,6 @@
 using namespace QQuickViewTestUtil;
 using namespace QQuickVisualTestUtil;
 
-static const char* kTableViewPropName = "tableView";
 static const char* kDelegateObjectName = "tableViewDelegate";
 static const char *kDelegatesCreatedCountProp = "delegatesCreatedCount";
 static const char *kModelDataBindingProp = "modelDataBinding";

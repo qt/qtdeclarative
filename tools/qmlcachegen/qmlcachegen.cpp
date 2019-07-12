@@ -45,6 +45,8 @@
 
 #include <algorithm>
 
+using namespace QQmlJS;
+
 int filterResourceFile(const QString &input, const QString &output);
 bool generateLoader(const QStringList &compiledFiles, const QStringList &retainedFiles,
                     const QString &output, const QStringList &resourceFileMappings,
@@ -205,10 +207,7 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
     annotateListElements(&irDocument);
 
     {
-        QmlIR::JSCodeGen v4CodeGen(irDocument.code,
-                                   &irDocument.jsGenerator, &irDocument.jsModule,
-                                   &irDocument.jsParserEngine, irDocument.program,
-                                   &irDocument.jsGenerator.stringTable, illegalNames);
+        QmlIR::JSCodeGen v4CodeGen(&irDocument, illegalNames);
         for (QmlIR::Object *object: qAsConst(irDocument.objects)) {
             if (object->functionsAndExpressions->count == 0)
                 continue;
@@ -309,9 +308,7 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
         }
 
         {
-            QmlIR::JSCodeGen v4CodeGen(irDocument.code, &irDocument.jsGenerator,
-                                       &irDocument.jsModule, &irDocument.jsParserEngine,
-                                       irDocument.program, &irDocument.jsGenerator.stringTable, illegalNames);
+            QmlIR::JSCodeGen v4CodeGen(&irDocument, illegalNames);
             v4CodeGen.generateFromProgram(inputFileName, inputFileUrl, sourceCode, program,
                                           &irDocument.jsModule, QV4::Compiler::ContextType::ScriptImportedByQML);
             if (v4CodeGen.hasError()) {

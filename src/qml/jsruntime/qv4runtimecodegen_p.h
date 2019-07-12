@@ -66,11 +66,11 @@ public:
 
     void generateFromFunctionExpression(const QString &fileName,
                                         const QString &sourceCode,
-                                        AST::FunctionExpression *ast,
+                                        QQmlJS::AST::FunctionExpression *ast,
                                         Compiler::Module *module);
 
-    void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail) override;
-    void throwReferenceError(const AST::SourceLocation &loc, const QString &detail) override;
+    void throwSyntaxError(const QQmlJS::AST::SourceLocation &loc, const QString &detail) override;
+    void throwReferenceError(const QQmlJS::AST::SourceLocation &loc, const QString &detail) override;
 
 private:
     ExecutionEngine *engine;

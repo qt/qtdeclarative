@@ -167,7 +167,6 @@ void QV4Include::finished()
         QByteArray data = m_reply->readAll();
 
         QString code = QString::fromUtf8(data);
-        QmlIR::Document::removeScriptPragmas(code);
 
         QV4::Scoped<QV4::QmlContext> qml(scope, m_qmlContext.value());
         QV4::Script script(v4, qml, /*parse as QML binding*/false, code, m_url.toString());

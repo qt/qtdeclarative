@@ -39,10 +39,10 @@
 
 #include "qqmljslexer_p.h"
 #include "qqmljsengine_p.h"
-#include "qqmljsmemorypool_p.h"
 #include "qqmljskeywords_p.h"
 
 #include <private/qqmljsdiagnosticmessage_p.h>
+#include <private/qqmljsmemorypool_p.h>
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qvarlengtharray.h>

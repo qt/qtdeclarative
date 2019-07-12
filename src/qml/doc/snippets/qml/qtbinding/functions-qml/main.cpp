@@ -60,13 +60,13 @@ QQmlEngine engine;
 QQmlComponent component(&engine, "MyItem.qml");
 QObject *object = component.create();
 
-QVariant returnedValue;
-QVariant msg = "Hello from C++";
+QString returnedValue;
+QString msg = "Hello from C++";
 QMetaObject::invokeMethod(object, "myQmlFunction",
-        Q_RETURN_ARG(QVariant, returnedValue),
-        Q_ARG(QVariant, msg));
+        Q_RETURN_ARG(QString, returnedValue),
+        Q_ARG(QString, msg));
 
-qDebug() << "QML function returned:" << returnedValue.toString();
+qDebug() << "QML function returned:" << returnedValue;
 delete object;
 //![0]
 }

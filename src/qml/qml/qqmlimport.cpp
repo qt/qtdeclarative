@@ -55,6 +55,7 @@
 #include <private/qqmlengine_p.h>
 #include <private/qfieldlist_p.h>
 #include <private/qqmltypemodule_p.h>
+#include <private/qqmltypeloaderqmldircontent_p.h>
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonarray.h>
 

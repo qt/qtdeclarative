@@ -44,6 +44,7 @@
 #include <private/qqmltype_p_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmlextensionplugin_p.h>
+#include <private/qv4executablecompilationunit_p.h>
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qmutex.h>

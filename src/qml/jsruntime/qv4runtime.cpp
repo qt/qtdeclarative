@@ -59,6 +59,7 @@
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmljavascriptexpression_p.h>
+#include <private/qqmljsast_p.h>
 #include "qv4qobjectwrapper_p.h"
 #include "qv4symbol_p.h"
 #include "qv4generatorobject_p.h"

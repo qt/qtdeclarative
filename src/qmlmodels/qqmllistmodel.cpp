@@ -53,6 +53,7 @@
 #include <private/qv4objectiterator_p.h>
 #include <private/qv4alloca_p.h>
 #include <private/qv4lookup_p.h>
+#include <private/qv4qmlcontext_p.h>
 
 #include <qqmlcontext.h>
 #include <qqmlinfo.h>

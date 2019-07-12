@@ -55,6 +55,7 @@
 #include <private/qqmlvaluetypeproxybinding_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
+#include <private/qqmlscriptdata_p.h>
 #include <private/qjsvalue_p.h>
 
 #include <qtqml_tracepoints_p.h>
@@ -735,7 +736,7 @@ void QQmlObjectCreator::setupBindings(bool applyDeferredBindings)
     QQmlListProperty<void> savedList;
     qSwap(_currentList, savedList);
 
-    const QV4::CompiledData::BindingPropertyData &propertyData = compilationUnit->bindingPropertyDataPerObject.at(_compiledObjectIndex);
+    const QV4::BindingPropertyData &propertyData = compilationUnit->bindingPropertyDataPerObject.at(_compiledObjectIndex);
 
     if (_compiledObject->idNameIndex) {
         const QQmlPropertyData *idProperty = propertyData.last();
@@ -1445,8 +1446,12 @@ void QQmlObjectCreator::clear()
         return;
     Q_ASSERT(phase != Startup);
 
-    while (!sharedState->allCreatedObjects.isEmpty())
-        delete sharedState->allCreatedObjects.pop();
+    while (!sharedState->allCreatedObjects.isEmpty()) {
+        auto object = sharedState->allCreatedObjects.pop();
+        if (engine->objectOwnership(object) != QQmlEngine::CppOwnership) {
+            delete object;
+        }
+    }
 
     while (sharedState->componentAttached) {
         QQmlComponentAttached *a = sharedState->componentAttached;

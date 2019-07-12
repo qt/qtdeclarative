@@ -57,6 +57,7 @@
 #include <private/qv4variantobject_p.h>
 #include <private/qv4identifiertable_p.h>
 #include <private/qv4lookup_p.h>
+#include <private/qv4qmlcontext_p.h>
 
 #if QT_CONFIG(qml_sequence_object)
 #include <private/qv4sequenceobject_p.h>
@@ -80,7 +81,9 @@
 #include <QtCore/qtimer.h>
 #include <QtCore/qatomic.h>
 #include <QtCore/qmetaobject.h>
+#if QT_CONFIG(qml_itemmodel)
 #include <QtCore/qabstractitemmodel.h>
+#endif
 #include <QtCore/qloggingcategory.h>
 
 #include <vector>
@@ -1233,7 +1236,9 @@ private:
         std::vector<bool> *stdVectorBoolPtr;
         std::vector<QString> *stdVectorQStringPtr;
         std::vector<QUrl> *stdVectorQUrlPtr;
+#if QT_CONFIG(qml_itemmodel)
         std::vector<QModelIndex> *stdVectorQModelIndexPtr;
+#endif
 
         char allocData[MaxSizeOf7<QVariant,
                                   QString,
@@ -1693,8 +1698,10 @@ void *CallArgument::dataPtr()
         return stdVectorQStringPtr;
     else if (type == qMetaTypeId<std::vector<QUrl>>())
         return stdVectorQUrlPtr;
+#if QT_CONFIG(qml_itemmodel)
     else if (type == qMetaTypeId<std::vector<QModelIndex>>())
         return stdVectorQModelIndexPtr;
+#endif
     else if (type != 0)
         return (void *)&allocData;
     return nullptr;
@@ -1845,7 +1852,10 @@ bool CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
                || callType == qMetaTypeId<std::vector<bool>>()
                || callType == qMetaTypeId<std::vector<QString>>()
                || callType == qMetaTypeId<std::vector<QUrl>>()
-               || callType == qMetaTypeId<std::vector<QModelIndex>>()) {
+#if QT_CONFIG(qml_itemmodel)
+               || callType == qMetaTypeId<std::vector<QModelIndex>>()
+#endif
+               ) {
         queryEngine = true;
         const QV4::Object* object = value.as<QV4::Object>();
         if (callType == qMetaTypeId<std::vector<int>>()) {
@@ -1863,9 +1873,11 @@ bool CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
         } else if (callType == qMetaTypeId<std::vector<QUrl>>()) {
             stdVectorQUrlPtr = nullptr;
             fromContainerValue<std::vector<QUrl>>(object, callType, &CallArgument::stdVectorQUrlPtr, queryEngine);
+#if QT_CONFIG(qml_itemmodel)
         } else if (callType == qMetaTypeId<std::vector<QModelIndex>>()) {
             stdVectorQModelIndexPtr = nullptr;
             fromContainerValue<std::vector<QModelIndex>>(object, callType, &CallArgument::stdVectorQModelIndexPtr, queryEngine);
+#endif
         }
 #endif
     } else if (QMetaType::typeFlags(callType)

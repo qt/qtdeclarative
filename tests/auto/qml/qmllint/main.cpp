@@ -38,6 +38,8 @@ private Q_SLOTS:
     void initTestCase();
     void test();
     void test_data();
+    void testUnqualified();
+    void testUnqualified_data();
 private:
     QString m_qmllintPath;
 };
@@ -67,6 +69,49 @@ void TestQmllint::test_data()
     // Invalid files:
     QTest::newRow("Invalid_syntax_QML") << QStringLiteral("failure1.qml") << false;
     QTest::newRow("Invalid_syntax_JS") << QStringLiteral("failure1.js") << false;
+}
+
+void TestQmllint::testUnqualified()
+{
+    QFETCH(QString, filename);
+    QFETCH(QString, warningMessage);
+    QFETCH(int, warningLine);
+    QFETCH(int, warningColumn);
+    filename.prepend(QStringLiteral("data/"));
+    QStringList args;
+    args << QStringLiteral("-U") << filename;
+
+    QProcess process;
+    process.start(m_qmllintPath, args);
+    QVERIFY(process.waitForFinished());
+    QVERIFY(process.exitStatus() == QProcess::NormalExit);
+    QVERIFY(process.exitCode());
+    QString output = process.readAllStandardError();
+    QVERIFY(output.contains(QString::asprintf("Warning: unqualified access at %d:%d", warningLine, warningColumn)));
+    QVERIFY(output.contains(warningMessage));
+}
+
+void TestQmllint::testUnqualified_data()
+{
+    QTest::addColumn<QString>("filename");
+    QTest::addColumn<QString>("warningMessage");
+    QTest::addColumn<int>("warningLine");
+    QTest::addColumn<int>("warningColumn");
+
+    // check for false positive due to and warning about with statement
+    QTest::newRow("WithStatement") << QStringLiteral("WithStatement.qml") << QStringLiteral("with statements are strongly discouraged") << 10 << 25;
+    // id from nowhere (as with setContextProperty)
+    QTest::newRow("IdFromOuterSpaceDirect") << QStringLiteral("IdFromOuterSpace.qml") << "alien.x" << 4 << 8;
+    QTest::newRow("IdFromOuterSpaceAccess") << QStringLiteral("IdFromOuterSpace.qml") << "console.log(alien)" << 7 << 21;
+    // access property of root object
+    QTest::newRow("FromRootDirect") << QStringLiteral("FromRoot.qml") << QStringLiteral("x: root.unqualified") << 9 << 16; // new property
+    QTest::newRow("FromRootAccess") << QStringLiteral("FromRoot.qml") << QStringLiteral("property int check: root.x") << 13 << 33;  // builtin property
+    // access property of root object from direct child
+    QTest::newRow("FromRootDirectParentDirect") << QStringLiteral("FromRootDirectParent.qml") << QStringLiteral("x: parent.unqualified") << 8 << 12;
+    QTest::newRow("FromRootDirectParentAccess") << QStringLiteral("FromRootDirectParent.qml") << QStringLiteral("property int check: parent.x") << 12 << 29;
+    // access injected name from signal
+    QTest::newRow("SignalHandler") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onDoubleClicked:  function(mouse) {...") << 4 << 34;
+
 }
 
 void TestQmllint::test()

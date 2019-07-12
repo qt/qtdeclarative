@@ -208,6 +208,7 @@ private slots:
     void remoteLoadCrash();
     void signalWithDefaultArg();
     void signalParameterTypes();
+    void functionParameterTypes();
 
     // regression tests for crashes
     void crash1();
@@ -622,6 +623,8 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("fuzzed.2") << "fuzzed.2.qml" << "fuzzed.2.errors.txt" << false;
 
     QTest::newRow("bareQmlImport") << "bareQmlImport.qml" << "bareQmlImport.errors.txt" << false;
+
+    QTest::newRow("typeAnnotations.2") << "typeAnnotations.2.qml" << "typeAnnotations.2.errors.txt" << false;
 }
 
 
@@ -3695,6 +3698,38 @@ void tst_qqmllanguage::signalParameterTypes()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(obj != nullptr);
     QVERIFY(obj->property("success").toBool());
+    }
+
+    // dynamic signal connections
+    {
+    QQmlComponent component(&engine, testFileUrl("signalParameterTypes.3.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj != nullptr);
+    QVERIFY(obj->property("success").toBool());
+    }
+}
+
+void tst_qqmllanguage::functionParameterTypes()
+{
+    QQmlComponent component(&engine, testFileUrl("functionParameterTypes.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY2(!obj.isNull(), qPrintable(component.errorString()));
+    const QMetaObject *metaObject = obj->metaObject();
+
+    {
+        QMetaMethod slot = metaObject->method(metaObject->indexOfSlot("returnItem()"));
+        QVERIFY(slot.isValid());
+        QCOMPARE(slot.returnType(), QMetaType::type("QObject*"));
+        QObject *returnedPtr = nullptr;
+        slot.invoke(obj.data(), Qt::DirectConnection, Q_RETURN_ARG(QObject*, returnedPtr));
+        QCOMPARE(returnedPtr, obj.data());
+    }
+
+    {
+        QMetaMethod slot = metaObject->method(metaObject->indexOfSlot("takeString(QString)"));
+        QVERIFY(slot.isValid());
+        QCOMPARE(slot.parameterCount(), 1);
+        QCOMPARE(slot.parameterType(0), int(QMetaType::QString));
     }
 }
 

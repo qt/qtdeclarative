@@ -48,7 +48,6 @@
 #include <private/qqmljsast_p.h>
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
-#include <private/qv4stringtoarrayindex_p.h>
 #include <private/qv4staticvalue_p.h>
 #include <private/qv4compilercontext_p.h>
 #include <private/qv4compilercontrolflow_p.h>
@@ -69,6 +68,7 @@ static const bool disable_lookups = false;
 QT_USE_NAMESPACE
 using namespace QV4;
 using namespace QV4::Compiler;
+using namespace QQmlJS;
 using namespace QQmlJS::AST;
 
 static inline void setJumpOutLocation(QV4::Moth::BytecodeGenerator *bytecodeGenerator,
@@ -610,6 +610,8 @@ void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, con
     if (hasError())
         return;
 
+    accept(e->typeAnnotation);
+
     if (e->initializer) {
         if (!baseRef.isValid()) {
             // assignment
@@ -882,6 +884,12 @@ bool Codegen::visit(ExportDeclaration *ast)
     Reference defaultExportSlot = Reference::fromScopedLocal(this, defaultExportIndex, /*scope*/0);
     defaultExportSlot.storeConsumeAccumulator();
 
+    return false;
+}
+
+bool Codegen::visit(TypeAnnotation *ast)
+{
+    throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Type annotations are not supported (yet)."));
     return false;
 }
 

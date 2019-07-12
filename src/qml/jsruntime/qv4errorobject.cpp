@@ -47,7 +47,7 @@
 
 #include "qv4string_p.h"
 #include <private/qv4mm_p.h>
-#include <qv4codegen_p.h>
+#include <private/qv4codegen_p.h>
 
 #ifndef Q_OS_WIN
 #  include <time.h>

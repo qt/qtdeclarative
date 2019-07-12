@@ -39,7 +39,6 @@
 
 #include "qqmltypecompiler_p.h"
 
-#include <private/qqmlirbuilder_p.h>
 #include <private/qqmlobjectcreator_p.h>
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlvmemetaobject_p.h>
@@ -145,11 +144,11 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
 
         document->jsModule.fileName = typeData->urlString();
         document->jsModule.finalUrl = typeData->finalUrlString();
-        QmlIR::JSCodeGen v4CodeGenerator(document->code, &document->jsGenerator, &document->jsModule, &document->jsParserEngine,
-                                         document->program, &document->jsGenerator.stringTable, engine->v4engine()->illegalNames());
-        QQmlJSCodeGenerator jsCodeGen(this, &v4CodeGenerator);
-        if (!jsCodeGen.generateCodeForComponents())
+        QmlIR::JSCodeGen v4CodeGenerator(document, engine->v4engine()->illegalNames());
+        if (!v4CodeGenerator.generateCodeForComponents(componentRoots())) {
+            recordError(v4CodeGenerator.error());
             return nullptr;
+        }
 
         document->javaScriptCompilationUnit = v4CodeGenerator.generateCompilationUnit(/*generated unit data*/false);
     }
@@ -1304,76 +1303,6 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
                 binding->flags |= QV4::CompiledData::Binding::IsCustomParserBinding;
             }
         }
-    }
-
-    return true;
-}
-
-QQmlJSCodeGenerator::QQmlJSCodeGenerator(QQmlTypeCompiler *typeCompiler, QmlIR::JSCodeGen *v4CodeGen)
-    : QQmlCompilePass(typeCompiler)
-    , customParsers(typeCompiler->customParserCache())
-    , qmlObjects(*typeCompiler->qmlObjects())
-    , propertyCaches(typeCompiler->propertyCaches())
-    , v4CodeGen(v4CodeGen)
-{
-}
-
-bool QQmlJSCodeGenerator::generateCodeForComponents()
-{
-    const QVector<quint32> &componentRoots = compiler->componentRoots();
-    for (int i = 0; i < componentRoots.count(); ++i) {
-        if (!compileComponent(componentRoots.at(i)))
-            return false;
-    }
-
-    return compileComponent(/*root object*/0);
-}
-
-bool QQmlJSCodeGenerator::compileComponent(int contextObject)
-{
-    const QmlIR::Object *obj = qmlObjects.at(contextObject);
-    if (obj->flags & QV4::CompiledData::Object::IsComponent) {
-        Q_ASSERT(obj->bindingCount() == 1);
-        const QV4::CompiledData::Binding *componentBinding = obj->firstBinding();
-        Q_ASSERT(componentBinding->type == QV4::CompiledData::Binding::Type_Object);
-        contextObject = componentBinding->value.objectIndex;
-    }
-
-    if (!compileJavaScriptCodeInObjectsRecursively(contextObject, contextObject))
-        return false;
-
-    return true;
-}
-
-bool QQmlJSCodeGenerator::compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex)
-{
-    QmlIR::Object *object = qmlObjects.at(objectIndex);
-    if (object->flags & QV4::CompiledData::Object::IsComponent)
-        return true;
-
-    if (object->functionsAndExpressions->count > 0) {
-        QList<QmlIR::CompiledFunctionOrExpression> functionsToCompile;
-        for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next)
-            functionsToCompile << *foe;
-        const QVector<int> runtimeFunctionIndices = v4CodeGen->generateJSCodeForFunctionsAndBindings(functionsToCompile);
-        if (v4CodeGen->hasError()) {
-            compiler->recordError(v4CodeGen->error());
-            return false;
-        }
-
-        QQmlJS::MemoryPool *pool = compiler->memoryPool();
-        object->runtimeFunctionIndices.allocate(pool, runtimeFunctionIndices);
-    }
-
-    for (const QmlIR::Binding *binding = object->firstBinding(); binding; binding = binding->next) {
-        if (binding->type < QV4::CompiledData::Binding::Type_Object)
-            continue;
-
-        int target = binding->value.objectIndex;
-        int scope = binding->type == QV4::CompiledData::Binding::Type_Object ? target : scopeObjectIndex;
-
-        if (!compileJavaScriptCodeInObjectsRecursively(binding->value.objectIndex, scope))
-            return false;
     }
 
     return true;

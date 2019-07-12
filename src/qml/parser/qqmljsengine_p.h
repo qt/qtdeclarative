@@ -52,8 +52,9 @@
 //
 
 #include "qqmljsglobal_p.h"
-#include "qqmljsmemorypool_p.h"
 #include "qqmljssourcelocation_p.h"
+
+#include <private/qqmljsmemorypool_p.h>
 
 #include <QtCore/qstring.h>
 #include <QtCore/qset.h>

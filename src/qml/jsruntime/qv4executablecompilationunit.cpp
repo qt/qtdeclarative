@@ -44,11 +44,11 @@
 #include <private/qv4lookup_p.h>
 #include <private/qv4qmlcontext_p.h>
 #include <private/qv4identifiertable_p.h>
-#include <private/qv4instr_moth_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
+#include <private/qqmlscriptdata_p.h>
 #include <private/qv4module_p.h>
 #include <private/qv4compilationunitmapper_p.h>
 #include <private/qml_compile_hash_p.h>
@@ -784,7 +784,7 @@ QString ExecutableCompilationUnit::bindingValueAsString(const CompiledData::Bind
     case Binding::Type_Boolean:
         return binding->value.b ? QStringLiteral("true") : QStringLiteral("false");
     case Binding::Type_Number:
-        return QString::number(bindingValueAsNumber(binding));
+        return QString::number(bindingValueAsNumber(binding), 'g', QLocale::FloatingPointShortest);
     case Binding::Type_Invalid:
         return QString();
 #if !QT_CONFIG(translation)

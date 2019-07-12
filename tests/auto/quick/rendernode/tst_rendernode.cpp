@@ -49,8 +49,7 @@ public:
         view.setResizeMode(QQuickView::SizeViewToRootObject);
         view.setSource(testFileUrl(fileName));
         view.setVisible(true);
-        QTest::qWaitForWindowExposed(&view);
-        return view.grabWindow();
+        return QTest::qWaitForWindowExposed(&view) ? view.grabWindow() : QImage();
     }
 
     //It is important for platforms that only are able to show fullscreen windows
@@ -225,6 +224,7 @@ void tst_rendernode::renderOrder()
         QSKIP("Render nodes not yet supported with QRhi");
 
     QImage fb = runTest("RenderOrder.qml");
+    QVERIFY(!fb.isNull());
 
     const qreal scaleFactor = QGuiApplication::primaryScreen()->devicePixelRatio();
     QCOMPARE(fb.width(), qRound(200 * scaleFactor));
@@ -257,6 +257,7 @@ void tst_rendernode::messUpState()
         QSKIP("Render nodes not yet supported with QRhi");
 
     QImage fb = runTest("MessUpState.qml");
+    QVERIFY(!fb.isNull());
     int x1 = 0;
     int x2 = fb.width() / 2;
     int x3 = fb.width() - 1;
@@ -318,7 +319,7 @@ void tst_rendernode::matrix()
 
     qmlRegisterType<StateRecordingRenderNodeItem>("RenderNode", 1, 0, "StateRecorder");
     StateRecordingRenderNode::matrices.clear();
-    runTest("matrix.qml");
+    QVERIFY(!runTest("matrix.qml").isNull());
 
     QMatrix4x4 noRotateOffset;
     noRotateOffset.translate(20, 20);
@@ -371,9 +372,10 @@ bool tst_rendernode::isRunningOnRhi() const
         decided = true;
         QQuickView dummy;
         dummy.show();
-        QTest::qWaitForWindowExposed(&dummy);
-        QSGRendererInterface::GraphicsApi api = dummy.rendererInterface()->graphicsApi();
-        retval = QSGRendererInterface::isApiRhiBased(api);
+        if (QTest::qWaitForWindowExposed(&dummy)) {
+            QSGRendererInterface::GraphicsApi api = dummy.rendererInterface()->graphicsApi();
+            retval = QSGRendererInterface::isApiRhiBased(api);
+        }
         dummy.hide();
     }
     return retval;

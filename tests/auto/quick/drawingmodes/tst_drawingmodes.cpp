@@ -385,9 +385,10 @@ bool tst_drawingmodes::isRunningOnRhi() const
         decided = true;
         QQuickView dummy;
         dummy.show();
-        QTest::qWaitForWindowExposed(&dummy);
-        QSGRendererInterface::GraphicsApi api = dummy.rendererInterface()->graphicsApi();
-        retval = QSGRendererInterface::isApiRhiBased(api);
+        if (QTest::qWaitForWindowExposed(&dummy)) {
+            QSGRendererInterface::GraphicsApi api = dummy.rendererInterface()->graphicsApi();
+            retval = QSGRendererInterface::isApiRhiBased(api);
+        }
         dummy.hide();
     }
     return retval;

@@ -348,17 +348,18 @@ void QQmlPropertyCache::appendSignal(const QString &name, QQmlPropertyData::Flag
 }
 
 void QQmlPropertyCache::appendMethod(const QString &name, QQmlPropertyData::Flags flags,
-                                     int coreIndex, const QList<QByteArray> &names)
+                                     int coreIndex, int returnType, const QList<QByteArray> &names,
+                                     const QVector<int> &parameterTypes)
 {
     int argumentCount = names.count();
 
     QQmlPropertyData data;
-    data.setPropType(QMetaType::QVariant);
+    data.setPropType(returnType);
     data.setCoreIndex(coreIndex);
 
     QQmlPropertyCacheMethodArguments *args = createArgumentsObject(argumentCount, names);
     for (int ii = 0; ii < argumentCount; ++ii)
-        args->arguments[ii + 1] = QMetaType::QVariant;
+        args->arguments[ii + 1] = parameterTypes.at(ii);
     args->argumentsValid = true;
     data.setArguments(args);
 
