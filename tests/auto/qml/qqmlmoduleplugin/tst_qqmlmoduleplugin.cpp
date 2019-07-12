@@ -99,7 +99,7 @@ public:
         qmlRegisterModule(uri, 1, 0);
     }
 
-    void initializeEngine(QQmlEngine *engine, const char *uri) override
+    void initializeEngine(QQmlEngine *, const char *) override
     {
         initializeEngineEntered.lock();
         leavingInitializeEngine.lock();

@@ -75,8 +75,8 @@ public:
         delete node;
         node = new QSGNode;
 
-        const int w = width();
-        const int h = height();
+        const int w = int(width());
+        const int h = int(height());
         QQuickWindow *win = window();
         for (int y = 0; y < h; ++y) {
             for (int x = 0; x < w; ++x) {
@@ -569,8 +569,8 @@ bool tst_SceneGraph::isRunningOnOpenGLDirectly()
         decided = true;
         QQuickView dummy;
         dummy.show();
-        QTest::qWaitForWindowExposed(&dummy);
-        retval = dummy.rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL;
+        if (QTest::qWaitForWindowExposed(&dummy))
+            retval = dummy.rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL;
         dummy.hide();
     }
     return retval;
