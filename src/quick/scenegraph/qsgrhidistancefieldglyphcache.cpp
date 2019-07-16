@@ -512,7 +512,7 @@ bool QSGRhiDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &font)
 
             int width = texInfo->allocatedArea.width();
             int height = texInfo->allocatedArea.height();
-            qint64 size = width * height;
+            qint64 size = qint64(width) * height;
             if (reinterpret_cast<const char *>(textureData + size) > qtdfTableEnd) {
                 qWarning("qtdf table too small in font '%s'.",
                          qPrintable(font.familyName()));
