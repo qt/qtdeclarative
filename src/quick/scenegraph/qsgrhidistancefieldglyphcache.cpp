@@ -446,7 +446,7 @@ bool QSGRhiDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &font)
 
         const char *textureRecord = allocatorData;
         for (int i = 0; i < textureCount; ++i, textureRecord += Qtdf::TextureRecordSize) {
-            if (textureRecord + Qtdf::TextureRecordSize > qtdfTableEnd) {
+            if (qtdfTableEnd - textureRecord < Qtdf::TextureRecordSize) {
                 qWarning("qtdf table too small in font '%s'.",
                          qPrintable(font.familyName()));
                 return false;
@@ -462,7 +462,7 @@ bool QSGRhiDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &font)
 
         const char *glyphRecord = textureRecord;
         for (quint32 i = 0; i < glyphCount; ++i, glyphRecord += Qtdf::GlyphRecordSize) {
-            if (glyphRecord + Qtdf::GlyphRecordSize > qtdfTableEnd) {
+            if (qtdfTableEnd - glyphRecord < Qtdf:: GlyphRecordSize) {
                 qWarning("qtdf table too small in font '%s'.",
                          qPrintable(font.familyName()));
                 return false;
@@ -513,7 +513,7 @@ bool QSGRhiDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &font)
             int width = texInfo->allocatedArea.width();
             int height = texInfo->allocatedArea.height();
             qint64 size = qint64(width) * height;
-            if (reinterpret_cast<const char *>(textureData + size) > qtdfTableEnd) {
+            if (qtdfTableEnd - reinterpret_cast<const char *>(textureData) < size) {
                 qWarning("qtdf table too small in font '%s'.",
                          qPrintable(font.familyName()));
                 return false;
