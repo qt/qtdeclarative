@@ -1574,7 +1574,8 @@ void QQmlXMLHttpRequest::dispatchCallbackNow(Object *thisObj, bool done, bool er
 
         if (scope.engine->hasException) {
             QQmlError error = scope.engine->catchExceptionAsQmlError();
-            QQmlEnginePrivate::warning(QQmlEnginePrivate::get(scope.engine->qmlEngine()), error);
+            QQmlEnginePrivate *qmlEnginePrivate = scope.engine->qmlEngine() ? QQmlEnginePrivate::get(scope.engine->qmlEngine()) : nullptr;
+            QQmlEnginePrivate::warning(qmlEnginePrivate, error);
         }
     };
 
@@ -1765,8 +1766,13 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(const FunctionObject *b, const
     // Argument 1 - URL
     QUrl url = QUrl(argv[1].toQStringNoThrow());
 
-    if (url.isRelative())
-        url = scope.engine->callingQmlContext()->resolvedUrl(url);
+    if (url.isRelative()) {
+        QQmlContextData *qmlContextData = scope.engine->callingQmlContext();
+        if (qmlContextData)
+            url = qmlContextData->resolvedUrl(url);
+        else
+            url = scope.engine->resolvedUrl(url.url());
+    }
 
     bool async = true;
     // Argument 2 - async (optional)

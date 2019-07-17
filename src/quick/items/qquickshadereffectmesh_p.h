@@ -66,8 +66,8 @@ QT_REQUIRE_CONFIG(quick_shadereffect);
 
 QT_BEGIN_NAMESPACE
 
-const char *qtPositionAttributeName();
-const char *qtTexCoordAttributeName();
+Q_QUICK_PRIVATE_EXPORT const char *qtPositionAttributeName();
+Q_QUICK_PRIVATE_EXPORT const char *qtTexCoordAttributeName();
 
 class QSGGeometry;
 class QRectF;
