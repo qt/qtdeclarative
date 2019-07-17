@@ -2478,17 +2478,20 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
     } else if (siinfo->qobjectCallback) {
         QObject *o = siinfo->qobjectCallback(q, q);
         if (!o) {
-            qFatal("qmlRegisterSingletonType(): \"%s\" is not available because the callback function returns a null pointer.",
-                   qPrintable(QString::fromUtf8(type.typeName())));
+            QQmlError error;
+            error.setMessageType(QtMsgType::QtCriticalMsg);
+            error.setDescription(QString::asprintf("qmlRegisterSingletonType(): \"%s\" is not available because the callback function returns a null pointer.",
+                                                   qPrintable(QString::fromUtf8(type.typeName()))));
+            warning(error);
+        } else {
+            // if this object can use a property cache, create it now
+            QQmlData::ensurePropertyCache(q, o);
         }
-        // if this object can use a property cache, create it now
-        QQmlData::ensurePropertyCache(q, o);
         // even though the object is defined in C++, qmlContext(obj) and qmlEngine(obj)
         // should behave identically to QML singleton types.
         q->setContextForObject(o, new QQmlContext(q->rootContext(), q));
         value = q->newQObject(o);
         singletonInstances.insert(type, value);
-
     } else if (!siinfo->url.isEmpty()) {
         QQmlComponent component(q, siinfo->url, QQmlComponent::PreferSynchronous);
         QObject *o = component.beginCreate(q->rootContext());
