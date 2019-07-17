@@ -102,6 +102,11 @@ QQmlDirPlugins QQmlTypeLoaderQmldirContent::plugins() const
     return m_parser.plugins();
 }
 
+QStringList QQmlTypeLoaderQmldirContent::imports() const
+{
+    return m_parser.imports();
+}
+
 QString QQmlTypeLoaderQmldirContent::pluginLocation() const
 {
     return m_location;

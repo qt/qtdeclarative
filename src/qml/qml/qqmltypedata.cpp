@@ -155,7 +155,8 @@ bool QQmlTypeData::tryLoadFromDiskCache()
                     && import->majorVersion == -1
                     && import->minorVersion == -1) {
                     QList<QQmlError> errors;
-                    if (!fetchQmldir(qmldirUrl, import, 1, &errors)) {
+                    auto pendingImport = std::make_shared<PendingImport>(this, import);
+                    if (!fetchQmldir(qmldirUrl, pendingImport, 1, &errors)) {
                         setError(errors);
                         return false;
                     }
@@ -522,10 +523,8 @@ void QQmlTypeData::continueLoadFromIR()
             if (!loadImplicitImport())
                 return;
             // This qmldir is for the implicit import
-            QQmlJS::MemoryPool *pool = m_document->jsParserEngine.pool();
-            auto implicitImport = pool->New<QV4::CompiledData::Import>();
-            implicitImport->uriIndex = m_document->registerString(QLatin1String("."));
-            implicitImport->qualifierIndex = 0; // empty string
+            auto implicitImport = std::make_shared<PendingImport>();
+            implicitImport->uri = QLatin1String(".");
             implicitImport->majorVersion = -1;
             implicitImport->minorVersion = -1;
             QList<QQmlError> errors;
@@ -560,16 +559,16 @@ void QQmlTypeData::allDependenciesDone()
     if (!m_typesResolved) {
         // Check that all imports were resolved
         QList<QQmlError> errors;
-        QHash<const QV4::CompiledData::Import *, int>::const_iterator it = m_unresolvedImports.constBegin(), end = m_unresolvedImports.constEnd();
+        auto it = m_unresolvedImports.constBegin(), end = m_unresolvedImports.constEnd();
         for ( ; it != end; ++it) {
-            if (*it == 0) {
+            if ((*it)->priority == 0) {
                 // This import was not resolved
-                for (auto keyIt = m_unresolvedImports.keyBegin(),
-                          keyEnd = m_unresolvedImports.keyEnd();
+                for (auto keyIt = m_unresolvedImports.constBegin(),
+                          keyEnd = m_unresolvedImports.constEnd();
                      keyIt != keyEnd; ++keyIt) {
-                    const QV4::CompiledData::Import *import = *keyIt;
+                    PendingImportPtr import = *keyIt;
                     QQmlError error;
-                    error.setDescription(QQmlTypeLoader::tr("module \"%1\" is not installed").arg(stringAt(import->uriIndex)));
+                    error.setDescription(QQmlTypeLoader::tr("module \"%1\" is not installed").arg(import->uri));
                     error.setUrl(m_importCache.baseUrl());
                     error.setLine(import->location.line);
                     error.setColumn(import->location.column);

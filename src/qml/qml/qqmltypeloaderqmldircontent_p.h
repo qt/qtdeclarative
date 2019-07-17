@@ -78,6 +78,7 @@ public:
     QQmlDirComponents components() const;
     QQmlDirScripts scripts() const;
     QQmlDirPlugins plugins() const;
+    QStringList imports() const;
 
     QString pluginLocation() const;
 
