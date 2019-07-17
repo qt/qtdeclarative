@@ -59,6 +59,7 @@ private slots:
     void multiSingletonModule();
     void implicitComponentModule();
     void qrcRootPathUrl();
+    void implicitImport();
 };
 
 void tst_QQMLTypeLoader::testLoadComplete()
@@ -511,6 +512,16 @@ void tst_QQMLTypeLoader::qrcRootPathUrl()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qrcRootPath.qml"));
     QCOMPARE(component.status(), QQmlComponent::Ready);
+}
+
+void tst_QQMLTypeLoader::implicitImport()
+{
+    QQmlEngine engine;
+    engine.addImportPath(testFile("imports"));
+    QQmlComponent component(&engine, testFileUrl("implicitimporttest.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

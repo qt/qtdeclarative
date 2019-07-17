@@ -803,8 +803,10 @@ UiHeaderItemList: UiHeaderItemList UiImport;
 
 PragmaId: JsIdentifier;
 
-UiPragma: T_PRAGMA PragmaId T_AUTOMATIC_SEMICOLON;
-UiPragma: T_PRAGMA PragmaId T_SEMICOLON;
+Semicolon: T_AUTOMATIC_SEMICOLON;
+Semicolon: T_SEMICOLON;
+
+UiPragma: T_PRAGMA PragmaId Semicolon;
 /.
     case $rule_number: {
         AST::UiPragma *pragma = new (pool) AST::UiPragma(stringRef(2));
@@ -816,8 +818,7 @@ UiPragma: T_PRAGMA PragmaId T_SEMICOLON;
 
 ImportId: MemberExpression;
 
-UiImport: UiImportHead T_AUTOMATIC_SEMICOLON;
-UiImport: UiImportHead T_SEMICOLON;
+UiImport: UiImportHead Semicolon;
 /.
     case $rule_number: {
         sym(1).UiImport->semicolonToken = loc(2);
@@ -844,8 +845,7 @@ UiVersionSpecifier: T_VERSION_NUMBER;
     } break;
 ./
 
-UiImport: UiImportHead UiVersionSpecifier T_AUTOMATIC_SEMICOLON;
-UiImport: UiImportHead UiVersionSpecifier T_SEMICOLON;
+UiImport: UiImportHead UiVersionSpecifier Semicolon;
 /.
     case $rule_number: {
         auto versionToken = loc(2);
@@ -859,8 +859,7 @@ UiImport: UiImportHead UiVersionSpecifier T_SEMICOLON;
     } break;
 ./
 
-UiImport: UiImportHead UiVersionSpecifier  T_AS QmlIdentifier T_AUTOMATIC_SEMICOLON;
-UiImport: UiImportHead UiVersionSpecifier  T_AS QmlIdentifier T_SEMICOLON;
+UiImport: UiImportHead UiVersionSpecifier  T_AS QmlIdentifier Semicolon;
 /.
     case $rule_number: {
         sym(1).UiImport->versionToken = loc(2);
@@ -872,8 +871,7 @@ UiImport: UiImportHead UiVersionSpecifier  T_AS QmlIdentifier T_SEMICOLON;
     } break;
 ./
 
-UiImport: UiImportHead T_AS QmlIdentifier T_AUTOMATIC_SEMICOLON;
-UiImport: UiImportHead T_AS QmlIdentifier T_SEMICOLON;
+UiImport: UiImportHead T_AS QmlIdentifier Semicolon;
 /.
     case $rule_number: {
         sym(1).UiImport->asToken = loc(2);
@@ -1150,8 +1148,7 @@ UiParameterList: UiParameterList T_COMMA UiPropertyType QmlIdentifier;
     } break;
 ./
 
-UiObjectMember: T_SIGNAL T_IDENTIFIER T_LPAREN UiParameterListOpt T_RPAREN T_AUTOMATIC_SEMICOLON;
-UiObjectMember: T_SIGNAL T_IDENTIFIER T_LPAREN UiParameterListOpt T_RPAREN T_SEMICOLON;
+UiObjectMember: T_SIGNAL T_IDENTIFIER T_LPAREN UiParameterListOpt T_RPAREN Semicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(nullptr, stringRef(2));
@@ -1165,8 +1162,7 @@ UiObjectMember: T_SIGNAL T_IDENTIFIER T_LPAREN UiParameterListOpt T_RPAREN T_SEM
     } break;
 ./
 
-UiObjectMember: T_SIGNAL T_IDENTIFIER T_AUTOMATIC_SEMICOLON;
-UiObjectMember: T_SIGNAL T_IDENTIFIER T_SEMICOLON;
+UiObjectMember: T_SIGNAL T_IDENTIFIER Semicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(nullptr, stringRef(2));
@@ -1179,8 +1175,7 @@ UiObjectMember: T_SIGNAL T_IDENTIFIER T_SEMICOLON;
     } break;
 ./
 
-UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_AUTOMATIC_SEMICOLON;
-UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_SEMICOLON;
+UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier Semicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(4).UiQualifiedId->finish(), stringRef(6));
@@ -1194,8 +1189,7 @@ UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T
     } break;
 ./
 
-UiObjectMember: T_READONLY T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_AUTOMATIC_SEMICOLON;
-UiObjectMember: T_READONLY T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_SEMICOLON;
+UiObjectMember: T_READONLY T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier Semicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(5).UiQualifiedId->finish(), stringRef(7));
@@ -1211,8 +1205,7 @@ UiObjectMember: T_READONLY T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlI
     } break;
 ./
 
-UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_AUTOMATIC_SEMICOLON;
-UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_SEMICOLON;
+UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier Semicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(2).UiQualifiedId->finish(), stringRef(3));
@@ -1224,8 +1217,7 @@ UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_SEMICOLON;
     } break;
 ./
 
-UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType QmlIdentifier T_AUTOMATIC_SEMICOLON;
-UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType QmlIdentifier T_SEMICOLON;
+UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType QmlIdentifier Semicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4));
@@ -1239,8 +1231,7 @@ UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType QmlIdentifier T_SEMICOLON;
     } break;
 ./
 
-UiObjectMember: T_DEFAULT T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_AUTOMATIC_SEMICOLON;
-UiObjectMember: T_DEFAULT T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_SEMICOLON;
+UiObjectMember: T_DEFAULT T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier Semicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(5).UiQualifiedId->finish(), stringRef(7));
@@ -2900,8 +2891,7 @@ StatementListItem: Statement;
     } break;
 ./
 
-StatementListItem: ExpressionStatementLookahead T_FORCE_DECLARATION Declaration T_AUTOMATIC_SEMICOLON;
-StatementListItem: ExpressionStatementLookahead T_FORCE_DECLARATION Declaration T_SEMICOLON;
+StatementListItem: ExpressionStatementLookahead T_FORCE_DECLARATION Declaration Semicolon;
 /.
     case $rule_number: {
         sym(1).Node = new (pool) AST::StatementList(sym(3).FunctionDeclaration);
@@ -2964,8 +2954,7 @@ VarDeclaration_In: Var VariableDeclarationList_In;
     } break;
 ./
 
-VariableStatement: VarDeclaration_In T_AUTOMATIC_SEMICOLON;
-VariableStatement: VarDeclaration_In T_SEMICOLON;
+VariableStatement: VarDeclaration_In Semicolon;
 
 BindingList: LexicalBinding_In;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
@@ -3235,8 +3224,7 @@ ExpressionStatementLookahead: ;
     } break;
 ./
 
-ExpressionStatement: Expression_In T_AUTOMATIC_SEMICOLON;
-ExpressionStatement: Expression_In T_SEMICOLON;
+ExpressionStatement: Expression_In Semicolon;
 /.
     case $rule_number: {
         AST::ExpressionStatement *node = new (pool) AST::ExpressionStatement(sym(1).Expression);
@@ -3269,9 +3257,8 @@ IfStatement: T_IF T_LPAREN Expression_In T_RPAREN Statement;
 ./
 
 
-IterationStatement: T_DO Statement T_WHILE T_LPAREN Expression_In T_RPAREN T_AUTOMATIC_SEMICOLON;
 IterationStatement: T_DO Statement T_WHILE T_LPAREN Expression_In T_RPAREN T_COMPATIBILITY_SEMICOLON;  -- for JSC/V8 compatibility
-IterationStatement: T_DO Statement T_WHILE T_LPAREN Expression_In T_RPAREN T_SEMICOLON;
+IterationStatement: T_DO Statement T_WHILE T_LPAREN Expression_In T_RPAREN Semicolon;
 /.
     case $rule_number: {
         AST::DoWhileStatement *node = new (pool) AST::DoWhileStatement(sym(2).Statement, sym(5).Expression);
@@ -3404,8 +3391,7 @@ ForDeclaration: Var BindingPattern;
     } break;
 ./
 
-ContinueStatement: T_CONTINUE T_AUTOMATIC_SEMICOLON;
-ContinueStatement: T_CONTINUE T_SEMICOLON;
+ContinueStatement: T_CONTINUE Semicolon;
 /.
     case $rule_number: {
         AST::ContinueStatement *node = new (pool) AST::ContinueStatement();
@@ -3415,8 +3401,7 @@ ContinueStatement: T_CONTINUE T_SEMICOLON;
     } break;
 ./
 
-ContinueStatement: T_CONTINUE IdentifierReference T_AUTOMATIC_SEMICOLON;
-ContinueStatement: T_CONTINUE IdentifierReference T_SEMICOLON;
+ContinueStatement: T_CONTINUE IdentifierReference Semicolon;
 /.
     case $rule_number: {
         AST::ContinueStatement *node = new (pool) AST::ContinueStatement(stringRef(2));
@@ -3427,8 +3412,7 @@ ContinueStatement: T_CONTINUE IdentifierReference T_SEMICOLON;
     } break;
 ./
 
-BreakStatement: T_BREAK T_AUTOMATIC_SEMICOLON;
-BreakStatement: T_BREAK T_SEMICOLON;
+BreakStatement: T_BREAK Semicolon;
 /.
     case $rule_number: {
         AST::BreakStatement *node = new (pool) AST::BreakStatement(QStringRef());
@@ -3438,8 +3422,7 @@ BreakStatement: T_BREAK T_SEMICOLON;
     } break;
 ./
 
-BreakStatement: T_BREAK IdentifierReference T_AUTOMATIC_SEMICOLON;
-BreakStatement: T_BREAK IdentifierReference T_SEMICOLON;
+BreakStatement: T_BREAK IdentifierReference Semicolon;
 /.
     case $rule_number: {
         AST::BreakStatement *node = new (pool) AST::BreakStatement(stringRef(2));
@@ -3450,8 +3433,7 @@ BreakStatement: T_BREAK IdentifierReference T_SEMICOLON;
     } break;
 ./
 
-ReturnStatement: T_RETURN ExpressionOpt_In T_AUTOMATIC_SEMICOLON;
-ReturnStatement: T_RETURN ExpressionOpt_In T_SEMICOLON;
+ReturnStatement: T_RETURN ExpressionOpt_In Semicolon;
 /.
     case $rule_number: {
         if (!functionNestingLevel) {
@@ -3575,8 +3557,7 @@ LabelledItem: ExpressionStatementLookahead T_FORCE_DECLARATION FunctionDeclarati
     } break;
 ./
 
-ThrowStatement: T_THROW Expression_In T_AUTOMATIC_SEMICOLON;
-ThrowStatement: T_THROW Expression_In T_SEMICOLON;
+ThrowStatement: T_THROW Expression_In Semicolon;
 /.
     case $rule_number: {
         AST::ThrowStatement *node = new (pool) AST::ThrowStatement(sym(2).Expression);
@@ -3653,8 +3634,7 @@ CatchParameter: BindingPattern;
     } break;
 ./
 
-DebuggerStatement: T_DEBUGGER T_AUTOMATIC_SEMICOLON; -- automatic semicolon
-DebuggerStatement: T_DEBUGGER T_SEMICOLON;
+DebuggerStatement: T_DEBUGGER Semicolon;
 /.
     case $rule_number: {
         AST::DebuggerStatement *node = new (pool) AST::DebuggerStatement();
@@ -4263,13 +4243,10 @@ ModuleItemList: ModuleItemList ModuleItem;
     } break;
 ./
 
-ModuleItem: ImportDeclaration T_AUTOMATIC_SEMICOLON;
+
+ModuleItem: ImportDeclaration Semicolon;
 /. case $rule_number:  Q_FALLTHROUGH(); ./
-ModuleItem: ImportDeclaration T_SEMICOLON;
-/. case $rule_number:  Q_FALLTHROUGH(); ./
-ModuleItem: ExportDeclaration T_AUTOMATIC_SEMICOLON;
-/. case $rule_number:  Q_FALLTHROUGH(); ./
-ModuleItem: ExportDeclaration T_SEMICOLON;
+ModuleItem: ExportDeclaration Semicolon;
 /.
     case $rule_number: {
         sym(1).StatementList = new (pool) AST::StatementList(sym(1).Node);

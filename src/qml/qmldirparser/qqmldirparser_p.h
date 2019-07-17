@@ -136,6 +136,7 @@ public:
 
     QHash<QString,Component> components() const;
     QHash<QString,Component> dependencies() const;
+    QStringList imports() const;
     QList<Script> scripts() const;
     QList<Plugin> plugins() const;
     bool designerSupported() const;
@@ -162,6 +163,7 @@ private:
     QString _typeNamespace;
     QHash<QString,Component> _components; // multi hash
     QHash<QString,Component> _dependencies;
+    QStringList _imports;
     QList<Script> _scripts;
     QList<Plugin> _plugins;
     bool _designerSupported;
