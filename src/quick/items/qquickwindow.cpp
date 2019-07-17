@@ -3748,6 +3748,12 @@ bool QQuickWindow::isSceneGraphInitialized() const
 
     This signal is emitted when the window receives the event \a close from
     the windowing system.
+
+    On \macOs, Qt will create a menu item \c Quit if there is no menu item
+    whose text is "quit" or "exit". This menu item calls the \c QCoreApplication::quit
+    signal, not the \c QQuickWindow::closing() signal.
+
+    \sa {QMenuBar as a Global Menu Bar}
 */
 
 /*!
