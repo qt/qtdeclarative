@@ -1358,8 +1358,8 @@ void QQuickTextInput::createCursor()
 /*!
     \qmlmethod rect QtQuick::TextInput::positionToRectangle(int pos)
 
-    This function takes a character position and returns the rectangle that the
-    cursor would occupy, if it was placed at that character position.
+    This function takes a character position \a pos and returns the rectangle
+    that the cursor would occupy, if it was placed at that character position.
 
     This is similar to setting the cursorPosition, and then querying the cursor
     rectangle, but the cursorPosition is not changed.
@@ -1389,10 +1389,10 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
 }
 
 /*!
-    \qmlmethod int QtQuick::TextInput::positionAt(real x, real y, CursorPosition position = CursorBetweenCharacters)
+    \qmlmethod int QtQuick::TextInput::positionAt(real x, real y, CursorPosition position)
 
     This function returns the character position at
-    x and y pixels from the top left  of the textInput. Position 0 is before the
+    \a x and \a y pixels from the top left of the textInput. Position 0 is before the
     first character, position 1 is after the first character but before the second,
     and so on until position text.length, which is after all characters.
 
@@ -1402,12 +1402,13 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
     the first line and if it is below the text the position of the nearest character
     on the last line will be returned.
 
-    The cursor position type specifies how the cursor position should be resolved.
+    The cursor \a position parameter specifies how the cursor position should be resolved:
 
-    \list
-    \li TextInput.CursorBetweenCharacters - Returns the position between characters that is nearest x.
-    \li TextInput.CursorOnCharacter - Returns the position before the character that is nearest x.
-    \endlist
+    \value TextInput.CursorBetweenCharacters
+           Returns the position between characters that is nearest x.
+           This is the default value.
+    \value TextInput.CursorOnCharacter
+           Returns the position before the character that is nearest x.
 */
 
 void QQuickTextInput::positionAt(QQmlV4Function *args) const
@@ -2131,7 +2132,7 @@ void QQuickTextInput::redo()
 /*!
     \qmlmethod QtQuick::TextInput::insert(int position, string text)
 
-    Inserts \a text into the TextInput at position.
+    Inserts \a text into the TextInput at \a position.
 */
 
 void QQuickTextInput::insert(int position, const QString &text)
@@ -2538,7 +2539,7 @@ void QQuickTextInput::moveCursorSelection(int position)
 }
 
 /*!
-    \qmlmethod QtQuick::TextInput::moveCursorSelection(int position, SelectionMode mode = TextInput.SelectCharacters)
+    \qmlmethod QtQuick::TextInput::moveCursorSelection(int position, SelectionMode mode)
 
     Moves the cursor to \a position and updates the selection according to the optional \a mode
     parameter.  (To only move the cursor, set the \l cursorPosition property.)
@@ -2549,7 +2550,7 @@ void QQuickTextInput::moveCursorSelection(int position)
     text range.
 
     The selection mode specifies whether the selection is updated on a per character or a per word
-    basis.  If not specified the selection mode will default to TextInput.SelectCharacters.
+    basis.  If not specified the selection mode will default to \c {TextInput.SelectCharacters}.
 
     \list
     \li TextInput.SelectCharacters - Sets either the selectionStart or selectionEnd (whichever was at

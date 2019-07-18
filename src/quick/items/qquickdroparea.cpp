@@ -209,7 +209,7 @@ qreal QQuickDropAreaDrag::y() const
 /*!
     \qmlsignal QtQuick::DropArea::positionChanged(DragEvent drag)
 
-    This signal is emitted when the position of a drag has changed.
+    This signal is emitted when the position of a \a drag has changed.
 
     The corresponding handler is \c onPositionChanged.
 */
@@ -312,7 +312,7 @@ void QQuickDropArea::dragLeaveEvent(QDragLeaveEvent *)
 /*!
     \qmlsignal QtQuick::DropArea::dropped(DragEvent drop)
 
-    This signal is emitted when a drop event occurs within the bounds of
+    This signal is emitted when a \a drop event occurs within the bounds of
     a DropArea.
 
     The corresponding handler is \c onDropped.

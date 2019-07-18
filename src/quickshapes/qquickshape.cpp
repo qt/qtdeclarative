@@ -89,7 +89,7 @@ QQuickShapeStrokeFillParams::QQuickShapeStrokeFillParams()
 
 /*!
     \qmltype ShapePath
-    \instantiates QQuickShapePath
+    //! \instantiates QQuickShapePath
     \inqmlmodule QtQuick.Shapes
     \ingroup qtquick-paths
     \ingroup qtquick-views
@@ -516,7 +516,7 @@ void QQuickShapePath::resetFillGradient()
 
 /*!
     \qmltype Shape
-    \instantiates QQuickShape
+    //! \instantiates QQuickShape
     \inqmlmodule QtQuick.Shapes
     \ingroup qtquick-paths
     \ingroup qtquick-views
@@ -1123,7 +1123,7 @@ void QQuickShapePrivate::sync()
 
 /*!
     \qmltype ShapeGradient
-    \instantiates QQuickShapeGradient
+    //! \instantiates QQuickShapeGradient
     \inqmlmodule QtQuick.Shapes
     \ingroup qtquick-paths
     \ingroup qtquick-views
@@ -1174,7 +1174,7 @@ void QQuickShapeGradient::setSpread(SpreadMode mode)
 
 /*!
     \qmltype LinearGradient
-    \instantiates QQuickShapeLinearGradient
+    //! \instantiates QQuickShapeLinearGradient
     \inqmlmodule QtQuick.Shapes
     \ingroup qtquick-paths
     \ingroup qtquick-views
@@ -1265,7 +1265,7 @@ void QQuickShapeLinearGradient::setY2(qreal v)
 
 /*!
     \qmltype RadialGradient
-    \instantiates QQuickShapeRadialGradient
+    //! \instantiates QQuickShapeRadialGradient
     \inqmlmodule QtQuick.Shapes
     \ingroup qtquick-paths
     \ingroup qtquick-views
@@ -1418,7 +1418,7 @@ void QQuickShapeRadialGradient::setFocalRadius(qreal v)
 
 /*!
     \qmltype ConicalGradient
-    \instantiates QQuickShapeConicalGradient
+    //! \instantiates QQuickShapeConicalGradient
     \inqmlmodule QtQuick.Shapes
     \ingroup qtquick-paths
     \ingroup qtquick-views

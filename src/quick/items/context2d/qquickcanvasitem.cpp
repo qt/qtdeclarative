@@ -850,13 +850,15 @@ QSGTextureProvider *QQuickCanvasItem::textureProvider() const
     The \a contextId parameter names the required context. The Canvas item
     will return a context that implements the required drawing mode. After the
     first call to getContext, any subsequent call to getContext with the same
-    contextId will return the same context object.
+    contextId will return the same context object. Any additional arguments
+    (\a args) are currently ignored.
 
     If the context type is not supported or the canvas has previously been
     requested to provide a different and incompatible context type, \c null
     will be returned.
 
     Canvas only supports a 2d context.
+
 */
 
 void QQuickCanvasItem::getContext(QQmlV4Function *args)
@@ -899,7 +901,7 @@ void QQuickCanvasItem::getContext(QQmlV4Function *args)
 /*!
     \qmlmethod int QtQuick::Canvas::requestAnimationFrame(callback)
 
-    This function schedules callback to be invoked before composing the Qt Quick
+    This function schedules \a callback to be invoked before composing the Qt Quick
     scene.
 */
 
@@ -962,7 +964,7 @@ void QQuickCanvasItem::requestPaint()
 /*!
     \qmlmethod QtQuick::Canvas::markDirty(rect area)
 
-    Mark the given \a area as dirty, so that when this area is visible the
+    Marks the given \a area as dirty, so that when this area is visible the
     canvas renderer will redraw it. This will trigger the \c paint signal.
 
     \sa paint, requestPaint()
@@ -986,16 +988,16 @@ void QQuickCanvasItem::checkAnimationCallbacks()
 }
 
 /*!
-  \qmlmethod bool QtQuick::Canvas::save(string filename)
+    \qmlmethod bool QtQuick::Canvas::save(string filename)
 
-   Save the current canvas content into an image file \a filename.
-   The saved image format is automatically decided by the \a filename's
-   suffix.
+    Saves the current canvas content into an image file \a filename.
+    The saved image format is automatically decided by the \a filename's
+    suffix. Returns \c true on success.
 
-   Note: calling this method will force painting the whole canvas, not just the
-   current canvas visible window.
+    \note Calling this method will force painting the whole canvas, not just the
+    current canvas visible window.
 
-   \sa canvasWindow, canvasSize, toDataURL()
+    \sa canvasWindow, canvasSize, toDataURL()
 */
 bool QQuickCanvasItem::save(const QString &filename) const
 {
@@ -1025,15 +1027,17 @@ QQmlRefPointer<QQuickCanvasPixmap> QQuickCanvasItem::loadedPixmap(const QUrl& ur
 */
 
 /*!
-  \qmlmethod QtQuick::Canvas::loadImage(url image)
-    Loads the given \c image asynchronously.
+    \qmlmethod QtQuick::Canvas::loadImage(url image)
 
-    When the image is ready, \l imageLoaded will be emitted.
-    The loaded image can be unloaded by the unloadImage() method.
+    Loads the given \a image asynchronously.
 
-    Note: Only loaded images can be painted on the Canvas item.
-  \sa unloadImage, imageLoaded, isImageLoaded(),
-      Context2D::createImageData(), Context2D::drawImage()
+    Once the image is ready, imageLoaded() signal will be emitted.
+    The loaded image can be unloaded with the unloadImage() method.
+
+    \note Only loaded images can be painted on the Canvas item.
+
+    \sa unloadImage(), imageLoaded(), isImageLoaded(),
+        Context2D::createImageData(), Context2D::drawImage()
 */
 void QQuickCanvasItem::loadImage(const QUrl& url)
 {
@@ -1053,14 +1057,15 @@ void QQuickCanvasItem::loadImage(const QUrl& url)
     }
 }
 /*!
-  \qmlmethod QtQuick::Canvas::unloadImage(url image)
-  Unloads the \c image.
+    \qmlmethod QtQuick::Canvas::unloadImage(url image)
 
-  Once an image is unloaded it cannot be painted by the canvas context
-  unless it is loaded again.
+    Unloads the \a image.
 
-  \sa loadImage(), imageLoaded, isImageLoaded(),
-      Context2D::createImageData(), Context2D::drawImage
+    Once an image is unloaded, it cannot be painted by the canvas context
+    unless it is loaded again.
+
+    \sa loadImage(), imageLoaded(), isImageLoaded(),
+        Context2D::createImageData(), Context2D::drawImage
 */
 void QQuickCanvasItem::unloadImage(const QUrl& url)
 {
@@ -1069,10 +1074,11 @@ void QQuickCanvasItem::unloadImage(const QUrl& url)
 }
 
 /*!
-  \qmlmethod QtQuick::Canvas::isImageError(url image)
-  Returns true if the \a image failed to load.
+    \qmlmethod QtQuick::Canvas::isImageError(url image)
 
-  \sa loadImage()
+    Returns \c true if the \a image failed to load, \c false otherwise.
+
+    \sa loadImage()
 */
 bool QQuickCanvasItem::isImageError(const QUrl& url) const
 {

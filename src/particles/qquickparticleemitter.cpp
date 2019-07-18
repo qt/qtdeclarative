@@ -190,10 +190,10 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlsignal QtQuick.Particles::Emitter::emitParticles(Array particles)
 
-    This signal is emitted when particles are emitted. particles is a JavaScript
+    This signal is emitted when particles are emitted. \a particles is a JavaScript
     array of Particle objects. You can modify particle attributes directly within the handler.
 
-    Note that JavaScript is slower to execute, so it is not recommended to use this in
+    \note JavaScript is slower to execute, so it is not recommended to use this in
     high-volume particle systems.
 
     The corresponding handler is \c onEmitParticles.
@@ -201,19 +201,20 @@ QT_BEGIN_NAMESPACE
 
 /*! \qmlmethod QtQuick.Particles::Emitter::burst(int count)
 
-    Emits count particles from this emitter immediately.
+    Emits a number of particles, specified by \a count, from this emitter immediately.
 */
 
 /*! \qmlmethod QtQuick.Particles::Emitter::burst(int count, int x, int y)
 
-    Emits count particles from this emitter immediately. The particles are emitted
-    as if the Emitter was positioned at x,y but all other properties are the same.
+    Emits a number of particles, specified by \a count, from this emitter immediately.
+    The particles are emitted as if the Emitter was positioned at (\a {x}, \a {y}) but
+    all other properties are the same.
 */
 
 /*! \qmlmethod QtQuick.Particles::Emitter::pulse(int duration)
 
-    If the emitter is not enabled, enables it for duration milliseconds and then switches
-    it back off.
+    If the emitter is not enabled, enables it for a specified \a duration
+    (in milliseconds) and then switches it back off.
 */
 
 QQuickParticleEmitter::QQuickParticleEmitter(QQuickItem *parent) :

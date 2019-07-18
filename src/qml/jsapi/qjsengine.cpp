@@ -585,7 +585,9 @@ QJSValue QJSEngine::newObject()
 
 /*!
   \since 5.12
-  Creates a JavaScript object of class Error.
+
+  Creates a JavaScript object of class Error, with \a message as the error
+  message.
 
   The prototype of the created object will be \a errorType.
 

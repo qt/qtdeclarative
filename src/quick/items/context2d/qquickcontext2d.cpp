@@ -1149,6 +1149,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_scale(const QV4::FunctionO
 
 /*!
     \qmlmethod object QtQuick::Context2D::setTransform(real a, real b, real c, real d, real e, real f)
+
     Changes the transformation matrix to the matrix given by the arguments as described below.
 
     Modifying the transformation matrix directly enables you to perform scaling,
@@ -1161,21 +1162,22 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_scale(const QV4::FunctionO
     \image qml-item-canvas-math.png
     where:
     \list
-    \li \c{a} is the scale factor in the horizontal (x) direction
+    \li \a{a} is the scale factor in the horizontal (x) direction
     \image qml-item-canvas-scalex.png
-    \li \c{c} is the skew factor in the x direction
+    \li \a{c} is the skew factor in the x direction
     \image qml-item-canvas-skewx.png
-    \li \c{e} is the translation in the x direction
+    \li \a{e} is the translation in the x direction
     \image qml-item-canvas-translate.png
-    \li \c{b} is the skew factor in the y (vertical) direction
+    \li \a{b} is the skew factor in the y (vertical) direction
     \image qml-item-canvas-skewy.png
-    \li \c{d} is the scale factor in the y direction
+    \li \a{d} is the scale factor in the y direction
     \image qml-item-canvas-scaley.png
-    \li \c{f} is the translation in the y direction
+    \li \a{f} is the translation in the y direction
     \image qml-item-canvas-translatey.png
     \li the last row remains constant
     \endlist
-    The scale factors and skew factors are multiples; \c{e} and \c{f} are
+
+    The scale factors and skew factors are multiples; \a{e} and \a{f} are
     coordinate space units, just like the units in the translate(x,y)
     method.
 
@@ -1203,11 +1205,14 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_setTransform(const QV4::Fu
 /*!
     \qmlmethod object QtQuick::Context2D::transform(real a, real b, real c, real d, real e, real f)
 
-    This method is very similar to setTransform(), but instead of replacing the old
-    transform matrix, this method applies the given tranform matrix to the current matrix by multiplying to it.
+    This method is very similar to setTransform(), but instead of replacing
+    the old transform matrix, this method applies the given tranform matrix
+    to the current matrix by multiplying to it.
 
-    The setTransform(a, b, c, d, e, f) method actually resets the current transform to the identity matrix,
-    and then invokes the transform(a, b, c, d, e, f) method with the same arguments.
+    The setTransform(\a a, \a b, \a c, \a d, \a e, \a f) method actually
+    resets the current transform to the identity matrix, and then invokes
+    the transform(\a a, \a b, \a c, \a d, \a e, \a f) method with the same
+    arguments.
 
     \sa setTransform()
 */
@@ -1627,9 +1632,12 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createLinearGradient(const
 }
 
 /*!
-  \qmlmethod object QtQuick::Context2D::createRadialGradient(real x0, real y0, real r0, real x1, real y1, real r1)
-   Returns a CanvasGradient object that represents a radial gradient that paints along the cone given by the start circle with
-   origin (x0, y0) and radius r0, and the end circle with origin (x1, y1) and radius r1.
+    \qmlmethod object QtQuick::Context2D::createRadialGradient(real x0, real y0, real r0, real x1, real y1, real r1)
+
+    Returns a CanvasGradient object that represents a radial gradient that
+    paints along the cone given by the start circle with origin (\a x0, \a y0)
+    and radius \a r0, and the end circle with origin (\a x1, \a y1) and radius
+    \a r1.
 
     \sa CanvasGradient::addColorStop()
     \sa createLinearGradient()
@@ -1680,8 +1688,10 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createRadialGradient(const
 
 /*!
   \qmlmethod object QtQuick::Context2D::createConicalGradient(real x, real y, real angle)
-   Returns a CanvasGradient object that represents a conical gradient that interpolate colors counter-clockwise around a center point (\c x, \c y)
-   with start angle \c angle in units of radians.
+
+   Returns a CanvasGradient object that represents a conical gradient that
+   interpolates colors counter-clockwise around a center point (\a x, \a y)
+   with a start angle \a angle in units of radians.
 
     \sa CanvasGradient::addColorStop()
     \sa createLinearGradient()
@@ -2264,8 +2274,10 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_path(const QV4::FunctionObject 
 
 //rects
 /*!
-  \qmlmethod object QtQuick::Context2D::clearRect(real x, real y, real w, real h)
-  Clears all pixels on the canvas in the given rectangle to transparent black.
+    \qmlmethod object QtQuick::Context2D::clearRect(real x, real y, real w, real h)
+
+    Clears all pixels on the canvas in the rectangle specified by
+    (\a x, \a y, \a w, \a h) to transparent black.
   */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_clearRect(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {
@@ -2284,8 +2296,9 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_clearRect(const QV4::Funct
 
 }
 /*!
-  \qmlmethod object QtQuick::Context2D::fillRect(real x, real y, real w, real h)
-   Paint the specified rectangular area using the fillStyle.
+    \qmlmethod object QtQuick::Context2D::fillRect(real x, real y, real w, real h)
+
+    Paints a rectangular area specified by (\a x, \a y, \a w, \a h) using fillStyle.
 
    \sa fillStyle
   */
@@ -2302,14 +2315,12 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_fillRect(const QV4::Functi
 }
 
 /*!
-  \qmlmethod object QtQuick::Context2D::strokeRect(real x, real y, real w, real h)
-   Stroke the specified rectangle's path using the strokeStyle, lineWidth, lineJoin,
-   and (if appropriate) miterLimit attributes.
+    \qmlmethod object QtQuick::Context2D::strokeRect(real x, real y, real w, real h)
 
-   \sa strokeStyle
-   \sa lineWidth
-   \sa lineJoin
-   \sa miterLimit
+    Strokes the path of the rectangle specified by (\a x, \a y, \a w, \a h) using
+    strokeStyle, lineWidth, lineJoin, and (if appropriate) miterLimit attributes.
+
+   \sa strokeStyle, lineWidth, lineJoin, miterLimit
   */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_strokeRect(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {
@@ -2333,7 +2344,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_strokeRect(const QV4::Func
     circle whose center is at the point (\a x, \a y) and whose radius is
     \a radius.
 
-    Both \c startAngle and \c endAngle are measured from the x-axis in radians.
+    Both \a startAngle and \a endAngle are measured from the x-axis in radians.
 
     \image qml-item-canvas-arc.png
 
@@ -2440,10 +2451,11 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_beginPath(const QV4::Funct
 /*!
   \qmlmethod object QtQuick::Context2D::bezierCurveTo(real cp1x, real cp1y, real cp2x, real cp2y, real x, real y)
 
-  Adds a cubic bezier curve between the current position and the given endPoint using the control points specified by (\c cp1x, cp1y),
-  and (\c cp2x, \c cp2y).
-  After the curve is added, the current position is updated to be at the end point (\c x, \c y) of the curve.
+  Adds a cubic bezier curve between the current position and the given endPoint using the control points specified by (\a {cp1x}, \a {cp1y}),
+  and (\a {cp2x}, \a {cp2y}).
+  After the curve is added, the current position is updated to be at the end point (\a {x}, \a {y}) of the curve.
   The following code produces the path shown below:
+
   \code
   ctx.strokeStyle = Qt.rgba(0, 0, 0, 1);
   ctx.lineWidth = 1;
@@ -2452,7 +2464,9 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_beginPath(const QV4::Funct
   ctx.bezierCurveTo(-10, 90, 210, 90, 180, 0);
   ctx.stroke();
   \endcode
+
    \image qml-item-canvas-bezierCurveTo.png
+
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-beziercurveto}{W3C 2d context standard for bezierCurveTo}
   \sa {http://www.openrise.com/lab/FlowerPower/}{The beautiful flower demo by using bezierCurveTo}
   */
@@ -2551,7 +2565,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_fill(const QV4::FunctionOb
 /*!
   \qmlmethod object QtQuick::Context2D::lineTo(real x, real y)
 
-   Draws a line from the current position to the point (x, y).
+   Draws a line from the current position to the point at (\a x, \a y).
  */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_lineTo(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {
@@ -2575,7 +2589,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_lineTo(const QV4::Function
 /*!
   \qmlmethod object QtQuick::Context2D::moveTo(real x, real y)
 
-   Creates a new subpath with the given point.
+   Creates a new subpath with a point at (\a x, \a y).
  */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_moveTo(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {
@@ -2596,11 +2610,12 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_moveTo(const QV4::Function
 }
 
 /*!
-  \qmlmethod object QtQuick::Context2D::quadraticCurveTo(real cpx, real cpy, real x, real y)
+    \qmlmethod object QtQuick::Context2D::quadraticCurveTo(real cpx, real cpy, real x, real y)
 
-   Adds a quadratic bezier curve between the current point and the endpoint (\c x, \c y) with the control point specified by (\c cpx, \c cpy).
+    Adds a quadratic bezier curve between the current point and the endpoint
+    (\a x, \a y) with the control point specified by (\a cpx, \a cpy).
 
-   See \l{http://www.w3.org/TR/2dcontext/#dom-context-2d-quadraticcurveto}{W3C 2d context standard for quadraticCurveTo}
+    \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-quadraticcurveto}{W3C 2d context standard for quadraticCurveTo}
  */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_quadraticCurveTo(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {
@@ -2624,9 +2639,10 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_quadraticCurveTo(const QV4
 }
 
 /*!
-  \qmlmethod object QtQuick::Context2D::rect(real x, real y, real w, real h)
+    \qmlmethod object QtQuick::Context2D::rect(real x, real y, real w, real h)
 
-   Adds a rectangle at position (\c x, \c y), with the given width \c w and height \c h, as a closed subpath.
+    Adds a rectangle at position (\a x, \a y), with the given width \a w and
+    height \a h, as a closed subpath.
  */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_rect(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {
@@ -2641,10 +2657,11 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_rect(const QV4::FunctionOb
 }
 
 /*!
-  \qmlmethod object QtQuick::Context2D::roundedRect(real x, real y, real w, real h,  real xRadius, real yRadius)
+    \qmlmethod object QtQuick::Context2D::roundedRect(real x, real y, real w, real h, real xRadius, real yRadius)
 
-   Adds the given rectangle rect with rounded corners to the path. The \c xRadius and \c yRadius arguments specify the radius of the
-   ellipses defining the corners of the rounded rectangle.
+    Adds a rounded-corner rectangle, specified by (\a x, \a y, \a w, \a h), to the path.
+    The \a xRadius and \a yRadius arguments specify the radius of the
+    ellipses defining the corners of the rounded rectangle.
  */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_roundedRect(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {
@@ -2664,12 +2681,14 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_roundedRect(const QV4::Fun
 }
 
 /*!
-  \qmlmethod object QtQuick::Context2D::ellipse(real x, real y, real w, real h)
+    \qmlmethod object QtQuick::Context2D::ellipse(real x, real y, real w, real h)
 
-  Creates an ellipse within the bounding rectangle defined by its top-left corner at (\a x, \ y), width \a w and height \a h,
-  and adds it to the path as a closed subpath.
+    Creates an ellipse within the bounding rectangle defined by its top-left
+    corner at (\a x, \a y), width \a w and height \a h, and adds it to the
+    path as a closed subpath.
 
-  The ellipse is composed of a clockwise curve, starting and finishing at zero degrees (the 3 o'clock position).
+    The ellipse is composed of a clockwise curve, starting and finishing at
+    zero degrees (the 3 o'clock position).
  */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_ellipse(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {
@@ -2687,8 +2706,11 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_ellipse(const QV4::Functio
 /*!
   \qmlmethod object QtQuick::Context2D::text(string text, real x, real y)
 
-  Adds the given \c text to the path as a set of closed subpaths created from the current context font supplied.
-  The subpaths are positioned so that the left end of the text's baseline lies at the point specified by (\c x, \c y).
+  Adds the given \a text to the path as a set of closed subpaths created
+  from the current context font supplied.
+
+  The subpaths are positioned so that the left end of the text's baseline
+  lies at the point specified by (\a x, \a y).
  */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_text(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {
@@ -2713,9 +2735,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_text(const QV4::FunctionOb
 
    Strokes the subpaths with the current stroke style.
 
-   See \l{http://www.w3.org/TR/2dcontext/#dom-context-2d-stroke}{W3C 2d context standard for stroke}
-
-   \sa strokeStyle
+   \sa strokeStyle, {http://www.w3.org/TR/2dcontext/#dom-context-2d-stroke}{W3C 2d context standard for stroke}
   */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_stroke(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *, int)
 {
@@ -2731,7 +2751,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_stroke(const QV4::Function
 /*!
   \qmlmethod object QtQuick::Context2D::isPointInPath(real x, real y)
 
-   Returns true if the given point is in the current path.
+   Returns \c true if the point (\a x, \a y) is in the current path.
 
    \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-ispointinpath}{W3C 2d context standard for isPointInPath}
   */
@@ -2949,7 +2969,9 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_textBaseline(const QV4::Functio
 
 /*!
   \qmlmethod object QtQuick::Context2D::fillText(text, x, y)
-  Fills the given text at the given position.
+
+  Fills the specified \a text at the given position (\a x, \a y).
+
   \sa font
   \sa textAlign
   \sa textBaseline
@@ -2973,13 +2995,15 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_fillText(const QV4::Functi
     RETURN_RESULT(*thisObject);
 }
 /*!
-  \qmlmethod object QtQuick::Context2D::strokeText(text, x, y)
-  Strokes the given text at the given position.
-  \sa font
-  \sa textAlign
-  \sa textBaseline
-  \sa fillText
-  */
+    \qmlmethod object QtQuick::Context2D::strokeText(text, x, y)
+
+    Strokes the given \a text at a position specified by (\a x, \a y).
+
+    \sa font
+    \sa textAlign
+    \sa textBaseline
+    \sa fillText
+*/
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_strokeText(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {
     QV4::Scope scope(b);
@@ -3415,8 +3439,10 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createImageData(const QV4:
 }
 
 /*!
-  \qmlmethod CanvasImageData QtQuick::Context2D::getImageData(real sx, real sy, real sw, real sh)
-  Returns an CanvasImageData object containing the image data for the given rectangle of the canvas.
+    \qmlmethod CanvasImageData QtQuick::Context2D::getImageData(real x, real y, real w, real h)
+
+    Returns an CanvasImageData object containing the image data for the canvas
+    rectangle specified by (\a x, \a y, \a w, \a h).
   */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_getImageData(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {
@@ -3442,8 +3468,13 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_getImageData(const QV4::Fu
 }
 
 /*!
-  \qmlmethod object QtQuick::Context2D::putImageData(CanvasImageData imageData, real dx, real dy, real dirtyX, real dirtyY, real dirtyWidth, real dirtyHeight)
-  Paints the data from the given ImageData object onto the canvas. If a dirty rectangle (\a dirtyX, \a dirtyY, \a dirtyWidth, \a dirtyHeight) is provided, only the pixels from that rectangle are painted.
+    \qmlmethod object QtQuick::Context2D::putImageData(CanvasImageData imageData, real dx, real dy, real dirtyX, real dirtyY, real dirtyWidth, real dirtyHeight)
+
+    Paints the data from the given \a imageData object onto the canvas at
+    (\a dx, \a dy).
+
+    If a dirty rectangle (\a dirtyX, \a dirtyY, \a dirtyWidth, \a dirtyHeight)
+    is provided, only the pixels from that rectangle are painted.
   */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_putImageData(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {
@@ -3536,16 +3567,18 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_putImageData(const QV4::Fu
   */
 
 /*!
-  \qmlmethod CanvasGradient QtQuick::CanvasGradient::addColorStop(real offsetof, string color)
-  Adds a color stop with the given color to the gradient at the given offset.
-  0.0 is the offset at one end of the gradient, 1.0 is the offset at the other end.
+    \qmlmethod CanvasGradient QtQuick::CanvasGradient::addColorStop(real offset, string color)
 
-  For example:
-  \code
-  var gradient = ctx.createLinearGradient(0, 0, 100, 100);
-  gradient.addColorStop(0.3, Qt.rgba(1, 0, 0, 1));
-  gradient.addColorStop(0.7, 'rgba(0, 255, 255, 1');
-  \endcode
+    Adds a color stop with the given \a color to the gradient at the given \a offset.
+    0.0 is the offset at one end of the gradient, 1.0 is the offset at the other end.
+
+    For example:
+
+    \code
+    var gradient = ctx.createLinearGradient(0, 0, 100, 100);
+    gradient.addColorStop(0.3, Qt.rgba(1, 0, 0, 1));
+    gradient.addColorStop(0.7, 'rgba(0, 255, 255, 1');
+    \endcode
   */
 QV4::ReturnedValue QQuickContext2DStyle::gradient_proto_addColorStop(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {

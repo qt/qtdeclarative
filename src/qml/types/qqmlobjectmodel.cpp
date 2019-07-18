@@ -328,7 +328,7 @@ QObject *QQmlObjectModel::get(int index) const
     \qmlmethod QtQml.Models::ObjectModel::append(object item)
     \since 5.6
 
-    Appends a new item to the end of the model.
+    Appends a new \a item to the end of the model.
 
     \code
         objectModel.append(objectComponent.createObject())
@@ -346,7 +346,7 @@ void QQmlObjectModel::append(QObject *object)
     \qmlmethod QtQml.Models::ObjectModel::insert(int index, object item)
     \since 5.6
 
-    Inserts a new item to the model at position \a index.
+    Inserts a new \a item to the model at position \a index.
 
     \code
         objectModel.insert(2, objectComponent.createObject())
@@ -371,7 +371,7 @@ void QQmlObjectModel::insert(int index, QObject *object)
     \qmlmethod QtQml.Models::ObjectModel::move(int from, int to, int n = 1)
     \since 5.6
 
-    Moves \a n items \a from one position \a to another.
+    Moves \e n items \a from one position \a to another.
 
     The from and to ranges must exist; for example, to move the first 3 items
     to the end of the model:
@@ -398,7 +398,7 @@ void QQmlObjectModel::move(int from, int to, int n)
     \qmlmethod QtQml.Models::ObjectModel::remove(int index, int n = 1)
     \since 5.6
 
-    Removes the items at \a index from the model.
+    Removes \e n items at \a index from the model.
 
     \sa clear()
 */

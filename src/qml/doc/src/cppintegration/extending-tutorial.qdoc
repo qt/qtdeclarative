@@ -407,8 +407,7 @@ located at the same level as the application that uses our new import module.
 This way, the QML engine will find our module as the default search path for QML
 imports includes the directory of the application executable. On \macos, the
 plugin binary is copied to \c Contents/PlugIns in the the application bundle;
-this path is set in \l {tutorials/extending-qml/chapter6-plugins/app.pro}
-{chapter6-plugins/app.pro}:
+this path is set in \c {chapter6-plugins/app.pro}:
 
 \quotefromfile tutorials/extending-qml/chapter6-plugins/app.pro
 \skipto osx

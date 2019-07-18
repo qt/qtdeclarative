@@ -327,9 +327,12 @@ QRectF QQuickFontMetrics::tightBoundingRect(const QString &text) const
 /*!
     \qmlmethod string QtQuick::FontMetrics::elidedText(string text, enumeration mode, real width, int flags)
 
-    This method returns a returns an elided version of the string (i.e., a
+    This method returns an elided version of the string (i.e., a
     string with "..." in it) if the string \a text is wider than \a width.
     Otherwise, returns the original string.
+
+    The \a mode argument specifies the text elide mode; that is, where
+    the ellipsis should appear when displaying text that doesn't fit.
 
     The \a flags argument is optional and currently only supports
     \l {Qt::TextShowMnemonic}.
@@ -338,7 +341,7 @@ QRectF QQuickFontMetrics::tightBoundingRect(const QString &text) const
     \l {QQuickTextMetrics::elidedText}{elidedText} property of
     \l {QQuickTextMetrics::elidedText}{TextMetrics}.
 
-    \sa {QFontMetricsF::elidedText()}
+    \sa Qt::TextElideMode, QFontMetricsF::elidedText()
 */
 QString QQuickFontMetrics::elidedText(const QString &text, Qt::TextElideMode mode, qreal width, int flags) const
 {
