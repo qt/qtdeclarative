@@ -28,6 +28,7 @@
 
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlfile.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlscriptstring.h>
@@ -125,10 +126,12 @@ void tst_qqmlexpression::expressionFromDataComponent()
     QQmlEngine engine;
     QQmlComponent c(&engine);
 
-    QUrl url = testFileUrl("expressionFromDataComponent.qml");
+    const QString fn(QLatin1String("expressionFromDataComponent.qml"));
+    QUrl url = testFileUrl(fn);
+    QString path = testFile(fn);
 
     {
-        QFile f(url.toLocalFile());
+        QFile f(path);
         QVERIFY(f.open(QIODevice::ReadOnly));
         c.setData(f.readAll(), url);
     }
