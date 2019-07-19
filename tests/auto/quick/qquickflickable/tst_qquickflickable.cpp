@@ -1652,6 +1652,7 @@ void tst_qquickflickable::flickTwiceUsingTouches()
     QQuickViewTestUtil::moveMouseAway(window.data());
     window->show();
     QVERIFY(window->rootObject() != nullptr);
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
     QVERIFY(flickable != nullptr);
@@ -1994,6 +1995,7 @@ void tst_qquickflickable::nestedMouseAreaUsingTouch()
     QQuickViewTestUtil::moveMouseAway(window.data());
     window->show();
     QVERIFY(window->rootObject() != nullptr);
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
     QVERIFY(flickable != nullptr);
@@ -2489,6 +2491,7 @@ void tst_qquickflickable::synchronousDrag()
     QQuickViewTestUtil::moveMouseAway(window);
     window->show();
     QVERIFY(window->rootObject() != nullptr);
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
     QVERIFY(flickable != nullptr);
