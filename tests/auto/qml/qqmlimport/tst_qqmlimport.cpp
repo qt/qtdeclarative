@@ -78,7 +78,7 @@ void tst_QQmlImport::testDesignerSupported()
     QVERIFY(window->errors().isEmpty());
 
     QString warningString("%1:30:1: module does not support the designer \"MyPluginUnsupported\" \n     import MyPluginUnsupported 1.0\r \n     ^ ");
-#ifndef Q_OS_WIN
+#if !defined(Q_OS_WIN) && !defined(Q_OS_ANDROID)
     warningString.remove('\r');
 #endif
     warningString = warningString.arg(testFileUrl("testfile_unsupported.qml").toString());
@@ -130,6 +130,9 @@ void tst_QQmlImport::uiFormatLoading()
 
 void tst_QQmlImport::importPathOrder()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath) returns bogus path on Android, but its nevertheless unusable.");
+#endif
     QStringList expectedImportPaths;
     QString appDirPath = QCoreApplication::applicationDirPath();
     QString qml2Imports = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
