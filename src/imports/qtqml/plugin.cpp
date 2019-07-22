@@ -42,10 +42,6 @@
 #include <QtQml/private/qqmlcomponentattached_p.h>
 #include <QtQml/private/qqmlbind_p.h>
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-#include <QtQmlModels/private/qqmlmodelsmodule_p.h>
-#endif
-
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -75,10 +71,6 @@ public:
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQml"));
         QQmlEnginePrivate::defineModule();
-
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-        QQmlModelsModule::registerQmlTypes();
-#endif
 
         qmlRegisterModule(uri, 2, 15);
     }
