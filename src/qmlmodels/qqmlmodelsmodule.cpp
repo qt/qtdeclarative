@@ -108,12 +108,12 @@ void QQmlModelsModule::defineModule()
 #if QT_CONFIG(qml_delegate_model)
     qmlRegisterType<QQmlDelegateModel>(uri, 2, 1, "DelegateModel");
     qmlRegisterType<QQmlDelegateModelGroup>(uri, 2, 1, "DelegateModelGroup");
-    qmlRegisterType<QQuickPackage>(uri, 2, 14, "Package");
+    qmlRegisterType<QQuickPackage>(uri, 2, 0, "Package");
 #endif
 #if QT_CONFIG(qml_object_model)
     qmlRegisterType<QQmlObjectModel>(uri, 2, 1, "ObjectModel");
     qmlRegisterType<QQmlObjectModel,3>(uri, 2, 3, "ObjectModel");
-    qmlRegisterType<QQmlInstantiator>(uri, 2, 14, "Instantiator");
+    qmlRegisterType<QQmlInstantiator>(uri, 2, 1, "Instantiator");
     qmlRegisterType<QQmlInstanceModel>();
 #endif
 #if QT_CONFIG(itemmodel)
