@@ -233,6 +233,7 @@ private slots:
     void functionAssignment_afterBinding();
     void eval();
     void function();
+    void topLevelGeneratorFunction();
     void qtbug_10696();
     void qtbug_11606();
     void qtbug_11600();
@@ -6346,6 +6347,28 @@ void tst_qqmlecmascript::function()
     QCOMPARE(o->property("test3").toBool(), true);
 
     delete o;
+}
+
+// QTBUG-77096
+void tst_qqmlecmascript::topLevelGeneratorFunction()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("generatorFunction.qml"));
+
+    QScopedPointer<QObject> o {component.create()};
+    QVERIFY(o != nullptr);
+
+    // check that generator works correctly in QML
+    QCOMPARE(o->property("test1").toBool(), true);
+    QCOMPARE(o->property("test2").toBool(), true);
+    QCOMPARE(o->property("test3").toBool(), true);
+    QCOMPARE(o->property("done").toBool(), true);
+
+    // check that generator is accessible from C++
+    QVariant returnedValue;
+    QMetaObject::invokeMethod(o.get(), "gen", Q_RETURN_ARG(QVariant, returnedValue));
+    auto it = returnedValue.value<QJSValue>();
+    QCOMPARE(it.property("next").callWithInstance(it).property("value").toInt(), 1);
 }
 
 // Test the "Qt.include" method

@@ -88,7 +88,7 @@ public:
                           const QString &name);
     void leaveEnvironment();
 
-    void enterQmlFunction(QQmlJS::AST::FunctionDeclaration *ast)
+    void enterQmlFunction(QQmlJS::AST::FunctionExpression *ast)
     { enterFunction(ast, false); }
 
 protected:
