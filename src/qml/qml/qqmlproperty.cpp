@@ -1216,10 +1216,18 @@ bool QQmlPropertyPrivate::write(QObject *object,
     if (propertyType == variantType && !isUrl && propertyType != qMetaTypeId<QList<QUrl>>() && !property.isQList()) {
         return property.writeProperty(object, const_cast<void *>(value.constData()), flags);
     } else if (property.isQObject()) {
-        QQmlMetaObject valMo = rawMetaObjectForType(enginePriv, variantType);
+        QVariant val = value;
+        int varType = variantType;
+        if (variantType == QMetaType::Nullptr) {
+            // This reflects the fact that you can assign a nullptr to a QObject pointer
+            // Without the change to QObjectStar, rawMetaObjectForType would not give us a QQmlMetaObject
+            varType = QMetaType::QObjectStar;
+            val = QVariant(QMetaType::QObjectStar, nullptr);
+        }
+        QQmlMetaObject valMo = rawMetaObjectForType(enginePriv, varType);
         if (valMo.isNull())
             return false;
-        QObject *o = *static_cast<QObject *const *>(value.constData());
+        QObject *o = *static_cast<QObject *const *>(val.constData());
         QQmlMetaObject propMo = rawMetaObjectForType(enginePriv, propertyType);
 
         if (o)
