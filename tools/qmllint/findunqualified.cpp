@@ -325,7 +325,9 @@ void FindUnqualifiedIDVisitor::importExportedNames(QStringRef prefix, QString na
                 break;
             }
         } else {
-            qDebug() << name << "not found";
+            m_colorOut.write(QLatin1String("warning: "), Warning);
+            m_colorOut.write(name + QLatin1String(" was not found. Did you add all import paths?\n"));
+            m_unknownImports.insert(name);
             break;
         }
     }
@@ -526,7 +528,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
     auto name = idexp->name;
     if (!m_exportedName2MetaObject.contains(name.toString())) {
         m_currentScope->addIdToAccssedIfNotInParentScopes(
-                { name.toString(), idexp->firstSourceLocation() });
+                { name.toString(), idexp->firstSourceLocation() }, m_unknownImports);
     }
     return true;
 }

@@ -75,7 +75,7 @@ public:
     void insertPropertyIdentifier(QString id); // inserts property as qml identifier as well as the corresponding
 
     bool isIdInCurrentScope(QString const &id) const;
-    void addIdToAccssedIfNotInParentScopes(QPair<QString, QQmlJS::AST::SourceLocation> const& id_loc_pair);
+    void addIdToAccssedIfNotInParentScopes(QPair<QString, QQmlJS::AST::SourceLocation> const& id_loc_pair, const QSet<QString>& unknownImports);
 
     bool isVisualRootScope() const;
     QString name() const;

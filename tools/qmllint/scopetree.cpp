@@ -86,8 +86,14 @@ bool ScopeTree::isIdInCurrentScope(const QString &id) const
     return isIdInCurrentQMlScopes(id) || isIdInCurrentJSScopes(id);
 }
 
-void ScopeTree::addIdToAccssedIfNotInParentScopes(const QPair<QString, QQmlJS::AST::SourceLocation> &id_loc_pair) {
-    if (!isIdInCurrentScope(id_loc_pair.first)) {
+void ScopeTree::addIdToAccssedIfNotInParentScopes(const QPair<QString, QQmlJS::AST::SourceLocation> &id_loc_pair, const QSet<QString>& unknownImports) {
+    // also do not add id if it is parent
+    // parent is almost always defined valid in QML, and if we could not find a definition for the current QML component
+    // not skipping "parent" will lead to many false positives
+    // Moreover, if the top level item is Item or inherits from it, it will have a parent property to which we would point the user
+    // which makes for a very nonsensical warning
+    auto qmlScope = getCurrentQMLScope();
+    if (!isIdInCurrentScope(id_loc_pair.first) && !(id_loc_pair.first == QLatin1String("parent") && qmlScope && unknownImports.contains(qmlScope->name()))) {
         m_accessedIdentifiers.push_back(id_loc_pair);
     }
 }
@@ -148,20 +154,15 @@ bool ScopeTree::recheckIdentifiers(const QString& code, const QHash<QString, Lan
                 while (parentScope && parentScope->scopeType() != ScopeType::QMLScope) {
                     parentScope = parentScope->m_parentScope;
                 }
-                bool directChild = parentScope && parentScope->isVisualRootScope();
                 colorOut.write("Note: ", Info);
                 colorOut.write( idLocationPair.first + QLatin1String(" is a meber of the root element\n"), Normal );
-                if (directChild) {
-                    colorOut.write(QLatin1String("      As the current element is a direct child of the root element,\n      you can qualify the access with parent to avoid this warning:\n"), Normal);
-                } else {
-                    colorOut.write(QLatin1String("      You can qualify the access with its id to avoid this warning:\n"), Normal);
-                    if (rootId == QLatin1String("<id>")) {
-                        colorOut.write("Note: ", Warning);
-                        colorOut.write(("You first have to give the root element an id\n"));
-                    }
+                colorOut.write(QLatin1String("      You can qualify the access with its id to avoid this warning:\n"), Normal);
+                if (rootId == QLatin1String("<id>")) {
+                    colorOut.write("Note: ", Warning);
+                    colorOut.write(("You first have to give the root element an id\n"));
                 }
                 colorOut.write(issueLocationWithContext.beforeText.toString(), Normal);
-                colorOut.write( (directChild ? QLatin1String("parent") : rootId) + QLatin1Char('.'), Hint);
+                colorOut.write(rootId + QLatin1Char('.'), Hint);
                 colorOut.write(issueLocationWithContext.issueText.toString(), Normal);
                 colorOut.write(issueLocationWithContext.afterText + QLatin1Char('\n'), Normal);
             } else if (currentScope->isIdInjectedFromSignal(idLocationPair.first)) {

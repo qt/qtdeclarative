@@ -40,6 +40,7 @@ private Q_SLOTS:
     void test_data();
     void testUnqualified();
     void testUnqualified_data();
+    void testUnqualifiedNoSpuriousParentWarning();
 private:
     QString m_qmllintPath;
 };
@@ -73,13 +74,14 @@ void TestQmllint::test_data()
 
 void TestQmllint::testUnqualified()
 {
+    auto qmlImportDir = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
     QFETCH(QString, filename);
     QFETCH(QString, warningMessage);
     QFETCH(int, warningLine);
     QFETCH(int, warningColumn);
     filename.prepend(QStringLiteral("data/"));
     QStringList args;
-    args << QStringLiteral("-U") << filename;
+    args << QStringLiteral("-U") << filename  << QStringLiteral("-I") << qmlImportDir;
 
     QProcess process;
     process.start(m_qmllintPath, args);
@@ -106,15 +108,39 @@ void TestQmllint::testUnqualified_data()
     // access property of root object
     QTest::newRow("FromRootDirect") << QStringLiteral("FromRoot.qml") << QStringLiteral("x: root.unqualified") << 9 << 16; // new property
     QTest::newRow("FromRootAccess") << QStringLiteral("FromRoot.qml") << QStringLiteral("property int check: root.x") << 13 << 33;  // builtin property
-    // access property of root object from direct child
-    QTest::newRow("FromRootDirectParentDirect") << QStringLiteral("FromRootDirectParent.qml") << QStringLiteral("x: parent.unqualified") << 8 << 12;
-    QTest::newRow("FromRootDirectParentAccess") << QStringLiteral("FromRootDirectParent.qml") << QStringLiteral("property int check: parent.x") << 12 << 29;
     // access injected name from signal
     QTest::newRow("SignalHandler1") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onDoubleClicked:  function(mouse) {...") << 5 << 21;
     QTest::newRow("SignalHandler2") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onPositionChanged:  function(mouse) {...") << 10 << 21;
     QTest::newRow("SignalHandlerShort1") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onClicked:  (mouse) =>  {...") << 8 << 29;
     QTest::newRow("SignalHandlerShort2") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onPressAndHold:  (mouse) =>  {...") << 12 << 34;
 
+}
+
+void TestQmllint::testUnqualifiedNoSpuriousParentWarning()
+{
+    auto qmlImportDir = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
+    {
+        QString filename = QLatin1String("spuriousParentWarning.qml");
+        filename.prepend(QStringLiteral("data/"));
+        QStringList args;
+        args << QStringLiteral("-U") << filename << QStringLiteral("-I") << qmlImportDir;
+        QProcess process;
+        process.start(m_qmllintPath, args);
+        QVERIFY(process.waitForFinished());
+        QVERIFY(process.exitStatus() == QProcess::NormalExit);
+        QVERIFY(process.exitCode() == 0);
+    }
+    {
+        QString filename = QLatin1String("nonSpuriousParentWarning.qml");
+        filename.prepend(QStringLiteral("data/"));
+        QStringList args;
+        args << QStringLiteral("-U") << filename << QStringLiteral("-I") << qmlImportDir;
+        QProcess process;
+        process.start(m_qmllintPath, args);
+        QVERIFY(process.waitForFinished());
+        QVERIFY(process.exitStatus() == QProcess::NormalExit);
+        QVERIFY(process.exitCode());
+    }
 }
 
 void TestQmllint::test()
