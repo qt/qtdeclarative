@@ -85,10 +85,10 @@ void tst_qquickmenubar::mouse()
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
-    QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     centerOnScreen(window.data());
     moveMouseAway(window.data());
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
@@ -224,10 +224,10 @@ void tst_qquickmenubar::keys()
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
-    QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     centerOnScreen(window.data());
     moveMouseAway(window.data());
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
@@ -412,10 +412,10 @@ void tst_qquickmenubar::mnemonics()
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
-    QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     centerOnScreen(window.data());
     moveMouseAway(window.data());
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
