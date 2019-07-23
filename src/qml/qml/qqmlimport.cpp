@@ -465,9 +465,18 @@ void findCompositeSingletons(const QQmlImportNamespace &set, QList<QQmlImports::
 
         const QQmlDirComponents &components = import->qmlDirComponents;
 
+        const int importMajorVersion = import->majversion;
+        const int importMinorVersion = import->minversion;
+        auto shouldSkipSingleton = [importMajorVersion, importMinorVersion](int singletonMajorVersion, int singletonMinorVersion) -> bool {
+            return importMajorVersion != -1 &&
+                    (singletonMajorVersion > importMajorVersion || (singletonMajorVersion == importMajorVersion && singletonMinorVersion > importMinorVersion));
+        };
+
         ConstIterator cend = components.constEnd();
         for (ConstIterator cit = components.constBegin(); cit != cend; ++cit) {
             if (cit->singleton && excludeBaseUrl(import->url, cit->fileName, baseUrl.toString())) {
+                if (shouldSkipSingleton(cit->majorVersion, cit->minorVersion))
+                    continue;
                 QQmlImports::CompositeSingletonReference ref;
                 ref.typeName = cit->typeName;
                 ref.prefix = set.prefix;
@@ -478,7 +487,9 @@ void findCompositeSingletons(const QQmlImportNamespace &set, QList<QQmlImports::
         }
 
         if (QQmlTypeModule *module = QQmlMetaType::typeModule(import->uri, import->majversion)) {
-            module->walkCompositeSingletons([&resultList, &set](const QQmlType &singleton) {
+            module->walkCompositeSingletons([&resultList, &set, &shouldSkipSingleton](const QQmlType &singleton) {
+                if (shouldSkipSingleton(singleton.majorVersion(), singleton.minorVersion()))
+                    return;
                 QQmlImports::CompositeSingletonReference ref;
                 ref.typeName = singleton.elementName();
                 ref.prefix = set.prefix;
