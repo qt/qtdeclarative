@@ -54,14 +54,14 @@
 #include <QtCore/QUrl>
 #include <QtCore/QHash>
 #include <QtCore/QDebug>
+#include <private/qtqmlcompilerglobal_p.h>
 #include <private/qqmljsengine_p.h>
-#include <private/qv4global_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlEngine;
-class Q_QML_PRIVATE_EXPORT QQmlDirParser
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlDirParser
 {
 public:
     QQmlDirParser();
@@ -136,6 +136,7 @@ public:
 
     QHash<QString,Component> components() const;
     QHash<QString,Component> dependencies() const;
+    QStringList imports() const;
     QList<Script> scripts() const;
     QList<Plugin> plugins() const;
     bool designerSupported() const;
@@ -162,6 +163,7 @@ private:
     QString _typeNamespace;
     QHash<QString,Component> _components; // multi hash
     QHash<QString,Component> _dependencies;
+    QStringList _imports;
     QList<Script> _scripts;
     QList<Plugin> _plugins;
     bool _designerSupported;

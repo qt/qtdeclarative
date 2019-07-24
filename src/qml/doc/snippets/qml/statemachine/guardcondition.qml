@@ -70,7 +70,7 @@ Rectangle {
             }
         }
         // define the signal the SignalTransition is connected with
-        signal mysignal(string mystr)
+        signal mysignal(mystr: string)
         // on clicking the button emit the signal with a single string argument
         onClicked: button.mysignal("test")
     }

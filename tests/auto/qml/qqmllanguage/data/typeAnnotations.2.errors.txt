@@ -1,0 +1,1 @@
+5:14:Type annotations are not permitted in variable declarations

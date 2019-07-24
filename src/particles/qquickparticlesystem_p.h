@@ -61,6 +61,7 @@
 #include <QtQml/qqml.h>
 #include <private/qv4util_p.h>
 #include <private/qv4global_p.h>
+#include <private/qv4staticvalue_p.h>
 #include "qtquickparticlesglobal_p.h"
 
 QT_BEGIN_NAMESPACE

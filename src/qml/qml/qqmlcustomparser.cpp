@@ -39,7 +39,7 @@
 
 #include "qqmlcustomparser_p.h"
 
-#include <private/qqmltypecompiler_p.h>
+#include <private/qv4compileddata_p.h>
 
 #include <QtCore/qdebug.h>
 

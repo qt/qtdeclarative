@@ -180,8 +180,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     QQmlPrivate::RegisterAutoParent autoparent = { 0, &qquickitem_autoParent };
     QQmlPrivate::qmlregister(QQmlPrivate::AutoParentRegistration, &autoparent);
 
-    // Register the latest version, even if there are no new types or new revisions for existing types yet.
-    qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
+    qmlRegisterModule(uri, 2, 15);
 
 #if !QT_CONFIG(quick_animatedimage)
     qmlRegisterTypeNotAvailable(uri,major,minor,"AnimatedImage", QCoreApplication::translate("QQuickAnimatedImage","Qt was built without support for QMovie"));
@@ -477,9 +476,11 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickTableView>(uri, 2, 12, "TableView");
 #endif
 
+#if QT_CONFIG(quick_itemview)
     qmlRegisterUncreatableType<QQuickItemView, 13>(uri, 2, 13, itemViewName, itemViewMessage);
     qmlRegisterType<QQuickPathView, 13>(uri, 2, 13, "PathView");
     qmlRegisterType<QQuickGridView, 13>(uri, 2, 13, "GridView");
+#endif
 #if QT_CONFIG(quick_tableview)
     qmlRegisterType<QQuickTableView, 14>(uri, 2, 14, "TableView");
 #endif

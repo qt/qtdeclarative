@@ -103,8 +103,8 @@ public:
                         int propType, int revision, int notifyIndex);
     void appendSignal(const QString &, QQmlPropertyData::Flags, int coreIndex,
                       const int *types = nullptr, const QList<QByteArray> &names = QList<QByteArray>());
-    void appendMethod(const QString &, QQmlPropertyData::Flags flags, int coreIndex,
-                      const QList<QByteArray> &names = QList<QByteArray>());
+    void appendMethod(const QString &, QQmlPropertyData::Flags flags, int coreIndex, int returnType,
+                      const QList<QByteArray> &names, const QVector<int> &parameterTypes);
     void appendEnum(const QString &, const QVector<QQmlEnumValue> &);
 
     const QMetaObject *metaObject() const;

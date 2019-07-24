@@ -59,8 +59,7 @@ public:
         Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.wavefrontmesh"));
         qmlRegisterType<QWavefrontMesh>(uri, 1, 0, "WavefrontMesh");
 
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.12 onward
-        qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
+        qmlRegisterModule(uri, 1, 15);
     }
 };
 

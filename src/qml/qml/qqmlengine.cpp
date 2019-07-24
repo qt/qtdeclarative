@@ -51,14 +51,15 @@
 #include "qqmlscriptstring.h"
 #include "qqmlglobal_p.h"
 #include "qqmlcomponent_p.h"
-#include "qqmldirparser_p.h"
 #include "qqmlextensioninterface.h"
 #include "qqmllist_p.h"
 #include "qqmltypenamecache_p.h"
 #include "qqmlnotifier_p.h"
 #include "qqmlincubator.h"
 #include "qqmlabstracturlinterceptor.h"
+#include <private/qqmldirparser_p.h>
 #include <private/qqmlboundsignal_p.h>
+#include <private/qqmljsdiagnosticmessage_p.h>
 #include <QtCore/qstandardpaths.h>
 #include <QtCore/qsettings.h>
 #include <QtCore/qmetaobject.h>
@@ -218,30 +219,6 @@ void QQmlEnginePrivate::defineModule()
     qmlRegisterUncreatableType<QQmlLocale>(uri, 2, 2, "Locale", QQmlEngine::tr("Locale cannot be instantiated. Use Qt.locale()"));
 #endif
 }
-
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-void QQmlEnginePrivate::registerQuickTypes()
-{
-    // Don't add anything here. These are only for backwards compatibility.
-
-    const char uri[] = "QtQuick";
-
-    qmlRegisterType<QQmlComponent>(uri, 2, 0, "Component");
-    qmlRegisterType<QObject>(uri, 2, 0, "QtObject");
-    qmlRegisterType<QQmlBind>(uri, 2, 0, "Binding");
-    qmlRegisterType<QQmlBind, 8>(uri, 2, 8, "Binding");
-    qmlRegisterCustomType<QQmlConnections>(uri, 2, 0, "Connections", new QQmlConnectionsParser);
-    qmlRegisterCustomType<QQmlConnections, 1>(uri, 2, 7, "Connections", new QQmlConnectionsParser);
-#if QT_CONFIG(qml_animation)
-    qmlRegisterType<QQmlTimer>(uri, 2, 0,"Timer");
-#endif
-    qmlRegisterType<QQmlLoggingCategory>(uri, 2, 8, "LoggingCategory");
-    qmlRegisterType<QQmlLoggingCategory, 1>(uri, 2, 12, "LoggingCategory");
-#if QT_CONFIG(qml_locale)
-    qmlRegisterUncreatableType<QQmlLocale>(uri, 2, 0, "Locale", QQmlEngine::tr("Locale cannot be instantiated. Use Qt.locale()"));
-#endif
-}
-#endif // QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 
 bool QQmlEnginePrivate::designerMode()
 {
@@ -1790,7 +1767,7 @@ void QQmlData::deferData(int objectIndex, const QQmlRefPointer<QV4::ExecutableCo
     deferData->context = context;
 
     const QV4::CompiledData::Object *compiledObject = compilationUnit->objectAt(objectIndex);
-    const QV4::CompiledData::BindingPropertyData &propertyData = compilationUnit->bindingPropertyDataPerObject.at(objectIndex);
+    const QV4::BindingPropertyData &propertyData = compilationUnit->bindingPropertyDataPerObject.at(objectIndex);
 
     const QV4::CompiledData::Binding *binding = compiledObject->bindingTable();
     for (quint32 i = 0; i < compiledObject->nBindings; ++i, ++binding) {
@@ -2115,10 +2092,11 @@ void QQmlEnginePrivate::warning(QQmlEnginePrivate *engine, const QList<QQmlError
         dumpwarning(error);
 }
 
-QList<QQmlError> QQmlEnginePrivate::qmlErrorFromDiagnostics(const QString &fileName, const QList<DiagnosticMessage> &diagnosticMessages)
+QList<QQmlError> QQmlEnginePrivate::qmlErrorFromDiagnostics(
+        const QString &fileName, const QList<QQmlJS::DiagnosticMessage> &diagnosticMessages)
 {
     QList<QQmlError> errors;
-    for (const DiagnosticMessage &m : diagnosticMessages) {
+    for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
         if (m.isWarning()) {
             qWarning("%s:%d : %s", qPrintable(fileName), m.line, qPrintable(m.message));
             continue;
@@ -2323,6 +2301,17 @@ QString QQmlEngine::offlineStorageDatabaseFilePath(const QString &databaseName) 
     QCryptographicHash md5(QCryptographicHash::Md5);
     md5.addData(databaseName.toUtf8());
     return d->offlineStorageDatabaseDirectory() + QLatin1String(md5.result().toHex());
+}
+
+// #### Qt 6: Remove this function, it exists only for binary compatibility.
+/*!
+ * \internal
+ */
+bool QQmlEngine::addNamedBundle(const QString &name, const QString &fileName)
+{
+    Q_UNUSED(name)
+    Q_UNUSED(fileName)
+    return false;
 }
 
 QString QQmlEnginePrivate::offlineStorageDatabaseDirectory() const

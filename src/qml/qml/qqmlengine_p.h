@@ -66,6 +66,7 @@
 #include <private/qintrusivelist_p.h>
 #include <private/qrecyclepool_p.h>
 #include <private/qfieldlist_p.h>
+#include <private/qv4engine_p.h>
 
 #include <QtCore/qlist.h>
 #include <QtCore/qpair.h>
@@ -251,9 +252,6 @@ public:
     static QList<QQmlError> qmlErrorFromDiagnostics(const QString &fileName, const QList<QQmlJS::DiagnosticMessage> &diagnosticMessages);
 
     static void defineModule();
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    static void registerQuickTypes();
-#endif
 
     static bool designerMode();
     static void activateDesignerMode();

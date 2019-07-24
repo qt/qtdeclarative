@@ -58,6 +58,7 @@
 #include <private/qv4jscall_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qqmlpropertycachecreator_p.h>
+#include <private/qqmlpropertycachemethodarguments_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -917,21 +918,38 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     return -1; // The dynamic method with that id is not available.
                 }
 
-                const unsigned int parameterCount = function->formalParameterCount();
+                auto methodData = cache->method(_id);
+                auto arguments = methodData->hasArguments() ? methodData->arguments() : nullptr;
+
+                const unsigned int parameterCount = (arguments && arguments->names) ? arguments->names->count() : 0;
+                Q_ASSERT(parameterCount == function->formalParameterCount());
+
                 QV4::JSCallData jsCallData(scope, parameterCount);
                 *jsCallData->thisObject = v4->global();
 
-                for (uint ii = 0; ii < parameterCount; ++ii)
-                    jsCallData->args[ii] = scope.engine->fromVariant(*(QVariant *)a[ii + 1]);
+                for (uint ii = 0; ii < parameterCount; ++ii) {
+                    jsCallData->args[ii] = scope.engine->metaTypeToJS(arguments->arguments[ii + 1], a[ii + 1]);
+                }
 
+                const int returnType = methodData->propType();
                 QV4::ScopedValue result(scope, function->call(jsCallData));
                 if (scope.hasException()) {
                     QQmlError error = scope.engine->catchExceptionAsQmlError();
                     if (error.isValid())
                         ep->warning(error);
-                    if (a[0]) *(QVariant *)a[0] = QVariant();
+                    if (a[0]) {
+                        QMetaType::destruct(returnType, a[0]);
+                        QMetaType::construct(returnType, a[0], nullptr);
+                    }
                 } else {
-                    if (a[0]) *(QVariant *)a[0] = scope.engine->toVariant(result, 0);
+                    if (a[0]) {
+                        // When the return type is QVariant, JS objects are to be returned as QJSValue wrapped in
+                        // QVariant.
+                        if (returnType == QMetaType::QVariant)
+                            *(QVariant *)a[0] = scope.engine->toVariant(result, 0);
+                        else
+                            scope.engine->metaTypeFromJS(result, returnType, a[0]);
+                    }
                 }
 
                 ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.

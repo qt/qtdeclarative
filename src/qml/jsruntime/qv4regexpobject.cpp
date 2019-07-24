@@ -56,7 +56,7 @@
 #include <cassert>
 #include <typeinfo>
 #include <iostream>
-#include "qv4alloca_p.h"
+#include <private/qv4alloca_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -64,7 +64,9 @@ QQmlPreviewServiceImpl::QQmlPreviewServiceImpl(QObject *parent) :
     connect(this, &QQmlPreviewServiceImpl::load, &m_handler, &QQmlPreviewHandler::loadUrl);
     connect(this, &QQmlPreviewServiceImpl::rerun, &m_handler, &QQmlPreviewHandler::rerun);
     connect(this, &QQmlPreviewServiceImpl::zoom, &m_handler, &QQmlPreviewHandler::zoom);
+#if QT_CONFIG(translation)
     connect(this, &QQmlPreviewServiceImpl::language, &m_handler, &QQmlPreviewHandler::language);
+#endif
     connect(&m_handler, &QQmlPreviewHandler::error, this, &QQmlPreviewServiceImpl::forwardError,
             Qt::DirectConnection);
     connect(&m_handler, &QQmlPreviewHandler::fps, this, &QQmlPreviewServiceImpl::forwardFps,
@@ -135,6 +137,7 @@ void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
         emit zoom(static_cast<qreal>(factor));
         break;
     }
+#if QT_CONFIG(translation)
     case Language: {
         QUrl context;
         QString locale;
@@ -143,6 +146,7 @@ void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
                       locale.isEmpty() ? QLocale() : QLocale(locale));
         break;
     }
+#endif
     default:
         forwardError(QString::fromLatin1("Invalid command: %1").arg(command));
         break;

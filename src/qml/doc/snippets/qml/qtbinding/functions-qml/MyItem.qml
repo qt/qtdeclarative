@@ -52,7 +52,7 @@
 import QtQuick 2.0
 
 Item {
-    function myQmlFunction(msg) {
+    function myQmlFunction(msg: string) : string {
         console.log("Got message:", msg)
         return "some return value"
     }

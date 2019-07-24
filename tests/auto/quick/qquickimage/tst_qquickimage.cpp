@@ -1107,7 +1107,7 @@ class MyInterceptor : public QQmlAbstractUrlInterceptor
 {
 public:
     MyInterceptor(QUrl url) : QQmlAbstractUrlInterceptor(), m_url(url) {}
-    QUrl intercept(const QUrl &url, QQmlAbstractUrlInterceptor::DataType type)
+    QUrl intercept(const QUrl &url, QQmlAbstractUrlInterceptor::DataType)
     {
         if (url.scheme() == "interceptthis")
             return m_url;

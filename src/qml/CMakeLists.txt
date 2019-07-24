@@ -67,20 +67,23 @@ add_qt_module(Qml
         ../3rdparty/masm/yarr/YarrUnicodeProperties.h
         common/qqmlapiversion_p.h
         common/qqmljsdiagnosticmessage_p.h
+        common/qqmljsfixedpoolarray_p.h
+        common/qqmljsmemorypool_p.h
+        common/qv4alloca_p.h
+        common/qv4calldata_p.h
+        common/qv4compileddata_p.h
+        common/qv4staticvalue_p.h
+        common/qv4stringtoarrayindex_p.h
         compiler/qqmlirbuilder.cpp compiler/qqmlirbuilder_p.h
-        compiler/qv4alloca_p.h
         compiler/qv4bytecodegenerator.cpp compiler/qv4bytecodegenerator_p.h
         compiler/qv4bytecodehandler.cpp compiler/qv4bytecodehandler_p.h
-        compiler/qv4calldata_p.h
         compiler/qv4codegen.cpp compiler/qv4codegen_p.h
-        compiler/qv4compileddata_p.h
         compiler/qv4compiler.cpp compiler/qv4compiler_p.h
         compiler/qv4compilercontext.cpp compiler/qv4compilercontext_p.h
         compiler/qv4compilercontrolflow_p.h
+        compiler/qv4compilerglobal_p.h
         compiler/qv4compilerscanfunctions.cpp compiler/qv4compilerscanfunctions_p.h
         compiler/qv4instr_moth.cpp compiler/qv4instr_moth_p.h
-        compiler/qv4staticvalue_p.h
-        compiler/qv4stringtoarrayindex_p.h
         compiler/qv4util_p.h
         debugger/qqmldebug.h
         debugger/qqmldebugconnector_p.h
@@ -170,10 +173,9 @@ add_qt_module(Qml
         parser/qqmljsastfwd_p.h
         parser/qqmljsastvisitor.cpp parser/qqmljsastvisitor_p.h
         parser/qqmljsengine_p.cpp parser/qqmljsengine_p.h parser/qqmljsengine_p.h
-        parser/qqmljsglobal_p.h parser/qqmljsglobal_p.h
+        parser/qqmljsglobal_p.h
         parser/qqmljskeywords_p.h
         parser/qqmljslexer.cpp parser/qqmljslexer_p.h
-        parser/qqmljsmemorypool_p.h
         parser/qqmljssourcelocation_p.h
         qml/ftw/qbitfield_p.h
         qml/ftw/qfieldlist_p.h
@@ -204,11 +206,13 @@ add_qt_module(Qml
         qml/qqmlcontext.cpp qml/qqmlcontext.h qml/qqmlcontext_p.h
         qml/qqmlcustomparser.cpp qml/qqmlcustomparser_p.h
         qml/qqmldata_p.h
+        qml/qqmldatablob.cpp qml/qqmldatablob_p.h
         qml/qqmldelayedcallqueue.cpp qml/qqmldelayedcallqueue_p.h
+        qml/qqmldirdata.cpp qml/qqmldirdata_p.h
         qml/qqmlengine.cpp qml/qqmlengine.h qml/qqmlengine_p.h
         qml/qqmlenumdata_p.h
         qml/qqmlenumvalue_p.h
-        qml/qqmlerror.cpp
+        qml/qqmlerror.cpp qml/qqmlerror.h
         qml/qqmlexpression.cpp qml/qqmlexpression.h qml/qqmlexpression_p.h
         qml/qqmlextensioninterface.h
         qml/qqmlextensionplugin.cpp qml/qqmlextensionplugin.h qml/qqmlextensionplugin_p.h
@@ -247,6 +251,8 @@ add_qt_module(Qml
         qml/qqmlpropertyvalueinterceptor.cpp qml/qqmlpropertyvalueinterceptor_p.h
         qml/qqmlpropertyvaluesource.cpp qml/qqmlpropertyvaluesource.h
         qml/qqmlproxymetaobject.cpp qml/qqmlproxymetaobject_p.h
+        qml/qqmlscriptblob.cpp qml/qqmlscriptblob_p.h
+        qml/qqmlscriptdata.cpp qml/qqmlscriptdata_p.h
         qml/qqmlscriptstring.cpp qml/qqmlscriptstring.h qml/qqmlscriptstring_p.h
         qml/qqmlsourcecoordinate_p.h
         qml/qqmlstaticmetaobject.cpp qml/qqmlstaticmetaobject_p.h
@@ -254,7 +260,10 @@ add_qt_module(Qml
         qml/qqmltype.cpp qml/qqmltype_p.h
         qml/qqmltype_p_p.h
         qml/qqmltypecompiler.cpp qml/qqmltypecompiler_p.h
+        qml/qqmltypedata.cpp qml/qqmltypedata_p.h
         qml/qqmltypeloader.cpp qml/qqmltypeloader_p.h
+        qml/qqmltypeloaderqmldircontent.cpp qml/qqmltypeloaderqmldircontent_p.h
+        qml/qqmltypeloaderthread.cpp qml/qqmltypeloaderthread_p.h
         qml/qqmltypemodule.cpp qml/qqmltypemodule_p.h
         qml/qqmltypemodule_p_p.h
         qml/qqmltypemoduleversion.cpp qml/qqmltypemoduleversion_p.h
@@ -270,10 +279,10 @@ add_qt_module(Qml
         qml/v8/qv4domerrors.cpp qml/v8/qv4domerrors_p.h
         qml/v8/qv4sqlerrors.cpp qml/v8/qv4sqlerrors_p.h
         qmldirparser/qqmldirparser.cpp qmldirparser/qqmldirparser_p.h
+        qtqmlcompilerglobal.h qtqmlcompilerglobal_p.h
         qtqmlglobal.h qtqmlglobal_p.h
         types/qqmlbind.cpp types/qqmlbind_p.h
         types/qqmlconnections.cpp types/qqmlconnections_p.h
-        types/qqmlmodelindexvaluetype.cpp types/qqmlmodelindexvaluetype_p.h
         util/qqmlpropertymap.cpp util/qqmlpropertymap.h
     DEFINES
         BUILDING_QT__
@@ -335,6 +344,8 @@ qt_declarative_generate_reg_exp_jit_tables(Qml)
 #####################################################################
 
 extend_target(Qml CONDITION QT_FEATURE_qml_network
+    SOURCES
+        qml/qqmltypeloadernetworkreplyproxy.cpp qml/qqmltypeloadernetworkreplyproxy_p.h
     PUBLIC_LIBRARIES
         Qt::Network
 )
@@ -364,22 +375,6 @@ extend_target(Qml CONDITION GCC AND (TEST_architecture_arch STREQUAL "mips")
         -fno-reorder-blocks
 )
 
-#### Keys ignored in scope 8:.:.:qml.pro:NOT build_pass:
-# compile_hash_contents = "// Generated file, DO NOT EDIT" "$${LITERAL_HASH}define QML_COMPILE_HASH "$$QML_COMPILE_HASH"" "$${LITERAL_HASH}define QML_COMPILE_HASH_LENGTH $$str_size($$QML_COMPILE_HASH)"
-# tag = <EMPTY>
-# tagFile = "$$PWD/../../.tag"
-
-#### Keys ignored in scope 9:.:.:qml.pro:EXISTS _ss_tagFile:
-# QMAKE_INTERNAL_INCLUDED_FILES = "$$tagFile"
-# tag = "$$cat$$tagFile,singleline"
-
-#### Keys ignored in scope 10:.:.:qml.pro:NOT tag___equals____ss_{LITERAL_DOLLAR}Format AND %H_ss_{LITERAL_DOLLAR}:
-# QML_COMPILE_HASH = "$$tag"
-
-#### Keys ignored in scope 12:.:.:qml.pro:EXISTS _ss_PWD/../../.git:
-# QML_COMPILE_HASH = "$$commit"
-# commit = "$$systemgitrev-parseHEAD"
-
 extend_target(Qml CONDITION EXISTS "qqml_enable_gcov"
     LIBRARIES
         gcov
@@ -394,10 +389,10 @@ extend_target(Qml CONDITION release AND MSVC AND QT_CL_MAJOR_VERSION___equals___
         -d2SSAOptimizer-
 )
 
-#### Keys ignored in scope 16:.:.:qml.pro:ICC:
+#### Keys ignored in scope 10:.:.:qml.pro:ICC:
 # WERROR = "-ww2415"
 
-#### Keys ignored in scope 17:.:.:qml.pro:greaterThan(QT_CLANG_MAJOR_VERSION,3) OR greaterThan(QT_CLANG_MINOR_VERSION,3) OR greaterThan(QT_APPLE_CLANG_MAJOR_VERSION,5) OR QT_APPLE_CLANG_MAJOR_VERSION___equals___5 AND greaterThan(QT_APPLE_CLANG_MINOR_VERSION,0):
+#### Keys ignored in scope 11:.:.:qml.pro:greaterThan(QT_CLANG_MAJOR_VERSION,3) OR greaterThan(QT_CLANG_MINOR_VERSION,3) OR greaterThan(QT_APPLE_CLANG_MAJOR_VERSION,5) OR QT_APPLE_CLANG_MAJOR_VERSION___equals___5 AND greaterThan(QT_APPLE_CLANG_MINOR_VERSION,0):
 # WERROR = "-Wno-error=unused-const-variable"
 
 extend_target(Qml CONDITION QT_FEATURE_qml_jit
@@ -423,6 +418,22 @@ extend_target(Qml CONDITION QT_FEATURE_qml_animation
     INCLUDE_DIRECTORIES
         animations
 )
+
+#### Keys ignored in scope 17:.:common:common/common.pri:NOT build_pass:
+# compile_hash_contents = "// Generated file, DO NOT EDIT" "$${LITERAL_HASH}define QML_COMPILE_HASH "$$QML_COMPILE_HASH"" "$${LITERAL_HASH}define QML_COMPILE_HASH_LENGTH $$str_size($$QML_COMPILE_HASH)"
+# tag = <EMPTY>
+# tagFile = "$$PWD/../../.tag"
+
+#### Keys ignored in scope 18:.:common:common/common.pri:EXISTS _ss_tagFile:
+# QMAKE_INTERNAL_INCLUDED_FILES = "$$tagFile"
+# tag = "$$cat$$tagFile,singleline"
+
+#### Keys ignored in scope 19:.:common:common/common.pri:NOT tag___equals____ss_{LITERAL_DOLLAR}Format AND %H_ss_{LITERAL_DOLLAR}:
+# QML_COMPILE_HASH = "$$tag"
+
+#### Keys ignored in scope 21:.:common:common/common.pri:EXISTS _ss_PWD/../../.git:
+# QML_COMPILE_HASH = "$$commit"
+# commit = "$$systemgitrev-parseHEAD"
 
 extend_target(Qml CONDITION (GCC) AND ((QT_COMPILER_VERSION_MAJOR STREQUAL 5))
     COMPILE_OPTIONS
@@ -499,6 +510,11 @@ extend_target(Qml CONDITION QT_FEATURE_clock_gettime AND linux-_x_ OR hpux-_x_ O
         rt
 )
 
+extend_target(Qml CONDITION QT_FEATURE_qml_itemmodel
+    SOURCES
+        types/qqmlmodelindexvaluetype.cpp types/qqmlmodelindexvaluetype_p.h
+)
+
 extend_target(Qml CONDITION (disassembler) AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64")) # special case
     DEFINES
         WTF_USE_UDIS86=1
@@ -534,7 +550,7 @@ extend_target(Qml CONDITION (NOT ICC AND NOT CLANG AND GCC) AND ((QT_COMPILER_VE
         -Wno-expansion-to-defined
 )
 
-#### Keys ignored in scope 62:.:../3rdparty/masm:../3rdparty/masm/masm-defs.pri:(QT_COMPILER_VERSION_MAJOR STRGREATER 6):
+#### Keys ignored in scope 64:.:../3rdparty/masm:../3rdparty/masm/masm-defs.pri:(QT_COMPILER_VERSION_MAJOR STRGREATER 6):
 # QMAKE_CXXFLAGS_WARN_ON = "-Wno-expansion-to-defined"
 
 extend_target(Qml CONDITION WINRT
@@ -563,7 +579,7 @@ extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
         ../3rdparty/masm/disassembler/udis86/udis86_syn-intel.c
 )
 
-#### Keys ignored in scope 70:.:../3rdparty/masm:../3rdparty/masm/masm.pri:DEFINES___contains___WTF_USE_UDIS86=1:
+#### Keys ignored in scope 72:.:../3rdparty/masm:../3rdparty/masm/masm.pri:DEFINES___contains___WTF_USE_UDIS86=1:
 # ITAB = "$$PWD/disassembler/udis86/optable.xml"
 # QMAKE_EXTRA_COMPILERS = "udis86"
 # QMAKE_EXTRA_TARGETS = "udis86_tab_cfile"
@@ -574,10 +590,10 @@ extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
 # udis86_tab_cfile.depends = "udis86_itab.h"
 # udis86_tab_cfile.target = "$$OUT_PWD/udis86_itab.c"
 
-#### Keys ignored in scope 72:.:../3rdparty/masm:../3rdparty/masm/masm.pri:(CMAKE_BUILD_TYPE STREQUAL Debug):
+#### Keys ignored in scope 74:.:../3rdparty/masm:../3rdparty/masm/masm.pri:(CMAKE_BUILD_TYPE STREQUAL Debug):
 # GENERATEDDIR = "$$GENERATEDDIR/debug"
 
-#### Keys ignored in scope 73:.:../3rdparty/masm:../3rdparty/masm/masm.pri:else:
+#### Keys ignored in scope 75:.:../3rdparty/masm:../3rdparty/masm/masm.pri:else:
 # GENERATEDDIR = "$$GENERATEDDIR/release"
 
 extend_target(Qml CONDITION (NOT c++11 AND NOT ICC) AND (CLANG)

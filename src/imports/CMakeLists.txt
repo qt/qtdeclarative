@@ -4,7 +4,10 @@ add_subdirectory(builtins)
 add_subdirectory(qtqml)
 add_subdirectory(models)
 add_subdirectory(labsmodels)
-add_subdirectory(folderlistmodel)
+
+if(QT_FEATURE_qml_itemmodel)
+    add_subdirectory(folderlistmodel)
+endif()
 
 if(QT_FEATURE_qml_worker_script)
     add_subdirectory(workerscript)

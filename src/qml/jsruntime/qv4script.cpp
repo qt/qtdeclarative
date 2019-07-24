@@ -60,6 +60,7 @@
 #include <QScopedValueRollback>
 
 using namespace QV4;
+using namespace QQmlJS;
 
 Script::Script(ExecutionEngine *v4, QmlContext *qml, const QQmlRefPointer<ExecutableCompilationUnit> &compilationUnit)
     : line(1), column(0), context(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
@@ -245,7 +246,6 @@ Script *Script::createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlCo
 
     QByteArray data = f.readAll();
     QString sourceCode = QString::fromUtf8(data);
-    QmlIR::Document::removeScriptPragmas(sourceCode);
 
     auto result = new QV4::Script(engine, qmlContext, /*parseAsBinding*/false, sourceCode, originalUrl.toString());
     result->contextType = QV4::Compiler::ContextType::ScriptImportedByQML;

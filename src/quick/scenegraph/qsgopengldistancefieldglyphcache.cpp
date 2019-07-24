@@ -69,7 +69,8 @@ DEFINE_BOOL_CONFIG_OPTION(qsgPreferFullSizeGlyphCacheTextures, QSG_PREFER_FULLSI
 QSGOpenGLDistanceFieldGlyphCache::QSGOpenGLDistanceFieldGlyphCache(QOpenGLContext *c,
                                                                    const QRawFont &font)
     : QSGDistanceFieldGlyphCache(font)
-    , m_maxTextureSize(0)
+    , m_maxTextureWidth(0)
+    , m_maxTextureHeight(0)
     , m_maxTextureCount(3)
     , m_areaAllocator(nullptr)
     , m_blitProgram(nullptr)
@@ -113,13 +114,23 @@ void QSGOpenGLDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs
     QList<GlyphPosition> glyphPositions;
     QVector<glyph_t> glyphsToRender;
 
+    const int padding = QSG_OPENGL_DISTANCEFIELD_GLYPH_CACHE_PADDING;
+    const qreal scaleFactor = qreal(1) / QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution);
+
+    if (m_maxTextureHeight == 0) {
+        m_funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_maxTextureWidth);
+
+        // We need to add a buffer to avoid glyphs that overlap the border between two
+        // textures causing the height of the textures to extend beyond the limit.
+        m_maxTextureHeight = m_maxTextureWidth - (qCeil(m_referenceFont.pixelSize() * scaleFactor) + distanceFieldRadius() * 2 + padding * 2);
+    }
+
     if (m_areaAllocator == nullptr)
-        m_areaAllocator = new QSGAreaAllocator(QSize(maxTextureSize(), m_maxTextureCount * maxTextureSize()));
+        m_areaAllocator = new QSGAreaAllocator(QSize(m_maxTextureWidth, m_maxTextureCount * m_maxTextureHeight));
 
     for (QSet<glyph_t>::const_iterator it = glyphs.constBegin(); it != glyphs.constEnd() ; ++it) {
         glyph_t glyphIndex = *it;
 
-        int padding = QSG_OPENGL_DISTANCEFIELD_GLYPH_CACHE_PADDING;
         QRectF boundingRect = glyphData(glyphIndex).boundingRect;
         int glyphWidth = qCeil(boundingRect.width()) + distanceFieldRadius() * 2;
         int glyphHeight = qCeil(boundingRect.height()) + distanceFieldRadius() * 2;
@@ -152,8 +163,8 @@ void QSGOpenGLDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs
                 continue;
         }
 
-        TextureInfo *tex = textureInfo(alloc.y() / maxTextureSize());
-        alloc = QRect(alloc.x(), alloc.y() % maxTextureSize(), alloc.width(), alloc.height());
+        TextureInfo *tex = textureInfo(alloc.y() / m_maxTextureHeight);
+        alloc = QRect(alloc.x(), alloc.y() % m_maxTextureHeight, alloc.width(), alloc.height());
 
         tex->allocatedArea |= alloc;
         Q_ASSERT(tex->padding == padding || tex->padding < 0);
@@ -541,13 +552,6 @@ bool QSGOpenGLDistanceFieldGlyphCache::createFullSizeTextures() const
     return qsgPreferFullSizeGlyphCacheTextures() && glyphCount() > QT_DISTANCEFIELD_HIGHGLYPHCOUNT();
 }
 
-int QSGOpenGLDistanceFieldGlyphCache::maxTextureSize() const
-{
-    if (!m_maxTextureSize)
-        m_funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_maxTextureSize);
-    return m_maxTextureSize;
-}
-
 namespace {
     struct Qtdf {
         // We need these structs to be tightly packed, but some compilers we use do not
@@ -646,7 +650,7 @@ bool QSGOpenGLDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &fon
         }
 
         qreal pixelSize = qreal(Qtdf::fetch<quint16>(qtdfTableStart, Qtdf::pixelSize));
-        m_maxTextureSize = Qtdf::fetch<quint32>(qtdfTableStart, Qtdf::textureSize);
+        m_maxTextureWidth = m_maxTextureHeight = Qtdf::fetch<quint32>(qtdfTableStart, Qtdf::textureSize);
         m_doubleGlyphResolution = Qtdf::fetch<quint8>(qtdfTableStart, Qtdf::flags) == 1;
         padding = Qtdf::fetch<quint8>(qtdfTableStart, Qtdf::headerPadding);
 
@@ -655,7 +659,7 @@ bool QSGOpenGLDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &fon
             return false;
         }
 
-        if (m_maxTextureSize <= 0) {
+        if (m_maxTextureWidth <= 0) {
             qWarning("Invalid texture size in '%s'", qPrintable(font.familyName()));
             return false;
         }
@@ -663,11 +667,11 @@ bool QSGOpenGLDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &fon
         int systemMaxTextureSize;
         m_funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &systemMaxTextureSize);
 
-        if (m_maxTextureSize > systemMaxTextureSize) {
+        if (m_maxTextureWidth > systemMaxTextureSize) {
             qWarning("System maximum texture size is %d. This is lower than the value in '%s', which is %d",
                      systemMaxTextureSize,
                      qPrintable(font.familyName()),
-                     m_maxTextureSize);
+                     m_maxTextureWidth);
         }
 
         if (padding != QSG_OPENGL_DISTANCEFIELD_GLYPH_CACHE_PADDING) {
@@ -690,12 +694,12 @@ bool QSGOpenGLDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &fon
                 return false;
         }
 
-        if (m_areaAllocator->size().height() % m_maxTextureSize != 0) {
+        if (m_areaAllocator->size().height() % m_maxTextureHeight != 0) {
             qWarning("Area allocator size mismatch in '%s'", qPrintable(font.familyName()));
             return false;
         }
 
-        textureCount = m_areaAllocator->size().height() / m_maxTextureSize;
+        textureCount = m_areaAllocator->size().height() / m_maxTextureHeight;
         m_maxTextureCount = qMax(m_maxTextureCount, textureCount);
 
         const char *textureRecord = allocatorData;

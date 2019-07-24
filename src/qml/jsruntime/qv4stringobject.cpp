@@ -45,7 +45,7 @@
 #include <private/qv4mm_p.h>
 #include "qv4scopedvalue_p.h"
 #include "qv4symbol_p.h"
-#include "qv4alloca_p.h"
+#include <private/qv4alloca_p.h>
 #include "qv4jscall_p.h"
 #include "qv4stringiterator_p.h"
 #include <QtCore/QDateTime>

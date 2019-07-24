@@ -669,7 +669,7 @@ public:
         emit finished();
     }
 
-    QQuickTextureFactory *textureFactory() const
+    QQuickTextureFactory *textureFactory() const override
     {
         QImage image(50, 50, QImage::Format_RGB32);
         auto texture = QQuickTextureFactory::textureFactoryForImage(image);
@@ -696,7 +696,7 @@ public:
 
     ~WaitingAsyncProvider() {}
 
-    QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize)
+    QQuickImageResponse *requestImageResponse(const QString & /* id */, const QSize & /* requestedSize */)
     {
         auto response = new WaitingAsyncImageResponse(m_providerRemovedMutex, m_providerRemovedCond, m_providerRemoved, m_imageRequestedMutex, m_imageRequestedCondition, m_imageRequested);
         pool.start(response);

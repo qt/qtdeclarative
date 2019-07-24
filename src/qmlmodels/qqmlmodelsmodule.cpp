@@ -62,58 +62,23 @@
 
 QT_BEGIN_NAMESPACE
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-
-void QQmlModelsModule::registerQmlTypes()
-{
-    // Don't add anything here. These are only for backwards compatibility.
-#if QT_CONFIG(qml_object_model)
-    qmlRegisterType<QQmlInstantiator>("QtQml", 2, 1, "Instantiator"); // Only available in >= 2.1
-    qmlRegisterType<QQmlInstanceModel>();
-#endif
-}
-
-void QQmlModelsModule::registerQuickTypes()
-{
-    // Don't add anything here. These are only for backwards compatibility.
-
-    const char uri[] = "QtQuick";
-
-#if QT_CONFIG(qml_object_model)
-    qmlRegisterType<QQmlInstantiator>(uri, 2, 1, "Instantiator");
-    qmlRegisterType<QQmlInstanceModel>();
-    qmlRegisterType<QQmlObjectModel>(uri, 2, 0, "VisualItemModel");
-#endif
-#if QT_CONFIG(qml_list_model)
-    qmlRegisterType<QQmlListElement>(uri, 2, 0, "ListElement");
-    qmlRegisterCustomType<QQmlListModel>(uri, 2, 0, "ListModel", new QQmlListModelParser);
-#endif
-#if QT_CONFIG(qml_delegate_model)
-    qmlRegisterType<QQmlDelegateModel>(uri, 2, 0, "VisualDataModel");
-    qmlRegisterType<QQmlDelegateModelGroup>(uri, 2, 0, "VisualDataGroup");
-    qmlRegisterType<QQuickPackage>(uri, 2, 0, "Package");
-#endif
-}
-
-#endif // QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-
 void QQmlModelsModule::defineModule()
 {
     const char uri[] = "QtQml.Models";
 
 #if QT_CONFIG(qml_list_model)
-    qmlRegisterType<QQmlListElement>(uri, 2, 1, "ListElement");
-    qmlRegisterCustomType<QQmlListModel>(uri, 2, 1, "ListModel", new QQmlListModelParser);
+    qmlRegisterType<QQmlListElement>(uri, 2, 0, "ListElement");
+    qmlRegisterCustomType<QQmlListModel>(uri, 2, 0, "ListModel", new QQmlListModelParser);
 #endif
 #if QT_CONFIG(qml_delegate_model)
     qmlRegisterType<QQmlDelegateModel>(uri, 2, 1, "DelegateModel");
     qmlRegisterType<QQmlDelegateModelGroup>(uri, 2, 1, "DelegateModelGroup");
-    qmlRegisterType<QQuickPackage>(uri, 2, 14, "Package");
+    qmlRegisterType<QQuickPackage>(uri, 2, 0, "Package");
 #endif
 #if QT_CONFIG(qml_object_model)
     qmlRegisterType<QQmlObjectModel>(uri, 2, 1, "ObjectModel");
     qmlRegisterType<QQmlObjectModel,3>(uri, 2, 3, "ObjectModel");
-    qmlRegisterType<QQmlInstantiator>(uri, 2, 14, "Instantiator");
+    qmlRegisterType<QQmlInstantiator>(uri, 2, 1, "Instantiator");
     qmlRegisterType<QQmlInstanceModel>();
 #endif
 #if QT_CONFIG(itemmodel)

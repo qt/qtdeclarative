@@ -58,7 +58,7 @@ Item {
     property alias cellColor: rectangle.color
 //![4]
 //![5]
-    signal clicked(color cellColor)
+    signal clicked(cellColor: color)
 //![5]
 
     width: 40; height: 25

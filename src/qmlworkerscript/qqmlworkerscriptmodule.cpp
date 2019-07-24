@@ -42,17 +42,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-
-void QQmlWorkerScriptModule::registerQuickTypes()
-{
-    // Don't add anything here. These are only for backwards compatibility.
-    const char uri[] = "QtQuick";
-    qmlRegisterType<QQuickWorkerScript>(uri, 2, 0, "WorkerScript");
-}
-
-#endif // QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-
 void QQmlWorkerScriptModule::defineModule()
 {
     const char uri[] = "QtQml.WorkerScript";

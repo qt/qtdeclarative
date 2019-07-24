@@ -178,6 +178,13 @@
             "section": "QML",
             "condition": "features.thread",
             "output": [ "privateFeature" ]
+        },
+        "qml-itemmodel": {
+            "label": "QML Item Model",
+            "purpose": "Provides the item model for item views in QML",
+            "section": "QML",
+            "condition": "features.itemmodel",
+            "output": [ "privateFeature" ]
         }
     },
 

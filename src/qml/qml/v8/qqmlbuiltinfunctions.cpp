@@ -40,6 +40,7 @@
 #include "qqmlbuiltinfunctions_p.h"
 
 #include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlfile.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlloggingcategory_p.h>

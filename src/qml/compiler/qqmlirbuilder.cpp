@@ -56,12 +56,91 @@ QT_USE_NAMESPACE
 
 static const quint32 emptyStringIndex = 0;
 using namespace QmlIR;
+using namespace QQmlJS;
 
 #define COMPILE_EXCEPTION(location, desc) \
     { \
         recordError(location, desc); \
         return false; \
     }
+
+bool Parameter::init(QV4::Compiler::JSUnitGenerator *stringGenerator, const QString &parameterName,
+                     const QString &typeName)
+{
+    return init(this, stringGenerator, stringGenerator->registerString(parameterName), stringGenerator->registerString(typeName));
+}
+
+bool Parameter::init(QV4::CompiledData::Parameter *param, const QV4::Compiler::JSUnitGenerator *stringGenerator,
+                     int parameterNameIndex, int typeNameIndex)
+{
+    param->nameIndex = parameterNameIndex;
+    return initType(&param->type, stringGenerator, typeNameIndex);
+}
+
+bool Parameter::initType(QV4::CompiledData::ParameterType *paramType, const QV4::Compiler::JSUnitGenerator *stringGenerator, int typeNameIndex)
+{
+    paramType->indexIsBuiltinType = false;
+    paramType->typeNameIndexOrBuiltinType = 0;
+    const QString typeName = stringGenerator->stringForIndex(typeNameIndex);
+    auto builtinType = stringToBuiltinType(typeName);
+    if (builtinType == QV4::CompiledData::BuiltinType::InvalidBuiltin) {
+        if (typeName.isEmpty() || !typeName.at(0).isUpper())
+            return false;
+        paramType->indexIsBuiltinType = false;
+        paramType->typeNameIndexOrBuiltinType = typeNameIndex;
+        Q_ASSERT(quint32(typeNameIndex) < (1u << 31));
+    } else {
+        paramType->indexIsBuiltinType = true;
+        paramType->typeNameIndexOrBuiltinType = static_cast<quint32>(builtinType);
+        Q_ASSERT(quint32(builtinType) < (1u << 31));
+    }
+    return true;
+}
+
+QV4::CompiledData::BuiltinType Parameter::stringToBuiltinType(const QString &typeName)
+{
+    static const struct TypeNameToType {
+        const char *name;
+        size_t nameLength;
+        QV4::CompiledData::BuiltinType type;
+    } propTypeNameToTypes[] = {
+        { "int", strlen("int"), QV4::CompiledData::BuiltinType::Int },
+        { "bool", strlen("bool"), QV4::CompiledData::BuiltinType::Bool },
+        { "double", strlen("double"), QV4::CompiledData::BuiltinType::Real },
+        { "real", strlen("real"), QV4::CompiledData::BuiltinType::Real },
+        { "string", strlen("string"), QV4::CompiledData::BuiltinType::String },
+        { "url", strlen("url"), QV4::CompiledData::BuiltinType::Url },
+        { "color", strlen("color"), QV4::CompiledData::BuiltinType::Color },
+        // Internally QTime, QDate and QDateTime are all supported.
+        // To be more consistent with JavaScript we expose only
+        // QDateTime as it matches closely with the Date JS type.
+        // We also call it "date" to match.
+        // { "time", strlen("time"), Property::Time },
+        // { "date", strlen("date"), Property::Date },
+        { "date", strlen("date"), QV4::CompiledData::BuiltinType::DateTime },
+        { "rect", strlen("rect"), QV4::CompiledData::BuiltinType::Rect },
+        { "point", strlen("point"), QV4::CompiledData::BuiltinType::Point },
+        { "size", strlen("size"), QV4::CompiledData::BuiltinType::Size },
+        { "font", strlen("font"), QV4::CompiledData::BuiltinType::Font },
+        { "vector2d", strlen("vector2d"), QV4::CompiledData::BuiltinType::Vector2D },
+        { "vector3d", strlen("vector3d"), QV4::CompiledData::BuiltinType::Vector3D },
+        { "vector4d", strlen("vector4d"), QV4::CompiledData::BuiltinType::Vector4D },
+        { "quaternion", strlen("quaternion"), QV4::CompiledData::BuiltinType::Quaternion },
+        { "matrix4x4", strlen("matrix4x4"), QV4::CompiledData::BuiltinType::Matrix4x4 },
+        { "variant", strlen("variant"), QV4::CompiledData::BuiltinType::Variant },
+        { "var", strlen("var"), QV4::CompiledData::BuiltinType::Var }
+    };
+    static const int propTypeNameToTypesCount = sizeof(propTypeNameToTypes) /
+                                                sizeof(propTypeNameToTypes[0]);
+
+    for (int typeIndex = 0; typeIndex < propTypeNameToTypesCount; ++typeIndex) {
+        const TypeNameToType *t = propTypeNameToTypes + typeIndex;
+        if (typeName == QLatin1String(t->name, static_cast<int>(t->nameLength))) {
+            return t->type;
+        }
+    }
+    return QV4::CompiledData::BuiltinType::InvalidBuiltin;
+}
 
 void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, const QQmlJS::AST::SourceLocation &loc)
 {
@@ -247,62 +326,9 @@ QStringList Signal::parameterStringList(const QV4::Compiler::StringTableGenerato
 {
     QStringList result;
     result.reserve(parameters->count);
-    for (SignalParameter *param = parameters->first; param; param = param->next)
+    for (Parameter *param = parameters->first; param; param = param->next)
         result << stringPool->stringForIndex(param->nameIndex);
     return result;
-}
-
-static void replaceWithSpace(QString &str, int idx, int n)
-{
-    QChar *data = str.data() + idx;
-    const QChar space(QLatin1Char(' '));
-    for (int ii = 0; ii < n; ++ii)
-        *data++ = space;
-}
-
-void Document::removeScriptPragmas(QString &script)
-{
-    const QLatin1String pragma("pragma");
-    const QLatin1String library("library");
-
-    QQmlJS::Lexer l(nullptr);
-    l.setCode(script, 0);
-
-    int token = l.lex();
-
-    while (true) {
-        if (token != QQmlJSGrammar::T_DOT)
-            return;
-
-        int startOffset = l.tokenOffset();
-        int startLine = l.tokenStartLine();
-
-        token = l.lex();
-
-        if (token != QQmlJSGrammar::T_PRAGMA ||
-            l.tokenStartLine() != startLine ||
-            script.midRef(l.tokenOffset(), l.tokenLength()) != pragma)
-            return;
-
-        token = l.lex();
-
-        if (token != QQmlJSGrammar::T_IDENTIFIER ||
-            l.tokenStartLine() != startLine)
-            return;
-
-        const QStringRef pragmaValue = script.midRef(l.tokenOffset(), l.tokenLength());
-        int endOffset = l.tokenLength() + l.tokenOffset();
-
-        token = l.lex();
-        if (l.tokenStartLine() == startLine)
-            return;
-
-        if (pragmaValue == library) {
-            replaceWithSpace(script, startOffset, endOffset - startOffset);
-        } else {
-            return;
-        }
-    }
 }
 
 Document::Document(bool debugMode)
@@ -764,40 +790,6 @@ bool IRBuilder::visit(QQmlJS::AST::UiEnumDeclaration *node)
 
 bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
 {
-    static const struct TypeNameToType {
-        const char *name;
-        size_t nameLength;
-        QV4::CompiledData::BuiltinType type;
-    } propTypeNameToTypes[] = {
-        { "int", strlen("int"), QV4::CompiledData::BuiltinType::Int },
-        { "bool", strlen("bool"), QV4::CompiledData::BuiltinType::Bool },
-        { "double", strlen("double"), QV4::CompiledData::BuiltinType::Real },
-        { "real", strlen("real"), QV4::CompiledData::BuiltinType::Real },
-        { "string", strlen("string"), QV4::CompiledData::BuiltinType::String },
-        { "url", strlen("url"), QV4::CompiledData::BuiltinType::Url },
-        { "color", strlen("color"), QV4::CompiledData::BuiltinType::Color },
-        // Internally QTime, QDate and QDateTime are all supported.
-        // To be more consistent with JavaScript we expose only
-        // QDateTime as it matches closely with the Date JS type.
-        // We also call it "date" to match.
-        // { "time", strlen("time"), Property::Time },
-        // { "date", strlen("date"), Property::Date },
-        { "date", strlen("date"), QV4::CompiledData::BuiltinType::DateTime },
-        { "rect", strlen("rect"), QV4::CompiledData::BuiltinType::Rect },
-        { "point", strlen("point"), QV4::CompiledData::BuiltinType::Point },
-        { "size", strlen("size"), QV4::CompiledData::BuiltinType::Size },
-        { "font", strlen("font"), QV4::CompiledData::BuiltinType::Font },
-        { "vector2d", strlen("vector2d"), QV4::CompiledData::BuiltinType::Vector2D },
-        { "vector3d", strlen("vector3d"), QV4::CompiledData::BuiltinType::Vector3D },
-        { "vector4d", strlen("vector4d"), QV4::CompiledData::BuiltinType::Vector4D },
-        { "quaternion", strlen("quaternion"), QV4::CompiledData::BuiltinType::Quaternion },
-        { "matrix4x4", strlen("matrix4x4"), QV4::CompiledData::BuiltinType::Matrix4x4 },
-        { "variant", strlen("variant"), QV4::CompiledData::BuiltinType::Variant },
-        { "var", strlen("var"), QV4::CompiledData::BuiltinType::Var }
-    };
-    static const int propTypeNameToTypesCount = sizeof(propTypeNameToTypes) /
-                                                sizeof(propTypeNameToTypes[0]);
-
     if (node->type == QQmlJS::AST::UiPublicMember::Signal) {
         Signal *signal = New<Signal>();
         QString signalName = node->name.toString();
@@ -807,7 +799,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
         signal->location.line = loc.startLine;
         signal->location.column = loc.startColumn;
 
-        signal->parameters = New<PoolList<SignalParameter> >();
+        signal->parameters = New<PoolList<Parameter> >();
 
         QQmlJS::AST::UiParameterList *p = node->parameters;
         while (p) {
@@ -818,38 +810,13 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
                 return false;
             }
 
-            const TypeNameToType *type = nullptr;
-            for (int typeIndex = 0; typeIndex < propTypeNameToTypesCount; ++typeIndex) {
-                const TypeNameToType *t = propTypeNameToTypes + typeIndex;
-                if (memberType == QLatin1String(t->name, static_cast<int>(t->nameLength))) {
-                    type = t;
-                    break;
-                }
+            Parameter *param = New<Parameter>();
+            if (!param->init(jsGenerator, p->name.toString(), memberType)) {
+                QString errStr = QCoreApplication::translate("QQmlParser","Invalid signal parameter type: ");
+                errStr.append(memberType);
+                recordError(node->typeToken, errStr);
+                return false;
             }
-
-            SignalParameter *param = New<SignalParameter>();
-
-            if (!type) {
-                if (memberType.at(0).isUpper()) {
-                    // Must be a QML object type.
-                    // Lazily determine type during compilation.
-                    param->indexIsBuiltinType = false;
-                    param->typeNameIndexOrBuiltinType = registerString(memberType);
-                    Q_ASSERT(quint32(jsGenerator->getStringId(memberType)) < (1u << 31));
-                } else {
-                    QString errStr = QCoreApplication::translate("QQmlParser","Invalid signal parameter type: ");
-                    errStr.append(memberType);
-                    recordError(node->typeToken, errStr);
-                    return false;
-                }
-            } else {
-                // the parameter is a known basic type
-                param->indexIsBuiltinType = true;
-                param->typeNameIndexOrBuiltinType = static_cast<quint32>(type->type);
-                Q_ASSERT(quint32(type->type) < (1u << 31));
-            }
-
-            param->nameIndex = registerString(p->name.toString());
             signal->parameters->append(param);
             p = p->next;
         }
@@ -875,15 +842,10 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             Property *property = New<Property>();
             property->isReadOnly = node->isReadonlyMember;
 
-            bool typeFound = false;
-
-            for (int ii = 0; !typeFound && ii < propTypeNameToTypesCount; ++ii) {
-                const TypeNameToType *t = propTypeNameToTypes + ii;
-                if (memberType == QLatin1String(t->name, static_cast<int>(t->nameLength))) {
-                    property->setBuiltinType(t->type);
-                    typeFound = true;
-                }
-            }
+            QV4::CompiledData::BuiltinType builtinPropertyType = Parameter::stringToBuiltinType(memberType);
+            bool typeFound = builtinPropertyType != QV4::CompiledData::BuiltinType::InvalidBuiltin;
+            if (typeFound)
+                property->setBuiltinType(builtinPropertyType);
 
             if (!typeFound && memberType.at(0).isUpper()) {
                 const QStringRef &typeModifier = node->typeModifier;
@@ -960,13 +922,16 @@ bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
         f->index = index;
         f->nameIndex = registerString(funDecl->name.toString());
 
-        const QStringList formals = funDecl->formals ? funDecl->formals->formals() : QStringList();
+        QString returnTypeName = funDecl->typeAnnotation ? funDecl->typeAnnotation->type->toString() : QString();
+        Parameter::initType(&f->returnType, jsGenerator, registerString(returnTypeName));
+
+        const QQmlJS::AST::BoundNames formals = funDecl->formals ? funDecl->formals->formals() : QQmlJS::AST::BoundNames();
         int formalsCount = formals.size();
         f->formals.allocate(pool, formalsCount);
 
         int i = 0;
-        for (const QString &arg : formals) {
-            f->formals[i] = registerString(arg);
+        for (const auto &arg : formals) {
+            f->formals[i].init(jsGenerator, arg.id, arg.typeName());
             ++i;
         }
 
@@ -1696,7 +1661,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
             signalToWrite->nParameters = s->parameters->count;
 
             QV4::CompiledData::Parameter *parameterToWrite = reinterpret_cast<QV4::CompiledData::Parameter*>(signalPtr + sizeof(*signalToWrite));
-            for (SignalParameter *param = s->parameters->first; param; param = param->next, ++parameterToWrite)
+            for (Parameter *param = s->parameters->first; param; param = param->next, ++parameterToWrite)
                 *parameterToWrite = *param;
 
             int size = QV4::CompiledData::Signal::calculateSize(s->parameters->count);
@@ -1782,19 +1747,11 @@ char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, Binding
     return bindingPtr;
 }
 
-JSCodeGen::JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
-                     QV4::Compiler::Module *jsModule, QQmlJS::Engine *jsEngine,
-                     QQmlJS::AST::UiProgram *qmlRoot,
-                     const QV4::Compiler::StringTableGenerator *stringPool, const QSet<QString> &globalNames)
-    : QV4::Compiler::Codegen(jsUnitGenerator, /*strict mode*/false)
-    , sourceCode(sourceCode)
-    , jsEngine(jsEngine)
-    , qmlRoot(qmlRoot)
-    , stringPool(stringPool)
+JSCodeGen::JSCodeGen(Document *document, const QSet<QString> &globalNames)
+    : QV4::Compiler::Codegen(&document->jsGenerator, /*strict mode*/false), document(document)
 {
     m_globalNames = globalNames;
-
-    _module = jsModule;
+    _module = &document->jsModule;
     _fileNameIsUrl = true;
 }
 
@@ -1802,17 +1759,17 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
 {
     auto qmlName = [&](const CompiledFunctionOrExpression &c) {
         if (c.nameIndex != 0)
-            return stringPool->stringForIndex(c.nameIndex);
+            return document->stringAt(c.nameIndex);
         else
             return QStringLiteral("%qml-expression-entry");
     };
     QVector<int> runtimeFunctionIndices(functions.size());
 
-    QV4::Compiler::ScanFunctions scan(this, sourceCode, QV4::Compiler::ContextType::Global);
+    QV4::Compiler::ScanFunctions scan(this, document->code, QV4::Compiler::ContextType::Global);
     scan.enterGlobalEnvironment(QV4::Compiler::ContextType::Binding);
     for (const CompiledFunctionOrExpression &f : functions) {
-        Q_ASSERT(f.node != qmlRoot);
-        Q_ASSERT(f.parentNode && f.parentNode != qmlRoot);
+        Q_ASSERT(f.node != document->program);
+        Q_ASSERT(f.parentNode && f.parentNode != document->program);
         QQmlJS::AST::FunctionDeclaration *function = QQmlJS::AST::cast<QQmlJS::AST::FunctionDeclaration*>(f.node);
 
         if (function) {
@@ -1835,7 +1792,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     for (int i = 0; i < functions.count(); ++i) {
         const CompiledFunctionOrExpression &qmlFunction = functions.at(i);
         QQmlJS::AST::Node *node = qmlFunction.node;
-        Q_ASSERT(node != qmlRoot);
+        Q_ASSERT(node != document->program);
 
         QQmlJS::AST::FunctionDeclaration *function = QQmlJS::AST::cast<QQmlJS::AST::FunctionDeclaration*>(node);
 
@@ -1850,7 +1807,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
             body = function->body;
         } else {
             // Synthesize source elements.
-            QQmlJS::MemoryPool *pool = jsEngine->pool();
+            QQmlJS::MemoryPool *pool = document->jsParserEngine.pool();
 
             QQmlJS::AST::Statement *stmt = node->statementCast();
             if (!stmt) {
@@ -1869,4 +1826,59 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     }
 
     return runtimeFunctionIndices;
+}
+
+bool JSCodeGen::generateCodeForComponents(const QVector<quint32> &componentRoots)
+{
+    for (int i = 0; i < componentRoots.count(); ++i) {
+        if (!compileComponent(componentRoots.at(i)))
+            return false;
+    }
+
+    return compileComponent(/*root object*/0);
+}
+
+bool JSCodeGen::compileComponent(int contextObject)
+{
+    const QmlIR::Object *obj = document->objects.at(contextObject);
+    if (obj->flags & QV4::CompiledData::Object::IsComponent) {
+        Q_ASSERT(obj->bindingCount() == 1);
+        const QV4::CompiledData::Binding *componentBinding = obj->firstBinding();
+        Q_ASSERT(componentBinding->type == QV4::CompiledData::Binding::Type_Object);
+        contextObject = componentBinding->value.objectIndex;
+    }
+
+    return compileJavaScriptCodeInObjectsRecursively(contextObject, contextObject);
+}
+
+bool JSCodeGen::compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex)
+{
+    QmlIR::Object *object = document->objects.at(objectIndex);
+    if (object->flags & QV4::CompiledData::Object::IsComponent)
+        return true;
+
+    if (object->functionsAndExpressions->count > 0) {
+        QList<QmlIR::CompiledFunctionOrExpression> functionsToCompile;
+        for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next)
+            functionsToCompile << *foe;
+        const QVector<int> runtimeFunctionIndices = generateJSCodeForFunctionsAndBindings(functionsToCompile);
+        if (hasError())
+            return false;
+
+        object->runtimeFunctionIndices.allocate(document->jsParserEngine.pool(),
+                                                runtimeFunctionIndices);
+    }
+
+    for (const QmlIR::Binding *binding = object->firstBinding(); binding; binding = binding->next) {
+        if (binding->type < QV4::CompiledData::Binding::Type_Object)
+            continue;
+
+        int target = binding->value.objectIndex;
+        int scope = binding->type == QV4::CompiledData::Binding::Type_Object ? target : scopeObjectIndex;
+
+        if (!compileJavaScriptCodeInObjectsRecursively(binding->value.objectIndex, scope))
+            return false;
+    }
+
+    return true;
 }

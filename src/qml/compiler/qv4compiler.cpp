@@ -38,13 +38,14 @@
 ****************************************************************************/
 
 #include <qv4compiler_p.h>
-#include <qv4compileddata_p.h>
 #include <qv4codegen_p.h>
+#include <private/qv4compileddata_p.h>
 #include <private/qv4staticvalue_p.h>
 #include <private/qv4alloca_p.h>
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qml_compile_hash_p.h>
+#include <private/qqmlirbuilder_p.h>
 #include <QCryptographicHash>
 
 // Efficient implementation that takes advantage of powers of two.
@@ -268,8 +269,11 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     registerString(module->finalUrl);
     for (Context *f : qAsConst(module->functions)) {
         registerString(f->name);
-        for (int i = 0; i < f->arguments.size(); ++i)
-            registerString(f->arguments.at(i));
+        registerString(f->returnType);
+        for (int i = 0; i < f->arguments.size(); ++i) {
+            registerString(f->arguments.at(i).id);
+            registerString(f->arguments.at(i).typeName());
+        }
         for (int i = 0; i < f->locals.size(); ++i)
             registerString(f->locals.at(i));
     }
@@ -436,7 +440,9 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     function->length = irFunction->formals ? irFunction->formals->length() : 0;
     function->nFormals = irFunction->arguments.size();
     function->formalsOffset = currentOffset;
-    currentOffset += function->nFormals * sizeof(quint32);
+    currentOffset += function->nFormals * sizeof(CompiledData::Parameter);
+
+    QmlIR::Parameter::initType(&function->returnType, this, getStringId(irFunction->returnType));
 
     function->sizeOfLocalTemporalDeadZone = irFunction->sizeOfLocalTemporalDeadZone;
     function->sizeOfRegisterTemporalDeadZone = irFunction->sizeOfRegisterTemporalDeadZone;
@@ -465,9 +471,11 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     function->codeSize = irFunction->code.size();
 
     // write formals
-    quint32_le *formals = (quint32_le *)(f + function->formalsOffset);
-    for (int i = 0; i < irFunction->arguments.size(); ++i)
-        formals[i] = getStringId(irFunction->arguments.at(i));
+    CompiledData::Parameter *formals = (CompiledData::Parameter *)(f + function->formalsOffset);
+    for (int i = 0; i < irFunction->arguments.size(); ++i) {
+        QmlIR::Parameter::init(&formals[i], this, getStringId(irFunction->arguments.at(i).id),
+                               getStringId(irFunction->arguments.at(i).typeName()));
+    }
 
     // write locals
     quint32_le *locals = (quint32_le *)(f + function->localsOffset);

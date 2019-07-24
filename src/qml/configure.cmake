@@ -176,3 +176,9 @@ qt_feature("qml_worker_script" PRIVATE
     PURPOSE "Enables the use of threads in QML."
     CONDITION QT_FEATURE_thread
 )
+qt_feature("qml_itemmodel" PRIVATE
+    SECTION "QML"
+    LABEL "QML Item Model"
+    PURPOSE "Provides the item model for item views in QML"
+    CONDITION QT_FEATURE_itemmodel
+)

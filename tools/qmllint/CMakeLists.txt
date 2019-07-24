@@ -7,7 +7,13 @@
 add_qt_tool(qmllint
     TOOLS_TARGET Qml # special case
     SOURCES
+        componentversion.cpp componentversion.h
+        fakemetaobject.cpp fakemetaobject.h
+        findunqualified.cpp findunqualified.h
         main.cpp
+        qcoloroutput.cpp qcoloroutput_p.h
+        qmljstypedescriptionreader.cpp qmljstypedescriptionreader.h
+        scopetree.cpp scopetree.h
     LIBRARIES
         Qt::QmlDevToolsPrivate
     PUBLIC_LIBRARIES

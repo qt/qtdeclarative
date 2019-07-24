@@ -166,9 +166,12 @@ updated, and any \c onButtonTextChanged handlers would not be called.
 
 \section2 Invoking QML Methods
 
-All QML methods are exposed to the meta-object system and can be called from C++
-using QMetaObject::invokeMethod(). Method parameters and return values passed
-from QML are always translated into QVariant values in C++.
+All QML methods are exposed to the meta-object system and can be called from
+C++ using QMetaObject::invokeMethod(). You can specify types for the parameters
+and the return value after the colon character, as shown in the code snippet
+below.  This can be useful, for example, when you want to connect a signal in
+C++ with a certain signature to a QML-defined method. If you omit the types,
+the C++ signature will use QVariant.
 
 Here is a C++ application that calls a QML method using
 QMetaObject::invokeMethod():
@@ -182,9 +185,12 @@ QMetaObject::invokeMethod():
 \li \snippet qml/qtbinding/functions-qml/main.cpp 0
 \endtable
 
-Notice the Q_RETURN_ARG() and Q_ARG() arguments for QMetaObject::invokeMethod()
-must be specified as QVariant types, as this is the generic data type used for
-QML method parameters and return values.
+Notice the parameter and return type specified after the colon. You can use \l
+{QML Basic Types}{basic types} and \l {QML Object Types}{object types} as type
+names.
+
+If the type is omitted in QML, then you must specify QVariant as type with
+Q_RETURN_ARG() and Q_ARG() when calling QMetaObject::invokeMethod.
 
 
 \section2 Connecting to QML Signals
@@ -210,9 +216,8 @@ QObject::connect(), so that the \c cppSlot() method is called whenever the
 \snippet qml/qtbinding/signals-qml/main.cpp 0
 \endtable
 
-When a QML object type is used as a signal parameter, the parameter should
-use \l var as the type, and the value should be received in C++ using the
-QVariant type:
+A QML object type in a signal parameter is translated to a pointer to the class
+in C++:
 
 \table
 \row
@@ -226,7 +231,7 @@ QVariant type:
      id: item
      width: 100; height: 100
 
-     signal qmlSignal(var anObject)
+     signal qmlSignal(anObject: Item)
 
      MouseArea {
          anchors.fill: parent
@@ -241,18 +246,16 @@ QVariant type:
  {
      Q_OBJECT
  public slots:
-     void cppSlot(const QVariant &v) {
-        qDebug() << "Called the C++ slot with value:" << v;
+     void cppSlot(QQuickItem *item) {
+        qDebug() << "Called the C++ slot with item:" << item;
 
-        QQuickItem *item =
-            qobject_cast<QQuickItem*>(v.value<QObject*>());
         qDebug() << "Item dimensions:" << item->width()
                  << item->height();
      }
  };
 
  int main(int argc, char *argv[]) {
-     QApplication app(argc, argv);
+     QGuiApplication app(argc, argv);
 
      QQuickView view(QUrl::fromLocalFile("MyItem.qml"));
      QObject *item = view.rootObject();

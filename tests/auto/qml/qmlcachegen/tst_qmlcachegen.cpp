@@ -36,6 +36,7 @@
 #include <QSysInfo>
 #include <QLoggingCategory>
 #include <private/qqmlcomponent_p.h>
+#include <private/qqmlscriptdata_p.h>
 #include <qtranslator.h>
 
 #include "../../shared/util.h"

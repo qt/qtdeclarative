@@ -32,6 +32,7 @@
 #include <QTranslator>
 #include <QQmlContext>
 #include <private/qqmlengine_p.h>
+#include <private/qqmltypedata_p.h>
 #include "../../shared/util.h"
 
 class tst_qqmltranslation : public QQmlDataTest

@@ -28,6 +28,7 @@
 
 #include <QtTest/QtTest>
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlfile.h>
 #include <QtQml/qqmlnetworkaccessmanagerfactory.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
@@ -35,6 +36,7 @@
 #include <QtCore/qprocess.h>
 #endif
 #include <QtQml/private/qqmlengine_p.h>
+#include <QtQml/private/qqmltypedata_p.h>
 #include <QtQml/private/qqmltypeloader_p.h>
 #include "../../shared/testhttpserver.h"
 #include "../../shared/util.h"
@@ -56,6 +58,8 @@ private slots:
     void qmlSingletonWithinModule();
     void multiSingletonModule();
     void implicitComponentModule();
+    void qrcRootPathUrl();
+    void implicitImport();
 };
 
 void tst_QQMLTypeLoader::testLoadComplete()
@@ -501,6 +505,23 @@ void tst_QQMLTypeLoader::implicitComponentModule()
     QVERIFY(!obj.isNull());
 
     checkCleanCacheLoad(QLatin1String("implicitComponentModule"));
+}
+
+void tst_QQMLTypeLoader::qrcRootPathUrl()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("qrcRootPath.qml"));
+    QCOMPARE(component.status(), QQmlComponent::Ready);
+}
+
+void tst_QQMLTypeLoader::implicitImport()
+{
+    QQmlEngine engine;
+    engine.addImportPath(testFile("imports"));
+    QQmlComponent component(&engine, testFileUrl("implicitimporttest.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

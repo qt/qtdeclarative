@@ -50,7 +50,6 @@
 // We mean it.
 //
 
-#include <private/qv4global_p.h>
 #include <private/qv4codegen_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qv4bytecodegenerator_p.h>
@@ -279,7 +278,7 @@ struct ControlFlowWith : public ControlFlowUnwind
 
 struct ControlFlowBlock : public ControlFlowUnwind
 {
-    ControlFlowBlock(Codegen *cg, AST::Node *ast)
+    ControlFlowBlock(Codegen *cg, QQmlJS::AST::Node *ast)
         : ControlFlowUnwind(cg, Block)
     {
         block = cg->enterBlock(ast);
@@ -314,11 +313,11 @@ struct ControlFlowBlock : public ControlFlowUnwind
 
 struct ControlFlowCatch : public ControlFlowUnwind
 {
-    AST::Catch *catchExpression;
+    QQmlJS::AST::Catch *catchExpression;
     bool insideCatch = false;
     BytecodeGenerator::ExceptionHandler exceptionLabel;
 
-    ControlFlowCatch(Codegen *cg, AST::Catch *catchExpression)
+    ControlFlowCatch(Codegen *cg, QQmlJS::AST::Catch *catchExpression)
         : ControlFlowUnwind(cg, Catch), catchExpression(catchExpression),
           exceptionLabel(generator()->newExceptionHandler())
     {
@@ -372,10 +371,10 @@ struct ControlFlowCatch : public ControlFlowUnwind
 
 struct ControlFlowFinally : public ControlFlowUnwind
 {
-    AST::Finally *finally;
+    QQmlJS::AST::Finally *finally;
     bool insideFinally = false;
 
-    ControlFlowFinally(Codegen *cg, AST::Finally *finally)
+    ControlFlowFinally(Codegen *cg, QQmlJS::AST::Finally *finally)
         : ControlFlowUnwind(cg, Finally), finally(finally)
     {
         Q_ASSERT(finally != nullptr);

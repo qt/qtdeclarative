@@ -59,6 +59,8 @@ int main(int argc, char **argv)
         component.setData(qmltemplate, current);
         window.setContent(current, &component, component.create());
         window.show();
-        QTest::qWaitForWindowActive(&window);
+        if (!QTest::qWaitForWindowActive(&window))
+            return EXIT_FAILURE;
     }
+    return 0;
 }
