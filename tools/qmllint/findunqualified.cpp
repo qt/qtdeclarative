@@ -503,7 +503,9 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
         } else {
             auto method = m_currentScope->methods()[signal];
             for (auto const &param : method.parameterNames()) {
-                m_currentScope->insertSignalIdentifier(param, method, uisb->statement->firstSourceLocation());
+                auto firstSourceLocation = uisb->statement->firstSourceLocation();
+                bool hasMultilineStatementBody = uisb->statement->lastSourceLocation().startLine > firstSourceLocation.startLine;
+                m_currentScope->insertSignalIdentifier(param, method, firstSourceLocation, hasMultilineStatementBody);
             }
         }
         return true;

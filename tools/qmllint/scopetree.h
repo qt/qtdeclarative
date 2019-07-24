@@ -56,6 +56,7 @@ struct MethodUsage
 {
     LanguageUtils::FakeMetaMethod method;
     QQmlJS::AST::SourceLocation loc;
+    bool hasMultilineHandlerBody;
 };
 
 class ColorOutput;
@@ -70,7 +71,7 @@ public:
 
     void insertJSIdentifier(QString id, QQmlJS::AST::VariableScope scope);
     void insertQMLIdentifier(QString id);
-    void insertSignalIdentifier(QString id, LanguageUtils::FakeMetaMethod method, QQmlJS::AST::SourceLocation loc);
+    void insertSignalIdentifier(QString id, LanguageUtils::FakeMetaMethod method, QQmlJS::AST::SourceLocation loc, bool hasMultilineHandlerBody);
     void insertPropertyIdentifier(QString id); // inserts property as qml identifier as well as the corresponding
 
     bool isIdInCurrentScope(QString const &id) const;
@@ -88,7 +89,7 @@ public:
 private:
     QSet<QString> m_currentScopeJSIdentifiers;
     QSet<QString> m_currentScopeQMLIdentifiers;
-    QHash<QString, MethodUsage> m_injectedSignalIdentifiers; // need iteration in insertion order for hints, rarely more than 4 parameters needed
+    QMultiHash<QString, MethodUsage> m_injectedSignalIdentifiers;
     QMap<QString, LanguageUtils::FakeMetaMethod> m_methods;
     QVector<QPair<QString, QQmlJS::AST::SourceLocation>> m_accessedIdentifiers;
     QVector<ScopeTree*> m_childScopes;

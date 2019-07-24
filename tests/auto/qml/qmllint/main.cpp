@@ -110,7 +110,10 @@ void TestQmllint::testUnqualified_data()
     QTest::newRow("FromRootDirectParentDirect") << QStringLiteral("FromRootDirectParent.qml") << QStringLiteral("x: parent.unqualified") << 8 << 12;
     QTest::newRow("FromRootDirectParentAccess") << QStringLiteral("FromRootDirectParent.qml") << QStringLiteral("property int check: parent.x") << 12 << 29;
     // access injected name from signal
-    QTest::newRow("SignalHandler") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onDoubleClicked:  function(mouse) {...") << 4 << 34;
+    QTest::newRow("SignalHandler1") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onDoubleClicked:  function(mouse) {...") << 5 << 21;
+    QTest::newRow("SignalHandler2") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onPositionChanged:  function(mouse) {...") << 10 << 21;
+    QTest::newRow("SignalHandlerShort1") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onClicked:  (mouse) =>  {...") << 8 << 29;
+    QTest::newRow("SignalHandlerShort2") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onPressAndHold:  (mouse) =>  {...") << 12 << 34;
 
 }
 
