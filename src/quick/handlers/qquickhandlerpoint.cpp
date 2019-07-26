@@ -51,13 +51,14 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
 
     A QML representation of a QQuickEventPoint.
 
-    It's possible to make bindings to properties of a \l SinglePointHandler's
-    current point. For example:
+    It's possible to make bindings to properties of a handler's current
+    \l {SinglePointHandler::point}{point} or
+    \l {MultiPointHandler::centroid}{centroid}. For example:
 
     \snippet pointerHandlers/dragHandlerNullTarget.qml 0
 
     The point is kept up-to-date when the DragHandler is actively responding to
-    an EventPoint; but when the point is released, or the current point is
+    an EventPoint; but after the point is released, or when the current point is
     being handled by a different handler, \c position.x and \c position.y are 0.
 
     \note This is practically identical to QtQuick::EventPoint; however an
@@ -68,7 +69,7 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
     handler is handling. HandlerPoint is a Q_GADGET that the handler owns.
     This allows you to make lifetime bindings to its properties.
 
-    \sa SinglePointHandler::point
+    \sa SinglePointHandler::point, MultiPointHandler::centroid
 */
 
 QQuickHandlerPoint::QQuickHandlerPoint()
@@ -105,12 +106,6 @@ void QQuickHandlerPoint::reset(const QQuickEventPoint *point)
         m_pressPosition = point->position();
         m_scenePressPosition = point->scenePosition();
         m_pressedButtons = event->buttons();
-        break;
-    case QQuickEventPoint::Released:
-        if (event->buttons() == Qt::NoButton) {
-            reset();
-            return;
-        }
         break;
     default:
         break;

@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qquickhoverhandler_p.h"
+#include <private/qquicksinglepointhandler_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,6 +60,8 @@ Q_LOGGING_CATEGORY(lcHoverHandler, "qt.quick.handler.hover")
 QQuickHoverHandler::QQuickHoverHandler(QQuickItem *parent)
     : QQuickSinglePointHandler(parent)
 {
+    // Tell QQuickPointerDeviceHandler::wantsPointerEvent() to ignore button state
+    d_func()->acceptedButtons = Qt::NoButton;
     // Rule out the touchscreen for now (can be overridden in QML in case a hover-detecting touchscreen exists)
     setAcceptedDevices(static_cast<QQuickPointerDevice::DeviceType>(
         static_cast<int>(QQuickPointerDevice::AllDevices) ^ static_cast<int>(QQuickPointerDevice::TouchScreen)));
