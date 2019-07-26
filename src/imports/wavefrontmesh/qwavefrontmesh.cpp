@@ -53,19 +53,6 @@
 
 QT_BEGIN_NAMESPACE
 
-static const char qt_position_attribute_name[] = "qt_Vertex";
-static const char qt_texcoord_attribute_name[] = "qt_MultiTexCoord0";
-
-const char *qtPositionAttributeName()
-{
-    return qt_position_attribute_name;
-}
-
-const char *qtTexCoordAttributeName()
-{
-    return qt_texcoord_attribute_name;
-}
-
 class QWavefrontMeshPrivate : public QObjectPrivate
 {
 public:

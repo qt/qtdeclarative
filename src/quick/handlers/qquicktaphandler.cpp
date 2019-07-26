@@ -392,9 +392,6 @@ void QQuickTapHandler::updateTimeHeld()
     from the release event about the point that was tapped:
 
     \snippet pointerHandlers/tapHandlerOnTapped.qml 0
-
-    \note At the time this signal is emitted, \l point has been reset
-    (all coordinates are \c 0).
 */
 
 /*!
@@ -406,9 +403,6 @@ void QQuickTapHandler::updateTimeHeld()
     it can be tapped again; but if the time until the next tap is less,
     \l tapCount will increase. The \c eventPoint signal parameter contains
     information from the release event about the point that was tapped.
-
-    \note At the time this signal is emitted, \l point has been reset
-    (all coordinates are \c 0).
 */
 
 /*!
@@ -422,9 +416,6 @@ void QQuickTapHandler::updateTimeHeld()
     \l singleTapped, \l tapped, and \l tapCountChanged. The \c eventPoint
     signal parameter contains information from the release event about the
     point that was tapped.
-
-    \note At the time this signal is emitted, \l point has been reset
-    (all coordinates are \c 0).
 */
 
 /*!

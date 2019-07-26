@@ -249,6 +249,8 @@ private slots:
     void interrupt_data();
     void interrupt();
 
+    void triggerBackwardJumpWithDestructuring();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -4936,6 +4938,19 @@ void tst_QJSEngine::interrupt()
 #else
     QSKIP("This test requires C++11 futures");
 #endif
+}
+
+void tst_QJSEngine::triggerBackwardJumpWithDestructuring()
+{
+    QJSEngine engine;
+    auto value = engine.evaluate(
+            "function makeArray(n) { return [...Array(n).keys()]; }\n"
+            "for (let i=0;i<100;++i) {\n"
+            "    let arr = makeArray(20)\n"
+            "    arr.sort( (a, b) => b - a )\n"
+            "}"
+            );
+    QVERIFY(!value.isError());
 }
 
 QTEST_MAIN(tst_QJSEngine)
