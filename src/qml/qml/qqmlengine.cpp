@@ -820,11 +820,12 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
         QMetaMethod m = QMetaObjectPrivate::signal(object->metaObject(), index);
         QList<QByteArray> parameterTypes = m.parameterTypes();
 
-        int *types = (int *)malloc((parameterTypes.count() + 1) * sizeof(int));
-        void **args = (void **) malloc((parameterTypes.count() + 1) *sizeof(void *));
+        QScopedPointer<QMetaCallEvent> ev(new QMetaCallEvent(m.methodIndex(), 0, nullptr,
+                                                             object, index,
+                                                             parameterTypes.count() + 1));
 
-        types[0] = 0; // return type
-        args[0] = nullptr; // return value
+        void **args = ev->args();
+        int *types = ev->types();
 
         for (int ii = 0; ii < parameterTypes.count(); ++ii) {
             const QByteArray &typeName = parameterTypes.at(ii);
@@ -837,21 +838,16 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
                 qWarning("QObject::connect: Cannot queue arguments of type '%s'\n"
                          "(Make sure '%s' is registered using qRegisterMetaType().)",
                          typeName.constData(), typeName.constData());
-                free(types);
-                free(args);
                 return;
             }
 
             args[ii + 1] = QMetaType::create(types[ii + 1], a[ii + 1]);
         }
 
-        QMetaCallEvent *ev = new QMetaCallEvent(m.methodIndex(), 0, nullptr, object, index,
-                                                parameterTypes.count() + 1, types, args);
-
         QQmlThreadNotifierProxyObject *mpo = new QQmlThreadNotifierProxyObject;
         mpo->target = object;
         mpo->moveToThread(QObjectPrivate::get(object)->threadData->thread.loadAcquire());
-        QCoreApplication::postEvent(mpo, ev);
+        QCoreApplication::postEvent(mpo, ev.take());
 
     } else {
         QQmlNotifierEndpoint *ep = ddata->notify(index);
