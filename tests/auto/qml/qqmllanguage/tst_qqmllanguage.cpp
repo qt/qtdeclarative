@@ -370,7 +370,8 @@ private:
 
 void tst_qqmllanguage::cleanupTestCase()
 {
-    QVERIFY(QFile::remove(testFile(QString::fromUtf8("I18nType\303\201\303\242\303\243\303\244\303\245.qml"))));
+    if (dataDirectoryUrl().scheme() != QLatin1String("qrc"))
+        QVERIFY(QFile::remove(testFile(QString::fromUtf8("I18nType\303\201\303\242\303\243\303\244\303\245.qml"))));
 }
 
 void tst_qqmllanguage::insertedSemicolon_data()
@@ -630,6 +631,18 @@ void tst_qqmllanguage::errors_data()
 
 void tst_qqmllanguage::errors()
 {
+#ifdef Q_OS_ANDROID
+    if (qstrcmp(QTest::currentDataTag(), "fuzzed.2") == 0) {
+        QSKIP("Gives different errors on Android");
+        /* Only gives one error on Android:
+
+            qrc:/data/fuzzed.2.qml:1:1: "
+            import"
+            ^
+        So, it seems to complain about the first import (which is understandable)
+        */
+    }
+#endif
     QFETCH(QString, file);
     QFETCH(QString, errorFile);
     QFETCH(bool, create);
@@ -2678,11 +2691,15 @@ void tst_qqmllanguage::importsLocal_data()
            "Test {}"
         << (!qmlCheckTypes()?"TestType":"")
         << (!qmlCheckTypes()?"":"Test is ambiguous. Found in org/qtproject/Test/ and in subdir/");
-    QTest::newRow("file URL survives percent-encoding")
-        << "import \"" + QUrl::fromLocalFile(QDir::currentPath() + "/{subdir}").toString() + "\"\n"
-           "Test {}"
-        << "QQuickRectangle"
-        << "";
+
+    if (dataDirectoryUrl().scheme() != QLatin1String("qrc")) {
+        // file URL doesn't work with qrc scheme
+        QTest::newRow("file URL survives percent-encoding")
+            << "import \"" + QUrl::fromLocalFile(QDir::currentPath() + "/{subdir}").toString() + "\"\n"
+               "Test {}"
+            << "QQuickRectangle"
+            << "";
+    }
 }
 
 void tst_qqmllanguage::importsLocal()
@@ -3441,7 +3458,11 @@ void tst_qqmllanguage::uncreatableTypesAsProperties()
 void tst_qqmllanguage::initTestCase()
 {
     QQmlDataTest::initTestCase();
-    QVERIFY2(QDir::setCurrent(dataDirectory()), qPrintable("Could not chdir to " + dataDirectory()));
+    if (dataDirectoryUrl().scheme() == QLatin1String("qrc"))
+        engine.addImportPath(dataDirectory());
+    else
+        QVERIFY2(QDir::setCurrent(dataDirectory()), qPrintable("Could not chdir to " + dataDirectory()));
+
 
     defaultImportPathList = engine.importPathList();
 
@@ -3472,11 +3493,13 @@ void tst_qqmllanguage::initTestCase()
     // For POSIX, this will just be data/I18nType.qml, since POSIX is 7-bit
     // For iso8859-1 locale, this will just be data/I18nType?????.qml where ????? is 5 8-bit characters
     // For utf-8 locale, this will be data/I18nType??????????.qml where ?????????? is 5 8-bit characters, UTF-8 encoded
-    QFile in(testFileUrl(QLatin1String("I18nType30.qml")).toLocalFile());
-    QVERIFY2(in.open(QIODevice::ReadOnly), qPrintable(QString::fromLatin1("Cannot open '%1': %2").arg(in.fileName(), in.errorString())));
-    QFile out(testFileUrl(QString::fromUtf8("I18nType\303\201\303\242\303\243\303\244\303\245.qml")).toLocalFile());
-    QVERIFY2(out.open(QIODevice::WriteOnly), qPrintable(QString::fromLatin1("Cannot open '%1': %2").arg(out.fileName(), out.errorString())));
-    out.write(in.readAll());
+    if (dataDirectoryUrl().scheme() != QLatin1String("qrc")) {
+        QFile in(testFileUrl(QLatin1String("I18nType30.qml")).toLocalFile());
+        QVERIFY2(in.open(QIODevice::ReadOnly), qPrintable(QString::fromLatin1("Cannot open '%1': %2").arg(in.fileName(), in.errorString())));
+        QFile out(testFileUrl(QString::fromUtf8("I18nType\303\201\303\242\303\243\303\244\303\245.qml")).toLocalFile());
+        QVERIFY2(out.open(QIODevice::WriteOnly), qPrintable(QString::fromLatin1("Cannot open '%1': %2").arg(out.fileName(), out.errorString())));
+        out.write(in.readAll());
+    }
 
     // Register a Composite Singleton.
     qmlRegisterSingletonType(testFileUrl("singleton/RegisteredCompositeSingletonType.qml"), "org.qtproject.Test", 1, 0, "RegisteredSingleton");
@@ -3988,7 +4011,7 @@ void tst_qqmllanguage::objectDeletionNotify()
 
 void tst_qqmllanguage::scopedProperties()
 {
-    QQmlComponent component(&engine, testFile("scopedProperties.qml"));
+    QQmlComponent component(&engine, testFileUrl("scopedProperties.qml"));
 
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
@@ -3997,7 +4020,7 @@ void tst_qqmllanguage::scopedProperties()
 
 void tst_qqmllanguage::deepProperty()
 {
-    QQmlComponent component(&engine, testFile("deepProperty.qml"));
+    QQmlComponent component(&engine, testFileUrl("deepProperty.qml"));
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
     QFont font = qvariant_cast<QFont>(qvariant_cast<QObject*>(o->property("someObject"))->property("font"));
@@ -4015,7 +4038,7 @@ void tst_qqmllanguage::implicitImportsLast()
     if (engine.importPathList() == defaultImportPathList)
         engine.addImportPath(testFile("lib"));
 
-    QQmlComponent component(&engine, testFile("localOrderTest.qml"));
+    QQmlComponent component(&engine, testFileUrl("localOrderTest.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
@@ -4035,7 +4058,7 @@ void tst_qqmllanguage::getSingletonInstance(QQmlEngine& engine, const char* file
     if (!fileName || !propertyName)
         return;
 
-    QQmlComponent component(&engine, testFile(fileName));
+    QQmlComponent component(&engine, testFileUrl(fileName));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
@@ -4077,7 +4100,7 @@ void verifyCompositeSingletonPropertyValues(QObject* o, const char* n1, int v1, 
 // Reads values from a composite singleton type
 void tst_qqmllanguage::compositeSingletonProperties()
 {
-    QQmlComponent component(&engine, testFile("singletonTest1.qml"));
+    QQmlComponent component(&engine, testFileUrl("singletonTest1.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
@@ -4124,14 +4147,14 @@ void tst_qqmllanguage::compositeSingletonDifferentEngine()
 // pragma Singleton in a non-type qml file fails
 void tst_qqmllanguage::compositeSingletonNonTypeError()
 {
-    QQmlComponent component(&engine, testFile("singletonTest4.qml"));
+    QQmlComponent component(&engine, testFileUrl("singletonTest4.qml"));
     VERIFY_ERRORS("singletonTest4.error.txt");
 }
 
 // Loads the singleton using a namespace qualifier
 void tst_qqmllanguage::compositeSingletonQualifiedNamespace()
 {
-    QQmlComponent component(&engine, testFile("singletonTest5.qml"));
+    QQmlComponent component(&engine, testFileUrl("singletonTest5.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
@@ -4156,7 +4179,7 @@ void tst_qqmllanguage::compositeSingletonModule()
 {
     engine.addImportPath(testFile("singleton/module"));
 
-    QQmlComponent component(&engine, testFile("singletonTest6.qml"));
+    QQmlComponent component(&engine, testFileUrl("singletonTest6.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
@@ -4182,7 +4205,7 @@ void tst_qqmllanguage::compositeSingletonModuleVersioned()
 {
     engine.addImportPath(testFile("singleton/module"));
 
-    QQmlComponent component(&engine, testFile("singletonTest7.qml"));
+    QQmlComponent component(&engine, testFileUrl("singletonTest7.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
@@ -4208,7 +4231,7 @@ void tst_qqmllanguage::compositeSingletonModuleQualified()
 {
     engine.addImportPath(testFile("singleton/module"));
 
-    QQmlComponent component(&engine, testFile("singletonTest8.qml"));
+    QQmlComponent component(&engine, testFileUrl("singletonTest8.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
@@ -4232,14 +4255,14 @@ void tst_qqmllanguage::compositeSingletonModuleQualified()
 // Tries to instantiate a type with a pragma Singleton and fails
 void tst_qqmllanguage::compositeSingletonInstantiateError()
 {
-    QQmlComponent component(&engine, testFile("singletonTest9.qml"));
+    QQmlComponent component(&engine, testFileUrl("singletonTest9.qml"));
     VERIFY_ERRORS("singletonTest9.error.txt");
 }
 
 // Having a composite singleton type as dynamic property type is allowed
 void tst_qqmllanguage::compositeSingletonDynamicPropertyError()
 {
-    QQmlComponent component(&engine, testFile("singletonTest10.qml"));
+    QQmlComponent component(&engine, testFileUrl("singletonTest10.qml"));
     VERIFY_ERRORS(0);
 }
 
@@ -4247,7 +4270,7 @@ void tst_qqmllanguage::compositeSingletonDynamicPropertyError()
 // (like C++ singleton)
 void tst_qqmllanguage::compositeSingletonDynamicSignal()
 {
-    QQmlComponent component(&engine, testFile("singletonTest11.qml"));
+    QQmlComponent component(&engine, testFileUrl("singletonTest11.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
@@ -4261,21 +4284,21 @@ void tst_qqmllanguage::compositeSingletonQmlRegisterTypeError()
 {
     qmlRegisterType(testFileUrl("singleton/registeredComposite/CompositeType.qml"),
         "CompositeSingletonTest", 1, 0, "RegisteredCompositeType");
-    QQmlComponent component(&engine, testFile("singletonTest12.qml"));
+    QQmlComponent component(&engine, testFileUrl("singletonTest12.qml"));
     VERIFY_ERRORS("singletonTest12.error.txt");
 }
 
 // Qmldir defines a type as a singleton, but the qml file does not have a pragma Singleton.
 void tst_qqmllanguage::compositeSingletonQmldirNoPragmaError()
 {
-    QQmlComponent component(&engine, testFile("singletonTest13.qml"));
+    QQmlComponent component(&engine, testFileUrl("singletonTest13.qml"));
     VERIFY_ERRORS("singletonTest13.error.txt");
 }
 
 // Invalid singleton definition in the qmldir file results in an error
 void tst_qqmllanguage::compositeSingletonQmlDirError()
 {
-    QQmlComponent component(&engine, testFile("singletonTest14.qml"));
+    QQmlComponent component(&engine, testFileUrl("singletonTest14.qml"));
     VERIFY_ERRORS("singletonTest14.error.txt");
 }
 
@@ -4309,7 +4332,7 @@ void tst_qqmllanguage::compositeSingletonRemote()
 // the pragma Singleton changes.
 void tst_qqmllanguage::compositeSingletonJavaScriptPragma()
 {
-    QQmlComponent component(&engine, testFile("singletonTest16.qml"));
+    QQmlComponent component(&engine, testFileUrl("singletonTest16.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
@@ -4327,7 +4350,7 @@ void tst_qqmllanguage::compositeSingletonSelectors()
     QQmlEngine e2;
     QQmlFileSelector qmlSelector(&e2);
     qmlSelector.setExtraSelectors(QStringList() << "basicSelector");
-    QQmlComponent component(&e2, testFile("singletonTest1.qml"));
+    QQmlComponent component(&e2, testFileUrl("singletonTest1.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
@@ -4339,7 +4362,7 @@ void tst_qqmllanguage::compositeSingletonSelectors()
 // qmlRegisterSingletonType.
 void tst_qqmllanguage::compositeSingletonRegistered()
 {
-    QQmlComponent component(&engine, testFile("singletonTest17.qml"));
+    QQmlComponent component(&engine, testFileUrl("singletonTest17.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
@@ -4349,7 +4372,7 @@ void tst_qqmllanguage::compositeSingletonRegistered()
 
 void tst_qqmllanguage::compositeSingletonCircular()
 {
-    QQmlComponent component(&engine, testFile("circularSingleton.qml"));
+    QQmlComponent component(&engine, testFileUrl("circularSingleton.qml"));
     VERIFY_ERRORS(0);
 
     QQmlTestMessageHandler messageHandler;
@@ -4383,7 +4406,7 @@ void tst_qqmllanguage::singletonsHaveContextAndEngine()
 
 void tst_qqmllanguage::customParserBindingScopes()
 {
-    QQmlComponent component(&engine, testFile("customParserBindingScopes.qml"));
+    QQmlComponent component(&engine, testFileUrl("customParserBindingScopes.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
@@ -4394,7 +4417,7 @@ void tst_qqmllanguage::customParserBindingScopes()
 
 void tst_qqmllanguage::customParserEvaluateEnum()
 {
-    QQmlComponent component(&engine, testFile("customParserEvaluateEnum.qml"));
+    QQmlComponent component(&engine, testFileUrl("customParserEvaluateEnum.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
@@ -4402,7 +4425,7 @@ void tst_qqmllanguage::customParserEvaluateEnum()
 
 void tst_qqmllanguage::customParserProperties()
 {
-    QQmlComponent component(&engine, testFile("customParserProperties.qml"));
+    QQmlComponent component(&engine, testFileUrl("customParserProperties.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
@@ -4416,7 +4439,7 @@ void tst_qqmllanguage::customParserProperties()
 
 void tst_qqmllanguage::customParserWithExtendedObject()
 {
-    QQmlComponent component(&engine, testFile("customExtendedParserProperties.qml"));
+    QQmlComponent component(&engine, testFileUrl("customExtendedParserProperties.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
@@ -4434,7 +4457,7 @@ void tst_qqmllanguage::customParserWithExtendedObject()
 
 void tst_qqmllanguage::nestedCustomParsers()
 {
-    QQmlComponent component(&engine, testFile("nestedCustomParsers.qml"));
+    QQmlComponent component(&engine, testFileUrl("nestedCustomParsers.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
@@ -4448,7 +4471,7 @@ void tst_qqmllanguage::nestedCustomParsers()
 
 void tst_qqmllanguage::preservePropertyCacheOnGroupObjects()
 {
-    QQmlComponent component(&engine, testFile("preservePropertyCacheOnGroupObjects.qml"));
+    QQmlComponent component(&engine, testFileUrl("preservePropertyCacheOnGroupObjects.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
@@ -4467,7 +4490,7 @@ void tst_qqmllanguage::preservePropertyCacheOnGroupObjects()
 
 void tst_qqmllanguage::propertyCacheInSync()
 {
-    QQmlComponent component(&engine, testFile("propertyCacheInSync.qml"));
+    QQmlComponent component(&engine, testFileUrl("propertyCacheInSync.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
@@ -4487,7 +4510,7 @@ void tst_qqmllanguage::propertyCacheInSync()
 
 void tst_qqmllanguage::rootObjectInCreationNotForSubObjects()
 {
-    QQmlComponent component(&engine, testFile("rootObjectInCreationNotForSubObjects.qml"));
+    QQmlComponent component(&engine, testFileUrl("rootObjectInCreationNotForSubObjects.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
@@ -4513,7 +4536,7 @@ void tst_qqmllanguage::rootObjectInCreationNotForSubObjects()
 // QTBUG-63036
 void tst_qqmllanguage::lazyDeferredSubObject()
 {
-    QQmlComponent component(&engine, testFile("lazyDeferredSubObject.qml"));
+    QQmlComponent component(&engine, testFileUrl("lazyDeferredSubObject.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
@@ -4528,7 +4551,7 @@ void tst_qqmllanguage::lazyDeferredSubObject()
 // QTBUG-63200
 void tst_qqmllanguage::deferredProperties()
 {
-    QQmlComponent component(&engine, testFile("deferredProperties.qml"));
+    QQmlComponent component(&engine, testFileUrl("deferredProperties.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
@@ -4645,7 +4668,7 @@ static void testExecuteDeferredOnce(const QQmlProperty &property)
 
 void tst_qqmllanguage::executeDeferredPropertiesOnce()
 {
-    QQmlComponent component(&engine, testFile("deferredProperties.qml"));
+    QQmlComponent component(&engine, testFileUrl("deferredProperties.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
@@ -4745,7 +4768,7 @@ void tst_qqmllanguage::deleteSingletons()
     QPointer<QObject> singleton;
     {
         QQmlEngine tmpEngine;
-        QQmlComponent component(&tmpEngine, testFile("singletonTest5.qml"));
+        QQmlComponent component(&tmpEngine, testFileUrl("singletonTest5.qml"));
         VERIFY_ERRORS(0);
         QScopedPointer<QObject> o(component.create());
         QVERIFY(o != nullptr);
@@ -4772,7 +4795,7 @@ void tst_qqmllanguage::arrayBuffer_data()
 void tst_qqmllanguage::arrayBuffer()
 {
     QFETCH(QString, file);
-    QQmlComponent component(&engine, testFile(file));
+    QQmlComponent component(&engine, testFileUrl(file));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);

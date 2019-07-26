@@ -17,3 +17,5 @@ include (../../shared/util.pri)
 
 OTHER_FILES += \
     data/readonlyObjectProperty.qml
+
+android: RESOURCES += qqmllanguage.qrc
