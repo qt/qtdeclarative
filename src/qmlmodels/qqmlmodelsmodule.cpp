@@ -71,6 +71,8 @@ void QQmlModelsModule::defineModule()
     qmlRegisterCustomType<QQmlListModel>(uri, 2, 0, "ListModel", new QQmlListModelParser);
 #endif
 #if QT_CONFIG(qml_delegate_model)
+    qmlRegisterType<QQmlDelegateModel>(uri, 2, 0, "VisualDataModel");
+    qmlRegisterType<QQmlDelegateModelGroup>(uri, 2, 0, "VisualDataGroup");
     qmlRegisterType<QQmlDelegateModel>(uri, 2, 1, "DelegateModel");
     qmlRegisterType<QQmlDelegateModelGroup>(uri, 2, 1, "DelegateModelGroup");
     qmlRegisterType<QQuickPackage>(uri, 2, 0, "Package");
