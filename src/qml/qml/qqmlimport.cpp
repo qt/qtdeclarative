@@ -1958,7 +1958,9 @@ void QQmlImportDatabase::setImportPathList(const QStringList &paths)
     if (qmlImportTrace())
         qDebug().nospace() << "QQmlImportDatabase::setImportPathList: " << paths;
 
-    fileImportPath = paths;
+    fileImportPath.clear();
+    for (auto it = paths.crbegin(); it != paths.crend(); ++it)
+        addImportPath(*it);
 
     // Our existing cached paths may have been invalidated
     clearDirCache();
