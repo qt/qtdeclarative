@@ -902,6 +902,10 @@ void QSGRenderThread::run()
         QQuickProfiler::registerAnimationCallback();
 
     while (active) {
+#ifdef Q_OS_DARWIN
+        QMacAutoReleasePool frameReleasePool;
+#endif
+
         if (window) {
             if (enableRhi) {
                 if (!rhi) {
