@@ -249,14 +249,6 @@ QSGRenderLoop *QSGRenderLoop::instance()
                     loopType = BasicRenderLoop;
 
                 switch (rhiSupport->rhiBackend()) {
-                case QRhi::Vulkan:
-#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
-                    // ### to be investigated (Mesa/Gnome deadlocks on
-                    // resize with threaded+Vulkan (but not threaded+GL))
-                    loopType = BasicRenderLoop;
-#endif
-                    break;
-
                 case QRhi::D3D11:
                     // D3D11 is forced to 'basic' always for now. The threaded loop's model may
                     // not be suitable for DXGI due to the possibility of having the main
