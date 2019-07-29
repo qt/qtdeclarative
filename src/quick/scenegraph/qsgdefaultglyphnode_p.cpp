@@ -764,13 +764,13 @@ void QSGTextMaskMaterial::updateCache(QFontEngine::GlyphFormat glyphFormat)
         if (!fontEngine->supportsTransformation(glyphCacheTransform))
             glyphCacheTransform = QTransform();
 
-        //QColor color = glyphFormat == QFontEngine::Format_ARGB ? QColor::fromRgbF(m_color.x(), m_color.y(), m_color.z(), m_color.w()) : QColor();
-        m_glyphCache = fontEngine->glyphCache(cacheKey, glyphFormat, glyphCacheTransform); // ### restore color arg when merges are done
+        QColor color = glyphFormat == QFontEngine::Format_ARGB ? QColor::fromRgbF(m_color.x(), m_color.y(), m_color.z(), m_color.w()) : QColor();
+        m_glyphCache = fontEngine->glyphCache(cacheKey, glyphFormat, glyphCacheTransform, color);
         if (!m_glyphCache || int(m_glyphCache->glyphFormat()) != glyphFormat) {
             if (m_rhi)
-                m_glyphCache = new QSGRhiTextureGlyphCache(m_rhi, glyphFormat, glyphCacheTransform); // ### color
+                m_glyphCache = new QSGRhiTextureGlyphCache(m_rhi, glyphFormat, glyphCacheTransform, color);
             else
-                m_glyphCache = new QOpenGLTextureGlyphCache(glyphFormat, glyphCacheTransform); // ### restore color arg when merges are done
+                m_glyphCache = new QOpenGLTextureGlyphCache(glyphFormat, glyphCacheTransform, color);
 
             fontEngine->setGlyphCache(cacheKey, m_glyphCache.data());
             m_rc->registerFontengineForCleanup(fontEngine);
