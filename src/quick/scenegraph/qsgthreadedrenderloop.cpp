@@ -686,10 +686,11 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     syncResultedInChanges = false;
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
 
-    bool repaintRequested = (pendingUpdate & RepaintRequest) || d->customRenderStage || grabImage;
-    bool syncRequested = (pendingUpdate & SyncRequest) || grabImage;
-    bool exposeRequested = (pendingUpdate & ExposeRequest) == ExposeRequest;
+    const bool repaintRequested = (pendingUpdate & RepaintRequest) || d->customRenderStage || grabImage;
+    const bool syncRequested = (pendingUpdate & SyncRequest) || grabImage;
+    const bool exposeRequested = (pendingUpdate & ExposeRequest) == ExposeRequest;
     pendingUpdate = 0;
+    const bool grabRequested = grabImage != nullptr;
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     // Begin the frame before syncing -> sync is where we may invoke
@@ -732,13 +733,26 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
             // try again later
             if (frameResult == QRhi::FrameOpDeviceLost || frameResult == QRhi::FrameOpSwapChainOutOfDate)
                 QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));
+
+            // Before returning we need to ensure the same wake up logic that
+            // would have happened if beginFrame() had suceeded.
+            if (exposeRequested) {
+                qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- bailing out due to failed beginFrame, wake Gui");
+                waitCondition.wakeOne();
+                mutex.unlock();
+            } else if (syncRequested && !grabRequested) {
+                qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- bailing out due to failed beginFrame, wake Gui like sync would do");
+                mutex.lock();
+                waitCondition.wakeOne();
+                mutex.unlock();
+            }
             return;
         }
     }
 
     if (syncRequested) {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- updatePending, doing sync");
-        sync(exposeRequested, grabImage != nullptr);
+        sync(exposeRequested, grabRequested);
     }
 #ifndef QSG_NO_RENDER_TIMING
     if (profileFrames)
