@@ -66,6 +66,15 @@ set(_qml_dev_tools_private_includes
     )
 target_include_directories(QmlDevTools PRIVATE ${_qml_dev_tools_private_includes})
 target_include_directories(QmlDevToolsPrivate INTERFACE ${_qml_dev_tools_private_includes})
+
+# We build the qlalr sources into qmldevtools, so there's no link-time
+# dependency to QtQml. However we also include files in QmlDevTools such
+# as qqmlirbuilder.cpp that include <private/qqmljsgrammar_p.h> that
+# originate from QtQml. That particular header was created at cmake time
+# via syncqt, but it's just a forwarding header that in turn includes
+# the generated file. That generated file is created when building
+# QtQml, so we must depend on it:
+add_dependencies(QmlDevTools Qml)
 # special case end
 
 #### Keys ignored in scope 1:.:.:qmldevtools.pro:<TRUE>:
