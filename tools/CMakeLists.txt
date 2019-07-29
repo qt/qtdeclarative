@@ -5,10 +5,8 @@ if(QT_FEATURE_qml_devtools)
     add_subdirectory(qmllint)
     add_subdirectory(qmlmin)
     add_subdirectory(qmlimportscanner)
-
-    if(QT_FEATURE_commandlineparser AND QT_FEATURE_xmlstreamwriter)
-        add_subdirectory(qmlcachegen)
-    endif()
+    # special case: Do not build qmlcachegen here but build it at src/
+    # time, so that we can use it for our own .qml files in src/imports.
 endif()
 
 if(QT_FEATURE_thread AND NOT ANDROID OR android_app AND NOT WASM AND NOT rtems)

@@ -29,11 +29,17 @@ endif()
 # These need to be included here since they have dependencies on the modules
 # specified above.
 add_subdirectory(plugins)
-add_subdirectory(imports)
 
 if(QT_FEATURE_qml_devtools)
     add_subdirectory(qmldevtools)
+
+    # Build qmlcachegen now, so that we can use it in src/imports.
+    if(QT_FEATURE_commandlineparser AND QT_FEATURE_xmlstreamwriter)
+        add_subdirectory(../tools/qmlcachegen qmlcachegen)
+    endif()
 endif()
+
+add_subdirectory(imports)
 
 if(QT_FEATURE_qml_network)
 
