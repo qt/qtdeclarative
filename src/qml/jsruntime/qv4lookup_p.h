@@ -151,6 +151,10 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
             quintptr reserved3;
             ReturnedValue (*getterTrampoline)(Lookup *l, ExecutionEngine *engine);
         } qmlContextGlobalLookup;
+        struct {
+            Heap::Object *qmlTypeWrapper;
+            quintptr unused2;
+        } qmlTypeLookup;
     };
     uint nameIndex;
 
