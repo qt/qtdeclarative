@@ -512,8 +512,11 @@ void QQuickTextAreaPrivate::executeBackground(bool complete)
 
     if (!background || complete)
         quickBeginDeferred(q, backgroundName(), background);
-    if (complete)
+    if (complete) {
         quickCompleteDeferred(q, backgroundName(), background);
+        if (background)
+            QQuickControlPrivate::addImplicitSizeListener(background, this, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
+    }
 }
 
 void QQuickTextAreaPrivate::itemImplicitWidthChanged(QQuickItem *item)
@@ -633,9 +636,10 @@ void QQuickTextArea::setBackground(QQuickItem *background)
             d->extra.value().hasBackgroundWidth = p->widthValid;
             d->extra.value().hasBackgroundHeight = p->heightValid;
         }
-        if (isComponentComplete())
+        if (isComponentComplete()) {
             d->resizeBackground();
-        QQuickControlPrivate::addImplicitSizeListener(background, d, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
+            QQuickControlPrivate::addImplicitSizeListener(background, d, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
+        }
     }
 
     if (!qFuzzyCompare(oldImplicitBackgroundWidth, implicitBackgroundWidth()))
