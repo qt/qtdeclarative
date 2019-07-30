@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qml_module(qmlplugin
+    INSTALL_QML_FILES
     TARGET_PATH "QtQml"
     IMPORT_VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     SOURCES

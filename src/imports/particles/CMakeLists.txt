@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qml_module(particlesplugin
+    INSTALL_QML_FILES
     TARGET_PATH "QtQuick/Particles.2"
     IMPORT_VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     SOURCES

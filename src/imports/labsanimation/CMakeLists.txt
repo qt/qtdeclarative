@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qml_module(labsanimationplugin
+    INSTALL_QML_FILES
     TARGET_PATH "Qt/labs/animation"
     IMPORT_VERSION "1.0"
     SOURCES

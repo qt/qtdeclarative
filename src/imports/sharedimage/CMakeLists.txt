@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qml_module(sharedimageplugin
+    INSTALL_QML_FILES
     TARGET_PATH "Qt/labs/sharedimage"
     IMPORT_VERSION "1.0"
     SOURCES

@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qml_module(qtqmlstatemachine
+    INSTALL_QML_FILES
     TARGET_PATH "QtQml/StateMachine"
     IMPORT_VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
     SOURCES

@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qml_module(qmllocalstorageplugin
+    INSTALL_QML_FILES
     TARGET_PATH "QtQuick/LocalStorage"
     IMPORT_VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     SOURCES

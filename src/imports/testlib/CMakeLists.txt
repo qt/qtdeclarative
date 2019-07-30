@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qml_module(qmltestplugin
+    INSTALL_QML_FILES
     TARGET_PATH "QtTest"
     IMPORT_VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
     QML_FILES

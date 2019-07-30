@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qml_module(labsmodelsplugin
+    INSTALL_QML_FILES
     TARGET_PATH "Qt/labs/qmlmodels"
     IMPORT_VERSION "1.0"
     SOURCES

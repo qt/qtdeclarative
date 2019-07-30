@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qml_module(qquicklayoutsplugin
+    INSTALL_QML_FILES
     TARGET_PATH "QtQuick/Layouts"
     IMPORT_VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
     SOURCES

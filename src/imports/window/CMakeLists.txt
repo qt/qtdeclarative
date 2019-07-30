@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qml_module(windowplugin
+    INSTALL_QML_FILES
     TARGET_PATH "QtQuick/Window.2"
     IMPORT_VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     SOURCES

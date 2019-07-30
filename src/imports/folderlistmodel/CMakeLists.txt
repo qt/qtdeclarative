@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qml_module(qmlfolderlistmodelplugin
+    INSTALL_QML_FILES
     TARGET_PATH "Qt/labs/folderlistmodel"
     IMPORT_VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     SOURCES

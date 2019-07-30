@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qml_module(qmlsettingsplugin
+    INSTALL_QML_FILES
     TARGET_PATH "Qt/labs/settings"
     IMPORT_VERSION "1.1"
     SOURCES
