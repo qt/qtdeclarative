@@ -369,10 +369,6 @@ void QQuickPaintedItem::setTextureSize(const QSize &size)
     emit textureSizeChanged();
 }
 
-#if QT_VERSION >= 0x060000
-#warning "Remove: QQuickPaintedItem::contentsBoundingRect, contentsScale, contentsSize. Also remove them from qsgadaptationlayer_p.h and qsgdefaultpainternode.h/cpp."
-#endif
-
 /*!
     \obsolete
 
