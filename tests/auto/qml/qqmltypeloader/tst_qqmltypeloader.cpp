@@ -60,10 +60,16 @@ private slots:
     void implicitComponentModule();
     void qrcRootPathUrl();
     void implicitImport();
+
+private:
+    void checkSingleton(const QString & dataDirectory);
 };
 
 void tst_QQMLTypeLoader::testLoadComplete()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("Loading dynamic plugins does not work on Android");
+#endif
     QQuickView *window = new QQuickView();
     window->engine()->addImportPath(QT_TESTCASE_BUILDDIR);
     qDebug() << window->engine()->importPathList();
@@ -157,7 +163,7 @@ void tst_QQMLTypeLoader::trimCache3()
     QCOMPARE(loader.isTypeLoaded(testFileUrl("ComponentWithIncubator.qml")), false);
 }
 
-static void checkSingleton(const QString &dataDirectory)
+void tst_QQMLTypeLoader::checkSingleton(const QString &dataDirectory)
 {
     QQmlEngine engine;
     engine.addImportPath(dataDirectory);
@@ -166,8 +172,8 @@ static void checkSingleton(const QString &dataDirectory)
                       "import QtQuick 2.6\n"
                       "import \"..\"\n"
                       "Item { property int t: ValueSource.something }",
-                      QUrl::fromLocalFile(dataDirectory + "/abc/Xyz.qml"));
-    QCOMPARE(component.status(), QQmlComponent::Ready);
+                      testFileUrl("abc/Xyz.qml"));
+    QVERIFY2(component.status() == QQmlComponent::Ready, qPrintable(component.errorString()));
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o.data());
     QCOMPARE(o->property("t").toInt(), 10);
@@ -389,6 +395,9 @@ public:
 
 void tst_QQMLTypeLoader::intercept()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("Loading dynamic plugins does not work on Android");
+#endif
     qmlClearTypeRegistrations();
 
     QQmlEngine engine;
@@ -478,6 +487,9 @@ static void checkCleanCacheLoad(const QString &testCase)
 
 void tst_QQMLTypeLoader::multiSingletonModule()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("Android seems to have problems with QProcess");
+#endif
     qmlClearTypeRegistrations();
     QQmlEngine engine;
     engine.addImportPath(testFile("imports"));
@@ -498,6 +510,9 @@ void tst_QQMLTypeLoader::multiSingletonModule()
 
 void tst_QQMLTypeLoader::implicitComponentModule()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("Android seems to have problems with QProcess");
+#endif
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("implicitcomponent.qml"));
     QCOMPARE(component.status(), QQmlComponent::Ready);
