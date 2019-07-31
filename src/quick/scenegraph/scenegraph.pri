@@ -37,9 +37,13 @@ SOURCES += \
 
 qtConfig(opengl(es1|es2)?) {
     HEADERS += \
-        $$PWD/coreapi/qsgbatchrenderer_p.h
+        $$PWD/coreapi/qsgbatchrenderer_p.h \
+        $$PWD/coreapi/qsgopenglvisualizer_p.h \
+        $$PWD/coreapi/qsgrhivisualizer_p.h
     SOURCES += \
         $$PWD/coreapi/qsgbatchrenderer.cpp \
+        $$PWD/coreapi/qsgopenglvisualizer.cpp \
+        $$PWD/coreapi/qsgrhivisualizer.cpp \
         $$PWD/coreapi/qsgshaderrewriter.cpp
 }
 

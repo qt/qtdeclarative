@@ -97,6 +97,7 @@ public:
     inline QSGMaterialShader::RenderState state(QSGMaterialShader::RenderState::DirtyStates dirty) const;
     inline QSGMaterialRhiShader::RenderState rhiState(QSGMaterialRhiShader::RenderState::DirtyStates dirty) const;
     virtual void setCustomRenderMode(const QByteArray &) { }
+    virtual bool hasCustomRenderModeWithContinuousUpdate() const { return false; }
     virtual void releaseCachedResources() { }
 
     void clearChangedFlag() { m_changed_emitted = false; }
