@@ -68,11 +68,11 @@ QtQuickControls2MaterialStylePlugin::QtQuickControls2MaterialStylePlugin(QObject
 
 void QtQuickControls2MaterialStylePlugin::registerTypes(const char *uri)
 {
-    qmlRegisterModule(uri, 2, QT_VERSION_MINOR); // Qt 5.12->2.12, 5.13->2.13...
+    qmlRegisterModule(uri, 2, 15); // Qt 5.12->2.12, 5.13->2.13...
     qmlRegisterUncreatableType<QQuickMaterialStyle>(uri, 2, 0, "Material", tr("Material is an attached property"));
 
     QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterModule(import, 2, QT_VERSION_MINOR); // Qt 5.12->2.12, 5.13->2.13...
+    qmlRegisterModule(import, 2, 15); // Qt 5.12->2.12, 5.13->2.13...
 
     qmlRegisterType<QQuickMaterialBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
     qmlRegisterType<QQuickMaterialProgressBar>(import, 2, 0, "ProgressBarImpl");
