@@ -2844,17 +2844,17 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch) // RHI
 
             drawCall.vbufOffset = aligned(vOffset, 4);
             const int vertexByteSize = g->sizeOfVertex() * g->vertexCount();
-            vOffset += vertexByteSize;
+            vOffset = drawCall.vbufOffset + vertexByteSize;
 
             int indexByteSize = 0;
             if (g->indexCount()) {
                 drawCall.ibufOffset = aligned(iOffset, 4);
                 indexByteSize = g->sizeOfIndex() * g->indexCount();
-                iOffset += indexByteSize;
+                iOffset = drawCall.ibufOffset + indexByteSize;
             }
 
             drawCall.ubufOffset = aligned(uOffset, m_ubufAlignment);
-            uOffset += StencilClipUbufSize;
+            uOffset = drawCall.ubufOffset + StencilClipUbufSize;
 
             QMatrix4x4 matrixYUpNDC = m_current_projection_matrix;
             if (clip->matrix())
@@ -2919,13 +2919,13 @@ void Renderer::enqueueStencilDraw(const Batch *batch) // RHI only
         QRhiCommandBuffer::DynamicOffset ubufOffset(0, drawCall.ubufOffset);
         if (i == 0) {
             cb->setGraphicsPipeline(m_stencilClipCommon.replacePs);
-            cb->setShaderResources(srb, 1, &ubufOffset);
             cb->setViewport(m_pstate.viewport);
         } else if (i == 1) {
             cb->setGraphicsPipeline(m_stencilClipCommon.incrPs);
-            cb->setShaderResources(srb, 1, &ubufOffset);
             cb->setViewport(m_pstate.viewport);
         }
+        // else incrPs is already bound
+        cb->setShaderResources(srb, 1, &ubufOffset);
         cb->setStencilRef(drawCall.stencilRef);
         const QRhiCommandBuffer::VertexInput vbufBinding(batch->stencilClipState.vbuf, drawCall.vbufOffset);
         if (drawCall.indexCount) {
