@@ -5,9 +5,10 @@
 #####################################################################
 
 add_qml_module(qtqmlstatemachine
-    INSTALL_QML_FILES
-    TARGET_PATH "QtQml/StateMachine"
-    IMPORT_VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
+    CPP_PLUGIN
+    URI "QtQml.StateMachine"
+    VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
+    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         childrenprivate.h
         finalstate.cpp finalstate.h

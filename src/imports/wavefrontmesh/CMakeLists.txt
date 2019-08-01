@@ -5,9 +5,10 @@
 #####################################################################
 
 add_qml_module(qmlwavefrontmeshplugin
-    INSTALL_QML_FILES
-    TARGET_PATH "Qt/labs/wavefrontmesh"
-    IMPORT_VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
+    CPP_PLUGIN
+    URI "Qt.labs.wavefrontmesh"
+    VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
+    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         plugin.cpp
         qwavefrontmesh.cpp qwavefrontmesh.h

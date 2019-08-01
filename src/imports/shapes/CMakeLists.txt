@@ -5,9 +5,10 @@
 #####################################################################
 
 add_qml_module(qmlshapesplugin
-    INSTALL_QML_FILES
-    TARGET_PATH "QtQuick/Shapes"
-    IMPORT_VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
+    CPP_PLUGIN
+    URI "QtQuick.Shapes"
+    VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
+    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         plugin.cpp
     LIBRARIES

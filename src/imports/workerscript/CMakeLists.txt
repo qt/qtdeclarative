@@ -5,9 +5,11 @@
 #####################################################################
 
 add_qml_module(workerscriptplugin
-    INSTALL_QML_FILES
+    CPP_PLUGIN
+    URI "QtQml.WorkerScript.2"
     TARGET_PATH "QtQml/WorkerScript.2"
-    IMPORT_VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
+    VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
+    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         plugin.cpp
     LIBRARIES

@@ -5,9 +5,10 @@
 #####################################################################
 
 add_qml_module(labsanimationplugin
-    INSTALL_QML_FILES
-    TARGET_PATH "Qt/labs/animation"
-    IMPORT_VERSION "1.0"
+    CPP_PLUGIN
+    URI "Qt.labs.animation"
+    VERSION "1.0"
+    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         plugin.cpp
     LIBRARIES

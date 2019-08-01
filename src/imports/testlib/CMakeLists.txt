@@ -5,13 +5,10 @@
 #####################################################################
 
 add_qml_module(qmltestplugin
-    INSTALL_QML_FILES
-    TARGET_PATH "QtTest"
-    IMPORT_VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
-    QML_FILES
-        TestCase.qml
-        SignalSpy.qml
-        testlogger.js
+    CPP_PLUGIN
+    URI "QtTest"
+    VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
+    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         main.cpp
     LIBRARIES
@@ -26,10 +23,18 @@ add_qml_module(qmltestplugin
         Qt::Test
 )
 
+# QML Files
+add_qt_resource(qmltestplugin qmake_QtTest
+    PREFIX
+        "/qt-project.org/imports/QtTest"
+    FILES
+        TestCase.qml
+        SignalSpy.qml
+        testlogger.js
+)
+
 #### Keys ignored in scope 1:.:.:testlib.pro:<TRUE>:
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "1.$$QT_MINOR_VERSION"
 # OTHER_FILES = "testlib.json"
-# QML_FILES = "TestCase.qml" "SignalSpy.qml" "testlogger.js"
-# TARGETPATH = "QtTest"
 # _LOADED = "qml_plugin"

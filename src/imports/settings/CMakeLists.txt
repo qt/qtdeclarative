@@ -5,9 +5,10 @@
 #####################################################################
 
 add_qml_module(qmlsettingsplugin
-    INSTALL_QML_FILES
-    TARGET_PATH "Qt/labs/settings"
-    IMPORT_VERSION "1.1"
+    CPP_PLUGIN
+    URI "Qt.labs.settings"
+    VERSION "1.1"
+    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         plugin.cpp
         qqmlsettings.cpp qqmlsettings_p.h
