@@ -452,7 +452,7 @@ void tst_QJSEngine::installTranslatorFunctions()
 {
     newEngine();
     QBENCHMARK {
-        m_engine->installTranslatorFunctions();
+        m_engine->installExtensions(QJSEngine::TranslationExtension);
     }
 }
 
@@ -471,7 +471,7 @@ void tst_QJSEngine::translation()
     QFETCH(QString, text);
     QFETCH(QString, fileName);
     newEngine();
-    m_engine->installTranslatorFunctions();
+    m_engine->installExtensions(QJSEngine::TranslationExtension);
 
     QBENCHMARK {
         (void)m_engine->evaluate(text, fileName);

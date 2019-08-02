@@ -52,7 +52,9 @@ void tst_QJSValue::ctor_invalid()
     {
         QJSValue v;
         QVERIFY(v.isUndefined());
+#ifdef QT_DEPRECATED
         QCOMPARE(v.engine(), (QJSEngine *)nullptr);
+#endif
     }
 }
 
@@ -63,7 +65,9 @@ void tst_QJSValue::ctor_undefinedWithEngine()
         QJSValue v = eng.toScriptValue(QVariant());
         QVERIFY(v.isUndefined());
         QCOMPARE(v.isObject(), false);
+#ifdef QT_DEPRECATED
         QCOMPARE(v.engine(), &eng);
+#endif
     }
 }
 
@@ -75,7 +79,9 @@ void tst_QJSValue::ctor_nullWithEngine()
         QVERIFY(!v.isUndefined());
         QCOMPARE(v.isNull(), true);
         QCOMPARE(v.isObject(), false);
+#ifdef QT_DEPRECATED
         QCOMPARE(v.engine(), &eng);
+#endif
     }
 }
 
@@ -88,7 +94,9 @@ void tst_QJSValue::ctor_boolWithEngine()
         QCOMPARE(v.isBool(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toBool(), false);
+#ifdef QT_DEPRECATED
         QCOMPARE(v.engine(), &eng);
+#endif
     }
 }
 
@@ -101,7 +109,9 @@ void tst_QJSValue::ctor_intWithEngine()
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
+#ifdef QT_DEPRECATED
         QCOMPARE(v.engine(), &eng);
+#endif
     }
 }
 
@@ -118,7 +128,9 @@ void tst_QJSValue::ctor_int()
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
+#ifdef QT_DEPRECATED
         QCOMPARE(v.engine(), (QJSEngine *)nullptr);
+#endif
     }
 }
 
@@ -131,7 +143,9 @@ void tst_QJSValue::ctor_uintWithEngine()
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
+#ifdef QT_DEPRECATED
         QCOMPARE(v.engine(), &eng);
+#endif
     }
 }
 
@@ -148,7 +162,9 @@ void tst_QJSValue::ctor_uint()
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
+#ifdef QT_DEPRECATED
         QCOMPARE(v.engine(), (QJSEngine *)nullptr);
+#endif
     }
 }
 
@@ -161,7 +177,9 @@ void tst_QJSValue::ctor_floatWithEngine()
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
+#ifdef QT_DEPRECATED
         QCOMPARE(v.engine(), &eng);
+#endif
     }
 }
 
@@ -178,7 +196,9 @@ void tst_QJSValue::ctor_float()
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
+#ifdef QT_DEPRECATED
         QCOMPARE(v.engine(), (QJSEngine *)nullptr);
+#endif
     }
 }
 
@@ -191,7 +211,9 @@ void tst_QJSValue::ctor_stringWithEngine()
         QCOMPARE(v.isString(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toString(), QLatin1String("ciao"));
+#ifdef QT_DEPRECATED
         QCOMPARE(v.engine(), &eng);
+#endif
     }
 }
 
@@ -203,7 +225,9 @@ void tst_QJSValue::ctor_string()
         QCOMPARE(v.isString(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toString(), QLatin1String("ciao"));
+#ifdef QT_DEPRECATED
         QCOMPARE(v.engine(), (QJSEngine *)nullptr);
+#endif
     }
     {
         QJSValue v("ciao");
@@ -211,7 +235,9 @@ void tst_QJSValue::ctor_string()
         QCOMPARE(v.isString(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toString(), QLatin1String("ciao"));
+#ifdef QT_DEPRECATED
         QCOMPARE(v.engine(), (QJSEngine *)nullptr);
+#endif
     }
 }
 
@@ -223,12 +249,16 @@ void tst_QJSValue::ctor_copyAndAssignWithEngine()
         QJSValue v = eng.toScriptValue(1.0);
         QJSValue v2(v);
         QCOMPARE(v2.strictlyEquals(v), true);
+#ifdef QT_DEPRECATED
         QCOMPARE(v2.engine(), &eng);
+#endif
 
         QJSValue v3(v);
         QCOMPARE(v3.strictlyEquals(v), true);
         QCOMPARE(v3.strictlyEquals(v2), true);
+#ifdef QT_DEPRECATED
         QCOMPARE(v3.engine(), &eng);
+#endif
 
         QJSValue v4 = eng.toScriptValue(2.0);
         QCOMPARE(v4.strictlyEquals(v), false);
@@ -253,7 +283,9 @@ void tst_QJSValue::ctor_undefined()
     QJSValue v(QJSValue::UndefinedValue);
     QVERIFY(v.isUndefined());
     QCOMPARE(v.isObject(), false);
+#ifdef QT_DEPRECATED
     QCOMPARE(v.engine(), (QJSEngine *)nullptr);
+#endif
 }
 
 void tst_QJSValue::ctor_null()
@@ -262,7 +294,9 @@ void tst_QJSValue::ctor_null()
     QVERIFY(!v.isUndefined());
     QCOMPARE(v.isNull(), true);
     QCOMPARE(v.isObject(), false);
+#ifdef QT_DEPRECATED
     QCOMPARE(v.engine(), (QJSEngine *)nullptr);
+#endif
 }
 
 void tst_QJSValue::ctor_bool()
@@ -273,7 +307,9 @@ void tst_QJSValue::ctor_bool()
     QCOMPARE(v.isBool(), true);
     QCOMPARE(v.isObject(), false);
     QCOMPARE(v.toBool(), false);
+#ifdef QT_DEPRECATED
     QCOMPARE(v.engine(), (QJSEngine *)nullptr);
+#endif
 }
 
 void tst_QJSValue::ctor_copyAndAssign()
@@ -281,12 +317,16 @@ void tst_QJSValue::ctor_copyAndAssign()
     QJSValue v(1.0);
     QJSValue v2(v);
     QCOMPARE(v2.strictlyEquals(v), true);
+#ifdef QT_DEPRECATED
     QCOMPARE(v2.engine(), (QJSEngine *)nullptr);
+#endif
 
     QJSValue v3(v);
     QCOMPARE(v3.strictlyEquals(v), true);
     QCOMPARE(v3.strictlyEquals(v2), true);
+#ifdef QT_DEPRECATED
     QCOMPARE(v3.engine(), (QJSEngine *)nullptr);
+#endif
 
     QJSValue v4(2.0);
     QCOMPARE(v4.strictlyEquals(v), false);
@@ -423,7 +463,9 @@ void tst_QJSValue::toString()
         QCOMPARE(o.toString(), QStringLiteral("[object Object]"));
 
         o = createUnboundValue(o);
+#ifdef QT_DEPRECATED
         QVERIFY(!o.engine());
+#endif
         QCOMPARE(o.toString(), QStringLiteral("[object Object]"));
     }
 
@@ -435,7 +477,9 @@ void tst_QJSValue::toString()
         QCOMPARE(o.toString(), QStringLiteral("1,2,3"));
 
         o = createUnboundValue(o);
+#ifdef QT_DEPRECATED
         QVERIFY(!o.engine());
+#endif
         QCOMPARE(o.toString(), QStringLiteral("1,2,3"));
     }
 
@@ -1641,10 +1685,14 @@ void tst_QJSValue::getSetProperty()
     QCOMPARE(object.property("baz").toNumber(), num.toNumber());
 
     QJSValue strstr = QJSValue("bar");
+#ifdef QT_DEPRECATED
     QCOMPARE(strstr.engine(), (QJSEngine *)nullptr);
+#endif
     object.setProperty("foo", strstr);
     QCOMPARE(object.property("foo").toString(), strstr.toString());
+#ifdef QT_DEPRECATED
     QCOMPARE(strstr.engine(), &eng); // the value has been bound to the engine
+#endif
 
     QJSValue numnum = QJSValue(123.0);
     object.setProperty("baz", numnum);
@@ -2536,15 +2584,18 @@ void tst_QJSValue::engineDeleted()
     delete eng;
 
     QVERIFY(v1.isUndefined());
-    QVERIFY(!v1.engine());
     QVERIFY(v2.isUndefined());
-    QVERIFY(!v2.engine());
     QVERIFY(v3.isUndefined());
-    QVERIFY(!v3.engine());
     QVERIFY(v4.isUndefined());
-    QVERIFY(!v4.engine());
     QVERIFY(v5.isString()); // was not bound to engine
+
+#ifdef QT_DEPRECATED
+    QVERIFY(!v1.engine());
+    QVERIFY(!v2.engine());
+    QVERIFY(!v3.engine());
+    QVERIFY(!v4.engine());
     QVERIFY(!v5.engine());
+#endif
 
     QVERIFY(v3.property("foo").isUndefined());
 }
