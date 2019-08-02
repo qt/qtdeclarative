@@ -874,7 +874,8 @@ void tst_qquickflickable::wheel()
     // test a vertical flick
     {
         QPoint pos(200, 200);
-        QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(), QPoint(0,-120), -120, Qt::Vertical, Qt::NoButton, Qt::NoModifier);
+        QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(), QPoint(0,-120),
+                          Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
         event.setAccepted(false);
         QGuiApplication::sendEvent(window.data(), &event);
     }
@@ -897,7 +898,8 @@ void tst_qquickflickable::wheel()
     // test a horizontal flick
     {
         QPoint pos(200, 200);
-        QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(), QPoint(-120,0), -120, Qt::Horizontal, Qt::NoButton, Qt::NoModifier);
+        QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(), QPoint(-120,0),
+                          Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
 
         event.setAccepted(false);
         QGuiApplication::sendEvent(window.data(), &event);
@@ -926,7 +928,8 @@ void tst_qquickflickable::trackpad()
     QPoint pos(200, 200);
 
     {
-        QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(0,-100), QPoint(0,-120), -120, Qt::Vertical, Qt::NoButton, Qt::NoModifier, Qt::ScrollBegin);
+        QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(0,-100), QPoint(0,-120),
+                          Qt::NoButton, Qt::NoModifier, Qt::ScrollBegin, false);
         event.setAccepted(false);
         QGuiApplication::sendEvent(window.data(), &event);
     }
@@ -938,7 +941,8 @@ void tst_qquickflickable::trackpad()
     QCOMPARE(flick->contentY(), qreal(0));
 
     {
-        QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(-100,0), QPoint(-120,0), -120, Qt::Horizontal, Qt::NoButton, Qt::NoModifier, Qt::ScrollUpdate);
+        QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(-100,0), QPoint(-120,0),
+                          Qt::NoButton, Qt::NoModifier, Qt::ScrollUpdate, false);
         event.setAccepted(false);
         QGuiApplication::sendEvent(window.data(), &event);
     }
@@ -947,7 +951,8 @@ void tst_qquickflickable::trackpad()
     QCOMPARE(flick->contentY(), qreal(0));
 
     {
-        QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(0,0), QPoint(0,0), 0, Qt::Horizontal, Qt::NoButton, Qt::NoModifier, Qt::ScrollEnd);
+        QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(0,0), QPoint(0,0),
+                          Qt::NoButton, Qt::NoModifier, Qt::ScrollEnd, false);
         event.setAccepted(false);
         QGuiApplication::sendEvent(window.data(), &event);
     }

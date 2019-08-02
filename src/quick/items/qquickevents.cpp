@@ -1448,7 +1448,7 @@ QQuickPointerEvent *QQuickPointerScrollEvent::reset(QEvent *event)
         m_synthSource = ev->source();
         m_inverted = ev->inverted();
 
-        m_point->reset(Qt::TouchPointMoved, ev->posF(), quint64(1) << 24, ev->timestamp()); // mouse has device ID 1
+        m_point->reset(Qt::TouchPointMoved, ev->position(), quint64(1) << 24, ev->timestamp()); // mouse has device ID 1
     }
 #endif
     // TODO else if (event->type() == QEvent::Scroll) ...
