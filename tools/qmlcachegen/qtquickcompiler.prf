@@ -1,15 +1,5 @@
 if(qtc_run|lupdate_run): return()
 
-!contains(QT, qml) {
-    qt_modules = \
-        $$replace(QT, -private$, _private) \
-        $$replace(QT_PRIVATE, -private$, _private)
-    qt_modules = $$resolve_depends(qt_modules, "QT.", ".depends" ".run_depends")
-    !contains(qt_modules, qml): \
-        error("The qtquickcompiler feature cannot be used without the QML module.")
-    unset(qt_modules)
-}
-
 qtPrepareTool(QML_CACHEGEN, qmlcachegen, _FILTER)
 qtPrepareTool(QMAKE_RCC, rcc, _DEP)
 
