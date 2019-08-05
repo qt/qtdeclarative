@@ -16,6 +16,8 @@ add_qml_module(windowplugin
         Qt::QmlPrivate
         Qt::QuickPrivate
     PUBLIC_LIBRARIES
+        Qt::Core
+        Qt::Gui
         Qt::Qml
         Qt::Quick
 )

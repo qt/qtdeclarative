@@ -17,6 +17,8 @@ add_qml_module(qtquick2plugin
         Qt::QmlPrivate
         Qt::QuickPrivate
     PUBLIC_LIBRARIES
+        Qt::Core
+        Qt::Gui
         Qt::Qml
         Qt::QmlModels
         Qt::Quick

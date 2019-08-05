@@ -17,6 +17,7 @@ add_qml_module(qmltestplugin
         Qt::QuickTestPrivate
     PUBLIC_LIBRARIES
         Qt::Core
+        Qt::Gui
         Qt::Qml
         Qt::Quick
         Qt::QuickTest
@@ -32,6 +33,14 @@ add_qt_resource(qmltestplugin qmake_QtTest
         SignalSpy.qml
         testlogger.js
 )
+
+qt_install_qml_files(qmltestplugin
+    FILES
+        TestCase.qml
+        SignalSpy.qml
+        testlogger.js
+)
+
 
 #### Keys ignored in scope 1:.:.:testlib.pro:<TRUE>:
 # CXX_MODULE = "qml"

@@ -17,6 +17,8 @@ add_qml_module(particlesplugin
         Qt::QuickParticlesPrivate
         Qt::QuickPrivate
     PUBLIC_LIBRARIES
+        Qt::Core
+        Qt::Gui
         Qt::Qml
         Qt::Quick
         Qt::QuickParticles
