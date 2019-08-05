@@ -200,7 +200,7 @@ void QQuickShapePath::setStrokeColor(const QColor &color)
 }
 
 /*!
-    \qmlproperty color QtQuick.Shapes::ShapePath::strokeWidth
+    \qmlproperty real QtQuick.Shapes::ShapePath::strokeWidth
 
     This property holds the stroke width.
 
