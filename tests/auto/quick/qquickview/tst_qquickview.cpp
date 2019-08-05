@@ -49,6 +49,7 @@ private slots:
     void errors();
     void engine();
     void findChild();
+    void setInitialProperties();
 };
 
 
@@ -281,6 +282,17 @@ void tst_QQuickView::findChild()
     QVERIFY(!view.rootObject()->findChild<QObject *>("viewChild")); // ancestor
     QVERIFY(!view.rootObject()->findChild<QObject *>("contentItemChild")); // cousin
     QVERIFY(!view.rootObject()->findChild<QObject *>("rootObject")); // self
+}
+
+void tst_QQuickView::setInitialProperties()
+{
+    QQuickView view;
+    view.setInitialProperties({{"z", 4}, {"width", 100}});
+    view.setSource(testFileUrl("resizemodeitem.qml"));
+    QObject *rootObject = view.rootObject();
+    QVERIFY(rootObject);
+    QCOMPARE(rootObject->property("z").toInt(), 4);
+    QCOMPARE(rootObject->property("width").toInt(), 100);
 }
 
 QTEST_MAIN(tst_QQuickView)

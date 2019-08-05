@@ -121,6 +121,7 @@ private slots:
     void relativeUrl_data();
     void relativeUrl();
     void setDataNoEngineNoSegfault();
+    void testSetInitialProperties();
 
 private:
     QQmlEngine engine;
@@ -665,6 +666,101 @@ void tst_qqmlcomponent::setDataNoEngineNoSegfault()
     QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Must provide an engine before calling create");
     auto c = comp.create();
     QVERIFY(!c);
+}
+
+void tst_qqmlcomponent::testSetInitialProperties()
+{
+    QQmlEngine eng;
+    {
+        // JSON based initialization
+        QQmlComponent comp(&eng);
+        comp.loadUrl(testFileUrl("allJSONTypes.qml"));
+        QScopedPointer<QObject> obj { comp.beginCreate(eng.rootContext()) };
+        QVERIFY(obj);
+        comp.setInitialProperties(obj.get(), QVariantMap {
+                {QLatin1String("i"), 42},
+                {QLatin1String("b"), true},
+                {QLatin1String("d"), 3.1416},
+                {QLatin1String("s"), QLatin1String("hello world")},
+                {QLatin1String("nothing"), QVariant::fromValue(nullptr)}
+        });
+        comp.completeCreate();
+        if (!comp.errors().empty())
+            qDebug() << comp.errorString() << comp.errors();
+        QVERIFY(comp.errors().empty());
+        QCOMPARE(obj->property("i"), 42);
+        QCOMPARE(obj->property("b"), true);
+        QCOMPARE(obj->property("d"), 3.1416);
+        QCOMPARE(obj->property("s"), QLatin1String("hello world"));
+        QCOMPARE(obj->property("nothing"), QVariant::fromValue(nullptr));
+    }
+    {
+        //  QVariant
+        QQmlComponent comp(&eng);
+        comp.loadUrl(testFileUrl("variantBasedInitialization.qml"));
+        QScopedPointer<QObject> obj { comp.beginCreate(eng.rootContext()) };
+        QVERIFY(obj);
+        QUrl myurl = comp.url();
+        QFont myfont;
+        QDateTime mydate = QDateTime::currentDateTime();
+        QPoint mypoint {1,2};
+        QSizeF mysize {0.5, 0.3};
+        QMatrix4x4 matrix {};
+        QQuaternion quat {5.0f, 0.3f, 0.2f, 0.1f};
+        QVector2D vec2 {2.0f, 3.1f};
+        QVector3D vec3 {1.0f, 2.0, 3.0f};
+        QVector4D vec4 {1.0f, 2.0f, 3.0f, 4.0f};
+#define ASJSON(NAME) {QLatin1String(#NAME), NAME}
+        comp.setInitialProperties(obj.get(), QVariantMap {
+                                                     {QLatin1String("i"), 42},
+                                                     {QLatin1String("b"), true},
+                                                     {QLatin1String("d"), 3.1416},
+                                                     {QLatin1String("s"), QLatin1String("hello world")},
+                                                     {QLatin1String("nothing"), QVariant::fromValue( nullptr)},
+                                                     ASJSON(myurl),
+                                                     ASJSON(myfont),
+                                                     ASJSON(mydate),
+                                                     ASJSON(mypoint),
+                                                     ASJSON(mysize),
+                                                     ASJSON(matrix),
+                                                     ASJSON(quat),
+                                                     ASJSON(vec2), ASJSON(vec3), ASJSON(vec4)
+                                             });
+#undef ASJSON
+        comp.completeCreate();
+        if (!comp.errors().empty())
+            qDebug() << comp.errorString() << comp.errors();
+        QVERIFY(comp.errors().empty());
+        QCOMPARE(obj->property("i"), 42);
+        QCOMPARE(obj->property("b"), true);
+        QCOMPARE(obj->property("d"), 3.1416);
+        QCOMPARE(obj->property("s"), QLatin1String("hello world"));
+        QCOMPARE(obj->property("nothing"), QVariant::fromValue(nullptr));
+#define COMPARE(NAME) QCOMPARE(obj->property(#NAME), NAME)
+        COMPARE(myurl);
+        COMPARE(myfont);
+        COMPARE(mydate);
+        COMPARE(mypoint);
+        COMPARE(mysize);
+        COMPARE(matrix);
+        COMPARE(quat);
+        COMPARE(vec2);
+        COMPARE(vec3);
+        COMPARE(vec4);
+#undef COMPARE
+
+    }
+    {
+        // createWithInitialProperties: setting a nonexistent property
+        QQmlComponent comp(&eng);
+        comp.loadUrl(testFileUrl("allJSONTypes.qml"));
+        QScopedPointer<QObject> obj {
+            comp.createWithInitialProperties(QVariantMap { {"notThePropertiesYoureLookingFor", 42} })
+        };
+        qDebug() << comp.errorString();
+        QVERIFY(obj);
+        QVERIFY(comp.errorString().contains("Could not set property notThePropertiesYoureLookingFor"));
+    }
 }
 
 QTEST_MAIN(tst_qqmlcomponent)
