@@ -613,7 +613,9 @@ void tst_QQuickDrawer::wheel_data()
 static bool sendWheelEvent(QQuickItem *item, const QPoint &localPos, int degrees)
 {
     QQuickWindow *window = item->window();
-    QWheelEvent wheelEvent(localPos, item->window()->mapToGlobal(localPos), QPoint(0, 0), QPoint(0, 8 * degrees), 0, Qt::Vertical, Qt::NoButton, 0);
+    QWheelEvent wheelEvent(localPos, item->window()->mapToGlobal(localPos), QPoint(0, 0),
+                           QPoint(0, 8 * degrees), Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase,
+                           false);
     QSpontaneKeyEvent::setSpontaneous(&wheelEvent);
     return qGuiApp->notify(window, &wheelEvent);
 }
