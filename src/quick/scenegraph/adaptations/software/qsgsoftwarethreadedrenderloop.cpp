@@ -43,6 +43,7 @@
 
 #include <private/qsgrenderer_p.h>
 #include <private/qquickwindow_p.h>
+#include <private/qquickitem_p.h>
 #include <private/qquickprofiler_p.h>
 #include <private/qquickanimatorcontroller_p.h>
 #include <private/qquickprofiler_p.h>

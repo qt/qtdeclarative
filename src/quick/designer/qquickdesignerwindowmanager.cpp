@@ -39,6 +39,7 @@
 
 #include "qquickdesignerwindowmanager_p.h"
 #include "private/qquickwindow_p.h"
+#include "private/qquickitem_p.h"
 #include <QtQuick/QQuickWindow>
 #if QT_CONFIG(opengl)
 #include <private/qsgdefaultrendercontext_p.h>

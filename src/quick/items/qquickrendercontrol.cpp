@@ -58,6 +58,7 @@
 
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qsgsoftwarerenderer_p.h>
 #include <QtCore/private/qobject_p.h>
 

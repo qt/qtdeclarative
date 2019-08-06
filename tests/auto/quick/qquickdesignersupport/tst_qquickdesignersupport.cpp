@@ -461,9 +461,14 @@ void tst_qquickdesignersupport::testNotifyPropertyChangeCallBack()
     QCOMPARE(s_propertyName, QQuickDesignerSupport::PropertyName("gradient"));
 }
 
+// We have to use this ugly approach, because the signature of
+// registerFixResourcePathsForObjectCallBack doesn't accept
+// a proper lambda with a capture list
+static QVector<QObject*> s_allSubObjects;
+
 static void fixResourcePathsForObjectCallBackFunction(QObject *object)
 {
-    s_object = object;
+    s_allSubObjects << object;
 }
 
 static void (*fixResourcePathsForObjectCallBackPointer)(QObject *) = &fixResourcePathsForObjectCallBackFunction;
@@ -480,7 +485,7 @@ void tst_qquickdesignersupport::testFixResourcePathsForObjectCallBack()
 
     QVERIFY(rootItem);
 
-    s_object = nullptr;
+    s_allSubObjects.clear();
 
     QQuickDesignerSupportItems::registerFixResourcePathsForObjectCallBack(fixResourcePathsForObjectCallBackPointer);
 
@@ -490,8 +495,12 @@ void tst_qquickdesignersupport::testFixResourcePathsForObjectCallBack()
 
     QQuickDesignerSupportItems::tweakObjects(simpleItem);
 
-    //Check that the fixResourcePathsForObjectCallBack was called on simpleItem
-    QCOMPARE(simpleItem , s_object);
+    // Check that the fixResourcePathsForObjectCallBack was called on simpleItem
+    // NOTE: more objects are collected now. There is also at least a palette
+    //       that created on demand.
+    QVERIFY(s_allSubObjects.contains(simpleItem));
+
+    s_allSubObjects.clear();
 }
 
 void doComponentCompleteRecursive(QObject *object)

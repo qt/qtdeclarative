@@ -65,4 +65,6 @@ if(QT_FEATURE_private_tests)
     # add_subdirectory(touchmouse) # skip building until fixed in dev # special case
     add_subdirectory(scenegraph)
     add_subdirectory(sharedimage)
+    add_subdirectory(qquickcolorgroup)
+    add_subdirectory(qquickpalette)
 endif()

@@ -41,7 +41,9 @@
 #include "qquickopenglinfo_p.h"
 #include "qopenglcontext.h"
 #include "qquickwindow.h"
+#include "qquickwindow_p.h"
 #include "qquickitem.h"
+#include "qquickitem_p.h"
 
 QT_BEGIN_NAMESPACE
 

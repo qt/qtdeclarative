@@ -1,4 +1,5 @@
 HEADERS += \
+    $$PWD/qquickabstractpaletteprovider_p.h \
     $$PWD/qquickevents_p_p.h \
     $$PWD/qquickanchors_p.h \
     $$PWD/qquickanchors_p_p.h \
@@ -56,10 +57,15 @@ HEADERS += \
     $$PWD/qquickscreen_p.h \
     $$PWD/qquickwindowattached_p.h \
     $$PWD/qquickwindowmodule_p.h \
+    $$PWD/qquickwindowmodule_p_p.h \
     $$PWD/qquickrendercontrol.h \
     $$PWD/qquickrendercontrol_p.h \
     $$PWD/qquickgraphicsinfo_p.h \
-    $$PWD/qquickitemgrabresult.h
+    $$PWD/qquickitemgrabresult.h \
+    $$PWD/qquickpalette_p.h \
+    $$PWD/qquickcolorgroup_p.h \
+    $$PWD/qquickpalettecolorprovider_p.h \
+    $$PWD/qquickpaletteproviderprivatebase_p.h
 
 SOURCES += \
     $$PWD/qquickevents.cpp \
@@ -99,7 +105,10 @@ SOURCES += \
     $$PWD/qquickwindowattached.cpp \
     $$PWD/qquickrendercontrol.cpp \
     $$PWD/qquickgraphicsinfo.cpp \
-    $$PWD/qquickitemgrabresult.cpp
+    $$PWD/qquickitemgrabresult.cpp \
+    $$PWD/qquickpalettecolorprovider.cpp \
+    $$PWD/qquickcolorgroup.cpp \
+    $$PWD/qquickpalette.cpp
 
 qtConfig(quick-draganddrop) {
     HEADERS += \

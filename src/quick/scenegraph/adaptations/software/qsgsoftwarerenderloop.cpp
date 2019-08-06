@@ -44,6 +44,7 @@
 #include <QtCore/QCoreApplication>
 
 #include <private/qquickwindow_p.h>
+#include <private/qquickitem_p.h>
 #include <QElapsedTimer>
 #include <private/qquickanimatorcontroller_p.h>
 #include <private/qquickprofiler_p.h>

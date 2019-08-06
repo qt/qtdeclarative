@@ -56,6 +56,7 @@
 
 #include <QtGui/QWindow>
 #include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/private/qquickitem_p.h>
 
 // Used for very high-level info about the renderering and gl context
 // Includes GL_VERSION, type of render loop, atlas size, etc.

@@ -56,6 +56,7 @@
 #include "qquickevents_p_p.h"
 
 #include <QtQuick/private/qsgcontext_p.h>
+#include <QtQuick/private/qquickpaletteproviderprivatebase_p.h>
 
 #include <QtCore/qthread.h>
 #include <QtCore/qmutex.h>
@@ -103,7 +104,9 @@ public:
     virtual bool swap() = 0;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickWindowPrivate : public QWindowPrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickWindowPrivate
+    : public QWindowPrivate
+    , public QQuickPaletteProviderPrivateBase<QQuickWindow, QQuickWindowPrivate>
 {
 public:
     Q_DECLARE_PUBLIC(QQuickWindow)

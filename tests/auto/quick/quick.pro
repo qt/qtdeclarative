@@ -42,6 +42,8 @@ PRIVATETESTS += \
     qquickstyledtext \
     qquickstates \
     qquicksystempalette \
+    qquickcolorgroup \
+    qquickpalette \
     qquicktimeline
 
 QUICKTESTS += \

@@ -8258,6 +8258,48 @@ QSGTextureProvider *QQuickItem::textureProvider() const
 }
 
 /*!
+    \since 6.0
+    \qmlproperty Palette QtQuick::Item::palette
+
+    This property holds the palette currently set for the item.
+
+    This property describes the item's requested palette. The palette is used by the item's style
+    when rendering all controls, and is available as a means to ensure that custom controls can
+    maintain consistency with the native platform's native look and feel. It's common that
+    different platforms, or different styles, define different palettes for an application.
+
+    The default palette depends on the system environment. ApplicationWindow maintains a
+    system/theme palette which serves as a default for all controls. There may also be special
+    palette defaults for certain types of controls. You can also set the default palette for
+    controls by either:
+
+    \list
+    \li passing a custom palette to QGuiApplication::setPalette(), before loading any QML; or
+    \li specifying the colors in the \l {Qt Quick Controls 2 Configuration File}
+        {qtquickcontrols2.conf file}.
+    \endlist
+
+    Items propagate explicit palette properties from parents to children. If you change a specific
+    property on a items's palette, that property propagates to all of the item's children,
+    overriding any system defaults for that property.
+
+    \code
+    Item {
+        palette {
+            buttonText: "maroon"
+            button: "lavender"
+        }
+
+        Button {
+            text: "Click Me"
+        }
+    }
+    \endcode
+
+    \sa Window::palette, Popup::palette, QQuickAbstractPaletteProvider, ColorGroup, Palette
+*/
+
+/*!
     \property QQuickItem::layer
     \internal
   */

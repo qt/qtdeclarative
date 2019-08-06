@@ -53,6 +53,7 @@
 
 #include <QtQuick/QQuickWindow>
 #include <private/qquickwindow_p.h>
+#include <private/qquickitem_p.h>
 
 #include <QtQuick/private/qsgrenderer_p.h>
 

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -36,9 +36,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
-#ifndef QQUICKWINDOWMODULE_H
-#define QQUICKWINDOWMODULE_H
+#ifndef QQUICKWINDOWMODULE_P_P_H
+#define QQUICKWINDOWMODULE_P_P_H
 
 //
 //  W A R N I N G
@@ -51,57 +50,22 @@
 // We mean it.
 //
 
-#include <private/qtquickglobal_p.h>
-#include <qquickwindow.h>
-#include <qqmlparserstatus.h>
-#include <private/qquickwindowattached_p.h>
+#include "qquickwindow_p.h"
+#include <QtQml/private/qv4persistent_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindowQmlImplPrivate;
-
-class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public QQmlParserStatus
+class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImplPrivate : public QQuickWindowPrivate
 {
-    Q_OBJECT
-    Q_INTERFACES(QQmlParserStatus)
-
-    Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged)
-    Q_PROPERTY(Visibility visibility READ visibility WRITE setVisibility NOTIFY visibilityChanged)
-    Q_PROPERTY(QObject *screen READ screen WRITE setScreen NOTIFY screenChanged REVISION(2, 3))
-    QML_ATTACHED(QQuickWindowAttached)
-
 public:
-    QQuickWindowQmlImpl(QWindow *parent = nullptr);
+    QQuickWindowQmlImplPrivate();
 
-    void setVisible(bool visible);
-    void setVisibility(Visibility visibility);
-
-    QObject *screen() const;
-    void setScreen(QObject *screen);
-
-    static QQuickWindowAttached *qmlAttachedProperties(QObject *object);
-
-Q_SIGNALS:
-    void visibleChanged(bool arg);
-    void visibilityChanged(QWindow::Visibility visibility);
-    Q_REVISION(2, 3) void screenChanged();
-
-protected:
-    void classBegin() override;
-    void componentComplete() override;
-
-    QQuickWindowQmlImpl(QQuickWindowQmlImplPrivate &dd, QWindow *parent);
-
-private Q_SLOTS:
-    void setWindowVisibility();
-
-private:
-    Q_DISABLE_COPY(QQuickWindowQmlImpl)
-    Q_DECLARE_PRIVATE(QQuickWindowQmlImpl)
+    bool complete = false;
+    bool visible = false;
+    QQuickWindow::Visibility visibility = QQuickWindow::AutomaticVisibility;
+    QV4::PersistentValue rootItemMarker;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickWindowQmlImpl)
-
-#endif
+#endif // QQUICKWINDOWMODULE_P_P_H

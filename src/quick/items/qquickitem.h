@@ -50,7 +50,6 @@
 #include <QtGui/qfont.h>
 #include <QtGui/qaccessible.h>
 
-
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
@@ -94,6 +93,7 @@ class QSGNode;
 class QSGTransformNode;
 class QSGTextureProvider;
 class QQuickItemGrabResult;
+class QQuickPalette;
 
 class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
 {
@@ -114,6 +114,7 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity NOTIFY opacityChanged FINAL)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
+    Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQuickPalette *palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged REVISION(6, 0))
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQmlListProperty<QQuickItem> visibleChildren READ visibleChildren NOTIFY visibleChildrenChanged DESIGNABLE false)
 
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQmlListProperty<QQuickState> states READ states DESIGNABLE false)
@@ -399,6 +400,9 @@ Q_SIGNALS:
     void implicitWidthChanged();
     void implicitHeightChanged();
     Q_REVISION(2, 11) void containmentMaskChanged();
+
+    Q_REVISION(6, 0) void paletteChanged();
+    Q_REVISION(6, 0) void paletteCreated();
 
 protected:
     bool event(QEvent *) override;

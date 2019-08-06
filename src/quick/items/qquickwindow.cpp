@@ -5693,6 +5693,24 @@ void QQuickWindow::setTextRenderType(QQuickWindow::TextRenderType renderType)
     QQuickWindowPrivate::textRenderType = renderType;
 }
 
+
+/*!
+    \since 6.0
+    \qmlproperty QQuickPalette Window::palette
+
+    This property holds the palette currently set for the window.
+
+    The default palette depends on the system environment. QGuiApplication maintains a system/theme
+    palette which serves as a default for all application windows. You can also set the default palette
+    for windows by passing a custom palette to QGuiApplication::setPalette(), before loading any QML.
+
+    ApplicationWindow propagates explicit palette properties to child controls. If you change a specific
+    property on the window's palette, that property propagates to all child controls in the window,
+    overriding any system defaults for that property.
+
+    \sa Item::palette, Popup::palette, QQuickAbstractPaletteProvider, QQuickColorGroup, QQuickPalette
+*/
+
 #ifndef QT_NO_DEBUG_STREAM
 QDebug operator<<(QDebug debug, const QQuickWindow *win)
 {

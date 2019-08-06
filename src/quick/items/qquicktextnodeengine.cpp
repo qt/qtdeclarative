@@ -54,6 +54,7 @@
 #include <private/qtextimagehandler_p.h>
 #include <private/qrawfont_p.h>
 #include <private/qglyphrun_p.h>
+#include <private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
 

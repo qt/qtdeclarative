@@ -75,7 +75,7 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qelapsedtimer.h>
-#include <QtCore/qpointer.h>
+#include <QtQuick/private/qquickpaletteproviderprivatebase_p.h>
 
 #if QT_CONFIG(quick_shadereffect)
 #include <QtQuick/private/qquickshadereffectsource_p.h>
@@ -249,7 +249,9 @@ private:
 
 #endif
 
-class Q_QUICK_PRIVATE_EXPORT QQuickItemPrivate : public QObjectPrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickItemPrivate
+    : public QObjectPrivate
+    , public QQuickPaletteProviderPrivateBase<QQuickItem, QQuickItemPrivate>
 {
     Q_DECLARE_PUBLIC(QQuickItem)
 

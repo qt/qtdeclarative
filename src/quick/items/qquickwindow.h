@@ -224,6 +224,9 @@ Q_SIGNALS:
     Q_REVISION(2, 14) void beforeRenderPassRecording();
     Q_REVISION(2, 14) void afterRenderPassRecording();
 
+    Q_REVISION(6, 0) void paletteChanged();
+    Q_REVISION(6, 0) void paletteCreated();
+
 public Q_SLOTS:
     void update();
     void releaseResources();

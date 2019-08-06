@@ -80,6 +80,11 @@ qt_add_module(Quick
         items/qquickwindow.cpp items/qquickwindow.h items/qquickwindow_p.h
         items/qquickwindowattached.cpp items/qquickwindowattached_p.h
         items/qquickwindowmodule.cpp items/qquickwindowmodule_p.h
+        items/qquickwindowmodule_p_p.h
+        items/qquickpalette.cpp items/qquickpalette_p.h
+        items/qquickcolorgroup.cpp items/qquickcolorgroup_p.h
+        items/qquickpalettecolorprovider.cpp items/qquickpalettecolorprovider_p.h
+        items/qquickpaletteproviderprivatebase_p.h
         qtquick2.cpp qtquick2_p.h
         qtquickglobal.h qtquickglobal_p.h
         scenegraph/adaptations/software/qsgabstractsoftwarerenderer.cpp scenegraph/adaptations/software/qsgabstractsoftwarerenderer_p.h

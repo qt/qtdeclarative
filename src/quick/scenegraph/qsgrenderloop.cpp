@@ -57,6 +57,7 @@
 
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <private/qquickprofiler_p.h>
