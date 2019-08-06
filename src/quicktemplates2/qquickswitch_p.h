@@ -84,7 +84,6 @@ protected:
     void buttonChange(ButtonChange change) override;
 
     QFont defaultFont() const override;
-    QPalette defaultPalette() const override;
 
 private:
     Q_DISABLE_COPY(QQuickSwitch)

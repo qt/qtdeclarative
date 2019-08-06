@@ -937,6 +937,11 @@ void QQuickSwipeDelegatePrivate::resizeContent()
     }
 }
 
+QPalette QQuickSwipeDelegatePrivate::defaultPalette() const
+{
+    return QQuickTheme::palette(QQuickTheme::ListView);
+}
+
 QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent)
     : QQuickItemDelegate(*(new QQuickSwipeDelegatePrivate(this)), parent)
 {
@@ -1222,11 +1227,6 @@ void QQuickSwipeDelegate::geometryChanged(const QRectF &newGeometry, const QRect
 QFont QQuickSwipeDelegate::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::ListView);
-}
-
-QPalette QQuickSwipeDelegate::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::ListView);
 }
 
 #if QT_CONFIG(accessibility)

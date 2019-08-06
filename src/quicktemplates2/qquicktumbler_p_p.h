@@ -71,6 +71,8 @@ public:
 
     static QQuickTumblerPrivate *get(QQuickTumbler *tumbler);
 
+    QPalette defaultPalette() const override;
+
     QVariant model;
     QQmlComponent *delegate = nullptr;
     int visibleItemCount = 5;

@@ -130,6 +130,8 @@ public:
     void startTimeout();
     void stopTimeout();
 
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::ToolTip); }
+
     int delay = 0;
     int timeout = -1;
     QString text;
@@ -309,11 +311,6 @@ void QQuickToolTip::hide()
 QFont QQuickToolTip::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::ToolTip);
-}
-
-QPalette QQuickToolTip::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::ToolTip);
 }
 
 void QQuickToolTip::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)

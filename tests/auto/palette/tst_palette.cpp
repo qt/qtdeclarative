@@ -41,11 +41,14 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
+#include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p_p.h>
+#include <QtQuickTemplates2/private/qquickbutton_p.h>
 
 using namespace QQuickVisualTestUtil;
 
@@ -67,6 +70,10 @@ private slots:
 
     void listView_data();
     void listView();
+
+    void setDynamicallyCreatedPalette();
+    void createBindings();
+    void updateBindings();
 };
 
 void tst_palette::initTestCase()
@@ -136,8 +143,7 @@ void tst_palette::palette()
     QVariant var = object->property("palette");
     QVERIFY(var.isValid());
 
-    QPalette actualPalette = var.value<QPalette>();
-    QCOMPARE(actualPalette, expectedPalette);
+    QCOMPARE(var.value<QQuickPalette*>()->toQPalette(), expectedPalette);
 }
 
 void tst_palette::inheritance_data()
@@ -175,55 +181,54 @@ void tst_palette::inheritance()
     defaultPalette.setColor(QPalette::Base, QColor("#efefef"));
     defaultPalette.setColor(QPalette::Text, QColor("#101010"));
 
-    QCOMPARE(window->palette(), defaultPalette);
+    auto windowPalette = QQuickWindowPrivate::get(window.get())->palette();
 
-    QCOMPARE(control->property("palette").value<QPalette>(), defaultPalette);
-    QCOMPARE(child->property("palette").value<QPalette>(), defaultPalette);
-    QCOMPARE(grandChild->property("palette").value<QPalette>(), defaultPalette);
+    QCOMPARE(windowPalette->toQPalette(), defaultPalette);
 
-    QPalette childPalette(defaultPalette);
-    childPalette.setColor(QPalette::Base, Qt::red);
-    childPalette.setColor(QPalette::Text, Qt::green);
-    childPalette.setColor(QPalette::Button, Qt::blue);
-    child->setProperty("palette", childPalette);
-    QCOMPARE(child->property("palette").value<QPalette>(), childPalette);
-    QCOMPARE(grandChild->property("palette").value<QPalette>(), childPalette);
+    auto controlPalette = control->property("palette").value<QQuickPalette*>();
+    auto childPalette = child->property("palette").value<QQuickPalette*>();
+    auto grandChildPalette = grandChild->property("palette").value<QQuickPalette*>();
+    QVERIFY(controlPalette && childPalette && grandChildPalette);
 
-    QPalette grandChildPalette(childPalette);
-    grandChildPalette.setColor(QPalette::Base, Qt::cyan);
-    grandChildPalette.setColor(QPalette::Mid, Qt::magenta);
-    grandChild->setProperty("palette", grandChildPalette);
-    QCOMPARE(child->property("palette").value<QPalette>(), childPalette);
-    QCOMPARE(grandChild->property("palette").value<QPalette>(), grandChildPalette);
+    QCOMPARE(controlPalette->toQPalette(), defaultPalette);
+    QCOMPARE(childPalette->toQPalette(), defaultPalette);
+    QCOMPARE(grandChildPalette->toQPalette(), defaultPalette);
 
-    QPalette windowPalette(defaultPalette);
-    windowPalette.setColor(QPalette::Window, Qt::gray);
-    window->setPalette(windowPalette);
-    QCOMPARE(window->palette(), windowPalette);
-    QCOMPARE(control->property("palette").value<QPalette>(), windowPalette);
+    childPalette->setBase(Qt::red);
+    childPalette->setText(Qt::green);
+    childPalette->setButton(Qt::blue);
 
-    childPalette.setColor(QPalette::Window, Qt::gray);
-    QCOMPARE(child->property("palette").value<QPalette>(), childPalette);
+    QCOMPARE(childPalette->base(), grandChildPalette->base());
+    QCOMPARE(childPalette->text(), grandChildPalette->text());
+    QCOMPARE(childPalette->button(), grandChildPalette->button());
 
-    grandChildPalette.setColor(QPalette::Window, Qt::gray);
-    QCOMPARE(grandChild->property("palette").value<QPalette>(), grandChildPalette);
+    windowPalette->setWindow(Qt::gray);
+    QCOMPARE(controlPalette->window(), windowPalette->window());
 
-    child->setProperty("palette", QVariant());
-    QCOMPARE(child->property("palette").value<QPalette>(), windowPalette);
-    QCOMPARE(grandChild->property("palette").value<QPalette>(), grandChildPalette);
+    childPalette->setWindow(Qt::red);
+    QCOMPARE(childPalette->window(), Qt::red);
 
-    grandChild->setProperty("palette", QVariant());
-    QCOMPARE(grandChild->property("palette").value<QPalette>(), windowPalette);
+    grandChildPalette->setWindow(Qt::blue);
+    QCOMPARE(grandChildPalette->window(), Qt::blue);
+
+    auto childMo = child->metaObject();
+    childMo->property(childMo->indexOfProperty("palette")).reset(child);
+    QCOMPARE(childPalette->window(), windowPalette->window());
+    QCOMPARE(grandChildPalette->window(), Qt::blue);
+
+    auto grandChildMo = grandChild->metaObject();
+    grandChildMo->property(grandChildMo->indexOfProperty("palette")).reset(grandChild);
+    QCOMPARE(grandChildPalette->window(), windowPalette->window());
 }
 
 class TestTheme : public QQuickTheme
 {
 public:
-    static const int NPalettes = QQuickTheme::Tumbler + 1;
+    static const uint NPalettes = QQuickTheme::Tumbler + 1;
 
     TestTheme()
     {
-        for (int i = 0; i < NPalettes; ++i)
+        for (uint i = 0; i < NPalettes; ++i)
             setPalette(static_cast<Scope>(i), QPalette(QColor::fromRgb(i)));
     }
 };
@@ -291,6 +296,7 @@ void tst_palette::defaultPalette()
 
     // The call to setData() above causes QQuickDefaultTheme to be set as the current theme,
     // so we must make sure we only set our theme afterwards.
+    std::unique_ptr<QQuickTheme> oldTheme(QQuickThemePrivate::instance.take());
     QQuickThemePrivate::instance.reset(new TestTheme);
 
     QScopedPointer<QObject> object(component.create());
@@ -300,8 +306,11 @@ void tst_palette::defaultPalette()
     QVERIFY(var.isValid());
 
     QPalette expectedPalette = QQuickTheme::palette(scope);
-    QPalette actualPalette = var.value<QPalette>();
-    QCOMPARE(actualPalette, expectedPalette);
+    auto actualPalette = var.value<QQuickPalette*>();
+    QVERIFY(actualPalette);
+    QCOMPARE(actualPalette->toQPalette(), expectedPalette);
+
+    QQuickThemePrivate::instance.reset(oldTheme.release());
 }
 
 void tst_palette::listView_data()
@@ -342,7 +351,75 @@ void tst_palette::listView()
     QQuickItem *control = column->property(objectName.toUtf8()).value<QQuickItem *>();
     QVERIFY(control);
 
-    QCOMPARE(control->property("palette").value<QPalette>().color(QPalette::Highlight), QColor(Qt::red));
+    QCOMPARE(QQuickItemPrivate::get(control)->palette()->highlight(), Qt::red);
+}
+
+void tst_palette::setDynamicallyCreatedPalette()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("set-palette.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+
+    QVariant var = object->property("palette");
+    QVERIFY(var.isValid());
+
+    auto palette = var.value<QQuickPalette*>();
+    QVERIFY(palette);
+
+    QCOMPARE(palette->buttonText(), QColor("azure"));
+    QCOMPARE(palette->button(), QColor("khaki"));
+
+    QCOMPARE(palette->disabled()->buttonText(), QColor("lavender"));
+    QCOMPARE(palette->disabled()->button(), QColor("coral"));
+}
+
+void tst_palette::createBindings()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("bindings.qml"));
+
+    QScopedPointer<QObject> window(component.create());
+    QVERIFY2(!window.isNull(), qPrintable(component.errorString()));
+
+    auto disabledButton = window->property("disabledButton").value<QQuickButton*>();
+    QVERIFY(disabledButton);
+
+    auto enabledButton = window->property("enabledButton").value<QQuickButton*>();
+    QVERIFY(enabledButton);
+
+    QCOMPARE(QQuickItemPrivate::get(disabledButton)->palette()->button(), QColor("aqua"));
+    QCOMPARE(QQuickItemPrivate::get(disabledButton)->palette()->buttonText(), QColor("azure"));
+
+    QCOMPARE(QQuickItemPrivate::get(enabledButton)->palette()->button(), QColor("khaki"));
+    QCOMPARE(QQuickItemPrivate::get(enabledButton)->palette()->buttonText(), QColor("bisque"));
+
+    QCOMPARE(QQuickItemPrivate::get(enabledButton)->palette()->disabled()->button(), QColor("aqua"));
+    QCOMPARE(QQuickItemPrivate::get(enabledButton)->palette()->disabled()->buttonText(), QColor("azure"));
+}
+
+void tst_palette::updateBindings()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("bindings.qml"));
+
+    QScopedPointer<QObject> window(component.create());
+    QVERIFY2(!window.isNull(), qPrintable(component.errorString()));
+
+    auto disabledButton = window->property("disabledButton").value<QQuickButton*>();
+    QVERIFY(disabledButton);
+
+    auto enabledButton = window->property("enabledButton").value<QQuickButton*>();
+    QVERIFY(enabledButton);
+
+    QQuickItemPrivate::get(disabledButton)->palette()->disabled()->setButton(QColor("navy"));
+    enabledButton->setEnabled(false);
+
+    QCOMPARE(QQuickItemPrivate::get(enabledButton)->palette()->button(), QColor("navy"));
 }
 
 QTEST_MAIN(tst_palette)

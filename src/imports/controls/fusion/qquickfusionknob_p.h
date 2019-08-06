@@ -48,7 +48,6 @@
 // We mean it.
 //
 
-#include <QtGui/qpalette.h>
 #include <QtQuick/qquickpainteditem.h>
 
 QT_BEGIN_NAMESPACE
@@ -56,18 +55,11 @@ QT_BEGIN_NAMESPACE
 class QQuickFusionKnob : public QQuickPaintedItem
 {
     Q_OBJECT
-    Q_PROPERTY(QPalette palette READ palette WRITE setPalette FINAL)
 
 public:
     explicit QQuickFusionKnob(QQuickItem *parent = nullptr);
 
-    QPalette palette() const;
-    void setPalette(const QPalette &palette);
-
     void paint(QPainter *painter) override;
-
-private:
-    QPalette m_palette;
 };
 
 QT_END_NAMESPACE

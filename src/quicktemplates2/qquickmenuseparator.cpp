@@ -66,19 +66,22 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Menu}, Menu, {Separator Controls}
 */
 
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuSeparatorPrivate : public QQuickControlPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickMenuSeparator)
+
+public:
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::Menu); }
+};
+
 QQuickMenuSeparator::QQuickMenuSeparator(QQuickItem *parent)
-    : QQuickControl(parent)
+    : QQuickControl(*(new QQuickMenuSeparatorPrivate), parent)
 {
 }
 
 QFont QQuickMenuSeparator::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::Menu);
-}
-
-QPalette QQuickMenuSeparator::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::Menu);
 }
 
 #if QT_CONFIG(accessibility)

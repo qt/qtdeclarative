@@ -36,6 +36,7 @@
 
 #include "qquicktoolbutton_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquickbutton_p_p.h"
 
 #include <QtGui/qpa/qplatformtheme.h>
 
@@ -64,19 +65,22 @@ QT_BEGIN_NAMESPACE
     \sa ToolBar, {Customizing ToolButton}, {Button Controls}
 */
 
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickToolPrivate : public QQuickButtonPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickToolButton)
+
+public:
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::ToolBar); }
+};
+
 QQuickToolButton::QQuickToolButton(QQuickItem *parent)
-    : QQuickButton(parent)
+    : QQuickButton(*(new QQuickToolPrivate), parent)
 {
 }
 
 QFont QQuickToolButton::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::ToolBar);
-}
-
-QPalette QQuickToolButton::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::ToolBar);
 }
 
 QT_END_NAMESPACE

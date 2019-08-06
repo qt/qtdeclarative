@@ -68,6 +68,8 @@ public:
 
     void setMenuBar(QQuickMenuBar *menuBar);
 
+    QPalette defaultPalette() const override;
+
     bool highlighted = false;
     QQuickMenu *menu = nullptr;
     QQuickMenuBar *menuBar = nullptr;

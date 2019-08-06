@@ -48,7 +48,6 @@
 // We mean it.
 //
 
-#include <QtGui/qpalette.h>
 #include <QtQuick/qquickpainteditem.h>
 
 QT_BEGIN_NAMESPACE
@@ -57,7 +56,6 @@ class QQuickFusionDial : public QQuickPaintedItem
 {
     Q_OBJECT
     Q_PROPERTY(bool highlight READ highlight WRITE setHighlight FINAL)
-    Q_PROPERTY(QPalette palette READ palette WRITE setPalette FINAL)
 
 public:
     explicit QQuickFusionDial(QQuickItem *parent = nullptr);
@@ -65,14 +63,10 @@ public:
     bool highlight() const;
     void setHighlight(bool highlight);
 
-    QPalette palette() const;
-    void setPalette(const QPalette &palette);
-
     void paint(QPainter *painter) override;
 
 private:
     bool m_highlight = false;
-    QPalette m_palette;
 };
 
 QT_END_NAMESPACE

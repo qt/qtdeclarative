@@ -49,6 +49,7 @@
 #include "qquickpopupitem_p_p.h"
 #include "qquickapplicationwindow_p.h"
 #include "qquickdeferredexecute_p_p.h"
+#include "qquickcontentitem_p.h"
 
 #if QT_CONFIG(accessibility)
 #include <QtQuick/private/qquickaccessibleattached_p.h>
@@ -489,6 +490,11 @@ void QQuickControlPrivate::updateImplicitContentSize()
         emit q->implicitContentHeightChanged();
 }
 
+QPalette QQuickControlPrivate::defaultPalette() const
+{
+    return QQuickTheme::palette(QQuickTheme::System);
+}
+
 #if QT_CONFIG(accessibility)
 void QQuickControlPrivate::accessibilityActiveChanged(bool active)
 {
@@ -604,97 +610,6 @@ void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &font)
             QQuickTextFieldPrivate::get(textField)->inheritFont(font);
         else
             QQuickControlPrivate::updateFontRecur(child, font);
-    }
-}
-
-/*!
-    \internal
-
-    Returns the palette that the item inherits from its ancestors and
-    QGuiApplication::palette.
-*/
-QPalette QQuickControlPrivate::parentPalette(const QQuickItem *item)
-{
-    QQuickItem *p = item->parentItem();
-    while (p) {
-        if (QQuickControl *control = qobject_cast<QQuickControl *>(p))
-            return control->palette();
-        else if (QQuickLabel *label = qobject_cast<QQuickLabel *>(p))
-            return label->palette();
-        else if (QQuickTextField *textField = qobject_cast<QQuickTextField *>(p))
-            return textField->palette();
-        else if (QQuickTextArea *textArea = qobject_cast<QQuickTextArea *>(p))
-            return textArea->palette();
-
-        p = p->parentItem();
-    }
-
-    if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(item->window()))
-        return window->palette();
-
-    return QQuickTheme::palette(QQuickTheme::System);
-}
-
-/*!
-    \internal
-
-    Determine which palette is implicitly imposed on this control by its ancestors
-    and QGuiApplication::palette, resolve this against its own palette (attributes from
-    the implicit palette are copied over). Then propagate this palette to this
-    control's children.
-*/
-void QQuickControlPrivate::resolvePalette()
-{
-    Q_Q(QQuickControl);
-    inheritPalette(parentPalette(q));
-}
-
-void QQuickControlPrivate::inheritPalette(const QPalette &palette)
-{
-    Q_Q(QQuickControl);
-    QPalette parentPalette = extra.isAllocated() ? extra->requestedPalette.resolve(palette) : palette;
-    parentPalette.resolve(extra.isAllocated() ? extra->requestedPalette.resolve() | palette.resolve() : palette.resolve());
-
-    const QPalette defaultPalette = q->defaultPalette();
-    const QPalette resolvedPalette = parentPalette.resolve(defaultPalette);
-
-    setPalette_helper(resolvedPalette);
-}
-
-/*!
-    \internal
-
-    Assign \a palette to this control, and propagate it to all children.
-*/
-void QQuickControlPrivate::updatePalette(const QPalette &palette)
-{
-    Q_Q(QQuickControl);
-    QPalette oldPalette = resolvedPalette;
-    resolvedPalette = palette;
-
-    if (oldPalette != palette)
-        q->paletteChange(palette, oldPalette);
-
-    QQuickControlPrivate::updatePaletteRecur(q, palette);
-
-    if (oldPalette != palette)
-        emit q->paletteChanged();
-}
-
-void QQuickControlPrivate::updatePaletteRecur(QQuickItem *item, const QPalette &palette)
-{
-    const auto childItems = item->childItems();
-    for (QQuickItem *child : childItems) {
-        if (QQuickControl *control = qobject_cast<QQuickControl *>(child))
-            QQuickControlPrivate::get(control)->inheritPalette(palette);
-        else if (QQuickLabel *label = qobject_cast<QQuickLabel *>(child))
-            QQuickLabelPrivate::get(label)->inheritPalette(palette);
-        else if (QQuickTextArea *textArea = qobject_cast<QQuickTextArea *>(child))
-            QQuickTextAreaPrivate::get(textArea)->inheritPalette(palette);
-        else if (QQuickTextField *textField = qobject_cast<QQuickTextField *>(child))
-            QQuickTextFieldPrivate::get(textField)->inheritPalette(palette);
-        else
-            QQuickControlPrivate::updatePaletteRecur(child, palette);
     }
 }
 
@@ -974,7 +889,6 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
     QQuickItem::itemChange(change, value);
     switch (change) {
     case ItemEnabledHasChanged:
-        emit paletteChanged();
         enabledChange();
         break;
     case ItemVisibleHasChanged:
@@ -987,7 +901,6 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
     case ItemParentHasChanged:
         if ((change == ItemParentHasChanged && value.item) || (change == ItemSceneChange && value.window)) {
             d->resolveFont();
-            d->resolvePalette();
             if (!d->hasLocale)
                 d->updateLocale(QQuickControlPrivate::calcLocale(d->parentItem), false); // explicit=false
 #if QT_CONFIG(quicktemplates2_hover)
@@ -1711,75 +1624,6 @@ void QQuickControl::resetBaselineOffset()
 }
 
 /*!
-    \since QtQuick.Controls 2.3 (Qt 5.10)
-    \qmlproperty palette QtQuick.Controls::Control::palette
-
-    This property holds the palette currently set for the control.
-
-    This property describes the control's requested palette. The palette is used by the control's
-    style when rendering standard components, and is available as a means to ensure that custom
-    controls can maintain consistency with the native platform's native look and feel. It's common
-    that different platforms, or different styles, define different palettes for an application.
-
-    The default palette depends on the system environment. ApplicationWindow maintains a system/theme
-    palette which serves as a default for all controls. There may also be special palette defaults for
-    certain types of controls. You can also set the default palette for controls by either:
-
-    \list
-    \li passing a custom palette to QGuiApplication::setPalette(), before loading any QML; or
-    \li specifying the colors in the \l {Qt Quick Controls 2 Configuration File}{qtquickcontrols2.conf file}.
-    \endlist
-
-    Control propagates explicit palette properties from parent to children. If you change a specific
-    property on a control's palette, that property propagates to all of the control's children,
-    overriding any system defaults for that property.
-
-    \code
-    Page {
-        palette.text: "red"
-
-        Column {
-            Label {
-                text: qsTr("This will use red color...")
-            }
-
-            Switch {
-                text: qsTr("... and so will this")
-            }
-        }
-    }
-    \endcode
-
-    For the full list of available palette colors, see the
-    \l {qtquickcontrols2-palette}{palette QML Basic Type} documentation.
-
-    \sa ApplicationWindow::palette, Popup::palette
-*/
-QPalette QQuickControl::palette() const
-{
-    Q_D(const QQuickControl);
-    QPalette palette = d->resolvedPalette;
-    if (!isEnabled())
-        palette.setCurrentColorGroup(QPalette::Disabled);
-    return palette;
-}
-
-void QQuickControl::setPalette(const QPalette &palette)
-{
-    Q_D(QQuickControl);
-    if (d->extra.value().requestedPalette.resolve() == palette.resolve() && d->extra.value().requestedPalette == palette)
-        return;
-
-    d->extra.value().requestedPalette = palette;
-    d->resolvePalette();
-}
-
-void QQuickControl::resetPalette()
-{
-    setPalette(QPalette());
-}
-
-/*!
     \since QtQuick.Controls 2.5 (Qt 5.12)
     \qmlproperty real QtQuick.Controls::Control::horizontalPadding
 
@@ -2056,7 +1900,6 @@ void QQuickControl::classBegin()
     Q_D(QQuickControl);
     QQuickItem::classBegin();
     d->resolveFont();
-    d->resolvePalette();
 }
 
 void QQuickControl::componentComplete()
@@ -2083,11 +1926,6 @@ void QQuickControl::componentComplete()
 QFont QQuickControl::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::System);
-}
-
-QPalette QQuickControl::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::System);
 }
 
 void QQuickControl::focusInEvent(QFocusEvent *event)
@@ -2270,12 +2108,6 @@ void QQuickControl::localeChange(const QLocale &newLocale, const QLocale &oldLoc
 {
     Q_UNUSED(newLocale);
     Q_UNUSED(oldLocale);
-}
-
-void QQuickControl::paletteChange(const QPalette &newPalette, const QPalette &oldPalette)
-{
-    Q_UNUSED(newPalette);
-    Q_UNUSED(oldPalette);
 }
 
 void QQuickControl::insetChange(const QMarginsF &newInset, const QMarginsF &oldInset)

@@ -74,8 +74,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickApplicationWindow : public QQuickWi
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
     // 2.3 (Qt 5.10)
-    Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
     Q_PROPERTY(QQuickItem *menuBar READ menuBar WRITE setMenuBar NOTIFY menuBarChanged FINAL REVISION 3)
+    // 2.14 (Qt 6)
+    Q_PRIVATE_PROPERTY(QQuickApplicationWindow::d_func(), QQuickPalette *palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged REVISION 3)
     Q_CLASSINFO("DeferredPropertyNames", "background")
     Q_CLASSINFO("DefaultProperty", "contentData")
 
@@ -108,11 +109,6 @@ public:
     void setLocale(const QLocale &locale);
     void resetLocale();
 
-    // 2.3 (Qt 5.10)
-    QPalette palette() const;
-    void setPalette(const QPalette &palette);
-    void resetPalette();
-
     QQuickItem *menuBar() const;
     void setMenuBar(QQuickItem *menuBar);
 
@@ -123,7 +119,6 @@ Q_SIGNALS:
     void footerChanged();
     void fontChanged();
     void localeChanged();
-    Q_REVISION(3) void paletteChanged();
     Q_REVISION(3) void menuBarChanged();
 
 protected:
@@ -136,7 +131,6 @@ private:
     Q_DISABLE_COPY(QQuickApplicationWindow)
     Q_DECLARE_PRIVATE(QQuickApplicationWindow)
     Q_PRIVATE_SLOT(d_func(), void _q_updateActiveFocus())
-    QScopedPointer<QQuickApplicationWindowPrivate> d_ptr;
 };
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickApplicationWindowAttached : public QObject

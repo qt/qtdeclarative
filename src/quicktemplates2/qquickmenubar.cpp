@@ -283,6 +283,11 @@ void QQuickMenuBarPrivate::menus_clear(QQmlListProperty<QQuickMenu> *prop)
     QQuickMenuBarPrivate::get(menuBar)->contentModel->clear();
 }
 
+QPalette QQuickMenuBarPrivate::defaultPalette() const
+{
+    return QQuickTheme::palette(QQuickTheme::MenuBar);
+}
+
 QQuickMenuBar::QQuickMenuBar(QQuickItem *parent)
     : QQuickContainer(*(new QQuickMenuBarPrivate), parent)
 {
@@ -562,11 +567,6 @@ void QQuickMenuBar::itemRemoved(int index, QQuickItem *item)
 QFont QQuickMenuBar::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::MenuBar);
-}
-
-QPalette QQuickMenuBar::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::MenuBar);
 }
 
 #if QT_CONFIG(accessibility)

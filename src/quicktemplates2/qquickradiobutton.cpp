@@ -36,6 +36,7 @@
 
 #include "qquickradiobutton_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquickabstractbutton_p_p.h"
 
 #include <QtGui/qpa/qplatformtheme.h>
 
@@ -90,8 +91,16 @@ QT_BEGIN_NAMESPACE
     \sa ButtonGroup, {Customizing RadioButton}, {Button Controls}, RadioDelegate
 */
 
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRadioButtonPrivate : public QQuickAbstractButtonPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickRadioButton)
+
+public:
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::RadioButton); }
+};
+
 QQuickRadioButton::QQuickRadioButton(QQuickItem *parent)
-    : QQuickAbstractButton(parent)
+    : QQuickAbstractButton(*(new QQuickRadioButtonPrivate), parent)
 {
     setCheckable(true);
     setAutoExclusive(true);
@@ -100,11 +109,6 @@ QQuickRadioButton::QQuickRadioButton(QQuickItem *parent)
 QFont QQuickRadioButton::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::RadioButton);
-}
-
-QPalette QQuickRadioButton::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::RadioButton);
 }
 
 #if QT_CONFIG(accessibility)

@@ -279,43 +279,6 @@ void QQuickTextAreaPrivate::updateFont(const QFont &font)
         emit q->fontChanged();
 }
 
-/*!
-    \internal
-
-    Determine which palette is implicitly imposed on this control by its ancestors
-    and QGuiApplication::palette, resolve this against its own palette (attributes from
-    the implicit palette are copied over). Then propagate this palette to this
-    control's children.
-*/
-void QQuickTextAreaPrivate::resolvePalette()
-{
-    Q_Q(QQuickTextArea);
-    inheritPalette(QQuickControlPrivate::parentPalette(q));
-}
-
-void QQuickTextAreaPrivate::inheritPalette(const QPalette &palette)
-{
-    QPalette parentPalette = extra.isAllocated() ? extra->requestedPalette.resolve(palette) : palette;
-    parentPalette.resolve(extra.isAllocated() ? extra->requestedPalette.resolve() | palette.resolve() : palette.resolve());
-
-    const QPalette defaultPalette = QQuickTheme::palette(QQuickTheme::TextArea);
-    const QPalette resolvedPalette = parentPalette.resolve(defaultPalette);
-
-    setPalette_helper(resolvedPalette);
-}
-
-void QQuickTextAreaPrivate::updatePalette(const QPalette &palette)
-{
-    Q_Q(QQuickTextArea);
-    QPalette oldPalette = resolvedPalette;
-    resolvedPalette = palette;
-
-    QQuickControlPrivate::updatePaletteRecur(q, palette);
-
-    if (oldPalette != palette)
-        emit q->paletteChanged();
-}
-
 #if QT_CONFIG(quicktemplates2_hover)
 void QQuickTextAreaPrivate::updateHoverEnabled(bool enabled, bool xplicit)
 {
@@ -554,6 +517,11 @@ void QQuickTextAreaPrivate::itemDestroyed(QQuickItem *item)
         emit q->implicitBackgroundWidthChanged();
         emit q->implicitBackgroundHeightChanged();
     }
+}
+
+QPalette QQuickTextAreaPrivate::defaultPalette() const
+{
+    return QQuickTheme::palette(QQuickTheme::TextArea);
 }
 
 QQuickTextArea::QQuickTextArea(QQuickItem *parent)
@@ -818,38 +786,6 @@ void QQuickTextArea::resetHoverEnabled()
 }
 
 /*!
-    \since QtQuick.Controls 2.3 (Qt 5.10)
-    \qmlproperty palette QtQuick.Controls::TextArea::palette
-
-    This property holds the palette currently set for the text area.
-
-    \sa Control::palette
-*/
-QPalette QQuickTextArea::palette() const
-{
-    Q_D(const QQuickTextArea);
-    QPalette palette = d->resolvedPalette;
-    if (!isEnabled())
-        palette.setCurrentColorGroup(QPalette::Disabled);
-    return palette;
-}
-
-void QQuickTextArea::setPalette(const QPalette &palette)
-{
-    Q_D(QQuickTextArea);
-    if (d->extra.value().requestedPalette.resolve() == palette.resolve() && d->extra.value().requestedPalette == palette)
-        return;
-
-    d->extra.value().requestedPalette = palette;
-    d->resolvePalette();
-}
-
-void QQuickTextArea::resetPalette()
-{
-    setPalette(QPalette());
-}
-
-/*!
     \since QtQuick.Controls 2.5 (Qt 5.12)
     \qmlproperty real QtQuick.Controls::TextArea::implicitBackgroundWidth
     \readonly
@@ -996,7 +932,6 @@ void QQuickTextArea::classBegin()
     Q_D(QQuickTextArea);
     QQuickTextEdit::classBegin();
     d->resolveFont();
-    d->resolvePalette();
 }
 
 void QQuickTextArea::componentComplete()
@@ -1021,13 +956,11 @@ void QQuickTextArea::itemChange(QQuickItem::ItemChange change, const QQuickItem:
     QQuickTextEdit::itemChange(change, value);
     switch (change) {
     case ItemEnabledHasChanged:
-        emit paletteChanged();
         break;
     case ItemSceneChange:
     case ItemParentHasChanged:
         if ((change == ItemParentHasChanged && value.item) || (change == ItemSceneChange && value.window)) {
             d->resolveFont();
-            d->resolvePalette();
 #if QT_CONFIG(quicktemplates2_hover)
             if (!d->explicitHoverEnabled)
                 d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false

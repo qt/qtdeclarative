@@ -63,11 +63,13 @@ public:
 
 protected:
     QFont defaultFont() const override;
-    QPalette defaultPalette() const override;
 
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
 #endif
+
+private:
+    Q_DECLARE_PRIVATE(QQuickRadioDelegate)
 };
 
 QT_END_NAMESPACE

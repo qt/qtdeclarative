@@ -57,6 +57,8 @@ class QQuickItemDelegatePrivate : public QQuickAbstractButtonPrivate
     Q_DECLARE_PUBLIC(QQuickItemDelegate)
 
 public:
+    QPalette defaultPalette() const override;
+
     bool highlighted = false;
 };
 

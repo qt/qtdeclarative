@@ -53,32 +53,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPopupItemPrivate : public QQuickPagePrivate
-{
-    Q_DECLARE_PUBLIC(QQuickPopupItem)
-
-public:
-    QQuickPopupItemPrivate(QQuickPopup *popup);
-
-    void implicitWidthChanged() override;
-    void implicitHeightChanged() override;
-
-    void resolveFont() override;
-    void resolvePalette() override;
-
-    QQuickItem *getContentItem() override;
-
-    void cancelContentItem() override;
-    void executeContentItem(bool complete = false) override;
-
-    void cancelBackground() override;
-    void executeBackground(bool complete = false) override;
-
-    int backId = 0;
-    int escapeId = 0;
-    QQuickPopup *popup = nullptr;
-};
-
 QQuickPopupItemPrivate::QQuickPopupItemPrivate(QQuickPopup *popup)
     : popup(popup)
 {
@@ -103,14 +77,6 @@ void QQuickPopupItemPrivate::resolveFont()
         inheritFont(window->font());
     else
         inheritFont(QQuickTheme::font(QQuickTheme::System));
-}
-
-void QQuickPopupItemPrivate::resolvePalette()
-{
-    if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(popup->window()))
-        inheritPalette(window->palette());
-    else
-        inheritPalette(QQuickTheme::palette(QQuickTheme::System));
 }
 
 QQuickItem *QQuickPopupItemPrivate::getContentItem()
@@ -168,6 +134,9 @@ QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup)
     setCursor(Qt::ArrowCursor);
 #endif
 
+    connect(popup, &QQuickPopup::paletteChanged, this, &QQuickItem::paletteChanged);
+    connect(popup, &QQuickPopup::paletteCreated, this, &QQuickItem::paletteCreated);
+
 #if QT_CONFIG(quicktemplates2_hover)
     // TODO: switch to QStyleHints::useHoverEffects in Qt 5.8
     setHoverEnabled(true);
@@ -202,6 +171,36 @@ void QQuickPopupItem::ungrabShortcut()
         d->escapeId = 0;
     }
 #endif
+}
+
+QQuickPalette *QQuickPopupItemPrivate::palette() const
+{
+    return QQuickPopupPrivate::get(popup)->palette();
+}
+
+void QQuickPopupItemPrivate::setPalette(QQuickPalette *p)
+{
+    QQuickPopupPrivate::get(popup)->setPalette(p);
+}
+
+void QQuickPopupItemPrivate::resetPalette()
+{
+    QQuickPopupPrivate::get(popup)->resetPalette();
+}
+
+QPalette QQuickPopupItemPrivate::defaultPalette() const
+{
+    return QQuickPopupPrivate::get(popup)->defaultPalette();
+}
+
+bool QQuickPopupItemPrivate::providesPalette() const
+{
+    return QQuickPopupPrivate::get(popup)->providesPalette();
+}
+
+QPalette QQuickPopupItemPrivate::parentPalette() const
+{
+    return QQuickPopupPrivate::get(popup)->parentPalette();
 }
 
 void QQuickPopupItem::updatePolish()
@@ -365,13 +364,6 @@ void QQuickPopupItem::paddingChange(const QMarginsF &newPadding, const QMarginsF
     d->popup->paddingChange(newPadding, oldPadding);
 }
 
-void QQuickPopupItem::paletteChange(const QPalette &newPalette, const QPalette &oldPalette)
-{
-    Q_D(QQuickPopupItem);
-    QQuickPage::paletteChange(newPalette, oldPalette);
-    d->popup->paletteChange(newPalette, oldPalette);
-}
-
 void QQuickPopupItem::enabledChange()
 {
     Q_D(QQuickPopupItem);
@@ -382,19 +374,12 @@ void QQuickPopupItem::enabledChange()
     // returns a different palette depending on whether or not the control is enabled.
     // To save a connection, we also emit enabledChanged here.
     emit d->popup->enabledChanged();
-    emit d->popup->paletteChanged();
 }
 
 QFont QQuickPopupItem::defaultFont() const
 {
     Q_D(const QQuickPopupItem);
     return d->popup->defaultFont();
-}
-
-QPalette QQuickPopupItem::defaultPalette() const
-{
-    Q_D(const QQuickPopupItem);
-    return d->popup->defaultPalette();
 }
 
 #if QT_CONFIG(accessibility)

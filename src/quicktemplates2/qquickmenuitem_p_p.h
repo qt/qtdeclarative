@@ -75,6 +75,8 @@ public:
 
     bool acceptKeyClick(Qt::Key key) const override;
 
+    QPalette defaultPalette() const override;
+
     bool highlighted = false;
     QQuickDeferredPointer<QQuickItem> arrow;
     QQuickMenu *menu = nullptr;

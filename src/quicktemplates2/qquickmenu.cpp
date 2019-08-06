@@ -702,6 +702,11 @@ QObject *QQuickMenuPrivate::contentData_at(QQmlListProperty<QObject> *prop, int 
     return QQuickMenuPrivate::get(q)->contentData.value(index);
 }
 
+QPalette QQuickMenuPrivate::defaultPalette() const
+{
+    return QQuickTheme::palette(QQuickTheme::Menu);
+}
+
 void QQuickMenuPrivate::contentData_clear(QQmlListProperty<QObject> *prop)
 {
     QQuickMenu *q = static_cast<QQuickMenu *>(prop->object);
@@ -1496,11 +1501,6 @@ void QQuickMenu::timerEvent(QTimerEvent *event)
 QFont QQuickMenu::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::Menu);
-}
-
-QPalette QQuickMenu::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::Menu);
 }
 
 #if QT_CONFIG(accessibility)

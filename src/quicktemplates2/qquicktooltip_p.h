@@ -90,7 +90,6 @@ public Q_SLOTS:
 
 protected:
     QFont defaultFont() const override;
-    QPalette defaultPalette() const override;
 
     void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data) override;
     void timerEvent(QTimerEvent *event) override;

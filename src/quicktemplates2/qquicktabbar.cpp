@@ -111,6 +111,8 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::TabBar); }
+
     bool updatingLayout = false;
     QQuickTabBar::Position position = QQuickTabBar::Header;
 };
@@ -384,11 +386,6 @@ void QQuickTabBar::itemRemoved(int index, QQuickItem *item)
 QFont QQuickTabBar::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::TabBar);
-}
-
-QPalette QQuickTabBar::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::TabBar);
 }
 
 #if QT_CONFIG(accessibility)

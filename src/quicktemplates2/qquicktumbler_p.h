@@ -133,7 +133,6 @@ protected:
     void updatePolish() override;
 
     QFont defaultFont() const override;
-    QPalette defaultPalette() const override;
 
 private:
     Q_DISABLE_COPY(QQuickTumbler)

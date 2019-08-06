@@ -120,16 +120,16 @@ QFont QQuickItemDelegate::defaultFont() const
     return QQuickTheme::font(QQuickTheme::ItemView);
 }
 
-QPalette QQuickItemDelegate::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::ItemView);
-}
-
 #if QT_CONFIG(accessibility)
 QAccessible::Role QQuickItemDelegate::accessibleRole() const
 {
     return QAccessible::ListItem;
 }
 #endif
+
+QPalette QQuickItemDelegatePrivate::defaultPalette() const
+{
+    return QQuickTheme::palette(QQuickTheme::ItemView);
+}
 
 QT_END_NAMESPACE

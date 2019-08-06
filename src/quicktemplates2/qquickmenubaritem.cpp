@@ -79,6 +79,11 @@ void QQuickMenuBarItemPrivate::setMenuBar(QQuickMenuBar *newMenuBar)
     emit q->menuBarChanged();
 }
 
+QPalette QQuickMenuBarItemPrivate::defaultPalette() const
+{
+    return QQuickTheme::palette(QQuickTheme::MenuBar);
+}
+
 QQuickMenuBarItem::QQuickMenuBarItem(QQuickItem *parent)
     : QQuickAbstractButton(*(new QQuickMenuBarItemPrivate), parent)
 {
@@ -168,11 +173,6 @@ void QQuickMenuBarItem::geometryChanged(const QRectF &newGeometry, const QRectF 
 QFont QQuickMenuBarItem::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::MenuBar);
-}
-
-QPalette QQuickMenuBarItem::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::MenuBar);
 }
 
 #if QT_CONFIG(accessibility)

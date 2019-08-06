@@ -53,6 +53,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickPalette;
+
 class QQuickFusionStyle : public QObject
 {
     Q_OBJECT
@@ -69,17 +71,17 @@ public:
     static QColor topShadow();
     static QColor innerContrastLine();
 
-    Q_INVOKABLE static QColor highlight(const QPalette &palette);
-    Q_INVOKABLE static QColor highlightedText(const QPalette &palette);
-    Q_INVOKABLE static QColor outline(const QPalette &palette);
-    Q_INVOKABLE static QColor highlightedOutline(const QPalette &palette);
-    Q_INVOKABLE static QColor tabFrameColor(const QPalette &palette);
-    Q_INVOKABLE static QColor buttonColor(const QPalette &palette, bool highlighted = false, bool down = false, bool hovered = false);
-    Q_INVOKABLE static QColor buttonOutline(const QPalette &palette, bool highlighted = false, bool enabled = true);
+    Q_INVOKABLE static QColor highlight(QQuickPalette *palette);
+    Q_INVOKABLE static QColor highlightedText(QQuickPalette *palette);
+    Q_INVOKABLE static QColor outline(QQuickPalette *palette);
+    Q_INVOKABLE static QColor highlightedOutline(QQuickPalette *palette);
+    Q_INVOKABLE static QColor tabFrameColor(QQuickPalette *palette);
+    Q_INVOKABLE static QColor buttonColor(QQuickPalette *palette, bool highlighted = false, bool down = false, bool hovered = false);
+    Q_INVOKABLE static QColor buttonOutline(QQuickPalette *palette, bool highlighted = false, bool enabled = true);
     Q_INVOKABLE static QColor gradientStart(const QColor &baseColor);
     Q_INVOKABLE static QColor gradientStop(const QColor &baseColor);
     Q_INVOKABLE static QColor mergedColors(const QColor &colorA, const QColor &colorB, int factor = 50);
-    Q_INVOKABLE static QColor grooveColor(const QPalette &palette);
+    Q_INVOKABLE static QColor grooveColor(QQuickPalette *palette);
 };
 
 QT_END_NAMESPACE

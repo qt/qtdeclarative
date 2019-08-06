@@ -104,6 +104,8 @@ class QQuickCheckBoxPrivate : public QQuickAbstractButtonPrivate
 public:
     void setNextCheckState(const QJSValue &callback);
 
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::CheckBox); }
+
     bool tristate = false;
     Qt::CheckState checkState = Qt::Unchecked;
     QJSValue nextCheckState;
@@ -184,11 +186,6 @@ void QQuickCheckBox::setCheckState(Qt::CheckState state)
 QFont QQuickCheckBox::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::CheckBox);
-}
-
-QPalette QQuickCheckBox::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::CheckBox);
 }
 
 void QQuickCheckBox::buttonChange(ButtonChange change)

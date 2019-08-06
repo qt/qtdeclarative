@@ -68,7 +68,6 @@
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickpage_p.h>
 #include <QtQuickTemplates2/private/qquickpageindicator_p.h>
-#include <QtQuickTemplates2/private/qquickpaletteprovider_p.h>
 #include <QtQuickTemplates2/private/qquickpane_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickTemplates2/private/qquickpopupanchors_p.h>
@@ -102,6 +101,8 @@
 #include <QtQuickTemplates2/private/qquicktumbler_p.h>
 #endif
 
+#include <QtQuick/private/qquickpalette_p.h>
+
 #if QT_CONFIG(shortcut)
 // qtdeclarative/src/quick/util/qquickshortcut.cpp
 typedef bool (*ShortcutContextMatcher)(QObject *, Qt::ShortcutContext);
@@ -110,16 +111,6 @@ extern void qt_quick_set_shortcut_context_matcher(ShortcutContextMatcher matcher
 #endif
 
 QT_BEGIN_NAMESPACE
-
-static void initProviders()
-{
-    QQuickPaletteProvider::init();
-}
-
-static void cleanupProviders()
-{
-    QQuickPaletteProvider::cleanup();
-}
 
 class QtQuickTemplates2Plugin: public QQmlExtensionPlugin
 {
@@ -159,7 +150,6 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 #endif
 
     registered = true;
-    initProviders();
 
     // The minor version used to be the current Qt 5 minor. For compatibility it is the last
     // Qt 5 release.
@@ -281,6 +271,9 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterRevision<QQuickText, 9>(uri, 2, 2);
     qmlRegisterRevision<QQuickTextInput, 9>(uri, 2, 2);
     qmlRegisterRevision<QQuickWindowQmlImpl, 3>(uri, 2, 2);
+    qmlRegisterRevision<QQuickWindowQmlImpl, 3>(uri, 2, 3);
+    qmlRegisterRevision<QQuickWindow, 3>(uri, 2, 3);
+    qmlRegisterRevision<QQuickItem, 3>(uri, 2, 3);
 
     // QtQuick.Templates 2.3 (new types and revisions in Qt 5.10)
     qmlRegisterType<QQuickAbstractButton, 3>(uri, 2, 3, "AbstractButton");
@@ -314,6 +307,9 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     // make revisioned properties available to their subclasses (synced with Qt 5.10)
     qmlRegisterRevision<QQuickText, 10>(uri, 2, 3);
     qmlRegisterRevision<QQuickTextEdit, 10>(uri, 2, 3);
+    // For backward compatibility
+    qmlRegisterType<QQuickColorGroup, 13>(uri, 2, 13, "ColorGroup");
+    qmlRegisterType<QQuickPalette, 13>(uri, 2, 13, "Palette");
 
     // QtQuick.Templates 2.4 (new types and revisions in Qt 5.11)
     qmlRegisterType<QQuickAbstractButton, 4>(uri, 2, 4, "AbstractButton");
@@ -364,9 +360,6 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 
 void QtQuickTemplates2Plugin::unregisterTypes()
 {
-    if (registered)
-        cleanupProviders();
-
 #if QT_CONFIG(shortcut)
     qt_quick_set_shortcut_context_matcher(originalContextMatcher);
 #endif

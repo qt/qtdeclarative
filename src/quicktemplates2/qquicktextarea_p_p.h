@@ -53,6 +53,7 @@
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuickTemplates2/private/qquickpresshandler_p_p.h>
 #include <QtQuickTemplates2/private/qquickdeferredpointer_p_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 #include <QtQuickTemplates2/private/qquicktextarea_p.h>
 
@@ -102,15 +103,6 @@ public:
         updateFont(font);
     }
 
-    void resolvePalette();
-    void inheritPalette(const QPalette &palette);
-    void updatePalette(const QPalette &palette);
-    inline void setPalette_helper(const QPalette &palette) {
-        if (resolvedPalette.resolve() == palette.resolve() && resolvedPalette == palette)
-            return;
-        updatePalette(palette);
-    }
-
 #if QT_CONFIG(quicktemplates2_hover)
     void updateHoverEnabled(bool h, bool e);
 #endif
@@ -142,6 +134,8 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
     void itemDestroyed(QQuickItem *item) override;
+
+    QPalette defaultPalette() const override;
 
 #if QT_CONFIG(quicktemplates2_hover)
     bool hovered = false;

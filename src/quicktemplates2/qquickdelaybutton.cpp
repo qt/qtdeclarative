@@ -84,6 +84,8 @@ public:
     void finishTransition();
     void cancelTransition();
 
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::Button); }
+
     int delay = 300;
     qreal progress = 0.0;
     QQuickTransition *transition = nullptr;
@@ -257,11 +259,6 @@ void QQuickDelayButton::nextCheckState()
 QFont QQuickDelayButton::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::Button);
-}
-
-QPalette QQuickDelayButton::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::Button);
 }
 
 QT_END_NAMESPACE

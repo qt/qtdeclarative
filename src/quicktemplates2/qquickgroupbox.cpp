@@ -95,6 +95,8 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::GroupBox); }
+
     QString title;
     QQuickDeferredPointer<QQuickItem> label;
 };
@@ -264,11 +266,6 @@ void QQuickGroupBox::componentComplete()
 QFont QQuickGroupBox::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::GroupBox);
-}
-
-QPalette QQuickGroupBox::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::GroupBox);
 }
 
 #if QT_CONFIG(accessibility)

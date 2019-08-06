@@ -38,26 +38,15 @@
 
 #include <QtCore/qmath.h>
 #include <QtGui/qpainter.h>
+#include <QtQuick/private/qquickpalette_p.h>
+#include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
 
 QQuickFusionKnob::QQuickFusionKnob(QQuickItem *parent)
     : QQuickPaintedItem(parent)
 {
-}
-
-QPalette QQuickFusionKnob::palette() const
-{
-    return m_palette;
-}
-
-void QQuickFusionKnob::setPalette(const QPalette &palette)
-{
-    if (palette == m_palette)
-        return;
-
-    m_palette = palette;
-    update();
+    connect(this, &QQuickItem::paletteChanged, this, [this](){ update(); });
 }
 
 // extracted from QStyleHelper::drawDial()
@@ -68,7 +57,7 @@ void QQuickFusionKnob::paint(QPainter *painter)
     if (w <= 0 || h <= 0)
         return;
 
-    QColor color = m_palette.color(QPalette::Button);
+    QColor color = QQuickItemPrivate::get(this)->palette()->button();
     color.setHsv(color.hue(),
                  qMin(140, color .saturation()),
                  qMax(180, color.value()));

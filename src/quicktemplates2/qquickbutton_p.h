@@ -77,7 +77,6 @@ protected:
     QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent);
 
     QFont defaultFont() const override;
-    QPalette defaultPalette() const override;
 
 private:
     Q_DISABLE_COPY(QQuickButton)

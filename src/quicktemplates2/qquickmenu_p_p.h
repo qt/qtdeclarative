@@ -122,6 +122,8 @@ public:
     static QObject *contentData_at(QQmlListProperty<QObject> *prop, int index);
     static void contentData_clear(QQmlListProperty<QObject> *prop);
 
+    QPalette defaultPalette() const override;
+
     bool cascade = false;
     int hoverTimer = 0;
     int currentIndex = -1;

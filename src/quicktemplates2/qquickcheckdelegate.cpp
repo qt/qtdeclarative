@@ -91,6 +91,8 @@ class QQuickCheckDelegatePrivate : public QQuickItemDelegatePrivate
 public:
     void setNextCheckState(const QJSValue &callback);
 
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::ListView); }
+
     bool tristate = false;
     Qt::CheckState checkState = Qt::Unchecked;
     QJSValue nextCheckState;
@@ -171,11 +173,6 @@ void QQuickCheckDelegate::setCheckState(Qt::CheckState state)
 QFont QQuickCheckDelegate::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::ListView);
-}
-
-QPalette QQuickCheckDelegate::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::ListView);
 }
 
 void QQuickCheckDelegate::buttonChange(ButtonChange change)

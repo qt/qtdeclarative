@@ -70,8 +70,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextField : public QQuickTextInput
     // 2.1 (Qt 5.8)
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL REVISION 1)
     Q_PROPERTY(bool hoverEnabled READ isHoverEnabled WRITE setHoverEnabled RESET resetHoverEnabled NOTIFY hoverEnabledChanged FINAL REVISION 1)
-    // 2.3 (Qt 5.10)
-    Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
     // 2.5 (Qt 5.12)
     Q_PROPERTY(QColor placeholderTextColor READ placeholderTextColor WRITE setPlaceholderTextColor NOTIFY placeholderTextColorChanged FINAL REVISION 5)
     Q_PROPERTY(qreal implicitBackgroundWidth READ implicitBackgroundWidth NOTIFY implicitBackgroundWidthChanged FINAL REVISION 5)
@@ -105,11 +103,6 @@ public:
     bool isHoverEnabled() const;
     void setHoverEnabled(bool enabled);
     void resetHoverEnabled();
-
-    // 2.3 (Qt 5.10)
-    QPalette palette() const;
-    void setPalette(const QPalette &palette);
-    void resetPalette();
 
     // 2.5 (Qt 5.12)
     QColor placeholderTextColor() const;
@@ -147,8 +140,6 @@ Q_SIGNALS:
     Q_REVISION(1) void released(QQuickMouseEvent *event);
     Q_REVISION(1) void hoveredChanged();
     Q_REVISION(1) void hoverEnabledChanged();
-    // 2.3 (Qt 5.10)
-    Q_REVISION(3) void paletteChanged();
     // 2.5 (Qt 5.12)
     Q_REVISION(5) void placeholderTextColorChanged();
     Q_REVISION(5) void implicitBackgroundWidthChanged();

@@ -88,6 +88,8 @@ public:
     void handleMove(const QPointF &point) override;
     void handleRelease(const QPointF &point) override;
 
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::Switch); }
+
     qreal position = 0;
 };
 
@@ -232,11 +234,6 @@ void QQuickSwitch::buttonChange(ButtonChange change)
 QFont QQuickSwitch::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::Switch);
-}
-
-QPalette QQuickSwitch::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::Switch);
 }
 
 QT_END_NAMESPACE

@@ -79,7 +79,6 @@ Q_SIGNALS:
 
 protected:
     QFont defaultFont() const override;
-    QPalette defaultPalette() const override;
 
     void buttonChange(ButtonChange change) override;
     void nextCheckState() override;

@@ -80,8 +80,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
     Q_PROPERTY(qreal baselineOffset READ baselineOffset WRITE setBaselineOffset RESET resetBaselineOffset NOTIFY baselineOffsetChanged FINAL)
-    // 2.3 (Qt 5.10)
-    Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
     // 2.5 (Qt 5.12)
     Q_PROPERTY(qreal horizontalPadding READ horizontalPadding WRITE setHorizontalPadding RESET resetHorizontalPadding NOTIFY horizontalPaddingChanged FINAL REVISION 5)
     Q_PROPERTY(qreal verticalPadding READ verticalPadding WRITE setVerticalPadding RESET resetVerticalPadding NOTIFY verticalPaddingChanged FINAL REVISION 5)
@@ -164,12 +162,7 @@ public:
     void setBaselineOffset(qreal offset);
     void resetBaselineOffset();
 
-    // 2.3 (Qt 5.10)
-    QPalette palette() const;
-    void setPalette(const QPalette &palette);
-    void resetPalette();
-
-    // 2.5 (Qt 5.12)
+     // 2.5 (Qt 5.12)
     qreal horizontalPadding() const;
     void setHorizontalPadding(qreal padding);
     void resetHorizontalPadding();
@@ -221,8 +214,6 @@ Q_SIGNALS:
     void backgroundChanged();
     void contentItemChanged();
     void baselineOffsetChanged();
-    // 2.3 (Qt 5.10)
-    Q_REVISION(3) void paletteChanged();
     // 2.5 (Qt 5.12)
     Q_REVISION(5) void horizontalPaddingChanged();
     Q_REVISION(5) void verticalPaddingChanged();
@@ -237,7 +228,6 @@ Q_SIGNALS:
 
 protected:
     virtual QFont defaultFont() const;
-    virtual QPalette defaultPalette() const;
 
     QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent);
 
@@ -276,7 +266,6 @@ protected:
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
     virtual void localeChange(const QLocale &newLocale, const QLocale &oldLocale);
-    virtual void paletteChange(const QPalette &newPalette, const QPalette &oldPalette);
     virtual void insetChange(const QMarginsF &newInset, const QMarginsF &oldInset);
     virtual void enabledChange();
 

@@ -40,6 +40,7 @@
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickTemplates2/private/qquicklabel_p.h>
+#include <QtQuickTemplates2/private/qquicklabel_p_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 
@@ -152,7 +153,7 @@ void tst_QQuickStyle::configurationFile()
     // Make it small so that there's less possibility for the default/system
     // pixel size to match it and give us false positives.
     QCOMPARE(label->font().pixelSize(), 3);
-    QCOMPARE(label->palette().windowText(), Qt::red);
+    QCOMPARE(QQuickLabelPrivate::get(label)->palette()->windowText(), Qt::red);
 }
 
 void tst_QQuickStyle::commandLineArgument()

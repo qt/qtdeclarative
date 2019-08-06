@@ -42,14 +42,17 @@
 
 #include <QtGui/qpa/qwindowsysteminterface.h>
 #include <QtQuick/qquickview.h>
+#include <QtQuick/private/qquickpalette_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickcombobox_p.h>
 #include <QtQuickTemplates2/private/qquickdialog_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
+#include <QtQuickTemplates2/private/qquickpopupitem_p_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickslider_p.h>
 #include <QtQuickTemplates2/private/qquickstackview_p.h>
+#include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 
 using namespace QQuickVisualTestUtil;
 
@@ -1174,29 +1177,28 @@ void tst_QQuickPopup::disabledPalette()
     QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
     QVERIFY(popup);
 
-    QSignalSpy popupEnabledSpy(popup, SIGNAL(enabledChanged()));
+    QSignalSpy popupEnabledSpy(popup, &QQuickPopup::enabledChanged);
     QVERIFY(popupEnabledSpy.isValid());
-    QSignalSpy popupPaletteSpy(popup, SIGNAL(paletteChanged()));
+    QSignalSpy popupPaletteSpy(popup, &QQuickPopup::paletteChanged);
     QVERIFY(popupPaletteSpy.isValid());
 
-    QSignalSpy popupItemEnabledSpy(popup->popupItem(), SIGNAL(enabledChanged()));
+    QSignalSpy popupItemEnabledSpy(popup->popupItem(), &QQuickItem::enabledChanged);
     QVERIFY(popupItemEnabledSpy.isValid());
-    QSignalSpy popupItemPaletteSpy(popup->popupItem(), SIGNAL(paletteChanged()));
+    QSignalSpy popupItemPaletteSpy(popup->popupItem(), &QQuickItem::paletteChanged);
     QVERIFY(popupItemPaletteSpy.isValid());
 
-    QPalette palette = popup->palette();
-    palette.setColor(QPalette::Active, QPalette::Base, Qt::green);
-    palette.setColor(QPalette::Disabled, QPalette::Base, Qt::red);
-    popup->setPalette(palette);
-    QCOMPARE(popupPaletteSpy.count(), 1);
-    QCOMPARE(popupItemPaletteSpy.count(), 1);
+    auto palette = QQuickPopupPrivate::get(popup)->palette();
+    palette->setBase(Qt::green);
+    palette->disabled()->setBase(Qt::red);
+    QCOMPARE(popupPaletteSpy.count(), 2);
+    QCOMPARE(popupItemPaletteSpy.count(), 2);
     QCOMPARE(popup->background()->property("color").value<QColor>(), Qt::green);
 
     popup->setEnabled(false);
     QCOMPARE(popupEnabledSpy.count(), 1);
     QCOMPARE(popupItemEnabledSpy.count(), 1);
-    QCOMPARE(popupPaletteSpy.count(), 2);
-    QCOMPARE(popupItemPaletteSpy.count(), 2);
+    QCOMPARE(popupPaletteSpy.count(), 3);
+    QCOMPARE(popupItemPaletteSpy.count(), 3);
     QCOMPARE(popup->background()->property("color").value<QColor>(), Qt::red);
 }
 
@@ -1221,12 +1223,11 @@ void tst_QQuickPopup::disabledParentPalette()
     QSignalSpy popupItemPaletteSpy(popup->popupItem(), SIGNAL(paletteChanged()));
     QVERIFY(popupItemPaletteSpy.isValid());
 
-    QPalette palette = popup->palette();
-    palette.setColor(QPalette::Active, QPalette::Base, Qt::green);
-    palette.setColor(QPalette::Disabled, QPalette::Base, Qt::red);
-    popup->setPalette(palette);
-    QCOMPARE(popupPaletteSpy.count(), 1);
-    QCOMPARE(popupItemPaletteSpy.count(), 1);
+    auto palette = QQuickPopupPrivate::get(popup)->palette();
+    palette->setBase(Qt::green);
+    palette->disabled()->setBase(Qt::red);
+    QCOMPARE(popupPaletteSpy.count(), 2);
+    QCOMPARE(popupItemPaletteSpy.count(), 2);
     QCOMPARE(popup->background()->property("color").value<QColor>(), Qt::green);
 
     // Disable the overlay (which is QQuickPopupItem's parent) to ensure that
@@ -1239,8 +1240,8 @@ void tst_QQuickPopup::disabledParentPalette()
     QCOMPARE(popup->background()->property("color").value<QColor>(), Qt::red);
     QCOMPARE(popupEnabledSpy.count(), 1);
     QCOMPARE(popupItemEnabledSpy.count(), 1);
-    QCOMPARE(popupPaletteSpy.count(), 2);
-    QCOMPARE(popupItemPaletteSpy.count(), 2);
+    QCOMPARE(popupPaletteSpy.count(), 3);
+    QCOMPARE(popupItemPaletteSpy.count(), 3);
 
     popup->close();
     QTRY_VERIFY(!popup->isVisible());

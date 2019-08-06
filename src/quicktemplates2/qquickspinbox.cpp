@@ -138,6 +138,8 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::SpinBox); }
+
     bool editable = false;
     bool wrap = false;
     int from = 0;
@@ -1040,11 +1042,6 @@ void QQuickSpinBox::localeChange(const QLocale &newLocale, const QLocale &oldLoc
 QFont QQuickSpinBox::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::SpinBox);
-}
-
-QPalette QQuickSpinBox::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::SpinBox);
 }
 
 #if QT_CONFIG(accessibility)

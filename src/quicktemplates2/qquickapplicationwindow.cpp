@@ -50,6 +50,7 @@
 #include <QtCore/private/qobject_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
+#include <QtQuick/private/qquickwindowmodule_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -119,11 +120,18 @@ QT_BEGIN_NAMESPACE
 static const QQuickItemPrivate::ChangeTypes ItemChanges = QQuickItemPrivate::Visibility
         | QQuickItemPrivate::Geometry | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight;
 
-class QQuickApplicationWindowPrivate : public QQuickItemChangeListener
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickApplicationWindowPrivate
+    : public QQuickWindowQmlImplPrivate
+    , public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickApplicationWindow)
 
 public:
+    QQuickApplicationWindowPrivate()
+    {
+        complete = true;
+    }
+
     static QQuickApplicationWindowPrivate *get(QQuickApplicationWindow *window)
     {
         return window->d_func();
@@ -146,14 +154,6 @@ public:
     }
     void resolveFont();
 
-    void updatePalette(const QPalette &p);
-    inline void setPalette_helper(const QPalette &p) {
-        if (palette.resolve() == p.resolve() && palette == p)
-            return;
-        updatePalette(p);
-    }
-    void resolvePalette();
-
     void _q_updateActiveFocus();
     void setActiveFocusControl(QQuickItem *item);
 
@@ -162,18 +162,26 @@ public:
     void cancelBackground();
     void executeBackground(bool complete = false);
 
-    bool complete = true;
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::System); }
+    void updateChildrenPalettes(const QPalette &parentPalette) override
+    {
+        // Update regular children
+        QQuickWindowPrivate::updateChildrenPalettes(parentPalette);
+
+        // And cover one special case
+        for (auto &&popup : q_func()->findChildren<QQuickPopup *>())
+            QQuickPopupPrivate::get(popup)->inheritPalette(parentPalette);
+    }
+
     QQuickDeferredPointer<QQuickItem> background;
-    QQuickItem *contentItem = nullptr;
+    QQuickItem *appWindowContentItem = nullptr;
     QQuickItem *menuBar = nullptr;
     QQuickItem *header = nullptr;
     QQuickItem *footer = nullptr;
     QQuickOverlay *overlay = nullptr;
     QFont font;
     QLocale locale;
-    QPalette palette;
     QQuickItem *activeFocusControl = nullptr;
-    QQuickApplicationWindow *q_ptr = nullptr;
 };
 
 static void layoutItem(QQuickItem *item, qreal y, qreal width)
@@ -269,28 +277,6 @@ void QQuickApplicationWindowPrivate::resolveFont()
     setFont_helper(resolvedFont);
 }
 
-void QQuickApplicationWindowPrivate::updatePalette(const QPalette &p)
-{
-    Q_Q(QQuickApplicationWindow);
-    const bool changed = palette != p;
-    palette = p;
-
-    QQuickControlPrivate::updatePaletteRecur(q->QQuickWindow::contentItem(), p);
-
-    const QList<QQuickPopup *> popups = q->findChildren<QQuickPopup *>();
-    for (QQuickPopup *popup : popups)
-        QQuickControlPrivate::get(static_cast<QQuickControl *>(popup->popupItem()))->inheritPalette(p);
-
-    if (changed)
-        emit q->paletteChanged();
-}
-
-void QQuickApplicationWindowPrivate::resolvePalette()
-{
-    QPalette resolvedPalette = palette.resolve(QQuickTheme::palette(QQuickTheme::System));
-    setPalette_helper(resolvedPalette);
-}
-
 static QQuickItem *findActiveFocusControl(QQuickWindow *window)
 {
     QQuickItem *item = window->activeFocusItem();
@@ -347,9 +333,8 @@ void QQuickApplicationWindowPrivate::executeBackground(bool complete)
 }
 
 QQuickApplicationWindow::QQuickApplicationWindow(QWindow *parent)
-    : QQuickWindowQmlImpl(parent), d_ptr(new QQuickApplicationWindowPrivate)
+    : QQuickWindowQmlImpl(*(new QQuickApplicationWindowPrivate), parent)
 {
-    d_ptr->q_ptr = this;
     connect(this, SIGNAL(activeFocusItemChanged()), this, SLOT(_q_updateActiveFocus()));
 }
 
@@ -364,7 +349,6 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
         QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, ItemChanges);
     if (d->footer)
         QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, ItemChanges);
-    d_ptr.reset(); // QTBUG-52731
 }
 
 QQuickApplicationWindowAttached *QQuickApplicationWindow::qmlAttachedProperties(QObject *object)
@@ -575,13 +559,13 @@ QQmlListProperty<QObject> QQuickApplicationWindowPrivate::contentData()
 QQuickItem *QQuickApplicationWindow::contentItem() const
 {
     QQuickApplicationWindowPrivate *d = const_cast<QQuickApplicationWindowPrivate *>(d_func());
-    if (!d->contentItem) {
-        d->contentItem = new QQuickContentItem(this, QQuickWindow::contentItem());
-        d->contentItem->setFlag(QQuickItem::ItemIsFocusScope);
-        d->contentItem->setFocus(true);
+    if (!d->appWindowContentItem) {
+        d->appWindowContentItem = new QQuickContentItem(this, QQuickWindow::contentItem());
+        d->appWindowContentItem->setFlag(QQuickItem::ItemIsFocusScope);
+        d->appWindowContentItem->setFocus(true);
         d->relayout();
     }
-    return d->contentItem;
+    return d->appWindowContentItem;
 }
 
 /*!
@@ -739,43 +723,6 @@ void QQuickApplicationWindow::resetLocale()
 
 /*!
     \since QtQuick.Controls 2.3 (Qt 5.10)
-    \qmlproperty palette QtQuick.Controls::ApplicationWindow::palette
-
-    This property holds the palette currently set for the window.
-
-    The default palette depends on the system environment. QGuiApplication maintains a system/theme
-    palette which serves as a default for all application windows. You can also set the default palette
-    for windows by passing a custom palette to QGuiApplication::setPalette(), before loading any QML.
-
-    ApplicationWindow propagates explicit palette properties to child controls. If you change a specific
-    property on the window's palette, that property propagates to all child controls in the window,
-    overriding any system defaults for that property.
-
-    \sa Control::palette, Popup::palette, {qtquickcontrols2-palette}{palette QML Basic Type}
-*/
-QPalette QQuickApplicationWindow::palette() const
-{
-    Q_D(const QQuickApplicationWindow);
-    return d->palette;
-}
-
-void QQuickApplicationWindow::setPalette(const QPalette &palette)
-{
-    Q_D(QQuickApplicationWindow);
-    if (d->palette.resolve() == palette.resolve() && d->palette == palette)
-        return;
-
-    QPalette resolvedPalette = palette.resolve(QQuickTheme::palette(QQuickTheme::System));
-    d->setPalette_helper(resolvedPalette);
-}
-
-void QQuickApplicationWindow::resetPalette()
-{
-    setPalette(QPalette());
-}
-
-/*!
-    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty Item QtQuick.Controls::ApplicationWindow::menuBar
 
     This property holds the window menu bar. The menu bar is positioned at the
@@ -833,7 +780,6 @@ void QQuickApplicationWindow::classBegin()
     d->complete = false;
     QQuickWindowQmlImpl::classBegin();
     d->resolveFont();
-    d->resolvePalette();
 }
 
 void QQuickApplicationWindow::componentComplete()

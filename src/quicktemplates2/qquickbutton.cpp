@@ -99,11 +99,6 @@ QFont QQuickButton::defaultFont() const
     return QQuickTheme::font(QQuickTheme::Button);
 }
 
-QPalette QQuickButton::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::Button);
-}
-
 /*!
     \qmlproperty bool QtQuick.Controls::Button::highlighted
 
@@ -157,6 +152,11 @@ void QQuickButton::setFlat(bool flat)
 
     d->flat = flat;
     emit flatChanged();
+}
+
+QPalette QQuickButtonPrivate::defaultPalette() const
+{
+    return QQuickTheme::palette(QQuickTheme::Button);
 }
 
 QT_END_NAMESPACE

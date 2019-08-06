@@ -49,8 +49,11 @@
 //
 
 #include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
+
+class QQuickRadioButtonPrivate;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRadioButton : public QQuickAbstractButton
 {
@@ -61,7 +64,6 @@ public:
 
 protected:
     QFont defaultFont() const override;
-    QPalette defaultPalette() const override;
 
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;

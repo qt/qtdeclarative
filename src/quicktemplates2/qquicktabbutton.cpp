@@ -36,6 +36,7 @@
 
 #include "qquicktabbutton_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquickabstractbutton_p_p.h"
 
 #include <QtGui/qpa/qplatformtheme.h>
 
@@ -63,8 +64,16 @@ QT_BEGIN_NAMESPACE
     \sa TabBar, {Customizing TabButton}, {Button Controls}, {Navigation Controls}
 */
 
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTabButtonPrivate : public QQuickAbstractButtonPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickTabButton)
+
+public:
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::TabBar); }
+};
+
 QQuickTabButton::QQuickTabButton(QQuickItem *parent)
-    : QQuickAbstractButton(parent)
+    : QQuickAbstractButton(*(new QQuickTabButtonPrivate), parent)
 {
     setCheckable(true);
     setAutoExclusive(true);
@@ -73,11 +82,6 @@ QQuickTabButton::QQuickTabButton(QQuickItem *parent)
 QFont QQuickTabButton::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::TabBar);
-}
-
-QPalette QQuickTabButton::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::TabBar);
 }
 
 #if QT_CONFIG(accessibility)

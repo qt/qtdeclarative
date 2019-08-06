@@ -152,6 +152,11 @@ bool QQuickMenuItemPrivate::acceptKeyClick(Qt::Key key) const
     return key == Qt::Key_Space || key == Qt::Key_Return || key == Qt::Key_Enter;
 }
 
+QPalette QQuickMenuItemPrivate::defaultPalette() const
+{
+    return QQuickTheme::palette(QQuickTheme::Menu);
+}
+
 /*!
     \qmlsignal void QtQuick.Controls::MenuItem::triggered()
 
@@ -262,11 +267,6 @@ void QQuickMenuItem::componentComplete()
 QFont QQuickMenuItem::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::Menu);
-}
-
-QPalette QQuickMenuItem::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::Menu);
 }
 
 #if QT_CONFIG(accessibility)

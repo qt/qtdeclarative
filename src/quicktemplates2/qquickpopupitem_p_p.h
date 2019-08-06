@@ -49,11 +49,13 @@
 //
 
 #include <QtQuickTemplates2/private/qquickpage_p.h>
+#include <QtQuickTemplates2/private/qquickpage_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickPopup;
 class QQuickPopupItemPrivate;
+
 class QQuickPopupItem : public QQuickPage
 {
     Q_OBJECT
@@ -94,11 +96,9 @@ protected:
     void mirrorChange() override;
     void itemChange(ItemChange change, const ItemChangeData &data) override;
     void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
-    void paletteChange(const QPalette &newPalette, const QPalette &oldPalette) override;
     void enabledChange() override;
 
     QFont defaultFont() const override;
-    QPalette defaultPalette() const override;
 
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
@@ -109,6 +109,40 @@ private:
     Q_DISABLE_COPY(QQuickPopupItem)
     Q_DECLARE_PRIVATE(QQuickPopupItem)
     friend class QQuickPopup;
+};
+
+class QQuickPopupItemPrivate : public QQuickPagePrivate
+{
+    Q_DECLARE_PUBLIC(QQuickPopupItem)
+
+public:
+    QQuickPopupItemPrivate(QQuickPopup *popup);
+
+    void implicitWidthChanged() override;
+    void implicitHeightChanged() override;
+
+    void resolveFont() override;
+
+    QQuickItem *getContentItem() override;
+
+    void cancelContentItem() override;
+    void executeContentItem(bool complete = false) override;
+
+    void cancelBackground() override;
+    void executeBackground(bool complete = false) override;
+
+    QQuickPalette *palette() const override;
+    void setPalette(QQuickPalette* p) override;
+    void resetPalette() override;
+
+    QPalette defaultPalette() const override;
+    bool providesPalette() const override;
+
+    QPalette parentPalette() const override;
+
+    int backId = 0;
+    int escapeId = 0;
+    QQuickPopup *popup = nullptr;
 };
 
 QT_END_NAMESPACE

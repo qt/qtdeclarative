@@ -52,6 +52,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickTabButtonPrivate;
+
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTabButton : public QQuickAbstractButton
 {
     Q_OBJECT
@@ -61,11 +63,13 @@ public:
 
 protected:
     QFont defaultFont() const override;
-    QPalette defaultPalette() const override;
 
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
 #endif
+
+private:
+    Q_DECLARE_PRIVATE(QQuickTabButton)
 };
 
 QT_END_NAMESPACE

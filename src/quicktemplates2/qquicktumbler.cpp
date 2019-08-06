@@ -284,6 +284,11 @@ void QQuickTumblerPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryC
         calculateDisplacements();
 }
 
+QPalette QQuickTumblerPrivate::defaultPalette() const
+{
+    return QQuickTheme::palette(QQuickTheme::Tumbler);
+}
+
 QQuickTumbler::QQuickTumbler(QQuickItem *parent)
     : QQuickControl(*(new QQuickTumblerPrivate), parent)
 {
@@ -878,11 +883,6 @@ void QQuickTumbler::updatePolish()
 QFont QQuickTumbler::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::Tumbler);
-}
-
-QPalette QQuickTumbler::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::Tumbler);
 }
 
 void QQuickTumblerAttachedPrivate::init(QQuickItem *delegateItem)

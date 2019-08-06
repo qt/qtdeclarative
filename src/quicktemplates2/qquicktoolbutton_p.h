@@ -52,6 +52,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickToolButtonPrivate;
+
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickToolButton : public QQuickButton
 {
     Q_OBJECT
@@ -61,7 +63,9 @@ public:
 
 protected:
     QFont defaultFont() const override;
-    QPalette defaultPalette() const override;
+
+private:
+    Q_DECLARE_PRIVATE(QQuickToolButton)
 };
 
 QT_END_NAMESPACE

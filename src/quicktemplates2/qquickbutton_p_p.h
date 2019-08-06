@@ -57,6 +57,8 @@ class QQuickButtonPrivate : public QQuickAbstractButtonPrivate
     Q_DECLARE_PUBLIC(QQuickButton)
 
 public:
+    QPalette defaultPalette() const override;
+
     bool flat = false;
     bool highlighted = false;
 };

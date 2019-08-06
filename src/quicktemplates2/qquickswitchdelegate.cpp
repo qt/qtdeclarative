@@ -85,6 +85,8 @@ public:
     void handleMove(const QPointF &point) override;
     void handleRelease(const QPointF &point) override;
 
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::ListView); }
+
     qreal position = 0;
 };
 
@@ -201,11 +203,6 @@ void QQuickSwitchDelegate::touchEvent(QTouchEvent *event)
 QFont QQuickSwitchDelegate::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::ListView);
-}
-
-QPalette QQuickSwitchDelegate::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::ListView);
 }
 
 void QQuickSwitchDelegate::mirrorChange()

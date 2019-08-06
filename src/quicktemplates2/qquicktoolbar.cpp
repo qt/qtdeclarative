@@ -99,6 +99,8 @@ QT_BEGIN_NAMESPACE
 class QQuickToolBarPrivate : public QQuickPanePrivate
 {
 public:
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::ToolBar); }
+
     QQuickToolBar::Position position = QQuickToolBar::Header;
 };
 
@@ -142,11 +144,6 @@ void QQuickToolBar::setPosition(Position position)
 QFont QQuickToolBar::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::ToolBar);
-}
-
-QPalette QQuickToolBar::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::ToolBar);
 }
 
 #if QT_CONFIG(accessibility)

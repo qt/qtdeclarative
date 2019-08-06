@@ -96,6 +96,8 @@ public:
     static QQuickMenu *menus_at(QQmlListProperty<QQuickMenu> *prop, int index);
     static void menus_clear(QQmlListProperty<QQuickMenu> *prop);
 
+    QPalette defaultPalette() const override;
+
     bool popupMode = false;
     bool triggering = false;
     QQmlComponent *delegate = nullptr;

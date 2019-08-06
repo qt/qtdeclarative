@@ -52,6 +52,7 @@
 #include <QtQuick/private/qquicktext_p_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuickTemplates2/private/qquickdeferredpointer_p_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 #if QT_CONFIG(accessibility)
 #include <QtGui/qaccessible.h>
@@ -97,15 +98,6 @@ public:
         updateFont(font);
     }
 
-    void resolvePalette();
-    void inheritPalette(const QPalette &palette);
-    void updatePalette(const QPalette &palette);
-    inline void setPalette_helper(const QPalette &palette) {
-        if (resolvedPalette.resolve() == palette.resolve() && resolvedPalette == palette)
-            return;
-        updatePalette(palette);
-    }
-
     void textChanged(const QString &text);
 
 #if QT_CONFIG(accessibility)
@@ -122,6 +114,8 @@ public:
     void itemImplicitHeightChanged(QQuickItem *item) override;
     void itemDestroyed(QQuickItem *item) override;
 
+    QPalette defaultPalette() const override;
+
     struct ExtraData {
         bool hasTopInset = false;
         bool hasLeftInset = false;
@@ -134,7 +128,6 @@ public:
         qreal rightInset = 0;
         qreal bottomInset = 0;
         QFont requestedFont;
-        QPalette requestedPalette;
     };
     QLazilyAllocated<ExtraData> extra;
 

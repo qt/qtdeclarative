@@ -53,6 +53,7 @@
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuickTemplates2/private/qquickpresshandler_p_p.h>
 #include <QtQuickTemplates2/private/qquickdeferredpointer_p_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 #include <QtQuickTemplates2/private/qquicktextfield_p.h>
 
@@ -98,15 +99,6 @@ public:
         updateFont(font);
     }
 
-    void resolvePalette();
-    void inheritPalette(const QPalette &palette);
-    void updatePalette(const QPalette &palette);
-    inline void setPalette_helper(const QPalette &palette) {
-        if (resolvedPalette.resolve() == palette.resolve() && resolvedPalette == palette)
-            return;
-        updatePalette(palette);
-    }
-
 #if QT_CONFIG(quicktemplates2_hover)
     void updateHoverEnabled(bool h, bool e);
 #endif
@@ -133,6 +125,8 @@ public:
     void itemImplicitHeightChanged(QQuickItem *item) override;
     void itemDestroyed(QQuickItem *item) override;
 
+    QPalette defaultPalette() const override;
+
 #if QT_CONFIG(quicktemplates2_hover)
     bool hovered = false;
     bool explicitHoverEnabled = false;
@@ -150,12 +144,10 @@ public:
         qreal rightInset = 0;
         qreal bottomInset = 0;
         QFont requestedFont;
-        QPalette requestedPalette;
     };
     QLazilyAllocated<ExtraData> extra;
 
     bool resizingBackground = false;
-    QPalette resolvedPalette;
     QQuickDeferredPointer<QQuickItem> background;
     QString placeholder;
     QColor placeholderColor;

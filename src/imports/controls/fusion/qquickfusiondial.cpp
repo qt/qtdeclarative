@@ -38,6 +38,8 @@
 
 #include <QtGui/qpainter.h>
 #include <QtGui/private/qmath_p.h>
+#include <QtQuick/private/qquickpalette_p.h>
+#include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -60,20 +62,6 @@ void QQuickFusionDial::setHighlight(bool highlight)
     update();
 }
 
-QPalette QQuickFusionDial::palette() const
-{
-    return m_palette;
-}
-
-void QQuickFusionDial::setPalette(const QPalette &palette)
-{
-    if (palette == m_palette)
-        return;
-
-    m_palette = palette;
-    update();
-}
-
 // based on QStyleHelper::drawDial()
 void QQuickFusionDial::paint(QPainter *painter)
 {
@@ -82,7 +70,7 @@ void QQuickFusionDial::paint(QPainter *painter)
     if (width <= 0 || height <= 0 || !isVisible())
         return;
 
-    QColor buttonColor = m_palette.button().color();
+    QColor buttonColor = QQuickItemPrivate::get(this)->palette()->button();
     const bool enabled = isEnabled();
     qreal r = qMin(width, height) / 2.0;
     r -= r/50;
@@ -137,7 +125,7 @@ void QQuickFusionDial::paint(QPainter *painter)
     painter->drawEllipse(br.adjusted(1, 1, -1, -1));
 
     if (m_highlight) {
-        QColor highlight = m_palette.highlight().color();
+        QColor highlight = QQuickItemPrivate::get(this)->palette()->highlight();
         highlight.setHsv(highlight.hue(),
                          qMin(160, highlight.saturation()),
                          qMax(230, highlight.value()));

@@ -68,6 +68,8 @@ public:
 
     void resizeContent() override;
 
+    QPalette defaultPalette() const override;
+
     QQuickSwipe swipe;
 };
 

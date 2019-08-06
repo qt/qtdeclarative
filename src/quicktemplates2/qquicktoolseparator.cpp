@@ -66,6 +66,8 @@ class QQuickToolSeparatorPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickToolSeparator)
 
 public:
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::ToolBar); }
+
     Qt::Orientation orientation = Qt::Vertical;
 };
 
@@ -134,11 +136,6 @@ bool QQuickToolSeparator::isVertical() const
 QFont QQuickToolSeparator::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::ToolBar);
-}
-
-QPalette QQuickToolSeparator::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::ToolBar);
 }
 
 #if QT_CONFIG(accessibility)

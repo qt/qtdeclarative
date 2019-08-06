@@ -52,7 +52,6 @@ T.Dial {
     background: DialImpl {
         implicitWidth: 100
         implicitHeight: 100
-        palette: control.palette
         highlight: control.visualFocus
     }
 
@@ -61,7 +60,6 @@ T.Dial {
         y: control.background.y + control.background.height / 2 - control.handle.height / 2
         width: control.width / 7
         height: control.height / 7
-        palette: control.palette
         transform: [
             Translate {
                 y: -Math.min(control.background.width, control.background.height) * 0.42 + control.handle.height

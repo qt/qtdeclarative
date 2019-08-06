@@ -267,6 +267,8 @@ public:
 
     static void hideOldPopup(QQuickPopup *popup);
 
+    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::ComboBox); }
+
     bool flat = false;
     bool down = false;
     bool hasDown = false;
@@ -1940,11 +1942,6 @@ void QQuickComboBox::localeChange(const QLocale &newLocale, const QLocale &oldLo
 QFont QQuickComboBox::defaultFont() const
 {
     return QQuickTheme::font(QQuickTheme::ComboBox);
-}
-
-QPalette QQuickComboBox::defaultPalette() const
-{
-    return QQuickTheme::palette(QQuickTheme::ComboBox);
 }
 
 #if QT_CONFIG(accessibility)

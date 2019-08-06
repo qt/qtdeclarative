@@ -121,7 +121,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(bool opened READ isOpened NOTIFY openedChanged FINAL REVISION 3)
     Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL REVISION 3)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL REVISION 3)
-    Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
+    Q_PRIVATE_PROPERTY(QQuickPopup::d_func(), QQuickPalette *palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged REVISION 3)
     // 2.5 (Qt 5.12)
     Q_PROPERTY(qreal horizontalPadding READ horizontalPadding WRITE setHorizontalPadding RESET resetHorizontalPadding NOTIFY horizontalPaddingChanged FINAL)
     Q_PROPERTY(qreal verticalPadding READ verticalPadding WRITE setVerticalPadding RESET resetVerticalPadding NOTIFY verticalPaddingChanged FINAL)
@@ -310,10 +310,6 @@ public:
     bool isEnabled() const;
     void setEnabled(bool enabled);
 
-    QPalette palette() const;
-    void setPalette(const QPalette &palette);
-    void resetPalette();
-
     // 2.5 (Qt 5.12)
     qreal horizontalPadding() const;
     void setHorizontalPadding(qreal padding);
@@ -400,6 +396,7 @@ Q_SIGNALS:
     Q_REVISION(3) void mirroredChanged();
     Q_REVISION(3) void enabledChanged();
     Q_REVISION(3) void paletteChanged();
+    Q_REVISION(3) void paletteCreated();
     // 2.5 (Qt 5.12)
     Q_REVISION(5) void horizontalPaddingChanged();
     Q_REVISION(5) void verticalPaddingChanged();
@@ -446,12 +443,10 @@ protected:
     virtual void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data);
     virtual void marginsChange(const QMarginsF &newMargins, const QMarginsF &oldMargins);
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
-    virtual void paletteChange(const QPalette &newPalette, const QPalette &oldPalette);
     virtual void spacingChange(qreal newSpacing, qreal oldSpacing);
     virtual void insetChange(const QMarginsF &newInset, const QMarginsF &oldInset);
 
     virtual QFont defaultFont() const;
-    virtual QPalette defaultPalette() const;
 
 #if QT_CONFIG(accessibility)
     virtual QAccessible::Role accessibleRole() const;

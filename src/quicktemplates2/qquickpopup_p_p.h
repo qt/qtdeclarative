@@ -50,11 +50,13 @@
 
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 #include <QtCore/private/qobject_p.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/private/qquicktransitionmanager_p_p.h>
+#include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -81,7 +83,10 @@ private:
     QQuickPopupPrivate *popup = nullptr;
 };
 
-class Q_AUTOTEST_EXPORT QQuickPopupPrivate : public QObjectPrivate, public QQuickItemChangeListener
+class Q_AUTOTEST_EXPORT QQuickPopupPrivate
+    : public QObjectPrivate
+    , public QQuickItemChangeListener
+    , public QQuickPaletteProviderPrivateBase<QQuickPopup, QQuickPopupPrivate>
 {
     Q_DECLARE_PUBLIC(QQuickPopup)
 
@@ -143,6 +148,8 @@ public:
 
     void setWindow(QQuickWindow *window);
     void itemDestroyed(QQuickItem *item) override;
+
+    QPalette defaultPalette() const override;
 
     enum TransitionState {
         NoTransition, EnterTransition, ExitTransition

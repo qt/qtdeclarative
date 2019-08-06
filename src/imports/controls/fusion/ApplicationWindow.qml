@@ -43,7 +43,7 @@ import QtQuick.Controls.Fusion.impl 2.12
 T.ApplicationWindow {
     id: window
 
-    color: palette.window
+    color: window.palette.window
 
     overlay.modal: Rectangle {
         color: Fusion.topShadow

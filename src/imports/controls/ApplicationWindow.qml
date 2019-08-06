@@ -43,7 +43,7 @@ import QtQuick.Templates 2.12 as T
 T.ApplicationWindow {
     id: window
 
-    color: palette.window
+    color: window.palette.window
 
     overlay.modal: Rectangle {
         color: Color.transparent(window.palette.shadow, 0.5)
