@@ -8956,6 +8956,7 @@ void tst_QQuickListView::addOnCompleted()
                 y = 9999999;
             } else {
                 const qreal newY = item->y();
+                QVERIFY(newY != 9999999); // once we could not find an item, we shouldn' find any further ones
                 QVERIFY2(newY > y, objName.toUtf8().constData());
                 y = newY;
             }
