@@ -1,0 +1,80 @@
+# Generated from qqmlecmascript.pro.
+
+#####################################################################
+## tst_qqmlecmascript Test:
+#####################################################################
+
+# Collect test data
+
+file(GLOB test_data_glob
+    LIST_DIRECTORIES true
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    "data/*")
+list(APPEND test_data ${test_data_glob})
+
+add_qt_test(tst_qqmlecmascript
+    GUI
+    SOURCES
+        ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
+        ../../shared/util.cpp ../../shared/util.h
+        testtypes.cpp testtypes.h
+        tst_qqmlecmascript.cpp
+    INCLUDE_DIRECTORIES
+        ../../shared
+    LIBRARIES
+        Qt::CorePrivate
+        Qt::GuiPrivate
+        Qt::QmlPrivate
+    PUBLIC_LIBRARIES
+        Qt::Gui
+        Qt::Network
+        Qt::Qml
+    TESTDATA ${test_data}
+)
+
+# Resources:
+# special case begin
+set_source_files_properties(
+    data/include.js
+    data/include.qml
+    data/js/include2.js
+    data/js/include3.js
+    PROPERTIES
+    QT_SKIP_QUICKCOMPILER 1
+)
+
+# special case end
+add_qt_resource(tst_qqmlecmascript "qqmlecmascript"
+    PREFIX
+        "/"
+    FILES
+        data/include.js
+        data/include.qml
+        data/js/include2.js
+        data/js/include3.js
+)
+
+
+#### Keys ignored in scope 1:.:.:qqmlecmascript.pro:<TRUE>:
+# CONFIG = "testcase"
+
+## Scopes:
+#####################################################################
+
+#### Keys ignored in scope 2:.:.:qqmlecmascript.pro:APPLE_OSX:
+# CONFIG = "-app_bundle"
+
+extend_target(tst_qqmlecmascript CONDITION TARGET Qt::Widgets
+    PUBLIC_LIBRARIES
+        Qt::Widgets
+)
+
+extend_target(tst_qqmlecmascript CONDITION ANDROID OR APPLE_IOS
+    DEFINES
+        QT_QMLTEST_DATADIR=\\\":/data\\\"
+)
+
+extend_target(tst_qqmlecmascript CONDITION NOT ANDROID AND NOT APPLE_IOS
+    DEFINES
+        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
+)

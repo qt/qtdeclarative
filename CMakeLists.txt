@@ -8,4 +8,5 @@ project(QtDeclarative
 )
 
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui Widgets Network)
+find_package(Qt6 ${PROJECT_VERSION} CONFIG COMPONENTS Sql)
 qt_build_repo()

@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qt_test(tst_qjsvalueiterator
+    GUI
     SOURCES
         tst_qjsvalueiterator.cpp
     PUBLIC_LIBRARIES

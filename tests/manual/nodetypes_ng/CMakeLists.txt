@@ -1,0 +1,60 @@
+# Generated from nodetypes_ng.pro.
+
+#####################################################################
+## nodetypes_ng Binary:
+#####################################################################
+
+add_qt_executable(nodetypes_ng
+    GUI
+    SOURCES
+        nodetypes_ng.cpp
+    PUBLIC_LIBRARIES
+        Qt::Gui
+        Qt::Qml
+        Qt::Quick
+)
+
+# Resources:
+add_qt_resource(nodetypes_ng "nodetypes_ng"
+    PREFIX
+        "/"
+    FILES
+        AtlasedImages.qml
+        CompressedImages.qml
+        DistanceFieldText.qml
+        Images.qml
+        Layers.qml
+        LotsOfNodes.qml
+        LotsOfRects.qml
+        MoreWindows.qml
+        MultiClipRects.qml
+        Painter.qml
+        Rects.qml
+        ShaderEffect.qml
+        ShaderEffectNoAnim.qml
+        ShaderEffectSource.qml
+        SimpleRect.qml
+        Text.qml
+        arrow-down.png
+        arrow-up.png
+        blacknwhite.png
+        car_etc2_nomips.ktx
+        face-smile.png
+        main.qml
+        minus-sign.png
+        plus-sign.png
+        qt.png
+        qt_bc1_10mips.ktx
+        shadow_pass1.frag.qsb
+        shadow_pass1_legacy_gl.frag
+        shadow_pass2.frag.qsb
+        shadow_pass2_legacy_gl.frag
+        wobble.frag.qsb
+        wobble.vert.qsb
+        wobble_legacy_gl.frag
+        wobble_legacy_gl.vert
+)
+
+
+#### Keys ignored in scope 1:.:.:nodetypes_ng.pro:<TRUE>:
+# OTHER_FILES = "main.qml" "SimpleRect.qml" "Rects.qml" "LotsOfRects.qml"

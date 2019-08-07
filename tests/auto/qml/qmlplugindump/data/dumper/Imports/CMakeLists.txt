@@ -1,0 +1,40 @@
+# Generated from imports.pro.
+
+#####################################################################
+## Imports Plugin:
+#####################################################################
+
+add_qt_plugin(Imports
+# special case begin
+    TYPE qml_plugin
+    OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+# special case end
+    SOURCES
+        imports.cpp imports.h
+        imports_plugin.cpp imports_plugin.h
+    PUBLIC_LIBRARIES
+        Qt::Core
+        Qt::Gui
+        Qt::Qml
+)
+
+#### Keys ignored in scope 1:.:.:imports.pro:<TRUE>:
+# CONFIG = "qt" "plugin" "-debug_and_release_target"
+# TEMPLATE = "lib"
+
+## Scopes:
+#####################################################################
+
+#### Keys ignored in scope 2:.:.:imports.pro:NOT build_pass AND QT_FEATURE_debug_and_release:
+# CONFIG = "release"
+
+#### Keys ignored in scope 3:.:.:imports.pro:NOT _PRO_FILE_PWD____equals____ss_OUT_PWD:
+# COPIES = "cp"
+# cp.files = "qmldir" "plugins.qmltypes" "CompositeImports.qml"
+# cp.path = "$$OUT_PWD"
+
+# special case begin
+get_target_property(binary_dir Imports BINARY_DIR)
+file(COPY qmldir plugins.qmltypes CompositeImports.qml
+    DESTINATION ${binary_dir}
+)

@@ -1,0 +1,63 @@
+# Generated from qquickfolderlistmodel.pro.
+
+#####################################################################
+## tst_qquickfolderlistmodel Test:
+#####################################################################
+
+# Collect test data
+
+file(GLOB test_data_glob
+    LIST_DIRECTORIES true
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    "data/*")
+list(APPEND test_data ${test_data_glob})
+
+add_qt_test(tst_qquickfolderlistmodel
+    GUI
+    SOURCES
+        ../../shared/util.cpp ../../shared/util.h
+        tst_qquickfolderlistmodel.cpp
+    INCLUDE_DIRECTORIES
+        ../../shared
+    LIBRARIES
+        Qt::CorePrivate
+        Qt::GuiPrivate
+        Qt::QmlPrivate
+    PUBLIC_LIBRARIES
+        Qt::Gui
+        Qt::Qml
+    TESTDATA ${test_data}
+)
+
+# special case begin
+set_source_files_properties(data/txtdir/hello.txt PROPERTIES alias "txtdir/hello.txt")
+# special case end
+# Resources:
+add_qt_resource(tst_qquickfolderlistmodel "introspect"
+    PREFIX
+        "/myprefix/subdir"
+    BASE
+        "data"
+    FILES
+        txtdir/hello.txt
+)
+
+
+#### Keys ignored in scope 1:.:.:qquickfolderlistmodel.pro:<TRUE>:
+# CONFIG = "testcase"
+
+## Scopes:
+#####################################################################
+
+#### Keys ignored in scope 2:.:.:qquickfolderlistmodel.pro:APPLE_OSX:
+# CONFIG = "-app_bundle"
+
+extend_target(tst_qquickfolderlistmodel CONDITION ANDROID OR APPLE_IOS
+    DEFINES
+        QT_QMLTEST_DATADIR=\\\":/data\\\"
+)
+
+extend_target(tst_qquickfolderlistmodel CONDITION NOT ANDROID AND NOT APPLE_IOS
+    DEFINES
+        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
+)

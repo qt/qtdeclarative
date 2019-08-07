@@ -1,0 +1,24 @@
+# Generated from plugin.2.pro.
+
+#####################################################################
+## plugin.2 Plugin:
+#####################################################################
+
+add_qt_plugin(plugin.2
+    OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/AutoTestQmlPluginType.2"
+    SOURCES
+        plugin.cpp
+    LIBRARIES
+        Qt::CorePrivate
+        Qt::GuiPrivate
+        Qt::QmlPrivate
+    PUBLIC_LIBRARIES
+        Qt::Core
+        Qt::Gui
+        Qt::Qml
+)
+
+#### Keys ignored in scope 1:.:.:plugin.2.pro:<TRUE>:
+# CONFIG = "plugin"
+# IMPORT_FILES = "qmldir"
+# TEMPLATE = "lib"

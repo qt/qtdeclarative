@@ -4,7 +4,16 @@
 ## tst_qjsonbinding Test:
 #####################################################################
 
+# Collect test data
+
+file(GLOB test_data_glob
+    LIST_DIRECTORIES true
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    "data/*")
+list(APPEND test_data ${test_data_glob})
+
 add_qt_test(tst_qjsonbinding
+    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qjsonbinding.cpp
@@ -15,11 +24,11 @@ add_qt_test(tst_qjsonbinding
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Qml
+    TESTDATA ${test_data}
 )
 
 #### Keys ignored in scope 1:.:.:qjsonbinding.pro:<TRUE>:
 # CONFIG = "testcase"
-# TESTDATA = "data/*"
 
 ## Scopes:
 #####################################################################
@@ -34,5 +43,5 @@ extend_target(tst_qjsonbinding CONDITION ANDROID OR APPLE_IOS
 
 extend_target(tst_qjsonbinding CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
-        QT_QMLTEST_DATADIR=\\\"/data\\\"
+        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

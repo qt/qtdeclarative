@@ -1,0 +1,40 @@
+# Generated from json.pro.
+
+#####################################################################
+## json Binary:
+#####################################################################
+
+add_qt_executable(json
+    GUI
+    SOURCES
+        main.cpp
+    PUBLIC_LIBRARIES
+        Qt::Gui
+        Qt::Qml
+        Qt::Quick
+)
+
+# Resources:
+add_qt_resource(json "qmake_immediate"
+    PREFIX
+        "/"
+    FILES
+        JsonData.js
+        main.qml
+)
+
+
+#### Keys ignored in scope 1:.:.:json.pro:<TRUE>:
+# TEMPLATE = "app"
+
+## Scopes:
+#####################################################################
+
+#### Keys ignored in scope 2:.:.:json.pro:QNX:
+# target.path = "/tmp/$${TARGET}/bin"
+
+#### Keys ignored in scope 4:.:.:json.pro:UNIX AND NOT ANDROID:
+# target.path = "/opt/$${TARGET}/bin"
+
+#### Keys ignored in scope 5:.:.:json.pro:NOT target.path_ISEMPTY:
+# INSTALLS = "target"

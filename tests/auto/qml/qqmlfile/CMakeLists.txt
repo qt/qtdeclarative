@@ -5,9 +5,11 @@
 #####################################################################
 
 add_qt_test(tst_qqmlfile
+    GUI
     SOURCES
         tst_qqmlfile.cpp
     PUBLIC_LIBRARIES
+        Qt::Gui
         Qt::Qml
 )
 
