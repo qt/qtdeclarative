@@ -2665,7 +2665,8 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch) // RHI
 {
     // Note: No use of the clip-related speparate m_current* vars is allowed
     // here. All stored in batch->clipState instead. To collect state during
-    // renderBatches(), m_currentClipState is used.
+    // the prepare steps, m_currentClipState is used. It should not be used in
+    // the render steps afterwards.
 
     // The stenciling logic is slightly different from the legacy GL path as we
     // cannot just randomly clear the stencil buffer. We now put all clip
@@ -4089,7 +4090,7 @@ void Renderer::renderBatches()
                 if (b->merged)
                     ok = prepareRenderMergedBatch(b, &renderBatch);
                 else if (b->isRenderNode)
-                    ok = false; // ###
+                    ok = prepareRhiRenderNode(b, &renderBatch);
                 else
                     ok = prepareRenderUnmergedBatch(b, &renderBatch);
                 if (ok)
@@ -4120,7 +4121,7 @@ void Renderer::renderBatches()
             if (renderBatch->batch->merged)
                 renderMergedBatch(renderBatch);
             else if (renderBatch->batch->isRenderNode)
-                Q_UNREACHABLE(); // ###
+                renderRhiRenderNode(renderBatch->batch);
             else
                 renderUnmergedBatch(renderBatch);
         }
@@ -4359,7 +4360,7 @@ struct RenderNodeState : public QSGRenderNode::RenderState
     bool m_stencilEnabled;
 };
 
-void Renderer::renderRenderNode(Batch *batch)
+void Renderer::renderRenderNode(Batch *batch) // legacy (GL-only)
 {
     if (Q_UNLIKELY(debug_render()))
         qDebug() << " -" << batch << "rendernode";
@@ -4473,6 +4474,105 @@ void Renderer::renderRenderNode(Batch *batch)
 
     if (changes & QSGRenderNode::RenderTargetState)
         glBindFramebuffer(GL_FRAMEBUFFER, prevFbo);
+}
+
+bool Renderer::prepareRhiRenderNode(Batch *batch, PreparedRenderBatch *renderBatch) // split prepare-render (RHI only)
+{
+    if (Q_UNLIKELY(debug_render()))
+        qDebug() << " -" << batch << "rendernode";
+
+    Q_ASSERT(batch->first->isRenderNode);
+    RenderNodeElement *e = static_cast<RenderNodeElement *>(batch->first);
+
+    setActiveRhiShader(nullptr, nullptr);
+
+    QSGNode *clip = e->renderNode->parent();
+    QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(e->renderNode);
+    rd->m_clip_list = nullptr;
+    while (clip != rootNode()) {
+        if (clip->type() == QSGNode::ClipNodeType) {
+            rd->m_clip_list = static_cast<QSGClipNode *>(clip);
+            break;
+        }
+        clip = clip->parent();
+    }
+
+    updateClipState(rd->m_clip_list, batch);
+
+    renderBatch->batch = batch;
+    renderBatch->sms = nullptr;
+
+    return true;
+}
+
+void Renderer::renderRhiRenderNode(const Batch *batch) // split prepare-render (RHI only)
+{
+    if (batch->clipState.type & ClipState::StencilClip)
+        enqueueStencilDraw(batch);
+
+    RenderNodeElement *e = static_cast<RenderNodeElement *>(batch->first);
+    QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(e->renderNode);
+
+    QMatrix4x4 pm = projectionMatrix();
+    if (m_useDepthBuffer) {
+        pm(2, 2) = m_zRange;
+        pm(2, 3) = 1.0f - e->order * m_zRange;
+    }
+
+    RenderNodeState state;
+    state.m_projectionMatrix = &pm;
+    const std::array<int, 4> scissor = batch->clipState.scissor.scissor();
+    state.m_scissorRect = QRect(scissor[0], scissor[1], scissor[2], scissor[3]);
+    state.m_stencilValue = batch->clipState.stencilRef;
+    state.m_scissorEnabled = batch->clipState.type & ClipState::ScissorClip;
+    state.m_stencilEnabled = batch->clipState.type & ClipState::StencilClip;
+
+    QSGNode *xform = e->renderNode->parent();
+    QMatrix4x4 matrix;
+    QSGNode *root = rootNode();
+    if (e->root) {
+        matrix = qsg_matrixForRoot(e->root);
+        root = e->root->sgNode;
+    }
+    while (xform != root) {
+        if (xform->type() == QSGNode::TransformNodeType) {
+            matrix = matrix * static_cast<QSGTransformNode *>(xform)->combinedMatrix();
+            break;
+        }
+        xform = xform->parent();
+    }
+    rd->m_matrix = &matrix;
+
+    QSGNode *opacity = e->renderNode->parent();
+    rd->m_opacity = 1.0;
+    while (opacity != rootNode()) {
+        if (opacity->type() == QSGNode::OpacityNodeType) {
+            rd->m_opacity = static_cast<QSGOpacityNode *>(opacity)->combinedOpacity();
+            break;
+        }
+        opacity = opacity->parent();
+    }
+
+    const QSGRenderNode::StateFlags changes = e->renderNode->changedStates();
+
+    QRhiCommandBuffer *cb = commandBuffer();
+    cb->beginExternal();
+    e->renderNode->render(&state);
+    cb->endExternal();
+
+    rd->m_matrix = nullptr;
+    rd->m_clip_list = nullptr;
+
+    if (changes & QSGRenderNode::ViewportState)
+        m_pstate.viewportSet = false;
+
+    if (changes & QSGRenderNode::ScissorState)
+        m_pstate.scissorSet = false;
+
+    // Do not bother with RenderTargetState. Where applicable, endExternal()
+    // ensures the correct target is rebound. For others (like Vulkan) it makes
+    // no sense since render() could not possibly do that on our command buffer
+    // which is in renderpass recording state.
 }
 
 void Renderer::setCustomRenderMode(const QByteArray &mode)

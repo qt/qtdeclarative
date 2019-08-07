@@ -71,23 +71,29 @@ QSGNode *CustomRenderItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
         if (!ri)
             return nullptr;
         switch (ri->graphicsApi()) {
-            case QSGRendererInterface::OpenGL:
+        case QSGRendererInterface::OpenGL:
+            Q_FALLTHROUGH();
+        case QSGRendererInterface::OpenGLRhi:
 #if QT_CONFIG(opengl)
-                n = new OpenGLRenderNode(this);
-                break;
+            n = new OpenGLRenderNode(this);
 #endif
-            case QSGRendererInterface::Direct3D12:
-#if QT_CONFIG(d3d12)
-                n = new D3D12RenderNode(this);
-                break;
-#endif
-            case QSGRendererInterface::Software:
-                n = new SoftwareRenderNode(this);
-                break;
+            break;
 
-            default:
-                return nullptr;
+        case QSGRendererInterface::Direct3D12: // ### Qt 6: remove
+#if QT_CONFIG(d3d12)
+            n = new D3D12RenderNode(this);
+#endif
+            break;
+
+        case QSGRendererInterface::Software:
+            n = new SoftwareRenderNode(this);
+            break;
+
+        default:
+            break;
         }
+        if (!n)
+            qWarning("QSGRendererInterface reports unknown graphics API %d", ri->graphicsApi());
     }
 
     return n;

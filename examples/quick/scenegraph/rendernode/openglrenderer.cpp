@@ -148,17 +148,33 @@ void OpenGLRenderNode::render(const RenderState *state)
     m_program->enableAttributeArray(0);
     m_program->enableAttributeArray(1);
 
-    // Note that clipping (scissor or stencil) is ignored in this example.
+    // We are prepared both for the legacy (direct OpenGL) and the modern
+    // (abstracted by RHI) OpenGL scenegraph. So set all the states that are
+    // important to us.
+
+    f->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
     f->glEnable(GL_BLEND);
     f->glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Clip support.
+    if (state->scissorEnabled()) {
+        f->glEnable(GL_SCISSOR_TEST);
+        const QRect r = state->scissorRect(); // already bottom-up
+        f->glScissor(r.x(), r.y(), r.width(), r.height());
+    }
+    if (state->stencilEnabled()) {
+        f->glEnable(GL_STENCIL_TEST);
+        f->glStencilFunc(GL_EQUAL, state->stencilValue(), 0xFF);
+        f->glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    }
 
     f->glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 QSGRenderNode::StateFlags OpenGLRenderNode::changedStates() const
 {
-    return BlendState;
+    return BlendState | ScissorState | StencilState;
 }
 
 QSGRenderNode::RenderingFlags OpenGLRenderNode::flags() const
