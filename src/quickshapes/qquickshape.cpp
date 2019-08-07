@@ -969,6 +969,11 @@ void QQuickShape::itemChange(ItemChange change, const ItemChangeData &data)
     // sync may have been deferred; do it now if the item became visible
     if (change == ItemVisibleHasChanged && data.boolValue)
         d->_q_shapePathChanged();
+    else if (change == QQuickItem::ItemSceneChange) {
+        for (int i = 0; i < d->sp.count(); ++i)
+            QQuickShapePathPrivate::get(d->sp[i])->dirty = QQuickShapePathPrivate::DirtyAll;
+        d->_q_shapePathChanged();
+    }
 
     QQuickItem::itemChange(change, data);
 }
