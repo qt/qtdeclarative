@@ -378,6 +378,19 @@ void QSGPlainTexturePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch
         q->m_texture_size = tmp.size();
     }
 
+    if ((q->mipmapFiltering() != QSGTexture::None
+            || q->horizontalWrapMode() != QSGTexture::ClampToEdge
+            || q->verticalWrapMode() != QSGTexture::ClampToEdge)
+            && !rhi->isFeatureSupported(QRhi::NPOTTextureRepeat))
+    {
+        const int w = qNextPowerOfTwo(tmp.width() - 1);
+        const int h = qNextPowerOfTwo(tmp.height() - 1);
+        if (tmp.width() != w || tmp.height() != h) {
+            tmp = tmp.scaled(w, h, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+            q->m_texture_size = tmp.size();
+        }
+    }
+
     bool needsRebuild = q->m_texture && q->m_texture->pixelSize() != q->m_texture_size;
 
     if (mipmappingChanged) {
