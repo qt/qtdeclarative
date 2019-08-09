@@ -16,13 +16,27 @@ add_qt_tool(qml
         Qt::Qml
 )
 
-# Resources:
-add_qt_resource(qml "qml" PREFIX "qt-project.org/QmlRuntime" FILES
-    conf/content/resizeItemToWindow.qml
-    conf/content/resizeWindowToItem.qml
+# special case begin
+set_source_files_properties(
     conf/default.qml
     conf/resizeToItem.qml
-    resources/qml-64.png)
+    conf/content/resizeItemToWindow.qml
+    conf/content/resizeWindowToItem.qml
+    PROPERTIES QT_SKIP_QUICKCOMPILER 1
+)
+# special case end
+
+# Resources:
+add_qt_resource(qml "qml"
+    PREFIX
+        "/qt-project.org/QmlRuntime"
+    FILES
+        conf/content/resizeItemToWindow.qml
+        conf/content/resizeWindowToItem.qml
+        conf/default.qml
+        conf/resizeToItem.qml
+        resources/qml-64.png
+)
 
 
 #### Keys ignored in scope 1:.:.:qml.pro:<TRUE>:
@@ -46,7 +60,7 @@ extend_target(qml CONDITION TARGET Qt::Widgets
 #### Keys ignored in scope 4:.:.:qml.pro:WIN32:
 # RC_ICONS = "resources/qml.ico"
 
-#### Keys ignored in scope 5:.:.:qml.pro:APPLE_OSX:
+#### Keys ignored in scope 5:.:.:qml.pro:APPLE:
 # ICON = "resources/qml.icns"
 # OTHER_FILES = "resources/Info.plist"
 # QMAKE_INFO_PLIST = "resources/Info.plist"
