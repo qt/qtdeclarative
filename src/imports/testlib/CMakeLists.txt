@@ -24,21 +24,21 @@ add_qml_module(qmltestplugin
         Qt::Test
 )
 
-# QML Files
+set(qml_files
+    TestCase.qml
+    SignalSpy.qml
+    testlogger.js
+)
+
 add_qt_resource(qmltestplugin qmake_QtTest
     PREFIX
         "/qt-project.org/imports/QtTest"
     FILES
-        TestCase.qml
-        SignalSpy.qml
-        testlogger.js
+        ${qml_files}
 )
 
 qt_install_qml_files(qmltestplugin
-    FILES
-        TestCase.qml
-        SignalSpy.qml
-        testlogger.js
+    FILES ${qml_files}
 )
 
 

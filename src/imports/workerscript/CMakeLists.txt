@@ -6,8 +6,8 @@
 
 add_qml_module(workerscriptplugin
     CPP_PLUGIN
-    URI "QtQml.WorkerScript.2"
     TARGET_PATH "QtQml/WorkerScript.2"
+    URI "QtQml.WorkerScript"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
