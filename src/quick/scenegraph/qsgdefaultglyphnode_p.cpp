@@ -687,11 +687,12 @@ public:
 
 // ***** common material stuff
 
-QSGTextMaskMaterial::QSGTextMaskMaterial(QSGRenderContext *rc, const QRawFont &font, QFontEngine::GlyphFormat glyphFormat)
+QSGTextMaskMaterial::QSGTextMaskMaterial(QSGRenderContext *rc, const QVector4D &color, const QRawFont &font, QFontEngine::GlyphFormat glyphFormat)
     : m_rc(qobject_cast<QSGDefaultRenderContext *>(rc))
     , m_texture(nullptr)
     , m_glyphCache(nullptr)
     , m_font(font)
+    , m_color(color)
 {
     init(glyphFormat);
 }
@@ -699,6 +700,19 @@ QSGTextMaskMaterial::QSGTextMaskMaterial(QSGRenderContext *rc, const QRawFont &f
 QSGTextMaskMaterial::~QSGTextMaskMaterial()
 {
     delete m_texture;
+}
+
+void QSGTextMaskMaterial::setColor(const QVector4D &color)
+{
+    if (m_color == color)
+        return;
+
+    m_color = color;
+
+    // If it is an RGB cache, then the pen color is actually part of the cache key
+    // so it has to be updated
+    if (m_glyphCache != nullptr && m_glyphCache->glyphFormat() == QFontEngine::Format_ARGB)
+        updateCache(QFontEngine::Format_ARGB);
 }
 
 void QSGTextMaskMaterial::init(QFontEngine::GlyphFormat glyphFormat)
@@ -711,6 +725,11 @@ void QSGTextMaskMaterial::init(QFontEngine::GlyphFormat glyphFormat)
     Q_ASSERT(m_rc);
     m_rhi = m_rc->rhi();
 
+    updateCache(glyphFormat);
+}
+
+void QSGTextMaskMaterial::updateCache(QFontEngine::GlyphFormat glyphFormat)
+{
     // The following piece of code will read/write to the font engine's caches,
     // potentially from different threads. However, this is safe because this
     // code is only called from QQuickItem::updatePaintNode() which is called
@@ -745,13 +764,13 @@ void QSGTextMaskMaterial::init(QFontEngine::GlyphFormat glyphFormat)
         if (!fontEngine->supportsTransformation(glyphCacheTransform))
             glyphCacheTransform = QTransform();
 
-        m_glyphCache = fontEngine->glyphCache(cacheKey, glyphFormat, glyphCacheTransform);
-
+        QColor color = glyphFormat == QFontEngine::Format_ARGB ? QColor::fromRgbF(m_color.x(), m_color.y(), m_color.z(), m_color.w()) : QColor();
+        m_glyphCache = fontEngine->glyphCache(cacheKey, glyphFormat, glyphCacheTransform, color);
         if (!m_glyphCache || int(m_glyphCache->glyphFormat()) != glyphFormat) {
             if (m_rhi)
-                m_glyphCache = new QSGRhiTextureGlyphCache(m_rhi, glyphFormat, glyphCacheTransform);
+                m_glyphCache = new QSGRhiTextureGlyphCache(m_rhi, glyphFormat, glyphCacheTransform, color);
             else
-                m_glyphCache = new QOpenGLTextureGlyphCache(glyphFormat, glyphCacheTransform);
+                m_glyphCache = new QOpenGLTextureGlyphCache(glyphFormat, glyphCacheTransform, color);
 
             fontEngine->setGlyphCache(cacheKey, m_glyphCache.data());
             m_rc->registerFontengineForCleanup(fontEngine);
@@ -963,7 +982,7 @@ bool QSGTextMaskMaterial::ensureUpToDate()
 
 
 QSGStyledTextMaterial::QSGStyledTextMaterial(QSGRenderContext *rc, const QRawFont &font)
-    : QSGTextMaskMaterial(rc, font, QFontEngine::Format_A8)
+    : QSGTextMaskMaterial(rc, QVector4D(), font, QFontEngine::Format_A8)
 {
 }
 

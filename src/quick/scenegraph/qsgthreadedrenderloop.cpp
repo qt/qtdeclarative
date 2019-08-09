@@ -686,10 +686,11 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     syncResultedInChanges = false;
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
 
-    bool repaintRequested = (pendingUpdate & RepaintRequest) || d->customRenderStage || grabImage;
-    bool syncRequested = (pendingUpdate & SyncRequest) || grabImage;
-    bool exposeRequested = (pendingUpdate & ExposeRequest) == ExposeRequest;
+    const bool repaintRequested = (pendingUpdate & RepaintRequest) || d->customRenderStage || grabImage;
+    const bool syncRequested = (pendingUpdate & SyncRequest) || grabImage;
+    const bool exposeRequested = (pendingUpdate & ExposeRequest) == ExposeRequest;
     pendingUpdate = 0;
+    const bool grabRequested = grabImage != nullptr;
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     // Begin the frame before syncing -> sync is where we may invoke
@@ -708,7 +709,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
         const QSize previousOutputSize = cd->swapchain->currentPixelSize();
         if (previousOutputSize != effectiveOutputSize || cd->swapchainJustBecameRenderable) {
             if (cd->swapchainJustBecameRenderable)
-                qDebug("just became exposed");
+                qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "just became exposed");
             cd->swapchainJustBecameRenderable = false;
             cd->depthStencilForSwapchain->setPixelSize(effectiveOutputSize);
 
@@ -719,7 +720,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
             if (!cd->hasActiveSwapchain)
                 qWarning("Failed to build or resize swapchain");
             else
-                qDebug() << "rhi swapchain size" << effectiveOutputSize;
+                qCDebug(QSG_LOG_RENDERLOOP) << "rhi swapchain size" << effectiveOutputSize;
         }
 
         Q_ASSERT(rhi == cd->rhi);
@@ -732,13 +733,26 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
             // try again later
             if (frameResult == QRhi::FrameOpDeviceLost || frameResult == QRhi::FrameOpSwapChainOutOfDate)
                 QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));
+
+            // Before returning we need to ensure the same wake up logic that
+            // would have happened if beginFrame() had suceeded.
+            if (exposeRequested) {
+                qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- bailing out due to failed beginFrame, wake Gui");
+                waitCondition.wakeOne();
+                mutex.unlock();
+            } else if (syncRequested && !grabRequested) {
+                qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- bailing out due to failed beginFrame, wake Gui like sync would do");
+                mutex.lock();
+                waitCondition.wakeOne();
+                mutex.unlock();
+            }
             return;
         }
     }
 
     if (syncRequested) {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- updatePending, doing sync");
-        sync(exposeRequested, grabImage != nullptr);
+        sync(exposeRequested, grabRequested);
     }
 #ifndef QSG_NO_RENDER_TIMING
     if (profileFrames)
@@ -888,6 +902,10 @@ void QSGRenderThread::run()
         QQuickProfiler::registerAnimationCallback();
 
     while (active) {
+#ifdef Q_OS_DARWIN
+        QMacAutoReleasePool frameReleasePool;
+#endif
+
         if (window) {
             if (enableRhi) {
                 if (!rhi) {
@@ -922,7 +940,7 @@ void QSGRenderThread::run()
                                                                         QRhiRenderBuffer::UsedWithSwapChainOnly);
                     cd->swapchain->setWindow(window);
                     cd->swapchain->setDepthStencil(cd->depthStencilForSwapchain);
-                    qDebug("MSAA sample count for the swapchain is %d", rhiSampleCount);
+                    qCDebug(QSG_LOG_INFO, "MSAA sample count for the swapchain is %d", rhiSampleCount);
                     cd->swapchain->setSampleCount(rhiSampleCount);
                     cd->swapchain->setFlags(flags);
                     cd->rpDescForSwapchain = cd->swapchain->newCompatibleRenderPassDescriptor();

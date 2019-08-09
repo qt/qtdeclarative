@@ -249,14 +249,6 @@ QSGRenderLoop *QSGRenderLoop::instance()
                     loopType = BasicRenderLoop;
 
                 switch (rhiSupport->rhiBackend()) {
-                case QRhi::Vulkan:
-#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
-                    // ### to be investigated (Mesa/Gnome deadlocks on
-                    // resize with threaded+Vulkan (but not threaded+GL))
-                    loopType = BasicRenderLoop;
-#endif
-                    break;
-
                 case QRhi::D3D11:
                     // D3D11 is forced to 'basic' always for now. The threaded loop's model may
                     // not be suitable for DXGI due to the possibility of having the main
@@ -572,7 +564,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
                                                             QRhiRenderBuffer::UsedWithSwapChainOnly);
         cd->swapchain->setWindow(window);
         cd->swapchain->setDepthStencil(cd->depthStencilForSwapchain);
-        qDebug("MSAA sample count for the swapchain is %d", rhiSampleCount);
+        qCDebug(QSG_LOG_INFO, "MSAA sample count for the swapchain is %d", rhiSampleCount);
         cd->swapchain->setSampleCount(rhiSampleCount);
         cd->swapchain->setFlags(flags);
         cd->rpDescForSwapchain = cd->swapchain->newCompatibleRenderPassDescriptor();
@@ -637,7 +629,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         const QSize previousOutputSize = cd->swapchain->currentPixelSize();
         if (previousOutputSize != effectiveOutputSize || cd->swapchainJustBecameRenderable) {
             if (cd->swapchainJustBecameRenderable)
-                qDebug("just became exposed");
+                qCDebug(QSG_LOG_RENDERLOOP, "just became exposed");
             cd->swapchainJustBecameRenderable = false;
             cd->depthStencilForSwapchain->setPixelSize(effectiveOutputSize);
 
@@ -648,7 +640,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             if (!cd->hasActiveSwapchain)
                 qWarning("Failed to build or resize swapchain");
             else
-                qDebug() << "rhi swapchain size" << effectiveOutputSize;
+                qCDebug(QSG_LOG_RENDERLOOP) << "rhi swapchain size" << effectiveOutputSize;
         }
 
         Q_ASSERT(rhi == cd->rhi);

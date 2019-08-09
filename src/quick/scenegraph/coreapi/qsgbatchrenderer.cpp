@@ -59,6 +59,9 @@
 #include <private/qquickprofiler_p.h>
 #include "qsgmaterialrhishader_p.h"
 
+#include "qsgopenglvisualizer_p.h"
+#include "qsgrhivisualizer_p.h"
+
 #include <algorithm>
 
 #ifndef GL_DOUBLE
@@ -145,7 +148,7 @@ static inline uint aligned(uint v, uint byteAlign)
     return (v + byteAlign - 1) & ~(byteAlign - 1);
 }
 
-static inline QRhiVertexInputAttribute::Format vertexInputFormat(const QSGGeometry::Attribute &a)
+QRhiVertexInputAttribute::Format qsg_vertexInputFormat(const QSGGeometry::Attribute &a)
 {
     switch (a.type) {
     case QSGGeometry::FloatType:
@@ -193,7 +196,7 @@ static QRhiVertexInputLayout calculateVertexInputLayout(const QSGMaterialRhiShad
             qWarning("Vertex input %d is present in material but not in shader. This is wrong.",
                      a.position);
         }
-        inputAttributes.append(QRhiVertexInputAttribute(VERTEX_BUFFER_BINDING, a.position, vertexInputFormat(a), offset));
+        inputAttributes.append(QRhiVertexInputAttribute(VERTEX_BUFFER_BINDING, a.position, qsg_vertexInputFormat(a), offset));
         offset += a.tupleSize * size_of_type(a.type);
     }
     if (batchable) {
@@ -215,7 +218,7 @@ static QRhiVertexInputLayout calculateVertexInputLayout(const QSGMaterialRhiShad
     return inputLayout;
 }
 
-static inline QRhiCommandBuffer::IndexFormat indexFormat(const QSGGeometry *geometry)
+QRhiCommandBuffer::IndexFormat qsg_indexFormat(const QSGGeometry *geometry)
 {
     switch (geometry->indexType()) {
     case QSGGeometry::UnsignedShortType:
@@ -230,7 +233,7 @@ static inline QRhiCommandBuffer::IndexFormat indexFormat(const QSGGeometry *geom
     }
 }
 
-static inline QRhiGraphicsPipeline::Topology gpTopology(int geomDrawMode)
+QRhiGraphicsPipeline::Topology qsg_topology(int geomDrawMode)
 {
     QRhiGraphicsPipeline::Topology topology = QRhiGraphicsPipeline::Triangles;
     switch (geomDrawMode) {
@@ -501,8 +504,8 @@ void Updater::updateStates(QSGNode *n)
             qDebug(" - forceupdate");
     }
 
-    if (Q_UNLIKELY(renderer->m_visualizeMode == Renderer::VisualizeChanges))
-        renderer->visualizeChangesPrepare(sn);
+    if (Q_UNLIKELY(renderer->m_visualizer->mode() == Visualizer::VisualizeChanges))
+        renderer->m_visualizer->visualizeChangesPrepare(sn);
 
     visitNode(sn);
 }
@@ -975,7 +978,6 @@ Renderer::Renderer(QSGDefaultRenderContext *ctx)
     , m_vertexUploadPool(256)
     , m_indexUploadPool(64)
     , m_vao(nullptr)
-    , m_visualizeMode(VisualizeNothing)
 {
     m_rhi = m_context->rhi();
     if (m_rhi) {
@@ -983,9 +985,11 @@ Renderer::Renderer(QSGDefaultRenderContext *ctx)
         m_uint32IndexForRhi = !m_rhi->isFeatureSupported(QRhi::NonFourAlignedEffectiveIndexBufferOffset);
         if (qEnvironmentVariableIntValue("QSG_RHI_UINT32_INDEX"))
             m_uint32IndexForRhi = true;
+        m_visualizer = new RhiVisualizer(this);
     } else {
         initializeOpenGLFunctions();
         m_uint32IndexForRhi = false;
+        m_visualizer = new OpenGLVisualizer(this);
     }
 
     setNodeUpdater(new Updater(this));
@@ -1088,6 +1092,8 @@ Renderer::~Renderer()
     }
 
     destroyGraphicsResources();
+
+    delete m_visualizer;
 }
 
 void Renderer::destroyGraphicsResources()
@@ -1104,6 +1110,8 @@ void Renderer::destroyGraphicsResources()
     m_stencilClipCommon.reset();
 
     delete m_dummyTexture;
+
+    m_visualizer->releaseResources();
 }
 
 void Renderer::releaseCachedResources()
@@ -1138,7 +1146,7 @@ void Renderer::invalidateAndRecycleBatch(Batch *b)
  */
 void Renderer::map(Buffer *buffer, int byteSize, bool isIndexBuf)
 {
-    if (!m_context->hasBrokenIndexBufferObjects() && m_visualizeMode == VisualizeNothing) {
+    if (!m_context->hasBrokenIndexBufferObjects() && m_visualizer->mode() == Visualizer::VisualizeNothing) {
         // Common case, use a shared memory pool for uploading vertex data to avoid
         // excessive reevaluation
         QDataBuffer<char> &pool = m_context->separateIndexBuffer() && isIndexBuf
@@ -1194,7 +1202,7 @@ void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
             m_resourceUpdates->updateDynamicBuffer(buffer->buf, 0, buffer->size,
                                                    QByteArray::fromRawData(buffer->data, buffer->size));
         }
-        if (m_visualizeMode == VisualizeNothing)
+        if (m_visualizer->mode() == Visualizer::VisualizeNothing)
             buffer->data = nullptr;
     } else {
         if (buffer->id == 0)
@@ -1202,7 +1210,7 @@ void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
         GLenum target = isIndexBuf ? GL_ELEMENT_ARRAY_BUFFER : GL_ARRAY_BUFFER;
         glBindBuffer(target, buffer->id);
         glBufferData(target, buffer->size, buffer->data, m_bufferStrategy);
-        if (!m_context->hasBrokenIndexBufferObjects() && m_visualizeMode == VisualizeNothing)
+        if (!m_context->hasBrokenIndexBufferObjects() && m_visualizer->mode() == Visualizer::VisualizeNothing)
             buffer->data = nullptr;
     }
 }
@@ -2096,7 +2104,7 @@ void Renderer::uploadMergedElement(Element *e, int vaOffset, char **vertexData, 
     *indexCount += iCount;
 }
 
-static QMatrix4x4 qsg_matrixForRoot(Node *node)
+QMatrix4x4 qsg_matrixForRoot(Node *node)
 {
     if (node->type() == QSGNode::TransformNodeType)
         return static_cast<QSGTransformNode *>(node->sgNode)->combinedMatrix();
@@ -2830,31 +2838,31 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch) // RHI
 
             if (firstStencilClipInBatch) {
                 m_stencilClipCommon.inputLayout.setBindings({ QRhiVertexInputBinding(g->sizeOfVertex()) });
-                m_stencilClipCommon.inputLayout.setAttributes({ QRhiVertexInputAttribute(0, 0, vertexInputFormat(*a), 0) });
-                m_stencilClipCommon.topology = gpTopology(g->drawingMode());
+                m_stencilClipCommon.inputLayout.setAttributes({ QRhiVertexInputAttribute(0, 0, qsg_vertexInputFormat(*a), 0) });
+                m_stencilClipCommon.topology = qsg_topology(g->drawingMode());
             }
 #ifndef QT_NO_DEBUG
             else {
-                if (gpTopology(g->drawingMode()) != m_stencilClipCommon.topology)
+                if (qsg_topology(g->drawingMode()) != m_stencilClipCommon.topology)
                     qWarning("updateClipState: Clip list entries have different primitive topologies, this is not currently supported.");
-                if (vertexInputFormat(*a) != m_stencilClipCommon.inputLayout.attributes().first().format())
+                if (qsg_vertexInputFormat(*a) != m_stencilClipCommon.inputLayout.attributes().first().format())
                     qWarning("updateClipState: Clip list entries have different vertex input layouts, this is must not happen.");
             }
 #endif
 
             drawCall.vbufOffset = aligned(vOffset, 4);
             const int vertexByteSize = g->sizeOfVertex() * g->vertexCount();
-            vOffset += vertexByteSize;
+            vOffset = drawCall.vbufOffset + vertexByteSize;
 
             int indexByteSize = 0;
             if (g->indexCount()) {
                 drawCall.ibufOffset = aligned(iOffset, 4);
                 indexByteSize = g->sizeOfIndex() * g->indexCount();
-                iOffset += indexByteSize;
+                iOffset = drawCall.ibufOffset + indexByteSize;
             }
 
             drawCall.ubufOffset = aligned(uOffset, m_ubufAlignment);
-            uOffset += StencilClipUbufSize;
+            uOffset = drawCall.ubufOffset + StencilClipUbufSize;
 
             QMatrix4x4 matrixYUpNDC = m_current_projection_matrix;
             if (clip->matrix())
@@ -2874,7 +2882,7 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch) // RHI
 
             drawCall.vertexCount = g->vertexCount();
             drawCall.indexCount = g->indexCount();
-            drawCall.indexFormat = indexFormat(g);
+            drawCall.indexFormat = qsg_indexFormat(g);
             batch->stencilClipState.drawCalls.add(drawCall);
         }
 
@@ -2919,13 +2927,13 @@ void Renderer::enqueueStencilDraw(const Batch *batch) // RHI only
         QRhiCommandBuffer::DynamicOffset ubufOffset(0, drawCall.ubufOffset);
         if (i == 0) {
             cb->setGraphicsPipeline(m_stencilClipCommon.replacePs);
-            cb->setShaderResources(srb, 1, &ubufOffset);
             cb->setViewport(m_pstate.viewport);
         } else if (i == 1) {
             cb->setGraphicsPipeline(m_stencilClipCommon.incrPs);
-            cb->setShaderResources(srb, 1, &ubufOffset);
             cb->setViewport(m_pstate.viewport);
         }
+        // else incrPs is already bound
+        cb->setShaderResources(srb, 1, &ubufOffset);
         cb->setStencilRef(drawCall.stencilRef);
         const QRhiCommandBuffer::VertexInput vbufBinding(batch->stencilClipState.vbuf, drawCall.vbufOffset);
         if (drawCall.indexCount) {
@@ -3255,7 +3263,7 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms)
         flags |= QRhiGraphicsPipeline::UsesStencilRef;
 
     ps->setFlags(flags);
-    ps->setTopology(gpTopology(m_gstate.drawMode));
+    ps->setTopology(qsg_topology(m_gstate.drawMode));
     ps->setCullMode(m_gstate.cullMode);
 
     QRhiGraphicsPipeline::TargetBlend blend;
@@ -4089,6 +4097,9 @@ void Renderer::renderBatches()
             }
         }
 
+        if (m_visualizer->mode() != Visualizer::VisualizeNothing)
+            m_visualizer->prepareVisualize();
+
         QRhiCommandBuffer *cb = commandBuffer();
         cb->beginPass(renderTarget(), m_pstate.clearColor, m_pstate.dsClear, m_resourceUpdates);
         m_resourceUpdates = nullptr;
@@ -4120,7 +4131,8 @@ void Renderer::renderBatches()
         if (m_renderPassRecordingCallbacks.end)
             m_renderPassRecordingCallbacks.end(m_renderPassRecordingCallbacks.userData);
 
-        cb->endPass();
+        if (m_visualizer->mode() == Visualizer::VisualizeNothing)
+            cb->endPass();
     }
 }
 
@@ -4314,13 +4326,16 @@ void Renderer::render()
     m_renderOrderRebuildLower = -1;
     m_renderOrderRebuildUpper = -1;
 
-    if (!m_rhi) {
-        if (m_visualizeMode != VisualizeNothing)
-            visualize();
+    if (m_visualizer->mode() != Visualizer::VisualizeNothing)
+        m_visualizer->visualize();
 
+    if (!m_rhi) {
         if (m_vao)
             m_vao->release();
     } else {
+        if (m_visualizer->mode() != Visualizer::VisualizeNothing)
+            commandBuffer()->endPass();
+
         if (m_resourceUpdates) {
             m_resourceUpdates->release();
             m_resourceUpdates = nullptr;
@@ -4460,311 +4475,23 @@ void Renderer::renderRenderNode(Batch *batch)
         glBindFramebuffer(GL_FRAMEBUFFER, prevFbo);
 }
 
-class VisualizeShader : public QOpenGLShaderProgram
-{
-public:
-    int color;
-    int matrix;
-    int rotation;
-    int pattern;
-    int projection;
-};
-
-void Renderer::visualizeDrawGeometry(const QSGGeometry *g)
-{
-    if (g->attributeCount() < 1)
-        return;
-    const QSGGeometry::Attribute *a = g->attributes();
-    glVertexAttribPointer(0, a->tupleSize, a->type, false, g->sizeOfVertex(), g->vertexData());
-    if (g->indexCount())
-        glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), g->indexData());
-    else
-        glDrawArrays(g->drawingMode(), 0, g->vertexCount());
-
-}
-
-void Renderer::visualizeBatch(Batch *b)
-{
-    VisualizeShader *shader = static_cast<VisualizeShader *>(m_shaderManager->visualizeProgram);
-
-    if (b->positionAttribute != 0)
-        return;
-
-    QSGGeometryNode *gn = b->first->node;
-    QSGGeometry *g = gn->geometry();
-    const QSGGeometry::Attribute &a = g->attributes()[b->positionAttribute];
-
-    glBindBuffer(GL_ARRAY_BUFFER, b->vbo.id);
-
-    QMatrix4x4 matrix(m_current_projection_matrix);
-    if (b->root)
-        matrix = matrix * qsg_matrixForRoot(b->root);
-
-    shader->setUniformValue(shader->pattern, float(b->merged ? 0 : 1));
-
-    QColor color = QColor::fromHsvF((rand() & 1023) / 1023.0, 1.0, 1.0);
-    float cr = color.redF();
-    float cg = color.greenF();
-    float cb = color.blueF();
-    shader->setUniformValue(shader->color, cr, cg, cb, 1.0);
-
-    if (b->merged) {
-        shader->setUniformValue(shader->matrix, matrix);
-        const char *dataStart = m_context->separateIndexBuffer() ? b->ibo.data : b->vbo.data;
-        for (int ds=0; ds<b->drawSets.size(); ++ds) {
-            const DrawSet &set = b->drawSets.at(ds);
-            glVertexAttribPointer(a.position, 2, a.type, false, g->sizeOfVertex(), (void *) (qintptr) (set.vertices));
-            glDrawElements(g->drawingMode(), set.indexCount, GL_UNSIGNED_SHORT,
-                           (void *)(qintptr)(dataStart + set.indices));
-        }
-    } else {
-        Element *e = b->first;
-        int offset = 0;
-        while (e) {
-            gn = e->node;
-            g = gn->geometry();
-            shader->setUniformValue(shader->matrix, matrix * *gn->matrix());
-            glVertexAttribPointer(a.position, a.tupleSize, a.type, false, g->sizeOfVertex(), (void *) (qintptr) offset);
-            if (g->indexCount())
-                glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), g->indexData());
-            else
-                glDrawArrays(g->drawingMode(), 0, g->vertexCount());
-            offset += g->sizeOfVertex() * g->vertexCount();
-            e = e->nextInBatch;
-        }
-    }
-}
-
-
-
-
-void Renderer::visualizeClipping(QSGNode *node)
-{
-    if (node->type() == QSGNode::ClipNodeType) {
-        VisualizeShader *shader = static_cast<VisualizeShader *>(m_shaderManager->visualizeProgram);
-        QSGClipNode *clipNode = static_cast<QSGClipNode *>(node);
-        QMatrix4x4 matrix = m_current_projection_matrix;
-        if (clipNode->matrix())
-            matrix = matrix * *clipNode->matrix();
-        shader->setUniformValue(shader->matrix, matrix);
-        visualizeDrawGeometry(clipNode->geometry());
-    }
-
-    QSGNODE_TRAVERSE(node) {
-        visualizeClipping(child);
-    }
-}
-
-#define QSGNODE_DIRTY_PARENT (QSGNode::DirtyNodeAdded \
-                              | QSGNode::DirtyOpacity \
-                              | QSGNode::DirtyMatrix \
-                              | QSGNode::DirtyNodeRemoved)
-
-void Renderer::visualizeChangesPrepare(Node *n, uint parentChanges)
-{
-    uint childDirty = (parentChanges | n->dirtyState) & QSGNODE_DIRTY_PARENT;
-    uint selfDirty = n->dirtyState | parentChanges;
-    if (n->type() == QSGNode::GeometryNodeType && selfDirty != 0)
-        m_visualizeChanceSet.insert(n, selfDirty);
-    SHADOWNODE_TRAVERSE(n) {
-        visualizeChangesPrepare(child, childDirty);
-    }
-}
-
-void Renderer::visualizeChanges(Node *n)
-{
-
-    if (n->type() == QSGNode::GeometryNodeType && n->element()->batch && m_visualizeChanceSet.contains(n)) {
-        uint dirty = m_visualizeChanceSet.value(n);
-        bool tinted = (dirty & QSGNODE_DIRTY_PARENT) != 0;
-
-        VisualizeShader *shader = static_cast<VisualizeShader *>(m_shaderManager->visualizeProgram);
-        QColor color = QColor::fromHsvF((rand() & 1023) / 1023.0, 0.3, 1.0);
-        float ca = 0.5;
-        float cr = color.redF() * ca;
-        float cg = color.greenF() * ca;
-        float cb = color.blueF() * ca;
-        shader->setUniformValue(shader->color, cr, cg, cb, ca);
-        shader->setUniformValue(shader->pattern, float(tinted ? 0.5 : 0));
-
-        QSGGeometryNode *gn = static_cast<QSGGeometryNode *>(n->sgNode);
-
-        QMatrix4x4 matrix = m_current_projection_matrix;
-        if (n->element()->batch->root)
-            matrix = matrix * qsg_matrixForRoot(n->element()->batch->root);
-        matrix = matrix * *gn->matrix();
-        shader->setUniformValue(shader->matrix, matrix);
-        visualizeDrawGeometry(gn->geometry());
-
-        // This is because many changes don't propegate their dirty state to the
-        // parent so the node updater will not unset these states. They are
-        // not used for anything so, unsetting it should have no side effects.
-        n->dirtyState = nullptr;
-    }
-
-    SHADOWNODE_TRAVERSE(n) {
-        visualizeChanges(child);
-    }
-}
-
-void Renderer::visualizeOverdraw_helper(Node *node)
-{
-    if (node->type() == QSGNode::GeometryNodeType && node->element()->batch) {
-        VisualizeShader *shader = static_cast<VisualizeShader *>(m_shaderManager->visualizeProgram);
-        QSGGeometryNode *gn = static_cast<QSGGeometryNode *>(node->sgNode);
-
-        QMatrix4x4 matrix = m_current_projection_matrix;
-        matrix(2, 2) = m_zRange;
-        matrix(2, 3) = 1.0f - node->element()->order * m_zRange;
-
-        if (node->element()->batch->root)
-            matrix = matrix * qsg_matrixForRoot(node->element()->batch->root);
-        matrix = matrix * *gn->matrix();
-        shader->setUniformValue(shader->matrix, matrix);
-
-        QColor color = node->element()->batch->isOpaque ? QColor::fromRgbF(0.3, 1.0, 0.3) : QColor::fromRgbF(1.0, 0.3, 0.3);
-        float ca = 0.33f;
-        shader->setUniformValue(shader->color, color.redF() * ca, color.greenF() * ca, color.blueF() * ca, ca);
-
-        visualizeDrawGeometry(gn->geometry());
-    }
-
-    SHADOWNODE_TRAVERSE(node) {
-        visualizeOverdraw_helper(child);
-    }
-}
-
-void Renderer::visualizeOverdraw()
-{
-    VisualizeShader *shader = static_cast<VisualizeShader *>(m_shaderManager->visualizeProgram);
-    shader->setUniformValue(shader->color, 0.5f, 0.5f, 1.0f, 1.0f);
-    shader->setUniformValue(shader->projection, 1);
-
-    glBlendFunc(GL_ONE, GL_ONE);
-
-    static float step = 0;
-    step += static_cast<float>(M_PI * 2 / 1000.);
-    if (step > M_PI * 2)
-        step = 0;
-    float angle = 80.0 * std::sin(step);
-
-    QMatrix4x4 xrot; xrot.rotate(20, 1, 0, 0);
-    QMatrix4x4 zrot; zrot.rotate(angle, 0, 0, 1);
-    QMatrix4x4 tx; tx.translate(0, 0, 1);
-
-    QMatrix4x4 m;
-
-//    m.rotate(180, 0, 1, 0);
-
-    m.translate(0, 0.5, 4);
-    m.scale(2, 2, 1);
-
-    m.rotate(-30, 1, 0, 0);
-    m.rotate(angle, 0, 1, 0);
-    m.translate(0, 0, -1);
-
-    shader->setUniformValue(shader->rotation, m);
-
-    float box[] = {
-        // lower
-        -1, 1, 0,   1, 1, 0,
-        -1, 1, 0,   -1, -1, 0,
-        1, 1, 0,    1, -1, 0,
-        -1, -1, 0,  1, -1, 0,
-
-        // upper
-        -1, 1, 1,   1, 1, 1,
-        -1, 1, 1,   -1, -1, 1,
-        1, 1, 1,    1, -1, 1,
-        -1, -1, 1,  1, -1, 1,
-
-        // sides
-        -1, -1, 0,  -1, -1, 1,
-        1, -1, 0,   1, -1, 1,
-        -1, 1, 0,   -1, 1, 1,
-        1, 1, 0,    1, 1, 1
-    };
-    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, box);
-    glLineWidth(2);
-    glDrawArrays(GL_LINES, 0, 24);
-
-    visualizeOverdraw_helper(m_nodes.value(rootNode()));
-
-    // Animate the view...
-    QSurface *surface = m_context->openglContext()->surface();
-    if (surface->surfaceClass() == QSurface::Window)
-        if (QQuickWindow *window = qobject_cast<QQuickWindow *>(static_cast<QWindow *>(surface)))
-            window->update();
-}
-
 void Renderer::setCustomRenderMode(const QByteArray &mode)
 {
-    if (mode.isEmpty()) m_visualizeMode = VisualizeNothing;
-    else if (mode == "clip") m_visualizeMode = VisualizeClipping;
-    else if (mode == "overdraw") m_visualizeMode = VisualizeOverdraw;
-    else if (mode == "batches") m_visualizeMode = VisualizeBatches;
-    else if (mode == "changes") m_visualizeMode = VisualizeChanges;
+    if (mode.isEmpty())
+        m_visualizer->setMode(Visualizer::VisualizeNothing);
+    else if (mode == "clip")
+        m_visualizer->setMode(Visualizer::VisualizeClipping);
+    else if (mode == "overdraw")
+        m_visualizer->setMode(Visualizer::VisualizeOverdraw);
+    else if (mode == "batches")
+        m_visualizer->setMode(Visualizer::VisualizeBatches);
+    else if (mode == "changes")
+        m_visualizer->setMode(Visualizer::VisualizeChanges);
 }
 
-void Renderer::visualize()
+bool Renderer::hasCustomRenderModeWithContinuousUpdate() const
 {
-    if (!m_shaderManager->visualizeProgram) {
-        VisualizeShader *prog = new VisualizeShader();
-        QSGShaderSourceBuilder::initializeProgramFromFiles(
-            prog,
-            QStringLiteral(":/qt-project.org/scenegraph/shaders/visualization.vert"),
-            QStringLiteral(":/qt-project.org/scenegraph/shaders/visualization.frag"));
-        prog->bindAttributeLocation("v", 0);
-        prog->link();
-        prog->bind();
-        prog->color = prog->uniformLocation("color");
-        prog->pattern = prog->uniformLocation("pattern");
-        prog->projection = prog->uniformLocation("projection");
-        prog->matrix = prog->uniformLocation("matrix");
-        prog->rotation = prog->uniformLocation("rotation");
-        m_shaderManager->visualizeProgram = prog;
-    } else {
-        m_shaderManager->visualizeProgram->bind();
-    }
-    VisualizeShader *shader = static_cast<VisualizeShader *>(m_shaderManager->visualizeProgram);
-
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    glEnableVertexAttribArray(0);
-
-    // Blacken out the actual rendered content...
-    float bgOpacity = 0.8f;
-    if (m_visualizeMode == VisualizeBatches)
-        bgOpacity = 1.0;
-    float v[] = { -1, 1,   1, 1,   -1, -1,   1, -1 };
-    shader->setUniformValue(shader->color, 0.0f, 0.0f, 0.0f, bgOpacity);
-    shader->setUniformValue(shader->matrix, QMatrix4x4());
-    shader->setUniformValue(shader->rotation, QMatrix4x4());
-    shader->setUniformValue(shader->pattern, 0.0f);
-    shader->setUniformValue(shader->projection, false);
-    glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, v);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    if (m_visualizeMode == VisualizeBatches) {
-        srand(0); // To force random colors to be roughly the same every time..
-        for (int i=0; i<m_opaqueBatches.size(); ++i) visualizeBatch(m_opaqueBatches.at(i));
-        for (int i=0; i<m_alphaBatches.size(); ++i) visualizeBatch(m_alphaBatches.at(i));
-    } else if (m_visualizeMode == VisualizeClipping) {
-        shader->setUniformValue(shader->pattern, 0.5f);
-        shader->setUniformValue(shader->color, 0.2f, 0.0f, 0.0f, 0.2f);
-        visualizeClipping(rootNode());
-    } else if (m_visualizeMode == VisualizeChanges) {
-        visualizeChanges(m_nodes.value(rootNode()));
-        m_visualizeChanceSet.clear();
-    } else if (m_visualizeMode == VisualizeOverdraw) {
-        visualizeOverdraw();
-    }
-
-    // Reset state back to defaults..
-    glDisable(GL_BLEND);
-    glDisableVertexAttribArray(0);
-    shader->release();
+    return m_visualizer->mode() == Visualizer::VisualizeOverdraw;
 }
 
 bool operator==(const GraphicsState &a, const GraphicsState &b) Q_DECL_NOTHROW
@@ -4822,8 +4549,34 @@ uint qHash(const GraphicsPipelineStateKey &k, uint seed) Q_DECL_NOTHROW
     return qHash(k.state, seed) + qHash(k.sms->programRhi.program, seed) + qHash(k.rpDesc, seed);
 }
 
-QT_END_NAMESPACE
-
+Visualizer::Visualizer(Renderer *renderer)
+    : m_renderer(renderer),
+      m_visualizeMode(VisualizeNothing)
+{
 }
+
+Visualizer::~Visualizer()
+{
+}
+
+#define QSGNODE_DIRTY_PARENT (QSGNode::DirtyNodeAdded \
+                              | QSGNode::DirtyOpacity \
+                              | QSGNode::DirtyMatrix \
+                              | QSGNode::DirtyNodeRemoved)
+
+void Visualizer::visualizeChangesPrepare(Node *n, uint parentChanges)
+{
+    uint childDirty = (parentChanges | n->dirtyState) & QSGNODE_DIRTY_PARENT;
+    uint selfDirty = n->dirtyState | parentChanges;
+    if (n->type() == QSGNode::GeometryNodeType && selfDirty != 0)
+        m_visualizeChangeSet.insert(n, selfDirty);
+    SHADOWNODE_TRAVERSE(n) {
+        visualizeChangesPrepare(child, childDirty);
+    }
+}
+
+} // namespace QSGBatchRenderer
+
+QT_END_NAMESPACE
 
 #include "moc_qsgbatchrenderer_p.cpp"

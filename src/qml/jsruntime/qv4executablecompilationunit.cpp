@@ -694,7 +694,7 @@ bool ExecutableCompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorSt
     }
 
     return CompiledData::SaveableUnitPointer(unitData()).saveToDisk<char>(
-            [this, &unitUrl, errorString](const char *data, quint32 size) {
+            [&unitUrl, errorString](const char *data, quint32 size) {
         return CompiledData::SaveableUnitPointer::writeDataToFile(localCacheFilePath(unitUrl), data,
                                                                   size, errorString);
     });

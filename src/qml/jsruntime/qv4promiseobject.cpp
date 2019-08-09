@@ -86,6 +86,7 @@ namespace QV4 {
 namespace Promise {
 
 const int PROMISE_REACTION_EVENT = QEvent::registerEventType();
+const int PROMISE_RESOLVE_THENABLE_EVENT = QEvent::registerEventType();
 
 struct ReactionEvent : public QEvent
 {
@@ -98,6 +99,18 @@ struct ReactionEvent : public QEvent
     QV4::PersistentValue reaction;
     QV4::PersistentValue resolution;
 };
+
+struct ResolveThenableEvent : public QEvent
+{
+    ResolveThenableEvent(ExecutionEngine *e, const PromiseObject *promise_, const Object *thenable_, const FunctionObject *then_)
+        : QEvent(QEvent::Type(PROMISE_RESOLVE_THENABLE_EVENT)), promise(e, *promise_), thenable(e, *thenable_), then(e, *then_)
+    {}
+
+    QV4::PersistentValue promise;
+    QV4::PersistentValue thenable;
+    QV4::PersistentValue then;
+};
+
 
 } // namespace Promise
 } // namespace QV4
@@ -115,6 +128,11 @@ void ReactionHandler::addReaction(ExecutionEngine *e, const Value *reaction, con
     QCoreApplication::postEvent(this, new ReactionEvent(e, reaction, value));
 }
 
+void ReactionHandler::addResolveThenable(ExecutionEngine *e, const PromiseObject *promise, const Object *thenable, const FunctionObject *then)
+{
+    QCoreApplication::postEvent(this, new ResolveThenableEvent(e, promise, thenable, then));
+}
+
 void ReactionHandler::customEvent(QEvent *event)
 {
     if (event)
@@ -122,6 +140,9 @@ void ReactionHandler::customEvent(QEvent *event)
         const int type = event->type();
         if (type == PROMISE_REACTION_EVENT)
             executeReaction(static_cast<ReactionEvent*>(event));
+
+        if (type == PROMISE_RESOLVE_THENABLE_EVENT)
+            executeResolveThenable(static_cast<ResolveThenableEvent*>(event));
     }
 }
 
@@ -158,6 +179,7 @@ void ReactionHandler::executeReaction(ReactionEvent *event)
         reaction->call(promise, resolution, 1);
     }
 }
+
 
 namespace {
 
@@ -198,6 +220,26 @@ public:
     }
 };
 
+}
+
+
+void ReactionHandler::executeResolveThenable(ResolveThenableEvent *event)
+{
+    Scope scope(event->then.engine());
+    JSCallData jsCallData(scope, 2);
+    PromiseObject *promise = event->promise.as<PromiseObject>();
+    ScopedFunctionObject resolve {scope, FunctionBuilder::makeResolveFunction(scope.engine, promise->d())};
+    ScopedFunctionObject reject {scope, FunctionBuilder::makeRejectFunction(scope.engine, promise->d())};
+    jsCallData->args[0] = resolve;
+    jsCallData.args[1] = reject;
+    jsCallData->thisObject = event->thenable.as<QV4::Object>();
+    event->then.as<const FunctionObject>()->call(jsCallData);
+    if (scope.engine->hasException) {
+        JSCallData rejectCallData(scope, 1);
+        rejectCallData->args[0] = scope.engine->catchException();
+        Scoped<RejectWrapper> reject {scope, scope.engine->memoryManager->allocate<QV4::RejectWrapper>()};
+        reject->call(rejectCallData);
+    }
 }
 
 void Heap::PromiseObject::setState(PromiseObject::State state)
@@ -363,23 +405,36 @@ void Heap::RejectWrapper::init()
     Heap::FunctionObject::init();
 }
 
+ReturnedValue PromiseCtor::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
+{
+    // 25.4.3.1 Promise ( executor )
+    // 1. If NewTarget is undefined, throw a TypeError exception.
+    Scope scope(f);
+    THROW_TYPE_ERROR();
+}
 
 ReturnedValue PromiseCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
+    // 25.4.3.1 Promise ( executor )
+
     Scope scope(f);
 
-    if (argc != 1)
+    if (argc == 0) // If there are no arguments, argument 1 will be undefined ==> thus not callable ==> type error
         THROW_TYPE_ERROR();
 
     ScopedFunctionObject executor(scope, argv[0].as<const FunctionObject>());
-    if (!executor)
-        THROW_TYPE_ERROR();
+    if (!executor) //2. If IsCallable(executor) is false
+        THROW_TYPE_ERROR(); // throw a TypeError exception
 
     Scoped<PromiseObject> a(scope, scope.engine->newPromiseObject());
     if (scope.engine->hasException)
         return Encode::undefined();
 
-    a->d()->state = Heap::PromiseObject::Pending;
+    a->d()->state = Heap::PromiseObject::Pending;  //4. Set promise.[[PromiseState]] to "pending"
+    // 5. Set promise.[[PromiseFulfillReactions]] to a new empty List.
+    // 6. Set promise.[[PromiseRejectReactions]] to a new empty List.
+    // 7. Set promise.[[PromiseIsHandled]] to false.
+    // happens in constructor of a
 
     ScopedFunctionObject resolve(scope, FunctionBuilder::makeResolveFunction(scope.engine, a->d()));
     ScopedFunctionObject reject(scope, FunctionBuilder::makeRejectFunction(scope.engine, a->d()));
@@ -387,13 +442,15 @@ ReturnedValue PromiseCtor::virtualCallAsConstructor(const FunctionObject *f, con
     JSCallData jsCallData(scope, 2);
     jsCallData->args[0] = resolve;
     jsCallData->args[1] = reject;
-    jsCallData->thisObject = a;
+    //jsCallData->thisObject = a; VERIFY corretness, but this should be undefined (see below)
 
-    executor->call(jsCallData);
+    executor->call(jsCallData); // 9. Let completion be Call(executor, undefined, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
 
     if (scope.engine->hasException) {
-        a->d()->state = Heap::PromiseObject::Rejected;
-        a->d()->resolution.set(scope.engine, Value::fromReturnedValue(scope.engine->catchException()));
+        ScopedValue exception {scope, scope.engine->catchException()};
+        JSCallData callData {scope, 1};
+        callData.args[0] = exception;
+        reject->call(callData);
     }
 
     if (newTarget)
@@ -402,42 +459,42 @@ ReturnedValue PromiseCtor::virtualCallAsConstructor(const FunctionObject *f, con
     return a->asReturnedValue();
 }
 
-ReturnedValue PromiseCtor::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
-{
-    Scope scope(f);
-    THROW_TYPE_ERROR();
-}
 
 ReturnedValue PromiseCtor::method_resolve(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
+    // 25.4.4.5Promise.resolve ( x )
     Scope scope(f);
     ExecutionEngine* e = scope.engine;
-    if (!thisObject || !thisObject->isObject())
+    if (!thisObject || !thisObject->isObject()) // 2. If Type(C) is not Object, throw a TypeError exception
         THROW_TYPE_ERROR();
 
-    ScopedValue argument(scope);
+    ScopedValue x(scope);
     if (argc < 1) {
-        argument = Encode::undefined();
+        x = Encode::undefined();
     } else {
-        argument = argv[0];
+        x = argv[0];
     }
 
-    if (isPromise(argument) && argument->isObject()) {
+    // 3. If IsPromise(x) is true, then
+    if (isPromise(x) && x->isObject()) {
         ScopedObject so(scope, thisObject);
-        ScopedObject constructor(scope, argument->objectValue()->get(e->id_constructor()));
-        if (so->d() == constructor->d())
-            return argument->asReturnedValue();
+        // Let xConstructor be ? Get(x, "constructor").
+        ScopedObject constructor(scope, x->objectValue()->get(e->id_constructor()));
+        if (so->d() == constructor->d()) // If SameValue(xConstructor, C) is true, return x.
+            return x->asReturnedValue();
     }
 
+    // Let promiseCapability be ? NewPromiseCapability(C).
     Scoped<PromiseCapability> capability(scope, e->memoryManager->allocate<QV4::PromiseCapability>());
 
     ScopedObject newPromise(scope, e->newPromiseObject(thisObject->as<const FunctionObject>(), capability));
     if (!newPromise || !isCallable(capability->d()->resolve) || !isCallable(capability->d()->reject))
         THROW_TYPE_ERROR();
 
+    // Perform ? Call(promiseCapability.[[Resolve]], undefined, « x »).
     ScopedValue undefined(scope, Value::undefinedValue());
     ScopedFunctionObject resolve(scope, capability->d()->resolve);
-    resolve->call(undefined, argument, 1);
+    resolve->call(undefined, x, 1);
 
     return newPromise.asReturnedValue();
 }
@@ -447,16 +504,18 @@ ReturnedValue PromiseCtor::method_reject(const FunctionObject *f, const Value *t
     Scope scope(f);
     ExecutionEngine *e = scope.engine;
 
+    // 2. If Type(C) is not Object, throw a TypeError exception.
     if (!thisObject || !thisObject->isObject())
         THROW_TYPE_ERROR();
 
-    ScopedValue argument(scope);
+    ScopedValue r(scope);
     if (argc < 1) {
-        argument = Encode::undefined();
+        r = Encode::undefined();
     } else {
-        argument = argv[0];
+        r = argv[0];
     }
 
+    // 3. Let promiseCapability be ? NewPromiseCapability(C).
     Scoped<PromiseCapability> capability(scope, e->memoryManager->allocate<QV4::PromiseCapability>());
 
     ScopedObject newPromise(scope, e->newPromiseObject(thisObject->as<const FunctionObject>(), capability));
@@ -465,7 +524,8 @@ ReturnedValue PromiseCtor::method_reject(const FunctionObject *f, const Value *t
 
     ScopedValue undefined(scope, Value::undefinedValue());
     ScopedFunctionObject reject(scope, capability->d()->reject.as<const FunctionObject>());
-    reject->call(undefined, argument, 1);
+    // Perform ? Call(promiseCapability.[[Reject]], undefined, « r »).
+    reject->call(undefined, r, 1);
 
     return newPromise.asReturnedValue();
 }
@@ -475,6 +535,7 @@ ReturnedValue PromiseCtor::method_all(const FunctionObject *f, const Value *this
     Scope scope(f);
     ExecutionEngine* e = scope.engine;
 
+    // 2. If Type(C) is not Object, throw a TypeError exception.
     if (!thisObject || !thisObject->isObject())
         THROW_TYPE_ERROR();
 
@@ -777,6 +838,7 @@ void PromisePrototype::init(ExecutionEngine *engine, Object *ctor)
 
 ReturnedValue PromisePrototype::method_then(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
+    // 25.4.5.3 Promise.prototype.then
     Scope scope(f);
     ExecutionEngine* e = scope.engine;
 
@@ -804,6 +866,7 @@ ReturnedValue PromisePrototype::method_then(const FunctionObject *f, const Value
     if (!constructor || scope.hasException())
         THROW_TYPE_ERROR();
 
+    // 4. Let resultCapability be ? NewPromiseCapability(C).
     ScopedObject nextPromise(scope, e->newPromiseObject(constructor, capability));
     capability->d()->promise.set(scope.engine, nextPromise);
 
@@ -811,21 +874,25 @@ ReturnedValue PromisePrototype::method_then(const FunctionObject *f, const Value
     Scoped<PromiseReaction> rejectReaction(scope, Heap::PromiseReaction::createRejectReaction(scope.engine, capability, onRejected));
 
     ScopedValue resolution(scope, promise->d()->resolution);
-    if (promise->d()->isPending()) {
+    if (promise->d()->isPending()) { // 7. If promise.[[PromiseState]] is "pending"
         {
+            // Append fulfillReaction as the last element of the List that is promise.[[PromiseFulfillReactions]].
             ScopedArrayObject a(scope, promise->d()->fulfillReactions);
             ScopedValue newValue(scope, fulfillReaction->d());
             a->push_back(newValue);
         }
 
         {
+            // Append rejectReaction as the last element of the List that is promise.[[PromiseRejectReactions]].
             ScopedArrayObject a(scope, promise->d()->rejectReactions);
             ScopedValue newValue(scope, rejectReaction->d());
             a->push_back(newValue);
         }
-    } else if (promise->d()->isFulfilled()) {
-        fulfillReaction->as<QV4::PromiseReaction>()->d()->triggerWithValue(e, resolution);
-    } else if (promise->d()->isRejected()) {
+    } else if (promise->d()->isFulfilled()) { // 8. Else if promise.[[PromiseState]] is "fulfilled", then
+        // Perform EnqueueJob("PromiseJobs", PromiseReactionJob, « fulfillReaction, value »).
+        fulfillReaction->as<QV4::PromiseReaction>()->d()->triggerWithValue(e, resolution); // Perform EnqueueJob("PromiseJobs", PromiseReactionJob, « fulfillReaction, value »).
+    } else if (promise->d()->isRejected()) { // 9. Else
+        // Perform EnqueueJob("PromiseJobs", PromiseReactionJob, « rejectReaction, reason »).
         rejectReaction->as<QV4::PromiseReaction>()->d()->triggerWithValue(e, resolution);
     } else {
         Q_ASSERT(false);
@@ -889,7 +956,6 @@ ReturnedValue CapabilitiesExecutorWrapper::virtualCall(const FunctionObject *f, 
     if (argc >= 2 && !argv[1].isUndefined())
         capabilities->reject.set(scope.engine, argv[1]);
 
-    // TODO: return?
     return Encode::undefined();
 }
 
@@ -929,27 +995,60 @@ ReturnedValue ResolveElementWrapper::virtualCall(const FunctionObject *f, const 
 
 ReturnedValue ResolveWrapper::virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
+    // 25.4.1.3.2 (ecmase-262/8.0)
+
     Q_UNUSED(thisObject);
 
     Scope scope(f);
     const ResolveWrapper *self = static_cast<const ResolveWrapper*>(f);
 
     Scoped<PromiseObject> promise(scope, self->d()->promise);
-    if (self->d()->alreadyResolved || !promise->d()->isPending())
+    // 4. If alreadyRseolved.[[Value]] is true, return undefined
+    if (self->d()->alreadyResolved || !promise->d()->isPending()) // Why check for pending?
         return Encode::undefined();
 
-    ScopedValue value(scope);
+    // 5. Set alreadyResolved.[[Value]] to true
+    self->d()->alreadyResolved = true;
+
+    ScopedValue resolution(scope);
     if (argc == 1) {
-        value = argv[0];
+        resolution = argv[0];
     } else {
-        value = Encode::undefined();
+        resolution = Encode::undefined();
     }
 
-    self->d()->alreadyResolved = true;
-    promise->d()->setState(Heap::PromiseObject::Fulfilled);
-    promise->d()->resolution.set(scope.engine, value);
+    if (!resolution->isObject()) { // 7 If Type(resolution) is not Object
+        // then Return FullFillPromise(promise, resolution)
+        // (FullFillPromise will return undefined, so we share the return with the other path which also returns undefined
+        promise->d()->setState(Heap::PromiseObject::Fulfilled);
+        promise->d()->resolution.set(scope.engine, resolution);
+        promise->d()->triggerFullfillReactions(scope.engine);
+    } else {
+        //PromiseObject *promise = resolution->as<PromiseObject>();
+        auto resolutionObject = resolution->as<Object>();
+        ScopedString thenName(scope, scope.engine->newIdentifier(QStringLiteral("then")));
 
-    promise->d()->triggerFullfillReactions(scope.engine);
+        // 8. Let then be Get(resolution, then)
+        ScopedFunctionObject thenAction { scope, resolutionObject->get(thenName)};
+        // 9. If then is an abrupt completion, then
+        if (scope.engine->hasException) {
+            // Return RecjectPromise(promise, then.[[Value]]
+            ScopedValue thenValue {scope, scope.engine->catchException()};
+            promise->d()->setState(Heap::PromiseObject::Rejected);
+            promise->d()->resolution.set(scope.engine, thenValue);
+            promise->d()->triggerRejectReactions(scope.engine);
+        } else {
+            // 10. Let thenAction be then.[[Value]]
+            if (!thenAction) { // 11. If IsCallable(thenAction) is false
+                promise->d()->setState(Heap::PromiseObject::Fulfilled);
+                promise->d()->resolution.set(scope.engine, resolution);
+                promise->d()->triggerFullfillReactions(scope.engine);
+            } else {
+                // 12. Perform EnqueueJob("PromiseJobs", PromiseResolveThenableJob, « promise, resolution, thenAction »).
+                scope.engine->getPromiseReactionHandler()->addResolveThenable(scope.engine, promise.getPointer(), resolutionObject, thenAction);
+            }
+        }
+    }
 
     return Encode::undefined();
 }
@@ -972,11 +1071,25 @@ ReturnedValue RejectWrapper::virtualCall(const FunctionObject *f, const Value *t
         value = Encode::undefined();
     }
 
-    self->d()->alreadyResolved = true;
-    promise->d()->setState(Heap::PromiseObject::Rejected);
-    promise->d()->resolution.set(scope.engine, value);
+    if (!isPromise(value)) {
+        self->d()->alreadyResolved = true;
+        promise->d()->setState(Heap::PromiseObject::Rejected);
+        promise->d()->resolution.set(scope.engine, value);
 
-    promise->d()->triggerRejectReactions(scope.engine);
+        promise->d()->triggerRejectReactions(scope.engine);
+
+    } else {
+        PromiseObject *promise = value->as<PromiseObject>();
+        ScopedString thenName(scope, scope.engine->newIdentifier(QStringLiteral("catch")));
+
+        ScopedFunctionObject then(scope, promise->get(thenName));
+        JSCallData jsCallData(scope, 2);
+        jsCallData->args[0] = *f;
+        jsCallData->args[1] = Encode::undefined();
+        jsCallData->thisObject = value;
+
+        then->call(jsCallData);
+    }
 
     return Encode::undefined();
 }

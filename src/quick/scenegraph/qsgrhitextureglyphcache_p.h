@@ -59,7 +59,8 @@ QT_BEGIN_NAMESPACE
 class QSGRhiTextureGlyphCache : public QImageTextureGlyphCache
 {
 public:
-    QSGRhiTextureGlyphCache(QRhi *rhi, QFontEngine::GlyphFormat format, const QTransform &matrix);
+    QSGRhiTextureGlyphCache(QRhi *rhi, QFontEngine::GlyphFormat format, const QTransform &matrix,
+                            const QColor &color = QColor());
     ~QSGRhiTextureGlyphCache();
 
     void createTextureData(int width, int height) override;

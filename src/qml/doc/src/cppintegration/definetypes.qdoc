@@ -471,7 +471,7 @@ will be accessible to the \e attachee:
 class MessageBoardAttachedType : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool expired READ expired WRITE expired NOTIFY expiredChanged)
+    Q_PROPERTY(bool expired READ expired WRITE setExpired NOTIFY expiredChanged)
 public:
     MessageBoardAttachedType(QObject *parent);
     bool expired() const;
@@ -493,7 +493,7 @@ class MessageBoard : public QObject
 {
     Q_OBJECT
 public:
-    static MessageBoard *qmlAttachedProperties(QObject *object)
+    static MessageBoardAttachedType *qmlAttachedProperties(QObject *object)
     {
         return new MessageBoardAttachedType(object);
     }

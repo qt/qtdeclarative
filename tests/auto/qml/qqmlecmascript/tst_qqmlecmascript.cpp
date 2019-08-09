@@ -233,6 +233,7 @@ private slots:
     void functionAssignment_afterBinding();
     void eval();
     void function();
+    void topLevelGeneratorFunction();
     void qtbug_10696();
     void qtbug_11606();
     void qtbug_11600();
@@ -2048,7 +2049,7 @@ void tst_qqmlecmascript::functionErrors()
 
     QObject *resource = qobject_cast<ScarceResourceObject*>(QQmlProperty::read(object, "a").value<QObject*>());
     warning = url + QLatin1String(":16: TypeError: Property 'scarceResource' of object ScarceResourceObject(0x%1) is not a function");
-    warning = warning.arg(QString::number((qintptr)resource, 16));
+    warning = warning.arg(QString::number((quintptr)resource, 16));
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData()); // we expect a meaningful warning to be printed.
     QMetaObject::invokeMethod(object, "retrieveScarceResource");
     delete object;
@@ -4573,7 +4574,7 @@ void tst_qqmlecmascript::scarceResources_other()
     eo = qobject_cast<ScarceResourceObject*>(QQmlProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
     expectedWarning = varComponentTwelve.url().toString() + QLatin1String(":16: TypeError: Property 'scarceResource' of object ScarceResourceObject(0x%1) is not a function");
-    expectedWarning = expectedWarning.arg(QString::number((qintptr)eo, 16));
+    expectedWarning = expectedWarning.arg(QString::number((quintptr)eo, 16));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(expectedWarning)); // we expect a meaningful warning to be printed.
     QMetaObject::invokeMethod(object, "retrieveScarceResource");
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // due to exception, assignment will NOT have occurred.
@@ -4647,7 +4648,7 @@ void tst_qqmlecmascript::scarceResources_other()
     eo = qobject_cast<ScarceResourceObject*>(QQmlProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
     expectedWarning = variantComponentTwelve.url().toString() + QLatin1String(":16: TypeError: Property 'scarceResource' of object ScarceResourceObject(0x%1) is not a function");
-    expectedWarning = expectedWarning.arg(QString::number((qintptr)eo, 16));
+    expectedWarning = expectedWarning.arg(QString::number((quintptr)eo, 16));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(expectedWarning)); // we expect a meaningful warning to be printed.
     QMetaObject::invokeMethod(object, "retrieveScarceResource");
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // due to exception, assignment will NOT have occurred.
@@ -6346,6 +6347,28 @@ void tst_qqmlecmascript::function()
     QCOMPARE(o->property("test3").toBool(), true);
 
     delete o;
+}
+
+// QTBUG-77096
+void tst_qqmlecmascript::topLevelGeneratorFunction()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("generatorFunction.qml"));
+
+    QScopedPointer<QObject> o {component.create()};
+    QVERIFY(o != nullptr);
+
+    // check that generator works correctly in QML
+    QCOMPARE(o->property("test1").toBool(), true);
+    QCOMPARE(o->property("test2").toBool(), true);
+    QCOMPARE(o->property("test3").toBool(), true);
+    QCOMPARE(o->property("done").toBool(), true);
+
+    // check that generator is accessible from C++
+    QVariant returnedValue;
+    QMetaObject::invokeMethod(o.get(), "gen", Q_RETURN_ARG(QVariant, returnedValue));
+    auto it = returnedValue.value<QJSValue>();
+    QCOMPARE(it.property("next").callWithInstance(it).property("value").toInt(), 1);
 }
 
 // Test the "Qt.include" method

@@ -30,6 +30,8 @@
 
 #include "qcoloroutput_p.h"
 
+#include <algorithm>
+
 #include <QQueue>
 
 ScopeTree::ScopeTree(ScopeType type, QString name, ScopeTree *parentScope)
@@ -66,10 +68,10 @@ void ScopeTree::insertQMLIdentifier(QString id)
     m_currentScopeQMLIdentifiers.insert(id);
 }
 
-void ScopeTree::insertSignalIdentifier(QString id, LanguageUtils::FakeMetaMethod method, QQmlJS::AST::SourceLocation loc)
+void ScopeTree::insertSignalIdentifier(QString id, LanguageUtils::FakeMetaMethod method, QQmlJS::AST::SourceLocation loc, bool hasMultilineHandlerBody)
 {
     Q_ASSERT(m_scopeType == ScopeType::QMLScope);
-    m_injectedSignalIdentifiers.insert(id, {method, loc});
+    m_injectedSignalIdentifiers.insert(id, {method, loc, hasMultilineHandlerBody});
 }
 
 void ScopeTree::insertPropertyIdentifier(QString id)
@@ -84,8 +86,14 @@ bool ScopeTree::isIdInCurrentScope(const QString &id) const
     return isIdInCurrentQMlScopes(id) || isIdInCurrentJSScopes(id);
 }
 
-void ScopeTree::addIdToAccssedIfNotInParentScopes(const QPair<QString, QQmlJS::AST::SourceLocation> &id_loc_pair) {
-    if (!isIdInCurrentScope(id_loc_pair.first)) {
+void ScopeTree::addIdToAccssedIfNotInParentScopes(const QPair<QString, QQmlJS::AST::SourceLocation> &id_loc_pair, const QSet<QString>& unknownImports) {
+    // also do not add id if it is parent
+    // parent is almost always defined valid in QML, and if we could not find a definition for the current QML component
+    // not skipping "parent" will lead to many false positives
+    // Moreover, if the top level item is Item or inherits from it, it will have a parent property to which we would point the user
+    // which makes for a very nonsensical warning
+    auto qmlScope = getCurrentQMLScope();
+    if (!isIdInCurrentScope(id_loc_pair.first) && !(id_loc_pair.first == QLatin1String("parent") && qmlScope && unknownImports.contains(qmlScope->name()))) {
         m_accessedIdentifiers.push_back(id_loc_pair);
     }
 }
@@ -146,31 +154,37 @@ bool ScopeTree::recheckIdentifiers(const QString& code, const QHash<QString, Lan
                 while (parentScope && parentScope->scopeType() != ScopeType::QMLScope) {
                     parentScope = parentScope->m_parentScope;
                 }
-                bool directChild = parentScope && parentScope->isVisualRootScope();
                 colorOut.write("Note: ", Info);
                 colorOut.write( idLocationPair.first + QLatin1String(" is a meber of the root element\n"), Normal );
-                if (directChild) {
-                    colorOut.write(QLatin1String("      As the current element is a direct child of the root element,\n      you can qualify the access with parent to avoid this warning:\n"), Normal);
-                } else {
-                    colorOut.write(QLatin1String("      You can qualify the access with its id to avoid this warning:\n"), Normal);
-                    if (rootId == QLatin1String("<id>")) {
-                        colorOut.write("Note: ", Warning);
-                        colorOut.write(("You first have to give the root element an id\n"));
-                    }
+                colorOut.write(QLatin1String("      You can qualify the access with its id to avoid this warning:\n"), Normal);
+                if (rootId == QLatin1String("<id>")) {
+                    colorOut.write("Note: ", Warning);
+                    colorOut.write(("You first have to give the root element an id\n"));
                 }
                 colorOut.write(issueLocationWithContext.beforeText.toString(), Normal);
-                colorOut.write( (directChild ? QLatin1String("parent") : rootId) + QLatin1Char('.'), Hint);
+                colorOut.write(rootId + QLatin1Char('.'), Hint);
                 colorOut.write(issueLocationWithContext.issueText.toString(), Normal);
                 colorOut.write(issueLocationWithContext.afterText + QLatin1Char('\n'), Normal);
             } else if (currentScope->isIdInjectedFromSignal(idLocationPair.first)) {
                 auto qmlScope = currentScope->getCurrentQMLScope();
-                MethodUsage methodUsage = qmlScope->m_injectedSignalIdentifiers[idLocationPair.first];
+                auto methodUsages = qmlScope->m_injectedSignalIdentifiers.values(idLocationPair.first);
+                auto location = idLocationPair.second;
+                // sort the list of signal handlers by their occurrence in the source code
+                // then, we select the first one whose location is after the unqualified id
+                // and go one step backwards to get the one which we actually need
+                std::sort(methodUsages.begin(), methodUsages.end(), [](const MethodUsage m1, const MethodUsage m2) {
+                    return m1.loc.startLine < m2.loc.startLine || (m1.loc.startLine == m2.loc.startLine && m1.loc.startColumn < m2.loc.startColumn);
+                });
+                auto oneBehindIt = std::find_if(methodUsages.begin(), methodUsages.end(), [&location](MethodUsage methodUsage) {
+                    return location.startLine < methodUsage.loc.startLine || (location.startLine == methodUsage.loc.startLine && location.startColumn < methodUsage.loc.startColumn);
+                });
+                auto methodUsage = *(--oneBehindIt);
                 colorOut.write("Note:", Info);
                 colorOut.write(idLocationPair.first + QString::asprintf(" is accessible in this scope because you are handling a signal at %d:%d\n", methodUsage.loc.startLine, methodUsage.loc.startColumn), Normal);
                 colorOut.write("Consider using a function instead\n", Normal);
                 IssueLocationWithContext context {code, methodUsage.loc};
                 colorOut.write(context.beforeText + QLatin1Char(' '));
-                colorOut.write("function(", Hint);
+                colorOut.write(methodUsage.hasMultilineHandlerBody ? "function(" : "(", Hint);
                 const auto parameters = methodUsage.method.parameterNames();
                 for (int numParams = parameters.size(); numParams > 0; --numParams) {
                     colorOut.write(parameters.at(parameters.size() - numParams), Hint);
@@ -178,10 +192,10 @@ bool ScopeTree::recheckIdentifiers(const QString& code, const QHash<QString, Lan
                         colorOut.write(", ", Hint);
                     }
                 }
-                colorOut.write(")", Hint);
+                colorOut.write(methodUsage.hasMultilineHandlerBody ? ")" : ") => ", Hint);
                 colorOut.write(" {...", Normal);
             }
-            colorOut.write("\n", Normal);
+            colorOut.write("\n\n\n", Normal);
         }
         for (auto const& childScope: currentScope->m_childScopes) {
             workQueue.enqueue(childScope);

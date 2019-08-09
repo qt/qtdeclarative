@@ -64,7 +64,7 @@ class QQmlConfigurableDebugService : public Base
 {
 protected:
     QQmlConfigurableDebugService(float version, QObject *parent = nullptr) :
-        Base(version, parent), m_configMutex(QMutex::Recursive)
+        Base(version, parent)
     {
         init();
     }
@@ -103,7 +103,7 @@ protected:
             emit Base::attachedToEngine(engine);
     }
 
-    QMutex m_configMutex;
+    QRecursiveMutex m_configMutex;
     QList<QJSEngine *> m_waitingEngines;
     bool m_waitingForConfiguration;
 };

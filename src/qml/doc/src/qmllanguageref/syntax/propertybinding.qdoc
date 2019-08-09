@@ -128,6 +128,9 @@ loops - it could indicate that the binding is being used for more than describin
 property relationships. Complex bindings can reduce code performance, readability,
 and maintainability. It may be a good idea to redesign components that have
 complex bindings, or at least factor the binding out into a separate function.
+As a general rule, users should not rely on the evaluation order of bindings.
+
+\sa {Positioning with Anchors}
 
 
 \target qml-javascript-assignment

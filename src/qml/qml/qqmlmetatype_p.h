@@ -58,7 +58,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlTypeModule;
-class QMutex;
+class QRecursiveMutex;
 class QQmlError;
 
 namespace QV4 { class ExecutableCompilationUnit; }
@@ -160,7 +160,7 @@ public:
     static void prependCachedUnitLookupFunction(QQmlPrivate::QmlUnitCacheLookupFunction handler);
     static void removeCachedUnitLookupFunction(QQmlPrivate::QmlUnitCacheLookupFunction handler);
 
-    static QMutex *typeRegistrationLock();
+    static QRecursiveMutex *typeRegistrationLock();
 
     static QString prettyTypeName(const QObject *object);
 

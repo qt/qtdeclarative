@@ -428,7 +428,7 @@ void tst_qqmlengine::trimComponentCache()
     engine.setIncubationController(&componentCache);
 
     QQmlComponent component(&engine, testFileUrl(file));
-    QVERIFY(component.isReady());
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
     QCOMPARE(object->property("success").toBool(), true);
@@ -742,13 +742,17 @@ public:
     CustomSelector(const QUrl &base):m_base(base){}
     virtual QUrl intercept(const QUrl &url, QQmlAbstractUrlInterceptor::DataType d)
     {
-        if (url.scheme() != QStringLiteral("file"))
+        if ((url.scheme() != QStringLiteral("file") && url.scheme() != QStringLiteral("qrc"))
+            || url.path().contains("QtQml"))
             return url;
         if (!m_interceptionPoints.contains(d))
             return url;
 
-        if (url.path().endsWith("Test.2/qmldir"))//Special case
-            return QUrl::fromLocalFile(m_base.path() + "interception/module/intercepted/qmldir");
+        if (url.path().endsWith("Test.2/qmldir")) {//Special case
+            QUrl url = m_base;
+            url.setPath(m_base.path() + "interception/module/intercepted/qmldir");
+            return url;
+        }
         // Special case: with 5.10 we always add the implicit import, so we need to explicitly handle this case now
         if (url.path().endsWith("intercepted/qmldir"))
             return url;
@@ -836,7 +840,7 @@ void tst_qqmlengine::urlInterceptor()
     QFETCH(QString, expectedAbsoluteUrl);
 
     QQmlEngine e;
-    e.addImportPath(testFileUrl("interception/imports").toLocalFile());
+    e.addImportPath(testFileUrl("interception/imports").url());
     CustomSelector cs(testFileUrl(""));
     cs.m_interceptionPoints = interceptionPoint;
     e.setUrlInterceptor(&cs);
@@ -1032,6 +1036,46 @@ void tst_qqmlengine::singletonInstance()
     }
     {
         qmlRegisterSingletonType<CppSingleton>("Qt.test",1,0,"NotAmbiguous", [](QQmlEngine* qeng, QJSEngine* jeng) -> QObject* {return CppSingleton::create(qeng, jeng);}); // test that overloads for qmlRegisterSingleton are not ambiguous
+    }
+    {
+        // Register QObject* directly
+        CppSingleton single;
+        int id = qmlRegisterSingletonInstance("Qt.test", 1, 0, "CppOwned",
+                                                                &single);
+        QQmlEngine engine2;
+        CppSingleton *singlePtr = engine2.singletonInstance<CppSingleton *>(id);
+        QVERIFY(singlePtr);
+        QCOMPARE(&single, singlePtr);
+        QVERIFY(engine2.objectOwnership(singlePtr) == QQmlEngine::CppOwnership);
+    }
+
+    {
+        CppSingleton single;
+        QQmlEngine engineA;
+        QQmlEngine engineB;
+        int id = qmlRegisterSingletonInstance("Qt.test", 1, 0, "CppOwned", &single);
+        auto singlePtr = engineA.singletonInstance<CppSingleton *>(id);
+        QVERIFY(singlePtr);
+        singlePtr = engineA.singletonInstance<CppSingleton *>(id); // accessing the singleton multiple times from the same engine is fine
+        QVERIFY(singlePtr);
+        QTest::ignoreMessage(QtMsgType::QtCriticalMsg, "<Unknown File>: qmlRegisterSingletonType(): \"CppOwned\" is not available because the callback function returns a null pointer.");
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, "<Unknown File>: Singleton registered by registerSingletonInstance must only be accessed from one engine");
+        QCOMPARE(&single, singlePtr);
+        auto noSinglePtr = engineB.singletonInstance<CppSingleton *>(id);
+        QVERIFY(!noSinglePtr);
+    }
+
+    {
+        CppSingleton single;
+        QThread newThread {};
+        single.moveToThread(&newThread);
+        QCOMPARE(single.thread(), &newThread);
+        QQmlEngine engineB;
+        int id = qmlRegisterSingletonInstance("Qt.test", 1, 0, "CppOwned", &single);
+        QTest::ignoreMessage(QtMsgType::QtCriticalMsg, "<Unknown File>: qmlRegisterSingletonType(): \"CppOwned\" is not available because the callback function returns a null pointer.");
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, "<Unknown File>: Registered object must live in the same thread as the engine it was registered with");
+        auto noSinglePtr = engineB.singletonInstance<CppSingleton *>(id);
+        QVERIFY(!noSinglePtr);
     }
 
     {

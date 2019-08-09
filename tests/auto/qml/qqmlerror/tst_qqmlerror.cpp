@@ -195,7 +195,7 @@ void tst_qqmlerror::debug()
     }
 
     {
-        QUrl url(dataDirectoryUrl().resolved(QUrl("test.txt")));
+        QUrl url = testFileUrl("test.txt");
         QQmlError error;
         error.setUrl(url);
         error.setDescription("An Error");

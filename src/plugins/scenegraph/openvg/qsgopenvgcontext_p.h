@@ -57,7 +57,13 @@ class QSGOpenVGRenderContext : public QSGRenderContext, public QSGRendererInterf
 public:
     QSGOpenVGRenderContext(QSGContext *context);
 
-    void initialize(void *context) override;
+    static const int INIT_PARAMS_MAGIC = 0x51E;
+    struct InitParams : public QSGRenderContext::InitParams {
+        int sType = INIT_PARAMS_MAGIC;
+        QOpenVGContext *context = nullptr;
+    };
+
+    void initialize(const QSGRenderContext::InitParams *params) override;
     void invalidate() override;
     void renderNextFrame(QSGRenderer *renderer, uint fboId) override;
     QSGTexture *createTexture(const QImage &image, uint flags) const override;
@@ -94,7 +100,7 @@ public:
     QSGLayer *createLayer(QSGRenderContext *renderContext) override;
     QSurfaceFormat defaultSurfaceFormat() const override;
     QSGInternalRectangleNode *createInternalRectangleNode() override;
-    QSGInternalImageNode *createInternalImageNode() override;
+    QSGInternalImageNode *createInternalImageNode(QSGRenderContext *renderContext) override;
 #if QT_CONFIG(quick_sprite)
     QSGSpriteNode *createSpriteNode() override;
 #endif

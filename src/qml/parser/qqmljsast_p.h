@@ -3351,7 +3351,7 @@ public:
 
     SourceLocation firstSourceLocation() const override
     {
-      if (FunctionDeclaration *funDecl = cast<FunctionDeclaration *>(sourceElement))
+      if (FunctionExpression *funDecl = sourceElement->asFunctionDefinition())
         return funDecl->firstSourceLocation();
       else if (VariableStatement *varStmt = cast<VariableStatement *>(sourceElement))
         return varStmt->firstSourceLocation();
@@ -3361,7 +3361,7 @@ public:
 
     SourceLocation lastSourceLocation() const override
     {
-      if (FunctionDeclaration *funDecl = cast<FunctionDeclaration *>(sourceElement))
+      if (FunctionExpression *funDecl = sourceElement->asFunctionDefinition())
         return funDecl->lastSourceLocation();
       else if (VariableStatement *varStmt = cast<VariableStatement *>(sourceElement))
         return varStmt->lastSourceLocation();

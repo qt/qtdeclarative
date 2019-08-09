@@ -210,7 +210,7 @@ and when interaction with the scene graph can happen.
 The following is a simple outline of how a frame gets
 composed with the threaded render loop.
 
-\image sg-renderloop-threaded.jpg
+\image sg-renderloop-threaded.png
 
 \list 1
 
@@ -301,7 +301,7 @@ will make the code non-portable.
 The following is a simplified illustration of the frame rendering
 sequence in the non-threaded renderer.
 
-\image sg-renderloop-singlethreaded.jpg
+\image sg-renderloop-singlethreaded.png
 
 
 \section2 Custom control over rendering with QQuickRenderControl

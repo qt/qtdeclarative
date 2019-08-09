@@ -322,6 +322,13 @@ namespace QQmlPrivate
 
     int Q_QML_EXPORT qmlregister(RegistrationType, void *);
     void Q_QML_EXPORT qmlunregister(RegistrationType, quintptr);
+    struct Q_QML_EXPORT RegisterSingletonFunctor
+    {
+        QObject *operator()(QQmlEngine *, QJSEngine *);
+
+        QObject *m_object;
+        bool alreadyCalled = false;
+    };
 }
 
 QT_END_NAMESPACE

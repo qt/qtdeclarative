@@ -648,7 +648,7 @@ public:
         float lastOpacity;
     };
 
-    ShaderManager(QSGDefaultRenderContext *ctx) : visualizeProgram(nullptr), blitProgram(nullptr), context(ctx) { }
+    ShaderManager(QSGDefaultRenderContext *ctx) : blitProgram(nullptr), context(ctx) { }
     ~ShaderManager() {
         qDeleteAll(rewrittenShaders);
         qDeleteAll(stockShaders);
@@ -664,8 +664,6 @@ public Q_SLOTS:
 public:
     Shader *prepareMaterial(QSGMaterial *material, bool enableRhiShaders = false, const QSGGeometry *geometry = nullptr);
     Shader *prepareMaterialNoRewrite(QSGMaterial *material, bool enableRhiShaders = false, const QSGGeometry *geometry = nullptr);
-
-    QOpenGLShaderProgram *visualizeProgram;
 
 private:
     QHash<QSGMaterialType *, Shader *> rewrittenShaders;
@@ -719,12 +717,9 @@ struct RenderPassState
     bool scissorSet;
 };
 
-class Q_QUICK_PRIVATE_EXPORT Renderer : public QSGRenderer, public QOpenGLFunctions
+class Visualizer
 {
 public:
-    Renderer(QSGDefaultRenderContext *);
-    ~Renderer();
-
     enum VisualizeMode {
         VisualizeNothing,
         VisualizeBatches,
@@ -732,6 +727,30 @@ public:
         VisualizeChanges,
         VisualizeOverdraw
     };
+
+    Visualizer(Renderer *renderer);
+    virtual ~Visualizer();
+
+    VisualizeMode mode() const { return m_visualizeMode; }
+    void setMode(VisualizeMode mode) { m_visualizeMode = mode; }
+
+    virtual void visualizeChangesPrepare(Node *n, uint parentChanges = 0);
+    virtual void prepareVisualize() = 0;
+    virtual void visualize() = 0;
+
+    virtual void releaseResources() = 0;
+
+protected:
+    Renderer *m_renderer;
+    VisualizeMode m_visualizeMode;
+    QHash<Node *, uint> m_visualizeChangeSet;
+};
+
+class Q_QUICK_PRIVATE_EXPORT Renderer : public QSGRenderer, public QOpenGLFunctions
+{
+public:
+    Renderer(QSGDefaultRenderContext *);
+    ~Renderer();
 
 protected:
     void nodeChanged(QSGNode *node, QSGNode::DirtyState state) override;
@@ -747,6 +766,8 @@ private:
     };
 
     friend class Updater;
+    friend class OpenGLVisualizer;
+    friend class RhiVisualizer;
 
     void destroyGraphicsResources();
     void map(Buffer *buffer, int size, bool isIndexBuf = false);
@@ -813,15 +834,8 @@ private:
     inline Batch *newBatch();
     void invalidateAndRecycleBatch(Batch *b);
 
-    void visualize();
-    void visualizeBatch(Batch *b);
-    void visualizeClipping(QSGNode *node);
-    void visualizeChangesPrepare(Node *n, uint parentChanges = 0);
-    void visualizeChanges(Node *n);
-    void visualizeOverdraw();
-    void visualizeOverdraw_helper(Node *node);
-    void visualizeDrawGeometry(const QSGGeometry *g);
     void setCustomRenderMode(const QByteArray &mode) override;
+    bool hasCustomRenderModeWithContinuousUpdate() const override;
 
     QSGDefaultRenderContext *m_context;
     QSet<Node *> m_taggedRoots;
@@ -852,6 +866,8 @@ private:
     int m_batchNodeThreshold;
     int m_batchVertexThreshold;
 
+    Visualizer *m_visualizer;
+
     // Stuff used during rendering only...
     ShaderManager *m_shaderManager; // per rendercontext, shared
     QSGMaterial *m_currentMaterial;
@@ -873,9 +889,6 @@ private:
     QDataBuffer<char> m_indexUploadPool;
     // For minimal OpenGL core profile support
     QOpenGLVertexArrayObject *m_vao;
-
-    QHash<Node *, uint> m_visualizeChanceSet;
-    VisualizeMode m_visualizeMode;
 
     Allocator<Node, 256> m_nodeAllocator;
     Allocator<Element, 64> m_elementAllocator;

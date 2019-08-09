@@ -43,8 +43,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QSGRhiTextureGlyphCache::QSGRhiTextureGlyphCache(QRhi *rhi, QFontEngine::GlyphFormat format, const QTransform &matrix)
-    : QImageTextureGlyphCache(format, matrix),
+QSGRhiTextureGlyphCache::QSGRhiTextureGlyphCache(QRhi *rhi, QFontEngine::GlyphFormat format, const QTransform &matrix,
+                                                 const QColor &color)
+    : QImageTextureGlyphCache(format, matrix, color),
       m_rhi(rhi)
 {
     // Some OpenGL implementations, for instance macOS, have issues with

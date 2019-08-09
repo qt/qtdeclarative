@@ -57,6 +57,7 @@
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmlscriptdata_p.h>
 #include <private/qjsvalue_p.h>
+#include <private/qv4generatorobject_p.h>
 
 #include <qtqml_tracepoints_p.h>
 
@@ -1135,7 +1136,10 @@ void QQmlObjectCreator::setupFunctions()
         if (!property->isVMEFunction())
             continue;
 
-        function = QV4::FunctionObject::createScriptFunction(qmlContext, runtimeFunction);
+        if (runtimeFunction->isGenerator())
+            function = QV4::GeneratorFunction::create(qmlContext, runtimeFunction);
+        else
+            function = QV4::FunctionObject::createScriptFunction(qmlContext, runtimeFunction);
         _vmeMetaObject->setVmeMethod(property->coreIndex(), function);
     }
 }
