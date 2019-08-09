@@ -5,4 +5,4 @@ osx-10.12
 [fontSizeMode]
 opensuse-42.1
 [contentSize]
-win32 gcc
+windows gcc
