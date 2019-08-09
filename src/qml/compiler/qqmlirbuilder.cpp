@@ -908,7 +908,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
 
 bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
 {
-    if (QQmlJS::AST::FunctionDeclaration *funDecl = QQmlJS::AST::cast<QQmlJS::AST::FunctionDeclaration *>(node->sourceElement)) {
+    if (QQmlJS::AST::FunctionExpression *funDecl = node->sourceElement->asFunctionDefinition()) {
         CompiledFunctionOrExpression *foe = New<CompiledFunctionOrExpression>();
         foe->node = funDecl;
         foe->parentNode = funDecl;
@@ -1770,7 +1770,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     for (const CompiledFunctionOrExpression &f : functions) {
         Q_ASSERT(f.node != document->program);
         Q_ASSERT(f.parentNode && f.parentNode != document->program);
-        QQmlJS::AST::FunctionDeclaration *function = QQmlJS::AST::cast<QQmlJS::AST::FunctionDeclaration*>(f.node);
+        auto function = f.node->asFunctionDefinition();
 
         if (function) {
             scan.enterQmlFunction(function);
@@ -1794,7 +1794,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
         QQmlJS::AST::Node *node = qmlFunction.node;
         Q_ASSERT(node != document->program);
 
-        QQmlJS::AST::FunctionDeclaration *function = QQmlJS::AST::cast<QQmlJS::AST::FunctionDeclaration*>(node);
+        QQmlJS::AST::FunctionExpression *function = node->asFunctionDefinition();
 
         QString name;
         if (function)

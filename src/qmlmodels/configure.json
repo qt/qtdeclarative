@@ -7,7 +7,7 @@
 
     "features": {
         "qml-object-model" : {
-            "label": "QML list model",
+            "label": "QML object model",
             "purpose": "Provides the ObjectModel and Instantiator QML types.",
             "section": "QML",
             "output": [ "privateFeature" ]

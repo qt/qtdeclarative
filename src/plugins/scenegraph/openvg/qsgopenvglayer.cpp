@@ -44,7 +44,8 @@
 QT_BEGIN_NAMESPACE
 
 QSGOpenVGLayer::QSGOpenVGLayer(QSGRenderContext *renderContext)
-    : m_item(nullptr)
+    : QSGLayer(*(new QSGOpenVGLayerPrivate))
+    , m_item(nullptr)
     , m_renderer(nullptr)
     , m_device_pixel_ratio(1)
     , m_mirrorHorizontal(false)
@@ -310,6 +311,11 @@ void QSGOpenVGLayer::grab()
 
     if (m_recursive)
         markDirtyTexture(); // Continuously update if 'live' and 'recursive'.
+}
+
+int QSGOpenVGLayerPrivate::comparisonKey() const
+{
+    return 0;
 }
 
 QT_END_NAMESPACE

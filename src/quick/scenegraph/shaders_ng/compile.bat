@@ -82,3 +82,5 @@ qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -o shadereffect.vert.qsb shade
 qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o shadereffect.frag.qsb shadereffect.frag
 qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -o sprite.vert.qsb sprite.vert
 qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o sprite.frag.qsb sprite.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o visualization.vert.qsb visualization.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o visualization.frag.qsb visualization.frag

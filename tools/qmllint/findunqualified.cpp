@@ -38,6 +38,7 @@
 #include <private/qqmljsast_p.h>
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
+#include <private/qv4codegen_p.h>
 
 QDebug &operator<<(QDebug dbg, const QQmlJS::AST::SourceLocation &loc);
 
@@ -225,8 +226,7 @@ FindUnqualifiedIDVisitor::localQmlFile2FakeMetaObject(QString filePath)
             break;
         }
         case UiObjectMember::Kind_UiEnumDeclaration: {
-            auto enumDeclaration = static_cast<UiEnumDeclaration *>(initMembers->member);
-            qDebug() << "enumdecl" << enumDeclaration->name;
+            // nothing to do
             break;
         }
         case UiObjectMember::Kind_UiObjectBinding: {
@@ -235,8 +235,6 @@ FindUnqualifiedIDVisitor::localQmlFile2FakeMetaObject(QString filePath)
         }
         case UiObjectMember::Kind_UiObjectDefinition: {
             // creates nothing accessible
-            /*auto objectDefinition = static_cast<UiObjectDefinition*>(initMembers->member);
-        qDebug() << "objdef" << objectDefinition->qualifiedTypeNameId->name;*/
             break;
         }
         case UiObjectMember::Kind_UiPublicMember: {
@@ -325,7 +323,9 @@ void FindUnqualifiedIDVisitor::importExportedNames(QStringRef prefix, QString na
                 break;
             }
         } else {
-            qDebug() << name << "not found";
+            m_colorOut.write(QLatin1String("warning: "), Warning);
+            m_colorOut.write(name + QLatin1String(" was not found. Did you add all import paths?\n"));
+            m_unknownImports.insert(name);
             break;
         }
     }
@@ -503,7 +503,9 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
         } else {
             auto method = m_currentScope->methods()[signal];
             for (auto const &param : method.parameterNames()) {
-                m_currentScope->insertSignalIdentifier(param, method, uisb->statement->firstSourceLocation());
+                auto firstSourceLocation = uisb->statement->firstSourceLocation();
+                bool hasMultilineStatementBody = uisb->statement->lastSourceLocation().startLine > firstSourceLocation.startLine;
+                m_currentScope->insertSignalIdentifier(param, method, firstSourceLocation, hasMultilineStatementBody);
             }
         }
         return true;
@@ -524,7 +526,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
     auto name = idexp->name;
     if (!m_exportedName2MetaObject.contains(name.toString())) {
         m_currentScope->addIdToAccssedIfNotInParentScopes(
-                { name.toString(), idexp->firstSourceLocation() });
+                { name.toString(), idexp->firstSourceLocation() }, m_unknownImports);
     }
     return true;
 }
@@ -545,15 +547,19 @@ FindUnqualifiedIDVisitor::FindUnqualifiedIDVisitor(QStringList const &qmltypeDir
     m_colorOut.insertColorMapping(Normal, ColorOutput::DefaultColor);
     m_colorOut.insertColorMapping(Hint, ColorOutput::GreenForeground);
     QLatin1String jsGlobVars[] = {
-        QLatin1String ("Array"), QLatin1String("Boolean"), QLatin1String("Date"), QLatin1String("Function"), QLatin1String("Math"), QLatin1String("Number"), QLatin1String("Object"), QLatin1String("RegExp"), QLatin1String("String"),
-        QLatin1String("Error"), QLatin1String("EvalError"), QLatin1String("RangeError"), QLatin1String("ReferenceError"), QLatin1String("SyntaxError"), QLatin1String("TypeError"), QLatin1String("URIError"),
-        QLatin1String("encodeURI"), QLatin1String("encodeURIComponent"), QLatin1String("decodeURI"), QLatin1String("decodeURIComponent"), QLatin1String("escape"), QLatin1String("unescape"),
-        QLatin1String("isFinite"), QLatin1String("isNanN"), QLatin1String("parseFloat"), QLatin1String("parseInt"),
-        QLatin1String("eval"), QLatin1String("console"), QLatin1String("print"), QLatin1String("gc"),
+        /* Not listed on the MDN page; browser and QML extensions: */
+        // console/debug api
+        QLatin1String("console"), QLatin1String("print"),
+        // garbage collector
+        QLatin1String("gc"),
+        // i18n
         QLatin1String("qsTr"), QLatin1String("qsTrId"), QLatin1String("QT_TR_NOOP"), QLatin1String("QT_TRANSLATE_NOOP"), QLatin1String("QT_TRID_NOOP"),
-        QLatin1String("XMLHttpRequest"), QLatin1String("JSON"), QLatin1String("Promise"),
-        QLatin1String("undefined")
+        // XMLHttpRequest
+        QLatin1String("XMLHttpRequest")
     };
+    for (const char **globalName = QV4::Compiler::Codegen::s_globalNames; *globalName != nullptr; ++globalName) {
+        m_currentScope->insertJSIdentifier(QString::fromLatin1(*globalName), QQmlJS::AST::VariableScope::Const);
+    }
     for (const auto& jsGlobVar: jsGlobVars)
         m_currentScope->insertJSIdentifier(jsGlobVar, QQmlJS::AST::VariableScope::Const);
 }
@@ -593,7 +599,6 @@ void FindUnqualifiedIDVisitor::visitFunctionExpressionHelper(QQmlJS::AST::Functi
             m_currentScope->insertJSIdentifier(name, VariableScope::Const);
         }
     }
-    // qDebug() << fexpr->firstSourceLocation() << "function expression" << fexpr->name;
     QString name = fexpr->name.toString();
     if (name.isEmpty())
         name = "<anon>";

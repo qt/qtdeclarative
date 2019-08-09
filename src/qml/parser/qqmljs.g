@@ -1396,6 +1396,14 @@ UiObjectMember: FunctionDeclarationWithTypes;
     } break;
 ./
 
+UiObjectMember: GeneratorExpression;
+/.
+    case $rule_number: {
+        auto node = new (pool) AST::UiSourceElement(sym(1).Node);
+        sym(1).Node = node;
+    } break;
+./
+
 UiObjectMember: VariableStatement;
 /.
     case $rule_number: {

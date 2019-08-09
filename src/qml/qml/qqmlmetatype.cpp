@@ -60,7 +60,7 @@ struct LockedData : private QQmlMetaTypeData
 };
 
 Q_GLOBAL_STATIC(LockedData, metaTypeData)
-Q_GLOBAL_STATIC_WITH_ARGS(QMutex, metaTypeDataLock, (QMutex::Recursive))
+Q_GLOBAL_STATIC(QRecursiveMutex, metaTypeDataLock)
 
 class QQmlMetaTypeDataPtr
 {
@@ -804,7 +804,7 @@ QQmlType QQmlMetaType::typeForUrl(const QString &urlString,
     return QQmlType();
 }
 
-QMutex *QQmlMetaType::typeRegistrationLock()
+QRecursiveMutex *QQmlMetaType::typeRegistrationLock()
 {
     return metaTypeDataLock();
 }

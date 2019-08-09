@@ -667,6 +667,15 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
 }
 
+template<typename T>
+inline auto qmlRegisterSingletonInstance(const char *uri, int versionMajor, int versionMinor,
+                                         const char *typeName, T *cppObject) -> typename std::enable_if<std::is_base_of<QObject, T>::value, int>::type
+{
+    QQmlPrivate::RegisterSingletonFunctor registrationFunctor;
+    registrationFunctor.m_object = cppObject;
+    return qmlRegisterSingletonType<T>(uri, versionMajor, versionMinor, typeName, registrationFunctor);
+}
+
 inline int qmlRegisterSingletonType(const QUrl &url, const char *uri, int versionMajor, int versionMinor, const char *qmlName)
 {
     if (url.isRelative()) {

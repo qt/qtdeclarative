@@ -192,8 +192,9 @@ void QSGRhiSupport::applySettings()
     default:
         break;
     }
-    qDebug("Using QRhi with backend %s\n  graphics API debug/validation layers: %d\n  QRhi profiling and debug markers: %d",
-           backendName, m_debugLayer, m_profile);
+    qCDebug(QSG_LOG_INFO,
+            "Using QRhi with backend %s\n  graphics API debug/validation layers: %d\n  QRhi profiling and debug markers: %d",
+            backendName, m_debugLayer, m_profile);
 }
 
 QSGRhiSupport *QSGRhiSupport::staticInst()
@@ -527,11 +528,11 @@ void QSGRhiProfileConnection::initialize(QRhi *rhi)
         int profPort = qEnvironmentVariableIntValue("QSG_RHI_PROFILE_PORT");
         if (!profPort)
             profPort = 30667;
-        qDebug("Sending RHI profiling output to %s:%d", qPrintable(profHost), profPort);
+        qCDebug(QSG_LOG_INFO, "Sending RHI profiling output to %s:%d", qPrintable(profHost), profPort);
         m_profConn.reset(new QTcpSocket);
         QObject::connect(m_profConn.data(), QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), m_profConn.data(),
-                         [this](QAbstractSocket::SocketError socketError) { qDebug("  RHI profiler error: %d (%s)",
-                                                                                   socketError, qPrintable(m_profConn->errorString())); });
+                         [this](QAbstractSocket::SocketError socketError) { qWarning("  RHI profiler error: %d (%s)",
+                                                                                     socketError, qPrintable(m_profConn->errorString())); });
         m_profConn->connectToHost(profHost, profPort);
         m_profConn->waitForConnected(); // blocking wait because we want to send stuff already from the init below
         rhi->profiler()->setDevice(m_profConn.data());

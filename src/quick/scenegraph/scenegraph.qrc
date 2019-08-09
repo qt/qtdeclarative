@@ -121,5 +121,8 @@
         <file>shaders_ng/shadereffect.frag.qsb</file>
         <file>shaders_ng/sprite.vert.qsb</file>
         <file>shaders_ng/sprite.frag.qsb</file>
+
+        <file>shaders_ng/visualization.vert.qsb</file>
+        <file>shaders_ng/visualization.frag.qsb</file>
     </qresource>
 </RCC>

@@ -59,8 +59,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSignalMapper;
-
 class Q_QUICK_PRIVATE_EXPORT QQuickGenericShaderEffect : public QObject
 {
     Q_OBJECT
@@ -142,7 +140,7 @@ private:
 
     struct SignalMapper {
         SignalMapper() : mapper(nullptr), active(false) { }
-        QSignalMapper *mapper;
+        QObject *mapper;
         bool active;
     };
     QVector<SignalMapper> m_signalMappers[NShader];

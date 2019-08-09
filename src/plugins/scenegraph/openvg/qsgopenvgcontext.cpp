@@ -68,10 +68,14 @@ QSGOpenVGRenderContext::QSGOpenVGRenderContext(QSGContext *context)
 
 }
 
-void QSGOpenVGRenderContext::initialize(void *context)
+void QSGOpenVGRenderContext::initialize(const QSGRenderContext::InitParams *params)
 {
-    m_vgContext = static_cast<QOpenVGContext*>(context);
-    QSGRenderContext::initialize(context);
+    const InitParams *vgparams = static_cast<const InitParams *>(params);
+    if (vgparams->sType != INIT_PARAMS_MAGIC)
+        qFatal("Invalid OpenVG render context parameters");
+
+    m_vgContext = vgparams->context;
+    QSGRenderContext::initialize(params);
 }
 
 void QSGOpenVGRenderContext::invalidate()
@@ -160,7 +164,7 @@ QSGInternalRectangleNode *QSGOpenVGContext::createInternalRectangleNode()
     return new QSGOpenVGInternalRectangleNode();
 }
 
-QSGInternalImageNode *QSGOpenVGContext::createInternalImageNode()
+QSGInternalImageNode *QSGOpenVGContext::createInternalImageNode(QSGRenderContext *)
 {
     return new QSGOpenVGInternalImageNode();
 }

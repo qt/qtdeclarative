@@ -45,6 +45,7 @@ private slots:
     void completeQmldirPaths_data();
     void completeQmldirPaths();
     void interceptQmldir();
+    void singletonVersionResolution();
     void cleanup();
 };
 
@@ -77,7 +78,7 @@ void tst_QQmlImport::testDesignerSupported()
     QVERIFY(window->errors().isEmpty());
 
     QString warningString("%1:30:1: module does not support the designer \"MyPluginUnsupported\" \n     import MyPluginUnsupported 1.0\r \n     ^ ");
-#ifndef Q_OS_WIN
+#if !defined(Q_OS_WIN) && !defined(Q_OS_ANDROID)
     warningString.remove('\r');
 #endif
     warningString = warningString.arg(testFileUrl("testfile_unsupported.qml").toString());
@@ -129,6 +130,9 @@ void tst_QQmlImport::uiFormatLoading()
 
 void tst_QQmlImport::importPathOrder()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath) returns bogus path on Android, but its nevertheless unusable.");
+#endif
     QStringList expectedImportPaths;
     QString appDirPath = QCoreApplication::applicationDirPath();
     QString qml2Imports = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
@@ -210,6 +214,50 @@ void tst_QQmlImport::interceptQmldir()
     QVERIFY(component.isReady());
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
+}
+
+// QTBUG-77102
+void tst_QQmlImport::singletonVersionResolution()
+{
+    QQmlEngine engine;
+    engine.addImportPath(testFile("QTBUG-77102/imports"));
+    {
+        // Singleton with higher version is simply ignored when importing lower version of plugin
+        QQmlComponent component(&engine);
+        component.loadUrl(testFileUrl("QTBUG-77102/main.0.9.qml"));
+        QVERIFY(component.isReady());
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+    }
+    {
+        // but the singleton is not accessible
+        QQmlComponent component(&engine);
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression {".*ReferenceError: MySettings is not defined$"} );
+        component.loadUrl(testFileUrl("QTBUG-77102/main.0.9.fail.qml"));
+        QVERIFY(component.isReady());
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+    }
+    {
+        // unless a version which is high enough is imported
+        QQmlComponent component(&engine);
+        component.loadUrl(testFileUrl("QTBUG-77102/main.1.0.qml"));
+        QVERIFY(component.isReady());
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        auto item = qobject_cast<QQuickItem*>(obj.get());
+        QCOMPARE(item->width(), 50);
+    }
+    {
+        // or when there is no number because we are importing from a path
+        QQmlComponent component(&engine);
+        component.loadUrl(testFileUrl("QTBUG-77102/main.nonumber.qml"));
+        QVERIFY(component.isReady());
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        auto item = qobject_cast<QQuickItem*>(obj.get());
+        QCOMPARE(item->width(), 50);
+    }
 }
 
 

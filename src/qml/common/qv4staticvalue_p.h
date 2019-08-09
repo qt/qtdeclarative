@@ -51,6 +51,7 @@
 //
 
 #include <QtCore/private/qnumeric_p.h>
+#include <cstring>
 
 #ifdef QT_NO_DEBUG
 #define QV4_NEARLY_ALWAYS_INLINE Q_ALWAYS_INLINE
