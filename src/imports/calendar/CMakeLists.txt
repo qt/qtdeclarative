@@ -8,7 +8,6 @@ add_qml_module(qtlabscalendarplugin
     CPP_PLUGIN
     URI "Qt.labs.calendar"
     VERSION "1.0"
-    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         qquickcalendar.cpp qquickcalendar_p.h
         qquickcalendarmodel.cpp qquickcalendarmodel_p.h
@@ -42,8 +41,6 @@ set(qml_files
 )
 
 add_qt_resource(qtlabscalendarplugin qmake_Qt_labs_calendar
-    PREFIX
-        "/qt-project.org/imports/Qt/labs/calendar"
     FILES
         ${qml_files}
 )

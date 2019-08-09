@@ -9,7 +9,6 @@ add_qml_module(qtquickcontrols2imaginestyleplugin
     TARGET_PATH "QtQuick/Controls.2/Imagine"
     URI "QtQuick.Controls.Imagine"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
-    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         qquickimageselector.cpp qquickimageselector_p.h
         qquickimaginestyle.cpp qquickimaginestyle_p.h
@@ -83,8 +82,6 @@ set(qml_files
 )
 
 add_qt_resource(qtquickcontrols2imaginestyleplugin qmake_QtQuick_Controls_2_Imagine
-    PREFIX
-        "/qt-project.org/imports/QtQuick/Controls.2/Imagine"
     FILES
         ${qml_files}
 )

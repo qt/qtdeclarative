@@ -8,7 +8,6 @@ add_qml_module(qtlabsplatformplugin
     CPP_PLUGIN
     URI "Qt.labs.platform"
     VERSION "1.0"
-    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         qquickplatformcolordialog.cpp qquickplatformcolordialog_p.h
         qquickplatformdialog.cpp qquickplatformdialog_p.h

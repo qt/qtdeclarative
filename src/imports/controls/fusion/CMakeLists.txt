@@ -9,7 +9,6 @@ add_qml_module(qtquickcontrols2fusionstyleplugin
     TARGET_PATH "QtQuick/Controls.2/Fusion"
     URI "QtQuick.Controls.Fusion"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
-    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         qquickfusionbusyindicator.cpp qquickfusionbusyindicator_p.h
         qquickfusiondial.cpp qquickfusiondial_p.h
@@ -110,8 +109,6 @@ set(qml_files
 )
 
 add_qt_resource(qtquickcontrols2fusionstyleplugin qmake_QtQuick_Controls_2_Fusion
-    PREFIX
-        "/qt-project.org/imports/QtQuick/Controls.2/Fusion"
     FILES
         ${qml_files}
 )

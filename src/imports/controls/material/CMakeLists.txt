@@ -9,7 +9,6 @@ add_qml_module(qtquickcontrols2materialstyleplugin
     TARGET_PATH "QtQuick/Controls.2/Material"
     URI "QtQuick.Controls.Material"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
-    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         qquickmaterialbusyindicator.cpp qquickmaterialbusyindicator_p.h
         qquickmaterialprogressbar.cpp qquickmaterialprogressbar_p.h
@@ -117,8 +116,6 @@ set(qml_files
 )
 
 add_qt_resource(qtquickcontrols2materialstyleplugin qmake_QtQuick_Controls_2_Material
-    PREFIX
-        "/qt-project.org/imports/QtQuick/Controls.2/Material"
     FILES
         ${qml_files}
 )

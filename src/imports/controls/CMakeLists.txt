@@ -9,7 +9,6 @@ add_qml_module(qtquickcontrols2plugin
     TARGET_PATH "QtQuick/Controls.2"
     URI "QtQuick.Controls"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
-    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         qquickdefaultbusyindicator.cpp qquickdefaultbusyindicator_p.h
         qquickdefaultdial.cpp qquickdefaultdial_p.h
@@ -36,8 +35,6 @@ add_qml_module(qtquickcontrols2plugin
 
 # Resources:
 add_qt_resource(qtquickcontrols2plugin "qtquickcontrols2plugin"
-    PREFIX
-        "/qt-project.org/imports/QtQuick/Controls.2"
     FILES
         images/arrow-indicator.png
         images/arrow-indicator@2x.png
@@ -121,8 +118,6 @@ set(qml_files
 )
 
 add_qt_resource(qtquickcontrols2plugin qmake_QtQuick_Controls_2
-    PREFIX
-        "/qt-project.org/imports/QtQuick/Controls.2"
     FILES
         ${qml_files}
 )

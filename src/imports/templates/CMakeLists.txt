@@ -9,7 +9,6 @@ add_qml_module(qtquicktemplates2plugin
     TARGET_PATH "QtQuick/Templates.2"
     URI "QtQuick.Templates"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
-    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         qtquicktemplates2plugin.cpp
     DEFINES

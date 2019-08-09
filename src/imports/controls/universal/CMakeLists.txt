@@ -9,7 +9,6 @@ add_qml_module(qtquickcontrols2universalstyleplugin
     TARGET_PATH "QtQuick/Controls.2/Universal"
     URI "QtQuick.Controls.Universal"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
-    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         qquickuniversalbusyindicator.cpp qquickuniversalbusyindicator_p.h
         qquickuniversalfocusrectangle.cpp qquickuniversalfocusrectangle_p.h
@@ -112,8 +111,6 @@ set(qml_files
 )
 
 add_qt_resource(qtquickcontrols2universalstyleplugin qmake_QtQuick_Controls_2_Universal
-    PREFIX
-        "/qt-project.org/imports/QtQuick/Controls.2/Universal"
     FILES
         ${qml_files}
 )
