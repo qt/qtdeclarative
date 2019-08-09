@@ -9,7 +9,6 @@ add_qml_module(modelsplugin
     TARGET_PATH "QtQml/Models.2"
     URI "QtQml.Models"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
-    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         plugin.cpp
     LIBRARIES

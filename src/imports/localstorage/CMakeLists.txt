@@ -8,7 +8,6 @@ add_qml_module(qmllocalstorageplugin
     CPP_PLUGIN
     URI "QtQuick.LocalStorage"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
-    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         plugin.cpp
     LIBRARIES

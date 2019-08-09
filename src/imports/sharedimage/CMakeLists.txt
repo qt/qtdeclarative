@@ -8,7 +8,6 @@ add_qml_module(sharedimageplugin
     CPP_PLUGIN
     URI "Qt.labs.sharedimage"
     VERSION "1.0"
-    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         plugin.cpp
         qsharedimageloader.cpp qsharedimageloader_p.h

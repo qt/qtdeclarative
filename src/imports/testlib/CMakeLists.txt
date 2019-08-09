@@ -8,7 +8,6 @@ add_qml_module(qmltestplugin
     CPP_PLUGIN
     URI "QtTest"
     VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
-    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         main.cpp
     LIBRARIES
@@ -31,8 +30,6 @@ set(qml_files
 )
 
 add_qt_resource(qmltestplugin qmake_QtTest
-    PREFIX
-        "/qt-project.org/imports/QtTest"
     FILES
         ${qml_files}
 )

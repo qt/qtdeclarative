@@ -9,7 +9,6 @@ add_qml_module(windowplugin
     TARGET_PATH "QtQuick/Window.2"
     URI "QtQuick.Window"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
-    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         plugin.cpp
     LIBRARIES

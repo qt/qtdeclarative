@@ -9,7 +9,6 @@ add_qml_module(qtquick2plugin
     TARGET_PATH "QtQuick.2"
     URI "QtQuick"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
-    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         plugin.cpp
     LIBRARIES

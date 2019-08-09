@@ -8,7 +8,6 @@ add_qml_module(qmlsettingsplugin
     CPP_PLUGIN
     URI "Qt.labs.settings"
     VERSION "1.1"
-    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         plugin.cpp
         qqmlsettings.cpp qqmlsettings_p.h

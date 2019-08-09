@@ -9,7 +9,6 @@ add_qml_module(particlesplugin
     TARGET_PATH "QtQuick/Particles.2"
     URI "QtQuick.Particles"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
-    RESOURCE_PREFIX "/qt-project.org/imports"
     SOURCES
         plugin.cpp
     LIBRARIES
