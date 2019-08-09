@@ -31,15 +31,35 @@
 
 \section1 Scene Graph Adaptations in Qt Quick
 
-Originally, Qt Quick always relied on OpenGL (OpenGL ES 2.0 or OpenGL 2.0) to parse the scene graph
-and render the results to a render target. From Qt 5.8 onwards, Qt Quick also supports rendering in
-software and with Direct3D 12.
+Originally, Qt Quick always relied on OpenGL (OpenGL ES 2.0 or OpenGL 2.0) to
+parse the scene graph and render the results to a render target
+
+From Qt 5.8 onwards, Qt Quick also supports rendering in software, with OpenVG,
+and with Direct3D 12. This is realized by having additional scene graph
+adaptations, either in form of plugins (d3d12, openvg) or built-in to the Qt
+Quick library (software). The default adaptation continues to rely directly on
+OpenGL.
+
+From Qt 5.14 onwards, the default adaptation gains the option of rendering via
+a graphics abstraction layer, the Qt Rendering Hardware Interface (RHI),
+provided by the \l QtGui module. When enabled, no direct OpenGL calls are made.
+Rather, the scene graph renders by using the APIs provided by the abstraction
+layer, which is then translated into OpenGL, Vulkan, Metal, or Direct 3D calls.
+Shader handling is also unified by writing shader code once, compiling to
+\l{https://www.khronos.org/spir/}{SPIR-V}, and then translating to the language
+appropriate for the various graphics APIs.
 
 \target Switching Between the Adaptation Used by the Application
 \section1 Switch Between Adaptations in Your Application
 
-The default rendering backend is still OpenGL, but in Qt builds with OpenGL support disabled, the
-default is the software renderer. You can override this in one of two ways:
+Unlike \c software or \c d3d12, the RHI-based renderer is not an additional
+adaptation, and is always built-in. As of Qt 5.14 it can be enabled by setting
+the environment variable \c{QSG_RHI} to a non-zero value before starting the
+application, or via \l QQuickWindow::setScenegraphBackend() in combination with
+\l QSGRendererInterface::GraphicsApi. When none of this is done, OpenGL is used
+directly like in previous versions.
+
+Switching to a different adaptation can be achieved in two ways:
 
 \list
     \li Use an environment variable - Set the \c{QT_QUICK_BACKEND} or the legacy
@@ -51,7 +71,8 @@ default is the software renderer. You can override this in one of two ways:
 The following backends are supported:
 
 \list
-    \li OpenGL - Request with the \c{""} string or the QSGRendererInterface::OpenGL enum value.
+    \li Default - Request with the \c{""} string or a QSGRendererInterface::GraphicsApi enum value
+        different than the ones listed below.
     \li Software - Request with the \c{"software"} string or the QSGRendererInterface::Software
         enum value.
     \li Direct3D 12 - Request with the \c{"d3d12"} string or the QSGRendererInterface::Direct3D12
@@ -64,16 +85,25 @@ To find out which backend is in use, you can enable basic scene graph informatio
 \c{QSG_INFO} environment variable or the \c{qt.scenegraph.general} logging category. This results
 in some information being printed onto the debug output, during application startup.
 
-\note Typically, adaptations other than OpenGL come with a set of limitations as they are unlikely
-      to provide a feature set that's 100% compatible with OpenGL. However, these adaptations may
-      provide their own specific advantages in certain areas. For more information on the various
-      adaptations, refer to the sections below.
+\note In Qt builds with OpenGL disabled, the default adaptation is \c software.
+This may change in future releases.
 
-\section1 OpenGL ES 2.0 and OpenGL 2.0 Adaptation
+\note Typically, adaptations other than the default one come with a set of
+limitations as they are unlikely to provide a feature set that's 100%
+compatible with OpenGL. However, these adaptations may provide their own
+specific advantages in certain areas. For more information on the various
+adaptations, refer to the sections below.
 
-The OpenGL adaptation is the default adaptation, which is capable of providing the full Qt Quick 2
-feature set. For more details, see
-\l{qtquick-visualcanvas-scenegraph-renderer.html}{OpenGL Adaptation}.
+\section1 Default Adaptation
+
+When using OpenGL directly, the default adaptation is capable of providing the
+full Qt Quick 2 feature set. For more details, see
+\l{qtquick-visualcanvas-scenegraph-renderer.html}{Default Adaptation}.
+
+When using OpenGL, Vulkan, Metal, or Direct 3D via the RHI, the default
+adaptation is capable of providing most features, including the full batching
+renderer described in \l{qtquick-visualcanvas-scenegraph-renderer.html}{Default
+Adaptation}, but some additional features may not be available as of Qt 5.14.
 
 \section1 Software Adaptation
 

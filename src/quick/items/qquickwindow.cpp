@@ -4224,7 +4224,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     When not running with the RHI (and using OpenGL directly), the signal is
     emitted after the renderer has cleared the render target. This makes it
-    possible to create appliations that function identically both with and
+    possible to create applications that function identically both with and
     without the RHI.
 
     \note Resource updates (uploads, copies) typically cannot be enqueued from
@@ -4255,7 +4255,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     When not running with the RHI (and using OpenGL directly), the signal is
     emitted after the renderer has finished its rendering, but before
-    afterRendering(). This makes it possible to create appliations that
+    afterRendering(). This makes it possible to create applications that
     function identically both with and without the RHI.
 
     \note Resource updates (uploads, copies) typically cannot be enqueued from

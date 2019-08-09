@@ -172,12 +172,15 @@ Creator.
         \b{Scene Graph}
         \list
         \li \l{Scene Graph - OpenGL Under QML}{OpenGL Under QML}
+        \li \l{Scene Graph - Metal Under QML}{Metal Under QML}
+        \li \l{Scene Graph - Direct3D 11 Under QML}{Direct3D 11 Under QML}
         \li \l{Scene Graph - Painted Item}{Painted Item}
         \li \l{Scene Graph - Custom Geometry}{Custom Geometry}
         \li \l{Scene Graph - Graph}{Graph}
         \li \l{Scene Graph - Simple Material}{Simple Material}
         \li \l{Scene Graph - Rendering FBOs}{Rendering FBOs}
         \li \l{Scene Graph - Rendering FBOs in a thread}{Rendering FBOs in a thread}
+        \li \l{Scene Graph - Custom Rendering with QSGRenderNode}{Render Node}
         \endlist
     \enddiv
 \enddiv

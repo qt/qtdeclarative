@@ -56,12 +56,15 @@ See the documentation about the \l{qtquick-visualcanvas-visualparent.html}
 \section1 Scene Graph
 
 Modern computer systems and devices use graphics processing units or GPUs to
-render graphics.  Qt Quick can leverage this graphics hardware by using graphics
-APIs like OpenGL.  The default graphics adaptation for Qt Quick requires OpenGL and
-it is used to display applications developed with Qt Quick in QML.  In particular,
-Qt Quick defines a scene graph which is then rendered.  See the documentation about the
-\l{qtquick-visualcanvas-scenegraph.html}{Scene Graph} for in-depth information about
-the concept of a scene graph and why it is beneficial, and about the scene graph
-adaptations provided by Qt Quick.
+render graphics. Qt Quick can leverage this graphics hardware by using graphics
+APIs like \l{https://www.khronos.org/opengl/}{OpenGL},
+\l{https://www.khronos.org/vulkan/}{Vulkan}, or
+\l{https://developer.apple.com/documentation/metal}{Metal}. The default
+graphics adaptation for Qt Quick requires OpenGL and it is used to display
+applications developed with Qt Quick in QML. In particular, Qt Quick defines a
+scene graph which is then rendered. See the documentation about the
+\l{qtquick-visualcanvas-scenegraph.html}{Scene Graph} for in-depth information
+about the concept of a scene graph and why it is beneficial, and about the
+scene graph adaptations provided by Qt Quick.
 
 */
