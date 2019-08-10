@@ -1,6 +1,6 @@
-/****************************************************************************
+﻿/****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -41,7 +41,6 @@
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qquickitem_p.h>
 #include <QtQuick/qsgnode.h>
-#include <QtQuick/qsgtexturematerial.h>
 #include <QtQuick/qsgtexture.h>
 #include <QFile>
 #include <QRandomGenerator>
@@ -56,13 +55,15 @@
 #include <private/qqmlglobal_p.h>
 #include <QtQml/qqmlinfo.h>
 #include <cmath>
+#include <QtGui/private/qrhi_p.h>
 
 QT_BEGIN_NAMESPACE
 
-//TODO: Make it larger on desktop? Requires fixing up shader code with the same define
+// Must match the shader code
 #define UNIFORM_ARRAY_SIZE 64
 
 const qreal CONV = 0.017453292519943295;
+
 class ImageMaterialData
 {
     public:
@@ -85,13 +86,10 @@ class ImageMaterialData
     QSizeF animSheetSize;
 };
 
-class TabledMaterialData : public ImageMaterialData {};
-class TabledMaterial : public QSGSimpleMaterialShader<TabledMaterialData>
+class TabledMaterialShader : public QSGMaterialShader
 {
-    QSG_DECLARE_SIMPLE_SHADER(TabledMaterial, TabledMaterialData)
-
 public:
-    TabledMaterial()
+    TabledMaterialShader()
     {
         QSGShaderSourceBuilder builder;
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
@@ -122,36 +120,47 @@ public:
     const char *vertexShader() const override { return m_vertex_code.constData(); }
     const char *fragmentShader() const override { return m_fragment_code.constData(); }
 
-    QList<QByteArray> attributes() const override {
-        return QList<QByteArray>() << "vPosTex" << "vData" << "vVec"
-            << "vColor" << "vDeformVec" << "vRotation";
-    };
+    char const *const *attributeNames() const override
+    {
+        static const char *const attr[] = { "vPosTex", "vData", "vVec", "vColor", "vDeformVec", "vRotation", nullptr };
+        return attr;
+    }
 
     void initialize() override {
-        QSGSimpleMaterialShader<TabledMaterialData>::initialize();
         program()->bind();
         program()->setUniformValue("_qt_texture", 0);
         program()->setUniformValue("colortable", 1);
         glFuncs = QOpenGLContext::currentContext()->functions();
+        m_matrix_id = program()->uniformLocation("qt_Matrix");
+        m_opacity_id = program()->uniformLocation("qt_Opacity");
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_entry_id = program()->uniformLocation("entry");
         m_sizetable_id = program()->uniformLocation("sizetable");
         m_opacitytable_id = program()->uniformLocation("opacitytable");
     }
 
-    void updateState(const TabledMaterialData* d, const TabledMaterialData*) override {
+    void updateState(const RenderState &renderState, QSGMaterial *mat, QSGMaterial *) override {
+        ImageMaterialData *state = static_cast<ImageMaterial *>(mat)->state();
+
+        if (renderState.isMatrixDirty())
+            program()->setUniformValue(m_matrix_id, renderState.combinedMatrix());
+        if (renderState.isOpacityDirty() && m_opacity_id >= 0)
+            program()->setUniformValue(m_opacity_id, renderState.opacity());
+
         glFuncs->glActiveTexture(GL_TEXTURE1);
-        d->colorTable->bind();
+        state->colorTable->bind();
 
         glFuncs->glActiveTexture(GL_TEXTURE0);
-        d->texture->bind();
+        state->texture->bind();
 
-        program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
-        program()->setUniformValue(m_entry_id, (float) d->entry);
-        program()->setUniformValueArray(m_sizetable_id, (const float*) d->sizeTable, UNIFORM_ARRAY_SIZE, 1);
-        program()->setUniformValueArray(m_opacitytable_id, (const float*) d->opacityTable, UNIFORM_ARRAY_SIZE, 1);
+        program()->setUniformValue(m_timestamp_id, (float) state->timestamp);
+        program()->setUniformValue(m_entry_id, (float) state->entry);
+        program()->setUniformValueArray(m_sizetable_id, (const float*) state->sizeTable, UNIFORM_ARRAY_SIZE, 1);
+        program()->setUniformValueArray(m_opacitytable_id, (const float*) state->opacityTable, UNIFORM_ARRAY_SIZE, 1);
     }
 
+    int m_matrix_id;
+    int m_opacity_id;
     int m_entry_id;
     int m_timestamp_id;
     int m_sizetable_id;
@@ -161,13 +170,91 @@ public:
     QOpenGLFunctions* glFuncs;
 };
 
-class DeformableMaterialData : public ImageMaterialData {};
-class DeformableMaterial : public QSGSimpleMaterialShader<DeformableMaterialData>
+class TabledMaterialRhiShader : public QSGMaterialRhiShader
 {
-    QSG_DECLARE_SIMPLE_SHADER(DeformableMaterial, DeformableMaterialData)
-
 public:
-    DeformableMaterial()
+    TabledMaterialRhiShader()
+    {
+        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_tabled.vert.qsb"));
+        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_tabled.frag.qsb"));
+    }
+
+    bool updateUniformData(const RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
+    {
+        QByteArray *buf = renderState.uniformData();
+        Q_ASSERT(buf->size() >= 80 + 2 * (UNIFORM_ARRAY_SIZE * 4 * 4));
+
+        if (renderState.isMatrixDirty()) {
+            const QMatrix4x4 m = renderState.combinedMatrix();
+            memcpy(buf->data(), m.constData(), 64);
+        }
+
+        if (renderState.isOpacityDirty()) {
+            const float opacity = renderState.opacity();
+            memcpy(buf->data() + 64, &opacity, 4);
+        }
+
+        ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
+
+        float entry = float(state->entry);
+        memcpy(buf->data() + 68, &entry, 4);
+
+        float timestamp = float(state->timestamp);
+        memcpy(buf->data() + 72, &timestamp, 4);
+
+        float *p = reinterpret_cast<float *>(buf->data() + 80);
+        for (int i = 0; i < UNIFORM_ARRAY_SIZE; ++i) {
+            *p = state->sizeTable[i];
+            p += 4;
+        }
+        p = reinterpret_cast<float *>(buf->data() + 80 + (UNIFORM_ARRAY_SIZE * 4 * 4));
+        for (int i = 0; i < UNIFORM_ARRAY_SIZE; ++i) {
+            *p = state->opacityTable[i];
+            p += 4;
+        }
+
+        return true;
+    }
+
+    void updateSampledImage(const RenderState &renderState, int binding, QSGTexture **texture,
+                            QSGMaterial *newMaterial, QSGMaterial *) override
+    {
+        ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
+        if (binding == 2) {
+            state->colorTable->updateRhiTexture(renderState.rhi(), renderState.resourceUpdateBatch());
+            *texture = state->colorTable;
+        } else if (binding == 1) {
+            state->texture->updateRhiTexture(renderState.rhi(), renderState.resourceUpdateBatch());
+            *texture = state->texture;
+        }
+    }
+};
+
+class TabledMaterial : public ImageMaterial
+{
+public:
+    TabledMaterial() { setFlag(SupportsRhiShader, true); }
+    QSGMaterialShader *createShader() const override {
+        if (flags().testFlag(RhiShaderWanted))
+            return new TabledMaterialRhiShader;
+        else
+            return new TabledMaterialShader;
+    }
+    QSGMaterialType *type() const override { return &m_type; }
+
+    ImageMaterialData *state() override { return &m_state; }
+
+private:
+    static QSGMaterialType m_type;
+    ImageMaterialData m_state;
+};
+
+QSGMaterialType TabledMaterial::m_type;
+
+class DeformableMaterialShader : public QSGMaterialShader
+{
+public:
+    DeformableMaterialShader()
     {
         QSGShaderSourceBuilder builder;
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
@@ -196,27 +283,38 @@ public:
     const char *vertexShader() const override { return m_vertex_code.constData(); }
     const char *fragmentShader() const override { return m_fragment_code.constData(); }
 
-    QList<QByteArray> attributes() const override {
-        return QList<QByteArray>() << "vPosTex" << "vData" << "vVec"
-            << "vColor" << "vDeformVec" << "vRotation";
-    };
+    char const *const *attributeNames() const override
+    {
+        static const char *const attr[] = { "vPosTex", "vData", "vVec", "vColor", "vDeformVec", "vRotation", nullptr };
+        return attr;
+    }
 
     void initialize() override {
-        QSGSimpleMaterialShader<DeformableMaterialData>::initialize();
         program()->bind();
         program()->setUniformValue("_qt_texture", 0);
         glFuncs = QOpenGLContext::currentContext()->functions();
+        m_matrix_id = program()->uniformLocation("qt_Matrix");
+        m_opacity_id = program()->uniformLocation("qt_Opacity");
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_entry_id = program()->uniformLocation("entry");
     }
 
-    void updateState(const DeformableMaterialData* d, const DeformableMaterialData*) override {
-        d->texture->bind();
+    void updateState(const RenderState &renderState, QSGMaterial *mat, QSGMaterial *) override {
+        ImageMaterialData *state = static_cast<ImageMaterial *>(mat)->state();
 
-        program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
-        program()->setUniformValue(m_entry_id, (float) d->entry);
+        if (renderState.isMatrixDirty())
+            program()->setUniformValue(m_matrix_id, renderState.combinedMatrix());
+        if (renderState.isOpacityDirty() && m_opacity_id >= 0)
+            program()->setUniformValue(m_opacity_id, renderState.opacity());
+
+        state->texture->bind();
+
+        program()->setUniformValue(m_timestamp_id, (float) state->timestamp);
+        program()->setUniformValue(m_entry_id, (float) state->entry);
     }
 
+    int m_matrix_id;
+    int m_opacity_id;
     int m_entry_id;
     int m_timestamp_id;
     QByteArray m_vertex_code;
@@ -224,13 +322,77 @@ public:
     QOpenGLFunctions* glFuncs;
 };
 
-class SpriteMaterialData : public ImageMaterialData {};
-class SpriteMaterial : public QSGSimpleMaterialShader<SpriteMaterialData>
+class DeformableMaterialRhiShader : public QSGMaterialRhiShader
 {
-    QSG_DECLARE_SIMPLE_SHADER(SpriteMaterial, SpriteMaterialData)
-
 public:
-    SpriteMaterial()
+    DeformableMaterialRhiShader()
+    {
+        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_deformed.vert.qsb"));
+        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_deformed.frag.qsb"));
+    }
+
+    bool updateUniformData(const RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
+    {
+        QByteArray *buf = renderState.uniformData();
+        Q_ASSERT(buf->size() >= 80 + 2 * (UNIFORM_ARRAY_SIZE * 4 * 4));
+
+        if (renderState.isMatrixDirty()) {
+            const QMatrix4x4 m = renderState.combinedMatrix();
+            memcpy(buf->data(), m.constData(), 64);
+        }
+
+        if (renderState.isOpacityDirty()) {
+            const float opacity = renderState.opacity();
+            memcpy(buf->data() + 64, &opacity, 4);
+        }
+
+        ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
+
+        float entry = float(state->entry);
+        memcpy(buf->data() + 68, &entry, 4);
+
+        float timestamp = float(state->timestamp);
+        memcpy(buf->data() + 72, &timestamp, 4);
+
+        return true;
+    }
+
+    void updateSampledImage(const RenderState &renderState, int binding, QSGTexture **texture,
+                            QSGMaterial *newMaterial, QSGMaterial *) override
+    {
+        ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
+        if (binding == 1) {
+            state->texture->updateRhiTexture(renderState.rhi(), renderState.resourceUpdateBatch());
+            *texture = state->texture;
+        }
+    }
+};
+
+class DeformableMaterial : public ImageMaterial
+{
+public:
+    DeformableMaterial() { setFlag(SupportsRhiShader, true); }
+    QSGMaterialShader *createShader() const override {
+        if (flags().testFlag(RhiShaderWanted))
+            return new DeformableMaterialRhiShader;
+        else
+            return new DeformableMaterialShader;
+    }
+    QSGMaterialType *type() const override { return &m_type; }
+
+    ImageMaterialData *state() override { return &m_state; }
+
+private:
+    static QSGMaterialType m_type;
+    ImageMaterialData m_state;
+};
+
+QSGMaterialType DeformableMaterial::m_type;
+
+class SpriteMaterialShader : public QSGMaterialShader
+{
+public:
+    SpriteMaterialShader()
     {
         QSGShaderSourceBuilder builder;
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
@@ -263,17 +425,20 @@ public:
     const char *vertexShader() const override { return m_vertex_code.constData(); }
     const char *fragmentShader() const override { return m_fragment_code.constData(); }
 
-    QList<QByteArray> attributes() const override {
-        return QList<QByteArray>() << "vPosTex" << "vData" << "vVec"
-            << "vColor" << "vDeformVec" << "vRotation" << "vAnimData" << "vAnimPos";
+    char const *const *attributeNames() const override
+    {
+        static const char *const attr[] = { "vPosTex", "vData", "vVec", "vColor", "vDeformVec", "vRotation",
+                                            "vAnimData", "vAnimPos", nullptr };
+        return attr;
     }
 
     void initialize() override {
-        QSGSimpleMaterialShader<SpriteMaterialData>::initialize();
         program()->bind();
         program()->setUniformValue("_qt_texture", 0);
         program()->setUniformValue("colortable", 1);
         glFuncs = QOpenGLContext::currentContext()->functions();
+        m_matrix_id = program()->uniformLocation("qt_Matrix");
+        m_opacity_id = program()->uniformLocation("qt_Opacity");
         //Don't actually expose the animSheetSize in the shader, it's currently only used for CPU calculations.
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_entry_id = program()->uniformLocation("entry");
@@ -281,20 +446,29 @@ public:
         m_opacitytable_id = program()->uniformLocation("opacitytable");
     }
 
-    void updateState(const SpriteMaterialData* d, const SpriteMaterialData*) override {
+    void updateState(const RenderState &renderState, QSGMaterial *mat, QSGMaterial *) override {
+        ImageMaterialData *state = static_cast<ImageMaterial *>(mat)->state();
+
+        if (renderState.isMatrixDirty())
+            program()->setUniformValue(m_matrix_id, renderState.combinedMatrix());
+        if (renderState.isOpacityDirty() && m_opacity_id >= 0)
+            program()->setUniformValue(m_opacity_id, renderState.opacity());
+
         glFuncs->glActiveTexture(GL_TEXTURE1);
-        d->colorTable->bind();
+        state->colorTable->bind();
 
         // make sure we end by setting GL_TEXTURE0 as active texture
         glFuncs->glActiveTexture(GL_TEXTURE0);
-        d->texture->bind();
+        state->texture->bind();
 
-        program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
-        program()->setUniformValue(m_entry_id, (float) d->entry);
-        program()->setUniformValueArray(m_sizetable_id, (const float*) d->sizeTable, 64, 1);
-        program()->setUniformValueArray(m_opacitytable_id, (const float*) d->opacityTable, UNIFORM_ARRAY_SIZE, 1);
+        program()->setUniformValue(m_timestamp_id, (float) state->timestamp);
+        program()->setUniformValue(m_entry_id, (float) state->entry);
+        program()->setUniformValueArray(m_sizetable_id, (const float*) state->sizeTable, 64, 1);
+        program()->setUniformValueArray(m_opacitytable_id, (const float*) state->opacityTable, UNIFORM_ARRAY_SIZE, 1);
     }
 
+    int m_matrix_id;
+    int m_opacity_id;
     int m_timestamp_id;
     int m_entry_id;
     int m_sizetable_id;
@@ -304,13 +478,91 @@ public:
     QOpenGLFunctions* glFuncs;
 };
 
-class ColoredMaterialData : public ImageMaterialData {};
-class ColoredMaterial : public QSGSimpleMaterialShader<ColoredMaterialData>
+class SpriteMaterialRhiShader : public QSGMaterialRhiShader
 {
-    QSG_DECLARE_SIMPLE_SHADER(ColoredMaterial, ColoredMaterialData)
-
 public:
-    ColoredMaterial()
+    SpriteMaterialRhiShader()
+    {
+        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_sprite.vert.qsb"));
+        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_sprite.frag.qsb"));
+    }
+
+    bool updateUniformData(const RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
+    {
+        QByteArray *buf = renderState.uniformData();
+        Q_ASSERT(buf->size() >= 80 + 2 * (UNIFORM_ARRAY_SIZE * 4 * 4));
+
+        if (renderState.isMatrixDirty()) {
+            const QMatrix4x4 m = renderState.combinedMatrix();
+            memcpy(buf->data(), m.constData(), 64);
+        }
+
+        if (renderState.isOpacityDirty()) {
+            const float opacity = renderState.opacity();
+            memcpy(buf->data() + 64, &opacity, 4);
+        }
+
+        ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
+
+        float entry = float(state->entry);
+        memcpy(buf->data() + 68, &entry, 4);
+
+        float timestamp = float(state->timestamp);
+        memcpy(buf->data() + 72, &timestamp, 4);
+
+        float *p = reinterpret_cast<float *>(buf->data() + 80);
+        for (int i = 0; i < UNIFORM_ARRAY_SIZE; ++i) {
+            *p = state->sizeTable[i];
+            p += 4;
+        }
+        p = reinterpret_cast<float *>(buf->data() + 80 + (UNIFORM_ARRAY_SIZE * 4 * 4));
+        for (int i = 0; i < UNIFORM_ARRAY_SIZE; ++i) {
+            *p = state->opacityTable[i];
+            p += 4;
+        }
+
+        return true;
+    }
+
+    void updateSampledImage(const RenderState &renderState, int binding, QSGTexture **texture,
+                            QSGMaterial *newMaterial, QSGMaterial *) override
+    {
+        ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
+        if (binding == 2) {
+            state->colorTable->updateRhiTexture(renderState.rhi(), renderState.resourceUpdateBatch());
+            *texture = state->colorTable;
+        } else if (binding == 1) {
+            state->texture->updateRhiTexture(renderState.rhi(), renderState.resourceUpdateBatch());
+            *texture = state->texture;
+        }
+    }
+};
+
+class SpriteMaterial : public ImageMaterial
+{
+public:
+    SpriteMaterial() { setFlag(SupportsRhiShader, true); }
+    QSGMaterialShader *createShader() const override {
+        if (flags().testFlag(RhiShaderWanted))
+            return new SpriteMaterialRhiShader;
+        else
+            return new SpriteMaterialShader;
+    }
+    QSGMaterialType *type() const override { return &m_type; }
+
+    ImageMaterialData *state() override { return &m_state; }
+
+private:
+    static QSGMaterialType m_type;
+    ImageMaterialData m_state;
+};
+
+QSGMaterialType SpriteMaterial::m_type;
+
+class ColoredMaterialShader : public QSGMaterialShader
+{
+public:
+    ColoredMaterialShader()
     {
         QSGShaderSourceBuilder builder;
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
@@ -337,8 +589,23 @@ public:
     const char *vertexShader() const override { return m_vertex_code.constData(); }
     const char *fragmentShader() const override { return m_fragment_code.constData(); }
 
+    char const *const *attributeNames() const override
+    {
+        static const char *const attr[] = { "vPos", "vData", "vVec", "vColor", nullptr };
+        return attr;
+    }
+
+    void initialize() override {
+        program()->bind();
+        program()->setUniformValue("_qt_texture", 0);
+        glFuncs = QOpenGLContext::currentContext()->functions();
+        m_matrix_id = program()->uniformLocation("qt_Matrix");
+        m_opacity_id = program()->uniformLocation("qt_Opacity");
+        m_timestamp_id = program()->uniformLocation("timestamp");
+        m_entry_id = program()->uniformLocation("entry");
+    }
+
     void activate() override {
-        QSGSimpleMaterialShader<ColoredMaterialData>::activate();
 #if !defined(QT_OPENGL_ES_2) && !defined(Q_OS_WIN)
         glEnable(GL_POINT_SPRITE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -346,33 +613,28 @@ public:
     }
 
     void deactivate() override {
-        QSGSimpleMaterialShader<ColoredMaterialData>::deactivate();
 #if !defined(QT_OPENGL_ES_2) && !defined(Q_OS_WIN)
         glDisable(GL_POINT_SPRITE);
         glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
     }
 
-    QList<QByteArray> attributes() const override {
-        return QList<QByteArray>() << "vPos" << "vData" << "vVec" << "vColor";
+    void updateState(const RenderState &renderState, QSGMaterial *mat, QSGMaterial *) override {
+        ImageMaterialData *state = static_cast<ImageMaterial *>(mat)->state();
+
+        if (renderState.isMatrixDirty())
+            program()->setUniformValue(m_matrix_id, renderState.combinedMatrix());
+        if (renderState.isOpacityDirty() && m_opacity_id >= 0)
+            program()->setUniformValue(m_opacity_id, renderState.opacity());
+
+        state->texture->bind();
+
+        program()->setUniformValue(m_timestamp_id, (float) state->timestamp);
+        program()->setUniformValue(m_entry_id, (float) state->entry);
     }
 
-    void initialize() override {
-        QSGSimpleMaterialShader<ColoredMaterialData>::initialize();
-        program()->bind();
-        program()->setUniformValue("_qt_texture", 0);
-        glFuncs = QOpenGLContext::currentContext()->functions();
-        m_timestamp_id = program()->uniformLocation("timestamp");
-        m_entry_id = program()->uniformLocation("entry");
-    }
-
-    void updateState(const ColoredMaterialData* d, const ColoredMaterialData*) override {
-        d->texture->bind();
-
-        program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
-        program()->setUniformValue(m_entry_id, (float) d->entry);
-    }
-
+    int m_matrix_id;
+    int m_opacity_id;
     int m_timestamp_id;
     int m_entry_id;
     QByteArray m_vertex_code;
@@ -380,13 +642,77 @@ public:
     QOpenGLFunctions* glFuncs;
 };
 
-class SimpleMaterialData : public ImageMaterialData {};
-class SimpleMaterial : public QSGSimpleMaterialShader<SimpleMaterialData>
+class ColoredMaterialRhiShader : public QSGMaterialRhiShader
 {
-    QSG_DECLARE_SIMPLE_SHADER(SimpleMaterial, SimpleMaterialData)
-
 public:
-    SimpleMaterial()
+    ColoredMaterialRhiShader()
+    {
+        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_colored.vert.qsb"));
+        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_colored.frag.qsb"));
+    }
+
+    bool updateUniformData(const RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
+    {
+        QByteArray *buf = renderState.uniformData();
+        Q_ASSERT(buf->size() >= 80 + 2 * (UNIFORM_ARRAY_SIZE * 4 * 4));
+
+        if (renderState.isMatrixDirty()) {
+            const QMatrix4x4 m = renderState.combinedMatrix();
+            memcpy(buf->data(), m.constData(), 64);
+        }
+
+        if (renderState.isOpacityDirty()) {
+            const float opacity = renderState.opacity();
+            memcpy(buf->data() + 64, &opacity, 4);
+        }
+
+        ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
+
+        float entry = float(state->entry);
+        memcpy(buf->data() + 68, &entry, 4);
+
+        float timestamp = float(state->timestamp);
+        memcpy(buf->data() + 72, &timestamp, 4);
+
+        return true;
+    }
+
+    void updateSampledImage(const RenderState &renderState, int binding, QSGTexture **texture,
+                            QSGMaterial *newMaterial, QSGMaterial *) override
+    {
+        ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
+        if (binding == 1) {
+            state->texture->updateRhiTexture(renderState.rhi(), renderState.resourceUpdateBatch());
+            *texture = state->texture;
+        }
+    }
+};
+
+class ColoredMaterial : public ImageMaterial
+{
+public:
+    ColoredMaterial() { setFlag(SupportsRhiShader, true); }
+    QSGMaterialShader *createShader() const override {
+        if (flags().testFlag(RhiShaderWanted))
+            return new ColoredMaterialRhiShader;
+        else
+            return new ColoredMaterialShader;
+    }
+    QSGMaterialType *type() const override { return &m_type; }
+
+    ImageMaterialData *state() override { return &m_state; }
+
+private:
+    static QSGMaterialType m_type;
+    ImageMaterialData m_state;
+};
+
+QSGMaterialType ColoredMaterial::m_type;
+
+class SimpleMaterialShader : public QSGMaterialShader
+{
+public:
+    SimpleMaterialShader()
     {
         QSGShaderSourceBuilder builder;
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
@@ -411,8 +737,23 @@ public:
     const char *vertexShader() const override { return m_vertex_code.constData(); }
     const char *fragmentShader() const override { return m_fragment_code.constData(); }
 
+    char const *const *attributeNames() const override
+    {
+        static const char *const attr[] = { "vPos", "vData", "vVec", nullptr };
+        return attr;
+    }
+
+    void initialize() override {
+        program()->bind();
+        program()->setUniformValue("_qt_texture", 0);
+        glFuncs = QOpenGLContext::currentContext()->functions();
+        m_matrix_id = program()->uniformLocation("qt_Matrix");
+        m_opacity_id = program()->uniformLocation("qt_Opacity");
+        m_timestamp_id = program()->uniformLocation("timestamp");
+        m_entry_id = program()->uniformLocation("entry");
+    }
+
     void activate() override {
-        QSGSimpleMaterialShader<SimpleMaterialData>::activate();
 #if !defined(QT_OPENGL_ES_2) && !defined(Q_OS_WIN)
         glEnable(GL_POINT_SPRITE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -420,39 +761,101 @@ public:
     }
 
     void deactivate() override {
-        QSGSimpleMaterialShader<SimpleMaterialData>::deactivate();
 #if !defined(QT_OPENGL_ES_2) && !defined(Q_OS_WIN)
         glDisable(GL_POINT_SPRITE);
         glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
     }
 
-    QList<QByteArray> attributes() const override {
-        return QList<QByteArray>() << "vPos" << "vData" << "vVec";
+    void updateState(const RenderState &renderState, QSGMaterial *mat, QSGMaterial *) override {
+        ImageMaterialData *state = static_cast<ImageMaterial *>(mat)->state();
+
+        if (renderState.isMatrixDirty())
+            program()->setUniformValue(m_matrix_id, renderState.combinedMatrix());
+        if (renderState.isOpacityDirty() && m_opacity_id >= 0)
+            program()->setUniformValue(m_opacity_id, renderState.opacity());
+
+        state->texture->bind();
+
+        program()->setUniformValue(m_timestamp_id, (float) state->timestamp);
+        program()->setUniformValue(m_entry_id, (float) state->entry);
     }
 
-    void initialize() override {
-        QSGSimpleMaterialShader<SimpleMaterialData>::initialize();
-        program()->bind();
-        program()->setUniformValue("_qt_texture", 0);
-        glFuncs = QOpenGLContext::currentContext()->functions();
-        m_timestamp_id = program()->uniformLocation("timestamp");
-        m_entry_id = program()->uniformLocation("entry");
-    }
-
-    void updateState(const SimpleMaterialData* d, const SimpleMaterialData*) override {
-        d->texture->bind();
-
-        program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
-        program()->setUniformValue(m_entry_id, (float) d->entry);
-    }
-
+    int m_matrix_id;
+    int m_opacity_id;
     int m_timestamp_id;
     int m_entry_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
     QOpenGLFunctions* glFuncs;
 };
+
+class SimpleMaterialRhiShader : public QSGMaterialRhiShader
+{
+public:
+    SimpleMaterialRhiShader()
+    {
+        setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_simple.vert.qsb"));
+        setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_simple.frag.qsb"));
+    }
+
+    bool updateUniformData(const RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
+    {
+        QByteArray *buf = renderState.uniformData();
+        Q_ASSERT(buf->size() >= 80 + 2 * (UNIFORM_ARRAY_SIZE * 4 * 4));
+
+        if (renderState.isMatrixDirty()) {
+            const QMatrix4x4 m = renderState.combinedMatrix();
+            memcpy(buf->data(), m.constData(), 64);
+        }
+
+        if (renderState.isOpacityDirty()) {
+            const float opacity = renderState.opacity();
+            memcpy(buf->data() + 64, &opacity, 4);
+        }
+
+        ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
+
+        float entry = float(state->entry);
+        memcpy(buf->data() + 68, &entry, 4);
+
+        float timestamp = float(state->timestamp);
+        memcpy(buf->data() + 72, &timestamp, 4);
+
+        return true;
+    }
+
+    void updateSampledImage(const RenderState &renderState, int binding, QSGTexture **texture,
+                            QSGMaterial *newMaterial, QSGMaterial *) override
+    {
+        ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
+        if (binding == 1) {
+            state->texture->updateRhiTexture(renderState.rhi(), renderState.resourceUpdateBatch());
+            *texture = state->texture;
+        }
+    }
+};
+
+class SimpleMaterial : public ImageMaterial
+{
+public:
+    SimpleMaterial() { setFlag(SupportsRhiShader, true); }
+    QSGMaterialShader *createShader() const override {
+        if (flags().testFlag(RhiShaderWanted))
+            return new SimpleMaterialRhiShader;
+        else
+            return new SimpleMaterialShader;
+    }
+    QSGMaterialType *type() const override { return &m_type; }
+
+    ImageMaterialData *state() override { return &m_state; }
+
+private:
+    static QSGMaterialType m_type;
+    ImageMaterialData m_state;
+};
+
+QSGMaterialType SimpleMaterial::m_type;
 
 void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 {
@@ -726,6 +1129,8 @@ QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     , m_debugMode(false)
     , m_entryEffect(Fade)
     , m_startedImageLoading(0)
+    , m_rhi(nullptr)
+    , m_apiChecked(false)
 {
     setFlag(ItemHasContents);
 }
@@ -1000,7 +1405,7 @@ void QQuickImageParticle::setEntryEffect(EntryEffect arg)
     if (m_entryEffect != arg) {
         m_entryEffect = arg;
         if (m_material)
-            getState<ImageMaterialData>(m_material)->entry = (qreal) m_entryEffect;
+            getState(m_material)->entry = (qreal) m_entryEffect;
         emit entryEffectChanged(arg);
     }
 }
@@ -1224,7 +1629,7 @@ void QQuickImageParticle::buildParticleNodes(QSGNode** passThrough)
 
 void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
 {
-    if (!QOpenGLContext::currentContext())
+    if (!m_rhi && !QOpenGLContext::currentContext())
         return;
 
     if (m_count * 4 > 0xffff) {
@@ -1271,27 +1676,37 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
             }
         }
     }
+
+    if (!m_rhi) { // the RHI may be backed by GL but these checks should be obsolete in any case
 #ifdef Q_OS_WIN
-    if (perfLevel < Deformable) //QTBUG-24540 , point sprite 'extension' isn't working on windows.
-        perfLevel = Deformable;
+        if (perfLevel < Deformable) //QTBUG-24540 , point sprite 'extension' isn't working on windows.
+            perfLevel = Deformable;
 #endif
 
 #ifdef Q_OS_MAC
-    // OS X 10.8.3 introduced a bug in the AMD drivers, for at least the 2011 macbook pros,
-    // causing point sprites who read gl_PointCoord in the frag shader to come out as
-    // green-red blobs.
-    const GLubyte *glVendor = QOpenGLContext::currentContext()->functions()->glGetString(GL_VENDOR);
-    if (perfLevel < Deformable && glVendor && strstr((char *) glVendor, "ATI")) {
-        perfLevel = Deformable;
-    }
+        // macOS 10.8.3 introduced a bug in the AMD drivers, for at least the 2011 macbook pros,
+        // causing point sprites who read gl_PointCoord in the frag shader to come out as
+        // green-red blobs.
+        const GLubyte *glVendor = QOpenGLContext::currentContext()->functions()->glGetString(GL_VENDOR);
+        if (perfLevel < Deformable && glVendor && strstr((char *) glVendor, "ATI")) {
+            perfLevel = Deformable;
+        }
 #endif
 
 #ifdef Q_OS_LINUX
-    // Nouveau drivers can potentially freeze a machine entirely when taking the point-sprite path.
-    const GLubyte *glVendor = QOpenGLContext::currentContext()->functions()->glGetString(GL_VENDOR);
-    if (perfLevel < Deformable && glVendor && strstr((const char *) glVendor, "nouveau"))
-        perfLevel = Deformable;
+        // Nouveau drivers can potentially freeze a machine entirely when taking the point-sprite path.
+        const GLubyte *glVendor = QOpenGLContext::currentContext()->functions()->glGetString(GL_VENDOR);
+        if (perfLevel < Deformable && glVendor && strstr((const char *) glVendor, "nouveau"))
+            perfLevel = Deformable;
 #endif
+
+    } else {
+        // Points with a size other than 1 are an optional feature with QRhi
+        // because some of the underlying APIs have no support for this.
+        // Therefore, avoid the point sprite path with APIs like Direct3D.
+        if (perfLevel < Deformable && !m_rhi->isFeatureSupported(QRhi::VertexShaderPointSize))
+            perfLevel = Deformable;
+    }
 
     if (perfLevel >= Colored  && !m_color.isValid())
         m_color = QColor(Qt::white);//Hidden default, but different from unset
@@ -1308,6 +1723,7 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
     bool imageLoaded = false;
     switch (perfLevel) {//Fallthrough intended
     case Sprites:
+    {
         if (!m_spriteEngine) {
             qWarning() << "ImageParticle: No sprite engine...";
             //Sprite performance mode with static image is supported, but not advised
@@ -1318,16 +1734,19 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
                 return;
             imageLoaded = true;
         }
-        m_material = SpriteMaterial::createMaterial();
+        m_material = new SpriteMaterial;
+        ImageMaterialData *state = getState(m_material);
         if (imageLoaded)
-            getState<ImageMaterialData>(m_material)->texture = QSGPlainTexture::fromImage(image);
-        getState<ImageMaterialData>(m_material)->animSheetSize = QSizeF(image.size() / image.devicePixelRatioF());
+            state->texture = QSGPlainTexture::fromImage(image);
+        state->animSheetSize = QSizeF(image.size() / image.devicePixelRatioF());
         if (m_spriteEngine)
             m_spriteEngine->setCount(m_count);
+    }
         Q_FALLTHROUGH();
     case Tabled:
+    {
         if (!m_material)
-            m_material = TabledMaterial::createMaterial();
+            m_material = new TabledMaterial;
 
         if (m_colorTable) {
             if (m_colorTable->pix.isReady())
@@ -1354,21 +1773,29 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
             colortable = QImage(1,1,QImage::Format_ARGB32_Premultiplied);
             colortable.fill(Qt::white);
         }
-        getState<ImageMaterialData>(m_material)->colorTable = QSGPlainTexture::fromImage(colortable);
-        fillUniformArrayFromImage(getState<ImageMaterialData>(m_material)->sizeTable, sizetable, UNIFORM_ARRAY_SIZE);
-        fillUniformArrayFromImage(getState<ImageMaterialData>(m_material)->opacityTable, opacitytable, UNIFORM_ARRAY_SIZE);
+        ImageMaterialData *state = getState(m_material);
+        state->colorTable = QSGPlainTexture::fromImage(colortable);
+        fillUniformArrayFromImage(state->sizeTable, sizetable, UNIFORM_ARRAY_SIZE);
+        fillUniformArrayFromImage(state->opacityTable, opacitytable, UNIFORM_ARRAY_SIZE);
+    }
         Q_FALLTHROUGH();
     case Deformable:
+    {
         if (!m_material)
-            m_material = DeformableMaterial::createMaterial();
+            m_material = new DeformableMaterial;
+    }
         Q_FALLTHROUGH();
     case Colored:
+    {
         if (!m_material)
-            m_material = ColoredMaterial::createMaterial();
+            m_material = new ColoredMaterial;
+    }
         Q_FALLTHROUGH();
     default://Also Simple
+    {
         if (!m_material)
-            m_material = SimpleMaterial::createMaterial();
+            m_material = new SimpleMaterial;
+        ImageMaterialData *state = getState(m_material);
         if (!imageLoaded) {
             if (!m_image || !m_image->pix.isReady()) {
                 if (m_image)
@@ -1376,13 +1803,14 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
                 delete m_material;
                 return;
             }
-            //getState<ImageMaterialData>(m_material)->texture //TODO: Shouldn't this be better? But not crash?
+            //state->texture //TODO: Shouldn't this be better? But not crash?
             //    = QQuickItemPrivate::get(this)->sceneGraphContext()->textureForFactory(m_imagePix.textureFactory());
-            getState<ImageMaterialData>(m_material)->texture = QSGPlainTexture::fromImage(m_image->pix.image());
+            state->texture = QSGPlainTexture::fromImage(m_image->pix.image());
         }
-        getState<ImageMaterialData>(m_material)->texture->setFiltering(QSGTexture::Linear);
-        getState<ImageMaterialData>(m_material)->entry = (qreal) m_entryEffect;
+        state->texture->setFiltering(QSGTexture::Linear);
+        state->entry = (qreal) m_entryEffect;
         m_material->setFlag(QSGMaterial::Blending | QSGMaterial::RequiresFullMatrix);
+    }
     }
 
     m_nodes.clear();
@@ -1416,14 +1844,23 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
         node->setFlag(QSGNode::OwnsGeometry);
         node->setGeometry(g);
         if (perfLevel <= Colored){
-            g->setDrawingMode(GL_POINTS);
-            if (m_debugMode){
-                GLfloat pointSizeRange[2];
-                QOpenGLContext::currentContext()->functions()->glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, pointSizeRange);
-                qDebug() << "Using point sprites, GL_ALIASED_POINT_SIZE_RANGE " <<pointSizeRange[0] << ":" << pointSizeRange[1];
+            g->setDrawingMode(QSGGeometry::DrawPoints);
+            if (m_debugMode) {
+                if (m_rhi) {
+                    qDebug("Using point sprites");
+                } else {
+#if QT_CONFIG(opengl)
+                    GLfloat pointSizeRange[2];
+                    QOpenGLContext::currentContext()->functions()->glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, pointSizeRange);
+                    qDebug() << "Using point sprites, GL_ALIASED_POINT_SIZE_RANGE " <<pointSizeRange[0] << ":" << pointSizeRange[1];
+#else
+                    qDebug("Using point sprites");
+#endif
+                }
             }
-        }else
-            g->setDrawingMode(GL_TRIANGLES);
+        } else {
+            g->setDrawingMode(QSGGeometry::DrawTriangles);
+        }
 
         for (int p=0; p < count; ++p)
             commit(groupId, p);//commit sets geometry for the node, has its own perfLevel switch
@@ -1464,16 +1901,34 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
     update();
 }
 
-static inline bool isOpenGL(QSGRenderContext *rc)
-{
-    QSGRendererInterface *rif = rc->sceneGraphContext()->rendererInterface(rc);
-    return !rif || rif->graphicsApi() == QSGRendererInterface::OpenGL;
-}
-
 QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
 {
-    if (!node && !isOpenGL(QQuickItemPrivate::get(this)->sceneGraphRenderContext()))
-        return nullptr;
+    if (!m_apiChecked || m_windowChanged) {
+        m_apiChecked = true;
+        m_windowChanged = false;
+
+        QSGRenderContext *rc = QQuickItemPrivate::get(this)->sceneGraphRenderContext();
+        QSGRendererInterface *rif = rc->sceneGraphContext()->rendererInterface(rc);
+        if (!rif)
+            return nullptr;
+
+        QSGRendererInterface::GraphicsApi api = rif->graphicsApi();
+        const bool isDirectOpenGL = api == QSGRendererInterface::OpenGL;
+        const bool isRhi = QSGRendererInterface::isApiRhiBased(api);
+
+        if (!node && !isDirectOpenGL && !isRhi)
+            return nullptr;
+
+        if (isRhi)
+            m_rhi = static_cast<QRhi *>(rif->getResource(m_window, QSGRendererInterface::RhiResource));
+        else
+            m_rhi = nullptr;
+
+        if (isRhi && !m_rhi) {
+            qWarning("Failed to query QRhi, particles disabled");
+            return nullptr;
+        }
+    }
 
     if (m_pleaseReset){
         if (node)
@@ -1541,7 +1996,7 @@ void QQuickImageParticle::prepareNextFrame(QSGNode **node)
     case Colored:
     case Simple:
     default: //Also Simple
-        getState<ImageMaterialData>(m_material)->timestamp = time;
+        getState(m_material)->timestamp = time;
         break;
     }
     foreach (QSGGeometryNode* node, m_nodes)
@@ -1550,6 +2005,7 @@ void QQuickImageParticle::prepareNextFrame(QSGNode **node)
 
 void QQuickImageParticle::spritesUpdate(qreal time)
 {
+    ImageMaterialData *state = getState(m_material);
     // Sprite progression handled CPU side, so as to have per-frame control.
     for (auto groupId : groupIds()) {
         for (QQuickParticleData* mainDatum : qAsConst(m_system->groupData[groupId]->data)) {
@@ -1587,7 +2043,7 @@ void QQuickImageParticle::spritesUpdate(qreal time)
             }
             if (m_spriteEngine->sprite(spriteIdx)->reverse())//### Store this in datum too?
                 frameAt = (datum->frameCount - 1) - frameAt;
-            QSizeF sheetSize = getState<ImageMaterialData>(m_material)->animSheetSize;
+            QSizeF sheetSize = state->animSheetSize;
             qreal y = datum->animY / sheetSize.height();
             qreal w = datum->animWidth / sheetSize.width();
             qreal h = datum->animHeight / sheetSize.height();
@@ -1686,6 +2142,7 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                     writeTo->animHeight = m_spriteEngine->spriteHeight(spriteIdx);
                 }
             } else {
+                ImageMaterialData *state = getState(m_material);
                 QQuickParticleData* writeTo = getShadowDatum(datum);
                 writeTo->animT = datum->t;
                 writeTo->frameCount = 1;
@@ -1694,8 +2151,8 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                 writeTo->animIdx = 0;
                 writeTo->animT = 0;
                 writeTo->animX = writeTo->animY = 0;
-                writeTo->animWidth = getState<ImageMaterialData>(m_material)->animSheetSize.width();
-                writeTo->animHeight = getState<ImageMaterialData>(m_material)->animSheetSize.height();
+                writeTo->animWidth = state->animSheetSize.width();
+                writeTo->animHeight = state->animSheetSize.height();
             }
             Q_FALLTHROUGH();
         case Tabled:
