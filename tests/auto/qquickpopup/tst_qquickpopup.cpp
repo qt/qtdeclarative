@@ -88,6 +88,7 @@ private slots:
     void qquickview();
     void disabledPalette();
     void disabledParentPalette();
+    void countChanged();
 };
 
 void tst_QQuickPopup::initTestCase()
@@ -1171,6 +1172,21 @@ void tst_QQuickPopup::disabledParentPalette()
     QTRY_VERIFY(!popup->isVisible());
 }
 
+void tst_QQuickPopup::countChanged()
+{
+    QQuickApplicationHelper helper(this, "countChanged.qml");
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickComboBox *comboBox = window->property("comboBox").value<QQuickComboBox*>();
+    QVERIFY(comboBox);
+    QCOMPARE(window->property("count").toInt(), 1);
+
+    QVERIFY(window->setProperty("isModel1", false));
+    QTRY_COMPARE(window->property("count").toInt(), 2);
+}
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)
 
 #include "tst_qquickpopup.moc"
