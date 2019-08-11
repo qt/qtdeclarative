@@ -15,5 +15,6 @@
         <file>shaders/RectangularGlow.frag</file>
         <file>shaders/+glslcore/RectangularGlow.frag</file>
         <file>shaders/+hlsl/RectangularGlow.frag</file>
+        <file>shaders/+qsb/RectangularGlow.frag</file>
     </qresource>
 </RCC>

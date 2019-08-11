@@ -840,6 +840,7 @@ void QQuickComboBox::setModel(const QVariant& m)
 
     d->model = model;
     d->createDelegateModel();
+    emit countChanged();
     if (isComponentComplete()) {
         setCurrentIndex(count() > 0 ? 0 : -1);
         d->updateCurrentText();

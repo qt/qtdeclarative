@@ -80,8 +80,6 @@ QColor QQuickFusionStyle::highlightedText(const QPalette &palette)
 
 QColor QQuickFusionStyle::outline(const QPalette &palette)
 {
-    if (palette.window().style() == Qt::TexturePattern)
-        return QColor(0, 0, 0, 160);
     return palette.window().color().darker(140);
 }
 
@@ -95,8 +93,6 @@ QColor QQuickFusionStyle::highlightedOutline(const QPalette &palette)
 
 QColor QQuickFusionStyle::tabFrameColor(const QPalette &palette)
 {
-    if (palette.window().style() == Qt::TexturePattern)
-        return QColor(255, 255, 255, 8);
     return buttonColor(palette).lighter(104);
 }
 

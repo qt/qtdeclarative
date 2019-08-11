@@ -151,10 +151,10 @@ void tst_QQuickMenu::mouse()
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
     QQuickApplicationWindow *window = helper.appWindow;
-    window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window));
     centerOnScreen(window);
     moveMouseAway(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
     menu->open();
@@ -270,12 +270,12 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
     QQuickApplicationWindow *window = helper.appWindow;
+    centerOnScreen(window);
+    moveMouseAway(window);
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(QGuiApplication::focusWindow() == window);
-    centerOnScreen(window);
-    moveMouseAway(window);
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
     QCOMPARE(menu->currentIndex(), -1);
@@ -453,12 +453,12 @@ void tst_QQuickMenu::disabledMenuItemKeyNavigation()
     QQuickApplicationHelper helper(this, QLatin1String("disabledMenuItemKeyNavigation.qml"));
 
     QQuickApplicationWindow *window = helper.appWindow;
+    centerOnScreen(window);
+    moveMouseAway(window);
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(QGuiApplication::focusWindow() == window);
-    centerOnScreen(window);
-    moveMouseAway(window);
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
     QCOMPARE(menu->currentIndex(), -1);
@@ -610,10 +610,10 @@ void tst_QQuickMenu::menuSeparator()
 {
     QQuickApplicationHelper helper(this, QLatin1String("menuSeparator.qml"));
     QQuickWindow *window = helper.window;
-    window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window));
     centerOnScreen(window);
     moveMouseAway(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
     QVERIFY(menu);
@@ -752,10 +752,10 @@ void tst_QQuickMenu::popup()
 {
     QQuickApplicationHelper helper(this, QLatin1String("popup.qml"));
     QQuickApplicationWindow *window = helper.appWindow;
-    window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window));
     centerOnScreen(window);
     moveMouseAway(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
     QVERIFY(menu);
@@ -1039,10 +1039,10 @@ void tst_QQuickMenu::subMenuMouse()
 
     QQuickApplicationHelper helper(this, QLatin1String("subMenus.qml"));
     QQuickApplicationWindow *window = helper.appWindow;
-    window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window));
     centerOnScreen(window);
     moveMouseAway(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
     QVERIFY(mainMenu);
@@ -1145,10 +1145,10 @@ void tst_QQuickMenu::subMenuDisabledMouse()
 
     QQuickApplicationHelper helper(this, QLatin1String("subMenuDisabled.qml"));
     QQuickApplicationWindow *window = helper.appWindow;
-    window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window));
     centerOnScreen(window);
     moveMouseAway(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
     QVERIFY(mainMenu);
@@ -1207,10 +1207,10 @@ void tst_QQuickMenu::subMenuKeyboard()
 
     QQuickApplicationHelper helper(this, QLatin1String("subMenus.qml"));
     QQuickApplicationWindow *window = helper.appWindow;
-    window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window));
     centerOnScreen(window);
     moveMouseAway(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     if (mirrored)
         window->setLocale(QLocale("ar_EG"));
@@ -1329,10 +1329,10 @@ void tst_QQuickMenu::subMenuDisabledKeyboard()
 
     QQuickApplicationHelper helper(this, QLatin1String("subMenuDisabled.qml"));
     QQuickApplicationWindow *window = helper.appWindow;
-    window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window));
     centerOnScreen(window);
     moveMouseAway(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     if (mirrored)
         window->setLocale(QLocale("ar_EG"));
@@ -1417,10 +1417,10 @@ void tst_QQuickMenu::subMenuPosition()
     if (flip)
         window->setWidth(window->width() - mainMenu->width());
 
-    window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window));
     centerOnScreen(window);
     moveMouseAway(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     if (mirrored)
         window->setLocale(QLocale("ar_EG"));
