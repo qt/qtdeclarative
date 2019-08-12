@@ -86,6 +86,7 @@ QT_BEGIN_NAMESPACE
 
 class QSGDefaultRenderContext;
 class QVulkanInstance;
+class QOffscreenSurface;
 
 // Opting in/out of QRhi and choosing the default/requested backend is managed
 // by this singleton. This is because this information may be needed before
