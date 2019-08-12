@@ -525,7 +525,8 @@ int main(int argc, char **argv)
     }
 
     if (target == GenerateLoaderStandAlone) {
-        QStringList retainedFiles;
+        QStringList retainedFiles = parser.values(retainOption);
+        retainedFiles.sort();
         Error error;
         if (!generateLoader(sources, retainedFiles, outputFileName,
                             parser.values(resourceNameOption), &error.message)) {
