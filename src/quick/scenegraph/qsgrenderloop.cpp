@@ -244,25 +244,28 @@ QSGRenderLoop *QSGRenderLoop::instance()
             }
 
             if (rhiSupport->isRhiEnabled()) {
-                // no 'windows' because that's not yet ported to the rhi
-                if (loopType == WindowsRenderLoop)
-                    loopType = BasicRenderLoop;
-
                 switch (rhiSupport->rhiBackend()) {
-                case QRhi::D3D11:
-                    // D3D11 is forced to 'basic' always for now. The threaded loop's model may
-                    // not be suitable for DXGI due to the possibility of having the main
-                    // thread blocked while issuing a Present. To be investigated.
+                case QRhi::Null:
                     loopType = BasicRenderLoop;
                     break;
 
-                case QRhi::Null:
-                    loopType = BasicRenderLoop;
+                case QRhi::D3D11:
+                    // The threaded loop's model may not be suitable for DXGI
+                    // due to the possibility of having the main thread (with
+                    // the Windows message pump) blocked while issuing a
+                    // Present on the render thread. However, according to the
+                    // docs this can be a problem for fullscreen swapchains
+                    // only. So leave threaded enabled by default for now and
+                    // revisit later if there are problems.
                     break;
 
                 default:
                     break;
                 }
+
+                // no 'windows' because that's not yet ported to the rhi
+                if (loopType == WindowsRenderLoop)
+                    loopType = BasicRenderLoop;
             }
 
             // The environment variables can always override. This is good
