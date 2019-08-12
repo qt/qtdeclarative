@@ -32,25 +32,25 @@
 
     \brief Provides a set of UI controls for Qt Quick.
 
-    Qt Quick Controls 2 provides a set of controls that can be used
+    Qt Quick Controls provides a set of controls that can be used
     to build complete interfaces in Qt Quick. The module was introduced
     in Qt 5.7.
 
     \image qtquickcontrols2-styles.png
 
-    Qt Quick Controls 2 comes with a selection customizable styles.
-    See \l {Styling Qt Quick Controls 2} for more details.
+    Qt Quick Controls comes with a selection customizable styles.
+    See \l {Styling Qt Quick Controls} for more details.
 
     \section1 Prerequisites
 
-    The \l{Qt Quick Controls 2 QML Types}{QML types} can be imported into your
+    The \l{Qt Quick Controls QML Types}{QML types} can be imported into your
     application using the following import statement in your \c {.qml} file:
 
     \code \QtMinorVersion
     import QtQuick.Controls 2.\1
     \endcode
 
-    The \l{Qt Quick Controls 2 C++ Classes}{C++ classes} can be included into
+    The \l{Qt Quick Controls C++ Classes}{C++ classes} can be included into
     your application using the following include statement:
 
     \code
@@ -64,12 +64,12 @@
     QT += quickcontrols2
     \endcode
 
-    For more details, see \l {Getting Started with Qt Quick Controls 2}.
+    For more details, see \l {Getting Started with Qt Quick Controls}.
 
     \section2 Building From Source
 
     When building from source, ensure that the \l {Qt Graphical Effects} module
-    is also built, as Qt Quick Controls 2 requires it.
+    is also built, as Qt Quick Controls requires it.
 
     The \l {Qt Image Formats} module is recommended, but not
     required. It provides support for the \c {.webp} format used by the
@@ -77,8 +77,8 @@
 
     \section1 Versions
 
-    Qt Quick Controls 2.0 was introduced in Qt 5.7. Subsequent minor Qt releases
-    increment the import version of the Qt Quick Controls 2 modules by one,
+    Qt Quick Controls.0 was introduced in Qt 5.7. Subsequent minor Qt releases
+    increment the import version of the Qt Quick Controls modules by one,
     until Qt 5.12, where the import versions match Qt's minor version. The
     experimental Qt Labs modules use import version 1.0.
 
@@ -86,7 +86,7 @@
       \header
         \li \c Qt
         \li \l {Qt Quick QML Types}{\c QtQuick}
-        \li \l {Qt Quick Controls 2 QML Types}{\c QtQuick.Controls},\br
+        \li \l {Qt Quick Controls QML Types}{\c QtQuick.Controls},\br
             \l {Material Style}{\c QtQuick.Controls.Material},\br
             \l {Universal Style}{\c QtQuick.Controls.Universal},\br
             \l {Qt Quick Templates 2 QML Types}{\c QtQuick.Templates}
@@ -131,13 +131,13 @@
 
     \section1 License and Attributions
 
-    Qt Quick Controls 2 is available under commercial licenses from \l{The Qt Company}.
+    Qt Quick Controls is available under commercial licenses from \l{The Qt Company}.
     In addition, it is available under the
     \l{GNU Lesser General Public License, version 3}, or
     the \l{GNU General Public License, version 2}.
     See \l{Qt Licensing} for further details.
 
-    Furthermore Qt Quick Controls 2 potentially contains third party
+    Furthermore Qt Quick Controls potentially contains third party
     modules under following permissive licenses:
 
     \generatelist{groupsbymodule attributions-qtquickcontrols}
@@ -145,35 +145,35 @@
     \section1 Topics
 
     \list
-      \li \l{Qt Quick Controls 2 Guidelines}{Guidelines}
-      \li \l{Styling Qt Quick Controls 2}{Styling}
-      \li \l{Icons in Qt Quick Controls 2}{Icons}
-      \li \l{Customizing Qt Quick Controls 2}{Customization}
-      \li \l{High-DPI Support in Qt Quick Controls 2}{High-DPI Support}
-      \li \l{Using File Selectors with Qt Quick Controls 2}{Using File Selectors}
-      \li \l{Deploying Qt Quick Controls 2 Applications}{Deployment}
-      \li \l{Qt Quick Controls 2 Configuration File}{Configuration File}
-      \li \l{Supported Environment Variables in Qt Quick Controls 2}{Environment Variables}
+      \li \l{Qt Quick Controls Guidelines}{Guidelines}
+      \li \l{Styling Qt Quick Controls}{Styling}
+      \li \l{Icons in Qt Quick Controls}{Icons}
+      \li \l{Customizing Qt Quick Controls}{Customization}
+      \li \l{High-DPI Support in Qt Quick Controls}{High-DPI Support}
+      \li \l{Using File Selectors with Qt Quick Controls}{Using File Selectors}
+      \li \l{Deploying Qt Quick Controls Applications}{Deployment}
+      \li \l{Qt Quick Controls Configuration File}{Configuration File}
+      \li \l{Supported Environment Variables in Qt Quick Controls}{Environment Variables}
       \li \l{Differences with Qt Quick Controls 1}
     \endlist
 
     \section1 Reference
 
     \list
-      \li \l{Qt Quick Controls 2 QML Types}{QML Types}
-      \li \l{Qt Quick Controls 2 C++ Classes}{C++ Classes}
+      \li \l{Qt Quick Controls QML Types}{QML Types}
+      \li \l{Qt Quick Controls C++ Classes}{C++ Classes}
     \endlist
 
     \section1 Examples
 
     \list
-      \li \l{Qt Quick Controls 2 - Gallery}{Gallery}
-      \li \l{Qt Quick Controls 2 - Chat Tutorial}{Chat Tutorial}
-      \li \l{Qt Quick Controls 2 - Text Editor}{Text Editor}
-      \li \l{Qt Quick Controls 2 - Wearable Demo}{Wearable Demo}
-      \li \l{Qt Quick Controls 2 - Imagine Style Example: Automotive}{Automotive Example}
-      \li \l{Qt Quick Controls 2 - Imagine Style Example: Music Player}{Music Player Example}
-      \li \l{Qt Quick Controls 2 Examples}{All Examples}
+      \li \l{Qt Quick Controls - Gallery}{Gallery}
+      \li \l{Qt Quick Controls - Chat Tutorial}{Chat Tutorial}
+      \li \l{Qt Quick Controls - Text Editor}{Text Editor}
+      \li \l{Qt Quick Controls - Wearable Demo}{Wearable Demo}
+      \li \l{Qt Quick Controls - Imagine Style Example: Automotive}{Automotive Example}
+      \li \l{Qt Quick Controls - Imagine Style Example: Music Player}{Music Player Example}
+      \li \l{Qt Quick Controls Examples}{All Examples}
     \endlist
 
     \section1 Related Modules

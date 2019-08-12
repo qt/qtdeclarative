@@ -27,23 +27,23 @@
 
 /*!
     \page qtquickcontrols2-styles.html
-    \title Styling Qt Quick Controls 2
+    \title Styling Qt Quick Controls
 
     \section1 Available Styles
 
-    Qt Quick Controls 2 comes with a selection of styles.
+    Qt Quick Controls comes with a selection of styles.
 
     \section2 Default Style
 
     \image qtquickcontrols2-default-thumbnail.png
     The \l {Default Style} is a simple and light-weight all-round style that offers
-    the maximum performance for Qt Quick Controls 2.
+    the maximum performance for Qt Quick Controls.
 
     \section2 Fusion Style
 
     \image qtquickcontrols2-fusion-thumbnail.png
     The \l {Fusion Style} is a platform-agnostic style that offers a desktop-oriented
-    look'n'feel for Qt Quick Controls 2.
+    look'n'feel for Qt Quick Controls.
 
     \section2 Imagine Style
 
@@ -67,7 +67,7 @@
     \l {https://dev.windows.com/design}{Microsoft Universal Design Guidelines},
     but requires more system resources than the Default style.
 
-    \section1 Using Styles in Qt Quick Controls 2
+    \section1 Using Styles in Qt Quick Controls
 
     In order to run an application with a specific style, either configure the
     style using \l QQuickStyle in C++, pass a command line argument, or set an
@@ -81,7 +81,7 @@
     \section2 Using QQuickStyle in C++
 
     \l QQuickStyle provides C++ API for configuring a specific style. The following
-    example runs a Qt Quick Controls 2 application with the Material style:
+    example runs a Qt Quick Controls application with the Material style:
 
     \code
     QQuickStyle::setStyle("Material");
@@ -93,7 +93,7 @@
 
     Passing a \c -style command line argument is the convenient way to test different
     styles. It takes precedence over the other methods listed below. The following
-    example runs a Qt Quick Controls 2 application with the Material style:
+    example runs a Qt Quick Controls application with the Material style:
 
     \code
     ./app -style material
@@ -103,19 +103,19 @@
 
     Setting the \c QT_QUICK_CONTROLS_STYLE environment variable can be used to set
     a system-wide style preference. It takes precedence over the configuration file
-    mentioned below. The following example runs a Qt Quick Controls 2 application with
+    mentioned below. The following example runs a Qt Quick Controls application with
     the Universal style:
 
     \code
     QT_QUICK_CONTROLS_STYLE=universal ./app
     \endcode
 
-    See \l {Supported Environment Variables in Qt Quick Controls 2} for the full list
+    See \l {Supported Environment Variables in Qt Quick Controls} for the full list
     of supported environment variables.
 
     \section2 Configuration file
 
-    Qt Quick Controls 2 support a special configuration file, \c :/qtquickcontrols2.conf,
+    Qt Quick Controls support a special configuration file, \c :/qtquickcontrols2.conf,
     that is built into an application's resources.
 
     The configuration file can specify the preferred style (may be overridden by either
@@ -127,7 +127,7 @@
     Style=Material
     \endcode
 
-    See \l {Qt Quick Controls 2 Configuration File} for more details about the
+    See \l {Qt Quick Controls Configuration File} for more details about the
     configuration file.
 
     \section1 Related Information
@@ -137,10 +137,10 @@
     \li \l {Imagine Style}
     \li \l {Material Style}
     \li \l {Universal Style}
-    \li \l {Customizing Qt Quick Controls 2}
-    \li \l {Using File Selectors with Qt Quick Controls 2}
-    \li \l {Deploying Qt Quick Controls 2 Applications}
-    \li \l {Qt Quick Controls 2 Configuration File}
-    \li \l {Supported Environment Variables in Qt Quick Controls 2}
+    \li \l {Customizing Qt Quick Controls}
+    \li \l {Using File Selectors with Qt Quick Controls}
+    \li \l {Deploying Qt Quick Controls Applications}
+    \li \l {Qt Quick Controls Configuration File}
+    \li \l {Supported Environment Variables in Qt Quick Controls}
     \endlist
 */

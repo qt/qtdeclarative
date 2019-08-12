@@ -64,7 +64,7 @@ QT_BEGIN_NAMESPACE
     \since 5.7
 
     QQuickStyle provides API for querying and configuring the application
-    \l {Styling Qt Quick Controls 2}{styles} of Qt Quick Controls 2.
+    \l {Styling Qt Quick Controls}{styles} of Qt Quick Controls.
 
     \code
     #include <QGuiApplication>
@@ -86,7 +86,7 @@ QT_BEGIN_NAMESPACE
     \endcode
 
     \note The style must be configured \b before loading QML that imports
-    Qt Quick Controls 2. It is not possible to change the style after the QML
+    Qt Quick Controls. It is not possible to change the style after the QML
     types have been registered.
 
     The style can also be specified as a path to a custom style, such as
@@ -102,7 +102,7 @@ QT_BEGIN_NAMESPACE
     QQuickStyle::setFallbackStyle("Material");
     \endcode
 
-    \sa {Styling Qt Quick Controls 2}
+    \sa {Styling Qt Quick Controls}
 */
 
 static QStringList envPathList(const QByteArray &var)
@@ -536,10 +536,10 @@ QString QQuickStyle::path()
 /*!
     Sets the application style to \a style.
 
-    \note The style must be configured \b before loading QML that imports Qt Quick Controls 2.
+    \note The style must be configured \b before loading QML that imports Qt Quick Controls.
           It is not possible to change the style after the QML types have been registered.
 
-    \sa setFallbackStyle(), {Using Styles in Qt Quick Controls 2}
+    \sa setFallbackStyle(), {Using Styles in Qt Quick Controls}
 */
 void QQuickStyle::setStyle(const QString &style)
 {
@@ -555,15 +555,15 @@ void QQuickStyle::setStyle(const QString &style)
     \since 5.8
     Sets the application fallback style to \a style.
 
-    \note The fallback style must be the name of one of the built-in Qt Quick Controls 2 styles, e.g. "Material".
+    \note The fallback style must be the name of one of the built-in Qt Quick Controls styles, e.g. "Material".
 
-    \note The style must be configured \b before loading QML that imports Qt Quick Controls 2.
+    \note The style must be configured \b before loading QML that imports Qt Quick Controls.
           It is not possible to change the style after the QML types have been registered.
 
     The fallback style can be also specified by setting the \c QT_QUICK_CONTROLS_FALLBACK_STYLE
-    \l {Supported Environment Variables in Qt Quick Controls 2}{environment variable}.
+    \l {Supported Environment Variables in Qt Quick Controls}{environment variable}.
 
-    \sa setStyle(), {Using Styles in Qt Quick Controls 2}
+    \sa setStyle(), {Using Styles in Qt Quick Controls}
 */
 void QQuickStyle::setFallbackStyle(const QString &style)
 {

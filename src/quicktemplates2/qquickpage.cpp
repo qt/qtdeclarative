@@ -83,7 +83,7 @@ QT_BEGIN_NAMESPACE
     \endqml
 
     \sa ApplicationWindow, {Container Controls},
-        {Focus Management in Qt Quick Controls 2}
+        {Focus Management in Qt Quick Controls}
 */
 
 static const QQuickItemPrivate::ChangeTypes LayoutChanges = QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility | QQuickItemPrivate::Destroyed

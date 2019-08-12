@@ -27,9 +27,9 @@
 
 /*!
     \page qtquickcontrols2-environment.html
-    \title Supported Environment Variables in Qt Quick Controls 2
+    \title Supported Environment Variables in Qt Quick Controls
 
-    This page contains a list of all environment variables that Qt Quick Controls 2
+    This page contains a list of all environment variables that Qt Quick Controls
     supports. The environment variables are primarily meant for testing purposes, but
     they can also be used to set system-wide defaults.
 
@@ -39,7 +39,7 @@
             \li Description
         \row
             \li \c QT_QUICK_CONTROLS_STYLE
-            \li Specifies the default \l {Styling Qt Quick Controls 2}{Qt Quick Controls 2 style}.
+            \li Specifies the default \l {Styling Qt Quick Controls}{Qt Quick Controls style}.
                 The value can be either one of the built-in styles, for example \c "Material",
                 or the path to a custom style such as \c ":/mystyle".
         \row
@@ -48,18 +48,18 @@
                 The value can be one of the built-in styles, for example \c "Material",
         \row
             \li \c QT_QUICK_CONTROLS_STYLE_PATH
-            \li Specifies a list of additional paths that are used to lookup \l {Styling Qt Quick Controls 2}
-                {Qt Quick Controls 2 styles}. Multiple path entries must be \l {QDir::listSeparator}{separated}
+            \li Specifies a list of additional paths that are used to lookup \l {Styling Qt Quick Controls}
+                {Qt Quick Controls styles}. Multiple path entries must be \l {QDir::listSeparator}{separated}
                 by \c ':' under Unix and \c ';' under Windows. By default, styles are looked up from
                 \c $QML2_IMPORT_PATH/QtQuick/Controls.2.
         \row
             \li \c QT_QUICK_CONTROLS_CONF
-            \li Specifies the location of the \l {Qt Quick Controls 2 configuration file}.
+            \li Specifies the location of the \l {Qt Quick Controls configuration file}.
                 By default, the configuration file is loaded from the application's
                 resources in \c ":/qtquickcontrols2.conf".
         \row
             \li \c QT_QUICK_CONTROLS_HOVER_ENABLED
-            \li Specifies whether Qt Quick Controls 2 use \l {Control::hoverEnabled}{hover effects}.
+            \li Specifies whether Qt Quick Controls use \l {Control::hoverEnabled}{hover effects}.
                 The value can be set to \c 0 or \c 1 to disable or enable hover effects, respectively.
      \endtable
 
@@ -78,7 +78,7 @@
     \section1 Related Information
 
     \list
-      \li \l{Styling Qt Quick Controls 2}
-      \li \l{Qt Quick Controls 2 Configuration File}
+      \li \l{Styling Qt Quick Controls}
+      \li \l{Qt Quick Controls Configuration File}
     \endlist
 */
