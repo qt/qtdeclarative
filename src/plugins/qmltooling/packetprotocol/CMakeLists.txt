@@ -6,6 +6,7 @@
 
 add_qt_module(PacketProtocol
     STATIC
+    INTERNAL_MODULE
     SOURCES
         qpacket.cpp qpacket_p.h
         qpacketprotocol.cpp qpacketprotocol_p.h
