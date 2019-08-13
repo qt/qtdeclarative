@@ -127,6 +127,7 @@ private slots:
     void qAbstractItemModel_package_sections();
     void qAbstractItemModel_sections();
     void sectionsPositioning();
+    void sectionsDelegate_data();
     void sectionsDelegate();
     void sectionsDragOutsideBounds_data();
     void sectionsDragOutsideBounds();
@@ -2160,8 +2161,17 @@ void tst_QQuickListView::sections(const QUrl &source)
     QTRY_COMPARE(item->height(), 40.0);
 }
 
+void tst_QQuickListView::sectionsDelegate_data()
+{
+    QTest::addColumn<QUrl>("path");
+    QTest::addRow("implicit") << testFileUrl("listview-sections_delegate.qml");
+    QTest::addRow("required") << testFileUrl("listview-sections_delegate_required.qml");
+}
+
 void tst_QQuickListView::sectionsDelegate()
 {
+    QFETCH(QUrl, path);
+
     QScopedPointer<QQuickView> window(createView());
 
     QaimModel model;
@@ -2171,7 +2181,7 @@ void tst_QQuickListView::sectionsDelegate()
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    window->setSource(testFileUrl("listview-sections_delegate.qml"));
+    window->setSource(path);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
