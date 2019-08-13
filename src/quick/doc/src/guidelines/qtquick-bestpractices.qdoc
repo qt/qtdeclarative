@@ -45,9 +45,9 @@ UI. It is recommended to browse this list of UI controls before creating your
 own custom UI control.
 
 Besides these basic UI controls offered by Qt Quick itself, a rich set of UI
-controls are also available with Qt Quick Controls 2. They cater to the most
+controls are also available with Qt Quick Controls. They cater to the most
 common use cases without any change, and offer a lot more possibilities with their
-customization options. In particular, Qt Quick Controls 2 provides styling
+customization options. In particular, Qt Quick Controls provides styling
 options that align with the latest UI design trends. If these UI controls do not
 satisfy your application's needs, only then it is recommended to create a
 custom control.
@@ -55,7 +55,7 @@ custom control.
 
 \section2 Related Information
 \list
-\li \l{Qt Quick Controls 2}
+\li \l{Qt Quick Controls}
 \li \l{Qt Quick}
 \endlist
 
@@ -323,7 +323,7 @@ see \l {Choosing the Correct Integration Method Between C++ and QML}.
 \section2 Related Information
 \list
 \li \l{Integrating QML and C++}
-\li \l{Qt Quick Controls 2 - Chat Tutorial}{Chat application tutorial}
+\li \l{Qt Quick Controls - Chat Tutorial}{Chat application tutorial}
 \endlist
 
 \section1 Using Qt Quick Layouts
@@ -426,7 +426,7 @@ developers to follow these tips:
  \li Use anchors or the Qt Quick Layouts module to lay out the visual items.
  \li Do not specify explicit width and height for a visual item.
  \li Provide UI resources such as images and icons for each display resolution
-     that your application supports. The Qt Quick Controls 2 gallery example
+     that your application supports. The Qt Quick Controls gallery example
      demonstrates this well by providing the \c qt-logo.png for \c @2x, \c @3x,
      and \c @4x resolutions, enabling the application to cater to high
      resolution displays. Qt automatically chooses the appropriate
@@ -437,7 +437,7 @@ developers to follow these tips:
      versions of an image, as is necessary with bitmap images.
  \li Use font-based icons, such as Font Awesome. These scale to any display
      resolution, and also allow colorization. The
-     Qt Quick Controls 2 Text Editor example demonstrates this well.
+     Qt Quick Controls Text Editor example demonstrates this well.
 \endlist
 
 With this in place, your application's UI should scale depending
@@ -448,8 +448,8 @@ on the display resolution on offer.
 \section2 Related Information
 
 \list
- \li \l{Qt Quick Controls 2 - Gallery}{Gallery example}
- \li \l{Qt Quick Controls 2 - Text Editor}{Text Editor example}
+ \li \l{Qt Quick Controls - Gallery}{Gallery example}
+ \li \l{Qt Quick Controls - Text Editor}{Text Editor example}
  \li \l{Font Awesome}
  \li \l{Scalability}
  \li \l{High DPI Displays}
