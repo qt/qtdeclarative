@@ -383,20 +383,23 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
 
     bool current = false;
-    if (gl) {
-        QSurface *surface = window;
-        // There may be no platform window if the window got closed.
-        if (!window->handle())
-            surface = offscreenSurface;
+    if (gl || rhi) {
         if (rhi) {
+            // Direct OpenGL calls in user code need a current context, like
+            // when rendering; ensure this (no-op when not running on GL).
+            // Also works when there is no handle() anymore.
             rhi->makeThreadLocalNativeContextCurrent();
             current = true;
         } else {
+            QSurface *surface = window;
+            // There may be no platform window if the window got closed.
+            if (!window->handle())
+                surface = offscreenSurface;
             current = gl->makeCurrent(surface);
         }
+        if (Q_UNLIKELY(!current))
+            qCDebug(QSG_LOG_RENDERLOOP, "cleanup without an OpenGL context");
     }
-    if (Q_UNLIKELY(!current))
-        qCDebug(QSG_LOG_RENDERLOOP, "cleanup without an OpenGL context");
 
 #if QT_CONFIG(quick_shadereffect)
     QSGRhiShaderEffectNode::cleanupMaterialTypeCache();
