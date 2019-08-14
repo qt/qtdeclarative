@@ -792,7 +792,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
 {
     if (node->type == QQmlJS::AST::UiPublicMember::Signal) {
         Signal *signal = New<Signal>();
-        QString signalName = node->name.toString();
+        const QString signalName = node->name.toString();
         signal->nameIndex = registerString(signalName);
 
         QQmlJS::AST::SourceLocation loc = node->typeToken;
@@ -821,8 +821,14 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             p = p->next;
         }
 
-        if (signalName.at(0).isUpper())
-            COMPILE_EXCEPTION(node->identifierToken, tr("Signal names cannot begin with an upper case letter"));
+        for (const QChar &ch : signalName) {
+            if (ch.isLower())
+                break;
+            if (ch.isUpper()) {
+                COMPILE_EXCEPTION(node->identifierToken,
+                                  tr("Signal names cannot begin with an upper case letter"));
+            }
+        }
 
         if (illegalNames.contains(signalName))
             COMPILE_EXCEPTION(node->identifierToken, tr("Illegal signal name"));
