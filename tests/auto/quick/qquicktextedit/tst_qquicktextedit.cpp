@@ -2106,13 +2106,17 @@ void tst_qquicktextedit::mouseSelection()
     textEditObject->setFocus(focus);
     textEditObject->setFocusOnPress(focusOnPress);
 
+    // Avoid that the last click from the previous test data and the first click in the
+    // current test data happens so close in time that they are interpreted as a double click.
+    static const int moreThanDoubleClickInterval = QGuiApplication::styleHints()->mouseDoubleClickInterval() + 1;
+
     // press-and-drag-and-release from x1 to x2
     QPoint p1 = textEditObject->positionToRectangle(from).center().toPoint();
     QPoint p2 = textEditObject->positionToRectangle(to).center().toPoint();
     if (clicks == 2)
-        QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, p1);
+        QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, p1, moreThanDoubleClickInterval);
     else if (clicks == 3)
-        QTest::mouseDClick(&window, Qt::LeftButton, Qt::NoModifier, p1);
+        QTest::mouseDClick(&window, Qt::LeftButton, Qt::NoModifier, p1, moreThanDoubleClickInterval);
     QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, p1);
     if (clicks == 2) {
         // QTBUG-50022: Since qtbase commit beef975, QTestLib avoids generating
