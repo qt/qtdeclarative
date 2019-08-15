@@ -24,37 +24,37 @@ add_qt_resource(touch "qml"
         mpta-crosshairs.qml
 )
 set_source_files_properties("../../../examples/quick/shared/Button.qml"
-    PROPERTIES alias "Button.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "Button.qml"
 )
 set_source_files_properties("../../../examples/quick/shared/CheckBox.qml"
-    PROPERTIES alias "CheckBox.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "CheckBox.qml"
 )
 set_source_files_properties("../../../examples/quick/shared/Label.qml"
-    PROPERTIES alias "Label.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "Label.qml"
 )
 set_source_files_properties("../../../examples/quick/shared/LauncherList.qml"
-    PROPERTIES alias "LauncherList.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "LauncherList.qml"
 )
 set_source_files_properties("../../../examples/quick/shared/SimpleLauncherDelegate.qml"
-    PROPERTIES alias "SimpleLauncherDelegate.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "SimpleLauncherDelegate.qml"
 )
 set_source_files_properties("../../../examples/quick/shared/Slider.qml"
-    PROPERTIES alias "Slider.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "Slider.qml"
 )
 set_source_files_properties("../../../examples/quick/shared/TextField.qml"
-    PROPERTIES alias "TextField.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "TextField.qml"
 )
 set_source_files_properties("../../../examples/quick/shared/images/back.png"
-    PROPERTIES alias "images/back.png"
+    PROPERTIES QT_RESOURCE_ALIAS "images/back.png"
 )
 set_source_files_properties("../../../examples/quick/shared/images/checkmark.png"
-    PROPERTIES alias "images/checkmark.png"
+    PROPERTIES QT_RESOURCE_ALIAS "images/checkmark.png"
 )
 set_source_files_properties("../../../examples/quick/shared/images/next.png"
-    PROPERTIES alias "images/next.png"
+    PROPERTIES QT_RESOURCE_ALIAS "images/next.png"
 )
 set_source_files_properties("../../../examples/quick/shared/images/slider_handle.png"
-    PROPERTIES alias "images/slider_handle.png"
+    PROPERTIES QT_RESOURCE_ALIAS "images/slider_handle.png"
 )
 add_qt_resource(touch "quick_shared"
     PREFIX

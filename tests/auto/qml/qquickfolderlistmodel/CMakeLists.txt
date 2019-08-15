@@ -30,7 +30,7 @@ add_qt_test(tst_qquickfolderlistmodel
 )
 
 # special case begin
-set_source_files_properties(data/txtdir/hello.txt PROPERTIES alias "txtdir/hello.txt")
+set_source_files_properties(data/txtdir/hello.txt PROPERTIES QT_RESOURCE_ALIAS "txtdir/hello.txt")
 # special case end
 # Resources:
 add_qt_resource(tst_qquickfolderlistmodel "introspect"

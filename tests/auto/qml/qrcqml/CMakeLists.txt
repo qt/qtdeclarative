@@ -15,13 +15,13 @@ add_qt_test(tst_qrcqml
 
 # Resources:
 set_source_files_properties("data/SameDir2.qml"
-    PROPERTIES alias "SameDir.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "SameDir.qml"
 )
 set_source_files_properties("data/importtest.qml"
-    PROPERTIES alias "importtest.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "importtest.qml"
 )
 set_source_files_properties("data/main2.qml"
-    PROPERTIES alias "main.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "main.qml"
 )
 add_qt_resource(tst_qrcqml "qrcqml"
     PREFIX
@@ -35,10 +35,10 @@ add_qt_resource(tst_qrcqml "qrcqml"
         data/main2.qml
 )
 set_source_files_properties("data/SameDir3.qml"
-    PROPERTIES alias "SameDir.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "SameDir.qml"
 )
 set_source_files_properties("data/main3.qml"
-    PROPERTIES alias "main.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "main.qml"
 )
 add_qt_resource(tst_qrcqml "qrcqml1"
     PREFIX
@@ -48,7 +48,7 @@ add_qt_resource(tst_qrcqml "qrcqml1"
         data/main3.qml
 )
 set_source_files_properties("data/SubDir.qml"
-    PROPERTIES alias "SubDir.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "SubDir.qml"
 )
 add_qt_resource(tst_qrcqml "qrcqml2"
     PREFIX
@@ -57,10 +57,10 @@ add_qt_resource(tst_qrcqml "qrcqml2"
         data/SubDir.qml
 )
 set_source_files_properties("data/imports/QrcImport/Imported.qml"
-    PROPERTIES alias "QrcImport/Imported.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "QrcImport/Imported.qml"
 )
 set_source_files_properties("data/imports/QrcImport/qmldir"
-    PROPERTIES alias "QrcImport/qmldir"
+    PROPERTIES QT_RESOURCE_ALIAS "QrcImport/qmldir"
 )
 add_qt_resource(tst_qrcqml "qrcqml3"
     PREFIX

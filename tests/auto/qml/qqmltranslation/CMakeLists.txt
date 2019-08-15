@@ -35,12 +35,12 @@ set_source_files_properties(
     data/translation.qml
     PROPERTIES
     QT_SKIP_QUICKCOMPILER 1
-    alias translation.qml
+    QT_RESOURCE_ALIAS translation.qml
 )
 set_source_files_properties(
     data/qml_fr.qm
     PROPERTIES
-    alias qml_fr.qm
+    QT_RESOURCE_ALIAS qml_fr.qm
 )
 # special case end
 add_qt_resource(tst_qqmltranslation "translation"

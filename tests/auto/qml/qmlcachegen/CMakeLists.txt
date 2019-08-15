@@ -41,13 +41,13 @@ add_qt_resource(tst_qmlcachegen "qmake_workerscripts_test"
         ${qmake_workerscripts_test_resource_files}
 )
 set_source_files_properties("data/trickypaths.qml"
-    PROPERTIES alias "file name with spaces.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "file name with spaces.qml"
 )
 set_source_files_properties("data/versionStyleSuffix-1.2-core-yc.qml"
-    PROPERTIES alias "versionStyleSuffix-1.2-core-yc.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "versionStyleSuffix-1.2-core-yc.qml"
 )
 set_source_files_properties("data/versionStyleSuffix-1.2-more.qml"
-    PROPERTIES alias "versionStyleSuffix-1.2-more.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "versionStyleSuffix-1.2-more.qml"
 )
 set(trickypaths_resource_files
     "data/trickypaths.qml"
@@ -62,7 +62,7 @@ add_qt_resource(tst_qmlcachegen "trickypaths"
         ${trickypaths_resource_files}
 )
 set_source_files_properties("data/Retain.qml"
-    PROPERTIES alias "Retain.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "Retain.qml"
 )
 set(retain_resource_files
     "data/Retain.qml"
@@ -100,7 +100,7 @@ add_qt_resource(tst_qmlcachegen "qmake_immediate"
 
 # Resources:
 set_source_files_properties("data/umlaut.qml"
-    PROPERTIES alias "Bäh.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "Bäh.qml"
 )
 set(trickypaths_umlaut_resource_files
     "data/umlaut.qml"

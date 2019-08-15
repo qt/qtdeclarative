@@ -5,7 +5,9 @@ add_subdirectory(quick)
 add_subdirectory(quicktest)
 add_subdirectory(qmldevtools)
 add_subdirectory(cmake)
-add_subdirectory(installed_cmake)
+# special case begin
+# add_subdirectory(installed_cmake)
+# special case end
 add_subdirectory(toolsupport)
 if(NOT APPLE_UIKIT)
     add_subdirectory(qmltest)
