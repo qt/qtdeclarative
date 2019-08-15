@@ -130,7 +130,7 @@ public:
 private:
     QMultiMap<size_t, Allocation*> freeAllocations;
     QMap<quintptr, ChunkOfPages*> chunks;
-    mutable QMutex mutex;
+    mutable QRecursiveMutex mutex;
 };
 
 }

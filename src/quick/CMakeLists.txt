@@ -185,133 +185,155 @@ add_qt_module(Quick
 )
 
 # Resources:
-add_qt_resource(Quick "scenegraph" PREFIX "/qt-project.org/scenegraph" BASE "scenegraph" FILES
-    shaders/24bittextmask.frag
-    shaders/24bittextmask_core.frag
-    shaders/32bitcolortext.frag
-    shaders/32bitcolortext_core.frag
-    shaders/8bittextmask.frag
-    shaders/8bittextmask_core.frag
-    shaders/distancefieldoutlinetext.frag
-    shaders/distancefieldoutlinetext_core.frag
-    shaders/distancefieldshiftedtext.frag
-    shaders/distancefieldshiftedtext.vert
-    shaders/distancefieldshiftedtext_core.frag
-    shaders/distancefieldshiftedtext_core.vert
-    shaders/distancefieldtext.frag
-    shaders/distancefieldtext.vert
-    shaders/distancefieldtext_core.frag
-    shaders/distancefieldtext_core.vert
-    shaders/flatcolor.frag
-    shaders/flatcolor.vert
-    shaders/flatcolor_core.frag
-    shaders/flatcolor_core.vert
-    shaders/hiqsubpixeldistancefieldtext.frag
-    shaders/hiqsubpixeldistancefieldtext.vert
-    shaders/hiqsubpixeldistancefieldtext_core.frag
-    shaders/hiqsubpixeldistancefieldtext_core.vert
-    shaders/loqsubpixeldistancefieldtext.frag
-    shaders/loqsubpixeldistancefieldtext.vert
-    shaders/loqsubpixeldistancefieldtext_core.frag
-    shaders/loqsubpixeldistancefieldtext_core.vert
-    shaders/opaquetexture.frag
-    shaders/opaquetexture.vert
-    shaders/opaquetexture_core.frag
-    shaders/opaquetexture_core.vert
-    shaders/outlinedtext.frag
-    shaders/outlinedtext.vert
-    shaders/outlinedtext_core.frag
-    shaders/outlinedtext_core.vert
-    shaders/rendernode.frag
-    shaders/rendernode.vert
-    shaders/rendernode_core.frag
-    shaders/rendernode_core.vert
-    shaders/smoothcolor.frag
-    shaders/smoothcolor.vert
-    shaders/smoothcolor_core.frag
-    shaders/smoothcolor_core.vert
-    shaders/smoothtexture.frag
-    shaders/smoothtexture.vert
-    shaders/smoothtexture_core.frag
-    shaders/smoothtexture_core.vert
-    shaders/sprite.frag
-    shaders/sprite.vert
-    shaders/sprite_core.frag
-    shaders/sprite_core.vert
-    shaders/stencilclip.frag
-    shaders/stencilclip.vert
-    shaders/stencilclip_core.frag
-    shaders/stencilclip_core.vert
-    shaders/styledtext.frag
-    shaders/styledtext.vert
-    shaders/styledtext_core.frag
-    shaders/styledtext_core.vert
-    shaders/textmask.frag
-    shaders/textmask.vert
-    shaders/textmask_core.frag
-    shaders/textmask_core.vert
-    shaders/texture.frag
-    shaders/texture_core.frag
-    shaders/vertexcolor.frag
-    shaders/vertexcolor.vert
-    shaders/vertexcolor_core.frag
-    shaders/vertexcolor_core.vert
-    shaders/visualization.frag
-    shaders/visualization.vert
-    shaders_ng/24bittextmask.frag.qsb
-    shaders_ng/32bitcolortext.frag.qsb
-    shaders_ng/8bittextmask.frag.qsb
-    shaders_ng/8bittextmask_a.frag.qsb
-    shaders_ng/distancefieldoutlinetext.frag.qsb
-    shaders_ng/distancefieldoutlinetext.vert.qsb
-    shaders_ng/distancefieldoutlinetext_a.frag.qsb
-    shaders_ng/distancefieldshiftedtext.frag.qsb
-    shaders_ng/distancefieldshiftedtext.vert.qsb
-    shaders_ng/distancefieldshiftedtext_a.frag.qsb
-    shaders_ng/distancefieldtext.frag.qsb
-    shaders_ng/distancefieldtext.vert.qsb
-    shaders_ng/distancefieldtext_a.frag.qsb
-    shaders_ng/flatcolor.frag.qsb
-    shaders_ng/flatcolor.vert.qsb
-    shaders_ng/hiqsubpixeldistancefieldtext.frag.qsb
-    shaders_ng/hiqsubpixeldistancefieldtext.vert.qsb
-    shaders_ng/hiqsubpixeldistancefieldtext_a.frag.qsb
-    shaders_ng/loqsubpixeldistancefieldtext.frag.qsb
-    shaders_ng/loqsubpixeldistancefieldtext.vert.qsb
-    shaders_ng/loqsubpixeldistancefieldtext_a.frag.qsb
-    shaders_ng/opaquetexture.frag.qsb
-    shaders_ng/opaquetexture.vert.qsb
-    shaders_ng/outlinedtext.frag.qsb
-    shaders_ng/outlinedtext.vert.qsb
-    shaders_ng/outlinedtext_a.frag.qsb
-    shaders_ng/shadereffect.frag.qsb
-    shaders_ng/shadereffect.vert.qsb
-    shaders_ng/smoothcolor.frag.qsb
-    shaders_ng/smoothcolor.vert.qsb
-    shaders_ng/smoothtexture.frag.qsb
-    shaders_ng/smoothtexture.vert.qsb
-    shaders_ng/sprite.frag.qsb
-    shaders_ng/sprite.vert.qsb
-    shaders_ng/stencilclip.frag.qsb
-    shaders_ng/stencilclip.vert.qsb
-    shaders_ng/styledtext.frag.qsb
-    shaders_ng/styledtext.vert.qsb
-    shaders_ng/styledtext_a.frag.qsb
-    shaders_ng/textmask.frag.qsb
-    shaders_ng/textmask.vert.qsb
-    shaders_ng/texture.frag.qsb
-    shaders_ng/texture.vert.qsb
-    shaders_ng/vertexcolor.frag.qsb
-    shaders_ng/vertexcolor.vert.qsb)
-add_qt_resource(Quick "items" PREFIX "/qt-project.org/items" BASE "items" FILES
-    shaders/shadereffect.frag
-    shaders/shadereffect.vert
-    shaders/shadereffect_core.frag
-    shaders/shadereffect_core.vert
-    shaders/shadereffectfallback.frag
-    shaders/shadereffectfallback.vert
-    shaders/shadereffectfallback_core.frag
-    shaders/shadereffectfallback_core.vert)
+set(scenegraph_resource_files
+    "shaders/24bittextmask.frag"
+    "shaders/24bittextmask_core.frag"
+    "shaders/32bitcolortext.frag"
+    "shaders/32bitcolortext_core.frag"
+    "shaders/8bittextmask.frag"
+    "shaders/8bittextmask_core.frag"
+    "shaders/distancefieldoutlinetext.frag"
+    "shaders/distancefieldoutlinetext_core.frag"
+    "shaders/distancefieldshiftedtext.frag"
+    "shaders/distancefieldshiftedtext.vert"
+    "shaders/distancefieldshiftedtext_core.frag"
+    "shaders/distancefieldshiftedtext_core.vert"
+    "shaders/distancefieldtext.frag"
+    "shaders/distancefieldtext.vert"
+    "shaders/distancefieldtext_core.frag"
+    "shaders/distancefieldtext_core.vert"
+    "shaders/flatcolor.frag"
+    "shaders/flatcolor.vert"
+    "shaders/flatcolor_core.frag"
+    "shaders/flatcolor_core.vert"
+    "shaders/hiqsubpixeldistancefieldtext.frag"
+    "shaders/hiqsubpixeldistancefieldtext.vert"
+    "shaders/hiqsubpixeldistancefieldtext_core.frag"
+    "shaders/hiqsubpixeldistancefieldtext_core.vert"
+    "shaders/loqsubpixeldistancefieldtext.frag"
+    "shaders/loqsubpixeldistancefieldtext.vert"
+    "shaders/loqsubpixeldistancefieldtext_core.frag"
+    "shaders/loqsubpixeldistancefieldtext_core.vert"
+    "shaders/opaquetexture.frag"
+    "shaders/opaquetexture.vert"
+    "shaders/opaquetexture_core.frag"
+    "shaders/opaquetexture_core.vert"
+    "shaders/outlinedtext.frag"
+    "shaders/outlinedtext.vert"
+    "shaders/outlinedtext_core.frag"
+    "shaders/outlinedtext_core.vert"
+    "shaders/rendernode.frag"
+    "shaders/rendernode.vert"
+    "shaders/rendernode_core.frag"
+    "shaders/rendernode_core.vert"
+    "shaders/smoothcolor.frag"
+    "shaders/smoothcolor.vert"
+    "shaders/smoothcolor_core.frag"
+    "shaders/smoothcolor_core.vert"
+    "shaders/smoothtexture.frag"
+    "shaders/smoothtexture.vert"
+    "shaders/smoothtexture_core.frag"
+    "shaders/smoothtexture_core.vert"
+    "shaders/sprite.frag"
+    "shaders/sprite.vert"
+    "shaders/sprite_core.frag"
+    "shaders/sprite_core.vert"
+    "shaders/stencilclip.frag"
+    "shaders/stencilclip.vert"
+    "shaders/stencilclip_core.frag"
+    "shaders/stencilclip_core.vert"
+    "shaders/styledtext.frag"
+    "shaders/styledtext.vert"
+    "shaders/styledtext_core.frag"
+    "shaders/styledtext_core.vert"
+    "shaders/textmask.frag"
+    "shaders/textmask.vert"
+    "shaders/textmask_core.frag"
+    "shaders/textmask_core.vert"
+    "shaders/texture.frag"
+    "shaders/texture_core.frag"
+    "shaders/vertexcolor.frag"
+    "shaders/vertexcolor.vert"
+    "shaders/vertexcolor_core.frag"
+    "shaders/vertexcolor_core.vert"
+    "shaders/visualization.frag"
+    "shaders/visualization.vert"
+    "shaders_ng/24bittextmask.frag.qsb"
+    "shaders_ng/32bitcolortext.frag.qsb"
+    "shaders_ng/8bittextmask.frag.qsb"
+    "shaders_ng/8bittextmask_a.frag.qsb"
+    "shaders_ng/distancefieldoutlinetext.frag.qsb"
+    "shaders_ng/distancefieldoutlinetext.vert.qsb"
+    "shaders_ng/distancefieldoutlinetext_a.frag.qsb"
+    "shaders_ng/distancefieldshiftedtext.frag.qsb"
+    "shaders_ng/distancefieldshiftedtext.vert.qsb"
+    "shaders_ng/distancefieldshiftedtext_a.frag.qsb"
+    "shaders_ng/distancefieldtext.frag.qsb"
+    "shaders_ng/distancefieldtext.vert.qsb"
+    "shaders_ng/distancefieldtext_a.frag.qsb"
+    "shaders_ng/flatcolor.frag.qsb"
+    "shaders_ng/flatcolor.vert.qsb"
+    "shaders_ng/hiqsubpixeldistancefieldtext.frag.qsb"
+    "shaders_ng/hiqsubpixeldistancefieldtext.vert.qsb"
+    "shaders_ng/hiqsubpixeldistancefieldtext_a.frag.qsb"
+    "shaders_ng/loqsubpixeldistancefieldtext.frag.qsb"
+    "shaders_ng/loqsubpixeldistancefieldtext.vert.qsb"
+    "shaders_ng/loqsubpixeldistancefieldtext_a.frag.qsb"
+    "shaders_ng/opaquetexture.frag.qsb"
+    "shaders_ng/opaquetexture.vert.qsb"
+    "shaders_ng/outlinedtext.frag.qsb"
+    "shaders_ng/outlinedtext.vert.qsb"
+    "shaders_ng/outlinedtext_a.frag.qsb"
+    "shaders_ng/shadereffect.frag.qsb"
+    "shaders_ng/shadereffect.vert.qsb"
+    "shaders_ng/smoothcolor.frag.qsb"
+    "shaders_ng/smoothcolor.vert.qsb"
+    "shaders_ng/smoothtexture.frag.qsb"
+    "shaders_ng/smoothtexture.vert.qsb"
+    "shaders_ng/sprite.frag.qsb"
+    "shaders_ng/sprite.vert.qsb"
+    "shaders_ng/stencilclip.frag.qsb"
+    "shaders_ng/stencilclip.vert.qsb"
+    "shaders_ng/styledtext.frag.qsb"
+    "shaders_ng/styledtext.vert.qsb"
+    "shaders_ng/styledtext_a.frag.qsb"
+    "shaders_ng/textmask.frag.qsb"
+    "shaders_ng/textmask.vert.qsb"
+    "shaders_ng/texture.frag.qsb"
+    "shaders_ng/texture.vert.qsb"
+    "shaders_ng/vertexcolor.frag.qsb"
+    "shaders_ng/vertexcolor.vert.qsb"
+    "shaders_ng/visualization.frag.qsb"
+    "shaders_ng/visualization.vert.qsb"
+)
+
+add_qt_resource(Quick "scenegraph"
+    PREFIX
+        "/qt-project.org/scenegraph"
+    BASE
+        "scenegraph"
+    FILES
+        ${scenegraph_resource_files}
+)
+set(items_resource_files
+    "shaders/shadereffect.frag"
+    "shaders/shadereffect.vert"
+    "shaders/shadereffect_core.frag"
+    "shaders/shadereffect_core.vert"
+    "shaders/shadereffectfallback.frag"
+    "shaders/shadereffectfallback.vert"
+    "shaders/shadereffectfallback_core.frag"
+    "shaders/shadereffectfallback_core.vert"
+)
+
+add_qt_resource(Quick "items"
+    PREFIX
+        "/qt-project.org/items"
+    BASE
+        "items"
+    FILES
+        ${items_resource_files}
+)
 
 
 if(ANDROID)
@@ -331,8 +353,10 @@ endif()
 ## Scopes:
 #####################################################################
 
-#### Keys ignored in scope 2:.:.:quick.pro:QT_FEATURE_qml_network:
-# QT_PRIVATE = "network"
+extend_target(Quick CONDITION QT_FEATURE_qml_network
+    LIBRARIES
+        Qt::Network
+)
 
 extend_target(Quick CONDITION MSVC
     DEFINES
@@ -409,6 +433,8 @@ extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FE
         scenegraph/compressedtexture/qsgcompressedatlastexture.cpp scenegraph/compressedtexture/qsgcompressedatlastexture_p.h
         scenegraph/compressedtexture/qsgcompressedtexture.cpp scenegraph/compressedtexture/qsgcompressedtexture_p.h
         scenegraph/coreapi/qsgbatchrenderer.cpp scenegraph/coreapi/qsgbatchrenderer_p.h
+        scenegraph/coreapi/qsgopenglvisualizer.cpp scenegraph/coreapi/qsgopenglvisualizer_p.h
+        scenegraph/coreapi/qsgrhivisualizer.cpp scenegraph/coreapi/qsgrhivisualizer_p.h
         scenegraph/coreapi/qsgshaderrewriter.cpp
         scenegraph/qsgdefaultcontext.cpp scenegraph/qsgdefaultcontext_p.h
         scenegraph/qsgdefaultglyphnode.cpp scenegraph/qsgdefaultglyphnode_p.cpp scenegraph/qsgdefaultglyphnode_p.h

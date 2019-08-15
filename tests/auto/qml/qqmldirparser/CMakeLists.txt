@@ -4,6 +4,14 @@
 ## tst_qqmldirparser Test:
 #####################################################################
 
+# Collect test data
+
+file(GLOB test_data_glob
+    LIST_DIRECTORIES true
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    "data/*")
+list(APPEND test_data ${test_data_glob})
+
 add_qt_test(tst_qqmldirparser
     GUI
     SOURCES
@@ -16,16 +24,11 @@ add_qt_test(tst_qqmldirparser
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Qml
+    TESTDATA ${test_data}
 )
-
-#### Keys ignored in scope 1:.:.:qqmldirparser.pro:<TRUE>:
-# CONFIG = "testcase"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qqmldirparser.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qqmldirparser CONDITION ANDROID OR APPLE_IOS
     DEFINES

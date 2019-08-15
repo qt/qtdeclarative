@@ -39,6 +39,7 @@
 
 #include "qsgopenvgpainternode.h"
 #include "qsgopenvgtexture.h"
+#include <private/qsgcontext_p.h>
 #include <qmath.h>
 
 #include <QtGui/QPainter>

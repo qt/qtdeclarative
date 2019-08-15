@@ -70,12 +70,8 @@ public:
         , delayed(false)
         , pendingEval(false)
         , restoreBinding(true)
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
         , restoreValue(false)
         , restoreModeExplicit(false)
-#else
-        , restoreValue(true)
-#endif
     {}
     ~QQmlBindPrivate() { }
 
@@ -93,9 +89,7 @@ public:
     bool pendingEval:1;
     bool restoreBinding:1;
     bool restoreValue:1;
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
     bool restoreModeExplicit:1;
-#endif
 
     void validate(QObject *binding) const;
     void clearPrev();
@@ -365,8 +359,7 @@ void QQmlBind::setDelayed(bool delayed)
     \li Binding.RestoreBindingOrValue The original value is always restored.
     \list
 
-    \warning The default value is Binding.RestoreBinding. This will change in
-    Qt 5.15 to Binding.RestoreBindingOrValue.
+    The default value is Binding.RestoreBinding.
 
     If you rely on any specific behavior regarding the restoration of plain
     values when bindings get disabled you should migrate to explicitly set the
@@ -392,9 +385,7 @@ void QQmlBind::setRestoreMode(RestorationMode newMode)
     if (newMode != restoreMode()) {
         d->restoreValue = (newMode & RestoreValue);
         d->restoreBinding = (newMode & RestoreBinding);
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
         d->restoreModeExplicit = true;
-#endif
         emit restoreModeChanged();
     }
 }
@@ -465,27 +456,11 @@ void QQmlBind::eval()
                     Q_ASSERT(vmemo);
                     vmemo->setVMEProperty(propPriv->core.coreIndex(), *d->v4Value.valueRef());
                     d->clearPrev();
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-                } else if (!d->restoreModeExplicit) {
-                    qmlWarning(this)
-                            << "Not restoring previous value because restoreMode has not been set."
-                            << "This behavior is deprecated."
-                            << "In Qt < 5.15 the default is Binding.RestoreBinding."
-                            << "In Qt >= 5.15 the default is Binding.RestoreBindingOrValue.";
-#endif
                 }
             } else if (d->prevIsVariant) {
                 if (d->restoreValue) {
                     d->prop.write(d->prevValue);
                     d->clearPrev();
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-                } else if (!d->restoreModeExplicit) {
-                    qmlWarning(this)
-                            << "Not restoring previous value because restoreMode has not been set."
-                            << "This behavior is deprecated."
-                            << "In Qt < 5.15 the default is Binding.RestoreBinding."
-                            << "In Qt >= 5.15 the default is Binding.RestoreBindingOrValue.";
-#endif
                 }
             }
             return;

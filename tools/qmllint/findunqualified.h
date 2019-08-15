@@ -57,6 +57,7 @@ private:
     QString m_rootId;
     QString m_filePath;
     QSet<QPair<QString, QString>> m_alreadySeenImports;
+    QSet<QString> m_unknownImports;
     ColorOutput m_colorOut;
 
     struct OutstandingConnection {QString targetName; ScopeTree *scope; QQmlJS::AST::UiObjectDefinition *uiod;};

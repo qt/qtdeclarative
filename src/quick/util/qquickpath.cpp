@@ -109,6 +109,11 @@ QT_BEGIN_NAMESPACE
         \li Yes
         \li Yes
         \li Yes
+    \li PathMultiLine
+        \li Yes
+        \li Yes
+        \li Yes
+        \li Yes
     \row
         \li PathQuad
         \li Yes
@@ -246,7 +251,8 @@ bool QQuickPath::isClosed() const
     A path can contain the following path objects:
     \list
         \li \l PathLine - a straight line to a given position.
-        \li \l PathPolyline - a polyline specified as a list of normalized coordinates.
+        \li \l PathPolyline - a polyline specified as a list of coordinates.
+        \li \l PathMultiline - a list of polylines specified as a list of lists of coordinates.
         \li \l PathQuad - a quadratic Bezier curve to a given position with a control point.
         \li \l PathCubic - a cubic Bezier curve to a given position with two control points.
         \li \l PathArc - an arc to a given position with a radius.
@@ -2416,9 +2422,14 @@ void QQuickPathPolyline::setPath(const QVariantList &path)
         pathList.append(c);
     }
 
-    if (m_path != pathList) {
+    setPath(pathList);
+}
+
+void QQuickPathPolyline::setPath(const QVector<QPointF> &path)
+{
+    if (m_path != path) {
         const QPointF &oldStart = start();
-        m_path = pathList;
+        m_path = path;
         const QPointF &newStart = start();
         emit pathChanged();
         if (oldStart != newStart)
@@ -2444,6 +2455,146 @@ void QQuickPathPolyline::addToPath(QPainterPath &path, const QQuickPathData &/*d
     path.moveTo(m_path.first());
     for (int i = 1; i < m_path.size(); ++i)
         path.lineTo(m_path.at(i));
+}
+
+
+/*!
+    \qmltype PathMultiline
+    \instantiates QQuickPathMultiline
+    \inqmlmodule QtQuick
+    \ingroup qtquick-animation-paths
+    \brief Defines a set of polylines through a list of lists of coordinates.
+    \since QtQuick 2.14
+
+    This element allows to define a list of polylines at once.
+    Each polyline in the list will be preceded by a \l{QPainterPath::moveTo}{moveTo}
+    command, effectively making each polyline a separate one.
+    The polylines in this list are supposed to be non-intersecting with each other.
+    In any case, when used in conjunction with a \l ShapePath, the containing ShapePath's
+    \l ShapePath::fillRule applies.
+    That is, with the default \c OddEvenFill and non intersecting shapes, the largest shape in the list defines an area to be filled;
+    areas where two shapes overlap are holes; areas where three shapes overlap are filled areas inside holes, etc.
+
+    The example below creates a high voltage symbol by adding each path
+    of the symbol to the list of paths.
+    The coordinates of the vertices are normalized, and through the containing shape's
+    \l scale property, the path will be rescaled together with its containing shape.
+
+    \qml
+    PathMultiline {
+        paths: [
+                [Qt.point(0.5,     0.06698),
+                 Qt.point(1,       0.93301),
+                 Qt.point(0,       0.93301),
+                 Qt.point(0.5,     0.06698)],
+
+                [Qt.point(0.5,     0.12472),
+                 Qt.point(0.95,    0.90414),
+                 Qt.point(0.05,    0.90414),
+                 Qt.point(0.5,     0.12472)],
+
+                [Qt.point(0.47131, 0.32986),
+                 Qt.point(0.36229, 0.64789),
+                 Qt.point(0.51492, 0.58590),
+                 Qt.point(0.47563, 0.76014),
+                 Qt.point(0.44950, 0.73590),
+                 Qt.point(0.46292, 0.83392),
+                 Qt.point(0.52162, 0.75190),
+                 Qt.point(0.48531, 0.76230),
+                 Qt.point(0.57529, 0.53189),
+                 Qt.point(0.41261, 0.59189),
+                 Qt.point(0.53001, 0.32786),
+                 Qt.point(0.47131, 0.32986)]
+               ]
+    }
+    \endqml
+
+    \sa Path, QPainterPath::setFillRule, PathPolyline, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg, PathMove
+*/
+
+/*!
+    \qmlproperty point QtQuick::PathMultiline::start
+
+    This read-only property contains the beginning of the polylines.
+*/
+
+/*!
+    \qmlproperty list<list<point>> QtQuick::PathMultiline::paths
+
+    This property defines the vertices of the polylines.
+*/
+
+QQuickPathMultiline::QQuickPathMultiline(QObject *parent) : QQuickCurve(parent)
+{
+}
+
+QVariantList QQuickPathMultiline::paths() const
+{
+    QVariantList res;
+    for (int j = 0; j < m_paths.length(); ++j) {
+        const QVector<QPointF> &path = m_paths.at(j);
+        QVariantList p;
+        for (int i = 0; i < path.length(); ++i) {
+            const QPointF &c = path.at(i);
+            p.append(QVariant::fromValue(c));
+        }
+        res.append(p);
+    }
+    return res;
+}
+
+void QQuickPathMultiline::setPaths(const QVariantList &paths)
+{
+    QVector<QVector<QPointF>> pathsList;
+    for (int j = 0; j < paths.length(); ++j) {
+        if (paths.at(j).type() != QVariant::List)
+            qWarning() << "QQuickPathMultiLine::setPaths: elements in argument not of type List";
+        QVariantList path = paths.at(j).toList();
+        QVector<QPointF> l;
+        for (int i = 0; i < path.length(); ++i) {
+            const QVariant &element = path.at(i);
+            const QVariant::Type elementType = element.type();
+            if (elementType == QVariant::PointF || elementType == QVariant::Point) {
+                const QPointF c = element.toPointF();
+                l.append(c);
+            }
+        }
+        if (l.size() >= 2)
+            pathsList.append(l);
+    }
+
+    setPaths(pathsList);
+}
+
+void QQuickPathMultiline::setPaths(const QVector<QVector<QPointF>> &paths)
+{
+    if (m_paths != paths) {
+        const QPointF &oldStart = start();
+        m_paths = paths;
+        const QPointF &newStart = start();
+        emit pathsChanged();
+        if (oldStart != newStart)
+            emit startChanged();
+        emit changed();
+    }
+}
+
+QPointF QQuickPathMultiline::start() const
+{
+    if (m_paths.size())
+        return m_paths.first().first();
+    return QPointF();
+}
+
+void QQuickPathMultiline::addToPath(QPainterPath &path, const QQuickPathData &)
+{
+    if (!m_paths.size())
+        return;
+    for (const QVector<QPointF> &p: m_paths) {
+        path.moveTo(p.first());
+        for (int i = 1; i < p.size(); ++i)
+            path.lineTo(p.at(i));
+    }
 }
 
 QT_END_NAMESPACE

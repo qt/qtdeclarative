@@ -278,6 +278,7 @@ private slots:
     void addOnCompleted();
     void setPositionOnLayout();
     void touchCancel();
+    void resizeAfterComponentComplete();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -9018,6 +9019,21 @@ void tst_QQuickListView::touchCancel() // QTBUG-74679
     listview->setCurrentIndex(1);
     // ensure that it actually moves (animates) to the second delegate
     QTRY_COMPARE(listview->contentY(), 500.0);
+}
+
+void tst_QQuickListView::resizeAfterComponentComplete()  // QTBUG-76487
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("resizeAfterComponentComplete.qml"));
+    window->resize(640, 480);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QObject *listView = window->rootObject();
+    QVERIFY(listView);
+
+    QObject *lastItem = qvariant_cast<QObject *>(listView->property("lastItem"));
+    QTRY_COMPARE(lastItem->property("y").toInt(), 9 * lastItem->property("height").toInt());
 }
 
 QTEST_MAIN(tst_QQuickListView)

@@ -536,6 +536,13 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
         context->endNextRhiFrame(renderer);
     else
         context->endNextFrame(renderer);
+
+    if (renderer->hasCustomRenderModeWithContinuousUpdate()) {
+        // For the overdraw visualizer. This update is not urgent so avoid a
+        // direct update() call, this is only here to keep the overdraw
+        // visualization box rotating even when the scene is static.
+        QCoreApplication::postEvent(q, new QEvent(QEvent::Type(FullUpdateRequest)));
+    }
 }
 
 QQuickWindowPrivate::QQuickWindowPrivate()
@@ -3804,6 +3811,12 @@ bool QQuickWindow::isSceneGraphInitialized() const
 
     This signal is emitted when the window receives the event \a close from
     the windowing system.
+
+    On \macOs, Qt will create a menu item \c Quit if there is no menu item
+    whose text is "quit" or "exit". This menu item calls the \c QCoreApplication::quit
+    signal, not the \c QQuickWindow::closing() signal.
+
+    \sa {QMenuBar as a Global Menu Bar}
 */
 
 /*!

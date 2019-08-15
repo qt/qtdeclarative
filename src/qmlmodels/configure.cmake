@@ -16,7 +16,7 @@
 
 qt_feature("qml_object_model" PRIVATE
     SECTION "QML"
-    LABEL "QML list model"
+    LABEL "QML object model"
     PURPOSE "Provides the ObjectModel and Instantiator QML types."
 )
 qt_feature("qml_list_model" PRIVATE

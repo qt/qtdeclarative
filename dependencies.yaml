@@ -1,7 +1,0 @@
-dependencies:
-- ../qtbase.git:
-    ref: f955bd8ced8b93d142b7f755665946424c6d3644
-    required: true
-- ../qtsvg.git:
-    ref: 4b186657ef09634c082b03570624288cf7c1baba
-    required: false

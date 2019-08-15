@@ -96,6 +96,9 @@ void tst_qqmlapplicationengine::basicLoading()
 // will break.
 void tst_qqmlapplicationengine::testNonResolvedPath()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("Android stores QML files in resources, and the path to a resource cannot be relative in this case");
+#endif
     {
         // NOTE NOTE NOTE! Missing testFileUrl is *WANTED* here! We want a
         // non-resolved URL.
@@ -117,6 +120,9 @@ void tst_qqmlapplicationengine::testNonResolvedPath()
 
 void tst_qqmlapplicationengine::application_data()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("Cannot launch external process on Android");
+#endif
     QTest::addColumn<QByteArray>("qmlFile");
     QTest::addColumn<QByteArray>("expectedStdErr");
 

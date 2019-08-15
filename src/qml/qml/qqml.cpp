@@ -76,6 +76,26 @@ int qmlTypeId(const char *uri, int versionMajor, int versionMinor, const char *q
     return QQmlMetaType::typeId(uri, versionMajor, versionMinor, qmlName);
 }
 
+// From qqmlprivate.h
+QObject *QQmlPrivate::RegisterSingletonFunctor::operator()(QQmlEngine *qeng, QJSEngine *)
+{
+    if (qeng->thread() != m_object->thread()) {
+        QQmlError error;
+        error.setDescription(QLatin1String("Registered object must live in the same thread as the engine it was registered with"));
+        QQmlEnginePrivate::get(qeng)->warning(qeng, error);
+        return nullptr;
+    }
+    if (alreadyCalled) {
+        QQmlError error;
+        error.setDescription(QLatin1String("Singleton registered by registerSingletonInstance must only be accessed from one engine"));
+        QQmlEnginePrivate::get(qeng)->warning(qeng, error);
+        return nullptr;
+    }
+    alreadyCalled = true;
+    qeng->setObjectOwnership(m_object, QQmlEngine::CppOwnership);
+    return m_object;
+};
+
 /*
 This method is "over generalized" to allow us to (potentially) register more types of things in
 the future without adding exported symbols.

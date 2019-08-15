@@ -342,6 +342,9 @@ void tst_qqmlnotifier::lotsOfBindings()
 
 void tst_qqmlnotifier::deleteFromHandler()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("Android seems to have problems with QProcess");
+#endif
 #if !QT_CONFIG(process)
     QSKIP("Need QProcess support to test qFatal.");
 #else

@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qqmlerror.h"
+#include "qqmlfile.h"
 #include "qqmlsourcecoordinate_p.h"
 #include <private/qqmljsdiagnosticmessage_p.h>
 
@@ -307,8 +308,8 @@ QDebug operator<<(QDebug debug, const QQmlError &error)
 
     QUrl url = error.url();
 
-    if (error.line() > 0 && url.scheme() == QLatin1String("file")) {
-        QString file = url.toLocalFile();
+    if (error.line() > 0 && (url.scheme() == QLatin1String("file") || url.scheme() == QLatin1String("qrc"))) {
+        QString file = QQmlFile::urlToLocalFileOrQrc(url);
         QFile f(file);
         if (f.open(QIODevice::ReadOnly)) {
             QByteArray data = f.readAll();

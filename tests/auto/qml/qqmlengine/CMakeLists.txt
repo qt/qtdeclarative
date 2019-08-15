@@ -4,6 +4,14 @@
 ## tst_qqmlengine Test:
 #####################################################################
 
+# Collect test data
+
+file(GLOB test_data_glob
+    LIST_DIRECTORIES true
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    "data/*")
+list(APPEND test_data ${test_data_glob})
+
 add_qt_test(tst_qqmlengine
     GUI
     SOURCES
@@ -19,26 +27,25 @@ add_qt_test(tst_qqmlengine
         Qt::Gui
         Qt::Network
         Qt::Qml
+    TESTDATA ${test_data}
 )
 
 # Resources:
+set(qmake_immediate_resource_files
+    "data/qrcurls.js"
+    "data/qrcurls.qml"
+)
+
 add_qt_resource(tst_qqmlengine "qmake_immediate"
     PREFIX
         "/"
     FILES
-        data/qrcurls.js
-        data/qrcurls.qml
+        ${qmake_immediate_resource_files}
 )
 
 
-#### Keys ignored in scope 1:.:.:qqmlengine.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qqmlengine.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qqmlengine CONDITION boot2qt
     DEFINES

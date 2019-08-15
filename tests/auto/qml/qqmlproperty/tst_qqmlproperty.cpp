@@ -144,6 +144,7 @@ private slots:
     void deeplyNestedObject();
     void readOnlyDynamicProperties();
     void aliasToIdWithMatchingQmlFileNameOnCaseInsensitiveFileSystem();
+    void nullPropertyBinding();
 
     void floatToStringPrecision_data();
     void floatToStringPrecision();
@@ -2057,6 +2058,22 @@ void tst_qqmlproperty::aliasToIdWithMatchingQmlFileNameOnCaseInsensitiveFileSyst
 
     QQmlProperty property(root.data(), "testType.objectName", QQmlEngine::contextForObject(root.data()));
     QVERIFY(property.isValid());
+}
+
+// QTBUG-77027
+void tst_qqmlproperty::nullPropertyBinding()
+{
+    const QUrl url = testFileUrl("nullPropertyBinding.qml");
+    QQmlEngine engine;
+    QQmlComponent component(&engine, url);
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root);
+    QTest::ignoreMessage(QtMsgType::QtInfoMsg, "undefined");
+    QMetaObject::invokeMethod(root.get(), "tog");
+    QTest::ignoreMessage(QtMsgType::QtInfoMsg, "defined");
+    QMetaObject::invokeMethod(root.get(), "tog");
+    QTest::ignoreMessage(QtMsgType::QtInfoMsg, "undefined");
+    QMetaObject::invokeMethod(root.get(), "tog");
 }
 
 void tst_qqmlproperty::floatToStringPrecision_data()

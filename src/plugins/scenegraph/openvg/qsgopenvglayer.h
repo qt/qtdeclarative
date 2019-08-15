@@ -42,6 +42,7 @@
 
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qsgcontext_p.h>
+#include <private/qsgtexture_p.h>
 
 #include "qopenvgcontext_p.h"
 #include "qopenvgoffscreensurface.h"
@@ -50,9 +51,11 @@ QT_BEGIN_NAMESPACE
 
 class QSGOpenVGRenderer;
 class QSGOpenVGRenderContext;
+class QSGOpenVGLayerPrivate;
 
 class QSGOpenVGLayer : public QSGLayer
 {
+    Q_DECLARE_PRIVATE(QSGOpenVGLayer)
 public:
     QSGOpenVGLayer(QSGRenderContext *renderContext);
     ~QSGOpenVGLayer();
@@ -107,6 +110,13 @@ private:
 
     QOpenVGOffscreenSurface *m_offscreenSurface;
     QOpenVGOffscreenSurface *m_secondaryOffscreenSurface;
+};
+
+class QSGOpenVGLayerPrivate : public QSGTexturePrivate
+{
+    Q_DECLARE_PUBLIC(QSGOpenVGLayer)
+public:
+    int comparisonKey() const override;
 };
 
 QT_END_NAMESPACE
