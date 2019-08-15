@@ -112,8 +112,14 @@ public:
     ~QQmlObjectCreator();
 
     QObject *create(int subComponentIndex = -1, QObject *parent = nullptr, QQmlInstantiationInterrupt *interrupt = nullptr);
-    bool populateDeferredProperties(QObject *instance, QQmlData::DeferredData *deferredData);
-    bool populateDeferredBinding(const QQmlProperty &qmlProperty, QQmlData::DeferredData *deferredData, const QV4::CompiledData::Binding *binding);
+
+    bool populateDeferredProperties(QObject *instance, const QQmlData::DeferredData *deferredData);
+
+    void beginPopulateDeferred(QQmlContextData *context);
+    void populateDeferredBinding(const QQmlProperty &qmlProperty, int deferredIndex,
+                                 const QV4::CompiledData::Binding *binding);
+    void finalizePopulateDeferred();
+
     QQmlContextData *finalize(QQmlInstantiationInterrupt &interrupt);
     void clear();
 
@@ -138,6 +144,11 @@ private:
 
     bool populateInstance(int index, QObject *instance,
                           QObject *bindingTarget, const QQmlPropertyData *valueTypeProperty);
+
+    // If qmlProperty and binding are null, populate all properties, otherwise only the given one.
+    void populateDeferred(QObject *instance, int deferredIndex,
+                          const QQmlPropertyPrivate *qmlProperty = nullptr,
+                          const QV4::CompiledData::Binding *binding = nullptr);
 
     void setupBindings(bool applyDeferredBindings = false);
     bool setPropertyBinding(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
