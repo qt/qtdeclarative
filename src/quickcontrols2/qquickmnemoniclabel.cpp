@@ -88,7 +88,7 @@ static QTextLayout::FormatRange underlineRange(int start, int length = 1)
 // based on QPlatformTheme::removeMnemonics()
 void QQuickMnemonicLabel::updateMnemonic()
 {
-    QString text(m_fullText.size(), 0);
+    QString text(m_fullText.size(), QChar::Null);
     int idx = 0;
     int pos = 0;
     int len = m_fullText.length();

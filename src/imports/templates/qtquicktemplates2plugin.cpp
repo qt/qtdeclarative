@@ -162,13 +162,9 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     registered = true;
     initProviders();
 
-    // Register the latest version, even if there are no new types or new revisions for existing types yet.
-    // Before Qt 5.12, we would do the following:
-    //
-    // qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
-    //
-    // However, we want to align with the rest of Qt Quick which uses Qt's minor version.
-    qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
+    // The minor version used to be the current Qt 5 minor. For compatibility it is the last
+    // Qt 5 release.
+    qmlRegisterModule(uri, 2, 15);
 
     // QtQuick.Templates 2.0 (originally introduced in Qt 5.7)
     qmlRegisterType<QQuickAbstractButton>(uri, 2, 0, "AbstractButton");

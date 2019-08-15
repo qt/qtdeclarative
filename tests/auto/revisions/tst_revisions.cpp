@@ -56,7 +56,7 @@ void tst_revisions::revisions_data()
     QTest::addColumn<int>("revision");
 
     // Qt 5.7: 2.0, Qt 5.8: 2.1, Qt 5.9: 2.2...
-    for (int i = 0; i <= QT_VERSION_MINOR - 7; ++i)
+    for (int i = 0; i <= 15; ++i)
         QTest::newRow(qPrintable(QString("2.%1").arg(i))) << i;
 }
 
@@ -91,7 +91,7 @@ void tst_revisions::window_data()
         QTest::newRow(qPrintable(QString("screen:2.%1").arg(i))) << i << "screen: null" << QString(":1 \"ApplicationWindow.screen\" is not available in QtQuick.Templates 2.%1").arg(i);
 
     // Qt 5.9: 2.2, Qt 5.10: 2.3...
-    for (int i = 2; i <= QT_VERSION_MINOR - 7; ++i)
+    for (int i = 2; i <= 15; ++i)
         QTest::newRow(qPrintable(QString("screen:2.%1").arg(i))) << i << "screen: null" << "";
 }
 

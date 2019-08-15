@@ -120,13 +120,9 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
         stylePlugin->initializeTheme(theme);
     qDeleteAll(stylePlugins);
 
-    // Register the latest version, even if there are no new types or new revisions for existing types yet.
-    // Before Qt 5.12, we would do the following:
-    //
-    // qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
-    //
-    // However, we want to align with the rest of Qt Quick which uses Qt's minor version.
-    qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
+    // The minor version used to be the current Qt 5 minor. For compatibility it is the last
+    // Qt 5 release.
+    qmlRegisterModule(uri, 2, 15);
 
     // QtQuick.Controls 2.0 (originally introduced in Qt 5.7)
     qmlRegisterType(resolvedUrl(QStringLiteral("AbstractButton.qml")), uri, 2, 0, "AbstractButton");
@@ -198,14 +194,10 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterUncreatableType<QQuickSplitHandleAttached>(uri, 2, 13, "SplitHandle",
         QStringLiteral("SplitHandle is only available as an attached property."));
 
-    // Register the latest version, even if there are no new types or new revisions for existing types yet.
-    // Before Qt 5.12, we would do the following:
-    //
-    // qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
-    //
-    // However, we want to align with the rest of Qt Quick which uses Qt's minor version.
+    // The minor version used to be the current Qt 5 minor. For compatibility it is the last
+    // Qt 5 release.
     const QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterModule(import, 2, QT_VERSION_MINOR);
+    qmlRegisterModule(import, 2, 15);
 
     // QtQuick.Controls.impl 2.0 (Qt 5.7)
     qmlRegisterType<QQuickDefaultBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
