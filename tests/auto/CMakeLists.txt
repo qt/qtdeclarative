@@ -4,7 +4,7 @@ add_subdirectory(qml)
 add_subdirectory(quick)
 add_subdirectory(quicktest)
 add_subdirectory(qmldevtools)
-add_subdirectory(cmake)
+# add_subdirectory(cmake) # special case remove
 # special case begin
 # add_subdirectory(installed_cmake)
 # special case end
