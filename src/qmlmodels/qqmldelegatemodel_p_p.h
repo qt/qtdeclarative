@@ -201,11 +201,14 @@ public:
         , incubating(nullptr)
         , vdm(l) {}
 
+    void initializeRequiredProperties(QQmlDelegateModelItem *modelItemToIncubate, QObject* object);
     void statusChanged(Status) override;
     void setInitialState(QObject *) override;
 
     QQmlDelegateModelItem *incubating = nullptr;
     QQmlDelegateModelPrivate *vdm = nullptr;
+    QQmlContextData *proxyContext = nullptr;
+    QPointer<QObject> proxiedObject  = nullptr; // the proxied object might disapear, so we use a QPointer instead of a raw one
     int index[QQmlListCompositor::MaximumGroupCount];
 };
 
@@ -443,6 +446,16 @@ private:
     QMetaObject * const metaObject;
     const int memberPropertyOffset;
     const int indexPropertyOffset;
+};
+
+class PropertyUpdater : public QObject
+{
+    Q_OBJECT
+
+public:
+    PropertyUpdater(QObject *parent);
+public Q_SLOTS:
+    void doUpdate();
 };
 
 QT_END_NAMESPACE
