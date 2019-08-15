@@ -91,10 +91,14 @@ Q_SIGNALS:
 
 private:
     void connectSignals();
+    void connectSignalsToMethods();
+    void connectSignalsToBindings();
+
     void classBegin() override;
     void componentComplete() override;
 };
 
+// TODO: Drop this class as soon as we can
 class QQmlConnectionsParser : public QQmlCustomParser
 {
 public:
