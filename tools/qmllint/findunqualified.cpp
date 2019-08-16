@@ -170,7 +170,8 @@ FindUnqualifiedIDVisitor::localQmlFile2FakeMetaObject(QString filePath)
 {
     using namespace QQmlJS::AST;
     auto fake = new LanguageUtils::FakeMetaObject;
-    fake->setClassName(QFileInfo { filePath }.baseName());
+    QString baseName = QFileInfo { filePath }.baseName();
+    fake->setClassName(baseName.endsWith(".ui") ? baseName.chopped(3) : baseName);
     QFile file(filePath);
     if (!file.open(QFile::ReadOnly)) {
         return fake;
@@ -304,6 +305,22 @@ FindUnqualifiedIDVisitor::localQmlFile2FakeMetaObject(QString filePath)
     return fake;
 }
 
+void FindUnqualifiedIDVisitor::importDirectory(const QString &directory, const QString &prefix)
+{
+    QString dirname = directory;
+    QFileInfo info { dirname };
+    if (info.isRelative())
+        dirname = QDir(QFileInfo { m_filePath }.path()).filePath(dirname);
+
+    QDirIterator it { dirname, QStringList() << QLatin1String("*.qml"), QDir::NoFilter };
+    while (it.hasNext()) {
+        LanguageUtils::FakeMetaObject *fake = localQmlFile2FakeMetaObject(it.next());
+        m_exportedName2MetaObject.insert(
+                fake->className(),
+                QSharedPointer<const LanguageUtils::FakeMetaObject>(fake));
+    }
+}
+
 void FindUnqualifiedIDVisitor::importExportedNames(QStringRef prefix, QString name)
 {
     for (;;) {
@@ -377,6 +394,8 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiProgram *)
     meta->addProperty(LanguageUtils::FakeMetaProperty {"ignoreUnknownSignals", "bool", false, false, false, 0});
     meta->addProperty(LanguageUtils::FakeMetaProperty {"target", "QObject", false, false, false, 0});
     m_exportedName2MetaObject["Connections"] = LanguageUtils::FakeMetaObject::ConstPtr { meta };
+
+    importDirectory(".", QString());
     return true;
 }
 
@@ -672,18 +691,9 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiImport *import)
         prefix += import->importId + QLatin1Char('.');
     }
     auto dirname = import->fileName.toString();
-    if (!dirname.isEmpty()) {
-        QFileInfo info { dirname };
-        if (info.isRelative()) {
-            dirname = QDir(QFileInfo { m_filePath }.path()).filePath(dirname);
-        }
-        QDirIterator it { dirname, QStringList() << QLatin1String("*.qml"), QDir::NoFilter };
-        while (it.hasNext()) {
-            LanguageUtils::FakeMetaObject *fake = localQmlFile2FakeMetaObject(it.next());
-            m_exportedName2MetaObject.insert(
-                    fake->className(), QSharedPointer<const LanguageUtils::FakeMetaObject>(fake));
-        }
-    }
+    if (!dirname.isEmpty())
+        importDirectory(dirname, prefix);
+
     QString path {};
     if (!import->importId.isEmpty()) {
         m_qmlid2meta.insert(import->importId.toString(), {}); // TODO: do not put imported ids into the same space as qml IDs
