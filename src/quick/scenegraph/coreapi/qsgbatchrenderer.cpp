@@ -4563,11 +4563,14 @@ void Renderer::renderRhiRenderNode(const Batch *batch) // split prepare-render (
     rd->m_matrix = nullptr;
     rd->m_clip_list = nullptr;
 
-    if (changes & QSGRenderNode::ViewportState)
+    if ((changes & QSGRenderNode::ViewportState)
+            || (changes & QSGRenderNode::ScissorState))
+    {
+        // Reset both flags if either is reported as changed, since with the rhi
+        // it could be setViewport() that will record the resetting of the scissor.
         m_pstate.viewportSet = false;
-
-    if (changes & QSGRenderNode::ScissorState)
         m_pstate.scissorSet = false;
+    }
 
     // Do not bother with RenderTargetState. Where applicable, endExternal()
     // ensures the correct target is rebound. For others (like Vulkan) it makes

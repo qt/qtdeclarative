@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,73 +48,53 @@
 **
 ****************************************************************************/
 
-#include "customrenderitem.h"
-#include <QQuickWindow>
-#include <QSGRendererInterface>
+#ifndef METALRENDERER_H
+#define METALRENDERER_H
 
-#include "openglrenderer.h"
-#include "metalrenderer.h"
-#include "d3d12renderer.h"
-#include "softwarerenderer.h"
+#include <qsgrendernode.h>
 
-//! [1]
-CustomRenderItem::CustomRenderItem(QQuickItem *parent)
-    : QQuickItem(parent)
-{
-    // Our item shows something so set the flag.
-    setFlag(ItemHasContents);
-}
-//! [1]
-
-//! [2]
-QSGNode *CustomRenderItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
-{
-    QSGRenderNode *n = static_cast<QSGRenderNode *>(node);
-    if (!n) {
-        QSGRendererInterface *ri = window()->rendererInterface();
-        if (!ri)
-            return nullptr;
-        switch (ri->graphicsApi()) {
-        case QSGRendererInterface::OpenGL:
-            Q_FALLTHROUGH();
-        case QSGRendererInterface::OpenGLRhi:
-#if QT_CONFIG(opengl)
-            n = new OpenGLRenderNode(this);
-#endif
-            break;
-
-        case QSGRendererInterface::MetalRhi:
 #ifdef Q_OS_DARWIN
-        {
-            MetalRenderNode *metalNode = new MetalRenderNode(this);
-            n = metalNode;
-            metalNode->resourceBuilder()->setWindow(window());
-            QObject::connect(window(), &QQuickWindow::beforeRendering,
-                             metalNode->resourceBuilder(), &MetalRenderNodeResourceBuilder::build);
-        }
+
+QT_BEGIN_NAMESPACE
+
+class QQuickItem;
+class QQuickWindow;
+
+QT_END_NAMESPACE
+
+class MetalRenderNodeResourceBuilder : public QObject
+{
+    Q_OBJECT
+
+public:
+    void setWindow(QQuickWindow *w) { m_window = w; }
+
+public slots:
+    void build();
+
+private:
+    QQuickWindow *m_window = nullptr;
+};
+
+class MetalRenderNode : public QSGRenderNode
+{
+public:
+    MetalRenderNode(QQuickItem *item);
+    ~MetalRenderNode();
+
+    void render(const RenderState *state) override;
+    void releaseResources() override;
+    StateFlags changedStates() const override;
+    RenderingFlags flags() const override;
+    QRectF rect() const override;
+
+    MetalRenderNodeResourceBuilder *resourceBuilder() { return &m_resourceBuilder; }
+
+private:
+    QQuickItem *m_item;
+    MetalRenderNodeResourceBuilder m_resourceBuilder;
+};
+
+#endif // Q_OS_DARWIN
+
 #endif
-            break;
-
-        case QSGRendererInterface::Direct3D12: // ### Qt 6: remove
-#if QT_CONFIG(d3d12)
-            n = new D3D12RenderNode(this);
-#endif
-            break;
-
-        case QSGRendererInterface::Software:
-            n = new SoftwareRenderNode(this);
-            break;
-
-        default:
-            break;
-        }
-        if (!n)
-            qWarning("QSGRendererInterface reports unknown graphics API %d", ri->graphicsApi());
-    }
-
-    return n;
-}
-//! [2]
-
-// This item does not support being moved between windows. If that is desired,
-// itemChange() should be reimplemented as well.

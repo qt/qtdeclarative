@@ -38,7 +38,9 @@
     Metal, Direct 3D, or OpenGL). This example demonstrates implementing a
     custom QQuickItem backed by a QSGRenderNode implementation, where the node
     renders a triangle directly via the graphics API. The rest of the scene
-    (background, text, rectangles) are standard Qt Quick items.
+    (background, text, rectangles) are standard Qt Quick items. The example has
+    full support for OpenGL and Metal, as well as the software backend of Qt
+    Quick.
 
     The custom item behaves like any other Qt Quick item, meaning it
     participates and stacking and clipping as usual, which is a big difference
