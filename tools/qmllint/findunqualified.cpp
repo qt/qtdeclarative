@@ -476,6 +476,23 @@ void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::WithStatement *)
     leaveEnvironment();
 }
 
+static QString signalName(const QStringRef &handlerName)
+{
+    if (handlerName.startsWith("on") && handlerName.size() > 2) {
+        QString signal = handlerName.mid(2).toString();
+        for (int i = 0; i < signal.length(); ++i) {
+            QCharRef ch = signal[i];
+            if (ch.isLower())
+                return QString();
+            if (ch.isUpper()) {
+                ch = ch.toLower();
+                return signal;
+            }
+        }
+    }
+    return QString();
+}
+
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
 {
     using namespace QQmlJS::AST;
@@ -489,8 +506,17 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
         if (m_currentScope->isVisualRootScope()) {
             m_rootId = identexp->name.toString();
         }
-    } else if (name.startsWith("on") && name.size() > 2 && name.at(2).isUpper()) {
-        auto statement = uisb->statement;
+    } else {
+        const QString signal = signalName(name);
+        if (signal.isEmpty())
+            return true;
+
+        if (!m_currentScope->methods().contains(signal)) {
+            m_currentScope->addUnmatchedSignalHandler(name.toString(), uisb->firstSourceLocation());
+            return true;
+        }
+
+        const auto statement = uisb->statement;
         if (statement->kind == Node::Kind::Kind_ExpressionStatement) {
             if (static_cast<ExpressionStatement *>(statement)->expression->asFunctionDefinition()) {
                 // functions are already handled
@@ -499,17 +525,14 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
                 return true;
             }
         }
-        QString signal = name.mid(2).toString();
-        signal[0] = signal[0].toLower();
-        if (!m_currentScope->methods().contains(signal)) {
-            qDebug() << "Info file does not contain signal" << signal;
-        } else {
-            auto method = m_currentScope->methods()[signal];
-            for (auto const &param : method.parameterNames()) {
-                auto firstSourceLocation = uisb->statement->firstSourceLocation();
-                bool hasMultilineStatementBody = uisb->statement->lastSourceLocation().startLine > firstSourceLocation.startLine;
-                m_currentScope->insertSignalIdentifier(param, method, firstSourceLocation, hasMultilineStatementBody);
-            }
+
+        auto method = m_currentScope->methods()[signal];
+        for (auto const &param : method.parameterNames()) {
+            const auto firstSourceLocation = statement->firstSourceLocation();
+            bool hasMultilineStatementBody
+                    = statement->lastSourceLocation().startLine > firstSourceLocation.startLine;
+            m_currentScope->insertSignalIdentifier(param, method, firstSourceLocation,
+                                                   hasMultilineStatementBody);
         }
         return true;
     }

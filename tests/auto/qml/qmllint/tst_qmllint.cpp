@@ -44,6 +44,8 @@ private Q_SLOTS:
     void testUnqualified_data();
     void testUnqualifiedNoSpuriousParentWarning();
     void catchIdentifierNoFalsePositive();
+    void testUnmatchedSignalHandler();
+
 private:
     QString runQmllint(const QString &fileToLint, bool shouldSucceed);
 
@@ -124,6 +126,14 @@ void TestQmllint::testUnqualifiedNoSpuriousParentWarning()
 void TestQmllint::catchIdentifierNoFalsePositive()
 {
     runQmllint("catchIdentifierNoWarning.qml", true);
+}
+
+void TestQmllint::testUnmatchedSignalHandler()
+{
+    const QString output = runQmllint("UnmatchedSignalHandler.qml", false);
+    QVERIFY(output.contains(QString::asprintf(
+            "Warning: no matching signal found for handler \"onClicked\" at %d:%d", 12, 13)));
+    QVERIFY(!output.contains(QStringLiteral("onMouseXChanged")));
 }
 
 void TestQmllint::test()
