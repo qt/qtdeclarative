@@ -87,7 +87,7 @@ Item {
                 anchors.margins: frame.width / 5
                 fillMode: Image.PreserveAspectFit
                 smooth: true
-                visible: checked
+                visible: root.checked
             }
         }
         Text {

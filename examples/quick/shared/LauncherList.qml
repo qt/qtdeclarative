@@ -51,6 +51,7 @@
 import QtQuick 2.12
 
 Rectangle {
+    id: root
     property int activePageCount: 0
 
     //model is a list of {"name":"somename", "url":"file:///some/url/mainfile.qml"}
@@ -74,7 +75,7 @@ Rectangle {
             id: launcherList
             clip: true
             delegate: SimpleLauncherDelegate{
-                onClicked: showExample(url)
+                onClicked: root.showExample(url)
             }
             model: ListModel {id:myModel}
             anchors.fill: parent
@@ -116,7 +117,7 @@ Rectangle {
             ParallelAnimation {
                 id: showAnim
                 ScriptAction {
-                    script: activePageCount++
+                    script: root.activePageCount++
                 }
                 NumberAnimation {
                     target: launcherList
@@ -144,7 +145,7 @@ Rectangle {
                 id: exitAnim
 
                 ScriptAction {
-                    script: activePageCount--
+                    script: root.activePageCount--
                 }
 
                 ParallelAnimation {
@@ -182,7 +183,7 @@ Rectangle {
         visible: height > 0
         anchors.bottom: parent.bottom
         width: parent.width
-        height: activePageCount > 0 ? 40 : 0
+        height: root.activePageCount > 0 ? 40 : 0
 
         Behavior on height {
             NumberAnimation {
@@ -222,7 +223,7 @@ Rectangle {
 
             TapHandler {
                 id: tapHandler
-                enabled: activePageCount > 0
+                enabled: root.activePageCount > 0
                 onTapped: {
                     pageContainer.children[pageContainer.children.length - 1].exit()
                 }

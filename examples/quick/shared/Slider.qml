@@ -83,7 +83,7 @@ Item {
         anchors.left: parent.left
         anchors.leftMargin: 16
         height: childrenRect.height
-        width: Math.max(minLabelWidth, childrenRect.width)
+        width: Math.max(slider.minLabelWidth, childrenRect.width)
         anchors.verticalCenter: parent.verticalCenter
         Text {
             text: slider.name + ":"
