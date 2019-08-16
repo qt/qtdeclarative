@@ -40,7 +40,7 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qv4codegen_p.h>
 
-QDebug &operator<<(QDebug dbg, const QQmlJS::AST::SourceLocation &loc);
+QDebug operator<<(QDebug dbg, const QQmlJS::AST::SourceLocation &loc);
 
 static QQmlJS::TypeDescriptionReader createReaderForFile(QString const &filename)
 {
@@ -773,7 +773,7 @@ void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *)
     leaveEnvironment();
 }
 
-QDebug &operator<<(QDebug dbg, const QQmlJS::AST::SourceLocation &loc)
+QDebug operator<<(QDebug dbg, const QQmlJS::AST::SourceLocation &loc)
 {
     QDebugStateSaver saver(dbg);
     dbg.nospace() << loc.startLine;
