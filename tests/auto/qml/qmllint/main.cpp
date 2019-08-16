@@ -41,6 +41,7 @@ private Q_SLOTS:
     void testUnqualified();
     void testUnqualified_data();
     void testUnqualifiedNoSpuriousParentWarning();
+    void catchIdentifierNoFalsePositive();
 private:
     QString m_qmllintPath;
 };
@@ -113,7 +114,8 @@ void TestQmllint::testUnqualified_data()
     QTest::newRow("SignalHandler2") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onPositionChanged:  function(mouse) {...") << 10 << 21;
     QTest::newRow("SignalHandlerShort1") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onClicked:  (mouse) =>  {...") << 8 << 29;
     QTest::newRow("SignalHandlerShort2") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onPressAndHold:  (mouse) =>  {...") << 12 << 34;
-
+    // access catch identifier outside catch block
+    QTest::newRow("CatchStatement") << QStringLiteral("CatchStatement.qml") << QStringLiteral("err") << 6 << 21;
 }
 
 void TestQmllint::testUnqualifiedNoSpuriousParentWarning()
@@ -141,6 +143,20 @@ void TestQmllint::testUnqualifiedNoSpuriousParentWarning()
         QVERIFY(process.exitStatus() == QProcess::NormalExit);
         QVERIFY(process.exitCode());
     }
+}
+
+void TestQmllint::catchIdentifierNoFalsePositive()
+{
+    auto qmlImportDir = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
+    QString filename = QLatin1String("catchIdentifierNoWarning.qml");
+    filename.prepend(QStringLiteral("data/"));
+    QStringList args;
+    args << QStringLiteral("-U") << filename << QStringLiteral("-I") << qmlImportDir;
+    QProcess process;
+    process.start(m_qmllintPath, args);
+    QVERIFY(process.waitForFinished());
+    QVERIFY(process.exitStatus() == QProcess::NormalExit);
+    QVERIFY(process.exitCode() == 0);
 }
 
 void TestQmllint::test()

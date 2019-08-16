@@ -451,9 +451,10 @@ void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::CaseBlock *)
     leaveEnvironment();
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::Catch *)
+bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::Catch *catchStatement)
 {
     enterEnvironment(ScopeType::JSLexicalScope, "catch");
+    m_currentScope->insertJSIdentifier(catchStatement->patternElement->bindingIdentifier.toString(), QQmlJS::AST::VariableScope::Let);
     return true;
 }
 
