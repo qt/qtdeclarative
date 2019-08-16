@@ -49,7 +49,9 @@
 ****************************************************************************/
 
 import QtQuick 2.8
+//! [2]
 import SceneGraphRendering 2.0
+//! [2]
 
 Item {
     Rectangle {
@@ -60,6 +62,7 @@ Item {
             GradientStop { position: 1; color: "black" }
         }
 
+        //! [5]
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -73,6 +76,7 @@ Item {
                 }
             }
         }
+        // ![5]
 
         Rectangle {
             id: clipper
@@ -88,6 +92,7 @@ Item {
                 running: false
             }
 
+            //! [3]
             CustomRenderItem {
                 id: renderer
                 width: bg.width - 20
@@ -102,6 +107,7 @@ Item {
                     Translate { id: txIn; x: renderer.width / 2; y: renderer.height / 2 }
                 ]
             }
+            //! [3]
         }
 
         SequentialAnimation {
@@ -124,6 +130,7 @@ Item {
             loops: Animation.Infinite
         }
 
+        //! [4]
         Text {
             id: label
             anchors.bottom: parent.bottom
@@ -146,6 +153,7 @@ Item {
                         + "\nLeft click to toggle clipping to yellow rect"
                         + "\nRight click to rotate (can be used to exercise stencil clip instead of scissor)"
             }
+        // ![4]
         }
 
         Text {

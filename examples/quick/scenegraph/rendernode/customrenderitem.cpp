@@ -56,13 +56,16 @@
 #include "d3d12renderer.h"
 #include "softwarerenderer.h"
 
+//! [1]
 CustomRenderItem::CustomRenderItem(QQuickItem *parent)
     : QQuickItem(parent)
 {
     // Our item shows something so set the flag.
     setFlag(ItemHasContents);
 }
+//! [1]
 
+//! [2]
 QSGNode *CustomRenderItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
 {
     QSGRenderNode *n = static_cast<QSGRenderNode *>(node);
@@ -98,3 +101,4 @@ QSGNode *CustomRenderItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
 
     return n;
 }
+//! [2]

@@ -57,6 +57,7 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
 
+//! [1]
 OpenGLRenderNode::OpenGLRenderNode(QQuickItem *item)
     : m_item(item)
 {
@@ -74,6 +75,7 @@ void OpenGLRenderNode::releaseResources()
     delete m_vbo;
     m_vbo = nullptr;
 }
+//! [1]
 
 void OpenGLRenderNode::init()
 {
@@ -121,19 +123,21 @@ void OpenGLRenderNode::init()
     m_vbo->release();
 }
 
+//! [2]
 void OpenGLRenderNode::render(const RenderState *state)
 {
     if (!m_program)
         init();
 
     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
-
     m_program->bind();
     m_program->setUniformValue(m_matrixUniform, *state->projectionMatrix() * *matrix());
     m_program->setUniformValue(m_opacityUniform, float(inheritedOpacity()));
+//! [2]
 
     m_vbo->bind();
 
+//! [5]
     QPointF p0(m_item->width() - 1, m_item->height() - 1);
     QPointF p1(0, 0);
     QPointF p2(0, m_item->height() - 1);
@@ -142,6 +146,7 @@ void OpenGLRenderNode::render(const RenderState *state)
                             GLfloat(p1.x()), GLfloat(p1.y()),
                             GLfloat(p2.x()), GLfloat(p2.y()) };
     m_vbo->write(0, vertices, sizeof(vertices));
+//! [5]
 
     m_program->setAttributeBuffer(0, GL_FLOAT, 0, 2);
     m_program->setAttributeBuffer(1, GL_FLOAT, sizeof(vertices), 3);
@@ -152,6 +157,7 @@ void OpenGLRenderNode::render(const RenderState *state)
     // (abstracted by RHI) OpenGL scenegraph. So set all the states that are
     // important to us.
 
+    //! [3]
     f->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
     f->glEnable(GL_BLEND);
@@ -170,8 +176,10 @@ void OpenGLRenderNode::render(const RenderState *state)
     }
 
     f->glDrawArrays(GL_TRIANGLES, 0, 3);
+    //! [3]
 }
 
+//! [4]
 QSGRenderNode::StateFlags OpenGLRenderNode::changedStates() const
 {
     return BlendState | ScissorState | StencilState;
@@ -186,5 +194,6 @@ QRectF OpenGLRenderNode::rect() const
 {
     return QRect(0, 0, m_item->width(), m_item->height());
 }
+//! [4]
 
 #endif // opengl
