@@ -2815,23 +2815,13 @@ QVector<QQuickItem *> QQuickWindowPrivate::pointerTargets(QQuickItem *item, QQui
     QVector<QQuickItem *> targets;
     auto itemPrivate = QQuickItemPrivate::get(item);
     QPointF itemPos = item->mapFromScene(point->scenePosition());
+    bool relevant = item->contains(itemPos);
     // if the item clips, we can potentially return early
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
-        if (!item->contains(itemPos))
+        if (!relevant)
             return targets;
     }
 
-    // recurse for children
-    QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
-    for (int ii = children.count() - 1; ii >= 0; --ii) {
-        QQuickItem *child = children.at(ii);
-        auto childPrivate = QQuickItemPrivate::get(child);
-        if (!child->isVisible() || !child->isEnabled() || childPrivate->culled)
-            continue;
-        targets << pointerTargets(child, point, checkMouseButtons, checkAcceptsTouch);
-    }
-
-    bool relevant = item->contains(itemPos);
     if (itemPrivate->hasPointerHandlers()) {
         if (!relevant)
             if (itemPrivate->anyPointerHandlerWants(point))
@@ -2842,8 +2832,26 @@ QVector<QQuickItem *> QQuickWindowPrivate::pointerTargets(QQuickItem *item, QQui
         if (relevant && checkAcceptsTouch && !(item->acceptTouchEvents() || item->acceptedMouseButtons()))
             relevant = false;
     }
-    if (relevant)
-        targets << item; // add this item last: children take precedence
+
+    QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
+    if (relevant) {
+        auto it = std::lower_bound(children.begin(), children.end(), 0,
+           [](auto lhs, auto rhs) -> bool { return lhs->z() < rhs; });
+        children.insert(it, item);
+    }
+
+    for (int ii = children.count() - 1; ii >= 0; --ii) {
+        QQuickItem *child = children.at(ii);
+        auto childPrivate = QQuickItemPrivate::get(child);
+        if (!child->isVisible() || !child->isEnabled() || childPrivate->culled)
+            continue;
+
+        if (child != item)
+            targets << pointerTargets(child, point, checkMouseButtons, checkAcceptsTouch);
+        else
+            targets << child;
+    }
+
     return targets;
 }
 

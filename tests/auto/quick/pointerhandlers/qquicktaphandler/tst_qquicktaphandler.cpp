@@ -70,6 +70,7 @@ private slots:
     void buttonsMultiTouch();
     void componentUserBehavioralOverride();
     void rightLongPressIgnoreWheel();
+    void negativeZStackingOrder();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -742,6 +743,38 @@ void tst_TapHandler::rightLongPressIgnoreWheel()
     QTest::mouseRelease(window, Qt::RightButton, Qt::NoModifier, p1, 500);
     QTRY_COMPARE(tap->isPressed(), false);
     QCOMPARE(tappedSpy.count(), 0);
+}
+
+void tst_TapHandler::negativeZStackingOrder() // QTBUG-83114
+{
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "tapHandlersOverlapped.qml");
+    QQuickView *window = windowPtr.data();
+    QQuickItem *root = window->rootObject();
+
+    QQuickTapHandler *parentTapHandler = window->rootObject()->findChild<QQuickTapHandler*>("parentTapHandler");
+    QVERIFY(parentTapHandler != nullptr);
+    QSignalSpy clickSpyParent(parentTapHandler, &QQuickTapHandler::tapped);
+    QQuickTapHandler *childTapHandler = window->rootObject()->findChild<QQuickTapHandler*>("childTapHandler");
+    QVERIFY(childTapHandler != nullptr);
+    QSignalSpy clickSpyChild(childTapHandler, &QQuickTapHandler::tapped);
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(150, 100));
+    QCOMPARE(clickSpyChild.count(), 1);
+    QCOMPARE(clickSpyParent.count(), 1);
+    auto order = root->property("taps").toList();
+    QVERIFY(order.at(0) == "childTapHandler");
+    QVERIFY(order.at(1) == "parentTapHandler");
+
+    // Now change stacking order and try again.
+    childTapHandler->parentItem()->setZ(-1);
+    root->setProperty("taps", QVariantList());
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(150, 100));
+    QCOMPARE(clickSpyChild.count(), 2);
+    QCOMPARE(clickSpyParent.count(), 2);
+    order = root->property("taps").toList();
+    QVERIFY(order.at(0) == "parentTapHandler");
+    QVERIFY(order.at(1) == "childTapHandler");
 }
 
 QTEST_MAIN(tst_TapHandler)

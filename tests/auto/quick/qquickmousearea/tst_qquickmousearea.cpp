@@ -158,6 +158,7 @@ private slots:
     void mask();
     void nestedEventDelivery();
     void settingHiddenInPressUngrabs();
+    void negativeZStackingOrder();
 
 private:
     int startDragDistance() const {
@@ -2436,6 +2437,39 @@ void tst_QQuickMouseArea::settingHiddenInPressUngrabs()
     QTRY_VERIFY(!mouseArea->isEnabled());
     // The mouse area is not stuck in pressed state.
     QVERIFY(!mouseArea->pressed());
+}
+
+void tst_QQuickMouseArea::negativeZStackingOrder() // QTBUG-83114
+{
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("mouseAreasOverlapped.qml"), true, &errorMessage), errorMessage.constData());
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(window.rootObject() != nullptr);
+    QQuickItem *root = window.rootObject();
+
+    QQuickMouseArea *parentMouseArea = root->findChild<QQuickMouseArea*>("parentMouseArea");
+    QVERIFY(parentMouseArea != nullptr);
+    QSignalSpy clickSpyParent(parentMouseArea, &QQuickMouseArea::clicked);
+    QQuickMouseArea *childMouseArea = root->findChild<QQuickMouseArea*>("childMouseArea");
+    QVERIFY(childMouseArea != nullptr);
+    QSignalSpy clickSpyChild(childMouseArea, &QQuickMouseArea::clicked);
+
+    QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, QPoint(150, 100));
+    QCOMPARE(clickSpyChild.count(), 1);
+    QCOMPARE(clickSpyParent.count(), 0);
+    auto order = root->property("clicks").toList();
+    QVERIFY(order.at(0) == "childMouseArea");
+
+    // Now change stacking order and try again.
+    childMouseArea->parentItem()->setZ(-1);
+    root->setProperty("clicks", QVariantList());
+    QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, QPoint(150, 100));
+    QCOMPARE(clickSpyChild.count(), 1);
+    QCOMPARE(clickSpyParent.count(), 1);
+    order = root->property("clicks").toList();
+    QVERIFY(order.at(0) == "parentMouseArea");
 }
 
 QTEST_MAIN(tst_QQuickMouseArea)
