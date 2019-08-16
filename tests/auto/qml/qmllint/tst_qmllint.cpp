@@ -46,6 +46,7 @@ private Q_SLOTS:
     void catchIdentifierNoFalsePositive();
     void testUnmatchedSignalHandler();
     void uiQml();
+    void methodInScope();
 
 private:
     QString runQmllint(const QString &fileToLint, bool shouldSucceed);
@@ -140,6 +141,12 @@ void TestQmllint::testUnmatchedSignalHandler()
 void TestQmllint::uiQml()
 {
     const QString output = runQmllint("FormUser.qml", true);
+    QVERIFY(output.isEmpty());
+}
+
+void TestQmllint::methodInScope()
+{
+    const QString output = runQmllint("MethodInScope.qml", true);
     QVERIFY(output.isEmpty());
 }
 

@@ -274,6 +274,7 @@ FindUnqualifiedIDVisitor::localQmlFile2FakeMetaObject(QString filePath)
             auto sourceElement = static_cast<UiSourceElement *>(initMembers->member);
             if (FunctionExpression *fexpr = sourceElement->sourceElement->asFunctionDefinition()) {
                 LanguageUtils::FakeMetaMethod method;
+                method.setMethodName(fexpr->name.toString());
                 method.setMethodType(LanguageUtils::FakeMetaMethod::Method);
                 FormalParameterList *parameters = fexpr->formals;
                 while (parameters) {

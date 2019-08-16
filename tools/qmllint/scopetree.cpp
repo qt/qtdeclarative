@@ -226,7 +226,7 @@ QMap<QString, LanguageUtils::FakeMetaMethod>const &ScopeTree::methods() const
 bool ScopeTree::isIdInCurrentQMlScopes(QString id) const
 {
     auto qmlScope = getCurrentQMLScope();
-    return qmlScope->m_currentScopeQMLIdentifiers.contains(id);
+    return qmlScope->m_currentScopeQMLIdentifiers.contains(id) || qmlScope->m_methods.contains(id);
 }
 
 bool ScopeTree::isIdInCurrentJSScopes(QString id) const
