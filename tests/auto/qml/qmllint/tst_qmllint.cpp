@@ -47,6 +47,7 @@ private Q_SLOTS:
     void testUnmatchedSignalHandler();
     void uiQml();
     void methodInScope();
+    void importWithPrefix();
 
 private:
     QString runQmllint(const QString &fileToLint, bool shouldSucceed);
@@ -147,6 +148,12 @@ void TestQmllint::uiQml()
 void TestQmllint::methodInScope()
 {
     const QString output = runQmllint("MethodInScope.qml", true);
+    QVERIFY(output.isEmpty());
+}
+
+void TestQmllint::importWithPrefix()
+{
+    const QString output = runQmllint("ImportWithPrefix.qml", true);
     QVERIFY(output.isEmpty());
 }
 

@@ -317,7 +317,7 @@ void FindUnqualifiedIDVisitor::importDirectory(const QString &directory, const Q
     while (it.hasNext()) {
         LanguageUtils::FakeMetaObject *fake = localQmlFile2FakeMetaObject(it.next());
         m_exportedName2MetaObject.insert(
-                fake->className(),
+                prefix + fake->className(),
                 QSharedPointer<const LanguageUtils::FakeMetaObject>(fake));
     }
 }
