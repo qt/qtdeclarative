@@ -333,7 +333,9 @@ void FindUnqualifiedIDVisitor::importExportedNames(QStringRef prefix, QString na
 
 void FindUnqualifiedIDVisitor::throwRecursionDepthError()
 {
-    return;
+    m_colorOut.write(QStringLiteral("Error"), Error);
+    m_colorOut.write(QStringLiteral("Maximum statement or expression depth exceeded"), Error);
+    m_visitFailed = true;
 }
 
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiProgram *)
@@ -568,6 +570,9 @@ FindUnqualifiedIDVisitor::~FindUnqualifiedIDVisitor() = default;
 
 bool FindUnqualifiedIDVisitor::check()
 {
+    if (m_visitFailed)
+        return false;
+
     // now that all ids are known, revisit any Connections whose target were perviously unknown
     for (auto const& outstandingConnection: m_outstandingConnections) {
         auto metaObject = m_qmlid2meta[outstandingConnection.targetName];
