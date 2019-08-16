@@ -62,6 +62,8 @@ private slots:
     void renderMultiline();
     void polylineDataTypes_data();
     void polylineDataTypes();
+    void multilineDataTypes_data();
+    void multilineDataTypes();
 
 private:
     QVector<QPolygonF> m_lowPolyLogo;
@@ -472,6 +474,164 @@ void tst_QQuickShape::polylineDataTypes()
     for (QPointF p : m_lowPolyLogo.first()) {
         QMetaObject::invokeMethod(shape, "checkVertexAt", Q_ARG(QVariant, QVariant::fromValue<int>(i++)));
         QCOMPARE(shape->property("vertexBeingChecked").toPointF(), p);
+    }
+}
+
+void tst_QQuickShape::multilineDataTypes_data()
+{
+    QTest::addColumn<QVariant>("paths");
+
+    QTest::newRow("vector of polygons") << QVariant::fromValue(m_lowPolyLogo);
+    {
+        QVector<QVector<QPointF>> paths;
+        for (const auto &poly : m_lowPolyLogo) {
+            QVector<QPointF> points;
+            points << poly;
+            paths << points;
+        }
+        QTest::newRow("vector of point vectors") << QVariant::fromValue(paths);
+    }
+    {
+        QList<QVector<QPointF>> paths;
+        for (const auto &poly : m_lowPolyLogo) {
+            QVector<QPointF> points;
+            points << poly;
+            paths << points;
+        }
+        QTest::newRow("list of point vectors") << QVariant::fromValue(paths);
+    }
+    {
+        QList<QList<QPointF>> paths;
+        for (const auto &poly : m_lowPolyLogo) {
+            QList<QPointF> points;
+            for (const auto &point : poly)
+                points << point;
+            paths << points;
+        }
+        QTest::newRow("list of point lists") << QVariant::fromValue(paths);
+    }
+    {
+        QVariantList paths;
+        for (const auto &poly : m_lowPolyLogo) {
+            QVector<QPointF> points;
+            points << poly;
+            paths << QVariant::fromValue(points);
+        }
+        QTest::newRow("QVariantList of point vectors") << QVariant::fromValue(paths);
+    }
+    {
+        QVariantList paths;
+        for (const auto &poly : m_lowPolyLogo) {
+            QList<QPointF> points;
+            for (const auto &point : poly)
+                points << point;
+            paths << QVariant::fromValue(points);
+        }
+        QTest::newRow("QVariantList of point lists") << QVariant::fromValue(paths);
+    }
+    {
+        QVariantList paths;
+        for (const auto &poly : m_lowPolyLogo) {
+            QVariantList points;
+            for (const auto &point : poly)
+                points << point;
+            paths << QVariant::fromValue(points);
+        }
+        QTest::newRow("QVariantList of QVariantLists") << QVariant::fromValue(paths);
+    }
+    /* These could be supported if QVariant knew how to convert lists and vectors of QPolygon to QPolygonF.
+       But they are omitted for now because we don't want to have special cases for them
+       in QQuickPathMultiline::setPaths().  Floating point is preferred for geometry in Qt Quick.
+    {
+        QList<QPolygon> paths;
+        for (const auto &poly : m_lowPolyLogo)
+            paths << poly.toPolygon();
+        QTest::newRow("list of QPolygon (integer points)") << QVariant::fromValue(paths);
+    }
+    {
+        QVector<QPolygon> paths;
+        for (const auto &poly : m_lowPolyLogo)
+            paths << poly.toPolygon();
+        QTest::newRow("vector of QPolygon (integer points)") << QVariant::fromValue(paths);
+    }
+    */
+    {
+        QList<QList<QPoint>> paths;
+        for (const auto &poly : m_lowPolyLogo) {
+            QList<QPoint> points;
+            for (const auto &point : poly)
+                points << point.toPoint();
+            paths << points;
+        }
+        QTest::newRow("list of integer point lists") << QVariant::fromValue(paths);
+    }
+    {
+        QVector<QList<QPoint>> paths;
+        for (const auto &poly : m_lowPolyLogo) {
+            QList<QPoint> points;
+            for (const auto &point : poly)
+                points << point.toPoint();
+            paths << points;
+        }
+        QTest::newRow("vector of integer point lists") << QVariant::fromValue(paths);
+    }
+    {
+        QList<QVector<QPoint>> paths;
+        for (const auto &poly : m_lowPolyLogo) {
+            QVector<QPoint> points;
+            for (const auto &point : poly)
+                points << point.toPoint();
+            paths << points;
+        }
+        QTest::newRow("list of integer point vectors") << QVariant::fromValue(paths);
+    }
+}
+
+void tst_QQuickShape::multilineDataTypes()
+{
+    QFETCH(QVariant, paths);
+
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("multiline.qml"));
+    QQuickShape *shape = qobject_cast<QQuickShape *>(window->rootObject());
+    QVERIFY(shape);
+    shape->setProperty("paths", paths);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QEXPECT_FAIL("", "Failure due to grabWindow not functional on offscreen/minimimal platforms", Abort);
+
+    QImage img = window->grabWindow();
+    QVERIFY(!img.isNull());
+
+    QImage refImg(testFileUrl("multiline.png").toLocalFile());
+    QVERIFY(!refImg.isNull());
+
+    QString errorMessage;
+    const QImage actualImg = img.convertToFormat(refImg.format());
+    const bool res = QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage);
+    if (!res) { // For visual inspection purposes.
+        QTest::qWait(5000);
+        const QString &tempLocation = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+        actualImg.save(tempLocation + QLatin1String("/multiline.png"));
+    }
+    QVERIFY2(res, qPrintable(errorMessage));
+
+    QVector<QVector<QPointF>> pointVectors;
+    for (auto v : m_lowPolyLogo)
+        pointVectors << v;
+    QCOMPARE(shape->property("paths").value<QVector<QVector<QPointF>>>(), pointVectors);
+    // Verify that QML sees it as an array of arrays of points
+    int i = 0;
+    for (auto pv : m_lowPolyLogo) {
+        int j = 0;
+        for (QPointF p : pv) {
+            QMetaObject::invokeMethod(shape, "checkVertexAt", Q_ARG(QVariant, QVariant::fromValue<int>(i)), Q_ARG(QVariant, QVariant::fromValue<int>(j++)));
+            QCOMPARE(shape->property("vertexBeingChecked").toPointF(), p);
+        }
+        ++i;
     }
 }
 

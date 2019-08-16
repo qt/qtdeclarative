@@ -450,12 +450,12 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathMultiline : public QQuickCurve
 {
     Q_OBJECT
     Q_PROPERTY(QPointF start READ start NOTIFY startChanged)
-    Q_PROPERTY(QVariantList paths READ paths WRITE setPaths NOTIFY pathsChanged)
+    Q_PROPERTY(QVariant paths READ paths WRITE setPaths NOTIFY pathsChanged)
 public:
     QQuickPathMultiline(QObject *parent=nullptr);
 
-    QVariantList paths() const;
-    void setPaths(const QVariantList &paths);
+    QVariant paths() const;
+    void setPaths(const QVariant &paths);
     void setPaths(const QVector<QVector<QPointF>> &paths);
     QPointF start() const;
     void addToPath(QPainterPath &path, const QQuickPathData &) override;
