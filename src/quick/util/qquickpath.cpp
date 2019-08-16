@@ -2397,32 +2397,42 @@ void QQuickPathPercent::setValue(qreal value)
     \qmlproperty list<point> QtQuick::PathPolyline::path
 
     This property defines the vertices of the polyline.
+
+    It can be a JS array of points constructed with \c Qt.point(),
+    a QList or QVector of QPointF, or QPolygonF.
+    If you are binding this to a custom property in some C++ object,
+    QPolygonF is the most appropriate type to use.
 */
 
 QQuickPathPolyline::QQuickPathPolyline(QObject *parent) : QQuickCurve(parent)
 {
 }
 
-QVariantList QQuickPathPolyline::path() const
+QVariant QQuickPathPolyline::path() const
 {
-    QVariantList res;
-    for (int i = 0; i < m_path.length(); ++i) {
-        const QPointF &c = m_path.at(i);
-        res.append(QVariant::fromValue(c));
-    }
-
-    return res;
+    return QVariant::fromValue(m_path);
 }
 
-void QQuickPathPolyline::setPath(const QVariantList &path)
+void QQuickPathPolyline::setPath(const QVariant &path)
 {
-    QVector<QPointF> pathList;
-    for (int i = 0; i < path.length(); ++i) {
-        const QPointF c = path.at(i).toPointF();
-        pathList.append(c);
+    if (path.type() == QVariant::PolygonF) {
+        setPath(path.value<QPolygonF>());
+    } else if (path.canConvert<QVector<QPointF>>()) {
+        setPath(path.value<QVector<QPointF>>());
+    } else if (path.canConvert<QVariantList>()) {
+        // This handles cases other than QPolygonF or QVector<QPointF>, such as
+        // QList<QPointF>, QVector<QPoint>, QVariantList of QPointF, QVariantList of QPoint.
+        QVector<QPointF> pathList;
+        QVariantList vl = path.value<QVariantList>();
+        // If path is a QJSValue, e.g. coming from a JS array of Qt.point() in QML,
+        // then path.value<QVariantList>() is inefficient.
+        // TODO We should be able to iterate over path.value<QSequentialIterable>() eventually
+        for (const QVariant &v : vl)
+            pathList.append(v.toPointF());
+        setPath(pathList);
+    } else {
+        qWarning() << "PathPolyline: path of type" << path.type() << "not supported";
     }
-
-    setPath(pathList);
 }
 
 void QQuickPathPolyline::setPath(const QVector<QPointF> &path)

@@ -60,6 +60,11 @@ private slots:
     void conicalGrad();
     void renderPolyline();
     void renderMultiline();
+    void polylineDataTypes_data();
+    void polylineDataTypes();
+
+private:
+    QVector<QPolygonF> m_lowPolyLogo;
 };
 
 tst_QQuickShape::tst_QQuickShape()
@@ -75,6 +80,29 @@ tst_QQuickShape::tst_QQuickShape()
     qmlRegisterType<QQuickShapeRadialGradient>(uri, 1, 0, "RadialGradient");
     qmlRegisterType<QQuickShapeConicalGradient>(uri, 1, 0, "ConicalGradient");
     qmlRegisterType<QQuickPathPolyline>(uri, 1, 0, "PathPolyline");
+
+    m_lowPolyLogo << (QPolygonF() <<
+                      QPointF(20, 0) <<
+                      QPointF(140, 0) <<
+                      QPointF(140, 80) <<
+                      QPointF(120, 100) <<
+                      QPointF(0, 100) <<
+                      QPointF(0, 20) <<
+                      QPointF(20, 0) )
+                  << (QPolygonF() << QPointF(20, 80) <<
+                      QPointF(60, 80) <<
+                      QPointF(80, 60) <<
+                      QPointF(80, 20) <<
+                      QPointF(40, 20) <<
+                      QPointF(20, 40) <<
+                      QPointF(20, 80) )
+                  << (QPolygonF() << QPointF(80, 80) <<
+                      QPointF(70, 70) )
+                  << (QPolygonF() << QPointF(120, 80) <<
+                      QPointF(100, 60) <<
+                      QPointF(100, 20) )
+                  << (QPolygonF() << QPointF(100, 40) <<
+                      QPointF(120, 40) );
 }
 
 void tst_QQuickShape::initValues()
@@ -371,6 +399,80 @@ void tst_QQuickShape::renderMultiline()
         actualImg.save(tempLocation + QLatin1String("/pathitem8.png"));
     }
     QVERIFY2(res, qPrintable(errorMessage));
+}
+
+void tst_QQuickShape::polylineDataTypes_data()
+{
+    QTest::addColumn<QVariant>("path");
+
+    QTest::newRow("polygon") << QVariant::fromValue(m_lowPolyLogo.first());
+    {
+        QVector<QPointF> points;
+        points << m_lowPolyLogo.first();
+        QTest::newRow("vector of points") << QVariant::fromValue(points);
+    }
+    {
+        QList<QPointF> points;
+        for (const auto &point : m_lowPolyLogo.first())
+            points << point;
+        QTest::newRow("list of points") << QVariant::fromValue(points);
+    }
+    {
+        QVariantList points;
+        for (const auto &point : m_lowPolyLogo.first())
+            points << point;
+        QTest::newRow("QVariantList of points") << QVariant::fromValue(points);
+    }
+    {
+        QVector<QPoint> points;
+        for (const auto &point : m_lowPolyLogo.first())
+            points << point.toPoint();
+        QTest::newRow("vector of QPoint (integer points)") << QVariant::fromValue(points);
+    }
+    // Oddly, QPolygon is not supported, even though it's really QVector<QPoint>.
+    // We don't want to have a special case for it in QQuickPathPolyline::setPath(),
+    // but it could potentially be supported by fixing one of the QVariant conversions.
+}
+
+void tst_QQuickShape::polylineDataTypes()
+{
+    QFETCH(QVariant, path);
+
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("polyline.qml"));
+    QQuickShape *shape = qobject_cast<QQuickShape *>(window->rootObject());
+    QVERIFY(shape);
+    shape->setProperty("path", path);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QEXPECT_FAIL("", "Failure due to grabWindow not functional on offscreen/minimimal platforms", Abort);
+
+    QImage img = window->grabWindow();
+    QVERIFY(!img.isNull());
+
+    QImage refImg(testFileUrl("polyline.png").toLocalFile());
+    QVERIFY(!refImg.isNull());
+
+    QString errorMessage;
+    const QImage actualImg = img.convertToFormat(refImg.format());
+    const bool res = QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage);
+    if (!res) { // For visual inspection purposes.
+        QTest::qWait(5000);
+        const QString &tempLocation = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+        actualImg.save(tempLocation + QLatin1String("/polyline.png"));
+    }
+    QVERIFY2(res, qPrintable(errorMessage));
+
+    QCOMPARE(shape->property("path").value<QVector<QPointF>>(), m_lowPolyLogo.first());
+    // Verify that QML sees it as an array of points
+    int i = 0;
+    for (QPointF p : m_lowPolyLogo.first()) {
+        QMetaObject::invokeMethod(shape, "checkVertexAt", Q_ARG(QVariant, QVariant::fromValue<int>(i++)));
+        QCOMPARE(shape->property("vertexBeingChecked").toPointF(), p);
+    }
 }
 
 QTEST_MAIN(tst_QQuickShape)
