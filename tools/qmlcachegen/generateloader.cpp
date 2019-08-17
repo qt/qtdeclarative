@@ -434,7 +434,11 @@ bool generateLoader(const QStringList &compiledFiles, const QStringList &sortedR
         }
     }
 
+#if QT_CONFIG(temporaryfile)
     QSaveFile f(outputFileName);
+#else
+    QFile f(outputFileName);
+#endif
     if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         *errorString = f.errorString();
         return false;
@@ -445,10 +449,12 @@ bool generateLoader(const QStringList &compiledFiles, const QStringList &sortedR
         return false;
     }
 
+#if QT_CONFIG(temporaryfile)
     if (!f.commit()) {
         *errorString = f.errorString();
         return false;
     }
+#endif
 
     return true;
 }
