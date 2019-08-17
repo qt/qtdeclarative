@@ -122,8 +122,10 @@ const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
         return &QQmlRectValueType::staticMetaObject;
     case QVariant::RectF:
         return &QQmlRectFValueType::staticMetaObject;
+#if QT_CONFIG(easingcurve)
     case QVariant::EasingCurve:
         return &QQmlEasingValueType::staticMetaObject;
+#endif
 #if QT_CONFIG(qml_itemmodel)
     case QVariant::ModelIndex:
         return &QQmlModelIndexValueType::staticMetaObject;
@@ -201,7 +203,9 @@ const QMetaObject *QQmlValueTypeFactory::metaObjectForMetaType(int type)
 
 void QQmlValueTypeFactory::registerValueTypes(const char *uri, int versionMajor, int versionMinor)
 {
+#if QT_CONFIG(easingcurve)
     qmlRegisterValueTypeEnums<QQmlEasingValueType>(uri, versionMajor, versionMinor, "Easing");
+#endif
 }
 
 QQmlValueType::QQmlValueType(int typeId, const QMetaObject *gadgetMetaObject)
@@ -489,6 +493,7 @@ int QQmlRectValueType::bottom() const
     return v.bottom();
 }
 
+#if QT_CONFIG(easingcurve)
 QQmlEasingValueType::Type QQmlEasingValueType::type() const
 {
     return (QQmlEasingValueType::Type)v.type();
@@ -572,6 +577,8 @@ QVariantList QQmlEasingValueType::bezierCurve() const
         rv << QVariant(point.x()) << QVariant(point.y());
     return rv;
 }
+#endif // easingcurve
+
 
 QT_END_NAMESPACE
 
