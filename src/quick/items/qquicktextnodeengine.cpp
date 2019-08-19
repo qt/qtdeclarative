@@ -477,7 +477,7 @@ void QQuickTextNodeEngine::addTextObject(const QTextBlock &block, const QPointF 
         }
 
         qreal ascent;
-        QTextLine line = block.layout()->lineForTextPosition(pos);
+        QTextLine line = block.layout()->lineForTextPosition(pos - block.position());
         switch (format.verticalAlignment())
         {
         case QTextCharFormat::AlignTop:
