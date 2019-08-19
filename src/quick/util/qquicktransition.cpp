@@ -82,13 +82,15 @@ QT_BEGIN_NAMESPACE
     values can be set to restrict the animations to only be applied when changing
     from one particular state to another.
 
-    To define multiple transitions, specify \l Item::transitions as a list:
+    To define multiple Transitions, specify \l Item::transitions as a list:
 
     \snippet qml/transitions-list.qml list of transitions
 
-    If multiple Transitions are specified, only a single (best-matching) Transition will be applied for any particular
-    state change. In the example above, when changing to \c state1, the first transition will be used, rather
-    than the more generic second transition.
+    If multiple Transitions are specified, only a single (best-matching)
+    Transition will be applied for any particular state change. In the
+    example above, if the Rectangle enters a state other than \c "middleRight"
+    or \c "bottomLeft", the third Transition will be carried out, meaning the
+    icon will be moved to the starting point.
 
     If a state change has a Transition that matches the same property as a
     \l Behavior, the Transition animation overrides the \l Behavior for that
@@ -298,10 +300,11 @@ QQuickTransitionInstance *QQuickTransition::prepare(QQuickStateOperation::Action
 
     \snippet qml/transition-from-to-modified.qml modified transition
 
-    The animation would only be applied when changing from the default state to
-    the "brighter" state (i.e. when the mouse is pressed, but not on release).
+    The animation would only be applied when changing from the default state
+    to the "brighter" state (i.e. when the mouse is pressed, but not on release).
 
-    Multiple \c to and \c from values can be set by using a comma-separated string.
+    Multiple \c to and \c from values can be set by using a comma-separated
+    string.
 
     \sa reversible
 */
@@ -323,7 +326,8 @@ void QQuickTransition::setFromState(const QString &f)
 
 /*!
     \qmlproperty bool QtQuick::Transition::reversible
-    This property holds whether the transition should be automatically reversed when the conditions that triggered this transition are reversed.
+    This property holds whether the transition should be automatically
+    reversed when the conditions that triggered this transition are reversed.
 
     The default value is false.
 
