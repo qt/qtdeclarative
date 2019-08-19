@@ -82,7 +82,7 @@ Person *BirthdayParty::guest(int index) const
 
 void BirthdayParty::invite(const QString &name)
 {
-    Person *person = new Person(this);
+    auto *person = new Person(this);
     person->setName(name);
     m_guests.append(person);
 }
