@@ -87,9 +87,9 @@ int main(int argc, char ** argv)
         if (bestShoe)
             qWarning() << bestShoe->name() << "is wearing the best shoes!";
 
-    } else {
-        qWarning() << component.errors();
+        return EXIT_SUCCESS;
     }
 
-    return 0;
+    qWarning() << component.errors();
+    return EXIT_FAILURE;
 }

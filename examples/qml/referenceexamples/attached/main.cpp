@@ -93,9 +93,9 @@ int main(int argc, char ** argv)
                 qWarning() << "   " << guest->name() << "RSVP date:" << qPrintable(rsvpDate.toString());
         }
 
-    } else {
-        qWarning() << component.errors();
+        return EXIT_SUCCESS;
     }
 
-    return 0;
+    qWarning() << component.errors();
+    return EXIT_FAILURE;
 }

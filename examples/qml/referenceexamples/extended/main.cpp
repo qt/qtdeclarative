@@ -70,9 +70,9 @@ int main(int argc, char ** argv)
 
     if (edit) {
         edit->show();
-        return app.exec();
-    } else {
-        qWarning() << component.errors();
-        return 0;
+        return QApplication::exec();
     }
+
+    qWarning() << component.errors();
+    return EXIT_FAILURE;
 }

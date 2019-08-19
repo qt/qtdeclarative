@@ -95,9 +95,9 @@ int main(int argc, char ** argv)
         }
 
         party->startParty();
-    } else {
-        qWarning() << component.errors();
+        return QCoreApplication::exec();
     }
 
-    return app.exec();
+    qWarning() << component.errors();
+    return EXIT_FAILURE;
 }
