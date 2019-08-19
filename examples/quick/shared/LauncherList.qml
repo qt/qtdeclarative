@@ -75,6 +75,7 @@ Rectangle {
             id: launcherList
             clip: true
             delegate: SimpleLauncherDelegate{
+                required property url url
                 onClicked: root.showExample(url)
             }
             model: ListModel {id:myModel}
