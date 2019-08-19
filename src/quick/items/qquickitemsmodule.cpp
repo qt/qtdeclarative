@@ -247,27 +247,27 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickTextInput>(uri,major,minor,"TextInput");
     qmlRegisterType<QQuickTextInput,2>(uri,2,2,"TextInput");
     qmlRegisterType<QQuickTextInput,3>(uri,2,4,"TextInput");
-    qmlRegisterType<QQuickItemGrabResult>();
+    qmlRegisterAnonymousType<QQuickItemGrabResult>(uri, major);
 #if QT_CONFIG(quick_shadereffect)
-    qmlRegisterType<QQuickItemLayer>();
+    qmlRegisterAnonymousType<QQuickItemLayer>(uri, major);
 #endif
-    qmlRegisterType<QQuickAnchors>();
-    qmlRegisterType<QQuickKeyEvent>();
-    qmlRegisterType<QQuickMouseEvent>();
-    qmlRegisterType<QQuickWheelEvent>();
-    qmlRegisterType<QQuickCloseEvent>();
-    qmlRegisterType<QQuickTransform>();
+    qmlRegisterAnonymousType<QQuickAnchors>(uri, major);
+    qmlRegisterAnonymousType<QQuickKeyEvent>(uri, major);
+    qmlRegisterAnonymousType<QQuickMouseEvent>(uri, major);
+    qmlRegisterAnonymousType<QQuickWheelEvent>(uri, major);
+    qmlRegisterAnonymousType<QQuickCloseEvent>(uri, major);
+    qmlRegisterAnonymousType<QQuickTransform>(uri, major);
 #if QT_CONFIG(quick_path)
-    qmlRegisterType<QQuickPathElement>();
-    qmlRegisterType<QQuickCurve>();
+    qmlRegisterAnonymousType<QQuickPathElement>(uri, major);
+    qmlRegisterAnonymousType<QQuickCurve>(uri, major);
 #endif
-    qmlRegisterType<QQuickScaleGrid>();
-    qmlRegisterType<QQuickTextLine>();
-    qmlRegisterType<QQuickPen>();
-    qmlRegisterType<QQuickFlickableVisibleArea>();
+    qmlRegisterAnonymousType<QQuickScaleGrid>(uri, major);
+    qmlRegisterAnonymousType<QQuickTextLine>(uri, major);
+    qmlRegisterAnonymousType<QQuickPen>(uri, major);
+    qmlRegisterAnonymousType<QQuickFlickableVisibleArea>(uri, major);
     qRegisterMetaType<QQuickAnchorLine>("QQuickAnchorLine");
 
-    qmlRegisterType<QQuickTextDocument>();
+    qmlRegisterAnonymousType<QQuickTextDocument>(uri, major);
 
 
     qmlRegisterUncreatableType<QQuickKeyNavigationAttached>(uri,major,minor,"KeyNavigation",QQuickKeyNavigationAttached::tr("KeyNavigation is only available via attached properties"));
@@ -279,7 +279,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
     qmlRegisterType<QQuickPinchArea>(uri,major,minor,"PinchArea");
     qmlRegisterType<QQuickPinch>(uri,major,minor,"Pinch");
-    qmlRegisterType<QQuickPinchEvent>();
+    qmlRegisterAnonymousType<QQuickPinchEvent>(uri, major);
 
 #if QT_CONFIG(quick_shadereffect)
     qmlRegisterType<QQuickShaderEffectSource>("QtQuick", 2, 0, "ShaderEffectSource");
@@ -302,7 +302,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
     qmlRegisterType<QQuickParentChange>(uri, major, minor,"ParentChange");
     qmlRegisterType<QQuickAnchorChanges>(uri, major, minor,"AnchorChanges");
-    qmlRegisterType<QQuickAnchorSet>();
+    qmlRegisterAnonymousType<QQuickAnchorSet>(uri, major);
     qmlRegisterType<QQuickAnchorAnimation>(uri, major, minor,"AnchorAnimation");
     qmlRegisterType<QQuickParentAnimation>(uri, major, minor,"ParentAnimation");
 #if QT_CONFIG(quick_path)
@@ -312,8 +312,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
 #if QT_CONFIG(quick_draganddrop)
     qmlRegisterType<QQuickDropArea>("QtQuick", 2, 0, "DropArea");
-    qmlRegisterType<QQuickDropEvent>();
-    qmlRegisterType<QQuickDropAreaDrag>();
+    qmlRegisterAnonymousType<QQuickDropEvent>(uri, 2);
+    qmlRegisterAnonymousType<QQuickDropAreaDrag>(uri, 2);
     qmlRegisterUncreatableType<QQuickDrag>("QtQuick", 2, 0, "Drag", QQuickDragAttached::tr("Drag is only available via attached properties"));
 #endif
 
