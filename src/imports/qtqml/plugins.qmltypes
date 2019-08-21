@@ -108,11 +108,11 @@ Module {
         name: "QQmlConnections"
         prototype: "QObject"
         exports: ["QtQml/Connections 2.0", "QtQml/Connections 2.3"]
-        exportMetaObjectRevisions: [0, 1]
+        exportMetaObjectRevisions: [0, 3]
         Property { name: "target"; type: "QObject"; isPointer: true }
-        Property { name: "enabled"; revision: 1; type: "bool" }
+        Property { name: "enabled"; revision: 3; type: "bool" }
         Property { name: "ignoreUnknownSignals"; type: "bool" }
-        Signal { name: "enabledChanged"; revision: 1 }
+        Signal { name: "enabledChanged"; revision: 3 }
     }
     Component {
         name: "QQmlInstanceModel"
@@ -213,7 +213,7 @@ Module {
         name: "QQmlLoggingCategory"
         prototype: "QObject"
         exports: ["QtQml/LoggingCategory 2.12", "QtQml/LoggingCategory 2.8"]
-        exportMetaObjectRevisions: [1, 0]
+        exportMetaObjectRevisions: [12, 0]
         Enum {
             name: "DefaultLogLevel"
             values: {
@@ -225,7 +225,7 @@ Module {
             }
         }
         Property { name: "name"; type: "string" }
-        Property { name: "defaultLogLevel"; revision: 1; type: "DefaultLogLevel" }
+        Property { name: "defaultLogLevel"; revision: 12; type: "DefaultLogLevel" }
     }
     Component {
         name: "QQmlTimer"

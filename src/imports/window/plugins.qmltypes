@@ -26,7 +26,7 @@ Module {
         prototype: "QObject"
         exports: ["QtQuick.Window/Screen 2.0", "QtQuick.Window/Screen 2.3"]
         isCreatable: false
-        exportMetaObjectRevisions: [0, 1]
+        exportMetaObjectRevisions: [0, 3]
         attachedType: "QQuickScreenAttached"
     }
     Component {
@@ -48,7 +48,7 @@ Module {
             "QtQuick.Window/ScreenInfo 2.3"
         ]
         isCreatable: false
-        exportMetaObjectRevisions: [10, 2]
+        exportMetaObjectRevisions: [10, 3]
         Property { name: "name"; type: "string"; isReadonly: true }
         Property { name: "manufacturer"; revision: 10; type: "string"; isReadonly: true }
         Property { name: "model"; revision: 10; type: "string"; isReadonly: true }
@@ -62,14 +62,14 @@ Module {
         Property { name: "devicePixelRatio"; type: "double"; isReadonly: true }
         Property { name: "primaryOrientation"; type: "Qt::ScreenOrientation"; isReadonly: true }
         Property { name: "orientation"; type: "Qt::ScreenOrientation"; isReadonly: true }
-        Property { name: "virtualX"; revision: 1; type: "int"; isReadonly: true }
-        Property { name: "virtualY"; revision: 1; type: "int"; isReadonly: true }
+        Property { name: "virtualX"; revision: 3; type: "int"; isReadonly: true }
+        Property { name: "virtualY"; revision: 3; type: "int"; isReadonly: true }
         Signal { name: "manufacturerChanged"; revision: 10 }
         Signal { name: "modelChanged"; revision: 10 }
         Signal { name: "serialNumberChanged"; revision: 10 }
         Signal { name: "desktopGeometryChanged" }
-        Signal { name: "virtualXChanged"; revision: 1 }
-        Signal { name: "virtualYChanged"; revision: 1 }
+        Signal { name: "virtualXChanged"; revision: 3 }
+        Signal { name: "virtualYChanged"; revision: 3 }
     }
     Component {
         name: "QQuickWindow"
@@ -166,11 +166,11 @@ Module {
             "QtQuick.Window/Window 2.2",
             "QtQuick.Window/Window 2.3"
         ]
-        exportMetaObjectRevisions: [0, 13, 1, 2]
+        exportMetaObjectRevisions: [0, 13, 2, 3]
         attachedType: "QQuickWindowAttached"
         Property { name: "visible"; type: "bool" }
         Property { name: "visibility"; type: "Visibility" }
-        Property { name: "screen"; revision: 2; type: "QObject"; isPointer: true }
+        Property { name: "screen"; revision: 3; type: "QObject"; isPointer: true }
         Signal {
             name: "visibleChanged"
             Parameter { name: "arg"; type: "bool" }
@@ -179,7 +179,7 @@ Module {
             name: "visibilityChanged"
             Parameter { name: "visibility"; type: "QWindow::Visibility" }
         }
-        Signal { name: "screenChanged"; revision: 2 }
+        Signal { name: "screenChanged"; revision: 3 }
     }
     Component {
         name: "QWindow"

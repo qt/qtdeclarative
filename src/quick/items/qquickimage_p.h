@@ -66,8 +66,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImage : public QQuickImageBase
     Q_PROPERTY(qreal paintedHeight READ paintedHeight NOTIFY paintedGeometryChanged)
     Q_PROPERTY(HAlignment horizontalAlignment READ horizontalAlignment WRITE setHorizontalAlignment NOTIFY horizontalAlignmentChanged)
     Q_PROPERTY(VAlignment verticalAlignment READ verticalAlignment WRITE setVerticalAlignment NOTIFY verticalAlignmentChanged)
-    Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged REVISION 1)
-    Q_PROPERTY(bool autoTransform READ autoTransform WRITE setAutoTransform NOTIFY autoTransformChanged REVISION 2)
+    Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged REVISION 3)
+    Q_PROPERTY(bool autoTransform READ autoTransform WRITE setAutoTransform NOTIFY autoTransformChanged REVISION 5)
 
 public:
     QQuickImage(QQuickItem *parent=nullptr);
@@ -112,8 +112,8 @@ Q_SIGNALS:
     void paintedGeometryChanged();
     void horizontalAlignmentChanged(HAlignment alignment);
     void verticalAlignmentChanged(VAlignment alignment);
-    Q_REVISION(1) void mipmapChanged(bool);
-    Q_REVISION(2) void autoTransformChanged();
+    Q_REVISION(3) void mipmapChanged(bool);
+    Q_REVISION(5) void autoTransformChanged();
 
 private Q_SLOTS:
     void invalidateSceneGraph();

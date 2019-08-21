@@ -205,11 +205,11 @@ void QQuickWindowModule::defineModule()
     qmlRegisterRevision<QQuickWindow,1>(uri, 2, 1);//Type moved to a subclass, but also has new members
     qmlRegisterRevision<QQuickWindow,2>(uri, 2, 2);
     qmlRegisterType<QQuickWindowQmlImpl>(uri, 2, 1, "Window");
-    qmlRegisterType<QQuickWindowQmlImpl,1>(uri, 2, 2, "Window");
-    qmlRegisterType<QQuickWindowQmlImpl,2>(uri, 2, 3, "Window");
+    qmlRegisterType<QQuickWindowQmlImpl,2>(uri, 2, 2, "Window");
+    qmlRegisterType<QQuickWindowQmlImpl,3>(uri, 2, 3, "Window");
     qmlRegisterUncreatableType<QQuickScreen>(uri, 2, 0, "Screen", QStringLiteral("Screen can only be used via the attached property."));
-    qmlRegisterUncreatableType<QQuickScreen,1>(uri, 2, 3, "Screen", QStringLiteral("Screen can only be used via the attached property."));
-    qmlRegisterUncreatableType<QQuickScreenInfo,2>(uri, 2, 3, "ScreenInfo", QStringLiteral("ScreenInfo can only be used via the attached property."));
+    qmlRegisterUncreatableType<QQuickScreen,3>(uri, 2, 3, "Screen", QStringLiteral("Screen can only be used via the attached property."));
+    qmlRegisterUncreatableType<QQuickScreenInfo,3>(uri, 2, 3, "ScreenInfo", QStringLiteral("ScreenInfo can only be used via the attached property."));
     qmlRegisterUncreatableType<QQuickScreenInfo,10>(uri, 2, 10, "ScreenInfo", QStringLiteral("ScreenInfo can only be used via the attached property."));
     qmlRegisterRevision<QWindow,13>(uri, 2, 13);
     qmlRegisterRevision<QQuickWindow,13>(uri, 2, 13);

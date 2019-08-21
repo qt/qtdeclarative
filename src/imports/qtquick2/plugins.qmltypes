@@ -2197,7 +2197,7 @@ Module {
             "QtQuick/Image 2.3",
             "QtQuick/Image 2.5"
         ]
-        exportMetaObjectRevisions: [0, 1, 2]
+        exportMetaObjectRevisions: [0, 3, 5]
         Enum {
             name: "HAlignment"
             values: {
@@ -2231,8 +2231,8 @@ Module {
         Property { name: "paintedHeight"; type: "double"; isReadonly: true }
         Property { name: "horizontalAlignment"; type: "HAlignment" }
         Property { name: "verticalAlignment"; type: "VAlignment" }
-        Property { name: "mipmap"; revision: 1; type: "bool" }
-        Property { name: "autoTransform"; revision: 2; type: "bool" }
+        Property { name: "mipmap"; revision: 3; type: "bool" }
+        Property { name: "autoTransform"; revision: 5; type: "bool" }
         Signal { name: "paintedGeometryChanged" }
         Signal {
             name: "horizontalAlignmentChanged"
@@ -2244,10 +2244,10 @@ Module {
         }
         Signal {
             name: "mipmapChanged"
-            revision: 1
+            revision: 3
             Parameter { type: "bool" }
         }
-        Signal { name: "autoTransformChanged"; revision: 2 }
+        Signal { name: "autoTransformChanged"; revision: 5 }
     }
     Component {
         name: "QQuickImageBase"
@@ -2308,7 +2308,7 @@ Module {
             "QtQuick/Item 2.4",
             "QtQuick/Item 2.7"
         ]
-        exportMetaObjectRevisions: [0, 1, 11, 2, 7]
+        exportMetaObjectRevisions: [0, 1, 11, 4, 7]
         Enum {
             name: "Flags"
             values: {
@@ -2428,14 +2428,14 @@ Module {
         Method { name: "update" }
         Method {
             name: "grabToImage"
-            revision: 2
+            revision: 4
             type: "bool"
             Parameter { name: "callback"; type: "QJSValue" }
             Parameter { name: "targetSize"; type: "QSize" }
         }
         Method {
             name: "grabToImage"
-            revision: 2
+            revision: 4
             type: "bool"
             Parameter { name: "callback"; type: "QJSValue" }
         }
@@ -2568,7 +2568,7 @@ Module {
             "QtQuick/ItemView 2.7"
         ]
         isCreatable: false
-        exportMetaObjectRevisions: [1, 13, 2, 7]
+        exportMetaObjectRevisions: [1, 13, 3, 7]
         Enum {
             name: "LayoutDirection"
             values: {
@@ -2612,8 +2612,8 @@ Module {
         Property { name: "keyNavigationWraps"; type: "bool" }
         Property { name: "keyNavigationEnabled"; revision: 7; type: "bool" }
         Property { name: "cacheBuffer"; type: "int" }
-        Property { name: "displayMarginBeginning"; revision: 2; type: "int" }
-        Property { name: "displayMarginEnd"; revision: 2; type: "int" }
+        Property { name: "displayMarginBeginning"; revision: 3; type: "int" }
+        Property { name: "displayMarginEnd"; revision: 3; type: "int" }
         Property { name: "layoutDirection"; type: "Qt::LayoutDirection" }
         Property { name: "effectiveLayoutDirection"; type: "Qt::LayoutDirection"; isReadonly: true }
         Property { name: "verticalLayoutDirection"; type: "VerticalLayoutDirection" }
@@ -2924,7 +2924,7 @@ Module {
             "QtQuick/ListView 2.4",
             "QtQuick/ListView 2.7"
         ]
-        exportMetaObjectRevisions: [0, 1, 2, 7]
+        exportMetaObjectRevisions: [0, 1, 4, 7]
         attachedType: "QQuickListViewAttached"
         Enum {
             name: "Orientation"
@@ -2965,10 +2965,10 @@ Module {
         Property { name: "section"; type: "QQuickViewSection"; isReadonly: true; isPointer: true }
         Property { name: "currentSection"; type: "string"; isReadonly: true }
         Property { name: "snapMode"; type: "SnapMode" }
-        Property { name: "headerPositioning"; revision: 2; type: "HeaderPositioning" }
-        Property { name: "footerPositioning"; revision: 2; type: "FooterPositioning" }
-        Signal { name: "headerPositioningChanged"; revision: 2 }
-        Signal { name: "footerPositioningChanged"; revision: 2 }
+        Property { name: "headerPositioning"; revision: 4; type: "HeaderPositioning" }
+        Property { name: "footerPositioning"; revision: 4; type: "FooterPositioning" }
+        Signal { name: "headerPositioningChanged"; revision: 4 }
+        Signal { name: "footerPositioningChanged"; revision: 4 }
         Method { name: "incrementCurrentIndex" }
         Method { name: "decrementCurrentIndex" }
     }
@@ -3018,13 +3018,13 @@ Module {
             "QtQuick/MouseArea 2.5",
             "QtQuick/MouseArea 2.9"
         ]
-        exportMetaObjectRevisions: [0, 1, 2, 9]
+        exportMetaObjectRevisions: [0, 4, 5, 9]
         Property { name: "mouseX"; type: "double"; isReadonly: true }
         Property { name: "mouseY"; type: "double"; isReadonly: true }
         Property { name: "containsMouse"; type: "bool"; isReadonly: true }
         Property { name: "pressed"; type: "bool"; isReadonly: true }
         Property { name: "enabled"; type: "bool" }
-        Property { name: "scrollGestureEnabled"; revision: 2; type: "bool" }
+        Property { name: "scrollGestureEnabled"; revision: 5; type: "bool" }
         Property { name: "pressedButtons"; type: "Qt::MouseButtons"; isReadonly: true }
         Property { name: "acceptedButtons"; type: "Qt::MouseButtons" }
         Property { name: "hoverEnabled"; type: "bool" }
@@ -3032,10 +3032,10 @@ Module {
         Property { name: "preventStealing"; type: "bool" }
         Property { name: "propagateComposedEvents"; type: "bool" }
         Property { name: "cursorShape"; type: "Qt::CursorShape" }
-        Property { name: "containsPress"; revision: 1; type: "bool"; isReadonly: true }
+        Property { name: "containsPress"; revision: 4; type: "bool"; isReadonly: true }
         Property { name: "pressAndHoldInterval"; revision: 9; type: "int" }
         Signal { name: "hoveredChanged" }
-        Signal { name: "scrollGestureEnabledChanged"; revision: 2 }
+        Signal { name: "scrollGestureEnabledChanged"; revision: 5 }
         Signal {
             name: "positionChanged"
             Parameter { name: "mouse"; type: "QQuickMouseEvent"; isPointer: true }
@@ -3075,7 +3075,7 @@ Module {
         Signal { name: "entered" }
         Signal { name: "exited" }
         Signal { name: "canceled" }
-        Signal { name: "containsPressChanged"; revision: 1 }
+        Signal { name: "containsPressChanged"; revision: 4 }
         Signal { name: "pressAndHoldIntervalChanged"; revision: 9 }
     }
     Component {
@@ -3324,7 +3324,7 @@ Module {
         name: "QQuickPathArc"
         prototype: "QQuickCurve"
         exports: ["QtQuick/PathArc 2.0", "QtQuick/PathArc 2.9"]
-        exportMetaObjectRevisions: [0, 2]
+        exportMetaObjectRevisions: [0, 9]
         Enum {
             name: "ArcDirection"
             values: {
@@ -3336,8 +3336,8 @@ Module {
         Property { name: "radiusY"; type: "double" }
         Property { name: "useLargeArc"; type: "bool" }
         Property { name: "direction"; type: "ArcDirection" }
-        Property { name: "xAxisRotation"; revision: 2; type: "double" }
-        Signal { name: "xAxisRotationChanged"; revision: 2 }
+        Property { name: "xAxisRotation"; revision: 9; type: "double" }
+        Signal { name: "xAxisRotationChanged"; revision: 9 }
     }
     Component {
         name: "QQuickPathAttribute"
@@ -3598,7 +3598,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick/PinchArea 2.0", "QtQuick/PinchArea 2.5"]
-        exportMetaObjectRevisions: [0, 1]
+        exportMetaObjectRevisions: [0, 5]
         Property { name: "enabled"; type: "bool" }
         Property { name: "pinch"; type: "QQuickPinch"; isReadonly: true; isPointer: true }
         Signal {
@@ -3615,7 +3615,7 @@ Module {
         }
         Signal {
             name: "smartZoom"
-            revision: 1
+            revision: 5
             Parameter { name: "pinch"; type: "QQuickPinchEvent"; isPointer: true }
         }
     }
@@ -4010,7 +4010,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick/ShaderEffect 2.0", "QtQuick/ShaderEffect 2.4"]
-        exportMetaObjectRevisions: [0, 1]
+        exportMetaObjectRevisions: [0, 4]
         Enum {
             name: "CullMode"
             values: {
@@ -4034,7 +4034,7 @@ Module {
         Property { name: "cullMode"; type: "CullMode" }
         Property { name: "log"; type: "string"; isReadonly: true }
         Property { name: "status"; type: "Status"; isReadonly: true }
-        Property { name: "supportsAtlasTextures"; revision: 1; type: "bool" }
+        Property { name: "supportsAtlasTextures"; revision: 4; type: "bool" }
     }
     Component {
         name: "QQuickShaderEffectMesh"
@@ -4053,7 +4053,7 @@ Module {
             "QtQuick/ShaderEffectSource 2.6",
             "QtQuick/ShaderEffectSource 2.9"
         ]
-        exportMetaObjectRevisions: [0, 1, 2]
+        exportMetaObjectRevisions: [0, 6, 9]
         Enum {
             name: "WrapMode"
             values: {
@@ -4088,8 +4088,8 @@ Module {
         Property { name: "hideSource"; type: "bool" }
         Property { name: "mipmap"; type: "bool" }
         Property { name: "recursive"; type: "bool" }
-        Property { name: "textureMirroring"; revision: 1; type: "TextureMirroring" }
-        Property { name: "samples"; revision: 2; type: "int" }
+        Property { name: "textureMirroring"; revision: 6; type: "TextureMirroring" }
+        Property { name: "samples"; revision: 9; type: "int" }
         Signal { name: "scheduledUpdateCompleted" }
         Method { name: "scheduleUpdate" }
     }
@@ -4101,11 +4101,11 @@ Module {
             "QtQuick/Shortcut 2.6",
             "QtQuick/Shortcut 2.9"
         ]
-        exportMetaObjectRevisions: [0, 1, 9]
+        exportMetaObjectRevisions: [0, 6, 9]
         Property { name: "sequence"; type: "QVariant" }
         Property { name: "sequences"; revision: 9; type: "QVariantList" }
-        Property { name: "nativeText"; revision: 1; type: "string"; isReadonly: true }
-        Property { name: "portableText"; revision: 1; type: "string"; isReadonly: true }
+        Property { name: "nativeText"; revision: 6; type: "string"; isReadonly: true }
+        Property { name: "portableText"; revision: 6; type: "string"; isReadonly: true }
         Property { name: "enabled"; type: "bool" }
         Property { name: "autoRepeat"; type: "bool" }
         Property { name: "context"; type: "Qt::ShortcutContext" }
@@ -4988,7 +4988,7 @@ Module {
             "QtQuick/TextInput 2.7",
             "QtQuick/TextInput 2.9"
         ]
-        exportMetaObjectRevisions: [0, 2, 3, 6, 7, 9]
+        exportMetaObjectRevisions: [0, 2, 4, 6, 7, 9]
         Enum {
             name: "EchoMode"
             values: {
@@ -5072,7 +5072,7 @@ Module {
         Property { name: "echoMode"; type: "EchoMode" }
         Property { name: "activeFocusOnPress"; type: "bool" }
         Property { name: "passwordCharacter"; type: "string" }
-        Property { name: "passwordMaskDelay"; revision: 3; type: "int" }
+        Property { name: "passwordMaskDelay"; revision: 4; type: "int" }
         Property { name: "displayText"; type: "string"; isReadonly: true }
         Property { name: "preeditText"; revision: 7; type: "string"; isReadonly: true }
         Property { name: "autoScroll"; type: "bool" }
@@ -5132,7 +5132,7 @@ Module {
         }
         Signal {
             name: "passwordMaskDelayChanged"
-            revision: 3
+            revision: 4
             Parameter { name: "delay"; type: "int" }
         }
         Signal { name: "preeditTextChanged"; revision: 7 }
@@ -5189,7 +5189,7 @@ Module {
         }
         Method {
             name: "ensureVisible"
-            revision: 3
+            revision: 4
             Parameter { name: "position"; type: "int" }
         }
         Method { name: "clear"; revision: 7 }
@@ -5213,7 +5213,7 @@ Module {
         }
         Method {
             name: "inputMethodQuery"
-            revision: 3
+            revision: 4
             type: "QVariant"
             Parameter { name: "query"; type: "Qt::InputMethodQuery" }
             Parameter { name: "argument"; type: "QVariant" }
