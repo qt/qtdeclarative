@@ -58,6 +58,7 @@ class TextBalloon : public QQuickPaintedItem
 {
     Q_OBJECT
     Q_PROPERTY(bool rightAligned READ isRightAligned WRITE setRightAligned NOTIFY rightAlignedChanged)
+    QML_ELEMENT
 
     public:
         TextBalloon(QQuickItem *parent = 0);

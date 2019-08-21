@@ -54,12 +54,16 @@
 #include <QObject>
 #include <QRectF>
 #include <QPointF>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickParticleExtruder : public QObject
 {
     Q_OBJECT
+
+    QML_NAMED_ELEMENT(ParticleExtruder)
+    QML_UNCREATABLE("Abstract type. Use one of the inheriting types instead.")
 
 public:
     explicit QQuickParticleExtruder(QObject *parent = 0);

@@ -51,12 +51,16 @@
 #define PERSON_H
 
 #include <QObject>
+#include <QtQml/qqml.h>
 
 class Person : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString name READ name WRITE setName)
     Q_PROPERTY(int shoeSize READ shoeSize WRITE setShoeSize)
+    //![0]
+    QML_ANONYMOUS
+    //![0]
 public:
     Person(QObject *parent = nullptr);
 
@@ -75,6 +79,7 @@ private:
 class Boy : public Person
 {
     Q_OBJECT
+    QML_ELEMENT
 public:
     Boy(QObject * parent = nullptr);
 };
@@ -83,6 +88,7 @@ public:
 class Girl : public Person
 {
     Q_OBJECT
+    QML_ELEMENT
 public:
     Girl(QObject * parent = nullptr);
 };

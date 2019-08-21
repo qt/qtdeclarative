@@ -45,6 +45,7 @@
 #include <QtCore/QState>
 #include <QtQml/QQmlParserStatus>
 #include <QtQml/QQmlListProperty>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -54,6 +55,7 @@ class State : public QState, public QQmlParserStatus
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QQmlListProperty<QObject> children READ children NOTIFY childrenChanged)
     Q_CLASSINFO("DefaultProperty", "children")
+    QML_ELEMENT
 
 public:
     explicit State(QState *parent = 0);

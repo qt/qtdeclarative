@@ -56,6 +56,9 @@ class Q_QUICK_EXPORT QQuickPaintedItem : public QQuickItem
     Q_PROPERTY(RenderTarget renderTarget READ renderTarget WRITE setRenderTarget NOTIFY renderTargetChanged)
     Q_PROPERTY(QSize textureSize READ textureSize WRITE setTextureSize NOTIFY textureSizeChanged)
 
+    QML_NAMED_ELEMENT(PaintedItem)
+    QML_UNCREATABLE("Cannot create instance of abstract class PaintedItem.")
+
 public:
     explicit QQuickPaintedItem(QQuickItem *parent = nullptr);
     ~QQuickPaintedItem() override;

@@ -53,12 +53,16 @@
 
 #include <QObject>
 #include <QPointF>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickDirection : public QObject
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(NullVector)
+    QML_UNCREATABLE("Abstract type. Use one of the inheriting types instead.")
+
 public:
     explicit QQuickDirection(QObject *parent = 0);
 

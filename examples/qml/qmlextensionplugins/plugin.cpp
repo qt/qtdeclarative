@@ -112,6 +112,7 @@ class TimeModel : public QObject
     Q_OBJECT
     Q_PROPERTY(int hour READ hour NOTIFY timeChanged)
     Q_PROPERTY(int minute READ minute NOTIFY timeChanged)
+    QML_NAMED_ELEMENT(Time)
 //![0]
 
 public:
@@ -157,7 +158,7 @@ public:
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(uri == QLatin1String("TimeExample"));
-        qmlRegisterType<TimeModel>(uri, 1, 0, "Time");
+        qmlRegisterTypesAndRevisions<TimeModel>(uri, 1);
     }
 };
 //![plugin]

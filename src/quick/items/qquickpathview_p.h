@@ -100,6 +100,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathView : public QQuickItem
     Q_PROPERTY(MovementDirection movementDirection READ movementDirection WRITE setMovementDirection NOTIFY movementDirectionChanged REVISION 7)
 
     Q_PROPERTY(int cacheItemCount READ cacheItemCount WRITE setCacheItemCount NOTIFY cacheItemCountChanged)
+    QML_NAMED_ELEMENT(PathView)
+    QML_ATTACHED(QQuickPathViewAttached)
 
 public:
     QQuickPathView(QQuickItem *parent = nullptr);
@@ -299,6 +301,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickPathView)
-QML_DECLARE_TYPEINFO(QQuickPathView, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKPATHVIEW_P_H

@@ -178,11 +178,13 @@ previous example.  However, as we have repurposed the People class as a common
 base for Boy and Girl, we want to prevent it from being instantiated from QML
 directly - an explicit Boy or Girl should be instantiated instead.
 
-\snippet referenceexamples/coercion/main.cpp 0
+\snippet referenceexamples/coercion/person.h 0
 
 While we want to disallow instantiating Person from within QML, it still needs
 to be registered with the QML engine, so that it can be used as a property type
 and other types can be coerced to it.
+
+\snippet referenceexamples/coercion/main.cpp 0
 
 \section2 Define Boy and Girl
 

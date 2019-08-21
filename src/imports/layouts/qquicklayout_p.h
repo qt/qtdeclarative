@@ -61,6 +61,10 @@ class QQuickLayout : public QQuickItem, public QQuickItemChangeListener
 
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(Layout)
+    QML_UNCREATABLE("Do not create objects of type Layout.")
+    QML_ATTACHED(QQuickLayoutAttached)
+
 public:
     enum SizeHint {
         MinimumSize = 0,
@@ -331,6 +335,5 @@ inline QQuickLayoutAttached *attachedLayoutObject(QQuickItem *item, bool create 
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickLayout)
-QML_DECLARE_TYPEINFO(QQuickLayout, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKLAYOUT_P_H

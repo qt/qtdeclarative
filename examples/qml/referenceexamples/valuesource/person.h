@@ -52,6 +52,7 @@
 
 #include <QObject>
 #include <QColor>
+#include <QtQml/qqml.h>
 
 class ShoeDescription : public QObject
 {
@@ -60,6 +61,7 @@ class ShoeDescription : public QObject
     Q_PROPERTY(QColor color READ color WRITE setColor)
     Q_PROPERTY(QString brand READ brand WRITE setBrand)
     Q_PROPERTY(qreal price READ price WRITE setPrice)
+    QML_ANONYMOUS
 public:
     ShoeDescription(QObject *parent = nullptr);
 
@@ -86,6 +88,7 @@ class Person : public QObject
     Q_OBJECT
     Q_PROPERTY(QString name READ name WRITE setName)
     Q_PROPERTY(ShoeDescription *shoe READ shoe)
+    QML_ANONYMOUS
 public:
     Person(QObject *parent = nullptr);
 
@@ -101,6 +104,7 @@ private:
 class Boy : public Person
 {
     Q_OBJECT
+    QML_ELEMENT
 public:
     Boy(QObject * parent = nullptr);
 };
@@ -108,6 +112,7 @@ public:
 class Girl : public Person
 {
     Q_OBJECT
+    QML_ELEMENT
 public:
     Girl(QObject * parent = nullptr);
 };

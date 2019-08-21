@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -37,8 +37,22 @@
 **
 ****************************************************************************/
 
-#ifndef GROUPGOALAFFECTOR_H
-#define GROUPGOALAFFECTOR_H
+#ifndef QTQUICKFOREIGN_P_H
+#define QTQUICKFOREIGN_P_H
+
+#include <qtquickglobal_p.h>
+
+#if QT_CONFIG(im)
+#include <QtGui/qinputmethod.h>
+#endif
+#if QT_CONFIG(validator)
+#include <QtGui/qvalidator.h>
+#endif
+#if QT_CONFIG(shortcut)
+#include <QtGui/qkeysequence.h>
+#endif
+
+#include <QtQml/qqml.h>
 
 //
 //  W A R N I N G
@@ -50,57 +64,57 @@
 //
 // We mean it.
 //
-#include "qquickparticleaffector_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickStochasticEngine;
-
-class QQuickGroupGoalAffector : public QQuickParticleAffector
+#if QT_CONFIG(validator)
+struct QValidatorForeign
 {
-    Q_OBJECT
-    Q_PROPERTY(QString goalState READ goalState WRITE setGoalState NOTIFY goalStateChanged)
-    Q_PROPERTY(bool jump READ jump WRITE setJump NOTIFY jumpChanged)
-    QML_NAMED_ELEMENT(GroupGoal)
-public:
-    explicit QQuickGroupGoalAffector(QQuickItem *parent = 0);
-
-    QString goalState() const
-    {
-        return m_goalState;
-    }
-
-    bool jump() const
-    {
-        return m_jump;
-    }
-
-protected:
-    bool affectParticle(QQuickParticleData *d, qreal dt) override;
-
-Q_SIGNALS:
-
-    void goalStateChanged(const QString &arg);
-
-    void jumpChanged(bool arg);
-
-public Q_SLOTS:
-
-    void setGoalState(const QString &arg);
-
-    void setJump(bool arg)
-    {
-        if (m_jump != arg) {
-            m_jump = arg;
-            Q_EMIT jumpChanged(arg);
-        }
-    }
-
-private:
-    QString m_goalState;
-    bool m_jump;
+    Q_GADGET
+    QML_FOREIGN(QValidator)
+    QML_ANONYMOUS
 };
+
+struct QRegExpValidatorForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QRegExpValidator)
+    QML_NAMED_ELEMENT(RegExpValidator)
+};
+
+#if QT_CONFIG(regularexpression)
+struct QRegularExpressionValidatorForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QRegularExpressionValidator)
+    QML_NAMED_ELEMENT(RegularExpressionValidator)
+    QML_ADDED_IN_MINOR_VERSION(14)
+};
+#endif // QT_CONFIG(regularexpression)
+
+#endif // QT_CONFIG(validator)
+
+#if QT_CONFIG(im)
+struct QInputMethodForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QInputMethod)
+    QML_NAMED_ELEMENT(InputMethod)
+    QML_UNCREATABLE("InputMethod is an abstract class.")
+};
+#endif // QT_CONFIG(im)
+
+#if QT_CONFIG(shortcut)
+struct QKeySequenceForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QKeySequence)
+    QML_NAMED_ELEMENT(StandardKey)
+    QML_ADDED_IN_MINOR_VERSION(2)
+    QML_UNCREATABLE("Cannot create an instance of StandardKey.")
+};
+#endif // QT_CONFIG(shortcut)
 
 QT_END_NAMESPACE
 
-#endif // GROUPGOALAFFECTOR_H
+#endif // QTQUICKFOREIGN_P_H

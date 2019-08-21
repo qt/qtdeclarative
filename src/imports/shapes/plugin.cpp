@@ -57,21 +57,12 @@ public:
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QByteArray(uri) == QByteArray("QtQuick.Shapes"));
-        qmlRegisterType<QQuickShape>(uri, 1, 0, "Shape");
-        qmlRegisterType<QQuickShapePath>(uri, 1, 0, "ShapePath");
-        qmlRegisterUncreatableType<QQuickShapeGradient>(uri, 1, 0, "ShapeGradient", QQuickShapeGradient::tr("ShapeGradient is an abstract base class"));
-        qmlRegisterType<QQuickShapeLinearGradient>(uri, 1, 0, "LinearGradient");
-        qmlRegisterType<QQuickShapeRadialGradient>(uri, 1, 0, "RadialGradient");
-        qmlRegisterType<QQuickShapeConicalGradient>(uri, 1, 0, "ConicalGradient");
+        qmlRegisterTypesAndRevisions<QQuickShape, QQuickShapePath, QQuickShapeGradient,
+                                     QQuickShapeLinearGradient, QQuickShapeRadialGradient,
+                                     QQuickShapeConicalGradient>(uri, 1);
 
         // Auto-increment the import to stay in sync with ALL future QtQuick minor versions
         qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
-
-        // revision in Qt 5.11: added containsMode property
-        qmlRegisterType<QQuickShape, 11>(uri, 1, 11, "Shape");
-
-        // revision in Qt 5.14: added scale property
-        qmlRegisterType<QQuickShapePath, 14>(uri, 1, 14, "ShapePath"); // QTBUG-61942
     }
 };
 

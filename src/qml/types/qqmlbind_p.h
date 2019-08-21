@@ -81,6 +81,7 @@ private:
     Q_PROPERTY(RestorationMode restoreMode READ restoreMode WRITE setRestoreMode
                NOTIFY restoreModeChanged REVISION 14)
     Q_ENUM(RestorationMode)
+    QML_NAMED_ELEMENT(Binding)
 
 public:
     QQmlBind(QObject *parent=nullptr);

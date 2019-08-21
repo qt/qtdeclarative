@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQuick module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,70 +37,44 @@
 **
 ****************************************************************************/
 
-#ifndef GROUPGOALAFFECTOR_H
-#define GROUPGOALAFFECTOR_H
+#ifndef STATEMACHINEFOREIGN_H
+#define STATEMACHINEFOREIGN_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-#include "qquickparticleaffector_p.h"
+#include <QtQml/qqml.h>
+#include <QtCore/qhistorystate.h>
+#include <QtCore/qstate.h>
+#include <QtCore/qabstractstate.h>
+#include <QtCore/qsignaltransition.h>
 
-QT_BEGIN_NAMESPACE
-
-class QQuickStochasticEngine;
-
-class QQuickGroupGoalAffector : public QQuickParticleAffector
+struct QHistoryStateForeign
 {
-    Q_OBJECT
-    Q_PROPERTY(QString goalState READ goalState WRITE setGoalState NOTIFY goalStateChanged)
-    Q_PROPERTY(bool jump READ jump WRITE setJump NOTIFY jumpChanged)
-    QML_NAMED_ELEMENT(GroupGoal)
-public:
-    explicit QQuickGroupGoalAffector(QQuickItem *parent = 0);
-
-    QString goalState() const
-    {
-        return m_goalState;
-    }
-
-    bool jump() const
-    {
-        return m_jump;
-    }
-
-protected:
-    bool affectParticle(QQuickParticleData *d, qreal dt) override;
-
-Q_SIGNALS:
-
-    void goalStateChanged(const QString &arg);
-
-    void jumpChanged(bool arg);
-
-public Q_SLOTS:
-
-    void setGoalState(const QString &arg);
-
-    void setJump(bool arg)
-    {
-        if (m_jump != arg) {
-            m_jump = arg;
-            Q_EMIT jumpChanged(arg);
-        }
-    }
-
-private:
-    QString m_goalState;
-    bool m_jump;
+    Q_GADGET
+    QML_FOREIGN(QHistoryState)
+    QML_NAMED_ELEMENT(HistoryState)
 };
 
-QT_END_NAMESPACE
+struct QStateForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QState)
+    QML_NAMED_ELEMENT(QState)
+    QML_UNCREATABLE("Don't use this, use State instead.")
+};
 
-#endif // GROUPGOALAFFECTOR_H
+struct QAbstractStateForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QAbstractState)
+    QML_NAMED_ELEMENT(QAbstractState)
+    QML_UNCREATABLE("Don't use this, use State instead.")
+};
+
+struct QSignalTransitionForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QSignalTransition)
+    QML_NAMED_ELEMENT(QSignalTransition)
+    QML_UNCREATABLE("Don't use this, use SignalTransition instead.")
+};
+
+#endif // STATEMACHINEFOREIGN_H

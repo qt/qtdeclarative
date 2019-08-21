@@ -72,6 +72,7 @@ class Q_QML_PRIVATE_EXPORT QQmlTimer : public QObject, public QQmlParserStatus
     Q_PROPERTY(bool repeat READ isRepeating WRITE setRepeating NOTIFY repeatChanged)
     Q_PROPERTY(bool triggeredOnStart READ triggeredOnStart WRITE setTriggeredOnStart NOTIFY triggeredOnStartChanged)
     Q_PROPERTY(QObject *parent READ parent CONSTANT)
+    QML_NAMED_ELEMENT(Timer)
 
 public:
     QQmlTimer(QObject *parent=nullptr);

@@ -89,6 +89,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectSource : public QQuickItem, publi
     Q_PROPERTY(bool recursive READ recursive WRITE setRecursive NOTIFY recursiveChanged)
     Q_PROPERTY(TextureMirroring textureMirroring READ textureMirroring WRITE setTextureMirroring NOTIFY textureMirroringChanged REVISION 6)
     Q_PROPERTY(int samples READ samples WRITE setSamples NOTIFY samplesChanged REVISION 9)
+    QML_NAMED_ELEMENT(ShaderEffectSource)
 
 public:
     enum WrapMode {

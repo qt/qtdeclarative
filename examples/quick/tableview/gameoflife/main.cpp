@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
 
     //! [registertype]
-    qmlRegisterType<GameOfLifeModel>("GameOfLifeModel", 1, 0, "GameOfLifeModel");
+    qmlRegisterTypesAndRevisions<GameOfLifeModel>("GameOfLifeModel", 1);
     //! [registertype]
 
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));

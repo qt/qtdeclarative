@@ -63,6 +63,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickDragHandler : public QQuickMultiPointHandler
     Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT)
     Q_PROPERTY(QVector2D translation READ translation NOTIFY translationChanged)
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged REVISION 14)
+    QML_NAMED_ELEMENT(DragHandler)
+    QML_ADDED_IN_MINOR_VERSION(12)
 
 public:
     enum SnapMode {

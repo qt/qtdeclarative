@@ -57,7 +57,7 @@ int main(int argc, char ** argv)
 {
     QCoreApplication app(argc, argv);
 //![0]
-    qmlRegisterType<Person>("People", 1,0, "Person");
+    qmlRegisterTypesAndRevisions<Person>("People", 1);
 //![0]
 
     QQmlEngine engine;

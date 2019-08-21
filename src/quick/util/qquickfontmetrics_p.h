@@ -79,6 +79,8 @@ class Q_AUTOTEST_EXPORT QQuickFontMetrics : public QObject
     Q_PROPERTY(qreal overlinePosition READ overlinePosition NOTIFY fontChanged)
     Q_PROPERTY(qreal strikeOutPosition READ strikeOutPosition NOTIFY fontChanged)
     Q_PROPERTY(qreal lineWidth READ lineWidth NOTIFY fontChanged)
+    QML_NAMED_ELEMENT(FontMetrics)
+    QML_ADDED_IN_MINOR_VERSION(4)
 public:
     explicit QQuickFontMetrics(QObject *parent = nullptr);
     ~QQuickFontMetrics();

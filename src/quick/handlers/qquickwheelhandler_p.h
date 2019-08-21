@@ -72,6 +72,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickWheelHandler : public QQuickSinglePointHandle
     Q_PROPERTY(qreal targetScaleMultiplier READ targetScaleMultiplier WRITE setTargetScaleMultiplier NOTIFY targetScaleMultiplierChanged)
     Q_PROPERTY(bool targetTransformAroundCursor READ isTargetTransformAroundCursor WRITE setTargetTransformAroundCursor NOTIFY targetTransformAroundCursorChanged)
 
+    QML_NAMED_ELEMENT(WheelHandler)
+    QML_ADDED_IN_MINOR_VERSION(14)
+
 public:
     explicit QQuickWheelHandler(QQuickItem *parent = nullptr);
 

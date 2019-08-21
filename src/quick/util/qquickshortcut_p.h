@@ -56,6 +56,7 @@
 #include <QtCore/qvariant.h>
 #include <QtGui/qkeysequence.h>
 #include <QtQml/qqmlparserstatus.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -72,6 +73,8 @@ class QQuickShortcut : public QObject, public QQmlParserStatus
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL)
     Q_PROPERTY(bool autoRepeat READ autoRepeat WRITE setAutoRepeat NOTIFY autoRepeatChanged FINAL)
     Q_PROPERTY(Qt::ShortcutContext context READ context WRITE setContext NOTIFY contextChanged FINAL)
+    QML_NAMED_ELEMENT(Shortcut)
+    QML_ADDED_IN_MINOR_VERSION(5)
 
 public:
     explicit QQuickShortcut(QObject *parent = nullptr);

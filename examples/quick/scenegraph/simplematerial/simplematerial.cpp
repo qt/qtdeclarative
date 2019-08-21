@@ -157,6 +157,7 @@ class Item : public QQuickItem
     Q_OBJECT
 
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
+    QML_NAMED_ELEMENT(SimpleMaterialItem)
 
 public:
 
@@ -203,7 +204,7 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
-    qmlRegisterType<Item>("SimpleMaterial", 1, 0, "SimpleMaterialItem");
+    qmlRegisterTypesAndRevisions<Item>("SimpleMaterial", 1);
 
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);

@@ -66,6 +66,9 @@ class Q_AUTOTEST_EXPORT QQuickPackage : public QObject
     Q_DECLARE_PRIVATE(QQuickPackage)
 
     Q_CLASSINFO("DefaultProperty", "data")
+    QML_NAMED_ELEMENT(Package)
+    QML_ADDED_IN_MINOR_VERSION(14)
+    QML_ATTACHED(QQuickPackageAttached)
     Q_PROPERTY(QQmlListProperty<QObject> data READ data)
 
 public:
@@ -99,6 +102,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickPackage)
-QML_DECLARE_TYPEINFO(QQuickPackage, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKPACKAGE_H

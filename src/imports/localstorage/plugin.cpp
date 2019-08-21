@@ -716,6 +716,8 @@ Returns the created database object.
 class QQuickLocalStorage : public QObject
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(LocalStorage)
+    QML_SINGLETON
 public:
     QQuickLocalStorage(QObject *parent=nullptr) : QObject(parent)
     {
@@ -802,15 +804,6 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
 #endif // settings
 }
 
-static QObject *module_api_factory(QQmlEngine *engine, QJSEngine *scriptEngine)
-{
-   Q_UNUSED(engine)
-   Q_UNUSED(scriptEngine)
-   QQuickLocalStorage *api = new QQuickLocalStorage();
-
-   return api;
-}
-
 class QQmlLocalStoragePlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
@@ -823,7 +816,7 @@ public:
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.LocalStorage"));
-        qmlRegisterSingletonType<QQuickLocalStorage>(uri, 2, 0, "LocalStorage", module_api_factory);
+        qmlRegisterTypesAndRevisions<QQuickLocalStorage>(uri, 2);
 
         // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
         qmlRegisterModule(uri, 2, QT_VERSION_MINOR);

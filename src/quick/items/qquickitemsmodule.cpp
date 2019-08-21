@@ -175,331 +175,218 @@ static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject
     return QQmlPrivate::IncompatibleObject;
 }
 
-static void qt_quickitems_defineModule(const char *uri, int major, int minor)
+static void qt_quickitems_defineModule()
 {
+    const char *uri = "QtQuick";
+    const int major = 2;
+
     QQmlPrivate::RegisterAutoParent autoparent = { 0, &qquickitem_autoParent };
     QQmlPrivate::qmlregister(QQmlPrivate::AutoParentRegistration, &autoparent);
 
-    // Register the latest version, even if there are no new types or new revisions for existing types yet.
-    qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
-
-#if !QT_CONFIG(quick_animatedimage)
-    qmlRegisterTypeNotAvailable(uri,major,minor,"AnimatedImage", QCoreApplication::translate("QQuickAnimatedImage","Qt was built without support for QMovie"));
-#else
-    qmlRegisterType<QQuickAnimatedImage>(uri,major,minor,"AnimatedImage");
-#endif
-    qmlRegisterType<QQuickBorderImage>(uri,major,minor,"BorderImage");
-    qmlRegisterType<QQuickFlickable>(uri,major,minor,"Flickable");
-#if QT_CONFIG(quick_flipable)
-    qmlRegisterType<QQuickFlipable>(uri,major,minor,"Flipable");
-#endif
-//    qmlRegisterType<QQuickFocusPanel>(uri,major,minor,"FocusPanel");
-    qmlRegisterType<QQuickFocusScope>(uri,major,minor,"FocusScope");
-    qmlRegisterType<QQuickGradient>(uri,major,minor,"Gradient");
-    qmlRegisterType<QQuickGradientStop>(uri,major,minor,"GradientStop");
-#if QT_CONFIG(quick_positioners)
-    qmlRegisterType<QQuickColumn>(uri,major,minor,"Column");
-    qmlRegisterType<QQuickFlow>(uri,major,minor,"Flow");
-    qmlRegisterType<QQuickGrid>(uri,major,minor,"Grid");
-    qmlRegisterUncreatableType<QQuickBasePositioner>(uri,major,minor,"Positioner",
-                                                  QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
-    qmlRegisterType<QQuickRow>(uri,major,minor,"Row");
-#endif
-#if QT_CONFIG(quick_gridview)
-    qmlRegisterType<QQuickGridView>(uri,major,minor,"GridView");
-#endif
-    qmlRegisterType<QQuickImage>(uri,major,minor,"Image");
-    qmlRegisterType<QQuickItem>(uri,major,minor,"Item");
-#if QT_CONFIG(quick_listview)
-    qmlRegisterType<QQuickListView>(uri,major,minor,"ListView");
-    qmlRegisterType<QQuickViewSection>(uri,major,minor,"ViewSection");
-#endif
-    qmlRegisterType<QQuickLoader>(uri,major,minor,"Loader");
-    qmlRegisterType<QQuickMouseArea>(uri,major,minor,"MouseArea");
-#if QT_CONFIG(quick_path)
-    qmlRegisterType<QQuickPath>(uri,major,minor,"Path");
-    qmlRegisterType<QQuickPathAttribute>(uri,major,minor,"PathAttribute");
-    qmlRegisterType<QQuickPathCubic>(uri,major,minor,"PathCubic");
-    qmlRegisterType<QQuickPathLine>(uri,major,minor,"PathLine");
-    qmlRegisterType<QQuickPathPercent>(uri,major,minor,"PathPercent");
-    qmlRegisterType<QQuickPathQuad>(uri,major,minor,"PathQuad");
-    qmlRegisterType<QQuickPathCatmullRomCurve>("QtQuick",2,0,"PathCurve");
-    qmlRegisterType<QQuickPathArc>("QtQuick",2,0,"PathArc");
-    qmlRegisterType<QQuickPathSvg>("QtQuick",2,0,"PathSvg");
-    qmlRegisterType<QQuickPath, 14>(uri, 2, 14, "Path");
-    qmlRegisterType<QQuickPathPolyline>("QtQuick", 2, 14, "PathPolyline");
-    qmlRegisterType<QQuickPathMultiline>("QtQuick", 2, 14, "PathMultiline");
-#endif
-#if QT_CONFIG(quick_pathview)
-    qmlRegisterType<QQuickPathView>(uri,major,minor,"PathView");
-#endif
-    qmlRegisterType<QQuickRectangle>(uri,major,minor,"Rectangle");
-#if QT_CONFIG(quick_repeater)
-    qmlRegisterType<QQuickRepeater>(uri,major,minor,"Repeater");
-#endif
-    qmlRegisterType<QQuickTranslate>(uri,major,minor,"Translate");
-    qmlRegisterType<QQuickRotation>(uri,major,minor,"Rotation");
-    qmlRegisterType<QQuickScale>(uri,major,minor,"Scale");
-    qmlRegisterType<QQuickMatrix4x4>(uri,2,3,"Matrix4x4");
-    qmlRegisterType<QQuickText>(uri,major,minor,"Text");
-    qmlRegisterType<QQuickTextEdit>(uri,major,minor,"TextEdit");
-    qmlRegisterType<QQuickTextEdit,1>(uri,2,1,"TextEdit");
-    qmlRegisterType<QQuickTextInput>(uri,major,minor,"TextInput");
-    qmlRegisterType<QQuickTextInput,2>(uri,2,2,"TextInput");
-    qmlRegisterType<QQuickTextInput,4>(uri,2,4,"TextInput");
-    qmlRegisterAnonymousType<QQuickItemGrabResult>(uri, major);
-#if QT_CONFIG(quick_shadereffect)
-    qmlRegisterAnonymousType<QQuickItemLayer>(uri, major);
-#endif
-    qmlRegisterAnonymousType<QQuickAnchors>(uri, major);
-    qmlRegisterAnonymousType<QQuickKeyEvent>(uri, major);
-    qmlRegisterAnonymousType<QQuickMouseEvent>(uri, major);
-    qmlRegisterAnonymousType<QQuickWheelEvent>(uri, major);
-    qmlRegisterAnonymousType<QQuickCloseEvent>(uri, major);
-    qmlRegisterAnonymousType<QQuickTransform>(uri, major);
-#if QT_CONFIG(quick_path)
-    qmlRegisterAnonymousType<QQuickPathElement>(uri, major);
-    qmlRegisterAnonymousType<QQuickCurve>(uri, major);
-#endif
-    qmlRegisterAnonymousType<QQuickScaleGrid>(uri, major);
-    qmlRegisterAnonymousType<QQuickTextLine>(uri, major);
-    qmlRegisterAnonymousType<QQuickPen>(uri, major);
-    qmlRegisterAnonymousType<QQuickFlickableVisibleArea>(uri, major);
     qRegisterMetaType<QQuickAnchorLine>("QQuickAnchorLine");
+    qRegisterMetaType<QPointingDeviceUniqueId>("QPointingDeviceUniqueId");
+    qRegisterMetaType<QQuickHandlerPoint>();
 
-    qmlRegisterAnonymousType<QQuickTextDocument>(uri, major);
+    // Register the latest version, even if there are no new types or new revisions for existing types yet.
+    qmlRegisterModule(uri, major, QT_VERSION_MINOR);
 
+    // Core QtQuick types
+    qmlRegisterTypesAndRevisions<
+            QPointingDeviceUniqueIdForeign,
+            QQuickAnchorAnimation,
+            QQuickAnchorChanges,
+            QQuickAnchors,
+            QQuickAnchorSet,
+            QQuickBorderImage,
+            QQuickEnterKeyAttached,
+            QQuickEventPoint,
+            QQuickEventTouchPoint,
+            QQuickFlickable,
+            QQuickFlickableVisibleArea,
+            QQuickFocusScope,
+            QQuickGradient,
+            QQuickGradientStop,
+            QQuickGraphicsInfo,
+            QQuickImage,
+            QQuickImageBase,
+            QQuickItem,
+            QQuickItemGrabResult,
+            QQuickKeyNavigationAttached,
+            QQuickKeysAttached,
+            QQuickLayoutMirroringAttached,
+            QQuickLoader,
+            QQuickMatrix4x4,
+            QQuickMouseArea,
+            QQuickMultiPointTouchArea,
+            QQuickPaintedItem,
+            QQuickParentAnimation,
+            QQuickParentChange,
+            QQuickPen,
+            QQuickPinch,
+            QQuickPinchArea,
+            QQuickPointerDevice,
+            QQuickRectangle,
+            QQuickRotation,
+            QQuickScale,
+            QQuickScaleGrid,
+            QQuickTouchPoint,
+            QQuickTransform,
+            QQuickTranslate
+    >(uri, major);
 
-    qmlRegisterUncreatableType<QQuickKeyNavigationAttached>(uri,major,minor,"KeyNavigation",QQuickKeyNavigationAttached::tr("KeyNavigation is only available via attached properties"));
-    qmlRegisterUncreatableType<QQuickKeysAttached>(uri,major,minor,"Keys",QQuickKeysAttached::tr("Keys is only available via attached properties"));
-    qmlRegisterUncreatableType<QQuickLayoutMirroringAttached>(uri,major,minor,"LayoutMirroring", QQuickLayoutMirroringAttached::tr("LayoutMirroring is only available via attached properties"));
-#if QT_CONFIG(quick_viewtransitions)
-    qmlRegisterUncreatableType<QQuickViewTransitionAttached>(uri,major,minor,"ViewTransition",QQuickViewTransitionAttached::tr("ViewTransition is only available via attached properties"));
-#endif
+    // text-related types
+    qmlRegisterTypesAndRevisions<
+            QQuickText,
+            QQuickTextDocument,
+            QQuickTextEdit,
+            QQuickTextInput,
+            QQuickTextLine
+    >(uri, major);
 
-    qmlRegisterType<QQuickPinchArea>(uri,major,minor,"PinchArea");
-    qmlRegisterType<QQuickPinch>(uri,major,minor,"Pinch");
-    qmlRegisterAnonymousType<QQuickPinchEvent>(uri, major);
+    // events
+    qmlRegisterTypesAndRevisions<
+            QQuickCloseEvent,
+            QQuickDropEvent,
+            QQuickGrabGestureEvent,
+            QQuickKeyEvent,
+            QQuickMouseEvent,
+            QQuickPinchEvent,
+            QQuickPointerEvent,
+            QQuickPointerMouseEvent,
+            QQuickPointerTouchEvent,
+            QQuickWheelEvent
+    >(uri, major);
 
-#if QT_CONFIG(quick_shadereffect)
-    qmlRegisterType<QQuickShaderEffectSource>("QtQuick", 2, 0, "ShaderEffectSource");
-    qmlRegisterUncreatableType<QQuickShaderEffectMesh>("QtQuick", 2, 0, "ShaderEffectMesh", QQuickShaderEffectMesh::tr("Cannot create instance of abstract class ShaderEffectMesh."));
-    qmlRegisterType<QQuickGridMesh>("QtQuick", 2, 0, "GridMesh");
-    qmlRegisterType<QQuickShaderEffect>("QtQuick", 2, 0, "ShaderEffect");
-#endif
-
-    qmlRegisterUncreatableType<QQuickPaintedItem>("QtQuick", 2, 0, "PaintedItem", QQuickPaintedItem::tr("Cannot create instance of abstract class PaintedItem"));
-
-#if QT_CONFIG(quick_canvas)
-    qmlRegisterType<QQuickCanvasItem>("QtQuick", 2, 0, "Canvas");
-#endif
-
-#if QT_CONFIG(quick_sprite)
-    qmlRegisterType<QQuickSprite>("QtQuick", 2, 0, "Sprite");
-    qmlRegisterType<QQuickAnimatedSprite>("QtQuick", 2, 0, "AnimatedSprite");
-    qmlRegisterType<QQuickSpriteSequence>("QtQuick", 2, 0, "SpriteSequence");
-#endif
-
-    qmlRegisterType<QQuickParentChange>(uri, major, minor,"ParentChange");
-    qmlRegisterType<QQuickAnchorChanges>(uri, major, minor,"AnchorChanges");
-    qmlRegisterAnonymousType<QQuickAnchorSet>(uri, major);
-    qmlRegisterType<QQuickAnchorAnimation>(uri, major, minor,"AnchorAnimation");
-    qmlRegisterType<QQuickParentAnimation>(uri, major, minor,"ParentAnimation");
-#if QT_CONFIG(quick_path)
-    qmlRegisterType<QQuickPathAnimation>("QtQuick",2,0,"PathAnimation");
-    qmlRegisterType<QQuickPathInterpolator>("QtQuick",2,0,"PathInterpolator");
-#endif
-
-#if QT_CONFIG(quick_draganddrop)
-    qmlRegisterType<QQuickDropArea>("QtQuick", 2, 0, "DropArea");
-    qmlRegisterAnonymousType<QQuickDropEvent>(uri, 2);
-    qmlRegisterAnonymousType<QQuickDropAreaDrag>(uri, 2);
-    qmlRegisterUncreatableType<QQuickDrag>("QtQuick", 2, 0, "Drag", QQuickDragAttached::tr("Drag is only available via attached properties"));
-#endif
-
-    qmlRegisterType<QQuickMultiPointTouchArea>("QtQuick", 2, 0, "MultiPointTouchArea");
-    qmlRegisterType<QQuickTouchPoint>("QtQuick", 2, 0, "TouchPoint");
-    qmlRegisterUncreatableType<QQuickGrabGestureEvent>(uri,major,minor, "GestureEvent",
-        QQuickMouseEvent::tr("GestureEvent is only available in the context of handling the gestureStarted signal from MultiPointTouchArea"));
+    // Input Handlers are part of QtQuick, not a separate module, since 5.12
+    qmlRegisterTypesAndRevisions<
+            QQuickDragHandler,
+            QQuickHoverHandler,
+            QQuickPinchHandler,
+            QQuickPointerHandler,
+            QQuickPointHandler,
+            QQuickTapHandler
+    >(uri, major);
 
 #if QT_CONFIG(accessibility)
-    qmlRegisterUncreatableType<QQuickAccessibleAttached>("QtQuick", 2, 0, "Accessible",QQuickAccessibleAttached::tr("Accessible is only available via attached properties"));
-#endif
-
-    qmlRegisterType<QQuickItem, 1>(uri, 2, 1,"Item");
-#if QT_CONFIG(quick_positioners)
-    qmlRegisterType<QQuickGrid, 1>(uri, 2, 1, "Grid");
-#endif
-#if QT_CONFIG(quick_itemview)
-    const char *itemViewName = "ItemView";
-    const QString itemViewMessage = QQuickItemView::tr("ItemView is an abstract base class");
-    qmlRegisterUncreatableType<QQuickItemView, 1>(uri, 2, 1, itemViewName, itemViewMessage);
-    qmlRegisterUncreatableType<QQuickItemView, 3>(uri, 2, 3, itemViewName, itemViewMessage);
-#endif
-#if QT_CONFIG(quick_listview)
-    qmlRegisterType<QQuickListView, 1>(uri, 2, 1, "ListView");
-#endif
-#if QT_CONFIG(quick_gridview)
-    qmlRegisterType<QQuickGridView, 1>(uri, 2, 1, "GridView");
-#endif
-    qmlRegisterType<QQuickTextEdit, 1>(uri, 2, 1, "TextEdit");
-
-    qmlRegisterType<QQuickText, 2>(uri, 2, 2, "Text");
-    qmlRegisterType<QQuickTextEdit, 2>(uri, 2, 2, "TextEdit");
-
-    qmlRegisterType<QQuickText, 3>(uri, 2, 3, "Text");
-    qmlRegisterType<QQuickTextEdit, 3>(uri, 2, 3, "TextEdit");
-    qmlRegisterType<QQuickImage, 3>(uri, 2, 3,"Image");
-
-    qmlRegisterType<QQuickItem, 4>(uri, 2, 4, "Item");
-#if QT_CONFIG(quick_listview)
-    qmlRegisterType<QQuickListView, 4>(uri, 2, 4, "ListView");
-#endif
-    qmlRegisterType<QQuickMouseArea, 4>(uri, 2, 4, "MouseArea");
-#if QT_CONFIG(quick_shadereffect)
-    qmlRegisterType<QQuickShaderEffect, 4>(uri, 2, 4, "ShaderEffect");
+    qmlRegisterTypesAndRevisions<QQuickAccessibleAttached>(uri, major);
 #endif
 
 #if QT_CONFIG(opengl)
-    qmlRegisterUncreatableType<QQuickOpenGLInfo>(uri, 2, 4,"OpenGLInfo", QQuickOpenGLInfo::tr("OpenGLInfo is only available via attached properties"));
-#endif
-    qmlRegisterType<QQuickPinchArea, 5>(uri, 2, 5,"PinchArea");
-    qmlRegisterType<QQuickImage, 5>(uri, 2, 5,"Image");
-    qmlRegisterType<QQuickMouseArea, 5>(uri, 2, 5, "MouseArea");
-
-    qmlRegisterType<QQuickText, 6>(uri, 2, 6, "Text");
-    qmlRegisterType<QQuickTextEdit, 6>(uri, 2, 6, "TextEdit");
-    qmlRegisterType<QQuickTextInput, 6>(uri, 2, 6, "TextInput");
-#if QT_CONFIG(quick_positioners)
-    qmlRegisterUncreatableType<QQuickBasePositioner, 6>(uri, 2, 6, "Positioner",
-                                                  QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
-    qmlRegisterType<QQuickColumn, 6>(uri, 2, 6, "Column");
-    qmlRegisterType<QQuickRow, 6>(uri, 2, 6, "Row");
-    qmlRegisterType<QQuickGrid, 6>(uri, 2, 6, "Grid");
-    qmlRegisterType<QQuickFlow, 6>(uri, 2, 6, "Flow");
-#endif
-    qmlRegisterUncreatableType<QQuickEnterKeyAttached, 6>(uri, 2, 6, "EnterKey",
-                                                           QQuickEnterKeyAttached::tr("EnterKey is only available via attached properties"));
-#if QT_CONFIG(quick_shadereffect)
-    qmlRegisterType<QQuickShaderEffectSource, 6>(uri, 2, 6, "ShaderEffectSource");
-#endif
-
-    qmlRegisterType<QQuickItem, 7>(uri, 2, 7, "Item");
-#if QT_CONFIG(quick_listview)
-    qmlRegisterType<QQuickListView, 7>(uri, 2, 7, "ListView");
-#endif
-#if QT_CONFIG(quick_gridview)
-    qmlRegisterType<QQuickGridView, 7>(uri, 2, 7, "GridView");
-#endif
-    qmlRegisterType<QQuickTextInput, 7>(uri, 2, 7, "TextInput");
-    qmlRegisterType<QQuickTextEdit, 7>(uri, 2, 7, "TextEdit");
-#if QT_CONFIG(quick_pathview)
-    qmlRegisterType<QQuickPathView, 7>(uri, 2, 7, "PathView");
-#endif
-#if QT_CONFIG(quick_itemview)
-    qmlRegisterUncreatableType<QQuickItemView, 7>(uri, 2, 7, itemViewName, itemViewMessage);
-#endif
-
-    qmlRegisterUncreatableType<QQuickMouseEvent, 7>(uri, 2, 7, nullptr, QQuickMouseEvent::tr("MouseEvent is only available within handlers in MouseArea"));
-
-    qmlRegisterUncreatableType<QQuickGraphicsInfo>(uri, 2, 8,"GraphicsInfo", QQuickGraphicsInfo::tr("GraphicsInfo is only available via attached properties"));
-#if QT_CONFIG(quick_shadereffect)
-    qmlRegisterType<QQuickBorderImageMesh>("QtQuick", 2, 8, "BorderImageMesh");
-#endif
-
-    qmlRegisterType<QQuickFlickable, 9>(uri, 2, 9, "Flickable");
-    qmlRegisterType<QQuickMouseArea, 9>(uri, 2, 9, "MouseArea");
-
-#if QT_CONFIG(quick_path)
-    qmlRegisterType<QQuickPathArc, 9>(uri, 2, 9, "PathArc");
-    qmlRegisterType<QQuickPathMove>(uri, 2, 9, "PathMove");
-#endif
-
-    qmlRegisterType<QQuickText, 9>(uri, 2, 9, "Text");
-    qmlRegisterType<QQuickTextInput, 9>(uri, 2, 9, "TextInput");
-    qmlRegisterType<QQuickTouchPoint>(uri, 2, 9, "TouchPoint");
-    qRegisterMetaType<QPointingDeviceUniqueId>("QPointingDeviceUniqueId");
-    qmlRegisterUncreatableType<QPointingDeviceUniqueId>(uri, 2, 9, "PointingDeviceUniqueId", QQuickTouchPoint::tr("PointingDeviceUniqueId is only available via read-only properties"));
-#if QT_CONFIG(quick_positioners)
-    qmlRegisterUncreatableType<QQuickBasePositioner, 9>(uri, 2, 9, "Positioner",
-                                                  QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
-#endif
-
-#if QT_CONFIG(quick_shadereffect)
-    qmlRegisterType<QQuickShaderEffectSource, 9>(uri, 2, 9, "ShaderEffectSource");
-#endif
-
-    qmlRegisterType<QQuickFlickable, 10>(uri, 2, 10, "Flickable");
-    qmlRegisterType<QQuickTextEdit, 10>(uri, 2, 10, "TextEdit");
-    qmlRegisterType<QQuickText, 10>(uri, 2, 10, "Text");
-
-#if QT_CONFIG(quick_path)
-    qmlRegisterType<QQuickPathAngleArc>(uri, 2, 11, "PathAngleArc");
+    qmlRegisterTypesAndRevisions<QQuickOpenGLInfo>(uri, major);
 #endif
 
 #if QT_CONFIG(quick_animatedimage)
-    qmlRegisterType<QQuickAnimatedImage, 11>(uri, 2, 11,"AnimatedImage");
+    qmlRegisterTypesAndRevisions<QQuickAnimatedImage>(uri, major);
+#else
+    qmlRegisterTypeNotAvailable(
+                uri, major, minor, "AnimatedImage",
+                QCoreApplication::translate("QQuickAnimatedImage",
+                                            "Qt was built without support for QMovie"));
 #endif
-    qmlRegisterType<QQuickItem, 11>(uri, 2, 11,"Item");
-    qmlRegisterType<QQuickFlickable, 12>(uri, 2, 12, "Flickable");
 
-    // classes related to Input Handlers which are newly exposed since 5.12
-    qmlRegisterUncreatableType<QQuickPointerEvent>(uri, 2, 12, "PointerEvent",
-        QQuickPointerHandler::tr("PointerEvent is only available as a parameter of several signals in PointerHandler"));
-    qmlRegisterUncreatableType<QQuickPointerMouseEvent>(uri, 2, 12, "PointerMouseEvent",
-        QQuickPointerHandler::tr("PointerMouseEvent is only available as a parameter of several signals in PointerHandler"));
-    qmlRegisterUncreatableType<QQuickPointerTouchEvent>(uri, 2, 12, "PointerTouchEvent",
-        QQuickPointerHandler::tr("PointerTouchEvent is only available as a parameter of several signals in PointerHandler"));
-    qmlRegisterUncreatableType<QQuickEventPoint>(uri, 2, 12, "EventPoint",
-        QQuickPointerHandler::tr("EventPoint is only available as a member of PointerEvent"));
-    qmlRegisterUncreatableType<QQuickEventTouchPoint>(uri, 2, 12, "EventTouchPoint",
-        QQuickPointerHandler::tr("EventTouchPoint is only available as a member of PointerEvent"));
-    qmlRegisterUncreatableType<QQuickPointerDevice>(uri, 2, 12, "PointerDevice",
-        QQuickPointerHandler::tr("PointerDevice is only available as a property of PointerEvent"));
+#if QT_CONFIG(quick_canvas)
+    qmlRegisterTypesAndRevisions<QQuickCanvasItem>(uri, major);
+#endif
 
-    // Input Handlers are part of QtQuick, not a separate module, since 5.12
-    qmlRegisterUncreatableType<QQuickPointerHandler>(uri, 2, 12, "PointerHandler",
-        QQuickPointerHandler::tr("PointerHandler is an abstract base class"));
-    qmlRegisterType<QQuickPointHandler>(uri, 2, 12, "PointHandler");
-    qmlRegisterType<QQuickDragHandler>(uri, 2, 12, "DragHandler");
-    qmlRegisterUncreatableType<QQuickDragAxis>(uri, 2, 12, "DragAxis",
-        QQuickDragHandler::tr("DragAxis is only available as a grouped property of DragHandler"));
-    qmlRegisterType<QQuickHoverHandler>(uri, 2, 12, "HoverHandler");
-    qmlRegisterType<QQuickPinchHandler>(uri, 2, 12, "PinchHandler");
-    qmlRegisterType<QQuickTapHandler>(uri, 2, 12, "TapHandler");
-    qRegisterMetaType<QQuickHandlerPoint>();
+#if QT_CONFIG(quick_draganddrop)
+    qmlRegisterTypesAndRevisions<
+            QQuickDrag,
+            QQuickDropArea,
+            QQuickDropAreaDrag,
+            QQuickDragAttached,
+            QQuickDragAxis
+    >(uri, major);
+#endif
 
-    // The rest of the 5.12 revisions
-    qmlRegisterType<QQuickAnimatedSprite, 12>("QtQuick", 2, 12, "AnimatedSprite");
-    qmlRegisterType<QQuickGradient, 12>(uri, 2, 12, "Gradient");
-    qmlRegisterType<QQuickFlickable, 12>(uri, 2, 12, "Flickable");
-    qmlRegisterType<QQuickText, 12>(uri, 2, 12, "Text");
-#if QT_CONFIG(quick_tableview)
-    qmlRegisterType<QQuickTableView>(uri, 2, 12, "TableView");
+#if QT_CONFIG(quick_flipable)
+    qmlRegisterTypesAndRevisions<QQuickFlipable>(uri, major);
+#endif
+
+#if QT_CONFIG(quick_positioners)
+    qmlRegisterTypesAndRevisions<
+            QQuickBasePositioner,
+            QQuickColumn,
+            QQuickFlow,
+            QQuickGrid,
+            QQuickRow
+    >(uri, major);
+#endif
+
+#if QT_CONFIG(quick_gridview)
+    qmlRegisterTypesAndRevisions<QQuickGridView>(uri, major);
 #endif
 
 #if QT_CONFIG(quick_itemview)
-    qmlRegisterUncreatableType<QQuickItemView, 13>(uri, 2, 13, itemViewName, itemViewMessage);
+    qmlRegisterTypesAndRevisions<QQuickItemView>(uri, major);
 #endif
-#if QT_CONFIG(quick_pathview)
-    qmlRegisterType<QQuickPathView, 13>(uri, 2, 13, "PathView");
-#endif
-#if QT_CONFIG(quick_gridview)
-    qmlRegisterType<QQuickGridView, 13>(uri, 2, 13, "GridView");
-#endif
-#if QT_CONFIG(quick_tableview)
-    qmlRegisterType<QQuickTableView, 14>(uri, 2, 14, "TableView");
-#endif
-#if QT_CONFIG(wheelevent)
-    qmlRegisterType<QQuickWheelHandler>(uri, 2, 14, "WheelHandler");
-#endif
-    qmlRegisterUncreatableType<QQuickImageBase, 14>(uri, 2, 14, "ImageBase",
-        QQuickPointerHandler::tr("ImageBase is an abstract base class"));
-    qmlRegisterType<QQuickImage, 14>(uri, 2, 14, "Image");
-    qmlRegisterType<QQuickDragHandler, 14>(uri, 2, 14, "DragHandler");
 
-    qmlRegisterUncreatableType<QQuickPointerHandler, 15>(uri, 2, 15, "PointerHandler",
-        QQuickPointerHandler::tr("PointerHandler is an abstract base class"));
+#if QT_CONFIG(quick_listview)
+    qmlRegisterTypesAndRevisions<
+            QQuickViewSection,
+            QQuickListView
+    >(uri, major);
+#endif
+
+#if QT_CONFIG(quick_path)
+    qmlRegisterTypesAndRevisions<
+            QQuickCurve,
+            QQuickPath,
+            QQuickPathAngleArc,
+            QQuickPathAnimation,
+            QQuickPathArc,
+            QQuickPathAttribute,
+            QQuickPathCatmullRomCurve,
+            QQuickPathCubic,
+            QQuickPathElement,
+            QQuickPathInterpolator,
+            QQuickPathLine,
+            QQuickPathMove,
+            QQuickPathMultiline,
+            QQuickPathPercent,
+            QQuickPathPolyline,
+            QQuickPathQuad,
+            QQuickPathSvg
+    >(uri, major);
+#endif
+
+#if QT_CONFIG(quick_pathview)
+    qmlRegisterTypesAndRevisions<QQuickPathView>(uri, major);
+#endif
+
+#if QT_CONFIG(quick_repeater)
+    qmlRegisterTypesAndRevisions<QQuickRepeater>(uri, major);
+#endif
+
+#if QT_CONFIG(quick_shadereffect)
+    qmlRegisterTypesAndRevisions<
+            QQuickBorderImageMesh,
+            QQuickGridMesh,
+            QQuickItemLayer,
+            QQuickShaderEffect,
+            QQuickShaderEffectMesh,
+            QQuickShaderEffectSource
+    >(uri, major);
+#endif
+
+#if QT_CONFIG(quick_sprite)
+    qmlRegisterTypesAndRevisions<
+            QQuickAnimatedSprite,
+            QQuickSprite,
+            QQuickSpriteSequence
+    >(uri, major);
+#endif
+
+#if QT_CONFIG(quick_tableview)
+    qmlRegisterTypesAndRevisions<QQuickTableView>(uri, major);
+#endif
+
+#if QT_CONFIG(quick_viewtransitions)
+    qmlRegisterTypesAndRevisions<QQuickViewTransitionAttached>(uri, major);
+#endif
+
+#if QT_CONFIG(wheelevent)
+    qmlRegisterTypesAndRevisions<QQuickWheelHandler>(uri, major);
+#endif
 }
 
 static void initResources()
@@ -512,12 +399,7 @@ QT_BEGIN_NAMESPACE
 void QQuickItemsModule::defineModule()
 {
     initResources();
-
-    QByteArray name = "QtQuick";
-    int majorVersion = 2;
-    int minorVersion = 0;
-
-    qt_quickitems_defineModule(name, majorVersion, minorVersion);
+    qt_quickitems_defineModule();
 }
 
 QT_END_NAMESPACE

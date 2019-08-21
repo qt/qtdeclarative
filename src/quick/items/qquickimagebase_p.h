@@ -71,6 +71,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImageBase : public QQuickImplicitSizeItem
     Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY currentFrameChanged REVISION 14)
     Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged REVISION 14)
 
+    QML_NAMED_ELEMENT(ImageBase);
+    QML_ADDED_IN_MINOR_VERSION(14)
+    QML_UNCREATABLE("ImageBase is an abstract base class.")
+
 public:
     QQuickImageBase(QQuickItem *parent=nullptr);
     ~QQuickImageBase();

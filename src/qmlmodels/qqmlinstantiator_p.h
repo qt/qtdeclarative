@@ -72,6 +72,8 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlInstantiator : public QObject, public QQmlP
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     Q_PROPERTY(QObject *object READ object NOTIFY objectChanged)
     Q_CLASSINFO("DefaultProperty", "delegate")
+    QML_NAMED_ELEMENT(Instantiator)
+    QML_ADDED_IN_MINOR_VERSION(14)
 
 public:
     QQmlInstantiator(QObject *parent = nullptr);

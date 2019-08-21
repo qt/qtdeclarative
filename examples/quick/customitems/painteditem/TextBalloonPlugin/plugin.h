@@ -59,6 +59,6 @@ class TextBalloonPlugin : public QQmlExtensionPlugin
 public:
     void registerTypes(const char *uri)
     {
-        qmlRegisterType<TextBalloon>(uri, 1, 0, "TextBalloon");
+        qmlRegisterTypesAndRevisions<TextBalloon>(uri, 1);
     }
 };

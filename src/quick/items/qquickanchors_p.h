@@ -84,6 +84,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnchors : public QObject
     Q_PROPERTY(QQuickItem *fill READ fill WRITE setFill RESET resetFill NOTIFY fillChanged)
     Q_PROPERTY(QQuickItem *centerIn READ centerIn WRITE setCenterIn RESET resetCenterIn NOTIFY centerInChanged)
     Q_PROPERTY(bool alignWhenCentered READ alignWhenCentered WRITE setAlignWhenCentered NOTIFY centerAlignedChanged)
+    QML_ANONYMOUS
 
 public:
     QQuickAnchors(QQuickItem *item, QObject *parent=nullptr);

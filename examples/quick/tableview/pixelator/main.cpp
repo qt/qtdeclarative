@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
 
     //! [registertype]
-    qmlRegisterType<ImageModel>("ImageModel", 1, 0, "ImageModel");
+    qmlRegisterTypesAndRevisions<ImageModel>("ImageModel", 1);
     //! [registertype]
 
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));

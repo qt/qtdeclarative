@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 {
     QGuiApplication a(argc, argv);
 
-    qmlRegisterType<Graph>("Graph", 1, 0, "Graph");
+    qmlRegisterTypesAndRevisions<Graph>("Graph", 1);
 
     QQuickView view;
     view.resize(800, 400);

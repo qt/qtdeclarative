@@ -47,6 +47,7 @@ QT_BEGIN_NAMESPACE
 void QQmlWorkerScriptModule::registerQuickTypes()
 {
     // Don't add anything here. These are only for backwards compatibility.
+    // Also, don't convert to qmlRegisterTypesAndRevisions as that will add future revisions.
     const char uri[] = "QtQuick";
     qmlRegisterType<QQuickWorkerScript>(uri, 2, 0, "WorkerScript");
 }
@@ -56,7 +57,7 @@ void QQmlWorkerScriptModule::registerQuickTypes()
 void QQmlWorkerScriptModule::defineModule()
 {
     const char uri[] = "QtQml.WorkerScript";
-    qmlRegisterType<QQuickWorkerScript>(uri, 2, 0, "WorkerScript");
+    qmlRegisterTypesAndRevisions<QQuickWorkerScript>(uri, 2);
 }
 
 QT_END_NAMESPACE

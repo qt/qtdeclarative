@@ -137,8 +137,11 @@ Module {
     Component {
         name: "SignalTransition"
         prototype: "QSignalTransition"
-        exports: ["QtQml.StateMachine/SignalTransition 1.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQml.StateMachine/SignalTransition 1.0",
+            "QtQml.StateMachine/SignalTransition 1.1"
+        ]
+        exportMetaObjectRevisions: [0, 1]
         Property { name: "signal"; type: "QJSValue" }
         Property { name: "guard"; type: "QQmlScriptString" }
         Signal { name: "invokeYourself" }
@@ -166,8 +169,11 @@ Module {
     Component {
         name: "TimeoutTransition"
         prototype: "QSignalTransition"
-        exports: ["QtQml.StateMachine/TimeoutTransition 1.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQml.StateMachine/TimeoutTransition 1.0",
+            "QtQml.StateMachine/TimeoutTransition 1.1"
+        ]
+        exportMetaObjectRevisions: [0, 1]
         Property { name: "timeout"; type: "int" }
     }
 }

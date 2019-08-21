@@ -58,6 +58,7 @@ class Spinner : public QQuickItem
     Q_OBJECT
 
     Q_PROPERTY(bool spinning READ spinning WRITE setSpinning NOTIFY spinningChanged)
+    QML_ELEMENT
 
 public:
     Spinner();

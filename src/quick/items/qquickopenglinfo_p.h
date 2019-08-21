@@ -70,6 +70,11 @@ class QQuickOpenGLInfo : public QObject
     Q_PROPERTY(ContextProfile profile READ profile NOTIFY profileChanged FINAL)
     Q_PROPERTY(RenderableType renderableType READ renderableType NOTIFY renderableTypeChanged FINAL)
 
+    QML_NAMED_ELEMENT(OpenGLInfo)
+    QML_UNCREATABLE("OpenGLInfo is only available via attached properties.")
+    QML_ADDED_IN_MINOR_VERSION(4)
+    QML_ATTACHED(QQuickOpenGLInfo)
+
 public:
     QQuickOpenGLInfo(QQuickItem *item = 0);
 
@@ -115,7 +120,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPEINFO(QQuickOpenGLInfo, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKOPENGLINFO_P_H

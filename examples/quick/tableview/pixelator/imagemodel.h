@@ -53,12 +53,14 @@
 
 #include <QAbstractTableModel>
 #include <QImage>
+#include <QtQml/qqml.h>
 
 //! [model]
 class ImageModel : public QAbstractTableModel
 {
     Q_OBJECT
     Q_PROPERTY(QString source READ source WRITE setSource NOTIFY sourceChanged)
+    QML_ELEMENT
 public:
     ImageModel(QObject *parent = nullptr);
 

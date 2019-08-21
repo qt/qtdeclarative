@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
-    qmlRegisterType<FboInSGRenderer>("SceneGraphRendering", 1, 0, "Renderer");
+    qmlRegisterTypesAndRevisions<FboInSGRenderer>("SceneGraphRendering", 1);
 
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);

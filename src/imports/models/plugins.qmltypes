@@ -398,7 +398,7 @@ Module {
         defaultProperty: "delegate"
         prototype: "QQmlInstanceModel"
         exports: ["QtQml.Models/DelegateModel 2.1"]
-        exportMetaObjectRevisions: [0]
+        exportMetaObjectRevisions: [1]
         attachedType: "QQmlDelegateModelAttached"
         Property { name: "model"; type: "QVariant" }
         Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
@@ -434,7 +434,7 @@ Module {
         name: "QQmlDelegateModelGroup"
         prototype: "QObject"
         exports: ["QtQml.Models/DelegateModelGroup 2.1"]
-        exportMetaObjectRevisions: [0]
+        exportMetaObjectRevisions: [1]
         Property { name: "count"; type: "int"; isReadonly: true }
         Property { name: "name"; type: "string" }
         Property { name: "includeByDefault"; type: "bool" }
@@ -487,13 +487,13 @@ Module {
         name: "QQmlListElement"
         prototype: "QObject"
         exports: ["QtQml.Models/ListElement 2.1"]
-        exportMetaObjectRevisions: [0]
+        exportMetaObjectRevisions: [1]
     }
     Component {
         name: "QQmlListModel"
         prototype: "QAbstractListModel"
-        exports: ["QtQml.Models/ListModel 2.1"]
-        exportMetaObjectRevisions: [0]
+        exports: ["QtQml.Models/ListModel 2.1", "QtQml.Models/ListModel 2.14"]
+        exportMetaObjectRevisions: [1, 14]
         Property { name: "count"; type: "int"; isReadonly: true }
         Property { name: "dynamicRoles"; type: "bool" }
         Property { name: "agent"; revision: 14; type: "QObject"; isReadonly: true; isPointer: true }
@@ -590,7 +590,7 @@ Module {
             "QtQml.Models/ObjectModel 2.1",
             "QtQml.Models/ObjectModel 2.3"
         ]
-        exportMetaObjectRevisions: [0, 3]
+        exportMetaObjectRevisions: [1, 3]
         attachedType: "QQmlObjectModelAttached"
         Property { name: "children"; type: "QObject"; isList: true; isReadonly: true }
         Method { name: "clear"; revision: 3 }
@@ -646,7 +646,7 @@ Module {
         defaultProperty: "data"
         prototype: "QObject"
         exports: ["QtQml.Models/Package 2.14"]
-        exportMetaObjectRevisions: [0]
+        exportMetaObjectRevisions: [14]
         attachedType: "QQuickPackageAttached"
         Property { name: "data"; type: "QObject"; isList: true; isReadonly: true }
     }
