@@ -1,7 +1,7 @@
-# Generated from adding.pro.
+# Generated from attached.pro.
 
 cmake_minimum_required(VERSION 3.14)
-project(adding LANGUAGES CXX)
+project(attached LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -12,31 +12,34 @@ set(CMAKE_AUTOUIC ON)
 set(INSTALL_EXAMPLEDIR "examples")
 
 find_package(Qt6 COMPONENTS Core)
+find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(adding
+add_qt_gui_executable(attached
+    birthdayparty.cpp birthdayparty.h
     main.cpp
     person.cpp person.h
 )
-target_link_libraries(adding PUBLIC
+target_link_libraries(attached PUBLIC
     Qt::Core
+    Qt::Gui
     Qt::Qml
 )
 
 # Resources:
-set(adding_resource_files
+set(attached_resource_files
     "example.qml"
 )
 
-QT6_ADD_RESOURCES(adding "adding"
+QT6_ADD_RESOURCES(attached "attached"
     PREFIX
         "/"
     FILES
-        ${adding_resource_files}
+        ${attached_resource_files}
 )
 
 
-install(TARGETS adding
+install(TARGETS attached
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"

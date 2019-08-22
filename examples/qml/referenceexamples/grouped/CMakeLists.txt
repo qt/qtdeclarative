@@ -1,7 +1,7 @@
-# Generated from shell.pro.
+# Generated from grouped.pro.
 
 cmake_minimum_required(VERSION 3.14)
-project(shell LANGUAGES CXX)
+project(grouped LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -12,17 +12,34 @@ set(CMAKE_AUTOUIC ON)
 set(INSTALL_EXAMPLEDIR "examples")
 
 find_package(Qt6 COMPONENTS Core)
+find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(shell
+add_qt_gui_executable(grouped
+    birthdayparty.cpp birthdayparty.h
     main.cpp
+    person.cpp person.h
 )
-target_link_libraries(shell PUBLIC
+target_link_libraries(grouped PUBLIC
     Qt::Core
+    Qt::Gui
     Qt::Qml
 )
 
-install(TARGETS shell
+# Resources:
+set(grouped_resource_files
+    "example.qml"
+)
+
+QT6_ADD_RESOURCES(grouped "grouped"
+    PREFIX
+        "/"
+    FILES
+        ${grouped_resource_files}
+)
+
+
+install(TARGETS grouped
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"

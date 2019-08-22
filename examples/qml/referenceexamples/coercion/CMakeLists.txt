@@ -1,7 +1,7 @@
-# Generated from shell.pro.
+# Generated from coercion.pro.
 
 cmake_minimum_required(VERSION 3.14)
-project(shell LANGUAGES CXX)
+project(coercion LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -14,15 +14,30 @@ set(INSTALL_EXAMPLEDIR "examples")
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(shell
+add_qt_gui_executable(coercion
+    birthdayparty.cpp birthdayparty.h
     main.cpp
+    person.cpp person.h
 )
-target_link_libraries(shell PUBLIC
+target_link_libraries(coercion PUBLIC
     Qt::Core
     Qt::Qml
 )
 
-install(TARGETS shell
+# Resources:
+set(coercion_resource_files
+    "example.qml"
+)
+
+QT6_ADD_RESOURCES(coercion "coercion"
+    PREFIX
+        "/"
+    FILES
+        ${coercion_resource_files}
+)
+
+
+install(TARGETS coercion
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -1,7 +1,7 @@
-# Generated from shell.pro.
+# Generated from qmltest.pro.
 
 cmake_minimum_required(VERSION 3.14)
-project(shell LANGUAGES CXX)
+project(tst_qmltestexample LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -12,17 +12,17 @@ set(CMAKE_AUTOUIC ON)
 set(INSTALL_EXAMPLEDIR "examples")
 
 find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Qml)
+find_package(Qt6 COMPONENTS Gui)
 
-add_qt_gui_executable(shell
-    main.cpp
+add_qt_gui_executable(tst_qmltestexample
+    tst_qmltest.cpp
 )
-target_link_libraries(shell PUBLIC
+target_link_libraries(tst_qmltestexample PUBLIC
     Qt::Core
-    Qt::Qml
+    Qt::Gui
 )
 
-install(TARGETS shell
+install(TARGETS tst_qmltestexample
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
