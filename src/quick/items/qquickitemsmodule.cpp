@@ -480,6 +480,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
 #if QT_CONFIG(quick_itemview)
     qmlRegisterUncreatableType<QQuickItemView, 13>(uri, 2, 13, itemViewName, itemViewMessage);
+#endif
+#if QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickPathView, 13>(uri, 2, 13, "PathView");
 #endif
 #if QT_CONFIG(quick_gridview)
