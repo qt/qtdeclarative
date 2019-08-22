@@ -12,4 +12,5 @@ HEADERS += \
 
 QT = qml-private quick-private
 
+CONFIG += qmltypes install_qmltypes
 load(qml_plugin)

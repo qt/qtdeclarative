@@ -50,3 +50,9 @@ SOURCES += qtquick2.cpp
 INCLUDEPATH += $$PWD
 
 load(qt_module)
+
+QMLTYPES_FILENAME = plugins.qmltypes
+QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/QtQuick.2
+QML_IMPORT_NAME = QtQuick
+IMPORT_VERSION = 2.$$QT_MINOR_VERSION
+CONFIG += qmltypes install_qmltypes install_metatypes

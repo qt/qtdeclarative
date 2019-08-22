@@ -44,23 +44,14 @@
 
 QT_BEGIN_NAMESPACE
 
-class QmlWavefrontMeshPlugin : public QQmlExtensionPlugin
+class QmlWavefrontMeshPlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 public:
     QmlWavefrontMeshPlugin(QObject *parent = nullptr)
-        : QQmlExtensionPlugin(parent)
+        : QQmlEngineExtensionPlugin(parent)
     {
-    }
-
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.wavefrontmesh"));
-        qmlRegisterTypesAndRevisions<QWavefrontMesh>(uri, 1);
-
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.12 onward
-        qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
     }
 };
 

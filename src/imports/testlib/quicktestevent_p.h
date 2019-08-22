@@ -51,7 +51,6 @@
 // We mean it.
 //
 
-#include <QtQuickTest/quicktestglobal.h>
 #include <QtCore/qobject.h>
 #include <QtGui/QWindow>
 #include <QtQml/qqml.h>
@@ -60,7 +59,7 @@
 QT_BEGIN_NAMESPACE
 
 class QuickTestEvent;
-class Q_QUICK_TEST_EXPORT QQuickTouchEventSequence : public QObject
+class QQuickTouchEventSequence : public QObject
 {
     Q_OBJECT
     QML_ANONYMOUS
@@ -79,7 +78,7 @@ private:
     QuickTestEvent * const m_testEvent;
 };
 
-class Q_QUICK_TEST_EXPORT QuickTestEvent : public QObject
+class QuickTestEvent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int defaultMouseDelay READ defaultMouseDelay FINAL)

@@ -96,22 +96,4 @@ void QQmlModelsModule::registerQuickTypes()
 
 #endif // QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 
-void QQmlModelsModule::defineModule()
-{
-    const char uri[] = "QtQml.Models";
-
-#if QT_CONFIG(qml_list_model)
-    qmlRegisterTypesAndRevisions<QQmlListElement, QQmlListModel, QQmlListModelWorkerAgent>(uri, 2);
-#endif
-#if QT_CONFIG(qml_delegate_model)
-    qmlRegisterTypesAndRevisions<QQmlDelegateModel, QQmlDelegateModelGroup, QQuickPackage, QQmlAbstractDelegateComponent>(uri, 2);
-#endif
-#if QT_CONFIG(qml_object_model)
-    qmlRegisterTypesAndRevisions<QQmlObjectModel, QQmlInstantiator, QQmlInstanceModel>(uri, 2);
-#endif
-#if QT_CONFIG(itemmodel)
-    qmlRegisterTypesAndRevisions<QItemSelectionModelForeign>(uri, 2);
-#endif
-}
-
 QT_END_NAMESPACE

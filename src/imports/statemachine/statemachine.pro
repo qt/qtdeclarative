@@ -22,4 +22,6 @@ HEADERS = \
     $$PWD/timeouttransition.h \
     $$PWD/statemachineforeign.h
 
+CONFIG += qmltypes install_qmltypes
+
 load(qml_plugin)

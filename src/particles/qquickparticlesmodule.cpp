@@ -81,48 +81,6 @@ QT_BEGIN_NAMESPACE
 void QQuickParticlesModule::defineModule()
 {
     initResources();
-
-    const char* uri = "QtQuick.Particles";
-
-    qmlRegisterTypesAndRevisions<
-            QQuickParticleSystem,
-            QQuickParticleGroup,
-
-            QQuickImageParticle,
-#if QT_CONFIG(quick_shadereffect)
-            QQuickCustomParticle,
-#endif
-            QQuickItemParticle,
-
-            QQuickParticleEmitter,
-            QQuickTrailEmitter,
-
-            QQuickEllipseExtruder,
-            QQuickRectangleExtruder,
-            QQuickLineExtruder,
-            QQuickMaskExtruder,
-
-            QQuickPointDirection,
-            QQuickAngleDirection,
-            QQuickTargetDirection,
-            QQuickCumulativeDirection,
-
-            QQuickCustomAffector,
-            QQuickWanderAffector,
-            QQuickFrictionAffector,
-            QQuickAttractorAffector,
-            QQuickGravityAffector,
-            QQuickAgeAffector,
-            QQuickSpriteGoalAffector,
-            QQuickGroupGoalAffector,
-            QQuickTurbulenceAffector,
-
-            // Exposed just for completeness
-            QQuickParticleAffector,
-            QQuickParticlePainter,
-            QQuickParticleExtruder,
-            QQuickDirection
-    >(uri, 2);
 }
 
 QT_END_NAMESPACE

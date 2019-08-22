@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQuick module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKUTILMODULE_H
-#define QQUICKUTILMODULE_H
+#ifndef QUICKTESTRESULTFOREIGN_P_H
+#define QUICKTESTRESULTFOREIGN_P_H
 
 //
 //  W A R N I N G
@@ -51,16 +51,18 @@
 // We mean it.
 //
 
-#include <qqml.h>
+#include <QtQuickTest/private/quicktestresult_p.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickUtilModule
+struct QuickTestResultForeign
 {
-public:
-    static void defineModule();
+    Q_GADGET
+    QML_FOREIGN(QuickTestResult)
+    QML_NAMED_ELEMENT(TestResult)
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKUTILMODULE_H
+#endif // QUICKTESTRESULTFOREIGN_P_H

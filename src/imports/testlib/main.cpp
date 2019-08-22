@@ -37,11 +37,13 @@
 **
 ****************************************************************************/
 
+#include "quicktestevent_p.h"
+#include "quicktestutil_p.h"
+
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
+#include <QtQuickTest/quicktest.h>
 #include <QtQuickTest/private/quicktestresult_p.h>
-#include <QtQuickTest/private/quicktestevent_p.h>
-#include <QtQuickTest/private/quicktestutil_p.h>
 #include <QtQuickTest/private/qtestoptions_p.h>
 
 QML_DECLARE_TYPE(QuickTestResult)
@@ -50,22 +52,13 @@ QML_DECLARE_TYPE(QuickTestUtil)
 
 QT_BEGIN_NAMESPACE
 
-class QTestQmlModule : public QQmlExtensionPlugin
+class QTestQmlModule : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 
 public:
-    QTestQmlModule(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtTest"));
-        qmlRegisterTypesAndRevisions<QuickTestResult, QuickTestEvent,
-                                     QuickTestUtil, QQuickTouchEventSequence>(uri, 1);
-
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
-        qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
-    }
+    QTestQmlModule(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) { }
 };
 
 QT_END_NAMESPACE

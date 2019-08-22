@@ -64,4 +64,10 @@ qtConfig(qml-delegate-model) {
         $$PWD/qquickpackage_p.h
 }
 
+QMLTYPES_FILENAME = plugins.qmltypes
+QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/QtQml/Models.2
+QML_IMPORT_NAME = QtQml.Models
+IMPORT_VERSION = 2.$$QT_MINOR_VERSION
+CONFIG += qmltypes install_qmltypes install_metatypes
+
 load(qt_module)

@@ -50,24 +50,13 @@
 
 QT_BEGIN_NAMESPACE
 
-class QtQmlStateMachinePlugin : public QQmlExtensionPlugin
+class QtQmlStateMachinePlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 
 public:
-    QtQmlStateMachinePlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
-    void registerTypes(const char *uri) override
-    {
-        qmlRegisterTypesAndRevisions<
-                State, StateMachine, FinalState, TimeoutTransition, SignalTransition,
-                QHistoryStateForeign, QStateForeign, QAbstractStateForeign, QSignalTransitionForeign
-                >(uri, 1);
-        qmlProtectModule(uri, 1);
-
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
-        qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
-    }
+    QtQmlStateMachinePlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) { }
 };
 
 QT_END_NAMESPACE

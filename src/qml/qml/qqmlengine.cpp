@@ -197,25 +197,6 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
 bool QQmlEnginePrivate::qml_debugging_enabled = false;
 bool QQmlEnginePrivate::s_designerMode = false;
 
-void QQmlEnginePrivate::defineModule()
-{
-    const char uri[] = "QtQml";
-
-    qmlRegisterTypesAndRevisions<
-            QObjectForeign,
-#if QT_CONFIG(qml_animation)
-            QQmlTimer,
-#endif
-#if QT_CONFIG(qml_locale)
-            QQmlLocale,
-#endif
-            QQmlComponent,
-            QQmlBind,
-            QQmlConnections,
-            QQmlLoggingCategory
-    >(uri, 2);
-}
-
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 void QQmlEnginePrivate::registerQuickTypes()
 {

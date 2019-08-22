@@ -54,10 +54,4 @@ void QQmlWorkerScriptModule::registerQuickTypes()
 
 #endif // QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 
-void QQmlWorkerScriptModule::defineModule()
-{
-    const char uri[] = "QtQml.WorkerScript";
-    qmlRegisterTypesAndRevisions<QQuickWorkerScript>(uri, 2);
-}
-
 QT_END_NAMESPACE

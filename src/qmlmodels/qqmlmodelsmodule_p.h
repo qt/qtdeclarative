@@ -68,9 +68,6 @@ public:
     static void registerQmlTypes();
     static void registerQuickTypes();
 #endif
-
-    static void defineModule();
-    static void defineLabsModule();
 };
 
 #if QT_CONFIG(itemmodel)

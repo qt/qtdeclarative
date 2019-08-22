@@ -69,25 +69,12 @@ QT_BEGIN_NAMESPACE
 */
 
 //![class decl]
-class QtQmlLabsModelsPlugin : public QQmlExtensionPlugin
+class QtQmlLabsModelsPlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 public:
-    QtQmlLabsModelsPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.qmlmodels"));
-
-#if QT_CONFIG(qml_delegate_model)
-        qmlRegisterTypesAndRevisions<QQmlDelegateChooser, QQmlDelegateChoice>(uri, 1);
-#endif
-#if QT_CONFIG(qml_table_model)
-        qmlRegisterTypesAndRevisions<QQmlTableModel, QQmlTableModelColumn>(uri, 1);
-#endif
-
-        qmlRegisterModule(uri, 1, 0);
-    }
+    QtQmlLabsModelsPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) { }
 };
 //![class decl]
 

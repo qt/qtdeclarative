@@ -58,28 +58,13 @@ QT_BEGIN_NAMESPACE
     \endqml
 */
 
-
 //![class decl]
-class QtQuick2WindowPlugin : public QQmlExtensionPlugin
+class QtQuick2WindowPlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 public:
-    QtQuick2WindowPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.Window"));
-
-        qmlRegisterTypesAndRevisions<
-                QWindowForeign,
-                QQuickWindowForeign,
-                QQuickWindowQmlImplForeign,
-                QQuickScreenForeign,
-                QQuickScreenInfoForeign>(uri, 2);
-
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
-        qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
-    }
+    QtQuick2WindowPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) { }
 };
 //![class decl]
 

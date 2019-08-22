@@ -66,4 +66,11 @@ include(../3rdparty/masm/masm.pri)
 
 MODULE_PLUGIN_TYPES = \
     qmltooling
+
+QMLTYPES_FILENAME = plugins.qmltypes
+QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/QtQml
+QML_IMPORT_NAME = QtQml
+IMPORT_VERSION = 2.$$QT_MINOR_VERSION
+CONFIG += qmltypes install_qmltypes install_metatypes
+
 load(qt_module)

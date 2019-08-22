@@ -59,21 +59,12 @@ QT_BEGIN_NAMESPACE
     \endqml
 */
 
-class QtQmlWorkerScriptPlugin : public QQmlExtensionPlugin
+class QtQmlWorkerScriptPlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 public:
-    QtQmlWorkerScriptPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQml.WorkerScript"));
-
-        QQmlWorkerScriptModule::defineModule();
-
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
-        qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
-    }
+    QtQmlWorkerScriptPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) { }
 };
 
 QT_END_NAMESPACE
