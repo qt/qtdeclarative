@@ -2117,23 +2117,20 @@ void tst_qquicktextedit::mouseSelection()
         QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, p1, moreThanDoubleClickInterval);
     else if (clicks == 3)
         QTest::mouseDClick(&window, Qt::LeftButton, Qt::NoModifier, p1, moreThanDoubleClickInterval);
+    // cancel the 500ms delta QTestLib adds in order to properly synthesize a triple click within the required interval
+    QTest::lastMouseTimestamp -= QTest::mouseDoubleClickInterval;
     QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, p1);
-    if (clicks == 2) {
-        // QTBUG-50022: Since qtbase commit beef975, QTestLib avoids generating
-        // double click events by adding 500ms delta to release event timestamps.
-        // Send a double click event by hand to ensure the correct sequence:
-        // press, release, press, _dbl click_, move, release.
-        QMouseEvent dblClickEvent(QEvent::MouseButtonDblClick, p1, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-        QGuiApplication::sendEvent(textEditObject, &dblClickEvent);
-    }
     QTest::mouseMove(&window, p2);
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, p2);
     QTRY_COMPARE(textEditObject->selectedText(), selectedText);
 
     // Clicking and shift to clicking between the same points should select the same text.
     textEditObject->setCursorPosition(0);
-    if (clicks > 1)
+    if (clicks > 1) {
         QTest::mouseDClick(&window, Qt::LeftButton, Qt::NoModifier, p1);
+        // cancel the 500ms delta QTestLib adds in order to properly synthesize a triple click within the required interval
+        QTest::lastMouseTimestamp -= QTest::mouseDoubleClickInterval;
+    }
     if (clicks != 2)
         QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, p1);
     QTest::mouseClick(&window, Qt::LeftButton, Qt::ShiftModifier, p2);
