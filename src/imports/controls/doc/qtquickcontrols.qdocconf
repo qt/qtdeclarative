@@ -8,7 +8,7 @@ project                 = QtQuickControls
 description             = Qt Quick Controls Reference Documentation
 version                 = $QT_VERSION
 
-qhp.projects            = QtQuickControls2
+qhp.projects            = QtQuickControls
 
 qhp.QtQuickControls.file          = qtquickcontrols.qhp
 qhp.QtQuickControls.namespace     = org.qt-project.qtquickcontrols.$QT_VERSION_TAG
