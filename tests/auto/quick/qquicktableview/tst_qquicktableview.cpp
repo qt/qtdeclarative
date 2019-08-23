@@ -119,6 +119,7 @@ private slots:
     void checkRowHeightProviderNegativeReturnValue();
     void checkRowHeightProviderNotCallable();
     void checkForceLayoutFunction();
+    void checkForceLayoutEndUpDoingALayout();
     void checkContentWidthAndHeight();
     void checkPageFlicking();
     void checkExplicitContentWidthAndHeight();
@@ -548,6 +549,32 @@ void tst_QQuickTableView::checkForceLayoutFunction()
 
     for (auto fxItem : tableViewPrivate->loadedItems)
         QCOMPARE(fxItem->item->width(), newColumnWidth);
+}
+
+void tst_QQuickTableView::checkForceLayoutEndUpDoingALayout()
+{
+    // QTBUG-77074
+    // Check that we change the implicit size of the delegate after
+    // the initial loading, and at the same time hide some rows or
+    // columns, and then do a forceLayout(), we end up with a
+    // complete relayout that respects the new implicit size.
+    LOAD_TABLEVIEW("tweakimplicitsize.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    const qreal newDelegateSize = 20;
+    view->rootObject()->setProperty("delegateSize", newDelegateSize);
+    // Hide a row, just to force the following relayout to
+    // do a complete reload (and not just a relayout)
+    view->rootObject()->setProperty("hideRow", 1);
+    tableView->forceLayout();
+
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QCOMPARE(fxItem->item->height(), newDelegateSize);
 }
 
 void tst_QQuickTableView::checkContentWidthAndHeight()
