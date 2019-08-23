@@ -1145,6 +1145,10 @@ void tst_qquickimage::multiFrame_data()
 
 void tst_qquickimage::multiFrame()
 {
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
     QFETCH(QString, qmlfile);
     QFETCH(bool, asynchronous);
     Q_UNUSED(asynchronous)
@@ -1166,6 +1170,8 @@ void tst_qquickimage::multiFrame()
     QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QImage contents = view.grabWindow();
+    if (contents.width() < 40)
+        QSKIP("Skipping due to grabWindow not functional");
     // The first frame is a blue ball, approximately qRgba(0x33, 0x6d, 0xcc, 0xff)
     QRgb color = contents.pixel(16, 16);
     QVERIFY(qRed(color) < 0xc0);
