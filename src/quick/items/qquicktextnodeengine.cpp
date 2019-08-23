@@ -781,8 +781,8 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
     for (int i = 0; i < m_backgrounds.size(); ++i) {
         const QRectF &rect = m_backgrounds.at(i).first;
         const QColor &color = m_backgrounds.at(i).second;
-
-        parentNode->addRectangleNode(rect, color);
+        if (color.alpha() != 0)
+            parentNode->addRectangleNode(rect, color);
     }
 
     // Add all text with unselected color first
