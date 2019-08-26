@@ -238,12 +238,13 @@ void QQuickToolTip::setTimeout(int timeout)
     if (d->timeout == timeout)
         return;
 
+    d->timeout = timeout;
+
     if (timeout <= 0)
         d->stopTimeout();
     else if (isVisible())
         d->startTimeout();
 
-    d->timeout = timeout;
     emit timeoutChanged();
 }
 
