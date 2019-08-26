@@ -24,5 +24,9 @@ win32 {
     SUBDIRS += d3d11underqml
 }
 
+qtConfig(vulkan) {
+    SUBDIRS += vulkanunderqml
+}
+
 EXAMPLE_FILES += \
     shared
