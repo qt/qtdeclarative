@@ -279,12 +279,16 @@ QSurface::SurfaceType QSGRhiSupport::windowSurfaceType() const
 }
 
 #if QT_CONFIG(vulkan)
-static const void *qsgrhi_vk_rifResource(QSGRendererInterface::Resource res, const QRhiNativeHandles *nat,
-                                   const QRhiNativeHandles *cbNat)
+static const void *qsgrhi_vk_rifResource(QSGRendererInterface::Resource res,
+                                         const QRhiNativeHandles *nat,
+                                         const QRhiNativeHandles *cbNat,
+                                         const QRhiNativeHandles *rpNat)
 {
     const QRhiVulkanNativeHandles *vknat = static_cast<const QRhiVulkanNativeHandles *>(nat);
     const QRhiVulkanCommandBufferNativeHandles *maybeVkCbNat =
             static_cast<const QRhiVulkanCommandBufferNativeHandles *>(cbNat);
+    const QRhiVulkanRenderPassNativeHandles *maybeVkRpNat =
+            static_cast<const QRhiVulkanRenderPassNativeHandles *>(rpNat);
 
     switch (res) {
     case QSGRendererInterface::DeviceResource:
@@ -298,6 +302,11 @@ static const void *qsgrhi_vk_rifResource(QSGRendererInterface::Resource res, con
             return nullptr;
     case QSGRendererInterface::PhysicalDeviceResource:
         return &vknat->physDev;
+    case QSGRendererInterface::RenderPassResource:
+        if (maybeVkRpNat)
+            return &maybeVkRpNat->renderPass;
+        else
+            return nullptr;
     default:
         return nullptr;
     }
@@ -376,7 +385,10 @@ const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res, const
     case QRhi::Vulkan:
     {
         QRhiCommandBuffer *cb = rc->currentFrameCommandBuffer();
-        return qsgrhi_vk_rifResource(res, nat, cb ? cb->nativeHandles() : nullptr);
+        QRhiRenderPassDescriptor *rp = rc->currentFrameRenderPass();
+        return qsgrhi_vk_rifResource(res, nat,
+                                     cb ? cb->nativeHandles() : nullptr,
+                                     rp ? rp->nativeHandles() : nullptr);
     }
 #endif
 #if QT_CONFIG(opengl)
