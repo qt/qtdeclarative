@@ -63,6 +63,7 @@ private slots:
     void qrcScriptImport();
     void fsScriptImport();
     void moduleScriptImport();
+    void esModulesViaQJSEngine();
 
     void enums();
 
@@ -594,6 +595,15 @@ void tst_qmlcachegen::moduleScriptImport()
 
         QCOMPARE(unitFromResources, compilationUnit->unitData());
     }
+}
+
+void tst_qmlcachegen::esModulesViaQJSEngine()
+{
+    QCOMPARE(QFileInfo(":/data/module.mjs").size(), 0);
+    QJSEngine engine;
+    QJSValue module = engine.importModule(":/data/module.mjs");
+    QJSValue result = module.property("entry").call();
+    QCOMPARE(result.toString(), "ok");
 }
 
 void tst_qmlcachegen::enums()
