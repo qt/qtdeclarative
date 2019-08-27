@@ -49,6 +49,7 @@
 %token T_DIVIDE_EQ "/="         T_DO "do"                   T_DOT "."
 %token T_ELSE "else"            T_EQ "="                    T_EQ_EQ "=="
 %token T_EQ_EQ_EQ "==="         T_FINALLY "finally"         T_FOR "for"
+%token T_FUNCTION_STAR "function *"
 %token T_FUNCTION "function"    T_GE ">="                   T_GT ">"
 %token T_GT_GT ">>"             T_GT_GT_EQ ">>="            T_GT_GT_GT ">>>"
 %token T_GT_GT_GT_EQ ">>>="     T_IDENTIFIER "identifier"   T_IF "if"
@@ -1390,18 +1391,18 @@ UiObjectMember: T_READONLY T_PROPERTY UiPropertyType QmlIdentifier T_COLON Expre
     } break;
 ./
 
-UiObjectMember: FunctionDeclarationWithTypes;
-/.
-    case $rule_number: {
-        sym(1).Node = new (pool) AST::UiSourceElement(sym(1).Node);
-    } break;
-./
-
-UiObjectMember: GeneratorExpression;
+UiObjectMember: GeneratorDeclaration;
 /.
     case $rule_number: {
         auto node = new (pool) AST::UiSourceElement(sym(1).Node);
         sym(1).Node = node;
+    } break;
+./
+
+UiObjectMember: FunctionDeclarationWithTypes;
+/.
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::UiSourceElement(sym(1).Node);
     } break;
 ./
 
@@ -3228,7 +3229,7 @@ ExpressionStatementLookahead: ;
         int token = lookaheadToken(lexer);
         if (token == T_LBRACE)
             pushToken(T_FORCE_BLOCK);
-        else if (token == T_FUNCTION || token == T_CLASS || token == T_LET || token == T_CONST)
+        else if (token == T_FUNCTION || token == T_FUNCTION_STAR || token == T_CLASS || token == T_LET || token == T_CONST)
             pushToken(T_FORCE_DECLARATION);
     } break;
 ./
@@ -3976,27 +3977,45 @@ GeneratorRBrace: T_RBRACE;
     } break;
 ./
 
-GeneratorDeclaration: Function T_STAR BindingIdentifier GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
+FunctionStar: T_FUNCTION_STAR %prec REDUCE_HERE;
+
+GeneratorDeclaration: FunctionStar BindingIdentifier GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
 /.
     case $rule_number: {
-        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(3), sym(5).FormalParameterList, sym(8).StatementList);
+        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(2), sym(4).FormalParameterList, sym(7).StatementList);
         node->functionToken = loc(1);
-        node->identifierToken = loc(3);
-        node->lparenToken = loc(4);
-        node->rparenToken = loc(6);
-        node->lbraceToken = loc(7);
-        node->rbraceToken = loc(9);
+        node->identifierToken = loc(2);
+        node->lparenToken = loc(3);
+        node->rparenToken = loc(5);
+        node->lbraceToken = loc(6);
+        node->rbraceToken = loc(8);
         node->isGenerator = true;
         sym(1).Node = node;
     } break;
 ./
 
 GeneratorDeclaration_Default: GeneratorDeclaration;
-GeneratorDeclaration_Default: Function T_STAR GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
+GeneratorDeclaration_Default: FunctionStar GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
 /.
     case $rule_number: {
-        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(QStringRef(), sym(4).FormalParameterList, sym(7).StatementList);
+        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(QStringRef(), sym(3).FormalParameterList, sym(6).StatementList);
         node->functionToken = loc(1);
+        node->lparenToken = loc(2);
+        node->rparenToken = loc(4);
+        node->lbraceToken = loc(5);
+        node->rbraceToken = loc(7);
+        node->isGenerator = true;
+        sym(1).Node = node;
+    } break;
+./
+
+GeneratorExpression: T_FUNCTION_STAR BindingIdentifier GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
+/.
+    case $rule_number: {
+        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(stringRef(2), sym(4).FormalParameterList, sym(7).StatementList);
+        node->functionToken = loc(1);
+        if (!stringRef(2).isNull())
+          node->identifierToken = loc(2);
         node->lparenToken = loc(3);
         node->rparenToken = loc(5);
         node->lbraceToken = loc(6);
@@ -4006,31 +4025,15 @@ GeneratorDeclaration_Default: Function T_STAR GeneratorLParen FormalParameters T
     } break;
 ./
 
-GeneratorExpression: T_FUNCTION T_STAR BindingIdentifier GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
+GeneratorExpression: T_FUNCTION_STAR GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
 /.
     case $rule_number: {
-        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(stringRef(3), sym(5).FormalParameterList, sym(8).StatementList);
+        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(QStringRef(), sym(3).FormalParameterList, sym(6).StatementList);
         node->functionToken = loc(1);
-        if (!stringRef(3).isNull())
-          node->identifierToken = loc(3);
-        node->lparenToken = loc(4);
-        node->rparenToken = loc(6);
-        node->lbraceToken = loc(7);
-        node->rbraceToken = loc(9);
-        node->isGenerator = true;
-        sym(1).Node = node;
-    } break;
-./
-
-GeneratorExpression: T_FUNCTION T_STAR GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
-/.
-    case $rule_number: {
-        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(QStringRef(), sym(4).FormalParameterList, sym(7).StatementList);
-        node->functionToken = loc(1);
-        node->lparenToken = loc(3);
-        node->rparenToken = loc(5);
-        node->lbraceToken = loc(6);
-        node->rbraceToken = loc(8);
+        node->lparenToken = loc(2);
+        node->rparenToken = loc(4);
+        node->lbraceToken = loc(5);
+        node->rbraceToken = loc(7);
         node->isGenerator = true;
         sym(1).Node = node;
     } break;
@@ -4415,7 +4418,7 @@ ExportDeclarationLookahead: ;
 /.
     case $rule_number: {
         int token = lookaheadToken(lexer);
-        if (token == T_FUNCTION || token == T_CLASS)
+        if (token == T_FUNCTION || token == T_FUNCTION_STAR || token == T_CLASS)
             pushToken(T_FORCE_DECLARATION);
     } break;
 ./
