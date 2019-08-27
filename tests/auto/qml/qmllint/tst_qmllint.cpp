@@ -30,12 +30,14 @@
 #include <QProcess>
 #include <QString>
 
-class TestQmllint: public QObject
+#include <util.h>
+
+class TestQmllint: public QQmlDataTest
 {
     Q_OBJECT
 
 private Q_SLOTS:
-    void initTestCase();
+    void initTestCase() override;
     void test();
     void test_data();
     void testUnqualified();
@@ -48,6 +50,7 @@ private:
 
 void TestQmllint::initTestCase()
 {
+    QQmlDataTest::initTestCase();
     m_qmllintPath = QLibraryInfo::location(QLibraryInfo::BinariesPath) + QLatin1String("/qmllint");
 #ifdef Q_OS_WIN
     m_qmllintPath += QLatin1String(".exe");
@@ -80,9 +83,8 @@ void TestQmllint::testUnqualified()
     QFETCH(QString, warningMessage);
     QFETCH(int, warningLine);
     QFETCH(int, warningColumn);
-    filename.prepend(QStringLiteral("data/"));
     QStringList args;
-    args << QStringLiteral("-U") << filename  << QStringLiteral("-I") << qmlImportDir;
+    args << QStringLiteral("-U") << testFile(filename) << QStringLiteral("-I") << qmlImportDir;
 
     QProcess process;
     process.start(m_qmllintPath, args);
@@ -122,8 +124,7 @@ void TestQmllint::testUnqualifiedNoSpuriousParentWarning()
 {
     auto qmlImportDir = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
     {
-        QString filename = QLatin1String("spuriousParentWarning.qml");
-        filename.prepend(QStringLiteral("data/"));
+        QString filename = testFile("spuriousParentWarning.qml");
         QStringList args;
         args << QStringLiteral("-U") << filename << QStringLiteral("-I") << qmlImportDir;
         QProcess process;
@@ -133,8 +134,7 @@ void TestQmllint::testUnqualifiedNoSpuriousParentWarning()
         QVERIFY(process.exitCode() == 0);
     }
     {
-        QString filename = QLatin1String("nonSpuriousParentWarning.qml");
-        filename.prepend(QStringLiteral("data/"));
+        QString filename = testFile("nonSpuriousParentWarning.qml");
         QStringList args;
         args << QStringLiteral("-U") << filename << QStringLiteral("-I") << qmlImportDir;
         QProcess process;
@@ -163,13 +163,12 @@ void TestQmllint::test()
 {
     QFETCH(QString, filename);
     QFETCH(bool, isValid);
-    filename = QStringLiteral("data/") + filename;
     QStringList args;
-    args << QStringLiteral("--silent") << filename;
+    args << QStringLiteral("--silent") << testFile(filename);
 
     bool success = QProcess::execute(m_qmllintPath, args) == 0;
     QCOMPARE(success, isValid);
 }
 
 QTEST_MAIN(TestQmllint)
-#include "main.moc"
+#include "tst_qmllint.moc"

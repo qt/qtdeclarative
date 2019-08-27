@@ -69,7 +69,7 @@ void QQmlModelsModule::registerQmlTypes()
     // Don't add anything here. These are only for backwards compatibility.
 #if QT_CONFIG(qml_object_model)
     qmlRegisterType<QQmlInstantiator>("QtQml", 2, 1, "Instantiator"); // Only available in >= 2.1
-    qmlRegisterType<QQmlInstanceModel>();
+    qmlRegisterAnonymousType<QQmlInstanceModel>("QtQml", 2);
 #endif
 }
 
@@ -81,7 +81,7 @@ void QQmlModelsModule::registerQuickTypes()
 
 #if QT_CONFIG(qml_object_model)
     qmlRegisterType<QQmlInstantiator>(uri, 2, 1, "Instantiator");
-    qmlRegisterType<QQmlInstanceModel>();
+    qmlRegisterAnonymousType<QQmlInstanceModel>(uri, 2);
     qmlRegisterType<QQmlObjectModel>(uri, 2, 0, "VisualItemModel");
 #endif
 #if QT_CONFIG(qml_list_model)
@@ -114,7 +114,7 @@ void QQmlModelsModule::defineModule()
     qmlRegisterType<QQmlObjectModel>(uri, 2, 1, "ObjectModel");
     qmlRegisterType<QQmlObjectModel,3>(uri, 2, 3, "ObjectModel");
     qmlRegisterType<QQmlInstantiator>(uri, 2, 14, "Instantiator");
-    qmlRegisterType<QQmlInstanceModel>();
+    qmlRegisterAnonymousType<QQmlInstanceModel>(uri, 2);
 #endif
 #if QT_CONFIG(itemmodel)
     qmlRegisterType<QItemSelectionModel>(uri, 2, 2, "ItemSelectionModel");

@@ -83,8 +83,8 @@ class Q_AUTOTEST_EXPORT QQuickScreenInfo : public QObject
     // TODO Qt 6 Remove this orientation -> incomplete device orientation -> better use OrientationSensor
     Q_PROPERTY(Qt::ScreenOrientation orientation READ orientation NOTIFY orientationChanged)
 
-    Q_PROPERTY(int virtualX READ virtualX NOTIFY virtualXChanged REVISION 1)
-    Q_PROPERTY(int virtualY READ virtualY NOTIFY virtualYChanged REVISION 1)
+    Q_PROPERTY(int virtualX READ virtualX NOTIFY virtualXChanged REVISION 3)
+    Q_PROPERTY(int virtualY READ virtualY NOTIFY virtualYChanged REVISION 3)
 
 public:
     QQuickScreenInfo(QObject *parent = nullptr, QScreen *wrappedScreen = nullptr);
@@ -121,8 +121,8 @@ Q_SIGNALS:
     void devicePixelRatioChanged();
     void primaryOrientationChanged();
     void orientationChanged();
-    Q_REVISION(1) void virtualXChanged();
-    Q_REVISION(1) void virtualYChanged();
+    Q_REVISION(3) void virtualXChanged();
+    Q_REVISION(3) void virtualYChanged();
 
 protected:
     QPointer<QScreen> m_screen;

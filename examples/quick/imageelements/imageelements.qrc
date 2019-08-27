@@ -8,6 +8,7 @@
         <file>content/colors-stretch.sci</file>
         <file>content/colors.png</file>
         <file>content/ImageCell.qml</file>
+        <file>content/multi.ico</file>
         <file>content/MyBorderImage.qml</file>
         <file>content/qt-logo.png</file>
         <file>content/shadow.png</file>
@@ -18,6 +19,8 @@
         <file>animatedimage.qml</file>
         <file>animatedsprite.qml</file>
         <file>borderimage.qml</file>
+        <file>framestepping.qml</file>
+        <file>multiframeborderimage.qml</file>
         <file>image.qml</file>
         <file>shadows.qml</file>
         <file>spritesequence.qml</file>

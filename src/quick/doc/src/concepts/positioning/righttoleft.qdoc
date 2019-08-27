@@ -148,7 +148,7 @@ To define the layout direction for a particular locale, declare the dedicated st
 You can do this by first introducing this line
 
 \code
-QT_TRANSLATE_NOOP("QGuiApplication", "QT_LAYOUT_DIRECTION");
+qsTr("QT_LAYOUT_DIRECTION","QGuiApplication");
 \endcode
 
 somewhere in your QML source code and calling \c lupdate to generate the translation source file.

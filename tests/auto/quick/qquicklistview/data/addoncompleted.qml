@@ -73,6 +73,9 @@ Rectangle {
         anchors.fill: parent
         model: listModel
         objectName: "view"
+        // buffered delegates are created asynchronously
+        // therefore we disable buffering
+        cacheBuffer: 0
 
         delegate: Rectangle {
             height: 15

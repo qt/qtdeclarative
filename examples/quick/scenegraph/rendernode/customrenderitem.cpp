@@ -53,16 +53,20 @@
 #include <QSGRendererInterface>
 
 #include "openglrenderer.h"
+#include "metalrenderer.h"
 #include "d3d12renderer.h"
 #include "softwarerenderer.h"
 
+//! [1]
 CustomRenderItem::CustomRenderItem(QQuickItem *parent)
     : QQuickItem(parent)
 {
     // Our item shows something so set the flag.
     setFlag(ItemHasContents);
 }
+//! [1]
 
+//! [2]
 QSGNode *CustomRenderItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
 {
     QSGRenderNode *n = static_cast<QSGRenderNode *>(node);
@@ -71,24 +75,46 @@ QSGNode *CustomRenderItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
         if (!ri)
             return nullptr;
         switch (ri->graphicsApi()) {
-            case QSGRendererInterface::OpenGL:
+        case QSGRendererInterface::OpenGL:
+            Q_FALLTHROUGH();
+        case QSGRendererInterface::OpenGLRhi:
 #if QT_CONFIG(opengl)
-                n = new OpenGLRenderNode(this);
-                break;
+            n = new OpenGLRenderNode(this);
 #endif
-            case QSGRendererInterface::Direct3D12:
-#if QT_CONFIG(d3d12)
-                n = new D3D12RenderNode(this);
-                break;
-#endif
-            case QSGRendererInterface::Software:
-                n = new SoftwareRenderNode(this);
-                break;
+            break;
 
-            default:
-                return nullptr;
+        case QSGRendererInterface::MetalRhi:
+#ifdef Q_OS_DARWIN
+        {
+            MetalRenderNode *metalNode = new MetalRenderNode(this);
+            n = metalNode;
+            metalNode->resourceBuilder()->setWindow(window());
+            QObject::connect(window(), &QQuickWindow::beforeRendering,
+                             metalNode->resourceBuilder(), &MetalRenderNodeResourceBuilder::build);
         }
+#endif
+            break;
+
+        case QSGRendererInterface::Direct3D12: // ### Qt 6: remove
+#if QT_CONFIG(d3d12)
+            n = new D3D12RenderNode(this);
+#endif
+            break;
+
+        case QSGRendererInterface::Software:
+            n = new SoftwareRenderNode(this);
+            break;
+
+        default:
+            break;
+        }
+        if (!n)
+            qWarning("QSGRendererInterface reports unknown graphics API %d", ri->graphicsApi());
     }
 
     return n;
 }
+//! [2]
+
+// This item does not support being moved between windows. If that is desired,
+// itemChange() should be reimplemented as well.

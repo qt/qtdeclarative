@@ -73,6 +73,7 @@ public:
     void loadTranslations(const QUrl &rootFile);
     void finishLoad(QQmlComponent *component);
     QList<QObject *> objects;
+    QVariantMap initialProperties;
 };
 
 QT_END_NAMESPACE

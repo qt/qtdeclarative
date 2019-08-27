@@ -141,6 +141,7 @@ protected:
     QPointF m_systemOffset;
 
     QQuickWindow *m_window;
+    bool m_windowChanged;
 
 private: // methods
     void recalculateGroupIds() const;

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -68,6 +68,8 @@ public:
       : status(QQuickImageBase::Null),
         progress(0.0),
         devicePixelRatio(1.0),
+        currentFrame(0),
+        frameCount(0),
         async(false),
         cache(true),
         mirror(false),
@@ -85,6 +87,8 @@ public:
     QSize oldSourceSize;
     qreal devicePixelRatio;
     QQuickImageProviderOptions providerOptions;
+    int currentFrame;
+    int frameCount;
     bool async : 1;
     bool cache : 1;
     bool mirror: 1;

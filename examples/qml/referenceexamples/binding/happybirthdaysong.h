@@ -61,9 +61,9 @@ class HappyBirthdaySong : public QObject, public QQmlPropertyValueSource
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_INTERFACES(QQmlPropertyValueSource)
 public:
-    HappyBirthdaySong(QObject *parent = 0);
+    HappyBirthdaySong(QObject *parent = nullptr);
 
-    virtual void setTarget(const QQmlProperty &);
+    void setTarget(const QQmlProperty &) override;
 
     QString name() const;
     void setName(const QString &);

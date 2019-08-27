@@ -162,6 +162,8 @@ private slots:
 
     void initialContentHeight();
 
+    void verticallyAlignedImageInTable();
+
 private:
     QStringList standard;
     QStringList richText;
@@ -4413,6 +4415,18 @@ void tst_qquicktext::implicitSizeChangeRewrap()
     QVERIFY(text != nullptr);
 
     QVERIFY(text->contentWidth() < window->width());
+}
+
+void tst_qquicktext::verticallyAlignedImageInTable()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("verticallyAlignedImageInTable.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    // Don't crash
 }
 
 QTEST_MAIN(tst_qquicktext)

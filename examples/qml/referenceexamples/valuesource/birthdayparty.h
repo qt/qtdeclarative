@@ -80,7 +80,7 @@ class BirthdayParty : public QObject
 // ![0]
     Q_CLASSINFO("DefaultProperty", "guests")
 public:
-    BirthdayParty(QObject *parent = 0);
+    BirthdayParty(QObject *parent = nullptr);
 
     Person *host() const;
     void setHost(Person *);

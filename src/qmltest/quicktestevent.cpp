@@ -241,7 +241,8 @@ namespace QtQuickTest
         QTEST_ASSERT(stateKey == 0 || stateKey & Qt::KeyboardModifierMask);
 
         stateKey &= static_cast<unsigned int>(Qt::KeyboardModifierMask);
-        QWheelEvent we(pos, window->mapToGlobal(pos), QPoint(0, 0), QPoint(xDelta, yDelta), 0, Qt::Vertical, buttons, stateKey);
+        QWheelEvent we(pos, window->mapToGlobal(pos), QPoint(0, 0), QPoint(xDelta, yDelta), buttons,
+                       stateKey, Qt::NoScrollPhase, false);
 
         QSpontaneKeyEvent::setSpontaneous(&we); // hmmmm
         if (!qApp->notify(window, &we))

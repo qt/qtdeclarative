@@ -889,4 +889,16 @@ void QQuickImage::setMipmap(bool use)
     By default, this property is set to false.
  */
 
+/*!
+    \qmlproperty int QtQuick::Image::currentFrame
+    \qmlproperty int QtQuick::Image::frameCount
+    \since 5.14
+
+    currentFrame is the frame that is currently visible. The default is \c 0.
+    You can set it to a number between \c 0 and \c {frameCount - 1} to display a
+    different frame, if the image contains multiple frames.
+
+    frameCount is the number of frames in the image. Most images have only one frame.
+*/
+
 QT_END_NAMESPACE

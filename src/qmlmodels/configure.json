@@ -30,7 +30,7 @@
             "label": "QML table model",
             "purpose": "Provides the TableModel QML type.",
             "section": "QML",
-            "condition": "features.qml-itemmodel",
+            "condition": "features.qml-itemmodel && features.qml-delegate-model",
             "output": [ "privateFeature" ]
         }
     },

@@ -69,7 +69,7 @@ class Q_AUTOTEST_EXPORT QQmlConnections : public QObject, public QQmlParserStatu
 
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QObject *target READ target WRITE setTarget NOTIFY targetChanged)
-    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged REVISION 1)
+    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged REVISION 3)
     Q_PROPERTY(bool ignoreUnknownSignals READ ignoreUnknownSignals WRITE setIgnoreUnknownSignals)
 
 public:
@@ -87,7 +87,7 @@ public:
 
 Q_SIGNALS:
     void targetChanged();
-    Q_REVISION(1) void enabledChanged();
+    Q_REVISION(3) void enabledChanged();
 
 private:
     void connectSignals();

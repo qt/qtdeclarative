@@ -143,6 +143,9 @@ public:
     static QQmlComponentPrivate *get(QQmlComponent *c) {
         return static_cast<QQmlComponentPrivate *>(QObjectPrivate::get(c));
     }
+
+    QObject *doBeginCreate(QQmlComponent *q, QQmlContext *context);
+    bool setInitialProperty(QObject *component, const QString &name, const QVariant& value);
 };
 
 QT_END_NAMESPACE
