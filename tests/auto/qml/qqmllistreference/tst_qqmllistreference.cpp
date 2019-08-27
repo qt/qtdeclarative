@@ -87,7 +87,7 @@ public:
 void tst_qqmllistreference::initTestCase()
 {
     QQmlDataTest::initTestCase();
-    qmlRegisterType<TestType>();
+    qmlRegisterAnonymousType<TestType>("Test", 1);
 }
 
 void tst_qqmllistreference::qmllistreference()

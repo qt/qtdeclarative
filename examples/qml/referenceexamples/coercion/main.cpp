@@ -60,7 +60,7 @@ int main(int argc, char ** argv)
 
     qmlRegisterType<BirthdayParty>("People", 1,0, "BirthdayParty");
     //![0]
-    qmlRegisterType<Person>();
+    qmlRegisterAnonymousType<Person>("People", 1);
     //![0]
 
     //![register boy girl]
