@@ -62,6 +62,7 @@ void registerTypes()
     qmlRegisterType<MyRevisionedClass,1>("Test",1,1,"MyRevisionedClass");
     qmlRegisterType<MyRevisionedIllegalOverload>("Test",1,0,"MyRevisionedIllegalOverload");
     qmlRegisterType<MyRevisionedLegalOverload>("Test",1,0,"MyRevisionedLegalOverload");
+    qmlRegisterType<SomethingKnown>("Test",1,0,"SomethingKnown");
 
     // Register the uncreatable base class
     qmlRegisterRevision<MyRevisionedBaseClassRegistered,1>("Test",1,1);

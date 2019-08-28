@@ -711,21 +711,25 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateObjectBinding(QQmlPrope
         // Using -1 for the minor version ensures that we get the raw metaObject.
         QQmlPropertyCache *propertyMetaObject = enginePrivate->rawPropertyCacheForType(property->propType(), -1);
 
-        // Will be true if the assigned type inherits propertyMetaObject
-        bool isAssignable = false;
-        // Determine isAssignable value
         if (propertyMetaObject) {
+            // Will be true if the assigned type inherits propertyMetaObject
+            // Determine isAssignable value
+            bool isAssignable = false;
             QQmlPropertyCache *c = propertyCaches.at(binding->value.objectIndex);
             while (c && !isAssignable) {
                 isAssignable |= c == propertyMetaObject;
                 c = c->parent();
             }
+
+            if (!isAssignable) {
+                return qQmlCompileError(binding->valueLocation, tr("Cannot assign object of type \"%1\" to property of type \"%2\" as the former is neither the same as the latter nor a sub-class of it.")
+                        .arg(stringAt(compilationUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex)).arg(QLatin1String(QMetaType::typeName(property->propType()))));
+            }
+        } else {
+            return qQmlCompileError(binding->valueLocation, tr("Cannot assign to property of unknown type \"%1\".")
+                        .arg(QLatin1String(QMetaType::typeName(property->propType()))));
         }
 
-        if (!isAssignable) {
-            return qQmlCompileError(binding->valueLocation, tr("Cannot assign object of type \"%1\" to property of type \"%2\" as the former is neither the same as the latter nor a sub-class of it.")
-                    .arg(stringAt(compilationUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex)).arg(QLatin1String(QMetaType::typeName(property->propType()))));
-        }
     }
     return noError;
 }
