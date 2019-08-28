@@ -228,10 +228,6 @@ void SquircleRenderer::mainPassRecordingStart()
     const QQuickWindow::GraphicsStateInfo *stateInfo = m_window->graphicsStateInfo();
     QSGRendererInterface *rif = m_window->rendererInterface();
 
-    VkCommandBuffer cb = *reinterpret_cast<VkCommandBuffer *>(
-                rif->getResource(m_window, QSGRendererInterface::CommandListResource));
-    Q_ASSERT(cb);
-
     VkDeviceSize ubufOffset = stateInfo->currentFrameSlot * m_allocPerUbuf;
     void *p = nullptr;
     VkResult err = m_devFuncs->vkMapMemory(m_dev, m_ubufMem, ubufOffset, m_allocPerUbuf, 0, &p);
@@ -242,6 +238,16 @@ void SquircleRenderer::mainPassRecordingStart()
     m_devFuncs->vkUnmapMemory(m_dev, m_ubufMem);
 
     m_window->beginExternalCommands();
+
+    // Must query the command buffer _after_ beginExternalCommands(), this is
+    // actually important when running on Vulkan because what we get here is a
+    // new secondary command buffer, not the primary one.
+    VkCommandBuffer cb = *reinterpret_cast<VkCommandBuffer *>(
+                rif->getResource(m_window, QSGRendererInterface::CommandListResource));
+    Q_ASSERT(cb);
+
+    // Do not assume any state persists on the command buffer. (it may be a
+    // brand new one that just started recording)
 
     m_devFuncs->vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 
@@ -317,6 +323,9 @@ void SquircleRenderer::init(int framesInFlight)
 
     // For simplicity we just use host visible buffers instead of device local + staging.
 
+    VkPhysicalDeviceProperties physDevProps;
+    m_funcs->vkGetPhysicalDeviceProperties(m_physDev, &physDevProps);
+
     VkPhysicalDeviceMemoryProperties physDevMemProps;
     m_funcs->vkGetPhysicalDeviceMemoryProperties(m_physDev, &physDevMemProps);
 
@@ -379,7 +388,7 @@ void SquircleRenderer::init(int framesInFlight)
     // watch out for the buffer offset aligment requirement, which may be as
     // large as 256 bytes.
 
-    m_allocPerUbuf = aligned(UBUF_SIZE, memReq.alignment);
+    m_allocPerUbuf = aligned(UBUF_SIZE, physDevProps.limits.minUniformBufferOffsetAlignment);
 
     bufferInfo.size = framesInFlight * m_allocPerUbuf;
     bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;

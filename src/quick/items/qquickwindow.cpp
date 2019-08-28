@@ -4773,6 +4773,17 @@ const QQuickWindow::GraphicsStateInfo *QQuickWindow::graphicsStateInfo()
     because the scene graph performs the necessary steps implicitly for render
     nodes.
 
+    Native graphics objects (such as, graphics device, command buffer or
+    encoder) are accessible via QSGRendererInterface::getResource().
+
+    \warning Watch out for the fact that
+    QSGRendererInterface::CommandListResource may return a different object
+    between beginExternalCommands() - endExternalCommands(). This can happen
+    when the underlying implementation provides a dedicated secondary command
+    buffer for recording external graphics commands within a render pass.
+    Therefore, always query CommandListResource after calling this function. Do
+    not attempt to reuse an object from an earlier query.
+
     \note This function has no effect when the scene graph is using OpenGL
     directly and the RHI graphics abstraction layer is not in use. Refer to
     resetOpenGLState() in that case.
