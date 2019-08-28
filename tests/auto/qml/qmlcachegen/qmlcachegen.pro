@@ -15,7 +15,9 @@ RESOURCES += \
     data/Enums.qml \
     data/componentInItem.qml \
     data/jsmoduleimport.qml \
-    data/script.mjs
+    data/script.mjs \
+    data/module.mjs \
+    data/utils.mjs
 
 workerscripts_test.files = \
     data/worker.js \
