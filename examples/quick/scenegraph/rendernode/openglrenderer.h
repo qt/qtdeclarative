@@ -52,12 +52,12 @@
 #define OPENGLRENDERER_H
 
 #include <qsgrendernode.h>
+#include <QQuickItem>
 
 #if QT_CONFIG(opengl)
 
 QT_BEGIN_NAMESPACE
 
-class QQuickItem;
 class QOpenGLShaderProgram;
 class QOpenGLBuffer;
 
@@ -67,7 +67,6 @@ QT_END_NAMESPACE
 class OpenGLRenderNode : public QSGRenderNode
 {
 public:
-    OpenGLRenderNode(QQuickItem *item);
     ~OpenGLRenderNode();
 
     void render(const RenderState *state) override;
@@ -77,10 +76,13 @@ public:
     QRectF rect() const override;
 //! [1]
 
+    void sync(QQuickItem *item);
+
 private:
     void init();
 
-    QQuickItem *m_item;
+    int m_width = 0;
+    int m_height = 0;
     QOpenGLShaderProgram *m_program = nullptr;
     int m_matrixUniform;
     int m_opacityUniform;

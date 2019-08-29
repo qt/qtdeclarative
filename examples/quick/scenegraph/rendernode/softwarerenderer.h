@@ -57,7 +57,6 @@
 class SoftwareRenderNode : public QSGRenderNode
 {
 public:
-    SoftwareRenderNode(QQuickItem *item);
     ~SoftwareRenderNode();
 
     void render(const RenderState *state) override;
@@ -66,8 +65,12 @@ public:
     RenderingFlags flags() const override;
     QRectF rect() const override;
 
+    void sync(QQuickItem *item);
+
 private:
-    QQuickItem *m_item;
+    QQuickWindow *m_window = nullptr;
+    int m_width = 0;
+    int m_height = 0;
 };
 
 #endif
