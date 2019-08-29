@@ -283,7 +283,16 @@ void QQuickWidgetPrivate::render(bool needsSync)
 
         Q_ASSERT(context);
 
-        if (!context->makeCurrent(offscreenSurface)) {
+        bool current = context->makeCurrent(offscreenSurface);
+
+        if (!current && !context->isValid()) {
+            renderControl->invalidate();
+            current = context->create() && context->makeCurrent(offscreenSurface);
+            if (current)
+                renderControl->initialize(context);
+        }
+
+        if (!current) {
             qWarning("QQuickWidget: Cannot render due to failing makeCurrent()");
             return;
         }
