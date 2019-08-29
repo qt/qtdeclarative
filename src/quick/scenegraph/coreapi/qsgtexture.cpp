@@ -696,27 +696,6 @@ void QSGTexture::updateBindOptions(bool force) // legacy (GL-only)
 }
 
 /*!
-    \return the QRhiTexture for this QSGTexture or null if there is none.
-
-    Unlike textureId(), this function is not expected to create a new
-    QRhiTexture in case there is none. Just return null in that case. The
-    expectation towards the renderer is that a null texture leads to using a
-    transparent, dummy texture instead.
-
-    \note This function is only used when running the graphics API independent
-    rendering path of the scene graph.
-
-    \warning This function can only be called from the rendering thread.
-
-    \since 5.14
- */
-QRhiTexture *QSGTexture::rhiTexture() const
-{
-    Q_D(const QSGTexture);
-    return d->rhiTexture();
-}
-
-/*!
     Call this function to enqueue image upload operations to \a
     resourceUpdates, in case there are any pending ones. When there is no new
     data (for example, because there was no setImage() since the last call to
@@ -762,6 +741,23 @@ int QSGTexturePrivate::comparisonKey() const
     return q->textureId(); // this is semantically wrong but at least compatible with existing, non-RHI-aware subclasses
 }
 
+/*!
+    \internal
+
+    \return the QRhiTexture for this QSGTexture or null if there is none.
+
+    Unlike textureId(), this function is not expected to create a new
+    QRhiTexture in case there is none. Just return null in that case. The
+    expectation towards the renderer is that a null texture leads to using a
+    transparent, dummy texture instead.
+
+    \note This function is only used when running the graphics API independent
+    rendering path of the scene graph.
+
+    \warning This function can only be called from the rendering thread.
+
+    \since 5.14
+ */
 QRhiTexture *QSGTexturePrivate::rhiTexture() const
 {
     return nullptr;

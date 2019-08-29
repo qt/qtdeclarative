@@ -113,7 +113,6 @@ public:
 
     // ### Qt 6: make these virtual
     int comparisonKey() const;
-    QRhiTexture *rhiTexture() const;
     void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates);
 
     // ### Qt 6: make this an argument for removedFromAtlas()
