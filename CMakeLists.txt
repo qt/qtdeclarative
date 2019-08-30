@@ -7,6 +7,7 @@ project(QtDeclarative
     LANGUAGES CXX C
 )
 
-find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui Widgets Network)
-find_package(Qt6 ${PROJECT_VERSION} CONFIG COMPONENTS Sql)
+find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui Widgets Network
+                                           OPTIONAL_COMPONENTS Sql Concurrent)
+
 qt_build_repo()

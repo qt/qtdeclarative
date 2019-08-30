@@ -61,6 +61,7 @@ qt_process_qlalr("${CMAKE_CURRENT_SOURCE_DIR}/../qml/parser/qqmljs.g" QmlDevTool
 qt_internal_module_info(qml_module "Qml")
 set(_qml_dev_tools_private_includes
         $<BUILD_INTERFACE:${qml_module_include_dir}>
+        $<BUILD_INTERFACE:${qml_module_repo_include_dir}>
         $<BUILD_INTERFACE:${qml_module_include_dir}/${PROJECT_VERSION}>
         $<BUILD_INTERFACE:${qml_module_include_dir}/${PROJECT_VERSION}/${qml_module}>
     )
