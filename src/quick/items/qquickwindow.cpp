@@ -4193,7 +4193,11 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     command buffer, before via QSGRendererInterface. Note however that the
     render pass (or passes) are already recorded at this point and it is not
     possible to add more commands within the scenegraph's pass. Instead, use
-    afterRenderPassRecording() for that.
+    afterRenderPassRecording() for that. This signal has therefore limited use
+    and is rarely needed in an RHI-based setup. Rather, it is the combination
+    of beforeRendering() + beforeRenderPassRecording() or beforeRendering() +
+    afterRenderPassRecording() that is typically used to achieve under- or
+    overlaying of the custom rendering.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
@@ -4229,7 +4233,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     \note Resource updates (uploads, copies) typically cannot be enqueued from
     within a render pass. Therefore, more complex user rendering will need to
-    connect to both the beforeRendering() and this signals.
+    connect to both beforeRendering() and this signal.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
@@ -4260,7 +4264,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     \note Resource updates (uploads, copies) typically cannot be enqueued from
     within a render pass. Therefore, more complex user rendering will need to
-    connect to both the beforeRendering() and this signals.
+    connect to both beforeRendering() and this signal.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that

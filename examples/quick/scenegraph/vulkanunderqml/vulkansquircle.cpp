@@ -186,7 +186,12 @@ void VulkanSquircle::sync()
 {
     if (!m_renderer) {
         m_renderer = new SquircleRenderer;
+        // Initializing resources is done before starting to record the
+        // renderpass, regardless of wanting an underlay or overlay.
         connect(window(), &QQuickWindow::beforeRendering, m_renderer, &SquircleRenderer::frameStart, Qt::DirectConnection);
+        // Here we want an underlay and therefore connect to
+        // beforeRenderPassRecording. Changing to afterRenderPassRecording
+        // would render the squircle on top (overlay).
         connect(window(), &QQuickWindow::beforeRenderPassRecording, m_renderer, &SquircleRenderer::mainPassRecordingStart, Qt::DirectConnection);
     }
     m_renderer->setViewportSize(window()->size() * window()->devicePixelRatio());
