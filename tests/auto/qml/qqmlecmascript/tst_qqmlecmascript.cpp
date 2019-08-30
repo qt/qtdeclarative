@@ -374,6 +374,7 @@ private slots:
     void hugeRegexpQuantifiers();
     void singletonTypeWrapperLookup();
     void getThisObject();
+    void semicolonAfterProperty();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -9104,6 +9105,16 @@ void tst_qqmlecmascript::getThisObject()
     QVERIFY(!test.isNull());
 
     QTRY_COMPARE(qvariant_cast<QObject *>(test->property("self")), test.data());
+}
+
+// QTBUG-77954
+void tst_qqmlecmascript::semicolonAfterProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("semicolonAfterProperty.qml"));
+    QVERIFY(component.isReady());
+    QScopedPointer<QObject> test(component.create());
+    QVERIFY(!test.isNull());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
