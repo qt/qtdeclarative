@@ -126,6 +126,8 @@ public:
 
     QImage grabAndBlockInCurrentFrame(QRhi *rhi, QRhiSwapChain *swapchain);
 
+    static void checkEnvQSgInfo();
+
 private:
     QSGRhiSupport();
     void applySettings();
