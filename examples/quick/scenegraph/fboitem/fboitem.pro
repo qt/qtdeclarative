@@ -7,9 +7,9 @@ INCLUDEPATH += ../shared
 HEADERS += ../shared/logorenderer.h
 SOURCES += ../shared/logorenderer.cpp
 
-RESOURCES += textureinsgnode.qrc
+RESOURCES += fboitem.qrc
 
-target.path = $$[QT_INSTALL_EXAMPLES]/quick/scenegraph/textureinsgnode
+target.path = $$[QT_INSTALL_EXAMPLES]/quick/scenegraph/fboitem
 INSTALLS += target
 
 OTHER_FILES += \

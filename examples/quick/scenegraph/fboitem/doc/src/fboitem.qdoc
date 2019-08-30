@@ -26,11 +26,11 @@
 ****************************************************************************/
 
 /*!
-    \example scenegraph/textureinsgnode
+    \example scenegraph/fboitem
     \title Scene Graph - Rendering FBOs
     \ingroup qtquickexamples
 
     \brief Shows how to use FramebufferObjects with Qt Quick.
 
-    \image textureinsgnode-example.jpg
+    \image fboitem-example.jpg
  */
