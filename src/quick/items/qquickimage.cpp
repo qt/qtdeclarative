@@ -687,7 +687,6 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         yOffset = qCeil(height() - pixHeight);
 
     switch (d->fillMode) {
-    default:
     case Stretch:
         targetRect = QRectF(0, 0, width(), height());
         sourceRect = d->pix.rect();
@@ -699,7 +698,7 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         break;
 
     case PreserveAspectCrop: {
-        targetRect = QRect(0, 0, width(), height());
+        targetRect = QRectF(0, 0, width(), height());
         qreal wscale = width() / qreal(d->pix.width());
         qreal hscale = height() / qreal(d->pix.height());
 
@@ -751,7 +750,7 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         targetRect = QRectF(x + xOffset, y + yOffset, w, h);
         sourceRect = QRectF(x, y, w, h);
         break;
-    };
+    }
 
     qreal nsWidth = (hWrap == QSGTexture::Repeat || d->fillMode == Pad) ? d->pix.width() / d->devicePixelRatio : d->pix.width();
     qreal nsHeight = (vWrap == QSGTexture::Repeat || d->fillMode == Pad) ? d->pix.height() / d->devicePixelRatio : d->pix.height();

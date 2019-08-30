@@ -11,9 +11,10 @@ qtConfig(qml-worker-script): \
     SUBDIRS += qmlworkerscript
 
 qtHaveModule(gui):qtConfig(qml-animation) {
-    SUBDIRS += \
-        quick \
-        quickshapes
+    SUBDIRS += quick
+
+    qtConfig(quick-path): \
+        SUBDIRS += quickshapes
 
     qtConfig(testlib): \
         SUBDIRS += qmltest

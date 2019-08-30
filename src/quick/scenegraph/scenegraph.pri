@@ -53,6 +53,7 @@ HEADERS += \
     $$PWD/util/qsgengine.h \
     $$PWD/util/qsgengine_p.h \
     $$PWD/util/qsgplaintexture_p.h \
+    $$PWD/util/qsgrhinativetextureimporter_p.h \
     $$PWD/util/qsgsimplerectnode.h \
     $$PWD/util/qsgsimpletexturenode.h \
     $$PWD/util/qsgtextureprovider.h \
@@ -69,6 +70,7 @@ SOURCES += \
     $$PWD/util/qsgareaallocator.cpp \
     $$PWD/util/qsgengine.cpp \
     $$PWD/util/qsgplaintexture.cpp \
+    $$PWD/util/qsgrhinativetextureimporter.cpp \
     $$PWD/util/qsgsimplerectnode.cpp \
     $$PWD/util/qsgsimpletexturenode.cpp \
     $$PWD/util/qsgtextureprovider.cpp \

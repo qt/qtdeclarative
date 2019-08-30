@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -37,54 +37,68 @@
 **
 ****************************************************************************/
 
-#ifndef QSGENGINE_H
-#define QSGENGINE_H
-
-#include <QtCore/QObject>
-#include <QtQuick/qtquickglobal.h>
+#include "qsgrhinativetextureimporter_p.h"
+#include <private/qsgrhisupport_p.h> // to get all the relevant qrhi headers
 
 QT_BEGIN_NAMESPACE
 
-class QOpenGLContext;
-class QSGAbstractRenderer;
-class QSGEnginePrivate;
-class QSGTexture;
-class QSGRendererInterface;
-class QSGRectangleNode;
-class QSGImageNode;
-class QSGNinePatchNode;
-
-// ### Qt 6: Remove or redesign.
-
-class Q_QUICK_EXPORT QSGEngine : public QObject
+void QSGRhiNativeTextureImporter::buildWrapper(QRhi *rhi, QRhiTexture *t,
+                                               const void *nativeObjectPtr, int nativeLayout)
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QSGEngine)
-public:
-    enum CreateTextureOption {
-        TextureHasAlphaChannel  = 0x0001,
-        TextureOwnsGLTexture    = 0x0004,
-        TextureCanUseAtlas      = 0x0008,
-        TextureIsOpaque         = 0x0010
-    };
-    Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
-    Q_FLAG(CreateTextureOptions)
+#if !QT_CONFIG(vulkan)
+    Q_UNUSED(nativeLayout);
+#endif
+#if !QT_CONFIG(opengl) && !QT_CONFIG(vulkan) && !defined(Q_OS_WIN) && !defined(Q_OS_DARWIN)
+    Q_UNUSED(nativeObjectPtr);
+#endif
 
-    explicit QSGEngine(QObject *parent = nullptr);
-    ~QSGEngine() override;
-
-    void initialize(QOpenGLContext *context);
-    void invalidate();
-
-    QSGAbstractRenderer *createRenderer() const;
-    QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options = CreateTextureOption()) const;
-    QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption()) const;
-    QSGRendererInterface *rendererInterface() const;
-    QSGRectangleNode *createRectangleNode() const;
-    QSGImageNode *createImageNode() const;
-    QSGNinePatchNode *createNinePatchNode() const;
-};
+    switch (rhi->backend()) {
+    case QRhi::OpenGLES2:
+    {
+#if QT_CONFIG(opengl)
+        QRhiGles2TextureNativeHandles h;
+        h.texture = *reinterpret_cast<const uint *>(nativeObjectPtr);
+        t->buildFrom(&h);
+#endif
+    }
+        break;
+    case QRhi::Vulkan:
+    {
+#if QT_CONFIG(vulkan)
+        QRhiVulkanTextureNativeHandles h;
+        h.image = *reinterpret_cast<const VkImage *>(nativeObjectPtr);
+        h.layout = VkImageLayout(nativeLayout);
+        t->buildFrom(&h);
+#endif
+    }
+        break;
+    case QRhi::D3D11:
+    {
+#ifdef Q_OS_WIN
+        QRhiD3D11TextureNativeHandles h;
+        h.texture = *reinterpret_cast<void * const *>(nativeObjectPtr);
+        t->buildFrom(&h);
+#endif
+    }
+        break;
+    case QRhi::Metal:
+    {
+#ifdef Q_OS_DARWIN
+        QRhiMetalTextureNativeHandles h;
+        h.texture = *reinterpret_cast<void * const *>(nativeObjectPtr);
+        t->buildFrom(&h);
+#endif
+    }
+        break;
+    case QRhi::Null:
+        t->build();
+        break;
+    default:
+        qWarning("QSGRhiNativeTextureImporter: encountered an unsupported QRhi backend (%d)",
+                 int(rhi->backend()));
+        t->build();
+        break;
+    }
+}
 
 QT_END_NAMESPACE
-
-#endif // QSGENGINE_H

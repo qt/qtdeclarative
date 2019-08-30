@@ -214,9 +214,7 @@ QSGRenderLoop *QSGRenderLoop::instance()
 {
     if (!s_instance) {
 
-        // For compatibility with 5.3 and earlier's QSG_INFO environment variables
-        if (qEnvironmentVariableIsSet("QSG_INFO"))
-            const_cast<QLoggingCategory &>(QSG_LOG_INFO()).setEnabled(QtDebugMsg, true);
+        QSGRhiSupport::checkEnvQSgInfo();
 
         s_instance = QSGContext::createWindowManager();
 #ifdef ENABLE_DEFAULT_BACKEND
