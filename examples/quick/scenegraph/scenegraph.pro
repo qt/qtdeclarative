@@ -17,7 +17,9 @@ SUBDIRS += \
         threadedanimation
 
 macos {
-    SUBDIRS += metalunderqml
+    SUBDIRS += \
+        metalunderqml \
+        metaltextureimport
 }
 
 win32 {
