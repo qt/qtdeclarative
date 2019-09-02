@@ -216,15 +216,19 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     memoryManager = new QV4::MemoryManager(this);
 
     if (maxCallDepth == -1) {
-        ok = false;
-        maxCallDepth = qEnvironmentVariableIntValue("QV4_MAX_CALL_DEPTH", &ok);
-        if (!ok || maxCallDepth <= 0) {
+        if (qEnvironmentVariableIsSet("QV4_CRASH_ON_STACKOVERFLOW")) {
+            maxCallDepth = std::numeric_limits<qint32>::max();
+        } else {
+            ok = false;
+            maxCallDepth = qEnvironmentVariableIntValue("QV4_MAX_CALL_DEPTH", &ok);
+            if (!ok || maxCallDepth <= 0) {
 #if defined(QT_NO_DEBUG) && !defined(__SANITIZE_ADDRESS__) && !QT_HAS_FEATURE(address_sanitizer)
-            maxCallDepth = 1234;
+                maxCallDepth = 1234;
 #else
-            // no (tail call) optimization is done, so there'll be a lot mare stack frames active
-            maxCallDepth = 200;
+                // no (tail call) optimization is done, so there'll be a lot mare stack frames active
+                maxCallDepth = 200;
 #endif
+            }
         }
     }
     Q_ASSERT(maxCallDepth > 0);
