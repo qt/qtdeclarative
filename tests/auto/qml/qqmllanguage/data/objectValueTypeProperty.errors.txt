@@ -1,1 +1,1 @@
-4:18:Unexpected object assignment for property "x"
+4:18:Can not assign value of type "MyTypeObject" to property "x", expecting "int"

@@ -191,21 +191,17 @@ QQmlEngineDebugServiceImpl::propertyData(QObject *obj, int propIdx)
     if (binding)
         rv.binding = binding->expression();
 
-    if (QQmlValueTypeFactory::isValueType(prop.userType())) {
-        rv.type = QQmlObjectProperty::Basic;
-    } else if (QQmlMetaType::isQObject(prop.userType()))  {
+    rv.value = valueContents(prop.read(obj));
+
+    if (QQmlMetaType::isQObject(prop.userType()))  {
         rv.type = QQmlObjectProperty::Object;
     } else if (QQmlMetaType::isList(prop.userType())) {
         rv.type = QQmlObjectProperty::List;
     } else if (prop.userType() == QMetaType::QVariant) {
         rv.type = QQmlObjectProperty::Variant;
+    } else if (rv.value.isValid()) {
+        rv.type = QQmlObjectProperty::Basic;
     }
-
-    QVariant value;
-    if (rv.type != QQmlObjectProperty::Unknown && prop.userType() != 0) {
-        value = prop.read(obj);
-    }
-    rv.value = valueContents(value);
 
     return rv;
 }
@@ -271,10 +267,10 @@ QVariant QQmlEngineDebugServiceImpl::valueContents(QVariant value) const
                         return s;
                 }
             }
-
-            if (isSaveable(value))
-                return value;
         }
+
+        if (isSaveable(value))
+            return value;
     }
 
     if (QQmlMetaType::isQObject(userType)) {
