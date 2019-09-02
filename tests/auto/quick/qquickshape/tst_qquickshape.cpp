@@ -43,6 +43,28 @@
 using namespace QQuickViewTestUtil;
 using namespace QQuickVisualTestUtil;
 
+class PolygonProvider : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QVector<QPolygonF> paths READ paths WRITE setPaths NOTIFY pathsChanged)
+
+public:
+    QVector<QPolygonF> paths() const { return m_paths; }
+    void setPaths(QVector<QPolygonF> paths)
+    {
+        if (m_paths == paths)
+            return;
+        m_paths = paths;
+        emit pathsChanged();
+    }
+
+signals:
+    void pathsChanged();
+
+private:
+    QVector<QPolygonF> m_paths;
+};
+
 class tst_QQuickShape : public QQmlDataTest
 {
     Q_OBJECT
@@ -64,6 +86,7 @@ private slots:
     void polylineDataTypes();
     void multilineDataTypes_data();
     void multilineDataTypes();
+    void multilineStronglyTyped();
 
 private:
     QVector<QPolygonF> m_lowPolyLogo;
@@ -82,6 +105,7 @@ tst_QQuickShape::tst_QQuickShape()
     qmlRegisterType<QQuickShapeRadialGradient>(uri, 1, 0, "RadialGradient");
     qmlRegisterType<QQuickShapeConicalGradient>(uri, 1, 0, "ConicalGradient");
     qmlRegisterType<QQuickPathPolyline>(uri, 1, 0, "PathPolyline");
+    qmlRegisterType<PolygonProvider>("Qt.test", 1, 0, "PolygonProvider");
 
     m_lowPolyLogo << (QPolygonF() <<
                       QPointF(20, 0) <<
@@ -616,6 +640,54 @@ void tst_QQuickShape::multilineDataTypes()
         QTest::qWait(5000);
         const QString &tempLocation = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
         actualImg.save(tempLocation + QLatin1String("/multiline.png"));
+    }
+    QVERIFY2(res, qPrintable(errorMessage));
+
+    QVector<QVector<QPointF>> pointVectors;
+    for (auto v : m_lowPolyLogo)
+        pointVectors << v;
+    QCOMPARE(shape->property("paths").value<QVector<QVector<QPointF>>>(), pointVectors);
+    // Verify that QML sees it as an array of arrays of points
+    int i = 0;
+    for (auto pv : m_lowPolyLogo) {
+        int j = 0;
+        for (QPointF p : pv) {
+            QMetaObject::invokeMethod(shape, "checkVertexAt", Q_ARG(QVariant, QVariant::fromValue<int>(i)), Q_ARG(QVariant, QVariant::fromValue<int>(j++)));
+            QCOMPARE(shape->property("vertexBeingChecked").toPointF(), p);
+        }
+        ++i;
+    }
+}
+
+void tst_QQuickShape::multilineStronglyTyped()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("multilineStronglyTyped.qml"));
+    QQuickShape *shape = qobject_cast<QQuickShape *>(window->rootObject());
+    QVERIFY(shape);
+    PolygonProvider *provider = shape->findChild<PolygonProvider*>("provider");
+    QVERIFY(provider);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    provider->setPaths(m_lowPolyLogo);
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+            || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QEXPECT_FAIL("", "Failure due to grabWindow not functional on offscreen/minimimal platforms", Abort);
+
+    QImage img = window->grabWindow();
+    QVERIFY(!img.isNull());
+
+    QImage refImg(testFileUrl("multiline.png").toLocalFile());
+    QVERIFY(!refImg.isNull());
+
+    QString errorMessage;
+    const QImage actualImg = img.convertToFormat(refImg.format());
+    const bool res = QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage);
+    if (!res) { // For visual inspection purposes.
+        QTest::qWait(5000);
+        const QString &tempLocation = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+        actualImg.save(tempLocation + QLatin1String("/multilineStronglyTyped.png"));
     }
     QVERIFY2(res, qPrintable(errorMessage));
 

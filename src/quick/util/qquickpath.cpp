@@ -2566,14 +2566,20 @@ void QQuickPathMultiline::setPaths(const QVariant &paths)
         QVector<QVector<QPointF>> pathsList;
         QVariantList vll = paths.value<QVariantList>();
         for (const QVariant &v : vll) {
-            QVariantList vl = v.value<QVariantList>();
-            QVector<QPointF> l;
-            for (const QVariant &point : vl) {
-                if (point.canConvert<QPointF>())
-                    l.append(point.toPointF());
+            // If we bind a QVector<QPolygonF> property directly, rather than via QVariant,
+            // it will come through as QJSValue that can be converted to QVariantList of QPolygonF.
+            if (v.canConvert<QPolygonF>()) {
+                pathsList.append(v.value<QPolygonF>());
+            } else {
+                QVariantList vl = v.value<QVariantList>();
+                QVector<QPointF> l;
+                for (const QVariant &point : vl) {
+                    if (point.canConvert<QPointF>())
+                        l.append(point.toPointF());
+                }
+                if (l.size() >= 2)
+                    pathsList.append(l);
             }
-            if (l.size() >= 2)
-                pathsList.append(l);
         }
         setPaths(pathsList);
     } else {
