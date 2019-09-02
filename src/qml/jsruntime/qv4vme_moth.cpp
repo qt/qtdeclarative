@@ -1247,7 +1247,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         double base = left.toNumber();
         double exp = ACC.toNumber();
         if (qIsInf(exp) && (base == 1 || base == -1))
-            acc = Encode(qSNaN());
+            acc = Encode(qQNaN());
         else
             acc = Encode(pow(base,exp));
     MOTH_END_INSTR(Exp)
