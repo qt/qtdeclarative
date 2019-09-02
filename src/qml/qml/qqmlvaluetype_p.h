@@ -66,6 +66,7 @@ QT_BEGIN_NAMESPACE
 class Q_QML_PRIVATE_EXPORT QQmlValueType : public QObject, public QAbstractDynamicMetaObject
 {
 public:
+    QQmlValueType();
     QQmlValueType(int userType, const QMetaObject *metaObject);
     ~QQmlValueType() override;
     void read(QObject *, int);
@@ -90,7 +91,7 @@ public:
 class Q_QML_PRIVATE_EXPORT QQmlValueTypeFactory
 {
 public:
-    static bool isValueType(int);
+    static bool isValueType(int idx);
     static QQmlValueType *valueType(int idx);
     static const QMetaObject *metaObjectForMetaType(int type);
 
