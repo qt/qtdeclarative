@@ -96,29 +96,29 @@ using namespace QV4;
 
 void Heap::QQmlValueTypeWrapper::destroy()
 {
-    if (gadgetPtr) {
-        valueType->metaType.destruct(gadgetPtr);
-        ::operator delete(gadgetPtr);
+    if (m_gadgetPtr) {
+        m_valueType->metaType.destruct(m_gadgetPtr);
+        ::operator delete(m_gadgetPtr);
     }
-    if (_propertyCache)
-        _propertyCache->release();
+    if (m_propertyCache)
+        m_propertyCache->release();
     Object::destroy();
 }
 
 void Heap::QQmlValueTypeWrapper::setValue(const QVariant &value) const
 {
-    Q_ASSERT(valueType->metaType.id() == value.userType());
-    if (gadgetPtr)
-        valueType->metaType.destruct(gadgetPtr);
-    if (!gadgetPtr)
-        gadgetPtr = ::operator new(valueType->metaType.sizeOf());
-    valueType->metaType.construct(gadgetPtr, value.constData());
+    Q_ASSERT(valueType()->metaType.id() == value.userType());
+    if (auto *gadget = gadgetPtr())
+        valueType()->metaType.destruct(gadget);
+    if (!gadgetPtr())
+        setGadgetPtr(::operator new(valueType()->metaType.sizeOf()));
+    valueType()->metaType.construct(gadgetPtr(), value.constData());
 }
 
 QVariant Heap::QQmlValueTypeWrapper::toVariant() const
 {
-    Q_ASSERT(gadgetPtr);
-    return QVariant(valueType->metaType.id(), gadgetPtr);
+    Q_ASSERT(gadgetPtr());
+    return QVariant(valueType()->metaType.id(), gadgetPtr());
 }
 
 
@@ -146,13 +146,13 @@ bool QQmlValueTypeReference::readReferenceValue() const
                 QQmlPropertyCache *cache = nullptr;
                 if (const QMetaObject *mo = QQmlValueTypeFactory::metaObjectForMetaType(variantReferenceType))
                     cache = QJSEnginePrivate::get(engine())->cache(mo);
-                if (d()->gadgetPtr) {
-                    d()->valueType->metaType.destruct(d()->gadgetPtr);
-                    ::operator delete(d()->gadgetPtr);
+                if (d()->gadgetPtr()) {
+                    d()->valueType()->metaType.destruct(d()->gadgetPtr());
+                    ::operator delete(d()->gadgetPtr());
                 }
-                d()->gadgetPtr =nullptr;
+                d()->setGadgetPtr(nullptr);
                 d()->setPropertyCache(cache);
-                d()->valueType = QQmlValueTypeFactory::valueType(variantReferenceType);
+                d()->setValueType(QQmlValueTypeFactory::valueType(variantReferenceType));
                 if (!cache)
                     return false;
             } else {
@@ -161,12 +161,12 @@ bool QQmlValueTypeReference::readReferenceValue() const
         }
         d()->setValue(variantReferenceValue);
     } else {
-        if (!d()->gadgetPtr) {
-            d()->gadgetPtr = ::operator new(d()->valueType->metaType.sizeOf());
-            d()->valueType->metaType.construct(d()->gadgetPtr, nullptr);
+        if (!d()->gadgetPtr()) {
+            d()->setGadgetPtr(::operator new(d()->valueType()->metaType.sizeOf()));
+            d()->valueType()->metaType.construct(d()->gadgetPtr(), nullptr);
         }
         // value-type reference
-        void *args[] = { d()->gadgetPtr, nullptr };
+        void *args[] = { d()->gadgetPtr(), nullptr };
         QMetaObject::metacall(d()->object, QMetaObject::ReadProperty, d()->property, args);
     }
     return true;
@@ -192,8 +192,8 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, QObject *obj
     r->d()->object = object;
     r->d()->property = property;
     r->d()->setPropertyCache(QJSEnginePrivate::get(engine)->cache(metaObject));
-    r->d()->valueType = QQmlValueTypeFactory::valueType(typeId);
-    r->d()->gadgetPtr = nullptr;
+    r->d()->setValueType(QQmlValueTypeFactory::valueType(typeId));
+    r->d()->setGadgetPtr(nullptr);
     return r->asReturnedValue();
 }
 
@@ -204,8 +204,8 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, const QVaria
 
     Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->allocate<QQmlValueTypeWrapper>());
     r->d()->setPropertyCache(QJSEnginePrivate::get(engine)->cache(metaObject));
-    r->d()->valueType = QQmlValueTypeFactory::valueType(typeId);
-    r->d()->gadgetPtr = nullptr;
+    r->d()->setValueType(QQmlValueTypeFactory::valueType(typeId));
+    r->d()->setGadgetPtr(nullptr);
     r->d()->setValue(value);
     return r->asReturnedValue();
 }
@@ -223,9 +223,9 @@ bool QQmlValueTypeWrapper::toGadget(void *data) const
     if (const QQmlValueTypeReference *ref = as<const QQmlValueTypeReference>())
         if (!ref->readReferenceValue())
             return false;
-    const int typeId = d()->valueType->metaType.id();
+    const int typeId = d()->valueType()->metaType.id();
     QMetaType::destruct(typeId, data);
-    QMetaType::construct(typeId, data, d()->gadgetPtr);
+    QMetaType::construct(typeId, data, d()->gadgetPtr());
     return true;
 }
 
@@ -307,7 +307,7 @@ bool QQmlValueTypeWrapper::isEqual(const QVariant& value) const
 
 int QQmlValueTypeWrapper::typeId() const
 {
-    return d()->valueType->metaType.id();
+    return d()->valueType()->metaType.id();
 }
 
 bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
@@ -315,10 +315,10 @@ bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
     bool destructGadgetOnExit = false;
     Q_ALLOCA_DECLARE(void, gadget);
     if (const QQmlValueTypeReference *ref = as<const QQmlValueTypeReference>()) {
-        if (!d()->gadgetPtr) {
-            Q_ALLOCA_ASSIGN(void, gadget, d()->valueType->metaType.sizeOf());
-            d()->gadgetPtr = gadget;
-            d()->valueType->metaType.construct(d()->gadgetPtr, nullptr);
+        if (!d()->gadgetPtr()) {
+            Q_ALLOCA_ASSIGN(void, gadget, d()->valueType()->metaType.sizeOf());
+            d()->setGadgetPtr(gadget);
+            d()->valueType()->metaType.construct(d()->gadgetPtr(), nullptr);
             destructGadgetOnExit = true;
         }
         if (!ref->readReferenceValue())
@@ -327,12 +327,12 @@ bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
 
     int flags = 0;
     int status = -1;
-    void *a[] = { d()->gadgetPtr, nullptr, &status, &flags };
+    void *a[] = { d()->gadgetPtr(), nullptr, &status, &flags };
     QMetaObject::metacall(target, QMetaObject::WriteProperty, propertyIndex, a);
 
     if (destructGadgetOnExit) {
-        d()->valueType->metaType.destruct(d()->gadgetPtr);
-        d()->gadgetPtr = nullptr;
+        d()->valueType()->metaType.destruct(d()->gadgetPtr());
+        d()->setGadgetPtr(nullptr);
     }
     return true;
 }
@@ -354,16 +354,16 @@ ReturnedValue QQmlValueTypeWrapper::method_toString(const FunctionObject *b, con
     // Prepare a buffer to pass to QMetaType::convert()
     QString convertResult;
     convertResult.~QString();
-    if (QMetaType::convert(w->d()->gadgetPtr, w->d()->valueType->metaType.id(), &convertResult, QMetaType::QString)) {
+    if (QMetaType::convert(w->d()->gadgetPtr(), w->d()->valueType()->metaType.id(), &convertResult, QMetaType::QString)) {
         result = convertResult;
     } else {
-        result += QString::fromUtf8(QMetaType::typeName(w->d()->valueType->metaType.id()))
+        result += QString::fromUtf8(QMetaType::typeName(w->d()->valueType()->metaType.id()))
                 + QLatin1Char('(');
         const QMetaObject *mo = w->d()->propertyCache()->metaObject();
         const int propCount = mo->propertyCount();
         for (int i = 0; i < propCount; ++i) {
             if (mo->property(i).isDesignable()) {
-                QVariant value = mo->property(i).readOnGadget(w->d()->gadgetPtr);
+                QVariant value = mo->property(i).readOnGadget(w->d()->gadgetPtr());
                 if (i > 0)
                     result += QLatin1String(", ");
                 result += value.toString();
@@ -387,7 +387,7 @@ Q_ALWAYS_INLINE static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
     if (property->propType() == metatype) { \
         cpptype v; \
         void *args[] = { &v, nullptr }; \
-        metaObject->d.static_metacall(reinterpret_cast<QObject*>(valueTypeWrapper->gadgetPtr), \
+        metaObject->d.static_metacall(reinterpret_cast<QObject*>(valueTypeWrapper->gadgetPtr()), \
                                       QMetaObject::ReadProperty, index, args); \
         return QV4::Encode(constructor(v)); \
     }
@@ -412,7 +412,7 @@ Q_ALWAYS_INLINE static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
         v = QVariant(property->propType(), static_cast<void *>(nullptr));
         args[0] = v.data();
     }
-    metaObject->d.static_metacall(reinterpret_cast<QObject*>(valueTypeWrapper->gadgetPtr), QMetaObject::ReadProperty,
+    metaObject->d.static_metacall(reinterpret_cast<QObject*>(valueTypeWrapper->gadgetPtr()), QMetaObject::ReadProperty,
                                   index, args);
     return engine->fromVariant(v);
 #undef VALUE_TYPE_LOAD
@@ -604,7 +604,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
     if (property.isEnumType() && (QMetaType::Type)v.type() == QMetaType::Double)
         v = v.toInt();
 
-    void *gadget = r->d()->gadgetPtr;
+    void *gadget = r->d()->gadgetPtr();
     property.writeOnGadget(gadget, v);
 
 
@@ -620,7 +620,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
         } else {
             int flags = 0;
             int status = -1;
-            void *a[] = { r->d()->gadgetPtr, nullptr, &status, &flags };
+            void *a[] = { r->d()->gadgetPtr(), nullptr, &status, &flags };
             QMetaObject::metacall(reference->d()->object, QMetaObject::WriteProperty, reference->d()->property, a);
         }
     }

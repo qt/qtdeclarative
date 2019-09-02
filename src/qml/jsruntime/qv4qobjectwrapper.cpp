@@ -2077,7 +2077,7 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
         if (!d()->valueTypeWrapper)
             return Encode::undefined();
 
-        object = QQmlObjectOrGadget(d()->propertyCache(), d()->valueTypeWrapper->gadgetPtr);
+        object = QQmlObjectOrGadget(d()->propertyCache(), d()->valueTypeWrapper->gadgetPtr());
     }
 
     QQmlPropertyData method;
