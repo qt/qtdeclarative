@@ -238,12 +238,11 @@ void StringLiteral::accept0(Visitor *visitor)
 
 void TemplateLiteral::accept0(Visitor *visitor)
 {
-    if (visitor->visit(this)) {
-        if (next)
-            accept(next, visitor);
+    bool accepted = true;
+    for (TemplateLiteral *it = this; it && accepted; it = it->next) {
+        accepted = visitor->visit(it);
+        visitor->endVisit(it);
     }
-
-    visitor->endVisit(this);
 }
 
 void NumericLiteral::accept0(Visitor *visitor)
@@ -1013,13 +1012,13 @@ QStringList FormalParameterList::boundNames() const
 
 void FormalParameterList::accept0(Visitor *visitor)
 {
-    if (visitor->visit(this)) {
-        accept(element, visitor);
-        if (next)
-            accept(next, visitor);
+    bool accepted = true;
+    for (FormalParameterList *it = this; it && accepted; it = it->next) {
+        accepted = visitor->visit(it);
+        if (accepted)
+            accept(it->element, visitor);
+        visitor->endVisit(it);
     }
-
-    visitor->endVisit(this);
 }
 
 FormalParameterList *FormalParameterList::finish(QQmlJS::MemoryPool *pool)
@@ -1290,12 +1289,14 @@ void UiPragma::accept0(Visitor *visitor)
 
 void UiHeaderItemList::accept0(Visitor *visitor)
 {
-    if (visitor->visit(this)) {
-        accept(headerItem, visitor);
-        accept(next, visitor);
-    }
+    bool accepted = true;
+    for (UiHeaderItemList *it = this; it && accepted; it = it->next) {
+        accepted = visitor->visit(it);
+        if (accepted)
+            accept(it->headerItem, visitor);
 
-    visitor->endVisit(this);
+        visitor->endVisit(it);
+    }
 }
 
 
@@ -1359,14 +1360,15 @@ void PatternElement::boundNames(QStringList *names)
 
 void PatternElementList::accept0(Visitor *visitor)
 {
-    if (visitor->visit(this)) {
-        accept(elision, visitor);
-        accept(element, visitor);
-        if (next)
-            accept(next, visitor);
+    bool accepted = true;
+    for (PatternElementList *it = this; it && accepted; it = it->next) {
+        accepted = visitor->visit(it);
+        if (accepted) {
+            accept(it->elision, visitor);
+            accept(it->element, visitor);
+        }
+        visitor->endVisit(it);
     }
-
-    visitor->endVisit(this);
 }
 
 void PatternElementList::boundNames(QStringList *names)
@@ -1395,13 +1397,13 @@ void PatternProperty::boundNames(QStringList *names)
 
 void PatternPropertyList::accept0(Visitor *visitor)
 {
-    if (visitor->visit(this)) {
-        accept(property, visitor);
-        if (next)
-            accept(next, visitor);
+    bool accepted = true;
+    for (PatternPropertyList *it = this; it && accepted; it = it->next) {
+        accepted = visitor->visit(it);
+        if (accepted)
+            accept(it->property, visitor);
+        visitor->endVisit(it);
     }
-
-    visitor->endVisit(this);
 }
 
 void PatternPropertyList::boundNames(QStringList *names)
@@ -1446,13 +1448,14 @@ void ClassDeclaration::accept0(Visitor *visitor)
 
 void ClassElementList::accept0(Visitor *visitor)
 {
-    if (visitor->visit(this)) {
-        accept(property, visitor);
-        if (next)
-            accept(next, visitor);
-    }
+    bool accepted = true;
+    for (ClassElementList *it = this; it && accepted; it = it->next) {
+        accepted = visitor->visit(it);
+        if (accepted)
+            accept(it->property, visitor);
 
-    visitor->endVisit(this);
+        visitor->endVisit(it);
+    }
 }
 
 ClassElementList *ClassElementList::finish()
