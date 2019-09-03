@@ -494,7 +494,7 @@ void tst_QQuickPopup::closePolicy()
     QTRY_VERIFY(popup->isOpened());
 
     // press outside popup and its parent
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1), 50);
     if (closePolicy.testFlag(QQuickPopup::CloseOnPressOutside) || closePolicy.testFlag(QQuickPopup::CloseOnPressOutsideParent))
         QTRY_VERIFY(!popup->isVisible());
     else
