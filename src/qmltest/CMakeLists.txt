@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qt_module(QuickTest
+    CONFIG_MODULE_NAME qmltest # special case
     QMAKE_MODULE_CONFIG $${QT.testlib.CONFIG}
     SOURCES
         qtestoptions_p.h
