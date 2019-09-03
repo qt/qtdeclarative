@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_module(QuickTest
-    CONFIG_MODULE_NAME qmltest # special case
     QMAKE_MODULE_CONFIG $${QT.testlib.CONFIG}
     SOURCES
         qtestoptions_p.h
@@ -16,6 +15,7 @@ add_qt_module(QuickTest
     DEFINES
         QT_NO_FOREACH
         QT_NO_URL_CAST_FROM_STRING
+        QT_BUILD_QMLTEST_LIB # special case
     LIBRARIES
         Qt::TestPrivate
         Qt::Quick # special case
