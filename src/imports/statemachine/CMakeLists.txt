@@ -5,9 +5,9 @@
 #####################################################################
 
 add_qml_module(qtqmlstatemachine
-    CPP_PLUGIN
     URI "QtQml.StateMachine"
     VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
+    CLASSNAME QtQmlStateMachinePlugin
     SOURCES
         childrenprivate.h
         finalstate.cpp finalstate.h

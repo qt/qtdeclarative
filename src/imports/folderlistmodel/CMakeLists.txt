@@ -5,9 +5,9 @@
 #####################################################################
 
 add_qml_module(qmlfolderlistmodelplugin
-    CPP_PLUGIN
     URI "Qt.labs.folderlistmodel"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
+    CLASSNAME QmlFolderListModelPlugin
     SOURCES
         fileinfothread.cpp fileinfothread_p.h
         fileproperty_p.h

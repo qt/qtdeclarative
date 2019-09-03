@@ -5,9 +5,10 @@
 #####################################################################
 
 add_qml_module(qquicklayoutsplugin
-    CPP_PLUGIN
     URI "QtQuick.Layouts"
     VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
+    DESIGNER_SUPPORTED
+    CLASSNAME QtQuickLayoutsPlugin
     SOURCES
         plugin.cpp
         qquickgridlayoutengine.cpp qquickgridlayoutengine_p.h

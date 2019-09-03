@@ -5,10 +5,11 @@
 #####################################################################
 
 add_qml_module(workerscriptplugin
-    CPP_PLUGIN
     TARGET_PATH "QtQml/WorkerScript.2"
     URI "QtQml.WorkerScript"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
+    DESIGNER_SUPPORTED
+    CLASSNAME QtQmlWorkerScriptPlugin
     SOURCES
         plugin.cpp
     LIBRARIES

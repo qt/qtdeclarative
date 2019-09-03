@@ -5,10 +5,10 @@
 #####################################################################
 
 add_qml_module(particlesplugin
-    CPP_PLUGIN
     TARGET_PATH "QtQuick/Particles.2"
     URI "QtQuick.Particles"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
+    CLASSNAME QtQuick2ParticlesPlugin
     SOURCES
         plugin.cpp
     LIBRARIES

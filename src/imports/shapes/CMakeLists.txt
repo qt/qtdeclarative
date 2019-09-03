@@ -5,9 +5,9 @@
 #####################################################################
 
 add_qml_module(qmlshapesplugin
-    CPP_PLUGIN
     URI "QtQuick.Shapes"
     VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
+    CLASSNAME QmlShapesPlugin
     SOURCES
         plugin.cpp
     LIBRARIES

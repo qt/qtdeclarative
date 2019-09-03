@@ -5,9 +5,9 @@
 #####################################################################
 
 add_qml_module(labsanimationplugin
-    CPP_PLUGIN
     URI "Qt.labs.animation"
     VERSION "1.0"
+    CLASSNAME QtLabsAnimationPlugin
     SOURCES
         plugin.cpp
     LIBRARIES

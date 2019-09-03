@@ -5,9 +5,13 @@
 #####################################################################
 
 add_qml_module(qmlplugin
-    CPP_PLUGIN
     URI "QtQml"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
+    DESIGNER_SUPPORTED
+    CLASSNAME QtQmlPlugin
+    IMPORTS
+        QtQml.Models
+        QtQml.WorkerScript
     SOURCES
         plugin.cpp
     LIBRARIES

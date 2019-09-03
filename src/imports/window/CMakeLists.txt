@@ -5,10 +5,11 @@
 #####################################################################
 
 add_qml_module(windowplugin
-    CPP_PLUGIN
     TARGET_PATH "QtQuick/Window.2"
     URI "QtQuick.Window"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
+    DESIGNER_SUPPORTED
+    CLASSNAME QtQuick2WindowPlugin
     SOURCES
         plugin.cpp
     LIBRARIES

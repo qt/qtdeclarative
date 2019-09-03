@@ -10,4 +10,7 @@ project(QtDeclarative
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui Widgets Network
                                            OPTIONAL_COMPONENTS Sql Concurrent Test)
 
+# export QT6_ADD_QML_MODULE to this project
+include(src/qml/Qt6QmlMacros.cmake)
+
 qt_build_repo()

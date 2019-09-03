@@ -5,10 +5,13 @@
 #####################################################################
 
 add_qml_module(qtquick2plugin
-    CPP_PLUGIN
     TARGET_PATH "QtQuick.2"
     URI "QtQuick"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
+    DESIGNER_SUPPORTED
+    CLASSNAME QtQuick2Plugin
+    IMPORTS
+        QtQml
     SOURCES
         plugin.cpp
     LIBRARIES

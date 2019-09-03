@@ -5,9 +5,9 @@
 #####################################################################
 
 add_qml_module(qmlsettingsplugin
-    CPP_PLUGIN
     URI "Qt.labs.settings"
     VERSION "1.1"
+    CLASSNAME QmlSettingsPlugin
     SOURCES
         plugin.cpp
         qqmlsettings.cpp qqmlsettings_p.h

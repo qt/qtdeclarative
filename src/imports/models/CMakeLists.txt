@@ -5,10 +5,11 @@
 #####################################################################
 
 add_qml_module(modelsplugin
-    CPP_PLUGIN
     TARGET_PATH "QtQml/Models.2"
     URI "QtQml.Models"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
+    DESIGNER_SUPPORTED
+    CLASSNAME QtQmlModelsPlugin
     SOURCES
         plugin.cpp
     LIBRARIES

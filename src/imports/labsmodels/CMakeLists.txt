@@ -5,9 +5,9 @@
 #####################################################################
 
 add_qml_module(labsmodelsplugin
-    CPP_PLUGIN
     URI "Qt.labs.qmlmodels"
     VERSION "1.0"
+    CLASSNAME QtQmlLabsModelsPlugin
     SOURCES
         plugin.cpp
     LIBRARIES
