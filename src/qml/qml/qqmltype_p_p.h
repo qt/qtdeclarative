@@ -66,9 +66,29 @@ public:
     QQmlTypePrivate(QQmlType::RegistrationType type);
 
     void init() const;
-    void initEnums(const QQmlPropertyCache *cache = nullptr) const;
+    void initEnums(QQmlEnginePrivate *engine) const;
     void insertEnums(const QMetaObject *metaObject) const;
     void insertEnumsFromPropertyCache(const QQmlPropertyCache *cache) const;
+
+    QUrl sourceUrl() const
+    {
+        switch (regType) {
+        case QQmlType::CompositeType:
+            return extraData.fd->url;
+        case QQmlType::CompositeSingletonType:
+            return extraData.sd->singletonInstanceInfo->url;
+        default:
+            return QUrl();
+        }
+    }
+
+    bool isComposite() const
+    {
+        return regType == QQmlType::CompositeType || regType == QQmlType::CompositeSingletonType;
+    }
+
+    QQmlType resolveCompositeBaseType(QQmlEnginePrivate *engine) const;
+    QQmlPropertyCache *compositePropertyCache(QQmlEnginePrivate *engine) const;
 
     QQmlType::RegistrationType regType;
 

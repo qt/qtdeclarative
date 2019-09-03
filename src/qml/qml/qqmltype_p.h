@@ -182,11 +182,7 @@ public:
     };
 
 private:
-    QQmlType resolveCompositeBaseType(QQmlEnginePrivate *engine) const;
-    int resolveCompositeEnumValue(QQmlEnginePrivate *engine, const QString &name, bool *ok) const;
-    QQmlPropertyCache *compositePropertyCache(QQmlEnginePrivate *engine) const;
     friend uint qHash(const QQmlType &t, uint seed);
-
     QQmlRefPointer<const QQmlTypePrivate> d;
 };
 
