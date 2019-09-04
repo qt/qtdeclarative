@@ -1177,7 +1177,7 @@ UiObjectMember: T_SIGNAL T_IDENTIFIER Semicolon;
     } break;
 ./
 
-UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier Semicolon;
+UiObjectMemberListPropertyNoInitialiser: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier Semicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(4).UiQualifiedId->finish(), stringRef(6));
@@ -1191,23 +1191,19 @@ UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier S
     } break;
 ./
 
-UiObjectMember: T_READONLY T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier Semicolon;
+UiObjectMember: UiObjectMemberListPropertyNoInitialiser;
+
+UiObjectMember: T_READONLY UiObjectMemberListPropertyNoInitialiser;
 /.
     case $rule_number: {
-        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(5).UiQualifiedId->finish(), stringRef(7));
+        AST::UiPublicMember *node = sym(2).UiPublicMember;
         node->isReadonlyMember = true;
         node->readonlyToken = loc(1);
-        node->typeModifier = stringRef(3);
-        node->propertyToken = loc(2);
-        node->typeModifierToken = loc(3);
-        node->typeToken = loc(5);
-        node->identifierToken = loc(7);
-        node->semicolonToken = loc(8);
         sym(1).Node = node;
     } break;
 ./
 
-UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier Semicolon;
+UiObjectMemberPropertyNoInitialiser: T_PROPERTY UiPropertyType QmlIdentifier Semicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(2).UiQualifiedId->finish(), stringRef(3));
@@ -1219,42 +1215,37 @@ UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier Semicolon;
     } break;
 ./
 
-UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType QmlIdentifier Semicolon;
+
+
+UiObjectMember: UiObjectMemberPropertyNoInitialiser;
+
+UiObjectMember: T_DEFAULT UiObjectMemberPropertyNoInitialiser;
 /.
     case $rule_number: {
-        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4));
+        AST::UiPublicMember *node = sym(2).UiPublicMember;
         node->isDefaultMember = true;
         node->defaultToken = loc(1);
-        node->propertyToken = loc(2);
-        node->typeToken = loc(3);
-        node->identifierToken = loc(4);
-        node->semicolonToken = loc(5);
         sym(1).Node = node;
     } break;
 ./
 
-UiObjectMember: T_DEFAULT T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier Semicolon;
+UiObjectMember: T_DEFAULT UiObjectMemberListPropertyNoInitialiser;
 /.
     case $rule_number: {
-        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(5).UiQualifiedId->finish(), stringRef(7));
+        AST::UiPublicMember *node = sym(2).UiPublicMember;
         node->isDefaultMember = true;
         node->defaultToken = loc(1);
-        node->typeModifier = stringRef(3);
-        node->propertyToken = loc(2);
-        node->typeModifierToken = loc(2);
-        node->typeToken = loc(4);
-        node->identifierToken = loc(7);
-        node->semicolonToken = loc(8);
         sym(1).Node = node;
     } break;
 ./
+
 OptionalSemicolon: | Semicolon;
 /.
 /* we need OptionalSemicolon because UiScriptStatement might already parse the last semicolon
   and then we would miss a semicolon (see tests/auto/quick/qquickvisualdatamodel/data/objectlist.qml)*/
  ./
 
-UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_COLON UiScriptStatement OptionalSemicolon;
+UiObjectMemberWithScriptStatement: T_PROPERTY UiPropertyType QmlIdentifier T_COLON UiScriptStatement OptionalSemicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(2).UiQualifiedId->finish(), stringRef(3), sym(5).Statement);
@@ -1266,35 +1257,29 @@ UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_COLON UiScriptStatemen
     } break;
 ./
 
-UiObjectMember: T_READONLY T_PROPERTY UiPropertyType QmlIdentifier T_COLON UiScriptStatement OptionalSemicolon;
+UiObjectMember: UiObjectMemberWithScriptStatement;
+
+UiObjectMember: T_READONLY UiObjectMemberWithScriptStatement;
 /.
     case $rule_number: {
-        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4), sym(6).Statement);
+        AST::UiPublicMember *node = sym(2).UiPublicMember;
         node->isReadonlyMember = true;
         node->readonlyToken = loc(1);
-        node->propertyToken = loc(2);
-        node->typeToken = loc(3);
-        node->identifierToken = loc(4);
-        node->colonToken = loc(5);
         sym(1).Node = node;
     } break;
 ./
 
-UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType QmlIdentifier T_COLON UiScriptStatement OptionalSemicolon;
+UiObjectMember: T_DEFAULT UiObjectMemberWithScriptStatement;
 /.
     case $rule_number: {
-        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4), sym(6).Statement);
+        AST::UiPublicMember *node = sym(2).UiPublicMember;
         node->isDefaultMember = true;
         node->defaultToken = loc(1);
-        node->propertyToken = loc(2);
-        node->typeToken = loc(3);
-        node->identifierToken = loc(4);
-        node->colonToken = loc(5);
         sym(1).Node = node;
     } break;
 ./
 
-UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_COLON T_LBRACKET UiArrayMemberList T_RBRACKET Semicolon;
+UiObjectMemberWithArray: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_COLON T_LBRACKET UiArrayMemberList T_RBRACKET Semicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(4).UiQualifiedId->finish(), stringRef(6));
@@ -1320,35 +1305,19 @@ UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T
     } break;
 ./
 
-UiObjectMember: T_READONLY T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_COLON T_LBRACKET UiArrayMemberList T_RBRACKET Semicolon;
+UiObjectMember: UiObjectMemberWithArray;
+
+UiObjectMember: T_READONLY UiObjectMemberWithArray;
 /.
     case $rule_number: {
-        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(5).UiQualifiedId->finish(), stringRef(7));
+        AST::UiPublicMember *node = sym(2).UiPublicMember;
         node->isReadonlyMember = true;
         node->readonlyToken = loc(1);
-        node->typeModifier = stringRef(3);
-        node->propertyToken = loc(2);
-        node->typeModifierToken = loc(3);
-        node->typeToken = loc(5);
-        node->identifierToken = loc(7);
-        node->semicolonToken = loc(8); // insert a fake ';' before ':'
-
-        AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(7));
-        propertyName->identifierToken = loc(7);
-        propertyName->next = 0;
-
-        AST::UiArrayBinding *binding = new (pool) AST::UiArrayBinding(propertyName, sym(10).UiArrayMemberList->finish());
-        binding->colonToken = loc(8);
-        binding->lbracketToken = loc(9);
-        binding->rbracketToken = loc(11);
-
-        node->binding = binding;
-
         sym(1).Node = node;
     } break;
 ./
 
-UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_COLON ExpressionStatementLookahead UiQualifiedId UiObjectInitializer Semicolon;
+UiObjectMemberExpressionStatementLookahead: T_PROPERTY UiPropertyType QmlIdentifier T_COLON ExpressionStatementLookahead UiQualifiedId UiObjectInitializer Semicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(2).UiQualifiedId->finish(), stringRef(3));
@@ -1371,27 +1340,14 @@ UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_COLON ExpressionStatem
     } break;
 ./
 
-UiObjectMember: T_READONLY T_PROPERTY UiPropertyType QmlIdentifier T_COLON ExpressionStatementLookahead UiQualifiedId UiObjectInitializer Semicolon;
+UiObjectMember: UiObjectMemberExpressionStatementLookahead;
+
+UiObjectMember: T_READONLY UiObjectMemberExpressionStatementLookahead;
 /.
     case $rule_number: {
-        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4));
+        AST::UiPublicMember *node = sym(2).UiPublicMember;
         node->isReadonlyMember = true;
         node->readonlyToken = loc(1);
-        node->propertyToken = loc(2);
-        node->typeToken = loc(3);
-        node->identifierToken = loc(4);
-        node->semicolonToken = loc(5); // insert a fake ';' before ':'
-
-        AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(4));
-        propertyName->identifierToken = loc(4);
-        propertyName->next = 0;
-
-        AST::UiObjectBinding *binding = new (pool) AST::UiObjectBinding(
-          propertyName, sym(7).UiQualifiedId, sym(8).UiObjectInitializer);
-        binding->colonToken = loc(5);
-
-        node->binding = binding;
-
         sym(1).Node = node;
     } break;
 ./
