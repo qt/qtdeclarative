@@ -109,6 +109,12 @@ void QSGRhiSupport::applySettings()
 {
     m_set = true;
 
+    // This is also done when creating the renderloop but we may be before that
+    // in case we get here due to a setScenegraphBackend() -> configure() early
+    // on in main(). Avoid losing info logs since troubleshooting gets
+    // confusing otherwise.
+    QSGRhiSupport::checkEnvQSgInfo();
+
     if (m_requested.valid) {
         // explicit rhi backend request from C++ (e.g. via QQuickWindow)
         m_enableRhi = m_requested.rhi;
@@ -201,6 +207,13 @@ QSGRhiSupport *QSGRhiSupport::staticInst()
 {
     static QSGRhiSupport inst;
     return &inst;
+}
+
+void QSGRhiSupport::checkEnvQSgInfo()
+{
+    // For compatibility with 5.3 and earlier's QSG_INFO environment variables
+    if (qEnvironmentVariableIsSet("QSG_INFO"))
+        const_cast<QLoggingCategory &>(QSG_LOG_INFO()).setEnabled(QtDebugMsg, true);
 }
 
 void QSGRhiSupport::configure(QSGRendererInterface::GraphicsApi api)

@@ -69,6 +69,10 @@ QT_BEGIN_NAMESPACE
     Most of the time you will instead want to subclass QQuickItem and insert
     your QSGNode in a normal QtQuick scene by overriding QQuickItem::updatePaintNode().
 
+    \warning This class is only suitable when working directly with OpenGL. It
+    is not compatible with the \l{Scene Graph Adaptations}{RHI-based rendering
+    path}.
+
     \sa QSGAbstractRenderer
  */
 

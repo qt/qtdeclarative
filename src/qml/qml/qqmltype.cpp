@@ -154,23 +154,6 @@ bool QQmlType::availableInVersion(const QHashedStringRef &module, int vmajor, in
     return module == d->module && vmajor == d->version_maj && vminor >= d->version_min;
 }
 
-// returns the nearest _registered_ super class
-QQmlType QQmlType::superType() const
-{
-    if (!d)
-        return QQmlType();
-    if (!d->haveSuperType && d->baseMetaObject) {
-        const QMetaObject *mo = d->baseMetaObject->superClass();
-        while (mo && !d->superType.isValid()) {
-            d->superType = QQmlMetaType::qmlType(mo, d->module, d->version_maj, d->version_min);
-            mo = mo->superClass();
-        }
-        d->haveSuperType = true;
-    }
-
-    return d->superType;
-}
-
 QQmlType QQmlType::resolveCompositeBaseType(QQmlEnginePrivate *engine) const
 {
     Q_ASSERT(isComposite());

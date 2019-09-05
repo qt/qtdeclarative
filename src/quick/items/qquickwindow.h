@@ -109,6 +109,11 @@ public:
     };
     Q_ENUM(TextRenderType)
 
+    enum NativeObjectType {
+        NativeObjectTexture
+    };
+    Q_ENUM(NativeObjectType)
+
     explicit QQuickWindow(QWindow *parent = nullptr);
     explicit QQuickWindow(QQuickRenderControl *renderControl);
 
@@ -153,6 +158,11 @@ public:
     QSGTexture *createTextureFromImage(const QImage &image) const;
     QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options) const;
     QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption()) const;
+    QSGTexture *createTextureFromNativeObject(NativeObjectType type,
+                                              const void *nativeObjectPtr,
+                                              int nativeLayout,
+                                              const QSize &size,
+                                              CreateTextureOptions options = CreateTextureOption()) const;
 
     void setClearBeforeRendering(bool enabled);
     bool clearBeforeRendering() const;
