@@ -327,7 +327,8 @@ void QQmlConnections::connectSignalsToMethods()
 
             signal->takeExpression(expression);
             d->boundsignals += signal;
-        } else if (!d->ignoreUnknownSignals && propName.startsWith("on") && propName.length() > 2
+        } else if (!d->ignoreUnknownSignals
+                   && propName.startsWith(QLatin1String("on")) && propName.length() > 2
                    && propName.at(2).isUpper()) {
             qmlWarning(this) << tr("Detected function \"%1\" in Connections element. "
                                    "This is probably intended to be a signal handler but no "

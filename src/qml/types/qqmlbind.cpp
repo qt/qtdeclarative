@@ -357,7 +357,7 @@ void QQmlBind::setDelayed(bool delayed)
     \li Binding.RestoreValue The original value is restored if it was a plain
         value rather than a binding.
     \li Binding.RestoreBindingOrValue The original value is always restored.
-    \list
+    \endlist
 
     The default value is Binding.RestoreBinding.
 

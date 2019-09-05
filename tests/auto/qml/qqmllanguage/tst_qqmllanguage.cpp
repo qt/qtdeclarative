@@ -626,8 +626,9 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("bareQmlImport") << "bareQmlImport.qml" << "bareQmlImport.errors.txt" << false;
 
     QTest::newRow("typeAnnotations.2") << "typeAnnotations.2.qml" << "typeAnnotations.2.errors.txt" << false;
-}
 
+    QTest::newRow("propertyUnknownType") << "propertyUnknownType.qml" << "propertyUnknownType.errors.txt" << false;
+}
 
 void tst_qqmllanguage::errors()
 {

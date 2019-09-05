@@ -1852,9 +1852,15 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
         QLatin1String(".so"),
         QLatin1String(".bundle")
     };
-# else  // Unix
+#else  // Unix
     static const QString prefix = QLatin1String("lib");
-    static const QStringList suffixes = { QLatin1String(".so") };
+    static const QStringList suffixes = {
+# if defined(Q_OS_ANDROID)
+        QStringLiteral(LIBS_SUFFIX),
+# endif
+        QLatin1String(".so")
+
+    };
 #endif
 
     return resolvePlugin(typeLoader, qmldirPath, qmldirPluginPath, baseName, suffixes, prefix);
