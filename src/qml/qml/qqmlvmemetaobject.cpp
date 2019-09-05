@@ -1180,6 +1180,8 @@ bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex,
 
     const int aliasId = index - propOffset() - compiledObject->nProperties;
     const QV4::CompiledData::Alias *aliasData = &compiledObject->aliasTable()[aliasId];
+    while (aliasData->aliasToLocalAlias)
+        aliasData = &compiledObject->aliasTable()[aliasData->localAliasIndex];
     *target = ctxt->idValues[aliasData->targetObjectId].data();
     if (!*target)
         return false;
