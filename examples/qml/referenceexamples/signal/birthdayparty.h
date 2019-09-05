@@ -76,7 +76,7 @@ class BirthdayParty : public QObject
     Q_PROPERTY(QQmlListProperty<Person> guests READ guests)
     Q_CLASSINFO("DefaultProperty", "guests")
 public:
-    BirthdayParty(QObject *parent = 0);
+    BirthdayParty(QObject *parent = nullptr);
 
     Person *host() const;
     void setHost(Person *);

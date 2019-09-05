@@ -67,7 +67,7 @@ void BirthdayParty::setHost(Person *c)
 
 QQmlListProperty<Person> BirthdayParty::guests()
 {
-    return QQmlListProperty<Person>(this, m_guests);
+    return {this, m_guests};
 }
 
 int BirthdayParty::guestCount() const
@@ -82,7 +82,7 @@ Person *BirthdayParty::guest(int index) const
 
 void BirthdayParty::invite(const QString &name)
 {
-    Person *person = new Person(this);
+    auto *person = new Person(this);
     person->setName(name);
     m_guests.append(person);
 }

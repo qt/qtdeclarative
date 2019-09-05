@@ -88,6 +88,7 @@ public:
 
 public Q_SLOTS:
     void setSource(const QUrl&);
+    void setInitialProperties(const QVariantMap &initialProperties);
     void setContent(const QUrl& url, QQmlComponent *component, QObject *item);
 
 Q_SIGNALS:

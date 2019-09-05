@@ -16,5 +16,16 @@
         <file>shaders/customparticletemplate_core.vert</file>
         <file>shaders/imageparticle_core.frag</file>
         <file>shaders/imageparticle_core.vert</file>
+
+        <file>shaders_ng/imageparticle_simple.vert.qsb</file>
+        <file>shaders_ng/imageparticle_simple.frag.qsb</file>
+        <file>shaders_ng/imageparticle_tabled.vert.qsb</file>
+        <file>shaders_ng/imageparticle_tabled.frag.qsb</file>
+        <file>shaders_ng/imageparticle_deformed.vert.qsb</file>
+        <file>shaders_ng/imageparticle_deformed.frag.qsb</file>
+        <file>shaders_ng/imageparticle_sprite.vert.qsb</file>
+        <file>shaders_ng/imageparticle_sprite.frag.qsb</file>
+        <file>shaders_ng/imageparticle_colored.vert.qsb</file>
+        <file>shaders_ng/imageparticle_colored.frag.qsb</file>
     </qresource>
 </RCC>

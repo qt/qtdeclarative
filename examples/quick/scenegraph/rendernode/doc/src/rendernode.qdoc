@@ -1,0 +1,165 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example scenegraph/rendernode
+    \title Scene Graph - Custom Rendering with QSGRenderNode
+    \ingroup qtquickexamples
+    \brief Shows how to integrate drawing via the native graphics API with the Qt Quick scene graph.
+
+    \image rendernode-example.jpg
+
+    \l QSGRenderNode allows integrating draw and other calls made directly via
+    the Qt Quick scene graph's underlying native graphics API (such as, Vulkan,
+    Metal, Direct 3D, or OpenGL). This example demonstrates implementing a
+    custom QQuickItem backed by a QSGRenderNode implementation, where the node
+    renders a triangle directly via the graphics API. The rest of the scene
+    (background, text, rectangles) are standard Qt Quick items. The example has
+    full support for OpenGL and Metal, as well as the software backend of Qt
+    Quick.
+
+    The custom item behaves like any other Qt Quick item, meaning it
+    participates and stacking and clipping as usual, which is a big difference
+    to the alternative approaches like having the custom rendering as an
+    overlay (connecting to \l QQuickWindow::afterRendering()) and underlay
+    (connecting to \l QQuickWindow::beforeRendering()) because those do not
+    offer the possibility of proper mixing of the custom content with the Qt
+    Quick scene.
+
+    Another important feature is that QSGRenderNode can be helpful to preserve
+    performance, when compared to some of the alternatives. Going through \l
+    QQuickFramebufferObject allows creating a custom item similarly to what
+    this example does, but it does it by rendering the custom content in a
+    texture, and then drawing a textured quad with that texture. This can be
+    expensive on some systems due to the cost of texturing and blending.
+    QSGRenderNode avoids this since the native graphics calls are issued in
+    line with the draw calls for the scene graph's batches.
+
+    All this comes at the cost of being more complex, and not necessarily being
+    suitable for all types of 3D content, in particular where vertices and
+    different depth would clash with the 2D content in the Qt Quick scene
+    graph's batches (those are better served by "flattening" into a 2D texture
+    via approaches like QQuickFramebufferObject). Therefore QSGRenderNode is
+    not always the right choice. It can however a good and powerful choice in
+    many cases. This is what the example demonstrates.
+
+    Let's go through the most important parts of the code:
+
+    \snippet scenegraph/rendernode/main.cpp 1
+
+    Our custom QML type is implemented in the class CustomRenderItem.
+
+    \snippet scenegraph/rendernode/main.qml 2
+
+    The corresponding import in the QML document.
+
+    \snippet scenegraph/rendernode/main.qml 3
+
+    The CustomRenderItem object. It is positioned to fill a big part of the
+    scene, covering its parent (the yellow rectangle; this will be used to
+    demonstrate clipping). The item will have its scale and rotation animated.
+
+    \snippet scenegraph/rendernode/main.qml 4
+
+    Text items are used to show some helpful information, such as, the
+    active graphics API Qt Quick uses.
+
+    \snippet scenegraph/rendernode/main.qml 5
+
+    Clicking the left mouse button is used to toggle clipping on the custom
+    item's parent item. By default this is done using scissoring (GL_SCISSOR_TEST
+    with OpenGL). A well-written QSGRenderNode implementation is expected to be
+    able to take this into account and enable scissor testing when the scene graph
+    indicates that it is necessary.
+
+    The right mouse button is used to toggle an animation on the rotation of
+    the parent item. With clipping enabled, this demonstrates clipping via the
+    stencil buffer since a rectangular scissor is not appropriate when we need
+    to clip to a rotated rectangle shape. The scene graph fills up the stencil
+    buffer as necessary, the QSGRenderNode implementation just has to enable
+    stencil testing using the provided reference value.
+
+    \snippet scenegraph/rendernode/customrenderitem.cpp 1
+
+    Moving on to the CustomRenderItem implementation. This is a visual item.
+
+    \snippet scenegraph/rendernode/customrenderitem.cpp 2
+
+    The implementation of \l QQuickItem::updatePaintNode() creates (if not yet
+    done) and returns an instance of a suitable QSGRenderNode subclass. The
+    example supports multiple graphics APIs, and also the \c software backend.
+
+    Let's look at the the render node for OpenGL (supporting both the
+    traditional, direct OpenGL-based scene graph, and also the modern,
+    abstracted variant using the RHI). For other graphics APIs, the concepts
+    and the outline of a QSGRenderNode implementation are the same. It is worth
+    noting that in some cases it will also be necessary to connect to a signal
+    like \l QQuickWindow::beforeRendering() to perform copy type of operations
+    (such as, vertex buffer uploads). This is not necessary for OpenGL, but it
+    is essential for Vulkan or Metal since there such operations cannot be
+    issued in render() as there is a renderpass being recorded when render() is
+    called.
+
+    \snippet scenegraph/rendernode/openglrenderer.h 1
+
+    The main job is to provide implementations of the virtual QSGRenderNode functions.
+
+    \snippet scenegraph/rendernode/openglrenderer.cpp 1
+
+    The pattern for safe graphics resource management is to do any cleanup in
+    \l{QSGRenderNode::releaseResources()}{releaseResources()}, while also
+    calling this from the destructor.
+
+    \snippet scenegraph/rendernode/openglrenderer.cpp 2
+
+    The render() function initializes graphics resources (in this case, an
+    OpenGL shader program and a vertex buffer), if not yet done. It then
+    makes sure the necessary resources are bound and updates uniforms.
+    The transformation matrix and the opacity are provided by the scene graph
+    either via the \c state argument or base class functions.
+
+    \snippet scenegraph/rendernode/openglrenderer.cpp 5
+
+    This render node is well-behaving since it basically renders in 2D,
+    respecting the item's geometry. This is not mandatory, but then flags() has
+    to return (or not return) the appropriate flags.
+
+    \snippet scenegraph/rendernode/openglrenderer.cpp 3
+
+    After setting up vertex inputs, but before recording a draw call for our
+    triangle, it is important to set some state in order to integrate with the
+    rest of the scene correctly. Setting scissor and stencil as instructed by
+    \c state allows our item to render correctly even when there are one or
+    more clips in the parent chain.
+
+    \snippet scenegraph/rendernode/openglrenderer.cpp 4
+
+    As shown above, we only really render in 2D (no depth), within the item's
+    geometry. changedStates() returns the flags corresponding to the OpenGL
+    states render() touches.
+
+*/

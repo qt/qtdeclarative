@@ -40,7 +40,7 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qv4codegen_p.h>
 
-QDebug &operator<<(QDebug dbg, const QQmlJS::AST::SourceLocation &loc);
+QDebug operator<<(QDebug dbg, const QQmlJS::AST::SourceLocation &loc);
 
 static QQmlJS::TypeDescriptionReader createReaderForFile(QString const &filename)
 {
@@ -333,7 +333,9 @@ void FindUnqualifiedIDVisitor::importExportedNames(QStringRef prefix, QString na
 
 void FindUnqualifiedIDVisitor::throwRecursionDepthError()
 {
-    return;
+    m_colorOut.write(QStringLiteral("Error"), Error);
+    m_colorOut.write(QStringLiteral("Maximum statement or expression depth exceeded"), Error);
+    m_visitFailed = true;
 }
 
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiProgram *)
@@ -449,9 +451,10 @@ void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::CaseBlock *)
     leaveEnvironment();
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::Catch *)
+bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::Catch *catchStatement)
 {
     enterEnvironment(ScopeType::JSLexicalScope, "catch");
+    m_currentScope->insertJSIdentifier(catchStatement->patternElement->bindingIdentifier.toString(), QQmlJS::AST::VariableScope::Let);
     return true;
 }
 
@@ -568,6 +571,9 @@ FindUnqualifiedIDVisitor::~FindUnqualifiedIDVisitor() = default;
 
 bool FindUnqualifiedIDVisitor::check()
 {
+    if (m_visitFailed)
+        return false;
+
     // now that all ids are known, revisit any Connections whose target were perviously unknown
     for (auto const& outstandingConnection: m_outstandingConnections) {
         auto metaObject = m_qmlid2meta[outstandingConnection.targetName];
@@ -767,7 +773,7 @@ void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *)
     leaveEnvironment();
 }
 
-QDebug &operator<<(QDebug dbg, const QQmlJS::AST::SourceLocation &loc)
+QDebug operator<<(QDebug dbg, const QQmlJS::AST::SourceLocation &loc)
 {
     QDebugStateSaver saver(dbg);
     dbg.nospace() << loc.startLine;

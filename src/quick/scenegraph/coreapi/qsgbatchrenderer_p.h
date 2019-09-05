@@ -817,6 +817,8 @@ private:
     void enqueueStencilDraw(const Batch *batch);
     const QMatrix4x4 &matrixForRoot(Node *node);
     void renderRenderNode(Batch *batch);
+    bool prepareRhiRenderNode(Batch *batch, PreparedRenderBatch *renderBatch);
+    void renderRhiRenderNode(const Batch *batch);
     void setActiveShader(QSGMaterialShader *program, ShaderManager::Shader *shader);
     void setActiveRhiShader(QSGMaterialRhiShader *program, ShaderManager::Shader *shader);
 

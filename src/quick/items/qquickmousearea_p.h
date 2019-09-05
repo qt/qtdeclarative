@@ -71,7 +71,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
     Q_PROPERTY(bool containsMouse READ hovered NOTIFY hoveredChanged)
     Q_PROPERTY(bool pressed READ pressed NOTIFY pressedChanged)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
-    Q_PROPERTY(bool scrollGestureEnabled READ isScrollGestureEnabled WRITE setScrollGestureEnabled NOTIFY scrollGestureEnabledChanged REVISION 2)
+    Q_PROPERTY(bool scrollGestureEnabled READ isScrollGestureEnabled WRITE setScrollGestureEnabled NOTIFY scrollGestureEnabledChanged REVISION 5)
     Q_PROPERTY(Qt::MouseButtons pressedButtons READ pressedButtons NOTIFY pressedButtonsChanged)
     Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
     Q_PROPERTY(bool hoverEnabled READ hoverEnabled WRITE setHoverEnabled NOTIFY hoverEnabledChanged)
@@ -83,7 +83,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
 #if QT_CONFIG(cursor)
     Q_PROPERTY(Qt::CursorShape cursorShape READ cursorShape WRITE setCursorShape RESET unsetCursor NOTIFY cursorShapeChanged)
 #endif
-    Q_PROPERTY(bool containsPress READ containsPress NOTIFY containsPressChanged REVISION 1)
+    Q_PROPERTY(bool containsPress READ containsPress NOTIFY containsPressChanged REVISION 4)
     Q_PROPERTY(int pressAndHoldInterval READ pressAndHoldInterval WRITE setPressAndHoldInterval NOTIFY pressAndHoldIntervalChanged RESET resetPressAndHoldInterval REVISION 9)
 
 public:
@@ -134,7 +134,7 @@ Q_SIGNALS:
     void hoveredChanged();
     void pressedChanged();
     void enabledChanged();
-    Q_REVISION(2) void scrollGestureEnabledChanged();
+    Q_REVISION(5) void scrollGestureEnabledChanged();
     void pressedButtonsChanged();
     void acceptedButtonsChanged();
     void hoverEnabledChanged();
@@ -156,7 +156,7 @@ Q_SIGNALS:
     void entered();
     void exited();
     void canceled();
-    Q_REVISION(1) void containsPressChanged();
+    Q_REVISION(4) void containsPressChanged();
     Q_REVISION(9) void pressAndHoldIntervalChanged();
 
 protected:

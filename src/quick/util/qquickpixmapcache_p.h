@@ -150,6 +150,7 @@ public:
     const QSize &implicitSize() const;
     const QSize &requestSize() const;
     QQuickImageProviderOptions::AutoTransform autoTransform() const;
+    int frameCount() const;
     QImage image() const;
     void setImage(const QImage &);
     void setPixmap(const QQuickPixmap &other);
@@ -164,7 +165,7 @@ public:
     void load(QQmlEngine *, const QUrl &, QQuickPixmap::Options options);
     void load(QQmlEngine *, const QUrl &, const QSize &);
     void load(QQmlEngine *, const QUrl &, const QSize &, QQuickPixmap::Options options);
-    void load(QQmlEngine *, const QUrl &, const QSize &, QQuickPixmap::Options options, const QQuickImageProviderOptions &providerOptions);
+    void load(QQmlEngine *, const QUrl &, const QSize &, QQuickPixmap::Options options, const QQuickImageProviderOptions &providerOptions, int frame = 0, int frameCount = 1);
 
     void clear();
     void clear(QObject *);
@@ -175,7 +176,7 @@ public:
     bool connectDownloadProgress(QObject *, int);
 
     static void purgeCache();
-    static bool isCached(const QUrl &url, const QSize &requestSize, const QQuickImageProviderOptions &options);
+    static bool isCached(const QUrl &url, const QSize &requestSize, const int frame, const QQuickImageProviderOptions &options);
 
     static const QLatin1String itemGrabberScheme;
 

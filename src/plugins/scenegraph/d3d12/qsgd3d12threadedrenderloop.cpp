@@ -121,10 +121,6 @@ const QEvent::Type WM_Obscure           = QEvent::Type(QEvent::User + 1);
 // Passed from the RL to RT when GUI has been locked, waiting for sync.
 const QEvent::Type WM_RequestSync       = QEvent::Type(QEvent::User + 2);
 
-// Passed by the RT to itself to trigger another render pass. This is typically
-// a result of QQuickWindow::update().
-const QEvent::Type WM_RequestRepaint    = QEvent::Type(QEvent::User + 3);
-
 // Passed by the RL to the RT to maybe release resource if no windows are
 // rendering.
 const QEvent::Type WM_TryRelease        = QEvent::Type(QEvent::User + 4);
@@ -435,14 +431,6 @@ bool QSGD3D12RenderThread::event(QEvent *e)
         }
         return true;
     }
-
-    case WM_RequestRepaint:
-        if (Q_UNLIKELY(debug_loop()))
-            qDebug("RT - WM_RequestPaint");
-        // When GUI posts this event, it is followed by a polishAndSync, so we
-        // must not exit the event loop yet.
-        pendingUpdate |= RepaintRequest;
-        break;
 
     default:
         break;

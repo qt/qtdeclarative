@@ -46,6 +46,8 @@
 #include "../../shared/util.h"
 #include "../shared/visualtestutil.h"
 
+Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
+
 Q_DECLARE_METATYPE(QQuickImageBase::Status)
 
 class tst_qquickborderimage : public QQmlDataTest
@@ -79,6 +81,8 @@ private slots:
 #if QT_CONFIG(opengl)
     void borderImageMesh();
 #endif
+    void multiFrame_data();
+    void multiFrame();
 
 private:
     QQmlEngine engine;
@@ -601,6 +605,67 @@ void tst_qquickborderimage::borderImageMesh()
              qPrintable(errorMessage));
 }
 #endif
+
+void tst_qquickborderimage::multiFrame_data()
+{
+    QTest::addColumn<QString>("qmlfile");
+    QTest::addColumn<bool>("asynchronous");
+
+    QTest::addRow("default") << "multiframe.qml" << false;
+    QTest::addRow("async") << "multiframeAsync.qml" << true;
+}
+
+void tst_qquickborderimage::multiFrame()
+{
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
+    QFETCH(QString, qmlfile);
+    QFETCH(bool, asynchronous);
+    Q_UNUSED(asynchronous)
+
+    QQuickView view(testFileUrl(qmlfile));
+    QQuickBorderImage *image = qobject_cast<QQuickBorderImage*>(view.rootObject());
+    QVERIFY(image);
+    QSignalSpy countSpy(image, SIGNAL(frameCountChanged()));
+    QSignalSpy currentSpy(image, SIGNAL(currentFrameChanged()));
+    if (asynchronous) {
+        QCOMPARE(image->frameCount(), 0);
+        QTRY_COMPARE(image->frameCount(), 4);
+        QCOMPARE(countSpy.count(), 1);
+    } else {
+        QCOMPARE(image->frameCount(), 4);
+    }
+    QCOMPARE(image->currentFrame(), 0);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QCoreApplication::processEvents(); // Process all queued events
+
+    QImage contents = view.grabWindow();
+    if (contents.width() < 160)
+        QSKIP("Skipping due to grabWindow not functional");
+
+    // The middle of the first frame looks blue, approximately qRgba(0x43, 0x7e, 0xd6, 0xff)
+    QColor color = contents.pixelColor(60, 60);
+    qCDebug(lcTests) << "expected bluish color, got" << color;
+    QVERIFY(color.redF() < 0.75);
+    QVERIFY(color.greenF() < 0.75);
+    QVERIFY(color.blueF() > 0.75);
+
+    image->setCurrentFrame(1);
+    QTRY_COMPARE(image->status(), QQuickImageBase::Ready);
+    QCOMPARE(currentSpy.count(), 1);
+    QCOMPARE(image->currentFrame(), 1);
+    contents = view.grabWindow();
+    // The middle of the second frame looks green, approximately qRgba(0x3a, 0xd2, 0x31, 0xff)
+    color = contents.pixelColor(60, 60);
+    qCDebug(lcTests) << "expected greenish color, got" << color;
+    QVERIFY(color.redF() < 0.75);
+    QVERIFY(color.green() > 0.75);
+    QVERIFY(color.blueF() < 0.75);
+}
+
 QTEST_MAIN(tst_qquickborderimage)
 
 #include "tst_qquickborderimage.moc"

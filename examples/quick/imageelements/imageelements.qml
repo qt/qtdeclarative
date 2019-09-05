@@ -64,6 +64,8 @@ Item {
             addExample("AnimatedImage", "An image which plays animated formats", Qt.resolvedUrl("animatedimage.qml"));
             addExample("AnimatedSprite", "A simple sprite-based animation", Qt.resolvedUrl("animatedsprite.qml"));
             addExample("SpriteSequence", "A sprite-based animation with complex transitions", Qt.resolvedUrl("spritesequence.qml"));
+            addExample("FrameStepping", "A multi-frame non-animated image", Qt.resolvedUrl("framestepping.qml"));
+            addExample("MultiBorderImage", "A multi-frame image with scaled borders", Qt.resolvedUrl("multiframeborderimage.qml"));
         }
     }
 }

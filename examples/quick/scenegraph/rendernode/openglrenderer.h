@@ -63,6 +63,7 @@ class QOpenGLBuffer;
 
 QT_END_NAMESPACE
 
+//! [1]
 class OpenGLRenderNode : public QSGRenderNode
 {
 public:
@@ -74,6 +75,7 @@ public:
     StateFlags changedStates() const override;
     RenderingFlags flags() const override;
     QRectF rect() const override;
+//! [1]
 
 private:
     void init();

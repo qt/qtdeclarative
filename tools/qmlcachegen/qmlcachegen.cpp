@@ -334,7 +334,11 @@ static bool saveUnitAsCpp(const QString &inputFileName, const QString &outputFil
                           const QV4::CompiledData::SaveableUnitPointer &unit,
                           QString *errorString)
 {
+#if QT_CONFIG(temporaryfile)
     QSaveFile f(outputFileName);
+#else
+    QFile f(outputFileName);
+#endif
     if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         *errorString = f.errorString();
         return false;
@@ -392,10 +396,12 @@ static bool saveUnitAsCpp(const QString &inputFileName, const QString &outputFil
     if (!writeStr("};\n}\n}\n"))
         return false;
 
+#if QT_CONFIG(temporaryfile)
     if (!f.commit()) {
         *errorString = f.errorString();
         return false;
     }
+#endif
 
     return true;
 }

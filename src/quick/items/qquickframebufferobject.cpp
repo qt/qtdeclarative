@@ -109,6 +109,10 @@ public:
  * and can be used directly in \l {ShaderEffect}{ShaderEffects} and other
  * classes that consume texture providers.
  *
+ * \warning This class is only suitable when working directly with OpenGL. It
+ * is not compatible with the \l{Scene Graph Adaptations}{RHI-based rendering
+ * path}.
+ *
  * \sa {Scene Graph - Rendering FBOs}, {Scene Graph and Rendering}
  */
 

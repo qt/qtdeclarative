@@ -290,7 +290,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathArc : public QQuickCurve
     Q_PROPERTY(qreal radiusY READ radiusY WRITE setRadiusY NOTIFY radiusYChanged)
     Q_PROPERTY(bool useLargeArc READ useLargeArc WRITE setUseLargeArc NOTIFY useLargeArcChanged)
     Q_PROPERTY(ArcDirection direction READ direction WRITE setDirection NOTIFY directionChanged)
-    Q_PROPERTY(qreal xAxisRotation READ xAxisRotation WRITE setXAxisRotation NOTIFY xAxisRotationChanged REVISION 2)
+    Q_PROPERTY(qreal xAxisRotation READ xAxisRotation WRITE setXAxisRotation NOTIFY xAxisRotationChanged REVISION 9)
 
 public:
     QQuickPathArc(QObject *parent=nullptr)
@@ -321,7 +321,7 @@ Q_SIGNALS:
     void radiusYChanged();
     void useLargeArcChanged();
     void directionChanged();
-    Q_REVISION(2) void xAxisRotationChanged();
+    Q_REVISION(9) void xAxisRotationChanged();
 
 private:
     qreal _radiusX = 0;
@@ -428,12 +428,12 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathPolyline : public QQuickCurve
 {
     Q_OBJECT
     Q_PROPERTY(QPointF start READ start NOTIFY startChanged)
-    Q_PROPERTY(QVariantList path READ path WRITE setPath NOTIFY pathChanged)
+    Q_PROPERTY(QVariant path READ path WRITE setPath NOTIFY pathChanged)
 public:
     QQuickPathPolyline(QObject *parent=nullptr);
 
-    QVariantList path() const;
-    void setPath(const QVariantList &path);
+    QVariant path() const;
+    void setPath(const QVariant &path);
     void setPath(const QVector<QPointF> &path);
     QPointF start() const;
     void addToPath(QPainterPath &path, const QQuickPathData &data) override;
@@ -450,12 +450,12 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathMultiline : public QQuickCurve
 {
     Q_OBJECT
     Q_PROPERTY(QPointF start READ start NOTIFY startChanged)
-    Q_PROPERTY(QVariantList paths READ paths WRITE setPaths NOTIFY pathsChanged)
+    Q_PROPERTY(QVariant paths READ paths WRITE setPaths NOTIFY pathsChanged)
 public:
     QQuickPathMultiline(QObject *parent=nullptr);
 
-    QVariantList paths() const;
-    void setPaths(const QVariantList &paths);
+    QVariant paths() const;
+    void setPaths(const QVariant &paths);
     void setPaths(const QVector<QVector<QPointF>> &paths);
     QPointF start() const;
     void addToPath(QPainterPath &path, const QQuickPathData &) override;

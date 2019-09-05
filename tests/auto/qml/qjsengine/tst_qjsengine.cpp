@@ -201,7 +201,9 @@ private slots:
 
     void engineForObject();
     void intConversion_QTBUG43309();
+#ifdef QT_DEPRECATED
     void toFixed();
+#endif
 
     void argumentEvaluationOrder();
 
@@ -4323,7 +4325,10 @@ void tst_QJSEngine::engineForObject()
         QVERIFY(!qjsEngine(&object));
         QJSValue wrapper = engine.newQObject(&object);
         QQmlEngine::setObjectOwnership(&object, QQmlEngine::CppOwnership);
+        QVERIFY(qjsEngine(&object));
+#ifdef QT_DEPRECATED
         QCOMPARE(qjsEngine(&object), wrapper.engine());
+#endif
     }
     QVERIFY(!qjsEngine(&object));
 }
@@ -4338,6 +4343,7 @@ void tst_QJSEngine::intConversion_QTBUG43309()
     QCOMPARE(result.toNumber(), 25.0);
 }
 
+#ifdef QT_DEPRECATED
 // QTBUG-44039 and QTBUG-43885:
 void tst_QJSEngine::toFixed()
 {
@@ -4349,6 +4355,7 @@ void tst_QJSEngine::toFixed()
     QVERIFY(result.isString());
     QCOMPARE(result.toString(), QStringLiteral("12.1"));
 }
+#endif
 
 void tst_QJSEngine::argumentEvaluationOrder()
 {

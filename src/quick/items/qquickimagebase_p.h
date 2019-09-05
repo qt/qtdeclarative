@@ -68,6 +68,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImageBase : public QQuickImplicitSizeItem
     Q_PROPERTY(bool cache READ cache WRITE setCache NOTIFY cacheChanged)
     Q_PROPERTY(QSize sourceSize READ sourceSize WRITE setSourceSize RESET resetSourceSize NOTIFY sourceSizeChanged)
     Q_PROPERTY(bool mirror READ mirror WRITE setMirror NOTIFY mirrorChanged)
+    Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY currentFrameChanged REVISION 14)
+    Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged REVISION 14)
 
 public:
     QQuickImageBase(QQuickItem *parent=nullptr);
@@ -95,6 +97,11 @@ public:
     virtual void setMirror(bool mirror);
     bool mirror() const;
 
+    virtual void setCurrentFrame(int frame);
+    virtual int currentFrame() const;
+
+    virtual int frameCount() const;
+
     virtual void setAutoTransform(bool transform);
     bool autoTransform() const;
 
@@ -112,6 +119,8 @@ Q_SIGNALS:
     void asynchronousChanged();
     void cacheChanged();
     void mirrorChanged();
+    Q_REVISION(14) void currentFrameChanged();
+    Q_REVISION(14) void frameCountChanged();
 
 protected:
     virtual void load();

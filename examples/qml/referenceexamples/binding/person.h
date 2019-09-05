@@ -61,7 +61,7 @@ class ShoeDescription : public QObject
     Q_PROPERTY(QString brand READ brand WRITE setBrand NOTIFY shoeChanged)
     Q_PROPERTY(qreal price READ price WRITE setPrice NOTIFY shoeChanged)
 public:
-    ShoeDescription(QObject *parent = 0);
+    ShoeDescription(QObject *parent = nullptr);
 
     int size() const;
     void setSize(int);
@@ -92,7 +92,7 @@ class Person : public QObject
     Q_PROPERTY(ShoeDescription *shoe READ shoe CONSTANT)
 // ![0]
 public:
-    Person(QObject *parent = 0);
+    Person(QObject *parent = nullptr);
 
     QString name() const;
     void setName(const QString &);
@@ -110,14 +110,14 @@ class Boy : public Person
 {
     Q_OBJECT
 public:
-    Boy(QObject * parent = 0);
+    Boy(QObject * parent = nullptr);
 };
 
 class Girl : public Person
 {
     Q_OBJECT
 public:
-    Girl(QObject * parent = 0);
+    Girl(QObject * parent = nullptr);
 };
 
 #endif // PERSON_H

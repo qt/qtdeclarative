@@ -1,6 +1,11 @@
-TEMPLATE = app
-TARGET = testqmllint
-INCLUDEPATH += .
+CONFIG += testcase
+TARGET = tst_qmllint
+macos:CONFIG -= app_bundle
 
-SOURCES += main.cpp
+SOURCES += tst_qmllint.cpp
+
+include (../../shared/util.pri)
+
+TESTDATA = data/*
+
 QT += testlib

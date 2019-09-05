@@ -54,6 +54,8 @@
 #include <QSGRendererInterface>
 #include <QFile>
 
+// ### Qt 6: remove
+
 #if QT_CONFIG(d3d12)
 
 D3D12RenderNode::D3D12RenderNode(QQuickItem *item)
@@ -166,8 +168,8 @@ void D3D12RenderNode::init()
     psoDesc.RasterizerState = rastDesc;
     psoDesc.BlendState = blendDesc;
     // No depth. The correct stacking of the item is ensured by the projection matrix.
-    // Do not bother with stencil since we do not apply clipping in the
-    // example. If clipping is desired, render() needs to set a different PSO
+    // Note that this does not support clipping.
+    // If clipping is desired, render() needs to set a different PSO
     // with stencil enabled whenever the RenderState indicates so.
     psoDesc.SampleMask = UINT_MAX;
     psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;

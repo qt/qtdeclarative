@@ -54,6 +54,8 @@ class QSGRectangleNode;
 class QSGImageNode;
 class QSGNinePatchNode;
 
+// ### Qt 6: Remove or redesign.
+
 class Q_QUICK_EXPORT QSGEngine : public QObject
 {
     Q_OBJECT

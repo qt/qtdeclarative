@@ -206,14 +206,18 @@ void QQmlEnginePrivate::defineModule()
     qmlRegisterType<QQmlBind>(uri, 2, 0, "Binding");
     qmlRegisterType<QQmlBind, 8>(uri, 2, 8, "Binding"); // Only available in >= 2.8
     qmlRegisterType<QQmlBind, 14>(uri, 2, 14, "Binding");
+
+    // TODO: We won't need Connections to be a custom type anymore once we can drop the
+    //       automatic signal handler inference from undeclared properties.
     qmlRegisterCustomType<QQmlConnections>(uri, 2, 0, "Connections", new QQmlConnectionsParser);
-    qmlRegisterCustomType<QQmlConnections, 1>(uri, 2, 3, "Connections", new QQmlConnectionsParser); // Only available in QtQml >= 2.3
+    qmlRegisterCustomType<QQmlConnections, 3>(uri, 2, 3, "Connections", new QQmlConnectionsParser); // Only available in QtQml >= 2.3
+
 #if QT_CONFIG(qml_animation)
     qmlRegisterType<QQmlTimer>(uri, 2, 0, "Timer");
 #endif
 
     qmlRegisterType<QQmlLoggingCategory>(uri, 2, 8, "LoggingCategory"); // Only available in >= 2.8
-    qmlRegisterType<QQmlLoggingCategory, 1>(uri, 2, 12, "LoggingCategory"); // Only available in >= 2.12
+    qmlRegisterType<QQmlLoggingCategory, 12>(uri, 2, 12, "LoggingCategory"); // Only available in >= 2.12
 
 #if QT_CONFIG(qml_locale)
     qmlRegisterUncreatableType<QQmlLocale>(uri, 2, 2, "Locale", QQmlEngine::tr("Locale cannot be instantiated. Use Qt.locale()"));
@@ -796,11 +800,12 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
         QMetaMethod m = QMetaObjectPrivate::signal(object->metaObject(), index);
         QList<QByteArray> parameterTypes = m.parameterTypes();
 
-        int *types = (int *)malloc((parameterTypes.count() + 1) * sizeof(int));
-        void **args = (void **) malloc((parameterTypes.count() + 1) *sizeof(void *));
+        QScopedPointer<QMetaCallEvent> ev(new QMetaCallEvent(m.methodIndex(), 0, nullptr,
+                                                             object, index,
+                                                             parameterTypes.count() + 1));
 
-        types[0] = 0; // return type
-        args[0] = nullptr; // return value
+        void **args = ev->args();
+        int *types = ev->types();
 
         for (int ii = 0; ii < parameterTypes.count(); ++ii) {
             const QByteArray &typeName = parameterTypes.at(ii);
@@ -813,21 +818,16 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
                 qWarning("QObject::connect: Cannot queue arguments of type '%s'\n"
                          "(Make sure '%s' is registered using qRegisterMetaType().)",
                          typeName.constData(), typeName.constData());
-                free(types);
-                free(args);
                 return;
             }
 
             args[ii + 1] = QMetaType::create(types[ii + 1], a[ii + 1]);
         }
 
-        QMetaCallEvent *ev = new QMetaCallEvent(m.methodIndex(), 0, nullptr, object, index,
-                                                parameterTypes.count() + 1, types, args);
-
         QQmlThreadNotifierProxyObject *mpo = new QQmlThreadNotifierProxyObject;
         mpo->target = object;
         mpo->moveToThread(QObjectPrivate::get(object)->threadData->thread.loadAcquire());
-        QCoreApplication::postEvent(mpo, ev);
+        QCoreApplication::postEvent(mpo, ev.take());
 
     } else {
         QQmlNotifierEndpoint *ep = ddata->notify(index);

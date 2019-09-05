@@ -32,6 +32,7 @@
 #include <QFile>
 #include <QTimer>
 #include <QTest>
+#include <QQmlFile>
 
 /*!
 \internal
@@ -152,17 +153,17 @@ bool TestHTTPServer::wait(const QUrl &expect, const QUrl &reply, const QUrl &bod
     m_state = AwaitingHeader;
     m_data.clear();
 
-    QFile expectFile(expect.toLocalFile());
+    QFile expectFile(QQmlFile::urlToLocalFileOrQrc(expect));
     if (!expectFile.open(QIODevice::ReadOnly))
         return false;
 
-    QFile replyFile(reply.toLocalFile());
+    QFile replyFile(QQmlFile::urlToLocalFileOrQrc(reply));
     if (!replyFile.open(QIODevice::ReadOnly))
         return false;
 
     m_bodyData = QByteArray();
     if (body.isValid()) {
-        QFile bodyFile(body.toLocalFile());
+        QFile bodyFile(QQmlFile::urlToLocalFileOrQrc(body));
         if (!bodyFile.open(QIODevice::ReadOnly))
             return false;
         m_bodyData = bodyFile.readAll();

@@ -22,3 +22,9 @@ qtConfig(d3d12) {
     SOURCES += d3d12renderer.cpp
     LIBS += -ld3d12
 }
+
+macos {
+    HEADERS += metalrenderer.h
+    SOURCES += metalrenderer.mm
+    LIBS += -framework Metal -framework AppKit
+}

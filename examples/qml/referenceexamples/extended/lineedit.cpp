@@ -51,7 +51,7 @@
 #include <qqml.h>
 
 LineEditExtension::LineEditExtension(QObject *object)
-: QObject(object), m_lineedit(static_cast<QLineEdit *>(object))
+: QObject(object), m_lineedit(qobject_cast<QLineEdit *>(object))
 {
 }
 

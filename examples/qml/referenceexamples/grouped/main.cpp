@@ -66,7 +66,7 @@ int main(int argc, char ** argv)
 
     QQmlEngine engine;
     QQmlComponent component(&engine, QUrl("qrc:example.qml"));
-    BirthdayParty *party = qobject_cast<BirthdayParty *>(component.create());
+    auto *party = qobject_cast<BirthdayParty *>(component.create());
 
     if (party && party->host()) {
         qWarning() << party->host()->name() << "is having a birthday!";

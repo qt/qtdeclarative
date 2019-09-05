@@ -58,7 +58,9 @@
 
 #include <QtCore/qobject.h>
 #include <QtCore/qrect.h>
+#if QT_CONFIG(easingcurve)
 #include <QtCore/qeasingcurve.h>
+#endif
 #include <QtCore/qvariant.h>
 
 QT_BEGIN_NAMESPACE
@@ -210,6 +212,7 @@ public:
     int bottom() const;
 };
 
+#if QT_CONFIG(easingcurve)
 struct QQmlEasingValueType
 {
     QEasingCurve v;
@@ -260,6 +263,7 @@ public:
     void setBezierCurve(const QVariantList &);
     QVariantList bezierCurve() const;
 };
+#endif
 
 template<typename T>
 int qmlRegisterValueTypeEnums(const char *uri, int versionMajor, int versionMinor, const char *qmlName)

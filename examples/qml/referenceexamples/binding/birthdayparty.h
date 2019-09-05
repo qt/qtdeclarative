@@ -83,7 +83,7 @@ class BirthdayParty : public QObject
     Q_PROPERTY(QString announcement READ announcement WRITE setAnnouncement)
     Q_CLASSINFO("DefaultProperty", "guests")
 public:
-    BirthdayParty(QObject *parent = 0);
+    BirthdayParty(QObject *parent = nullptr);
 
     Person *host() const;
     void setHost(Person *);

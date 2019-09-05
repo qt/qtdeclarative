@@ -899,7 +899,7 @@ void QQuickMouseArea::wheelEvent(QWheelEvent *event)
     }
 
     QQuickWheelEvent &we = d->quickWheelEvent;
-    we.reset(event->posF().x(), event->posF().y(), event->angleDelta(), event->pixelDelta(),
+    we.reset(event->position().x(), event->position().y(), event->angleDelta(), event->pixelDelta(),
              event->buttons(), event->modifiers(), event->inverted());
     we.setAccepted(d->isWheelConnected());
     emit wheel(&we);

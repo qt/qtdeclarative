@@ -100,6 +100,8 @@ public:
     QUrl url() const;
 
     virtual QObject *create(QQmlContext *context = nullptr);
+    QObject *createWithInitialProperties(const QVariantMap& initialProperties, QQmlContext *context = nullptr);
+    void setInitialProperties(QObject *component, const QVariantMap &properties);
     virtual QObject *beginCreate(QQmlContext *);
     virtual void completeCreate();
 

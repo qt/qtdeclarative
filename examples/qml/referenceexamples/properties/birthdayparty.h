@@ -68,7 +68,7 @@ class BirthdayParty : public QObject
 // ![2]
 // ![3]
 public:
-    BirthdayParty(QObject *parent = 0);
+    BirthdayParty(QObject *parent = nullptr);
 
     Person *host() const;
     void setHost(Person *);

@@ -65,7 +65,7 @@ int main(int argc, char ** argv)
 // ![1]
     QQmlEngine engine;
     QQmlComponent component(&engine, QUrl("qrc:example.qml"));
-    QLineEdit *edit = qobject_cast<QLineEdit *>(component.create());
+    auto *edit = qobject_cast<QLineEdit *>(component.create());
 // ![1]
 
     if (edit) {

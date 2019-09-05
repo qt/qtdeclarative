@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qsgplaintexture_p.h"
+#include "qsgrhinativetextureimporter_p.h"
 #include <QtQuick/private/qsgcontext_p.h>
 #include <qmath.h>
 #include <private/qquickprofiler_p.h>
@@ -274,6 +275,24 @@ void QSGPlainTexture::setTexture(QRhiTexture *texture) // RHI only
     m_mipmaps_generated = false;
 }
 
+void QSGPlainTexture::setTextureFromNativeObject(QRhi *rhi, QQuickWindow::NativeObjectType type,
+                                                 const void *nativeObjectPtr, int nativeLayout,
+                                                 const QSize &size, bool mipmap)
+{
+    Q_UNUSED(type);
+
+    QRhiTexture::Flags flags = 0;
+    if (mipmap)
+        flags |= QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips;
+
+    QRhiTexture *t = rhi->newTexture(QRhiTexture::RGBA8, size, 1, flags);
+
+    // ownership of the native object is never taken
+    QSGRhiNativeTextureImporter::buildWrapper(rhi, t, nativeObjectPtr, nativeLayout);
+
+    setTexture(t);
+}
+
 int QSGPlainTexturePrivate::comparisonKey() const
 {
     Q_Q(const QSGPlainTexture);
@@ -376,6 +395,19 @@ void QSGPlainTexturePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch
     if (tmp.width() > max || tmp.height() > max) {
         tmp = tmp.scaled(qMin(max, tmp.width()), qMin(max, tmp.height()), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
         q->m_texture_size = tmp.size();
+    }
+
+    if ((q->mipmapFiltering() != QSGTexture::None
+            || q->horizontalWrapMode() != QSGTexture::ClampToEdge
+            || q->verticalWrapMode() != QSGTexture::ClampToEdge)
+            && !rhi->isFeatureSupported(QRhi::NPOTTextureRepeat))
+    {
+        const int w = qNextPowerOfTwo(tmp.width() - 1);
+        const int h = qNextPowerOfTwo(tmp.height() - 1);
+        if (tmp.width() != w || tmp.height() != h) {
+            tmp = tmp.scaled(w, h, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+            q->m_texture_size = tmp.size();
+        }
     }
 
     bool needsRebuild = q->m_texture && q->m_texture->pixelSize() != q->m_texture_size;

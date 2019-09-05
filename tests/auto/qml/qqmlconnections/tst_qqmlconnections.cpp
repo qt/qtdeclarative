@@ -42,27 +42,55 @@ public:
 private slots:
     void defaultValues();
     void properties();
+
+    void connection_data() { prefixes(); }
     void connection();
+
+    void trimming_data() { prefixes(); }
     void trimming();
+
+    void targetChanged_data() { prefixes(); };
     void targetChanged();
+
     void unknownSignals_data();
     void unknownSignals();
+
     void errors_data();
     void errors();
+
+    void rewriteErrors_data() { prefixes(); }
     void rewriteErrors();
+
+    void singletonTypeTarget_data() { prefixes(); }
     void singletonTypeTarget();
+
+    void enableDisable_QTBUG_36350_data() { prefixes(); }
     void enableDisable_QTBUG_36350();
+
+    void disabledAtStart_data() { prefixes(); }
     void disabledAtStart();
+
+    void clearImplicitTarget_data() { prefixes(); }
     void clearImplicitTarget();
     void onWithoutASignal();
+
+    void noAcceleratedGlobalLookup_data() { prefixes(); }
     void noAcceleratedGlobalLookup();
 
 private:
     QQmlEngine engine;
+    void prefixes();
 };
 
 tst_qqmlconnections::tst_qqmlconnections()
 {
+}
+
+void tst_qqmlconnections::prefixes()
+{
+    QTest::addColumn<QString>("prefix");
+    QTest::newRow("functions") << QString("functions");
+    QTest::newRow("bindings") << QString("bindings");
 }
 
 void tst_qqmlconnections::defaultValues()
@@ -93,8 +121,9 @@ void tst_qqmlconnections::properties()
 
 void tst_qqmlconnections::connection()
 {
+    QFETCH(QString, prefix);
     QQmlEngine engine;
-    QQmlComponent c(&engine, testFileUrl("test-connection.qml"));
+    QQmlComponent c(&engine, testFileUrl(prefix + "/test-connection.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
 
     QVERIFY(item != nullptr);
@@ -110,8 +139,9 @@ void tst_qqmlconnections::connection()
 
 void tst_qqmlconnections::trimming()
 {
+    QFETCH(QString, prefix);
     QQmlEngine engine;
-    QQmlComponent c(&engine, testFileUrl("trimming.qml"));
+    QQmlComponent c(&engine, testFileUrl(prefix + "/trimming.qml"));
     QObject *object = c.create();
 
     QVERIFY(object != nullptr);
@@ -131,8 +161,9 @@ void tst_qqmlconnections::trimming()
 // Confirm that target can be changed by one of our signal handlers
 void tst_qqmlconnections::targetChanged()
 {
+    QFETCH(QString, prefix);
     QQmlEngine engine;
-    QQmlComponent c(&engine, testFileUrl("connection-targetchange.qml"));
+    QQmlComponent c(&engine, testFileUrl(prefix + "/connection-targetchange.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
     QVERIFY(item != nullptr);
 
@@ -158,10 +189,15 @@ void tst_qqmlconnections::unknownSignals_data()
     QTest::addColumn<QString>("file");
     QTest::addColumn<QString>("error");
 
-    QTest::newRow("basic") << "connection-unknownsignals.qml" << ":6:30: QML Connections: Cannot assign to non-existent property \"onFooBar\"";
-    QTest::newRow("parent") << "connection-unknownsignals-parent.qml" << ":4:30: QML Connections: Cannot assign to non-existent property \"onFooBar\"";
-    QTest::newRow("ignored") << "connection-unknownsignals-ignored.qml" << ""; // should be NO error
-    QTest::newRow("notarget") << "connection-unknownsignals-notarget.qml" << ""; // should be NO error
+    QTest::newRow("functions/basic")    << "functions/connection-unknownsignals.qml" << ":6:30: QML Connections: Detected function \"onFooBar\" in Connections element. This is probably intended to be a signal handler but no signal of the target matches the name.";
+    QTest::newRow("functions/parent")   << "functions/connection-unknownsignals-parent.qml" << ":4:30: QML Connections: Detected function \"onFooBar\" in Connections element. This is probably intended to be a signal handler but no signal of the target matches the name.";
+    QTest::newRow("functions/ignored")  << "functions/connection-unknownsignals-ignored.qml" << ""; // should be NO error
+    QTest::newRow("functions/notarget") << "functions/connection-unknownsignals-notarget.qml" << ""; // should be NO error
+
+    QTest::newRow("bindings/basic")    << "bindings/connection-unknownsignals.qml" << ":6:30: QML Connections: Cannot assign to non-existent property \"onFooBar\"";
+    QTest::newRow("bindings/parent")   << "bindings/connection-unknownsignals-parent.qml" << ":4:30: QML Connections: Cannot assign to non-existent property \"onFooBar\"";
+    QTest::newRow("bindings/ignored")  << "bindings/connection-unknownsignals-ignored.qml" << ""; // should be NO error
+    QTest::newRow("bindings/notarget") << "bindings/connection-unknownsignals-notarget.qml" << ""; // should be NO error
 }
 
 void tst_qqmlconnections::unknownSignals()
@@ -239,10 +275,11 @@ private:
 
 void tst_qqmlconnections::rewriteErrors()
 {
+    QFETCH(QString, prefix);
     qmlRegisterType<TestObject>("Test", 1, 0, "TestObject");
     {
         QQmlEngine engine;
-        QQmlComponent c(&engine, testFileUrl("rewriteError-unnamed.qml"));
+        QQmlComponent c(&engine, testFileUrl(prefix + "/rewriteError-unnamed.qml"));
         QTest::ignoreMessage(QtWarningMsg, (c.url().toString() + ":5:35: QML Connections: Signal uses unnamed parameter followed by named parameter.").toLatin1());
         TestObject *obj = qobject_cast<TestObject*>(c.create());
         QVERIFY(obj != nullptr);
@@ -254,7 +291,7 @@ void tst_qqmlconnections::rewriteErrors()
 
     {
         QQmlEngine engine;
-        QQmlComponent c(&engine, testFileUrl("rewriteError-global.qml"));
+        QQmlComponent c(&engine, testFileUrl(prefix + "/rewriteError-global.qml"));
         QTest::ignoreMessage(QtWarningMsg, (c.url().toString() + ":5:35: QML Connections: Signal parameter \"parseInt\" hides global variable.").toLatin1());
         TestObject *obj = qobject_cast<TestObject*>(c.create());
         QVERIFY(obj != nullptr);
@@ -305,8 +342,9 @@ static QObject *module_api_factory(QQmlEngine *engine, QJSEngine *scriptEngine)
 // QTBUG-20937
 void tst_qqmlconnections::singletonTypeTarget()
 {
+    QFETCH(QString, prefix);
     qmlRegisterSingletonType<MyTestSingletonType>("MyTestSingletonType", 1, 0, "Api", module_api_factory);
-    QQmlComponent component(&engine, testFileUrl("singletontype-target.qml"));
+    QQmlComponent component(&engine, testFileUrl(prefix + "/singletontype-target.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
 
@@ -331,8 +369,9 @@ void tst_qqmlconnections::singletonTypeTarget()
 
 void tst_qqmlconnections::enableDisable_QTBUG_36350()
 {
+    QFETCH(QString, prefix);
     QQmlEngine engine;
-    QQmlComponent c(&engine, testFileUrl("test-connection.qml"));
+    QQmlComponent c(&engine, testFileUrl(prefix + "/test-connection.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
     QVERIFY(item != nullptr);
 
@@ -358,8 +397,9 @@ void tst_qqmlconnections::enableDisable_QTBUG_36350()
 
 void tst_qqmlconnections::disabledAtStart()
 {
+    QFETCH(QString, prefix);
     QQmlEngine engine;
-    QQmlComponent c(&engine, testFileUrl("disabled-at-start.qml"));
+    QQmlComponent c(&engine, testFileUrl(prefix + "/disabled-at-start.qml"));
     QObject * const object = c.create();
 
     QVERIFY(object != nullptr);
@@ -376,8 +416,9 @@ void tst_qqmlconnections::disabledAtStart()
 //QTBUG-56499
 void tst_qqmlconnections::clearImplicitTarget()
 {
+    QFETCH(QString, prefix);
     QQmlEngine engine;
-    QQmlComponent c(&engine, testFileUrl("test-connection-implicit.qml"));
+    QQmlComponent c(&engine, testFileUrl(prefix + "/test-connection-implicit.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
 
     QVERIFY(item != nullptr);
@@ -421,10 +462,11 @@ signals:
 
 void tst_qqmlconnections::noAcceleratedGlobalLookup()
 {
+    QFETCH(QString, prefix);
     qRegisterMetaType<Proxy::MyEnum>();
     qmlRegisterType<Proxy>("test.proxy", 1, 0, "Proxy");
     QQmlEngine engine;
-    QQmlComponent c(&engine, testFileUrl("override-proxy-type.qml"));
+    QQmlComponent c(&engine, testFileUrl(prefix + "/override-proxy-type.qml"));
     QVERIFY(c.isReady());
     QScopedPointer<QObject> object(c.create());
     const QVariant val = object->property("testEnum");

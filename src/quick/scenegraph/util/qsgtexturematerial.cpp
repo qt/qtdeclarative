@@ -164,6 +164,7 @@ void QSGOpaqueTextureMaterialRhiShader::updateSampledImage(const RenderState &st
         if (isNpot) {
             t->setHorizontalWrapMode(QSGTexture::ClampToEdge);
             t->setVerticalWrapMode(QSGTexture::ClampToEdge);
+            t->setMipmapFiltering(QSGTexture::None);
         }
     }
 

@@ -108,6 +108,8 @@ public:
     QQuickView::ResizeMode resizeMode;
     QSize initialSize;
     QElapsedTimer frameTimer;
+
+    QVariantMap initialProperties;
 };
 
 QT_END_NAMESPACE
