@@ -3308,6 +3308,8 @@ public:
         return defaultToken;
       else if (readonlyToken.isValid())
           return readonlyToken;
+      else if (requiredToken.isValid())
+          return requiredToken;
 
       return propertyToken;
     }
@@ -3331,10 +3333,13 @@ public:
     UiObjectMember *binding; // initialized with a QML object or array.
     bool isDefaultMember;
     bool isReadonlyMember;
+    bool isRequired = false;
     UiParameterList *parameters;
+    // TODO: merge source locations
     SourceLocation defaultToken;
     SourceLocation readonlyToken;
     SourceLocation propertyToken;
+    SourceLocation requiredToken;
     SourceLocation typeModifierToken;
     SourceLocation typeToken;
     SourceLocation identifierToken;

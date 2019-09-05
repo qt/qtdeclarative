@@ -70,6 +70,7 @@ private slots:
     void selfDelete();
     void contextDelete();
     void garbageCollection();
+    void requiredProperties();
 
 private:
     QQmlIncubationController controller;
@@ -1172,6 +1173,44 @@ void tst_qqmlincubator::garbageCollection()
     // verify incubator is correctly collected now that incubation is complete and all references are gone
     engine.collectGarbage();
     QVERIFY(weakIncubatorRef.isNullOrUndefined());
+}
+
+void tst_qqmlincubator::requiredProperties()
+{
+    {
+        QQmlComponent component(&engine, testFileUrl("requiredProperty.qml"));
+        QVERIFY(component.isReady());
+        // forceCompletion immediately after creating an asynchronous object completes it
+        QQmlIncubator incubator;
+        incubator.setInitialProperties({{"requiredProperty", 42}});
+        QVERIFY(incubator.isNull());
+        component.create(incubator);
+        QVERIFY(incubator.isLoading());
+
+        incubator.forceCompletion();
+
+        QVERIFY(incubator.isReady());
+        QVERIFY(incubator.object() != nullptr);
+        QCOMPARE(incubator.object()->property("requiredProperty").toInt(), 42);
+
+        delete incubator.object();
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("requiredProperty.qml"));
+        QVERIFY(component.isReady());
+        // forceCompletion immediately after creating an asynchronous object completes it
+        QQmlIncubator incubator;
+        QVERIFY(incubator.isNull());
+        component.create(incubator);
+        QVERIFY(incubator.isLoading());
+
+        incubator.forceCompletion();
+
+        QVERIFY(incubator.isError());
+        auto error = incubator.errors().first();
+        QVERIFY(error.description().contains(QLatin1String("Required property requiredProperty was not initialized")));
+        QVERIFY(incubator.object() == nullptr);
+    }
 }
 
 QTEST_MAIN(tst_qqmlincubator)

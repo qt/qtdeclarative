@@ -847,6 +847,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
 
             Property *property = New<Property>();
             property->isReadOnly = node->isReadonlyMember;
+            property->isRequired = node->isRequired;
 
             QV4::CompiledData::BuiltinType builtinPropertyType = Parameter::stringToBuiltinType(memberType);
             bool typeFound = builtinPropertyType != QV4::CompiledData::BuiltinType::InvalidBuiltin;

@@ -89,6 +89,7 @@
 %token T_STATIC "static"
 %token T_EXPORT "export"
 %token T_FROM "from"
+%token T_REQUIRED "required"
 
 --- template strings
 %token T_NO_SUBSTITUTION_TEMPLATE"(no subst template)"
@@ -121,7 +122,7 @@
 %token T_FOR_LOOKAHEAD_OK "(for lookahead ok)"
 
 --%left T_PLUS T_MINUS
-%nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET T_OF T_STATIC T_FROM T_AS
+%nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET T_OF T_STATIC T_FROM T_AS T_REQUIRED
 %nonassoc REDUCE_HERE
 %right T_THEN T_ELSE
 
@@ -1216,7 +1217,6 @@ UiObjectMemberPropertyNoInitialiser: T_PROPERTY UiPropertyType QmlIdentifier Sem
 ./
 
 
-
 UiObjectMember: UiObjectMemberPropertyNoInitialiser;
 
 UiObjectMember: T_DEFAULT UiObjectMemberPropertyNoInitialiser;
@@ -1244,6 +1244,17 @@ OptionalSemicolon: | Semicolon;
 /* we need OptionalSemicolon because UiScriptStatement might already parse the last semicolon
   and then we would miss a semicolon (see tests/auto/quick/qquickvisualdatamodel/data/objectlist.qml)*/
  ./
+
+UiObjectMember: T_REQUIRED UiObjectMemberPropertyNoInitialiser;
+/.
+    case $rule_number: {
+        AST::UiPublicMember *node = sym(2).UiPublicMember;
+        node->requiredToken = loc(1);
+        node->isRequired = true;
+        sym(1).Node = node;
+    } break;
+./
+
 
 UiObjectMemberWithScriptStatement: T_PROPERTY UiPropertyType QmlIdentifier T_COLON UiScriptStatement OptionalSemicolon;
 /.
@@ -1459,6 +1470,7 @@ QmlIdentifier: T_GET;
 QmlIdentifier: T_SET;
 QmlIdentifier: T_FROM;
 QmlIdentifier: T_OF;
+QmlIdentifier: T_REQUIRED;
 
 JsIdentifier: T_IDENTIFIER;
 JsIdentifier: T_PROPERTY;
@@ -1471,6 +1483,7 @@ JsIdentifier: T_FROM;
 JsIdentifier: T_STATIC;
 JsIdentifier: T_OF;
 JsIdentifier: T_AS;
+JsIdentifier: T_REQUIRED;
 
 IdentifierReference: JsIdentifier;
 BindingIdentifier: IdentifierReference;

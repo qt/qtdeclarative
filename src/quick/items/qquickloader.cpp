@@ -45,6 +45,7 @@
 #include <private/qqmlglobal_p.h>
 
 #include <private/qqmlcomponent_p.h>
+#include <private/qqmlincubator_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -664,7 +665,8 @@ void QQuickLoaderPrivate::setInitialState(QObject *obj)
     QV4::Scope scope(v4);
     QV4::ScopedValue ipv(scope, initialPropertyValues.value());
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, qmlCallingContext.value());
-    d->initializeObjectWithInitialProperties(qmlContext, ipv, obj);
+    auto incubatorPriv = QQmlIncubatorPrivate::get(incubator);
+    d->initializeObjectWithInitialProperties(qmlContext, ipv, obj, incubatorPriv->requiredProperties());
 }
 
 void QQuickLoaderIncubator::statusChanged(Status status)
