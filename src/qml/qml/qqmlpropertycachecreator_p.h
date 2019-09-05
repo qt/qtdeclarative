@@ -152,9 +152,18 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buil
 template <typename ObjectContainer>
 inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context)
 {
-    const CompiledObject *obj = objectContainer->objectAt(objectIndex);
+    auto isAddressable = [](const QUrl &url) {
+        const QString fileName = url.fileName();
+        return !fileName.isEmpty() && fileName.front().isUpper();
+    };
 
-    bool needVMEMetaObject = obj->propertyCount() != 0 || obj->aliasCount() != 0 || obj->signalCount() != 0 || obj->functionCount() != 0 || obj->enumCount() != 0;
+    const CompiledObject *obj = objectContainer->objectAt(objectIndex);
+    bool needVMEMetaObject = obj->propertyCount() != 0 || obj->aliasCount() != 0
+            || obj->signalCount() != 0 || obj->functionCount() != 0 || obj->enumCount() != 0
+            || (((obj->flags & QV4::CompiledData::Object::IsComponent)
+                 || (objectIndex == 0 && isAddressable(objectContainer->url())))
+                && !objectContainer->resolvedType(obj->inheritedTypeNameIndex)->isFullyDynamicType);
+
     if (!needVMEMetaObject) {
         auto binding = obj->bindingsBegin();
         auto end = obj->bindingsEnd();

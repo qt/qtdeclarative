@@ -2500,7 +2500,15 @@ void tst_qqmllanguage::testType(const QString& qml, const QString& type, const Q
         VERIFY_ERRORS(0);
         QScopedPointer<QObject> object(component.create());
         QVERIFY(object != nullptr);
-        QCOMPARE(QString(object->metaObject()->className()), type);
+        const QMetaObject *meta = object->metaObject();
+        for (; meta; meta = meta->superClass()) {
+            const QString className(meta->className());
+            if (!className.contains("_QMLTYPE_") && !className.contains("_QML_")) {
+                QCOMPARE(className, type);
+                break;
+            }
+        }
+        QVERIFY(meta != nullptr);
     }
 
     engine.setImportPathList(defaultImportPathList);
@@ -4043,10 +4051,12 @@ void tst_qqmllanguage::implicitImportsLast()
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
-    QVERIFY(QString(object->metaObject()->className()).startsWith(QLatin1String("QQuickMouseArea")));
+    QVERIFY(QString(object->metaObject()->superClass()->superClass()->className())
+            .startsWith(QLatin1String("QQuickMouseArea")));
     QObject* object2 = object->property("item").value<QObject*>();
     QVERIFY(object2 != nullptr);
-    QCOMPARE(QString(object2->metaObject()->className()), QLatin1String("QQuickRectangle"));
+    QCOMPARE(QString(object2->metaObject()->superClass()->className()),
+             QLatin1String("QQuickRectangle"));
 
     engine.setImportPathList(defaultImportPathList);
 }
@@ -5030,7 +5040,6 @@ void tst_qqmllanguage::instanceof()
 
         if (QTest::currentDataTag() == QLatin1String("customRectangleWithPropInstance instanceof CustomRectangle") ||
             QTest::currentDataTag() == QLatin1String("customRectangleWithPropInstance instanceof CustomImport.CustomRectangle"))
-            QEXPECT_FAIL("", "QTBUG-58477: QML type rules are a little lax", Continue);
         QCOMPARE(returnValue, expectedValue.toBool());
     } else {
         QVERIFY(expr.hasError());
