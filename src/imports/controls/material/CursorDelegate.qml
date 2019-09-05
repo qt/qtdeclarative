@@ -46,7 +46,7 @@ Rectangle {
 
     Connections {
         target: cursor.parent
-        onCursorPositionChanged: {
+        function onCursorPositionChanged() {
             // keep a moving cursor visible
             cursor.opacity = 1
             timer.restart()

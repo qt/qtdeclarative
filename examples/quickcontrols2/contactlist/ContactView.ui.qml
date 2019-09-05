@@ -72,11 +72,7 @@ ListView {
     delegate: ContactDelegate {
         id: delegate
         width: listView.width
-
-        Connections {
-            target: delegate
-            onPressAndHold: listView.pressAndHold(index)
-        }
+        onPressAndHold: listView.pressAndHold(index)
     }
 
     model: ContactModel {
