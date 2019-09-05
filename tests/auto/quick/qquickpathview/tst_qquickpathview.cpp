@@ -120,6 +120,7 @@ private slots:
     void undefinedPath();
     void mouseDrag();
     void nestedMouseAreaDrag();
+    void flickNClick();
     void treeModel();
     void changePreferredHighlight();
     void missingPercent();
@@ -1599,6 +1600,32 @@ void tst_QQuickPathView::nestedMouseAreaDrag()
     // Dragging outside the mouse are should animate the PathView.
     flick(window.data(), QPoint(75,75), QPoint(175,75), 200);
     QVERIFY(pathview->isMoving());
+}
+
+void tst_QQuickPathView::flickNClick() // QTBUG-77173
+{
+    QScopedPointer<QQuickView> window(createView());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->setSource(testFileUrl("nestedmousearea2.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QCOMPARE(window.data(), qGuiApp->focusWindow());
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
+    QVERIFY(pathview != nullptr);
+
+    for (int duration = 100; duration > 0; duration -= 20) {
+        // Dragging the child mouse area should animate the PathView (MA has no drag target)
+        flick(window.data(), QPoint(200,200), QPoint(400,200), duration);
+        QVERIFY(pathview->isMoving());
+
+        // Now while it's still moving, click it.
+        // The PathView should stop at a position such that offset is a whole number.
+        QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(200, 200));
+        QTRY_VERIFY(!pathview->isMoving());
+        QVERIFY(qFuzzyIsNull(pathview->offset() - int(pathview->offset())));
+    }
 }
 
 void tst_QQuickPathView::treeModel()
