@@ -86,7 +86,7 @@ Q_SIGNALS:
 
 protected:
     void itemChange(ItemChange change, const ItemChangeData &data) override;
-    void geometryChanged(const QRectF &oldGeometry, const QRectF &newGeometry) override;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;

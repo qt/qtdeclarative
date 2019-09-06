@@ -67,10 +67,10 @@
     \endtable
 
     To run an application with the Material style, see
-    \l {Using Styles in Qt Quick Controls 2}.
+    \l {Using Styles in Qt Quick Controls}.
 
     \note The Material style is not a native Android style. The Material
-    style is a 100% cross-platform Qt Quick Controls 2 style implementation that
+    style is a 100% cross-platform Qt Quick Controls style implementation that
     follows the Google Material Design Guidelines. The style runs on any
     platform, and looks more or less identical everywhere. Minor differences
     may occur due to differences in available system fonts and font rendering
@@ -124,14 +124,14 @@
 
     \include qquickmaterialstyle.qdocinc conf
 
-    See \l {Qt Quick Controls 2 Configuration File} for more details about the
+    See \l {Qt Quick Controls Configuration File} for more details about the
     configuration file.
 
     \section3 Environment Variables
 
     \include qquickmaterialstyle.qdocinc env
 
-    See \l {Supported Environment Variables in Qt Quick Controls 2} for the full
+    See \l {Supported Environment Variables in Qt Quick Controls} for the full
     list of supported environment variables.
 
     \section2 Dependency
@@ -145,7 +145,7 @@
     If the Material style is imported in a QML file that is always loaded, the
     Material style must be deployed with the application in order to be able
     to run the application regardless of which style the application is run with.
-    By using \l {Using File Selectors with Qt Quick Controls 2}{file selectors},
+    By using \l {Using File Selectors with Qt Quick Controls}{file selectors},
     style-specific tweaks can be applied without creating a hard dependency to
     a style.
 
@@ -232,7 +232,7 @@
     To use the dense variant, either set the
     \c QT_QUICK_CONTROLS_MATERIAL_VARIANT environment variable to \c Dense,
     or specify \c Variant=Dense in the
-    \l {Qt Quick Controls 2 Configuration File}{qtquickcontrols2.conf} file.
+    \l {Qt Quick Controls Configuration File}{qtquickcontrols2.conf} file.
     The default value in both cases is \c Normal.
 
     The following images illustrate the differences between some of the
@@ -399,6 +399,6 @@
     \section1 Related Information
 
     \list
-      \li \l{Styling Qt Quick Controls 2}
+      \li \l{Styling Qt Quick Controls}
     \endlist
 */

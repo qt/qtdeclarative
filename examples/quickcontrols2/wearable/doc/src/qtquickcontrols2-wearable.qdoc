@@ -62,7 +62,7 @@
 
     \section1 Styling
 
-    The demo uses a custom \l {Styling Qt Quick Controls 2}{Qt Quick Controls 2 style}
+    The demo uses a custom \l {Styling Qt Quick Controls}{Qt Quick Controls 2 style}
     embedded into the demo's resources. The custom style is implemented for a
     few controls only, as it is specific to this particular demo. It uses a
     singleton type for various styling attributes, such as fonts and colors.
@@ -114,7 +114,7 @@
     \snippet wearable/wearable.cpp icons
 
     The icons are used on the Launcher Page, which is presented below. See
-    \l {Icons in Qt Quick Controls 2} for more details about icons and themes.
+    \l {Icons in Qt Quick Controls} for more details about icons and themes.
 
     \section1 Launcher Page
 

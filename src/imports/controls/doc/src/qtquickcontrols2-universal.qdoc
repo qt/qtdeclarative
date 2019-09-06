@@ -66,10 +66,10 @@
     \endtable
 
     To run an application with the Universal style, see
-    \l {Using Styles in Qt Quick Controls 2}.
+    \l {Using Styles in Qt Quick Controls}.
 
     \note The Universal style is not a native Windows 10 style. The Universal
-    style is a 100% cross-platform Qt Quick Controls 2 style implementation that
+    style is a 100% cross-platform Qt Quick Controls style implementation that
     follows the Microsoft Universal Design Guidelines. The style runs on any
     platform, and looks more or less identical everywhere. Minor differences
     may occur due to differences in available system fonts and font rendering
@@ -123,14 +123,14 @@
 
     \include qquickuniversalstyle.qdocinc conf
 
-    See \l {Qt Quick Controls 2 Configuration File} for more details about the
+    See \l {Qt Quick Controls Configuration File} for more details about the
     configuration file.
 
     \section3 Environment Variables
 
     \include qquickuniversalstyle.qdocinc env
 
-    See \l {Supported Environment Variables in Qt Quick Controls 2} for the full
+    See \l {Supported Environment Variables in Qt Quick Controls} for the full
     list of supported environment variables.
 
     \section2 Dependency
@@ -144,7 +144,7 @@
     If the Universal style is imported in a QML file that is always loaded, the
     Universal style must be deployed with the application in order to be able
     to run the application regardless of which style the application is run with.
-    By using \l {Using File Selectors with Qt Quick Controls 2}{file selectors},
+    By using \l {Using File Selectors with Qt Quick Controls}{file selectors},
     style-specific tweaks can be applied without creating a hard dependency to
     a style.
 
@@ -283,6 +283,6 @@
     \section1 Related Information
 
     \list
-      \li \l{Styling Qt Quick Controls 2}
+      \li \l{Styling Qt Quick Controls}
     \endlist
 */

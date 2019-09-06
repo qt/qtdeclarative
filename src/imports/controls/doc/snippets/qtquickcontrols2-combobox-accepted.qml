@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -25,27 +25,21 @@
 **
 ****************************************************************************/
 
-/*!
-    \page qtlabscalendar-index.html
-    \title Qt Labs Calendar
+import QtQuick 2.12
+import QtQuick.Controls 2.12
 
-    \brief The experimental Qt Labs Calendar module provides a set of UI controls
-    for Qt Quick.
-
-    The experimental Qt Labs Calendar module provides a set of types that can be
-    used to build calendars in Qt Quick. The module was introduced in Qt 5.7.
-
-    \section1 QML Types
-
-    \generatelist {qmltypesbymodule Qt.labs.calendar}
-
-    \labs
-
-    \section1 Related Information
-
-    \list
-      \li \l{Qt Quick}
-      \li \l{Qt Quick Layouts}
-      \li \l{Qt Quick Controls}
-    \endlist
-*/
+//! [combobox]
+ComboBox {
+    editable: true
+    model: ListModel {
+        id: model
+        ListElement { text: "Banana" }
+        ListElement { text: "Apple" }
+        ListElement { text: "Coconut" }
+    }
+    onAccepted: {
+        if (find(editText) === -1)
+            model.append({text: editText})
+    }
+}
+//! [combobox]

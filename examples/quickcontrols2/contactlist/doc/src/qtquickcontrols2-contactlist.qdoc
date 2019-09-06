@@ -30,7 +30,7 @@
     \title Qt Quick Controls - Contact List
     \keyword Qt Quick Controls 2 - Contact List
     \ingroup qtquickcontrols2-examples
-    \brief A QML app using Qt Quick Controls 2 and a C++ class that implements
+    \brief A QML app using Qt Quick Controls and a C++ class that implements
     a simple contact list.
 
     The \e {Contact List Example} shows how to integrate a C++ backend in a way that

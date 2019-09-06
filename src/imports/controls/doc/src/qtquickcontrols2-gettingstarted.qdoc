@@ -27,7 +27,8 @@
 
 /*!
     \page qtquickcontrols2-gettingstarted.html
-    \title Getting Started with Qt Quick Controls 2
+    \keyword Getting Started with Qt Quick Controls 2
+    \title Getting Started with Qt Quick Controls
 
     A basic example of a QML file that makes use of controls is shown here:
 
@@ -54,7 +55,7 @@
     C++ application, doing this means you can only set window properties from
     C++.
 
-    With Qt Quick Controls 2, declare an ApplicationWindow as the root item of
+    With Qt Quick Controls, declare an ApplicationWindow as the root item of
     your application and launch it by using QQmlApplicationEngine instead.
     This ensures that you can control top level window properties from QML.
 

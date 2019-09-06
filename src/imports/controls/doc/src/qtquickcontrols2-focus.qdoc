@@ -27,10 +27,11 @@
 
 /*!
     \page qtquickcontrols2-focus.html
-    \title Focus Management in Qt Quick Controls 2
-    \brief Overview of focus handling with Qt Quick Controls 2
+    \keyword Focus Management in Qt Quick Controls 2
+    \title Focus Management in Qt Quick Controls
+    \brief Overview of focus handling with Qt Quick Controls
 
-    Qt Quick Controls 2 follows the standard
+    Qt Quick Controls follows the standard
     \l {Keyboard Focus in Qt Quick}{Qt Quick focus system}, while also
     providing some added convenience. For example, the
     \l {Control::}{focusPolicy} property can be used to control the ways in
@@ -38,7 +39,7 @@
 
     \section1 Focus Scope Controls
 
-    Qt Quick Controls 2 offers a selection of controls that act as
+    Qt Quick Controls offers a selection of controls that act as
     \l {Acquiring Focus and Focus Scopes}{focus scopes}:
 
     \annotatedlist qtquickcontrols2-focusscopes

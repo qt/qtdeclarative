@@ -90,21 +90,7 @@ QT_BEGIN_NAMESPACE
     The following example demonstrates appending content to an editable
     combo box by reacting to the \l accepted signal.
 
-    \code
-    ComboBox {
-        editable: true
-        model: ListModel {
-            id: model
-            ListElement { text: "Banana" }
-            ListElement { text: "Apple" }
-            ListElement { text: "Coconut" }
-        }
-        onAccepted: {
-            if (find(editText) === -1)
-                model.append({text: editText})
-        }
-    }
-    \endcode
+    \snippet qtquickcontrols2-combobox-accepted.qml combobox
 
     \section1 ComboBox Model Roles
 
@@ -130,7 +116,7 @@ QT_BEGIN_NAMESPACE
     \l textRole is not defined, ComboBox is unable to visualize it and throws a
     \c {ReferenceError: modelData is not defined}.
 
-    \sa {Customizing ComboBox}, {Input Controls}, {Focus Management in Qt Quick Controls 2}
+    \sa {Customizing ComboBox}, {Input Controls}, {Focus Management in Qt Quick Controls}
 */
 
 /*!
@@ -163,9 +149,22 @@ QT_BEGIN_NAMESPACE
     \qmlsignal void QtQuick.Controls::ComboBox::accepted()
 
     This signal is emitted when the \uicontrol Return or \uicontrol Enter key is pressed
-    on an \l editable combo box. If the confirmed string is not currently in the model,
-    the \l currentIndex will be set to \c -1 and the \l currentText will be updated
-    accordingly.
+    on an \l editable combo box.
+
+    You can handle this signal in order to add the newly entered
+    item to the model, for example:
+
+    \snippet qtquickcontrols2-combobox-accepted.qml combobox
+
+    Before the signal is emitted, a check is done to see if the string
+    exists in the model. If it does, \l currentIndex will be set to its index,
+    and \l currentText to the string itself.
+
+    After the signal has been emitted, and if the first check failed (that is,
+    the item did not exist), another check will be done to see if the item was
+    added by the signal handler. If it was, the \l currentIndex and
+    \l currentText are updated accordingly. Otherwise, they will be set to
+    \c -1 and \c "", respectively.
 
     \note If there is a \l validator set on the combo box, the signal will only be
           emitted if the input is in an acceptable state.
