@@ -62,7 +62,7 @@ DelayButton {
 
             Connections {
                 target: control
-                onProgressChanged: canvas.requestPaint()
+                function onProgressChanged() { canvas.requestPaint(); }
             }
 
             onPaint: {
