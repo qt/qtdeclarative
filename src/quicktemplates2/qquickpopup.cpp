@@ -2582,6 +2582,7 @@ void QQuickPopup::itemChange(QQuickItem::ItemChange change, const QQuickItem::It
             else
                 d->popupItem->ungrabShortcut();
         }
+        break;
     default:
         break;
     }

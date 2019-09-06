@@ -74,7 +74,7 @@ Page {
                         width: parent.width
                         wrapMode: Label.Wrap
                         horizontalAlignment: Qt.AlignHCenter
-                        text: "TabBar is a bar with icons or text which allows the user"
+                        text: "TabBar is a bar with icons or text which allows the user "
                               + "to switch between different subtasks, views, or modes."
                     }
 
