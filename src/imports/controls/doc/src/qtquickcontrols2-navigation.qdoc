@@ -31,7 +31,7 @@
     \ingroup qtquickcontrols2-guidelines
     \brief Guidelines for navigation controls
 
-    Qt Quick Controls 2 offers a selection of navigation models.
+    Qt Quick Controls offers a selection of navigation models.
 
     \annotatedlist qtquickcontrols2-navigation
 
@@ -55,7 +55,7 @@
     scrolling. The page indicator on the bottom shows which is the presently
     active page.
 
-    \section1 TabBar
+    \section1 TabBar Control
 
     \image qtquickcontrols2-tabbar-wireframe.png
 

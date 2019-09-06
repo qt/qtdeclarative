@@ -373,7 +373,7 @@ QT_BEGIN_NAMESPACE
     \endlist
 
     \sa {Customizing StackView}, {Navigation Controls}, {Container Controls},
-        {Focus Management in Qt Quick Controls 2}
+        {Focus Management in Qt Quick Controls}
 */
 
 QQuickStackView::QQuickStackView(QQuickItem *parent)

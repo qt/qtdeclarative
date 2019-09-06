@@ -50,7 +50,7 @@
     \caption The Imagine style with the default images
 
     To run an application with the Imagine style, see
-    \l {Using Styles in Qt Quick Controls 2}.
+    \l {Using Styles in Qt Quick Controls}.
 
     \section2 File Names
 
@@ -2387,7 +2387,7 @@
 
     See Sketch's \l {https://sketchapp.com/docs/exporting/}{Exporting} documentation.
 
-    Qt Quick Controls 2 also provides a
+    Qt Quick Controls also provides a
     \l {http://code.qt.io/cgit/qt/qtquickcontrols2.git/tree/src/imports/controls/imagine/design}
     {plugin} for Sketch that automatically fixes the thickness of the 9-patch lines
     after the assets are exported. To install this file, double-click on it.
@@ -2463,7 +2463,7 @@
 
     \include qquickimaginestyle.qdocinc conf
 
-    See \l {Qt Quick Controls 2 Configuration File} for more details about the
+    See \l {Qt Quick Controls Configuration File} for more details about the
     configuration file.
 
     \section4 Environment Variables
@@ -2471,7 +2471,7 @@
 
     \include qquickimaginestyle.qdocinc env
 
-    See \l {Supported Environment Variables in Qt Quick Controls 2} for the full
+    See \l {Supported Environment Variables in Qt Quick Controls} for the full
     list of supported environment variables.
 
     \section3 Palette
@@ -2499,11 +2499,11 @@
     If the Imagine style is imported in a QML file that is always loaded, the
     Imagine style must be deployed with the application in order to be able
     to run the application regardless of which style the application is run with.
-    By using \l {Using File Selectors with Qt Quick Controls 2}{file selectors},
+    By using \l {Using File Selectors with Qt Quick Controls}{file selectors},
     style-specific tweaks can be applied without creating a hard dependency to
     a style.
 
-    \b {See also} \l {Styling Qt Quick Controls 2}
+    \b {See also} \l {Styling Qt Quick Controls}
 
     \section1 Attached Property Documentation
 
@@ -2522,8 +2522,8 @@
     \section1 Related Information
 
     \list
-      \li \l{Styling Qt Quick Controls 2}
-      \li \l{Qt Quick Controls 2 - Imagine Style Example: Automotive}{Automotive Example}
-      \li \l{Qt Quick Controls 2 - Imagine Style Example: Music Player}{Music Player Example}
+      \li \l{Styling Qt Quick Controls}
+      \li \l{Qt Quick Controls - Imagine Style Example: Automotive}{Automotive Example}
+      \li \l{Qt Quick Controls - Imagine Style Example: Music Player}{Music Player Example}
     \endlist
 */

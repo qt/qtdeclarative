@@ -36,7 +36,7 @@
     or platform-independent style.
 
     On embedded systems, where the hardware has limited resources, this approach
-    can be inefficient. Qt Quick Controls 2 was designed to solve this problem,
+    can be inefficient. Qt Quick Controls was designed to solve this problem,
     using
     \l {https://blog.qt.io/blog/2015/03/31/qt-quick-controls-for-embedded/}{benchmarks}
     to guide the development.
@@ -58,7 +58,7 @@
     Read more about implementing a style plugin
     \l {Creating a Custom Style}{here}.
 
-    In Qt Quick Controls 2, styles no longer provide components that are
+    In Qt Quick Controls, styles no longer provide components that are
     dynamically instantiated by controls, but controls themselves consist of
     item delegates that can be replaced. In effect, this means that delegates
     are Qt Quick items that are instantiated on the spot, as properties of the
@@ -89,7 +89,7 @@
     }
     \endqml
 
-    The API of Qt Quick Controls 2 aims to be clean and simple. Common
+    The API of Qt Quick Controls aims to be clean and simple. Common
     operations are easy, and more advanced ones are liberally documented with
     snippets that can be copied into your code.
 
@@ -99,7 +99,7 @@
     \header
         \li
         \li Qt Quick Controls 1
-        \li Qt Quick Controls 2
+        \li Qt Quick Controls
     \row
         \li Stylable delegates
         \li Yes
@@ -138,7 +138,7 @@
 
     \section2 Porting Qt Quick Controls 1 Code
 
-    The API of Qt Quick Controls 2 is very similar to Qt Quick Controls 1, but it
+    The API of Qt Quick Controls is very similar to Qt Quick Controls 1, but it
     does come with some changes necessary to facilitate the improvements. The
     majority of changes are to do with styling; all of a control's delegates
     are now accessible in the control itself, instead of in a separate style
@@ -156,7 +156,7 @@
     }
     \endqml
 
-    To style a button in Qt Quick Controls 2:
+    To style a button in Qt Quick Controls:
 
     \qml
     Button {
@@ -189,7 +189,7 @@
 
     The first column lists all types available in \l {Qt Quick Controls 1},
     \l {Qt Quick Dialogs}, and \l {Qt Quick Extras}.
-    The second column documents the respective type in Qt Quick Controls 2.
+    The second column documents the respective type in Qt Quick Controls.
     When a direct alternative is not available, the third column contains
     an alternative that provides related functionality. The last column
     contains some remarks about the differences between the types in the
@@ -198,7 +198,7 @@
     \table
     \header
         \li Qt Quick Controls 1
-        \li Qt Quick Controls 2
+        \li Qt Quick Controls
         \li Alternatives
         \li Remarks
     \row
@@ -245,9 +245,9 @@
         \li \l [QML QtQuickControls1] {ExclusiveGroup}
         \li \mdash
         \li \l [QML QtQuickControls2] {ActionGroup},\br
-            \l [QML QtQuickControls2] {ButtonGroup} \br\sup {(Qt Quick Controls 2)}
+            \l [QML QtQuickControls2] {ButtonGroup} \br\sup {(Qt Quick Controls)}
         \li \list
-                \li \b {Qt Quick Controls 2}: \c ActionGroup and \c ButtonGroup offer similar functionality.
+                \li \b {Qt Quick Controls}: \c ActionGroup and \c ButtonGroup offer similar functionality.
             \endlist
     \row
         \li \l [QML QtQuickControls1] {GroupBox}
@@ -270,7 +270,7 @@
                     supports traditional desktop style cascading submenus, but does not
                     work on Embedded Linux because \l EGLFS does not support multiple
                     top-level windows.
-                \li \b {Qt Quick Controls 2}: \c Menu is a non-native \c Item-based popup
+                \li \b {Qt Quick Controls}: \c Menu is a non-native \c Item-based popup
                     that is stacked above the application content. Due to this, menu popups
                     are restricted within window boundaries. \c Menu is fully customizable
                     using QML and Qt Quick, and allows adding any \c Items. Traditional
@@ -288,7 +288,7 @@
                 \li \b {Qt Quick Controls 1}: \c MenuBar is native on platforms where an
                     implementation is available in the Qt Platform Abstraction Layer. Other
                     platforms use a QML-based menubar item stacked at the top of the window.
-                \li \b {Qt Quick Controls 2}: \c MenuBar is a non-native QML-based menubar
+                \li \b {Qt Quick Controls}: \c MenuBar is a non-native QML-based menubar
                     that can be fully customized using QML and Qt Quick.
                 \li \b {Qt Labs Platform}: \c MenuBar is an \e experimental native menubar.
                     It is only available on platforms where a native implementation is available
@@ -305,7 +305,7 @@
                 \li \b {Qt Quick Controls 1}: \c MenuItem and \c MenuSeparator are native
                     on platforms where an implementation is available in the Qt Platform
                     Abstraction Layer. Other platforms use QML-based menu items and separators.
-                \li \b {Qt Quick Controls 2}: \c MenuItem and \c MenuSeparator are a non-native
+                \li \b {Qt Quick Controls}: \c MenuItem and \c MenuSeparator are a non-native
                     QML-based menu items and separators that can be fully customized using QML
                     and Qt Quick.
                 \li \b {Qt Labs Platform}: \c MenuItem and \c MenuSeparator are \e experimental
@@ -343,7 +343,7 @@
         \li \list
                 \li \b {Qt Quick Controls 1}: Uses \l Layout attached properties
                     to specify size hints.
-                \li \b {Qt Quick Controls 2}: Uses dedicated
+                \li \b {Qt Quick Controls}: Uses dedicated
                     \l [QML QtQuickControls2] {SplitView} attached properties
                     to specify size hints.
                     Allows \l {SplitView::saveState()}{saving} and
@@ -358,15 +358,15 @@
         \li \l [QML QtQuickControls2] {StackView}
         \li
         \li \list
-                \li \b {Qt Quick Controls 2}: \c StackView provides customizable transitions
+                \li \b {Qt Quick Controls}: \c StackView provides customizable transitions
                     and attached properties via a single \c StackView type.
             \endlist
     \row
         \li \l [QML QtQuickControls1] {StatusBar}
         \li \mdash
-        \li \l [QML QtQuickControls2] {ToolBar} \br\sup {(Qt Quick Controls 2)}
+        \li \l [QML QtQuickControls2] {ToolBar} \br\sup {(Qt Quick Controls)}
         \li \list
-                \li \b {Qt Quick Controls 2}: \c ApplicationWindow allows assigning any
+                \li \b {Qt Quick Controls}: \c ApplicationWindow allows assigning any
                     item or control, such as \c ToolBar, as a header or footer.
             \endlist
     \row
@@ -379,9 +379,9 @@
             \l [QML QtQuickControls1] {Tab}
         \li \mdash
         \li \l [QML QtQuickControls2] {TabBar},\br
-            \l [QML QtQuickControls2] {TabButton} \br\sup {(Qt Quick Controls 2)}
+            \l [QML QtQuickControls2] {TabButton} \br\sup {(Qt Quick Controls)}
         \li \list
-                \li \b {Qt Quick Controls 2}: \c TabBar and \c TabButton offer similar
+                \li \b {Qt Quick Controls}: \c TabBar and \c TabButton offer similar
                     functionality, and can be used to build tabbed views.
             \endlist
     \row
@@ -397,7 +397,7 @@
         \li \list
                 \li \b {Qt Quick Controls 1}: \c TextArea inherits \c ScrollView and is therefore
                     always a scrollable editor.
-                \li \b {Qt Quick Controls 2}: \c TextArea is a simpler multi-line editor that can
+                \li \b {Qt Quick Controls}: \c TextArea is a simpler multi-line editor that can
                     be optionally attached to a \c Flickable to provide scrolling functionality.
                     This allows using \c TextArea in a scrollable page without having two nested
                     scrollable areas, which can be problematic and cause usability issues.
@@ -425,7 +425,7 @@
 
     \header
         \li Qt Quick Dialogs
-        \li Qt Quick Controls 2
+        \li Qt Quick Controls
         \li Alternatives
         \li Remarks
     \row
@@ -435,7 +435,7 @@
         \li \list
                 \li \b {Qt Quick Dialogs}: \c Dialog is either a top-level window or an \c Item-based popup
                     depending on whether the underlying platform supports multiple top-level windows.
-                \li \b {Qt Quick Controls 2}: \c Dialog is not a top-level window, but an \c Item-based
+                \li \b {Qt Quick Controls}: \c Dialog is not a top-level window, but an \c Item-based
                     popup that is stacked above the application content. Due to this, dialogs are restricted
                     within window boundaries.
             \endlist
@@ -462,7 +462,7 @@
 
     \header
         \li Qt Quick Extras
-        \li Qt Quick Controls 2
+        \li Qt Quick Controls
         \li Alternatives
         \li Remarks
     \row
@@ -512,14 +512,14 @@
         \li
         \li \list
                 \li \b {Qt Quick Extras}: \c Tumbler can consist of multiple columns.
-                \li \b {Qt Quick Controls 2}: \c Tumbler presents a single spinnable wheel.
+                \li \b {Qt Quick Controls}: \c Tumbler presents a single spinnable wheel.
                     Multiple columns can be created by placing multiple \c Tumblers next
                     to each other.
             \endlist
 
     \header
         \li No Predecessor
-        \li Qt Quick Controls 2
+        \li Qt Quick Controls
         \li Alternatives
         \li Remarks
     \row
@@ -672,7 +672,7 @@
         \li \list
                 \li \b {Qt Quick Controls 1}: \c Button and \c Action have built-in
                     Qt Widgets-based tooltips.
-                \li \b {Qt Quick Controls 2}: \c ToolTip can be attached to any \c Item.
+                \li \b {Qt Quick Controls}: \c ToolTip can be attached to any \c Item.
             \endlist
     \endtable
 
@@ -680,7 +680,7 @@
 
     \list
       \li \l{Qt Quick}
-      \li \l{Qt Quick Controls 2 QML Types}
+      \li \l{Qt Quick Controls QML Types}
       \li \l{Qt Quick Controls 1 QML Types}
       \li \l{Qt Quick Extras QML Types}
       \li \l{Qt Labs Calendar QML Types}

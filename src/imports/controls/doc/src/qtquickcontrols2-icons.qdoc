@@ -27,11 +27,12 @@
 
 /*!
     \page qtquickcontrols2-icons.html
-    \title Icons in Qt Quick Controls 2
+    \keyword Icons in Qt Quick Controls 2
+    \title Icons in Qt Quick Controls
 
-    Qt Quick Controls 2.3 (Qt 5.10) introduced built-in support for icons. Buttons,
-    item delegates, and menu items are now capable of presenting an icon in addition
-    to a text label.
+    Qt Quick Controls comes with support for icons since Qt 5.10. This means,
+    Buttons, item delegates, and menu items are now capable of presenting an
+    icon in addition to a text label.
 
     \section1 Using Icons
 
@@ -58,7 +59,7 @@
     }
     \endcode
 
-    Each \l {Styling Qt Quick Controls 2}{Qt Quick Controls 2 style} requests a
+    Each \l {Styling Qt Quick Controls}{Qt Quick Controls 2 style} requests a
     default icon size and color according to their guidelines, but it is possible
     to override these by setting the \c icon.width, \c icon.height, and \c icon.color
     properties.
@@ -159,11 +160,11 @@
     }
     \endcode
 
-    The \l {Qt Quick Controls 2 - Gallery}{Gallery example} and \l {Qt Quick Controls 2 - Wearable Demo}
+    The \l {Qt Quick Controls - Gallery}{Gallery example} and \l {Qt Quick Controls 2 - Wearable Demo}
     {Wearable Demo} provide complete runnable applications with a bundled icon theme.
 
     \section1 Related Information
     \list
-        \li \l {High-DPI Support in Qt Quick Controls 2}
+        \li \l {High-DPI Support in Qt Quick Controls}
     \endlist
 */

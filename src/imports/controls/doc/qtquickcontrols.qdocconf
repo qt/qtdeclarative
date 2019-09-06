@@ -9,7 +9,6 @@ description             = Qt Quick Controls Reference Documentation
 version                 = $QT_VERSION
 
 qhp.projects            = QtQuickControls
-moduleheader            = QtQuickControls2
 
 qhp.QtQuickControls.file          = qtquickcontrols.qhp
 qhp.QtQuickControls.namespace     = org.qt-project.qtquickcontrols.$QT_VERSION_TAG
