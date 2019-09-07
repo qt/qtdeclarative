@@ -731,6 +731,7 @@ void  QQuickFolderListModel::setShowDotAndDotDot(bool on)
 
     if (on != d->showDotAndDotDot) {
         d->fileInfoThread.setShowDotAndDotDot(on);
+        d->showDotAndDotDot = on;
     }
 }
 
@@ -756,6 +757,7 @@ void QQuickFolderListModel::setShowHidden(bool on)
 
     if (on != d->showHidden) {
         d->fileInfoThread.setShowHidden(on);
+        d->showHidden = on;
     }
 }
 
@@ -781,6 +783,7 @@ void QQuickFolderListModel::setShowOnlyReadable(bool on)
 
     if (on != d->showOnlyReadable) {
         d->fileInfoThread.setShowOnlyReadable(on);
+        d->showOnlyReadable = on;
     }
 }
 
@@ -805,6 +808,7 @@ void QQuickFolderListModel::setCaseSensitive(bool on)
 
     if (on != d->caseSensitive) {
         d->fileInfoThread.setCaseSensitive(on);
+        d->caseSensitive = on;
     }
 }
 
