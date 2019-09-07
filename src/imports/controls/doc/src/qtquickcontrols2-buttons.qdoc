@@ -31,7 +31,7 @@
     \ingroup qtquickcontrols2-guidelines
     \brief Guidelines for button controls
 
-    Qt Quick Controls 2 offers a selection of button-like controls.
+    Qt Quick Controls offers a selection of button-like controls.
 
     \annotatedlist qtquickcontrols2-buttons
 
@@ -186,6 +186,6 @@
 
     \section1 Related Information
     \list
-    \li \l {Qt Quick Controls 2 Guidelines}
+    \li \l {Qt Quick Controls Guidelines}
     \endlist
 */
