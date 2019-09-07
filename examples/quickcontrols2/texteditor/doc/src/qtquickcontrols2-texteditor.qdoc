@@ -30,7 +30,7 @@
     \title Qt Quick Controls - Text Editor
     \keyword Qt Quick Controls 2 - Text Editor
     \ingroup qtquickcontrols2-examples
-    \brief A QML app using Qt Quick Controls 2 and a C++ class to
+    \brief A QML app using Qt Quick Controls and a C++ class to
     provide a fully-functional rich-text editor application.
 
     The \e {Text Editor Example} presents a sample HTML file using the TextArea
@@ -77,7 +77,7 @@
 
     The touch user interface is a simplified version of the text editor. It is
     suitable for touch devices with limited screen size. The example uses
-    \l{Using File Selectors with Qt Quick Controls 2}{file selectors} to load
+    \l{Using File Selectors with Qt Quick Controls}{file selectors} to load
     the appropriate user interface automatically.
 
     Unlike the desktop version, which uses top-level dialogs, the touch version

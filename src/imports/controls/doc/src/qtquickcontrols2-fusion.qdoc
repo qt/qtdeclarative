@@ -38,7 +38,7 @@
     \image qtquickcontrols2-fusion.png
 
     To run an application with the Fusion style, see
-    \l {Using Styles in Qt Quick Controls 2}.
+    \l {Using Styles in Qt Quick Controls}.
 
     \note The Fusion style is not a native desktop style. The style runs on any
     platform, and looks similar everywhere. Minor differences may occur due to
@@ -88,6 +88,6 @@
     \section1 Related Information
 
     \list
-      \li \l{Styling Qt Quick Controls 2}
+      \li \l{Styling Qt Quick Controls}
     \endlist
 */

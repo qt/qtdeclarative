@@ -100,7 +100,7 @@ QT_BEGIN_NAMESPACE
           or using anchors for its children works as expected.
 
     \sa TabBar, PageIndicator, {Customizing SwipeView}, {Navigation Controls}, {Container Controls},
-        {Focus Management in Qt Quick Controls 2}
+        {Focus Management in Qt Quick Controls}
 */
 
 class QQuickSwipeViewPrivate : public QQuickContainerPrivate

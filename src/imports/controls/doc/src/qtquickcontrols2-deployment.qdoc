@@ -27,9 +27,9 @@
 
 /*!
     \page qtquickcontrols2-deployment.html
-    \title Deploying Qt Quick Controls 2 Applications
+    \title Deploying Qt Quick Controls Applications
 
-    Deployment of Qt Quick Controls 2 applications is very similar to
+    Deployment of Qt Quick Controls applications is very similar to
     deployment of other types of Qt applications. However, there are a few
     factors to consider.
 

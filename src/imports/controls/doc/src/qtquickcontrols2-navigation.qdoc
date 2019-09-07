@@ -31,7 +31,7 @@
     \ingroup qtquickcontrols2-guidelines
     \brief Guidelines for navigation controls
 
-    Qt Quick Controls 2 offers a selection of navigation models.
+    Qt Quick Controls offers a selection of navigation models.
 
     \annotatedlist qtquickcontrols2-navigation
 

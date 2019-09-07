@@ -80,7 +80,7 @@ ApplicationWindow {
     }
     Shortcut {
         sequence: StandardKey.Quit
-        onActivated: Qt.quit()
+        onActivated: close()
     }
     Shortcut {
         sequence: StandardKey.Copy
@@ -121,7 +121,7 @@ ApplicationWindow {
             }
             MenuItem {
                 text: qsTr("&Quit")
-                onTriggered: Qt.quit()
+                onTriggered: close()
             }
         }
 
@@ -203,6 +203,14 @@ ApplicationWindow {
 
     MessageDialog {
         id: errorDialog
+    }
+
+    MessageDialog {
+        id : quitDialog
+        title: qsTr("Quit?")
+        text: qsTr("The file has been modified. Quit anyway?")
+        buttons: (MessageDialog.Yes | MessageDialog.No)
+        onYesClicked: Qt.quit()
     }
 
     header: ToolBar {
@@ -447,6 +455,13 @@ ApplicationWindow {
         MenuItem {
             text: qsTr("Color...")
             onTriggered: colorDialog.open()
+        }
+    }
+
+    onClosing: {
+        if (document.modified) {
+            quitDialog.open()
+            close.accepted = false
         }
     }
 }

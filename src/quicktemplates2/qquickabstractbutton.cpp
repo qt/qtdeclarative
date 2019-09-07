@@ -736,7 +736,7 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
 
     \include qquickicon.qdocinc grouped-properties
 
-    \sa text, display, {Icons in Qt Quick Controls 2}
+    \sa text, display, {Icons in Qt Quick Controls}
 */
 
 QQuickIcon QQuickAbstractButton::icon() const

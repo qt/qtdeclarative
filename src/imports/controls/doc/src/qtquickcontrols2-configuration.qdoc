@@ -31,8 +31,8 @@
     \title Qt Quick Controls Configuration File
     \keyword Qt Quick Controls 2 Configuration File
 
-    Qt Quick Controls 2 support a special configuration file, \c :/qtquickcontrols2.conf,
-    that is built into an application's resources.
+    Qt Quick Controls support a special configuration file, \c qtquickcontrols2.conf,
+    which is built into an application's resources.
 
     The configuration file can specify the preferred style and certain style-specific
     attributes. The following example specifies that the preferred style is the \l {Material style}.
@@ -56,7 +56,7 @@
     \endcode
 
     It is possible to specify a custom location for the configuration file with
-    the \l {Supported Environment Variables in Qt Quick Controls 2}
+    the \l {Supported Environment Variables in Qt Quick Controls}
     {QT_QUICK_CONTROLS_CONF} environment variable.
 
     \section1 Controls Section
@@ -174,7 +174,7 @@
 
     \section1 Using the Configuration File in a Project
 
-    In order to make it possible for Qt Quick Controls 2 to find the configuration file,
+    In order to make it possible for Qt Quick Controls to find the configuration file,
     it must be built into application's resources using the \l {The Qt Resource System}.
     Here's an example \c .qrc file:
 
@@ -186,7 +186,7 @@
     </RCC>
     \endcode
 
-    \note Qt Quick Controls 2 uses a file selector to load the configuration file. It
+    \note Qt Quick Controls uses a file selector to load the configuration file. It
     is possible to provide a different configuration file for different platforms and
     locales. See \l QFileSelector documentation for more details.
 
@@ -200,7 +200,7 @@
     \section1 Related Information
 
     \list
-      \li \l{Styling Qt Quick Controls 2}
-      \li \l{Supported Environment Variables in Qt Quick Controls 2}
+      \li \l{Styling Qt Quick Controls}
+      \li \l{Supported Environment Variables in Qt Quick Controls}
     \endlist
 */

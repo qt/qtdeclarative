@@ -1470,9 +1470,9 @@ void QQuickControl::setHovered(bool hovered)
     Setting this property propagates the value to all child controls that do not have
     \c hoverEnabled explicitly set.
 
-    You can also enable or disable hover effects for all Qt Quick Controls 2 applications
+    You can also enable or disable hover effects for all Qt Quick Controls applications
     by setting the \c QT_QUICK_CONTROLS_HOVER_ENABLED \l {Supported Environment Variables
-    in Qt Quick Controls 2}{environment variable}.
+    in Qt Quick Controls}{environment variable}.
 
     \sa hovered
 */

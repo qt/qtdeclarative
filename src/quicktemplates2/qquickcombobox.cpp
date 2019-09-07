@@ -116,7 +116,7 @@ QT_BEGIN_NAMESPACE
     \l textRole is not defined, ComboBox is unable to visualize it and throws a
     \c {ReferenceError: modelData is not defined}.
 
-    \sa {Customizing ComboBox}, {Input Controls}, {Focus Management in Qt Quick Controls 2}
+    \sa {Customizing ComboBox}, {Input Controls}, {Focus Management in Qt Quick Controls}
 */
 
 /*!

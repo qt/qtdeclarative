@@ -89,7 +89,7 @@ QT_BEGIN_NAMESPACE
     For a slider that allows the user to select a single value, see \l Slider.
 
     \sa {Customizing RangeSlider}, {Input Controls},
-        {Focus Management in Qt Quick Controls 2}
+        {Focus Management in Qt Quick Controls}
 */
 
 class QQuickRangeSliderNodePrivate : public QObjectPrivate

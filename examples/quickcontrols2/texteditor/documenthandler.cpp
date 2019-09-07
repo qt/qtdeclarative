@@ -80,7 +80,11 @@ void DocumentHandler::setDocument(QQuickTextDocument *document)
     if (document == m_document)
         return;
 
+    if (m_document)
+        m_document->textDocument()->disconnect(this);
     m_document = document;
+    if (m_document)
+        connect(m_document->textDocument(), &QTextDocument::modificationChanged, this, &DocumentHandler::modifiedChanged);
     emit documentChanged();
 }
 
@@ -369,4 +373,15 @@ void DocumentHandler::mergeFormatOnWordOrSelection(const QTextCharFormat &format
     if (!cursor.hasSelection())
         cursor.select(QTextCursor::WordUnderCursor);
     cursor.mergeCharFormat(format);
+}
+
+bool DocumentHandler::modified() const
+{
+    return m_document && m_document->textDocument()->isModified();
+}
+
+void DocumentHandler::setModified(bool m)
+{
+    if (m_document)
+        m_document->textDocument()->setModified(m);
 }
