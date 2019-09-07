@@ -178,6 +178,10 @@ void QSGRhiSupport::applySettings()
 
     m_shaderEffectDebug = qEnvironmentVariableIntValue("QSG_RHI_SHADEREFFECT_DEBUG");
 
+    m_killDeviceFrameCount = qEnvironmentVariableIntValue("QSG_RHI_SIMULATE_DEVICE_LOSS");
+    if (m_killDeviceFrameCount > 0 && m_rhiBackend == QRhi::D3D11)
+        qDebug("Graphics device will be reset every %d frames", m_killDeviceFrameCount);
+
     const char *backendName = "unknown";
     switch (m_rhiBackend) {
     case QRhi::Null:
@@ -489,6 +493,10 @@ QRhi *QSGRhiSupport::createRhi(QWindow *window, QOffscreenSurface *offscreenSurf
     if (backend == QRhi::D3D11) {
         QRhiD3D11InitParams rhiParams;
         rhiParams.enableDebugLayer = isDebugLayerRequested();
+        if (m_killDeviceFrameCount > 0) {
+            rhiParams.framesUntilKillingDeviceViaTdr = m_killDeviceFrameCount;
+            rhiParams.repeatDeviceKill = true;
+        }
         rhi = QRhi::create(backend, &rhiParams, flags);
     }
 #endif

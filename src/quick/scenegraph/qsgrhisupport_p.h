@@ -138,6 +138,7 @@ private:
         uint rhi : 1;
     } m_requested;
     QRhi::Implementation m_rhiBackend = QRhi::Null;
+    int m_killDeviceFrameCount;
     uint m_set : 1;
     uint m_enableRhi : 1;
     uint m_debugLayer : 1;
