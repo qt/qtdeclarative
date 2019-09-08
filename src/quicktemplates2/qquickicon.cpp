@@ -227,19 +227,19 @@ QQuickIcon QQuickIcon::resolve(const QQuickIcon &other) const
     QQuickIcon resolved = *this;
 
     if (!(d->resolveMask & QQuickIconPrivate::NameResolved))
-        resolved.setName(other.name());
+        resolved.d->name = other.name();
 
     if (!(d->resolveMask & QQuickIconPrivate::SourceResolved))
-        resolved.setSource(other.source());
+        resolved.d->source = other.source();
 
     if (!(d->resolveMask & QQuickIconPrivate::WidthResolved))
-        resolved.setWidth(other.width());
+        resolved.d->width = other.width();
 
     if (!(d->resolveMask & QQuickIconPrivate::HeightResolved))
-        resolved.setHeight(other.height());
+        resolved.d->height = other.height();
 
     if (!(d->resolveMask & QQuickIconPrivate::ColorResolved))
-        resolved.setColor(other.color());
+        resolved.d->color = other.color();
 
     if (!(d->resolveMask & QQuickIconPrivate::CacheResolved))
         resolved.setCache(other.cache());
