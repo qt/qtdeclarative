@@ -1123,6 +1123,9 @@ void Renderer::releaseCachedResources()
     m_pipelines.clear();
     m_samplers.clear();
     m_dummyTexture = nullptr;
+
+    if (m_rhi)
+        m_rhi->releaseCachedResources();
 }
 
 void Renderer::invalidateAndRecycleBatch(Batch *b)
