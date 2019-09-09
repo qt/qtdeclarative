@@ -81,4 +81,11 @@ These limitations and extensions are documented in the description of the
 \l{qtqml-javascript-hostenvironment.html}{JavaScript Host Environment} provided
 by the QML engine.
 
+\section1 Fine Tuning the JavaScript engine
+
+For specific use cases you may want to override some of the parameters the
+JavaScript engine uses for handling memory and compiling JavaScript. See
+\l{qtqml-javascript-finetuning.html}{Fine Tuning the JavaScript engine} for
+more information on these parameters.
+
 */
