@@ -561,6 +561,14 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 
         QRhiSwapChain::Flags flags = QRhiSwapChain::UsedAsTransferSource; // may be used in a grab
 
+        // QQ is always premul alpha. Decide based on alphaBufferSize in
+        // requestedFormat(). (the platform plugin can override format() but
+        // what matters here is what the application wanted, hence using the
+        // requested one)
+        const bool alpha = window->requestedFormat().alphaBufferSize() > 0;
+        if (alpha)
+            flags |= QRhiSwapChain::SurfaceHasPreMulAlpha;
+
         cd->swapchain = rhi->newSwapChain();
         cd->depthStencilForSwapchain = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil,
                                                             QSize(),
@@ -568,7 +576,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
                                                             QRhiRenderBuffer::UsedWithSwapChainOnly);
         cd->swapchain->setWindow(window);
         cd->swapchain->setDepthStencil(cd->depthStencilForSwapchain);
-        qCDebug(QSG_LOG_INFO, "MSAA sample count for the swapchain is %d", rhiSampleCount);
+        qCDebug(QSG_LOG_INFO, "MSAA sample count for the swapchain is %d. Alpha channel requested = %s",
+                rhiSampleCount, alpha ? "yes" : "no");
         cd->swapchain->setSampleCount(rhiSampleCount);
         cd->swapchain->setFlags(flags);
         cd->rpDescForSwapchain = cd->swapchain->newCompatibleRenderPassDescriptor();
