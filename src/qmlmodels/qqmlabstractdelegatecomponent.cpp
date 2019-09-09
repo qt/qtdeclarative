@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the plugins of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,60 +37,25 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-
-#include <private/qqmlmodelsmodule_p.h>
-
-#if QT_CONFIG(qml_table_model)
-#include "qqmltablemodel_p.h"
-#include "qqmltablemodelcolumn_p.h"
-#endif
-#if QT_CONFIG(qml_delegate_model)
-#include "qqmldelegatecomponent_p.h"
-#endif
+#include <QtQmlModels/private/qqmlabstractdelegatecomponent_p.h>
+#include <QtQmlModels/private/qqmladaptormodel_p.h>
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmlmodule Qt.labs.qmlmodels 1.0
-    \title Qt QML Models experimental QML Types
-    \ingroup qmlmodules
-    \brief Provides QML experimental types for data models
-    \since 5.12
-
-    This QML module contains experimental QML types related to data models.
-
-    To use the types in this module, import the module with the following line:
-
-    \code
-    import Qt.labs.qmlmodels 1.0
-    \endcode
-*/
-
-//![class decl]
-class QtQmlLabsModelsPlugin : public QQmlExtensionPlugin
+QQmlAbstractDelegateComponent::QQmlAbstractDelegateComponent(QObject *parent)
+    : QQmlComponent(parent)
 {
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
-public:
-    QtQmlLabsModelsPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.qmlmodels"));
+}
 
-#if QT_CONFIG(qml_delegate_model)
-        qmlRegisterTypesAndRevisions<QQmlDelegateChooser, QQmlDelegateChoice>(uri, 1);
-#endif
-#if QT_CONFIG(qml_table_model)
-        qmlRegisterTypesAndRevisions<QQmlTableModel, QQmlTableModelColumn>(uri, 1);
-#endif
+QQmlAbstractDelegateComponent::~QQmlAbstractDelegateComponent()
+{
+}
 
-        qmlRegisterModule(uri, 1, 0);
-    }
-};
-//![class decl]
+QVariant QQmlAbstractDelegateComponent::value(QQmlAdaptorModel *adaptorModel, int row, int column, const QString &role) const
+{
+    if (!adaptorModel)
+        return QVariant();
+    return adaptorModel->value(adaptorModel->indexAt(row, column), role);
+}
 
 QT_END_NAMESPACE
-
-#include "plugin.moc"

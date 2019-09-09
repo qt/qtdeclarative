@@ -45,18 +45,14 @@
 #include <private/qqmllistmodelworkeragent_p.h>
 #endif
 #if QT_CONFIG(qml_delegate_model)
+#include <private/qqmlabstractdelegatecomponent_p.h>
 #include <private/qqmldelegatemodel_p.h>
-#include <private/qqmldelegatecomponent_p.h>
 #include <private/qquickpackage_p.h>
 #include <private/qqmlcomponentattached_p.h>
 #endif
 #if QT_CONFIG(qml_object_model)
 #include <private/qqmlobjectmodel_p.h>
 #include <private/qqmlinstantiator_p.h>
-#endif
-#if QT_CONFIG(qml_table_model)
-#include <private/qqmltablemodel_p.h>
-#include <private/qqmltablemodelcolumn_p.h>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -108,26 +104,13 @@ void QQmlModelsModule::defineModule()
     qmlRegisterTypesAndRevisions<QQmlListElement, QQmlListModel, QQmlListModelWorkerAgent>(uri, 2);
 #endif
 #if QT_CONFIG(qml_delegate_model)
-    qmlRegisterTypesAndRevisions<QQmlDelegateModel, QQmlDelegateModelGroup, QQuickPackage>(uri, 2);
+    qmlRegisterTypesAndRevisions<QQmlDelegateModel, QQmlDelegateModelGroup, QQuickPackage, QQmlAbstractDelegateComponent>(uri, 2);
 #endif
 #if QT_CONFIG(qml_object_model)
     qmlRegisterTypesAndRevisions<QQmlObjectModel, QQmlInstantiator, QQmlInstanceModel>(uri, 2);
 #endif
 #if QT_CONFIG(itemmodel)
     qmlRegisterTypesAndRevisions<QItemSelectionModelForeign>(uri, 2);
-#endif
-}
-
-void QQmlModelsModule::defineLabsModule()
-{
-    const char uri[] = "Qt.labs.qmlmodels";
-
-#if QT_CONFIG(qml_delegate_model)
-    qmlRegisterTypesAndRevisions<
-            QQmlAbstractDelegateComponent, QQmlDelegateChooser, QQmlDelegateChoice>(uri, 1);
-#endif
-#if QT_CONFIG(qml_table_model)
-    qmlRegisterTypesAndRevisions<QQmlTableModel, QQmlTableModelColumn>(uri, 1);
 #endif
 }
 
