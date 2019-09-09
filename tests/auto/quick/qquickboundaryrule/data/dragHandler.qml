@@ -14,6 +14,7 @@ Rectangle {
     }
 
     BoundaryRule on x {
+        objectName: "boundaryRule"
         id: xbr
         minimum: -50
         maximum: 100

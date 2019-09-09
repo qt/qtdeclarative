@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAbstractAnimation;
 class QQuickBoundaryRulePrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickBoundaryRule : public QObject, public QQmlPropertyValueInterceptor
+class QQuickBoundaryRule : public QObject, public QQmlPropertyValueInterceptor
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickBoundaryRule)

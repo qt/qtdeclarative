@@ -30,7 +30,6 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/qquickview.h>
-#include <QtQuick/private/qquickboundaryrule_p.h>
 #include <QtQuick/private/qquickdraghandler_p.h>
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
@@ -57,7 +56,7 @@ void tst_qquickboundaryrule::dragHandler()
     QVERIFY(target);
     QQuickDragHandler *dragHandler = target->findChild<QQuickDragHandler*>();
     QVERIFY(dragHandler);
-    QQuickBoundaryRule *boundaryRule = target->findChild<QQuickBoundaryRule*>();
+    QObject *boundaryRule = target->findChild<QObject *>(QLatin1String("boundaryRule"));
     QVERIFY(boundaryRule);
     QSignalSpy overshootChangedSpy(boundaryRule, SIGNAL(currentOvershootChanged()));
 
@@ -68,29 +67,34 @@ void tst_qquickboundaryrule::dragHandler()
     QTest::mouseMove(&window, p1);
     QTRY_VERIFY(dragHandler->active());
     QCOMPARE(target->position().x(), 100);
-    QCOMPARE(boundaryRule->currentOvershoot(), 0);
-    QCOMPARE(boundaryRule->peakOvershoot(), 0);
+    bool ok = false;
+    QCOMPARE(boundaryRule->property("currentOvershoot").toReal(&ok), 0);
+    QVERIFY(ok);
+    QCOMPARE(boundaryRule->property("peakOvershoot").toReal(&ok), 0);
+    QVERIFY(ok);
     QCOMPARE(overshootChangedSpy.count(), 0);
     // restricted drag: halfway into overshoot
     p1 += QPoint(20, 0);
     QTest::mouseMove(&window, p1);
     QCOMPARE(target->position().x(), 117.5);
-    QCOMPARE(boundaryRule->currentOvershoot(), 20);
-    QCOMPARE(boundaryRule->peakOvershoot(), 20);
+    QCOMPARE(boundaryRule->property("currentOvershoot").toReal(), 20);
+    QCOMPARE(boundaryRule->property("peakOvershoot").toReal(), 20);
     QCOMPARE(overshootChangedSpy.count(), 1);
     // restricted drag: maximum overshoot
     p1 += QPoint(80, 0);
     QTest::mouseMove(&window, p1);
     QCOMPARE(target->position().x(), 140);
-    QCOMPARE(boundaryRule->currentOvershoot(), 100);
-    QCOMPARE(boundaryRule->peakOvershoot(), 100);
+    QCOMPARE(boundaryRule->property("currentOvershoot").toReal(), 100);
+    QCOMPARE(boundaryRule->property("peakOvershoot").toReal(), 100);
     QCOMPARE(overshootChangedSpy.count(), 2);
     // release and let it return to bounds
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, p1);
     QTRY_COMPARE(dragHandler->active(), false);
     QTRY_COMPARE(overshootChangedSpy.count(), 3);
-    QCOMPARE(boundaryRule->currentOvershoot(), 0);
-    QCOMPARE(boundaryRule->peakOvershoot(), 0);
+    QCOMPARE(boundaryRule->property("currentOvershoot").toReal(&ok), 0);
+    QVERIFY(ok);
+    QCOMPARE(boundaryRule->property("peakOvershoot").toReal(&ok), 0);
+    QVERIFY(ok);
     QCOMPARE(target->position().x(), 100);
 }
 
