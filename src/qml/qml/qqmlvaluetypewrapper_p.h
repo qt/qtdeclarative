@@ -69,22 +69,45 @@ namespace Heap {
 struct QQmlValueTypeWrapper : Object {
     void init() { Object::init(); }
     void destroy();
-    QQmlPropertyCache *propertyCache() const { return _propertyCache; }
+
+    QQmlPropertyCache *propertyCache() const { return m_propertyCache; }
     void setPropertyCache(QQmlPropertyCache *c) {
         if (c)
             c->addref();
-        if (_propertyCache)
-            _propertyCache->release();
-        _propertyCache = c;
+        if (m_propertyCache)
+            m_propertyCache->release();
+        m_propertyCache = c;
     }
-    mutable void *gadgetPtr;
-    QQmlValueType *valueType;
+
+    void setValueType(QQmlValueType *valueType)
+    {
+        Q_ASSERT(valueType != nullptr);
+        m_valueType = valueType;
+    }
+
+    QQmlValueType *valueType() const
+    {
+        Q_ASSERT(m_valueType != nullptr);
+        return m_valueType;
+    }
+
+    void setGadgetPtr(void *gadgetPtr) const
+    {
+        m_gadgetPtr = gadgetPtr;
+    }
+
+    void *gadgetPtr() const
+    {
+        return m_gadgetPtr;
+    }
 
     void setValue(const QVariant &value) const;
     QVariant toVariant() const;
 
 private:
-    QQmlPropertyCache *_propertyCache;
+    mutable void *m_gadgetPtr;
+    QQmlValueType *m_valueType;
+    QQmlPropertyCache *m_propertyCache;
 };
 
 }

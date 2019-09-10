@@ -100,228 +100,6 @@ QString symbolNamespaceForPath(const QString &relativePath)
     return mangledIdentifier(symbol);
 }
 
-struct VirtualDirectoryEntry
-{
-    QString name;
-    QVector<VirtualDirectoryEntry*> dirEntries;
-    int firstChildIndex = -1; // node index inside generated data
-    bool isDirectory = true;
-
-    VirtualDirectoryEntry()
-    {}
-
-    ~VirtualDirectoryEntry()
-    {
-        qDeleteAll(dirEntries);
-    }
-
-    VirtualDirectoryEntry *append(const QString &name)
-    {
-        for (QVector<VirtualDirectoryEntry*>::Iterator it = dirEntries.begin(), end = dirEntries.end();
-             it != end; ++it) {
-            if ((*it)->name == name)
-                return *it;
-        }
-
-        VirtualDirectoryEntry *subEntry = new VirtualDirectoryEntry;
-        subEntry->name = name;
-        dirEntries.append(subEntry);
-        return subEntry;
-    }
-
-    void appendEmptyFile(const QString &name)
-    {
-        VirtualDirectoryEntry *subEntry = new VirtualDirectoryEntry;
-        subEntry->name = name;
-        subEntry->isDirectory = false;
-        dirEntries.append(subEntry);
-    }
-
-    bool isEmpty() const { return dirEntries.isEmpty(); }
-};
-
-struct DataStream
-{
-    DataStream(QVector<unsigned char > *data = nullptr)
-        : data(data)
-    {}
-
-    qint64 currentOffset() const { return data->size(); }
-
-    DataStream &operator<<(quint16 value)
-    {
-        unsigned char d[2];
-        qToBigEndian(value, d);
-        data->append(d[0]);
-        data->append(d[1]);
-        return *this;
-    }
-    DataStream &operator<<(quint32 value)
-    {
-        unsigned char d[4];
-        qToBigEndian(value, d);
-        data->append(d[0]);
-        data->append(d[1]);
-        data->append(d[2]);
-        data->append(d[3]);
-        return *this;
-    }
-private:
-    QVector<unsigned char> *data;
-};
-
-static bool resource_sort_order(const VirtualDirectoryEntry *lhs, const VirtualDirectoryEntry *rhs)
-{
-    return qt_hash(lhs->name) < qt_hash(rhs->name);
-}
-
-struct ResourceTree
-{
-    ResourceTree()
-    {}
-
-    void serialize(VirtualDirectoryEntry &root, QVector<unsigned char> *treeData, QVector<unsigned char> *stringData)
-    {
-        treeStream = DataStream(treeData);
-        stringStream = DataStream(stringData);
-
-        QStack<VirtualDirectoryEntry *> directories;
-
-        {
-            directories.push(&root);
-            while (!directories.isEmpty()) {
-                VirtualDirectoryEntry *entry = directories.pop();
-                registerString(entry->name);
-                if (entry->isDirectory)
-                    directories << entry->dirEntries;
-            }
-        }
-
-        {
-            quint32 currentDirectoryIndex = 1;
-            directories.push(&root);
-            while (!directories.isEmpty()) {
-                VirtualDirectoryEntry *entry = directories.pop();
-                entry->firstChildIndex = currentDirectoryIndex;
-                currentDirectoryIndex += entry->dirEntries.count();
-                std::sort(entry->dirEntries.begin(), entry->dirEntries.end(), resource_sort_order);
-
-                for (QVector<VirtualDirectoryEntry*>::ConstIterator child = entry->dirEntries.constBegin(), end = entry->dirEntries.constEnd();
-                     child != end; ++child) {
-                    if ((*child)->isDirectory)
-                        directories << *child;
-                }
-            }
-        }
-
-        {
-            writeTreeEntry(&root);
-            directories.push(&root);
-            while (!directories.isEmpty()) {
-                VirtualDirectoryEntry *entry = directories.pop();
-
-                for (QVector<VirtualDirectoryEntry*>::ConstIterator child = entry->dirEntries.constBegin(), end = entry->dirEntries.constEnd();
-                     child != end; ++child) {
-                    writeTreeEntry(*child);
-                    if ((*child)->isDirectory)
-                        directories << (*child);
-                }
-            }
-        }
-    }
-
-private:
-    DataStream treeStream;
-    DataStream stringStream;
-    QHash<QString, qint64> stringOffsets;
-
-    void registerString(const QString &name)
-    {
-        if (stringOffsets.contains(name))
-            return;
-        const qint64 offset = stringStream.currentOffset();
-        stringOffsets.insert(name, offset);
-
-        stringStream << quint16(name.length())
-                     << quint32(qt_hash(name));
-        for (int i = 0; i < name.length(); ++i)
-            stringStream << quint16(name.at(i).unicode());
-    }
-
-    void writeTreeEntry(VirtualDirectoryEntry *entry)
-    {
-        treeStream << quint32(stringOffsets.value(entry->name))
-                   << quint16(entry->isDirectory ? 0x2 : 0x0); // Flags: File or Directory
-
-        if (entry->isDirectory) {
-            treeStream << quint32(entry->dirEntries.count())
-                       << quint32(entry->firstChildIndex);
-        } else {
-            treeStream << quint16(QLocale::AnyCountry) << quint16(QLocale::C)
-                       << quint32(0x0);
-        }
-    }
-};
-
-static QByteArray generateResourceDirectoryTree(QTextStream &code, const QStringList &qrcFiles,
-                                                const QStringList &sortedRetainedFiles)
-{
-    QByteArray call;
-    if (qrcFiles.isEmpty())
-        return call;
-
-    VirtualDirectoryEntry resourceDirs;
-    resourceDirs.name = QStringLiteral("/");
-
-    for (const QString &entry : qrcFiles) {
-        const QStringList segments = entry.split(QLatin1Char('/'), QString::SkipEmptyParts);
-
-        VirtualDirectoryEntry *dirEntry = &resourceDirs;
-
-        for (int i = 0; i < segments.count() - 1; ++i)
-            dirEntry = dirEntry->append(segments.at(i));
-        if (!std::binary_search(sortedRetainedFiles.begin(), sortedRetainedFiles.end(), entry))
-            dirEntry->appendEmptyFile(segments.last());
-    }
-
-    if (resourceDirs.isEmpty())
-        return call;
-
-    QVector<unsigned char> names;
-    QVector<unsigned char> tree;
-    ResourceTree().serialize(resourceDirs, &tree, &names);
-
-    code << "static const unsigned char qt_resource_tree[] = {\n";
-    for (int i = 0; i < tree.count(); ++i) {
-        code << uint(tree.at(i));
-        if (i < tree.count() - 1)
-            code << ',';
-        if (i % 16 == 0)
-            code << '\n';
-    }
-    code << "};\n";
-
-    code << "static const unsigned char qt_resource_names[] = {\n";
-    for (int i = 0; i < names.count(); ++i) {
-        code << uint(names.at(i));
-        if (i < names.count() - 1)
-            code << ',';
-        if (i % 16 == 0)
-            code << '\n';
-    }
-    code << "};\n";
-
-    code << "static const unsigned char qt_resource_empty_payout[] = { 0, 0, 0, 0, 0 };\n";
-
-    code << "QT_BEGIN_NAMESPACE\n";
-    code << "extern Q_CORE_EXPORT bool qRegisterResourceData(int, const unsigned char *, const unsigned char *, const unsigned char *);\n";
-    code << "QT_END_NAMESPACE\n";
-
-    call = "QT_PREPEND_NAMESPACE(qRegisterResourceData)(/*version*/0x01, qt_resource_tree, qt_resource_names, qt_resource_empty_payout);\n";
-
-    return call;
-}
-
 static QString qtResourceNameForFile(const QString &fileName)
 {
     QFileInfo fi(fileName);
@@ -332,9 +110,8 @@ static QString qtResourceNameForFile(const QString &fileName)
     return name;
 }
 
-bool generateLoader(const QStringList &compiledFiles, const QStringList &sortedRetainedFiles,
-                    const QString &outputFileName, const QStringList &resourceFileMappings,
-                    QString *errorString)
+bool generateLoader(const QStringList &compiledFiles, const QString &outputFileName,
+                    const QStringList &resourceFileMappings, QString *errorString)
 {
     QByteArray generatedLoaderCode;
 
@@ -344,9 +121,6 @@ bool generateLoader(const QStringList &compiledFiles, const QStringList &sortedR
         stream << "#include <QtCore/qdir.h>\n";
         stream << "#include <QtCore/qurl.h>\n";
         stream << "\n";
-
-        QByteArray resourceRegisterCall = generateResourceDirectoryTree(stream, compiledFiles,
-                                                                        sortedRetainedFiles);
 
         stream << "namespace QmlCacheGeneratedCode {\n";
         for (int i = 0; i < compiledFiles.count(); ++i) {
@@ -384,9 +158,6 @@ bool generateLoader(const QStringList &compiledFiles, const QStringList &sortedR
         stream << "    registration.version = 0;\n";
         stream << "    registration.lookupCachedQmlUnit = &lookupCachedUnit;\n";
         stream << "    QQmlPrivate::qmlregister(QQmlPrivate::QmlUnitCacheHookRegistration, &registration);\n";
-
-        if (!resourceRegisterCall.isEmpty())
-            stream << resourceRegisterCall;
 
         stream << "}\n\n";
         stream << "Registry::~Registry() {\n";

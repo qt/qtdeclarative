@@ -6357,6 +6357,8 @@ void tst_qqmlecmascript::topLevelGeneratorFunction()
     QQmlComponent component(&engine, testFileUrl("generatorFunction.qml"));
 
     QScopedPointer<QObject> o {component.create()};
+    if (!o)
+        qDebug() << component.errorString();
     QVERIFY(o != nullptr);
 
     // check that generator works correctly in QML

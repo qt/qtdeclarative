@@ -16,20 +16,6 @@ defineReplace(qmlCacheResourceFileOutputName) {
     return($${name})
 }
 
-defineTest(qtQuickRetainSources) {
-    for(retainedRes, QTQUICK_COMPILER_RETAINED_RESOURCES) {
-        equals(1, $$retainedRes): return(true)
-    }
-    return(false)
-}
-
-defineTest(qtQuickSkippedResourceFile) {
-    for(skippedRes, QTQUICK_COMPILER_SKIPPED_RESOURCES) {
-        equals(1, $$skippedRes): return(true)
-    }
-    return(false)
-}
-
 # Flatten RESOURCES that may contain individual files or objects
 load(resources)
 
@@ -37,29 +23,14 @@ NEWRESOURCES =
 QMLCACHE_RESOURCE_FILES =
 
 for(res, RESOURCES) {
-    qtQuickSkippedResourceFile($$res) {
-        NEWRESOURCES += $$res
-        next()
-    }
-
     absRes = $$absolute_path($$res, $$_PRO_FILE_PWD_)
     rccContents = $$system($$QMAKE_RCC_DEP -list $$system_quote($$absRes),lines)
     contains(rccContents,.*\\.js$)|contains(rccContents,.*\\.qml$)|contains(rccContents,.*\\.mjs$) {
         new_resource = $$qmlCacheResourceFileOutputName($$res)
         mkpath($$dirname(new_resource))
-        qtQuickRetainSources($$res) {
-            NEWRESOURCES += $$res
-            QMLCACHE_LOADER_FLAGS += --retain=$$shell_quote($$absRes)
-        } else {
-            remaining_files = $$system($$QML_CACHEGEN_FILTER -filter-resource-file \
-                    -o $$system_quote($$new_resource) $$system_quote($$absRes),lines)
-            !isEmpty(remaining_files) {
-                NEWRESOURCES += $$new_resource
-                QMLCACHE_LOADER_FLAGS += --resource-file-mapping=$$shell_quote($$absRes=$$new_resource)
-            } else {
-                QMLCACHE_LOADER_FLAGS += --resource-file-mapping=$$shell_quote($$absRes)
-            }
-        }
+        system($$QMAKE_QMAKE -install qinstall $$system_quote($$absRes) $$system_quote($$new_resource))
+        NEWRESOURCES += $$new_resource
+        QMLCACHE_LOADER_FLAGS += --resource-file-mapping=$$shell_quote($$absRes=$$new_resource)
 
         QMLCACHE_RESOURCE_FILES += $$absRes
 

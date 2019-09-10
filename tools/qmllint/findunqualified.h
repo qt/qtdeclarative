@@ -70,7 +70,7 @@ private:
     void importHelper(QString id, QString prefix, int major, int minor);
     LanguageUtils::FakeMetaObject* localQmlFile2FakeMetaObject(QString filePath);
 
-
+    void importDirectory(const QString &directory, const QString &prefix);
     void importExportedNames(QStringRef prefix, QString name);
 
     void throwRecursionDepthError() override;

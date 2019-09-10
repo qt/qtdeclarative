@@ -70,5 +70,5 @@ int main(int argc, char ** argv)
         qWarning() << component.errors();
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }

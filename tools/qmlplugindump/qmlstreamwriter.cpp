@@ -50,9 +50,9 @@ void QmlStreamWriter::writeEndDocument()
 
 void QmlStreamWriter::writeLibraryImport(const QString &uri, int majorVersion, int minorVersion, const QString &as)
 {
-    m_stream->write(QString("import %1 %2.%3").arg(uri, QString::number(majorVersion), QString::number(minorVersion)).toUtf8());
+    m_stream->write(QString::fromLatin1("import %1 %2.%3").arg(uri, QString::number(majorVersion), QString::number(minorVersion)).toUtf8());
     if (!as.isEmpty())
-        m_stream->write(QString(" as %1").arg(as).toUtf8());
+        m_stream->write(QString::fromLatin1(" as %1").arg(as).toUtf8());
     m_stream->write("\n");
 }
 
@@ -60,7 +60,7 @@ void QmlStreamWriter::writeStartObject(const QString &component)
 {
     flushPotentialLinesWithNewlines();
     writeIndent();
-    m_stream->write(QString("%1 {").arg(component).toUtf8());
+    m_stream->write(QString::fromLatin1("%1 {").arg(component).toUtf8());
     ++m_indentDepth;
     m_maybeOneline = true;
 }
@@ -89,7 +89,7 @@ void QmlStreamWriter::writeEndObject()
 
 void QmlStreamWriter::writeScriptBinding(const QString &name, const QString &rhs)
 {
-    writePotentialLine(QString("%1: %2").arg(name, rhs).toUtf8());
+    writePotentialLine(QString::fromLatin1("%1: %2").arg(name, rhs).toUtf8());
 }
 
 void QmlStreamWriter::writeBooleanBinding(const QString &name, bool value)
@@ -104,7 +104,7 @@ void QmlStreamWriter::writeArrayBinding(const QString &name, const QStringList &
 
     // try to use a single line
     QString singleLine;
-    singleLine += QString("%1: [").arg(name);
+    singleLine += QString::fromLatin1("%1: [").arg(name);
     for (int i = 0; i < elements.size(); ++i) {
         singleLine += elements.at(i);
         if (i != elements.size() - 1)
@@ -117,7 +117,7 @@ void QmlStreamWriter::writeArrayBinding(const QString &name, const QStringList &
     }
 
     // write multi-line
-    m_stream->write(QString("%1: [\n").arg(name).toUtf8());
+    m_stream->write(QString::fromLatin1("%1: [\n").arg(name).toUtf8());
     ++m_indentDepth;
     for (int i = 0; i < elements.size(); ++i) {
         writeIndent();
@@ -143,13 +143,13 @@ void QmlStreamWriter::writeScriptObjectLiteralBinding(const QString &name, const
 {
     flushPotentialLinesWithNewlines();
     writeIndent();
-    m_stream->write(QString("%1: {\n").arg(name).toUtf8());
+    m_stream->write(QString::fromLatin1("%1: {\n").arg(name).toUtf8());
     ++m_indentDepth;
     for (int i = 0; i < keyValue.size(); ++i) {
         const QString key = keyValue.at(i).first;
         const QString value = keyValue.at(i).second;
         writeIndent();
-        m_stream->write(QString("%1: %2").arg(key, value).toUtf8());
+        m_stream->write(QString::fromLatin1("%1: %2").arg(key, value).toUtf8());
         if (i != keyValue.size() - 1) {
             m_stream->write(",\n");
         } else {

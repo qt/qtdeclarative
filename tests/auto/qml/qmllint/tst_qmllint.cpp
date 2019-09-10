@@ -44,7 +44,14 @@ private Q_SLOTS:
     void testUnqualified_data();
     void testUnqualifiedNoSpuriousParentWarning();
     void catchIdentifierNoFalsePositive();
+    void testUnmatchedSignalHandler();
+    void uiQml();
+    void methodInScope();
+    void importWithPrefix();
+
 private:
+    QString runQmllint(const QString &fileToLint, bool shouldSucceed);
+
     QString m_qmllintPath;
 };
 
@@ -83,15 +90,8 @@ void TestQmllint::testUnqualified()
     QFETCH(QString, warningMessage);
     QFETCH(int, warningLine);
     QFETCH(int, warningColumn);
-    QStringList args;
-    args << QStringLiteral("-U") << testFile(filename) << QStringLiteral("-I") << qmlImportDir;
 
-    QProcess process;
-    process.start(m_qmllintPath, args);
-    QVERIFY(process.waitForFinished());
-    QVERIFY(process.exitStatus() == QProcess::NormalExit);
-    QVERIFY(process.exitCode());
-    QString output = process.readAllStandardError();
+    const QString output = runQmllint(filename, false);
     QVERIFY(output.contains(QString::asprintf("Warning: unqualified access at %d:%d", warningLine, warningColumn)));
     QVERIFY(output.contains(warningMessage));
 }
@@ -122,41 +122,39 @@ void TestQmllint::testUnqualified_data()
 
 void TestQmllint::testUnqualifiedNoSpuriousParentWarning()
 {
-    auto qmlImportDir = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
-    {
-        QString filename = testFile("spuriousParentWarning.qml");
-        QStringList args;
-        args << QStringLiteral("-U") << filename << QStringLiteral("-I") << qmlImportDir;
-        QProcess process;
-        process.start(m_qmllintPath, args);
-        QVERIFY(process.waitForFinished());
-        QVERIFY(process.exitStatus() == QProcess::NormalExit);
-        QVERIFY(process.exitCode() == 0);
-    }
-    {
-        QString filename = testFile("nonSpuriousParentWarning.qml");
-        QStringList args;
-        args << QStringLiteral("-U") << filename << QStringLiteral("-I") << qmlImportDir;
-        QProcess process;
-        process.start(m_qmllintPath, args);
-        QVERIFY(process.waitForFinished());
-        QVERIFY(process.exitStatus() == QProcess::NormalExit);
-        QVERIFY(process.exitCode());
-    }
+    runQmllint("spuriousParentWarning.qml", true);
+    runQmllint("nonSpuriousParentWarning.qml", false);
 }
 
 void TestQmllint::catchIdentifierNoFalsePositive()
 {
-    auto qmlImportDir = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
-    QString filename = QLatin1String("catchIdentifierNoWarning.qml");
-    filename.prepend(QStringLiteral("data/"));
-    QStringList args;
-    args << QStringLiteral("-U") << filename << QStringLiteral("-I") << qmlImportDir;
-    QProcess process;
-    process.start(m_qmllintPath, args);
-    QVERIFY(process.waitForFinished());
-    QVERIFY(process.exitStatus() == QProcess::NormalExit);
-    QVERIFY(process.exitCode() == 0);
+    runQmllint("catchIdentifierNoWarning.qml", true);
+}
+
+void TestQmllint::testUnmatchedSignalHandler()
+{
+    const QString output = runQmllint("UnmatchedSignalHandler.qml", false);
+    QVERIFY(output.contains(QString::asprintf(
+            "Warning: no matching signal found for handler \"onClicked\" at %d:%d", 12, 13)));
+    QVERIFY(!output.contains(QStringLiteral("onMouseXChanged")));
+}
+
+void TestQmllint::uiQml()
+{
+    const QString output = runQmllint("FormUser.qml", true);
+    QVERIFY(output.isEmpty());
+}
+
+void TestQmllint::methodInScope()
+{
+    const QString output = runQmllint("MethodInScope.qml", true);
+    QVERIFY(output.isEmpty());
+}
+
+void TestQmllint::importWithPrefix()
+{
+    const QString output = runQmllint("ImportWithPrefix.qml", true);
+    QVERIFY(output.isEmpty());
 }
 
 void TestQmllint::test()
@@ -168,6 +166,25 @@ void TestQmllint::test()
 
     bool success = QProcess::execute(m_qmllintPath, args) == 0;
     QCOMPARE(success, isValid);
+}
+
+QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed)
+{
+    auto qmlImportDir = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
+    QStringList args;
+    args << QStringLiteral("-U") << testFile(fileToLint)
+         << QStringLiteral("-I") << qmlImportDir;
+    QProcess process;
+    process.start(m_qmllintPath, args);
+    [&]() {
+        QVERIFY(process.waitForFinished());
+        QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+        if (shouldSucceed)
+            QCOMPARE(process.exitCode(), 0);
+        else
+            QVERIFY(process.exitCode() != 0);
+    }();
+    return process.readAllStandardError();
 }
 
 QTEST_MAIN(TestQmllint)
