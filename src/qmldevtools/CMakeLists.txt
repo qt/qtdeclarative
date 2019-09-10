@@ -67,6 +67,13 @@ set(_qml_dev_tools_private_includes
     )
 target_include_directories(QmlDevTools PRIVATE ${_qml_dev_tools_private_includes})
 target_include_directories(QmlDevToolsPrivate INTERFACE ${_qml_dev_tools_private_includes})
+set(_qml_dev_tools_public_includes
+        $<INSTALL_INTERFACE:include/${qml_module}>
+        $<INSTALL_INTERFACE:include/${qml_module}/${PROJECT_VERSION}>
+        $<INSTALL_INTERFACE:include/${qml_module}/${PROJECT_VERSION}/${qml_module}>
+    )
+target_include_directories(QmlDevTools PRIVATE ${_qml_dev_tools_public_includes})
+target_include_directories(QmlDevToolsPrivate INTERFACE ${_qml_dev_tools_public_includes})
 
 # We build the qlalr sources into qmldevtools, so there's no link-time
 # dependency to QtQml. However we also include files in QmlDevTools such
