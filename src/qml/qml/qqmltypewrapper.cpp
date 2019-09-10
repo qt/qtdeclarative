@@ -476,6 +476,34 @@ ReturnedValue QQmlTypeWrapper::virtualResolveLookupGetter(const Object *object, 
             }
             // Fall through to base implementation
         }
+
+        if (name->startsWithUpper()) {
+            bool ok = false;
+            int value = type.enumValue(QQmlEnginePrivate::get(engine->qmlEngine()), name, &ok);
+            if (ok) {
+                lookup->qmlEnumValueLookup.ic = This->internalClass();
+                lookup->qmlEnumValueLookup.encodedEnumValue
+                        = QV4::Value::fromInt32(value).asReturnedValue();
+                lookup->getter = QQmlTypeWrapper::lookupEnumValue;
+                return lookup->getter(lookup, engine, *object);
+            }
+
+            value = type.scopedEnumIndex(QQmlEnginePrivate::get(engine->qmlEngine()), name, &ok);
+            if (ok) {
+                Scoped<QQmlScopedEnumWrapper> enumWrapper(
+                            scope, engine->memoryManager->allocate<QQmlScopedEnumWrapper>());
+                enumWrapper->d()->typePrivate = type.priv();
+                QQmlType::refHandle(enumWrapper->d()->typePrivate);
+                enumWrapper->d()->scopeEnumIndex = value;
+
+                lookup->qmlScopedEnumWrapperLookup.ic = This->internalClass();
+                lookup->qmlScopedEnumWrapperLookup.qmlScopedEnumWrapper
+                        = static_cast<Heap::Object*>(enumWrapper->heapObject());
+                lookup->getter = QQmlTypeWrapper::lookupScopedEnum;
+                return enumWrapper.asReturnedValue();
+            }
+            // Fall through to base implementation
+        }
         // Fall through to base implementation
     }
     return QV4::Object::virtualResolveLookupGetter(object, engine, lookup);
@@ -517,6 +545,34 @@ ReturnedValue QQmlTypeWrapper::lookupSingletonProperty(Lookup *l, ExecutionEngin
     Scope scope(engine);
     ScopedValue obj(scope, QV4::QObjectWrapper::wrap(engine, qobjectSingleton));
     return QObjectWrapper::lookupGetterImpl(l, engine, obj, /*useOriginalProperty*/ true, revertLookup);
+}
+
+ReturnedValue QQmlTypeWrapper::lookupEnumValue(Lookup *l, ExecutionEngine *engine, const Value &base)
+{
+    auto *o = static_cast<Heap::Object *>(base.heapObject());
+    if (!o || o->internalClass != l->qmlEnumValueLookup.ic) {
+        l->getter = Lookup::getterGeneric;
+        return Lookup::getterGeneric(l, engine, base);
+    }
+
+    return l->qmlEnumValueLookup.encodedEnumValue;
+}
+
+ReturnedValue QQmlTypeWrapper::lookupScopedEnum(Lookup *l, ExecutionEngine *engine, const Value &base)
+{
+    Scope scope(engine);
+    Scoped<QQmlScopedEnumWrapper> enumWrapper(scope, static_cast<Heap::QQmlScopedEnumWrapper *>(
+                l->qmlScopedEnumWrapperLookup.qmlScopedEnumWrapper));
+
+    auto *o = static_cast<Heap::Object *>(base.heapObject());
+    if (!o || o->internalClass != l->qmlScopedEnumWrapperLookup.ic) {
+        QQmlType::derefHandle(enumWrapper->d()->typePrivate);
+        l->qmlScopedEnumWrapperLookup.qmlScopedEnumWrapper = nullptr;
+        l->getter = Lookup::getterGeneric;
+        return Lookup::getterGeneric(l, engine, base);
+    }
+
+    return enumWrapper.asReturnedValue();
 }
 
 void Heap::QQmlScopedEnumWrapper::destroy()

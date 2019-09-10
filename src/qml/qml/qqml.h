@@ -102,7 +102,7 @@ class QQmlPropertyValueInterceptor;
 void Q_QML_EXPORT qmlClearTypeRegistrations();
 
 template<typename T>
-int qmlRegisterAnonymousType(const char *uri, int versionMajor=1)
+int qmlRegisterAnonymousType(const char *uri, int versionMajor)
 {
     QML_GETTYPENAMES
 
@@ -136,7 +136,7 @@ int qmlRegisterAnonymousType(const char *uri, int versionMajor=1)
 template<typename T>
 QT_DEPRECATED_VERSION_X_5_14("Use qmlRegisterAnonymousType instead") int qmlRegisterType()
 {
-    return qmlRegisterAnonymousType<T>("");
+    return qmlRegisterAnonymousType<T>("", 1);
 }
 
 int Q_QML_EXPORT qmlRegisterTypeNotAvailable(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& message);

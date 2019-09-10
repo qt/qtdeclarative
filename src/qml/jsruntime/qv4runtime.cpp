@@ -2050,7 +2050,7 @@ ReturnedValue Runtime::Exp::call(const Value &base, const Value &exp)
     double b = base.toNumber();
     double e = exp.toNumber();
     if (qt_is_inf(e) && (b == 1 || b == -1))
-        return Encode(qt_snan());
+        return Encode(qt_qnan());
     return Encode(pow(b,e));
 }
 

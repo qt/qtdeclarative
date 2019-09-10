@@ -1,0 +1,101 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example scenegraph/metaltextureimport
+    \title Scene Graph - Metal Texture Import
+    \ingroup qtquickexamples
+    \brief Shows how to use a texture created directly with Metal
+
+    \image metaltextureimport-example.jpg
+
+    The Metal Texture Import example shows how an application can import and
+    use a
+    \l{https://developer.apple.com/documentation/metal/mtltexture}{MTLTexture}
+    in the Qt Quick scene. This provides an alternative to the \l{Scene Graph -
+    Metal Under QML}{underlay}, overlay, or \l{Scene Graph - Custom Rendering
+    with QSGRenderNode}{render node} approaches when it comes to integrating
+    native Metal rendering. In many cases going through a texture, and
+    therefore "flattening" the 3D contents first, is the best option to
+    integrate and mix custom 3D contents with the 2D UI elements provided by Qt
+    Quick.
+
+    \snippet scenegraph/metaltextureimport/main.qml 1
+    \snippet scenegraph/metaltextureimport/main.qml 2
+
+    The application exposes a custom QQuickItem subclass under ther name of
+    CustomTextureItem. This is instantiated in QML. The value of the \c t
+    property is animated as well.
+
+    \snippet scenegraph/metaltextureimport/metaltextureimport.h 1
+
+    The implementation of our custom item involves overriding
+    QQuickItem::updatePaintNode(), as well as functions and slots related to
+    geometry changes and cleanup.
+
+    \snippet scenegraph/metaltextureimport/metaltextureimport.mm 1
+
+    We also need a scenegraph node. Instead of deriving directly from QSGNode,
+    we can use QSGSimpleTextureNode which gives us some of the functionality
+    pre-implemented as a convenience.
+
+    \snippet scenegraph/metaltextureimport/metaltextureimport.mm 2
+
+    The updatePaintNode() function of the item is called on the render thread
+    (if there is one), with the main (gui) thread blocked. Here we create a new
+    node if there has not yet been one, and update it. Accessing Qt objects
+    living on the main thread is safe here, so sync() will calculate and copy
+    the values it needs from QQuickItem or QQuickWindow.
+
+    \snippet scenegraph/metaltextureimport/metaltextureimport.mm 3
+
+    The node does not merely rely on the typical QQuickItem - QSGNode
+    update sequence, it connects to QQuickWindow::beforeRendering() as
+    well. That is where the contents of the Metal texture will be updated by
+    encoding a full render pass, targeting the texture, on the Qt Quicks
+    scenegraph's command buffer. beforeRendering() is the right place for this,
+    because the signal is emitted before Qt Quick starts to encode its own
+    rendering commands. Choosing QQuickWindow::beforeRenderPassRecording()
+    instead would be an error in this exanple.
+
+    \snippet scenegraph/metaltextureimport/metaltextureimport.mm 4
+    \snippet scenegraph/metaltextureimport/metaltextureimport.mm 5
+
+    After copying the values we need, sync() also performs some graphics
+    resource initialization. The MTLDevice is queried from the scenegraph. Once
+    a MTLTexture is available, a QSGTexture wrapping (not owning) it is created
+    via QQuickWindow::createTextureFromNativeObject(). This function is a
+    modern equivalent to QQuickWindow::createTextureFromId() that is not tied
+    to OpenGL. Finally, the QSGTexture is associated with the underlying
+    materials by calling the base class' setTexture() function.
+
+    \snippet scenegraph/metaltextureimport/metaltextureimport.mm 6
+
+    render(), the slot connected to beforeRendering(), encodes the rendering
+    commands using the buffers and pipeline state objects created in sync().
+
+  */

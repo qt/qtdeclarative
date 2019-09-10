@@ -1,0 +1,68 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example scenegraph/vulkanunderqml
+    \title Scene Graph - Vulkan Under QML
+    \ingroup qtquickexamples
+    \brief Shows how to render directly with vulkan under a Qt Quick scene.
+
+    \image vulkanunderqml-example.jpg
+
+    The Vulkan Under QML example shows how an application can make use of the
+    \l QQuickWindow::beforeRendering() and \l
+    QQuickWindow::beforeRenderPassRecording() signals to draw custom Vulkan
+    content under a Qt Quick scene. This signal is emitted at the start of
+    every frame, before the scene graph starts its rendering, thus any Vulkan
+    draw calls that are made as a response to this signal, will stack under the
+    Qt Quick items. There are two signals, because the custom Vulkan commands
+    are recorded onto the same command buffer that is used by the scene graph.
+    beforeRendering() on its own is not sufficient for this because it gets
+    emitted at the start of the frame, before recording the start of a
+    renderpass instance via
+    \l{https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkCmdBeginRenderPass.html}{vkCmdBeginRenderPass}.
+    By also connecting to beforeRenderPassRecording(), the application's own
+    commands and the scene graph's scaffolding will end up in the right order.
+
+    As an alternative, applications that wish to render Vulkan content
+    on top of the Qt Quick scene, can do so by connecting to the \l
+    QQuickWindow::afterRendering() and \l
+    QQuickWindow::afterRenderPassRecording() signals.
+
+    In this example, we will also see how it is possible to have
+    values that are exposed to QML which affect the Vulkan
+    rendering. We animate the threshold value using a NumberAnimation
+    in the QML file and this value is used by the SPIR-V shader
+    program that draws the squircles.
+
+    The example is equivalent in most ways to the \l{Scene Graph - OpenGL Under
+    QML}{OpenGL Under QML}, \l{Scene Graph - Direct3D 11 Under QML}{Direct3D 11
+    Under QML}, and \l{Scene Graph - Metal Under QML}{Metal Under QML}
+    examples, they all render the same custom content, just via different
+    native APIs.
+
+  */
