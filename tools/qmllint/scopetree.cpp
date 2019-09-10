@@ -81,6 +81,12 @@ void ScopeTree::insertPropertyIdentifier(QString id)
     this->addMethod(method);
 }
 
+void ScopeTree::addUnmatchedSignalHandler(const QString &handler,
+                                          const QQmlJS::AST::SourceLocation &location)
+{
+    m_unmatchedSignalHandlers.append(qMakePair(handler, location));
+}
+
 bool ScopeTree::isIdInCurrentScope(const QString &id) const
 {
     return isIdInCurrentQMlScopes(id) || isIdInCurrentJSScopes(id);
@@ -132,6 +138,15 @@ bool ScopeTree::recheckIdentifiers(const QString& code, const QHash<QString, Lan
     workQueue.enqueue(this);
     while (!workQueue.empty()) {
         const ScopeTree* currentScope = workQueue.dequeue();
+        for (const auto &handler : currentScope->m_unmatchedSignalHandlers) {
+            colorOut.write("Warning: ", Warning);
+            colorOut.write(QString::fromLatin1(
+                                   "no matching signal found for handler \"%1\" at %2:%3\n")
+                                   .arg(handler.first).arg(handler.second.startLine)
+                                   .arg(handler.second.startColumn), Normal);
+            printContext(colorOut, code, handler.second);
+        }
+
         for (auto idLocationPair : currentScope->m_accessedIdentifiers) {
             if (qmlIDs.contains(idLocationPair.first))
                 continue;
@@ -141,13 +156,11 @@ bool ScopeTree::recheckIdentifiers(const QString& code, const QHash<QString, Lan
             noUnqualifiedIdentifier = false;
             colorOut.write("Warning: ", Warning);
             auto location = idLocationPair.second;
-            colorOut.write(QString::asprintf("unqualified access at %d:%d\n", location.startLine, location.startColumn), Normal);
-            IssueLocationWithContext issueLocationWithContext {code, location};
-            colorOut.write(issueLocationWithContext.beforeText.toString(), Normal);
-            colorOut.write(issueLocationWithContext.issueText.toString(), Error);
-            colorOut.write(issueLocationWithContext.afterText.toString() + QLatin1Char('\n'), Normal);
-            int tabCount = issueLocationWithContext.beforeText.count(QLatin1Char('\t'));
-            colorOut.write(QString(" ").repeated(issueLocationWithContext.beforeText.length() - tabCount) + QString("\t").repeated(tabCount) + QString("^").repeated(location.length) + QLatin1Char('\n'), Normal);
+            colorOut.write(QString::asprintf("unqualified access at %d:%d\n", location.startLine,
+                                             location.startColumn), Normal);
+
+            printContext(colorOut, code, location);
+
             // root(JS) --> program(qml) --> (first element)
             if (root->m_childScopes[0]->m_childScopes[0]->m_currentScopeQMLIdentifiers.contains(idLocationPair.first)) {
                 ScopeTree *parentScope = currentScope->m_parentScope;
@@ -161,6 +174,7 @@ bool ScopeTree::recheckIdentifiers(const QString& code, const QHash<QString, Lan
                     colorOut.write("Note: ", Warning);
                     colorOut.write(("You first have to give the root element an id\n"));
                 }
+                IssueLocationWithContext issueLocationWithContext {code, location};
                 colorOut.write(issueLocationWithContext.beforeText.toString(), Normal);
                 colorOut.write(rootId + QLatin1Char('.'), Hint);
                 colorOut.write(issueLocationWithContext.issueText.toString(), Normal);
@@ -212,7 +226,7 @@ QMap<QString, LanguageUtils::FakeMetaMethod>const &ScopeTree::methods() const
 bool ScopeTree::isIdInCurrentQMlScopes(QString id) const
 {
     auto qmlScope = getCurrentQMLScope();
-    return qmlScope->m_currentScopeQMLIdentifiers.contains(id);
+    return qmlScope->m_currentScopeQMLIdentifiers.contains(id) || qmlScope->m_methods.contains(id);
 }
 
 bool ScopeTree::isIdInCurrentJSScopes(QString id) const
@@ -248,6 +262,20 @@ ScopeTree *ScopeTree::getCurrentQMLScope()
         qmlScope = qmlScope->m_parentScope;
     }
     return qmlScope;
+}
+
+void ScopeTree::printContext(ColorOutput &colorOut, const QString &code,
+                             const QQmlJS::AST::SourceLocation &location) const
+{
+    IssueLocationWithContext issueLocationWithContext {code, location};
+    colorOut.write(issueLocationWithContext.beforeText.toString(), Normal);
+    colorOut.write(issueLocationWithContext.issueText.toString(), Error);
+    colorOut.write(issueLocationWithContext.afterText.toString() + QLatin1Char('\n'), Normal);
+    int tabCount = issueLocationWithContext.beforeText.count(QLatin1Char('\t'));
+    colorOut.write(QString(" ").repeated(issueLocationWithContext.beforeText.length() - tabCount)
+                           + QString("\t").repeated(tabCount)
+                           + QString("^").repeated(location.length)
+                           + QLatin1Char('\n'), Normal);
 }
 
 ScopeType ScopeTree::scopeType() {return m_scopeType;}

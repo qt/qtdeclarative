@@ -58,11 +58,11 @@
 int main(int argc, char ** argv)
 {
     QCoreApplication app(argc, argv);
-    qmlRegisterType<BirthdayPartyAttached>();
+    qmlRegisterAnonymousType<BirthdayPartyAttached>("People", 1);
     qmlRegisterType<BirthdayParty>("People", 1,0, "BirthdayParty");
     qmlRegisterType<HappyBirthdaySong>("People", 1,0, "HappyBirthdaySong");
-    qmlRegisterType<ShoeDescription>();
-    qmlRegisterType<Person>();
+    qmlRegisterAnonymousType<ShoeDescription>("People", 1);
+    qmlRegisterAnonymousType<Person>("People", 1);
     qmlRegisterType<Boy>("People", 1,0, "Boy");
     qmlRegisterType<Girl>("People", 1,0, "Girl");
 
@@ -94,9 +94,9 @@ int main(int argc, char ** argv)
         }
 
         party->startParty();
-    } else {
-        qWarning() << component.errors();
+        return QCoreApplication::exec();
     }
 
-    return app.exec();
+    qWarning() << component.errors();
+    return EXIT_FAILURE;
 }

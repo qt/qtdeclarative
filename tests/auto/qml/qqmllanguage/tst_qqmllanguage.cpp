@@ -132,6 +132,7 @@ private slots:
     void autoComponentCreation();
     void autoComponentCreationInGroupProperty();
     void propertyValueSource();
+    void requiredProperty();
     void attachedProperties();
     void dynamicObjects();
     void customVariantTypes();
@@ -1631,6 +1632,25 @@ void tst_qqmllanguage::propertyValueSource()
     QVERIFY(valueSource != nullptr);
     QCOMPARE(valueSource->prop.object(), qobject_cast<QObject*>(object.data()));
     QCOMPARE(valueSource->prop.name(), QString(QLatin1String("intProperty")));
+    }
+}
+
+void tst_qqmllanguage::requiredProperty()
+{
+    QQmlEngine engine;
+    {
+        QQmlComponent component(&engine, testFileUrl("requiredProperties.1.qml"));
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object);
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("requiredProperties.2.qml"));
+        QVERIFY(!component.errors().empty());
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("requiredProperties.3.qml"));
+        QVERIFY(!component.errors().empty());
     }
 }
 

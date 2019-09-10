@@ -75,7 +75,7 @@ QT_BEGIN_NAMESPACE
 // Also change the comment behind the number to describe the latest change. This has the added
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
-#define QV4_DATA_STRUCTURE_VERSION 0x24 // Collect function parameter types
+#define QV4_DATA_STRUCTURE_VERSION 0x26// support required properties
 
 class QIODevice;
 class QQmlTypeNameCache;
@@ -656,7 +656,8 @@ struct Property
 {
     quint32_le nameIndex;
     union {
-        quint32_le_bitfield<0, 29> builtinTypeOrTypeNameIndex;
+        quint32_le_bitfield<0, 28> builtinTypeOrTypeNameIndex;
+        quint32_le_bitfield<28, 1> isRequired;
         quint32_le_bitfield<29, 1> isBuiltinType;
         quint32_le_bitfield<30, 1> isList;
         quint32_le_bitfield<31, 1> isReadOnly;

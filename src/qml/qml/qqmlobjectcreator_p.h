@@ -66,6 +66,28 @@ class QQmlAbstractBinding;
 class QQmlInstantiationInterrupt;
 class QQmlIncubatorPrivate;
 
+struct AliasToRequiredInfo {
+    QString propertyName;
+    QUrl fileUrl;
+};
+
+/*!
+\internal
+This struct contains information solely used for displaying error messages
+\variable aliasesToRequired allows us to give the user a way to know which (aliasing) properties
+can be set to set the required property
+\sa QQmlComponentPrivate::unsetRequiredPropertyToQQmlError
+*/
+struct RequiredPropertyInfo
+{
+    QString propertyName;
+    QUrl fileUrl;
+    QV4::CompiledData::Location location;
+    QVector<AliasToRequiredInfo> aliasesToRequired;
+};
+
+using RequiredProperties = QHash<QQmlPropertyData*, RequiredPropertyInfo>;
+
 struct QQmlObjectCreatorSharedState : public QSharedData
 {
     QQmlContextData *rootContext;
@@ -78,6 +100,7 @@ struct QQmlObjectCreatorSharedState : public QSharedData
     QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
     QQmlVmeProfiler profiler;
     QRecursionNode recursionNode;
+    RequiredProperties requiredProperties;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlObjectCreator
@@ -101,6 +124,8 @@ public:
 
     QQmlContextData *parentContextData() const { return parentContext.contextData(); }
     QFiniteStack<QPointer<QObject> > &allCreatedObjects() { return sharedState->allCreatedObjects; }
+
+    RequiredProperties &requiredProperties() {return sharedState->requiredProperties;}
 
 private:
     QQmlObjectCreator(QQmlContextData *contextData, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, QQmlObjectCreatorSharedState *inheritedSharedState);

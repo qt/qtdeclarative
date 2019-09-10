@@ -59,8 +59,8 @@ int main(int argc, char ** argv)
     QCoreApplication app(argc, argv);
 
     qmlRegisterType<BirthdayParty>("People", 1,0, "BirthdayParty");
-    qmlRegisterType<ShoeDescription>();
-    qmlRegisterType<Person>();
+    qmlRegisterAnonymousType<ShoeDescription>("People", 1);
+    qmlRegisterAnonymousType<Person>("People", 1);
     qmlRegisterType<Boy>("People", 1,0, "Boy");
     qmlRegisterType<Girl>("People", 1,0, "Girl");
 
@@ -87,9 +87,9 @@ int main(int argc, char ** argv)
         if (bestShoe)
             qWarning() << bestShoe->name() << "is wearing the best shoes!";
 
-    } else {
-        qWarning() << component.errors();
+        return EXIT_SUCCESS;
     }
 
-    return 0;
+    qWarning() << component.errors();
+    return EXIT_FAILURE;
 }

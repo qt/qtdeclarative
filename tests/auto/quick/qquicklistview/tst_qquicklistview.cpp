@@ -389,7 +389,7 @@ void tst_QQuickListView::init()
         m_view = nullptr;
     }
 #endif
-    qmlRegisterType<QAbstractItemModel>();
+    qmlRegisterAnonymousType<QAbstractItemModel>("Proxy", 1);
     qmlRegisterType<ProxyTestInnerModel>("Proxy", 1, 0, "ProxyTestInnerModel");
     qmlRegisterType<QSortFilterProxyModel>("Proxy", 1, 0, "QSortFilterProxyModel");
 }
