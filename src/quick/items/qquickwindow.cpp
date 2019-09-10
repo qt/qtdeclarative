@@ -39,7 +39,6 @@
 
 #include "qquickwindow.h"
 #include "qquickwindow_p.h"
-#include "qquickwindowattached_p.h"
 
 #include "qquickitem.h"
 #include "qquickitem_p.h"

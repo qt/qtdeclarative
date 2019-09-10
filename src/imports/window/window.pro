@@ -6,6 +6,9 @@ IMPORT_VERSION = 2.$$QT_MINOR_VERSION
 SOURCES += \
     plugin.cpp
 
+HEADERS += \
+    plugin.h
+
 QT += quick-private qml-private
 
 load(qml_plugin)

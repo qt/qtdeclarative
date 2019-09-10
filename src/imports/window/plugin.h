@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the plugins of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,52 +37,85 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
+#ifndef PLUGIN_H
+#define PLUGIN_H
 
-#include "plugin.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtGui/private/qwindow_p.h>
+#include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/private/qquickwindowattached_p.h>
+#include <QtQuick/private/qquickscreen_p.h>
+#include <QtQuick/private/qquickwindowmodule_p.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmlmodule QtQuick.Window 2.\QtMinorVersion
-    \title Qt Quick Window QML Types
-    \ingroup qmlmodules
-    \brief Provides QML types for window management
-
-    This QML module contains types for creating top-level windows and accessing screen information.
-
-    To use the types in this module, import the module with the following line:
-
-    \qml \QtMinorVersion
-    import QtQuick.Window 2.\1
-    \endqml
-*/
-
-
-//![class decl]
-class QtQuick2WindowPlugin : public QQmlExtensionPlugin
+struct QWindowForeign
 {
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
-public:
-    QtQuick2WindowPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.Window"));
-
-        qmlRegisterTypesAndRevisions<
-                QWindowForeign,
-                QQuickWindowForeign,
-                QQuickWindowQmlImplForeign,
-                QQuickScreenForeign,
-                QQuickScreenInfoForeign>(uri, 2);
-
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
-        qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
-    }
+    Q_GADGET
+    QML_FOREIGN(QWindow)
+    QML_ANONYMOUS
+    QML_ADDED_IN_MINOR_VERSION(1)
 };
-//![class decl]
+
+struct QQuickWindowForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QQuickWindow)
+    QML_NAMED_ELEMENT(Window)
+    QML_ADDED_IN_MINOR_VERSION(0)
+    QML_REMOVED_IN_MINOR_VERSION(1)
+};
+
+struct QQuickWindowForeignAttached
+{
+    Q_GADGET
+    QML_FOREIGN(QQuickWindowAttached)
+    QML_ANONYMOUS
+};
+
+struct QQuickScreenInfoForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QQuickScreenInfo)
+    QML_NAMED_ELEMENT(ScreenInfo)
+    QML_ADDED_IN_MINOR_VERSION(3)
+    QML_UNCREATABLE("ScreenInfo can only be used via the attached property.")
+};
+
+struct QQuickScreenForeignAttached
+{
+    Q_GADGET
+    QML_FOREIGN(QQuickScreenAttached)
+    QML_ANONYMOUS
+};
+
+struct QQuickScreenForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QQuickScreen)
+    QML_NAMED_ELEMENT(Screen)
+    QML_UNCREATABLE("Screen can only be used via the attached property.")
+};
+
+struct QQuickWindowQmlImplForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QQuickWindowQmlImpl)
+    QML_NAMED_ELEMENT(Window)
+    QML_ADDED_IN_MINOR_VERSION(1)
+};
 
 QT_END_NAMESPACE
 
-#include "plugin.moc"
+#endif // PLUGIN_H
