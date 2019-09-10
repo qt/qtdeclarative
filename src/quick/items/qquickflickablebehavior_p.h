@@ -93,6 +93,11 @@
 #define QML_FLICK_MULTIFLICK_THRESHOLD 1250
 #endif
 
+// If the time (ms) between the last move and the release exceeds this, then velocity will be zero.
+#ifndef QML_FLICK_VELOCITY_DECAY_TIME
+#define QML_FLICK_VELOCITY_DECAY_TIME 50
+#endif
+
 // Multiflick acceleration minimum contentSize/viewSize ratio
 #ifndef QML_FLICK_MULTIFLICK_RATIO
 #define QML_FLICK_MULTIFLICK_RATIO 10

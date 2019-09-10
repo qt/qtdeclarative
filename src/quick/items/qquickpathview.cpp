@@ -60,6 +60,7 @@
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcItemViewDelegateLifecycle)
+Q_LOGGING_CATEGORY(lcPathView, "qt.quick.pathview")
 
 const qreal MinimumFlickVelocity = 75.0;
 
@@ -1623,6 +1624,7 @@ void QQuickPathViewPrivate::addVelocitySample(qreal v)
     velocityBuffer.append(v);
     if (velocityBuffer.count() > QML_FLICK_SAMPLEBUFFER)
         velocityBuffer.remove(0);
+    qCDebug(lcPathView) << "instantaneous velocity" << v;
 }
 
 qreal QQuickPathViewPrivate::calcVelocity() const
@@ -1635,6 +1637,7 @@ qreal QQuickPathViewPrivate::calcVelocity() const
             velocity += v;
         }
         velocity /= count;
+        qCDebug(lcPathView) << "average velocity" << velocity << "based on" << count << "samples";
     }
     return velocity;
 }
@@ -1765,7 +1768,7 @@ void QQuickPathView::mouseReleaseEvent(QMouseEvent *event)
     }
 }
 
-void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *)
+void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *event)
 {
     Q_Q(QQuickPathView);
     stealMouse = false;
@@ -1779,6 +1782,12 @@ void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *)
     }
 
     qreal velocity = calcVelocity();
+    qint64 elapsed = computeCurrentTime(event) - lastPosTime;
+    // Let the velocity linearly decay such that it becomes 0 if elapsed time > QML_FLICK_VELOCITY_DECAY_TIME
+    // The intention is that if you are flicking at some speed, then stop in one place for some time before releasing,
+    // the previous velocity is lost. (QTBUG-77173, QTBUG-59052)
+    velocity *= qreal(qMax(0LL, QML_FLICK_VELOCITY_DECAY_TIME - elapsed)) / QML_FLICK_VELOCITY_DECAY_TIME;
+    qCDebug(lcPathView) << "after elapsed time" << elapsed << "velocity decayed to" << velocity;
     qreal count = pathItems == -1 ? modelCount : qMin(pathItems, modelCount);
     const auto averageItemLength = path->path().length() / count;
     qreal pixelVelocity = averageItemLength * velocity;
