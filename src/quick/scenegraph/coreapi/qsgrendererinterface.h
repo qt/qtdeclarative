@@ -72,7 +72,8 @@ public:
         OpenGLContextResource,
         DeviceContextResource,
         CommandEncoderResource,
-        VulkanInstanceResource
+        VulkanInstanceResource,
+        RenderPassResource
     };
 
     enum ShaderType {

@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/scenegraph/vulkanunderqml">
+        <file>main.qml</file>
+        <file>squircle.vert.spv</file>
+        <file>squircle.frag.spv</file>
+    </qresource>
+</RCC>

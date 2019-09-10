@@ -115,6 +115,8 @@ struct Q_QML_EXPORT QQmlTypeWrapper : Object
     static bool virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup, const Value &value);
 
     static ReturnedValue lookupSingletonProperty(Lookup *l, ExecutionEngine *engine, const Value &base);
+    static ReturnedValue lookupEnumValue(Lookup *l, ExecutionEngine *engine, const Value &base);
+    static ReturnedValue lookupScopedEnum(Lookup *l, ExecutionEngine *engine, const Value &base);
 
 protected:
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);

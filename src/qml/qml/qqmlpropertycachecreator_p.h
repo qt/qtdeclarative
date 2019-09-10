@@ -256,17 +256,8 @@ inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContaine
         Q_ASSERT(typeRef);
         QQmlType qmltype = typeRef->type;
         if (!qmltype.isValid()) {
-            QString propertyName = stringAt(context.instantiatingBinding->propertyNameIndex);
-            if (imports->resolveType(propertyName, &qmltype, nullptr, nullptr, nullptr)) {
-                if (qmltype.isComposite()) {
-                    QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
-                    Q_ASSERT(tdata);
-                    Q_ASSERT(tdata->isComplete());
-
-                    auto compilationUnit = tdata->compilationUnit();
-                    qmltype = QQmlMetaType::qmlType(compilationUnit->metaTypeId);
-                }
-            }
+            imports->resolveType(stringAt(context.instantiatingBinding->propertyNameIndex),
+                                 &qmltype, nullptr, nullptr, nullptr);
         }
 
         const QMetaObject *attachedMo = qmltype.attachedPropertiesType(enginePrivate);

@@ -58,11 +58,6 @@
 #include <QOpenGLFunctions>
 
 //! [1]
-OpenGLRenderNode::OpenGLRenderNode(QQuickItem *item)
-    : m_item(item)
-{
-}
-
 OpenGLRenderNode::~OpenGLRenderNode()
 {
     releaseResources();
@@ -138,9 +133,9 @@ void OpenGLRenderNode::render(const RenderState *state)
     m_vbo->bind();
 
 //! [5]
-    QPointF p0(m_item->width() - 1, m_item->height() - 1);
+    QPointF p0(m_width - 1, m_height - 1);
     QPointF p1(0, 0);
-    QPointF p2(0, m_item->height() - 1);
+    QPointF p2(0, m_height - 1);
 
     GLfloat vertices[6] = { GLfloat(p0.x()), GLfloat(p0.y()),
                             GLfloat(p1.x()), GLfloat(p1.y()),
@@ -192,8 +187,14 @@ QSGRenderNode::RenderingFlags OpenGLRenderNode::flags() const
 
 QRectF OpenGLRenderNode::rect() const
 {
-    return QRect(0, 0, m_item->width(), m_item->height());
+    return QRect(0, 0, m_width, m_height);
 }
 //! [4]
+
+void OpenGLRenderNode::sync(QQuickItem *item)
+{
+    m_width = item->width();
+    m_height = item->height();
+}
 
 #endif // opengl
