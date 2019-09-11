@@ -5686,6 +5686,7 @@ void QQuickItem::setRotation(qreal r)
           color: "red"
           x: 25; y: 25; width: 50; height: 50
           scale: 1.4
+          transformOrigin: Item.TopLeft
       }
   }
   \endqml
