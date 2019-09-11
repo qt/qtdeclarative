@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -37,37 +37,53 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include <QtQuickTest/private/quicktestresult_p.h>
-#include <QtQuickTest/private/quicktestevent_p.h>
-#include <QtQuickTest/private/quicktestutil_p.h>
-#include <QtQuickTest/private/qtestoptions_p.h>
+#ifndef QUICKTESTUTIL_P_H
+#define QUICKTESTUTIL_P_H
 
-QML_DECLARE_TYPE(QuickTestResult)
-QML_DECLARE_TYPE(QuickTestEvent)
-QML_DECLARE_TYPE(QuickTestUtil)
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuickTest/quicktestglobal.h>
+#include <QtCore/qobject.h>
+#include <QtQml/qqml.h>
+#include <QtQml/qjsvalue.h>
 
 QT_BEGIN_NAMESPACE
 
-class QTestQmlModule : public QQmlExtensionPlugin
+class Q_QUICK_TEST_EXPORT QuickTestUtil : public QObject
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
-
+    Q_PROPERTY(bool printAvailableFunctions READ printAvailableFunctions NOTIFY printAvailableFunctionsChanged)
+    Q_PROPERTY(int dragThreshold READ dragThreshold NOTIFY dragThresholdChanged)
+    QML_NAMED_ELEMENT(TestUtil)
 public:
-    QTestQmlModule(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtTest"));
-        qmlRegisterTypesAndRevisions<QuickTestResult, QuickTestEvent,
-                                     QuickTestUtil, QQuickTouchEventSequence>(uri, 1);
+    QuickTestUtil(QObject *parent = nullptr) :QObject(parent) {}
+    ~QuickTestUtil() override {}
 
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
-        qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
-    }
+    bool printAvailableFunctions() const;
+    int dragThreshold() const;
+
+Q_SIGNALS:
+    void printAvailableFunctionsChanged();
+    void dragThresholdChanged();
+
+public Q_SLOTS:
+
+    QJSValue typeName(const QVariant& v) const;
+    bool compare(const QVariant& act, const QVariant& exp) const;
+
+    QJSValue callerFile(int frameIndex = 0) const;
+    int callerLine(int frameIndex = 0) const;
 };
 
 QT_END_NAMESPACE
 
-#include "main.moc"
+#endif // QUICKTESTUTIL_P_H
