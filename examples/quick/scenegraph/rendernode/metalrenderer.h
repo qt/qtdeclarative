@@ -52,13 +52,11 @@
 #define METALRENDERER_H
 
 #include <qsgrendernode.h>
+#include <QQuickItem>
 
 #ifdef Q_OS_DARWIN
 
 QT_BEGIN_NAMESPACE
-
-class QQuickItem;
-class QQuickWindow;
 
 QT_END_NAMESPACE
 
@@ -79,7 +77,7 @@ private:
 class MetalRenderNode : public QSGRenderNode
 {
 public:
-    MetalRenderNode(QQuickItem *item);
+    MetalRenderNode();
     ~MetalRenderNode();
 
     void render(const RenderState *state) override;
@@ -90,9 +88,14 @@ public:
 
     MetalRenderNodeResourceBuilder *resourceBuilder() { return &m_resourceBuilder; }
 
+    void sync(QQuickItem *item);
+
 private:
-    QQuickItem *m_item;
     MetalRenderNodeResourceBuilder m_resourceBuilder;
+    QQuickWindow *m_window = nullptr;
+    int m_width = 0;
+    int m_height = 0;
+    int m_outputHeight = 0;
 };
 
 #endif // Q_OS_DARWIN

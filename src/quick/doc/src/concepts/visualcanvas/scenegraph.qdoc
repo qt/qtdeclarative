@@ -341,8 +341,14 @@ OpenGL application is allowed to draw.
 The \l {Scene Graph - OpenGL Under QML} example gives an example on
 how to use these signals using OpenGL.
 
+The \l {Scene Graph - Direct3D 11 Under QML} example gives an example on
+how to use these signals using Direct3D.
+
 The \l {Scene Graph - Metal Under QML} example gives an example on
 how to use these signals using Metal.
+
+The \l {Scene Graph - Vulkan Under QML} example gives an example on
+how to use these signals using Vulkan.
 
 The other alternative, only available for OpenGL currently, is to create a
 QQuickFramebufferObject, render into it, and let it be displayed in the scene
@@ -351,6 +357,13 @@ this can be done. It is also possible to combine multiple rendering contexts
 and multiple threads to create content to be displayed in the scene graph. The
 \l {Scene Graph - Rendering FBOs in a thread} examples show how this can be
 done.
+
+Graphics APIs other than OpenGL can also follow this approach, even though
+QQuickFramebufferObject does not currently support them. Creating and rendering
+to a texture directly with the underlying API, followed by wrapping and using
+this resource in a Qt Quick scene in a custom QQuickItem, is demonstrated in
+the \l {Scene Graph - Metal Texture Import} example. That example uses Metal,
+the concepts however apply to all other graphics APIs as well.
 
 \warning When mixing OpenGL content with scene graph rendering, it is
 important the application does not leave the OpenGL context in a state

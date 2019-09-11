@@ -62,6 +62,7 @@ QT_BEGIN_NAMESPACE
 
 class QRhi;
 class QRhiCommandBuffer;
+class QRhiRenderPassDescriptor;
 class QOpenGLContext;
 class QSGMaterialShader;
 class QSGMaterialRhiShader;
@@ -145,6 +146,10 @@ public:
         // may be null if not in an active frame, but returning null is valid then
         return m_currentFrameCommandBuffer;
     }
+    QRhiRenderPassDescriptor *currentFrameRenderPass() const {
+        // may be null if not in an active frame, but returning null is valid then
+        return m_currentFrameRenderPass;
+    }
 
 protected:
     static QString fontKey(const QRawFont &font);
@@ -160,6 +165,7 @@ protected:
     QSGOpenGLAtlasTexture::Manager *m_glAtlasManager;
     QSGRhiAtlasTexture::Manager *m_rhiAtlasManager;
     QRhiCommandBuffer *m_currentFrameCommandBuffer;
+    QRhiRenderPassDescriptor *m_currentFrameRenderPass;
 };
 
 QT_END_NAMESPACE

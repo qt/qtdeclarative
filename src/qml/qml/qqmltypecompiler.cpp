@@ -328,18 +328,8 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             const QmlIR::Object *attachedObj = qmlObjects.at(binding->value.objectIndex);
             auto *typeRef = resolvedType(binding->propertyNameIndex);
             QQmlType type = typeRef ? typeRef->type : QQmlType();
-            if (!type.isValid()) {
-                if (imports->resolveType(propertyName, &type, nullptr, nullptr, nullptr)) {
-                    if (type.isComposite()) {
-                        QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(type.sourceUrl());
-                        Q_ASSERT(tdata);
-                        Q_ASSERT(tdata->isComplete());
-
-                        auto compilationUnit = tdata->compilationUnit();
-                        type = QQmlMetaType::qmlType(compilationUnit->metaTypeId);
-                    }
-                }
-            }
+            if (!type.isValid())
+                imports->resolveType(propertyName, &type, nullptr, nullptr, nullptr);
 
             const QMetaObject *attachedType = type.attachedPropertiesType(enginePrivate);
             if (!attachedType)

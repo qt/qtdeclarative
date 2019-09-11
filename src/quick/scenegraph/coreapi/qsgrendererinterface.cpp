@@ -134,6 +134,10 @@ QT_BEGIN_NAMESPACE
 
     \value VulkanInstanceResource The resource is a pointer to the
     QVulkanInstance used by the scenegraph, when applicable.
+
+    \value RenderPassResource The resource is a pointer to the render pass used
+    by the scenegraph, describing the color and depth/stecil attachments and
+    how they are used. For example, a \c{VkRenderPass *}.
  */
 
 /*!

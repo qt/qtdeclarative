@@ -1941,30 +1941,32 @@ ReturnedValue GlobalExtensions::method_qsTr(const FunctionObject *b, const Value
         THROW_GENERIC_ERROR("qsTr(): third argument (n) must be a number");
 
     QString context;
-    if (QQmlContextData *ctxt = scope.engine->callingQmlContext()) {
-        QString path = ctxt->urlString();
-        int lastSlash = path.lastIndexOf(QLatin1Char('/'));
-        int lastDot = path.lastIndexOf(QLatin1Char('.'));
-        int length = lastDot - (lastSlash + 1);
-        context = (lastSlash > -1) ? path.mid(lastSlash + 1, (length > -1) ? length : -1) : QString();
-    } else {
-        CppStackFrame *frame = scope.engine->currentStackFrame;
-        // The first non-empty source URL in the call stack determines the translation context.
-        while (frame && context.isEmpty()) {
-            if (CompiledData::CompilationUnitBase *baseUnit = frame->v4Function->compilationUnit) {
-                const auto *unit = static_cast<const CompiledData::CompilationUnit *>(baseUnit);
-                QString fileName = unit->fileName();
-                QUrl url(unit->fileName());
-                if (url.isValid() && url.isRelative()) {
-                    context = url.fileName();
-                } else {
-                    context = QQmlFile::urlToLocalFileOrQrc(fileName);
-                    if (context.isEmpty() && fileName.startsWith(QLatin1String(":/")))
-                        context = fileName;
-                }
-                context = QFileInfo(context).baseName();
+    CppStackFrame *frame = scope.engine->currentStackFrame;
+    // The first non-empty source URL in the call stack determines the translation context.
+    while (frame && context.isEmpty()) {
+        if (CompiledData::CompilationUnitBase *baseUnit = frame->v4Function->compilationUnit) {
+            const auto *unit = static_cast<const CompiledData::CompilationUnit *>(baseUnit);
+            QString fileName = unit->fileName();
+            QUrl url(unit->fileName());
+            if (url.isValid() && url.isRelative()) {
+                context = url.fileName();
+            } else {
+                context = QQmlFile::urlToLocalFileOrQrc(fileName);
+                if (context.isEmpty() && fileName.startsWith(QLatin1String(":/")))
+                    context = fileName;
             }
-            frame = frame->parent;
+            context = QFileInfo(context).baseName();
+        }
+        frame = frame->parent;
+    }
+
+    if (context.isEmpty()) {
+        if (QQmlContextData *ctxt = scope.engine->callingQmlContext()) {
+            QString path = ctxt->urlString();
+            int lastSlash = path.lastIndexOf(QLatin1Char('/'));
+            int lastDot = path.lastIndexOf(QLatin1Char('.'));
+            int length = lastDot - (lastSlash + 1);
+            context = (lastSlash > -1) ? path.mid(lastSlash + 1, (length > -1) ? length : -1) : QString();
         }
     }
 

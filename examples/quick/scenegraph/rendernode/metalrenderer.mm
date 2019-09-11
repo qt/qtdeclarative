@@ -214,8 +214,7 @@ void MetalRenderNodeResourceBuilder::build()
     }
 }
 
-MetalRenderNode::MetalRenderNode(QQuickItem *item)
-    : m_item(item)
+MetalRenderNode::MetalRenderNode()
 {
     g.vs.first = g.fs.first = nil;
     g.vs.second = g.fs.second = nil;
@@ -258,14 +257,14 @@ void MetalRenderNode::releaseResources()
 
 void MetalRenderNode::render(const RenderState *state)
 {
-    QQuickWindow *window = m_item->window();
-    const QQuickWindow::GraphicsStateInfo *stateInfo = window->graphicsStateInfo();
+    Q_ASSERT(m_window);
+    const QQuickWindow::GraphicsStateInfo *stateInfo = m_window->graphicsStateInfo();
     id<MTLBuffer> vbuf = g.vbuf[stateInfo->currentFrameSlot];
     id<MTLBuffer> ubuf = g.ubuf[stateInfo->currentFrameSlot];
 
-    QPointF p0(m_item->width() - 1, m_item->height() - 1);
+    QPointF p0(m_width - 1, m_height - 1);
     QPointF p1(0, 0);
-    QPointF p2(0, m_item->height() - 1);
+    QPointF p2(0, m_height - 1);
 
     float vertices[6] = { float(p0.x()), float(p0.y()),
                           float(p1.x()), float(p1.y()),
@@ -280,9 +279,9 @@ void MetalRenderNode::render(const RenderState *state)
     memcpy(p, mvp.constData(), 64);
     memcpy(p + 64, &opacity, 4);
 
-    QSGRendererInterface *rif = window->rendererInterface();
+    QSGRendererInterface *rif = m_window->rendererInterface();
     id<MTLRenderCommandEncoder> encoder = (id<MTLRenderCommandEncoder>) rif->getResource(
-                window, QSGRendererInterface::CommandEncoderResource);
+                m_window, QSGRendererInterface::CommandEncoderResource);
     Q_ASSERT(encoder);
 
     [encoder setVertexBuffer: vbuf offset: 0 atIndex: 1];
@@ -296,7 +295,7 @@ void MetalRenderNode::render(const RenderState *state)
         const QRect r = state->scissorRect(); // bottom-up
         MTLScissorRect s;
         s.x = r.x();
-        s.y = (window->height() * window->effectiveDevicePixelRatio()) - (r.y() + r.height());
+        s.y = m_outputHeight - (r.y() + r.height());
         s.width = r.width();
         s.height = r.height();
         [encoder setScissorRect: s];
@@ -322,5 +321,13 @@ QSGRenderNode::RenderingFlags MetalRenderNode::flags() const
 
 QRectF MetalRenderNode::rect() const
 {
-    return QRect(0, 0, m_item->width(), m_item->height());
+    return QRect(0, 0, m_width, m_height);
+}
+
+void MetalRenderNode::sync(QQuickItem *item)
+{
+    m_window = item->window();
+    m_width = item->width();
+    m_height = item->height();
+    m_outputHeight = m_window->height() * m_window->effectiveDevicePixelRatio();
 }

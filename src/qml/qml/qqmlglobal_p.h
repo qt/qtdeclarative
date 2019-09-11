@@ -98,11 +98,11 @@ QT_BEGIN_NAMESPACE
     static int signalIdx = -1; \
     static int methodIdx = -1; \
     if (signalIdx < 0) { \
-        Q_ASSERT(((int)(*signal) - '0') == QSIGNAL_CODE); \
+        Q_ASSERT((int(*signal) - '0') == QSIGNAL_CODE); \
         signalIdx = SenderType::staticMetaObject.indexOfSignal(signal+1); \
     } \
     if (methodIdx < 0) { \
-        int code = ((int)(*method) - '0'); \
+        int code = (int(*method) - '0'); \
         Q_ASSERT(code == QSLOT_CODE || code == QSIGNAL_CODE); \
         if (code == QSLOT_CODE) \
             methodIdx = ReceiverType::staticMetaObject.indexOfSlot(method+1); \
@@ -137,11 +137,11 @@ QT_BEGIN_NAMESPACE
     static int signalIdx = -1; \
     static int methodIdx = -1; \
     if (signalIdx < 0) { \
-        Q_ASSERT(((int)(*signal) - '0') == QSIGNAL_CODE); \
+        Q_ASSERT((int(*signal) - '0') == QSIGNAL_CODE); \
         signalIdx = SenderType::staticMetaObject.indexOfSignal(signal+1); \
     } \
     if (methodIdx < 0) { \
-        int code = ((int)(*method) - '0'); \
+        int code = (int(*method) - '0'); \
         Q_ASSERT(code == QSLOT_CODE || code == QSIGNAL_CODE); \
         if (code == QSLOT_CODE) \
             methodIdx = ReceiverType::staticMetaObject.indexOfSlot(method+1); \
