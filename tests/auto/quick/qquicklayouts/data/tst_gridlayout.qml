@@ -60,8 +60,8 @@ Item {
         id: testCase
         name: "Tests_GridLayout"
         when: windowShown
-        width: 200
-        height: 200
+        width: parent.width
+        height: parent.height
 
         Component {
             id: layout_flow_Component
@@ -851,24 +851,37 @@ Item {
             }
         }
 
-        function test_spacings()
+        function test_spacings_data()
+        {
+            let data = [
+                { spacing: Number.NaN },
+                { spacing: 0 },
+                { spacing: 10 },
+                { spacing: -5 },
+                { spacing: -19 }
+            ]
+            for (let i = 0; i < data.length; ++i) {
+                data[i].tag = data[i].spacing.toString()
+            }
+            return data
+        }
+
+        function test_spacings(data)
         {
             var layout = layout_spacings_Component.createObject(container);
 
             // breaks down below -19. This is acceptable, since it means that the implicit size of the layout is negative
             var testSpacings = [Number.NaN, 0, 10, -5, -19]
             layout.rowSpacing = 0
-            for (var i = 0; i < testSpacings.length; ++i) {
-                var sp = testSpacings[i]
-                if (isNaN(sp)) {
-                    sp = 5  // Test defaults
-                } else {
-                    layout.columnSpacing = sp
-                }
-                tryCompare(layout.children[0], "itemRect", [ 0,  0,  10,  10])
-                tryCompare(layout.children[1], "itemRect", [10 + sp,  0,  10,  10])
-                compare(layout.implicitWidth, 20 + sp)
+            var spacing = data.spacing
+            if (isNaN(spacing)) {
+                spacing = 5  // Test defaults
+            } else {
+                layout.columnSpacing = spacing
             }
+            tryCompare(layout.children[0], "itemRect", [ 0,  0,  10,  10])
+            tryCompare(layout.children[1], "itemRect", [10 + spacing,  0,  10,  10])
+            compare(layout.implicitWidth, 20 + spacing)
 
             // do not crash
             layout.columnSpacing = -100
