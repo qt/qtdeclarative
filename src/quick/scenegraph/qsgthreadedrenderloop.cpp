@@ -713,7 +713,9 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
         }
 
         Q_ASSERT(rhi == cd->rhi);
-        QRhi::FrameOpResult frameResult = rhi->beginFrame(cd->swapchain);
+        // ### the flag should only be set when the app requests it, but there's no way to do that right now
+        QRhi::BeginFrameFlags frameFlags = QRhi::ExternalContentsInPass;
+        QRhi::FrameOpResult frameResult = rhi->beginFrame(cd->swapchain, frameFlags);
         if (frameResult != QRhi::FrameOpSuccess) {
             if (frameResult == QRhi::FrameOpDeviceLost)
                 qWarning("Device lost");

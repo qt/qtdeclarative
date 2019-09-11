@@ -52,10 +52,9 @@
 #define D3D12RENDERER_H
 
 #include <qsgrendernode.h>
+#include <QQuickItem>
 
 #if QT_CONFIG(d3d12)
-
-QT_FORWARD_DECLARE_CLASS(QQuickItem)
 
 #include <d3d12.h>
 #include <wrl/client.h>
@@ -65,7 +64,6 @@ using namespace Microsoft::WRL;
 class D3D12RenderNode : public QSGRenderNode
 {
 public:
-    D3D12RenderNode(QQuickItem *item);
     ~D3D12RenderNode();
 
     void render(const RenderState *state) override;
@@ -73,10 +71,15 @@ public:
     RenderingFlags flags() const override;
     QRectF rect() const override;
 
+    void sync(QQuickItem *item);
+
 private:
     void init();
 
-    QQuickItem *m_item;
+    QQuickWindow *m_window = nullptr;
+    int m_width = 0;
+    int m_height = 0;
+
     ID3D12Device *m_device = nullptr;
     ComPtr<ID3D12PipelineState> pipelineState;
     ComPtr<ID3D12RootSignature> rootSignature;

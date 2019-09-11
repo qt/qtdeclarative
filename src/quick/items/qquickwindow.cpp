@@ -4193,7 +4193,11 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     command buffer, before via QSGRendererInterface. Note however that the
     render pass (or passes) are already recorded at this point and it is not
     possible to add more commands within the scenegraph's pass. Instead, use
-    afterRenderPassRecording() for that.
+    afterRenderPassRecording() for that. This signal has therefore limited use
+    and is rarely needed in an RHI-based setup. Rather, it is the combination
+    of beforeRendering() + beforeRenderPassRecording() or beforeRendering() +
+    afterRenderPassRecording() that is typically used to achieve under- or
+    overlaying of the custom rendering.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
@@ -4229,7 +4233,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     \note Resource updates (uploads, copies) typically cannot be enqueued from
     within a render pass. Therefore, more complex user rendering will need to
-    connect to both the beforeRendering() and this signals.
+    connect to both beforeRendering() and this signal.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
@@ -4260,7 +4264,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     \note Resource updates (uploads, copies) typically cannot be enqueued from
     within a render pass. Therefore, more complex user rendering will need to
-    connect to both the beforeRendering() and this signals.
+    connect to both beforeRendering() and this signal.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
@@ -4772,6 +4776,17 @@ const QQuickWindow::GraphicsStateInfo *QQuickWindow::graphicsStateInfo()
     \l{QSGRenderNode::render()}{render()} implementation of a QSGRenderNode
     because the scene graph performs the necessary steps implicitly for render
     nodes.
+
+    Native graphics objects (such as, graphics device, command buffer or
+    encoder) are accessible via QSGRendererInterface::getResource().
+
+    \warning Watch out for the fact that
+    QSGRendererInterface::CommandListResource may return a different object
+    between beginExternalCommands() - endExternalCommands(). This can happen
+    when the underlying implementation provides a dedicated secondary command
+    buffer for recording external graphics commands within a render pass.
+    Therefore, always query CommandListResource after calling this function. Do
+    not attempt to reuse an object from an earlier query.
 
     \note This function has no effect when the scene graph is using OpenGL
     directly and the RHI graphics abstraction layer is not in use. Refer to

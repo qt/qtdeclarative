@@ -964,8 +964,10 @@ QString QQmlTypeLoader::absoluteFilePath(const QString &path)
 
 bool QQmlTypeLoader::fileExists(const QString &path, const QString &file)
 {
-    if (path.isEmpty())
+    const QChar nullChar(QChar::Null);
+    if (path.isEmpty() || path.contains(nullChar) || file.isEmpty() || file.contains(nullChar))
         return false;
+
     Q_ASSERT(path.endsWith(QLatin1Char('/')));
     if (path.at(0) == QLatin1Char(':')) {
         // qrc resource

@@ -58,11 +58,6 @@
 
 #if QT_CONFIG(d3d12)
 
-D3D12RenderNode::D3D12RenderNode(QQuickItem *item)
-    : m_item(item)
-{
-}
-
 D3D12RenderNode::~D3D12RenderNode()
 {
     releaseResources();
@@ -87,8 +82,8 @@ void D3D12RenderNode::releaseResources()
 
 void D3D12RenderNode::init()
 {
-    QSGRendererInterface *rif = m_item->window()->rendererInterface();
-    m_device = static_cast<ID3D12Device *>(rif->getResource(m_item->window(), QSGRendererInterface::DeviceResource));
+    QSGRendererInterface *rif = m_window->rendererInterface();
+    m_device = static_cast<ID3D12Device *>(rif->getResource(m_window, QSGRendererInterface::DeviceResource));
     Q_ASSERT(m_device);
 
     D3D12_ROOT_PARAMETER rootParameter;
@@ -178,7 +173,7 @@ void D3D12RenderNode::init()
     psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT; // not in use due to !DepthEnable, but this would be the correct format otherwise
     // We are rendering on the default render target so if the QuickWindow/View
     // has requested samples > 0 then we have to follow suit.
-    const uint samples = qMax(1, m_item->window()->format().samples());
+    const uint samples = qMax(1, m_window->format().samples());
     psoDesc.SampleDesc.Count = samples;
     if (samples > 1) {
         D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msaaInfo = {};
@@ -257,9 +252,9 @@ void D3D12RenderNode::render(const RenderState *state)
     if (!m_device)
         init();
 
-    QSGRendererInterface *rif = m_item->window()->rendererInterface();
+    QSGRendererInterface *rif = m_window->rendererInterface();
     ID3D12GraphicsCommandList *commandList = static_cast<ID3D12GraphicsCommandList *>(
-        rif->getResource(m_item->window(), QSGRendererInterface::CommandListResource));
+        rif->getResource(m_window, QSGRendererInterface::CommandListResource));
     Q_ASSERT(commandList);
 
     const int msize = 16 * sizeof(float);
@@ -268,9 +263,9 @@ void D3D12RenderNode::render(const RenderState *state)
     const float opacity = inheritedOpacity();
     memcpy(cbPtr + 2 * msize, &opacity, sizeof(float));
 
-    const QPointF p0(m_item->width() - 1, m_item->height() - 1);
+    const QPointF p0(m_width - 1, m_height - 1);
     const QPointF p1(0, 0);
-    const QPointF p2(0, m_item->height() - 1);
+    const QPointF p2(0, m_height - 1);
 
     float *vp = reinterpret_cast<float *>(vbPtr);
     *vp++ = p0.x();
@@ -301,7 +296,14 @@ QSGRenderNode::RenderingFlags D3D12RenderNode::flags() const
 
 QRectF D3D12RenderNode::rect() const
 {
-    return QRect(0, 0, m_item->width(), m_item->height());
+    return QRect(0, 0, m_width, m_height);
+}
+
+void D3D12RenderNode::sync(QQuickItem *item)
+{
+    m_window = item->window();
+    m_width = item->width();
+    m_height = item->height();
 }
 
 #endif // d3d12

@@ -739,9 +739,16 @@ QQmlType QQmlMetaType::typeForUrl(const QString &urlString,
     const QUrl url = QQmlTypeLoader::normalize(QUrl(urlString));
 
     QQmlMetaTypeDataPtr data;
-    QQmlType ret(data->urlToType.value(url));
-    if (ret.isValid() && ret.sourceUrl() == url)
-        return ret;
+    {
+        QQmlType ret(data->urlToType.value(url));
+        if (ret.isValid() && ret.sourceUrl() == url)
+            return ret;
+    }
+    {
+        QQmlType ret(data->urlToNonFileImportType.value(url));
+        if (ret.isValid() && ret.sourceUrl() == url)
+            return ret;
+    }
 
     const int dot = qualifiedType.indexOf(QLatin1Char('.'));
     const QString typeName = dot < 0
