@@ -242,7 +242,9 @@ private:
     mutable QString m_finalUrlString;
 
     // List of QQmlDataBlob's that are waiting for me to complete.
+protected:
     QList<QQmlDataBlob *> m_waitingOnMe;
+private:
 
     // List of QQmlDataBlob's that I am waiting for to complete.
     QVector<QQmlRefPointer<QQmlDataBlob>> m_waitingFor;

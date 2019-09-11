@@ -678,7 +678,7 @@ void QQmlTypeData::resolveTypes()
 
         if (ref.type.isCompositeSingleton()) {
             ref.typeData = typeLoader()->getType(ref.type.sourceUrl());
-            if (ref.typeData->status() == QQmlDataBlob::ResolvingDependencies) {
+            if (ref.typeData->status() == QQmlDataBlob::ResolvingDependencies || m_waitingOnMe.contains(ref.typeData.data())) {
                 // TODO: give an error message? If so, we should record and show the path of the cycle.
                 continue;
             }
