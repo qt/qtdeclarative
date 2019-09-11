@@ -369,6 +369,8 @@ void QQuickTextAreaPrivate::detachFlickable()
     QObjectPrivate::disconnect(flickable, &QQuickFlickable::contentHeightChanged, this, &QQuickTextAreaPrivate::resizeFlickableControl);
 
     flickable = nullptr;
+
+    resizeBackground();
 }
 
 void QQuickTextAreaPrivate::ensureCursorVisible()
@@ -437,7 +439,10 @@ void QQuickTextAreaPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometry
     Q_UNUSED(change);
     Q_UNUSED(diff);
 
-    resizeFlickableControl();
+    if (flickable)
+        resizeFlickableControl();
+    else
+        resizeBackground();
 }
 
 qreal QQuickTextAreaPrivate::getImplicitWidth() const
