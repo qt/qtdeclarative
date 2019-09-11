@@ -430,7 +430,8 @@ void QQuickDialogButtonBoxPrivate::removeStandardButtons()
     while (i >= 0) {
         QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(q->itemAt(i));
         if (button) {
-            QQuickDialogButtonBoxAttached *attached = qobject_cast<QQuickDialogButtonBoxAttached *>(qmlAttachedPropertiesObject<QQuickDialogButtonBox>(button, false));
+            QQuickDialogButtonBoxAttached *attached = qobject_cast<QQuickDialogButtonBoxAttached *>(
+                qmlAttachedPropertiesObject<QQuickDialogButtonBox>(button, false));
             if (attached) {
                 QQuickDialogButtonBoxAttachedPrivate *p = QQuickDialogButtonBoxAttachedPrivate::get(attached);
                 if (p->standardButton != QPlatformDialogHelper::NoButton) {
@@ -438,6 +439,24 @@ void QQuickDialogButtonBoxPrivate::removeStandardButtons()
                     button->deleteLater();
                 }
             }
+        }
+        --i;
+    }
+}
+
+void QQuickDialogButtonBoxPrivate::updateLanguage()
+{
+    Q_Q(QQuickDialogButtonBox);
+    int i = q->count() - 1;
+    while (i >= 0) {
+        QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(itemAt(i));
+        if (button) {
+            QQuickDialogButtonBoxAttached *attached = qobject_cast<QQuickDialogButtonBoxAttached *>(
+                qmlAttachedPropertiesObject<QQuickDialogButtonBox>(button, true));
+            const auto boxAttachedPrivate = QQuickDialogButtonBoxAttachedPrivate::get(attached);
+            const QPlatformDialogHelper::StandardButton standardButton = boxAttachedPrivate->standardButton;
+            const QString buttonText = QGuiApplicationPrivate::platformTheme()->standardButtonText(standardButton);
+            button->setText(QPlatformTheme::removeMnemonics(buttonText));
         }
         --i;
     }
@@ -684,11 +703,34 @@ void QQuickDialogButtonBox::updatePolish()
     d->updateLayout();
 }
 
+class LanguageEventFilter : public QObject
+{
+public:
+    LanguageEventFilter(QQuickDialogButtonBoxPrivate *box)
+        : QObject(box->q_ptr)
+        , boxPrivate(box)
+    {
+    }
+
+protected:
+    bool eventFilter(QObject *, QEvent *event)
+    {
+        if (event->type() == QEvent::LanguageChange)
+            boxPrivate->updateLanguage();
+        return false;
+    }
+
+private:
+    QQuickDialogButtonBoxPrivate *boxPrivate;
+};
+
 void QQuickDialogButtonBox::componentComplete()
 {
     Q_D(QQuickDialogButtonBox);
     QQuickContainer::componentComplete();
     d->updateLayout();
+    // TODO: use the solution in QTBUG-78141 instead, when it's implemented.
+    qApp->installEventFilter(new LanguageEventFilter(d));
 }
 
 void QQuickDialogButtonBox::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
