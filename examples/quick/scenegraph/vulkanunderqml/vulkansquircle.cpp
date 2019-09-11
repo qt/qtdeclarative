@@ -362,13 +362,13 @@ void SquircleRenderer::init(int framesInFlight)
             }
         }
     }
-    if (memTypeIndex < 0)
+    if (memTypeIndex == uint32_t(-1))
         qFatal("Failed to find host visible and coherent memory type");
 
     allocInfo.memoryTypeIndex = memTypeIndex;
     err = m_devFuncs->vkAllocateMemory(m_dev, &allocInfo, nullptr, &m_vbufMem);
     if (err != VK_SUCCESS)
-        qFatal("Failed to allocate vertex buffer memory of size %llu: %d", allocInfo.allocationSize, err);
+        qFatal("Failed to allocate vertex buffer memory of size %u: %d", uint(allocInfo.allocationSize), err);
 
     void *p = nullptr;
     err = m_devFuncs->vkMapMemory(m_dev, m_vbufMem, 0, allocInfo.allocationSize, 0, &p);
@@ -412,14 +412,14 @@ void SquircleRenderer::init(int framesInFlight)
             }
         }
     }
-    if (memTypeIndex < 0)
+    if (memTypeIndex == uint32_t(-1))
         qFatal("Failed to find host visible and coherent memory type");
 
     allocInfo.allocationSize = framesInFlight * m_allocPerUbuf;
     allocInfo.memoryTypeIndex = memTypeIndex;
     err = m_devFuncs->vkAllocateMemory(m_dev, &allocInfo, nullptr, &m_ubufMem);
     if (err != VK_SUCCESS)
-        qFatal("Failed to allocate uniform buffer memory of size %llu: %d", allocInfo.allocationSize, err);
+        qFatal("Failed to allocate uniform buffer memory of size %u: %d", uint(allocInfo.allocationSize), err);
 
     err = m_devFuncs->vkBindBufferMemory(m_dev, m_ubuf, m_ubufMem, 0);
     if (err != VK_SUCCESS)
