@@ -227,7 +227,7 @@ access to the data from QML:
 
 The QSqlQueryModel class is good enough to implement a custom read-only
 model that represents data in an SQL database. The
-\l{Qt Quick Controls 2 - Chat Tutorial}{chat tutorial} example
+\l{Qt Quick Controls - Chat Tutorial}{chat tutorial} example
 demonstrates this very well by implementing a custom model to fetch the
 contact details from an SQLite database.
 

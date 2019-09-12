@@ -540,10 +540,10 @@ void QQmlDelegateModel::setRootIndex(const QVariant &root)
     \qmlmethod QModelIndex QtQml.Models::DelegateModel::modelIndex(int index)
 
     QAbstractItemModel provides a hierarchical tree of data, whereas
-    QML only operates on list data.  This function assists in using
+    QML only operates on list data. This function assists in using
     tree models in QML.
 
-    Returns a QModelIndex for the specified index.
+    Returns a QModelIndex for the specified \a index.
     This value can be assigned to rootIndex.
 
     \sa rootIndex

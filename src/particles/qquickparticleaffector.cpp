@@ -125,7 +125,7 @@ QT_BEGIN_NAMESPACE
     themselves). As this executes JavaScript code per particle, it is not recommended to use this
     signal with a high-volume particle system.
 
-    x,y is the particle's current position.
+    (\a {x}, \a {y}) is the particle's current position.
 
     The corresponding handler is \c onAffected.
 */

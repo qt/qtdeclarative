@@ -150,6 +150,10 @@ Returns an STL-style iterator pointing to the imaginary item after the last item
 Remove the current object from the list, and return an iterator to the next element.
 */
 
+/*!
+    \class QIntrusiveListNode
+    \internal
+*/
 
 /*!
 \fn QIntrusiveListNode::QIntrusiveListNode()

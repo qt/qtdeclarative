@@ -1761,6 +1761,12 @@ ReturnedValue ExecutionEngine::global()
 
 QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(const QUrl &url)
 {
+    QQmlMetaType::CachedUnitLookupError cacheError = QQmlMetaType::CachedUnitLookupError::NoError;
+    if (const QV4::CompiledData::Unit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(url, &cacheError)) {
+        return ExecutableCompilationUnit::create(
+                    QV4::CompiledData::CompilationUnit(cachedUnit, url.fileName(), url.toString()));
+    }
+
     QFile f(QQmlFile::urlToLocalFileOrQrc(url));
     if (!f.open(QIODevice::ReadOnly)) {
         throwError(QStringLiteral("Could not open module %1 for reading").arg(url.toString()));

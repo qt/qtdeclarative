@@ -26,13 +26,6 @@
 ****************************************************************************/
 
 /*!
-    \group qtjavascript
-    \title Scripting Classes and Overviews
-
-    \brief Classes for embedding JavaScript in Qt/C++ applications.
-*/
-
-/*!
   \page qtjavascript.html
   \title Making Applications Scriptable
   \ingroup frameworks-technologies

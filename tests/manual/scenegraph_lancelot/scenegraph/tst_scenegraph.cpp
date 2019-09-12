@@ -81,6 +81,10 @@ tst_Scenegraph::tst_Scenegraph()
 
 void tst_Scenegraph::initTestCase()
 {
+    const char *backendVarName = "QT_QUICK_BACKEND";
+    const QString backend = qEnvironmentVariable(backendVarName, QString::fromLatin1("default"));
+    QBaselineTest::addClientProperty(QString::fromLatin1(backendVarName), backend);
+
     QByteArray msg;
     if (!QBaselineTest::connectToBaselineServer(&msg))
         QSKIP(msg);
