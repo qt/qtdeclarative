@@ -77,6 +77,7 @@ void BaselineJIT::generate()
 
 #define STORE_IP() as->storeInstructionPointer(nextInstructionOffset())
 #define STORE_ACC() as->saveAccumulatorInFrame()
+#define LOAD_ACC() as->loadAccumulatorFromFrame()
 #define BASELINEJIT_GENERATE_RUNTIME_CALL(function, destination) \
     as->GENERATE_RUNTIME_CALL(function, destination)
 #define BASELINEJIT_GENERATE_TAIL_CALL(function) \
@@ -235,6 +236,7 @@ void BaselineJIT::generate_StoreNameSloppy(int name)
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_storeNameSloppy, CallResultDestination::Ignore);
     as->checkException();
+    LOAD_ACC();
 }
 
 void BaselineJIT::generate_StoreNameStrict(int name)
@@ -247,6 +249,7 @@ void BaselineJIT::generate_StoreNameStrict(int name)
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_storeNameStrict, CallResultDestination::Ignore);
     as->checkException();
+    LOAD_ACC();
 }
 
 void BaselineJIT::generate_LoadElement(int base, int /*traceSlot*/)
@@ -272,6 +275,7 @@ void BaselineJIT::generate_StoreElement(int base, int index, int /*traceSlot*/)
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_storeElement, CallResultDestination::Ignore);
     as->checkException();
+    LOAD_ACC();
 }
 
 void BaselineJIT::generate_LoadProperty(int name, int /*traceSlot*/)
@@ -310,6 +314,7 @@ void BaselineJIT::generate_StoreProperty(int name, int base)
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_storeProperty, CallResultDestination::Ignore);
     as->checkException();
+    LOAD_ACC();
 }
 
 void BaselineJIT::generate_SetLookup(int index, int base)
@@ -329,7 +334,6 @@ void BaselineJIT::generate_SetLookup(int index, int base)
 void BaselineJIT::generate_LoadSuperProperty(int property)
 {
     STORE_IP();
-    STORE_ACC();
     as->prepareCallWithArgCount(2);
     as->passJSSlotAsArg(property, 1);
     as->passEngineAsArg(0);
@@ -347,6 +351,7 @@ void BaselineJIT::generate_StoreSuperProperty(int property)
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_storeSuperProperty, CallResultDestination::Ignore);
     as->checkException();
+    LOAD_ACC();
 }
 
 void BaselineJIT::generate_Yield()
@@ -592,6 +597,7 @@ void BaselineJIT::generate_PushBlockContext(int index)
     as->passInt32AsArg(index, 1);
     as->passJSSlotAsArg(0, 0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::pushBlockContext, CallResultDestination::Ignore);
+    as->loadAccumulatorFromFrame();
 }
 
 void BaselineJIT::generate_CloneBlockContext()
@@ -600,6 +606,7 @@ void BaselineJIT::generate_CloneBlockContext()
     as->prepareCallWithArgCount(1);
     as->passJSSlotAsArg(CallData::Context, 0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::cloneBlockContext, CallResultDestination::Ignore);
+    as->loadAccumulatorFromFrame();
 }
 
 void BaselineJIT::generate_PushScriptContext(int index)
@@ -610,6 +617,7 @@ void BaselineJIT::generate_PushScriptContext(int index)
     as->passEngineAsArg(1);
     as->passJSSlotAsArg(0, 0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::pushScriptContext, CallResultDestination::Ignore);
+    as->loadAccumulatorFromFrame();
 }
 
 void BaselineJIT::generate_PopScriptContext()
@@ -619,6 +627,7 @@ void BaselineJIT::generate_PopScriptContext()
     as->passEngineAsArg(1);
     as->passJSSlotAsArg(0, 0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::popScriptContext, CallResultDestination::Ignore);
+    as->loadAccumulatorFromFrame();
 }
 
 void BaselineJIT::generate_PopContext() { as->popContext(); }
@@ -719,11 +728,13 @@ void BaselineJIT::generate_TypeofValue()
 
 void BaselineJIT::generate_DeclareVar(int varName, int isDeletable)
 {
+    STORE_ACC();
     as->prepareCallWithArgCount(3);
     as->passInt32AsArg(varName, 2);
     as->passInt32AsArg(isDeletable, 1);
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_declareVar, CallResultDestination::Ignore);
+    LOAD_ACC();
 }
 
 void BaselineJIT::generate_DefineArray(int argc, int args)
@@ -781,11 +792,13 @@ void BaselineJIT::generate_CreateRestParameter(int argIndex)
 
 void BaselineJIT::generate_ConvertThisToObject()
 {
+    STORE_ACC();
     as->prepareCallWithArgCount(2);
     as->passJSSlotAsArg(CallData::This, 1);
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::convertThisToObject, CallResultDestination::Ignore);
     as->checkException();
+    LOAD_ACC();
 }
 
 void BaselineJIT::generate_LoadSuperConstructor()
@@ -931,6 +944,7 @@ void BaselineJIT::generate_ThrowOnNullOrUndefined()
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::throwOnNullOrUndefined, CallResultDestination::Ignore);
     as->checkException();
+    LOAD_ACC();
 }
 
 void BaselineJIT::generate_GetTemplateObject(int index)
