@@ -39,8 +39,8 @@
 /*!
     \qmlmethod string String::arg(value)
 
-    Returns a copy of this string with the lowest numbered place marker replaced by value,
-    i.e., %1, %2, ..., %99.  The following example prints "There are 20 items"
+    Returns a copy of this string with the lowest numbered place marker replaced by \a value,
+    i.e., %1, %2, ..., %99.  The following example prints "There are 20 items":
 
     \code
     var message = "There are %1 items"

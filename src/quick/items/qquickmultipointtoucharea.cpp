@@ -410,7 +410,7 @@ void QQuickTouchPoint::setUniqueId(const QPointingDeviceUniqueId &id)
     area should grab the current touch points. By default they will not be grabbed; to grab them call \c gesture.grab(). If the
     gesture is not grabbed, the nesting Flickable, for example, would also have an opportunity to grab.
 
-    The gesture object also includes information on the current set of \c touchPoints and the \c dragThreshold.
+    The \a gesture object also includes information on the current set of \c touchPoints and the \c dragThreshold.
 
     The corresponding handler is \c onGestureStarted.
 */

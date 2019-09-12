@@ -386,7 +386,7 @@ void QQuickTapHandler::updateTimeHeld()
     That is, if you press and release a touchpoint or button within a time
     period less than \l longPressThreshold, while any movement does not exceed
     the drag threshold, then the \c tapped signal will be emitted at the time
-    of release.  The \c eventPoint signal parameter contains information
+    of release.  The \a eventPoint signal parameter contains information
     from the release event about the point that was tapped:
 
     \snippet pointerHandlers/tapHandlerOnTapped.qml 0
@@ -399,7 +399,7 @@ void QQuickTapHandler::updateTimeHeld()
     This signal is emitted when the \c parent Item is tapped once.
     After an amount of time greater than QStyleHints::mouseDoubleClickInterval,
     it can be tapped again; but if the time until the next tap is less,
-    \l tapCount will increase. The \c eventPoint signal parameter contains
+    \l tapCount will increase. The \a eventPoint signal parameter contains
     information from the release event about the point that was tapped.
 */
 
@@ -411,13 +411,13 @@ void QQuickTapHandler::updateTimeHeld()
     short span of time (QStyleHints::mouseDoubleClickInterval()) and distance
     (QStyleHints::mouseDoubleClickDistance() or
     QStyleHints::touchDoubleTapDistance()). This signal always occurs after
-    \l singleTapped, \l tapped, and \l tapCountChanged. The \c eventPoint
+    \l singleTapped, \l tapped, and \l tapCountChanged. The \a eventPoint
     signal parameter contains information from the release event about the
     point that was tapped.
 */
 
 /*!
-    \qmlsignal QtQuick::TapHandler::longPressed
+    \qmlsignal QtQuick::TapHandler::longPressed()
 
     This signal is emitted when the \c parent Item is pressed and held for a
     time period greater than \l longPressThreshold. That is, if you press and
@@ -427,7 +427,7 @@ void QQuickTapHandler::updateTimeHeld()
 */
 
 /*!
-    \qmlsignal QtQuick::TapHandler::tapCountChanged
+    \qmlsignal QtQuick::TapHandler::tapCountChanged()
 
     This signal is emitted when the \c parent Item is tapped once or more (within
     a specified time and distance span) and when the present \c tapCount differs

@@ -1,0 +1,107 @@
+Qt 5.13.1 is a bug-fix release. It maintains both forward and backward
+compatibility (source and binary) with Qt 5.13.0.
+
+For more details, refer to the online documentation included in this
+distribution. The documentation is also available online:
+
+https://doc.qt.io/qt-5/index.html
+
+The Qt version 5.13 series is binary compatible with the 5.12.x series.
+Applications compiled for 5.12 will continue to run with 5.13.
+
+Some of the changes listed in this file include issue tracking numbers
+corresponding to tasks in the Qt Bug Tracker:
+
+https://bugreports.qt.io/
+
+Each of these identifiers can be entered in the bug tracker to obtain more
+information about a particular change.
+
+****************************************************************************
+*                   Important Behavior Changes                             *
+****************************************************************************
+
+ - [QTBUG-76871] TapHandler.point now holds the release position while the
+   tapped() signal is emitted.
+ - [QTBUG-14769][QTBUG-50482] TextEdit now uses the I-beam cursor by default,
+   and the pointing cursor for links.  But if user code sets a custom cursor,
+   we restore it when the mouse is no longer hovering a link.
+
+****************************************************************************
+*                                  QtQml                                   *
+****************************************************************************
+
+ - [QTBUG-56264] Fixed segfault on Sparc64.
+ - [QTBUG-77102] Fix bug with singletons not being imported from modules when
+   using older versions.
+ - [QTBUG-77047] Fixed crash when creating arrays using the spread operator.
+ - [QTBUG-75983] Fixed crash in XMLHttpRequest.open.
+ - [QTBUG-77012] Fixed static build issue: multiple definitions of
+   qtPositionAttributeName().
+ - [QTBUG-71329] Fixed promise chaining.
+ - [QTBUG-76441] Fix support for import statements using qrc:/ urls.
+ - [QTBUG-55407] Fixed a crash when setData or create is called after a user
+   mistakenly used the internal constructor of QQmlComponent which does
+   not take an engine.
+ - [QTBUG-76796] Fixed late binding re-evaluation when using typeof(name).
+ - [QTBUG-76627] qmlplugindump now finds enums in composite types.
+ - [QTBUG-76656] Fixed resolution of 'this' when using the call operator on scope and context
+   properties.
+ - [QTBUG-71387] Fixed a crash after calling qmlClearTypeRegistrations().
+ - [QTBUG-75642] Fixed an invalid memory read in JIT with template literals.
+ - [QTBUG-75939] Fix crash when destroying QJSValues from other threads.
+ - [QTBUG-76085] Fixed automatic loading of translations from resources.
+ - [QTBUG-76018] Fixed grammar to permit readonly list properties.
+ - [QTBUG-75880] Fix accidental implicit creation of local variable when using anonymous functions
+   in object literals.
+ - [QTBUG-67343] Fixed assertion when having a ShaderEffect as a delegate
+   in a ComboBox.
+ - [QTBUG-75896] Fixed property lookup in QML singletons.
+ - [QTBUG-75392] Fixed a crash by working around a compiler bug.
+ - [QTBUG-48809] Print a warning when using absolute paths in qmldir files.
+ - [QTBUG-75609] Fixed a performance regression with attached properties.
+ - [QTBUG-76074] Loader now frees custom qml types when unloading.
+
+****************************************************************************
+*                                 QtQuick                                  *
+****************************************************************************
+
+ - Item Views:
+   * [QTBUG-76487] We now properly populate delegates with the populate
+     transition when the view is resized after componentComplete.
+   * [QTBUG-31677] A ListView footer is now positioned correctly after the
+     last item is removed.
+   * [QTBUG-76433][QTBUG-44308] Fixed a crash while doing fast flicking in
+     transitions that use Animators.
+   * [QTBUG-76254] Fixed a crash in QQmlDelegateModel.
+   * [QTBUG-71581] Fixed a crash in ListView when closing an application that
+     dynamically creates and appends items to an ObjectModel.
+
+ - Input:
+   * [QTBUG-75399] Fixed a crash when using the KeyNavigation attached property.
+   * [QTBUG-76875] DragHandler now respects acceptedButtons.
+   * [QTBUG-71218] If a Controls 2 Button has a DragHandler, the button is
+     now released when the drag begins.
+   * [QTBUG-75770] MouseArea now respects QPlatformTheme::TouchDoubleTapDistance
+     to avoid generating double-clicks while moving and clicking the mouse quickly.
+
+ - Scene graph:
+   * [QTBUG-76603] qmlscene now sets the default surface format earlier
+     and correctly.
+   * [QTBUG-68566] Fixed rendering freeze when using software rendering
+     of WebEngine in QQuickWidget.
+   * [QTBUG-73768] Fixed an assert in BorderImage when any border size
+     exceeds source image size.
+   * [QTBUG-66810] Software rendering: repaint everything when moving
+     between HiDpi and lower-resolution screens.
+   * [QTBUG-74348] Fixed leaking scene graph rendering contexts when using
+     the threaded render loop.
+   * [QTBUG-76055] Cleaned up error messages in shadereffect.
+
+ - Text:
+   * [QTBUG-74761] Added support for text color when using color fonts.
+   * [QTBUG-76528] Fixed missing glyphs and in some cases crashes when
+     displaying many characters from the same font on a system with a
+     low maximum texture size.
+   * [QTBUG-75002] Accessibility: StaticText nodes are announced as
+     read-only rather than editable in Windows Narrator.

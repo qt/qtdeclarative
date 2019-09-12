@@ -38,12 +38,12 @@
 
     \section1 Scaling with BorderImage
 
-    \e BorderImage shows off the various scaling modes of the \l BorderImage
+    \e BorderImage shows the various scaling modes of the \l BorderImage
     type by setting its horizontalTileMode and verticalTileMode properties.
 
     \section1 Image Fill
 
-    \e Image shows off the various fill modes of the \l Image type.
+    \e Image shows the various fill modes of the \l Image type.
 
     \section1 Shadow Effects
 
