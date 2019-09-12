@@ -4,6 +4,10 @@ TARGET = graph
 
 TEMPLATE = app
 
+CONFIG += qmltypes
+QML_IMPORT_NAME = Graph
+QML_IMPORT_MAJOR_VERSION = 1
+
 SOURCES += main.cpp \
     graph.cpp \
     noisynode.cpp \

@@ -64,7 +64,9 @@ class BezierCurve : public QQuickItem
     Q_PROPERTY(QPointF p4 READ p4 WRITE setP4 NOTIFY p4Changed)
 
     Q_PROPERTY(int segmentCount READ segmentCount WRITE setSegmentCount NOTIFY segmentCountChanged)
+//! [3]
     QML_ELEMENT
+//! [3]
 
 public:
     BezierCurve(QQuickItem *parent = 0);

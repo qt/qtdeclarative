@@ -59,6 +59,7 @@ class BirthdayParty : public QObject
     Q_OBJECT
     Q_PROPERTY(Person *host READ host WRITE setHost)
     Q_PROPERTY(QQmlListProperty<Person> guests READ guests)
+    QML_ELEMENT
 public:
     BirthdayParty(QObject *parent = nullptr);
 

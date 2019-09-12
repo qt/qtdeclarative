@@ -1,5 +1,9 @@
 QT += qml quick
 
+CONFIG += qmltypes
+QML_IMPORT_NAME = SceneGraphRendering
+QML_IMPORT_MAJOR_VERSION = 2
+
 HEADERS += customrenderitem.h \
            openglrenderer.h \
            softwarerenderer.h

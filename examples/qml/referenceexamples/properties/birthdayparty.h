@@ -67,6 +67,7 @@ class BirthdayParty : public QObject
     Q_PROPERTY(QQmlListProperty<Person> guests READ guests)
 // ![2]
 // ![3]
+    QML_ELEMENT
 public:
     BirthdayParty(QObject *parent = nullptr);
 

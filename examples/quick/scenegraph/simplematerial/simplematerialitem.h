@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the documentation of the Qt Toolkit.
+** This file is part of the demonstration applications of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -47,16 +47,36 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include "chartsplugin.h"
-//![0]
-#include "piechart.h"
-#include "pieslice.h"
-#include <qqml.h>
 
-void ChartsPlugin::registerTypes(const char *uri)
+#ifndef SIMPLEMATERIALITEM_H
+#define SIMPLEMATERIALITEM_H
+
+#include <QtQuick/qquickitem.h>
+
+//! [8]
+class SimpleMaterialItem : public QQuickItem
 {
-    qmlRegisterTypesAndRevisions<PieChart, PieSlice>(uri, 1);
-}
+    Q_OBJECT
 
-//![0]
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
+    QML_ELEMENT
 
+public:
+
+    SimpleMaterialItem() { setFlag(ItemHasContents, true); }
+
+    void setColor(const QColor &color);
+    QColor color() const { return m_color; }
+
+signals:
+    void colorChanged();
+
+private:
+  QColor m_color;
+
+public:
+    QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *) override;
+};
+//! [8]
+
+#endif // SIMPLEMATERIALITEM_H

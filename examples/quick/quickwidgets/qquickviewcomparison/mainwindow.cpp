@@ -86,8 +86,6 @@ MainWindow::MainWindow(bool transparency, bool noRenderAlpha)
     m_labelStatus = new QLabel;
     layout->addWidget(m_labelStatus);
 
-    qmlRegisterTypesAndRevisions<FbItem>("fbitem", 1);
-
     QWidget *quickContainer = new QWidget;
     layout->addWidget(quickContainer);
     layout->setStretchFactor(quickContainer, 8);

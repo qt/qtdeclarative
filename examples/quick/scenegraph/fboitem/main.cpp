@@ -58,8 +58,6 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
-    qmlRegisterTypesAndRevisions<FboInSGRenderer>("SceneGraphRendering", 1);
-
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setSource(QUrl("qrc:///scenegraph/fboitem/main.qml"));

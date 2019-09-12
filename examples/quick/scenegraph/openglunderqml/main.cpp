@@ -59,8 +59,6 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
-    qmlRegisterTypesAndRevisions<Squircle>("OpenGLUnderQML", 1);
-
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setSource(QUrl("qrc:///scenegraph/openglunderqml/main.qml"));

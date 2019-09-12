@@ -3,7 +3,7 @@
 ** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the documentation of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -47,18 +47,52 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef CHARTSPLUGIN_H
-#define CHARTSPLUGIN_H
 
-//![0]
-#include <QQmlExtensionPlugin>
+#include "timemodel.h"
 
-class ChartsPlugin : public QQmlEngineExtensionPlugin
+int TimeModel::instances=0;
+MinuteTimer *TimeModel::timer=nullptr;
+
+void MinuteTimer::start()
 {
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
-};
-//![0]
+    if (!timer.isActive()) {
+        time = QTime::currentTime();
+        timer.start(60000-time.second()*1000, this);
+    }
+}
 
-#endif
+void MinuteTimer::stop()
+{
+    timer.stop();
+}
 
+void MinuteTimer::timerEvent(QTimerEvent *)
+{
+    QTime now = QTime::currentTime();
+    if (now.second() == 59 && now.minute() == time.minute() && now.hour() == time.hour()) {
+        // just missed time tick over, force it, wait extra 0.5 seconds
+        time = time.addSecs(60);
+        timer.start(60500, this);
+    } else {
+        time = now;
+        timer.start(60000-time.second()*1000, this);
+    }
+    emit timeChanged();
+}
+
+TimeModel::TimeModel(QObject *parent) : QObject(parent)
+{
+    if (++instances == 1) {
+        if (!timer)
+            timer = new MinuteTimer(QCoreApplication::instance());
+        connect(timer, &MinuteTimer::timeChanged, this, &TimeModel::timeChanged);
+        timer->start();
+    }
+}
+
+TimeModel::~TimeModel()
+{
+    if (--instances == 0) {
+        timer->stop();
+    }
+}

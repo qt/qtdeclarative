@@ -133,10 +133,9 @@ Here is the application \c main.cpp:
 
 \snippet tutorials/extending-qml/chapter1-basics/main.cpp 0
 
-This call to qmlRegisterType() registers the \c PieChart type as a type called "PieChart",
-in a type namespace called "Charts", with a version of 1.0.
-
-Lastly, we write a \c .pro project file that includes the files and the \c declarative library:
+We write a \c .pro project file that includes the files and the \c qml library, and
+defines a type namespace called "Charts" with a version of 1.0 for any types exposed
+to QML:
 
 \quotefile tutorials/extending-qml/chapter1-basics/chapter1-basics.pro
 
@@ -314,15 +313,13 @@ item when its contents are drawn:
 
 \snippet tutorials/extending-qml/chapter4-customPropertyTypes/piechart.cpp 0
 
-Like the \c PieChart type, the \c PieSlice type has to be registered
-using qmlRegisterType() to be used from QML. As with \c PieChart, we'll add the
-type to the "Charts" type namespace, version 1.0:
+Like the \c PieChart type, the \c PieSlice type has to be exposted to QML
+using QML_ELEMENT. As with \c PieChart, we add the "Charts" type namespace,
+version 1.0 to the .pro file:
 
-\snippet tutorials/extending-qml/chapter4-customPropertyTypes/main.cpp 0
+\snippet tutorials/extending-qml/chapter4-customPropertyTypes/pieslice.h 0
 \dots
-\snippet tutorials/extending-qml/chapter4-customPropertyTypes/main.cpp 1
-\dots
-\snippet tutorials/extending-qml/chapter4-customPropertyTypes/main.cpp 2
+\quotefile tutorials/extending-qml/chapter1-basics/chapter4-customPropertyTypes.pro
 
 The source code from the following files are referred to in this chapter:
 \generatelist examplefiles .*chapter4.*

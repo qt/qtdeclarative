@@ -55,6 +55,7 @@
 #include <qqml.h>
 
 #include <QStringList>
+#include <qqml.h>
 
 class HappyBirthdaySong : public QObject, public QQmlPropertyValueSource
 {

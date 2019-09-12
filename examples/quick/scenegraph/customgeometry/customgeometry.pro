@@ -1,6 +1,10 @@
 TARGET = customgeometry
 QT += quick
 
+CONFIG += qmltypes
+QML_IMPORT_NAME = CustomGeometry
+QML_IMPORT_MAJOR_VERSION = 1
+
 SOURCES += \
     main.cpp \
     beziercurve.cpp

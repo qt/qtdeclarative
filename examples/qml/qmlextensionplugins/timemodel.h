@@ -3,7 +3,7 @@
 ** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the documentation of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -47,18 +47,65 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef CHARTSPLUGIN_H
-#define CHARTSPLUGIN_H
 
-//![0]
-#include <QQmlExtensionPlugin>
+#ifndef TIMEMODEL_H
+#define TIMEMODEL_H
 
-class ChartsPlugin : public QQmlEngineExtensionPlugin
+#include <QtQml/qqml.h>
+#include <QtCore/qdatetime.h>
+#include <QtCore/qbasictimer.h>
+#include <QtCore/qcoreapplication.h>
+
+// Implements a "TimeModel" class with hour and minute properties
+// that change on-the-minute yet efficiently sleep the rest
+// of the time.
+
+class MinuteTimer : public QObject
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
+public:
+    MinuteTimer(QObject *parent) : QObject(parent) {}
+
+    void start();
+    void stop();
+
+    int hour() const { return time.hour(); }
+    int minute() const { return time.minute(); }
+
+signals:
+    void timeChanged();
+
+protected:
+    void timerEvent(QTimerEvent *) override;
+
+private:
+    QTime time;
+    QBasicTimer timer;
 };
+
+//![0]
+class TimeModel : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int hour READ hour NOTIFY timeChanged)
+    Q_PROPERTY(int minute READ minute NOTIFY timeChanged)
+    QML_NAMED_ELEMENT(Time)
 //![0]
 
-#endif
+public:
+    TimeModel(QObject *parent=nullptr);
+    ~TimeModel() override;
 
+    int minute() const { return timer->minute(); }
+    int hour() const { return timer->hour(); }
+
+signals:
+    void timeChanged();
+
+private:
+    QTime t;
+    static MinuteTimer *timer;
+    static int instances;
+};
+
+#endif // TIMEMODEL_H

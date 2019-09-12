@@ -3,6 +3,10 @@ QT += quick
 # To make threaded gl check...
 QT += core-private gui-private
 
+CONFIG += qmltypes
+QML_IMPORT_NAME = SceneGraphRendering
+QML_IMPORT_MAJOR_VERSION = 1
+
 HEADERS += threadrenderer.h
 SOURCES += threadrenderer.cpp main.cpp
 
