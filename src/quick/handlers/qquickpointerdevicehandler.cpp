@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -230,6 +230,55 @@ void QQuickPointerDeviceHandler::setAcceptedPointerTypes(QQuickPointerDevice::Po
        }
     }
     \endqml
+
+    If you set \c acceptedModifiers to an OR combination of modifier keys,
+    it means \e all of those modifiers must be pressed to activate the handler:
+
+    \qml
+    Item {
+       TapHandler {
+           acceptedModifiers: Qt.ControlModifier | Qt.AltModifier | Qt.ShiftModifier
+           onTapped: console.log("control-alt-shift-tapped")
+       }
+    }
+    \endqml
+
+    The available modifiers are as follows:
+
+    \value NoModifier       No modifier key is allowed.
+    \value ShiftModifier    A Shift key on the keyboard must be pressed.
+    \value ControlModifier  A Ctrl key on the keyboard must be pressed.
+    \value AltModifier      An Alt key on the keyboard must be pressed.
+    \value MetaModifier     A Meta key on the keyboard must be pressed.
+    \value KeypadModifier   A keypad button must be pressed.
+    \value GroupSwitchModifier X11 only (unless activated on Windows by a command line argument).
+                            A Mode_switch key on the keyboard must be pressed.
+    \value KeyboardModifierMask The handler does not care which modifiers are pressed.
+
+    If you need even more complex behavior than can be achieved with
+    combinations of multiple handlers with multiple modifier flags, you can
+    check the modifiers in JavaScript code:
+
+    \qml
+    Item {
+        TapHandler {
+            onTapped:
+                switch (point.modifiers) {
+                case Qt.ControlModifier | Qt.AltModifier:
+                    console.log("CTRL+ALT");
+                    break;
+                case Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier:
+                    console.log("CTRL+META+ALT");
+                    break;
+                default:
+                    console.log("other modifiers", point.modifiers);
+                    break;
+                }
+        }
+    }
+    \endqml
+
+    \sa Qt::KeyboardModifier
 */
 void QQuickPointerDeviceHandler::setAcceptedModifiers(Qt::KeyboardModifiers acceptedModifiers)
 {

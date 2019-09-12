@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -40,6 +40,16 @@ Item {
         onTapped: console.log("tapped with no modifiers")
     }
     TapHandler {
-        onTapped: console.log("tapped with modifiers " + point.event.modifiers)
+        onTapped:
+            switch (point.modifiers) {
+            case Qt.ControlModifier | Qt.AltModifier:
+                console.log("CTRL+ALT");
+                break;
+            case Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier:
+                console.log("CTRL+META+ALT");
+                break;
+            default:
+                console.log("other modifiers", point.modifiers)
+            }
     }
 }
