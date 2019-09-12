@@ -40,6 +40,7 @@
 #include "qquickmultipointtoucharea_p.h"
 #include <QtQuick/qquickwindow.h>
 #include <private/qsgadaptationlayer_p.h>
+#include <private/qevent_p.h>
 #include <private/qquickitem_p.h>
 #include <private/qguiapplication_p.h>
 #include <QEvent>
@@ -655,7 +656,8 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
                 // (we may have just obtained enough points to start tracking them -- in that case moved or stationary count as newly pressed)
                 addTouchPoint(&p);
                 started = true;
-            } else if (touchPointState & Qt::TouchPointMoved) {
+            } else if ((touchPointState & Qt::TouchPointMoved) || p.d->stationaryWithModifiedProperty) {
+                // React to a stationary point with a property change (velocity, pressure) as if the point moved. (QTBUG-77142)
                 QQuickTouchPoint* dtp = static_cast<QQuickTouchPoint*>(_touchPoints.value(id));
                 Q_ASSERT(dtp);
                 _movedTouchPoints.append(dtp);
