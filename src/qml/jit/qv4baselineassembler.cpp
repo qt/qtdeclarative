@@ -1479,6 +1479,12 @@ void BaselineAssembler::saveAccumulatorInFrame()
                                                         offsetof(CallData, accumulator)));
 }
 
+void BaselineAssembler::loadAccumulatorFromFrame()
+{
+    pasm()->loadAccumulator(PlatformAssembler::Address(PlatformAssembler::JSStackFrameRegister,
+                                                       offsetof(CallData, accumulator)));
+}
+
 static ReturnedValue TheJitIs__Tail_Calling__ToTheRuntimeSoTheJitFrameIsMissing(CppStackFrame *frame, ExecutionEngine *engine)
 {
     return Runtime::method_tailCall(frame, engine);
@@ -1606,7 +1612,6 @@ void BaselineAssembler::deadTemporalZoneCheck(int offsetForSavedIP, int variable
 {
     auto valueIsAliveJump = pasm()->jumpNotEmpty();
     storeInstructionPointer(offsetForSavedIP);
-    saveAccumulatorInFrame();
     prepareCallWithArgCount(2);
     passInt32AsArg(variableName, 1);
     passEngineAsArg(0);
