@@ -94,7 +94,6 @@ qtConfig(opengl(es1|es2)?) {
 
     # rhi, still tied to OpenGL-enabled Qt builds for now
     HEADERS += \
-        $$PWD/qsgrhisupport_p.h \
         $$PWD/qsgrhitextureglyphcache_p.h \
         $$PWD/util/qsgrhiatlastexture_p.h \
         $$PWD/qsgrhilayer_p.h \
@@ -102,7 +101,6 @@ qtConfig(opengl(es1|es2)?) {
         $$PWD/qsgrhidistancefieldglyphcache_p.h
 
     SOURCES += \
-        $$PWD/qsgrhisupport.cpp \
         $$PWD/qsgrhitextureglyphcache.cpp \
         $$PWD/qsgrhilayer.cpp \
         $$PWD/qsgrhishadereffectnode.cpp \
@@ -118,7 +116,8 @@ HEADERS += \
     $$PWD/qsgbasicinternalrectanglenode_p.h \
     $$PWD/qsgbasicinternalimagenode_p.h \
     $$PWD/qsgbasicglyphnode_p.h \
-    $$PWD/qsgrenderloop_p.h
+    $$PWD/qsgrenderloop_p.h \
+    $$PWD/qsgrhisupport_p.h
 
 SOURCES += \
     $$PWD/qsgadaptationlayer.cpp \
@@ -127,7 +126,8 @@ SOURCES += \
     $$PWD/qsgbasicinternalrectanglenode.cpp \
     $$PWD/qsgbasicinternalimagenode.cpp \
     $$PWD/qsgbasicglyphnode.cpp \
-    $$PWD/qsgrenderloop.cpp
+    $$PWD/qsgrenderloop.cpp \
+    $$PWD/qsgrhisupport.cpp
 
 qtConfig(opengl(es1|es2)?) {
     SOURCES += \
