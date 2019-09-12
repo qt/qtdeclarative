@@ -49,6 +49,8 @@
 #include <private/qqmladaptormodel_p.h>
 #include <private/qqmlopenmetaobject_p.h>
 
+#include <QtCore/qloggingcategory.h>
+
 //
 //  W A R N I N G
 //  -------------
@@ -63,6 +65,8 @@
 QT_REQUIRE_CONFIG(qml_delegate_model);
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcItemViewDelegateRecycling)
 
 typedef QQmlListCompositor Compositor;
 
@@ -190,7 +194,18 @@ void QV4::Heap::QQmlDelegateModelItemObject::init(QQmlDelegateModelItem *item)
     this->item = item;
 }
 
+class QQmlReusableDelegateModelItemsPool
+{
+public:
+    void insertItem(QQmlDelegateModelItem *modelItem);
+    QQmlDelegateModelItem *takeItem(const QQmlComponent *delegate, int newIndexHint);
+    void reuseItem(QQmlDelegateModelItem *item, int newModelIndex);
+    void drain(int maxPoolTime, std::function<void(QQmlDelegateModelItem *cacheItem)> releaseItem);
+    int size() { return m_reusableItemsPool.size(); }
 
+private:
+    QList<QQmlDelegateModelItem *> m_reusableItemsPool;
+};
 
 class QQmlDelegateModelPrivate;
 class QQDMIncubationTask : public QQmlIncubator
@@ -380,7 +395,7 @@ public:
     int count() const override;
     bool isValid() const override;
     QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
-    ReleaseFlags release(QObject *item) override;
+    ReleaseFlags release(QObject *item, ReusableFlag reusable = NotReusable) override;
     QVariant variantValue(int index, const QString &role) override;
     QList<QByteArray> watchedRoles() const { return m_watchedRoles; }
     void setWatchedRoles(const QList<QByteArray> &roles) override;

@@ -262,7 +262,7 @@ QObject *QQmlObjectModel::object(int index, QQmlIncubator::IncubationMode)
     return item.item;
 }
 
-QQmlInstanceModel::ReleaseFlags QQmlObjectModel::release(QObject *item)
+QQmlInstanceModel::ReleaseFlags QQmlObjectModel::release(QObject *item, ReusableFlag)
 {
     Q_D(QQmlObjectModel);
     int idx = d->indexOf(item);

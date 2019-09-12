@@ -113,7 +113,7 @@ public:
     int count() const override;
     bool isValid() const override { return delegate() != nullptr; }
     QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
-    ReleaseFlags release(QObject *object) override;
+    ReleaseFlags release(QObject *object, ReusableFlag reusable = NotReusable) override;
     void cancel(int index) override;
     QVariant variantValue(int index, const QString &role) override;
     void setWatchedRoles(const QList<QByteArray> &roles) override;

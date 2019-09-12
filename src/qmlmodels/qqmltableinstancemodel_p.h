@@ -86,12 +86,6 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlTableInstanceModel : public QQmlInstanceMod
     Q_OBJECT
 
 public:
-
-    enum ReusableFlag {
-        NotReusable,
-        Reusable
-    };
-
     QQmlTableInstanceModel(QQmlContext *qmlContext, QObject *parent = nullptr);
     ~QQmlTableInstanceModel() override;
 
@@ -115,14 +109,11 @@ public:
     const QAbstractItemModel *abstractItemModel() const override;
 
     QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
-    ReleaseFlags release(QObject *object) override { return release(object, NotReusable); }
-    ReleaseFlags release(QObject *object, ReusableFlag reusable);
+    ReleaseFlags release(QObject *object, ReusableFlag reusable = NotReusable) override;
     void cancel(int) override;
 
-    void insertIntoReusableItemsPool(QQmlDelegateModelItem *modelItem);
-    QQmlDelegateModelItem *takeFromReusableItemsPool(const QQmlComponent *delegate);
-    void drainReusableItemsPool(int maxPoolTime);
-    int poolSize() { return m_reusableItemsPool.size(); }
+    void drainReusableItemsPool(int maxPoolTime) override;
+    int poolSize() override { return m_reusableItemsPool.size(); }
     void reuseItem(QQmlDelegateModelItem *item, int newModelIndex);
 
     QQmlIncubator::Status incubationStatus(int index) override;
@@ -145,7 +136,7 @@ private:
     QQmlDelegateModelItemMetaType *m_metaType;
 
     QHash<int, QQmlDelegateModelItem *> m_modelItems;
-    QList<QQmlDelegateModelItem *> m_reusableItemsPool;
+    QQmlReusableDelegateModelItemsPool m_reusableItemsPool;
     QList<QQmlIncubator *> m_finishedIncubationTasks;
 
     void incubateModelItem(QQmlDelegateModelItem *modelItem, QQmlIncubator::IncubationMode incubationMode);
@@ -153,6 +144,7 @@ private:
     void deleteIncubationTaskLater(QQmlIncubator *incubationTask);
     void deleteAllFinishedIncubationTasks();
     QQmlDelegateModelItem *resolveModelItem(int index);
+    void destroyModelItem(QQmlDelegateModelItem *modelItem);
 
     void dataChangedCallback(const QModelIndex &begin, const QModelIndex &end, const QVector<int> &roles);
 

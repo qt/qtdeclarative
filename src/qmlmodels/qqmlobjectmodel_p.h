@@ -72,6 +72,11 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlInstanceModel : public QObject
     QML_ANONYMOUS
 
 public:
+    enum ReusableFlag {
+        NotReusable,
+        Reusable
+    };
+
     virtual ~QQmlInstanceModel() {}
 
     enum ReleaseFlag { Referenced = 0x01, Destroyed = 0x02, Pooled = 0x04 };
@@ -80,12 +85,15 @@ public:
     virtual int count() const = 0;
     virtual bool isValid() const = 0;
     virtual QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) = 0;
-    virtual ReleaseFlags release(QObject *object) = 0;
+    virtual ReleaseFlags release(QObject *object, ReusableFlag reusableFlag = NotReusable) = 0;
     virtual void cancel(int) {}
     QString stringValue(int index, const QString &role) { return variantValue(index, role).toString(); }
     virtual QVariant variantValue(int, const QString &) = 0;
     virtual void setWatchedRoles(const QList<QByteArray> &roles) = 0;
     virtual QQmlIncubator::Status incubationStatus(int index) = 0;
+
+    virtual void drainReusableItemsPool(int maxPoolTime) { Q_UNUSED(maxPoolTime) }
+    virtual int poolSize() { return 0; }
 
     virtual int indexOf(QObject *object, QObject *objectContext) const = 0;
     virtual const QAbstractItemModel *abstractItemModel() const { return nullptr; }
@@ -125,7 +133,7 @@ public:
     int count() const override;
     bool isValid() const override;
     QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
-    ReleaseFlags release(QObject *object) override;
+    ReleaseFlags release(QObject *object, ReusableFlag reusable = NotReusable) override;
     QVariant variantValue(int index, const QString &role) override;
     void setWatchedRoles(const QList<QByteArray> &) override {}
     QQmlIncubator::Status incubationStatus(int index) override;
