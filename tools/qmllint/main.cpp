@@ -123,9 +123,9 @@ int main(int argv, char *argc[])
     // use host qml import path as a sane default if nothing else has been provided
     QStringList qmltypeDirs = parser.isSet(qmltypesDirsOption) ? parser.values(qmltypesDirsOption)
 #ifndef QT_BOOTSTRAPPED
-                                                               : QStringList{QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath)};
+                                                               : QStringList{QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath), QLatin1String(".")};
 #else
-                                                               : QStringList{};
+                                                               : QStringList{QLatin1String(".")};
 #endif
 #else
     bool silent = false;

@@ -39,8 +39,18 @@
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qv4codegen_p.h>
+#include <private/qqmldirparser_p.h>
 
-static QQmlJS::TypeDescriptionReader createReaderForFile(QString const &filename)
+static QQmlDirParser createQmldirParserForFile(const QString &filename)
+{
+    QFile f(filename);
+    f.open(QFile::ReadOnly);
+    QQmlDirParser parser;
+    parser.parse(f.readAll());
+    return parser;
+}
+
+static QQmlJS::TypeDescriptionReader createQmltypesReaderForFile(QString const &filename)
 {
     QFile f(filename);
     f.open(QFile::ReadOnly);
@@ -58,13 +68,12 @@ void FindUnqualifiedIDVisitor::leaveEnvironment()
     m_currentScope = m_currentScope->parentScope();
 }
 
-enum ImportVersion { FullyVersioned, PartiallyVersioned, Unversioned };
+enum ImportVersion { FullyVersioned, PartiallyVersioned, Unversioned, BasePath };
 
-QStringList completeQmltypesPaths(const QString &uri, const QStringList &basePaths, int vmaj, int vmin)
+QStringList completeImportPaths(const QString &uri, const QStringList &basePaths, int vmaj, int vmin)
 {
     static const QLatin1Char Slash('/');
     static const QLatin1Char Backslash('\\');
-    static const QLatin1String SlashPluginsDotQmltypes("/plugins.qmltypes");
 
     const QVector<QStringRef> parts = uri.splitRef(QLatin1Char('.'), QString::SkipEmptyParts);
 
@@ -94,7 +103,7 @@ QStringList completeQmltypesPaths(const QString &uri, const QStringList &basePat
         return str;
     };
 
-    for (int version = FullyVersioned; version <= Unversioned; ++version) {
+    for (int version = FullyVersioned; version <= BasePath; ++version) {
         const QString ver = versionString(vmaj, vmin, static_cast<ImportVersion>(version));
 
         for (const QString &path : basePaths) {
@@ -102,20 +111,23 @@ QStringList completeQmltypesPaths(const QString &uri, const QStringList &basePat
             if (!dir.endsWith(Slash) && !dir.endsWith(Backslash))
                 dir += Slash;
 
-            // append to the end
-            qmlDirPathsPaths += dir + joinStringRefs(parts, Slash) + ver + SlashPluginsDotQmltypes;
+            if (version == BasePath) {
+                qmlDirPathsPaths += dir;
+            } else {
+                // append to the end
+                qmlDirPathsPaths += dir + joinStringRefs(parts, Slash) + ver;
+            }
 
-            if (version != Unversioned) {
+            if (version < Unversioned) {
                 // insert in the middle
                 for (int index = parts.count() - 2; index >= 0; --index) {
                     qmlDirPathsPaths += dir + joinStringRefs(parts.mid(0, index + 1), Slash)
                             + ver + Slash
-                            + joinStringRefs(parts.mid(index + 1), Slash) + SlashPluginsDotQmltypes;
+                            + joinStringRefs(parts.mid(index + 1), Slash);
                 }
             }
         }
     }
-
     return qmlDirPathsPaths;
 }
 
@@ -128,18 +140,50 @@ void FindUnqualifiedIDVisitor::importHelper(QString id, QString prefix, int majo
         m_alreadySeenImports.insert(importId);
     }
     id = id.replace(QLatin1String("/"), QLatin1String("."));
-    auto qmltypesPaths = completeQmltypesPaths(id, m_qmltypeDirs, major, minor);
+    auto qmltypesPaths = completeImportPaths(id, m_qmltypeDirs, major, minor);
 
     QHash<QString, LanguageUtils::FakeMetaObject::ConstPtr> objects;
     QList<QQmlJS::ModuleApiInfo> moduleApis;
     QStringList dependencies;
+    static const QLatin1String SlashPluginsDotQmltypes("/plugins.qmltypes");
+    static const QLatin1String SlashQmldir("/qmldir");
     for (auto const &qmltypesPath : qmltypesPaths) {
-        if (QFile::exists(qmltypesPath)) {
-            auto reader = createReaderForFile(qmltypesPath);
+        if (QFile::exists(qmltypesPath + SlashQmldir)) {
+            auto reader = createQmldirParserForFile(qmltypesPath + SlashQmldir);
+            const auto imports = reader.imports();
+            for (const QString &import : imports)
+                importHelper(import, prefix, major, minor);
+
+            QHash<QString, LanguageUtils::FakeMetaObject *> qmlComponents;
+            const auto components = reader.components();
+            for (auto it = components.begin(), end = components.end(); it != end; ++it) {
+                const QString filePath = qmltypesPath + QLatin1Char('/') + it->fileName;
+                if (!QFile::exists(filePath)) {
+                    m_colorOut.write(QLatin1String("warning: "), Warning);
+                    m_colorOut.write(it->fileName + QLatin1String(" is listed as component in ")
+                                     + qmltypesPath + SlashQmldir
+                                     + QLatin1String(" but does not exist.\n"));
+                    continue;
+                }
+
+                auto mo = qmlComponents.find(it.key());
+                if (mo == qmlComponents.end())
+                    mo = qmlComponents.insert(it.key(), localQmlFile2FakeMetaObject(filePath));
+
+                (*mo)->addExport(
+                            it.key(), reader.typeNamespace(),
+                            LanguageUtils::ComponentVersion(it->majorVersion, it->minorVersion));
+            }
+            for (auto it = qmlComponents.begin(), end = qmlComponents.end(); it != end; ++it) {
+                objects.insert(it.key(),
+                               QSharedPointer<const LanguageUtils::FakeMetaObject>(it.value()));
+            }
+        }
+        if (QFile::exists(qmltypesPath + SlashPluginsDotQmltypes)) {
+            auto reader = createQmltypesReaderForFile(qmltypesPath + SlashPluginsDotQmltypes);
             auto succ = reader(&objects, &moduleApis, &dependencies);
             if (!succ)
                 m_colorOut.writeUncolored(reader.errorMessage());
-            break;
         }
     }
     for (auto const &dependency : qAsConst(dependencies)) {
@@ -367,7 +411,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiProgram *)
         QDirIterator it { dir, QStringList() << QLatin1String("builtins.qmltypes"), QDir::NoFilter,
                           QDirIterator::Subdirectories };
         while (it.hasNext()) {
-            auto reader = createReaderForFile(it.next());
+            auto reader = createQmltypesReaderForFile(it.next());
             auto succ = reader(&objects, &moduleApis, &dependencies);
             if (!succ)
                 m_colorOut.writeUncolored(reader.errorMessage());
