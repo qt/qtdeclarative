@@ -279,7 +279,7 @@ void QQmlApplicationEngine::load(const QString &filePath)
 }
 
 /*!
-   Sets the initial properties with which the QML component gets initialized after
+   Sets the \a initialProperties with which the QML component gets initialized after
    it gets loaded.
 
 

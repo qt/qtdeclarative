@@ -458,7 +458,7 @@
 */
 
 /*!
-    \fn template<typename T> QObject *qmlAttachedPropertiesObject(const QObject *attachee, bool create = true)
+    \fn template<typename T> QObject *qmlAttachedPropertiesObject(const QObject *attachee, bool create)
     \relates QQmlEngine
 
     The form of this template function is:

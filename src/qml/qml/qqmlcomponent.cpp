@@ -813,8 +813,9 @@ QObject *QQmlComponent::create(QQmlContext *context)
 }
 
 /*!
-    Create an object instance of this component, and initialize its toplevel properties according to initalPropertyValues.
-
+    Create an object instance of this component, and initialize its toplevel
+    properties with \a initialProperties. \a context specifies the context
+    where the object instance is to be created.
 
     \sa QQmlComponent::create
     \since 5.14
@@ -1104,7 +1105,7 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context,
 }
 
 /*!
-   Set toplevel properties of the component.
+   Set toplevel \a properties of the \a component.
 
 
    This method provides advanced control over component instance creation.
