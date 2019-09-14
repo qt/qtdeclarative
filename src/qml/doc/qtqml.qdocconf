@@ -37,11 +37,17 @@ tagfile                 = ../../../doc/qtqml/qtqml.tags
 depends += qtcore qtgui qtquick qtdoc qtlinguist qmake qtscript qtwidgets qtxmlpatterns qtquickcontrols
 
 headerdirs  += .. \
-               ../../imports/models
+               ../../imports/models \
+               ../../qmlmodels \
+               ../../qml \
+               ../../qmlworkerscript
 
 sourcedirs  += .. \
                ../../imports/models \
-               ../../imports/statemachine
+               ../../imports/statemachine \
+               ../../qmlmodels \
+               ../../qml \
+               ../../qmlworkerscript
 
 exampledirs += ../../../examples/qml \
                ../ \
