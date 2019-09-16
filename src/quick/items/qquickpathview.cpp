@@ -118,10 +118,10 @@ void QQuickPathViewPrivate::init()
     q->setFlag(QQuickItem::ItemIsFocusScope);
     q->setFiltersChildMouseEvents(true);
     qmlobject_connect(&tl, QQuickTimeLine, SIGNAL(updated()),
-                      q, QQuickPathView, SLOT(ticked()))
+                      q, QQuickPathView, SLOT(ticked()));
     timer.invalidate();
     qmlobject_connect(&tl, QQuickTimeLine, SIGNAL(completed()),
-                      q, QQuickPathView, SLOT(movementEnding()))
+                      q, QQuickPathView, SLOT(movementEnding()));
 }
 
 QQuickItem *QQuickPathViewPrivate::getItem(int modelIndex, qreal z, bool async)

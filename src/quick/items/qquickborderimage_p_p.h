@@ -86,7 +86,7 @@ public:
         if (!border) {
             border = new QQuickScaleGrid(q);
             qmlobject_connect(border, QQuickScaleGrid, SIGNAL(borderChanged()),
-                              q, QQuickBorderImage, SLOT(doUpdate()))
+                              q, QQuickBorderImage, SLOT(doUpdate()));
         }
         return border;
     }

@@ -5083,7 +5083,7 @@ QQuickStateGroup *QQuickItemPrivate::_states()
         if (!componentComplete)
             _stateGroup->classBegin();
         qmlobject_connect(_stateGroup, QQuickStateGroup, SIGNAL(stateChanged(QString)),
-                          q, QQuickItem, SIGNAL(stateChanged(QString)))
+                          q, QQuickItem, SIGNAL(stateChanged(QString)));
     }
 
     return _stateGroup;

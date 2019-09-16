@@ -90,7 +90,7 @@ QT_BEGIN_NAMESPACE
     \endcode
 */
 #define qmlobject_connect(Sender, SenderType, Signal, Receiver, ReceiverType, Method) \
-{ \
+do { \
     SenderType *sender = (Sender); \
     ReceiverType *receiver = (Receiver); \
     const char *signal = (Signal); \
@@ -111,7 +111,7 @@ QT_BEGIN_NAMESPACE
     } \
     Q_ASSERT(signalIdx != -1 && methodIdx != -1); \
     QMetaObject::connect(sender, signalIdx, receiver, methodIdx, Qt::DirectConnection); \
-}
+} while (0)
 
 /*!
     Disconnect \a Signal of \a Sender from \a Method of \a Receiver.  \a Signal must be
@@ -129,7 +129,7 @@ QT_BEGIN_NAMESPACE
     \endcode
 */
 #define qmlobject_disconnect(Sender, SenderType, Signal, Receiver, ReceiverType, Method) \
-{ \
+do { \
     SenderType *sender = (Sender); \
     ReceiverType *receiver = (Receiver); \
     const char *signal = (Signal); \
@@ -150,7 +150,7 @@ QT_BEGIN_NAMESPACE
     } \
     Q_ASSERT(signalIdx != -1 && methodIdx != -1); \
     QMetaObject::disconnect(sender, signalIdx, receiver, methodIdx); \
-}
+} while (0)
 
 /*!
     This method is identical to qobject_cast<T>() except that it does not require lazy
