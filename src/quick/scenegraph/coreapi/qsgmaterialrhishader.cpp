@@ -426,6 +426,71 @@ bool QSGMaterialRhiShader::updateGraphicsPipelineState(const RenderState &state,
  */
 
 /*!
+    \class QSGMaterialRhiShader::GraphicsPipelineState
+
+    \brief Describes state changes that the material wants to apply to the
+    currently active graphics pipeline state.
+
+    \inmodule QtQuick
+    \since 5.14
+
+    Unlike QSGMaterialShader, directly issuing state change commands with the
+    underlying graphics API is not possible with QSGMaterialRhiShader. This is
+    mainly because the concept of individually changeable states is considered
+    deprecated and not supported with modern graphics APIs.
+
+    Therefore, it is up to QSGMaterialRhiShader to expose a data structure with
+    the set of supported states, which the material can change in its
+    updatePipelineState() implementation, if there is one. The scenegraph will
+    then internally apply these changes to the active graphics pipeline state,
+    then rolling them back as appropriate.
+ */
+
+/*!
+    \enum QSGMaterialRhiShader::GraphicsPipelineState::BlendFactor
+    \since 5.14
+
+    \value Zero
+    \value One
+    \value SrcColor
+    \value OneMinusSrcColor
+    \value DstColor
+    \value OneMinusDstColor
+    \value SrcAlpha
+    \value OneMinusSrcAlpha
+    \value DstAlpha
+    \value OneMinusDstAlpha
+    \value ConstantColor
+    \value OneMinusConstantColor
+    \value ConstantAlpha
+    \value OneMinusConstantAlpha
+    \value SrcAlphaSaturate
+    \value Src1Color
+    \value OneMinusSrc1Color
+    \value Src1Alpha
+    \value OneMinusSrc1Alpha
+ */
+
+/*!
+    \enum QSGMaterialRhiShader::GraphicsPipelineState::ColorMaskComponent
+    \since 5.14
+
+    \value R
+    \value G
+    \value B
+    \value A
+ */
+
+/*!
+    \enum QSGMaterialRhiShader::GraphicsPipelineState::CullMode
+    \since 5.14
+
+    \value CullNone
+    \value CullFront
+    \value CullBack
+ */
+
+/*!
     Returns the accumulated opacity to be used for rendering.
  */
 float QSGMaterialRhiShader::RenderState::opacity() const
