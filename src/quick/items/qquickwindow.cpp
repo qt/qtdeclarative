@@ -4737,7 +4737,7 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \return a pointer to a GraphicsStateInfo struct describing some of the
+    \return a reference to a GraphicsStateInfo struct describing some of the
     RHI's internal state, in particular, the double or tripple buffering status
     of the backend (such as, the Vulkan or Metal integrations). This is
     relevant when the underlying graphics APIs is Vulkan or Metal, and the
@@ -4745,14 +4745,14 @@ void QQuickWindow::resetOpenGLState()
     its own often-changing resources, such as, uniform buffers, in order to
     avoid stalling the pipeline.
  */
-const QQuickWindow::GraphicsStateInfo *QQuickWindow::graphicsStateInfo()
+const QQuickWindow::GraphicsStateInfo &QQuickWindow::graphicsStateInfo()
 {
     Q_D(QQuickWindow);
     if (d->rhi) {
         d->rhiStateInfo.currentFrameSlot = d->rhi->currentFrameSlot();
         d->rhiStateInfo.framesInFlight = d->rhi->resourceLimit(QRhi::FramesInFlight);
     }
-    return &d->rhiStateInfo;
+    return d->rhiStateInfo;
 }
 
 /*!

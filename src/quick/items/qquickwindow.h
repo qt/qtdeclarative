@@ -142,10 +142,10 @@ public:
     void resetOpenGLState();
 #endif
     struct GraphicsStateInfo {
-        int currentFrameSlot = 0;
-        int framesInFlight = 0;
+        int currentFrameSlot;
+        int framesInFlight;
     };
-    const GraphicsStateInfo *graphicsStateInfo();
+    const GraphicsStateInfo &graphicsStateInfo();
     void beginExternalCommands();
     void endExternalCommands();
     QQmlIncubationController *incubationController() const;

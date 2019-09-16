@@ -212,7 +212,7 @@ void SquircleRenderer::frameStart()
         prepareShader(FragmentStage);
 
     if (!m_initialized)
-        init(m_window->graphicsStateInfo()->framesInFlight);
+        init(m_window->graphicsStateInfo().framesInFlight);
 }
 
 static const float vertices[] = {
@@ -230,10 +230,10 @@ void SquircleRenderer::mainPassRecordingStart()
     // the scenegraph's main renderpass. It does not create its own passes,
     // rendertargets, etc. so no synchronization is needed.
 
-    const QQuickWindow::GraphicsStateInfo *stateInfo = m_window->graphicsStateInfo();
+    const QQuickWindow::GraphicsStateInfo &stateInfo(m_window->graphicsStateInfo());
     QSGRendererInterface *rif = m_window->rendererInterface();
 
-    VkDeviceSize ubufOffset = stateInfo->currentFrameSlot * m_allocPerUbuf;
+    VkDeviceSize ubufOffset = stateInfo.currentFrameSlot * m_allocPerUbuf;
     void *p = nullptr;
     VkResult err = m_devFuncs->vkMapMemory(m_dev, m_ubufMem, ubufOffset, m_allocPerUbuf, 0, &p);
     if (err != VK_SUCCESS || !p)
@@ -259,7 +259,7 @@ void SquircleRenderer::mainPassRecordingStart()
     VkDeviceSize vbufOffset = 0;
     m_devFuncs->vkCmdBindVertexBuffers(cb, 0, 1, &m_vbuf, &vbufOffset);
 
-    uint32_t dynamicOffset = m_allocPerUbuf * stateInfo->currentFrameSlot;
+    uint32_t dynamicOffset = m_allocPerUbuf * stateInfo.currentFrameSlot;
     m_devFuncs->vkCmdBindDescriptorSets(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1,
                                         &m_ubufDescriptor, 1, &dynamicOffset);
 

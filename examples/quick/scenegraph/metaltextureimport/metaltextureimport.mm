@@ -281,7 +281,7 @@ void CustomTextureNode::sync()
         m_vs = compileShaderFromSource(m_vert, m_vertEntryPoint);
         m_fs = compileShaderFromSource(m_frag, m_fragEntryPoint);
 
-        const int framesInFlight = m_window->graphicsStateInfo()->framesInFlight;
+        const int framesInFlight = m_window->graphicsStateInfo().framesInFlight;
 
         m_vbuf = [m_device newBufferWithLength: sizeof(vertices) options: MTLResourceStorageModeShared];
         void *p = [m_vbuf contents];
@@ -348,8 +348,8 @@ void CustomTextureNode::render()
     Q_ASSERT(cb);
     id<MTLRenderCommandEncoder> encoder = [cb renderCommandEncoderWithDescriptor: renderpassdesc];
 
-    const QQuickWindow::GraphicsStateInfo *stateInfo = m_window->graphicsStateInfo();
-    void *p = [m_ubuf[stateInfo->currentFrameSlot] contents];
+    const QQuickWindow::GraphicsStateInfo &stateInfo(m_window->graphicsStateInfo());
+    void *p = [m_ubuf[stateInfo.currentFrameSlot] contents];
     memcpy(p, &m_t, 4);
 
     MTLViewport vp;
@@ -361,7 +361,7 @@ void CustomTextureNode::render()
     vp.zfar = 1;
     [encoder setViewport: vp];
 
-    [encoder setFragmentBuffer: m_ubuf[stateInfo->currentFrameSlot] offset: 0 atIndex: 0];
+    [encoder setFragmentBuffer: m_ubuf[stateInfo.currentFrameSlot] offset: 0 atIndex: 0];
     [encoder setVertexBuffer: m_vbuf offset: 0 atIndex: 1];
     [encoder setRenderPipelineState: m_pipeline];
     [encoder drawPrimitives: MTLPrimitiveTypeTriangleStrip vertexStart: 0 vertexCount: 4 instanceCount: 1 baseInstance: 0];

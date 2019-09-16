@@ -215,7 +215,7 @@ void SquircleRenderer::frameStart()
         prepareShader(FragmentStage);
 
     if (!m_initialized)
-        init(m_window->graphicsStateInfo()->framesInFlight);
+        init(m_window->graphicsStateInfo().framesInFlight);
 }
 
 static const float vertices[] = {
@@ -233,7 +233,7 @@ void SquircleRenderer::mainPassRecordingStart()
     // the scenegraph's main renderpass. It does not create its own passes,
     // rendertargets, etc. so no synchronization is needed.
 
-    const QQuickWindow::GraphicsStateInfo *stateInfo = m_window->graphicsStateInfo();
+    const QQuickWindow::GraphicsStateInfo &stateInfo(m_window->graphicsStateInfo());
 
     QSGRendererInterface *rif = m_window->rendererInterface();
     id<MTLRenderCommandEncoder> encoder = (id<MTLRenderCommandEncoder>) rif->getResource(
@@ -242,7 +242,7 @@ void SquircleRenderer::mainPassRecordingStart()
 
     m_window->beginExternalCommands();
 
-    void *p = [m_ubuf[stateInfo->currentFrameSlot] contents];
+    void *p = [m_ubuf[stateInfo.currentFrameSlot] contents];
     float t = m_t;
     memcpy(p, &t, 4);
 
@@ -255,7 +255,7 @@ void SquircleRenderer::mainPassRecordingStart()
     vp.zfar = 1;
     [encoder setViewport: vp];
 
-    [encoder setFragmentBuffer: m_ubuf[stateInfo->currentFrameSlot] offset: 0 atIndex: 0];
+    [encoder setFragmentBuffer: m_ubuf[stateInfo.currentFrameSlot] offset: 0 atIndex: 0];
     [encoder setVertexBuffer: m_vbuf offset: 0 atIndex: 1];
     [encoder setRenderPipelineState: m_pipeline];
     [encoder drawPrimitives: MTLPrimitiveTypeTriangleStrip vertexStart: 0 vertexCount: 4 instanceCount: 1 baseInstance: 0];
