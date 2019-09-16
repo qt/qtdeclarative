@@ -60,8 +60,8 @@ Item {
         id: testCase
         name: "Tests_GridLayout"
         when: windowShown
-        width: 200
-        height: 200
+        width: parent.width
+        height: parent.height
 
         Component {
             id: layout_flow_Component
@@ -84,7 +84,7 @@ Item {
 
         function test_flow()
         {
-            var layout = layout_flow_Component.createObject(container);
+            var layout = createTemporaryObject(layout_flow_Component, container);
             tryCompare(layout.children[0], "itemRect", [ 0,  0, 10, 10])
             tryCompare(layout.children[1], "itemRect", [10,  0, 10, 10])
             tryCompare(layout.children[2], "itemRect", [20,  0, 10, 10])
@@ -102,8 +102,6 @@ Item {
 
             tryCompare(layout.children[4], "itemRect", [10,  0, 10, 10])
             tryCompare(layout.children[5], "itemRect", [10, 10, 10, 10])
-
-            layout.destroy()
         }
 
         Component {
@@ -178,7 +176,7 @@ Item {
         }
 
         function test_flowLeftToRight() {
-            var layout = layout_flowLeftToRight_Component.createObject(container);
+            var layout = createTemporaryObject(layout_flowLeftToRight_Component, container);
             compare(layout.implicitWidth, 80);
             compare(layout.children[0].x, 0);
             compare(layout.children[0].y, 0);
@@ -208,8 +206,6 @@ Item {
             compare(layout.children[11].y, 60);
             compare(layout.children[12].x, 40);
             compare(layout.children[12].y, 80);
-
-            layout.destroy();
         }
 
 
@@ -259,7 +255,7 @@ Item {
 
         function test_flowLeftToRightDefaultPositions() {
             ignoreWarning("QGridLayoutEngine::addItem: Cell (1, 0) already taken");
-            var layout = layout_flowLeftToRightDefaultPositions_Component.createObject(container);
+            var layout = createTemporaryObject(layout_flowLeftToRightDefaultPositions_Component, container);
             compare(layout.implicitWidth, 40);
             compare(layout.children[0].x, 0);
             compare(layout.children[0].y, 0);
@@ -267,7 +263,6 @@ Item {
             compare(layout.children[1].y, 20);
             compare(layout.children[2].x, 20);
             compare(layout.children[2].y, 20);
-            layout.destroy();
         }
 
 
@@ -342,7 +337,7 @@ Item {
         }
 
         function test_flowTopToBottom() {
-            var layout = layout_flowTopToBottom_Component.createObject(container);
+            var layout = createTemporaryObject(layout_flowTopToBottom_Component, container);
             compare(layout.children[0].x, 0);
             compare(layout.children[0].y, 0);
             compare(layout.children[1].x, 20);
@@ -371,8 +366,6 @@ Item {
             compare(layout.children[11].y, 60);
             compare(layout.children[12].x, 80);
             compare(layout.children[12].y, 0);
-
-            layout.destroy();
         }
 
         Component {
@@ -432,7 +425,7 @@ Item {
         }
 
         function test_spanAcrossEmptyRows() {
-            var layout = layout_spanAcrossEmptyRows_Component.createObject(container);
+            var layout = createTemporaryObject(layout_spanAcrossEmptyRows_Component, container);
             compare(layout.children[0].x, 0);
             compare(layout.children[0].y, 0);
             compare(layout.children[1].x, 20);
@@ -442,8 +435,6 @@ Item {
 
             compare(layout.implicitWidth, 60);
             compare(layout.Layout.maximumWidth, 120);
-
-            layout.destroy();
         }
 
         Component {
@@ -463,14 +454,13 @@ Item {
         }
 
         function test_spanIsMoreThanColumns() {
-            var layout = layout_spanIsMoreThanColumns_Component.createObject(container);
+            var layout = createTemporaryObject(layout_spanIsMoreThanColumns_Component, container);
             // item was not added, therefore implicit width is 0
             compare(layout.implicitWidth, 0);
-            layout.destroy();
         }
 
         function test_sizeHints() {
-            var layout = layout_spanAcrossEmptyRows_Component.createObject(container);
+            var layout = createTemporaryObject(layout_spanAcrossEmptyRows_Component, container);
             compare(layout.visible, true)
 
             var minWidth  = layout.Layout.minimumWidth
@@ -489,8 +479,6 @@ Item {
             compare(prefHeight, layout.implicitHeight)
             compare(maxWidth, layout.Layout.maximumWidth)
             compare(maxHeight, layout.Layout.maximumHeight)
-
-            layout.destroy();
         }
 
         Component {
@@ -567,7 +555,7 @@ Item {
 
         function test_alignment()
         {
-            var layout = layout_alignment_Component.createObject(container);
+            var layout = createTemporaryObject(layout_alignment_Component, container);
             layout.width = 60;
             layout.height = 100;
 
@@ -596,8 +584,6 @@ Item {
             layout.children[4].Layout.alignment = Qt.AlignLeft
             tryCompare(layout.children[4], "x", 0);
             tryCompare(layout.children[4], "y", 60);
-
-            layout.destroy();
         }
 
 
@@ -648,7 +634,7 @@ Item {
 
         function test_rightToLeft()
         {
-            var layout = layout_rightToLeft_Component.createObject(container);
+            var layout = createTemporaryObject(layout_rightToLeft_Component, container);
             layout.width = 180;
             layout.height = 50;
 
@@ -674,8 +660,6 @@ Item {
 
             layout.LayoutMirroring.enabled = true
             verifyIsRightToLeft(layout)
-
-            layout.destroy();
         }
 
         Component {
@@ -698,7 +682,7 @@ Item {
 
         function test_columnsChanged()
         {
-            var layout = layout_columnsOrRowsChanged_Component.createObject(container);
+            var layout = createTemporaryObject(layout_columnsOrRowsChanged_Component, container);
             layout.width = 40;
             layout.height = 20;
             tryCompare(layout.children[0], "itemRect", [ 0,  5,  10, 10])
@@ -711,13 +695,11 @@ Item {
             tryCompare(layout.children[1], "itemRect", [20,  0,  10, 10])
             tryCompare(layout.children[2], "itemRect", [ 0, 10,  10, 10])
             tryCompare(layout.children[3], "itemRect", [20, 10,  10, 10])
-
-            layout.destroy()
         }
 
         function test_rowsChanged()
         {
-            var layout = layout_columnsOrRowsChanged_Component.createObject(container);
+            var layout = createTemporaryObject(layout_columnsOrRowsChanged_Component, container);
             layout.flow = GridLayout.TopToBottom
             layout.width = 20;
             layout.height = 40;
@@ -731,8 +713,6 @@ Item {
             tryCompare(layout.children[1], "itemRect", [ 0, 25,  10, 10])
             tryCompare(layout.children[2], "itemRect", [10,  5,  10, 10])
             tryCompare(layout.children[3], "itemRect", [10, 25,  10, 10])
-
-            layout.destroy()
         }
 
         Component {
@@ -767,7 +747,7 @@ Item {
 
         function test_columnOrRowChanged()
         {
-            var layout = layout_columnOrRowChanged_Component.createObject(container);
+            var layout = createTemporaryObject(layout_columnOrRowChanged_Component, container);
             layout.width = layout.implicitWidth
             layout.height = layout.implicitHeight
             // c0-c1-c2
@@ -795,8 +775,6 @@ Item {
             tryCompare(layout.children[0], "itemRect", [10, 10,  10, 10])
             tryCompare(layout.children[1], "itemRect", [ 0,  0,  10, 10])
             tryCompare(layout.children[2], "itemRect", [20,  0,  10, 10])
-
-            layout.destroy()
         }
 
         Component {
@@ -819,7 +797,7 @@ Item {
         }
         function test_baselines()
         {
-            var layout = layout_baselines_Component.createObject(container);
+            var layout = createTemporaryObject(layout_baselines_Component, container);
             tryCompare(layout.children[0], "itemRect", [ 0, 0, 10, 10])
             tryCompare(layout.children[1], "itemRect", [10, 0, 10, 10])
             compare(layout.implicitWidth, 20)
@@ -832,8 +810,6 @@ Item {
             tryCompare(layout.children[1], "itemRect", [10, 10, 10, 10])
             compare(layout.implicitWidth, 20)
             compare(layout.implicitHeight, 20)
-
-            layout.destroy();
         }
 
         Component {
@@ -851,30 +827,42 @@ Item {
             }
         }
 
-        function test_spacings()
+        function test_spacings_data()
         {
-            var layout = layout_spacings_Component.createObject(container);
+            let data = [
+                { spacing: Number.NaN },
+                { spacing: 0 },
+                { spacing: 10 },
+                { spacing: -5 },
+                { spacing: -19 }
+            ]
+            for (let i = 0; i < data.length; ++i) {
+                data[i].tag = data[i].spacing.toString()
+            }
+            return data
+        }
+
+        function test_spacings(data)
+        {
+            var layout = createTemporaryObject(layout_spacings_Component, container);
 
             // breaks down below -19. This is acceptable, since it means that the implicit size of the layout is negative
             var testSpacings = [Number.NaN, 0, 10, -5, -19]
             layout.rowSpacing = 0
-            for (var i = 0; i < testSpacings.length; ++i) {
-                var sp = testSpacings[i]
-                if (isNaN(sp)) {
-                    sp = 5  // Test defaults
-                } else {
-                    layout.columnSpacing = sp
-                }
-                tryCompare(layout.children[0], "itemRect", [ 0,  0,  10,  10])
-                tryCompare(layout.children[1], "itemRect", [10 + sp,  0,  10,  10])
-                compare(layout.implicitWidth, 20 + sp)
+            var spacing = data.spacing
+            if (isNaN(spacing)) {
+                spacing = 5  // Test defaults
+            } else {
+                layout.columnSpacing = spacing
             }
+            tryCompare(layout.children[0], "itemRect", [ 0,  0,  10,  10])
+            tryCompare(layout.children[1], "itemRect", [10 + spacing,  0,  10,  10])
+            compare(layout.implicitWidth, 20 + spacing)
 
             // do not crash
             layout.columnSpacing = -100
             waitForRendering(layout)
             verify(isFinite(layout.implicitWidth))
-            layout.destroy();
         }
 
         Component {
@@ -1026,11 +1014,10 @@ Item {
 
         function test_invalidateWhileRearranging_QTBUG_44139()
         {
-            var layout = layout_invalidateWhileRearranging_Component.createObject(container)
+            var layout = createTemporaryObject(layout_invalidateWhileRearranging_Component, container)
 
             waitForRendering(layout);
             verify(layout.children[1].visible == false);
-            layout.destroy()
         }
     }
 }
