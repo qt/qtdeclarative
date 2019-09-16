@@ -36,6 +36,11 @@
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickItem>
 
+#ifdef Q_OS_WIN
+#  include <fcntl.h>
+#  include <io.h>
+#endif // Q_OS_WIN
+
 // Timeout values:
 
 // A valid screen grab requires the scene to not change
@@ -101,6 +106,10 @@ private slots:
 #endif
         if (ofile == "-") {   // Write to stdout
             QFile of;
+#ifdef Q_OS_WIN
+            // Make sure write to stdout doesn't do LF->CRLF
+            _setmode(_fileno(stdout), _O_BINARY);
+#endif // Q_OS_WIN
             if (!of.open(1, QIODevice::WriteOnly) || !lastGrab.save(&of, "ppm")) {
                 qWarning() << "Error: failed to write grabbed image to stdout.";
                 QGuiApplication::exit(2);
