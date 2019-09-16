@@ -388,7 +388,10 @@ void QSGRhiLayer::grab()
                           m_mirrorHorizontal ? -m_rect.width() : m_rect.width(),
                           m_mirrorVertical ? m_rect.height() : -m_rect.height());
     }
-    m_renderer->setProjectionMatrixToRect(mirrored, !m_rhi->isYUpInNDC());
+    QSGAbstractRenderer::MatrixTransformFlags matrixFlags = 0;
+    if (!m_rhi->isYUpInNDC())
+        matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
+    m_renderer->setProjectionMatrixToRect(mirrored, matrixFlags);
     m_renderer->setClearColor(Qt::transparent);
     m_renderer->setRenderTarget(m_rt);
     m_renderer->setCommandBuffer(m_context->currentFrameCommandBuffer());

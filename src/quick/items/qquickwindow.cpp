@@ -500,10 +500,10 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             renderer->setDeviceRect(rect);
             renderer->setViewportRect(rect);
             if (QQuickRenderControl::renderWindowFor(q)) {
-                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size), false);
+                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size));
                 renderer->setDevicePixelRatio(devicePixelRatio);
             } else {
-                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), rect.size()), false);
+                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), rect.size()));
                 renderer->setDevicePixelRatio(1);
             }
         } else {
@@ -520,7 +520,10 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             renderer->setDeviceRect(rect);
             renderer->setViewportRect(rect);
             const bool flipY = rhi ? !rhi->isYUpInNDC() : false;
-            renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), logicalSize), flipY);
+            QSGAbstractRenderer::MatrixTransformFlags matrixFlags = 0;
+            if (flipY)
+                matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
+            renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), logicalSize), matrixFlags);
             renderer->setDevicePixelRatio(devicePixelRatio);
         }
 
