@@ -796,10 +796,10 @@ private:
     void renderBatches();
     bool ensurePipelineState(Element *e, const ShaderManager::Shader *sms);
     QRhiTexture *dummyTexture();
-    void updateMaterialDynamicData(ShaderManager::Shader *sms, const QSGMaterialRhiShader::RenderState &renderState,
+    void updateMaterialDynamicData(ShaderManager::Shader *sms, QSGMaterialRhiShader::RenderState &renderState,
                                    QSGMaterial *material, QVector<QRhiShaderResourceBinding> *bindings,
                                    const Batch *batch, int ubufOffset, int ubufRegionSize);
-    void updateMaterialStaticData(ShaderManager::Shader *sms, const QSGMaterialRhiShader::RenderState &renderState,
+    void updateMaterialStaticData(ShaderManager::Shader *sms, QSGMaterialRhiShader::RenderState &renderState,
                                   QSGMaterial *material, Batch *batch, bool *gstateChanged);
     void checkLineWidth(QSGGeometry *g);
     bool prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *renderBatch);

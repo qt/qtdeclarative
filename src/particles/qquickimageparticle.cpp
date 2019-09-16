@@ -179,7 +179,7 @@ public:
         setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_tabled.frag.qsb"));
     }
 
-    bool updateUniformData(const RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
+    bool updateUniformData(RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
     {
         QByteArray *buf = renderState.uniformData();
         Q_ASSERT(buf->size() >= 80 + 2 * (UNIFORM_ARRAY_SIZE * 4 * 4));
@@ -216,7 +216,7 @@ public:
         return true;
     }
 
-    void updateSampledImage(const RenderState &renderState, int binding, QSGTexture **texture,
+    void updateSampledImage(RenderState &renderState, int binding, QSGTexture **texture,
                             QSGMaterial *newMaterial, QSGMaterial *) override
     {
         ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
@@ -331,7 +331,7 @@ public:
         setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_deformed.frag.qsb"));
     }
 
-    bool updateUniformData(const RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
+    bool updateUniformData(RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
     {
         QByteArray *buf = renderState.uniformData();
         Q_ASSERT(buf->size() >= 80 + 2 * (UNIFORM_ARRAY_SIZE * 4 * 4));
@@ -357,7 +357,7 @@ public:
         return true;
     }
 
-    void updateSampledImage(const RenderState &renderState, int binding, QSGTexture **texture,
+    void updateSampledImage(RenderState &renderState, int binding, QSGTexture **texture,
                             QSGMaterial *newMaterial, QSGMaterial *) override
     {
         ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
@@ -487,7 +487,7 @@ public:
         setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_sprite.frag.qsb"));
     }
 
-    bool updateUniformData(const RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
+    bool updateUniformData(RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
     {
         QByteArray *buf = renderState.uniformData();
         Q_ASSERT(buf->size() >= 80 + 2 * (UNIFORM_ARRAY_SIZE * 4 * 4));
@@ -524,7 +524,7 @@ public:
         return true;
     }
 
-    void updateSampledImage(const RenderState &renderState, int binding, QSGTexture **texture,
+    void updateSampledImage(RenderState &renderState, int binding, QSGTexture **texture,
                             QSGMaterial *newMaterial, QSGMaterial *) override
     {
         ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
@@ -651,7 +651,7 @@ public:
         setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_colored.frag.qsb"));
     }
 
-    bool updateUniformData(const RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
+    bool updateUniformData(RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
     {
         QByteArray *buf = renderState.uniformData();
         Q_ASSERT(buf->size() >= 80 + 2 * (UNIFORM_ARRAY_SIZE * 4 * 4));
@@ -677,7 +677,7 @@ public:
         return true;
     }
 
-    void updateSampledImage(const RenderState &renderState, int binding, QSGTexture **texture,
+    void updateSampledImage(RenderState &renderState, int binding, QSGTexture **texture,
                             QSGMaterial *newMaterial, QSGMaterial *) override
     {
         ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
@@ -799,7 +799,7 @@ public:
         setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_simple.frag.qsb"));
     }
 
-    bool updateUniformData(const RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
+    bool updateUniformData(RenderState &renderState, QSGMaterial *newMaterial, QSGMaterial *) override
     {
         QByteArray *buf = renderState.uniformData();
         Q_ASSERT(buf->size() >= 80 + 2 * (UNIFORM_ARRAY_SIZE * 4 * 4));
@@ -825,7 +825,7 @@ public:
         return true;
     }
 
-    void updateSampledImage(const RenderState &renderState, int binding, QSGTexture **texture,
+    void updateSampledImage(RenderState &renderState, int binding, QSGTexture **texture,
                             QSGMaterial *newMaterial, QSGMaterial *) override
     {
         ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();

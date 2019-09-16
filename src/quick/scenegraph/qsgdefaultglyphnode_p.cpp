@@ -410,9 +410,9 @@ class QSGTextMaskRhiShader : public QSGMaterialRhiShader
 public:
     QSGTextMaskRhiShader(QFontEngine::GlyphFormat glyphFormat);
 
-    bool updateUniformData(const RenderState &state,
+    bool updateUniformData(RenderState &state,
                            QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
-    void updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+    void updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
                             QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 
 protected:
@@ -428,7 +428,7 @@ QSGTextMaskRhiShader::QSGTextMaskRhiShader(QFontEngine::GlyphFormat glyphFormat)
                       QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/textmask.frag.qsb"));
 }
 
-bool QSGTextMaskRhiShader::updateUniformData(const RenderState &state,
+bool QSGTextMaskRhiShader::updateUniformData(RenderState &state,
                                              QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     Q_ASSERT(oldMaterial == nullptr || newMaterial->type() == oldMaterial->type());
@@ -471,7 +471,7 @@ bool QSGTextMaskRhiShader::updateUniformData(const RenderState &state,
     return changed;
 }
 
-void QSGTextMaskRhiShader::updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+void QSGTextMaskRhiShader::updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
                                               QSGMaterial *newMaterial, QSGMaterial *)
 {
     Q_UNUSED(state);
@@ -498,10 +498,10 @@ public:
                               QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/8bittextmask.frag.qsb"));
     }
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
-bool QSG8BitTextMaskRhiShader::updateUniformData(const RenderState &state,
+bool QSG8BitTextMaskRhiShader::updateUniformData(RenderState &state,
                                                  QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     bool changed = QSGTextMaskRhiShader::updateUniformData(state, newMaterial, oldMaterial);
@@ -532,8 +532,8 @@ public:
                           QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/24bittextmask.frag.qsb"));
     }
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
-    bool updateGraphicsPipelineState(const RenderState &state, GraphicsPipelineState *ps,
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    bool updateGraphicsPipelineState(RenderState &state, GraphicsPipelineState *ps,
                                      QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
@@ -544,7 +544,7 @@ public:
 // framebuffer update and blending always on... Could we do gamma correction in
 // the shader for text? (but that's bad for blending?)
 
-bool QSG24BitTextMaskRhiShader::updateUniformData(const RenderState &state,
+bool QSG24BitTextMaskRhiShader::updateUniformData(RenderState &state,
                                                   QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     bool changed = QSGTextMaskRhiShader::updateUniformData(state, newMaterial, oldMaterial);
@@ -565,7 +565,7 @@ bool QSG24BitTextMaskRhiShader::updateUniformData(const RenderState &state,
     return changed;
 }
 
-bool QSG24BitTextMaskRhiShader::updateGraphicsPipelineState(const RenderState &state, GraphicsPipelineState *ps,
+bool QSG24BitTextMaskRhiShader::updateGraphicsPipelineState(RenderState &state, GraphicsPipelineState *ps,
                                                             QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     Q_UNUSED(state);
@@ -596,10 +596,10 @@ public:
                           QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/32bitcolortext.frag.qsb"));
     }
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
-bool QSG32BitColorTextRhiShader::updateUniformData(const RenderState &state,
+bool QSG32BitColorTextRhiShader::updateUniformData(RenderState &state,
                                                    QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     bool changed = QSGTextMaskRhiShader::updateUniformData(state, newMaterial, oldMaterial);
@@ -636,11 +636,11 @@ public:
                               QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/styledtext.frag.qsb"));
     }
 
-    bool updateUniformData(const RenderState &state,
+    bool updateUniformData(RenderState &state,
                            QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
-bool QSGStyledTextRhiShader::updateUniformData(const RenderState &state,
+bool QSGStyledTextRhiShader::updateUniformData(RenderState &state,
                                                QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     bool changed = QSG8BitTextMaskRhiShader::updateUniformData(state, newMaterial, oldMaterial);

@@ -141,9 +141,9 @@ class SpriteMaterialRhiShader : public QSGMaterialRhiShader
 public:
      SpriteMaterialRhiShader();
 
-     bool updateUniformData(const RenderState &state,
+     bool updateUniformData(RenderState &state,
                             QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
-     void updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+     void updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
                              QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
@@ -153,7 +153,7 @@ SpriteMaterialRhiShader::SpriteMaterialRhiShader()
     setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/sprite.frag.qsb"));
 }
 
-bool SpriteMaterialRhiShader::updateUniformData(const RenderState &state,
+bool SpriteMaterialRhiShader::updateUniformData(RenderState &state,
                                                 QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
 #ifdef QT_NO_DEBUG
@@ -186,7 +186,7 @@ bool SpriteMaterialRhiShader::updateUniformData(const RenderState &state,
     return changed;
 }
 
-void SpriteMaterialRhiShader::updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+void SpriteMaterialRhiShader::updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
                                                  QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     if (binding != 1)

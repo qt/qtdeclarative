@@ -100,7 +100,7 @@ class QSGVertexColorMaterialRhiShader : public QSGMaterialRhiShader
 public:
     QSGVertexColorMaterialRhiShader();
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
+    bool updateUniformData(RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
 };
 
 QSGVertexColorMaterialRhiShader::QSGVertexColorMaterialRhiShader()
@@ -109,7 +109,7 @@ QSGVertexColorMaterialRhiShader::QSGVertexColorMaterialRhiShader()
     setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/vertexcolor.frag.qsb"));
 }
 
-bool QSGVertexColorMaterialRhiShader::updateUniformData(const RenderState &state,
+bool QSGVertexColorMaterialRhiShader::updateUniformData(RenderState &state,
                                                         QSGMaterial * /*newEffect*/,
                                                         QSGMaterial * /*oldEffect*/)
 {
