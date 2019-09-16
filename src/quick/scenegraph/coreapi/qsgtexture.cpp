@@ -717,6 +717,9 @@ void QSGTexture::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUp
     d->updateRhiTexture(rhi, resourceUpdates);
 }
 
+/*!
+    \internal
+ */
 void QSGTexture::setWorkResourceUpdateBatch(QRhiResourceUpdateBatch *resourceUpdates)
 {
     Q_D(QSGTexture);
