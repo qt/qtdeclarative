@@ -68,10 +68,8 @@ int main(int argc, char ** argv)
 
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);
-    QQmlContext *ctxt = view.rootContext();
-    ctxt->setContextProperty("myModel", &model);
+    view.setInitialProperties({{"model", QVariant::fromValue(&model)}});
 //![0]
-
     view.setSource(QUrl("qrc:view.qml"));
     view.show();
 

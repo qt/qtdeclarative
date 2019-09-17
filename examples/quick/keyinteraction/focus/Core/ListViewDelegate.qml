@@ -52,6 +52,8 @@ import QtQuick 2.1
 
 Item {
     id: container
+    required property int index
+
     width: ListView.view.width; height: 60; anchors.leftMargin: 10; anchors.rightMargin: 10
 
     Rectangle {
@@ -67,7 +69,7 @@ Item {
     Text {
         id: label
         anchors.centerIn: content
-        text: "List element " + (index + 1)
+        text: "List element " + (container.index + 1)
         color: "#193441"
         font.pixelSize: 14
     }
@@ -78,7 +80,7 @@ Item {
         hoverEnabled: true
 
         onClicked: {
-            container.ListView.view.currentIndex = index
+            container.ListView.view.currentIndex = container.index
             container.forceActiveFocus()
         }
     }

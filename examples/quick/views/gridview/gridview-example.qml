@@ -74,20 +74,24 @@ Rectangle {
         highlight: Rectangle { width: 80; height: 80; color: "lightsteelblue" }
 
         delegate: Item {
+            required property string icon
+            required property string name
+            required property int index
+
             width: 100; height: 100
 
             Image {
                 id: myIcon
                 y: 20; anchors.horizontalCenter: parent.horizontalCenter
-                source: icon
+                source: parent.icon
             }
             Text {
                 anchors { top: myIcon.bottom; horizontalCenter: parent.horizontalCenter }
-                text: name
+                text: parent.name
             }
             MouseArea {
                 anchors.fill: parent
-                onClicked: parent.GridView.view.currentIndex = index
+                onClicked: parent.GridView.view.currentIndex = parent.index
             }
         }
     }

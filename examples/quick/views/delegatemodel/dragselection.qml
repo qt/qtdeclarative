@@ -48,6 +48,7 @@
 **
 ****************************************************************************/
 
+import QtQml 2.0
 import QtQuick 2.0
 import QtQml.Models 2.1
 
@@ -63,6 +64,8 @@ Item {
         id: packageDelegate
         Package {
             id: packageRoot
+
+            required property var modelData
 
             MouseArea {
                 id: visibleContainer
@@ -130,7 +133,7 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     color: "white"
-                    text: modelData
+                    text: packageRoot.modelData
                     font.pixelSize: 18
                 }
 

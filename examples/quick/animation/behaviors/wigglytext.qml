@@ -48,6 +48,7 @@
 **
 ****************************************************************************/
 
+import QtQml 2.0
 import QtQuick 2.0
 
 Rectangle {
@@ -58,7 +59,7 @@ Rectangle {
 
     width: 320; height: 480; color: "#474747"; focus: true
 
-    Keys.onPressed: {
+    Keys.onPressed: (event) => {
         if (event.key == Qt.Key_Delete || event.key == Qt.Key_Backspace)
             container.remove()
         else if (event.text != "") {

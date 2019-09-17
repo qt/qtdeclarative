@@ -78,6 +78,7 @@ Rectangle {
             clip: true
             model: 64
             delegate: Text {
+                required property int index
                 font.pixelSize: 18;
                 color: "white";
                 text: index;

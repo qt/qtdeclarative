@@ -62,7 +62,7 @@ Rectangle {
     Text {
         color: "white"
         anchors.right: parent.right
-        text: score
+        text: root.score
     }
 
     ParticleSystem {
@@ -96,7 +96,7 @@ Rectangle {
         ParticleGroup {
             name: "lit"
             duration: 10000
-            onEntered: score++;
+            onEntered: root.score++
             TrailEmitter {
                 id: fireballFlame
                 group: "flame"

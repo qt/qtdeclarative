@@ -53,7 +53,7 @@ import QtQuick 2.0  // For QColor
 
 BirthdayParty {
 // ![0]
-    onPartyStarted: console.log("This party started rockin' at " + time);
+    onPartyStarted: (time) => { console.log("This party started rockin' at " + time); }
 // ![0]
 
     host: Boy {

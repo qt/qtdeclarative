@@ -62,17 +62,17 @@ Rectangle {
         loops: -1
         running: true
         ScriptAction {
-            script: if (increasing) {
-                        current++;
-                        if (current >= aModel.count -1) {
-                            current = aModel.count - 1;
-                            increasing = !increasing;
+            script: if (root.increasing) {
+                        root.current++;
+                        if (root.current >= aModel.count -1) {
+                            root.current = aModel.count - 1;
+                            root.increasing = !root.increasing;
                         }
                     } else {
-                        current--;
-                        if (current <= 0) {
-                            current = 0;
-                            increasing = !increasing;
+                        root.current--;
+                        if (root.current <= 0) {
+                            root.current = 0;
+                            root.increasing = !root.increasing;
                         }
                     }
         }
@@ -161,16 +161,22 @@ Rectangle {
         Item {
             width: 160
             height: column.height
+
+            required property int index
+            required property string name
+            required property string type
+            required property int age
+
             Column {
                 id: column
-                Text { text: 'Name: ' + name }
-                Text { text: 'Type: ' + type }
-                Text { text: 'Age: ' + age }
+                Text { text: 'Name: ' + parent.name }
+                Text { text: 'Type: ' + parent.type }
+                Text { text: 'Age: ' + parent.age }
             }
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: root.current = index
+                onClicked: root.current = parent.index
             }
         }
     }

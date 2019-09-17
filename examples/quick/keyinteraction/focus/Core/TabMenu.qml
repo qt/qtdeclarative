@@ -51,10 +51,9 @@
 import QtQuick 2.1
 
 FocusScope {
-    onActiveFocusChanged: {
-        if (activeFocus)
-            mainView.state = "showTabViews"
-    }
+    id: menu
+    required property Item keyUpTarget
+    required property Item keyDownTarget
 
     Rectangle {
         anchors.fill: parent
@@ -76,8 +75,8 @@ FocusScope {
                     activeFocusOnTab: true
                     focus: true
 
-                    KeyNavigation.up: listMenu
-                    KeyNavigation.down: gridMenu
+                    KeyNavigation.up: menu.keyUpTarget
+                    KeyNavigation.down: menu.keyDownTarget
 
                     Rectangle {
                         id: content

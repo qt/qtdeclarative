@@ -70,21 +70,21 @@ Rectangle {
             color: "#FFFEF0"
             Text { text: "Page 1"; font.bold: true; anchors.centerIn: parent }
 
-            Component.onDestruction: if (printDestruction) print("destroyed 1")
+            Component.onDestruction: if (root.printDestruction) print("destroyed 1")
         }
         Rectangle {
             width: view.width; height: view.height
             color: "#F0FFF7"
             Text { text: "Page 2"; font.bold: true; anchors.centerIn: parent }
 
-            Component.onDestruction: if (printDestruction) print("destroyed 2")
+            Component.onDestruction: if (root.printDestruction) print("destroyed 2")
         }
         Rectangle {
             width: view.width; height: view.height
             color: "#F4F0FF"
             Text { text: "Page 3"; font.bold: true; anchors.centerIn: parent }
 
-            Component.onDestruction: if (printDestruction) print("destroyed 3")
+            Component.onDestruction: if (root.activeFocusprintDestruction) print("destroyed 3")
         }
     }
 
@@ -112,6 +112,8 @@ Rectangle {
                 model: itemModel.count
 
                 Rectangle {
+                    required property int index
+
                     width: 5; height: 5
                     radius: 3
                     color: view.currentIndex == index ? "blue" : "white"
@@ -119,7 +121,7 @@ Rectangle {
                     MouseArea {
                         width: 20; height: 20
                         anchors.centerIn: parent
-                        onClicked: view.currentIndex = index
+                        onClicked: view.currentIndex = parent.index
                     }
                 }
             }

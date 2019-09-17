@@ -56,6 +56,8 @@ import QtQuick 2.0
 import QtQuick.Particles 2.0
 
 Rectangle {
+    id: root
+
     property real delegateHeight: 65
     width: 200; height: 300
     gradient: Gradient {
@@ -66,20 +68,26 @@ Rectangle {
     // Define a delegate component.  A component will be
     // instantiated for each visible item in the list.
     component PetDelegate: Item {
-        id: wrapper
-        width: 200; height: delegateHeight
+        id: pet
+        width: 200; height: root.delegateHeight
         z: 10
+
+        required property int index
+        required property string name
+        required property string type
+        required property int age
+
         Column {
-            Text {color: "white"; text: name; font.pixelSize: 18 }
-            Text {color: "white"; text: 'Type: ' + type; font.pixelSize: 14 }
-            Text {color: "white"; text: 'Age: ' + age; font.pixelSize: 14 }
+            Text {color: "white"; text: pet.name; font.pixelSize: 18 }
+            Text {color: "white"; text: 'Type: ' + pet.type; font.pixelSize: 14 }
+            Text {color: "white"; text: 'Age: ' + pet.age; font.pixelSize: 14 }
         }
-        MouseArea { anchors.fill: parent; onClicked: listView.currentIndex = index; }
+        MouseArea { anchors.fill: parent; onClicked: listView.currentIndex = pet.index; }
         // indent the item if it is the current item
         states: State {
             name: "Current"
-            when: wrapper.ListView.isCurrentItem
-            PropertyChanges { target: wrapper; x: 20 }
+            when: pet.ListView.isCurrentItem
+            PropertyChanges { target: pet; x: 20 }
         }
         transitions: Transition {
             NumberAnimation { properties: "x"; duration: 200 }
@@ -89,7 +97,7 @@ Rectangle {
     // Define a highlight with customized movement between items.
     component HighlightBar : Rectangle {
         z: 0
-        width: 200; height: delegateHeight
+        width: 200; height: root.delegateHeight
         gradient: Gradient {
             GradientStop { position: 0.0; color: "#99FF99" }
             GradientStop { position: 1.0; color: "#88FF88" }

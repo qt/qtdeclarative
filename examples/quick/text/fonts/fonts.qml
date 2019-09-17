@@ -51,6 +51,7 @@
 import QtQuick 2.0
 
 Rectangle {
+    id: root
     property string myText: "The quick brown fox jumps over the lazy dog."
 
     width: 320; height: 480
@@ -71,7 +72,7 @@ Rectangle {
         spacing: 15
 
         Text {
-            text: myText
+            text: root.myText
             color: "lightsteelblue"
             width: parent.width
             wrapMode: Text.WordWrap
@@ -81,7 +82,7 @@ Rectangle {
             font.pixelSize: 20
         }
         Text {
-            text: myText
+            text: root.myText
             color: "lightsteelblue"
             width: parent.width
             wrapMode: Text.WordWrap
@@ -89,7 +90,7 @@ Rectangle {
             font { family: "Times"; pixelSize: 20; capitalization: Font.AllUppercase }
         }
         Text {
-            text: myText
+            text: root.myText
             color: "lightsteelblue"
             width: parent.width
             horizontalAlignment: Text.AlignRight
@@ -97,14 +98,14 @@ Rectangle {
             font { family: fixedFont.name; pixelSize: 20; weight: Font.Bold; capitalization: Font.AllLowercase }
         }
         Text {
-            text: myText
+            text: root.myText
             color: "lightsteelblue"
             width: parent.width
             wrapMode: Text.WordWrap
             font { family: fixedFont.name; pixelSize: 20; italic: true; capitalization: Font.SmallCaps }
         }
         Text {
-            text: myText
+            text: root.myText
             color: "lightsteelblue"
             width: parent.width
             wrapMode: Text.WordWrap
@@ -112,7 +113,7 @@ Rectangle {
         }
         Text {
             text: {
-                if (webFont.status == FontLoader.Ready) myText
+                if (webFont.status == FontLoader.Ready) root.myText
                 else if (webFont.status == FontLoader.Loading) "Loading..."
                 else if (webFont.status == FontLoader.Error) "Error loading font"
             }

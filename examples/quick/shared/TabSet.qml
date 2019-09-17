@@ -78,6 +78,7 @@ Item {
         Repeater {
             model: stack.children.length
             delegate: Rectangle {
+                required property int index
                 width: tabWidget.width / stack.children.length
                 height: Math.max(Screen.pixelDensity * 7, label.implicitHeight * 1.2)
 
@@ -90,18 +91,18 @@ Item {
                     anchors { fill: parent; leftMargin: 2; topMargin: 5; rightMargin: 1 }
                     border { left: 7; right: 7 }
                     source: "images/tab.png"
-                    visible: tabWidget.current == index
+                    visible: tabWidget.current == parent.index
                 }
                 Text {
                     id: label
                     horizontalAlignment: Qt.AlignHCenter; verticalAlignment: Qt.AlignVCenter
                     anchors.fill: parent
-                    text: stack.children[index].title
+                    text: stack.children[parent.index].title
                     elide: Text.ElideRight
-                    font.bold: tabWidget.current == index
+                    font.bold: tabWidget.current == parent.index
                 }
                 TapHandler {
-                    onTapped: tabWidget.current = index
+                    onTapped: tabWidget.current = parent.index
                 }
             }
         }

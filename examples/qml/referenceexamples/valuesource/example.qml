@@ -56,7 +56,7 @@ BirthdayParty {
     HappyBirthdaySong on announcement { name: "Bob Jones" }
 // ![0]
 
-    onPartyStarted: console.log("This party started rockin' at " + time);
+    onPartyStarted: (time) => { console.log("This party started rockin' at " + time); }
 
 
     host: Boy {

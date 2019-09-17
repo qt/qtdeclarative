@@ -84,8 +84,8 @@ Rectangle {
             Repeater {
                 model: 3
                 Loader {
-                    property int value: index
-                    sourceComponent: positionerDelegate
+                    required property int index
+                    sourceComponent: PositionerDelegate {}
                 }
             }
         }
@@ -106,8 +106,8 @@ Rectangle {
             Repeater {
                 model: 8
                 Loader {
-                    property int value: index
-                    sourceComponent: positionerDelegate
+                    required property int index
+                    sourceComponent: PositionerDelegate {}
                 }
             }
         }
@@ -128,8 +128,8 @@ Rectangle {
             Repeater {
                 model: 8
                 Loader {
-                    property int value: index
-                    sourceComponent: positionerDelegate
+                    required property int index
+                    sourceComponent: PositionerDelegate {}
                 }
             }
         }
@@ -152,7 +152,7 @@ Rectangle {
             layoutDirection: root.direction
             orientation: Qt.Horizontal
             model: 48
-            delegate: viewDelegate
+            delegate: ViewDelegate {}
         }
 
         Text {
@@ -166,7 +166,7 @@ Rectangle {
             cellWidth: 50; cellHeight: 50
             layoutDirection: root.direction
             model: 48
-            delegate: viewDelegate
+            delegate: ViewDelegate {}
         }
 
         Rectangle {
@@ -230,35 +230,34 @@ Rectangle {
         }
     }
 
-    Component {
-        id: positionerDelegate
+    component PositionerDelegate : Rectangle {
+        width: 40
+        height: 40
+        property int lightness: parent.index + 1;
+        color: Qt.rgba(0.8 / lightness, 0.8 / lightness, 0.8 / lightness, 1.0)
+        Text {
+            text: parent.lightness
+            color: "white"
+            font.pixelSize: 18
+            anchors.centerIn: parent
+        }
+    }
+
+    component ViewDelegate : Item {
+        id: delegateItem
+        required property int index
+        width: (listView.effectiveLayoutDirection == Qt.LeftToRight  ? (index == 48 - 1) : (index == 0)) ? 40 : 50
         Rectangle {
             width: 40; height: 40
-            color: Qt.rgba(0.8/(parent.value+1),0.8/(parent.value+1),0.8/(parent.value+1),1.0)
+            color: Qt.rgba(0.5 + (48 - delegateItem.index) * Math.random() / 48,
+                           0.3 + delegateItem.index * Math.random() / 48,
+                           0.3 * Math.random(),
+                           1.0)
             Text {
-                text: parent.parent.value+1
+                text: delegateItem.index + 1
                 color: "white"
                 font.pixelSize: 18
                 anchors.centerIn: parent
-            }
-        }
-    }
-    Component {
-        id: viewDelegate
-        Item {
-            width: (listView.effectiveLayoutDirection == Qt.LeftToRight  ? (index == 48 - 1) : (index == 0)) ? 40 : 50
-            Rectangle {
-                width: 40; height: 40
-                color: Qt.rgba(0.5+(48 - index)*Math.random()/48,
-                               0.3+index*Math.random()/48,
-                               0.3*Math.random(),
-                               1.0)
-                Text {
-                    text: index+1
-                    color: "white"
-                    font.pixelSize: 18
-                    anchors.centerIn: parent
-                }
             }
         }
     }

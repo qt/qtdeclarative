@@ -48,6 +48,7 @@
 **
 ****************************************************************************/
 
+import QtQml 2.12
 import QtQuick 2.12
 import QtQuick.Window 2.3
 import QtQuick.Controls 2.2
@@ -81,11 +82,14 @@ ApplicationWindow {
             implicitWidth: 15
             implicitHeight: 15
 
-            color: model.value ? "#f3f3f4" : "#b5b7bf"
+            required property var model
+            required property bool value
+
+            color: value ? "#f3f3f4" : "#b5b7bf"
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: model.value = !model.value
+                onClicked: parent.model.value = !parent.value
             }
         }
         //! [tableview]

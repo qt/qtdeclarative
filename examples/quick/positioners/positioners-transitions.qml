@@ -48,6 +48,7 @@
 **
 ****************************************************************************/
 
+import QtQml 2.0
 import QtQuick 2.0
 
 Item {
@@ -215,9 +216,9 @@ Item {
             opacity: page.effectiveOpacity
         }
 
-        Rectangle { color: "#80c342"; width:page. smallSize; height: page.smallSize }
-        Rectangle { color: "#14aaff"; width: smallSize; height: page.smallSize }
-        Rectangle { color: "#6400aa"; width: page.page.smallSize; height: page.smallSize }
+        Rectangle { color: "#80c342"; width: page.smallSize; height: page.smallSize }
+        Rectangle { color: "#14aaff"; width: page.smallSize; height: page.smallSize }
+        Rectangle { color: "#6400aa"; width: page.smallSize; height: page.smallSize }
     }
 
     Flow {

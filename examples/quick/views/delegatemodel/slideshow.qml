@@ -74,6 +74,8 @@ Rectangle {
 
             width: 76; height: 76
 
+            required property string thumbnail
+
             Rectangle {
                 id: image
                 x: 0; y: 0; width: 76; height: 76
@@ -86,7 +88,7 @@ Rectangle {
                     anchors.leftMargin: 1
                     anchors.topMargin: 1
 
-                    source: thumbnail
+                    source: delegateItem.thumbnail
                     fillMode: Image.PreserveAspectFit
                 }
 

@@ -55,6 +55,9 @@ Rectangle {
     width: ListView.view.width
     height: button.implicitHeight + 22
 
+    required property string name
+    required property string description
+
     signal clicked()
 
     gradient: Gradient {
@@ -110,7 +113,7 @@ Rectangle {
                 anchors.leftMargin: 10
                 anchors.right: parent.right
                 anchors.rightMargin: 10
-                text: name
+                text: container.name
                 color: "black"
                 font.pixelSize: 22
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
@@ -122,7 +125,7 @@ Rectangle {
                 id: buttonLabel2
                 anchors.left: parent.left
                 anchors.leftMargin: 10
-                text: description
+                text: container.description
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 color: "#666"
                 font.pixelSize: 12

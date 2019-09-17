@@ -53,7 +53,9 @@ import QtQuick 2.0
 //! [0]
 Item {
     id: root
-    property string colorKey
+
+    required property string colorKey
+    required property int modelData
 
     width: 64; height: 64
 
@@ -74,9 +76,9 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
 
-            color: colorKey
+            color: root.colorKey
 
-            Drag.keys: [ colorKey ]
+            Drag.keys: [ root.colorKey ]
             Drag.active: mouseArea.drag.active
             Drag.hotSpot.x: 32
             Drag.hotSpot.y: 32
@@ -85,7 +87,7 @@ Item {
                 anchors.fill: parent
                 color: "white"
                 font.pixelSize: 48
-                text: modelData + 1
+                text: root.modelData + 1
                 horizontalAlignment:Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }

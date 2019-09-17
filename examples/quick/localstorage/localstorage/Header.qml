@@ -59,6 +59,9 @@ Item {
     width: Screen.width / 2
     height: Screen.height / 7
 
+    required property ListView listView
+    required property Text statusText
+
     function insertrec() {
         var rowid = parseInt(JS.dbInsert(dateInput.text, descInput.text, distInput.text), 10)
         if (rowid) {
@@ -148,7 +151,7 @@ Item {
                         }
                         onEditingFinished: {
                             if (dateInput.text == "") {
-                                statustext.text = "Please fill in the date"
+                                root.statusText.text = "Please fill in the date"
                                 dateInput.forceActiveFocus()
                             }
                         }
@@ -161,10 +164,10 @@ Item {
                         activeFocusOnTab: true
                         onEditingFinished: {
                             if (descInput.text.length < 8) {
-                                statustext.text = "Enter a description of minimum 8 characters"
+                                root.statusText.text = "Enter a description of minimum 8 characters"
                                 descInput.forceActiveFocus()
                             } else {
-                                statustext.text = ""
+                                root.statusText.text = ""
                             }
                         }
                     }
@@ -179,7 +182,7 @@ Item {
                         }
                         onEditingFinished: {
                             if (distInput.text == "") {
-                                statustext.text = "Please fill in the distance"
+                                root.statusText.text = "Please fill in the distance"
                                 distInput.forceActiveFocus()
                             }
                         }
