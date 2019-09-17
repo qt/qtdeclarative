@@ -848,6 +848,18 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
     return true;
 }
 
+bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::PatternElement *element)
+{
+    if (element->isVariableDeclaration()) {
+        QQmlJS::AST::BoundNames names;
+        element->boundNames(&names);
+        for (const auto &name : names)
+            m_currentScope->insertJSIdentifier(name.id, element->scope);
+    }
+
+    return true;
+}
+
 void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *)
 {
     leaveEnvironment();
