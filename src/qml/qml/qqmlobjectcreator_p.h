@@ -126,6 +126,7 @@ public:
     QFiniteStack<QPointer<QObject> > &allCreatedObjects() { return sharedState->allCreatedObjects; }
 
     RequiredProperties &requiredProperties() {return sharedState->requiredProperties;}
+    bool componentHadRequiredProperties() const {return hadRequiredProperties;}
 
 private:
     QQmlObjectCreator(QQmlContextData *contextData, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, QQmlObjectCreatorSharedState *inheritedSharedState);
@@ -172,6 +173,7 @@ private:
     const QQmlPropertyCacheVector *propertyCaches;
     QExplicitlySharedDataPointer<QQmlObjectCreatorSharedState> sharedState;
     bool topLevelCreator;
+    bool hadRequiredProperties;
     QQmlIncubatorPrivate *incubator;
 
     QObject *_qobject;

@@ -345,6 +345,11 @@ RequiredProperties &QQmlComponentPrivate::requiredProperties()
     return state.creator->requiredProperties();
 }
 
+bool QQmlComponentPrivate::hadRequiredProperties() const
+{
+    return state.creator->componentHadRequiredProperties();
+}
+
 void QQmlComponentPrivate::clear()
 {
     if (typeData) {

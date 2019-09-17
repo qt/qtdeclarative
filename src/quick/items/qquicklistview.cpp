@@ -49,6 +49,7 @@
 #include <QtCore/qmath.h>
 
 #include <private/qquicksmoothedanimation_p_p.h>
+#include <private/qqmlcomponent_p.h>
 #include "qplatformdefs.h"
 
 QT_BEGIN_NAMESPACE
@@ -190,6 +191,8 @@ public:
     }
 
     friend class QQuickViewSection;
+
+    static void setSectionHelper(QQmlContext *context, QQuickItem *sectionItem, const QString &section);
 };
 
 //----------------------------------------------------------------------------
@@ -992,14 +995,20 @@ QQuickItem * QQuickListViewPrivate::getSectionItem(const QString &section)
         sectionCache[i] = nullptr;
         sectionItem->setVisible(true);
         QQmlContext *context = QQmlEngine::contextForObject(sectionItem)->parentContext();
-        context->setContextProperty(QLatin1String("section"), section);
+        setSectionHelper(context, sectionItem, section);
     } else {
         QQmlContext *creationContext = sectionCriteria->delegate()->creationContext();
         QQmlContext *context = new QQmlContext(
                 creationContext ? creationContext : qmlContext(q));
-        context->setContextProperty(QLatin1String("section"), section);
-        QObject *nobj = sectionCriteria->delegate()->beginCreate(context);
+        QQmlComponent* delegate = sectionCriteria->delegate();
+        QQmlComponentPrivate* delegatePriv = QQmlComponentPrivate::get(delegate);
+        QObject *nobj = delegate->beginCreate(context);
         if (nobj) {
+            if (delegatePriv->hadRequiredProperties()) {
+                delegate->setInitialProperties(nobj, {{"section", section}});
+            } else {
+                context->setContextProperty(QLatin1String("section"), section);
+            }
             QQml_setParent_noEvent(context, nobj);
             sectionItem = qobject_cast<QQuickItem *>(nobj);
             if (!sectionItem) {
@@ -1069,7 +1078,7 @@ void QQuickListViewPrivate::updateInlineSection(FxListItemSG *listItem)
             listItem->setPosition(pos);
         } else {
             QQmlContext *context = QQmlEngine::contextForObject(listItem->section())->parentContext();
-            context->setContextProperty(QLatin1String("section"), listItem->attached->m_section);
+            setSectionHelper(context, listItem->section(), listItem->attached->m_section);
         }
     } else if (listItem->section()) {
         qreal pos = listItem->position();
@@ -1125,7 +1134,7 @@ void QQuickListViewPrivate::updateStickySections()
             currentSectionItem = getSectionItem(currentSection);
         } else if (QString::compare(currentStickySection, currentSection, Qt::CaseInsensitive)) {
             QQmlContext *context = QQmlEngine::contextForObject(currentSectionItem)->parentContext();
-            context->setContextProperty(QLatin1String("section"), currentSection);
+            setSectionHelper(context, currentSectionItem, currentSection);
         }
         currentStickySection = currentSection;
         if (!currentSectionItem)
@@ -1159,7 +1168,7 @@ void QQuickListViewPrivate::updateStickySections()
             nextSectionItem = getSectionItem(nextSection);
         } else if (QString::compare(nextStickySection, nextSection, Qt::CaseInsensitive)) {
             QQmlContext *context = QQmlEngine::contextForObject(nextSectionItem)->parentContext();
-            context->setContextProperty(QLatin1String("section"), nextSection);
+            setSectionHelper(context, nextSectionItem, nextSection);
         }
         nextStickySection = nextSection;
         if (!nextSectionItem)
@@ -1752,6 +1761,14 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
         fixup(data, minExtent, maxExtent);
         return false;
     }
+}
+
+void QQuickListViewPrivate::setSectionHelper(QQmlContext *context, QQuickItem *sectionItem, const QString &section)
+{
+    if (context->contextProperty(QLatin1String("section")).isValid())
+        context->setContextProperty(QLatin1String("section"), section);
+    else
+        sectionItem->setProperty("section", section);
 }
 
 //----------------------------------------------------------------------------

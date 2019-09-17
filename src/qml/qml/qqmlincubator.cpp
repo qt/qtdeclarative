@@ -690,6 +690,11 @@ RequiredProperties &QQmlIncubatorPrivate::requiredProperties()
     return creator->requiredProperties();
 }
 
+bool QQmlIncubatorPrivate::hadRequiredProperties() const
+{
+    return creator->componentHadRequiredProperties();
+}
+
 /*!
 Stores a mapping from property names to initial values with which the incubated
 component will be initialized

@@ -127,6 +127,7 @@ private slots:
     void qAbstractItemModel_package_sections();
     void qAbstractItemModel_sections();
     void sectionsPositioning();
+    void sectionsDelegate_data();
     void sectionsDelegate();
     void sectionsDragOutsideBounds_data();
     void sectionsDragOutsideBounds();
@@ -279,6 +280,8 @@ private slots:
     void setPositionOnLayout();
     void touchCancel();
     void resizeAfterComponentComplete();
+
+    void delegateWithRequiredProperties();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -2158,8 +2161,17 @@ void tst_QQuickListView::sections(const QUrl &source)
     QTRY_COMPARE(item->height(), 40.0);
 }
 
+void tst_QQuickListView::sectionsDelegate_data()
+{
+    QTest::addColumn<QUrl>("path");
+    QTest::addRow("implicit") << testFileUrl("listview-sections_delegate.qml");
+    QTest::addRow("required") << testFileUrl("listview-sections_delegate_required.qml");
+}
+
 void tst_QQuickListView::sectionsDelegate()
 {
+    QFETCH(QUrl, path);
+
     QScopedPointer<QQuickView> window(createView());
 
     QaimModel model;
@@ -2169,7 +2181,7 @@ void tst_QQuickListView::sectionsDelegate()
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    window->setSource(testFileUrl("listview-sections_delegate.qml"));
+    window->setSource(path);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
@@ -9035,6 +9047,90 @@ void tst_QQuickListView::resizeAfterComponentComplete()  // QTBUG-76487
 
     QObject *lastItem = qvariant_cast<QObject *>(listView->property("lastItem"));
     QTRY_COMPARE(lastItem->property("y").toInt(), 9 * lastItem->property("height").toInt());
+}
+
+class Animal
+{
+public:
+    Animal(const int cost, const QString &name) {m_name = name; m_cost = cost;}
+
+    int cost() const {return m_cost;}
+    QString name() const {return m_name;}
+
+    QString m_name;
+    int m_cost;
+};
+
+class FruitModel : public QAbstractListModel
+{
+    Q_OBJECT
+public:
+    enum AnimalRoles {
+        NameRole = Qt::UserRole + 1,
+        CostRole
+    };
+
+    FruitModel(QObject* = nullptr) {
+        m_animals.push_back(Animal {4, QLatin1String("Melon")});
+        m_animals.push_back(Animal {5, QLatin1String("Cherry")});
+    }
+
+    int rowCount(const QModelIndex & = QModelIndex()) const override {return m_animals.count();}
+
+    QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const override {
+        if (!checkIndex(index))
+            return {};
+        const Animal &animal = m_animals[index.row()];
+        if (role == CostRole)
+            return animal.cost();
+        else if (role == NameRole)
+            return animal.name();
+        return QVariant();
+    }
+
+protected:
+    QHash<int, QByteArray> roleNames() const override {
+        QHash<int, QByteArray> roles;
+        roles[CostRole] = "cost";
+        roles[NameRole] = "name";
+        return roles;
+    }
+private:
+    QList<Animal> m_animals;
+};
+
+void tst_QQuickListView::delegateWithRequiredProperties()
+{
+    FruitModel myModel;
+    qmlRegisterSingletonInstance("Qt.fruit", 1, 0, "FruitModelCpp", &myModel);
+    {
+        // ListModel
+        QTest::ignoreMessage(QtMsgType::QtDebugMsg, "Apple2");
+        QTest::ignoreMessage(QtMsgType::QtDebugMsg, "Orange3");
+        QTest::ignoreMessage(QtMsgType::QtDebugMsg, "Banana1");
+        QScopedPointer<QQuickView> window(createView());
+        window->setInitialProperties({{QLatin1String("useCpp"), false}});
+        window->setSource(testFileUrl("delegatesWithRequiredProperties.qml"));
+        window->show();
+        QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+        QObject *listView = window->rootObject();
+        QVERIFY(listView);
+    }
+    {
+        // C++ model
+        QTest::ignoreMessage(QtMsgType::QtDebugMsg, "Melon4");
+        QTest::ignoreMessage(QtMsgType::QtDebugMsg, "Cherry5");
+        QScopedPointer<QQuickView> window(createView());
+        window->setInitialProperties({{QLatin1String("useCpp"), true}});
+        window->setSource(testFileUrl("delegatesWithRequiredProperties.qml"));
+
+        window->show();
+        QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+        QObject *listView = window->rootObject();
+        QVERIFY(listView);
+    }
 }
 
 QTEST_MAIN(tst_QQuickListView)
