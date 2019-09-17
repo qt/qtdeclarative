@@ -8,6 +8,6 @@ project(QtDeclarative
 )
 
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui Widgets Network
-                                           OPTIONAL_COMPONENTS Sql Concurrent)
+                                           OPTIONAL_COMPONENTS Sql Concurrent Test)
 
 qt_build_repo()
