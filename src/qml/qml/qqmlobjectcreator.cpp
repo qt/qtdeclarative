@@ -82,6 +82,7 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, const QQmlR
     , propertyCaches(&compilationUnit->propertyCaches)
     , sharedState(new QQmlObjectCreatorSharedState)
     , topLevelCreator(true)
+    , hadRequiredProperties(false)
     , incubator(incubator)
 {
     init(parentContext);
@@ -1523,6 +1524,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         const QV4::CompiledData::Property* property = _compiledObject->propertiesBegin() + propertyIndex;
         QQmlPropertyData *propertyData = _propertyCache->property(_propertyCache->propertyOffset() + propertyIndex);
         if (property->isRequired) {
+            hadRequiredProperties = true;
             sharedState->requiredProperties.insert(propertyData,
                                                    RequiredPropertyInfo {compilationUnit->stringAt(property->nameIndex), compilationUnit->finalUrl(), property->location, {}});
         }

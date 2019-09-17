@@ -149,6 +149,8 @@ private slots:
     void movementDirection();
     void removePath();
     void objectModelMove();
+    void requiredPropertiesInDelegate();
+    void requiredPropertiesInDelegatePreventUnrelated();
 };
 
 class TestObject : public QObject
@@ -2656,6 +2658,34 @@ void tst_QQuickPathView::objectModelMove()
         const QQuickItemPrivate *childItemPrivate = QQuickItemPrivate::get(childItem);
         QCOMPARE(childItemPrivate->changeListeners.size(), 0);
     }
+}
+
+void tst_QQuickPathView::requiredPropertiesInDelegate()
+{
+    {
+        QTest::ignoreMessage(QtMsgType::QtInfoMsg, "Bill JonesBerlin0");
+        QTest::ignoreMessage(QtMsgType::QtInfoMsg, "Jane DoeOslo1");
+        QTest::ignoreMessage(QtMsgType::QtInfoMsg, "John SmithOulo2");
+        QScopedPointer<QQuickView> window(createView());
+        window->setSource(testFileUrl("delegateWithRequiredProperties.qml"));
+        window->show();
+    }
+    {
+        QScopedPointer<QQuickView> window(createView());
+        window->setSource(testFileUrl("delegateWithRequiredProperties.2.qml"));
+        window->show();
+        QTRY_VERIFY(window->rootObject()->property("working").toBool());
+    }
+}
+
+void tst_QQuickPathView::requiredPropertiesInDelegatePreventUnrelated()
+{
+    QTest::ignoreMessage(QtMsgType::QtInfoMsg, "ReferenceError");
+    QTest::ignoreMessage(QtMsgType::QtInfoMsg, "ReferenceError");
+    QTest::ignoreMessage(QtMsgType::QtInfoMsg, "ReferenceError");
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("delegatewithUnrelatedRequiredPreventsAccessToModel.qml"));
+    window->show();
 }
 
 QTEST_MAIN(tst_QQuickPathView)

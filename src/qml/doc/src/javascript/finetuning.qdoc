@@ -1,0 +1,104 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+
+\page qtqml-javascript-finetuning.html
+\title Fine-tuning the JavaScript Engine
+\brief Describes the environment variables available, to control how Javascript is run.
+
+Running JavaScript code can be influenced by a few environment variables, particularly:
+
+\table
+    \header
+        \li Environment Variable
+        \li Description
+    \row
+        \li \c{QV4_JIT_CALL_THRESHOLD}
+        \li The JavaScript engine contains a Just-In-Time compiler (JIT). The JIT will compile
+            frequently run JavaScript functions into machine code to run faster. This
+            environment variable determines how often a function needs to be run to be
+            considered for JIT compilation. The default value is 3 times.
+    \row
+        \li \c{QV4_FORCE_INTERPRETER}
+        \li Setting this environment variable disables the JIT and runs all
+            functions through the interpreter, no matter how often they are called.
+    \row
+        \li \c{QV4_JS_MAX_STACK_SIZE}
+        \li The JavaScript engine reserves a special memory area as a stack to run JavaScript.
+            This stack is separate from the C++ stack. Usually this area is 4MB in size. If this
+            environment variable contains a number, the JavaScript engine interprets it as the
+            size of the memory area, in bytes, to be allocated as the JavaScript stack.
+    \row
+        \li \c{QV4_GC_MAX_STACK_SIZE}
+        \li In addition to the regular JavaScript stack, the JavaScript engine keeps another stack
+            for the garbage collector, usually 2MB of memory. If the garbage collector needs to
+            handle an excessive number of objects at the same time, this stack might overrun.
+            If it contains a number, this environment variable is interpreted as the size in bytes
+            of the memory area that will be allocated as the stack for the garbage collector.
+    \row
+        \li \c{QV4_CRASH_ON_STACKOVERFLOW}
+        \li Usually the JavaScript engine tries to catch C++ stack overflows caused by
+            excessively recursive JavaScript code, and generates a non-fatal error condition.
+            There are separate recursion checks for compiling JavaScript and running JavaScript. A
+            stack overflow when compiling JavaScript indicates that the code contains deeply nested
+            objects and functions. A stack overflow at run-time indicates that the code results in
+            a deeply recursive program. The check for this is only indirectly related to the
+            JavaScript stack size mentioned above, as each JavaScript function call consumes stack
+            space on both, the C++ and the JavaScript stack. The code that checks for excessive
+            recursion is necessarily conservative, as the available stack size depends on many
+            factors and can often be customized by the user. With this environment variable set, the
+            JavaScript engine does not check for stack overflows when compiling or running
+            JavaScript and will not generate exceptions for them. Instead, when the stack overflows
+            the program attempts an invalid memory access. This most likely terminates the
+            program. In turn, the program gets to use up all the stack space the operating system
+            can provide.
+            \warning malicious code may be able to evade the termination and access unexpected
+                     memory locations this way.
+    \row
+        \li \c{QV4_MAX_CALL_DEPTH}
+        \li Stack overflows when running (as opposed to compiling) JavaScript are prevented by
+            controlling the call depth: the number of nested function invocations. By
+            default, an exception is generated if the call depth exceeds 1234. If it contains a
+            number, this environment variable overrides the maximum call depth. Beware that the
+            recursion limit when compiling JavaScript is not affected.
+    \row
+        \li \c{QV4_MM_AGGRESSIVE_GC}
+        \li Setting this environment variable runs the garbage collector before each memory
+            allocation. This is very expensive at run-time, but it quickly uncovers many memory
+            management errors, for example the manual deletion of an object belonging to the QML
+            engine from C++.
+    \row
+        \li \c{QV4_PROFILE_WRITE_PERF_MAP}
+        \li On Linux, the \c perf utility can be used to profile programs. To analyze JIT-compiled
+            JavaScript functions, it needs to know about their names and locations in memory. To
+            provide this information, there's a convention to create a special file called
+            \c{perf-<pid>.map} in \e{/tmp} which perf then reads. This environment variable, if
+            set, causes the JIT to generate this file.
+\endtable
+
+*/
+

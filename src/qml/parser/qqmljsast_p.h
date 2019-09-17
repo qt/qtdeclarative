@@ -275,10 +275,16 @@ public:
     virtual FunctionExpression *asFunctionDefinition();
     virtual ClassExpression *asClassDefinition();
 
+    bool ignoreRecursionDepth() const;
+
     inline void accept(Visitor *visitor)
     {
         Visitor::RecursionDepthCheck recursionCheck(visitor);
-        if (recursionCheck()) {
+
+        // Stack overflow is uncommon, ignoreRecursionDepth() only returns true if
+        // QV4_CRASH_ON_STACKOVERFLOW is set, and ignoreRecursionDepth() needs to be out of line.
+        // Therefore, check for ignoreRecursionDepth() _after_ calling the inline recursionCheck().
+        if (recursionCheck() || ignoreRecursionDepth()) {
             if (visitor->preVisit(this))
                 accept0(visitor);
             visitor->postVisit(this);

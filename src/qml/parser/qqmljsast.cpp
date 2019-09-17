@@ -105,6 +105,12 @@ ClassExpression *Node::asClassDefinition()
     return nullptr;
 }
 
+bool Node::ignoreRecursionDepth() const
+{
+    static const bool doIgnore = qEnvironmentVariableIsSet("QV4_CRASH_ON_STACKOVERFLOW");
+    return doIgnore;
+}
+
 ExpressionNode *ExpressionNode::expressionCast()
 {
     return this;

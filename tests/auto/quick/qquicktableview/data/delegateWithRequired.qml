@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,20 +37,34 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLAPIVERSION_P_H
-#define QQMLAPIVERSION_P_H
+import QtQuick 2.12
+import QtQuick.Window 2.3
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API. It exists purely as an
-// implementation detail. This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+Item {
+    width: 640
+    height: 450
 
-#define Q_QML_PRIVATE_API_VERSION 6
+    property alias tableView: tableView
 
-#endif // QQMLAPIVERSION_P_H
+    TableView {
+        id: tableView
+        width: 600
+        height: 400
+        delegate: tableViewDelegate
+    }
+
+    Component {
+        id: tableViewDelegate
+        Rectangle {
+            id: rect
+            required property string position
+            required property bool hasModelChildren
+            required property QtObject model
+            Text {text: rect.position}
+            implicitWidth: 100
+            implicitHeight: 100
+            Component.onCompleted: () => {if (rect.position === "R1:C1" && rect.model.hasModelChildren == rect.hasModelChildren)  console.info("success")}
+        }
+    }
+
+}
