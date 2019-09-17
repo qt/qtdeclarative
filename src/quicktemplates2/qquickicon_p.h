@@ -107,7 +107,7 @@ public:
     QQuickIcon resolve(const QQuickIcon &other) const;
 
 private:
-    QSharedDataPointer<QQuickIconPrivate> d;
+    QExplicitlySharedDataPointer<QQuickIconPrivate> d;
 };
 
 QT_END_NAMESPACE
