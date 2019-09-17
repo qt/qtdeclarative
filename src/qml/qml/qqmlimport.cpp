@@ -1751,6 +1751,16 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 
     addImportPath(QStringLiteral("qrc:/qt-project.org/imports"));
     addImportPath(QCoreApplication::applicationDirPath());
+#if defined(Q_OS_ANDROID)
+    addImportPath(QStringLiteral("qrc:/android_rcc_bundle/qml"));
+    if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QT_BUNDLED_LIBS_PATH"))) {
+        const QString envImportPath = qEnvironmentVariable("QT_BUNDLED_LIBS_PATH");
+        QLatin1Char pathSep(':');
+        QStringList paths = envImportPath.split(pathSep, QString::SkipEmptyParts);
+        for (int ii = paths.count() - 1; ii >= 0; --ii)
+            addPluginPath(paths.at(ii));
+    }
+#endif
 }
 
 QQmlImportDatabase::~QQmlImportDatabase()
@@ -1798,6 +1808,18 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
         if (!resolvedPath.endsWith(Slash))
             resolvedPath += Slash;
 
+#if defined(Q_OS_ANDROID)
+        if (qmldirPath.size() > 25 && qmldirPath.at(0) == QLatin1Char(':') && qmldirPath.at(1) == QLatin1Char('/') &&
+           qmldirPath.startsWith(QStringLiteral(":/android_rcc_bundle/qml/"), Qt::CaseInsensitive)) {
+            QString pluginName = qmldirPath.mid(21) + Slash + baseName;
+            auto bundledPath = resolvedPath + QLatin1String("lib") + pluginName.replace(QLatin1Char('/'), QLatin1Char('_'));
+            for (const QString &suffix : suffixes) {
+                const QString absolutePath = typeLoader->absoluteFilePath(bundledPath + suffix);
+                if (!absolutePath.isEmpty())
+                    return absolutePath;
+            }
+        }
+#endif
         resolvedPath += prefix + baseName;
         for (const QString &suffix : suffixes) {
             const QString absolutePath = typeLoader->absoluteFilePath(resolvedPath + suffix);
