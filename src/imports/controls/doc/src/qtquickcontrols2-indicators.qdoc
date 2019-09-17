@@ -31,7 +31,7 @@
     \ingroup qtquickcontrols2-guidelines
     \brief Guidelines for indicator controls
 
-    Qt Quick Controls 2 offers a selection of indicator-like controls.
+    Qt Quick Controls offers a selection of indicator-like controls.
 
     \annotatedlist qtquickcontrols2-indicators
 
@@ -78,6 +78,6 @@
 
     \section1 Related Information
     \list
-    \li \l {Qt Quick Controls 2 Guidelines}
+    \li \l {Qt Quick Controls Guidelines}
     \endlist
 */

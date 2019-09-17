@@ -27,10 +27,11 @@
 
 /*!
     \page qtquickcontrols2-customize.html
-    \title Customizing Qt Quick Controls 2
+    \keyword Customizing Qt Quick Controls 2
+    \title Customizing Qt Quick Controls
     \brief A set of UI controls to create user interfaces in Qt Quick
 
-    Qt Quick Controls 2 consist of a hierarchy (tree) of items. In order to
+    Qt Quick Controls consist of a hierarchy (tree) of items. In order to
     provide a custom look and feel, the default QML implementation of each
     item can be replaced with a custom one.
 
@@ -119,7 +120,7 @@
     \endqml
 
     As you now have the \c MyControls namespace, you can name the controls after
-    their actual counterparts in the Qt Quick Controls 2 module. You can repeat
+    their actual counterparts in the Qt Quick Controls module. You can repeat
     this process for any control that you wish to add.
 
     An added benefit of these three methods is that it's not necessary to
@@ -132,9 +133,9 @@
 
     \section2 Definition of a Style
 
-    In Qt Quick Controls 2, a style is essentially an interchangeable set of
+    In Qt Quick Controls, a style is essentially an interchangeable set of
     QML files within a single directory. There are three requirements for a style
-    to be \l {Using Styles in Qt Quick Controls 2}{usable}:
+    to be \l {Using Styles in Qt Quick Controls}{usable}:
 
     \list
     \li At least one QML file whose name matches a control (for example,
@@ -143,7 +144,7 @@
         {QtQuick.Templates} import as the root item. For example,
         Button.qml must contain a Button template as its root item.
 
-        If we instead used the corresponding type from the \l {Qt Quick Controls 2}
+        If we instead used the corresponding type from the \l {Qt Quick Controls}
         {QtQuick.Controls} import as we did in the previous section, it would not work:
         the control we were defining would try to derive from itself.
     \li The files must be in a directory in the filesystem or in the
@@ -176,7 +177,7 @@
     Using the approach above, it is possible to preview a custom style
     in \l {Using Qt Quick Designer}{Qt Quick Designer}. In order to do so,
     ensure that the project has a
-    \l {Qt Quick Controls 2 Configuration File}{qtquickcontrols2.conf} file,
+    \l {Qt Quick Controls Configuration File}{qtquickcontrols2.conf} file,
     and that the following entry exists:
 
     \badcode
@@ -185,7 +186,7 @@
     \endcode
 
     For more information, take a look at the
-    \l {Qt Quick Controls 2 - Flat Style}{Flat Style example}.
+    \l {Qt Quick Controls - Flat Style}{Flat Style example}.
 
     \section2 Style-specific C++ Extensions
 
@@ -390,7 +391,7 @@
 
     With that in place, we can run our example. To tell the application to
     use our new style, we pass \c {-style :/mystyle} as an application
-    argument, but there are \l {Using Styles in Qt Quick Controls 2}{many
+    argument, but there are \l {Using Styles in Qt Quick Controls}{many
     ways} to specify the style to use.
 
     The end result:

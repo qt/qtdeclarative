@@ -27,11 +27,11 @@
 
 /*!
     \page qtquickcontrols2-fileselectors.html
-    \title Using File Selectors with Qt Quick Controls 2
+    \title Using File Selectors with Qt Quick Controls
 
     \l {QFileSelector}{File selectors} provide a convenient way of selecting
     file variants. Qt offers the platform name and the locale as built-in
-    selectors. Qt Quick Controls 2 extends the built-in selectors with the name
+    selectors. Qt Quick Controls extends the built-in selectors with the name
     (lowercase) of the style that an application is running with.
 
     By using file selectors, style-specific tweaks can be applied without
@@ -41,7 +41,7 @@
     to some code duplication, but on the other hand, cuts the aforementioned
     hard dependency to the style, and leads to simpler and more efficient
     QML code. The same technique is used to implement the \l {Styling Qt
-    Quick Controls 2}{Qt Quick Controls 2 styles}.
+    Quick Controls}{Qt Quick Controls styles}.
 
     The following example demonstrates a custom rounded button that has a
     styled drop shadow in the \l {Material Style}{Material style}, and looks
@@ -136,6 +136,6 @@
     \list
       \li \l {QFileSelector}
       \li \l {QQmlFileSelector}
-      \li \l {Styling Qt Quick Controls 2}
+      \li \l {Styling Qt Quick Controls}
     \endlist
 */
