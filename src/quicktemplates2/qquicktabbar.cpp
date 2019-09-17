@@ -92,7 +92,7 @@ QT_BEGIN_NAMESPACE
     \snippet qtquickcontrols2-tabbar-flickable.qml 1
 
     \sa TabButton, {Customizing TabBar}, {Navigation Controls}, {Container Controls},
-        {Focus Management in Qt Quick Controls 2}
+        {Focus Management in Qt Quick Controls}
 */
 
 class QQuickTabBarPrivate : public QQuickContainerPrivate

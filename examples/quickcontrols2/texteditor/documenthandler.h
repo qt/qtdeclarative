@@ -84,6 +84,8 @@ class DocumentHandler : public QObject
     Q_PROPERTY(QString fileType READ fileType NOTIFY fileUrlChanged)
     Q_PROPERTY(QUrl fileUrl READ fileUrl NOTIFY fileUrlChanged)
 
+    Q_PROPERTY(bool modified READ modified WRITE setModified NOTIFY modifiedChanged)
+
 public:
     explicit DocumentHandler(QObject *parent = nullptr);
 
@@ -124,6 +126,9 @@ public:
     QString fileType() const;
     QUrl fileUrl() const;
 
+    bool modified() const;
+    void setModified(bool m);
+
 public Q_SLOTS:
     void load(const QUrl &fileUrl);
     void saveAs(const QUrl &fileUrl);
@@ -149,6 +154,8 @@ Q_SIGNALS:
 
     void loaded(const QString &text);
     void error(const QString &message);
+
+    void modifiedChanged();
 
 private:
     void reset();

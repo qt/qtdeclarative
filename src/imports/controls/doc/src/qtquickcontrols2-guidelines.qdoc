@@ -31,7 +31,7 @@
     \title Qt Quick Controls Guidelines
     \keyword Qt Quick Controls 2 Guidelines
 
-    Qt Quick Controls 2 offers a selection of controls that can be used to
+    Qt Quick Controls offers a selection of controls that can be used to
     build complete interfaces in Qt Quick.
 
     Below you will find practical guidelines on how and when to use
@@ -41,6 +41,6 @@
 
     \section1 Related Information
     \list
-      \li \l{Qt Quick Controls 2 QML Types}{All Qt Quick Controls 2 QML Types}
+      \li \l{Qt Quick Controls QML Types}{All Qt Quick Controls QML Types}
     \endlist
 */

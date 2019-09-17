@@ -27,9 +27,10 @@
 
 /*!
     \page qtquickcontrols2-highdpi.html
-    \title High-DPI Support in Qt Quick Controls 2
+    \keyword High-DPI Support in Qt Quick Controlsi 2
+    \title High-DPI Support in Qt Quick Controls
 
-    Qt Quick Controls 2 support Qt's cross-platform high-DPI scaling introduced in Qt 5.6.
+    Qt Quick Controls support Qt's cross-platform high-DPI scaling introduced in Qt 5.6.
     The feature is opt-in, and can be enabled by setting the \c Qt::AA_EnableHighDpiScaling
     application attribute in C++ before QGuiApplication is constructed:
 
@@ -52,7 +53,7 @@
 
     \warning \l {Qt Quick Controls}{Qt Quick Controls 1.x} are not compatible with Qt's
     automatic high-DPI scaling. There is currently no available solution for high-DPI
-    support in applications wishing to mix Qt Quick Controls and Qt Quick Controls 2.
+    support in applications wishing to mix Qt Quick Controls and Qt Quick Controls.
 
     \section1 Related Information
     \list

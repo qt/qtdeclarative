@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
     \e Yes, \e No, and \e Help.
 
     Button inherits its API from AbstractButton. For instance, you can set
-    \l {AbstractButton::text}{text}, display an \l {Icons in Qt Quick Controls 2}{icon},
+    \l {AbstractButton::text}{text}, display an \l {Icons in Qt Quick Controls}{icon},
     and react to \l {AbstractButton::clicked}{clicks} using the AbstractButton API.
 
     A button emits the signal \l {AbstractButton::}{clicked()} when it is activated by the user.

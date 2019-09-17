@@ -44,6 +44,7 @@
 #include <QtQml/private/qv4qobjectwrapper_p.h>
 #include <QtQml/private/qqmlcomponent_p.h>
 #include <QtQml/private/qqmlengine_p.h>
+#include <QtQml/private/qqmlapiversion_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -210,7 +211,12 @@ void QQuickStackElement::initialize()
         QV4::ScopedValue ipv(scope, properties.value());
         QV4::Scoped<QV4::QmlContext> qmlContext(scope, qmlCallingContext.value());
         QV4::ScopedValue qmlObject(scope, QV4::QObjectWrapper::wrap(v4, item));
+#if Q_QML_PRIVATE_API_VERSION >= 6
+        RequiredProperties requiredPropertiesCurrentlyNotSupported;
+        QQmlComponentPrivate::setInitialProperties(v4, qmlContext, qmlObject, ipv, requiredPropertiesCurrentlyNotSupported, item);
+#else
         QQmlComponentPrivate::setInitialProperties(v4, qmlContext, qmlObject, ipv);
+#endif
         properties.clear();
     }
 
