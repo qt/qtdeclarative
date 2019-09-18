@@ -22,11 +22,8 @@ add_subdirectory(threading)
 add_subdirectory(touchinteraction)
 add_subdirectory(tutorials)
 add_subdirectory(customitems)
-# special case end
-# Needs public QML Plugin APO
-#add_subdirectory(imageprovider)
-#add_subdirectory(imageresponseprovider)
-# special case begin
+add_subdirectory(imageprovider)
+add_subdirectory(imageresponseprovider)
 add_subdirectory(window)
 add_subdirectory(particles)
 add_subdirectory(delegatechooser)
