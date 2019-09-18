@@ -1,5 +1,15 @@
 if(qtc_run|lupdate_run): return()
 
+!contains(QT, qml) {
+    qt_modules = \
+        $$replace(QT, -private$, _private) \
+        $$replace(QT_PRIVATE, -private$, _private)
+    qt_modules = $$resolve_depends(qt_modules, "QT.", ".depends" ".run_depends")
+    !contains(qt_modules, qml): \
+        return()
+    unset(qt_modules)
+}
+
 qtPrepareTool(QML_CACHEGEN, qmlcachegen, _FILTER)
 qtPrepareTool(QMAKE_RCC, rcc, _DEP)
 
