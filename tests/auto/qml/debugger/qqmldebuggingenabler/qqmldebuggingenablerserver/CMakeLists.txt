@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_executable(qqmldebuggingenablerserver
-    GUI
     # special case begin
     # Remove OUTPUT_DIRECTORY and INSTALL_DIRECTORY with $$[QT_INSTALL_TESTS]
     # as these are invalid
