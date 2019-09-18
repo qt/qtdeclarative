@@ -28,7 +28,7 @@ for(res, RESOURCES) {
     contains(rccContents,.*\\.js$)|contains(rccContents,.*\\.qml$)|contains(rccContents,.*\\.mjs$) {
         new_resource = $$qmlCacheResourceFileOutputName($$res)
         mkpath($$dirname(new_resource))
-        system($$QMAKE_QMAKE -install qinstall $$system_quote($$absRes) $$system_quote($$new_resource))
+        dummy = $$system($$QML_CACHEGEN_FILTER --filter-resource-file -o $$system_quote($$new_resource) $$system_quote($$absRes))
         NEWRESOURCES += $$new_resource
         QMLCACHE_LOADER_FLAGS += --resource-file-mapping=$$shell_quote($$absRes=$$new_resource)
 

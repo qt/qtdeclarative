@@ -47,6 +47,7 @@
 
 using namespace QQmlJS;
 
+int filterResourceFile(const QString &input, const QString &output);
 bool generateLoader(const QStringList &compiledFiles, const QString &output,
                     const QStringList &resourceFileMappings, QString *errorString);
 QString symbolNamespaceForPath(const QString &relativePath);
@@ -417,6 +418,8 @@ int main(int argc, char **argv)
     parser.addHelpOption();
     parser.addVersionOption();
 
+    QCommandLineOption filterResourceFileOption(QStringLiteral("filter-resource-file"), QCoreApplication::translate("main", "Filter out QML/JS files from a resource file that can be cached ahead of time instead"));
+    parser.addOption(filterResourceFileOption);
     QCommandLineOption resourceFileMappingOption(QStringLiteral("resource-file-mapping"), QCoreApplication::translate("main", "Path from original resource file to new one"), QCoreApplication::translate("main", "old-name:new-name"));
     parser.addOption(resourceFileMappingOption);
     QCommandLineOption resourceOption(QStringLiteral("resource"), QCoreApplication::translate("main", "Qt resource file that might later contain one of the compiled files"), QCoreApplication::translate("main", "resource-file-name"));
@@ -461,6 +464,10 @@ int main(int argc, char **argv)
     const QString inputFile = sources.first();
     if (outputFileName.isEmpty())
         outputFileName = inputFile + QLatin1Char('c');
+
+    if (parser.isSet(filterResourceFileOption)) {
+        return filterResourceFile(inputFile, outputFileName);
+    }
 
     if (target == GenerateLoader) {
         ResourceFileMapper mapper(sources);
