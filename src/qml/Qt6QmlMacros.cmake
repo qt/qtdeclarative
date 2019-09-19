@@ -214,7 +214,7 @@ function(qt6_add_qml_module target)
         if (NOT dep_version MATCHES "[0-9]+\\.[0-9]+")
             message(FATAL_ERROR "Invalid module dependency version number. Expected VersionMajor.VersionMinor.")
         endif()
-        string(APPEND qmldir_file_contents "dependency ${dep_module} ${dep_version}\n")
+        string(APPEND qmldir_file_contents "depends ${dep_module} ${dep_version}\n")
     endforeach()
 
     file(WRITE ${qmldir_file} ${qmldir_file_contents})
@@ -377,7 +377,7 @@ function(qt6_target_qml_files target)
             string(APPEND file_contents "[singleton] ")
         endif()
 
-        string(APPEND file_contents "${qml_file_typename} ${version} ${qml_file}\n")
+        string(APPEND file_contents "${qml_file_typename} ${qml_file_version} ${qml_file}\n")
 
         if (qml_file_internal)
             string(APPEND file_contents "internal ${qml_file_typename} ${qml_file}\n")
