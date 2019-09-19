@@ -1359,6 +1359,34 @@ void tst_QQuickMouseArea::hoverVisible()
     QCOMPARE(enteredSpy.count(), 1);
 
     QCOMPARE(QPointF(mouseTracker->mouseX(), mouseTracker->mouseY()), QPointF(11,33));
+
+    // QTBUG-77983
+    mouseTracker->setVisible(false);
+    mouseTracker->setEnabled(false);
+
+    QCOMPARE(mouseTracker->hovered(), false);
+    mouseTracker->setVisible(true);
+    // if the enabled property is false, the containsMouse property shouldn't become true
+    // when an invisible mousearea become visible
+    QCOMPARE(mouseTracker->hovered(), false);
+
+    mouseTracker->parentItem()->setEnabled(false);
+    mouseTracker->setVisible(false);
+    mouseTracker->setEnabled(true);
+
+    QCOMPARE(mouseTracker->hovered(), false);
+    mouseTracker->setVisible(true);
+    // if the parent item is not enabled, the containsMouse property will be false, even if
+    // the mousearea is enabled
+    QCOMPARE(mouseTracker->hovered(), false);
+
+    mouseTracker->parentItem()->setEnabled(true);
+    mouseTracker->setVisible(false);
+    mouseTracker->setEnabled(true);
+
+    QCOMPARE(mouseTracker->hovered(), false);
+    mouseTracker->setVisible(true);
+    QCOMPARE(mouseTracker->hovered(), true);
 }
 
 void tst_QQuickMouseArea::hoverAfterPress()

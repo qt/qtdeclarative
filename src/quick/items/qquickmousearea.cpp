@@ -1069,7 +1069,7 @@ void QQuickMouseArea::itemChange(ItemChange change, const ItemChangeData &value)
     Q_D(QQuickMouseArea);
     switch (change) {
     case ItemVisibleHasChanged:
-        if (acceptHoverEvents() && d->hovered != (isVisible() && isUnderMouse())) {
+        if (d->effectiveEnable && d->enabled && acceptHoverEvents() && d->hovered != (isVisible() && isUnderMouse())) {
             if (!d->hovered) {
                 QPointF cursorPos = QGuiApplicationPrivate::lastCursorPosition;
                 d->lastScenePos = d->window->mapFromGlobal(cursorPos.toPoint());
