@@ -539,6 +539,8 @@ QStringList QQuickFolderListModel::nameFilters() const
 void QQuickFolderListModel::setNameFilters(const QStringList &filters)
 {
     Q_D(QQuickFolderListModel);
+    if (d->nameFilters == filters)
+        return;
     d->fileInfoThread.setNameFilters(filters);
     d->nameFilters = filters;
 }
