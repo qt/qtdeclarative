@@ -71,8 +71,7 @@ public:
 
         QQmlWorkerScriptModule::defineModule();
 
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
-        qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
+        qmlRegisterModule(uri, 2, 15);
     }
 };
 

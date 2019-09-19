@@ -1,5 +1,6 @@
 import org.qtproject.AutoTestQmlMixedPluginType 1.5
 import QtQuick 2.0
+import QtQml 2.0
 
 Item {
     property bool test: false

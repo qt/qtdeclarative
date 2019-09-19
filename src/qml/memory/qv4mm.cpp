@@ -223,7 +223,8 @@ Chunk *MemorySegment::allocate(size_t size)
             pageReservation.commit(candidate, size);
             for (uint i = 0; i < requiredChunks; ++i)
                 setBit(candidate - base + i);
-            DEBUG << "allocated chunk " << candidate << hex << size;
+            DEBUG << "allocated chunk " << candidate << Qt::hex << size;
+
             return candidate;
         }
     }
@@ -1024,7 +1025,7 @@ static size_t dumpBins(BlockAllocator *b, const char *title)
     SDUMP() << "    large slot map";
     HeapItem *h = b->freeBins[BlockAllocator::NumBins - 1];
     while (h) {
-        SDUMP() << "        " << hex << (quintptr(h)/32) << h->freeData.availableSlots;
+        SDUMP() << "        " << Qt::hex << (quintptr(h)/32) << h->freeData.availableSlots;
         h = h->freeData.next;
     }
 

@@ -1,3 +1,4 @@
 module QtQml.WorkerScript
 plugin workerscriptplugin
 classname QtQmlWorkerScriptPlugin
+designersupported

@@ -224,30 +224,6 @@ void QQmlEnginePrivate::defineModule()
 #endif
 }
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-void QQmlEnginePrivate::registerQuickTypes()
-{
-    // Don't add anything here. These are only for backwards compatibility.
-
-    const char uri[] = "QtQuick";
-
-    qmlRegisterType<QQmlComponent>(uri, 2, 0, "Component");
-    qmlRegisterType<QObject>(uri, 2, 0, "QtObject");
-    qmlRegisterType<QQmlBind>(uri, 2, 0, "Binding");
-    qmlRegisterType<QQmlBind, 8>(uri, 2, 8, "Binding");
-    qmlRegisterCustomType<QQmlConnections>(uri, 2, 0, "Connections", new QQmlConnectionsParser);
-    qmlRegisterCustomType<QQmlConnections, 3>(uri, 2, 7, "Connections", new QQmlConnectionsParser);
-#if QT_CONFIG(qml_animation)
-    qmlRegisterType<QQmlTimer>(uri, 2, 0,"Timer");
-#endif
-    qmlRegisterType<QQmlLoggingCategory>(uri, 2, 8, "LoggingCategory");
-    qmlRegisterType<QQmlLoggingCategory, 12>(uri, 2, 12, "LoggingCategory");
-#if QT_CONFIG(qml_locale)
-    qmlRegisterUncreatableType<QQmlLocale>(uri, 2, 0, "Locale", QQmlEngine::tr("Locale cannot be instantiated. Use Qt.locale()"));
-#endif
-}
-#endif // QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-
 bool QQmlEnginePrivate::designerMode()
 {
     return s_designerMode;

@@ -77,8 +77,7 @@ public:
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQml.Models"));
         QQmlModelsModule::defineModule();
 
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
-        qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
+        qmlRegisterModule(uri, 2, 15);
     }
 };
 //![class decl]
