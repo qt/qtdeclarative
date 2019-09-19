@@ -42,10 +42,6 @@
 #include <QtQml/private/qqmlcomponentattached_p.h>
 #include <QtQml/private/qqmlbind_p.h>
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-#include <QtQmlModels/private/qqmlmodelsmodule_p.h>
-#endif
-
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -76,12 +72,7 @@ public:
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQml"));
         QQmlEnginePrivate::defineModule();
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-        QQmlModelsModule::registerQmlTypes();
-#endif
-
-        // Auto-increment the import to stay in sync with ALL future QtQml minor versions from 5.11 onward
-        qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
+        qmlRegisterModule(uri, 2, 15);
     }
 };
 //![class decl]

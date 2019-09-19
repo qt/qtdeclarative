@@ -159,9 +159,6 @@ private:
     QSize m_textureSize;
     QRect m_dirtyRect;
     QColor m_fillColor;
-#if QT_VERSION >= 0x060000
-#warning "Remove m_contentsScale and assume 1 everywhere"
-#endif
     qreal m_contentsScale;
 
     bool m_dirtyContents : 1;

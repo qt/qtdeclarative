@@ -64,8 +64,7 @@ public:
         qmlRegisterType<QQuickShapeRadialGradient>(uri, 1, 0, "RadialGradient");
         qmlRegisterType<QQuickShapeConicalGradient>(uri, 1, 0, "ConicalGradient");
 
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions
-        qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
+        qmlRegisterModule(uri, 1, 15);
 
         // revision in Qt 5.11: added containsMode property
         qmlRegisterType<QQuickShape, 11>(uri, 1, 11, "Shape");

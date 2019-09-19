@@ -38,14 +38,7 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlextensionplugin.h>
-
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-#include <QtQml/private/qqmlengine_p.h>
-#include <QtQmlModels/private/qqmlmodelsmodule_p.h>
-#if QT_CONFIG(qml_worker_script)
-#include <QtQmlWorkerScript/private/qqmlworkerscriptmodule_p.h>
-#endif
-#endif // QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#include <QtQml/QQmlEngine>
 
 #include <private/qtquick2_p.h>
 
@@ -63,17 +56,9 @@ public:
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick"));
         Q_UNUSED(uri);
         moduleDefined = true;
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-        QQmlEnginePrivate::registerQuickTypes();
-        QQmlModelsModule::registerQuickTypes();
-#if QT_CONFIG(qml_worker_script)
-        QQmlWorkerScriptModule::registerQuickTypes();
-#endif
-#endif
         QQmlQtQuick2Module::defineModule();
 
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
-        qmlRegisterModule("QtQuick", 2, QT_VERSION_MINOR);
+        qmlRegisterModule("QtQuick", 2, 15);
     }
 
     ~QtQuick2Plugin() override

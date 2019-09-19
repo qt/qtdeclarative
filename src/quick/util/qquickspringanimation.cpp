@@ -319,7 +319,7 @@ void QSpringAnimation::updateState(QAbstractAnimationJob::State newState, QAbstr
 
 void QSpringAnimation::debugAnimation(QDebug d) const
 {
-    d << "SpringAnimationJob(" << hex << (const void *) this << dec << ")" << "velocity:" << maxVelocity
+    d << "SpringAnimationJob(" << Qt::hex << (const void *) this << Qt::dec << ")" << "velocity:" << maxVelocity
       << "spring:" << spring << "damping:" << damping << "epsilon:" << epsilon << "modulus:" << modulus
       << "mass:" << mass << "target:" << target.object() << "property:" << target.name()
       << "to:" << to << "current velocity:" << velocity;

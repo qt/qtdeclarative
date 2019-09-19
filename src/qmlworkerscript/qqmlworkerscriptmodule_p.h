@@ -58,9 +58,6 @@ QT_BEGIN_NAMESPACE
 class Q_QMLWORKERSCRIPT_PRIVATE_EXPORT QQmlWorkerScriptModule
 {
 public:
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    static void registerQuickTypes();
-#endif
     static void defineModule();
 };
 

@@ -95,7 +95,7 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
             }
         }
         if (missing)
-            qCWarning(DBG_TOUCH_TARGET) << this << "pointId" << hex << d->pointInfo.id()
+            qCWarning(DBG_TOUCH_TARGET) << this << "pointId" << Qt::hex << d->pointInfo.id()
                 << "is missing from current event, but was neither canceled nor released";
         if (point) {
             if (candidatePointCount == 1 || (candidatePointCount > 1 && d->ignoreAdditionalPoints)) {

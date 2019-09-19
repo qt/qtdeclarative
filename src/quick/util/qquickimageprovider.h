@@ -92,9 +92,11 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_finished())
 };
 
+class QQuickImageProviderOptions;
+
 class Q_QUICK_EXPORT QQuickImageProvider : public QQmlImageProviderBase
 {
-    friend class QQuickImageProviderWithOptions; // ### Qt 6 Remove
+    friend class QQuickImageProviderWithOptions;
 public:
     QQuickImageProvider(ImageType type, Flags flags = Flags());
     ~QQuickImageProvider() override;
@@ -102,15 +104,9 @@ public:
     ImageType imageType() const override;
     Flags flags() const override;
 
-#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
-    virtual QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize, const QQuickImageProviderOptions &options);
-    virtual QPixmap requestPixmap(const QString &id, QSize *size, const QSize& requestedSize, const QQuickImageProviderOptions &options);
-    virtual QQuickTextureFactory *requestTexture(const QString &id, QSize *size, const QSize &requestedSize, const QQuickImageProviderOptions &options);
-#else
     virtual QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize);
     virtual QPixmap requestPixmap(const QString &id, QSize *size, const QSize& requestedSize);
     virtual QQuickTextureFactory *requestTexture(const QString &id, QSize *size, const QSize &requestedSize);
-#endif
 
 private:
     QQuickImageProviderPrivate *d;
@@ -122,11 +118,7 @@ public:
     QQuickAsyncImageProvider();
     ~QQuickAsyncImageProvider() override;
 
-#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
-    virtual QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize, const QQuickImageProviderOptions &options) = 0;
-#else
     virtual QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize) = 0;
-#endif
 
 private:
     QQuickAsyncImageProviderPrivate *d;

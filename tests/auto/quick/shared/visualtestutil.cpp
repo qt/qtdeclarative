@@ -95,7 +95,7 @@ bool QQuickVisualTestUtil::compareImages(const QImage &ia, const QImage &ib, QSt
                 || qAbs(qRed(a) - qRed(b)) > tolerance
                 || qAbs(qRed(a) - qRed(b)) > tolerance) {
                 QDebug(errorMessage) << "Mismatch at:" << x << y << ':'
-                    << hex << showbase << a << b;
+                    << Qt::hex << Qt::showbase << a << b;
                 return false;
             }
         }

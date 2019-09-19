@@ -184,7 +184,7 @@ void QQuickAnimatorProxyJob::updateState(QAbstractAnimationJob::State newState, 
 
 void QQuickAnimatorProxyJob::debugAnimation(QDebug d) const
 {
-    d << "QuickAnimatorProxyJob("<< hex << (const void *) this << dec
+    d << "QuickAnimatorProxyJob("<< Qt::hex << (const void *) this << Qt::dec
       << "state:" << state() << "duration:" << duration()
       << "proxying: (" << job() << ')';
 }
@@ -266,7 +266,7 @@ QQuickAnimatorJob::QQuickAnimatorJob()
 
 void QQuickAnimatorJob::debugAnimation(QDebug d) const
 {
-    d << "QuickAnimatorJob(" << hex << (const void *) this << dec
+    d << "QuickAnimatorJob(" << Qt::hex << (const void *) this << Qt::dec
       << ") state:" << state() << "duration:" << duration()
       << "target:" << m_target << "value:" << m_value;
 }
