@@ -43,7 +43,8 @@ enum class ScopeType;
 class FindUnqualifiedIDVisitor : public QQmlJS::AST::Visitor {
 
 public:
-    explicit FindUnqualifiedIDVisitor(QStringList const &qmltypeDirs, const QString& code, const QString& fileName);
+    explicit FindUnqualifiedIDVisitor(QStringList const &qmltypeDirs, const QString& code,
+                                      const QString& fileName, bool silent);
     ~FindUnqualifiedIDVisitor() override;
     bool check();
 

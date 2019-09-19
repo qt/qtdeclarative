@@ -89,7 +89,7 @@ public:
     typedef QFlags<ColorCodeComponent> ColorCode;
     typedef QHash<int, ColorCode> ColorMapping;
 
-    ColorOutput();
+    ColorOutput(bool silent);
     ~ColorOutput();
 
     void setColorMapping(const ColorMapping &cMapping);

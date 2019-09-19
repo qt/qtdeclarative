@@ -50,7 +50,8 @@ static bool lint_file(const QString &filename, const bool silent, const bool war
 {
     QFile file(filename);
     if (!file.open(QFile::ReadOnly)) {
-        qWarning() << "Failed to open file" << filename << file.error();
+        if (!silent)
+            qWarning() << "Failed to open file" << filename << file.error();
         return false;
     }
 
@@ -76,7 +77,7 @@ static bool lint_file(const QString &filename, const bool silent, const bool war
 
     if (success && !isJavaScript && warnUnqualied) {
         auto root = parser.rootNode();
-        FindUnqualifiedIDVisitor v { qmltypeDirs, code, filename};
+        FindUnqualifiedIDVisitor v { qmltypeDirs, code, filename, silent };
         root->accept(&v);
         success = v.check();
     }
