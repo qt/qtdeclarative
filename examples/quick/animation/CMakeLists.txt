@@ -90,7 +90,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(animation "shared"
+qt6_add_resources(animation "shared"
     PREFIX
         "/shared"
     BASE
@@ -120,7 +120,7 @@ set(animation_resource_files
     "states/transitions.qml"
 )
 
-QT6_ADD_RESOURCES(animation "animation"
+qt6_add_resources(animation "animation"
     PREFIX
         "/animation"
     FILES

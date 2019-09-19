@@ -33,7 +33,7 @@ set(networkaccessmanagerfactory_resource_files
     "view.qml"
 )
 
-QT6_ADD_RESOURCES(networkaccessmanagerfactory "networkaccessmanagerfactory"
+qt6_add_resources(networkaccessmanagerfactory "networkaccessmanagerfactory"
     PREFIX
         "/"
     FILES

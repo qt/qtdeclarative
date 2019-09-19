@@ -36,7 +36,7 @@ set(qquickviewcomparison_resource_files
     "test.qml"
 )
 
-QT6_ADD_RESOURCES(qquickviewcomparison "qquickviewcomparison"
+qt6_add_resources(qquickviewcomparison "qquickviewcomparison"
     PREFIX
         "/qquickviewcomparison"
     FILES

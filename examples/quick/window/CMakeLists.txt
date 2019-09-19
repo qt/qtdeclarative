@@ -34,7 +34,7 @@ set(window_resource_files
     "window.qml"
 )
 
-QT6_ADD_RESOURCES(window "window"
+qt6_add_resources(window "window"
     PREFIX
         "/window"
     FILES
@@ -103,7 +103,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(window "shared"
+qt6_add_resources(window "shared"
     PREFIX
         "/shared"
     BASE

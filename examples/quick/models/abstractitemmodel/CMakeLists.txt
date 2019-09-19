@@ -32,7 +32,7 @@ set(abstractitemmodel_resource_files
     "view.qml"
 )
 
-QT6_ADD_RESOURCES(abstractitemmodel "abstractitemmodel"
+qt6_add_resources(abstractitemmodel "abstractitemmodel"
     PREFIX
         "/"
     FILES

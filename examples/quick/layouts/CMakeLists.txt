@@ -31,7 +31,7 @@ set(layouts_resource_files
     "layouts.qml"
 )
 
-QT6_ADD_RESOURCES(layouts "layouts"
+qt6_add_resources(layouts "layouts"
     PREFIX
         "/layouts"
     FILES

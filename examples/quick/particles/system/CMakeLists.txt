@@ -36,7 +36,7 @@ set(system_resource_files
     "system.qml"
 )
 
-QT6_ADD_RESOURCES(system "system"
+qt6_add_resources(system "system"
     PREFIX
         "/particles/system"
     FILES
@@ -169,7 +169,7 @@ set(images_resource_files
     "images/starfish_mask.png"
 )
 
-QT6_ADD_RESOURCES(system "images"
+qt6_add_resources(system "images"
     PREFIX
         "/particles"
     BASE
@@ -240,7 +240,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(system "shared"
+qt6_add_resources(system "shared"
     PREFIX
         "/shared"
     BASE

@@ -154,7 +154,7 @@ set(images_resource_files
     "images/starfish_mask.png"
 )
 
-QT6_ADD_RESOURCES(itemparticle "images"
+qt6_add_resources(itemparticle "images"
     PREFIX
         "/particles"
     BASE
@@ -225,7 +225,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(itemparticle "shared"
+qt6_add_resources(itemparticle "shared"
     PREFIX
         "/shared"
     BASE

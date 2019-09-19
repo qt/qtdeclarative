@@ -32,7 +32,7 @@ set(mousearea_resource_files
     "mousearea.qml"
 )
 
-QT6_ADD_RESOURCES(mousearea "mousearea"
+qt6_add_resources(mousearea "mousearea"
     PREFIX
         "/mousearea"
     FILES

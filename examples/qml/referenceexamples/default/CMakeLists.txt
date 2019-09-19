@@ -29,7 +29,7 @@ set(default_resource_files
     "example.qml"
 )
 
-QT6_ADD_RESOURCES(default "default"
+qt6_add_resources(default "default"
     PREFIX
         "/"
     FILES

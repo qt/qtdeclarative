@@ -33,7 +33,7 @@ set(qmake_immediate_resource_files
     "qt.png"
 )
 
-QT6_ADD_RESOURCES(pixelator "qmake_immediate"
+qt6_add_resources(pixelator "qmake_immediate"
     PREFIX
         "/"
     FILES

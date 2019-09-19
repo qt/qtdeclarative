@@ -35,7 +35,7 @@ set(maskedmousearea_resource_files
     "maskedmousearea.qml"
 )
 
-QT6_ADD_RESOURCES(maskedmousearea "maskedmousearea"
+qt6_add_resources(maskedmousearea "maskedmousearea"
     PREFIX
         "/customitems/maskedmousearea"
     FILES

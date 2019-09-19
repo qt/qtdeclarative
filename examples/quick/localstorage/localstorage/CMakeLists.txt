@@ -36,7 +36,7 @@ set(localstorage_resource_files
     "localstorage.qml"
 )
 
-QT6_ADD_RESOURCES(localstorage "localstorage"
+qt6_add_resources(localstorage "localstorage"
     PREFIX
         "/"
     FILES
@@ -105,7 +105,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(localstorage "shared"
+qt6_add_resources(localstorage "shared"
     PREFIX
         "/shared"
     BASE

@@ -34,7 +34,7 @@ set(accessibility_resource_files
     "content/Slider.qml"
 )
 
-QT6_ADD_RESOURCES(quick-accessibility "accessibility"
+qt6_add_resources(quick-accessibility "accessibility"
     PREFIX
         "/accessibility"
     FILES

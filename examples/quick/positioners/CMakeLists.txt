@@ -33,7 +33,7 @@ set(positioners_resource_files
     "positioners.qml"
 )
 
-QT6_ADD_RESOURCES(positioners "positioners"
+qt6_add_resources(positioners "positioners"
     PREFIX
         "/positioners"
     FILES
@@ -102,7 +102,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(positioners "shared"
+qt6_add_resources(positioners "shared"
     PREFIX
         "/shared"
     BASE

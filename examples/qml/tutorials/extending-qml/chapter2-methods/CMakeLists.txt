@@ -32,7 +32,7 @@ set(chapter2-methods_resource_files
     "app.qml"
 )
 
-QT6_ADD_RESOURCES(chapter2-methods "chapter2-methods"
+qt6_add_resources(chapter2-methods "chapter2-methods"
     PREFIX
         "/"
     FILES

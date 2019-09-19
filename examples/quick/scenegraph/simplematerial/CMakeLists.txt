@@ -29,7 +29,7 @@ set(simplematerial_resource_files
     "main.qml"
 )
 
-QT6_ADD_RESOURCES(simplematerial "simplematerial"
+qt6_add_resources(simplematerial "simplematerial"
     PREFIX
         "/scenegraph/simplematerial"
     FILES

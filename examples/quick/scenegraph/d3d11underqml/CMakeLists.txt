@@ -36,7 +36,7 @@ set(d3d11underqml_resource_files
     "squircle.vert"
 )
 
-QT6_ADD_RESOURCES(d3d11underqml "d3d11underqml"
+qt6_add_resources(d3d11underqml "d3d11underqml"
     PREFIX
         "/scenegraph/d3d11underqml"
     FILES

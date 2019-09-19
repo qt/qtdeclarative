@@ -32,7 +32,7 @@ set(chapter3-bindings_resource_files
     "app.qml"
 )
 
-QT6_ADD_RESOURCES(chapter3-bindings "chapter3-bindings"
+qt6_add_resources(chapter3-bindings "chapter3-bindings"
     PREFIX
         "/"
     FILES

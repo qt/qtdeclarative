@@ -35,7 +35,7 @@ set(draganddrop_resource_files
     "views/gridview.qml"
 )
 
-QT6_ADD_RESOURCES(draganddrop "draganddrop"
+qt6_add_resources(draganddrop "draganddrop"
     PREFIX
         "/draganddrop"
     FILES
@@ -104,7 +104,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(draganddrop "shared"
+qt6_add_resources(draganddrop "shared"
     PREFIX
         "/shared"
     BASE

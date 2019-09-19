@@ -35,7 +35,7 @@ set(textureprovider_resource_files
     "textureprovider.qml"
 )
 
-QT6_ADD_RESOURCES(textureprovider "textureprovider"
+qt6_add_resources(textureprovider "textureprovider"
     PREFIX
         "/textureprovider"
     FILES

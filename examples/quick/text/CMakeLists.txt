@@ -50,7 +50,7 @@ set(text_resource_files
     "textselection/textselection.qml"
 )
 
-QT6_ADD_RESOURCES(text "text"
+qt6_add_resources(text "text"
     PREFIX
         "/text"
     FILES
@@ -119,7 +119,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(text "shared"
+qt6_add_resources(text "shared"
     PREFIX
         "/shared"
     BASE

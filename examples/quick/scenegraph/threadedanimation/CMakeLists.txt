@@ -33,7 +33,7 @@ set(threadedanimation_resource_files
     "spinner.png"
 )
 
-QT6_ADD_RESOURCES(threadedanimation "threadedanimation"
+qt6_add_resources(threadedanimation "threadedanimation"
     PREFIX
         "/scenegraph/threadedanimation"
     FILES

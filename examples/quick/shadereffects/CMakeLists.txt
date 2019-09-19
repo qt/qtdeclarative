@@ -52,7 +52,7 @@ set(shadereffects_resource_files
     "shadereffects.qml"
 )
 
-QT6_ADD_RESOURCES(shadereffects "shadereffects"
+qt6_add_resources(shadereffects "shadereffects"
     PREFIX
         "/shadereffects"
     FILES

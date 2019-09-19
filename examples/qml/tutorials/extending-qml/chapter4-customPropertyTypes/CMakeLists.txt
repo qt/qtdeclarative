@@ -33,7 +33,7 @@ set(chapter4-customPropertyTypes_resource_files
     "app.qml"
 )
 
-QT6_ADD_RESOURCES(chapter4-customPropertyTypes "chapter4-customPropertyTypes"
+qt6_add_resources(chapter4-customPropertyTypes "chapter4-customPropertyTypes"
     PREFIX
         "/"
     FILES

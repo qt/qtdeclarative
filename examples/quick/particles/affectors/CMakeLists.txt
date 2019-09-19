@@ -42,7 +42,7 @@ set(affectors_resource_files
     "content/wander.qml"
 )
 
-QT6_ADD_RESOURCES(affectors "affectors"
+qt6_add_resources(affectors "affectors"
     PREFIX
         "/particles/affectors"
     FILES
@@ -175,7 +175,7 @@ set(images_resource_files
     "images/starfish_mask.png"
 )
 
-QT6_ADD_RESOURCES(affectors "images"
+qt6_add_resources(affectors "images"
     PREFIX
         "/particles"
     BASE
@@ -246,7 +246,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(affectors "shared"
+qt6_add_resources(affectors "shared"
     PREFIX
         "/shared"
     BASE

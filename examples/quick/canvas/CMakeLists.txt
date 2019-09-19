@@ -41,7 +41,7 @@ set(canvas_resource_files
     "tiger/tiger.qml"
 )
 
-QT6_ADD_RESOURCES(canvas "canvas"
+qt6_add_resources(canvas "canvas"
     PREFIX
         "/canvas"
     FILES
@@ -110,7 +110,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(canvas "shared"
+qt6_add_resources(canvas "shared"
     PREFIX
         "/shared"
     BASE

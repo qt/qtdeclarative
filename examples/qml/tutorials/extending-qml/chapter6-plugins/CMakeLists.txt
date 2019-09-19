@@ -27,7 +27,7 @@ set(app_resource_files
     "app.qml"
 )
 
-QT6_ADD_RESOURCES(chapter6-plugins "app"
+qt6_add_resources(chapter6-plugins "app"
     PREFIX
         "/"
     FILES

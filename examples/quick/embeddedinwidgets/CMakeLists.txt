@@ -32,7 +32,7 @@ set(embeddedinwidgets_resource_files
     "main.qml"
 )
 
-QT6_ADD_RESOURCES(embeddedinwidgets "embeddedinwidgets"
+qt6_add_resources(embeddedinwidgets "embeddedinwidgets"
     PREFIX
         "/embeddedinwidgets"
     FILES

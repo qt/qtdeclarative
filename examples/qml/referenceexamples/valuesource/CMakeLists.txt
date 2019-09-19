@@ -32,7 +32,7 @@ set(valuesource_resource_files
     "example.qml"
 )
 
-QT6_ADD_RESOURCES(valuesource "valuesource"
+qt6_add_resources(valuesource "valuesource"
     PREFIX
         "/"
     FILES

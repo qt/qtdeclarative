@@ -36,7 +36,7 @@ set(rendernode_resource_files
     "shader_vert.cso"
 )
 
-QT6_ADD_RESOURCES(rendernode "rendernode"
+qt6_add_resources(rendernode "rendernode"
     PREFIX
         "/scenegraph/rendernode"
     FILES

@@ -33,7 +33,7 @@ set(qmake_immediate_resource_files
     "main.qml"
 )
 
-QT6_ADD_RESOURCES(gameoflife "qmake_immediate"
+qt6_add_resources(gameoflife "qmake_immediate"
     PREFIX
         "/"
     FILES

@@ -36,7 +36,7 @@ set(threading_resource_files
     "workerscript/workerscript.qml"
 )
 
-QT6_ADD_RESOURCES(threading "threading"
+qt6_add_resources(threading "threading"
     PREFIX
         "/threading"
     FILES
@@ -105,7 +105,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(threading "shared"
+qt6_add_resources(threading "shared"
     PREFIX
         "/shared"
     BASE

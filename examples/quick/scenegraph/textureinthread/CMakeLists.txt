@@ -39,7 +39,7 @@ set(textureinthread_resource_files
     "main.qml"
 )
 
-QT6_ADD_RESOURCES(textureinthread "textureinthread"
+qt6_add_resources(textureinthread "textureinthread"
     PREFIX
         "/scenegraph/textureinthread"
     FILES

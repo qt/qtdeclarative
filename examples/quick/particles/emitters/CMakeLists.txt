@@ -38,7 +38,7 @@ set(emitters_resource_files
     "emitters.qml"
 )
 
-QT6_ADD_RESOURCES(emitters "emitters"
+qt6_add_resources(emitters "emitters"
     PREFIX
         "/particles/emitters"
     FILES
@@ -171,7 +171,7 @@ set(images_resource_files
     "images/starfish_mask.png"
 )
 
-QT6_ADD_RESOURCES(emitters "images"
+qt6_add_resources(emitters "images"
     PREFIX
         "/particles"
     BASE
@@ -242,7 +242,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(emitters "shared"
+qt6_add_resources(emitters "shared"
     PREFIX
         "/shared"
     BASE

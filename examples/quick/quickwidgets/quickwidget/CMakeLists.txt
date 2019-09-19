@@ -36,7 +36,7 @@ set(quickwidget_resource_files
     "rotatingsquaretab.qml"
 )
 
-QT6_ADD_RESOURCES(quickwidget "quickwidget"
+qt6_add_resources(quickwidget "quickwidget"
     PREFIX
         "/quickwidget"
     FILES

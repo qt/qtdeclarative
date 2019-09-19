@@ -32,7 +32,7 @@ set(extended_resource_files
     "example.qml"
 )
 
-QT6_ADD_RESOURCES(extended "extended"
+qt6_add_resources(extended "extended"
     PREFIX
         "/"
     FILES

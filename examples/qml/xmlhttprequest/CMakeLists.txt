@@ -35,7 +35,7 @@ set(xmlhttprequest_resource_files
     "xmlhttprequest.qml"
 )
 
-QT6_ADD_RESOURCES(xmlhttprequest "xmlhttprequest"
+qt6_add_resources(xmlhttprequest "xmlhttprequest"
     PREFIX
         "/qml/xmlhttprequest"
     FILES
@@ -88,7 +88,7 @@ set(quick_shared_resource_files
     "images/slider_handle.png"
 )
 
-QT6_ADD_RESOURCES(xmlhttprequest "quick_shared"
+qt6_add_resources(xmlhttprequest "quick_shared"
     PREFIX
         "/quick/shared"
     BASE

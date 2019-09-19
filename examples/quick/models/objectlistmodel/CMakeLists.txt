@@ -32,7 +32,7 @@ set(objectlistmodel_resource_files
     "view.qml"
 )
 
-QT6_ADD_RESOURCES(objectlistmodel "objectlistmodel"
+qt6_add_resources(objectlistmodel "objectlistmodel"
     PREFIX
         "/"
     FILES

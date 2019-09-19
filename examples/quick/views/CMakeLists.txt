@@ -76,7 +76,7 @@ set(views_resource_files
     "views.qml"
 )
 
-QT6_ADD_RESOURCES(views "views"
+qt6_add_resources(views "views"
     PREFIX
         "/views"
     FILES
@@ -145,7 +145,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(views "shared"
+qt6_add_resources(views "shared"
     PREFIX
         "/shared"
     BASE

@@ -38,7 +38,7 @@ set(dialcontrol_resource_files
     "dialcontrol.qml"
 )
 
-QT6_ADD_RESOURCES(dialcontrol "dialcontrol"
+qt6_add_resources(dialcontrol "dialcontrol"
     PREFIX
         "/"
     FILES

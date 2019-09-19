@@ -36,7 +36,7 @@ set(metalunderqml_resource_files
     "squircle.vert"
 )
 
-QT6_ADD_RESOURCES(metalunderqml "metalunderqml"
+qt6_add_resources(metalunderqml "metalunderqml"
     PREFIX
         "/scenegraph/metalunderqml"
     FILES

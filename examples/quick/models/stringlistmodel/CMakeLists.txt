@@ -31,7 +31,7 @@ set(stringlistmodel_resource_files
     "view.qml"
 )
 
-QT6_ADD_RESOURCES(stringlistmodel "stringlistmodel"
+qt6_add_resources(stringlistmodel "stringlistmodel"
     PREFIX
         "/"
     FILES

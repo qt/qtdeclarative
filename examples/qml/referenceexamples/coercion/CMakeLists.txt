@@ -29,7 +29,7 @@ set(coercion_resource_files
     "example.qml"
 )
 
-QT6_ADD_RESOURCES(coercion "coercion"
+qt6_add_resources(coercion "coercion"
     PREFIX
         "/"
     FILES

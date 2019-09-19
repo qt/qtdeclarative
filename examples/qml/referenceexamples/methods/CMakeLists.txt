@@ -29,7 +29,7 @@ set(methods_resource_files
     "example.qml"
 )
 
-QT6_ADD_RESOURCES(methods "methods"
+qt6_add_resources(methods "methods"
     PREFIX
         "/"
     FILES

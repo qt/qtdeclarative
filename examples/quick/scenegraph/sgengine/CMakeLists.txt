@@ -30,7 +30,7 @@ set(sgengine_resource_files
     "face-smile.png"
 )
 
-QT6_ADD_RESOURCES(sgengine "sgengine"
+qt6_add_resources(sgengine "sgengine"
     PREFIX
         "/scenegraph/sgengine"
     FILES
@@ -99,7 +99,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(sgengine "shared"
+qt6_add_resources(sgengine "shared"
     PREFIX
         "/shared"
     BASE

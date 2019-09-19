@@ -51,7 +51,7 @@ set(imageelements_resource_files
     "spritesequence.qml"
 )
 
-QT6_ADD_RESOURCES(imageelements "imageelements"
+qt6_add_resources(imageelements "imageelements"
     PREFIX
         "/imageelements"
     FILES
@@ -120,7 +120,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(imageelements "shared"
+qt6_add_resources(imageelements "shared"
     PREFIX
         "/shared"
     BASE

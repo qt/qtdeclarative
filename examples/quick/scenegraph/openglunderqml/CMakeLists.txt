@@ -32,7 +32,7 @@ set(openglunderqml_resource_files
     "main.qml"
 )
 
-QT6_ADD_RESOURCES(openglunderqml "openglunderqml"
+qt6_add_resources(openglunderqml "openglunderqml"
     PREFIX
         "/scenegraph/openglunderqml"
     FILES

@@ -32,7 +32,7 @@ set(binding_resource_files
     "example.qml"
 )
 
-QT6_ADD_RESOURCES(binding "binding"
+qt6_add_resources(binding "binding"
     PREFIX
         "/"
     FILES

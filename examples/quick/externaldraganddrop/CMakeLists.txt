@@ -32,7 +32,7 @@ set(externaldraganddrop_resource_files
     "externaldraganddrop.qml"
 )
 
-QT6_ADD_RESOURCES(externaldraganddrop "externaldraganddrop"
+qt6_add_resources(externaldraganddrop "externaldraganddrop"
     PREFIX
         "/externaldraganddrop"
     FILES
@@ -101,7 +101,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(externaldraganddrop "shared"
+qt6_add_resources(externaldraganddrop "shared"
     PREFIX
         "/shared"
     BASE

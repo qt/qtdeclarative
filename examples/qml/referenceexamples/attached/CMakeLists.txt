@@ -31,7 +31,7 @@ set(attached_resource_files
     "example.qml"
 )
 
-QT6_ADD_RESOURCES(attached "attached"
+qt6_add_resources(attached "attached"
     PREFIX
         "/"
     FILES

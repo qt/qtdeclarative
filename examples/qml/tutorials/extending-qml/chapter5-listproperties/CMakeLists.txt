@@ -33,7 +33,7 @@ set(chapter5-listproperties_resource_files
     "app.qml"
 )
 
-QT6_ADD_RESOURCES(chapter5-listproperties "chapter5-listproperties"
+qt6_add_resources(chapter5-listproperties "chapter5-listproperties"
     PREFIX
         "/"
     FILES

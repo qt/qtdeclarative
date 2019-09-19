@@ -30,7 +30,7 @@ set(customgeometry_resource_files
     "main.qml"
 )
 
-QT6_ADD_RESOURCES(customgeometry "customgeometry"
+qt6_add_resources(customgeometry "customgeometry"
     PREFIX
         "/scenegraph/customgeometry"
     FILES

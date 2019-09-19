@@ -28,7 +28,7 @@ set(adding_resource_files
     "example.qml"
 )
 
-QT6_ADD_RESOURCES(adding "adding"
+qt6_add_resources(adding "adding"
     PREFIX
         "/"
     FILES

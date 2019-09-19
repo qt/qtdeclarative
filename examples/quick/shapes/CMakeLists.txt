@@ -142,7 +142,7 @@ set(shapes_resource_files
     "content/tiger.qml"
 )
 
-QT6_ADD_RESOURCES(shapes "shapes"
+qt6_add_resources(shapes "shapes"
     PREFIX
         "/shapes"
     FILES

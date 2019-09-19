@@ -34,7 +34,7 @@ set(rendercontrol_resource_files
     "demo.qml"
 )
 
-QT6_ADD_RESOURCES(rendercontrol "rendercontrol"
+qt6_add_resources(rendercontrol "rendercontrol"
     PREFIX
         "/rendercontrol"
     FILES

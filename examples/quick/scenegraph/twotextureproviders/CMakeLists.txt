@@ -32,7 +32,7 @@ set(twotextureproviders_resource_files
     "main.qml"
 )
 
-QT6_ADD_RESOURCES(twotextureproviders "twotextureproviders"
+qt6_add_resources(twotextureproviders "twotextureproviders"
     PREFIX
         "/scenegraph/twotextureproviders"
     FILES

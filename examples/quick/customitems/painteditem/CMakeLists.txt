@@ -40,7 +40,7 @@ set(painteditem_resource_files
     "textballoons.qml"
 )
 
-QT6_ADD_RESOURCES(qmltextballoonplugin "painteditem"
+qt6_add_resources(qmltextballoonplugin "painteditem"
     PREFIX
         "/painteditem"
     FILES

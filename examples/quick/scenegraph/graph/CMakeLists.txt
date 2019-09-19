@@ -37,7 +37,7 @@ set(graph_resource_files
     "shaders/noisy.vsh"
 )
 
-QT6_ADD_RESOURCES(graph "graph"
+qt6_add_resources(graph "graph"
     PREFIX
         "/scenegraph/graph"
     FILES

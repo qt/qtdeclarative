@@ -39,7 +39,7 @@ set(keyinteraction_resource_files
     "keyinteraction.qml"
 )
 
-QT6_ADD_RESOURCES(keyinteraction "keyinteraction"
+qt6_add_resources(keyinteraction "keyinteraction"
     PREFIX
         "/keyinteraction"
     FILES

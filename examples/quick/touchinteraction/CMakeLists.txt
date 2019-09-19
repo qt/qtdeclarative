@@ -53,7 +53,7 @@ set(touchinteraction_resource_files
     "touchinteraction.qml"
 )
 
-QT6_ADD_RESOURCES(touchinteraction "touchinteraction"
+qt6_add_resources(touchinteraction "touchinteraction"
     PREFIX
         "/touchinteraction"
     FILES
@@ -122,7 +122,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(touchinteraction "shared"
+qt6_add_resources(touchinteraction "shared"
     PREFIX
         "/shared"
     BASE

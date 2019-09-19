@@ -34,7 +34,7 @@ set(customparticle_resource_files
     "customparticle.qml"
 )
 
-QT6_ADD_RESOURCES(customparticle "customparticle"
+qt6_add_resources(customparticle "customparticle"
     PREFIX
         "/particles/customparticle"
     FILES
@@ -167,7 +167,7 @@ set(images_resource_files
     "images/starfish_mask.png"
 )
 
-QT6_ADD_RESOURCES(customparticle "images"
+qt6_add_resources(customparticle "images"
     PREFIX
         "/particles"
     BASE
@@ -238,7 +238,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(customparticle "shared"
+qt6_add_resources(customparticle "shared"
     PREFIX
         "/shared"
     BASE

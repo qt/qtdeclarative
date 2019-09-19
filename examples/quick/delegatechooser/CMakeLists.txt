@@ -31,7 +31,7 @@ set(qml_resource_files
     "delegatechooser.qml"
 )
 
-QT6_ADD_RESOURCES(delegatechooser "qml"
+qt6_add_resources(delegatechooser "qml"
     PREFIX
         "/"
     FILES
@@ -100,7 +100,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(delegatechooser "shared"
+qt6_add_resources(delegatechooser "shared"
     PREFIX
         "/shared"
     BASE

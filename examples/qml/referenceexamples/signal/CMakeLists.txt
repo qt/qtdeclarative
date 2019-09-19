@@ -31,7 +31,7 @@ set(signal_resource_files
     "example.qml"
 )
 
-QT6_ADD_RESOURCES(signal "signal"
+qt6_add_resources(signal "signal"
     PREFIX
         "/"
     FILES

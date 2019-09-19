@@ -36,7 +36,7 @@ set(textureinsgnode_resource_files
     "main.qml"
 )
 
-QT6_ADD_RESOURCES(textureinsgnode "textureinsgnode"
+qt6_add_resources(textureinsgnode "textureinsgnode"
     PREFIX
         "/scenegraph/textureinsgnode"
     FILES

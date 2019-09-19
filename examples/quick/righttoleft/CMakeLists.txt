@@ -34,7 +34,7 @@ set(righttoleft_resource_files
     "textalignment/textalignment.qml"
 )
 
-QT6_ADD_RESOURCES(righttoleft "righttoleft"
+qt6_add_resources(righttoleft "righttoleft"
     PREFIX
         "/righttoleft"
     FILES
@@ -103,7 +103,7 @@ set(shared_resource_files
     "images/tab.png"
 )
 
-QT6_ADD_RESOURCES(righttoleft "shared"
+qt6_add_resources(righttoleft "shared"
     PREFIX
         "/shared"
     BASE

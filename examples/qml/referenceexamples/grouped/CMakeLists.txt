@@ -31,7 +31,7 @@ set(grouped_resource_files
     "example.qml"
 )
 
-QT6_ADD_RESOURCES(grouped "grouped"
+qt6_add_resources(grouped "grouped"
     PREFIX
         "/"
     FILES
