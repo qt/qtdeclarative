@@ -9,6 +9,5 @@ SUBDIRS += \
     wearable \
     imagine/automotive \
     imagine/musicplayer
-    wearable
 
 qtHaveModule(widgets): SUBDIRS += flatstyle
