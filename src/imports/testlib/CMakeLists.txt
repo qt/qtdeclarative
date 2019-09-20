@@ -39,7 +39,7 @@ set(qml_files
     "testlogger.js"
 )
 set_source_files_properties(TestCase.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "1.2"
+    QT_QML_SOURCE_VERSION "1.0"
     QT_QML_SOURCE_INSTALL TRUE
 )
 set_source_files_properties(SignalSpy.qml PROPERTIES
