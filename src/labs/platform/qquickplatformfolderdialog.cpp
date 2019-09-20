@@ -141,8 +141,12 @@ void QQuickPlatformFolderDialog::setFolder(const QUrl &folder)
 */
 QUrl QQuickPlatformFolderDialog::currentFolder() const
 {
-    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
+    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle())) {
+        const QList<QUrl> selectedFiles = fileDialog->selectedFiles();
+        if (!selectedFiles.isEmpty())
+            return selectedFiles.first();
         return fileDialog->directory();
+    }
     return m_options->initialDirectory();
 }
 
@@ -259,7 +263,7 @@ bool QQuickPlatformFolderDialog::useNativeDialog() const
 void QQuickPlatformFolderDialog::onCreate(QPlatformDialogHelper *dialog)
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
-        connect(fileDialog, &QPlatformFileDialogHelper::directoryEntered, this, &QQuickPlatformFolderDialog::currentFolderChanged);
+        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, &QQuickPlatformFolderDialog::currentFolderChanged);
         fileDialog->setOptions(m_options);
     }
 }
