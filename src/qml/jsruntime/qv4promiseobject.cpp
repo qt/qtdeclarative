@@ -163,6 +163,7 @@ void ReactionHandler::executeReaction(ReactionEvent *event)
         ScopedFunctionObject reaction(scope);
         if (scope.hasException()) {
             reaction = capability->d()->reject.as<QV4::FunctionObject>();
+            result = scope.engine->catchException();
         } else {
             reaction = capability->d()->resolve.as<QV4::FunctionObject>();
         }
