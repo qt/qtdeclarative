@@ -51,4 +51,3 @@ endif()
 if(QT_FEATURE_qml_devtools)
 endif()
 
-qt_export_tools(Qml)
