@@ -894,6 +894,7 @@ void PropertyUpdater::doUpdate()
     auto sender = QObject::sender();
     auto mo = sender->metaObject();
     auto signalIndex = QObject::senderSignalIndex();
+    ++updateCount;
     // start at 0 instead of propertyOffset to handle properties from parent hierarchy
     for (auto i = 0; i < mo->propertyCount() + mo->propertyOffset(); ++i) {
         auto property = mo->property(i);
@@ -904,6 +905,27 @@ void PropertyUpdater::doUpdate()
             qmlProp.write(property.read(QObject::sender()));
             return;
         }
+    }
+}
+
+void PropertyUpdater::breakBinding()
+{
+    auto it = senderToConnection.find(QObject::senderSignalIndex());
+    if (it == senderToConnection.end())
+        return;
+    if (updateCount == 0) {
+        QObject::disconnect(*it);
+        QQmlError warning;
+        warning.setUrl(qmlContext(QObject::sender())->baseUrl());
+        auto signalName = QString::fromLatin1(QObject::sender()->metaObject()->method(QObject::senderSignalIndex()).name());
+        signalName.chop(sizeof("changed")-1);
+        QString propName = signalName;
+        propName[0] = propName[0].toLower();
+        warning.setDescription(QString::fromUtf8("Writing to \"%1\" broke the binding to the underlying model").arg(propName));
+        qmlWarning(this, warning);
+        senderToConnection.erase(it);
+    } else {
+        --updateCount;
     }
 }
 
@@ -947,10 +969,18 @@ void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *mod
                 // only write to property if it was actually requested by the component
                 if (wasInRequired && prop.hasNotifySignal()) {
                     QMetaMethod changeSignal = prop.notifySignal();
-                    QMetaMethod updateSlot = PropertyUpdater::staticMetaObject.method(PropertyUpdater::staticMetaObject.indexOfSlot("doUpdate()"));
-                    QObject::connect(modelItemToIncubate, changeSignal, updater, updateSlot);
+                    static QMetaMethod updateSlot = PropertyUpdater::staticMetaObject.method(PropertyUpdater::staticMetaObject.indexOfSlot("doUpdate()"));
+                    QMetaObject::Connection conn = QObject::connect(modelItemToIncubate, changeSignal, updater, updateSlot);
+                    auto propIdx = object->metaObject()->indexOfProperty(propName.toUtf8());
+                    QMetaMethod writeToPropSignal = object->metaObject()->property(propIdx).notifySignal();
+                    updater->senderToConnection[writeToPropSignal.methodIndex()] = conn;
+                    static QMetaMethod breakBinding = PropertyUpdater::staticMetaObject.method(PropertyUpdater::staticMetaObject.indexOfSlot("breakBinding()"));
+                    componentProp.write(prop.read(modelItemToIncubate));
+                    // the connection needs to established after the write,
+                    // else the signal gets triggered by it and breakBinding will remove the connection
+                    QObject::connect(object, writeToPropSignal, updater, breakBinding);
                 }
-                if (wasInRequired)
+                else if (wasInRequired) // we still have to write, even if there is no change signal
                     componentProp.write(prop.read(modelItemToIncubate));
             }
         }

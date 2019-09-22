@@ -288,26 +288,6 @@ public:
 
     static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int startDragThreshold = -1);
 
-    template <typename TEventPoint>
-    static bool dragOverThreshold(qreal d, Qt::Axis axis, const TEventPoint *p, int startDragThreshold = -1)
-    {
-        QStyleHints *styleHints = qApp->styleHints();
-        bool overThreshold = qAbs(d) > (startDragThreshold >= 0 ? startDragThreshold : styleHints->startDragDistance());
-        const bool dragVelocityLimitAvailable = (styleHints->startDragVelocity() > 0);
-        if (!overThreshold && dragVelocityLimitAvailable) {
-            qreal velocity = axis == Qt::XAxis ? p->velocity().x() : p->velocity().y();
-            overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
-        }
-        return overThreshold;
-    }
-
-    static bool dragOverThreshold(const QQuickEventPoint *point)
-    {
-        QPointF delta = point->scenePosition() - point->scenePressPosition();
-        return (QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point) ||
-                QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point));
-    }
-
     static bool dragOverThreshold(QVector2D delta);
 
     // data property

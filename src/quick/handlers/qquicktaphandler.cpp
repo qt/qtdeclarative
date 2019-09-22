@@ -97,13 +97,6 @@ QQuickTapHandler::QQuickTapHandler(QQuickItem *parent)
     }
 }
 
-static bool dragOverThreshold(const QQuickEventPoint *point)
-{
-    QPointF delta = point->scenePosition() - point->scenePressPosition();
-    return (QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point) ||
-            QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point));
-}
-
 bool QQuickTapHandler::wantsEventPoint(QQuickEventPoint *point)
 {
     if (!point->pointerEvent()->asPointerMouseEvent() &&
@@ -115,7 +108,7 @@ bool QQuickTapHandler::wantsEventPoint(QQuickEventPoint *point)
     // (e.g. DragHandler) gets a chance to take over.
     // Don't forget to emit released in case of a cancel.
     bool ret = false;
-    bool overThreshold = dragOverThreshold(point);
+    bool overThreshold = d_func()->dragOverThreshold(point);
     if (overThreshold) {
         m_longPressTimer.stop();
         m_holdTimer.invalidate();

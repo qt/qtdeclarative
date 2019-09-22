@@ -40,8 +40,6 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qv4codegen_p.h>
 
-QDebug operator<<(QDebug dbg, const QQmlJS::AST::SourceLocation &loc);
-
 static QQmlJS::TypeDescriptionReader createReaderForFile(QString const &filename)
 {
     QFile f(filename);
@@ -139,9 +137,8 @@ void FindUnqualifiedIDVisitor::importHelper(QString id, QString prefix, int majo
         if (QFile::exists(qmltypesPath)) {
             auto reader = createReaderForFile(qmltypesPath);
             auto succ = reader(&objects, &moduleApis, &dependencies);
-            if (!succ) {
-                qDebug() << reader.errorMessage();
-            }
+            if (!succ)
+                m_colorOut.writeUncolored(reader.errorMessage());
             break;
         }
     }
@@ -292,13 +289,17 @@ FindUnqualifiedIDVisitor::localQmlFile2FakeMetaObject(QString filePath)
             } else if (cast<VariableStatement *>(sourceElement->sourceElement)) {
                 // nothing to do
             } else {
-                qDebug() << "unsupportedd sourceElement at" << sourceElement->firstSourceLocation()
-                         << sourceElement->sourceElement->kind;
+                const auto loc = sourceElement->firstSourceLocation();
+                m_colorOut.writeUncolored(
+                            "unsupportedd sourceElement at "
+                            + QString::fromLatin1("%1:%2: ").arg(loc.startLine).arg(loc.startColumn)
+                            + QString::number(sourceElement->sourceElement->kind));
             }
             break;
         }
         default: {
-            qDebug() << "unsupported element of kind" << initMembers->member->kind;
+            m_colorOut.writeUncolored("unsupported element of kind "
+                                      + QString::number(initMembers->member->kind));
         }
         }
         initMembers = initMembers->next;
@@ -368,9 +369,8 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiProgram *)
         while (it.hasNext()) {
             auto reader = createReaderForFile(it.next());
             auto succ = reader(&objects, &moduleApis, &dependencies);
-            if (!succ) {
-                qDebug() << reader.errorMessage();
-            }
+            if (!succ)
+                m_colorOut.writeUncolored(reader.errorMessage());
         }
     }
     // add builtins
@@ -578,13 +578,15 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
 }
 
 FindUnqualifiedIDVisitor::FindUnqualifiedIDVisitor(QStringList const &qmltypeDirs,
-                                                   const QString &code, const QString &fileName)
+                                                   const QString &code, const QString &fileName,
+                                                   bool silent)
     : m_rootScope(new ScopeTree { ScopeType::JSFunctionScope, "global" }),
       m_currentScope(m_rootScope.get()),
       m_qmltypeDirs(qmltypeDirs),
       m_code(code),
       m_rootId(QLatin1String("<id>")),
-      m_filePath(fileName)
+      m_filePath(fileName),
+      m_colorOut(silent)
 {
     // setup color output
     m_colorOut.insertColorMapping(Error, ColorOutput::RedForeground);
@@ -805,13 +807,4 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
 void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *)
 {
     leaveEnvironment();
-}
-
-QDebug operator<<(QDebug dbg, const QQmlJS::AST::SourceLocation &loc)
-{
-    QDebugStateSaver saver(dbg);
-    dbg.nospace() << loc.startLine;
-    dbg.nospace() << ":";
-    dbg.nospace() << loc.startColumn;
-    return dbg.maybeSpace();
 }

@@ -454,8 +454,11 @@ class PropertyUpdater : public QObject
 
 public:
     PropertyUpdater(QObject *parent);
+    QHash<int, QMetaObject::Connection> senderToConnection;
+    int updateCount = 0;
 public Q_SLOTS:
     void doUpdate();
+    void breakBinding();
 };
 
 QT_END_NAMESPACE
