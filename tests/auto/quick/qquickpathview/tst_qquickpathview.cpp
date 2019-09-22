@@ -2676,6 +2676,13 @@ void tst_QQuickPathView::requiredPropertiesInDelegate()
         window->show();
         QTRY_VERIFY(window->rootObject()->property("working").toBool());
     }
+    {
+        QScopedPointer<QQuickView> window(createView());
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression("Writing to \"name\" broke the binding to the underlying model"));
+        window->setSource(testFileUrl("delegateWithRequiredProperties.3.qml"));
+        window->show();
+        QTRY_VERIFY(window->rootObject()->property("working").toBool());
+    }
 }
 
 void tst_QQuickPathView::requiredPropertiesInDelegatePreventUnrelated()

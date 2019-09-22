@@ -628,8 +628,7 @@ void tst_qmlcachegen::reproducibleCache_data()
     QTest::addColumn<QString>("filePath");
 
     QDir dir(dataDirectory());
-    for (const QString &entry : dir.entryList(QDir::Files)) {
-        QVERIFY(entry.endsWith(".qml") || entry.endsWith(".js") || entry.endsWith(".mjs"));
+    for (const QString &entry : dir.entryList((QStringList() << "*.qml" << "*.js" << "*.mjs"), QDir::Files)) {
         QTest::newRow(entry.toUtf8().constData()) << dir.filePath(entry);
     }
 }

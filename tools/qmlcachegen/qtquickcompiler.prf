@@ -1,5 +1,15 @@
 if(qtc_run|lupdate_run): return()
 
+!contains(QT, qml) {
+    qt_modules = \
+        $$replace(QT, -private$, _private) \
+        $$replace(QT_PRIVATE, -private$, _private)
+    qt_modules = $$resolve_depends(qt_modules, "QT.", ".depends" ".run_depends")
+    !contains(qt_modules, qml): \
+        return()
+    unset(qt_modules)
+}
+
 qtPrepareTool(QML_CACHEGEN, qmlcachegen, _FILTER)
 qtPrepareTool(QMAKE_RCC, rcc, _DEP)
 
@@ -28,7 +38,7 @@ for(res, RESOURCES) {
     contains(rccContents,.*\\.js$)|contains(rccContents,.*\\.qml$)|contains(rccContents,.*\\.mjs$) {
         new_resource = $$qmlCacheResourceFileOutputName($$res)
         mkpath($$dirname(new_resource))
-        system($$QMAKE_QMAKE -install qinstall $$system_quote($$absRes) $$system_quote($$new_resource))
+        dummy = $$system($$QML_CACHEGEN_FILTER --filter-resource-file -o $$system_quote($$new_resource) $$system_quote($$absRes))
         NEWRESOURCES += $$new_resource
         QMLCACHE_LOADER_FLAGS += --resource-file-mapping=$$shell_quote($$absRes=$$new_resource)
 
