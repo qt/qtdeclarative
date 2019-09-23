@@ -667,9 +667,6 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             if (cd->swapchainJustBecameRenderable)
                 qCDebug(QSG_LOG_RENDERLOOP, "just became exposed");
 
-            cd->depthStencilForSwapchain->setPixelSize(effectiveOutputSize);
-            cd->depthStencilForSwapchain->build();
-
             cd->hasActiveSwapchain = cd->swapchain->buildOrResize();
             if (!cd->hasActiveSwapchain && rhi->isDeviceLost()) {
                 handleDeviceLoss();
@@ -679,10 +676,15 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             cd->swapchainJustBecameRenderable = false;
             cd->hasRenderableSwapchain = cd->hasActiveSwapchain;
 
-            if (!cd->hasActiveSwapchain)
-                qWarning("Failed to build or resize swapchain");
-            else
+            if (cd->hasActiveSwapchain) {
+                // surface size atomicity: now that buildOrResize() succeeded,
+                // query the size that was used in there by the swapchain, and
+                // that is the size we will use while preparing the next frame.
+                effectiveOutputSize = cd->swapchain->currentPixelSize();
                 qCDebug(QSG_LOG_RENDERLOOP) << "rhi swapchain size" << effectiveOutputSize;
+            } else {
+                qWarning("Failed to build or resize swapchain");
+            }
         }
 
         Q_ASSERT(rhi == cd->rhi);

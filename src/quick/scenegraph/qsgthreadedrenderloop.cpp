@@ -715,9 +715,6 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
             if (cd->swapchainJustBecameRenderable)
                 qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "just became exposed");
 
-            cd->depthStencilForSwapchain->setPixelSize(effectiveOutputSize);
-            cd->depthStencilForSwapchain->build();
-
             cd->hasActiveSwapchain = cd->swapchain->buildOrResize();
             if (!cd->hasActiveSwapchain && rhi->isDeviceLost()) {
                 handleDeviceLoss();
@@ -731,7 +728,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
             if (!cd->hasActiveSwapchain)
                 qWarning("Failed to build or resize swapchain");
             else
-                qCDebug(QSG_LOG_RENDERLOOP) << "rhi swapchain size" << effectiveOutputSize;
+                qCDebug(QSG_LOG_RENDERLOOP) << "rhi swapchain size" << cd->swapchain->currentPixelSize();
         }
 
         Q_ASSERT(rhi == cd->rhi);
@@ -810,8 +807,9 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
         }
     }
     if (current) {
+        const QSize outputSize = rhi ? cd->swapchain->currentPixelSize() : windowSize;
 
-        d->renderSceneGraph(windowSize);
+        d->renderSceneGraph(outputSize);
 
         if (profileFrames)
             renderTime = threadTimer.nsecsElapsed();
