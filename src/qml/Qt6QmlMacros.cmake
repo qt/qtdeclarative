@@ -61,12 +61,17 @@
 #   as an Interface. Supply an output variable to perform any custom actions
 #   on these extra generated targets.
 #
+# SKIP_TYPE_REGISTRATION: When present will cause the generated qmldir file
+#   to not list any qml types. These are expected to be registered by the
+#   c++ plugin code instead.
+#
 
 function(qt6_add_qml_module target)
 
     set(args_optional
         DESIGNER_SUPPORTED
         DO_NOT_INSTALL
+        SKIP_TYPE_REGISTRATION
     )
 
     if (QT_BUILDING_QT)
@@ -175,6 +180,10 @@ function(qt6_add_qml_module target)
         else()
             get_target_property(target_output_dir ${target} LIBRARY_OUTPUT_DIRECTORY)
         endif()
+    endif()
+
+    if (arg_SKIP_TYPE_REGISTRATION)
+        set_target_properties(${target} PROPERTIES QT_QML_MODULE_SKIP_TYPE_REGISTRATION TRUE)
     endif()
 
     if (arg_SOURCES)
@@ -347,6 +356,7 @@ function(qt6_target_qml_files target)
         FILES ${arg_FILES}
         OUTPUT_TARGETS resource_targets
     )
+    get_target_property(skip_type_registration ${target} QT_QML_MODULE_SKIP_TYPE_REGISTRATION)
     get_target_property(target_resource_export ${target} QT_QML_MODULE_RESOURCE_EXPORT)
     get_target_property(qml_module_install_dir ${target} QT_QML_MODULE_INSTALL_DIR)
     if (resource_targets)
@@ -358,6 +368,9 @@ function(qt6_target_qml_files target)
 
     set(file_contents "")
     foreach(qml_file IN LISTS arg_FILES)
+        if (skip_type_registration AND qml_file MATCHES "\\.qml$")
+            continue()
+        endif()
         get_source_file_property(qml_file_version ${qml_file} QT_QML_SOURCE_VERSION)
         get_source_file_property(qml_file_typename ${qml_file} QT_QML_SOURCE_TYPENAME)
         get_source_file_property(qml_file_singleton ${qml_file} QT_QML_SINGLETON_TYPE)
