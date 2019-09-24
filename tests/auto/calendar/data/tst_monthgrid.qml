@@ -148,28 +148,29 @@ TestCase {
         control.month = 0
         compare(control.month, 0)
 
-        ignoreWarning(Qt.resolvedUrl("tst_monthgrid.qml") + ":65:9: QML AbstractMonthGrid: month -1 is out of range [0...11]")
+
+        ignoreWarning(/tst_monthgrid.qml:65:9: QML (Abstract)?MonthGrid: month -1 is out of range \[0...11\]$/)
         control.month = -1
         compare(control.month, 0)
 
         control.month = 11
         compare(control.month, 11)
 
-        ignoreWarning(Qt.resolvedUrl("tst_monthgrid.qml") + ":65:9: QML AbstractMonthGrid: month 12 is out of range [0...11]")
+        ignoreWarning(/tst_monthgrid.qml:65:9: QML (Abstract)?MonthGrid: month 12 is out of range \[0...11\]$/)
         control.month = 12
         compare(control.month, 11)
 
         control.year = -271820
         compare(control.year, -271820)
 
-        ignoreWarning(Qt.resolvedUrl("tst_monthgrid.qml") + ":65:9: QML AbstractMonthGrid: year -271821 is out of range [-271820...275759]")
+        ignoreWarning(/tst_monthgrid.qml:65:9: QML (Abstract)?MonthGrid: year -271821 is out of range \[-271820...275759\]$/)
         control.year = -271821
         compare(control.year, -271820)
 
         control.year = 275759
         compare(control.year, 275759)
 
-        ignoreWarning(Qt.resolvedUrl("tst_monthgrid.qml") + ":65:9: QML AbstractMonthGrid: year 275760 is out of range [-271820...275759]")
+        ignoreWarning(/tst_monthgrid.qml:65:9: QML (Abstract)?MonthGrid: year 275760 is out of range \[-271820...275759\]$/)
         control.year = 275760
         compare(control.year, 275759)
 

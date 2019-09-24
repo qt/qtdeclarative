@@ -78,6 +78,8 @@ public:
     QQuickAbstractButton *createStandardButton(QPlatformDialogHelper::StandardButton button);
     void removeStandardButtons();
 
+    void updateLanguage();
+
     Qt::Alignment alignment = 0;
     QQuickDialogButtonBox::Position position = QQuickDialogButtonBox::Footer;
     QPlatformDialogHelper::StandardButtons standardButtons = QPlatformDialogHelper::NoButton;
