@@ -368,6 +368,11 @@ function(qt6_target_qml_files target)
 
     set(file_contents "")
     foreach(qml_file IN LISTS arg_FILES)
+        get_source_file_property(qml_file_install ${qml_file} QT_QML_SOURCE_INSTALL)
+        if (qml_file_install)
+            install(FILES ${qml_file} DESTINATION ${qml_module_install_dir})
+        endif()
+
         if (skip_type_registration AND qml_file MATCHES "\\.qml$")
             continue()
         endif()
@@ -375,7 +380,6 @@ function(qt6_target_qml_files target)
         get_source_file_property(qml_file_typename ${qml_file} QT_QML_SOURCE_TYPENAME)
         get_source_file_property(qml_file_singleton ${qml_file} QT_QML_SINGLETON_TYPE)
         get_source_file_property(qml_file_internal ${qml_file} QT_QML_INTERNAL_TYPE)
-        get_source_file_property(qml_file_install ${qml_file} QT_QML_SOURCE_INSTALL)
         get_target_property(qml_module_version ${target} QT_QML_MODULE_VERSION)
 
         if (NOT qml_file_version)
@@ -394,10 +398,6 @@ function(qt6_target_qml_files target)
 
         if (qml_file_internal)
             string(APPEND file_contents "internal ${qml_file_typename} ${qml_file}\n")
-        endif()
-
-        if (qml_file_install)
-            install(FILES ${qml_file} DESTINATION ${qml_module_install_dir})
         endif()
 
     endforeach()
