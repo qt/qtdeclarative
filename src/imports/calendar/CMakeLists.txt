@@ -5,9 +5,9 @@
 #####################################################################
 
 add_qml_module(qtlabscalendarplugin
-    CPP_PLUGIN
     URI "Qt.labs.calendar"
     VERSION "1.0"
+    CLASSNAME QtLabsCalendarPlugin
     SOURCES
         qquickcalendar.cpp qquickcalendar_p.h
         qquickcalendarmodel.cpp qquickcalendarmodel_p.h
@@ -34,34 +34,35 @@ add_qml_module(qtlabscalendarplugin
         Qt::Quick
 )
 
-set(qml_files
-    DayOfWeekRow.qml
-    MonthGrid.qml
-    WeekNumberColumn.qml
-)
-
-add_qt_resource(qtlabscalendarplugin qmake_Qt_labs_calendar
-    FILES
-        ${qml_files}
-)
-
-qt_install_qml_files(qtlabscalendarplugin
-    FILES ${qml_files}
-)
-
-
 #### Keys ignored in scope 1:.:.:calendar.pro:<TRUE>:
-# CONFIG = "no_cxx_module"
 # IMPORT_VERSION = "1.0"
 # OTHER_FILES = "qmldir"
+# TARGETPATH = "Qt/labs/calendar"
 # _LOADED = "qml_plugin"
 
 ## Scopes:
 #####################################################################
 
-#### Keys ignored in scope 2:.:.:calendar.pro:NOT static:
-# CONFIG = "qmlcache"
-add_qt_docs(
+set(qml_files
+    "DayOfWeekRow.qml"
+    "MonthGrid.qml"
+    "WeekNumberColumn.qml"
+)
+set_source_files_properties(DayOfWeekRow.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "1.0"
+)
+set_source_files_properties(MonthGrid.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "1.0"
+)
+set_source_files_properties(WeekNumberColumn.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "1.0"
+)
+
+qt6_target_qml_files(qtlabscalendarplugin
+    FILES
+        ${qml_files}
+)
+add_qt_docs(qtlabscalendarplugin
     doc/qtlabscalendar.qdocconf
 )
 

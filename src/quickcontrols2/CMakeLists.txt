@@ -35,6 +35,8 @@ add_qt_module(QuickControls2
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
     PUBLIC_LIBRARIES
+        Qt::Core
+        Qt::Gui
         Qt::Quick
 )
 

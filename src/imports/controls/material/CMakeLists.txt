@@ -5,10 +5,13 @@
 #####################################################################
 
 add_qml_module(qtquickcontrols2materialstyleplugin
-    CPP_PLUGIN
     TARGET_PATH "QtQuick/Controls.2/Material"
     URI "QtQuick.Controls.Material"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
+    CLASSNAME QtQuickControls2MaterialStylePlugin
+    DEPENDENCIES
+        QtQuick.Controls/2.5
+    SKIP_TYPE_REGISTRATION
     SOURCES
         qquickmaterialbusyindicator.cpp qquickmaterialbusyindicator_p.h
         qquickmaterialprogressbar.cpp qquickmaterialprogressbar_p.h
@@ -60,6 +63,14 @@ add_qt_resource(qtquickcontrols2materialstyleplugin "qtquickcontrols2materialsty
         ${qtquickcontrols2materialstyleplugin_resource_files}
 )
 
+
+#### Keys ignored in scope 1:.:.:material.pro:<TRUE>:
+# IMPORT_NAME = "QtQuick.Controls.Material"
+# IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
+# OTHER_FILES = "qmldir" "$$QML_FILES"
+# TARGETPATH = "QtQuick/Controls.2/Material"
+# _LOADED = "qml_plugin"
+# _REQUIREMENTS = "qtConfig(quickcontrols2-material)"
 
 set(qml_files
     "ApplicationWindow.qml"
@@ -120,18 +131,7 @@ set(qml_files
     "Tumbler.qml"
 )
 
-add_qt_resource(qtquickcontrols2materialstyleplugin qmake_QtQuick_Controls_2_Material
+qt6_target_qml_files(qtquickcontrols2materialstyleplugin
     FILES
         ${qml_files}
 )
-
-qt_install_qml_files(qtquickcontrols2materialstyleplugin
-    FILES ${qml_files}
-)
-
-
-#### Keys ignored in scope 1:.:.:material.pro:<TRUE>:
-# IMPORT_NAME = "QtQuick.Controls.Material"
-# IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
-# OTHER_FILES = "qmldir" "$$QML_FILES"
-# _LOADED = "qml_plugin"

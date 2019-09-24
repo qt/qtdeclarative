@@ -7,5 +7,7 @@ project(QtQuickControls2
     LANGUAGES CXX C
 )
 
-find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui Widgets Network Qml Quick QmlTools)
+find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui Widgets Network Qml Quick QmlTools
+    OPTIONAL_COMPONENTS QuickTest
+)
 qt_build_repo()

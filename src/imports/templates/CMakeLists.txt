@@ -5,10 +5,13 @@
 #####################################################################
 
 add_qml_module(qtquicktemplates2plugin
-    CPP_PLUGIN
     TARGET_PATH "QtQuick/Templates.2"
     URI "QtQuick.Templates"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
+    CLASSNAME QtQuickTemplates2Plugin
+    DEPENDENCIES
+        QtQuick.Window/2.2
+    SKIP_TYPE_REGISTRATION
     SOURCES
         qtquicktemplates2plugin.cpp
     DEFINES
@@ -28,7 +31,6 @@ add_qml_module(qtquicktemplates2plugin
 )
 
 #### Keys ignored in scope 1:.:.:templates.pro:<TRUE>:
-# CONFIG = "no_cxx_module"
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # OTHER_FILES = "qmldir"
 # TARGETPATH = "QtQuick/Templates.2"

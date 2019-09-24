@@ -122,6 +122,8 @@ add_qt_module(QuickTemplates2
         Qt::QmlPrivate
         Qt::QuickPrivate
     PUBLIC_LIBRARIES
+        Qt::Core
+        Qt::Gui
         Qt::Quick
 )
 

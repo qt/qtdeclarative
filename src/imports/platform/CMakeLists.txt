@@ -5,9 +5,10 @@
 #####################################################################
 
 add_qml_module(qtlabsplatformplugin
-    CPP_PLUGIN
     URI "Qt.labs.platform"
     VERSION "1.0"
+    CLASSNAME QtLabsPlatformPlugin
+    SKIP_TYPE_REGISTRATION
     SOURCES
         qquickplatformcolordialog.cpp qquickplatformcolordialog_p.h
         qquickplatformdialog.cpp qquickplatformdialog_p.h
@@ -40,7 +41,6 @@ add_qml_module(qtlabsplatformplugin
 )
 
 #### Keys ignored in scope 1:.:.:platform.pro:<TRUE>:
-# CONFIG = "no_cxx_module"
 # IMPORT_VERSION = "1.0"
 # OTHER_FILES = "qmldir"
 # TARGETPATH = "Qt/labs/platform"
@@ -96,7 +96,7 @@ extend_target(qtlabsplatformplugin CONDITION QT_FEATURE_systemtrayicon
     SOURCES
         qquickplatformsystemtrayicon.cpp qquickplatformsystemtrayicon_p.h
 )
-add_qt_docs(
+add_qt_docs(qtlabsplatformplugin
     doc/qtlabsplatform.qdocconf
 )
 
