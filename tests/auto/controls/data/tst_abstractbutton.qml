@@ -599,7 +599,7 @@ TestCase {
         AbstractButton {
             action: Action {
                 text: "Default"
-                icon.name: "default"
+                icon.name: checked ? "checked" : "unchecked"
                 icon.source: "qrc:/icons/default.png"
                 checkable: true
                 checked: true
@@ -617,6 +617,7 @@ TestCase {
         compare(control.checkable, true)
         compare(control.checked, true)
         compare(control.enabled, false)
+        compare(control.icon.name, "checked")
 
         var textSpy = signalSpy.createObject(control, { target: control, signalName: "textChanged" })
         verify(textSpy.valid)
@@ -630,6 +631,7 @@ TestCase {
         compare(control.checkable, false) // propagates
         compare(control.checked, false) // propagates
         compare(control.enabled, true) // propagates
+        compare(control.icon.name, "unchecked") // propagates
         compare(textSpy.count, 1)
 
         // changes via button
@@ -637,19 +639,23 @@ TestCase {
         control.checkable = true
         control.checked = true
         control.enabled = false
+        control.icon.name = "default"
         compare(control.text, "Button")
         compare(control.checkable, true)
         compare(control.checked, true)
         compare(control.enabled, false)
+        compare(control.icon.name, "default")
         compare(control.action.text, "Action") // does NOT propagate
         compare(control.action.checkable, true) // propagates
         compare(control.action.checked, true) // propagates
         compare(control.action.enabled, true) // does NOT propagate
+        compare(control.action.icon.name, control.action.checked ? "checked" : "unchecked") // does NOT propagate
         compare(textSpy.count, 2)
 
         // remove the action so that only the button's properties are left
         control.action = null
         compare(control.text, "Button")
+        compare(control.icon.name, "default")
         compare(textSpy.count, 2)
 
         // setting an action while button has a particular property set

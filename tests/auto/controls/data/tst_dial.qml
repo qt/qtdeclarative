@@ -470,15 +470,15 @@ TestCase {
 
     function test_snapMode_data(immediate) {
         return [
-            { tag: "NoSnap", snapMode: Slider.NoSnap, from: 0, to: 2, values: [0, 0, 1], positions: [0, 0.5, 0.5] },
-            { tag: "SnapAlways (0..2)", snapMode: Slider.SnapAlways, from: 0, to: 2, values: [0.0, 0.0, 1.0], positions: [0.0, 0.5, 0.5] },
-            { tag: "SnapAlways (1..3)", snapMode: Slider.SnapAlways, from: 1, to: 3, values: [1.0, 1.0, 2.0], positions: [0.0, 0.5, 0.5] },
-            { tag: "SnapAlways (-1..1)", snapMode: Slider.SnapAlways, from: -1, to: 1, values: [0.0, 0.0, 0.0], positions: [0.5, 0.5, 0.5] },
-            { tag: "SnapAlways (1..-1)", snapMode: Slider.SnapAlways, from: 1, to: -1, values: [1.0, 1.0, 0.0], positions: [0.0, 0.5, 0.5] },
-            { tag: "SnapOnRelease (0..2)", snapMode: Slider.SnapOnRelease, from: 0, to: 2, values: [0.0, 0.0, 1.0], positions: [0.0, 0.5, 0.5] },
-            { tag: "SnapOnRelease (1..3)", snapMode: Slider.SnapOnRelease, from: 1, to: 3, values: [1.0, 1.0, 2.0], positions: [0.0, 0.5, 0.5] },
-            { tag: "SnapOnRelease (-1..1)", snapMode: Slider.SnapOnRelease, from: -1, to: 1, values: [0.0, 0.0, 0.0], positions: [immediate ? 0.0 : 0.5, 0.5, 0.5] },
-            { tag: "SnapOnRelease (1..-1)", snapMode: Slider.SnapOnRelease, from: 1, to: -1, values: [1.0, 1.0, 0.0], positions: [0.0, 0.5, 0.5] }
+            { tag: "NoSnap", snapMode: Dial.NoSnap, from: 0, to: 2, values: [0, 0, 1], positions: [0, 0.5, 0.5] },
+            { tag: "SnapAlways (0..2)", snapMode: Dial.SnapAlways, from: 0, to: 2, values: [0.0, 0.0, 1.0], positions: [0.0, 0.5, 0.5] },
+            { tag: "SnapAlways (1..3)", snapMode: Dial.SnapAlways, from: 1, to: 3, values: [1.0, 1.0, 2.0], positions: [0.0, 0.5, 0.5] },
+            { tag: "SnapAlways (-1..1)", snapMode: Dial.SnapAlways, from: -1, to: 1, values: [0.0, 0.0, 0.0], positions: [0.5, 0.5, 0.5] },
+            { tag: "SnapAlways (1..-1)", snapMode: Dial.SnapAlways, from: 1, to: -1, values: [1.0, 1.0, 0.0], positions: [0.0, 0.5, 0.5] },
+            { tag: "SnapOnRelease (0..2)", snapMode: Dial.SnapOnRelease, from: 0, to: 2, values: [0.0, 0.0, 1.0], positions: [0.0, 0.5, 0.5] },
+            { tag: "SnapOnRelease (1..3)", snapMode: Dial.SnapOnRelease, from: 1, to: 3, values: [1.0, 1.0, 2.0], positions: [0.0, 0.5, 0.5] },
+            { tag: "SnapOnRelease (-1..1)", snapMode: Dial.SnapOnRelease, from: -1, to: 1, values: [0.0, 0.0, 0.0], positions: [immediate ? 0.0 : 0.5, 0.5, 0.5] },
+            { tag: "SnapOnRelease (1..-1)", snapMode: Dial.SnapOnRelease, from: 1, to: -1, values: [1.0, 1.0, 0.0], positions: [0.0, 0.5, 0.5] }
         ]
     }
 
