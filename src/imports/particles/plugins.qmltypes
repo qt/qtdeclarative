@@ -997,6 +997,56 @@ Module {
         }
     }
     Component {
+        name: "QQuickStochasticState"
+        prototype: "QObject"
+        Property { name: "duration"; type: "int" }
+        Property { name: "durationVariation"; type: "int" }
+        Property { name: "randomStart"; type: "bool" }
+        Property { name: "to"; type: "QVariantMap" }
+        Property { name: "name"; type: "string" }
+        Signal {
+            name: "durationChanged"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Signal {
+            name: "nameChanged"
+            Parameter { name: "arg"; type: "string" }
+        }
+        Signal {
+            name: "toChanged"
+            Parameter { name: "arg"; type: "QVariantMap" }
+        }
+        Signal {
+            name: "durationVariationChanged"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Signal { name: "entered" }
+        Signal {
+            name: "randomStartChanged"
+            Parameter { name: "arg"; type: "bool" }
+        }
+        Method {
+            name: "setDuration"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Method {
+            name: "setName"
+            Parameter { name: "arg"; type: "string" }
+        }
+        Method {
+            name: "setTo"
+            Parameter { name: "arg"; type: "QVariantMap" }
+        }
+        Method {
+            name: "setDurationVariation"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Method {
+            name: "setRandomStart"
+            Parameter { name: "arg"; type: "bool" }
+        }
+    }
+    Component {
         name: "QQuickTargetDirection"
         prototype: "QQuickDirection"
         exports: ["QtQuick.Particles/TargetDirection 2.0"]

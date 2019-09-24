@@ -100,6 +100,12 @@ Module {
                 "NativeTextRendering": 1
             }
         }
+        Enum {
+            name: "NativeObjectType"
+            values: {
+                "NativeObjectTexture": 0
+            }
+        }
         Property { name: "data"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "color"; type: "QColor" }
         Property { name: "contentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
