@@ -49,6 +49,7 @@
 #include "incrementalmodel.h"
 #include "proxytestinnermodel.h"
 #include "randomsortmodel.h"
+#include "reusemodel.h"
 #include <math.h>
 
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
@@ -283,6 +284,9 @@ private slots:
     void resizeAfterComponentComplete();
 
     void delegateWithRequiredProperties();
+
+    void reuse_reuseIsOffByDefault();
+    void reuse_checkThatItemsAreReused();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -9212,6 +9216,123 @@ void tst_QQuickListView::delegateWithRequiredProperties()
 
         QObject *listView = window->rootObject();
         QVERIFY(listView);
+    }
+}
+
+void tst_QQuickListView::reuse_reuseIsOffByDefault()
+{
+    // Check that delegate recycling is off by default. The reason is that
+    // ListView needs to be backwards compatible with legacy applications. And
+    // when using delegate recycling, there are certain differences, like that
+    // a delegates Component.onCompleted will just be called the first time the
+    // item is created, and not when it's reused.
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("listviewtest.qml"));
+    window->resize(640, 480);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listView = findItem<QQuickListView>(window->rootObject(), "list");
+    QVERIFY(listView != nullptr);
+    QVERIFY(!listView->reuseItems());
+}
+
+void tst_QQuickListView::reuse_checkThatItemsAreReused()
+{
+    // Flick up and down one page of items. Check that this results in the
+    // delegate items being reused once.
+    // Note that this is slightly different from tableview, which will reuse the items
+    // twice during a similar down-then-up flick. The reason is that listview fills up
+    // free space in the view with items  _before_ it release old items that have been
+    // flicked out. But changing this will break other auto tests (and perhaps legacy
+    // apps), so we have chosen to stick with this behavior for now.
+    QScopedPointer<QQuickView> window(createView());
+
+    ReuseModel model(100);
+    QQmlContext *ctxt = window->rootContext();
+    ctxt->setContextProperty("reuseModel", &model);
+
+    window->setSource(testFileUrl("reusedelegateitems.qml"));
+    window->resize(640, 480);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listView = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listView != nullptr);
+    const auto itemView_d = QQuickItemViewPrivate::get(listView);
+
+    QVERIFY(listView->reuseItems());
+
+    auto items = findItems<QQuickItem>(listView, "delegate");
+    const int initialItemCount = items.count();
+    QVERIFY(initialItemCount > 0);
+
+    // Sanity check that the size of the initial list of items match the count we tracked from QML
+    QCOMPARE(listView->property("delegatesCreatedCount").toInt(), initialItemCount);
+
+    // Go through all the initial items and check that they have not been reused yet
+    for (const auto item : qAsConst(items))
+        QCOMPARE(item->property("reusedCount").toInt(), 0);
+
+    // Flick one page down and count how many items we have created thus
+    // far. We expect this number to be twice as high as the initial count
+    // since we flicked one whole page.
+    const qreal delegateHeight = items.at(0)->height();
+    const qreal flickDistance = (initialItemCount * delegateHeight) + 1;
+    listView->setContentY(flickDistance);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listView));
+    const int countAfterDownFlick = listView->property("delegatesCreatedCount").toInt();
+    QCOMPARE(countAfterDownFlick, initialItemCount * 2);
+
+    // Check that the reuse pool is now populated. We expect all initial items to be pooled,
+    // except model index 0, which was never reused or released, since it's ListView.currentItem.
+    const int poolSizeAfterDownFlick = itemView_d->model->poolSize();
+    QCOMPARE(poolSizeAfterDownFlick, initialItemCount - 1);
+
+    // Go through all items and check that all model data inside the delegate
+    // have values updated according to their model index. Since model roles
+    // like 'display' are injected into the context in a special way by the
+    // QML model classes, we need to catch it through a binding instead (which is
+    // OK, since then we can also check that bindings are updated when reused).
+    items = findItems<QQuickItem>(listView, "delegate");
+    for (const auto item : qAsConst(items)) {
+        const QString display = item->property("displayBinding").toString();
+        const int modelIndex = item->property("modelIndex").toInt();
+        QVERIFY(modelIndex >= initialItemCount);
+        QCOMPARE(display, model.displayStringForRow(modelIndex));
+    }
+
+    // Flick one page up. This time there shouldn't be any new items created, so
+    // delegatesCreatedCount should remain unchanged. But while we reuse all the items
+    // in the pool during the flick, we also fill it up again with all the items that
+    // were inside the page that was flicked out.
+    listView->setContentY(0);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listView));
+    const int countAfterUpFlick = listView->property("delegatesCreatedCount").toInt();
+    const int poolSizeAfterUpFlick = itemView_d->model->poolSize();
+    QCOMPARE(countAfterUpFlick, countAfterDownFlick);
+    QCOMPARE(poolSizeAfterUpFlick, initialItemCount);
+
+    // Go through all items and check that they have been reused exactly once
+    // (except for ListView.currentItem, which was never released).
+    const auto listViewCurrentItem = listView->currentItem();
+    items = findItems<QQuickItem>(listView, "delegate");
+    for (const auto item : qAsConst(items)) {
+        const int reusedCount = item->property("reusedCount").toInt();
+        if (item == listViewCurrentItem)
+            QCOMPARE(reusedCount, 0);
+        else
+            QCOMPARE(reusedCount, 1);
+    }
+
+    // Go through all items again and check that all model data inside the delegate
+    // have correct values now that they have been reused.
+    items = findItems<QQuickItem>(listView, "delegate");
+    for (const auto item : qAsConst(items)) {
+        const QString display = item->property("displayBinding").toString();
+        const int modelIndex = item->property("modelIndex").toInt();
+        QVERIFY(modelIndex < initialItemCount);
+        QCOMPARE(display, model.displayStringForRow(modelIndex));
     }
 }
 

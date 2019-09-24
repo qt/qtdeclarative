@@ -497,7 +497,7 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         // We've jumped more than a page.  Estimate which items are now
         // visible and fill from there.
         int count = (fillFrom - (rowPos + rowSize())) / (rowSize()) * columns;
-        releaseVisibleItems();
+        releaseVisibleItems(reusableFlag);
         modelIndex += count;
         if (modelIndex >= model->count())
             modelIndex = model->count() - 1;
@@ -576,7 +576,7 @@ void QQuickGridViewPrivate::removeItem(FxViewItem *item)
         item->releaseAfterTransition = true;
         releasePendingTransition.append(item);
     } else {
-        releaseItem(item);
+        releaseItem(item, QQmlDelegateModel::NotReusable);
     }
 }
 

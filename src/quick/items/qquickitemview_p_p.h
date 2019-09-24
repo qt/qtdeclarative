@@ -174,7 +174,7 @@ public:
     void mirrorChange() override;
 
     FxViewItem *createItem(int modelIndex,QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested);
-    virtual bool releaseItem(FxViewItem *item);
+    virtual bool releaseItem(FxViewItem *item, QQmlInstanceModel::ReusableFlag reusableFlag);
 
     QQuickItem *createHighlightItem() const;
     QQuickItem *createComponentItem(QQmlComponent *component, qreal zValue, bool createDefault = false) const;
@@ -238,14 +238,16 @@ public:
         q->polish();
     }
 
-    void releaseVisibleItems() {
+    void releaseVisibleItems(QQmlInstanceModel::ReusableFlag reusableFlag) {
         // make a copy and clear the visibleItems first to avoid destroyed
         // items being accessed during the loop (QTBUG-61294)
         const QList<FxViewItem *> oldVisible = visibleItems;
         visibleItems.clear();
         for (FxViewItem *item : oldVisible)
-            releaseItem(item);
+            releaseItem(item, reusableFlag);
     }
+
+    virtual QQuickItemViewAttached *getAttachedObject(const QObject *) const { return nullptr; }
 
     QPointer<QQmlInstanceModel> model;
     QVariant modelVariant;
@@ -287,6 +289,11 @@ public:
     FxViewItem *header;
     QQmlComponent *footerComponent;
     FxViewItem *footer;
+
+    // Reusing delegate items cannot be on by default for backwards compatibility.
+    // Reusing an item will e.g mean that Component.onCompleted will only be called for an
+    // item when it's created and not when it's reused, which will break legacy applications.
+    QQmlInstanceModel::ReusableFlag reusableFlag = QQmlInstanceModel::NotReusable;
 
     struct MovedItem {
         FxViewItem *item;
