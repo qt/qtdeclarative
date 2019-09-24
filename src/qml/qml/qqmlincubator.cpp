@@ -61,7 +61,7 @@ void QQmlEnginePrivate::incubate(QQmlIncubator &i, QQmlContextData *forContext)
         QExplicitlySharedDataPointer<QQmlIncubatorPrivate> parentIncubator;
         QQmlContextData *cctxt = forContext;
         while (cctxt) {
-            if (cctxt->incubator) {
+            if (!cctxt->hasExtraObject && cctxt->incubator) {
                 parentIncubator = cctxt->incubator;
                 break;
             }
@@ -149,7 +149,8 @@ void QQmlIncubatorPrivate::clear()
     }
     enginePriv = nullptr;
     if (!rootContext.isNull()) {
-        rootContext->incubator = nullptr;
+        if (!rootContext->hasExtraObject)
+            rootContext->incubator = nullptr;
         rootContext = nullptr;
     }
 
