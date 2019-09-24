@@ -101,6 +101,7 @@ Q_SIGNALS:
     void playingChanged();
     void pausedChanged();
     void frameChanged();
+    void currentFrameChanged();
     void frameCountChanged();
     Q_REVISION(11) void speedChanged();
 

@@ -140,6 +140,7 @@ QQuickAnimatedImage::QQuickAnimatedImage(QQuickItem *parent)
 {
     connect(this, &QQuickImageBase::cacheChanged, this, &QQuickAnimatedImage::onCacheChanged);
     connect(this, &QQuickImageBase::currentFrameChanged, this, &QQuickAnimatedImage::frameChanged);
+    connect(this, &QQuickImageBase::currentFrameChanged, this, &QQuickAnimatedImage::currentFrameChanged);
     connect(this, &QQuickImageBase::frameCountChanged, this, &QQuickAnimatedImage::frameCountChanged);
 }
 
@@ -466,7 +467,7 @@ void QQuickAnimatedImage::movieUpdate()
 
     if (d->movie) {
         d->setPixmap(*d->infoForCurrentFrame(qmlEngine(this)));
-        emit currentFrameChanged();
+        emit QQuickImageBase::currentFrameChanged();
     }
 }
 
