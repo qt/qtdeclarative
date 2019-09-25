@@ -614,6 +614,8 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
     QQmlTypeCompiler compiler(enginePrivate, this, m_document.data(), typeNameCache, resolvedTypeCache, dependencyHasher);
     m_compiledData = compiler.compile();
     if (!m_compiledData) {
+        qDeleteAll(*resolvedTypeCache);
+        resolvedTypeCache->clear();
         setError(compiler.compilationErrors());
         return;
     }
