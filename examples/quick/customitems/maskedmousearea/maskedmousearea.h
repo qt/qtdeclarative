@@ -62,6 +62,7 @@ class MaskedMouseArea : public QQuickItem
     Q_PROPERTY(bool containsMouse READ containsMouse NOTIFY containsMouseChanged)
     Q_PROPERTY(QUrl maskSource READ maskSource WRITE setMaskSource NOTIFY maskSourceChanged)
     Q_PROPERTY(qreal alphaThreshold READ alphaThreshold WRITE setAlphaThreshold NOTIFY alphaThresholdChanged)
+    QML_ELEMENT
 
 public:
     MaskedMouseArea(QQuickItem *parent = 0);

@@ -74,6 +74,8 @@ class Q_AUTOTEST_EXPORT QQuickTextMetrics : public QObject
     Q_PROPERTY(QString elidedText READ elidedText NOTIFY metricsChanged FINAL)
     Q_PROPERTY(Qt::TextElideMode elide READ elide WRITE setElide NOTIFY elideChanged FINAL)
     Q_PROPERTY(qreal elideWidth READ elideWidth WRITE setElideWidth NOTIFY elideWidthChanged FINAL)
+    QML_NAMED_ELEMENT(TextMetrics)
+    QML_ADDED_IN_MINOR_VERSION(4)
 
 public:
     explicit QQuickTextMetrics(QObject *parent = 0);

@@ -84,47 +84,45 @@ void QQuickParticlesModule::defineModule()
 
     const char* uri = "QtQuick.Particles";
 
-    qmlRegisterType<QQuickParticleSystem>(uri, 2, 0, "ParticleSystem");
-    qmlRegisterType<QQuickParticleGroup>(uri, 2, 0, "ParticleGroup");
+    qmlRegisterTypesAndRevisions<
+            QQuickParticleSystem,
+            QQuickParticleGroup,
 
-    qmlRegisterType<QQuickImageParticle>(uri, 2, 0, "ImageParticle");
+            QQuickImageParticle,
 #if QT_CONFIG(quick_shadereffect)
-    qmlRegisterType<QQuickCustomParticle>(uri, 2, 0, "CustomParticle");
+            QQuickCustomParticle,
 #endif
-    qmlRegisterType<QQuickItemParticle>(uri, 2, 0, "ItemParticle");
+            QQuickItemParticle,
 
-    qmlRegisterType<QQuickParticleEmitter>(uri, 2, 0, "Emitter");
-    qmlRegisterType<QQuickTrailEmitter>(uri, 2, 0, "TrailEmitter");
+            QQuickParticleEmitter,
+            QQuickTrailEmitter,
 
-    qmlRegisterType<QQuickEllipseExtruder>(uri, 2, 0, "EllipseShape");
-    qmlRegisterType<QQuickRectangleExtruder>(uri, 2, 0, "RectangleShape");
-    qmlRegisterType<QQuickLineExtruder>(uri, 2, 0, "LineShape");
-    qmlRegisterType<QQuickMaskExtruder>(uri, 2, 0, "MaskShape");
+            QQuickEllipseExtruder,
+            QQuickRectangleExtruder,
+            QQuickLineExtruder,
+            QQuickMaskExtruder,
 
-    qmlRegisterType<QQuickPointDirection>(uri, 2, 0, "PointDirection");
-    qmlRegisterType<QQuickAngleDirection>(uri, 2, 0, "AngleDirection");
-    qmlRegisterType<QQuickTargetDirection>(uri, 2, 0, "TargetDirection");
-    qmlRegisterType<QQuickCumulativeDirection>(uri, 2, 0, "CumulativeDirection");
+            QQuickPointDirection,
+            QQuickAngleDirection,
+            QQuickTargetDirection,
+            QQuickCumulativeDirection,
 
-    qmlRegisterType<QQuickCustomAffector>(uri, 2, 0, "Affector");
-    qmlRegisterType<QQuickWanderAffector>(uri, 2, 0, "Wander");
-    qmlRegisterType<QQuickFrictionAffector>(uri, 2, 0, "Friction");
-    qmlRegisterType<QQuickAttractorAffector>(uri, 2, 0, "Attractor");
-    qmlRegisterType<QQuickGravityAffector>(uri, 2, 0, "Gravity");
-    qmlRegisterType<QQuickAgeAffector>(uri, 2, 0, "Age");
-    qmlRegisterType<QQuickSpriteGoalAffector>(uri, 2, 0, "SpriteGoal");
-    qmlRegisterType<QQuickGroupGoalAffector>(uri, 2, 0, "GroupGoal");
-    qmlRegisterType<QQuickTurbulenceAffector>(uri, 2, 0 , "Turbulence");
+            QQuickCustomAffector,
+            QQuickWanderAffector,
+            QQuickFrictionAffector,
+            QQuickAttractorAffector,
+            QQuickGravityAffector,
+            QQuickAgeAffector,
+            QQuickSpriteGoalAffector,
+            QQuickGroupGoalAffector,
+            QQuickTurbulenceAffector,
 
-    //Exposed just for completeness
-    qmlRegisterUncreatableType<QQuickParticleAffector>(uri, 2, 0, "ParticleAffector",
-                                                    QStringLiteral("Abstract type. Use one of the inheriting types instead."));
-    qmlRegisterUncreatableType<QQuickParticlePainter>(uri, 2, 0, "ParticlePainter",
-                                                   QStringLiteral("Abstract type. Use one of the inheriting types instead."));
-    qmlRegisterUncreatableType<QQuickParticleExtruder>(uri, 2, 0, "ParticleExtruder",
-                                                    QStringLiteral("Abstract type. Use one of the inheriting types instead."));
-    qmlRegisterUncreatableType<QQuickDirection>(uri, 2, 0, "NullVector",
-                                             QStringLiteral("Abstract type. Use one of the inheriting types instead."));
+            // Exposed just for completeness
+            QQuickParticleAffector,
+            QQuickParticlePainter,
+            QQuickParticleExtruder,
+            QQuickDirection
+    >(uri, 2);
 }
 
 QT_END_NAMESPACE

@@ -64,6 +64,7 @@ class Q_AUTOTEST_EXPORT QQuickStateChangeScript : public QQuickStateOperation, p
 
     Q_PROPERTY(QQmlScriptString script READ script WRITE setScript)
     Q_PROPERTY(QString name READ name WRITE setName)
+    QML_NAMED_ELEMENT(StateChangeScript)
 
 public:
     QQuickStateChangeScript(QObject *parent=nullptr);

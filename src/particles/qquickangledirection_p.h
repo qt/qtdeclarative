@@ -51,6 +51,8 @@
 // We mean it.
 //
 #include "qquickdirection_p.h"
+#include <QtQml/qqml.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickAngleDirection : public QQuickDirection
@@ -60,6 +62,7 @@ class QQuickAngleDirection : public QQuickDirection
     Q_PROPERTY(qreal magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
     Q_PROPERTY(qreal angleVariation READ angleVariation WRITE setAngleVariation NOTIFY angleVariationChanged)
     Q_PROPERTY(qreal magnitudeVariation READ magnitudeVariation WRITE setMagnitudeVariation NOTIFY magnitudeVariationChanged)
+    QML_NAMED_ELEMENT(AngleDirection)
 public:
     explicit QQuickAngleDirection(QObject *parent = 0);
     QPointF sample(const QPointF &from) override;

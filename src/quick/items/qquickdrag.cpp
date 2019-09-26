@@ -60,6 +60,8 @@ QT_BEGIN_NAMESPACE
 class QQuickDragAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickDragAttached)
+    QML_ANONYMOUS
+
 public:
     static QQuickDragAttachedPrivate *get(QQuickDragAttached *attached) {
         return static_cast<QQuickDragAttachedPrivate *>(QObjectPrivate::get(attached)); }

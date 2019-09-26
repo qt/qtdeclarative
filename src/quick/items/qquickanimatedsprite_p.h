@@ -92,6 +92,7 @@ class Q_AUTOTEST_EXPORT QQuickAnimatedSprite : public QQuickItem
     Q_PROPERTY(int loops READ loops WRITE setLoops NOTIFY loopsChanged)
     Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
     Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY currentFrameChanged)
+    QML_NAMED_ELEMENT(AnimatedSprite)
 
 public:
     explicit QQuickAnimatedSprite(QQuickItem *parent = nullptr);

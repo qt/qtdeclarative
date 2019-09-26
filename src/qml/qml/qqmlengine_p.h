@@ -101,6 +101,13 @@ class QQmlProfiler;
 class QQmlPropertyCapture;
 class QQmlMetaObject;
 
+struct QObjectForeign {
+    Q_GADGET
+    QML_FOREIGN(QObject)
+    QML_NAMED_ELEMENT(QtObject)
+    Q_CLASSINFO("QML.Root", "QML")
+};
+
 // This needs to be declared here so that the pool for it can live in QQmlEnginePrivate.
 // The inline method definitions are in qqmljavascriptexpression_p.h
 class QQmlJavaScriptExpressionGuard : public QQmlNotifierEndpoint

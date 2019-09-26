@@ -111,6 +111,7 @@ class FbItem : public QQuickFramebufferObject
     Q_PROPERTY(QVector3D target READ target WRITE setTarget)
     Q_PROPERTY(QVector3D rotation READ rotation WRITE setRotation)
     Q_PROPERTY(bool multisample READ multisample WRITE setMultisample)
+    QML_ELEMENT
 
 public:
     explicit FbItem(QQuickItem *parent = 0);

@@ -202,6 +202,7 @@ class QQuickImageParticle : public QQuickParticlePainter
     Q_PROPERTY(bool spritesInterpolate READ spritesInterpolate WRITE setSpritesInterpolate NOTIFY spritesInterpolateChanged)
 
     Q_PROPERTY(EntryEffect entryEffect READ entryEffect WRITE setEntryEffect NOTIFY entryEffectChanged)
+    QML_NAMED_ELEMENT(ImageParticle)
 public:
     explicit QQuickImageParticle(QQuickItem *parent = 0);
     virtual ~QQuickImageParticle();

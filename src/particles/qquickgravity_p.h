@@ -51,6 +51,7 @@
 // We mean it.
 //
 #include "qquickparticleaffector_p.h"
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -60,6 +61,7 @@ class QQuickGravityAffector : public QQuickParticleAffector
     Q_PROPERTY(qreal magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
     Q_PROPERTY(qreal acceleration READ magnitude WRITE setAcceleration NOTIFY magnitudeChanged)
     Q_PROPERTY(qreal angle READ angle WRITE setAngle NOTIFY angleChanged)
+    QML_NAMED_ELEMENT(Gravity)
 public:
     explicit QQuickGravityAffector(QQuickItem *parent = 0);
     qreal magnitude() const;

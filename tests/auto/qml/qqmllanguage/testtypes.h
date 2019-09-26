@@ -1420,6 +1420,40 @@ public:
     enum class OtherScopedEnum : int { ScopedVal1, ScopedVal2, ScopedVal3 };
 };
 
+class Extension : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int extension READ extension CONSTANT)
+public:
+    Extension(QObject *parent = nullptr) : QObject(parent) {}
+    int extension() const { return 42; }
+};
+
+class Extended : public QObject
+{
+    Q_OBJECT
+    QML_EXTENDED(Extension)
+    QML_NAMED_ELEMENT(Extended)
+    Q_PROPERTY(int base READ base CONSTANT)
+
+public:
+    int base() const { return 43; }
+};
+
+class Foreign
+{
+    Q_GADGET
+    QML_FOREIGN(QObject)
+    QML_NAMED_ELEMENT(Foreign)
+};
+
+class ForeignExtended
+{
+    Q_GADGET
+    QML_FOREIGN(QObject)
+    QML_NAMED_ELEMENT(ForeignExtended)
+    QML_EXTENDED(Extension)
+};
 
 void registerTypes();
 

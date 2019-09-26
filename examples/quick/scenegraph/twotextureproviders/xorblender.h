@@ -58,6 +58,7 @@ class XorBlender : public QQuickItem
     Q_OBJECT
     Q_PROPERTY(QQuickItem *source1 READ source1 WRITE setSource1 NOTIFY source1Changed)
     Q_PROPERTY(QQuickItem *source2 READ source2 WRITE setSource2 NOTIFY source2Changed)
+    QML_ELEMENT
 
 public:
     explicit XorBlender(QQuickItem *parent = 0);

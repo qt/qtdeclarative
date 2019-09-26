@@ -68,6 +68,9 @@ class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleAffector : public QQuickItem
     Q_PROPERTY(bool once READ onceOff WRITE setOnceOff NOTIFY onceChanged)
     Q_PROPERTY(QQuickParticleExtruder* shape READ shape WRITE setShape NOTIFY shapeChanged)
 
+    QML_NAMED_ELEMENT(ParticleAffector)
+    QML_UNCREATABLE("Abstract type. Use one of the inheriting types instead.")
+
 public:
     explicit QQuickParticleAffector(QQuickItem *parent = 0);
     virtual void affectSystem(qreal dt);

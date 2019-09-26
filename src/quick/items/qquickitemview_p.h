@@ -110,6 +110,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickItemView : public QQuickFlickable
     Q_PROPERTY(qreal preferredHighlightEnd READ preferredHighlightEnd WRITE setPreferredHighlightEnd NOTIFY preferredHighlightEndChanged RESET resetPreferredHighlightEnd)
     Q_PROPERTY(int highlightMoveDuration READ highlightMoveDuration WRITE setHighlightMoveDuration NOTIFY highlightMoveDurationChanged)
 
+    QML_NAMED_ELEMENT(ItemView)
+    QML_UNCREATABLE("ItemView is an abstract base class.")
+    QML_ADDED_IN_MINOR_VERSION(1)
+
 public:
     // this holds all layout enum values so they can be referred to by other enums
     // to ensure consistent values - e.g. QML references to GridView.TopToBottom flow

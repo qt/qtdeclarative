@@ -62,6 +62,7 @@ class QQuickAttractorAffector : public QQuickParticleAffector
     Q_PROPERTY(qreal pointY READ pointY WRITE setPointY NOTIFY pointYChanged)
     Q_PROPERTY(AffectableParameters affectedParameter READ affectedParameter WRITE setAffectedParameter NOTIFY affectedParameterChanged)
     Q_PROPERTY(Proportion proportionalToDistance READ proportionalToDistance WRITE setProportionalToDistance NOTIFY proportionalToDistanceChanged)
+    QML_NAMED_ELEMENT(Attractor)
 
 public:
     enum Proportion{

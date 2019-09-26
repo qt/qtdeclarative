@@ -71,6 +71,7 @@ class Q_AUTOTEST_EXPORT QQmlConnections : public QObject, public QQmlParserStatu
     Q_PROPERTY(QObject *target READ target WRITE setTarget NOTIFY targetChanged)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged REVISION 3)
     Q_PROPERTY(bool ignoreUnknownSignals READ ignoreUnknownSignals WRITE setIgnoreUnknownSignals)
+    QML_NAMED_ELEMENT(Connections)
 
 public:
     QQmlConnections(QObject *parent=nullptr);
@@ -106,6 +107,13 @@ public:
     void applyBindings(QObject *object, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
 };
 
+// TODO: We won't need Connections to be a custom type anymore once we can drop the
+//       automatic signal handler inference from undeclared properties.
+template<>
+inline QQmlCustomParser *qmlCreateCustomParser<QQmlConnections>()
+{
+    return new QQmlConnectionsParser;
+}
 
 QT_END_NAMESPACE
 

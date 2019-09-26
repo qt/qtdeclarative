@@ -42,6 +42,7 @@
 
 #include <QtCore/QSignalTransition>
 #include <QtQml/QQmlParserStatus>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -51,6 +52,7 @@ class TimeoutTransition : public QSignalTransition, public QQmlParserStatus
     Q_OBJECT
     Q_PROPERTY(int timeout READ timeout WRITE setTimeout NOTIFY timeoutChanged)
     Q_INTERFACES(QQmlParserStatus)
+    QML_ELEMENT
 
 public:
     TimeoutTransition(QState *parent = nullptr);

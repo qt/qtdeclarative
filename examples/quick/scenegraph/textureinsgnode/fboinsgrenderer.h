@@ -58,6 +58,7 @@ class LogoRenderer;
 class FboInSGRenderer : public QQuickFramebufferObject
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(Renderer)
 public:
     Renderer *createRenderer() const;
 };

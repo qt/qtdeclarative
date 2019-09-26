@@ -65,7 +65,8 @@ HEADERS += \
     $$PWD/qquickprofiler_p.h \
     $$PWD/qquickfontmetrics_p.h \
     $$PWD/qquicktextmetrics_p.h \
-    $$PWD/qquickvalidator_p.h
+    $$PWD/qquickvalidator_p.h \
+    $$PWD/qquickforeignutils_p.h
 
 qtConfig(shortcut) {
     SOURCES += \

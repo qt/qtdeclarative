@@ -59,6 +59,7 @@ class BirthdayPartyAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QDate rsvp READ rsvp WRITE setRsvp)
+    QML_ANONYMOUS
 public:
     BirthdayPartyAttached(QObject *object);
 
@@ -75,6 +76,12 @@ class BirthdayParty : public QObject
     Q_PROPERTY(Person *host READ host WRITE setHost)
     Q_PROPERTY(QQmlListProperty<Person> guests READ guests)
     Q_CLASSINFO("DefaultProperty", "guests")
+    QML_ELEMENT
+
+//! [declare attached]
+    QML_ATTACHED(BirthdayPartyAttached)
+//! [declare attached]
+
 public:
     BirthdayParty(QObject *parent = nullptr);
 
@@ -93,7 +100,4 @@ private:
     QList<Person *> m_guests;
 };
 
-//! [declare attached]
-QML_DECLARE_TYPEINFO(BirthdayParty, QML_HAS_ATTACHED_PROPERTIES)
-//! [declare attached]
 #endif // BIRTHDAYPARTY_H

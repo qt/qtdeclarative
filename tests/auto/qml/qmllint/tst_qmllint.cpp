@@ -156,6 +156,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("methodInScope")             << QStringLiteral("MethodInScope.qml");
     QTest::newRow("importWithPrefix")          << QStringLiteral("ImportWithPrefix.qml");
     QTest::newRow("catchIdentifier")           << QStringLiteral("catchIdentifierNoWarning.qml");
+    QTest::newRow("qmldirAndQmltypes")         << QStringLiteral("qmldirAndQmltypes.qml");
 }
 
 void TestQmllint::cleanQmlCode()
@@ -171,6 +172,7 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed)
     QStringList args;
     args << QStringLiteral("-U") << testFile(fileToLint)
          << QStringLiteral("-I") << qmlImportDir
+         << QStringLiteral("-I") << dataDirectory()
          << QStringLiteral("--silent");
     QString errors;
     auto verify = [&](bool isSilent) {

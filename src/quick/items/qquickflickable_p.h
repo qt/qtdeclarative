@@ -114,6 +114,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFlickable : public QQuickItem
     Q_PROPERTY(QQmlListProperty<QObject> flickableData READ flickableData)
     Q_PROPERTY(QQmlListProperty<QQuickItem> flickableChildren READ flickableChildren)
     Q_CLASSINFO("DefaultProperty", "flickableData")
+    QML_NAMED_ELEMENT(Flickable)
 
 public:
     QQuickFlickable(QQuickItem *parent=nullptr);

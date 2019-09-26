@@ -58,6 +58,7 @@ class QQuickEllipseExtruder : public QQuickParticleExtruder
 {
     Q_OBJECT
     Q_PROPERTY(bool fill READ fill WRITE setFill NOTIFY fillChanged)//###Use base class? If it's still box
+    QML_NAMED_ELEMENT(EllipseShape)
 public:
     explicit QQuickEllipseExtruder(QObject *parent = 0);
     QPointF extrude(const QRectF &) override;

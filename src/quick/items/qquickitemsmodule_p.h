@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <QtGui/qevent.h>
 #include <qqml.h>
 
 QT_BEGIN_NAMESPACE
@@ -59,6 +60,15 @@ class QQuickItemsModule
 {
 public:
     static void defineModule();
+};
+
+struct QPointingDeviceUniqueIdForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QPointingDeviceUniqueId)
+    QML_NAMED_ELEMENT(PointingDeviceUniqueId)
+    QML_ADDED_IN_MINOR_VERSION(9)
+    QML_UNCREATABLE("PointingDeviceUniqueId is only available via read-only properties.")
 };
 
 QT_END_NAMESPACE

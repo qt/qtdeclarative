@@ -58,6 +58,7 @@ QT_BEGIN_NAMESPACE
 class Q_AUTOTEST_EXPORT QQuickFocusScope : public QQuickItem
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(FocusScope)
 public:
     QQuickFocusScope(QQuickItem *parent=nullptr);
     virtual ~QQuickFocusScope();

@@ -58,6 +58,7 @@ class PieSlice : public QQuickPaintedItem
 {
     Q_OBJECT
     Q_PROPERTY(QColor color READ color WRITE setColor)
+    QML_ELEMENT
 
 public:
     PieSlice(QQuickItem *parent = 0);

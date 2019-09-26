@@ -550,7 +550,7 @@ QQmlContextData::QQmlContextData()
 QQmlContextData::QQmlContextData(QQmlContext *ctxt)
     : engine(nullptr), isInternal(false), isJSContext(false),
       isPragmaLibraryContext(false), unresolvedNames(false), hasEmittedDestruction(false), isRootObjectInCreation(false),
-      stronglyReferencedByParent(false), publicContext(ctxt), incubator(nullptr), componentObjectIndex(-1),
+      stronglyReferencedByParent(false), hasExtraObject(false), publicContext(ctxt), incubator(nullptr), componentObjectIndex(-1),
       contextObject(nullptr), nextChild(nullptr), prevChild(nullptr),
       expressions(nullptr), contextObjects(nullptr), idValues(nullptr), idValueCount(0),
       componentAttached(nullptr)

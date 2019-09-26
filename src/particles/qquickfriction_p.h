@@ -59,6 +59,7 @@ class QQuickFrictionAffector : public QQuickParticleAffector
     Q_OBJECT
     Q_PROPERTY(qreal factor READ factor WRITE setFactor NOTIFY factorChanged)
     Q_PROPERTY(qreal threshold READ threshold WRITE setThreshold NOTIFY thresholdChanged)
+    QML_NAMED_ELEMENT(Friction)
 public:
     explicit QQuickFrictionAffector(QQuickItem *parent = 0);
 

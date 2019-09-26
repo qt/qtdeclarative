@@ -66,6 +66,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPen : public QObject
     Q_PROPERTY(qreal width READ width WRITE setWidth NOTIFY penChanged)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY penChanged)
     Q_PROPERTY(bool pixelAligned READ pixelAligned WRITE setPixelAligned NOTIFY penChanged)
+    QML_ANONYMOUS
 public:
     QQuickPen(QObject *parent=nullptr);
 
@@ -96,6 +97,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickGradientStop : public QObject
 
     Q_PROPERTY(qreal position READ position WRITE setPosition)
     Q_PROPERTY(QColor color READ color WRITE setColor)
+    QML_NAMED_ELEMENT(GradientStop)
 
 public:
     QQuickGradientStop(QObject *parent=nullptr);
@@ -121,6 +123,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickGradient : public QObject
     Q_PROPERTY(QQmlListProperty<QQuickGradientStop> stops READ stops)
     Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged REVISION 12)
     Q_CLASSINFO("DefaultProperty", "stops")
+    QML_NAMED_ELEMENT(Gradient)
 
     Q_ENUMS(QGradient::Preset)
 public:
@@ -161,6 +164,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRectangle : public QQuickItem
     Q_PROPERTY(QJSValue gradient READ gradient WRITE setGradient RESET resetGradient)
     Q_PROPERTY(QQuickPen * border READ border CONSTANT)
     Q_PROPERTY(qreal radius READ radius WRITE setRadius NOTIFY radiusChanged)
+    QML_NAMED_ELEMENT(Rectangle)
 public:
     QQuickRectangle(QQuickItem *parent=nullptr);
 

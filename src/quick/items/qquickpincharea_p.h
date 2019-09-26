@@ -70,6 +70,7 @@ class Q_AUTOTEST_EXPORT QQuickPinch : public QObject
     Q_PROPERTY(qreal minimumY READ ymin WRITE setYmin NOTIFY minimumYChanged)
     Q_PROPERTY(qreal maximumY READ ymax WRITE setYmax NOTIFY maximumYChanged)
     Q_PROPERTY(bool active READ active NOTIFY activeChanged)
+    QML_NAMED_ELEMENT(Pinch)
 
 public:
     QQuickPinch();
@@ -210,6 +211,7 @@ class Q_AUTOTEST_EXPORT QQuickPinchEvent : public QObject
     Q_PROPERTY(QPointF startPoint2 READ startPoint2)
     Q_PROPERTY(int pointCount READ pointCount)
     Q_PROPERTY(bool accepted READ accepted WRITE setAccepted)
+    QML_ANONYMOUS
 
 public:
     QQuickPinchEvent(QPointF c, qreal s, qreal a, qreal r)
@@ -268,6 +270,7 @@ class Q_AUTOTEST_EXPORT QQuickPinchArea : public QQuickItem
 
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(QQuickPinch *pinch READ pinch CONSTANT)
+    QML_NAMED_ELEMENT(PinchArea)
 
 public:
     QQuickPinchArea(QQuickItem *parent=nullptr);

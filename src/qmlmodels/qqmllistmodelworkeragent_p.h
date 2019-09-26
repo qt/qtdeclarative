@@ -56,6 +56,7 @@
 #include <QEvent>
 #include <QMutex>
 #include <QWaitCondition>
+#include <QtQml/qqml.h>
 
 #include <private/qv4engine_p.h>
 
@@ -71,6 +72,7 @@ class QQmlListModelWorkerAgent : public QObject
     Q_OBJECT
     Q_PROPERTY(int count READ count)
     Q_PROPERTY(QV4::ExecutionEngine *engine READ engine WRITE setEngine NOTIFY engineChanged)
+    QML_ANONYMOUS
 
 public:
     QQmlListModelWorkerAgent(QQmlListModel *);

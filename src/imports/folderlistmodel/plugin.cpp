@@ -55,18 +55,13 @@ public:
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.folderlistmodel"));
-        qmlRegisterType<QQuickFolderListModel>(uri,1,0,"FolderListModel");
-        qmlRegisterType<QQuickFolderListModel>(uri,2,0,"FolderListModel");
-        qmlRegisterType<QQuickFolderListModel,1>(uri,2,1,"FolderListModel");
-        qmlRegisterType<QQuickFolderListModel,2>(uri,2,2,"FolderListModel");
+
+        // Major version 1 only has a single revision, 0.
+        qmlRegisterType<QQuickFolderListModel>(uri, 1, 0, "FolderListModel");
+
+        qmlRegisterTypesAndRevisions<QQuickFolderListModel>(uri, 2);
 
         qmlRegisterModule(uri, 2, 15);
-
-        // revision in Qt 5.11: added status property
-        qmlRegisterType<QQuickFolderListModel,11>(uri, 2, 11, "FolderListModel");
-
-        // revision in Qt 5.12: added sortCaseSensitive property
-        qmlRegisterType<QQuickFolderListModel,12>(uri, 2, 12, "FolderListModel");
     }
 };
 //![class decl]

@@ -57,7 +57,7 @@ public:
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.wavefrontmesh"));
-        qmlRegisterType<QWavefrontMesh>(uri, 1, 0, "WavefrontMesh");
+        qmlRegisterTypesAndRevisions<QWavefrontMesh>(uri, 1);
 
         qmlRegisterModule(uri, 1, 15);
     }

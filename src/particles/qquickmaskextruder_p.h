@@ -61,6 +61,7 @@ class QQuickMaskExtruder : public QQuickParticleExtruder
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
+    QML_NAMED_ELEMENT(MaskShape)
 public:
     explicit QQuickMaskExtruder(QObject *parent = 0);
     QPointF extrude(const QRectF &) override;

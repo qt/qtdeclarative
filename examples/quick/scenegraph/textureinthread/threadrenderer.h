@@ -58,6 +58,7 @@ class RenderThread;
 class ThreadRenderer : public QQuickItem
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(Renderer)
 
 public:
     ThreadRenderer();

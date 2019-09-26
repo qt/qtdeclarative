@@ -52,6 +52,8 @@
 //
 #include "qquickdirection_p.h"
 #include <QQmlListProperty>
+#include <QtQml/qqml.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickCumulativeDirection : public QQuickDirection
@@ -59,6 +61,7 @@ class QQuickCumulativeDirection : public QQuickDirection
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<QQuickDirection> directions READ directions)
     Q_CLASSINFO("DefaultProperty", "directions")
+    QML_NAMED_ELEMENT(CumulativeDirection)
 public:
     explicit QQuickCumulativeDirection(QObject *parent = 0);
     QQmlListProperty<QQuickDirection> directions();

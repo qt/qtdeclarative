@@ -147,11 +147,16 @@ public:
     quint32 hasEmittedDestruction:1;
     quint32 isRootObjectInCreation:1;
     quint32 stronglyReferencedByParent:1;
-    quint32 dummy:25;
+    quint32 hasExtraObject:1; // used in QQmlDelegateModelItem::dataForObject to find the corresponding QQmlDelegateModelItem of an object
+    quint32 dummy:24;
     QQmlContext *publicContext;
 
-    // The incubator that is constructing this context if any
-    QQmlIncubatorPrivate *incubator;
+    union {
+        // The incubator that is constructing this context if any
+        QQmlIncubatorPrivate *incubator;
+        // a pointer to extra data, currently only used in QQmlDelegateModel
+        QObject *extraObject;
+    };
 
     // Compilation unit for contexts that belong to a compiled type.
     QQmlRefPointer<QV4::ExecutableCompilationUnit> typeCompilationUnit;

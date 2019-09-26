@@ -54,6 +54,7 @@
 #include <QtQuickTest/quicktestglobal.h>
 #include <QtCore/qobject.h>
 #include <QtGui/QWindow>
+#include <QtQml/qqml.h>
 #include <QtTest/qtesttouch.h>
 
 QT_BEGIN_NAMESPACE
@@ -62,6 +63,8 @@ class QuickTestEvent;
 class Q_QUICK_TEST_EXPORT QQuickTouchEventSequence : public QObject
 {
     Q_OBJECT
+    QML_ANONYMOUS
+
 public:
     explicit QQuickTouchEventSequence(QuickTestEvent *testEvent, QObject *item = nullptr);
 public slots:
@@ -80,6 +83,7 @@ class Q_QUICK_TEST_EXPORT QuickTestEvent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int defaultMouseDelay READ defaultMouseDelay FINAL)
+    QML_NAMED_ELEMENT(TestEvent)
 public:
     QuickTestEvent(QObject *parent = nullptr);
     ~QuickTestEvent() override;

@@ -52,6 +52,7 @@
 //
 
 #include <QObject>
+#include <QtQml/qqml.h>
 #include "qquickparticlesystem_p.h"
 #include "qquickparticleextruder_p.h"
 #include "qquickparticleaffector_p.h"
@@ -66,6 +67,7 @@ class QQuickCustomAffector : public QQuickParticleAffector
     Q_PROPERTY(QQuickDirection *position READ position WRITE setPosition NOTIFY positionChanged RESET positionReset)
     Q_PROPERTY(QQuickDirection *velocity READ velocity WRITE setVelocity NOTIFY velocityChanged RESET velocityReset)
     Q_PROPERTY(QQuickDirection *acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged RESET accelerationReset)
+    QML_NAMED_ELEMENT(Affector)
 
 public:
     explicit QQuickCustomAffector(QQuickItem *parent = 0);

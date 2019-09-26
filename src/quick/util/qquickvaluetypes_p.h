@@ -326,6 +326,9 @@ class QQuickFontValueType
     Q_PROPERTY(bool kerning READ kerning WRITE setKerning FINAL)
     Q_PROPERTY(bool preferShaping READ preferShaping WRITE setPreferShaping FINAL)
 
+    QML_NAMED_ELEMENT(Font)
+    QML_UNCREATABLE("Element is not creatable.")
+
 public:
     enum FontWeight { Thin = QFont::Thin,
                       ExtraLight = QFont::ExtraLight,

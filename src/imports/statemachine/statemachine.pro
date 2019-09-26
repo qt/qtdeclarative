@@ -19,6 +19,7 @@ HEADERS = \
     $$PWD/signaltransition.h  \
     $$PWD/state.h  \
     $$PWD/statemachine.h  \
-    $$PWD/timeouttransition.h
+    $$PWD/timeouttransition.h \
+    $$PWD/statemachineforeign.h
 
 load(qml_plugin)

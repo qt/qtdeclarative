@@ -77,6 +77,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickBoundaryRule : public QObject, public QQmlPro
     Q_PROPERTY(OvershootFilter overshootFilter READ overshootFilter WRITE setOvershootFilter NOTIFY overshootFilterChanged)
     Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged)
     Q_PROPERTY(int returnDuration READ returnDuration WRITE setReturnDuration NOTIFY returnDurationChanged)
+    QML_NAMED_ELEMENT(BoundaryRule)
 
 public:
     enum OvershootFilter {

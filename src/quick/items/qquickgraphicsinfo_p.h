@@ -75,6 +75,11 @@ class QQuickGraphicsInfo : public QObject
     Q_PROPERTY(OpenGLContextProfile profile READ profile NOTIFY profileChanged FINAL)
     Q_PROPERTY(RenderableType renderableType READ renderableType NOTIFY renderableTypeChanged FINAL)
 
+    QML_NAMED_ELEMENT(GraphicsInfo)
+    QML_ADDED_IN_MINOR_VERSION(8)
+    QML_UNCREATABLE("GraphicsInfo is only available via attached properties.")
+    QML_ATTACHED(QQuickGraphicsInfo)
+
 public:
     enum GraphicsApi {
         Unknown = QSGRendererInterface::Unknown,
@@ -167,7 +172,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPEINFO(QQuickGraphicsInfo, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKGRAPHICSINFO_P_H

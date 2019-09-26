@@ -58,8 +58,7 @@ int main(int argc, char ** argv)
 {
     QCoreApplication app(argc, argv);
 
-    qmlRegisterType<BirthdayParty>("People", 1,0, "BirthdayParty");
-    qmlRegisterType<Person>("People", 1,0, "Person");
+    qmlRegisterTypesAndRevisions<BirthdayParty, Person>("People", 1);
 
     QQmlEngine engine;
     QQmlComponent component(&engine, QUrl("qrc:example.qml"));

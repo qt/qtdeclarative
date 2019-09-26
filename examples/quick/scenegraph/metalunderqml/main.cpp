@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
-    qmlRegisterType<MetalSquircle>("MetalUnderQML", 1, 0, "MetalSquircle");
+    qmlRegisterTypesAndRevisions<MetalSquircle>("MetalUnderQML", 1);
 
     QQuickWindow::setSceneGraphBackend(QSGRendererInterface::MetalRhi);
 

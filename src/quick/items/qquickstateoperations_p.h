@@ -74,6 +74,7 @@ class Q_AUTOTEST_EXPORT QQuickParentChange : public QQuickStateOperation, public
     Q_PROPERTY(QQmlScriptString height READ height WRITE setHeight)
     Q_PROPERTY(QQmlScriptString scale READ scale WRITE setScale)
     Q_PROPERTY(QQmlScriptString rotation READ rotation WRITE setRotation)
+    QML_NAMED_ELEMENT(ParentChange)
 public:
     QQuickParentChange(QObject *parent=nullptr);
     ~QQuickParentChange();
@@ -136,6 +137,7 @@ class Q_AUTOTEST_EXPORT QQuickAnchorSet : public QObject
     Q_PROPERTY(QQmlScriptString bottom READ bottom WRITE setBottom RESET resetBottom)
     Q_PROPERTY(QQmlScriptString verticalCenter READ verticalCenter WRITE setVerticalCenter RESET resetVerticalCenter)
     Q_PROPERTY(QQmlScriptString baseline READ baseline WRITE setBaseline RESET resetBaseline)
+    QML_ANONYMOUS
 
 public:
     QQuickAnchorSet(QObject *parent=nullptr);
@@ -185,6 +187,7 @@ class Q_AUTOTEST_EXPORT QQuickAnchorChanges : public QQuickStateOperation, publi
 
     Q_PROPERTY(QQuickItem *target READ object WRITE setObject)
     Q_PROPERTY(QQuickAnchorSet *anchors READ anchors CONSTANT)
+    QML_NAMED_ELEMENT(AnchorChanges)
 
 public:
     QQuickAnchorChanges(QObject *parent=nullptr);

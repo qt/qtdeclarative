@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
     QGuiApplication app(argc,argv);
     QQuickView view;
 
-    qmlRegisterType<MaskedMouseArea>("Example", 1, 0, "MaskedMouseArea");
+    qmlRegisterTypesAndRevisions<MaskedMouseArea>("Example", 1);
 
     view.setSource(QUrl("qrc:///customitems/maskedmousearea/maskedmousearea.qml"));
     view.show();

@@ -932,6 +932,12 @@ void PropertyUpdater::breakBinding()
 void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *modelItemToIncubate, QObject *object)
 {
     auto incubatorPriv = QQmlIncubatorPrivate::get(this);
+    QQmlData *d = QQmlData::get(object);
+    auto contextData = d ? d->context : nullptr;
+    if (contextData) {
+        contextData->hasExtraObject = true;
+        contextData->extraObject = modelItemToIncubate;
+    }
     if (incubatorPriv->hadRequiredProperties()) {
         if (incubatorPriv->requiredProperties().empty())
             return;
@@ -2271,6 +2277,8 @@ QQmlDelegateModelItem *QQmlDelegateModelItem::dataForObject(QObject *object)
 {
     QQmlData *d = QQmlData::get(object);
     QQmlContextData *context = d ? d->context : nullptr;
+    if (context && context->hasExtraObject)
+        return qobject_cast<QQmlDelegateModelItem *>(context->extraObject);
     for (context = context ? context->parent : nullptr; context; context = context->parent) {
         if (QQmlDelegateModelItem *cacheItem = qobject_cast<QQmlDelegateModelItem *>(
                 context->contextObject)) {
