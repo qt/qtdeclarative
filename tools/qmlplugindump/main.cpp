@@ -105,12 +105,18 @@ struct QmlVersionInfo
     QString pluginImportUri;
     int majorVersion;
     int minorVersion;
+    bool strict;
 };
 
 static bool matchingImportUri(const QQmlType &ty, const QmlVersionInfo& versionInfo) {
-    return (versionInfo.pluginImportUri == ty.module()
-            && (ty.majorVersion() == versionInfo.majorVersion || ty.majorVersion() == -1))
-            || ty.module().isEmpty();
+    if (versionInfo.strict) {
+        return (versionInfo.pluginImportUri == ty.module()
+                && (ty.majorVersion() == versionInfo.majorVersion || ty.majorVersion() == -1))
+                || ty.module().isEmpty();
+    }
+    return ty.module().isEmpty()
+            || versionInfo.pluginImportUri == ty.module()
+            || ty.module().startsWith(versionInfo.pluginImportUri + QLatin1Char('.'));
 }
 
 void collectReachableMetaObjects(const QMetaObject *meta, QSet<const QMetaObject *> *metas,  const QmlVersionInfo &info, bool extended = false, bool alreadyChangedModule = false)
@@ -1057,6 +1063,7 @@ int main(int argc, char *argv[])
     QString dependenciesFile;
     QString mergeFile;
     bool forceQtQuickDependency = true;
+    bool strict = false;
     enum Action { Uri, Path, Builtins };
     Action action = Uri;
     {
@@ -1120,6 +1127,10 @@ int main(int argc, char *argv[])
                 continue;
             } else if (arg == QLatin1String("--qapp")
                        || arg == QLatin1String("-qapp")) {
+                continue;
+            } else if (arg == QLatin1String("--strict")
+                       || arg == QLatin1String("-strict")) {
+                strict = true;
                 continue;
             } else {
                 std::cerr << "Invalid argument: " << qPrintable(arg) << std::endl;
@@ -1231,7 +1242,7 @@ int main(int argc, char *argv[])
     int majorVersion = qtQmlMajorVersion, minorVersion = qtQmlMinorVersion;
     QmlVersionInfo info;
     if (action == Builtins) {
-        QSet<const QMetaObject *> builtins = collectReachableMetaObjects(&engine, uncreatableMetas, singletonMetas, defaultCompositeTypes, {QLatin1String("Qt"), majorVersion, minorVersion});
+        QSet<const QMetaObject *> builtins = collectReachableMetaObjects(&engine, uncreatableMetas, singletonMetas, defaultCompositeTypes, {QLatin1String("Qt"), majorVersion, minorVersion, strict});
         Q_ASSERT(builtins.size() == 1);
         metas.insert(*builtins.begin());
     } else {
@@ -1291,7 +1302,7 @@ int main(int argc, char *argv[])
                 return EXIT_IMPORTERROR;
             }
         }
-        info = {pluginImportUri, majorVersion, minorVersion};
+        info = {pluginImportUri, majorVersion, minorVersion, strict};
         QSet<const QMetaObject *> candidates = collectReachableMetaObjects(&engine, uncreatableMetas, singletonMetas, compositeTypes, info, defaultTypes);
 
         for (QString iter: compositeTypes.keys()) {
