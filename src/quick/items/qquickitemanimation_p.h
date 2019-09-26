@@ -66,6 +66,7 @@ class Q_AUTOTEST_EXPORT QQuickParentAnimation : public QQuickAnimationGroup
     Q_PROPERTY(QQuickItem *target READ target WRITE setTargetObject NOTIFY targetChanged)
     Q_PROPERTY(QQuickItem *newParent READ newParent WRITE setNewParent NOTIFY newParentChanged)
     Q_PROPERTY(QQuickItem *via READ via WRITE setVia NOTIFY viaChanged)
+    QML_NAMED_ELEMENT(ParentAnimation)
 
 public:
     QQuickParentAnimation(QObject *parent=nullptr);
@@ -100,6 +101,7 @@ class Q_AUTOTEST_EXPORT QQuickAnchorAnimation : public QQuickAbstractAnimation
     Q_PROPERTY(QQmlListProperty<QQuickItem> targets READ targets)
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
     Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged)
+    QML_NAMED_ELEMENT(AnchorAnimation)
 
 public:
     QQuickAnchorAnimation(QObject *parent=nullptr);
@@ -143,6 +145,7 @@ class Q_AUTOTEST_EXPORT QQuickPathAnimation : public QQuickAbstractAnimation
     Q_PROPERTY(int orientationEntryDuration READ orientationEntryDuration WRITE setOrientationEntryDuration NOTIFY orientationEntryDurationChanged)
     Q_PROPERTY(int orientationExitDuration READ orientationExitDuration WRITE setOrientationExitDuration NOTIFY orientationExitDurationChanged)
     Q_PROPERTY(qreal endRotation READ endRotation WRITE setEndRotation NOTIFY endRotationChanged)
+    QML_NAMED_ELEMENT(PathAnimation)
 
 public:
     QQuickPathAnimation(QObject *parent=nullptr);

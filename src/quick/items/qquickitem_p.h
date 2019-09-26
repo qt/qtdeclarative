@@ -152,6 +152,7 @@ class QQuickItemLayer : public QObject, public QQuickItemChangeListener
     Q_PROPERTY(QQmlComponent *effect READ effect WRITE setEffect NOTIFY effectChanged)
     Q_PROPERTY(QQuickShaderEffectSource::TextureMirroring textureMirroring READ textureMirroring WRITE setTextureMirroring NOTIFY textureMirroringChanged)
     Q_PROPERTY(int samples READ samples WRITE setSamples NOTIFY samplesChanged)
+    QML_ANONYMOUS
 
 public:
     QQuickItemLayer(QQuickItem *item);
@@ -715,6 +716,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickKeyNavigationAttached : public QObject, publi
     Q_PROPERTY(QQuickItem *backtab READ backtab WRITE setBacktab NOTIFY backtabChanged)
     Q_PROPERTY(Priority priority READ priority WRITE setPriority NOTIFY priorityChanged)
 
+    QML_NAMED_ELEMENT(KeyNavigation)
+    QML_UNCREATABLE("KeyNavigation is only available via attached properties.")
+    QML_ATTACHED(QQuickKeyNavigationAttached)
+
 public:
     QQuickKeyNavigationAttached(QObject * = nullptr);
 
@@ -760,6 +765,10 @@ class QQuickLayoutMirroringAttached : public QObject
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled RESET resetEnabled NOTIFY enabledChanged)
     Q_PROPERTY(bool childrenInherit READ childrenInherit WRITE setChildrenInherit NOTIFY childrenInheritChanged)
 
+    QML_NAMED_ELEMENT(LayoutMirroring)
+    QML_UNCREATABLE("LayoutMirroring is only available via attached properties.")
+    QML_ATTACHED(QQuickLayoutMirroringAttached)
+
 public:
     explicit QQuickLayoutMirroringAttached(QObject *parent = nullptr);
 
@@ -783,6 +792,11 @@ class QQuickEnterKeyAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(Qt::EnterKeyType type READ type WRITE setType NOTIFY typeChanged)
+
+    QML_NAMED_ELEMENT(EnterKey)
+    QML_UNCREATABLE("EnterKey is only available via attached properties")
+    QML_ADDED_IN_MINOR_VERSION(6)
+    QML_ATTACHED(QQuickEnterKeyAttached)
 
 public:
     explicit QQuickEnterKeyAttached(QObject *parent = nullptr);
@@ -828,6 +842,10 @@ class QQuickKeysAttached : public QObject, public QQuickItemKeyFilter
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(QQmlListProperty<QQuickItem> forwardTo READ forwardTo)
     Q_PROPERTY(Priority priority READ priority WRITE setPriority NOTIFY priorityChanged)
+
+    QML_NAMED_ELEMENT(Keys)
+    QML_UNCREATABLE("Keys is only available via attached properties")
+    QML_ATTACHED(QQuickKeysAttached)
 
 public:
     QQuickKeysAttached(QObject *parent=nullptr);
@@ -984,12 +1002,8 @@ QT_END_NAMESPACE
 QML_DECLARE_TYPE(QQuickItemLayer)
 #endif
 QML_DECLARE_TYPE(QQuickKeysAttached)
-QML_DECLARE_TYPEINFO(QQuickKeysAttached, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QQuickKeyNavigationAttached)
-QML_DECLARE_TYPEINFO(QQuickKeyNavigationAttached, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QQuickLayoutMirroringAttached)
-QML_DECLARE_TYPEINFO(QQuickLayoutMirroringAttached, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QQuickEnterKeyAttached)
-QML_DECLARE_TYPEINFO(QQuickEnterKeyAttached, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKITEM_P_H

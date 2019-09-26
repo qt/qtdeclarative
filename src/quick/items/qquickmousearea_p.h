@@ -85,6 +85,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
 #endif
     Q_PROPERTY(bool containsPress READ containsPress NOTIFY containsPressChanged REVISION 4)
     Q_PROPERTY(int pressAndHoldInterval READ pressAndHoldInterval WRITE setPressAndHoldInterval NOTIFY pressAndHoldIntervalChanged RESET resetPressAndHoldInterval REVISION 9)
+    QML_NAMED_ELEMENT(MouseArea)
 
 public:
     QQuickMouseArea(QQuickItem *parent=nullptr);

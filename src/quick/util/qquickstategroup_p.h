@@ -65,6 +65,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStateGroup : public QObject, public QQmlParse
     Q_PROPERTY(QString state READ state WRITE setState NOTIFY stateChanged)
     Q_PROPERTY(QQmlListProperty<QQuickState> states READ statesProperty DESIGNABLE false)
     Q_PROPERTY(QQmlListProperty<QQuickTransition> transitions READ transitionsProperty DESIGNABLE false)
+    QML_NAMED_ELEMENT(StateGroup)
 
 public:
     QQuickStateGroup(QObject * = nullptr);

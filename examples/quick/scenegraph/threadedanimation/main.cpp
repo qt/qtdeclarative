@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
-    qmlRegisterType<Spinner>("Spinner", 1, 0, "Spinner");
+    qmlRegisterTypesAndRevisions<Spinner>("Spinner", 1);
 
     QQuickView view;
     view.setSource(QUrl("qrc:///scenegraph/threadedanimation/main.qml"));

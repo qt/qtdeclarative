@@ -51,6 +51,8 @@
 // We mean it.
 //
 #include "qquickdirection_p.h"
+#include <QtQml/qqml.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
@@ -68,6 +70,7 @@ class QQuickTargetDirection : public QQuickDirection
     Q_PROPERTY(bool proportionalMagnitude READ proportionalMagnitude WRITE setProportionalMagnitude NOTIFY proprotionalMagnitudeChanged)
     Q_PROPERTY(qreal magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
     Q_PROPERTY(qreal magnitudeVariation READ magnitudeVariation WRITE setMagnitudeVariation NOTIFY magnitudeVariationChanged)
+    QML_NAMED_ELEMENT(TargetDirection)
 
 public:
     explicit QQuickTargetDirection(QObject *parent = 0);

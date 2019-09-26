@@ -103,6 +103,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTransition : public QObject
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     Q_CLASSINFO("DefaultProperty", "animations")
     Q_CLASSINFO("DeferredPropertyNames", "animations")
+    QML_NAMED_ELEMENT(Transition)
 
 public:
     QQuickTransition(QObject *parent=nullptr);

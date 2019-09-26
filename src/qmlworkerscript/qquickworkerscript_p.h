@@ -87,6 +87,7 @@ class Q_AUTOTEST_EXPORT QQuickWorkerScript : public QObject, public QQmlParserSt
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
+    QML_NAMED_ELEMENT(WorkerScript);
 
     Q_INTERFACES(QQmlParserStatus)
 public:

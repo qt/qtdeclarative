@@ -67,6 +67,7 @@ class Q_AUTOTEST_EXPORT QQuickBorderImage : public QQuickImageBase
     Q_PROPERTY(TileMode verticalTileMode READ verticalTileMode WRITE setVerticalTileMode NOTIFY verticalTileModeChanged)
     // read-only for BorderImage
     Q_PROPERTY(QSize sourceSize READ sourceSize NOTIFY sourceSizeChanged)
+    QML_NAMED_ELEMENT(BorderImage)
 
 public:
     QQuickBorderImage(QQuickItem *parent=nullptr);

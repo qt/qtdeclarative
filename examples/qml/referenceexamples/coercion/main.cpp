@@ -58,15 +58,9 @@ int main(int argc, char ** argv)
 {
     QCoreApplication app(argc, argv);
 
-    qmlRegisterType<BirthdayParty>("People", 1,0, "BirthdayParty");
     //![0]
-    qmlRegisterAnonymousType<Person>("People", 1);
+    qmlRegisterTypesAndRevisions<BirthdayParty, Person, Boy, Girl>("People", 1);
     //![0]
-
-    //![register boy girl]
-    qmlRegisterType<Boy>("People", 1,0, "Boy");
-    qmlRegisterType<Girl>("People", 1,0, "Girl");
-    //![register boy girl]
 
     QQmlEngine engine;
     QQmlComponent component(&engine, QUrl("qrc:example.qml"));

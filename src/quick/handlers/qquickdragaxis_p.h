@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <QtQml/qqml.h>
 #include <private/qtquickglobal_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -61,6 +62,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickDragAxis : public QObject
     Q_PROPERTY(qreal minimum READ minimum WRITE setMinimum NOTIFY minimumChanged)
     Q_PROPERTY(qreal maximum READ maximum WRITE setMaximum NOTIFY maximumChanged)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
+    QML_NAMED_ELEMENT(DragAxis)
+    QML_ADDED_IN_MINOR_VERSION(12)
+    QML_UNCREATABLE("DragAxis is only available as a grouped property of DragHandler.")
 
 public:
     QQuickDragAxis();

@@ -59,10 +59,8 @@ int main(int argc, char *argv[])
 //![0]
     QGuiApplication app(argc, argv);
 
-    qmlRegisterType<PieChart>("Charts", 1, 0, "PieChart");
-
 //![1]
-    qmlRegisterType<PieSlice>("Charts", 1, 0, "PieSlice");
+    qmlRegisterTypesAndRevisions<PieChart, PieSlice>("Charts", 1);
 //![1]
 
     QQuickView view;

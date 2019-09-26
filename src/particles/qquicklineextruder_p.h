@@ -57,6 +57,7 @@ class QQuickLineExtruder : public QQuickParticleExtruder
     Q_OBJECT
     //Default is topleft to bottom right. Flipped makes it topright to bottom left
     Q_PROPERTY(bool mirrored READ mirrored WRITE setMirrored NOTIFY mirroredChanged)
+    QML_NAMED_ELEMENT(LineShape)
 
 public:
     explicit QQuickLineExtruder(QObject *parent = 0);

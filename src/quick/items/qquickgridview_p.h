@@ -73,6 +73,8 @@ class Q_AUTOTEST_EXPORT QQuickGridView : public QQuickItemView
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged)
 
     Q_CLASSINFO("DefaultProperty", "data")
+    QML_NAMED_ELEMENT(GridView)
+    QML_ATTACHED(QQuickGridViewAttached)
 
 public:
     enum Flow {
@@ -136,6 +138,5 @@ public:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickGridView)
-QML_DECLARE_TYPEINFO(QQuickGridView, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKGRIDVIEW_P_H

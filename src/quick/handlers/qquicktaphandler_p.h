@@ -67,6 +67,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTapHandler : public QQuickSinglePointHandler
     Q_PROPERTY(qreal longPressThreshold READ longPressThreshold WRITE setLongPressThreshold NOTIFY longPressThresholdChanged)
     Q_PROPERTY(GesturePolicy gesturePolicy READ gesturePolicy WRITE setGesturePolicy NOTIFY gesturePolicyChanged)
 
+    QML_NAMED_ELEMENT(TapHandler)
+    QML_ADDED_IN_MINOR_VERSION(12)
+
 public:
     enum GesturePolicy {
         DragThreshold,

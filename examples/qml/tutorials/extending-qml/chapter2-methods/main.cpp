@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    qmlRegisterType<PieChart>("Charts", 1, 0, "PieChart");
+    qmlRegisterTypesAndRevisions<PieChart>("Charts", 1);
 
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);

@@ -112,6 +112,11 @@ class Q_QUICK_PRIVATE_EXPORT QQuickBasePositioner : public QQuickImplicitSizeIte
     Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION 6)
     Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION 6)
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION 6)
+
+    QML_NAMED_ELEMENT(Positioner)
+    QML_UNCREATABLE("Positioner is an abstract type that is only available as an attached property.")
+    QML_ATTACHED(QQuickPositionerAttached)
+
 public:
     enum PositionerType { None = 0x0, Horizontal = 0x1, Vertical = 0x2, Both = 0x3 };
 
@@ -230,6 +235,7 @@ private:
 class Q_AUTOTEST_EXPORT QQuickColumn : public QQuickBasePositioner
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(Column)
 public:
     QQuickColumn(QQuickItem *parent=nullptr);
 
@@ -246,6 +252,8 @@ class Q_AUTOTEST_EXPORT QQuickRow: public QQuickBasePositioner
     Q_OBJECT
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
+    QML_NAMED_ELEMENT(Row)
+
 public:
     QQuickRow(QQuickItem *parent=nullptr);
 
@@ -279,6 +287,7 @@ class Q_AUTOTEST_EXPORT QQuickGrid : public QQuickBasePositioner
     Q_PROPERTY(HAlignment horizontalItemAlignment READ hItemAlign WRITE setHItemAlign NOTIFY horizontalAlignmentChanged REVISION 1)
     Q_PROPERTY(HAlignment effectiveHorizontalItemAlignment READ effectiveHAlign NOTIFY effectiveHorizontalAlignmentChanged REVISION 1)
     Q_PROPERTY(VAlignment verticalItemAlignment READ vItemAlign WRITE setVItemAlign NOTIFY verticalAlignmentChanged REVISION 1)
+    QML_NAMED_ELEMENT(Grid)
 
 public:
     QQuickGrid(QQuickItem *parent=nullptr);
@@ -359,6 +368,7 @@ class Q_AUTOTEST_EXPORT QQuickFlow: public QQuickBasePositioner
     Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged)
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
+    QML_NAMED_ELEMENT(Flow)
 public:
     QQuickFlow(QQuickItem *parent=nullptr);
 
@@ -395,6 +405,5 @@ QML_DECLARE_TYPE(QQuickGrid)
 QML_DECLARE_TYPE(QQuickFlow)
 
 QML_DECLARE_TYPE(QQuickBasePositioner)
-QML_DECLARE_TYPEINFO(QQuickBasePositioner, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKPOSITIONERS_P_H

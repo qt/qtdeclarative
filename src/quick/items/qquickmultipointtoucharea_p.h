@@ -83,6 +83,7 @@ class Q_AUTOTEST_EXPORT QQuickTouchPoint : public QObject
     Q_PROPERTY(qreal previousY READ previousY NOTIFY previousYChanged)
     Q_PROPERTY(qreal sceneX READ sceneX NOTIFY sceneXChanged)
     Q_PROPERTY(qreal sceneY READ sceneY NOTIFY sceneYChanged)
+    QML_NAMED_ELEMENT(TouchPoint)
 
 public:
     QQuickTouchPoint(bool qmlDefined = true)
@@ -187,6 +188,9 @@ class QQuickGrabGestureEvent : public QObject
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<QObject> touchPoints READ touchPoints CONSTANT)
     Q_PROPERTY(qreal dragThreshold READ dragThreshold CONSTANT)
+    QML_NAMED_ELEMENT(GestureEvent)
+    QML_UNCREATABLE("GestureEvent is only available in the context of handling the gestureStarted signal from MultiPointTouchArea.")
+
 public:
     QQuickGrabGestureEvent() : _dragThreshold(QGuiApplication::styleHints()->startDragDistance()) {}
 
@@ -213,6 +217,7 @@ class Q_AUTOTEST_EXPORT QQuickMultiPointTouchArea : public QQuickItem
     Q_PROPERTY(int minimumTouchPoints READ minimumTouchPoints WRITE setMinimumTouchPoints NOTIFY minimumTouchPointsChanged)
     Q_PROPERTY(int maximumTouchPoints READ maximumTouchPoints WRITE setMaximumTouchPoints NOTIFY maximumTouchPointsChanged)
     Q_PROPERTY(bool mouseEnabled READ mouseEnabled WRITE setMouseEnabled NOTIFY mouseEnabledChanged)
+    QML_NAMED_ELEMENT(MultiPointTouchArea)
 
 public:
     QQuickMultiPointTouchArea(QQuickItem *parent=nullptr);

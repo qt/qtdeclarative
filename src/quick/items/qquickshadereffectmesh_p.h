@@ -49,6 +49,7 @@ QT_REQUIRE_CONFIG(quick_shadereffect);
 #include <QtCore/qsize.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qbytearray.h>
+#include <QtQml/qqml.h>
 
 #ifndef QQUICKSHADEREFFECTMESH_P_H
 #define QQUICKSHADEREFFECTMESH_P_H
@@ -75,6 +76,10 @@ class QRectF;
 class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectMesh : public QObject
 {
     Q_OBJECT
+
+    QML_NAMED_ELEMENT(ShaderEffectMesh)
+    QML_UNCREATABLE("Cannot create instance of abstract class ShaderEffectMesh.")
+
 public:
     QQuickShaderEffectMesh(QObject *parent = nullptr);
     virtual bool validateAttributes(const QVector<QByteArray> &attributes, int *posIndex) = 0;
@@ -96,6 +101,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickGridMesh : public QQuickShaderEffectMesh
 {
     Q_OBJECT
     Q_PROPERTY(QSize resolution READ resolution WRITE setResolution NOTIFY resolutionChanged)
+    QML_NAMED_ELEMENT(GridMesh)
 public:
     QQuickGridMesh(QObject *parent = nullptr);
     bool validateAttributes(const QVector<QByteArray> &attributes, int *posIndex) override;
@@ -123,6 +129,10 @@ class QQuickBorderImageMesh : public QQuickShaderEffectMesh
     Q_PROPERTY(QSize size READ size WRITE setSize NOTIFY sizeChanged)
     Q_PROPERTY(TileMode horizontalTileMode READ horizontalTileMode WRITE setHorizontalTileMode NOTIFY horizontalTileModeChanged)
     Q_PROPERTY(TileMode verticalTileMode READ verticalTileMode WRITE setVerticalTileMode NOTIFY verticalTileModeChanged)
+
+    QML_NAMED_ELEMENT(BorderImageMesh)
+    QML_ADDED_IN_MINOR_VERSION(8)
+
 public:
     QQuickBorderImageMesh(QObject *parent = nullptr);
 

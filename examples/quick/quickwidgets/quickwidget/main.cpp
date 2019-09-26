@@ -214,7 +214,7 @@ int main(int argc, char **argv)
     optMultipleSample = parser.isSet(multipleSampleOption);
     optCoreProfile = parser.isSet(coreProfileOption);
 
-    qmlRegisterType<FbItem>("QuickWidgetExample", 1, 0, "FbItem");
+    qmlRegisterTypesAndRevisions<FbItem>("QuickWidgetExample", 1);
 
     MainWindow mainWindow;
     mainWindow.show();

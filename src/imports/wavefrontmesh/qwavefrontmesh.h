@@ -55,6 +55,8 @@ class QWavefrontMesh : public QQuickShaderEffectMesh
     Q_PROPERTY(Error lastError READ lastError NOTIFY lastErrorChanged)
     Q_PROPERTY(QVector3D projectionPlaneV READ projectionPlaneV WRITE setProjectionPlaneV NOTIFY projectionPlaneVChanged)
     Q_PROPERTY(QVector3D projectionPlaneW READ projectionPlaneW WRITE setProjectionPlaneW NOTIFY projectionPlaneWChanged)
+    QML_NAMED_ELEMENT(WavefrontMesh)
+
 public:
     enum Error {
         NoError,

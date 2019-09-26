@@ -24,9 +24,13 @@ Module {
     Component {
         name: "QQuickScreen"
         prototype: "QObject"
-        exports: ["QtQuick.Window/Screen 2.0", "QtQuick.Window/Screen 2.3"]
+        exports: [
+            "QtQuick.Window/Screen 2.0",
+            "QtQuick.Window/Screen 2.10",
+            "QtQuick.Window/Screen 2.3"
+        ]
         isCreatable: false
-        exportMetaObjectRevisions: [0, 3]
+        exportMetaObjectRevisions: [0, 10, 3]
         attachedType: "QQuickScreenAttached"
     }
     Component {
@@ -163,10 +167,11 @@ Module {
         exports: [
             "QtQuick.Window/Window 2.1",
             "QtQuick.Window/Window 2.13",
+            "QtQuick.Window/Window 2.14",
             "QtQuick.Window/Window 2.2",
             "QtQuick.Window/Window 2.3"
         ]
-        exportMetaObjectRevisions: [0, 13, 2, 3]
+        exportMetaObjectRevisions: [1, 13, 14, 2, 3]
         attachedType: "QQuickWindowAttached"
         Property { name: "visible"; type: "bool" }
         Property { name: "visibility"; type: "Visibility" }

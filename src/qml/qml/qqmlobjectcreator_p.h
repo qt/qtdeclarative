@@ -101,6 +101,7 @@ struct QQmlObjectCreatorSharedState : public QSharedData
     QQmlVmeProfiler profiler;
     QRecursionNode recursionNode;
     RequiredProperties requiredProperties;
+    bool hadRequiredProperties;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlObjectCreator
@@ -126,7 +127,7 @@ public:
     QFiniteStack<QPointer<QObject> > &allCreatedObjects() { return sharedState->allCreatedObjects; }
 
     RequiredProperties &requiredProperties() {return sharedState->requiredProperties;}
-    bool componentHadRequiredProperties() const {return hadRequiredProperties;}
+    bool componentHadRequiredProperties() const {return sharedState->hadRequiredProperties;}
 
 private:
     QQmlObjectCreator(QQmlContextData *contextData, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, QQmlObjectCreatorSharedState *inheritedSharedState);
@@ -173,7 +174,6 @@ private:
     const QQmlPropertyCacheVector *propertyCaches;
     QExplicitlySharedDataPointer<QQmlObjectCreatorSharedState> sharedState;
     bool topLevelCreator;
-    bool hadRequiredProperties;
     QQmlIncubatorPrivate *incubator;
 
     QObject *_qobject;

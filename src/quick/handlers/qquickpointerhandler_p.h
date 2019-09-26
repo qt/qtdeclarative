@@ -73,6 +73,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject, public QQmlP
     Q_PROPERTY(qreal margin READ margin WRITE setMargin NOTIFY marginChanged)
     Q_PROPERTY(int dragThreshold READ dragThreshold WRITE setDragThreshold RESET resetDragThreshold NOTIFY dragThresholdChanged REVISION 15)
 
+    QML_NAMED_ELEMENT(PointerHandler)
+    QML_UNCREATABLE("PointerHandler is an abstract base class.")
+    QML_ADDED_IN_MINOR_VERSION(12)
+
 public:
     explicit QQuickPointerHandler(QQuickItem *parent = nullptr);
     ~QQuickPointerHandler();

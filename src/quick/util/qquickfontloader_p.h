@@ -67,6 +67,7 @@ class Q_AUTOTEST_EXPORT QQuickFontLoader : public QObject
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    QML_NAMED_ELEMENT(FontLoader)
 
 public:
     enum Status { Null = 0, Ready, Loading, Error };

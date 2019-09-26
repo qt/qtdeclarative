@@ -46,7 +46,7 @@ Module {
         name: "QuickTestEvent"
         prototype: "QObject"
         exports: ["QtTest/TestEvent 1.0", "QtTest/TestEvent 1.2"]
-        exportMetaObjectRevisions: [0, 0]
+        exportMetaObjectRevisions: [0, 2]
         Property { name: "defaultMouseDelay"; type: "int"; isReadonly: true }
         Method {
             name: "keyPress"

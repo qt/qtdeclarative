@@ -185,8 +185,6 @@ void QQmlQtQuick2Module::defineModule()
     QQuickUtilModule::defineModule();
     QQuickItemsModule::defineModule();
 
-    qmlRegisterUncreatableType<QQuickApplication>("QtQuick",2,0,"Application", QQuickApplication::tr("Application is an abstract class"));
-
     QQuickValueTypes::registerValueTypes();
 
 #if QT_CONFIG(accessibility)

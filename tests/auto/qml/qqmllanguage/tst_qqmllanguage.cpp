@@ -305,6 +305,8 @@ private slots:
 
     void typeWrapperToVariant();
 
+    void extendedForeignTypes();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -5181,6 +5183,21 @@ void tst_qqmllanguage::typeWrapperToVariant()
     QVERIFY(connections);
     QObject *target = qvariant_cast<QObject *>(connections->property("target"));
     QVERIFY(target);
+}
+
+void tst_qqmllanguage::extendedForeignTypes()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("foreignExtended.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("extendedBase").toInt(), 43);
+    QCOMPARE(o->property("extendedExtension").toInt(), 42);
+    QCOMPARE(o->property("foreignExtendedExtension").toInt(), 42);
+    QCOMPARE(o->property("foreignObjectName").toString(), QLatin1String("foreign"));
+    QCOMPARE(o->property("foreignExtendedObjectName").toString(), QLatin1String("foreignExtended"));
 }
 
 QTEST_MAIN(tst_qqmllanguage)

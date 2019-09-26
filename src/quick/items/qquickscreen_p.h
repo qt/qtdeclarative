@@ -86,6 +86,10 @@ class Q_AUTOTEST_EXPORT QQuickScreenInfo : public QObject
     Q_PROPERTY(int virtualX READ virtualX NOTIFY virtualXChanged REVISION 3)
     Q_PROPERTY(int virtualY READ virtualY NOTIFY virtualYChanged REVISION 3)
 
+    QML_NAMED_ELEMENT(ScreenInfo)
+    QML_ADDED_IN_MINOR_VERSION(3)
+    QML_UNCREATABLE("ScreenInfo can only be used via the attached property.")
+
 public:
     QQuickScreenInfo(QObject *parent = nullptr, QScreen *wrappedScreen = nullptr);
 
@@ -161,13 +165,16 @@ private:
 class Q_AUTOTEST_EXPORT QQuickScreen : public QObject
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(Screen)
+    QML_UNCREATABLE("Screen can only be used via the attached property.")
+    QML_ATTACHED(QQuickScreenAttached)
+
 public:
     static QQuickScreenAttached *qmlAttachedProperties(QObject *object){ return new QQuickScreenAttached(object); }
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPEINFO(QQuickScreen, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QQuickScreenInfo)
 
 #endif

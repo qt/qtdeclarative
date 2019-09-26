@@ -68,6 +68,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public Q
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged)
     Q_PROPERTY(Visibility visibility READ visibility WRITE setVisibility NOTIFY visibilityChanged)
     Q_PROPERTY(QObject *screen READ screen WRITE setScreen NOTIFY screenChanged REVISION 3)
+    QML_NAMED_ELEMENT(Window)
+    QML_ADDED_IN_MINOR_VERSION(1)
+    QML_ATTACHED(QQuickWindowAttached)
 
 public:
     QQuickWindowQmlImpl(QWindow *parent = nullptr);
@@ -106,6 +109,5 @@ public:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickWindowQmlImpl)
-QML_DECLARE_TYPEINFO(QQuickWindowQmlImpl, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif

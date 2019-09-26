@@ -12,8 +12,14 @@ Module {
         name: "QQuickShape"
         defaultProperty: "data"
         prototype: "QQuickItem"
-        exports: ["QtQuick.Shapes/Shape 1.0", "QtQuick.Shapes/Shape 1.11"]
-        exportMetaObjectRevisions: [0, 11]
+        exports: [
+            "QtQuick.Shapes/Shape 1.0",
+            "QtQuick.Shapes/Shape 1.1",
+            "QtQuick.Shapes/Shape 1.11",
+            "QtQuick.Shapes/Shape 1.4",
+            "QtQuick.Shapes/Shape 1.7"
+        ]
+        exportMetaObjectRevisions: [0, 1, 11, 4, 7]
         Enum {
             name: "RendererType"
             values: {
@@ -51,8 +57,11 @@ Module {
         name: "QQuickShapeConicalGradient"
         defaultProperty: "stops"
         prototype: "QQuickShapeGradient"
-        exports: ["QtQuick.Shapes/ConicalGradient 1.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Shapes/ConicalGradient 1.0",
+            "QtQuick.Shapes/ConicalGradient 1.12"
+        ]
+        exportMetaObjectRevisions: [0, 12]
         Property { name: "centerX"; type: "double" }
         Property { name: "centerY"; type: "double" }
         Property { name: "angle"; type: "double" }
@@ -61,9 +70,12 @@ Module {
         name: "QQuickShapeGradient"
         defaultProperty: "stops"
         prototype: "QQuickGradient"
-        exports: ["QtQuick.Shapes/ShapeGradient 1.0"]
+        exports: [
+            "QtQuick.Shapes/ShapeGradient 1.0",
+            "QtQuick.Shapes/ShapeGradient 1.12"
+        ]
         isCreatable: false
-        exportMetaObjectRevisions: [0]
+        exportMetaObjectRevisions: [0, 12]
         Enum {
             name: "SpreadMode"
             values: {
@@ -78,8 +90,11 @@ Module {
         name: "QQuickShapeLinearGradient"
         defaultProperty: "stops"
         prototype: "QQuickShapeGradient"
-        exports: ["QtQuick.Shapes/LinearGradient 1.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Shapes/LinearGradient 1.0",
+            "QtQuick.Shapes/LinearGradient 1.12"
+        ]
+        exportMetaObjectRevisions: [0, 12]
         Property { name: "x1"; type: "double" }
         Property { name: "y1"; type: "double" }
         Property { name: "x2"; type: "double" }
@@ -142,8 +157,11 @@ Module {
         name: "QQuickShapeRadialGradient"
         defaultProperty: "stops"
         prototype: "QQuickShapeGradient"
-        exports: ["QtQuick.Shapes/RadialGradient 1.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Shapes/RadialGradient 1.0",
+            "QtQuick.Shapes/RadialGradient 1.12"
+        ]
+        exportMetaObjectRevisions: [0, 12]
         Property { name: "centerX"; type: "double" }
         Property { name: "centerY"; type: "double" }
         Property { name: "centerRadius"; type: "double" }

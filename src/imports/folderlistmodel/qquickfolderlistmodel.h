@@ -79,6 +79,7 @@ class QQuickFolderListModel : public QAbstractListModel, public QQmlParserStatus
     Q_PROPERTY(bool sortCaseSensitive READ sortCaseSensitive WRITE setSortCaseSensitive REVISION 12)
 //![class props]
 
+    QML_NAMED_ELEMENT(FolderListModel)
 //![abslistmodel]
 public:
     QQuickFolderListModel(QObject *parent = nullptr);

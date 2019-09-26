@@ -194,6 +194,10 @@ class QQuickViewTransitionAttached : public QObject
     Q_PROPERTY(QList<int> targetIndexes READ targetIndexes NOTIFY targetIndexesChanged)
     Q_PROPERTY(QQmlListProperty<QObject> targetItems READ targetItems NOTIFY targetItemsChanged)
 
+    QML_NAMED_ELEMENT(ViewTransition)
+    QML_UNCREATABLE("ViewTransition is only available via attached properties.")
+    QML_ATTACHED(QQuickViewTransitionAttached)
+
 public:
     QQuickViewTransitionAttached(QObject *parent);
 
@@ -227,6 +231,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickViewTransitionAttached)
-QML_DECLARE_TYPEINFO(QQuickViewTransitionAttached, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKITEMVIEWTRANSITION_P_P_H

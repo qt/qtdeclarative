@@ -71,6 +71,7 @@ class QQuickWanderAffector : public QQuickParticleAffector
     Q_PROPERTY(qreal xVariance READ xVariance WRITE setXVariance NOTIFY xVarianceChanged)
     Q_PROPERTY(qreal yVariance READ yVariance WRITE setYVariance NOTIFY yVarianceChanged)
     Q_PROPERTY(AffectableParameters affectedParameter READ affectedParameter WRITE setAffectedParameter NOTIFY affectedParameterChanged)
+    QML_NAMED_ELEMENT(Wander)
 
 public:
     enum AffectableParameters {

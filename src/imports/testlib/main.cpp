@@ -62,6 +62,7 @@ class QuickTestUtil : public QObject
     Q_OBJECT
     Q_PROPERTY(bool printAvailableFunctions READ printAvailableFunctions NOTIFY printAvailableFunctionsChanged)
     Q_PROPERTY(int dragThreshold READ dragThreshold NOTIFY dragThresholdChanged)
+    QML_NAMED_ELEMENT(TestUtil)
 public:
     QuickTestUtil(QObject *parent = nullptr)
         :QObject(parent)
@@ -144,13 +145,8 @@ public:
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtTest"));
-        qmlRegisterType<QuickTestResult, 0>(uri,1,0,"TestResult");
-        qmlRegisterType<QuickTestResult, 1>(uri,1,1,"TestResult");
-        qmlRegisterType<QuickTestResult, 13>(uri,1,13,"TestResult");
-        qmlRegisterType<QuickTestEvent>(uri,1,0,"TestEvent");
-        qmlRegisterType<QuickTestEvent>(uri,1,2,"TestEvent");
-        qmlRegisterType<QuickTestUtil>(uri,1,0,"TestUtil");
-        qmlRegisterAnonymousType<QQuickTouchEventSequence>(uri, 1);
+        qmlRegisterTypesAndRevisions<QuickTestResult, QuickTestEvent,
+                                     QuickTestUtil, QQuickTouchEventSequence>(uri, 1);
 
         qmlRegisterModule(uri, 1, 15);
     }

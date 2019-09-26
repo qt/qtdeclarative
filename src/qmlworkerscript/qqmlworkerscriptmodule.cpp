@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 void QQmlWorkerScriptModule::defineModule()
 {
     const char uri[] = "QtQml.WorkerScript";
-    qmlRegisterType<QQuickWorkerScript>(uri, 2, 0, "WorkerScript");
+    qmlRegisterTypesAndRevisions<QQuickWorkerScript>(uri, 2);
 }
 
 QT_END_NAMESPACE

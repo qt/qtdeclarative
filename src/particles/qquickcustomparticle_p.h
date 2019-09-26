@@ -67,6 +67,7 @@ class QQuickCustomParticle : public QQuickParticlePainter
     Q_OBJECT
     Q_PROPERTY(QByteArray fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged)
     Q_PROPERTY(QByteArray vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged)
+    QML_NAMED_ELEMENT(CustomParticle)
 
 public:
     explicit QQuickCustomParticle(QQuickItem* parent=0);

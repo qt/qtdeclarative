@@ -118,6 +118,8 @@ void registerTypes()
 
     qmlRegisterType<LazyDeferredSubObject>("Test", 1, 0, "LazyDeferredSubObject");
     qmlRegisterType<DeferredProperties>("Test", 1, 0, "DeferredProperties");
+
+    qmlRegisterTypesAndRevisions<Extended, Foreign, ForeignExtended>("Test", 1);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)

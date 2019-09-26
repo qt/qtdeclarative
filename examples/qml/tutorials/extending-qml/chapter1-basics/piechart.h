@@ -59,6 +59,7 @@ class PieChart : public QQuickPaintedItem
     Q_OBJECT
     Q_PROPERTY(QString name READ name WRITE setName)
     Q_PROPERTY(QColor color READ color WRITE setColor)
+    QML_ELEMENT
 
 public:
     PieChart(QQuickItem *parent = 0);

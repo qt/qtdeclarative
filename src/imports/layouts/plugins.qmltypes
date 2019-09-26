@@ -12,15 +12,27 @@ Module {
         name: "QQuickColumnLayout"
         defaultProperty: "data"
         prototype: "QQuickLinearLayout"
-        exports: ["QtQuick.Layouts/ColumnLayout 1.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Layouts/ColumnLayout 1.0",
+            "QtQuick.Layouts/ColumnLayout 1.1",
+            "QtQuick.Layouts/ColumnLayout 1.11",
+            "QtQuick.Layouts/ColumnLayout 1.4",
+            "QtQuick.Layouts/ColumnLayout 1.7"
+        ]
+        exportMetaObjectRevisions: [0, 1, 11, 4, 7]
     }
     Component {
         name: "QQuickGridLayout"
         defaultProperty: "data"
         prototype: "QQuickGridLayoutBase"
-        exports: ["QtQuick.Layouts/GridLayout 1.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Layouts/GridLayout 1.0",
+            "QtQuick.Layouts/GridLayout 1.1",
+            "QtQuick.Layouts/GridLayout 1.11",
+            "QtQuick.Layouts/GridLayout 1.4",
+            "QtQuick.Layouts/GridLayout 1.7"
+        ]
+        exportMetaObjectRevisions: [0, 1, 11, 4, 7]
         Enum {
             name: "Flow"
             values: {
@@ -45,9 +57,15 @@ Module {
         name: "QQuickLayout"
         defaultProperty: "data"
         prototype: "QQuickItem"
-        exports: ["QtQuick.Layouts/Layout 1.0", "QtQuick.Layouts/Layout 1.2"]
+        exports: [
+            "QtQuick.Layouts/Layout 1.0",
+            "QtQuick.Layouts/Layout 1.1",
+            "QtQuick.Layouts/Layout 1.11",
+            "QtQuick.Layouts/Layout 1.4",
+            "QtQuick.Layouts/Layout 1.7"
+        ]
         isCreatable: false
-        exportMetaObjectRevisions: [0, 0]
+        exportMetaObjectRevisions: [0, 1, 11, 4, 7]
         attachedType: "QQuickLayoutAttached"
     }
     Component {
@@ -82,15 +100,26 @@ Module {
         name: "QQuickRowLayout"
         defaultProperty: "data"
         prototype: "QQuickLinearLayout"
-        exports: ["QtQuick.Layouts/RowLayout 1.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Layouts/RowLayout 1.0",
+            "QtQuick.Layouts/RowLayout 1.1",
+            "QtQuick.Layouts/RowLayout 1.11",
+            "QtQuick.Layouts/RowLayout 1.4",
+            "QtQuick.Layouts/RowLayout 1.7"
+        ]
+        exportMetaObjectRevisions: [0, 1, 11, 4, 7]
     }
     Component {
         name: "QQuickStackLayout"
         defaultProperty: "data"
         prototype: "QQuickLayout"
-        exports: ["QtQuick.Layouts/StackLayout 1.3"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "QtQuick.Layouts/StackLayout 1.11",
+            "QtQuick.Layouts/StackLayout 1.3",
+            "QtQuick.Layouts/StackLayout 1.4",
+            "QtQuick.Layouts/StackLayout 1.7"
+        ]
+        exportMetaObjectRevisions: [11, 3, 4, 7]
         Property { name: "count"; type: "int"; isReadonly: true }
         Property { name: "currentIndex"; type: "int" }
         Method {

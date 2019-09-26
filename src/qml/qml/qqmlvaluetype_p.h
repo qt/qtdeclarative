@@ -218,6 +218,8 @@ struct QQmlEasingValueType
 {
     QEasingCurve v;
     Q_GADGET
+    QML_NAMED_ELEMENT(Easing)
+    QML_UNCREATABLE("Use the Type enum.")
 
     Q_PROPERTY(QQmlEasingValueType::Type type READ type WRITE setType FINAL)
     Q_PROPERTY(qreal amplitude READ amplitude WRITE setAmplitude FINAL)

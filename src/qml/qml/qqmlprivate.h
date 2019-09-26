@@ -52,17 +52,42 @@
 //
 
 #include <functional>
+#include <type_traits>
 
 #include <QtQml/qtqmlglobal.h>
+#include <QtQml/qqmlparserstatus.h>
+#include <QtQml/qqmllist.h>
+#include <QtQml/qqmlpropertyvaluesource.h>
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qvariant.h>
 #include <QtCore/qurl.h>
 
+#include <QtCore/qmetaobject.h>
+#include <QtCore/qdebug.h>
+
+#define QML_GETTYPENAMES \
+    const char *className = T::staticMetaObject.className(); \
+    const int nameLen = int(strlen(className)); \
+    QVarLengthArray<char,48> pointerName(nameLen+2); \
+    memcpy(pointerName.data(), className, size_t(nameLen)); \
+    pointerName[nameLen] = '*'; \
+    pointerName[nameLen+1] = '\0'; \
+    const int listLen = int(strlen("QQmlListProperty<")); \
+    QVarLengthArray<char,64> listName(listLen + nameLen + 2); \
+    memcpy(listName.data(), "QQmlListProperty<", size_t(listLen)); \
+    memcpy(listName.data()+listLen, className, size_t(nameLen)); \
+    listName[listLen+nameLen] = '>'; \
+    listName[listLen+nameLen+1] = '\0';
+
 QT_BEGIN_NAMESPACE
+
+class QQmlPropertyValueInterceptor;
 
 namespace QQmlPrivate {
 struct CachedQmlUnit;
+template<typename A>
+using QQmlAttachedPropertiesFunc = A *(*)(QObject *);
 }
 
 namespace QV4 {
@@ -77,7 +102,7 @@ struct Document;
 typedef void (*IRLoaderFunction)(Document *, const QQmlPrivate::CachedQmlUnit *);
 }
 
-typedef QObject *(*QQmlAttachedPropertiesFunc)(QObject *);
+using QQmlAttachedPropertiesFunc = QQmlPrivate::QQmlAttachedPropertiesFunc<QObject>;
 
 inline uint qHash(QQmlAttachedPropertiesFunc func, uint seed = 0)
 {
@@ -98,6 +123,13 @@ class QJSValue;
 class QJSEngine;
 class QQmlEngine;
 class QQmlCustomParser;
+
+template<class T>
+QQmlCustomParser *qmlCreateCustomParser()
+{
+    return nullptr;
+}
+
 namespace QQmlPrivate
 {
     void Q_QML_EXPORT qdeclarativeelement_destructor(QObject *);
@@ -123,10 +155,61 @@ namespace QQmlPrivate
     };
 
     template<typename T>
+    constexpr bool isConstructible()
+    {
+        return std::is_default_constructible<T>::value && std::is_base_of<QObject, T>::value;
+    }
+
+    template<typename T>
     void createInto(void *memory) { new (memory) QQmlElement<T>; }
 
     template<typename T>
+    QObject *createSingletonInstance(QQmlEngine *, QJSEngine *) { return new T; }
+
+    template<typename T>
     QObject *createParent(QObject *p) { return new T(p); }
+
+    using CreateIntoFunction = void (*)(void *);
+    using CreateSingletonFunction = QObject *(*)(QQmlEngine *, QJSEngine *);
+    using CreateParentFunction = QObject *(*)(QObject *);
+
+    template<typename T, bool Constructible = isConstructible<T>()>
+    struct Constructors;
+
+    template<typename T>
+    struct Constructors<T, true>
+    {
+        static constexpr CreateIntoFunction createInto
+                = QQmlPrivate::createInto<T>;
+        static constexpr CreateSingletonFunction createSingletonInstance
+                = QQmlPrivate::createSingletonInstance<T>;
+    };
+
+    template<typename T>
+    struct Constructors<T, false>
+    {
+        static constexpr CreateIntoFunction createInto = nullptr;
+        static constexpr CreateSingletonFunction createSingletonInstance = nullptr;
+    };
+
+    template<typename T, bool IsVoid = std::is_void<T>::value>
+    struct ExtendedType;
+
+    // void means "not an extended type"
+    template<typename T>
+    struct ExtendedType<T, true>
+    {
+        static constexpr const CreateParentFunction createParent = nullptr;
+        static constexpr const QMetaObject *staticMetaObject = nullptr;
+    };
+
+    // If it's not void, we actually want an error if the ctor or the metaobject is missing.
+    template<typename T>
+    struct ExtendedType<T, false>
+    {
+        static constexpr const CreateParentFunction createParent = QQmlPrivate::createParent<T>;
+        static constexpr const QMetaObject *staticMetaObject = &T::staticMetaObject;
+    };
 
     template<class From, class To, int N>
     struct StaticCastSelectorClass
@@ -155,66 +238,103 @@ namespace QQmlPrivate
         }
     };
 
-    template <typename T>
-    struct has_attachedPropertiesMember
+    template<typename...>
+    using QmlVoidT = void;
+
+    // You can prevent subclasses from using the same attached type by specialzing this.
+    // This is reserved for internal types, though.
+    template<class T, class A>
+    struct OverridableAttachedType
     {
-        static bool const value = QQmlTypeInfo<T>::hasAttachedProperties;
+        using Type = A;
     };
 
-    template <typename T, bool hasMember>
-    class has_attachedPropertiesMethod
+    template<class T, class = QmlVoidT<>, bool OldStyle = QQmlTypeInfo<T>::hasAttachedProperties>
+    struct QmlAttached
     {
-    public:
-        typedef int yes_type;
-        typedef char no_type;
-
-        template<typename ReturnType>
-        static yes_type checkType(ReturnType *(*)(QObject *));
-        static no_type checkType(...);
-
-        static bool const value = sizeof(checkType(&T::qmlAttachedProperties)) == sizeof(yes_type);
+        using Type = void;
+        using Func = QQmlAttachedPropertiesFunc<QObject>;
+        static const QMetaObject *staticMetaObject() { return nullptr; }
+        static Func attachedPropertiesFunc() { return nullptr; }
     };
 
-    template <typename T>
-    class has_attachedPropertiesMethod<T, false>
+    // Defined inline via QML_ATTACHED
+    template<class T>
+    struct QmlAttached<T, QmlVoidT<typename OverridableAttachedType<T, typename T::QmlAttachedType>::Type>, false>
     {
-    public:
-        static bool const value = false;
+        // Normal attached properties
+        template <typename Parent, typename Attached>
+        struct Properties
+        {
+            using Func = QQmlAttachedPropertiesFunc<Attached>;
+            static const QMetaObject *staticMetaObject() { return &Attached::staticMetaObject; }
+            static Func attachedPropertiesFunc() { return Parent::qmlAttachedProperties; }
+        };
+
+        // Disabled via OverridableAttachedType
+        template<typename Parent>
+        struct Properties<Parent, void>
+        {
+            using Func = QQmlAttachedPropertiesFunc<QObject>;
+            static const QMetaObject *staticMetaObject() { return nullptr; };
+            static Func attachedPropertiesFunc() { return nullptr; };
+        };
+
+        using Type = typename OverridableAttachedType<T, typename T::QmlAttachedType>::Type;
+        using Func = typename Properties<T, Type>::Func;
+
+        static const QMetaObject *staticMetaObject()
+        {
+            return Properties<T, Type>::staticMetaObject();
+        }
+
+        static Func attachedPropertiesFunc()
+        {
+            return Properties<T, Type>::attachedPropertiesFunc();
+        }
     };
 
-    template<typename T, int N>
-    class AttachedPropertySelector
+    // Separately defined via QQmlTypeInfo
+    template<class T>
+    struct QmlAttached<T, QmlVoidT<decltype(T::qmlAttachedProperties)>, true>
     {
-    public:
-        static inline QQmlAttachedPropertiesFunc func() { return nullptr; }
-        static inline const QMetaObject *metaObject() { return nullptr; }
+        using Type = typename std::remove_pointer<decltype(T::qmlAttachedProperties(nullptr))>::type;
+        using Func = QQmlAttachedPropertiesFunc<Type>;
+
+        static const QMetaObject *staticMetaObject() { return &Type::staticMetaObject; }
+        static Func attachedPropertiesFunc() { return T::qmlAttachedProperties; }
     };
+
+    // This is necessary because both the type containing a default template parameter and the type
+    // instantiating the template need to have access to the default template parameter type. In
+    // this case that's T::QmlAttachedType. The QML_FOREIGN macro needs to befriend specific other
+    // types. Therefore we need some kind of "accessor". Because of compiler bugs in gcc and clang,
+    // we cannot befriend attachedPropertiesFunc() directly. Wrapping the actual access into another
+    // struct "fixes" that. For convenience we still want the free standing functions in addition.
+    template<class T>
+    struct QmlAttachedAccessor
+    {
+        static QQmlAttachedPropertiesFunc<QObject> attachedPropertiesFunc()
+        {
+            return QQmlAttachedPropertiesFunc<QObject>(QmlAttached<T>::attachedPropertiesFunc());
+        }
+
+        static const QMetaObject *staticMetaObject()
+        {
+            return QmlAttached<T>::staticMetaObject();
+        }
+    };
+
     template<typename T>
-    class AttachedPropertySelector<T, 1>
+    inline QQmlAttachedPropertiesFunc<QObject> attachedPropertiesFunc()
     {
-        template<typename ReturnType>
-        static inline const QMetaObject *attachedPropertiesMetaObject(ReturnType *(*)(QObject *)) {
-            return &ReturnType::staticMetaObject;
-        }
-    public:
-        static inline QQmlAttachedPropertiesFunc func() {
-            return QQmlAttachedPropertiesFunc(&T::qmlAttachedProperties);
-        }
-        static inline const QMetaObject *metaObject() {
-            return attachedPropertiesMetaObject(&T::qmlAttachedProperties);
-        }
-    };
-
-    template<typename T>
-    inline QQmlAttachedPropertiesFunc attachedPropertiesFunc()
-    {
-        return AttachedPropertySelector<T, has_attachedPropertiesMethod<T, has_attachedPropertiesMember<T>::value>::value>::func();
+        return QmlAttachedAccessor<T>::attachedPropertiesFunc();
     }
 
     template<typename T>
     inline const QMetaObject *attachedPropertiesMetaObject()
     {
-        return AttachedPropertySelector<T, has_attachedPropertiesMethod<T, has_attachedPropertiesMember<T>::value>::value>::metaObject();
+        return QmlAttachedAccessor<T>::staticMetaObject();
     }
 
     enum AutoParentResult { Parented, IncompatibleObject, IncompatibleParent };
@@ -235,7 +355,7 @@ namespace QQmlPrivate
         const char *elementName;
         const QMetaObject *metaObject;
 
-        QQmlAttachedPropertiesFunc attachedPropertiesFunction;
+        QQmlAttachedPropertiesFunc<QObject> attachedPropertiesFunction;
         const QMetaObject *attachedPropertiesMetaObject;
 
         int parserStatusCast;
@@ -246,8 +366,36 @@ namespace QQmlPrivate
         const QMetaObject *extensionMetaObject;
 
         QQmlCustomParser *customParser;
+
         int revision;
         // If this is extended ensure "version" is bumped!!!
+    };
+
+    struct RegisterTypeAndRevisions {
+        int version;
+
+        int typeId;
+        int listId;
+        int objectSize;
+        void (*create)(void *);
+
+        const char *uri;
+        int versionMajor;
+
+        const QMetaObject *metaObject;
+        const QMetaObject *classInfoMetaObject;
+
+        QQmlAttachedPropertiesFunc<QObject> attachedPropertiesFunction;
+        const QMetaObject *attachedPropertiesMetaObject;
+
+        int parserStatusCast;
+        int valueSourceCast;
+        int valueInterceptorCast;
+
+        QObject *(*extensionObjectCreate)(QObject *);
+        const QMetaObject *extensionMetaObject;
+
+        QQmlCustomParser *(*customParserFactory)();
     };
 
     struct RegisterInterface {
@@ -280,6 +428,19 @@ namespace QQmlPrivate
         int revision; // new in version 2
         std::function<QObject*(QQmlEngine *, QJSEngine *)> generalizedQobjectApi; // new in version 3
         // If this is extended ensure "version" is bumped!!!
+    };
+
+    struct RegisterSingletonTypeAndRevisions {
+        int version;
+        const char *uri;
+        int versionMajor;
+
+        QJSValue (*scriptApi)(QQmlEngine *, QJSEngine *);
+        const QMetaObject *instanceMetaObject;
+        const QMetaObject *classInfoMetaObject;
+
+        int typeId;
+        std::function<QObject*(QQmlEngine *, QJSEngine *)> generalizedQobjectApi; // new in version 3
     };
 
     struct RegisterCompositeType {
@@ -317,7 +478,9 @@ namespace QQmlPrivate
         SingletonRegistration  = 3,
         CompositeRegistration  = 4,
         CompositeSingletonRegistration = 5,
-        QmlUnitCacheHookRegistration = 6
+        QmlUnitCacheHookRegistration = 6,
+        TypeAndRevisionsRegistration = 7,
+        SingletonAndRevisionsRegistration = 8
     };
 
     int Q_QML_EXPORT qmlregister(RegistrationType, void *);
@@ -329,7 +492,151 @@ namespace QQmlPrivate
         QObject *m_object;
         bool alreadyCalled = false;
     };
-}
+
+    static int indexOfOwnClassInfo(const QMetaObject *metaObject, const char *key)
+    {
+        if (!metaObject || !key)
+            return -1;
+
+        const int offset = metaObject->classInfoOffset();
+        for (int i = metaObject->classInfoCount() + offset - 1; i >= offset; --i)
+            if (qstrcmp(key, metaObject->classInfo(i).name()) == 0) {
+                return i;
+        }
+        return -1;
+    }
+
+    inline const char *classInfo(const QMetaObject *metaObject, const char *key)
+    {
+        return metaObject->classInfo(indexOfOwnClassInfo(metaObject, key)).value();
+    }
+
+    inline int intClassInfo(const QMetaObject *metaObject, const char *key, int defaultValue = 0)
+    {
+        const int index = indexOfOwnClassInfo(metaObject, key);
+        return (index == -1) ? defaultValue
+                             : QByteArray(metaObject->classInfo(index).value()).toInt();
+    }
+
+    inline bool boolClassInfo(const QMetaObject *metaObject, const char *key,
+                              bool defaultValue = false)
+    {
+        const int index = indexOfOwnClassInfo(metaObject, key);
+        return (index == -1) ? defaultValue
+                             : (QByteArray(metaObject->classInfo(index).value()) == "true");
+    }
+
+    inline const char *classElementName(const QMetaObject *metaObject)
+    {
+        const char *elementName = classInfo(metaObject, "QML.Element");
+        if (qstrcmp(elementName, "auto") == 0)
+            return metaObject->className();
+        if (qstrcmp(elementName, "anonymous") == 0)
+            return nullptr;
+
+        if (!elementName || elementName[0] < 'A' || elementName[0] > 'Z') {
+            qWarning() << "Missing or unusable QML.Element class info \"" << elementName << "\""
+                       << "for" << metaObject->className();
+        }
+
+        return elementName;
+    }
+
+    template<class T, class = QmlVoidT<>>
+    struct QmlExtended
+    {
+        using Type = void;
+    };
+
+    template<class T>
+    struct QmlExtended<T, QmlVoidT<typename T::QmlExtendedType>>
+    {
+        using Type = typename T::QmlExtendedType;
+    };
+
+    template<class T, class = QmlVoidT<>>
+    struct QmlResolved
+    {
+        using Type = T;
+    };
+
+    template<class T>
+    struct QmlResolved<T, QmlVoidT<typename T::QmlForeignType>>
+    {
+        using Type = typename T::QmlForeignType;
+    };
+
+    template<class T, class = QmlVoidT<>>
+    struct QmlSingleton
+    {
+        static constexpr bool Value = false;
+    };
+
+    template<class T>
+    struct QmlSingleton<T, QmlVoidT<typename T::QmlIsSingleton>>
+    {
+        static constexpr bool Value = bool(T::QmlIsSingleton::yes);
+    };
+
+    template<typename T>
+    void qmlRegisterSingletonAndRevisions(const char *uri, int versionMajor,
+                                          const QMetaObject *classInfoMetaObject)
+    {
+        QML_GETTYPENAMES
+
+        RegisterSingletonTypeAndRevisions api = {
+            0,
+
+            uri,
+            versionMajor,
+
+            nullptr,
+
+            &T::staticMetaObject,
+            classInfoMetaObject,
+
+            qRegisterNormalizedMetaType<T *>(pointerName.constData()),
+            Constructors<T>::createSingletonInstance
+        };
+
+        qmlregister(SingletonAndRevisionsRegistration, &api);
+    }
+
+    template<typename T, typename E>
+    void qmlRegisterTypeAndRevisions(const char *uri, int versionMajor,
+                                     const QMetaObject *classInfoMetaObject)
+    {
+        QML_GETTYPENAMES
+
+        RegisterTypeAndRevisions type = {
+            0,
+            qRegisterNormalizedMetaType<T *>(pointerName.constData()),
+            qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
+            int(sizeof(T)),
+            Constructors<T>::createInto,
+
+            uri,
+            versionMajor,
+
+            &T::staticMetaObject,
+            classInfoMetaObject,
+
+            attachedPropertiesFunc<T>(),
+            attachedPropertiesMetaObject<T>(),
+
+            StaticCastSelector<T, QQmlParserStatus>::cast(),
+            StaticCastSelector<T, QQmlPropertyValueSource>::cast(),
+            StaticCastSelector<T, QQmlPropertyValueInterceptor>::cast(),
+
+            ExtendedType<E>::createParent,
+            ExtendedType<E>::staticMetaObject,
+
+            &qmlCreateCustomParser<T>
+        };
+
+        qmlregister(TypeAndRevisionsRegistration, &type);
+    }
+} // namespace QQmlPrivate
 
 QT_END_NAMESPACE
 

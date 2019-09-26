@@ -68,6 +68,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImage : public QQuickImageBase
     Q_PROPERTY(VAlignment verticalAlignment READ verticalAlignment WRITE setVerticalAlignment NOTIFY verticalAlignmentChanged)
     Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged REVISION 3)
     Q_PROPERTY(bool autoTransform READ autoTransform WRITE setAutoTransform NOTIFY autoTransformChanged REVISION 5)
+    QML_NAMED_ELEMENT(Image)
 
 public:
     QQuickImage(QQuickItem *parent=nullptr);

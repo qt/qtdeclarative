@@ -69,6 +69,7 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlInstanceModel : public QObject
     Q_OBJECT
 
     Q_PROPERTY(int count READ count NOTIFY countChanged)
+    QML_ANONYMOUS
 
 public:
     virtual ~QQmlInstanceModel() {}
@@ -113,6 +114,9 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlObjectModel : public QQmlInstanceModel
 
     Q_PROPERTY(QQmlListProperty<QObject> children READ children NOTIFY childrenChanged DESIGNABLE false)
     Q_CLASSINFO("DefaultProperty", "children")
+    QML_NAMED_ELEMENT(ObjectModel)
+    QML_ADDED_IN_MINOR_VERSION(1)
+    QML_ATTACHED(QQmlObjectModelAttached)
 
 public:
     QQmlObjectModel(QObject *parent=nullptr);
@@ -191,6 +195,5 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQmlInstanceModel)
 QML_DECLARE_TYPE(QQmlObjectModel)
-QML_DECLARE_TYPEINFO(QQmlObjectModel, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQMLINSTANCEMODEL_P_H
