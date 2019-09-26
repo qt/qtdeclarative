@@ -8490,7 +8490,7 @@ void QQuickItemLayer::setMipmap(bool mipmap)
 
     \note ShaderEffectSource.RGB and ShaderEffectSource.Alpha should
     be used with caution, as support for these formats in the underlying
-    hardare and driver is often not present.
+    hardware and driver is often not present.
 
     \sa {Item Layers}
  */

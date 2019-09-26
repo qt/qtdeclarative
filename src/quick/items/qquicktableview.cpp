@@ -54,6 +54,7 @@
 /*!
     \qmltype TableView
     \inqmlmodule QtQuick
+    \since 5.12
     \ingroup qtquick-views
     \inherits Flickable
     \brief Provides a table view of items to display data from a model.

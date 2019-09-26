@@ -83,6 +83,7 @@ private slots:
     void then_reject_non_callable();
     void then_resolve_multiple_then();
     void promiseChain();
+    void promiseHandlerThrows();
 
 private:
     void execute_test(QString testName);
@@ -283,6 +284,17 @@ void tst_qqmlpromise::promiseChain()
     QVERIFY(root);
     QTRY_VERIFY(root->property("x") == 42);
 
+}
+
+void tst_qqmlpromise::promiseHandlerThrows()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("promisehandlerthrows.qml"));
+    QVERIFY(component.isReady());
+    QTest::ignoreMessage(QtDebugMsg, "Rethrowing err");
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root);
+    QTRY_VERIFY(root->property("errorMessage") == QLatin1String("Some error"));
 }
 
 
