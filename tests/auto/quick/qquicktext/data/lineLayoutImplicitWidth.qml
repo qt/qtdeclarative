@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2019 Jolla Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -52,53 +52,29 @@ import QtQuick 2.0
 
 Rectangle {
     id: main
-    width: 320; height: 480
-    focus: true
+    width: 800; height: 600
 
-    property real offset: 0
-    property real margin: 8
+    property real off: 0
 
     Text {
         id: myText
-        anchors.fill: parent
-        anchors.margins: 10
+        objectName: "myText"
         wrapMode: Text.WordWrap
-        font.family: "Times New Roman"
         font.pixelSize: 14
-        textFormat: Text.StyledText
-        horizontalAlignment: Text.AlignJustify
+        textFormat: Text.PlainText
+        focus: true
+        anchors.fill: parent
 
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer at ante dui <a href=\"http://www.digia.com\">www.digia.com</a>.<br/>Curabitur ante est, pulvinar quis adipiscing a, iaculis id ipsum. Nunc blandit condimentum odio vel egestas.<br><ul type=\"bullet\"><li>Coffee<ol type=\"a\"><li>Espresso<li>Cappuccino<li>Latte</ol><li>Juice<ol type=\"1\"><li>Orange</li><li>Apple</li><li>Pineapple</li><li>Tomato</li></ol></li></ul><p><font color=\"#434343\"><i>Proin consectetur <b>sapien</b> in ipsum lacinia sit amet mattis orci interdum. Quisque vitae accumsan lectus. Ut nisi turpis, sollicitudin ut dignissim id, fermentum ac est. Maecenas nec libero leo. Sed ac leo eget ipsum ultricies viverra sit amet eu orci. Praesent et tortor risus, viverra accumsan sapien. Sed faucibus eleifend lectus, sed euismod urna porta eu. Quisque vitae accumsan lectus. Ut nisi turpis, sollicitudin ut dignissim id, fermentum ac est. Maecenas nec libero leo. Sed ac leo eget ipsum ultricies viverra sit amet eu orci."
+        // The autotest will retrieve these so that it can verify them
+        property var lineImplicitWidths: []
 
-//! [layout]
+        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam quis ante tristique, fermentum magna at, varius lacus. Donec elementum orci sit amet ligula efficitur, eget sodales orci porttitor. Etiam laoreet tellus quis nisi mollis lacinia. Cras vitae nisl sed nunc semper blandit. Duis egestas commodo lacus non congue. Fusce quis rhoncus urna. And magna arcu, sodales vitae nunc vel, rutrum hendrerit magna. Nullam imperdiet porttitor sem at euismod. Morbi faucibus libero sit amet vestibulum aliquam. Duis consectetur lacinia malesuada. Sed quis ante dui. Name dignissim faucibus felis. Quisque dapibus aliquam ante, eu cursus elit dictum in. Mauris placerat efficitur rutrum."
+
         onLineLaidOut: {
-            line.width = width / 2  - (margin)
+            var n = line.number
 
-            if (line.y + line.height >= height) {
-                line.y -= height - margin
-                line.x = width / 2 + margin
-            }
-
-            if (line.isLast) {
-                lastLineMarker.x = line.x + line.implicitWidth
-                lastLineMarker.y = line.y + (line.height - lastLineMarker.height) / 2
-            }
-        }
-//! [layout]
-
-        Rectangle {
-            id: lastLineMarker
-            color: "#44cccccc"
-            width: theEndText.width + margin
-            height: theEndText.height + margin
-
-            Text {
-                id: theEndText
-                text: "THE\nEND"
-                anchors.centerIn: parent
-                font.pixelSize: myText.font.pixelSize / 2
-            }
+            // Save information about the line so the autotest can retrieve it
+            lineImplicitWidths[n] = line.implicitWidth
         }
     }
-
 }
