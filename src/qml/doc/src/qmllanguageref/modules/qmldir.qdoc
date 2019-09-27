@@ -479,10 +479,7 @@ Module {
 
         Enum {
             name: "Loops"
-            values: {
-                "Infinite": -2,
-                "OnceOnly": 1
-            }
+            values: [ "Infinite", "OnceOnly" ]
         }
 
         // Signal and Method work the same way. The inner Parameter
