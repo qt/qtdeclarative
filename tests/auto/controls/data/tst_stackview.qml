@@ -1345,4 +1345,63 @@ TestCase {
         ignoreWarning(new RegExp(".*cannot replace while already in the process of removing elements"))
         control.clear(StackView.Immediate)
     }
+
+    Component {
+        id: rectangleComponent
+        Rectangle {}
+    }
+
+    Component {
+        id: qtbug57267_StackViewComponent
+
+        StackView {
+            id: stackView
+
+            popEnter: Transition {
+                XAnimator { from: (stackView.mirrored ? -1 : 1) * -stackView.width; to: 0; duration: 400; easing.type: Easing.Linear }
+            }
+            popExit: Transition {
+                XAnimator { from: 0; to: (stackView.mirrored ? -1 : 1) * stackView.width; duration: 400; easing.type: Easing.Linear }
+            }
+            pushEnter: Transition {
+                XAnimator { from: (stackView.mirrored ? -1 : 1) * stackView.width; to: 0; duration: 400; easing.type: Easing.Linear }
+            }
+            pushExit: Transition {
+                XAnimator { from: 0; to: (stackView.mirrored ? -1 : 1) * -stackView.width; duration: 400; easing.type: Easing.Linear }
+            }
+            replaceEnter: Transition {
+                XAnimator { from: (stackView.mirrored ? -1 : 1) * stackView.width; to: 0; duration: 400; easing.type: Easing.Linear }
+            }
+            replaceExit: Transition {
+                XAnimator { from: 0; to: (stackView.mirrored ? -1 : 1) * -stackView.width; duration: 400; easing.type: Easing.Linear }
+            }
+        }
+    }
+
+    function test_qtbug57267() {
+        let redRect = createTemporaryObject(rectangleComponent, testCase, { color: "red" })
+        verify(redRect)
+        let blueRect = createTemporaryObject(rectangleComponent, testCase, { color: "blue" })
+        verify(blueRect)
+        let control = createTemporaryObject(qtbug57267_StackViewComponent, testCase,
+            { "anchors.fill": testCase, initialItem: redRect })
+        verify(control)
+
+        control.replace(blueRect)
+        compare(control.currentItem, blueRect)
+        compare(control.depth, 1)
+
+        // Wait until the animation has started and then interrupt it by pushing the redRect.
+        tryCompare(control, "busy", true)
+        control.replace(redRect)
+        // The blue rect shouldn't be visible since we replaced it and therefore interrupted its animation.
+        tryCompare(blueRect, "visible", false)
+        // We did the replace very early on, so the transition for the redRect should still be happening.
+        compare(control.busy, true)
+        compare(redRect.visible, true)
+
+        // After finishing the transition, the red rect should still be visible.
+        tryCompare(control, "busy", false)
+        compare(redRect.visible, true)
+    }
 }
