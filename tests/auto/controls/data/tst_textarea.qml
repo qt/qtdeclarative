@@ -688,4 +688,72 @@ TestCase {
         compare(control.background.width, 100)
         compare(control.background.height, 100)
     }
+
+    // QTBUG-76369
+    Component {
+        id: testResizeBackground
+        Item {
+            width: 200
+            height: 200
+            property alias textArea: textArea
+            ScrollView {
+                anchors.fill: parent
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                TextArea {
+                    id: textArea
+                    // workaround test failing due to default insets on Imagine
+                    topInset: undefined
+                    leftInset: undefined
+                    rightInset: undefined
+                    bottomInset: undefined
+                    wrapMode : TextEdit.WordWrap
+                    readOnly: false
+                    selectByMouse: true
+                    focus: true
+                    text: "test message"
+
+                    background: Rectangle {
+                        y: parent.height - height - textArea.bottomPadding / 2
+                        implicitWidth: 120
+                        height: textArea.activeFocus ? 2 : 1
+                    }
+                }
+            }
+        }
+    }
+
+    function test_resize_background() {
+        var control = createTemporaryObject(testResizeBackground, testCase)
+
+        compare(control.textArea.background.width, control.width)
+        compare(control.textArea.background.height, 1)
+        control.width = 400
+        control.height = 400
+        compare(control.textArea.background.width, control.width)
+        compare(control.textArea.background.height, 1)
+        control.width = 200
+        control.height = 200
+        compare(control.textArea.background.width, control.width)
+        compare(control.textArea.background.height, 1)
+
+        // hasBackgroundWidth=true
+        control.textArea.background.width = 1
+        compare(control.textArea.background.width, 1)
+        compare(control.textArea.background.height, 1)
+        control.width = 400
+        control.height = 400
+        compare(control.textArea.background.width, 1)
+        compare(control.textArea.background.height, 1)
+        // hasBackgroundHeight=false
+        control.textArea.background.height = undefined
+        compare(control.textArea.background.width, 1)
+        compare(control.textArea.background.height, 0)
+        control.textArea.background.y = 0
+        compare(control.textArea.background.width, 1)
+        compare(control.textArea.background.height, control.height)
+        control.width = 200
+        control.height = 200
+        compare(control.textArea.background.width, 1)
+        compare(control.textArea.background.height, control.height)
+    }
 }

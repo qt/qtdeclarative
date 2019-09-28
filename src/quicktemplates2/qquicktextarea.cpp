@@ -369,6 +369,8 @@ void QQuickTextAreaPrivate::detachFlickable()
     QObjectPrivate::disconnect(flickable, &QQuickFlickable::contentHeightChanged, this, &QQuickTextAreaPrivate::resizeFlickableControl);
 
     flickable = nullptr;
+
+    resizeBackground();
 }
 
 void QQuickTextAreaPrivate::ensureCursorVisible()
@@ -433,11 +435,21 @@ void QQuickTextAreaPrivate::resizeFlickableContent()
 
 void QQuickTextAreaPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff)
 {
-    Q_UNUSED(item);
-    Q_UNUSED(change);
     Q_UNUSED(diff);
+    if (!resizingBackground && item == background) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(item);
+        // Only set hasBackgroundWidth/Height if it was a width/height change,
+        // otherwise we're prevented from setting a width/height in the future.
+        if (change.widthChange())
+            extra.value().hasBackgroundWidth = p->widthValid;
+        if (change.heightChange())
+            extra.value().hasBackgroundHeight = p->heightValid;
+    }
 
-    resizeFlickableControl();
+    if (flickable)
+        resizeFlickableControl();
+    else
+        resizeBackground();
 }
 
 qreal QQuickTextAreaPrivate::getImplicitWidth() const
@@ -512,11 +524,8 @@ void QQuickTextAreaPrivate::executeBackground(bool complete)
 
     if (!background || complete)
         quickBeginDeferred(q, backgroundName(), background);
-    if (complete) {
+    if (complete)
         quickCompleteDeferred(q, backgroundName(), background);
-        if (background)
-            QQuickControlPrivate::addImplicitSizeListener(background, this, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
-    }
 }
 
 void QQuickTextAreaPrivate::itemImplicitWidthChanged(QQuickItem *item)
@@ -625,21 +634,20 @@ void QQuickTextArea::setBackground(QQuickItem *background)
     d->background = background;
 
     if (background) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(background);
+        if (p->widthValid || p->heightValid) {
+            d->extra.value().hasBackgroundWidth = p->widthValid;
+            d->extra.value().hasBackgroundHeight = p->heightValid;
+        }
         if (d->flickable)
             background->setParentItem(d->flickable);
         else
             background->setParentItem(this);
         if (qFuzzyIsNull(background->z()))
             background->setZ(-1);
-        QQuickItemPrivate *p = QQuickItemPrivate::get(background);
-        if (p->widthValid || p->heightValid) {
-            d->extra.value().hasBackgroundWidth = p->widthValid;
-            d->extra.value().hasBackgroundHeight = p->heightValid;
-        }
-        if (isComponentComplete()) {
+        if (isComponentComplete())
             d->resizeBackground();
-            QQuickControlPrivate::addImplicitSizeListener(background, d, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
-        }
+        QQuickControlPrivate::addImplicitSizeListener(background, d, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
     }
 
     if (!qFuzzyCompare(oldImplicitBackgroundWidth, implicitBackgroundWidth()))

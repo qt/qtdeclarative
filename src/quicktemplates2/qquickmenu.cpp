@@ -1487,7 +1487,9 @@ void QQuickMenu::timerEvent(QTimerEvent *event)
         if (QQuickMenu *subMenu = d->currentSubMenu())
             subMenu->open();
         d->stopHoverTimer();
+        return;
     }
+    QQuickPopup::timerEvent(event);
 }
 
 QFont QQuickMenu::defaultFont() const
