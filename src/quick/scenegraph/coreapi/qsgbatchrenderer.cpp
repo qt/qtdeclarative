@@ -400,14 +400,14 @@ void ShaderManager::clearCachedRendererData()
     }
 }
 
-QRhiShaderResourceBindings *ShaderManager::srb(const QVector<QRhiShaderResourceBinding> &bindings)
+QRhiShaderResourceBindings *ShaderManager::srb(const ShaderResourceBindingList &bindings)
 {
     auto it = srbCache.constFind(bindings);
     if (it != srbCache.constEnd())
         return *it;
 
     QRhiShaderResourceBindings *srb = context->rhi()->newShaderResourceBindings();
-    srb->setBindings(bindings);
+    srb->setBindings(bindings.cbegin(), bindings.cend());
     if (srb->build()) {
         srbCache.insert(bindings, srb);
     } else {
@@ -3253,7 +3253,7 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms)
 
     // Build a new one. This is potentially expensive.
     QRhiGraphicsPipeline *ps = m_rhi->newGraphicsPipeline();
-    ps->setShaderStages(sms->programRhi.shaderStages);
+    ps->setShaderStages(sms->programRhi.shaderStages.cbegin(), sms->programRhi.shaderStages.cend());
     ps->setVertexInputLayout(sms->programRhi.inputLayout);
     ps->setShaderResourceBindings(e->srb);
     ps->setRenderPassDescriptor(renderPassDescriptor());
@@ -3428,7 +3428,7 @@ static void materialToRendererGraphicsState(GraphicsState *dst,
 void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
                                          QSGMaterialRhiShader::RenderState &renderState,
                                          QSGMaterial *material,
-                                         QVector<QRhiShaderResourceBinding> *bindings,
+                                         ShaderManager::ShaderResourceBindingList *bindings,
                                          const Batch *batch,
                                          int ubufOffset,
                                          int ubufRegionSize) // RHI only, [prepare step]
@@ -3630,7 +3630,7 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
     bool pendingGStatePop = false;
     updateMaterialStaticData(sms, renderState, material, batch, &pendingGStatePop);
 
-    QVector<QRhiShaderResourceBinding> bindings;
+    ShaderManager::ShaderResourceBindingList bindings;
     updateMaterialDynamicData(sms, renderState, material, &bindings, batch, 0, ubufSize);
 
 #ifndef QT_NO_DEBUG
@@ -3824,7 +3824,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
         }
 
         QSGMaterialRhiShader::RenderState renderState = rhiState(QSGMaterialRhiShader::RenderState::DirtyStates(int(dirty)));
-        QVector<QRhiShaderResourceBinding> bindings;
+        ShaderManager::ShaderResourceBindingList bindings;
         updateMaterialDynamicData(sms, renderState,
                                   material, &bindings, batch, ubufOffset, ubufSize);
 

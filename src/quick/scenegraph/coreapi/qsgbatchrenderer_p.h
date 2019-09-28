@@ -642,7 +642,7 @@ public:
         struct {
             QSGMaterialRhiShader *program = nullptr;
             QRhiVertexInputLayout inputLayout;
-            QVector<QRhiGraphicsShaderStage> shaderStages;
+            QVarLengthArray<QRhiGraphicsShaderStage, 2> shaderStages;
         } programRhi;
 
         float lastOpacity;
@@ -656,7 +656,9 @@ public:
 
     void clearCachedRendererData();
 
-    QRhiShaderResourceBindings *srb(const QVector<QRhiShaderResourceBinding> &bindings);
+    using ShaderResourceBindingList = QVarLengthArray<QRhiShaderResourceBinding, 8>;
+
+    QRhiShaderResourceBindings *srb(const ShaderResourceBindingList &bindings);
 
 public Q_SLOTS:
     void invalidated();
@@ -672,7 +674,7 @@ private:
     QOpenGLShaderProgram *blitProgram;
     QSGDefaultRenderContext *context;
 
-    QHash<QVector<QRhiShaderResourceBinding>, QRhiShaderResourceBindings *> srbCache;
+    QHash<ShaderResourceBindingList, QRhiShaderResourceBindings *> srbCache;
 };
 
 struct GraphicsState
@@ -797,7 +799,7 @@ private:
     bool ensurePipelineState(Element *e, const ShaderManager::Shader *sms);
     QRhiTexture *dummyTexture();
     void updateMaterialDynamicData(ShaderManager::Shader *sms, QSGMaterialRhiShader::RenderState &renderState,
-                                   QSGMaterial *material, QVector<QRhiShaderResourceBinding> *bindings,
+                                   QSGMaterial *material, ShaderManager::ShaderResourceBindingList *bindings,
                                    const Batch *batch, int ubufOffset, int ubufRegionSize);
     void updateMaterialStaticData(ShaderManager::Shader *sms, QSGMaterialRhiShader::RenderState &renderState,
                                   QSGMaterial *material, Batch *batch, bool *gstateChanged);
