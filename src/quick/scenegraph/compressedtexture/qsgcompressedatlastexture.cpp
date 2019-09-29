@@ -88,10 +88,20 @@ Texture *Atlas::create(const QByteArray &data, int dataLength, int dataOffset, c
 
 void Atlas::generateTexture()
 {
+    int bytesPerBlock = 8;
+    switch (m_format) {
+    case QOpenGLTexture::RGBA8_ETC2_EAC:
+    case QOpenGLTexture::RGBA_DXT3:
+    case QOpenGLTexture::RGBA_DXT5:
+        bytesPerBlock = 16;
+    default:
+        break;
+    }
+
     QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
     funcs->glCompressedTexImage2D(GL_TEXTURE_2D, 0, m_format,
                                   m_size.width(), m_size.height(), 0,
-                                  (m_size.width() * m_size.height()) / 2,
+                                  (m_size.width() / 4 * m_size.height() / 4) * bytesPerBlock,
                                   nullptr);
 }
 
