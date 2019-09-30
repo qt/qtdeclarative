@@ -163,8 +163,8 @@ public:
 
     // 2.14 (Qt 5.14)
     QVariant currentValue() const;
-    Q_INVOKABLE QVariant valueAt(int index) const;
-    Q_INVOKABLE int indexOfValue(const QVariant &value) const;
+    Q_REVISION(14) Q_INVOKABLE QVariant valueAt(int index) const;
+    Q_REVISION(14) Q_INVOKABLE int indexOfValue(const QVariant &value) const;
 
 public Q_SLOTS:
     void incrementCurrentIndex();
