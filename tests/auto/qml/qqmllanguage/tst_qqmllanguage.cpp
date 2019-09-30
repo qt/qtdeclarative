@@ -5075,7 +5075,8 @@ void tst_qqmllanguage::accessDeletedObject()
 {
     QQmlEngine engine;
 
-    engine.rootContext()->setContextProperty("objectCreator", new ObjectCreator);
+    QScopedPointer<ObjectCreator> creator(new ObjectCreator);
+    engine.rootContext()->setContextProperty("objectCreator", creator.get());
     QQmlComponent component(&engine, testFileUrl("accessDeletedObject.qml"));
     VERIFY_ERRORS(0);
 
