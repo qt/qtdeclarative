@@ -1969,6 +1969,69 @@ void tst_qqmllanguage::aliasProperties()
         QScopedPointer<QObject> object(component.create());
         QVERIFY(!object.isNull());
     }
+
+    // Alias to grouped property
+    {
+        QQmlComponent component(&engine, testFileUrl("alias.17.qml"));
+        VERIFY_ERRORS(0);
+
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+        QVERIFY(object->property("success").toBool());
+    }
+
+    // Alias to grouped property updates
+    {
+        QQmlComponent component(&engine, testFileUrl("alias.17.qml"));
+        VERIFY_ERRORS(0);
+
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+        QObject *aliasUser = object->findChild<QObject*>(QLatin1String("aliasUser"));
+        QVERIFY(aliasUser);
+        QQmlProperty checkValueProp(object.get(), "checkValue");
+        QVERIFY(checkValueProp.isValid());
+        checkValueProp.write(777);
+        QCOMPARE(object->property("checkValue").toInt(), 777);
+        QCOMPARE(aliasUser->property("topMargin").toInt(), 777);
+    }
+
+    // Write to alias to grouped property
+    {
+        QQmlComponent component(&engine, testFileUrl("alias.17.qml"));
+        VERIFY_ERRORS(0);
+
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+        QObject *aliasUser = object->findChild<QObject*>(QLatin1String("aliasUser"));
+        QVERIFY(aliasUser);
+        QQmlProperty topMarginProp {aliasUser, "topMargin"};
+        QVERIFY(topMarginProp.isValid());
+        topMarginProp.write(777);
+        QObject *myItem = object->findChild<QObject*>(QLatin1String("myItem"));
+        QVERIFY(myItem);
+        auto anchors = myItem->property("anchors").value<QObject*>();
+        QVERIFY(anchors);
+        QCOMPARE(anchors->property("topMargin").toInt(), 777);
+    }
+
+    // Binding to alias to grouped property gets updated
+    {
+        QQmlComponent component(&engine, testFileUrl("alias.17.qml"));
+        VERIFY_ERRORS(0);
+
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+        QObject *aliasUser = object->findChild<QObject*>(QLatin1String("aliasUser"));
+        QVERIFY(aliasUser);
+        QQmlProperty topMarginProp {aliasUser, "topMargin"};
+        QVERIFY(topMarginProp.isValid());
+        topMarginProp.write(20);
+        QObject *myText = object->findChild<QObject*>(QLatin1String("myText"));
+        QVERIFY(myText);
+        auto text = myText->property("text").toString();
+        QCOMPARE(text, "alias:\n20");
+    }
 }
 
 // QTBUG-13374 Test that alias properties and signals can coexist
