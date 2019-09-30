@@ -87,7 +87,7 @@
 
     \section1 Packages
 
-    \e Packages uses the \l Package type to transition delegates between
+    \e Packages use the \l [QML]{Package} type to transition delegates between
     two views.
 
     It has a Package object which defines delegate items for each view and an
