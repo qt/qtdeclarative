@@ -564,7 +564,7 @@ void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor
     QCoreApplication::processEvents();
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     if (inDestructor)
-        delete dd->animationController;
+        dd->animationController.reset();
     if (current && gl)
         gl->doneCurrent();
     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- invalidating scene graph");
@@ -1302,7 +1302,8 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
             }
         }
 
-        QQuickAnimatorController *controller = QQuickWindowPrivate::get(w->window)->animationController;
+        QQuickAnimatorController *controller
+                = QQuickWindowPrivate::get(w->window)->animationController.get();
         if (controller->thread() != w->thread)
             controller->moveToThread(w->thread);
 

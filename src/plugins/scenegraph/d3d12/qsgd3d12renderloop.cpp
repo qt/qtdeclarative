@@ -148,7 +148,7 @@ void QSGD3D12RenderLoop::windowDestroyed(QQuickWindow *window)
     delete rc;
     delete engine;
 
-    delete wd->animationController;
+    wd->animationController.reset();
 }
 
 void QSGD3D12RenderLoop::exposeWindow(QQuickWindow *window)

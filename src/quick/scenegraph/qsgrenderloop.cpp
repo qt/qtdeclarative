@@ -436,7 +436,7 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
             gl->doneCurrent();
     }
 
-    delete d->animationController;
+    d->animationController.reset();
 }
 
 void QSGGuiThreadRenderLoop::handleDeviceLoss()

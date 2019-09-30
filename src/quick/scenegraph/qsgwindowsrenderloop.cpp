@@ -269,7 +269,7 @@ void QSGWindowsRenderLoop::windowDestroyed(QQuickWindow *window)
         m_gl->doneCurrent();
     }
 
-    delete d->animationController;
+    d->animationController.reset();
 }
 
 bool QSGWindowsRenderLoop::anyoneShowing() const

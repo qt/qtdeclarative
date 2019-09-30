@@ -644,7 +644,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
         q->setVulkanInstance(QSGRhiSupport::vulkanInstance());
 #endif
 
-    animationController = new QQuickAnimatorController(q);
+    animationController.reset(new QQuickAnimatorController(q));
 
     QObject::connect(context, SIGNAL(initialized()), q, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
     QObject::connect(context, SIGNAL(invalidated()), q, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
