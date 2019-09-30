@@ -305,6 +305,7 @@ void QQmlTypeData::done()
         QQmlJS::DiagnosticMessage error = buildTypeResolutionCaches(&typeNameCache, &resolvedTypeCache);
         if (error.isValid()) {
             setError(error);
+            qDeleteAll(resolvedTypeCache);
             return;
         }
     }
