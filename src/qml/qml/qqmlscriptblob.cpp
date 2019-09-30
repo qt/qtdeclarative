@@ -177,7 +177,7 @@ void QQmlScriptBlob::done()
     }
 
     if (!m_isModule) {
-        m_scriptData->typeNameCache = new QQmlTypeNameCache(m_importCache);
+        m_scriptData->typeNameCache.adopt(new QQmlTypeNameCache(m_importCache));
 
         QSet<QString> ns;
 
@@ -195,7 +195,7 @@ void QQmlScriptBlob::done()
             m_scriptData->typeNameCache->add(script.qualifier, scriptIndex, script.nameSpace);
         }
 
-        m_importCache.populateCache(m_scriptData->typeNameCache);
+        m_importCache.populateCache(m_scriptData->typeNameCache.data());
     }
     m_scripts.clear();
 }

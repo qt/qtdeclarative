@@ -82,7 +82,7 @@ private:
 public:
     QUrl url;
     QString urlString;
-    QQmlTypeNameCache *typeNameCache;
+    QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
     QVector<QQmlRefPointer<QQmlScriptBlob>> scripts;
 
     QV4::ReturnedValue scriptValueForContext(QQmlContextData *parentCtxt);
