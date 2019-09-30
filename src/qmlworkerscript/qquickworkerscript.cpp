@@ -374,7 +374,7 @@ QQuickWorkerScriptEngine::~QQuickWorkerScriptEngine()
         yieldCurrentThread();
     }
 
-    d->deleteLater();
+    delete d;
 }
 
 WorkerScript::WorkerScript(int id, QQuickWorkerScriptEnginePrivate *parent)
