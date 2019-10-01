@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -54,8 +54,8 @@ import QtQuick.Controls 2.12
 
 TestCase {
     id: testCase
-    width: 200
-    height: 200
+    width: 300
+    height: 300
     visible: true
     when: windowShown
     name: "Tumbler"
@@ -513,6 +513,7 @@ TestCase {
         Text {
             text: parent.displacement.toFixed(2)
             anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
         }
 
         property real displacement: Tumbler.displacement
@@ -1235,5 +1236,25 @@ TestCase {
         tryCompare(tumblerView, "count", 5);
         // 5 - 2 = 3
         compare(tumbler.currentIndex, 3);
+    }
+
+    function test_displacementAfterResizing() {
+        createTumbler({
+            width: 200,
+            wrap: false,
+            delegate: displacementDelegate,
+            model: 30,
+            visibleItemCount: 7,
+            currentIndex: 15
+        })
+
+        var delegate = findChild(tumblerView, "delegate15")
+        verify(delegate)
+
+        tryCompare(delegate, "displacement", 0)
+
+        // Resizing the Tumbler shouldn't affect the displacement.
+        tumbler.height *= 1.4
+        tryCompare(delegate, "displacement", 0)
     }
 }

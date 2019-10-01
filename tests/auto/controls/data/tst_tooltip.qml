@@ -205,6 +205,15 @@ TestCase {
         else
             control.visible = true
         compare(control.visible, true)
+        // wait a bit to make sure that it's still visible
+        wait(50)
+        compare(control.visible, true)
+        // re-arm for another 200 ms
+        control.timeout = 200
+        compare(control.visible, true)
+        // ensure that it's still visible after 150 ms (where old timeout < 150 < new timeout)
+        wait(150)
+        compare(control.visible, true)
         tryCompare(control, "visible", false)
     }
 

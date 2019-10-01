@@ -949,9 +949,20 @@ void QQuickTumblerAttachedPrivate::calculateDisplacement()
         const qreal contentY = tumblerPrivate->viewContentY;
         const qreal delegateH = delegateHeight(tumbler);
         const qreal preferredHighlightBegin = tumblerPrivate->view->property("preferredHighlightBegin").toReal();
-        // Tumbler's displacement goes from negative at the top to positive towards the bottom, so we must switch this around.
-        const qreal reverseDisplacement = (contentY + preferredHighlightBegin) / delegateH;
-        displacement = reverseDisplacement - index;
+        const qreal itemY = qobject_cast<QQuickItem*>(parent)->y();
+        qreal currentItemY = 0;
+        auto currentItem = tumblerPrivate->view->property("currentItem").value<QQuickItem*>();
+        if (currentItem)
+            currentItemY = currentItem->y();
+        // Start from the y position of the current item.
+        const qreal topOfCurrentItemInViewport = currentItemY - contentY;
+        // Then, calculate the distance between it and the preferredHighlightBegin.
+        const qreal relativePositionToPreferredHighlightBegin = topOfCurrentItemInViewport - preferredHighlightBegin;
+        // Next, calculate the distance between us and the current item.
+        const qreal distanceFromCurrentItem = currentItemY - itemY;
+        const qreal displacementInPixels = distanceFromCurrentItem - relativePositionToPreferredHighlightBegin;
+        // Convert it from pixels to a floating point index.
+        displacement = displacementInPixels / delegateH;
     }
 
     emitIfDisplacementChanged(previousDisplacement, displacement);
