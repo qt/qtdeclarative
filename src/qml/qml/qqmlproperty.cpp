@@ -1373,8 +1373,9 @@ bool QQmlPropertyPrivate::write(QObject *object,
             }
         }
         if (!ok) {
-            // the only other option is that they are assigning a single value
+            // the only other options are that they are assigning a single value
             // to a sequence type property (eg, an int to a QList<int> property).
+            // or that we encountered an interface type
             // Note that we've already handled single-value assignment to QList<QUrl> properties.
             if (variantType == QVariant::Int && propertyType == qMetaTypeId<QList<int> >()) {
                 QList<int> list;
@@ -1402,6 +1403,15 @@ bool QQmlPropertyPrivate::write(QObject *object,
                 list << value.toString();
                 v = QVariant::fromValue<QStringList>(list);
                 ok = true;
+            }
+        }
+
+        if (!ok && QQmlMetaType::isInterface(propertyType)) {
+            auto valueAsQObject = qvariant_cast<QObject *>(value);
+            if (valueAsQObject && valueAsQObject->qt_metacast(QQmlMetaType::interfaceIId(propertyType))) {
+                // this case can occur when object has an interface type
+                // and the variant contains a type implementing the interface
+                return property.writeProperty(object, const_cast<void *>(value.constData()), flags);
             }
         }
 
