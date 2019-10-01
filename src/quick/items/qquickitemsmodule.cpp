@@ -279,7 +279,7 @@ static void qt_quickitems_defineModule()
     qmlRegisterTypesAndRevisions<QQuickAnimatedImage>(uri, major);
 #else
     qmlRegisterTypeNotAvailable(
-                uri, major, minor, "AnimatedImage",
+                uri, major, 15, "AnimatedImage",
                 QCoreApplication::translate("QQuickAnimatedImage",
                                             "Qt was built without support for QMovie"));
 #endif
