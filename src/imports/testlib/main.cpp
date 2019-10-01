@@ -37,100 +37,15 @@
 **
 ****************************************************************************/
 
-#include <private/qv4scopedvalue_p.h>
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
-#include <QtQml/qjsvalue.h>
-#include <QtQml/qjsengine.h>
-#include "QtQuickTest/private/quicktestresult_p.h"
-#include "QtQuickTest/private/quicktestevent_p.h"
-#include "private/qtestoptions_p.h"
-#include "QtQuick/qquickitem.h"
-#include <QtQml/private/qqmlengine_p.h>
-#include <QtGui/QGuiApplication>
-#include <QtGui/qstylehints.h>
+#include <QtQuickTest/private/quicktestresult_p.h>
+#include <QtQuickTest/private/quicktestevent_p.h>
+#include <QtQuickTest/private/quicktestutil_p.h>
+#include <QtQuickTest/private/qtestoptions_p.h>
 
 QML_DECLARE_TYPE(QuickTestResult)
 QML_DECLARE_TYPE(QuickTestEvent)
-
-#include <QtDebug>
-
-QT_BEGIN_NAMESPACE
-
-class QuickTestUtil : public QObject
-{
-    Q_OBJECT
-    Q_PROPERTY(bool printAvailableFunctions READ printAvailableFunctions NOTIFY printAvailableFunctionsChanged)
-    Q_PROPERTY(int dragThreshold READ dragThreshold NOTIFY dragThresholdChanged)
-    QML_NAMED_ELEMENT(TestUtil)
-public:
-    QuickTestUtil(QObject *parent = nullptr)
-        :QObject(parent)
-    {}
-
-    ~QuickTestUtil() override
-    {}
-    bool printAvailableFunctions() const
-    {
-        return QTest::printAvailableFunctions;
-    }
-    int dragThreshold() const { return QGuiApplication::styleHints()->startDragDistance(); }
-
-Q_SIGNALS:
-    void printAvailableFunctionsChanged();
-    void dragThresholdChanged();
-
-public Q_SLOTS:
-
-    QJSValue typeName(const QVariant& v) const
-    {
-        QString name(v.typeName());
-        if (v.canConvert<QObject*>()) {
-            QQmlType type;
-            const QMetaObject *mo = v.value<QObject*>()->metaObject();
-            while (!type.isValid() && mo) {
-                type = QQmlMetaType::qmlType(mo);
-                mo = mo->superClass();
-            }
-            if (type.isValid()) {
-                name = type.qmlTypeName();
-            }
-        }
-
-        QQmlEngine *engine = qmlEngine(this);
-        QV4::ExecutionEngine *v4 = engine->handle();
-        return QJSValue(v4, v4->newString(name)->asReturnedValue());
-    }
-
-    bool compare(const QVariant& act, const QVariant& exp) const {
-        return act == exp;
-    }
-
-    QJSValue callerFile(int frameIndex = 0) const
-    {
-        QQmlEngine *engine = qmlEngine(this);
-        QV4::ExecutionEngine *v4 = engine->handle();
-        QV4::Scope scope(v4);
-
-        QVector<QV4::StackFrame> stack = v4->stackTrace(frameIndex + 2);
-        return (stack.size() > frameIndex + 1)
-                ? QJSValue(v4, v4->newString(stack.at(frameIndex + 1).source)->asReturnedValue())
-                : QJSValue();
-    }
-    int callerLine(int frameIndex = 0) const
-    {
-        QQmlEngine *engine = qmlEngine(this);
-        QV4::ExecutionEngine *v4 = engine->handle();
-
-        QVector<QV4::StackFrame> stack = v4->stackTrace(frameIndex + 2);
-        if (stack.size() > frameIndex + 1)
-            return stack.at(frameIndex + 1).line;
-        return -1;
-    }
-};
-
-QT_END_NAMESPACE
-
 QML_DECLARE_TYPE(QuickTestUtil)
 
 QT_BEGIN_NAMESPACE

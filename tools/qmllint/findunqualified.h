@@ -126,6 +126,8 @@ private:
 
     // expression handling
     bool visit(QQmlJS::AST::IdentifierExpression *idexp) override;
+
+    bool visit(QQmlJS::AST::PatternElement *) override;
 };
 
 

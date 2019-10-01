@@ -40,7 +40,7 @@
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
 
-#include <private/qquickboundaryrule_p.h>
+#include "qquickboundaryrule_p.h"
 
 QT_BEGIN_NAMESPACE
 

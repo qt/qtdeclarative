@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -37,31 +37,39 @@
 **
 ****************************************************************************/
 
-#include "qquicklocalstorage_p.h"
+#ifndef QQUICKLOCALSTORAGE_P_H
+#define QQUICKLOCALSTORAGE_P_H
 
-#include <QtQml/qqmlextensionplugin.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtCore/qobject.h>
 #include <QtQml/qqml.h>
+#include <QtQml/private/qv4engine_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlLocalStoragePlugin : public QQmlExtensionPlugin
+class QQuickLocalStorage : public QObject
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    QML_NAMED_ELEMENT(LocalStorage)
+    QML_SINGLETON
 
 public:
-    QQmlLocalStoragePlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent)
-    {
-    }
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.LocalStorage"));
-        qmlRegisterTypesAndRevisions<QQuickLocalStorage>(uri, 2);
+    QQuickLocalStorage(QObject *parent = nullptr) : QObject(parent) {}
+    ~QQuickLocalStorage() override = default;
 
-        qmlRegisterModule(uri, 2, 15);
-    }
+    Q_INVOKABLE void openDatabaseSync(QQmlV4Function* args);
 };
 
 QT_END_NAMESPACE
 
-#include "plugin.moc"
+#endif // QQUICKLOCALSTORAGE_P_H
