@@ -78,6 +78,13 @@ void QQmlMetaTypeData::registerType(QQmlTypePrivate *priv)
     priv->release();
 }
 
+void QQmlMetaTypeData::registerModuleTypes(const QQmlMetaTypeData::VersionedUri &versionedUri)
+{
+    auto function = moduleTypeRegistrationFunctions.constFind(versionedUri);
+    if (function != moduleTypeRegistrationFunctions.constEnd())
+        (*function)();
+}
+
 QQmlPropertyCache *QQmlMetaTypeData::propertyCacheForMinorVersion(int index, int minorVersion) const
 {
     return (index < typePropertyCaches.length())

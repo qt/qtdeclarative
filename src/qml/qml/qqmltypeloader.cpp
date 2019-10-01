@@ -395,19 +395,29 @@ QQmlEngine *QQmlTypeLoader::engine() const
 Call the initializeEngine() method on \a iface.  Used by QQmlImportDatabase to ensure it
 gets called in the correct thread.
 */
-void QQmlTypeLoader::initializeEngine(QQmlExtensionInterface *iface,
-                                              const char *uri)
+template<class Interface>
+void doInitializeEngine(Interface *iface, QQmlTypeLoaderThread *thread, QQmlEngine *engine,
+                      const char *uri)
 {
-    Q_ASSERT(m_thread->isThisThread() || engine()->thread() == QThread::currentThread());
+    Q_ASSERT(thread->isThisThread() || engine->thread() == QThread::currentThread());
 
-    if (m_thread->isThisThread()) {
-        m_thread->initializeEngine(iface, uri);
+    if (thread->isThisThread()) {
+        thread->initializeEngine(iface, uri);
     } else {
-        Q_ASSERT(engine()->thread() == QThread::currentThread());
-        iface->initializeEngine(engine(), uri);
+        Q_ASSERT(engine->thread() == QThread::currentThread());
+        iface->initializeEngine(engine, uri);
     }
 }
 
+void QQmlTypeLoader::initializeEngine(QQmlEngineExtensionInterface *iface, const char *uri)
+{
+    doInitializeEngine(iface, m_thread, engine(), uri);
+}
+
+void QQmlTypeLoader::initializeEngine(QQmlExtensionInterface *iface, const char *uri)
+{
+    doInitializeEngine(iface, m_thread, engine(), uri);
+}
 
 void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QByteArray &data)
 {

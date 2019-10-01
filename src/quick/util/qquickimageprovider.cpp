@@ -291,7 +291,7 @@ void QQuickImageResponse::cancel()
     \image imageprovider.png
 
     See the \l {imageprovider}{Image Provider Example} for the complete implementation.
-    Note that the example registers the provider via a \l{QQmlExtensionPlugin}{plugin}
+    Note that the example registers the provider via a \l{QQmlEngineExtensionPlugin}{plugin}
     instead of registering it in the application \c main() function as shown above.
 
 

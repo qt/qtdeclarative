@@ -990,7 +990,9 @@ static QVector<QStaticPlugin> makePlugins()
     const auto staticPlugins = QPluginLoader::staticPlugins();
     for (const QStaticPlugin &plugin : staticPlugins) {
         const QString iid = plugin.metaData().value(QLatin1String("IID")).toString();
-        if (iid == QLatin1String(QQmlExtensionInterface_iid) || iid == QLatin1String(QQmlExtensionInterface_iid_old)) {
+        if (iid == QLatin1String(QQmlEngineExtensionInterface_iid)
+                || iid == QLatin1String(QQmlExtensionInterface_iid)
+                || iid == QLatin1String(QQmlExtensionInterface_iid_old)) {
             plugins.append(plugin);
         }
     }
@@ -1008,7 +1010,9 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
     static const QVector<QStaticPlugin> plugins = makePlugins();
     for (const QStaticPlugin &plugin : plugins) {
         // Since a module can list more than one plugin, we keep iterating even after we found a match.
-        if (QQmlExtensionPlugin *instance = qobject_cast<QQmlExtensionPlugin *>(plugin.instance())) {
+        QObject *instance = plugin.instance();
+        if (qobject_cast<QQmlEngineExtensionPlugin *>(instance)
+                || qobject_cast<QQmlExtensionPlugin *>(instance)) {
             const QJsonArray metaTagsUriList = plugin.metaData().value(QLatin1String("uri")).toArray();
             if (metaTagsUriList.isEmpty()) {
                 if (errors) {
@@ -2055,17 +2059,8 @@ bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &ba
         // other QML loader threads and thus not process the initializeEngine call).
     }
 
-    // The plugin's per-engine initialization does not need lock protection, as this function is
-    // only called from the engine specific loader thread and importDynamicPlugin as well as
-    // importStaticPlugin are the only places of access.
-    if (!initializedPlugins.contains(uniquePluginID)) {
-        initializedPlugins.insert(uniquePluginID);
-
-        if (QQmlExtensionInterface *eiface = qobject_cast<QQmlExtensionInterface *>(instance)) {
-            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-            ep->typeLoader.initializeEngine(eiface, uri.toUtf8().constData());
-        }
-    }
+    if (!initializedPlugins.contains(uniquePluginID))
+        finalizePlugin(instance, uniquePluginID, uri);
 
     return true;
 }
@@ -2140,18 +2135,8 @@ bool QQmlImportDatabase::importDynamicPlugin(const QString &filePath, const QStr
     // other QML loader threads and thus not process the initializeEngine call).
     }
 
-
-    if (!engineInitialized) {
-        // The plugin's per-engine initialization does not need lock protection, as this function is
-        // only called from the engine specific loader thread and importDynamicPlugin as well as
-        // importStaticPlugin are the only places of access.
-        initializedPlugins.insert(absoluteFilePath);
-
-        if (QQmlExtensionInterface *eiface = qobject_cast<QQmlExtensionInterface *>(instance)) {
-            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-            ep->typeLoader.initializeEngine(eiface, uri.toUtf8().constData());
-        }
-    }
+    if (!engineInitialized)
+        finalizePlugin(instance, absoluteFilePath, uri);
 
     return true;
 }
@@ -2172,6 +2157,22 @@ void QQmlImportDatabase::clearDirCache()
         ++itr;
     }
     qmldirCache.clear();
+}
+
+void QQmlImportDatabase::finalizePlugin(QObject *instance, const QString &path, const QString &uri)
+{
+    // The plugin's per-engine initialization does not need lock protection, as this function is
+    // only called from the engine specific loader thread and importDynamicPlugin as well as
+    // importStaticPlugin are the only places of access.
+
+    initializedPlugins.insert(path);
+    if (auto *extensionIface = qobject_cast<QQmlExtensionInterface *>(instance)) {
+        QQmlEnginePrivate::get(engine)->typeLoader.initializeEngine(
+                    extensionIface, uri.toUtf8().constData());
+    } else if (auto *engineIface = qobject_cast<QQmlEngineExtensionInterface *>(instance)) {
+        QQmlEnginePrivate::get(engine)->typeLoader.initializeEngine(
+                    engineIface, uri.toUtf8().constData());
+    }
 }
 
 QT_END_NAMESPACE

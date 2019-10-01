@@ -70,6 +70,19 @@ private:
     Q_DISABLE_COPY(QQmlExtensionPlugin)
 };
 
+class Q_QML_EXPORT QQmlEngineExtensionPlugin
+        : public QObject
+        , public QQmlEngineExtensionInterface
+{
+    Q_OBJECT
+    Q_DISABLE_COPY_MOVE(QQmlEngineExtensionPlugin)
+    Q_INTERFACES(QQmlEngineExtensionInterface)
+public:
+    explicit QQmlEngineExtensionPlugin(QObject *parent = nullptr);
+    ~QQmlEngineExtensionPlugin() override;
+    void initializeEngine(QQmlEngine *engine, const char *uri) override;
+};
+
 QT_END_NAMESPACE
 
 #endif // QQMLEXTENSIONPLUGIN_H
