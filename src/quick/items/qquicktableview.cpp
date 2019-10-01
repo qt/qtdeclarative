@@ -520,10 +520,10 @@ int QQuickTableViewPrivate::nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge)
     // visible, and should be loaded next if the content item moves.
     int startIndex = -1;
     switch (edge) {
-    case Qt::LeftEdge: startIndex = loadedColumns.firstKey() - 1; break;
-    case Qt::RightEdge: startIndex = loadedColumns.lastKey() + 1; break;
-    case Qt::TopEdge: startIndex = loadedRows.firstKey() - 1; break;
-    case Qt::BottomEdge: startIndex = loadedRows.lastKey() + 1; break;
+    case Qt::LeftEdge: startIndex = leftColumn() - 1; break;
+    case Qt::RightEdge: startIndex = rightColumn() + 1; break;
+    case Qt::TopEdge: startIndex = topRow() - 1; break;
+    case Qt::BottomEdge: startIndex = bottomRow() + 1; break;
     }
 
     return nextVisibleEdgeIndex(edge, startIndex);
@@ -1913,7 +1913,7 @@ void QQuickTableViewPrivate::loadEdge(Qt::Edge edge, QQmlIncubator::IncubationMo
     const int edgeIndex = nextVisibleEdgeIndexAroundLoadedTable(edge);
     qCDebug(lcTableViewDelegateLifecycle) << edge << edgeIndex;
 
-    const QList<int> visibleCells = edge & (Qt::LeftEdge | Qt::RightEdge)
+    const auto visibleCells = edge & (Qt::LeftEdge | Qt::RightEdge)
             ? loadedRows.keys() : loadedColumns.keys();
     loadRequest.begin(edge, edgeIndex, visibleCells, incubationMode);
     processLoadRequest();
