@@ -72,6 +72,7 @@ void QSGOpenVGRenderContext::initialize(void *context)
 {
     m_vgContext = static_cast<QOpenVGContext*>(context);
     QSGRenderContext::initialize(context);
+    emit initialized();
 }
 
 void QSGOpenVGRenderContext::invalidate()
@@ -80,6 +81,7 @@ void QSGOpenVGRenderContext::invalidate()
     delete m_glyphCacheManager;
     m_glyphCacheManager = nullptr;
     QSGRenderContext::invalidate();
+    emit invalidated();
 }
 
 void QSGOpenVGRenderContext::renderNextFrame(QSGRenderer *renderer, uint fboId)
