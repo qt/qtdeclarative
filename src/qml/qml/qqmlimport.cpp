@@ -1997,12 +1997,25 @@ void QQmlImportDatabase::setImportPathList(const QStringList &paths)
 /*!
     \internal
 */
-bool QQmlImportDatabase::registerPluginTypes(QObject *instance, const QString &basePath,
-                                      const QString &uri, const QString &typeNamespace, int vmaj, QList<QQmlError> *errors)
+static bool registerPluginTypes(QObject *instance, const QString &basePath, const QString &uri,
+                                const QString &typeNamespace, int vmaj, QList<QQmlError> *errors)
 {
     if (qmlImportTrace())
         qDebug().nospace() << "QQmlImportDatabase::registerPluginTypes: " << uri << " from " << basePath;
-    return QQmlMetaType::registerPluginTypes(instance, basePath, uri, typeNamespace, vmaj, errors);
+
+    if (!QQmlMetaType::registerPluginTypes(instance, basePath, uri, typeNamespace, vmaj, errors))
+        return false;
+
+    if (vmaj >= 0 && !typeNamespace.isEmpty() && !QQmlMetaType::protectModule(uri, vmaj)) {
+        QQmlError error;
+        error.setDescription(
+                    QString::fromLatin1("Cannot protect module %1 %2 as it was never registered")
+                    .arg(uri).arg(vmaj));
+        errors->append(error);
+        return false;
+    }
+
+    return true;
 }
 
 /*!

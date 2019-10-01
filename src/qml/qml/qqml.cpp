@@ -61,7 +61,7 @@ void qmlClearTypeRegistrations() // Declared in qqml.h
 //From qqml.h
 bool qmlProtectModule(const char *uri, int majVersion)
 {
-    return QQmlMetaType::protectModule(uri, majVersion);
+    return QQmlMetaType::protectModule(QString::fromUtf8(uri), majVersion);
 }
 
 //From qqml.h

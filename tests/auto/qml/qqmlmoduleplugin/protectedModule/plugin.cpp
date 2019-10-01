@@ -47,9 +47,9 @@ public:
 
     void registerTypes(const char *uri)
     {
-        // Because the module is protected, this plugin should never be loaded
+        // The module is protected. The plugin can still be loaded, but it cannot register
+        // any types.
         Q_UNUSED(uri);
-        Q_ASSERT(0);
     }
 };
 
