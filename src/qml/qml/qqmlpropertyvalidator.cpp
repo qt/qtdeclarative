@@ -727,7 +727,7 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateObjectBinding(QQmlPrope
     } else if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject && property->isFunction()) {
         return noError;
     } else if (isPrimitiveType(propType)) {
-        auto typeName = QMetaType::typeName(propType);
+        auto typeName = QString::fromUtf8(QMetaType::typeName(propType));
         return qQmlCompileError(binding->location, tr("Can not assign value of type \"%1\" to property \"%2\", expecting \"%3\"")
                                                       .arg(rhsType())
                                                       .arg(propertyName)
