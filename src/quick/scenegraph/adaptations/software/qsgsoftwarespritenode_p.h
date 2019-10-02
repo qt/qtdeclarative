@@ -64,6 +64,7 @@ class QSGSoftwareSpriteNode : public QSGSpriteNode
 {
 public:
     QSGSoftwareSpriteNode();
+    ~QSGSoftwareSpriteNode() override;
 
     void setTexture(QSGTexture *texture) override;
     void setTime(float time) override;
@@ -81,7 +82,7 @@ public:
 
 private:
 
-    QSGSoftwarePixmapTexture *m_texture;
+    QSGSoftwarePixmapTexture *m_texture = nullptr;
     float m_time;
     QPoint m_sourceA;
     QPoint m_sourceB;
