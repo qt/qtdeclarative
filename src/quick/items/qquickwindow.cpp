@@ -424,6 +424,13 @@ void QQuickWindowPrivate::syncSceneGraph()
 {
     Q_Q(QQuickWindow);
 
+    // Calculate the dpr the same way renderSceneGraph() will.
+    qreal devicePixelRatio = q->effectiveDevicePixelRatio();
+    if (renderTargetId && !QQuickRenderControl::renderWindowFor(q))
+        devicePixelRatio = 1;
+
+    context->prepareSync(devicePixelRatio);
+
     animationController->beforeNodeSync();
 
     emit q->beforeSynchronizing();

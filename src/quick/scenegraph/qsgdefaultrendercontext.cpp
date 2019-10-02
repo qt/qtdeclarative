@@ -200,6 +200,11 @@ void QSGDefaultRenderContext::invalidate()
     emit invalidated();
 }
 
+void QSGDefaultRenderContext::prepareSync(qreal devicePixelRatio)
+{
+    m_currentDevicePixelRatio = devicePixelRatio;
+}
+
 static QBasicMutex qsg_framerender_mutex;
 
 void QSGDefaultRenderContext::beginNextFrame(QSGRenderer *renderer,

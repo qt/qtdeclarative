@@ -751,15 +751,15 @@ void QSGTextMaskMaterial::updateCache(QFontEngine::GlyphFormat glyphFormat)
         void *cacheKey;
         if (m_rhi) {
             cacheKey = m_rhi;
-            // ### no idea what the QWindow is (esp. since we are not even
-            // rendering at this point), and anyway is the original logic correct
-            // even...
-            devicePixelRatio = qGuiApp->devicePixelRatio();
+            // Get the dpr the modern way. This value retrieved via the
+            // rendercontext matches what RenderState::devicePixelRatio()
+            // exposes to the material shaders later on.
+            devicePixelRatio = m_rc->currentDevicePixelRatio();
         } else {
             ctx = const_cast<QOpenGLContext *>(QOpenGLContext::currentContext());
             Q_ASSERT(ctx != nullptr);
             cacheKey = ctx;
-            devicePixelRatio = qsg_device_pixel_ratio(ctx);
+            devicePixelRatio = qsg_device_pixel_ratio(ctx); // this is technically incorrect, see other branch above
         }
 
         QTransform glyphCacheTransform = QTransform::fromScale(devicePixelRatio, devicePixelRatio);
