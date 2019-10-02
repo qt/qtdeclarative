@@ -187,7 +187,7 @@ static QRhiVertexInputLayout calculateVertexInputLayout(const QSGMaterialRhiShad
     }
 
     const int attrCount = geometry->attributeCount();
-    QVector<QRhiVertexInputAttribute> inputAttributes;
+    QVarLengthArray<QRhiVertexInputAttribute, 8> inputAttributes;
     inputAttributes.reserve(attrCount + 1);
     int offset = 0;
     for (int i = 0; i < attrCount; ++i) {
@@ -205,15 +205,14 @@ static QRhiVertexInputLayout calculateVertexInputLayout(const QSGMaterialRhiShad
     }
 
     Q_ASSERT(VERTEX_BUFFER_BINDING == 0 && ZORDER_BUFFER_BINDING == 1); // not very flexible
-    QVector<QRhiVertexInputBinding> inputBindings;
-    inputBindings.reserve(2);
+    QVarLengthArray<QRhiVertexInputBinding, 2> inputBindings;
     inputBindings.append(QRhiVertexInputBinding(geometry->sizeOfVertex()));
     if (batchable)
         inputBindings.append(QRhiVertexInputBinding(sizeof(float)));
 
     QRhiVertexInputLayout inputLayout;
-    inputLayout.setBindings(inputBindings);
-    inputLayout.setAttributes(inputAttributes);
+    inputLayout.setBindings(inputBindings.cbegin(), inputBindings.cend());
+    inputLayout.setAttributes(inputAttributes.cbegin(), inputAttributes.cend());
 
     return inputLayout;
 }

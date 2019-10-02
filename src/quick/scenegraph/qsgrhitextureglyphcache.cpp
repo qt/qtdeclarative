@@ -223,7 +223,9 @@ void QSGRhiTextureGlyphCache::endFillTexture()
     if (!m_resourceUpdates)
         m_resourceUpdates = m_rhi->nextResourceUpdateBatch();
 
-    m_resourceUpdates->uploadTexture(m_texture, m_uploads);
+    QRhiTextureUploadDescription desc;
+    desc.setEntries(m_uploads.cbegin(), m_uploads.cend());
+    m_resourceUpdates->uploadTexture(m_texture, desc);
     m_uploads.clear();
 }
 

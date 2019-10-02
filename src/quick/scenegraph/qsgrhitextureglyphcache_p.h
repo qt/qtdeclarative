@@ -90,7 +90,7 @@ private:
     QRhiTexture *m_texture = nullptr;
     QSize m_size;
     bool m_bgra = false;
-    QVector<QRhiTextureUploadEntry> m_uploads;
+    QVarLengthArray<QRhiTextureUploadEntry, 16> m_uploads;
     QSet<QRhiTexture *> m_pendingDispose;
 };
 
