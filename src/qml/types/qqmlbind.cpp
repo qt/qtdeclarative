@@ -359,7 +359,8 @@ void QQmlBind::setDelayed(bool delayed)
     \li Binding.RestoreBindingOrValue The original value is always restored.
     \endlist
 
-    The default value is Binding.RestoreBinding.
+    \warning The default value is Binding.RestoreBinding. This will change in
+    Qt 5.15 to Binding.RestoreBindingOrValue.
 
     If you rely on any specific behavior regarding the restoration of plain
     values when bindings get disabled you should migrate to explicitly set the
@@ -456,11 +457,23 @@ void QQmlBind::eval()
                     Q_ASSERT(vmemo);
                     vmemo->setVMEProperty(propPriv->core.coreIndex(), *d->v4Value.valueRef());
                     d->clearPrev();
+                } else if (!d->restoreModeExplicit) {
+                    qmlWarning(this)
+                            << "Not restoring previous value because restoreMode has not been set."
+                            << "This behavior is deprecated."
+                            << "In Qt < 5.15 the default is Binding.RestoreBinding."
+                            << "In Qt >= 5.15 the default is Binding.RestoreBindingOrValue.";
                 }
             } else if (d->prevIsVariant) {
                 if (d->restoreValue) {
                     d->prop.write(d->prevValue);
                     d->clearPrev();
+                } else if (!d->restoreModeExplicit) {
+                    qmlWarning(this)
+                            << "Not restoring previous value because restoreMode has not been set."
+                            << "This behavior is deprecated."
+                            << "In Qt < 5.15 the default is Binding.RestoreBinding."
+                            << "In Qt >= 5.15 the default is Binding.RestoreBindingOrValue.";
                 }
             }
             return;
