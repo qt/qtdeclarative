@@ -1012,13 +1012,13 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
             };
 
             switch (block.blockFormat().marker()) {
-            case QTextBlockFormat::Checked:
+            case QTextBlockFormat::MarkerType::Checked:
                 listItemBullet = QChar(0x2612); // Checked checkbox
                 break;
-            case QTextBlockFormat::Unchecked:
+            case QTextBlockFormat::MarkerType::Unchecked:
                 listItemBullet = QChar(0x2610); // Unchecked checkbox
                 break;
-            case QTextBlockFormat::NoMarker:
+            case QTextBlockFormat::MarkerType::NoMarker:
                 break;
             }
 
