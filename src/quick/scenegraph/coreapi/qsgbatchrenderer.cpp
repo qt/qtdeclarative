@@ -2849,8 +2849,10 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch) // RHI
             else {
                 if (qsg_topology(g->drawingMode()) != m_stencilClipCommon.topology)
                     qWarning("updateClipState: Clip list entries have different primitive topologies, this is not currently supported.");
+#if 0 // ### restore once the 5.14 submodule update is done
                 if (qsg_vertexInputFormat(*a) != m_stencilClipCommon.inputLayout.attributes().first().format())
                     qWarning("updateClipState: Clip list entries have different vertex input layouts, this is must not happen.");
+#endif
             }
 #endif
 
