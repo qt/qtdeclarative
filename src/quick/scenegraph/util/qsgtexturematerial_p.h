@@ -75,8 +75,8 @@ class Q_QUICK_PRIVATE_EXPORT QSGOpaqueTextureMaterialRhiShader : public QSGMater
 public:
     QSGOpaqueTextureMaterialRhiShader();
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
-    void updateSampledImage(const RenderState &state, int binding, QSGTexture **texture, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    void updateSampledImage(RenderState &state, int binding, QSGTexture **texture, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
 class QSGTextureMaterialShader : public QSGOpaqueTextureMaterialShader
@@ -96,7 +96,7 @@ class QSGTextureMaterialRhiShader : public QSGOpaqueTextureMaterialRhiShader
 public:
     QSGTextureMaterialRhiShader();
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
 QT_END_NAMESPACE

@@ -220,7 +220,8 @@ void QQmlInstantiatorPrivate::makeModel()
 /*!
     \qmltype Instantiator
     \instantiates QQmlInstantiator
-    \inqmlmodule QtQml
+    \inqmlmodule QtQml.Models
+    \ingroup qtquick-models
     \brief Dynamically creates objects.
 
     A Instantiator can be used to control the dynamic creation of objects, or to dynamically
@@ -231,6 +232,8 @@ void QQmlInstantiatorPrivate::makeModel()
     can also be destroyed dynamically through other means, and the Instantiator will not recreate
     them unless the properties of the Instantiator change.
 
+    \note Instantiator is part of QtQml.Models since version 2.14 and part of QtQml since
+    version 2.1. Importing Instantiator via QtQml is deprecated since Qt 5.14.
 */
 QQmlInstantiator::QQmlInstantiator(QObject *parent)
     : QObject(*(new QQmlInstantiatorPrivate), parent)

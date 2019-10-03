@@ -5,7 +5,7 @@ qtConfig(opengl(es1|es2)?) {
             graph \
             simplematerial \
             sgengine \
-            textureinsgnode \
+            fboitem \
             openglunderqml \
             textureinthread \
             twotextureproviders

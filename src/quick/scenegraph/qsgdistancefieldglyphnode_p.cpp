@@ -212,10 +212,10 @@ class QSGDistanceFieldTextMaterialRhiShader : public QSGMaterialRhiShader
 public:
     QSGDistanceFieldTextMaterialRhiShader(bool alphaTexture);
 
-    bool updateUniformData(const RenderState &state,
+    bool updateUniformData(RenderState &state,
                            QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 
-    void updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+    void updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
                             QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 
 protected:
@@ -235,7 +235,7 @@ QSGDistanceFieldTextMaterialRhiShader::QSGDistanceFieldTextMaterialRhiShader(boo
                           QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/distancefieldtext.frag.qsb"));
 }
 
-bool QSGDistanceFieldTextMaterialRhiShader::updateUniformData(const RenderState &state,
+bool QSGDistanceFieldTextMaterialRhiShader::updateUniformData(RenderState &state,
                                                               QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     Q_ASSERT(oldMaterial == nullptr || newMaterial->type() == oldMaterial->type());
@@ -291,7 +291,7 @@ bool QSGDistanceFieldTextMaterialRhiShader::updateUniformData(const RenderState 
     return changed;
 }
 
-void QSGDistanceFieldTextMaterialRhiShader::updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+void QSGDistanceFieldTextMaterialRhiShader::updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
                                                                QSGMaterial *newMaterial, QSGMaterial *)
 {
     Q_UNUSED(state);
@@ -432,7 +432,7 @@ class DistanceFieldStyledTextMaterialRhiShader : public QSGDistanceFieldTextMate
 public:
     DistanceFieldStyledTextMaterialRhiShader(bool alphaTexture);
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
 DistanceFieldStyledTextMaterialRhiShader::DistanceFieldStyledTextMaterialRhiShader(bool alphaTexture)
@@ -440,7 +440,7 @@ DistanceFieldStyledTextMaterialRhiShader::DistanceFieldStyledTextMaterialRhiShad
 {
 }
 
-bool DistanceFieldStyledTextMaterialRhiShader::updateUniformData(const RenderState &state,
+bool DistanceFieldStyledTextMaterialRhiShader::updateUniformData(RenderState &state,
                                                                  QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     bool changed = QSGDistanceFieldTextMaterialRhiShader::updateUniformData(state, newMaterial, oldMaterial);
@@ -548,7 +548,7 @@ class DistanceFieldOutlineTextMaterialRhiShader : public DistanceFieldStyledText
 public:
     DistanceFieldOutlineTextMaterialRhiShader(bool alphaTexture);
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
 DistanceFieldOutlineTextMaterialRhiShader::DistanceFieldOutlineTextMaterialRhiShader(bool alphaTexture)
@@ -564,7 +564,7 @@ DistanceFieldOutlineTextMaterialRhiShader::DistanceFieldOutlineTextMaterialRhiSh
                           QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/distancefieldoutlinetext.frag.qsb"));
 }
 
-bool DistanceFieldOutlineTextMaterialRhiShader::updateUniformData(const RenderState &state,
+bool DistanceFieldOutlineTextMaterialRhiShader::updateUniformData(RenderState &state,
                                                                   QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     bool changed = DistanceFieldStyledTextMaterialRhiShader::updateUniformData(state, newMaterial, oldMaterial);
@@ -670,7 +670,7 @@ class DistanceFieldShiftedStyleTextMaterialRhiShader : public DistanceFieldStyle
 public:
     DistanceFieldShiftedStyleTextMaterialRhiShader(bool alphaTexture);
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
 DistanceFieldShiftedStyleTextMaterialRhiShader::DistanceFieldShiftedStyleTextMaterialRhiShader(bool alphaTexture)
@@ -686,7 +686,7 @@ DistanceFieldShiftedStyleTextMaterialRhiShader::DistanceFieldShiftedStyleTextMat
                           QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/distancefieldshiftedtext.frag.qsb"));
 }
 
-bool DistanceFieldShiftedStyleTextMaterialRhiShader::updateUniformData(const RenderState &state,
+bool DistanceFieldShiftedStyleTextMaterialRhiShader::updateUniformData(RenderState &state,
                                                                        QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     bool changed = DistanceFieldStyledTextMaterialRhiShader::updateUniformData(state, newMaterial, oldMaterial);
@@ -809,8 +809,8 @@ class QSGHiQSubPixelDistanceFieldTextMaterialRhiShader : public QSGDistanceField
 public:
     QSGHiQSubPixelDistanceFieldTextMaterialRhiShader(bool alphaTexture);
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
-    bool updateGraphicsPipelineState(const RenderState &state, GraphicsPipelineState *ps,
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    bool updateGraphicsPipelineState(RenderState &state, GraphicsPipelineState *ps,
                                      QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
@@ -829,7 +829,7 @@ QSGHiQSubPixelDistanceFieldTextMaterialRhiShader::QSGHiQSubPixelDistanceFieldTex
                           QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/hiqsubpixeldistancefieldtext.frag.qsb"));
 }
 
-bool QSGHiQSubPixelDistanceFieldTextMaterialRhiShader::updateUniformData(const RenderState &state,
+bool QSGHiQSubPixelDistanceFieldTextMaterialRhiShader::updateUniformData(RenderState &state,
                                                                          QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     bool changed = QSGDistanceFieldTextMaterialRhiShader::updateUniformData(state, newMaterial, oldMaterial);
@@ -855,7 +855,7 @@ bool QSGHiQSubPixelDistanceFieldTextMaterialRhiShader::updateUniformData(const R
     return changed;
 }
 
-bool QSGHiQSubPixelDistanceFieldTextMaterialRhiShader::updateGraphicsPipelineState(const RenderState &state, GraphicsPipelineState *ps,
+bool QSGHiQSubPixelDistanceFieldTextMaterialRhiShader::updateGraphicsPipelineState(RenderState &state, GraphicsPipelineState *ps,
                                                                                    QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     Q_UNUSED(state);

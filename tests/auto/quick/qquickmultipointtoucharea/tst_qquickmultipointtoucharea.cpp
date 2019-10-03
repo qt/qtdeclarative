@@ -72,6 +72,7 @@ private slots:
     void mouseGestureStarted_data();
     void mouseGestureStarted();
     void cancel();
+    void stationaryTouchWithChangingPressure();
 
 private:
     QQuickView *createAndShowView(const QString &file);
@@ -1303,6 +1304,42 @@ void tst_QQuickMultiPointTouchArea::cancel()
     QCOMPARE(area->property("touchCount").toInt(), 0);
     QMetaObject::invokeMethod(area, "clearCounts");
 
+}
+
+void tst_QQuickMultiPointTouchArea::stationaryTouchWithChangingPressure() // QTBUG-77142
+{
+    QScopedPointer<QQuickView> window(createAndShowView("basic.qml"));
+    QVERIFY(window->rootObject() != nullptr);
+
+    QQuickTouchPoint *point1 = window->rootObject()->findChild<QQuickTouchPoint*>("point1");
+    QCOMPARE(point1->pressed(), false);
+
+    QPoint p1(20,100);
+    QTouchEvent::TouchPoint tp1(1);
+
+    tp1.setScreenPos(window->mapToGlobal(p1));
+    tp1.setState(Qt::TouchPointPressed);
+    tp1.setPressure(0.5);
+    qt_handleTouchEvent(window.data(), device, {tp1});
+    QQuickTouchUtils::flush(window.data());
+
+    QCOMPARE(point1->pressed(), true);
+    QCOMPARE(point1->pressure(), 0.5);
+
+    tp1.setState(Qt::TouchPointStationary);
+    tp1.setPressure(0.6);
+    qt_handleTouchEvent(window.data(), device, {tp1});
+    QQuickTouchUtils::flush(window.data());
+
+    QCOMPARE(point1->pressure(), 0.6);
+
+    tp1.setState(Qt::TouchPointReleased);
+    tp1.setPressure(0);
+    qt_handleTouchEvent(window.data(), device, {tp1});
+    QQuickTouchUtils::flush(window.data());
+
+    QCOMPARE(point1->pressed(), false);
+    QCOMPARE(point1->pressure(), 0);
 }
 
 

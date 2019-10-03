@@ -5083,7 +5083,7 @@ QQuickStateGroup *QQuickItemPrivate::_states()
         if (!componentComplete)
             _stateGroup->classBegin();
         qmlobject_connect(_stateGroup, QQuickStateGroup, SIGNAL(stateChanged(QString)),
-                          q, QQuickItem, SIGNAL(stateChanged(QString)))
+                          q, QQuickItem, SIGNAL(stateChanged(QString)));
     }
 
     return _stateGroup;
@@ -5686,6 +5686,7 @@ void QQuickItem::setRotation(qreal r)
           color: "red"
           x: 25; y: 25; width: 50; height: 50
           scale: 1.4
+          transformOrigin: Item.TopLeft
       }
   }
   \endqml
@@ -8489,7 +8490,7 @@ void QQuickItemLayer::setMipmap(bool mipmap)
 
     \note ShaderEffectSource.RGB and ShaderEffectSource.Alpha should
     be used with caution, as support for these formats in the underlying
-    hardare and driver is often not present.
+    hardware and driver is often not present.
 
     \sa {Item Layers}
  */

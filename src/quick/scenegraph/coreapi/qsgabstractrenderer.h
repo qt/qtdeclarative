@@ -63,6 +63,13 @@ public:
     Q_DECLARE_FLAGS(ClearMode, ClearModeBit)
     Q_FLAG(ClearMode)
 
+    enum MatrixTransformFlag
+    {
+        MatrixTransformFlipY = 0x01
+    };
+    Q_DECLARE_FLAGS(MatrixTransformFlags, MatrixTransformFlag)
+    Q_FLAG(MatrixTransformFlags)
+
     ~QSGAbstractRenderer() override;
 
     void setRootNode(QSGRootNode *node);
@@ -75,7 +82,8 @@ public:
     inline void setViewportRect(const QSize &size) { setViewportRect(QRect(QPoint(), size)); }
     QRect viewportRect() const;
 
-    void setProjectionMatrixToRect(const QRectF &rect, bool flipY = false);
+    void setProjectionMatrixToRect(const QRectF &rect);
+    void setProjectionMatrixToRect(const QRectF &rect, MatrixTransformFlags flags);
     void setProjectionMatrix(const QMatrix4x4 &matrix);
     void setProjectionMatrixWithNativeNDC(const QMatrix4x4 &matrix);
     QMatrix4x4 projectionMatrix() const;

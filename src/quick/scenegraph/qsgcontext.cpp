@@ -341,6 +341,11 @@ void QSGRenderContext::invalidate()
 {
 }
 
+void QSGRenderContext::prepareSync(qreal devicePixelRatio)
+{
+    Q_UNUSED(devicePixelRatio);
+}
+
 void QSGRenderContext::beginNextFrame(QSGRenderer *renderer,
                                       RenderPassCallback mainPassRecordingStart,
                                       RenderPassCallback mainPassRecordingEnd,

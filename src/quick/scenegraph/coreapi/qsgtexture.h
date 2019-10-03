@@ -141,6 +141,7 @@ class Q_QUICK_EXPORT QSGDynamicTexture : public QSGTexture
     Q_OBJECT
 
 public:
+    QSGDynamicTexture() = default;
     virtual bool updateTexture() = 0;
 
 protected:

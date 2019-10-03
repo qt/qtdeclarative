@@ -1098,13 +1098,11 @@ class MyItemUsingRevisionedObject : public QObject
     Q_PROPERTY(MyRevisionedClass *revisioned READ revisioned)
 
 public:
-    MyItemUsingRevisionedObject() {
-        m_revisioned = new MyRevisionedClass;
-    }
+    MyItemUsingRevisionedObject() : m_revisioned (new MyRevisionedClass) {}
 
-    MyRevisionedClass *revisioned() const { return m_revisioned; }
+    MyRevisionedClass *revisioned() const { return m_revisioned.get(); }
 private:
-    MyRevisionedClass *m_revisioned;
+    QScopedPointer<MyRevisionedClass> m_revisioned;
 };
 
 QML_DECLARE_TYPE(MyRevisionedBaseClassRegistered)

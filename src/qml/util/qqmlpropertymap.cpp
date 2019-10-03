@@ -180,6 +180,10 @@ int QQmlPropertyMapMetaObject::createProperty(const char *name, const char *valu
     \note When deriving a class from QQmlPropertyMap, use the
     \l {QQmlPropertyMap::QQmlPropertyMap(DerivedType *derived, QObject *parent)} {protected two-argument constructor}
     which ensures that the class is correctly registered with the Qt \l {Meta-Object System}.
+
+    \note The QMetaObject of a QQmlPropertyMap is dynamically generated and modified.
+    Operations on that meta object are not thread safe, so applications need to take
+    care to explicitly synchronize access to the meta object.
 */
 
 /*!

@@ -143,7 +143,7 @@ public:
     QTextBlock blockWithMarkerUnderMousePress;
 
     QBasicTimer cursorBlinkTimer;
-    QBasicTimer tripleClickTimer;
+    ulong timestampAtLastDoubleClick = 0;   // will only be set at a double click
 
 #if QT_CONFIG(im)
     int preeditCursor;

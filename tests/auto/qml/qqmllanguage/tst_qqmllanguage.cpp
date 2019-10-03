@@ -244,12 +244,11 @@ private slots:
     void compositeSingletonModuleQualified();
     void compositeSingletonInstantiateError();
     void compositeSingletonDynamicPropertyError();
-    void compositeSingletonDynamicSignal();
+    void compositeSingletonDynamicSignalAndJavaScriptPragma();
     void compositeSingletonQmlRegisterTypeError();
     void compositeSingletonQmldirNoPragmaError();
     void compositeSingletonQmlDirError();
     void compositeSingletonRemote();
-    void compositeSingletonJavaScriptPragma();
     void compositeSingletonSelectors();
     void compositeSingletonRegistered();
     void compositeSingletonCircular();
@@ -2522,7 +2521,15 @@ void tst_qqmllanguage::testType(const QString& qml, const QString& type, const Q
         VERIFY_ERRORS(0);
         QScopedPointer<QObject> object(component.create());
         QVERIFY(object != nullptr);
-        QCOMPARE(QString(object->metaObject()->className()), type);
+        const QMetaObject *meta = object->metaObject();
+        for (; meta; meta = meta->superClass()) {
+            const QString className(meta->className());
+            if (!className.contains("_QMLTYPE_") && !className.contains("_QML_")) {
+                QCOMPARE(className, type);
+                break;
+            }
+        }
+        QVERIFY(meta != nullptr);
     }
 
     engine.setImportPathList(defaultImportPathList);
@@ -4065,10 +4072,12 @@ void tst_qqmllanguage::implicitImportsLast()
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
-    QVERIFY(QString(object->metaObject()->className()).startsWith(QLatin1String("QQuickMouseArea")));
+    QVERIFY(QString(object->metaObject()->superClass()->superClass()->className())
+            .startsWith(QLatin1String("QQuickMouseArea")));
     QObject* object2 = object->property("item").value<QObject*>();
     QVERIFY(object2 != nullptr);
-    QCOMPARE(QString(object2->metaObject()->className()), QLatin1String("QQuickRectangle"));
+    QCOMPARE(QString(object2->metaObject()->superClass()->className()),
+             QLatin1String("QQuickRectangle"));
 
     engine.setImportPathList(defaultImportPathList);
 }
@@ -4289,16 +4298,35 @@ void tst_qqmllanguage::compositeSingletonDynamicPropertyError()
     VERIFY_ERRORS(0);
 }
 
-// Having a composite singleton type as dynamic signal parameter succeeds
-// (like C++ singleton)
-void tst_qqmllanguage::compositeSingletonDynamicSignal()
+void tst_qqmllanguage::compositeSingletonDynamicSignalAndJavaScriptPragma()
 {
-    QQmlComponent component(&engine, testFileUrl("singletonTest11.qml"));
-    VERIFY_ERRORS(0);
-    QScopedPointer<QObject> o(component.create());
-    QVERIFY(o != nullptr);
+    {
+        // Having a composite singleton type as dynamic signal parameter succeeds
+        // (like C++ singleton)
 
-    verifyCompositeSingletonPropertyValues(o.data(), "value1", 99, "value2", -55);
+        QQmlComponent component(&engine, testFileUrl("singletonTest11.qml"));
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> o(component.create());
+        QVERIFY(o != nullptr);
+
+        verifyCompositeSingletonPropertyValues(o.data(), "value1", 99, "value2", -55);
+    }
+    {
+        // Load a composite singleton type and a javascript file that has .pragma library
+        // in it. This will make sure that the javascript .pragma does not get mixed with
+        // the pragma Singleton changes.
+
+        QQmlComponent component(&engine, testFileUrl("singletonTest16.qml"));
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> o(component.create());
+        QVERIFY(o != nullptr);
+
+        // The value1 that is read from the SingletonType was changed from 125 to 99
+        // above. As the type is a singleton and
+        // the engine has not been destroyed, we just retrieve the old instance and
+        // the value is still 99.
+        verifyCompositeSingletonPropertyValues(o.data(), "value1", 99, "value2", 333);
+    }
 }
 
 // Use qmlRegisterType to register a qml composite type with pragma Singleton defined in it.
@@ -4348,23 +4376,6 @@ void tst_qqmllanguage::compositeSingletonRemote()
     QVERIFY(o != nullptr);
 
     verifyCompositeSingletonPropertyValues(o.data(), "value1", 525, "value2", 355);
-}
-
-// Load a composite singleton type and a javascript file that has .pragma library
-// in it. This will make sure that the javascript .pragma does not get mixed with
-// the pragma Singleton changes.
-void tst_qqmllanguage::compositeSingletonJavaScriptPragma()
-{
-    QQmlComponent component(&engine, testFileUrl("singletonTest16.qml"));
-    VERIFY_ERRORS(0);
-    QScopedPointer<QObject> o(component.create());
-    QVERIFY(o != nullptr);
-
-    // The value1 that is read from the SingletonType was changed from 125 to 99
-    // in compositeSingletonDynamicSignal() above. As the type is a singleton and
-    // the engine has not been destroyed, we just retrieve the old instance and
-    // the value is still 99.
-    verifyCompositeSingletonPropertyValues(o.data(), "value1", 99, "value2", 333);
 }
 
 // Reads values from a Singleton accessed through selectors.
@@ -5052,7 +5063,6 @@ void tst_qqmllanguage::instanceof()
 
         if (QTest::currentDataTag() == QLatin1String("customRectangleWithPropInstance instanceof CustomRectangle") ||
             QTest::currentDataTag() == QLatin1String("customRectangleWithPropInstance instanceof CustomImport.CustomRectangle"))
-            QEXPECT_FAIL("", "QTBUG-58477: QML type rules are a little lax", Continue);
         QCOMPARE(returnValue, expectedValue.toBool());
     } else {
         QVERIFY(expr.hasError());
@@ -5088,7 +5098,8 @@ void tst_qqmllanguage::accessDeletedObject()
 {
     QQmlEngine engine;
 
-    engine.rootContext()->setContextProperty("objectCreator", new ObjectCreator);
+    QScopedPointer<ObjectCreator> creator(new ObjectCreator);
+    engine.rootContext()->setContextProperty("objectCreator", creator.get());
     QQmlComponent component(&engine, testFileUrl("accessDeletedObject.qml"));
     VERIFY_ERRORS(0);
 

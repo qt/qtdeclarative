@@ -576,6 +576,10 @@ const void *QSGGeometry::indexData() const
     \value IntType
     \value UnsignedIntType
     \value FloatType
+    \value Bytes2Type Added in Qt 5.14.
+    \value Bytes3Type Added in Qt 5.14.
+    \value Bytes4Type Added in Qt 5.14.
+    \value DoubleType Added in Qt 5.14.
  */
 
 /*!

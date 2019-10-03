@@ -267,9 +267,9 @@ class QQuickShapeLinearGradientRhiShader : public QSGMaterialRhiShader
 public:
     QQuickShapeLinearGradientRhiShader();
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial,
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial,
                            QSGMaterial *oldMaterial) override;
-    void updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+    void updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
                             QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 
 private:
@@ -328,9 +328,9 @@ class QQuickShapeRadialGradientRhiShader : public QSGMaterialRhiShader
 public:
     QQuickShapeRadialGradientRhiShader();
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial,
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial,
                            QSGMaterial *oldMaterial) override;
-    void updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+    void updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
                             QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 
 private:
@@ -384,9 +384,9 @@ class QQuickShapeConicalGradientRhiShader : public QSGMaterialRhiShader
 public:
     QQuickShapeConicalGradientRhiShader();
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial,
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial,
                            QSGMaterial *oldMaterial) override;
-    void updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+    void updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
                             QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 
 private:

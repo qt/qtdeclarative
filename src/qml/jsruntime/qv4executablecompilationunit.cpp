@@ -52,6 +52,7 @@
 #include <private/qv4module_p.h>
 #include <private/qv4compilationunitmapper_p.h>
 #include <private/qml_compile_hash_p.h>
+#include <private/qqmltypewrapper_p.h>
 
 #include <QtQml/qqmlfile.h>
 #include <QtQml/qqmlpropertymap.h>
@@ -291,15 +292,18 @@ void ExecutableCompilationUnit::unlink()
     if (runtimeLookups) {
         for (uint i = 0; i < data->lookupTableSize; ++i) {
             QV4::Lookup &l = runtimeLookups[i];
-            if (l.getter == QV4::QObjectWrapper::lookupGetter) {
+            if (l.getter == QV4::QObjectWrapper::lookupGetter
+                    || l.getter == QQmlTypeWrapper::lookupSingletonProperty) {
                 if (QQmlPropertyCache *pc = l.qobjectLookup.propertyCache)
                     pc->release();
-            } else if (l.getter == QQmlValueTypeWrapper::lookupGetter) {
+            } else if (l.getter == QQmlValueTypeWrapper::lookupGetter
+                       || l.getter == QQmlTypeWrapper::lookupSingletonProperty) {
                 if (QQmlPropertyCache *pc = l.qgadgetLookup.propertyCache)
                     pc->release();
             }
 
-            if (l.qmlContextPropertyGetter == QQmlContextWrapper::lookupScopeObjectProperty) {
+            if (l.qmlContextPropertyGetter == QQmlContextWrapper::lookupScopeObjectProperty
+                    || l.qmlContextPropertyGetter == QQmlContextWrapper::lookupContextObjectProperty) {
                 if (QQmlPropertyCache *pc = l.qobjectLookup.propertyCache)
                     pc->release();
             }

@@ -101,6 +101,7 @@ public:
 
 #if QT_CONFIG(opengl)
     GLuint textureId() const override;
+    QPlatformTextureList::Flags textureListFlags() override;
     QImage grabFramebuffer() override;
 #else
     QImage grabFramebuffer();

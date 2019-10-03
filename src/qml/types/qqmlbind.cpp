@@ -382,10 +382,10 @@ QQmlBind::RestorationMode QQmlBind::restoreMode() const
 void QQmlBind::setRestoreMode(RestorationMode newMode)
 {
     Q_D(QQmlBind);
+    d->restoreModeExplicit = true;
     if (newMode != restoreMode()) {
         d->restoreValue = (newMode & RestoreValue);
         d->restoreBinding = (newMode & RestoreBinding);
-        d->restoreModeExplicit = true;
         emit restoreModeChanged();
     }
 }

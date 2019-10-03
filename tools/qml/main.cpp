@@ -60,6 +60,7 @@
 #include <qqml.h>
 #include <qqmldebug.h>
 
+#include <private/qmemory_p.h>
 #include <private/qtqmlglobal_p.h>
 #if QT_CONFIG(qml_animation)
 #include <private/qabstractanimation_p.h>
@@ -68,6 +69,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <memory>
 
 #define FILE_OPEN_EVENT_WAIT_TIME 3000 // ms
 
@@ -398,23 +400,23 @@ static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
 int main(int argc, char *argv[])
 {
     getAppFlags(argc, argv);
-    QCoreApplication *app = nullptr;
+    std::unique_ptr<QCoreApplication> app;
     switch (applicationType) {
 #ifdef QT_GUI_LIB
     case QmlApplicationTypeGui:
-        app = new LoaderApplication(argc, argv);
+        app = qt_make_unique<LoaderApplication>(argc, argv);
         break;
 #ifdef QT_WIDGETS_LIB
     case QmlApplicationTypeWidget:
-        app = new QApplication(argc, argv);
-        static_cast<QApplication *>(app)->setWindowIcon(QIcon(iconResourcePath));
+        app = qt_make_unique<QApplication>(argc, argv);
+        static_cast<QApplication *>(app.get())->setWindowIcon(QIcon(iconResourcePath));
         break;
 #endif // QT_WIDGETS_LIB
 #endif // QT_GUI_LIB
     case QmlApplicationTypeCore:
         Q_FALLTHROUGH();
     default: // QmlApplicationTypeUnknown: not allowed, but we'll exit after checking apptypeOption below
-        app = new QCoreApplication(argc, argv);
+        app = qt_make_unique<QCoreApplication>(argc, argv);
         break;
     }
 
@@ -597,7 +599,7 @@ int main(int argc, char *argv[])
     if (files.count() <= 0) {
 #if defined(Q_OS_DARWIN)
         if (applicationType == QmlApplicationTypeGui)
-            exitTimerId = static_cast<LoaderApplication *>(app)->startTimer(FILE_OPEN_EVENT_WAIT_TIME);
+            exitTimerId = static_cast<LoaderApplication *>(app.get())->startTimer(FILE_OPEN_EVENT_WAIT_TIME);
         else
 #endif
         noFilesGiven();

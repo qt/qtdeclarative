@@ -276,25 +276,14 @@
 /*!
   \fn int qmlRegisterAnonymousType(const char *uri, int versionMajor)
 
-  This template function registers the C++ type in the QML system. Instances of this type cannot be created from the QML system.
+  This template function registers the C++ type in the QML system as an anonymous type. The
+  resulting QML type does not have a name. Therefore, instances of this type cannot be created from
+  the QML system. You can, however, access instances of the type when they are exposed as properties
+  of other types.
 
-  Use this function when the type will not be referenced by name. Use \a uri and \a versionMajor to indicate to which module the type belongs.
-
-  \sa {Choosing the Correct Integration Method Between C++ and QML}
-*/
-
-/*!
-  \fn int qmlRegisterType()
-  \relates QQmlEngine
-  \overload
-
-  This template function registers the C++ type in the QML
-  system. Instances of this type cannot be created from the QML
-  system.
-
-  This function should be used when the type will not be referenced by name.
-  Specifically, it has to be used for C++ types that are used as the left-hand
-  side of a property binding.
+  Use this function when the type will not be referenced by name, specifically for C++ types that
+  are used on the left-hand side of a property binding. To indicate to which module the type belongs
+  use \a uri and \a versionMajor.
 
   For example, consider the following two classes:
 
@@ -354,15 +343,26 @@
 
     \code
     qmlRegisterType<Foo>("App", 1, 0, "Foo");
-    qmlRegisterType<Bar>();
+    qmlRegisterAnonymousType<Bar>("App", 1);
     \endcode
 
   As the \c Foo type is instantiated in QML, it must be registered
-  with the version of \l qmlRegisterType() that takes an import URI.
+  with the version of \l qmlRegisterType() that takes an element name.
 
   Returns the QML type id.
 
+  \since 5.14
   \sa {Choosing the Correct Integration Method Between C++ and QML}
+*/
+
+/*!
+  \fn int qmlRegisterType()
+  \relates QQmlEngine
+  \overload
+  \deprecated
+
+  Do not use this function. For anonymous type registrations, use \l qmlRegisterAnonymousType(),
+  and make sure to provide a URI and a major version.
 */
 
 /*!
@@ -458,7 +458,7 @@
 */
 
 /*!
-    \fn template<typename T> QObject *qmlAttachedPropertiesObject(const QObject *attachee, bool create = true)
+    \fn template<typename T> QObject *qmlAttachedPropertiesObject(const QObject *attachee, bool create)
     \relates QQmlEngine
 
     The form of this template function is:

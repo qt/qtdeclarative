@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -47,14 +47,24 @@ Q_LOGGING_CATEGORY(lcHoverHandler, "qt.quick.handler.hover")
 /*!
     \qmltype HoverHandler
     \instantiates QQuickHoverHandler
+    \inherits SinglePointHandler
     \inqmlmodule QtQuick
     \ingroup qtquick-input-handlers
     \brief Handler for mouse and tablet hover.
 
-    HoverHandler detects a hovering cursor.  Since touchscreens don't generally
-    offer hover events, in practice it detects a hovering mouse or tablet stylus.
+    HoverHandler detects a hovering mouse or tablet stylus cursor.
 
-    \sa MouseArea
+    A binding to the \l hovered property is the easiest way to react when the
+    cursor enters or leaves the \l {PointerHandler::parent}{parent} Item.
+    The \l {SinglePointHandler::point}{point} property provides more detail,
+    including the cursor position. The
+    \l {PointerDeviceHandler::acceptedDevices}{acceptedDevices},
+    \l {PointerDeviceHandler::acceptedPointerTypes}{acceptedPointerTypes},
+    and \l {PointerDeviceHandler::acceptedModifiers}{acceptedModifiers}
+    properties can be used to narrow the behavior to detect hovering of
+    specific kinds of devices or while holding a modifier key.
+
+    \sa MouseArea, PointHandler
 */
 
 QQuickHoverHandler::QQuickHoverHandler(QQuickItem *parent)
@@ -62,9 +72,6 @@ QQuickHoverHandler::QQuickHoverHandler(QQuickItem *parent)
 {
     // Tell QQuickPointerDeviceHandler::wantsPointerEvent() to ignore button state
     d_func()->acceptedButtons = Qt::NoButton;
-    // Rule out the touchscreen for now (can be overridden in QML in case a hover-detecting touchscreen exists)
-    setAcceptedDevices(static_cast<QQuickPointerDevice::DeviceType>(
-        static_cast<int>(QQuickPointerDevice::AllDevices) ^ static_cast<int>(QQuickPointerDevice::TouchScreen)));
 }
 
 QQuickHoverHandler::~QQuickHoverHandler()
@@ -93,10 +100,22 @@ bool QQuickHoverHandler::wantsPointerEvent(QQuickPointerEvent *event)
 
 void QQuickHoverHandler::handleEventPoint(QQuickEventPoint *point)
 {
-    setHovered(true);
+    bool hovered = true;
+    if (point->state() == QQuickEventPoint::Released &&
+            point->pointerEvent()->device()->pointerType() == QQuickPointerDevice::Finger)
+        hovered = false;
+    setHovered(hovered);
     setPassiveGrab(point);
 }
 
+/*!
+    \qmlproperty bool QtQuick::HoverHandler::hovered
+    \readonly
+
+    Holds true whenever any pointing device cursor (mouse or tablet) is within
+    the bounds of the \c parent Item, extended by the
+    \l {PointerHandler::margin}{margin}, if any.
+*/
 void QQuickHoverHandler::setHovered(bool hovered)
 {
     if (m_hovered != hovered) {

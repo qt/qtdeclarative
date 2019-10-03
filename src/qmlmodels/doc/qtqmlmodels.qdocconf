@@ -1,0 +1,37 @@
+include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
+include($QT_INSTALL_DOCS/config/exampleurl-qtdeclarative.qdocconf)
+
+project                 = QtQmlModels
+description             = Qt Qml Models Reference Documentation
+version                 = $QT_VERSION
+moduleheader            = QtQmlModels
+qhp.projects            = QtQmlModels
+
+qhp.QtQmlModels.file                = qtqmlmodels.qhp
+qhp.QtQmlModels.namespace           = org.qt-project.qtqmlmodels.$QT_VERSION_TAG
+qhp.QtQmlModels.virtualFolder       = qtqmlmodels
+qhp.QtQmlModels.indexRoot           =
+
+qhp.QtQmlModels.filterAttributes    = qtqmlmodels $QT_VERSION qtrefdoc
+qhp.QtQmlModels.customFilters.Qt.name = QtQmlModels $QT_VERSION
+qhp.QtQmlModels.customFilters.Qt.filterAttributes = qtqmlmodels $QT_VERSION
+
+qhp.QtQmlModels.title      = QML Types
+qhp.QtQmlModels.indexTitle = Qt QML Models QML Types
+qhp.QtQmlModels.selectors  = qmlclass
+qhp.QtQmlModels.sortPages  = true
+
+tagfile      = qtqmlmodels.tags
+
+depends += qtcore qtqml qtdoc
+
+headerdirs  += ..
+
+sourcedirs  += .. \
+               ../../imports/models
+
+exampledirs += ../../../examples/qml \
+               ../ \
+               snippets
+
+navigation.qmltypespage = "Qt Qml Models QML Types"

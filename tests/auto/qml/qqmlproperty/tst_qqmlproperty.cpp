@@ -35,6 +35,9 @@
 #include <private/qqmlboundsignal_p.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
+#if QT_CONFIG(regularexpression)
+#include <QtCore/qregularexpression.h>
+#endif
 #include <QtCore/private/qobject_p.h>
 #include "../../shared/util.h"
 
@@ -2017,9 +2020,13 @@ void tst_qqmlproperty::warnOnInvalidBinding()
     expectedWarning = testUrl.toString() + QString::fromLatin1(":7:5: Unable to assign QQuickText to QQuickRectangle");
     QTest::ignoreMessage(QtWarningMsg, expectedWarning.toLatin1().constData());
 
+#if QT_CONFIG(regularexpression)
     // V8 error message for invalid binding to anchor
-    expectedWarning = testUrl.toString() + QString::fromLatin1(":14:9: Unable to assign QQuickItem_QML_8 to QQuickAnchorLine");
-    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toLatin1().constData());
+    const QRegularExpression warning(
+                "^" + testUrl.toString()
+                + ":14:9: Unable to assign QQuickItem_QML_\\d+ to QQuickAnchorLine$");
+    QTest::ignoreMessage(QtWarningMsg, warning);
+#endif
 
     QQmlComponent component(&engine, testUrl);
     QObject *obj = component.create();

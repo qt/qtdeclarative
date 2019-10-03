@@ -71,7 +71,7 @@ void tst_qqmlcpputils::fastConnect()
 
     {
         MyObject obj;
-        qmlobject_connect(&obj, MyObject, SIGNAL(signal1()), &obj, MyObject, SLOT(slot1()))
+        qmlobject_connect(&obj, MyObject, SIGNAL(signal1()), &obj, MyObject, SLOT(slot1()));
 
         obj.signal1();
         QCOMPARE(obj.slotCount, 1);

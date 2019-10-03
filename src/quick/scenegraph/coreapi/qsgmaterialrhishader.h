@@ -76,9 +76,9 @@ public:
         float determinant() const;
         float devicePixelRatio() const;
 
-        QByteArray *uniformData() const;
-        QRhiResourceUpdateBatch *resourceUpdateBatch() const;
-        QRhi *rhi() const;
+        QByteArray *uniformData();
+        QRhiResourceUpdateBatch *resourceUpdateBatch();
+        QRhi *rhi();
 
     private:
         friend class QSGRenderer;
@@ -146,13 +146,13 @@ public:
     QSGMaterialRhiShader();
     virtual ~QSGMaterialRhiShader();
 
-    virtual bool updateUniformData(const RenderState &state,
+    virtual bool updateUniformData(RenderState &state,
                                    QSGMaterial *newMaterial, QSGMaterial *oldMaterial);
 
-    virtual void updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+    virtual void updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
                                     QSGMaterial *newMaterial, QSGMaterial *oldMaterial);
 
-    virtual bool updateGraphicsPipelineState(const RenderState &state, GraphicsPipelineState *ps,
+    virtual bool updateGraphicsPipelineState(RenderState &state, GraphicsPipelineState *ps,
                                              QSGMaterial *newMaterial, QSGMaterial *oldMaterial);
 
     Flags flags() const;
