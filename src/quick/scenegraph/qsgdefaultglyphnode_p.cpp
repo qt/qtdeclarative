@@ -808,6 +808,8 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
     qreal glyphCacheScaleY = cache->transform().m22();
     qreal glyphCacheInverseScaleX = 1.0 / glyphCacheScaleX;
     qreal glyphCacheInverseScaleY = 1.0 / glyphCacheScaleY;
+    qreal scaleRatioX = qRound(glyphCacheScaleX) / glyphCacheScaleX;
+    qreal scaleRatioY = qRound(glyphCacheScaleY) / glyphCacheScaleY;
 
     Q_ASSERT(geometry->indexType() == GL_UNSIGNED_SHORT);
     geometry->allocate(glyphIndexes.size() * 4, glyphIndexes.size() * 6);
@@ -833,13 +835,11 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
          // coordinates, we need to apply the scale factor before rounding, and then
          // apply the inverse scale to get back to the coordinate system of the node.
 
-         qreal x = (qFloor(glyphPosition.x() * glyphCacheScaleX) * glyphCacheInverseScaleX) +
-                        (c.baseLineX * glyphCacheInverseScaleX) - margin;
-         qreal y = (qRound(glyphPosition.y() * glyphCacheScaleY) * glyphCacheInverseScaleY) -
-                        (c.baseLineY * glyphCacheInverseScaleY) - margin;
+         qreal x = (glyphPosition.x() + qRound(c.baseLineX * glyphCacheInverseScaleX) - margin) * scaleRatioX;
+         qreal y = (glyphPosition.y() - qRound(c.baseLineY * glyphCacheInverseScaleY) - margin) * scaleRatioY;
 
-         qreal w = c.w * glyphCacheInverseScaleX;
-         qreal h = c.h * glyphCacheInverseScaleY;
+         qreal w = c.w * glyphCacheInverseScaleX * scaleRatioX;
+         qreal h = c.h * glyphCacheInverseScaleY * scaleRatioY;
 
          *boundingRect |= QRectF(x + margin, y + margin, w, h);
 
