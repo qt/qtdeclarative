@@ -780,12 +780,12 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
             typeStr + dotqml_string, // Type -> Type.qml
             typeStr + dotuidotqml_string // Type -> Type.ui.qml
         };
-        for (uint i = 0; i < sizeof(urlsToTry) / sizeof(urlsToTry[0]); ++i) {
-            exists = typeLoader->fileExists(localDirectoryPath, urlsToTry[i]);
+        for (const QString &urlToTry : urlsToTry) {
+            exists = typeLoader->fileExists(localDirectoryPath, urlToTry);
             if (exists) {
 #if defined(Q_OS_MACOS) || defined(Q_OS_WIN)
                 // don't let function.qml confuse the use of "new Function(...)" for example.
-                if (!QQml_isFileCaseCorrect(localDirectoryPath + urlsToTry[i])) {
+                if (!QQml_isFileCaseCorrect(localDirectoryPath + urlToTry)) {
                     exists = false;
                     if (errors) {
                         QQmlError caseError;
@@ -797,7 +797,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
 #else
                 Q_UNUSED(errors);
 #endif
-                qmlUrl = url + urlsToTry[i];
+                qmlUrl = url + urlToTry;
                 break;
             }
         }
