@@ -1,18 +1,19 @@
 import QtQml 2.1
 import QtQuick 2.1
+import Test 1.0
 
 Rectangle {
     Instantiator {
         objectName: "instantiator1"
-        model: model1
+        model: Model1
         delegate: QtObject {
             property string datum: model.text
         }
     }
     Component.onCompleted: {
-        model1.add("Delta");
-        model1.add("Gamma");
-        model1.add("Beta");
-        model1.add("Alpha");
+        Model1.add("Delta");
+        Model1.add("Gamma");
+        Model1.add("Beta");
+        Model1.add("Alpha");
     }
 }
