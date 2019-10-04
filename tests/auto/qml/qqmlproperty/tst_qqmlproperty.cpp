@@ -1994,11 +1994,9 @@ void tst_qqmlproperty::assignEmptyVariantMap()
     QCOMPARE(o.variantMap().count(), 1);
     QCOMPARE(o.variantMap().isEmpty(), false);
 
-    QQmlContext context(&engine);
-    context.setContextProperty("o", &o);
 
     QQmlComponent component(&engine, testFileUrl("assignEmptyVariantMap.qml"));
-    QObject *obj = component.create(&context);
+    QObject *obj = component.createWithInitialProperties({{"o", QVariant::fromValue(&o)}});
     QVERIFY(obj);
 
     QCOMPARE(o.variantMap().count(), 0);
