@@ -226,7 +226,7 @@ void tst_qquickflickable::create()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("flickable01.qml"));
-    QQuickFlickable *obj = qobject_cast<QQuickFlickable*>(c.create());
+    QQuickFlickable *obj = qobject_cast<QQuickFlickable*>(c.createWithInitialProperties({{"setRebound", false}}));
 
     QVERIFY(obj != nullptr);
     QCOMPARE(obj->isAtXBeginning(), true);
@@ -782,9 +782,8 @@ void tst_qquickflickable::flickableDirection()
 void tst_qquickflickable::resizeContent()
 {
     QQmlEngine engine;
-    engine.rootContext()->setContextProperty("setRebound", QVariant::fromValue(false));
     QQmlComponent c(&engine, testFileUrl("resize.qml"));
-    QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
+    QQuickItem *root = qobject_cast<QQuickItem*>(c.createWithInitialProperties({{"setRebound", false}}));
     QQuickFlickable *obj = findItem<QQuickFlickable>(root, "flick");
 
     QVERIFY(obj != nullptr);
@@ -816,7 +815,7 @@ void tst_qquickflickable::returnToBounds()
 
     QScopedPointer<QQuickView> window(new QQuickView);
 
-    window->rootContext()->setContextProperty("setRebound", setRebound);
+    window->setInitialProperties({{"setRebound", setRebound}});
     window->setSource(testFileUrl("resize.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
