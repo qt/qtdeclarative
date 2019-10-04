@@ -246,7 +246,6 @@ static void qt_quickitems_defineModule()
     // events
     qmlRegisterTypesAndRevisions<
             QQuickCloseEvent,
-            QQuickDropEvent,
             QQuickGrabGestureEvent,
             QQuickKeyEvent,
             QQuickMouseEvent,
@@ -290,6 +289,7 @@ static void qt_quickitems_defineModule()
 
 #if QT_CONFIG(quick_draganddrop)
     qmlRegisterTypesAndRevisions<
+            QQuickDropEvent,
             QQuickDrag,
             QQuickDropArea,
             QQuickDropAreaDrag,
