@@ -424,12 +424,13 @@ void tst_qqmlengine::trimComponentCache()
 
     QQmlEngine engine;
     ComponentCacheFunctions componentCache(engine);
-    engine.rootContext()->setContextProperty("componentCache", &componentCache);
     engine.setIncubationController(&componentCache);
 
     QQmlComponent component(&engine, testFileUrl(file));
     QVERIFY2(component.isReady(), qPrintable(component.errorString()));
-    QScopedPointer<QObject> object(component.create());
+    QScopedPointer<QObject> object(component.createWithInitialProperties({
+            {"componentCache", QVariant::fromValue(&componentCache)}
+    }));
     QVERIFY(object != nullptr);
     QCOMPARE(object->property("success").toBool(), true);
 }
@@ -511,6 +512,7 @@ void tst_qqmlengine::failedCompilation()
     QQmlEngine engine;
 
     QQmlComponent component(&engine, testFileUrl(file));
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "QQmlComponent: Component is not ready");
     QVERIFY(!component.isReady());
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object.isNull());
@@ -601,11 +603,10 @@ void tst_qqmlengine::objectOwnership()
         {
             QQmlEngine engine;
             QQmlComponent c(&engine);
-            engine.rootContext()->setContextProperty("test", this);
             QQmlEngine::setObjectOwnership(ptr, QQmlEngine::JavaScriptOwnership);
-            c.setData("import QtQuick 2.0; Item { property int data: test.createAQObjectForOwnershipTest() ? 0 : 1 }", QUrl());
+            c.setData("import QtQuick 2.0; Item { required property QtObject test; property int data: test.createAQObjectForOwnershipTest() ? 0 : 1 }", QUrl());
             QVERIFY(c.isReady());
-            QObject *o = c.create();
+            QObject *o = c.createWithInitialProperties( {{"test", QVariant::fromValue(this)}} );
             QVERIFY(o != nullptr);
         }
         QTRY_VERIFY(spy.count());
@@ -616,13 +617,13 @@ void tst_qqmlengine::objectOwnership()
         {
             QQmlEngine engine;
             QQmlComponent c(&engine);
-            engine.rootContext()->setContextProperty("test", ptr);
             QQmlEngine::setObjectOwnership(ptr, QQmlEngine::JavaScriptOwnership);
-            c.setData("import QtQuick 2.0; QtObject { property var object: { var i = test; test ? 0 : 1 }  }", QUrl());
+            c.setData("import QtQuick 2.0; QtObject { required property QtObject test; property var object: { var i = test; test ? 0 : 1 }  }", QUrl());
             QVERIFY(c.isReady());
-            QObject *o = c.create();
+            QObject *o = c.createWithInitialProperties({{"test", QVariant::fromValue(ptr)}});
             QVERIFY(o != nullptr);
-            engine.rootContext()->setContextProperty("test", nullptr);
+            QQmlProperty testProp(o, "test");
+            testProp.write(QVariant::fromValue<QObject*>(nullptr));
         }
         QTRY_VERIFY(spy.count());
     }
@@ -772,6 +773,7 @@ public:
 };
 
 Q_DECLARE_METATYPE(QList<QQmlAbstractUrlInterceptor::DataType>);
+
 void tst_qqmlengine::urlInterceptor_data()
 {
     QTest::addColumn<QUrl>("testFile");
@@ -940,14 +942,15 @@ void tst_qqmlengine::cppSignalAndEval()
 {
     ObjectCaller objectCaller;
     QQmlEngine engine;
-    engine.rootContext()->setContextProperty(QLatin1String("CallerCpp"), &objectCaller);
+    qmlRegisterSingletonInstance("Test", 1, 0, "CallerCpp", &objectCaller);
     QQmlComponent c(&engine);
     c.setData("import QtQuick 2.9\n"
+              "import Test 1.0\n"
               "Item {\n"
               "    property var r: 0\n"
               "    Connections {\n"
               "        target: CallerCpp;\n"
-              "        onDoubleReply: {\n"
+              "        function onDoubleReply() {\n"
               "            eval('var z = 1');\n"
               "            r = a;\n"
               "        }\n"
