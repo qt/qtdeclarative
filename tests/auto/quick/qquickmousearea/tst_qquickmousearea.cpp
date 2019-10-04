@@ -307,7 +307,7 @@ void tst_QQuickMouseArea::resetDrag()
 {
     QQuickView window;
     QByteArray errorMessage;
-    window.rootContext()->setContextProperty("haveTarget", QVariant(true));
+    window.setInitialProperties({{"haveTarget", true}});
     QVERIFY2(QQuickTest::initView(window, testFileUrl("dragreset.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
@@ -326,7 +326,9 @@ void tst_QQuickMouseArea::resetDrag()
     QVERIFY(rootItem != nullptr);
     QSignalSpy targetSpy(drag, SIGNAL(targetChanged()));
     QVERIFY(drag->target() != nullptr);
-    window.rootContext()->setContextProperty("haveTarget", QVariant(false));
+    auto root = window.rootObject();
+    QQmlProperty haveTarget {root, "haveTarget"};
+    haveTarget.write(false);
     QCOMPARE(targetSpy.count(),1);
     QVERIFY(!drag->target());
 }

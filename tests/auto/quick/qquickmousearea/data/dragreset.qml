@@ -1,6 +1,7 @@
 import QtQuick 2.0
 Rectangle {
     id: whiteRect
+    required property bool haveTarget
     width: 200
     height: 200
     color: "white"
