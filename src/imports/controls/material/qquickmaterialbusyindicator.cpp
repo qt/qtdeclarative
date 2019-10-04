@@ -184,7 +184,7 @@ QColor QQuickMaterialBusyIndicator::color() const
     return m_color;
 }
 
-void QQuickMaterialBusyIndicator::setColor(QColor color)
+void QQuickMaterialBusyIndicator::setColor(const QColor &color)
 {
     if (m_color == color)
         return;

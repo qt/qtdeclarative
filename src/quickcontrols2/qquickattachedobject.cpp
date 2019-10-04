@@ -119,7 +119,7 @@ static QList<QQuickAttachedObject *> findAttachedChildren(const QMetaObject *typ
         if (window) {
             item = window->contentItem();
 
-            const auto windowChildren = window->children();
+            const auto &windowChildren = window->children();
             for (QObject *child : windowChildren) {
                 QQuickWindow *childWindow = qobject_cast<QQuickWindow *>(child);
                 if (childWindow) {
