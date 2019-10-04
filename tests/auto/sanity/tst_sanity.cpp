@@ -156,7 +156,7 @@ void tst_Sanity::initTestCase()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QString("import QtQuick.Templates 2.%1; Control { }").arg(QT_VERSION_MINOR - 7).toUtf8(), QUrl());
+    component.setData(QString("import QtQuick.Templates 2.%1; Control { }").arg(15).toUtf8(), QUrl());
 
     const QStringList qmlTypeNames = QQmlMetaType::qmlTypeNames();
 
