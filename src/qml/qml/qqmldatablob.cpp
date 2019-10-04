@@ -351,7 +351,7 @@ void QQmlDataBlob::addDependency(QQmlDataBlob *blob)
         status() == Error || status() == Complete || m_isDone)
         return;
 
-    for (auto existingDep: qAsConst(m_waitingFor))
+    for (const auto &existingDep: qAsConst(m_waitingFor))
         if (existingDep.data() == blob)
             return;
 

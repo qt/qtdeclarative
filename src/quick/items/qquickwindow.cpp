@@ -2768,7 +2768,7 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
         // If the touch was accepted (regardless by whom or in what form),
         // update accepted new points.
         bool isPressOrRelease = pointerEvent->isPressEvent() || pointerEvent->isReleaseEvent();
-        for (auto point: qAsConst(touchEvent->touchPoints())) {
+        for (const auto &point: qAsConst(touchEvent->touchPoints())) {
             if (auto pointerEventPoint = ptEvent->pointById(point.id())) {
                 pointerEventPoint->setAccepted();
                 if (isPressOrRelease)
@@ -2778,7 +2778,7 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     } else {
         // But if the event was not accepted then we know this item
         // will not be interested in further updates for those touchpoint IDs either.
-        for (auto point: qAsConst(touchEvent->touchPoints())) {
+        for (const auto &point: qAsConst(touchEvent->touchPoints())) {
             if (point.state() == Qt::TouchPointPressed) {
                 if (auto *tp = ptEvent->pointById(point.id())) {
                     if (tp->exclusiveGrabber() == item) {
@@ -3019,7 +3019,7 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
                     if (filteringParent->childMouseEventFilter(receiver, filteringParentTouchEvent.data())) {
                         qCDebug(DBG_TOUCH) << "touch event intercepted by childMouseEventFilter of " << filteringParent;
                         skipDelivery.append(filteringParent);
-                        for (auto point: qAsConst(filteringParentTouchEvent->touchPoints())) {
+                        for (const auto &point: qAsConst(filteringParentTouchEvent->touchPoints())) {
                             QQuickEventPoint *pt = event->pointById(point.id());
                             pt->setAccepted();
                             pt->setGrabberItem(filteringParent);

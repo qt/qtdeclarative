@@ -95,10 +95,10 @@ public:
     void setColumnSpacing(qreal spacing);
 
     QJSValue rowHeightProvider() const;
-    void setRowHeightProvider(QJSValue provider);
+    void setRowHeightProvider(const QJSValue &provider);
 
     QJSValue columnWidthProvider() const;
-    void setColumnWidthProvider(QJSValue provider);
+    void setColumnWidthProvider(const QJSValue &provider);
 
     virtual QVariant model() const;
     virtual void setModel(const QVariant &newModel);

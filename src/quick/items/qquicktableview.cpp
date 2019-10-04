@@ -2582,7 +2582,7 @@ QJSValue QQuickTableView::rowHeightProvider() const
     return d_func()->rowHeightProvider;
 }
 
-void QQuickTableView::setRowHeightProvider(QJSValue provider)
+void QQuickTableView::setRowHeightProvider(const QJSValue &provider)
 {
     Q_D(QQuickTableView);
     if (provider.strictlyEquals(d->rowHeightProvider))
@@ -2598,7 +2598,7 @@ QJSValue QQuickTableView::columnWidthProvider() const
     return d_func()->columnWidthProvider;
 }
 
-void QQuickTableView::setColumnWidthProvider(QJSValue provider)
+void QQuickTableView::setColumnWidthProvider(const QJSValue &provider)
 {
     Q_D(QQuickTableView);
     if (provider.strictlyEquals(d->columnWidthProvider))

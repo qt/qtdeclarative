@@ -964,7 +964,7 @@ QStringRef IRBuilder::asStringRef(QQmlJS::AST::Node *node)
     return textRefAt(node->firstSourceLocation(), node->lastSourceLocation());
 }
 
-void IRBuilder::extractVersion(QStringRef string, int *maj, int *min)
+void IRBuilder::extractVersion(const QStringRef &string, int *maj, int *min)
 {
     *maj = -1; *min = -1;
 

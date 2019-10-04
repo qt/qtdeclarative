@@ -87,27 +87,27 @@ public:
     QQuickItem *originalParent() const;
 
     QQmlScriptString x() const;
-    void setX(QQmlScriptString x);
+    void setX(const QQmlScriptString &x);
     bool xIsSet() const;
 
     QQmlScriptString y() const;
-    void setY(QQmlScriptString y);
+    void setY(const QQmlScriptString &y);
     bool yIsSet() const;
 
     QQmlScriptString width() const;
-    void setWidth(QQmlScriptString width);
+    void setWidth(const QQmlScriptString &width);
     bool widthIsSet() const;
 
     QQmlScriptString height() const;
-    void setHeight(QQmlScriptString height);
+    void setHeight(const QQmlScriptString &height);
     bool heightIsSet() const;
 
     QQmlScriptString scale() const;
-    void setScale(QQmlScriptString scale);
+    void setScale(const QQmlScriptString &scale);
     bool scaleIsSet() const;
 
     QQmlScriptString rotation() const;
-    void setRotation(QQmlScriptString rotation);
+    void setRotation(const QQmlScriptString &rotation);
     bool rotationIsSet() const;
 
     ActionList actions() override;

@@ -156,7 +156,7 @@ protected:
     bool affectParticle(QQuickParticleData *d, qreal dt) override;
 
 private:
-    void affectProperties(const QList<QQuickParticleData*> particles, qreal dt);
+    void affectProperties(const QList<QQuickParticleData*> &particles, qreal dt);
     QQuickDirection * m_position;
     QQuickDirection * m_velocity;
     QQuickDirection * m_acceleration;

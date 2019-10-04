@@ -311,7 +311,7 @@ void QQuickStateGroup::componentComplete()
         if (!state->isNamed())
             state->setName(QLatin1String("anonymousState") + QString::number(++d->unnamedCount));
 
-        const QString stateName = state->name();
+        QString stateName = state->name();
         if (names.contains(stateName)) {
             qmlWarning(state->parent()) << "Found duplicate state name: " << stateName;
         } else {

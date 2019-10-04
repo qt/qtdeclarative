@@ -73,10 +73,10 @@ public:
 
 Q_SIGNALS:
 
-    void sourceChanged(QUrl arg);
+    void sourceChanged(const QUrl &arg);
 
 public Q_SLOTS:
-    void setSource(QUrl arg);
+    void setSource(const QUrl &arg);
 
 private Q_SLOTS:
     void startMaskLoading();

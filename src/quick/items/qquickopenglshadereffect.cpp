@@ -189,8 +189,8 @@ class MappedSlotObject: public QtPrivate::QSlotObjectBase
 public:
     typedef std::function<void()> PropChangedFunc;
 
-    explicit MappedSlotObject(PropChangedFunc func)
-        : QSlotObjectBase(&impl), _signalIndex(-1), func(func)
+    explicit MappedSlotObject(PropChangedFunc f)
+        : QSlotObjectBase(&impl), _signalIndex(-1), func(std::move(f))
     { ref(); }
 
     void setSignalIndex(int idx) { _signalIndex = idx; }
