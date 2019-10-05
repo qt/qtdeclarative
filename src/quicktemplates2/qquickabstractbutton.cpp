@@ -105,6 +105,7 @@ QT_BEGIN_NAMESPACE
     \qmlsignal QtQuick.Controls::AbstractButton::pressAndHold()
 
     This signal is emitted when the button is interactively pressed and held down by the user via touch or mouse.
+    It is not emitted when \l autoRepeat is enabled.
 */
 
 /*!
@@ -657,6 +658,9 @@ void QQuickAbstractButton::setAutoExclusive(bool exclusive)
 
     This property holds whether the button repeats \l pressed(), \l released()
     and \l clicked() signals while the button is pressed and held down.
+
+    If this property is set to \c true, the \l pressAndHold() signal will not
+    be emitted.
 
     The default value is \c false.
 

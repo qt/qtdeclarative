@@ -43,6 +43,7 @@
 
 #include <QtCore/qregularexpression.h>
 #include <QtCore/qabstractitemmodel.h>
+#include <QtCore/qglobal.h>
 #include <QtGui/qinputmethod.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qpa/qplatformtheme.h>
@@ -231,6 +232,13 @@ public:
     void updateEditText();
     void updateCurrentText();
     void updateCurrentValue();
+    void updateCurrentText(bool hasDelegateModelObject);
+    void updateCurrentValue(bool hasDelegateModelObject);
+    void updateCurrentTextAndValue();
+
+    bool isValidIndex(int index) const;
+    QString fastTextAt(int index) const;
+    QVariant fastValueAt(int index) const;
 
     void acceptInput();
     QString tryComplete(const QString &inputText);
@@ -433,10 +441,34 @@ void QQuickComboBoxPrivate::updateEditText()
     q->setEditText(text);
 }
 
+// We have these two rather than just using default arguments
+// because QObjectPrivate::connect() doesn't accept lambdas.
 void QQuickComboBoxPrivate::updateCurrentText()
 {
+    updateCurrentText(false);
+}
+
+void QQuickComboBoxPrivate::updateCurrentValue()
+{
+    updateCurrentValue(false);
+}
+
+void QQuickComboBoxPrivate::updateCurrentText(bool hasDelegateModelObject)
+{
     Q_Q(QQuickComboBox);
-    QString text = q->textAt(currentIndex);
+    QString text;
+    // If a delegate model object was passed in, it means the calling code
+    // has decided to reuse it for several function calls to speed things up.
+    // So, use the faster (private) version in that case.
+    // For other cases, we use the version that creates the delegate model object
+    // itself in order to have neater, more convenient calling code.
+    if (isValidIndex(currentIndex)) {
+        if (hasDelegateModelObject)
+            text = fastTextAt(currentIndex);
+        else
+            text = q->textAt(currentIndex);
+    }
+
     if (currentText != text) {
         currentText = text;
         if (!hasDisplayText)
@@ -451,15 +483,56 @@ void QQuickComboBoxPrivate::updateCurrentText()
         q->setEditText(currentText);
 }
 
-void QQuickComboBoxPrivate::updateCurrentValue()
+void QQuickComboBoxPrivate::updateCurrentValue(bool hasDelegateModelObject)
 {
     Q_Q(QQuickComboBox);
-    const QVariant value = q->valueAt(currentIndex);
+    QVariant value;
+    // If a delegate model object was passed in, it means the calling code
+    // has decided to reuse it for several function calls to speed things up.
+    // So, use the faster (private) version in that case.
+    if (isValidIndex(currentIndex)) {
+        if (hasDelegateModelObject)
+            value = fastValueAt(currentIndex);
+        else
+            value = q->valueAt(currentIndex);
+    }
     if (currentValue == value)
         return;
 
     currentValue = value;
     emit q->currentValueChanged();
+}
+
+void QQuickComboBoxPrivate::updateCurrentTextAndValue()
+{
+    QObject *object = nullptr;
+    // For performance reasons, we reuse the same delegate model object: QTBUG-76029.
+    if (isValidIndex(currentIndex))
+        object = delegateModel->object(currentIndex);
+    const bool hasDelegateModelObject = object != nullptr;
+    updateCurrentText(hasDelegateModelObject);
+    updateCurrentValue(hasDelegateModelObject);
+    if (object)
+        delegateModel->release(object);
+}
+
+bool QQuickComboBoxPrivate::isValidIndex(int index) const
+{
+    return delegateModel && index >= 0 && index < delegateModel->count();
+}
+
+// For performance reasons (QTBUG-76029), both this and valueAt assume that
+// the index is valid and delegateModel->object(index) has been called.
+QString QQuickComboBoxPrivate::fastTextAt(int index) const
+{
+    const QString effectiveTextRole = textRole.isEmpty() ? QStringLiteral("modelData") : textRole;
+    return delegateModel->stringValue(index, effectiveTextRole);
+}
+
+QVariant QQuickComboBoxPrivate::fastValueAt(int index) const
+{
+    const QString effectiveValueRole = valueRole.isEmpty() ? QStringLiteral("modelData") : valueRole;
+    return delegateModel->variantValue(index, effectiveValueRole);
 }
 
 void QQuickComboBoxPrivate::acceptInput()
@@ -508,10 +581,8 @@ void QQuickComboBoxPrivate::setCurrentIndex(int index, Activation activate)
     currentIndex = index;
     emit q->currentIndexChanged();
 
-    if (componentComplete) {
-        updateCurrentText();
-        updateCurrentValue();
-    }
+    if (componentComplete)
+        updateCurrentTextAndValue();
 
     if (activate)
         emit q->activated(index);
@@ -832,10 +903,14 @@ void QQuickComboBox::setModel(const QVariant& m)
     if (d->model == model)
         return;
 
-    if (QAbstractItemModel* aim = qvariant_cast<QAbstractItemModel *>(d->model))
-        QObjectPrivate::disconnect(aim, &QAbstractItemModel::dataChanged, d, &QQuickComboBoxPrivate::updateCurrentText);
-    if (QAbstractItemModel* aim = qvariant_cast<QAbstractItemModel *>(model))
-        QObjectPrivate::connect(aim, &QAbstractItemModel::dataChanged, d, &QQuickComboBoxPrivate::updateCurrentText);
+    if (QAbstractItemModel* aim = qvariant_cast<QAbstractItemModel *>(d->model)) {
+        QObjectPrivate::disconnect(aim, &QAbstractItemModel::dataChanged,
+            d, QOverload<>::of(&QQuickComboBoxPrivate::updateCurrentText));
+    }
+    if (QAbstractItemModel* aim = qvariant_cast<QAbstractItemModel *>(model)) {
+        QObjectPrivate::connect(aim, &QAbstractItemModel::dataChanged,
+            d, QOverload<>::of(&QQuickComboBoxPrivate::updateCurrentText));
+    }
 
     d->model = model;
     d->createDelegateModel();
@@ -1505,15 +1580,13 @@ QVariant QQuickComboBox::currentValue() const
 QVariant QQuickComboBox::valueAt(int index) const
 {
     Q_D(const QQuickComboBox);
-    if (!d->delegateModel || index < 0 || index >= d->delegateModel->count())
+    if (!d->isValidIndex(index))
         return QVariant();
 
-    // We use QVariant because the model API uses QVariant.
-    QVariant value;
     QObject *object = d->delegateModel->object(index);
+    QVariant value;
     if (object) {
-        const QString role = d->valueRole.isEmpty() ? QStringLiteral("modelData") : d->valueRole;
-        value = d->delegateModel->variantValue(index, role);
+        value = d->fastValueAt(index);
         d->delegateModel->release(object);
     }
     return value;
@@ -1550,13 +1623,13 @@ int QQuickComboBox::indexOfValue(const QVariant &value) const
 QString QQuickComboBox::textAt(int index) const
 {
     Q_D(const QQuickComboBox);
-    if (!d->delegateModel || index < 0 || index >= d->delegateModel->count())
+    if (!d->isValidIndex(index))
         return QString();
 
-    QString text;
     QObject *object = d->delegateModel->object(index);
+    QString text;
     if (object) {
-        text = d->delegateModel->stringValue(index, d->textRole.isEmpty() ? QStringLiteral("modelData") : d->textRole);
+        text = d->fastTextAt(index);
         d->delegateModel->release(object);
     }
     return text;
@@ -1823,12 +1896,10 @@ void QQuickComboBox::componentComplete()
         static_cast<QQmlDelegateModel *>(d->delegateModel)->componentComplete();
 
     if (count() > 0) {
-        if (!d->hasCurrentIndex && d->currentIndex == -1) {
+        if (!d->hasCurrentIndex && d->currentIndex == -1)
             setCurrentIndex(0);
-        } else {
-            d->updateCurrentText();
-            d->updateCurrentValue();
-        }
+        else
+            d->updateCurrentTextAndValue();
     }
 }
 
