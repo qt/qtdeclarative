@@ -75,6 +75,7 @@ private slots:
     void introspectQrc();
     void sortCaseSensitive_data();
     void sortCaseSensitive();
+    void updateProperties();
 private:
     void checkNoErrors(const QQmlComponent& component);
     QQmlEngine engine;
@@ -423,6 +424,47 @@ void tst_qquickfolderlistmodel::sortCaseSensitive()
     QTRY_COMPARE(flm->property("count").toInt(), 2); // wait for refresh
     for (int i = 0; i < 2; ++i)
         QTRY_COMPARE(flm->data(flm->index(i),FileNameRole).toString(), expectedOrder.at(i));
+}
+
+void tst_qquickfolderlistmodel::updateProperties()
+{
+    QQmlComponent component(&engine, testFileUrl("basic.qml"));
+    checkNoErrors(component);
+
+    QObject *folderListModel = component.create();
+    QVERIFY(folderListModel);
+
+    QVariant caseSensitive = folderListModel->property("caseSensitive");
+    QVERIFY(caseSensitive.isValid());
+    QCOMPARE(caseSensitive.toBool(), true);
+    folderListModel->setProperty("caseSensitive", false);
+    caseSensitive = folderListModel->property("caseSensitive");
+    QVERIFY(caseSensitive.isValid());
+    QCOMPARE(caseSensitive.toBool(), false);
+
+    QVariant showOnlyReadable = folderListModel->property("showOnlyReadable");
+    QVERIFY(showOnlyReadable.isValid());
+    QCOMPARE(showOnlyReadable.toBool(), false);
+    folderListModel->setProperty("showOnlyReadable", true);
+    showOnlyReadable = folderListModel->property("showOnlyReadable");
+    QVERIFY(showOnlyReadable.isValid());
+    QCOMPARE(showOnlyReadable.toBool(), true);
+
+    QVariant showDotAndDotDot = folderListModel->property("showDotAndDotDot");
+    QVERIFY(showDotAndDotDot.isValid());
+    QCOMPARE(showDotAndDotDot.toBool(), false);
+    folderListModel->setProperty("showDotAndDotDot", true);
+    showDotAndDotDot = folderListModel->property("showDotAndDotDot");
+    QVERIFY(showDotAndDotDot.isValid());
+    QCOMPARE(showDotAndDotDot.toBool(), true);
+
+    QVariant showHidden = folderListModel->property("showHidden");
+    QVERIFY(showHidden.isValid());
+    QCOMPARE(showHidden.toBool(), false);
+    folderListModel->setProperty("showHidden", true);
+    showHidden = folderListModel->property("showHidden");
+    QVERIFY(showHidden.isValid());
+    QCOMPARE(showHidden.toBool(), true);
 }
 
 QTEST_MAIN(tst_qquickfolderlistmodel)

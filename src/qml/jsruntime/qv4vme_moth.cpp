@@ -647,7 +647,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(LoadSuperProperty)
         STORE_IP();
-        STORE_ACC();
         acc = Runtime::LoadSuperProperty::call(engine, STACK_VALUE(property));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadSuperProperty)
@@ -794,12 +793,14 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(Construct)
         STORE_IP();
+        STORE_ACC();
         acc = Runtime::Construct::call(engine, STACK_VALUE(func), ACC, stack + argv, argc);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(Construct)
 
     MOTH_BEGIN_INSTR(ConstructWithSpread)
         STORE_IP();
+        STORE_ACC();
         acc = Runtime::ConstructWithSpread::call(engine, STACK_VALUE(func), ACC, stack + argv, argc);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(ConstructWithSpread)
@@ -827,7 +828,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(DeadTemporalZoneCheck)
         if (ACC.isEmpty()) {
             STORE_IP();
-            STORE_ACC();
             Runtime::ThrowReferenceError::call(engine, name);
             goto handleUnwind;
         }
@@ -970,6 +970,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(CreateRestParameter)
 
     MOTH_BEGIN_INSTR(ConvertThisToObject)
+        STORE_ACC();
         stack[CallData::This] = Runtime::ConvertThisToObject::call(engine, stack[CallData::This]);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(ConvertThisToObject)
@@ -980,6 +981,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(LoadSuperConstructor)
 
     MOTH_BEGIN_INSTR(ToObject)
+        STORE_ACC();
         acc = ACC.toObject(engine)->asReturnedValue();
         CHECK_EXCEPTION;
     MOTH_END_INSTR(ToObject)

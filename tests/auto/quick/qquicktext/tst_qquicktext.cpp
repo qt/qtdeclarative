@@ -164,6 +164,8 @@ private slots:
 
     void verticallyAlignedImageInTable();
 
+    void transparentBackground();
+
 private:
     QStringList standard;
     QStringList richText;
@@ -4429,6 +4431,26 @@ void tst_qquicktext::verticallyAlignedImageInTable()
     // Don't crash
 }
 
+void tst_qquicktext::transparentBackground()
+{
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabToImage not functional on offscreen/minimimal platforms");
+
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("transparentBackground.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QImage img = window->grabWindow();
+    QCOMPARE(img.isNull(), false);
+
+    QColor color = img.pixelColor(0, 0);
+    QCOMPARE(color.red(), 255);
+    QCOMPARE(color.blue(), 255);
+    QCOMPARE(color.green(), 255);
+}
 QTEST_MAIN(tst_qquicktext)
 
 #include "tst_qquicktext.moc"

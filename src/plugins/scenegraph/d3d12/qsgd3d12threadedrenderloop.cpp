@@ -373,7 +373,7 @@ bool QSGD3D12RenderThread::event(QEvent *e)
                 QCoreApplication::processEvents();
                 QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
                 if (wme->destroying)
-                    delete wd->animationController;
+                    wd->animationController.reset();
             }
             if (wme->destroying)
                 active = false;
@@ -1006,7 +1006,7 @@ void QSGD3D12ThreadedRenderLoop::handleExposure(QQuickWindow *window)
         if (Q_UNLIKELY(debug_loop()))
             qDebug("starting render thread");
         // Push a few things to the render thread.
-        QQuickAnimatorController *controller = QQuickWindowPrivate::get(w->window)->animationController;
+        QQuickAnimatorController *controller = QQuickWindowPrivate::get(w->window)->animationController.data();
         if (controller->thread() != w->thread)
             controller->moveToThread(w->thread);
         if (w->thread->thread() == QThread::currentThread()) {

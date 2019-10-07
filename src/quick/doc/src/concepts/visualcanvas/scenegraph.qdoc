@@ -1016,6 +1016,14 @@ with multiple windows.
    \li Where applicable (Vulkan, Direct3D), enables the graphics API implementation's debug
    and/or validation layers, if available.
 
+  \row
+   \li \c QSG_RHI_PREFER_SOFTWARE_RENDERER
+   \li \c 1
+   \li Requests choosing an adapter or physical device that uses software-based
+   rasterization. Applicable only when the underlying API has support for
+   enumerating adapters (for example, Direct3D or Vulkan), and is ignored
+   otherwise.
+
   \endtable
 
   Applications wishing to always run with a single given graphics API, can
@@ -1031,4 +1039,9 @@ with multiple windows.
   equivalent in effect to running with both \c QSG_RHI and \c QSG_RHI_BACKEND
   set.
 
+  All QRhi backends will choose the system default GPU adapter or physical
+  device, unless overridden by \c{QSG_RHI_PREFER_SOFTWARE_RENDERER} or a
+  backend-specific variable, such as, \c{QT_D3D_ADAPTER_INDEX} or
+  \c{QT_VK_PHYSICAL_DEVICE_INDEX}. No further adapter configurability is
+  provided at this time.
  */

@@ -43,7 +43,7 @@ QML types for creating user interfaces with the QML language, and a
 \l{Qt Quick C++ Classes}{C++ API} for extending QML applications with C++ code.
 
 \note A set of Qt Quick-based UI controls is also available to create user
-interfaces. See \l{Qt Quick Controls 2} for more information.
+interfaces. See \l{Qt Quick Controls} for more information.
 
 For those new to QML and Qt Quick, please see
 \l{QML Applications}

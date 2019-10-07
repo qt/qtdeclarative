@@ -796,7 +796,7 @@ void tst_qqmlmoduleplugin::multiSingleton()
 {
     QQmlEngine engine;
     QObject obj;
-    engine.rootContext()->setContextProperty("tracker", &obj);
+    qmlRegisterSingletonInstance("Test", 1, 0, "Tracker", &obj);
     engine.addImportPath(m_importsDirectory);
     QQmlComponent component(&engine, testFileUrl("multiSingleton.qml"));
     QObject *object = component.create();

@@ -174,6 +174,7 @@ public:
 
     using RenderPassCallback = void (*)(void *);
 
+    virtual void prepareSync(qreal devicePixelRatio);
     virtual void beginNextFrame(QSGRenderer *renderer,
                                 RenderPassCallback mainPassRecordingStart,
                                 RenderPassCallback mainPassRecordingEnd,

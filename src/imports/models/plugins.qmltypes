@@ -484,6 +484,58 @@ Module {
     }
     Component { name: "QQmlDelegateModelParts"; prototype: "QObject" }
     Component {
+        name: "QQmlInstanceModel"
+        prototype: "QObject"
+        Property { name: "count"; type: "int"; isReadonly: true }
+        Signal {
+            name: "modelUpdated"
+            Parameter { name: "changeSet"; type: "QQmlChangeSet" }
+            Parameter { name: "reset"; type: "bool" }
+        }
+        Signal {
+            name: "createdItem"
+            Parameter { name: "index"; type: "int" }
+            Parameter { name: "object"; type: "QObject"; isPointer: true }
+        }
+        Signal {
+            name: "initItem"
+            Parameter { name: "index"; type: "int" }
+            Parameter { name: "object"; type: "QObject"; isPointer: true }
+        }
+        Signal {
+            name: "destroyingItem"
+            Parameter { name: "object"; type: "QObject"; isPointer: true }
+        }
+    }
+    Component {
+        name: "QQmlInstantiator"
+        defaultProperty: "delegate"
+        prototype: "QObject"
+        exports: ["QtQml.Models/Instantiator 2.14"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "active"; type: "bool" }
+        Property { name: "asynchronous"; type: "bool" }
+        Property { name: "model"; type: "QVariant" }
+        Property { name: "count"; type: "int"; isReadonly: true }
+        Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
+        Property { name: "object"; type: "QObject"; isReadonly: true; isPointer: true }
+        Signal {
+            name: "objectAdded"
+            Parameter { name: "index"; type: "int" }
+            Parameter { name: "object"; type: "QObject"; isPointer: true }
+        }
+        Signal {
+            name: "objectRemoved"
+            Parameter { name: "index"; type: "int" }
+            Parameter { name: "object"; type: "QObject"; isPointer: true }
+        }
+        Method {
+            name: "objectAt"
+            type: "QObject*"
+            Parameter { name: "index"; type: "int" }
+        }
+    }
+    Component {
         name: "QQmlListElement"
         prototype: "QObject"
         exports: ["QtQml.Models/ListElement 2.1"]

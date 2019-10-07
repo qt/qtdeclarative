@@ -1,5 +1,6 @@
 pragma Singleton
 import QtQuick 2.0
+import Test 1.0
 
 QtObject {
     property Loader _loader: Loader {
@@ -7,10 +8,10 @@ QtObject {
     }
 
     Component.onCompleted: {
-        if (tracker.objectName === "first")
-            tracker.objectName = "second"
+        if (Tracker.objectName === "first")
+            Tracker.objectName = "second"
         else
-            tracker.objectName = "first"
+            Tracker.objectName = "first"
         //console.log("created singleton", this)
     }
 }

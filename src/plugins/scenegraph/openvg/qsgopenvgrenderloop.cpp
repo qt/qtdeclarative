@@ -96,7 +96,7 @@ void QSGOpenVGRenderLoop::windowDestroyed(QQuickWindow *window)
         vg->doneCurrent();
     }
 
-    delete d->animationController;
+    d->animationController.reset();
 }
 
 void QSGOpenVGRenderLoop::exposureChanged(QQuickWindow *window)

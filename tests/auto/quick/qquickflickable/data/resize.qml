@@ -1,6 +1,7 @@
 import QtQuick 2.0
 
 Rectangle {
+    required property bool setRebound
     function resizeContent() {
         flick.resizeContent(600, 600, Qt.point(100, 100))
     }

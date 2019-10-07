@@ -41,6 +41,7 @@
 #include <QtCore/qmap.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/private/qtouchdevice_p.h>
+#include <QtGui/private/qevent_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickpointerhandler_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
@@ -1828,6 +1829,7 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
     // but that would require changing tst_qquickwindow::touchEvent_velocity(): it expects transformed velocity
 
     bool anyPressOrReleaseInside = false;
+    bool anyStationaryWithModifiedPropertyInside = false;
     bool anyGrabber = false;
     QMatrix4x4 transformMatrix(QQuickItemPrivate::get(item)->windowToItemTransform());
     for (int i = 0; i < m_pointCount; ++i) {
@@ -1860,6 +1862,8 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
             anyPressOrReleaseInside = true;
         const QTouchEvent::TouchPoint *tp = touchPointById(p->pointId());
         if (tp) {
+            if (isInside && tp->d->stationaryWithModifiedProperty)
+                anyStationaryWithModifiedPropertyInside = true;
             eventStates |= tp->state();
             QTouchEvent::TouchPoint tpCopy = *tp;
             tpCopy.setPos(item->mapFromScene(tpCopy.scenePos()));
@@ -1873,7 +1877,8 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
 
     // Now touchPoints will have only points which are inside the item.
     // But if none of them were just pressed inside, and the item has no other reason to care, ignore them anyway.
-    if (eventStates == Qt::TouchPointStationary || touchPoints.isEmpty() || (!anyPressOrReleaseInside && !anyGrabber && !isFiltering))
+    if ((eventStates == Qt::TouchPointStationary && !anyStationaryWithModifiedPropertyInside) ||
+            touchPoints.isEmpty() || (!anyPressOrReleaseInside && !anyGrabber && !isFiltering))
         return nullptr;
 
     // if all points have the same state, set the event type accordingly

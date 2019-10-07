@@ -131,7 +131,7 @@ void MetalRenderNodeResourceBuilder::build()
         g.fs = compileShaderFromSource(g.fsSource, QByteArrayLiteral("main0"));
     }
 
-    const int framesInFlight = m_window->graphicsStateInfo()->framesInFlight;
+    const int framesInFlight = m_window->graphicsStateInfo().framesInFlight;
 
     // For simplicity's sake we use shared mode (something like host visible +
     // host coherent) for everything.
@@ -258,9 +258,9 @@ void MetalRenderNode::releaseResources()
 void MetalRenderNode::render(const RenderState *state)
 {
     Q_ASSERT(m_window);
-    const QQuickWindow::GraphicsStateInfo *stateInfo = m_window->graphicsStateInfo();
-    id<MTLBuffer> vbuf = g.vbuf[stateInfo->currentFrameSlot];
-    id<MTLBuffer> ubuf = g.ubuf[stateInfo->currentFrameSlot];
+    const QQuickWindow::GraphicsStateInfo &stateInfo(m_window->graphicsStateInfo());
+    id<MTLBuffer> vbuf = g.vbuf[stateInfo.currentFrameSlot];
+    id<MTLBuffer> ubuf = g.ubuf[stateInfo.currentFrameSlot];
 
     QPointF p0(m_width - 1, m_height - 1);
     QPointF p1(0, 0);

@@ -1119,6 +1119,13 @@ GLuint QQuickWidgetPrivate::textureId() const
     return resolvedFbo ? resolvedFbo->texture()
         : (fbo ? fbo->texture() : 0);
 }
+
+QPlatformTextureList::Flags QQuickWidgetPrivate::textureListFlags()
+{
+    QPlatformTextureList::Flags flags = QWidgetPrivate::textureListFlags();
+    flags |= QPlatformTextureList::NeedsPremultipliedAlphaBlending;
+    return flags;
+}
 #endif
 
 /*!

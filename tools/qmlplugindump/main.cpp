@@ -105,12 +105,18 @@ struct QmlVersionInfo
     QString pluginImportUri;
     int majorVersion;
     int minorVersion;
+    bool strict;
 };
 
 static bool matchingImportUri(const QQmlType &ty, const QmlVersionInfo& versionInfo) {
-    return (versionInfo.pluginImportUri == ty.module()
-            && (ty.majorVersion() == versionInfo.majorVersion || ty.majorVersion() == -1))
-            || ty.module().isEmpty();
+    if (versionInfo.strict) {
+        return (versionInfo.pluginImportUri == ty.module()
+                && (ty.majorVersion() == versionInfo.majorVersion || ty.majorVersion() == -1))
+                || ty.module().isEmpty();
+    }
+    return ty.module().isEmpty()
+            || versionInfo.pluginImportUri == ty.module()
+            || ty.module().startsWith(versionInfo.pluginImportUri + QLatin1Char('.'));
 }
 
 void collectReachableMetaObjects(const QMetaObject *meta, QSet<const QMetaObject *> *metas,  const QmlVersionInfo &info, bool extended = false, bool alreadyChangedModule = false)
@@ -230,14 +236,14 @@ QByteArray convertToId(const QMetaObject *mo)
 
 // Collect all metaobjects for types registered with qmlRegisterType() without parameters
 void collectReachableMetaObjectsWithoutQmlName(QQmlEnginePrivate *engine, QSet<const QMetaObject *>& metas,
-                                               QMap<QString, QSet<QQmlType>> &compositeTypes, const QmlVersionInfo &info) {
+                                               QMap<QString, QList<QQmlType>> &compositeTypes, const QmlVersionInfo &info) {
     const auto qmlAllTypes = QQmlMetaType::qmlAllTypes();
     for (const QQmlType &ty : qmlAllTypes) {
         if (!metas.contains(ty.baseMetaObject())) {
             if (!ty.isComposite()) {
                 collectReachableMetaObjects(engine, ty, &metas, info);
             } else if (matchingImportUri(ty, info)) {
-                compositeTypes[ty.elementName()].insert(ty);
+                compositeTypes[ty.elementName()].append(ty);
             }
        }
     }
@@ -246,7 +252,7 @@ void collectReachableMetaObjectsWithoutQmlName(QQmlEnginePrivate *engine, QSet<c
 QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
                                                       QSet<const QMetaObject *> &noncreatables,
                                                       QSet<const QMetaObject *> &singletons,
-                                                      QMap<QString, QSet<QQmlType>> &compositeTypes,
+                                                      QMap<QString, QList<QQmlType>> &compositeTypes,
                                                       const QmlVersionInfo &info,
                                                       const QList<QQmlType> &skip = QList<QQmlType>()
                                                       )
@@ -266,7 +272,7 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
             qmlTypesByCppName[ty.baseMetaObject()->className()].insert(ty);
             collectReachableMetaObjects(QQmlEnginePrivate::get(engine), ty, &metas, info);
         } else {
-            compositeTypes[ty.elementName()].insert(ty);
+            compositeTypes[ty.elementName()].append(ty);
         }
     }
 
@@ -436,10 +442,11 @@ public:
     }
 
     QString getPrototypeNameForCompositeType(const QMetaObject *metaObject, QSet<QByteArray> &defaultReachableNames,
-                                             QList<const QMetaObject *> *objectsToMerge)
+                                             QList<const QMetaObject *> *objectsToMerge, const QmlVersionInfo &versionInfo)
     {
+        auto ty = QQmlMetaType::qmlType(metaObject);
         QString prototypeName;
-        if (!defaultReachableNames.contains(metaObject->className())) {
+        if (matchingImportUri(ty, versionInfo)) {
             // dynamic meta objects can break things badly
             // but extended types are usually fine
             const QMetaObjectPrivate *mop = reinterpret_cast<const QMetaObjectPrivate *>(metaObject->d.data);
@@ -451,20 +458,20 @@ public:
                 prototypeName = "QObject";
             else
                 prototypeName = getPrototypeNameForCompositeType(
-                            superMetaObject, defaultReachableNames, objectsToMerge);
+                            superMetaObject, defaultReachableNames, objectsToMerge, versionInfo);
         } else {
             prototypeName = convertToId(metaObject->className());
         }
         return prototypeName;
     }
 
-    void dumpComposite(QQmlEngine *engine, const QSet<QQmlType> &compositeType, QSet<QByteArray> &defaultReachableNames)
+    void dumpComposite(QQmlEngine *engine, const QList<QQmlType> &compositeType, QSet<QByteArray> &defaultReachableNames,  const QmlVersionInfo &versionInfo)
     {
         for (const QQmlType &type : compositeType)
-            dumpCompositeItem(engine, type, defaultReachableNames);
+            dumpCompositeItem(engine, type, defaultReachableNames, versionInfo);
     }
 
-    void dumpCompositeItem(QQmlEngine *engine, const QQmlType &compositeType, QSet<QByteArray> &defaultReachableNames)
+    void dumpCompositeItem(QQmlEngine *engine, const QQmlType &compositeType, QSet<QByteArray> &defaultReachableNames, const QmlVersionInfo &versionInfo)
     {
         QQmlComponent e(engine, compositeType.sourceUrl());
         if (!e.isReady()) {
@@ -486,7 +493,7 @@ public:
         KnownAttributes knownAttributes;
         // Get C++ base class name for the composite type
         QString prototypeName = getPrototypeNameForCompositeType(mainMeta, defaultReachableNames,
-                                                                 &objectsToMerge);
+                                                                 &objectsToMerge, versionInfo);
         qml->writeScriptBinding(QLatin1String("prototype"), enquote(prototypeName));
 
         QString qmlTyName = compositeType.qmlTypeName();
@@ -991,6 +998,16 @@ void printDebugMessage(QtMsgType, const QMessageLogContext &, const QString &msg
     // In case of QtFatalMsg the calling code will abort() when appropriate.
 }
 
+QT_BEGIN_NAMESPACE
+static bool operator<(const QQmlType &a, const QQmlType &b)
+{
+    return a.qmlTypeName() < b.qmlTypeName()
+            || (a.qmlTypeName() == b.qmlTypeName()
+                && ((a.majorVersion() < b.majorVersion())
+                    || (a.majorVersion() == b.majorVersion()
+                        && a.minorVersion() < b.minorVersion())));
+}
+QT_END_NAMESPACE
 
 int main(int argc, char *argv[])
 {
@@ -1056,6 +1073,7 @@ int main(int argc, char *argv[])
     QString dependenciesFile;
     QString mergeFile;
     bool forceQtQuickDependency = true;
+    bool strict = false;
     enum Action { Uri, Path, Builtins };
     Action action = Uri;
     {
@@ -1119,6 +1137,10 @@ int main(int argc, char *argv[])
                 continue;
             } else if (arg == QLatin1String("--qapp")
                        || arg == QLatin1String("-qapp")) {
+                continue;
+            } else if (arg == QLatin1String("--strict")
+                       || arg == QLatin1String("-strict")) {
+                strict = true;
                 continue;
             } else {
                 std::cerr << "Invalid argument: " << qPrintable(arg) << std::endl;
@@ -1216,7 +1238,6 @@ int main(int argc, char *argv[])
     // find all QMetaObjects reachable from the builtin module
     QSet<const QMetaObject *> uncreatableMetas;
     QSet<const QMetaObject *> singletonMetas;
-    QMap<QString, QSet<QQmlType>> defaultCompositeTypes;
 
     // QQuickKeyEvent, QQuickPinchEvent, QQuickDropEvent are not exported
     QSet<QByteArray> defaultReachableNames;
@@ -1225,11 +1246,13 @@ int main(int argc, char *argv[])
     QSet<const QMetaObject *> metas;
 
     // composite types we want to dump information of
-    QMap<QString, QSet<QQmlType>> compositeTypes;
+    QMap<QString, QList<QQmlType>> compositeTypes;
 
     int majorVersion = qtQmlMajorVersion, minorVersion = qtQmlMinorVersion;
+    QmlVersionInfo info;
     if (action == Builtins) {
-        QSet<const QMetaObject *> builtins = collectReachableMetaObjects(&engine, uncreatableMetas, singletonMetas, defaultCompositeTypes, {QLatin1String("Qt"), majorVersion, minorVersion});
+        QMap<QString, QList<QQmlType>> defaultCompositeTypes;
+        QSet<const QMetaObject *> builtins = collectReachableMetaObjects(&engine, uncreatableMetas, singletonMetas, defaultCompositeTypes, {QLatin1String("Qt"), majorVersion, minorVersion, strict});
         Q_ASSERT(builtins.size() == 1);
         metas.insert(*builtins.begin());
     } else {
@@ -1289,15 +1312,12 @@ int main(int argc, char *argv[])
                 return EXIT_IMPORTERROR;
             }
         }
+        info = {pluginImportUri, majorVersion, minorVersion, strict};
+        QSet<const QMetaObject *> candidates = collectReachableMetaObjects(&engine, uncreatableMetas, singletonMetas, compositeTypes, info, defaultTypes);
 
-        QSet<const QMetaObject *> candidates = collectReachableMetaObjects(&engine, uncreatableMetas, singletonMetas, compositeTypes, {pluginImportUri, majorVersion, minorVersion}, defaultTypes);
-
-        for (QString iter: compositeTypes.keys()) {
-            if (defaultCompositeTypes.contains(iter)) {
-                QSet<QQmlType> compositeTypesByName = compositeTypes.value(iter);
-                compositeTypesByName.subtract(defaultCompositeTypes.value(iter));
-                compositeTypes[iter] = compositeTypesByName;
-            }
+        for (auto it = compositeTypes.begin(), end = compositeTypes.end(); it != end; ++it) {
+            std::sort(it->begin(), it->end());
+            it->erase(std::unique(it->begin(), it->end()), it->end());
         }
 
         for (const QMetaObject *mo : qAsConst(candidates)) {
@@ -1348,9 +1368,9 @@ int main(int argc, char *argv[])
         dumper.dump(QQmlEnginePrivate::get(&engine), meta, uncreatableMetas.contains(meta), singletonMetas.contains(meta));
     }
 
-    QMap<QString, QSet<QQmlType> >::const_iterator iter = compositeTypes.constBegin();
+    QMap<QString, QList<QQmlType>>::const_iterator iter = compositeTypes.constBegin();
     for (; iter != compositeTypes.constEnd(); ++iter)
-        dumper.dumpComposite(&engine, iter.value(), defaultReachableNames);
+        dumper.dumpComposite(&engine, iter.value(), defaultReachableNames, info);
 
     // define QEasingCurve as an extension of QQmlEasingValueType, this way
     // properties using the QEasingCurve type get useful type information.

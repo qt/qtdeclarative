@@ -5,6 +5,16 @@ Rectangle {
     width: 500
     height: 500
 
+    required property bool usePopulateTransition
+    required property bool enableAddTransition
+    required property bool dynamicallyPopulate
+    required property var testModel
+    required property var model_targetItems_transitionFrom
+    required property var model_displacedItems_transitionVia
+    required property point targetItems_transitionFrom
+    required property point displacedItems_transitionVia
+    required property string testedPositioner
+
     property int duration: 50
 
     property real incrementalSize: 5

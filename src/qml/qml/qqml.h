@@ -168,11 +168,13 @@ int qmlRegisterAnonymousType(const char *uri, int versionMajor)
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
 }
 
+#if QT_DEPRECATED_SINCE(5, 14)
 template<typename T>
 QT_DEPRECATED_VERSION_X_5_14("Use qmlRegisterAnonymousType instead") int qmlRegisterType()
 {
     return qmlRegisterAnonymousType<T>("", 1);
 }
+#endif
 
 int Q_QML_EXPORT qmlRegisterTypeNotAvailable(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& message);
 
@@ -621,8 +623,10 @@ namespace QtQml {
     Q_QML_EXPORT QQmlContext *qmlContext(const QObject *);
     Q_QML_EXPORT QQmlEngine *qmlEngine(const QObject *);
 #if QT_DEPRECATED_SINCE(5, 14)
-    Q_QML_EXPORT QT_DEPRECATED QObject *qmlAttachedPropertiesObjectById(int, const QObject *, bool create = true);
-    Q_QML_EXPORT QT_DEPRECATED QObject *qmlAttachedPropertiesObject(
+    Q_QML_EXPORT QT_DEPRECATED_VERSION_X_5_14("Use qmlAttachedPropertiesObject(QObject *, QQmlAttachedPropertiesFunc, bool")
+    QObject *qmlAttachedPropertiesObjectById(int, const QObject *, bool create = true);
+    Q_QML_EXPORT QT_DEPRECATED_VERSION_X_5_14("Use qmlAttachedPropertiesObject(QObject *, QQmlAttachedPropertiesFunc, bool")
+    QObject *qmlAttachedPropertiesObject(
             int *, const QObject *, const QMetaObject *, bool create);
 #endif
     Q_QML_EXPORT QQmlAttachedPropertiesFunc qmlAttachedPropertiesFunction(QObject *,

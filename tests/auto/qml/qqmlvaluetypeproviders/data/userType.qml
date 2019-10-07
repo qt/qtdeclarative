@@ -2,6 +2,7 @@ import QtQuick 2.0
 import Test 1.0
 
 Item {
+    required property TestValueExporter testValueExporter
     property bool success: false
 
     // Test user value type stored as both var and variant

@@ -39,15 +39,15 @@ information about them.
 
 The Qt Quick Designer enables designing Qt Quick-based UIs using simple
 drag-n-drop gestures that most designers are familiar with. It offers UI
-elements from the Qt Quick and Qt Quick Controls 2 modules, as well as
+elements from the Qt Quick and Qt Quick Controls modules, as well as
 integration for custom UI elements.
 
 The following is a list of example applications that use UIs created by
 the Qt Quick Designer:
 
 \list
- \li \l{Qt Quick Controls 2 - Contact List}
- \li \l{Qt Quick Controls 2 - Flat Style}
+ \li \l{Qt Quick Controls - Contact List}
+ \li \l{Qt Quick Controls - Flat Style}
 \endlist
 
 \section2 QML Debugger and Profiler

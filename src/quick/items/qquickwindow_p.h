@@ -254,7 +254,7 @@ public:
 
     QSGRenderLoop *windowManager;
     QQuickRenderControl *renderControl;
-    QQuickAnimatorController *animationController;
+    QScopedPointer<QQuickAnimatorController> animationController;
     QScopedPointer<QTouchEvent> delayedTouch;
 
     int pointerEventRecursionGuard;

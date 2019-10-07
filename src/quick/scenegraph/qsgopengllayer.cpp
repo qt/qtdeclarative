@@ -408,7 +408,7 @@ void QSGOpenGLLayer::grab()
                     m_mirrorVertical ? m_rect.bottom() : m_rect.top(),
                     m_mirrorHorizontal ? -m_rect.width() : m_rect.width(),
                     m_mirrorVertical ? -m_rect.height() : m_rect.height());
-    m_renderer->setProjectionMatrixToRect(mirrored, false);
+    m_renderer->setProjectionMatrixToRect(mirrored);
     m_renderer->setClearColor(Qt::transparent);
 
     if (m_multisampling) {

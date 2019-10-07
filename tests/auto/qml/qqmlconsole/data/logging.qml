@@ -31,6 +31,8 @@ import QtQuick 2.0
 
 QtObject {
     id:root
+    required property var customObject
+    required property var stringListProperty
 
     function consoleCount() {
         console.count("console.count", "Ignore additional argument");
@@ -67,7 +69,7 @@ QtObject {
         console.log(1, "pong!", new Object);
         console.log(1, ["ping","pong"], new Object, 2);
 
-        console.log(contextStringListProperty);
+        console.log(stringListProperty);
         console.log(customObject);
         console.log([[1,2,3,[2,2,2,2],4],[5,6,7,8]]);
 

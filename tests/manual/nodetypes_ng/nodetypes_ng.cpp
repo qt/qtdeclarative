@@ -301,6 +301,13 @@ int main(int argc, char **argv)
         fmt.setProfile(QSurfaceFormat::CoreProfile);
         view.setFormat(fmt);
     }
+    if (app.arguments().contains(QLatin1String("--transparent"))) {
+        qDebug("Requesting alpha channel for the window and using Qt::transparent as background");
+        QSurfaceFormat fmt = view.format();
+        fmt.setAlphaBufferSize(8);
+        view.setFormat(fmt);
+        view.setColor(Qt::transparent);
+    }
 
     view.engine()->rootContext()->setContextProperty(QLatin1String("helper"), &helper);
 

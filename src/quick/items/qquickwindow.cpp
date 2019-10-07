@@ -424,6 +424,13 @@ void QQuickWindowPrivate::syncSceneGraph()
 {
     Q_Q(QQuickWindow);
 
+    // Calculate the dpr the same way renderSceneGraph() will.
+    qreal devicePixelRatio = q->effectiveDevicePixelRatio();
+    if (renderTargetId && !QQuickRenderControl::renderWindowFor(q))
+        devicePixelRatio = 1;
+
+    context->prepareSync(devicePixelRatio);
+
     animationController->beforeNodeSync();
 
     emit q->beforeSynchronizing();
@@ -500,10 +507,10 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             renderer->setDeviceRect(rect);
             renderer->setViewportRect(rect);
             if (QQuickRenderControl::renderWindowFor(q)) {
-                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size), false);
+                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size));
                 renderer->setDevicePixelRatio(devicePixelRatio);
             } else {
-                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), rect.size()), false);
+                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), rect.size()));
                 renderer->setDevicePixelRatio(1);
             }
         } else {
@@ -520,7 +527,10 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             renderer->setDeviceRect(rect);
             renderer->setViewportRect(rect);
             const bool flipY = rhi ? !rhi->isYUpInNDC() : false;
-            renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), logicalSize), flipY);
+            QSGAbstractRenderer::MatrixTransformFlags matrixFlags = 0;
+            if (flipY)
+                matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
+            renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), logicalSize), matrixFlags);
             renderer->setDevicePixelRatio(devicePixelRatio);
         }
 
@@ -641,7 +651,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
         q->setVulkanInstance(QSGRhiSupport::vulkanInstance());
 #endif
 
-    animationController = new QQuickAnimatorController(q);
+    animationController.reset(new QQuickAnimatorController(q));
 
     QObject::connect(context, SIGNAL(initialized()), q, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
     QObject::connect(context, SIGNAL(invalidated()), q, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
@@ -4749,7 +4759,7 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \return a pointer to a GraphicsStateInfo struct describing some of the
+    \return a reference to a GraphicsStateInfo struct describing some of the
     RHI's internal state, in particular, the double or tripple buffering status
     of the backend (such as, the Vulkan or Metal integrations). This is
     relevant when the underlying graphics APIs is Vulkan or Metal, and the
@@ -4757,14 +4767,14 @@ void QQuickWindow::resetOpenGLState()
     its own often-changing resources, such as, uniform buffers, in order to
     avoid stalling the pipeline.
  */
-const QQuickWindow::GraphicsStateInfo *QQuickWindow::graphicsStateInfo()
+const QQuickWindow::GraphicsStateInfo &QQuickWindow::graphicsStateInfo()
 {
     Q_D(QQuickWindow);
     if (d->rhi) {
         d->rhiStateInfo.currentFrameSlot = d->rhi->currentFrameSlot();
         d->rhiStateInfo.framesInFlight = d->rhi->resourceLimit(QRhi::FramesInFlight);
     }
-    return &d->rhiStateInfo;
+    return d->rhiStateInfo;
 }
 
 /*!

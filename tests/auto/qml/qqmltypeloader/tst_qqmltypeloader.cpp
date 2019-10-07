@@ -60,6 +60,7 @@ private slots:
     void implicitComponentModule();
     void qrcRootPathUrl();
     void implicitImport();
+    void compositeSingletonCycle();
 
 private:
     void checkSingleton(const QString & dataDirectory);
@@ -443,7 +444,7 @@ void tst_QQMLTypeLoader::redirect()
     component.loadUrl(server.urlString("/Load.qml"), QQmlComponent::Asynchronous);
     QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
 
-    QObject *object = component.create();
+    QScopedPointer<QObject> object {component.create()};
     QTRY_COMPARE(object->property("xy").toInt(), 323232);
 }
 
@@ -537,6 +538,23 @@ void tst_QQMLTypeLoader::implicitImport()
     QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
+}
+
+void tst_QQMLTypeLoader::compositeSingletonCycle()
+{
+    TestHTTPServer server;
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
+    QVERIFY(server.serveDirectory(dataDirectory()));
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    engine.addImportPath(server.baseUrl().toString());
+    component.loadUrl(server.urlString("Com/Orga/Handlers/Handler.qml"), QQmlComponent::Asynchronous);
+    QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> object {component.create()};
+    QVERIFY(object);
+    QCOMPARE(qvariant_cast<QColor>(object->property("color")), QColorConstants::Black);
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

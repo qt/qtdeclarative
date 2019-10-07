@@ -47,8 +47,8 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Package
     \instantiates QQuickPackage
-    \inqmlmodule QtQuick
-    \ingroup qtquick-views
+    \inqmlmodule QtQml.Models
+    \ingroup qtquick-models
     \brief Specifies a collection of named items.
 
     The Package type is used in conjunction with
@@ -70,6 +70,9 @@ QT_BEGIN_NAMESPACE
     a model which provides the chosen delegate.
 
     \snippet package/view.qml 0
+
+    \note Package is part of QtQml.Models since version 2.14 and part of QtQuick since version 2.0.
+    Importing Package via QtQuick is deprecated since Qt 5.14.
 
     \sa {Qt Quick Examples - Views}, {Qt Quick Demo - Photo Viewer}, {Qt QML}
 */

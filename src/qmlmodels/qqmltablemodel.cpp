@@ -64,7 +64,7 @@ Q_LOGGING_CATEGORY(lcTableModel, "qt.qml.tablemodel")
     The model's initial row data is set with either the \l rows property or by
     calling \l appendRow(). Each column in the model is specified by declaring
     a \l TableModelColumn instance, where the order of each instance determines
-    its column index. Once the model's \l Component.completed() signal has been
+    its column index. Once the model's \l Component::completed() signal has been
     emitted, the columns and roles will have been established and are then
     fixed for the lifetime of the model.
 

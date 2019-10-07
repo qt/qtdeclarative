@@ -69,6 +69,7 @@ void QQmlMetaTypeData::registerType(QQmlTypePrivate *priv)
         if (!types.at(i).isValid()) {
             types[i] = QQmlType(priv);
             priv->index = i;
+            priv->release();
             return;
         }
     }

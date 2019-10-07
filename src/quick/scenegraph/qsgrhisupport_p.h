@@ -114,6 +114,7 @@ public:
     bool isDebugLayerRequested() const { return m_debugLayer; }
     bool isProfilingRequested() const { return m_profile; }
     bool isShaderEffectDebuggingRequested() const { return m_shaderEffectDebug; }
+    bool isSoftwareRendererRequested() const { return m_preferSoftwareRenderer; }
 
     QSurface::SurfaceType windowSurfaceType() const;
 
@@ -138,11 +139,13 @@ private:
         uint rhi : 1;
     } m_requested;
     QRhi::Implementation m_rhiBackend = QRhi::Null;
+    int m_killDeviceFrameCount;
     uint m_set : 1;
     uint m_enableRhi : 1;
     uint m_debugLayer : 1;
     uint m_profile : 1;
     uint m_shaderEffectDebug : 1;
+    uint m_preferSoftwareRenderer : 1;
 };
 
 // Sends QRhi resource statistics over a QTcpSocket. To be initialized by the

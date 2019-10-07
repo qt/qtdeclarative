@@ -305,6 +305,7 @@ void QQmlTypeData::done()
         QQmlJS::DiagnosticMessage error = buildTypeResolutionCaches(&typeNameCache, &resolvedTypeCache);
         if (error.isValid()) {
             setError(error);
+            qDeleteAll(resolvedTypeCache);
             return;
         }
     }
@@ -614,6 +615,8 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
     QQmlTypeCompiler compiler(enginePrivate, this, m_document.data(), typeNameCache, resolvedTypeCache, dependencyHasher);
     m_compiledData = compiler.compile();
     if (!m_compiledData) {
+        qDeleteAll(*resolvedTypeCache);
+        resolvedTypeCache->clear();
         setError(compiler.compilationErrors());
         return;
     }
@@ -678,7 +681,7 @@ void QQmlTypeData::resolveTypes()
 
         if (ref.type.isCompositeSingleton()) {
             ref.typeData = typeLoader()->getType(ref.type.sourceUrl());
-            if (ref.typeData->status() == QQmlDataBlob::ResolvingDependencies) {
+            if (ref.typeData->status() == QQmlDataBlob::ResolvingDependencies || m_waitingOnMe.contains(ref.typeData.data())) {
                 // TODO: give an error message? If so, we should record and show the path of the cycle.
                 continue;
             }

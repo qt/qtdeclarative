@@ -795,7 +795,7 @@ QQuickShapeLinearGradientRhiShader::QQuickShapeLinearGradientRhiShader()
     setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/lineargradient.frag.qsb"));
 }
 
-bool QQuickShapeLinearGradientRhiShader::updateUniformData(const RenderState &state,
+bool QQuickShapeLinearGradientRhiShader::updateUniformData(RenderState &state,
                                                            QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     Q_ASSERT(oldMaterial == nullptr || newMaterial->type() == oldMaterial->type());
@@ -834,7 +834,7 @@ bool QQuickShapeLinearGradientRhiShader::updateUniformData(const RenderState &st
     return changed;
 }
 
-void QQuickShapeLinearGradientRhiShader::updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+void QQuickShapeLinearGradientRhiShader::updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
                                                             QSGMaterial *newMaterial, QSGMaterial *)
 {
     if (binding != 1)
@@ -968,7 +968,7 @@ QQuickShapeRadialGradientRhiShader::QQuickShapeRadialGradientRhiShader()
     setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/radialgradient.frag.qsb"));
 }
 
-bool QQuickShapeRadialGradientRhiShader::updateUniformData(const RenderState &state,
+bool QQuickShapeRadialGradientRhiShader::updateUniformData(RenderState &state,
                                                            QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     Q_ASSERT(oldMaterial == nullptr || newMaterial->type() == oldMaterial->type());
@@ -1026,7 +1026,7 @@ bool QQuickShapeRadialGradientRhiShader::updateUniformData(const RenderState &st
     return changed;
 }
 
-void QQuickShapeRadialGradientRhiShader::updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+void QQuickShapeRadialGradientRhiShader::updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
                                                             QSGMaterial *newMaterial, QSGMaterial *)
 {
     if (binding != 1)
@@ -1158,7 +1158,7 @@ QQuickShapeConicalGradientRhiShader::QQuickShapeConicalGradientRhiShader()
     setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/conicalgradient.frag.qsb"));
 }
 
-bool QQuickShapeConicalGradientRhiShader::updateUniformData(const RenderState &state,
+bool QQuickShapeConicalGradientRhiShader::updateUniformData(RenderState &state,
                                                             QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     Q_ASSERT(oldMaterial == nullptr || newMaterial->type() == oldMaterial->type());
@@ -1200,7 +1200,7 @@ bool QQuickShapeConicalGradientRhiShader::updateUniformData(const RenderState &s
     return changed;
 }
 
-void QQuickShapeConicalGradientRhiShader::updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+void QQuickShapeConicalGradientRhiShader::updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
                                                              QSGMaterial *newMaterial, QSGMaterial *)
 {
     if (binding != 1)

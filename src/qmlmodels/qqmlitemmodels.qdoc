@@ -62,7 +62,7 @@
 
     \section1 QModelIndexList Type
 
-    \l QModelIndexList is exposed in QML as a JavaScript array. Conversions are
+    QModelIndexList is exposed in QML as a JavaScript array. Conversions are
     automatically made from and to C++. In fact, any JavaScript array can be
     converted back to QModelIndexList, with non-QModelIndex objects replaced by
     invalid \l{QModelIndex}es.

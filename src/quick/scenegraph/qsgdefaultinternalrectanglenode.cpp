@@ -111,7 +111,7 @@ class SmoothColorMaterialRhiShader : public QSGMaterialRhiShader
 public:
     SmoothColorMaterialRhiShader();
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
 SmoothColorMaterialRhiShader::SmoothColorMaterialRhiShader()
@@ -120,7 +120,7 @@ SmoothColorMaterialRhiShader::SmoothColorMaterialRhiShader()
     setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/smoothcolor.frag.qsb"));
 }
 
-bool SmoothColorMaterialRhiShader::updateUniformData(const RenderState &state, QSGMaterial *, QSGMaterial *oldMaterial)
+bool SmoothColorMaterialRhiShader::updateUniformData(RenderState &state, QSGMaterial *, QSGMaterial *oldMaterial)
 {
     bool changed = false;
     QByteArray *buf = state.uniformData();

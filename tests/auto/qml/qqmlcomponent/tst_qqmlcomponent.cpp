@@ -225,12 +225,12 @@ void tst_qqmlcomponent::qmlCreateObjectAutoParent()
     QVERIFY(window_item);
     QVERIFY(window_window);
 
-    QCOMPARE(qtobject_item->metaObject()->className(), "QQuickItem");
-    QCOMPARE(qtobject_window->metaObject()->className(), "QQuickWindow");
-    QCOMPARE(item_item->metaObject()->className(), "QQuickItem");
-    QCOMPARE(item_window->metaObject()->className(), "QQuickWindow");
-    QCOMPARE(window_item->metaObject()->className(), "QQuickItem");
-    QCOMPARE(window_window->metaObject()->className(), "QQuickWindow");
+    QVERIFY(QByteArray(qtobject_item->metaObject()->className()).startsWith("QQuickItem"));
+    QVERIFY(QByteArray(qtobject_window->metaObject()->className()).startsWith("QQuickWindow"));
+    QVERIFY(QByteArray(item_item->metaObject()->className()).startsWith("QQuickItem"));
+    QVERIFY(QByteArray(item_window->metaObject()->className()).startsWith("QQuickWindow"));
+    QVERIFY(QByteArray(window_item->metaObject()->className()).startsWith("QQuickItem"));
+    QVERIFY(QByteArray(window_window->metaObject()->className()).startsWith("QQuickWindow"));
 
     QCOMPARE(qtobject_qtobject->parent(), qtobjectParent);
     QCOMPARE(qtobject_item->parent(), qtobjectParent);

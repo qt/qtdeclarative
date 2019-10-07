@@ -158,6 +158,9 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
     QmlIR::QmlUnitGenerator qmlGenerator;
     qmlGenerator.generate(*document, dependencyHasher);
 
+    if (!errors.isEmpty())
+        return nullptr;
+
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit
             = QV4::ExecutableCompilationUnit::create(std::move(
                     document->javaScriptCompilationUnit));
@@ -165,11 +168,7 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
     compilationUnit->resolvedTypes = *resolvedTypes;
     compilationUnit->propertyCaches = std::move(m_propertyCaches);
     Q_ASSERT(compilationUnit->propertyCaches.count() == static_cast<int>(compilationUnit->objectCount()));
-
-    if (errors.isEmpty())
-        return compilationUnit;
-    else
-        return nullptr;
+    return compilationUnit;
 }
 
 void QQmlTypeCompiler::recordError(const QV4::CompiledData::Location &location, const QString &description)

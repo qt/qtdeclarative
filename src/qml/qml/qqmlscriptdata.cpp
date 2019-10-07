@@ -156,11 +156,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
 
 void QQmlScriptData::clear()
 {
-    if (typeNameCache) {
-        typeNameCache->release();
-        typeNameCache = nullptr;
-    }
-
+    typeNameCache = nullptr;
     scripts.clear();
 
     // An addref() was made when the QQmlCleanup was added to the engine.
