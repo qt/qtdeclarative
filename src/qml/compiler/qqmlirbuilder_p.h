@@ -453,7 +453,7 @@ public:
 
     static QString asString(QQmlJS::AST::UiQualifiedId *node);
     QStringRef asStringRef(QQmlJS::AST::Node *node);
-    static void extractVersion(QStringRef string, int *maj, int *min);
+    static void extractVersion(const QStringRef &string, int *maj, int *min);
     QStringRef textRefAt(const QQmlJS::AST::SourceLocation &loc) const
     { return QStringRef(&sourceCode, loc.offset, loc.length); }
     QStringRef textRefAt(const QQmlJS::AST::SourceLocation &first,

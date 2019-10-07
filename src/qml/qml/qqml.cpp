@@ -79,6 +79,13 @@ int qmlTypeId(const char *uri, int versionMajor, int versionMinor, const char *q
 // From qqmlprivate.h
 QObject *QQmlPrivate::RegisterSingletonFunctor::operator()(QQmlEngine *qeng, QJSEngine *)
 {
+    if (!m_object) {
+        QQmlError error;
+        error.setDescription(QLatin1String("The registered singleton has already been deleted. Ensure that it outlives the engine."));
+        QQmlEnginePrivate::get(qeng)->warning(qeng, error);
+        return nullptr;
+    }
+
     if (qeng->thread() != m_object->thread()) {
         QQmlError error;
         error.setDescription(QLatin1String("Registered object must live in the same thread as the engine it was registered with"));

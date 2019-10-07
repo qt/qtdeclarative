@@ -358,7 +358,7 @@ void QQmlContext::setContextProperties(const QVector<PropertyPair> &properties)
     data->expressions = nullptr;
     data->childContexts = nullptr;
 
-    for (auto property : properties)
+    for (const auto &property : properties)
         setContextProperty(property.name, property.value);
 
     data->expressions = expressions;

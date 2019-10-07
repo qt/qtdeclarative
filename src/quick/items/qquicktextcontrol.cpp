@@ -1397,7 +1397,7 @@ QVariant QQuickTextControl::inputMethodQuery(Qt::InputMethodQuery property) cons
     return inputMethodQuery(property, QVariant());
 }
 
-QVariant QQuickTextControl::inputMethodQuery(Qt::InputMethodQuery property, QVariant argument) const
+QVariant QQuickTextControl::inputMethodQuery(Qt::InputMethodQuery property, const QVariant &argument) const
 {
     Q_D(const QQuickTextControl);
     QTextBlock block = d->cursor.block();

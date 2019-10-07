@@ -638,7 +638,7 @@ void QQuickTextNodeEngine::addBorder(const QRectF &rect, qreal border,
                                      QTextFrameFormat::BorderStyle borderStyle,
                                      const QBrush &borderBrush)
 {
-    QColor color = borderBrush.color();
+    const QColor &color = borderBrush.color();
 
     // Currently we don't support other styles than solid
     Q_UNUSED(borderStyle);

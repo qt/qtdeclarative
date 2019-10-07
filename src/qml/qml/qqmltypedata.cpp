@@ -209,7 +209,7 @@ void QQmlTypeData::createTypeAndPropertyCaches(
 
     QQmlPropertyCacheAliasCreator<QV4::ExecutableCompilationUnit> aliasCreator(
             &m_compiledData->propertyCaches, m_compiledData.data());
-    aliasCreator.appendAliasPropertiesToMetaObjects();
+    aliasCreator.appendAliasPropertiesToMetaObjects(engine);
 
     pendingGroupPropertyBindings.resolveMissingPropertyCaches(engine, &m_compiledData->propertyCaches);
 }

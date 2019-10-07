@@ -174,7 +174,7 @@ public:
 
 #if QT_CONFIG(im)
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
-    Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, QVariant argument) const;
+    Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, const QVariant &argument) const;
 #endif
 
     virtual QMimeData *createMimeDataFromSelection() const;

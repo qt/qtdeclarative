@@ -585,13 +585,13 @@ public:
 
     QQmlPropertyCacheAliasCreator(QQmlPropertyCacheVector *propertyCaches, const ObjectContainer *objectContainer);
 
-    void appendAliasPropertiesToMetaObjects();
+    void appendAliasPropertiesToMetaObjects(QQmlEnginePrivate *enginePriv);
 
-    QQmlJS::DiagnosticMessage appendAliasesToPropertyCache(const CompiledObject &component, int objectIndex);
+    QQmlJS::DiagnosticMessage appendAliasesToPropertyCache(const CompiledObject &component, int objectIndex, QQmlEnginePrivate *enginePriv);
 
 private:
-    void appendAliasPropertiesInMetaObjectsWithinComponent(const CompiledObject &component, int firstObjectIndex);
-    QQmlJS::DiagnosticMessage propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, int *rev, QQmlPropertyData::Flags *propertyFlags);
+    void appendAliasPropertiesInMetaObjectsWithinComponent(const CompiledObject &component, int firstObjectIndex, QQmlEnginePrivate *enginePriv);
+    QQmlJS::DiagnosticMessage propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, int *rev, QQmlPropertyData::Flags *propertyFlags, QQmlEnginePrivate *enginePriv);
 
     void collectObjectsWithAliasesRecursively(int objectIndex, QVector<int> *objectsWithAliases) const;
 
@@ -610,7 +610,7 @@ inline QQmlPropertyCacheAliasCreator<ObjectContainer>::QQmlPropertyCacheAliasCre
 }
 
 template <typename ObjectContainer>
-inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertiesToMetaObjects()
+inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertiesToMetaObjects(QQmlEnginePrivate *enginePriv)
 {
     // skip the root object (index 0) as that one does not have a first object index originating
     // from a binding.
@@ -620,15 +620,15 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertie
             continue;
 
         const auto rootBinding = component.bindingsBegin();
-        appendAliasPropertiesInMetaObjectsWithinComponent(component, rootBinding->value.objectIndex);
+        appendAliasPropertiesInMetaObjectsWithinComponent(component, rootBinding->value.objectIndex, enginePriv);
     }
 
     const int rootObjectIndex = 0;
-    appendAliasPropertiesInMetaObjectsWithinComponent(*objectContainer->objectAt(rootObjectIndex), rootObjectIndex);
+    appendAliasPropertiesInMetaObjectsWithinComponent(*objectContainer->objectAt(rootObjectIndex), rootObjectIndex, enginePriv);
 }
 
 template <typename ObjectContainer>
-inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertiesInMetaObjectsWithinComponent(const CompiledObject &component, int firstObjectIndex)
+inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertiesInMetaObjectsWithinComponent(const CompiledObject &component, int firstObjectIndex, QQmlEnginePrivate *enginePriv)
 {
     QVector<int> objectsWithAliases;
     collectObjectsWithAliasesRecursively(firstObjectIndex, &objectsWithAliases);
@@ -668,7 +668,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertie
             const CompiledObject &object = *objectContainer->objectAt(objectIndex);
 
             if (allAliasTargetsExist(object)) {
-                appendAliasesToPropertyCache(component, objectIndex);
+                appendAliasesToPropertyCache(component, objectIndex, enginePriv);
             } else {
                 pendingObjects.append(objectIndex);
             }
@@ -702,9 +702,8 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::collectObjectsWithAl
 }
 
 template <typename ObjectContainer>
-inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias(
-        const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, int *minorVersion,
-        QQmlPropertyData::Flags *propertyFlags)
+inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, int *minorVersion,
+        QQmlPropertyData::Flags *propertyFlags, QQmlEnginePrivate *enginePriv)
 {
     *type = 0;
     bool writable = false;
@@ -736,7 +735,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>:
             lastAlias = targetAlias;
         } while (lastAlias->aliasToLocalAlias);
 
-        return propertyDataForAlias(component, *lastAlias, type, minorVersion, propertyFlags);
+        return propertyDataForAlias(component, *lastAlias, type, minorVersion, propertyFlags, enginePriv);
     }
 
     const int targetObjectIndex = objectForId(component, alias.targetObjectId);
@@ -768,29 +767,46 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>:
 
         QQmlPropertyCache *targetCache = propertyCaches->at(targetObjectIndex);
         Q_ASSERT(targetCache);
+
         QQmlPropertyData *targetProperty = targetCache->property(coreIndex);
         Q_ASSERT(targetProperty);
 
-        *type = targetProperty->propType();
+        // for deep aliases, valueTypeIndex is always set
+        if (!QQmlValueTypeFactory::isValueType(targetProperty->propType()) && valueTypeIndex != -1) {
+            // deep alias property
+            *type = targetProperty->propType();
+            targetCache = enginePriv->propertyCacheForType(*type);
+            Q_ASSERT(targetCache);
+            targetProperty = targetCache->property(valueTypeIndex);
 
-        writable = targetProperty->isWritable();
-        resettable = targetProperty->isResettable();
 
-        if (valueTypeIndex != -1) {
-            const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(*type);
-            if (valueTypeMetaObject->property(valueTypeIndex).isEnumType())
-                *type = QVariant::Int;
-            else
-                *type = valueTypeMetaObject->property(valueTypeIndex).userType();
+            *type = targetProperty->propType();
+            writable = targetProperty->isWritable();
+            resettable = targetProperty->isResettable();
+
         } else {
-            if (targetProperty->isEnum()) {
-                *type = QVariant::Int;
-            } else {
-                // Copy type flags
-                propertyFlags->copyPropertyTypeFlags(targetProperty->flags());
+            // value type or primitive type or enum
+            *type = targetProperty->propType();
 
-                if (targetProperty->isVarProperty())
-                    propertyFlags->type = QQmlPropertyData::Flags::QVariantType;
+            writable = targetProperty->isWritable();
+            resettable = targetProperty->isResettable();
+
+            if (valueTypeIndex != -1) {
+                const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(*type);
+                if (valueTypeMetaObject->property(valueTypeIndex).isEnumType())
+                    *type = QVariant::Int;
+                else
+                    *type = valueTypeMetaObject->property(valueTypeIndex).userType();
+            } else {
+                if (targetProperty->isEnum()) {
+                    *type = QVariant::Int;
+                } else {
+                    // Copy type flags
+                    propertyFlags->copyPropertyTypeFlags(targetProperty->flags());
+
+                    if (targetProperty->isVarProperty())
+                        propertyFlags->type = QQmlPropertyData::Flags::QVariantType;
+                }
             }
         }
     }
@@ -802,7 +818,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>:
 
 template <typename ObjectContainer>
 inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesToPropertyCache(
-        const CompiledObject &component, int objectIndex)
+        const CompiledObject &component, int objectIndex, QQmlEnginePrivate *enginePriv)
 {
     const CompiledObject &object = *objectContainer->objectAt(objectIndex);
     if (!object.aliasCount())
@@ -823,7 +839,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>:
         int type = 0;
         int minorVersion = 0;
         QQmlPropertyData::Flags propertyFlags;
-        QQmlJS::DiagnosticMessage error = propertyDataForAlias(component, *alias, &type, &minorVersion, &propertyFlags);
+        QQmlJS::DiagnosticMessage error = propertyDataForAlias(component, *alias, &type, &minorVersion, &propertyFlags, enginePriv);
         if (error.isValid())
             return error;
 

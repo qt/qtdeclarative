@@ -216,7 +216,7 @@ void QQuickShortcut::setSequences(const QVariantList &values)
 
     bool changed = !remainder.isEmpty();
     for (int i = 0; i < values.count(); ++i) {
-        QVariant value = values.at(i);
+        const QVariant &value = values.at(i);
         Shortcut& shortcut = m_shortcuts[i];
         if (value == shortcut.userValue)
             continue;

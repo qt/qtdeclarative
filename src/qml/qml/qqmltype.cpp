@@ -393,7 +393,7 @@ void QQmlTypePrivate::createEnumConflictReport(const QMetaObject *metaObject, co
 
     qWarning().noquote() << QLatin1String("Possible conflicting items:");
     // find items with conflicting key
-    for (const auto i : enumInfoList) {
+    for (const auto &i : qAsConst(enumInfoList)) {
         if (i.enumKey == conflictingKey)
         qWarning().noquote().nospace() << "    " << i.metaObjectName << "." << i.enumName << "." << i.enumKey << " from scope "
                                            << i.metaEnumScope << " injected by " << i.path.join(QLatin1String("->"));

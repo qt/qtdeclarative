@@ -491,7 +491,7 @@ bool QQmlTypeLoader::Blob::fetchQmldir(const QUrl &url, PendingImportPtr import,
 {
     QQmlRefPointer<QQmlQmldirData> data = typeLoader()->getQmldir(url);
 
-    data->setImport(this, import);
+    data->setImport(this, std::move(import));
     data->setPriority(this, priority);
 
     if (data->status() == Error) {

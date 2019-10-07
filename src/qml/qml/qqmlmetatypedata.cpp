@@ -150,7 +150,7 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, int min
     bool hasCopied = false;
 
     for (int ii = 0; ii < types.count(); ++ii) {
-        QQmlType currentType = types.at(ii);
+        const QQmlType &currentType = types.at(ii);
         if (!currentType.isValid())
             continue;
 
