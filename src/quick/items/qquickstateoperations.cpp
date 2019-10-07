@@ -200,7 +200,7 @@ QQmlScriptString QQuickParentChange::x() const
     return d->xString.value;
 }
 
-void QQuickParentChange::setX(QQmlScriptString x)
+void QQuickParentChange::setX(const QQmlScriptString &x)
 {
     Q_D(QQuickParentChange);
     d->xString = x;
@@ -218,7 +218,7 @@ QQmlScriptString QQuickParentChange::y() const
     return d->yString.value;
 }
 
-void QQuickParentChange::setY(QQmlScriptString y)
+void QQuickParentChange::setY(const QQmlScriptString &y)
 {
     Q_D(QQuickParentChange);
     d->yString = y;
@@ -236,7 +236,7 @@ QQmlScriptString QQuickParentChange::width() const
     return d->widthString.value;
 }
 
-void QQuickParentChange::setWidth(QQmlScriptString width)
+void QQuickParentChange::setWidth(const QQmlScriptString &width)
 {
     Q_D(QQuickParentChange);
     d->widthString = width;
@@ -254,7 +254,7 @@ QQmlScriptString QQuickParentChange::height() const
     return d->heightString.value;
 }
 
-void QQuickParentChange::setHeight(QQmlScriptString height)
+void QQuickParentChange::setHeight(const QQmlScriptString &height)
 {
     Q_D(QQuickParentChange);
     d->heightString = height;
@@ -272,7 +272,7 @@ QQmlScriptString QQuickParentChange::scale() const
     return d->scaleString.value;
 }
 
-void QQuickParentChange::setScale(QQmlScriptString scale)
+void QQuickParentChange::setScale(const QQmlScriptString &scale)
 {
     Q_D(QQuickParentChange);
     d->scaleString = scale;
@@ -290,7 +290,7 @@ QQmlScriptString QQuickParentChange::rotation() const
     return d->rotationString.value;
 }
 
-void QQuickParentChange::setRotation(QQmlScriptString rotation)
+void QQuickParentChange::setRotation(const QQmlScriptString &rotation)
 {
     Q_D(QQuickParentChange);
     d->rotationString = rotation;

@@ -295,8 +295,7 @@ void Atlas::enqueueTextureUpload(TextureBase *t, QRhiResourceUpdateBatch *resour
     const int tmpBitsSize = tmpBits.size() * 4;
     const quint32 *src = reinterpret_cast<const quint32 *>(image.constBits());
     quint32 *dst = tmpBits.data();
-    QVector<QRhiTextureUploadEntry> entries;
-    entries.reserve(5);
+    QVarLengthArray<QRhiTextureUploadEntry, 5> entries;
 
     // top row, padding corners
     dst[0] = src[0];
@@ -361,7 +360,9 @@ void Atlas::enqueueTextureUpload(TextureBase *t, QRhiResourceUpdateBatch *resour
         entries.append(QRhiTextureUploadEntry(0, 0, subresDesc));
     }
 
-    resourceUpdates->uploadTexture(m_texture, QRhiTextureUploadDescription(entries));
+    QRhiTextureUploadDescription desc;
+    desc.setEntries(entries.cbegin(), entries.cend());
+    resourceUpdates->uploadTexture(m_texture, desc);
 
     const QSize textureSize = t->textureSize();
     if (textureSize.width() > m_atlas_transient_image_threshold || textureSize.height() > m_atlas_transient_image_threshold)

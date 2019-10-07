@@ -182,7 +182,9 @@ void QSGRhiDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> &gly
     for (int i = 0; i < glyphs.size(); ++i) {
         TextureInfo *texInfo = m_glyphsTexture.value(glyphs.at(i).glyph());
         if (!texInfo->uploads.isEmpty()) {
-            m_resourceUpdates->uploadTexture(texInfo->texture, texInfo->uploads);
+            QRhiTextureUploadDescription desc;
+            desc.setEntries(texInfo->uploads.cbegin(), texInfo->uploads.cend());
+            m_resourceUpdates->uploadTexture(texInfo->texture, desc);
             texInfo->uploads.clear();
         }
     }

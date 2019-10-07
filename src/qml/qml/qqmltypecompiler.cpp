@@ -1016,7 +1016,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases(int componentIndex)
             }
 
             if (result == AllAliasesResolved) {
-                QQmlJS::DiagnosticMessage error = aliasCacheCreator.appendAliasesToPropertyCache(*qmlObjects->at(componentIndex), objectIndex);
+                QQmlJS::DiagnosticMessage error = aliasCacheCreator.appendAliasesToPropertyCache(*qmlObjects->at(componentIndex), objectIndex, enginePrivate);
                 if (error.isValid()) {
                     recordError(error);
                     return false;
@@ -1143,23 +1143,42 @@ QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
             if (!subProperty.isEmpty()) {
                 const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(targetProperty->propType());
                 if (!valueTypeMetaObject) {
-                    *error = qQmlCompileError(
-                            alias->referenceLocation,
-                            tr("Invalid alias target location: %1").arg(subProperty.toString()));
-                    break;
-                }
+                    // could be a deep alias
+                    bool isDeepAlias = subProperty.at(0).isLower();
+                    if (isDeepAlias) {
+                        isDeepAlias = false;
+                        for (auto it = targetObject->bindingsBegin(); it != targetObject->bindingsEnd(); ++it) {
+                            auto binding = *it;
+                            if (compiler->stringAt(binding.propertyNameIndex) == property) {
+                                resolver = QQmlPropertyResolver(propertyCaches.at(binding.value.objectIndex));
+                                QQmlPropertyData *actualProperty = resolver.property(subProperty.toString());
+                                if (actualProperty) {
+                                    propIdx = QQmlPropertyIndex(propIdx.coreIndex(), actualProperty->coreIndex());
+                                    isDeepAlias = true;
+                                }
+                            }
+                        }
+                    }
+                    if (!isDeepAlias) {
+                        *error = qQmlCompileError(
+                                alias->referenceLocation,
+                                tr("Invalid alias target location: %1").arg(subProperty.toString()));
+                        break;
+                    }
+                } else {
 
-                int valueTypeIndex =
-                        valueTypeMetaObject->indexOfProperty(subProperty.toString().toUtf8().constData());
-                if (valueTypeIndex == -1) {
-                    *error = qQmlCompileError(
-                            alias->referenceLocation,
-                            tr("Invalid alias target location: %1").arg(subProperty.toString()));
-                    break;
-                }
-                Q_ASSERT(valueTypeIndex <= 0x0000FFFF);
+                    int valueTypeIndex =
+                            valueTypeMetaObject->indexOfProperty(subProperty.toString().toUtf8().constData());
+                    if (valueTypeIndex == -1) {
+                        *error = qQmlCompileError(
+                                alias->referenceLocation,
+                                tr("Invalid alias target location: %1").arg(subProperty.toString()));
+                        break;
+                    }
+                    Q_ASSERT(valueTypeIndex <= 0x0000FFFF);
 
-                propIdx = QQmlPropertyIndex(propIdx.coreIndex(), valueTypeIndex);
+                    propIdx = QQmlPropertyIndex(propIdx.coreIndex(), valueTypeIndex);
+                }
             } else {
                 if (targetProperty->isQObject())
                     alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;

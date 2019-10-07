@@ -55,7 +55,8 @@ QList<QQmlError> QQmlTypeLoaderQmldirContent::errors(const QString &uri) const
 {
     QList<QQmlError> errors;
     const QUrl url(uri);
-    for (const auto parseError : m_parser.errors(uri)) {
+    const auto parseErrors = m_parser.errors(uri);
+    for (const auto &parseError : parseErrors) {
         QQmlError error;
         error.setUrl(url);
         error.setLine(parseError.line);

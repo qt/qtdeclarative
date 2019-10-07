@@ -532,7 +532,7 @@ void QQuickAnimatedSprite::setInterpolate(bool arg)
     }
 }
 
-void QQuickAnimatedSprite::setSource(QUrl arg)
+void QQuickAnimatedSprite::setSource(const QUrl &arg)
 {
     Q_D(QQuickAnimatedSprite);
 
