@@ -445,6 +445,8 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
                 QV4::ScopedString s(scope, v4->newString(stringValue));
                 _vmeMetaObject->setVMEProperty(property->coreIndex(), s);
             } else {
+                // ### Qt 6: Doing the conversion here where we don't know the eventual target type is rather strange
+                // and caused for instance QTBUG-78943
                 QVariant value = QQmlStringConverters::variantFromString(stringValue);
                 property->writeProperty(_qobject, &value, propertyWriteFlags);
             }

@@ -78,7 +78,7 @@ public:
     QQmlNullableValue<bool> when;
     QPointer<QObject> obj;
     QString propName;
-    QQmlNullableValue<QVariant> value;
+    QQmlNullableValue<QJSValue> value;
     QQmlProperty prop;
     QQmlAbstractBinding::Ptr prevBind;
     QV4::PersistentValue v4Value;
@@ -293,13 +293,13 @@ void QQmlBind::setProperty(const QString &p)
     The value to be set on the target object and property.  This can be a
     constant (which isn't very useful), or a bound expression.
 */
-QVariant QQmlBind::value() const
+QJSValue QQmlBind::value() const
 {
     Q_D(const QQmlBind);
     return d->value.value;
 }
 
-void QQmlBind::setValue(const QVariant &v)
+void QQmlBind::setValue(const QJSValue &v)
 {
     Q_D(QQmlBind);
     d->value = v;
@@ -502,7 +502,7 @@ void QQmlBind::eval()
         QQmlPropertyPrivate::removeBinding(d->prop);
     }
 
-    d->prop.write(d->value.value);
+    d->prop.write(d->value.value.toVariant());
 }
 
 QT_END_NAMESPACE
