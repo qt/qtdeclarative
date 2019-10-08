@@ -128,6 +128,7 @@ private slots:
     void qobjectTrackerForDynamicModelObjects();
     void crash_append_empty_array();
     void dynamic_roles_crash_QTBUG_38907();
+    void nestedListModelIteration();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1665,6 +1666,32 @@ void tst_qqmllistmodel::dynamic_roles_crash_QTBUG_38907()
                               Q_RETURN_ARG(QVariant, retVal));
 
     QVERIFY(retVal.toBool());
+}
+
+void tst_qqmllistmodel::nestedListModelIteration()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    QTest::ignoreMessage(QtMsgType::QtDebugMsg ,R"({"subItems":[{"a":1,"b":0,"c":0},{"a":0,"b":2,"c":0},{"a":0,"b":0,"c":3}]})");
+    component.setData(
+            R"(import QtQuick 2.5
+            Item {
+                visible: true
+                width: 640
+                height: 480
+                ListModel {
+                    id : model
+                }
+                Component.onCompleted: {
+                        var tempData = {
+                            subItems: [{a: 1}, {b: 2}, {c: 3}]
+                        }
+                        model.insert(0, tempData)
+                        console.log(JSON.stringify(model.get(0)))
+                }
+            })",
+            QUrl());
+    QScopedPointer<QObject>(component.create());
 }
 
 QTEST_MAIN(tst_qqmllistmodel)
