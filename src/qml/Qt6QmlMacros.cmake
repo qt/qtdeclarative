@@ -33,9 +33,12 @@
 #
 # DO_NOT_INSTALL_METADATA: When present, will not install the supporting files.
 #
+# INSTALL_QML_FILES: When present, will install the qml files along side the
+#   plugin.
+#
 # SOURCES: List of C++ sources. (OPTIONAL)
 #
-# DEPENDENCIES: List of QML Module depdencies and their versions. The module
+# DEPENDENCIES: List of QML Module dependencies and their versions. The module
 #   and its version must be separated via a slash(/). E.g. QtQuick/2.0
 #
 # QML_FILES: List of Qml files. See qt6_target_qml_files for more information
@@ -72,6 +75,7 @@ function(qt6_add_qml_module target)
         DESIGNER_SUPPORTED
         DO_NOT_INSTALL_METADATA
         SKIP_TYPE_REGISTRATION
+        INSTALL_QML_FILES
     )
 
     if (QT_BUILDING_QT)
@@ -180,6 +184,10 @@ function(qt6_add_qml_module target)
         else()
             get_target_property(target_output_dir ${target} LIBRARY_OUTPUT_DIRECTORY)
         endif()
+    endif()
+
+    if (arg_INSTALL_QML_FILES)
+        set_target_properties(${target} PROPERTIES QT_QML_MODULE_INSTALL_QML_FILES TRUE)
     endif()
 
     if (arg_SKIP_TYPE_REGISTRATION)
@@ -316,8 +324,6 @@ endfunction()
 #   type name will be deduced using the file's basename.
 # QT_QML_SINGLETON_TYPE: Set to true if this qml file contains a singleton
 #   type.
-# QT_QML_SOURCE_INSTALL: When set to true, the file will be installed alongside
-#   the module.
 # QT_QML_INTERNAL_TYPE: When set to true, the type specified by
 #   QT_QML_SOURCE_TYPENAME will not be available to users of this module.
 #
@@ -342,6 +348,7 @@ function(qt6_target_qml_files target)
     cmake_parse_arguments(arg "" "" "FILES" ${ARGN})
     get_target_property(resource_count ${target} QT6_QML_MODULE_ADD_QML_FILES_COUNT)
     get_target_property(qmldir_file ${target} QT_QML_MODULE_QMLDIR_FILE)
+    get_target_property(install_qml_files ${target} QT_QML_MODULE_INSTALL_QML_FILES)
     if (NOT qmldir_file)
         message(FATAL_ERROR "qt6_target_qml_file: ${target} is not a Qml module")
     endif()
@@ -368,8 +375,7 @@ function(qt6_target_qml_files target)
 
     set(file_contents "")
     foreach(qml_file IN LISTS arg_FILES)
-        get_source_file_property(qml_file_install ${qml_file} QT_QML_SOURCE_INSTALL)
-        if (qml_file_install)
+        if (install_qml_files)
             install(FILES ${qml_file} DESTINATION ${qml_module_install_dir})
         endif()
 
