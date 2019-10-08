@@ -62,6 +62,7 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qvariant.h>
 #include <QtCore/qurl.h>
+#include <QPointer>
 
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qdebug.h>
@@ -489,7 +490,7 @@ namespace QQmlPrivate
     {
         QObject *operator()(QQmlEngine *, QJSEngine *);
 
-        QObject *m_object;
+        QPointer<QObject> m_object;
         bool alreadyCalled = false;
     };
 

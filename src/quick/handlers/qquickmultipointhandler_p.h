@@ -107,7 +107,7 @@ protected:
     QVector<PointData> angles(const QPointF &ref) const;
     static qreal averageAngleDelta(const QVector<PointData> &old, const QVector<PointData> &newAngles);
     void acceptPoints(const QVector<QQuickEventPoint *> &points);
-    bool grabPoints(QVector<QQuickEventPoint *> points);
+    bool grabPoints(const QVector<QQuickEventPoint *> &points);
     void moveTarget(QPointF pos);
 
     Q_DECLARE_PRIVATE(QQuickMultiPointHandler)

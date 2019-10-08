@@ -187,7 +187,7 @@ static QRhiVertexInputLayout calculateVertexInputLayout(const QSGMaterialRhiShad
     }
 
     const int attrCount = geometry->attributeCount();
-    QVector<QRhiVertexInputAttribute> inputAttributes;
+    QVarLengthArray<QRhiVertexInputAttribute, 8> inputAttributes;
     inputAttributes.reserve(attrCount + 1);
     int offset = 0;
     for (int i = 0; i < attrCount; ++i) {
@@ -205,15 +205,14 @@ static QRhiVertexInputLayout calculateVertexInputLayout(const QSGMaterialRhiShad
     }
 
     Q_ASSERT(VERTEX_BUFFER_BINDING == 0 && ZORDER_BUFFER_BINDING == 1); // not very flexible
-    QVector<QRhiVertexInputBinding> inputBindings;
-    inputBindings.reserve(2);
+    QVarLengthArray<QRhiVertexInputBinding, 2> inputBindings;
     inputBindings.append(QRhiVertexInputBinding(geometry->sizeOfVertex()));
     if (batchable)
         inputBindings.append(QRhiVertexInputBinding(sizeof(float)));
 
     QRhiVertexInputLayout inputLayout;
-    inputLayout.setBindings(inputBindings);
-    inputLayout.setAttributes(inputAttributes);
+    inputLayout.setBindings(inputBindings.cbegin(), inputBindings.cend());
+    inputLayout.setAttributes(inputAttributes.cbegin(), inputAttributes.cend());
 
     return inputLayout;
 }
@@ -2849,10 +2848,8 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch) // RHI
             else {
                 if (qsg_topology(g->drawingMode()) != m_stencilClipCommon.topology)
                     qWarning("updateClipState: Clip list entries have different primitive topologies, this is not currently supported.");
-#if 0 // ### restore once the 5.14 submodule update is done
-                if (qsg_vertexInputFormat(*a) != m_stencilClipCommon.inputLayout.attributes().first().format())
+                if (qsg_vertexInputFormat(*a) != m_stencilClipCommon.inputLayout.cbeginAttributes()->format())
                     qWarning("updateClipState: Clip list entries have different vertex input layouts, this is must not happen.");
-#endif
             }
 #endif
 

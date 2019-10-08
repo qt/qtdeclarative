@@ -601,8 +601,7 @@ static inline double ParseString(const QString &s, double localTZA)
             QStringLiteral("d MMMM, yyyy hh:mm:ss"),
         };
 
-        for (uint i = 0; i < sizeof(formats) / sizeof(formats[0]); ++i) {
-            const QString &format(formats[i]);
+        for (const QString &format : formats) {
             dt = format.indexOf(QLatin1String("hh:mm")) < 0
                 ? QDateTime(QDate::fromString(s, format),
                             QTime(0, 0, 0), Qt::UTC)

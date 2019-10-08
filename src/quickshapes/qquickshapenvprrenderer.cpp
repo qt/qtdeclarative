@@ -177,7 +177,7 @@ QDebug operator<<(QDebug debug, const QQuickShapeNvprRenderer::NvprPath &path)
     debug << "Path with" << path.cmd.count() << "commands";
     int ci = 0;
     for (GLubyte cmd : path.cmd) {
-        static struct { GLubyte cmd; const char *s; int coordCount; } nameTab[] = {
+        static struct { GLubyte cmd; const char *s; int coordCount; } nameTabs[] = {
         { GL_MOVE_TO_NV, "moveTo", 2 },
         { GL_LINE_TO_NV, "lineTo", 2 },
         { GL_QUADRATIC_CURVE_TO_NV, "quadTo", 4 },
@@ -187,14 +187,14 @@ QDebug operator<<(QDebug debug, const QQuickShapeNvprRenderer::NvprPath &path)
         { GL_SMALL_CW_ARC_TO_NV, "arcTo-small-CW", 5 },
         { GL_SMALL_CCW_ARC_TO_NV, "arcTo-small-CCW", 5 },
         { GL_CLOSE_PATH_NV, "closePath", 0 } };
-        for (size_t i = 0; i < sizeof(nameTab) / sizeof(nameTab[0]); ++i) {
-            if (nameTab[i].cmd == cmd) {
+        for (const auto &nameTab : nameTabs) {
+            if (nameTab.cmd == cmd) {
                 QByteArray cs;
-                for (int j = 0; j < nameTab[i].coordCount; ++j) {
+                for (int j = 0; j < nameTab.coordCount; ++j) {
                     cs.append(QByteArray::number(path.coord[ci++]));
                     cs.append(' ');
                 }
-                debug << "\n  " << nameTab[i].s << " " << cs;
+                debug << "\n  " << nameTab.s << " " << cs;
                 break;
             }
         }

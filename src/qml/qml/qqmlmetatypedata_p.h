@@ -106,10 +106,6 @@ struct QQmlMetaTypeData
     QList<QQmlPrivate::AutoParentFunction> parentFunctions;
     QVector<QQmlPrivate::QmlUnitCacheLookupFunction> lookupCachedQmlUnit;
 
-    QSet<QString> protectedNamespaces;
-
-    QString typeRegistrationNamespace;
-
     QHash<int, int> qmlLists;
 
     QHash<const QMetaObject *, QQmlPropertyCache *> propertyCaches;

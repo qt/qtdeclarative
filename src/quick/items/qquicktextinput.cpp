@@ -1958,7 +1958,7 @@ QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
     return inputMethodQuery(property, QVariant());
 }
 
-QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property, QVariant argument) const
+QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property, const QVariant &argument) const
 {
     Q_D(const QQuickTextInput);
     switch (property) {

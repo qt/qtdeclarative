@@ -68,14 +68,14 @@ QQuickMaskExtruder::QQuickMaskExtruder(QObject *parent) :
 {
 }
 
-void QQuickMaskExtruder::setSource(QUrl arg)
+void QQuickMaskExtruder::setSource(const QUrl &arg)
 {
     if (m_source != arg) {
         m_source = arg;
 
         m_lastHeight = -1;//Trigger reset
         m_lastWidth = -1;
-        emit sourceChanged(arg);
+        emit sourceChanged(m_source);
         startMaskLoading();
     }
 }
