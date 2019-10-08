@@ -1,0 +1,7 @@
+dependencies:
+  ../qtgraphicaleffects:
+    ref: 01dab192574e9ab68240e19b359adf8412b377bf
+    required: true
+  ../qtimageformats:
+    ref: ee449f9f458d8727f0fe667c9143df270cf88cb2
+    required: false
