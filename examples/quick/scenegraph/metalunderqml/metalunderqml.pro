@@ -1,3 +1,5 @@
+!macos: error("This example requires macOS")
+
 QT += qml quick
 
 HEADERS += metalsquircle.h
