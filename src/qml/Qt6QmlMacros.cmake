@@ -31,7 +31,7 @@
 #   value is supplied, the default installation path will be ${Qt6_DIR}/qml.
 #   (OPTIONAL).
 #
-# DO_NOT_INSTALL: When present, will not install the supporting files.
+# DO_NOT_INSTALL_METADATA: When present, will not install the supporting files.
 #
 # SOURCES: List of C++ sources. (OPTIONAL)
 #
@@ -70,7 +70,7 @@ function(qt6_add_qml_module target)
 
     set(args_optional
         DESIGNER_SUPPORTED
-        DO_NOT_INSTALL
+        DO_NOT_INSTALL_METADATA
         SKIP_TYPE_REGISTRATION
     )
 
@@ -264,7 +264,7 @@ function(qt6_add_qml_module target)
         )
 
         # Install QMLDIR file
-        if (NOT DO_NOT_INSTALL)
+        if (NOT DO_NOT_INSTALL_METADATA)
             install(FILES ${qmldir_file}
                 DESTINATION ${arg_INSTALL_LOCATION}
             )
@@ -275,7 +275,7 @@ function(qt6_add_qml_module target)
     set(target_plugin_qmltypes "${CMAKE_CURRENT_SOURCE_DIR}/plugins.qmltypes")
     if (EXISTS ${target_plugin_qmltypes})
         file(APPEND ${qmldir_file} "typeinfo plugins.qmltypes\n")
-        if (NOT arg_DO_NOT_INSTALL)
+        if (NOT arg_DO_NOT_INSTALL_METADATA)
             install(FILES ${target_plugin_qmltypes}
                 DESTINATION ${arg_INSTALL_LOCATION}
             )
@@ -290,7 +290,7 @@ function(qt6_add_qml_module target)
 
     # Copy/Install type info file
     if (EXISTS ${arg_TYPEINFO})
-        if (NOT arg_DO_NOT_INSTALL)
+        if (NOT arg_DO_NOT_INSTALL_METADATA)
             install(FILES ${arg_TYPEINFO}
                 DESTINATION ${arg_INSTALL_LOCATION}
             )
