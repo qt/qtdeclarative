@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
         {Focus Management in Qt Quick Controls}
 */
 
-QQuickItem *QQuickMenuBarPrivate::beginCreateItem()
+QQuickItem *QQuickMenuBarPrivate::beginCreateItem(QQuickMenu *menu)
 {
     Q_Q(QQuickMenuBar);
     if (!delegate)
@@ -96,6 +96,8 @@ QQuickItem *QQuickMenuBarPrivate::beginCreateItem()
         return nullptr;
     }
 
+    if (QQuickMenuBarItem *menuBarItem = qobject_cast<QQuickMenuBarItem *>(item))
+        menuBarItem->setMenu(menu);
     item->setParentItem(q);
     QQml_setParent_noEvent(item, q);
 
@@ -112,9 +114,7 @@ void QQuickMenuBarPrivate::completeCreateItem()
 
 QQuickItem *QQuickMenuBarPrivate::createItem(QQuickMenu *menu)
 {
-    QQuickItem *item = beginCreateItem();
-    if (QQuickMenuBarItem *menuBarItem = qobject_cast<QQuickMenuBarItem *>(item))
-        menuBarItem->setMenu(menu);
+    QQuickItem *item = beginCreateItem(menu);
     completeCreateItem();
     return item;
 }
