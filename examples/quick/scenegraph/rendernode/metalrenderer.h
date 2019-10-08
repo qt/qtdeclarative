@@ -54,7 +54,8 @@
 #include <qsgrendernode.h>
 #include <QQuickItem>
 
-#ifdef Q_OS_DARWIN
+//#ifdef Q_OS_DARWIN
+#ifdef Q_OS_MACOS
 
 QT_BEGIN_NAMESPACE
 
