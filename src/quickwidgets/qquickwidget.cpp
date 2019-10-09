@@ -878,7 +878,9 @@ void QQuickWidgetPrivate::createContext()
 
         context = new QOpenGLContext;
         context->setFormat(offscreenWindow->requestedFormat());
-
+        const QWindow *win = q->window()->windowHandle();
+        if (win && win->screen())
+            context->setScreen(win->screen());
         QOpenGLContext *shareContext = qt_gl_global_share_context();
         if (!shareContext)
             shareContext = QWidgetPrivate::get(q->window())->shareContext();
