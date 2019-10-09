@@ -115,6 +115,9 @@ protected:
 private:
     void prepareEval();
     void eval();
+
+private Q_SLOTS:
+    void targetValueChanged();
 };
 
 QT_END_NAMESPACE

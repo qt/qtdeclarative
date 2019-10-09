@@ -54,10 +54,13 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qtimer.h>
+#include <QtCore/qloggingcategory.h>
 
 #include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcBindingRemoval)
 
 class QQmlBindPrivate : public QObjectPrivate
 {
@@ -72,6 +75,7 @@ public:
         , restoreBinding(true)
         , restoreValue(false)
         , restoreModeExplicit(false)
+        , writingProperty(false)
     {}
     ~QQmlBindPrivate() { }
 
@@ -90,6 +94,7 @@ public:
     bool restoreBinding:1;
     bool restoreValue:1;
     bool restoreModeExplicit:1;
+    bool writingProperty: 1;
 
     void validate(QObject *binding) const;
     void clearPrev();
@@ -242,7 +247,7 @@ void QQmlBind::setObject(QObject *obj)
     }
     d->obj = obj;
     if (d->componentComplete) {
-        d->prop = QQmlProperty(d->obj, d->propName, qmlContext(this));
+        setTarget(QQmlProperty(d->obj, d->propName, qmlContext(this)));
         d->validate(this);
     }
     eval();
@@ -288,7 +293,7 @@ void QQmlBind::setProperty(const QString &p)
     }
     d->propName = p;
     if (d->componentComplete) {
-        d->prop = QQmlProperty(d->obj, d->propName, qmlContext(this));
+        setTarget(QQmlProperty(d->obj, d->propName, qmlContext(this)));
         d->validate(this);
     }
     eval();
@@ -401,6 +406,19 @@ void QQmlBind::setRestoreMode(RestorationMode newMode)
 void QQmlBind::setTarget(const QQmlProperty &p)
 {
     Q_D(QQmlBind);
+
+    if (Q_UNLIKELY(lcBindingRemoval().isInfoEnabled())) {
+        if (QObject *oldObject = d->prop.object()) {
+            QMetaProperty prop = oldObject->metaObject()->property(d->prop.index());
+            if (prop.hasNotifySignal()) {
+                QByteArray signal('2' + prop.notifySignal().methodSignature());
+                QObject::disconnect(oldObject, signal.constData(),
+                                    this, SLOT(targetValueChanged()));
+            }
+        }
+        p.connectNotifySignal(this, SLOT(targetValueChanged()));
+    }
+
     d->prop = p;
 }
 
@@ -415,7 +433,7 @@ void QQmlBind::componentComplete()
     Q_D(QQmlBind);
     d->componentComplete = true;
     if (!d->prop.isValid()) {
-        d->prop = QQmlProperty(d->obj, d->propName, qmlContext(this));
+        setTarget(QQmlProperty(d->obj, d->propName, qmlContext(this)));
         d->validate(this);
     }
     eval();
@@ -509,7 +527,34 @@ void QQmlBind::eval()
         QQmlPropertyPrivate::removeBinding(d->prop);
     }
 
+    d->writingProperty = true;
     d->prop.write(d->value.value.toVariant());
+    d->writingProperty = false;
+}
+
+void QQmlBind::targetValueChanged()
+{
+    Q_D(QQmlBind);
+    if (d->writingProperty)
+        return;
+
+    if (d->when.isValid() && !d->when)
+        return;
+
+    QUrl url;
+    quint16 line = 0;
+
+    const QQmlData *ddata = QQmlData::get(this, false);
+    if (ddata && ddata->outerContext) {
+        url = ddata->outerContext->url();
+        line = ddata->lineNumber;
+    }
+
+    qCInfo(lcBindingRemoval,
+           "The target property of the Binding element created at %s:%d was changed from "
+           "elsewhere. This does not overwrite the binding. The target property will still be "
+           "updated when the value of the Binding element changes.",
+           qPrintable(url.toString()), line);
 }
 
 QT_END_NAMESPACE
