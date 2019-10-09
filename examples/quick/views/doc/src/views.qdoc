@@ -100,7 +100,7 @@
 
     \snippet views/package/view.qml 0
 
-    \section1 ObjectModel
+    \section1 Using ObjectModel
 
     \e ObjectModel uses an ObjectModel for the model instead of a \l ListModel.
 
