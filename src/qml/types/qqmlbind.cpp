@@ -193,6 +193,13 @@ QQmlBind::~QQmlBind()
 
     When the binding becomes inactive again, any direct bindings that were previously
     set on the property will be restored.
+
+    \note By default, a previously set literal value is not restored when the Binding becomes
+    inactive. Rather, the last value set by the now inactive Binding is retained. You can customize
+    the restoration behavior for literal values as well as bindings using the \l restoreMode
+    property. The default will change in Qt 6.0.
+
+    \sa restoreMode
 */
 bool QQmlBind::when() const
 {
@@ -360,7 +367,7 @@ void QQmlBind::setDelayed(bool delayed)
     \endlist
 
     \warning The default value is Binding.RestoreBinding. This will change in
-    Qt 5.15 to Binding.RestoreBindingOrValue.
+    Qt 6.0 to Binding.RestoreBindingOrValue.
 
     If you rely on any specific behavior regarding the restoration of plain
     values when bindings get disabled you should migrate to explicitly set the
@@ -461,8 +468,8 @@ void QQmlBind::eval()
                     qmlWarning(this)
                             << "Not restoring previous value because restoreMode has not been set."
                             << "This behavior is deprecated."
-                            << "In Qt < 5.15 the default is Binding.RestoreBinding."
-                            << "In Qt >= 5.15 the default is Binding.RestoreBindingOrValue.";
+                            << "In Qt < 6.0 the default is Binding.RestoreBinding."
+                            << "In Qt >= 6.0 the default is Binding.RestoreBindingOrValue.";
                 }
             } else if (d->prevIsVariant) {
                 if (d->restoreValue) {
@@ -472,8 +479,8 @@ void QQmlBind::eval()
                     qmlWarning(this)
                             << "Not restoring previous value because restoreMode has not been set."
                             << "This behavior is deprecated."
-                            << "In Qt < 5.15 the default is Binding.RestoreBinding."
-                            << "In Qt >= 5.15 the default is Binding.RestoreBindingOrValue.";
+                            << "In Qt < 6.0 the default is Binding.RestoreBinding."
+                            << "In Qt >= 6.0 the default is Binding.RestoreBindingOrValue.";
                 }
             }
             return;
