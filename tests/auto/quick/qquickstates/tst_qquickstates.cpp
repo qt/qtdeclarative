@@ -139,6 +139,7 @@ private slots:
     void revertListMemoryLeak();
     void duplicateStateName();
     void trivialWhen();
+    void parentChangeCorrectReversal();
 };
 
 void tst_qquickstates::initTestCase()
@@ -1673,6 +1674,22 @@ void tst_qquickstates::trivialWhen()
 
     QQmlComponent c(&engine, testFileUrl("trivialWhen.qml"));
     QVERIFY(c.create());
+}
+
+void tst_qquickstates::parentChangeCorrectReversal()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("parentChangeCorrectReversal.qml"));
+    QScopedPointer<QObject> root {c.create()};
+    QVERIFY(root);
+    QQmlProperty stayingRectX(root.get(), "stayingRectX");
+    qreal oldX = stayingRectX.read().toDouble();
+    QQmlProperty switchToRight(root.get(), "switchToRight");
+    switchToRight.write(true);
+    qreal newX = stayingRectX.read().toDouble();
+    QVERIFY(newX != oldX);
+    switchToRight.write(false);
+    QCOMPARE(oldX, stayingRectX.read().toDouble());
 }
 
 
