@@ -28,6 +28,7 @@
 
 #include <QtTest/QtTest>
 #include <QtTest/QSignalSpy>
+#include <QtGui/qstylehints.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 #include <QtQml/qqmlcontext.h>
@@ -36,6 +37,8 @@
 
 #include <qpa/qplatformdrag.h>
 #include <qpa/qwindowsysteminterface.h>
+#include "../../shared/util.h"
+#include "../shared/viewtestutil.h"
 
 template <typename T> static T evaluate(QObject *scope, const QString &expression)
 {
@@ -54,13 +57,10 @@ template <> void evaluate<void>(QObject *scope, const QString &expression)
         qWarning() << expr.error().toString();
 }
 
-class tst_QQuickDropArea: public QObject
+class tst_QQuickDropArea: public QQmlDataTest
 {
     Q_OBJECT
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
-
     void containsDrag_internal();
     void containsDrag_external();
     void keys_internal();
@@ -74,20 +74,12 @@ private slots:
     void competingDrags();
     void simultaneousDrags();
     void dropStuff();
+    void nestedDropAreas_data();
+    void nestedDropAreas();
 
 private:
     QQmlEngine engine;
 };
-
-void tst_QQuickDropArea::initTestCase()
-{
-
-}
-
-void tst_QQuickDropArea::cleanupTestCase()
-{
-
-}
 
 void tst_QQuickDropArea::containsDrag_internal()
 {
@@ -1222,6 +1214,74 @@ void tst_QQuickDropArea::dropStuff()
                                        Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<int>(dropArea, "array.byteLength"), 3);
     QCOMPARE(evaluate<QByteArray>(dropArea, "array"), QByteArray("red"));
+}
+
+void tst_QQuickDropArea::nestedDropAreas_data()
+{
+    QTest::addColumn<QString>("qmlFile");
+
+    QTest::newRow("dropRectDropRect") << "nested1.qml";
+    QTest::newRow("rectDropRectDrop") << "nested2.qml";
+}
+
+void tst_QQuickDropArea::nestedDropAreas()
+{
+    QFETCH(QString, qmlFile);
+
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(QQuickTest::initView(window, testFileUrl(qmlFile.toLatin1().data()), true, &errorMessage), errorMessage.constData());
+
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(window.rootObject() != nullptr);
+
+    QQuickItem *dragArea = window.rootObject()->findChild<QQuickItem*>("dragArea");
+    QVERIFY(dragArea);
+    QQuickItem *outerDropArea = window.rootObject()->findChild<QQuickItem*>("outerDropArea");
+    QVERIFY(outerDropArea);
+    QQuickItem *innerDropArea = window.rootObject()->findChild<QQuickItem*>("innerDropArea");
+    QVERIFY(innerDropArea);
+
+    QPoint p = QPoint(10,10);
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, p);
+
+    // move the minimum distance to activate drag
+    p += QPoint(dragThreshold + 1, dragThreshold + 1);
+    QTest::mouseMove(&window, p);
+
+    // drag the red rectangle into the inner DropArea
+    p += QPoint(100, 100);
+    QTest::mouseMove(&window, p);
+    QCOMPARE(window.rootObject()->property("outerEnterEvents"), 0);
+    QCOMPARE(window.rootObject()->property("outerExitEvents"), 0);
+    QCOMPARE(window.rootObject()->property("innerEnterEvents"), 1);
+    QCOMPARE(window.rootObject()->property("innerExitEvents"), 0);
+
+    // drag the red rectangle into the outer DropArea
+    p += QPoint(0, 50);
+    QTest::mouseMove(&window, p);
+    QCOMPARE(window.rootObject()->property("outerEnterEvents"), 1);
+    QCOMPARE(window.rootObject()->property("outerExitEvents"), 0);
+    QCOMPARE(window.rootObject()->property("innerEnterEvents"), 1);
+    QCOMPARE(window.rootObject()->property("innerExitEvents"), 1);
+
+    // drag the red rectangle into the inner DropArea
+    p -= QPoint(0, 50);
+    QTest::mouseMove(&window, p);
+    QCOMPARE(window.rootObject()->property("outerEnterEvents"), 1);
+    QCOMPARE(window.rootObject()->property("outerExitEvents"), 1);
+    QCOMPARE(window.rootObject()->property("innerEnterEvents"), 2);
+    QCOMPARE(window.rootObject()->property("innerExitEvents"), 1);
+
+    // drag the red rectangle back out of both
+    p -= QPoint(100, 100);
+    QTest::mouseMove(&window, p);
+    QCOMPARE(window.rootObject()->property("outerEnterEvents"), 1);
+    QCOMPARE(window.rootObject()->property("outerExitEvents"), 1);
+    QCOMPARE(window.rootObject()->property("innerEnterEvents"), 2);
+    QCOMPARE(window.rootObject()->property("innerExitEvents"), 2);
 }
 
 QTEST_MAIN(tst_QQuickDropArea)

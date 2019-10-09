@@ -935,6 +935,11 @@ void tst_qqmlvaluetypes::color()
         QCOMPARE(qRound(object->property("hsl_s").toDouble() * 100), 74);
         QCOMPARE(qRound(object->property("hsl_l").toDouble() * 100), 54);
 
+        QCOMPARE(object->property("valid").userType(), QMetaType::Bool);
+        QVERIFY(object->property("valid").toBool());
+        QCOMPARE(object->property("invalid").userType(), QMetaType::Bool);
+        QVERIFY(!object->property("invalid").toBool());
+
         QColor comparison;
         comparison.setRedF(0.2);
         comparison.setGreenF(0.88);

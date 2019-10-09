@@ -84,6 +84,7 @@ class QQuickColorValueType
     Q_PROPERTY(qreal hslHue READ hslHue WRITE setHslHue FINAL)
     Q_PROPERTY(qreal hslSaturation READ hslSaturation WRITE setHslSaturation FINAL)
     Q_PROPERTY(qreal hslLightness READ hslLightness WRITE setHslLightness FINAL)
+    Q_PROPERTY(bool valid READ isValid)
     Q_GADGET
 public:
     Q_INVOKABLE QString toString() const;
@@ -98,6 +99,7 @@ public:
     qreal hslHue() const;
     qreal hslSaturation() const;
     qreal hslLightness() const;
+    bool isValid() const;
     void setR(qreal);
     void setG(qreal);
     void setB(qreal);

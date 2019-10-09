@@ -62,7 +62,7 @@ class QQmlEngineDebugClientPrivate : public QQmlDebugClientPrivate
 public:
     QQmlEngineDebugClientPrivate(QQmlDebugConnection *connection);
 
-    quint32 nextId = 0;
+    qint32 nextId = 0;
     bool valid = false;
     QList<QQmlEngineDebugEngineReference> engines;
     QQmlEngineDebugContextReference rootContext;

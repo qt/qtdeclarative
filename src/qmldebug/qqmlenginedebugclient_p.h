@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 
 struct QQmlEngineDebugPropertyReference
 {
-    int objectDebugId = -1;
+    qint32 objectDebugId = -1;
     QString name;
     QVariant value;
     QString valueTypeName;
@@ -61,25 +61,25 @@ struct QQmlEngineDebugPropertyReference
 struct QQmlEngineDebugFileReference
 {
     QUrl url;
-    int lineNumber = -1;
-    int columnNumber = -1;
+    qint32 lineNumber = -1;
+    qint32 columnNumber = -1;
 };
 
 struct QQmlEngineDebugObjectReference
 {
-    int debugId = -1;
+    qint32 debugId = -1;
     QString className;
     QString idString;
     QString name;
     QQmlEngineDebugFileReference source;
-    int contextDebugId = -1;
+    qint32 contextDebugId = -1;
     QList<QQmlEngineDebugPropertyReference> properties;
     QList<QQmlEngineDebugObjectReference> children;
 };
 
 struct QQmlEngineDebugContextReference
 {
-    int debugId = -1;
+    qint32 debugId = -1;
     QString name;
     QList<QQmlEngineDebugObjectReference> objects;
     QList<QQmlEngineDebugContextReference> contexts;
@@ -87,7 +87,7 @@ struct QQmlEngineDebugContextReference
 
 struct QQmlEngineDebugEngineReference
 {
-    int debugId = -1;
+    qint32 debugId = -1;
     QString name;
 };
 
@@ -100,46 +100,46 @@ class QQmlEngineDebugClient : public QQmlDebugClient
 public:
     explicit QQmlEngineDebugClient(QQmlDebugConnection *conn);
 
-    quint32 addWatch(const QQmlEngineDebugPropertyReference &,
-                     bool *success);
-    quint32 addWatch(const QQmlEngineDebugContextReference &, const QString &,
-                     bool *success);
-    quint32 addWatch(const QQmlEngineDebugObjectReference &, const QString &,
-                     bool *success);
-    quint32 addWatch(const QQmlEngineDebugObjectReference &,
-                     bool *success);
-    quint32 addWatch(const QQmlEngineDebugFileReference &,
+    qint32 addWatch(const QQmlEngineDebugPropertyReference &,
+                    bool *success);
+    qint32 addWatch(const QQmlEngineDebugContextReference &, const QString &,
+                    bool *success);
+    qint32 addWatch(const QQmlEngineDebugObjectReference &, const QString &,
+                    bool *success);
+    qint32 addWatch(const QQmlEngineDebugObjectReference &,
+                    bool *success);
+    qint32 addWatch(const QQmlEngineDebugFileReference &,
                      bool *success);
 
-    void removeWatch(quint32 watch, bool *success);
+    void removeWatch(qint32 watch, bool *success);
 
-    quint32 queryAvailableEngines(bool *success);
-    quint32 queryRootContexts(const QQmlEngineDebugEngineReference &,
-                              bool *success);
-    quint32 queryObject(const QQmlEngineDebugObjectReference &,
-                        bool *success);
-    quint32 queryObjectsForLocation(const QString &file,
-            int lineNumber, int columnNumber, bool *success);
-    quint32 queryObjectRecursive(const QQmlEngineDebugObjectReference &,
+    qint32 queryAvailableEngines(bool *success);
+    qint32 queryRootContexts(const QQmlEngineDebugEngineReference &,
+                             bool *success);
+    qint32 queryObject(const QQmlEngineDebugObjectReference &,
+                       bool *success);
+    qint32 queryObjectsForLocation(const QString &file,
+           qint32 lineNumber, qint32 columnNumber, bool *success);
+    qint32 queryObjectRecursive(const QQmlEngineDebugObjectReference &,
+                                bool *success);
+    qint32 queryObjectsForLocationRecursive(const QString &file,
+           qint32 lineNumber, qint32 columnNumber, bool *success);
+    qint32 queryExpressionResult(qint32 objectDebugId,
+                                 const QString &expr,
                                  bool *success);
-    quint32 queryObjectsForLocationRecursive(const QString &file,
-            int lineNumber, int columnNumber, bool *success);
-    quint32 queryExpressionResult(int objectDebugId,
-                                  const QString &expr,
-                                  bool *success);
-    quint32 queryExpressionResultBC(int objectDebugId,
-                                  const QString &expr,
-                                  bool *success);
-    quint32 setBindingForObject(int objectDebugId, const QString &propertyName,
-                                const QVariant &bindingExpression,
-                                bool isLiteralValue,
-                                const QString &source, int line, bool *success);
-    quint32 resetBindingForObject(int objectDebugId,
-                                  const QString &propertyName, bool *success);
-    quint32 setMethodBody(int objectDebugId, const QString &methodName,
-                          const QString &methodBody, bool *success);
+    qint32 queryExpressionResultBC(qint32 objectDebugId,
+                                 const QString &expr,
+                                 bool *success);
+    qint32 setBindingForObject(qint32 objectDebugId, const QString &propertyName,
+                               const QVariant &bindingExpression,
+                               bool isLiteralValue,
+                               const QString &source, qint32 line, bool *success);
+    qint32 resetBindingForObject(qint32 objectDebugId,
+                                 const QString &propertyName, bool *success);
+    qint32 setMethodBody(qint32 objectDebugId, const QString &methodName,
+                         const QString &methodBody, bool *success);
 
-    quint32 getId();
+    qint32 getId();
 
     void decode(QPacket &ds, QQmlEngineDebugContextReference &);
     void decode(QPacket &ds, QQmlEngineDebugObjectReference &, bool simple);
@@ -153,7 +153,7 @@ public:
     bool valid() const;
 
 signals:
-    void newObject(int objectId);
+    void newObject(qint32 objectId);
     void valueChanged(QByteArray,QVariant);
     void result();
 

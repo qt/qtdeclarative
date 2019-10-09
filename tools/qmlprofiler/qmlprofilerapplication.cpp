@@ -302,7 +302,7 @@ void QmlProfilerApplication::flush()
 {
     if (m_recording) {
         m_pendingRequest = REQUEST_FLUSH;
-        m_qmlProfilerClient->sendRecordingStatus(false);
+        m_qmlProfilerClient->setRecording(false);
     } else {
         if (m_profilerData->save(m_interactiveOutputFile)) {
             m_profilerData->clear();
@@ -392,7 +392,7 @@ void QmlProfilerApplication::userCommand(const QString &command)
 
     if (cmd == Constants::CMD_RECORD || cmd == Constants::CMD_RECORD2) {
         m_pendingRequest = REQUEST_TOGGLE_RECORDING;
-        m_qmlProfilerClient->sendRecordingStatus(!m_recording);
+        m_qmlProfilerClient->setRecording(!m_recording);
     } else if (cmd == Constants::CMD_QUIT || cmd == Constants::CMD_QUIT2) {
         m_pendingRequest = REQUEST_QUIT;
         if (m_recording) {

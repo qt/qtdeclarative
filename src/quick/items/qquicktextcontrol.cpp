@@ -1212,8 +1212,8 @@ void QQuickTextControlPrivate::mouseReleaseEvent(QMouseEvent *e, const QPointF &
         QTextBlock block = q->blockWithMarkerAt(pos);
         if (block == blockWithMarkerUnderMousePress) {
             auto fmt = block.blockFormat();
-            fmt.setMarker(fmt.marker() == QTextBlockFormat::Unchecked ?
-                              QTextBlockFormat::Checked : QTextBlockFormat::Unchecked);
+            fmt.setMarker(fmt.marker() == QTextBlockFormat::MarkerType::Unchecked ?
+                              QTextBlockFormat::MarkerType::Checked : QTextBlockFormat::MarkerType::Unchecked);
             cursor.setBlockFormat(fmt);
         }
     }
@@ -1507,7 +1507,7 @@ void QQuickTextControlPrivate::hoverEvent(QHoverEvent *e, const QPointF &pos)
             emit q->markerHovered(block.isValid());
         hoveredMarker = block.isValid();
         if (hoveredMarker)
-            qCDebug(DBG_HOVER_TRACE) << q << e->type() << pos << "hovered marker" << block.blockFormat().marker() << block.text();
+            qCDebug(DBG_HOVER_TRACE) << q << e->type() << pos << "hovered marker" << int(block.blockFormat().marker()) << block.text();
     }
 }
 

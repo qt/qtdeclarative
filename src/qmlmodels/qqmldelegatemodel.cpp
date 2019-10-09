@@ -453,7 +453,8 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
     }
     if (d->m_delegate == delegate)
         return;
-    bool wasValid = d->m_delegate != nullptr;
+    if (d->m_complete)
+        _q_itemsRemoved(0, d->m_count);
     d->m_delegate.setObject(delegate, this);
     d->m_delegateValidated = false;
     if (d->m_delegateChooser)
@@ -469,7 +470,11 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
                                                [d](){ d->delegateChanged(); });
         }
     }
-    d->delegateChanged(d->m_delegate, wasValid);
+    if (d->m_complete) {
+        _q_itemsInserted(0, d->adaptorModelCount());
+        d->requestMoreIfNecessary();
+    }
+    emit delegateChanged();
 }
 
 /*!

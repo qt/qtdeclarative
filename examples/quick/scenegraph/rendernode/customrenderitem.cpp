@@ -87,7 +87,9 @@ QSGNode *CustomRenderItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
         break;
 
     case QSGRendererInterface::MetalRhi:
-#ifdef Q_OS_DARWIN
+// Restore when QTBUG-78580 is done and the .pro is updated accordingly
+//#ifdef Q_OS_DARWIN
+#ifdef Q_OS_MACOS
         if (!n) {
             MetalRenderNode *metalNode = new MetalRenderNode;
             n = metalNode;
