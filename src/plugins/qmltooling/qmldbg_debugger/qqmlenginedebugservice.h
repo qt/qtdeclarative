@@ -111,7 +111,8 @@ private:
     friend class QQmlDebuggerServiceFactory;
 
     void processMessage(const QByteArray &msg);
-    void propertyChanged(int id, int objectId, const QMetaProperty &property, const QVariant &value);
+    void propertyChanged(qint32 id, qint32 objectId, const QMetaProperty &property,
+                         const QVariant &value);
 
     void prepareDeferredObjects(QObject *);
     void buildObjectList(QDataStream &, QQmlContext *,
