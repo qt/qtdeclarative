@@ -102,6 +102,7 @@ Q_LOGGING_CATEGORY(DBG_DIRTY, "qt.quick.dirty")
 Q_LOGGING_CATEGORY(lcTransient, "qt.quick.window.transient")
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
+extern Q_GUI_EXPORT bool qt_sendShortcutOverrideEvent(QObject *o, ulong timestamp, int k, Qt::KeyboardModifiers mods, const QString &text = QString(), bool autorep = false, ushort count = 1);
 
 bool QQuickWindowPrivate::defaultAlphaBuffer = false;
 
@@ -1794,6 +1795,13 @@ void QQuickWindowPrivate::deliverKeyEvent(QKeyEvent *e)
 {
     if (activeFocusItem) {
         QQuickItem *item = activeFocusItem;
+
+        // In case of generated event, trigger ShortcutOverride event
+        if (e->type() == QEvent::KeyPress && e->spontaneous() == false)
+                qt_sendShortcutOverrideEvent(item, e->timestamp(),
+                                         e->key(), e->modifiers(), e->text(),
+                                         e->isAutoRepeat(), e->count());
+
         e->accept();
         QCoreApplication::sendEvent(item, e);
         while (!e->isAccepted() && (item = item->parentItem())) {
