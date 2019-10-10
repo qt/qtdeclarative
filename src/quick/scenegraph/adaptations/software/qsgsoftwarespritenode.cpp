@@ -49,6 +49,11 @@ QSGSoftwareSpriteNode::QSGSoftwareSpriteNode()
     setGeometry((QSGGeometry*)1);
 }
 
+QSGSoftwareSpriteNode::~QSGSoftwareSpriteNode()
+{
+    delete m_texture;
+}
+
 void QSGSoftwareSpriteNode::setTexture(QSGTexture *texture)
 {
     m_texture = qobject_cast<QSGSoftwarePixmapTexture*>(texture);

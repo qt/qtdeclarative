@@ -1,3 +1,5 @@
+!qtConfig(vulkan): error("This example requires Qt built with Vulkan support")
+
 QT += qml quick
 
 HEADERS += vulkansquircle.h

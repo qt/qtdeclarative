@@ -211,20 +211,13 @@ void QSGOpenVGInternalRectangleNode::render()
     } else {
         vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
         vgLoadIdentity();
-        if (m_radius > 0) {
-            // Fallback to rendering to an image for rounded rects with perspective transforms
-            if (m_offscreenSurface == nullptr || m_offscreenSurface->size() != QSize(std::ceil(m_rect.width()), std::ceil(m_rect.height()))) {
-                delete m_offscreenSurface;
-                m_offscreenSurface = new QOpenVGOffscreenSurface(QSize(std::ceil(m_rect.width()), std::ceil(m_rect.height())));
-            }
-
-            m_offscreenSurface->makeCurrent();
-        } else if (m_offscreenSurface) {
+        // Fallback to rendering to an image for rounded rects with perspective transforms
+        if (m_offscreenSurface == nullptr || m_offscreenSurface->size() != QSize(std::ceil(m_rect.width()), std::ceil(m_rect.height()))) {
             delete m_offscreenSurface;
-            m_offscreenSurface = nullptr;
+            m_offscreenSurface = new QOpenVGOffscreenSurface(QSize(std::ceil(m_rect.width()), std::ceil(m_rect.height())));
         }
+        m_offscreenSurface->makeCurrent();
     }
-
 
     // If path is dirty
     if (m_pathDirty) {
@@ -291,7 +284,7 @@ void QSGOpenVGInternalRectangleNode::render()
         vgDrawPath(m_rectanglePath, VG_FILL_PATH);
     }
 
-    if (!transform().isAffine() && m_radius > 0) {
+    if (!transform().isAffine()) {
         m_offscreenSurface->doneCurrent();
         //  Render offscreen surface
         vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);

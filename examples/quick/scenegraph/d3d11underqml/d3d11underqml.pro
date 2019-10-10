@@ -1,3 +1,5 @@
+!win32: error("This example requires Windows")
+
 QT += qml quick
 
 HEADERS += d3d11squircle.h

@@ -587,6 +587,7 @@ void QQuickItemView::setHighlightRangeMode(HighlightRangeMode mode)
     d->haveHighlightRange = d->highlightRange != NoHighlightRange && d->highlightRangeStart <= d->highlightRangeEnd;
     if (isComponentComplete()) {
         d->updateViewport();
+        d->moveReason = QQuickItemViewPrivate::Other;
         d->fixupPosition();
     }
     emit highlightRangeModeChanged();
@@ -609,8 +610,10 @@ void QQuickItemView::setPreferredHighlightBegin(qreal start)
     d->haveHighlightRange = d->highlightRange != NoHighlightRange && d->highlightRangeStart <= d->highlightRangeEnd;
     if (isComponentComplete()) {
         d->updateViewport();
-        if (!isMoving() && !isFlicking())
+        if (!isMoving() && !isFlicking()) {
+            d->moveReason = QQuickItemViewPrivate::Other;
             d->fixupPosition();
+        }
     }
     emit preferredHighlightBeginChanged();
 }
@@ -624,8 +627,10 @@ void QQuickItemView::resetPreferredHighlightBegin()
     d->highlightRangeStart = 0;
     if (isComponentComplete()) {
         d->updateViewport();
-        if (!isMoving() && !isFlicking())
+        if (!isMoving() && !isFlicking()) {
+            d->moveReason = QQuickItemViewPrivate::Other;
             d->fixupPosition();
+        }
     }
     emit preferredHighlightBeginChanged();
 }
@@ -646,8 +651,10 @@ void QQuickItemView::setPreferredHighlightEnd(qreal end)
     d->haveHighlightRange = d->highlightRange != NoHighlightRange && d->highlightRangeStart <= d->highlightRangeEnd;
     if (isComponentComplete()) {
         d->updateViewport();
-        if (!isMoving() && !isFlicking())
+        if (!isMoving() && !isFlicking()) {
+            d->moveReason = QQuickItemViewPrivate::Other;
             d->fixupPosition();
+        }
     }
     emit preferredHighlightEndChanged();
 }
@@ -661,8 +668,10 @@ void QQuickItemView::resetPreferredHighlightEnd()
     d->highlightRangeEnd = 0;
     if (isComponentComplete()) {
         d->updateViewport();
-        if (!isMoving() && !isFlicking())
+        if (!isMoving() && !isFlicking()) {
+            d->moveReason = QQuickItemViewPrivate::Other;
             d->fixupPosition();
+        }
     }
     emit preferredHighlightEndChanged();
 }

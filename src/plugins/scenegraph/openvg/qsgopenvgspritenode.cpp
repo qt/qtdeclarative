@@ -52,7 +52,7 @@ QSGOpenVGSpriteNode::QSGOpenVGSpriteNode()
 
 QSGOpenVGSpriteNode::~QSGOpenVGSpriteNode()
 {
-
+    delete m_texture;
 }
 
 void QSGOpenVGSpriteNode::setTexture(QSGTexture *texture)
