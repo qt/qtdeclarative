@@ -1937,6 +1937,10 @@ Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerEvent *e
 {
     QDebugStateSaver saver(dbg);
     dbg.nospace();
+    if (!event) {
+        dbg << "QQuickPointerEvent(0)";
+        return dbg;
+    }
     dbg << "QQuickPointerEvent(";
     dbg << event->timestamp();
     dbg << " dev:";
@@ -1957,6 +1961,10 @@ Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickEventPoint *eve
 {
     QDebugStateSaver saver(dbg);
     dbg.nospace();
+    if (!event) {
+        dbg << "QQuickEventPoint(0)";
+        return dbg;
+    }
     dbg << "QQuickEventPoint(accepted:" << event->isAccepted()
         << " state:";
     QtDebugUtils::formatQEnum(dbg, event->state());
