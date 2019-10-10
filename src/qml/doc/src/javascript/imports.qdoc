@@ -144,14 +144,17 @@ A JavaScript resource may import a QML module in the following fashion:
 .import TypeNamespace MajorVersion.MinorVersion as Qualifier
 \endcode
 
-For example:
+Below you can see an example that also shows how to use the QML types from a
+module imported in javascript:
+
 \code
 .import Qt.test 1.0 as JsQtTest
+
+var importedEnumValue = JsQtTest.MyQmlObject.EnumValue3
 \endcode
 
 In particular, this may be useful in order to access functionality provided
 via a singleton type; see qmlRegisterSingletonType() for more information.
 
 \note The .import syntax doesn't work for scripts used in the \l {WorkerScript}
-
 */
