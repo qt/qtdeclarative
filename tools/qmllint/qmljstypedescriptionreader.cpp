@@ -123,15 +123,13 @@ void TypeDescriptionReader::readDocument(UiProgram *ast)
         return;
     }
 
-    ComponentVersion version;
-    const QString versionString = _source.mid(import->versionToken.offset, import->versionToken.length);
-    const int dotIdx = versionString.indexOf(QLatin1Char('.'));
-    if (dotIdx != -1) {
-        version = ComponentVersion(versionString.leftRef(dotIdx).toInt(),
-                                   versionString.midRef(dotIdx + 1).toInt());
+    if (!import->version) {
+        addError(import->firstSourceLocation(), tr("Import statement without version."));
+        return;
     }
-    if (version.majorVersion() != 1) {
-        addError(import->versionToken, tr("Major version different from 1 not supported."));
+
+    if (import->version->majorVersion != 1) {
+        addError(import->version->firstSourceLocation(), tr("Major version different from 1 not supported."));
         return;
     }
 

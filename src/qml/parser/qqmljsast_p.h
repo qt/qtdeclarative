@@ -3025,7 +3025,6 @@ public:
     QStringRef importId;
     SourceLocation importToken;
     SourceLocation fileNameToken;
-    SourceLocation versionToken;
     SourceLocation asToken;
     SourceLocation importIdToken;
     SourceLocation semicolonToken;
