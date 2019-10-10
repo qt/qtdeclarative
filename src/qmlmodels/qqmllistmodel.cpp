@@ -634,7 +634,7 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles)
         mo->updateValues(*roles);
 }
 
-void ListModel::set(int elementIndex, QV4::Object *object)
+void ListModel::set(int elementIndex, QV4::Object *object, ListModel::SetElement reason)
 {
     if (!object)
         return;
@@ -684,7 +684,7 @@ void ListModel::set(int elementIndex, QV4::Object *object)
         } else if (QV4::DateObject *date = propertyValue->as<QV4::DateObject>()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::DateTime);
             if (r.type == ListLayout::Role::DateTime) {
-                QDateTime dt = date->toQDateTime();;
+                QDateTime dt = date->toQDateTime();
                 e->setDateTimePropertyFast(r, dt);
             }
         } else if (QV4::Object *o = propertyValue->as<QV4::Object>()) {
@@ -699,9 +699,16 @@ void ListModel::set(int elementIndex, QV4::Object *object)
                     e->setVariantMapFast(role, o);
             }
         } else if (propertyValue->isNullOrUndefined()) {
-            const ListLayout::Role *r = m_layout->getExistingRole(propertyName);
-            if (r)
-                e->clearProperty(*r);
+            if (reason == SetElement::WasJustInserted) {
+                QQmlError err;
+                auto memberName = propertyName->toString(m_modelCache->engine())->toQString();
+                err.setDescription(QString::fromLatin1("%1 is %2. Adding an object with a %2 member does not create a role for it.").arg(memberName, propertyValue->isNull() ? QLatin1String("null") : QLatin1String("undefined")));
+                qmlWarning(nullptr, err);
+            } else {
+                const ListLayout::Role *r = m_layout->getExistingRole(propertyName);
+                if (r)
+                    e->clearProperty(*r);
+            }
         }
     }
 }
@@ -725,13 +732,13 @@ QVector<std::function<void()>> ListModel::remove(int index, int count)
 void ListModel::insert(int elementIndex, QV4::Object *object)
 {
     insertElement(elementIndex);
-    set(elementIndex, object);
+    set(elementIndex, object, SetElement::WasJustInserted);
 }
 
 int ListModel::append(QV4::Object *object)
 {
     int elementIndex = appendElement();
-    set(elementIndex, object);
+    set(elementIndex, object, SetElement::WasJustInserted);
     return elementIndex;
 }
 
