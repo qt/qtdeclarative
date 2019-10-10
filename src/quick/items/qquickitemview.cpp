@@ -247,6 +247,8 @@ void QQuickItemView::setModel(const QVariant &m)
 
         connect(d->model, SIGNAL(modelUpdated(QQmlChangeSet,bool)),
                 this, SLOT(modelUpdated(QQmlChangeSet,bool)));
+        if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model))
+            QObjectPrivate::connect(dataModel, &QQmlDelegateModel::delegateChanged, d, &QQuickItemViewPrivate::applyDelegateChange);
         emit countChanged();
     }
     emit modelChanged();
@@ -277,22 +279,8 @@ void QQuickItemView::setDelegate(QQmlComponent *delegate)
     if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model)) {
         int oldCount = dataModel->count();
         dataModel->setDelegate(delegate);
-        if (isComponentComplete()) {
-            d->releaseVisibleItems();
-            d->releaseItem(d->currentItem);
-            d->currentItem = nullptr;
-            d->updateSectionCriteria();
-            d->refill();
-            d->moveReason = QQuickItemViewPrivate::SetIndex;
-            d->updateCurrent(d->currentIndex);
-            if (d->highlight && d->currentItem) {
-                if (d->autoHighlight)
-                    d->resetHighlightPosition();
-                d->updateTrackedItem();
-            }
-            d->moveReason = QQuickItemViewPrivate::Other;
-            d->updateViewport();
-        }
+        if (isComponentComplete())
+            d->applyDelegateChange();
         if (oldCount != dataModel->count())
             emit countChanged();
     }
@@ -1087,6 +1075,24 @@ qreal QQuickItemViewPrivate::calculatedMaxExtent() const
     else
         maxExtent = isContentFlowReversed() ? q->minXExtent() - size(): -q->maxXExtent();
     return maxExtent;
+}
+
+void QQuickItemViewPrivate::applyDelegateChange()
+{
+    releaseVisibleItems();
+    releaseItem(currentItem);
+    currentItem = nullptr;
+    updateSectionCriteria();
+    refill();
+    moveReason = QQuickItemViewPrivate::SetIndex;
+    updateCurrent(currentIndex);
+    if (highlight && currentItem) {
+        if (autoHighlight)
+            resetHighlightPosition();
+        updateTrackedItem();
+    }
+    moveReason = QQuickItemViewPrivate::Other;
+    updateViewport();
 }
 
 // for debugging only

@@ -3,7 +3,7 @@
 ** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -47,58 +47,47 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+import QtQuick 2.0
 
-#ifndef METALRENDERER_H
-#define METALRENDERER_H
+Item {
+    width: 200; height: 200
+    property int outerEnterEvents: 0
+    property int outerExitEvents: 0
+    property int innerEnterEvents: 0
+    property int innerExitEvents: 0
 
-#include <qsgrendernode.h>
-#include <QQuickItem>
+    DropArea {
+        objectName: "outerDropArea"
+        x: 75; y: 75
+        width: 100; height: 100
+        Rectangle {
+            anchors.fill: parent
+            color: "green"
+        }
+        onEntered: ++outerEnterEvents
+        onExited: ++outerExitEvents
 
-//#ifdef Q_OS_DARWIN
-#ifdef Q_OS_MACOS
+        DropArea {
+            objectName: "innerDropArea"
+            width: 50; height: 50
+            Rectangle {
+                anchors.fill: parent
+                color: "blue"
+            }
+            onEntered: ++innerEnterEvents
+            onExited: ++innerExitEvents
+        }
+    }
 
-QT_BEGIN_NAMESPACE
-
-QT_END_NAMESPACE
-
-class MetalRenderNodeResourceBuilder : public QObject
-{
-    Q_OBJECT
-
-public:
-    void setWindow(QQuickWindow *w) { m_window = w; }
-
-public slots:
-    void build();
-
-private:
-    QQuickWindow *m_window = nullptr;
-};
-
-class MetalRenderNode : public QSGRenderNode
-{
-public:
-    MetalRenderNode();
-    ~MetalRenderNode();
-
-    void render(const RenderState *state) override;
-    void releaseResources() override;
-    StateFlags changedStates() const override;
-    RenderingFlags flags() const override;
-    QRectF rect() const override;
-
-    MetalRenderNodeResourceBuilder *resourceBuilder() { return &m_resourceBuilder; }
-
-    void sync(QQuickItem *item);
-
-private:
-    MetalRenderNodeResourceBuilder m_resourceBuilder;
-    QQuickWindow *m_window = nullptr;
-    int m_width = 0;
-    int m_height = 0;
-    int m_outputHeight = 0;
-};
-
-#endif // Q_OS_DARWIN
-
-#endif
+    Rectangle {
+        width: 20; height: 20
+        color: dragArea.pressed ? "red" : "brown"
+        Drag.active: dragArea.drag.active
+        MouseArea {
+            id: dragArea
+            objectName: "dragArea"
+            anchors.fill: parent
+            drag.target: parent
+        }
+    }
+}

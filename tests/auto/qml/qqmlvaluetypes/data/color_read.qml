@@ -12,4 +12,7 @@ MyTypeObject {
     property real hsl_s: color.hslSaturation
     property real hsl_l: color.hslLightness
     property variant copy: color
+
+    property bool valid: color.valid
+    property bool invalid: invalidColor.valid
 }

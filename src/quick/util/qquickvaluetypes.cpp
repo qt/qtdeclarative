@@ -109,6 +109,11 @@ qreal QQuickColorValueType::hslLightness() const
     return v.lightnessF();
 }
 
+bool QQuickColorValueType::isValid() const
+{
+    return v.isValid();
+}
+
 void QQuickColorValueType::setR(qreal r)
 {
     v.setRedF(r);

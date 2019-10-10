@@ -77,7 +77,7 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModel : public QQmlInstanceModel, p
     Q_DECLARE_PRIVATE(QQmlDelegateModel)
 
     Q_PROPERTY(QVariant model READ model WRITE setModel)
-    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     Q_PROPERTY(QString filterOnGroup READ filterGroup WRITE setFilterGroup NOTIFY filterGroupChanged RESET resetFilterGroup)
     Q_PROPERTY(QQmlDelegateModelGroup *items READ items CONSTANT) //TODO : worth renaming?
     Q_PROPERTY(QQmlDelegateModelGroup *persistedItems READ persistedItems CONSTANT)
@@ -140,6 +140,7 @@ Q_SIGNALS:
     void filterGroupChanged();
     void defaultGroupsChanged();
     void rootIndexChanged();
+    void delegateChanged();
 
 private Q_SLOTS:
     void _q_itemsChanged(int index, int count, const QVector<int> &roles);

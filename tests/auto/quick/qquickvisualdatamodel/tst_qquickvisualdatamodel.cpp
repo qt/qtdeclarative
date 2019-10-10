@@ -432,6 +432,7 @@ private slots:
     void asynchronousCancel();
     void invalidContext();
     void externalManagedModel();
+    void delegateModelChangeDelegate();
 
 private:
     template <int N> void groups_verify(
@@ -4300,6 +4301,45 @@ void tst_qquickvisualdatamodel::externalManagedModel()
 
     // Make sure it runs to completion without crashing.
     QTRY_VERIFY(!object->property("running").toBool());
+}
+
+void tst_qquickvisualdatamodel::delegateModelChangeDelegate()
+{
+    // Verify that QTBUG-63477 is fixed.
+    // Changing the delegate would not update existing items.
+    QQmlEngine engine;
+    QScopedPointer<QQmlContext> context(new QQmlContext(engine.rootContext()));
+
+    QQmlComponent c(&engine);
+    c.setData("import QtQml.Models 2.2\nDelegateModel {}\n", QUrl());
+    QCOMPARE(c.status(), QQmlComponent::Ready);
+
+    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(c.create(context.data()));
+    QVERIFY(visualModel);
+    visualModel->setModel(QVariant(3));
+
+    QQmlComponent first(&engine);
+    first.setData("import QtQuick 2.0\nItem { objectName: \"old\" }\n", QUrl());
+    QCOMPARE(first.status(), QQmlComponent::Ready);
+
+    // Without delegate, claim to have an item count of 0
+    QCOMPARE(visualModel->count(), 0);
+
+    visualModel->setDelegate(&first);
+    // The first delegate has been set, verify we get it
+    QObject* old = visualModel->object(0, QQmlIncubator::Synchronous);
+    QVERIFY(old);
+    QCOMPARE(visualModel->object(0, QQmlIncubator::Synchronous)->objectName(), QStringLiteral("old"));
+    QCOMPARE(visualModel->count(), 3);
+
+    QQmlComponent second(&engine);
+    second.setData("import QtQuick 2.0\nItem { objectName: \"new\" }\n", QUrl());
+    QCOMPARE(second.status(), QQmlComponent::Ready);
+
+    visualModel->setDelegate(&second);
+    // After changing the delegate, expect the existing item to have the new delegate
+    QCOMPARE(visualModel->object(0, QQmlIncubator::Synchronous)->objectName(), QStringLiteral("new"));
+    QCOMPARE(visualModel->count(), 3);
 }
 
 QTEST_MAIN(tst_qquickvisualdatamodel)

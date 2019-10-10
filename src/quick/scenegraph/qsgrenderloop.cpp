@@ -619,6 +619,24 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         i++;
     }
 
+    // Check for context loss.
+    if (!current && !rhi && !gl->isValid()) {
+        for (auto it = m_windows.constBegin() ; it != m_windows.constEnd(); it++) {
+            QQuickWindowPrivate *windowPrivate = QQuickWindowPrivate::get(it.key());
+            windowPrivate->cleanupNodesOnShutdown();
+        }
+        rc->invalidate();
+        current = gl->create() && gl->makeCurrent(window);
+        if (current) {
+            QSGDefaultRenderContext::InitParams rcParams;
+            rcParams.sampleCount = qMax(1, gl->format().samples());
+            rcParams.openGLContext = gl;
+            rcParams.initialSurfacePixelSize = window->size() * window->effectiveDevicePixelRatio();
+            rcParams.maybeSurface = window;
+            rc->initialize(&rcParams);
+        }
+    }
+
     if (!current)
         return;
 

@@ -91,6 +91,8 @@ QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
 QQmlTypePrivate::~QQmlTypePrivate()
 {
     qDeleteAll(scopedEnums);
+    for (const auto &metaObject : metaObjects)
+        free(metaObject.metaObject);
     switch (regType) {
     case QQmlType::CppType:
         delete extraData.cd->customParser;

@@ -1641,8 +1641,18 @@ PropertyKey ModelObjectOwnPropertyKeyIterator::next(const Object *o, Property *p
         if (attrs)
             *attrs = QV4::Attr_Data;
         if (pd) {
+
             QVariant value = that->d()->m_model->data(that->d()->elementIndex(), role.index);
-            pd->value = v4->fromVariant(value);
+            if (auto recursiveListModel = qvariant_cast<QQmlListModel*>(value)) {
+                auto size = recursiveListModel->count();
+                auto array = ScopedArrayObject{scope, v4->newArrayObject(size)};
+                for (auto i = 0; i < size; i++) {
+                    array->arrayPut(i, QJSValuePrivate::convertedToValue(v4, recursiveListModel->get(i)));
+                }
+                pd->value = array;
+            } else {
+                pd->value = v4->fromVariant(value);
+            }
         }
         return roleName->toPropertyKey();
     }

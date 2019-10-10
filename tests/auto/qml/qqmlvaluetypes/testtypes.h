@@ -69,6 +69,7 @@ class MyTypeObject : public QObject
     Q_PROPERTY(QMatrix4x4 matrix READ matrix WRITE setMatrix NOTIFY changed)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY changed)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY changed)
+    Q_PROPERTY(QColor invalidColor READ invalidColor CONSTANT)
     Q_PROPERTY(QVariant variant READ variant NOTIFY changed)
 
 public:
@@ -167,6 +168,8 @@ public:
     QColor m_color;
     QColor color() const { return m_color; }
     void setColor(const QColor &v) { m_color = v; emit changed(); }
+
+    QColor invalidColor() const { return QColor(); }
 
     QVariant variant() const { return sizef(); }
 

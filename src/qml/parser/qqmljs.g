@@ -851,13 +851,7 @@ UiVersionSpecifier: T_VERSION_NUMBER;
 UiImport: UiImportHead UiVersionSpecifier Semicolon;
 /.
     case $rule_number: {
-        auto versionToken = loc(2);
-        auto version = sym(2).UiVersionSpecifier;
-        sym(1).UiImport->version = version;
-        if (version->minorToken.isValid()) {
-            versionToken.length += version->minorToken.length + (version->minorToken.offset - versionToken.offset - versionToken.length);
-        }
-        sym(1).UiImport->versionToken = versionToken;
+        sym(1).UiImport->version = sym(2).UiVersionSpecifier;
         sym(1).UiImport->semicolonToken = loc(3);
     } break;
 ./
@@ -865,7 +859,6 @@ UiImport: UiImportHead UiVersionSpecifier Semicolon;
 UiImport: UiImportHead UiVersionSpecifier  T_AS QmlIdentifier Semicolon;
 /.
     case $rule_number: {
-        sym(1).UiImport->versionToken = loc(2);
         sym(1).UiImport->version = sym(2).UiVersionSpecifier;
         sym(1).UiImport->asToken = loc(3);
         sym(1).UiImport->importIdToken = loc(4);
