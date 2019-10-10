@@ -39,13 +39,13 @@
 
     \include examples-run.qdocinc
 
-    \section1 GridView and PathView
+    \section1 Using GridView and PathView
 
     \e GridView and \e PathView demonstrate usage of these types to display
     views.
     \snippet views/gridview/gridview-example.qml 0
 
-    \section1 Dynamic List
+    \section1 Using Dynamic List
 
     \e{Dynamic List} demonstrates animation of runtime additions and removals to
     a \l ListView.
@@ -66,12 +66,12 @@
     \snippet views/listview/expandingdelegates.qml 2
     \snippet views/listview/expandingdelegates.qml 3
 
-    \section1 Highlight
+    \section1 Using Highlight
 
     \e Highlight demonstrates adding a custom highlight to a ListView.
     \snippet views/listview/highlight.qml 0
 
-    \section1 Highlight Ranges
+    \section1 Using Highlight Ranges
 
     \e{Highlight Ranges} shows the three different highlight range modes of
     ListView.
@@ -79,13 +79,13 @@
     \snippet views/listview/highlightranges.qml 1
     \snippet views/listview/highlightranges.qml 2
 
-    \section1 Sections
+    \section1 Using Sections
 
     \e Sections demonstrates the various section headers and footers available
     to \l ListView.
     \snippet views/listview/sections.qml 0
 
-    \section1 Packages
+    \section1 Using Packages
 
     \e Packages use the \l [QML]{Package} type to transition delegates between
     two views.
@@ -106,7 +106,7 @@
 
     \snippet views/objectmodel/objectmodel.qml 0
 
-    \section1 Display Margins
+    \section1 Using Display Margins
 
     \e{Display Margins} uses delegates to display items and implements a simple
     header and footer components.
