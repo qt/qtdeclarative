@@ -94,7 +94,7 @@
     \sa ColumnLayout
     \sa GridLayout
     \sa RowLayout
-    \sa StackView
+    \sa {QtQuick.Controls::StackView}{StackView}
 */
 
 QT_BEGIN_NAMESPACE
