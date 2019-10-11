@@ -76,6 +76,7 @@ void QSGOpenVGRenderContext::initialize(const QSGRenderContext::InitParams *para
 
     m_vgContext = vgparams->context;
     QSGRenderContext::initialize(params);
+    emit initialized();
 }
 
 void QSGOpenVGRenderContext::invalidate()
@@ -84,6 +85,7 @@ void QSGOpenVGRenderContext::invalidate()
     delete m_glyphCacheManager;
     m_glyphCacheManager = nullptr;
     QSGRenderContext::invalidate();
+    emit invalidated();
 }
 
 void QSGOpenVGRenderContext::renderNextFrame(QSGRenderer *renderer, uint fboId)

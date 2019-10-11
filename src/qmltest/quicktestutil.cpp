@@ -63,7 +63,7 @@ int QuickTestUtil::dragThreshold() const
 
 QJSValue QuickTestUtil::typeName(const QVariant &v) const
 {
-    QString name(v.typeName());
+    QString name = QString::fromUtf8(v.typeName());
     if (v.canConvert<QObject*>()) {
         QQmlType type;
         const QMetaObject *mo = v.value<QObject*>()->metaObject();

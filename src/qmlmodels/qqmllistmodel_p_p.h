@@ -381,8 +381,10 @@ public:
         return elements.count();
     }
 
+    enum class SetElement {WasJustInserted, IsCurrentlyUpdated};
+
     void set(int elementIndex, QV4::Object *object, QVector<int> *roles);
-    void set(int elementIndex, QV4::Object *object);
+    void set(int elementIndex, QV4::Object *object, SetElement reason = SetElement::IsCurrentlyUpdated);
 
     int append(QV4::Object *object);
     void insert(int elementIndex, QV4::Object *object);
