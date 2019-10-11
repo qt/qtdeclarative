@@ -53,7 +53,7 @@ add_qt_module(QmlDevTools
 # special case begin
 # Need to generate the parser files as in Qml module.
 set(_qt_qlalr_flags "--no-debug" "--qt")
-qt_process_qlalr("${CMAKE_CURRENT_SOURCE_DIR}/../qml/parser/qqmljs.g" QmlDevTools "${_qt_qlalr_flags}")
+qt_process_qlalr(QmlDevTools "${CMAKE_CURRENT_SOURCE_DIR}/../qml/parser/qqmljs.g" "${_qt_qlalr_flags}")
 
 # Need to propagate some of the include directories from Qml via QmlDevToolsPrivate
 # for other tools, and also for the main QmlDevTools module,

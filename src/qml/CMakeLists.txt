@@ -343,7 +343,7 @@ add_qt_module(Qml
 # special case begin
 qt_declarative_write_tag_header(Qml)
 set(_qt_qlalr_flags "--no-debug" "--qt")
-qt_process_qlalr("${CMAKE_CURRENT_SOURCE_DIR}/parser/qqmljs.g" Qml "${_qt_qlalr_flags}")
+qt_process_qlalr(Qml "${CMAKE_CURRENT_SOURCE_DIR}/parser/qqmljs.g" "${_qt_qlalr_flags}")
 qt_declarative_generate_reg_exp_jit_tables(Qml)
 # special case end
 
