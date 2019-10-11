@@ -70,6 +70,8 @@
 #include <private/qsgrhishadereffectnode_p.h>
 #include <private/qsgdefaultrendercontext_p.h>
 
+#include <qtquick_tracepoints_p.h>
+
 /*
    Overall design:
 
@@ -686,7 +688,9 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
         sinceLastTime = threadTimer.nsecsElapsed();
         threadTimer.start();
     }
+    Q_TRACE_SCOPE(QSG_syncAndRender);
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphRenderLoopFrame);
+    Q_TRACE(QSG_sync_entry);
 
     QElapsedTimer waitTimer;
     waitTimer.start();
@@ -774,6 +778,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     if (profileFrames)
         syncTime = threadTimer.nsecsElapsed();
 #endif
+    Q_TRACE(QSG_sync_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
                               QQuickProfiler::SceneGraphRenderLoopSync);
 
@@ -792,6 +797,8 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     }
 
     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- rendering started");
+
+    Q_TRACE(QSG_render_entry);
 
     // RepaintRequest may have been set in pendingUpdate in an
     // updatePaintNode() invoked from sync(). We are about to do a repaint
@@ -828,8 +835,10 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
 
         if (profileFrames)
             renderTime = threadTimer.nsecsElapsed();
+        Q_TRACE(QSG_render_exit);
         Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
                                   QQuickProfiler::SceneGraphRenderLoopRender);
+        Q_TRACE(QSG_swap_entry);
 
         // With the rhi grabs can only be done by adding a readback and then
         // blocking in a real frame. The legacy GL path never gets here with
@@ -860,10 +869,11 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
 
         if (!grabRequested)
             d->fireFrameSwapped();
-
     } else {
+        Q_TRACE(QSG_render_exit);
         Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphRenderLoopFrame,
                                 QQuickProfiler::SceneGraphRenderLoopSync, 1);
+        Q_TRACE(QSG_swap_entry);
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- window not ready, skipping render");
     }
 
@@ -887,7 +897,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
             int((renderTime - syncTime) / 1000000),
             int(threadTimer.elapsed() - renderTime / 1000000));
 
-
+    Q_TRACE(QSG_swap_exit);
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame,
                            QQuickProfiler::SceneGraphRenderLoopSwap);
 
@@ -1546,7 +1556,7 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
         return;
     }
 
-
+    Q_TRACE_SCOPE(QSG_polishAndSync);
     QElapsedTimer timer;
     qint64 polishTime = 0;
     qint64 waitTime = 0;
@@ -1555,14 +1565,17 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     if (profileFrames)
         timer.start();
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphPolishAndSync);
+    Q_TRACE(QSG_polishItems_entry);
 
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
     d->polishItems();
 
     if (profileFrames)
         polishTime = timer.nsecsElapsed();
+    Q_TRACE(QSG_polishItems_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
                               QQuickProfiler::SceneGraphPolishAndSyncPolish);
+    Q_TRACE(QSG_wait_entry);
 
     w->updateDuringSync = false;
 
@@ -1577,8 +1590,11 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     qCDebug(QSG_LOG_RENDERLOOP, "- wait for sync");
     if (profileFrames)
         waitTime = timer.nsecsElapsed();
+    Q_TRACE(QSG_wait_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
                               QQuickProfiler::SceneGraphPolishAndSyncWait);
+    Q_TRACE(QSG_sync_entry);
+
     w->thread->waitCondition.wait(&w->thread->mutex);
     m_lockedForSync = false;
     w->thread->mutex.unlock();
@@ -1586,8 +1602,10 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
 
     if (profileFrames)
         syncTime = timer.nsecsElapsed();
+    Q_TRACE(QSG_sync_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
                               QQuickProfiler::SceneGraphPolishAndSyncSync);
+    Q_TRACE(QSG_animations_entry);
 
     if (m_animation_timer == 0 && m_animation_driver->isRunning()) {
         qCDebug(QSG_LOG_RENDERLOOP, "- advancing animations");
@@ -1608,6 +1626,7 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
             << ", animations=" << (timer.nsecsElapsed() - syncTime) / 1000000
             << " - (on Gui thread) " << window;
 
+    Q_TRACE(QSG_animations_exit);
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphPolishAndSync,
                            QQuickProfiler::SceneGraphPolishAndSyncAnimations);
 }

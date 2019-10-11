@@ -62,6 +62,8 @@
 #include "qsgopenglvisualizer_p.h"
 #include "qsgrhivisualizer_p.h"
 
+#include <qtquick_tracepoints_p.h>
+
 #include <algorithm>
 
 #ifndef GL_DOUBLE
@@ -270,6 +272,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material, boo
         return nullptr;
     }
 
+    Q_TRACE_SCOPE(QSG_prepareMaterial);
     if (QSG_LOG_TIME_COMPILATION().isDebugEnabled())
         qsg_renderer_timer.start();
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphContextFrame);
@@ -332,6 +335,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
         return nullptr;
     }
 
+    Q_TRACE_SCOPE(QSG_prepareMaterial);
     if (QSG_LOG_TIME_COMPILATION().isDebugEnabled())
         qsg_renderer_timer.start();
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphContextFrame);

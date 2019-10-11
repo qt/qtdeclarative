@@ -60,6 +60,8 @@
 #include <QtGui/QBackingStore>
 #include <QtQuick/QQuickWindow>
 
+#include <qtquick_tracepoints_p.h>
+
 QT_BEGIN_NAMESPACE
 
 // Passed from the RL to the RT when a window is removed obscured and should be
@@ -457,6 +459,8 @@ void QSGSoftwareRenderThread::sync(bool inExpose)
 
 void QSGSoftwareRenderThread::syncAndRender()
 {
+    Q_TRACE_SCOPE(QSG_syncAndRender);
+    Q_TRACE(QSG_sync_entry);
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphRenderLoopFrame);
 
     QElapsedTimer waitTimer;
@@ -475,6 +479,7 @@ void QSGSoftwareRenderThread::syncAndRender()
     if (syncRequested)
         sync(exposeRequested);
 
+    Q_TRACE(QSG_sync_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
                               QQuickProfiler::SceneGraphRenderLoopSync);
 
@@ -487,6 +492,7 @@ void QSGSoftwareRenderThread::syncAndRender()
     }
 
     qCDebug(QSG_RASTER_LOG_RENDERLOOP, "RT - rendering started");
+    Q_TRACE(QSG_render_entry);
 
     if (rtAnim->isRunning()) {
         wd->animationController->lock();
@@ -502,8 +508,10 @@ void QSGSoftwareRenderThread::syncAndRender()
             softwareRenderer->setBackingStore(backingStore);
         wd->renderSceneGraph(exposedWindow->size());
 
+        Q_TRACE(QSG_render_exit);
         Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
                                   QQuickProfiler::SceneGraphRenderLoopRender);
+        Q_TRACE(QSG_swap_entry);
 
         if (softwareRenderer && (!wd->customRenderStage || !wd->customRenderStage->swap()))
             backingStore->flush(softwareRenderer->flushRegion());
@@ -519,8 +527,10 @@ void QSGSoftwareRenderThread::syncAndRender()
 
         wd->fireFrameSwapped();
     } else {
+        Q_TRACE(QSG_render_exit);
         Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphRenderLoopFrame,
                                 QQuickProfiler::SceneGraphRenderLoopSync, 1);
+        Q_TRACE(QSG_swap_entry);
         qCDebug(QSG_RASTER_LOG_RENDERLOOP, "RT - window not ready, skipping render");
     }
 
@@ -532,6 +542,7 @@ void QSGSoftwareRenderThread::syncAndRender()
         mutex.unlock();
     }
 
+    Q_TRACE(QSG_swap_exit);
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame,
                            QQuickProfiler::SceneGraphRenderLoopSwap);
 }
@@ -947,13 +958,18 @@ void QSGSoftwareThreadedRenderLoop::polishAndSync(QSGSoftwareThreadedRenderLoop:
         return;
     }
 
+    Q_TRACE_SCOPE(QSG_polishAndSync);
+
+    Q_TRACE(QSG_polishItems_entry);
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphPolishAndSync);
 
     QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
     wd->polishItems();
 
+    Q_TRACE(QSG_polishItems_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
                               QQuickProfiler::SceneGraphPolishAndSyncPolish);
+    Q_TRACE(QSG_sync_entry);
 
     w->updateDuringSync = false;
 
@@ -967,15 +983,19 @@ void QSGSoftwareThreadedRenderLoop::polishAndSync(QSGSoftwareThreadedRenderLoop:
 
     qCDebug(QSG_RASTER_LOG_RENDERLOOP, "polishAndSync - wait for sync");
 
+    Q_TRACE(QSG_sync_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
                               QQuickProfiler::SceneGraphPolishAndSyncWait);
+    Q_TRACE(QSG_wait_entry);
     w->thread->waitCondition.wait(&w->thread->mutex);
     lockedForSync = false;
     w->thread->mutex.unlock();
     qCDebug(QSG_RASTER_LOG_RENDERLOOP, "polishAndSync - unlock after sync");
 
+    Q_TRACE(QSG_wait_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
                               QQuickProfiler::SceneGraphPolishAndSyncSync);
+    Q_TRACE(QSG_animations_entry);
 
     if (!animationTimer && m_anim->isRunning()) {
         qCDebug(QSG_RASTER_LOG_RENDERLOOP, "polishAndSync - advancing animations");
@@ -987,6 +1007,7 @@ void QSGSoftwareThreadedRenderLoop::polishAndSync(QSGSoftwareThreadedRenderLoop:
         w->window->requestUpdate();
     }
 
+    Q_TRACE(QSG_animations_exit);
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphPolishAndSync,
                            QQuickProfiler::SceneGraphPolishAndSyncAnimations);
 }

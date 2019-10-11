@@ -59,6 +59,8 @@
 
 #include <private/qquickprofiler_p.h>
 
+#include <qtquick_tracepoints_p.h>
+
 QT_BEGIN_NAMESPACE
 
 #ifndef GL_BGRA
@@ -250,14 +252,17 @@ void AtlasBase::bind(QSGTexture::Filtering filtering)
         if (profileFrames)
             qsg_renderer_timer.start();
 
+        Q_TRACE_SCOPE(QSG_texture_prepare);
         Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphTexturePrepare);
 
         // Skip bind, convert, swizzle; they're irrelevant
         Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphTexturePrepare,
                                 QQuickProfiler::SceneGraphTexturePrepareStart, 3);
+        Q_TRACE(QSG_texture_upload_entry);
 
         uploadPendingTexture(i);
 
+        Q_TRACE(QSG_texture_upload_exit);
         Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare,
                                   QQuickProfiler::SceneGraphTexturePrepareUpload);
 

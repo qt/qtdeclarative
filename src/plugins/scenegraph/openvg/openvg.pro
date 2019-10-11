@@ -6,6 +6,18 @@ PLUGIN_TYPE = scenegraph
 PLUGIN_CLASS_NAME = QSGOpenVGAdaptation
 load(qt_plugin)
 
+TRACEPOINT_PROVIDER = $$PWD/openvg.tracepoints
+CONFIG += qt_tracepoints
+debug_and_release {
+    CONFIG(debug, debug|release) {
+        INCLUDEPATH += $$OUT_PWD/../../../quick/.tracegen/debug
+    } else {
+        INCLUDEPATH += $$OUT_PWD/../../../quick/.tracegen/release
+    }
+} else {
+    INCLUDEPATH += $$OUT_PWD/../../../quick/.tracegen/
+}
+
 QMAKE_TARGET_PRODUCT = "Qt Quick OpenVG Renderer (Qt $$QT_VERSION)"
 QMAKE_TARGET_DESCRIPTION = "Quick OpenVG Renderer for Qt."
 
