@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/rendercontrol")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -29,6 +29,7 @@ target_link_libraries(rendercontrol PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(rendercontrol_resource_files
     "demo.qml"
@@ -40,7 +41,6 @@ qt6_add_resources(rendercontrol "rendercontrol"
     FILES
         ${rendercontrol_resource_files}
 )
-
 
 install(TARGETS rendercontrol
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

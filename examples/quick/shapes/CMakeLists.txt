@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/shapes")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -25,6 +25,7 @@ target_link_libraries(shapes PUBLIC
     Qt::Qml
     Qt::Quick
 )
+
 
 # Resources:
 set_source_files_properties("../shared/LauncherList.qml"
@@ -148,7 +149,6 @@ qt6_add_resources(shapes "shapes"
     FILES
         ${shapes_resource_files}
 )
-
 
 install(TARGETS shapes
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

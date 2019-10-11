@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/customitems/maskedmousearea")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -27,6 +27,7 @@ target_link_libraries(maskedmousearea PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(maskedmousearea_resource_files
     "images/cloud_1.png"
@@ -41,7 +42,6 @@ qt6_add_resources(maskedmousearea "maskedmousearea"
     FILES
         ${maskedmousearea_resource_files}
 )
-
 
 install(TARGETS maskedmousearea
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

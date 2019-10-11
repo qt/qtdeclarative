@@ -21,6 +21,12 @@ target_link_libraries(tst_qmltestexample PUBLIC
     Qt::Core
     Qt::Gui
 )
+if(QT_BUILDING_QT)
+    target_link_libraries(tst_qmltestexample PUBLIC
+        Qt::Qml
+        Qt::QuickTest
+    )
+endif()
 
 install(TARGETS tst_qmltestexample
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

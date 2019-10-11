@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/mousearea")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -26,6 +26,7 @@ target_link_libraries(mousearea PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(mousearea_resource_files
     "mousearea-wheel-example.qml"
@@ -38,7 +39,6 @@ qt6_add_resources(mousearea "mousearea"
     FILES
         ${mousearea_resource_files}
 )
-
 
 install(TARGETS mousearea
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

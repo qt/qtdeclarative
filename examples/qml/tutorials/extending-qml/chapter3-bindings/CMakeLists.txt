@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/qml/tutorials/extending-qml/chapter3-bindings")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -27,6 +27,7 @@ target_link_libraries(chapter3-bindings PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(chapter3-bindings_resource_files
     "app.qml"
@@ -38,7 +39,6 @@ qt6_add_resources(chapter3-bindings "chapter3-bindings"
     FILES
         ${chapter3-bindings_resource_files}
 )
-
 
 install(TARGETS chapter3-bindings
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

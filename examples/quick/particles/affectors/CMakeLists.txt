@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/particles/affectors")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -25,6 +25,7 @@ target_link_libraries(affectors PUBLIC
     Qt::Qml
     Qt::Quick
 )
+
 
 # Resources:
 set(affectors_resource_files
@@ -254,7 +255,6 @@ qt6_add_resources(affectors "shared"
     FILES
         ${shared_resource_files}
 )
-
 
 install(TARGETS affectors
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

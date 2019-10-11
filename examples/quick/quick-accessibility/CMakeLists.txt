@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/quick-accessibility")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -26,6 +26,7 @@ target_link_libraries(quick-accessibility PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(accessibility_resource_files
     "accessibility.qml"
@@ -40,7 +41,6 @@ qt6_add_resources(quick-accessibility "accessibility"
     FILES
         ${accessibility_resource_files}
 )
-
 
 install(TARGETS quick-accessibility
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

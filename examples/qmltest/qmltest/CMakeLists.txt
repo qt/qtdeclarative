@@ -28,6 +28,16 @@ target_link_libraries(tst_qmltestexample PUBLIC
 # special case end
 )
 
+# special case begin
+# This ling get added, but does not make sense
+#if(QT_BUILDING_QT)
+#    target_link_libraries(tst_qmltestexample PUBLIC
+#        Qt::Qml
+#        Qt::QuickTest
+#    )
+#endif()
+# special case end
+
 install(TARGETS tst_qmltestexample
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -29,6 +29,7 @@ target_link_libraries(rendernode PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(rendernode_resource_files
     "main.qml"
@@ -45,6 +46,15 @@ qt6_add_resources(rendernode "rendernode"
         ${rendernode_resource_files}
 )
 
+if(QT_FEATURE_d3d12)
+    target_sources(rendernode PUBLIC
+        d3d12renderer.cpp d3d12renderer.h
+    )
+
+    target_link_libraries(rendernode PUBLIC
+        d3d12
+    )
+endif()
 
 if(QT_FEATURE_d3d12)
     target_sources(rendernode PUBLIC

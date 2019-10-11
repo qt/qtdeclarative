@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/qml/referenceexamples/properties")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Qml)
@@ -24,6 +24,7 @@ target_link_libraries(properties PUBLIC
     Qt::Qml
 )
 
+
 # Resources:
 set(properties_resource_files
     "example.qml"
@@ -35,7 +36,6 @@ qt6_add_resources(properties "properties"
     FILES
         ${properties_resource_files}
 )
-
 
 install(TARGETS properties
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

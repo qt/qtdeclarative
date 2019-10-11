@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/qml/tutorials/extending-qml/chapter6-plugins")
 
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
@@ -22,6 +22,7 @@ target_link_libraries(chapter6-plugins PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(app_resource_files
     "app.qml"
@@ -33,7 +34,6 @@ qt6_add_resources(chapter6-plugins "app"
     FILES
         ${app_resource_files}
 )
-
 
 install(TARGETS chapter6-plugins
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

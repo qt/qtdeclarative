@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/delegatechooser")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -25,6 +25,7 @@ target_link_libraries(delegatechooser PUBLIC
     Qt::Qml
     Qt::Quick
 )
+
 
 # Resources:
 set(qml_resource_files
@@ -108,7 +109,6 @@ qt6_add_resources(delegatechooser "shared"
     FILES
         ${shared_resource_files}
 )
-
 
 install(TARGETS delegatechooser
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

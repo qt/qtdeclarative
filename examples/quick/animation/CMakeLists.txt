@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/animation")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -25,6 +25,7 @@ target_link_libraries(animation PUBLIC
     Qt::Qml
     Qt::Quick
 )
+
 
 # Resources:
 set_source_files_properties("../shared/Button.qml"
@@ -126,7 +127,6 @@ qt6_add_resources(animation "animation"
     FILES
         ${animation_resource_files}
 )
-
 
 install(TARGETS animation
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -26,6 +26,7 @@ target_link_libraries(imageelements PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(imageelements_resource_files
     "animatedimage.qml"
@@ -131,7 +132,6 @@ qt6_add_resources(imageelements "shared"
     FILES
         ${shared_resource_files}
 )
-
 
 install(TARGETS imageelements
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

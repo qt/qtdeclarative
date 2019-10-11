@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/particles/itemparticle")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -25,6 +25,17 @@ target_link_libraries(itemparticle PUBLIC
     Qt::Qml
     Qt::Quick
 )
+
+
+file(GLOB resource_glob_0 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "content/*")
+foreach(file IN LISTS resource_glob_0)
+    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/${file}" PROPERTIES QT_RESOURCE_ALIAS "${file}")
+endforeach()
+
+file(GLOB resource_glob_1 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*qml")
+foreach(file IN LISTS resource_glob_1)
+    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/${file}" PROPERTIES QT_RESOURCE_ALIAS "${file}")
+endforeach()
 
 # Resources:
 set_source_files_properties("../images/_explo.png"
@@ -233,16 +244,6 @@ qt6_add_resources(itemparticle "shared"
     FILES
         ${shared_resource_files}
 )
-
-file(GLOB resource_glob_0 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "content/*")
-foreach(file IN LISTS resource_glob_0)
-    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/${file}" PROPERTIES QT_RESOURCE_ALIAS "${file}")
-endforeach()
-
-file(GLOB resource_glob_1 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*qml")
-foreach(file IN LISTS resource_glob_1)
-    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/${file}" PROPERTIES QT_RESOURCE_ALIAS "${file}")
-endforeach()
 set(qmake_immediate_resource_files
     ${resource_glob_0}
     ${resource_glob_1}
@@ -254,7 +255,6 @@ qt6_add_resources(itemparticle "qmake_immediate"
     FILES
         ${qmake_immediate_resource_files}
 )
-
 
 install(TARGETS itemparticle
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/qml/tutorials/extending-qml/chapter1-basics")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -27,6 +27,7 @@ target_link_libraries(chapter1-basics PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(chapter1-basics_resource_files
     "app.qml"
@@ -38,7 +39,6 @@ qt6_add_resources(chapter1-basics "chapter1-basics"
     FILES
         ${chapter1-basics_resource_files}
 )
-
 
 install(TARGETS chapter1-basics
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/qml/xmlhttprequest")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -25,6 +25,7 @@ target_link_libraries(xmlhttprequest PUBLIC
     Qt::Qml
     Qt::Quick
 )
+
 
 # Resources:
 set(xmlhttprequest_resource_files
@@ -96,7 +97,6 @@ qt6_add_resources(xmlhttprequest "quick_shared"
     FILES
         ${quick_shared_resource_files}
 )
-
 
 install(TARGETS xmlhttprequest
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

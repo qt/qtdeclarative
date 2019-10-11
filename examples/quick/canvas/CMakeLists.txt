@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/canvas")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -25,6 +25,7 @@ target_link_libraries(canvas PUBLIC
     Qt::Qml
     Qt::Quick
 )
+
 
 # Resources:
 set(canvas_resource_files
@@ -118,7 +119,6 @@ qt6_add_resources(canvas "shared"
     FILES
         ${shared_resource_files}
 )
-
 
 install(TARGETS canvas
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

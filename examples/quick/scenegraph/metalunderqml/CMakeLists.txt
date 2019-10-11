@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/scenegraph/metalunderqml")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -21,13 +21,14 @@ add_qt_gui_executable(metalunderqml
     metalsquircle.h metalsquircle.mm
 )
 target_link_libraries(metalunderqml PUBLIC
-    ${FWAppKit}
-    ${FWMetal}
+    "-framework AppKit"
+    "-framework Metal"
     Qt::Core
     Qt::Gui
     Qt::Qml
     Qt::Quick
 )
+
 
 # Resources:
 set(metalunderqml_resource_files
@@ -42,7 +43,6 @@ qt6_add_resources(metalunderqml "metalunderqml"
     FILES
         ${metalunderqml_resource_files}
 )
-
 
 install(TARGETS metalunderqml
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

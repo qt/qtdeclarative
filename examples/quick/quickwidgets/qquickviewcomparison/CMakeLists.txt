@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/quickwidgets/qquickviewcomparison")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -31,6 +31,7 @@ target_link_libraries(qquickviewcomparison PUBLIC
     Qt::Widgets
 )
 
+
 # Resources:
 set(qquickviewcomparison_resource_files
     "test.qml"
@@ -42,7 +43,6 @@ qt6_add_resources(qquickviewcomparison "qquickviewcomparison"
     FILES
         ${qquickviewcomparison_resource_files}
 )
-
 
 install(TARGETS qquickviewcomparison
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

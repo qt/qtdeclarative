@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/qml/networkaccessmanagerfactory")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -28,6 +28,7 @@ target_link_libraries(networkaccessmanagerfactory PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(networkaccessmanagerfactory_resource_files
     "view.qml"
@@ -39,7 +40,6 @@ qt6_add_resources(networkaccessmanagerfactory "networkaccessmanagerfactory"
     FILES
         ${networkaccessmanagerfactory_resource_files}
 )
-
 
 install(TARGETS networkaccessmanagerfactory
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

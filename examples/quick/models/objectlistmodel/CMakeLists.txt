@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/models/objectlistmodel")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -27,6 +27,7 @@ target_link_libraries(objectlistmodel PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(objectlistmodel_resource_files
     "view.qml"
@@ -38,7 +39,6 @@ qt6_add_resources(objectlistmodel "objectlistmodel"
     FILES
         ${objectlistmodel_resource_files}
 )
-
 
 install(TARGETS objectlistmodel
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

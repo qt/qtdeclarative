@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/scenegraph/simplematerial")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -24,6 +24,7 @@ target_link_libraries(simplematerial PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(simplematerial_resource_files
     "main.qml"
@@ -35,7 +36,6 @@ qt6_add_resources(simplematerial "simplematerial"
     FILES
         ${simplematerial_resource_files}
 )
-
 
 install(TARGETS simplematerial
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/qml/referenceexamples/adding")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Qml)
@@ -23,6 +23,7 @@ target_link_libraries(adding PUBLIC
     Qt::Qml
 )
 
+
 # Resources:
 set(adding_resource_files
     "example.qml"
@@ -34,7 +35,6 @@ qt6_add_resources(adding "adding"
     FILES
         ${adding_resource_files}
 )
-
 
 install(TARGETS adding
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

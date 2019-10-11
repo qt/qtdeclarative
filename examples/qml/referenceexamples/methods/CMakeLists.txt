@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/qml/referenceexamples/methods")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Qml)
@@ -24,6 +24,7 @@ target_link_libraries(methods PUBLIC
     Qt::Qml
 )
 
+
 # Resources:
 set(methods_resource_files
     "example.qml"
@@ -35,7 +36,6 @@ qt6_add_resources(methods "methods"
     FILES
         ${methods_resource_files}
 )
-
 
 install(TARGETS methods
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/scenegraph/graph")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -28,6 +28,7 @@ target_link_libraries(graph PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(graph_resource_files
     "main.qml"
@@ -43,7 +44,6 @@ qt6_add_resources(graph "graph"
     FILES
         ${graph_resource_files}
 )
-
 
 install(TARGETS graph
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

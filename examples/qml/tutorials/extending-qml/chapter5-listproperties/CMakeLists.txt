@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/qml/tutorials/extending-qml/chapter5-listproperties")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -28,6 +28,7 @@ target_link_libraries(chapter5-listproperties PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(chapter5-listproperties_resource_files
     "app.qml"
@@ -39,7 +40,6 @@ qt6_add_resources(chapter5-listproperties "chapter5-listproperties"
     FILES
         ${chapter5-listproperties_resource_files}
 )
-
 
 install(TARGETS chapter5-listproperties
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/qml/tutorials/extending-qml/chapter2-methods")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -27,6 +27,7 @@ target_link_libraries(chapter2-methods PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(chapter2-methods_resource_files
     "app.qml"
@@ -38,7 +39,6 @@ qt6_add_resources(chapter2-methods "chapter2-methods"
     FILES
         ${chapter2-methods_resource_files}
 )
-
 
 install(TARGETS chapter2-methods
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

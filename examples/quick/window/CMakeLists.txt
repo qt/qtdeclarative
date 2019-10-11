@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/window")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -25,6 +25,7 @@ target_link_libraries(window PUBLIC
     Qt::Qml
     Qt::Quick
 )
+
 
 # Resources:
 set(window_resource_files
@@ -111,7 +112,6 @@ qt6_add_resources(window "shared"
     FILES
         ${shared_resource_files}
 )
-
 
 install(TARGETS window
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

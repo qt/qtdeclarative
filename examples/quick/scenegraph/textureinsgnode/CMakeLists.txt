@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/scenegraph/textureinsgnode")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -24,12 +24,14 @@ add_qt_gui_executable(textureinsgnode
 target_include_directories(textureinsgnode PUBLIC
     ../shared
 )
+
 target_link_libraries(textureinsgnode PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Qml
     Qt::Quick
 )
+
 
 # Resources:
 set(textureinsgnode_resource_files
@@ -42,7 +44,6 @@ qt6_add_resources(textureinsgnode "textureinsgnode"
     FILES
         ${textureinsgnode_resource_files}
 )
-
 
 install(TARGETS textureinsgnode
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

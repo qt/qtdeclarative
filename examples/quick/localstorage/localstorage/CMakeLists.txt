@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/localstorage/localstorage")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -25,6 +25,7 @@ target_link_libraries(localstorage PUBLIC
     Qt::Qml
     Qt::Quick
 )
+
 
 # Resources:
 set(localstorage_resource_files
@@ -113,7 +114,6 @@ qt6_add_resources(localstorage "shared"
     FILES
         ${shared_resource_files}
 )
-
 
 install(TARGETS localstorage
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

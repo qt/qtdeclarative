@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/scenegraph/textureinthread")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -23,15 +23,18 @@ add_qt_gui_executable(textureinthread
 target_include_directories(textureinthread PUBLIC
     ../shared
 )
+
 target_link_libraries(textureinthread PRIVATE
     Qt::CorePrivate
     Qt::GuiPrivate
 )
+
 target_link_libraries(textureinthread PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Quick
 )
+
 
 # Resources:
 set(textureinthread_resource_files
@@ -45,7 +48,6 @@ qt6_add_resources(textureinthread "textureinthread"
     FILES
         ${textureinthread_resource_files}
 )
-
 
 install(TARGETS textureinthread
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

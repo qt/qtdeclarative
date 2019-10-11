@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/views")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -25,6 +25,7 @@ target_link_libraries(views PUBLIC
     Qt::Qml
     Qt::Quick
 )
+
 
 # Resources:
 set(views_resource_files
@@ -153,7 +154,6 @@ qt6_add_resources(views "shared"
     FILES
         ${shared_resource_files}
 )
-
 
 install(TARGETS views
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

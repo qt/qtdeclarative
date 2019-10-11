@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/layouts")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -26,6 +26,7 @@ target_link_libraries(layouts PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(layouts_resource_files
     "layouts.qml"
@@ -37,7 +38,6 @@ qt6_add_resources(layouts "layouts"
     FILES
         ${layouts_resource_files}
 )
-
 
 install(TARGETS layouts
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

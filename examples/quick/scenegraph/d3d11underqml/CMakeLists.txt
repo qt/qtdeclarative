@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/scenegraph/d3d11underqml")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -29,6 +29,7 @@ target_link_libraries(d3d11underqml PUBLIC
     d3dcompiler
 )
 
+
 # Resources:
 set(d3d11underqml_resource_files
     "main.qml"
@@ -42,7 +43,6 @@ qt6_add_resources(d3d11underqml "d3d11underqml"
     FILES
         ${d3d11underqml_resource_files}
 )
-
 
 install(TARGETS d3d11underqml
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

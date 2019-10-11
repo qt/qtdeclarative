@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/customitems/painteditem/TextBalloonPlugin")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -34,6 +34,7 @@ target_link_libraries(qmltextballoonplugin PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(painteditem_resource_files
     "textballoon.h"
@@ -46,7 +47,6 @@ qt6_add_resources(qmltextballoonplugin "painteditem"
     FILES
         ${painteditem_resource_files}
 )
-
 
 install(TARGETS qmltextballoonplugin
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

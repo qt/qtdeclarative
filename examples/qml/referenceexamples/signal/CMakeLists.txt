@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/qml/referenceexamples/signal")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -26,6 +26,7 @@ target_link_libraries(signal PUBLIC
     Qt::Qml
 )
 
+
 # Resources:
 set(signal_resource_files
     "example.qml"
@@ -37,7 +38,6 @@ qt6_add_resources(signal "signal"
     FILES
         ${signal_resource_files}
 )
-
 
 install(TARGETS signal
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

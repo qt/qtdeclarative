@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/tableview/pixelator")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -27,6 +27,7 @@ target_link_libraries(pixelator PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(qmake_immediate_resource_files
     "main.qml"
@@ -39,7 +40,6 @@ qt6_add_resources(pixelator "qmake_immediate"
     FILES
         ${qmake_immediate_resource_files}
 )
-
 
 install(TARGETS pixelator
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
