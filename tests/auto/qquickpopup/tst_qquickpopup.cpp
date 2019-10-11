@@ -1197,9 +1197,11 @@ void tst_QQuickPopup::toolTipCrashOnClose()
 
     QQuickWindow *window = helper.window;
     window->show();
-    // TODO: Using ignoreMessage() fails in CI with macOS for release builds,
-    // so for now we let the warning through.
-//    QTest::ignoreMessage(QtWarningMsg, "ShaderEffectSource: 'recursive' must be set to true when rendering recursively.");
+    // The warning only occurs with debug builds for some reason.
+    // In any case, the warning is irrelevant, but using ShaderEffectSource is important, so we ignore it.
+#ifdef QT_DEBUG
+    QTest::ignoreMessage(QtWarningMsg, "ShaderEffectSource: 'recursive' must be set to true when rendering recursively.");
+#endif
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QTest::mouseMove(window, QPoint(window->width() / 2, window->height() / 2));
@@ -1215,9 +1217,9 @@ void tst_QQuickPopup::setOverlayParentToNull()
 
     QQuickWindow *window = helper.window;
     window->show();
-    // TODO: Using ignoreMessage() fails in CI with macOS for release builds,
-    // so for now we let the warning through.
-//    QTest::ignoreMessage(QtWarningMsg, "ShaderEffectSource: 'recursive' must be set to true when rendering recursively.");
+#ifdef QT_DEBUG
+    QTest::ignoreMessage(QtWarningMsg, "ShaderEffectSource: 'recursive' must be set to true when rendering recursively.");
+#endif
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QVERIFY(QMetaObject::invokeMethod(window, "nullifyOverlayParent"));
