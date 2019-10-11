@@ -380,23 +380,21 @@ public:
         relocatableModuleUri = uri;
     }
 
-    const QString getExportString(QString qmlTyName, int majorVersion, int minorVersion)
+    QString getExportString(const QQmlType &type, const QmlVersionInfo &versionInfo)
     {
-        if (qmlTyName.startsWith(relocatableModuleUri + QLatin1Char('/'))) {
-            qmlTyName.remove(0, relocatableModuleUri.size() + 1);
-        }
-        if (qmlTyName.startsWith("./")) {
-            qmlTyName.remove(0, 2);
-        }
-        if (qmlTyName.startsWith(QLatin1Char('/'))) {
-            qmlTyName.remove(0, 1);
-        }
-        const QString exportString = enquote(
-                    QString("%1 %2.%3").arg(
-                        qmlTyName,
-                        QString::number(majorVersion),
-                        QString::number(minorVersion)));
-        return exportString;
+        const QString module = type.module().isEmpty() ? versionInfo.pluginImportUri
+                                                       : type.module();
+        const int majorVersion = type.majorVersion() >= 0 ? type.majorVersion()
+                                                          : versionInfo.majorVersion;
+        const int minorVersion = type.minorVersion() >= 0 ? type.minorVersion()
+                                                          : versionInfo.minorVersion;
+
+        const QString versionedElement = type.elementName()
+                + QString::fromLatin1(" %1.%2").arg(majorVersion).arg(minorVersion);
+
+        return enquote((module == relocatableModuleUri)
+                       ? versionedElement
+                       : module + QLatin1Char('/') + versionedElement);
     }
 
     void writeMetaContent(const QMetaObject *meta, KnownAttributes *knownAttributes = nullptr)
@@ -455,11 +453,15 @@ public:
                     && !objectsToMerge->contains(metaObject))
                 objectsToMerge->append(metaObject);
             const QMetaObject *superMetaObject = metaObject->superClass();
-            if (!superMetaObject)
+            if (!superMetaObject) {
                 prototypeName = "QObject";
-            else
+            } else {
+                QQmlType superType = QQmlMetaType::qmlType(superMetaObject);
+                if (superType.isValid() && !superType.isComposite())
+                    return convertToId(superMetaObject->className());
                 prototypeName = getPrototypeNameForCompositeType(
                             superMetaObject, objectsToMerge, versionInfo);
+            }
         } else {
             prototypeName = convertToId(metaObject->className());
         }
@@ -498,8 +500,12 @@ public:
         qml->writeScriptBinding(QLatin1String("prototype"), enquote(prototypeName));
 
         QString qmlTyName = compositeType.qmlTypeName();
-        const QString exportString = getExportString(qmlTyName, compositeType.majorVersion(), compositeType.minorVersion());
+        const QString exportString = getExportString(compositeType, versionInfo);
+
+        // TODO: why don't we simply output the compositeType.elementName() here?
+        //       That would make more sense, but it would change the format quite a bit.
         qml->writeScriptBinding(QLatin1String("name"), exportString);
+
         qml->writeArrayBinding(QLatin1String("exports"), QStringList() << exportString);
         qml->writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), QStringList() << QString::number(compositeType.minorVersion()));
         qml->writeBooleanBinding(QLatin1String("isComposite"), true);
@@ -566,7 +572,7 @@ public:
                 if (attachedType != meta)
                     attachedTypeId = convertToId(attachedType);
             }
-            const QString exportString = getExportString(type.qmlTypeName(), type.majorVersion(), type.minorVersion());
+            const QString exportString = getExportString(type, { QString(), -1, -1, false });
             int metaObjectRevision = type.metaObjectRevision();
             if (extendedObject) {
                 // emulate custom metaobjectrevision out of import

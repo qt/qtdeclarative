@@ -14,4 +14,14 @@ Module {
         exports: ["dumper.Imports/Imports 1.0"]
         exportMetaObjectRevisions: [0]
     }
+    Component {
+        prototype: "Imports"
+        name: "dumper.Imports/Derived 1.0"
+        exports: ["dumper.Imports/Derived 1.0"]
+        exportMetaObjectRevisions: [0]
+        isComposite: true
+        isCreatable: false
+        isSingleton: true
+        Property { name: "something"; type: "int" }
+    }
 }
