@@ -230,6 +230,7 @@ private slots:
     void padding();
 
     void QTBUG_51115_readOnlyResetsSelection();
+    void QTBUG_77814_InsertRemoveNoSelection();
 
 private:
     void simulateKey(QWindow *, int key);
@@ -7001,6 +7002,18 @@ void tst_qquicktextinput::QTBUG_51115_readOnlyResetsSelection()
     QQuickTextInput *obj = qobject_cast<QQuickTextInput*>(view.rootObject());
 
     QCOMPARE(obj->selectedText(), QString());
+}
+
+void tst_qquicktextinput::QTBUG_77814_InsertRemoveNoSelection()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("qtbug77841.qml"));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QQuickTextInput *textInput = view.rootObject()->findChild<QQuickTextInput*>("qwe");
+    QVERIFY(textInput);
+
+    QCOMPARE(textInput->selectedText(), QString());
 }
 
 QTEST_MAIN(tst_qquicktextinput)
