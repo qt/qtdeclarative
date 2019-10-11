@@ -343,7 +343,7 @@ void QQuickBorderImage::load()
 
             QUrl loadUrl = d->url;
             resolve2xLocalFile(d->url, targetDevicePixelRatio, &loadUrl, &d->devicePixelRatio);
-            d->pix.load(qmlEngine(this), loadUrl, d->sourcesize * d->devicePixelRatio, options);
+            d->pix.load(qmlEngine(this), loadUrl, d->sourcesize * d->devicePixelRatio, options, QQuickImageProviderOptions(), d->currentFrame, d->frameCount);
 
             if (d->pix.isLoading()) {
                 if (d->progress != 0.0) {
@@ -534,6 +534,10 @@ void QQuickBorderImage::requestFinished()
         d->oldSourceSize = sourceSize();
         emit sourceSizeChanged();
     }
+    if (d->frameCount != d->pix.frameCount()) {
+        d->frameCount = d->pix.frameCount();
+        emit frameCountChanged();
+    }
 
     pixmapChange();
 }
@@ -692,6 +696,18 @@ void QQuickBorderImage::pixmapChange()
     d->pixmapChanged = true;
     update();
 }
+
+/*!
+    \qmlproperty int QtQuick::BorderImage::currentFrame
+    \qmlproperty int QtQuick::BorderImage::frameCount
+    \since 5.14
+
+    currentFrame is the frame that is currently visible. The default is \c 0.
+    You can set it to a number between \c 0 and \c {frameCount - 1} to display a
+    different frame, if the image contains multiple frames.
+
+    frameCount is the number of frames in the image. Most images have only one frame.
+*/
 
 QT_END_NAMESPACE
 

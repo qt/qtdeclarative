@@ -186,5 +186,7 @@ qtConfig(qml-network) {
         $$PWD/qqmltypeloadernetworkreplyproxy.cpp
 }
 
+android: DEFINES += LIBS_SUFFIX='\\"_$${QT_ARCH}.so\\"'
+
 include(ftw/ftw.pri)
 include(v8/v8.pri)

@@ -147,10 +147,6 @@ const QEvent::Type WM_Obscure           = QEvent::Type(QEvent::User + 1);
 // (updatePaintNode())
 const QEvent::Type WM_RequestSync       = QEvent::Type(QEvent::User + 2);
 
-// Passed by the RT to itself to trigger another render pass. This is
-// typically a result of QQuickWindow::update().
-const QEvent::Type WM_RequestRepaint    = QEvent::Type(QEvent::User + 3);
-
 // Passed by the RL to the RT to free up maybe release SG and GL contexts
 // if no windows are rendering.
 const QEvent::Type WM_TryRelease        = QEvent::Type(QEvent::User + 4);
@@ -509,13 +505,6 @@ bool QSGRenderThread::event(QEvent *e)
         mutex.unlock();
         return true;
     }
-
-    case WM_RequestRepaint:
-        qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "WM_RequestPaint");
-        // When GUI posts this event, it is followed by a polishAndSync, so we mustn't
-        // exit the event loop yet.
-        pendingUpdate |= RepaintRequest;
-        break;
 
     default:
         break;

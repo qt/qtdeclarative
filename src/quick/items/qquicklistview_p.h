@@ -126,8 +126,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickListView : public QQuickItemView
 
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged)
 
-    Q_PROPERTY(HeaderPositioning headerPositioning READ headerPositioning WRITE setHeaderPositioning NOTIFY headerPositioningChanged REVISION 2)
-    Q_PROPERTY(FooterPositioning footerPositioning READ footerPositioning WRITE setFooterPositioning NOTIFY footerPositioningChanged REVISION 2)
+    Q_PROPERTY(HeaderPositioning headerPositioning READ headerPositioning WRITE setHeaderPositioning NOTIFY headerPositioningChanged REVISION 4)
+    Q_PROPERTY(FooterPositioning footerPositioning READ footerPositioning WRITE setFooterPositioning NOTIFY footerPositioningChanged REVISION 4)
 
     Q_CLASSINFO("DefaultProperty", "data")
 
@@ -188,8 +188,8 @@ Q_SIGNALS:
     void highlightResizeVelocityChanged();
     void highlightResizeDurationChanged();
     void snapModeChanged();
-    Q_REVISION(2) void headerPositioningChanged();
-    Q_REVISION(2) void footerPositioningChanged();
+    Q_REVISION(4) void headerPositioningChanged();
+    Q_REVISION(4) void footerPositioningChanged();
 
 protected:
     void viewportMoved(Qt::Orientations orient) override;

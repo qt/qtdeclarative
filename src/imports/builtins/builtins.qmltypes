@@ -131,6 +131,13 @@ Module {
             }
         }
         Enum {
+            name: "SplitBehavior"
+            values: {
+                "KeepEmptyParts": 0,
+                "SkipEmptyParts": 1
+            }
+        }
+        Enum {
             name: "Alignment"
             values: {
                 "AlignLeft": 1,
@@ -466,7 +473,8 @@ Module {
                 "AA_DontShowShortcutsInContextMenus": 28,
                 "AA_CompressTabletEvents": 29,
                 "AA_DisableWindowContextHelpButton": 30,
-                "AA_AttributeCount": 31
+                "AA_DisableSessionManager": 31,
+                "AA_AttributeCount": 32
             }
         }
         Enum {
@@ -1081,7 +1089,8 @@ Module {
             values: {
                 "PlainText": 0,
                 "RichText": 1,
-                "AutoText": 2
+                "AutoText": 2,
+                "MarkdownText": 3
             }
         }
         Enum {

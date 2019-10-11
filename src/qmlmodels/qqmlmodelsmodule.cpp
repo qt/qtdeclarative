@@ -81,7 +81,7 @@ void QQmlModelsModule::defineModule()
     qmlRegisterType<QQmlObjectModel>(uri, 2, 1, "ObjectModel");
     qmlRegisterType<QQmlObjectModel,3>(uri, 2, 3, "ObjectModel");
     qmlRegisterType<QQmlInstantiator>(uri, 2, 1, "Instantiator");
-    qmlRegisterType<QQmlInstanceModel>();
+    qmlRegisterAnonymousType<QQmlInstanceModel>(uri, 2);
 #endif
 #if QT_CONFIG(itemmodel)
     qmlRegisterType<QItemSelectionModel>(uri, 2, 2, "ItemSelectionModel");

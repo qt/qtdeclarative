@@ -59,6 +59,7 @@ private:
     QSet<QPair<QString, QString>> m_alreadySeenImports;
     QSet<QString> m_unknownImports;
     ColorOutput m_colorOut;
+    bool m_visitFailed = false;
 
     struct OutstandingConnection {QString targetName; ScopeTree *scope; QQmlJS::AST::UiObjectDefinition *uiod;};
 

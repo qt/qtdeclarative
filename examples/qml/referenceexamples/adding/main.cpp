@@ -62,7 +62,7 @@ int main(int argc, char ** argv)
 
     QQmlEngine engine;
     QQmlComponent component(&engine, QUrl("qrc:example.qml"));
-    Person *person = qobject_cast<Person *>(component.create());
+    auto *person = qobject_cast<Person *>(component.create());
     if (person) {
         qWarning() << "The person's name is" << person->name();
         qWarning() << "They wear a" << person->shoeSize() << "sized shoe";

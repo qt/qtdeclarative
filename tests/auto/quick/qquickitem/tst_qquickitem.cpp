@@ -83,8 +83,8 @@ protected:
         event->accept();
         ++wheelCount;
         timestamp = event->timestamp();
-        lastWheelEventPos = event->pos();
-        lastWheelEventGlobalPos = event->globalPos();
+        lastWheelEventPos = event->position().toPoint();
+        lastWheelEventGlobalPos = event->globalPosition().toPoint();
     }
 };
 
@@ -1462,7 +1462,8 @@ void tst_qquickitem::wheelEvent()
 
     QPoint localPoint(width / 2, height / 2);
     QPoint globalPoint = window.mapToGlobal(localPoint);
-    QWheelEvent event(localPoint, globalPoint, -120, Qt::NoButton, Qt::NoModifier, Qt::Vertical);
+    QWheelEvent event(localPoint, globalPoint, QPoint(0, 0), QPoint(0, -120),
+                      Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
     event.setTimestamp(123456UL);
     event.setAccepted(false);
     QGuiApplication::sendEvent(&window, &event);

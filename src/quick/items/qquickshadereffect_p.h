@@ -74,7 +74,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffect : public QQuickItem
     Q_PROPERTY(CullMode cullMode READ cullMode WRITE setCullMode NOTIFY cullModeChanged)
     Q_PROPERTY(QString log READ log NOTIFY logChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
-    Q_PROPERTY(bool supportsAtlasTextures READ supportsAtlasTextures WRITE setSupportsAtlasTextures NOTIFY supportsAtlasTexturesChanged REVISION 1)
+    Q_PROPERTY(bool supportsAtlasTextures READ supportsAtlasTextures WRITE setSupportsAtlasTextures NOTIFY supportsAtlasTexturesChanged REVISION 4)
 
 public:
     enum CullMode {

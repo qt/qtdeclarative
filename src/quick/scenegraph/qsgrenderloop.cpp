@@ -214,9 +214,7 @@ QSGRenderLoop *QSGRenderLoop::instance()
 {
     if (!s_instance) {
 
-        // For compatibility with 5.3 and earlier's QSG_INFO environment variables
-        if (qEnvironmentVariableIsSet("QSG_INFO"))
-            const_cast<QLoggingCategory &>(QSG_LOG_INFO()).setEnabled(QtDebugMsg, true);
+        QSGRhiSupport::checkEnvQSgInfo();
 
         s_instance = QSGContext::createWindowManager();
 #ifdef ENABLE_DEFAULT_BACKEND
@@ -244,25 +242,28 @@ QSGRenderLoop *QSGRenderLoop::instance()
             }
 
             if (rhiSupport->isRhiEnabled()) {
-                // no 'windows' because that's not yet ported to the rhi
-                if (loopType == WindowsRenderLoop)
-                    loopType = BasicRenderLoop;
-
                 switch (rhiSupport->rhiBackend()) {
-                case QRhi::D3D11:
-                    // D3D11 is forced to 'basic' always for now. The threaded loop's model may
-                    // not be suitable for DXGI due to the possibility of having the main
-                    // thread blocked while issuing a Present. To be investigated.
+                case QRhi::Null:
                     loopType = BasicRenderLoop;
                     break;
 
-                case QRhi::Null:
-                    loopType = BasicRenderLoop;
+                case QRhi::D3D11:
+                    // The threaded loop's model may not be suitable for DXGI
+                    // due to the possibility of having the main thread (with
+                    // the Windows message pump) blocked while issuing a
+                    // Present on the render thread. However, according to the
+                    // docs this can be a problem for fullscreen swapchains
+                    // only. So leave threaded enabled by default for now and
+                    // revisit later if there are problems.
                     break;
 
                 default:
                     break;
                 }
+
+                // no 'windows' because that's not yet ported to the rhi
+                if (loopType == WindowsRenderLoop)
+                    loopType = BasicRenderLoop;
             }
 
             // The environment variables can always override. This is good
@@ -383,20 +384,23 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
 
     bool current = false;
-    if (gl) {
-        QSurface *surface = window;
-        // There may be no platform window if the window got closed.
-        if (!window->handle())
-            surface = offscreenSurface;
+    if (gl || rhi) {
         if (rhi) {
+            // Direct OpenGL calls in user code need a current context, like
+            // when rendering; ensure this (no-op when not running on GL).
+            // Also works when there is no handle() anymore.
             rhi->makeThreadLocalNativeContextCurrent();
             current = true;
         } else {
+            QSurface *surface = window;
+            // There may be no platform window if the window got closed.
+            if (!window->handle())
+                surface = offscreenSurface;
             current = gl->makeCurrent(surface);
         }
+        if (Q_UNLIKELY(!current))
+            qCDebug(QSG_LOG_RENDERLOOP, "cleanup without an OpenGL context");
     }
-    if (Q_UNLIKELY(!current))
-        qCDebug(QSG_LOG_RENDERLOOP, "cleanup without an OpenGL context");
 
 #if QT_CONFIG(quick_shadereffect)
     QSGRhiShaderEffectNode::cleanupMaterialTypeCache();

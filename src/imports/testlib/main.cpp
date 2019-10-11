@@ -150,7 +150,7 @@ public:
         qmlRegisterType<QuickTestEvent>(uri,1,0,"TestEvent");
         qmlRegisterType<QuickTestEvent>(uri,1,2,"TestEvent");
         qmlRegisterType<QuickTestUtil>(uri,1,0,"TestUtil");
-        qmlRegisterType<QQuickTouchEventSequence>();
+        qmlRegisterAnonymousType<QQuickTouchEventSequence>(uri);
 
         qmlRegisterModule(uri, 1, 15);
     }

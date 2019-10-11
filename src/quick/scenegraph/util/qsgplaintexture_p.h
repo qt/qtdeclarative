@@ -53,6 +53,7 @@
 
 #include <QtQuick/private/qtquickglobal_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/qquickwindow.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -85,6 +86,9 @@ public:
     void bind() override;
 
     void setTexture(QRhiTexture *texture);
+    void setTextureFromNativeObject(QRhi *rhi, QQuickWindow::NativeObjectType type,
+                                    const void *nativeObjectPtr, int nativeLayout,
+                                    const QSize &size, bool mipmap);
 
     static QSGPlainTexture *fromImage(const QImage &image) {
         QSGPlainTexture *t = new QSGPlainTexture();

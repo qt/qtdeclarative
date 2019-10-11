@@ -1,0 +1,5 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/">
+<file alias="data/I18nTypeÁâãäå.qml">data/I18nType30.qml</file>
+</qresource>
+</RCC>

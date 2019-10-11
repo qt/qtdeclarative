@@ -49,27 +49,65 @@
 ****************************************************************************/
 
 import QtQuick 2.8
+//! [2]
 import SceneGraphRendering 2.0
+//! [2]
 
 Item {
     Rectangle {
+        id: bg
         anchors.fill: parent
         gradient: Gradient {
             GradientStop { position: 0; color: "steelblue" }
             GradientStop { position: 1; color: "black" }
         }
 
-        CustomRenderItem {
-            id: renderer
+        //! [5]
+        MouseArea {
             anchors.fill: parent
-            anchors.margins: 10
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onClicked: {
+                if (mouse.button === Qt.LeftButton) {
+                    clipper.clip = !clipper.clip
+                } else if (mouse.button === Qt.RightButton) {
+                    nonRectClipAnim.running = !nonRectClipAnim.running
+                    if (!nonRectClipAnim.running)
+                        clipper.rotation = 0;
+                }
+            }
+        }
+        // ![5]
 
-            transform: [
-                Rotation { id: rotation; axis.x: 0; axis.z: 0; axis.y: 1; angle: 0; origin.x: renderer.width / 2; origin.y: renderer.height / 2; },
-                Translate { id: txOut; x: -renderer.width / 2; y: -renderer.height / 2 },
-                Scale { id: scale; },
-                Translate { id: txIn; x: renderer.width / 2; y: renderer.height / 2 }
-            ]
+        Rectangle {
+            id: clipper
+            width: parent.width / 2
+            height: parent.height / 2
+            anchors.centerIn: parent
+            border.color: "yellow"
+            border.width: 2
+            color: "transparent"
+            NumberAnimation on rotation {
+                id: nonRectClipAnim
+                from: 0; to: 360; duration: 5000; loops: Animation.Infinite
+                running: false
+            }
+
+            //! [3]
+            CustomRenderItem {
+                id: renderer
+                width: bg.width - 20
+                height: bg.height - 20
+                x: -clipper.x + 10
+                y: -clipper.y + 10
+
+                transform: [
+                    Rotation { id: rotation; axis.x: 0; axis.z: 0; axis.y: 1; angle: 0; origin.x: renderer.width / 2; origin.y: renderer.height / 2; },
+                    Translate { id: txOut; x: -renderer.width / 2; y: -renderer.height / 2 },
+                    Scale { id: scale; },
+                    Translate { id: txIn; x: renderer.width / 2; y: renderer.height / 2 }
+                ]
+            }
+            //! [3]
         }
 
         SequentialAnimation {
@@ -92,19 +130,39 @@ Item {
             loops: Animation.Infinite
         }
 
+        //! [4]
         Text {
             id: label
-            anchors.bottom: renderer.bottom
-            anchors.left: renderer.left
-            anchors.right: renderer.right
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
             anchors.margins: 20
+            color: "yellow"
             wrapMode: Text.WordWrap
             property int api: GraphicsInfo.api
-            text: "Custom rendering via the graphics API "
-                  + (api === GraphicsInfo.OpenGL ? "OpenGL"
-                     : api === GraphicsInfo.Direct3D12 ? "Direct3D 12"
-                     : api === GraphicsInfo.Software ? "Software" : "")
+            text: {
+                var apiStr;
+                switch (api) {
+                case GraphicsInfo.OpenGL: apiStr = "OpenGL (direct)"; break;
+                case GraphicsInfo.Direct3D12: apiStr = "Direct3D 12 (direct)"; break;
+                case GraphicsInfo.Software: apiStr = "Software (QPainter)"; break;
+                case GraphicsInfo.OpenGLRhi: apiStr = "OpenGL (RHI)"; break;
+                case GraphicsInfo.MetalRhi: apiStr = "Metal (RHI)"; break;
+                // the example has no other QSGRenderNode subclasses
+                default: apiStr = "<UNSUPPORTED>"; break;
+                }
+                "Custom rendering via the graphics API " + apiStr
+                        + "\nLeft click to toggle clipping to yellow rect"
+                        + "\nRight click to rotate (can be used to exercise stencil clip instead of scissor)"
+            }
+        // ![4]
+        }
+
+        Text {
+            id: label2
+            anchors.top: parent.top
+            anchors.right: parent.right
             color: "yellow"
+            text: "Clip: " + (clipper.clip ? "ON" : "OFF") + " Rotation: " + (nonRectClipAnim.running ? "ON" : "OFF")
         }
     }
 }

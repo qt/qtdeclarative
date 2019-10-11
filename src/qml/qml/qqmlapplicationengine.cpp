@@ -131,7 +131,7 @@ void QQmlApplicationEnginePrivate::finishLoad(QQmlComponent *c)
         q->objectCreated(nullptr, c->url());
         break;
     case QQmlComponent::Ready: {
-        auto newObj = c->create();
+        auto newObj = initialProperties.empty() ? c->create() : c->createWithInitialProperties(initialProperties);
         objects << newObj;
         QObject::connect(newObj, &QObject::destroyed, q, [&](QObject *obj) { objects.removeAll(obj); });
         q->objectCreated(objects.constLast(), c->url());
@@ -276,6 +276,22 @@ void QQmlApplicationEngine::load(const QString &filePath)
 {
     Q_D(QQmlApplicationEngine);
     d->startLoad(QUrl::fromUserInput(filePath, QLatin1String("."), QUrl::AssumeLocalFile));
+}
+
+/*!
+   Sets the initial properties with which the QML component gets initialized after
+   it gets loaded.
+
+
+   \sa QQmlComponent::setInitialProperties
+   \sa QQmlApplicationEngine::load
+   \sa QQmlApplicationEngine::loadData
+   \since 5.14
+*/
+void QQmlApplicationEngine::setInitialProperties(const QVariantMap &initialProperties)
+{
+    Q_D(QQmlApplicationEngine);
+    d->initialProperties = initialProperties;
 }
 
 /*!

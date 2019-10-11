@@ -44,10 +44,11 @@
 
 QT_BEGIN_NAMESPACE
 
-
 class QOpenGLFramebufferObject;
 class QQuickFramebufferObjectPrivate;
 class QSGFramebufferObjectNode;
+
+// ### Qt 6: To be removed. To be seen if an alternative will need to be introduced.
 
 class Q_QUICK_EXPORT QQuickFramebufferObject : public QQuickItem
 {

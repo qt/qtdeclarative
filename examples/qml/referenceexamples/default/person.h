@@ -58,7 +58,7 @@ class Person : public QObject
     Q_PROPERTY(QString name READ name WRITE setName)
     Q_PROPERTY(int shoeSize READ shoeSize WRITE setShoeSize)
 public:
-    Person(QObject *parent = 0);
+    Person(QObject *parent = nullptr);
 
     QString name() const;
     void setName(const QString &);
@@ -74,14 +74,14 @@ class Boy : public Person
 {
     Q_OBJECT
 public:
-    Boy(QObject * parent = 0);
+    Boy(QObject * parent = nullptr);
 };
 
 class Girl : public Person
 {
     Q_OBJECT
 public:
-    Girl(QObject * parent = 0);
+    Girl(QObject * parent = nullptr);
 };
 
 #endif // PERSON_H

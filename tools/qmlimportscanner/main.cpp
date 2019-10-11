@@ -496,6 +496,36 @@ QVariantList findQmlImportsRecursively(const QStringList &qmlDirs, const QString
     return ret;
 }
 
+
+QString generateCmakeIncludeFileContent(const QVariantList &importList) {
+    // The function assumes that "list" is a QVariantList with 0 or more QVariantMaps, where
+    // each map contains QString -> QVariant<QString> mappings. This matches with the structure
+    // that qmake parses for static qml plugin auto imporitng.
+    // So: [ {"a": "a","b": "b"}, {"c": "c"} ]
+    QString content;
+    QTextStream s(&content);
+    int importsCount = 0;
+    for (const QVariant &importVariant: importList) {
+        if (static_cast<QMetaType::Type>(importVariant.type()) == QMetaType::QVariantMap) {
+            s << QStringLiteral("set(qml_import_scanner_import_") << importsCount
+              << QStringLiteral(" \"");
+
+            const QMap<QString, QVariant> &importDict = importVariant.toMap();
+            for (auto it = importDict.cbegin(); it != importDict.cend(); ++it) {
+                s << it.key().toUpper() << QLatin1Char(';')
+                  << it.value().toString() << QLatin1Char(';');
+            }
+            s << QStringLiteral("\")\n");
+            ++importsCount;
+        }
+    }
+    if (importsCount >= 0) {
+        content.prepend(QString(QStringLiteral("set(qml_import_scanner_imports_count %1)\n"))
+               .arg(importsCount));
+    }
+    return content;
+}
+
 } // namespace
 
 int main(int argc, char *argv[])
@@ -512,6 +542,7 @@ int main(int argc, char *argv[])
     QStringList qmlRootPaths;
     QStringList scanFiles;
     QStringList qmlImportPaths;
+    bool generateCmakeContent = false;
 
     int i = 1;
     while (i < args.count()) {
@@ -536,6 +567,8 @@ int main(int argc, char *argv[])
             if (i >= args.count())
                 std::cerr << "-importPath requires an argument\n";
             argReceiver = &qmlImportPaths;
+        } else if (arg == QLatin1String("-cmake-output")) {
+             generateCmakeContent = true;
         } else {
             std::cerr << qPrintable(appName) << ": Invalid argument: \""
                 << qPrintable(arg) << "\"\n";
@@ -562,8 +595,15 @@ int main(int argc, char *argv[])
     // Find the imports!
     QVariantList imports = findQmlImportsRecursively(qmlRootPaths, scanFiles);
 
-    // Convert to JSON
-    QByteArray json = QJsonDocument(QJsonArray::fromVariantList(imports)).toJson();
-    std::cout << json.constData() << std::endl;
+    QByteArray content;
+    if (generateCmakeContent) {
+        // Convert to CMake code
+        content = generateCmakeIncludeFileContent(imports).toUtf8();
+    } else {
+        // Convert to JSON
+        content = QJsonDocument(QJsonArray::fromVariantList(imports)).toJson();
+    }
+
+    std::cout << content.constData() << std::endl;
     return 0;
 }

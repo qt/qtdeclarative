@@ -34,7 +34,7 @@
 #include <QGLWidget>
 #include <QTextLayout>
 #include <QVBoxLayout>
-#include <QTime>
+#include <QElapsedTimer>
 #include <QDebug>
 #include <QRandomGenerator>
 #include <QStaticText>
@@ -328,20 +328,20 @@ public:
     }
 
     void paintEvent(QPaintEvent *) {
-        static int last = 0;
+        static qint64 last = 0;
         static bool firstRun = true;
         if (firstRun) {
             timer.start();
             firstRun = false;
         } else {
-            int elapsed = timer.elapsed();
+            qint64 elapsed = timer.elapsed();
             qDebug() << "frame elapsed:" << elapsed - last;
             last = elapsed;
         }
         QPainter p(this);
         p.fillRect(rect(), Qt::white);
         p.setPen(Qt::black);
-        QTime drawTimer;
+        QElapsedTimer drawTimer;
         drawTimer.start();
         testFunc(p);
         qDebug() << "draw time" << drawTimer.elapsed();
@@ -351,7 +351,7 @@ public:
             qApp->quit();
     }
 
-    QTime timer;
+    QElapsedTimer timer;
     int frames;
 };
 

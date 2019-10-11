@@ -784,6 +784,7 @@ void tst_qqmlvaluetypes::font()
     {
         QQmlComponent component(&engine, testFileUrl("font_read.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QVERIFY(object != nullptr);
 
         QCOMPARE(object->property("f_family").toString(), object->font().family());
@@ -793,8 +794,19 @@ void tst_qqmlvaluetypes::font()
         QCOMPARE(object->property("f_underline").toBool(), object->font().underline());
         QCOMPARE(object->property("f_overline").toBool(), object->font().overline());
         QCOMPARE(object->property("f_strikeout").toBool(), object->font().strikeOut());
-        QCOMPARE(object->property("f_pointSize").toDouble(), object->font().pointSizeF());
-        QCOMPARE(object->property("f_pixelSize").toInt(), int((object->font().pointSizeF() * qt_defaultDpi()) / qreal(72.)));
+
+        // If QFont::pixelSize() was set, QFont::pointSizeF() would return -1.
+        // If QFont::pointSizeF() was set, QFont::pixelSize() would return -1.
+        // QQuickFontValueType doesn't follow this semantic (if its -1 it calculates the value of
+        // the property from the other one)
+        double expectedPointSizeF = object->font().pointSizeF();
+        if (expectedPointSizeF == -1) expectedPointSizeF = object->font().pixelSize() * qreal(72.) / qreal(qt_defaultDpi());
+        int expectedPixelSize = object->font().pixelSize();
+        if (expectedPixelSize == -1) expectedPixelSize = int((object->font().pointSizeF() * qt_defaultDpi()) / qreal(72.));
+
+        QCOMPARE(object->property("f_pointSize").toDouble(), expectedPointSizeF);
+        QCOMPARE(object->property("f_pixelSize").toInt(), expectedPixelSize);
+
         QCOMPARE(object->property("f_capitalization").toInt(), (int)object->font().capitalization());
         QCOMPARE(object->property("f_letterSpacing").toDouble(), object->font().letterSpacing());
         QCOMPARE(object->property("f_wordSpacing").toDouble(), object->font().wordSpacing());

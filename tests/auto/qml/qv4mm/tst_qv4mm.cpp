@@ -136,7 +136,7 @@ void tst_qv4mm::clearICParent()
     // to change this test.
     for (uint i = 0; i < 16 * 1024; ++i) {
         QV4::Scope scope(&engine);
-        QV4::ScopedString s(scope, identifiers->getIndexed(i));
+        QV4::ScopedString s(scope, identifiers->get(i));
         QV4::Scoped<QV4::InternalClass> ic(scope, object->internalClass());
         QVERIFY(ic->d()->parent != nullptr);
         object->deleteProperty(s->toPropertyKey());

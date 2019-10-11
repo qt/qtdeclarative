@@ -1519,7 +1519,7 @@ void tst_QQuickMouseArea::onWheel()
     QVERIFY(root != nullptr);
 
     QWheelEvent wheelEvent(QPoint(10, 32), QPoint(10, 32), QPoint(60, 20), QPoint(0, 120),
-                           0, Qt::Vertical,Qt::NoButton, Qt::ControlModifier);
+                           Qt::NoButton, Qt::ControlModifier, Qt::NoScrollPhase, false);
     QGuiApplication::sendEvent(&window, &wheelEvent);
 
     QCOMPARE(root->property("angleDeltaY").toInt(), 120);

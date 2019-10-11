@@ -57,6 +57,7 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
 
+//! [1]
 OpenGLRenderNode::OpenGLRenderNode(QQuickItem *item)
     : m_item(item)
 {
@@ -74,6 +75,7 @@ void OpenGLRenderNode::releaseResources()
     delete m_vbo;
     m_vbo = nullptr;
 }
+//! [1]
 
 void OpenGLRenderNode::init()
 {
@@ -121,19 +123,21 @@ void OpenGLRenderNode::init()
     m_vbo->release();
 }
 
+//! [2]
 void OpenGLRenderNode::render(const RenderState *state)
 {
     if (!m_program)
         init();
 
     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
-
     m_program->bind();
     m_program->setUniformValue(m_matrixUniform, *state->projectionMatrix() * *matrix());
     m_program->setUniformValue(m_opacityUniform, float(inheritedOpacity()));
+//! [2]
 
     m_vbo->bind();
 
+//! [5]
     QPointF p0(m_item->width() - 1, m_item->height() - 1);
     QPointF p1(0, 0);
     QPointF p2(0, m_item->height() - 1);
@@ -142,23 +146,43 @@ void OpenGLRenderNode::render(const RenderState *state)
                             GLfloat(p1.x()), GLfloat(p1.y()),
                             GLfloat(p2.x()), GLfloat(p2.y()) };
     m_vbo->write(0, vertices, sizeof(vertices));
+//! [5]
 
     m_program->setAttributeBuffer(0, GL_FLOAT, 0, 2);
     m_program->setAttributeBuffer(1, GL_FLOAT, sizeof(vertices), 3);
     m_program->enableAttributeArray(0);
     m_program->enableAttributeArray(1);
 
-    // Note that clipping (scissor or stencil) is ignored in this example.
+    // We are prepared both for the legacy (direct OpenGL) and the modern
+    // (abstracted by RHI) OpenGL scenegraph. So set all the states that are
+    // important to us.
+
+    //! [3]
+    f->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
     f->glEnable(GL_BLEND);
     f->glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
+    // Clip support.
+    if (state->scissorEnabled()) {
+        f->glEnable(GL_SCISSOR_TEST);
+        const QRect r = state->scissorRect(); // already bottom-up
+        f->glScissor(r.x(), r.y(), r.width(), r.height());
+    }
+    if (state->stencilEnabled()) {
+        f->glEnable(GL_STENCIL_TEST);
+        f->glStencilFunc(GL_EQUAL, state->stencilValue(), 0xFF);
+        f->glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    }
+
     f->glDrawArrays(GL_TRIANGLES, 0, 3);
+    //! [3]
 }
 
+//! [4]
 QSGRenderNode::StateFlags OpenGLRenderNode::changedStates() const
 {
-    return BlendState;
+    return BlendState | ScissorState | StencilState;
 }
 
 QSGRenderNode::RenderingFlags OpenGLRenderNode::flags() const
@@ -170,5 +194,6 @@ QRectF OpenGLRenderNode::rect() const
 {
     return QRect(0, 0, m_item->width(), m_item->height());
 }
+//! [4]
 
 #endif // opengl

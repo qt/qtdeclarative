@@ -12,3 +12,4 @@ HEADERS += \
 
 include (../../shared/util.pri)
 
+TESTDATA = data/*

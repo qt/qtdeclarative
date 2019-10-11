@@ -1,0 +1,68 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example scenegraph/metalunderqml
+    \title Scene Graph - Metal Under QML
+    \ingroup qtquickexamples
+    \brief Shows how to render directly with Metal under a Qt Quick scene.
+
+    \image metalunderqml-example.jpg
+
+    The Metal Under QML example shows how an application can make use
+    of the \l QQuickWindow::beforeRendering() and \l
+    QQuickWindow::beforeRenderPassRecording() signals to draw custom
+    Metal content under a Qt Quick scene. This signal is emitted at
+    the start of every frame, before the scene graph starts its
+    rendering, thus any Metal draw calls that are made as a response
+    to this signal, will stack under the Qt Quick items. There are two
+    signals, because the custom Metal commands are recorded onto the
+    same command buffer with the same render command encoder that the
+    scene graph uses. beforeRendering() on its own is not sufficient
+    for this because it gets emitted at the start of the frame, before
+    having an
+    \l{https://developer.apple.com/documentation/metal/mtlrendercommandencoder}{MTLRenderCommandEncoder}
+    available. By also connecting to beforeRenderPassRecording(), the
+    application can gain access to the necessary native objects.
+
+    As an alternative, applications that wish to render Metal content
+    on top of the Qt Quick scene, can do so by connecting to the \l
+    QQuickWindow::afterRendering() and \l
+    QQuickWindow::afterRenderPassRecording() signals.
+
+    In this example, we will also see how it is possible to have
+    values that are exposed to QML which affect the Metal
+    rendering. We animate the threshold value using a NumberAnimation
+    in the QML file and this value is used by the Metal shader
+    program that draws the squircles.
+
+    The example is equivalent in most ways to the \l{Scene Graph - OpenGL Under
+    QML}{OpenGL Under QML} and \l{Scene Graph - Direct3D 11 Under QML}{Direct3D
+    11 Under QML} examples, they all render the same custom content, just via
+    different native APIs.
+
+  */

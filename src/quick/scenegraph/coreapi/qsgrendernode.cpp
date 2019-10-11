@@ -81,8 +81,10 @@ QSGRenderNodePrivate::QSGRenderNodePrivate()
 }
 
 /*!
-    This function should return a mask where each bit represents graphics states changed by
-    the \l render() function:
+    When the underlying rendering API is OpenGL, this function should return a
+    mask where each bit represents graphics states changed by the \l render()
+    function:
+
     \list
     \li DepthState - depth write mask, depth test enabled, depth comparison function
     \li StencilState - stencil write masks, stencil test enabled, stencil operations,
@@ -95,25 +97,35 @@ QSGRenderNodePrivate::QSGRenderNodePrivate()
     \li RenderTargetState - render target
     \endlist
 
+    With APIs other than OpenGL, the only relevant values are the ones that
+    correspond to dynamic state changes recorded on the command list/buffer.
+    For example, RSSetViewports, RSSetScissorRects, OMSetBlendFactor,
+    OMSetStencilRef in case of D3D12, or vkCmdSetViewport, vkCmdSetScissor,
+    vkCmdSetBlendConstants, vkCmdSetStencilRef in case of Vulkan, and only when
+    such commands were added to the scenegraph's command list queried via the
+    QSGRendererInterface::CommandList resource enum. States set in pipeline
+    state objects do not need to be reported here. Similarly, draw call related
+    settings (pipeline states, descriptor sets, vertex or index buffer
+    bindings, root signature, descriptor heaps, etc.) are always set again by
+    the scenegraph so render() can freely change them.
+
+    \note RenderTargetState is no longer supported with APIs like Vulkan. This
+    is by nature. render() is invoked while the Qt Quick scenegraph's main
+    command buffer is recording a renderpass, so there is no possibility of
+    changing the target and starting another renderpass (on that command buffer
+    at least). Therefore returning a value with RenderTargetState set is not
+    sensible.
+
+    The software backend exposes its QPainter and saves and restores before and
+    after invoking render(). Therefore reporting any changed states from here
+    is not necessary.
+
     The function is called by the renderer so it can reset the states after
     rendering this node. This makes the implementation of render() simpler
     since it does not have to query and restore these states.
 
     The default implementation returns 0, meaning no relevant state was changed
     in render().
-
-    With APIs other than OpenGL the relevant states are only those that are set
-    via the command list (for example, OMSetRenderTargets, RSSetViewports,
-    RSSetScissorRects, OMSetBlendFactor, OMSetStencilRef in case of D3D12), and
-    only when such commands were added to the scenegraph's command list queried
-    via the QSGRendererInterface::CommandList resource enum. States set in
-    pipeline state objects do not need to be reported here. Similarly, draw
-    call related settings (root signature, descriptor heaps, etc.) are always
-    set again by the scenegraph so render() can freely change them.
-
-    The software backend exposes its QPainter and saves and restores before and
-    after invoking render(). Therefore reporting any changed states from here
-    is not necessary.
 
     \note This function may be called before render().
   */
@@ -149,18 +161,31 @@ QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
     QQuickFramebufferObject, QQuickWindow::beforeRendering(), or the
     equivalents of those for APIs other than OpenGL.
 
-    Clip information is calculated before the function is called, it is however
-    not enabled. Implementations wishing to take clipping into account can set
-    up scissoring or stencil based on the information in \a state. Some
-    scenegraph backends, software in particular, use no scissor or stencil.
-    There the clip region is provided as an ordinary QRegion.
+    \note QSGRenderNode can perform significantly better than texture-based
+    approaches (such as, QQuickFramebufferObject), especially on systems where
+    the fragment processing power is limited. This is because it avoids
+    rendering to a texture and then drawing a textured quad. Rather,
+    QSGRenderNode allows recording draw calls in line with the scenegraph's
+    other commands, avoiding an additional render target and the potentially
+    expensive texturing and blending.
 
-    For OpenGL the following states are set on the render thread's context
-    before this function is called:
+    Clip information is calculated before the function is called.
+    Implementations wishing to take clipping into account can set up scissoring
+    or stencil based on the information in \a state. The stencil buffer is
+    filled with the necessary clip shapes, but it is up to the implementation
+    to enable stencil testing.
+
+    Some scenegraph backends, software in particular, use no scissor or
+    stencil. There the clip region is provided as an ordinary QRegion.
+
+    With the legacy, direct OpenGL based renderer, the following states are set
+    on the render thread's context before this function is called:
+
     \list
+    \li glColorMask(true, true, true, true)
     \li glDepthMask(false)
     \li glDisable(GL_DEPTH_TEST)
-    \li glStencilFunc(GL_EQUAL, state.stencilValue, 0xff) depending on clip
+    \li glStencilFunc(GL_EQUAL, state.stencilValue, 0xff); glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP) depending on clip
     \li glScissor(state.scissorRect.x(), state.scissorRect.y(),
                  state.scissorRect.width(), state.scissorRect.height()) depending on clip
     \li glEnable(GL_BLEND)
@@ -168,22 +193,41 @@ QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
     \li glDisable(GL_CULL_FACE)
     \endlist
 
-    States that are not listed above, but are included in \l StateFlags, can
+    States that are not listed above, but are covered by \l StateFlags, can
     have arbitrary values.
+
+    \note There is no state set with other graphics APIs, considering that many
+    of them do not have a concept of the traditional OpenGL state machine.
+    Rather, it is up to the implementation to create pipeline state objects
+    with the desired blending, scissor, and stencil tests enabled. Note that
+    this also includes OpenGL via the RHI. New QSGRenderNode implementations
+    are recommended to set all scissor, stencil and blend state explicitly (as
+    shown in the above list), even if they are targeting OpenGL.
 
     \l changedStates() should return which states this function changes. If a
     state is not covered by \l StateFlags, the state should be set to the
     default value according to the OpenGL specification. For other APIs, see
     the documentation for changedStates() for more information.
 
-    \note Depth writes are disabled when this function is called (for example,
-    glDepthMask(false) in case of OpenGL). Enabling depth writes can lead to
-    unexpected results, depending on the scenegraph backend in use, so nodes
-    should avoid this.
+    \note Depth writes are disabled when this function is called
+    (glDepthMask(false) with OpenGL). Enabling depth writes can lead to
+    unexpected results, depending on the scenegraph backend in use and the
+    content in the scene, so exercise caution with this.
 
     For APIs other than OpenGL, it will likely be necessary to query certain
     API-specific resources (for example, the graphics device or the command
     list/buffer to add the commands to). This is done via QSGRendererInterface.
+
+    Assume nothing about the pipelines and dynamic states bound on the command
+    list/buffer when this function is called.
+
+    With some graphics APIs it can be necessary to also connect to the
+    QQuickWindow::beforeRendering() signal, because that is emitted before
+    recording the beginning of a renderpass on the command buffer
+    (vkCmdBeginRenderPass with Vulkan, or starting to encode via
+    MTLRenderCommandEncoder in case of Metal). Recording copy operations cannot
+    be done inside render() with such APIs. Rather, do it in the slot connected
+    (with DirectConnection) to the beforeRendering signal.
 
     \sa QSGRendererInterface, QQuickWindow::rendererInterface()
   */
@@ -335,7 +379,8 @@ QSGRenderNode::RenderState::~RenderState()
 /*!
     \fn const QMatrix4x4 *QSGRenderNode::RenderState::scissorRect() const
 
-    \return the current scissor rectangle when clipping is active.
+    \return the current scissor rectangle when clipping is active. x and y are
+    the bottom left coordinates.
 
     \note Be aware of the differences between graphics APIs: for some the
     scissor rect is only active when scissoring is enabled (for example,

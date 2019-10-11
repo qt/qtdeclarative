@@ -1,5 +1,3 @@
-# Generated from cmake.pro.
-# special case begin
 cmake_minimum_required(VERSION 2.8)
 
 project(qmake_cmake_files)
@@ -30,4 +28,14 @@ add_test(qtquickcompiler ${CMAKE_CTEST_COMMAND}
 
 )
 
-# special case end
+add_test(qmlimportscanner ${CMAKE_CTEST_COMMAND}
+    --build-and-test
+    "${CMAKE_CURRENT_SOURCE_DIR}/qmlimportscanner/"
+    "${CMAKE_CURRENT_BINARY_DIR}/qmlimportscanner"
+    --build-config "${CMAKE_BUILD_TYPE}"
+    --build-generator ${CMAKE_GENERATOR}
+    --build-makeprogram ${CMAKE_MAKE_PROGRAM}
+    --build-project qis_test
+    --build-options "-DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}" ${BUILD_OPTIONS_LIST}
+    --test-command qis_test
+)

@@ -183,7 +183,9 @@ void QSGDefaultDepthStencilBuffer::free()
 QSGDepthStencilBufferManager::~QSGDepthStencilBufferManager()
 {
     for (Hash::const_iterator it = m_buffers.constBegin(), cend = m_buffers.constEnd(); it != cend; ++it) {
-        QSGDepthStencilBuffer *buffer = it.value().toStrongRef().data();
+        QSharedPointer<QSGDepthStencilBuffer> buffer = it.value().toStrongRef();
+        Q_ASSERT_X(buffer, "~QSGDepthStencilBufferManager",
+                   "~QSGDepthStencilBuffer is supposed to unregister from the manager");
         buffer->free();
         buffer->m_manager = nullptr;
     }

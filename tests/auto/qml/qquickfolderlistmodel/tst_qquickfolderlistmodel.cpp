@@ -112,6 +112,10 @@ void tst_qquickfolderlistmodel::initTestCase()
 
 void tst_qquickfolderlistmodel::basicProperties()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("[QTBUG-77335] Initial folder of FolderListModel on Android does not work properly,"
+          " and from there on it is unreliable to change the folder");
+#endif
     QQmlComponent component(&engine, testFileUrl("basic.qml"));
     checkNoErrors(component);
 
@@ -356,6 +360,9 @@ void tst_qquickfolderlistmodel::showDotAndDotDot()
 
 void tst_qquickfolderlistmodel::showDotAndDotDot_data()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("Resource file system does not list '.' and '..' due to QDir::entryList() behavior");
+#endif
     QTest::addColumn<QUrl>("folder");
     QTest::addColumn<QUrl>("rootFolder");
     QTest::addColumn<bool>("showDotAndDotDot");
@@ -411,7 +418,7 @@ void tst_qquickfolderlistmodel::sortCaseSensitive()
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != 0);
-    flm->setProperty("folder", QUrl::fromLocalFile(dataDirectoryUrl().path() + QLatin1String("/sortdir")));
+    flm->setProperty("folder", testFileUrl("sortdir"));
     flm->setProperty("sortCaseSensitive", sortCaseSensitive);
     QTRY_COMPARE(flm->property("count").toInt(), 2); // wait for refresh
     for (int i = 0; i < 2; ++i)

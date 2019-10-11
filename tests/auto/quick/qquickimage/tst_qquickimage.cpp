@@ -97,6 +97,8 @@ private slots:
     void highDpiFillModesAndSizes();
     void hugeImages();
     void urlInterceptor();
+    void multiFrame_data();
+    void multiFrame();
 
 private:
     QQmlEngine engine;
@@ -1130,6 +1132,62 @@ void tst_qquickimage::urlInterceptor()
     QVERIFY(object);
     QTRY_COMPARE(object->status(), QQuickImage::Ready);
     QTRY_COMPARE(object->progress(), 1.0);
+}
+
+void tst_qquickimage::multiFrame_data()
+{
+    QTest::addColumn<QString>("qmlfile");
+    QTest::addColumn<bool>("asynchronous");
+
+    QTest::addRow("default") << "multiframe.qml" << false;
+    QTest::addRow("async") << "multiframeAsync.qml" << true;
+}
+
+void tst_qquickimage::multiFrame()
+{
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
+    QFETCH(QString, qmlfile);
+    QFETCH(bool, asynchronous);
+    Q_UNUSED(asynchronous)
+
+    QQuickView view(testFileUrl(qmlfile));
+    QQuickImage *image = qobject_cast<QQuickImage*>(view.rootObject());
+    QVERIFY(image);
+    QSignalSpy countSpy(image, SIGNAL(frameCountChanged()));
+    QSignalSpy currentSpy(image, SIGNAL(currentFrameChanged()));
+    if (asynchronous) {
+        QCOMPARE(image->frameCount(), 0);
+        QTRY_COMPARE(image->frameCount(), 4);
+        QCOMPARE(countSpy.count(), 1);
+    } else {
+        QCOMPARE(image->frameCount(), 4);
+    }
+    QCOMPARE(image->currentFrame(), 0);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QImage contents = view.grabWindow();
+    if (contents.width() < 40)
+        QSKIP("Skipping due to grabWindow not functional");
+    // The first frame is a blue ball, approximately qRgba(0x33, 0x6d, 0xcc, 0xff)
+    QRgb color = contents.pixel(16, 16);
+    QVERIFY(qRed(color) < 0xc0);
+    QVERIFY(qGreen(color) < 0xc0);
+    QVERIFY(qBlue(color) > 0xc0);
+
+    image->setCurrentFrame(1);
+    QTRY_COMPARE(image->status(), QQuickImageBase::Ready);
+    QCOMPARE(currentSpy.count(), 1);
+    QCOMPARE(image->currentFrame(), 1);
+    contents = view.grabWindow();
+    // The second frame is a green ball, approximately qRgba(0x27, 0xc8, 0x22, 0xff)
+    color = contents.pixel(16, 16);
+    QVERIFY(qRed(color) < 0xc0);
+    QVERIFY(qGreen(color) > 0xc0);
+    QVERIFY(qBlue(color) < 0xc0);
 }
 
 QTEST_MAIN(tst_qquickimage)

@@ -759,7 +759,7 @@ QQuickLinearLayout::QQuickLinearLayout(Qt::Orientation orientation,
     \since QtQuick.Layouts 1.1
 
     This property holds the layout direction of the row layout - it controls whether items are laid
-    out from left ro right or right to left. If \c Qt.RightToLeft is specified,
+    out from left to right or right to left. If \c Qt.RightToLeft is specified,
     left-aligned items will be right-aligned and right-aligned items will be left-aligned.
 
     Possible values:
@@ -776,7 +776,7 @@ QQuickLinearLayout::QQuickLinearLayout(Qt::Orientation orientation,
     \since QtQuick.Layouts 1.1
 
     This property holds the layout direction of the column layout - it controls whether items are laid
-    out from left ro right or right to left. If \c Qt.RightToLeft is specified,
+    out from left to right or right to left. If \c Qt.RightToLeft is specified,
     left-aligned items will be right-aligned and right-aligned items will be left-aligned.
 
     Possible values:

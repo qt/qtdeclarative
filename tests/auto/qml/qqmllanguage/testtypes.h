@@ -89,6 +89,14 @@ private:
     int m_value2;
 };
 
+class SomethingUnknown : public QObject {
+    Q_OBJECT
+};
+
+class SomethingKnown : public SomethingUnknown {
+    Q_OBJECT
+};
+
 class MyQmlObject : public QObject, public MyInterface
 {
     Q_OBJECT
@@ -104,6 +112,7 @@ class MyQmlObject : public QObject, public MyInterface
     Q_PROPERTY(int propertyWithNotify READ propertyWithNotify WRITE setPropertyWithNotify NOTIFY oddlyNamedNotifySignal)
     Q_PROPERTY(int nonScriptable READ nonScriptable WRITE setNonScriptable SCRIPTABLE false)
     Q_PROPERTY(QJSValue qjsvalue READ qjsvalue WRITE setQJSValue NOTIFY qjsvalueChanged)
+    Q_PROPERTY(SomethingUnknown* somethingUnknown READ somethingUnknown WRITE setSomethingUnknown NOTIFY somethingUnknownChanged)
 
     Q_INTERFACES(MyInterface)
 public:
@@ -151,6 +160,9 @@ public:
 
     int childAddedEventCount() const { return m_childAddedEventCount; }
 
+    SomethingUnknown* somethingUnknown() const { return nullptr; }
+    void setSomethingUnknown(SomethingUnknown* something) { Q_UNUSED(something); }
+
 public slots:
     void basicSlot() { qWarning("MyQmlObject::basicSlot"); }
     void basicSlotWithArgs(int v) { qWarning("MyQmlObject::basicSlotWithArgs(%d)", v); }
@@ -162,6 +174,7 @@ signals:
     void oddlyNamedNotifySignal();
     void signalWithDefaultArg(int parameter = 5);
     void qjsvalueChanged();
+    void somethingUnknownChanged();
 
 protected:
     virtual bool event(QEvent *event);
