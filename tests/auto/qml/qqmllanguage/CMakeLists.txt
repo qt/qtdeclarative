@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qqmllanguage
-    GUI
     SOURCES
         ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
         ../../shared/util.cpp ../../shared/util.h
@@ -33,14 +30,26 @@ add_qt_test(tst_qqmllanguage
 )
 
 #### Keys ignored in scope 1:.:.:qqmllanguage.pro:<TRUE>:
-# CONFIG = "testcase"
 # OTHER_FILES = "data/readonlyObjectProperty.qml"
 
 ## Scopes:
 #####################################################################
 
-#### Keys ignored in scope 2:.:.:qqmllanguage.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
+# Resources:
+set_source_files_properties("data/I18nType30.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "data/I18nTypeÁâãäå.qml"
+)
+set(qqmllanguage_resource_files
+    "data/I18nType30.qml"
+)
+
+add_qt_resource(tst_qqmllanguage "qqmllanguage"
+    PREFIX
+        "/"
+    FILES
+        ${qqmllanguage_resource_files}
+)
+
 
 extend_target(tst_qqmllanguage CONDITION ANDROID OR APPLE_IOS
     DEFINES

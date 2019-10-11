@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/scenegraph/rendernode")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -32,6 +32,8 @@ target_link_libraries(rendernode PUBLIC
 # Resources:
 set(rendernode_resource_files
     "main.qml"
+    "metalshader.frag"
+    "metalshader.vert"
     "shader_frag.cso"
     "shader_vert.cso"
 )
@@ -43,6 +45,29 @@ qt6_add_resources(rendernode "rendernode"
         ${rendernode_resource_files}
 )
 
+
+if(QT_FEATURE_d3d12)
+    target_sources(rendernode PUBLIC
+        d3d12renderer.cpp d3d12renderer.h
+    )
+
+    target_link_libraries(rendernode PUBLIC
+        d3d12
+    )
+
+endif()
+
+if(APPLE_OSX)
+    target_sources(rendernode PUBLIC
+        metalrenderer.h metalrenderer.mm
+    )
+
+    target_link_libraries(rendernode PUBLIC
+        "-framework AppKit"
+        "-framework Metal"
+    )
+
+endif()
 
 install(TARGETS rendernode
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

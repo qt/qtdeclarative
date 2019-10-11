@@ -77,6 +77,16 @@ set(particles1_resource_files
     "shaders/imageparticle.vert"
     "shaders/imageparticle_core.frag"
     "shaders/imageparticle_core.vert"
+    "shaders_ng/imageparticle_colored.frag.qsb"
+    "shaders_ng/imageparticle_colored.vert.qsb"
+    "shaders_ng/imageparticle_deformed.frag.qsb"
+    "shaders_ng/imageparticle_deformed.vert.qsb"
+    "shaders_ng/imageparticle_simple.frag.qsb"
+    "shaders_ng/imageparticle_simple.vert.qsb"
+    "shaders_ng/imageparticle_sprite.frag.qsb"
+    "shaders_ng/imageparticle_sprite.vert.qsb"
+    "shaders_ng/imageparticle_tabled.frag.qsb"
+    "shaders_ng/imageparticle_tabled.vert.qsb"
 )
 
 add_qt_resource(QuickParticles "particles1"

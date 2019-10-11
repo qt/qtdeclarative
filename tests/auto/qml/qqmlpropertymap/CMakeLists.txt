@@ -4,8 +4,13 @@
 ## tst_qqmlpropertymap Test:
 #####################################################################
 
+# Collect test data
+file(GLOB_RECURSE test_data_glob
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    data/*)
+list(APPEND test_data ${test_data_glob})
+
 add_qt_test(tst_qqmlpropertymap
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qqmlpropertymap.cpp
@@ -20,16 +25,11 @@ add_qt_test(tst_qqmlpropertymap
         Qt::Gui
         Qt::Qml
         Qt::Quick
+    TESTDATA ${test_data}
 )
-
-#### Keys ignored in scope 1:.:.:qqmlpropertymap.pro:<TRUE>:
-# CONFIG = "testcase"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qqmlpropertymap.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qqmlpropertymap CONDITION ANDROID OR APPLE_IOS
     DEFINES

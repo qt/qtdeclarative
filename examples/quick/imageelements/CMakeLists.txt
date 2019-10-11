@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quick/imageelements")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -42,11 +42,14 @@ set(imageelements_resource_files
     "content/colors-round.sci"
     "content/colors-stretch.sci"
     "content/colors.png"
+    "content/multi.ico"
     "content/qt-logo.png"
     "content/shadow.png"
     "content/speaker.png"
+    "framestepping.qml"
     "image.qml"
     "imageelements.qml"
+    "multiframeborderimage.qml"
     "shadows.qml"
     "spritesequence.qml"
 )

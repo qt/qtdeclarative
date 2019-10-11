@@ -512,6 +512,11 @@ extend_target(Qml CONDITION QT_FEATURE_qml_locale
         qml/qqmllocale.cpp qml/qqmllocale_p.h
 )
 
+extend_target(Qml CONDITION ANDROID
+    DEFINES
+        LIBS_SUFFIX='\\"_.so\\"'
+)
+
 extend_target(Qml CONDITION hpux-_x_ OR solaris-_x_ OR (QT_FEATURE_clock_gettime AND linux-_x_)
     LIBRARIES
         rt
@@ -557,7 +562,7 @@ extend_target(Qml CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AND N
         -Wno-expansion-to-defined
 )
 
-#### Keys ignored in scope 64:.:../3rdparty/masm:../3rdparty/masm/masm-defs.pri:(QT_COMPILER_VERSION_MAJOR STRGREATER 6):
+#### Keys ignored in scope 65:.:../3rdparty/masm:../3rdparty/masm/masm-defs.pri:(QT_COMPILER_VERSION_MAJOR STRGREATER 6):
 # QMAKE_CXXFLAGS_WARN_ON = "-Wno-expansion-to-defined"
 
 extend_target(Qml CONDITION WINRT
@@ -586,7 +591,7 @@ extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
         ../3rdparty/masm/disassembler/udis86/udis86_syn-intel.c
 )
 
-#### Keys ignored in scope 72:.:../3rdparty/masm:../3rdparty/masm/masm.pri:DEFINES___contains___WTF_USE_UDIS86=1:
+#### Keys ignored in scope 73:.:../3rdparty/masm:../3rdparty/masm/masm.pri:DEFINES___contains___WTF_USE_UDIS86=1:
 # ITAB = "$$PWD/disassembler/udis86/optable.xml"
 # QMAKE_EXTRA_COMPILERS = "udis86"
 # QMAKE_EXTRA_TARGETS = "udis86_tab_cfile"
@@ -597,10 +602,10 @@ extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
 # udis86_tab_cfile.depends = "udis86_itab.h"
 # udis86_tab_cfile.target = "$$OUT_PWD/udis86_itab.c"
 
-#### Keys ignored in scope 74:.:../3rdparty/masm:../3rdparty/masm/masm.pri:(CMAKE_BUILD_TYPE STREQUAL Debug):
+#### Keys ignored in scope 75:.:../3rdparty/masm:../3rdparty/masm/masm.pri:(CMAKE_BUILD_TYPE STREQUAL Debug):
 # GENERATEDDIR = "$$GENERATEDDIR/debug"
 
-#### Keys ignored in scope 75:.:../3rdparty/masm:../3rdparty/masm/masm.pri:else:
+#### Keys ignored in scope 76:.:../3rdparty/masm:../3rdparty/masm/masm.pri:else:
 # GENERATEDDIR = "$$GENERATEDDIR/release"
 
 extend_target(Qml CONDITION (NOT c++11 AND NOT ICC) AND (CLANG)
