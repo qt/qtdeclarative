@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/quickcontrols2/texteditor")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -45,6 +45,20 @@ qt6_add_resources(texteditor "texteditor"
         ${texteditor_resource_files}
 )
 
+
+if(TARGET Qt::Widgets)
+    target_link_libraries(texteditor PUBLIC
+        Qt::Widgets
+    )
+
+endif()
+
+if(cross_compile)
+    target_compile_definitions(texteditor PUBLIC
+        QT_EXTRA_FILE_SELECTOR=\\\"touch\\\"
+    )
+
+endif()
 
 install(TARGETS texteditor
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
