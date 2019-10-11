@@ -1680,11 +1680,12 @@ void QQuickPathViewPrivate::handleMousePressEvent(QMouseEvent *event)
             return;
     }
 
-
-    if (tl.isActive() && flicking && flickDuration && qreal(tl.time())/flickDuration < 0.8)
+    if (tl.isActive() && flicking && flickDuration && qreal(tl.time()) / flickDuration < 0.8) {
         stealMouse = true; // If we've been flicked then steal the click.
-    else
+        q->grabMouse(); // grab it right now too, just to be sure (QTBUG-77173)
+    } else {
         stealMouse = false;
+    }
     q->setKeepMouseGrab(stealMouse);
 
     timer.start();

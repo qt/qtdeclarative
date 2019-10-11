@@ -66,7 +66,7 @@ public:
     void render() override;
 
 private:
-    QSGOpenVGTexture *m_texture;
+    QSGOpenVGTexture *m_texture = nullptr;
     float m_time;
     QPoint m_sourceA;
     QPoint m_sourceB;

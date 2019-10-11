@@ -676,13 +676,13 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 
     int xOffset = 0;
     if (d->hAlign == QQuickImage::AlignHCenter)
-        xOffset = qCeil((width() - pixWidth) / 2.);
+        xOffset = (width() - pixWidth) / 2;
     else if (d->hAlign == QQuickImage::AlignRight)
         xOffset = qCeil(width() - pixWidth);
 
     int yOffset = 0;
     if (d->vAlign == QQuickImage::AlignVCenter)
-        yOffset = qCeil((height() - pixHeight) / 2.);
+        yOffset = (height() - pixHeight) / 2;
     else if (d->vAlign == QQuickImage::AlignBottom)
         yOffset = qCeil(height() - pixHeight);
 

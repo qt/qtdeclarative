@@ -265,6 +265,7 @@ void QQuickRenderControl::polishItems()
     if (!d->window)
         return;
     cd->polishItems();
+    emit d->window->afterAnimating();
 }
 
 /*!
