@@ -56,7 +56,7 @@ extend_target(QmlWorkerScript CONDITION WIN32
         NOMINMAX
 )
 
-extend_target(QmlWorkerScript CONDITION (disassembler) AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64")) # special case
+extend_target(QmlWorkerScript CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))
     DEFINES
         WTF_USE_UDIS86=1
 )
@@ -81,12 +81,12 @@ extend_target(QmlWorkerScript CONDITION NOT disassembler
         WTF_USE_UDIS86=0
 )
 
-extend_target(QmlWorkerScript CONDITION (CMAKE_BUILD_TYPE STREQUAL Release)
+extend_target(QmlWorkerScript CONDITION CMAKE_BUILD_TYPE STREQUAL Release
     DEFINES
         NDEBUG
 )
 
-extend_target(QmlWorkerScript CONDITION (NOT ICC AND NOT CLANG AND GCC) AND ((QT_COMPILER_VERSION_MAJOR STRGREATER 6))
+extend_target(QmlWorkerScript CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AND NOT CLANG AND NOT ICC
     COMPILE_OPTIONS
         -Wno-expansion-to-defined
 )

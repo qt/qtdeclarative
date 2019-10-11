@@ -21,6 +21,4 @@ add_qt_plugin(qmldbg_native
 
 #### Keys ignored in scope 1:.:.:qmldbg_native.pro:<TRUE>:
 # OTHER_FILES = "$$PWD/qqmlnativedebugconnector.json"
-# PLUGIN_CLASS_NAME = "QQmlNativeDebugConnectorFactory"
-# PLUGIN_TYPE = "qmltooling"
 # _LOADED = "qt_plugin"

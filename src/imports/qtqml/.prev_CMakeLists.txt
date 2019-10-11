@@ -12,6 +12,7 @@ add_qml_module(qmlplugin
     IMPORTS
         QtQml.Models
         QtQml.WorkerScript
+    SKIP_TYPE_REGISTRATION
     SOURCES
         plugin.cpp
     LIBRARIES

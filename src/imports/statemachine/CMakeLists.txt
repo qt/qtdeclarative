@@ -8,6 +8,7 @@ add_qml_module(qtqmlstatemachine
     URI "QtQml.StateMachine"
     VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
     CLASSNAME QtQmlStateMachinePlugin
+    SKIP_TYPE_REGISTRATION
     SOURCES
         childrenprivate.h
         finalstate.cpp finalstate.h

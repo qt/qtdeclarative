@@ -25,6 +25,4 @@ add_qt_plugin(qmldbg_quickprofiler
 
 #### Keys ignored in scope 1:.:.:qmldbg_quickprofiler.pro:<TRUE>:
 # OTHER_FILES = "qquickprofileradapter.json"
-# PLUGIN_CLASS_NAME = "QQuickProfilerAdapterFactory"
-# PLUGIN_TYPE = "qmltooling"
 # _LOADED = "qt_plugin"

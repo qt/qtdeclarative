@@ -40,10 +40,7 @@ add_qt_plugin(qsgopenvgbackend
 )
 
 #### Keys ignored in scope 1:.:.:openvg.pro:<TRUE>:
-# CONFIG = "egl"
 # OTHER_FILES = "$$PWD/openvg.json"
-# PLUGIN_CLASS_NAME = "QSGOpenVGAdaptation"
-# PLUGIN_TYPE = "scenegraph"
 # QMAKE_TARGET_DESCRIPTION = "Quick OpenVG Renderer for Qt."
 # QMAKE_TARGET_PRODUCT = "Qt Quick OpenVG Renderer (Qt $$QT_VERSION)"
 # _LOADED = "qt_plugin"

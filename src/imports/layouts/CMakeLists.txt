@@ -9,6 +9,7 @@ add_qml_module(qquicklayoutsplugin
     VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
     DESIGNER_SUPPORTED
     CLASSNAME QtQuickLayoutsPlugin
+    SKIP_TYPE_REGISTRATION
     SOURCES
         plugin.cpp
         qquickgridlayoutengine.cpp qquickgridlayoutengine_p.h

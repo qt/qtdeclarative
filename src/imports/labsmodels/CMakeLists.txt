@@ -8,6 +8,7 @@ add_qml_module(labsmodelsplugin
     URI "Qt.labs.qmlmodels"
     VERSION "1.0"
     CLASSNAME QtQmlLabsModelsPlugin
+    SKIP_TYPE_REGISTRATION
     SOURCES
         plugin.cpp
     LIBRARIES

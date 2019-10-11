@@ -8,6 +8,7 @@ add_qml_module(qmlwavefrontmeshplugin
     URI "Qt.labs.wavefrontmesh"
     VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
     CLASSNAME QmlWavefrontMeshPlugin
+    SKIP_TYPE_REGISTRATION
     SOURCES
         plugin.cpp
         qwavefrontmesh.cpp qwavefrontmesh.h

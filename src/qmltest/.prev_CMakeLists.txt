@@ -15,7 +15,6 @@ add_qt_module(QuickTest
     DEFINES
         QT_NO_FOREACH
         QT_NO_URL_CAST_FROM_STRING
-        QT_BUILD_QMLTEST_LIB # special case
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui

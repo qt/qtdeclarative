@@ -8,6 +8,7 @@ add_qml_module(qmlsettingsplugin
     URI "Qt.labs.settings"
     VERSION "1.1"
     CLASSNAME QmlSettingsPlugin
+    SKIP_TYPE_REGISTRATION
     SOURCES
         plugin.cpp
         qqmlsettings.cpp qqmlsettings_p.h

@@ -10,6 +10,7 @@ add_qml_module(windowplugin
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     DESIGNER_SUPPORTED
     CLASSNAME QtQuick2WindowPlugin
+    SKIP_TYPE_REGISTRATION
     SOURCES
         plugin.cpp
     LIBRARIES

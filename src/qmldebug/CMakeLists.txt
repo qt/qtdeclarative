@@ -6,6 +6,7 @@
 
 add_qt_module(QmlDebug
     STATIC
+    INTERNAL_MODULE
     SOURCES
         qqmldebugclient.cpp qqmldebugclient_p.h
         qqmldebugclient_p_p.h
@@ -39,5 +40,4 @@ add_qt_module(QmlDebug
 )
 
 #### Keys ignored in scope 1:.:.:qmldebug.pro:<TRUE>:
-# CONFIG = "static" "internal_module"
 # _LOADED = "qt_module"

@@ -1,5 +1,5 @@
 # Generated from src.pro.
-
+# special case skip regeneration
 add_subdirectory(qml)
 add_subdirectory(qmlmodels)
 

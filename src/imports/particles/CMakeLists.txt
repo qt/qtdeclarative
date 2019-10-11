@@ -9,6 +9,7 @@ add_qml_module(particlesplugin
     URI "QtQuick.Particles"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     CLASSNAME QtQuick2ParticlesPlugin
+    SKIP_TYPE_REGISTRATION
     SOURCES
         plugin.cpp
     LIBRARIES

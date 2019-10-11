@@ -347,7 +347,6 @@ if(ANDROID)
 endif()
 
 #### Keys ignored in scope 1:.:.:quick.pro:<TRUE>:
-# MODULE_PLUGIN_TYPES = "scenegraph"
 # _LOADED = "qt_module"
 
 ## Scopes:
@@ -584,7 +583,7 @@ extend_target(Quick CONDITION QT_FEATURE_wheelevent
         handlers/qquickwheelhandler.cpp handlers/qquickwheelhandler_p.h
         handlers/qquickwheelhandler_p_p.h
 )
-add_qt_docs(
+add_qt_docs(Quick
     doc/qtquick.qdocconf
 )
 

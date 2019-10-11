@@ -12,6 +12,7 @@ add_qml_module(qtquick2plugin
     CLASSNAME QtQuick2Plugin
     IMPORTS
         QtQml
+    SKIP_TYPE_REGISTRATION
     SOURCES
         plugin.cpp
     LIBRARIES

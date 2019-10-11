@@ -5,6 +5,7 @@
 #####################################################################
 
 add_qt_module(QuickParticles
+    INTERNAL_MODULE
     SOURCES
         qquickage.cpp qquickage_p.h
         qquickangledirection.cpp qquickangledirection_p.h
@@ -52,26 +53,41 @@ add_qt_module(QuickParticles
 )
 
 # Resources:
-add_qt_resource(QuickParticles "particles" PREFIX "/" FILES
-    particleresources/fuzzydot.png
-    particleresources/glowdot.png
-    particleresources/noise.png
-    particleresources/star.png)
-add_qt_resource(QuickParticles "particles1" PREFIX "/particles" FILES
-    shaders/customparticle.frag
-    shaders/customparticle.vert
-    shaders/customparticle_core.frag
-    shaders/customparticle_core.vert
-    shaders/customparticletemplate.vert
-    shaders/customparticletemplate_core.vert
-    shaders/imageparticle.frag
-    shaders/imageparticle.vert
-    shaders/imageparticle_core.frag
-    shaders/imageparticle_core.vert)
+set(particles_resource_files
+    "particleresources/fuzzydot.png"
+    "particleresources/glowdot.png"
+    "particleresources/noise.png"
+    "particleresources/star.png"
+)
+
+add_qt_resource(QuickParticles "particles"
+    PREFIX
+        "/"
+    FILES
+        ${particles_resource_files}
+)
+set(particles1_resource_files
+    "shaders/customparticle.frag"
+    "shaders/customparticle.vert"
+    "shaders/customparticle_core.frag"
+    "shaders/customparticle_core.vert"
+    "shaders/customparticletemplate.vert"
+    "shaders/customparticletemplate_core.vert"
+    "shaders/imageparticle.frag"
+    "shaders/imageparticle.vert"
+    "shaders/imageparticle_core.frag"
+    "shaders/imageparticle_core.vert"
+)
+
+add_qt_resource(QuickParticles "particles1"
+    PREFIX
+        "/particles"
+    FILES
+        ${particles1_resource_files}
+)
 
 
 #### Keys ignored in scope 1:.:.:particles.pro:<TRUE>:
-# CONFIG = "internal_module"
 # MODULE = "quickparticles"
 # _LOADED = "qt_module"
 

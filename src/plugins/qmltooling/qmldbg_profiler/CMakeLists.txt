@@ -25,6 +25,4 @@ add_qt_plugin(qmldbg_profiler
 
 #### Keys ignored in scope 1:.:.:qmldbg_profiler.pro:<TRUE>:
 # OTHER_FILES = "$$PWD/qqmlprofilerservice.json"
-# PLUGIN_CLASS_NAME = "QQmlProfilerServiceFactory"
-# PLUGIN_TYPE = "qmltooling"
 # _LOADED = "qt_plugin"

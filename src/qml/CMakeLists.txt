@@ -172,7 +172,7 @@ add_qt_module(Qml
         parser/qqmljsast.cpp parser/qqmljsast_p.h
         parser/qqmljsastfwd_p.h
         parser/qqmljsastvisitor.cpp parser/qqmljsastvisitor_p.h
-        parser/qqmljsengine_p.cpp parser/qqmljsengine_p.h parser/qqmljsengine_p.h
+        parser/qqmljsengine_p.cpp parser/qqmljsengine_p.h
         parser/qqmljsglobal_p.h
         parser/qqmljskeywords_p.h
         parser/qqmljslexer.cpp parser/qqmljslexer_p.h
@@ -328,9 +328,16 @@ add_qt_module(Qml
         Qt::Core
 )
 
+# special case begin remove the block, handled manually
+# QLALR Grammars:
+#qt_process_qlalr(
+#    parser/qqmljs.g
+#    Qml
+#    ""
+#)
+# special case end
+
 #### Keys ignored in scope 1:.:.:qml.pro:<TRUE>:
-# CONFIG = "qt_tracepoints" "qlalr"
-# MODULE_PLUGIN_TYPES = "qmltooling"
 # _LOADED = "qt_module"
 
 # special case begin
@@ -392,7 +399,7 @@ extend_target(Qml CONDITION release AND MSVC AND QT_CL_MAJOR_VERSION___equals___
 #### Keys ignored in scope 10:.:.:qml.pro:ICC:
 # WERROR = "-ww2415"
 
-#### Keys ignored in scope 11:.:.:qml.pro:greaterThan(QT_CLANG_MAJOR_VERSION,3) OR greaterThan(QT_CLANG_MINOR_VERSION,3) OR greaterThan(QT_APPLE_CLANG_MAJOR_VERSION,5) OR QT_APPLE_CLANG_MAJOR_VERSION___equals___5 AND greaterThan(QT_APPLE_CLANG_MINOR_VERSION,0):
+#### Keys ignored in scope 11:.:.:qml.pro:greaterThan(QT_CLANG_MAJOR_VERSION,3) OR greaterThan(QT_CLANG_MINOR_VERSION,3) OR greaterThan(QT_APPLE_CLANG_MAJOR_VERSION,5) OR ( QT_APPLE_CLANG_MAJOR_VERSION___equals___5 AND greaterThan(QT_APPLE_CLANG_MINOR_VERSION,0) ):
 # WERROR = "-Wno-error=unused-const-variable"
 
 extend_target(Qml CONDITION QT_FEATURE_qml_jit
@@ -426,16 +433,16 @@ extend_target(Qml CONDITION QT_FEATURE_qml_animation
 
 #### Keys ignored in scope 18:.:common:common/common.pri:EXISTS _ss_tagFile:
 # QMAKE_INTERNAL_INCLUDED_FILES = "$$tagFile"
-# tag = "$$cat$$tagFile,singleline"
+# tag = "$$cat($$tagFile, singleline)"
 
 #### Keys ignored in scope 19:.:common:common/common.pri:NOT tag___equals____ss_{LITERAL_DOLLAR}Format AND %H_ss_{LITERAL_DOLLAR}:
 # QML_COMPILE_HASH = "$$tag"
 
 #### Keys ignored in scope 21:.:common:common/common.pri:EXISTS _ss_PWD/../../.git:
 # QML_COMPILE_HASH = "$$commit"
-# commit = "$$systemgitrev-parseHEAD"
+# commit = "$$system(git rev-parse HEAD)"
 
-extend_target(Qml CONDITION (GCC) AND ((QT_COMPILER_VERSION_MAJOR STREQUAL 5))
+extend_target(Qml CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STREQUAL 5
     COMPILE_OPTIONS
         -fno-strict-aliasing
 )
@@ -505,7 +512,7 @@ extend_target(Qml CONDITION QT_FEATURE_qml_locale
         qml/qqmllocale.cpp qml/qqmllocale_p.h
 )
 
-extend_target(Qml CONDITION QT_FEATURE_clock_gettime AND linux-_x_ OR hpux-_x_ OR solaris-_x_
+extend_target(Qml CONDITION hpux-_x_ OR solaris-_x_ OR (QT_FEATURE_clock_gettime AND linux-_x_)
     LIBRARIES
         rt
 )
@@ -515,7 +522,7 @@ extend_target(Qml CONDITION QT_FEATURE_qml_itemmodel
         types/qqmlmodelindexvaluetype.cpp types/qqmlmodelindexvaluetype_p.h
 )
 
-extend_target(Qml CONDITION (disassembler) AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64")) # special case
+extend_target(Qml CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))
     DEFINES
         WTF_USE_UDIS86=1
 )
@@ -540,12 +547,12 @@ extend_target(Qml CONDITION NOT disassembler
         WTF_USE_UDIS86=0
 )
 
-extend_target(Qml CONDITION (CMAKE_BUILD_TYPE STREQUAL Release)
+extend_target(Qml CONDITION CMAKE_BUILD_TYPE STREQUAL Release
     DEFINES
         NDEBUG
 )
 
-extend_target(Qml CONDITION (NOT ICC AND NOT CLANG AND GCC) AND ((QT_COMPILER_VERSION_MAJOR STRGREATER 6))
+extend_target(Qml CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AND NOT CLANG AND NOT ICC
     COMPILE_OPTIONS
         -Wno-expansion-to-defined
 )
@@ -609,7 +616,7 @@ extend_target(Qml CONDITION (((NOT c++11 AND NOT ICC) AND (NOT (CLANG))) AND (GC
 
 
 qt_create_tracepoints(Qml qtqml.tracepoints)
-add_qt_docs(
+add_qt_docs(Qml
     doc/qtqml.qdocconf
 )
 

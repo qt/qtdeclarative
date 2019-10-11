@@ -18,5 +18,4 @@ add_qt_module(PacketProtocol
 )
 
 #### Keys ignored in scope 1:.:.:packetprotocol.pro:<TRUE>:
-# CONFIG = "static" "internal_module"
 # _LOADED = "qt_module"

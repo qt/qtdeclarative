@@ -32,7 +32,7 @@ add_qt_module(QmlDevTools
         ../qml/parser/qqmljsast.cpp ../qml/parser/qqmljsast_p.h
         ../qml/parser/qqmljsastfwd_p.h
         ../qml/parser/qqmljsastvisitor.cpp ../qml/parser/qqmljsastvisitor_p.h
-        ../qml/parser/qqmljsengine_p.cpp ../qml/parser/qqmljsengine_p.h ../qml/parser/qqmljsengine_p.h
+        ../qml/parser/qqmljsengine_p.cpp ../qml/parser/qqmljsengine_p.h
         ../qml/parser/qqmljsglobal_p.h
         ../qml/parser/qqmljskeywords_p.h
         ../qml/parser/qqmljslexer.cpp ../qml/parser/qqmljslexer_p.h
@@ -86,7 +86,6 @@ add_dependencies(QmlDevTools Qml)
 # special case end
 
 #### Keys ignored in scope 1:.:.:qmldevtools.pro:<TRUE>:
-# CONFIG = "minimal_syncqt" "internal_module" "generated_privates" "qlalr"
 # MODULE_INCNAME = "QtQml"
 # _LOADED = "qt_module"
 # _OPTION = "host_build"
@@ -97,7 +96,7 @@ add_dependencies(QmlDevTools Qml)
 #### Keys ignored in scope 2:.:.:qmldevtools.pro:ICC:
 # WERROR = "-ww2415"
 
-#### Keys ignored in scope 3:.:.:qmldevtools.pro:CLANG AND greaterThan(QT_CLANG_MAJOR_VERSION,3 OR greaterThan(QT_CLANG_MINOR_VERSION,3)):
+#### Keys ignored in scope 3:.:.:qmldevtools.pro:CLANG AND ( greaterThan(QT_CLANG_MAJOR_VERSION,3) OR greaterThan(QT_CLANG_MINOR_VERSION,3) ):
 # WERROR = "-Wno-error=unused-const-variable"
 
 #### Keys ignored in scope 5:.:../qml/common:../qml/common/common.pri:NOT build_pass:
@@ -107,16 +106,16 @@ add_dependencies(QmlDevTools Qml)
 
 #### Keys ignored in scope 6:.:../qml/common:../qml/common/common.pri:EXISTS _ss_tagFile:
 # QMAKE_INTERNAL_INCLUDED_FILES = "$$tagFile"
-# tag = "$$cat$$tagFile,singleline"
+# tag = "$$cat($$tagFile, singleline)"
 
 #### Keys ignored in scope 7:.:../qml/common:../qml/common/common.pri:NOT tag___equals____ss_{LITERAL_DOLLAR}Format AND %H_ss_{LITERAL_DOLLAR}:
 # QML_COMPILE_HASH = "$$tag"
 
 #### Keys ignored in scope 9:.:../qml/common:../qml/common/common.pri:EXISTS _ss_PWD/../../.git:
 # QML_COMPILE_HASH = "$$commit"
-# commit = "$$systemgitrev-parseHEAD"
+# commit = "$$system(git rev-parse HEAD)"
 
-extend_target(QmlDevTools CONDITION (GCC) AND ((QT_COMPILER_VERSION_MAJOR STREQUAL 5))
+extend_target(QmlDevTools CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STREQUAL 5
     COMPILE_OPTIONS
         -fno-strict-aliasing
 )

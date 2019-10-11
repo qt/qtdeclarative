@@ -23,33 +23,40 @@ add_qt_module(QuickShapes
 )
 
 # Resources:
-add_qt_resource(QuickShapes "qtquickshapes" PREFIX "/qt-project.org/shapes" FILES
-    shaders/blit.frag
-    shaders/blit.vert
-    shaders/blit_core.frag
-    shaders/blit_core.vert
-    shaders/conicalgradient.frag
-    shaders/conicalgradient.vert
-    shaders/conicalgradient_core.frag
-    shaders/conicalgradient_core.vert
-    shaders/lineargradient.frag
-    shaders/lineargradient.vert
-    shaders/lineargradient_core.frag
-    shaders/lineargradient_core.vert
-    shaders/radialgradient.frag
-    shaders/radialgradient.vert
-    shaders/radialgradient_core.frag
-    shaders/radialgradient_core.vert
-    shaders_ng/conicalgradient.frag.qsb
-    shaders_ng/conicalgradient.vert.qsb
-    shaders_ng/lineargradient.frag.qsb
-    shaders_ng/lineargradient.vert.qsb
-    shaders_ng/radialgradient.frag.qsb
-    shaders_ng/radialgradient.vert.qsb)
+set(qtquickshapes_resource_files
+    "shaders/blit.frag"
+    "shaders/blit.vert"
+    "shaders/blit_core.frag"
+    "shaders/blit_core.vert"
+    "shaders/conicalgradient.frag"
+    "shaders/conicalgradient.vert"
+    "shaders/conicalgradient_core.frag"
+    "shaders/conicalgradient_core.vert"
+    "shaders/lineargradient.frag"
+    "shaders/lineargradient.vert"
+    "shaders/lineargradient_core.frag"
+    "shaders/lineargradient_core.vert"
+    "shaders/radialgradient.frag"
+    "shaders/radialgradient.vert"
+    "shaders/radialgradient_core.frag"
+    "shaders/radialgradient_core.vert"
+    "shaders_ng/conicalgradient.frag.qsb"
+    "shaders_ng/conicalgradient.vert.qsb"
+    "shaders_ng/lineargradient.frag.qsb"
+    "shaders_ng/lineargradient.vert.qsb"
+    "shaders_ng/radialgradient.frag.qsb"
+    "shaders_ng/radialgradient.vert.qsb"
+)
+
+add_qt_resource(QuickShapes "qtquickshapes"
+    PREFIX
+        "/qt-project.org/shapes"
+    FILES
+        ${qtquickshapes_resource_files}
+)
 
 
 #### Keys ignored in scope 1:.:.:quickshapes.pro:<TRUE>:
-# CONFIG = "simd" "optimize_full" "internal_module"
 # _LOADED = "qt_module"
 
 ## Scopes:

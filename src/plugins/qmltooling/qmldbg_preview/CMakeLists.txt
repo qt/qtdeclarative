@@ -32,6 +32,4 @@ add_qt_plugin(qmldbg_preview
 
 #### Keys ignored in scope 1:.:.:qmldbg_preview.pro:<TRUE>:
 # OTHER_FILES = "$$PWD/qqmlpreviewservice.json"
-# PLUGIN_CLASS_NAME = "QQmlPreviewServiceFactory"
-# PLUGIN_TYPE = "qmltooling"
 # _LOADED = "qt_plugin"
