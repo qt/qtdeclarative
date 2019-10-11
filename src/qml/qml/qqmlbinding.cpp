@@ -298,8 +298,9 @@ protected:
             case QMetaType::Int:
                 if (result.isInteger())
                     return doStore<int>(result.integerValue(), pd, flags);
-                else if (result.isNumber())
-                    return doStore<int>(result.doubleValue(), pd, flags);
+                else if (result.isNumber()) {
+                    return doStore<int>(QV4::StaticValue::toInteger(result.doubleValue()), pd, flags);
+                }
                 break;
             case QMetaType::Double:
                 if (result.isNumber())
