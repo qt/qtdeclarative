@@ -7,7 +7,9 @@ SOURCES += \
 
 RESOURCES += \
     $$PWD/qtquickcontrols2.conf \
-    $$PWD/control-assets/button-background.9.png
+    $$PWD/control-assets/button-background.9.png \
+    $$PWD/test-assets/button-background-1.png \
+    $$PWD/test-assets/button-background-2.png
 
 OTHER_FILES += \
     $$PWD/data/*.qml

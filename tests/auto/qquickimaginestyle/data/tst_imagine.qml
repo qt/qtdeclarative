@@ -54,6 +54,7 @@ import QtTest 1.1
 import QtQuick.Templates 2.12 as T
 import QtQuick.Controls 2.12
 import QtQuick.Controls.Imagine 2.12
+import QtQuick.Controls.Imagine.impl 2.12
 
 TestCase {
     id: testCase
@@ -104,5 +105,52 @@ TestCase {
         var control = createTemporaryObject(buttonComponent, testCase)
         verify(control)
         compare(control.font.pixelSize, 80)
+    }
+
+    Component {
+        id: ninePatchImageComponent
+
+        NinePatchImage {
+            property alias mouseArea: mouseArea
+
+            MouseArea {
+                id: mouseArea
+                anchors.fill: parent
+                // The name of the images isn't important; we just want to check that
+                // going from regular to 9-patch to regular to regular works without crashing.
+                onPressed: parent.source = "qrc:/control-assets/button-background.9.png"
+                onReleased: parent.source = "qrc:/test-assets/button-background-1.png"
+                onClicked: parent.source = "qrc:/test-assets/button-background-2.png"
+            }
+        }
+    }
+
+    Component {
+        id: signalSpyComponent
+
+        SignalSpy {}
+    }
+
+    // QTBUG-78790
+    function test_switchBetween9PatchAndRegular() {
+        var ninePatchImage = createTemporaryObject(ninePatchImageComponent, testCase,
+            { source: "qrc:/test-assets/button-background-1.png" })
+        verify(ninePatchImage)
+
+        var clickSpy = signalSpyComponent.createObject(ninePatchImage,
+            { target: ninePatchImage.mouseArea, signalName: "clicked" })
+        verify(clickSpy.valid)
+
+        var afterRenderingSpy = signalSpyComponent.createObject(ninePatchImage,
+            { target: testCase.Window.window, signalName: "afterRendering" })
+        verify(afterRenderingSpy.valid)
+
+        mousePress(ninePatchImage)
+        // Wait max 1 second - in reality it should take a handful of milliseconds.
+        afterRenderingSpy.wait(1000)
+        mouseRelease(ninePatchImage)
+        compare(clickSpy.count, 1)
+        // Shouldn't result in a crash.
+        afterRenderingSpy.wait(1000)
     }
 }
