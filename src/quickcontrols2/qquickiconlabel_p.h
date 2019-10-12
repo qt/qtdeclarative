@@ -88,7 +88,7 @@ public:
     void setIcon(const QQuickIcon &icon);
 
     QString text() const;
-    void setText(const QString text);
+    void setText(const QString &text);
 
     QFont font() const;
     void setFont(const QFont &font);
