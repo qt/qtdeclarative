@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qmlcachegen
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qmlcachegen.cpp
@@ -65,14 +62,14 @@ set_source_files_properties("data/Retain.qml"
     PROPERTIES QT_RESOURCE_ALIAS "Retain.qml"
 )
 set(retain_resource_files
-    "data/Retain.qml"
+    "Retain.qml"
 )
-
-set_source_files_properties(${retain_resource_files} PROPERTIES QT_RETAIN_QUICKCOMPILER 1)
 
 add_qt_resource(tst_qmlcachegen "retain"
     PREFIX
         "/"
+    BASE
+        "data"
     FILES
         ${retain_resource_files}
 )
@@ -82,8 +79,10 @@ set(qmake_immediate_resource_files
     "data/jsimport.qml"
     "data/jsmoduleimport.qml"
     "data/library.js"
+    "data/module.mjs"
     "data/script.js"
     "data/script.mjs"
+    "data/utils.mjs"
     "data/versionchecks.qml"
 )
 

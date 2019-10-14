@@ -56,17 +56,6 @@ if(QT_FEATURE_d3d12)
     )
 endif()
 
-if(QT_FEATURE_d3d12)
-    target_sources(rendernode PUBLIC
-        d3d12renderer.cpp d3d12renderer.h
-    )
-
-    target_link_libraries(rendernode PUBLIC
-        d3d12
-    )
-
-endif()
-
 if(APPLE_OSX)
     target_sources(rendernode PUBLIC
         metalrenderer.h metalrenderer.mm
@@ -76,7 +65,6 @@ if(APPLE_OSX)
         "-framework AppKit"
         "-framework Metal"
     )
-
 endif()
 
 install(TARGETS rendernode

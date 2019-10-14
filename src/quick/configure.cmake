@@ -11,6 +11,12 @@
 #### Tests
 
 
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../config.tests/d3d12/CMakeLists.txt")
+    qt_config_compile_test("d3d12"
+                           LABEL "Direct3D 12"
+                           PROJECT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../config.tests/d3d12")
+endif()
+
 
 #### Features
 

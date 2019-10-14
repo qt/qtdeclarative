@@ -11,6 +11,7 @@ add_qml_module(qmllocalstorageplugin
     SKIP_TYPE_REGISTRATION
     SOURCES
         plugin.cpp
+        qquicklocalstorage.cpp qquicklocalstorage_p.h
     LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate

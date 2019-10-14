@@ -16,6 +16,7 @@ add_qml_module(qtqmlstatemachine
         signaltransition.cpp signaltransition.h
         state.cpp state.h
         statemachine.cpp statemachine.h
+        statemachineforeign.h
         timeouttransition.cpp timeouttransition.h
     LIBRARIES
         Qt::CorePrivate

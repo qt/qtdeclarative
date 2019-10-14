@@ -331,8 +331,8 @@ add_qt_module(Qml
 # special case begin remove the block, handled manually
 # QLALR Grammars:
 #qt_process_qlalr(
-#    parser/qqmljs.g
 #    Qml
+#    parser/qqmljs.g
 #    ""
 #)
 # special case end
@@ -514,7 +514,7 @@ extend_target(Qml CONDITION QT_FEATURE_qml_locale
 
 extend_target(Qml CONDITION ANDROID
     DEFINES
-        LIBS_SUFFIX='\\"_.so\\"'
+        LIBS_SUFFIX='\\"_${CMAKE_SYSTEM_PROCESSOR}.so\\"'
 )
 
 extend_target(Qml CONDITION hpux-_x_ OR solaris-_x_ OR (QT_FEATURE_clock_gettime AND linux-_x_)

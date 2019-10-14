@@ -116,6 +116,7 @@ add_qt_module(Quick
         scenegraph/qsgcontext.cpp scenegraph/qsgcontext_p.h
         scenegraph/qsgcontextplugin.cpp scenegraph/qsgcontextplugin_p.h
         scenegraph/qsgrenderloop.cpp scenegraph/qsgrenderloop_p.h
+        scenegraph/qsgrhisupport.cpp scenegraph/qsgrhisupport_p.h
         scenegraph/util/qsgareaallocator.cpp scenegraph/util/qsgareaallocator_p.h
         scenegraph/util/qsgengine.cpp scenegraph/util/qsgengine.h scenegraph/util/qsgengine_p.h
         scenegraph/util/qsgflatcolormaterial.cpp scenegraph/util/qsgflatcolormaterial.h
@@ -140,9 +141,9 @@ add_qt_module(Quick
         util/qquickanimatorjob.cpp util/qquickanimatorjob_p.h
         util/qquickapplication.cpp util/qquickapplication_p.h
         util/qquickbehavior.cpp util/qquickbehavior_p.h
-        util/qquickboundaryrule.cpp util/qquickboundaryrule_p.h
         util/qquickfontloader.cpp util/qquickfontloader_p.h
         util/qquickfontmetrics.cpp util/qquickfontmetrics_p.h
+        util/qquickforeignutils_p.h
         util/qquickglobal.cpp
         util/qquickimageprovider.cpp util/qquickimageprovider.h util/qquickimageprovider_p.h
         util/qquickpixmapcache.cpp util/qquickpixmapcache_p.h
@@ -449,7 +450,6 @@ extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FE
         scenegraph/qsgrhidistancefieldglyphcache.cpp scenegraph/qsgrhidistancefieldglyphcache_p.h
         scenegraph/qsgrhilayer.cpp scenegraph/qsgrhilayer_p.h
         scenegraph/qsgrhishadereffectnode.cpp scenegraph/qsgrhishadereffectnode_p.h
-        scenegraph/qsgrhisupport.cpp scenegraph/qsgrhisupport_p.h
         scenegraph/qsgrhitextureglyphcache.cpp scenegraph/qsgrhitextureglyphcache_p.h
         scenegraph/qsgwindowsrenderloop.cpp scenegraph/qsgwindowsrenderloop_p.h
         scenegraph/util/qsgdefaultimagenode.cpp scenegraph/util/qsgdefaultimagenode_p.h

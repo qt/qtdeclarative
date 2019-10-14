@@ -35,5 +35,5 @@ qt_feature("qml_table_model" PRIVATE
     SECTION "QML"
     LABEL "QML table model"
     PURPOSE "Provides the TableModel QML type."
-    CONDITION QT_FEATURE_qml_itemmodel
+    CONDITION QT_FEATURE_qml_itemmodel AND QT_FEATURE_qml_delegate_model
 )

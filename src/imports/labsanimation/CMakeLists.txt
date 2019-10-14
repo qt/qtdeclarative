@@ -11,6 +11,7 @@ add_qml_module(labsanimationplugin
     SKIP_TYPE_REGISTRATION
     SOURCES
         plugin.cpp
+        qquickboundaryrule.cpp qquickboundaryrule_p.h
     LIBRARIES
         Qt::QmlPrivate
         Qt::QuickPrivate

@@ -58,3 +58,7 @@ extend_target(QmlModels CONDITION QT_FEATURE_qml_delegate_model
         qqmllistcompositor.cpp qqmllistcompositor_p.h
         qquickpackage.cpp qquickpackage_p.h
 )
+add_qt_docs(QmlModels
+    doc/qtqmlmodels.qdocconf
+)
+

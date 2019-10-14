@@ -93,3 +93,7 @@ extend_target(QmlWorkerScript CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGRE
 
 #### Keys ignored in scope 12:.:../3rdparty/masm:../3rdparty/masm/masm-defs.pri:(QT_COMPILER_VERSION_MAJOR STRGREATER 6):
 # QMAKE_CXXFLAGS_WARN_ON = "-Wno-expansion-to-defined"
+add_qt_docs(QmlWorkerScript
+    doc/qtqmlworkerscript.qdocconf
+)
+

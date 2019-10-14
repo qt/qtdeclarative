@@ -12,6 +12,7 @@ add_qt_module(QuickTest
         quicktestevent.cpp quicktestevent_p.h
         quicktestglobal.h
         quicktestresult.cpp quicktestresult_p.h
+        quicktestutil.cpp quicktestutil_p.h
     DEFINES
         QT_NO_FOREACH
         QT_NO_URL_CAST_FROM_STRING
