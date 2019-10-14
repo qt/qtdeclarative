@@ -597,65 +597,63 @@ ReturnedValue ArrayPrototype::method_findIndex(const FunctionObject *b, const Va
     return Encode(-1);
 }
 
-ReturnedValue ArrayPrototype::method_join(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue ArrayPrototype::method_join(const FunctionObject *functionObject,
+                                          const Value *thisObject, const Value *argv, int argc)
 {
-    Scope scope(b);
+    Scope scope(functionObject);
     ScopedObject instance(scope, thisObject->toObject(scope.engine));
 
     if (!instance)
         return Encode(scope.engine->newString());
 
-    ScopedValue arg(scope, argc ? argv[0] : Value::undefinedValue());
+    // We cannot optimize the resolution of the argument away in case of length == 0
+    // It may have side effects.
+    ScopedValue argument(scope, argc ? argv[0] : Value::undefinedValue());
+    const QString separator = argument->isUndefined()
+            ? QStringLiteral(",")
+            : argument->toQString();
 
-    QString r4;
-    if (arg->isUndefined())
-        r4 = QStringLiteral(",");
-    else
-        r4 = arg->toQString();
-
-    ScopedValue length(scope, instance->get(scope.engine->id_length()));
-    const quint32 r2 = length->isUndefined() ? 0 : length->toUInt32();
-
-    if (!r2)
+    ScopedValue scopedLength(scope, instance->get(scope.engine->id_length()));
+    const quint32 genericLength = scopedLength->isUndefined() ? 0 : scopedLength->toUInt32();
+    if (!genericLength)
         return Encode(scope.engine->newString());
 
-    QString R;
-
-    // ### FIXME
-    if (ArrayObject *a = instance->as<ArrayObject>()) {
-        ScopedValue e(scope);
-        for (uint i = 0; i < a->getLength(); ++i) {
+    QString result;
+    if (auto *arrayObject = instance->as<ArrayObject>()) {
+        ScopedValue entry(scope);
+        const qint64 arrayLength = arrayObject->getLength();
+        Q_ASSERT(arrayLength >= 0);
+        Q_ASSERT(arrayLength <= std::numeric_limits<quint32>::max());
+        for (quint32 i = 0; i < quint32(arrayLength); ++i) {
             if (i)
-                R += r4;
+                result += separator;
 
-            e = a->get(i);
+            entry = arrayObject->get(i);
             CHECK_EXCEPTION();
-            if (!e->isNullOrUndefined())
-                R += e->toQString();
+            if (!entry->isNullOrUndefined())
+                result += entry->toQString();
         }
     } else {
-        //
-        // crazy!
-        //
         ScopedString name(scope, scope.engine->newString(QStringLiteral("0")));
-        ScopedValue r6(scope, instance->get(name));
-        if (!r6->isNullOrUndefined())
-            R = r6->toQString();
+        ScopedValue value(scope, instance->get(name));
+        CHECK_EXCEPTION();
 
-        ScopedValue r12(scope);
-        for (quint32 k = 1; k < r2; ++k) {
-            R += r4;
+        if (!value->isNullOrUndefined())
+            result = value->toQString();
 
-            name = Value::fromDouble(k).toString(scope.engine);
-            r12 = instance->get(name);
+        for (quint32 i = 1; i < genericLength; ++i) {
+            result += separator;
+
+            name = Value::fromDouble(i).toString(scope.engine);
+            value = instance->get(name);
             CHECK_EXCEPTION();
 
-            if (!r12->isNullOrUndefined())
-                R += r12->toQString();
+            if (!value->isNullOrUndefined())
+                result += value->toQString();
         }
     }
 
-    return Encode(scope.engine->newString(R));
+    return Encode(scope.engine->newString(result));
 }
 
 ReturnedValue ArrayPrototype::method_pop(const FunctionObject *b, const Value *thisObject, const Value *, int)
