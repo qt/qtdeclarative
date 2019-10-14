@@ -2060,20 +2060,19 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
             firstDirtyPos = nodeIterator->startPos();
             // ### this could be optimized if the first and last dirty nodes are not connected
             // as the intermediate text nodes would usually only need to be transformed differently.
-            int lastDirtyPos = firstDirtyPos;
+            QQuickTextNode *firstCleanNode = nullptr;
             auto it = d->textNodeMap.constEnd();
             while (it != nodeIterator) {
                 --it;
-                if (it->dirty()) {
-                    lastDirtyPos = it->startPos();
+                if (it->dirty())
                     break;
-                }
+                firstCleanNode = it->textNode();
             }
             do {
                 rootNode->removeChildNode(nodeIterator->textNode());
                 delete nodeIterator->textNode();
                 nodeIterator = d->textNodeMap.erase(nodeIterator);
-            } while (nodeIterator != d->textNodeMap.constEnd() && nodeIterator->startPos() <= lastDirtyPos);
+            } while (nodeIterator != d->textNodeMap.constEnd() && nodeIterator->textNode() != firstCleanNode);
         }
 
         // FIXME: the text decorations could probably be handled separately (only updated for affected textFrames)
