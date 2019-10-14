@@ -63,6 +63,13 @@ public:
         return QStringLiteral("%1").arg(index.row());
     }
 
+    Q_INVOKABLE QVariant dataFromSerializedIndex(int index) const
+    {
+        if (modelData.contains(index))
+            return modelData.value(index);
+        return QString();
+    }
+
     QHash<int, QByteArray> roleNames() const override
     {
         return { {Qt::DisplayRole, "display"} };
@@ -102,6 +109,12 @@ public:
 
         beginRemoveRows(parent, row, row + count - 1);
         m_rows -= count;
+        for (int c = 0; c < m_columns; ++c) {
+            for (int r = 0; r < count; ++r) {
+                const int serializedIndex = (row + r) + (c * m_rows);
+                modelData.remove(serializedIndex);
+            }
+        }
         endRemoveRows();
         return true;
     }

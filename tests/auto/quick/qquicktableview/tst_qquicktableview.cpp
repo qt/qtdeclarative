@@ -160,6 +160,7 @@ private slots:
     void checkContextPropertiesQQmlListProperyModel_data();
     void checkContextPropertiesQQmlListProperyModel();
     void checkRowAndColumnChangedButNotIndex();
+    void checkThatWeAlwaysEmitChangedUponItemReused();
     void checkChangingModelFromDelegate();
     void checkRebuildViewportOnly();
     void useDelegateChooserWithoutDefault();
@@ -2081,6 +2082,41 @@ void tst_QQuickTableView::checkRowAndColumnChangedButNotIndex()
     QCOMPARE(contextIndex, 1);
     QCOMPARE(contextRow, 0);
     QCOMPARE(contextColumn, 1);
+}
+
+void tst_QQuickTableView::checkThatWeAlwaysEmitChangedUponItemReused()
+{
+    // Check that we always emit changes to index when we reuse an item, even
+    // if it doesn't change. This is needed since the model can have changed
+    // row or column count while the item was in the pool, which means that
+    // any data referred to by the index property inside the delegate
+    // will change too. So we need to refresh any bindings to index.
+    // QTBUG-79209
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    TestModel model(1, 1);
+    tableView->setModel(QVariant::fromValue(&model));
+    model.setModelData(QPoint(0, 0), QSize(1, 1), "old value");
+
+    WAIT_UNTIL_POLISHED;
+
+    const auto reuseItem = tableViewPrivate->loadedTableItem(QPoint(0, 0))->item;
+    const auto context = qmlContext(reuseItem.data());
+
+    // Remove the cell/row that has "old value" as model data, and
+    // add a new one right after. The new cell will have the same
+    // index, but with no model data assigned.
+    // This change will not be detected by items in the pool. But since
+    // we emit indexChanged when the item is reused, it will be updated then.
+    model.removeRow(0);
+    model.insertRow(0);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(context->contextProperty("index").toInt(), 0);
+    QCOMPARE(context->contextProperty("row").toInt(), 0);
+    QCOMPARE(context->contextProperty("column").toInt(), 0);
+    QCOMPARE(context->contextProperty("modelDataFromIndex").toString(), "");
 }
 
 void tst_QQuickTableView::checkChangingModelFromDelegate()
