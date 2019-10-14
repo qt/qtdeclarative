@@ -258,6 +258,12 @@ public:
     MovementReason moveReason;
 
     QList<FxViewItem *> visibleItems;
+    qreal firstVisibleItemPosition = 0;
+    void storeFirstVisibleItemPosition() {
+        if (!visibleItems.isEmpty()) {
+            firstVisibleItemPosition = visibleItems.constFirst()->position();
+        }
+    }
     int visibleIndex;
     int currentIndex;
     FxViewItem *currentItem;

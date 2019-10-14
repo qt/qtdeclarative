@@ -1784,6 +1784,7 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
         if (prevCount != itemCount)
             emit q->countChanged();
     } while (currentChanges.hasPendingChanges() || bufferedChanges.hasPendingChanges());
+    storeFirstVisibleItemPosition();
 }
 
 void QQuickItemViewPrivate::regenerate(bool orientationChanged)
@@ -1870,6 +1871,7 @@ void QQuickItemViewPrivate::layout()
 
     updateSections();
     layoutVisibleItems();
+    storeFirstVisibleItemPosition();
 
     int lastIndexInView = findLastIndexInView();
     refill();
@@ -1954,7 +1956,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
         prevFirstItemInViewPos = prevFirstItemInView->position();
         prevFirstItemInViewIndex = prevFirstItemInView->index;
     }
-    qreal prevVisibleItemsFirstPos = visibleItems.count() ? visibleItems.constFirst()->position() : 0.0;
+    qreal prevVisibleItemsFirstPos = visibleItems.count() ? firstVisibleItemPosition : 0.0;
 
     totalInsertionResult->visiblePos = prevFirstItemInViewPos;
     totalRemovalResult->visiblePos = prevFirstItemInViewPos;
@@ -2000,6 +2002,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
         if (!insertions.isEmpty()) {
             repositionFirstItem(prevVisibleItemsFirst, prevVisibleItemsFirstPos, prevFirstItemInView, &insertionResult, &removalResult);
             layoutVisibleItems(removals.first().index);
+            storeFirstVisibleItemPosition();
         }
     }
 
@@ -2020,6 +2023,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
         if (i < insertions.count() - 1) {
             repositionFirstItem(prevVisibleItemsFirst, prevVisibleItemsFirstPos, prevFirstItemInView, &insertionResult, &removalResult);
             layoutVisibleItems(insertions[i].index);
+            storeFirstVisibleItemPosition();
         }
         itemCount += insertions[i].count;
     }

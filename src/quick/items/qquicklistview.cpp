@@ -805,6 +805,7 @@ void QQuickListViewPrivate::layoutVisibleItems(int fromModelIndex)
 
         FxViewItem *firstItem = *visibleItems.constBegin();
         bool fixedCurrent = currentItem && firstItem->item == currentItem->item;
+        firstVisibleItemPosition = firstItem->position();
         qreal sum = firstItem->size();
         qreal pos = firstItem->position() + firstItem->size() + spacing;
         firstItem->setVisible(firstItem->endPosition() >= from && firstItem->position() <= to);
