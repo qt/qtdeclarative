@@ -70,7 +70,7 @@ struct ScopedValue;
 
 #define CHECK_EXCEPTION() \
     do { \
-        if (scope.hasException()) { \
+        if (scope.hasException() || scope.engine->isInterrupted.loadAcquire()) { \
             return QV4::Encode::undefined(); \
         } \
     } while (false)
