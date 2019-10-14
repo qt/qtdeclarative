@@ -119,6 +119,7 @@ private slots:
     void checkRowHeightProviderNegativeReturnValue();
     void checkRowHeightProviderNotCallable();
     void checkForceLayoutFunction();
+    void checkForceLayoutEndUpDoingALayout();
     void checkContentWidthAndHeight();
     void checkPageFlicking();
     void checkExplicitContentWidthAndHeight();
@@ -172,6 +173,7 @@ private slots:
     void checkSyncView_differentSizedModels();
     void checkSyncView_connect_late_data();
     void checkSyncView_connect_late();
+    void delegateWithRequiredProperties();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -558,6 +560,32 @@ void tst_QQuickTableView::checkForceLayoutFunction()
 
     for (auto fxItem : tableViewPrivate->loadedItems)
         QCOMPARE(fxItem->item->width(), newColumnWidth);
+}
+
+void tst_QQuickTableView::checkForceLayoutEndUpDoingALayout()
+{
+    // QTBUG-77074
+    // Check that we change the implicit size of the delegate after
+    // the initial loading, and at the same time hide some rows or
+    // columns, and then do a forceLayout(), we end up with a
+    // complete relayout that respects the new implicit size.
+    LOAD_TABLEVIEW("tweakimplicitsize.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    const qreal newDelegateSize = 20;
+    view->rootObject()->setProperty("delegateSize", newDelegateSize);
+    // Hide a row, just to force the following relayout to
+    // do a complete reload (and not just a relayout)
+    view->rootObject()->setProperty("hideRow", 1);
+    tableView->forceLayout();
+
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QCOMPARE(fxItem->item->height(), newDelegateSize);
 }
 
 void tst_QQuickTableView::checkContentWidthAndHeight()
@@ -2590,6 +2618,50 @@ void tst_QQuickTableView::checkSyncView_connect_late()
 
     QCOMPARE(tableViewHVPrivate->loadedTableOuterRect, tableViewPrivate->loadedTableOuterRect);
 
+}
+
+void tst_QQuickTableView::delegateWithRequiredProperties()
+{
+    constexpr static int PositionRole = Qt::UserRole+1;
+    struct MyTable : QAbstractTableModel {
+
+
+        using QAbstractTableModel::QAbstractTableModel;
+
+        int rowCount(const QModelIndex& = QModelIndex()) const override {
+            return 3;
+        }
+
+        int columnCount(const QModelIndex& = QModelIndex()) const override {
+            return 3;
+        }
+
+        QVariant data(const QModelIndex &index, int = Qt::DisplayRole) const override {
+            return QVariant::fromValue(QString::asprintf("R%d:C%d", index.row(), index.column()));
+        }
+
+        QHash<int, QByteArray> roleNames() const override {
+            return QHash<int, QByteArray> { {PositionRole, "position"} };
+        }
+    };
+
+    auto model =  QVariant::fromValue(QSharedPointer<MyTable>(new MyTable));
+    {
+        QTest::ignoreMessage(QtMsgType::QtInfoMsg, "success");
+        LOAD_TABLEVIEW("delegateWithRequired.qml")
+        QVERIFY(tableView);
+        tableView->setModel(model);
+        WAIT_UNTIL_POLISHED;
+        QVERIFY(view->errors().empty());
+    }
+    {
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression(R"|(TableView: failed loading index: \d)|"));
+        LOAD_TABLEVIEW("delegatewithRequiredUnset.qml")
+        QVERIFY(tableView);
+        tableView->setModel(model);
+        WAIT_UNTIL_POLISHED;
+        QTRY_VERIFY(view->errors().empty());
+    }
 }
 
 QTEST_MAIN(tst_QQuickTableView)

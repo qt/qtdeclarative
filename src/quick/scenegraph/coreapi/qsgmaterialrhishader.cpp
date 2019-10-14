@@ -301,9 +301,9 @@ void QSGMaterialRhiShader::setFlag(Flags flags, bool on)
     memcpy calls) when updating material states. When \a oldMaterial is null,
     this shader was just activated.
  */
-bool QSGMaterialRhiShader::updateUniformData(const RenderState &state,
-                                               QSGMaterial *newMaterial,
-                                               QSGMaterial *oldMaterial)
+bool QSGMaterialRhiShader::updateUniformData(RenderState &state,
+                                             QSGMaterial *newMaterial,
+                                             QSGMaterial *oldMaterial)
 {
     Q_UNUSED(state);
     Q_UNUSED(newMaterial);
@@ -334,11 +334,11 @@ bool QSGMaterialRhiShader::updateUniformData(const RenderState &state,
     \a oldMaterial can be used to minimize changes. When \a oldMaterial is null,
     this shader was just activated.
  */
-void QSGMaterialRhiShader::updateSampledImage(const RenderState &state,
-                                                int binding,
-                                                QSGTexture **texture,
-                                                QSGMaterial *newMaterial,
-                                                QSGMaterial *oldMaterial)
+void QSGMaterialRhiShader::updateSampledImage(RenderState &state,
+                                              int binding,
+                                              QSGTexture **texture,
+                                              QSGMaterial *newMaterial,
+                                              QSGMaterial *oldMaterial)
 {
     Q_UNUSED(state);
     Q_UNUSED(binding);
@@ -367,8 +367,8 @@ void QSGMaterialRhiShader::updateSampledImage(const RenderState &state,
     The subclass specific state can be extracted from \a newMaterial. When \a
     oldMaterial is null, this shader was just activated.
  */
-bool QSGMaterialRhiShader::updateGraphicsPipelineState(const RenderState &state, GraphicsPipelineState *ps,
-                                                         QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+bool QSGMaterialRhiShader::updateGraphicsPipelineState(RenderState &state, GraphicsPipelineState *ps,
+                                                       QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     Q_UNUSED(state);
     Q_UNUSED(ps);
@@ -426,12 +426,77 @@ bool QSGMaterialRhiShader::updateGraphicsPipelineState(const RenderState &state,
  */
 
 /*!
+    \class QSGMaterialRhiShader::GraphicsPipelineState
+
+    \brief Describes state changes that the material wants to apply to the
+    currently active graphics pipeline state.
+
+    \inmodule QtQuick
+    \since 5.14
+
+    Unlike QSGMaterialShader, directly issuing state change commands with the
+    underlying graphics API is not possible with QSGMaterialRhiShader. This is
+    mainly because the concept of individually changeable states is considered
+    deprecated and not supported with modern graphics APIs.
+
+    Therefore, it is up to QSGMaterialRhiShader to expose a data structure with
+    the set of supported states, which the material can change in its
+    updatePipelineState() implementation, if there is one. The scenegraph will
+    then internally apply these changes to the active graphics pipeline state,
+    then rolling them back as appropriate.
+ */
+
+/*!
+    \enum QSGMaterialRhiShader::GraphicsPipelineState::BlendFactor
+    \since 5.14
+
+    \value Zero
+    \value One
+    \value SrcColor
+    \value OneMinusSrcColor
+    \value DstColor
+    \value OneMinusDstColor
+    \value SrcAlpha
+    \value OneMinusSrcAlpha
+    \value DstAlpha
+    \value OneMinusDstAlpha
+    \value ConstantColor
+    \value OneMinusConstantColor
+    \value ConstantAlpha
+    \value OneMinusConstantAlpha
+    \value SrcAlphaSaturate
+    \value Src1Color
+    \value OneMinusSrc1Color
+    \value Src1Alpha
+    \value OneMinusSrc1Alpha
+ */
+
+/*!
+    \enum QSGMaterialRhiShader::GraphicsPipelineState::ColorMaskComponent
+    \since 5.14
+
+    \value R
+    \value G
+    \value B
+    \value A
+ */
+
+/*!
+    \enum QSGMaterialRhiShader::GraphicsPipelineState::CullMode
+    \since 5.14
+
+    \value CullNone
+    \value CullFront
+    \value CullBack
+ */
+
+/*!
     Returns the accumulated opacity to be used for rendering.
  */
 float QSGMaterialRhiShader::RenderState::opacity() const
 {
     Q_ASSERT(m_data);
-    return static_cast<const QSGRenderer *>(m_data)->currentOpacity();
+    return float(static_cast<const QSGRenderer *>(m_data)->currentOpacity());
 }
 
 /*!
@@ -440,7 +505,7 @@ float QSGMaterialRhiShader::RenderState::opacity() const
 float QSGMaterialRhiShader::RenderState::determinant() const
 {
     Q_ASSERT(m_data);
-    return static_cast<const QSGRenderer *>(m_data)->determinant();
+    return float(static_cast<const QSGRenderer *>(m_data)->determinant());
 }
 
 /*!
@@ -459,7 +524,7 @@ QMatrix4x4 QSGMaterialRhiShader::RenderState::combinedMatrix() const
 float QSGMaterialRhiShader::RenderState::devicePixelRatio() const
 {
     Q_ASSERT(m_data);
-    return static_cast<const QSGRenderer *>(m_data)->devicePixelRatio();
+    return float(static_cast<const QSGRenderer *>(m_data)->devicePixelRatio());
 }
 
 /*!
@@ -511,7 +576,10 @@ QRect QSGMaterialRhiShader::RenderState::deviceRect() const
 
 /*!
     Returns a pointer to the data for the uniform (constant) buffer in the
-    shader.
+    shader. Uniform data must only be updated from
+    QSGMaterialRhiShader::updateUniformData(). The return value is null in the
+    other reimplementable functions, such as,
+    QSGMaterialRhiShader::updateSampledImage().
 
     \note It is strongly recommended to declare the uniform block with \c
     std140 in the shader, and to carefully study the standard uniform block
@@ -525,11 +593,8 @@ QRect QSGMaterialRhiShader::RenderState::deviceRect() const
     \note Avoid copying from C++ POD types, such as, structs, in order to
     update multiple members at once, unless it has been verified that the
     layouts of the C++ struct and the GLSL uniform block match.
-
-    \note Uniform data must only be updated from
-    QSGMaterialRhiShader::updateUniformData().
  */
-QByteArray *QSGMaterialRhiShader::RenderState::uniformData() const
+QByteArray *QSGMaterialRhiShader::RenderState::uniformData()
 {
     Q_ASSERT(m_data);
     return static_cast<const QSGRenderer *>(m_data)->currentUniformData();
@@ -541,7 +606,7 @@ QByteArray *QSGMaterialRhiShader::RenderState::uniformData() const
     QSGMaterialRhiShader::updateSampledImage() to enqueue texture image
     content updates.
  */
-QRhiResourceUpdateBatch *QSGMaterialRhiShader::RenderState::resourceUpdateBatch() const
+QRhiResourceUpdateBatch *QSGMaterialRhiShader::RenderState::resourceUpdateBatch()
 {
     Q_ASSERT(m_data);
     return static_cast<const QSGRenderer *>(m_data)->currentResourceUpdateBatch();
@@ -550,7 +615,7 @@ QRhiResourceUpdateBatch *QSGMaterialRhiShader::RenderState::resourceUpdateBatch(
 /*!
     Returns the current QRhi.
  */
-QRhi *QSGMaterialRhiShader::RenderState::rhi() const
+QRhi *QSGMaterialRhiShader::RenderState::rhi()
 {
     Q_ASSERT(m_data);
     return static_cast<const QSGRenderer *>(m_data)->currentRhi();

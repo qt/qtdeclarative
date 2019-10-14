@@ -62,7 +62,9 @@ class QQuickTurbulenceAffector : public QQuickParticleAffector
     Q_OBJECT
     Q_PROPERTY(qreal strength READ strength WRITE setStrength NOTIFY strengthChanged)
     Q_PROPERTY(QUrl noiseSource READ noiseSource WRITE setNoiseSource NOTIFY noiseSourceChanged)
-    public:
+    QML_NAMED_ELEMENT(Turbulence)
+
+public:
     explicit QQuickTurbulenceAffector(QQuickItem *parent = 0);
     ~QQuickTurbulenceAffector();
     void affectSystem(qreal dt) override;

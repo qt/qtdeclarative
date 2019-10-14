@@ -190,6 +190,7 @@ public:
     QSGRenderContext *createRenderContext(QSGContext *) const override { return rc; }
 
     void releaseSwapchain(QQuickWindow *window);
+    void handleDeviceLoss();
 
     bool eventFilter(QObject *watched, QEvent *event) override;
 
@@ -435,7 +436,26 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
             gl->doneCurrent();
     }
 
-    delete d->animationController;
+    d->animationController.reset();
+}
+
+void QSGGuiThreadRenderLoop::handleDeviceLoss()
+{
+    if (!rhi || !rhi->isDeviceLost())
+        return;
+
+    qWarning("Graphics device lost, cleaning up scenegraph and releasing RHI");
+
+    for (auto it = m_windows.constBegin(), itEnd = m_windows.constEnd(); it != itEnd; ++it)
+        QQuickWindowPrivate::get(it.key())->cleanupNodesOnShutdown();
+
+    rc->invalidate();
+
+    for (auto it = m_windows.constBegin(), itEnd = m_windows.constEnd(); it != itEnd; ++it)
+        releaseSwapchain(it.key());
+
+    delete rhi;
+    rhi = nullptr;
 }
 
 void QSGGuiThreadRenderLoop::releaseSwapchain(QQuickWindow *window)
@@ -488,8 +508,11 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     const bool enableRhi = rhiSupport->isRhiEnabled();
 
     if (enableRhi && !rhi) {
-        offscreenSurface = rhiSupport->maybeCreateOffscreenSurface(window);
+        if (!offscreenSurface)
+            offscreenSurface = rhiSupport->maybeCreateOffscreenSurface(window);
+
         rhi = rhiSupport->createRhi(window, offscreenSurface);
+
         if (rhi) {
             if (rhiSupport->isProfilingRequested())
                 QSGRhiProfileConnection::instance()->initialize(rhi);
@@ -561,6 +584,14 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 
         QRhiSwapChain::Flags flags = QRhiSwapChain::UsedAsTransferSource; // may be used in a grab
 
+        // QQ is always premul alpha. Decide based on alphaBufferSize in
+        // requestedFormat(). (the platform plugin can override format() but
+        // what matters here is what the application wanted, hence using the
+        // requested one)
+        const bool alpha = window->requestedFormat().alphaBufferSize() > 0;
+        if (alpha)
+            flags |= QRhiSwapChain::SurfaceHasPreMulAlpha;
+
         cd->swapchain = rhi->newSwapChain();
         cd->depthStencilForSwapchain = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil,
                                                             QSize(),
@@ -568,7 +599,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
                                                             QRhiRenderBuffer::UsedWithSwapChainOnly);
         cd->swapchain->setWindow(window);
         cd->swapchain->setDepthStencil(cd->depthStencilForSwapchain);
-        qCDebug(QSG_LOG_INFO, "MSAA sample count for the swapchain is %d", rhiSampleCount);
+        qCDebug(QSG_LOG_INFO, "MSAA sample count for the swapchain is %d. Alpha channel requested = %s",
+                rhiSampleCount, alpha ? "yes" : "no");
         cd->swapchain->setSampleCount(rhiSampleCount);
         cd->swapchain->setFlags(flags);
         cd->rpDescForSwapchain = cd->swapchain->newCompatibleRenderPassDescriptor();
@@ -585,6 +617,24 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             break;
         }
         i++;
+    }
+
+    // Check for context loss.
+    if (!current && !rhi && !gl->isValid()) {
+        for (auto it = m_windows.constBegin() ; it != m_windows.constEnd(); it++) {
+            QQuickWindowPrivate *windowPrivate = QQuickWindowPrivate::get(it.key());
+            windowPrivate->cleanupNodesOnShutdown();
+        }
+        rc->invalidate();
+        current = gl->create() && gl->makeCurrent(window);
+        if (current) {
+            QSGDefaultRenderContext::InitParams rcParams;
+            rcParams.sampleCount = qMax(1, gl->format().samples());
+            rcParams.openGLContext = gl;
+            rcParams.initialSurfacePixelSize = window->size() * window->effectiveDevicePixelRatio();
+            rcParams.maybeSurface = window;
+            rc->initialize(&rcParams);
+        }
     }
 
     if (!current)
@@ -634,24 +684,34 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         if (previousOutputSize != effectiveOutputSize || cd->swapchainJustBecameRenderable) {
             if (cd->swapchainJustBecameRenderable)
                 qCDebug(QSG_LOG_RENDERLOOP, "just became exposed");
-            cd->swapchainJustBecameRenderable = false;
-            cd->depthStencilForSwapchain->setPixelSize(effectiveOutputSize);
 
-            cd->depthStencilForSwapchain->build();
             cd->hasActiveSwapchain = cd->swapchain->buildOrResize();
+            if (!cd->hasActiveSwapchain && rhi->isDeviceLost()) {
+                handleDeviceLoss();
+                return;
+            }
 
+            cd->swapchainJustBecameRenderable = false;
             cd->hasRenderableSwapchain = cd->hasActiveSwapchain;
-            if (!cd->hasActiveSwapchain)
-                qWarning("Failed to build or resize swapchain");
-            else
+
+            if (cd->hasActiveSwapchain) {
+                // surface size atomicity: now that buildOrResize() succeeded,
+                // query the size that was used in there by the swapchain, and
+                // that is the size we will use while preparing the next frame.
+                effectiveOutputSize = cd->swapchain->currentPixelSize();
                 qCDebug(QSG_LOG_RENDERLOOP) << "rhi swapchain size" << effectiveOutputSize;
+            } else {
+                qWarning("Failed to build or resize swapchain");
+            }
         }
 
         Q_ASSERT(rhi == cd->rhi);
-        QRhi::FrameOpResult frameResult = rhi->beginFrame(cd->swapchain);
+        // ### the flag should only be set when the app requests it, but there's no way to do that right now
+        QRhi::BeginFrameFlags frameFlags = QRhi::ExternalContentsInPass;
+        QRhi::FrameOpResult frameResult = rhi->beginFrame(cd->swapchain, frameFlags);
         if (frameResult != QRhi::FrameOpSuccess) {
             if (frameResult == QRhi::FrameOpDeviceLost)
-                qWarning("Device lost");
+                handleDeviceLoss();
             else if (frameResult == QRhi::FrameOpError)
                 qWarning("Failed to start frame");
             // out of date is not worth warning about - it may happen even during resizing on some platforms
@@ -690,7 +750,13 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         QRhi::EndFrameFlags flags = 0;
         if (!needsPresent)
             flags |= QRhi::SkipPresent;
-        rhi->endFrame(cd->swapchain, flags);
+        QRhi::FrameOpResult frameResult = rhi->endFrame(cd->swapchain, flags);
+        if (frameResult != QRhi::FrameOpSuccess) {
+            if (frameResult == QRhi::FrameOpDeviceLost)
+                handleDeviceLoss();
+            else if (frameResult == QRhi::FrameOpError)
+                qWarning("Failed to end frame");
+        }
     } else if (needsPresent) {
         if (!cd->customRenderStage || !cd->customRenderStage->swap())
             gl->swapBuffers(window);

@@ -112,6 +112,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION 6)
     Q_PROPERTY(QString preeditText READ preeditText NOTIFY preeditTextChanged REVISION 7)
     Q_PROPERTY(qreal tabStopDistance READ tabStopDistance WRITE setTabStopDistance NOTIFY tabStopDistanceChanged REVISION 10)
+    QML_NAMED_ELEMENT(TextEdit)
 
 public:
     QQuickTextEdit(QQuickItem *parent=nullptr);

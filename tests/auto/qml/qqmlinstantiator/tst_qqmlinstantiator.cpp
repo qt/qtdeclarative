@@ -190,9 +190,9 @@ void tst_qqmlinstantiator::intModelChange()
 void tst_qqmlinstantiator::createAndRemove()
 {
     QQmlEngine engine;
+    QScopedPointer<StringModel> model {new StringModel("model1")};
+    qmlRegisterSingletonInstance("Test", 1, 0, "Model1", model.get());
     QQmlComponent component(&engine, testFileUrl("createAndRemove.qml"));
-    StringModel *model = new StringModel("model1");
-    engine.rootContext()->setContextProperty("model1", model);
     QObject *rootObject = component.create();
     QVERIFY(rootObject != nullptr);
 

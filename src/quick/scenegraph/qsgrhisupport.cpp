@@ -101,7 +101,8 @@ QSGRhiSupport::QSGRhiSupport()
       m_enableRhi(false),
       m_debugLayer(false),
       m_profile(false),
-      m_shaderEffectDebug(false)
+      m_shaderEffectDebug(false),
+      m_preferSoftwareRenderer(false)
 {
 }
 
@@ -140,7 +141,7 @@ void QSGRhiSupport::applySettings()
         }
     } else {
         // check env.vars., fall back to platform-specific defaults when backend is not set
-        m_enableRhi = qEnvironmentVariableIntValue("QSG_RHI");
+        m_enableRhi = uint(qEnvironmentVariableIntValue("QSG_RHI"));
         const QByteArray rhiBackend = qgetenv("QSG_RHI_BACKEND");
         if (rhiBackend == QByteArrayLiteral("gl")
                 || rhiBackend == QByteArrayLiteral("gles2")
@@ -171,12 +172,18 @@ void QSGRhiSupport::applySettings()
         return;
 
     // validation layers (Vulkan) or debug layer (D3D)
-    m_debugLayer = qEnvironmentVariableIntValue("QSG_RHI_DEBUG_LAYER");
+    m_debugLayer = uint(qEnvironmentVariableIntValue("QSG_RHI_DEBUG_LAYER"));
 
     // EnableProfiling + DebugMarkers
-    m_profile = qEnvironmentVariableIntValue("QSG_RHI_PROFILE");
+    m_profile = uint(qEnvironmentVariableIntValue("QSG_RHI_PROFILE"));
 
-    m_shaderEffectDebug = qEnvironmentVariableIntValue("QSG_RHI_SHADEREFFECT_DEBUG");
+    m_shaderEffectDebug = uint(qEnvironmentVariableIntValue("QSG_RHI_SHADEREFFECT_DEBUG"));
+
+    m_preferSoftwareRenderer = uint(qEnvironmentVariableIntValue("QSG_RHI_PREFER_SOFTWARE_RENDERER"));
+
+    m_killDeviceFrameCount = qEnvironmentVariableIntValue("QSG_RHI_SIMULATE_DEVICE_LOSS");
+    if (m_killDeviceFrameCount > 0 && m_rhiBackend == QRhi::D3D11)
+        qDebug("Graphics device will be reset every %d frames", m_killDeviceFrameCount);
 
     const char *backendName = "unknown";
     switch (m_rhiBackend) {
@@ -201,6 +208,8 @@ void QSGRhiSupport::applySettings()
     qCDebug(QSG_LOG_INFO,
             "Using QRhi with backend %s\n  graphics API debug/validation layers: %d\n  QRhi profiling and debug markers: %d",
             backendName, m_debugLayer, m_profile);
+    if (m_preferSoftwareRenderer)
+        qCDebug(QSG_LOG_INFO, "Prioritizing software renderers");
 }
 
 QSGRhiSupport *QSGRhiSupport::staticInst()
@@ -279,12 +288,16 @@ QSurface::SurfaceType QSGRhiSupport::windowSurfaceType() const
 }
 
 #if QT_CONFIG(vulkan)
-static const void *qsgrhi_vk_rifResource(QSGRendererInterface::Resource res, const QRhiNativeHandles *nat,
-                                   const QRhiNativeHandles *cbNat)
+static const void *qsgrhi_vk_rifResource(QSGRendererInterface::Resource res,
+                                         const QRhiNativeHandles *nat,
+                                         const QRhiNativeHandles *cbNat,
+                                         const QRhiNativeHandles *rpNat)
 {
     const QRhiVulkanNativeHandles *vknat = static_cast<const QRhiVulkanNativeHandles *>(nat);
     const QRhiVulkanCommandBufferNativeHandles *maybeVkCbNat =
             static_cast<const QRhiVulkanCommandBufferNativeHandles *>(cbNat);
+    const QRhiVulkanRenderPassNativeHandles *maybeVkRpNat =
+            static_cast<const QRhiVulkanRenderPassNativeHandles *>(rpNat);
 
     switch (res) {
     case QSGRendererInterface::DeviceResource:
@@ -298,6 +311,11 @@ static const void *qsgrhi_vk_rifResource(QSGRendererInterface::Resource res, con
             return nullptr;
     case QSGRendererInterface::PhysicalDeviceResource:
         return &vknat->physDev;
+    case QSGRendererInterface::RenderPassResource:
+        if (maybeVkRpNat)
+            return &maybeVkRpNat->renderPass;
+        else
+            return nullptr;
     default:
         return nullptr;
     }
@@ -376,7 +394,10 @@ const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res, const
     case QRhi::Vulkan:
     {
         QRhiCommandBuffer *cb = rc->currentFrameCommandBuffer();
-        return qsgrhi_vk_rifResource(res, nat, cb ? cb->nativeHandles() : nullptr);
+        QRhiRenderPassDescriptor *rp = rc->currentFrameRenderPass();
+        return qsgrhi_vk_rifResource(res, nat,
+                                     cb ? cb->nativeHandles() : nullptr,
+                                     rp ? rp->nativeHandles() : nullptr);
     }
 #endif
 #if QT_CONFIG(opengl)
@@ -447,6 +468,8 @@ QRhi *QSGRhiSupport::createRhi(QWindow *window, QOffscreenSurface *offscreenSurf
     QRhi::Flags flags = 0;
     if (isProfilingRequested())
         flags |= QRhi::EnableProfiling | QRhi::EnableDebugMarkers;
+    if (isSoftwareRendererRequested())
+        flags |= QRhi::PreferSoftwareRenderer;
 
     QRhi::Implementation backend = rhiBackend();
     if (backend == QRhi::Null) {
@@ -477,6 +500,10 @@ QRhi *QSGRhiSupport::createRhi(QWindow *window, QOffscreenSurface *offscreenSurf
     if (backend == QRhi::D3D11) {
         QRhiD3D11InitParams rhiParams;
         rhiParams.enableDebugLayer = isDebugLayerRequested();
+        if (m_killDeviceFrameCount > 0) {
+            rhiParams.framesUntilKillingDeviceViaTdr = m_killDeviceFrameCount;
+            rhiParams.repeatDeviceKill = true;
+        }
         rhi = QRhi::create(backend, &rhiParams, flags);
     }
 #endif

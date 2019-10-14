@@ -5,7 +5,7 @@ qtConfig(opengl(es1|es2)?) {
             graph \
             simplematerial \
             sgengine \
-            textureinsgnode \
+            fboitem \
             openglunderqml \
             textureinthread \
             twotextureproviders
@@ -17,11 +17,17 @@ SUBDIRS += \
         threadedanimation
 
 macos {
-    SUBDIRS += metalunderqml
+    SUBDIRS += \
+        metalunderqml \
+        metaltextureimport
 }
 
 win32 {
     SUBDIRS += d3d11underqml
+}
+
+qtConfig(vulkan) {
+    SUBDIRS += vulkanunderqml
 }
 
 EXAMPLE_FILES += \

@@ -92,6 +92,7 @@ class Q_AUTOTEST_EXPORT QQuickAnimatedSprite : public QQuickItem
     Q_PROPERTY(int loops READ loops WRITE setLoops NOTIFY loopsChanged)
     Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
     Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY currentFrameChanged)
+    QML_NAMED_ELEMENT(AnimatedSprite)
 
 public:
     explicit QQuickAnimatedSprite(QQuickItem *parent = nullptr);
@@ -122,7 +123,7 @@ Q_SIGNALS:
     void runningChanged(bool arg);
     void interpolateChanged(bool arg);
 
-    void sourceChanged(QUrl arg);
+    void sourceChanged(const QUrl &arg);
     void reverseChanged(bool arg);
     void frameSyncChanged(bool arg);
     void frameCountChanged(int arg);
@@ -148,7 +149,7 @@ public Q_SLOTS:
     void setRunning(bool arg);
     void setPaused(bool arg);
     void setInterpolate(bool arg);
-    void setSource(QUrl arg);
+    void setSource(const QUrl &arg);
     void setReverse(bool arg);
     void setFrameSync(bool arg);
     void setFrameCount(int arg);

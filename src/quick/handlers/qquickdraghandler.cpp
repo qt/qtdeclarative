@@ -39,6 +39,7 @@
 
 #include "qquickdraghandler_p.h"
 #include <private/qquickwindow_p.h>
+#include <private/qquickmultipointhandler_p_p.h>
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
@@ -228,7 +229,7 @@ void QQuickDragHandler::handlePointerEventImpl(QQuickPointerEvent *event)
                 accumulatedDragDelta.setY(0);
             }
             qreal angle = std::atan2(accumulatedDragDelta.y(), accumulatedDragDelta.x()) * 180 / M_PI;
-            bool overThreshold = QQuickWindowPrivate::dragOverThreshold(accumulatedDragDelta);
+            bool overThreshold = d_func()->dragOverThreshold(accumulatedDragDelta);
             qCDebug(lcDragHandler) << "movement" << accumulatedDragDelta << "angle" << angle << "of point" << point
                                    << "pressed @" << point->scenePressPosition() << "over threshold?" << overThreshold;
             minAngle = qMin(angle, minAngle);

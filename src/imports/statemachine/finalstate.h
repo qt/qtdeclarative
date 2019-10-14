@@ -45,6 +45,7 @@
 
 #include <QtCore/QFinalState>
 #include <QtQml/QQmlListProperty>
+#include <QtQml/qqml.h>
 
 
 QT_BEGIN_NAMESPACE
@@ -54,6 +55,7 @@ class FinalState : public QFinalState
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<QObject> children READ children NOTIFY childrenChanged)
     Q_CLASSINFO("DefaultProperty", "children")
+    QML_ELEMENT
 
 public:
     explicit FinalState(QState *parent = 0);

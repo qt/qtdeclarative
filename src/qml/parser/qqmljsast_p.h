@@ -275,10 +275,16 @@ public:
     virtual FunctionExpression *asFunctionDefinition();
     virtual ClassExpression *asClassDefinition();
 
+    bool ignoreRecursionDepth() const;
+
     inline void accept(Visitor *visitor)
     {
         Visitor::RecursionDepthCheck recursionCheck(visitor);
-        if (recursionCheck()) {
+
+        // Stack overflow is uncommon, ignoreRecursionDepth() only returns true if
+        // QV4_CRASH_ON_STACKOVERFLOW is set, and ignoreRecursionDepth() needs to be out of line.
+        // Therefore, check for ignoreRecursionDepth() _after_ calling the inline recursionCheck().
+        if (recursionCheck() || ignoreRecursionDepth()) {
             if (visitor->preVisit(this))
                 accept0(visitor);
             visitor->postVisit(this);
@@ -307,6 +313,14 @@ public:
     int kind = Kind_Undefined;
 };
 
+template<typename T>
+T lastListElement(T head)
+{
+    auto current = head;
+    while (current->next)
+        current = current->next;
+    return current;
+}
 
 class QML_PARSER_EXPORT UiQualifiedId: public Node
 {
@@ -338,7 +352,7 @@ public:
     { return identifierToken; }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : identifierToken; }
+    { return lastListElement(this)->identifierToken; }
 
 // attributes
     UiQualifiedId *next;
@@ -397,7 +411,7 @@ public:
     { return typeId->firstSourceLocation(); }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : typeId->lastSourceLocation(); }
+    { return lastListElement(this)->typeId->lastSourceLocation(); }
 
     inline TypeArgumentList *finish()
     {
@@ -678,7 +692,10 @@ public:
     { return literalToken; }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : (expression ? expression->lastSourceLocation() : literalToken); }
+    {
+        auto last = lastListElement(this);
+        return (last->expression ? last->expression->lastSourceLocation() : last->literalToken);
+    }
 
     void accept0(Visitor *visitor) override;
 
@@ -800,7 +817,7 @@ public:
     { return commaToken; }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : commaToken; }
+    { return lastListElement(this)->commaToken; }
 
     inline Elision *finish ()
     {
@@ -961,7 +978,10 @@ public:
     { return elision ? elision->firstSourceLocation() : element->firstSourceLocation(); }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : (element ? element->lastSourceLocation() : elision->lastSourceLocation()); }
+    {
+        auto last = lastListElement(this);
+        return last->element ? last->element->lastSourceLocation() : last->elision->lastSourceLocation();
+    }
 
     Elision *elision = nullptr;
     PatternElement *element = nullptr;
@@ -1036,7 +1056,7 @@ public:
     { return property->firstSourceLocation(); }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : property->lastSourceLocation(); }
+    { return lastListElement(this)->property->lastSourceLocation(); }
 
     PatternProperty *property;
     PatternPropertyList *next;
@@ -1645,7 +1665,9 @@ public:
     { return statement->firstSourceLocation(); }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : statement->lastSourceLocation(); }
+    {
+        return lastListElement(this)->statement->lastSourceLocation();
+    }
 
     inline StatementList *finish ()
     {
@@ -2138,7 +2160,9 @@ public:
     { return clause->firstSourceLocation(); }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : clause->lastSourceLocation(); }
+    {
+        return lastListElement(this)->clause->lastSourceLocation();
+    }
 
     inline CaseClauses *finish ()
     {
@@ -2429,7 +2453,9 @@ public:
     { return element->firstSourceLocation(); }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : element->lastSourceLocation(); }
+    {
+        return lastListElement(this)->element->lastSourceLocation();
+    }
 
     FormalParameterList *finish(MemoryPool *pool);
 
@@ -2606,7 +2632,9 @@ public:
     { return importSpecifierToken; }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : importSpecifierToken; }
+    {
+        return lastListElement(this)->importSpecifierToken;
+    }
 
 // attributes
     SourceLocation importSpecifierToken;
@@ -2843,7 +2871,7 @@ public:
     SourceLocation firstSourceLocation() const override
     { return exportSpecifier->firstSourceLocation(); }
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : exportSpecifier->lastSourceLocation(); }
+    { return lastListElement(this)->exportSpecifier->lastSourceLocation(); }
 
 // attributes
     ExportSpecifier *exportSpecifier;
@@ -2997,7 +3025,6 @@ public:
     QStringRef importId;
     SourceLocation importToken;
     SourceLocation fileNameToken;
-    SourceLocation versionToken;
     SourceLocation asToken;
     SourceLocation importIdToken;
     SourceLocation semicolonToken;
@@ -3036,7 +3063,7 @@ public:
     { return member->firstSourceLocation(); }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : member->lastSourceLocation(); }
+    { return lastListElement(this)->member->lastSourceLocation(); }
 
     UiObjectMemberList *finish()
     {
@@ -3115,7 +3142,7 @@ public:
     { return headerItem->firstSourceLocation(); }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : headerItem->lastSourceLocation(); }
+    { return lastListElement(this)->headerItem->lastSourceLocation(); }
 
 // attributes
     Node *headerItem;
@@ -3179,7 +3206,7 @@ public:
     { return member->firstSourceLocation(); }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : member->lastSourceLocation(); }
+    { return lastListElement(this)->member->lastSourceLocation(); }
 
     UiArrayMemberList *finish()
     {
@@ -3240,7 +3267,10 @@ public:
     { return colonToken.isValid() ? identifierToken : propertyTypeToken; }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : (colonToken.isValid() ? propertyTypeToken : identifierToken); }
+    {
+        auto last = lastListElement(this);
+        return (last->colonToken.isValid() ? last->propertyTypeToken : last->identifierToken);
+    }
 
     inline UiParameterList *finish ()
     {
@@ -3283,6 +3313,8 @@ public:
         return defaultToken;
       else if (readonlyToken.isValid())
           return readonlyToken;
+      else if (requiredToken.isValid())
+          return requiredToken;
 
       return propertyToken;
     }
@@ -3306,10 +3338,13 @@ public:
     UiObjectMember *binding; // initialized with a QML object or array.
     bool isDefaultMember;
     bool isReadonlyMember;
+    bool isRequired = false;
     UiParameterList *parameters;
+    // TODO: merge source locations
     SourceLocation defaultToken;
     SourceLocation readonlyToken;
     SourceLocation propertyToken;
+    SourceLocation requiredToken;
     SourceLocation typeModifierToken;
     SourceLocation typeToken;
     SourceLocation identifierToken;
@@ -3493,8 +3528,10 @@ public:
     { return memberToken; }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() :
-                    valueToken.isValid() ? valueToken : memberToken; }
+    {
+        auto last = lastListElement(this);
+        return last->valueToken.isValid() ? last->valueToken : last->memberToken;
+    }
 
     void accept0(Visitor *visitor) override;
 

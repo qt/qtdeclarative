@@ -54,6 +54,7 @@
 /*!
     \qmltype TableView
     \inqmlmodule QtQuick
+    \since 5.12
     \ingroup qtquick-views
     \inherits Flickable
     \brief Provides a table view of items to display data from a model.
@@ -1823,18 +1824,9 @@ void QQuickTableViewPrivate::beginRebuildTable()
 
 void QQuickTableViewPrivate::layoutAfterLoadingInitialTable()
 {
-    if (rebuildOptions.testFlag(RebuildOption::LayoutOnly)
-            || rowHeightProvider.isUndefined() || columnWidthProvider.isUndefined()) {
-        // Since we don't have both size providers, we need to calculate the
-        // size of each row and column based on the size of the delegate items.
-        // This couldn't be done while we were loading the initial rows and
-        // columns, since during the process, we didn't have all the items
-        // available yet for the calculation. So we do it now. The exception
-        // is if we specifically only requested a relayout.
-        clearEdgeSizeCache();
-        relayoutTableItems();
-        syncLoadedTableRectFromLoadedTable();
-    }
+    clearEdgeSizeCache();
+    relayoutTableItems();
+    syncLoadedTableRectFromLoadedTable();
 
     if (syncView || rebuildOptions.testFlag(RebuildOption::All)) {
         // We try to limit how often we update the content size. The main reason is that is has a
@@ -2590,7 +2582,7 @@ QJSValue QQuickTableView::rowHeightProvider() const
     return d_func()->rowHeightProvider;
 }
 
-void QQuickTableView::setRowHeightProvider(QJSValue provider)
+void QQuickTableView::setRowHeightProvider(const QJSValue &provider)
 {
     Q_D(QQuickTableView);
     if (provider.strictlyEquals(d->rowHeightProvider))
@@ -2606,7 +2598,7 @@ QJSValue QQuickTableView::columnWidthProvider() const
     return d_func()->columnWidthProvider;
 }
 
-void QQuickTableView::setColumnWidthProvider(QJSValue provider)
+void QQuickTableView::setColumnWidthProvider(const QJSValue &provider)
 {
     Q_D(QQuickTableView);
     if (provider.strictlyEquals(d->columnWidthProvider))

@@ -64,9 +64,6 @@ class QQmlEngine;
 class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlDirParser
 {
 public:
-    QQmlDirParser();
-    ~QQmlDirParser();
-
     bool parse(const QString &source);
 
     bool hasError() const;
@@ -87,7 +84,7 @@ public:
 
     struct Plugin
     {
-        Plugin() {}
+        Plugin() = default;
 
         Plugin(const QString &name, const QString &path)
             : name(name), path(path)
@@ -101,7 +98,7 @@ public:
 
     struct Component
     {
-        Component() {}
+        Component() = default;
 
         Component(const QString &typeName, const QString &fileName, int majorVersion, int minorVersion)
             : typeName(typeName), fileName(fileName), majorVersion(majorVersion), minorVersion(minorVersion),
@@ -120,7 +117,7 @@ public:
 
     struct Script
     {
-        Script() {}
+        Script() = default;
 
         Script(const QString &nameSpace, const QString &fileName, int majorVersion, int minorVersion)
             : nameSpace(nameSpace), fileName(fileName), majorVersion(majorVersion), minorVersion(minorVersion)
@@ -143,7 +140,7 @@ public:
 
     struct TypeInfo
     {
-        TypeInfo() {}
+        TypeInfo() = default;
         TypeInfo(const QString &fileName)
             : fileName(fileName) {}
 
@@ -166,14 +163,14 @@ private:
     QStringList _imports;
     QList<Script> _scripts;
     QList<Plugin> _plugins;
-    bool _designerSupported;
+    bool _designerSupported = false;
     QList<TypeInfo> _typeInfos;
     QString _className;
 };
 
-typedef QHash<QString,QQmlDirParser::Component> QQmlDirComponents;
-typedef QList<QQmlDirParser::Script> QQmlDirScripts;
-typedef QList<QQmlDirParser::Plugin> QQmlDirPlugins;
+using QQmlDirComponents = QHash<QString,QQmlDirParser::Component>;
+using QQmlDirScripts = QList<QQmlDirParser::Script>;
+using QQmlDirPlugins = QList<QQmlDirParser::Plugin>;
 
 QDebug &operator<< (QDebug &, const QQmlDirParser::Component &);
 QDebug &operator<< (QDebug &, const QQmlDirParser::Script &);

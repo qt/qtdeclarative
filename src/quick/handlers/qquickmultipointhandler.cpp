@@ -364,7 +364,7 @@ void QQuickMultiPointHandler::acceptPoints(const QVector<QQuickEventPoint *> &po
         point->setAccepted();
 }
 
-bool QQuickMultiPointHandler::grabPoints(QVector<QQuickEventPoint *> points)
+bool QQuickMultiPointHandler::grabPoints(const QVector<QQuickEventPoint *> &points)
 {
     if (points.isEmpty())
         return false;

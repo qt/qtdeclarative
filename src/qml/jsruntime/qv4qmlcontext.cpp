@@ -248,11 +248,15 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
                         return lookup->qmlContextPropertyGetter(lookup, v4, base);
                     }
                 }
-                return QQmlTypeWrapper::create(v4, scopeObject, r.type);
+                result = QQmlTypeWrapper::create(v4, scopeObject, r.type);
             } else if (r.importNamespace) {
-                return QQmlTypeWrapper::create(v4, scopeObject, context->imports, r.importNamespace);
+                result = QQmlTypeWrapper::create(v4, scopeObject, context->imports, r.importNamespace);
             }
-            Q_ASSERT(!"Unreachable");
+            if (lookup) {
+                lookup->qmlTypeLookup.qmlTypeWrapper = static_cast<Heap::Object*>(result->heapObject());
+                lookup->qmlContextPropertyGetter = QQmlContextWrapper::lookupType;
+            }
+            return result->asReturnedValue();
         }
 
         // Fall through
@@ -657,6 +661,27 @@ ReturnedValue QQmlContextWrapper::lookupInParentContextHierarchy(Lookup *l, Exec
     expressionContext->unresolvedNames = true;
 
     return Encode::undefined();
+}
+
+ReturnedValue QQmlContextWrapper::lookupType(Lookup *l, ExecutionEngine *engine, Value *base)
+{
+    Scope scope(engine);
+    Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
+    if (!qmlContext)
+        return QV4::Encode::undefined();
+
+    QObject *scopeObject = qmlContext->qmlScope();
+    if (scopeObject && QQmlData::wasDeleted(scopeObject))
+        return QV4::Encode::undefined();
+
+    Heap::Object *heapObject = l->qmlTypeLookup.qmlTypeWrapper;
+    if (static_cast<Heap::QQmlTypeWrapper *>(heapObject)->object != scopeObject) {
+        l->qmlTypeLookup.qmlTypeWrapper = nullptr;
+        l->qmlContextPropertyGetter = QQmlContextWrapper::resolveQmlContextPropertyLookupGetter;
+        return QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(l, engine, base);
+    }
+
+    return Value::fromHeapObject(heapObject).asReturnedValue();
 }
 
 void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QQmlContextWrapper *qml)

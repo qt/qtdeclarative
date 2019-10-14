@@ -1,6 +1,8 @@
 TARGET = QtQmlModels
 QT = core-private qml-private
 
+QMAKE_DOCS = $$PWD/doc/qtqmlmodels.qdocconf
+
 DEFINES += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES QT_NO_FOREACH
 
 HEADERS += \

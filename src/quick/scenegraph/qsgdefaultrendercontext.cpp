@@ -68,6 +68,7 @@ QSGDefaultRenderContext::QSGDefaultRenderContext(QSGContext *context)
     , m_glAtlasManager(nullptr)
     , m_rhiAtlasManager(nullptr)
     , m_currentFrameCommandBuffer(nullptr)
+    , m_currentFrameRenderPass(nullptr)
 {
 }
 
@@ -199,6 +200,11 @@ void QSGDefaultRenderContext::invalidate()
     emit invalidated();
 }
 
+void QSGDefaultRenderContext::prepareSync(qreal devicePixelRatio)
+{
+    m_currentDevicePixelRatio = devicePixelRatio;
+}
+
 static QBasicMutex qsg_framerender_mutex;
 
 void QSGDefaultRenderContext::beginNextFrame(QSGRenderer *renderer,
@@ -239,6 +245,7 @@ void QSGDefaultRenderContext::beginNextRhiFrame(QSGRenderer *renderer, QRhiRende
     renderer->setRenderPassRecordingCallbacks(mainPassRecordingStart, mainPassRecordingEnd, callbackUserData);
 
     m_currentFrameCommandBuffer = cb;
+    m_currentFrameRenderPass = rp;
 }
 
 void QSGDefaultRenderContext::renderNextRhiFrame(QSGRenderer *renderer)
@@ -250,6 +257,7 @@ void QSGDefaultRenderContext::endNextRhiFrame(QSGRenderer *renderer)
 {
     Q_UNUSED(renderer);
     m_currentFrameCommandBuffer = nullptr;
+    m_currentFrameRenderPass = nullptr;
 }
 
 /*!

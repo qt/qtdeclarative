@@ -44,6 +44,7 @@
 
 #include <QtQml/qqmlinfo.h>
 #include <QtCore/qmath.h>
+#include <memory>
 
 QT_BEGIN_NAMESPACE
 
@@ -51,15 +52,17 @@ class QQuickParentChangePrivate : public QQuickStateOperationPrivate
 {
     Q_DECLARE_PUBLIC(QQuickParentChange)
 public:
-    QQuickParentChangePrivate() : target(nullptr), parent(nullptr), origParent(nullptr), origStackBefore(nullptr),
-        rewindParent(nullptr), rewindStackBefore(nullptr) {}
-
-    QQuickItem *target;
+    QQuickItem *target = nullptr;
     QPointer<QQuickItem> parent;
-    QPointer<QQuickItem> origParent;
-    QPointer<QQuickItem> origStackBefore;
-    QQuickItem *rewindParent;
-    QQuickItem *rewindStackBefore;
+
+    struct StateSnapshot {
+        QPointer<QQuickItem> parent;
+        QPointer<QQuickItem> stackBefore;
+        qreal x = 0, y = 0, width = 0, height = 0, scale = 0, rotation = 0;
+    };
+
+    std::unique_ptr<StateSnapshot> orig;
+    std::unique_ptr<StateSnapshot> rewind;
 
     QQmlNullableValue<QQmlScriptString> xString;
     QQmlNullableValue<QQmlScriptString> yString;
@@ -68,10 +71,11 @@ public:
     QQmlNullableValue<QQmlScriptString> scaleString;
     QQmlNullableValue<QQmlScriptString> rotationString;
 
-    void doChange(QQuickItem *targetParent, QQuickItem *stackBefore = nullptr);
+    void doChange(QQuickItem *targetParent);
+    void reverseRewindHelper(const std::unique_ptr<StateSnapshot> &snapshot);
 };
 
-void QQuickParentChangePrivate::doChange(QQuickItem *targetParent, QQuickItem *stackBefore)
+void QQuickParentChangePrivate::doChange(QQuickItem *targetParent)
 {
     if (targetParent && target && target->parentItem()) {
         Q_Q(QQuickParentChange);
@@ -137,11 +141,6 @@ void QQuickParentChangePrivate::doChange(QQuickItem *targetParent, QQuickItem *s
     } else if (target) {
         target->setParentItem(targetParent);
     }
-
-    //restore the original stack position.
-    //### if stackBefore has also been reparented this won't work
-    if (target && stackBefore)
-        target->stackBefore(stackBefore);
 }
 
 /*!
@@ -200,7 +199,7 @@ QQmlScriptString QQuickParentChange::x() const
     return d->xString.value;
 }
 
-void QQuickParentChange::setX(QQmlScriptString x)
+void QQuickParentChange::setX(const QQmlScriptString &x)
 {
     Q_D(QQuickParentChange);
     d->xString = x;
@@ -218,7 +217,7 @@ QQmlScriptString QQuickParentChange::y() const
     return d->yString.value;
 }
 
-void QQuickParentChange::setY(QQmlScriptString y)
+void QQuickParentChange::setY(const QQmlScriptString &y)
 {
     Q_D(QQuickParentChange);
     d->yString = y;
@@ -236,7 +235,7 @@ QQmlScriptString QQuickParentChange::width() const
     return d->widthString.value;
 }
 
-void QQuickParentChange::setWidth(QQmlScriptString width)
+void QQuickParentChange::setWidth(const QQmlScriptString &width)
 {
     Q_D(QQuickParentChange);
     d->widthString = width;
@@ -254,7 +253,7 @@ QQmlScriptString QQuickParentChange::height() const
     return d->heightString.value;
 }
 
-void QQuickParentChange::setHeight(QQmlScriptString height)
+void QQuickParentChange::setHeight(const QQmlScriptString &height)
 {
     Q_D(QQuickParentChange);
     d->heightString = height;
@@ -272,7 +271,7 @@ QQmlScriptString QQuickParentChange::scale() const
     return d->scaleString.value;
 }
 
-void QQuickParentChange::setScale(QQmlScriptString scale)
+void QQuickParentChange::setScale(const QQmlScriptString &scale)
 {
     Q_D(QQuickParentChange);
     d->scaleString = scale;
@@ -290,7 +289,7 @@ QQmlScriptString QQuickParentChange::rotation() const
     return d->rotationString.value;
 }
 
-void QQuickParentChange::setRotation(QQmlScriptString rotation)
+void QQuickParentChange::setRotation(const QQmlScriptString &rotation)
 {
     Q_D(QQuickParentChange);
     d->rotationString = rotation;
@@ -305,7 +304,7 @@ bool QQuickParentChange::rotationIsSet() const
 QQuickItem *QQuickParentChange::originalParent() const
 {
     Q_D(const QQuickParentChange);
-    return d->origParent;
+    return d->orig ? d->orig->parent : nullptr;
 }
 
 /*!
@@ -473,20 +472,10 @@ void QQuickParentChange::saveOriginals()
 {
     Q_D(QQuickParentChange);
     saveCurrentValues();
-    d->origParent = d->rewindParent;
-    d->origStackBefore = d->rewindStackBefore;
+    if (!d->orig)
+        d->orig.reset(new QQuickParentChangePrivate::StateSnapshot);
+    *d->orig = *d->rewind;
 }
-
-/*void QQuickParentChange::copyOriginals(QQuickStateActionEvent *other)
-{
-    Q_D(QQuickParentChange);
-    QQuickParentChange *pc = static_cast<QQuickParentChange*>(other);
-
-    d->origParent = pc->d_func()->rewindParent;
-    d->origStackBefore = pc->d_func()->rewindStackBefore;
-
-    saveCurrentValues();
-}*/
 
 void QQuickParentChange::execute()
 {
@@ -499,10 +488,26 @@ bool QQuickParentChange::isReversable()
     return true;
 }
 
+void QQuickParentChangePrivate::reverseRewindHelper(const std::unique_ptr<QQuickParentChangePrivate::StateSnapshot> &snapshot)
+{
+    if (!target || !snapshot)
+        return;
+    target->setX(snapshot->x);
+    target->setY(snapshot->y);
+    target->setScale(snapshot->scale);
+    target->setWidth(snapshot->width);
+    target->setHeight(snapshot->height);
+    target->setRotation(snapshot->rotation);
+    target->setParentItem(snapshot->parent);
+    if (snapshot->stackBefore)
+        target->stackBefore(snapshot->stackBefore);
+}
+
+
 void QQuickParentChange::reverse()
 {
     Q_D(QQuickParentChange);
-    d->doChange(d->origParent, d->origStackBefore);
+    d->reverseRewindHelper(d->orig);
 }
 
 QQuickStateActionEvent::EventType QQuickParentChange::type() const
@@ -524,21 +529,28 @@ void QQuickParentChange::saveCurrentValues()
 {
     Q_D(QQuickParentChange);
     if (!d->target) {
-        d->rewindParent = nullptr;
-        d->rewindStackBefore = nullptr;
+        d->rewind = nullptr;
         return;
     }
 
-    d->rewindParent = d->target->parentItem();
-    d->rewindStackBefore = nullptr;
+    d->rewind.reset(new QQuickParentChangePrivate::StateSnapshot);
+    d->rewind->x = d->target->x();
+    d->rewind->y = d->target->y();
+    d->rewind->scale = d->target->scale();
+    d->rewind->width = d->target->width();
+    d->rewind->height = d->target->height();
+    d->rewind->rotation = d->target->rotation();
 
-    if (!d->rewindParent)
+    d->rewind->parent = d->target->parentItem();
+    d->rewind->stackBefore = nullptr;
+
+    if (!d->rewind->parent)
         return;
 
-    QList<QQuickItem *> children = d->rewindParent->childItems();
+    QList<QQuickItem *> children = d->rewind->parent->childItems();
     for (int ii = 0; ii < children.count() - 1; ++ii) {
         if (children.at(ii) == d->target) {
-            d->rewindStackBefore = children.at(ii + 1);
+            d->rewind->stackBefore = children.at(ii + 1);
             break;
         }
     }
@@ -547,7 +559,8 @@ void QQuickParentChange::saveCurrentValues()
 void QQuickParentChange::rewind()
 {
     Q_D(QQuickParentChange);
-    d->doChange(d->rewindParent, d->rewindStackBefore);
+    d->reverseRewindHelper(d->rewind);
+    d->rewind.reset();
 }
 
 /*!

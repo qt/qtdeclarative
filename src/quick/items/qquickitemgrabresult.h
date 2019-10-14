@@ -45,6 +45,7 @@
 #include <QtCore/QUrl>
 #include <QtGui/QImage>
 #include <QtQml/QJSValue>
+#include <QtQml/qqml.h>
 #include <QtQuick/qtquickglobal.h>
 
 QT_BEGIN_NAMESPACE
@@ -60,6 +61,8 @@ class Q_QUICK_EXPORT QQuickItemGrabResult : public QObject
 
     Q_PROPERTY(QImage image READ image CONSTANT)
     Q_PROPERTY(QUrl url READ url CONSTANT)
+    QML_ANONYMOUS
+
 public:
     QImage image() const;
     QUrl url() const;

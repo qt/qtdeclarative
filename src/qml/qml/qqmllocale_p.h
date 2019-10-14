@@ -94,6 +94,9 @@ private:
 class Q_QML_PRIVATE_EXPORT QQmlLocale
 {
     Q_GADGET
+    QML_NAMED_ELEMENT(Locale)
+    QML_UNCREATABLE("Locale cannot be instantiated. Use Qt.locale().")
+    QML_ADDED_IN_MINOR_VERSION(2)
 
 public:
     ~QQmlLocale();

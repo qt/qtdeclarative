@@ -170,14 +170,45 @@ Rectangle {
         property variant resizers: []
         property variant funcs
 
+        property Component mouseArea: Component {
+            Rectangle {
+                id: rr
+
+                property variant obj
+                property string xprop
+                property string yprop
+
+                width: 20
+                height: 20
+
+                MouseArea {
+                    property bool a: false
+
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onEntered: color = "yellow"
+                    onExited: color = rr.color
+                    onPressed: a = true
+                    onReleased: a = false
+                    onPositionChanged: {
+                        if (a) {
+                            var pt = mapToItem(rr.parent, mouse.x, mouse.y);
+                            rr.obj[rr.xprop] = pt.x
+                            rr.obj[rr.yprop] = pt.y
+                            rr.x = pt.x - 10
+                            rr.y = pt.y - 10
+                        }
+                    }
+                }
+            }
+        }
+
         function genResizer(obj, x, y, xprop, yprop, color) {
-            var ma = Qt.createQmlObject('import QtQuick 2.9; import QtQuick.Shapes 1.0; Rectangle { id: rr; property variant obj; color: "' + color + '"; width: 20; height: 20;'+
-                                         'MouseArea { anchors.fill: parent; hoverEnabled: true;' +
-                                         'onEntered: color = "yellow"; onExited: color = "' + color + '";' +
-                                         'property bool a: false; onPressed: a = true; onReleased: a = false; ' +
-                                         'onPositionChanged: if (a) { var pt = mapToItem(rr.parent, mouse.x, mouse.y);' +
-                                         'obj.' + xprop + ' = pt.x; obj.' + yprop + ' = pt.y; rr.x = pt.x - 10; rr.y = pt.y - 10; } } }',
-                                         canvas, "resizer_item");
+            var ma = mouseArea.createObject(canvas, {
+                                                color: color,
+                                                xprop: xprop,
+                                                yprop: yprop
+                                            });
             ma.visible = root.showResizers;
             ma.obj = obj;
             ma.x = x - 10;
@@ -186,15 +217,55 @@ Rectangle {
             return ma;
         }
 
+        property Component linePath: Component {
+            ShapePath {
+                id: lineShapePath
+                strokeColor: "black"
+                strokeWidth: widthSlider.value
+                fillColor: "transparent"
+                PathLine {
+                    x: lineShapePath.startX + 1
+                    y: lineShapePath.startY + 1
+                }
+            }
+        }
+
+        property Component cubicPath: Component {
+            ShapePath {
+                id: cubicShapePath
+                strokeColor: "black"
+                strokeWidth: widthSlider.value
+                fillColor: root.fill ? 'green' : 'transparent'
+                PathCubic {
+                    x: cubicShapePath.startX + 1
+                    y: cubicShapePath.startY + 1
+                    control1X: cubicShapePath.startX + 50;
+                    control1Y: cubicShapePath.startY + 50;
+                    control2X: cubicShapePath.startX + 150;
+                    control2Y: cubicShapePath.startY + 50;
+                }
+            }
+        }
+
+        property Component quadPath: Component {
+            ShapePath {
+                id: quadShapePath
+                strokeColor: "black"
+                strokeWidth: widthSlider.value
+                fillColor: root.fill ? 'green' : 'transparent'
+                PathQuad {
+                    x: quadShapePath.startx + 1
+                    y: quadShapePath.startY + 1
+                    controlX: quadShapePath.startX + 50
+                    controlY: quadShapePath.startY + 50
+                }
+            }
+        }
+
         Component.onCompleted: {
             funcs = [
                         { "start": function(x, y) {
-                            var p = Qt.createQmlObject('import QtQuick 2.9; import QtQuick.Shapes 1.0; ShapePath {' +
-                                                       'strokeColor: "black"; fillColor: "transparent";'+
-                                                       'strokeWidth: ' + widthSlider.value + ';' +
-                                                       'startX: ' + x + '; startY: ' + y + ';' +
-                                                       'PathLine { x: ' + x + ' + 1; y: ' + y + ' + 1 } }',
-                                                       root, "dynamic_visual_path");
+                            var p = linePath.createObject(root, { startX: x, startY: y });
                             shape.data.push(p);
                             activePath = p;
                         }, "move": function(x, y) {
@@ -211,13 +282,7 @@ Rectangle {
                         }
                         },
                         { "start": function(x, y) {
-                            var p = Qt.createQmlObject('import QtQuick 2.9; import QtQuick.Shapes 1.0; ShapePath {' +
-                                                       'strokeColor: "black"; fillColor: "' + (root.fill ? 'green' : 'transparent') + '";'+
-                                                       'strokeWidth: ' + widthSlider.value + ';' +
-                                                       'startX: ' + x + '; startY: ' + y + ';' +
-                                                       'PathCubic { x: ' + x + ' + 1; y: ' + y + ' + 1;' +
-                                                       'control1X: ' + x + ' + 50; control1Y: ' + y + ' + 50; control2X: ' + x + ' + 150; control2Y: ' + y + ' + 50; } }',
-                                                       root, "dynamic_visual_path");
+                            var p = cubicPath.createObject(root, { startX: x, startY: y });
                             shape.data.push(p);
                             activePath = p;
                         }, "move": function(x, y) {
@@ -236,13 +301,7 @@ Rectangle {
                         }
                         },
                         { "start": function(x, y) {
-                            var p = Qt.createQmlObject('import QtQuick 2.9; import QtQuick.Shapes 1.0; ShapePath {' +
-                                                       'strokeColor: "black"; fillColor: "' + (root.fill ? 'green' : 'transparent') + '";'+
-                                                       'strokeWidth: ' + widthSlider.value + ';' +
-                                                       'startX: ' + x + '; startY: ' + y + ';' +
-                                                       'PathQuad { x: ' + x + ' + 1; y: ' + y + ' + 1;' +
-                                                       'controlX: ' + x + ' + 50; controlY: ' + y + ' + 50 } }',
-                                                       root, "dynamic_visual_path");
+                            var p = quadPath.createObject(root, { startX: x, startY: y });
                             shape.data.push(p);
                             activePath = p;
                         }, "move": function(x, y) {

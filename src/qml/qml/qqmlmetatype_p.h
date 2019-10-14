@@ -84,7 +84,7 @@ public:
     static void unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
 
     static void registerModule(const char *uri, int versionMajor, int versionMinor);
-    static bool protectModule(const char *uri, int majVersion);
+    static bool protectModule(const QString &uri, int majVersion);
 
     static int typeId(const char *uri, int versionMajor, int versionMinor, const char *qmlName);
 

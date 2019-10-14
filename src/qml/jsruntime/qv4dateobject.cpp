@@ -294,13 +294,28 @@ static double MakeDay(double year, double month, double day)
     if (month < 0)
         month += 12.0;
 
-    double d = DayFromYear(year);
-    bool leap = InLeapYear(d*msPerDay);
+    /* Quoting the spec:
 
-    d += DayFromMonth(month, leap);
-    d += day - 1;
+       Find a value t such that YearFromTime(t) is ym and MonthFromTime(t) is mn
+       and DateFromTime(t) is 1; but if this is not possible (because some
+       argument is out of range), return NaN.
+    */
+    double first = DayFromYear(year);
+    /* Beware floating-point glitches: don't test the first millisecond of a
+     * year, month or day when we could test a moment firmly in the interior of
+     * the interval. A rounding glitch might give the first millisecond to the
+     * preceding interval.
+     */
+    bool leap = InLeapYear((first + 60) * msPerDay);
 
-    return d;
+    first += DayFromMonth(month, leap);
+    const double t = first * msPerDay + msPerDay / 2; // Noon on the first of the month
+    Q_ASSERT(Day(t) == first);
+    if (YearFromTime(t) != year || MonthFromTime(t) != month || DateFromTime(t) != 1) {
+        qWarning("Apparently out-of-range date %.0f-%02.0f-%02.0f", year, month, day);
+        return qt_qnan();
+    }
+    return first + day - 1;
 }
 
 static inline double MakeDate(double day, double time)
@@ -601,8 +616,7 @@ static inline double ParseString(const QString &s, double localTZA)
             QStringLiteral("d MMMM, yyyy hh:mm:ss"),
         };
 
-        for (uint i = 0; i < sizeof(formats) / sizeof(formats[0]); ++i) {
-            const QString &format(formats[i]);
+        for (const QString &format : formats) {
             dt = format.indexOf(QLatin1String("hh:mm")) < 0
                 ? QDateTime(QDate::fromString(s, format),
                             QTime(0, 0, 0), Qt::UTC)
@@ -729,14 +743,16 @@ void Heap::DateObject::init(const QTime &time)
      * time from it, which shall (via toQDateTime(), below) discard the date
      * part.  We need a date for which time-zone data is likely to be sane (so
      * MakeDay(0, 0, 0) was a bad choice; 2 BC, December 31st is before
-     * time-zones were standardized), with no transition nearby in date.  We
-     * ignore DST transitions before 1970, but even then zone transitions did
-     * happen.  Some do happen at new year, others on DST transitions in spring
-     * and autumn; so pick the three hundredth anniversary of the birth of
-     * Giovanni Domenico Cassini (1625-06-08), whose work first let us
-     * synchronize clocks tolerably accurately at distant locations.
+     * time-zones were standardized), with no transition nearby in date.
+     * QDateTime ignores DST transitions before 1970, but even then zone
+     * transitions did happen; and DaylightSavingTA() will include DST, at odds
+     * with QDateTime.  So pick a date since 1970 and prefer one when no zone
+     * was in DST.  One such interval (according to the Olson database, at
+     * least) was 1971 March 15th to April 17th.  Since converting a time to a
+     * date-time without specifying a date is foolish, let's use April Fools'
+     * day.
      */
-    static const double d = MakeDay(1925, 5, 8);
+    static const double d = MakeDay(1971, 3, 1);
     double t = MakeTime(time.hour(), time.minute(), time.second(), time.msec());
     date = TimeClip(UTC(MakeDate(d, t), internalClass->engine->localTZA));
 }

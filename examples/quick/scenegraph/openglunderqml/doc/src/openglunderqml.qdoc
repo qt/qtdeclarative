@@ -50,9 +50,10 @@
     in the QML file and this value is used by the OpenGL shader
     program that draws the squircles.
 
-    The example is equivalent in most ways to the \l{Scene Graph - Direct3D 11 Under
-    QML}{Direct3D 11 Under QML} and \l{Scene Graph - Metal Under QML}{Metal Under
-    QML} examples, they all render the same custom content, just via different
+    The example is equivalent in most ways to the \l{Scene Graph - Direct3D 11
+    Under QML}{Direct3D 11 Under QML}, \l{Scene Graph - Metal Under QML}{Metal
+    Under QML}, and \l{Scene Graph - Vulkan Under QML}{Vulkan Under QML}
+    examples, they all render the same custom content, just via different
     native APIs.
 
     \snippet scenegraph/openglunderqml/squircle.h 2

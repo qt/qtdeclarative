@@ -2636,7 +2636,7 @@ QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateA
             for (int j = 0; j < targets.count(); ++j) {
                 QQuickStateAction myAction;
                 QString errorMessage;
-                const QString propertyName = props.at(i);
+                const QString &propertyName = props.at(i);
                 myAction.property = d->createProperty(targets.at(j), propertyName, this, &errorMessage);
                 if (myAction.property.isValid()) {
                     if (usingDefaultProperties)

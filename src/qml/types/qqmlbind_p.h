@@ -75,12 +75,13 @@ private:
     Q_INTERFACES(QQmlPropertyValueSource)
     Q_PROPERTY(QObject *target READ object WRITE setObject)
     Q_PROPERTY(QString property READ property WRITE setProperty)
-    Q_PROPERTY(QVariant value READ value WRITE setValue)
+    Q_PROPERTY(QJSValue value READ value WRITE setValue)
     Q_PROPERTY(bool when READ when WRITE setWhen)
     Q_PROPERTY(bool delayed READ delayed WRITE setDelayed REVISION 8)
     Q_PROPERTY(RestorationMode restoreMode READ restoreMode WRITE setRestoreMode
                NOTIFY restoreModeChanged REVISION 14)
     Q_ENUM(RestorationMode)
+    QML_NAMED_ELEMENT(Binding)
 
 public:
     QQmlBind(QObject *parent=nullptr);
@@ -95,8 +96,8 @@ public:
     QString property() const;
     void setProperty(const QString &);
 
-    QVariant value() const;
-    void setValue(const QVariant &);
+    QJSValue value() const;
+    void setValue(const QJSValue &);
 
     bool delayed() const;
     void setDelayed(bool);
@@ -115,6 +116,9 @@ protected:
 private:
     void prepareEval();
     void eval();
+
+private Q_SLOTS:
+    void targetValueChanged();
 };
 
 QT_END_NAMESPACE

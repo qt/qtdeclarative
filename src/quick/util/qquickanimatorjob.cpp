@@ -207,7 +207,7 @@ void QQuickAnimatorProxyJob::setWindow(QQuickWindow *window)
         stop();
 
     } else if (!m_controller && m_job) {
-        m_controller = QQuickWindowPrivate::get(window)->animationController;
+        m_controller = QQuickWindowPrivate::get(window)->animationController.get();
         if (window->isSceneGraphInitialized())
             readyToAnimate();
         else

@@ -58,6 +58,7 @@ class QQuickTransformPrivate;
 class Q_QUICK_EXPORT QQuickTransform : public QObject
 {
     Q_OBJECT
+    QML_ANONYMOUS
 public:
     explicit QQuickTransform(QObject *parent = nullptr);
     ~QQuickTransform() override;
@@ -150,6 +151,7 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
 
     Q_CLASSINFO("DefaultProperty", "data")
     Q_CLASSINFO("qt_QmlJSWrapperFactoryMethod", "_q_createJSWrapper(QV4::ExecutionEngine*)")
+    QML_NAMED_ELEMENT(Item)
 
 public:
     enum Flag {

@@ -164,8 +164,19 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
             QQmlData *targetDData = QQmlData::get(target, /*create*/false);
             if (!targetDData)
                 return;
-            int coreIndex = QQmlPropertyIndex::fromEncoded(aliasData->encodedMetaPropertyIndex).coreIndex();
+            QQmlPropertyIndex encodedIndex = QQmlPropertyIndex::fromEncoded(aliasData->encodedMetaPropertyIndex);
+            int coreIndex = encodedIndex.coreIndex();
+            int valueTypeIndex = encodedIndex.valueTypeIndex();
             const QQmlPropertyData *pd = targetDData->propertyCache->property(coreIndex);
+            if (pd && valueTypeIndex != -1 && !QQmlValueTypeFactory::valueType(pd->propType())) {
+                // deep alias
+                QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(metaObject->compilationUnit->engine->qmlEngine());
+                auto const *newPropertyCache = enginePriv->propertyCacheForType(pd->propType());
+                void *argv[1] = { &target };
+                QMetaObject::metacall(target, QMetaObject::ReadProperty, coreIndex, argv);
+                Q_ASSERT(newPropertyCache);
+                pd = newPropertyCache->property(valueTypeIndex);
+            }
             if (!pd)
                 return;
 
@@ -858,17 +869,23 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     if (!targetDData->propertyCache)
                         return -1;
                     const QQmlPropertyData *pd = targetDData->propertyCache->property(coreIndex);
-                    // Value type property
+                    // Value type property or deep alias
                     QQmlValueType *valueType = QQmlValueTypeFactory::valueType(pd->propType());
-                    Q_ASSERT(valueType);
+                    if (valueType) {
 
-                    valueType->read(target, coreIndex);
-                    int rv = QMetaObject::metacall(valueType, c, valueTypePropertyIndex, a);
+                        valueType->read(target, coreIndex);
+                        int rv = QMetaObject::metacall(valueType, c, valueTypePropertyIndex, a);
 
-                    if (c == QMetaObject::WriteProperty)
-                        valueType->write(target, coreIndex, nullptr);
+                        if (c == QMetaObject::WriteProperty)
+                            valueType->write(target, coreIndex, nullptr);
 
-                    return rv;
+                        return rv;
+                    } else {
+                        // deep alias
+                        void *argv[1] = { &target };
+                        QMetaObject::metacall(target, QMetaObject::ReadProperty, coreIndex, argv);
+                        return QMetaObject::metacall(target, c, valueTypePropertyIndex, a);
+                    }
 
                 } else {
                     return QMetaObject::metacall(target, c, coreIndex, a);
@@ -1180,6 +1197,8 @@ bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex,
 
     const int aliasId = index - propOffset() - compiledObject->nProperties;
     const QV4::CompiledData::Alias *aliasData = &compiledObject->aliasTable()[aliasId];
+    while (aliasData->aliasToLocalAlias)
+        aliasData = &compiledObject->aliasTable()[aliasData->localAliasIndex];
     *target = ctxt->idValues[aliasData->targetObjectId].data();
     if (!*target)
         return false;

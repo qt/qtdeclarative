@@ -64,6 +64,9 @@ class QQmlAdaptorModel;
 class Q_QMLMODELS_PRIVATE_EXPORT QQmlAbstractDelegateComponent : public QQmlComponent
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(AbstractDelegateComponent)
+    QML_UNCREATABLE("Cannot create instance of abstract class AbstractDelegateComponent.")
+
 public:
     QQmlAbstractDelegateComponent(QObject *parent = nullptr);
     ~QQmlAbstractDelegateComponent() override;
@@ -90,6 +93,7 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateChoice : public QObject
     Q_PROPERTY(int column READ column WRITE setColumn NOTIFY columnChanged)
     Q_PROPERTY(QQmlComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     Q_CLASSINFO("DefaultProperty", "delegate")
+    QML_NAMED_ELEMENT(DelegateChoice)
 public:
     QVariant roleValue() const;
     void setRoleValue(const QVariant &roleValue);
@@ -126,6 +130,7 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateChooser : public QQmlAbstractDelega
     Q_PROPERTY(QString role READ role WRITE setRole NOTIFY roleChanged)
     Q_PROPERTY(QQmlListProperty<QQmlDelegateChoice> choices READ choices CONSTANT)
     Q_CLASSINFO("DefaultProperty", "choices")
+    QML_NAMED_ELEMENT(DelegateChooser)
 
 public:
     QString role() const { return m_role; }

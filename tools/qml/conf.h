@@ -30,6 +30,7 @@
 
 #include <QtQml/QQmlContext>
 #include <QtQml/QQmlListProperty>
+#include <QtQml/qqml.h>
 #include <QObject>
 #include <QUrl>
 
@@ -38,6 +39,7 @@ class PartialScene : public QObject
     Q_OBJECT
     Q_PROPERTY(QUrl container READ container WRITE setContainer NOTIFY containerChanged)
     Q_PROPERTY(QString itemType READ itemType WRITE setItemType NOTIFY itemTypeChanged)
+    QML_ELEMENT
 public:
     PartialScene(QObject *parent = 0) : QObject(parent)
     {}
@@ -72,6 +74,7 @@ class Config : public QObject
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<PartialScene> sceneCompleters READ sceneCompleters)
     Q_CLASSINFO("DefaultProperty", "sceneCompleters")
+    QML_NAMED_ELEMENT(Configuration)
 public:
     Config (QObject* parent=0) : QObject(parent)
     {}

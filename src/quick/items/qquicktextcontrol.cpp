@@ -794,8 +794,6 @@ void QQuickTextControl::timerEvent(QTimerEvent *e)
         d->cursorOn = !d->cursorOn;
 
         d->repaintCursor();
-    } else if (e->timerId() == d->tripleClickTimer.timerId()) {
-        d->tripleClickTimer.stop();
     }
 }
 
@@ -1058,7 +1056,7 @@ void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &po
     commitPreedit();
 #endif
 
-    if (tripleClickTimer.isActive()
+    if ((e->timestamp() < (timestampAtLastDoubleClick + QGuiApplication::styleHints()->mouseDoubleClickInterval()))
         && ((pos - tripleClickPoint).toPoint().manhattanLength() < QGuiApplication::styleHints()->startDragDistance())) {
 
         cursor.movePosition(QTextCursor::StartOfBlock);
@@ -1068,7 +1066,7 @@ void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &po
 
         anchorOnMousePress = QString();
 
-        tripleClickTimer.stop();
+        timestampAtLastDoubleClick = 0; // do not enter this condition in case of 4(!) rapid clicks
     } else {
         int cursorPos = q->hitTest(pos, Qt::FuzzyHit);
         if (cursorPos == -1) {
@@ -1214,8 +1212,8 @@ void QQuickTextControlPrivate::mouseReleaseEvent(QMouseEvent *e, const QPointF &
         QTextBlock block = q->blockWithMarkerAt(pos);
         if (block == blockWithMarkerUnderMousePress) {
             auto fmt = block.blockFormat();
-            fmt.setMarker(fmt.marker() == QTextBlockFormat::Unchecked ?
-                              QTextBlockFormat::Checked : QTextBlockFormat::Unchecked);
+            fmt.setMarker(fmt.marker() == QTextBlockFormat::MarkerType::Unchecked ?
+                              QTextBlockFormat::MarkerType::Checked : QTextBlockFormat::MarkerType::Unchecked);
             cursor.setBlockFormat(fmt);
         }
     }
@@ -1267,7 +1265,7 @@ void QQuickTextControlPrivate::mouseDoubleClickEvent(QMouseEvent *e, const QPoin
         selectedWordOnDoubleClick = cursor;
 
         tripleClickPoint = pos;
-        tripleClickTimer.start(QGuiApplication::styleHints()->mouseDoubleClickInterval(), q);
+        timestampAtLastDoubleClick = e->timestamp();
         if (doEmit) {
             selectionChanged();
 #if QT_CONFIG(clipboard)
@@ -1399,7 +1397,7 @@ QVariant QQuickTextControl::inputMethodQuery(Qt::InputMethodQuery property) cons
     return inputMethodQuery(property, QVariant());
 }
 
-QVariant QQuickTextControl::inputMethodQuery(Qt::InputMethodQuery property, QVariant argument) const
+QVariant QQuickTextControl::inputMethodQuery(Qt::InputMethodQuery property, const QVariant &argument) const
 {
     Q_D(const QQuickTextControl);
     QTextBlock block = d->cursor.block();
@@ -1509,7 +1507,7 @@ void QQuickTextControlPrivate::hoverEvent(QHoverEvent *e, const QPointF &pos)
             emit q->markerHovered(block.isValid());
         hoveredMarker = block.isValid();
         if (hoveredMarker)
-            qCDebug(DBG_HOVER_TRACE) << q << e->type() << pos << "hovered marker" << block.blockFormat().marker() << block.text();
+            qCDebug(DBG_HOVER_TRACE) << q << e->type() << pos << "hovered marker" << int(block.blockFormat().marker()) << block.text();
     }
 }
 

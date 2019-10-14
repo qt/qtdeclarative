@@ -777,10 +777,6 @@ void tst_qqmlqt::dateTimeFormatting()
 
     QQmlEngine eng;
 
-    eng.rootContext()->setContextProperty("qdate", date);
-    eng.rootContext()->setContextProperty("qtime", time);
-    eng.rootContext()->setContextProperty("qdatetime", dateTime);
-
     QQmlComponent component(&eng, testFileUrl("formatting.qml"));
 
     QStringList warnings;
@@ -794,7 +790,11 @@ void tst_qqmlqt::dateTimeFormatting()
     foreach (const QString &warning, warnings)
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
-    QObject *object = component.create();
+    QObject *object = component.createWithInitialProperties({
+            {"qdate", date},
+            {"qtime", time},
+            {"qdatetime", dateTime}
+    });
     QVERIFY2(component.errorString().isEmpty(), qPrintable(component.errorString()));
     QVERIFY(object != nullptr);
 
@@ -853,7 +853,6 @@ void tst_qqmlqt::dateTimeFormattingVariants()
     QFETCH(QStringList, expectedResults);
 
     QQmlEngine eng;
-    eng.rootContext()->setContextProperty("qvariant", variant);
     QQmlComponent component(&eng, testFileUrl("formatting.qml"));
 
     QStringList warnings;
@@ -867,7 +866,7 @@ void tst_qqmlqt::dateTimeFormattingVariants()
     foreach (const QString &warning, warnings)
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
-    QObject *object = component.create();
+    QObject *object = component.createWithInitialProperties({{"qvariant", variant}});
     QVERIFY2(component.errorString().isEmpty(), qPrintable(component.errorString()));
     QVERIFY(object != nullptr);
 
@@ -1174,6 +1173,7 @@ void tst_qqmlqt::qtObjectContents()
 class TimeProvider: public QObject
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(TimeProvider)
     Q_PROPERTY(QTime time READ time WRITE setTime NOTIFY timeChanged)
 
 public:
@@ -1254,13 +1254,14 @@ void tst_qqmlqt::timeRoundtrip()
 
     TimeZoneSwitch tzs(QTest::currentDataTag());
     QFETCH(QTime, time);
+    qmlRegisterTypesAndRevisions<TimeProvider>("Test", 1);
 
     TimeProvider tp(time);
 
     QQmlEngine eng;
-    eng.rootContext()->setContextProperty(QLatin1String("tp"), &tp);
+    //qmlRegisterSingletonInstance("Test", 1, 0, "TimeProvider", &tp);
     QQmlComponent component(&eng, testFileUrl("timeRoundtrip.qml"));
-    QObject *obj = component.create();
+    QObject *obj = component.createWithInitialProperties({{"tp", QVariant::fromValue(&tp)}});
     QVERIFY(obj != nullptr);
 
     // QML reads m_getTime and saves the result as m_putTime; this should come out the same, without

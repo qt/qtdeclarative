@@ -49,6 +49,7 @@
 %token T_DIVIDE_EQ "/="         T_DO "do"                   T_DOT "."
 %token T_ELSE "else"            T_EQ "="                    T_EQ_EQ "=="
 %token T_EQ_EQ_EQ "==="         T_FINALLY "finally"         T_FOR "for"
+%token T_FUNCTION_STAR "function *"
 %token T_FUNCTION "function"    T_GE ">="                   T_GT ">"
 %token T_GT_GT ">>"             T_GT_GT_EQ ">>="            T_GT_GT_GT ">>>"
 %token T_GT_GT_GT_EQ ">>>="     T_IDENTIFIER "identifier"   T_IF "if"
@@ -88,6 +89,7 @@
 %token T_STATIC "static"
 %token T_EXPORT "export"
 %token T_FROM "from"
+%token T_REQUIRED "required"
 
 --- template strings
 %token T_NO_SUBSTITUTION_TEMPLATE"(no subst template)"
@@ -120,8 +122,9 @@
 %token T_FOR_LOOKAHEAD_OK "(for lookahead ok)"
 
 --%left T_PLUS T_MINUS
-%nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET T_OF T_STATIC T_FROM T_AS
+%nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET T_OF T_STATIC T_FROM T_AS T_REQUIRED
 %nonassoc REDUCE_HERE
+%right T_THEN T_ELSE
 
 %start TopLevel
 
@@ -848,13 +851,7 @@ UiVersionSpecifier: T_VERSION_NUMBER;
 UiImport: UiImportHead UiVersionSpecifier Semicolon;
 /.
     case $rule_number: {
-        auto versionToken = loc(2);
-        auto version = sym(2).UiVersionSpecifier;
-        sym(1).UiImport->version = version;
-        if (version->minorToken.isValid()) {
-            versionToken.length += version->minorToken.length + (version->minorToken.offset - versionToken.offset - versionToken.length);
-        }
-        sym(1).UiImport->versionToken = versionToken;
+        sym(1).UiImport->version = sym(2).UiVersionSpecifier;
         sym(1).UiImport->semicolonToken = loc(3);
     } break;
 ./
@@ -862,7 +859,6 @@ UiImport: UiImportHead UiVersionSpecifier Semicolon;
 UiImport: UiImportHead UiVersionSpecifier  T_AS QmlIdentifier Semicolon;
 /.
     case $rule_number: {
-        sym(1).UiImport->versionToken = loc(2);
         sym(1).UiImport->version = sym(2).UiVersionSpecifier;
         sym(1).UiImport->asToken = loc(3);
         sym(1).UiImport->importIdToken = loc(4);
@@ -1175,7 +1171,7 @@ UiObjectMember: T_SIGNAL T_IDENTIFIER Semicolon;
     } break;
 ./
 
-UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier Semicolon;
+UiObjectMemberListPropertyNoInitialiser: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier Semicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(4).UiQualifiedId->finish(), stringRef(6));
@@ -1189,23 +1185,19 @@ UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier S
     } break;
 ./
 
-UiObjectMember: T_READONLY T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier Semicolon;
+UiObjectMember: UiObjectMemberListPropertyNoInitialiser;
+
+UiObjectMember: T_READONLY UiObjectMemberListPropertyNoInitialiser;
 /.
     case $rule_number: {
-        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(5).UiQualifiedId->finish(), stringRef(7));
+        AST::UiPublicMember *node = sym(2).UiPublicMember;
         node->isReadonlyMember = true;
         node->readonlyToken = loc(1);
-        node->typeModifier = stringRef(3);
-        node->propertyToken = loc(2);
-        node->typeModifierToken = loc(3);
-        node->typeToken = loc(5);
-        node->identifierToken = loc(7);
-        node->semicolonToken = loc(8);
         sym(1).Node = node;
     } break;
 ./
 
-UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier Semicolon;
+UiObjectMemberPropertyNoInitialiser: T_PROPERTY UiPropertyType QmlIdentifier Semicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(2).UiQualifiedId->finish(), stringRef(3));
@@ -1217,42 +1209,47 @@ UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier Semicolon;
     } break;
 ./
 
-UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType QmlIdentifier Semicolon;
+
+UiObjectMember: UiObjectMemberPropertyNoInitialiser;
+
+UiObjectMember: T_DEFAULT UiObjectMemberPropertyNoInitialiser;
 /.
     case $rule_number: {
-        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4));
+        AST::UiPublicMember *node = sym(2).UiPublicMember;
         node->isDefaultMember = true;
         node->defaultToken = loc(1);
-        node->propertyToken = loc(2);
-        node->typeToken = loc(3);
-        node->identifierToken = loc(4);
-        node->semicolonToken = loc(5);
         sym(1).Node = node;
     } break;
 ./
 
-UiObjectMember: T_DEFAULT T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier Semicolon;
+UiObjectMember: T_DEFAULT UiObjectMemberListPropertyNoInitialiser;
 /.
     case $rule_number: {
-        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(5).UiQualifiedId->finish(), stringRef(7));
+        AST::UiPublicMember *node = sym(2).UiPublicMember;
         node->isDefaultMember = true;
         node->defaultToken = loc(1);
-        node->typeModifier = stringRef(3);
-        node->propertyToken = loc(2);
-        node->typeModifierToken = loc(2);
-        node->typeToken = loc(4);
-        node->identifierToken = loc(7);
-        node->semicolonToken = loc(8);
         sym(1).Node = node;
     } break;
 ./
+
 OptionalSemicolon: | Semicolon;
 /.
 /* we need OptionalSemicolon because UiScriptStatement might already parse the last semicolon
   and then we would miss a semicolon (see tests/auto/quick/qquickvisualdatamodel/data/objectlist.qml)*/
  ./
 
-UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_COLON UiScriptStatement OptionalSemicolon;
+UiObjectMember: T_REQUIRED UiObjectMemberPropertyNoInitialiser;
+/.
+    case $rule_number: {
+        AST::UiPublicMember *node = sym(2).UiPublicMember;
+        node->requiredToken = loc(1);
+        node->isRequired = true;
+        sym(1).Node = node;
+    } break;
+./
+
+
+UiObjectMemberWithScriptStatement: T_PROPERTY UiPropertyType QmlIdentifier T_COLON UiScriptStatement OptionalSemicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(2).UiQualifiedId->finish(), stringRef(3), sym(5).Statement);
@@ -1264,35 +1261,29 @@ UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_COLON UiScriptStatemen
     } break;
 ./
 
-UiObjectMember: T_READONLY T_PROPERTY UiPropertyType QmlIdentifier T_COLON UiScriptStatement OptionalSemicolon;
+UiObjectMember: UiObjectMemberWithScriptStatement;
+
+UiObjectMember: T_READONLY UiObjectMemberWithScriptStatement;
 /.
     case $rule_number: {
-        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4), sym(6).Statement);
+        AST::UiPublicMember *node = sym(2).UiPublicMember;
         node->isReadonlyMember = true;
         node->readonlyToken = loc(1);
-        node->propertyToken = loc(2);
-        node->typeToken = loc(3);
-        node->identifierToken = loc(4);
-        node->colonToken = loc(5);
         sym(1).Node = node;
     } break;
 ./
 
-UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType QmlIdentifier T_COLON UiScriptStatement OptionalSemicolon;
+UiObjectMember: T_DEFAULT UiObjectMemberWithScriptStatement;
 /.
     case $rule_number: {
-        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4), sym(6).Statement);
+        AST::UiPublicMember *node = sym(2).UiPublicMember;
         node->isDefaultMember = true;
         node->defaultToken = loc(1);
-        node->propertyToken = loc(2);
-        node->typeToken = loc(3);
-        node->identifierToken = loc(4);
-        node->colonToken = loc(5);
         sym(1).Node = node;
     } break;
 ./
 
-UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_COLON T_LBRACKET UiArrayMemberList T_RBRACKET Semicolon;
+UiObjectMemberWithArray: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_COLON T_LBRACKET UiArrayMemberList T_RBRACKET Semicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(4).UiQualifiedId->finish(), stringRef(6));
@@ -1318,35 +1309,19 @@ UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T
     } break;
 ./
 
-UiObjectMember: T_READONLY T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_COLON T_LBRACKET UiArrayMemberList T_RBRACKET Semicolon;
+UiObjectMember: UiObjectMemberWithArray;
+
+UiObjectMember: T_READONLY UiObjectMemberWithArray;
 /.
     case $rule_number: {
-        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(5).UiQualifiedId->finish(), stringRef(7));
+        AST::UiPublicMember *node = sym(2).UiPublicMember;
         node->isReadonlyMember = true;
         node->readonlyToken = loc(1);
-        node->typeModifier = stringRef(3);
-        node->propertyToken = loc(2);
-        node->typeModifierToken = loc(3);
-        node->typeToken = loc(5);
-        node->identifierToken = loc(7);
-        node->semicolonToken = loc(8); // insert a fake ';' before ':'
-
-        AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(7));
-        propertyName->identifierToken = loc(7);
-        propertyName->next = 0;
-
-        AST::UiArrayBinding *binding = new (pool) AST::UiArrayBinding(propertyName, sym(10).UiArrayMemberList->finish());
-        binding->colonToken = loc(8);
-        binding->lbracketToken = loc(9);
-        binding->rbracketToken = loc(11);
-
-        node->binding = binding;
-
         sym(1).Node = node;
     } break;
 ./
 
-UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_COLON ExpressionStatementLookahead UiQualifiedId UiObjectInitializer Semicolon;
+UiObjectMemberExpressionStatementLookahead: T_PROPERTY UiPropertyType QmlIdentifier T_COLON ExpressionStatementLookahead UiQualifiedId UiObjectInitializer Semicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(2).UiQualifiedId->finish(), stringRef(3));
@@ -1369,27 +1344,22 @@ UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_COLON ExpressionStatem
     } break;
 ./
 
-UiObjectMember: T_READONLY T_PROPERTY UiPropertyType QmlIdentifier T_COLON ExpressionStatementLookahead UiQualifiedId UiObjectInitializer Semicolon;
+UiObjectMember: UiObjectMemberExpressionStatementLookahead;
+
+UiObjectMember: T_READONLY UiObjectMemberExpressionStatementLookahead;
 /.
     case $rule_number: {
-        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4));
+        AST::UiPublicMember *node = sym(2).UiPublicMember;
         node->isReadonlyMember = true;
         node->readonlyToken = loc(1);
-        node->propertyToken = loc(2);
-        node->typeToken = loc(3);
-        node->identifierToken = loc(4);
-        node->semicolonToken = loc(5); // insert a fake ';' before ':'
+        sym(1).Node = node;
+    } break;
+./
 
-        AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(4));
-        propertyName->identifierToken = loc(4);
-        propertyName->next = 0;
-
-        AST::UiObjectBinding *binding = new (pool) AST::UiObjectBinding(
-          propertyName, sym(7).UiQualifiedId, sym(8).UiObjectInitializer);
-        binding->colonToken = loc(5);
-
-        node->binding = binding;
-
+UiObjectMember: GeneratorDeclaration;
+/.
+    case $rule_number: {
+        auto node = new (pool) AST::UiSourceElement(sym(1).Node);
         sym(1).Node = node;
     } break;
 ./
@@ -1398,14 +1368,6 @@ UiObjectMember: FunctionDeclarationWithTypes;
 /.
     case $rule_number: {
         sym(1).Node = new (pool) AST::UiSourceElement(sym(1).Node);
-    } break;
-./
-
-UiObjectMember: GeneratorExpression;
-/.
-    case $rule_number: {
-        auto node = new (pool) AST::UiSourceElement(sym(1).Node);
-        sym(1).Node = node;
     } break;
 ./
 
@@ -1501,6 +1463,7 @@ QmlIdentifier: T_GET;
 QmlIdentifier: T_SET;
 QmlIdentifier: T_FROM;
 QmlIdentifier: T_OF;
+QmlIdentifier: T_REQUIRED;
 
 JsIdentifier: T_IDENTIFIER;
 JsIdentifier: T_PROPERTY;
@@ -1513,6 +1476,7 @@ JsIdentifier: T_FROM;
 JsIdentifier: T_STATIC;
 JsIdentifier: T_OF;
 JsIdentifier: T_AS;
+JsIdentifier: T_REQUIRED;
 
 IdentifierReference: JsIdentifier;
 BindingIdentifier: IdentifierReference;
@@ -3232,7 +3196,7 @@ ExpressionStatementLookahead: ;
         int token = lookaheadToken(lexer);
         if (token == T_LBRACE)
             pushToken(T_FORCE_BLOCK);
-        else if (token == T_FUNCTION || token == T_CLASS || token == T_LET || token == T_CONST)
+        else if (token == T_FUNCTION || token == T_FUNCTION_STAR || token == T_CLASS || token == T_LET || token == T_CONST)
             pushToken(T_FORCE_DECLARATION);
     } break;
 ./
@@ -3980,27 +3944,45 @@ GeneratorRBrace: T_RBRACE;
     } break;
 ./
 
-GeneratorDeclaration: Function T_STAR BindingIdentifier GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
+FunctionStar: T_FUNCTION_STAR %prec REDUCE_HERE;
+
+GeneratorDeclaration: FunctionStar BindingIdentifier GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
 /.
     case $rule_number: {
-        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(3), sym(5).FormalParameterList, sym(8).StatementList);
+        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(2), sym(4).FormalParameterList, sym(7).StatementList);
         node->functionToken = loc(1);
-        node->identifierToken = loc(3);
-        node->lparenToken = loc(4);
-        node->rparenToken = loc(6);
-        node->lbraceToken = loc(7);
-        node->rbraceToken = loc(9);
+        node->identifierToken = loc(2);
+        node->lparenToken = loc(3);
+        node->rparenToken = loc(5);
+        node->lbraceToken = loc(6);
+        node->rbraceToken = loc(8);
         node->isGenerator = true;
         sym(1).Node = node;
     } break;
 ./
 
 GeneratorDeclaration_Default: GeneratorDeclaration;
-GeneratorDeclaration_Default: Function T_STAR GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
+GeneratorDeclaration_Default: FunctionStar GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
 /.
     case $rule_number: {
-        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(QStringRef(), sym(4).FormalParameterList, sym(7).StatementList);
+        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(QStringRef(), sym(3).FormalParameterList, sym(6).StatementList);
         node->functionToken = loc(1);
+        node->lparenToken = loc(2);
+        node->rparenToken = loc(4);
+        node->lbraceToken = loc(5);
+        node->rbraceToken = loc(7);
+        node->isGenerator = true;
+        sym(1).Node = node;
+    } break;
+./
+
+GeneratorExpression: T_FUNCTION_STAR BindingIdentifier GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
+/.
+    case $rule_number: {
+        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(stringRef(2), sym(4).FormalParameterList, sym(7).StatementList);
+        node->functionToken = loc(1);
+        if (!stringRef(2).isNull())
+          node->identifierToken = loc(2);
         node->lparenToken = loc(3);
         node->rparenToken = loc(5);
         node->lbraceToken = loc(6);
@@ -4010,31 +3992,15 @@ GeneratorDeclaration_Default: Function T_STAR GeneratorLParen FormalParameters T
     } break;
 ./
 
-GeneratorExpression: T_FUNCTION T_STAR BindingIdentifier GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
+GeneratorExpression: T_FUNCTION_STAR GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
 /.
     case $rule_number: {
-        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(stringRef(3), sym(5).FormalParameterList, sym(8).StatementList);
+        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(QStringRef(), sym(3).FormalParameterList, sym(6).StatementList);
         node->functionToken = loc(1);
-        if (!stringRef(3).isNull())
-          node->identifierToken = loc(3);
-        node->lparenToken = loc(4);
-        node->rparenToken = loc(6);
-        node->lbraceToken = loc(7);
-        node->rbraceToken = loc(9);
-        node->isGenerator = true;
-        sym(1).Node = node;
-    } break;
-./
-
-GeneratorExpression: T_FUNCTION T_STAR GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
-/.
-    case $rule_number: {
-        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(QStringRef(), sym(4).FormalParameterList, sym(7).StatementList);
-        node->functionToken = loc(1);
-        node->lparenToken = loc(3);
-        node->rparenToken = loc(5);
-        node->lbraceToken = loc(6);
-        node->rbraceToken = loc(8);
+        node->lparenToken = loc(2);
+        node->rparenToken = loc(4);
+        node->lbraceToken = loc(5);
+        node->rbraceToken = loc(7);
         node->isGenerator = true;
         sym(1).Node = node;
     } break;
@@ -4419,7 +4385,7 @@ ExportDeclarationLookahead: ;
 /.
     case $rule_number: {
         int token = lookaheadToken(lexer);
-        if (token == T_FUNCTION || token == T_CLASS)
+        if (token == T_FUNCTION || token == T_FUNCTION_STAR || token == T_CLASS)
             pushToken(T_FORCE_DECLARATION);
     } break;
 ./

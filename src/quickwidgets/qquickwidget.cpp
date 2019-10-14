@@ -283,7 +283,16 @@ void QQuickWidgetPrivate::render(bool needsSync)
 
         Q_ASSERT(context);
 
-        if (!context->makeCurrent(offscreenSurface)) {
+        bool current = context->makeCurrent(offscreenSurface);
+
+        if (!current && !context->isValid()) {
+            renderControl->invalidate();
+            current = context->create() && context->makeCurrent(offscreenSurface);
+            if (current)
+                renderControl->initialize(context);
+        }
+
+        if (!current) {
             qWarning("QQuickWidget: Cannot render due to failing makeCurrent()");
             return;
         }
@@ -1118,6 +1127,13 @@ GLuint QQuickWidgetPrivate::textureId() const
     }
     return resolvedFbo ? resolvedFbo->texture()
         : (fbo ? fbo->texture() : 0);
+}
+
+QPlatformTextureList::Flags QQuickWidgetPrivate::textureListFlags()
+{
+    QPlatformTextureList::Flags flags = QWidgetPrivate::textureListFlags();
+    flags |= QPlatformTextureList::NeedsPremultipliedAlphaBlending;
+    return flags;
 }
 #endif
 

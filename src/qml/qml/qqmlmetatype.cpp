@@ -154,7 +154,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->extraData.cd->propertyValueSourceCast = type.valueSourceCast;
     d->extraData.cd->propertyValueInterceptorCast = type.valueInterceptorCast;
     d->extraData.cd->extFunc = type.extensionObjectCreate;
-    d->extraData.cd->customParser = type.customParser;
+    d->extraData.cd->customParser = reinterpret_cast<QQmlCustomParser *>(type.customParser);
     d->extraData.cd->registerEnumClassesUnscoped = true;
 
     if (type.extensionMetaObject)
@@ -342,7 +342,7 @@ QString registrationTypeString(QQmlType::RegistrationType typeType)
 
 // NOTE: caller must hold a QMutexLocker on "data"
 bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *data,
-                       const char *uri, const QString &typeName, int majorVersion = -1)
+                       const char *uri, const QString &typeName, int majorVersion)
 {
     if (!typeName.isEmpty()) {
         if (typeName.at(0).isLower()) {
@@ -363,26 +363,15 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
 
     if (uri && !typeName.isEmpty()) {
         QString nameSpace = QString::fromUtf8(uri);
-
-        if (data->typeRegistrationNamespace.isEmpty() && !nameSpace.isEmpty()) {
-            // Is the target namespace protected against further registrations?
-            if (data->protectedNamespaces.contains(nameSpace)) {
+        QQmlMetaTypeData::VersionedUri versionedUri;
+        versionedUri.uri = nameSpace;
+        versionedUri.majorVersion = majorVersion;
+        if (QQmlTypeModule* qqtm = data->uriToModule.value(versionedUri, 0)){
+            if (qqtm->isLocked()){
                 QString failure(QCoreApplication::translate("qmlRegisterType",
-                                                            "Cannot install %1 '%2' into protected namespace '%3'"));
-                data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType)).arg(typeName).arg(nameSpace));
+                                                            "Cannot install %1 '%2' into protected module '%3' version '%4'"));
+                data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType)).arg(typeName).arg(nameSpace).arg(majorVersion));
                 return false;
-            }
-        } else if (majorVersion >= 0) {
-            QQmlMetaTypeData::VersionedUri versionedUri;
-            versionedUri.uri = nameSpace;
-            versionedUri.majorVersion = majorVersion;
-            if (QQmlTypeModule* qqtm = data->uriToModule.value(versionedUri, 0)){
-                if (qqtm->isLocked()){
-                    QString failure(QCoreApplication::translate("qmlRegisterType",
-                                                                "Cannot install %1 '%2' into protected module '%3' version '%4'"));
-                    data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType)).arg(typeName).arg(nameSpace).arg(majorVersion));
-                    return false;
-                }
             }
         }
     }
@@ -477,8 +466,10 @@ QQmlType QQmlMetaType::registerCompositeSingletonType(const QQmlPrivate::Registe
     bool fileImport = false;
     if (*(type.uri) == '\0')
         fileImport = true;
-    if (!checkRegistration(QQmlType::CompositeSingletonType, data, fileImport ? nullptr : type.uri, typeName))
+    if (!checkRegistration(QQmlType::CompositeSingletonType, data, fileImport ? nullptr : type.uri,
+                           typeName, type.versionMajor)) {
         return QQmlType();
+    }
 
     QQmlTypePrivate *priv = createQQmlType(data, typeName, type);
     addTypeToData(priv, data);
@@ -560,12 +551,12 @@ int QQmlMetaType::registerUnitCacheHook(
     return 0;
 }
 
-bool QQmlMetaType::protectModule(const char *uri, int majVersion)
+bool QQmlMetaType::protectModule(const QString &uri, int majVersion)
 {
     QQmlMetaTypeDataPtr data;
 
     QQmlMetaTypeData::VersionedUri versionedUri;
-    versionedUri.uri = QString::fromUtf8(uri);
+    versionedUri.uri = uri;
     versionedUri.majorVersion = majVersion;
 
     if (QQmlTypeModule* qqtm = data->uriToModule.value(versionedUri, 0)) {
@@ -683,8 +674,6 @@ bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePat
                 }
                 return false;
             }
-
-            data->protectedNamespaces.insert(uri);
         } else {
             // This is not an identified module - provide a warning
             qWarning().nospace() << qPrintable(
@@ -698,11 +687,9 @@ bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePat
                 = QQmlImports::urlFromLocalFileOrQrcOrUrl(basePath);
         }
 
-        data->typeRegistrationNamespace = typeNamespace;
         const QByteArray bytes = uri.toUtf8();
         const char *moduleId = bytes.constData();
         iface->registerTypes(moduleId);
-        data->typeRegistrationNamespace.clear();
     }
 
     if (!failures.isEmpty()) {
@@ -739,9 +726,16 @@ QQmlType QQmlMetaType::typeForUrl(const QString &urlString,
     const QUrl url = QQmlTypeLoader::normalize(QUrl(urlString));
 
     QQmlMetaTypeDataPtr data;
-    QQmlType ret(data->urlToType.value(url));
-    if (ret.isValid() && ret.sourceUrl() == url)
-        return ret;
+    {
+        QQmlType ret(data->urlToType.value(url));
+        if (ret.isValid() && ret.sourceUrl() == url)
+            return ret;
+    }
+    {
+        QQmlType ret(data->urlToNonFileImportType.value(url));
+        if (ret.isValid() && ret.sourceUrl() == url)
+            return ret;
+    }
 
     const int dot = qualifiedType.indexOf(QLatin1Char('.'));
     const QString typeName = dot < 0

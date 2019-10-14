@@ -470,7 +470,7 @@ void tst_qqmlconnections::noAcceleratedGlobalLookup()
     QVERIFY(c.isReady());
     QScopedPointer<QObject> object(c.create());
     const QVariant val = object->property("testEnum");
-    QCOMPARE(val.type(), int(QMetaType::Int));
+    QCOMPARE(val.type(), QVariant::Int);
     QCOMPARE(val.toInt(), int(Proxy::EnumValue));
 }
 

@@ -97,6 +97,7 @@ private slots:
     void enumerableProperties();
     void enumProperties();
     void scarceTypes();
+    void nonValueTypes();
 
 private:
     QQmlEngine engine;
@@ -933,6 +934,11 @@ void tst_qqmlvaluetypes::color()
         QCOMPARE(qRound(object->property("hsl_h").toDouble() * 100), 43);
         QCOMPARE(qRound(object->property("hsl_s").toDouble() * 100), 74);
         QCOMPARE(qRound(object->property("hsl_l").toDouble() * 100), 54);
+
+        QCOMPARE(object->property("valid").userType(), QMetaType::Bool);
+        QVERIFY(object->property("valid").toBool());
+        QCOMPARE(object->property("invalid").userType(), QMetaType::Bool);
+        QVERIFY(!object->property("invalid").toBool());
 
         QColor comparison;
         comparison.setRedF(0.2);
@@ -1844,6 +1850,16 @@ void tst_qqmlvaluetypes::scarceTypes()
     QCOMPARE(QByteArray(pixmapValue->vtable()->className), QByteArray("VariantObject"));
 }
 
+#define CHECK_TYPE_IS_NOT_VALUETYPE(Type, typeId, cppType) \
+    QVERIFY(!QQmlValueTypeFactory::isValueType(QMetaType::Type));
+
+void tst_qqmlvaluetypes::nonValueTypes()
+{
+    CHECK_TYPE_IS_NOT_VALUETYPE(UnknownType, 0, void)
+    QT_FOR_EACH_STATIC_PRIMITIVE_TYPE(CHECK_TYPE_IS_NOT_VALUETYPE);
+}
+
+#undef CHECK_TYPE_IS_NOT_VALUETYPE
 
 QTEST_MAIN(tst_qqmlvaluetypes)
 

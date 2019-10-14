@@ -125,7 +125,7 @@ QSGOpaqueTextureMaterialRhiShader::QSGOpaqueTextureMaterialRhiShader()
     setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/opaquetexture.frag.qsb"));
 }
 
-bool QSGOpaqueTextureMaterialRhiShader::updateUniformData(const RenderState &state, QSGMaterial *, QSGMaterial *)
+bool QSGOpaqueTextureMaterialRhiShader::updateUniformData(RenderState &state, QSGMaterial *, QSGMaterial *)
 {
     bool changed = false;
     QByteArray *buf = state.uniformData();
@@ -139,7 +139,7 @@ bool QSGOpaqueTextureMaterialRhiShader::updateUniformData(const RenderState &sta
     return changed;
 }
 
-void QSGOpaqueTextureMaterialRhiShader::updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+void QSGOpaqueTextureMaterialRhiShader::updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
                                                            QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     if (binding != 1)
@@ -473,7 +473,7 @@ QSGTextureMaterialRhiShader::QSGTextureMaterialRhiShader()
     setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/texture.frag.qsb"));
 }
 
-bool QSGTextureMaterialRhiShader::updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+bool QSGTextureMaterialRhiShader::updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     bool changed = false;
     QByteArray *buf = state.uniformData();

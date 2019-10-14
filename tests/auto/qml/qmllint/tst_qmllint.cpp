@@ -38,13 +38,21 @@ class TestQmllint: public QQmlDataTest
 
 private Q_SLOTS:
     void initTestCase() override;
-    void test();
-    void test_data();
+
     void testUnqualified();
     void testUnqualified_data();
+
+    void cleanQmlCode_data();
+    void cleanQmlCode();
+
+    void dirtyQmlCode_data();
+    void dirtyQmlCode();
+
     void testUnqualifiedNoSpuriousParentWarning();
-    void catchIdentifierNoFalsePositive();
+
 private:
+    QString runQmllint(const QString &fileToLint, bool shouldSucceed);
+
     QString m_qmllintPath;
 };
 
@@ -61,37 +69,14 @@ void TestQmllint::initTestCase()
     }
 }
 
-void TestQmllint::test_data()
-{
-    QTest::addColumn<QString>("filename");
-    QTest::addColumn<bool>("isValid");
-
-    // Valid files:
-    QTest::newRow("Simple_QML") << QStringLiteral("Simple.qml") << true;
-    QTest::newRow("QML_importing_JS") << QStringLiteral("importing_js.qml") << true;
-    QTest::newRow("QTBUG-45916_JS_with_pragma_and_import") << QStringLiteral("QTBUG-45916.js") << true;
-
-    // Invalid files:
-    QTest::newRow("Invalid_syntax_QML") << QStringLiteral("failure1.qml") << false;
-    QTest::newRow("Invalid_syntax_JS") << QStringLiteral("failure1.js") << false;
-}
-
 void TestQmllint::testUnqualified()
 {
-    auto qmlImportDir = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
     QFETCH(QString, filename);
     QFETCH(QString, warningMessage);
     QFETCH(int, warningLine);
     QFETCH(int, warningColumn);
-    QStringList args;
-    args << QStringLiteral("-U") << testFile(filename) << QStringLiteral("-I") << qmlImportDir;
 
-    QProcess process;
-    process.start(m_qmllintPath, args);
-    QVERIFY(process.waitForFinished());
-    QVERIFY(process.exitStatus() == QProcess::NormalExit);
-    QVERIFY(process.exitCode());
-    QString output = process.readAllStandardError();
+    const QString output = runQmllint(filename, false);
     QVERIFY(output.contains(QString::asprintf("Warning: unqualified access at %d:%d", warningLine, warningColumn)));
     QVERIFY(output.contains(warningMessage));
 }
@@ -118,56 +103,97 @@ void TestQmllint::testUnqualified_data()
     QTest::newRow("SignalHandlerShort2") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onPressAndHold:  (mouse) =>  {...") << 12 << 34;
     // access catch identifier outside catch block
     QTest::newRow("CatchStatement") << QStringLiteral("CatchStatement.qml") << QStringLiteral("err") << 6 << 21;
+
+    QTest::newRow("NonSpuriousParent") << QStringLiteral("nonSpuriousParentWarning.qml") << QStringLiteral("property int x: <id>.parent.x") << 6 << 25;
 }
 
 void TestQmllint::testUnqualifiedNoSpuriousParentWarning()
 {
-    auto qmlImportDir = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
-    {
-        QString filename = testFile("spuriousParentWarning.qml");
-        QStringList args;
-        args << QStringLiteral("-U") << filename << QStringLiteral("-I") << qmlImportDir;
-        QProcess process;
-        process.start(m_qmllintPath, args);
-        QVERIFY(process.waitForFinished());
-        QVERIFY(process.exitStatus() == QProcess::NormalExit);
-        QVERIFY(process.exitCode() == 0);
-    }
-    {
-        QString filename = testFile("nonSpuriousParentWarning.qml");
-        QStringList args;
-        args << QStringLiteral("-U") << filename << QStringLiteral("-I") << qmlImportDir;
-        QProcess process;
-        process.start(m_qmllintPath, args);
-        QVERIFY(process.waitForFinished());
-        QVERIFY(process.exitStatus() == QProcess::NormalExit);
-        QVERIFY(process.exitCode());
-    }
+    const QString unknownNotFound = runQmllint("spuriousParentWarning.qml", true);
+    QVERIFY(unknownNotFound.contains(
+                QStringLiteral("warning: Unknown was not found. Did you add all import paths?")));
 }
 
-void TestQmllint::catchIdentifierNoFalsePositive()
+void TestQmllint::dirtyQmlCode_data()
 {
-    auto qmlImportDir = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
-    QString filename = QLatin1String("catchIdentifierNoWarning.qml");
-    filename.prepend(QStringLiteral("data/"));
-    QStringList args;
-    args << QStringLiteral("-U") << filename << QStringLiteral("-I") << qmlImportDir;
-    QProcess process;
-    process.start(m_qmllintPath, args);
-    QVERIFY(process.waitForFinished());
-    QVERIFY(process.exitStatus() == QProcess::NormalExit);
-    QVERIFY(process.exitCode() == 0);
+    QTest::addColumn<QString>("filename");
+    QTest::addColumn<QString>("warningMessage");
+    QTest::addColumn<QString>("notContained");
+
+    QTest::newRow("Invalid_syntax_QML")
+            << QStringLiteral("failure1.qml")
+            << QStringLiteral("failure1.qml:4 : Expected token `:'")
+            << QString();
+    QTest::newRow("Invalid_syntax_JS")
+            << QStringLiteral("failure1.js")
+            << QStringLiteral("failure1.js:4 : Expected token `;'")
+            << QString();
+    QTest::newRow("UnmatchedSignalHandler")
+            << QStringLiteral("UnmatchedSignalHandler.qml")
+            << QString("Warning: no matching signal found for handler \"onClicked\" at 12:13")
+            << QStringLiteral("onMouseXChanged");
 }
 
-void TestQmllint::test()
+void TestQmllint::dirtyQmlCode()
 {
     QFETCH(QString, filename);
-    QFETCH(bool, isValid);
-    QStringList args;
-    args << QStringLiteral("--silent") << testFile(filename);
+    QFETCH(QString, warningMessage);
+    QFETCH(QString, notContained);
 
-    bool success = QProcess::execute(m_qmllintPath, args) == 0;
-    QCOMPARE(success, isValid);
+    const QString output = runQmllint(filename, false);
+    QVERIFY(output.contains(warningMessage));
+    if (!notContained.isEmpty())
+        QVERIFY(!output.contains(notContained));
+}
+
+void TestQmllint::cleanQmlCode_data()
+{
+    QTest::addColumn<QString>("filename");
+    QTest::newRow("Simple_QML")                << QStringLiteral("Simple.qml");
+    QTest::newRow("QML_importing_JS")          << QStringLiteral("importing_js.qml");
+    QTest::newRow("JS_with_pragma_and_import") << QStringLiteral("QTBUG-45916.js");
+    QTest::newRow("uiQml")                     << QStringLiteral("FormUser.qml");
+    QTest::newRow("methodInScope")             << QStringLiteral("MethodInScope.qml");
+    QTest::newRow("importWithPrefix")          << QStringLiteral("ImportWithPrefix.qml");
+    QTest::newRow("catchIdentifier")           << QStringLiteral("catchIdentifierNoWarning.qml");
+    QTest::newRow("qmldirAndQmltypes")         << QStringLiteral("qmldirAndQmltypes.qml");
+    QTest::newRow("forLoop")                   << QStringLiteral("forLoop.qml");
+}
+
+void TestQmllint::cleanQmlCode()
+{
+    QFETCH(QString, filename);
+    const QString warnings = runQmllint(filename, true);
+    QVERIFY(warnings.isEmpty());
+}
+
+QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed)
+{
+    auto qmlImportDir = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
+    QStringList args;
+    args << QStringLiteral("-U") << testFile(fileToLint)
+         << QStringLiteral("-I") << qmlImportDir
+         << QStringLiteral("-I") << dataDirectory()
+         << QStringLiteral("--silent");
+    QString errors;
+    auto verify = [&](bool isSilent) {
+        QProcess process;
+        process.start(m_qmllintPath, args);
+        QVERIFY(process.waitForFinished());
+        QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+        if (shouldSucceed)
+            QCOMPARE(process.exitCode(), 0);
+        else
+            QVERIFY(process.exitCode() != 0);
+        errors = process.readAllStandardError();
+
+        if (isSilent)
+            QVERIFY(errors.isEmpty());
+    };
+    verify(true);
+    args.removeLast();
+    verify(false);
+    return errors;
 }
 
 QTEST_MAIN(TestQmllint)

@@ -57,7 +57,7 @@ int main(int argc, char ** argv)
 {
     QCoreApplication app(argc, argv);
 //![0]
-    qmlRegisterType<Person>("People", 1,0, "Person");
+    qmlRegisterTypesAndRevisions<Person>("People", 1);
 //![0]
 
     QQmlEngine engine;
@@ -70,5 +70,5 @@ int main(int argc, char ** argv)
         qWarning() << component.errors();
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }

@@ -101,7 +101,6 @@ QmlProfilerData::~QmlProfilerData()
 
 void QmlProfilerData::clear()
 {
-    d->eventTypes.clear();
     d->events.clear();
 
     d->traceEndTime = std::numeric_limits<qint64>::min();

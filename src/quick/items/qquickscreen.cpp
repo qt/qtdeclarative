@@ -229,7 +229,8 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlattachedmethod int Screen::angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b)
 
-    Returns the rotation angle, in degrees, between the two specified angles.
+    Returns the rotation angle, in degrees, between the specified screen
+    orientations \a a and \a b.
 */
 
 /*!

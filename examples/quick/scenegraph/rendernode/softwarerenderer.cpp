@@ -54,11 +54,6 @@
 #include <QSGRendererInterface>
 #include <QPainter>
 
-SoftwareRenderNode::SoftwareRenderNode(QQuickItem *item)
-    : m_item(item)
-{
-}
-
 SoftwareRenderNode::~SoftwareRenderNode()
 {
     releaseResources();
@@ -70,8 +65,10 @@ void SoftwareRenderNode::releaseResources()
 
 void SoftwareRenderNode::render(const RenderState *renderState)
 {
-    QSGRendererInterface *rif = m_item->window()->rendererInterface();
-    QPainter *p = static_cast<QPainter *>(rif->getResource(m_item->window(), QSGRendererInterface::PainterResource));
+    Q_ASSERT(m_window);
+
+    QSGRendererInterface *rif = m_window->rendererInterface();
+    QPainter *p = static_cast<QPainter *>(rif->getResource(m_window, QSGRendererInterface::PainterResource));
     Q_ASSERT(p);
 
     const QRegion *clipRegion = renderState->clipRegion();
@@ -81,15 +78,15 @@ void SoftwareRenderNode::render(const RenderState *renderState)
     p->setTransform(matrix()->toTransform());
     p->setOpacity(inheritedOpacity());
 
-    const QPointF p0(m_item->width() - 1, m_item->height() - 1);
+    const QPointF p0(m_width - 1, m_height - 1);
     const QPointF p1(0, 0);
-    const QPointF p2(0, m_item->height() - 1);
+    const QPointF p2(0, m_height - 1);
     QPainterPath path(p0);
     path.lineTo(p1);
     path.lineTo(p2);
     path.closeSubpath();
 
-    QLinearGradient gradient(QPointF(0, 0), QPointF(m_item->width(), m_item->height()));
+    QLinearGradient gradient(QPointF(0, 0), QPointF(m_width, m_height));
     gradient.setColorAt(0, Qt::green);
     gradient.setColorAt(1, Qt::red);
 
@@ -108,5 +105,12 @@ QSGRenderNode::RenderingFlags SoftwareRenderNode::flags() const
 
 QRectF SoftwareRenderNode::rect() const
 {
-    return QRect(0, 0, m_item->width(), m_item->height());
+    return QRect(0, 0, m_width, m_height);
+}
+
+void SoftwareRenderNode::sync(QQuickItem *item)
+{
+    m_window = item->window();
+    m_width = item->width();
+    m_height = item->height();
 }

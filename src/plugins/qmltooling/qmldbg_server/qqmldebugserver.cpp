@@ -506,7 +506,7 @@ void QQmlDebugServerImpl::receiveMessage()
             in >> m_clientPlugins;
 
             for (DebugServiceConstIt iter = m_plugins.constBegin(), cend = m_plugins.constEnd(); iter != cend; ++iter) {
-                const QString pluginName = iter.key();
+                const QString &pluginName = iter.key();
                 QQmlDebugService::State newState = QQmlDebugService::Unavailable;
                 if (m_clientPlugins.contains(pluginName))
                     newState = QQmlDebugService::Enabled;

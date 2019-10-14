@@ -10,8 +10,8 @@ Module {
     dependencies: []
     Component {
         name: "QObject"
-        exports: ["QML/QtObject 1.0", "QtQml/QtObject 2.0"]
-        exportMetaObjectRevisions: [0, 0]
+        exports: ["QtQml/QtObject 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "objectName"; type: "string" }
         Signal {
             name: "objectNameChanged"
@@ -52,8 +52,8 @@ Module {
     Component {
         name: "QQmlComponent"
         prototype: "QObject"
-        exports: ["QML/Component 1.0", "QtQml/Component 2.0"]
-        exportMetaObjectRevisions: [0, 0]
+        exports: ["QtQml/Component 2.0"]
+        exportMetaObjectRevisions: [0]
         attachedType: "QQmlComponentAttached"
         Enum {
             name: "CompilationMode"
@@ -170,7 +170,7 @@ Module {
         name: "QQmlLocale"
         exports: ["QtQml/Locale 2.2"]
         isCreatable: false
-        exportMetaObjectRevisions: [0]
+        exportMetaObjectRevisions: [2]
         Enum {
             name: "MeasurementSystem"
             values: {
@@ -213,7 +213,7 @@ Module {
         name: "QQmlLoggingCategory"
         prototype: "QObject"
         exports: ["QtQml/LoggingCategory 2.12", "QtQml/LoggingCategory 2.8"]
-        exportMetaObjectRevisions: [12, 0]
+        exportMetaObjectRevisions: [12, 8]
         Enum {
             name: "DefaultLogLevel"
             values: {
@@ -241,19 +241,5 @@ Module {
         Method { name: "start" }
         Method { name: "stop" }
         Method { name: "restart" }
-    }
-    Component {
-        name: "QQuickMouseEvent"
-        prototype: "QObject"
-        Property { name: "x"; type: "double"; isReadonly: true }
-        Property { name: "y"; type: "double"; isReadonly: true }
-        Property { name: "button"; type: "int"; isReadonly: true }
-        Property { name: "buttons"; type: "int"; isReadonly: true }
-        Property { name: "modifiers"; type: "int"; isReadonly: true }
-        Property { name: "source"; revision: 7; type: "int"; isReadonly: true }
-        Property { name: "wasHeld"; type: "bool"; isReadonly: true }
-        Property { name: "isClick"; type: "bool"; isReadonly: true }
-        Property { name: "accepted"; type: "bool" }
-        Property { name: "flags"; revision: 11; type: "int"; isReadonly: true }
     }
 }

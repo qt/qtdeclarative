@@ -61,7 +61,6 @@ class QQmlDebugConnectionPrivate;
 class QQmlDebugConnection : public QObject
 {
     Q_OBJECT
-    Q_DISABLE_COPY(QQmlDebugConnection)
     Q_DECLARE_PRIVATE(QQmlDebugConnection)
 public:
     QQmlDebugConnection(QObject *parent = nullptr);

@@ -73,14 +73,6 @@ static bool parseVersion(const QString &str, int *major, int *minor)
     return false;
 }
 
-QQmlDirParser::QQmlDirParser() : _designerSupported(false)
-{
-}
-
-QQmlDirParser::~QQmlDirParser()
-{
-}
-
 inline static void scanSpace(const QChar *&ch) {
     while (ch->isSpace() && !ch->isNull() && *ch != QLatin1Char('\n'))
         ++ch;

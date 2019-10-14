@@ -40,7 +40,7 @@
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
 
-#include <private/qquickboundaryrule_p.h>
+#include "qquickboundaryrule_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -70,7 +70,7 @@ public:
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.animation"));
-        qmlRegisterType<QQuickBoundaryRule>(uri, 1, 0, "BoundaryRule");
+        qmlRegisterTypesAndRevisions<QQuickBoundaryRule>(uri, 1);
         qmlRegisterModule(uri, 1, 0);
     }
 };

@@ -120,6 +120,7 @@ private slots:
     void undefinedPath();
     void mouseDrag();
     void nestedMouseAreaDrag();
+    void flickNClick();
     void treeModel();
     void changePreferredHighlight();
     void missingPercent();
@@ -149,6 +150,8 @@ private slots:
     void movementDirection();
     void removePath();
     void objectModelMove();
+    void requiredPropertiesInDelegate();
+    void requiredPropertiesInDelegatePreventUnrelated();
 };
 
 class TestObject : public QObject
@@ -1601,6 +1604,71 @@ void tst_QQuickPathView::nestedMouseAreaDrag()
     QVERIFY(pathview->isMoving());
 }
 
+void tst_QQuickPathView::flickNClick() // QTBUG-77173
+{
+    QScopedPointer<QQuickView> window(createView());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->setSource(testFileUrl("nestedmousearea2.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QCOMPARE(window.data(), qGuiApp->focusWindow());
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
+    QVERIFY(pathview != nullptr);
+    QSignalSpy movingChangedSpy(pathview, SIGNAL(movingChanged()));
+    QSignalSpy draggingSpy(pathview, SIGNAL(draggingChanged()));
+    QSignalSpy dragStartedSpy(pathview, SIGNAL(dragStarted()));
+    QSignalSpy dragEndedSpy(pathview, SIGNAL(dragEnded()));
+    QSignalSpy currentIndexSpy(pathview, SIGNAL(currentIndexChanged()));
+    QSignalSpy moveStartedSpy(pathview, SIGNAL(movementStarted()));
+    QSignalSpy moveEndedSpy(pathview, SIGNAL(movementEnded()));
+    QSignalSpy flickingSpy(pathview, SIGNAL(flickingChanged()));
+    QSignalSpy flickStartedSpy(pathview, SIGNAL(flickStarted()));
+    QSignalSpy flickEndedSpy(pathview, SIGNAL(flickEnded()));
+
+    for (int duration = 100; duration > 0; duration -= 20) {
+        movingChangedSpy.clear();
+        draggingSpy.clear();
+        dragStartedSpy.clear();
+        dragEndedSpy.clear();
+        currentIndexSpy.clear();
+        moveStartedSpy.clear();
+        moveEndedSpy.clear();
+        flickingSpy.clear();
+        flickStartedSpy.clear();
+        flickEndedSpy.clear();
+        // Dragging the child mouse area should animate the PathView (MA has no drag target)
+        flick(window.data(), QPoint(200,200), QPoint(400,200), duration);
+        QVERIFY(pathview->isMoving());
+        QCOMPARE(movingChangedSpy.count(), 1);
+        QCOMPARE(draggingSpy.count(), 2);
+        QCOMPARE(dragStartedSpy.count(), 1);
+        QCOMPARE(dragEndedSpy.count(), 1);
+        QVERIFY(currentIndexSpy.count() > 0);
+        QCOMPARE(moveStartedSpy.count(), 1);
+        QCOMPARE(moveEndedSpy.count(), 0);
+        QCOMPARE(flickingSpy.count(), 1);
+        QCOMPARE(flickStartedSpy.count(), 1);
+        QCOMPARE(flickEndedSpy.count(), 0);
+
+        // Now while it's still moving, click it.
+        // The PathView should stop at a position such that offset is a whole number.
+        QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(200, 200));
+        QTRY_VERIFY(!pathview->isMoving());
+        QCOMPARE(movingChangedSpy.count(), 2); // QTBUG-78926
+        QCOMPARE(draggingSpy.count(), 2);
+        QCOMPARE(dragStartedSpy.count(), 1);
+        QCOMPARE(dragEndedSpy.count(), 1);
+        QCOMPARE(moveStartedSpy.count(), 1);
+        QCOMPARE(moveEndedSpy.count(), 1);
+        QCOMPARE(flickingSpy.count(), 2);
+        QCOMPARE(flickStartedSpy.count(), 1);
+        QCOMPARE(flickEndedSpy.count(), 1);
+        QVERIFY(qFuzzyIsNull(pathview->offset() - int(pathview->offset())));
+    }
+}
+
 void tst_QQuickPathView::treeModel()
 {
     QScopedPointer<QQuickView> window(createView());
@@ -2656,6 +2724,41 @@ void tst_QQuickPathView::objectModelMove()
         const QQuickItemPrivate *childItemPrivate = QQuickItemPrivate::get(childItem);
         QCOMPARE(childItemPrivate->changeListeners.size(), 0);
     }
+}
+
+void tst_QQuickPathView::requiredPropertiesInDelegate()
+{
+    {
+        QTest::ignoreMessage(QtMsgType::QtInfoMsg, "Bill JonesBerlin0");
+        QTest::ignoreMessage(QtMsgType::QtInfoMsg, "Jane DoeOslo1");
+        QTest::ignoreMessage(QtMsgType::QtInfoMsg, "John SmithOulo2");
+        QScopedPointer<QQuickView> window(createView());
+        window->setSource(testFileUrl("delegateWithRequiredProperties.qml"));
+        window->show();
+    }
+    {
+        QScopedPointer<QQuickView> window(createView());
+        window->setSource(testFileUrl("delegateWithRequiredProperties.2.qml"));
+        window->show();
+        QTRY_VERIFY(window->rootObject()->property("working").toBool());
+    }
+    {
+        QScopedPointer<QQuickView> window(createView());
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression("Writing to \"name\" broke the binding to the underlying model"));
+        window->setSource(testFileUrl("delegateWithRequiredProperties.3.qml"));
+        window->show();
+        QTRY_VERIFY(window->rootObject()->property("working").toBool());
+    }
+}
+
+void tst_QQuickPathView::requiredPropertiesInDelegatePreventUnrelated()
+{
+    QTest::ignoreMessage(QtMsgType::QtInfoMsg, "ReferenceError");
+    QTest::ignoreMessage(QtMsgType::QtInfoMsg, "ReferenceError");
+    QTest::ignoreMessage(QtMsgType::QtInfoMsg, "ReferenceError");
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("delegatewithUnrelatedRequiredPreventsAccessToModel.qml"));
+    window->show();
 }
 
 QTEST_MAIN(tst_QQuickPathView)

@@ -201,27 +201,19 @@ void QQmlEnginePrivate::defineModule()
 {
     const char uri[] = "QtQml";
 
-    qmlRegisterType<QQmlComponent>(uri, 2, 0, "Component");
-    qmlRegisterType<QObject>(uri, 2, 0, "QtObject");
-    qmlRegisterType<QQmlBind>(uri, 2, 0, "Binding");
-    qmlRegisterType<QQmlBind, 8>(uri, 2, 8, "Binding"); // Only available in >= 2.8
-    qmlRegisterType<QQmlBind, 14>(uri, 2, 14, "Binding");
-
-    // TODO: We won't need Connections to be a custom type anymore once we can drop the
-    //       automatic signal handler inference from undeclared properties.
-    qmlRegisterCustomType<QQmlConnections>(uri, 2, 0, "Connections", new QQmlConnectionsParser);
-    qmlRegisterCustomType<QQmlConnections, 3>(uri, 2, 3, "Connections", new QQmlConnectionsParser); // Only available in QtQml >= 2.3
-
+    qmlRegisterTypesAndRevisions<
+            QObjectForeign,
 #if QT_CONFIG(qml_animation)
-    qmlRegisterType<QQmlTimer>(uri, 2, 0, "Timer");
+            QQmlTimer,
 #endif
-
-    qmlRegisterType<QQmlLoggingCategory>(uri, 2, 8, "LoggingCategory"); // Only available in >= 2.8
-    qmlRegisterType<QQmlLoggingCategory, 12>(uri, 2, 12, "LoggingCategory"); // Only available in >= 2.12
-
 #if QT_CONFIG(qml_locale)
-    qmlRegisterUncreatableType<QQmlLocale>(uri, 2, 2, "Locale", QQmlEngine::tr("Locale cannot be instantiated. Use Qt.locale()"));
+            QQmlLocale,
 #endif
+            QQmlComponent,
+            QQmlBind,
+            QQmlConnections,
+            QQmlLoggingCategory
+    >(uri, 2);
 }
 
 bool QQmlEnginePrivate::designerMode()

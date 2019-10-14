@@ -88,7 +88,7 @@ private:
         QRect allocatedArea;
         QDistanceField image;
         int padding = -1;
-        QVector<QRhiTextureUploadEntry> uploads;
+        QVarLengthArray<QRhiTextureUploadEntry, 16> uploads;
 
         TextureInfo(const QRect &preallocRect = QRect()) : texture(nullptr), allocatedArea(preallocRect) { }
     };

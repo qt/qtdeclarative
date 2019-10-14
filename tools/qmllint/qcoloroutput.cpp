@@ -39,7 +39,7 @@
 class ColorOutputPrivate
 {
 public:
-    ColorOutputPrivate() : currentColorID(-1)
+    ColorOutputPrivate(bool silent) : currentColorID(-1), silent(silent)
 
     {
         /* - QIODevice::Unbuffered because we want it to appear when the user actually calls, performance
@@ -53,6 +53,7 @@ public:
     ColorOutput::ColorMapping   colorMapping;
     int                         currentColorID;
     bool                        coloringEnabled;
+    bool                        silent;
 
     static const char *const foregrounds[];
     static const char *const backgrounds[];
@@ -238,7 +239,7 @@ ColorOutput::ColorMapping ColorOutput::colorMapping() const
 /*!
   Constructs a ColorOutput instance, ready for use.
  */
-ColorOutput::ColorOutput() : d(new ColorOutputPrivate())
+ColorOutput::ColorOutput(bool silent) : d(new ColorOutputPrivate(silent))
 {
 }
 
@@ -258,7 +259,8 @@ ColorOutput::~ColorOutput() = default; // must be here so that QScopedPointer ha
  */
 void ColorOutput::write(const QString &message, int colorID)
 {
-    d->write(colorify(message, colorID));
+    if (!d->silent)
+        d->write(colorify(message, colorID));
 }
 
 /*!
@@ -269,7 +271,8 @@ void ColorOutput::write(const QString &message, int colorID)
  */
 void ColorOutput::writeUncolored(const QString &message)
 {
-    d->write(message + QLatin1Char('\n'));
+    if (!d->silent)
+        d->write(message + QLatin1Char('\n'));
 }
 
 /*!

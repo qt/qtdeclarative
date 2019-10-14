@@ -1,0 +1,16 @@
+import QtQuick.tooling 1.2
+Module {
+    dependencies: []
+    Component {
+        name: "SomethingEntirelyStrange"
+        prototype: "QObject"
+        Enum {
+            name: "AnEnum"
+            values: {
+                "AAA": 0,
+                "BBB": 1,
+                "CCC": 2
+            }
+        }
+    }
+}

@@ -93,6 +93,7 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, const QQmlR
     sharedState->allJavaScriptObjects = nullptr;
     sharedState->creationContext = creationContext;
     sharedState->rootContext = nullptr;
+    sharedState->hadRequiredProperties = false;
 
     if (auto profiler = QQmlEnginePrivate::get(engine)->profiler) {
         Q_QML_PROFILE_IF_ENABLED(QQmlProfilerDefinitions::ProfileCreating, profiler,
@@ -445,6 +446,8 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
                 QV4::ScopedString s(scope, v4->newString(stringValue));
                 _vmeMetaObject->setVMEProperty(property->coreIndex(), s);
             } else {
+                // ### Qt 6: Doing the conversion here where we don't know the eventual target type is rather strange
+                // and caused for instance QTBUG-78943
                 QVariant value = QQmlStringConverters::variantFromString(stringValue);
                 property->writeProperty(_qobject, &value, propertyWriteFlags);
             }
@@ -783,6 +786,23 @@ void QQmlObjectCreator::setupBindings(bool applyDeferredBindings)
 
     const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
     for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
+        QQmlPropertyData *const property = propertyData.at(i);
+        if (property) {
+            QQmlPropertyData* targetProperty = property;
+            if (targetProperty->isAlias()) {
+                // follow alias
+                auto target = _bindingTarget;
+                QQmlPropertyIndex originalIndex(targetProperty->coreIndex(), _valueTypeProperty ? _valueTypeProperty->coreIndex() : -1);
+                QQmlPropertyIndex propIndex;
+                QQmlPropertyPrivate::findAliasTarget(target, originalIndex, &target, &propIndex);
+                QQmlData *data = QQmlData::get(target);
+                Q_ASSERT(data && data->propertyCache);
+                targetProperty = data->propertyCache->property(propIndex.coreIndex());
+            }
+            sharedState->requiredProperties.remove(targetProperty);
+        }
+
+
         if (binding->flags & QV4::CompiledData::Binding::IsCustomParserBinding)
             continue;
 
@@ -793,8 +813,6 @@ void QQmlObjectCreator::setupBindings(bool applyDeferredBindings)
             if (applyDeferredBindings)
                 continue;
         }
-
-        const QQmlPropertyData *property = propertyData.at(i);
 
         if (property && property->isQList()) {
             if (property->coreIndex() != currentListPropertyIndex) {
@@ -1504,9 +1522,42 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     if (_compiledObject->flags & QV4::CompiledData::Object::HasDeferredBindings)
         _ddata->deferData(_compiledObjectIndex, compilationUnit, context);
 
+    for (int propertyIndex = 0; propertyIndex != _compiledObject->propertyCount(); ++propertyIndex) {
+        const QV4::CompiledData::Property* property = _compiledObject->propertiesBegin() + propertyIndex;
+        QQmlPropertyData *propertyData = _propertyCache->property(_propertyCache->propertyOffset() + propertyIndex);
+        if (property->isRequired) {
+            sharedState->hadRequiredProperties = true;
+            sharedState->requiredProperties.insert(propertyData,
+                                                   RequiredPropertyInfo {compilationUnit->stringAt(property->nameIndex), compilationUnit->finalUrl(), property->location, {}});
+        }
+    }
+
     if (_compiledObject->nFunctions > 0)
         setupFunctions();
     setupBindings();
+
+    for (int aliasIndex = 0; aliasIndex != _compiledObject->aliasCount(); ++aliasIndex) {
+        const QV4::CompiledData::Alias* alias = _compiledObject->aliasesBegin() + aliasIndex;
+        const auto originalAlias = alias;
+        while (alias->aliasToLocalAlias)
+            alias = _compiledObject->aliasesBegin() + alias->localAliasIndex;
+        Q_ASSERT(alias->flags & QV4::CompiledData::Alias::Resolved);
+        if (!context->idValues->wasSet())
+            continue;
+        QObject *target = context->idValues[alias->targetObjectId].data();
+        if (!target)
+            continue;
+        QQmlData *targetDData = QQmlData::get(target, /*create*/false);
+        if (!targetDData)
+            continue;
+        int coreIndex = QQmlPropertyIndex::fromEncoded(alias->encodedMetaPropertyIndex).coreIndex();
+        QQmlPropertyData *const targetProperty = targetDData->propertyCache->property(coreIndex);
+        if (!targetProperty)
+            continue;
+        auto it = sharedState->requiredProperties.find(targetProperty);
+        if (it != sharedState->requiredProperties.end())
+            it->aliasesToRequired.push_back(AliasToRequiredInfo {compilationUnit->stringAt(originalAlias->nameIndex), compilationUnit->finalUrl()});
+    }
 
     qSwap(_vmeMetaObject, vmeMetaObject);
     qSwap(_bindingTarget, bindingTarget);

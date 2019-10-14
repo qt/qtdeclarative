@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
-    qmlRegisterType<XorBlender>("SceneGraphRendering", 1, 0, "XorBlender");
+    qmlRegisterTypesAndRevisions<XorBlender>("SceneGraphRendering", 1);
 
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);

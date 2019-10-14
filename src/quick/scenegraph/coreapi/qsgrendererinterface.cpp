@@ -78,11 +78,11 @@ QT_BEGIN_NAMESPACE
     \value OpenGL OpenGL ES 2.0 or higher
     \value Direct3D12 Direct3D 12
     \value OpenVG OpenVG via EGL
-    \value OpenGLRhi OpenGL ES 2.0 or higher via a graphics abstraction layer
-    \value Direct3D11Rhi Direct3D 11 via a graphics abstraction layer
-    \value VulkanRhi Vulkan 1.0 via a graphics abstraction layer
-    \value MetalRhi Metal via a graphics abstraction layer
-    \value NullRhi Null (no output) via a graphics abstraction layer
+    \value OpenGLRhi OpenGL ES 2.0 or higher via a graphics abstraction layer. This value was introduced in Qt 5.14.
+    \value Direct3D11Rhi Direct3D 11 via a graphics abstraction layer. This value was introduced in Qt 5.14.
+    \value VulkanRhi Vulkan 1.0 via a graphics abstraction layer. This value was introduced in Qt 5.14.
+    \value MetalRhi Metal via a graphics abstraction layer. This value was introduced in Qt 5.14.
+    \value NullRhi Null (no output) via a graphics abstraction layer. This value was introduced in Qt 5.14.
   */
 
 /*!
@@ -111,29 +111,36 @@ QT_BEGIN_NAMESPACE
     used by the scenegraph, when running with the software backend.
 
     \value RhiResource The resource is a pointer to the QRhi instance used by
-    the scenegraph, when applicable.
+    the scenegraph, when applicable. This value was introduced in Qt 5.14.
 
     \value PhysicalDeviceResource The resource is a pointer to the pysical
     device object used by the scenegraph, when applicable. For example, a
     \c{VkPhysicalDevice *}. Note that with Vulkan the returned value is a
-    pointer to the VkPhysicalDevice, not the handle itself.
+    pointer to the VkPhysicalDevice, not the handle itself. This value was
+    introduced in Qt 5.14.
 
     \value OpenGLContextResource The resource is a pointer to the
     QOpenGLContext used by the scenegraph (on the render thread), when
-    applicable.
+    applicable. This value was introduced in Qt 5.14.
 
     \value DeviceContextResource The resource is a pointer to the device
     context used by the scenegraph, when applicable. For example, a
-    \c{ID3D11DeviceContext *}.
+    \c{ID3D11DeviceContext *}. This value was introduced in Qt 5.14.
 
     \value CommandEncoderResource The resource is a pointer to the currently
     active render command encoder object used by the scenegraph, when
     applicable. For example, a \c{MTLRenderCommandEncoder *}. This object has
     limited validity, and is only valid while the scene graph is recording a
-    render pass for the next frame.
+    render pass for the next frame. This value was introduced in Qt 5.14.
 
     \value VulkanInstanceResource The resource is a pointer to the
-    QVulkanInstance used by the scenegraph, when applicable.
+    QVulkanInstance used by the scenegraph, when applicable. This value was
+    introduced in Qt 5.14.
+
+    \value RenderPassResource The resource is a pointer to the render pass used
+    by the scenegraph, describing the color and depth/stecil attachments and
+    how they are used. For example, a \c{VkRenderPass *}. This value was
+    introduced in Qt 5.14.
  */
 
 /*!
@@ -141,8 +148,9 @@ QT_BEGIN_NAMESPACE
     \value UnknownShadingLanguage Not yet known due to no window and scenegraph associated
     \value GLSL GLSL or GLSL ES
     \value HLSL HLSL
-    \value RhiShader Consumes QShader instances containing shader
-    variants for multiple target languages and bytecode formats
+    \value RhiShader Consumes QShader instances containing shader variants for
+    multiple target languages and intermediate formats. This value was introduced in
+    Qt 5.14.
  */
 
 /*!
@@ -218,6 +226,8 @@ void *QSGRendererInterface::getResource(QQuickWindow *window, const char *resour
     instead of directly calling the native graphics API.
 
     \note This function can be called on any thread.
+
+    \since 5.14
  */
 bool QSGRendererInterface::isApiRhiBased(GraphicsApi api)
 {

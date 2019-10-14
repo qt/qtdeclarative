@@ -885,7 +885,7 @@ void QQmlPropertyPrivate::setBinding(QQmlAbstractBinding *binding, BindingFlags 
     QQmlData *data = QQmlData::get(object, true);
     if (data->propertyCache) {
         QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
-        Q_ASSERT(propertyData && !propertyData->isAlias());
+        Q_ASSERT(propertyData);
     }
 #endif
 

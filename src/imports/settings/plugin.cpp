@@ -54,7 +54,7 @@ public:
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QByteArray(uri) == QByteArray("Qt.labs.settings"));
-        qmlRegisterType<QQmlSettings>(uri, 1, 0, "Settings");
+        qmlRegisterTypesAndRevisions<QQmlSettings>(uri, 1);
         qmlRegisterModule(uri, 1, 1); // QTBUG-73239
     }
 };

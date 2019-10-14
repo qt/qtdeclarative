@@ -41,15 +41,18 @@
 #define QQML_H
 
 #include <QtQml/qqmlprivate.h>
-#include <QtQml/qqmlparserstatus.h>
-#include <QtQml/qqmlpropertyvaluesource.h>
-#include <QtQml/qqmllist.h>
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qmetaobject.h>
 
 #define QML_VERSION     0x020000
 #define QML_VERSION_STR "2.0"
+
+#define QML_PRIVATE_NAMESPACE \
+    QT_PREPEND_NAMESPACE(QQmlPrivate)
+
+#define QML_REGISTER_TYPES_AND_REVISIONS \
+    QT_PREPEND_NAMESPACE(qmlRegisterTypesAndRevisions)
 
 #define QML_DECLARE_TYPE(TYPE) \
     Q_DECLARE_METATYPE(TYPE *) \
@@ -63,6 +66,52 @@
 
 #define QML_DECLARE_INTERFACE_HASMETATYPE(INTERFACE) \
     QML_DECLARE_TYPE_HASMETATYPE(INTERFACE)
+
+#define QML_ELEMENT \
+    Q_CLASSINFO("QML.Element", "auto")
+
+#define QML_ANONYMOUS \
+    Q_CLASSINFO("QML.Element", "anonymous")
+
+#define QML_NAMED_ELEMENT(NAME) \
+    Q_CLASSINFO("QML.Element", #NAME)
+
+#define QML_UNCREATABLE(REASON) \
+    Q_CLASSINFO("QML.Creatable", "false") \
+    Q_CLASSINFO("QML.UncreatableReason", REASON)
+
+#define QML_SINGLETON \
+    Q_CLASSINFO("QML.Singleton", "true") \
+    enum class QmlIsSingleton {yes = true}; \
+    template<typename, typename> friend struct QML_PRIVATE_NAMESPACE::QmlSingleton; \
+    template<typename T, typename... Args> \
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor);
+
+#define QML_ADDED_IN_MINOR_VERSION(VERSION) \
+    Q_CLASSINFO("QML.AddedInMinorVersion", #VERSION)
+
+#define QML_REMOVED_IN_MINOR_VERSION(VERSION) \
+    Q_CLASSINFO("QML.RemovedInMinorVersion", #VERSION)
+
+#define QML_ATTACHED(ATTACHED_TYPE) \
+    Q_CLASSINFO("QML.Attached", #ATTACHED_TYPE) \
+    using QmlAttachedType = ATTACHED_TYPE; \
+    template<class, class, bool> friend struct QML_PRIVATE_NAMESPACE::QmlAttached; \
+    template<class> friend struct QML_PRIVATE_NAMESPACE::QmlAttachedAccessor;
+
+#define QML_EXTENDED(EXTENDED_TYPE) \
+    Q_CLASSINFO("QML.Extended", #EXTENDED_TYPE) \
+    using QmlExtendedType = EXTENDED_TYPE; \
+    template<class, class> friend struct QML_PRIVATE_NAMESPACE::QmlExtended; \
+    template<typename T, typename... Args> \
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor);
+
+#define QML_FOREIGN(FOREIGN_TYPE) \
+    Q_CLASSINFO("QML.Foreign", #FOREIGN_TYPE) \
+    using QmlForeignType = FOREIGN_TYPE; \
+    template<class, class> friend struct QML_PRIVATE_NAMESPACE::QmlResolved; \
+    template<typename T, typename... Args> \
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor);
 
 enum { /* TYPEINFO flags */
     QML_HAS_ATTACHED_PROPERTIES = 0x01
@@ -82,27 +131,13 @@ QT_END_NAMESPACE
 
 QT_BEGIN_NAMESPACE
 
-
-class QQmlPropertyValueInterceptor;
-
-#define QML_GETTYPENAMES \
-    const char *className = T::staticMetaObject.className(); \
-    const int nameLen = int(strlen(className)); \
-    QVarLengthArray<char,48> pointerName(nameLen+2); \
-    memcpy(pointerName.data(), className, size_t(nameLen)); \
-    pointerName[nameLen] = '*'; \
-    pointerName[nameLen+1] = '\0'; \
-    const int listLen = int(strlen("QQmlListProperty<")); \
-    QVarLengthArray<char,64> listName(listLen + nameLen + 2); \
-    memcpy(listName.data(), "QQmlListProperty<", size_t(listLen)); \
-    memcpy(listName.data()+listLen, className, size_t(nameLen)); \
-    listName[listLen+nameLen] = '>'; \
-    listName[listLen+nameLen+1] = '\0';
-
 void Q_QML_EXPORT qmlClearTypeRegistrations();
 
+template<class T>
+QQmlCustomParser *qmlCreateCustomParser();
+
 template<typename T>
-int qmlRegisterAnonymousType(const char *uri, int versionMajor=1)
+int qmlRegisterAnonymousType(const char *uri, int versionMajor)
 {
     QML_GETTYPENAMES
 
@@ -133,11 +168,13 @@ int qmlRegisterAnonymousType(const char *uri, int versionMajor=1)
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
 }
 
+#if QT_DEPRECATED_SINCE(5, 14)
 template<typename T>
 QT_DEPRECATED_VERSION_X_5_14("Use qmlRegisterAnonymousType instead") int qmlRegisterType()
 {
-    return qmlRegisterAnonymousType<T>("");
+    return qmlRegisterAnonymousType<T>("", 1);
 }
+#endif
 
 int Q_QML_EXPORT qmlRegisterTypeNotAvailable(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& message);
 
@@ -586,8 +623,10 @@ namespace QtQml {
     Q_QML_EXPORT QQmlContext *qmlContext(const QObject *);
     Q_QML_EXPORT QQmlEngine *qmlEngine(const QObject *);
 #if QT_DEPRECATED_SINCE(5, 14)
-    Q_QML_EXPORT QT_DEPRECATED QObject *qmlAttachedPropertiesObjectById(int, const QObject *, bool create = true);
-    Q_QML_EXPORT QT_DEPRECATED QObject *qmlAttachedPropertiesObject(
+    Q_QML_EXPORT QT_DEPRECATED_VERSION_X_5_14("Use qmlAttachedPropertiesObject(QObject *, QQmlAttachedPropertiesFunc, bool")
+    QObject *qmlAttachedPropertiesObjectById(int, const QObject *, bool create = true);
+    Q_QML_EXPORT QT_DEPRECATED_VERSION_X_5_14("Use qmlAttachedPropertiesObject(QObject *, QQmlAttachedPropertiesFunc, bool")
+    QObject *qmlAttachedPropertiesObject(
             int *, const QObject *, const QMetaObject *, bool create);
 #endif
     Q_QML_EXPORT QQmlAttachedPropertiesFunc qmlAttachedPropertiesFunction(QObject *,
@@ -719,6 +758,44 @@ inline int qmlRegisterType(const QUrl &url, const char *uri, int versionMajor, i
 
     return QQmlPrivate::qmlregister(QQmlPrivate::CompositeRegistration, &type);
 }
+
+template<class T, class Resolved, class Extended, bool Singleton>
+struct QmlTypeAndRevisionsRegistration;
+
+template<class T, class Resolved, class Extended>
+struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, false> {
+    static void registerTypeAndRevisions(const char *uri, int versionMajor)
+    {
+        QQmlPrivate::qmlRegisterTypeAndRevisions<Resolved, Extended>(
+                    uri, versionMajor, &T::staticMetaObject);
+    }
+};
+
+template<class T, class Resolved>
+struct QmlTypeAndRevisionsRegistration<T, Resolved, void, true> {
+    static void registerTypeAndRevisions(const char *uri, int versionMajor)
+    {
+        QQmlPrivate::qmlRegisterSingletonAndRevisions<Resolved>(
+                    uri, versionMajor, &T::staticMetaObject);
+    }
+};
+
+template<typename T = void, typename... Args>
+void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor);
+
+template<typename T, typename... Args>
+void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor)
+{
+    QmlTypeAndRevisionsRegistration<
+            T, typename QQmlPrivate::QmlResolved<T>::Type,
+            typename QQmlPrivate::QmlExtended<T>::Type,
+            QQmlPrivate::QmlSingleton<T>::Value>
+            ::registerTypeAndRevisions(uri, versionMajor);
+    qmlRegisterTypesAndRevisions<Args...>(uri, versionMajor);
+}
+
+template<>
+inline void qmlRegisterTypesAndRevisions<>(const char *, int) {}
 
 int Q_QML_EXPORT qmlTypeId(const char *uri, int versionMajor, int versionMinor, const char *qmlName);
 

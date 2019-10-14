@@ -61,8 +61,12 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlPropertyData;
+struct RequiredPropertyInfo;
+using RequiredProperties = QHash<QQmlPropertyData*, RequiredPropertyInfo>;
+
 class QQmlIncubator;
-class QQmlIncubatorPrivate : public QQmlEnginePrivate::Incubator
+class Q_QML_PRIVATE_EXPORT QQmlIncubatorPrivate : public QQmlEnginePrivate::Incubator
 {
 public:
     QQmlIncubatorPrivate(QQmlIncubator *q, QQmlIncubator::IncubationMode m);
@@ -97,11 +101,14 @@ public:
     QIntrusiveList<QIPBase, &QIPBase::nextWaitingFor> waitingFor;
 
     QRecursionNode recursion;
+    QVariantMap initialProperties;
 
     void clear();
 
     void forceCompletion(QQmlInstantiationInterrupt &i);
     void incubate(QQmlInstantiationInterrupt &i);
+    RequiredProperties &requiredProperties();
+    bool hadRequiredProperties() const;
 };
 
 QT_END_NAMESPACE

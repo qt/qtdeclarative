@@ -100,6 +100,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
 
     Q_PROPERTY(QJSValue fontInfo READ fontInfo NOTIFY fontInfoChanged REVISION 9)
     Q_PROPERTY(QSizeF advance READ advance NOTIFY contentSizeChanged REVISION 10)
+    QML_NAMED_ELEMENT(Text)
 
 public:
     QQuickText(QQuickItem *parent=nullptr);
@@ -329,6 +330,7 @@ class QQuickTextLine : public QObject
     Q_PROPERTY(qreal height READ height WRITE setHeight)
     Q_PROPERTY(qreal x READ x WRITE setX)
     Q_PROPERTY(qreal y READ y WRITE setY)
+    QML_ANONYMOUS
 
 public:
     QQuickTextLine();

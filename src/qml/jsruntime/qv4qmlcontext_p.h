@@ -112,6 +112,7 @@ struct Q_QML_EXPORT QQmlContextWrapper : Object
     static ReturnedValue lookupContextObjectProperty(Lookup *l, ExecutionEngine *engine, Value *base);
     static ReturnedValue lookupInGlobalObject(Lookup *l, ExecutionEngine *engine, Value *base);
     static ReturnedValue lookupInParentContextHierarchy(Lookup *l, ExecutionEngine *engine, Value *base);
+    static ReturnedValue lookupType(Lookup *l, ExecutionEngine *engine, Value *base);
 };
 
 struct Q_QML_EXPORT QmlContext : public ExecutionContext

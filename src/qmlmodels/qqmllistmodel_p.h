@@ -83,6 +83,7 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlListModel : public QAbstractListModel
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     Q_PROPERTY(bool dynamicRoles READ dynamicRoles WRITE setDynamicRoles)
     Q_PROPERTY(QObject *agent READ agent CONSTANT REVISION(14))
+    QML_NAMED_ELEMENT(ListModel)
 
 public:
     QQmlListModel(QObject *parent=nullptr);
@@ -171,7 +172,8 @@ private:
 // ### FIXME
 class QQmlListElement : public QObject
 {
-Q_OBJECT
+    Q_OBJECT
+    QML_NAMED_ELEMENT(ListElement)
 };
 
 class QQmlListModelParser : public QQmlCustomParser
@@ -200,6 +202,12 @@ private:
 
     QString listElementTypeName;
 };
+
+template<>
+inline QQmlCustomParser *qmlCreateCustomParser<QQmlListModel>()
+{
+    return new QQmlListModelParser;
+}
 
 QT_END_NAMESPACE
 

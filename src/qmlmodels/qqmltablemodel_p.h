@@ -72,6 +72,7 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlTableModel : public QAbstractTableModel, pu
     Q_PROPERTY(QQmlListProperty<QQmlTableModelColumn> columns READ columns CONSTANT FINAL)
     Q_INTERFACES(QQmlParserStatus)
     Q_CLASSINFO("DefaultProperty", "columns")
+    QML_NAMED_ELEMENT(TableModel)
 
 public:
     QQmlTableModel(QObject *parent = nullptr);

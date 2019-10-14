@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -60,8 +60,9 @@
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcItemViewDelegateLifecycle)
+Q_LOGGING_CATEGORY(lcPathView, "qt.quick.pathview")
 
-const qreal MinimumFlickVelocity = 75.0;
+static const qreal MinimumFlickVelocity = 75;
 
 static QQmlOpenMetaObjectType *qPathViewAttachedType = nullptr;
 
@@ -90,8 +91,8 @@ void QQuickPathViewAttached::setValue(const QByteArray &name, const QVariant &va
 }
 
 QQuickPathViewPrivate::QQuickPathViewPrivate()
-  : path(nullptr), currentIndex(0), currentItemOffset(0.0), startPc(0)
-    , offset(0.0), offsetAdj(0.0), mappedRange(1.0), mappedCache(0.0)
+  : path(nullptr), currentIndex(0), currentItemOffset(0), startPc(0)
+    , offset(0), offsetAdj(0), mappedRange(1), mappedCache(0)
     , stealMouse(false), ownModel(false), interactive(true), haveHighlightRange(true)
     , autoHighlight(true), highlightUp(false), layoutScheduled(false)
     , moving(false), flicking(false), dragging(false), inRequest(false), delegateValidated(false)
@@ -117,10 +118,10 @@ void QQuickPathViewPrivate::init()
     q->setFlag(QQuickItem::ItemIsFocusScope);
     q->setFiltersChildMouseEvents(true);
     qmlobject_connect(&tl, QQuickTimeLine, SIGNAL(updated()),
-                      q, QQuickPathView, SLOT(ticked()))
+                      q, QQuickPathView, SLOT(ticked()));
     timer.invalidate();
     qmlobject_connect(&tl, QQuickTimeLine, SIGNAL(completed()),
-                      q, QQuickPathView, SLOT(movementEnding()))
+                      q, QQuickPathView, SLOT(movementEnding()));
 }
 
 QQuickItem *QQuickPathViewPrivate::getItem(int modelIndex, qreal z, bool async)
@@ -163,7 +164,7 @@ void QQuickPathView::createdItem(int index, QObject *object)
             att->setOnPath(false);
         }
         item->setParentItem(this);
-        d->updateItem(item, 1.0);
+        d->updateItem(item, 1);
     } else {
         d->requestedIndex = -1;
         if (!d->inRequest)
@@ -184,13 +185,13 @@ void QQuickPathView::initItem(int index, QObject *object)
         if (att) {
             att->m_view = this;
             qreal percent = d->positionOfIndex(index);
-            if (percent < 1.0 && d->path) {
+            if (percent < 1 && d->path) {
                 const auto attributes = d->path->attributes();
                 for (const QString &attr : attributes)
                     att->setValue(attr.toUtf8(), d->path->attributeAt(attr, percent));
                 item->setZ(d->requestedZ);
             }
-            att->setOnPath(percent < 1.0);
+            att->setOnPath(percent < 1);
         }
     }
 }
@@ -264,17 +265,17 @@ void QQuickPathViewPrivate::updateMappedRange()
         mappedRange = qreal(modelCount)/pathItems;
         mappedCache = qreal(cacheSize)/pathItems/2; // Half of cache at each end
     } else {
-        mappedRange = 1.0;
-        mappedCache = 0.0;
+        mappedRange = 1;
+        mappedCache = 0;
     }
 }
 
 qreal QQuickPathViewPrivate::positionOfIndex(qreal index) const
 {
-    qreal pos = -1.0;
+    qreal pos = -1;
 
     if (model && index >= 0 && index < modelCount) {
-        qreal start = 0.0;
+        qreal start = 0;
         if (haveHighlightRange && (highlightRangeMode != QQuickPathView::NoHighlightRange
                                    || snapMode != QQuickPathView::NoSnap))
             start = highlightRangeStart;
@@ -282,10 +283,10 @@ qreal QQuickPathViewPrivate::positionOfIndex(qreal index) const
         globalPos = std::fmod(globalPos, qreal(modelCount)) / modelCount;
         if (pathItems != -1 && pathItems < modelCount) {
             globalPos += start / mappedRange;
-            globalPos = std::fmod(globalPos, qreal(1.0));
+            globalPos = std::fmod(globalPos, qreal(1));
             pos = globalPos * mappedRange;
         } else {
-            pos = std::fmod(globalPos + start, qreal(1.0));
+            pos = std::fmod(globalPos + start, qreal(1));
         }
     }
 
@@ -296,7 +297,7 @@ qreal QQuickPathViewPrivate::positionOfIndex(qreal index) const
 // account the circular space.
 bool QQuickPathViewPrivate::isInBound(qreal position, qreal lower, qreal upper) const
 {
-    if (lower == upper)
+    if (qFuzzyCompare(lower, upper))
         return true;
     if (lower > upper) {
         if (position > upper && position > lower)
@@ -358,7 +359,7 @@ void QQuickPathViewPrivate::updateHighlight()
         } else {
             qreal target = currentIndex;
 
-            offsetAdj = 0.0;
+            offsetAdj = 0;
             tl.reset(moveHighlight);
             moveHighlight.setValue(highlightPosition);
 
@@ -367,14 +368,14 @@ void QQuickPathViewPrivate::updateHighlight()
             if (target - highlightPosition > modelCount/2) {
                 highlightUp = false;
                 qreal distance = modelCount - target + highlightPosition;
-                tl.move(moveHighlight, 0.0, QEasingCurve(QEasingCurve::InQuad), int(duration * highlightPosition / distance));
+                tl.move(moveHighlight, 0, QEasingCurve(QEasingCurve::InQuad), int(duration * highlightPosition / distance));
                 tl.set(moveHighlight, modelCount-0.01);
                 tl.move(moveHighlight, target, QEasingCurve(QEasingCurve::OutQuad), int(duration * (modelCount-target) / distance));
             } else if (target - highlightPosition <= -modelCount/2) {
                 highlightUp = true;
                 qreal distance = modelCount - highlightPosition + target;
                 tl.move(moveHighlight, modelCount-0.01, QEasingCurve(QEasingCurve::InQuad), int(duration * (modelCount-highlightPosition) / distance));
-                tl.set(moveHighlight, 0.0);
+                tl.set(moveHighlight, 0);
                 tl.move(moveHighlight, target, QEasingCurve(QEasingCurve::OutQuad), int(duration * target / distance));
             } else {
                 highlightUp = highlightPosition - target < 0;
@@ -386,9 +387,9 @@ void QQuickPathViewPrivate::updateHighlight()
 
 void QQuickPathViewPrivate::setHighlightPosition(qreal pos)
 {
-    if (pos != highlightPosition) {
-        qreal start = 0.0;
-        qreal end = 1.0;
+    if (!(qFuzzyCompare(pos, highlightPosition))) {
+        qreal start = 0;
+        qreal end = 1;
         if (haveHighlightRange && highlightRangeMode != QQuickPathView::NoHighlightRange) {
             start = highlightRangeStart;
             end = highlightRangeEnd;
@@ -399,7 +400,7 @@ void QQuickPathViewPrivate::setHighlightPosition(qreal pos)
         qreal relativeHighlight = std::fmod(pos + offset, range) / range;
 
         if (!highlightUp && relativeHighlight > end / mappedRange) {
-            qreal diff = 1.0 - relativeHighlight;
+            qreal diff = 1 - relativeHighlight;
             setOffset(offset + diff * range);
         } else if (highlightUp && relativeHighlight >= (end - start) / mappedRange) {
             qreal diff = relativeHighlight - (end - start) / mappedRange;
@@ -410,7 +411,7 @@ void QQuickPathViewPrivate::setHighlightPosition(qreal pos)
         qreal pathPos = positionOfIndex(pos);
         updateItem(highlightItem, pathPos);
         if (QQuickPathViewAttached *att = attached(highlightItem))
-            att->setOnPath(pathPos < 1.0);
+            att->setOnPath(pathPos < 1);
     }
 }
 
@@ -435,10 +436,10 @@ void QQuickPathViewPrivate::updateItem(QQuickItem *item, qreal percent)
         const auto attributes = path->attributes();
         for (const QString &attr : attributes)
             att->setValue(attr.toUtf8(), path->attributeAt(attr, percent));
-        att->setOnPath(percent < 1.0);
+        att->setOnPath(percent < 1);
     }
-    QQuickItemPrivate::get(item)->setCulled(percent >= 1.0);
-    QPointF pf = path->pointAtPercent(qMin(percent, qreal(1.0)));
+    QQuickItemPrivate::get(item)->setCulled(percent >= 1);
+    QPointF pf = path->pointAtPercent(qMin(percent, qreal(1)));
     item->setX(pf.x() - item->width()/2);
     item->setY(pf.y() - item->height()/2);
 }
@@ -668,7 +669,7 @@ void QQuickPathView::setModel(const QVariant &m)
             d->currentIndex = 0;
             emit currentIndexChanged();
         }
-        if (d->offset != 0.0) {
+        if (!(qFuzzyIsNull(d->offset))) {
             d->offset = 0;
             emit offsetChanged();
         }
@@ -820,7 +821,7 @@ void QQuickPathView::decrementCurrentIndex()
     \qmlproperty real QtQuick::PathView::offset
 
     The offset specifies how far along the path the items are from their initial positions.
-    This is a real number that ranges from 0.0 to the count of items in the model.
+    This is a real number that ranges from \c 0 to the count of items in the model.
 */
 qreal QQuickPathView::offset() const
 {
@@ -839,7 +840,7 @@ void QQuickPathView::setOffset(qreal offset)
 void QQuickPathViewPrivate::setOffset(qreal o)
 {
     Q_Q(QQuickPathView);
-    if (offset != o) {
+    if (!qFuzzyCompare(offset, o)) {
         if (isValid() && q->isComponentComplete()) {
             qreal oldOffset = offset;
             offset = std::fmod(o, qreal(modelCount));
@@ -882,7 +883,6 @@ void QQuickPathViewPrivate::setAdjustedOffset(qreal o)
 
     \sa highlightItem, highlightRangeMode
 */
-
 QQmlComponent *QQuickPathView::highlight() const
 {
     Q_D(const QQuickPathView);
@@ -901,25 +901,26 @@ void QQuickPathView::setHighlight(QQmlComponent *highlight)
 }
 
 /*!
-  \qmlproperty Item QtQuick::PathView::highlightItem
+    \qmlproperty Item QtQuick::PathView::highlightItem
 
-  \c highlightItem holds the highlight item, which was created
-  from the \l highlight component.
+    \c highlightItem holds the highlight item, which was created
+    from the \l highlight component.
 
-  \sa highlight
+    \sa highlight
 */
 QQuickItem *QQuickPathView::highlightItem() const
 {
     Q_D(const QQuickPathView);
     return d->highlightItem;
 }
+
 /*!
     \qmlproperty real QtQuick::PathView::preferredHighlightBegin
     \qmlproperty real QtQuick::PathView::preferredHighlightEnd
     \qmlproperty enumeration QtQuick::PathView::highlightRangeMode
 
     These properties set the preferred range of the highlight (current item)
-    within the view. The preferred values must be in the range 0.0-1.0.
+    within the view. The preferred values must be in the range from \c 0 to \c 1.
 
     Valid values for \c highlightRangeMode are:
 
@@ -960,7 +961,7 @@ qreal QQuickPathView::preferredHighlightBegin() const
 void QQuickPathView::setPreferredHighlightBegin(qreal start)
 {
     Q_D(QQuickPathView);
-    if (d->highlightRangeStart == start || start < 0 || start > 1.0)
+    if (qFuzzyCompare(d->highlightRangeStart, start) || start < 0 || start > 1)
         return;
     d->highlightRangeStart = start;
     d->haveHighlightRange = d->highlightRangeStart <= d->highlightRangeEnd;
@@ -977,7 +978,7 @@ qreal QQuickPathView::preferredHighlightEnd() const
 void QQuickPathView::setPreferredHighlightEnd(qreal end)
 {
     Q_D(QQuickPathView);
-    if (d->highlightRangeEnd == end || end < 0 || end > 1.0)
+    if (qFuzzyCompare(d->highlightRangeEnd, end) || end < 0 || end > 1)
         return;
     d->highlightRangeEnd = end;
     d->haveHighlightRange = d->highlightRangeStart <= d->highlightRangeEnd;
@@ -1048,7 +1049,7 @@ qreal QQuickPathView::dragMargin() const
 void QQuickPathView::setDragMargin(qreal dragMargin)
 {
     Q_D(QQuickPathView);
-    if (d->dragMargin == dragMargin)
+    if (qFuzzyCompare(d->dragMargin, dragMargin))
         return;
     d->dragMargin = dragMargin;
     emit dragMarginChanged();
@@ -1069,7 +1070,7 @@ qreal QQuickPathView::flickDeceleration() const
 void QQuickPathView::setFlickDeceleration(qreal dec)
 {
     Q_D(QQuickPathView);
-    if (d->deceleration == dec)
+    if (qFuzzyCompare(d->deceleration, dec))
         return;
     d->deceleration = dec;
     emit flickDecelerationChanged();
@@ -1090,7 +1091,7 @@ qreal QQuickPathView::maximumFlickVelocity() const
 void QQuickPathView::setMaximumFlickVelocity(qreal vel)
 {
     Q_D(QQuickPathView);
-    if (vel == d->maximumFlickVelocity)
+    if (qFuzzyCompare(vel, d->maximumFlickVelocity))
         return;
     d->maximumFlickVelocity = vel;
     emit maximumFlickVelocityChanged();
@@ -1580,7 +1581,7 @@ QQuickItem *QQuickPathView::itemAtIndex(int index) const
 QPointF QQuickPathViewPrivate::pointNear(const QPointF &point, qreal *nearPercent) const
 {
     const auto pathLength = path->path().length();
-    qreal samples = qMin(pathLength / 5, qreal(500.0));
+    qreal samples = qMin(pathLength / 5, qreal(500));
     qreal res = pathLength / samples;
 
     qreal mindist = 1e10; // big number
@@ -1601,7 +1602,7 @@ QPointF QQuickPathViewPrivate::pointNear(const QPointF &point, qreal *nearPercen
 
     // now refine
     qreal approxPc = nearPc;
-    for (qreal i = approxPc-1.0; i < approxPc+1.0; i += 1/(2*res)) {
+    for (qreal i = approxPc-1; i < approxPc+1; i += 1/(2*res)) {
         QPointF pt = path->pointAtPercent(i/samples);
         QPointF diff = pt - point;
         qreal dist = diff.x()*diff.x() + diff.y()*diff.y();
@@ -1623,6 +1624,7 @@ void QQuickPathViewPrivate::addVelocitySample(qreal v)
     velocityBuffer.append(v);
     if (velocityBuffer.count() > QML_FLICK_SAMPLEBUFFER)
         velocityBuffer.remove(0);
+    qCDebug(lcPathView) << "instantaneous velocity" << v;
 }
 
 qreal QQuickPathViewPrivate::calcVelocity() const
@@ -1635,6 +1637,7 @@ qreal QQuickPathViewPrivate::calcVelocity() const
             velocity += v;
         }
         velocity /= count;
+        qCDebug(lcPathView) << "average velocity" << velocity << "based on" << count << "samples";
     }
     return velocity;
 }
@@ -1642,7 +1645,7 @@ qreal QQuickPathViewPrivate::calcVelocity() const
 qint64 QQuickPathViewPrivate::computeCurrentTime(QInputEvent *event) const
 {
     if (0 != event->timestamp())
-        return event->timestamp();
+        return qint64(event->timestamp());
     return timer.elapsed();
 }
 
@@ -1669,7 +1672,7 @@ void QQuickPathViewPrivate::handleMousePressEvent(QMouseEvent *event)
         if (item->contains(item->mapFromScene(event->windowPos())))
             break;
     }
-    if (idx == items.count() && dragMargin == 0.)  // didn't click on an item
+    if (idx == items.count() && qFuzzyIsNull(dragMargin))  // didn't click on an item
         return;
 
     startPoint = pointNear(event->localPos(), &startPc);
@@ -1680,11 +1683,12 @@ void QQuickPathViewPrivate::handleMousePressEvent(QMouseEvent *event)
             return;
     }
 
-
-    if (tl.isActive() && flicking && flickDuration && qreal(tl.time())/flickDuration < 0.8)
+    if (tl.isActive() && flicking && flickDuration && qreal(tl.time()) / flickDuration < 0.8) {
         stealMouse = true; // If we've been flicked then steal the click.
-    else
+        q->grabMouse(); // grab it right now too, just to be sure (QTBUG-77173)
+    } else {
         stealMouse = false;
+    }
     q->setKeepMouseGrab(stealMouse);
 
     timer.start();
@@ -1730,7 +1734,7 @@ void QQuickPathViewPrivate::handleMouseMoveEvent(QMouseEvent *event)
         moveReason = QQuickPathViewPrivate::Mouse;
         int count = pathItems == -1 ? modelCount : qMin(pathItems, modelCount);
         qreal diff = (newPc - startPc)*count;
-        if (diff) {
+        if (!qFuzzyIsNull(diff)) {
             q->setOffset(offset + diff);
 
             if (diff > modelCount/2)
@@ -1740,7 +1744,7 @@ void QQuickPathViewPrivate::handleMouseMoveEvent(QMouseEvent *event)
 
             qint64 elapsed = currentTimestamp - lastPosTime;
             if (elapsed > 0)
-                addVelocitySample(diff / (qreal(elapsed) / 1000.));
+                addVelocitySample(diff / (qreal(elapsed) / 1000));
         }
         if (!moving) {
             moving = true;
@@ -1765,7 +1769,7 @@ void QQuickPathView::mouseReleaseEvent(QMouseEvent *event)
     }
 }
 
-void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *)
+void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *event)
 {
     Q_Q(QQuickPathView);
     stealMouse = false;
@@ -1779,6 +1783,12 @@ void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *)
     }
 
     qreal velocity = calcVelocity();
+    qint64 elapsed = computeCurrentTime(event) - lastPosTime;
+    // Let the velocity linearly decay such that it becomes 0 if elapsed time > QML_FLICK_VELOCITY_DECAY_TIME
+    // The intention is that if you are flicking at some speed, then stop in one place for some time before releasing,
+    // the previous velocity is lost. (QTBUG-77173, QTBUG-59052)
+    velocity *= qreal(qMax(0LL, QML_FLICK_VELOCITY_DECAY_TIME - elapsed)) / QML_FLICK_VELOCITY_DECAY_TIME;
+    qCDebug(lcPathView) << "after elapsed time" << elapsed << "velocity decayed to" << velocity;
     qreal count = pathItems == -1 ? modelCount : qMin(pathItems, modelCount);
     const auto averageItemLength = path->path().length() / count;
     qreal pixelVelocity = averageItemLength * velocity;
@@ -1796,32 +1806,32 @@ void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *)
                 || snapMode != QQuickPathView::NoSnap)) {
             if (snapMode == QQuickPathView::SnapOneItem) {
                 // encourage snapping one item in direction of motion
-                if (velocity > 0.)
+                if (velocity > 0)
                     dist = qRound(0.5 + offset) - offset;
                 else
                     dist = qRound(0.5 - offset) + offset;
             } else {
                 // + 0.25 to encourage moving at least one item in the flick direction
-                dist = qMin(qreal(modelCount-1), qreal(v2 / (accel * 2.0) + 0.25));
+                dist = qMin(qreal(modelCount-1), qreal(v2 / (accel * 2) + 0.25));
 
                 // round to nearest item.
-                if (velocity > 0.)
+                if (velocity > 0)
                     dist = qRound(dist + offset) - offset;
                 else
                     dist = qRound(dist - offset) + offset;
             }
             // Calculate accel required to stop on item boundary
-            if (dist <= 0.) {
-                dist = 0.;
-                accel = 0.;
+            if (dist <= 0) {
+                dist = 0;
+                accel = 0;
             } else {
-                accel = v2 / (2.0f * qAbs(dist));
+                accel = v2 / (2 * qAbs(dist));
             }
         } else {
-            dist = qMin(qreal(modelCount-1), qreal(v2 / (accel * 2.0)));
+            dist = qMin(qreal(modelCount-1), qreal(v2 / (accel * 2)));
         }
-        flickDuration = static_cast<int>(1000 * qAbs(velocity) / accel);
-        offsetAdj = 0.0;
+        flickDuration = int(1000 * qAbs(velocity) / accel);
+        offsetAdj = 0;
         moveOffset.setValue(offset);
         tl.accel(moveOffset, velocity, accel, dist);
         tl.callback(QQuickTimeLineCallback(&moveOffset, fixOffsetCallback, this));
@@ -1995,7 +2005,7 @@ void QQuickPathView::refill()
             else
                 qCDebug(lcItemViewDelegateLifecycle) << "idx" << idx << "@" << pos << ":" << item;
         }
-        if (pos < 1.0) {
+        if (pos < 1) {
             d->updateItem(item, pos);
             if (idx == d->currentIndex) {
                 currentVisible = true;
@@ -2005,9 +2015,9 @@ void QQuickPathView::refill()
         } else {
             d->updateItem(item, pos);
             if (QQuickPathViewAttached *att = d->attached(item))
-                att->setOnPath(pos < 1.0);
-            if (!d->isInBound(pos, d->mappedRange - d->mappedCache, 1.0 + d->mappedCache)) {
-                qCDebug(lcItemViewDelegateLifecycle) << "release" << idx << "@" << pos << ", !isInBound: lower" << (d->mappedRange - d->mappedCache) << "upper" << (1.0 + d->mappedCache);
+                att->setOnPath(pos < 1);
+            if (!d->isInBound(pos, d->mappedRange - d->mappedCache, 1 + d->mappedCache)) {
+                qCDebug(lcItemViewDelegateLifecycle) << "release" << idx << "@" << pos << ", !isInBound: lower" << (d->mappedRange - d->mappedCache) << "upper" << (1 + d->mappedCache);
                 d->releaseItem(item);
                 it = d->items.erase(it);
             } else {
@@ -2023,12 +2033,12 @@ void QQuickPathView::refill()
             int endIdx = 0;
             qreal endPos;
             int startIdx = 0;
-            qreal startPos = 0.0;
+            qreal startPos = 0;
             const bool wasEmpty = d->items.isEmpty();
             if (!wasEmpty) {
                 //Find the beginning and end, items may not be in sorted order
-                endPos = -1.0;
-                startPos = 2.0;
+                endPos = -1;
+                startPos = 2;
 
                 for (QQuickItem * item : qAsConst(d->items)) {
                     int idx = d->model->indexOf(item, nullptr);
@@ -2057,10 +2067,10 @@ void QQuickPathView::refill()
             if (idx >= d->modelCount)
                 idx = 0;
             qreal nextPos = d->positionOfIndex(idx);
-            while ((d->isInBound(nextPos, endPos, 1.0 + d->mappedCache) || !d->items.count())
+            while ((d->isInBound(nextPos, endPos, 1 + d->mappedCache) || !d->items.count())
                     && d->items.count() < count+d->cacheSize) {
                 qCDebug(lcItemViewDelegateLifecycle) << "append" << idx << "@" << nextPos << (d->currentIndex == idx ? "current" : "") << "items count was" << d->items.count();
-                QQuickItem *item = d->getItem(idx, idx+1, nextPos >= 1.0);
+                QQuickItem *item = d->getItem(idx, idx+1, nextPos >= 1);
                 if (!item) {
                     waiting = true;
                     break;
@@ -2092,7 +2102,7 @@ void QQuickPathView::refill()
             while (!waiting && d->isInBound(nextPos, d->mappedRange - d->mappedCache, startPos)
                     && d->items.count() < count+d->cacheSize) {
                 qCDebug(lcItemViewDelegateLifecycle) << "prepend" << idx << "@" << nextPos << (d->currentIndex == idx ? "current" : "") << "items count was" << d->items.count();
-                QQuickItem *item = d->getItem(idx, idx+1, nextPos >= 1.0);
+                QQuickItem *item = d->getItem(idx, idx+1, nextPos >= 1);
                 if (!item) {
                     waiting = true;
                     break;
@@ -2125,9 +2135,9 @@ void QQuickPathView::refill()
                 QQuickItem *lastItem = d->items.at(0);
                 while (idx != endIdx) {
                     nextPos = d->positionOfIndex(idx);
-                    if (d->isInBound(nextPos, d->mappedRange - d->mappedCache, 1.0 + d->mappedCache)) {
+                    if (d->isInBound(nextPos, d->mappedRange - d->mappedCache, 1 + d->mappedCache)) {
                         //This gets the reference from the delegate model, and will not re-create
-                        QQuickItem *item = d->getItem(idx, idx+1, nextPos >= 1.0);
+                        QQuickItem *item = d->getItem(idx, idx+1, nextPos >= 1);
                         if (!item) {
                             waiting = true;
                             break;
@@ -2161,13 +2171,13 @@ void QQuickPathView::refill()
 
     bool currentChanged = false;
     if (!currentVisible) {
-        d->currentItemOffset = 1.0;
+        d->currentItemOffset = 1;
         if (d->currentItem) {
-            d->updateItem(d->currentItem, 1.0);
+            d->updateItem(d->currentItem, 1);
         } else if (!waiting && d->currentIndex >= 0 && d->currentIndex < d->modelCount) {
             if ((d->currentItem = d->getItem(d->currentIndex, d->currentIndex))) {
                 currentChanged = true;
-                d->updateItem(d->currentItem, 1.0);
+                d->updateItem(d->currentItem, 1);
                 if (QQuickPathViewAttached *att = d->attached(d->currentItem))
                     att->setIsCurrentItem(true);
             }
@@ -2361,7 +2371,7 @@ void QQuickPathViewPrivate::createCurrentItem()
         }
     } else if (currentIndex >= 0 && currentIndex < modelCount) {
         if ((currentItem = getItem(currentIndex, currentIndex))) {
-            updateItem(currentItem, 1.0);
+            updateItem(currentItem, 1);
             if (QQuickPathViewAttached *att = attached(currentItem))
                 att->setIsCurrentItem(true);
         }
@@ -2395,7 +2405,7 @@ void QQuickPathViewPrivate::updateCurrent()
 
 void QQuickPathViewPrivate::fixOffsetCallback(void *d)
 {
-    ((QQuickPathViewPrivate *)d)->fixOffset();
+    static_cast<QQuickPathViewPrivate *>(d)->fixOffset();
 }
 
 void QQuickPathViewPrivate::fixOffset()
@@ -2420,7 +2430,7 @@ void QQuickPathViewPrivate::snapToIndex(int index, MovementReason reason)
 
     qreal targetOffset = std::fmod(qreal(modelCount - index), qreal(modelCount));
     moveReason = reason;
-    offsetAdj = 0.0;
+    offsetAdj = 0;
     tl.reset(moveOffset);
     moveOffset.setValue(offset);
 
@@ -2432,20 +2442,20 @@ void QQuickPathViewPrivate::snapToIndex(int index, MovementReason reason)
 
     if (!duration || qAbs(offset - targetOffset) < threshold || (qFuzzyIsNull(targetOffset) && qAbs(modelCount - offset) < threshold)) {
         tl.set(moveOffset, targetOffset);
-    } else if (moveDirection == QQuickPathView::Positive || (moveDirection == QQuickPathView::Shortest && targetOffset - offset > modelCount/2.0)) {
+    } else if (moveDirection == QQuickPathView::Positive || (moveDirection == QQuickPathView::Shortest && targetOffset - offset > modelCount/2)) {
         qreal distance = modelCount - targetOffset + offset;
         if (targetOffset > moveOffset) {
-            tl.move(moveOffset, 0.0, QEasingCurve(QEasingCurve::InQuad), int(duration * offset / distance));
+            tl.move(moveOffset, 0, QEasingCurve(QEasingCurve::InQuad), int(duration * offset / distance));
             tl.set(moveOffset, modelCount);
-            tl.move(moveOffset, targetOffset, QEasingCurve(offset == 0.0 ? QEasingCurve::InOutQuad : QEasingCurve::OutQuad), int(duration * (modelCount-targetOffset) / distance));
+            tl.move(moveOffset, targetOffset, QEasingCurve(qFuzzyIsNull(offset) ? QEasingCurve::InOutQuad : QEasingCurve::OutQuad), int(duration * (modelCount-targetOffset) / distance));
         } else {
             tl.move(moveOffset, targetOffset, QEasingCurve(QEasingCurve::InOutQuad), duration);
         }
-    } else if (moveDirection == QQuickPathView::Negative || targetOffset - offset <= -modelCount/2.0) {
+    } else if (moveDirection == QQuickPathView::Negative || targetOffset - offset <= -modelCount/2) {
         qreal distance = modelCount - offset + targetOffset;
         if (targetOffset < moveOffset) {
-            tl.move(moveOffset, modelCount, QEasingCurve(targetOffset == 0 ? QEasingCurve::InOutQuad : QEasingCurve::InQuad), int(duration * (modelCount-offset) / distance));
-            tl.set(moveOffset, 0.0);
+            tl.move(moveOffset, modelCount, QEasingCurve(qFuzzyIsNull(targetOffset) ? QEasingCurve::InOutQuad : QEasingCurve::InQuad), int(duration * (modelCount-offset) / distance));
+            tl.set(moveOffset, 0);
             tl.move(moveOffset, targetOffset, QEasingCurve(QEasingCurve::OutQuad), int(duration * targetOffset / distance));
         } else {
             tl.move(moveOffset, targetOffset, QEasingCurve(QEasingCurve::InOutQuad), duration);

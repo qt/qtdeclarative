@@ -41,4 +41,9 @@ QtObject {
 
     property string err_dateTime1: Qt.formatDateTime()
     property string err_dateTime2: Qt.formatDateTime(new Date, new Object)
+
+    property var qdate
+    property var qtime
+    property var qdatetime
+    property var qvariant
 }

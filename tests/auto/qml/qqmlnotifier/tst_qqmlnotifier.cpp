@@ -185,8 +185,7 @@ void tst_qqmlnotifier::createObjects()
     QQmlComponent component(&engine, testFileUrl("connectnotify.qml"));
     exportedObject = new ExportedClass();
     exportedObject->setObjectName("exportedObject");
-    engine.rootContext()->setContextProperty("_exportedObject", exportedObject);
-    root = component.create();
+    root = component.createWithInitialProperties({{"exportedObject", QVariant::fromValue(exportedObject)}});
     QVERIFY(root != nullptr);
 
     exportedClass = qobject_cast<ExportedClass *>(
@@ -324,12 +323,12 @@ void tst_qqmlnotifier::lotsOfBindings()
     TestObject o;
     QQmlEngine *e = new QQmlEngine;
 
-    e->rootContext()->setContextProperty(QStringLiteral("test"), &o);
+    qmlRegisterSingletonInstance("Test", 1, 0, "Test", &o);
 
     QList<QQmlComponent *> components;
     for (int i = 0; i < 20000; ++i) {
         QQmlComponent *component = new QQmlComponent(e);
-        component->setData("import QtQuick 2.0; Item { width: test.a; }", QUrl());
+        component->setData("import QtQuick 2.0; import Test 1.0; Item {width: Test.a; }", QUrl());
         component->create(e->rootContext());
         components.append(component);
     }

@@ -188,8 +188,7 @@ void QQuickRenderControlPrivate::windowDestroyed()
     if (window) {
         rc->invalidate();
 
-        delete QQuickWindowPrivate::get(window)->animationController;
-        QQuickWindowPrivate::get(window)->animationController = nullptr;
+        QQuickWindowPrivate::get(window)->animationController.reset();
 
 #if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
         if (QOpenGLContext::currentContext())
@@ -276,6 +275,7 @@ void QQuickRenderControl::polishItems()
     if (!d->window)
         return;
     cd->polishItems();
+    emit d->window->afterAnimating();
 }
 
 /*!

@@ -55,8 +55,7 @@
 
 void ChartsPlugin::registerTypes(const char *uri)
 {
-    qmlRegisterType<PieChart>(uri, 1, 0, "PieChart");
-    qmlRegisterType<PieSlice>(uri, 1, 0, "PieSlice");
+    qmlRegisterTypesAndRevisions<PieChart, PieSlice>(uri, 1);
 }
 
 //![0]

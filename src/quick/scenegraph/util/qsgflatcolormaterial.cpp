@@ -121,7 +121,7 @@ class FlatColorMaterialRhiShader : public QSGMaterialRhiShader
 public:
     FlatColorMaterialRhiShader();
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
 FlatColorMaterialRhiShader::FlatColorMaterialRhiShader()
@@ -130,7 +130,7 @@ FlatColorMaterialRhiShader::FlatColorMaterialRhiShader()
     setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/flatcolor.frag.qsb"));
 }
 
-bool FlatColorMaterialRhiShader::updateUniformData(const RenderState &state,
+bool FlatColorMaterialRhiShader::updateUniformData(RenderState &state,
                                                    QSGMaterial *newMaterial,
                                                    QSGMaterial *oldMaterial)
 {

@@ -61,7 +61,7 @@ QQmlTypeLoader::Blob::PendingImportPtr QQmlQmldirData::import(QQmlTypeLoader::Bl
 
 void QQmlQmldirData::setImport(QQmlTypeLoader::Blob *blob, QQmlTypeLoader::Blob::PendingImportPtr import)
 {
-    m_imports[blob] = import;
+    m_imports[blob] = std::move(import);
 }
 
 int QQmlQmldirData::priority(QQmlTypeLoader::Blob *blob) const

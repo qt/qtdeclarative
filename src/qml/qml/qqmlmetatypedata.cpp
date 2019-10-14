@@ -69,6 +69,7 @@ void QQmlMetaTypeData::registerType(QQmlTypePrivate *priv)
         if (!types.at(i).isValid()) {
             types[i] = QQmlType(priv);
             priv->index = i;
+            priv->release();
             return;
         }
     }
@@ -149,7 +150,7 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, int min
     bool hasCopied = false;
 
     for (int ii = 0; ii < types.count(); ++ii) {
-        QQmlType currentType = types.at(ii);
+        const QQmlType &currentType = types.at(ii);
         if (!currentType.isValid())
             continue;
 

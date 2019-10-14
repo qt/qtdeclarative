@@ -125,6 +125,7 @@ class QQuickStateOperationPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickStateOperation : public QObject
 {
     Q_OBJECT
+    QML_ANONYMOUS
 public:
     QQuickStateOperation(QObject *parent = nullptr)
         : QObject(parent) {}
@@ -157,6 +158,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickState : public QObject
     Q_PROPERTY(QQmlListProperty<QQuickStateOperation> changes READ changes)
     Q_CLASSINFO("DefaultProperty", "changes")
     Q_CLASSINFO("DeferredPropertyNames", "changes")
+    QML_NAMED_ELEMENT(State)
 
 public:
     QQuickState(QObject *parent=nullptr);

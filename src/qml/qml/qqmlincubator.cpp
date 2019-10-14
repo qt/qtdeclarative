@@ -43,6 +43,7 @@
 
 #include "qqmlexpression_p.h"
 #include "qqmlobjectcreator_p.h"
+#include <private/qqmlcomponent_p.h>
 
 void QQmlEnginePrivate::incubate(QQmlIncubator &i, QQmlContextData *forContext)
 {
@@ -60,7 +61,7 @@ void QQmlEnginePrivate::incubate(QQmlIncubator &i, QQmlContextData *forContext)
         QExplicitlySharedDataPointer<QQmlIncubatorPrivate> parentIncubator;
         QQmlContextData *cctxt = forContext;
         while (cctxt) {
-            if (cctxt->incubator) {
+            if (!cctxt->hasExtraObject && cctxt->incubator) {
                 parentIncubator = cctxt->incubator;
                 break;
             }
@@ -148,7 +149,8 @@ void QQmlIncubatorPrivate::clear()
     }
     enginePriv = nullptr;
     if (!rootContext.isNull()) {
-        rootContext->incubator = nullptr;
+        if (!rootContext->hasExtraObject)
+            rootContext->incubator = nullptr;
         rootContext = nullptr;
     }
 
@@ -296,6 +298,20 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
         tresult = creator->create(subComponentToCreate, /*parent*/nullptr, &i);
         if (!tresult)
             errors = creator->errors;
+        else {
+           RequiredProperties& requiredProperties = creator->requiredProperties();
+           for (auto it = initialProperties.cbegin(); it != initialProperties.cend(); ++it) {
+               auto component = tresult;
+               auto name = it.key();
+               QQmlProperty prop = QQmlComponentPrivate::removePropertyFromRequired(component, name, requiredProperties);
+               if (!prop.isValid() || !prop.write(it.value())) {
+                   QQmlError error{};
+                   error.setUrl(compilationUnit->url());
+                   error.setDescription(QLatin1String("Could not set property %1").arg(name));
+                   errors.push_back(error);
+               }
+           }
+        }
         enginePriv->dereferenceScarceResources();
 
         if (watcher.hasRecursed())
@@ -312,8 +328,14 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
             ddata->indestructible = true;
             ddata->explicitIndestructibleSet = true;
             ddata->rootObjectInCreation = false;
-            if (q)
+            if (q) {
                 q->setInitialState(result);
+                if (!creator->requiredProperties().empty()) {
+                    const auto& unsetRequiredProperties = creator->requiredProperties();
+                    for (const auto& unsetRequiredProperty: unsetRequiredProperties)
+                        errors << QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(unsetRequiredProperty);
+                }
+            }
         }
 
         if (watcher.hasRecursed())
@@ -654,6 +676,36 @@ QObject *QQmlIncubator::object() const
         return nullptr;
     else
         return d->result;
+}
+
+/*!
+Return a list of properties which are required but haven't been set yet.
+This list can be modified, so that subclasses which implement special logic
+setInitialProperties can mark properties set there as no longer required.
+
+\sa QQmlIncubator::setInitialProperties
+\since 5.15
+*/
+RequiredProperties &QQmlIncubatorPrivate::requiredProperties()
+{
+    return creator->requiredProperties();
+}
+
+bool QQmlIncubatorPrivate::hadRequiredProperties() const
+{
+    return creator->componentHadRequiredProperties();
+}
+
+/*!
+Stores a mapping from property names to initial values with which the incubated
+component will be initialized
+
+\sa QQmlComponent::setInitialProperties
+\since 5.15
+*/
+void QQmlIncubator::setInitialProperties(const QVariantMap &initialProperties)
+{
+    d->initialProperties = initialProperties;
 }
 
 /*!

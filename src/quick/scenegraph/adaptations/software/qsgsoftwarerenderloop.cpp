@@ -100,7 +100,7 @@ void QSGSoftwareRenderLoop::windowDestroyed(QQuickWindow *window)
         rc->invalidate();
     }
 
-    delete d->animationController;
+    d->animationController.reset();
 }
 
 void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window, bool isNewExpose)

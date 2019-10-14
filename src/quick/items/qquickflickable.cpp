@@ -266,9 +266,9 @@ void QQuickFlickablePrivate::init()
     QQml_setParent_noEvent(contentItem, q);
     contentItem->setParentItem(q);
     qmlobject_connect(&timeline, QQuickTimeLine, SIGNAL(completed()),
-                      q, QQuickFlickable, SLOT(timelineCompleted()))
+                      q, QQuickFlickable, SLOT(timelineCompleted()));
     qmlobject_connect(&velocityTimeline, QQuickTimeLine, SIGNAL(completed()),
-                      q, QQuickFlickable, SLOT(velocityTimelineCompleted()))
+                      q, QQuickFlickable, SLOT(velocityTimelineCompleted()));
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setAcceptTouchEvents(false); // rely on mouse events synthesized from touch
     q->setFiltersChildMouseEvents(true);

@@ -3,6 +3,7 @@ import Test 1.0
 
 Item {
     id: root
+    required property ExportedClass exportedObject
     ExportedClass {
         id: exportedClass
         objectName: "exportedClass"
@@ -22,7 +23,7 @@ Item {
     }
 
     property int foo: exportedClass.qmlObjectProp
-    property int baz: _exportedObject.cppObjectProp
+    property int baz: exportedObject.cppObjectProp
 
     // v4 bindings that could share a subscription. They don't, though, and the code
     // relies on that

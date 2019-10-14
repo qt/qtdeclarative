@@ -2,6 +2,7 @@ import QtQuick 2.0
 
 Item {
     property bool success: false
+    required property QtObject componentCache
 
     function reportError(s) { console.warn(s) }
 

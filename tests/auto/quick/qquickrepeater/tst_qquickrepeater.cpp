@@ -55,6 +55,7 @@ public:
 
 private slots:
     void numberModel();
+    void objectList_data();
     void objectList();
     void stringList();
     void dataModel_adding();
@@ -79,6 +80,7 @@ private slots:
     void QTBUG54859_asynchronousMove();
     void package();
     void ownership();
+    void requiredProperties();
 };
 
 class TestObject : public QObject
@@ -143,6 +145,14 @@ void tst_QQuickRepeater::numberModel()
     delete window;
 }
 
+void tst_QQuickRepeater::objectList_data()
+{
+    QTest::addColumn<QUrl>("filename");
+
+    QTest::newRow("normal") << testFileUrl("objlist.qml");
+    QTest::newRow("required") << testFileUrl("objlist_required.qml");
+}
+
 class MyObject : public QObject
 {
     Q_OBJECT
@@ -157,6 +167,7 @@ public:
 
 void tst_QQuickRepeater::objectList()
 {
+    QFETCH(QUrl, filename);
     QQuickView *window = createView();
     QObjectList data;
     for (int i=0; i<100; i++)
@@ -165,7 +176,7 @@ void tst_QQuickRepeater::objectList()
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testData", QVariant::fromValue(data));
 
-    window->setSource(testFileUrl("objlist.qml"));
+    window->setSource(filename);
     qApp->processEvents();
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
@@ -1106,6 +1117,18 @@ void tst_QQuickRepeater::ownership()
 
     QVERIFY(!delegateGuard);
     QVERIFY(!modelGuard);
+}
+
+void tst_QQuickRepeater::requiredProperties()
+{
+    QTest::ignoreMessage(QtMsgType::QtInfoMsg, "apples0");
+    QTest::ignoreMessage(QtMsgType::QtInfoMsg, "oranges1");
+    QTest::ignoreMessage(QtMsgType::QtInfoMsg, "pears2");
+    QQmlEngine engine;
+
+    QQmlComponent component(&engine, testFileUrl("requiredProperty.qml"));
+    QScopedPointer<QObject> o {component.create()};
+    QVERIFY(o);
 }
 
 QTEST_MAIN(tst_QQuickRepeater)

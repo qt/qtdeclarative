@@ -66,7 +66,7 @@ class SmoothTextureMaterialRhiShader : public QSGTextureMaterialRhiShader
 public:
     SmoothTextureMaterialRhiShader();
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
 
@@ -136,7 +136,7 @@ SmoothTextureMaterialRhiShader::SmoothTextureMaterialRhiShader()
     setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/smoothtexture.frag.qsb"));
 }
 
-bool SmoothTextureMaterialRhiShader::updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+bool SmoothTextureMaterialRhiShader::updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     bool changed = false;
     QByteArray *buf = state.uniformData();

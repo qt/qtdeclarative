@@ -70,6 +70,7 @@ class Q_AUTOTEST_EXPORT QQuickRepeater : public QQuickItem
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     Q_CLASSINFO("DefaultProperty", "delegate")
+    QML_NAMED_ELEMENT(Repeater)
 
 public:
     QQuickRepeater(QQuickItem *parent=nullptr);

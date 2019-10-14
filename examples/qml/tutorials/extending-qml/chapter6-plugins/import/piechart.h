@@ -59,6 +59,7 @@ class PieChart : public QQuickItem
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<PieSlice> slices READ slices)
     Q_PROPERTY(QString name READ name WRITE setName)
+    QML_ELEMENT
 
 public:
     PieChart(QQuickItem *parent = 0);

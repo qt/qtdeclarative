@@ -525,8 +525,13 @@ const QAbstractItemModel *QQmlTableInstanceModel::abstractItemModel() const
 
 void QQmlTableInstanceModelIncubationTask::setInitialState(QObject *object)
 {
-    modelItemToIncubate->object = object;
-    emit tableInstanceModel->initItem(modelItemToIncubate->index, object);
+    initializeRequiredProperties(modelItemToIncubate, object);
+    if (QQmlIncubatorPrivate::get(this)->requiredProperties().empty()) {
+        modelItemToIncubate->object = object;
+        emit tableInstanceModel->initItem(modelItemToIncubate->index, object);
+    } else {
+        object->deleteLater();
+    }
 }
 
 void QQmlTableInstanceModelIncubationTask::statusChanged(QQmlIncubator::Status status)

@@ -96,7 +96,7 @@ void QSGOpenVGRenderLoop::windowDestroyed(QQuickWindow *window)
         vg->doneCurrent();
     }
 
-    delete d->animationController;
+    d->animationController.reset();
 }
 
 void QSGOpenVGRenderLoop::exposureChanged(QQuickWindow *window)
@@ -187,6 +187,7 @@ void QSGOpenVGRenderLoop::renderWindow(QQuickWindow *window)
     data.updatePending = false;
 
     if (!data.grabOnly) {
+        cd->flushFrameSynchronousEvents();
         // Event delivery/processing triggered the window to be deleted or stop rendering.
         if (!m_windows.contains(window))
             return;

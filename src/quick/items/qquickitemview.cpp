@@ -247,6 +247,8 @@ void QQuickItemView::setModel(const QVariant &m)
 
         connect(d->model, SIGNAL(modelUpdated(QQmlChangeSet,bool)),
                 this, SLOT(modelUpdated(QQmlChangeSet,bool)));
+        if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model))
+            QObjectPrivate::connect(dataModel, &QQmlDelegateModel::delegateChanged, d, &QQuickItemViewPrivate::applyDelegateChange);
         emit countChanged();
     }
     emit modelChanged();
@@ -277,22 +279,8 @@ void QQuickItemView::setDelegate(QQmlComponent *delegate)
     if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model)) {
         int oldCount = dataModel->count();
         dataModel->setDelegate(delegate);
-        if (isComponentComplete()) {
-            d->releaseVisibleItems();
-            d->releaseItem(d->currentItem);
-            d->currentItem = nullptr;
-            d->updateSectionCriteria();
-            d->refill();
-            d->moveReason = QQuickItemViewPrivate::SetIndex;
-            d->updateCurrent(d->currentIndex);
-            if (d->highlight && d->currentItem) {
-                if (d->autoHighlight)
-                    d->resetHighlightPosition();
-                d->updateTrackedItem();
-            }
-            d->moveReason = QQuickItemViewPrivate::Other;
-            d->updateViewport();
-        }
+        if (isComponentComplete())
+            d->applyDelegateChange();
         if (oldCount != dataModel->count())
             emit countChanged();
     }
@@ -599,6 +587,7 @@ void QQuickItemView::setHighlightRangeMode(HighlightRangeMode mode)
     d->haveHighlightRange = d->highlightRange != NoHighlightRange && d->highlightRangeStart <= d->highlightRangeEnd;
     if (isComponentComplete()) {
         d->updateViewport();
+        d->moveReason = QQuickItemViewPrivate::Other;
         d->fixupPosition();
     }
     emit highlightRangeModeChanged();
@@ -621,8 +610,10 @@ void QQuickItemView::setPreferredHighlightBegin(qreal start)
     d->haveHighlightRange = d->highlightRange != NoHighlightRange && d->highlightRangeStart <= d->highlightRangeEnd;
     if (isComponentComplete()) {
         d->updateViewport();
-        if (!isMoving() && !isFlicking())
+        if (!isMoving() && !isFlicking()) {
+            d->moveReason = QQuickItemViewPrivate::Other;
             d->fixupPosition();
+        }
     }
     emit preferredHighlightBeginChanged();
 }
@@ -636,8 +627,10 @@ void QQuickItemView::resetPreferredHighlightBegin()
     d->highlightRangeStart = 0;
     if (isComponentComplete()) {
         d->updateViewport();
-        if (!isMoving() && !isFlicking())
+        if (!isMoving() && !isFlicking()) {
+            d->moveReason = QQuickItemViewPrivate::Other;
             d->fixupPosition();
+        }
     }
     emit preferredHighlightBeginChanged();
 }
@@ -658,8 +651,10 @@ void QQuickItemView::setPreferredHighlightEnd(qreal end)
     d->haveHighlightRange = d->highlightRange != NoHighlightRange && d->highlightRangeStart <= d->highlightRangeEnd;
     if (isComponentComplete()) {
         d->updateViewport();
-        if (!isMoving() && !isFlicking())
+        if (!isMoving() && !isFlicking()) {
+            d->moveReason = QQuickItemViewPrivate::Other;
             d->fixupPosition();
+        }
     }
     emit preferredHighlightEndChanged();
 }
@@ -673,8 +668,10 @@ void QQuickItemView::resetPreferredHighlightEnd()
     d->highlightRangeEnd = 0;
     if (isComponentComplete()) {
         d->updateViewport();
-        if (!isMoving() && !isFlicking())
+        if (!isMoving() && !isFlicking()) {
+            d->moveReason = QQuickItemViewPrivate::Other;
             d->fixupPosition();
+        }
     }
     emit preferredHighlightEndChanged();
 }
@@ -1087,6 +1084,24 @@ qreal QQuickItemViewPrivate::calculatedMaxExtent() const
     else
         maxExtent = isContentFlowReversed() ? q->minXExtent() - size(): -q->maxXExtent();
     return maxExtent;
+}
+
+void QQuickItemViewPrivate::applyDelegateChange()
+{
+    releaseVisibleItems();
+    releaseItem(currentItem);
+    currentItem = nullptr;
+    updateSectionCriteria();
+    refill();
+    moveReason = QQuickItemViewPrivate::SetIndex;
+    updateCurrent(currentIndex);
+    if (highlight && currentItem) {
+        if (autoHighlight)
+            resetHighlightPosition();
+        updateTrackedItem();
+    }
+    moveReason = QQuickItemViewPrivate::Other;
+    updateViewport();
 }
 
 // for debugging only

@@ -43,7 +43,8 @@ enum class ScopeType;
 class FindUnqualifiedIDVisitor : public QQmlJS::AST::Visitor {
 
 public:
-    explicit FindUnqualifiedIDVisitor(QStringList const &qmltypeDirs, const QString& code, const QString& fileName);
+    explicit FindUnqualifiedIDVisitor(QStringList const &qmltypeDirs, const QString& code,
+                                      const QString& fileName, bool silent);
     ~FindUnqualifiedIDVisitor() override;
     bool check();
 
@@ -70,7 +71,7 @@ private:
     void importHelper(QString id, QString prefix, int major, int minor);
     LanguageUtils::FakeMetaObject* localQmlFile2FakeMetaObject(QString filePath);
 
-
+    void importDirectory(const QString &directory, const QString &prefix);
     void importExportedNames(QStringRef prefix, QString name);
 
     void throwRecursionDepthError() override;
@@ -125,6 +126,8 @@ private:
 
     // expression handling
     bool visit(QQmlJS::AST::IdentifierExpression *idexp) override;
+
+    bool visit(QQmlJS::AST::PatternElement *) override;
 };
 
 

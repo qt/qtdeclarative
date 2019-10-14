@@ -58,8 +58,7 @@ int main(int argc, char ** argv)
 {
     QCoreApplication app(argc, argv);
 
-    qmlRegisterType<BirthdayParty>("People", 1,0, "BirthdayParty");
-    qmlRegisterType<Person>("People", 1,0, "Person");
+    qmlRegisterTypesAndRevisions<BirthdayParty, Person>("People", 1);
 
     QQmlEngine engine;
     QQmlComponent component(&engine, QUrl("qrc:example.qml"));
@@ -70,9 +69,9 @@ int main(int argc, char ** argv)
         qWarning() << "They are inviting:";
         for (int ii = 0; ii < party->guestCount(); ++ii)
             qWarning() << "   " << party->guest(ii)->name();
-    } else {
-        qWarning() << component.errors();
+        return EXIT_SUCCESS;
     }
 
-    return 0;
+    qWarning() << component.errors();
+    return EXIT_FAILURE;
 }

@@ -192,7 +192,7 @@ public:
 
 #if QT_CONFIG(quick_draganddrop)
     void deliverDragEvent(QQuickDragGrabber *, QEvent *);
-    bool deliverDragEvent(QQuickDragGrabber *, QQuickItem *, QDragMoveEvent *);
+    bool deliverDragEvent(QQuickDragGrabber *, QQuickItem *, QDragMoveEvent *, QVarLengthArray<QQuickItem*, 64> *currentGrabItems = nullptr);
 #endif
 #if QT_CONFIG(cursor)
     void updateCursor(const QPointF &scenePos);
@@ -254,7 +254,7 @@ public:
 
     QSGRenderLoop *windowManager;
     QQuickRenderControl *renderControl;
-    QQuickAnimatorController *animationController;
+    QScopedPointer<QQuickAnimatorController> animationController;
     QScopedPointer<QTouchEvent> delayedTouch;
 
     int pointerEventRecursionGuard;
@@ -288,25 +288,7 @@ public:
 
     static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int startDragThreshold = -1);
 
-    template <typename TEventPoint>
-    static bool dragOverThreshold(qreal d, Qt::Axis axis, const TEventPoint *p, int startDragThreshold = -1)
-    {
-        QStyleHints *styleHints = qApp->styleHints();
-        bool overThreshold = qAbs(d) > (startDragThreshold >= 0 ? startDragThreshold : styleHints->startDragDistance());
-        const bool dragVelocityLimitAvailable = (styleHints->startDragVelocity() > 0);
-        if (!overThreshold && dragVelocityLimitAvailable) {
-            qreal velocity = axis == Qt::XAxis ? p->velocity().x() : p->velocity().y();
-            overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
-        }
-        return overThreshold;
-    }
-
-    static bool dragOverThreshold(const QQuickEventPoint *point)
-    {
-        QPointF delta = point->scenePosition() - point->scenePressPosition();
-        return (QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point) ||
-                QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point));
-    }
+    static bool dragOverThreshold(qreal d, Qt::Axis axis, const QTouchEvent::TouchPoint *tp, int startDragThreshold = -1);
 
     static bool dragOverThreshold(QVector2D delta);
 

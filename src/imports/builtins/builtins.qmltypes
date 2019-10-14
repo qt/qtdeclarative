@@ -1685,6 +1685,17 @@ Module {
                 "ChecksumItuV41": 1
             }
         }
+        Enum {
+            name: "HighDpiScaleFactorRoundingPolicy"
+            values: {
+                "Unset": 0,
+                "Round": 1,
+                "Ceil": 2,
+                "Floor": 3,
+                "RoundPreferFloor": 4,
+                "PassThrough": 5
+            }
+        }
     }
     Component { name: "QEasingCurve"; prototype: "QQmlEasingValueType" }
 }

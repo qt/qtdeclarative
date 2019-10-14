@@ -102,6 +102,7 @@ Q_LOGGING_CATEGORY(DBG_DIRTY, "qt.quick.dirty")
 Q_LOGGING_CATEGORY(lcTransient, "qt.quick.window.transient")
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
+extern Q_GUI_EXPORT bool qt_sendShortcutOverrideEvent(QObject *o, ulong timestamp, int k, Qt::KeyboardModifiers mods, const QString &text = QString(), bool autorep = false, ushort count = 1);
 
 bool QQuickWindowPrivate::defaultAlphaBuffer = false;
 
@@ -424,6 +425,13 @@ void QQuickWindowPrivate::syncSceneGraph()
 {
     Q_Q(QQuickWindow);
 
+    // Calculate the dpr the same way renderSceneGraph() will.
+    qreal devicePixelRatio = q->effectiveDevicePixelRatio();
+    if (renderTargetId && !QQuickRenderControl::renderWindowFor(q))
+        devicePixelRatio = 1;
+
+    context->prepareSync(devicePixelRatio);
+
     animationController->beforeNodeSync();
 
     emit q->beforeSynchronizing();
@@ -500,10 +508,10 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             renderer->setDeviceRect(rect);
             renderer->setViewportRect(rect);
             if (QQuickRenderControl::renderWindowFor(q)) {
-                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size), false);
+                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size));
                 renderer->setDevicePixelRatio(devicePixelRatio);
             } else {
-                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), rect.size()), false);
+                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), rect.size()));
                 renderer->setDevicePixelRatio(1);
             }
         } else {
@@ -520,7 +528,10 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             renderer->setDeviceRect(rect);
             renderer->setViewportRect(rect);
             const bool flipY = rhi ? !rhi->isYUpInNDC() : false;
-            renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), logicalSize), flipY);
+            QSGAbstractRenderer::MatrixTransformFlags matrixFlags = 0;
+            if (flipY)
+                matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
+            renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), logicalSize), matrixFlags);
             renderer->setDevicePixelRatio(devicePixelRatio);
         }
 
@@ -641,7 +652,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
         q->setVulkanInstance(QSGRhiSupport::vulkanInstance());
 #endif
 
-    animationController = new QQuickAnimatorController(q);
+    animationController.reset(new QQuickAnimatorController(q));
 
     QObject::connect(context, SIGNAL(initialized()), q, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
     QObject::connect(context, SIGNAL(invalidated()), q, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
@@ -1784,6 +1795,13 @@ void QQuickWindowPrivate::deliverKeyEvent(QKeyEvent *e)
 {
     if (activeFocusItem) {
         QQuickItem *item = activeFocusItem;
+
+        // In case of generated event, trigger ShortcutOverride event
+        if (e->type() == QEvent::KeyPress && e->spontaneous() == false)
+                qt_sendShortcutOverrideEvent(item, e->timestamp(),
+                                         e->key(), e->modifiers(), e->text(),
+                                         e->isAutoRepeat(), e->count());
+
         e->accept();
         QCoreApplication::sendEvent(item, e);
         while (!e->isAccepted() && (item = item->parentItem())) {
@@ -2758,7 +2776,7 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
         // If the touch was accepted (regardless by whom or in what form),
         // update accepted new points.
         bool isPressOrRelease = pointerEvent->isPressEvent() || pointerEvent->isReleaseEvent();
-        for (auto point: qAsConst(touchEvent->touchPoints())) {
+        for (const auto &point: qAsConst(touchEvent->touchPoints())) {
             if (auto pointerEventPoint = ptEvent->pointById(point.id())) {
                 pointerEventPoint->setAccepted();
                 if (isPressOrRelease)
@@ -2768,7 +2786,7 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     } else {
         // But if the event was not accepted then we know this item
         // will not be interested in further updates for those touchpoint IDs either.
-        for (auto point: qAsConst(touchEvent->touchPoints())) {
+        for (const auto &point: qAsConst(touchEvent->touchPoints())) {
             if (point.state() == Qt::TouchPointPressed) {
                 if (auto *tp = ptEvent->pointById(point.id())) {
                     if (tp->exclusiveGrabber() == item) {
@@ -2810,32 +2828,49 @@ void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *e
             for (; grabItem != grabber->end(); grabItem = grabber->release(grabItem))
                 QCoreApplication::sendEvent(**grabItem, &leaveEvent);
             return;
-        } else for (; grabItem != grabber->end(); grabItem = grabber->release(grabItem)) {
+        } else {
             QDragMoveEvent *moveEvent = static_cast<QDragMoveEvent *>(event);
-            if (deliverDragEvent(grabber, **grabItem, moveEvent)) {
-                for (++grabItem; grabItem != grabber->end();) {
-                    QPointF p = (**grabItem)->mapFromScene(moveEvent->pos());
-                    if ((**grabItem)->contains(p)) {
-                        QDragMoveEvent translatedEvent(
-                                p.toPoint(),
-                                moveEvent->possibleActions(),
-                                moveEvent->mimeData(),
-                                moveEvent->mouseButtons(),
-                                moveEvent->keyboardModifiers());
-                        QQuickDropEventEx::copyActions(&translatedEvent, *moveEvent);
-                        QCoreApplication::sendEvent(**grabItem, &translatedEvent);
-                        ++grabItem;
-                    } else {
-                        QDragLeaveEvent leaveEvent;
-                        QCoreApplication::sendEvent(**grabItem, &leaveEvent);
-                        grabItem = grabber->release(grabItem);
-                    }
+
+            // Used to ensure we don't send DragEnterEvents to current drop targets,
+            // and to detect which current drop targets we have left
+            QVarLengthArray<QQuickItem*, 64> currentGrabItems;
+            for (; grabItem != grabber->end(); grabItem = grabber->release(grabItem))
+                currentGrabItems.append(**grabItem);
+
+            // Look for any other potential drop targets that are higher than the current ones
+            QDragEnterEvent enterEvent(
+                    moveEvent->pos(),
+                    moveEvent->possibleActions(),
+                    moveEvent->mimeData(),
+                    moveEvent->mouseButtons(),
+                    moveEvent->keyboardModifiers());
+            QQuickDropEventEx::copyActions(&enterEvent, *moveEvent);
+            event->setAccepted(deliverDragEvent(grabber, contentItem, &enterEvent, &currentGrabItems));
+
+            for (grabItem = grabber->begin(); grabItem != grabber->end(); ++grabItem) {
+                int i = currentGrabItems.indexOf(**grabItem);
+                if (i >= 0) {
+                    currentGrabItems.remove(i);
+                    // Still grabbed: send move event
+                    QDragMoveEvent translatedEvent(
+                            (**grabItem)->mapFromScene(moveEvent->pos()).toPoint(),
+                            moveEvent->possibleActions(),
+                            moveEvent->mimeData(),
+                            moveEvent->mouseButtons(),
+                            moveEvent->keyboardModifiers());
+                    QQuickDropEventEx::copyActions(&translatedEvent, *moveEvent);
+                    QCoreApplication::sendEvent(**grabItem, &translatedEvent);
+                    event->setAccepted(translatedEvent.isAccepted());
+                    QQuickDropEventEx::copyActions(moveEvent, translatedEvent);
                 }
-                return;
-            } else {
-                QDragLeaveEvent leaveEvent;
-                QCoreApplication::sendEvent(**grabItem, &leaveEvent);
             }
+
+            // Anything left in currentGrabItems is no longer a drop target and should be sent a DragLeaveEvent
+            QDragLeaveEvent leaveEvent;
+            for (QQuickItem *i : currentGrabItems)
+                QCoreApplication::sendEvent(i, &leaveEvent);
+
+            return;
         }
     }
     if (event->type() == QEvent::DragEnter || event->type() == QEvent::DragMove) {
@@ -2851,9 +2886,8 @@ void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *e
     }
 }
 
-bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickItem *item, QDragMoveEvent *event)
+bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickItem *item, QDragMoveEvent *event, QVarLengthArray<QQuickItem*, 64> *currentGrabItems)
 {
-    bool accepted = false;
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     if (!item->isVisible() || !item->isEnabled() || QQuickItemPrivate::get(item)->culled)
         return false;
@@ -2872,12 +2906,24 @@ bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
             event->keyboardModifiers());
     QQuickDropEventEx::copyActions(&enterEvent, *event);
     QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
+
+    // Check children in front of this item first
     for (int ii = children.count() - 1; ii >= 0; --ii) {
-        if (deliverDragEvent(grabber, children.at(ii), &enterEvent))
+        if (children.at(ii)->z() < 0)
+            continue;
+        if (deliverDragEvent(grabber, children.at(ii), &enterEvent, currentGrabItems))
             return true;
     }
 
     if (itemContained) {
+        // If this item is currently grabbed, don't send it another DragEnter,
+        // just grab it again if it's still contained.
+        if (currentGrabItems && currentGrabItems->contains(item)) {
+            grabber->grab(item);
+            grabber->setTarget(item);
+            return true;
+        }
+
         if (event->type() == QEvent::DragMove || itemPrivate->flags & QQuickItem::ItemAcceptsDrops) {
             QDragMoveEvent translatedEvent(
                     p.toPoint(),
@@ -2894,15 +2940,24 @@ bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
             if (event->type() == QEvent::DragEnter) {
                 if (translatedEvent.isAccepted()) {
                     grabber->grab(item);
-                    accepted = true;
+                    grabber->setTarget(item);
+                    return true;
                 }
             } else {
-                accepted = true;
+                return true;
             }
         }
     }
 
-    return accepted;
+    // Check children behind this item if this item or any higher children have not accepted
+    for (int ii = children.count() - 1; ii >= 0; --ii) {
+        if (children.at(ii)->z() >= 0)
+            continue;
+        if (deliverDragEvent(grabber, children.at(ii), &enterEvent, currentGrabItems))
+            return true;
+    }
+
+    return false;
 }
 #endif // quick_draganddrop
 
@@ -3009,7 +3064,7 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
                     if (filteringParent->childMouseEventFilter(receiver, filteringParentTouchEvent.data())) {
                         qCDebug(DBG_TOUCH) << "touch event intercepted by childMouseEventFilter of " << filteringParent;
                         skipDelivery.append(filteringParent);
-                        for (auto point: qAsConst(filteringParentTouchEvent->touchPoints())) {
+                        for (const auto &point: qAsConst(filteringParentTouchEvent->touchPoints())) {
                             QQuickEventPoint *pt = event->pointById(point.id());
                             pt->setAccepted();
                             pt->setGrabberItem(filteringParent);
@@ -3109,6 +3164,18 @@ bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent 
     if (dragVelocityLimitAvailable) {
         QVector2D velocityVec = QGuiApplicationPrivate::mouseEventVelocity(event);
         qreal velocity = axis == Qt::XAxis ? velocityVec.x() : velocityVec.y();
+        overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
+    }
+    return overThreshold;
+}
+
+bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, const QTouchEvent::TouchPoint *tp, int startDragThreshold)
+{
+    QStyleHints *styleHints = qApp->styleHints();
+    bool overThreshold = qAbs(d) > (startDragThreshold >= 0 ? startDragThreshold : styleHints->startDragDistance());
+    const bool dragVelocityLimitAvailable = (styleHints->startDragVelocity() > 0);
+    if (!overThreshold && dragVelocityLimitAvailable) {
+        qreal velocity = axis == Qt::XAxis ? tp->velocity().x() : tp->velocity().y();
         overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
     }
     return overThreshold;
@@ -4193,7 +4260,11 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     command buffer, before via QSGRendererInterface. Note however that the
     render pass (or passes) are already recorded at this point and it is not
     possible to add more commands within the scenegraph's pass. Instead, use
-    afterRenderPassRecording() for that.
+    afterRenderPassRecording() for that. This signal has therefore limited use
+    and is rarely needed in an RHI-based setup. Rather, it is the combination
+    of beforeRendering() + beforeRenderPassRecording() or beforeRendering() +
+    afterRenderPassRecording() that is typically used to achieve under- or
+    overlaying of the custom rendering.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
@@ -4229,7 +4300,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     \note Resource updates (uploads, copies) typically cannot be enqueued from
     within a render pass. Therefore, more complex user rendering will need to
-    connect to both the beforeRendering() and this signals.
+    connect to both beforeRendering() and this signal.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
@@ -4260,7 +4331,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     \note Resource updates (uploads, copies) typically cannot be enqueued from
     within a render pass. Therefore, more complex user rendering will need to
-    connect to both the beforeRendering() and this signals.
+    connect to both beforeRendering() and this signal.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
@@ -4733,7 +4804,7 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \return a pointer to a GraphicsStateInfo struct describing some of the
+    \return a reference to a GraphicsStateInfo struct describing some of the
     RHI's internal state, in particular, the double or tripple buffering status
     of the backend (such as, the Vulkan or Metal integrations). This is
     relevant when the underlying graphics APIs is Vulkan or Metal, and the
@@ -4741,14 +4812,14 @@ void QQuickWindow::resetOpenGLState()
     its own often-changing resources, such as, uniform buffers, in order to
     avoid stalling the pipeline.
  */
-const QQuickWindow::GraphicsStateInfo *QQuickWindow::graphicsStateInfo()
+const QQuickWindow::GraphicsStateInfo &QQuickWindow::graphicsStateInfo()
 {
     Q_D(QQuickWindow);
     if (d->rhi) {
         d->rhiStateInfo.currentFrameSlot = d->rhi->currentFrameSlot();
         d->rhiStateInfo.framesInFlight = d->rhi->resourceLimit(QRhi::FramesInFlight);
     }
-    return &d->rhiStateInfo;
+    return d->rhiStateInfo;
 }
 
 /*!
@@ -4772,6 +4843,17 @@ const QQuickWindow::GraphicsStateInfo *QQuickWindow::graphicsStateInfo()
     \l{QSGRenderNode::render()}{render()} implementation of a QSGRenderNode
     because the scene graph performs the necessary steps implicitly for render
     nodes.
+
+    Native graphics objects (such as, graphics device, command buffer or
+    encoder) are accessible via QSGRendererInterface::getResource().
+
+    \warning Watch out for the fact that
+    QSGRendererInterface::CommandListResource may return a different object
+    between beginExternalCommands() - endExternalCommands(). This can happen
+    when the underlying implementation provides a dedicated secondary command
+    buffer for recording external graphics commands within a render pass.
+    Therefore, always query CommandListResource after calling this function. Do
+    not attempt to reuse an object from an earlier query.
 
     \note This function has no effect when the scene graph is using OpenGL
     directly and the RHI graphics abstraction layer is not in use. Refer to

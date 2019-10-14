@@ -35,6 +35,9 @@
 #include <private/qqmlboundsignal_p.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
+#if QT_CONFIG(regularexpression)
+#include <QtCore/qregularexpression.h>
+#endif
 #include <QtCore/private/qobject_p.h>
 #include "../../shared/util.h"
 
@@ -150,6 +153,8 @@ private slots:
     void floatToStringPrecision();
 
     void copy();
+
+    void bindingToAlias();
 private:
     QQmlEngine engine;
 };
@@ -1989,11 +1994,9 @@ void tst_qqmlproperty::assignEmptyVariantMap()
     QCOMPARE(o.variantMap().count(), 1);
     QCOMPARE(o.variantMap().isEmpty(), false);
 
-    QQmlContext context(&engine);
-    context.setContextProperty("o", &o);
 
     QQmlComponent component(&engine, testFileUrl("assignEmptyVariantMap.qml"));
-    QObject *obj = component.create(&context);
+    QObject *obj = component.createWithInitialProperties({{"o", QVariant::fromValue(&o)}});
     QVERIFY(obj);
 
     QCOMPARE(o.variantMap().count(), 0);
@@ -2015,9 +2018,13 @@ void tst_qqmlproperty::warnOnInvalidBinding()
     expectedWarning = testUrl.toString() + QString::fromLatin1(":7:5: Unable to assign QQuickText to QQuickRectangle");
     QTest::ignoreMessage(QtWarningMsg, expectedWarning.toLatin1().constData());
 
+#if QT_CONFIG(regularexpression)
     // V8 error message for invalid binding to anchor
-    expectedWarning = testUrl.toString() + QString::fromLatin1(":14:9: Unable to assign QQuickItem_QML_8 to QQuickAnchorLine");
-    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toLatin1().constData());
+    const QRegularExpression warning(
+                "^" + testUrl.toString()
+                + ":14:9: Unable to assign QQuickItem_QML_\\d+ to QQuickAnchorLine$");
+    QTest::ignoreMessage(QtWarningMsg, warning);
+#endif
 
     QQmlComponent component(&engine, testUrl);
     QObject *obj = component.create();
@@ -2121,6 +2128,15 @@ void tst_qqmlproperty::initTestCase()
     qmlRegisterType<MyQmlObject>("Test",1,0,"MyQmlObject");
     qmlRegisterType<PropertyObject>("Test",1,0,"PropertyObject");
     qmlRegisterType<MyContainer>("Test",1,0,"MyContainer");
+}
+
+// QTBUG-60908
+void tst_qqmlproperty::bindingToAlias()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("aliasToBinding.qml"));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
 }
 
 QTEST_MAIN(tst_qqmlproperty)

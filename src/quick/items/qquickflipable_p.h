@@ -71,6 +71,7 @@ class Q_AUTOTEST_EXPORT QQuickFlipable : public QQuickItem
     Q_PROPERTY(QQuickItem *front READ front WRITE setFront NOTIFY frontChanged)
     Q_PROPERTY(QQuickItem *back READ back WRITE setBack NOTIFY backChanged)
     Q_PROPERTY(Side side READ side NOTIFY sideChanged)
+    QML_NAMED_ELEMENT(Flipable)
     //### flipAxis
     //### flipRotation
 public:

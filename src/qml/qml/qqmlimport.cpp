@@ -780,12 +780,12 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
             typeStr + dotqml_string, // Type -> Type.qml
             typeStr + dotuidotqml_string // Type -> Type.ui.qml
         };
-        for (uint i = 0; i < sizeof(urlsToTry) / sizeof(urlsToTry[0]); ++i) {
-            exists = typeLoader->fileExists(localDirectoryPath, urlsToTry[i]);
+        for (const QString &urlToTry : urlsToTry) {
+            exists = typeLoader->fileExists(localDirectoryPath, urlToTry);
             if (exists) {
 #if defined(Q_OS_MACOS) || defined(Q_OS_WIN)
                 // don't let function.qml confuse the use of "new Function(...)" for example.
-                if (!QQml_isFileCaseCorrect(localDirectoryPath + urlsToTry[i])) {
+                if (!QQml_isFileCaseCorrect(localDirectoryPath + urlToTry)) {
                     exists = false;
                     if (errors) {
                         QQmlError caseError;
@@ -797,7 +797,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
 #else
                 Q_UNUSED(errors);
 #endif
-                qmlUrl = url + urlsToTry[i];
+                qmlUrl = url + urlToTry;
                 break;
             }
         }
@@ -1751,6 +1751,16 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 
     addImportPath(QStringLiteral("qrc:/qt-project.org/imports"));
     addImportPath(QCoreApplication::applicationDirPath());
+#if defined(Q_OS_ANDROID)
+    addImportPath(QStringLiteral("qrc:/android_rcc_bundle/qml"));
+    if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QT_BUNDLED_LIBS_PATH"))) {
+        const QString envImportPath = qEnvironmentVariable("QT_BUNDLED_LIBS_PATH");
+        QLatin1Char pathSep(':');
+        QStringList paths = envImportPath.split(pathSep, QString::SkipEmptyParts);
+        for (int ii = paths.count() - 1; ii >= 0; --ii)
+            addPluginPath(paths.at(ii));
+    }
+#endif
 }
 
 QQmlImportDatabase::~QQmlImportDatabase()
@@ -1798,6 +1808,18 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
         if (!resolvedPath.endsWith(Slash))
             resolvedPath += Slash;
 
+#if defined(Q_OS_ANDROID)
+        if (qmldirPath.size() > 25 && qmldirPath.at(0) == QLatin1Char(':') && qmldirPath.at(1) == QLatin1Char('/') &&
+           qmldirPath.startsWith(QStringLiteral(":/android_rcc_bundle/qml/"), Qt::CaseInsensitive)) {
+            QString pluginName = qmldirPath.mid(21) + Slash + baseName;
+            auto bundledPath = resolvedPath + QLatin1String("lib") + pluginName.replace(QLatin1Char('/'), QLatin1Char('_'));
+            for (const QString &suffix : suffixes) {
+                const QString absolutePath = typeLoader->absoluteFilePath(bundledPath + suffix);
+                if (!absolutePath.isEmpty())
+                    return absolutePath;
+            }
+        }
+#endif
         resolvedPath += prefix + baseName;
         for (const QString &suffix : suffixes) {
             const QString absolutePath = typeLoader->absoluteFilePath(resolvedPath + suffix);
@@ -1975,12 +1997,25 @@ void QQmlImportDatabase::setImportPathList(const QStringList &paths)
 /*!
     \internal
 */
-bool QQmlImportDatabase::registerPluginTypes(QObject *instance, const QString &basePath,
-                                      const QString &uri, const QString &typeNamespace, int vmaj, QList<QQmlError> *errors)
+static bool registerPluginTypes(QObject *instance, const QString &basePath, const QString &uri,
+                                const QString &typeNamespace, int vmaj, QList<QQmlError> *errors)
 {
     if (qmlImportTrace())
         qDebug().nospace() << "QQmlImportDatabase::registerPluginTypes: " << uri << " from " << basePath;
-    return QQmlMetaType::registerPluginTypes(instance, basePath, uri, typeNamespace, vmaj, errors);
+
+    if (!QQmlMetaType::registerPluginTypes(instance, basePath, uri, typeNamespace, vmaj, errors))
+        return false;
+
+    if (vmaj >= 0 && !typeNamespace.isEmpty() && !QQmlMetaType::protectModule(uri, vmaj)) {
+        QQmlError error;
+        error.setDescription(
+                    QString::fromLatin1("Cannot protect module %1 %2 as it was never registered")
+                    .arg(uri).arg(vmaj));
+        errors->append(error);
+        return false;
+    }
+
+    return true;
 }
 
 /*!

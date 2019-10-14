@@ -47,6 +47,9 @@ QT_BEGIN_NAMESPACE
 
 
 class QQmlEngine;
+class QQmlPropertyData;
+class QVariant;
+using QVariantMap = QMap<QString, QVariant>;
 
 class QQmlIncubatorPrivate;
 class Q_QML_EXPORT QQmlIncubator
@@ -83,6 +86,8 @@ public:
     Status status() const;
 
     QObject *object() const;
+
+    void setInitialProperties(const QVariantMap &initialProperties);
 
 protected:
     virtual void statusChanged(Status);

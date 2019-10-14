@@ -39,10 +39,18 @@
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qv4codegen_p.h>
+#include <private/qqmldirparser_p.h>
 
-QDebug operator<<(QDebug dbg, const QQmlJS::AST::SourceLocation &loc);
+static QQmlDirParser createQmldirParserForFile(const QString &filename)
+{
+    QFile f(filename);
+    f.open(QFile::ReadOnly);
+    QQmlDirParser parser;
+    parser.parse(f.readAll());
+    return parser;
+}
 
-static QQmlJS::TypeDescriptionReader createReaderForFile(QString const &filename)
+static QQmlJS::TypeDescriptionReader createQmltypesReaderForFile(QString const &filename)
 {
     QFile f(filename);
     f.open(QFile::ReadOnly);
@@ -60,13 +68,12 @@ void FindUnqualifiedIDVisitor::leaveEnvironment()
     m_currentScope = m_currentScope->parentScope();
 }
 
-enum ImportVersion { FullyVersioned, PartiallyVersioned, Unversioned };
+enum ImportVersion { FullyVersioned, PartiallyVersioned, Unversioned, BasePath };
 
-QStringList completeQmltypesPaths(const QString &uri, const QStringList &basePaths, int vmaj, int vmin)
+QStringList completeImportPaths(const QString &uri, const QStringList &basePaths, int vmaj, int vmin)
 {
     static const QLatin1Char Slash('/');
     static const QLatin1Char Backslash('\\');
-    static const QLatin1String SlashPluginsDotQmltypes("/plugins.qmltypes");
 
     const QVector<QStringRef> parts = uri.splitRef(QLatin1Char('.'), QString::SkipEmptyParts);
 
@@ -96,7 +103,7 @@ QStringList completeQmltypesPaths(const QString &uri, const QStringList &basePat
         return str;
     };
 
-    for (int version = FullyVersioned; version <= Unversioned; ++version) {
+    for (int version = FullyVersioned; version <= BasePath; ++version) {
         const QString ver = versionString(vmaj, vmin, static_cast<ImportVersion>(version));
 
         for (const QString &path : basePaths) {
@@ -104,20 +111,23 @@ QStringList completeQmltypesPaths(const QString &uri, const QStringList &basePat
             if (!dir.endsWith(Slash) && !dir.endsWith(Backslash))
                 dir += Slash;
 
-            // append to the end
-            qmlDirPathsPaths += dir + joinStringRefs(parts, Slash) + ver + SlashPluginsDotQmltypes;
+            if (version == BasePath) {
+                qmlDirPathsPaths += dir;
+            } else {
+                // append to the end
+                qmlDirPathsPaths += dir + joinStringRefs(parts, Slash) + ver;
+            }
 
-            if (version != Unversioned) {
+            if (version < Unversioned) {
                 // insert in the middle
                 for (int index = parts.count() - 2; index >= 0; --index) {
                     qmlDirPathsPaths += dir + joinStringRefs(parts.mid(0, index + 1), Slash)
                             + ver + Slash
-                            + joinStringRefs(parts.mid(index + 1), Slash) + SlashPluginsDotQmltypes;
+                            + joinStringRefs(parts.mid(index + 1), Slash);
                 }
             }
         }
     }
-
     return qmlDirPathsPaths;
 }
 
@@ -130,19 +140,50 @@ void FindUnqualifiedIDVisitor::importHelper(QString id, QString prefix, int majo
         m_alreadySeenImports.insert(importId);
     }
     id = id.replace(QLatin1String("/"), QLatin1String("."));
-    auto qmltypesPaths = completeQmltypesPaths(id, m_qmltypeDirs, major, minor);
+    auto qmltypesPaths = completeImportPaths(id, m_qmltypeDirs, major, minor);
 
     QHash<QString, LanguageUtils::FakeMetaObject::ConstPtr> objects;
     QList<QQmlJS::ModuleApiInfo> moduleApis;
     QStringList dependencies;
+    static const QLatin1String SlashPluginsDotQmltypes("/plugins.qmltypes");
+    static const QLatin1String SlashQmldir("/qmldir");
     for (auto const &qmltypesPath : qmltypesPaths) {
-        if (QFile::exists(qmltypesPath)) {
-            auto reader = createReaderForFile(qmltypesPath);
-            auto succ = reader(&objects, &moduleApis, &dependencies);
-            if (!succ) {
-                qDebug() << reader.errorMessage();
+        if (QFile::exists(qmltypesPath + SlashQmldir)) {
+            auto reader = createQmldirParserForFile(qmltypesPath + SlashQmldir);
+            const auto imports = reader.imports();
+            for (const QString &import : imports)
+                importHelper(import, prefix, major, minor);
+
+            QHash<QString, LanguageUtils::FakeMetaObject *> qmlComponents;
+            const auto components = reader.components();
+            for (auto it = components.begin(), end = components.end(); it != end; ++it) {
+                const QString filePath = qmltypesPath + QLatin1Char('/') + it->fileName;
+                if (!QFile::exists(filePath)) {
+                    m_colorOut.write(QLatin1String("warning: "), Warning);
+                    m_colorOut.write(it->fileName + QLatin1String(" is listed as component in ")
+                                     + qmltypesPath + SlashQmldir
+                                     + QLatin1String(" but does not exist.\n"));
+                    continue;
+                }
+
+                auto mo = qmlComponents.find(it.key());
+                if (mo == qmlComponents.end())
+                    mo = qmlComponents.insert(it.key(), localQmlFile2FakeMetaObject(filePath));
+
+                (*mo)->addExport(
+                            it.key(), reader.typeNamespace(),
+                            LanguageUtils::ComponentVersion(it->majorVersion, it->minorVersion));
             }
-            break;
+            for (auto it = qmlComponents.begin(), end = qmlComponents.end(); it != end; ++it) {
+                objects.insert(it.key(),
+                               QSharedPointer<const LanguageUtils::FakeMetaObject>(it.value()));
+            }
+        }
+        if (QFile::exists(qmltypesPath + SlashPluginsDotQmltypes)) {
+            auto reader = createQmltypesReaderForFile(qmltypesPath + SlashPluginsDotQmltypes);
+            auto succ = reader(&objects, &moduleApis, &dependencies);
+            if (!succ)
+                m_colorOut.writeUncolored(reader.errorMessage());
         }
     }
     for (auto const &dependency : qAsConst(dependencies)) {
@@ -170,7 +211,8 @@ FindUnqualifiedIDVisitor::localQmlFile2FakeMetaObject(QString filePath)
 {
     using namespace QQmlJS::AST;
     auto fake = new LanguageUtils::FakeMetaObject;
-    fake->setClassName(QFileInfo { filePath }.baseName());
+    QString baseName = QFileInfo { filePath }.baseName();
+    fake->setClassName(baseName.endsWith(".ui") ? baseName.chopped(3) : baseName);
     QFile file(filePath);
     if (!file.open(QFile::ReadOnly)) {
         return fake;
@@ -273,6 +315,7 @@ FindUnqualifiedIDVisitor::localQmlFile2FakeMetaObject(QString filePath)
             auto sourceElement = static_cast<UiSourceElement *>(initMembers->member);
             if (FunctionExpression *fexpr = sourceElement->sourceElement->asFunctionDefinition()) {
                 LanguageUtils::FakeMetaMethod method;
+                method.setMethodName(fexpr->name.toString());
                 method.setMethodType(LanguageUtils::FakeMetaMethod::Method);
                 FormalParameterList *parameters = fexpr->formals;
                 while (parameters) {
@@ -290,18 +333,38 @@ FindUnqualifiedIDVisitor::localQmlFile2FakeMetaObject(QString filePath)
             } else if (cast<VariableStatement *>(sourceElement->sourceElement)) {
                 // nothing to do
             } else {
-                qDebug() << "unsupportedd sourceElement at" << sourceElement->firstSourceLocation()
-                         << sourceElement->sourceElement->kind;
+                const auto loc = sourceElement->firstSourceLocation();
+                m_colorOut.writeUncolored(
+                            "unsupportedd sourceElement at "
+                            + QString::fromLatin1("%1:%2: ").arg(loc.startLine).arg(loc.startColumn)
+                            + QString::number(sourceElement->sourceElement->kind));
             }
             break;
         }
         default: {
-            qDebug() << "unsupported element of kind" << initMembers->member->kind;
+            m_colorOut.writeUncolored("unsupported element of kind "
+                                      + QString::number(initMembers->member->kind));
         }
         }
         initMembers = initMembers->next;
     }
     return fake;
+}
+
+void FindUnqualifiedIDVisitor::importDirectory(const QString &directory, const QString &prefix)
+{
+    QString dirname = directory;
+    QFileInfo info { dirname };
+    if (info.isRelative())
+        dirname = QDir(QFileInfo { m_filePath }.path()).filePath(dirname);
+
+    QDirIterator it { dirname, QStringList() << QLatin1String("*.qml"), QDir::NoFilter };
+    while (it.hasNext()) {
+        LanguageUtils::FakeMetaObject *fake = localQmlFile2FakeMetaObject(it.next());
+        m_exportedName2MetaObject.insert(
+                prefix + fake->className(),
+                QSharedPointer<const LanguageUtils::FakeMetaObject>(fake));
+    }
 }
 
 void FindUnqualifiedIDVisitor::importExportedNames(QStringRef prefix, QString name)
@@ -348,11 +411,10 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiProgram *)
         QDirIterator it { dir, QStringList() << QLatin1String("builtins.qmltypes"), QDir::NoFilter,
                           QDirIterator::Subdirectories };
         while (it.hasNext()) {
-            auto reader = createReaderForFile(it.next());
+            auto reader = createQmltypesReaderForFile(it.next());
             auto succ = reader(&objects, &moduleApis, &dependencies);
-            if (!succ) {
-                qDebug() << reader.errorMessage();
-            }
+            if (!succ)
+                m_colorOut.writeUncolored(reader.errorMessage());
         }
     }
     // add builtins
@@ -377,6 +439,8 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiProgram *)
     meta->addProperty(LanguageUtils::FakeMetaProperty {"ignoreUnknownSignals", "bool", false, false, false, 0});
     meta->addProperty(LanguageUtils::FakeMetaProperty {"target", "QObject", false, false, false, 0});
     m_exportedName2MetaObject["Connections"] = LanguageUtils::FakeMetaObject::ConstPtr { meta };
+
+    importDirectory(".", QString());
     return true;
 }
 
@@ -476,6 +540,23 @@ void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::WithStatement *)
     leaveEnvironment();
 }
 
+static QString signalName(const QStringRef &handlerName)
+{
+    if (handlerName.startsWith("on") && handlerName.size() > 2) {
+        QString signal = handlerName.mid(2).toString();
+        for (int i = 0; i < signal.length(); ++i) {
+            QCharRef ch = signal[i];
+            if (ch.isLower())
+                return QString();
+            if (ch.isUpper()) {
+                ch = ch.toLower();
+                return signal;
+            }
+        }
+    }
+    return QString();
+}
+
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
 {
     using namespace QQmlJS::AST;
@@ -489,8 +570,17 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
         if (m_currentScope->isVisualRootScope()) {
             m_rootId = identexp->name.toString();
         }
-    } else if (name.startsWith("on") && name.size() > 2 && name.at(2).isUpper()) {
-        auto statement = uisb->statement;
+    } else {
+        const QString signal = signalName(name);
+        if (signal.isEmpty())
+            return true;
+
+        if (!m_currentScope->methods().contains(signal)) {
+            m_currentScope->addUnmatchedSignalHandler(name.toString(), uisb->firstSourceLocation());
+            return true;
+        }
+
+        const auto statement = uisb->statement;
         if (statement->kind == Node::Kind::Kind_ExpressionStatement) {
             if (static_cast<ExpressionStatement *>(statement)->expression->asFunctionDefinition()) {
                 // functions are already handled
@@ -499,17 +589,14 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
                 return true;
             }
         }
-        QString signal = name.mid(2).toString();
-        signal[0] = signal[0].toLower();
-        if (!m_currentScope->methods().contains(signal)) {
-            qDebug() << "Info file does not contain signal" << signal;
-        } else {
-            auto method = m_currentScope->methods()[signal];
-            for (auto const &param : method.parameterNames()) {
-                auto firstSourceLocation = uisb->statement->firstSourceLocation();
-                bool hasMultilineStatementBody = uisb->statement->lastSourceLocation().startLine > firstSourceLocation.startLine;
-                m_currentScope->insertSignalIdentifier(param, method, firstSourceLocation, hasMultilineStatementBody);
-            }
+
+        auto method = m_currentScope->methods()[signal];
+        for (auto const &param : method.parameterNames()) {
+            const auto firstSourceLocation = statement->firstSourceLocation();
+            bool hasMultilineStatementBody
+                    = statement->lastSourceLocation().startLine > firstSourceLocation.startLine;
+            m_currentScope->insertSignalIdentifier(param, method, firstSourceLocation,
+                                                   hasMultilineStatementBody);
         }
         return true;
     }
@@ -535,13 +622,15 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
 }
 
 FindUnqualifiedIDVisitor::FindUnqualifiedIDVisitor(QStringList const &qmltypeDirs,
-                                                   const QString &code, const QString &fileName)
+                                                   const QString &code, const QString &fileName,
+                                                   bool silent)
     : m_rootScope(new ScopeTree { ScopeType::JSFunctionScope, "global" }),
       m_currentScope(m_rootScope.get()),
       m_qmltypeDirs(qmltypeDirs),
       m_code(code),
       m_rootId(QLatin1String("<id>")),
-      m_filePath(fileName)
+      m_filePath(fileName),
+      m_colorOut(silent)
 {
     // setup color output
     m_colorOut.insertColorMapping(Error, ColorOutput::RedForeground);
@@ -649,18 +738,9 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiImport *import)
         prefix += import->importId + QLatin1Char('.');
     }
     auto dirname = import->fileName.toString();
-    if (!dirname.isEmpty()) {
-        QFileInfo info { dirname };
-        if (info.isRelative()) {
-            dirname = QDir(QFileInfo { m_filePath }.path()).filePath(dirname);
-        }
-        QDirIterator it { dirname, QStringList() << QLatin1String("*.qml"), QDir::NoFilter };
-        while (it.hasNext()) {
-            LanguageUtils::FakeMetaObject *fake = localQmlFile2FakeMetaObject(it.next());
-            m_exportedName2MetaObject.insert(
-                    fake->className(), QSharedPointer<const LanguageUtils::FakeMetaObject>(fake));
-        }
-    }
+    if (!dirname.isEmpty())
+        importDirectory(dirname, prefix);
+
     QString path {};
     if (!import->importId.isEmpty()) {
         m_qmlid2meta.insert(import->importId.toString(), {}); // TODO: do not put imported ids into the same space as qml IDs
@@ -768,16 +848,19 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
     return true;
 }
 
+bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::PatternElement *element)
+{
+    if (element->isVariableDeclaration()) {
+        QQmlJS::AST::BoundNames names;
+        element->boundNames(&names);
+        for (const auto &name : names)
+            m_currentScope->insertJSIdentifier(name.id, element->scope);
+    }
+
+    return true;
+}
+
 void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *)
 {
     leaveEnvironment();
-}
-
-QDebug operator<<(QDebug dbg, const QQmlJS::AST::SourceLocation &loc)
-{
-    QDebugStateSaver saver(dbg);
-    dbg.nospace() << loc.startLine;
-    dbg.nospace() << ":";
-    dbg.nospace() << loc.startColumn;
-    return dbg.maybeSpace();
 }

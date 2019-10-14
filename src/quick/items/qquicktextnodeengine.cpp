@@ -638,7 +638,7 @@ void QQuickTextNodeEngine::addBorder(const QRectF &rect, qreal border,
                                      QTextFrameFormat::BorderStyle borderStyle,
                                      const QBrush &borderBrush)
 {
-    QColor color = borderBrush.color();
+    const QColor &color = borderBrush.color();
 
     // Currently we don't support other styles than solid
     Q_UNUSED(borderStyle);
@@ -781,8 +781,8 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
     for (int i = 0; i < m_backgrounds.size(); ++i) {
         const QRectF &rect = m_backgrounds.at(i).first;
         const QColor &color = m_backgrounds.at(i).second;
-
-        parentNode->addRectangleNode(rect, color);
+        if (color.alpha() != 0)
+            parentNode->addRectangleNode(rect, color);
     }
 
     // Add all text with unselected color first
@@ -1012,13 +1012,13 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
             };
 
             switch (block.blockFormat().marker()) {
-            case QTextBlockFormat::Checked:
+            case QTextBlockFormat::MarkerType::Checked:
                 listItemBullet = QChar(0x2612); // Checked checkbox
                 break;
-            case QTextBlockFormat::Unchecked:
+            case QTextBlockFormat::MarkerType::Unchecked:
                 listItemBullet = QChar(0x2610); // Unchecked checkbox
                 break;
-            case QTextBlockFormat::NoMarker:
+            case QTextBlockFormat::MarkerType::NoMarker:
                 break;
             }
 

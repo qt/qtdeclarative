@@ -49,6 +49,19 @@
 
 QT_BEGIN_NAMESPACE
 
+static bool isPrimitiveType(int typeId)
+{
+    switch (typeId) {
+#define HANDLE_PRIMITIVE(Type, id, T) \
+    case QMetaType::Type:
+QT_FOR_EACH_STATIC_PRIMITIVE_TYPE(HANDLE_PRIMITIVE);
+#undef HANDLE_PRIMITIVE
+        return true;
+    default:
+        return false;
+    }
+}
+
 QQmlPropertyValidator::QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, const QQmlImports &imports, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
     : enginePrivate(enginePrivate)
     , compilationUnit(compilationUnit)
@@ -281,11 +294,21 @@ QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::validateObject(
                         return recordError(binding->location, tr("Invalid grouped property access"));
                     }
                 } else {
-                    if (!enginePrivate->propertyCacheForType(pd->propType())) {
+                    const int typeId = pd->propType();
+                    if (isPrimitiveType(typeId)) {
+                        return recordError(
+                                    binding->location,
+                                    tr("Invalid grouped property access: Property \"%1\" with primitive type \"%2\".")
+                                        .arg(name)
+                                        .arg(QString::fromLatin1(QMetaType::typeName(typeId)))
+                                    );
+                    }
+
+                    if (!enginePrivate->propertyCacheForType(typeId)) {
                         return recordError(binding->location,
                                            tr("Invalid grouped property access: Property \"%1\" with type \"%2\", which is not a value type")
                                            .arg(name)
-                                           .arg(QString::fromLatin1(QMetaType::typeName(pd->propType())))
+                                           .arg(QString::fromLatin1(QMetaType::typeName(typeId)))
                                           );
                     }
                 }
@@ -679,15 +702,21 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateObjectBinding(QQmlPrope
         return noError;
     }
 
-    if (QQmlMetaType::isInterface(property->propType())) {
+    const int propType = property->propType();
+    const auto rhsType = [&]() {
+        return stringAt(compilationUnit->objectAt(binding->value.objectIndex)
+                        ->inheritedTypeNameIndex);
+    };
+
+    if (QQmlMetaType::isInterface(propType)) {
         // Can only check at instantiation time if the created sub-object successfully casts to the
         // target interface.
         return noError;
-    } else if (property->propType() == QMetaType::QVariant || property->propType() == qMetaTypeId<QJSValue>()) {
+    } else if (propType == QMetaType::QVariant || propType == qMetaTypeId<QJSValue>()) {
         // We can convert everything to QVariant :)
         return noError;
     } else if (property->isQList()) {
-        const int listType = enginePrivate->listType(property->propType());
+        const int listType = enginePrivate->listType(propType);
         if (!QQmlMetaType::isInterface(listType)) {
             QQmlPropertyCache *source = propertyCaches.at(binding->value.objectIndex);
             if (!canCoerce(listType, source)) {
@@ -697,19 +726,23 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateObjectBinding(QQmlPrope
         return noError;
     } else if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject && property->isFunction()) {
         return noError;
-    } else if (QQmlValueTypeFactory::isValueType(property->propType())) {
-        auto typeName = QMetaType::typeName(property->propType());
+    } else if (isPrimitiveType(propType)) {
+        auto typeName = QString::fromUtf8(QMetaType::typeName(propType));
+        return qQmlCompileError(binding->location, tr("Can not assign value of type \"%1\" to property \"%2\", expecting \"%3\"")
+                                                      .arg(rhsType())
+                                                      .arg(propertyName)
+                                                      .arg(typeName));
+    } else if (QQmlValueTypeFactory::isValueType(propType)) {
         return qQmlCompileError(binding->location, tr("Can not assign value of type \"%1\" to property \"%2\", expecting an object")
-                                                      .arg(typeName ? QString::fromLatin1(typeName) : QString::fromLatin1("<unknown type>"))
-                                                      .arg(propertyName));
-    } else if (property->propType() == qMetaTypeId<QQmlScriptString>()) {
+                                                      .arg(rhsType()).arg(propertyName));
+    } else if (propType == qMetaTypeId<QQmlScriptString>()) {
         return qQmlCompileError(binding->valueLocation, tr("Invalid property assignment: script expected"));
     } else {
         // We want to use the raw metaObject here as the raw metaobject is the
         // actual property type before we applied any extensions that might
         // effect the properties on the type, but don't effect assignability
         // Using -1 for the minor version ensures that we get the raw metaObject.
-        QQmlPropertyCache *propertyMetaObject = enginePrivate->rawPropertyCacheForType(property->propType(), -1);
+        QQmlPropertyCache *propertyMetaObject = enginePrivate->rawPropertyCacheForType(propType, -1);
 
         if (propertyMetaObject) {
             // Will be true if the assigned type inherits propertyMetaObject
@@ -723,11 +756,11 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateObjectBinding(QQmlPrope
 
             if (!isAssignable) {
                 return qQmlCompileError(binding->valueLocation, tr("Cannot assign object of type \"%1\" to property of type \"%2\" as the former is neither the same as the latter nor a sub-class of it.")
-                        .arg(stringAt(compilationUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex)).arg(QLatin1String(QMetaType::typeName(property->propType()))));
+                        .arg(rhsType()).arg(QLatin1String(QMetaType::typeName(propType))));
             }
         } else {
             return qQmlCompileError(binding->valueLocation, tr("Cannot assign to property of unknown type \"%1\".")
-                        .arg(QLatin1String(QMetaType::typeName(property->propType()))));
+                        .arg(QLatin1String(QMetaType::typeName(propType))));
         }
 
     }

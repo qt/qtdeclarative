@@ -1,5 +1,6 @@
 /****************************************************************************
 **
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Copyright (C) 2016 basysKom GmbH.
 ** Contact: https://www.qt.io/licensing/
 **
@@ -110,8 +111,8 @@ void tst_qv4identifiertable::sweepCenterEntryInBucket()
     table.asPropertyKey(entry2);
     table.asPropertyKey(entry3);
 
-    QCOMPARE(table.size, 3);
-    QCOMPARE(table.alloc, 5);
+    QCOMPARE(table.size, 3u);
+    QCOMPARE(table.alloc, 5u);
 
     QCOMPARE(table.entriesByHash[0], entry1);
     QCOMPARE(table.entriesByHash[1], entry2);
@@ -153,8 +154,8 @@ void tst_qv4identifiertable::sweepLastEntryInBucket()
     table.asPropertyKey(entry2);
     table.asPropertyKey(entry3);
 
-    QCOMPARE(table.size, 3);
-    QCOMPARE(table.alloc, 5);
+    QCOMPARE(table.size, 3u);
+    QCOMPARE(table.alloc, 5u);
 
     QCOMPARE(table.entriesByHash[0], entry1);
     QCOMPARE(table.entriesByHash[1], entry2);
@@ -193,8 +194,8 @@ void tst_qv4identifiertable::sweepFirstEntryInSameBucketWithDifferingHash()
     table.asPropertyKey(entry1);
     table.asPropertyKey(entry2);
 
-    QCOMPARE(table.size, 2);
-    QCOMPARE(table.alloc, 5);
+    QCOMPARE(table.size, 2u);
+    QCOMPARE(table.alloc, 5u);
 
     QCOMPARE(table.entriesByHash[0], entry1);
     QCOMPARE(table.entriesByHash[1], entry2);
@@ -231,8 +232,8 @@ void tst_qv4identifiertable::dontSweepAcrossBucketBoundaries()
     table.asPropertyKey(entry1);
     table.asPropertyKey(entry2);
 
-    QCOMPARE(table.size, 2);
-    QCOMPARE(table.alloc, 5);
+    QCOMPARE(table.size, 2u);
+    QCOMPARE(table.alloc, 5u);
 
     QCOMPARE(table.entriesByHash[0], entry1);
     QCOMPARE(table.entriesByHash[1], entry2);
@@ -279,8 +280,8 @@ void tst_qv4identifiertable::sweepAcrossBucketBoundariesIfFirstBucketFull()
     table.asPropertyKey(entry3);
     table.asPropertyKey(entry4);
 
-    QCOMPARE(table.size, 4);
-    QCOMPARE(table.alloc, 11);
+    QCOMPARE(table.size, 4u);
+    QCOMPARE(table.alloc, 11u);
 
     QCOMPARE(table.entriesByHash[0], entry1);
     QCOMPARE(table.entriesByHash[1], entry2);
@@ -336,8 +337,8 @@ void tst_qv4identifiertable::sweepBucketGap()
     table.asPropertyKey(entry3);
     table.asPropertyKey(entry4);
 
-    QCOMPARE(table.size, 4);
-    QCOMPARE(table.alloc, 11);
+    QCOMPARE(table.size, 4u);
+    QCOMPARE(table.alloc, 11u);
 
     QCOMPARE(table.entriesByHash[0], entry1);
     QCOMPARE(table.entriesByHash[1], entry2);

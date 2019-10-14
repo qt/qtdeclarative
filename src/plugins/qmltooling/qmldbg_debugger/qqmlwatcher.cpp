@@ -109,12 +109,7 @@ QQmlWatchProxy::QQmlWatchProxy(int id,
 
 void QQmlWatchProxy::notifyValueChanged()
 {
-    QVariant v;
-    if (m_expr)
-        v = m_expr->evaluate();
-    else if (QQmlValueTypeFactory::isValueType(m_property.userType()))
-        v = m_property.read(m_object);
-
+    const QVariant v = m_expr ? m_expr->evaluate() : m_property.read(m_object);
     emit m_watch->propertyChanged(m_id, m_debugId, m_property, v);
 }
 

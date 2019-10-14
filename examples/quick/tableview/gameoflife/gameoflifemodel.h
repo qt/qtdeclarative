@@ -54,11 +54,13 @@
 #include <array>
 #include <QAbstractTableModel>
 #include <QPoint>
+#include <QtQml/qqml.h>
 
 //! [modelclass]
 class GameOfLifeModel : public QAbstractTableModel
 {
     Q_OBJECT
+    QML_ELEMENT
 
     Q_ENUMS(Roles)
 public:

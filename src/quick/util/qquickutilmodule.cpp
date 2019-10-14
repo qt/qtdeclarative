@@ -40,6 +40,7 @@
 #include "qquickutilmodule_p.h"
 #include "qquickanimation_p.h"
 #include "qquickanimation_p_p.h"
+#include "qquickapplication_p.h"
 #include "qquickbehavior_p.h"
 #include "qquicksmoothedanimation_p.h"
 #include "qquickfontloader_p.h"
@@ -58,12 +59,11 @@
 #include "qquickshortcut_p.h"
 #endif
 #include "qquickvalidator_p.h"
+#include "qquickforeignutils_p.h"
 #include <qqmlinfo.h>
 #include <private/qqmltypenotavailable_p.h>
 #include <private/qquickanimationcontroller_p.h>
 #include <QtCore/qcoreapplication.h>
-#include <QtGui/QInputMethod>
-#include <QtGui/QKeySequence>
 
 #if QT_CONFIG(shortcut)
 Q_DECLARE_METATYPE(QKeySequence::StandardKey)
@@ -71,73 +71,61 @@ Q_DECLARE_METATYPE(QKeySequence::StandardKey)
 
 void QQuickUtilModule::defineModule()
 {
-#if QT_CONFIG(im)
-    qmlRegisterUncreatableType<QInputMethod>("QtQuick",2,0,"InputMethod",
-                                             QInputMethod::tr("InputMethod is an abstract class"));
-#endif
-    qmlRegisterUncreatableType<QQuickAbstractAnimation>("QtQuick",2,0,"Animation",QQuickAbstractAnimation::tr("Animation is an abstract class"));
-
-    qmlRegisterType<QQuickBehavior>("QtQuick",2,0,"Behavior");
-    qmlRegisterType<QQuickColorAnimation>("QtQuick",2,0,"ColorAnimation");
-    qmlRegisterType<QQuickSmoothedAnimation>("QtQuick",2,0,"SmoothedAnimation");
-    qmlRegisterType<QQuickFontLoader>("QtQuick",2,0,"FontLoader");
-    qmlRegisterType<QQuickNumberAnimation>("QtQuick",2,0,"NumberAnimation");
-    qmlRegisterType<QQuickParallelAnimation>("QtQuick",2,0,"ParallelAnimation");
-    qmlRegisterType<QQuickPauseAnimation>("QtQuick",2,0,"PauseAnimation");
-    qmlRegisterType<QQuickPropertyAction>("QtQuick",2,0,"PropertyAction");
-    qmlRegisterType<QQuickPropertyAnimation>("QtQuick",2,0,"PropertyAnimation");
-    qmlRegisterType<QQuickRotationAnimation>("QtQuick",2,0,"RotationAnimation");
-    qmlRegisterType<QQuickScriptAction>("QtQuick",2,0,"ScriptAction");
-    qmlRegisterType<QQuickSequentialAnimation>("QtQuick",2,0,"SequentialAnimation");
-    qmlRegisterType<QQuickSpringAnimation>("QtQuick",2,0,"SpringAnimation");
-    qmlRegisterType<QQuickAnimationController>("QtQuick",2,0,"AnimationController");
-    qmlRegisterType<QQuickStateChangeScript>("QtQuick",2,0,"StateChangeScript");
-    qmlRegisterType<QQuickStateGroup>("QtQuick",2,0,"StateGroup");
-    qmlRegisterType<QQuickState>("QtQuick",2,0,"State");
-    qmlRegisterType<QQuickSystemPalette>("QtQuick",2,0,"SystemPalette");
-    qmlRegisterType<QQuickTransition>("QtQuick",2,0,"Transition");
-    qmlRegisterType<QQuickVector3dAnimation>("QtQuick",2,0,"Vector3dAnimation");
-
-#if QT_CONFIG(validator)
-    qmlRegisterAnonymousType<QValidator>("QtQuick", 2);
-    qmlRegisterType<QQuickIntValidator>("QtQuick",2,0,"IntValidator");
-    qmlRegisterType<QQuickDoubleValidator>("QtQuick",2,0,"DoubleValidator");
-    qmlRegisterType<QRegExpValidator>("QtQuick",2,0,"RegExpValidator");
-#if QT_CONFIG(regularexpression)
-    qmlRegisterType<QRegularExpressionValidator>("QtQuick", 2, 14, "RegularExpressionValidator");
-#endif
-#endif
-
-    qmlRegisterUncreatableType<QQuickAnimator>("QtQuick", 2, 2, "Animator", QQuickAbstractAnimation::tr("Animator is an abstract class"));
-    qmlRegisterType<QQuickXAnimator>("QtQuick", 2, 2, "XAnimator");
-    qmlRegisterType<QQuickYAnimator>("QtQuick", 2, 2, "YAnimator");
-    qmlRegisterType<QQuickScaleAnimator>("QtQuick", 2, 2, "ScaleAnimator");
-    qmlRegisterType<QQuickRotationAnimator>("QtQuick", 2, 2, "RotationAnimator");
-    qmlRegisterType<QQuickOpacityAnimator>("QtQuick", 2, 2, "OpacityAnimator");
-#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
-    qmlRegisterType<QQuickUniformAnimator>("QtQuick", 2, 2, "UniformAnimator");
-#endif
-    qmlRegisterAnonymousType<QQuickStateOperation>("QtQuick", 2);
-
-    qmlRegisterCustomType<QQuickPropertyChanges>("QtQuick",2,0,"PropertyChanges", new QQuickPropertyChangesParser);
-
 #if QT_CONFIG(shortcut)
     qRegisterMetaType<QKeySequence::StandardKey>();
-    qmlRegisterUncreatableType<QKeySequence, 2>("QtQuick", 2, 2, "StandardKey", QStringLiteral("Cannot create an instance of StandardKey."));
 #endif
 
-    qmlRegisterType<QQuickFontMetrics>("QtQuick", 2, 4, "FontMetrics");
-    qmlRegisterType<QQuickTextMetrics>("QtQuick", 2, 4, "TextMetrics");
-
+    qmlRegisterTypesAndRevisions<
+#if QT_CONFIG(validator)
+            QValidatorForeign,
+            QQuickIntValidator,
+            QQuickDoubleValidator,
+            QRegExpValidatorForeign,
+#if QT_CONFIG(regularexpression)
+            QRegularExpressionValidatorForeign,
+#endif // QT_CONFIG(regularexpression)
+#endif // QT_CONFIG(validator)
+#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
+            QQuickUniformAnimator,
+#endif
 #if QT_CONFIG(shortcut)
-    qmlRegisterType<QQuickShortcut>("QtQuick", 2, 5, "Shortcut");
-    qmlRegisterType<QQuickShortcut,6>("QtQuick", 2, 6, "Shortcut");
-
-    qmlRegisterType<QQuickShortcut,9>("QtQuick", 2, 9, "Shortcut");
+            QQuickShortcut,
+            QKeySequenceForeign,
 #endif
-
-    qmlRegisterUncreatableType<QQuickAbstractAnimation, 12>("QtQuick", 2, 12, "Animation",
-        QQuickAbstractAnimation::tr("Animation is an abstract class"));
-    // 5.13
-    qmlRegisterType<QQuickBehavior, 13>("QtQuick", 2, 13, "Behavior");
+#if QT_CONFIG(im)
+            QInputMethodForeign,
+#endif
+            QQuickAbstractAnimation,
+            QQuickBehavior,
+            QQuickColorAnimation,
+            QQuickSmoothedAnimation,
+            QQuickFontLoader,
+            QQuickNumberAnimation,
+            QQuickParallelAnimation,
+            QQuickPauseAnimation,
+            QQuickPropertyAction,
+            QQuickPropertyAnimation,
+            QQuickRotationAnimation,
+            QQuickScriptAction,
+            QQuickSequentialAnimation,
+            QQuickSpringAnimation,
+            QQuickAnimationController,
+            QQuickStateChangeScript,
+            QQuickStateGroup,
+            QQuickState,
+            QQuickSystemPalette,
+            QQuickTransition,
+            QQuickVector3dAnimation,
+            QQuickAnimator,
+            QQuickXAnimator,
+            QQuickYAnimator,
+            QQuickScaleAnimator,
+            QQuickRotationAnimator,
+            QQuickOpacityAnimator,
+            QQuickStateOperation,
+            QQuickPropertyChanges,
+            QQuickFontMetrics,
+            QQuickTextMetrics,
+            QQuickApplication
+    >("QtQuick", 2);
 }

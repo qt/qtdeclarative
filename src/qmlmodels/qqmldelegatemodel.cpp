@@ -48,7 +48,6 @@
 #include <private/qqmlchangeset_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlcomponent_p.h>
-#include <private/qqmlincubator_p.h>
 
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
@@ -454,7 +453,8 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
     }
     if (d->m_delegate == delegate)
         return;
-    bool wasValid = d->m_delegate != nullptr;
+    if (d->m_complete)
+        _q_itemsRemoved(0, d->m_count);
     d->m_delegate.setObject(delegate, this);
     d->m_delegateValidated = false;
     if (d->m_delegateChooser)
@@ -470,7 +470,11 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
                                                [d](){ d->delegateChanged(); });
         }
     }
-    d->delegateChanged(d->m_delegate, wasValid);
+    if (d->m_complete) {
+        _q_itemsInserted(0, d->adaptorModelCount());
+        d->requestMoreIfNecessary();
+    }
+    emit delegateChanged();
 }
 
 /*!
@@ -540,10 +544,10 @@ void QQmlDelegateModel::setRootIndex(const QVariant &root)
     \qmlmethod QModelIndex QtQml.Models::DelegateModel::modelIndex(int index)
 
     QAbstractItemModel provides a hierarchical tree of data, whereas
-    QML only operates on list data.  This function assists in using
+    QML only operates on list data. This function assists in using
     tree models in QML.
 
-    Returns a QModelIndex for the specified index.
+    Returns a QModelIndex for the specified \a index.
     This value can be assigned to rootIndex.
 
     \sa rootIndex
@@ -887,6 +891,117 @@ static bool isDoneIncubating(QQmlIncubator::Status status)
      return status == QQmlIncubator::Ready || status == QQmlIncubator::Error;
 }
 
+PropertyUpdater::PropertyUpdater(QObject *parent) :
+      QObject(parent) {}
+
+void PropertyUpdater::doUpdate()
+{
+    auto sender = QObject::sender();
+    auto mo = sender->metaObject();
+    auto signalIndex = QObject::senderSignalIndex();
+    ++updateCount;
+    // start at 0 instead of propertyOffset to handle properties from parent hierarchy
+    for (auto i = 0; i < mo->propertyCount() + mo->propertyOffset(); ++i) {
+        auto property = mo->property(i);
+        if (property.notifySignal().methodIndex() == signalIndex) {
+            // we synchronize between required properties and model rolenames by name
+            // that's why the QQmlProperty and the metaobject property must have the same name
+            QQmlProperty qmlProp(parent(), QString::fromLatin1(property.name()));
+            qmlProp.write(property.read(QObject::sender()));
+            return;
+        }
+    }
+}
+
+void PropertyUpdater::breakBinding()
+{
+    auto it = senderToConnection.find(QObject::senderSignalIndex());
+    if (it == senderToConnection.end())
+        return;
+    if (updateCount == 0) {
+        QObject::disconnect(*it);
+        QQmlError warning;
+        warning.setUrl(qmlContext(QObject::sender())->baseUrl());
+        auto signalName = QString::fromLatin1(QObject::sender()->metaObject()->method(QObject::senderSignalIndex()).name());
+        signalName.chop(sizeof("changed")-1);
+        QString propName = signalName;
+        propName[0] = propName[0].toLower();
+        warning.setDescription(QString::fromUtf8("Writing to \"%1\" broke the binding to the underlying model").arg(propName));
+        qmlWarning(this, warning);
+        senderToConnection.erase(it);
+    } else {
+        --updateCount;
+    }
+}
+
+void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *modelItemToIncubate, QObject *object)
+{
+    auto incubatorPriv = QQmlIncubatorPrivate::get(this);
+    QQmlData *d = QQmlData::get(object);
+    auto contextData = d ? d->context : nullptr;
+    if (contextData) {
+        contextData->hasExtraObject = true;
+        contextData->extraObject = modelItemToIncubate;
+    }
+    if (incubatorPriv->hadRequiredProperties()) {
+        if (incubatorPriv->requiredProperties().empty())
+            return;
+        RequiredProperties &requiredProperties = incubatorPriv->requiredProperties();
+
+        auto qmlMetaObject = modelItemToIncubate->metaObject();
+        // if a required property was not in the model, it might still be a static property of the
+        // QQmlDelegateModelItem or one of its derived classes this is the case for index, row,
+        // column, model and more
+        // the most derived subclass of QQmlDelegateModelItem is QQmlDMAbstractModelData at depth 2,
+        // so 4 should be plenty
+        QVarLengthArray<const QMetaObject *, 4> mos;
+        // we first check the dynamic meta object for properties originating from the model
+        mos.push_back(qmlMetaObject); // contains abstractitemmodelproperties
+        auto delegateModelItemSubclassMO = qmlMetaObject->superClass();
+        mos.push_back(delegateModelItemSubclassMO);
+
+        while (strcmp(delegateModelItemSubclassMO->className(), modelItemToIncubate->staticMetaObject.className())) {
+            delegateModelItemSubclassMO = delegateModelItemSubclassMO->superClass();
+            mos.push_back(delegateModelItemSubclassMO);
+        }
+        if (proxiedObject)
+            mos.push_back(proxiedObject->metaObject());
+
+        auto updater = new PropertyUpdater(object);
+        for (const QMetaObject *mo : mos) {
+            for (int i = mo->propertyOffset(); i < mo->propertyCount() + mo->propertyOffset(); ++i) {
+                auto prop = mo->property(i);
+                if (!prop.name())
+                    continue;
+                auto propName = QString::fromUtf8(prop.name());
+                bool wasInRequired = false;
+                QQmlProperty componentProp = QQmlComponentPrivate::removePropertyFromRequired(
+                        object, propName, requiredProperties, &wasInRequired);
+                // only write to property if it was actually requested by the component
+                if (wasInRequired && prop.hasNotifySignal()) {
+                    QMetaMethod changeSignal = prop.notifySignal();
+                    static QMetaMethod updateSlot = PropertyUpdater::staticMetaObject.method(PropertyUpdater::staticMetaObject.indexOfSlot("doUpdate()"));
+                    QMetaObject::Connection conn = QObject::connect(modelItemToIncubate, changeSignal, updater, updateSlot);
+                    auto propIdx = object->metaObject()->indexOfProperty(propName.toUtf8());
+                    QMetaMethod writeToPropSignal = object->metaObject()->property(propIdx).notifySignal();
+                    updater->senderToConnection[writeToPropSignal.methodIndex()] = conn;
+                    static QMetaMethod breakBinding = PropertyUpdater::staticMetaObject.method(PropertyUpdater::staticMetaObject.indexOfSlot("breakBinding()"));
+                    componentProp.write(prop.read(modelItemToIncubate));
+                    // the connection needs to established after the write,
+                    // else the signal gets triggered by it and breakBinding will remove the connection
+                    QObject::connect(object, writeToPropSignal, updater, breakBinding);
+                }
+                else if (wasInRequired) // we still have to write, even if there is no change signal
+                    componentProp.write(prop.read(modelItemToIncubate));
+            }
+        }
+    } else {
+        modelItemToIncubate->contextData->contextObject = modelItemToIncubate;
+        if (proxiedObject)
+            proxyContext->contextObject = proxiedObject;
+    }
+}
+
 void QQDMIncubationTask::statusChanged(Status status)
 {
     if (vdm) {
@@ -987,6 +1102,7 @@ void QQDMIncubationTask::setInitialState(QObject *o)
 void QQmlDelegateModelPrivate::setInitialState(QQDMIncubationTask *incubationTask, QObject *o)
 {
     QQmlDelegateModelItem *cacheItem = incubationTask->incubating;
+    incubationTask->initializeRequiredProperties(incubationTask->incubating, o);
     cacheItem->object = o;
 
     if (QQuickPackage *package = qmlobject_cast<QQuickPackage *>(cacheItem->object))
@@ -1053,7 +1169,6 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
 
         QQmlContextData *ctxt = new QQmlContextData;
         ctxt->setParent(QQmlContextData::get(creationContext  ? creationContext : m_context.data()));
-        ctxt->contextObject = cacheItem;
         cacheItem->contextData = ctxt;
 
         if (m_adaptorModel.hasProxyObject()) {
@@ -1062,7 +1177,8 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
                 ctxt = new QQmlContextData;
                 ctxt->setParent(cacheItem->contextData, /*stronglyReferencedByParent*/true);
                 QObject *proxied = proxy->proxiedObject();
-                ctxt->contextObject = proxied;
+                cacheItem->incubationTask->proxiedObject = proxied;
+                cacheItem->incubationTask->proxyContext = ctxt;
                 // We don't own the proxied object. We need to clear it if it goes away.
                 QObject::connect(proxied, &QObject::destroyed,
                                  cacheItem, &QQmlDelegateModelItem::childContextObjectDestroyed);
@@ -2166,6 +2282,8 @@ QQmlDelegateModelItem *QQmlDelegateModelItem::dataForObject(QObject *object)
 {
     QQmlData *d = QQmlData::get(object);
     QQmlContextData *context = d ? d->context : nullptr;
+    if (context && context->hasExtraObject)
+        return qobject_cast<QQmlDelegateModelItem *>(context->extraObject);
     for (context = context ? context->parent : nullptr; context; context = context->parent) {
         if (QQmlDelegateModelItem *cacheItem = qobject_cast<QQmlDelegateModelItem *>(
                 context->contextObject)) {

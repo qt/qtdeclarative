@@ -66,6 +66,7 @@ class QQmlSettings : public QObject, public QQmlParserStatus
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QString category READ category WRITE setCategory FINAL)
     Q_PROPERTY(QString fileName READ fileName WRITE setFileName FINAL)
+    QML_NAMED_ELEMENT(Settings)
 
 public:
     explicit QQmlSettings(QObject *parent = 0);

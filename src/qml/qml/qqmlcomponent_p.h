@@ -86,8 +86,9 @@ public:
 
     QObject *beginCreate(QQmlContextData *);
     void completeCreate();
-    void initializeObjectWithInitialProperties(QV4::QmlContext *qmlContext, const QV4::Value &valuemap, QObject *toCreate);
-    static void setInitialProperties(QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o, const QV4::Value &v);
+    void initializeObjectWithInitialProperties(QV4::QmlContext *qmlContext, const QV4::Value &valuemap, QObject *toCreate, RequiredProperties &requiredProperties);
+    static void setInitialProperties(QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o, const QV4::Value &v, RequiredProperties &requiredProperties, QObject *createdComponent);
+    static QQmlError unsetRequiredPropertyToQQmlError(const RequiredPropertyInfo &unsetRequiredProperty);
 
     virtual void incubateObject(
             QQmlIncubator *incubationTask,
@@ -106,6 +107,8 @@ public:
     qreal progress;
 
     int start;
+    RequiredProperties& requiredProperties();
+    bool hadRequiredProperties() const;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
 
     struct ConstructionState {
@@ -134,6 +137,7 @@ public:
     static void completeDeferred(QQmlEnginePrivate *enginePriv, DeferredState *deferredState);
 
     static void complete(QQmlEnginePrivate *enginePriv, ConstructionState *state);
+    static QQmlProperty removePropertyFromRequired(QObject *createdComponent, const QString &name, RequiredProperties& requiredProperties, bool *wasInRequiredProperties = nullptr);
 
     QQmlEngine *engine;
     QQmlGuardedContextData creationContext;

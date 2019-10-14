@@ -73,6 +73,8 @@ public:
     void insertQMLIdentifier(QString id);
     void insertSignalIdentifier(QString id, LanguageUtils::FakeMetaMethod method, QQmlJS::AST::SourceLocation loc, bool hasMultilineHandlerBody);
     void insertPropertyIdentifier(QString id); // inserts property as qml identifier as well as the corresponding
+    void addUnmatchedSignalHandler(const QString &handler,
+                                   const QQmlJS::AST::SourceLocation &location);
 
     bool isIdInCurrentScope(QString const &id) const;
     void addIdToAccssedIfNotInParentScopes(QPair<QString, QQmlJS::AST::SourceLocation> const& id_loc_pair, const QSet<QString>& unknownImports);
@@ -96,11 +98,14 @@ private:
     ScopeTree *m_parentScope;
     QString m_name;
     ScopeType m_scopeType;
+    QVector<QPair<QString, QQmlJS::AST::SourceLocation>> m_unmatchedSignalHandlers;
 
     bool isIdInCurrentQMlScopes(QString id) const;
     bool isIdInCurrentJSScopes(QString id) const;
     bool isIdInjectedFromSignal(QString id) const;
     const ScopeTree* getCurrentQMLScope() const;
     ScopeTree* getCurrentQMLScope();
+    void printContext(ColorOutput& colorOut, const QString &code,
+                      const QQmlJS::AST::SourceLocation &location) const;
 };
 #endif // SCOPETREE_H

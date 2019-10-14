@@ -482,6 +482,10 @@ private slots:
     void testChildMouseEventFilter_data();
     void cleanupGrabsOnRelease();
 
+#if QT_CONFIG(shortcut)
+    void testShortCut();
+#endif
+
 private:
     QTouchDevice *touchDevice;
     QTouchDevice *touchDeviceWithVelocity;
@@ -3578,6 +3582,30 @@ void tst_qquickwindow::cleanupGrabsOnRelease()
     QCOMPARE(child->mouseUngrabEventCount, 1);
     QCOMPARE(parent->mouseUngrabEventCount, 1);
 }
+
+#if QT_CONFIG(shortcut)
+void tst_qquickwindow::testShortCut()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("shortcut.qml"));
+
+    QObject *created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+    QVERIFY(created);
+
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(created);
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    EventFilter eventFilter;
+    window->activeFocusItem()->installEventFilter(&eventFilter);
+    //Send non-spontaneous key press event
+    QKeyEvent keyEvent(QEvent::KeyPress, Qt::Key_B, Qt::NoModifier);
+    QCoreApplication::sendEvent(window, &keyEvent);
+    QVERIFY(eventFilter.events.contains(int(QEvent::ShortcutOverride)));
+    QVERIFY(window->property("received").value<bool>());
+}
+#endif
 
 QTEST_MAIN(tst_qquickwindow)
 

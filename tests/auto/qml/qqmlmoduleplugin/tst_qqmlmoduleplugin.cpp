@@ -82,6 +82,7 @@ private slots:
     void importsChildPlugin2();
     void importsChildPlugin21();
     void parallelPluginImport();
+    void multiSingleton();
 
 private:
     QString m_importsDirectory;
@@ -627,7 +628,7 @@ void tst_qqmlmoduleplugin::importStrictModule_data()
         << "import org.qtproject.NonstrictModule 1.0\n"
            "MyPluginType {}"
         << "Module 'org.qtproject.NonstrictModule' does not contain a module identifier directive - it cannot be protected from external registrations."
-        << ":1:1: plugin cannot be loaded for module \"org.qtproject.NonstrictModule\": Cannot install element 'MyPluginType' into protected namespace 'org.qtproject.StrictModule'";
+        << ":1:1: plugin cannot be loaded for module \"org.qtproject.NonstrictModule\": Cannot install element 'MyPluginType' into protected module 'org.qtproject.StrictModule' version '1'";
 
     QTest::newRow("non-strict preemption")
         << "import org.qtproject.PreemptiveModule 1.0\n"
@@ -790,6 +791,20 @@ void tst_qqmlmoduleplugin::parallelPluginImport()
 
     worker.wait();
 }
+
+void tst_qqmlmoduleplugin::multiSingleton()
+{
+    QQmlEngine engine;
+    QObject obj;
+    qmlRegisterSingletonInstance("Test", 1, 0, "Tracker", &obj);
+    engine.addImportPath(m_importsDirectory);
+    QQmlComponent component(&engine, testFileUrl("multiSingleton.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != nullptr);
+    QCOMPARE(obj.objectName(), QLatin1String("first"));
+    delete object;
+}
+
 
 QTEST_MAIN(tst_qqmlmoduleplugin)
 

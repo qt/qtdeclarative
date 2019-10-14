@@ -57,7 +57,7 @@ void registerTypes()
     qmlRegisterType<MyNamespace::MySecondNamespacedType>("Test",1,0,"MySecondNamespacedType");
     qmlRegisterUncreatableMetaObject(MyNamespace::staticMetaObject, "Test", 1, 0, "MyNamespace", "Access to enums & flags only");
     qmlRegisterType<MyParserStatus>("Test",1,0,"MyParserStatus");
-    qmlRegisterType<MyGroupedObject>();
+    qmlRegisterAnonymousType<MyGroupedObject>("Test", 1);
     qmlRegisterType<MyRevisionedClass>("Test",1,0,"MyRevisionedClass");
     qmlRegisterType<MyRevisionedClass,1>("Test",1,1,"MyRevisionedClass");
     qmlRegisterType<MyRevisionedIllegalOverload>("Test",1,0,"MyRevisionedIllegalOverload");
@@ -118,6 +118,8 @@ void registerTypes()
 
     qmlRegisterType<LazyDeferredSubObject>("Test", 1, 0, "LazyDeferredSubObject");
     qmlRegisterType<DeferredProperties>("Test", 1, 0, "DeferredProperties");
+
+    qmlRegisterTypesAndRevisions<Extended, Foreign, ForeignExtended>("Test", 1);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)

@@ -431,7 +431,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
 
     This signal is emitted in response to both mouse wheel and trackpad scroll gestures.
 
-    The \l {WheelEvent}{wheel} parameter provides information about the event, including the x and y
+    The \a wheel parameter provides information about the event, including the x and y
     position, any buttons currently pressed, and information about the wheel movement, including
     angleDelta and pixelDelta.
 
@@ -1069,7 +1069,7 @@ void QQuickMouseArea::itemChange(ItemChange change, const ItemChangeData &value)
     Q_D(QQuickMouseArea);
     switch (change) {
     case ItemVisibleHasChanged:
-        if (acceptHoverEvents() && d->hovered != (isVisible() && isUnderMouse())) {
+        if (d->effectiveEnable && d->enabled && acceptHoverEvents() && d->hovered != (isVisible() && isUnderMouse())) {
             if (!d->hovered) {
                 QPointF cursorPos = QGuiApplicationPrivate::lastCursorPosition;
                 d->lastScenePos = d->window->mapFromGlobal(cursorPos.toPoint());

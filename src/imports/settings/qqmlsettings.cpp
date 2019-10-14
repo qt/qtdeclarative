@@ -473,7 +473,7 @@ QVariant QQmlSettings::value(const QString &key, const QVariant &defaultValue) c
 /*!
    \qmlmethod Settings::setValue(string key, var value)
 
-   Sets the value of setting key to value. If the key already exists,
+   Sets the value of setting \a key to \a value. If the key already exists,
    the previous value is overwritten.
 
    \since Qt 5.12

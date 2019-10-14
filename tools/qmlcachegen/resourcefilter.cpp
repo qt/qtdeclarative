@@ -57,8 +57,6 @@ int filterResourceFile(const QString &input, const QString &output)
     QXmlStreamWriter writer(&outputString);
     writer.setAutoFormatting(true);
 
-    QStringList remainingFiles;
-
     QXmlStreamReader reader(&file);
     while (!reader.atEnd()) {
         switch (reader.readNext()) {
@@ -139,47 +137,36 @@ int filterResourceFile(const QString &input, const QString &output)
             if (currentFileName.isEmpty())
                 continue;
 
-            if (!currentFileName.endsWith(QStringLiteral(".qml"))
-                && !currentFileName.endsWith(QStringLiteral(".js"))
-                && !currentFileName.endsWith(QStringLiteral(".mjs"))) {
-                writer.writeStartElement(QStringLiteral("file"));
+            writer.writeStartElement(QStringLiteral("file"));
 
-                if (!fileAttributes.hasAttribute(QStringLiteral("alias")))
-                    fileAttributes.append(QStringLiteral("alias"), currentFileName);
+            if (!fileAttributes.hasAttribute(QStringLiteral("alias")))
+                fileAttributes.append(QStringLiteral("alias"), currentFileName);
 
-                currentFileName = inputDirectory.absoluteFilePath(currentFileName);
-                currentFileName = outputDirectory.relativeFilePath(currentFileName);
+            currentFileName = inputDirectory.absoluteFilePath(currentFileName);
+            currentFileName = outputDirectory.relativeFilePath(currentFileName);
 
-                remainingFiles << currentFileName;
-
-                writer.writeAttributes(fileAttributes);
-                writer.writeCharacters(currentFileName);
-                writer.writeEndElement();
-            }
+            writer.writeAttributes(fileAttributes);
+            writer.writeCharacters(currentFileName);
+            writer.writeEndElement();
             continue;
 
         default: break;
     }
     }
 
-    if (!remainingFiles.isEmpty()) {
-        QFile outputFile(output);
-        if (!outputFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-            fprintf(stderr, "Cannot open %s for writing.\n", qPrintable(output));
-            return EXIT_FAILURE;
-        }
-        const QByteArray outputStringUtf8 = outputString.toUtf8();
-        if (outputFile.write(outputStringUtf8) != outputStringUtf8.size())
-            return EXIT_FAILURE;
-
-        outputFile.close();
-        if (outputFile.error() != QFileDevice::NoError)
-            return EXIT_FAILURE;
-
-        // The build system expects this output if we wrote a qrc file and no output
-        // if no files remain.
-        fprintf(stdout, "New resource file written with %d files.\n", remainingFiles.count());
+    QFile outputFile(output);
+    if (!outputFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        fprintf(stderr, "Cannot open %s for writing.\n", qPrintable(output));
+        return EXIT_FAILURE;
     }
+    const QByteArray outputStringUtf8 = outputString.toUtf8();
+    if (outputFile.write(outputStringUtf8) != outputStringUtf8.size())
+        return EXIT_FAILURE;
+
+    outputFile.close();
+    if (outputFile.error() != QFileDevice::NoError)
+        return EXIT_FAILURE;
+
 
     return EXIT_SUCCESS;
 }

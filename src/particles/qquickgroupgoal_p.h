@@ -61,6 +61,7 @@ class QQuickGroupGoalAffector : public QQuickParticleAffector
     Q_OBJECT
     Q_PROPERTY(QString goalState READ goalState WRITE setGoalState NOTIFY goalStateChanged)
     Q_PROPERTY(bool jump READ jump WRITE setJump NOTIFY jumpChanged)
+    QML_NAMED_ELEMENT(GroupGoal)
 public:
     explicit QQuickGroupGoalAffector(QQuickItem *parent = 0);
 

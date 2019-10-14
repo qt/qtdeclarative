@@ -256,6 +256,7 @@ class TestValueExporter : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(TestValue testValue READ testValue WRITE setTestValue)
+    QML_NAMED_ELEMENT(TestValueExporter)
 public:
     TestValue testValue() const { return m_testValue; }
     void setTestValue(const TestValue &v) { m_testValue = v; }
@@ -275,15 +276,14 @@ void tst_qqmlvaluetypeproviders::userType()
 
     qRegisterMetaType<TestValue>();
     QMetaType::registerComparators<TestValue>();
-    qmlRegisterType<TestValueExporter>("Test", 1, 0, "TestValueExporter");
+    qmlRegisterTypesAndRevisions<TestValueExporter>("Test", 1);
 
     TestValueExporter exporter;
 
     QQmlEngine e;
-    e.rootContext()->setContextProperty("testValueExporter", &exporter);
 
     QQmlComponent component(&e, testFileUrl("userType.qml"));
-    QScopedPointer<QObject> obj(component.create());
+    QScopedPointer<QObject> obj(component.createWithInitialProperties({{"testValueExporter", QVariant::fromValue(&exporter)}}));
     QVERIFY(obj != nullptr);
     QCOMPARE(obj->property("success").toBool(), true);
 }

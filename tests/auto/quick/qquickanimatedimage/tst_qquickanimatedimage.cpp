@@ -27,6 +27,7 @@
 ****************************************************************************/
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickrectangle_p.h>
@@ -39,6 +40,23 @@
 #include "../../shared/util.h"
 
 Q_DECLARE_METATYPE(QQuickImageBase::Status)
+
+template <typename T> static T evaluate(QObject *scope, const QString &expression)
+{
+    QQmlExpression expr(qmlContext(scope), scope, expression);
+    QVariant result = expr.evaluate();
+    if (expr.hasError())
+        qWarning() << expr.error().toString();
+    return result.value<T>();
+}
+
+template <> void evaluate<void>(QObject *scope, const QString &expression)
+{
+    QQmlExpression expr(qmlContext(scope), scope, expression);
+    expr.evaluate();
+    if (expr.hasError())
+        qWarning() << expr.error().toString();
+}
 
 class tst_qquickanimatedimage : public QQmlDataTest
 {
@@ -68,6 +86,7 @@ private slots:
     void playingAndPausedChanges();
     void noCaching();
     void sourceChangesOnFrameChanged();
+    void currentFrame();
 };
 
 void tst_qquickanimatedimage::cleanup()
@@ -616,6 +635,33 @@ void tst_qquickanimatedimage::sourceChangesOnFrameChanged()
         QTRY_COMPARE(anim->source(), testFileUrl("hearts.gif"));
 
     qDeleteAll(images);
+}
+
+void tst_qquickanimatedimage::currentFrame()
+{
+    QQuickView window;
+    window.setSource(testFileUrl("currentframe.qml"));
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(window.rootObject());
+    QVERIFY(anim);
+    QSignalSpy frameChangedSpy(anim, SIGNAL(frameChanged()));
+    QSignalSpy currentFrameChangedSpy(anim, SIGNAL(currentFrameChanged()));
+
+    anim->setCurrentFrame(1);
+    QCOMPARE(anim->currentFrame(), 1);
+    QCOMPARE(frameChangedSpy.count(), 1);
+    QCOMPARE(currentFrameChangedSpy.count(), 1);
+    QCOMPARE(anim->property("currentFrameChangeCount"), 1);
+    QCOMPARE(anim->property("frameChangeCount"), 1);
+
+    evaluate<void>(anim, "scriptedSetCurrentFrame(2)");
+    QCOMPARE(anim->currentFrame(), 2);
+    QCOMPARE(frameChangedSpy.count(), 2);
+    QCOMPARE(currentFrameChangedSpy.count(), 2);
+    QCOMPARE(anim->property("currentFrameChangeCount"), 2);
+    QCOMPARE(anim->property("frameChangeCount"), 2);
 }
 
 QTEST_MAIN(tst_qquickanimatedimage)

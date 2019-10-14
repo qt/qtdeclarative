@@ -62,6 +62,7 @@ QT_BEGIN_NAMESPACE
 
 class QRhi;
 class QRhiCommandBuffer;
+class QRhiRenderPassDescriptor;
 class QOpenGLContext;
 class QSGMaterialShader;
 class QSGMaterialRhiShader;
@@ -103,6 +104,7 @@ public:
     void initialize(const QSGRenderContext::InitParams *params) override;
     void invalidate() override;
 
+    void prepareSync(qreal devicePixelRatio) override;
     void beginNextFrame(QSGRenderer *renderer,
                         RenderPassCallback mainPassRecordingStart,
                         RenderPassCallback mainPassRecordingEnd,
@@ -145,6 +147,21 @@ public:
         // may be null if not in an active frame, but returning null is valid then
         return m_currentFrameCommandBuffer;
     }
+    QRhiRenderPassDescriptor *currentFrameRenderPass() const {
+        // may be null if not in an active frame, but returning null is valid then
+        return m_currentFrameRenderPass;
+    }
+
+    qreal currentDevicePixelRatio() const
+    {
+        // Valid starting from QQuickWindow::syncSceneGraph(). This takes the
+        // redirections, e.g. QQuickWindow::setRenderTarget(), into account.
+        // This calculation logic matches what the renderer does, so this is
+        // the same value that gets exposed in RenderState::devicePixelRatio()
+        // to material shaders. This getter is useful to perform dpr-related
+        // operations in the sync phase (in updatePaintNode()).
+        return m_currentDevicePixelRatio;
+    }
 
 protected:
     static QString fontKey(const QRawFont &font);
@@ -160,6 +177,8 @@ protected:
     QSGOpenGLAtlasTexture::Manager *m_glAtlasManager;
     QSGRhiAtlasTexture::Manager *m_rhiAtlasManager;
     QRhiCommandBuffer *m_currentFrameCommandBuffer;
+    QRhiRenderPassDescriptor *m_currentFrameRenderPass;
+    qreal m_currentDevicePixelRatio;
 };
 
 QT_END_NAMESPACE

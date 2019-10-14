@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="Retain.qml">Retain.qml</file>
+    </qresource>
+</RCC>

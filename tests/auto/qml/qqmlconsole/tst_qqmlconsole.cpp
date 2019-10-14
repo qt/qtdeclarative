@@ -95,16 +95,16 @@ void tst_qqmlconsole::logging()
     QTest::ignoreMessage(QtDebugMsg, "QVariant(CustomObject, MY OBJECT)");
     QTest::ignoreMessage(QtDebugMsg, "[[1,2,3,[2,2,2,2],4],[5,6,7,8]]");
 
-    QScopedPointer<QQmlContext> loggingContext(new QQmlContext(engine.rootContext()));
     QStringList stringList; stringList << QStringLiteral("Hello") << QStringLiteral("World");
-    loggingContext->setContextProperty("contextStringListProperty", stringList);
 
     CustomObject customObject;
     QVERIFY(QMetaType::registerDebugStreamOperator<CustomObject>());
-    loggingContext->setContextProperty("customObject", QVariant::fromValue(customObject));
 
     QQmlComponent component(&engine, testUrl);
-    QScopedPointer<QObject> object(component.create(loggingContext.data()));
+    QScopedPointer<QObject> object(component.createWithInitialProperties({
+            {"customObject", QVariant::fromValue(customObject)},
+            {"stringListProperty", stringList}
+    }));
     QVERIFY(object != nullptr);
 }
 

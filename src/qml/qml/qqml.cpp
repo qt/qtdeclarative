@@ -61,7 +61,7 @@ void qmlClearTypeRegistrations() // Declared in qqml.h
 //From qqml.h
 bool qmlProtectModule(const char *uri, int majVersion)
 {
-    return QQmlMetaType::protectModule(uri, majVersion);
+    return QQmlMetaType::protectModule(QString::fromUtf8(uri), majVersion);
 }
 
 //From qqml.h
@@ -79,6 +79,13 @@ int qmlTypeId(const char *uri, int versionMajor, int versionMinor, const char *q
 // From qqmlprivate.h
 QObject *QQmlPrivate::RegisterSingletonFunctor::operator()(QQmlEngine *qeng, QJSEngine *)
 {
+    if (!m_object) {
+        QQmlError error;
+        error.setDescription(QLatin1String("The registered singleton has already been deleted. Ensure that it outlives the engine."));
+        QQmlEnginePrivate::get(qeng)->warning(qeng, error);
+        return nullptr;
+    }
+
     if (qeng->thread() != m_object->thread()) {
         QQmlError error;
         error.setDescription(QLatin1String("Registered object must live in the same thread as the engine it was registered with"));
@@ -96,33 +103,188 @@ QObject *QQmlPrivate::RegisterSingletonFunctor::operator()(QQmlEngine *qeng, QJS
     return m_object;
 };
 
+static QVector<int> availableRevisions(const QMetaObject *metaObject)
+{
+    QVector<int> revisions;
+    if (!metaObject)
+        return revisions;
+    const int propertyOffset = metaObject->propertyOffset();
+    const int propertyCount = metaObject->propertyCount();
+    for (int propertyIndex = propertyOffset, propertyEnd = propertyOffset + propertyCount;
+         propertyIndex < propertyEnd; ++propertyIndex) {
+        const QMetaProperty property = metaObject->property(propertyIndex);
+        if (int revision = property.revision())
+            revisions.append(revision);
+    }
+    const int methodOffset = metaObject->methodOffset();
+    const int methodCount = metaObject->methodCount();
+    for (int methodIndex = methodOffset, methodEnd = methodOffset + methodCount;
+         methodIndex < methodEnd; ++methodIndex) {
+        const QMetaMethod method = metaObject->method(methodIndex);
+        if (int revision = method.revision())
+            revisions.append(revision);
+    }
+
+    // Need to also check parent meta objects, as their revisions are inherited.
+    if (const QMetaObject *superMeta = metaObject->superClass())
+        revisions += availableRevisions(superMeta);
+
+    return revisions;
+}
+
 /*
 This method is "over generalized" to allow us to (potentially) register more types of things in
 the future without adding exported symbols.
 */
 int QQmlPrivate::qmlregister(RegistrationType type, void *data)
 {
-    if (type == AutoParentRegistration) {
+    QQmlType dtype;
+    switch (type) {
+    case AutoParentRegistration:
         return QQmlMetaType::registerAutoParentFunction(
                 *reinterpret_cast<RegisterAutoParent *>(data));
-    } else if (type == QmlUnitCacheHookRegistration) {
+    case QmlUnitCacheHookRegistration:
         return QQmlMetaType::registerUnitCacheHook(
                 *reinterpret_cast<RegisterQmlUnitCacheHook *>(data));
-    }
+    case TypeAndRevisionsRegistration: {
+        const RegisterTypeAndRevisions &type = *reinterpret_cast<RegisterTypeAndRevisions *>(data);
+        const char *elementName = classElementName(type.classInfoMetaObject);
+        const bool creatable = (elementName != nullptr)
+                && boolClassInfo(type.classInfoMetaObject, "QML.Creatable", true);
 
-    QQmlType dtype;
-    if (type == TypeRegistration)
+        const QString noCreateReason = creatable
+                ? QString()
+                : QString::fromUtf8(classInfo(type.classInfoMetaObject, "QML.UncreatableReason"));
+        RegisterType revisionRegistration = {
+            1,
+            type.typeId,
+            type.listId,
+            creatable ? type.objectSize : 0,
+            nullptr,
+            noCreateReason,
+            type.uri,
+            type.versionMajor,
+            -1,
+            nullptr,
+            type.metaObject,
+            type.attachedPropertiesFunction,
+            type.attachedPropertiesMetaObject,
+            type.parserStatusCast,
+            type.valueSourceCast,
+            type.valueInterceptorCast,
+            type.extensionObjectCreate,
+            type.extensionMetaObject,
+            nullptr,
+            -1
+        };
+
+        const int added = intClassInfo(type.classInfoMetaObject, "QML.AddedInMinorVersion", 0);
+        const int removed = intClassInfo(type.classInfoMetaObject, "QML.RemovedInMinorVersion", -1);
+
+        auto revisions = availableRevisions(type.metaObject);
+        revisions.append(qMax(added, 0));
+        if (type.attachedPropertiesMetaObject)
+            revisions += availableRevisions(type.attachedPropertiesMetaObject);
+
+        std::sort(revisions.begin(), revisions.end());
+        const auto it = std::unique(revisions.begin(), revisions.end());
+        revisions.erase(it, revisions.end());
+
+        const bool typeWasRemoved = removed >= added;
+        for (int revision : revisions) {
+            if (revision < added)
+                continue;
+
+            // When removed, we still add revisions, but anonymous ones
+            if (typeWasRemoved && revision >= removed) {
+                revisionRegistration.elementName = nullptr;
+                revisionRegistration.create = nullptr;
+            } else {
+                revisionRegistration.elementName = elementName;
+                revisionRegistration.create = creatable ? type.create : nullptr;
+            }
+
+            // Equivalent of qmlRegisterRevision<T, revision>(...)
+            revisionRegistration.versionMinor = revision;
+            revisionRegistration.revision = revision;
+            revisionRegistration.customParser = type.customParserFactory();
+
+            qmlregister(TypeRegistration, &revisionRegistration);
+        }
+        break;
+    }
+    case SingletonAndRevisionsRegistration: {
+        const RegisterSingletonTypeAndRevisions &type
+                = *reinterpret_cast<RegisterSingletonTypeAndRevisions *>(data);
+        const char *elementName = classElementName(type.classInfoMetaObject);
+        RegisterSingletonType revisionRegistration = {
+            QmlCurrentSingletonTypeRegistrationVersion,
+            type.uri,
+            type.versionMajor,
+            -1,
+            elementName,
+
+            type.scriptApi,
+            nullptr,
+            type.instanceMetaObject,
+            type.typeId,
+            -1,
+
+            type.generalizedQobjectApi
+        };
+
+        const int added = intClassInfo(type.classInfoMetaObject, "QML.AddedInMinorVersion", 0);
+        const int removed = intClassInfo(type.classInfoMetaObject, "QML.RemovedInMinorVersion", -1);
+
+        auto revisions = availableRevisions(type.instanceMetaObject);
+        revisions.append(qMax(added, 0));
+
+        std::sort(revisions.begin(), revisions.end());
+        const auto it = std::unique(revisions.begin(), revisions.end());
+        revisions.erase(it, revisions.end());
+
+        const bool typeWasRemoved = removed >= added;
+        for (int revision : qAsConst(revisions)) {
+            if (revision < added)
+                continue;
+
+            // When removed, we still add revisions, but anonymous ones
+            if (typeWasRemoved && revision >= removed) {
+                revisionRegistration.typeName = nullptr;
+                revisionRegistration.scriptApi = nullptr;
+                revisionRegistration.generalizedQobjectApi = nullptr;
+            } else {
+                revisionRegistration.typeName = elementName;
+                revisionRegistration.scriptApi = type.scriptApi;
+                revisionRegistration.generalizedQobjectApi = type.generalizedQobjectApi;
+            }
+
+            // Equivalent of qmlRegisterRevision<T, revision>(...)
+            revisionRegistration.versionMinor = revision;
+            revisionRegistration.revision = revision;
+
+            qmlregister(SingletonRegistration, &revisionRegistration);
+        }
+        break;
+    }
+    case TypeRegistration:
         dtype = QQmlMetaType::registerType(*reinterpret_cast<RegisterType *>(data));
-    else if (type == InterfaceRegistration)
+        break;
+    case InterfaceRegistration:
         dtype = QQmlMetaType::registerInterface(*reinterpret_cast<RegisterInterface *>(data));
-    else if (type == SingletonRegistration)
+        break;
+    case SingletonRegistration:
         dtype = QQmlMetaType::registerSingletonType(*reinterpret_cast<RegisterSingletonType *>(data));
-    else if (type == CompositeRegistration)
+        break;
+    case CompositeRegistration:
         dtype = QQmlMetaType::registerCompositeType(*reinterpret_cast<RegisterCompositeType *>(data));
-    else if (type == CompositeSingletonRegistration)
+        break;
+    case CompositeSingletonRegistration:
         dtype = QQmlMetaType::registerCompositeSingletonType(*reinterpret_cast<RegisterCompositeSingletonType *>(data));
-    else
+        break;
+    default:
         return -1;
+    }
 
     if (!dtype.isValid())
         return -1;
@@ -147,6 +309,14 @@ void QQmlPrivate::qmlunregister(RegistrationType type, quintptr data)
     case CompositeRegistration:
     case CompositeSingletonRegistration:
         QQmlMetaType::unregisterType(data);
+        break;
+    case TypeAndRevisionsRegistration:
+    case SingletonAndRevisionsRegistration:
+        // Currently unnecessary. We'd need a special data structure to hold
+        // URI + majorVersion and then we'd iterate the minor versions, look up the
+        // associated QQmlType objects by uri/elementName/major/minor and qmlunregister
+        // each of them.
+        Q_UNREACHABLE();
         break;
     }
 }

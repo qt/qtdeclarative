@@ -74,6 +74,7 @@ class Q_AUTOTEST_EXPORT QQuickAnimatedImage : public QQuickImage
 
     // read-only for AnimatedImage
     Q_PROPERTY(QSize sourceSize READ sourceSize NOTIFY sourceSizeChanged)
+    QML_NAMED_ELEMENT(AnimatedImage)
 
 public:
     QQuickAnimatedImage(QQuickItem *parent=nullptr);
@@ -101,6 +102,7 @@ Q_SIGNALS:
     void playingChanged();
     void pausedChanged();
     void frameChanged();
+    void currentFrameChanged();
     void frameCountChanged();
     Q_REVISION(11) void speedChanged();
 

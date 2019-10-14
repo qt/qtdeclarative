@@ -211,9 +211,9 @@ class QSGRhiShaderEffectMaterialShader : public QSGMaterialRhiShader
 public:
     QSGRhiShaderEffectMaterialShader(const QSGRhiShaderEffectMaterial *material);
 
-    bool updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
-    void updateSampledImage(const RenderState &state, int binding, QSGTexture **texture, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
-    bool updateGraphicsPipelineState(const RenderState &state, GraphicsPipelineState *ps, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    void updateSampledImage(RenderState &state, int binding, QSGTexture **texture, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+    bool updateGraphicsPipelineState(RenderState &state, GraphicsPipelineState *ps, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
 QSGRhiShaderEffectMaterialShader::QSGRhiShaderEffectMaterialShader(const QSGRhiShaderEffectMaterial *material)
@@ -228,7 +228,7 @@ static inline QColor qsg_premultiply_color(const QColor &c)
     return QColor::fromRgbF(c.redF() * c.alphaF(), c.greenF() * c.alphaF(), c.blueF() * c.alphaF(), c.alphaF());
 }
 
-bool QSGRhiShaderEffectMaterialShader::updateUniformData(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+bool QSGRhiShaderEffectMaterialShader::updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     Q_UNUSED(oldMaterial);
     QSGRhiShaderEffectMaterial *mat = static_cast<QSGRhiShaderEffectMaterial *>(newMaterial);
@@ -381,7 +381,7 @@ bool QSGRhiShaderEffectMaterialShader::updateUniformData(const RenderState &stat
     return changed;
 }
 
-void QSGRhiShaderEffectMaterialShader::updateSampledImage(const RenderState &state, int binding, QSGTexture **texture,
+void QSGRhiShaderEffectMaterialShader::updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
                                                           QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     Q_UNUSED(oldMaterial);
@@ -426,7 +426,7 @@ void QSGRhiShaderEffectMaterialShader::updateSampledImage(const RenderState &sta
     *texture = mat->m_dummyTexture;
 }
 
-bool QSGRhiShaderEffectMaterialShader::updateGraphicsPipelineState(const RenderState &state, GraphicsPipelineState *ps,
+bool QSGRhiShaderEffectMaterialShader::updateGraphicsPipelineState(RenderState &state, GraphicsPipelineState *ps,
                                                                    QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     Q_UNUSED(state);

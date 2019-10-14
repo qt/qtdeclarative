@@ -233,7 +233,7 @@ bool QQuickCustomAffector::affectParticle(QQuickParticleData *d, qreal dt)
     return changed;
 }
 
-void QQuickCustomAffector::affectProperties(const QList<QQuickParticleData*> particles, qreal dt)
+void QQuickCustomAffector::affectProperties(const QList<QQuickParticleData*> &particles, qreal dt)
 {
     foreach (QQuickParticleData* d, particles)
         if ( affectParticle(d, dt) )
