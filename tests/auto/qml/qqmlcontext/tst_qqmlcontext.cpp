@@ -895,16 +895,27 @@ void tst_qqmlcontext::contextObjectHierarchy()
 
 void tst_qqmlcontext::destroyContextProperty()
 {
-    QQmlEngine engine;
-    QQmlContext context(&engine);
-
+    QScopedPointer<QQmlContext> context;
+    QScopedPointer<QObject> objectThatOutlivesEngine(new QObject);
     {
-        QObject object;
-        context.setContextProperty(QLatin1String("a"), &object);
-        QCOMPARE(qvariant_cast<QObject *>(context.contextProperty(QLatin1String("a"))), &object);
+        QQmlEngine engine;
+        context.reset(new QQmlContext(&engine));
+
+        {
+            QObject object;
+            context->setContextProperty(QLatin1String("a"), &object);
+            QCOMPARE(qvariant_cast<QObject *>(context->contextProperty(QLatin1String("a"))), &object);
+        }
+
+        QCOMPARE(qvariant_cast<QObject *>(context->contextProperty(QLatin1String("a"))), nullptr);
+        context->setContextProperty(QLatin1String("b"), objectThatOutlivesEngine.data());
     }
 
-    QCOMPARE(qvariant_cast<QObject *>(context.contextProperty(QLatin1String("a"))), nullptr);
+    // dropDestroyedObject() should not crash, even if the engine is gone.
+    objectThatOutlivesEngine.reset();
+
+    // We're not allowed to call context->contextProperty("b") anymore.
+    // TODO: Or are we?
 }
 
 QTEST_MAIN(tst_qqmlcontext)
