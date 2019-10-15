@@ -51,6 +51,8 @@
 #include <QtQml/qqmlextensioninterface.h>
 #include <QtQml/qqmlfile.h>
 
+#include <qtqml_tracepoints_p.h>
+
 #include <QtCore/qdir.h>
 #include <QtCore/qdiriterator.h>
 #include <QtCore/qfile.h>
@@ -436,6 +438,7 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QString &fileName)
 
 void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::SourceCodeData &d)
 {
+    Q_TRACE_SCOPE(QQmlCompiling, blob->url());
     QQmlCompilingProfiler prof(profiler(), blob);
 
     blob->m_inCallback = true;
@@ -455,6 +458,7 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::SourceCodeD
 
 void QQmlTypeLoader::setCachedUnit(QQmlDataBlob *blob, const QV4::CompiledData::Unit *unit)
 {
+    Q_TRACE_SCOPE(QQmlCompiling, blob->url());
     QQmlCompilingProfiler prof(profiler(), blob);
 
     blob->m_inCallback = true;

@@ -434,7 +434,7 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
 
     Function *function = frame->v4Function;
     Q_TRACE_SCOPE(QQmlV4_function_call, engine, function->name()->toQString(),
-                  function->compilationUnit->fileName(),
+                  function->executableCompilationUnit()->fileName(),
                   function->compiledFunction->location.line,
                   function->compiledFunction->location.column);
     Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling

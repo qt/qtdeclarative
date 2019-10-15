@@ -45,6 +45,8 @@
 
 #include <QtQml/qqmlengine.h>
 
+#include <qtqml_tracepoints_p.h>
+
 #ifdef DATABLOB_DEBUG
 #define ASSERT_CALLBACK() do { if (!m_typeLoader || !m_typeLoader->m_thread->isThisThread()) qFatal("QQmlDataBlob: An API call was made outside a callback"); } while (false)
 #else
@@ -559,6 +561,7 @@ void QQmlDataBlob::notifyAllWaitingOnMe()
 void QQmlDataBlob::notifyComplete(QQmlDataBlob *blob)
 {
     Q_ASSERT(blob->status() == Error || blob->status() == Complete);
+    Q_TRACE_SCOPE(QQmlCompiling, blob->url());
     QQmlCompilingProfiler prof(typeLoader()->profiler(), blob);
 
     m_inCallback = true;
