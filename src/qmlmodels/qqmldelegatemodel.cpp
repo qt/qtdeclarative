@@ -38,10 +38,10 @@
 ****************************************************************************/
 
 #include "qqmldelegatemodel_p_p.h"
-#include "qqmldelegatecomponent_p.h"
 
 #include <QtQml/qqmlinfo.h>
 
+#include <private/qqmlabstractdelegatecomponent_p.h>
 #include <private/qquickpackage_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include <private/qqmladaptormodel_p.h>

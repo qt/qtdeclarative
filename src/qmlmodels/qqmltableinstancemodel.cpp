@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qqmltableinstancemodel_p.h"
-#include "qqmldelegatecomponent_p.h"
+#include "qqmlabstractdelegatecomponent_p.h"
 
 #include <QtCore/QTimer>
 

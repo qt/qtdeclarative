@@ -54,7 +54,7 @@
 #include <qqml.h>
 #include <QRect>
 #include <QSize>
-#include <private/qqmlglobal_p.h>
+#include <private/qtquickglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -64,7 +64,7 @@ class QQuickWindow;
 class QScreen;
 
 
-class Q_AUTOTEST_EXPORT QQuickScreenInfo : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickScreenInfo : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString name READ name NOTIFY nameChanged)
@@ -85,10 +85,6 @@ class Q_AUTOTEST_EXPORT QQuickScreenInfo : public QObject
 
     Q_PROPERTY(int virtualX READ virtualX NOTIFY virtualXChanged REVISION 3)
     Q_PROPERTY(int virtualY READ virtualY NOTIFY virtualYChanged REVISION 3)
-
-    QML_NAMED_ELEMENT(ScreenInfo)
-    QML_ADDED_IN_MINOR_VERSION(3)
-    QML_UNCREATABLE("ScreenInfo can only be used via the attached property.")
 
 public:
     QQuickScreenInfo(QObject *parent = nullptr, QScreen *wrappedScreen = nullptr);
@@ -132,7 +128,7 @@ protected:
     QPointer<QScreen> m_screen;
 };
 
-class Q_AUTOTEST_EXPORT QQuickScreenAttached : public QQuickScreenInfo
+class Q_QUICK_PRIVATE_EXPORT QQuickScreenAttached : public QQuickScreenInfo
 {
     Q_OBJECT
     Q_PROPERTY(Qt::ScreenOrientations orientationUpdateMask READ orientationUpdateMask
@@ -162,11 +158,9 @@ private:
     bool m_updateMaskSet;
 };
 
-class Q_AUTOTEST_EXPORT QQuickScreen : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickScreen : public QObject
 {
     Q_OBJECT
-    QML_NAMED_ELEMENT(Screen)
-    QML_UNCREATABLE("Screen can only be used via the attached property.")
     QML_ATTACHED(QQuickScreenAttached)
 
 public:

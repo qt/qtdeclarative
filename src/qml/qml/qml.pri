@@ -3,6 +3,7 @@ SOURCES += \
     $$PWD/qqmldatablob.cpp \
     $$PWD/qqmldirdata.cpp \
     $$PWD/qqmlerror.cpp \
+    $$PWD/qqmlmoduleregistration.cpp \
     $$PWD/qqmlopenmetaobject.cpp \
     $$PWD/qqmlscriptblob.cpp \
     $$PWD/qqmlscriptdata.cpp \
@@ -71,6 +72,7 @@ HEADERS += \
     $$PWD/qqmldatablob_p.h \
     $$PWD/qqmldirdata_p.h \
     $$PWD/qqmlglobal_p.h \
+    $$PWD/qqmlmoduleregistration.h \
     $$PWD/qqmlopenmetaobject_p.h \
     $$PWD/qqmlscriptblob_p.h \
     $$PWD/qqmlscriptdata_p.h \

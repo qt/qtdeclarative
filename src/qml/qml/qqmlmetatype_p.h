@@ -188,6 +188,10 @@ public:
 
     static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
                       const QMetaObject *ignoreStart, const QMetaObject *ignoreEnd);
+
+    static void qmlInsertModuleRegistration(const QString &uri, int majorVersion,
+                                            void (*registerFunction)());
+    static void qmlRegisterModuleTypes(const QString &uri, int majorVersion);
 };
 
 Q_DECLARE_TYPEINFO(QQmlMetaType, Q_MOVABLE_TYPE);

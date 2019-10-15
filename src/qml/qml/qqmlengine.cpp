@@ -2233,7 +2233,7 @@ void QQmlEngine::setPluginPathList(const QStringList &paths)
 
   On failure and if non-null, the \a errors list will have any errors which occurred prepended to it.
 
-  The plugin has to be a Qt plugin which implements the QQmlExtensionPlugin interface.
+  The plugin has to be a Qt plugin which implements the QQmlEngineExtensionPlugin interface.
 */
 bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors)
 {

@@ -68,6 +68,7 @@ QT_BEGIN_NAMESPACE
 class QQmlScriptBlob;
 class QQmlQmldirData;
 class QQmlTypeData;
+class QQmlEngineExtensionInterface;
 class QQmlExtensionInterface;
 class QQmlProfiler;
 class QQmlTypeLoaderThread;
@@ -172,6 +173,7 @@ public:
     void loadWithCachedUnit(QQmlDataBlob *blob, const QV4::CompiledData::Unit *unit, Mode mode = PreferSynchronous);
 
     QQmlEngine *engine() const;
+    void initializeEngine(QQmlEngineExtensionInterface *, const char *);
     void initializeEngine(QQmlExtensionInterface *, const char *);
     void invalidate();
 
