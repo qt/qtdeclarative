@@ -62,11 +62,13 @@ static bool lint_file(const QString &filename, const bool silent, const bool war
     QQmlJS::Lexer lexer(&engine);
 
     QFileInfo info(filename);
-    bool isJavaScript = info.suffix().toLower() == QLatin1String("js");
+    const QString lowerSuffix = info.suffix().toLower();
+    const bool isJavaScript = (lowerSuffix == QLatin1String("js") || lowerSuffix == QLatin1String("mjs"));
+    const bool isESModule = lowerSuffix == QLatin1String("mjs");
     lexer.setCode(code, /*line = */ 1, /*qmlMode=*/ !isJavaScript);
     QQmlJS::Parser parser(&engine);
 
-    bool success = isJavaScript ? parser.parseProgram() : parser.parse();
+    bool success = isJavaScript ? (isESModule ? parser.parseModule() : parser.parseProgram()) : parser.parse();
 
     if (!success && !silent) {
         const auto diagnosticMessages = parser.diagnosticMessages();
