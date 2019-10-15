@@ -238,12 +238,13 @@ void QQuickToolTip::setTimeout(int timeout)
     if (d->timeout == timeout)
         return;
 
+    d->timeout = timeout;
+
     if (timeout <= 0)
         d->stopTimeout();
     else if (isVisible())
         d->startTimeout();
 
-    d->timeout = timeout;
     emit timeoutChanged();
 }
 
@@ -327,10 +328,14 @@ void QQuickToolTip::timerEvent(QTimerEvent *event)
     if (event->timerId() == d->timeoutTimer.timerId()) {
         d->stopTimeout();
         QQuickPopup::setVisible(false);
-    } else if (event->timerId() == d->delayTimer.timerId()) {
+        return;
+    }
+    if (event->timerId() == d->delayTimer.timerId()) {
         d->stopDelay();
         QQuickPopup::setVisible(true);
+        return;
     }
+    QQuickPopup::timerEvent(event);
 }
 
 #if QT_CONFIG(accessibility)

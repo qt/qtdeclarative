@@ -169,11 +169,11 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     // QtQuick.Templates 2.0 (originally introduced in Qt 5.7)
     qmlRegisterType<QQuickAbstractButton>(uri, 2, 0, "AbstractButton");
     qmlRegisterType<QQuickApplicationWindow>(uri, 2, 0, "ApplicationWindow");
-    qmlRegisterType<QQuickApplicationWindowAttached>();
+    qmlRegisterAnonymousType<QQuickApplicationWindowAttached>(uri, 2);
     qmlRegisterType<QQuickBusyIndicator>(uri, 2, 0, "BusyIndicator");
     qmlRegisterType<QQuickButton>(uri, 2, 0, "Button");
     qmlRegisterType<QQuickButtonGroup>(uri, 2, 0, "ButtonGroup");
-    qmlRegisterType<QQuickButtonGroupAttached>();
+    qmlRegisterAnonymousType<QQuickButtonGroupAttached>(uri, 2);
     qmlRegisterType<QQuickCheckBox>(uri, 2, 0, "CheckBox");
     qmlRegisterType<QQuickCheckDelegate>(uri, 2, 0, "CheckDelegate");
     qmlRegisterType<QQuickComboBox>(uri, 2, 0, "ComboBox");
@@ -187,7 +187,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickLabel>(uri, 2, 0, "Label");
     qmlRegisterType<QQuickMenu>(uri, 2, 0, "Menu");
     qmlRegisterType<QQuickMenuItem>(uri, 2, 0, "MenuItem");
-    qmlRegisterType<QQuickOverlay>();
+    qmlRegisterAnonymousType<QQuickOverlay>(uri, 2);
     qmlRegisterType<QQuickPage>(uri, 2, 0, "Page");
     qmlRegisterType<QQuickPageIndicator>(uri, 2, 0, "PageIndicator");
     qmlRegisterType<QQuickPane>(uri, 2, 0, "Pane");
@@ -196,33 +196,33 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickRadioButton>(uri, 2, 0, "RadioButton");
     qmlRegisterType<QQuickRadioDelegate>(uri, 2, 0, "RadioDelegate");
     qmlRegisterType<QQuickRangeSlider>(uri, 2, 0, "RangeSlider");
-    qmlRegisterType<QQuickRangeSliderNode>();
+    qmlRegisterAnonymousType<QQuickRangeSliderNode>(uri, 2);
     qmlRegisterType<QQuickScrollBar>(uri, 2, 0, "ScrollBar");
-    qmlRegisterType<QQuickScrollBarAttached>();
+    qmlRegisterAnonymousType<QQuickScrollBarAttached>(uri, 2);
     qmlRegisterType<QQuickScrollIndicator>(uri, 2, 0, "ScrollIndicator");
-    qmlRegisterType<QQuickScrollIndicatorAttached>();
+    qmlRegisterAnonymousType<QQuickScrollIndicatorAttached>(uri, 2);
     qmlRegisterType<QQuickSlider>(uri, 2, 0, "Slider");
     qmlRegisterType<QQuickSpinBox>(uri, 2, 0, "SpinBox");
-    qmlRegisterType<QQuickSpinButton>();
+    qmlRegisterAnonymousType<QQuickSpinButton>(uri, 2);
     qmlRegisterType<QQuickStackView>(uri, 2, 0, "StackView");
-    qmlRegisterType<QQuickStackViewAttached>();
-    qmlRegisterType<QQuickSwipe>();
+    qmlRegisterAnonymousType<QQuickStackViewAttached>(uri, 2);
+    qmlRegisterAnonymousType<QQuickSwipe>(uri, 2);
     qmlRegisterType<QQuickSwipeDelegate>(uri, 2, 0, "SwipeDelegate");
     qmlRegisterType<QQuickSwipeView>(uri, 2, 0, "SwipeView");
-    qmlRegisterType<QQuickSwipeViewAttached>();
+    qmlRegisterAnonymousType<QQuickSwipeViewAttached>(uri, 2);
     qmlRegisterType<QQuickSwitch>(uri, 2, 0, "Switch");
     qmlRegisterType<QQuickSwitchDelegate>(uri, 2, 0, "SwitchDelegate");
     qmlRegisterType<QQuickTabBar>(uri, 2, 0, "TabBar");
     qmlRegisterType<QQuickTabButton>(uri, 2, 0, "TabButton");
     qmlRegisterType<QQuickTextArea>(uri, 2, 0, "TextArea");
-    qmlRegisterType<QQuickTextAreaAttached>();
+    qmlRegisterAnonymousType<QQuickTextAreaAttached>(uri, 2);
     qmlRegisterType<QQuickTextField>(uri, 2, 0, "TextField");
     qmlRegisterType<QQuickToolBar>(uri, 2, 0, "ToolBar");
     qmlRegisterType<QQuickToolButton>(uri, 2, 0, "ToolButton");
     qmlRegisterType<QQuickToolTip>(uri, 2, 0, "ToolTip");
-    qmlRegisterType<QQuickToolTipAttached>();
+    qmlRegisterAnonymousType<QQuickToolTipAttached>(uri, 2);
 #if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
-    qmlRegisterType<QQuickTumblerAttached>();
+    qmlRegisterAnonymousType<QQuickTumblerAttached>(uri, 2);
     qmlRegisterType<QQuickTumbler>(uri, 2, 0, "Tumbler");
 #endif
 
@@ -241,7 +241,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickContainer, 1>(uri, 2, 1, "Container");
     qmlRegisterType<QQuickDialog>(uri, 2, 1, "Dialog");
     qmlRegisterType<QQuickDialogButtonBox>(uri, 2, 1, "DialogButtonBox");
-    qmlRegisterType<QQuickDialogButtonBoxAttached>();
+    qmlRegisterAnonymousType<QQuickDialogButtonBoxAttached>(uri, 2);
     qmlRegisterType<QQuickMenuSeparator>(uri, 2, 1, "MenuSeparator");
     qmlRegisterType<QQuickPage, 1>(uri, 2, 1, "Page");
     qmlRegisterType<QQuickPopup, 1>(uri, 2, 1, "Popup");
@@ -281,7 +281,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     // make revisioned properties available to their subclasses (synced with Qt 5.9)
     qmlRegisterRevision<QQuickText, 9>(uri, 2, 2);
     qmlRegisterRevision<QQuickTextInput, 9>(uri, 2, 2);
-    qmlRegisterRevision<QQuickWindowQmlImpl, 2>(uri, 2, 2);
+    qmlRegisterRevision<QQuickWindowQmlImpl, 3>(uri, 2, 2);
 
     // QtQuick.Templates 2.3 (new types and revisions in Qt 5.10)
     qmlRegisterType<QQuickAbstractButton, 3>(uri, 2, 3, "AbstractButton");
@@ -293,7 +293,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickContainer, 3>(uri, 2, 3, "Container");
     qmlRegisterType<QQuickDialog, 3>(uri, 2, 3, "Dialog");
     qmlRegisterType<QQuickDialogButtonBox, 3>(uri, 2, 3, "DialogButtonBox");
-    qmlRegisterType<QQuickIcon>();
+    qmlRegisterAnonymousType<QQuickIcon>(uri, 2);
     qRegisterMetaType<QQuickIcon>();
     qmlRegisterType<QQuickLabel, 3>(uri, 2, 3, "Label");
     qmlRegisterType<QQuickMenu, 3>(uri, 2, 3, "Menu");
@@ -301,7 +301,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickMenuBarItem>(uri, 2, 3, "MenuBarItem");
     qmlRegisterType<QQuickMenuItem, 3>(uri, 2, 3, "MenuItem");
     qmlRegisterUncreatableType<QQuickOverlay>(uri, 2, 3, "Overlay", QStringLiteral("Overlay is only available as an attached property."));
-    qmlRegisterType<QQuickOverlayAttached>();
+    qmlRegisterAnonymousType<QQuickOverlayAttached>(uri, 2);
     qmlRegisterType<QQuickPopup, 3>(uri, 2, 3, "Popup");
     qmlRegisterType<QQuickRangeSlider, 3>(uri, 2, 3, "RangeSlider");
     qmlRegisterType<QQuickScrollBar, 3>(uri, 2, 3, "ScrollBar");
@@ -337,7 +337,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickLabel, 5>(uri, 2, 5, "Label");
     qmlRegisterType<QQuickPage, 5>(uri, 2, 5, "Page");
     qmlRegisterType<QQuickPopup, 5>(uri, 2, 5, "Popup");
-    qmlRegisterType<QQuickPopupAnchors>();
+    qmlRegisterAnonymousType<QQuickPopupAnchors>(uri, 2);
     qmlRegisterType<QQuickRangeSlider, 5>(uri, 2, 5, "RangeSlider");
     qmlRegisterType<QQuickSlider, 5>(uri, 2, 5, "Slider");
     qmlRegisterType<QQuickSpinBox, 5>(uri, 2, 5, "SpinBox");
@@ -347,10 +347,10 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 
     // QtQuick.Templates 2.13 (new types and revisions in Qt 5.13)
     qmlRegisterType<QQuickSplitView>(uri, 2, 13, "SplitView");
-    qmlRegisterType<QQuickSplitViewAttached>();
+    qmlRegisterAnonymousType<QQuickSplitViewAttached>(uri, 2);
     qmlRegisterUncreatableType<QQuickSplitHandleAttached>(uri, 2, 13, "SplitHandle",
         QStringLiteral("SplitHandle is only available as an attached property."));
-    qmlRegisterType<QQuickSplitHandleAttached>();
+    qmlRegisterAnonymousType<QQuickSplitHandleAttached>(uri, 2);
 
     // QtQuick.Templates 2.14 (new types and revisions in Qt 5.14)
     qmlRegisterType<QQuickComboBox, 14>(uri, 2, 14, "ComboBox");

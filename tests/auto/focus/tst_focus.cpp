@@ -232,7 +232,9 @@ void tst_focus::policy()
     QVERIFY(!control->hasActiveFocus());
 
     // Qt::WheelFocus
-    QWheelEvent wheelEvent(QPoint(control->width() / 2, control->height() / 2), 10, Qt::NoButton, Qt::NoModifier);
+    QWheelEvent wheelEvent(QPointF(control->width() / 2, control->height() / 2), QPointF(),
+                           QPoint(), QPoint(0, 10), Qt::NoButton, Qt::NoModifier,
+                           Qt::NoScrollPhase, false);
     QGuiApplication::sendEvent(control, &wheelEvent);
     QVERIFY(!control->hasActiveFocus());
     QVERIFY(!control->hasVisualFocus());
@@ -403,7 +405,9 @@ void tst_focus::scope()
     QVERIFY(control->hasActiveFocus());
 
     // Qt::WheelFocus
-    QWheelEvent wheelEvent(QPoint(control->width() / 2, control->height() / 2), 10, Qt::NoButton, Qt::NoModifier);
+    QWheelEvent wheelEvent(QPointF(control->width() / 2, control->height() / 2), QPointF(),
+                           QPoint(), QPoint(0, 10), Qt::NoButton, Qt::NoModifier,
+                           Qt::NoScrollPhase, false);
     QGuiApplication::sendEvent(control, &wheelEvent);
     QVERIFY(!child->hasActiveFocus());
     QVERIFY(control->hasActiveFocus());

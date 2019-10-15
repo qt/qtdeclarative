@@ -126,11 +126,6 @@ bool QQuickOverlayPrivate::startDrag(QEvent *event, const QPointF &pos)
     return false;
 }
 
-static bool isTouchEvent(QEvent *event)
-{
-    return event->type() == QEvent::TouchBegin || event->type() == QEvent::TouchUpdate || event->type() == QEvent::TouchEnd;
-}
-
 bool QQuickOverlayPrivate::handlePress(QQuickItem *source, QEvent *event, QQuickPopup *target)
 {
     if (target) {
@@ -139,7 +134,18 @@ bool QQuickOverlayPrivate::handlePress(QQuickItem *source, QEvent *event, QQuick
             return true;
         }
         return false;
-    } else if (!mouseGrabberPopup || isTouchEvent(event)) {
+    }
+
+    switch (event->type()) {
+    default: {
+        if (mouseGrabberPopup)
+            break;
+#if QT_CONFIG(quicktemplates2_multitouch)
+        Q_FALLTHROUGH();
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
+#endif
         // allow non-modal popups to close themselves,
         // and non-dimming modal popups to block the event
         const auto popups = stackingOrderPopups();
@@ -149,6 +155,8 @@ bool QQuickOverlayPrivate::handlePress(QQuickItem *source, QEvent *event, QQuick
                 return true;
             }
         }
+        break;
+    }
     }
 
     event->ignore();

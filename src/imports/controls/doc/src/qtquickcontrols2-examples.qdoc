@@ -31,7 +31,7 @@
     \keyword Qt Quick Controls Examples
     \title Qt Quick Controls Examples
     \keyword Qt Quick Controls 2 Examples
-    \brief A collection of examples for \l {Qt Quick Controls 2}
+    \brief A collection of examples for \l {Qt Quick Controls}
 
-    These examples demonstrate creating user interfaces using \l {Qt Quick Controls 2}.
+    These examples demonstrate creating user interfaces using \l {Qt Quick Controls}.
 */

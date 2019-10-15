@@ -89,6 +89,8 @@ private slots:
     void disabledPalette();
     void disabledParentPalette();
     void countChanged();
+    void toolTipCrashOnClose();
+    void setOverlayParentToNull();
 };
 
 void tst_QQuickPopup::initTestCase()
@@ -494,7 +496,7 @@ void tst_QQuickPopup::closePolicy()
     QTRY_VERIFY(popup->isOpened());
 
     // press outside popup and its parent
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1), 50);
     if (closePolicy.testFlag(QQuickPopup::CloseOnPressOutside) || closePolicy.testFlag(QQuickPopup::CloseOnPressOutsideParent))
         QTRY_VERIFY(!popup->isVisible());
     else
@@ -741,7 +743,9 @@ void tst_QQuickPopup::wheel_data()
 static bool sendWheelEvent(QQuickItem *item, const QPoint &localPos, int degrees)
 {
     QQuickWindow *window = item->window();
-    QWheelEvent wheelEvent(localPos, item->window()->mapToGlobal(localPos), QPoint(0, 0), QPoint(0, 8 * degrees), 0, Qt::Vertical, Qt::NoButton, 0);
+    QWheelEvent wheelEvent(localPos, item->window()->mapToGlobal(localPos), QPoint(0, 0),
+                           QPoint(0, 8 * degrees), Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase,
+                           false);
     QSpontaneKeyEvent::setSpontaneous(&wheelEvent);
     return qGuiApp->notify(window, &wheelEvent);
 }
@@ -1187,6 +1191,46 @@ void tst_QQuickPopup::countChanged()
     QVERIFY(window->setProperty("isModel1", false));
     QTRY_COMPARE(window->property("count").toInt(), 2);
 }
+
+// QTBUG-73243
+void tst_QQuickPopup::toolTipCrashOnClose()
+{
+    QQuickApplicationHelper helper(this, "toolTipCrashOnClose.qml");
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    // TODO: Using ignoreMessage() fails in CI with macOS for release builds,
+    // so for now we let the warning through.
+//    QTest::ignoreMessage(QtWarningMsg, "ShaderEffectSource: 'recursive' must be set to true when rendering recursively.");
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QTest::mouseMove(window, QPoint(window->width() / 2, window->height() / 2));
+    QTRY_VERIFY(window->property("toolTipOpened").toBool());
+
+    QVERIFY(window->close());
+    // Shouldn't crash.
+}
+
+void tst_QQuickPopup::setOverlayParentToNull()
+{
+    QQuickApplicationHelper helper(this, "toolTipCrashOnClose.qml");
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    // TODO: Using ignoreMessage() fails in CI with macOS for release builds,
+    // so for now we let the warning through.
+//    QTest::ignoreMessage(QtWarningMsg, "ShaderEffectSource: 'recursive' must be set to true when rendering recursively.");
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QVERIFY(QMetaObject::invokeMethod(window, "nullifyOverlayParent"));
+
+    QTest::mouseMove(window, QPoint(window->width() / 2, window->height() / 2));
+    QTRY_VERIFY(window->property("toolTipOpened").toBool());
+
+    QVERIFY(window->close());
+    // While nullifying the overlay parent doesn't make much sense, it shouldn't crash.
+}
+
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)
 
 #include "tst_qquickpopup.moc"

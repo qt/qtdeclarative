@@ -31,7 +31,7 @@
     \ingroup qtquickcontrols2-guidelines
     \brief Guidelines for delegate controls
 
-    Qt Quick Controls 2 offers a selection of controls that are used as
+    Qt Quick Controls offers a selection of controls that are used as
     delegates in views.
 
     \annotatedlist qtquickcontrols2-delegates
@@ -74,6 +74,6 @@
 
     \section1 Related Information
     \list
-    \li \l {Qt Quick Controls 2 Guidelines}
+    \li \l {Qt Quick Controls Guidelines}
     \endlist
 */

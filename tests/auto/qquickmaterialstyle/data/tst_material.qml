@@ -715,39 +715,4 @@ TestCase {
 
         control.destroy()
     }
-
-    Component {
-        id: testResizeBackground
-        Item {
-            width: 200
-            height: 200
-            property alias textArea: textArea
-            ScrollView {
-                anchors.fill: parent
-                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-                TextArea {
-                    id: textArea
-                    wrapMode : TextEdit.WordWrap
-                    readOnly: false
-                    selectByMouse: true
-                    focus: true
-                    text: "test message"
-                }
-            }
-        }
-    }
-
-    function test_resize_background() {
-        var control = testCase.createTemporaryObject(testResizeBackground, testCase)
-        compare(control.textArea.background.height, 1)
-        compare(control.textArea.background.width, control.width)
-        control.width = 400
-        control.height = 400
-        compare(control.textArea.background.height, 1)
-        compare(control.textArea.background.width, control.width)
-        control.width = 200
-        control.height = 200
-        compare(control.textArea.background.height, 1)
-        compare(control.textArea.background.width, control.width)
-    }
 }

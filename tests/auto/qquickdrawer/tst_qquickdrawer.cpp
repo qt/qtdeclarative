@@ -350,7 +350,8 @@ void tst_QQuickDrawer::position()
     QVERIFY(drawer);
     drawer->setEdge(edge);
 
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, press);
+    // Give it some time (50 ms) before the press to avoid flakiness on OpenSUSE: QTBUG-77946
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, press, 50);
     QTest::mouseMove(window, from);
     QTest::mouseMove(window, to);
     QCOMPARE(drawer->position(), position);
@@ -403,7 +404,8 @@ void tst_QQuickDrawer::dragMargin()
     int leftX = qMax<int>(0, dragMargin);
     int leftDistance = startDragDistance + drawer->width() * 0.45;
     QVERIFY(leftDistance > QGuiApplication::styleHints()->startDragDistance());
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(leftX, drawer->height() / 2));
+    // Give it some time (50 ms) before the press to avoid flakiness on OpenSUSE: QTBUG-77946
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(leftX, drawer->height() / 2), 50);
     QTest::mouseMove(window, QPoint(leftX + startDragDistance, drawer->height() / 2));
     QTest::mouseMove(window, QPoint(leftX + leftDistance, drawer->height() / 2));
     QCOMPARE(drawer->position(), dragFromLeft);
@@ -613,7 +615,9 @@ void tst_QQuickDrawer::wheel_data()
 static bool sendWheelEvent(QQuickItem *item, const QPoint &localPos, int degrees)
 {
     QQuickWindow *window = item->window();
-    QWheelEvent wheelEvent(localPos, item->window()->mapToGlobal(localPos), QPoint(0, 0), QPoint(0, 8 * degrees), 0, Qt::Vertical, Qt::NoButton, 0);
+    QWheelEvent wheelEvent(localPos, item->window()->mapToGlobal(localPos), QPoint(0, 0),
+                           QPoint(0, 8 * degrees), Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase,
+                           false);
     QSpontaneKeyEvent::setSpontaneous(&wheelEvent);
     return qGuiApp->notify(window, &wheelEvent);
 }

@@ -31,7 +31,7 @@
     \ingroup qtquickcontrols2-guidelines
     \brief Guidelines for container controls
 
-    Qt Quick Controls 2 offers a selection of container-like controls.
+    Qt Quick Controls offers a selection of container-like controls.
 
     \annotatedlist qtquickcontrols2-containers
 

@@ -187,7 +187,7 @@ public:
     QQuickPopup::ClosePolicy closePolicy = DefaultClosePolicy;
     QQuickItem *parentItem = nullptr;
     QQuickItem *dimmer = nullptr;
-    QQuickWindow *window = nullptr;
+    QPointer<QQuickWindow> window;
     QQuickTransition *enter = nullptr;
     QQuickTransition *exit = nullptr;
     QQuickPopupItem *popupItem = nullptr;

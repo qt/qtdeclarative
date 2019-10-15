@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
     menus in a menu bar can be accessed using \l menuAt().
 
     \sa {Customizing MenuBar}, Menu, MenuBarItem, {Menu Controls},
-        {Focus Management in Qt Quick Controls 2}
+        {Focus Management in Qt Quick Controls}
 */
 
 QQuickItem *QQuickMenuBarPrivate::beginCreateItem()

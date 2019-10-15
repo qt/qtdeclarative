@@ -28,13 +28,13 @@
 /*!
 \example chattutorial
 \keyword Qt Quick Controls - Chat Tutorial
-    \title Qt Quick Controls - Chat Tutorial
-    \keyword Qt Quick Controls 2 - Chat Tutorial
-\brief Tutorial about writing a basic chat client using Qt Quick Controls 2.
+\title Qt Quick Controls - Chat Tutorial
+\keyword Qt Quick Controls 2 - Chat Tutorial
+\brief Tutorial about writing a basic chat client using Qt Quick Controls.
 \ingroup qtquickcontrols2-examples
 
 This tutorial shows how to write a basic chat application using Qt Quick
-Controls 2. It will also explain how to integrate an SQL database into a Qt
+Controls. It will also explain how to integrate an SQL database into a Qt
 application.
 
 \section1 Chapter 1: Setting Up
@@ -88,7 +88,7 @@ arguments provided by the user.
 Next, the QML engine is created. \l QQmlApplicationEngine is a convenient
 wrapper over QQmlEngine, providing the \l {QQmlApplicationEngine::load}{load()}
 function to easily load QML for an application. It also adds some convenience
-for using \l {Using File Selectors with Qt Quick Controls 2}{file selectors}.
+for using \l {Using File Selectors with Qt Quick Controls}{file selectors}.
 
 Once we've set up things in C++, we can move on to the user interface in QML.
 
@@ -105,7 +105,7 @@ access to graphical primitives such as \l Item, \l Rectangle, \l Text, and so
 on.
 For the full list of types, see the \l {Qt Quick QML Types} documentation.
 
-Next, import the Qt Quick Controls 2 module. Amongst other things, this
+Next, import the Qt Quick Controls module. Amongst other things, this
 provides access to \l ApplicationWindow, which will replace the existing
 root type, \c Window:
 
@@ -156,7 +156,7 @@ property.
 
 Then, we assign a \l Label to its \l {Page::}{header} property. Label extends
 the primitive \l Text item from the Qt Quick module by adding
-\l{Styling Qt Quick Controls 2}{styling} and \l {Control::}{font} inheritance.
+\l{Styling Qt Quick Controls}{styling} and \l {Control::}{font} inheritance.
 This means that a Label can look different depending on which style is in use,
 and can also propagate its pixel size to its children.
 
@@ -228,7 +228,7 @@ In this chapter, we'll explain how to create a list of interactive items using
 
 ListView comes from the Qt Quick module, and displays a list of items
 populated from a \l {Models and Views in Qt Quick}{model}. ItemDelegate comes from
-the Qt Quick Controls 2 module, and provides a standard view item for use in views
+the Qt Quick Controls module, and provides a standard view item for use in views
 and controls such as ListView and \l ComboBox. For example, each ItemDelegate
 can display text, be checked on and off, and react to mouse clicks.
 
@@ -746,7 +746,7 @@ text field to make way for future input.
 
 \section1 Chapter 5: Styling
 
-Styles in Qt Quick Controls 2 are designed to work on any platform. In this
+Styles in Qt Quick Controls are designed to work on any platform. In this
 chapter, we'll do some minor visual tweaks to make sure our application
 looks good when run with the \l {Default Style}{Default},
 \l {Material Style}{Material}, and \l {Universal Style}{Universal} styles.
@@ -784,8 +784,8 @@ Material style plugin \e must be deployed with the application, even if the
 target device doesn't use it, otherwise the QML engine will fail to find the
 import.
 
-Instead, it is better to rely on Qt Quick Controls 2's built-in support for
-\l {Using File Selectors with Qt Quick Controls 2}{style-based file selectors}.
+Instead, it is better to rely on Qt Quick Controls's built-in support for
+\l {Using File Selectors with Qt Quick Controls}{style-based file selectors}.
 To do this, we must move the ToolBar out into its own file. We'll call it
 \c ChatToolBar.qml. This will be the \e "default" version of the file, which
 means that it will be used when the \l {Default Style}{Default style} is in
@@ -796,7 +796,7 @@ use. Here's the new file:
 \printuntil }
 
 As we only use the ToolBar type within this file, we only need the
-Qt Quick Controls 2 import. The code itself has not changed from how it was
+Qt Quick Controls import. The code itself has not changed from how it was
 in \c ContactPage.qml, which is how it should be; for the default version
 of the file, nothing needs to be different.
 
@@ -876,7 +876,7 @@ After building and running the application, you should see these results:
 \section1 Summary
 
 In this tutorial, we've taken you through the following steps of writing a
-basic application using Qt Quick Controls 2:
+basic application using Qt Quick Controls:
 
 \list
 \li Creating a new project using Qt Creator.
