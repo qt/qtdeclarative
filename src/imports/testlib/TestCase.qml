@@ -1631,7 +1631,7 @@ Item {
 
             TestCase {
                 name: "ItemTests"
-                when: area.pressed
+                when: windowShown
                 id: test1
 
                 function test_touch() {
