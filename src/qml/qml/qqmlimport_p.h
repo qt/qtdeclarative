@@ -236,6 +236,7 @@ private:
     bool importStaticPlugin(QObject *instance, const QString &basePath, const QString &uri,
                           const QString &typeNamespace, int vmaj, QList<QQmlError> *errors);
     void clearDirCache();
+    void finalizePlugin(QObject *instance, const QString &path, const QString &uri);
 
     struct QmldirCache {
         int versionMajor;

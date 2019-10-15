@@ -138,7 +138,13 @@ void QQmlTypeLoaderThread::callDownloadProgressChanged(QQmlDataBlob *b, qreal p)
 void QQmlTypeLoaderThread::initializeEngine(QQmlExtensionInterface *iface,
                                             const char *uri)
 {
-    callMethodInMain(&This::initializeEngineMain, iface, uri);
+    callMethodInMain(&This::initializeExtensionMain, iface, uri);
+}
+
+void QQmlTypeLoaderThread::initializeEngine(QQmlEngineExtensionInterface *iface,
+                                            const char *uri)
+{
+    callMethodInMain(&This::initializeEngineExtensionMain, iface, uri);
 }
 
 void QQmlTypeLoaderThread::shutdownThread()
@@ -188,7 +194,14 @@ void QQmlTypeLoaderThread::callDownloadProgressChangedMain(QQmlDataBlob *b, qrea
     b->release();
 }
 
-void QQmlTypeLoaderThread::initializeEngineMain(QQmlExtensionInterface *iface,
+void QQmlTypeLoaderThread::initializeExtensionMain(QQmlExtensionInterface *iface,
+                                                const char *uri)
+{
+    Q_ASSERT(m_loader->engine()->thread() == QThread::currentThread());
+    iface->initializeEngine(m_loader->engine(), uri);
+}
+
+void QQmlTypeLoaderThread::initializeEngineExtensionMain(QQmlEngineExtensionInterface *iface,
                                                 const char *uri)
 {
     Q_ASSERT(m_loader->engine()->thread() == QThread::currentThread());

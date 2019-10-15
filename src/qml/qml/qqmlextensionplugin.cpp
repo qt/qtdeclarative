@@ -43,10 +43,11 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \since 5.0
+    \since 5.14
     \inmodule QtQml
-    \class QQmlExtensionPlugin
-    \brief The QQmlExtensionPlugin class provides an abstract base for custom QML extension plugins.
+    \class QQmlEngineExtensionPlugin
+    \brief The QQmlEngineExtensionPlugin class provides an abstract base for custom QML extension
+           plugins.
 
     \ingroup plugins
 
@@ -60,6 +61,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \fn void QQmlExtensionPlugin::registerTypes(const char *uri)
+    \internal
 
     Registers the QML types in the given \a uri. Subclasses should implement
     this to call qmlRegisterType() for all types which are provided by the extension
@@ -70,11 +72,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    Constructs a QML extension plugin with the given \a parent.
-
-    Note that this constructor is invoked automatically by the
-    Q_PLUGIN_METADATA() macro, so there is no need for calling it
-    explicitly.
+    \internal
 */
 QQmlExtensionPlugin::QQmlExtensionPlugin(QObject *parent)
     : QObject(*(new QQmlExtensionPluginPrivate), parent)
@@ -82,14 +80,31 @@ QQmlExtensionPlugin::QQmlExtensionPlugin(QObject *parent)
 }
 
 /*!
-  \internal
+    Constructs a QML extension plugin with the given \a parent.
+
+    Note that this constructor is invoked automatically by the
+    Q_PLUGIN_METADATA() macro, so there is no need for calling it
+    explicitly.
  */
-QQmlExtensionPlugin::~QQmlExtensionPlugin()
+QQmlEngineExtensionPlugin::QQmlEngineExtensionPlugin(QObject *parent)
+    : QObject(parent)
 {
 }
 
+
+/*!
+  \internal
+ */
+QQmlExtensionPlugin::~QQmlExtensionPlugin() = default;
+
+/*!
+  \internal
+ */
+QQmlEngineExtensionPlugin::~QQmlEngineExtensionPlugin() = default;
+
 /*!
     \since 5.1
+    \internal
     \brief Returns the URL of the directory from which the extension is loaded.
 
     This is useful when the plugin also needs to load QML files or other
@@ -102,14 +117,23 @@ QUrl QQmlExtensionPlugin::baseUrl() const
 }
 
 /*!
-    \fn void QQmlExtensionPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
+    \internal
+*/
+
+void QQmlExtensionPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
+{
+    Q_UNUSED(engine);
+    Q_UNUSED(uri);
+}
+
+/*!
+    \fn void QQmlEngineExtensionPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 
     Initializes the extension from the \a uri using the \a engine. Here an application
     plugin might, for example, expose some data or objects to QML,
     as context properties on the engine's root context.
-*/
-
-void QQmlExtensionPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
+ */
+void QQmlEngineExtensionPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     Q_UNUSED(engine);
     Q_UNUSED(uri);
@@ -123,6 +147,12 @@ void QQmlExtensionPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 
 /*!
   \class QQmlTypesExtensionInterface
+  \internal
+  \inmodule QtQml
+*/
+
+/*!
+  \class QQmlEngineExtensionInterface
   \internal
   \inmodule QtQml
 */

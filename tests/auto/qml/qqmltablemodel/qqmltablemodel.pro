@@ -7,4 +7,4 @@ include (../../shared/util.pri)
 
 TESTDATA = data/*
 
-QT += core gui qml-private qml quick-private quick testlib qmlmodels-private
+QT += core gui qml-private qml quick-private quick testlib

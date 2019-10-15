@@ -65,6 +65,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlDataBlob;
 class QQmlTypeLoader;
+class QQmlEngineExtensionInterface;
 class QQmlExtensionInterface;
 
 class QQmlTypeLoaderThread : public QQmlThread
@@ -86,6 +87,7 @@ public:
     void callCompleted(QQmlDataBlob *b);
     void callDownloadProgressChanged(QQmlDataBlob *b, qreal p);
     void initializeEngine(QQmlExtensionInterface *, const char *);
+    void initializeEngine(QQmlEngineExtensionInterface *, const char *);
 
 protected:
     void shutdownThread() override;
@@ -96,7 +98,8 @@ private:
     void loadWithCachedUnitThread(QQmlDataBlob *b, const QV4::CompiledData::Unit *unit);
     void callCompletedMain(QQmlDataBlob *b);
     void callDownloadProgressChangedMain(QQmlDataBlob *b, qreal p);
-    void initializeEngineMain(QQmlExtensionInterface *iface, const char *uri);
+    void initializeExtensionMain(QQmlExtensionInterface *iface, const char *uri);
+    void initializeEngineExtensionMain(QQmlEngineExtensionInterface *iface, const char *uri);
 
     QQmlTypeLoader *m_loader;
 #if QT_CONFIG(qml_network)

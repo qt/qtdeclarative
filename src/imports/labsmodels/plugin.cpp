@@ -42,6 +42,14 @@
 
 #include <private/qqmlmodelsmodule_p.h>
 
+#if QT_CONFIG(qml_table_model)
+#include "qqmltablemodel_p.h"
+#include "qqmltablemodelcolumn_p.h"
+#endif
+#if QT_CONFIG(qml_delegate_model)
+#include "qqmldelegatecomponent_p.h"
+#endif
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -70,7 +78,13 @@ public:
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.qmlmodels"));
-        QQmlModelsModule::defineLabsModule();
+
+#if QT_CONFIG(qml_delegate_model)
+        qmlRegisterTypesAndRevisions<QQmlDelegateChooser, QQmlDelegateChoice>(uri, 1);
+#endif
+#if QT_CONFIG(qml_table_model)
+        qmlRegisterTypesAndRevisions<QQmlTableModel, QQmlTableModelColumn>(uri, 1);
+#endif
 
         qmlRegisterModule(uri, 1, 0);
     }

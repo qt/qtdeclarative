@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLDELEGATECOMPONENT_P_H
-#define QQMLDELEGATECOMPONENT_P_H
+#ifndef QQMLABSTRACTDELEGATECOMPONENT_P_H
+#define QQMLABSTRACTDELEGATECOMPONENT_P_H
 
 //
 //  W A R N I N G
@@ -52,6 +52,7 @@
 //
 
 #include <private/qtqmlmodelsglobal_p.h>
+#include <private/qqmlcomponentattached_p.h>
 #include <qqmlcomponent.h>
 
 QT_REQUIRE_CONFIG(qml_delegate_model);
@@ -59,7 +60,6 @@ QT_REQUIRE_CONFIG(qml_delegate_model);
 QT_BEGIN_NAMESPACE
 
 // TODO: consider making QQmlAbstractDelegateComponent public API
-class QQmlAbstractDelegateComponentPrivate;
 class QQmlAdaptorModel;
 class Q_QMLMODELS_PRIVATE_EXPORT QQmlAbstractDelegateComponent : public QQmlComponent
 {
@@ -78,83 +78,8 @@ signals:
 
 protected:
     QVariant value(QQmlAdaptorModel *adaptorModel,int row, int column, const QString &role) const;
-
-private:
-    Q_DECLARE_PRIVATE(QQmlAbstractDelegateComponent)
-    Q_DISABLE_COPY(QQmlAbstractDelegateComponent)
-};
-
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateChoice : public QObject
-{
-    Q_OBJECT
-    Q_PROPERTY(QVariant roleValue READ roleValue WRITE setRoleValue NOTIFY roleValueChanged)
-    Q_PROPERTY(int row READ row WRITE setRow NOTIFY rowChanged)
-    Q_PROPERTY(int index READ row WRITE setRow NOTIFY indexChanged)
-    Q_PROPERTY(int column READ column WRITE setColumn NOTIFY columnChanged)
-    Q_PROPERTY(QQmlComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
-    Q_CLASSINFO("DefaultProperty", "delegate")
-    QML_NAMED_ELEMENT(DelegateChoice)
-public:
-    QVariant roleValue() const;
-    void setRoleValue(const QVariant &roleValue);
-
-    int row() const;
-    void setRow(int r);
-
-    int column() const;
-    void setColumn(int c);
-
-    QQmlComponent *delegate() const;
-    void setDelegate(QQmlComponent *delegate);
-
-    virtual bool match(int row, int column, const QVariant &value) const;
-
-signals:
-    void roleValueChanged();
-    void rowChanged();
-    void indexChanged();
-    void columnChanged();
-    void delegateChanged();
-    void changed();
-
-private:
-    QVariant m_value;
-    int m_row = -1;
-    int m_column = -1;
-    QQmlComponent *m_delegate = nullptr;
-};
-
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateChooser : public QQmlAbstractDelegateComponent
-{
-    Q_OBJECT
-    Q_PROPERTY(QString role READ role WRITE setRole NOTIFY roleChanged)
-    Q_PROPERTY(QQmlListProperty<QQmlDelegateChoice> choices READ choices CONSTANT)
-    Q_CLASSINFO("DefaultProperty", "choices")
-    QML_NAMED_ELEMENT(DelegateChooser)
-
-public:
-    QString role() const { return m_role; }
-    void setRole(const QString &role);
-
-    virtual QQmlListProperty<QQmlDelegateChoice> choices();
-    static void choices_append(QQmlListProperty<QQmlDelegateChoice> *, QQmlDelegateChoice *);
-    static int choices_count(QQmlListProperty<QQmlDelegateChoice> *);
-    static QQmlDelegateChoice *choices_at(QQmlListProperty<QQmlDelegateChoice> *, int);
-    static void choices_clear(QQmlListProperty<QQmlDelegateChoice> *);
-
-    QQmlComponent *delegate(QQmlAdaptorModel *adaptorModel, int row, int column = -1) const override;
-
-signals:
-    void roleChanged();
-
-private:
-    QString m_role;
-    QList<QQmlDelegateChoice *> m_choices;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQmlDelegateChoice)
-QML_DECLARE_TYPE(QQmlDelegateChooser)
-
-#endif // QQMLDELEGATECOMPONENT_P_H
+#endif // QQMLABSTRACTDELEGATECOMPONENT_P_H

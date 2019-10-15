@@ -158,6 +158,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("catchIdentifier")           << QStringLiteral("catchIdentifierNoWarning.qml");
     QTest::newRow("qmldirAndQmltypes")         << QStringLiteral("qmldirAndQmltypes.qml");
     QTest::newRow("forLoop")                   << QStringLiteral("forLoop.qml");
+    QTest::newRow("esmodule")                  << QStringLiteral("esmodule.mjs");
 }
 
 void TestQmllint::cleanQmlCode()
