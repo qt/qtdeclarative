@@ -849,6 +849,8 @@ QQuickSplitViewPrivate::EffectiveSizeData QQuickSplitViewPrivate::effectiveSizeD
 
 int QQuickSplitViewPrivate::handleIndexForSplitIndex(int splitIndex) const
 {
+    // If it's the first and only item in the view, it doesn't have a handle,
+    // so return -1: splitIndex (0) - 1.
     // If it's the last item in the view, it doesn't have a handle, so use
     // the handle for the previous item.
     return splitIndex == contentModel->count() - 1 ? splitIndex - 1 : splitIndex;
@@ -1016,11 +1018,13 @@ void QQuickSplitViewPrivate::itemVisibilityChanged(QQuickItem *item)
     // of the corresponding handle (if one exists).
 
     const int handleIndex = handleIndexForSplitIndex(itemIndex);
-    QQuickItem *handleItem = m_handleItems.at(handleIndex);
-    handleItem->setVisible(item->isVisible());
+    if (handleIndex != -1) {
+        QQuickItem *handleItem = m_handleItems.at(handleIndex);
+        handleItem->setVisible(item->isVisible());
 
-    qCDebug(qlcQQuickSplitView) << "set visible property of handle item"
-        << handleItem << "at index" << handleIndex << "to" << item->isVisible();
+        qCDebug(qlcQQuickSplitView) << "set visible property of handle item"
+            << handleItem << "at index" << handleIndex << "to" << item->isVisible();
+    }
 
     updateHandleVisibilities();
     updateFillIndex();

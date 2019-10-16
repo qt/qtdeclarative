@@ -1958,4 +1958,20 @@ TestCase {
         mouseRelease(targetHandle, -100, targetHandle.height / 2, Qt.LeftButton)
         verify(!control.resizing)
     }
+
+    Component {
+        id: oneItemComponent
+
+        SplitView {
+            Item {}
+        }
+    }
+
+    // QTBUG-79270
+    function test_hideSplitViewWithOneItem() {
+        var control = createTemporaryObject(oneItemComponent, testCase)
+        verify(control)
+        // Shouldn't be an assertion failure.
+        control.visible = false
+    }
 }
