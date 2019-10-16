@@ -56,6 +56,7 @@ private slots:
     void bindingOverwriting();
     void bindToQmlComponent();
     void bindingDoesNoWeirdConversion();
+    void bindNaNToInt();
 
 private:
     QQmlEngine engine;
@@ -398,6 +399,16 @@ void tst_qqmlbinding::bindingDoesNoWeirdConversion()
     QVERIFY(colorLabel);
 }
 
+//QTBUG-72442
+void tst_qqmlbinding::bindNaNToInt()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("nanPropertyToInt.qml"));
+    QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(c.create()));
+
+    QVERIFY(item != nullptr);
+    QCOMPARE(item->property("val").toInt(), 0);
+}
 QTEST_MAIN(tst_qqmlbinding)
 
 #include "tst_qqmlbinding.moc"

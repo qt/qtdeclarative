@@ -62,16 +62,11 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace JIT {
 
-#define JIT_STRINGIFYx(s) #s
-#define JIT_STRINGIFY(s) JIT_STRINGIFYx(s)
-
 #define GENERATE_RUNTIME_CALL(function, destination) \
-    callRuntime(JIT_STRINGIFY(function), \
-                reinterpret_cast<void *>(&Runtime::function::call), \
+    callRuntime(reinterpret_cast<void *>(&Runtime::function::call), \
                 destination)
 #define GENERATE_TAIL_CALL(function) \
-    tailCallRuntime(JIT_STRINGIFY(function), \
-                reinterpret_cast<void *>(&function))
+    tailCallRuntime(reinterpret_cast<void *>(&function))
 
 class BaselineAssembler {
 public:
@@ -153,7 +148,7 @@ public:
     void passCppFrameAsArg(int arg);
     void passInt32AsArg(int value, int arg);
     void passPointerAsArg(void *ptr, int arg);
-    void callRuntime(const char *functionName, const void *funcPtr, CallResultDestination dest);
+    void callRuntime(const void *funcPtr, CallResultDestination dest);
     void saveAccumulatorInFrame();
     void loadAccumulatorFromFrame();
     void jsTailCall(int func, int thisObject, int argc, int argv);
@@ -179,7 +174,7 @@ protected:
 
 private:
     typedef unsigned(*CmpFunc)(const Value&,const Value&);
-    void cmp(int cond, CmpFunc function, const char *functionName, int lhs);
+    void cmp(int cond, CmpFunc function, int lhs);
 };
 
 } // namespace JIT

@@ -61,7 +61,8 @@ namespace JIT {
 
 #define ASM_GENERATE_RUNTIME_CALL(function, destination) \
     pasm()->GENERATE_RUNTIME_CALL(function, destination)
-#define callHelper(x) PlatformAssemblerCommon::callRuntimeUnchecked(#x, reinterpret_cast<void *>(&x))
+#define callHelper(x) \
+    PlatformAssemblerCommon::callRuntimeUnchecked(reinterpret_cast<void *>(&x), #x)
 
 const QV4::Value::ValueTypeInternal IntegerTag = QV4::Value::ValueTypeInternal::Integer;
 
@@ -83,10 +84,9 @@ public:
         : PlatformAssemblerCommon(constantTable)
     {}
 
-    void callRuntime(const char *functionName, const void *funcPtr,
-                     CallResultDestination dest)
+    void callRuntime(const void *funcPtr, CallResultDestination dest)
     {
-        PlatformAssemblerCommon::callRuntime(functionName, funcPtr);
+        PlatformAssemblerCommon::callRuntime(funcPtr);
         if (dest == CallResultDestination::InAccumulator)
             saveReturnValueInAccumulator();
     }
@@ -240,7 +240,7 @@ public:
         auto isInt = branch32(Equal, TrustedImm32(Value::QT_Int), ScratchRegister2);
 
         move(AccumulatorRegister, registerForArg(0));
-        callRuntimeUnchecked("toInt32Helper", reinterpret_cast<void *>(&toInt32Helper));
+        callHelper(toInt32Helper);
         saveReturnValueInAccumulator();
 
         isInt.link(this);
@@ -383,10 +383,9 @@ public:
         : PlatformAssemblerCommon(constantTable)
     {}
 
-    void callRuntime(const char *functionName, const void *funcPtr,
-                     CallResultDestination dest)
+    void callRuntime(const void *funcPtr, CallResultDestination dest)
     {
-        PlatformAssemblerCommon::callRuntime(functionName, funcPtr);
+        PlatformAssemblerCommon::callRuntime(funcPtr);
         if (dest == CallResultDestination::InAccumulator)
             saveReturnValueInAccumulator();
     }
@@ -491,7 +490,7 @@ public:
             move(AccumulatorRegisterValue, registerForArg(0));
             move(AccumulatorRegisterTag, registerForArg(1));
         }
-        callRuntimeUnchecked("toNumberHelper", reinterpret_cast<void *>(&toNumberHelper));
+        callHelper(toNumberHelper);
         saveReturnValueInAccumulator();
         if (ArgInRegCount < 2)
             addPtr(TrustedImm32(4 * PointerSize), StackPointerRegister);
@@ -548,7 +547,7 @@ public:
             move(AccumulatorRegisterValue, registerForArg(0));
             move(AccumulatorRegisterTag, registerForArg(1));
         }
-        callRuntimeUnchecked("toInt32Helper", reinterpret_cast<void *>(&toInt32Helper));
+        callHelper(toInt32Helper);
         saveReturnValueInAccumulator();
         if (ArgInRegCount < 2)
             addPtr(TrustedImm32(4 * PointerSize), StackPointerRegister);
@@ -570,7 +569,7 @@ public:
             move(AccumulatorRegisterValue, registerForArg(0));
             move(AccumulatorRegisterTag, registerForArg(1));
         }
-        callRuntimeUnchecked("toInt32Helper", reinterpret_cast<void *>(&toInt32Helper));
+        callHelper(toInt32Helper);
         saveReturnValueInAccumulator();
         if (ArgInRegCount < 2)
             addPtr(TrustedImm32(4 * PointerSize), StackPointerRegister);
@@ -1267,7 +1266,7 @@ void BaselineAssembler::cmpeqInt(int lhs)
     else
         pasm()->move(PlatformAssembler::StackPointerRegister, pasm()->registerForArg(1));
     pasm()->pushAccumulatorAsArg(0);
-    pasm()->callRuntimeUnchecked("Equal", (void*)Runtime::Equal::call);
+    pasm()->callRuntimeUnchecked((void*)Runtime::Equal::call);
     pasm()->saveReturnValueInAccumulator();
     if (PlatformAssembler::ArgInRegCount < 2)
         pasm()->addPtr(TrustedImm32(2 * PlatformAssembler::PointerSize), PlatformAssembler::StackPointerRegister);
@@ -1291,7 +1290,7 @@ void BaselineAssembler::cmpneInt(int lhs)
     else
         pasm()->move(PlatformAssembler::StackPointerRegister, pasm()->registerForArg(1));
     pasm()->pushAccumulatorAsArg(0);
-    pasm()->callRuntimeUnchecked("NotEqual", (void*)Runtime::NotEqual::call);
+    pasm()->callRuntimeUnchecked((void*)Runtime::NotEqual::call);
     pasm()->saveReturnValueInAccumulator();
     if (PlatformAssembler::ArgInRegCount < 2)
         pasm()->addPtr(TrustedImm32(2 * PlatformAssembler::PointerSize), PlatformAssembler::StackPointerRegister);
@@ -1305,7 +1304,7 @@ void BaselineAssembler::cmpneInt(int lhs)
     done.link(pasm());
 }
 
-void BaselineAssembler::cmp(int cond, CmpFunc function, const char *functionName, int lhs)
+void BaselineAssembler::cmp(int cond, CmpFunc function, int lhs)
 {
     auto c = static_cast<PlatformAssembler::RelationalCondition>(cond);
     auto done = pasm()->binopBothIntPath(regAddr(lhs), [this, c](){
@@ -1321,7 +1320,7 @@ void BaselineAssembler::cmp(int cond, CmpFunc function, const char *functionName
     pasm()->passAccumulatorAsArg(1);
     pasm()->passJSSlotAsArg(lhs, 0);
 
-    callRuntime(functionName, reinterpret_cast<void*>(function), CallResultDestination::InAccumulator);
+    callRuntime(reinterpret_cast<void*>(function), CallResultDestination::InAccumulator);
     checkException();
 
     // done.
@@ -1331,50 +1330,42 @@ void BaselineAssembler::cmp(int cond, CmpFunc function, const char *functionName
 
 void BaselineAssembler::cmpeq(int lhs)
 {
-    cmp(PlatformAssembler::Equal, &Runtime::CompareEqual::call,
-        "CompareEqual", lhs);
+    cmp(PlatformAssembler::Equal, &Runtime::CompareEqual::call, lhs);
 }
 
 void BaselineAssembler::cmpne(int lhs)
 {
-    cmp(PlatformAssembler::NotEqual, &Runtime::CompareNotEqual::call,
-        "CompareNotEqual", lhs);
+    cmp(PlatformAssembler::NotEqual, &Runtime::CompareNotEqual::call, lhs);
 }
 
 void BaselineAssembler::cmpgt(int lhs)
 {
-    cmp(PlatformAssembler::GreaterThan, &Runtime::CompareGreaterThan::call,
-        "CompareGreaterThan", lhs);
+    cmp(PlatformAssembler::GreaterThan, &Runtime::CompareGreaterThan::call, lhs);
 }
 
 void BaselineAssembler::cmpge(int lhs)
 {
-    cmp(PlatformAssembler::GreaterThanOrEqual, &Runtime::CompareGreaterEqual::call,
-        "CompareGreaterEqual", lhs);
+    cmp(PlatformAssembler::GreaterThanOrEqual, &Runtime::CompareGreaterEqual::call, lhs);
 }
 
 void BaselineAssembler::cmplt(int lhs)
 {
-    cmp(PlatformAssembler::LessThan, &Runtime::CompareLessThan::call,
-        "CompareLessThan", lhs);
+    cmp(PlatformAssembler::LessThan, &Runtime::CompareLessThan::call, lhs);
 }
 
 void BaselineAssembler::cmple(int lhs)
 {
-    cmp(PlatformAssembler::LessThanOrEqual, &Runtime::CompareLessEqual::call,
-        "CompareLessEqual", lhs);
+    cmp(PlatformAssembler::LessThanOrEqual, &Runtime::CompareLessEqual::call, lhs);
 }
 
 void BaselineAssembler::cmpStrictEqual(int lhs)
 {
-    cmp(PlatformAssembler::Equal, &Runtime::CompareStrictEqual::call,
-        "RuntimeHelpers::strictEqual", lhs);
+    cmp(PlatformAssembler::Equal, &Runtime::CompareStrictEqual::call, lhs);
 }
 
 void BaselineAssembler::cmpStrictNotEqual(int lhs)
 {
-    cmp(PlatformAssembler::NotEqual, &Runtime::CompareStrictNotEqual::call,
-        "RuntimeHelpers::strictNotEqual", lhs);
+    cmp(PlatformAssembler::NotEqual, &Runtime::CompareStrictNotEqual::call, lhs);
 }
 
 int BaselineAssembler::jump(int offset)
@@ -1463,9 +1454,9 @@ void BaselineAssembler::passPointerAsArg(void *ptr, int arg)
     pasm()->passPointerAsArg(ptr, arg);
 }
 
-void BaselineAssembler::callRuntime(const char *functionName, const void *funcPtr, CallResultDestination dest)
+void BaselineAssembler::callRuntime(const void *funcPtr, CallResultDestination dest)
 {
-    pasm()->callRuntime(functionName, funcPtr, dest);
+    pasm()->callRuntime(funcPtr, dest);
 }
 
 void BaselineAssembler::saveAccumulatorInFrame()
@@ -1498,8 +1489,9 @@ void BaselineAssembler::jsTailCall(int func, int thisObject, int argc, int argv)
     pasm()->storeInt32AsValue(argv,      Address(tos.base, argvOffset));
     pasm()->moveReg(regAddr(thisObject), Address(tos.base, thisOffset));
     pasm()->moveReg(regAddr(func),       Address(tos.base, funcOffset));
-    pasm()->tailCallRuntime("TheJitIs__Tail_Calling__ToTheRuntimeSoTheJitFrameIsMissing",
-                            reinterpret_cast<void *>(TheJitIs__Tail_Calling__ToTheRuntimeSoTheJitFrameIsMissing));
+    pasm()->tailCallRuntime(
+            reinterpret_cast<void *>(TheJitIs__Tail_Calling__ToTheRuntimeSoTheJitFrameIsMissing),
+            "TheJitIs__Tail_Calling__ToTheRuntimeSoTheJitFrameIsMissing");
 }
 
 void BaselineAssembler::checkException()

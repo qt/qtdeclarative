@@ -4728,11 +4728,13 @@ static void beginDeferredOnce(QQmlEnginePrivate *enginePriv,
         typedef QMultiHash<int, const QV4::CompiledData::Binding *> QV4PropertyBindingHash;
         auto it = std::reverse_iterator<QV4PropertyBindingHash::iterator>(range.second);
         auto last = std::reverse_iterator<QV4PropertyBindingHash::iterator>(range.first);
+        state->creator->beginPopulateDeferred(deferData->context);
         while (it != last) {
-            if (!state->creator->populateDeferredBinding(property, deferData, *it))
-                state->errors << state->creator->errors;
+            state->creator->populateDeferredBinding(property, deferData->deferredIdx, *it);
             ++it;
         }
+        state->creator->finalizePopulateDeferred();
+        state->errors << state->creator->errors;
 
         deferredState->constructionStates += state;
 
