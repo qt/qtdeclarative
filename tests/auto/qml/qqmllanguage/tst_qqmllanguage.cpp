@@ -1955,7 +1955,6 @@ void tst_qqmllanguage::aliasProperties()
 
     // "Nested" aliases within an object that require iterative resolution
     {
-        // This is known to fail at the moment.
         QQmlComponent component(&engine, testFileUrl("alias.14.qml"));
         VERIFY_ERRORS(0);
 
