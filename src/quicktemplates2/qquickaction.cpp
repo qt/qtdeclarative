@@ -40,7 +40,9 @@
 #include "qquickshortcutcontext_p_p.h"
 
 #include <QtGui/qevent.h>
-#include <QtGui/private/qshortcutmap_p.h>
+#if QT_CONFIG(shortcut)
+#  include <QtGui/private/qshortcutmap_p.h>
+#endif
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 
@@ -261,6 +263,8 @@ void QQuickActionPrivate::unregisterItem(QQuickItem *item)
     delete entry;
 
     updateDefaultShortcutEntry();
+#else
+    Q_UNUSED(item);
 #endif
 }
 
@@ -277,6 +281,8 @@ void QQuickActionPrivate::itemVisibilityChanged(QQuickItem *item)
         entry->ungrab();
 
     updateDefaultShortcutEntry();
+#else
+    Q_UNUSED(item);
 #endif
 }
 
@@ -332,8 +338,8 @@ void QQuickActionPrivate::updateDefaultShortcutEntry()
 QQuickAction::QQuickAction(QObject *parent)
     : QObject(*(new QQuickActionPrivate), parent)
 {
-    Q_D(QQuickAction);
 #if QT_CONFIG(shortcut)
+    Q_D(QQuickAction);
     d->defaultShortcutEntry = new QQuickActionPrivate::ShortcutEntry(this);
 #endif
 }
@@ -554,8 +560,8 @@ void QQuickActionPrivate::trigger(QObject* source, bool doToggle)
 
 bool QQuickAction::event(QEvent *event)
 {
-    Q_D(QQuickAction);
 #if QT_CONFIG(shortcut)
+    Q_D(QQuickAction);
     if (event->type() == QEvent::Shortcut)
         return d->handleShortcutEvent(this, static_cast<QShortcutEvent *>(event));
 #endif
@@ -564,10 +570,13 @@ bool QQuickAction::event(QEvent *event)
 
 bool QQuickAction::eventFilter(QObject *object, QEvent *event)
 {
-    Q_D(QQuickAction);
 #if QT_CONFIG(shortcut)
+    Q_D(QQuickAction);
     if (event->type() == QEvent::Shortcut)
         return d->handleShortcutEvent(object, static_cast<QShortcutEvent *>(event));
+#else
+    Q_UNUSED(object);
+    Q_UNUSED(event);
 #endif
     return false;
 }
