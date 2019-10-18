@@ -97,6 +97,8 @@ public:
     static QAtomicInt classIndexCounter;
 
     static int metaTypeForPropertyType(QV4::CompiledData::BuiltinType type);
+
+    static QByteArray createClassNameTypeByUrl(const QUrl &url);
 };
 
 template <typename ObjectContainer>
@@ -108,7 +110,8 @@ public:
     QQmlPropertyCacheCreator(QQmlPropertyCacheVector *propertyCaches,
                              QQmlPendingGroupPropertyBindings *pendingGroupPropertyBindings,
                              QQmlEnginePrivate *enginePrivate,
-                             const ObjectContainer *objectContainer, const QQmlImports *imports);
+                             const ObjectContainer *objectContainer, const QQmlImports *imports,
+                             const QByteArray &typeClassName);
 
     QQmlJS::DiagnosticMessage buildMetaObjects();
 
@@ -126,18 +129,21 @@ protected:
     const QQmlImports * const imports;
     QQmlPropertyCacheVector *propertyCaches;
     QQmlPendingGroupPropertyBindings *pendingGroupPropertyBindings;
+    const QByteArray typeClassName;
 };
 
 template <typename ObjectContainer>
 inline QQmlPropertyCacheCreator<ObjectContainer>::QQmlPropertyCacheCreator(QQmlPropertyCacheVector *propertyCaches,
                                                                            QQmlPendingGroupPropertyBindings *pendingGroupPropertyBindings,
                                                                            QQmlEnginePrivate *enginePrivate,
-                                                                           const ObjectContainer *objectContainer, const QQmlImports *imports)
+                                                                           const ObjectContainer *objectContainer, const QQmlImports *imports,
+                                                                           const QByteArray &typeClassName)
     : enginePrivate(enginePrivate)
     , objectContainer(objectContainer)
     , imports(imports)
     , propertyCaches(propertyCaches)
     , pendingGroupPropertyBindings(pendingGroupPropertyBindings)
+    , typeClassName(typeClassName)
 {
     propertyCaches->resize(objectContainer->objectCount());
 }
@@ -293,14 +299,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
     QByteArray newClassName;
 
     if (objectIndex == /*root object*/0) {
-        const QString path = objectContainer->url().path();
-        int lastSlash = path.lastIndexOf(QLatin1Char('/'));
-        if (lastSlash > -1) {
-            const QStringRef nameBase = path.midRef(lastSlash + 1, path.length() - lastSlash - 5);
-            if (!nameBase.isEmpty() && nameBase.at(0).isUpper())
-                newClassName = nameBase.toUtf8() + "_QMLTYPE_" +
-                        QByteArray::number(classIndexCounter.fetchAndAddRelaxed(1));
-        }
+        newClassName = typeClassName;
     }
     if (newClassName.isEmpty()) {
         newClassName = QQmlMetaObject(baseTypeCache.data()).className();
@@ -499,22 +498,30 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
             Q_ASSERT(!p->isBuiltinType);
 
             QQmlType qmltype;
-            if (!imports->resolveType(stringAt(p->builtinTypeOrTypeNameIndex), &qmltype, nullptr, nullptr, nullptr)) {
+            bool selfReference = false;
+            if (!imports->resolveType(stringAt(p->builtinTypeOrTypeNameIndex), &qmltype, nullptr, nullptr, nullptr,
+                                      nullptr, QQmlType::AnyRegistrationType, &selfReference)) {
                 return qQmlCompileError(p->location, QQmlPropertyCacheCreatorBase::tr("Invalid property type"));
             }
 
             Q_ASSERT(qmltype.isValid());
             if (qmltype.isComposite()) {
-                QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
-                Q_ASSERT(tdata);
-                Q_ASSERT(tdata->isComplete());
+                QQmlMetaType::CompositeMetaTypeIds typeIds;
+                if (selfReference) {
+                     typeIds = objectContainer->typeIds();
+                } else {
+                    QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
+                    Q_ASSERT(tdata);
+                    Q_ASSERT(tdata->isComplete());
 
-                auto compilationUnit = tdata->compilationUnit();
+                    auto compilationUnit = tdata->compilationUnit();
+                    typeIds = compilationUnit->typeIds();
+                }
 
                 if (p->isList) {
-                    propertyType = compilationUnit->listMetaTypeId;
+                    propertyType = typeIds.listId;
                 } else {
-                    propertyType = compilationUnit->metaTypeId;
+                    propertyType = typeIds.id;
                 }
             } else {
                 if (p->isList) {
@@ -562,11 +569,16 @@ inline int QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter(const
     if (customTypeName)
         *customTypeName = typeName;
     QQmlType qmltype;
-    if (!imports->resolveType(typeName, &qmltype, nullptr, nullptr, nullptr))
+    bool selfReference = false;
+    if (!imports->resolveType(typeName, &qmltype, nullptr, nullptr, nullptr, nullptr, QQmlType::AnyRegistrationType,
+                              &selfReference))
         return QMetaType::UnknownType;
 
     if (!qmltype.isComposite())
         return qmltype.typeId();
+
+    if (selfReference)
+        return objectContainer->typeIds().id;
 
     QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
     Q_ASSERT(tdata);

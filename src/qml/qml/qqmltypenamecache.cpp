@@ -154,8 +154,10 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name, QQml
         QQmlImportNamespace *typeNamespace = nullptr;
         QList<QQmlError> errors;
         QQmlType t;
+        bool typeRecursionDetected = false;
         bool typeFound = m_imports.resolveType(typeName, &t, nullptr, nullptr, &typeNamespace, &errors,
-                                               QQmlType::AnyRegistrationType, recursionRestriction);
+                                               QQmlType::AnyRegistrationType,
+                                               recursionRestriction == QQmlImport::AllowRecursion ? &typeRecursionDetected : nullptr);
         if (typeFound) {
             return Result(t);
         }

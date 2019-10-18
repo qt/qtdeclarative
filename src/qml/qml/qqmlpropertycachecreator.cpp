@@ -74,6 +74,22 @@ int QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(QV4::CompiledData::Bui
     return QMetaType::UnknownType;
 }
 
+QByteArray QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(const QUrl &url)
+{
+    const QString path = url.path();
+    int lastSlash = path.lastIndexOf(QLatin1Char('/'));
+    // Not a reusable type if we don't have an absolute Url
+    if (lastSlash <= -1)
+        return QByteArray();
+    // ### this might not be correct for .ui.qml files
+    const QStringRef nameBase = path.midRef(lastSlash + 1, path.length() - lastSlash - 5);
+    // Not a reusable type if it doesn't start with a upper case letter.
+    if (nameBase.isEmpty() || !nameBase.at(0).isUpper())
+        return QByteArray();
+    return nameBase.toUtf8() + "_QMLTYPE_" +
+            QByteArray::number(classIndexCounter.fetchAndAddRelaxed(1));
+}
+
 QQmlBindingInstantiationContext::QQmlBindingInstantiationContext(int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding,
                                                                  const QString &instantiatingPropertyName, QQmlPropertyCache *referencingObjectPropertyCache)
     : referencingObjectIndex(referencingObjectIndex)

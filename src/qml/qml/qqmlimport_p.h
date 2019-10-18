@@ -114,7 +114,7 @@ public:
                      int *vmajor, int *vminor, QQmlType* type_return,
                      QString *base = nullptr, QList<QQmlError> *errors = nullptr,
                      QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,
-                     QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion);
+                     bool *typeRecursionDeteced = nullptr);
 
     // Prefix when used as a qualified import.  Otherwise empty.
     QHashedString prefix;
@@ -142,8 +142,7 @@ public:
                      QQmlImportNamespace **ns_return,
                      QList<QQmlError> *errors = nullptr,
                      QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,
-                     QQmlImport::RecursionRestriction recursionRestriction
-                     = QQmlImport::PreventRecursion) const;
+                     bool *typeRecursionDetected = nullptr) const;
     bool resolveType(QQmlImportNamespace *,
                      const QHashedStringRef& type,
                      QQmlType *type_return, int *version_major, int *version_minor,

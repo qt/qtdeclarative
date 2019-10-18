@@ -306,6 +306,9 @@ private slots:
 
     void extendedForeignTypes();
 
+    void selfReference();
+    void selfReferencingSingleton();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -5280,6 +5283,69 @@ void tst_qqmllanguage::extendedForeignTypes()
     QCOMPARE(o->property("foreignExtendedExtension").toInt(), 42);
     QCOMPARE(o->property("foreignObjectName").toString(), QLatin1String("foreign"));
     QCOMPARE(o->property("foreignExtendedObjectName").toString(), QLatin1String("foreignExtended"));
+}
+
+void tst_qqmllanguage::selfReference()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("SelfReference.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QQmlComponentPrivate *componentPrivate = QQmlComponentPrivate::get(&component);
+    auto compilationUnit = componentPrivate->compilationUnit;
+    QVERIFY(compilationUnit);
+
+    const QMetaObject *metaObject = o->metaObject();
+    QMetaProperty selfProperty = metaObject->property(metaObject->indexOfProperty("self"));
+    QCOMPARE(selfProperty.userType(), compilationUnit->metaTypeId);
+
+    QByteArray typeName = selfProperty.typeName();
+    QVERIFY(typeName.endsWith('*'));
+    typeName = typeName.chopped(1);
+    QCOMPARE(typeName, metaObject->className());
+
+    QMetaMethod selfFunction = metaObject->method(metaObject->indexOfMethod("returnSelf()"));
+    QVERIFY(selfFunction.isValid());
+    QCOMPARE(selfFunction.returnType(), compilationUnit->metaTypeId);
+
+    QMetaMethod selfSignal;
+
+    for (int i = metaObject->methodOffset(); i < metaObject->methodCount(); ++i) {
+        QMetaMethod method = metaObject->method(i);
+        if (method.isValid() && method.name().startsWith("blah")) {
+            selfSignal = method;
+            break;
+        }
+    }
+
+    QVERIFY(selfSignal.isValid());
+    QCOMPARE(selfSignal.parameterCount(), 1);
+    QCOMPARE(selfSignal.parameterType(0), compilationUnit->metaTypeId);
+}
+
+void tst_qqmllanguage::selfReferencingSingleton()
+{
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory());
+
+    QPointer<QObject> singletonPointer;
+    {
+        QQmlComponent component(&engine);
+        component.setData(QByteArray(R"(import QtQml 2.0
+                                     import selfreferencingsingletonmodule 1.0
+                                     QtObject {
+                                         property SelfReferencingSingleton singletonPointer: SelfReferencingSingleton
+                                     })"), QUrl());
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> o(component.create());
+        QVERIFY(!o.isNull());
+        singletonPointer = o->property("singletonPointer").value<QObject*>();
+    }
+
+    QVERIFY(!singletonPointer.isNull());
+    QCOMPARE(singletonPointer->property("dummy").toInt(), 42);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

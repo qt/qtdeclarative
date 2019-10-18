@@ -283,7 +283,7 @@ void ExecutableCompilationUnit::unlink()
         Q_ASSERT(data && propertyCaches.count() > 0 && propertyCaches.at(/*root object*/0));
         if (qmlEngine)
             qmlEngine->unregisterInternalCompositeType(this);
-        QQmlMetaType::unregisterInternalCompositeType(this);
+        QQmlMetaType::unregisterInternalCompositeType({metaTypeId, listMetaTypeId});
         isRegisteredWithEngine = false;
     }
 
@@ -383,13 +383,17 @@ IdentifierHash ExecutableCompilationUnit::createNamedObjectsPerComponent(int com
     return *namedObjectsPerComponentCache.insert(componentObjectIndex, namedObjectCache);
 }
 
-void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngine)
+void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngine, QQmlMetaType::CompositeMetaTypeIds typeIds)
 {
     this->qmlEngine = qmlEngine;
 
     // Add to type registry of composites
     if (propertyCaches.needsVMEMetaObject(/*root object*/0)) {
-        QQmlMetaType::registerInternalCompositeType(this);
+        // typeIds is only valid for types that have references to themselves.
+        if (!typeIds.isValid())
+            typeIds = QQmlMetaType::registerInternalCompositeType(rootPropertyCache()->className());
+        metaTypeId = typeIds.id;
+        listMetaTypeId = typeIds.listId;
         qmlEngine->registerInternalCompositeType(this);
     } else {
         const QV4::CompiledData::Object *obj = objectAt(/*root object*/0);
