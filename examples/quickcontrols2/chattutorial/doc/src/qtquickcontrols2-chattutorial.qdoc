@@ -309,7 +309,7 @@ in an application. Here's the revised \c main.qml:
 \printuntil }
 \printuntil }
 
-\section2 StackView
+\section2 Navigating with StackView
 
 As its name suggests, StackView provides stack-based navigation. The last item
 to be \e "pushed" onto the stack is the first one to be removed, and the

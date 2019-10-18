@@ -30,3 +30,6 @@ SUBDIRS += \
     revisions \
     sanity \
     snippets
+
+# Requires lrelease, which isn't always available in CI.
+qtHaveModule(tools): translation
