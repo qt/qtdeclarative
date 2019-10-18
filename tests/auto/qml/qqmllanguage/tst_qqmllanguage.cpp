@@ -2053,6 +2053,11 @@ void tst_qqmllanguage::aliasProperties()
         auto text = myText->property("text").toString();
         QCOMPARE(text, "alias:\n20");
     }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("alias.18.qml"));
+        VERIFY_ERRORS("alias.18.errors.txt");
+    }
 }
 
 // QTBUG-13374 Test that alias properties and signals can coexist
