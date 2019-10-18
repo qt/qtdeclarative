@@ -76,8 +76,10 @@ private slots:
     void qtbug_50516_2();
 
     void keys();
+#if QT_CONFIG(shortcut)
     void standardKeys_data();
     void standardKeys();
+#endif
     void keysProcessingOrder();
     void keysim();
     void keysForward();
@@ -1429,6 +1431,8 @@ void tst_QQuickItem::keys()
     delete testObject;
 }
 
+#if QT_CONFIG(shortcut)
+
 Q_DECLARE_METATYPE(QEvent::Type);
 Q_DECLARE_METATYPE(QKeySequence::StandardKey);
 
@@ -1486,6 +1490,8 @@ void tst_QQuickItem::standardKeys()
     QCOMPARE(item->property("pressed").toBool(), pressed);
     QCOMPARE(item->property("released").toBool(), released);
 }
+
+#endif // QT_CONFIG(shortcut)
 
 void tst_QQuickItem::keysProcessingOrder()
 {
