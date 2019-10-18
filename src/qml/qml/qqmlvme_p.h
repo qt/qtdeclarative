@@ -100,9 +100,9 @@ class QQmlInstantiationInterrupt {
 public:
     inline QQmlInstantiationInterrupt();
     // ### Qt 6: remove
-    inline QQmlInstantiationInterrupt(volatile bool *runWhile, int nsecs=0);
-    inline QQmlInstantiationInterrupt(std::atomic<bool> *runWhile, int nsecs = 0);
-    inline QQmlInstantiationInterrupt(int nsecs);
+    inline QQmlInstantiationInterrupt(volatile bool *runWhile, qint64 nsecs=0);
+    inline QQmlInstantiationInterrupt(std::atomic<bool> *runWhile, qint64 nsecs = 0);
+    inline QQmlInstantiationInterrupt(qint64 nsecs);
 
     inline void reset();
     inline bool shouldInterrupt() const;
@@ -110,7 +110,7 @@ private:
     enum Mode { None, Time, LegacyFlag, Flag }; // ### Qt 6: remove LegacyFlag
     Mode mode;
     QElapsedTimer timer;
-    int nsecs = 0;
+    qint64 nsecs = 0;
     volatile bool *runWhileLegacy = nullptr; // ### Qt 6: remove
     std::atomic<bool> *runWhile = nullptr;
 };
@@ -156,17 +156,17 @@ QQmlInstantiationInterrupt::QQmlInstantiationInterrupt()
 {
 }
 
-QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(volatile bool *runWhile, int nsecs)
+QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(volatile bool *runWhile, qint64 nsecs)
     : mode(LegacyFlag), nsecs(nsecs), runWhileLegacy(runWhile)
 {
 }
 
-QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(std::atomic<bool> *runWhile, int nsecs)
+QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(std::atomic<bool> *runWhile, qint64 nsecs)
     : mode(Flag), nsecs(nsecs), runWhile(runWhile)
 {
 }
 
-QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(int nsecs)
+QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(qint64 nsecs)
     : mode(Time), nsecs(nsecs)
 {
 }

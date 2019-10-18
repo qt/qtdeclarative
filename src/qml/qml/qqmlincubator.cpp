@@ -403,7 +403,7 @@ void QQmlIncubationController::incubateFor(int msecs)
     if (!d || !d->incubatorCount)
         return;
 
-    QQmlInstantiationInterrupt i(msecs * 1000000);
+    QQmlInstantiationInterrupt i(msecs * Q_INT64_C(1000000));
     i.reset();
     do {
         static_cast<QQmlIncubatorPrivate*>(d->incubatorList.first())->incubate(i);
@@ -422,7 +422,7 @@ void QQmlIncubationController::incubateWhile(volatile bool *flag, int msecs)
     if (!d || !d->incubatorCount)
         return;
 
-    QQmlInstantiationInterrupt i(flag, msecs * 1000000);
+    QQmlInstantiationInterrupt i(flag, msecs * Q_INT64_C(1000000));
     i.reset();
     do {
         static_cast<QQmlIncubatorPrivate*>(d->incubatorList.first())->incubate(i);
@@ -447,7 +447,7 @@ void QQmlIncubationController::incubateWhile(std::atomic<bool> *flag, int msecs)
     if (!d || !d->incubatorCount)
         return;
 
-    QQmlInstantiationInterrupt i(flag, msecs * 1000000);
+    QQmlInstantiationInterrupt i(flag, msecs * Q_INT64_C(1000000));
     i.reset();
     do {
         static_cast<QQmlIncubatorPrivate*>(d->incubatorList.first())->incubate(i);
