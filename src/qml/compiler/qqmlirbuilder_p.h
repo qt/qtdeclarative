@@ -158,6 +158,13 @@ struct PoolList
     }
 
     struct Iterator {
+        // turn Iterator into a proper iterator
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = T;
+        using difference_type = ptrdiff_t;
+        using pointer = T *;
+        using reference = T &;
+
         T *ptr;
 
         explicit Iterator(T *p) : ptr(p) {}
@@ -178,8 +185,15 @@ struct PoolList
             return *ptr;
         }
 
-        void operator++() {
+        Iterator& operator++() {
             ptr = ptr->next;
+            return *this;
+        }
+
+        Iterator operator++(int) {
+            Iterator that {ptr};
+            ptr = ptr->next;
+            return that;
         }
 
         bool operator==(const Iterator &rhs) const {
@@ -193,6 +207,8 @@ struct PoolList
 
     Iterator begin() { return Iterator(first); }
     Iterator end() { return Iterator(nullptr); }
+
+    using iterator = Iterator;
 };
 
 struct Object;

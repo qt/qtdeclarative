@@ -250,9 +250,11 @@ QString Object::appendAlias(Alias *alias, const QString &aliasName, bool isDefau
     if (!target)
         target = this;
 
-    for (Alias *p = target->aliases->first; p; p = p->next)
-        if (p->nameIndex == alias->nameIndex)
-            return tr("Duplicate alias name");
+    auto aliasWithSameName = std::find_if(target->aliases->begin(), target->aliases->end(), [&alias](const Alias &targetAlias){
+        return targetAlias.nameIndex == alias->nameIndex;
+    });
+    if (aliasWithSameName != target->aliases->end())
+        return tr("Duplicate alias name");
 
     if (aliasName.constData()->isUpper())
         return tr("Alias names cannot begin with an upper case letter");
