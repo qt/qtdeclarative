@@ -728,12 +728,12 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateObjectBinding(QQmlPrope
         return noError;
     } else if (isPrimitiveType(propType)) {
         auto typeName = QMetaType::typeName(propType);
-        return qQmlCompileError(binding->location, tr("Can not assign value of type \"%1\" to property \"%2\", expecting \"%3\"")
+        return qQmlCompileError(binding->location, tr("Cannot assign value of type \"%1\" to property \"%2\", expecting \"%3\"")
                                                       .arg(rhsType())
                                                       .arg(propertyName)
                                                       .arg(typeName));
     } else if (QQmlValueTypeFactory::isValueType(propType)) {
-        return qQmlCompileError(binding->location, tr("Can not assign value of type \"%1\" to property \"%2\", expecting an object")
+        return qQmlCompileError(binding->location, tr("Cannot assign value of type \"%1\" to property \"%2\", expecting an object")
                                                       .arg(rhsType()).arg(propertyName));
     } else if (propType == qMetaTypeId<QQmlScriptString>()) {
         return qQmlCompileError(binding->valueLocation, tr("Invalid property assignment: script expected"));
