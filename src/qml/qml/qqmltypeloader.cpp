@@ -973,48 +973,56 @@ bool QQmlTypeLoader::fileExists(const QString &path, const QString &file)
         return false;
 
     Q_ASSERT(path.endsWith(QLatin1Char('/')));
+
+    LockHolder<QQmlTypeLoader> holder(this);
+    QCache<QString, bool> *fileSet = m_importDirCache.object(path);
+    if (fileSet) {
+        if (bool *value = fileSet->object(file))
+            return *value;
+    } else if (m_importDirCache.contains(path)) {
+        // explicit nullptr in cache
+        return false;
+    }
+
+    auto addToCache = [&](const QFileInfo &fileInfo) {
+        if (!fileSet) {
+            fileSet = fileInfo.dir().exists() ? new QCache<QString, bool> : nullptr;
+            m_importDirCache.insert(path, fileSet);
+            if (!fileSet)
+                return false;
+        }
+
+        const bool exists = fileInfo.exists();
+        fileSet->insert(file, new bool(exists));
+        return exists;
+    };
+
     if (path.at(0) == QLatin1Char(':')) {
         // qrc resource
-        QFileInfo fileInfo(path + file);
-        return fileInfo.isFile();
-    } else if (path.count() > 3 && path.at(3) == QLatin1Char(':') &&
-               path.startsWith(QLatin1String("qrc"), Qt::CaseInsensitive)) {
-        // qrc resource url
-        QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(path + file));
-        return fileInfo.isFile();
+        return addToCache(QFileInfo(path + file));
     }
+
+    if (path.count() > 3 && path.at(3) == QLatin1Char(':')
+            && path.startsWith(QLatin1String("qrc"), Qt::CaseInsensitive)) {
+        // qrc resource url
+        return addToCache(QFileInfo(QQmlFile::urlToLocalFileOrQrc(path + file)));
+    }
+
 #if defined(Q_OS_ANDROID)
-    else if (path.count() > 7 && path.at(6) == QLatin1Char(':') && path.at(7) == QLatin1Char('/') &&
-           path.startsWith(QLatin1String("assets"), Qt::CaseInsensitive)) {
+    if (path.count() > 7 && path.at(6) == QLatin1Char(':') && path.at(7) == QLatin1Char('/')
+            && path.startsWith(QLatin1String("assets"), Qt::CaseInsensitive)) {
         // assets resource url
-        QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(path + file));
-        return fileInfo.isFile();
-    } else if (path.count() > 8 && path.at(7) == QLatin1Char(':') && path.at(8) == QLatin1Char('/') &&
-           path.startsWith(QLatin1String("content"), Qt::CaseInsensitive)) {
+        return addToCache(QFileInfo(QQmlFile::urlToLocalFileOrQrc(path + file)));
+    }
+
+    if (path.count() > 8 && path.at(7) == QLatin1Char(':') && path.at(8) == QLatin1Char('/')
+            && path.startsWith(QLatin1String("content"), Qt::CaseInsensitive)) {
         // content url
-        QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(path + file));
-        return fileInfo.isFile();
+        return addToCache(QFileInfo(QQmlFile::urlToLocalFileOrQrc(path + file)));
     }
 #endif
 
-    LockHolder<QQmlTypeLoader> holder(this);
-    if (!m_importDirCache.contains(path)) {
-        bool exists = QDir(path).exists();
-        QCache<QString, bool> *entry = exists ? new QCache<QString, bool> : nullptr;
-        m_importDirCache.insert(path, entry);
-    }
-    QCache<QString, bool> *fileSet = m_importDirCache.object(path);
-    if (!fileSet)
-        return false;
-
-    bool *value = fileSet->object(file);
-    if (value) {
-        return *value;
-    } else {
-        bool exists = QFile::exists(path + file);
-        fileSet->insert(file, new bool(exists));
-        return exists;
-    }
+    return addToCache(QFileInfo(path + file));
 }
 
 

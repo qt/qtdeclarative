@@ -131,8 +131,10 @@ private slots:
     void mouseSelectionMode_accessors();
     void selectByMouse();
     void selectByKeyboard();
+#if QT_CONFIG(shortcut)
     void keyboardSelection_data();
     void keyboardSelection();
+#endif
     void renderType();
     void inputMethodHints();
 
@@ -190,16 +192,19 @@ private slots:
     void insert();
     void remove_data();
     void remove();
-
+#if QT_CONFIG(shortcut)
     void keySequence_data();
     void keySequence();
+#endif
 
     void undo_data();
     void undo();
     void redo_data();
     void redo();
+#if QT_CONFIG(shortcut)
     void undo_keypressevents_data();
     void undo_keypressevents();
+#endif
     void clear();
 
     void baseUrl();
@@ -217,7 +222,9 @@ private slots:
 
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
+#if QT_CONFIG(shortcut)
     void simulateKeys(QWindow *window, const QKeySequence &sequence);
+#endif
 
     void simulateKey(QWindow *, int key, Qt::KeyboardModifiers modifiers = nullptr);
 
@@ -260,6 +267,8 @@ void tst_qquicktextedit::simulateKeys(QWindow *window, const QList<Key> &keys)
     }
 }
 
+#if QT_CONFIG(shortcut)
+
 void tst_qquicktextedit::simulateKeys(QWindow *window, const QKeySequence &sequence)
 {
     for (int i = 0; i < sequence.count(); ++i) {
@@ -276,6 +285,8 @@ QList<Key> &operator <<(QList<Key> &keys, const QKeySequence &sequence)
         keys << Key(sequence[i], QChar());
     return keys;
 }
+
+#endif // QT_CONFIG(shortcut)
 
 template <int N> QList<Key> &operator <<(QList<Key> &keys, const char (&characters)[N])
 {
@@ -2307,6 +2318,8 @@ void tst_qquicktextedit::selectByKeyboard()
     QCOMPARE(spy.at(2).at(0).toBool(), false);
 }
 
+#if QT_CONFIG(shortcut)
+
 Q_DECLARE_METATYPE(QKeySequence::StandardKey)
 
 void tst_qquicktextedit::keyboardSelection_data()
@@ -2390,6 +2403,8 @@ void tst_qquicktextedit::keyboardSelection()
 
     QCOMPARE(edit->selectedText(), selectedText);
 }
+
+#endif // QT_CONFIG(shortcut)
 
 void tst_qquicktextedit::renderType()
 {
@@ -4820,6 +4835,7 @@ void tst_qquicktextedit::remove()
         QVERIFY(cursorPositionSpy.count() > 0);
 }
 
+#if QT_CONFIG(shortcut)
 
 void tst_qquicktextedit::keySequence_data()
 {
@@ -4983,6 +4999,8 @@ void tst_qquicktextedit::keySequence()
     QCOMPARE(textEdit->text(), expectedText);
     QCOMPARE(textEdit->selectedText(), selectedText);
 }
+
+#endif // QT_CONFIG(shortcut)
 
 #define NORMAL 0
 #define REPLACE_UNTIL_END 1
@@ -5257,6 +5275,8 @@ void tst_qquicktextedit::redo()
     QCOMPARE(spy.count(), 2);
 }
 
+#if QT_CONFIG(shortcut)
+
 void tst_qquicktextedit::undo_keypressevents_data()
 {
     QTest::addColumn<KeyList>("keys");
@@ -5449,6 +5469,8 @@ void tst_qquicktextedit::undo_keypressevents()
     }
     QVERIFY(textEdit->text().isEmpty());
 }
+
+#endif // QT_CONFIG(shortcut)
 
 void tst_qquicktextedit::clear()
 {
