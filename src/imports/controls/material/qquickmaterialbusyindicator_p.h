@@ -63,7 +63,7 @@ public:
     explicit QQuickMaterialBusyIndicator(QQuickItem *parent = nullptr);
 
     QColor color() const;
-    void setColor(QColor color);
+    void setColor(const QColor &color);
 
     bool isRunning() const;
     void setRunning(bool running);

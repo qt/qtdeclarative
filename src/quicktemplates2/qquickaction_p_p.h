@@ -51,7 +51,9 @@
 #include <QtCore/private/qobject_p.h>
 #include <QtCore/qvariant.h>
 #include <QtCore/qstring.h>
-#include <QtGui/qkeysequence.h>
+#if QT_CONFIG(shortcut)
+#  include <QtGui/qkeysequence.h>
+#endif
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -119,8 +121,8 @@ public:
     bool checkable = false;
     QString text;
     QQuickIcon icon;
-    QKeySequence keySequence;
 #if QT_CONFIG(shortcut)
+    QKeySequence keySequence;
     QVariant vshortcut;
     ShortcutEntry *defaultShortcutEntry = nullptr;
     QVector<ShortcutEntry *> shortcutEntries;

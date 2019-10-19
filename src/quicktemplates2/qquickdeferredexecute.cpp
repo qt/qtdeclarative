@@ -92,11 +92,21 @@ static bool beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &pro
         typedef QMultiHash<int, const QV4::CompiledData::Binding *> QV4PropertyBindingHash;
         auto it = std::reverse_iterator<QV4PropertyBindingHash::iterator>(range.second);
         auto last = std::reverse_iterator<QV4PropertyBindingHash::iterator>(range.first);
+#if Q_QML_PRIVATE_API_VERSION < 7
         while (it != last) {
             if (!state->creator->populateDeferredBinding(property, deferData, *it))
                 state->errors << state->creator->errors;
             ++it;
         }
+#else
+        state->creator->beginPopulateDeferred(deferData->context);
+        while (it != last) {
+            state->creator->populateDeferredBinding(property, deferData->deferredIdx, *it);
+            ++it;
+        }
+        state->creator->finalizePopulateDeferred();
+        state->errors << state->creator->errors;
+#endif
 
         deferredState->constructionStates += state;
 

@@ -495,7 +495,7 @@ static bool qt_is_dark_system_theme()
 {
     if (const QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme()) {
         if (const QPalette *systemPalette = theme->palette(QPlatformTheme::SystemPalette)) {
-            const QColor textColor = systemPalette->color(QPalette::WindowText);
+            const QColor &textColor = systemPalette->color(QPalette::WindowText);
             return textColor.red() > 128 && textColor.blue() > 128 && textColor.green() > 128;
         }
     }

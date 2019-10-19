@@ -408,7 +408,7 @@ QString QQuickIconLabel::text() const
     return d->text;
 }
 
-void QQuickIconLabel::setText(const QString text)
+void QQuickIconLabel::setText(const QString &text)
 {
     Q_D(QQuickIconLabel);
     if (d->text == text)

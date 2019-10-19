@@ -180,7 +180,6 @@ void QQuickTumblerView::createView()
             QQml_setParent_noEvent(m_listView, this);
             m_listView->setParentItem(this);
             m_listView->setSnapMode(QQuickListView::SnapToItem);
-            m_listView->setHighlightRangeMode(QQuickListView::StrictlyEnforceRange);
             m_listView->setClip(true);
 
             // Give the view a size.
@@ -193,6 +192,8 @@ void QQuickTumblerView::createView()
             // the view animates any potential currentIndex change over one second,
             // which we don't want when the contentItem has just been created.
             m_listView->setDelegate(m_delegate);
+            // Set this after setting the delegate to avoid unexpected currentIndex changes: QTBUG-79150
+            m_listView->setHighlightRangeMode(QQuickListView::StrictlyEnforceRange);
             m_listView->setHighlightMoveDuration(1000);
 
             qCDebug(lcTumblerView) << "finished creating ListView";
