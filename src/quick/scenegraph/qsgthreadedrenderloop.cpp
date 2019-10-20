@@ -807,9 +807,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
         }
     }
     if (current) {
-        const QSize outputSize = rhi ? cd->swapchain->currentPixelSize() : windowSize;
-
-        d->renderSceneGraph(outputSize);
+        d->renderSceneGraph(windowSize, rhi ? cd->swapchain->currentPixelSize() : QSize());
 
         if (profileFrames)
             renderTime = threadTimer.nsecsElapsed();
