@@ -348,7 +348,7 @@ QT_BEGIN_NAMESPACE
 #endif
 #endif
 
-#define MOTH_INSTR_ALIGN_MASK (Q_ALIGNOF(QV4::Moth::Instr) - 1)
+#define MOTH_INSTR_ALIGN_MASK (alignof(QV4::Moth::Instr) - 1)
 
 #define MOTH_INSTR_ENUM(I)  I, I##_Wide,
 #define MOTH_INSTR_SIZE(I) (sizeof(QV4::Moth::Instr::instr_##I))
