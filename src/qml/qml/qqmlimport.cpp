@@ -229,8 +229,7 @@ public:
     bool resolveType(const QHashedStringRef &type, int *vmajor, int *vminor,
                      QQmlType *type_return, QList<QQmlError> *errors,
                      QQmlType::RegistrationType registrationType,
-                     QQmlImport::RecursionRestriction recursionRestriction
-                     = QQmlImport::PreventRecursion);
+                     bool *typeRecursionDetected = nullptr);
 
     QUrl baseUrl;
     QString base;
@@ -594,7 +593,7 @@ bool QQmlImports::resolveType(const QHashedStringRef &type,
                               QQmlType *type_return, int *vmaj, int *vmin,
                               QQmlImportNamespace** ns_return, QList<QQmlError> *errors,
                               QQmlType::RegistrationType registrationType,
-                              QQmlImport::RecursionRestriction recursionRestriction) const
+                              bool *typeRecursionDetected) const
 {
     QQmlImportNamespace* ns = d->findQualifiedNamespace(type);
     if (ns) {
@@ -604,7 +603,7 @@ bool QQmlImports::resolveType(const QHashedStringRef &type,
     }
     if (type_return) {
         if (d->resolveType(type, vmaj, vmin, type_return, errors, registrationType,
-                           recursionRestriction)) {
+                           typeRecursionDetected)) {
             if (qmlImportTrace()) {
 #define RESOLVE_TYPE_DEBUG qDebug().nospace() << "QQmlImports(" << qPrintable(baseUrl().toString()) \
                                               << ')' << "::resolveType: " << type.toString() << " => "
@@ -744,9 +743,12 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
                             if (resolveLocalUrl(*base, c.fileName) != componentUrl)
                                 continue; // failed attempt to access an internal type
                         }
-                        if (recursionRestriction == QQmlImport::PreventRecursion && *base == componentUrl) {
-                            if (typeRecursionDetected)
-                                *typeRecursionDetected = true;
+
+                        const bool recursion = *base == componentUrl;
+                        if (typeRecursionDetected)
+                            *typeRecursionDetected = recursion;
+
+                        if (recursionRestriction == QQmlImport::PreventRecursion && recursion) {
                             continue; // no recursion
                         }
                     }
@@ -803,10 +805,10 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
         }
 
         if (exists) {
-            if (recursionRestriction == QQmlImport::PreventRecursion && base && (*base == qmlUrl)) { // no recursion
-                if (typeRecursionDetected)
-                    *typeRecursionDetected = true;
-            } else {
+            const bool recursion = base && *base == qmlUrl;
+            if (typeRecursionDetected)
+                *typeRecursionDetected = recursion;
+            if (recursionRestriction == QQmlImport::AllowRecursion || !recursion) {
                 QQmlType returnType = QQmlMetaType::typeForUrl(
                         qmlUrl, type, registrationType == QQmlType::CompositeSingletonType, errors);
                 if (type_return)
@@ -822,7 +824,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
 bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, int *vminor,
                                      QQmlType *type_return, QList<QQmlError> *errors,
                                      QQmlType::RegistrationType registrationType,
-                                     QQmlImport::RecursionRestriction recursionRestriction)
+                                     bool *typeRecursionDetected)
 {
     QQmlImportNamespace *s = nullptr;
     int dot = type.indexOf(Dot);
@@ -852,7 +854,7 @@ bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, 
     QHashedStringRef unqualifiedtype = dot < 0 ? type : QHashedStringRef(type.constData()+dot+1, type.length()-dot-1);
     if (s) {
         if (s->resolveType(typeLoader, unqualifiedtype, vmajor, vminor, type_return, &base, errors,
-                           registrationType, recursionRestriction))
+                           registrationType, typeRecursionDetected))
             return true;
         if (s->imports.count() == 1 && !s->imports.at(0)->isLibrary && type_return && s != &unqualifiedset) {
             // qualified, and only 1 url
@@ -880,13 +882,19 @@ bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedS
                                       int *vmajor, int *vminor, QQmlType *type_return,
                                       QString *base, QList<QQmlError> *errors,
                                       QQmlType::RegistrationType registrationType,
-                                      QQmlImport::RecursionRestriction recursionRestriction)
+                                      bool *typeRecursionDetected)
 {
-    bool typeRecursionDetected = false;
+    QQmlImport::RecursionRestriction recursionRestriction =
+            typeRecursionDetected ? QQmlImport::AllowRecursion : QQmlImport::PreventRecursion;
+
+    bool localTypeRecursionDetected = false;
+    if (!typeRecursionDetected)
+        typeRecursionDetected = &localTypeRecursionDetected;
+
     for (int i=0; i<imports.count(); ++i) {
         const QQmlImportInstance *import = imports.at(i);
         if (import->resolveType(typeLoader, type, vmajor, vminor, type_return, base,
-                                &typeRecursionDetected, registrationType, recursionRestriction, errors)) {
+                                typeRecursionDetected, registrationType, recursionRestriction, errors)) {
             if (qmlCheckTypes()) {
                 // check for type clashes
                 for (int j = i+1; j<imports.count(); ++j) {
@@ -933,7 +941,7 @@ bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedS
     }
     if (errors) {
         QQmlError error;
-        if (typeRecursionDetected)
+        if (*typeRecursionDetected)
             error.setDescription(QQmlImportDatabase::tr("is instantiated recursively"));
         else
             error.setDescription(QQmlImportDatabase::tr("is not a type"));

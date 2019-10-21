@@ -105,6 +105,11 @@ void QQmlTypeData::unregisterCallback(TypeDataCallback *callback)
     Q_ASSERT(!m_callbacks.contains(callback));
 }
 
+QQmlMetaType::CompositeMetaTypeIds QQmlTypeData::typeIds() const
+{
+    return m_typeIds;
+}
+
 bool QQmlTypeData::tryLoadFromDiskCache()
 {
     if (diskCacheDisabled() && !diskCacheForced())
@@ -199,7 +204,7 @@ void QQmlTypeData::createTypeAndPropertyCaches(
     {
         QQmlPropertyCacheCreator<QV4::ExecutableCompilationUnit> propertyCacheCreator(
                 &m_compiledData->propertyCaches, &pendingGroupPropertyBindings, engine,
-                m_compiledData.data(), &m_importCache);
+                m_compiledData.data(), &m_importCache, typeClassName());
         QQmlJS::DiagnosticMessage error = propertyCacheCreator.buildMetaObjects();
         if (error.isValid()) {
             setError(error);
@@ -299,6 +304,14 @@ void QQmlTypeData::done()
         }
     }
 
+    m_typeClassName = QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(finalUrl());
+    if (!m_typeClassName.isEmpty())
+        m_typeIds = QQmlMetaType::registerInternalCompositeType(m_typeClassName);
+    auto typeCleanupGuard = qScopeGuard([&]() {
+        if (isError() && m_typeIds.isValid())
+            QQmlMetaType::unregisterInternalCompositeType(m_typeIds);
+    });
+
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
     QV4::ResolvedTypeReferenceMap resolvedTypeCache;
     {
@@ -351,7 +364,7 @@ void QQmlTypeData::done()
             }
         }
 
-        m_compiledData->finalizeCompositeType(enginePrivate);
+        m_compiledData->finalizeCompositeType(enginePrivate, typeIds());
     }
 
     {
@@ -704,12 +717,14 @@ void QQmlTypeData::resolveTypes()
 
         const QString name = stringAt(unresolvedRef.key());
 
+        bool *selfReferenceDetection = unresolvedRef->needsCreation ? nullptr : &ref.selfReference;
+
         if (!resolveType(name, majorVersion, minorVersion, ref, unresolvedRef->location.line,
                          unresolvedRef->location.column, reportErrors,
-                         QQmlType::AnyRegistrationType) && reportErrors)
+                         QQmlType::AnyRegistrationType, selfReferenceDetection) && reportErrors)
             return;
 
-        if (ref.type.isComposite()) {
+        if (ref.type.isComposite() && !ref.selfReference) {
             ref.typeData = typeLoader()->getType(ref.type.sourceUrl());
             addDependency(ref.typeData.data());
         }
@@ -755,7 +770,7 @@ QQmlJS::DiagnosticMessage QQmlTypeData::buildTypeResolutionCaches(
                 return qQmlCompileError(resolvedType->location, tr("Composite Singleton Type %1 is not creatable.").arg(qmlType.qmlTypeName()));
             }
             ref->compilationUnit = resolvedType->typeData->compilationUnit();
-        } else if (qmlType.isValid()) {
+        } else if (qmlType.isValid() && !resolvedType->selfReference) {
             ref->type = qmlType;
             Q_ASSERT(ref->type.isValid());
 
@@ -782,20 +797,23 @@ QQmlJS::DiagnosticMessage QQmlTypeData::buildTypeResolutionCaches(
 
 bool QQmlTypeData::resolveType(const QString &typeName, int &majorVersion, int &minorVersion,
                                TypeReference &ref, int lineNumber, int columnNumber,
-                               bool reportErrors, QQmlType::RegistrationType registrationType)
+                               bool reportErrors, QQmlType::RegistrationType registrationType,
+                               bool *typeRecursionDetected)
 {
     QQmlImportNamespace *typeNamespace = nullptr;
     QList<QQmlError> errors;
 
     bool typeFound = m_importCache.resolveType(typeName, &ref.type, &majorVersion, &minorVersion,
-                                               &typeNamespace, &errors, registrationType);
+                                               &typeNamespace, &errors, registrationType,
+                                               typeRecursionDetected);
     if (!typeNamespace && !typeFound && !m_implicitImportLoaded) {
         // Lazy loading of implicit import
         if (loadImplicitImport()) {
             // Try again to find the type
             errors.clear();
             typeFound = m_importCache.resolveType(typeName, &ref.type, &majorVersion, &minorVersion,
-                                                  &typeNamespace, &errors, registrationType);
+                                                  &typeNamespace, &errors, registrationType,
+                                                  typeRecursionDetected);
         } else {
             return false; //loadImplicitImport() hit an error, and called setError already
         }

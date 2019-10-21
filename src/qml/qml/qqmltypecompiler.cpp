@@ -81,7 +81,7 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
 
     {
         QQmlPropertyCacheCreator<QQmlTypeCompiler> propertyCacheBuilder(&m_propertyCaches, &pendingGroupPropertyBindings,
-                                                                        engine, this, imports());
+                                                                        engine, this, imports(), typeData->typeClassName());
         QQmlJS::DiagnosticMessage error = propertyCacheBuilder.buildMetaObjects();
         if (error.isValid()) {
             recordError(error);
@@ -277,6 +277,11 @@ void QQmlTypeCompiler::addImport(const QString &module, const QString &qualifier
     import->uriIndex = moduleIdx;
     import->qualifierIndex = qualifierIdx;
     document->imports.append(import);
+}
+
+QQmlMetaType::CompositeMetaTypeIds QQmlTypeCompiler::typeIds() const
+{
+    return typeData->typeIds();
 }
 
 QQmlCompilePass::QQmlCompilePass(QQmlTypeCompiler *typeCompiler)

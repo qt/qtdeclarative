@@ -278,7 +278,7 @@ QVariant QQmlObjectModel::variantValue(int index, const QString &role)
     Q_D(QQmlObjectModel);
     if (index < 0 || index >= d->children.count())
         return QString();
-    return QQmlEngine::contextForObject(d->children.at(index).item)->contextProperty(role);
+    return d->children.at(index).item->property(role.toUtf8().constData());
 }
 
 QQmlIncubator::Status QQmlObjectModel::incubationStatus(int)

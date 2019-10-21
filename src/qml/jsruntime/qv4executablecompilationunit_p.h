@@ -58,6 +58,7 @@
 #include <private/qqmlpropertycachevector_p.h>
 #include <private/qqmltype_p.h>
 #include <private/qqmlnullablevalue_p.h>
+#include <private/qqmlmetatype_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -142,7 +143,7 @@ public:
     QHash<int, IdentifierHash> namedObjectsPerComponentCache;
     inline IdentifierHash namedObjectsPerComponent(int componentObjectIndex);
 
-    void finalizeCompositeType(QQmlEnginePrivate *qmlEngine);
+    void finalizeCompositeType(QQmlEnginePrivate *qmlEngine, QQmlMetaType::CompositeMetaTypeIds typeIds);
 
     int totalBindingsCount = 0; // Number of bindings used in this type
     int totalParserStatusCount = 0; // Number of instantiated types that are QQmlParserStatus subclasses
@@ -153,6 +154,8 @@ public:
     ResolvedTypeReference *resolvedType(int id) const { return resolvedTypes.value(id); }
 
     bool verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const;
+
+    QQmlMetaType::CompositeMetaTypeIds typeIds() const { return {metaTypeId, listMetaTypeId}; }
 
     int metaTypeId = -1;
     int listMetaTypeId = -1;

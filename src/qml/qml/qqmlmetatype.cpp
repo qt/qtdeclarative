@@ -518,12 +518,10 @@ QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterComposit
     return QQmlType(priv);
 }
 
-void QQmlMetaType::registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
+QQmlMetaType::CompositeMetaTypeIds QQmlMetaType::registerInternalCompositeType(const QByteArray &className)
 {
-    QByteArray name = compilationUnit->rootPropertyCache()->className();
-
-    QByteArray ptr = name + '*';
-    QByteArray lst = "QQmlListProperty<" + name + '>';
+    QByteArray ptr = className + '*';
+    QByteArray lst = "QQmlListProperty<" + className + '>';
 
     int ptr_type = QMetaType::registerNormalizedType(ptr,
                                                      QtMetaTypePrivate::QMetaTypeFunctionHelper<QObject*>::Destruct,
@@ -538,23 +536,19 @@ void QQmlMetaType::registerInternalCompositeType(QV4::ExecutableCompilationUnit 
                                                      static_cast<QFlags<QMetaType::TypeFlag> >(QtPrivate::QMetaTypeTypeFlags<QQmlListProperty<QObject> >::Flags),
                                                      static_cast<QMetaObject*>(nullptr));
 
-    compilationUnit->metaTypeId = ptr_type;
-    compilationUnit->listMetaTypeId = lst_type;
-
     QQmlMetaTypeDataPtr data;
     data->qmlLists.insert(lst_type, ptr_type);
+
+    return {ptr_type, lst_type};
 }
 
-void QQmlMetaType::unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
+void QQmlMetaType::unregisterInternalCompositeType(const QQmlMetaType::CompositeMetaTypeIds &typeIds)
 {
-    int ptr_type = compilationUnit->metaTypeId;
-    int lst_type = compilationUnit->listMetaTypeId;
-
     QQmlMetaTypeDataPtr data;
-    data->qmlLists.remove(lst_type);
+    data->qmlLists.remove(typeIds.listId);
 
-    QMetaType::unregisterType(ptr_type);
-    QMetaType::unregisterType(lst_type);
+    QMetaType::unregisterType(typeIds.id);
+    QMetaType::unregisterType(typeIds.listId);
 }
 
 int QQmlMetaType::registerUnitCacheHook(
