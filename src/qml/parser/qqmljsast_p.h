@@ -1782,7 +1782,7 @@ public:
     { return expression->firstSourceLocation(); }
 
     SourceLocation lastSourceLocation() const override
-    { return expression->lastSourceLocation(); }
+    { return semicolonToken; }
 
 // attributes
     ExpressionNode *expression;

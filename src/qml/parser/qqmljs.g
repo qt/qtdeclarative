@@ -125,6 +125,7 @@
 %nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET T_OF T_STATIC T_FROM T_AS T_REQUIRED
 %nonassoc REDUCE_HERE
 %right T_THEN T_ELSE
+%right T_WITHOUTAS T_AS
 
 %start TopLevel
 
@@ -1011,15 +1012,27 @@ UiObjectMember: UiQualifiedId T_ON UiQualifiedId  UiObjectInitializer;
 ./
 
 
-UiObjectLiteral: T_LBRACE ExpressionStatementLookahead UiPropertyDefinitionList T_RBRACE;
-/.  case $rule_number: Q_FALLTHROUGH(); ./
-UiObjectLiteral: T_LBRACE ExpressionStatementLookahead UiPropertyDefinitionList T_COMMA T_RBRACE;
+UiObjectLiteral: T_LBRACE ExpressionStatementLookahead UiPropertyDefinitionList T_RBRACE Semicolon;
 /.
     case $rule_number: {
         AST::ObjectPattern *l = new (pool) AST::ObjectPattern(sym(3).PatternPropertyList->finish());
         l->lbraceToken = loc(1);
         l->rbraceToken = loc(4);
         AST::ExpressionStatement *node = new (pool) AST::ExpressionStatement(l);
+        node->semicolonToken = loc(5);
+        sym(1).Node = node;
+    } break;
+./
+
+
+UiObjectLiteral: T_LBRACE ExpressionStatementLookahead UiPropertyDefinitionList T_COMMA T_RBRACE Semicolon;
+/.
+    case $rule_number: {
+        AST::ObjectPattern *l = new (pool) AST::ObjectPattern(sym(3).PatternPropertyList->finish());
+        l->lbraceToken = loc(1);
+        l->rbraceToken = loc(5);
+        AST::ExpressionStatement *node = new (pool) AST::ExpressionStatement(l);
+        node->semicolonToken = loc(6);
         sym(1).Node = node;
     } break;
 ./
@@ -4356,7 +4369,10 @@ ImportsList: ImportsList T_COMMA ImportSpecifier;
     } break;
 ./
 
-ImportSpecifier: ImportedBinding;
+-- When enconutering an IdentifierReference it can resolve to both ImportedBinding and IdentifierName
+-- Using %right and %prec, we tell qlalr that it should not reduce immediately, but rather shift
+-- so that we have a chance of actually parsing the correct rule if there is an "as" identifier
+ImportSpecifier: ImportedBinding %prec T_WITHOUTAS;
 /.
     case $rule_number: {
         auto importSpecifier = new (pool) AST::ImportSpecifier(stringRef(1));
