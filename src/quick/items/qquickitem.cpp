@@ -8534,7 +8534,11 @@ void QQuickItemLayer::setSourceRect(const QRectF &sourceRect)
 /*!
     \qmlproperty bool QtQuick::Item::layer.smooth
 
-    Holds whether the layer is smoothly transformed.
+    Holds whether the layer is smoothly transformed. When enabled, sampling the
+    layer's texture is performed using \c linear interpolation, while
+    non-smooth results in using the \c nearest filtering mode.
+
+    By default, this property is set to \c false.
 
     \sa {Item Layers}
  */
