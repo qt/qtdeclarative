@@ -34,12 +34,16 @@
 
 struct ResourceFileMapper
 {
+    enum class FileOutput {
+        RelativeFilePath,
+        AbsoluteFilePath
+    };
     ResourceFileMapper(const QStringList &resourceFiles);
 
     bool isEmpty() const;
 
     QStringList resourcePaths(const QString &fileName);
-    QStringList qmlCompilerFiles() const;
+    QStringList qmlCompilerFiles(FileOutput fo = FileOutput::RelativeFilePath) const;
 
 private:
     void populateFromQrcFile(QFile &file);
