@@ -200,7 +200,7 @@ public:
 
     static void qmlInsertModuleRegistration(const QString &uri, int majorVersion,
                                             void (*registerFunction)());
-    static void qmlRegisterModuleTypes(const QString &uri, int majorVersion);
+    static bool qmlRegisterModuleTypes(const QString &uri, int majorVersion);
 };
 
 Q_DECLARE_TYPEINFO(QQmlMetaType, Q_MOVABLE_TYPE);

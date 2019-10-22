@@ -61,6 +61,7 @@ private slots:
     void qrcRootPathUrl();
     void implicitImport();
     void compositeSingletonCycle();
+    void declarativeCppType();
 };
 
 void tst_QQMLTypeLoader::testLoadComplete()
@@ -540,6 +541,15 @@ void tst_QQMLTypeLoader::compositeSingletonCycle()
     QScopedPointer<QObject> object {component.create()};
     QVERIFY(object);
     QCOMPARE(qvariant_cast<QColor>(object->property("color")), QColorConstants::Black);
+}
+
+void tst_QQMLTypeLoader::declarativeCppType()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("declarativeCppType.qml"));
+    QCOMPARE(component.status(), QQmlComponent::Ready);
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)
