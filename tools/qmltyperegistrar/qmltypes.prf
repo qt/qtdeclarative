@@ -5,6 +5,10 @@ qtPrepareTool(QML_TYPEREGISTRAR, qmltyperegistrar)
 # from moc.prf
 isEmpty(QML_IMPORT_MAJOR_VERSION):!isEmpty(IMPORT_VERSION): \
     QML_IMPORT_MAJOR_VERSION = $$section(IMPORT_VERSION, ., 0, 0)
+
+isEmpty(QML_IMPORT_MINOR_VERSION):!isEmpty(IMPORT_VERSION): \
+    QML_IMPORT_MINOR_VERSION = $$section(IMPORT_VERSION, ., 1, 1)
+
 isEmpty(QML_IMPORT_NAME):!isEmpty(TARGETPATH) {
     QML_IMPORT_NAME = $$replace(TARGETPATH, "/", ".")
     QML_IMPORT_NAME = $$replace(QML_IMPORT_NAME, .$${QML_IMPORT_MAJOR_VERSION}$, '')
@@ -16,6 +20,10 @@ isEmpty(QML_IMPORT_NAME) {
 
 isEmpty(QML_IMPORT_MAJOR_VERSION) {
     error("Need IMPORT_VERSION or QML_IMPORT_MAJOR_VERSION in order to generate qml types.");
+}
+
+isEmpty(QML_IMPORT_MINOR_VERSION) {
+    QML_IMPORT_MINOR_VERSION = 0
 }
 
 isEmpty(QMLTYPES_FILENAME) {
@@ -35,6 +43,7 @@ QML_TYPEREGISTRAR_FLAGS = \
     --generate-plugintypes=$$QMLTYPES_FILENAME \
     --import-name=$$QML_IMPORT_NAME \
     --major-version=$$QML_IMPORT_MAJOR_VERSION \
+    --minor-version=$$QML_IMPORT_MINOR_VERSION \
     --foreign-types=$$join(foreign_types, ',')
 
 DEPENDENCIESFILE = $$_PRO_FILE_PWD_/dependencies.json

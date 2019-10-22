@@ -199,6 +199,11 @@ int main(int argc, char **argv)
     majorVersionOption.setValueName(QStringLiteral("major version"));
     parser.addOption(majorVersionOption);
 
+    QCommandLineOption minorVersionOption(QStringLiteral("minor-version"));
+    minorVersionOption.setDescription(QStringLiteral("Minor version to use for module registration."));
+    minorVersionOption.setValueName(QStringLiteral("minor version"));
+    parser.addOption(minorVersionOption);
+
     QCommandLineOption pluginTypesOption(QStringLiteral("generate-plugintypes"));
     pluginTypesOption.setDescription(QStringLiteral("Generate plugins.qmltypes into specified directory."));
     pluginTypesOption.setValueName(QStringLiteral("qmltypes target Directory"));
@@ -348,8 +353,9 @@ int main(int argc, char **argv)
                 qPrintable(module), qPrintable(majorVersion));
     }
 
-    fprintf(output, "\n    qmlRegisterModule(\"%s\", %s, QT_VERSION_MINOR);",
-            qPrintable(module), qPrintable(majorVersion));
+    fprintf(output, "\n    qmlRegisterModule(\"%s\", %s, %s);",
+            qPrintable(module), qPrintable(majorVersion),
+            qPrintable(parser.value(minorVersionOption)));
     fprintf(output, "\n}\n");
     fprintf(output, "static const QQmlModuleRegistration registration(\"%s\", %s, %s);\n",
             qPrintable(module), qPrintable(majorVersion), qPrintable(functionName));
