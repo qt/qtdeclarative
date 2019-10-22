@@ -120,6 +120,7 @@ private slots:
     void checkRowHeightProviderNotCallable();
     void checkForceLayoutFunction();
     void checkForceLayoutEndUpDoingALayout();
+    void checkForceLayoutDuringModelChange();
     void checkContentWidthAndHeight();
     void checkPageFlicking();
     void checkExplicitContentWidthAndHeight();
@@ -585,6 +586,29 @@ void tst_QQuickTableView::checkForceLayoutEndUpDoingALayout()
 
     for (auto fxItem : tableViewPrivate->loadedItems)
         QCOMPARE(fxItem->item->height(), newDelegateSize);
+}
+
+void tst_QQuickTableView::checkForceLayoutDuringModelChange()
+{
+    // Check that TableView doesn't assert if we call
+    // forceLayout() in the middle of a model change.
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    const int initialRowCount = 10;
+    TestModel model(initialRowCount, 10);
+    tableView->setModel(QVariant::fromValue(&model));
+
+    connect(&model, &QAbstractItemModel::rowsInserted, [=](){
+        QCOMPARE(tableView->rows(), initialRowCount);
+        tableView->forceLayout();
+        QCOMPARE(tableView->rows(), initialRowCount + 1);
+    });
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->rows(), initialRowCount);
+    model.addRow(0);
+    QCOMPARE(tableView->rows(), initialRowCount + 1);
 }
 
 void tst_QQuickTableView::checkContentWidthAndHeight()

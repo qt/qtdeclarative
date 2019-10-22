@@ -322,7 +322,8 @@ public:
 
     qreal sizeHintForColumn(int column);
     qreal sizeHintForRow(int row);
-    void calculateTableSize();
+    QSize calculateTableSize();
+    void updateTableSize();
 
     inline bool isColumnHidden(int column);
     inline bool isRowHidden(int row);
@@ -351,6 +352,7 @@ public:
     void updateContentWidth();
     void updateContentHeight();
     void updateAverageEdgeSize();
+    RebuildOptions checkForVisibilityChanges();
     void forceLayout();
 
     void updateExtents();
