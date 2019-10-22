@@ -10,6 +10,14 @@ isEmpty(QML_IMPORT_NAME):!isEmpty(TARGETPATH) {
     QML_IMPORT_NAME = $$replace(QML_IMPORT_NAME, .$${QML_IMPORT_MAJOR_VERSION}$, '')
 }
 
+isEmpty(QML_IMPORT_NAME) {
+    error("Need TARGET_PATH or QML_IMPORT_NAME in order to generate qml types.");
+}
+
+isEmpty(QML_IMPORT_MAJOR_VERSION) {
+    error("Need IMPORT_VERSION or QML_IMPORT_MAJOR_VERSION in order to generate qml types.");
+}
+
 isEmpty(QMLTYPES_FILENAME) {
     plugin: QMLTYPES_FILENAME = $$OUT_PWD/plugins.qmltypes
     else: QMLTYPES_FILENAME = $$OUT_PWD/$${TEMPLATE}.qmltypes
