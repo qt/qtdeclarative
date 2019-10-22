@@ -383,7 +383,7 @@ void QQuickContainerPrivate::contentData_append(QQmlListProperty<QObject> *prop,
     QQuickItem *item = qobject_cast<QQuickItem *>(obj);
     if (item) {
         if (QQuickItemPrivate::get(item)->isTransparentForPositioner())
-            item->setParentItem(effectiveContentItem(p->contentItem));
+            item->setParentItem(effectiveContentItem(q->contentItem()));
         else if (p->contentModel->indexOf(item, nullptr) == -1)
             q->addItem(item);
     } else {
