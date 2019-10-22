@@ -51,7 +51,7 @@ static bool acceptClassForQmlTypeRegistration(const QJsonObject &classDef)
 {
     const QJsonArray classInfos = classDef[QLatin1String("classInfos")].toArray();
     for (const QJsonValue &info: classInfos) {
-        if (info[QLatin1String("name")].toString().startsWith(QLatin1String("QML.")))
+        if (info[QLatin1String("name")].toString() == QLatin1String("QML.Element"))
             return true;
     }
     return false;
