@@ -1019,5 +1019,59 @@ Item {
             waitForRendering(layout);
             verify(layout.children[1].visible == false);
         }
+
+
+
+        Component {
+            id: gridlayout_propertyChanges_Component
+            GridLayout {
+                columns: 1
+                property alias spy : signalSpy
+                SignalSpy {
+                    id: signalSpy
+                    target: parent
+                }
+            }
+        }
+
+        Component {
+            id: rowlayout_propertyChanges_Component
+            RowLayout {
+                property alias spy : signalSpy
+                SignalSpy {
+                    id: signalSpy
+                    target: parent
+                }
+            }
+        }
+
+        function test_propertyChanges_data()
+        {
+            let data = [
+                { tag: "columnSpacing", value: 9 },
+                { tag: "rowSpacing", value: 9 },
+                { tag: "columns", value: 2 },
+                { tag: "rows", value: 2 },
+                { tag: "flow", value: GridLayout.TopToBottom},
+                { tag: "layoutDirection", value: Qt.RightToLeft },
+                { tag: "spacing", value: 9 }
+            ]
+            return data
+        }
+
+        function test_propertyChanges(data)
+        {
+            var propName = data.tag
+            var layout = createTemporaryObject(propName === "spacing"
+                                               ? rowlayout_propertyChanges_Component
+                                               : gridlayout_propertyChanges_Component
+                                               , container)
+
+            layout.spy.signalName = propName + "Changed"
+            verify(layout.spy.valid)
+
+            layout[propName] = data.value
+            compare(layout.spy.count, 1)
+        }
     }
 }
