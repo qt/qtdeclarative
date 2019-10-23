@@ -4888,6 +4888,7 @@ void tst_QJSEngine::interrupt_data()
         QTest::addRow("labeled continue / %s", mode)   << i << "a: while (true) { for (;;) { continue a; } }";
         QTest::addRow("labeled break / %s", mode)      << i << "while (true) { a: for (;;) { break a; } }";
         QTest::addRow("tail call / %s", mode)          << i << "'use strict';\nfunction x() { return x(); }; x();";
+        QTest::addRow("huge array join / %s", mode)    << i << "Array(1E9)|1";
     }
 }
 

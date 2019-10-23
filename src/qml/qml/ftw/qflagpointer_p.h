@@ -55,6 +55,17 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QtPrivate {
+template <typename T> struct QFlagPointerAlignment
+{
+    enum : size_t { Value = Q_ALIGNOF(T) };
+};
+template <> struct QFlagPointerAlignment<void>
+{
+    enum : size_t { Value = ~size_t(0) };
+};
+}
+
 template<typename T>
 class QFlagPointer {
 public:
@@ -133,6 +144,7 @@ template<typename T>
 QFlagPointer<T>::QFlagPointer(T *v)
 : ptr_value(quintptr(v))
 {
+    Q_STATIC_ASSERT_X(Q_ALIGNOF(T) >= 4, "Type T does not have sufficient alignment");
     Q_ASSERT((ptr_value & FlagsMask) == 0);
 }
 
@@ -247,6 +259,8 @@ template<typename T, typename T2>
 QBiPointer<T, T2>::QBiPointer(T *v)
 : ptr_value(quintptr(v))
 {
+    Q_STATIC_ASSERT_X(QtPrivate::QFlagPointerAlignment<T>::Value >= 4,
+                      "Type T does not have sufficient alignment");
     Q_ASSERT((quintptr(v) & FlagsMask) == 0);
 }
 
@@ -254,6 +268,8 @@ template<typename T, typename T2>
 QBiPointer<T, T2>::QBiPointer(T2 *v)
 : ptr_value(quintptr(v) | Flag2Bit)
 {
+    Q_STATIC_ASSERT_X(QtPrivate::QFlagPointerAlignment<T2>::Value >= 4,
+                      "Type T2 does not have sufficient alignment");
     Q_ASSERT((quintptr(v) & FlagsMask) == 0);
 }
 

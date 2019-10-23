@@ -532,6 +532,9 @@ QObject *QQmlContextPrivate::context_at(QQmlListProperty<QObject> *prop, int ind
 
 void QQmlContextPrivate::dropDestroyedQObject(const QString &name, QObject *destroyed)
 {
+    if (!data->isValid())
+        return;
+
     const int idx = data->propertyNames().value(name);
     Q_ASSERT(idx >= 0);
     if (qvariant_cast<QObject *>(propertyValues[idx]) != destroyed)
