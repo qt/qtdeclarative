@@ -107,10 +107,7 @@ void QQmlTypeData::unregisterCallback(TypeDataCallback *callback)
 
 bool QQmlTypeData::tryLoadFromDiskCache()
 {
-    if (diskCacheDisabled() && !diskCacheForced())
-        return false;
-
-    if (isDebugging())
+    if (!diskCacheEnabled())
         return false;
 
     QV4::ExecutionEngine *v4 = typeLoader()->engine()->handle();
@@ -621,8 +618,7 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
         return;
     }
 
-    const bool trySaveToDisk = (!diskCacheDisabled() || diskCacheForced())
-            && !m_document->jsModule.debugMode && !typeRecompilation;
+    const bool trySaveToDisk = diskCacheEnabled() && !typeRecompilation;
     if (trySaveToDisk) {
         QString errorString;
         if (m_compiledData->saveToDisk(url(), &errorString)) {

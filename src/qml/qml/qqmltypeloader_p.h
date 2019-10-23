@@ -128,9 +128,7 @@ public:
         virtual QString stringAt(int) const { return QString(); }
 
         bool isDebugging() const;
-
-        static bool diskCacheDisabled();
-        static bool diskCacheForced();
+        bool diskCacheEnabled() const;
 
         QQmlImports m_importCache;
         QVector<PendingImportPtr> m_unresolvedImports;

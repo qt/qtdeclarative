@@ -58,6 +58,8 @@ const char *ONCOMPLETED_QMLFILE = "oncompleted.qml";
 const char *CREATECOMPONENT_QMLFILE = "createComponent.qml";
 const char *CONDITION_QMLFILE = "condition.qml";
 const char *QUIT_QMLFILE = "quit.qml";
+const char *QUITINJS_QMLFILE = "quitInJS.qml";
+const char *QUIT_JSFILE = "quit.js";
 const char *CHANGEBREAKPOINT_QMLFILE = "changeBreakpoint.qml";
 const char *STEPACTION_QMLFILE = "stepAction.qml";
 const char *BREAKPOINTRELOCATION_QMLFILE = "breakpointRelocation.qml";
@@ -109,8 +111,10 @@ private slots:
     void setBreakpointInScriptOnOptimizedBinding();
     void setBreakpointInScriptWithCondition_data() { targetData(); }
     void setBreakpointInScriptWithCondition();
-    void setBreakpointInScriptThatQuits_data() { targetData(); }
+    void setBreakpointInScriptThatQuits_data() { targetData(); };
     void setBreakpointInScriptThatQuits();
+    void setBreakpointInJavaScript_data();
+    void setBreakpointInJavaScript();
     void setBreakpointWhenAttaching();
 
     void clearBreakpoint_data() { targetData(); }
@@ -446,6 +450,48 @@ void tst_QQmlDebugJS::setBreakpointInScriptThatQuits()
     QCOMPARE(QFileInfo(body.value("script").toObject().value("name").toString()).fileName(), QLatin1String(QUIT_QMLFILE));
 
     m_client->continueDebugging(QV4DebugClient::Continue);
+    QVERIFY(m_process->waitForFinished());
+    QCOMPARE(m_process->exitStatus(), QProcess::NormalExit);
+}
+
+void tst_QQmlDebugJS::setBreakpointInJavaScript_data()
+{
+    QTest::addColumn<bool>("qmlscene");
+    QTest::addColumn<bool>("seedCache");
+    QTest::newRow("custom / immediate") << false << false;
+    QTest::newRow("qmlscene / immediate") << true << false;
+    QTest::newRow("custom / seeded") << false << true;
+    QTest::newRow("qmlscene / seeded") << true << true;
+}
+
+void tst_QQmlDebugJS::setBreakpointInJavaScript()
+{
+    QFETCH(bool, qmlscene);
+    QFETCH(bool, seedCache);
+
+    if (seedCache) { // Make sure there is a qmlc file that the engine should _not_ laod.
+        QProcess process;
+        process.start(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene",
+                      { testFile(QUITINJS_QMLFILE) });
+        QTRY_COMPARE(process.state(), QProcess::NotRunning);
+    }
+
+    QCOMPARE(init(qmlscene, QUITINJS_QMLFILE), ConnectSuccess);
+
+    const int sourceLine = 2;
+
+    m_client->setBreakpoint(QLatin1String(QUIT_JSFILE), sourceLine, -1, true);
+    m_client->connect();
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
+
+    const QJsonObject body = m_client->response().body.toObject();
+
+    QCOMPARE(body.value("sourceLine").toInt(), sourceLine);
+    QCOMPARE(QFileInfo(body.value("script").toObject().value("name").toString()).fileName(),
+             QLatin1String(QUIT_JSFILE));
+
+    m_client->continueDebugging(QV4DebugClient::Continue);
+
     QVERIFY(m_process->waitForFinished());
     QCOMPARE(m_process->exitStatus(), QProcess::NormalExit);
 }

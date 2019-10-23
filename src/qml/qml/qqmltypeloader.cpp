@@ -703,14 +703,9 @@ bool QQmlTypeLoader::Blob::isDebugging() const
     return typeLoader()->engine()->handle()->debugger() != nullptr;
 }
 
-bool QQmlTypeLoader::Blob::diskCacheDisabled()
+bool QQmlTypeLoader::Blob::diskCacheEnabled() const
 {
-    return disableDiskCache();
-}
-
-bool QQmlTypeLoader::Blob::diskCacheForced()
-{
-    return forceDiskCache();
+    return (!disableDiskCache() || forceDiskCache()) && !isDebugging();
 }
 
 bool QQmlTypeLoader::Blob::qmldirDataAvailable(const QQmlRefPointer<QQmlQmldirData> &data, QList<QQmlError> *errors)
