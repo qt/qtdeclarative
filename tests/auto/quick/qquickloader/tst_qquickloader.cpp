@@ -681,6 +681,11 @@ void tst_QQuickLoader::initialPropertyValues_data()
             << QStringList()
             << (QStringList() << "initialValue")
             << (QVariantList() << 6);
+
+    QTest::newRow("source url changed, previously initial properties are discared") << testFileUrl("initialPropertyValues.11.qml")
+                                                                                    << QStringList()
+                                                                                    << (QStringList() << "oldi" << "i")
+                                                                                    << (QVariantList() << 12 << 42);
 }
 
 void tst_QQuickLoader::initialPropertyValues()
