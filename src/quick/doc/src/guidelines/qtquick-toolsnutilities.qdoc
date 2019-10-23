@@ -72,7 +72,7 @@ so on.
  \li \l{QML Profiler}
 \endlist
 
-\section2 QmlLive, GammaRay, and Squish
+\section1 QmlLive, GammaRay, and Squish
 
 QmlLive is a 3rd party tool that offers a QML runtime capable of rendering
 changes to the code in realtime. It avoids the need to rebuild the
@@ -109,4 +109,28 @@ integrating 3rd party tools such as QmlLive and GammaRay.
 \list
 \li \l{Qt Creator Manual}
 \endlist
+
+\section1 qmllint
+qmllint is a tool shipped with Qt, that verifies the syntatic validity of QML files.
+It also warns about some QML anti-patterns. If you want to disable a specific
+warning type, you can find the appropriate flag for doing so by passing \c{--help} on the command line.
+
+qmllint warns about
+\list
+  \li Unqualified accesses of properties.
+  \li Usage of signal handlers without a matching signal.
+  \li Usage of with statements in QML.
+\endlist
+
+In order for qmllint to work properly, it requires type information. That information
+is provided by qmltypes files. qmltypes files in the current directory, as well as
+those for Qt's built-in types, are discovered automatically. For qmltypes files from
+libraries that reside outside of the current directory, you can provide their path
+via the -I flag.
+
+\section2 Related Information
+\list
+  \li \l{qmltypes}
+\endlist
+
 */
