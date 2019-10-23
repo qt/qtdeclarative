@@ -930,7 +930,6 @@ QQuickItem *QQuickSplitViewPrivate::getContentItem()
     if (QQuickItem *item = QQuickContainerPrivate::getContentItem())
         return item;
 
-    // TODO: why are several created?
     return new QQuickContentItem(q);
 }
 
