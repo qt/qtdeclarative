@@ -364,7 +364,7 @@ static inline Heap::CallContext *getScope(QV4::Value *stack, int level)
 
 static inline const QV4::Value &constant(Function *function, int index)
 {
-    return function->compilationUnit->constants[index].asValue<Value>();
+    return function->compilationUnit->constants[index].asValue<QV4::Value>();
 }
 
 static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)

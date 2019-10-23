@@ -1824,7 +1824,8 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
         if (qmldirPath.size() > 25 && qmldirPath.at(0) == QLatin1Char(':') && qmldirPath.at(1) == QLatin1Char('/') &&
            qmldirPath.startsWith(QStringLiteral(":/android_rcc_bundle/qml/"), Qt::CaseInsensitive)) {
             QString pluginName = qmldirPath.mid(21) + Slash + baseName;
-            auto bundledPath = resolvedPath + QLatin1String("lib") + pluginName.replace(QLatin1Char('/'), QLatin1Char('_'));
+            pluginName.replace(QLatin1Char('/'), QLatin1Char('_'));
+            QString bundledPath = resolvedPath + QLatin1String("lib") + pluginName;
             for (const QString &suffix : suffixes) {
                 const QString absolutePath = typeLoader->absoluteFilePath(bundledPath + suffix);
                 if (!absolutePath.isEmpty())

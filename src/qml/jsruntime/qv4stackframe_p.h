@@ -117,7 +117,7 @@ struct Q_QML_EXPORT CppStackFrame {
     void setupJSFrame(Value *stackSpace, const Value &function, const Heap::ExecutionContext *scope,
                       const Value &thisObject, const Value &newTarget = Value::undefinedValue()) {
         setupJSFrame(stackSpace, function, scope, thisObject, newTarget,
-                     v4Function->nFormals, v4Function->compiledFunction->nRegisters);
+                     v4Function->compiledFunction->nFormals, v4Function->compiledFunction->nRegisters);
     }
     void setupJSFrame(Value *stackSpace, const Value &function, const Heap::ExecutionContext *scope,
                       const Value &thisObject, const Value &newTarget, uint nFormals, uint nRegisters)

@@ -464,22 +464,24 @@ Unlike an ordinary property, an alias has the following restrictions:
     must be provided when the alias is first declared.
 \li It cannot refer to \l {Attached Properties and Attached Signal Handlers}
     {attached properties}.
-\li It cannot refer to grouped properties; the following code will not work:
+\li It cannot refer to properties inside a hierarchy with depth 3 or greater. The
+    following code will not work:
+    \code
+    property alias color: myItem.myRect.border.color
+
+    Item {
+        id: myItem
+        property Rectangle myRect
+    }
+    \endcode
+
+    However, aliases to properties that are up to two levels deep will work.
+
     \code
     property alias color: rectangle.border.color
 
     Rectangle {
         id: rectangle
-    }
-    \endcode
-
-    However, aliases to \l {QML Basic Types}{value type} properties do work:
-    \code
-    property alias rectX: object.rectProperty.x
-
-    Item {
-        id: object
-        property rect rectProperty
     }
     \endcode
 \endlist
