@@ -59,6 +59,8 @@
 #include <private/qjsvalue_p.h>
 #include <private/qv4generatorobject_p.h>
 
+#include <QScopedValueRollback>
+
 #include <qtqml_tracepoints_p.h>
 
 QT_USE_NAMESPACE
@@ -241,9 +243,6 @@ void QQmlObjectCreator::beginPopulateDeferred(QQmlContextData *newContext)
 
     Q_ASSERT(topLevelCreator);
     Q_ASSERT(!sharedState->allJavaScriptObjects);
-
-    QV4::Scope valueScope(v4);
-    sharedState->allJavaScriptObjects = valueScope.alloc(compilationUnit->totalObjectCount);
 }
 
 void QQmlObjectCreator::populateDeferred(QObject *instance, int deferredIndex,
@@ -260,6 +259,8 @@ void QQmlObjectCreator::populateDeferred(QObject *instance, int deferredIndex,
     qSwap(_scopeObject, scopeObject);
 
     QV4::Scope valueScope(v4);
+    QScopedValueRollback<QV4::Value*> jsObjectGuard(sharedState->allJavaScriptObjects,
+                                                    valueScope.alloc(compilationUnit->totalObjectCount));
 
     Q_ASSERT(topLevelCreator);
     QV4::QmlContext *qmlContext = static_cast<QV4::QmlContext *>(valueScope.alloc());
