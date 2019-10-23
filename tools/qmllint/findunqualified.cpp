@@ -466,7 +466,7 @@ void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::Catch *)
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::WithStatement *withStatement)
 {
     m_colorOut.write(QString::asprintf("Warning: "), Warning);
-    m_colorOut.write(QString::asprintf("%d:%d: with statements are strongly discouraged in QML and might cause false positives when analying unqalified identifiers\n", withStatement->firstSourceLocation().startLine, withStatement->firstSourceLocation().startColumn), Normal);
+    m_colorOut.write(QString::asprintf("%d:%d: with statements are strongly discouraged in QML and might cause false positives when analysing unqalified identifiers\n", withStatement->firstSourceLocation().startLine, withStatement->firstSourceLocation().startColumn), Normal);
     enterEnvironment(ScopeType::JSLexicalScope, "with");
     return true;
 }
