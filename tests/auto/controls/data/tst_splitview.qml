@@ -149,23 +149,6 @@ TestCase {
         }
     }
 
-    SplitView {
-        id: dummyHorizontalSplitView
-        handle: handleComponent
-
-        Item { objectName: "dummyItem" }
-        Item { objectName: "dummyItem" }
-    }
-
-    SplitView {
-        id: dummyVerticalSplitView
-        orientation: Qt.Vertical
-        handle: handleComponent
-
-        Item { objectName: "dummyItem" }
-        Item { objectName: "dummyItem" }
-    }
-
     Component {
         id: splitViewComponent
 
