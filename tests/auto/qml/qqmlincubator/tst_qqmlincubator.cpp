@@ -149,7 +149,7 @@ void tst_qqmlincubator::objectDeleted()
         QVERIFY(!SelfRegisteringType::me());
 
         while (SelfRegisteringOuterType::me() == nullptr && incubator.isLoading()) {
-            bool b = false;
+            std::atomic<bool> b{false};
             controller.incubateWhile(&b);
         }
 
@@ -157,14 +157,14 @@ void tst_qqmlincubator::objectDeleted()
         QVERIFY(incubator.isLoading());
 
         while (SelfRegisteringType::me() == nullptr && incubator.isLoading()) {
-            bool b = false;
+            std::atomic<bool> b{false};
             controller.incubateWhile(&b);
         }
 
         delete SelfRegisteringType::me();
 
         {
-            bool b = true;
+            std::atomic<bool> b{true};
             controller.incubateWhile(&b);
         }
 
@@ -205,7 +205,7 @@ void tst_qqmlincubator::clear()
     component.create(incubator);
 
     while (SelfRegisteringType::me() == nullptr && incubator.isLoading()) {
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -224,7 +224,7 @@ void tst_qqmlincubator::clear()
     component.create(incubator);
 
     {
-        bool b = true;
+        std::atomic<bool> b{true};
         controller.incubateWhile(&b);
     }
 
@@ -318,7 +318,7 @@ void tst_qqmlincubator::forceCompletion()
     QVERIFY(incubator.isLoading());
 
     while (SelfRegisteringType::me() == nullptr && incubator.isLoading()) {
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -377,7 +377,7 @@ void tst_qqmlincubator::setInitialState()
     MyIncubator incubator(QQmlIncubator::Asynchronous);
     component.create(incubator);
     QVERIFY(incubator.isLoading());
-    bool b = true;
+    std::atomic<bool> b{true};
     controller.incubateWhile(&b);
     QVERIFY(incubator.isReady());
     QVERIFY(incubator.object());
@@ -414,7 +414,7 @@ void tst_qqmlincubator::clearDuringCompletion()
     QVERIFY(!CompletionRegisteringType::me());
 
     while (CompletionRegisteringType::me() == nullptr && incubator.isLoading()) {
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -453,7 +453,7 @@ void tst_qqmlincubator::objectDeletionAfterInit()
     component.create(incubator);
 
     while (!incubator.obj && incubator.isLoading()) {
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -552,7 +552,7 @@ void tst_qqmlincubator::statusChanged()
     QCOMPARE(incubator.statuses.at(0), int(QQmlIncubator::Loading));
 
     {
-    bool b = true;
+    std::atomic<bool> b{true};
     controller.incubateWhile(&b);
     }
 
@@ -574,7 +574,7 @@ void tst_qqmlincubator::statusChanged()
     QCOMPARE(incubator.statuses.at(0), int(QQmlIncubator::Loading));
 
     {
-    bool b = true;
+    std::atomic<bool> b{true};
     controller.incubateWhile(&b);
     }
 
@@ -622,7 +622,7 @@ void tst_qqmlincubator::asynchronousIfNested()
     QVERIFY(incubator.isLoading());
     QVERIFY(!SelfRegisteringType::me());
     while (SelfRegisteringType::me() == nullptr && incubator.isLoading()) {
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -635,7 +635,7 @@ void tst_qqmlincubator::asynchronousIfNested()
 
     while (nested.isLoading()) {
         QVERIFY(incubator.isLoading());
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -643,7 +643,7 @@ void tst_qqmlincubator::asynchronousIfNested()
     QVERIFY(incubator.isLoading());
 
     {
-        bool b = true;
+        std::atomic<bool> b{true};
         controller.incubateWhile(&b);
     }
 
@@ -742,7 +742,7 @@ void tst_qqmlincubator::chainedAsynchronousIfNested()
     QVERIFY(!SelfRegisteringType::me());
 
     while (SelfRegisteringType::me() == nullptr && incubator.isLoading()) {
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -779,7 +779,7 @@ void tst_qqmlincubator::chainedAsynchronousIfNested()
         QVERIFY(incubator1.isLoading());
         QVERIFY(incubator2.isNull());
 
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -792,14 +792,14 @@ void tst_qqmlincubator::chainedAsynchronousIfNested()
         QVERIFY(incubator1.isReady());
         QVERIFY(incubator2.isLoading());
 
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
     QVERIFY(incubator1.isReady());
     QVERIFY(incubator2.isReady());
     if (incubator.isLoading()) {
-        bool b = true;
+        std::atomic<bool> b{true};
         controller.incubateWhile(&b);
     }
 
@@ -856,7 +856,7 @@ void tst_qqmlincubator::chainedAsynchronousIfNestedOnCompleted()
     QVERIFY(!SelfRegisteringType::me());
 
     while (SelfRegisteringType::me() == nullptr && incubator.isLoading()) {
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -876,7 +876,7 @@ void tst_qqmlincubator::chainedAsynchronousIfNestedOnCompleted()
         QVERIFY(incubator2.isNull());
         QVERIFY(incubator3.isNull());
 
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -891,7 +891,7 @@ void tst_qqmlincubator::chainedAsynchronousIfNestedOnCompleted()
         QVERIFY(incubator2.isNull());
         QVERIFY(incubator3.isNull());
 
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -906,7 +906,7 @@ void tst_qqmlincubator::chainedAsynchronousIfNestedOnCompleted()
         QVERIFY(incubator2.isLoading());
         QVERIFY(incubator3.isNull());
 
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -921,12 +921,12 @@ void tst_qqmlincubator::chainedAsynchronousIfNestedOnCompleted()
         QVERIFY(incubator2.isReady());
         QVERIFY(incubator3.isLoading());
 
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
     {
-    bool b = true;
+    std::atomic<bool> b{true};
     controller.incubateWhile(&b);
     }
 
@@ -984,7 +984,7 @@ void tst_qqmlincubator::chainedAsynchronousClear()
     QVERIFY(!SelfRegisteringType::me());
 
     while (SelfRegisteringType::me() == nullptr && incubator.isLoading()) {
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -1004,7 +1004,7 @@ void tst_qqmlincubator::chainedAsynchronousClear()
         QVERIFY(incubator2.isNull());
         QVERIFY(incubator3.isNull());
 
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -1019,7 +1019,7 @@ void tst_qqmlincubator::chainedAsynchronousClear()
         QVERIFY(incubator2.isNull());
         QVERIFY(incubator3.isNull());
 
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -1034,7 +1034,7 @@ void tst_qqmlincubator::chainedAsynchronousClear()
         QVERIFY(incubator2.isLoading());
         QVERIFY(incubator3.isNull());
 
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -1078,7 +1078,7 @@ void tst_qqmlincubator::selfDelete()
 #define DELETE_TEST(status, mode) { \
     bool done = false; \
     component.create(*(new MyIncubator(&done, status, mode))); \
-    bool True = true; \
+    std::atomic<bool> True{true}; \
     controller.incubateWhile(&True); \
     QVERIFY(done == true); \
     }
@@ -1107,7 +1107,7 @@ void tst_qqmlincubator::selfDelete()
     QVERIFY(!SelfRegisteringType::me());
 
     while (SelfRegisteringType::me() == nullptr && incubator->isLoading()) {
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 
@@ -1121,7 +1121,7 @@ void tst_qqmlincubator::selfDelete()
     delete SelfRegisteringType::me();
 
     {
-    bool b = true;
+    std::atomic<bool> b{true};
     controller.incubateWhile(&b);
     }
 
@@ -1142,7 +1142,7 @@ void tst_qqmlincubator::contextDelete()
     delete context;
 
     {
-        bool b = false;
+        std::atomic<bool> b{false};
         controller.incubateWhile(&b);
     }
 }
@@ -1155,7 +1155,7 @@ void tst_qqmlincubator::garbageCollection()
 
     engine.collectGarbage();
 
-    bool b = true;
+    std::atomic<bool> b{true};
     controller.incubateWhile(&b);
 
     // verify incubation completed (the incubator was not prematurely collected)

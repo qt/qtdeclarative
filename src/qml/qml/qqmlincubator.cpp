@@ -403,26 +403,51 @@ void QQmlIncubationController::incubateFor(int msecs)
     if (!d || !d->incubatorCount)
         return;
 
-    QQmlInstantiationInterrupt i(msecs * 1000000);
+    QQmlInstantiationInterrupt i(msecs * Q_INT64_C(1000000));
     i.reset();
     do {
         static_cast<QQmlIncubatorPrivate*>(d->incubatorList.first())->incubate(i);
     } while (d && d->incubatorCount != 0 && !i.shouldInterrupt());
 }
 
+#if QT_DEPRECATED_SINCE(5, 15)
 /*!
-Incubate objects while the bool pointed to by \a flag is true, or until there are no
-more objects to incubate, or up to \a msecs if \a msecs is not zero.
+\obsolete
 
-Generally this method is used in conjunction with a thread or a UNIX signal that sets
-the bool pointed to by \a flag to false when it wants incubation to be interrupted.
+\warning Do not use this function.
+Use the overload taking a \c{std::atomic<bool>} instead.
 */
 void QQmlIncubationController::incubateWhile(volatile bool *flag, int msecs)
 {
     if (!d || !d->incubatorCount)
         return;
 
-    QQmlInstantiationInterrupt i(flag, msecs * 1000000);
+    QQmlInstantiationInterrupt i(flag, msecs * Q_INT64_C(1000000));
+    i.reset();
+    do {
+        static_cast<QQmlIncubatorPrivate*>(d->incubatorList.first())->incubate(i);
+    } while (d && d->incubatorCount != 0 && !i.shouldInterrupt());
+}
+#endif
+
+/*!
+\since 5.15
+
+Incubate objects while the atomic bool pointed to by \a flag is true,
+or until there are no more objects to incubate, or up to \a msecs if \a
+msecs is not zero.
+
+Generally this method is used in conjunction with a thread or a UNIX signal that sets
+the bool pointed to by \a flag to false when it wants incubation to be interrupted.
+
+\note \a flag is read using acquire memory ordering.
+*/
+void QQmlIncubationController::incubateWhile(std::atomic<bool> *flag, int msecs)
+{
+    if (!d || !d->incubatorCount)
+        return;
+
+    QQmlInstantiationInterrupt i(flag, msecs * Q_INT64_C(1000000));
     i.reset();
     do {
         static_cast<QQmlIncubatorPrivate*>(d->incubatorList.first())->incubate(i);

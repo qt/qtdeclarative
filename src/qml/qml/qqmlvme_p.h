@@ -64,6 +64,8 @@
 #include <private/qqmlengine_p.h>
 #include <private/qfinitestack_p.h>
 
+#include <atomic>
+
 QT_BEGIN_NAMESPACE
 
 class QObject;
@@ -97,17 +99,20 @@ class QTypeInfo<QQmlVMETypes::State> : public QTypeInfoMerger<QQmlVMETypes::Stat
 class QQmlInstantiationInterrupt {
 public:
     inline QQmlInstantiationInterrupt();
-    inline QQmlInstantiationInterrupt(volatile bool *runWhile, int nsecs=0);
-    inline QQmlInstantiationInterrupt(int nsecs);
+    // ### Qt 6: remove
+    inline QQmlInstantiationInterrupt(volatile bool *runWhile, qint64 nsecs=0);
+    inline QQmlInstantiationInterrupt(std::atomic<bool> *runWhile, qint64 nsecs = 0);
+    inline QQmlInstantiationInterrupt(qint64 nsecs);
 
     inline void reset();
     inline bool shouldInterrupt() const;
 private:
-    enum Mode { None, Time, Flag };
+    enum Mode { None, Time, LegacyFlag, Flag }; // ### Qt 6: remove LegacyFlag
     Mode mode;
     QElapsedTimer timer;
-    int nsecs;
-    volatile bool *runWhile;
+    qint64 nsecs = 0;
+    volatile bool *runWhileLegacy = nullptr; // ### Qt 6: remove
+    std::atomic<bool> *runWhile = nullptr;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlVME
@@ -147,17 +152,22 @@ private:
 };
 
 QQmlInstantiationInterrupt::QQmlInstantiationInterrupt()
-    : mode(None), nsecs(0), runWhile(nullptr)
+    : mode(None)
 {
 }
 
-QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(volatile bool *runWhile, int nsecs)
+QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(volatile bool *runWhile, qint64 nsecs)
+    : mode(LegacyFlag), nsecs(nsecs), runWhileLegacy(runWhile)
+{
+}
+
+QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(std::atomic<bool> *runWhile, qint64 nsecs)
     : mode(Flag), nsecs(nsecs), runWhile(runWhile)
 {
 }
 
-QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(int nsecs)
-    : mode(Time), nsecs(nsecs), runWhile(nullptr)
+QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(qint64 nsecs)
+    : mode(Time), nsecs(nsecs)
 {
 }
 
@@ -169,15 +179,18 @@ void QQmlInstantiationInterrupt::reset()
 
 bool QQmlInstantiationInterrupt::shouldInterrupt() const
 {
-    if (mode == None) {
+    switch (mode) {
+    case None:
         return false;
-    } else if (mode == Time) {
+    case Time:
         return timer.nsecsElapsed() > nsecs;
-    } else if (mode == Flag) {
-        return !*runWhile || (nsecs && timer.nsecsElapsed() > nsecs);
-    } else {
-        return false;
+    case LegacyFlag:
+        return !*runWhileLegacy || (nsecs && timer.nsecsElapsed() > nsecs);
+    case Flag:
+        return !runWhile->load(std::memory_order_acquire) || (nsecs && timer.nsecsElapsed() > nsecs);
     }
+    Q_UNREACHABLE();
+    return false;
 }
 
 QT_END_NAMESPACE
