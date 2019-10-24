@@ -1,0 +1,2 @@
+3:2:Unexpected token `version number'
+1:1:Expected a qualified name id or a string literal

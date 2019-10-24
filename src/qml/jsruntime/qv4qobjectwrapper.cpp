@@ -1622,7 +1622,7 @@ static QV4::ReturnedValue CallOverloaded(const QQmlObjectOrGadget &object, const
 
         int methodMatchScore = 0;
         for (int ii = 0; ii < methodArgumentCount; ++ii) {
-            methodMatchScore += MatchScore((v = Value::fromStaticValue(callArgs->args[ii])),
+            methodMatchScore += MatchScore((v = QV4::Value::fromStaticValue(callArgs->args[ii])),
                                            methodArgTypes[ii]);
         }
 
@@ -2268,7 +2268,7 @@ ReturnedValue QMetaObjectWrapper::callOverloadedConstructor(QV4::ExecutionEngine
 
         int methodMatchScore = 0;
         for (int ii = 0; ii < methodArgumentCount; ++ii) {
-            methodMatchScore += MatchScore((v = Value::fromStaticValue(callArgs->args[ii])),
+            methodMatchScore += MatchScore((v = QV4::Value::fromStaticValue(callArgs->args[ii])),
                                            methodArgTypes[ii]);
         }
 

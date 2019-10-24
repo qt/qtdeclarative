@@ -51,7 +51,7 @@ static bool acceptClassForQmlTypeRegistration(const QJsonObject &classDef)
 {
     const QJsonArray classInfos = classDef[QLatin1String("classInfos")].toArray();
     for (const QJsonValue &info: classInfos) {
-        if (info[QLatin1String("name")].toString().startsWith(QLatin1String("QML.")))
+        if (info[QLatin1String("name")].toString() == QLatin1String("QML.Element"))
             return true;
     }
     return false;
@@ -198,6 +198,11 @@ int main(int argc, char **argv)
     majorVersionOption.setDescription(QStringLiteral("Major version to use for type registrations."));
     majorVersionOption.setValueName(QStringLiteral("major version"));
     parser.addOption(majorVersionOption);
+
+    QCommandLineOption minorVersionOption(QStringLiteral("minor-version"));
+    minorVersionOption.setDescription(QStringLiteral("Minor version to use for module registration."));
+    minorVersionOption.setValueName(QStringLiteral("minor version"));
+    parser.addOption(minorVersionOption);
 
     QCommandLineOption pluginTypesOption(QStringLiteral("generate-plugintypes"));
     pluginTypesOption.setDescription(QStringLiteral("Generate plugins.qmltypes into specified directory."));
@@ -348,8 +353,9 @@ int main(int argc, char **argv)
                 qPrintable(module), qPrintable(majorVersion));
     }
 
-    fprintf(output, "\n    qmlRegisterModule(\"%s\", %s, QT_VERSION_MINOR);",
-            qPrintable(module), qPrintable(majorVersion));
+    fprintf(output, "\n    qmlRegisterModule(\"%s\", %s, %s);",
+            qPrintable(module), qPrintable(majorVersion),
+            qPrintable(parser.value(minorVersionOption)));
     fprintf(output, "\n}\n");
     fprintf(output, "static const QQmlModuleRegistration registration(\"%s\", %s, %s);\n",
             qPrintable(module), qPrintable(majorVersion), qPrintable(functionName));
