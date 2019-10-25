@@ -65,18 +65,6 @@
 
 QT_USE_NAMESPACE
 
-namespace {
-struct ActiveOCRestorer
-{
-    ActiveOCRestorer(QQmlObjectCreator *creator, QQmlEnginePrivate *ep)
-    : ep(ep), oldCreator(ep->activeObjectCreator) { ep->activeObjectCreator = creator; }
-    ~ActiveOCRestorer() { ep->activeObjectCreator = oldCreator; }
-
-    QQmlEnginePrivate *ep;
-    QQmlObjectCreator *oldCreator;
-};
-}
-
 QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, QQmlContextData *creationContext,
                                      QQmlIncubatorPrivate *incubator)
     : phase(Startup)
@@ -1163,7 +1151,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     QString typeName;
     Q_TRACE_EXIT(QQmlObjectCreator_createInstance_exit, typeName);
 
-    ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
+    QScopedValueRollback<QQmlObjectCreator*> ocRestore(QQmlEnginePrivate::get(engine)->activeObjectCreator, this);
 
     bool isComponent = false;
     QObject *instance = nullptr;
@@ -1364,7 +1352,7 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
     phase = Finalizing;
 
     QQmlObjectCreatorRecursionWatcher watcher(this);
-    ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
+    QScopedValueRollback<QQmlObjectCreator*> ocRestore(QQmlEnginePrivate::get(engine)->activeObjectCreator, this);
 
     while (!sharedState->allCreatedBindings.isEmpty()) {
         QQmlAbstractBinding::Ptr b = sharedState->allCreatedBindings.pop();
