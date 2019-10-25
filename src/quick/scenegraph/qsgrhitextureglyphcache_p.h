@@ -75,8 +75,10 @@ public:
     QRhiTexture *texture() const { return m_texture; }
     void commitResourceUpdates(QRhiResourceUpdateBatch *mergeInto);
 
-    int width() const { return m_size.width(); }
-    int height() const { return m_size.height(); }
+    // Clamp the default -1 width and height to 0 for compatibility with
+    // QOpenGLTextureGlyphCache.
+    int width() const { return qMax(0, m_size.width()); }
+    int height() const { return qMax(0, m_size.height()); }
 
     bool eightBitFormatIsAlphaSwizzled() const;
 
