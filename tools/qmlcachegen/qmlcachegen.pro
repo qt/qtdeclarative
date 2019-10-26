@@ -5,8 +5,10 @@ DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
 SOURCES = qmlcachegen.cpp \
     resourcefilter.cpp \
-    generateloader.cpp \
-    resourcefilemapper.cpp
+    generateloader.cpp
+
+include(../shared/shared.pri)
+
 TARGET = qmlcachegen
 
 build_integration.files = qmlcache.prf qtquickcompiler.prf
@@ -38,5 +40,3 @@ QMAKE_TARGET_DESCRIPTION = QML Cache Generator
 
 load(qt_tool)
 
-HEADERS += \
-    resourcefilemapper.h

@@ -638,6 +638,8 @@ int runQmlmin(int argc, char *argv[])
         return 0;
     }
 
+    std::cerr << "qmlmin: This tool is deprecated and will be removed in Qt 6. It is not needed anymore due to QtQml's built-in caching." << std::endl;
+
     QFile file(fileName);
     if (! file.open(QFile::ReadOnly)) {
         std::cerr << "qmlmin: '" << qPrintable(fileName) << "' no such file or directory" << std::endl;

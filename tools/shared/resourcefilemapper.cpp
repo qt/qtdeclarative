@@ -58,7 +58,7 @@ QStringList ResourceFileMapper::resourcePaths(const QString &fileName)
     return resourcePaths;
 }
 
-QStringList ResourceFileMapper::qmlCompilerFiles() const
+QStringList ResourceFileMapper::qmlCompilerFiles(FileOutput fo) const
 {
     QStringList files;
     for (auto it = qrcPathToFileSystemPath.constBegin(), end = qrcPathToFileSystemPath.constEnd();
@@ -67,7 +67,10 @@ QStringList ResourceFileMapper::qmlCompilerFiles() const
         const QString suffix = QFileInfo(qrcPath).suffix();
         if (suffix != QStringLiteral("qml") && suffix != QStringLiteral("js") && suffix != QStringLiteral("mjs"))
             continue;
-        files << qrcPath;
+        if (fo == FileOutput::AbsoluteFilePath)
+            files << it.value();
+        else
+            files << qrcPath;
     }
     return files;
 }

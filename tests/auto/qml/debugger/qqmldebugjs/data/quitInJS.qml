@@ -3,7 +3,7 @@
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:GPL-EXCEPT$
 ** Commercial License Usage
@@ -25,26 +25,17 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef RESOURCEFILEMAPPER_H
-#define RESOURCEFILEMAPPER_H
 
-#include <QStringList>
-#include <QHash>
-#include <QFile>
+import QtQuick 2.0
+import "quit.js" as Quit;
 
-struct ResourceFileMapper
-{
-    ResourceFileMapper(const QStringList &resourceFiles);
+//DO NOT CHANGE
 
-    bool isEmpty() const;
+Item {
+    Timer {
+        running: true
+        triggeredOnStart: true
+        onTriggered: Quit.quit();
+    }
+}
 
-    QStringList resourcePaths(const QString &fileName);
-    QStringList qmlCompilerFiles() const;
-
-private:
-    void populateFromQrcFile(QFile &file);
-
-    QHash<QString, QString> qrcPathToFileSystemPath;
-};
-
-#endif // RESOURCEFILEMAPPER_H
