@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule QtQuick.Controls 2.5
+    \qmlmodule QtQuick.Controls 2.\QtMinorVersion
     \keyword Qt Quick Controls QML Types
     \title Qt Quick Controls QML Types
     \keyword Qt Quick Controls 2 QML Types
