@@ -284,7 +284,7 @@ protected:
 #endif
 
 private:
-    void ungrab();
+    void ungrab(bool normalRelease = false);
     QMap<int,QQuickTouchPoint*> _touchPrototypes;  //TouchPoints defined in QML
     QMap<int,QObject*> _touchPoints;            //All current touch points
     QList<QObject*> _releasedTouchPoints;
@@ -292,8 +292,10 @@ private:
     QList<QObject*> _movedTouchPoints;
     int _minimumTouchPoints;
     int _maximumTouchPoints;
+    QVector<int> _lastFilterableTouchPointIds;
     QPointer<QQuickTouchPoint> _mouseTouchPoint; // exists when mouse button is down and _mouseEnabled is true; null otherwise
     QTouchEvent::TouchPoint _mouseQpaTouchPoint; // synthetic QPA touch point to hold state and position of the mouse
+    const QTouchDevice *_touchMouseDevice;
     QPointF _mousePos;
     bool _stealMouse;
     bool _mouseEnabled;
