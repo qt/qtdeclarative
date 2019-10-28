@@ -293,7 +293,7 @@ struct Function
 
     typedef quint16_le TraceInfoCount;
     TraceInfoCount nTraceInfos;
-    static constexpr TraceInfoCount NoTracing() { return TraceInfoCount::max(); }
+    static Q_DECL_CONSTEXPR TraceInfoCount NoTracing() { return TraceInfoCount::max(); }
 
     // Keep all unaligned data at the end
     quint8 flags;
