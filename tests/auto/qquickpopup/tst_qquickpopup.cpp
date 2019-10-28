@@ -91,6 +91,7 @@ private slots:
     void countChanged();
     void toolTipCrashOnClose();
     void setOverlayParentToNull();
+    void tabFence();
 };
 
 void tst_QQuickPopup::initTestCase()
@@ -1231,6 +1232,62 @@ void tst_QQuickPopup::setOverlayParentToNull()
 
     QVERIFY(window->close());
     // While nullifying the overlay parent doesn't make much sense, it shouldn't crash.
+}
+
+void tst_QQuickPopup::tabFence()
+{
+    if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
+        QSKIP("This platform only allows tab focus for text controls");
+
+    QQuickApplicationHelper helper(this, "tabFence.qml");
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickPopup *popup = window->property("dialog").value<QQuickPopup*>();
+    QVERIFY(popup);
+    popup->open();
+    popup->setModal(true);
+
+    QQuickButton *outsideButton1 = window->property("outsideButton1").value<QQuickButton*>();
+    QVERIFY(outsideButton1);
+    QQuickButton *outsideButton2 = window->property("outsideButton2").value<QQuickButton*>();
+    QVERIFY(outsideButton2);
+    QQuickButton *dialogButton1 = window->property("dialogButton1").value<QQuickButton*>();
+    QVERIFY(dialogButton1);
+    QQuickButton *dialogButton2 = window->property("dialogButton2").value<QQuickButton*>();
+    QVERIFY(dialogButton2);
+
+    // When modal, focus loops between the two external buttons
+    outsideButton1->forceActiveFocus();
+    QVERIFY(outsideButton1->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(outsideButton2->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(outsideButton1->hasActiveFocus());
+
+    // Same thing for dialog's buttons
+    dialogButton1->forceActiveFocus();
+    QVERIFY(dialogButton1->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(dialogButton2->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(dialogButton1->hasActiveFocus());
+
+    popup->setModal(false);
+
+    // When not modal, focus goes in and out of the dialog
+    outsideButton1->forceActiveFocus();
+    QVERIFY(outsideButton1->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(outsideButton2->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(dialogButton1->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(dialogButton2->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(outsideButton1->hasActiveFocus());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)
