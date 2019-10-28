@@ -197,6 +197,8 @@ private slots:
     void qtBug60123();
 #endif
 
+    void setParentCalledInOnWindowChanged();
+
 private:
 
     enum PaintOrderOp {
@@ -2145,6 +2147,12 @@ void tst_qquickitem::qtBug60123()
     activateWindowAndTestPress(&window);
 }
 #endif
+void tst_qquickitem::setParentCalledInOnWindowChanged()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("setParentInWindowChange.qml"));
+    QVERIFY(ensureFocus(&view)); // should not crash
+}
 
 QTEST_MAIN(tst_qquickitem)
 
