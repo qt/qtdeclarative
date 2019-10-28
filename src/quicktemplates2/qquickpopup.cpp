@@ -1836,6 +1836,8 @@ void QQuickPopup::setModal(bool modal)
         d->toggleOverlay();
     emit modalChanged();
 
+    QQuickItemPrivate::get(d->popupItem)->isTabFence = modal;
+
     if (!d->hasDim) {
         setDim(modal);
         d->hasDim = false;
