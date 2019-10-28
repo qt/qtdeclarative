@@ -82,6 +82,7 @@ private slots:
     void cursorShape();
     void componentComplete();
     void closeOnEscapeWithNestedPopups();
+    void closeOnEscapeWithVisiblePopup();
     void enabled();
     void orientation_data();
     void orientation();
@@ -1018,6 +1019,21 @@ void tst_QQuickPopup::closeOnEscapeWithNestedPopups()
     // Remove one by pressing the Escape key (the Shortcut should be activated).
     QTest::keyClick(window, Qt::Key_Escape);
     QCOMPARE(stackView->depth(), 1);
+}
+
+void tst_QQuickPopup::closeOnEscapeWithVisiblePopup()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("closeOnEscapeWithVisiblePopup.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickPopup *popup = window->findChild<QQuickPopup *>("popup");
+    QVERIFY(popup);
+    QTRY_VERIFY(popup->isOpened());
+
+    QTest::keyClick(window, Qt::Key_Escape);
+    QTRY_VERIFY(!popup->isVisible());
 }
 
 void tst_QQuickPopup::enabled()
