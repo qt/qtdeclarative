@@ -143,6 +143,7 @@ private slots:
     void source();
     void recursion_data();
     void recursion();
+    void noCrashWithImageProvider();
 
 private:
     QQmlEngine engine;
@@ -1277,6 +1278,30 @@ void tst_QQuickDrag::recursion()
         QCOMPARE(dropTarget.dropEvents, 0);
         QCOMPARE(dropTarget.leaveEvents, 1);
     }
+}
+
+void tst_QQuickDrag::noCrashWithImageProvider()
+{
+    // QTBUG-72045
+    QQmlComponent component(&engine);
+    component.setData(
+    R"(
+    import QtQuick 2.9
+    Item {
+        Rectangle {
+            id: item
+            width: 50
+            height: 50
+            anchors.centerIn: parent
+            color: "orange"
+            Component.onCompleted: {
+                item.Drag.imageSource = "image://kill/me"
+            }
+        }
+    })", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickItem *item = qobject_cast<QQuickItem *>(object.data());
+    QVERIFY(item);
 }
 
 

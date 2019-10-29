@@ -442,7 +442,7 @@ void QQuickDragAttached::setImageSource(const QUrl &url)
         if (url.isEmpty()) {
             d->pixmapLoader.clear();
         } else {
-            d->pixmapLoader.load(qmlEngine(this), url);
+            d->pixmapLoader.load(qmlEngine(parent()), url);
         }
 
         Q_EMIT imageSourceChanged();
