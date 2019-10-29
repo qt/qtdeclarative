@@ -174,6 +174,10 @@ QQmlBind::~QQmlBind()
 
     When the binding becomes inactive again, any direct bindings that were previously
     set on the property will be restored.
+
+    \note A previously set literal value is not restored when the Binding becomes inactive. Rather,
+    the last value set by the now inactive Binding is retained. This behavior will change in future
+    versions of Qt.
 */
 bool QQmlBind::when() const
 {
