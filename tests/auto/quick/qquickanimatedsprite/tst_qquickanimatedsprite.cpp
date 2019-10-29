@@ -57,6 +57,7 @@ private slots:
     void test_changeSourceToSmallerImgKeepingBigFrameSize();
     void test_infiniteLoops();
     void test_implicitSize();
+    void test_finishBehavior();
 };
 
 void tst_qquickanimatedsprite::initTestCase()
@@ -426,6 +427,31 @@ void tst_qquickanimatedsprite::test_infiniteLoops()
     const int previousFrame = sprite->currentFrame();
     QTRY_VERIFY(sprite->currentFrame() != previousFrame);
     QCOMPARE(finishedSpy.count(), 0);
+}
+
+void tst_qquickanimatedsprite::test_finishBehavior()
+{
+    QQuickView window;
+    window.setSource(testFileUrl("finishBehavior.qml"));
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(window.rootObject());
+
+    QQuickAnimatedSprite* sprite = window.rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
+    QVERIFY(sprite);
+
+    QTRY_VERIFY(sprite->running());
+
+    // correctly stops at last frame
+    QSignalSpy finishedSpy(sprite, SIGNAL(finished()));
+    QVERIFY(finishedSpy.wait(2000));
+    QCOMPARE(sprite->running(), false);
+    QCOMPARE(sprite->currentFrame(), 5);
+
+    // correctly starts a second time
+    sprite->start();
+    QTRY_VERIFY(sprite->running());
+    QTRY_COMPARE(sprite->currentFrame(), 5);
 }
 
 QTEST_MAIN(tst_qquickanimatedsprite)
