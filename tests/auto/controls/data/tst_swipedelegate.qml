@@ -702,7 +702,9 @@ TestCase {
 
                 property alias removeAnimation: onRemoveAnimation
 
-                ListView.onRemove: SequentialAnimation {
+                ListView.onRemove: onRemoveAnimation.start()
+
+                SequentialAnimation {
                     id: onRemoveAnimation
 
                     PropertyAction {
@@ -1274,10 +1276,10 @@ TestCase {
     // When this happens, it will grab the mouse and hence we must clear
     // that action's pressed state so that it doesn't stay pressed after releasing.
     function test_dragSideAction() {
-        var listView = createTemporaryObject(removableDelegatesComponent, testCase);
+        let listView = createTemporaryObject(removableDelegatesComponent, testCase);
         verify(listView);
 
-        var control = listView.itemAt(0, 0);
+        let control = listView.itemAt(0, 0);
         verify(control);
 
         // Expose the side action.
@@ -1285,15 +1287,43 @@ TestCase {
         verify(control.swipe.leftItem);
         tryCompare(control.swipe, "complete", true);
 
-        var pressedSpy = signalSpyComponent.createObject(control,
+        let pressedSpy = signalSpyComponent.createObject(control,
             { target: control.swipe.leftItem.SwipeDelegate, signalName: "pressedChanged" });
         verify(pressedSpy);
         verify(pressedSpy.valid);
 
+        let movingHorizontallySpy = createTemporaryObject(signalSpyComponent, testCase,
+            { target: listView, signalName: "movingHorizontallyChanged" })
+        verify(movingHorizontallySpy)
+        verify(movingHorizontallySpy.valid)
+
+        let movingVerticallySpy = createTemporaryObject(signalSpyComponent, testCase,
+            { target: listView, signalName: "movingVerticallyChanged" })
+        verify(movingVerticallySpy)
+        verify(movingVerticallySpy.valid)
+
+        let flickingHorizontallySpy = createTemporaryObject(signalSpyComponent, testCase,
+            { target: listView, signalName: "flickingHorizontallyChanged" })
+        verify(flickingHorizontallySpy)
+        verify(flickingHorizontallySpy.valid)
+
+        let flickingVerticallySpy = createTemporaryObject(signalSpyComponent, testCase,
+            { target: listView, signalName: "flickingVerticallyChanged" })
+        verify(flickingVerticallySpy)
+        verify(flickingVerticallySpy.valid)
+
+        // Drag the ListView vertically; its contentY should change.
         mouseDrag(listView, 20, 20, 0, listView.height);
         compare(pressedSpy.count, 2);
-        verify(listView.contentY !== 0);
 
+        // Wait for it to stop moving.
+        tryCompare(listView, "flickingVertically", false)
+
+        // 2 because it should change to true then false.
+        compare(movingHorizontallySpy.count, 0)
+        compare(movingVerticallySpy.count, 2)
+        compare(flickingHorizontallySpy.count, 0)
+        compare(flickingVerticallySpy.count, 2)
         compare(control.swipe.leftItem.SwipeDelegate.pressed, false);
     }
 
