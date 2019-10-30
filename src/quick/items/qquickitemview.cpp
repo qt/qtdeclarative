@@ -235,7 +235,9 @@ void QQuickItemView::setModel(const QVariant &m)
         if (isComponentComplete()) {
             d->updateSectionCriteria();
             d->refill();
-            d->currentIndex = -1;
+            /* Setting currentIndex to -2 ensures that we always enter the "currentIndex changed"
+               code path in setCurrentIndex, updating bindings depending on currentIndex.*/
+            d->currentIndex = -2;
             setCurrentIndex(d->model->count() > 0 ? 0 : -1);
             d->updateViewport();
 

@@ -2891,7 +2891,11 @@ void tst_QQuickListView::currentIndex()
 
     // empty model should reset currentIndex to -1
     QaimModel emptyModel;
+    window->rootObject()->setProperty("currentItemChangedCount", QVariant(0));
+    QVERIFY(QQmlProperty(window->rootObject(), "s").read().toString() != QLatin1String("-1"));
     ctxt->setContextProperty("testModel", &emptyModel);
+    QCOMPARE(QQmlProperty(window->rootObject(), "s").read().toString(), "-1");
+    QCOMPARE(window->rootObject()->property("currentItemChangedCount").toInt(), 1);
     QCOMPARE(listview->currentIndex(), -1);
 
     delete window;
