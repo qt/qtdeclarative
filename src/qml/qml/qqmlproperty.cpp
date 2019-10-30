@@ -63,6 +63,7 @@
 #include <private/qqmlvaluetypewrapper_p.h>
 #include <QtCore/qdebug.h>
 #include <cmath>
+#include <QtQml/QQmlPropertyMap>
 
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QList<qreal>)
@@ -331,10 +332,15 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
 
                 return;
             } else {
-                if (!property->isQObject())
-                    return; // Not an object property
+                if (!property->isQObject()) {
+                    if (auto asPropertyMap = qobject_cast<QQmlPropertyMap*>(currentObject))
+                        currentObject = asPropertyMap->value(path.at(ii).toString()).value<QObject*>();
+                    else
+                        return; // Not an object property, and not a property map
+                } else {
+                    property->readProperty(currentObject, &currentObject);
+                }
 
-                property->readProperty(currentObject, &currentObject);
                 if (!currentObject) return; // No value
 
             }
