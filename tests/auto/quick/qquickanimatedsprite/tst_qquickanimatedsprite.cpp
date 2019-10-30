@@ -49,6 +49,7 @@ private slots:
     void initTestCase();
     void test_properties();
     void test_runningChangedSignal();
+    void test_startStop();
     void test_frameChangedSignal();
     void test_largeAnimation_data();
     void test_largeAnimation();
@@ -116,6 +117,42 @@ void tst_qquickanimatedsprite::test_runningChangedSignal()
     QTRY_VERIFY(!sprite->running());
     QTRY_COMPARE(runningChangedSpy.count(), 2);
     QCOMPARE(finishedSpy.count(), 1);
+}
+
+void tst_qquickanimatedsprite::test_startStop()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+
+    window->setSource(testFileUrl("runningChange.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QVERIFY(window->rootObject());
+    QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
+    QVERIFY(sprite);
+
+    QVERIFY(!sprite->running());
+
+    QSignalSpy runningChangedSpy(sprite, SIGNAL(runningChanged(bool)));
+    QSignalSpy finishedSpy(sprite, SIGNAL(finished()));
+    QVERIFY(finishedSpy.isValid());
+
+    sprite->start();
+    QVERIFY(sprite->running());
+    QTRY_COMPARE(runningChangedSpy.count(), 1);
+    QCOMPARE(finishedSpy.count(), 0);
+    sprite->stop();
+    QVERIFY(!sprite->running());
+    QTRY_COMPARE(runningChangedSpy.count(), 2);
+    QCOMPARE(finishedSpy.count(), 0);
+
+    sprite->setCurrentFrame(2);
+    sprite->start();
+    QVERIFY(sprite->running());
+    QCOMPARE(sprite->currentFrame(), 0);
+    QTRY_VERIFY(sprite->currentFrame() > 0);
+    sprite->stop();
+    QVERIFY(!sprite->running());
 }
 
 template <typename T>
