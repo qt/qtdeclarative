@@ -1065,10 +1065,7 @@ void QQuickTableViewPrivate::releaseItem(FxTableItem *fxTableItem, QQmlTableInst
                     tableModel->release(item, reusableFlag) :
                     model->release(item);
 
-        if (releaseFlag != QQmlInstanceModel::Destroyed) {
-            // When items are not destroyed, it typically means that the
-            // item is reused, or that the model is an ObjectModel. If
-            // so, we just hide the item instead.
+        if (releaseFlag == QQmlInstanceModel::Pooled) {
             fxTableItem->setVisible(false);
 
             // If the item (or a descendant) has focus, remove it, so

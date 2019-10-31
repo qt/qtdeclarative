@@ -74,7 +74,7 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlInstanceModel : public QObject
 public:
     virtual ~QQmlInstanceModel() {}
 
-    enum ReleaseFlag { Referenced = 0x01, Destroyed = 0x02 };
+    enum ReleaseFlag { Referenced = 0x01, Destroyed = 0x02, Pooled = 0x04 };
     Q_DECLARE_FLAGS(ReleaseFlags, ReleaseFlag)
 
     virtual int count() const = 0;

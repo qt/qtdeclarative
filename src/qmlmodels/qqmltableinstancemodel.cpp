@@ -226,7 +226,7 @@ QQmlInstanceModel::ReleaseFlags QQmlTableInstanceModel::release(QObject *object,
 
     if (reusable == Reusable) {
         insertIntoReusableItemsPool(modelItem);
-        return QQmlInstanceModel::Referenced;
+        return QQmlInstanceModel::Pooled;
     }
 
     // The item is not reused or referenced by anyone, so just delete it
