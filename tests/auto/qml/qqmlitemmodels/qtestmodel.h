@@ -31,6 +31,8 @@
 
 #include <QtCore/qabstractitemmodel.h>
 
+#include <limits.h>
+
 class TestModel: public QAbstractItemModel
 {
     Q_OBJECT

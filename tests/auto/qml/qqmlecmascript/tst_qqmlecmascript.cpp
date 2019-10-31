@@ -5737,7 +5737,7 @@ void tst_qqmlecmascript::sequenceConversionRead()
         QVERIFY(seq != nullptr);
 
         // we haven't registered QList<NonRegisteredType> as a sequence type.
-        QString warningOne = QLatin1String("QMetaProperty::read: Unable to handle unregistered datatype 'QList<NonRegisteredType>' for property 'MySequenceConversionObject::typeListProperty'");
+        QString warningOne = QLatin1String("QMetaProperty::read: Unable to handle unregistered datatype 'QVector<NonRegisteredType>' for property 'MySequenceConversionObject::typeListProperty'");
         QString warningTwo = qmlFile.toString() + QLatin1String(":18: TypeError: Cannot read property 'length' of undefined");
         QTest::ignoreMessage(QtWarningMsg, warningOne.toLatin1().constData());
         QTest::ignoreMessage(QtWarningMsg, warningTwo.toLatin1().constData());
@@ -5747,7 +5747,7 @@ void tst_qqmlecmascript::sequenceConversionRead()
         // QList<NonRegisteredType> has not been registered as a sequence type.
         QCOMPARE(object->property("pointListLength").toInt(), 0);
         QVERIFY(!object->property("pointList").isValid());
-        QTest::ignoreMessage(QtWarningMsg, "QMetaProperty::read: Unable to handle unregistered datatype 'QList<NonRegisteredType>' for property 'MySequenceConversionObject::typeListProperty'");
+        QTest::ignoreMessage(QtWarningMsg, "QMetaProperty::read: Unable to handle unregistered datatype 'QVector<NonRegisteredType>' for property 'MySequenceConversionObject::typeListProperty'");
         QQmlProperty seqProp(seq, "typeListProperty", &engine);
         QVERIFY(!seqProp.read().isValid()); // not a valid/known sequence type
 
@@ -5790,7 +5790,7 @@ void tst_qqmlecmascript::sequenceConversionWrite()
         QVERIFY(seq != nullptr);
 
         // we haven't registered QList<QPoint> as a sequence type, so writing shouldn't work.
-        QString warningOne = qmlFile.toString() + QLatin1String(":16: Error: Cannot assign QJSValue to QList<QPoint>");
+        QString warningOne = qmlFile.toString() + QLatin1String(":16: Error: Cannot assign QJSValue to QVector<QPoint>");
         QTest::ignoreMessage(QtWarningMsg, warningOne.toLatin1().constData());
 
         QMetaObject::invokeMethod(object, "performTest");
@@ -5904,7 +5904,7 @@ void tst_qqmlecmascript::sequenceConversionBindings()
 
     {
         QUrl qmlFile = testFileUrl("sequenceConversion.bindings.error.qml");
-        QString warning = QString(QLatin1String("%1:17:9: Unable to assign QList<int> to QList<bool>")).arg(qmlFile.toString());
+        QString warning = QString(QLatin1String("%1:17:9: Unable to assign QVector<int> to QVector<bool>")).arg(qmlFile.toString());
         QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
         QQmlComponent component(&engine, qmlFile);
         QObject *object = component.create();
