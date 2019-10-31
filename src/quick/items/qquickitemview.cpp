@@ -1581,9 +1581,7 @@ FxViewItem *QQuickItemViewPrivate::visibleItem(int modelIndex) const {
     return nullptr;
 }
 
-// should rename to firstItemInView() to avoid confusion with other "*visible*" methods
-// that don't look at the view position and size
-FxViewItem *QQuickItemViewPrivate::firstVisibleItem() const {
+FxViewItem *QQuickItemViewPrivate::firstItemInView() const {
     const qreal pos = isContentFlowReversed() ? -position()-size() : position();
     for (FxViewItem *item : visibleItems) {
         if (item->index != -1 && item->endPosition() > pos)
@@ -1955,22 +1953,22 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
     bool viewportChanged = !currentChanges.pendingChanges.removes().isEmpty()
             || !currentChanges.pendingChanges.inserts().isEmpty();
 
-    FxViewItem *prevFirstVisible = firstVisibleItem();
-    QQmlNullableValue<qreal> prevViewPos;
-    int prevFirstVisibleIndex = -1;
-    if (prevFirstVisible) {
-        prevViewPos = prevFirstVisible->position();
-        prevFirstVisibleIndex = prevFirstVisible->index;
+    FxViewItem *prevFirstItemInView = firstItemInView();
+    QQmlNullableValue<qreal> prevFirstItemInViewPos;
+    int prevFirstItemInViewIndex = -1;
+    if (prevFirstItemInView) {
+        prevFirstItemInViewPos = prevFirstItemInView->position();
+        prevFirstItemInViewIndex = prevFirstItemInView->index;
     }
     qreal prevVisibleItemsFirstPos = visibleItems.count() ? visibleItems.constFirst()->position() : 0.0;
 
-    totalInsertionResult->visiblePos = prevViewPos;
-    totalRemovalResult->visiblePos = prevViewPos;
+    totalInsertionResult->visiblePos = prevFirstItemInViewPos;
+    totalRemovalResult->visiblePos = prevFirstItemInViewPos;
 
     const QVector<QQmlChangeSet::Change> &removals = currentChanges.pendingChanges.removes();
     const QVector<QQmlChangeSet::Change> &insertions = currentChanges.pendingChanges.inserts();
-    ChangeResult insertionResult(prevViewPos);
-    ChangeResult removalResult(prevViewPos);
+    ChangeResult insertionResult(prevFirstItemInViewPos);
+    ChangeResult removalResult(prevFirstItemInViewPos);
 
     int removedCount = 0;
     for (const QQmlChangeSet::Change &r : removals) {
@@ -1979,7 +1977,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
             visibleAffected = true;
         if (!visibleAffected && needsRefillForAddedOrRemovedIndex(r.index))
             visibleAffected = true;
-        const int correctedFirstVisibleIndex = prevFirstVisibleIndex - removalResult.countChangeBeforeVisible;
+        const int correctedFirstVisibleIndex = prevFirstItemInViewIndex - removalResult.countChangeBeforeVisible;
         if (correctedFirstVisibleIndex >= 0 && r.index < correctedFirstVisibleIndex) {
             if (r.index + r.count < correctedFirstVisibleIndex)
                 removalResult.countChangeBeforeVisible += r.count;
@@ -2006,7 +2004,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
 
         // set positions correctly for the next insertion
         if (!insertions.isEmpty()) {
-            repositionFirstItem(prevVisibleItemsFirst, prevVisibleItemsFirstPos, prevFirstVisible, &insertionResult, &removalResult);
+            repositionFirstItem(prevVisibleItemsFirst, prevVisibleItemsFirstPos, prevFirstItemInView, &insertionResult, &removalResult);
             layoutVisibleItems(removals.first().index);
         }
     }
@@ -2026,7 +2024,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
 
         // set positions correctly for the next insertion
         if (i < insertions.count() - 1) {
-            repositionFirstItem(prevVisibleItemsFirst, prevVisibleItemsFirstPos, prevFirstVisible, &insertionResult, &removalResult);
+            repositionFirstItem(prevVisibleItemsFirst, prevVisibleItemsFirstPos, prevFirstItemInView, &insertionResult, &removalResult);
             layoutVisibleItems(insertions[i].index);
         }
         itemCount += insertions[i].count;
@@ -2043,7 +2041,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
         for (const MovedItem &m : qAsConst(movingIntoView)) {
             int fromIndex = findMoveKeyIndex(m.moveKey, removals);
             if (fromIndex >= 0) {
-                if (prevFirstVisibleIndex >= 0 && fromIndex < prevFirstVisibleIndex)
+                if (prevFirstItemInViewIndex >= 0 && fromIndex < prevFirstItemInViewIndex)
                     repositionItemAt(m.item, fromIndex, -totalInsertionResult->sizeChangesAfterVisiblePos);
                 else
                     repositionItemAt(m.item, fromIndex, totalInsertionResult->sizeChangesAfterVisiblePos);
@@ -2054,7 +2052,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
 
     // reposition visibleItems.first() correctly so that the content y doesn't jump
     if (removedCount != prevVisibleItemsCount)
-        repositionFirstItem(prevVisibleItemsFirst, prevVisibleItemsFirstPos, prevFirstVisible, &insertionResult, &removalResult);
+        repositionFirstItem(prevVisibleItemsFirst, prevVisibleItemsFirstPos, prevFirstItemInView, &insertionResult, &removalResult);
 
     // Whatever removed/moved items remain are no longer visible items.
     prepareRemoveTransitions(&currentChanges.removedItems);

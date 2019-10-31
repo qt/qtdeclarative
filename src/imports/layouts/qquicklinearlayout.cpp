@@ -283,8 +283,11 @@ Qt::LayoutDirection QQuickGridLayoutBase::layoutDirection() const
 void QQuickGridLayoutBase::setLayoutDirection(Qt::LayoutDirection dir)
 {
     Q_D(QQuickGridLayoutBase);
+    if (d->m_layoutDirection == dir)
+        return;
     d->m_layoutDirection = dir;
     invalidate();
+    emit layoutDirectionChanged();
 }
 
 Qt::LayoutDirection QQuickGridLayoutBase::effectiveLayoutDirection() const
@@ -524,6 +527,7 @@ void QQuickGridLayout::setColumnSpacing(qreal spacing)
 
     d->engine.setSpacing(spacing, Qt::Horizontal);
     invalidate();
+    emit columnSpacingChanged();
 }
 
 /*!
@@ -546,6 +550,7 @@ void QQuickGridLayout::setRowSpacing(qreal spacing)
 
     d->engine.setSpacing(spacing, Qt::Vertical);
     invalidate();
+    emit rowSpacingChanged();
 }
 
 /*!
@@ -817,6 +822,7 @@ void QQuickLinearLayout::setSpacing(qreal space)
 
     d->engine.setSpacing(space, Qt::Horizontal | Qt::Vertical);
     invalidate();
+    emit spacingChanged();
 }
 
 void QQuickLinearLayout::insertLayoutItems()
