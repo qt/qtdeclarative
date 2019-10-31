@@ -154,7 +154,8 @@ public:
 
     void clear() {
         Q_Q(QQmlObjectModel);
-        for (const Item &child : qAsConst(children))
+        const auto copy = children;
+        for (const Item &child : copy)
             emit q->destroyingItem(child.item);
         remove(0, children.count());
     }
@@ -169,6 +170,8 @@ public:
     uint moveId;
     QList<Item> children;
 };
+
+Q_DECLARE_TYPEINFO(QQmlObjectModelPrivate::Item, Q_PRIMITIVE_TYPE);
 
 
 /*!
