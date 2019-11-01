@@ -408,6 +408,15 @@ QV4::ReturnedValue Runtime::In::call(ExecutionEngine *engine, const Value &left,
 
 double RuntimeHelpers::stringToNumber(const QString &string)
 {
+    // The actual maximum valid length is certainly shorter, but due to the sheer number of
+    // different number formatting variants, we rather err on the side of caution here.
+    // For example, you can have up to 772 valid decimal digits left of the dot, as stated in the
+    // libdoubleconversion sources. The same maximum value would be represented by roughly 3.5 times
+    // as many binary digits.
+    const int excessiveLength = 16 * 1024;
+    if (string.length() > excessiveLength)
+        return qQNaN();
+
     const QStringRef s = QStringRef(&string).trimmed();
     if (s.startsWith(QLatin1Char('0'))) {
         int base = -1;
