@@ -812,10 +812,12 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
     // QQmlEngine to emit signals from a different thread.  These signals are then automatically
     // marshalled back onto the QObject's thread and handled by QML from there.  This is tested
     // by the qqmlecmascript::threadSignal() autotest.
-    if (ddata->notifyList &&
-        QThread::currentThreadId() != QObjectPrivate::get(object)->getThreadData()->threadId.loadRelaxed()) {
+    if (!ddata->notifyList)
+        return;
 
-        if (!QObjectPrivate::get(object)->getThreadData()->thread.loadAcquire())
+    auto objectThreadData = QObjectPrivate::get(object)->threadData.loadRelaxed();
+    if (QThread::currentThreadId() != objectThreadData->threadId.loadRelaxed()) {
+        if (!objectThreadData->thread.loadAcquire())
             return;
 
         QMetaMethod m = QMetaObjectPrivate::signal(object->metaObject(), index);
@@ -847,7 +849,7 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
 
         QQmlThreadNotifierProxyObject *mpo = new QQmlThreadNotifierProxyObject;
         mpo->target = object;
-        mpo->moveToThread(QObjectPrivate::get(object)->getThreadData()->thread.loadAcquire());
+        mpo->moveToThread(objectThreadData->thread.loadAcquire());
         QCoreApplication::postEvent(mpo, ev.take());
 
     } else {
