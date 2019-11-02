@@ -904,6 +904,8 @@ void tst_QQuickPopup::cursorShape()
     // which is itself over an item with a different shape.
     QQuickApplicationHelper helper(this, QStringLiteral("cursor.qml"));
     QQuickApplicationWindow *window = helper.appWindow;
+    centerOnScreen(window);
+    moveMouseAway(window);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
 

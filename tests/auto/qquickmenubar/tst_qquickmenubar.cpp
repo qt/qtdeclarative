@@ -60,6 +60,7 @@ private slots:
     void keys();
     void mnemonics();
     void addRemove();
+    void checkHighlightWhenMenuDismissed();
 };
 
 void tst_qquickmenubar::delegate()
@@ -562,6 +563,63 @@ void tst_qquickmenubar::addRemove()
     QVERIFY(menu1.isNull());
     QCoreApplication::sendPostedEvents(menuBarItem1, QEvent::DeferredDelete);
     QVERIFY(menuBarItem1.isNull());
+}
+
+void tst_qquickmenubar::checkHighlightWhenMenuDismissed()
+{
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
+
+    QQmlApplicationEngine engine(testFileUrl("checkHighlightWhenDismissed.qml"));
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+
+    centerOnScreen(window.data());
+    moveMouseAway(window.data());
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickMenuBar *menuBar = window->findChild<QQuickMenuBar *>("menuBar");
+    QVERIFY(menuBar);
+
+    QQuickMenu *staticMenu = menuBar->menuAt(0);
+    QQuickMenu *dynamicMenu = menuBar->menuAt(1);
+    QVERIFY(staticMenu && dynamicMenu);
+    QQuickMenuBarItem *staticMenuBarItem = qobject_cast<QQuickMenuBarItem *>(staticMenu->parentItem());
+    QQuickMenuBarItem *dynamicMenuBarItem = qobject_cast<QQuickMenuBarItem *>(dynamicMenu->parentItem());
+    QVERIFY(staticMenuBarItem && dynamicMenuBarItem);
+
+    // highlight the static MenuBarItem and open the menu
+    QTest::mouseMove(window.data(), staticMenuBarItem->mapToScene(
+        QPointF(staticMenuBarItem->width() / 2, staticMenuBarItem->height() / 2)).toPoint());
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier,
+        staticMenuBarItem->mapToScene(QPointF(staticMenuBarItem->width() / 2, staticMenuBarItem->height() / 2)).toPoint());
+    QCOMPARE(staticMenuBarItem->isHighlighted(), true);
+    QCOMPARE(staticMenu->isVisible(), true);
+    QTRY_COMPARE(staticMenu->isOpened(), true);
+
+    // click a menu item to dismiss the menu and unhighlight the static MenuBarItem
+    QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(staticMenu->itemAt(0));
+    QVERIFY(menuItem);
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier,
+        menuItem->mapToScene(QPointF(menuItem->width() / 2, menuItem->height() / 2)).toPoint());
+    QCOMPARE(staticMenuBarItem->isHighlighted(), false);
+
+    // highlight the dynamic MenuBarItem and open the menu
+    QTest::mouseMove(window.data(), dynamicMenuBarItem->mapToScene(
+        QPointF(dynamicMenuBarItem->width() / 2, dynamicMenuBarItem->height() / 2)).toPoint());
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier,
+        dynamicMenuBarItem->mapToScene(QPointF(dynamicMenuBarItem->width() / 2, dynamicMenuBarItem->height() / 2)).toPoint());
+    QCOMPARE(dynamicMenuBarItem->isHighlighted(), true);
+    QCOMPARE(dynamicMenu->isVisible(), true);
+    QTRY_COMPARE(dynamicMenu->isOpened(), true);
+
+    // click a menu item to dismiss the menu and unhighlight the dynamic MenuBarItem
+    menuItem = qobject_cast<QQuickMenuItem *>(dynamicMenu->itemAt(0));
+    QVERIFY(menuItem);
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier,
+        menuItem->mapToScene(QPointF(menuItem->width() / 2, menuItem->height() / 2)).toPoint());
+    QCOMPARE(dynamicMenuBarItem->isHighlighted(), false);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_qquickmenubar)
