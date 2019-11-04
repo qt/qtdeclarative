@@ -69,6 +69,7 @@ private:
     quint16 checksumFileOrDir(const QString &path);
 
     QString testSuitePath;
+    QString grabberPath;
     int consecutiveErrors;   // Not test failures (image mismatches), but system failures (so no image at all)
     bool aborted;            // This run given up because of too many system failures
 };
@@ -89,6 +90,16 @@ void tst_Scenegraph::initTestCase()
     if (!fi.exists() || !fi.isDir() || !fi.isReadable())
         QSKIP("Test suite data directory missing or unreadable: " + fi.canonicalFilePath().toLatin1());
     testSuitePath = fi.canonicalFilePath();
+
+#if defined(Q_OS_WIN)
+    grabberPath = QFINDTESTDATA("qmlscenegrabber.exe");
+#elif defined(Q_OS_DARWIN)
+    grabberPath = QFINDTESTDATA("qmlscenegrabber.app/Contents/MacOS/qmlscenegrabber");
+#else
+    grabberPath = QFINDTESTDATA("qmlscenegrabber");
+#endif
+    if (grabberPath.isEmpty())
+        grabberPath = QCoreApplication::applicationDirPath() + "/qmlscenegrabber";
 
     const char *backendVarName = "QT_QUICK_BACKEND";
     const QString backend = qEnvironmentVariable(backendVarName, QString::fromLatin1("default"));
@@ -201,11 +212,10 @@ bool tst_Scenegraph::renderAndGrab(const QString& qmlFile, const QStringList& ex
 {
     bool usePipe = true;  // Whether to transport the grabbed image using temp. file or pipe. TBD: cmdline option
     QProcess grabber;
-    QString cmd = QCoreApplication::applicationDirPath() + "/qmlscenegrabber";
     QStringList args = extraArgs;
     QString tmpfile = usePipe ? QString("-") : QString("/tmp/qmlscenegrabber-%1-out.ppm").arg(QCoreApplication::applicationPid());
     args << qmlFile << "-o" << tmpfile;
-    grabber.start(cmd, args, QIODevice::ReadOnly);
+    grabber.start(grabberPath, args, QIODevice::ReadOnly);
     grabber.waitForFinished(17000);         //### hardcoded, must be larger than the scene timeout in qmlscenegrabber
     if (grabber.state() != QProcess::NotRunning) {
         grabber.terminate();
