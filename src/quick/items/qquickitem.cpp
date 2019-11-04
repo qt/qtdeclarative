@@ -2764,7 +2764,8 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
             // as we potentially changed d->parentWindow above
             // the check in derefWindow could not work
             // thus, we redo it here with the old parent
-            if (!oldParentItem) {
+            // Also, the window may have been deleted by derefWindow()
+            if (!oldParentItem && d->window) {
                 QQuickWindowPrivate::get(d->window)->parentlessItems.remove(this);
             }
         }
