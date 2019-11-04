@@ -429,6 +429,83 @@ QML list properties are type-safe - in this case \c {Fruit} is a QObject type th
 */
 
 /*!
+    \macro QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_APPEND
+    \relates QQmlListProperty
+
+    This macro defines the behavior of the list properties of this class to Append.
+    When assigning the property in a derived type, the values are appended
+    to those of the base class. This is the default behavior.
+
+    \code
+    class FruitBasket : QObject {
+        \Q_OBJECT
+        QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_APPEND
+        Q_PROPERTY(QQmlListProperty<Fruit> fruit READ fruit)
+
+        public:
+        // ...
+        QQmlListProperty<Fruit> fruit();
+        // ...
+    };
+    \endcode
+
+    \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT
+    \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE
+*/
+
+/*!
+    \macro QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT
+    \relates QQmlListProperty
+
+    This macro defines the behavior of the list properties of this class to
+    ReplaceIfNotDefault.
+    When assigning the property in a derived type, the values replace those of
+    the base class unless it's the default property.
+    In the case of the default property, values are appended to those of the base class.
+
+    \code
+    class FruitBasket : QObject {
+        \Q_OBJECT
+        QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT
+        Q_PROPERTY(QQmlListProperty<Fruit> fruit READ fruit)
+
+        public:
+        // ...
+        QQmlListProperty<Fruit> fruit();
+        // ...
+    };
+    \endcode
+
+    \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_APPEND
+    \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE
+*/
+
+/*!
+    \macro QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE
+    \relates QQmlListProperty
+
+    This macro defines the behavior of the list properties of this class to Replace.
+    When assigning the property in a derived type, the values replace those
+    of the base class.
+
+    \code
+    class FruitBasket : QObject {
+        \Q_OBJECT
+        QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE
+        Q_PROPERTY(QQmlListProperty<Fruit> fruit READ fruit)
+
+        public:
+        // ...
+        QQmlListProperty<Fruit> fruit();
+        // ...
+    };
+    \endcode
+
+    \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_APPEND
+    \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT
+*/
+
+/*!
 \fn template<typename T> QQmlListProperty<T>::QQmlListProperty()
 \internal
 */

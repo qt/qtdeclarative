@@ -50,6 +50,10 @@ QT_BEGIN_NAMESPACE
 class QObject;
 struct QMetaObject;
 
+#define QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_APPEND Q_CLASSINFO("QML.ListPropertyAssignBehavior", "Append")
+#define QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT Q_CLASSINFO("QML.ListPropertyAssignBehavior", "ReplaceIfNotDefault")
+#define QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE Q_CLASSINFO("QML.ListPropertyAssignBehavior", "Replace")
+
 #ifndef QQMLLISTPROPERTY
 #define QQMLLISTPROPERTY
 template<typename T>

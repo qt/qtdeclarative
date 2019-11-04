@@ -782,6 +782,35 @@ void QQmlObjectCreator::setupBindings(bool applyDeferredBindings)
                 void *argv[1] = { (void*)&_currentList };
                 QMetaObject::metacall(_qobject, QMetaObject::ReadProperty, property->coreIndex(), argv);
                 currentListPropertyIndex = property->coreIndex();
+
+                // manage override behavior
+                const QMetaObject *const metaobject = _qobject->metaObject();
+                const int qmlListBehavorClassInfoIndex = metaobject->indexOfClassInfo("QML.ListPropertyAssignBehavior");
+                if (qmlListBehavorClassInfoIndex != -1) { // QML.ListPropertyAssignBehavior class info is set
+                    const char *overrideBehavior =
+                            metaobject->classInfo(qmlListBehavorClassInfoIndex).value();
+                    if (!strcmp(overrideBehavior,
+                                "Replace")) {
+                        if (_currentList.clear) {
+                            _currentList.clear(&_currentList);
+                        }
+                    } else {
+                        bool isDefaultProperty =
+                                (property->name(_qobject)
+                                 == QString::fromUtf8(
+                                         metaobject
+                                                 ->classInfo(metaobject->indexOfClassInfo(
+                                                         "DefaultProperty"))
+                                                 .value()));
+                        if (!isDefaultProperty
+                            && (!strcmp(overrideBehavior,
+                                        "ReplaceIfNotDefault"))) {
+                            if (_currentList.clear) {
+                                _currentList.clear(&_currentList);
+                            }
+                        }
+                    }
+                }
             }
         } else if (_currentList.object) {
             _currentList = QQmlListProperty<void>();

@@ -90,10 +90,11 @@ class MyContainer : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<MyQmlObject> children READ children)
+
 public:
     MyContainer() {}
 
-    QQmlListProperty<MyQmlObject> children() { return QQmlListProperty<MyQmlObject>(this, m_children); }
+    QQmlListProperty<MyQmlObject> children() { return QQmlListProperty<MyQmlObject>(this, &m_children); }
 
     static MyAttached *qmlAttachedProperties(QObject *o) {
         return new MyAttached(o);
@@ -105,6 +106,35 @@ private:
 
 QML_DECLARE_TYPE(MyContainer);
 QML_DECLARE_TYPEINFO(MyContainer, QML_HAS_ATTACHED_PROPERTIES)
+
+class MyReplaceIfNotDefaultBehaviorContainer : public MyContainer
+{
+    Q_OBJECT
+    Q_PROPERTY(QQmlListProperty<MyQmlObject> defaultList READ defaultList)
+
+    QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT
+    Q_CLASSINFO("DefaultProperty", "defaultList")
+public:
+    MyReplaceIfNotDefaultBehaviorContainer() {}
+
+    QQmlListProperty<MyQmlObject> defaultList() { return QQmlListProperty<MyQmlObject>(this, &m_defaultList); }
+
+private:
+    QList<MyQmlObject*> m_defaultList;
+};
+
+QML_DECLARE_TYPE(MyReplaceIfNotDefaultBehaviorContainer);
+
+class MyAlwaysReplaceBehaviorContainer : public MyContainer
+{
+    Q_OBJECT
+
+    QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE
+public:
+    MyAlwaysReplaceBehaviorContainer() {}
+};
+
+QML_DECLARE_TYPE(MyAlwaysReplaceBehaviorContainer);
 
 class tst_qqmlproperty : public QQmlDataTest
 {
@@ -131,6 +161,7 @@ private slots:
     // Functionality
     void writeObjectToList();
     void writeListToList();
+    void listOverrideBehavior();
 
     //writeToReadOnly();
 
@@ -1663,6 +1694,30 @@ void tst_qqmlproperty::writeListToList()
     QCOMPARE(container->children()->size(), 1);*/
 }
 
+void tst_qqmlproperty::listOverrideBehavior()
+{
+    QQmlComponent alwaysAppendContainerComponent(&engine, testFileUrl("ListOverrideAlwaysAppendOverridenContainer.qml"));
+    QScopedPointer<QObject> alwaysAppendObject(alwaysAppendContainerComponent.create());
+    MyContainer *alwaysAppendContainer = qobject_cast<MyContainer*>(alwaysAppendObject.data());
+    QVERIFY(alwaysAppendContainer != nullptr);
+    QQmlListReference alwaysAppendChildrenList(alwaysAppendContainer, "children");
+    QCOMPARE(alwaysAppendChildrenList.count(), 5);
+    QQmlComponent replaceIfNotDefaultContainerComponent(&engine, testFileUrl("ListOverrideReplaceIfNotDefaultOverridenContainer.qml"));
+    QScopedPointer<QObject> replaceIfNotDefaultObject(replaceIfNotDefaultContainerComponent.create());
+    MyReplaceIfNotDefaultBehaviorContainer *replaceIfNotDefaultContainer = qobject_cast<MyReplaceIfNotDefaultBehaviorContainer*>(replaceIfNotDefaultObject.data());
+    QVERIFY(replaceIfNotDefaultContainer != nullptr);
+    QQmlListReference replaceIfNotDefaultDefaultList(replaceIfNotDefaultContainer, "defaultList");
+    QCOMPARE(replaceIfNotDefaultDefaultList.count(), 5);
+    QQmlListReference replaceIfNotDefaultChildrenList(replaceIfNotDefaultContainer, "children");
+    QCOMPARE(replaceIfNotDefaultChildrenList.count(), 2);
+    QQmlComponent alwaysReplaceContainerComponent(&engine, testFileUrl("ListOverrideAlwaysReplaceOverridenContainer.qml"));
+    QScopedPointer<QObject> alwaysReplaceObject(alwaysReplaceContainerComponent.create());
+    MyContainer *alwaysReplaceContainer = qobject_cast<MyContainer*>(alwaysReplaceObject.data());
+    QVERIFY(alwaysReplaceContainer != nullptr);
+    QQmlListReference alwaysReplaceChildrenList(alwaysReplaceContainer, "children");
+    QCOMPARE(alwaysReplaceChildrenList.count(), 2);
+}
+
 void tst_qqmlproperty::urlHandling_data()
 {
     QTest::addColumn<QByteArray>("input");
@@ -2158,6 +2213,8 @@ void tst_qqmlproperty::initTestCase()
     qmlRegisterType<MyQmlObject>("Test",1,0,"MyQmlObject");
     qmlRegisterType<PropertyObject>("Test",1,0,"PropertyObject");
     qmlRegisterType<MyContainer>("Test",1,0,"MyContainer");
+    qmlRegisterType<MyReplaceIfNotDefaultBehaviorContainer>("Test",1,0,"MyReplaceIfNotDefaultBehaviorContainer");
+    qmlRegisterType<MyAlwaysReplaceBehaviorContainer>("Test",1,0,"MyAlwaysReplaceBehaviorContainer");
 }
 
 // QTBUG-60908
