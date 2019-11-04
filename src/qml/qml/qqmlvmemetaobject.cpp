@@ -388,57 +388,20 @@ void QQmlVMEMetaObject::writeProperty(int id, double v)
 void QQmlVMEMetaObject::writeProperty(int id, const QString& v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
-    if (md)
-        md->set(engine, id, engine->newString(v));
-}
-
-void QQmlVMEMetaObject::writeProperty(int id, const QUrl& v)
-{
-    QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
-    if (md)
-        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
-}
-
-void QQmlVMEMetaObject::writeProperty(int id, const QDate& v)
-{
-    QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
-    if (md)
-        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
-}
-
-void QQmlVMEMetaObject::writeProperty(int id, const QDateTime& v)
-{
-    QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
-    if (md)
-        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
-}
-
-void QQmlVMEMetaObject::writeProperty(int id, const QPointF& v)
-{
-    QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
-    if (md)
-        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
-}
-
-void QQmlVMEMetaObject::writeProperty(int id, const QSizeF& v)
-{
-    QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
-    if (md)
-        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
-}
-
-void QQmlVMEMetaObject::writeProperty(int id, const QRectF& v)
-{
-    QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
-    if (md)
-        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
+    if (md) {
+        QV4::Scope scope(engine);
+        QV4::Scoped<QV4::MemberData>(scope, md)->set(engine, id, engine->newString(v));
+    }
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, QObject* v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
-    if (md)
-        md->set(engine, id, QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(engine, v)));
+    if (md) {
+        QV4::Scope scope(engine);
+        QV4::Scoped<QV4::MemberData>(scope, md)->set(engine, id, QV4::Value::fromReturnedValue(
+                                                         QV4::QObjectWrapper::wrap(engine, v)));
+    }
 
     QQmlVMEVariantQObjectPtr *guard = getQObjectGuardForProperty(id);
     if (v && !guard) {
