@@ -433,6 +433,19 @@ void QQuickAccessibleAttached::setRole(QAccessible::Role role)
     }
 }
 
+bool QQuickAccessibleAttached::wasNameExplicitlySet() const
+{
+    return m_nameExplicitlySet;
+}
+
+// Allows types to attach an accessible name to an item as a convenience,
+// so long as the user hasn't done so themselves.
+void QQuickAccessibleAttached::setNameImplicitly(const QString &name)
+{
+    setName(name);
+    m_nameExplicitlySet = false;
+}
+
 QQuickAccessibleAttached *QQuickAccessibleAttached::qmlAttachedProperties(QObject *obj)
 {
     return new QQuickAccessibleAttached(obj);
