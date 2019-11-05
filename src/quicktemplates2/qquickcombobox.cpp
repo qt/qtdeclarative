@@ -472,7 +472,7 @@ void QQuickComboBoxPrivate::updateCurrentText(bool hasDelegateModelObject)
     if (currentText != text) {
         currentText = text;
         if (!hasDisplayText)
-           q->setAccessibleName(text);
+           q->maybeSetAccessibleName(text);
         emit q->currentTextChanged();
     }
     if (!hasDisplayText && displayText != text) {
@@ -1051,7 +1051,7 @@ void QQuickComboBox::setDisplayText(const QString &text)
         return;
 
     d->displayText = text;
-    setAccessibleName(text);
+    maybeSetAccessibleName(text);
     emit displayTextChanged();
 }
 
@@ -1970,7 +1970,7 @@ void QQuickComboBox::accessibilityActiveChanged(bool active)
     QQuickControl::accessibilityActiveChanged(active);
 
     if (active) {
-        setAccessibleName(d->hasDisplayText ? d->displayText : d->currentText);
+        maybeSetAccessibleName(d->hasDisplayText ? d->displayText : d->currentText);
         setAccessibleProperty("editable", isEditable());
     }
 }

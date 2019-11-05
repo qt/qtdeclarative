@@ -2697,10 +2697,10 @@ QString QQuickPopup::accessibleName() const
     return d->popupItem->accessibleName();
 }
 
-void QQuickPopup::setAccessibleName(const QString &name)
+void QQuickPopup::maybeSetAccessibleName(const QString &name)
 {
     Q_D(QQuickPopup);
-    d->popupItem->setAccessibleName(name);
+    d->popupItem->maybeSetAccessibleName(name);
 }
 
 QVariant QQuickPopup::accessibleProperty(const char *propertyName)

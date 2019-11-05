@@ -45,6 +45,10 @@
 #include <QtGui/private/qshortcutmap_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 
+#if QT_CONFIG(accessibility)
+#include <QtQuick/private/qquickaccessibleattached_p.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QQuickPopupItemPrivate : public QQuickPagePrivate
@@ -401,7 +405,28 @@ QAccessible::Role QQuickPopupItem::accessibleRole() const
 void QQuickPopupItem::accessibilityActiveChanged(bool active)
 {
     Q_D(const QQuickPopupItem);
+    // Can't just use d->popup->accessibleName() here, because that refers to the accessible
+    // name of us, the popup item, which is not what we want.
+    const QQuickAccessibleAttached *popupAccessibleAttached = QQuickControlPrivate::accessibleAttached(d->popup);
+    const QString oldPopupName = popupAccessibleAttached ? popupAccessibleAttached->name() : QString();
+    const bool wasNameExplicitlySetOnPopup = popupAccessibleAttached && popupAccessibleAttached->wasNameExplicitlySet();
+
     QQuickPage::accessibilityActiveChanged(active);
+
+    QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(this);
+    const QString ourName = accessibleAttached ? accessibleAttached->name() : QString();
+    if (wasNameExplicitlySetOnPopup && accessibleAttached && ourName != oldPopupName) {
+        // The user set Accessible.name on the Popup. Since the Popup and its popup item
+        // have different accessible attached properties, the popup item doesn't know that
+        // a name was set on the Popup by the user, and that it should use that, rather than
+        // whatever QQuickPage sets. That's why we need to do it here.
+        // To avoid it being overridden by the call to accessibilityActiveChanged() below,
+        // we set it explicitly. It's safe to do this as the popup item is an internal implementation detail.
+        accessibleAttached->setName(oldPopupName);
+    }
+
+    // This allows the different popup types to set a name on their popup item accordingly.
+    // For example: Dialog uses its title and ToolTip uses its text.
     d->popup->accessibilityActiveChanged(active);
 }
 #endif

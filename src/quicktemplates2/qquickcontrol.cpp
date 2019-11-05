@@ -2282,11 +2282,13 @@ QString QQuickControl::accessibleName() const
     return QString();
 }
 
-void QQuickControl::setAccessibleName(const QString &name)
+void QQuickControl::maybeSetAccessibleName(const QString &name)
 {
 #if QT_CONFIG(accessibility)
-    if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(this))
-        accessibleAttached->setName(name);
+    if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(this)) {
+        if (!accessibleAttached->wasNameExplicitlySet())
+            accessibleAttached->setNameImplicitly(name);
+    }
 #else
     Q_UNUSED(name)
 #endif

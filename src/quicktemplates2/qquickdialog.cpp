@@ -219,7 +219,6 @@ void QQuickDialog::setTitle(const QString &title)
 {
     Q_D(QQuickDialog);
     d->popupItem->setTitle(title);
-    setAccessibleName(title);
 }
 
 /*!
@@ -536,7 +535,7 @@ void QQuickDialog::accessibilityActiveChanged(bool active)
     QQuickPopup::accessibilityActiveChanged(active);
 
     if (active)
-        setAccessibleName(d->popupItem->title());
+        maybeSetAccessibleName(d->popupItem->title());
 }
 #endif
 

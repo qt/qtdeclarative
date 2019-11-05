@@ -111,6 +111,7 @@ public:
 #if QT_CONFIG(accessibility)
     void accessibilityActiveChanged(bool active) override;
     QAccessible::Role accessibleRole() const override;
+    void maybeSetAccessibleName(const QString &name);
 #endif
 
     void cancelBackground();
