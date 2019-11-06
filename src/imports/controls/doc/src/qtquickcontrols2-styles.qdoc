@@ -78,6 +78,13 @@
     from highest to lowest. That is, using QQuickStyle to set the style will
     always take priority over using the command line argument, for example.
 
+    \warning When resolving a given style name to an absolute path, QQuickStyle
+    may search the root resource directory (\c {:}). Consequently, make sure
+    that your resource directories are named differently than the names of the
+    styles that your application supports. Otherwise, the styles may not load.
+    For example, avoid naming a resource directory \c :/material
+    (or \c {:/Material}) if the application supports the Material style.
+
     \section2 Using QQuickStyle in C++
 
     \l QQuickStyle provides C++ API for configuring a specific style. The following
