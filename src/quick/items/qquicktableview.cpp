@@ -2314,6 +2314,7 @@ void QQuickTableViewPrivate::syncSyncView()
 
 void QQuickTableViewPrivate::connectToModel()
 {
+    Q_Q(QQuickTableView);
     Q_TABLEVIEW_ASSERT(model, "");
 
     QObjectPrivate::connect(model, &QQmlInstanceModel::createdItem, this, &QQuickTableViewPrivate::itemCreatedCallback);
@@ -2323,6 +2324,8 @@ void QQuickTableViewPrivate::connectToModel()
         const auto tm = tableModel.data();
         QObjectPrivate::connect(tm, &QQmlTableInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
         QObjectPrivate::connect(tm, &QQmlTableInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
+        // Connect atYEndChanged to a function that fetches data if more is available
+        QObjectPrivate::connect(q, &QQuickTableView::atYEndChanged, this, &QQuickTableViewPrivate::fetchMoreData);
     }
 
     if (auto const aim = model->abstractItemModel()) {
@@ -2346,6 +2349,7 @@ void QQuickTableViewPrivate::connectToModel()
 
 void QQuickTableViewPrivate::disconnectFromModel()
 {
+    Q_Q(QQuickTableView);
     Q_TABLEVIEW_ASSERT(model, "");
 
     QObjectPrivate::disconnect(model, &QQmlInstanceModel::createdItem, this, &QQuickTableViewPrivate::itemCreatedCallback);
@@ -2355,6 +2359,7 @@ void QQuickTableViewPrivate::disconnectFromModel()
         const auto tm = tableModel.data();
         QObjectPrivate::disconnect(tm, &QQmlTableInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
         QObjectPrivate::disconnect(tm, &QQmlTableInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
+        QObjectPrivate::disconnect(q, &QQuickTableView::atYEndChanged, this, &QQuickTableViewPrivate::fetchMoreData);
     }
 
     if (auto const aim = model->abstractItemModel()) {
@@ -2434,6 +2439,14 @@ void QQuickTableViewPrivate::layoutChangedCallback(const QList<QPersistentModelI
     Q_UNUSED(hint);
 
     scheduleRebuildTable(RebuildOption::ViewportOnly);
+}
+
+void QQuickTableViewPrivate::fetchMoreData()
+{
+    if (tableModel && tableModel->canFetchMore()) {
+        tableModel->fetchMore();
+        scheduleRebuildTable(RebuildOption::ViewportOnly);
+    }
 }
 
 void QQuickTableViewPrivate::modelResetCallback()

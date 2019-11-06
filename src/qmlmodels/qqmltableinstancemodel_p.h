@@ -103,6 +103,9 @@ public:
 
     bool isValid() const override { return true; }
 
+    bool canFetchMore() const { return m_adaptorModel.canFetchMore(); }
+    void fetchMore() { m_adaptorModel.fetchMore(); }
+
     QVariant model() const;
     void setModel(const QVariant &model);
 

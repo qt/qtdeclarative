@@ -175,6 +175,7 @@ private slots:
     void checkSyncView_differentSizedModels();
     void checkSyncView_connect_late_data();
     void checkSyncView_connect_late();
+    void checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -2676,7 +2677,27 @@ void tst_QQuickTableView::checkSyncView_connect_late()
     QCOMPARE(tableViewVPrivate->loadedTableOuterRect.left(), 0);
 
     QCOMPARE(tableViewHVPrivate->loadedTableOuterRect, tableViewPrivate->loadedTableOuterRect);
+}
 
+void tst_QQuickTableView::checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable()
+{
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(5, 5, true);
+    tableView->setModel(model);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->rows(), 5);
+    QCOMPARE(tableView->columns(), 5);
+
+    // Flick table out of view on top
+    tableView->setContentX(0);
+    tableView->setContentY(-tableView->height() - 10);
+    tableView->polish();
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->rows(), 6);
+    QCOMPARE(tableView->columns(), 5);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

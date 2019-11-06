@@ -426,6 +426,8 @@ public:
     void setLocalViewportY(qreal contentY);
     void syncViewportPosRecursive();
 
+    void fetchMoreData();
+
     void _q_componentFinalized();
     void registerCallbackWhenBindingsAreEvaluated();
 

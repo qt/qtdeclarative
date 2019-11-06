@@ -46,6 +46,13 @@ public:
         , m_columns(columns)
     {}
 
+    TestModel(int rows, int columns, bool dataCanBeFetched, QObject *parent = nullptr)
+        : QAbstractTableModel(parent)
+          , m_rows(rows)
+          , m_columns(columns)
+          , m_dataCanBeFetched(dataCanBeFetched)
+    {}
+
     int rowCount(const QModelIndex & = QModelIndex()) const override { return m_rows; }
     void setRowCount(int count) { beginResetModel(); m_rows = count; emit rowCountChanged(); endResetModel(); }
 
@@ -141,6 +148,12 @@ public:
         return true;
     }
 
+    bool canFetchMore(const QModelIndex &parent) const override
+    {
+        Q_UNUSED(parent)
+        return m_dataCanBeFetched;
+    }
+
     void swapRows(int row1, int row2)
     {
         layoutAboutToBeChanged();
@@ -150,6 +163,12 @@ public:
         modelData[row1] = modelData[row2];
         modelData[row2] = tmp;
         layoutChanged();
+    }
+
+    void fetchMore(const QModelIndex &parent) override
+    {
+        Q_UNUSED(parent)
+        addRow(m_rows - 1);
     }
 
     void clear() {
@@ -172,6 +191,7 @@ signals:
 private:
     int m_rows = 0;
     int m_columns = 0;
+    bool m_dataCanBeFetched = false;
     QHash<int, QString> modelData;
 };
 
