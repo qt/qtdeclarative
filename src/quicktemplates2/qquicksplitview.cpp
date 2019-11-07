@@ -80,6 +80,9 @@ QT_BEGIN_NAMESPACE
     \li \l{SplitHandle::pressed}{SplitHandle.pressed}
     \endlist
 
+    \note Handles should be purely visual and not handle events, as it can
+    interfere with their hovered and pressed states.
+
     The preferred size of items in a SplitView can be specified via
     \l{Item::}{implicitWidth} and \l{Item::}{implicitHeight} or
     \c SplitView.preferredWidth and \c SplitView.preferredHeight:
@@ -1091,6 +1094,7 @@ QQuickSplitView::QQuickSplitView(QQuickItem *parent)
     d->changeTypes |= QQuickItemPrivate::Visibility;
 
     setAcceptedMouseButtons(Qt::LeftButton);
+    setFiltersChildMouseEvents(true);
 }
 
 QQuickSplitView::QQuickSplitView(QQuickSplitViewPrivate &dd, QQuickItem *parent)
@@ -1100,6 +1104,7 @@ QQuickSplitView::QQuickSplitView(QQuickSplitViewPrivate &dd, QQuickItem *parent)
     d->changeTypes |= QQuickItemPrivate::Visibility;
 
     setAcceptedMouseButtons(Qt::LeftButton);
+    setFiltersChildMouseEvents(true);
 }
 
 QQuickSplitView::~QQuickSplitView()
@@ -1362,6 +1367,20 @@ void QQuickSplitView::hoverMoveEvent(QHoverEvent *event)
 
     QQuickItem *hoveredItem = childAt(event->pos().x(), event->pos().y());
     d->updateHoveredHandle(hoveredItem);
+}
+
+bool QQuickSplitView::childMouseEventFilter(QQuickItem *item, QEvent *event)
+{
+    Q_D(QQuickSplitView);
+    qCDebug(qlcQQuickSplitViewMouse) << "childMouseEventFilter called with" << item << event;
+    if (event->type() != QEvent::HoverEnter)
+        return false;
+
+    // If a child item received a hover enter event, then it means our handle is no longer hovered.
+    // Handles should be purely visual and not accept hover events,
+    // so we should never get hover events for them here.
+    d->updateHoveredHandle(nullptr);
+    return false;
 }
 
 void QQuickSplitView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
