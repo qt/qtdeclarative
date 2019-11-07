@@ -1942,6 +1942,31 @@ void tst_QQuickListView::enforceRange()
 
     QTRY_COMPARE(listview->currentIndex(), 6);
 
+    // Test for [QTBUG-77418] {
+        // explicit set current index
+        listview->setCurrentIndex(5);
+        QTRY_COMPARE(listview->contentY(), 0);
+
+        // then check if contentY changes if the highlight range is changed
+        listview->setPreferredHighlightBegin(80);
+        listview->setPreferredHighlightEnd(80);
+        QTRY_COMPARE(listview->contentY(), 20);
+
+        // verify that current index does not change with no highlight
+        listview->setHighlightRangeMode(QQuickListView::NoHighlightRange);
+        listview->setContentY(100);
+        QTRY_COMPARE(listview->currentIndex(), 5);
+
+        // explicit set current index, contentY should not change now
+        listview->setCurrentIndex(6);
+        QTRY_COMPARE(listview->contentY(), 100);
+        QTest::qWait(50);   // This was needed in order to reproduce a failure for the following test
+
+        // verify that contentY changes if we turn on highlight again
+        listview->setHighlightRangeMode(QQuickListView::StrictlyEnforceRange);
+        QTRY_COMPARE(listview->contentY(), 40);
+    // } Test for [QTBUG-77418]
+
     // change model
     QaimModel model2;
     for (int i = 0; i < 5; i++)
