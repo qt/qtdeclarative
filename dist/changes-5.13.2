@@ -1,0 +1,63 @@
+Qt 5.13.2 is a bug-fix release. It maintains both forward and backward
+compatibility (source and binary) with Qt 5.13.0 through 5.13.1.
+
+For more details, refer to the online documentation included in this
+distribution. The documentation is also available online:
+
+https://doc.qt.io/qt-5/index.html
+
+The Qt version 5.13 series is binary compatible with the 5.12.x series.
+Applications compiled for 5.12 will continue to run with 5.13.
+
+Some of the changes listed in this file include issue tracking numbers
+corresponding to tasks in the Qt Bug Tracker:
+
+https://bugreports.qt.io/
+
+Each of these identifiers can be entered in the bug tracker to obtain more
+information about a particular change.
+
+****************************************************************************
+*                                  QtQml                                   *
+****************************************************************************
+
+ - [QTBUG-77761] EcmaScript modules are loaded correctly now when using the
+   Qt Quick Compiler.
+ - [QTBUG-74087] Various JavaScript list-like constructs are parsed
+   iteratively rather than recursively now, avoiding stack overflows.
+ - [QTBUG-78554] Exceptions thrown from a promise's resolve or reject
+   handler are forwarded correctly now.
+ - [QTBUG-78996] MakeDay() and getDay() now behave more correctly.
+
+****************************************************************************
+*                                 QtQuick                                  *
+****************************************************************************
+
+ - [QTBUG-79084] The QQuickWindow::afterAnimating signal is now emitted
+   properly when using QQuickRenderControl.
+ - [QTBUG-79011] Fix an odd 1px offset when rendering an Image with
+   fillMode: PreserveAspectFit.
+ - [QTBUG-78468] Fixed the hanging native pictures dialog on iOS.
+
+ - Item Views:
+
+   * [QTBUG-77074] Fixed a bug when TableView columnWidthProvider calculates
+     the widths of columns after a previously-hidden row is shown again.
+   * [QTBUG-77173] If you click or tap a PathView while it's moving,
+     it will come to rest with the nearest delegate aligned properly.
+   * [QTBUG-77418] ListView highlightRangeMode works correctly after
+     currentIndex is changed.
+
+ - Text:
+
+   * If the alpha of a text background is 0, the background rectangle node
+     is now omitted from the scene graph.
+   * [QTBUG-77389] Fixed TextEdit paragraph-selection triple click feature.
+
+ - OpenVG rendering:
+
+   * [QTBUG-77019] Fixed sprites leaking textures.
+   * [QTBUG-76526] Fixed per-frame delivery of touch events.
+   * [QTBUG-76806] The sceneGraphInitialized and sceneGraphInvalidated
+     signals are now emitted properly.
+   * [QTBUG-76589] Fixed rendering of non-affine transformed rectangles.

@@ -591,8 +591,8 @@ void QQuickLoader::setSource(QQmlV4Function *args)
 
     d->clear();
     QUrl sourceUrl = d->resolveSourceUrl(args);
+    d->disposeInitialPropertyValues();
     if (!ipv->isUndefined()) {
-        d->disposeInitialPropertyValues();
         d->initialPropertyValues.set(args->v4engine(), ipv);
     }
     d->qmlCallingContext.set(scope.engine, scope.engine->qmlContext());
@@ -602,6 +602,7 @@ void QQuickLoader::setSource(QQmlV4Function *args)
 
 void QQuickLoaderPrivate::disposeInitialPropertyValues()
 {
+    initialPropertyValues.clear();
 }
 
 void QQuickLoaderPrivate::load()
