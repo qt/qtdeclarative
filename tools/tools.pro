@@ -10,8 +10,6 @@ qtConfig(qml-devtools) {
     qtConfig(commandlineparser):qtConfig(xmlstreamwriter): SUBDIRS += qmlcachegen
 }
 
-qtConfig(commandlineparser): SUBDIRS += qmltyperegistrar
-
 qtConfig(thread):!android|android_app:!wasm:!rtems {
     SUBDIRS += \
         qml
