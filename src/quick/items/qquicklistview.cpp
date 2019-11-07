@@ -2078,7 +2078,7 @@ QQuickListView::~QQuickListView()
     highlight item is \c 0.
 
     \sa highlightItem, highlightFollowsCurrentItem,
-    {Qt Quick Examples - Views#Highlight}{ListView highlight example},
+    {Qt Quick Examples - Views#Using Highlight}{ListView Highlight Example},
     {Stacking Order in ListView}
 */
 

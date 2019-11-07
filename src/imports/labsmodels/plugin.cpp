@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \qmlmodule Qt.labs.qmlmodels 1.0
     \title Qt QML Models experimental QML Types
     \ingroup qmlmodules
-    \brief Provides QML experimental types for data models
+    \brief Provides QML experimental types for data models.
     \since 5.12
 
     This QML module contains experimental QML types related to data models.

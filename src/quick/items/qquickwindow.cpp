@@ -4592,7 +4592,7 @@ QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, Create
     \a nativeLayout is only used for APIs like Vulkan. When applicable, it must
     specify the current image layout, such as, a VkImageLayout value.
 
-    \sa sceneGraphInitialized(), QSGTextures
+    \sa sceneGraphInitialized(), QSGTexture
 
     \since 5.14
  */

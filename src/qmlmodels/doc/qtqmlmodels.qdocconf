@@ -23,15 +23,18 @@ qhp.QtQmlModels.sortPages  = true
 
 tagfile      = qtqmlmodels.tags
 
-depends += qtcore qtqml qtdoc
+depends += qtcore qtqml qtquick qtdoc qtqmlworkerscript qtquickcontrols qtxmlpatterns
 
-headerdirs  += ..
+headerdirs  += .. \
+               ../../imports/labsmodels
 
 sourcedirs  += .. \
-               ../../imports/models
+               ../../imports/models \
+               ../../imports/labsmodels
 
-exampledirs += ../../../examples/qml \
-               ../ \
+exampledirs += .. \
                snippets
+
+imagedirs += images
 
 navigation.qmltypespage = "Qt Qml Models QML Types"

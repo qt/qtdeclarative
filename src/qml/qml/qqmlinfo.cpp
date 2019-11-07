@@ -57,7 +57,6 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \fn QQmlInfo QtQml::qmlDebug(const QObject *object)
-    \relates QtQml
     \since 5.9
 
     Prints debug messages that include the file and line number for the
@@ -91,7 +90,6 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \fn QQmlInfo QtQml::qmlInfo(const QObject *object)
-    \relates QtQml
 
     Prints informational messages that include the file and line number for the
     specified QML \a object.
@@ -119,7 +117,6 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \fn QQmlInfo QtQml::qmlWarning(const QObject *object)
-    \relates QtQml
     \since 5.9
 
     Prints warning messages that include the file and line number for the

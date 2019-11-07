@@ -918,7 +918,7 @@ QPointF QQuickPath::backwardsPointAt(const QPainterPath &path, const qreal &path
     When curves are present, the percentage argument is mapped to the \c t
     parameter of the Bezier equations.
 
-   \sa QPainterPath::pointAt
+   \sa QPainterPath::pointAtPercent()
 
    \since QtQuick 2.14
 */
@@ -2370,8 +2370,8 @@ void QQuickPathPercent::setValue(qreal value)
 
     The example below creates a triangular path consisting of four vertices
     on the edge of the containing Shape's bounding box.
-    Through the containing shape's \l scale property, the path will be
-    rescaled together with its containing shape.
+    Through the containing shape's \l {QtQuick::Path::}{scale} property,
+    the path will be rescaled together with its containing shape.
 
     \qml
     PathPolyline {
@@ -2488,7 +2488,7 @@ void QQuickPathPolyline::addToPath(QPainterPath &path, const QQuickPathData &/*d
     The example below creates a high voltage symbol by adding each path
     of the symbol to the list of paths.
     The coordinates of the vertices are normalized, and through the containing shape's
-    \l scale property, the path will be rescaled together with its containing shape.
+    \l {QtQuick::Path::}{scale} property, the path will be rescaled together with its containing shape.
 
     \qml
     PathMultiline {
