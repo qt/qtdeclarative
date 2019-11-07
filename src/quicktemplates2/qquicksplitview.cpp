@@ -909,6 +909,40 @@ void QQuickSplitViewPrivate::updateHandleVisibilities()
     }
 }
 
+void QQuickSplitViewPrivate::updateHoveredHandle(QQuickItem *hoveredItem)
+{
+    Q_Q(QQuickSplitView);
+    const int oldHoveredHandleIndex = m_hoveredHandleIndex;
+    m_hoveredHandleIndex = m_handleItems.indexOf(hoveredItem);
+    if (m_hoveredHandleIndex == oldHoveredHandleIndex)
+        return;
+
+    // First, clear the hovered flag of any previously-hovered handle.
+    if (oldHoveredHandleIndex != -1) {
+        QQuickItem *oldHoveredHandle = m_handleItems.at(oldHoveredHandleIndex);
+        QQuickSplitHandleAttached *oldHoveredHandleAttached = qobject_cast<QQuickSplitHandleAttached*>(
+            qmlAttachedPropertiesObject<QQuickSplitHandleAttached>(oldHoveredHandle, true));
+        QQuickSplitHandleAttachedPrivate::get(oldHoveredHandleAttached)->setHovered(false);
+        qCDebug(qlcQQuickSplitViewMouse) << "handle item at index" << oldHoveredHandleIndex << "is no longer hovered";
+    }
+
+    if (m_hoveredHandleIndex != -1) {
+        QQuickSplitHandleAttached *handleAttached = qobject_cast<QQuickSplitHandleAttached*>(
+            qmlAttachedPropertiesObject<QQuickSplitHandleAttached>(hoveredItem, true));
+        QQuickSplitHandleAttachedPrivate::get(handleAttached)->setHovered(true);
+        qCDebug(qlcQQuickSplitViewMouse) << "handle item at index" << m_hoveredHandleIndex << "is now hovered";
+    } else {
+        qCDebug(qlcQQuickSplitViewMouse) << "either there is no hovered item or" << hoveredItem << "is not a handle";
+    }
+
+#if QT_CONFIG(cursor)
+    if (m_hoveredHandleIndex != -1)
+        q->setCursor(m_orientation == Qt::Horizontal ? Qt::SplitHCursor : Qt::SplitVCursor);
+    else
+        q->setCursor(Qt::ArrowCursor);
+#endif
+}
+
 void QQuickSplitViewPrivate::setResizing(bool resizing)
 {
     Q_Q(QQuickSplitView);
@@ -1327,48 +1361,7 @@ void QQuickSplitView::hoverMoveEvent(QHoverEvent *event)
     QQuickContainer::hoverMoveEvent(event);
 
     QQuickItem *hoveredItem = childAt(event->pos().x(), event->pos().y());
-    if (!hoveredItem) {
-        // No handle is hovered.
-        if (d->m_hoveredHandleIndex != -1) {
-            // The previously-hovered handle is no longer hovered.
-            QQuickItem *oldHoveredHandle = d->m_handleItems.at(d->m_hoveredHandleIndex);
-            QQuickSplitHandleAttached *handleAttached = qobject_cast<QQuickSplitHandleAttached*>(
-                qmlAttachedPropertiesObject<QQuickSplitHandleAttached>(oldHoveredHandle, true));
-            QQuickSplitHandleAttachedPrivate::get(handleAttached)->setHovered(false);
-        }
-
-        qCDebug(qlcQQuickSplitViewMouse) << "handle item at index" << d->m_hoveredHandleIndex << "is no longer hovered";
-
-        d->m_hoveredHandleIndex = -1;
-    } else {
-        // A child item of ours is hovered.
-
-        // First, clear the hovered flag of any previously-hovered handle.
-        if (d->m_hoveredHandleIndex != -1) {
-            QQuickItem *oldHoveredHandle = d->m_handleItems.at(d->m_hoveredHandleIndex);
-            QQuickSplitHandleAttached *handleAttached = qobject_cast<QQuickSplitHandleAttached*>(
-                qmlAttachedPropertiesObject<QQuickSplitHandleAttached>(oldHoveredHandle, true));
-            QQuickSplitHandleAttachedPrivate::get(handleAttached)->setHovered(false);
-        }
-
-        // Now check if the newly hovered item is actually a handle.
-        d->m_hoveredHandleIndex = d->m_handleItems.indexOf(hoveredItem);
-
-        if (d->m_hoveredHandleIndex != -1) {
-            QQuickSplitHandleAttached *handleAttached = qobject_cast<QQuickSplitHandleAttached*>(
-                qmlAttachedPropertiesObject<QQuickSplitHandleAttached>(hoveredItem, true));
-            QQuickSplitHandleAttachedPrivate::get(handleAttached)->setHovered(true);
-
-            qCDebug(qlcQQuickSplitViewMouse) << "handle item at index" << d->m_hoveredHandleIndex << "is now hovered";
-        }
-    }
-
-#if QT_CONFIG(cursor)
-    if (d->m_hoveredHandleIndex != -1)
-        setCursor(d->m_orientation == Qt::Horizontal ? Qt::SplitHCursor : Qt::SplitVCursor);
-    else
-        setCursor(Qt::ArrowCursor);
-#endif
+    d->updateHoveredHandle(hoveredItem);
 }
 
 void QQuickSplitView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
