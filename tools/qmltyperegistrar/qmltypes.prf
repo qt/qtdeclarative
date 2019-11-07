@@ -2,12 +2,15 @@ CONFIG += metatypes
 
 qtPrepareTool(QML_TYPEREGISTRAR, qmltyperegistrar)
 
-# from moc.prf
-isEmpty(QML_IMPORT_MAJOR_VERSION):!isEmpty(IMPORT_VERSION): \
-    QML_IMPORT_MAJOR_VERSION = $$section(IMPORT_VERSION, ., 0, 0)
+isEmpty(QML_IMPORT_VERSION): \
+    QML_IMPORT_VERSION = $$IMPORT_VERSION
 
-isEmpty(QML_IMPORT_MINOR_VERSION):!isEmpty(IMPORT_VERSION): \
-    QML_IMPORT_MINOR_VERSION = $$section(IMPORT_VERSION, ., 1, 1)
+# from moc.prf
+isEmpty(QML_IMPORT_MAJOR_VERSION):!isEmpty(QML_IMPORT_VERSION): \
+    QML_IMPORT_MAJOR_VERSION = $$section(QML_IMPORT_VERSION, ., 0, 0)
+
+isEmpty(QML_IMPORT_MINOR_VERSION):!isEmpty(QML_IMPORT_VERSION): \
+    QML_IMPORT_MINOR_VERSION = $$section(QML_IMPORT_VERSION, ., 1, 1)
 
 isEmpty(QML_IMPORT_NAME):!isEmpty(TARGETPATH) {
     QML_IMPORT_NAME = $$replace(TARGETPATH, "/", ".")
@@ -19,7 +22,7 @@ isEmpty(QML_IMPORT_NAME) {
 }
 
 isEmpty(QML_IMPORT_MAJOR_VERSION) {
-    error("Need IMPORT_VERSION or QML_IMPORT_MAJOR_VERSION in order to generate qml types.");
+    error("Need IMPORT_VERSION, QML_IMPORT_VERSION, or QML_IMPORT_MAJOR_VERSION in order to generate qml types.");
 }
 
 isEmpty(QML_IMPORT_MINOR_VERSION) {

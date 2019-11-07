@@ -11,8 +11,7 @@ HEADERS += \
     ../../shared/testhttpserver.h \
     declarativetesttype.h
 
-IMPORT_VERSION = 3.2
+QML_IMPORT_VERSION = 3.2
 QML_IMPORT_NAME = "declarative.import.for.typeloader.test"
 
 include (../../shared/util.pri)
-
