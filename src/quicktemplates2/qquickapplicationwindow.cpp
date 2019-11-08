@@ -684,6 +684,9 @@ void QQuickApplicationWindow::setFont(const QFont &font)
         return;
 
     QFont resolvedFont = font.resolve(QQuickTheme::font(QQuickTheme::System));
+    // See comment in QQuickControlPrivate::inheritFont
+    if (font.families().isEmpty())
+        resolvedFont.setFamilies(QStringList());
     d->setFont_helper(resolvedFont);
 }
 

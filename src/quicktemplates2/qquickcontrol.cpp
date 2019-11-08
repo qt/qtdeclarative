@@ -549,7 +549,13 @@ void QQuickControlPrivate::inheritFont(const QFont &font)
     parentFont.resolve(extra.isAllocated() ? extra->requestedFont.resolve() | font.resolve() : font.resolve());
 
     const QFont defaultFont = q->defaultFont();
-    const QFont resolvedFont = parentFont.resolve(defaultFont);
+    QFont resolvedFont = parentFont.resolve(defaultFont);
+    // Since resolving the font will put the family() into the
+    // families() list if it is empty then we need to unset it
+    // so it does not act as if the font has changed (when it
+    // has not actually changed)
+    if (defaultFont.families().isEmpty())
+        resolvedFont.setFamilies(QStringList());
 
     setFont_helper(resolvedFont);
 }
