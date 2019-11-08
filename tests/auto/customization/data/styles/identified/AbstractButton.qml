@@ -58,15 +58,18 @@ T.AbstractButton {
     indicator: Item {
         id: indicator
         objectName: "abstractbutton-indicator-identified"
+        Accessible.name: objectName
     }
 
     contentItem: Item {
         id: contentItem
         objectName: "abstractbutton-contentItem-identified"
+        Accessible.name: objectName
     }
 
     background: Item {
         id: background
         objectName: "abstractbutton-background-identified"
+        Accessible.name: objectName
     }
 }

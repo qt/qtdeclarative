@@ -199,7 +199,7 @@ void QQuickGroupBox::setLabel(QQuickItem *label)
     const qreal oldImplicitLabelHeight = implicitLabelHeight();
 
     d->removeImplicitSizeListener(d->label);
-    delete d->label;
+    QQuickControlPrivate::hideOldItem(d->label);
     d->label = label;
 
     if (label) {

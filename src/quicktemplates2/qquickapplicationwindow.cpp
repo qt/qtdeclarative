@@ -407,7 +407,7 @@ void QQuickApplicationWindow::setBackground(QQuickItem *background)
     if (!d->background.isExecuting())
         d->cancelBackground();
 
-    delete d->background;
+    QQuickControlPrivate::hideOldItem(d->background);
     d->background = background;
     if (background) {
         background->setParentItem(QQuickWindow::contentItem());

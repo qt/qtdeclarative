@@ -219,7 +219,7 @@ void QQuickContainerPrivate::cleanup()
             QQuickWindowPrivate::get(window)->clearFocusInScope(contentItem, focusItem, Qt::OtherFocusReason);
 
         q->contentItemChange(nullptr, contentItem);
-        delete contentItem;
+        QQuickControlPrivate::hideOldItem(contentItem);
     }
 
     QObject::disconnect(contentModel, &QQmlObjectModel::countChanged, q, &QQuickContainer::countChanged);

@@ -267,7 +267,7 @@ void QQuickRangeSliderNode::setHandle(QQuickItem *handle)
     const qreal oldImplicitHandleHeight = implicitHandleHeight();
 
     QQuickControlPrivate::get(d->slider)->removeImplicitSizeListener(d->handle);
-    delete d->handle;
+    QQuickControlPrivate::hideOldItem(d->handle);
     d->handle = handle;
 
     if (handle) {

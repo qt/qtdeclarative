@@ -34,6 +34,7 @@
 **
 ****************************************************************************/
 
+#include "qquickcontrol_p_p.h"
 #include "qquickoverlay_p.h"
 #include "qquickoverlay_p_p.h"
 #include "qquickpopupitem_p_p.h"
@@ -342,7 +343,6 @@ void QQuickOverlay::setModal(QQmlComponent *modal)
     if (d->modal == modal)
         return;
 
-    delete d->modal;
     d->modal = modal;
     emit modalChanged();
 }
@@ -359,7 +359,6 @@ void QQuickOverlay::setModeless(QQmlComponent *modeless)
     if (d->modeless == modeless)
         return;
 
-    delete d->modeless;
     d->modeless = modeless;
     emit modelessChanged();
 }
@@ -671,7 +670,6 @@ void QQuickOverlayAttached::setModal(QQmlComponent *modal)
     if (d->modal == modal)
         return;
 
-    delete d->modal;
     d->modal = modal;
     emit modalChanged();
 }
@@ -704,7 +702,6 @@ void QQuickOverlayAttached::setModeless(QQmlComponent *modeless)
     if (d->modeless == modeless)
         return;
 
-    delete d->modeless;
     d->modeless = modeless;
     emit modelessChanged();
 }

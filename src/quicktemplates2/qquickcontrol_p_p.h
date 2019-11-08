@@ -60,7 +60,11 @@
 #include <QtGui/qaccessible.h>
 #endif
 
+#include <QtCore/qloggingcategory.h>
+
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcItemManagement)
 
 class QQuickAccessibleAttached;
 
@@ -167,6 +171,8 @@ public:
 
     virtual void cancelBackground();
     virtual void executeBackground(bool complete = false);
+
+    static void hideOldItem(QQuickItem *item);
 
     void updateBaselineOffset();
 

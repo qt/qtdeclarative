@@ -658,4 +658,20 @@ TestCase {
             compare(control.displayText, data.displayTexts[i])
         }
     }
+
+    Component {
+        id: overriddenSpinBox
+        SpinBox {
+            value: 50
+            up.indicator: Rectangle {
+                property string s: "this is the one"
+            }
+        }
+    }
+
+    function test_indicatorOverridden() {
+        var control = createTemporaryObject(overriddenSpinBox, testCase)
+        verify(control)
+        compare(control.up.indicator.s, "this is the one");
+    }
 }

@@ -216,7 +216,7 @@ void QQuickMenuItem::setArrow(QQuickItem *arrow)
     if (!d->arrow.isExecuting())
         d->cancelArrow();
 
-    delete d->arrow;
+    QQuickControlPrivate::hideOldItem(d->arrow);
     d->arrow = arrow;
     if (arrow && !arrow->parentItem())
         arrow->setParentItem(this);
