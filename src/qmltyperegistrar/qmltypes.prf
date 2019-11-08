@@ -76,11 +76,11 @@ qmltyperegistrar_qmltypes.commands = $$escape_expand(\\n)  # force creation of r
 install_qmltypes {
     isEmpty(QMLTYPES_INSTALL_DIR): \
         QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/$$TARGETPATH
-    do_install.files = $$QMLTYPES_FILENAME
-    do_install.path = $$QMLTYPES_INSTALL_DIR
-    do_install.CONFIG += no_link
-    prefix_build: INSTALLS += do_install
-    else: COPIES += do_install
+    do_install_qmltypes.files = $$QMLTYPES_FILENAME
+    do_install_qmltypes.path = $$QMLTYPES_INSTALL_DIR
+    do_install_qmltypes.CONFIG += no_link
+    prefix_build: INSTALLS += do_install_qmltypes
+    else: COPIES += do_install_qmltypes
 }
 
 QMAKE_EXTRA_COMPILERS += qmltyperegistrar_compiler qmltyperegistrar_qmltypes
