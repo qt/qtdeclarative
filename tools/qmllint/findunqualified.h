@@ -95,10 +95,14 @@ private:
     Import readQmldir(const QString &dirname);
     void processImport(const QString &prefix, const Import &import);
 
-    ScopeTree *localQmlFile2ScopeTree(const QString &filePath);
+    ScopeTree *localFile2ScopeTree(const QString &filePath);
 
-    void importDirectory(const QString &directory, const QString &prefix);
+    void importFileOrDirectory(const QString &directory, const QString &prefix);
     void importExportedNames(const QStringRef &prefix, QString name);
+
+    void parseHeaders(QQmlJS::AST::UiHeaderItemList *headers);
+    void parseMembers(QQmlJS::AST::UiObjectMemberList *members, ScopeTree *scope);
+    void parseProgram(QQmlJS::AST::Program *program, ScopeTree *scope);
 
     void throwRecursionDepthError() override;
 

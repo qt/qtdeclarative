@@ -159,6 +159,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("qmldirAndQmltypes")         << QStringLiteral("qmldirAndQmltypes.qml");
     QTest::newRow("forLoop")                   << QStringLiteral("forLoop.qml");
     QTest::newRow("esmodule")                  << QStringLiteral("esmodule.mjs");
+    QTest::newRow("methodsInJavascript")       << QStringLiteral("javascriptMethods.qml");
 }
 
 void TestQmllint::cleanQmlCode()
