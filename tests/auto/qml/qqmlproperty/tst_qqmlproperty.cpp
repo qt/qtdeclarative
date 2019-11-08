@@ -41,6 +41,7 @@
 #include <QtCore/private/qobject_p.h>
 #include "../../shared/util.h"
 #include "qobject.h"
+#include <QtQml/QQmlPropertyMap>
 
 #include <QDebug>
 class MyQmlObject : public QObject
@@ -157,6 +158,8 @@ private slots:
     void copy();
 
     void bindingToAlias();
+
+    void nestedQQmlPropertyMap();
 private:
     QQmlEngine engine;
 };
@@ -2216,6 +2219,24 @@ void tst_qqmlproperty::bindingToAlias()
     QQmlComponent component(&engine, testFileUrl("aliasToBinding.qml"));
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_qqmlproperty::nestedQQmlPropertyMap()
+{
+    QQmlPropertyMap mainPropertyMap;
+    QQmlPropertyMap nestedPropertyMap;
+    QQmlPropertyMap deeplyNestedPropertyMap;
+
+    mainPropertyMap.insert("nesting1", QVariant::fromValue(&nestedPropertyMap));
+    nestedPropertyMap.insert("value", 42);
+    nestedPropertyMap.insert("nesting2", QVariant::fromValue(&deeplyNestedPropertyMap));
+    deeplyNestedPropertyMap.insert("value", "success");
+
+    QQmlProperty value{&mainPropertyMap, "nesting1.value"};
+    QCOMPARE(value.read().toInt(), 42);
+
+    QQmlProperty success{&mainPropertyMap, "nesting1.nesting2.value"};
+    QCOMPARE(success.read().toString(), QLatin1String("success"));
 }
 
 QTEST_MAIN(tst_qqmlproperty)

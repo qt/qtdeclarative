@@ -517,11 +517,34 @@ void QQuickTextLine::setLineOffset(int offset)
     m_lineOffset = offset;
 }
 
+void QQuickTextLine::setFullLayoutTextLength(int length)
+{
+    m_fullLayoutTextLength = length;
+}
+
 int QQuickTextLine::number() const
 {
     if (m_line)
         return m_line->lineNumber() + m_lineOffset;
     return 0;
+}
+
+qreal QQuickTextLine::implicitWidth() const
+{
+    if (m_line)
+        return m_line->naturalTextWidth();
+    return 0;
+}
+
+bool QQuickTextLine::isLast() const
+{
+    if (m_line && (m_line->textStart() + m_line->textLength()) == m_fullLayoutTextLength) {
+        // Ensure that isLast will change if the user reduced the width of the line
+        // so that the text no longer fits.
+        return m_line->width() >= m_line->naturalTextWidth();
+    }
+
+    return false;
 }
 
 qreal QQuickTextLine::width() const
@@ -585,12 +608,13 @@ bool QQuickTextPrivate::isLineLaidOutConnected()
     IS_SIGNAL_CONNECTED(q, QQuickText, lineLaidOut, (QQuickTextLine *));
 }
 
-void QQuickTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, int lineOffset)
+void QQuickTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, int fullLayoutTextLength, int lineOffset)
 {
     Q_Q(QQuickText);
 
     if (!textLine)
         textLine = new QQuickTextLine;
+    textLine->setFullLayoutTextLength(fullLayoutTextLength);
     textLine->setLine(&line);
     textLine->setY(height);
     textLine->setHeight(0);
@@ -790,7 +814,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
             if (noBreakLastLine && visibleCount == maxLineCount)
                 layout.engine()->option.setWrapMode(QTextOption::WrapAnywhere);
             if (customLayout) {
-                setupCustomLineGeometry(line, naturalHeight);
+                setupCustomLineGeometry(line, naturalHeight, layoutText.length());
             } else {
                 setLineGeometry(line, lineWidth, naturalHeight);
             }
@@ -1128,7 +1152,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
         QTextLine elidedLine = elideLayout->createLine();
         elidedLine.setPosition(QPointF(0, height));
         if (customLayout) {
-            setupCustomLineGeometry(elidedLine, height, visibleCount - 1);
+            setupCustomLineGeometry(elidedLine, height, elideText.length(), visibleCount - 1);
         } else {
             setLineGeometry(elidedLine, lineWidth, height);
         }
@@ -1335,20 +1359,43 @@ QQuickText::~QQuickText()
     \qmlsignal QtQuick::Text::lineLaidOut(object line)
 
     This signal is emitted for each line of text that is laid out during the layout
-    process. The specified \a line object provides more details about the line that
+    process in plain text or styled text mode. It is not emitted in rich text mode.
+    The specified \a line object provides more details about the line that
     is currently being laid out.
 
     This gives the opportunity to position and resize a line as it is being laid out.
     It can for example be used to create columns or lay out text around objects.
 
     The properties of the specified \a line object are:
-    \list
-    \li number (read-only)
-    \li x
-    \li y
-    \li width
-    \li height
-    \endlist
+
+    \table
+    \header
+        \li Property name
+        \li Description
+    \row
+        \li number (read-only)
+        \li Line number, starts with zero.
+    \row
+        \li x
+        \li Specifies the line's x position inside the \c Text element.
+    \row
+        \li y
+        \li Specifies the line's y position inside the \c Text element.
+    \row
+        \li width
+        \li Specifies the width of the line.
+    \row
+        \li height
+        \li Specifies the height of the line.
+    \row
+        \li implicitWidth (read-only)
+        \li The width that the line would naturally occupy based on its contents,
+            not taking into account any modifications made to \a width.
+    \row
+        \li isLast (read-only)
+        \li Whether the line is the last. This property can change if you
+            set the \a width property to a different value.
+    \endtable
 
     For example, this will move the first 5 lines of a Text item by 100 pixels to the right:
     \code
@@ -1356,6 +1403,16 @@ QQuickText::~QQuickText()
         if (line.number < 5) {
             line.x = line.x + 100
             line.width = line.width - 100
+        }
+    }
+    \endcode
+
+    The following example will allow you to position an item at the end of the last line:
+    \code
+    onLineLaidOut: {
+        if (line.isLast) {
+            lastLineMarker.x = line.x + line.implicitWidth
+            lastLineMarker.y = line.y + (line.height - lastLineMarker.height) / 2
         }
     }
     \endcode

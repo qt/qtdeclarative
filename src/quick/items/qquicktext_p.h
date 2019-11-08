@@ -330,6 +330,8 @@ class QQuickTextLine : public QObject
     Q_PROPERTY(qreal height READ height WRITE setHeight)
     Q_PROPERTY(qreal x READ x WRITE setX)
     Q_PROPERTY(qreal y READ y WRITE setY)
+    Q_PROPERTY(qreal implicitWidth READ implicitWidth)
+    Q_PROPERTY(bool isLast READ isLast)
     QML_ANONYMOUS
 
 public:
@@ -337,7 +339,10 @@ public:
 
     void setLine(QTextLine* line);
     void setLineOffset(int offset);
+    void setFullLayoutTextLength(int length);
     int number() const;
+    qreal implicitWidth() const;
+    bool isLast() const;
 
     qreal width() const;
     void setWidth(qreal width);
@@ -355,6 +360,7 @@ private:
     QTextLine *m_line;
     qreal m_height;
     int m_lineOffset;
+    int m_fullLayoutTextLength;
 };
 
 QT_END_NAMESPACE

@@ -395,20 +395,34 @@ void QQuickAnimatedSprite::reloadImage()
 
 void QQuickAnimatedSprite::componentComplete()
 {
-    Q_D(const QQuickAnimatedSprite);
+    Q_D(QQuickAnimatedSprite);
     createEngine();
     QQuickItem::componentComplete();
-    if (d->m_running)
+    if (d->m_running) {
+        d->m_running = false;
         start();
+    }
 }
 
+/*!
+    \qmlmethod QtQuick::AnimatedSprite::start()
+    \since 5.15
+
+    Starts the sprite animation. If the animation is already running, calling
+    this method has no effect.
+
+    \sa stop()
+*/
 void QQuickAnimatedSprite::start()
 {
     Q_D(QQuickAnimatedSprite);
+    if (d->m_running)
+        return;
     d->m_running = true;
     if (!isComponentComplete())
         return;
     d->m_curLoop = 0;
+    d->m_curFrame = 0;
     d->m_timestamp.start();
     if (d->m_spriteEngine) {
         d->m_spriteEngine->stop(0);
@@ -420,9 +434,20 @@ void QQuickAnimatedSprite::start()
     maybeUpdate();
 }
 
+/*!
+    \qmlmethod QtQuick::AnimatedSprite::stop()
+    \since 5.15
+
+    Stops the sprite animation. If the animation is not running, calling this
+    method has no effect.
+
+    \sa start()
+*/
 void QQuickAnimatedSprite::stop()
 {
     Q_D(QQuickAnimatedSprite);
+    if (!d->m_running)
+        return;
     d->m_running = false;
     if (!isComponentComplete())
         return;

@@ -598,7 +598,8 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
             }
         } else {
             // Is this a module?
-            if (QQmlMetaType::isAnyModule(import->uri)) {
+            if (QQmlMetaType::isAnyModule(import->uri)
+                    || QQmlMetaType::qmlRegisterModuleTypes(import->uri, import->majorVersion)) {
                 if (!m_importCache.addLibraryImport(importDatabase, import->uri, import->qualifier, import->majorVersion,
                                               import->minorVersion, QString(), QString(), false, errors))
                     return false;

@@ -2748,22 +2748,36 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
     }
 
     QQuickWindow *parentWindow = parentItem ? QQuickItemPrivate::get(parentItem)->window : nullptr;
+    bool alreadyAddedChild = false;
     if (d->window == parentWindow) {
         // Avoid freeing and reallocating resources if the window stays the same.
         d->parentItem = parentItem;
     } else {
-        if (d->window)
-            d->derefWindow();
+        auto oldParentItem = d->parentItem;
         d->parentItem = parentItem;
+        if (d->parentItem) {
+            QQuickItemPrivate::get(d->parentItem)->addChild(this);
+            alreadyAddedChild = true;
+        }
+        if (d->window) {
+            d->derefWindow();
+            // as we potentially changed d->parentWindow above
+            // the check in derefWindow could not work
+            // thus, we redo it here with the old parent
+            // Also, the window may have been deleted by derefWindow()
+            if (!oldParentItem && d->window) {
+                QQuickWindowPrivate::get(d->window)->parentlessItems.remove(this);
+            }
+        }
         if (parentWindow)
             d->refWindow(parentWindow);
     }
 
     d->dirty(QQuickItemPrivate::ParentChanged);
 
-    if (d->parentItem)
+    if (d->parentItem && !alreadyAddedChild)
         QQuickItemPrivate::get(d->parentItem)->addChild(this);
-    else if (d->window)
+    else if (d->window && !alreadyAddedChild)
         QQuickWindowPrivate::get(d->window)->parentlessItems.insert(this);
 
     d->setEffectiveVisibleRecur(d->calcEffectiveVisible());

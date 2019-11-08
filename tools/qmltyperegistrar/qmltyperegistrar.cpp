@@ -341,7 +341,7 @@ int main(int argc, char **argv)
 
     const QString functionName = QStringLiteral("qml_register_types_") + moduleAsSymbol;
 
-    fprintf(output, "void %s()\n{\n", qPrintable(functionName));
+    fprintf(output, "void %s()\n{", qPrintable(functionName));
     const auto majorVersion = parser.value(majorVersionOption);
 
     for (const QJsonObject &classDef : qAsConst(types)) {
@@ -357,7 +357,7 @@ int main(int argc, char **argv)
             qPrintable(module), qPrintable(majorVersion),
             qPrintable(parser.value(minorVersionOption)));
     fprintf(output, "\n}\n");
-    fprintf(output, "static const QQmlModuleRegistration registration(\"%s\", %s, %s);\n",
+    fprintf(output, "\nstatic const QQmlModuleRegistration registration(\"%s\", %s, %s);\n",
             qPrintable(module), qPrintable(majorVersion), qPrintable(functionName));
 
     if (!parser.isSet(pluginTypesOption))

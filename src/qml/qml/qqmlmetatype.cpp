@@ -278,10 +278,10 @@ void QQmlMetaType::qmlInsertModuleRegistration(const QString &uri, int majorVers
         data->moduleTypeRegistrationFunctions.insert(versionedUri, registerFunction);
 }
 
-void QQmlMetaType::qmlRegisterModuleTypes(const QString &uri, int majorVersion)
+bool QQmlMetaType::qmlRegisterModuleTypes(const QString &uri, int majorVersion)
 {
     QQmlMetaTypeDataPtr data;
-    data->registerModuleTypes(QQmlMetaTypeData::VersionedUri(uri, majorVersion));
+    return data->registerModuleTypes(QQmlMetaTypeData::VersionedUri(uri, majorVersion));
 }
 
 void QQmlMetaType::clearTypeRegistrations()
