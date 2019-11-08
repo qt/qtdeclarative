@@ -1,6 +1,6 @@
 option(host_build)
 
-QT = core qmldevtools-private
+QT = core-private qmldevtools-private
 
 SOURCES += main.cpp \
     componentversion.cpp \

@@ -109,7 +109,7 @@ void TestQmllint::testUnqualified_data()
 
 void TestQmllint::testUnqualifiedNoSpuriousParentWarning()
 {
-    const QString unknownNotFound = runQmllint("spuriousParentWarning.qml", true);
+    const QString unknownNotFound = runQmllint("spuriousParentWarning.qml", false);
     QVERIFY(unknownNotFound.contains(
                 QStringLiteral("warning: Unknown was not found. Did you add all import paths?")));
 }
@@ -132,6 +132,14 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("AutomatchedSignalHandler.qml")
             << QString("Warning: unqualified access at 12:36")
             << QStringLiteral("no matching signal found");
+    QTest::newRow("MemberNotFound")
+            << QStringLiteral("memberNotFound.qml")
+            << QString("Warning: Property \"foo\" not found on type \"QtObject\" at 6:31")
+            << QString();
+    QTest::newRow("UnknownJavascriptMethd")
+            << QStringLiteral("unknownJavascriptMethod.qml")
+            << QString("Warning: Property \"foo2\" not found on type \"Methods\" at 5:25")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()

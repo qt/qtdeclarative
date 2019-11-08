@@ -114,28 +114,33 @@ private:
     int m_revision = 0;
 };
 
+class ScopeTree;
 class MetaProperty
 {
     QString m_propertyName;
-    QString m_type;
+    QString m_typeName;
+    const ScopeTree *m_type = nullptr;
     bool m_isList;
     bool m_isWritable;
     bool m_isPointer;
     int m_revision;
 
 public:
-    MetaProperty(QString name, QString type,
-                     bool isList, bool isWritable, bool isPointer, int revision)
-        : m_propertyName(std::move(name))
-        , m_type(std::move(type))
+    MetaProperty(QString propertyName, QString typeName,
+                 bool isList, bool isWritable, bool isPointer, int revision)
+        : m_propertyName(std::move(propertyName))
+        , m_typeName(std::move(typeName))
         , m_isList(isList)
         , m_isWritable(isWritable)
         , m_isPointer(isPointer)
         , m_revision(revision)
     {}
 
-    QString name() const { return m_propertyName; }
-    QString typeName() const { return m_type; }
+    QString propertyName() const { return m_propertyName; }
+    QString typeName() const { return m_typeName; }
+
+    void setType(const ScopeTree *type) { m_type = type; }
+    const ScopeTree *type() const { return m_type; }
 
     bool isList() const { return m_isList; }
     bool isWritable() const { return m_isWritable; }
