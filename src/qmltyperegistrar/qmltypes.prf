@@ -30,8 +30,8 @@ isEmpty(QML_IMPORT_MINOR_VERSION) {
 }
 
 isEmpty(QMLTYPES_FILENAME) {
-    plugin: QMLTYPES_FILENAME = $$OUT_PWD/plugins.qmltypes
-    else: QMLTYPES_FILENAME = $$OUT_PWD/$${TEMPLATE}.qmltypes
+    plugin: QMLTYPES_FILENAME = plugins.qmltypes
+    else: QMLTYPES_FILENAME = $${TEMPLATE}.qmltypes
 }
 
 qt_module_deps = $$replace(QT, -private$, '')
@@ -76,7 +76,7 @@ qmltyperegistrar_qmltypes.commands = $$escape_expand(\\n)  # force creation of r
 install_qmltypes {
     isEmpty(QMLTYPES_INSTALL_DIR): \
         QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/$$TARGETPATH
-    do_install_qmltypes.files = $$QMLTYPES_FILENAME
+    do_install_qmltypes.files = $$OUT_PWD/$$QMLTYPES_FILENAME
     do_install_qmltypes.path = $$QMLTYPES_INSTALL_DIR
     do_install_qmltypes.CONFIG += no_link
     prefix_build: INSTALLS += do_install_qmltypes
