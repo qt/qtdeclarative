@@ -58,7 +58,7 @@ GetForm
 
     mouseArea.onClicked: Utils.makeRequest()
 
-    button.border.width: button.pressed ? 2 : 1
+    button.border.width: mouseArea.pressed ? 2 : 1
     text.text: "Request data.xml"
 
 }
