@@ -69,7 +69,7 @@ public:
     QQmlListProperty<QQuickMenu> menus();
     QQmlListProperty<QObject> contentData();
 
-    QQuickItem *beginCreateItem();
+    QQuickItem *beginCreateItem(QQuickMenu *menu);
     void completeCreateItem();
 
     QQuickItem *createItem(QQuickMenu *menu);
