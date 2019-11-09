@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule QtQuick.Templates 2.5
+    \qmlmodule QtQuick.Templates 2.\QtMinorVersion
     \title Qt Quick Templates 2 QML Types
     \ingroup qmlmodules
     \brief Provides QML types for templates (Qt Quick Templates).
