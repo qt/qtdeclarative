@@ -5,16 +5,14 @@ DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
 QMAKE_TARGET_DESCRIPTION = QML Types Registrar
 
-INCLUDEPATH += ../shared
+include(../../tools/shared/shared.pri)
 
 SOURCES += \
     qmltyperegistrar.cpp \
-    ../shared/qmlstreamwriter.cpp \
     qmltypesclassdescription.cpp \
     qmltypescreator.cpp
 
 HEADERS += \
-    ../shared/qmlstreamwriter.h \
     qmltypesclassdescription.h \
     qmltypescreator.h
 

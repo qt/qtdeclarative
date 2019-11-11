@@ -4969,24 +4969,24 @@ void tst_qqmllanguage::instanceof_data()
     // assert that basic types don't convert to QObject
     QTest::newRow("1 instanceof QtObject")
         << testFileUrl("instanceof_qtqml.qml")
-        << QVariant("TypeError: Type error");
+        << QVariant(false);
     QTest::newRow("true instanceof QtObject")
         << testFileUrl("instanceof_qtqml.qml")
-        << QVariant("TypeError: Type error");
+        << QVariant(false);
     QTest::newRow("\"foobar\" instanceof QtObject")
         << testFileUrl("instanceof_qtqml.qml")
-        << QVariant("TypeError: Type error");
+        << QVariant(false);
 
     // assert that Managed don't either
     QTest::newRow("new String(\"foobar\") instanceof QtObject")
         << testFileUrl("instanceof_qtqml.qml")
-        << QVariant("TypeError: Type error");
+        << QVariant(false);
     QTest::newRow("new Object() instanceof QtObject")
         << testFileUrl("instanceof_qtqml.qml")
-        << QVariant("TypeError: Type error");
+        << QVariant(false);
     QTest::newRow("new Date() instanceof QtObject")
         << testFileUrl("instanceof_qtqml.qml")
-        << QVariant("TypeError: Type error");
+        << QVariant(false);
 
     // test that simple QtQml comparisons work
     QTest::newRow("qtobjectInstance instanceof QtObject")

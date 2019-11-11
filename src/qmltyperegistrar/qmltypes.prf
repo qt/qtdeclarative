@@ -2,12 +2,15 @@ CONFIG += metatypes
 
 qtPrepareTool(QML_TYPEREGISTRAR, qmltyperegistrar)
 
-# from moc.prf
-isEmpty(QML_IMPORT_MAJOR_VERSION):!isEmpty(IMPORT_VERSION): \
-    QML_IMPORT_MAJOR_VERSION = $$section(IMPORT_VERSION, ., 0, 0)
+isEmpty(QML_IMPORT_VERSION): \
+    QML_IMPORT_VERSION = $$IMPORT_VERSION
 
-isEmpty(QML_IMPORT_MINOR_VERSION):!isEmpty(IMPORT_VERSION): \
-    QML_IMPORT_MINOR_VERSION = $$section(IMPORT_VERSION, ., 1, 1)
+# from moc.prf
+isEmpty(QML_IMPORT_MAJOR_VERSION):!isEmpty(QML_IMPORT_VERSION): \
+    QML_IMPORT_MAJOR_VERSION = $$section(QML_IMPORT_VERSION, ., 0, 0)
+
+isEmpty(QML_IMPORT_MINOR_VERSION):!isEmpty(QML_IMPORT_VERSION): \
+    QML_IMPORT_MINOR_VERSION = $$section(QML_IMPORT_VERSION, ., 1, 1)
 
 isEmpty(QML_IMPORT_NAME):!isEmpty(TARGETPATH) {
     QML_IMPORT_NAME = $$replace(TARGETPATH, "/", ".")
@@ -19,7 +22,7 @@ isEmpty(QML_IMPORT_NAME) {
 }
 
 isEmpty(QML_IMPORT_MAJOR_VERSION) {
-    error("Need IMPORT_VERSION or QML_IMPORT_MAJOR_VERSION in order to generate qml types.");
+    error("Need IMPORT_VERSION, QML_IMPORT_VERSION, or QML_IMPORT_MAJOR_VERSION in order to generate qml types.");
 }
 
 isEmpty(QML_IMPORT_MINOR_VERSION) {
@@ -27,8 +30,8 @@ isEmpty(QML_IMPORT_MINOR_VERSION) {
 }
 
 isEmpty(QMLTYPES_FILENAME) {
-    plugin: QMLTYPES_FILENAME = $$OUT_PWD/plugins.qmltypes
-    else: QMLTYPES_FILENAME = $$OUT_PWD/$${TEMPLATE}.qmltypes
+    plugin: QMLTYPES_FILENAME = plugins.qmltypes
+    else: QMLTYPES_FILENAME = $${TEMPLATE}.qmltypes
 }
 
 qt_module_deps = $$replace(QT, -private$, '')
@@ -73,11 +76,11 @@ qmltyperegistrar_qmltypes.commands = $$escape_expand(\\n)  # force creation of r
 install_qmltypes {
     isEmpty(QMLTYPES_INSTALL_DIR): \
         QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/$$TARGETPATH
-    do_install.files = $$QMLTYPES_FILENAME
-    do_install.path = $$QMLTYPES_INSTALL_DIR
-    do_install.CONFIG += no_link
-    prefix_build: INSTALLS += do_install
-    else: COPIES += do_install
+    do_install_qmltypes.files = $$OUT_PWD/$$QMLTYPES_FILENAME
+    do_install_qmltypes.path = $$QMLTYPES_INSTALL_DIR
+    do_install_qmltypes.CONFIG += no_link
+    prefix_build: INSTALLS += do_install_qmltypes
+    else: COPIES += do_install_qmltypes
 }
 
 QMAKE_EXTRA_COMPILERS += qmltyperegistrar_compiler qmltyperegistrar_qmltypes

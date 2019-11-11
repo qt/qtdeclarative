@@ -400,7 +400,7 @@ ReturnedValue QQmlTypeWrapper::virtualInstanceOf(const Object *typeObject, const
     // can only compare a QObject* against a QML type
     const QObjectWrapper *wrapper = var.as<QObjectWrapper>();
     if (!wrapper)
-        return engine->throwTypeError();
+        return QV4::Encode(false);
 
     // in case the wrapper outlived the QObject*
     const QObject *wrapperObject = wrapper->object();
