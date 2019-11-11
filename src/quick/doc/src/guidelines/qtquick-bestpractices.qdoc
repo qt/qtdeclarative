@@ -402,6 +402,43 @@ property MyMenu optionsMenu
 For information on performance in QML and Qt Quick,
 see \l {Performance Considerations And Suggestions}.
 
+\section1 Prefer Declarative Bindings Over Imperative Assignments
+
+In QML, it's possible to use imperative JavaScript code to perform tasks
+such as responding to input events, send data over a network, and so on.
+Imperative code has an important place in QML, but it's also important
+to be aware of when not to use it.
+
+For example, consider the following imperative assignment:
+
+\code
+Rectangle {
+    Component.onCompleted: color = "red"
+}
+\endcode
+
+This has the following disadvantages:
+
+\list
+\li It's slow. The color property will first be evaluated with a
+    default-constructed value, and then again with "red" later on.
+\li It delays errors that could be found at build time to run time, slowing
+    down the development process.
+\li It overwrites any declarative binding that was in place. In most cases this
+    is intended, but sometimes it can be unintentional.
+    See \l {Debugging overwriting of bindings} for more information.
+\li It interferes with tooling; Qt Quick Designer, for example, doesn't support
+    JavaScript.
+\endlist
+
+The code can be rewritten to be a declarative binding instead:
+
+\code
+Rectangle {
+    color: "red"
+}
+\endcode
+
 \section1 Tools and Utilities
 
 For information on useful tools and utilies that make working with QML and
