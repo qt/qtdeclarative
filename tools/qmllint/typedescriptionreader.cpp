@@ -380,7 +380,7 @@ void TypeDescriptionReader::readProperty(UiObjectDefinition *ast, const ScopeTre
         return;
     }
 
-    scope->addProperty(MetaProperty(name, type, isList, !isReadonly, isPointer, revision));
+    scope->addProperty(MetaProperty(name, type, isList, !isReadonly, isPointer, false, revision));
 }
 
 void TypeDescriptionReader::readEnum(UiObjectDefinition *ast, const ScopeTree::Ptr &scope)

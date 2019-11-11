@@ -140,6 +140,14 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("unknownJavascriptMethod.qml")
             << QString("Warning: Property \"foo2\" not found on type \"Methods\" at 5:25")
             << QString();
+    QTest::newRow("badAlias")
+            << QStringLiteral("badAlias.qml")
+            << QString("Warning: unqualified access at 4:27")
+            << QString();
+    QTest::newRow("badAliasProperty")
+            << QStringLiteral("badAliasProperty.qml")
+            << QString("Warning: Property \"nowhere\" not found on type \"QtObject\" at 5:32")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -168,6 +176,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("forLoop")                   << QStringLiteral("forLoop.qml");
     QTest::newRow("esmodule")                  << QStringLiteral("esmodule.mjs");
     QTest::newRow("methodsInJavascript")       << QStringLiteral("javascriptMethods.qml");
+    QTest::newRow("goodAlias")                 << QStringLiteral("goodAlias.qml");
 }
 
 void TestQmllint::cleanQmlCode()

@@ -123,16 +123,19 @@ class MetaProperty
     bool m_isList;
     bool m_isWritable;
     bool m_isPointer;
+    bool m_isAlias;
     int m_revision;
 
 public:
     MetaProperty(QString propertyName, QString typeName,
-                 bool isList, bool isWritable, bool isPointer, int revision)
+                 bool isList, bool isWritable, bool isPointer, bool isAlias,
+                 int revision)
         : m_propertyName(std::move(propertyName))
         , m_typeName(std::move(typeName))
         , m_isList(isList)
         , m_isWritable(isWritable)
         , m_isPointer(isPointer)
+        , m_isAlias(isAlias)
         , m_revision(revision)
     {}
 
@@ -145,6 +148,7 @@ public:
     bool isList() const { return m_isList; }
     bool isWritable() const { return m_isWritable; }
     bool isPointer() const { return m_isPointer; }
+    bool isAlias() const { return m_isAlias; }
     int revision() const { return m_revision; }
 };
 

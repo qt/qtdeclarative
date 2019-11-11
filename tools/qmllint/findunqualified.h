@@ -103,8 +103,7 @@ private:
     void importExportedNames(const QStringRef &prefix, QString name);
 
     void parseHeaders(QQmlJS::AST::UiHeaderItemList *headers);
-    void parseMembers(QQmlJS::AST::UiObjectMemberList *members, ScopeTree *scope);
-    void parseProgram(QQmlJS::AST::Program *program, ScopeTree *scope);
+    ScopeTree *parseProgram(QQmlJS::AST::Program *program, const QString &name);
 
     void throwRecursionDepthError() override;
 
