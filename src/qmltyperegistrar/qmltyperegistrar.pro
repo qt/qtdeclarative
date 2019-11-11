@@ -18,7 +18,15 @@ HEADERS += \
 
 build_integration.files = qmltypes.prf
 build_integration.path = $$[QT_HOST_DATA]/mkspecs/features
-prefix_build: INSTALLS += build_integration
-else: COPIES += build_integration
+
+prefix_build {
+    load(qt_build_paths)
+    qmltypes_to_builddir.files = qmltypes.prf
+    qmltypes_to_builddir.path = $$MODULE_BASE_OUTDIR/mkspecs/features
+    COPIES += qmltypes_to_builddir
+    INSTALLS += build_integration
+} else {
+    COPIES += build_integration
+}
 
 load(qt_tool)
