@@ -128,10 +128,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("failure1.js")
             << QStringLiteral("failure1.js:4 : Expected token `;'")
             << QString();
-    QTest::newRow("UnmatchedSignalHandler")
-            << QStringLiteral("UnmatchedSignalHandler.qml")
-            << QString("Warning: no matching signal found for handler \"onClicked\" at 12:13")
-            << QStringLiteral("onMouseXChanged");
+    QTest::newRow("AutomatchedSignalHandler")
+            << QStringLiteral("AutomatchedSignalHandler.qml")
+            << QString("Warning: unqualified access at 12:36")
+            << QStringLiteral("no matching signal found");
 }
 
 void TestQmllint::dirtyQmlCode()

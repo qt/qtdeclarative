@@ -26,6 +26,9 @@
 **
 ****************************************************************************/
 
+#ifndef QCOLOROUTPUT_H
+#define QCOLOROUTPUT_H
+
 //
 //  W A R N I N G
 //  -------------
@@ -36,12 +39,8 @@
 //
 // We mean it.
 
-#ifndef QCOLOROUTPUT_P_H
-#define QCOLOROUTPUT_P_H
-
-#include <QtCore/QtGlobal>
-#include <QtCore/QHash>
-#include <QScopedPointer>
+#include <QtCore/qglobal.h>
+#include <QtCore/qscopedpointer.h>
 
 class ColorOutputPrivate;
 
@@ -86,15 +85,13 @@ public:
         DefaultColor            = 1 << SpecialShift
     };
 
-    typedef QFlags<ColorCodeComponent> ColorCode;
-    typedef QHash<int, ColorCode> ColorMapping;
+    using ColorCode = QFlags<ColorCodeComponent>;
+    using ColorMapping = QHash<int, ColorCode>;
 
     ColorOutput(bool silent);
     ~ColorOutput();
 
-    void setColorMapping(const ColorMapping &cMapping);
-    ColorMapping colorMapping() const;
-    void insertColorMapping(int colorID, const ColorCode colorCode);
+    void insertMapping(int colorID, ColorCode colorCode);
 
     void writeUncolored(const QString &message);
     void write(const QString &message, int color = -1);
@@ -102,9 +99,9 @@ public:
 
 private:
     QScopedPointer<ColorOutputPrivate> d;
-    Q_DISABLE_COPY(ColorOutput)
+    Q_DISABLE_COPY_MOVE(ColorOutput)
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(ColorOutput::ColorCode)
 
-#endif
+#endif // QCOLOROUTPUT_H

@@ -29,36 +29,35 @@
 #ifndef COMPONENTVERSION_H
 #define COMPONENTVERSION_H
 
-#include <qglobal.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
 
-QT_BEGIN_NAMESPACE
-class QCryptographicHash;
-QT_END_NAMESPACE
-
-namespace LanguageUtils {
+#include <QtCore/qglobal.h>
 
 class ComponentVersion
 {
-    int _major;
-    int _minor;
-
 public:
-    static const int NoVersion;
-    static const int MaxVersion;
+    static const int NoVersion = -1;
 
-    ComponentVersion();
-    ComponentVersion(int major, int minor);
+    ComponentVersion() = default;
+    ComponentVersion(int major, int minor) : m_major(major), m_minor(minor) {}
     explicit ComponentVersion(const QString &versionString);
-    ~ComponentVersion();
 
-    int majorVersion() const
-    { return _major; }
-    int minorVersion() const
-    { return _minor; }
+    int majorVersion() const { return m_major; }
+    int minorVersion() const { return m_minor; }
 
-    bool isValid() const;
-    QString toString() const;
-    void addToHash(QCryptographicHash &hash) const;
+    bool isValid() const { return m_major >= 0 && m_minor >= 0; }
+
+private:
+    int m_major = NoVersion;
+    int m_minor = NoVersion;
 };
 
 bool operator<(const ComponentVersion &lhs, const ComponentVersion &rhs);
@@ -67,7 +66,5 @@ bool operator>(const ComponentVersion &lhs, const ComponentVersion &rhs);
 bool operator>=(const ComponentVersion &lhs, const ComponentVersion &rhs);
 bool operator==(const ComponentVersion &lhs, const ComponentVersion &rhs);
 bool operator!=(const ComponentVersion &lhs, const ComponentVersion &rhs);
-
-} // namespace LanguageUtils
 
 #endif // COMPONENTVERSION_H

@@ -26,72 +26,76 @@
 **
 ****************************************************************************/
 
-#include <QFile>
-#include <QHash>
-#include <QTextCodec>
+#include "qcoloroutput.h"
+
+#include <QtCore/qfile.h>
+#include <QtCore/qhash.h>
+#include <QtCore/qtextcodec.h>
 
 #ifndef Q_OS_WIN
 #include <unistd.h>
 #endif
 
-#include "qcoloroutput_p.h"
-
 class ColorOutputPrivate
 {
 public:
-    ColorOutputPrivate(bool silent) : currentColorID(-1), silent(silent)
-
+    ColorOutputPrivate(bool silent) : m_currentColorID(-1), m_silent(silent)
     {
-        /* - QIODevice::Unbuffered because we want it to appear when the user actually calls, performance
-         *   is considered of lower priority.
+        /* - QIODevice::Unbuffered because we want it to appear when the user actually calls,
+         *   performance is considered of lower priority.
          */
         m_out.open(stderr, QIODevice::WriteOnly | QIODevice::Unbuffered);
-
-        coloringEnabled = isColoringPossible();
+        m_coloringEnabled = isColoringPossible();
     }
-
-    ColorOutput::ColorMapping   colorMapping;
-    int                         currentColorID;
-    bool                        coloringEnabled;
-    bool                        silent;
 
     static const char *const foregrounds[];
     static const char *const backgrounds[];
 
-    inline void write(const QString &msg)
-    {
-        m_out.write(msg.toLocal8Bit());
-    }
+    inline void write(const QString &msg) { m_out.write(msg.toLocal8Bit()); }
 
     static QString escapeCode(const QString &in)
     {
+        const ushort escapeChar = 0x1B;
         QString result;
-        result.append(QChar(0x1B));
+        result.append(QChar(escapeChar));
         result.append(QLatin1Char('['));
         result.append(in);
         result.append(QLatin1Char('m'));
         return result;
     }
 
+    void insertColor(int id, ColorOutput::ColorCode code) { m_colorMapping.insert(id, code); }
+    ColorOutput::ColorCode color(int id) const { return m_colorMapping.value(id); }
+    bool containsColor(int id) const { return m_colorMapping.contains(id); }
+
+    bool isSilent() const { return m_silent; }
+    void setCurrentColorID(int colorId) { m_currentColorID = colorId; }
+
+    bool coloringEnabled() const { return m_coloringEnabled; }
+
 private:
     QFile                       m_out;
+    ColorOutput::ColorMapping   m_colorMapping;
+    int                         m_currentColorID;
+    bool                        m_coloringEnabled;
+    bool                        m_silent;
 
     /*!
      Returns true if it's suitable to send colored output to \c stderr.
      */
     inline bool isColoringPossible() const
     {
-#           if defined(Q_OS_WIN)
-            /* Windows doesn't at all support ANSI escape codes, unless
-             * the user install a "device driver". See the Wikipedia links in the
-             * class documentation for details. */
-            return false;
-#           else
-            /* We use QFile::handle() to get the file descriptor. It's a bit unsure
-             * whether it's 2 on all platforms and in all cases, so hopefully this layer
-             * of abstraction helps handle such cases. */
-            return isatty(m_out.handle());
-#           endif
+#if defined(Q_OS_WIN)
+        /* Windows doesn't at all support ANSI escape codes, unless
+         * the user install a "device driver". See the Wikipedia links in the
+         * class documentation for details. */
+        return false;
+#else
+        /* We use QFile::handle() to get the file descriptor. It's a bit unsure
+         * whether it's 2 on all platforms and in all cases, so hopefully this layer
+         * of abstraction helps handle such cases. */
+        return isatty(m_out.handle());
+#endif
     }
 };
 
@@ -128,7 +132,6 @@ const char *const ColorOutputPrivate::backgrounds[] =
 
 /*!
   \class ColorOutput
-  \since 4.4
   \nonreentrant
   \brief Outputs colored messages to \c stderr.
   \internal
@@ -215,40 +218,17 @@ const char *const ColorOutputPrivate::backgrounds[] =
  */
 
 /*!
- Sets the color mapping to be \a cMapping.
-
- Negative values are disallowed.
-
- \sa colorMapping(), insertMapping()
- */
-void ColorOutput::setColorMapping(const ColorMapping &cMapping)
-{
-    d->colorMapping = cMapping;
-}
-
-/*!
- Returns the color mappings in use.
-
- \sa setColorMapping(), insertMapping()
- */
-ColorOutput::ColorMapping ColorOutput::colorMapping() const
-{
-    return d->colorMapping;
-}
-
-/*!
   Constructs a ColorOutput instance, ready for use.
  */
-ColorOutput::ColorOutput(bool silent) : d(new ColorOutputPrivate(silent))
-{
-}
+ColorOutput::ColorOutput(bool silent) : d(new ColorOutputPrivate(silent)) {}
 
-ColorOutput::~ColorOutput() = default; // must be here so that QScopedPointer has access to the complete type
+// must be here so that QScopedPointer has access to the complete type
+ColorOutput::~ColorOutput() = default;
 
 /*!
- Sends \a message to \c stderr, using the color looked up in colorMapping() using \a colorID.
+ Sends \a message to \c stderr, using the color looked up in the color mapping using \a colorID.
 
- If \a color isn't available in colorMapping(), result and behavior is undefined.
+ If \a color isn't available in the color mapping, result and behavior is undefined.
 
  If \a colorID is 0, which is the default value, the previously used coloring is used. ColorOutput
  is initialized to not color at all.
@@ -259,7 +239,7 @@ ColorOutput::~ColorOutput() = default; // must be here so that QScopedPointer ha
  */
 void ColorOutput::write(const QString &message, int colorID)
 {
-    if (!d->silent)
+    if (!d->isSilent())
         d->write(colorify(message, colorID));
 }
 
@@ -271,7 +251,7 @@ void ColorOutput::write(const QString &message, int colorID)
  */
 void ColorOutput::writeUncolored(const QString &message)
 {
-    if (!d->silent)
+    if (!d->isSilent())
         d->write(message + QLatin1Char('\n'));
 }
 
@@ -285,61 +265,56 @@ void ColorOutput::writeUncolored(const QString &message)
  */
 QString ColorOutput::colorify(const QString &message, int colorID) const
 {
-    Q_ASSERT_X(colorID == -1 || d->colorMapping.contains(colorID), Q_FUNC_INFO,
-               qPrintable(QString::fromLatin1("There is no color registered by id %1").arg(colorID)));
-    Q_ASSERT_X(!message.isEmpty(), Q_FUNC_INFO, "It makes no sense to attempt to print an empty string.");
+    Q_ASSERT_X(colorID == -1 || d->containsColor(colorID), Q_FUNC_INFO,
+               qPrintable(QString::fromLatin1("There is no color registered by id %1")
+                          .arg(colorID)));
+    Q_ASSERT_X(!message.isEmpty(), Q_FUNC_INFO,
+               "It makes no sense to attempt to print an empty string.");
 
     if (colorID != -1)
-        d->currentColorID = colorID;
+        d->setCurrentColorID(colorID);
 
-    if (d->coloringEnabled && colorID != -1)
-    {
-        const int color(d->colorMapping.value(colorID));
+    if (d->coloringEnabled() && colorID != -1) {
+        const int color = d->color(colorID);
 
         /* If DefaultColor is set, we don't want to color it. */
         if (color & DefaultColor)
             return message;
 
-        const int foregroundCode = (int(color) & ForegroundMask) >> ForegroundShift;
-        const int backgroundCode = (int(color) & BackgroundMask) >> BackgroundShift;
+        const int foregroundCode = (color & ForegroundMask) >> ForegroundShift;
+        const int backgroundCode = (color & BackgroundMask) >> BackgroundShift;
         QString finalMessage;
         bool closureNeeded = false;
 
-        if (foregroundCode)
-        {
-            finalMessage.append(ColorOutputPrivate::escapeCode(QLatin1String(ColorOutputPrivate::foregrounds[foregroundCode - 1])));
+        if (foregroundCode > 0) {
+            finalMessage.append(
+                        ColorOutputPrivate::escapeCode(
+                            QLatin1String(ColorOutputPrivate::foregrounds[foregroundCode - 1])));
             closureNeeded = true;
         }
 
-        if (backgroundCode)
-        {
-            finalMessage.append(ColorOutputPrivate::escapeCode(QLatin1String(ColorOutputPrivate::backgrounds[backgroundCode - 1])));
+        if (backgroundCode > 0) {
+            finalMessage.append(
+                        ColorOutputPrivate::escapeCode(
+                            QLatin1String(ColorOutputPrivate::backgrounds[backgroundCode - 1])));
             closureNeeded = true;
         }
 
         finalMessage.append(message);
 
         if (closureNeeded)
-        {
-            finalMessage.append(QChar(0x1B));
-            finalMessage.append(QLatin1String("[0m"));
-        }
+            finalMessage.append(ColorOutputPrivate::escapeCode(QLatin1String("0")));
 
         return finalMessage;
     }
-    else
-        return message;
+
+    return message;
 }
 
 /*!
   Adds a color mapping from \a colorID to \a colorCode, for this ColorOutput instance.
-
-  This is a convenience function for creating a ColorOutput::ColorMapping instance and
-  calling setColorMapping().
-
-  \sa colorMapping(), setColorMapping()
  */
-void ColorOutput::insertColorMapping(int colorID, const ColorCode colorCode)
+void ColorOutput::insertMapping(int colorID, const ColorCode colorCode)
 {
-    d->colorMapping.insert(colorID, colorCode);
+    d->insertColor(colorID, colorCode);
 }
