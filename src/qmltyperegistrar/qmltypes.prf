@@ -39,8 +39,17 @@ qt_module_deps += $$replace(QT_PRIVATE, -private$, '')
 qt_module_deps = $$replace(qt_module_deps, _private$, '')
 all_qt_module_deps = $$resolve_depends(qt_module_deps, "QT.", ".depends" ".run_depends")
 foreign_types =
-for(dep, all_qt_module_deps): \
-    foreign_types += $$[QT_INSTALL_LIBS]/metatypes/$$lower($$eval(QT.$${dep}.module))_metatypes.json
+for(dep, all_qt_module_deps) {
+    METATYPES_FILENAME = $$lower($$eval(QT.$${dep}.module))_metatypes.json
+    INSTALLED_METATYPES = $$[QT_INSTALL_LIBS]/metatypes/$$METATYPES_FILENAME
+    isEmpty(MODULE_BASE_OUTDIR) {
+        foreign_types += $$INSTALLED_METATYPES
+    } else {
+        MODULE_BASE_METATYPES = $$MODULE_BASE_OUTDIR/lib/metatypes/$$METATYPES_FILENAME
+        exists($$MODULE_BASE_METATYPES): foreign_types += $$MODULE_BASE_METATYPES
+        else: foreign_types += $$INSTALLED_METATYPES
+    }
+}
 
 QML_TYPEREGISTRAR_FLAGS = \
     --generate-plugintypes=$$QMLTYPES_FILENAME \
