@@ -59,7 +59,7 @@ T.ToolTip {
     contentItem: Text {
         text: control.text
         font: control.font
-        // TODO: wrapMode: Label.Wrap
+        wrapMode: Text.Wrap
         opacity: enabled ? 1.0 : 0.2
         color: control.Universal.foreground
     }
