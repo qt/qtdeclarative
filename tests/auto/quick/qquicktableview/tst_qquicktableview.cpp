@@ -60,7 +60,7 @@ Q_DECLARE_METATYPE(QMarginsF);
     auto PROPNAME = view->rootObject()->property(#PROPNAME).value<QQuickTableView *>(); \
     QVERIFY(PROPNAME); \
     auto PROPNAME ## Private = QQuickTableViewPrivate::get(PROPNAME); \
-    Q_UNUSED(PROPNAME ## Private)
+    Q_UNUSED(PROPNAME ## Private) void()
 
 #define LOAD_TABLEVIEW(fileName) \
     view->setSource(testFileUrl(fileName)); \
