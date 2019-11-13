@@ -78,7 +78,7 @@ public:
 
     static void checkNonRelative(const char *item, const QString &typeName, const QString &fileName)
     {
-        if (fileName.startsWith(QLatin1Char('/')) || fileName.contains(QLatin1Char(':'))) {
+        if (fileName.startsWith(QLatin1Char('/'))) {
             qWarning() << item << typeName
                        << "is specified with non-relative URL" << fileName << "in a qmldir file."
                        << "URLs in qmldir files should be relative to the qmldir file's directory.";
