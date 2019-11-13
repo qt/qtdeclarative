@@ -431,15 +431,6 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiProgram *)
     // using an empty ScopeTree
     m_exportedName2Scope[QFileInfo { m_filePath }.baseName()] = {};
 
-    // add QML builtins
-    m_exportedName2Scope["QtObject"] = {}; // QtObject contains nothing of interest
-
-    ScopeTree *scope = new ScopeTree(ScopeType::QMLScope);
-    scope->addProperty(MetaProperty {"enabled", "bool", false, false, false, 0});
-    scope->addProperty(MetaProperty {"ignoreUnknownSignals", "bool", false, false, false, 0});
-    scope->addProperty(MetaProperty {"target", "QObject", false, false, false, 0});
-    m_exportedName2Scope["Connections"] = ScopeTree::ConstPtr { scope };
-
     importDirectory(".", QString());
     return true;
 }
@@ -798,9 +789,6 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     m_currentScope->addProperty(prop);
 
     enterEnvironment(ScopeType::QMLScope, name);
-    // there is no typeinfo for Component and QtObject, but they also have no interesting properties
-    if (name == QLatin1String("Component") || name == QLatin1String("QtObject"))
-        return true;
     importExportedNames(prefix, name);
     return true;
 }
@@ -825,10 +813,6 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
     enterEnvironment(ScopeType::QMLScope, name);
     if (name.isLower())
         return false; // Ignore grouped properties for now
-
-    // there is no typeinfo for Component
-    if (name == QLatin1String("Component") || name == QLatin1String("QtObject"))
-        return true;
 
     importExportedNames(prefix, name);
     if (name.endsWith("Connections")) {
