@@ -173,9 +173,9 @@ void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &typ
 {
     for (const QJsonValue &method : methods) {
         const QJsonObject obj = method.toObject();
-        if (obj[QLatin1String("access")].toString() != QLatin1String("public"))
-            continue;
         const QString name = obj[QLatin1String("name")].toString();
+        if (name.isEmpty())
+            continue;
         const QJsonArray arguments = method[QLatin1String("arguments")].toArray();
         const auto revision = obj.find(QLatin1String("revision"));
         if (notifySignals.contains(name) && arguments.isEmpty() && revision == obj.end())
