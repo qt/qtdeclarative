@@ -26,4 +26,3 @@ add_qml_module(qmlfolderlistmodelplugin
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # TARGETPATH = "Qt/labs/folderlistmodel"
-# _LOADED = "qml_plugin"

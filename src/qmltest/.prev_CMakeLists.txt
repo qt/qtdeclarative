@@ -31,7 +31,6 @@ add_qt_module(QuickTest
 
 #### Keys ignored in scope 1:.:.:qmltest.pro:<TRUE>:
 # MODULE_CONFIG = "$${QT.testlib.CONFIG}"
-# _LOADED = "qt_module"
 
 ## Scopes:
 #####################################################################

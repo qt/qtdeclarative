@@ -33,4 +33,3 @@ add_qml_module(qquicklayoutsplugin
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "1.$$QT_MINOR_VERSION"
 # TARGETPATH = "QtQuick/Layouts"
-# _LOADED = "qml_plugin"

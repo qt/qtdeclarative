@@ -21,4 +21,3 @@ add_qt_plugin(qmldbg_nativedebugger
 
 #### Keys ignored in scope 1:.:.:qmldbg_nativedebugger.pro:<TRUE>:
 # OTHER_FILES = "$$PWD/qqmlnativedebugservice.json"
-# _LOADED = "qt_plugin"

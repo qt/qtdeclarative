@@ -23,4 +23,3 @@ add_qml_module(labsmodelsplugin
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "1.0"
 # TARGETPATH = "Qt/labs/qmlmodels"
-# _LOADED = "qml_plugin"

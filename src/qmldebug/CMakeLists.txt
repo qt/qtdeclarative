@@ -38,6 +38,3 @@ add_qt_module(QmlDebug
         Qt::Network
         Qt::PacketProtocol
 )
-
-#### Keys ignored in scope 1:.:.:qmldebug.pro:<TRUE>:
-# _LOADED = "qt_module"

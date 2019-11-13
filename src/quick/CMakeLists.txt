@@ -348,9 +348,6 @@ if(ANDROID)
     )
 endif()
 
-#### Keys ignored in scope 1:.:.:quick.pro:<TRUE>:
-# _LOADED = "qt_module"
-
 ## Scopes:
 #####################################################################
 

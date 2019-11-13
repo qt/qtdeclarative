@@ -16,5 +16,4 @@ add_qt_tool(qmlmin
 
 #### Keys ignored in scope 1:.:.:qmlmin.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "QML/JS" "Minifier"
-# _LOADED = "qt_tool"
 # _OPTION = "host_build"

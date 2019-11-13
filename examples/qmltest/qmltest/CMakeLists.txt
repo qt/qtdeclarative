@@ -29,7 +29,7 @@ target_link_libraries(tst_qmltestexample PUBLIC
 )
 
 # special case begin
-# This ling get added, but does not make sense
+# This line get added, but does not make sense
 #if(QT_BUILDING_QT)
 #    target_link_libraries(tst_qmltestexample PUBLIC
 #        Qt::Qml

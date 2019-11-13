@@ -24,4 +24,3 @@ add_qml_module(labsanimationplugin
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "1.0"
 # TARGETPATH = "Qt/labs/animation"
-# _LOADED = "qml_plugin"

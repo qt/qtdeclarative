@@ -15,6 +15,7 @@ add_qt_tool(qmlplugindump
         Qt::QmlPrivate
         Qt::QuickPrivate
     PUBLIC_LIBRARIES
+        Qt::Gui
         Qt::Qml
         Qt::Quick
 )
@@ -22,7 +23,6 @@ add_qt_tool(qmlplugindump
 #### Keys ignored in scope 1:.:.:qmlplugindump.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "QML" "Plugin" "Metadata" "Dumper"
 # QTPLUGIN.platforms = "qminimal"
-# _LOADED = "qt_tool"
 
 ## Scopes:
 #####################################################################
@@ -36,6 +36,3 @@ extend_target(qmlplugindump CONDITION APPLE_OSX
     LINK_OPTIONS
         "-Wl,-sectcreate,__TEXT,__info_plist,${CMAKE_CURRENT_SOURCE_DIR}/Info.plist" # special case
 )
-
-#### Keys ignored in scope 3:.:.:qmlplugindump.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

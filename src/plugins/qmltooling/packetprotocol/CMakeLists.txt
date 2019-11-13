@@ -16,6 +16,3 @@ add_qt_module(PacketProtocol
     PUBLIC_LIBRARIES
         Qt::Core
 )
-
-#### Keys ignored in scope 1:.:.:packetprotocol.pro:<TRUE>:
-# _LOADED = "qt_module"

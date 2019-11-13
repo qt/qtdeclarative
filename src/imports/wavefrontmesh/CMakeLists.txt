@@ -26,4 +26,3 @@ add_qml_module(qmlwavefrontmeshplugin
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "1.$$QT_MINOR_VERSION"
 # TARGETPATH = "Qt/labs/wavefrontmesh"
-# _LOADED = "qml_plugin"

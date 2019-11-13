@@ -19,4 +19,3 @@ add_qt_plugin(qmldbg_tcp
 
 #### Keys ignored in scope 1:.:.:qmldbg_tcp.pro:<TRUE>:
 # OTHER_FILES = "$$PWD/qtcpserverconnection.json"
-# _LOADED = "qt_plugin"

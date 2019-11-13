@@ -21,4 +21,3 @@ add_qt_plugin(qmldbg_messages
 
 #### Keys ignored in scope 1:.:.:qmldbg_messages.pro:<TRUE>:
 # OTHER_FILES = "$$PWD/qdebugmessageservice.json"
-# _LOADED = "qt_plugin"

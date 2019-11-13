@@ -21,9 +21,6 @@ add_qt_module(QmlModels
         Qt::Qml
 )
 
-#### Keys ignored in scope 1:.:.:qmlmodels.pro:<TRUE>:
-# _LOADED = "qt_module"
-
 ## Scopes:
 #####################################################################
 

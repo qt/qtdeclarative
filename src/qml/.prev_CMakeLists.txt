@@ -335,9 +335,6 @@ qt_process_qlalr(
     ""
 )
 
-#### Keys ignored in scope 1:.:.:qml.pro:<TRUE>:
-# _LOADED = "qt_module"
-
 ## Scopes:
 #####################################################################
 
@@ -382,7 +379,7 @@ extend_target(Qml CONDITION EXISTS "qqml_enable_gcov"
         -ftest-coverage
 )
 
-extend_target(Qml CONDITION release AND MSVC AND QT_CL_MAJOR_VERSION___equals___19 AND QT_CL_MINOR_VERSION___equals___00 AND greaterThan(QT_CL_PATCH_VERSION,24212)
+extend_target(Qml CONDITION release AND MSVC AND (QT_CL_MAJOR_VERSION EQUAL 19) AND (QT_CL_MINOR_VERSION EQUAL 00) AND (QT_CL_PATCH_VERSION GREATER 24212)
     COMPILE_OPTIONS
         -d2SSAOptimizer-
 )
@@ -390,7 +387,7 @@ extend_target(Qml CONDITION release AND MSVC AND QT_CL_MAJOR_VERSION___equals___
 #### Keys ignored in scope 10:.:.:qml.pro:ICC:
 # WERROR = "-ww2415"
 
-#### Keys ignored in scope 11:.:.:qml.pro:greaterThan(QT_CLANG_MAJOR_VERSION,3) OR greaterThan(QT_CLANG_MINOR_VERSION,3) OR greaterThan(QT_APPLE_CLANG_MAJOR_VERSION,5) OR ( QT_APPLE_CLANG_MAJOR_VERSION___equals___5 AND greaterThan(QT_APPLE_CLANG_MINOR_VERSION,0) ):
+#### Keys ignored in scope 11:.:.:qml.pro:(QT_CLANG_MAJOR_VERSION GREATER 3) OR (QT_CLANG_MINOR_VERSION GREATER 3) OR (QT_APPLE_CLANG_MAJOR_VERSION GREATER 5) OR ( (QT_APPLE_CLANG_MAJOR_VERSION EQUAL 5) AND (QT_APPLE_CLANG_MINOR_VERSION GREATER 0) ):
 # WERROR = "-Wno-error=unused-const-variable"
 
 extend_target(Qml CONDITION QT_FEATURE_qml_jit

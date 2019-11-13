@@ -28,4 +28,3 @@ add_qml_module(sharedimageplugin
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "1.0"
 # TARGETPATH = "Qt/labs/sharedimage"
-# _LOADED = "qml_plugin"

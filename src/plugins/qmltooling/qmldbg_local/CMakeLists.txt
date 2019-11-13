@@ -18,4 +18,3 @@ add_qt_plugin(qmldbg_local
 
 #### Keys ignored in scope 1:.:.:qmldbg_local.pro:<TRUE>:
 # OTHER_FILES = "$$PWD/qlocalclientconnection.json"
-# _LOADED = "qt_plugin"

@@ -11,6 +11,7 @@ add_qt_executable(qmltime
     LIBRARIES
         Qt::QuickPrivate
     PUBLIC_LIBRARIES
+        Qt::Gui
         Qt::Qml
         Qt::Quick
 )
@@ -21,6 +22,3 @@ add_qt_executable(qmltime
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qmltime.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

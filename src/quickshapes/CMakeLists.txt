@@ -56,9 +56,6 @@ add_qt_resource(QuickShapes "qtquickshapes"
 )
 
 
-#### Keys ignored in scope 1:.:.:quickshapes.pro:<TRUE>:
-# _LOADED = "qt_module"
-
 ## Scopes:
 #####################################################################
 

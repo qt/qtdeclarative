@@ -20,4 +20,3 @@ add_qt_plugin(qmldbg_server
 
 #### Keys ignored in scope 1:.:.:qmldbg_server.pro:<TRUE>:
 # OTHER_FILES = "qqmldebugserver.json"
-# _LOADED = "qt_plugin"

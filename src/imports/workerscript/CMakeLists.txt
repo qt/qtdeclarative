@@ -25,4 +25,3 @@ add_qml_module(workerscriptplugin
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # TARGETPATH = "QtQml/WorkerScript.2"
-# _LOADED = "qml_plugin"

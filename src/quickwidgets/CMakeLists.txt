@@ -25,6 +25,3 @@ add_qt_module(QuickWidgets
         Qt::Quick
         Qt::Widgets
 )
-
-#### Keys ignored in scope 1:.:.:quickwidgets.pro:<TRUE>:
-# _LOADED = "qt_module"

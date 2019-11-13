@@ -25,4 +25,3 @@ add_qml_module(modelsplugin
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # TARGETPATH = "QtQml/Models.2"
-# _LOADED = "qml_plugin"

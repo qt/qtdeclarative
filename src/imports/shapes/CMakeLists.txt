@@ -27,4 +27,3 @@ add_qml_module(qmlshapesplugin
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "1.$$QT_MINOR_VERSION"
 # TARGETPATH = "QtQuick/Shapes"
-# _LOADED = "qml_plugin"

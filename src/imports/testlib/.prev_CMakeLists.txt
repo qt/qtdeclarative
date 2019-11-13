@@ -31,7 +31,6 @@ add_qml_module(qmltestplugin
 # OTHER_FILES = "testlib.json"
 # QML_FILES = "TestCase.qml" "SignalSpy.qml" "testlogger.js"
 # TARGETPATH = "QtTest"
-# _LOADED = "qml_plugin"
 
 set(qml_files
     "TestCase.qml"

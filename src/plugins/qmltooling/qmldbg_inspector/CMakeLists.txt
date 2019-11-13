@@ -30,4 +30,3 @@ add_qt_plugin(qmldbg_inspector
 
 #### Keys ignored in scope 1:.:.:qmldbg_inspector.pro:<TRUE>:
 # OTHER_FILES = "qqmlinspectorservice.json"
-# _LOADED = "qt_plugin"

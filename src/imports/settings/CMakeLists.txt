@@ -21,4 +21,3 @@ add_qml_module(qmlsettingsplugin
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "1.1"
 # TARGETPATH = "Qt/labs/settings"
-# _LOADED = "qml_plugin"

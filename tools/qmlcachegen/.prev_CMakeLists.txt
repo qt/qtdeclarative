@@ -20,10 +20,9 @@ add_qt_tool(qmlcachegen
 )
 
 #### Keys ignored in scope 1:.:.:qmlcachegen.pro:<TRUE>:
-# CMAKE_BIN_DIR = "$$cmakeRelativePath$$[QT_HOST_BINS],$$[QT_INSTALL_PREFIX]"
+# CMAKE_BIN_DIR = "$$cmakeRelativePath($$[QT_HOST_BINS], $$[QT_INSTALL_PREFIX])"
 # QMAKE_SUBSTITUTES = "cmake_config_file"
 # QMAKE_TARGET_DESCRIPTION = "QML" "Cache" "Generator"
-# _LOADED = "cmake_functions" "qt_build_paths" "qt_tool"
 # _OPTION = "host_build"
 # build_integration.files = "qmlcache.prf" "qtquickcompiler.prf"
 # build_integration.path = "$$[QT_HOST_DATA]/mkspecs/features"
@@ -36,10 +35,10 @@ add_qt_tool(qmlcachegen
 #####################################################################
 
 #### Keys ignored in scope 2:.:.:qmlcachegen.pro:prefix_build:
-# INSTALLS = "build_integration" "cmake_build_integration"
+# INSTALLS = "cmake_build_integration" "build_integration"
 
 #### Keys ignored in scope 3:.:.:qmlcachegen.pro:else:
-# COPIES = "build_integration" "cmake_build_integration"
+# COPIES = "cmake_build_integration" "build_integration"
 
 #### Keys ignored in scope 4:.:.:qmlcachegen.pro:CMAKE_BIN_DIR___contains___^\\.\\./._x_:
 # CMAKE_BIN_DIR = "$$[QT_HOST_BINS]/"

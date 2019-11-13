@@ -99,7 +99,6 @@ add_qt_resource(QuickParticles "particles1"
 
 #### Keys ignored in scope 1:.:.:particles.pro:<TRUE>:
 # MODULE = "quickparticles"
-# _LOADED = "qt_module"
 
 ## Scopes:
 #####################################################################

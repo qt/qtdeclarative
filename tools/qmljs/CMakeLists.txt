@@ -42,7 +42,6 @@ add_qt_tool(qmljs
 #### Keys ignored in scope 1:.:.:qmljs.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "QML" "JavaScript" "Tool"
 # TEMPLATE = "app"
-# _LOADED = "qt_tool"
 
 ## Scopes:
 #####################################################################
@@ -52,7 +51,7 @@ extend_target(qmljs CONDITION WIN32
         NOMINMAX
 )
 
-extend_target(qmljs CONDITION (disassembler) AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64")) # special case
+extend_target(qmljs CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))
     DEFINES
         WTF_USE_UDIS86=1
 )
@@ -77,12 +76,12 @@ extend_target(qmljs CONDITION NOT disassembler
         WTF_USE_UDIS86=0
 )
 
-extend_target(qmljs CONDITION (CMAKE_BUILD_TYPE STREQUAL Release)
+extend_target(qmljs CONDITION CMAKE_BUILD_TYPE STREQUAL Release
     DEFINES
         NDEBUG
 )
 
-extend_target(qmljs CONDITION (NOT ICC AND NOT CLANG AND GCC) AND ((QT_COMPILER_VERSION_MAJOR STRGREATER 6))
+extend_target(qmljs CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AND NOT CLANG AND NOT ICC
     COMPILE_OPTIONS
         -Wno-expansion-to-defined
 )

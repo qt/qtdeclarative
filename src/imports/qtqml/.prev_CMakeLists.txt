@@ -27,4 +27,3 @@ add_qml_module(qmlplugin
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # TARGETPATH = "QtQml"
-# _LOADED = "qml_plugin"

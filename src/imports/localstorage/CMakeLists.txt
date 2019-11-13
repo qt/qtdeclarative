@@ -26,4 +26,3 @@ add_qml_module(qmllocalstorageplugin
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # OTHER_FILES = "localstorage.json"
 # TARGETPATH = "QtQuick/LocalStorage"
-# _LOADED = "qml_plugin"

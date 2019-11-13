@@ -22,7 +22,6 @@ add_qt_tool(qmlscene
 
 #### Keys ignored in scope 1:.:.:qmlscene.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "QML" "Scene" "Viewer"
-# _LOADED = "qt_tool"
 
 ## Scopes:
 #####################################################################

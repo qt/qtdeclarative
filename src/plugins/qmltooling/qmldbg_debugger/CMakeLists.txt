@@ -28,4 +28,3 @@ add_qt_plugin(qmldbg_debugger
 
 #### Keys ignored in scope 1:.:.:qmldbg_debugger.pro:<TRUE>:
 # OTHER_FILES = "$$PWD/qqmldebuggerservice.json"
-# _LOADED = "qt_plugin"

@@ -87,7 +87,6 @@ add_dependencies(QmlDevTools Qml)
 
 #### Keys ignored in scope 1:.:.:qmldevtools.pro:<TRUE>:
 # MODULE_INCNAME = "QtQml"
-# _LOADED = "qt_module"
 # _OPTION = "host_build"
 
 ## Scopes:
@@ -96,7 +95,7 @@ add_dependencies(QmlDevTools Qml)
 #### Keys ignored in scope 2:.:.:qmldevtools.pro:ICC:
 # WERROR = "-ww2415"
 
-#### Keys ignored in scope 3:.:.:qmldevtools.pro:CLANG AND ( greaterThan(QT_CLANG_MAJOR_VERSION,3) OR greaterThan(QT_CLANG_MINOR_VERSION,3) ):
+#### Keys ignored in scope 3:.:.:qmldevtools.pro:CLANG AND ( (QT_CLANG_MAJOR_VERSION GREATER 3) OR (QT_CLANG_MINOR_VERSION GREATER 3) ):
 # WERROR = "-Wno-error=unused-const-variable"
 
 #### Keys ignored in scope 5:.:../qml/common:../qml/common/common.pri:NOT build_pass:

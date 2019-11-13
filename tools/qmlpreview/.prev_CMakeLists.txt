@@ -18,4 +18,3 @@ add_qt_tool(qmlpreview
 
 #### Keys ignored in scope 1:.:.:qmlpreview.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "QML" "Preview"
-# _LOADED = "qt_tool"

@@ -45,9 +45,6 @@ add_qt_module(QmlWorkerScript
         Qt::Qml
 )
 
-#### Keys ignored in scope 1:.:.:qmlworkerscript.pro:<TRUE>:
-# _LOADED = "qt_module"
-
 ## Scopes:
 #####################################################################
 

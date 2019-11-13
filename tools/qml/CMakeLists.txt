@@ -27,22 +27,25 @@ set_source_files_properties(
 # special case end
 
 # Resources:
+set(qml_resource_files
+    "conf/content/resizeItemToWindow.qml"
+    "conf/content/resizeWindowToItem.qml"
+    "conf/default.qml"
+    "conf/resizeToItem.qml"
+    "resources/qml-64.png"
+)
+
 add_qt_resource(qml "qml"
     PREFIX
         "/qt-project.org/QmlRuntime"
     FILES
-        conf/content/resizeItemToWindow.qml
-        conf/content/resizeWindowToItem.qml
-        conf/default.qml
-        conf/resizeToItem.qml
-        resources/qml-64.png
+        ${qml_resource_files}
 )
 
 
 #### Keys ignored in scope 1:.:.:qml.pro:<TRUE>:
 # ICON = "resources/qml64.png"
 # QMAKE_TARGET_DESCRIPTION = "QML" "Runtime"
-# _LOADED = "qt_tool"
 
 ## Scopes:
 #####################################################################

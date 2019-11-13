@@ -31,7 +31,6 @@ add_qml_module(qtquick2plugin
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # TARGETPATH = "QtQuick.2"
-# _LOADED = "qml_plugin"
 
 ## Scopes:
 #####################################################################

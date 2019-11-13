@@ -30,4 +30,3 @@ add_qml_module(qtqmlstatemachine
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "1.$$QT_MINOR_VERSION"
 # TARGETPATH = "QtQml/StateMachine"
-# _LOADED = "qml_plugin"

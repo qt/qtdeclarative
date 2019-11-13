@@ -21,5 +21,4 @@ add_qt_tool(qmllint
 
 #### Keys ignored in scope 1:.:.:qmllint.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "QML" "Syntax" "Verifier"
-# _LOADED = "qt_tool"
 # _OPTION = "host_build"

@@ -43,7 +43,6 @@ add_qt_plugin(qsgopenvgbackend
 # OTHER_FILES = "$$PWD/openvg.json"
 # QMAKE_TARGET_DESCRIPTION = "Quick OpenVG Renderer for Qt."
 # QMAKE_TARGET_PRODUCT = "Qt Quick OpenVG Renderer (Qt $$QT_VERSION)"
-# _LOADED = "qt_plugin"
 
 ## Scopes:
 #####################################################################

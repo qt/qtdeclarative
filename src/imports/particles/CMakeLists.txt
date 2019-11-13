@@ -28,4 +28,3 @@ add_qml_module(particlesplugin
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # TARGETPATH = "QtQuick/Particles.2"
-# _LOADED = "qml_plugin"
