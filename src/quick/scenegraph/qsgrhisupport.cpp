@@ -159,7 +159,7 @@ void QSGRhiSupport::applySettings()
         } else {
 #if defined(Q_OS_WIN)
             m_rhiBackend = QRhi::D3D11;
-#elif defined(Q_OS_DARWIN)
+#elif defined(Q_OS_MACOS) || defined(Q_OS_IOS)
             m_rhiBackend = QRhi::Metal;
 #else
             m_rhiBackend = QRhi::OpenGLES2;
@@ -350,7 +350,7 @@ static const void *qsgrhi_d3d11_rifResource(QSGRendererInterface::Resource res, 
 }
 #endif
 
-#ifdef Q_OS_DARWIN
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
 static const void *qsgrhi_mtl_rifResource(QSGRendererInterface::Resource res, const QRhiNativeHandles *nat,
                                     const QRhiNativeHandles *cbNat)
 {
@@ -408,7 +408,7 @@ const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res, const
     case QRhi::D3D11:
         return qsgrhi_d3d11_rifResource(res, nat);
 #endif
-#ifdef Q_OS_DARWIN
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
     case QRhi::Metal:
     {
         QRhiCommandBuffer *cb = rc->currentFrameCommandBuffer();
@@ -507,7 +507,7 @@ QRhi *QSGRhiSupport::createRhi(QWindow *window, QOffscreenSurface *offscreenSurf
         rhi = QRhi::create(backend, &rhiParams, flags);
     }
 #endif
-#ifdef Q_OS_DARWIN
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
     if (backend == QRhi::Metal) {
         QRhiMetalInitParams rhiParams;
         rhi = QRhi::create(backend, &rhiParams, flags);
