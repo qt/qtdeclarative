@@ -10,6 +10,3 @@ add_qt_test(image
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:image.pro:<TRUE>:
-# CONFIG = "qmltestcase"

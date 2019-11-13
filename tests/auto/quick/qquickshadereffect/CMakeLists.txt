@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qquickshadereffect
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qquickshadereffect.cpp
@@ -22,14 +21,8 @@ add_qt_test(tst_qquickshadereffect
         Qt::Quick
 )
 
-#### Keys ignored in scope 1:.:.:qquickshadereffect.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qquickshadereffect.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qquickshadereffect CONDITION ANDROID OR APPLE_IOS
     DEFINES

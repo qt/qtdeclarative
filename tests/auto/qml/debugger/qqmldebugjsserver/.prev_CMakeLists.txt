@@ -5,10 +5,8 @@
 #####################################################################
 
 add_qt_executable(qqmldebugjsserver
-    # special case begin
-    OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    # INSTALL_DIRECTORY "${INSTALL_TESTSDIR}/qqmldebugjsserver"
-    # special case end
+    OUTPUT_DIRECTORY "${INSTALL_TESTSDIR}/qqmldebugjsserver"
+    INSTALL_DIRECTORY "${INSTALL_TESTSDIR}/qqmldebugjsserver"
     SOURCES
         qqmldebugjsserver.cpp
     DEFINES

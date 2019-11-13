@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qquicktextedit
-    GUI
     SOURCES
         ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
         ../../shared/util.cpp ../../shared/util.h
@@ -39,9 +36,6 @@ add_qt_test(tst_qquicktextedit
     TESTDATA ${test_data}
 )
 
-#### Keys ignored in scope 1:.:.:qquicktextedit.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
 
@@ -49,9 +43,6 @@ extend_target(tst_qquicktextedit CONDITION APPLE_OSX
     PUBLIC_LIBRARIES
         ${FWAppKit}
 )
-
-#### Keys ignored in scope 2:.:.:qquicktextedit.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qquicktextedit CONDITION ANDROID OR APPLE_IOS
     DEFINES

@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "script/*")
+    script/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qjsengine
-    GUI
     SOURCES
         tst_qjsengine.cpp
     LIBRARIES
@@ -27,31 +24,33 @@ add_qt_test(tst_qjsengine
 )
 
 # Resources:
+set(qjsengine_resource_files
+    "translations/idtranslatable-unicode.qm"
+    "translations/idtranslatable_la.qm"
+    "translations/translatable-unicode.qm"
+    "translations/translatable_la.qm"
+)
+
 add_qt_resource(tst_qjsengine "qjsengine"
     PREFIX
         "/"
     FILES
-        translations/idtranslatable-unicode.qm
-        translations/idtranslatable_la.qm
-        translations/translatable-unicode.qm
-        translations/translatable_la.qm
+        ${qjsengine_resource_files}
 )
+set(qmake_immediate_resource_files
+    "exporterror1.mjs"
+    "importerror1.mjs"
+    "modulewithlexicals.mjs"
+    "testmodule.mjs"
+)
+
 add_qt_resource(tst_qjsengine "qmake_immediate"
     PREFIX
         "/"
     FILES
-        exporterror1.mjs
-        importerror1.mjs
-        modulewithlexicals.mjs
-        testmodule.mjs
+        ${qmake_immediate_resource_files}
 )
 
 
-#### Keys ignored in scope 1:.:.:qjsengine.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qjsengine.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

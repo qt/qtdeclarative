@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qquicktextmetrics
-    GUI
     SOURCES
         tst_qquicktextmetrics.cpp
     LIBRARIES
@@ -16,11 +15,5 @@ add_qt_test(tst_qquicktextmetrics
         Qt::Quick
 )
 
-#### Keys ignored in scope 1:.:.:qquicktextmetrics.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qquicktextmetrics.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

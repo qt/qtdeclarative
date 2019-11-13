@@ -10,6 +10,3 @@ add_qt_test(shadersource
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:shadersource.pro:<TRUE>:
-# CONFIG = "qmltestcase"

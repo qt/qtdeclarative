@@ -10,6 +10,3 @@ add_qt_test(listmodel
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:listmodel.pro:<TRUE>:
-# CONFIG = "qmltestcase"

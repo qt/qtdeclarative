@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_scenegraph
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         ../shared/geometrytestutil.cpp ../shared/geometrytestutil.h
@@ -28,14 +27,10 @@ add_qt_test(tst_scenegraph
 )
 
 #### Keys ignored in scope 1:.:.:scenegraph.pro:<TRUE>:
-# CONFIG = "testcase"
 # OTHER_FILES = "data/render_OutOfFloatRange.qml" "data/simple.qml" "data/render_ImageFiltering.qml"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:scenegraph.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_scenegraph CONDITION ANDROID OR APPLE_IOS
     DEFINES

@@ -97,21 +97,22 @@ add_qt_resource(tst_qmlcachegen "qmake_immediate"
 ## Scopes:
 #####################################################################
 
-# Resources:
-set_source_files_properties("data/umlaut.qml"
-    PROPERTIES QT_RESOURCE_ALIAS "Bäh.qml"
-)
-set(trickypaths_umlaut_resource_files
-    "data/umlaut.qml"
-)
+if(UNIX)
+    # Resources:
+    set_source_files_properties("data/umlaut.qml"
+        PROPERTIES QT_RESOURCE_ALIAS "Bäh.qml"
+    )
+    set(trickypaths_umlaut_resource_files
+        "data/umlaut.qml"
+    )
 
-add_qt_resource(tst_qmlcachegen "trickypaths_umlaut"
-    PREFIX
-        "/"
-    FILES
-        ${trickypaths_umlaut_resource_files}
-)
-
+    add_qt_resource(tst_qmlcachegen "trickypaths_umlaut"
+        PREFIX
+            "/"
+        FILES
+            ${trickypaths_umlaut_resource_files}
+    )
+endif()
 
 extend_target(tst_qmlcachegen CONDITION ANDROID OR APPLE_IOS
     DEFINES

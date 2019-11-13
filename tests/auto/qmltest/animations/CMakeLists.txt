@@ -10,6 +10,3 @@ add_qt_test(animations
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:animations.pro:<TRUE>:
-# CONFIG = "qmltestcase"

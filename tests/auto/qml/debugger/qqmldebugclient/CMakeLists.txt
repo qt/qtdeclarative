@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qqmldebugclient
-    GUI
     SOURCES
         ../../../shared/util.cpp ../../../shared/util.h
         ../shared/debugutil.cpp ../shared/debugutil_p.h

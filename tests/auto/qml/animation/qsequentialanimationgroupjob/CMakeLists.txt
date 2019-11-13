@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qsequentialanimationgroupjob
-    GUI
     SOURCES
         tst_qsequentialanimationgroupjob.cpp
     LIBRARIES
@@ -15,11 +14,5 @@ add_qt_test(tst_qsequentialanimationgroupjob
         Qt::Qml
 )
 
-#### Keys ignored in scope 1:.:.:qsequentialanimationgroupjob.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qsequentialanimationgroupjob.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

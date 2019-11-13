@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_signalspy
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         mypropertymap.cpp mypropertymap.h
@@ -17,14 +16,8 @@ add_qt_test(tst_signalspy
         Qt::Quick
 )
 
-#### Keys ignored in scope 1:.:.:signalspy.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:signalspy.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_signalspy CONDITION ANDROID OR APPLE_IOS
     DEFINES

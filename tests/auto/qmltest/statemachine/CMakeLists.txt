@@ -10,6 +10,3 @@ add_qt_test(statemachine
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:statemachine.pro:<TRUE>:
-# CONFIG = "qmltestcase"

@@ -10,6 +10,3 @@ add_qt_test(gradient
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:gradient.pro:<TRUE>:
-# CONFIG = "qmltestcase"

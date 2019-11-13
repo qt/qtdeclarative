@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qqmlglobal
-    GUI
     SOURCES
         tst_qqmlglobal.cpp
     LIBRARIES
@@ -17,11 +16,5 @@ add_qt_test(tst_qqmlglobal
         Qt::Qml
 )
 
-#### Keys ignored in scope 1:.:.:qqmlglobal.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qqmlglobal.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

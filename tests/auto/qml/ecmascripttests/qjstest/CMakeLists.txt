@@ -22,4 +22,3 @@ add_qt_tool(qjstest
 #### Keys ignored in scope 1:.:.:qjstest.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "Javascript" "test" "runner"
 # TEMPLATE = "app"
-# _LOADED = "qt_tool"

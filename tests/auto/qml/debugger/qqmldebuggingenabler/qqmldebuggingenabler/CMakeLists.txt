@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qqmldebuggingenabler
-    GUI
     SOURCES
         ../../../../shared/util.cpp ../../../../shared/util.h
         ../../shared/debugutil.cpp ../../shared/debugutil_p.h
@@ -25,14 +24,10 @@ add_qt_test(tst_qqmldebuggingenabler
 )
 
 #### Keys ignored in scope 1:.:.:qqmldebuggingenabler.pro:<TRUE>:
-# CONFIG = "testcase" "-debug_and_release_target"
 # OTHER_FILES = "data/test.qml"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qqmldebuggingenabler.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qqmldebuggingenabler CONDITION ANDROID OR APPLE_IOS
     DEFINES

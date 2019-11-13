@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_propertyrequirements
-    GUI
     SOURCES
         tst_propertyrequirements.cpp
     LIBRARIES
@@ -15,11 +14,5 @@ add_qt_test(tst_propertyrequirements
         Qt::Qml
 )
 
-#### Keys ignored in scope 1:.:.:propertyrequirements.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:propertyrequirements.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

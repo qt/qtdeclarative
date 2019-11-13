@@ -10,6 +10,3 @@ add_qt_test(buttonclick
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:buttonclick.pro:<TRUE>:
-# CONFIG = "qmltestcase"

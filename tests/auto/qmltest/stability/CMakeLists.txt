@@ -10,6 +10,3 @@ add_qt_test(stability
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:stability.pro:<TRUE>:
-# CONFIG = "qmltestcase"

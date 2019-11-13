@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_bindingdependencyapi
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_bindingdependencyapi.cpp
@@ -31,14 +28,8 @@ add_qt_test(tst_bindingdependencyapi
     TESTDATA ${test_data}
 )
 
-#### Keys ignored in scope 1:.:.:bindingdependencyapi.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:bindingdependencyapi.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_bindingdependencyapi CONDITION ANDROID OR APPLE_IOS
     DEFINES

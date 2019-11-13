@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_sharedimage
-    GUI
     SOURCES
         tst_sharedimage.cpp
     LIBRARIES
@@ -25,5 +22,4 @@ add_qt_test(tst_sharedimage
 )
 
 #### Keys ignored in scope 1:.:.:sharedimage.pro:<TRUE>:
-# CONFIG = "testcase" "-app_bundle"
 # OTHER_FILES = "data/yellow.png"

@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_rendernode
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_rendernode.cpp
@@ -32,14 +29,10 @@ add_qt_test(tst_rendernode
 )
 
 #### Keys ignored in scope 1:.:.:rendernode.pro:<TRUE>:
-# CONFIG = "testcase"
 # OTHER_FILES = "data/RenderOrder.qml" "data/MessUpState.qml" "data/matrix.qml"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:rendernode.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_rendernode CONDITION ANDROID OR APPLE_IOS
     DEFINES

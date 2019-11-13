@@ -12,5 +12,4 @@ add_qt_test(listview
 )
 
 #### Keys ignored in scope 1:.:.:listview.pro:<TRUE>:
-# CONFIG = "qmltestcase"
-# DISTFILES = "$$PWD/tst_listview.qml" "$$files$$PWD/data/*.qml"
+# DISTFILES = "$$PWD/tst_listview.qml" "$$PWD/data/*.qml"

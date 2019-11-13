@@ -10,6 +10,3 @@ add_qt_test(selftests
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:selftests.pro:<TRUE>:
-# CONFIG = "qmltestcase"

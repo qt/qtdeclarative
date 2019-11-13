@@ -10,6 +10,3 @@ add_qt_test(window
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:window.pro:<TRUE>:
-# CONFIG = "qmltestcase"

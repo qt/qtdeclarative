@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qmlmin
-    GUI
     SOURCES
         tst_qmlmin.cpp
     DEFINES
@@ -17,14 +16,8 @@ add_qt_test(tst_qmlmin
         Qt::Qml
 )
 
-#### Keys ignored in scope 1:.:.:qmlmin.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qmlmin.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qmlmin CONDITION cross_compile AND NOT boot2qt
     DEFINES

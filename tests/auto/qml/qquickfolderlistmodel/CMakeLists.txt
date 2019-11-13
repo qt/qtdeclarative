@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qquickfolderlistmodel
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qquickfolderlistmodel.cpp
@@ -33,24 +30,22 @@ add_qt_test(tst_qquickfolderlistmodel
 set_source_files_properties(data/txtdir/hello.txt PROPERTIES QT_RESOURCE_ALIAS "txtdir/hello.txt")
 # special case end
 # Resources:
+set(introspect_resource_files
+    "txtdir/hello.txt"
+)
+
 add_qt_resource(tst_qquickfolderlistmodel "introspect"
     PREFIX
         "/myprefix/subdir"
     BASE
         "data"
     FILES
-        txtdir/hello.txt
+        ${introspect_resource_files}
 )
 
 
-#### Keys ignored in scope 1:.:.:qquickfolderlistmodel.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qquickfolderlistmodel.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qquickfolderlistmodel CONDITION ANDROID OR APPLE_IOS
     DEFINES

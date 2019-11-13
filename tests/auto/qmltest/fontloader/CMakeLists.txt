@@ -10,6 +10,3 @@ add_qt_test(fontloader
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:fontloader.pro:<TRUE>:
-# CONFIG = "qmltestcase"

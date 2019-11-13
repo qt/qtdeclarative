@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qquicktimeline
-    GUI
     SOURCES
         tst_qquicktimeline.cpp
     LIBRARIES
@@ -19,11 +18,5 @@ add_qt_test(tst_qquicktimeline
         Qt::Quick
 )
 
-#### Keys ignored in scope 1:.:.:qquicktimeline.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qquicktimeline.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qquickopenglinfo
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qquickopenglinfo.cpp
@@ -26,14 +23,10 @@ add_qt_test(tst_qquickopenglinfo
 )
 
 #### Keys ignored in scope 1:.:.:qquickopenglinfo.pro:<TRUE>:
-# CONFIG = "testcase"
 # OTHER_FILES = "data/basic.qml"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qquickopenglinfo.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qquickopenglinfo CONDITION ANDROID OR APPLE_IOS
     DEFINES

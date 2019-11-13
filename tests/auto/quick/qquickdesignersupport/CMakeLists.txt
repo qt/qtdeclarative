@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qquickdesignersupport
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         ../shared/geometrytestutil.cpp ../shared/geometrytestutil.h
@@ -37,14 +34,10 @@ add_qt_test(tst_qquickdesignersupport
 )
 
 #### Keys ignored in scope 1:.:.:qquickdesignersupport.pro:<TRUE>:
-# CONFIG = "testcase"
 # DISTFILES = "data/TestComponent.qml" "data/test.qml" "data/componentTest.qml" "data/Component01.qml" "data/Component02.qml"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qquickdesignersupport.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qquickdesignersupport CONDITION ANDROID OR APPLE_IOS
     DEFINES

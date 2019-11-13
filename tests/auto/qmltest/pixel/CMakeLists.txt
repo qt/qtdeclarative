@@ -10,6 +10,3 @@ add_qt_test(pixel
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:pixel.pro:<TRUE>:
-# CONFIG = "qmltestcase"

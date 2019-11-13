@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qquickpainteditem
-    GUI
     SOURCES
         tst_qquickpainteditem.cpp
     LIBRARIES
@@ -20,11 +19,5 @@ add_qt_test(tst_qquickpainteditem
         Qt::Quick
 )
 
-#### Keys ignored in scope 1:.:.:qquickpainteditem.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qquickpainteditem.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qquickloader
-    GUI
     SOURCES
         ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
         ../../shared/util.cpp ../../shared/util.h
@@ -38,14 +35,8 @@ add_qt_test(tst_qquickloader
     TESTDATA ${test_data}
 )
 
-#### Keys ignored in scope 1:.:.:qquickloader.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qquickloader.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qquickloader CONDITION ANDROID OR APPLE_IOS
     DEFINES

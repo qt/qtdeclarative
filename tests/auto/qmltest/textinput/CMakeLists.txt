@@ -10,6 +10,3 @@ add_qt_test(textinput
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:textinput.pro:<TRUE>:
-# CONFIG = "qmltestcase"

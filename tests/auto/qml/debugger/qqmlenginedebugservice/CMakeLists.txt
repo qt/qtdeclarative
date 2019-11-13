@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qqmlenginedebugservice
-    GUI
     SOURCES
         ../../../shared/util.cpp ../../../shared/util.h
         ../shared/debugutil.cpp ../shared/debugutil_p.h
@@ -26,14 +25,8 @@ add_qt_test(tst_qqmlenginedebugservice
         Qt::Quick
 )
 
-#### Keys ignored in scope 1:.:.:qqmlenginedebugservice.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qqmlenginedebugservice.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qqmlenginedebugservice CONDITION ANDROID OR APPLE_IOS
     DEFINES

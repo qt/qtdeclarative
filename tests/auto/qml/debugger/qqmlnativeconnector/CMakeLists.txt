@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qqmlnativeconnector
-    GUI
     SOURCES
         tst_qqmlnativeconnector.cpp
     DEFINES

@@ -10,6 +10,3 @@ add_qt_test(textedit
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:textedit.pro:<TRUE>:
-# CONFIG = "qmltestcase"

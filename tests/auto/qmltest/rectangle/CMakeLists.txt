@@ -10,6 +10,3 @@ add_qt_test(rectangle
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:rectangle.pro:<TRUE>:
-# CONFIG = "qmltestcase"

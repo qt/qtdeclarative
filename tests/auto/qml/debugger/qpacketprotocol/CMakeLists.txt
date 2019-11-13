@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qpacketprotocol
-    GUI
     SOURCES
         ../../../shared/util.cpp ../../../shared/util.h
         ../shared/debugutil.cpp ../shared/debugutil_p.h
@@ -24,14 +23,8 @@ add_qt_test(tst_qpacketprotocol
         Qt::QmlDebug
 )
 
-#### Keys ignored in scope 1:.:.:qpacketprotocol.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qpacketprotocol.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qpacketprotocol CONDITION ANDROID OR APPLE_IOS
     DEFINES

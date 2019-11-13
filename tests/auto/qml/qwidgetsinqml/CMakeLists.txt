@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qwidgetsinqml
-    GUI
     SOURCES
         tst_qwidgetsinqml.cpp
     DEFINES
@@ -18,11 +17,5 @@ add_qt_test(tst_qwidgetsinqml
         Qt::Widgets
 )
 
-#### Keys ignored in scope 1:.:.:qwidgetsinqml.pro:<TRUE>:
-# CONFIG = "testcase" "parallel_test"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qwidgetsinqml.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

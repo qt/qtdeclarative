@@ -10,6 +10,3 @@ add_qt_test(borderimage
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:borderimage.pro:<TRUE>:
-# CONFIG = "qmltestcase"

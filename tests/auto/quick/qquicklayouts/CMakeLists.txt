@@ -5,11 +5,9 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qquicklayouts
@@ -28,6 +26,5 @@ add_qt_test(tst_qquicklayouts
 )
 
 #### Keys ignored in scope 1:.:.:qquicklayouts.pro:<TRUE>:
-# CONFIG = "qmltestcase"
 # OTHER_FILES = "data/tst_rowlayout.qml" "data/tst_gridlayout.qml" "data/tst_stacklayout.qml"
 # TEMPLATE = "app"

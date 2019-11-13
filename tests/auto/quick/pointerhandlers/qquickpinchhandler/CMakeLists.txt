@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qquickpinchhandler
-    GUI
     SOURCES
         ../../../shared/util.cpp ../../../shared/util.h
         ../../shared/geometrytestutil.cpp ../../shared/geometrytestutil.h
@@ -37,14 +34,10 @@ add_qt_test(tst_qquickpinchhandler
 )
 
 #### Keys ignored in scope 1:.:.:qquickpinchhandler.pro:<TRUE>:
-# CONFIG = "testcase"
 # OTHER_FILES = "data/pinchproperties.qml" "data/threeFingers.qml" "data/transformedPinchArea.qml"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qquickpinchhandler.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qquickpinchhandler CONDITION ANDROID OR APPLE_IOS
     DEFINES

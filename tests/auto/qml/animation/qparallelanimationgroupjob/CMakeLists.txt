@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qparallelanimationgroupjob
-    GUI
     SOURCES
         tst_qparallelanimationgroupjob.cpp
     LIBRARIES
@@ -17,11 +16,5 @@ add_qt_test(tst_qparallelanimationgroupjob
         Qt::Qml
 )
 
-#### Keys ignored in scope 1:.:.:qparallelanimationgroupjob.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qparallelanimationgroupjob.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

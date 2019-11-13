@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qquickscreen
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qquickscreen.cpp
@@ -22,14 +21,8 @@ add_qt_test(tst_qquickscreen
         Qt::Quick
 )
 
-#### Keys ignored in scope 1:.:.:qquickscreen.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qquickscreen.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qquickscreen CONDITION ANDROID OR APPLE_IOS
     DEFINES

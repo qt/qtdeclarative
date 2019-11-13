@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qquickdraghandler
-    GUI
     SOURCES
         ../../../shared/util.cpp ../../../shared/util.h
         ../../shared/geometrytestutil.cpp ../../shared/geometrytestutil.h
@@ -37,14 +34,10 @@ add_qt_test(tst_qquickdraghandler
 )
 
 #### Keys ignored in scope 1:.:.:qquickdraghandler.pro:<TRUE>:
-# CONFIG = "testcase"
 # OTHER_FILES = "data/DragAnywhereSlider.qml" "data/FlashAnimation.qml" "data/Slider.qml" "data/draggables.qml" "data/grabberstate.qml" "data/multipleSliders.qml" "data/reparenting.qml" "data/snapMode.qml"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qquickdraghandler.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qquickdraghandler CONDITION ANDROID OR APPLE_IOS
     DEFINES

@@ -10,6 +10,3 @@ add_qt_test(createbenchmark
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:createbenchmark.pro:<TRUE>:
-# CONFIG = "qmltestcase"

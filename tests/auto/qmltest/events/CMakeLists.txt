@@ -10,6 +10,3 @@ add_qt_test(events
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:events.pro:<TRUE>:
-# CONFIG = "qmltestcase"

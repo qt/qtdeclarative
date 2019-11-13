@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qquickmousearea
-    GUI
     SOURCES
         ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
         ../../shared/util.cpp ../../shared/util.h
@@ -39,14 +36,10 @@ add_qt_test(tst_qquickmousearea
 )
 
 #### Keys ignored in scope 1:.:.:qquickmousearea.pro:<TRUE>:
-# CONFIG = "testcase"
-# OTHER_FILES = "$$filesdata/*.qml"
+# OTHER_FILES = "data/*.qml"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qquickmousearea.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qquickmousearea CONDITION ANDROID OR APPLE_IOS
     DEFINES

@@ -10,6 +10,3 @@ add_qt_test(shortcut
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:shortcut.pro:<TRUE>:
-# CONFIG = "qmltestcase"

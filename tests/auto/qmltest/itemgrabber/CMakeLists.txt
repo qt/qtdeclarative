@@ -10,6 +10,3 @@ add_qt_test(itemgrabber
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:itemgrabber.pro:<TRUE>:
-# CONFIG = "qmltestcase"

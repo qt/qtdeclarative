@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qquickimageprovider
-    GUI
     SOURCES
         tst_qquickimageprovider.cpp
     LIBRARIES
@@ -20,11 +19,5 @@ add_qt_test(tst_qquickimageprovider
         Qt::Quick
 )
 
-#### Keys ignored in scope 1:.:.:qquickimageprovider.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qquickimageprovider.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

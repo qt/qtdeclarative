@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qquickstyledtext
-    GUI
     SOURCES
         tst_qquickstyledtext.cpp
     LIBRARIES
@@ -20,11 +19,5 @@ add_qt_test(tst_qquickstyledtext
         Qt::Quick
 )
 
-#### Keys ignored in scope 1:.:.:qquickstyledtext.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qquickstyledtext.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

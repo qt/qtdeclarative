@@ -10,6 +10,3 @@ add_qt_test(animatedimage
     PUBLIC_LIBRARIES
         Qt::Gui
 )
-
-#### Keys ignored in scope 1:.:.:animatedimage.pro:<TRUE>:
-# CONFIG = "qmltestcase"

@@ -5,7 +5,7 @@
 #####################################################################
 
 add_qt_executable(testapp
-    OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/./"
+    OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/"
     SOURCES
         main.cpp
     PUBLIC_LIBRARIES
@@ -14,17 +14,20 @@ add_qt_executable(testapp
 )
 
 # Resources:
+set(main_resource_files
+    "delayedExit.qml"
+    "delayedQuit.qml"
+    "immediateExit.qml"
+    "immediateQuit.qml"
+)
+
 add_qt_resource(testapp "main"
     PREFIX
         "/"
     FILES
-        delayedExit.qml
-        delayedQuit.qml
-        immediateExit.qml
-        immediateQuit.qml
+        ${main_resource_files}
 )
 
 
 #### Keys ignored in scope 1:.:.:testapp.pro:<TRUE>:
-# CONFIG = "-app_bundle" "console"
 # TEMPLATE = "app"

@@ -5,12 +5,8 @@
 #####################################################################
 
 add_qt_executable(qqmldebuggingenablerserver
+    INSTALL_DIRECTORY "${INSTALL_TESTSDIR}/tst_qqmldebuggingenabler"
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../qqmldebuggingenabler"
-    # special case begin
-    # Remove INSTALL_DIRECTORY with $$[QT_INSTALL_TESTS]
-    # as these are invalid
-    # INSTALL_DIRECTORY "${INSTALL_TESTSDIR}/tst_qqmldebuggingenabler"
-    # special case end
     SOURCES
         qqmldebuggingenablerserver.cpp
     DEFINES
