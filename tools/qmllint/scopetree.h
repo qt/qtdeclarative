@@ -153,6 +153,7 @@ public:
 
     void addProperty(const MetaProperty &prop) { m_properties.insert(prop.propertyName(), prop); }
     QHash<QString, MetaProperty> properties() const { return m_properties; }
+    void updateParentProperty(const ScopeTree *scope);
 
     QString defaultPropertyName() const { return m_defaultPropertyName; }
     void setDefaultPropertyName(const QString &name) { m_defaultPropertyName = name; }

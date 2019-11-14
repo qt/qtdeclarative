@@ -148,6 +148,14 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("badAliasProperty.qml")
             << QString("Warning: Property \"nowhere\" not found on type \"QtObject\" at 5:32")
             << QString();
+    QTest::newRow("badParent")
+            << QStringLiteral("badParent.qml")
+            << QString("Warning: Property \"rrr\" not found on type \"Item\" at 5:34")
+            << QString();
+    QTest::newRow("parentIsComponent")
+            << QStringLiteral("parentIsComponent.qml")
+            << QString("Warning: Property \"progress\" not found on type \"QQuickItem\" at 7:39")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -177,6 +185,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("esmodule")                  << QStringLiteral("esmodule.mjs");
     QTest::newRow("methodsInJavascript")       << QStringLiteral("javascriptMethods.qml");
     QTest::newRow("goodAlias")                 << QStringLiteral("goodAlias.qml");
+    QTest::newRow("goodParent")                << QStringLiteral("goodParent.qml");
 }
 
 void TestQmllint::cleanQmlCode()

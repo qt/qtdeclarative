@@ -888,7 +888,9 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::PatternElement *element)
 
 void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *)
 {
+    auto childScope = m_currentScope;
     leaveEnvironment();
+    childScope->updateParentProperty(m_currentScope);
 }
 
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::FieldMemberExpression *)
