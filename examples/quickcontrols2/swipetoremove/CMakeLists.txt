@@ -24,6 +24,7 @@ target_link_libraries(swipetoremove PUBLIC
     Qt::Qml
 )
 
+
 # Resources:
 set(qmake_immediate_resource_files
     "fonts/fontello.ttf"
@@ -36,7 +37,6 @@ qt6_add_resources(swipetoremove "qmake_immediate"
     FILES
         ${qmake_immediate_resource_files}
 )
-
 
 install(TARGETS swipetoremove
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

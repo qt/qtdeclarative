@@ -4,7 +4,7 @@
 ## QuickControls2 Module:
 #####################################################################
 
-add_qt_module(QuickControls2
+qt_add_module(QuickControls2
     SOURCES
         qquickanimatednode.cpp qquickanimatednode_p.h
         qquickattachedobject.cpp qquickattachedobject_p.h
@@ -42,12 +42,11 @@ add_qt_module(QuickControls2
 
 #### Keys ignored in scope 1:.:.:quickcontrols2.pro:<TRUE>:
 # MODULE = "quickcontrols2"
-# _LOADED = "qt_module"
 
 ## Scopes:
 #####################################################################
 
-extend_target(QuickControls2 CONDITION QT_FEATURE_quick_listview AND QT_FEATURE_quick_pathview
+qt_extend_target(QuickControls2 CONDITION QT_FEATURE_quick_listview AND QT_FEATURE_quick_pathview
     SOURCES
         qquicktumblerview.cpp qquicktumblerview_p.h
 )

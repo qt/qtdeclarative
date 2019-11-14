@@ -26,6 +26,7 @@ target_link_libraries(automotive PUBLIC
     Qt::QuickControls2
 )
 
+
 # Resources:
 set(icons_resource_files
     "automotive/44x44/air-con.png"
@@ -175,7 +176,6 @@ qt6_add_resources(automotive "qmake_immediate"
     FILES
         ${qmake_immediate_resource_files}
 )
-
 
 install(TARGETS automotive
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -69,7 +69,7 @@ add_qt_resource(qtquickcontrols2universalstyleplugin "qtquickcontrols2universals
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # OTHER_FILES = "qmldir" "$$QML_FILES"
 # TARGETPATH = "QtQuick/Controls.2/Universal"
-# _LOADED = "qml_plugin"
+# _REQUIREMENTS = "qtConfig(quickcontrols2-universal)"
 
 set(qml_files
     "ApplicationWindow.qml"
@@ -122,10 +122,6 @@ set(qml_files
     "ToolSeparator.qml"
     "ToolTip.qml"
     "Tumbler.qml"
-)
-
-set_source_files_properties(${qml_files} PROPERTIES
-    QT_QML_SOURCE_INSTALL TRUE
 )
 
 qt6_target_qml_files(qtquickcontrols2universalstyleplugin

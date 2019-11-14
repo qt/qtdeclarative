@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_focus
+qt_add_test(tst_focus
     SOURCES
         ../shared/qtest_quickcontrols.h
         ../shared/util.cpp ../shared/util.h
@@ -37,12 +37,12 @@ add_qt_test(tst_focus
 ## Scopes:
 #####################################################################
 
-extend_target(tst_focus CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_focus CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_focus CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_focus CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

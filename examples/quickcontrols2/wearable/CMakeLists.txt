@@ -26,6 +26,7 @@ target_link_libraries(wearable PUBLIC
     Qt::QuickControls2
 )
 
+
 # Resources:
 set(wearable_resource_files
     "icons/wearable/36x36/alarms.png"
@@ -187,7 +188,6 @@ qt6_add_resources(wearable "wearable"
     FILES
         ${wearable_resource_files}
 )
-
 
 install(TARGETS wearable
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

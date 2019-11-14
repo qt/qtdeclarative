@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_palette
+qt_add_test(tst_palette
     SOURCES
         ../shared/qtest_quickcontrols.h
         ../shared/util.cpp ../shared/util.h
@@ -40,7 +40,7 @@ set(qmake_immediate_resource_files
     "qtquickcontrols2.conf"
 )
 
-add_qt_resource(tst_palette "qmake_immediate"
+qt_add_resource(tst_palette "qmake_immediate"
     PREFIX
         "/"
     FILES
@@ -54,12 +54,12 @@ add_qt_resource(tst_palette "qmake_immediate"
 ## Scopes:
 #####################################################################
 
-extend_target(tst_palette CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_palette CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_palette CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_palette CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

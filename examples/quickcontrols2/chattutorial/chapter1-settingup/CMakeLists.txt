@@ -26,6 +26,7 @@ target_link_libraries(chapter1-settingup PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(qml_resource_files
     "main.qml"
@@ -37,7 +38,6 @@ qt6_add_resources(chapter1-settingup "qml"
     FILES
         ${qml_resource_files}
 )
-
 
 install(TARGETS chapter1-settingup
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

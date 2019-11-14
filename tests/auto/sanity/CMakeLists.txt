@@ -4,7 +4,7 @@
 ## tst_sanity Test:
 #####################################################################
 
-add_qt_test(tst_sanity
+qt_add_test(tst_sanity
     SOURCES
         ../shared/qtest_quickcontrols.h
         ../shared/util.cpp ../shared/util.h
@@ -34,12 +34,12 @@ add_qt_test(tst_sanity
 ## Scopes:
 #####################################################################
 
-extend_target(tst_sanity CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_sanity CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_sanity CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_sanity CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

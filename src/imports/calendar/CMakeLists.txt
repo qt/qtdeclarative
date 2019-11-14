@@ -4,7 +4,7 @@
 ## qtlabscalendarplugin Plugin:
 #####################################################################
 
-add_qml_module(qtlabscalendarplugin
+qt_add_qml_module(qtlabscalendarplugin
     URI "Qt.labs.calendar"
     VERSION "1.0"
     CLASSNAME QtLabsCalendarPlugin
@@ -38,7 +38,6 @@ add_qml_module(qtlabscalendarplugin
 # IMPORT_VERSION = "1.0"
 # OTHER_FILES = "qmldir"
 # TARGETPATH = "Qt/labs/calendar"
-# _LOADED = "qml_plugin"
 
 ## Scopes:
 #####################################################################
@@ -62,7 +61,7 @@ qt6_target_qml_files(qtlabscalendarplugin
     FILES
         ${qml_files}
 )
-add_qt_docs(qtlabscalendarplugin
+qt_add_docs(qtlabscalendarplugin
     doc/qtlabscalendar.qdocconf
 )
 

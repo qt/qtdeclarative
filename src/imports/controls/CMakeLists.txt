@@ -4,7 +4,7 @@
 ## qtquickcontrols2plugin Plugin:
 #####################################################################
 
-add_qml_module(qtquickcontrols2plugin
+qt_add_qml_module(qtquickcontrols2plugin
     TARGET_PATH "QtQuick/Controls.2"
     URI "QtQuick.Controls"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
@@ -61,7 +61,9 @@ set(qtquickcontrols2plugin_resource_files
     "images/drop-indicator@4x.png"
 )
 
-add_qt_resource(qtquickcontrols2plugin "qtquickcontrols2plugin"
+qt_add_resource(qtquickcontrols2plugin "qtquickcontrols2plugin"
+    PREFIX
+        "/qt-project.org/imports/QtQuick/Controls.2"
     FILES
         ${qtquickcontrols2plugin_resource_files}
 )
@@ -71,7 +73,6 @@ add_qt_resource(qtquickcontrols2plugin "qtquickcontrols2plugin"
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # OTHER_FILES = "qmldir" "$$QML_FILES" "$$PWD/snippets/*.qml" "$$PWD/src/*.qdoc" "$$PWD/src/calendar/*.qdoc" "$$PWD/src/templates/*.qdoc"
 # TARGETPATH = "QtQuick/Controls.2"
-# _LOADED = "qml_plugin"
 # _REQUIREMENTS = "qtConfig(quickcontrols2-default)"
 
 ## Scopes:
@@ -139,7 +140,7 @@ qt6_target_qml_files(qtquickcontrols2plugin
     FILES
         ${qml_files}
 )
-add_qt_docs(qtquickcontrols2plugin
+qt_add_docs(qtquickcontrols2plugin
     doc/qtquickcontrols.qdocconf
 )
 

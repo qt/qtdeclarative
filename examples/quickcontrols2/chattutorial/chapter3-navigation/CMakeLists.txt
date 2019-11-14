@@ -26,6 +26,7 @@ target_link_libraries(chapter3-navigation PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(qml_resource_files
     "ContactPage.qml"
@@ -98,7 +99,6 @@ qt6_add_resources(chapter3-navigation "shared"
     FILES
         ${shared_resource_files}
 )
-
 
 install(TARGETS chapter3-navigation
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

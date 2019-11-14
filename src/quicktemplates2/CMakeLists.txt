@@ -4,7 +4,7 @@
 ## QuickTemplates2 Module:
 #####################################################################
 
-add_qt_module(QuickTemplates2
+qt_add_module(QuickTemplates2
     SOURCES
         qquickabstractbutton.cpp qquickabstractbutton_p.h
         qquickabstractbutton_p_p.h
@@ -129,19 +129,18 @@ add_qt_module(QuickTemplates2
 
 #### Keys ignored in scope 1:.:.:quicktemplates2.pro:<TRUE>:
 # MODULE = "quicktemplates2"
-# _LOADED = "qt_module"
 
 ## Scopes:
 #####################################################################
 
-extend_target(QuickTemplates2 CONDITION TARGET Qt::QmlModels
+qt_extend_target(QuickTemplates2 CONDITION TARGET Qt::QmlModels
     LIBRARIES
         Qt::QmlModelsPrivate
     PUBLIC_LIBRARIES
         Qt::QmlModels
 )
 
-extend_target(QuickTemplates2 CONDITION QT_FEATURE_quick_listview AND QT_FEATURE_quick_pathview
+qt_extend_target(QuickTemplates2 CONDITION QT_FEATURE_quick_listview AND QT_FEATURE_quick_pathview
     SOURCES
         qquicktumbler.cpp qquicktumbler_p.h
         qquicktumbler_p_p.h

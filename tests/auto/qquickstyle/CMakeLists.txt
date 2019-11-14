@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     ${CMAKE_CURRENT_SOURCE_DIR}/data/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_qquickstyle
+qt_add_test(tst_qquickstyle
     SOURCES
         ../shared/qtest_quickcontrols.h
         ../shared/util.cpp ../shared/util.h
@@ -60,7 +60,7 @@ set(qmake_qrcStyles1_resource_files
     ${resource_glob_0}
 )
 
-add_qt_resource(tst_qquickstyle "qmake_qrcStyles1"
+qt_add_resource(tst_qquickstyle "qmake_qrcStyles1"
     PREFIX
         "/"
     FILES
@@ -70,7 +70,7 @@ set(qmake_qrcStyles2_resource_files
     ${resource_glob_1}
 )
 
-add_qt_resource(tst_qquickstyle "qmake_qrcStyles2"
+qt_add_resource(tst_qquickstyle "qmake_qrcStyles2"
     PREFIX
         "/"
     FILES
@@ -80,7 +80,7 @@ set(qmake_qrcStyles3_resource_files
     ${resource_glob_2}
 )
 
-add_qt_resource(tst_qquickstyle "qmake_qrcStyles3"
+qt_add_resource(tst_qquickstyle "qmake_qrcStyles3"
     PREFIX
         "/"
     FILES
@@ -90,7 +90,7 @@ set(qmake_qrcStyles4_resource_files
     ${resource_glob_3}
 )
 
-add_qt_resource(tst_qquickstyle "qmake_qrcStyles4"
+qt_add_resource(tst_qquickstyle "qmake_qrcStyles4"
     PREFIX
         "/"
     FILES
@@ -101,12 +101,12 @@ add_qt_resource(tst_qquickstyle "qmake_qrcStyles4"
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qquickstyle CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qquickstyle CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qquickstyle CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qquickstyle CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

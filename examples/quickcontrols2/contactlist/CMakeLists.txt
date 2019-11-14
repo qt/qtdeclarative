@@ -25,6 +25,7 @@ target_link_libraries(contactlist PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(qmake_immediate_resource_files
     "ContactDelegate.ui.qml"
@@ -42,7 +43,6 @@ qt6_add_resources(contactlist "qmake_immediate"
     FILES
         ${qmake_immediate_resource_files}
 )
-
 
 install(TARGETS contactlist
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

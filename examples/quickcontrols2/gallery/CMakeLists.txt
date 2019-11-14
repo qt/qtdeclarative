@@ -26,6 +26,7 @@ target_link_libraries(gallery PUBLIC
     Qt::QuickControls2
 )
 
+
 # Resources:
 set(qmake_immediate_resource_files
     "gallery.qml"
@@ -90,7 +91,6 @@ qt6_add_resources(gallery "qmake_immediate"
     FILES
         ${qmake_immediate_resource_files}
 )
-
 
 install(TARGETS gallery
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

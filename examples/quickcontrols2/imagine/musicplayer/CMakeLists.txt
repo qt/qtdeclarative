@@ -26,6 +26,7 @@ target_link_libraries(musicplayer PUBLIC
     Qt::QuickControls2
 )
 
+
 # Resources:
 set(icons_resource_files
     "musicplayer/32x32/bluetooth.png"
@@ -206,7 +207,6 @@ qt6_add_resources(musicplayer "qmake_immediate"
     FILES
         ${qmake_immediate_resource_files}
 )
-
 
 install(TARGETS musicplayer
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -24,6 +24,7 @@ target_link_libraries(sidepanel PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(qmake_immediate_resource_files
     "doc/images/qtquickcontrols2-sidepanel-landscape.png"
@@ -41,7 +42,6 @@ qt6_add_resources(sidepanel "qmake_immediate"
     FILES
         ${qmake_immediate_resource_files}
 )
-
 
 install(TARGETS sidepanel
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

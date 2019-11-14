@@ -30,6 +30,7 @@ target_link_libraries(chapter4-models PUBLIC
     Qt::Sql
 )
 
+
 # Resources:
 set(qml_resource_files
     "ContactPage.qml"
@@ -102,7 +103,6 @@ qt6_add_resources(chapter4-models "shared"
     FILES
         ${shared_resource_files}
 )
-
 
 install(TARGETS chapter4-models
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

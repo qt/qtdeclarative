@@ -4,7 +4,7 @@
 ## qtquickcontrols2fusionstyleplugin Plugin:
 #####################################################################
 
-add_qml_module(qtquickcontrols2fusionstyleplugin
+qt_add_qml_module(qtquickcontrols2fusionstyleplugin
     TARGET_PATH "QtQuick/Controls.2/Fusion"
     URI "QtQuick.Controls.Fusion"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
@@ -52,7 +52,7 @@ set(qtquickcontrols2fusionstyle_resource_files
     "images/progressmask@4x.png"
 )
 
-add_qt_resource(qtquickcontrols2fusionstyleplugin "qtquickcontrols2fusionstyle"
+qt_add_resource(qtquickcontrols2fusionstyleplugin "qtquickcontrols2fusionstyle"
     PREFIX
         "/qt-project.org/imports/QtQuick/Controls.2/Fusion"
     FILES
@@ -65,7 +65,6 @@ add_qt_resource(qtquickcontrols2fusionstyleplugin "qtquickcontrols2fusionstyle"
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # OTHER_FILES = "qmldir" "$$QML_FILES"
 # TARGETPATH = "QtQuick/Controls.2/Fusion"
-# _LOADED = "qml_plugin"
 # _REQUIREMENTS = "qtConfig(quickcontrols2-fusion)"
 
 set(qml_files

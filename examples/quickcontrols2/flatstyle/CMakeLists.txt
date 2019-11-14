@@ -28,6 +28,7 @@ target_link_libraries(flatstyle PUBLIC
     Qt::Widgets
 )
 
+
 # Resources:
 set(qmake_immediate_resource_files
     "Flat/Button.qml"
@@ -46,7 +47,6 @@ qt6_add_resources(flatstyle "qmake_immediate"
     FILES
         ${qmake_immediate_resource_files}
 )
-
 
 install(TARGETS flatstyle
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -26,6 +26,7 @@ target_link_libraries(chapter2-lists PUBLIC
     Qt::Quick
 )
 
+
 # Resources:
 set(qml_resource_files
     "main.qml"
@@ -96,7 +97,6 @@ qt6_add_resources(chapter2-lists "shared"
     FILES
         ${shared_resource_files}
 )
-
 
 install(TARGETS chapter2-lists
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

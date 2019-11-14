@@ -4,7 +4,7 @@
 ## qtquickcontrols2materialstyleplugin Plugin:
 #####################################################################
 
-add_qml_module(qtquickcontrols2materialstyleplugin
+qt_add_qml_module(qtquickcontrols2materialstyleplugin
     TARGET_PATH "QtQuick/Controls.2/Material"
     URI "QtQuick.Controls.Material"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
@@ -56,7 +56,7 @@ set(qtquickcontrols2materialstyleplugin_resource_files
     "shaders/RectangularGlow.frag"
 )
 
-add_qt_resource(qtquickcontrols2materialstyleplugin "qtquickcontrols2materialstyleplugin"
+qt_add_resource(qtquickcontrols2materialstyleplugin "qtquickcontrols2materialstyleplugin"
     PREFIX
         "/qt-project.org/imports/QtQuick/Controls.2/Material"
     FILES
@@ -69,7 +69,6 @@ add_qt_resource(qtquickcontrols2materialstyleplugin "qtquickcontrols2materialsty
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # OTHER_FILES = "qmldir" "$$QML_FILES"
 # TARGETPATH = "QtQuick/Controls.2/Material"
-# _LOADED = "qml_plugin"
 # _REQUIREMENTS = "qtConfig(quickcontrols2-material)"
 
 set(qml_files

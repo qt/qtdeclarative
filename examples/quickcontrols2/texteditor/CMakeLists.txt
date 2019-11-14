@@ -27,6 +27,7 @@ target_link_libraries(texteditor PUBLIC
     Qt::QuickControls2
 )
 
+
 # Resources:
 set(texteditor_resource_files
     "+touch/texteditor.html"
@@ -45,19 +46,16 @@ qt6_add_resources(texteditor "texteditor"
         ${texteditor_resource_files}
 )
 
-
 if(TARGET Qt::Widgets)
     target_link_libraries(texteditor PUBLIC
         Qt::Widgets
     )
-
 endif()
 
 if(cross_compile)
     target_compile_definitions(texteditor PUBLIC
         QT_EXTRA_FILE_SELECTOR=\\\"touch\\\"
     )
-
 endif()
 
 install(TARGETS texteditor

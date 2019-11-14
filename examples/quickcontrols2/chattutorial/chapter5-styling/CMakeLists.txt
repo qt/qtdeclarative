@@ -30,6 +30,7 @@ target_link_libraries(chapter5-styling PUBLIC
     Qt::Sql
 )
 
+
 # Resources:
 set(qml_resource_files
     "+material/ChatToolBar.qml"
@@ -105,7 +106,6 @@ qt6_add_resources(chapter5-styling "shared"
     FILES
         ${shared_resource_files}
 )
-
 
 install(TARGETS chapter5-styling
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

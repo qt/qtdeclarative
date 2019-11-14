@@ -4,7 +4,7 @@
 ## qtquicktemplates2plugin Plugin:
 #####################################################################
 
-add_qml_module(qtquicktemplates2plugin
+qt_add_qml_module(qtquicktemplates2plugin
     TARGET_PATH "QtQuick/Templates.2"
     URI "QtQuick.Templates"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
@@ -34,4 +34,3 @@ add_qml_module(qtquicktemplates2plugin
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # OTHER_FILES = "qmldir"
 # TARGETPATH = "QtQuick/Templates.2"
-# _LOADED = "qml_plugin"
