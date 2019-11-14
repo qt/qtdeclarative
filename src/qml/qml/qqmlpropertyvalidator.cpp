@@ -731,7 +731,7 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateObjectBinding(QQmlPrope
         return qQmlCompileError(binding->location, tr("Cannot assign value of type \"%1\" to property \"%2\", expecting \"%3\"")
                                                       .arg(rhsType())
                                                       .arg(propertyName)
-                                                      .arg(typeName));
+                                                      .arg(QString::fromUtf8(typeName)));
     } else if (QQmlValueTypeFactory::isValueType(propType)) {
         return qQmlCompileError(binding->location, tr("Cannot assign value of type \"%1\" to property \"%2\", expecting an object")
                                                       .arg(rhsType()).arg(propertyName));
