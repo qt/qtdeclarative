@@ -58,6 +58,12 @@ public:
     bool check();
 
 private:
+    struct Import {
+        QHash<QString, ScopeTree::ConstPtr> objects;
+        QList<ModuleApiInfo> moduleApis;
+        QStringList dependencies;
+    };
+
     QScopedPointer<ScopeTree> m_rootScope;
     ScopeTree *m_currentScope = nullptr;
     QHash<QString, ScopeTree::ConstPtr> m_exportedName2Scope;
@@ -82,8 +88,13 @@ private:
 
     void enterEnvironment(ScopeType type, QString name);
     void leaveEnvironment();
-    void importHelper(QString id, const QString &prefix, int major, int minor);
-    ScopeTree* localQmlFile2ScopeTree(const QString &filePath);
+    void importHelper(QString id, QString prefix, int major, int minor);
+
+    void readQmltypes(const QString &filename, Import &result);
+    Import readQmldir(const QString &dirname);
+    void processImport(const QString &prefix, const Import &import);
+
+    ScopeTree *localQmlFile2ScopeTree(const QString &filePath);
 
     void importDirectory(const QString &directory, const QString &prefix);
     void importExportedNames(const QStringRef &prefix, QString name);

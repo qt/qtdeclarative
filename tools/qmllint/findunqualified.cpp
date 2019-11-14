@@ -69,8 +69,7 @@ void FindUnqualifiedIDVisitor::leaveEnvironment()
 
 enum ImportVersion { FullyVersioned, PartiallyVersioned, Unversioned, BasePath };
 
-QStringList completeImportPaths(const QString &uri, const QStringList &basePaths,
-                                int vmaj, int vmin)
+QStringList completeImportPaths(const QString &uri, const QString &basePath, int vmaj, int vmin)
 {
     static const QLatin1Char Slash('/');
     static const QLatin1Char Backslash('\\');
@@ -79,7 +78,7 @@ QStringList completeImportPaths(const QString &uri, const QStringList &basePaths
 
     QStringList qmlDirPathsPaths;
     // fully & partially versioned parts + 1 unversioned for each base path
-    qmlDirPathsPaths.reserve(basePaths.count() * (2 * parts.count() + 1));
+    qmlDirPathsPaths.reserve(2 * parts.count() + 1);
 
     auto versionString = [](int vmaj, int vmin, ImportVersion version)
     {
@@ -107,96 +106,93 @@ QStringList completeImportPaths(const QString &uri, const QStringList &basePaths
     for (int version = FullyVersioned; version <= BasePath; ++version) {
         const QString ver = versionString(vmaj, vmin, static_cast<ImportVersion>(version));
 
-        for (const QString &path : basePaths) {
-            QString dir = path;
-            if (!dir.endsWith(Slash) && !dir.endsWith(Backslash))
-                dir += Slash;
+        QString dir = basePath;
+        if (!dir.endsWith(Slash) && !dir.endsWith(Backslash))
+            dir += Slash;
 
-            if (version == BasePath) {
-                qmlDirPathsPaths += dir;
-            } else {
-                // append to the end
-                qmlDirPathsPaths += dir + joinStringRefs(parts, Slash) + ver;
-            }
+        if (version == BasePath) {
+            qmlDirPathsPaths += dir;
+        } else {
+            // append to the end
+            qmlDirPathsPaths += dir + joinStringRefs(parts, Slash) + ver;
+        }
 
-            if (version < Unversioned) {
-                // insert in the middle
-                for (int index = parts.count() - 2; index >= 0; --index) {
-                    qmlDirPathsPaths += dir + joinStringRefs(parts.mid(0, index + 1), Slash)
-                            + ver + Slash
-                            + joinStringRefs(parts.mid(index + 1), Slash);
-                }
+        if (version < Unversioned) {
+            // insert in the middle
+            for (int index = parts.count() - 2; index >= 0; --index) {
+                qmlDirPathsPaths += dir + joinStringRefs(parts.mid(0, index + 1), Slash)
+                        + ver + Slash
+                        + joinStringRefs(parts.mid(index + 1), Slash);
             }
         }
     }
     return qmlDirPathsPaths;
 }
 
-void FindUnqualifiedIDVisitor::importHelper(QString id, const QString &prefix, int major, int minor)
+static const QLatin1String SlashQmldir             = QLatin1String("/qmldir");
+static const QLatin1String SlashAppDotQmltypes     = QLatin1String("/app.qmltypes");
+static const QLatin1String SlashLibDotQmltypes     = QLatin1String("/lib.qmltypes");
+static const QLatin1String SlashPluginsDotQmltypes = QLatin1String("/plugins.qmltypes");
+
+void FindUnqualifiedIDVisitor::readQmltypes(const QString &filename,
+                                            FindUnqualifiedIDVisitor::Import &result)
 {
-    QPair<QString, QString> importId { id, prefix };
-    if (m_alreadySeenImports.contains(importId))
-        return;
+    auto reader = createQmltypesReaderForFile(filename);
+    auto succ = reader(&result.objects, &result.moduleApis, &result.dependencies);
+    if (!succ)
+        m_colorOut.writeUncolored(reader.errorMessage());
+}
 
-    m_alreadySeenImports.insert(importId);
+FindUnqualifiedIDVisitor::Import FindUnqualifiedIDVisitor::readQmldir(const QString &path)
+{
+    Import result;
+    auto reader = createQmldirParserForFile(path + SlashQmldir);
+    const auto imports = reader.imports();
+    for (const QString &import : imports)
+        result.dependencies.append(import);
 
-    id = id.replace(QLatin1String("/"), QLatin1String("."));
-    auto qmltypesPaths = completeImportPaths(id, m_qmltypeDirs, major, minor);
-
-    QHash<QString, ScopeTree::ConstPtr> objects;
-    QList<ModuleApiInfo> moduleApis;
-    QStringList dependencies;
-    static const QLatin1String SlashPluginsDotQmltypes("/plugins.qmltypes");
-    static const QLatin1String SlashQmldir("/qmldir");
-    for (auto const &qmltypesPath : qmltypesPaths) {
-        if (QFile::exists(qmltypesPath + SlashQmldir)) {
-            auto reader = createQmldirParserForFile(qmltypesPath + SlashQmldir);
-            const auto imports = reader.imports();
-            for (const QString &import : imports)
-                importHelper(import, prefix, major, minor);
-
-            QHash<QString, ScopeTree *> qmlComponents;
-            const auto components = reader.components();
-            for (auto it = components.begin(), end = components.end(); it != end; ++it) {
-                const QString filePath = qmltypesPath + QLatin1Char('/') + it->fileName;
-                if (!QFile::exists(filePath)) {
-                    m_colorOut.write(QLatin1String("warning: "), Warning);
-                    m_colorOut.write(it->fileName + QLatin1String(" is listed as component in ")
-                                     + qmltypesPath + SlashQmldir
-                                     + QLatin1String(" but does not exist.\n"));
-                    continue;
-                }
-
-                auto mo = qmlComponents.find(it.key());
-                if (mo == qmlComponents.end())
-                    mo = qmlComponents.insert(it.key(), localQmlFile2ScopeTree(filePath));
-
-                (*mo)->addExport(
-                            it.key(), reader.typeNamespace(),
-                            ComponentVersion(it->majorVersion, it->minorVersion));
-            }
-            for (auto it = qmlComponents.begin(), end = qmlComponents.end(); it != end; ++it) {
-                objects.insert(it.key(),
-                               QSharedPointer<const ScopeTree>(it.value()));
-            }
+    QHash<QString, ScopeTree *> qmlComponents;
+    const auto components = reader.components();
+    for (auto it = components.begin(), end = components.end(); it != end; ++it) {
+        const QString filePath = path + QLatin1Char('/') + it->fileName;
+        if (!QFile::exists(filePath)) {
+            m_colorOut.write(QLatin1String("warning: "), Warning);
+            m_colorOut.write(it->fileName + QLatin1String(" is listed as component in ")
+                             + path + SlashQmldir
+                             + QLatin1String(" but does not exist.\n"));
+            continue;
         }
-        if (QFile::exists(qmltypesPath + SlashPluginsDotQmltypes)) {
-            auto reader = createQmltypesReaderForFile(qmltypesPath + SlashPluginsDotQmltypes);
-            auto succ = reader(&objects, &moduleApis, &dependencies);
-            if (!succ)
-                m_colorOut.writeUncolored(reader.errorMessage());
-        }
+
+        auto mo = qmlComponents.find(it.key());
+        if (mo == qmlComponents.end())
+            mo = qmlComponents.insert(it.key(), localQmlFile2ScopeTree(filePath));
+
+        (*mo)->addExport(
+                    it.key(), reader.typeNamespace(),
+                    ComponentVersion(it->majorVersion, it->minorVersion));
     }
-    for (auto const &dependency : qAsConst(dependencies)) {
+    for (auto it = qmlComponents.begin(), end = qmlComponents.end(); it != end; ++it)
+        result.objects.insert( it.key(), ScopeTree::ConstPtr(it.value()));
+
+    if (!reader.plugins().isEmpty() && QFile::exists(path + SlashPluginsDotQmltypes))
+        readQmltypes(path + SlashPluginsDotQmltypes, result);
+
+    return result;
+}
+
+void FindUnqualifiedIDVisitor::processImport(const QString &prefix, const FindUnqualifiedIDVisitor::Import &import)
+{
+    for (auto const &dependency : qAsConst(import.dependencies)) {
         auto const split = dependency.split(" ");
         auto const &id = split.at(0);
         auto const major = split.at(1).split('.').at(0).toInt();
         auto const minor = split.at(1).split('.').at(1).toInt();
         importHelper(id, QString(), major, minor);
     }
+
     // add objects
-    for (auto ob_it = objects.begin(); ob_it != objects.end(); ++ob_it) {
-        auto val = ob_it.value();
+    for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
+        const auto &val = it.value();
         m_exportedName2Scope[prefix + val->className()] = val;
 
         const auto exports = val->exports();
@@ -206,6 +202,38 @@ void FindUnqualifiedIDVisitor::importHelper(QString id, const QString &prefix, i
         const auto enums = val->enums();
         for (const auto &valEnum : enums)
             m_currentScope->addEnum(valEnum);
+    }
+}
+
+void FindUnqualifiedIDVisitor::importHelper(QString id, QString prefix, int major, int minor)
+{
+    id = id.replace(QLatin1String("/"), QLatin1String("."));
+    QPair<QString, QString> importId { id, prefix };
+    if (m_alreadySeenImports.contains(importId))
+        return;
+    m_alreadySeenImports.insert(importId);
+
+    for (const QString &qmltypeDir : m_qmltypeDirs) {
+        auto qmltypesPaths = completeImportPaths(id, qmltypeDir, major, minor);
+
+        for (auto const &qmltypesPath : qmltypesPaths) {
+            if (QFile::exists(qmltypesPath + SlashQmldir)) {
+                processImport(prefix, readQmldir(qmltypesPath));
+
+                // break so that we don't import unversioned qml components
+                // in addition to versioned ones
+                break;
+            }
+
+            Import result;
+            if (QFile::exists(qmltypesPath + SlashAppDotQmltypes))
+                readQmltypes(qmltypesPath + SlashAppDotQmltypes, result);
+            else if (QFile::exists(qmltypesPath + SlashLibDotQmltypes))
+                readQmltypes(qmltypesPath + SlashLibDotQmltypes, result);
+            else
+                continue;
+            processImport(prefix, result);
+        }
     }
 }
 
