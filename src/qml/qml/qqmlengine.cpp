@@ -1627,6 +1627,9 @@ static QObject *resolveAttachedProperties(QQmlAttachedPropertiesFunc pf, QQmlDat
 }
 
 #if QT_DEPRECATED_SINCE(5, 14)
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_DEPRECATED
+
 QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool create)
 {
     QQmlData *data = QQmlData::get(object, create);
@@ -1654,6 +1657,8 @@ QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
 
     return qmlAttachedPropertiesObjectById(*idCache, object, create);
 }
+
+QT_WARNING_POP
 #endif
 
 QQmlAttachedPropertiesFunc qmlAttachedPropertiesFunction(QObject *object,
@@ -1682,6 +1687,8 @@ QObject *qmlAttachedPropertiesObject(QObject *object, QQmlAttachedPropertiesFunc
 } // namespace QtQml
 
 #if QT_DEPRECATED_SINCE(5, 1)
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_DEPRECATED
 
 // Also define symbols outside namespace to keep binary compatibility with Qt 5.0
 
@@ -1712,6 +1719,7 @@ Q_QML_EXPORT QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *o
     return QtQml::qmlAttachedPropertiesObject(idCache, object, attachedMetaObject, create);
 }
 
+QT_WARNING_POP
 #endif // QT_DEPRECATED_SINCE(5, 1)
 
 class QQmlDataExtended {
