@@ -4,7 +4,7 @@
 ## painting Binary:
 #####################################################################
 
-add_qt_benchmark(painting
+qt_add_benchmark(painting
     SOURCES
         paintbenchmark.cpp
     PUBLIC_LIBRARIES

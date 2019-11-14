@@ -4,7 +4,7 @@
 ## windowplugin Plugin:
 #####################################################################
 
-add_qml_module(windowplugin
+qt_add_qml_module(windowplugin
     TARGET_PATH "QtQuick/Window.2"
     URI "QtQuick.Window"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"

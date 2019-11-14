@@ -4,7 +4,7 @@
 ## qtbug46798 Test:
 #####################################################################
 
-add_qt_test(qtbug46798
+qt_add_test(qtbug46798
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

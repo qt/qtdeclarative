@@ -4,7 +4,7 @@
 ## pluginVersion Generic Library:
 #####################################################################
 
-add_cmake_library(pluginVersion
+qt_add_cmake_library(pluginVersion
     MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/AutoTestQmlVersionPluginType"
     SOURCES

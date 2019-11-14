@@ -4,7 +4,7 @@
 ## qmltestplugin Plugin:
 #####################################################################
 
-add_qml_module(qmltestplugin
+qt_add_qml_module(qmltestplugin
     URI "QtTest"
     VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
     CLASSNAME QTestQmlModule

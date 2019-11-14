@@ -4,7 +4,7 @@
 ## qmlprofiler Tool:
 #####################################################################
 
-add_qt_tool(qmlprofiler
+qt_add_tool(qmlprofiler
     TOOLS_TARGET Qml # special case
     SOURCES
         commandlistener.cpp commandlistener.h

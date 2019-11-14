@@ -4,7 +4,7 @@
 ## tst_qquicktextmetrics Test:
 #####################################################################
 
-add_qt_test(tst_qquicktextmetrics
+qt_add_test(tst_qquicktextmetrics
     SOURCES
         tst_qquicktextmetrics.cpp
     LIBRARIES

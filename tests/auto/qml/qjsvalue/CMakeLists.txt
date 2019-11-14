@@ -4,7 +4,7 @@
 ## tst_qjsvalue Test:
 #####################################################################
 
-add_qt_test(tst_qjsvalue
+qt_add_test(tst_qjsvalue
     SOURCES
         tst_qjsvalue.cpp tst_qjsvalue.h
     LIBRARIES

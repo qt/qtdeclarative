@@ -4,7 +4,7 @@
 ## tst_bench_qjsengine Binary:
 #####################################################################
 
-add_qt_benchmark(tst_bench_qjsengine
+qt_add_benchmark(tst_bench_qjsengine
     SOURCES
         tst_qjsengine.cpp
     PUBLIC_LIBRARIES

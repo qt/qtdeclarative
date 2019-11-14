@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_qmlcachegen
+qt_add_test(tst_qmlcachegen
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qmlcachegen.cpp
@@ -31,7 +31,7 @@ set(qmake_workerscripts_test_resource_files
     "data/worker.qml"
 )
 
-add_qt_resource(tst_qmlcachegen "qmake_workerscripts_test"
+qt_add_resource(tst_qmlcachegen "qmake_workerscripts_test"
     PREFIX
         "/workerscripts"
     FILES
@@ -52,7 +52,7 @@ set(trickypaths_resource_files
     "data/versionStyleSuffix-1.2-more.qml"
 )
 
-add_qt_resource(tst_qmlcachegen "trickypaths"
+qt_add_resource(tst_qmlcachegen "trickypaths"
     PREFIX
         "/directory with spaces"
     FILES
@@ -65,7 +65,7 @@ set(retain_resource_files
     "Retain.qml"
 )
 
-add_qt_resource(tst_qmlcachegen "retain"
+qt_add_resource(tst_qmlcachegen "retain"
     PREFIX
         "/"
     BASE
@@ -86,7 +86,7 @@ set(qmake_immediate_resource_files
     "data/versionchecks.qml"
 )
 
-add_qt_resource(tst_qmlcachegen "qmake_immediate"
+qt_add_resource(tst_qmlcachegen "qmake_immediate"
     PREFIX
         "/"
     FILES
@@ -106,7 +106,7 @@ if(UNIX)
         "data/umlaut.qml"
     )
 
-    add_qt_resource(tst_qmlcachegen "trickypaths_umlaut"
+    qt_add_resource(tst_qmlcachegen "trickypaths_umlaut"
         PREFIX
             "/"
         FILES
@@ -114,12 +114,12 @@ if(UNIX)
     )
 endif()
 
-extend_target(tst_qmlcachegen CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qmlcachegen CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qmlcachegen CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qmlcachegen CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

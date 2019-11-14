@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_qquickfolderlistmodel
+qt_add_test(tst_qquickfolderlistmodel
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qquickfolderlistmodel.cpp
@@ -34,7 +34,7 @@ set(introspect_resource_files
     "txtdir/hello.txt"
 )
 
-add_qt_resource(tst_qquickfolderlistmodel "introspect"
+qt_add_resource(tst_qquickfolderlistmodel "introspect"
     PREFIX
         "/myprefix/subdir"
     BASE
@@ -47,12 +47,12 @@ add_qt_resource(tst_qquickfolderlistmodel "introspect"
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qquickfolderlistmodel CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qquickfolderlistmodel CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qquickfolderlistmodel CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qquickfolderlistmodel CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

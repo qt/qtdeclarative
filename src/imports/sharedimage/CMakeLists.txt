@@ -4,7 +4,7 @@
 ## sharedimageplugin Plugin:
 #####################################################################
 
-add_qml_module(sharedimageplugin
+qt_add_qml_module(sharedimageplugin
     URI "Qt.labs.sharedimage"
     VERSION "1.0"
     CLASSNAME QtQuickSharedImagePlugin

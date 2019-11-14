@@ -4,7 +4,7 @@
 ## tst_qquickwindow Binary:
 #####################################################################
 
-add_qt_benchmark(tst_qquickwindow
+qt_add_benchmark(tst_qquickwindow
     SOURCES
         tst_qquickwindow.cpp
     DEFINES

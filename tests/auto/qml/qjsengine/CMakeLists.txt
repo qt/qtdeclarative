@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     script/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_qjsengine
+qt_add_test(tst_qjsengine
     SOURCES
         tst_qjsengine.cpp
     LIBRARIES
@@ -31,7 +31,7 @@ set(qjsengine_resource_files
     "translations/translatable_la.qm"
 )
 
-add_qt_resource(tst_qjsengine "qjsengine"
+qt_add_resource(tst_qjsengine "qjsengine"
     PREFIX
         "/"
     FILES
@@ -44,7 +44,7 @@ set(qmake_immediate_resource_files
     "testmodule.mjs"
 )
 
-add_qt_resource(tst_qjsengine "qmake_immediate"
+qt_add_resource(tst_qjsengine "qmake_immediate"
     PREFIX
         "/"
     FILES

@@ -4,7 +4,7 @@
 ## qmlmin Tool:
 #####################################################################
 
-add_qt_tool(qmlmin
+qt_add_tool(qmlmin
     TOOLS_TARGET Qml # special case
     SOURCES
         main.cpp

@@ -4,7 +4,7 @@
 ## qmlscenegrabber Binary:
 #####################################################################
 
-add_qt_manual_test(qmlscenegrabber
+qt_add_manual_test(qmlscenegrabber
     OUTPUT_DIRECTORY ".."
     SOURCES
         main.cpp

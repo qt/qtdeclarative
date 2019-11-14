@@ -4,7 +4,7 @@
 ## qmlscene Tool:
 #####################################################################
 
-add_qt_tool(qmlscene
+qt_add_tool(qmlscene
     TOOLS_TARGET Qml # special case
     SOURCES
         main.cpp
@@ -26,12 +26,12 @@ add_qt_tool(qmlscene
 ## Scopes:
 #####################################################################
 
-extend_target(qmlscene CONDITION TARGET Qt::Widgets
+qt_extend_target(qmlscene CONDITION TARGET Qt::Widgets
     PUBLIC_LIBRARIES
         Qt::Widgets
 )
 
-extend_target(qmlscene CONDITION QT_FEATURE_qml_debug
+qt_extend_target(qmlscene CONDITION QT_FEATURE_qml_debug
     DEFINES
         QT_QML_DEBUG_NO_WARNING
 )

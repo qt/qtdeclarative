@@ -4,7 +4,7 @@
 ## Quick Module:
 #####################################################################
 
-add_qt_module(Quick
+qt_add_module(Quick
     PLUGIN_TYPES scenegraph
     SOURCES
         handlers/qquickdragaxis.cpp handlers/qquickdragaxis_p.h
@@ -309,7 +309,7 @@ set(scenegraph_resource_files
     "shaders_ng/visualization.vert.qsb"
 )
 
-add_qt_resource(Quick "scenegraph"
+qt_add_resource(Quick "scenegraph"
     PREFIX
         "/qt-project.org/scenegraph"
     BASE
@@ -328,7 +328,7 @@ set(items_resource_files
     "shaders/shadereffectfallback_core.vert"
 )
 
-add_qt_resource(Quick "items"
+qt_add_resource(Quick "items"
     PREFIX
         "/qt-project.org/items"
     BASE
@@ -351,12 +351,12 @@ endif()
 ## Scopes:
 #####################################################################
 
-extend_target(Quick CONDITION QT_FEATURE_qml_network
+qt_extend_target(Quick CONDITION QT_FEATURE_qml_network
     LIBRARIES
         Qt::Network
 )
 
-extend_target(Quick CONDITION MSVC
+qt_extend_target(Quick CONDITION MSVC
     DEFINES
         _CRT_SECURE_NO_WARNINGS
 )
@@ -364,12 +364,12 @@ extend_target(Quick CONDITION MSVC
 #### Keys ignored in scope 4:.:.:quick.pro:solaris-cc_x_:
 # QMAKE_CXXFLAGS_RELEASE = "--O2"
 
-extend_target(Quick CONDITION WIN32 AND NOT WINRT
+qt_extend_target(Quick CONDITION WIN32 AND NOT WINRT
     PUBLIC_LIBRARIES
         user32
 )
 
-extend_target(Quick CONDITION EXISTS "qqml_enable_gcov"
+qt_extend_target(Quick CONDITION EXISTS "qqml_enable_gcov"
     LIBRARIES
         gcov
     COMPILE_OPTIONS
@@ -378,7 +378,7 @@ extend_target(Quick CONDITION EXISTS "qqml_enable_gcov"
         -ftest-coverage
 )
 
-extend_target(Quick CONDITION QT_FEATURE_quick_designer
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_designer
     SOURCES
         designer/qqmldesignermetaobject.cpp designer/qqmldesignermetaobject_p.h
         designer/qquickdesignercustomobjectdata.cpp designer/qquickdesignercustomobjectdata_p.h
@@ -392,7 +392,7 @@ extend_target(Quick CONDITION QT_FEATURE_quick_designer
         designer/qquickdesignerwindowmanager.cpp designer/qquickdesignerwindowmanager_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_accessibility
+qt_extend_target(Quick CONDITION QT_FEATURE_accessibility
     SOURCES
         accessible/qaccessiblequickitem.cpp accessible/qaccessiblequickitem_p.h
         accessible/qaccessiblequickview.cpp accessible/qaccessiblequickview_p.h
@@ -407,24 +407,24 @@ extend_target(Quick CONDITION QT_FEATURE_accessibility
         Qt::Qml
 )
 
-extend_target(Quick CONDITION QT_FEATURE_qml_debug
+qt_extend_target(Quick CONDITION QT_FEATURE_qml_debug
     SOURCES
         util/qquickprofiler.cpp
 )
 
-extend_target(Quick CONDITION QT_FEATURE_shortcut
+qt_extend_target(Quick CONDITION QT_FEATURE_shortcut
     SOURCES
         util/qquickshortcut.cpp util/qquickshortcut_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_quick_path
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_path
     SOURCES
         util/qquickpath.cpp util/qquickpath_p.h
         util/qquickpath_p_p.h
         util/qquickpathinterpolator.cpp util/qquickpathinterpolator_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3
+qt_extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3
     SOURCES
         items/qquickframebufferobject.cpp items/qquickframebufferobject.h
         items/qquickopenglinfo.cpp items/qquickopenglinfo_p.h
@@ -459,17 +459,17 @@ extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FE
         scenegraph/util/qsgshadersourcebuilder.cpp scenegraph/util/qsgshadersourcebuilder_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_thread AND (QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3)
+qt_extend_target(Quick CONDITION QT_FEATURE_thread AND (QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3)
     SOURCES
         scenegraph/qsgthreadedrenderloop.cpp scenegraph/qsgthreadedrenderloop_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_quick_sprite AND (QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3)
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_sprite AND (QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3)
     SOURCES
         scenegraph/qsgdefaultspritenode.cpp scenegraph/qsgdefaultspritenode_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_quick_sprite
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_sprite
     SOURCES
         items/qquickanimatedsprite.cpp items/qquickanimatedsprite_p.h
         items/qquickanimatedsprite_p_p.h
@@ -480,29 +480,29 @@ extend_target(Quick CONDITION QT_FEATURE_quick_sprite
         scenegraph/adaptations/software/qsgsoftwarespritenode.cpp scenegraph/adaptations/software/qsgsoftwarespritenode_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_thread
+qt_extend_target(Quick CONDITION QT_FEATURE_thread
     SOURCES
         scenegraph/adaptations/software/qsgsoftwarethreadedrenderloop.cpp scenegraph/adaptations/software/qsgsoftwarethreadedrenderloop_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_quick_draganddrop
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_draganddrop
     SOURCES
         items/qquickdrag.cpp items/qquickdrag_p.h
         items/qquickdroparea.cpp items/qquickdroparea_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_quick_animatedimage
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_animatedimage
     SOURCES
         items/qquickanimatedimage.cpp items/qquickanimatedimage_p.h
         items/qquickanimatedimage_p_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_quick_gridview
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_gridview
     SOURCES
         items/qquickgridview.cpp items/qquickgridview_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_quick_itemview
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_itemview
     SOURCES
         items/qquickitemview.cpp items/qquickitemview_p.h
         items/qquickitemview_p_p.h
@@ -510,46 +510,46 @@ extend_target(Quick CONDITION QT_FEATURE_quick_itemview
         items/qquickitemviewfxitem_p_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_quick_viewtransitions
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_viewtransitions
     SOURCES
         items/qquickitemviewtransition.cpp items/qquickitemviewtransition_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_quick_listview
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_listview
     SOURCES
         items/qquicklistview.cpp items/qquicklistview_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_quick_tableview
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_tableview
     SOURCES
         items/qquicktableview.cpp items/qquicktableview_p.h
         items/qquicktableview_p_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_quick_pathview
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_pathview
     SOURCES
         items/qquickpathview.cpp items/qquickpathview_p.h
         items/qquickpathview_p_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_quick_positioners
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_positioners
     SOURCES
         items/qquickpositioners.cpp items/qquickpositioners_p.h
         items/qquickpositioners_p_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_quick_flipable
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_flipable
     SOURCES
         items/qquickflipable.cpp items/qquickflipable_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_quick_repeater
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_repeater
     SOURCES
         items/qquickrepeater.cpp items/qquickrepeater_p.h
         items/qquickrepeater_p_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_quick_shadereffect
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_shadereffect
     SOURCES
         items/qquickgenericshadereffect.cpp items/qquickgenericshadereffect_p.h
         items/qquickshadereffect.cpp items/qquickshadereffect_p.h
@@ -557,7 +557,7 @@ extend_target(Quick CONDITION QT_FEATURE_quick_shadereffect
         items/qquickshadereffectsource.cpp items/qquickshadereffectsource_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_opengl AND QT_FEATURE_quick_shadereffect
+qt_extend_target(Quick CONDITION QT_FEATURE_opengl AND QT_FEATURE_quick_shadereffect
     SOURCES
         items/qquickopenglshadereffect.cpp items/qquickopenglshadereffect_p.h
         items/qquickopenglshadereffectnode.cpp items/qquickopenglshadereffectnode_p.h
@@ -566,7 +566,7 @@ extend_target(Quick CONDITION QT_FEATURE_opengl AND QT_FEATURE_quick_shadereffec
 #### Keys ignored in scope 40:.:items:items/items.pri:QT_FEATURE_opengl:
 # OTHER_FILES = "$$PWD/shaders/shadereffect.vert" "$$PWD/shaders/shadereffect.frag" "$$PWD/shaders/shadereffectfallback.vert" "$$PWD/shaders/shadereffectfallback.frag" "$$PWD/shaders/shadereffect_core.vert" "$$PWD/shaders/shadereffect_core.frag" "$$PWD/shaders/shadereffectfallback_core.vert" "$$PWD/shaders/shadereffectfallback_core.frag"
 
-extend_target(Quick CONDITION QT_FEATURE_quick_canvas
+qt_extend_target(Quick CONDITION QT_FEATURE_quick_canvas
     SOURCES
         items/context2d/qquickcanvascontext.cpp items/context2d/qquickcanvascontext_p.h
         items/context2d/qquickcanvasitem.cpp items/context2d/qquickcanvasitem_p.h
@@ -576,12 +576,12 @@ extend_target(Quick CONDITION QT_FEATURE_quick_canvas
         items/context2d/qquickcontext2dtile.cpp items/context2d/qquickcontext2dtile_p.h
 )
 
-extend_target(Quick CONDITION QT_FEATURE_wheelevent
+qt_extend_target(Quick CONDITION QT_FEATURE_wheelevent
     SOURCES
         handlers/qquickwheelhandler.cpp handlers/qquickwheelhandler_p.h
         handlers/qquickwheelhandler_p_p.h
 )
-add_qt_docs(Quick
+qt_add_docs(Quick
     doc/qtquick.qdocconf
 )
 

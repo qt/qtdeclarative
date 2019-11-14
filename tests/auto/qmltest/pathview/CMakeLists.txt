@@ -4,7 +4,7 @@
 ## pathview Test:
 #####################################################################
 
-add_qt_test(pathview
+qt_add_test(pathview
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

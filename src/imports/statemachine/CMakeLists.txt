@@ -4,7 +4,7 @@
 ## qtqmlstatemachine Plugin:
 #####################################################################
 
-add_qml_module(qtqmlstatemachine
+qt_add_qml_module(qtqmlstatemachine
     URI "QtQml.StateMachine"
     VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
     CLASSNAME QtQmlStateMachinePlugin

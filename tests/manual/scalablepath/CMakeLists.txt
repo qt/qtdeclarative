@@ -4,7 +4,7 @@
 ## scalablepath Binary:
 #####################################################################
 
-add_qt_manual_test(scalablepath
+qt_add_manual_test(scalablepath
     GUI
     SOURCES
         main.cpp
@@ -20,7 +20,7 @@ set(qml_resource_files
     "main.qml"
 )
 
-add_qt_resource(scalablepath "qml"
+qt_add_resource(scalablepath "qml"
     PREFIX
         "/"
     FILES

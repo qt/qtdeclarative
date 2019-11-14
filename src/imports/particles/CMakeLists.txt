@@ -4,7 +4,7 @@
 ## particlesplugin Plugin:
 #####################################################################
 
-add_qml_module(particlesplugin
+qt_add_qml_module(particlesplugin
     TARGET_PATH "QtQuick/Particles.2"
     URI "QtQuick.Particles"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"

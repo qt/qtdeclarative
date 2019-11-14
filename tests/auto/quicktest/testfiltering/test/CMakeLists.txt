@@ -4,7 +4,7 @@
 ## tst_testfiltering Test:
 #####################################################################
 
-add_qt_test(tst_testfiltering
+qt_add_test(tst_testfiltering
     SOURCES
         ../tst_testfiltering.cpp
     PUBLIC_LIBRARIES

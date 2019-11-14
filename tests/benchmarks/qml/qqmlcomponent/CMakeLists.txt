@@ -4,7 +4,7 @@
 ## tst_qqmlcomponent Binary:
 #####################################################################
 
-add_qt_benchmark(tst_qqmlcomponent_benchmark # special case avoid collision with auto test
+qt_add_benchmark(tst_qqmlcomponent_benchmark # special case avoid collision with auto test
     GUI
     SOURCES
         testtypes.cpp testtypes.h

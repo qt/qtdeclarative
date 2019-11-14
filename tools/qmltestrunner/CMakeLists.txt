@@ -4,7 +4,7 @@
 ## qmltestrunner Tool:
 #####################################################################
 
-add_qt_tool(qmltestrunner
+qt_add_tool(qmltestrunner
     TOOLS_TARGET Qml # special case
     SOURCES
         main.cpp

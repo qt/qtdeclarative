@@ -4,7 +4,7 @@
 ## tst_nokeywords Test:
 #####################################################################
 
-add_qt_test(tst_nokeywords
+qt_add_test(tst_nokeywords
     SOURCES
         tst_nokeywords.cpp
     LIBRARIES

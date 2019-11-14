@@ -4,7 +4,7 @@
 ## tst_script Binary:
 #####################################################################
 
-add_qt_benchmark(tst_script
+qt_add_benchmark(tst_script
     SOURCES
         tst_script.cpp
     DEFINES

@@ -4,7 +4,7 @@
 ## statemachine Test:
 #####################################################################
 
-add_qt_test(statemachine
+qt_add_test(statemachine
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

@@ -4,7 +4,7 @@
 ## qmlsettingsplugin Plugin:
 #####################################################################
 
-add_qml_module(qmlsettingsplugin
+qt_add_qml_module(qmlsettingsplugin
     URI "Qt.labs.settings"
     VERSION "1.1"
     CLASSNAME QmlSettingsPlugin

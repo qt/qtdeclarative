@@ -4,7 +4,7 @@
 ## testapp Binary:
 #####################################################################
 
-add_qt_executable(testapp
+qt_add_executable(testapp
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/"
     SOURCES
         main.cpp
@@ -21,7 +21,7 @@ set(main_resource_files
     "immediateQuit.qml"
 )
 
-add_qt_resource(testapp "main"
+qt_add_resource(testapp "main"
     PREFIX
         "/"
     FILES

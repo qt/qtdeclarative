@@ -4,7 +4,7 @@
 ## qmlplugindump Tool:
 #####################################################################
 
-add_qt_tool(qmlplugindump
+qt_add_tool(qmlplugindump
     SOURCES
         main.cpp
         qmlstreamwriter.cpp qmlstreamwriter.h
@@ -26,12 +26,12 @@ add_qt_tool(qmlplugindump
 ## Scopes:
 #####################################################################
 
-extend_target(qmlplugindump CONDITION TARGET Qt::Widgets
+qt_extend_target(qmlplugindump CONDITION TARGET Qt::Widgets
     PUBLIC_LIBRARIES
         Qt::Widgets
 )
 
-extend_target(qmlplugindump CONDITION APPLE_OSX
+qt_extend_target(qmlplugindump CONDITION APPLE_OSX
     LINK_OPTIONS
         "-Wl,-sectcreate,__TEXT,__info_plist,$$shell_quote$$PWD/Info.plist"
 )

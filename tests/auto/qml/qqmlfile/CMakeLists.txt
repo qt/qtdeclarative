@@ -4,7 +4,7 @@
 ## tst_qqmlfile Test:
 #####################################################################
 
-add_qt_test(tst_qqmlfile
+qt_add_test(tst_qqmlfile
     SOURCES
         tst_qqmlfile.cpp
     PUBLIC_LIBRARIES

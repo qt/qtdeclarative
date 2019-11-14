@@ -4,7 +4,7 @@
 ## QmlWorkerScript Module:
 #####################################################################
 
-add_qt_module(QmlWorkerScript
+qt_add_module(QmlWorkerScript
     SOURCES
         qqmlworkerscriptmodule.cpp qqmlworkerscriptmodule_p.h
         qquickworkerscript.cpp qquickworkerscript_p.h
@@ -48,49 +48,49 @@ add_qt_module(QmlWorkerScript
 ## Scopes:
 #####################################################################
 
-extend_target(QmlWorkerScript CONDITION WIN32
+qt_extend_target(QmlWorkerScript CONDITION WIN32
     DEFINES
         NOMINMAX
 )
 
-extend_target(QmlWorkerScript CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))
+qt_extend_target(QmlWorkerScript CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))
     DEFINES
         WTF_USE_UDIS86=1
 )
 
-extend_target(QmlWorkerScript CONDITION (TEST_architecture_arch STREQUAL "arm") AND disassembler
+qt_extend_target(QmlWorkerScript CONDITION (TEST_architecture_arch STREQUAL "arm") AND disassembler
     DEFINES
         WTF_USE_ARMV7_DISASSEMBLER=1
 )
 
-extend_target(QmlWorkerScript CONDITION (TEST_architecture_arch STREQUAL "arm64") AND disassembler
+qt_extend_target(QmlWorkerScript CONDITION (TEST_architecture_arch STREQUAL "arm64") AND disassembler
     DEFINES
         WTF_USE_ARM64_DISASSEMBLER=1
 )
 
-extend_target(QmlWorkerScript CONDITION (TEST_architecture_arch STREQUAL "mips") AND disassembler
+qt_extend_target(QmlWorkerScript CONDITION (TEST_architecture_arch STREQUAL "mips") AND disassembler
     DEFINES
         WTF_USE_MIPS32_DISASSEMBLER=1
 )
 
-extend_target(QmlWorkerScript CONDITION NOT disassembler
+qt_extend_target(QmlWorkerScript CONDITION NOT disassembler
     DEFINES
         WTF_USE_UDIS86=0
 )
 
-extend_target(QmlWorkerScript CONDITION CMAKE_BUILD_TYPE STREQUAL Release
+qt_extend_target(QmlWorkerScript CONDITION CMAKE_BUILD_TYPE STREQUAL Release
     DEFINES
         NDEBUG
 )
 
-extend_target(QmlWorkerScript CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AND NOT CLANG AND NOT ICC
+qt_extend_target(QmlWorkerScript CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AND NOT CLANG AND NOT ICC
     COMPILE_OPTIONS
         -Wno-expansion-to-defined
 )
 
 #### Keys ignored in scope 12:.:../3rdparty/masm:../3rdparty/masm/masm-defs.pri:(QT_COMPILER_VERSION_MAJOR STRGREATER 6):
 # QMAKE_CXXFLAGS_WARN_ON = "-Wno-expansion-to-defined"
-add_qt_docs(QmlWorkerScript
+qt_add_docs(QmlWorkerScript
     doc/qtqmlworkerscript.qdocconf
 )
 

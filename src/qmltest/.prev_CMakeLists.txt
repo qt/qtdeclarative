@@ -4,7 +4,7 @@
 ## QuickTest Module:
 #####################################################################
 
-add_qt_module(QuickTest
+qt_add_module(QuickTest
     QMAKE_MODULE_CONFIG $${QT.testlib.CONFIG}
     SOURCES
         qtestoptions_p.h
@@ -35,18 +35,18 @@ add_qt_module(QuickTest
 ## Scopes:
 #####################################################################
 
-extend_target(QuickTest CONDITION TARGET Qt::Widgets
+qt_extend_target(QuickTest CONDITION TARGET Qt::Widgets
     DEFINES
         QT_QMLTEST_WITH_WIDGETS
     PUBLIC_LIBRARIES
         Qt::Widgets
 )
 
-extend_target(QuickTest CONDITION QT_FEATURE_qml_debug
+qt_extend_target(QuickTest CONDITION QT_FEATURE_qml_debug
     DEFINES
         QT_QML_DEBUG_NO_WARNING
 )
-add_qt_docs(QuickTest
+qt_add_docs(QuickTest
     doc/qtqmltest.qdocconf
 )
 

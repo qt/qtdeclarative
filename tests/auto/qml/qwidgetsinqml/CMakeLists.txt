@@ -4,7 +4,7 @@
 ## tst_qwidgetsinqml Test:
 #####################################################################
 
-add_qt_test(tst_qwidgetsinqml
+qt_add_test(tst_qwidgetsinqml
     SOURCES
         tst_qwidgetsinqml.cpp
     DEFINES

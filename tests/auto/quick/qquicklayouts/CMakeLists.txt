@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_qquicklayouts
+qt_add_test(tst_qquicklayouts
     GUI
     QMLTEST
     SOURCES

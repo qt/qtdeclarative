@@ -4,7 +4,7 @@
 ## tst_qquickanimators Test:
 #####################################################################
 
-add_qt_test(tst_qquickanimators
+qt_add_test(tst_qquickanimators
     SOURCES
         tst_qquickanimators.cpp
     LIBRARIES

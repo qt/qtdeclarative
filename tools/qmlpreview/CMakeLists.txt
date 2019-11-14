@@ -4,7 +4,7 @@
 ## qmlpreview Tool:
 #####################################################################
 
-add_qt_tool(qmlpreview
+qt_add_tool(qmlpreview
     TOOLS_TARGET Qml # special case
     SOURCES
         main.cpp

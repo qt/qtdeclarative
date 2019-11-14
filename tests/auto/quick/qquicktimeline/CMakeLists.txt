@@ -4,7 +4,7 @@
 ## tst_qquicktimeline Test:
 #####################################################################
 
-add_qt_test(tst_qquicktimeline
+qt_add_test(tst_qquicktimeline
     SOURCES
         tst_qquicktimeline.cpp
     LIBRARIES

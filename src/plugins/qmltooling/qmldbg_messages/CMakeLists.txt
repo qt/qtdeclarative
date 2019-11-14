@@ -4,7 +4,7 @@
 ## qmldbg_messages Plugin:
 #####################################################################
 
-add_qt_plugin(qmldbg_messages
+qt_add_plugin(qmldbg_messages
     TYPE qmltooling
     CLASS_NAME QDebugMessageServiceFactory
     SOURCES

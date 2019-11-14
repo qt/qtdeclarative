@@ -4,7 +4,7 @@
 ## qmleasing Binary:
 #####################################################################
 
-add_qt_executable(qmleasing
+qt_add_executable(qmleasing
     GUI
     SOURCES
         import.ui
@@ -29,7 +29,7 @@ set(resources_resource_files
     "preview.qml"
 )
 
-add_qt_resource(qmleasing "resources"
+qt_add_resource(qmleasing "resources"
     PREFIX
         "/"
     FILES

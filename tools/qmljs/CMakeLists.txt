@@ -4,7 +4,7 @@
 ## qmljs Tool:
 #####################################################################
 
-add_qt_tool(qmljs
+qt_add_tool(qmljs
     TOOLS_TARGET Qml # special case
     SOURCES
         qmljs.cpp
@@ -46,42 +46,42 @@ add_qt_tool(qmljs
 ## Scopes:
 #####################################################################
 
-extend_target(qmljs CONDITION WIN32
+qt_extend_target(qmljs CONDITION WIN32
     DEFINES
         NOMINMAX
 )
 
-extend_target(qmljs CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))
+qt_extend_target(qmljs CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))
     DEFINES
         WTF_USE_UDIS86=1
 )
 
-extend_target(qmljs CONDITION (TEST_architecture_arch STREQUAL "arm") AND disassembler
+qt_extend_target(qmljs CONDITION (TEST_architecture_arch STREQUAL "arm") AND disassembler
     DEFINES
         WTF_USE_ARMV7_DISASSEMBLER=1
 )
 
-extend_target(qmljs CONDITION (TEST_architecture_arch STREQUAL "arm64") AND disassembler
+qt_extend_target(qmljs CONDITION (TEST_architecture_arch STREQUAL "arm64") AND disassembler
     DEFINES
         WTF_USE_ARM64_DISASSEMBLER=1
 )
 
-extend_target(qmljs CONDITION (TEST_architecture_arch STREQUAL "mips") AND disassembler
+qt_extend_target(qmljs CONDITION (TEST_architecture_arch STREQUAL "mips") AND disassembler
     DEFINES
         WTF_USE_MIPS32_DISASSEMBLER=1
 )
 
-extend_target(qmljs CONDITION NOT disassembler
+qt_extend_target(qmljs CONDITION NOT disassembler
     DEFINES
         WTF_USE_UDIS86=0
 )
 
-extend_target(qmljs CONDITION CMAKE_BUILD_TYPE STREQUAL Release
+qt_extend_target(qmljs CONDITION CMAKE_BUILD_TYPE STREQUAL Release
     DEFINES
         NDEBUG
 )
 
-extend_target(qmljs CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AND NOT CLANG AND NOT ICC
+qt_extend_target(qmljs CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AND NOT CLANG AND NOT ICC
     COMPILE_OPTIONS
         -Wno-expansion-to-defined
 )

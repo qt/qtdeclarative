@@ -4,7 +4,7 @@
 ## qqmlbinding Test:
 #####################################################################
 
-add_qt_test(qqmlbinding
+qt_add_test(qqmlbinding
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

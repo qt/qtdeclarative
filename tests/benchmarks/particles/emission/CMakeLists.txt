@@ -4,7 +4,7 @@
 ## tst_emission Binary:
 #####################################################################
 
-add_qt_benchmark(tst_emission
+qt_add_benchmark(tst_emission
     SOURCES
         tst_emission.cpp
     LIBRARIES

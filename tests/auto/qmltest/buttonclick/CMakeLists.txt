@@ -4,7 +4,7 @@
 ## buttonclick Test:
 #####################################################################
 
-add_qt_test(buttonclick
+qt_add_test(buttonclick
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

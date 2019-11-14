@@ -4,7 +4,7 @@
 ## qmldbg_debugger Plugin:
 #####################################################################
 
-add_qt_plugin(qmldbg_debugger
+qt_add_plugin(qmldbg_debugger
     TYPE qmltooling
     CLASS_NAME QQmlDebuggerServiceFactory
     SOURCES

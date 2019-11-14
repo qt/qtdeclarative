@@ -4,7 +4,7 @@
 ## form Binary:
 #####################################################################
 
-add_qt_manual_test(form
+qt_add_manual_test(form
     GUI
     SOURCES
         main.cpp
@@ -20,7 +20,7 @@ set(qmake_immediate_resource_files
     "main.qml"
 )
 
-add_qt_resource(form "qmake_immediate"
+qt_add_resource(form "qmake_immediate"
     PREFIX
         "/"
     FILES

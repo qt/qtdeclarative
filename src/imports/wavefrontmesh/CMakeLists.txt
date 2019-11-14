@@ -4,7 +4,7 @@
 ## qmlwavefrontmeshplugin Plugin:
 #####################################################################
 
-add_qml_module(qmlwavefrontmeshplugin
+qt_add_qml_module(qmlwavefrontmeshplugin
     URI "Qt.labs.wavefrontmesh"
     VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
     CLASSNAME QmlWavefrontMeshPlugin

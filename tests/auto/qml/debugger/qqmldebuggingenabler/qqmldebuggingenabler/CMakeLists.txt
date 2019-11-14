@@ -4,7 +4,7 @@
 ## tst_qqmldebuggingenabler Test:
 #####################################################################
 
-add_qt_test(tst_qqmldebuggingenabler
+qt_add_test(tst_qqmldebuggingenabler
     SOURCES
         ../../../../shared/util.cpp ../../../../shared/util.h
         ../../shared/debugutil.cpp ../../shared/debugutil_p.h
@@ -29,12 +29,12 @@ add_qt_test(tst_qqmldebuggingenabler
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qqmldebuggingenabler CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qqmldebuggingenabler CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qqmldebuggingenabler CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qqmldebuggingenabler CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

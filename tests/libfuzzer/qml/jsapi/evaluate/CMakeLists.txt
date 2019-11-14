@@ -4,7 +4,7 @@
 ## evaluate Binary:
 #####################################################################
 
-add_qt_executable(evaluate
+qt_add_executable(evaluate
     SOURCES
         main.cpp
     PUBLIC_LIBRARIES

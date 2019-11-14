@@ -4,7 +4,7 @@
 ## CustomModule Generic Library:
 #####################################################################
 
-add_cmake_library(CustomModule
+qt_add_cmake_library(CustomModule
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../CustomModule"
     SOURCES
         moduleplugin.cpp
@@ -20,7 +20,7 @@ set(moduleplugin_resource_files
     "ModuleType.qml"
 )
 
-add_qt_resource(CustomModule "moduleplugin"
+qt_add_resource(CustomModule "moduleplugin"
     PREFIX
         "/"
     FILES

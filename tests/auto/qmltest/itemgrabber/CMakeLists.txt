@@ -4,7 +4,7 @@
 ## itemgrabber Test:
 #####################################################################
 
-add_qt_test(itemgrabber
+qt_add_test(itemgrabber
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

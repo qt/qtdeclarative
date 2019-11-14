@@ -4,7 +4,7 @@
 ## qmlcachegen Tool:
 #####################################################################
 
-add_qt_tool(qmlcachegen
+qt_add_tool(qmlcachegen
     SOURCES
         generateloader.cpp
         qmlcachegen.cpp

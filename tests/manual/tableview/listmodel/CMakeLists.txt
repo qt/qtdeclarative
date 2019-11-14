@@ -4,7 +4,7 @@
 ## tableview_listmodel Binary:
 #####################################################################
 
-add_qt_manual_test(tableview_listmodel
+qt_add_manual_test(tableview_listmodel
     GUI
     SOURCES
         main.cpp
@@ -19,7 +19,7 @@ set(qmake_immediate_resource_files
     "main.qml"
 )
 
-add_qt_resource(tableview_listmodel "qmake_immediate"
+qt_add_resource(tableview_listmodel "qmake_immediate"
     PREFIX
         "/"
     FILES

@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_qquickanimations
+qt_add_test(tst_qquickanimations
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qquickanimations.cpp
@@ -38,12 +38,12 @@ add_qt_test(tst_qquickanimations
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qquickanimations CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qquickanimations CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qquickanimations CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qquickanimations CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

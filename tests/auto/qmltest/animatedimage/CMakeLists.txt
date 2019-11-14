@@ -4,7 +4,7 @@
 ## animatedimage Test:
 #####################################################################
 
-add_qt_test(animatedimage
+qt_add_test(animatedimage
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

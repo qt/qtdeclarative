@@ -4,7 +4,7 @@
 ## qmlplugin Plugin:
 #####################################################################
 
-add_qml_module(qmlplugin
+qt_add_qml_module(qmlplugin
     URI "QtQml"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     DESIGNER_SUPPORTED

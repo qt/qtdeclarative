@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_qquickfontloader_static
+qt_add_test(tst_qquickfontloader_static
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qquickfontloader_static.cpp
@@ -34,12 +34,12 @@ add_qt_test(tst_qquickfontloader_static
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qquickfontloader_static CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qquickfontloader_static CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qquickfontloader_static CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qquickfontloader_static CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

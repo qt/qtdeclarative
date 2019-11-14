@@ -4,7 +4,7 @@
 ## qsgopenvgbackend Plugin:
 #####################################################################
 
-add_qt_plugin(qsgopenvgbackend
+qt_add_plugin(qsgopenvgbackend
     TYPE scenegraph
     CLASS_NAME QSGOpenVGAdaptation
     SOURCES
@@ -47,7 +47,7 @@ add_qt_plugin(qsgopenvgbackend
 ## Scopes:
 #####################################################################
 
-extend_target(qsgopenvgbackend CONDITION QT_FEATURE_quick_sprite
+qt_extend_target(qsgopenvgbackend CONDITION QT_FEATURE_quick_sprite
     SOURCES
         qsgopenvgspritenode.cpp qsgopenvgspritenode.h
 )

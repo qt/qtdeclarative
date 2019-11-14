@@ -4,7 +4,7 @@
 ## tst_qqmlchangeset Binary:
 #####################################################################
 
-add_qt_benchmark(tst_qqmlchangeset
+qt_add_benchmark(tst_qqmlchangeset
     SOURCES
         tst_qqmlchangeset.cpp
     DEFINES

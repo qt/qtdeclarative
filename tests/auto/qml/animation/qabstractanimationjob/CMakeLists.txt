@@ -4,7 +4,7 @@
 ## tst_qabstractanimationjob Test:
 #####################################################################
 
-add_qt_test(tst_qabstractanimationjob
+qt_add_test(tst_qabstractanimationjob
     SOURCES
         tst_qabstractanimationjob.cpp
     LIBRARIES

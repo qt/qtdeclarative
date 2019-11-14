@@ -4,7 +4,7 @@
 ## invalidNamespaceModule Generic Library:
 #####################################################################
 
-add_cmake_library(invalidNamespaceModule
+qt_add_cmake_library(invalidNamespaceModule
     MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/InvalidNamespaceModule"
     SOURCES

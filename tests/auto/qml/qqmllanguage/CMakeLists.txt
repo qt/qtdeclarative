@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_qqmllanguage
+qt_add_test(tst_qqmllanguage
     SOURCES
         ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
         ../../shared/util.cpp ../../shared/util.h
@@ -44,7 +44,7 @@ if(ANDROID)
         "data/I18nType30.qml"
     )
 
-    add_qt_resource(tst_qqmllanguage "qqmllanguage"
+    qt_add_resource(tst_qqmllanguage "qqmllanguage"
         PREFIX
             "/"
         FILES
@@ -52,12 +52,12 @@ if(ANDROID)
     )
 endif()
 
-extend_target(tst_qqmllanguage CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qqmllanguage CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qqmllanguage CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qqmllanguage CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

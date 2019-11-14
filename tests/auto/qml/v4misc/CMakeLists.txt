@@ -4,7 +4,7 @@
 ## tst_v4misc Test:
 #####################################################################
 
-add_qt_test(tst_v4misc
+qt_add_test(tst_v4misc
     SOURCES
         tst_v4misc.cpp
     LIBRARIES

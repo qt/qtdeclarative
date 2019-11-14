@@ -4,7 +4,7 @@
 ## Versions Generic Library:
 #####################################################################
 
-add_cmake_library(Versions
+qt_add_cmake_library(Versions
     MODULE
     OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} # special case
     SOURCES

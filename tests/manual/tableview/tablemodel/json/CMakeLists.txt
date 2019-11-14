@@ -4,7 +4,7 @@
 ## json Binary:
 #####################################################################
 
-add_qt_manual_test(json
+qt_add_manual_test(json
     GUI
     SOURCES
         main.cpp
@@ -20,7 +20,7 @@ set(qmake_immediate_resource_files
     "main.qml"
 )
 
-add_qt_resource(json "qmake_immediate"
+qt_add_resource(json "qmake_immediate"
     PREFIX
         "/"
     FILES

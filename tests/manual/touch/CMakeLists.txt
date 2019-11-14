@@ -4,7 +4,7 @@
 ## touch Binary:
 #####################################################################
 
-add_qt_manual_test(touch
+qt_add_manual_test(touch
     GUI
     SOURCES
         main.cpp
@@ -21,7 +21,7 @@ set(qml_resource_files
     "mpta-crosshairs.qml"
 )
 
-add_qt_resource(touch "qml"
+qt_add_resource(touch "qml"
     PREFIX
         "/"
     FILES
@@ -74,7 +74,7 @@ set(quick_shared_resource_files
     "images/slider_handle.png"
 )
 
-add_qt_resource(touch "quick_shared"
+qt_add_resource(touch "quick_shared"
     PREFIX
         "/quick/shared"
     BASE

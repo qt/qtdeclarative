@@ -4,7 +4,7 @@
 ## qml Tool:
 #####################################################################
 
-add_qt_tool(qml
+qt_add_tool(qml
     TOOLS_TARGET Qml # special case
     SOURCES
         conf.h
@@ -35,7 +35,7 @@ set(qml_resource_files
     "resources/qml-64.png"
 )
 
-add_qt_resource(qml "qml"
+qt_add_resource(qml "qml"
     PREFIX
         "/qt-project.org/QmlRuntime"
     FILES
@@ -50,12 +50,12 @@ add_qt_resource(qml "qml"
 ## Scopes:
 #####################################################################
 
-extend_target(qml CONDITION TARGET Qt::Gui
+qt_extend_target(qml CONDITION TARGET Qt::Gui
     PUBLIC_LIBRARIES
         Qt::Gui
 )
 
-extend_target(qml CONDITION TARGET Qt::Widgets
+qt_extend_target(qml CONDITION TARGET Qt::Widgets
     PUBLIC_LIBRARIES
         Qt::Widgets
 )
@@ -68,7 +68,7 @@ extend_target(qml CONDITION TARGET Qt::Widgets
 # OTHER_FILES = "resources/Info.plist"
 # QMAKE_INFO_PLIST = "resources/Info.plist"
 
-extend_target(qml CONDITION QT_FEATURE_qml_debug
+qt_extend_target(qml CONDITION QT_FEATURE_qml_debug
     DEFINES
         QT_QML_DEBUG_NO_WARNING
 )

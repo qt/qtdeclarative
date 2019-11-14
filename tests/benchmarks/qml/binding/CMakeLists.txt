@@ -4,7 +4,7 @@
 ## tst_binding Binary:
 #####################################################################
 
-add_qt_benchmark(tst_binding
+qt_add_benchmark(tst_binding
     SOURCES
         testtypes.cpp testtypes.h
         tst_binding.cpp

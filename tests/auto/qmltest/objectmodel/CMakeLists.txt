@@ -4,7 +4,7 @@
 ## objectmodel Test:
 #####################################################################
 
-add_qt_test(objectmodel
+qt_add_test(objectmodel
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

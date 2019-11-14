@@ -4,7 +4,7 @@
 ## qqmldebugprocessprocess Binary:
 #####################################################################
 
-add_qt_executable(qqmldebugprocessprocess
+qt_add_executable(qqmldebugprocessprocess
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../qqmldebugprocess"
 # special case begin
 # Remove INSTALL_DIRECTORY which starts with

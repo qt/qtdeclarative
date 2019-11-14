@@ -4,7 +4,7 @@
 ## Dummy Generic Library:
 #####################################################################
 
-add_cmake_library(Dummy
+qt_add_cmake_library(Dummy
     MODULE
     OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} # special case
     SOURCES

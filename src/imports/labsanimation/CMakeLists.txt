@@ -4,7 +4,7 @@
 ## labsanimationplugin Plugin:
 #####################################################################
 
-add_qml_module(labsanimationplugin
+qt_add_qml_module(labsanimationplugin
     URI "Qt.labs.animation"
     VERSION "1.0"
     CLASSNAME QtLabsAnimationPlugin

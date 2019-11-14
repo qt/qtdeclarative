@@ -4,7 +4,7 @@
 ## tst_qquicksystempalette Test:
 #####################################################################
 
-add_qt_test(tst_qquicksystempalette
+qt_add_test(tst_qquicksystempalette
     SOURCES
         tst_qquicksystempalette.cpp
     LIBRARIES
@@ -21,7 +21,7 @@ add_qt_test(tst_qquicksystempalette
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qquicksystempalette CONDITION TARGET Qt::Widgets
+qt_extend_target(tst_qquicksystempalette CONDITION TARGET Qt::Widgets
     PUBLIC_LIBRARIES
         Qt::Widgets
 )

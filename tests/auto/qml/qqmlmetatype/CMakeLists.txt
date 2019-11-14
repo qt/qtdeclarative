@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_qqmlmetatype
+qt_add_test(tst_qqmlmetatype
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qqmlmetatype.cpp
@@ -31,7 +31,7 @@ set(qmake_qmlfiles_resource_files
     "data/CompositeType.qml"
 )
 
-add_qt_resource(tst_qqmlmetatype "qmake_qmlfiles"
+qt_add_resource(tst_qqmlmetatype "qmake_qmlfiles"
     PREFIX
         "/tstqqmlmetatype"
     FILES
@@ -43,7 +43,7 @@ set(qmake_qmldirresource_resource_files
     "data/enumsInRecursiveImport.qml"
 )
 
-add_qt_resource(tst_qqmlmetatype "qmake_qmldirresource"
+qt_add_resource(tst_qqmlmetatype "qmake_qmldirresource"
     PREFIX
         "/"
     FILES
@@ -54,12 +54,12 @@ add_qt_resource(tst_qqmlmetatype "qmake_qmldirresource"
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qqmlmetatype CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qqmlmetatype CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qqmlmetatype CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qqmlmetatype CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

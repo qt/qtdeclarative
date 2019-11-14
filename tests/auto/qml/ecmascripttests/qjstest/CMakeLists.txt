@@ -4,7 +4,7 @@
 ## qjstest Tool:
 #####################################################################
 
-add_qt_tool(qjstest
+qt_add_tool(qjstest
     SOURCES
         main.cpp
         test262runner.cpp test262runner.h

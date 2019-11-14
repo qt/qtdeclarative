@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_qquickrepeater
+qt_add_test(tst_qquickrepeater
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         ../shared/geometrytestutil.cpp ../shared/geometrytestutil.h
@@ -38,12 +38,12 @@ add_qt_test(tst_qquickrepeater
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qquickrepeater CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qquickrepeater CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qquickrepeater CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qquickrepeater CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

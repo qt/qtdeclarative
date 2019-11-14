@@ -4,7 +4,7 @@
 ## tst_signalspy Test:
 #####################################################################
 
-add_qt_test(tst_signalspy
+qt_add_test(tst_signalspy
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         mypropertymap.cpp mypropertymap.h
@@ -19,12 +19,12 @@ add_qt_test(tst_signalspy
 ## Scopes:
 #####################################################################
 
-extend_target(tst_signalspy CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_signalspy CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_signalspy CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_signalspy CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

@@ -4,7 +4,7 @@
 ## nodetypes_ng Binary:
 #####################################################################
 
-add_qt_manual_test(nodetypes_ng
+qt_add_manual_test(nodetypes_ng
     GUI
     SOURCES
         nodetypes_ng.cpp
@@ -52,7 +52,7 @@ set(nodetypes_ng_resource_files
     "wobble_legacy_gl.vert"
 )
 
-add_qt_resource(nodetypes_ng "nodetypes_ng"
+qt_add_resource(nodetypes_ng "nodetypes_ng"
     PREFIX
         "/"
     FILES

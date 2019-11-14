@@ -4,7 +4,7 @@
 ## pluginWithQmlFile Generic Library:
 #####################################################################
 
-add_cmake_library(pluginWithQmlFile
+qt_add_cmake_library(pluginWithQmlFile
     MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/AutoTestPluginWithQmlFile"
     SOURCES

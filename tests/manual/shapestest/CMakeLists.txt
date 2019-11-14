@@ -4,7 +4,7 @@
 ## shapestest Binary:
 #####################################################################
 
-add_qt_manual_test(shapestest
+qt_add_manual_test(shapestest
     GUI
     SOURCES
         main.cpp
@@ -19,7 +19,7 @@ set(shapestest_resource_files
     "shapestest.qml"
 )
 
-add_qt_resource(shapestest "shapestest"
+qt_add_resource(shapestest "shapestest"
     PREFIX
         "/shapestest"
     FILES

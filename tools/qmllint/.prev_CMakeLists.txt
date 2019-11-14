@@ -4,7 +4,7 @@
 ## qmllint Tool:
 #####################################################################
 
-add_qt_tool(qmllint
+qt_add_tool(qmllint
     SOURCES
         componentversion.cpp componentversion.h
         fakemetaobject.cpp fakemetaobject.h

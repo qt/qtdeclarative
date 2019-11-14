@@ -4,7 +4,7 @@
 ## qmldbg_local Plugin:
 #####################################################################
 
-add_qt_plugin(qmldbg_local
+qt_add_plugin(qmldbg_local
     TYPE qmltooling
     CLASS_NAME QLocalClientConnectionFactory
     SOURCES

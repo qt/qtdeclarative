@@ -4,7 +4,7 @@
 ## tst_qv4identifiertable Test:
 #####################################################################
 
-add_qt_test(tst_qv4identifiertable
+qt_add_test(tst_qv4identifiertable
     SOURCES
         tst_qv4identifiertable.cpp
     LIBRARIES

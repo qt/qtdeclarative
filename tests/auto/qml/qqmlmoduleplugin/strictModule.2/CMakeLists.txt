@@ -4,7 +4,7 @@
 ## strictModule.2 Generic Library:
 #####################################################################
 
-add_cmake_library(strictModule.2
+qt_add_cmake_library(strictModule.2
     MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/StrictModule.2"
     SOURCES

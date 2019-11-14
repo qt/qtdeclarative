@@ -4,7 +4,7 @@
 ## strictModule Generic Library:
 #####################################################################
 
-add_cmake_library(strictModule
+qt_add_cmake_library(strictModule
     MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/StrictModule"
     SOURCES

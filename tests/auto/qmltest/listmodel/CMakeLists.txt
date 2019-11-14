@@ -4,7 +4,7 @@
 ## listmodel Test:
 #####################################################################
 
-add_qt_test(listmodel
+qt_add_test(listmodel
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

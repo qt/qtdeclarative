@@ -4,7 +4,7 @@
 ## qtquick2plugin Plugin:
 #####################################################################
 
-add_qml_module(qtquick2plugin
+qt_add_qml_module(qtquick2plugin
     TARGET_PATH "QtQuick.2"
     URI "QtQuick"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
@@ -35,7 +35,7 @@ add_qml_module(qtquick2plugin
 ## Scopes:
 #####################################################################
 
-extend_target(qtquick2plugin CONDITION QT_FEATURE_qml_worker_script
+qt_extend_target(qtquick2plugin CONDITION QT_FEATURE_qml_worker_script
     LIBRARIES
         Qt::QmlWorkerScriptPrivate
     PUBLIC_LIBRARIES

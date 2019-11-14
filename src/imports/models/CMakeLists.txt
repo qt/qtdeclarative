@@ -4,7 +4,7 @@
 ## modelsplugin Plugin:
 #####################################################################
 
-add_qml_module(modelsplugin
+qt_add_qml_module(modelsplugin
     TARGET_PATH "QtQml/Models.2"
     URI "QtQml.Models"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"

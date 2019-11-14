@@ -7,7 +7,7 @@
 # Collect test data
 list(APPEND test_data "../data")
 
-add_qt_test(tst_scenegraph
+qt_add_test(tst_scenegraph
     OUTPUT_DIRECTORY ".."
     SOURCES
         ../../../../../qtbase/tests/baselineserver/shared/baselineprotocol.cpp ../../../../../qtbase/tests/baselineserver/shared/baselineprotocol.h

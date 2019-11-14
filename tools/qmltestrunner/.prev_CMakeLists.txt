@@ -4,7 +4,7 @@
 ## qmltestrunner Tool:
 #####################################################################
 
-add_qt_tool(qmltestrunner
+qt_add_tool(qmltestrunner
     SOURCES
         main.cpp
     PUBLIC_LIBRARIES

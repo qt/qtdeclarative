@@ -4,7 +4,7 @@
 ## invalidFirstCommandModule Generic Library:
 #####################################################################
 
-add_cmake_library(invalidFirstCommandModule
+qt_add_cmake_library(invalidFirstCommandModule
     MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/InvalidFirstCommandModule"
     SOURCES

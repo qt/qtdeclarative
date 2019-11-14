@@ -4,7 +4,7 @@
 ## qmllint Tool:
 #####################################################################
 
-add_qt_tool(qmllint
+qt_add_tool(qmllint
     TOOLS_TARGET Qml # special case
     SOURCES
         componentversion.cpp componentversion.h

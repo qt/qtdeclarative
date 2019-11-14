@@ -4,7 +4,7 @@
 ## tst_qqmlopenmetaobject Test:
 #####################################################################
 
-add_qt_test(tst_qqmlopenmetaobject
+qt_add_test(tst_qqmlopenmetaobject
     SOURCES
         tst_qqmlopenmetaobject.cpp
     LIBRARIES

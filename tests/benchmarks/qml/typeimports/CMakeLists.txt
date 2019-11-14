@@ -4,7 +4,7 @@
 ## tst_typeimports Binary:
 #####################################################################
 
-add_qt_benchmark(tst_typeimports
+qt_add_benchmark(tst_typeimports
     SOURCES
         tst_typeimports.cpp
     DEFINES

@@ -4,7 +4,7 @@
 ## tst_propertyrequirements Test:
 #####################################################################
 
-add_qt_test(tst_propertyrequirements
+qt_add_test(tst_propertyrequirements
     SOURCES
         tst_propertyrequirements.cpp
     LIBRARIES

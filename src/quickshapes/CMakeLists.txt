@@ -4,7 +4,7 @@
 ## QuickShapes Module:
 #####################################################################
 
-add_qt_module(QuickShapes
+qt_add_module(QuickShapes
     INTERNAL_MODULE
     SOURCES
         qquickshape.cpp qquickshape_p.h
@@ -48,7 +48,7 @@ set(qtquickshapes_resource_files
     "shaders_ng/radialgradient.vert.qsb"
 )
 
-add_qt_resource(QuickShapes "qtquickshapes"
+qt_add_resource(QuickShapes "qtquickshapes"
     PREFIX
         "/qt-project.org/shapes"
     FILES
@@ -59,7 +59,7 @@ add_qt_resource(QuickShapes "qtquickshapes"
 ## Scopes:
 #####################################################################
 
-extend_target(QuickShapes CONDITION QT_FEATURE_opengl
+qt_extend_target(QuickShapes CONDITION QT_FEATURE_opengl
     SOURCES
         qquicknvprfunctions.cpp qquicknvprfunctions_p.h
         qquicknvprfunctions_p_p.h

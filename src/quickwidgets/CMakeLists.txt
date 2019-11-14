@@ -4,7 +4,7 @@
 ## QuickWidgets Module:
 #####################################################################
 
-add_qt_module(QuickWidgets
+qt_add_module(QuickWidgets
     SOURCES
         qquickwidget.cpp qquickwidget.h qquickwidget_p.h
         qtquickwidgetsglobal.h

@@ -4,7 +4,7 @@
 ## stability Test:
 #####################################################################
 
-add_qt_test(stability
+qt_add_test(stability
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

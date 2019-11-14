@@ -4,7 +4,7 @@
 ## qmltime Binary:
 #####################################################################
 
-add_qt_executable(qmltime
+qt_add_executable(qmltime
     GUI
     SOURCES
         qmltime.cpp

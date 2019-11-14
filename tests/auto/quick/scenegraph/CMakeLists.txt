@@ -4,7 +4,7 @@
 ## tst_scenegraph Test:
 #####################################################################
 
-add_qt_test(tst_scenegraph
+qt_add_test(tst_scenegraph
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         ../shared/geometrytestutil.cpp ../shared/geometrytestutil.h
@@ -32,12 +32,12 @@ add_qt_test(tst_scenegraph
 ## Scopes:
 #####################################################################
 
-extend_target(tst_scenegraph CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_scenegraph CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_scenegraph CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_scenegraph CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

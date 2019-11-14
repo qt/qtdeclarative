@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_qqmltranslation
+qt_add_test(tst_qqmltranslation
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qqmltranslation.cpp
@@ -46,7 +46,7 @@ set_source_files_properties(
 )
 # special case end
 
-add_qt_resource(tst_qqmltranslation "translation"
+qt_add_resource(tst_qqmltranslation "translation"
     PREFIX
         "/"
     BASE
@@ -59,12 +59,12 @@ add_qt_resource(tst_qqmltranslation "translation"
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qqmltranslation CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qqmltranslation CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qqmltranslation CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qqmltranslation CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

@@ -4,7 +4,7 @@
 ## tst_geometry Test:
 #####################################################################
 
-add_qt_test(tst_geometry
+qt_add_test(tst_geometry
     SOURCES
         tst_geometry.cpp
     LIBRARIES

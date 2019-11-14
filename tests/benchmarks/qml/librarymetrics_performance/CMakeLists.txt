@@ -4,7 +4,7 @@
 ## tst_librarymetrics_performance Binary:
 #####################################################################
 
-add_qt_benchmark(tst_librarymetrics_performance
+qt_add_benchmark(tst_librarymetrics_performance
     SOURCES
         tst_librarymetrics_performance.cpp
     PUBLIC_LIBRARIES
@@ -20,7 +20,7 @@ set(qmake_immediate_resource_files
     "data"
 )
 
-add_qt_resource(tst_librarymetrics_performance "qmake_immediate"
+qt_add_resource(tst_librarymetrics_performance "qmake_immediate"
     PREFIX
         "/"
     FILES

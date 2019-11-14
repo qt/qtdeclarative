@@ -4,7 +4,7 @@
 ## tst_qqmldebugclient Test:
 #####################################################################
 
-add_qt_test(tst_qqmldebugclient
+qt_add_test(tst_qqmldebugclient
     SOURCES
         ../../../shared/util.cpp ../../../shared/util.h
         ../shared/debugutil.cpp ../shared/debugutil_p.h
@@ -31,12 +31,12 @@ add_qt_test(tst_qqmldebugclient
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qqmldebugclient CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qqmldebugclient CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qqmldebugclient CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qqmldebugclient CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

@@ -4,7 +4,7 @@
 ## selftests Test:
 #####################################################################
 
-add_qt_test(selftests
+qt_add_test(selftests
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

@@ -4,7 +4,7 @@
 ## text Test:
 #####################################################################
 
-add_qt_test(text
+qt_add_test(text
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

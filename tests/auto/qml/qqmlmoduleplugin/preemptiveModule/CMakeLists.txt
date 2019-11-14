@@ -4,7 +4,7 @@
 ## preemptiveModule Generic Library:
 #####################################################################
 
-add_cmake_library(preemptiveModule
+qt_add_cmake_library(preemptiveModule
     MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/PreemptiveModule"
     SOURCES

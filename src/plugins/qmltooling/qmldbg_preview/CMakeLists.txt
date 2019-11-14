@@ -4,7 +4,7 @@
 ## qmldbg_preview Plugin:
 #####################################################################
 
-add_qt_plugin(qmldbg_preview
+qt_add_plugin(qmldbg_preview
     TYPE qmltooling
     CLASS_NAME QQmlPreviewServiceFactory
     SOURCES

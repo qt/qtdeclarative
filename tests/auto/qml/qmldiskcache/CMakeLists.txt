@@ -4,7 +4,7 @@
 ## tst_qmldiskcache Test:
 #####################################################################
 
-add_qt_test(tst_qmldiskcache
+qt_add_test(tst_qmldiskcache
     SOURCES
         tst_qmldiskcache.cpp
     LIBRARIES
@@ -33,7 +33,7 @@ set(qmake_immediate_resource_files
     "test.qml"
 )
 
-add_qt_resource(tst_qmldiskcache "qmake_immediate"
+qt_add_resource(tst_qmldiskcache "qmake_immediate"
     PREFIX
         "/"
     FILES

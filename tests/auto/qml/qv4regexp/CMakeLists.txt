@@ -4,7 +4,7 @@
 ## tst_qv4regexp Test:
 #####################################################################
 
-add_qt_test(tst_qv4regexp
+qt_add_test(tst_qv4regexp
     SOURCES
         tst_qv4regexp.cpp
     LIBRARIES

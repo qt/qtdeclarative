@@ -4,7 +4,7 @@
 ## qmllocalstorageplugin Plugin:
 #####################################################################
 
-add_qml_module(qmllocalstorageplugin
+qt_add_qml_module(qmllocalstorageplugin
     URI "QtQuick.LocalStorage"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     CLASSNAME QQmlLocalStoragePlugin

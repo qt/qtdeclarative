@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_qquickitem
+qt_add_test(tst_qquickitem
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         ../shared/geometrytestutil.cpp ../shared/geometrytestutil.h
@@ -36,19 +36,19 @@ add_qt_test(tst_qquickitem
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qquickitem CONDITION TARGET Qt::Widgets
+qt_extend_target(tst_qquickitem CONDITION TARGET Qt::Widgets
     DEFINES
         TEST_QTBUG_60123
     PUBLIC_LIBRARIES
         Qt::Widgets
 )
 
-extend_target(tst_qquickitem CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qquickitem CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qquickitem CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qquickitem CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

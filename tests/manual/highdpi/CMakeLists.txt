@@ -4,7 +4,7 @@
 ## qmlimageproviderplugin Generic Library:
 #####################################################################
 
-add_cmake_library(qmlimageproviderplugin
+qt_add_cmake_library(qmlimageproviderplugin
     MODULE
     INSTALL_DIRECTORY "${INSTALL_EXAMPLESDIR}/quick/imageprovider/ImageProvider"
     OUTPUT_DIRECTORY "ImageProvider"

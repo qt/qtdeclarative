@@ -4,7 +4,7 @@
 ## tst_bench_qjsvalue Binary:
 #####################################################################
 
-add_qt_benchmark(tst_bench_qjsvalue
+qt_add_benchmark(tst_bench_qjsvalue
     SOURCES
         tst_qjsvalue.cpp
     PUBLIC_LIBRARIES

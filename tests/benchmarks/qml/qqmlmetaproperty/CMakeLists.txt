@@ -4,7 +4,7 @@
 ## tst_qqmlmetaproperty Binary:
 #####################################################################
 
-add_qt_benchmark(tst_qqmlmetaproperty
+qt_add_benchmark(tst_qqmlmetaproperty
     SOURCES
         tst_qqmlmetaproperty.cpp
     DEFINES

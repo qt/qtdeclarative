@@ -4,7 +4,7 @@
 ## tst_bench_qjsvalueiterator Binary:
 #####################################################################
 
-add_qt_benchmark(tst_bench_qjsvalueiterator
+qt_add_benchmark(tst_bench_qjsvalueiterator
     SOURCES
         tst_qjsvalueiterator.cpp
     PUBLIC_LIBRARIES

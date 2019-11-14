@@ -4,7 +4,7 @@
 ## qmlimportscanner Tool:
 #####################################################################
 
-add_qt_tool(qmlimportscanner
+qt_add_tool(qmlimportscanner
     TOOLS_TARGET Qml # special case
     SOURCES
         main.cpp

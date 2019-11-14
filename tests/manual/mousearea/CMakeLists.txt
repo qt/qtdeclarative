@@ -4,7 +4,7 @@
 ## mousearea Binary:
 #####################################################################
 
-add_qt_manual_test(mousearea
+qt_add_manual_test(mousearea
     GUI
     SOURCES
         main.cpp
@@ -20,7 +20,7 @@ set(qml_resource_files
     "plainMouseArea.qml"
 )
 
-add_qt_resource(mousearea "qml"
+qt_add_resource(mousearea "qml"
     PREFIX
         "/"
     FILES
@@ -73,7 +73,7 @@ set(quick_shared_resource_files
     "images/slider_handle.png"
 )
 
-add_qt_resource(mousearea "quick_shared"
+qt_add_resource(mousearea "quick_shared"
     PREFIX
         "/quick/shared"
     BASE

@@ -4,7 +4,7 @@
 ## Imports Generic Library:
 #####################################################################
 
-add_cmake_library(Imports
+qt_add_cmake_library(Imports
     MODULE
     SOURCES
         imports.cpp imports.h

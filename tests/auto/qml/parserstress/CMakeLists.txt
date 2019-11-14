@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     tests/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_parserstress
+qt_add_test(tst_parserstress
     SOURCES
         tst_parserstress.cpp
     LIBRARIES

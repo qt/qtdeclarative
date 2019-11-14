@@ -4,7 +4,7 @@
 ## tst_javascript Binary:
 #####################################################################
 
-add_qt_benchmark(tst_javascript
+qt_add_benchmark(tst_javascript
     SOURCES
         testtypes.cpp testtypes.h
         tst_javascript.cpp

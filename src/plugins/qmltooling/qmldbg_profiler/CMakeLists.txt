@@ -4,7 +4,7 @@
 ## qmldbg_profiler Plugin:
 #####################################################################
 
-add_qt_plugin(qmldbg_profiler
+qt_add_plugin(qmldbg_profiler
     TYPE qmltooling
     CLASS_NAME QQmlProfilerServiceFactory
     SOURCES

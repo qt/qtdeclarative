@@ -4,7 +4,7 @@
 ## nodetypes Binary:
 #####################################################################
 
-add_qt_manual_test(nodetypes
+qt_add_manual_test(nodetypes
     GUI
     SOURCES
         nodetypes.cpp
@@ -35,7 +35,7 @@ set(nodetypes_resource_files
     "vs_wobble.cso"
 )
 
-add_qt_resource(nodetypes "nodetypes"
+qt_add_resource(nodetypes "nodetypes"
     PREFIX
         "/"
     FILES

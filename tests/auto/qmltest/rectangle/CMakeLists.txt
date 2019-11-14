@@ -4,7 +4,7 @@
 ## rectangle Test:
 #####################################################################
 
-add_qt_test(rectangle
+qt_add_test(rectangle
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

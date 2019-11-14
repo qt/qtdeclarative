@@ -4,7 +4,7 @@
 ## tst_nodestest Test:
 #####################################################################
 
-add_qt_test(tst_nodestest
+qt_add_test(tst_nodestest
     SOURCES
         tst_nodestest.cpp
     LIBRARIES

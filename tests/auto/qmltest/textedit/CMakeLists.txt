@@ -4,7 +4,7 @@
 ## textedit Test:
 #####################################################################
 
-add_qt_test(textedit
+qt_add_test(textedit
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

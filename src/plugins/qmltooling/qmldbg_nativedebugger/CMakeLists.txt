@@ -4,7 +4,7 @@
 ## qmldbg_nativedebugger Plugin:
 #####################################################################
 
-add_qt_plugin(qmldbg_nativedebugger
+qt_add_plugin(qmldbg_nativedebugger
     TYPE qmltooling
     CLASS_NAME QQmlNativeDebugServiceFactory
     SOURCES

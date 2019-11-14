@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_qquickborderimage
+qt_add_test(tst_qquickborderimage
     SOURCES
         ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
         ../../shared/util.cpp ../../shared/util.h
@@ -38,12 +38,12 @@ add_qt_test(tst_qquickborderimage
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qquickborderimage CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qquickborderimage CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qquickborderimage CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qquickborderimage CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

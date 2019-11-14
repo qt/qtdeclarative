@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_qquicktextinput
+qt_add_test(tst_qquicktextinput
     SOURCES
         ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
         ../../shared/util.cpp ../../shared/util.h
@@ -32,17 +32,17 @@ add_qt_test(tst_qquicktextinput
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qquicktextinput CONDITION APPLE_OSX
+qt_extend_target(tst_qquicktextinput CONDITION APPLE_OSX
     PUBLIC_LIBRARIES
         ${FWAppKit}
 )
 
-extend_target(tst_qquicktextinput CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qquicktextinput CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qquicktextinput CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qquicktextinput CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

@@ -4,7 +4,7 @@
 ## borderimage Test:
 #####################################################################
 
-add_qt_test(borderimage
+qt_add_test(borderimage
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

@@ -4,7 +4,7 @@
 ## tst_qquickpainteditem Test:
 #####################################################################
 
-add_qt_test(tst_qquickpainteditem
+qt_add_test(tst_qquickpainteditem
     SOURCES
         tst_qquickpainteditem.cpp
     LIBRARIES
