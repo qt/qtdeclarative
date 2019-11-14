@@ -61,12 +61,12 @@ Rectangle {
         GradientStop {
             position: 0
             Behavior on color {ColorAnimation { duration: 100 }}
-            color: button.pressed ? "#e0e0e0" : "#fff"
+            color: tapHandler.pressed ? "#e0e0e0" : "#fff"
         }
         GradientStop {
             position: 1
             Behavior on color {ColorAnimation { duration: 100 }}
-            color: button.pressed ? "#e0e0e0" : button.containsMouse ? "#f5f5f5" : "#eee"
+            color: tapHandler.pressed ? "#e0e0e0" : button.containsMouse ? "#f5f5f5" : "#eee"
         }
     }
 
