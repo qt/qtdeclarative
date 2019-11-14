@@ -1640,7 +1640,9 @@ QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool cre
         return nullptr;
 
     QQmlEnginePrivate *engine = QQmlEnginePrivate::get(data->context);
-    return resolveAttachedProperties(QQmlMetaType::attachedPropertiesFuncById(engine, id), data,
+
+    const QQmlType type = QQmlMetaType::qmlType(id, QQmlMetaType::TypeIdCategory::QmlType);
+    return resolveAttachedProperties(type.attachedPropertiesFunction(engine), data,
                                      const_cast<QObject *>(object), create);
 }
 
