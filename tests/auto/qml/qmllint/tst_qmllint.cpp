@@ -48,7 +48,7 @@ private Q_SLOTS:
     void dirtyQmlCode_data();
     void dirtyQmlCode();
 
-    void testUnqualifiedNoSpuriousParentWarning();
+    void testUnknownCausesFail();
 
 private:
     QString runQmllint(const QString &fileToLint, bool shouldSucceed);
@@ -107,9 +107,9 @@ void TestQmllint::testUnqualified_data()
     QTest::newRow("NonSpuriousParent") << QStringLiteral("nonSpuriousParentWarning.qml") << QStringLiteral("property int x: <id>.parent.x") << 6 << 25;
 }
 
-void TestQmllint::testUnqualifiedNoSpuriousParentWarning()
+void TestQmllint::testUnknownCausesFail()
 {
-    const QString unknownNotFound = runQmllint("spuriousParentWarning.qml", false);
+    const QString unknownNotFound = runQmllint("unknownElement.qml", false);
     QVERIFY(unknownNotFound.contains(
                 QStringLiteral("warning: Unknown was not found. Did you add all import paths?")));
 }

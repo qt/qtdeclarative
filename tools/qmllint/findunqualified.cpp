@@ -388,6 +388,7 @@ void FindUnqualifiedIDVisitor::importExportedNames(const QStringRef &prefix, QSt
             m_colorOut.write(name + QLatin1String(" was not found."
                                                   " Did you add all import paths?\n"));
             m_unknownImports.insert(name);
+            m_visitFailed = true;
             break;
         }
     }
