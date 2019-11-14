@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qqmllistmodelworkerscript
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qqmllistmodelworkerscript.cpp
@@ -33,14 +30,8 @@ add_qt_test(tst_qqmllistmodelworkerscript
     TESTDATA ${test_data}
 )
 
-#### Keys ignored in scope 1:.:.:qqmllistmodelworkerscript.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qqmllistmodelworkerscript.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qqmllistmodelworkerscript CONDITION ANDROID OR APPLE_IOS
     DEFINES

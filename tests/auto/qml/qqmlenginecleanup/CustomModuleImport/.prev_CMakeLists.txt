@@ -31,10 +31,3 @@ add_qt_resource(CustomModule "moduleplugin"
 #### Keys ignored in scope 1:.:.:CustomModule.pro:<TRUE>:
 # IMPORT_FILES = "qmldir"
 # TEMPLATE = "lib"
-
-# special case begin
-qt_autogen_tools_initial_setup(CustomModule)
-file(COPY qmldir
-    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/../CustomModule"
-)
-# special case end

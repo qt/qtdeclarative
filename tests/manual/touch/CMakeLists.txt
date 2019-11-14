@@ -4,7 +4,7 @@
 ## touch Binary:
 #####################################################################
 
-add_qt_executable(touch
+add_qt_manual_test(touch
     GUI
     SOURCES
         main.cpp
@@ -15,13 +15,17 @@ add_qt_executable(touch
 )
 
 # Resources:
+set(qml_resource_files
+    "flicktext.qml"
+    "main.qml"
+    "mpta-crosshairs.qml"
+)
+
 add_qt_resource(touch "qml"
     PREFIX
         "/"
     FILES
-        flicktext.qml
-        main.qml
-        mpta-crosshairs.qml
+        ${qml_resource_files}
 )
 set_source_files_properties("../../../examples/quick/shared/Button.qml"
     PROPERTIES QT_RESOURCE_ALIAS "Button.qml"
@@ -56,23 +60,27 @@ set_source_files_properties("../../../examples/quick/shared/images/next.png"
 set_source_files_properties("../../../examples/quick/shared/images/slider_handle.png"
     PROPERTIES QT_RESOURCE_ALIAS "images/slider_handle.png"
 )
+set(quick_shared_resource_files
+    "Button.qml"
+    "CheckBox.qml"
+    "Label.qml"
+    "LauncherList.qml"
+    "SimpleLauncherDelegate.qml"
+    "Slider.qml"
+    "TextField.qml"
+    "images/back.png"
+    "images/checkmark.png"
+    "images/next.png"
+    "images/slider_handle.png"
+)
+
 add_qt_resource(touch "quick_shared"
     PREFIX
         "/quick/shared"
     BASE
         "../../../examples/quick/shared"
     FILES
-        Button.qml
-        CheckBox.qml
-        Label.qml
-        LauncherList.qml
-        SimpleLauncherDelegate.qml
-        Slider.qml
-        TextField.qml
-        images/back.png
-        images/checkmark.png
-        images/next.png
-        images/slider_handle.png
+        ${quick_shared_resource_files}
 )
 
 

@@ -4,8 +4,7 @@
 ## tst_emission Binary:
 #####################################################################
 
-add_qt_executable(tst_emission
-    GUI
+add_qt_benchmark(tst_emission
     SOURCES
         tst_emission.cpp
     LIBRARIES
@@ -23,6 +22,3 @@ add_qt_executable(tst_emission
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:emission.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

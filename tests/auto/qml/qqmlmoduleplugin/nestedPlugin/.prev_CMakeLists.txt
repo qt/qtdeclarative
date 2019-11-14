@@ -1,10 +1,10 @@
 # Generated from nestedPlugin.pro.
 
 #####################################################################
-## stedPlugin Module:
+## nestedPlugin Generic Library:
 #####################################################################
 
-add_qt_module(stedPlugin
+add_cmake_library(nestedPlugin
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/AutoTestQmlNestedPluginType"
     SOURCES
         nestedPlugin.cpp
@@ -19,6 +19,5 @@ add_qt_module(stedPlugin
 )
 
 #### Keys ignored in scope 1:.:.:nestedPlugin.pro:<TRUE>:
-# CONFIG = "nestedPlugin"
 # IMPORT_FILES = "qmldir"
 # TEMPLATE = "lib"

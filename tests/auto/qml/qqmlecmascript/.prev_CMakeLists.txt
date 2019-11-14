@@ -1,7 +1,7 @@
-# Generated from qqmlvaluetypeproviders.pro.
+# Generated from qqmlecmascript.pro.
 
 #####################################################################
-## tst_qqmlvaluetypeproviders Test:
+## tst_qqmlecmascript Test:
 #####################################################################
 
 # Collect test data
@@ -10,34 +10,55 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_qqmlvaluetypeproviders
+add_qt_test(tst_qqmlecmascript
     SOURCES
+        ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
         ../../shared/util.cpp ../../shared/util.h
         testtypes.cpp testtypes.h
-        tst_qqmlvaluetypeproviders.cpp
+        tst_qqmlecmascript.cpp
     INCLUDE_DIRECTORIES
         ../../shared
     LIBRARIES
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QmlPrivate
-        Qt::QuickPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
+        Qt::Network
         Qt::Qml
-        Qt::Quick
     TESTDATA ${test_data}
 )
+
+# Resources:
+set(qqmlecmascript_resource_files
+    "data/include.js"
+    "data/include.qml"
+    "data/js/include2.js"
+    "data/js/include3.js"
+)
+
+add_qt_resource(tst_qqmlecmascript "qqmlecmascript"
+    PREFIX
+        "/"
+    FILES
+        ${qqmlecmascript_resource_files}
+)
+
 
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qqmlvaluetypeproviders CONDITION ANDROID OR APPLE_IOS
+extend_target(tst_qqmlecmascript CONDITION TARGET Qt::Widgets
+    PUBLIC_LIBRARIES
+        Qt::Widgets
+)
+
+extend_target(tst_qqmlecmascript CONDITION ANDROID OR APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qqmlvaluetypeproviders CONDITION NOT ANDROID AND NOT APPLE_IOS
+extend_target(tst_qqmlecmascript CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

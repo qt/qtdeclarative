@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qqmltranslation
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qqmltranslation.cpp
@@ -30,6 +27,11 @@ add_qt_test(tst_qqmltranslation
 )
 
 # Resources:
+set(translation_resource_files
+    "qml_fr.qm"
+    "translation.qml"
+)
+
 # special case begin
 set_source_files_properties(
     data/translation.qml
@@ -43,25 +45,19 @@ set_source_files_properties(
     QT_RESOURCE_ALIAS qml_fr.qm
 )
 # special case end
+
 add_qt_resource(tst_qqmltranslation "translation"
     PREFIX
         "/"
     BASE
         "data"
     FILES
-        qml_fr.qm
-        translation.qml
+        ${translation_resource_files}
 )
 
 
-#### Keys ignored in scope 1:.:.:qqmltranslation.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qqmltranslation.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qqmltranslation CONDITION ANDROID OR APPLE_IOS
     DEFINES

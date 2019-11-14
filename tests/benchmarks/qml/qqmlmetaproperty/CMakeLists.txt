@@ -4,8 +4,7 @@
 ## tst_qqmlmetaproperty Binary:
 #####################################################################
 
-add_qt_executable(tst_qqmlmetaproperty
-    GUI
+add_qt_benchmark(tst_qqmlmetaproperty
     SOURCES
         tst_qqmlmetaproperty.cpp
     DEFINES
@@ -17,11 +16,7 @@ add_qt_executable(tst_qqmlmetaproperty
 )
 
 #### Keys ignored in scope 1:.:.:qqmlmetaproperty.pro:<TRUE>:
-# CONFIG = "benchmark"
 # TEMPLATE = "app"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qqmlmetaproperty.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

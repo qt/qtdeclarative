@@ -1,14 +1,12 @@
 # Generated from pluginVersion.pro.
 
 #####################################################################
-## pluginVersion Plugin:
+## pluginVersion Generic Library:
 #####################################################################
 
-add_qt_plugin(pluginVersion
+add_cmake_library(pluginVersion
+    MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/AutoTestQmlVersionPluginType"
-# special case begin
-    TYPE qml_plugin
-# special case end
     SOURCES
         plugin.cpp
     LIBRARIES
@@ -22,10 +20,10 @@ add_qt_plugin(pluginVersion
 )
 
 #### Keys ignored in scope 1:.:.:pluginVersion.pro:<TRUE>:
-# CONFIG = "plugin"
 # IMPORT_FILES = "qmldir"
 # TEMPLATE = "lib"
 
+qt_autogen_tools_initial_setup(pluginVersion)
 # special case begin
 file(COPY qmldir
     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/AutoTestQmlVersionPluginType"

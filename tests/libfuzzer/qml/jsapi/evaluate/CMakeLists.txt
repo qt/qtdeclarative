@@ -11,6 +11,3 @@ add_qt_executable(evaluate
         # Remove: fsanitize=fuzzer
         Qt::Qml
 )
-
-#### Keys ignored in scope 1:.:.:evaluate.pro:<TRUE>:
-# CONFIG = "console" "-app_bundle"

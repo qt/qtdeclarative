@@ -4,7 +4,7 @@
 ## text Binary:
 #####################################################################
 
-add_qt_executable(text
+add_qt_manual_test(text
     GUI
     SOURCES
         main.cpp
@@ -15,13 +15,17 @@ add_qt_executable(text
 )
 
 # Resources:
+set(qml_resource_files
+    "SignalIndicator.qml"
+    "main.qml"
+    "textInputPropertiesAndSignals.qml"
+)
+
 add_qt_resource(text "qml"
     PREFIX
         "/"
     FILES
-        SignalIndicator.qml
-        main.qml
-        textInputPropertiesAndSignals.qml
+        ${qml_resource_files}
 )
 set_source_files_properties("../../../examples/quick/shared/Button.qml"
     PROPERTIES QT_RESOURCE_ALIAS "Button.qml"
@@ -56,23 +60,27 @@ set_source_files_properties("../../../examples/quick/shared/images/next.png"
 set_source_files_properties("../../../examples/quick/shared/images/slider_handle.png"
     PROPERTIES QT_RESOURCE_ALIAS "images/slider_handle.png"
 )
+set(quick_shared_resource_files
+    "Button.qml"
+    "CheckBox.qml"
+    "Label.qml"
+    "LauncherList.qml"
+    "SimpleLauncherDelegate.qml"
+    "Slider.qml"
+    "TextField.qml"
+    "images/back.png"
+    "images/checkmark.png"
+    "images/next.png"
+    "images/slider_handle.png"
+)
+
 add_qt_resource(text "quick_shared"
     PREFIX
         "/quick/shared"
     BASE
         "../../../examples/quick/shared"
     FILES
-        Button.qml
-        CheckBox.qml
-        Label.qml
-        LauncherList.qml
-        SimpleLauncherDelegate.qml
-        Slider.qml
-        TextField.qml
-        images/back.png
-        images/checkmark.png
-        images/next.png
-        images/slider_handle.png
+        ${quick_shared_resource_files}
 )
 
 

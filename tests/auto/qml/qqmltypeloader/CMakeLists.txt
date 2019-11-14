@@ -1,11 +1,16 @@
-# Generated from qqmltypeloader.pro.
+# Generated from tst_qqmltypeloader.pro.
 
 #####################################################################
 ## tst_qqmltypeloader Test:
 #####################################################################
 
+# Collect test data
+file(GLOB_RECURSE test_data_glob
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    data/*)
+list(APPEND test_data ${test_data_glob})
+
 add_qt_test(tst_qqmltypeloader
-    GUI
     SOURCES
         ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
         ../../shared/util.cpp ../../shared/util.h
@@ -15,18 +20,14 @@ add_qt_test(tst_qqmltypeloader
     LIBRARIES
         Qt::QmlPrivate
     PUBLIC_LIBRARIES
+        Qt::Gui
         Qt::Qml
         Qt::Quick
+    TESTDATA ${test_data}
 )
-
-#### Keys ignored in scope 2:.:.:tst_qqmltypeloader.pro:<TRUE>:
-# CONFIG = "testcase"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 3:.:.:tst_qqmltypeloader.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qqmltypeloader CONDITION ANDROID OR APPLE_IOS
     DEFINES
@@ -37,4 +38,3 @@ extend_target(tst_qqmltypeloader CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )
-add_subdirectory(SlowImport)

@@ -1,10 +1,11 @@
 # Generated from plugin.pro.
 
 #####################################################################
-## testplugin Plugin:
+## testplugin Generic Library:
 #####################################################################
 
-add_qt_plugin(testplugin
+add_cmake_library(testplugin
+    MODULE
     SOURCES
         plugin.cpp
     PUBLIC_LIBRARIES
@@ -14,5 +15,6 @@ add_qt_plugin(testplugin
 )
 
 #### Keys ignored in scope 1:.:.:plugin.pro:<TRUE>:
-# CONFIG = "plugin"
 # TEMPLATE = "lib"
+
+qt_autogen_tools_initial_setup(testplugin)

@@ -4,7 +4,7 @@
 ## quickwidgetviewer Binary:
 #####################################################################
 
-add_qt_executable(quickwidgetviewer
+add_qt_manual_test(quickwidgetviewer
     SOURCES
         main.cpp
     PUBLIC_LIBRARIES
@@ -13,5 +13,4 @@ add_qt_executable(quickwidgetviewer
 )
 
 #### Keys ignored in scope 1:.:.:quickwidgetviewer.pro:<TRUE>:
-# CONFIG = "c++11" "console"
 # TEMPLATE = "app"

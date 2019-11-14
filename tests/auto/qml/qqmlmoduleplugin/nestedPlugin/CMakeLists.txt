@@ -1,14 +1,11 @@
 # Generated from nestedPlugin.pro.
 
 #####################################################################
-## stedPlugin Module:
+## nestedPlugin Generic Library:
 #####################################################################
 
-add_qt_plugin(nestedPlugin
+add_cmake_library(nestedPlugin
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/AutoTestQmlNestedPluginType"
-# special case begin
-    TYPE qml_plugin
-# special case end
     SOURCES
         nestedPlugin.cpp
     LIBRARIES
@@ -22,11 +19,11 @@ add_qt_plugin(nestedPlugin
 )
 
 #### Keys ignored in scope 1:.:.:nestedPlugin.pro:<TRUE>:
-# CONFIG = "nestedPlugin"
 # IMPORT_FILES = "qmldir"
 # TEMPLATE = "lib"
 
 # special case begin
+qt_autogen_tools_initial_setup(nestedPlugin)
 file(COPY qmldir
     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/AutoTestQmlNestedPluginType"
 )

@@ -4,8 +4,7 @@
 ## tst_javascript Binary:
 #####################################################################
 
-add_qt_executable(tst_javascript
-    GUI
+add_qt_benchmark(tst_javascript
     SOURCES
         testtypes.cpp testtypes.h
         tst_javascript.cpp
@@ -18,11 +17,7 @@ add_qt_executable(tst_javascript
 )
 
 #### Keys ignored in scope 1:.:.:javascript.pro:<TRUE>:
-# CONFIG = "benchmark"
 # TEMPLATE = "app"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:javascript.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

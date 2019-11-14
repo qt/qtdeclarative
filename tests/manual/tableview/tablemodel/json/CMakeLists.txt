@@ -4,7 +4,7 @@
 ## json Binary:
 #####################################################################
 
-add_qt_executable(json
+add_qt_manual_test(json
     GUI
     SOURCES
         main.cpp
@@ -15,12 +15,16 @@ add_qt_executable(json
 )
 
 # Resources:
+set(qmake_immediate_resource_files
+    "JsonData.js"
+    "main.qml"
+)
+
 add_qt_resource(json "qmake_immediate"
     PREFIX
         "/"
     FILES
-        JsonData.js
-        main.qml
+        ${qmake_immediate_resource_files}
 )
 
 

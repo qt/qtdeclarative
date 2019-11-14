@@ -4,7 +4,7 @@
 ## scalablepath Binary:
 #####################################################################
 
-add_qt_executable(scalablepath
+add_qt_manual_test(scalablepath
     GUI
     SOURCES
         main.cpp
@@ -15,15 +15,18 @@ add_qt_executable(scalablepath
 )
 
 # Resources:
+set(qml_resource_files
+    "ShapeTestScale.qml"
+    "main.qml"
+)
+
 add_qt_resource(scalablepath "qml"
     PREFIX
         "/"
     FILES
-        ShapeTestScale.qml
-        main.qml
+        ${qml_resource_files}
 )
 
 
 #### Keys ignored in scope 1:.:.:scalablepath.pro:<TRUE>:
-# CONFIG = "c++11"
 # TEMPLATE = "app"

@@ -1,23 +1,22 @@
-# Generated from affectors.pro.
+# Generated from qqmlcomponent.pro.
 
 #####################################################################
-## tst_affectors Binary:
+## tst_qqmlcomponent Binary:
 #####################################################################
 
-add_qt_benchmark(tst_affectors
+add_qt_benchmark(tst_qqmlcomponent
     SOURCES
-        tst_affectors.cpp
+        testtypes.cpp testtypes.h
+        tst_qqmlcomponent.cpp
     DEFINES
         SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
-    LIBRARIES
-        Qt::QuickParticlesPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
-        Qt::QuickParticles
+        Qt::Qml
         Qt::Test
 )
 
-#### Keys ignored in scope 1:.:.:affectors.pro:<TRUE>:
+#### Keys ignored in scope 1:.:.:qqmlcomponent.pro:<TRUE>:
 # TEMPLATE = "app"
 
 ## Scopes:

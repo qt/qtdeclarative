@@ -4,8 +4,7 @@
 ## tst_compilation Binary:
 #####################################################################
 
-add_qt_executable(tst_compilation
-    GUI
+add_qt_benchmark(tst_compilation
     SOURCES
         tst_compilation.cpp
     DEFINES
@@ -20,11 +19,7 @@ add_qt_executable(tst_compilation
 )
 
 #### Keys ignored in scope 1:.:.:compilation.pro:<TRUE>:
-# CONFIG = "benchmark" "release"
 # TEMPLATE = "app"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:compilation.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

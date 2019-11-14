@@ -4,7 +4,7 @@
 ## tableview_abstracttablemodel Binary:
 #####################################################################
 
-add_qt_executable(tableview_abstracttablemodel
+add_qt_manual_test(tableview_abstracttablemodel
     GUI
     SOURCES
         main.cpp
@@ -15,12 +15,16 @@ add_qt_executable(tableview_abstracttablemodel
 )
 
 # Resources:
+set(qmake_immediate_resource_files
+    "Button.qml"
+    "main.qml"
+)
+
 add_qt_resource(tableview_abstracttablemodel "qmake_immediate"
     PREFIX
         "/"
     FILES
-        Button.qml
-        main.qml
+        ${qmake_immediate_resource_files}
 )
 
 

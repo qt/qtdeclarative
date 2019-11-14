@@ -4,8 +4,7 @@
 ## tst_animation Binary:
 #####################################################################
 
-add_qt_executable(tst_animation
-    GUI
+add_qt_benchmark(tst_animation
     SOURCES
         tst_animation.cpp
     DEFINES
@@ -23,11 +22,7 @@ add_qt_executable(tst_animation
 )
 
 #### Keys ignored in scope 1:.:.:animation.pro:<TRUE>:
-# CONFIG = "benchmark"
 # TEMPLATE = "app"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:animation.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

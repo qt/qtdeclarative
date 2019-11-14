@@ -1,10 +1,10 @@
 # Generated from childplugin.pro.
 
 #####################################################################
-## ildplugin Module:
+## childplugin Generic Library:
 #####################################################################
 
-add_qt_module(ildplugin
+add_cmake_library(childplugin
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../../imports/org/qtproject/AutoTestQmlPluginType.2/ChildPlugin"
     SOURCES
         childplugin.cpp
@@ -19,7 +19,6 @@ add_qt_module(ildplugin
 )
 
 #### Keys ignored in scope 1:.:.:childplugin.pro:<TRUE>:
-# CONFIG = "childplugin"
 # IMPORT_DIR = "DESTDIR"
 # IMPORT_FILES = "qmldir"
 # TEMPLATE = "lib"

@@ -1,14 +1,12 @@
 # Generated from invalidFirstCommandModule.pro.
 
 #####################################################################
-## invalidFirstCommandModule Plugin:
+## invalidFirstCommandModule Generic Library:
 #####################################################################
 
-add_qt_plugin(invalidFirstCommandModule
+add_cmake_library(invalidFirstCommandModule
+    MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/InvalidFirstCommandModule"
-# special case begin
-    TYPE qml_plugin
-# special case end
     SOURCES
         plugin.cpp
     LIBRARIES
@@ -22,10 +20,10 @@ add_qt_plugin(invalidFirstCommandModule
 )
 
 #### Keys ignored in scope 1:.:.:invalidFirstCommandModule.pro:<TRUE>:
-# CONFIG = "plugin"
 # IMPORT_FILES = "qmldir"
 # TEMPLATE = "lib"
 
+qt_autogen_tools_initial_setup(invalidFirstCommandModule)
 # special case begin
 file(COPY qmldir
     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/InvalidFirstCommandModule"

@@ -4,7 +4,7 @@
 ## mousearea Binary:
 #####################################################################
 
-add_qt_executable(mousearea
+add_qt_manual_test(mousearea
     GUI
     SOURCES
         main.cpp
@@ -15,12 +15,16 @@ add_qt_executable(mousearea
 )
 
 # Resources:
+set(qml_resource_files
+    "main.qml"
+    "plainMouseArea.qml"
+)
+
 add_qt_resource(mousearea "qml"
     PREFIX
         "/"
     FILES
-        main.qml
-        plainMouseArea.qml
+        ${qml_resource_files}
 )
 set_source_files_properties("../../../examples/quick/shared/Button.qml"
     PROPERTIES QT_RESOURCE_ALIAS "Button.qml"
@@ -55,23 +59,27 @@ set_source_files_properties("../../../examples/quick/shared/images/next.png"
 set_source_files_properties("../../../examples/quick/shared/images/slider_handle.png"
     PROPERTIES QT_RESOURCE_ALIAS "images/slider_handle.png"
 )
+set(quick_shared_resource_files
+    "Button.qml"
+    "CheckBox.qml"
+    "Label.qml"
+    "LauncherList.qml"
+    "SimpleLauncherDelegate.qml"
+    "Slider.qml"
+    "TextField.qml"
+    "images/back.png"
+    "images/checkmark.png"
+    "images/next.png"
+    "images/slider_handle.png"
+)
+
 add_qt_resource(mousearea "quick_shared"
     PREFIX
         "/quick/shared"
     BASE
         "../../../examples/quick/shared"
     FILES
-        Button.qml
-        CheckBox.qml
-        Label.qml
-        LauncherList.qml
-        SimpleLauncherDelegate.qml
-        Slider.qml
-        TextField.qml
-        images/back.png
-        images/checkmark.png
-        images/next.png
-        images/slider_handle.png
+        ${quick_shared_resource_files}
 )
 
 

@@ -1,10 +1,11 @@
 # Generated from versions.pro.
 
 #####################################################################
-## Versions Plugin:
+## Versions Generic Library:
 #####################################################################
 
-add_qt_plugin(Versions
+add_cmake_library(Versions
+    MODULE
     SOURCES
         versions.cpp versions.h
         versions_plugin.cpp versions_plugin.h
@@ -15,16 +16,14 @@ add_qt_plugin(Versions
 )
 
 #### Keys ignored in scope 1:.:.:versions.pro:<TRUE>:
-# CONFIG = "qt" "plugin" "-debug_and_release_target"
 # TEMPLATE = "lib"
 
 ## Scopes:
 #####################################################################
 
-#### Keys ignored in scope 2:.:.:versions.pro:NOT build_pass AND QT_FEATURE_debug_and_release:
-# CONFIG = "release"
-
 #### Keys ignored in scope 3:.:.:versions.pro:NOT _PRO_FILE_PWD____equals____ss_OUT_PWD:
 # COPIES = "cpqmldir"
 # cpqmldir.files = "qmldir" "plugins.qmltypes"
 # cpqmldir.path = "$$OUT_PWD"
+
+qt_autogen_tools_initial_setup(Versions)

@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qqmlecmascript
-    GUI
     SOURCES
         ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
         ../../shared/util.cpp ../../shared/util.h
@@ -33,36 +30,30 @@ add_qt_test(tst_qqmlecmascript
 )
 
 # Resources:
-# special case begin
-set_source_files_properties(
-    data/include.js
-    data/include.qml
-    data/js/include2.js
-    data/js/include3.js
-    PROPERTIES
-    QT_SKIP_QUICKCOMPILER 1
+set(qqmlecmascript_resource_files
+    "data/include.js"
+    "data/include.qml"
+    "data/js/include2.js"
+    "data/js/include3.js"
 )
 
+# special case begin
+set_source_files_properties(
+    ${qqmlecmascript_resource_files}
+    PROPERTIES
+        QT_SKIP_QUICKCOMPILER 1)
 # special case end
+
 add_qt_resource(tst_qqmlecmascript "qqmlecmascript"
     PREFIX
         "/"
     FILES
-        data/include.js
-        data/include.qml
-        data/js/include2.js
-        data/js/include3.js
+        ${qqmlecmascript_resource_files}
 )
 
 
-#### Keys ignored in scope 1:.:.:qqmlecmascript.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qqmlecmascript.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qqmlecmascript CONDITION TARGET Qt::Widgets
     PUBLIC_LIBRARIES

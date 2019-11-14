@@ -35,21 +35,22 @@ add_qt_test(tst_qqmllanguage
 ## Scopes:
 #####################################################################
 
-# Resources:
-set_source_files_properties("data/I18nType30.qml"
-    PROPERTIES QT_RESOURCE_ALIAS "data/I18nTypeÁâãäå.qml"
-)
-set(qqmllanguage_resource_files
-    "data/I18nType30.qml"
-)
+if(ANDROID)
+    # Resources:
+    set_source_files_properties("data/I18nType30.qml"
+        PROPERTIES QT_RESOURCE_ALIAS "data/I18nTypeÁâãäå.qml"
+    )
+    set(qqmllanguage_resource_files
+        "data/I18nType30.qml"
+    )
 
-add_qt_resource(tst_qqmllanguage "qqmllanguage"
-    PREFIX
-        "/"
-    FILES
-        ${qqmllanguage_resource_files}
-)
-
+    add_qt_resource(tst_qqmllanguage "qqmllanguage"
+        PREFIX
+            "/"
+        FILES
+            ${qqmllanguage_resource_files}
+    )
+endif()
 
 extend_target(tst_qqmllanguage CONDITION ANDROID OR APPLE_IOS
     DEFINES

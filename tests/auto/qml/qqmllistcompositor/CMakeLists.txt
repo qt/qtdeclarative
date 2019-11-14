@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qqmllistcompositor
-    GUI
     SOURCES
         tst_qqmllistcompositor.cpp
     LIBRARIES
@@ -21,11 +20,5 @@ add_qt_test(tst_qqmllistcompositor
         Qt::Quick
 )
 
-#### Keys ignored in scope 1:.:.:qqmllistcompositor.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qqmllistcompositor.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

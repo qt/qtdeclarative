@@ -1,10 +1,12 @@
 # Generated from highdpi.pro.
 
 #####################################################################
-## qmlimageproviderplugin Plugin:
+## qmlimageproviderplugin Generic Library:
 #####################################################################
 
-add_qt_plugin(qmlimageproviderplugin
+add_cmake_library(qmlimageproviderplugin
+    MODULE
+    INSTALL_DIRECTORY "${INSTALL_EXAMPLESDIR}/quick/imageprovider/ImageProvider"
     OUTPUT_DIRECTORY "ImageProvider"
     SOURCES
         imageprovider.cpp
@@ -16,9 +18,10 @@ add_qt_plugin(qmlimageproviderplugin
 )
 
 #### Keys ignored in scope 1:.:.:highdpi.pro:<TRUE>:
-# CONFIG = "plugin"
 # INSTALLS = "target" "qml"
 # TEMPLATE = "lib"
 # qml.files = "ImageProvider/qmldir"
 # qml.path = "$$[QT_INSTALL_EXAMPLES]/quick/imageprovider/ImageProvider"
 # target.path = "$$[QT_INSTALL_EXAMPLES]/quick/imageprovider/ImageProvider"
+
+qt_autogen_tools_initial_setup(qmlimageproviderplugin)

@@ -4,7 +4,7 @@
 ## nodetypes Binary:
 #####################################################################
 
-add_qt_executable(nodetypes
+add_qt_manual_test(nodetypes
     GUI
     SOURCES
         nodetypes.cpp
@@ -15,27 +15,31 @@ add_qt_executable(nodetypes
 )
 
 # Resources:
+set(nodetypes_resource_files
+    "Animators.qml"
+    "Effects.qml"
+    "Images.qml"
+    "Layers.qml"
+    "LotsOfImages.qml"
+    "LotsOfRects.qml"
+    "Painter.qml"
+    "Rects.qml"
+    "Text.qml"
+    "face-smile.png"
+    "main.qml"
+    "ps_shadow1.cso"
+    "ps_shadow2.cso"
+    "ps_wobble.cso"
+    "qt.png"
+    "shadow.png"
+    "vs_wobble.cso"
+)
+
 add_qt_resource(nodetypes "nodetypes"
     PREFIX
         "/"
     FILES
-        Animators.qml
-        Effects.qml
-        Images.qml
-        Layers.qml
-        LotsOfImages.qml
-        LotsOfRects.qml
-        Painter.qml
-        Rects.qml
-        Text.qml
-        face-smile.png
-        main.qml
-        ps_shadow1.cso
-        ps_shadow2.cso
-        ps_wobble.cso
-        qt.png
-        shadow.png
-        vs_wobble.cso
+        ${nodetypes_resource_files}
 )
 
 

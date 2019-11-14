@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qqmltimer
-    GUI
     SOURCES
         tst_qqmltimer.cpp
     LIBRARIES
@@ -19,11 +18,5 @@ add_qt_test(tst_qqmltimer
         Qt::Quick
 )
 
-#### Keys ignored in scope 1:.:.:qqmltimer.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qqmltimer.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

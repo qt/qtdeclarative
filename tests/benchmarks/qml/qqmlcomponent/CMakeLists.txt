@@ -4,7 +4,7 @@
 ## tst_qqmlcomponent Binary:
 #####################################################################
 
-add_qt_executable(tst_qqmlcomponent_benchmark # special case avoid collision with auto test
+add_qt_benchmark(tst_qqmlcomponent_benchmark # special case avoid collision with auto test
     GUI
     SOURCES
         testtypes.cpp testtypes.h
@@ -18,11 +18,7 @@ add_qt_executable(tst_qqmlcomponent_benchmark # special case avoid collision wit
 )
 
 #### Keys ignored in scope 1:.:.:qqmlcomponent.pro:<TRUE>:
-# CONFIG = "benchmark"
 # TEMPLATE = "app"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qqmlcomponent.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

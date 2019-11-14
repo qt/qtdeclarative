@@ -1,10 +1,11 @@
 # Generated from invalidNamespaceModule.pro.
 
 #####################################################################
-## invalidNamespaceModule Plugin:
+## invalidNamespaceModule Generic Library:
 #####################################################################
 
-add_qt_plugin(invalidNamespaceModule
+add_cmake_library(invalidNamespaceModule
+    MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/InvalidNamespaceModule"
     SOURCES
         plugin.cpp
@@ -19,6 +20,7 @@ add_qt_plugin(invalidNamespaceModule
 )
 
 #### Keys ignored in scope 1:.:.:invalidNamespaceModule.pro:<TRUE>:
-# CONFIG = "plugin"
 # IMPORT_FILES = "qmldir"
 # TEMPLATE = "lib"
+
+qt_autogen_tools_initial_setup(invalidNamespaceModule)

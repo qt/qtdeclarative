@@ -4,7 +4,7 @@
 ## shapestest Binary:
 #####################################################################
 
-add_qt_executable(shapestest
+add_qt_manual_test(shapestest
     GUI
     SOURCES
         main.cpp
@@ -15,11 +15,15 @@ add_qt_executable(shapestest
 )
 
 # Resources:
+set(shapestest_resource_files
+    "shapestest.qml"
+)
+
 add_qt_resource(shapestest "shapestest"
     PREFIX
         "/shapestest"
     FILES
-        shapestest.qml
+        ${shapestest_resource_files}
 )
 
 

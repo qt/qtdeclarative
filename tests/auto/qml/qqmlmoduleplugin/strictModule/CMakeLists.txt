@@ -1,14 +1,12 @@
 # Generated from strictModule.pro.
 
 #####################################################################
-## strictModule Plugin:
+## strictModule Generic Library:
 #####################################################################
 
-add_qt_plugin(strictModule
+add_cmake_library(strictModule
+    MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/StrictModule"
-# special case begin
-    TYPE qml_plugin
-# special case end
     SOURCES
         plugin.cpp
     LIBRARIES
@@ -22,10 +20,10 @@ add_qt_plugin(strictModule
 )
 
 #### Keys ignored in scope 1:.:.:strictModule.pro:<TRUE>:
-# CONFIG = "plugin"
 # IMPORT_FILES = "qmldir"
 # TEMPLATE = "lib"
 
+qt_autogen_tools_initial_setup(strictModule)
 # special case begin
 file(COPY qmldir
     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/StrictModule"

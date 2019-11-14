@@ -4,8 +4,7 @@
 ## tst_typeimports Binary:
 #####################################################################
 
-add_qt_executable(tst_typeimports
-    GUI
+add_qt_benchmark(tst_typeimports
     SOURCES
         tst_typeimports.cpp
     DEFINES
@@ -17,11 +16,7 @@ add_qt_executable(tst_typeimports
 )
 
 #### Keys ignored in scope 1:.:.:typeimports.pro:<TRUE>:
-# CONFIG = "benchmark"
 # TEMPLATE = "app"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:typeimports.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

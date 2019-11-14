@@ -4,8 +4,7 @@
 ## tst_binding Binary:
 #####################################################################
 
-add_qt_executable(tst_binding
-    GUI
+add_qt_benchmark(tst_binding
     SOURCES
         testtypes.cpp testtypes.h
         tst_binding.cpp
@@ -18,11 +17,7 @@ add_qt_executable(tst_binding
 )
 
 #### Keys ignored in scope 1:.:.:binding.pro:<TRUE>:
-# CONFIG = "benchmark"
 # TEMPLATE = "app"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:binding.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

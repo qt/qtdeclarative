@@ -4,8 +4,7 @@
 ## tst_librarymetrics_performance Binary:
 #####################################################################
 
-add_qt_executable(tst_librarymetrics_performance
-    GUI
+add_qt_benchmark(tst_librarymetrics_performance
     SOURCES
         tst_librarymetrics_performance.cpp
     PUBLIC_LIBRARIES
@@ -17,20 +16,20 @@ add_qt_executable(tst_librarymetrics_performance
 )
 
 # Resources:
+set(qmake_immediate_resource_files
+    "data"
+)
+
 add_qt_resource(tst_librarymetrics_performance "qmake_immediate"
     PREFIX
         "/"
     FILES
-        data
+        ${qmake_immediate_resource_files}
 )
 
 
 #### Keys ignored in scope 1:.:.:librarymetrics_performance.pro:<TRUE>:
-# CONFIG = "benchmark" "release"
 # TEMPLATE = "app"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:librarymetrics_performance.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

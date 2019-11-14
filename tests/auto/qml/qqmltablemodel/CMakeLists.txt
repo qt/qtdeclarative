@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qqmltablemodel
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qqmltablemodel.cpp
@@ -30,9 +27,6 @@ add_qt_test(tst_qqmltablemodel
         Qt::Quick
     TESTDATA ${test_data}
 )
-
-#### Keys ignored in scope 1:.:.:qqmltablemodel.pro:<TRUE>:
-# CONFIG = "testcase"
 
 ## Scopes:
 #####################################################################

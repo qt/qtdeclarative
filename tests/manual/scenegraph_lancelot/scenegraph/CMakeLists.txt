@@ -4,6 +4,9 @@
 ## tst_scenegraph Test:
 #####################################################################
 
+# Collect test data
+list(APPEND test_data "../data")
+
 add_qt_test(tst_scenegraph
     OUTPUT_DIRECTORY ".."
     SOURCES
@@ -18,19 +21,17 @@ add_qt_test(tst_scenegraph
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Network
+    TESTDATA ${test_data}
 )
 
 #### Keys ignored in scope 1:.:.:scenegraph.pro:<TRUE>:
-# CONFIG = "testcase" "console"
+# TEST_HELPER_INSTALLS = ".././qmlscenegrabber"
 
 ## Scopes:
 #####################################################################
 
-#### Keys ignored in scope 2:.:.:scenegraph.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
-
 #### Keys ignored in scope 4:.:../../../../../qtbase/tests/baselineserver/shared:../../../../../qtbase/tests/baselineserver/shared/qbaselinetest.pri:WIN32:
-# MKSPEC = "$$replaceQMAKESPEC,\\\\,/"
+# MKSPEC = "$$replace(QMAKESPEC, \\\\, /)"
 
 #### Keys ignored in scope 5:.:../../../../../qtbase/tests/baselineserver/shared:../../../../../qtbase/tests/baselineserver/shared/qbaselinetest.pri:else:
 # MKSPEC = "$$QMAKESPEC"

@@ -4,8 +4,7 @@
 ## tst_qqmlchangeset Binary:
 #####################################################################
 
-add_qt_executable(tst_qqmlchangeset
-    GUI
+add_qt_benchmark(tst_qqmlchangeset
     SOURCES
         tst_qqmlchangeset.cpp
     DEFINES
@@ -20,11 +19,7 @@ add_qt_executable(tst_qqmlchangeset
 )
 
 #### Keys ignored in scope 1:.:.:qqmlchangeset.pro:<TRUE>:
-# CONFIG = "benchmark"
 # TEMPLATE = "app"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qqmlchangeset.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

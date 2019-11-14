@@ -4,8 +4,7 @@
 ## tst_bench_qjsvalue Binary:
 #####################################################################
 
-add_qt_executable(tst_bench_qjsvalue
-    GUI
+add_qt_benchmark(tst_bench_qjsvalue
     SOURCES
         tst_qjsvalue.cpp
     PUBLIC_LIBRARIES
@@ -15,11 +14,7 @@ add_qt_executable(tst_bench_qjsvalue
 )
 
 #### Keys ignored in scope 1:.:.:qjsvalue.pro:<TRUE>:
-# CONFIG = "benchmark"
 # TEMPLATE = "app"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qjsvalue.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

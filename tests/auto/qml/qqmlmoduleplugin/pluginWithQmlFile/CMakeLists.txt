@@ -1,14 +1,12 @@
 # Generated from pluginWithQmlFile.pro.
 
 #####################################################################
-## pluginWithQmlFile Plugin:
+## pluginWithQmlFile Generic Library:
 #####################################################################
 
-add_qt_plugin(pluginWithQmlFile
+add_cmake_library(pluginWithQmlFile
+    MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/AutoTestPluginWithQmlFile"
-# special case begin
-    TYPE qml_plugin
-# special case end
     SOURCES
         plugin.cpp
     LIBRARIES
@@ -22,10 +20,10 @@ add_qt_plugin(pluginWithQmlFile
 )
 
 #### Keys ignored in scope 1:.:.:pluginWithQmlFile.pro:<TRUE>:
-# CONFIG = "plugin"
 # IMPORT_FILES = "qmldir" "MyQmlFile.qml"
 # TEMPLATE = "lib"
 
+qt_autogen_tools_initial_setup(pluginWithQmlFile)
 # special case begin
 file(COPY qmldir MyQmlFile.qml
     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/AutoTestPluginWithQmlFile"

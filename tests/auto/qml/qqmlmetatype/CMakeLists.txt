@@ -5,15 +5,12 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qqmlmetatype
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qqmlmetatype.cpp
@@ -30,30 +27,32 @@ add_qt_test(tst_qqmlmetatype
 )
 
 # Resources:
+set(qmake_qmlfiles_resource_files
+    "data/CompositeType.qml"
+)
+
 add_qt_resource(tst_qqmlmetatype "qmake_qmlfiles"
     PREFIX
         "/tstqqmlmetatype"
     FILES
-        data/CompositeType.qml
+        ${qmake_qmlfiles_resource_files}
 )
+set(qmake_qmldirresource_resource_files
+    "data/Components/App.qml"
+    "data/Components/qmldir"
+    "data/enumsInRecursiveImport.qml"
+)
+
 add_qt_resource(tst_qqmlmetatype "qmake_qmldirresource"
     PREFIX
         "/"
     FILES
-        data/Components/App.qml
-        data/Components/qmldir
-        data/enumsInRecursiveImport.qml
+        ${qmake_qmldirresource_resource_files}
 )
 
 
-#### Keys ignored in scope 1:.:.:qqmlmetatype.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qqmlmetatype.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qqmlmetatype CONDITION ANDROID OR APPLE_IOS
     DEFINES

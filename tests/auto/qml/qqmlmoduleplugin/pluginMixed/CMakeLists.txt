@@ -1,14 +1,12 @@
 # Generated from pluginMixed.pro.
 
 #####################################################################
-## pluginMixed Plugin:
+## pluginMixed Generic Library:
 #####################################################################
 
-add_qt_plugin(pluginMixed
+add_cmake_library(pluginMixed
+    MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/AutoTestQmlMixedPluginType"
-# special case begin
-    TYPE qml_plugin
-# special case end
     SOURCES
         plugin.cpp
     LIBRARIES
@@ -22,10 +20,10 @@ add_qt_plugin(pluginMixed
 )
 
 #### Keys ignored in scope 1:.:.:pluginMixed.pro:<TRUE>:
-# CONFIG = "plugin"
 # IMPORT_FILES = "Foo.qml" "qmldir"
 # TEMPLATE = "lib"
 
+qt_autogen_tools_initial_setup(pluginMixed)
 # special case begin
 file(COPY qmldir Foo.qml
     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/AutoTestQmlMixedPluginType"

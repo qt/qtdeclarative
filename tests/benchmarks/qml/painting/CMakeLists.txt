@@ -4,7 +4,7 @@
 ## painting Binary:
 #####################################################################
 
-add_qt_executable(painting
+add_qt_benchmark(painting
     SOURCES
         paintbenchmark.cpp
     PUBLIC_LIBRARIES
@@ -13,10 +13,7 @@ add_qt_executable(painting
 )
 
 #### Keys ignored in scope 1:.:.:painting.pro:<TRUE>:
-# CONFIG = "console"
+# _REQUIREMENTS = "qtHaveModule(opengl)"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:painting.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

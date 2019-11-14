@@ -4,8 +4,7 @@
 ## tst_qquickwindow Binary:
 #####################################################################
 
-add_qt_executable(tst_qquickwindow
-    GUI
+add_qt_benchmark(tst_qquickwindow
     SOURCES
         tst_qquickwindow.cpp
     DEFINES
@@ -25,13 +24,9 @@ add_qt_executable(tst_qquickwindow
 )
 
 #### Keys ignored in scope 1:.:.:qquickwindow.pro:<TRUE>:
-# CONFIG = "benchmark"
 # DEPLOYMENT = "testDataFiles"
 # testDataFiles.files = "data"
 # testDataFiles.path = "."
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:qquickwindow.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"

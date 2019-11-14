@@ -4,8 +4,7 @@
 ## tst_qevents Binary:
 #####################################################################
 
-add_qt_executable(tst_qevents
-    GUI
+add_qt_benchmark(tst_qevents
     SOURCES
         ../../../auto/quick/shared/geometrytestutil.cpp ../../../auto/quick/shared/geometrytestutil.h
         ../../../auto/quick/shared/viewtestutil.cpp ../../../auto/quick/shared/viewtestutil.h
@@ -29,14 +28,10 @@ add_qt_executable(tst_qevents
 )
 
 #### Keys ignored in scope 1:.:.:events.pro:<TRUE>:
-# CONFIG = "benchmark"
 # TEMPLATE = "app"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:events.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qevents CONDITION ANDROID OR APPLE_IOS
     DEFINES

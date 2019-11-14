@@ -4,7 +4,7 @@
 ## httpserver Binary:
 #####################################################################
 
-add_qt_executable(httpserver
+add_qt_manual_test(httpserver
     SOURCES
         ../../auto/shared/testhttpserver.cpp ../../auto/shared/testhttpserver.h
         main.cpp
@@ -15,5 +15,4 @@ add_qt_executable(httpserver
 )
 
 #### Keys ignored in scope 1:.:.:httpserver.pro:<TRUE>:
-# CONFIG = "console" "-app_bundle"
 # TEMPLATE = "app"

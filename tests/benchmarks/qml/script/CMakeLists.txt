@@ -4,8 +4,7 @@
 ## tst_script Binary:
 #####################################################################
 
-add_qt_executable(tst_script
-    GUI
+add_qt_benchmark(tst_script
     SOURCES
         tst_script.cpp
     DEFINES
@@ -24,11 +23,7 @@ add_qt_executable(tst_script
 )
 
 #### Keys ignored in scope 1:.:.:script.pro:<TRUE>:
-# CONFIG = "benchmark" "release"
 # TEMPLATE = "app"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 2:.:.:script.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
