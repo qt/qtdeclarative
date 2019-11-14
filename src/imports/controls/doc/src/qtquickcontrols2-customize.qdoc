@@ -166,7 +166,8 @@
 
     By default, the styling system uses the Default style as a fallback for
     controls that aren't implemented. To customize or extend any other built-in
-    style, it is possible to specify a different fallback style using \l QQuickStyle.
+    style, it is possible to specify a different fallback style using
+    \l[QtQuickControls2]{QQuickStyle}.
 
     What this means is that you can implement as many controls as you like for
     your custom style, and place them almost anywhere. It also allows users to
@@ -175,7 +176,7 @@
     \section3 Previewing Custom Styles in Qt Quick Designer
 
     Using the approach above, it is possible to preview a custom style
-    in \l {Using Qt Quick Designer}{Qt Quick Designer}. In order to do so,
+    in Qt Quick Designer. In order to do so,
     ensure that the project has a
     \l {Qt Quick Controls Configuration File}{qtquickcontrols2.conf} file,
     and that the following entry exists:

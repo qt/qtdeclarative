@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ComboBox
     \inherits Control
-    \instantiates QQuickComboBox
+//!     \instantiates QQuickComboBox
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
@@ -1636,7 +1636,7 @@ QString QQuickComboBox::textAt(int index) const
 }
 
 /*!
-    \qmlmethod int QtQuick.Controls::ComboBox::find(string text, flags = Qt.MatchExactly)
+    \qmlmethod int QtQuick.Controls::ComboBox::find(string text, enumeration flags)
 
     Returns the index of the specified \a text, or \c -1 if no match is found.
 

@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype TabButton
     \inherits AbstractButton
-    \instantiates QQuickTabButton
+//!     \instantiates QQuickTabButton
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-navigation

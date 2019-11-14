@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype FileDialog
     \inherits Dialog
-    \instantiates QQuickPlatformFileDialog
+//!     \instantiates QQuickPlatformFileDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native file dialog.

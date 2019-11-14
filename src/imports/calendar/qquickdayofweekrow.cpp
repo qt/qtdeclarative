@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype DayOfWeekRow
     \inherits Control
-    \instantiates QQuickDayOfWeekRow
+//!     \instantiates QQuickDayOfWeekRow
     \inqmlmodule Qt.labs.calendar
     \brief A row of names for the days in a week.
 

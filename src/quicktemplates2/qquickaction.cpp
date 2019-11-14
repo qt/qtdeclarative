@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Action
     \inherits QtObject
-    \instantiates QQuickAction
+//!     \instantiates QQuickAction
     \inqmlmodule QtQuick.Controls
     \since 5.10
     \ingroup utilities
@@ -506,7 +506,7 @@ void QQuickAction::setShortcut(const QKeySequence &shortcut)
 #endif // QT_CONFIG(shortcut)
 
 /*!
-    \qmlmethod void QtQuick.Controls::Action::toggle(QtObject source = null)
+    \qmlmethod void QtQuick.Controls::Action::toggle(QtObject source)
 
     Toggles the action and emits \l toggled() if enabled, with an optional \a source object defined.
 */
@@ -523,7 +523,7 @@ void QQuickAction::toggle(QObject *source)
 }
 
 /*!
-    \qmlmethod void QtQuick.Controls::Action::trigger(QtObject source = null)
+    \qmlmethod void QtQuick.Controls::Action::trigger(QtObject source)
 
     Triggers the action and emits \l triggered() if enabled, with an optional \a source object defined.
 */

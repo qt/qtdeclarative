@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype RadioDelegate
     \inherits ItemDelegate
-    \instantiates QQuickRadioDelegate
+//!     \instantiates QQuickRadioDelegate
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-delegates

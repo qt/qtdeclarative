@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Dialog
     \inherits QtObject
-    \instantiates QQuickPlatformDialog
+//! \instantiates QQuickPlatformDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief The base class of native dialogs.

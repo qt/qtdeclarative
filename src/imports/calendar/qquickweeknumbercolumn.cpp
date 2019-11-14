@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype WeekNumberColumn
     \inherits Control
-    \instantiates QQuickWeekNumberColumn
+//!     \instantiates QQuickWeekNumberColumn
     \inqmlmodule Qt.labs.calendar
     \brief A column of week numbers.
 

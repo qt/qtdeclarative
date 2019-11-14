@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype SwipeDelegate
     \inherits ItemDelegate
-    \instantiates QQuickSwipeDelegate
+//!     \instantiates QQuickSwipeDelegate
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-delegates

@@ -50,12 +50,12 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype SplitView
     \inherits Control
-    \instantiates QQuickSplitView
+//!     \instantiates QQuickSplitView
     \inqmlmodule QtQuick.Controls
     \since 5.13
     \ingroup qtquickcontrols2-containers
     \ingroup qtquickcontrols2-focusscopes
-    \brief Lays out items with a draggable splitter between each item
+    \brief Lays out items with a draggable splitter between each item.
 
     SplitView is a control that lays out items horizontally or vertically with
     a draggable splitter between each item.
@@ -63,25 +63,25 @@ QT_BEGIN_NAMESPACE
     SplitView supports the following attached properties on items it manages:
 
     \list
-    \li \l SplitView.minimumWidth
-    \li \l SplitView.minimumHeight
-    \li \l SplitView.preferredWidth
-    \li \l SplitView.preferredHeight
-    \li \l SplitView.maximumWidth
-    \li \l SplitView.maximumHeight
-    \li \l SplitView.fillWidth (true for only one child)
-    \li \l SplitView.fillHeight (true for only one child)
+    \li \l{minimumWidth}{SplitView.minimumWidth}
+    \li \l{minimumHeight}{SplitView.minimumHeight}
+    \li \l{preferredWidth}{SplitView.preferredWidth}
+    \li \l{preferredHeight}{SplitView.preferredHeight}
+    \li \l{maximumWidth}{SplitView.maximumWidth}
+    \li \l{maximumHeight}{SplitView.maximumHeight}
+    \li \l{fillWidth}{SplitView.fillWidth} (true for only one child)
+    \li \l{fillHeight}{SplitView.fillHeight} (true for only one child)
     \endlist
 
     In addition, each handle has the following read-only attached properties:
 
     \list
-    \li \l SplitHandle.hovered
-    \li \l SplitHandle.pressed
+    \li \l{SplitHandle::hovered}{SplitHandle.hovered}
+    \li \l{SplitHandle::pressed}{SplitHandle.pressed}
     \endlist
 
     The preferred size of items in a SplitView can be specified via
-    \l {Item::}{implicitWidth} and \l {Item::}{implicitHeight} or
+    \l{Item::}{implicitWidth} and \l{Item::}{implicitHeight} or
     \c SplitView.preferredWidth and \c SplitView.preferredHeight:
 
     \code
@@ -1159,7 +1159,7 @@ bool QQuickSplitView::isResizing() const
     This property holds the handle component.
 
     An instance of this component will be instantiated \c {count - 1}
-    times, as long as \l count is greater than than \c {1}.
+    times, as long as \c count is greater than than \c {1}.
 
     The following table explains how each handle will be resized
     depending on the orientation of the split view:
@@ -1172,10 +1172,10 @@ bool QQuickSplitView::isResizing() const
         \row
             \li \c Qt.Horizontal
             \li \c implicitWidth
-            \li The \l height of the SplitView.
+            \li The \c height of the SplitView.
         \row
             \li \c Qt.Vertical
-            \li The \l width of the SplitView.
+            \li The \c width of the SplitView.
             \li \c implicitHeight
     \endtable
 
@@ -1615,7 +1615,7 @@ void QQuickSplitViewAttached::resetMinimumHeight()
     \l {Item::}{implicitWidth} will be used instead. To reset this property to
     its default value, set it to \c undefined.
 
-    \note Do not set the \l width property of a split item, as it will be
+    \note Do not set the \l{Item::}{width} property of a split item, as it will be
     overwritten upon each layout of the SplitView.
 
     \sa minimumWidth, maximumWidth, fillWidth, preferredHeight
@@ -1675,16 +1675,16 @@ void QQuickSplitViewAttached::resetPreferredWidth()
     This attached property controls the preferred height of the split item. The
     preferred height will be used as the size of the item, and will be bound
     within the \l minimumHeight and \l maximumHeight. If the preferred height
-    is not set, the item's \l {Item::}{implicitHeight} will be used.
+    is not set, the item's \l{Item::}{implicitHeight} will be used.
 
     When a split item is resized, the preferredHeight will be set in order
     to keep track of the new size.
 
     By default, this property is not set, and therefore
-    \l {Item::}{implicitHeight} will be used instead. To reset this property to
+    \l{Item::}{implicitHeight} will be used instead. To reset this property to
     its default value, set it to \c undefined.
 
-    \note Do not set the \l height property of a split item, as it will be
+    \note Do not set the \l{Item:}{height} property of a split item, as it will be
     overwritten upon each layout of the SplitView.
 
     \sa minimumHeight, maximumHeight, fillHeight, preferredWidth
@@ -1993,10 +1993,10 @@ QQuickSplitHandleAttached::QQuickSplitHandleAttached(QObject *parent)
 /*!
     \qmltype SplitHandle
     \inherits QtObject
-    \instantiates QQuickSplitHandleAttached
+//!     \instantiates QQuickSplitHandleAttached
     \inqmlmodule QtQuick.Controls
     \since 5.13
-    \brief Provides attached properties for SplitView handles
+    \brief Provides attached properties for SplitView handles.
 
     SplitHandle provides attached properties for \l SplitView handles.
 

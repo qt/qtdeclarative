@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype TabBar
     \inherits Container
-    \instantiates QQuickTabBar
+//!     \instantiates QQuickTabBar
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-navigation

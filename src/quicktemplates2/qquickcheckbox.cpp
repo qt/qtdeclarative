@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype CheckBox
     \inherits AbstractButton
-    \instantiates QQuickCheckBox
+//!     \instantiates QQuickCheckBox
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-buttons
