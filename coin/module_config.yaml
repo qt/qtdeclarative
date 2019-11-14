@@ -7,8 +7,7 @@ accept_configuration:
 build_instructions:
   - !include "{{qt/qtbase}}/prepare_building_env.yaml"
   - !include "{{qt/qtbase}}/cmake_module_build_instructions.yaml"
+  - !include "{{qt/qtbase}}/cmake_build_and_upload_test_artifacts.yaml"
 
 test_instructions:
-  - type: EnvironmentVariable
-    variableName: Dummy
-    variableValue: dummy
+  - !include "{{qt/qtbase}}/cmake_regular_test_instructions.yaml"
