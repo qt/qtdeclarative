@@ -120,7 +120,8 @@ public:
 
     bool isIdInCurrentScope(const QString &id) const;
     void addIdToAccessed(const QString &id, const QQmlJS::AST::SourceLocation &location);
-    void accessMember(const QString &name, const QQmlJS::AST::SourceLocation &location);
+    void accessMember(const QString &name, const QString &parentType,
+                      const QQmlJS::AST::SourceLocation &location);
     void resetMemberScope();
 
     bool isVisualRootScope() const;
@@ -172,6 +173,7 @@ private:
     struct FieldMemberList
     {
         QString m_name;
+        QString m_parentType;
         QQmlJS::AST::SourceLocation m_location;
         std::unique_ptr<FieldMemberList> m_child;
     };

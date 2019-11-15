@@ -900,11 +900,37 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::FieldMemberExpression *)
 
 void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMember)
 {
-    if (m_fieldMemberBase == fieldMember->base) {
+    using namespace QQmlJS::AST;
+    ExpressionNode *base = fieldMember->base;
+    while (auto *nested = cast<NestedExpression *>(base))
+        base = nested->expression;
+
+    if (m_fieldMemberBase == base) {
+        QString type;
+        if (auto *binary = cast<BinaryExpression *>(base)) {
+            if (binary->op == QSOperator::As) {
+                if (auto *right = cast<IdentifierExpression *>(binary->right))
+                    type = right->name.toString();
+            }
+        }
         m_currentScope->accessMember(fieldMember->name.toString(),
+                                     type,
                                      fieldMember->identifierToken);
         m_fieldMemberBase = fieldMember;
     } else {
         m_fieldMemberBase = nullptr;
     }
+}
+
+bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::BinaryExpression *)
+{
+    return true;
+}
+
+void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::BinaryExpression *binExp)
+{
+    if (binExp->op == QSOperator::As && m_fieldMemberBase == binExp->left)
+        m_fieldMemberBase = binExp;
+    else
+        m_fieldMemberBase = nullptr;
 }

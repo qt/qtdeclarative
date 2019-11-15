@@ -88,14 +88,15 @@ bool ScopeTree::isIdInCurrentScope(const QString &id) const
 }
 
 void ScopeTree::addIdToAccessed(const QString &id, const QQmlJS::AST::SourceLocation &location) {
-    m_currentFieldMember = new FieldMemberList {id, location, {}};
+    m_currentFieldMember = new FieldMemberList {id, QString(), location, {}};
     m_accessedIdentifiers.push_back(std::unique_ptr<FieldMemberList>(m_currentFieldMember));
 }
 
-void ScopeTree::accessMember(const QString &name, const QQmlJS::AST::SourceLocation &location)
+void ScopeTree::accessMember(const QString &name, const QString &parentType,
+                             const QQmlJS::AST::SourceLocation &location)
 {
     Q_ASSERT(m_currentFieldMember);
-    auto *fieldMember = new FieldMemberList {name, location, {}};
+    auto *fieldMember = new FieldMemberList {name, parentType, location, {}};
     m_currentFieldMember->m_child.reset(fieldMember);
     m_currentFieldMember = fieldMember;
 }
@@ -150,7 +151,9 @@ bool ScopeTree::checkMemberAccess(
 
     const auto scopeIt = scope->m_properties.find(access->m_name);
     if (scopeIt != scope->m_properties.end()) {
-        if (scopeIt->isList() || scopeIt->typeName() == QLatin1String("string")) {
+        const QString typeName = access->m_parentType.isEmpty() ? scopeIt->typeName()
+                                                                : access->m_parentType;
+        if (scopeIt->isList() || typeName == QLatin1String("string")) {
             if (access->m_child && access->m_child->m_name != QLatin1String("length")) {
                 colorOut.write("Warning: ", Warning);
                 colorOut.write(
@@ -166,8 +169,9 @@ bool ScopeTree::checkMemberAccess(
             }
             return true;
         }
-        const ScopeTree *type = scopeIt->type() ? scopeIt->type()
-                                                : types.value(scopeIt->typeName()).get();
+        const ScopeTree *type = (scopeIt->type() && access->m_parentType.isEmpty())
+                ? scopeIt->type()
+                : types.value(typeName).get();
         return checkMemberAccess(code, access.get(), type, types, colorOut);
     }
 
@@ -199,7 +203,9 @@ bool ScopeTree::checkMemberAccess(
     while (type) {
         const auto typeIt = type->m_properties.find(access->m_name);
         if (typeIt != type->m_properties.end()) {
-            const auto propType = typeIt->type();
+            const ScopeTree *propType = access->m_parentType.isEmpty()
+                    ? typeIt->type()
+                    : types.value(access->m_parentType).get();
             return checkMemberAccess(code, access.get(),
                                      propType ? propType : types.value(typeIt->typeName()).get(),
                                      types, colorOut);

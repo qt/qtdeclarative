@@ -161,6 +161,9 @@ private:
     bool visit(QQmlJS::AST::PatternElement *) override;
     bool visit(QQmlJS::AST::FieldMemberExpression *idprop) override;
     void endVisit(QQmlJS::AST::FieldMemberExpression *) override;
+
+    bool visit(QQmlJS::AST::BinaryExpression *) override;
+    void endVisit(QQmlJS::AST::BinaryExpression *) override;
 };
 
 #endif // FINDUNQUALIFIED_H
