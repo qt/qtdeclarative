@@ -60,7 +60,7 @@
     \section1 Behaviors
 
     \e Behaviors uses behaviors to move a rectangle to where you click.
-    \snippet animation/behaviors/behavior-example.qml 0
+    \snippet animation/behaviors/FocusRect.qml 0
 
     \section1 Wiggly Text
 
