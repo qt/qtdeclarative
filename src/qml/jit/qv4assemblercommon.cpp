@@ -146,7 +146,7 @@ void PlatformAssemblerCommon::link(Function *function, const char *jitKind)
         // We use debugAddress here because it's actually for debugging and hidden behind an
         // environment variable.
         const QByteArray name = Function::prettyName(function, linkBuffer.debugAddress()).toUtf8();
-        codeRef = linkBuffer.finalizeCodeWithDisassembly(jitKind, "function %s", name.constData());
+        codeRef = linkBuffer.finalizeCodeWithDisassembly(jitKind, name.constData());
 
         WTF::setDataFile(stderr);
         printDisassembledOutputWithCalls(buf.data(), functions);
