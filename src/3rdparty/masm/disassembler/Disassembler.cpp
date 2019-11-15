@@ -36,7 +36,7 @@ void disassemble(const MacroAssemblerCodePtr& codePtr, size_t size, const char* 
     if (tryToDisassemble(codePtr, size, prefix, out))
         return;
     
-    out.printf("%sdisassembly not available for range %p...%p\n", prefix, codePtr.executableAddress(), static_cast<char*>(codePtr.executableAddress()) + size);
+    out.printf("%sdisassembly not available for range %p...%p", prefix, codePtr.executableAddress(), static_cast<char*>(codePtr.executableAddress()) + size);
 }
 
 } // namespace JSC
