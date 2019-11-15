@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,70 +48,49 @@
 **
 ****************************************************************************/
 
-import QtQml 2.14
 import QtQuick 2.14
-import QtQml.Models 2.14
 
-GridView {
-    id: root
-    width: 320; height: 480
-    cellWidth: 80; cellHeight: 80
+Rectangle {
+    id: icon
+    required property Item dragParent
 
-    displaced: Transition {
-        NumberAnimation { properties: "x,y"; easing.type: Easing.OutQuad }
+    property int visualIndex: 0
+    width: 72
+    height: 72
+    anchors {
+        horizontalCenter: parent.horizontalCenter
+        verticalCenter: parent.verticalCenter
+    }
+    radius: 3
+
+    Text {
+        anchors.centerIn: parent
+        color: "white"
+        text: parent.visualIndex
     }
 
-//! [0]
-    model: DelegateModel {
-//! [0]
-        id: visualModel
-        model: ListModel {
-            id: colorModel
-            ListElement { color: "blue" }
-            ListElement { color: "green" }
-            ListElement { color: "red" }
-            ListElement { color: "yellow" }
-            ListElement { color: "orange" }
-            ListElement { color: "purple" }
-            ListElement { color: "cyan" }
-            ListElement { color: "magenta" }
-            ListElement { color: "chartreuse" }
-            ListElement { color: "aquamarine" }
-            ListElement { color: "indigo" }
-            ListElement { color: "black" }
-            ListElement { color: "lightsteelblue" }
-            ListElement { color: "violet" }
-            ListElement { color: "grey" }
-            ListElement { color: "springgreen" }
-            ListElement { color: "salmon" }
-            ListElement { color: "blanchedalmond" }
-            ListElement { color: "forestgreen" }
-            ListElement { color: "pink" }
-            ListElement { color: "navy" }
-            ListElement { color: "goldenrod" }
-            ListElement { color: "crimson" }
-            ListElement { color: "teal" }
-        }
-//! [1]
-        delegate: DropArea {
-            id: delegateRoot
-            required property color color;
-
-            width: 80; height: 80
-
-            onEntered: function(drag) {
-                visualModel.items.move((drag.source as Icon).visualIndex, icon.visualIndex)
-            }
-
-            property int visualIndex: DelegateModel.itemsIndex
-
-            Icon {
-                id: icon
-                dragParent: root
-                visualIndex: delegateRoot.visualIndex
-                color: delegateRoot.color
-            }
-        }
-//! [1]
+    DragHandler {
+        id: dragHandler
     }
+
+    Drag.active: dragHandler.active
+    Drag.source: icon
+    Drag.hotSpot.x: 36
+    Drag.hotSpot.y: 36
+
+    states: [
+        State {
+            when: dragHandler.active
+            ParentChange {
+                target: icon
+                parent: icon.dragParent
+            }
+
+            AnchorChanges {
+                target: icon
+                anchors.horizontalCenter: undefined
+                anchors.verticalCenter: undefined
+            }
+        }
+    ]
 }
