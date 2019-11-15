@@ -230,6 +230,16 @@ bool ScopeTree::checkMemberAccess(
         type = types.value(type->superclassName());
     }
 
+    if (access->m_name.front().isUpper() && scope->scopeType() == ScopeType::QMLScope) {
+        // may be an attached type
+        const auto it = types.find(access->m_name);
+        if (it != types.end() && !(*it)->attachedTypeName().isEmpty()) {
+            const auto attached = types.find((*it)->attachedTypeName());
+            if (attached != types.end())
+                return checkMemberAccess(code, access.get(), attached->get(), types, colorOut);
+        }
+    }
+
     colorOut.write("Warning: ", Warning);
     colorOut.write(QString::fromLatin1(
                            "Property \"%1\" not found on type \"%2\" at %3:%4\n")

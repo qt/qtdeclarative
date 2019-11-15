@@ -191,6 +191,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("goodAlias")                 << QStringLiteral("goodAlias.qml");
     QTest::newRow("goodParent")                << QStringLiteral("goodParent.qml");
     QTest::newRow("goodTypeAssertion")         << QStringLiteral("goodTypeAssertion.qml");
+    QTest::newRow("AttachedProps")             << QStringLiteral("AttachedProps.qml");
 }
 
 void TestQmllint::cleanQmlCode()
