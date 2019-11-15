@@ -1497,7 +1497,9 @@ bool Codegen::visit(BinaryExpression *ast)
 
         break;
     }
-
+    case QSOperator::As:
+        setExprResult(left);
+        break;
     } // switch
 
     return false;

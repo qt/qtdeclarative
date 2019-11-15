@@ -2513,6 +2513,20 @@ RelationalExpression_In: RelationalExpression_In T_IN ShiftExpression;
     } break;
 ./
 
+TypeAssertExpression_In: RelationalExpression_In T_AS Type;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+TypeAssertExpression: RelationalExpression T_AS Type;
+/.
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::As, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+RelationalExpression_In: TypeAssertExpression_In;
+RelationalExpression: TypeAssertExpression;
+
 EqualityExpression_In: RelationalExpression_In;
 EqualityExpression: RelationalExpression;
 

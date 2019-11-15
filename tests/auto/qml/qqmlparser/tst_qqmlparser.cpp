@@ -63,6 +63,8 @@ private slots:
     void disallowedTypeAnnotations_data();
     void disallowedTypeAnnotations();
     void semicolonPartOfExpressionStatement();
+    void typeAssertion_data();
+    void typeAssertion();
 
 private:
     QStringList excludedDirs;
@@ -477,6 +479,46 @@ void tst_qqmlparser::semicolonPartOfExpressionStatement()
 
     QCOMPARE(observer.expressionsSeen, 4);
     QVERIFY(observer.endsWithSemicolon);
+}
+
+void tst_qqmlparser::typeAssertion_data()
+{
+    QTest::addColumn<QString>("expression");
+    QTest::addRow("as A")
+            << QString::fromLatin1("A { onStuff: (b as A).happen() }");
+    QTest::addRow("as double paren")
+            << QString::fromLatin1("A { onStuff: console.log((12 as double)); }");
+    QTest::addRow("as double noparen")
+            << QString::fromLatin1("A { onStuff: console.log(12 as double); }");
+    QTest::addRow("property as double")
+            << QString::fromLatin1("A { prop: (12 as double); }");
+    QTest::addRow("property noparen as double")
+            << QString::fromLatin1("A { prop: 12 as double; }");
+
+    // rabbits cannot be discerned from types on a syntactical level.
+    // We could detect this on a semantical level, once we implement type assertions there.
+
+    QTest::addRow("as rabbit")
+            << QString::fromLatin1("A { onStuff: (b as rabbit).happen() }");
+    QTest::addRow("as rabbit paren")
+            << QString::fromLatin1("A { onStuff: console.log((12 as rabbit)); }");
+    QTest::addRow("as rabbit noparen")
+            << QString::fromLatin1("A { onStuff: console.log(12 as rabbit); }");
+    QTest::addRow("property as rabbit")
+            << QString::fromLatin1("A { prop: (12 as rabbit); }");
+    QTest::addRow("property noparen as rabbit")
+            << QString::fromLatin1("A { prop: 12 as rabbit; }");
+}
+
+void tst_qqmlparser::typeAssertion()
+{
+    QFETCH(QString, expression);
+
+    QQmlJS::Engine engine;
+    QQmlJS::Lexer lexer(&engine);
+    lexer.setCode(expression, 1);
+    QQmlJS::Parser parser(&engine);
+    QVERIFY(parser.parse());
 }
 
 QTEST_MAIN(tst_qqmlparser)

@@ -104,6 +104,7 @@ enum Op {
     URShift,
     InplaceURightShift,
     InplaceXor,
+    As,
     Invalid
 };
 
