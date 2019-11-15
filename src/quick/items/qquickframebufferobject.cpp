@@ -83,6 +83,11 @@ public:
  * Everything that relates to rendering must be located in the
  * QQuickFramebufferObject::Renderer class.
  *
+ * \warning This class is only functional when Qt Quick is rendering
+ * via OpenGL, either directly or through the \l{Scene Graph
+ * Adaptations}{RHI-based rendering path}.  It is not compatible with
+ * other RHI backends, such as, Vulkan or Metal.
+ *
  * To avoid race conditions and read/write issues from two threads
  * it is important that the renderer and the item never read or
  * write shared variables. Communication between the item and the renderer
@@ -108,10 +113,6 @@ public:
  * \l{QSGTextureProvider}{texture provider}
  * and can be used directly in \l {ShaderEffect}{ShaderEffects} and other
  * classes that consume texture providers.
- *
- * \warning This class is only suitable when working directly with OpenGL. It
- * is not compatible with the \l{Scene Graph Adaptations}{RHI-based rendering
- * path}.
  *
  * \sa {Scene Graph - Rendering FBOs}, {Scene Graph and Rendering}
  */
@@ -233,6 +234,13 @@ public Q_SLOTS:
     {
         if (renderPending) {
             renderPending = false;
+
+            const bool needsWrap = QSGRendererInterface::isApiRhiBased(window->rendererInterface()->graphicsApi());
+            if (needsWrap) {
+                window->beginExternalCommands();
+                window->resetOpenGLState();
+            }
+
             fbo->bind();
             QOpenGLContext::currentContext()->functions()->glViewport(0, 0, fbo->width(), fbo->height());
             renderer->render();
@@ -240,6 +248,9 @@ public Q_SLOTS:
 
             if (msDisplayFbo)
                 QOpenGLFramebufferObject::blitFramebuffer(msDisplayFbo, fbo);
+
+            if (needsWrap)
+                window->endExternalCommands();
 
             markDirty(QSGNode::DirtyMaterial);
             emit textureChanged();
@@ -270,7 +281,8 @@ public:
 static inline bool isOpenGL(QSGRenderContext *rc)
 {
     QSGRendererInterface *rif = rc->sceneGraphContext()->rendererInterface(rc);
-    return !rif || rif->graphicsApi() == QSGRendererInterface::OpenGL;
+    return rif && (rif->graphicsApi() == QSGRendererInterface::OpenGL
+                   || rif->graphicsApi() == QSGRendererInterface::OpenGLRhi);
 }
 
 /*!
@@ -335,9 +347,11 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
             displayTexture = n->msDisplayFbo->texture();
         }
 
-        n->setTexture(window()->createTextureFromId(displayTexture,
-                                                    n->fbo->size(),
-                                                    QQuickWindow::TextureHasAlphaChannel));
+        QSGTexture *wrapper = window()->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture,
+                                                                      &displayTexture, 0,
+                                                                      n->fbo->size(),
+                                                                      QQuickWindow::TextureHasAlphaChannel);
+        n->setTexture(wrapper);
     }
 
     n->setTextureCoordinatesTransform(d->mirrorVertically ? QSGSimpleTextureNode::MirrorVertically : QSGSimpleTextureNode::NoTransform);

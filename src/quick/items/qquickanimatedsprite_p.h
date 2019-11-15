@@ -92,6 +92,7 @@ class Q_AUTOTEST_EXPORT QQuickAnimatedSprite : public QQuickItem
     Q_PROPERTY(int loops READ loops WRITE setLoops NOTIFY loopsChanged)
     Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
     Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY currentFrameChanged)
+    Q_PROPERTY(FinishBehavior finishBehavior READ finishBehavior WRITE setFinishBehavior NOTIFY finishBehaviorChanged REVISION 15)
     QML_NAMED_ELEMENT(AnimatedSprite)
 
 public:
@@ -100,6 +101,12 @@ public:
         Infinite = -1
     };
     Q_ENUM(LoopParameters)
+
+    enum FinishBehavior {
+        FinishAtInitialFrame,
+        FinishAtFinalFrame
+    };
+    Q_ENUM(FinishBehavior)
 
     bool running() const;
     bool interpolate() const;
@@ -116,6 +123,7 @@ public:
     int loops() const;
     bool paused() const;
     int currentFrame() const;
+    FinishBehavior finishBehavior() const;
 
 Q_SIGNALS:
 
@@ -135,6 +143,7 @@ Q_SIGNALS:
     void frameDurationChanged(int arg);
     void loopsChanged(int arg);
     void currentFrameChanged(int arg);
+    Q_REVISION(15) void finishBehaviorChanged(FinishBehavior arg);
 
     Q_REVISION(12) void finished();
 
@@ -163,7 +172,7 @@ public Q_SLOTS:
     void resetFrameDuration();
     void setLoops(int arg);
     void setCurrentFrame(int arg);
-
+    void setFinishBehavior(FinishBehavior arg);
 
 private Q_SLOTS:
     void createEngine();

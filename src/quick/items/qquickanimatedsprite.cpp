@@ -263,6 +263,19 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty enumeration QtQuick::AnimatedSprite::finishBehavior
+
+    The behavior when the animation finishes on its own.
+
+    \value FinishAtInitialFrame
+    When the animation finishes it returns to the initial frame.
+    This is the default behavior.
+
+    \value FinishAtFinalFrame
+    When the animation finishes it stays on the final frame.
+*/
+
+/*!
     \qmlmethod int QtQuick::AnimatedSprite::restart()
 
     Stops, then starts the sprite animation.
@@ -379,6 +392,12 @@ int QQuickAnimatedSprite::currentFrame() const
 {
     Q_D(const QQuickAnimatedSprite);
     return d->m_curFrame;
+}
+
+QQuickAnimatedSprite::FinishBehavior QQuickAnimatedSprite::finishBehavior() const
+{
+    Q_D(const QQuickAnimatedSprite);
+    return d->m_finishBehavior;
 }
 
 bool QQuickAnimatedSprite::isCurrentFrameChangedConnected()
@@ -704,6 +723,16 @@ void QQuickAnimatedSprite::setCurrentFrame(int arg) //TODO-C: Probably only work
     }
 }
 
+void QQuickAnimatedSprite::setFinishBehavior(FinishBehavior arg)
+{
+    Q_D(QQuickAnimatedSprite);
+
+    if (d->m_finishBehavior != arg) {
+        d->m_finishBehavior = arg;
+        Q_EMIT finishBehaviorChanged(arg);
+    }
+}
+
 void QQuickAnimatedSprite::createEngine()
 {
     Q_D(QQuickAnimatedSprite);
@@ -838,7 +867,11 @@ void QQuickAnimatedSprite::prepareNextFrame(QSGSpriteNode *node)
             progress = 0;
         }
         if (d->m_loops > 0 && d->m_curLoop >= d->m_loops) {
-            frameAt = 0;
+            if (d->m_finishBehavior == FinishAtInitialFrame)
+                frameAt = 0;
+            else
+                frameAt = frameCount() - 1;
+            d->m_curFrame = frameAt;
             d->m_running = false;
             emit runningChanged(false);
             emit finished();

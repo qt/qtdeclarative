@@ -4735,8 +4735,7 @@ void QQuickWindow::setDefaultAlphaBuffer(bool useAlpha)
     adaptation.
 
     \note This function has no effect when running on the RHI graphics
-    abstraction. With the RHI, the functions to call when enqueuing native
-    graphics commands are beginExternalCommands() and endExternalCommands().
+    abstraction and the underlying RHI backend is not OpenGL.
 
     \sa QQuickWindow::beforeRendering(), beginExternalCommands(), endExternalCommands()
  */
@@ -4744,7 +4743,7 @@ void QQuickWindow::resetOpenGLState()
 {
     Q_D(QQuickWindow);
 
-    if (d->rhi || !openglContext())
+    if (!openglContext())
         return;
 
     QOpenGLContext *ctx = openglContext();
@@ -4859,7 +4858,13 @@ const QQuickWindow::GraphicsStateInfo &QQuickWindow::graphicsStateInfo()
     directly and the RHI graphics abstraction layer is not in use. Refer to
     resetOpenGLState() in that case.
 
-    \sa endExternalCommands()
+    \note When the scenegraph is using the RHI graphics abstraction layer with
+    the OpenGL backend underneath, pay attention to the fact that the OpenGL
+    state in the context can have arbitrary settings, and this function does not
+    perform any resetting of the state back to defaults. Call
+    resetOpenGLState() if that is seen necessary.
+
+    \sa endExternalCommands(), resetOpenGLState()
 
     \since 5.14
  */

@@ -57,10 +57,9 @@ QT_REQUIRE_CONFIG(quick_sprite);
 
 #include "qquickitem_p.h"
 #include "qquicksprite_p.h"
+#include "qquickanimatedsprite_p.h"
 
 QT_BEGIN_NAMESPACE
-
-class QQuickAnimatedSprite;
 
 class QQuickAnimatedSpritePrivate : public QQuickItemPrivate
 {
@@ -78,6 +77,7 @@ public:
         , m_loops(-1)
         , m_curLoop(0)
         , m_pauseOffset(0)
+        , m_finishBehavior(QQuickAnimatedSprite::FinishAtInitialFrame)
     {
     }
 
@@ -93,6 +93,7 @@ public:
     int m_loops;
     int m_curLoop;
     int m_pauseOffset;
+    QQuickAnimatedSprite::FinishBehavior m_finishBehavior;
 };
 
 QT_END_NAMESPACE
