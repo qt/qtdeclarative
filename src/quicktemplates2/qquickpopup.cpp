@@ -2411,6 +2411,13 @@ void QQuickPopup::componentComplete()
 
     d->complete = true;
     d->popupItem->componentComplete();
+
+    if (isVisible()) {
+        if (d->closePolicy & QQuickPopup::CloseOnEscape)
+            d->popupItem->grabShortcut();
+        else
+            d->popupItem->ungrabShortcut();
+    }
 }
 
 bool QQuickPopup::isComponentComplete() const
