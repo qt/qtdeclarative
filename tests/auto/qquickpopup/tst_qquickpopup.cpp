@@ -72,6 +72,7 @@ private slots:
     void activeFocusOnClose1();
     void activeFocusOnClose2();
     void activeFocusOnClose3();
+    void activeFocusOnClosingSeveralPopups();
     void hover_data();
     void hover();
     void wheel_data();
@@ -664,6 +665,54 @@ void tst_QQuickPopup::activeFocusOnClose3()
     QVERIFY(!popup1->isVisible());
     QVERIFY(popup2->isVisible());
     QTRY_VERIFY(popup2->hasActiveFocus());
+}
+
+void tst_QQuickPopup::activeFocusOnClosingSeveralPopups()
+{
+    // Test that active focus isn't lost when multiple popup closing simultaneously
+    QQuickApplicationHelper helper(this, QStringLiteral("activeFocusOnClosingSeveralPopups.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickItem *button = window->property("button").value<QQuickItem *>();
+    QVERIFY(button);
+
+    QQuickPopup *popup1 = window->property("popup1").value<QQuickPopup *>();
+    QVERIFY(popup1);
+
+    QQuickPopup *popup2 = window->property("popup2").value<QQuickPopup *>();
+    QVERIFY(popup2);
+
+    QCOMPARE(button->hasActiveFocus(), true);
+    popup1->open();
+    QTRY_VERIFY(popup1->isOpened());
+    QVERIFY(popup1->hasActiveFocus());
+    popup2->open();
+    QTRY_VERIFY(popup2->isOpened());
+    QVERIFY(popup2->hasActiveFocus());
+    QTRY_COMPARE(button->hasActiveFocus(), false);
+    // close the unfocused popup first
+    popup1->close();
+    popup2->close();
+    QTRY_VERIFY(!popup1->isVisible());
+    QTRY_VERIFY(!popup2->isVisible());
+    QTRY_COMPARE(button->hasActiveFocus(), true);
+
+    popup1->open();
+    QTRY_VERIFY(popup1->isOpened());
+    QVERIFY(popup1->hasActiveFocus());
+    popup2->open();
+    QTRY_VERIFY(popup2->isOpened());
+    QVERIFY(popup2->hasActiveFocus());
+    QTRY_COMPARE(button->hasActiveFocus(), false);
+    // close the focused popup first
+    popup2->close();
+    popup1->close();
+    QTRY_VERIFY(!popup1->isVisible());
+    QTRY_VERIFY(!popup2->isVisible());
+    QTRY_COMPARE(button->hasActiveFocus(), true);
 }
 
 void tst_QQuickPopup::hover_data()
