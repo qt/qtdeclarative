@@ -5,14 +5,16 @@ CONFIG += no_import_scan
 
 QTPLUGIN.platforms = qminimal
 
+INCLUDEPATH += ../shared
+
 SOURCES += \
     main.cpp \
-    qmlstreamwriter.cpp \
-    qmltypereader.cpp
+    qmltypereader.cpp \
+    ../shared/qmlstreamwriter.cpp
 
 HEADERS += \
-    qmlstreamwriter.h \
-    qmltypereader.h
+    qmltypereader.h \
+    ../shared/qmlstreamwriter.h
 
 macx {
     # Prevent qmlplugindump from popping up in the dock when launched.

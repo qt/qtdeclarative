@@ -96,8 +96,12 @@ struct QQmlMetaTypeData
         QHashedString uri;
         int majorVersion;
     };
+
     typedef QHash<VersionedUri, QQmlTypeModule *> TypeModules;
     TypeModules uriToModule;
+
+    QHash<VersionedUri, void (*)()> moduleTypeRegistrationFunctions;
+    bool registerModuleTypes(const VersionedUri &versionedUri);
 
     QBitArray objects;
     QBitArray interfaces;

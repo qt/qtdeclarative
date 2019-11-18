@@ -76,9 +76,6 @@ class Q_QUICK_EXPORT QQuickWindow : public QWindow
     Q_PROPERTY(QQuickItem* contentItem READ contentItem CONSTANT)
     Q_PROPERTY(QQuickItem* activeFocusItem READ activeFocusItem NOTIFY activeFocusItemChanged REVISION 1)
     Q_CLASSINFO("DefaultProperty", "data")
-    QML_NAMED_ELEMENT(Window)
-    QML_ADDED_IN_MINOR_VERSION(0)
-    QML_REMOVED_IN_MINOR_VERSION(1)
     Q_DECLARE_PRIVATE(QQuickWindow)
 public:
     enum CreateTextureOption {

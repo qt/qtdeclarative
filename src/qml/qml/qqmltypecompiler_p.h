@@ -129,6 +129,8 @@ public:
         return resolvedTypes->value(id);
     }
 
+    QQmlMetaType::CompositeMetaTypeIds typeIds() const;
+
 private:
     QList<QQmlError> errors;
     QQmlEnginePrivate *engine;

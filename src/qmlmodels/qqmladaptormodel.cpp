@@ -459,6 +459,11 @@ public:
 
     QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const override
     {
+        if (!metaObject) {
+            VDMAbstractItemModelDataType *dataType = const_cast<VDMAbstractItemModelDataType *>(this);
+            dataType->initializeMetaType(model);
+        }
+
         QHash<QByteArray, int>::const_iterator it = roleNames.find(role.toUtf8());
         if (it != roleNames.end()) {
             return model.aim()->index(model.rowAt(index), model.columnAt(index), model.rootIndex).data(*it);
@@ -505,7 +510,7 @@ public:
         return new QQmlDMAbstractItemModelData(metaType, dataType, index, row, column);
     }
 
-    void initializeMetaType(QQmlAdaptorModel &model)
+    void initializeMetaType(const QQmlAdaptorModel &model)
     {
         QMetaObjectBuilder builder;
         setModelDataType<QQmlDMAbstractItemModelData>(&builder, this);

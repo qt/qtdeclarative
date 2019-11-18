@@ -267,6 +267,23 @@ void QQmlMetaType::clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
     }
 }
 
+void QQmlMetaType::qmlInsertModuleRegistration(const QString &uri, int majorVersion,
+                                               void (*registerFunction)())
+{
+    const QQmlMetaTypeData::VersionedUri versionedUri(uri, majorVersion);
+    QQmlMetaTypeDataPtr data;
+    if (data->moduleTypeRegistrationFunctions.contains(versionedUri))
+        qFatal("Canot add multiple registrations for %s %d", qPrintable(uri), majorVersion);
+    else
+        data->moduleTypeRegistrationFunctions.insert(versionedUri, registerFunction);
+}
+
+bool QQmlMetaType::qmlRegisterModuleTypes(const QString &uri, int majorVersion)
+{
+    QQmlMetaTypeDataPtr data;
+    return data->registerModuleTypes(QQmlMetaTypeData::VersionedUri(uri, majorVersion));
+}
+
 void QQmlMetaType::clearTypeRegistrations()
 {
     //Only cleans global static, assumed no running engine
@@ -501,12 +518,10 @@ QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterComposit
     return QQmlType(priv);
 }
 
-void QQmlMetaType::registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
+QQmlMetaType::CompositeMetaTypeIds QQmlMetaType::registerInternalCompositeType(const QByteArray &className)
 {
-    QByteArray name = compilationUnit->rootPropertyCache()->className();
-
-    QByteArray ptr = name + '*';
-    QByteArray lst = "QQmlListProperty<" + name + '>';
+    QByteArray ptr = className + '*';
+    QByteArray lst = "QQmlListProperty<" + className + '>';
 
     int ptr_type = QMetaType::registerNormalizedType(ptr,
                                                      QtMetaTypePrivate::QMetaTypeFunctionHelper<QObject*>::Destruct,
@@ -521,23 +536,19 @@ void QQmlMetaType::registerInternalCompositeType(QV4::ExecutableCompilationUnit 
                                                      static_cast<QFlags<QMetaType::TypeFlag> >(QtPrivate::QMetaTypeTypeFlags<QQmlListProperty<QObject> >::Flags),
                                                      static_cast<QMetaObject*>(nullptr));
 
-    compilationUnit->metaTypeId = ptr_type;
-    compilationUnit->listMetaTypeId = lst_type;
-
     QQmlMetaTypeDataPtr data;
     data->qmlLists.insert(lst_type, ptr_type);
+
+    return {ptr_type, lst_type};
 }
 
-void QQmlMetaType::unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
+void QQmlMetaType::unregisterInternalCompositeType(const QQmlMetaType::CompositeMetaTypeIds &typeIds)
 {
-    int ptr_type = compilationUnit->metaTypeId;
-    int lst_type = compilationUnit->listMetaTypeId;
-
     QQmlMetaTypeDataPtr data;
-    data->qmlLists.remove(lst_type);
+    data->qmlLists.remove(typeIds.listId);
 
-    QMetaType::unregisterType(ptr_type);
-    QMetaType::unregisterType(lst_type);
+    QMetaType::unregisterType(typeIds.id);
+    QMetaType::unregisterType(typeIds.listId);
 }
 
 int QQmlMetaType::registerUnitCacheHook(
@@ -633,17 +644,6 @@ bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePat
                                        const QString &uri, const QString &typeNamespace, int vmaj,
                                        QList<QQmlError> *errors)
 {
-    QQmlTypesExtensionInterface *iface = qobject_cast<QQmlTypesExtensionInterface *>(instance);
-    if (!iface) {
-        if (errors) {
-            QQmlError error;
-            error.setDescription(QStringLiteral("Module loaded for URI '%1' does not implement "
-                                                "QQmlTypesExtensionInterface").arg(typeNamespace));
-            errors->prepend(error);
-        }
-        return false;
-    }
-
     if (!typeNamespace.isEmpty() && typeNamespace != uri) {
         // This is an 'identified' module
         // The namespace for type registrations must match the URI for locating the module
@@ -681,26 +681,42 @@ bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePat
                                    "it cannot be protected from external registrations.").arg(uri));
         }
 
-        if (auto *plugin = qobject_cast<QQmlExtensionPlugin *>(instance)) {
-        // basepath should point to the directory of the module, not the plugin file itself:
-        QQmlExtensionPluginPrivate::get(plugin)->baseUrl
-                = QQmlImports::urlFromLocalFileOrQrcOrUrl(basePath);
-        }
-
-        const QByteArray bytes = uri.toUtf8();
-        const char *moduleId = bytes.constData();
-        iface->registerTypes(moduleId);
-    }
-
-    if (!failures.isEmpty()) {
-        if (errors) {
-            for (const QString &failure : qAsConst(failures)) {
-                QQmlError error;
-                error.setDescription(failure);
-                errors->prepend(error);
+        if (!qobject_cast<QQmlEngineExtensionInterface *>(instance)) {
+            QQmlTypesExtensionInterface *iface = qobject_cast<QQmlTypesExtensionInterface *>(instance);
+            if (!iface) {
+                if (errors) {
+                    QQmlError error;
+                    // Also does not implement QQmlTypesExtensionInterface, but we want to discourage that.
+                    error.setDescription(QStringLiteral("Module loaded for URI '%1' does not implement "
+                                                        "QQmlEngineExtensionInterface").arg(typeNamespace));
+                    errors->prepend(error);
+                }
+                return false;
             }
+
+            if (auto *plugin = qobject_cast<QQmlExtensionPlugin *>(instance)) {
+                // basepath should point to the directory of the module, not the plugin file itself:
+                QQmlExtensionPluginPrivate::get(plugin)->baseUrl
+                        = QQmlImports::urlFromLocalFileOrQrcOrUrl(basePath);
+            }
+
+            const QByteArray bytes = uri.toUtf8();
+            const char *moduleId = bytes.constData();
+            iface->registerTypes(moduleId);
         }
-        return false;
+
+        data->registerModuleTypes(QQmlMetaTypeData::VersionedUri(uri, vmaj));
+
+        if (!failures.isEmpty()) {
+            if (errors) {
+                for (const QString &failure : qAsConst(failures)) {
+                    QQmlError error;
+                    error.setDescription(failure);
+                    errors->prepend(error);
+                }
+            }
+            return false;
+        }
     }
 
     return true;

@@ -114,7 +114,7 @@ public:
                      int *vmajor, int *vminor, QQmlType* type_return,
                      QString *base = nullptr, QList<QQmlError> *errors = nullptr,
                      QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,
-                     QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion);
+                     bool *typeRecursionDeteced = nullptr);
 
     // Prefix when used as a qualified import.  Otherwise empty.
     QHashedString prefix;
@@ -142,8 +142,7 @@ public:
                      QQmlImportNamespace **ns_return,
                      QList<QQmlError> *errors = nullptr,
                      QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,
-                     QQmlImport::RecursionRestriction recursionRestriction
-                     = QQmlImport::PreventRecursion) const;
+                     bool *typeRecursionDetected = nullptr) const;
     bool resolveType(QQmlImportNamespace *,
                      const QHashedStringRef& type,
                      QQmlType *type_return, int *version_major, int *version_minor,
@@ -203,7 +202,7 @@ private:
     QQmlImportsPrivate *d;
 };
 
-class QQmlImportDatabase
+class Q_QML_PRIVATE_EXPORT QQmlImportDatabase
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlImportDatabase)
 public:
@@ -214,6 +213,8 @@ public:
 
 #if QT_CONFIG(library)
     bool importDynamicPlugin(const QString &filePath, const QString &uri, const QString &importNamespace, int vmaj, QList<QQmlError> *errors);
+    bool removeDynamicPlugin(const QString &filePath);
+    QStringList dynamicPlugins() const;
 #endif
 
     QStringList importPathList(PathType type = LocalOrRemote) const;
@@ -236,6 +237,7 @@ private:
     bool importStaticPlugin(QObject *instance, const QString &basePath, const QString &uri,
                           const QString &typeNamespace, int vmaj, QList<QQmlError> *errors);
     void clearDirCache();
+    void finalizePlugin(QObject *instance, const QString &path, const QString &uri);
 
     struct QmldirCache {
         int versionMajor;

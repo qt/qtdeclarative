@@ -969,6 +969,7 @@ void QQmlComponentPrivate::beginDeferred(QQmlEnginePrivate *enginePriv,
 
         if (!state->creator->populateDeferredProperties(object, deferredData))
             state->errors << state->creator->errors;
+        deferredData->bindings.clear();
 
         deferredState->constructionStates += state;
     }

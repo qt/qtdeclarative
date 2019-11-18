@@ -32,6 +32,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
 #include <private/qqmlimport_p.h>
+#include <private/qqmlengine_p.h>
 #include "../../shared/util.h"
 
 class tst_QQmlImport : public QQmlDataTest
@@ -46,6 +47,7 @@ private slots:
     void completeQmldirPaths();
     void interceptQmldir();
     void singletonVersionResolution();
+    void removeDynamicPlugin();
     void cleanup();
 };
 
@@ -258,6 +260,25 @@ void tst_QQmlImport::singletonVersionResolution()
         auto item = qobject_cast<QQuickItem*>(obj.get());
         QCOMPARE(item->width(), 50);
     }
+}
+
+void tst_QQmlImport::removeDynamicPlugin()
+{
+    qmlClearTypeRegistrations();
+    QQmlEngine engine;
+    {
+        // Load something that adds a dynamic plugin
+        QQmlComponent component(&engine);
+        component.setData(QByteArray("import QtTest 1.0; TestResult{}"), QUrl());
+        QVERIFY(component.isReady());
+    }
+    QQmlImportDatabase *imports = &QQmlEnginePrivate::get(&engine)->importDatabase;
+    const QStringList &plugins = imports->dynamicPlugins();
+    QVERIFY(!plugins.isEmpty());
+    for (const QString &plugin : plugins)
+        QVERIFY(imports->removeDynamicPlugin(plugin));
+    QVERIFY(imports->dynamicPlugins().isEmpty());
+    qmlClearTypeRegistrations();
 }
 
 

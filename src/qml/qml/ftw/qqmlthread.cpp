@@ -131,6 +131,9 @@ QQmlThreadPrivate::QQmlThreadPrivate(QQmlThread *q)
   m_mainThreadWaiting(false), mainSync(nullptr), m_mainObject(this)
 {
     setObjectName(QStringLiteral("QQmlThread"));
+    // This size is aligned with the recursion depth limits in the parser/codegen. In case of
+    // absurd content we want to hit the recursion checks instead of running out of stack.
+    setStackSize(8 * 1024 * 1024);
 }
 
 bool QQmlThreadPrivate::event(QEvent *e)

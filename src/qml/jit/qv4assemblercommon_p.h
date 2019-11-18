@@ -706,9 +706,9 @@ public:
     void passCppFrameAsArg(int arg);
     void passInt32AsArg(int value, int arg);
     void passPointerAsArg(void *ptr, int arg);
-    void callRuntime(const char *functionName, const void *funcPtr);
-    void callRuntimeUnchecked(const char *functionName, const void *funcPtr);
-    void tailCallRuntime(const char *functionName, const void *funcPtr);
+    void callRuntime(const void *funcPtr, const char *functionName = nullptr);
+    void callRuntimeUnchecked(const void *funcPtr, const char *functionName = nullptr);
+    void tailCallRuntime(const void *funcPtr, const char *functionName = nullptr);
     void setTailCallArg(RegisterID src, int arg);
     Address jsAlloca(int slotCount);
     void storeInt32AsValue(int srcInt, Address destAddr);

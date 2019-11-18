@@ -58,7 +58,9 @@
 #include <QtCore/qpointer.h>
 #include <QtGui/qvector2d.h>
 #include <QtGui/qevent.h>
-#include <QtGui/qkeysequence.h>
+#if QT_CONFIG(shortcut)
+#  include <QtGui/qkeysequence.h>
+#endif
 #include <QtQuick/qquickitem.h>
 
 QT_BEGIN_NAMESPACE

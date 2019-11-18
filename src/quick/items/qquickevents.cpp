@@ -1806,7 +1806,7 @@ const QTouchEvent::TouchPoint *QQuickPointerTouchEvent::touchPointById(int point
     auto it = std::find_if(tps.constBegin(), tps.constEnd(),
         [pointId](QTouchEvent::TouchPoint const& tp) { return tp.id() == pointId; } );
     // return the pointer to the actual TP in QTouchEvent::_touchPoints
-    return (it == tps.constEnd() ? nullptr : it.operator->());
+    return (it == tps.constEnd() ? nullptr : &*it);
 }
 
 /*!
@@ -1942,6 +1942,10 @@ Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerEvent *e
 {
     QDebugStateSaver saver(dbg);
     dbg.nospace();
+    if (!event) {
+        dbg << "QQuickPointerEvent(0)";
+        return dbg;
+    }
     dbg << "QQuickPointerEvent(";
     dbg << event->timestamp();
     dbg << " dev:";
@@ -1962,6 +1966,10 @@ Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickEventPoint *eve
 {
     QDebugStateSaver saver(dbg);
     dbg.nospace();
+    if (!event) {
+        dbg << "QQuickEventPoint(0)";
+        return dbg;
+    }
     dbg << "QQuickEventPoint(accepted:" << event->isAccepted()
         << " state:";
     QtDebugUtils::formatQEnum(dbg, event->state());

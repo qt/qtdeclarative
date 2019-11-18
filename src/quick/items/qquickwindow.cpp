@@ -39,7 +39,6 @@
 
 #include "qquickwindow.h"
 #include "qquickwindow_p.h"
-#include "qquickwindowattached_p.h"
 
 #include "qquickitem.h"
 #include "qquickitem_p.h"
@@ -4221,16 +4220,18 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     The OpenGL context used for rendering the scene graph will be bound
     at this point.
 
-    When using the RHI and a graphics API other than OpenGL, the signal is
-    emitted after the preparations for the frame have been done, meaning there
-    is a command buffer in recording mode, where applicable. If desired, the
-    slot function connected to this signal can query native resources like the
-    command before via QSGRendererInterface. Note however that the recording of
-    the main render pass is not yet started at this point and it is not
-    possible to add commands within that pass. Instead, use
-    beforeRenderPassRecording() for that. However, connecting to this signal is
-    still important if the recording of copy type of commands is desired since
-    those cannot be enqueued within a render pass.
+    When using the RHI, the signal is emitted after the preparations for the
+    frame have been done, meaning there is a command buffer in recording mode,
+    where applicable. If desired, the slot function connected to this signal
+    can query native resources like the command before via
+    QSGRendererInterface. Note however that the recording of the main render
+    pass is not yet started at this point and it is not possible to add
+    commands within that pass. Starting a pass means clearing the color, depth,
+    and stencil buffers so it is not possible to achieve an underlay type of
+    rendering by just connecting to this signal. Rather, connect to
+    beforeRenderPassRecording(). However, connecting to this signal is still
+    important if the recording of copy type of commands is desired since those
+    cannot be enqueued within a render pass.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
@@ -4253,18 +4254,17 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     The OpenGL context used for rendering the scene graph will be bound at this point.
 
-    When using the RHI and a graphics API other than OpenGL, the signal is
-    emitted after scene graph has added its commands to the command buffer,
-    which is not yet submitted to the graphics queue. If desired, the slot
-    function connected to this signal can query native resources, like the
-    command buffer, before via QSGRendererInterface. Note however that the
-    render pass (or passes) are already recorded at this point and it is not
-    possible to add more commands within the scenegraph's pass. Instead, use
-    afterRenderPassRecording() for that. This signal has therefore limited use
-    and is rarely needed in an RHI-based setup. Rather, it is the combination
-    of beforeRendering() + beforeRenderPassRecording() or beforeRendering() +
-    afterRenderPassRecording() that is typically used to achieve under- or
-    overlaying of the custom rendering.
+    When using the RHI, the signal is emitted after scene graph has added its
+    commands to the command buffer, which is not yet submitted to the graphics
+    queue. If desired, the slot function connected to this signal can query
+    native resources, like the command buffer, before via QSGRendererInterface.
+    Note however that the render pass (or passes) are already recorded at this
+    point and it is not possible to add more commands within the scenegraph's
+    pass. Instead, use afterRenderPassRecording() for that. This signal has
+    therefore limited use and is rarely needed in an RHI-based setup. Rather,
+    it is the combination of beforeRendering() + beforeRenderPassRecording() or
+    beforeRendering() + afterRenderPassRecording() that is typically used to
+    achieve under- or overlaying of the custom rendering.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
@@ -4735,8 +4735,7 @@ void QQuickWindow::setDefaultAlphaBuffer(bool useAlpha)
     adaptation.
 
     \note This function has no effect when running on the RHI graphics
-    abstraction. With the RHI, the functions to call when enqueuing native
-    graphics commands are beginExternalCommands() and endExternalCommands().
+    abstraction and the underlying RHI backend is not OpenGL.
 
     \sa QQuickWindow::beforeRendering(), beginExternalCommands(), endExternalCommands()
  */
@@ -4744,7 +4743,7 @@ void QQuickWindow::resetOpenGLState()
 {
     Q_D(QQuickWindow);
 
-    if (d->rhi || !openglContext())
+    if (!openglContext())
         return;
 
     QOpenGLContext *ctx = openglContext();
@@ -4859,7 +4858,13 @@ const QQuickWindow::GraphicsStateInfo &QQuickWindow::graphicsStateInfo()
     directly and the RHI graphics abstraction layer is not in use. Refer to
     resetOpenGLState() in that case.
 
-    \sa endExternalCommands()
+    \note When the scenegraph is using the RHI graphics abstraction layer with
+    the OpenGL backend underneath, pay attention to the fact that the OpenGL
+    state in the context can have arbitrary settings, and this function does not
+    perform any resetting of the state back to defaults. Call
+    resetOpenGLState() if that is seen necessary.
+
+    \sa endExternalCommands(), resetOpenGLState()
 
     \since 5.14
  */

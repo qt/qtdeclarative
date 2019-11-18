@@ -455,7 +455,7 @@ qreal QQuickListViewPrivate::lastPosition() const
             // All visible items are in delayRemove state
             invisibleCount = model->count();
         }
-        pos = (*(--visibleItems.constEnd()))->endPosition();
+        pos = (*(visibleItems.constEnd() - 1))->endPosition();
         if (invisibleCount > 0)
             pos += invisibleCount * (averageSize + spacing);
     } else if (model && model->count()) {
@@ -480,7 +480,7 @@ qreal QQuickListViewPrivate::positionAt(int modelIndex) const
             return (*visibleItems.constBegin())->position() - count * (averageSize + spacing) - cs;
         } else {
             int count = modelIndex - findLastVisibleIndex(visibleIndex) - 1;
-            return (*(--visibleItems.constEnd()))->endPosition() + spacing + count * (averageSize + spacing);
+            return (*(visibleItems.constEnd() - 1))->endPosition() + spacing + count * (averageSize + spacing);
         }
     }
     return 0;
@@ -496,7 +496,7 @@ qreal QQuickListViewPrivate::endPositionAt(int modelIndex) const
             return (*visibleItems.constBegin())->position() - (count - 1) * (averageSize + spacing) - spacing;
         } else {
             int count = modelIndex - findLastVisibleIndex(visibleIndex) - 1;
-            return (*(--visibleItems.constEnd()))->endPosition() + count * (averageSize + spacing);
+            return (*(visibleItems.constEnd() - 1))->endPosition() + count * (averageSize + spacing);
         }
     }
     return 0;
@@ -522,7 +522,7 @@ qreal QQuickListViewPrivate::snapPosAt(qreal pos)
         return snapItem->itemPosition();
     if (visibleItems.count()) {
         qreal firstPos = (*visibleItems.constBegin())->position();
-        qreal endPos = (*(--visibleItems.constEnd()))->position();
+        qreal endPos = (*(visibleItems.constEnd() - 1))->position();
         if (pos < firstPos) {
             return firstPos - qRound((firstPos - pos) / averageSize) * averageSize;
         } else if (pos > endPos)
@@ -667,7 +667,7 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
     qreal itemEnd = visiblePos;
     if (visibleItems.count()) {
         visiblePos = (*visibleItems.constBegin())->position();
-        itemEnd = (*(--visibleItems.constEnd()))->endPosition() + spacing;
+        itemEnd = (*(visibleItems.constEnd() - 1))->endPosition() + spacing;
     }
 
     int modelIndex = findLastVisibleIndex();

@@ -49,6 +49,8 @@
 #include <QtCore/QJsonDocument>
 #include <QtCore/QLibraryInfo>
 
+#include <resourcefilemapper.h>
+
 #include <iostream>
 #include <algorithm>
 
@@ -80,7 +82,8 @@ void printUsage(const QString &appNameIn)
 #endif
     std::wcerr
         << "Usage: " << appName << " -rootPath path/to/app/qml/directory -importPath path/to/qt/qml/directory\n"
-           "       " << appName << " -qmlFiles file1 file2 -importPath path/to/qt/qml/directory\n\n"
+           "       " << appName << " -qmlFiles file1 file2 -importPath path/to/qt/qml/directory\n"
+           "       " << appName << " -qrcFiles file1.qrc file2.qrc -importPath path/to/qt/qml/directory\n\n"
            "Example: " << appName << " -rootPath . -importPath "
         << QDir::toNativeSeparators(qmlPath).toStdWString()
         << '\n';
@@ -542,6 +545,7 @@ int main(int argc, char *argv[])
     QStringList qmlRootPaths;
     QStringList scanFiles;
     QStringList qmlImportPaths;
+    QStringList qrcFiles;
     bool generateCmakeContent = false;
 
     int i = 1;
@@ -569,6 +573,8 @@ int main(int argc, char *argv[])
             argReceiver = &qmlImportPaths;
         } else if (arg == QLatin1String("-cmake-output")) {
              generateCmakeContent = true;
+        } else if (arg == QLatin1String("-qrcFiles")) {
+            argReceiver = &qrcFiles;
         } else {
             std::cerr << qPrintable(appName) << ": Invalid argument: \""
                 << qPrintable(arg) << "\"\n";
@@ -589,6 +595,9 @@ int main(int argc, char *argv[])
             }
         }
     }
+
+    if (!qrcFiles.isEmpty())
+        scanFiles << ResourceFileMapper(qrcFiles).qmlCompilerFiles(ResourceFileMapper::FileOutput::AbsoluteFilePath);
 
     g_qmlImportPaths = qmlImportPaths;
 

@@ -42,22 +42,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlAbstractDelegateComponent::QQmlAbstractDelegateComponent(QObject *parent)
-    : QQmlComponent(parent)
-{
-}
-
-QQmlAbstractDelegateComponent::~QQmlAbstractDelegateComponent()
-{
-}
-
-QVariant QQmlAbstractDelegateComponent::value(QQmlAdaptorModel *adaptorModel, int row, int column, const QString &role) const
-{
-    if (!adaptorModel)
-        return QVariant();
-    return adaptorModel->value(adaptorModel->indexAt(row, column), role);
-}
-
 /*!
     \qmltype DelegateChoice
     \instantiates QQmlDelegateChoice

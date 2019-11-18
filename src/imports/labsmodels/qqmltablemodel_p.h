@@ -51,11 +51,12 @@
 // We mean it.
 //
 
+#include "qqmltablemodelcolumn_p.h"
+
 #include <QtCore/QObject>
 #include <QtCore/QAbstractTableModel>
 #include <QtQml/qqml.h>
 #include <QtQmlModels/private/qtqmlmodelsglobal_p.h>
-#include <QtQmlModels/private/qqmltablemodelcolumn_p.h>
 #include <QtQml/QJSValue>
 #include <QtQml/QQmlListProperty>
 
@@ -63,7 +64,7 @@ QT_REQUIRE_CONFIG(qml_table_model);
 
 QT_BEGIN_NAMESPACE
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlTableModel : public QAbstractTableModel, public QQmlParserStatus
+class QQmlTableModel : public QAbstractTableModel, public QQmlParserStatus
 {
     Q_OBJECT
     Q_PROPERTY(int columnCount READ columnCount NOTIFY columnCountChanged FINAL)

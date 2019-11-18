@@ -359,7 +359,7 @@ static inline void qMapDeallocate(SparseArrayNode *node, int alignment)
 
 SparseArrayNode *SparseArray::createNode(uint sl, SparseArrayNode *parent, bool left)
 {
-    SparseArrayNode *node = static_cast<SparseArrayNode *>(qMapAllocate(sizeof(SparseArrayNode), Q_ALIGNOF(SparseArrayNode)));
+    SparseArrayNode *node = static_cast<SparseArrayNode *>(qMapAllocate(sizeof(SparseArrayNode), alignof(SparseArrayNode)));
     Q_CHECK_PTR(node);
 
     node->p = (quintptr)parent;

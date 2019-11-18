@@ -2316,6 +2316,133 @@ Bool Runtime::CompareStrictNotEqual::call(const Value &left, const Value &right)
     return ! RuntimeHelpers::strictEqual(left, right);
 }
 
+template<typename Operation>
+static inline const void *symbol()
+{
+    return reinterpret_cast<void *>(&Operation::call);
+}
+
+QHash<const void *, const char *> Runtime::symbolTable()
+{
+    static const QHash<const void *, const char *> symbols({
+#ifndef V4_BOOTSTRAP
+            {symbol<CallGlobalLookup>(), "CallGlobalLookup" },
+            {symbol<CallQmlContextPropertyLookup>(), "CallQmlContextPropertyLookup" },
+            {symbol<CallName>(), "CallName" },
+            {symbol<CallProperty>(), "CallProperty" },
+            {symbol<CallPropertyLookup>(), "CallPropertyLookup" },
+            {symbol<CallElement>(), "CallElement" },
+            {symbol<CallValue>(), "CallValue" },
+            {symbol<CallWithReceiver>(), "CallWithReceiver" },
+            {symbol<CallPossiblyDirectEval>(), "CallPossiblyDirectEval" },
+            {symbol<CallWithSpread>(), "CallWithSpread" },
+            {symbol<TailCall>(), "TailCall" },
+
+            {symbol<Construct>(), "Construct" },
+            {symbol<ConstructWithSpread>(), "ConstructWithSpread" },
+
+            {symbol<StoreNameStrict>(), "StoreNameStrict" },
+            {symbol<StoreNameSloppy>(), "StoreNameSloppy" },
+            {symbol<StoreProperty>(), "StoreProperty" },
+            {symbol<StoreElement>(), "StoreElement" },
+            {symbol<LoadProperty>(), "LoadProperty" },
+            {symbol<LoadName>(), "LoadName" },
+            {symbol<LoadElement>(), "LoadElement" },
+            {symbol<LoadSuperProperty>(), "LoadSuperProperty" },
+            {symbol<StoreSuperProperty>(), "StoreSuperProperty" },
+            {symbol<LoadSuperConstructor>(), "LoadSuperConstructor" },
+            {symbol<LoadGlobalLookup>(), "LoadGlobalLookup" },
+            {symbol<LoadQmlContextPropertyLookup>(), "LoadQmlContextPropertyLookup" },
+            {symbol<GetLookup>(), "GetLookup" },
+            {symbol<SetLookupStrict>(), "SetLookupStrict" },
+            {symbol<SetLookupSloppy>(), "SetLookupSloppy" },
+
+            {symbol<TypeofValue>(), "TypeofValue" },
+            {symbol<TypeofName>(), "TypeofName" },
+
+            {symbol<DeleteProperty_NoThrow>(), "DeleteProperty_NoThrow" },
+            {symbol<DeleteProperty>(), "DeleteProperty" },
+            {symbol<DeleteName_NoThrow>(), "DeleteName_NoThrow" },
+            {symbol<DeleteName>(), "DeleteName" },
+
+            {symbol<ThrowException>(), "ThrowException" },
+            {symbol<PushCallContext>(), "PushCallContext" },
+            {symbol<PushWithContext>(), "PushWithContext" },
+            {symbol<PushCatchContext>(), "PushCatchContext" },
+            {symbol<PushBlockContext>(), "PushBlockContext" },
+            {symbol<CloneBlockContext>(), "CloneBlockContext" },
+            {symbol<PushScriptContext>(), "PushScriptContext" },
+            {symbol<PopScriptContext>(), "PopScriptContext" },
+            {symbol<ThrowReferenceError>(), "ThrowReferenceError" },
+            {symbol<ThrowOnNullOrUndefined>(), "ThrowOnNullOrUndefined" },
+
+            {symbol<Closure>(), "Closure" },
+
+            {symbol<ConvertThisToObject>(), "ConvertThisToObject" },
+            {symbol<DeclareVar>(), "DeclareVar" },
+            {symbol<CreateMappedArgumentsObject>(), "CreateMappedArgumentsObject" },
+            {symbol<CreateUnmappedArgumentsObject>(), "CreateUnmappedArgumentsObject" },
+            {symbol<CreateRestParameter>(), "CreateRestParameter" },
+
+            {symbol<ArrayLiteral>(), "ArrayLiteral" },
+            {symbol<ObjectLiteral>(), "ObjectLiteral" },
+            {symbol<CreateClass>(), "CreateClass" },
+
+            {symbol<GetIterator>(), "GetIterator" },
+            {symbol<IteratorNext>(), "IteratorNext" },
+            {symbol<IteratorNextForYieldStar>(), "IteratorNextForYieldStar" },
+            {symbol<IteratorClose>(), "IteratorClose" },
+            {symbol<DestructureRestElement>(), "DestructureRestElement" },
+
+            {symbol<ToObject>(), "ToObject" },
+            {symbol<ToBoolean>(), "ToBoolean" },
+            {symbol<ToNumber>(), "ToNumber" },
+
+            {symbol<UMinus>(), "UMinus" },
+
+            {symbol<Instanceof>(), "Instanceof" },
+            {symbol<In>(), "In" },
+            {symbol<Add>(), "Add" },
+            {symbol<Sub>(), "Sub" },
+            {symbol<Mul>(), "Mul" },
+            {symbol<Div>(), "Div" },
+            {symbol<Mod>(), "Mod" },
+            {symbol<Exp>(), "Exp" },
+            {symbol<BitAnd>(), "BitAnd" },
+            {symbol<BitOr>(), "BitOr" },
+            {symbol<BitXor>(), "BitXor" },
+            {symbol<Shl>(), "Shl" },
+            {symbol<Shr>(), "Shr" },
+            {symbol<UShr>(), "UShr" },
+            {symbol<GreaterThan>(), "GreaterThan" },
+            {symbol<LessThan>(), "LessThan" },
+            {symbol<GreaterEqual>(), "GreaterEqual" },
+            {symbol<LessEqual>(), "LessEqual" },
+            {symbol<Equal>(), "Equal" },
+            {symbol<NotEqual>(), "NotEqual" },
+            {symbol<StrictEqual>(), "StrictEqual" },
+            {symbol<StrictNotEqual>(), "StrictNotEqual" },
+
+            {symbol<CompareGreaterThan>(), "CompareGreaterThan" },
+            {symbol<CompareLessThan>(), "CompareLessThan" },
+            {symbol<CompareGreaterEqual>(), "CompareGreaterEqual" },
+            {symbol<CompareLessEqual>(), "CompareLessEqual" },
+            {symbol<CompareEqual>(), "CompareEqual" },
+            {symbol<CompareNotEqual>(), "CompareNotEqual" },
+            {symbol<CompareStrictEqual>(), "CompareStrictEqual" },
+            {symbol<CompareStrictNotEqual>(), "CompareStrictNotEqual" },
+
+            {symbol<CompareInstanceof>(), "CompareInstanceOf" },
+            {symbol<CompareIn>(), "CompareIn" },
+
+            {symbol<RegexpLiteral>(), "RegexpLiteral" },
+            {symbol<GetTemplateObject>(), "GetTemplateObject" }
+#endif
+    });
+
+    return symbols;
+}
+
 } // namespace QV4
 
 QT_END_NAMESPACE

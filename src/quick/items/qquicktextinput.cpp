@@ -2259,8 +2259,8 @@ void QQuickTextInput::remove(int start, int end)
             d->m_cursor -= qMin(d->m_cursor, end) - start;
         if (d->m_selstart > start)
             d->m_selstart -= qMin(d->m_selstart, end) - start;
-        if (d->m_selend > end)
-            d->m_selend -= qMin(d->m_selend, end) - start;
+        if (d->m_selend >= end)
+            d->m_selend -= end - start;
     }
     d->addCommand(QQuickTextInputPrivate::Command(
             QQuickTextInputPrivate::SetSelection, d->m_cursor, 0, d->m_selstart, d->m_selend));

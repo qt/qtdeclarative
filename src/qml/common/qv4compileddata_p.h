@@ -65,6 +65,7 @@
 #include <private/qendian_p.h>
 #include <private/qv4staticvalue_p.h>
 #include <functional>
+#include <limits.h>
 
 QT_BEGIN_NAMESPACE
 

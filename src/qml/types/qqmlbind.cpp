@@ -73,8 +73,7 @@ public:
         , delayed(false)
         , pendingEval(false)
         , restoreBinding(true)
-        , restoreValue(false)
-        , restoreModeExplicit(false)
+        , restoreValue(true)
         , writingProperty(false)
     {}
     ~QQmlBindPrivate() { }
@@ -93,7 +92,6 @@ public:
     bool pendingEval:1;
     bool restoreBinding:1;
     bool restoreValue:1;
-    bool restoreModeExplicit:1;
     bool writingProperty: 1;
 
     void validate(QObject *binding) const;
@@ -196,13 +194,8 @@ QQmlBind::~QQmlBind()
     }
     \endcode
 
-    When the binding becomes inactive again, any direct bindings that were previously
-    set on the property will be restored.
-
-    \note By default, a previously set literal value is not restored when the Binding becomes
-    inactive. Rather, the last value set by the now inactive Binding is retained. You can customize
-    the restoration behavior for literal values as well as bindings using the \l restoreMode
-    property. The default will change in Qt 6.0.
+    By default, any binding or value that was set perviously is restored when the binding becomes
+    inactive. You can customize the restoration behavior using the \l restoreMode property.
 
     \sa restoreMode
 */
@@ -371,8 +364,7 @@ void QQmlBind::setDelayed(bool delayed)
     \li Binding.RestoreBindingOrValue The original value is always restored.
     \endlist
 
-    \warning The default value is Binding.RestoreBinding. This will change in
-    Qt 6.0 to Binding.RestoreBindingOrValue.
+    The default value is \c Binding.RestoreBindingOrValue.
 
     If you rely on any specific behavior regarding the restoration of plain
     values when bindings get disabled you should migrate to explicitly set the
@@ -395,7 +387,6 @@ QQmlBind::RestorationMode QQmlBind::restoreMode() const
 void QQmlBind::setRestoreMode(RestorationMode newMode)
 {
     Q_D(QQmlBind);
-    d->restoreModeExplicit = true;
     if (newMode != restoreMode()) {
         d->restoreValue = (newMode & RestoreValue);
         d->restoreBinding = (newMode & RestoreBinding);
@@ -482,23 +473,11 @@ void QQmlBind::eval()
                     Q_ASSERT(vmemo);
                     vmemo->setVMEProperty(propPriv->core.coreIndex(), *d->v4Value.valueRef());
                     d->clearPrev();
-                } else if (!d->restoreModeExplicit) {
-                    qmlWarning(this)
-                            << "Not restoring previous value because restoreMode has not been set."
-                            << "This behavior is deprecated."
-                            << "In Qt < 6.0 the default is Binding.RestoreBinding."
-                            << "In Qt >= 6.0 the default is Binding.RestoreBindingOrValue.";
                 }
             } else if (d->prevIsVariant) {
                 if (d->restoreValue) {
                     d->prop.write(d->prevValue);
                     d->clearPrev();
-                } else if (!d->restoreModeExplicit) {
-                    qmlWarning(this)
-                            << "Not restoring previous value because restoreMode has not been set."
-                            << "This behavior is deprecated."
-                            << "In Qt < 6.0 the default is Binding.RestoreBinding."
-                            << "In Qt >= 6.0 the default is Binding.RestoreBindingOrValue.";
                 }
             }
             return;

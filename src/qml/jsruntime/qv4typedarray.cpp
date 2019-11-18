@@ -1068,51 +1068,44 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_indexOf(const FunctionObject 
     return Encode(-1);
 }
 
-ReturnedValue IntrinsicTypedArrayPrototype::method_join(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue IntrinsicTypedArrayPrototype::method_join(
+        const FunctionObject *functionObject, const Value *thisObject, const Value *argv, int argc)
 {
-    Scope scope(b);
-    Scoped<TypedArray> v(scope, thisObject);
-    if (!v || v->d()->buffer->isDetachedBuffer())
+    Scope scope(functionObject);
+    Scoped<TypedArray> typedArray(scope, thisObject);
+    if (!typedArray || typedArray->d()->buffer->isDetachedBuffer())
         return scope.engine->throwTypeError();
 
-    uint len = v->length();
+    // We cannot optimize the resolution of the argument away if length is 0.
+    // It may have side effects.
+    ScopedValue argument(scope, argc ? argv[0] : Value::undefinedValue());
+    const QString separator = argument->isUndefined()
+            ? QStringLiteral(",")
+            : argument->toQString();
 
-    ScopedValue arg(scope, argc ? argv[0] : Value::undefinedValue());
-
-    QString r4;
-    if (arg->isUndefined())
-        r4 = QStringLiteral(",");
-    else
-        r4 = arg->toQString();
-
-    const quint32 r2 = len;
-
-    if (!r2)
+    const quint32 length = typedArray->length();
+    if (!length)
         return Encode(scope.engine->newString());
 
-    QString R;
+    QString result;
 
-    //
-    // crazy!
-    //
     ScopedString name(scope, scope.engine->newString(QStringLiteral("0")));
-    ScopedValue r6(scope, v->get(name));
-    if (!r6->isNullOrUndefined())
-        R = r6->toQString();
+    ScopedValue value(scope, typedArray->get(name));
+    if (!value->isNullOrUndefined())
+        result = value->toQString();
 
-    ScopedValue r12(scope);
-    for (quint32 k = 1; k < r2; ++k) {
-        R += r4;
+    for (quint32 i = 1; i < length; ++i) {
+        result += separator;
 
-        name = Value::fromDouble(k).toString(scope.engine);
-        r12 = v->get(name);
+        name = Value::fromDouble(i).toString(scope.engine);
+        value = typedArray->get(name);
         CHECK_EXCEPTION();
 
-        if (!r12->isNullOrUndefined())
-            R += r12->toQString();
+        if (!value->isNullOrUndefined())
+            result += value->toQString();
     }
 
-    return Encode(scope.engine->newString(R));
+    return Encode(scope.engine->newString(result));
 }
 
 ReturnedValue IntrinsicTypedArrayPrototype::method_keys(const FunctionObject *b, const Value *thisObject, const Value *, int)

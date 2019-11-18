@@ -17,7 +17,7 @@ HEADERS += \
     imports.h
 
 !equals(_PRO_FILE_PWD_, $$OUT_PWD) {
-    cp.files = qmldir plugins.qmltypes CompositeImports.qml
+    cp.files = qmldir plugins.qmltypes CompositeImports.qml Derived.qml
     cp.path = $$OUT_PWD
     COPIES += cp
 }

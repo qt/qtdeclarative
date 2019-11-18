@@ -49,6 +49,7 @@ private slots:
     void initTestCase();
     void test_properties();
     void test_runningChangedSignal();
+    void test_startStop();
     void test_frameChangedSignal();
     void test_largeAnimation_data();
     void test_largeAnimation();
@@ -56,6 +57,7 @@ private slots:
     void test_changeSourceToSmallerImgKeepingBigFrameSize();
     void test_infiniteLoops();
     void test_implicitSize();
+    void test_finishBehavior();
 };
 
 void tst_qquickanimatedsprite::initTestCase()
@@ -116,6 +118,42 @@ void tst_qquickanimatedsprite::test_runningChangedSignal()
     QTRY_VERIFY(!sprite->running());
     QTRY_COMPARE(runningChangedSpy.count(), 2);
     QCOMPARE(finishedSpy.count(), 1);
+}
+
+void tst_qquickanimatedsprite::test_startStop()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+
+    window->setSource(testFileUrl("runningChange.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QVERIFY(window->rootObject());
+    QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
+    QVERIFY(sprite);
+
+    QVERIFY(!sprite->running());
+
+    QSignalSpy runningChangedSpy(sprite, SIGNAL(runningChanged(bool)));
+    QSignalSpy finishedSpy(sprite, SIGNAL(finished()));
+    QVERIFY(finishedSpy.isValid());
+
+    sprite->start();
+    QVERIFY(sprite->running());
+    QTRY_COMPARE(runningChangedSpy.count(), 1);
+    QCOMPARE(finishedSpy.count(), 0);
+    sprite->stop();
+    QVERIFY(!sprite->running());
+    QTRY_COMPARE(runningChangedSpy.count(), 2);
+    QCOMPARE(finishedSpy.count(), 0);
+
+    sprite->setCurrentFrame(2);
+    sprite->start();
+    QVERIFY(sprite->running());
+    QCOMPARE(sprite->currentFrame(), 0);
+    QTRY_VERIFY(sprite->currentFrame() > 0);
+    sprite->stop();
+    QVERIFY(!sprite->running());
 }
 
 template <typename T>
@@ -389,6 +427,31 @@ void tst_qquickanimatedsprite::test_infiniteLoops()
     const int previousFrame = sprite->currentFrame();
     QTRY_VERIFY(sprite->currentFrame() != previousFrame);
     QCOMPARE(finishedSpy.count(), 0);
+}
+
+void tst_qquickanimatedsprite::test_finishBehavior()
+{
+    QQuickView window;
+    window.setSource(testFileUrl("finishBehavior.qml"));
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(window.rootObject());
+
+    QQuickAnimatedSprite* sprite = window.rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
+    QVERIFY(sprite);
+
+    QTRY_VERIFY(sprite->running());
+
+    // correctly stops at last frame
+    QSignalSpy finishedSpy(sprite, SIGNAL(finished()));
+    QVERIFY(finishedSpy.wait(2000));
+    QCOMPARE(sprite->running(), false);
+    QCOMPARE(sprite->currentFrame(), 5);
+
+    // correctly starts a second time
+    sprite->start();
+    QTRY_VERIFY(sprite->running());
+    QTRY_COMPARE(sprite->currentFrame(), 5);
 }
 
 QTEST_MAIN(tst_qquickanimatedsprite)

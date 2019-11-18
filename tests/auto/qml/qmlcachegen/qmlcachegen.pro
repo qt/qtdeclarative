@@ -17,7 +17,8 @@ RESOURCES += \
     data/jsmoduleimport.qml \
     data/script.mjs \
     data/module.mjs \
-    data/utils.mjs
+    data/utils.mjs \
+    data/parameterAdjustment.qml
 
 workerscripts_test.files = \
     data/worker.js \

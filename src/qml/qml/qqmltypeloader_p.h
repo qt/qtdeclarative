@@ -68,6 +68,7 @@ QT_BEGIN_NAMESPACE
 class QQmlScriptBlob;
 class QQmlQmldirData;
 class QQmlTypeData;
+class QQmlEngineExtensionInterface;
 class QQmlExtensionInterface;
 class QQmlProfiler;
 class QQmlTypeLoaderThread;
@@ -128,9 +129,7 @@ public:
         virtual QString stringAt(int) const { return QString(); }
 
         bool isDebugging() const;
-
-        static bool diskCacheDisabled();
-        static bool diskCacheForced();
+        bool diskCacheEnabled() const;
 
         QQmlImports m_importCache;
         QVector<PendingImportPtr> m_unresolvedImports;
@@ -172,6 +171,7 @@ public:
     void loadWithCachedUnit(QQmlDataBlob *blob, const QV4::CompiledData::Unit *unit, Mode mode = PreferSynchronous);
 
     QQmlEngine *engine() const;
+    void initializeEngine(QQmlEngineExtensionInterface *, const char *);
     void initializeEngine(QQmlExtensionInterface *, const char *);
     void invalidate();
 

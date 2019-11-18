@@ -146,7 +146,7 @@ private slots:
     void cursorRectangle();
     void navigation();
     void navigation_RTL();
-#if QT_CONFIG(clipboard)
+#if QT_CONFIG(clipboard) && QT_CONFIG(shortcut)
     void copyAndPaste();
     void copyAndPasteKeySequence();
     void canPasteEmpty();
@@ -181,15 +181,19 @@ private slots:
     void remove_data();
     void remove();
 
+#if QT_CONFIG(shortcut)
     void keySequence_data();
     void keySequence();
+#endif
 
     void undo_data();
     void undo();
     void redo_data();
     void redo();
+#if QT_CONFIG(shortcut)
     void undo_keypressevents_data();
     void undo_keypressevents();
+#endif
     void clear();
 
     void backspaceSurrogatePairs();
@@ -230,12 +234,15 @@ private slots:
     void padding();
 
     void QTBUG_51115_readOnlyResetsSelection();
+    void QTBUG_77814_InsertRemoveNoSelection();
 
 private:
     void simulateKey(QWindow *, int key);
 
     void simulateKeys(QWindow *window, const QList<Key> &keys);
+#if QT_CONFIG(shortcut)
     void simulateKeys(QWindow *window, const QKeySequence &sequence);
+#endif
 
     QQmlEngine engine;
     QStringList standard;
@@ -263,6 +270,8 @@ void tst_qquicktextinput::simulateKeys(QWindow *window, const QList<Key> &keys)
     }
 }
 
+#if QT_CONFIG(shortcut)
+
 void tst_qquicktextinput::simulateKeys(QWindow *window, const QKeySequence &sequence)
 {
     for (int i = 0; i < sequence.count(); ++i) {
@@ -279,6 +288,8 @@ QList<Key> &operator <<(QList<Key> &keys, const QKeySequence &sequence)
         keys << Key(sequence[i], QChar());
     return keys;
 }
+
+#endif // QT_CONFIG(shortcut)
 
 template <int N> QList<Key> &operator <<(QList<Key> &keys, const char (&characters)[N])
 {
@@ -2585,7 +2596,7 @@ void tst_qquicktextinput::navigation_RTL()
     QVERIFY(input->hasActiveFocus());
 }
 
-#if QT_CONFIG(clipboard)
+#if QT_CONFIG(clipboard) && QT_CONFIG(shortcut)
 void tst_qquicktextinput::copyAndPaste()
 {
     if (!PlatformQuirks::isClipboardAvailable())
@@ -2683,7 +2694,7 @@ void tst_qquicktextinput::copyAndPaste()
 }
 #endif
 
-#if QT_CONFIG(clipboard)
+#if QT_CONFIG(clipboard) && QT_CONFIG(shortcut)
 void tst_qquicktextinput::copyAndPasteKeySequence()
 {
     if (!PlatformQuirks::isClipboardAvailable())
@@ -2751,7 +2762,7 @@ void tst_qquicktextinput::copyAndPasteKeySequence()
 }
 #endif
 
-#if QT_CONFIG(clipboard)
+#if QT_CONFIG(clipboard) && QT_CONFIG(shortcut)
 void tst_qquicktextinput::canPasteEmpty()
 {
     QGuiApplication::clipboard()->clear();
@@ -2767,7 +2778,7 @@ void tst_qquicktextinput::canPasteEmpty()
 }
 #endif
 
-#if QT_CONFIG(clipboard)
+#if QT_CONFIG(clipboard) && QT_CONFIG(shortcut)
 void tst_qquicktextinput::canPaste()
 {
     QGuiApplication::clipboard()->setText("Some text");
@@ -2783,7 +2794,7 @@ void tst_qquicktextinput::canPaste()
 }
 #endif
 
-#if QT_CONFIG(clipboard)
+#if QT_CONFIG(clipboard) && QT_CONFIG(shortcut)
 void tst_qquicktextinput::middleClickPaste()
 {
     if (!PlatformQuirks::isClipboardAvailable())
@@ -5097,6 +5108,7 @@ void tst_qquicktextinput::remove()
         QVERIFY(cursorPositionSpy.count() > 0);
 }
 
+#if QT_CONFIG(shortcut)
 void tst_qquicktextinput::keySequence_data()
 {
     QTest::addColumn<QString>("text");
@@ -5281,6 +5293,8 @@ void tst_qquicktextinput::keySequence()
     QCOMPARE(textInput->text(), expectedText);
     QCOMPARE(textInput->selectedText(), selectedText);
 }
+
+#endif // QT_CONFIG(shortcut)
 
 #define NORMAL 0
 #define REPLACE_UNTIL_END 1
@@ -5554,6 +5568,8 @@ void tst_qquicktextinput::redo()
     QVERIFY(!textInput->canRedo());
     QCOMPARE(spy.count(), 2);
 }
+
+#if QT_CONFIG(shortcut)
 
 void tst_qquicktextinput::undo_keypressevents_data()
 {
@@ -5858,6 +5874,8 @@ void tst_qquicktextinput::undo_keypressevents()
     }
     QVERIFY(textInput->text().isEmpty());
 }
+
+#endif // QT_CONFIG(shortcut)
 
 void tst_qquicktextinput::clear()
 {
@@ -7001,6 +7019,18 @@ void tst_qquicktextinput::QTBUG_51115_readOnlyResetsSelection()
     QQuickTextInput *obj = qobject_cast<QQuickTextInput*>(view.rootObject());
 
     QCOMPARE(obj->selectedText(), QString());
+}
+
+void tst_qquicktextinput::QTBUG_77814_InsertRemoveNoSelection()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("qtbug77841.qml"));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QQuickTextInput *textInput = view.rootObject()->findChild<QQuickTextInput*>("qwe");
+    QVERIFY(textInput);
+
+    QCOMPARE(textInput->selectedText(), QString());
 }
 
 QTEST_MAIN(tst_qquicktextinput)

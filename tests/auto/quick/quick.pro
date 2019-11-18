@@ -96,6 +96,8 @@ boot2qt: QUICKTESTS -= qquickgridview qquicklistview qquicktableview qquickposit
 
 !qtConfig(accessibility):QUICKTESTS -= qquickaccessible
 
+!qtConfig(shortcut):QUICKTESTS -= qquickshortcut
+
 qtConfig(private_tests) {
     SUBDIRS += $$PRIVATETESTS
     SUBDIRS += $$QUICKTESTS

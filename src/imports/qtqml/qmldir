@@ -1,7 +1,0 @@
-module QtQml
-plugin qmlplugin
-classname QtQmlPlugin
-typeinfo plugins.qmltypes
-import QtQml.Models
-import QtQml.WorkerScript
-designersupported

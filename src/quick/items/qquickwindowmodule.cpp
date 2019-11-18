@@ -48,6 +48,7 @@
 #include <private/qguiapplication_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qqmlglobal_p.h>
 #include <qpa/qplatformintegration.h>
 
 QT_BEGIN_NAMESPACE
@@ -193,19 +194,6 @@ void QQuickWindowQmlImpl::setScreen(QObject *screen)
 {
     QQuickScreenInfo *screenWrapper = qobject_cast<QQuickScreenInfo *>(screen);
     QWindow::setScreen(screenWrapper ? screenWrapper->wrappedScreen() : nullptr);
-}
-
-void QQuickWindowModule::defineModule()
-{
-    const char uri[] = "QtQuick.Window";
-
-    // Cannot automatically register these. They are from QtGui.
-    qmlRegisterRevision<QWindow,1>(uri, 2, 1);
-    qmlRegisterRevision<QWindow,2>(uri, 2, 2);
-    qmlRegisterRevision<QWindow,13>(uri, 2, 13);
-
-    qmlRegisterTypesAndRevisions<QQuickWindow, QQuickWindowQmlImpl,
-                                 QQuickScreen, QQuickScreenInfo>(uri, 2);
 }
 
 QT_END_NAMESPACE

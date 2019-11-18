@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:GPL-EXCEPT$
 ** Commercial License Usage
@@ -25,26 +25,13 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef RESOURCEFILEMAPPER_H
-#define RESOURCEFILEMAPPER_H
 
-#include <QStringList>
-#include <QHash>
-#include <QFile>
+import QtQml.Models 2.15
+import QtQuick 2.15
 
-struct ResourceFileMapper
-{
-    ResourceFileMapper(const QStringList &resourceFiles);
+import Test 1.0
 
-    bool isEmpty() const;
-
-    QStringList resourcePaths(const QString &fileName);
-    QStringList qmlCompilerFiles() const;
-
-private:
-    void populateFromQrcFile(QFile &file);
-
-    QHash<QString, QString> qrcPathToFileSystemPath;
-};
-
-#endif // RESOURCEFILEMAPPER_H
+DelegateModel {
+    model: AbstractItemModel {}
+    delegate: Item {}
+}

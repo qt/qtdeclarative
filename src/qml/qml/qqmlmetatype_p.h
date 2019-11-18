@@ -80,8 +80,17 @@ public:
 
     static void unregisterType(int type);
 
-    static void registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
-    static void unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
+    struct CompositeMetaTypeIds
+    {
+        int id = -1;
+        int listId = -1;
+        CompositeMetaTypeIds() = default;
+        CompositeMetaTypeIds(int id, int listId) : id(id), listId(listId) {}
+        bool isValid() const { return id != -1 && listId != -1; }
+    };
+
+    static CompositeMetaTypeIds registerInternalCompositeType(const QByteArray &className);
+    static void unregisterInternalCompositeType(const QQmlMetaType::CompositeMetaTypeIds &typeIds);
 
     static void registerModule(const char *uri, int versionMajor, int versionMinor);
     static bool protectModule(const QString &uri, int majVersion);
@@ -188,6 +197,10 @@ public:
 
     static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
                       const QMetaObject *ignoreStart, const QMetaObject *ignoreEnd);
+
+    static void qmlInsertModuleRegistration(const QString &uri, int majorVersion,
+                                            void (*registerFunction)());
+    static bool qmlRegisterModuleTypes(const QString &uri, int majorVersion);
 };
 
 Q_DECLARE_TYPEINFO(QQmlMetaType, Q_MOVABLE_TYPE);

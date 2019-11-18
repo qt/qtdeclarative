@@ -78,8 +78,27 @@ Rectangle {
                 line.y -= height - margin
                 line.x = width / 2 + margin
             }
+
+            if (line.isLast) {
+                lastLineMarker.x = line.x + line.implicitWidth
+                lastLineMarker.y = line.y + (line.height - lastLineMarker.height) / 2
+            }
         }
 //! [layout]
+
+        Rectangle {
+            id: lastLineMarker
+            color: "#44cccccc"
+            width: theEndText.width + margin
+            height: theEndText.height + margin
+
+            Text {
+                id: theEndText
+                text: "THE\nEND"
+                anchors.centerIn: parent
+                font.pixelSize: myText.font.pixelSize / 2
+            }
+        }
     }
 
 }

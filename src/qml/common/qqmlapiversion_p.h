@@ -51,6 +51,6 @@
 // We mean it.
 //
 
-#define Q_QML_PRIVATE_API_VERSION 6
+#define Q_QML_PRIVATE_API_VERSION 7
 
 #endif // QQMLAPIVERSION_P_H

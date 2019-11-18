@@ -263,6 +263,19 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty enumeration QtQuick::AnimatedSprite::finishBehavior
+
+    The behavior when the animation finishes on its own.
+
+    \value FinishAtInitialFrame
+    When the animation finishes it returns to the initial frame.
+    This is the default behavior.
+
+    \value FinishAtFinalFrame
+    When the animation finishes it stays on the final frame.
+*/
+
+/*!
     \qmlmethod int QtQuick::AnimatedSprite::restart()
 
     Stops, then starts the sprite animation.
@@ -381,6 +394,12 @@ int QQuickAnimatedSprite::currentFrame() const
     return d->m_curFrame;
 }
 
+QQuickAnimatedSprite::FinishBehavior QQuickAnimatedSprite::finishBehavior() const
+{
+    Q_D(const QQuickAnimatedSprite);
+    return d->m_finishBehavior;
+}
+
 bool QQuickAnimatedSprite::isCurrentFrameChangedConnected()
 {
     IS_SIGNAL_CONNECTED(this, QQuickAnimatedSprite, currentFrameChanged, (int));
@@ -395,20 +414,34 @@ void QQuickAnimatedSprite::reloadImage()
 
 void QQuickAnimatedSprite::componentComplete()
 {
-    Q_D(const QQuickAnimatedSprite);
+    Q_D(QQuickAnimatedSprite);
     createEngine();
     QQuickItem::componentComplete();
-    if (d->m_running)
+    if (d->m_running) {
+        d->m_running = false;
         start();
+    }
 }
 
+/*!
+    \qmlmethod QtQuick::AnimatedSprite::start()
+    \since 5.15
+
+    Starts the sprite animation. If the animation is already running, calling
+    this method has no effect.
+
+    \sa stop()
+*/
 void QQuickAnimatedSprite::start()
 {
     Q_D(QQuickAnimatedSprite);
+    if (d->m_running)
+        return;
     d->m_running = true;
     if (!isComponentComplete())
         return;
     d->m_curLoop = 0;
+    d->m_curFrame = 0;
     d->m_timestamp.start();
     if (d->m_spriteEngine) {
         d->m_spriteEngine->stop(0);
@@ -420,9 +453,20 @@ void QQuickAnimatedSprite::start()
     maybeUpdate();
 }
 
+/*!
+    \qmlmethod QtQuick::AnimatedSprite::stop()
+    \since 5.15
+
+    Stops the sprite animation. If the animation is not running, calling this
+    method has no effect.
+
+    \sa start()
+*/
 void QQuickAnimatedSprite::stop()
 {
     Q_D(QQuickAnimatedSprite);
+    if (!d->m_running)
+        return;
     d->m_running = false;
     if (!isComponentComplete())
         return;
@@ -679,6 +723,16 @@ void QQuickAnimatedSprite::setCurrentFrame(int arg) //TODO-C: Probably only work
     }
 }
 
+void QQuickAnimatedSprite::setFinishBehavior(FinishBehavior arg)
+{
+    Q_D(QQuickAnimatedSprite);
+
+    if (d->m_finishBehavior != arg) {
+        d->m_finishBehavior = arg;
+        Q_EMIT finishBehaviorChanged(arg);
+    }
+}
+
 void QQuickAnimatedSprite::createEngine()
 {
     Q_D(QQuickAnimatedSprite);
@@ -813,7 +867,11 @@ void QQuickAnimatedSprite::prepareNextFrame(QSGSpriteNode *node)
             progress = 0;
         }
         if (d->m_loops > 0 && d->m_curLoop >= d->m_loops) {
-            frameAt = 0;
+            if (d->m_finishBehavior == FinishAtInitialFrame)
+                frameAt = 0;
+            else
+                frameAt = frameCount() - 1;
+            d->m_curFrame = frameAt;
             d->m_running = false;
             emit runningChanged(false);
             emit finished();

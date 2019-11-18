@@ -39,7 +39,7 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 
-#include <private/qquickwindowmodule_p.h>
+#include "plugin.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -69,7 +69,13 @@ public:
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.Window"));
-        QQuickWindowModule::defineModule();
+
+        qmlRegisterTypesAndRevisions<
+                QWindowForeign,
+                QQuickWindowForeign,
+                QQuickWindowQmlImplForeign,
+                QQuickScreenForeign,
+                QQuickScreenInfoForeign>(uri, 2);
 
         qmlRegisterModule(uri, 2, 15);
     }

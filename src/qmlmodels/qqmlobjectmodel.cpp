@@ -154,7 +154,8 @@ public:
 
     void clear() {
         Q_Q(QQmlObjectModel);
-        for (const Item &child : qAsConst(children))
+        const auto copy = children;
+        for (const Item &child : copy)
             emit q->destroyingItem(child.item);
         remove(0, children.count());
     }
@@ -169,6 +170,8 @@ public:
     uint moveId;
     QList<Item> children;
 };
+
+Q_DECLARE_TYPEINFO(QQmlObjectModelPrivate::Item, Q_PRIMITIVE_TYPE);
 
 
 /*!
@@ -278,7 +281,7 @@ QVariant QQmlObjectModel::variantValue(int index, const QString &role)
     Q_D(QQmlObjectModel);
     if (index < 0 || index >= d->children.count())
         return QString();
-    return QQmlEngine::contextForObject(d->children.at(index).item)->contextProperty(role);
+    return d->children.at(index).item->property(role.toUtf8().constData());
 }
 
 QQmlIncubator::Status QQmlObjectModel::incubationStatus(int)

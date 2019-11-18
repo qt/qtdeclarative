@@ -68,7 +68,7 @@ QQmlRefPointer<QQmlScriptData> QQmlScriptBlob::scriptData() const
 
 void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 {
-    if (!diskCacheDisabled() || diskCacheForced()) {
+    if (diskCacheEnabled()) {
         QQmlRefPointer<QV4::ExecutableCompilationUnit> unit
                 = QV4::ExecutableCompilationUnit::create();
         QString error;
@@ -132,7 +132,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 
     auto executableUnit = QV4::ExecutableCompilationUnit::create(std::move(unit));
 
-    if ((!diskCacheDisabled() || diskCacheForced()) && !isDebugging()) {
+    if (diskCacheEnabled()) {
         QString errorString;
         if (executableUnit->saveToDisk(url(), &errorString)) {
             QString error;

@@ -138,6 +138,8 @@ bool QuickTestEvent::keySequence(const QVariant &keySequence)
         return false;
 #if QT_CONFIG(shortcut)
     QTest::keySequence(window, valueToKeySequence(keySequence));
+#else
+    Q_UNUSED(keySequence);
 #endif
     return true;
 }

@@ -80,7 +80,6 @@ static void generateWarning(QV4::ExecutionEngine *v4, const QString& description
 #if QT_CONFIG(qml_itemmodel)
 #define FOREACH_QML_SEQUENCE_TYPE_FOR_ITEMMODEL(F) \
     F(QModelIndex, QModelIndex, QModelIndexList, QModelIndex()) \
-    F(QModelIndex, QModelIndexVector, QVector<QModelIndex>, QModelIndex()) \
     F(QModelIndex, QModelIndexStdVector, std::vector<QModelIndex>, QModelIndex()) \
     F(QItemSelectionRange, QItemSelectionRange, QItemSelection, QItemSelectionRange())
 #else
@@ -88,9 +87,6 @@ static void generateWarning(QV4::ExecutionEngine *v4, const QString& description
 #endif
 
 #define FOREACH_QML_SEQUENCE_TYPE(F) \
-    F(int, IntVector, QVector<int>, 0) \
-    F(qreal, RealVector, QVector<qreal>, 0.0) \
-    F(bool, BoolVector, QVector<bool>, false) \
     F(int, IntStdVector, std::vector<int>, 0) \
     F(qreal, RealStdVector, std::vector<qreal>, 0.0) \
     F(bool, BoolStdVector, std::vector<bool>, false) \
@@ -99,10 +95,8 @@ static void generateWarning(QV4::ExecutionEngine *v4, const QString& description
     F(bool, Bool, QList<bool>, false) \
     F(QString, String, QList<QString>, QString()) \
     F(QString, QString, QStringList, QString()) \
-    F(QString, StringVector, QVector<QString>, QString()) \
     F(QString, StringStdVector, std::vector<QString>, QString()) \
     F(QUrl, Url, QList<QUrl>, QUrl()) \
-    F(QUrl, UrlVector, QVector<QUrl>, QUrl()) \
     F(QUrl, UrlStdVector, std::vector<QUrl>, QUrl()) \
     FOREACH_QML_SEQUENCE_TYPE_FOR_ITEMMODEL(F)
 
@@ -654,12 +648,6 @@ void Heap::QQmlSequence<Container>::init(QObject *object, int propertyIndex, boo
 
 namespace QV4 {
 
-typedef QQmlSequence<QVector<int> > QQmlIntVectorList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlIntVectorList);
-typedef QQmlSequence<QVector<qreal> > QQmlRealVectorList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlRealVectorList);
-typedef QQmlSequence<QVector<bool> > QQmlBoolVectorList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlBoolVectorList);
 typedef QQmlSequence<std::vector<int> > QQmlIntStdVectorList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlIntStdVectorList);
 typedef QQmlSequence<std::vector<qreal> > QQmlRealStdVectorList;
@@ -670,23 +658,17 @@ typedef QQmlSequence<QStringList> QQmlQStringList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQStringList);
 typedef QQmlSequence<QList<QString> > QQmlStringList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlStringList);
-typedef QQmlSequence<QVector<QString> > QQmlStringVectorList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlStringVectorList);
 typedef QQmlSequence<std::vector<QString> > QQmlStringStdVectorList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlStringStdVectorList);
 typedef QQmlSequence<QList<int> > QQmlIntList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlIntList);
+DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlStringStdVectorList);
 typedef QQmlSequence<QList<QUrl> > QQmlUrlList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlUrlList);
-typedef QQmlSequence<QVector<QUrl> > QQmlUrlVectorList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlUrlVectorList);
 typedef QQmlSequence<std::vector<QUrl> > QQmlUrlStdVectorList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlUrlStdVectorList);
 #if QT_CONFIG(qml_itemmodel)
 typedef QQmlSequence<QModelIndexList> QQmlQModelIndexList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQModelIndexList);
-typedef QQmlSequence<QVector<QModelIndex> > QQmlQModelIndexVectorList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQModelIndexVectorList);
 typedef QQmlSequence<std::vector<QModelIndex> > QQmlQModelIndexStdVectorList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQModelIndexStdVectorList);
 typedef QQmlSequence<QItemSelection> QQmlQItemSelectionRangeList;

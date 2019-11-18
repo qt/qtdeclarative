@@ -306,6 +306,9 @@ private slots:
 
     void extendedForeignTypes();
 
+    void selfReference();
+    void selfReferencingSingleton();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -624,12 +627,15 @@ void tst_qqmllanguage::errors_data()
 
     QTest::newRow("fuzzed.1") << "fuzzed.1.qml" << "fuzzed.1.errors.txt" << false;
     QTest::newRow("fuzzed.2") << "fuzzed.2.qml" << "fuzzed.2.errors.txt" << false;
+    QTest::newRow("fuzzed.3") << "fuzzed.3.qml" << "fuzzed.3.errors.txt" << false;
 
     QTest::newRow("bareQmlImport") << "bareQmlImport.qml" << "bareQmlImport.errors.txt" << false;
 
     QTest::newRow("typeAnnotations.2") << "typeAnnotations.2.qml" << "typeAnnotations.2.errors.txt" << false;
 
     QTest::newRow("propertyUnknownType") << "propertyUnknownType.qml" << "propertyUnknownType.errors.txt" << false;
+
+    QTest::newRow("selfInstantiation") << "SelfInstantiation.qml" << "SelfInstantiation.errors.txt" << false;
 }
 
 void tst_qqmllanguage::errors()
@@ -1955,7 +1961,6 @@ void tst_qqmllanguage::aliasProperties()
 
     // "Nested" aliases within an object that require iterative resolution
     {
-        // This is known to fail at the moment.
         QQmlComponent component(&engine, testFileUrl("alias.14.qml"));
         VERIFY_ERRORS(0);
 
@@ -2053,6 +2058,11 @@ void tst_qqmllanguage::aliasProperties()
         QVERIFY(myText);
         auto text = myText->property("text").toString();
         QCOMPARE(text, "alias:\n20");
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("alias.18.qml"));
+        VERIFY_ERRORS("alias.18.errors.txt");
     }
 }
 
@@ -4728,11 +4738,13 @@ static void beginDeferredOnce(QQmlEnginePrivate *enginePriv,
         typedef QMultiHash<int, const QV4::CompiledData::Binding *> QV4PropertyBindingHash;
         auto it = std::reverse_iterator<QV4PropertyBindingHash::iterator>(range.second);
         auto last = std::reverse_iterator<QV4PropertyBindingHash::iterator>(range.first);
+        state->creator->beginPopulateDeferred(deferData->context);
         while (it != last) {
-            if (!state->creator->populateDeferredBinding(property, deferData, *it))
-                state->errors << state->creator->errors;
+            state->creator->populateDeferredBinding(property, deferData->deferredIdx, *it);
             ++it;
         }
+        state->creator->finalizePopulateDeferred();
+        state->errors << state->creator->errors;
 
         deferredState->constructionStates += state;
 
@@ -4957,24 +4969,24 @@ void tst_qqmllanguage::instanceof_data()
     // assert that basic types don't convert to QObject
     QTest::newRow("1 instanceof QtObject")
         << testFileUrl("instanceof_qtqml.qml")
-        << QVariant("TypeError: Type error");
+        << QVariant(false);
     QTest::newRow("true instanceof QtObject")
         << testFileUrl("instanceof_qtqml.qml")
-        << QVariant("TypeError: Type error");
+        << QVariant(false);
     QTest::newRow("\"foobar\" instanceof QtObject")
         << testFileUrl("instanceof_qtqml.qml")
-        << QVariant("TypeError: Type error");
+        << QVariant(false);
 
     // assert that Managed don't either
     QTest::newRow("new String(\"foobar\") instanceof QtObject")
         << testFileUrl("instanceof_qtqml.qml")
-        << QVariant("TypeError: Type error");
+        << QVariant(false);
     QTest::newRow("new Object() instanceof QtObject")
         << testFileUrl("instanceof_qtqml.qml")
-        << QVariant("TypeError: Type error");
+        << QVariant(false);
     QTest::newRow("new Date() instanceof QtObject")
         << testFileUrl("instanceof_qtqml.qml")
-        << QVariant("TypeError: Type error");
+        << QVariant(false);
 
     // test that simple QtQml comparisons work
     QTest::newRow("qtobjectInstance instanceof QtObject")
@@ -5272,6 +5284,69 @@ void tst_qqmllanguage::extendedForeignTypes()
     QCOMPARE(o->property("foreignExtendedExtension").toInt(), 42);
     QCOMPARE(o->property("foreignObjectName").toString(), QLatin1String("foreign"));
     QCOMPARE(o->property("foreignExtendedObjectName").toString(), QLatin1String("foreignExtended"));
+}
+
+void tst_qqmllanguage::selfReference()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("SelfReference.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QQmlComponentPrivate *componentPrivate = QQmlComponentPrivate::get(&component);
+    auto compilationUnit = componentPrivate->compilationUnit;
+    QVERIFY(compilationUnit);
+
+    const QMetaObject *metaObject = o->metaObject();
+    QMetaProperty selfProperty = metaObject->property(metaObject->indexOfProperty("self"));
+    QCOMPARE(selfProperty.userType(), compilationUnit->metaTypeId);
+
+    QByteArray typeName = selfProperty.typeName();
+    QVERIFY(typeName.endsWith('*'));
+    typeName = typeName.chopped(1);
+    QCOMPARE(typeName, metaObject->className());
+
+    QMetaMethod selfFunction = metaObject->method(metaObject->indexOfMethod("returnSelf()"));
+    QVERIFY(selfFunction.isValid());
+    QCOMPARE(selfFunction.returnType(), compilationUnit->metaTypeId);
+
+    QMetaMethod selfSignal;
+
+    for (int i = metaObject->methodOffset(); i < metaObject->methodCount(); ++i) {
+        QMetaMethod method = metaObject->method(i);
+        if (method.isValid() && method.name().startsWith("blah")) {
+            selfSignal = method;
+            break;
+        }
+    }
+
+    QVERIFY(selfSignal.isValid());
+    QCOMPARE(selfSignal.parameterCount(), 1);
+    QCOMPARE(selfSignal.parameterType(0), compilationUnit->metaTypeId);
+}
+
+void tst_qqmllanguage::selfReferencingSingleton()
+{
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory());
+
+    QPointer<QObject> singletonPointer;
+    {
+        QQmlComponent component(&engine);
+        component.setData(QByteArray(R"(import QtQml 2.0
+                                     import selfreferencingsingletonmodule 1.0
+                                     QtObject {
+                                         property SelfReferencingSingleton singletonPointer: SelfReferencingSingleton
+                                     })"), QUrl());
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> o(component.create());
+        QVERIFY(!o.isNull());
+        singletonPointer = o->property("singletonPointer").value<QObject*>();
+    }
+
+    QVERIFY(!singletonPointer.isNull());
+    QCOMPARE(singletonPointer->property("dummy").toInt(), 42);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

@@ -147,7 +147,7 @@ struct Q_QML_EXPORT SparseArray
     SparseArray();
     ~SparseArray() {
         if (root())
-            freeTree(header.left, Q_ALIGNOF(SparseArrayNode));
+            freeTree(header.left, alignof(SparseArrayNode));
     }
 
     SparseArray(const SparseArray &other);

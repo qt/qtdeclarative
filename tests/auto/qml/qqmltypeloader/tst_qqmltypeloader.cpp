@@ -61,7 +61,7 @@ private slots:
     void qrcRootPathUrl();
     void implicitImport();
     void compositeSingletonCycle();
-
+    void declarativeCppType();
 private:
     void checkSingleton(const QString & dataDirectory);
 };
@@ -100,6 +100,8 @@ void tst_QQMLTypeLoader::trimCache()
 {
     QQmlEngine engine;
     QQmlTypeLoader &loader = QQmlEnginePrivate::get(&engine)->typeLoader;
+    QVector<QQmlTypeData *> releaseLater;
+    QVector<QV4::ExecutableCompilationUnit *> releaseCompilationUnitLater;
     for (int i = 0; i < 256; ++i) {
         QUrl url = testFileUrl("trim_cache.qml");
         url.setQuery(QString::number(i));
@@ -112,8 +114,10 @@ void tst_QQMLTypeLoader::trimCache()
         // QQmlTypeData or its compiledData() should prevent the trimming.
         if (i % 10 == 0) {
             // keep ref on data, don't add ref on data->compiledData()
+            releaseLater.append(data);
         } else if (i % 5 == 0) {
             data->compilationUnit()->addref();
+            releaseCompilationUnitLater.append(data->compilationUnit());
             data->release();
         } else {
             data->release();
@@ -129,6 +133,12 @@ void tst_QQMLTypeLoader::trimCache()
             QVERIFY(!loader.isTypeLoaded(url));
         // The cache is free to keep the others.
     }
+
+    for (auto *data : qAsConst(releaseCompilationUnitLater))
+        data->release();
+
+    for (auto *data : qAsConst(releaseLater))
+        data->release();
 }
 
 void tst_QQMLTypeLoader::trimCache2()
@@ -555,6 +565,15 @@ void tst_QQMLTypeLoader::compositeSingletonCycle()
     QScopedPointer<QObject> object {component.create()};
     QVERIFY(object);
     QCOMPARE(qvariant_cast<QColor>(object->property("color")), QColorConstants::Black);
+}
+
+void tst_QQMLTypeLoader::declarativeCppType()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("declarativeCppType.qml"));
+    QCOMPARE(component.status(), QQmlComponent::Ready);
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

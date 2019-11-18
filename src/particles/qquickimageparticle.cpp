@@ -1104,6 +1104,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     : QQuickParticlePainter(parent)
     , m_color_variation(0.0)
+    , m_outgoingNode(nullptr)
     , m_material(nullptr)
     , m_alphaVariation(0.0)
     , m_alpha(1.0)
@@ -1149,6 +1150,8 @@ void QQuickImageParticle::sceneGraphInvalidated()
 {
     m_nodes.clear();
     m_material = nullptr;
+    delete m_outgoingNode;
+    m_outgoingNode = nullptr;
 }
 
 void QQuickImageParticle::setImage(const QUrl &image)
@@ -1931,8 +1934,11 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *node, UpdatePaintNodeData
     }
 
     if (m_pleaseReset){
-        if (node)
-            delete node;
+        // Cannot just destroy the node and then return null (in case image
+        // loading is still in progress). Rather, keep track of the old node
+        // until we have a new one.
+        delete m_outgoingNode;
+        m_outgoingNode = node;
         node = nullptr;
 
         m_lastLevel = perfLevel;
@@ -1946,6 +1952,9 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *node, UpdatePaintNodeData
 
         m_pleaseReset = false;
         m_startedImageLoading = 0;//Cancel a part-way build (may still have a pending load)
+    } else if (!m_material) {
+        delete node;
+        node = nullptr;
     }
 
     if (m_system && m_system->isRunning() && !m_system->isPaused()){
@@ -1957,6 +1966,11 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *node, UpdatePaintNodeData
         } else if (m_startedImageLoading < 2) {
             update();//To call prepareNextFrame() again from the renderThread
         }
+    }
+
+    if (!node) {
+        node = m_outgoingNode;
+        m_outgoingNode = nullptr;
     }
 
     return node;

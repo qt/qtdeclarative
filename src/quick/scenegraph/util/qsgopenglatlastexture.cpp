@@ -150,6 +150,10 @@ QSGTexture *Manager::create(const QSGCompressedTextureFactory *factory)
     case QOpenGLTexture::RGB8_ETC2:
     case QOpenGLTexture::RGBA8_ETC2_EAC:
     case QOpenGLTexture::RGB8_PunchThrough_Alpha1_ETC2:
+    case QOpenGLTexture::RGB_DXT1:
+    case QOpenGLTexture::RGBA_DXT1:
+    case QOpenGLTexture::RGBA_DXT3:
+    case QOpenGLTexture::RGBA_DXT5:
         break;
     default:
         return t;
@@ -158,8 +162,12 @@ QSGTexture *Manager::create(const QSGCompressedTextureFactory *factory)
     QSize size = factory->m_textureData.size();
     if (size.width() < m_atlas_size_limit && size.height() < m_atlas_size_limit) {
         QHash<unsigned int, QSGCompressedAtlasTexture::Atlas*>::iterator i = m_atlases.find(format);
-        if (i == m_atlases.end())
-            i = m_atlases.insert(format, new QSGCompressedAtlasTexture::Atlas(m_atlas_size, format));
+        if (i == m_atlases.end()) {
+            // must be multiple of 4
+            QSize paddedSize(((m_atlas_size.width() + 3) / 4) * 4, ((m_atlas_size.height() + 3) / 4) * 4);
+            i = m_atlases.insert(format, new QSGCompressedAtlasTexture::Atlas(paddedSize, format));
+        }
+
         // must be multiple of 4
         QSize paddedSize(((size.width() + 3) / 4) * 4, ((size.height() + 3) / 4) * 4);
         QByteArray data = factory->m_textureData.data();
