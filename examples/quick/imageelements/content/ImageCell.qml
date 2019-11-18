@@ -53,8 +53,6 @@ Item {
     property alias mode: image.fillMode
     property alias caption: captionItem.text
 
-    width: parent.cellWidth; height: parent.cellHeight
-
     Image {
         id: image
         width: parent.width; height: parent.height - captionItem.height
