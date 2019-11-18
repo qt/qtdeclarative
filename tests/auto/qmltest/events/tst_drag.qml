@@ -150,6 +150,15 @@ Rectangle{
         SignalSpy {}
     }
 
+    Component {
+        id: mouseAreaComponent
+
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+        }
+    }
+
     TestCase {
         name:"mouserelease"
         when:windowShown
@@ -294,6 +303,27 @@ Rectangle{
                 compare(contentYSpy.count, 0)
             else
                 verify(contentYSpy.count > 0)
+        }
+
+        function test_negativeDragDistance_data() {
+            return [
+                { tag: "horizontal", startX: 100, startY: 100, xDistance: -90, yDistance: 0 },
+                { tag: "vertical", startX: 100, startY: 100, xDistance: 0, yDistance: -90 }
+            ]
+        }
+
+        // Tests that dragging to the left or top actually results in intermediate mouse moves.
+        function test_negativeDragDistance(data) {
+            let mouseArea = createTemporaryObject(mouseAreaComponent, root)
+            verify(mouseArea)
+
+            let positionSpy = signalSpyComponent.createObject(mouseArea,
+                { target: mouseArea, signalName: "positionChanged" })
+            verify(positionSpy)
+            verify(positionSpy.valid)
+
+            mouseDrag(mouseArea, data.startX, data.startY, data.xDistance, data.yDistance)
+            verify(positionSpy.count > 2, "Expected more than 2 mouse position changes, but only got " + positionSpy.count)
         }
     }
 }
