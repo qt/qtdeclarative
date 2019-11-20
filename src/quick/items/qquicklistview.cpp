@@ -1928,6 +1928,39 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     of type \l [QML] {real}, so it is possible to set fractional
     values like \c 0.1.
 
+    \section1 Reusing items
+
+    Since 5.15, ListView can be configured to recycle items instead of instantiating
+    from the \l delegate whenever new rows are flicked into view. This approach improves
+    performance, depending on the complexity of the delegate. Reusing
+    items is off by default (for backwards compatibility reasons), but can be switched
+    on by setting the \l reuseItems property to \c true.
+
+    When an item is flicked out, it moves to the \e{reuse pool}, which is an
+    internal cache of unused items. When this happens, the \l ListView::pooled
+    signal is emitted to inform the item about it. Likewise, when the item is
+    moved back from the pool, the \l ListView::reused signal is emitted.
+
+    Any item properties that come from the model are updated when the
+    item is reused. This includes \c index and \c row, but also
+    any model roles.
+
+    \note Avoid storing any state inside a delegate. If you do, reset it
+    manually on receiving the \l ListView::reused signal.
+
+    If an item has timers or animations, consider pausing them on receiving
+    the \l ListView::pooled signal. That way you avoid using the CPU resources
+    for items that are not visible. Likewise, if an item has resources that
+    cannot be reused, they could be freed up.
+
+    \note While an item is in the pool, it might still be alive and respond
+    to connected signals and bindings.
+
+    The following example shows a delegate that animates a spinning rectangle. When
+    it is pooled, the animation is temporarily paused:
+
+    \snippet qml/listview/reusabledelegate.qml 0
+
     \sa {QML Data Models}, GridView, PathView, {Qt Quick Examples - Views}
 */
 QQuickListView::QQuickListView(QQuickItem *parent)
@@ -2091,6 +2124,20 @@ QQuickListView::~QQuickListView()
 /*!
   \qmlproperty int QtQuick::ListView::count
   This property holds the number of items in the view.
+*/
+
+/*!
+    \qmlproperty bool QtQuick::ListView::reuseItems
+
+    This property enables you to reuse items that are instantiated
+    from the \l delegate. If set to \c false, any currently
+    pooled items are destroyed.
+
+    This property is \c false by default.
+
+    \since 5.15
+
+    \sa {Reusing items}, ListView::pooled, ListView::reused
 */
 
 /*!
