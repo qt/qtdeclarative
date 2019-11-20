@@ -45,6 +45,7 @@ private slots:
     void test_basic();
     void test_deletion();
     void test_noDeletion();
+    void test_takeGive();
 };
 
 void tst_qquickitemparticle::initTestCase()
@@ -104,6 +105,18 @@ void tst_qquickitemparticle::test_noDeletion()
 
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 100, 10));
     QVERIFY(extremelyFuzzyCompare(system->property("acc").toInt(), 100, 10));
+    delete view;
+}
+
+void tst_qquickitemparticle::test_takeGive()
+{
+    QQuickView* view = createView(testFileUrl("takeGive.qml"), 500);
+    QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
+    QMetaObject::invokeMethod(view->rootObject(), "takeItems");
+    ensureAnimTime(1000, system->m_animation);
+    QVERIFY(system->property("acc").toInt() == 100);
+    QMetaObject::invokeMethod(view->rootObject(), "giveItems");
+    QTRY_VERIFY(system->property("acc").toInt() == 0);
     delete view;
 }
 

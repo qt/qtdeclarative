@@ -159,8 +159,15 @@ void QQuickItemParticle::take(QQuickItem *item, bool prioritize)
 
 void QQuickItemParticle::give(QQuickItem *item)
 {
-    //TODO: This
-    Q_UNUSED(item);
+    for (auto groupId : groupIds()) {
+        for (QQuickParticleData* data : qAsConst(m_system->groupData[groupId]->data)) {
+            if (data->delegate == item){
+                m_deletables << item;
+                data->delegate = nullptr;
+                return;
+            }
+        }
+    }
 }
 
 void QQuickItemParticle::initialize(int gIdx, int pIdx)
@@ -179,8 +186,11 @@ void QQuickItemParticle::processDeletables()
             item->setOpacity(0.);
         item->setVisible(false);
         QQuickItemParticleAttached* mpa;
-        if ((mpa = qobject_cast<QQuickItemParticleAttached*>(qmlAttachedPropertiesObject<QQuickItemParticle>(item))))
-            mpa->detach();//reparent as well?
+        if ((mpa = qobject_cast<QQuickItemParticleAttached*>(qmlAttachedPropertiesObject<QQuickItemParticle>(item)))) {
+            if (mpa->m_parentItem != nullptr)
+                item->setParentItem(mpa->m_parentItem);
+            mpa->detach();
+        }
         int idx = -1;
         if ((idx = m_managed.indexOf(item)) != -1) {
             m_managed.takeAt(idx);
@@ -205,9 +215,12 @@ void QQuickItemParticle::tick(int time)
             m_deletables << d->delegate;
             d->delegate = nullptr;
         }
+        QQuickItem* parentItem = nullptr;
         if (!m_pendingItems.isEmpty()){
-            d->delegate = m_pendingItems.front();
+            QQuickItem *item = m_pendingItems.front();
             m_pendingItems.pop_front();
+            parentItem = item->parentItem();
+            d->delegate = item;
         }else if (m_delegate){
             d->delegate = qobject_cast<QQuickItem*>(m_delegate->create(qmlContext(this)));
             if (d->delegate)
@@ -218,6 +231,7 @@ void QQuickItemParticle::tick(int time)
             d->delegate->setY(d->curY(m_system) - d->delegate->height() / 2);
             QQuickItemParticleAttached* mpa = qobject_cast<QQuickItemParticleAttached*>(qmlAttachedPropertiesObject<QQuickItemParticle>(d->delegate));
             if (mpa){
+                mpa->m_parentItem = parentItem;
                 mpa->m_mp = this;
                 mpa->attach();
             }
