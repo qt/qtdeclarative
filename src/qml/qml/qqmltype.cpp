@@ -618,28 +618,16 @@ int QQmlType::metaObjectRevision() const
 
 QQmlAttachedPropertiesFunc QQmlType::attachedPropertiesFunction(QQmlEnginePrivate *engine) const
 {
-    if (!d)
-        return nullptr;
-    if (d->regType == CppType)
-        return d->extraData.cd->attachedPropertiesFunc;
-
-    QQmlType base;
-    if (d->regType == CompositeType)
-        base = d->resolveCompositeBaseType(engine);
-    return base.attachedPropertiesFunction(engine);
+    if (const QQmlTypePrivate *base = d->attachedPropertiesBase(engine))
+        return base->extraData.cd->attachedPropertiesFunc;
+    return nullptr;
 }
 
 const QMetaObject *QQmlType::attachedPropertiesType(QQmlEnginePrivate *engine) const
 {
-    if (!d)
-        return nullptr;
-    if (d->regType == CppType)
-        return d->extraData.cd->attachedPropertiesType;
-
-    QQmlType base;
-    if (d->regType == CompositeType)
-        base = d->resolveCompositeBaseType(engine);
-    return base.attachedPropertiesType(engine);
+    if (const QQmlTypePrivate *base = d->attachedPropertiesBase(engine))
+        return base->extraData.cd->attachedPropertiesType;
+    return nullptr;
 }
 
 #if QT_DEPRECATED_SINCE(5, 14)
@@ -650,15 +638,9 @@ Qt 4.7 and QtQuick 1.0).
 */
 int QQmlType::attachedPropertiesId(QQmlEnginePrivate *engine) const
 {
-    if (!d)
-        return -1;
-    if (d->regType == CppType)
-        return d->extraData.cd->attachedPropertiesType ? d->index : -1;
-
-    QQmlType base;
-    if (d->regType == CompositeType)
-        base = d->resolveCompositeBaseType(engine);
-    return base.attachedPropertiesId(engine);
+    if (const QQmlTypePrivate *base = d->attachedPropertiesBase(engine))
+        return base->index;
+    return -1;
 }
 #endif
 

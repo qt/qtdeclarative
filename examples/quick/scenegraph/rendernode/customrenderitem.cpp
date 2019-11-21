@@ -53,8 +53,12 @@
 #include <QSGRendererInterface>
 
 #include "openglrenderer.h"
+#ifdef Q_OS_MACOS
 #include "metalrenderer.h"
+#endif
+#if QT_CONFIG(d3d12)
 #include "d3d12renderer.h"
+#endif
 #include "softwarerenderer.h"
 
 //! [1]

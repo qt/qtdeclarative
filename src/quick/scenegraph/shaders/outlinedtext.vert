@@ -1,6 +1,7 @@
 uniform highp mat4 matrix;
 uniform highp vec2 textureScale;
 uniform highp vec2 shift;
+uniform highp float dpr;
 
 attribute highp vec4 vCoord;
 attribute highp vec2 tCoord;
@@ -18,5 +19,6 @@ void main()
      sCoordDown = (tCoord - vec2(0.0, 1.0)) * textureScale;
      sCoordLeft = (tCoord - vec2(-1.0, 0.0)) * textureScale;
      sCoordRight = (tCoord - vec2(1.0, 0.0)) * textureScale;
-     gl_Position = matrix * vCoord;
+     vec3 dprSnapPos = floor(vCoord.xyz * dpr + 0.5) / dpr;
+     gl_Position = matrix * vec4(dprSnapPos, vCoord.w);
 }

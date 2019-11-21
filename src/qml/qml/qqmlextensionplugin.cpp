@@ -127,8 +127,6 @@ void QQmlExtensionPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 }
 
 /*!
-    \fn void QQmlEngineExtensionPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
-
     Initializes the extension from the \a uri using the \a engine. Here an application
     plugin might, for example, expose some data or objects to QML,
     as context properties on the engine's root context.

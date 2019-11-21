@@ -59,8 +59,23 @@ QT_BEGIN_NAMESPACE
     import QtQml.Models 2.\1
     \endqml
 
-    Note that QtQml.Models module started at version 2.1 to match the version
+    \note QtQml.Models module started at version 2.1 to match the version
     of the parent module, \l{Qt QML}.
+
+    In addition, Qt.labs.qmlmodels provides experimental QML types for models.
+    To use these experimental types, import the module with the following line:
+
+    \qml
+    import Qt.labs.qmlmodels 1.0
+    \endqml
+
+    \section1 QML Types
+    \generatelist qmltypesbymodule QtQml.Models
+
+    \section1 Experimental QML Types
+    \generatelist qmltypesbymodule Qt.labs.qmlmodels
+
+    \noautolist
 */
 
 

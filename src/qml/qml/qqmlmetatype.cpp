@@ -927,11 +927,11 @@ int QQmlMetaType::attachedPropertiesFuncId(QQmlEnginePrivate *engine, const QMet
 
     for (auto it = data->metaObjectToType.constFind(mo), end = data->metaObjectToType.constEnd();
          it != end && it.key() == mo; ++it) {
-        const QQmlType type(it.value());
-        if (type.attachedPropertiesFunction(engine))
-            return type.attachedPropertiesId(engine);
+        if (const QQmlTypePrivate *type = it.value()) {
+            if (const QQmlTypePrivate *base = type->attachedPropertiesBase(engine))
+                return base->index;
+        }
     }
-
     return -1;
 }
 

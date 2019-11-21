@@ -1905,11 +1905,11 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
     Here is an example that uses WorkerScript to periodically append the
     current time to a list model:
 
-    \snippet ../quick/threading/threadedlistmodel/timedisplay.qml 0
+    \snippet ../../examples/quick/threading/threadedlistmodel/timedisplay.qml 0
 
     The included file, \tt dataloader.mjs, looks like this:
 
-    \snippet ../quick/threading/threadedlistmodel/dataloader.mjs 0
+    \snippet ../../examples/quick/threading/threadedlistmodel/dataloader.mjs 0
 
     The timer in the main example sends messages to the worker script by calling
     \l WorkerScript::sendMessage(). When this message is received,

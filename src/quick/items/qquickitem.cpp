@@ -2074,10 +2074,10 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     in the GPU equal to \c {width x height x 4}. In memory constrained
     configurations, large layers should be used with care.
 
-    In the QPainter / QWidget world, it is some times favorable to
+    In the QPainter / QWidget world, it is sometimes favorable to
     cache complex content in a pixmap, image or texture. In Qt Quick,
     because of the techniques already applied by the \l {Qt Quick
-    Scene Graph OpenGL Renderer} {scene graph renderer}, this will in most
+    Scene Graph Default Renderer} {scene graph renderer}, this will in most
     cases not be the case. Excessive draw calls are already reduced
     because of batching and a cache will in most cases end up blending
     more pixels than the original content. The overhead of rendering

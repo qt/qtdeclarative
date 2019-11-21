@@ -871,17 +871,13 @@ void QQuickTableViewPrivate::syncLoadedTableRectFromLoadedTable()
     loadedTableInnerRect = QRectF(topLeftRect.bottomRight(), bottomRightRect.topLeft());
 }
 
-void QQuickTableViewPrivate::forceLayout()
+QQuickTableViewPrivate::RebuildOptions QQuickTableViewPrivate::checkForVisibilityChanges()
 {
-    if (loadedItems.isEmpty())
-        return;
-
-    clearEdgeSizeCache();
-    RebuildOptions rebuildOptions = RebuildOption::LayoutOnly;
-
     // Go through all columns from first to last, find the columns that used
     // to be hidden and not loaded, and check if they should become visible
     // (and vice versa). If there is a change, we need to rebuild.
+    RebuildOptions rebuildOptions = RebuildOption::None;
+
     for (int column = leftColumn(); column <= rightColumn(); ++column) {
         const bool wasVisibleFromBefore = loadedColumns.contains(column);
         const bool isVisibleNow = !qFuzzyIsNull(getColumnWidth(column));
@@ -914,6 +910,28 @@ void QQuickTableViewPrivate::forceLayout()
         if (row == topRow())
             rebuildOptions.setFlag(RebuildOption::CalculateNewTopLeftRow);
         break;
+    }
+
+    return rebuildOptions;
+}
+
+void QQuickTableViewPrivate::forceLayout()
+{
+    if (loadedItems.isEmpty())
+        return;
+
+    clearEdgeSizeCache();
+    RebuildOptions rebuildOptions = RebuildOption::None;
+
+    const QSize actualTableSize = calculateTableSize();
+    if (tableSize != actualTableSize) {
+        // This can happen if the app is calling forceLayout while
+        // the model is updated, but before we're notified about it.
+        rebuildOptions = RebuildOption::All;
+    } else {
+        rebuildOptions = checkForVisibilityChanges();
+        if (!rebuildOptions)
+            rebuildOptions = RebuildOption::LayoutOnly;
     }
 
     scheduleRebuildTable(rebuildOptions);
@@ -1183,24 +1201,29 @@ qreal QQuickTableViewPrivate::sizeHintForRow(int row)
     return rowHeight;
 }
 
-void QQuickTableViewPrivate::calculateTableSize()
+void QQuickTableViewPrivate::updateTableSize()
 {
     // tableSize is the same as row and column count, and will always
     // be the same as the number of rows and columns in the model.
     Q_Q(QQuickTableView);
-    QSize prevTableSize = tableSize;
 
-    if (tableModel)
-        tableSize = QSize(tableModel->columns(), tableModel->rows());
-    else if (model)
-        tableSize = QSize(1, model->count());
-    else
-        tableSize = QSize(0, 0);
+    const QSize prevTableSize = tableSize;
+    tableSize = calculateTableSize();
 
     if (prevTableSize.width() != tableSize.width())
         emit q->columnsChanged();
     if (prevTableSize.height() != tableSize.height())
         emit q->rowsChanged();
+}
+
+QSize QQuickTableViewPrivate::calculateTableSize()
+{
+    if (tableModel)
+        return QSize(tableModel->columns(), tableModel->rows());
+    else if (model)
+        return QSize(1, model->count());
+
+    return QSize(0, 0);
 }
 
 qreal QQuickTableViewPrivate::getColumnLayoutWidth(int column)
@@ -1755,7 +1778,7 @@ void QQuickTableViewPrivate::calculateTopLeft(QPoint &topLeftCell, QPointF &topL
 
 void QQuickTableViewPrivate::beginRebuildTable()
 {
-    calculateTableSize();
+    updateTableSize();
 
     QPoint topLeft;
     QPointF topLeftPos;
@@ -2291,6 +2314,7 @@ void QQuickTableViewPrivate::syncSyncView()
 
 void QQuickTableViewPrivate::connectToModel()
 {
+    Q_Q(QQuickTableView);
     Q_TABLEVIEW_ASSERT(model, "");
 
     QObjectPrivate::connect(model, &QQmlInstanceModel::createdItem, this, &QQuickTableViewPrivate::itemCreatedCallback);
@@ -2300,6 +2324,8 @@ void QQuickTableViewPrivate::connectToModel()
         const auto tm = tableModel.data();
         QObjectPrivate::connect(tm, &QQmlTableInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
         QObjectPrivate::connect(tm, &QQmlTableInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
+        // Connect atYEndChanged to a function that fetches data if more is available
+        QObjectPrivate::connect(q, &QQuickTableView::atYEndChanged, this, &QQuickTableViewPrivate::fetchMoreData);
     }
 
     if (auto const aim = model->abstractItemModel()) {
@@ -2323,6 +2349,7 @@ void QQuickTableViewPrivate::connectToModel()
 
 void QQuickTableViewPrivate::disconnectFromModel()
 {
+    Q_Q(QQuickTableView);
     Q_TABLEVIEW_ASSERT(model, "");
 
     QObjectPrivate::disconnect(model, &QQmlInstanceModel::createdItem, this, &QQuickTableViewPrivate::itemCreatedCallback);
@@ -2332,6 +2359,7 @@ void QQuickTableViewPrivate::disconnectFromModel()
         const auto tm = tableModel.data();
         QObjectPrivate::disconnect(tm, &QQmlTableInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
         QObjectPrivate::disconnect(tm, &QQmlTableInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
+        QObjectPrivate::disconnect(q, &QQuickTableView::atYEndChanged, this, &QQuickTableViewPrivate::fetchMoreData);
     }
 
     if (auto const aim = model->abstractItemModel()) {
@@ -2411,6 +2439,14 @@ void QQuickTableViewPrivate::layoutChangedCallback(const QList<QPersistentModelI
     Q_UNUSED(hint);
 
     scheduleRebuildTable(RebuildOption::ViewportOnly);
+}
+
+void QQuickTableViewPrivate::fetchMoreData()
+{
+    if (tableModel && tableModel->canFetchMore()) {
+        tableModel->fetchMore();
+        scheduleRebuildTable(RebuildOption::ViewportOnly);
+    }
 }
 
 void QQuickTableViewPrivate::modelResetCallback()

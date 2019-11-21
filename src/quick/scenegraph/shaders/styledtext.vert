@@ -13,5 +13,6 @@ void main()
 {
      sampleCoord = tCoord * textureScale;
      shiftedSampleCoord = (tCoord - shift) * textureScale;
-     gl_Position = matrix * floor(vCoord * dpr + 0.5) / dpr;
+     vec3 dprSnapPos = floor(vCoord.xyz * dpr + 0.5) / dpr;
+     gl_Position = matrix * vec4(dprSnapPos, vCoord.w);
 }

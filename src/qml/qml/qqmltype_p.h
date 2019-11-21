@@ -182,6 +182,7 @@ public:
     };
 
 private:
+    friend class QQmlTypePrivate;
     friend uint qHash(const QQmlType &t, uint seed);
     QQmlRefPointer<const QQmlTypePrivate> d;
 };

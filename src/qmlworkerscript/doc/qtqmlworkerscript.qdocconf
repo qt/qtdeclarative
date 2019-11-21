@@ -23,15 +23,13 @@ qhp.QtQmlWorkerScript.sortPages  = true
 
 tagfile      = qtqmlworkerscript.tags
 
-depends += qtcore qtqml qtdoc
+depends += qtcore qtqml qtquick qtdoc
 
 headerdirs  += ..
 
 sourcedirs  += .. \
                ../../imports/workerscript
 
-exampledirs += ../../../examples/qml \
-               ../ \
-               snippets
+exampledirs += snippets
 
 navigation.qmltypespage = "Qt Qml WorkerScript QML Types"
