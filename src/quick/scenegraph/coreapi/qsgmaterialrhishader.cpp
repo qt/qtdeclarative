@@ -97,14 +97,14 @@ static inline QRhiShaderResourceBinding::StageFlags toSrbStage(QShader::Stage st
         Q_UNREACHABLE();
         break;
     }
-    return 0;
+    return { };
 }
 
 void QSGMaterialRhiShaderPrivate::prepare(QShader::Variant vertexShaderVariant)
 {
     ubufBinding = -1;
     ubufSize = 0;
-    ubufStages = 0;
+    ubufStages = { };
     memset(combinedImageSamplerBindings, 0, sizeof(combinedImageSamplerBindings));
     vertexShader = fragmentShader = nullptr;
     masterUniformData.clear();

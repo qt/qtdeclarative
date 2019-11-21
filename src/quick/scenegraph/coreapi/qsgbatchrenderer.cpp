@@ -3257,7 +3257,7 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms)
     ps->setShaderResourceBindings(e->srb);
     ps->setRenderPassDescriptor(renderPassDescriptor());
 
-    QRhiGraphicsPipeline::Flags flags = 0;
+    QRhiGraphicsPipeline::Flags flags;
     if (needsBlendConstant(m_gstate.srcColor) || needsBlendConstant(m_gstate.dstColor))
         flags |= QRhiGraphicsPipeline::UsesBlendConstants;
     if (m_gstate.usesScissor)

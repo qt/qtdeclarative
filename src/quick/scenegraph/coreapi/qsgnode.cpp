@@ -245,7 +245,6 @@ static void qt_print_node_count()
  */
 QSGNode::QSGNode()
     : m_nodeFlags(OwnedByParent)
-    , m_dirtyState(nullptr)
 {
     init();
 }
@@ -264,7 +263,6 @@ QSGNode::QSGNode(NodeType type)
     , m_previousSibling(nullptr)
     , m_subtreeRenderableCount(type == GeometryNodeType || type == RenderNodeType ? 1 : 0)
     , m_nodeFlags(OwnedByParent)
-    , m_dirtyState(nullptr)
 {
     init();
 }
@@ -283,7 +281,6 @@ QSGNode::QSGNode(QSGNodePrivate &dd, NodeType type)
     , m_previousSibling(nullptr)
     , m_subtreeRenderableCount(type == GeometryNodeType || type == RenderNodeType ? 1 : 0)
     , m_nodeFlags(OwnedByParent)
-    , m_dirtyState(nullptr)
     , d_ptr(&dd)
 {
     init();

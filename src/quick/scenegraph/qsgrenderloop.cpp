@@ -747,7 +747,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 
     const bool needsPresent = alsoSwap && window->isVisible();
     if (cd->swapchain) {
-        QRhi::EndFrameFlags flags = 0;
+        QRhi::EndFrameFlags flags;
         if (!needsPresent)
             flags |= QRhi::SkipPresent;
         QRhi::FrameOpResult frameResult = rhi->endFrame(cd->swapchain, flags);

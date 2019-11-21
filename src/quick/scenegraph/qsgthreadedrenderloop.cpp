@@ -824,7 +824,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
         }
 
         if (cd->swapchain) {
-            QRhi::EndFrameFlags flags = 0;
+            QRhi::EndFrameFlags flags;
             if (grabImage)
                 flags |= QRhi::SkipPresent;
             QRhi::FrameOpResult frameResult = rhi->endFrame(cd->swapchain, flags);

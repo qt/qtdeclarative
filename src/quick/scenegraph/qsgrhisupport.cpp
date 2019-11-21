@@ -465,7 +465,7 @@ QRhi *QSGRhiSupport::createRhi(QWindow *window, QOffscreenSurface *offscreenSurf
 {
     QRhi *rhi = nullptr;
 
-    QRhi::Flags flags = 0;
+    QRhi::Flags flags;
     if (isProfilingRequested())
         flags |= QRhi::EnableProfiling | QRhi::EnableDebugMarkers;
     if (isSoftwareRendererRequested())

@@ -3453,7 +3453,7 @@ QObject *QQmlPartsModel::object(int index, QQmlIncubator::IncubationMode incubat
 
 QQmlInstanceModel::ReleaseFlags QQmlPartsModel::release(QObject *item)
 {
-    QQmlInstanceModel::ReleaseFlags flags = nullptr;
+    QQmlInstanceModel::ReleaseFlags flags;
 
     QHash<QObject *, QQuickPackage *>::iterator it = m_packaged.find(item);
     if (it != m_packaged.end()) {

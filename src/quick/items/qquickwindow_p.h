@@ -206,8 +206,8 @@ public:
     };
     Q_DECLARE_FLAGS(FocusOptions, FocusOption)
 
-    void setFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = nullptr);
-    void clearFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = nullptr);
+    void setFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = { });
+    void clearFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = { });
     static void notifyFocusChangesRecur(QQuickItem **item, int remaining);
     void clearFocusObject() override;
 

@@ -8812,7 +8812,7 @@ QQuickItemPrivate::ExtraData::ExtraData()
   effectRefCount(0), hideRefCount(0),
   recursiveEffectRefCount(0),
   opacityNode(nullptr), clipNode(nullptr), rootNode(nullptr),
-  acceptedMouseButtons(nullptr), origin(QQuickItem::Center),
+  origin(QQuickItem::Center),
   transparentForPositioner(false)
 {
 }
