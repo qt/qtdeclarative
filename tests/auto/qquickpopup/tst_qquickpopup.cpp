@@ -1026,12 +1026,13 @@ void tst_QQuickPopup::closeOnEscapeWithVisiblePopup()
     QQuickApplicationHelper helper(this, QStringLiteral("closeOnEscapeWithVisiblePopup.qml"));
     QQuickWindow *window = helper.window;
     window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickPopup *popup = window->findChild<QQuickPopup *>("popup");
     QVERIFY(popup);
     QTRY_VERIFY(popup->isOpened());
 
+    QTRY_VERIFY(window->activeFocusItem());
     QTest::keyClick(window, Qt::Key_Escape);
     QTRY_VERIFY(!popup->isVisible());
 }

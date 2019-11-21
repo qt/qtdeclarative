@@ -58,8 +58,8 @@ T.ToolTip {
     contentItem: Text {
         text: control.text
         font: control.font
+        wrapMode: Text.Wrap
         color: control.palette.toolTipText
-        // TODO: wrapMode: Label.Wrap
     }
 
     background: Rectangle {

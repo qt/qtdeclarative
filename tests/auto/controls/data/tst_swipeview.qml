@@ -574,4 +574,53 @@ TestCase {
             compare(control.itemAt(i).x, 0)
         }
     }
+
+    Component {
+        id: focusSwipeViewComponent
+
+        SwipeView {
+            id: swipeView
+            anchors.fill: parent
+            focus: true
+
+            property int pressCount
+            property int releaseCount
+            property int rectanglePressCount
+            property int rectangleReleaseCount
+
+            Rectangle {
+                focus: true
+
+                Keys.onPressed: ++swipeView.rectanglePressCount
+                Keys.onReleased: ++swipeView.rectangleReleaseCount
+            }
+
+            Keys.onPressed: ++pressCount
+            Keys.onReleased: ++releaseCount
+        }
+    }
+
+    function test_focus() {
+        if (Qt.styleHints.tabFocusBehavior !== Qt.TabFocusAllControls)
+            skip("This platform only allows tab focus for text controls")
+
+        var control = createTemporaryObject(focusSwipeViewComponent, testCase)
+        verify(control)
+        compare(control.focus, true)
+        compare(control.contentItem.focus, true)
+        compare(control.itemAt(0).focus, true)
+        compare(control.itemAt(0).activeFocus, true)
+
+        keyPress(Qt.Key_A)
+        compare(control.pressCount, 1)
+        compare(control.releaseCount, 0)
+        compare(control.rectanglePressCount, 1)
+        compare(control.rectangleReleaseCount, 0)
+
+        keyRelease(Qt.Key_A)
+        compare(control.pressCount, 1)
+        compare(control.releaseCount, 1)
+        compare(control.rectanglePressCount, 1)
+        compare(control.rectangleReleaseCount, 1)
+    }
 }
