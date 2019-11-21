@@ -29,7 +29,7 @@
     \example scenegraph/metaltextureimport
     \title Scene Graph - Metal Texture Import
     \ingroup qtquickexamples
-    \brief Shows how to use a texture created directly with Metal
+    \brief Shows how to use a texture created directly with Metal.
 
     \image metaltextureimport-example.jpg
 

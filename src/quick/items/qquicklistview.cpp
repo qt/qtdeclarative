@@ -808,6 +808,7 @@ void QQuickListViewPrivate::layoutVisibleItems(int fromModelIndex)
 
         FxViewItem *firstItem = *visibleItems.constBegin();
         bool fixedCurrent = currentItem && firstItem->item == currentItem->item;
+        firstVisibleItemPosition = firstItem->position();
         qreal sum = firstItem->size();
         qreal pos = firstItem->position() + firstItem->size() + spacing;
         firstItem->setVisible(firstItem->endPosition() >= from && firstItem->position() <= to);
@@ -2095,7 +2096,7 @@ QQuickListView::~QQuickListView()
     highlight item is \c 0.
 
     \sa highlightItem, highlightFollowsCurrentItem,
-    {Qt Quick Examples - Views#Highlight}{ListView highlight example},
+    {Qt Quick Examples - Views#Using Highlight}{ListView Highlight Example},
     {Stacking Order in ListView}
 */
 

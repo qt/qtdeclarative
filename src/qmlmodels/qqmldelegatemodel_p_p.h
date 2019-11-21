@@ -129,7 +129,7 @@ public:
     int modelRow() const { return row; }
     int modelColumn() const { return column; }
     int modelIndex() const { return index; }
-    virtual void setModelIndex(int idx, int newRow, int newColumn);
+    virtual void setModelIndex(int idx, int newRow, int newColumn, bool alwaysEmit = false);
 
     virtual QV4::ReturnedValue get() { return QV4::QObjectWrapper::wrap(v4, this); }
 

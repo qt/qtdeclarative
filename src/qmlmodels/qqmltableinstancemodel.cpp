@@ -342,9 +342,13 @@ void QQmlTableInstanceModel::reuseItem(QQmlDelegateModelItem *item, int newModel
 {
     // Update the context properties index, row and column on
     // the delegate item, and inform the application about it.
+    // Note that we set alwaysEmit to true, to force all bindings
+    // to be reevaluated, even if the index didn't change (since
+    // the model can have changed size since last usage).
+    const bool alwaysEmit = true;
     const int newRow = m_adaptorModel.rowAt(newModelIndex);
     const int newColumn = m_adaptorModel.columnAt(newModelIndex);
-    item->setModelIndex(newModelIndex, newRow, newColumn);
+    item->setModelIndex(newModelIndex, newRow, newColumn, alwaysEmit);
 
     // Notify the application that all 'dynamic'/role-based context data has
     // changed as well (their getter function will use the updated index).

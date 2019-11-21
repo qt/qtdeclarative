@@ -1425,8 +1425,12 @@ Item {
             ddy = 0
 
         mousePress(item, x, y, button, modifiers, delay)
-        //trigger dragging
-        mouseMove(item, x + util.dragThreshold + 1, y + util.dragThreshold + 1, moveDelay, button)
+
+        // Trigger dragging by dragging past the drag threshold, but making sure to only drag
+        // along a certain axis if a distance greater than zero was given for that axis.
+        var dragTriggerXDistance = dx > 0 ? (util.dragThreshold + 1) : 0
+        var dragTriggerYDistance = dy > 0 ? (util.dragThreshold + 1) : 0
+        mouseMove(item, x + dragTriggerXDistance, y + dragTriggerYDistance, moveDelay, button)
         if (ddx > 0 || ddy > 0) {
             mouseMove(item, x + ddx, y + ddy, moveDelay, button)
             mouseMove(item, x + 2*ddx, y + 2*ddy, moveDelay, button)

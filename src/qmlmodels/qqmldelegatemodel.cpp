@@ -2234,7 +2234,7 @@ void QQmlDelegateModelItem::Dispose()
     delete this;
 }
 
-void QQmlDelegateModelItem::setModelIndex(int idx, int newRow, int newColumn)
+void QQmlDelegateModelItem::setModelIndex(int idx, int newRow, int newColumn, bool alwaysEmit)
 {
     const int prevIndex = index;
     const int prevRow = row;
@@ -2244,11 +2244,11 @@ void QQmlDelegateModelItem::setModelIndex(int idx, int newRow, int newColumn)
     row = newRow;
     column = newColumn;
 
-    if (idx != prevIndex)
+    if (idx != prevIndex || alwaysEmit)
         emit modelIndexChanged();
-    if (row != prevRow)
+    if (row != prevRow || alwaysEmit)
         emit rowChanged();
-    if (column != prevColumn)
+    if (column != prevColumn || alwaysEmit)
         emit columnChanged();
 }
 

@@ -701,8 +701,8 @@ void QSGTexture::updateBindOptions(bool force) // legacy (GL-only)
     data (for example, because there was no setImage() since the last call to
     this function), the function does nothing.
 
-    Materials involving textures are expected to call this function from their
-    updateSampledImage() implementation, typically without any conditions.
+    Materials involving \a rhi textures are expected to call this function from
+    their updateSampledImage() implementation, typically without any conditions.
 
     \note This function is only used when running the graphics API independent
     rendering path of the scene graph.
