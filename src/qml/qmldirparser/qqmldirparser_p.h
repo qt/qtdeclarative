@@ -64,9 +64,7 @@ class QQmlEngine;
 class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlDirParser
 {
 public:
-    QQmlDirParser();
-    ~QQmlDirParser();
-
+    void clear();
     bool parse(const QString &source);
 
     bool hasError() const;
@@ -166,7 +164,7 @@ private:
     QStringList _imports;
     QList<Script> _scripts;
     QList<Plugin> _plugins;
-    bool _designerSupported;
+    bool _designerSupported = false;
     QList<TypeInfo> _typeInfos;
     QString _className;
 };
