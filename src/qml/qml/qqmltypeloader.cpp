@@ -1116,7 +1116,8 @@ void QQmlTypeLoader::setQmldirContent(const QString &url, const QString &content
         m_importQmlDirCache.insert(url, qmldir);
     }
 
-    qmldir->setContent(url, content);
+    if (!qmldir->hasContent())
+        qmldir->setContent(url, content);
 }
 
 /*!

@@ -74,9 +74,9 @@ QString QQmlTypeLoaderQmldirContent::typeNamespace() const
 
 void QQmlTypeLoaderQmldirContent::setContent(const QString &location, const QString &content)
 {
+    Q_ASSERT(!m_hasContent);
     m_hasContent = true;
     m_location = location;
-    m_parser.clear();
     m_parser.parse(content);
 }
 
