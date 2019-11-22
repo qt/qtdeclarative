@@ -937,13 +937,14 @@ void PropertyUpdater::breakBinding()
 void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *modelItemToIncubate, QObject *object)
 {
     auto incubatorPriv = QQmlIncubatorPrivate::get(this);
-    QQmlData *d = QQmlData::get(object);
-    auto contextData = d ? d->context : nullptr;
-    if (contextData) {
-        contextData->hasExtraObject = true;
-        contextData->extraObject = modelItemToIncubate;
-    }
     if (incubatorPriv->hadRequiredProperties()) {
+        QQmlData *d = QQmlData::get(object);
+        auto contextData = d ? d->context : nullptr;
+        if (contextData) {
+            contextData->hasExtraObject = true;
+            contextData->extraObject = modelItemToIncubate;
+        }
+
         if (incubatorPriv->requiredProperties().empty())
             return;
         RequiredProperties &requiredProperties = incubatorPriv->requiredProperties();
