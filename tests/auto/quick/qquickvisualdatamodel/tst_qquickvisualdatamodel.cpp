@@ -433,6 +433,7 @@ private slots:
     void invalidContext();
     void externalManagedModel();
     void delegateModelChangeDelegate();
+    void checkFilterGroupForDelegate();
 
 private:
     template <int N> void groups_verify(
@@ -4340,6 +4341,19 @@ void tst_qquickvisualdatamodel::delegateModelChangeDelegate()
     // After changing the delegate, expect the existing item to have the new delegate
     QCOMPARE(visualModel->object(0, QQmlIncubator::Synchronous)->objectName(), QStringLiteral("new"));
     QCOMPARE(visualModel->count(), 3);
+}
+
+void tst_qquickvisualdatamodel::checkFilterGroupForDelegate()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("filterGroupForDelegate.qml"));
+    view.show();
+
+    QQuickItem *obj = view.rootObject();
+    QVERIFY(obj);
+
+    QTRY_VERIFY(obj->property("numChanges").toInt() > 100);
+    QVERIFY(obj->property("ok").toBool());
 }
 
 QTEST_MAIN(tst_qquickvisualdatamodel)

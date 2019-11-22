@@ -1038,7 +1038,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
         if (m_delegateChooser) {
             QQmlAbstractDelegateComponent *chooser = m_delegateChooser;
             do {
-                delegate = chooser->delegate(&m_adaptorModel, index);
+                delegate = chooser->delegate(&m_adaptorModel, cacheItem->index);
                 chooser = qobject_cast<QQmlAbstractDelegateComponent *>(delegate);
             } while (chooser);
             if (!delegate)
