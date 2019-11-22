@@ -469,6 +469,16 @@ void QQuickGridLayoutBase::rearrange(const QSizeF &size)
     if (!isReady())
         return;
 
+    const auto refCounter = qScopeGuard([&d] {
+        --(d->m_recurRearrangeCounter);
+    });
+    if (d->m_recurRearrangeCounter++ == 2) {
+        // allow a recursive depth of two in order to respond to height-for-width
+        // (e.g QQuickText changes implicitHeight when its width gets changed)
+        qWarning() << "Qt Quick Layouts: Detected recursive rearrange. Aborting after two iterations.";
+        return;
+    }
+
     d->m_rearranging = true;
     quickLayoutDebug() << objectName() << "QQuickGridLayoutBase::rearrange()" << size;
     Qt::LayoutDirection visualDir = effectiveLayoutDirection();

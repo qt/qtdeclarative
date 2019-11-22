@@ -701,8 +701,10 @@ QQuickItem *QQuickLayoutAttached::item() const
 
 
 QQuickLayout::QQuickLayout(QQuickLayoutPrivate &dd, QQuickItem *parent)
-    : QQuickItem(dd, parent),
-      m_dirty(false)
+    : QQuickItem(dd, parent)
+    , m_dirty(false)
+    , m_inUpdatePolish(false)
+    , m_polishInsideUpdatePolish(0)
 {
 }
 
@@ -729,7 +731,9 @@ QQuickLayoutAttached *QQuickLayout::qmlAttachedProperties(QObject *object)
 
 void QQuickLayout::updatePolish()
 {
+    m_inUpdatePolish = true;
     rearrange(QSizeF(width(), height()));
+    m_inUpdatePolish = false;
 }
 
 void QQuickLayout::componentComplete()
@@ -750,7 +754,18 @@ void QQuickLayout::invalidate(QQuickItem * /*childItem*/)
 
     if (!qobject_cast<QQuickLayout *>(parentItem())) {
         quickLayoutDebug() << "QQuickLayout::invalidate(), polish()";
-        polish();
+
+        if (m_inUpdatePolish)
+            ++m_polishInsideUpdatePolish;
+        else
+            m_polishInsideUpdatePolish = 0;
+
+        if (m_polishInsideUpdatePolish <= 2)
+            // allow at most two consecutive loops in order to respond to height-for-width
+            // (e.g QQuickText changes implicitHeight when its width gets changed)
+            polish();
+        else
+            qWarning() << "Qt Quick Layouts: Polish loop detected. Aborting after two iterations.";
     }
 }
 
