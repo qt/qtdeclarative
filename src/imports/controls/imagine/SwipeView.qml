@@ -61,6 +61,7 @@ T.SwipeView {
         model: control.contentModel
         interactive: control.interactive
         currentIndex: control.currentIndex
+        focus: control.focus
 
         spacing: control.spacing
         orientation: control.orientation
