@@ -456,7 +456,7 @@ QQuickAnchorAnimation::~QQuickAnchorAnimation()
 QQmlListProperty<QQuickItem> QQuickAnchorAnimation::targets()
 {
     Q_D(QQuickAnchorAnimation);
-    return QQmlListProperty<QQuickItem>(this, d->targets);
+    return QQmlListProperty<QQuickItem>(this, &(d->targets));
 }
 
 /*!

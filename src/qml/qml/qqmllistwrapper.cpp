@@ -119,11 +119,13 @@ ReturnedValue QmlListWrapper::virtualGet(const Managed *m, PropertyKey id, const
         if (hasProperty)
             *hasProperty = false;
         return Value::undefinedValue().asReturnedValue();
-    } else if (id.isString()) {
-        if (id == v4->id_length()->propertyKey() && !w->d()->object.isNull()) {
-            quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
-            return Value::fromUInt32(count).asReturnedValue();
-        }
+    }
+
+    if (id.isString() && id == v4->id_length()->propertyKey()) {
+        if (hasProperty)
+            *hasProperty = true;
+        quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
+        return Value::fromUInt32(count).asReturnedValue();
     }
 
     return Object::virtualGet(m, id, receiver, hasProperty);
@@ -131,12 +133,70 @@ ReturnedValue QmlListWrapper::virtualGet(const Managed *m, PropertyKey id, const
 
 bool QmlListWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
-    // doesn't do anything. Should we throw?
-    Q_UNUSED(m);
-    Q_UNUSED(id);
-    Q_UNUSED(value);
-    Q_UNUSED(receiver);
-    return false;
+    Q_ASSERT(m->as<QmlListWrapper>());
+
+    const auto *w = static_cast<const QmlListWrapper *>(m);
+    QV4::ExecutionEngine *v4 = w->engine();
+
+    QQmlListProperty<QObject> *prop = &(w->d()->property());
+
+    if (id.isArrayIndex()) {
+        if (!prop->count || !prop->replace)
+            return false;
+
+        const uint index = id.asArrayIndex();
+        const int count = prop->count(prop);
+        if (count < 0 || index >= uint(count))
+            return false;
+
+        QV4::Scope scope(v4);
+        QV4::ScopedObject so(scope, value.toObject(scope.engine));
+        if (auto *wrapper = so->as<QV4::QObjectWrapper>()) {
+            prop->replace(prop, index, wrapper->object());
+            return true;
+        }
+
+        return false;
+    }
+
+    if (id.isString() && id == v4->id_length()->propertyKey()) {
+        if (!prop->count)
+            return false;
+
+        const quint32 count = prop->count(prop);
+
+        bool ok = false;
+        const uint newLength = value.asArrayLength(&ok);
+        if (!ok)
+            return false;
+
+        if (newLength == 0) {
+            if (!prop->clear)
+                return false;
+            prop->clear(prop);
+            return true;
+        }
+
+        if (newLength < count) {
+            if (!prop->removeLast)
+                return false;
+
+            for (uint i = newLength; i < count; ++i)
+                prop->removeLast(prop);
+
+            return true;
+        }
+
+        if (!prop->append)
+            return false;
+
+        for (uint i = count; i < newLength; ++i)
+            prop->append(prop, nullptr);
+
+        return true;
+    }
+
+    return Object::virtualPut(m, id, value, receiver);
 }
 
 struct QmlListWrapperOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
