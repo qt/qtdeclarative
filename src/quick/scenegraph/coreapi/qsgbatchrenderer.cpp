@@ -546,7 +546,7 @@ void Updater::visitNode(Node *n)
 
     m_added = count;
     m_force_update = force;
-    n->dirtyState = nullptr;
+    n->dirtyState = {};
 }
 
 void Updater::visitClipNode(Node *n)
@@ -2627,7 +2627,7 @@ QRhiGraphicsPipeline *Renderer::buildStencilPipeline(const Batch *batch, bool fi
     QRhiGraphicsPipeline *ps = m_rhi->newGraphicsPipeline();
     ps->setFlags(QRhiGraphicsPipeline::UsesStencilRef);
     QRhiGraphicsPipeline::TargetBlend blend;
-    blend.colorWrite = 0;
+    blend.colorWrite = {};
     ps->setTargetBlends({ blend });
     ps->setSampleCount(renderTarget()->sampleCount());
     ps->setStencilTest(true);

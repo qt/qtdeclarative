@@ -591,11 +591,11 @@ int QQmlDelegateModel::count() const
 QQmlDelegateModel::ReleaseFlags QQmlDelegateModelPrivate::release(QObject *object)
 {
     if (!object)
-        return QQmlDelegateModel::ReleaseFlags(0);
+        return QQmlDelegateModel::ReleaseFlags{};
 
     QQmlDelegateModelItem *cacheItem = QQmlDelegateModelItem::dataForObject(object);
     if (!cacheItem)
-        return QQmlDelegateModel::ReleaseFlags(0);
+        return QQmlDelegateModel::ReleaseFlags{};
 
     if (!cacheItem->releaseObject())
         return QQmlDelegateModel::Referenced;

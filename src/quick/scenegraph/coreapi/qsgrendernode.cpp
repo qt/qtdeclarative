@@ -131,7 +131,7 @@ QSGRenderNodePrivate::QSGRenderNodePrivate()
   */
 QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
 {
-    return nullptr;
+    return {};
 }
 
 /*!
@@ -311,7 +311,7 @@ void QSGRenderNode::releaseResources()
  */
 QSGRenderNode::RenderingFlags QSGRenderNode::flags() const
 {
-    return nullptr;
+    return {};
 }
 
 /*!

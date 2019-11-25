@@ -525,7 +525,7 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
 
 */
 QQuickWidget::QQuickWidget(QWidget *parent)
-: QWidget(*(new QQuickWidgetPrivate), parent, nullptr)
+    : QWidget(*(new QQuickWidgetPrivate), parent, {})
 {
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
@@ -553,7 +553,7 @@ QQuickWidget::QQuickWidget(const QUrl &source, QWidget *parent)
   \sa Status, status(), errors()
 */
 QQuickWidget::QQuickWidget(QQmlEngine* engine, QWidget *parent)
-    : QWidget(*(new QQuickWidgetPrivate), parent, nullptr)
+    : QWidget(*(new QQuickWidgetPrivate), parent, {})
 {
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);

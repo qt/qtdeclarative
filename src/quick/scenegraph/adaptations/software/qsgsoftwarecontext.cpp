@@ -206,12 +206,12 @@ QSGRendererInterface::ShaderType QSGSoftwareContext::shaderType() const
 
 QSGRendererInterface::ShaderCompilationTypes QSGSoftwareContext::shaderCompilationType() const
 {
-    return nullptr;
+    return {};
 }
 
 QSGRendererInterface::ShaderSourceTypes QSGSoftwareContext::shaderSourceType() const
 {
-    return nullptr;
+    return {};
 }
 
 void *QSGSoftwareContext::getResource(QQuickWindow *window, Resource resource) const

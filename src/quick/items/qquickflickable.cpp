@@ -316,7 +316,7 @@ void QQuickFlickablePrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometr
 {
     Q_Q(QQuickFlickable);
     if (item == contentItem) {
-        Qt::Orientations orient = nullptr;
+        Qt::Orientations orient;
         if (change.xChange())
             orient |= Qt::Horizontal;
         if (change.yChange())

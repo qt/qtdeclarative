@@ -195,7 +195,7 @@ QAbstractFileEngine::FileFlags QQmlPreviewFileEngine::fileFlags(
     if (m_fallback)
         return m_fallback->fileFlags(type);
 
-    QAbstractFileEngine::FileFlags ret = 0;
+    QAbstractFileEngine::FileFlags ret;
 
     if (type & PermsMask) {
         ret |= QAbstractFileEngine::FileFlags(

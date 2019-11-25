@@ -527,7 +527,7 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             renderer->setDeviceRect(rect);
             renderer->setViewportRect(rect);
             const bool flipY = rhi ? !rhi->isYUpInNDC() : false;
-            QSGAbstractRenderer::MatrixTransformFlags matrixFlags = 0;
+            QSGAbstractRenderer::MatrixTransformFlags matrixFlags;
             if (flipY)
                 matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
             renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), logicalSize), matrixFlags);
@@ -4444,7 +4444,7 @@ bool QQuickWindow::clearBeforeRendering() const
 
 QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
 {
-    return createTextureFromImage(image, nullptr);
+    return createTextureFromImage(image, {});
 }
 
 

@@ -270,7 +270,7 @@ QQmlInstanceModel::ReleaseFlags QQmlObjectModel::release(QObject *item)
         if (!d->children[idx].deref())
             return QQmlInstanceModel::Referenced;
     }
-    return nullptr;
+    return {};
 }
 
 QVariant QQmlObjectModel::variantValue(int index, const QString &role)

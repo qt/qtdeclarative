@@ -202,7 +202,7 @@ void OpenGLVisualizer::visualizeChanges(Node *n)
         // This is because many changes don't propegate their dirty state to the
         // parent so the node updater will not unset these states. They are
         // not used for anything so, unsetting it should have no side effects.
-        n->dirtyState = nullptr;
+        n->dirtyState = {};
     }
 
     SHADOWNODE_TRAVERSE(n) {
