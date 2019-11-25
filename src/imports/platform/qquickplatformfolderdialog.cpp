@@ -186,7 +186,7 @@ void QQuickPlatformFolderDialog::setOptions(QFileDialogOptions::FileDialogOption
 
 void QQuickPlatformFolderDialog::resetOptions()
 {
-    setOptions(0);
+    setOptions({});
 }
 
 /*!

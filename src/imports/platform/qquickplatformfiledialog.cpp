@@ -303,7 +303,7 @@ void QQuickPlatformFileDialog::setOptions(QFileDialogOptions::FileDialogOptions 
 
 void QQuickPlatformFileDialog::resetOptions()
 {
-    setOptions(0);
+    setOptions({});
 }
 
 /*!

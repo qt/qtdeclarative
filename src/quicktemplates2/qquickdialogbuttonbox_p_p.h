@@ -80,7 +80,7 @@ public:
 
     void updateLanguage();
 
-    Qt::Alignment alignment = 0;
+    Qt::Alignment alignment;
     QQuickDialogButtonBox::Position position = QQuickDialogButtonBox::Footer;
     QPlatformDialogHelper::StandardButtons standardButtons = QPlatformDialogHelper::NoButton;
     QPlatformDialogHelper::ButtonLayout buttonLayout = QPlatformDialogHelper::UnknownLayout;
