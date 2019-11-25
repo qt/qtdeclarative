@@ -7,10 +7,14 @@
 qt_add_tool(qmlimportscanner
     TOOLS_TARGET Qml # special case
     SOURCES
+        ../shared/qmlstreamwriter.cpp ../shared/qmlstreamwriter.h
+        ../shared/resourcefilemapper.cpp ../shared/resourcefilemapper.h
         main.cpp
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII
+    INCLUDE_DIRECTORIES
+        ../shared
     LIBRARIES
         Qt::QmlDevToolsPrivate
     PUBLIC_LIBRARIES

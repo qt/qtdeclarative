@@ -13,6 +13,7 @@
 # cxx14_make_unique
 qt_config_compile_test(cxx14_make_unique
     LABEL "C++14 make_unique()"
+    CODE
 "
 #include <memory>
 
@@ -29,6 +30,7 @@ std::unique_ptr<int> ptr = std::make_unique<int>();
 # pointer_32bit
 qt_config_compile_test(pointer_32bit
     LABEL "32bit pointers"
+    CODE
 "
 
 
@@ -45,6 +47,7 @@ static_assert(sizeof(void *) == 4, \"fail\");
 # pointer_64bit
 qt_config_compile_test(pointer_64bit
     LABEL "64bit pointers"
+    CODE
 "
 
 
@@ -61,6 +64,7 @@ static_assert(sizeof(void *) == 8, \"fail\");
 # arm_thumb
 qt_config_compile_test(arm_thumb
     LABEL "THUMB mode on ARM"
+    CODE
 "
 
 
@@ -86,6 +90,7 @@ int main(int argc, char **argv)
 # arm_fp
 qt_config_compile_test(arm_fp
     LABEL "Sufficiently recent FPU on ARM"
+    CODE
 "
 
 

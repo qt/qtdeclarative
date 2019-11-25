@@ -7,13 +7,16 @@
 qt_add_tool(qmlcachegen
     TOOLS_TARGET Qml # special case
     SOURCES
+        ../shared/qmlstreamwriter.cpp ../shared/qmlstreamwriter.h
+        ../shared/resourcefilemapper.cpp ../shared/resourcefilemapper.h
         generateloader.cpp
         qmlcachegen.cpp
-        resourcefilemapper.cpp resourcefilemapper.h
         resourcefilter.cpp
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII
+    INCLUDE_DIRECTORIES
+        ../shared
     LIBRARIES
         Qt::QmlDevToolsPrivate
     PUBLIC_LIBRARIES

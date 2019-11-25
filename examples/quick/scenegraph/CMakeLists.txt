@@ -14,11 +14,11 @@ if(QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3)
 endif()
 if(APPLE_OSX)
     add_subdirectory(metalunderqml)
-    # add_subdirectory(metaltextureimport) special case TODO
+    # add_subdirectory(metaltextureimport) # special case TODO
 endif()
 if(WIN32)
     add_subdirectory(d3d11underqml)
 endif()
 if(QT_FEATURE_vulkan)
-    add_subdirectory(vulkanunderqml)
+    #add_subdirectory(vulkanunderqml) # special case not yet converted
 endif()

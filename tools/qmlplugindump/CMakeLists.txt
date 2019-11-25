@@ -7,9 +7,11 @@
 qt_add_tool(qmlplugindump
     TOOLS_TARGET Qml # special case
     SOURCES
+        ../shared/qmlstreamwriter.cpp ../shared/qmlstreamwriter.h
         main.cpp
-        qmlstreamwriter.cpp qmlstreamwriter.h
         qmltypereader.cpp qmltypereader.h
+    INCLUDE_DIRECTORIES
+        ../shared
     LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate

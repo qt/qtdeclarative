@@ -34,8 +34,6 @@ qt_extend_target(QmlModels CONDITION QT_FEATURE_qml_object_model
 qt_extend_target(QmlModels CONDITION QT_FEATURE_qml_table_model
     SOURCES
         qqmltableinstancemodel.cpp qqmltableinstancemodel_p.h
-        qqmltablemodel.cpp qqmltablemodel_p.h
-        qqmltablemodelcolumn.cpp qqmltablemodelcolumn_p.h
 )
 
 qt_extend_target(QmlModels CONDITION QT_FEATURE_qml_list_model
@@ -47,8 +45,8 @@ qt_extend_target(QmlModels CONDITION QT_FEATURE_qml_list_model
 
 qt_extend_target(QmlModels CONDITION QT_FEATURE_qml_delegate_model
     SOURCES
+        qqmlabstractdelegatecomponent.cpp qqmlabstractdelegatecomponent_p.h
         qqmladaptormodel.cpp qqmladaptormodel_p.h
-        qqmldelegatecomponent.cpp qqmldelegatecomponent_p.h
         qqmldelegatemodel.cpp qqmldelegatemodel_p.h
         qqmldelegatemodel_p_p.h
         qqmllistaccessor.cpp qqmllistaccessor_p.h

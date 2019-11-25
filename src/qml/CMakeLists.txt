@@ -231,6 +231,7 @@ qt_add_module(Qml
         qml/qqmlmetaobject.cpp qml/qqmlmetaobject_p.h
         qml/qqmlmetatype.cpp qml/qqmlmetatype_p.h
         qml/qqmlmetatypedata.cpp qml/qqmlmetatypedata_p.h
+        qml/qqmlmoduleregistration.cpp qml/qqmlmoduleregistration.h
         qml/qqmlnetworkaccessmanagerfactory.cpp qml/qqmlnetworkaccessmanagerfactory.h
         qml/qqmlnotifier.cpp qml/qqmlnotifier_p.h
         qml/qqmlobjectcreator.cpp qml/qqmlobjectcreator_p.h

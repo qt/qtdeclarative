@@ -23,3 +23,17 @@ qt_add_qml_module(labsmodelsplugin
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "1.0"
 # TARGETPATH = "Qt/labs/qmlmodels"
+
+## Scopes:
+#####################################################################
+
+qt_extend_target(labsmodelsplugin CONDITION QT_FEATURE_qml_table_model
+    SOURCES
+        qqmltablemodel.cpp qqmltablemodel_p.h
+        qqmltablemodelcolumn.cpp qqmltablemodelcolumn_p.h
+)
+
+qt_extend_target(labsmodelsplugin CONDITION QT_FEATURE_qml_delegate_model
+    SOURCES
+        qqmldelegatecomponent.cpp qqmldelegatecomponent_p.h
+)

@@ -12,7 +12,7 @@ qt_add_qml_module(windowplugin
     CLASSNAME QtQuick2WindowPlugin
     SKIP_TYPE_REGISTRATION
     SOURCES
-        plugin.cpp
+        plugin.cpp plugin.h
     LIBRARIES
         Qt::QmlPrivate
         Qt::QuickPrivate

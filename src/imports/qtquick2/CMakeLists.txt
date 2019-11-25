@@ -10,9 +10,9 @@ qt_add_qml_module(qtquick2plugin
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     DESIGNER_SUPPORTED
     CLASSNAME QtQuick2Plugin
+    SKIP_TYPE_REGISTRATION
     IMPORTS
         QtQml
-    SKIP_TYPE_REGISTRATION
     SOURCES
         plugin.cpp
     LIBRARIES
