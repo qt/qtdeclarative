@@ -146,24 +146,14 @@ TestCase {
             implicitWidth: defaultHorizontalHandleWidth
             implicitHeight: defaultVerticalHandleHeight
             color: "#444"
+
+            Text {
+                text: parent.x + "," + parent.y + " " + parent.width + "x" + parent.height
+                color: "white"
+                anchors.centerIn: parent
+                rotation: 90
+            }
         }
-    }
-
-    SplitView {
-        id: dummyHorizontalSplitView
-        handle: handleComponent
-
-        Item { objectName: "dummyItem" }
-        Item { objectName: "dummyItem" }
-    }
-
-    SplitView {
-        id: dummyVerticalSplitView
-        orientation: Qt.Vertical
-        handle: handleComponent
-
-        Item { objectName: "dummyItem" }
-        Item { objectName: "dummyItem" }
     }
 
     Component {
@@ -851,6 +841,36 @@ TestCase {
         }
     }
 
+    Component {
+        id: repeaterSplitViewComponent
+
+        SplitView {
+            anchors.fill: parent
+            handle: handleComponent
+
+            property alias repeater: repeater
+
+            Repeater {
+                id: repeater
+                model: 3
+                delegate: Rectangle {
+                    objectName: "rectDelegate" + index
+
+                    SplitView.preferredWidth: 25
+
+                    color: "#aaff0000"
+
+                    Text {
+                        text: parent.x + "," + parent.y + " " + parent.width + "x" + parent.height
+                        color: "white"
+                        rotation: 90
+                        anchors.centerIn: parent
+                    }
+                }
+            }
+        }
+    }
+
     function test_dragHandle_data() {
         var splitViewWidth = testCase.width - splitViewMargins * 2
         var splitViewHeight = testCase.height - splitViewMargins * 2
@@ -1109,6 +1129,28 @@ TestCase {
                     { x: 25 + 100 + defaultHorizontalHandleWidth, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
                     { x: 25 + 100 + defaultHorizontalHandleWidth * 2, y: 0, width: splitViewWidth - 100, height: splitViewHeight }
                 ]
+            },
+            {
+                tag: "repeater",
+                component: repeaterSplitViewComponent,
+                orientation: Qt.Horizontal,
+                fillIndex: 2,
+                handleIndex: 1,
+                newHandlePos: Qt.point(200, testCase.height / 2),
+                expectedGeometriesBeforeDrag: [
+                    { x: 0, y: 0, width: 25, height: splitViewHeight },
+                    { x: 25, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
+                    { x: 25 + defaultHorizontalHandleWidth, y: 0, width: 25, height: splitViewHeight },
+                    { x: 25 * 2 + defaultHorizontalHandleWidth, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
+                    { x: 25 * 2 + defaultHorizontalHandleWidth * 2, y: 0, width: splitViewWidth - 70 , height: splitViewHeight }
+                ],
+                expectedGeometriesAfterDrag: [
+                    { x: 0, y: 0, width: 25, height: splitViewHeight },
+                    { x: 25, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
+                    { x: 25 + defaultHorizontalHandleWidth, y: 0, width: 105, height: splitViewHeight },
+                    { x: 140, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
+                    { x: 150, y: 0, width: 150, height: splitViewHeight }
+                ]
             }
         ]
         return data
@@ -1139,6 +1181,7 @@ TestCase {
         var targetHandle = handles[data.handleIndex]
         mousePress(targetHandle)
         verify(control.resizing)
+        // newHandlePos is in scene coordinates, so map it to coordinates local to the handle.
         var localPos = testCase.mapToItem(targetHandle, data.newHandlePos.x, data.newHandlePos.y)
         mouseMove(targetHandle, localPos.x - targetHandle.width / 2, localPos.y - targetHandle.height / 2)
         verify(control.resizing)
@@ -1957,5 +2000,30 @@ TestCase {
         compare(secondItem.width, 50)
         mouseRelease(targetHandle, -100, targetHandle.height / 2, Qt.LeftButton)
         verify(!control.resizing)
+    }
+
+    Component {
+        id: oneItemComponent
+
+        SplitView {
+            Item {}
+        }
+    }
+
+    // QTBUG-79270
+    function test_hideSplitViewWithOneItem() {
+        var control = createTemporaryObject(oneItemComponent, testCase)
+        verify(control)
+        // Shouldn't be an assertion failure.
+        control.visible = false
+    }
+
+    // QTBUG-79302: ensure that the Repeater's items are actually generated.
+    // test_dragHandle:repeater tests dragging behavior with a Repeater.
+    function test_repeater(data) {
+        var control = createTemporaryObject(repeaterSplitViewComponent, testCase)
+        verify(control)
+        compare(control.repeater.count, 3)
+        compare(control.contentChildren.length, 3)
     }
 }

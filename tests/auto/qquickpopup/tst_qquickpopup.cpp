@@ -82,6 +82,7 @@ private slots:
     void cursorShape();
     void componentComplete();
     void closeOnEscapeWithNestedPopups();
+    void closeOnEscapeWithVisiblePopup();
     void enabled();
     void orientation_data();
     void orientation();
@@ -91,6 +92,7 @@ private slots:
     void countChanged();
     void toolTipCrashOnClose();
     void setOverlayParentToNull();
+    void tabFence();
 };
 
 void tst_QQuickPopup::initTestCase()
@@ -906,6 +908,8 @@ void tst_QQuickPopup::cursorShape()
     // which is itself over an item with a different shape.
     QQuickApplicationHelper helper(this, QStringLiteral("cursor.qml"));
     QQuickApplicationWindow *window = helper.appWindow;
+    centerOnScreen(window);
+    moveMouseAway(window);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
@@ -1018,6 +1022,21 @@ void tst_QQuickPopup::closeOnEscapeWithNestedPopups()
     // Remove one by pressing the Escape key (the Shortcut should be activated).
     QTest::keyClick(window, Qt::Key_Escape);
     QCOMPARE(stackView->depth(), 1);
+}
+
+void tst_QQuickPopup::closeOnEscapeWithVisiblePopup()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("closeOnEscapeWithVisiblePopup.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickPopup *popup = window->findChild<QQuickPopup *>("popup");
+    QVERIFY(popup);
+    QTRY_VERIFY(popup->isOpened());
+
+    QTest::keyClick(window, Qt::Key_Escape);
+    QTRY_VERIFY(!popup->isVisible());
 }
 
 void tst_QQuickPopup::enabled()
@@ -1199,9 +1218,11 @@ void tst_QQuickPopup::toolTipCrashOnClose()
 
     QQuickWindow *window = helper.window;
     window->show();
-    // TODO: Using ignoreMessage() fails in CI with macOS for release builds,
-    // so for now we let the warning through.
-//    QTest::ignoreMessage(QtWarningMsg, "ShaderEffectSource: 'recursive' must be set to true when rendering recursively.");
+    // The warning only occurs with debug builds for some reason.
+    // In any case, the warning is irrelevant, but using ShaderEffectSource is important, so we ignore it.
+#ifdef QT_DEBUG
+    QTest::ignoreMessage(QtWarningMsg, "ShaderEffectSource: 'recursive' must be set to true when rendering recursively.");
+#endif
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QTest::mouseMove(window, QPoint(window->width() / 2, window->height() / 2));
@@ -1217,9 +1238,9 @@ void tst_QQuickPopup::setOverlayParentToNull()
 
     QQuickWindow *window = helper.window;
     window->show();
-    // TODO: Using ignoreMessage() fails in CI with macOS for release builds,
-    // so for now we let the warning through.
-//    QTest::ignoreMessage(QtWarningMsg, "ShaderEffectSource: 'recursive' must be set to true when rendering recursively.");
+#ifdef QT_DEBUG
+    QTest::ignoreMessage(QtWarningMsg, "ShaderEffectSource: 'recursive' must be set to true when rendering recursively.");
+#endif
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QVERIFY(QMetaObject::invokeMethod(window, "nullifyOverlayParent"));
@@ -1229,6 +1250,62 @@ void tst_QQuickPopup::setOverlayParentToNull()
 
     QVERIFY(window->close());
     // While nullifying the overlay parent doesn't make much sense, it shouldn't crash.
+}
+
+void tst_QQuickPopup::tabFence()
+{
+    if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
+        QSKIP("This platform only allows tab focus for text controls");
+
+    QQuickApplicationHelper helper(this, "tabFence.qml");
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickPopup *popup = window->property("dialog").value<QQuickPopup*>();
+    QVERIFY(popup);
+    popup->open();
+    popup->setModal(true);
+
+    QQuickButton *outsideButton1 = window->property("outsideButton1").value<QQuickButton*>();
+    QVERIFY(outsideButton1);
+    QQuickButton *outsideButton2 = window->property("outsideButton2").value<QQuickButton*>();
+    QVERIFY(outsideButton2);
+    QQuickButton *dialogButton1 = window->property("dialogButton1").value<QQuickButton*>();
+    QVERIFY(dialogButton1);
+    QQuickButton *dialogButton2 = window->property("dialogButton2").value<QQuickButton*>();
+    QVERIFY(dialogButton2);
+
+    // When modal, focus loops between the two external buttons
+    outsideButton1->forceActiveFocus();
+    QVERIFY(outsideButton1->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(outsideButton2->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(outsideButton1->hasActiveFocus());
+
+    // Same thing for dialog's buttons
+    dialogButton1->forceActiveFocus();
+    QVERIFY(dialogButton1->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(dialogButton2->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(dialogButton1->hasActiveFocus());
+
+    popup->setModal(false);
+
+    // When not modal, focus goes in and out of the dialog
+    outsideButton1->forceActiveFocus();
+    QVERIFY(outsideButton1->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(outsideButton2->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(dialogButton1->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(dialogButton2->hasActiveFocus());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(outsideButton1->hasActiveFocus());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)

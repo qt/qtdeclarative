@@ -44,7 +44,9 @@
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
-#include <QtGui/private/qshortcutmap_p.h>
+#if QT_CONFIG(shortcut)
+#  include <QtGui/private/qshortcutmap_p.h>
+#endif
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQml/qqmllist.h>
@@ -1015,8 +1017,8 @@ void QQuickAbstractButton::componentComplete()
 
 bool QQuickAbstractButton::event(QEvent *event)
 {
-    Q_D(QQuickAbstractButton);
 #if QT_CONFIG(shortcut)
+    Q_D(QQuickAbstractButton);
     if (event->type() == QEvent::Shortcut) {
         QShortcutEvent *se = static_cast<QShortcutEvent *>(event);
         if (se->shortcutId() == d->shortcutId) {
@@ -1101,9 +1103,9 @@ void QQuickAbstractButton::timerEvent(QTimerEvent *event)
 
 void QQuickAbstractButton::itemChange(ItemChange change, const ItemChangeData &value)
 {
-    Q_D(QQuickAbstractButton);
     QQuickControl::itemChange(change, value);
 #if QT_CONFIG(shortcut)
+    Q_D(QQuickAbstractButton);
     if (change == ItemVisibleHasChanged) {
         if (value.boolValue)
             d->grabShortcut();

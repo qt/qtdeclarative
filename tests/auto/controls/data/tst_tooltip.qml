@@ -421,4 +421,26 @@ TestCase {
         compare(button2.down, false)
         tryCompare(button2.ToolTip, "visible", false)
     }
+
+    Component {
+        id: wrapComponent
+
+        Item {
+            ToolTip.text: "This is some very very very very very very very very very very very very"
+                + " very very very very very very very very very very very very very very"
+                + " very very very very very very very very very very very very long text"
+        }
+    }
+
+    // QTBUG-62350
+    function test_wrap() {
+        var item = createTemporaryObject(wrapComponent, testCase)
+        verify(item)
+
+        // Avoid "cannot find window to popup in" warning that can occur if it's made visible too early.
+        item.ToolTip.visible = true
+        tryCompare(item.ToolTip.toolTip, "opened", true)
+        compare(item.ToolTip.toolTip.contentItem.wrapMode, Text.Wrap)
+        verify(item.ToolTip.toolTip.contentItem.width < item.ToolTip.toolTip.contentItem.implicitWidth)
+    }
 }

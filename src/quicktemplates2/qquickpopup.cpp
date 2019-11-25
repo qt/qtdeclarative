@@ -1836,6 +1836,8 @@ void QQuickPopup::setModal(bool modal)
         d->toggleOverlay();
     emit modalChanged();
 
+    QQuickItemPrivate::get(d->popupItem)->isTabFence = modal;
+
     if (!d->hasDim) {
         setDim(modal);
         d->hasDim = false;
@@ -2409,6 +2411,13 @@ void QQuickPopup::componentComplete()
 
     d->complete = true;
     d->popupItem->componentComplete();
+
+    if (isVisible()) {
+        if (d->closePolicy & QQuickPopup::CloseOnEscape)
+            d->popupItem->grabShortcut();
+        else
+            d->popupItem->ungrabShortcut();
+    }
 }
 
 bool QQuickPopup::isComponentComplete() const

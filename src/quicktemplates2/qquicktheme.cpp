@@ -167,6 +167,8 @@ void QQuickTheme::setFont(Scope scope, const QFont &font)
 {
     Q_D(QQuickTheme);
     d->fonts[scope] = QSharedPointer<QFont>::create(d->defaultFont ? d->defaultFont->resolve(font) : font);
+    // See comment in QQuickControlPrivate::inheritFont
+    d->fonts[scope]->setFamilies(QStringList());
 }
 
 void QQuickTheme::setPalette(Scope scope, const QPalette &palette)
