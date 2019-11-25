@@ -96,6 +96,8 @@ public:
     static int columns_count(QQmlListProperty<QQmlTableModelColumn> *property);
     static QQmlTableModelColumn *columns_at(QQmlListProperty<QQmlTableModelColumn> *property, int index);
     static void columns_clear(QQmlListProperty<QQmlTableModelColumn> *property);
+    static void columns_replace(QQmlListProperty<QQmlTableModelColumn> *property, int index, QQmlTableModelColumn *value);
+    static void columns_removeLast(QQmlListProperty<QQmlTableModelColumn> *property);
 
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;

@@ -71,7 +71,9 @@ QQmlListProperty<Person> BirthdayParty::guests()
              &BirthdayParty::appendGuest,
              &BirthdayParty::guestCount,
              &BirthdayParty::guest,
-             &BirthdayParty::clearGuests};
+             &BirthdayParty::clearGuests,
+             &BirthdayParty::replaceGuest,
+             &BirthdayParty::removeLastGuest};
 }
 
 void BirthdayParty::appendGuest(Person* p) {
@@ -93,6 +95,16 @@ void BirthdayParty::clearGuests() {
     m_guests.clear();
 }
 
+void BirthdayParty::replaceGuest(int index, Person *p)
+{
+    m_guests[index] = p;
+}
+
+void BirthdayParty::removeLastGuest()
+{
+    m_guests.removeLast();
+}
+
 // ![0]
 
 void BirthdayParty::appendGuest(QQmlListProperty<Person>* list, Person* p) {
@@ -101,6 +113,16 @@ void BirthdayParty::appendGuest(QQmlListProperty<Person>* list, Person* p) {
 
 void BirthdayParty::clearGuests(QQmlListProperty<Person>* list) {
     reinterpret_cast< BirthdayParty* >(list->data)->clearGuests();
+}
+
+void BirthdayParty::replaceGuest(QQmlListProperty<Person> *list, int i, Person *p)
+{
+    reinterpret_cast< BirthdayParty* >(list->data)->replaceGuest(i, p);
+}
+
+void BirthdayParty::removeLastGuest(QQmlListProperty<Person> *list)
+{
+    reinterpret_cast< BirthdayParty* >(list->data)->removeLastGuest();
 }
 
 Person* BirthdayParty::guest(QQmlListProperty<Person>* list, int i) {

@@ -682,10 +682,13 @@ void QQuickWindow::handleApplicationStateChanged(Qt::ApplicationState state)
 
 QQmlListProperty<QObject> QQuickWindowPrivate::data()
 {
-    return QQmlListProperty<QObject>(q_func(), nullptr, QQuickWindowPrivate::data_append,
-                                             QQuickWindowPrivate::data_count,
-                                             QQuickWindowPrivate::data_at,
-                                             QQuickWindowPrivate::data_clear);
+    return QQmlListProperty<QObject>(q_func(), nullptr,
+                                     QQuickWindowPrivate::data_append,
+                                     QQuickWindowPrivate::data_count,
+                                     QQuickWindowPrivate::data_at,
+                                     QQuickWindowPrivate::data_clear,
+                                     QQuickWindowPrivate::data_replace,
+                                     QQuickWindowPrivate::data_removeLast);
 }
 
 static QMouseEvent *touchToMouseEvent(QEvent::Type type, const QTouchEvent::TouchPoint &p, QTouchEvent *event, QQuickItem *item, bool transformNeeded = true)
@@ -3255,6 +3258,20 @@ void QQuickWindowPrivate::data_clear(QQmlListProperty<QObject> *property)
     QQuickWindow *win = static_cast<QQuickWindow*>(property->object);
     QQmlListProperty<QObject> itemProperty = QQuickItemPrivate::get(win->contentItem())->data();
     itemProperty.clear(&itemProperty);
+}
+
+void QQuickWindowPrivate::data_replace(QQmlListProperty<QObject> *property, int i, QObject *o)
+{
+    QQuickWindow *win = static_cast<QQuickWindow*>(property->object);
+    QQmlListProperty<QObject> itemProperty = QQuickItemPrivate::get(win->contentItem())->data();
+    itemProperty.replace(&itemProperty, i, o);
+}
+
+void QQuickWindowPrivate::data_removeLast(QQmlListProperty<QObject> *property)
+{
+    QQuickWindow *win = static_cast<QQuickWindow*>(property->object);
+    QQmlListProperty<QObject> itemProperty = QQuickItemPrivate::get(win->contentItem())->data();
+    itemProperty.removeLast(&itemProperty);
 }
 
 bool QQuickWindowPrivate::isRenderable() const

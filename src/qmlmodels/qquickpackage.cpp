@@ -115,6 +115,14 @@ public:
         QList<DataGuard> *list = static_cast<QList<DataGuard> *>(prop->data);
         return list->count();
     }
+    static void data_replace(QQmlListProperty<QObject> *prop, int index, QObject *o) {
+        QList<DataGuard> *list = static_cast<QList<DataGuard> *>(prop->data);
+        list->replace(index, DataGuard(o, list));
+    }
+    static void data_removeLast(QQmlListProperty<QObject> *prop) {
+        QList<DataGuard> *list = static_cast<QList<DataGuard> *>(prop->data);
+        list->removeLast();
+    }
 };
 
 QHash<QObject *, QQuickPackageAttached *> QQuickPackageAttached::attached;
@@ -152,10 +160,13 @@ QQuickPackage::~QQuickPackage()
 QQmlListProperty<QObject> QQuickPackage::data()
 {
     Q_D(QQuickPackage);
-    return QQmlListProperty<QObject>(this, &d->dataList, QQuickPackagePrivate::data_append,
-                                                        QQuickPackagePrivate::data_count,
-                                                        QQuickPackagePrivate::data_at,
-                                                        QQuickPackagePrivate::data_clear);
+    return QQmlListProperty<QObject>(this, &d->dataList,
+                                     QQuickPackagePrivate::data_append,
+                                     QQuickPackagePrivate::data_count,
+                                     QQuickPackagePrivate::data_at,
+                                     QQuickPackagePrivate::data_clear,
+                                     QQuickPackagePrivate::data_replace,
+                                     QQuickPackagePrivate::data_removeLast);
 }
 
 bool QQuickPackage::hasPart(const QString &name)

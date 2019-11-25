@@ -731,7 +731,7 @@ QQmlListProperty<QQmlDelegateModelGroup> QQmlDelegateModel::groups()
             QQmlDelegateModelPrivate::group_append,
             QQmlDelegateModelPrivate::group_count,
             QQmlDelegateModelPrivate::group_at,
-            nullptr);
+            nullptr, nullptr, nullptr);
 }
 
 /*!

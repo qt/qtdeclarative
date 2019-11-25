@@ -162,7 +162,9 @@ void QQuickSpriteSequence::setInterpolate(bool arg)
 QQmlListProperty<QQuickSprite> QQuickSpriteSequence::sprites()
 {
     Q_D(QQuickSpriteSequence);
-    return QQmlListProperty<QQuickSprite>(this, &d->m_sprites, spriteAppend, spriteCount, spriteAt, spriteClear);
+    return QQmlListProperty<QQuickSprite>(this, &d->m_sprites,
+                                          spriteAppend, spriteCount, spriteAt,
+                                          spriteClear, spriteReplace, spriteRemoveLast);
 }
 
 bool QQuickSpriteSequence::running() const

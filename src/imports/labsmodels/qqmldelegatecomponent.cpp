@@ -250,7 +250,9 @@ QQmlListProperty<QQmlDelegateChoice> QQmlDelegateChooser::choices()
                                                 QQmlDelegateChooser::choices_append,
                                                 QQmlDelegateChooser::choices_count,
                                                 QQmlDelegateChooser::choices_at,
-                                                QQmlDelegateChooser::choices_clear);
+                                                QQmlDelegateChooser::choices_clear,
+                                                QQmlDelegateChooser::choices_replace,
+                                                QQmlDelegateChooser::choices_removeLast);
 }
 
 void QQmlDelegateChooser::choices_append(QQmlListProperty<QQmlDelegateChoice> *prop, QQmlDelegateChoice *choice)
@@ -279,6 +281,26 @@ void QQmlDelegateChooser::choices_clear(QQmlListProperty<QQmlDelegateChoice> *pr
     for (QQmlDelegateChoice *choice : q->m_choices)
         disconnect(choice, &QQmlDelegateChoice::changed, q, &QQmlAbstractDelegateComponent::delegateChanged);
     q->m_choices.clear();
+    q->delegateChanged();
+}
+
+void QQmlDelegateChooser::choices_replace(QQmlListProperty<QQmlDelegateChoice> *prop, int index,
+                                          QQmlDelegateChoice *choice)
+{
+    QQmlDelegateChooser *q = static_cast<QQmlDelegateChooser *>(prop->object);
+    disconnect(q->m_choices[index], &QQmlDelegateChoice::changed,
+               q, &QQmlAbstractDelegateComponent::delegateChanged);
+    q->m_choices[index] = choice;
+    connect(choice, &QQmlDelegateChoice::changed, q,
+            &QQmlAbstractDelegateComponent::delegateChanged);
+    q->delegateChanged();
+}
+
+void QQmlDelegateChooser::choices_removeLast(QQmlListProperty<QQmlDelegateChoice> *prop)
+{
+    QQmlDelegateChooser *q = static_cast<QQmlDelegateChooser *>(prop->object);
+    disconnect(q->m_choices.takeLast(), &QQmlDelegateChoice::changed,
+               q, &QQmlAbstractDelegateComponent::delegateChanged);
     q->delegateChanged();
 }
 

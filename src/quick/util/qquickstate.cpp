@@ -267,9 +267,13 @@ void QQuickState::setExtends(const QString &extends)
 QQmlListProperty<QQuickStateOperation> QQuickState::changes()
 {
     Q_D(QQuickState);
-    return QQmlListProperty<QQuickStateOperation>(this, &d->operations, QQuickStatePrivate::operations_append,
-                                              QQuickStatePrivate::operations_count, QQuickStatePrivate::operations_at,
-                                              QQuickStatePrivate::operations_clear);
+    return QQmlListProperty<QQuickStateOperation>(this, &d->operations,
+                                                  QQuickStatePrivate::operations_append,
+                                                  QQuickStatePrivate::operations_count,
+                                                  QQuickStatePrivate::operations_at,
+                                                  QQuickStatePrivate::operations_clear,
+                                                  QQuickStatePrivate::operations_replace,
+                                                  QQuickStatePrivate::operations_removeLast);
 }
 
 int QQuickState::operationCount() const

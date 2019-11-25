@@ -299,6 +299,8 @@ public:
     static int data_count(QQmlListProperty<QObject> *);
     static QObject *data_at(QQmlListProperty<QObject> *, int);
     static void data_clear(QQmlListProperty<QObject> *);
+    static void data_replace(QQmlListProperty<QObject> *, int, QObject *);
+    static void data_removeLast(QQmlListProperty<QObject> *);
 
     static void contextCreationFailureMessage(const QSurfaceFormat &format,
                                               QString *translatedMessage,

@@ -1143,7 +1143,9 @@ QQuickImageParticle::~QQuickImageParticle()
 
 QQmlListProperty<QQuickSprite> QQuickImageParticle::sprites()
 {
-    return QQmlListProperty<QQuickSprite>(this, &m_sprites, spriteAppend, spriteCount, spriteAt, spriteClear);
+    return QQmlListProperty<QQuickSprite>(this, &m_sprites,
+                                          spriteAppend, spriteCount, spriteAt,
+                                          spriteClear, spriteReplace, spriteRemoveLast);
 }
 
 void QQuickImageParticle::sceneGraphInvalidated()

@@ -136,6 +136,20 @@ static void list_clear(QQmlListProperty<QObject> *prop)
     resolved.activateSignal();
 }
 
+static void list_replace(QQmlListProperty<QObject> *prop, int index, QObject *o)
+{
+    const ResolvedList resolved(prop);
+    resolved.list()->replace(index, o);
+    resolved.activateSignal();
+}
+
+static void list_removeLast(QQmlListProperty<QObject> *prop)
+{
+    const ResolvedList resolved(prop);
+    resolved.list()->removeLast();
+    resolved.activateSignal();
+}
+
 QQmlVMEVariantQObjectPtr::QQmlVMEVariantQObjectPtr()
     : QQmlGuard<QObject>(nullptr), m_target(nullptr), m_index(-1)
 {
@@ -737,7 +751,8 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                             *static_cast<QQmlListProperty<QObject> *>(a[0])
                                     = QQmlListProperty<QObject>(
                                         object, reinterpret_cast<void *>(quintptr(id)),
-                                        list_append, list_count, list_at, list_clear);
+                                        list_append, list_count, list_at,
+                                        list_clear, list_replace, list_removeLast);
                         } else {
                             *reinterpret_cast<QObject **>(a[0]) = readPropertyAsQObject(id);
                         }
