@@ -335,7 +335,7 @@ bool QQmlData::wasDeleted(const QObject *object)
         return true;
 
     const QObjectPrivate *priv = QObjectPrivate::get(object);
-    if (!priv || priv->wasDeleted)
+    if (!priv || priv->wasDeleted || priv->isDeletingChildren)
         return true;
 
     const QQmlData *ddata = QQmlData::get(object);
