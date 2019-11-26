@@ -64,6 +64,7 @@ class QQmlEngine;
 class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlDirParser
 {
 public:
+    void clear();
     bool parse(const QString &source);
 
     bool hasError() const;

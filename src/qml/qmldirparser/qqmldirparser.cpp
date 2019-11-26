@@ -73,6 +73,20 @@ static bool parseVersion(const QString &str, int *major, int *minor)
     return false;
 }
 
+void QQmlDirParser::clear()
+{
+    _errors.clear();
+    _typeNamespace.clear();
+    _components.clear();
+    _dependencies.clear();
+    _imports.clear();
+    _scripts.clear();
+    _plugins.clear();
+    _designerSupported = false;
+    _typeInfos.clear();
+    _className.clear();
+}
+
 inline static void scanSpace(const QChar *&ch) {
     while (ch->isSpace() && !ch->isNull() && *ch != QLatin1Char('\n'))
         ++ch;
@@ -93,13 +107,6 @@ inline static void scanWord(const QChar *&ch) {
 */
 bool QQmlDirParser::parse(const QString &source)
 {
-    _errors.clear();
-    _plugins.clear();
-    _components.clear();
-    _scripts.clear();
-    _designerSupported = false;
-    _className.clear();
-
     quint16 lineNumber = 0;
     bool firstLine = true;
 

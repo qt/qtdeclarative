@@ -375,6 +375,9 @@ void tst_qqmldirparser::parse()
     QCOMPARE(toStringList(p.dependencies()), dependencies);
 
     QCOMPARE(p.designerSupported(), designerSupported);
+
+    p.clear();
+    QVERIFY(p.typeNamespace().isEmpty());
 }
 
 QTEST_MAIN(tst_qqmldirparser)
