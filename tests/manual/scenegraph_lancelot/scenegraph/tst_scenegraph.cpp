@@ -212,6 +212,7 @@ bool tst_Scenegraph::renderAndGrab(const QString& qmlFile, const QStringList& ex
 {
     bool usePipe = true;  // Whether to transport the grabbed image using temp. file or pipe. TBD: cmdline option
     QProcess grabber;
+    grabber.setProcessChannelMode(QProcess::ForwardedErrorChannel);
     QStringList args = extraArgs;
     QString tmpfile = usePipe ? QString("-") : QString("/tmp/qmlscenegrabber-%1-out.ppm").arg(QCoreApplication::applicationPid());
     args << qmlFile << "-o" << tmpfile;
