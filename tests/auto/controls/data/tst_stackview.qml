@@ -1245,4 +1245,104 @@ TestCase {
         gc()
         verify(control.initialItem)
     }
+
+    // Need to use this specific structure in order to reproduce the crash.
+    Component {
+        id: clearUponDestructionContainerComponent
+
+        Item {
+            id: container
+            objectName: "container"
+
+            property alias control: stackView
+            property var onDestructionCallback
+
+            property Component clearUponDestructionComponent: Component {
+                id: clearUponDestructionComponent
+
+                Item {
+                    objectName: "clearUponDestructionItem"
+                    Component.onDestruction: container.onDestructionCallback(stackView)
+                }
+            }
+
+            StackView {
+                id: stackView
+                initialItem: Item {
+                    objectName: "initialItem"
+                }
+            }
+        }
+    }
+
+    // QTBUG-80353
+    // Tests that calling clear() in Component.onDestruction in response to that
+    // item being removed (e.g. via an earlier call to clear()) results in a warning and not a crash.
+    function test_recursiveClearClear() {
+        let container = createTemporaryObject(clearUponDestructionContainerComponent, testCase,
+            { onDestructionCallback: function(stackView) { stackView.clear(StackView.Immediate) }})
+        verify(container)
+
+        let control = container.control
+        control.push(container.clearUponDestructionComponent, StackView.Immediate)
+
+        // Shouldn't crash.
+        ignoreWarning(new RegExp(".*cannot clear while already in the process of removing elements"))
+        control.clear(StackView.Immediate)
+    }
+
+    function test_recursivePopClear() {
+        let container = createTemporaryObject(clearUponDestructionContainerComponent, testCase,
+            { onDestructionCallback: function(stackView) { stackView.clear(StackView.Immediate) }})
+        verify(container)
+
+        let control = container.control
+        control.push(container.clearUponDestructionComponent, StackView.Immediate)
+
+        // Pop all items except the first, removing the second item we pushed in the process.
+        // Shouldn't crash.
+        ignoreWarning(new RegExp(".*cannot clear while already in the process of removing elements"))
+        control.pop(null, StackView.Immediate)
+    }
+
+    function test_recursivePopPop() {
+        let container = createTemporaryObject(clearUponDestructionContainerComponent, testCase,
+            { onDestructionCallback: function(stackView) { stackView.pop(null, StackView.Immediate) }})
+        verify(container)
+
+        let control = container.control
+        // Push an extra item so that we can call pop(null) and reproduce the conditions for the crash.
+        control.push(component, StackView.Immediate)
+        control.push(container.clearUponDestructionComponent, StackView.Immediate)
+
+        // Pop the top item, then pop down to the first item in response.
+        ignoreWarning(new RegExp(".*cannot pop while already in the process of removing elements"))
+        control.pop(StackView.Immediate)
+    }
+
+    function test_recursiveReplaceClear() {
+        let container = createTemporaryObject(clearUponDestructionContainerComponent, testCase,
+            { onDestructionCallback: function(stackView) { stackView.clear(StackView.Immediate) }})
+        verify(container)
+
+        let control = container.control
+        control.push(container.clearUponDestructionComponent, StackView.Immediate)
+
+        // Replace the top item, then clear in response.
+        ignoreWarning(new RegExp(".*cannot clear while already in the process of removing elements"))
+        control.replace(component, StackView.Immediate)
+    }
+
+    function test_recursiveClearReplace() {
+        let container = createTemporaryObject(clearUponDestructionContainerComponent, testCase,
+            { onDestructionCallback: function(stackView) { stackView.replace(component, StackView.Immediate) }})
+        verify(container)
+
+        let control = container.control
+        control.push(container.clearUponDestructionComponent, StackView.Immediate)
+
+        // Replace the top item, then clear in response.
+        ignoreWarning(new RegExp(".*cannot replace while already in the process of removing elements"))
+        control.clear(StackView.Immediate)
+    }
 }
