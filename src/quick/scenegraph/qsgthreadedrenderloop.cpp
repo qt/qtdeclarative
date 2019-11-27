@@ -368,6 +368,9 @@ public:
     QSize windowSize;
     float dpr = 1;
     int rhiSampleCount = 1;
+    bool rhiDeviceLost = false;
+    bool rhiDoomed = false;
+    bool guiNotifiedAboutRhiFailure = false;
 
     // Local event queue stuff...
     bool stopEventProcessing;
@@ -622,13 +625,15 @@ void QSGRenderThread::sync(bool inExpose, bool inGrab)
                 sgrc->initialize(&rcParams);
             }
         }
-    } else {
+    } else if (rhi) {
         // With the rhi making the (OpenGL) context current serves only one
         // purpose: to enable external OpenGL rendering connected to one of
         // the QQuickWindow signals (beforeSynchronizing, beforeRendering,
         // etc.) to function like it did on the direct OpenGL path. For our
         // own rendering this call would not be necessary.
         rhi->makeThreadLocalNativeContextCurrent();
+    } else {
+        current = false;
     }
     if (current) {
         QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
@@ -669,6 +674,7 @@ void QSGRenderThread::handleDeviceLoss()
     QQuickWindowPrivate::get(window)->cleanupNodesOnShutdown();
     sgrc->invalidate();
     wm->releaseSwapchain(window);
+    rhiDeviceLost = true;
     delete rhi;
     rhi = nullptr;
 }
@@ -771,7 +777,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
                               QQuickProfiler::SceneGraphRenderLoopSync);
 
     if (!syncResultedInChanges && !repaintRequested && sgrc->isValid() && !grabImage) {
-        if (gl || !rhi->isRecordingFrame()) {
+        if (gl || (rhi && !rhi->isRecordingFrame())) {
             qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- no changes, render aborted");
             int waitTime = vsyncDelta - (int) waitTimer.elapsed();
             if (waitTime > 0)
@@ -790,10 +796,10 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     }
 
     bool current = true;
-    if (d->renderer && windowSize.width() > 0 && windowSize.height() > 0) {
+    if (d->renderer && windowSize.width() > 0 && windowSize.height() > 0 && (gl || rhi)) {
         if (gl)
             current = gl->makeCurrent(window);
-        else if (rhi)
+        else
             rhi->makeThreadLocalNativeContextCurrent();
     } else {
         current = false;
@@ -912,14 +918,21 @@ void QSGRenderThread::processEventsAndWaitForMore()
 void QSGRenderThread::ensureRhi()
 {
     if (!rhi) {
+        if (rhiDoomed) // no repeated attempts if the initial attempt failed
+            return;
         QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
         rhi = rhiSupport->createRhi(window, offscreenSurface);
         if (rhi) {
+            rhiDeviceLost = false;
             rhiSampleCount = rhiSupport->chooseSampleCountForWindowWithRhi(window, rhi);
             if (rhiSupport->isProfilingRequested())
                 QSGRhiProfileConnection::instance()->initialize(rhi); // ### this breaks down with multiple windows
         } else {
-            qWarning("Failed to create QRhi on the render thread; scenegraph is not functional");
+            if (!rhiDeviceLost) {
+                rhiDoomed = true;
+                qWarning("Failed to create QRhi on the render thread; scenegraph is not functional");
+            }
+            // otherwise no error, will retry on a subsequent rendering attempt
             return;
         }
     }
@@ -975,9 +988,24 @@ void QSGRenderThread::run()
 
         if (window) {
             if (enableRhi) {
+
                 ensureRhi();
-                if (rhi)
-                    syncAndRender();
+
+                // We absolutely have to syncAndRender() here, even when QRhi
+                // failed to initialize otherwise the gui thread will be left
+                // in a blocked state. It is up to syncAndRender() to
+                // gracefully skip all graphics stuff when rhi is null.
+
+                syncAndRender();
+
+                // Now we can do something about rhi init failures. (reinit
+                // failure after device reset does not count)
+                if (rhiDoomed && !guiNotifiedAboutRhiFailure) {
+                    guiNotifiedAboutRhiFailure = true;
+                    QEvent *e = new QEvent(QEvent::Type(QQuickWindowPrivate::TriggerContextCreationFailure));
+                    QCoreApplication::postEvent(window, e);
+                }
+
             } else {
                 if (!sgrc->openglContext() && windowSize.width() > 0 && windowSize.height() > 0 && gl->makeCurrent(window)) {
                     QSGDefaultRenderContext::InitParams rcParams;

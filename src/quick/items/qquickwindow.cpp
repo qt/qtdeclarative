@@ -1768,6 +1768,8 @@ bool QQuickWindow::event(QEvent *e)
 
     if (e->type() == QEvent::Type(QQuickWindowPrivate::FullUpdateRequest))
         update();
+    else if (e->type() == QEvent::Type(QQuickWindowPrivate::TriggerContextCreationFailure))
+        d->windowManager->handleContextCreationFailure(this, false);
 
     return QWindow::event(e);
 }
