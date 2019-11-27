@@ -180,10 +180,9 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
             m_gl->setShareContext(qt_gl_global_share_context());
         bool created = m_gl->create();
         if (!created) {
-            const bool isEs = m_gl->isOpenGLES();
             delete m_gl;
             m_gl = nullptr;
-            handleContextCreationFailure(window, isEs);
+            handleContextCreationFailure(window);
             return;
         }
 

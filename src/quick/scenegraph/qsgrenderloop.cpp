@@ -324,15 +324,19 @@ void QSGRenderLoop::setInstance(QSGRenderLoop *instance)
     s_instance = instance;
 }
 
-void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window,
-                                                 bool isEs)
+void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window)
 {
     QString translatedMessage;
     QString untranslatedMessage;
-    QQuickWindowPrivate::contextCreationFailureMessage(window->requestedFormat(),
+    if (QSGRhiSupport::instance()->isRhiEnabled()) {
+        QQuickWindowPrivate::rhiCreationFailureMessage(QSGRhiSupport::instance()->rhiBackendName(),
                                                        &translatedMessage,
-                                                       &untranslatedMessage,
-                                                       isEs);
+                                                       &untranslatedMessage);
+    } else {
+        QQuickWindowPrivate::contextCreationFailureMessage(window->requestedFormat(),
+                                                           &translatedMessage,
+                                                           &untranslatedMessage);
+    }
     // If there is a slot connected to the error signal, emit it and leave it to
     // the application to do something with the message. If nothing is connected,
     // show a message on our own and terminate.
@@ -551,7 +555,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         } else {
             if (!data.rhiDeviceLost) {
                 data.rhiDoomed = true;
-                handleContextCreationFailure(window, false);
+                handleContextCreationFailure(window);
             }
             // otherwise no error, will retry on a subsequent rendering attempt
         }
@@ -562,10 +566,9 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         if (qt_gl_global_share_context())
             gl->setShareContext(qt_gl_global_share_context());
         if (!gl->create()) {
-            const bool isEs = gl->isOpenGLES();
             delete gl;
             gl = nullptr;
-            handleContextCreationFailure(window, isEs);
+            handleContextCreationFailure(window);
         } else {
             if (!offscreenSurface) {
                 offscreenSurface = new QOffscreenSurface;

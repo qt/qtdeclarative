@@ -1769,7 +1769,7 @@ bool QQuickWindow::event(QEvent *e)
     if (e->type() == QEvent::Type(QQuickWindowPrivate::FullUpdateRequest))
         update();
     else if (e->type() == QEvent::Type(QQuickWindowPrivate::TriggerContextCreationFailure))
-        d->windowManager->handleContextCreationFailure(this, false);
+        d->windowManager->handleContextCreationFailure(this);
 
     return QWindow::event(e);
 }
@@ -3256,10 +3256,9 @@ bool QQuickWindowPrivate::isRenderable() const
 
 void QQuickWindowPrivate::contextCreationFailureMessage(const QSurfaceFormat &format,
                                                         QString *translatedMessage,
-                                                        QString *untranslatedMessage,
-                                                        bool isEs)
+                                                        QString *untranslatedMessage)
 {
-    const QString contextType = QLatin1String(isEs ? "EGL" : "OpenGL");
+    const QString contextType = QLatin1String("OpenGL");
     QString formatStr;
     QDebug(&formatStr) << format;
 #if defined(Q_OS_WIN32)
@@ -3282,6 +3281,16 @@ void QQuickWindowPrivate::contextCreationFailureMessage(const QSurfaceFormat &fo
     *translatedMessage = QQuickWindow::tr(msg).arg(contextType, formatStr);
     *untranslatedMessage = QString::fromLatin1(msg).arg(contextType, formatStr);
 #endif // !Q_OS_WIN32
+}
+
+void QQuickWindowPrivate::rhiCreationFailureMessage(const QString &backendName,
+                                                    QString *translatedMessage,
+                                                    QString *untranslatedMessage)
+{
+    const char msg[] = QT_TRANSLATE_NOOP("QQuickWindow",
+        "Failed to initialize graphics backend for %1.");
+    *translatedMessage = QQuickWindow::tr(msg).arg(backendName);
+    *untranslatedMessage = QString::fromLatin1(msg).arg(backendName);
 }
 
 #if QT_DEPRECATED_SINCE(5, 8)

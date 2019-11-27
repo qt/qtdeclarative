@@ -848,13 +848,13 @@ QSize QQuickWidgetPrivate::rootObjectSize() const
     return rootObjectSize;
 }
 
-void QQuickWidgetPrivate::handleContextCreationFailure(const QSurfaceFormat &format, bool isEs)
+void QQuickWidgetPrivate::handleContextCreationFailure(const QSurfaceFormat &format)
 {
     Q_Q(QQuickWidget);
 
     QString translatedMessage;
     QString untranslatedMessage;
-    QQuickWindowPrivate::contextCreationFailureMessage(format, &translatedMessage, &untranslatedMessage, isEs);
+    QQuickWindowPrivate::contextCreationFailureMessage(format, &translatedMessage, &untranslatedMessage);
 
     static const QMetaMethod errorSignal = QMetaMethod::fromSignal(&QQuickWidget::sceneGraphError);
     const bool signalConnected = q->isSignalConnected(errorSignal);
@@ -896,10 +896,9 @@ void QQuickWidgetPrivate::createContext()
             context->setScreen(shareContext->screen());
         }
         if (!context->create()) {
-            const bool isEs = context->isOpenGLES();
             delete context;
             context = nullptr;
-            handleContextCreationFailure(offscreenWindow->requestedFormat(), isEs);
+            handleContextCreationFailure(offscreenWindow->requestedFormat());
             return;
         }
 

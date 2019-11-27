@@ -109,6 +109,7 @@ public:
 
     bool isRhiEnabled() const { return m_enableRhi; }
     QRhi::Implementation rhiBackend() const { return m_rhiBackend; }
+    QString rhiBackendName() const;
     QSGRendererInterface::GraphicsApi graphicsApi() const;
 
     bool isDebugLayerRequested() const { return m_debugLayer; }

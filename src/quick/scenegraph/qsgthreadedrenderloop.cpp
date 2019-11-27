@@ -1310,10 +1310,9 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
                 w->thread->gl->setFormat(w->window->requestedFormat());
                 w->thread->gl->setScreen(w->window->screen());
                 if (!w->thread->gl->create()) {
-                    const bool isEs = w->thread->gl->isOpenGLES();
                     delete w->thread->gl;
                     w->thread->gl = nullptr;
-                    handleContextCreationFailure(w->window, isEs);
+                    handleContextCreationFailure(w->window);
                     return;
                 }
 

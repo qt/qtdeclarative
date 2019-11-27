@@ -112,7 +112,7 @@ public:
 
     static void cleanup();
 
-    void handleContextCreationFailure(QQuickWindow *window, bool isEs);
+    void handleContextCreationFailure(QQuickWindow *window);
 
 Q_SIGNALS:
     void timeToIncubate();

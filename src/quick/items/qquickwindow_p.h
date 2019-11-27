@@ -301,8 +301,10 @@ public:
 
     static void contextCreationFailureMessage(const QSurfaceFormat &format,
                                               QString *translatedMessage,
-                                              QString *untranslatedMessage,
-                                              bool isEs);
+                                              QString *untranslatedMessage);
+    static void rhiCreationFailureMessage(const QString &backendName,
+                                          QString *translatedMessage,
+                                          QString *untranslatedMessage);
 
     static void emitBeforeRenderPassRecording(void *ud);
     static void emitAfterRenderPassRecording(void *ud);
