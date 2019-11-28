@@ -55,7 +55,7 @@ Qt::Alignment QQuickGridLayoutEngine::alignment(QQuickItem *quickItem) const
 {
     if (QGridLayoutItem *item = findLayoutItem(quickItem))
         return item->alignment();
-    return nullptr;
+    return {};
 }
 
 QT_END_NAMESPACE
