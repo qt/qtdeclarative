@@ -87,7 +87,7 @@ Item {
         running: !startScreen.visible
     }
 
-    property int score: 0
+    property int score: particleSystem.score
 
     Text {
         anchors.right: parent.right
@@ -96,11 +96,13 @@ Item {
         color: "white"
         function padded(num) {
             var ret = num.toString();
-            while (ret.length < 6)
-                ret = "0" + ret;
-            return ret;
+
+            if (ret >= 0)
+                return ret.padStart(6, "0");
+            else
+                return "-" + ret.substr(1).padStart(6, "0");
         }
-        text: "Score: " + padded(score)
+        text: "Score: " + padded(root.score)
     }
     MultiPointTouchArea {
         anchors.fill: parent
