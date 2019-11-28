@@ -48,6 +48,8 @@
 **
 ****************************************************************************/
 
+import QtQml 2.15
+import QtQml.Models 2.15
 import QtQuick 2.0
 
 Rectangle {
@@ -107,9 +109,14 @@ Rectangle {
         id: delegate
 
         Item {
+            id: delegateInstance
+            required property string name;
+            required property int type;
+            required property color ballColor;
+
             height: 56; width: window.width
 
-            Text { text: name; anchors.centerIn: parent; color: "White" }
+            Text { text: parent.name; anchors.centerIn: parent; color: "White" }
 
             Rectangle {
                 id: slot1; color: "#121212"; x: 30; height: 46; width: 46
@@ -137,12 +144,26 @@ Rectangle {
 
                 states : State {
                     name: "right"
-                    PropertyChanges { target: rect; x: window.width - 76; color: ballColor }
+                    PropertyChanges {
+                        target: rect;
+                        x: window.width - 76;
+                        color: delegateInstance.ballColor
+                    }
                 }
 
                 transitions: Transition {
-                    NumberAnimation { properties: "x"; easing.type: type; easing.bezierCurve: getBezierCurve(name); duration: 1000 }
-                    ColorAnimation { properties: "color"; easing.type: type; easing.bezierCurve: getBezierCurve(name); duration: 1000 }
+                    NumberAnimation {
+                        properties: "x"
+                        easing.type: delegateInstance.type
+                        easing.bezierCurve: window.getBezierCurve(delegateInstance.name)
+                        duration: 1000
+                    }
+                    ColorAnimation {
+                        properties: "color"
+                        easing.type: delegateInstance.type
+                        easing.bezierCurve: window.getBezierCurve(delegateInstance.name)
+                        duration: 1000
+                    }
                 }
             }
         }
