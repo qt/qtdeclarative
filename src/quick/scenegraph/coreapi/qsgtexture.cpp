@@ -395,6 +395,9 @@ QSGTexture::~QSGTexture()
     Binding a texture may also include uploading the texture data from
     a previously set QImage.
 
+    \warning This function should only be called when running with the
+    direct OpenGL rendering path.
+
     \warning This function can only be called from the rendering thread.
  */
 

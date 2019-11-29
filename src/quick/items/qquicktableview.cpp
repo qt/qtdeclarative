@@ -2711,6 +2711,23 @@ void QQuickTableView::setContentHeight(qreal height)
     QQuickFlickable::setContentHeight(height);
 }
 
+/*!
+    \qmlproperty TableView QtQuick::TableView::syncView
+
+    If this property of a TableView is set to another TableView, both the
+    tables will synchronize with regard to flicking, column widths/row heights,
+    and spacing according to \l syncDirection.
+
+    If \l syncDirection contains \l Qt.Horizontal, current tableView's column
+    widths, column spacing, and horizontal flicking movement synchronizes with
+    syncView's.
+
+    If \l syncDirection contains \l Qt.Vertical, current tableView's row
+    heights, row spacing, and vertical flicking movement synchronizes with
+    syncView's.
+
+    \sa syncDirection
+*/
 QQuickTableView *QQuickTableView::syncView() const
 {
    return d_func()->assignedSyncView;
@@ -2728,6 +2745,24 @@ void QQuickTableView::setSyncView(QQuickTableView *view)
     emit syncViewChanged();
 }
 
+/*!
+    \qmlproperty Qt::Orientations QtQuick::TableView::syncDirection
+
+    If the \l syncView is set on a TableView, this property controls
+    synchronization of flicking direction(s) for both tables. The default is \c
+    {Qt.Horizontal | Qt.Vertical}, which means that if you flick either table
+    in either direction, the other table is flicked the same amount in the
+    same direction.
+
+    This property and \l syncView can be used to make two tableViews
+    synchronize with each other smoothly in flicking regardless of the different
+    overshoot/undershoot, velocity, acceleration/deceleration or rebound
+    animation, and so on.
+
+    A typical use case is to make several headers flick along with the table.
+
+    \sa syncView, headerView
+*/
 Qt::Orientations QQuickTableView::syncDirection() const
 {
    return d_func()->assignedSyncDirection;
