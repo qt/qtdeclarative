@@ -2089,7 +2089,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
 
     // Whatever removed/moved items remain are no longer visible items.
     prepareRemoveTransitions(&currentChanges.removedItems);
-    for (QHash<QQmlChangeSet::MoveKey, FxViewItem *>::Iterator it = currentChanges.removedItems.begin();
+    for (auto it = currentChanges.removedItems.begin();
          it != currentChanges.removedItems.end(); ++it) {
         releaseItem(it.value(), reusableFlag);
     }
@@ -2181,11 +2181,11 @@ void QQuickItemViewPrivate::removeItem(FxViewItem *item, const QQmlChangeSet::Ch
             removeResult->sizeChangesAfterVisiblePos += item->size();
     }
     if (removal.isMove()) {
-        currentChanges.removedItems.insert(removal.moveKey(item->index), item);
+        currentChanges.removedItems.replace(removal.moveKey(item->index), item);
         item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, true);
     } else {
         // track item so it is released later
-        currentChanges.removedItems.insertMulti(QQmlChangeSet::MoveKey(), item);
+        currentChanges.removedItems.insert(QQmlChangeSet::MoveKey(), item);
     }
     if (!removeResult->changedFirstItem && item == *visibleItems.constBegin())
         removeResult->changedFirstItem = true;
@@ -2256,15 +2256,14 @@ void QQuickItemViewPrivate::prepareVisibleItemTransitions()
         visibleItems[i]->prepareTransition(transitioner, viewBounds);
 }
 
-void QQuickItemViewPrivate::prepareRemoveTransitions(QHash<QQmlChangeSet::MoveKey, FxViewItem *> *removedItems)
+void QQuickItemViewPrivate::prepareRemoveTransitions(QMultiHash<QQmlChangeSet::MoveKey, FxViewItem *> *removedItems)
 {
     if (!transitioner)
         return;
 
     if (transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, true)
             || transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, false)) {
-        for (QHash<QQmlChangeSet::MoveKey, FxViewItem *>::Iterator it = removedItems->begin();
-             it != removedItems->end(); ) {
+        for (auto it = removedItems->begin(); it != removedItems->end(); ) {
             bool isRemove = it.key().moveId < 0;
             if (isRemove) {
                 FxViewItem *item = *it;

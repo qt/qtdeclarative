@@ -92,7 +92,7 @@ public:
     int itemCount;
     int newCurrentIndex;
     QQmlChangeSet pendingChanges;
-    QHash<QQmlChangeSet::MoveKey, FxViewItem *> removedItems;
+    QMultiHash<QQmlChangeSet::MoveKey, FxViewItem *> removedItems;
 
     bool active : 1;
     bool currentChanged : 1;
@@ -203,7 +203,7 @@ public:
 
     void createTransitioner();
     void prepareVisibleItemTransitions();
-    void prepareRemoveTransitions(QHash<QQmlChangeSet::MoveKey, FxViewItem *> *removedItems);
+    void prepareRemoveTransitions(QMultiHash<QQmlChangeSet::MoveKey, FxViewItem *> *removedItems);
     bool prepareNonVisibleItemTransition(FxViewItem *item, const QRectF &viewBounds);
     void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item) override;
 
