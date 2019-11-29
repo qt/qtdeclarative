@@ -168,7 +168,7 @@ void QV4ProfilerAdapter::receiveData(
     if (m_functionLocations.isEmpty())
         m_functionLocations = locations;
     else
-        m_functionLocations.unite(locations);
+        m_functionLocations.insert(locations);
 
     if (m_functionCallData.isEmpty())
         m_functionCallData = functionCallData;
