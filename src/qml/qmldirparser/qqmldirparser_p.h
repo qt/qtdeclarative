@@ -132,7 +132,7 @@ public:
         int minorVersion = 0;
     };
 
-    QHash<QString,Component> components() const;
+    QMultiHash<QString,Component> components() const;
     QHash<QString,Component> dependencies() const;
     QStringList imports() const;
     QList<Script> scripts() const;
@@ -159,7 +159,7 @@ private:
 private:
     QList<QQmlJS::DiagnosticMessage> _errors;
     QString _typeNamespace;
-    QHash<QString,Component> _components; // multi hash
+    QMultiHash<QString,Component> _components;
     QHash<QString,Component> _dependencies;
     QStringList _imports;
     QList<Script> _scripts;
@@ -169,7 +169,7 @@ private:
     QString _className;
 };
 
-using QQmlDirComponents = QHash<QString,QQmlDirParser::Component>;
+using QQmlDirComponents = QMultiHash<QString,QQmlDirParser::Component>;
 using QQmlDirScripts = QList<QQmlDirParser::Script>;
 using QQmlDirPlugins = QList<QQmlDirParser::Plugin>;
 
