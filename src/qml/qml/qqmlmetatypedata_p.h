@@ -71,7 +71,7 @@ struct QQmlMetaTypeData
     QSet<QQmlType> undeletableTypes;
     typedef QHash<int, QQmlTypePrivate *> Ids;
     Ids idToType;
-    typedef QHash<QHashedStringRef, QQmlTypePrivate *> Names;
+    typedef QMultiHash<QHashedStringRef, QQmlTypePrivate *> Names;
     Names nameToType;
     typedef QHash<QUrl, QQmlTypePrivate *> Files; //For file imported composite types only
     Files urlToType;
@@ -79,7 +79,7 @@ struct QQmlMetaTypeData
             // singleton types. This way we can locate any
             // of them by url, even if it was registered as
             // a module via QQmlPrivate::RegisterCompositeType
-    typedef QHash<const QMetaObject *, QQmlTypePrivate *> MetaObjects;
+    typedef QMultiHash<const QMetaObject *, QQmlTypePrivate *> MetaObjects;
     MetaObjects metaObjectToType;
     typedef QHash<int, QQmlMetaType::StringConverter> StringConverters;
     StringConverters stringConverters;

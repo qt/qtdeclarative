@@ -329,7 +329,6 @@ QQmlType QQmlMetaType::registerInterface(const QQmlPrivate::RegisterInterface &t
 
     data->idToType.insert(priv->typeId, priv);
     data->idToType.insert(priv->listId, priv);
-    // XXX No insertMulti, so no multi-version interfaces?
     if (!priv->elementName.isEmpty())
         data->nameToType.insert(priv->elementName, priv);
 
@@ -414,10 +413,10 @@ void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data)
     Q_ASSERT(type);
 
     if (!type->elementName.isEmpty())
-        data->nameToType.insertMulti(type->elementName, type);
+        data->nameToType.insert(type->elementName, type);
 
     if (type->baseMetaObject)
-        data->metaObjectToType.insertMulti(type->baseMetaObject, type);
+        data->metaObjectToType.insert(type->baseMetaObject, type);
 
     if (type->typeId) {
         data->idToType.insert(type->typeId, type);
