@@ -80,7 +80,13 @@ public:
         Anisotropy16x
     };
 
+    struct NativeTexture {
+        const void *object;
+        int layout;
+    };
+
     virtual int textureId() const = 0; // ### Qt 6: remove
+    NativeTexture nativeTexture() const;
     virtual QSize textureSize() const = 0;
     virtual bool hasAlphaChannel() const = 0;
     virtual bool hasMipmaps() const = 0;
