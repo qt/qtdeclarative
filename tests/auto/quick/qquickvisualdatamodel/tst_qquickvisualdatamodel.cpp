@@ -434,6 +434,7 @@ private slots:
     void externalManagedModel();
     void delegateModelChangeDelegate();
     void checkFilterGroupForDelegate();
+    void readFromProxyObject();
 
 private:
     template <int N> void groups_verify(
@@ -4354,6 +4355,21 @@ void tst_qquickvisualdatamodel::checkFilterGroupForDelegate()
 
     QTRY_VERIFY(obj->property("numChanges").toInt() > 100);
     QVERIFY(obj->property("ok").toBool());
+}
+
+void tst_qquickvisualdatamodel::readFromProxyObject()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("readFromProxyObject.qml"));
+
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj);
+
+    auto *window = qobject_cast<QQuickWindow *>(obj.get());
+    QVERIFY(window);
+
+    QCOMPARE(window->property("name").type(), QMetaType::QString);
+    QTRY_VERIFY(window->property("name").toString() != QLatin1String("wrong"));
 }
 
 QTEST_MAIN(tst_qquickvisualdatamodel)

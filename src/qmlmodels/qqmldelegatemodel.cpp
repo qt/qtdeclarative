@@ -955,21 +955,25 @@ void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *mod
         // column, model and more
         // the most derived subclass of QQmlDelegateModelItem is QQmlDMAbstractModelData at depth 2,
         // so 4 should be plenty
-        QVarLengthArray<const QMetaObject *, 4> mos;
+        QVarLengthArray<QPair<const QMetaObject *, QObject *>, 4> mos;
         // we first check the dynamic meta object for properties originating from the model
-        mos.push_back(qmlMetaObject); // contains abstractitemmodelproperties
+        // contains abstractitemmodelproperties
+        mos.push_back(qMakePair(qmlMetaObject, modelItemToIncubate));
         auto delegateModelItemSubclassMO = qmlMetaObject->superClass();
-        mos.push_back(delegateModelItemSubclassMO);
+        mos.push_back(qMakePair(delegateModelItemSubclassMO, modelItemToIncubate));
 
-        while (strcmp(delegateModelItemSubclassMO->className(), modelItemToIncubate->staticMetaObject.className())) {
+        while (strcmp(delegateModelItemSubclassMO->className(),
+                      modelItemToIncubate->staticMetaObject.className())) {
             delegateModelItemSubclassMO = delegateModelItemSubclassMO->superClass();
-            mos.push_back(delegateModelItemSubclassMO);
+            mos.push_back(qMakePair(delegateModelItemSubclassMO, modelItemToIncubate));
         }
         if (proxiedObject)
-            mos.push_back(proxiedObject->metaObject());
+            mos.push_back(qMakePair(proxiedObject->metaObject(), proxiedObject));
 
         auto updater = new PropertyUpdater(object);
-        for (const QMetaObject *mo : mos) {
+        for (const auto &metaObjectAndObject : mos) {
+            const QMetaObject *mo = metaObjectAndObject.first;
+            QObject *itemOrProxy = metaObjectAndObject.second;
             for (int i = mo->propertyOffset(); i < mo->propertyCount() + mo->propertyOffset(); ++i) {
                 auto prop = mo->property(i);
                 if (!prop.name())
@@ -981,19 +985,23 @@ void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *mod
                 // only write to property if it was actually requested by the component
                 if (wasInRequired && prop.hasNotifySignal()) {
                     QMetaMethod changeSignal = prop.notifySignal();
-                    static QMetaMethod updateSlot = PropertyUpdater::staticMetaObject.method(PropertyUpdater::staticMetaObject.indexOfSlot("doUpdate()"));
-                    QMetaObject::Connection conn = QObject::connect(modelItemToIncubate, changeSignal, updater, updateSlot);
+                    static QMetaMethod updateSlot = PropertyUpdater::staticMetaObject.method(
+                                PropertyUpdater::staticMetaObject.indexOfSlot("doUpdate()"));
+                    QMetaObject::Connection conn = QObject::connect(itemOrProxy, changeSignal,
+                                                                    updater, updateSlot);
                     auto propIdx = object->metaObject()->indexOfProperty(propName.toUtf8());
-                    QMetaMethod writeToPropSignal = object->metaObject()->property(propIdx).notifySignal();
+                    QMetaMethod writeToPropSignal
+                            = object->metaObject()->property(propIdx).notifySignal();
                     updater->senderToConnection[writeToPropSignal.methodIndex()] = conn;
-                    static QMetaMethod breakBinding = PropertyUpdater::staticMetaObject.method(PropertyUpdater::staticMetaObject.indexOfSlot("breakBinding()"));
-                    componentProp.write(prop.read(modelItemToIncubate));
+                    static QMetaMethod breakBinding = PropertyUpdater::staticMetaObject.method(
+                                PropertyUpdater::staticMetaObject.indexOfSlot("breakBinding()"));
+                    componentProp.write(prop.read(itemOrProxy));
                     // the connection needs to established after the write,
                     // else the signal gets triggered by it and breakBinding will remove the connection
                     QObject::connect(object, writeToPropSignal, updater, breakBinding);
                 }
                 else if (wasInRequired) // we still have to write, even if there is no change signal
-                    componentProp.write(prop.read(modelItemToIncubate));
+                    componentProp.write(prop.read(itemOrProxy));
             }
         }
     } else {
