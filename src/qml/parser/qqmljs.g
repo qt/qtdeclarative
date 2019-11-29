@@ -80,6 +80,7 @@
 %token T_COMMENT "comment"
 %token T_COMPATIBILITY_SEMICOLON
 %token T_ARROW "=>"
+%token T_QUESTION_QUESTION "??"
 %token T_ENUM "enum"
 %token T_ELLIPSIS "..."
 %token T_YIELD "yield"
@@ -2638,13 +2639,48 @@ LogicalORExpression_In: LogicalORExpression_In T_OR_OR LogicalANDExpression_In;
     } break;
 ./
 
+CoalesceExpression: LogicalORExpression;
+CoalesceExpression_In: LogicalORExpression_In;
 
-ConditionalExpression: LogicalORExpression;
-ConditionalExpression_In: LogicalORExpression_In;
-
-ConditionalExpression: LogicalORExpression T_QUESTION AssignmentExpression_In T_COLON AssignmentExpression;
+CoalesceExpression: CoalesceExpression T_QUESTION_QUESTION LogicalORExpression;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
-ConditionalExpression_In: LogicalORExpression_In T_QUESTION AssignmentExpression_In T_COLON AssignmentExpression_In;
+CoalesceExpression_In: CoalesceExpression_In T_QUESTION_QUESTION LogicalORExpression_In;
+/.
+    case $rule_number: {
+
+        auto *lhs = sym(1).Expression;
+        auto *rhs = sym(3).Expression;
+
+        // Check if lhs or rhs contain || or &&
+
+        if (lhs->binaryExpressionCast() != nullptr) {
+            auto *binaryExpr = lhs->binaryExpressionCast();
+            if (binaryExpr->op == QSOperator::And || binaryExpr->op == QSOperator::Or) {
+                syntaxError(binaryExpr->operatorToken, "Left-hand side may not contain || or &&");
+                return false;
+            }
+        }
+
+        if (rhs->binaryExpressionCast() != nullptr) {
+            auto *binaryExpr = rhs->binaryExpressionCast();
+            if (binaryExpr->op == QSOperator::And || binaryExpr->op == QSOperator::Or) {
+                syntaxError(binaryExpr->operatorToken, "Right-hand side may not contain || or &&");
+                return false;
+            }
+        }
+
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(lhs, QSOperator::Coalesce, rhs);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+ConditionalExpression: CoalesceExpression;
+ConditionalExpression_In: CoalesceExpression_In;
+
+ConditionalExpression: CoalesceExpression T_QUESTION AssignmentExpression_In T_COLON AssignmentExpression;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+ConditionalExpression_In: CoalesceExpression_In T_QUESTION AssignmentExpression_In T_COLON AssignmentExpression_In;
 /.
     case $rule_number: {
         AST::ConditionalExpression *node = new (pool) AST::ConditionalExpression(sym(1).Expression, sym(3).Expression, sym(5).Expression);

@@ -1371,6 +1371,40 @@ bool Codegen::visit(BinaryExpression *ast)
             setExprResult(Reference::fromAccumulator(this));
         }
         return false;
+    } else if (ast->op == QSOperator::Coalesce) {
+
+        Reference left = expression(ast->left);
+        if (hasError())
+            return false;
+
+        BytecodeGenerator::Label iftrue = bytecodeGenerator->newLabel();
+        BytecodeGenerator::Label iffalse = bytecodeGenerator->newLabel();
+
+        Instruction::CmpNeNull cmp;
+
+        left = left.storeOnStack();
+        left.loadInAccumulator();
+        bytecodeGenerator->addInstruction(cmp);
+
+        bytecodeGenerator->jumpTrue().link(iftrue);
+        bytecodeGenerator->jumpFalse().link(iffalse);
+
+        blockTailCalls.unblock();
+
+        iftrue.link();
+
+        left.loadInAccumulator();
+
+        BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
+
+        iffalse.link();
+
+        Reference right = expression(ast->right);
+        right.loadInAccumulator();
+        jump_endif.link();
+        setExprResult(Reference::fromAccumulator(this));
+
+        return false;
     } else if (ast->op == QSOperator::Assign) {
         if (AST::Pattern *p = ast->left->patternCast()) {
             RegisterScope scope(this);

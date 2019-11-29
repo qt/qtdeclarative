@@ -105,6 +105,7 @@ enum Op {
     InplaceURightShift,
     InplaceXor,
     As,
+    Coalesce,
     Invalid
 };
 
