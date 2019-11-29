@@ -3536,7 +3536,7 @@ QObject *QQmlPartsModel::object(int index, QQmlIncubator::IncubationMode incubat
         QObject *part = package->part(m_part);
         if (!part)
             return nullptr;
-        m_packaged.insertMulti(part, package);
+        m_packaged.insert(part, package);
         return part;
     }
 
@@ -3554,7 +3554,7 @@ QQmlInstanceModel::ReleaseFlags QQmlPartsModel::release(QObject *item, ReusableF
 {
     QQmlInstanceModel::ReleaseFlags flags;
 
-    QHash<QObject *, QQuickPackage *>::iterator it = m_packaged.find(item);
+    auto it = m_packaged.find(item);
     if (it != m_packaged.end()) {
         QQuickPackage *package = *it;
         QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(m_model);
@@ -3595,7 +3595,7 @@ QQmlIncubator::Status QQmlPartsModel::incubationStatus(int index)
 
 int QQmlPartsModel::indexOf(QObject *item, QObject *) const
 {
-    QHash<QObject *, QQuickPackage *>::const_iterator it = m_packaged.find(item);
+    auto it = m_packaged.find(item);
     if (it != m_packaged.end()) {
         if (QQmlDelegateModelItem *cacheItem = QQmlDelegateModelItem::dataForObject(*it))
             return cacheItem->groupIndex(m_compositorGroup);

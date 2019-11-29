@@ -419,7 +419,7 @@ Q_SIGNALS:
 
 private:
     QQmlDelegateModel *m_model;
-    QHash<QObject *, QQuickPackage *> m_packaged;
+    QMultiHash<QObject *, QQuickPackage *> m_packaged;
     QString m_part;
     QString m_filterGroup;
     QList<QByteArray> m_watchedRoles;
