@@ -491,7 +491,7 @@ QQmlType QQmlMetaType::registerCompositeSingletonType(const QQmlPrivate::Registe
     addTypeToData(priv, data);
 
     QQmlMetaTypeData::Files *files = fileImport ? &(data->urlToType) : &(data->urlToNonFileImportType);
-    files->insertMulti(QQmlTypeLoader::normalize(type.url), priv);
+    files->insert(QQmlTypeLoader::normalize(type.url), priv);
 
     return QQmlType(priv);
 }
@@ -512,7 +512,7 @@ QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterComposit
     addTypeToData(priv, data);
 
     QQmlMetaTypeData::Files *files = fileImport ? &(data->urlToType) : &(data->urlToNonFileImportType);
-    files->insertMulti(QQmlTypeLoader::normalize(type.url), priv);
+    files->insert(QQmlTypeLoader::normalize(type.url), priv);
 
     return QQmlType(priv);
 }
@@ -796,7 +796,7 @@ QQmlType QQmlMetaType::typeForUrl(const QString &urlString,
 
         data->registerType(priv);
         addTypeToData(priv, data);
-        data->urlToType.insertMulti(url, priv);
+        data->urlToType.insert(url, priv);
         return QQmlType(priv);
     }
 
