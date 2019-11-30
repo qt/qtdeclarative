@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype DelayButton
     \inherits AbstractButton
-    \instantiates QQuickDelayButton
+//!     \instantiates QQuickDelayButton
     \inqmlmodule QtQuick.Controls
     \since 5.9
     \ingroup qtquickcontrols2-buttons

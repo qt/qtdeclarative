@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -48,28 +48,33 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Templates 2.12 as T
+import QtQuick 2.13
+import QtQuick.Controls 2.13
 
-T.AbstractButton {
-    id: control
-    objectName: "abstractbutton-identified"
+ApplicationWindow {
+    width: 400
+    height: 400
 
-    indicator: Item {
-        id: indicator
-        objectName: "abstractbutton-indicator-identified"
-        Accessible.name: objectName
+    property alias button: button
+    property alias popup1: popup1
+    property alias popup2: popup2
+
+    Button {
+        id: button
+        focus: true
     }
 
-    contentItem: Item {
-        id: contentItem
-        objectName: "abstractbutton-contentItem-identified"
-        Accessible.name: objectName
+    Popup {
+        id: popup1
+        focus: true
+        enter: Transition { NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 200 } }
+        exit: Transition { NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 200 } }
     }
 
-    background: Item {
-        id: background
-        objectName: "abstractbutton-background-identified"
-        Accessible.name: objectName
+    Popup {
+        id: popup2
+        focus: true
+        enter: Transition { NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 100 } }
+        exit: Transition { NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 100 } }
     }
 }

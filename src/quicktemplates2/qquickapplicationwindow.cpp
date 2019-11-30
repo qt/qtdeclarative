@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ApplicationWindow
     \inherits Window
-    \instantiates QQuickApplicationWindow
+//!     \instantiates QQuickApplicationWindow
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-containers
@@ -407,7 +407,7 @@ void QQuickApplicationWindow::setBackground(QQuickItem *background)
     if (!d->background.isExecuting())
         d->cancelBackground();
 
-    delete d->background;
+    QQuickControlPrivate::hideOldItem(d->background);
     d->background = background;
     if (background) {
         background->setParentItem(QQuickWindow::contentItem());

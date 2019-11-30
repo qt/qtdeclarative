@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Dialog
     \inherits Popup
-    \instantiates QQuickDialog
+//!     \instantiates QQuickDialog
     \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-dialogs
     \ingroup qtquickcontrols2-popups

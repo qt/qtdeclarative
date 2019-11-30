@@ -48,9 +48,12 @@
 // We mean it.
 //
 
+#include <QtCore/qloggingcategory.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcItemManagement)
 
 class QValidator;
 class QQuickPopup;

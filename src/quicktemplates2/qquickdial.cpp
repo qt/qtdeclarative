@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Dial
     \inherits Control
-    \instantiates QQuickDial
+//!     \instantiates QQuickDial
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
@@ -620,7 +620,7 @@ void QQuickDial::setHandle(QQuickItem *handle)
     if (!d->handle.isExecuting())
         d->cancelHandle();
 
-    delete d->handle;
+    QQuickControlPrivate::hideOldItem(d->handle);
     d->handle = handle;
     if (d->handle && !d->handle->parentItem())
         d->handle->setParentItem(this);

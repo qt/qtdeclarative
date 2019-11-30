@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype GroupBox
     \inherits Frame
-    \instantiates QQuickGroupBox
+//!     \instantiates QQuickGroupBox
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-containers
@@ -199,7 +199,7 @@ void QQuickGroupBox::setLabel(QQuickItem *label)
     const qreal oldImplicitLabelHeight = implicitLabelHeight();
 
     d->removeImplicitSizeListener(d->label);
-    delete d->label;
+    QQuickControlPrivate::hideOldItem(d->label);
     d->label = label;
 
     if (label) {

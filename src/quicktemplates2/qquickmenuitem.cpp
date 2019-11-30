@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuItem
     \inherits AbstractButton
-    \instantiates QQuickMenuItem
+//!     \instantiates QQuickMenuItem
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-menus
@@ -216,7 +216,7 @@ void QQuickMenuItem::setArrow(QQuickItem *arrow)
     if (!d->arrow.isExecuting())
         d->cancelArrow();
 
-    delete d->arrow;
+    QQuickControlPrivate::hideOldItem(d->arrow);
     d->arrow = arrow;
     if (arrow && !arrow->parentItem())
         arrow->setParentItem(this);

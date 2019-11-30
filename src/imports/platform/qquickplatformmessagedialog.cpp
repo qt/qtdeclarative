@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MessageDialog
     \inherits Dialog
-    \instantiates QQuickPlatformMessageDialog
+//!     \instantiates QQuickPlatformMessageDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native message dialog.

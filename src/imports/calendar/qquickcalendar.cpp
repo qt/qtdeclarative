@@ -41,7 +41,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Calendar
     \inherits QObject
-    \instantiates QQuickCalendar
+//! \instantiates QQuickCalendar
     \inqmlmodule Qt.labs.calendar
     \brief A calendar namespace.
 

@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype TextField
     \inherits TextInput
-    \instantiates QQuickTextField
+//!     \instantiates QQuickTextField
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
@@ -84,8 +84,8 @@ QT_BEGIN_NAMESPACE
     \qmlsignal QtQuick.Controls::TextField::pressAndHold(MouseEvent event)
 
     This signal is emitted when there is a long press (the delay depends on the platform plugin).
-    The \l {MouseEvent}{event} parameter provides information about the press, including the x and y
-    position of the press, and which button is pressed.
+    The \a event parameter provides information about the press, including the x and y
+    coordinates of the press, and which button is pressed.
 
     \sa pressed, released
 */
@@ -95,8 +95,9 @@ QT_BEGIN_NAMESPACE
     \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This signal is emitted when the text field is pressed by the user.
-    The \l {MouseEvent}{event} parameter provides information about the press,
-    including the x and y position of the press, and which button is pressed.
+    The \a event parameter provides information about the press,
+    including the x and y coordinates of the press, and which button
+    is pressed.
 
     \sa released, pressAndHold
 */
@@ -106,8 +107,9 @@ QT_BEGIN_NAMESPACE
     \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This signal is emitted when the text field is released by the user.
-    The \l {MouseEvent}{event} parameter provides information about the release,
-    including the x and y position of the press, and which button is pressed.
+    The \a event parameter provides information about the release,
+    including the x and y coordinates of the press, and which button
+    is pressed.
 
     \sa pressed, pressAndHold
 */
@@ -501,7 +503,7 @@ void QQuickTextField::setBackground(QQuickItem *background)
     }
 
     QQuickControlPrivate::removeImplicitSizeListener(d->background, d, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
-    delete d->background;
+    QQuickControlPrivate::hideOldItem(d->background);
     d->background = background;
 
     if (background) {

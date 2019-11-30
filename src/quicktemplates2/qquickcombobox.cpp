@@ -51,6 +51,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/private/qlazilyallocated_p.h>
 #include <private/qqmldelegatemodel_p.h>
+#include <QtQuick/private/qquickaccessibleattached_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qquickitemview_p.h>
@@ -60,7 +61,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ComboBox
     \inherits Control
-    \instantiates QQuickComboBox
+//!     \instantiates QQuickComboBox
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
@@ -263,6 +264,8 @@ public:
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
+
+    static void hideOldPopup(QQuickPopup *popup);
 
     bool flat = false;
     bool down = false;
@@ -774,6 +777,21 @@ void QQuickComboBoxPrivate::itemImplicitHeightChanged(QQuickItem *item)
         emit q->implicitIndicatorHeightChanged();
 }
 
+void QQuickComboBoxPrivate::hideOldPopup(QQuickPopup *popup)
+{
+    if (!popup)
+        return;
+
+    qCDebug(lcItemManagement) << "hiding old popup" << popup;
+
+    popup->setVisible(false);
+    popup->setParentItem(nullptr);
+    // Remove the item from the accessibility tree.
+    QQuickAccessibleAttached *accessible = accessibleAttached(popup);
+    if (accessible)
+        accessible->setIgnored(true);
+}
+
 QQuickComboBox::QQuickComboBox(QQuickItem *parent)
     : QQuickControl(*(new QQuickComboBoxPrivate), parent)
 {
@@ -794,7 +812,7 @@ QQuickComboBox::~QQuickComboBox()
         // Disconnect visibleChanged() to avoid a spurious highlightedIndexChanged() signal
         // emission during the destruction of the (visible) popup. (QTBUG-57650)
         QObjectPrivate::disconnect(d->popup.data(), &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::popupVisibleChanged);
-        delete d->popup;
+        QQuickComboBoxPrivate::hideOldPopup(d->popup);
         d->popup = nullptr;
     }
 }
@@ -1136,7 +1154,7 @@ void QQuickComboBox::setIndicator(QQuickItem *indicator)
     const qreal oldImplicitIndicatorHeight = implicitIndicatorHeight();
 
     d->removeImplicitSizeListener(d->indicator);
-    delete d->indicator;
+    QQuickControlPrivate::hideOldItem(d->indicator);
     d->indicator = indicator;
     if (indicator) {
         if (!indicator->parentItem())
@@ -1184,7 +1202,7 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
 
     if (d->popup) {
         QObjectPrivate::disconnect(d->popup.data(), &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::popupVisibleChanged);
-        delete d->popup;
+        QQuickComboBoxPrivate::hideOldPopup(d->popup);
     }
     if (popup) {
         QQuickPopupPrivate::get(popup)->allowVerticalFlip = true;
@@ -1568,7 +1586,7 @@ QString QQuickComboBox::textAt(int index) const
 }
 
 /*!
-    \qmlmethod int QtQuick.Controls::ComboBox::find(string text, flags = Qt.MatchExactly)
+    \qmlmethod int QtQuick.Controls::ComboBox::find(string text, enumeration flags)
 
     Returns the index of the specified \a text, or \c -1 if no match is found.
 

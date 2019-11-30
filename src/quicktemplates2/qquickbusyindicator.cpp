@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype BusyIndicator
     \inherits Control
-    \instantiates QQuickBusyIndicator
+//!     \instantiates QQuickBusyIndicator
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-indicators

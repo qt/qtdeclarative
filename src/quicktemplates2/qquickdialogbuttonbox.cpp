@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype DialogButtonBox
     \inherits Container
-    \instantiates QQuickDialogButtonBox
+//!     \instantiates QQuickDialogButtonBox
     \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-dialogs
     \brief A button box used in dialogs.
@@ -542,7 +542,7 @@ void QQuickDialogButtonBox::setAlignment(Qt::Alignment alignment)
 
 void QQuickDialogButtonBox::resetAlignment()
 {
-    setAlignment(0);
+    setAlignment({});
 }
 
 /*!

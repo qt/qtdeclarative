@@ -70,15 +70,15 @@
     \section1 Using Styles in Qt Quick Controls
 
     In order to run an application with a specific style, either configure the
-    style using \l QQuickStyle in C++, pass a command line argument, or set an
+    style using \l[CPP]{QQuickStyle} in C++, pass a command line argument, or set an
     environment variable. Alternatively, the preferred style and style-specific
     attributes can be specified in a configuration file.
 
     The priority of these approaches follows the order they are listed below,
-    from highest to lowest. That is, using QQuickStyle to set the style will
+    from highest to lowest. That is, using \c QQuickStyle to set the style will
     always take priority over using the command line argument, for example.
 
-    \warning When resolving a given style name to an absolute path, QQuickStyle
+    \warning When resolving a given style name to an absolute path, \c QQuickStyle
     may search the root resource directory (\c {:}). Consequently, make sure
     that your resource directories are named differently than the names of the
     styles that your application supports. Otherwise, the styles may not load.
@@ -87,14 +87,16 @@
 
     \section2 Using QQuickStyle in C++
 
-    \l QQuickStyle provides C++ API for configuring a specific style. The following
-    example runs a Qt Quick Controls application with the Material style:
+    \l[CPP]{QQuickStyle} provides C++ API for configuring a specific
+    style. The following example runs a Qt Quick Controls application
+    with the Material style:
 
     \code
     QQuickStyle::setStyle("Material");
     \endcode
 
-    See the detailed description of \l QQuickStyle for more details.
+    See the detailed description of \l[CPP]{QQuickStyle} for more
+    details.
 
     \section2 Command line argument
 

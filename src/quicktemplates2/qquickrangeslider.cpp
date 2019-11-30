@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype RangeSlider
     \inherits Control
-    \instantiates QQuickRangeSlider
+//!     \instantiates QQuickRangeSlider
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
@@ -267,7 +267,7 @@ void QQuickRangeSliderNode::setHandle(QQuickItem *handle)
     const qreal oldImplicitHandleHeight = implicitHandleHeight();
 
     QQuickControlPrivate::get(d->slider)->removeImplicitSizeListener(d->handle);
-    delete d->handle;
+    QQuickControlPrivate::hideOldItem(d->handle);
     d->handle = handle;
 
     if (handle) {
@@ -978,11 +978,11 @@ void QQuickRangeSlider::setOrientation(Qt::Orientation orientation)
 
     Sets \l first.value and \l second.value with the given arguments.
 
-    If \a to is larger than \a from and \a firstValue is larger than
-    \a secondValue, \a firstValue will be clamped to \a secondValue.
+    If \l to is larger than \l from and \a firstValue is larger than
+    \a secondValue, firstValue will be clamped to secondValue.
 
-    If \a from is larger than \a to and \a secondValue is larger than
-    \a firstValue, \a secondValue will be clamped to \a firstValue.
+    If \l from is larger than \l to and secondValue is larger than
+    firstValue, secondValue will be clamped to firstValue.
 
     This function may be necessary to set the first and second values
     after the control has been completed, as there is a circular
