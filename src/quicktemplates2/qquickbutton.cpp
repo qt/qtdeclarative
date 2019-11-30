@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Button
     \inherits AbstractButton
-    \instantiates QQuickButton
+//!     \instantiates QQuickButton
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-buttons

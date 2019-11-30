@@ -2478,7 +2478,7 @@
 
     The Imagine style supports palette customization via the \l {Control::}{palette}
     property and the \l {Palette Configuration}{qtquickcontrols2.conf} file.
-    As with other styles, the exact \l {palette QML Basic Type}{palette roles}
+    As with other styles, the exact \l[QML]{palette}{palette roles}
     that the Imagine style uses are style-dependent. However, as most of the visual
     appearance of controls (for example: backgrounds) are managed through image assets,
     only the roles that are typically used for text will have an effect.

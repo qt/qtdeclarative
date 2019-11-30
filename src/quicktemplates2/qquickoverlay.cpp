@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Overlay
     \inherits Item
-    \instantiates QQuickOverlay
+//!     \instantiates QQuickOverlay
     \inqmlmodule QtQuick.Controls
     \since 5.10
     \brief A window overlay for popups.

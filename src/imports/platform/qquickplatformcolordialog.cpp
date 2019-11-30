@@ -41,7 +41,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ColorDialog
     \inherits Dialog
-    \instantiates QQuickPlatformColorDialog
+//! \instantiates QQuickPlatformColorDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native color dialog.

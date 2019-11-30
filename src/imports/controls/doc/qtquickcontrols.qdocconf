@@ -33,7 +33,7 @@ qhp.QtQuickControls.subprojects.examples.title = Examples
 qhp.QtQuickControls.subprojects.examples.indexTitle = Qt Quick Controls Examples
 qhp.QtQuickControls.subprojects.examples.selectors = fake:example
 
-depends = qtcore qtgui qtdoc qtqml qtquick qtquickdialogs qtquickcontrols1 qtquickextras qmake qtsql qtwidgets qtlabscalendar qtlabsplatform qtgraphicaleffects
+depends = qtcore qtgui qtdoc qtqml qtqmlmodels qtquick qtquickdialogs qtquickcontrols1 qtquickextras qmake qtsql qtwidgets qtlabscalendar qtlabsplatform qtgraphicaleffects
 
 # Specify the install path under QT_INSTALL_EXAMPLES
 # Note: paths passed to \example command must contain the parent directory, e.g.

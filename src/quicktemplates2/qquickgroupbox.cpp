@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype GroupBox
     \inherits Frame
-    \instantiates QQuickGroupBox
+//!     \instantiates QQuickGroupBox
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-containers

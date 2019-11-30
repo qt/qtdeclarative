@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype TextArea
     \inherits TextEdit
-    \instantiates QQuickTextArea
+//!     \instantiates QQuickTextArea
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
@@ -121,8 +121,8 @@ QT_BEGIN_NAMESPACE
     \qmlsignal QtQuick.Controls::TextArea::pressAndHold(MouseEvent event)
 
     This signal is emitted when there is a long press (the delay depends on the platform plugin).
-    The \l {MouseEvent}{event} parameter provides information about the press, including the x and y
-    position of the press, and which button is pressed.
+    The \a event parameter provides information about the press, including the x and y
+    coordinates of the press, and which button is pressed.
 
     \sa pressed, released
 */
@@ -132,8 +132,8 @@ QT_BEGIN_NAMESPACE
     \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This signal is emitted when the text area is pressed by the user.
-    The \l {MouseEvent}{event} parameter provides information about the press,
-    including the x and y position of the press, and which button is pressed.
+    The \a event parameter provides information about the press,
+    including the x and y coordinates of the press, and which button is pressed.
 
     \sa released, pressAndHold
 */
@@ -143,8 +143,9 @@ QT_BEGIN_NAMESPACE
     \since QtQuick.Controls 2.1 (Qt 5.8)
 
     This signal is emitted when the text area is released by the user.
-    The \l {MouseEvent}{event} parameter provides information about the release,
-    including the x and y position of the press, and which button is pressed.
+    The \a event parameter provides information about the release,
+    including the x and y coordinates of the press, and which button
+    is pressed.
 
     \sa pressed, pressAndHold
 */

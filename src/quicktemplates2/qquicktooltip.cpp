@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ToolTip
     \inherits Popup
-    \instantiates QQuickToolTip
+//!     \instantiates QQuickToolTip
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-popups
@@ -273,9 +273,10 @@ QQuickToolTipAttached *QQuickToolTip::qmlAttachedProperties(QObject *object)
 
 /*!
     \since QtQuick.Controls 2.5 (Qt 5.12)
-    \qmlmethod void QtQuick.Controls::ToolTip::show(string text, int timeout = -1)
+    \qmlmethod void QtQuick.Controls::ToolTip::show(string text, int timeout)
 
-    This method shows the tooltip with \a text and \a timeout (milliseconds).
+    This method shows the \a text as a tooltip, which times out in
+    \a timeout (milliseconds).
 */
 void QQuickToolTip::show(const QString &text, int ms)
 {

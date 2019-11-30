@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuSeparator
     \inherits Control
-    \instantiates QQuickMenuSeparator
+//!     \instantiates QQuickMenuSeparator
     \inqmlmodule QtQuick.Controls
     \since 5.8
     \ingroup qtquickcontrols2-separators

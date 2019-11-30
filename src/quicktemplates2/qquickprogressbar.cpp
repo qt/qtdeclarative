@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ProgressBar
     \inherits Control
-    \instantiates QQuickProgressBar
+//!     \instantiates QQuickProgressBar
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-indicators

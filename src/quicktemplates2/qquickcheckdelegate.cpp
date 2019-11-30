@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype CheckDelegate
     \inherits ItemDelegate
-    \instantiates QQuickCheckDelegate
+//!     \instantiates QQuickCheckDelegate
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-delegates

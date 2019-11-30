@@ -223,33 +223,39 @@ TestCase {
         var minimumExpectedValueCount = data.live ? 2 : 1;
 
         // drag to the left
-        mouseDrag(dial, dial.width / 2, dial.height / 2, -dial.width / 2, 0, Qt.LeftButton);
+        // we always add or subtract 1 to ensure we start the drag from the opposite side
+        // of where we're dragging to, for more reliable tests
+        mouseDrag(dial, dial.width / 2 + 1, dial.height / 2, -dial.width / 2, 0, Qt.LeftButton);
         fuzzyCompare(dial.value, data.leftValue, 0.1);
-        verify(valueSpy.count >= minimumExpectedValueCount);
+        verify(valueSpy.count >= minimumExpectedValueCount, "expected valueChanged to be emitted at least "
+            + minimumExpectedValueCount + " time(s), but it was only emitted " + valueSpy.count + " time(s)");
         valueSpy.clear();
         verify(moveSpy.count > 0);
         moveSpy.clear();
 
         // drag to the top
-        mouseDrag(dial, dial.width / 2, dial.height / 2, 0, -dial.height / 2, Qt.LeftButton);
+        mouseDrag(dial, dial.width / 2, dial.height / 2 + 1, 0, -dial.height / 2, Qt.LeftButton);
         fuzzyCompare(dial.value, data.topValue, 0.1);
-        verify(valueSpy.count >= minimumExpectedValueCount);
+        verify(valueSpy.count >= minimumExpectedValueCount, "expected valueChanged to be emitted at least "
+            + minimumExpectedValueCount + " time(s), but it was only emitted " + valueSpy.count + " time(s)");
         valueSpy.clear();
         verify(moveSpy.count > 0);
         moveSpy.clear();
 
         // drag to the right
-        mouseDrag(dial, dial.width / 2, dial.height / 2, dial.width / 2, 0, Qt.LeftButton);
+        mouseDrag(dial, dial.width / 2 - 1, dial.height / 2, dial.width / 2, 0, Qt.LeftButton);
         fuzzyCompare(dial.value, data.rightValue, 0.1);
-        verify(valueSpy.count >= minimumExpectedValueCount);
+        verify(valueSpy.count >= minimumExpectedValueCount, "expected valueChanged to be emitted at least "
+            + minimumExpectedValueCount + " time(s), but it was only emitted " + valueSpy.count + " time(s)");
         valueSpy.clear();
         verify(moveSpy.count > 0);
         moveSpy.clear();
 
         // drag to the bottom (* 0.6 to ensure we don't go over to the minimum position)
-        mouseDrag(dial, dial.width / 2, dial.height / 2, 10, dial.height / 2, Qt.LeftButton);
+        mouseDrag(dial, dial.width / 2, dial.height / 2 - 1, 10, dial.height / 2, Qt.LeftButton);
         fuzzyCompare(dial.value, data.bottomValue, 0.1);
-        verify(valueSpy.count >= minimumExpectedValueCount);
+        verify(valueSpy.count >= minimumExpectedValueCount, "expected valueChanged to be emitted at least "
+            + minimumExpectedValueCount + " time(s), but it was only emitted " + valueSpy.count + " time(s)");
         valueSpy.clear();
         verify(moveSpy.count > 0);
         moveSpy.clear();

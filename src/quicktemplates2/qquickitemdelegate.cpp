@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ItemDelegate
     \inherits AbstractButton
-    \instantiates QQuickItemDelegate
+//!     \instantiates QQuickItemDelegate
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \brief Basic item delegate that can be used in various views and controls.

@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Label
     \inherits Text
-    \instantiates QQuickLabel
+//!     \instantiates QQuickLabel
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup text

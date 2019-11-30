@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype StandardPaths
     \inherits QtObject
-    \instantiates QQuickPlatformStandardPaths
+//!     \instantiates QQuickPlatformStandardPaths
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief Provides access to the standard system paths.
@@ -89,6 +89,8 @@ QObject *QQuickPlatformStandardPaths::create(QQmlEngine *engine, QJSEngine *scri
 /*!
     \qmlmethod string Qt.labs.platform::StandardPaths::displayName(StandardLocation type)
 
+    \include standardpath/functiondocs.qdocinc displayName
+
     \sa QStandardPaths::displayName()
 */
 QString QQuickPlatformStandardPaths::displayName(QStandardPaths::StandardLocation type)
@@ -99,6 +101,8 @@ QString QQuickPlatformStandardPaths::displayName(QStandardPaths::StandardLocatio
 /*!
     \qmlmethod url Qt.labs.platform::StandardPaths::findExecutable(string executableName, list<string> paths)
 
+    \include standardpath/functiondocs.qdocinc findExecutable
+
     \sa QStandardPaths::findExecutable()
 */
 QUrl QQuickPlatformStandardPaths::findExecutable(const QString &executableName, const QStringList &paths)
@@ -107,7 +111,9 @@ QUrl QQuickPlatformStandardPaths::findExecutable(const QString &executableName, 
 }
 
 /*!
-    \qmlmethod url Qt.labs.platform::StandardPaths::locate(StandardLocation type, string fileName, LocateOptions options = LocateFile)
+    \qmlmethod url Qt.labs.platform::StandardPaths::locate(StandardLocation type, string fileName, LocateOptions options)
+
+    \include standardpath/functiondocs.qdocinc locate
 
     \sa QStandardPaths::locate()
 */
@@ -117,7 +123,9 @@ QUrl QQuickPlatformStandardPaths::locate(QStandardPaths::StandardLocation type, 
 }
 
 /*!
-    \qmlmethod list<url> Qt.labs.platform::StandardPaths::locateAll(StandardLocation type, string fileName, LocateOptions options = LocateFile)
+    \qmlmethod list<url> Qt.labs.platform::StandardPaths::locateAll(StandardLocation type, string fileName, LocateOptions options)
+
+    \include standardpath/functiondocs.qdocinc locateAll
 
     \sa QStandardPaths::locateAll()
 */
@@ -129,6 +137,8 @@ QList<QUrl> QQuickPlatformStandardPaths::locateAll(QStandardPaths::StandardLocat
 /*!
     \qmlmethod void Qt.labs.platform::StandardPaths::setTestModeEnabled(bool testMode)
 
+    \include standardpath/functiondocs.qdocinc setTestModeEnabled
+
     \sa QStandardPaths::setTestModeEnabled()
 */
 void QQuickPlatformStandardPaths::setTestModeEnabled(bool testMode)
@@ -139,6 +149,8 @@ void QQuickPlatformStandardPaths::setTestModeEnabled(bool testMode)
 /*!
     \qmlmethod list<url> Qt.labs.platform::StandardPaths::standardLocations(StandardLocation type)
 
+    \include standardpath/functiondocs.qdocinc standardLocations
+
     \sa QStandardPaths::standardLocations()
 */
 QList<QUrl> QQuickPlatformStandardPaths::standardLocations(QStandardPaths::StandardLocation type)
@@ -148,6 +160,8 @@ QList<QUrl> QQuickPlatformStandardPaths::standardLocations(QStandardPaths::Stand
 
 /*!
     \qmlmethod url Qt.labs.platform::StandardPaths::writableLocation(StandardLocation type)
+
+    \include standardpath/functiondocs.qdocinc writableLocation
 
     \sa QStandardPaths::writableLocation()
 */

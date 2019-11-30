@@ -50,7 +50,7 @@ Q_LOGGING_CATEGORY(lcTumbler, "qt.quick.controls.tumbler")
 /*!
     \qmltype Tumbler
     \inherits Control
-    \instantiates QQuickTumbler
+//!     \instantiates QQuickTumbler
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
