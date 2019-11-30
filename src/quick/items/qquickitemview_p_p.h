@@ -316,6 +316,7 @@ public:
     bool inRequest : 1;
     bool runDelayedRemoveTransition : 1;
     bool delegateValidated : 1;
+    bool isClearing : 1;
 
 protected:
     virtual Qt::Orientation layoutOrientation() const = 0;

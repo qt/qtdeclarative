@@ -1505,7 +1505,7 @@ QQuickItemViewPrivate::QQuickItemViewPrivate()
     , inLayout(false), inViewportMoved(false), forceLayout(false), currentIndexCleared(false)
     , haveHighlightRange(false), autoHighlight(true), highlightRangeStartValid(false), highlightRangeEndValid(false)
     , fillCacheBuffer(false), inRequest(false)
-    , runDelayedRemoveTransition(false), delegateValidated(false)
+    , runDelayedRemoveTransition(false), delegateValidated(false), isClearing(false)
 {
     bufferPause.addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
     bufferPause.setLoopCount(1);
@@ -1681,6 +1681,10 @@ void QQuickItemViewPrivate::updateCurrent(int modelIndex)
 void QQuickItemViewPrivate::clear(bool onDestruction)
 {
     Q_Q(QQuickItemView);
+
+    isClearing = true;
+    auto cleanup = qScopeGuard([this] { isClearing = false; });
+
     currentChanges.reset();
     bufferedChanges.reset();
     timeline.clear();
@@ -2403,7 +2407,7 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item)
     QQmlInstanceModel::ReleaseFlags flags = {};
     if (model && item->item) {
         flags = model->release(item->item);
-        if (!flags) {
+        if (!flags && !isClearing) {
             // item was not destroyed, and we no longer reference it.
             if (item->item->parentItem() == contentItem) {
                 // Only cull the item if its parent item is still our contentItem.

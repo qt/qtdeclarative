@@ -281,6 +281,7 @@ private slots:
     void touchCancel();
     void resizeAfterComponentComplete();
     void moveObjectModelItemToAnotherObjectModel();
+    void changeModelAndDestroyTheOldOne();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -9156,6 +9157,21 @@ void tst_QQuickListView::moveObjectModelItemToAnotherObjectModel()
     QVERIFY(QQuickTest::qWaitForItemPolished(listView1));
     QVERIFY(redRect->isVisible());
     QVERIFY(!QQuickItemPrivate::get(redRect)->culled);
+}
+
+void tst_QQuickListView::changeModelAndDestroyTheOldOne()  // QTBUG-80203
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("changeModelAndDestroyTheOldOne.qml"));
+    window->resize(640, 480);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickItem *root = window->rootObject();
+    QVERIFY(root);
+
+    QVERIFY(QQuickTest::qWaitForItemPolished(root));
+    // no crash
 }
 
 QTEST_MAIN(tst_QQuickListView)
