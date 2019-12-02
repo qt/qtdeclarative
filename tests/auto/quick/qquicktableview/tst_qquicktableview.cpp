@@ -176,6 +176,7 @@ private slots:
     void checkSyncView_connect_late_data();
     void checkSyncView_connect_late();
     void checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable();
+    void replaceModel();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -2698,6 +2699,20 @@ void tst_QQuickTableView::checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable(
 
     QCOMPARE(tableView->rows(), 6);
     QCOMPARE(tableView->columns(), 5);
+}
+
+void tst_QQuickTableView::replaceModel()
+{
+    LOAD_TABLEVIEW("replaceModelTableView.qml");
+
+    tableView->setProperty("modelId", 0);
+    QTRY_COMPARE(tableView->rows(), 2);
+    tableView->setProperty("modelId", 1);
+    QTRY_COMPARE(tableView->rows(), 0);
+    tableView->setProperty("modelId", 2);
+    QTRY_COMPARE(tableView->rows(), 0);
+    tableView->setProperty("modelId", 0);
+    QTRY_COMPARE(tableView->rows(), 2);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

@@ -92,6 +92,7 @@ int main(int argc, char **argv)
 
     int flags = 0;
     if (parser.isSet(verbose))
+
         flags |= Test262Runner::Verbose;
     if (parser.isSet(parallel))
         flags |= Test262Runner::Parallel;

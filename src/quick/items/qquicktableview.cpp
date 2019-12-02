@@ -2245,6 +2245,7 @@ void QQuickTableViewPrivate::syncModel()
 
     if (instanceModel) {
         if (tableModel) {
+            releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
             delete tableModel;
             tableModel = nullptr;
         }
