@@ -6408,8 +6408,20 @@ void tst_qquicktextinput::setInputMask_data()
         QTest::newRow(QString(insert_mode + "blank=input").toLatin1())
             << QString("9999;0")
             << QString("2004")
+            << QString("24")
             << QString("2004")
-            << QString("2004")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "any_opt").toLatin1())
+            << QString("@xxx@")
+            << QString("@A C@")
+            << QString("@AC@")
+            << QString("@A C@")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "any_req").toLatin1())
+            << QString("@XXX@")
+            << QString("@A C@")
+            << QString("@AC@@")
+            << QString("@AC@@")
             << bool(insert_text);
     }
 }
@@ -6451,9 +6463,6 @@ void tst_qquicktextinput::setInputMask()
         for (int i = 0; i < input.length(); i++)
             QTest::keyClick(&window, input.at(i).toLatin1());
     }
-
-    QEXPECT_FAIL( "keys blank=input", "To eat blanks or not? Known issue. Task 43172", Abort);
-    QEXPECT_FAIL( "insert blank=input", "To eat blanks or not? Known issue. Task 43172", Abort);
 
     QCOMPARE(textInput->text(), expectedText);
     QCOMPARE(textInput->displayText(), expectedDisplay);
