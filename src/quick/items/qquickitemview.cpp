@@ -2399,7 +2399,11 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item)
         flags = model->release(item->item);
         if (!flags) {
             // item was not destroyed, and we no longer reference it.
-            QQuickItemPrivate::get(item->item)->setCulled(true);
+            if (item->item->parentItem() == contentItem) {
+                // Only cull the item if its parent item is still our contentItem.
+                // One case where this can happen is moving an item out of one ObjectModel and into another.
+                QQuickItemPrivate::get(item->item)->setCulled(true);
+            }
             unrequestedItems.insert(item->item, model->indexOf(item->item, q));
         } else if (flags & QQmlInstanceModel::Destroyed) {
             item->item->setParentItem(nullptr);
