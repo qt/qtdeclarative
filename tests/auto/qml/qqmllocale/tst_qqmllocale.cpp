@@ -102,6 +102,7 @@ private slots:
     void numberFromLocaleString_data();
     void numberFromLocaleString();
     void numberConstToLocaleString();
+    void numberOptions();
 
     void stringLocaleCompare_data();
     void stringLocaleCompare();
@@ -1155,6 +1156,35 @@ void tst_qqmllocale::numberConstToLocaleString()
     QLocale l("en_US");
     QCOMPARE(obj->property("const1").toString(), l.toString(1234.56, 'f', 2));
     QCOMPARE(obj->property("const2").toString(), l.toString(1234., 'f', 2));
+}
+
+void tst_qqmllocale::numberOptions()
+{
+    QQmlEngine engine;
+    QQmlComponent comp(&engine);
+    comp.setData(R"(
+        import QtQml 2.15
+        QtObject {
+            id: root
+            property string formatted
+            property bool caughtException: false
+            Component.onCompleted: () => {
+                const myLocale = Qt.locale("de_DE")
+                myLocale.numberOptions = Locale.OmitGroupSeparator | Locale.RejectTrailingZeroesAfterDot
+                root.formatted = Number(10000).toLocaleString(myLocale, 'f', 4)
+                try {
+                    Number.fromLocaleString(myLocale, "1,10");
+                } catch (e) {console.warn(e); root.caughtException = true}
+            }
+        }
+    )", QUrl("testdata"));
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "Error: Locale: Number.fromLocaleString(): Invalid format");
+    QScopedPointer<QObject> root {comp.create()};
+    qDebug() << comp.errorString();
+    QVERIFY(root);
+    QCOMPARE(root->property("formatted").toString(), QLatin1String("10000,0000"));
+    QCOMPARE(root->property("caughtException").toBool(), true);
+
 }
 
 void tst_qqmllocale::stringLocaleCompare_data()
