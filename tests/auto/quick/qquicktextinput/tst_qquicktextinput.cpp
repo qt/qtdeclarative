@@ -6411,6 +6411,14 @@ void tst_qquicktextinput::setInputMask()
     QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
     QVERIFY(textInput != nullptr);
 
+    // [QTBUG-80190] check if setting the same property value again doesn't emit an
+    // inputMaskChanged signal
+    QString unescapedMask = mask;   // mask is escaped, because '\' is also escape in a JS string
+    unescapedMask.replace(QLatin1String("\\\\"), QLatin1String("\\"));  // simple unescape
+    QSignalSpy spy(textInput, SIGNAL(inputMaskChanged(const QString &)));
+    textInput->setInputMask(unescapedMask);
+    QCOMPARE(spy.count(), 0);
+
     // then either insert using insert() or keyboard
     if (insert_text) {
         textInput->insert(0, input);

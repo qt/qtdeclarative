@@ -1140,7 +1140,10 @@ QString QQuickTextInput::inputMask() const
 void QQuickTextInput::setInputMask(const QString &im)
 {
     Q_D(QQuickTextInput);
-    if (d->inputMask() == im)
+    QString canonicalInputMask = im;
+    if (im.lastIndexOf(QLatin1Char(';')) == -1)
+        canonicalInputMask.append(QLatin1String("; "));
+    if (d->inputMask() == canonicalInputMask)
         return;
 
     d->setInputMask(im);
