@@ -252,6 +252,7 @@ void QQuickItemView::setModel(const QVariant &m)
         emit countChanged();
     }
     emit modelChanged();
+    d->moveReason = QQuickItemViewPrivate::Other;
 }
 
 QQmlComponent *QQuickItemView::delegate() const
