@@ -63,7 +63,6 @@ qtConfig(qml-animation) {
 include(types/types.pri)
 include(../3rdparty/masm/masm-defs.pri)
 include(../3rdparty/masm/masm.pri)
-include(../3rdparty/llvm/llvm.pri)
 
 MODULE_PLUGIN_TYPES = \
     qmltooling
