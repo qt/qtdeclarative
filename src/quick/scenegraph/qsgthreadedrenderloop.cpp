@@ -699,8 +699,9 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     const bool repaintRequested = (pendingUpdate & RepaintRequest) || d->customRenderStage || grabImage;
     const bool syncRequested = (pendingUpdate & SyncRequest) || grabImage;
     const bool exposeRequested = (pendingUpdate & ExposeRequest) == ExposeRequest;
-    pendingUpdate = 0;
     const bool grabRequested = grabImage != nullptr;
+    if (!grabRequested)
+        pendingUpdate = 0;
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     // Begin the frame before syncing -> sync is where we may invoke
@@ -776,20 +777,30 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
                               QQuickProfiler::SceneGraphRenderLoopSync);
 
-    if (!syncResultedInChanges && !repaintRequested && sgrc->isValid() && !grabImage) {
-        if (gl || (rhi && !rhi->isRecordingFrame())) {
-            qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- no changes, render aborted");
-            int waitTime = vsyncDelta - (int) waitTimer.elapsed();
-            if (waitTime > 0)
-                msleep(waitTime);
-            return;
-        }
+    if (!syncResultedInChanges
+            && !repaintRequested
+            && !(pendingUpdate & RepaintRequest) // may have been set in sync()
+            && sgrc->isValid()
+            && !grabRequested
+            && (gl || (rhi && !rhi->isRecordingFrame())))
+    {
+        qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- no changes, render aborted");
+        int waitTime = vsyncDelta - (int) waitTimer.elapsed();
+        if (waitTime > 0)
+            msleep(waitTime);
+        return;
     }
 
     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- rendering started");
 
+    // RepaintRequest may have been set in pendingUpdate in an
+    // updatePaintNode() invoked from sync(). We are about to do a repaint
+    // right now, so reset the flag. (bits other than RepaintRequest cannot
+    // be set in pendingUpdate at this point)
+    if (!grabRequested)
+        pendingUpdate = 0;
 
-    if (animatorDriver->isRunning() && !grabImage) {
+    if (animatorDriver->isRunning() && !grabRequested) {
         d->animationController->lock();
         animatorDriver->advance();
         d->animationController->unlock();
@@ -824,14 +835,14 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
         // blocking in a real frame. The legacy GL path never gets here with
         // grabs as it rather invokes sync/render directly without going
         // through syncAndRender().
-        if (grabImage) {
+        if (grabRequested) {
             Q_ASSERT(rhi && !gl && cd->swapchain);
             *grabImage = QSGRhiSupport::instance()->grabAndBlockInCurrentFrame(rhi, cd->swapchain);
         }
 
         if (cd->swapchain) {
             QRhi::EndFrameFlags flags;
-            if (grabImage)
+            if (grabRequested)
                 flags |= QRhi::SkipPresent;
             QRhi::FrameOpResult frameResult = rhi->endFrame(cd->swapchain, flags);
             if (frameResult != QRhi::FrameOpSuccess) {
@@ -847,7 +858,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
                 gl->swapBuffers(window);
         }
 
-        if (!grabImage)
+        if (!grabRequested)
             d->fireFrameSwapped();
 
     } else {
