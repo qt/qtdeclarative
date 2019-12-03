@@ -219,14 +219,14 @@ const ListLayout::Role *ListLayout::getRoleOrCreate(const QString &key, const QV
 {
     Role::DataType type;
 
-    switch (data.type()) {
-        case QVariant::Double:      type = Role::Number;      break;
-        case QVariant::Int:         type = Role::Number;      break;
-        case QVariant::Bool:        type = Role::Bool;        break;
-        case QVariant::String:      type = Role::String;      break;
-        case QVariant::Map:         type = Role::VariantMap;  break;
-        case QVariant::DateTime:    type = Role::DateTime;    break;
-        case QVariant::UserType:    {
+    switch (data.userType()) {
+        case QMetaType::Double:      type = Role::Number;      break;
+        case QMetaType::Int:         type = Role::Number;      break;
+        case QMetaType::Bool:        type = Role::Bool;        break;
+        case QMetaType::QString:      type = Role::String;      break;
+        case QMetaType::QVariantMap:         type = Role::VariantMap;  break;
+        case QMetaType::QDateTime:    type = Role::DateTime;    break;
+        default:    {
             if (data.userType() == qMetaTypeId<QJSValue>() &&
                 data.value<QJSValue>().isCallable()) {
                 type = Role::Function;
@@ -235,12 +235,14 @@ const ListLayout::Role *ListLayout::getRoleOrCreate(const QString &key, const QV
                        && data.value<const QV4::CompiledData::Binding*>()->isTranslationBinding()) {
                 type = Role::String;
                 break;
-            } else {
+            } else if (data.userType() >= QMetaType::User) {
                 type = Role::List;
+                break;
+            } else {
+                type = Role::Invalid;
                 break;
             }
         }
-        default:                    type = Role::Invalid;     break;
     }
 
     if (type == Role::Invalid) {
@@ -1740,7 +1742,7 @@ void DynamicRoleModelNode::updateValues(const QVariantMap &object, QVector<int> 
         if (value.userType() == qMetaTypeId<QJSValue>())
             value = value.value<QJSValue>().toVariant();
 
-        if (value.type() == QVariant::List) {
+        if (value.userType() == QMetaType::QVariantList) {
             QQmlListModel *subModel = QQmlListModel::createWithOwner(m_owner);
 
             QVariantList subArray = value.toList();
@@ -1803,7 +1805,7 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
     if (v.userType() == qMetaTypeId<QJSValue>())
         v= v.value<QJSValue>().toVariant();
 
-    if (v.type() == QVariant::List) {
+    if (v.userType() == QMetaType::QVariantList) {
         QQmlListModel *subModel = QQmlListModel::createWithOwner(parentModel);
 
         QVariantList subArray = v.toList();

@@ -2415,7 +2415,7 @@ QVariant QQuickPathPolyline::path() const
 
 void QQuickPathPolyline::setPath(const QVariant &path)
 {
-    if (path.type() == QVariant::PolygonF) {
+    if (path.userType() == QMetaType::QPolygonF) {
         setPath(path.value<QPolygonF>());
     } else if (path.canConvert<QVector<QPointF>>()) {
         setPath(path.value<QVector<QPointF>>());
@@ -2431,7 +2431,7 @@ void QQuickPathPolyline::setPath(const QVariant &path)
             pathList.append(v.toPointF());
         setPath(pathList);
     } else {
-        qWarning() << "PathPolyline: path of type" << path.type() << "not supported";
+        qWarning() << "PathPolyline: path of type" << path.userType() << "not supported";
     }
 }
 
@@ -2583,7 +2583,7 @@ void QQuickPathMultiline::setPaths(const QVariant &paths)
         }
         setPaths(pathsList);
     } else {
-        qWarning() << "PathMultiline: paths of type" << paths.type() << "not supported";
+        qWarning() << "PathMultiline: paths of type" << paths.userType() << "not supported";
         setPaths(QVector<QVector<QPointF>>());
     }
 }

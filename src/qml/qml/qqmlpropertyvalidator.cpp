@@ -398,31 +398,31 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
     switch (property->propType()) {
     case QMetaType::QVariant:
     break;
-    case QVariant::String: {
+    case QMetaType::QString: {
         if (!binding->evaluatesToString()) {
             return warnOrError(tr("Invalid property assignment: string expected"));
         }
     }
     break;
-    case QVariant::StringList: {
+    case QMetaType::QStringList: {
         if (!binding->evaluatesToString()) {
             return warnOrError(tr("Invalid property assignment: string or string list expected"));
         }
     }
     break;
-    case QVariant::ByteArray: {
+    case QMetaType::QByteArray: {
         if (binding->type != QV4::CompiledData::Binding::Type_String) {
             return warnOrError(tr("Invalid property assignment: byte array expected"));
         }
     }
     break;
-    case QVariant::Url: {
+    case QMetaType::QUrl: {
         if (binding->type != QV4::CompiledData::Binding::Type_String) {
             return warnOrError(tr("Invalid property assignment: url expected"));
         }
     }
     break;
-    case QVariant::UInt: {
+    case QMetaType::UInt: {
         if (binding->type == QV4::CompiledData::Binding::Type_Number) {
             double d = compilationUnit->bindingValueAsNumber(binding);
             if (double(uint(d)) == d)
@@ -431,7 +431,7 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
         return warnOrError(tr("Invalid property assignment: unsigned int expected"));
     }
     break;
-    case QVariant::Int: {
+    case QMetaType::Int: {
         if (binding->type == QV4::CompiledData::Binding::Type_Number) {
             double d = compilationUnit->bindingValueAsNumber(binding);
             if (double(int(d)) == d)
@@ -446,13 +446,13 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
         }
     }
     break;
-    case QVariant::Double: {
+    case QMetaType::Double: {
         if (binding->type != QV4::CompiledData::Binding::Type_Number) {
             return warnOrError(tr("Invalid property assignment: number expected"));
         }
     }
     break;
-    case QVariant::Color: {
+    case QMetaType::QColor: {
         bool ok = false;
         QQmlStringConverters::rgbaFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
@@ -461,7 +461,7 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
     }
     break;
 #if QT_CONFIG(datestring)
-    case QVariant::Date: {
+    case QMetaType::QDate: {
         bool ok = false;
         QQmlStringConverters::dateFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
@@ -469,7 +469,7 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
         }
     }
     break;
-    case QVariant::Time: {
+    case QMetaType::QTime: {
         bool ok = false;
         QQmlStringConverters::timeFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
@@ -477,7 +477,7 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
         }
     }
     break;
-    case QVariant::DateTime: {
+    case QMetaType::QDateTime: {
         bool ok = false;
         QQmlStringConverters::dateTimeFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
@@ -486,7 +486,7 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
     }
     break;
 #endif // datestring
-    case QVariant::Point: {
+    case QMetaType::QPoint: {
         bool ok = false;
         QQmlStringConverters::pointFFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
@@ -494,7 +494,7 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
         }
     }
     break;
-    case QVariant::PointF: {
+    case QMetaType::QPointF: {
         bool ok = false;
         QQmlStringConverters::pointFFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
@@ -502,7 +502,7 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
         }
     }
     break;
-    case QVariant::Size: {
+    case QMetaType::QSize: {
         bool ok = false;
         QQmlStringConverters::sizeFFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
@@ -510,7 +510,7 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
         }
     }
     break;
-    case QVariant::SizeF: {
+    case QMetaType::QSizeF: {
         bool ok = false;
         QQmlStringConverters::sizeFFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
@@ -518,7 +518,7 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
         }
     }
     break;
-    case QVariant::Rect: {
+    case QMetaType::QRect: {
         bool ok = false;
         QQmlStringConverters::rectFFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
@@ -526,7 +526,7 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
         }
     }
     break;
-    case QVariant::RectF: {
+    case QMetaType::QRectF: {
         bool ok = false;
         QQmlStringConverters::rectFFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
@@ -534,13 +534,13 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
         }
     }
     break;
-    case QVariant::Bool: {
+    case QMetaType::Bool: {
         if (binding->type != QV4::CompiledData::Binding::Type_Boolean) {
             return warnOrError(tr("Invalid property assignment: boolean expected"));
         }
     }
     break;
-    case QVariant::Vector2D: {
+    case QMetaType::QVector2D: {
         struct {
             float xp;
             float yp;
@@ -550,7 +550,7 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
         }
     }
     break;
-    case QVariant::Vector3D: {
+    case QMetaType::QVector3D: {
         struct {
             float xp;
             float yp;
@@ -561,7 +561,7 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
         }
     }
     break;
-    case QVariant::Vector4D: {
+    case QMetaType::QVector4D: {
         struct {
             float xp;
             float yp;
@@ -573,7 +573,7 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
         }
     }
     break;
-    case QVariant::Quaternion: {
+    case QMetaType::QQuaternion: {
         struct {
             float wp;
             float xp;
@@ -585,8 +585,8 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
         }
     }
     break;
-    case QVariant::RegExp:
-    case QVariant::RegularExpression:
+    case QMetaType::QRegExp:
+    case QMetaType::QRegularExpression:
         return warnOrError(tr("Invalid property assignment: regular expression expected; use /pattern/ syntax"));
     default: {
         // generate single literal value assignment to a list property if required

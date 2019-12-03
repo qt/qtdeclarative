@@ -1081,7 +1081,7 @@ void tst_QJSValue::toVariant()
 
         // We can't roundtrip a QRegExp this way, as toVariant() has no information on whether we
         // want QRegExp or QRegularExpression. It will always create a QRegularExpression.
-        QCOMPARE(var.type(), QMetaType::QRegularExpression);
+        QCOMPARE(var.userType(), QMetaType::QRegularExpression);
         QRegularExpression result = var.toRegularExpression();
         QCOMPARE(result.pattern(), rx.pattern());
         QCOMPARE(result.patternOptions() & QRegularExpression::CaseInsensitiveOption, 0);
@@ -1134,7 +1134,7 @@ void tst_QJSValue::toVariant()
         QVERIFY(array.isArray());
         QCOMPARE(array.property("length").toInt(), 2);
         QVariant ret = array.toVariant();
-        QCOMPARE(ret.type(), QVariant::List);
+        QCOMPARE(ret.userType(), QVariant::List);
         QVariantList listOut = ret.toList();
         QCOMPARE(listOut.size(), listIn.size());
         for (int i = 0; i < listIn.size(); ++i)

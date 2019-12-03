@@ -130,7 +130,7 @@ QT_BEGIN_NAMESPACE
 
 static QKeySequence valueToKeySequence(const QVariant &value)
 {
-    if (value.type() == QVariant::Int)
+    if (value.userType() == QMetaType::Int)
         return QKeySequence(static_cast<QKeySequence::StandardKey>(value.toInt()));
     return QKeySequence::fromString(value.toString());
 }

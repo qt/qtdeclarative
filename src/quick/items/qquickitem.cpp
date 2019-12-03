@@ -1478,7 +1478,7 @@ QVariant QQuickKeysAttached::inputMethodQuery(Qt::InputMethodQuery query) const
             if (i && i->isVisible() && (i->flags() & QQuickItem::ItemAcceptsInputMethod) && i == d->imeItem) {
                 //### how robust is i == d->imeItem check?
                 QVariant v = i->inputMethodQuery(query);
-                if (v.userType() == QVariant::RectF)
+                if (v.userType() == QMetaType::QRectF)
                     v = d->item->mapRectFromItem(i, v.toRectF());  //### cost?
                 return v;
             }

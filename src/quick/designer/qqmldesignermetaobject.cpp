@@ -240,7 +240,7 @@ int QQmlDesignerMetaObject::metaCall(QObject *o, QMetaObject::Call call, int id,
 
     if (call == QMetaObject::WriteProperty
             && propertyById.userType() == QMetaType::QVariant
-            && reinterpret_cast<QVariant *>(a[0])->type() == QVariant::Double
+            && reinterpret_cast<QVariant *>(a[0])->userType() == QMetaType::Double
             && qt_is_nan(reinterpret_cast<QVariant *>(a[0])->toDouble())) {
         return -1;
     }

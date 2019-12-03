@@ -471,7 +471,7 @@ QQmlPropertyPrivate::propertyTypeCategory() const
         return QQmlProperty::Normal;
     } else if (type & QQmlProperty::Property) {
         int type = propertyType();
-        if (type == QVariant::Invalid)
+        if (type == QMetaType::UnknownType)
             return QQmlProperty::InvalidCategory;
         else if (QQmlValueTypeFactory::isValueType((uint)type))
             return QQmlProperty::Normal;
@@ -526,7 +526,7 @@ bool QQmlProperty::operator==(const QQmlProperty &other) const
 */
 int QQmlProperty::propertyType() const
 {
-    return d ? d->propertyType() : int(QVariant::Invalid);
+    return d ? d->propertyType() : int(QMetaType::UnknownType);
 }
 
 bool QQmlPropertyPrivate::isValueType() const
@@ -542,7 +542,7 @@ int QQmlPropertyPrivate::propertyType() const
     } else if (type & QQmlProperty::Property) {
         return core.propType();
     } else {
-        return QVariant::Invalid;
+        return QMetaType::UnknownType;
     }
 }
 
@@ -1133,7 +1133,7 @@ bool QQmlPropertyPrivate::writeEnumProperty(const QMetaProperty &prop, int idx, 
     QVariant v = value;
     if (prop.isEnumType()) {
         QMetaEnum menum = prop.enumerator();
-        if (v.userType() == QVariant::String
+        if (v.userType() == QMetaType::QString
 #ifdef QT3_SUPPORT
             || v.userType() == QVariant::CString
 #endif
@@ -1145,13 +1145,13 @@ bool QQmlPropertyPrivate::writeEnumProperty(const QMetaProperty &prop, int idx, 
                 v = QVariant(menum.keyToValue(value.toByteArray(), &ok));
             if (!ok)
                 return false;
-        } else if (v.userType() != QVariant::Int && v.userType() != QVariant::UInt) {
+        } else if (v.userType() != QMetaType::Int && v.userType() != QMetaType::UInt) {
             int enumMetaTypeId = QMetaType::type(QByteArray(menum.scope() + QByteArray("::") + menum.name()));
             if ((enumMetaTypeId == QMetaType::UnknownType) || (v.userType() != enumMetaTypeId) || !v.constData())
                 return false;
             v = QVariant(*reinterpret_cast<const int *>(v.constData()));
         }
-        v.convert(QVariant::Int);
+        v.convert(QMetaType::Int);
     }
 
     // the status variable is changed by qt_metacall to indicate what it did
@@ -1206,17 +1206,17 @@ bool QQmlPropertyPrivate::write(QObject *object,
         QMetaProperty prop = object->metaObject()->property(property.coreIndex());
         QVariant v = value;
         // Enum values come through the script engine as doubles
-        if (variantType == QVariant::Double) {
+        if (variantType == QMetaType::Double) {
             double integral;
             double fractional = std::modf(value.toDouble(), &integral);
             if (qFuzzyIsNull(fractional))
-                v.convert(QVariant::Int);
+                v.convert(QMetaType::Int);
         }
         return writeEnumProperty(prop, property.coreIndex(), object, v, flags);
     }
 
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(context);
-    const bool isUrl = propertyType == QVariant::Url; // handled separately
+    const bool isUrl = propertyType == QMetaType::QUrl; // handled separately
 
     // The cases below are in approximate order of likelyhood:
     if (propertyType == variantType && !isUrl && propertyType != qMetaTypeId<QList<QUrl>>() && !property.isQList()) {
@@ -1249,7 +1249,7 @@ bool QQmlPropertyPrivate::write(QObject *object,
         } else {
             return false;
         }
-    } else if (value.canConvert(propertyType) && !isUrl && variantType != QVariant::String && propertyType != qMetaTypeId<QList<QUrl>>() && !property.isQList()) {
+    } else if (value.canConvert(propertyType) && !isUrl && variantType != QMetaType::QString && propertyType != qMetaTypeId<QList<QUrl>>() && !property.isQList()) {
         // common cases:
         switch (propertyType) {
         case QMetaType::Bool: {
@@ -1282,14 +1282,14 @@ bool QQmlPropertyPrivate::write(QObject *object,
         return property.writeProperty(object, const_cast<QVariant *>(&value), flags);
     } else if (isUrl) {
         QUrl u;
-        if (variantType == QVariant::Url) {
+        if (variantType == QMetaType::QUrl) {
             u = value.toUrl();
-        } else if (variantType == QVariant::ByteArray) {
+        } else if (variantType == QMetaType::QByteArray) {
             QString input(QString::fromUtf8(value.toByteArray()));
             // Encoded dir-separators defeat QUrl processing - decode them first
             input.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
             u = QUrl(input);
-        } else if (variantType == QVariant::String) {
+        } else if (variantType == QMetaType::QString) {
             QString input(value.toString());
             // Encoded dir-separators defeat QUrl processing - decode them first
             input.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
@@ -1355,7 +1355,7 @@ bool QQmlPropertyPrivate::write(QObject *object,
 
         bool ok = false;
         QVariant v;
-        if (variantType == QVariant::String)
+        if (variantType == QMetaType::QString)
             v = QQmlStringConverters::variantFromString(value.toString(), propertyType, &ok);
 
         if (!ok) {
@@ -1368,8 +1368,8 @@ bool QQmlPropertyPrivate::write(QObject *object,
                 // successful conversion.
                 Q_ASSERT(v.userType() == propertyType);
                 ok = true;
-            } else if (static_cast<uint>(propertyType) >= QVariant::UserType &&
-                       variantType == QVariant::String) {
+            } else if (static_cast<uint>(propertyType) >= QMetaType::User &&
+                       variantType == QMetaType::QString) {
                 QQmlMetaType::StringConverter con = QQmlMetaType::customStringConverter(propertyType);
                 if (con) {
                     v = con(value.toString());
@@ -1383,28 +1383,28 @@ bool QQmlPropertyPrivate::write(QObject *object,
             // to a sequence type property (eg, an int to a QList<int> property).
             // or that we encountered an interface type
             // Note that we've already handled single-value assignment to QList<QUrl> properties.
-            if (variantType == QVariant::Int && propertyType == qMetaTypeId<QList<int> >()) {
+            if (variantType == QMetaType::Int && propertyType == qMetaTypeId<QList<int> >()) {
                 QList<int> list;
                 list << value.toInt();
                 v = QVariant::fromValue<QList<int> >(list);
                 ok = true;
-            } else if ((variantType == QVariant::Double || variantType == QVariant::Int)
+            } else if ((variantType == QMetaType::Double || variantType == QMetaType::Int)
                        && (propertyType == qMetaTypeId<QList<qreal> >())) {
                 QList<qreal> list;
                 list << value.toReal();
                 v = QVariant::fromValue<QList<qreal> >(list);
                 ok = true;
-            } else if (variantType == QVariant::Bool && propertyType == qMetaTypeId<QList<bool> >()) {
+            } else if (variantType == QMetaType::Bool && propertyType == qMetaTypeId<QList<bool> >()) {
                 QList<bool> list;
                 list << value.toBool();
                 v = QVariant::fromValue<QList<bool> >(list);
                 ok = true;
-            } else if (variantType == QVariant::String && propertyType == qMetaTypeId<QList<QString> >()) {
+            } else if (variantType == QMetaType::QString && propertyType == qMetaTypeId<QList<QString> >()) {
                 QList<QString> list;
                 list << value.toString();
                 v = QVariant::fromValue<QList<QString> >(list);
                 ok = true;
-            } else if (variantType == QVariant::String && propertyType == qMetaTypeId<QStringList>()) {
+            } else if (variantType == QMetaType::QString && propertyType == qMetaTypeId<QStringList>()) {
                 QStringList list;
                 list << value.toString();
                 v = QVariant::fromValue<QStringList>(list);

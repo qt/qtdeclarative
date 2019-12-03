@@ -1654,7 +1654,7 @@ static QV4::ReturnedValue CallOverloaded(const QQmlObjectOrGadget &object, const
 }
 
 CallArgument::CallArgument()
-: type(QVariant::Invalid)
+: type(QMetaType::UnknownType)
 {
 }
 

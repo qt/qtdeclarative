@@ -157,7 +157,7 @@ void tst_qqmlmetatype::initTestCase()
 
 void tst_qqmlmetatype::qmlParserStatusCast()
 {
-    QVERIFY(!QQmlMetaType::qmlType(QVariant::Int).isValid());
+    QVERIFY(!QQmlMetaType::qmlType(QMetaType::Int).isValid());
     QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).isValid());
     QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).parserStatusCast(), -1);
     QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ValueSourceTestType *>()).isValid());
@@ -177,7 +177,7 @@ void tst_qqmlmetatype::qmlParserStatusCast()
 
 void tst_qqmlmetatype::qmlPropertyValueSourceCast()
 {
-    QVERIFY(!QQmlMetaType::qmlType(QVariant::Int).isValid());
+    QVERIFY(!QQmlMetaType::qmlType(QMetaType::Int).isValid());
     QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).isValid());
     QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).propertyValueSourceCast(), -1);
     QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()).isValid());
@@ -197,7 +197,7 @@ void tst_qqmlmetatype::qmlPropertyValueSourceCast()
 
 void tst_qqmlmetatype::qmlPropertyValueInterceptorCast()
 {
-    QVERIFY(!QQmlMetaType::qmlType(QVariant::Int).isValid());
+    QVERIFY(!QQmlMetaType::qmlType(QMetaType::Int).isValid());
     QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).isValid());
     QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).propertyValueInterceptorCast(), -1);
     QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()).isValid());
@@ -256,8 +256,8 @@ void tst_qqmlmetatype::prettyTypeName()
 
 void tst_qqmlmetatype::isList()
 {
-    QCOMPARE(QQmlMetaType::isList(QVariant::Invalid), false);
-    QCOMPARE(QQmlMetaType::isList(QVariant::Int), false);
+    QCOMPARE(QQmlMetaType::isList(QMetaType::UnknownType), false);
+    QCOMPARE(QQmlMetaType::isList(QMetaType::Int), false);
 
     QQmlListProperty<TestType> list;
 
@@ -327,10 +327,10 @@ void tst_qqmlmetatype::externalEnums()
     QScopedPointer<QObject> obj(c.create());
     QVERIFY(obj);
     QVariant a = obj->property("a");
-    QCOMPARE(a.type(), QVariant::Int);
+    QCOMPARE(a.userType(), QVariant::Int);
     QCOMPARE(a.toInt(), int(QStandardPaths::DocumentsLocation));
     QVariant b = obj->property("b");
-    QCOMPARE(b.type(), QVariant::Int);
+    QCOMPARE(b.userType(), QVariant::Int);
     QCOMPARE(b.toInt(), int(QStandardPaths::DocumentsLocation));
 
 }
@@ -394,10 +394,10 @@ void tst_qqmlmetatype::unregisterCustomType()
         QObject *controller = obj->findChild<QObject *>("controller");
         QVERIFY(qobject_cast<Controller1 *>(controller));
         QVariant stringVal = controller->property("string");
-        QCOMPARE(stringVal.type(), QVariant::String);
+        QCOMPARE(stringVal.userType(), QVariant::String);
         QCOMPARE(stringVal.toString(), QStringLiteral("Controller #1"));
         QVariant enumVal = controller->property("enumVal");
-        QCOMPARE(enumVal.type(), QVariant::Int);
+        QCOMPARE(enumVal.userType(), QVariant::Int);
         QCOMPARE(enumVal.toInt(), 1);
     }
     QQmlMetaType::unregisterType(controllerId);
@@ -417,10 +417,10 @@ void tst_qqmlmetatype::unregisterCustomType()
         QObject *controller = obj->findChild<QObject *>("controller");
         QVERIFY(qobject_cast<Controller2 *>(controller));
         QVariant stringVal = controller->property("string");
-        QCOMPARE(stringVal.type(), QVariant::String);
+        QCOMPARE(stringVal.userType(), QVariant::String);
         QCOMPARE(stringVal.toString(), QStringLiteral("Controller #2"));
         QVariant enumVal = controller->property("enumVal");
-        QCOMPARE(enumVal.type(), QVariant::Int);
+        QCOMPARE(enumVal.userType(), QVariant::Int);
         QCOMPARE(enumVal.toInt(), 111);
     }
     QQmlMetaType::unregisterType(controllerId);
@@ -440,10 +440,10 @@ void tst_qqmlmetatype::unregisterCustomType()
         QObject *controller = obj->findChild<QObject *>("controller");
         QVERIFY(qobject_cast<Controller1 *>(controller));
         QVariant stringVal = controller->property("string");
-        QCOMPARE(stringVal.type(), QVariant::String);
+        QCOMPARE(stringVal.userType(), QVariant::String);
         QCOMPARE(stringVal.toString(), QStringLiteral("Controller #1"));
         QVariant enumVal = controller->property("enumVal");
-        QCOMPARE(enumVal.type(), QVariant::Int);
+        QCOMPARE(enumVal.userType(), QVariant::Int);
         QCOMPARE(enumVal.toInt(), 1);
     }
 }
@@ -489,7 +489,7 @@ void tst_qqmlmetatype::unregisterCustomSingletonType()
         QScopedPointer<QObject> obj(c.create());
         QVERIFY(obj.data());
         QVariant stringVal = obj->property("text");
-        QCOMPARE(stringVal.type(), QVariant::String);
+        QCOMPARE(stringVal.userType(), QVariant::String);
         QCOMPARE(stringVal.toString(), QStringLiteral("StaticProvider #1"));
     }
     QQmlMetaType::unregisterType(staticProviderId);
@@ -505,7 +505,7 @@ void tst_qqmlmetatype::unregisterCustomSingletonType()
         QScopedPointer<QObject> obj(c.create());
         QVERIFY(obj.data());
         QVariant stringVal = obj->property("text");
-        QCOMPARE(stringVal.type(), QVariant::String);
+        QCOMPARE(stringVal.userType(), QVariant::String);
         QCOMPARE(stringVal.toString(), QStringLiteral("StaticProvider #2"));
     }
     QQmlMetaType::unregisterType(staticProviderId);
@@ -521,7 +521,7 @@ void tst_qqmlmetatype::unregisterCustomSingletonType()
         QScopedPointer<QObject> obj(c.create());
         QVERIFY(obj.data());
         QVariant stringVal = obj->property("text");
-        QCOMPARE(stringVal.type(), QVariant::String);
+        QCOMPARE(stringVal.userType(), QVariant::String);
         QCOMPARE(stringVal.toString(), QStringLiteral("StaticProvider #1"));
     }
 }

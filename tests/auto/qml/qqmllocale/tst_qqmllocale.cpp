@@ -449,7 +449,7 @@ void tst_qqmllocale::firstDayOfWeek()
         Q_ARG(QVariant, QVariant(locale)));
 
     QVariant val = obj->property("firstDayOfWeek");
-    QCOMPARE(val.type(), QVariant::Int);
+    QCOMPARE(val.userType(), QMetaType::Int);
 
     int day = int(QLocale(locale).firstDayOfWeek());
     if (day == 7) // JS Date days in range 0(Sunday) to 6(Saturday)

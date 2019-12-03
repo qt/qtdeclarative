@@ -1966,20 +1966,20 @@ QAbstractAnimationJob* QQuickParallelAnimation::transition(QQuickStateActions &a
 //convert a variant from string type to another animatable type
 void QQuickPropertyAnimationPrivate::convertVariant(QVariant &variant, int type)
 {
-    if (variant.userType() != QVariant::String) {
+    if (variant.userType() != QMetaType::QString) {
         variant.convert(type);
         return;
     }
 
     switch (type) {
-    case QVariant::Rect:
-    case QVariant::RectF:
-    case QVariant::Point:
-    case QVariant::PointF:
-    case QVariant::Size:
-    case QVariant::SizeF:
-    case QVariant::Color:
-    case QVariant::Vector3D:
+    case QMetaType::QRect:
+    case QMetaType::QRectF:
+    case QMetaType::QPoint:
+    case QMetaType::QPointF:
+    case QMetaType::QSize:
+    case QMetaType::QSizeF:
+    case QMetaType::QColor:
+    case QMetaType::QVector3D:
         {
         bool ok = false;
         variant = QQmlStringConverters::variantFromString(variant.toString(), type, &ok);
