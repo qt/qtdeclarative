@@ -3608,6 +3608,23 @@ QQuickListViewAttached *QQuickListView::qmlAttachedProperties(QObject *obj)
     return new QQuickListViewAttached(obj);
 }
 
+bool QQuickListView::contains(const QPointF &point) const
+{
+    bool ret = QQuickItemView::contains(point);
+    // QTBUG-74046: if a mouse press "falls through" a floating header or footer, don't allow dragging the list from there
+    if (ret) {
+        if (auto header = headerItem()) {
+            if (headerPositioning() != QQuickListView::InlineHeader && header->contains(mapToItem(header, point)))
+                ret = false;
+        }
+        if (auto footer = footerItem()) {
+            if (footerPositioning() != QQuickListView::InlineFooter && footer->contains(mapToItem(footer, point)))
+                ret = false;
+        }
+    }
+    return ret;
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qquicklistview_p.cpp"

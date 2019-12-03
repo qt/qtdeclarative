@@ -282,6 +282,7 @@ private slots:
     void setPositionOnLayout();
     void touchCancel();
     void resizeAfterComponentComplete();
+    void dragOverFloatingHeaderOrFooter();
 
     void delegateWithRequiredProperties();
 
@@ -9334,6 +9335,45 @@ void tst_QQuickListView::reuse_checkThatItemsAreReused()
         QVERIFY(modelIndex < initialItemCount);
         QCOMPARE(display, model.displayStringForRow(modelIndex));
     }
+}
+
+void tst_QQuickListView::dragOverFloatingHeaderOrFooter() // QTBUG-74046
+{
+    QQuickView *window = getView();
+    QQuickViewTestUtil::moveMouseAway(window);
+    window->setSource(testFileUrl("qtbug63974.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickListView *listview = qmlobject_cast<QQuickListView *>(window->rootObject());
+    QVERIFY(listview);
+    QCOMPARE(listview->contentY(), -20);
+
+    // Drag downwards from the header: the list shouldn't move
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(10,10));
+    for (int i = 0; i < 10; ++i)
+        QTest::mouseMove(window, QPoint(10, 10 + i * 10));
+    QCOMPARE(listview->isMoving(), false);
+    QCOMPARE(listview->contentY(), -20);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier);
+
+    // Drag upwards from the footer: the list shouldn't move
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(10,190));
+    for (int i = 0; i < 10; ++i)
+        QTest::mouseMove(window, QPoint(10, 190 - i * 10));
+    QCOMPARE(listview->isMoving(), false);
+    QCOMPARE(listview->contentY(), -20);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier);
+
+    // Drag upwards from the middle: the list should move
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(10,100));
+    for (int i = 0; i < 10 && listview->contentY() == -20; ++i)
+        QTest::mouseMove(window, QPoint(10, 100 - i * 10));
+    QVERIFY(listview->isMoving());
+    QVERIFY(listview->contentY() > -20);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier);
+
+    releaseView(window);
 }
 
 QTEST_MAIN(tst_QQuickListView)
