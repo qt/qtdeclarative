@@ -30,6 +30,7 @@
 #include <QtCore/QStringListModel>
 #include <QtCore/QSortFilterProxyModel>
 #include <QtGui/QStandardItemModel>
+#include <QtGui/QStyleHints>
 #include <QtQuick/qquickview.h>
 #include <QtQuickTest/QtQuickTest>
 #include <QtQml/qqmlengine.h>
@@ -183,6 +184,8 @@ private slots:
     void creationContext();
     void snapToItem_data();
     void snapToItem();
+    void headerSnapToItem_data();
+    void headerSnapToItem();
     void snapToItemWithSpacing_QTBUG_59852();
     void snapOneItemResize_QTBUG_43555();
     void snapOneItem_data();
@@ -5393,6 +5396,604 @@ void tst_QQuickListView::snapToItemWithSpacing_QTBUG_59852()
     QCOMPARE(listView->contentY(), 0); // it's farther to go to the next item, so snaps to the first
 
     releaseView(window);
+}
+
+static void drag_helper(QWindow *window, QPoint *startPos, const QPoint &delta)
+{
+    QPoint pos = *startPos;
+    int dragDistance = delta.manhattanLength();
+    Q_ASSERT(qAbs(delta.x()) >= 1 || qAbs(delta.y()) >= 1);
+
+    const int stepSize = 8;
+    QPoint unitVector(0, 0);
+    if (delta.x())
+        unitVector.setX(qBound(-1, delta.x(), 1));
+    if (delta.y())
+        unitVector.setY(qBound(-1, delta.y(), 1));
+    QPoint dragStepSize = unitVector * stepSize;
+    int nDragSteps = qAbs(dragDistance/stepSize);
+
+    for (int i = 0 ; i < nDragSteps; ++i) {
+        QTest::mouseMove(window, pos);
+        pos += dragStepSize;
+    }
+    // Move to the final position
+    pos = *startPos + delta;
+    QTest::mouseMove(window, pos);
+    *startPos = pos;
+}
+
+static void dragtwice(QWindow *window, QPoint *startPos, const QPoint &delta1, const QPoint &delta2)
+{
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    QPoint &pos = *startPos;
+    QPoint unitVector(0, 0);
+    if (delta1.x())
+        unitVector.setX(qBound(-1, delta1.x(), 1));
+    if (delta1.y())
+        unitVector.setY(qBound(-1, delta1.y(), 1));
+
+    // go just beyond the drag theshold
+    drag_helper(window, &pos, unitVector * (dragThreshold + 1));
+    drag_helper(window, &pos, unitVector);
+
+    // next drag will actually scroll the listview
+    if (delta1.manhattanLength() >= 1)
+        drag_helper(window, &pos, delta1);
+    if (delta2.manhattanLength() >= 1)
+        drag_helper(window, &pos, delta2);
+}
+
+struct MyListView : public QQuickListView{
+    qreal contentPosition() const
+    {
+        return (orientation() == QQuickListView::Horizontal ? contentX(): contentY());
+    }
+
+    qreal headerPosition() const
+    {
+        return (orientation() == QQuickListView::Horizontal ? headerItem()->x() : headerItem()->y());
+    }
+};
+
+void tst_QQuickListView::headerSnapToItem()
+{
+    QFETCH(QQuickItemView::LayoutDirection, layoutDirection);
+    QFETCH(QQuickListView::HeaderPositioning, headerPositioning);
+    QFETCH(int, firstDragDistance);
+    QFETCH(int, secondDragDistance);
+    QFETCH(int, expectedContentPosition);
+    QFETCH(int, expectedHeaderPosition);
+
+    QQuickView *window = getView();
+    window->setSource(testFileUrl("headerSnapToItem.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    MyListView *listview = static_cast<MyListView *>(findItem<QQuickListView>(window->rootObject(), "list"));
+    QVERIFY(listview != nullptr);
+
+    const bool horizontal = layoutDirection < QQuickItemView::VerticalTopToBottom;
+    listview->setOrientation(horizontal ? QQuickListView::Horizontal : QQuickListView::Vertical);
+
+    if (horizontal)
+        listview->setLayoutDirection(static_cast<Qt::LayoutDirection>(layoutDirection));
+    else
+        listview->setVerticalLayoutDirection(static_cast<QQuickItemView::VerticalLayoutDirection>(layoutDirection));
+
+    listview->setHeaderPositioning(headerPositioning);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+
+    QQuickItem *contentItem = listview->contentItem();
+    QVERIFY(contentItem != nullptr);
+    QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
+    QVERIFY(header != nullptr);
+    QCOMPARE(header, listview->headerItem());
+
+    QPoint startPos = (QPointF(listview->width(), listview->height())/2).toPoint();
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, startPos, 200);
+
+    QPoint firstDragDelta(0, firstDragDistance);
+    QPoint secondDragDelta = QPoint(0, secondDragDistance);
+    if (horizontal) {
+        firstDragDelta = firstDragDelta.transposed();
+        secondDragDelta = secondDragDelta.transposed();
+    }
+
+    dragtwice(window, &startPos, firstDragDelta, secondDragDelta);
+
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, startPos, 200);     // Wait 200 ms before we release to avoid trigger a flick
+
+    // wait for the "fixup" animation to finish
+    QTest::qWaitFor([&]()
+        { return !listview->isMoving();}
+    );
+
+    QCOMPARE(listview->contentPosition(), expectedContentPosition);
+    QCOMPARE(listview->headerPosition(),  expectedHeaderPosition);
+}
+
+void tst_QQuickListView::headerSnapToItem_data()
+{
+    QTest::addColumn<QQuickItemView::LayoutDirection>("layoutDirection");
+    QTest::addColumn<QQuickListView::HeaderPositioning>("headerPositioning");
+    QTest::addColumn<int>("firstDragDistance");
+    QTest::addColumn<int>("secondDragDistance");
+    QTest::addColumn<int>("expectedContentPosition");
+    QTest::addColumn<int>("expectedHeaderPosition");
+
+    // --------------------
+    // InlineHeader TopToBottom
+    QTest::newRow("InlineHeader TopToBottom -10") << QQuickItemView::VerticalTopToBottom
+                                                  << QQuickListView::InlineHeader
+                                                  << -10 << 0
+                                                  << -30 << -30;
+
+    QTest::newRow("InlineHeader TopToBottom -14") << QQuickItemView::VerticalTopToBottom
+                                                  << QQuickListView::InlineHeader
+                                                  << -14 << 0
+                                                  << -30 << -30;
+
+    QTest::newRow("InlineHeader TopToBottom -16") << QQuickItemView::VerticalTopToBottom
+                                                  << QQuickListView::InlineHeader
+                                                  << -16 << 0
+                                                  << 0 << -30;
+
+    QTest::newRow("InlineHeader TopToBottom -30") << QQuickItemView::VerticalTopToBottom
+                                              << QQuickListView::InlineHeader
+                                              << -30 << 0
+                                              << 0 << -30;
+
+    QTest::newRow("InlineHeader TopToBottom -39") << QQuickItemView::VerticalTopToBottom
+                                                  << QQuickListView::InlineHeader
+                                                  << -39 << 0
+                                                  << 0 << -30;
+
+    QTest::newRow("InlineHeader TopToBottom -41") << QQuickItemView::VerticalTopToBottom
+                                                  << QQuickListView::InlineHeader
+                                                  << -41 << 0
+                                                  << 20 << -30;
+
+    QTest::newRow("InlineHeader TopToBottom -65+10") << QQuickItemView::VerticalTopToBottom
+                                              << QQuickListView::InlineHeader
+                                              << -65 << 10
+                                              << 20 << -30;
+
+    // --------------------
+    // InlineHeader BottomToTop
+    QTest::newRow("InlineHeader BottomToTop +10") << QQuickItemView::VerticalBottomToTop
+                                                  << QQuickListView::InlineHeader
+                                                  << 10 << 0
+                                                  << -170 << 0;
+
+    QTest::newRow("InlineHeader BottomToTop +14") << QQuickItemView::VerticalBottomToTop
+                                                  << QQuickListView::InlineHeader
+                                                  << 14 << 0
+                                                  << -170 << 0;
+
+    QTest::newRow("InlineHeader BottomToTop +16") << QQuickItemView::VerticalBottomToTop
+                                                  << QQuickListView::InlineHeader
+                                                  << 16 << 0
+                                                  << -200 << 0;
+
+    QTest::newRow("InlineHeader BottomToTop +30") << QQuickItemView::VerticalBottomToTop
+                                                  << QQuickListView::InlineHeader
+                                                  << 30 << 0
+                                                  << -200 << 0;
+
+    QTest::newRow("InlineHeader BottomToTop +39") << QQuickItemView::VerticalBottomToTop
+                                                  << QQuickListView::InlineHeader
+                                                  << 39 << 0
+                                                  << -200 << 0;
+
+    QTest::newRow("InlineHeader BottomToTop +41") << QQuickItemView::VerticalBottomToTop
+                                                  << QQuickListView::InlineHeader
+                                                  << 41 << 0
+                                                  << -220 << 0;
+
+    QTest::newRow("InlineHeader BottomToTop +65-10") << QQuickItemView::VerticalBottomToTop
+                                                     << QQuickListView::InlineHeader
+                                                     << 65 << -10
+                                                     << -220 << 0;
+
+    // --------------------
+    // InlineHeader LeftToRight
+    QTest::newRow("InlineHeader LeftToRight -10") << QQuickItemView::LeftToRight
+                                                  << QQuickListView::InlineHeader
+                                                  << -10 << 0
+                                                  << -30 << -30;
+
+    QTest::newRow("InlineHeader LeftToRight -14") << QQuickItemView::LeftToRight
+                                                  << QQuickListView::InlineHeader
+                                                  << -14 << 0
+                                                  << -30 << -30;
+
+    QTest::newRow("InlineHeader LeftToRight -16") << QQuickItemView::LeftToRight
+                                                  << QQuickListView::InlineHeader
+                                                  << -16 << 0
+                                                  << 0 << -30;
+
+    QTest::newRow("InlineHeader LeftToRight -30") << QQuickItemView::LeftToRight
+                                                  << QQuickListView::InlineHeader
+                                                  << -30 << 0
+                                                  << 0 << -30;
+
+    QTest::newRow("InlineHeader LeftToRight -39") << QQuickItemView::LeftToRight
+                                                  << QQuickListView::InlineHeader
+                                                  << -39 << 0
+                                                  << 0 << -30;
+
+    QTest::newRow("InlineHeader LeftToRight -41") << QQuickItemView::LeftToRight
+                                                  << QQuickListView::InlineHeader
+                                                  << -41 << 0
+                                                  << 20 << -30;
+
+    QTest::newRow("InlineHeader LeftToRight -65+10") << QQuickItemView::LeftToRight
+                                                     << QQuickListView::InlineHeader
+                                                     << -65 << 10
+                                                     << 20 << -30;
+
+    // --------------------
+    // InlineHeader RightToLeft
+    QTest::newRow("InlineHeader RightToLeft +10") << QQuickItemView::RightToLeft
+                                                  << QQuickListView::InlineHeader
+                                                  << 10 << 0
+                                                  << -210 << 0;
+
+    QTest::newRow("InlineHeader RightToLeft +14") << QQuickItemView::RightToLeft
+                                                  << QQuickListView::InlineHeader
+                                                  << 14 << 0
+                                                  << -210 << 0;
+
+    QTest::newRow("InlineHeader RightToLeft +16") << QQuickItemView::RightToLeft
+                                                  << QQuickListView::InlineHeader
+                                                  << 16 << 0
+                                                  << -240 << 0;
+
+    QTest::newRow("InlineHeader RightToLeft +30") << QQuickItemView::RightToLeft
+                                                  << QQuickListView::InlineHeader
+                                                  << 30 << 0
+                                                  << -240 << 0;
+
+    QTest::newRow("InlineHeader RightToLeft +39") << QQuickItemView::RightToLeft
+                                                  << QQuickListView::InlineHeader
+                                                  << 39 << 0
+                                                  << -240 << 0;
+
+    QTest::newRow("InlineHeader RightToLeft +41") << QQuickItemView::RightToLeft
+                                                  << QQuickListView::InlineHeader
+                                                  << 41 << 0
+                                                  << -260 << 0;
+
+    QTest::newRow("InlineHeader RightToLeft +65-10") << QQuickItemView::RightToLeft
+                                                     << QQuickListView::InlineHeader
+                                                     << 65 << -10
+                                                     << -260 << 0;
+
+    // --------------------
+    // OverlayHeader TopToBottom
+    QTest::newRow("OverlayHeader TopToBottom +9") << QQuickItemView::VerticalTopToBottom
+                                                  << QQuickListView::OverlayHeader
+                                                  << 9 << 0
+                                                  << -30 << -30;
+
+    QTest::newRow("OverlayHeader TopToBottom -9") << QQuickItemView::VerticalTopToBottom
+                                                  << QQuickListView::OverlayHeader
+                                                  << -9 << 0
+                                                  << -30 << -30;
+
+    QTest::newRow("OverlayHeader TopToBottom -11") << QQuickItemView::VerticalTopToBottom
+                                                  << QQuickListView::OverlayHeader
+                                                  << -11 << 0
+                                                  << -10 << -10;
+
+    QTest::newRow("OverlayHeader TopToBottom -29") << QQuickItemView::VerticalTopToBottom
+                                                  << QQuickListView::OverlayHeader
+                                                  << -29 << 0
+                                                  << -10 << -10;
+
+    QTest::newRow("OverlayHeader TopToBottom -31") << QQuickItemView::VerticalTopToBottom
+                                                  << QQuickListView::OverlayHeader
+                                                  << -31 << 0
+                                                  << 10 << 10;
+
+    // --------------------
+    // OverlayHeader BottomToTop
+    QTest::newRow("OverlayHeader BottomToTop -9") << QQuickItemView::VerticalBottomToTop
+                                                  << QQuickListView::OverlayHeader
+                                                  << -9 << 0
+                                                  << -170 << 0;
+
+    QTest::newRow("OverlayHeader BottomToTop +9") << QQuickItemView::VerticalBottomToTop
+                                                  << QQuickListView::OverlayHeader
+                                                  << 9 << 0
+                                                  << -170 << 0;
+
+    QTest::newRow("OverlayHeader BottomToTop +11") << QQuickItemView::VerticalBottomToTop
+                                                   << QQuickListView::OverlayHeader
+                                                   << 11 << 0
+                                                   << -190 << -20;
+
+    QTest::newRow("OverlayHeader BottomToTop +29") << QQuickItemView::VerticalBottomToTop
+                                                   << QQuickListView::OverlayHeader
+                                                   << 29 << 0
+                                                   << -190 << -20;
+
+    QTest::newRow("OverlayHeader BottomToTop +31") << QQuickItemView::VerticalBottomToTop
+                                                   << QQuickListView::OverlayHeader
+                                                   << 31 << 0
+                                                   << -210 << -40;
+
+    // --------------------
+    // OverlayHeader LeftToRight
+    QTest::newRow("OverlayHeader LeftToRight +9") << QQuickItemView::LeftToRight
+                                                  << QQuickListView::OverlayHeader
+                                                  << 9 << 0
+                                                  << -30 << -30;
+
+    QTest::newRow("OverlayHeader LeftToRight -9") << QQuickItemView::LeftToRight
+                                                  << QQuickListView::OverlayHeader
+                                                  << -9 << 0
+                                                  << -30 << -30;
+
+    QTest::newRow("OverlayHeader LeftToRight -11") << QQuickItemView::LeftToRight
+                                                   << QQuickListView::OverlayHeader
+                                                   << -11 << 0
+                                                   << -10 << -10;
+
+    QTest::newRow("OverlayHeader LeftToRight -29") << QQuickItemView::LeftToRight
+                                                   << QQuickListView::OverlayHeader
+                                                   << -29 << 0
+                                                   << -10 << -10;
+
+    QTest::newRow("OverlayHeader LeftToRight -31") << QQuickItemView::LeftToRight
+                                                   << QQuickListView::OverlayHeader
+                                                   << -31 << 0
+                                                   << 10 << 10;
+
+    // --------------------
+    // OverlayHeader RightToLeft
+    QTest::newRow("OverlayHeader RightToLeft -9") << QQuickItemView::RightToLeft
+                                                  << QQuickListView::OverlayHeader
+                                                  << -9 << 0
+                                                  << -210 << 0;
+
+    QTest::newRow("OverlayHeader RightToLeft +9") << QQuickItemView::RightToLeft
+                                                  << QQuickListView::OverlayHeader
+                                                  << 9 << 0
+                                                  << -210 << 0;
+
+    QTest::newRow("OverlayHeader RightToLeft +11") << QQuickItemView::RightToLeft
+                                                   << QQuickListView::OverlayHeader
+                                                   << 11 << 0
+                                                   << -230 << -20;
+
+    QTest::newRow("OverlayHeader RightToLeft +29") << QQuickItemView::RightToLeft
+                                                   << QQuickListView::OverlayHeader
+                                                   << 29 << 0
+                                                   << -230 << -20;
+
+    QTest::newRow("OverlayHeader RightToLeft +31") << QQuickItemView::RightToLeft
+                                                   << QQuickListView::OverlayHeader
+                                                   << 31 << 0
+                                                   << -250 << -40;
+
+    // --------------------
+    // PullbackHeader TopToBottom
+    QTest::newRow("PullbackHeader TopToBottom -2") << QQuickItemView::VerticalTopToBottom
+                                                    << QQuickListView::PullBackHeader
+                                                    << -2 << 0
+                                                    << -30 << -30;
+
+    QTest::newRow("PullbackHeader TopToBottom -10") << QQuickItemView::VerticalTopToBottom
+                                                  << QQuickListView::PullBackHeader
+                                                  << -10 << 0
+                                                  << -30 << -30;
+
+    QTest::newRow("PullbackHeader TopToBottom -11") << QQuickItemView::VerticalTopToBottom
+                                                    << QQuickListView::PullBackHeader
+                                                    << -11 << 0
+                                                    << -10 << -10;
+
+    QTest::newRow("PullbackHeader TopToBottom -14") << QQuickItemView::VerticalTopToBottom
+                                                  << QQuickListView::PullBackHeader
+                                                  << -14 << 0
+                                                  << -10 << -10;
+
+    QTest::newRow("PullbackHeader TopToBottom -16") << QQuickItemView::VerticalTopToBottom
+                                                    << QQuickListView::PullBackHeader
+                                                    << -16 << 0
+                                                    << 0 << -30;
+
+    QTest::newRow("PullbackHeader TopToBottom -20") << QQuickItemView::VerticalTopToBottom
+                                                    << QQuickListView::PullBackHeader
+                                                    << -20 << 0
+                                                    << 0 << -30;
+
+    QTest::newRow("PullbackHeader TopToBottom -65+10") << QQuickItemView::VerticalTopToBottom
+                                                << QQuickListView::PullBackHeader
+                                              << -65 << 10
+                                              << 20 << -10;
+
+    QTest::newRow("PullbackHeader TopToBottom -65+20") << QQuickItemView::VerticalTopToBottom
+                                                << QQuickListView::PullBackHeader
+                                                << -65 << 20
+                                                << 10 << 10;
+
+    // Should move header even if contentY doesn't move (its aligned with top)
+    QTest::newRow("PullbackHeader TopToBottom -55+5") << QQuickItemView::VerticalTopToBottom
+                                                << QQuickListView::PullBackHeader
+                                                << -55 << 5
+                                                << 20 << -10;
+
+    // Should move header even if contentY doesn't move (it's aligned with header)
+    QTest::newRow("PullbackHeader TopToBottom -76+16") << QQuickItemView::VerticalTopToBottom
+                                                    << QQuickListView::PullBackHeader
+                                                    << -76 << 16
+                                                    << 30 << 30;
+
+    // --------------------
+    // PullbackHeader BottomToTop
+    QTest::newRow("PullbackHeader BottomToTop +2") << QQuickItemView::VerticalBottomToTop
+                                                    << QQuickListView::PullBackHeader
+                                                    << +2 << 0
+                                                    << -170 << 0;
+
+    QTest::newRow("PullbackHeader BottomToTop +9") << QQuickItemView::VerticalBottomToTop
+                                                  << QQuickListView::PullBackHeader
+                                                  << +9 << 0
+                                                  << -170 << 0;
+
+    QTest::newRow("PullbackHeader BottomToTop +11") << QQuickItemView::VerticalBottomToTop
+                                                   << QQuickListView::PullBackHeader
+                                                   << +11 << 0
+                                                   << -190 << -20;
+
+    QTest::newRow("PullbackHeader BottomToTop +14") << QQuickItemView::VerticalBottomToTop
+                                                    << QQuickListView::PullBackHeader
+                                                    << +14 << 0
+                                                    << -190 << -20;
+
+    QTest::newRow("PullbackHeader BottomToTop +16") << QQuickItemView::VerticalBottomToTop
+                                                    << QQuickListView::PullBackHeader
+                                                    << +16 << 0
+                                                    << -200 << 0;
+
+    QTest::newRow("PullbackHeader BottomToTop +20") << QQuickItemView::VerticalBottomToTop
+                                                    << QQuickListView::PullBackHeader
+                                                    << +20 << 0
+                                                    << -200 << 0;
+
+    QTest::newRow("PullbackHeader BottomToTop +65-10") << QQuickItemView::VerticalBottomToTop
+                                                    << QQuickListView::PullBackHeader
+                                                    << +65 << -10
+                                                    << -220 << -20;
+
+    QTest::newRow("PullbackHeader BottomToTop +65-20") << QQuickItemView::VerticalBottomToTop
+                                                       << QQuickListView::PullBackHeader
+                                                       << +65 << -20
+                                                       << -210 << -40;
+
+    // Should move header even if contentY doesn't move (it's aligned with top)
+    QTest::newRow("PullbackHeader BottomToTop +55-5") << QQuickItemView::VerticalBottomToTop
+                                                      << QQuickListView::PullBackHeader
+                                                      << 55 << -5
+                                                      << -220 << -20;
+
+    // Should move header even if contentY doesn't move (it's aligned with header)
+    QTest::newRow("PullbackHeader BottomToTop +76-16") << QQuickItemView::VerticalBottomToTop
+                                                       << QQuickListView::PullBackHeader
+                                                       << 76 << -16
+                                                       << -230 << -60;
+
+    // --------------------
+    // PullbackHeader LeftToRight
+    QTest::newRow("PullbackHeader LeftToRight -2") << QQuickItemView::LeftToRight
+                                                   << QQuickListView::PullBackHeader
+                                                   << -2 << 0
+                                                   << -30 << -30;
+
+    QTest::newRow("PullbackHeader LeftToRight -10") << QQuickItemView::LeftToRight
+                                                    << QQuickListView::PullBackHeader
+                                                    << -10 << 0
+                                                    << -30 << -30;
+
+    QTest::newRow("PullbackHeader LeftToRight -11") << QQuickItemView::LeftToRight
+                                                    << QQuickListView::PullBackHeader
+                                                    << -11 << 0
+                                                    << -10 << -10;
+
+    QTest::newRow("PullbackHeader LeftToRight -14") << QQuickItemView::LeftToRight
+                                                    << QQuickListView::PullBackHeader
+                                                    << -14 << 0
+                                                    << -10 << -10;
+
+    QTest::newRow("PullbackHeader LeftToRight -16") << QQuickItemView::LeftToRight
+                                                    << QQuickListView::PullBackHeader
+                                                    << -16 << 0
+                                                    << 0 << -30;
+
+    QTest::newRow("PullbackHeader LeftToRight -20") << QQuickItemView::LeftToRight
+                                                    << QQuickListView::PullBackHeader
+                                                    << -20 << 0
+                                                    << 0 << -30;
+
+    QTest::newRow("PullbackHeader LeftToRight -65+10") << QQuickItemView::LeftToRight
+                                                       << QQuickListView::PullBackHeader
+                                                       << -65 << 10
+                                                       << 20 << -10;
+
+    QTest::newRow("PullbackHeader LeftToRight -65+20") << QQuickItemView::LeftToRight
+                                                       << QQuickListView::PullBackHeader
+                                                       << -65 << 20
+                                                       << 10 << 10;
+
+    // Should move header even if contentX doesn't move (its aligned with top)
+    QTest::newRow("PullbackHeader LeftToRight -55+5") << QQuickItemView::LeftToRight
+                                                      << QQuickListView::PullBackHeader
+                                                      << -55 << 5
+                                                      << 20 << -10;
+
+    // Should move header even if contentX doesn't move (it's aligned with header)
+    QTest::newRow("PullbackHeader LeftToRight -76+16") << QQuickItemView::LeftToRight
+                                                       << QQuickListView::PullBackHeader
+                                                       << -76 << 16
+                                                       << 30 << 30;
+
+    // --------------------
+    // PullbackHeader RightToLeft
+    QTest::newRow("PullbackHeader RightToLeft +2") << QQuickItemView::RightToLeft
+                                                   << QQuickListView::PullBackHeader
+                                                   << +2 << 0
+                                                   << -210 << 0;
+
+    QTest::newRow("PullbackHeader RightToLeft +9") << QQuickItemView::RightToLeft
+                                                   << QQuickListView::PullBackHeader
+                                                   << +9 << 0
+                                                   << -210 << 0;
+
+    QTest::newRow("PullbackHeader RightToLeft +11") << QQuickItemView::RightToLeft
+                                                    << QQuickListView::PullBackHeader
+                                                    << +11 << 0
+                                                    << -230 << -20;
+
+    QTest::newRow("PullbackHeader RightToLeft +14") << QQuickItemView::RightToLeft
+                                                    << QQuickListView::PullBackHeader
+                                                    << +14 << 0
+                                                    << -230 << -20;
+
+    QTest::newRow("PullbackHeader RightToLeft +16") << QQuickItemView::RightToLeft
+                                                    << QQuickListView::PullBackHeader
+                                                    << +16 << 0
+                                                    << -240 << 0;
+
+    QTest::newRow("PullbackHeader RightToLeft +20") << QQuickItemView::RightToLeft
+                                                    << QQuickListView::PullBackHeader
+                                                    << +20 << 0
+                                                    << -240 << 0;
+
+    QTest::newRow("PullbackHeader RightToLeft +65-10") << QQuickItemView::RightToLeft
+                                                       << QQuickListView::PullBackHeader
+                                                       << +65 << -10
+                                                       << -260 << -20;
+
+    QTest::newRow("PullbackHeader RightToLeft +65-20") << QQuickItemView::RightToLeft
+                                                       << QQuickListView::PullBackHeader
+                                                       << +65 << -20
+                                                       << -250 << -40;
+
+    // Should move header even if contentX doesn't move (it's aligned with top)
+    QTest::newRow("PullbackHeader RightToLeft +55-5") << QQuickItemView::RightToLeft
+                                                      << QQuickListView::PullBackHeader
+                                                      << 55 << -5
+                                                      << -260 << -20;
+
+    // Should move header even if contentX doesn't move (it's aligned with header)
+    QTest::newRow("PullbackHeader RightToLeft +76-16") << QQuickItemView::RightToLeft
+                                                       << QQuickListView::PullBackHeader
+                                                       << 76 << -16
+                                                       << -270 << -60;
+
 }
 
 void tst_QQuickListView::snapOneItemResize_QTBUG_43555()

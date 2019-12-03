@@ -138,6 +138,8 @@ public:
     bool flick(QQuickItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
                QQuickTimeLineCallback::Callback fixupCallback, qreal velocity) override;
 
+    void fixupHeader();
+    void fixupHeaderCompleted();
     QQuickListView::Orientation orient;
     qreal visiblePos;
     qreal averageSize;
@@ -166,6 +168,12 @@ public:
     QString nextSection;
 
     qreal overshootDist;
+
+    qreal desiredViewportPosition;
+    qreal fixupHeaderPosition;
+    bool headerNeedsSeparateFixup : 1;
+    bool desiredHeaderVisible : 1;
+
     bool correctFlick : 1;
     bool inFlickCorrection : 1;
 
@@ -179,7 +187,9 @@ public:
         , highlightPosAnimator(nullptr), highlightWidthAnimator(nullptr), highlightHeightAnimator(nullptr)
         , highlightMoveVelocity(400), highlightResizeVelocity(400), highlightResizeDuration(-1)
         , sectionCriteria(nullptr), currentSectionItem(nullptr), nextSectionItem(nullptr)
-        , overshootDist(0.0), correctFlick(false), inFlickCorrection(false)
+        , overshootDist(0.0), desiredViewportPosition(0.0), fixupHeaderPosition(0.0)
+        , headerNeedsSeparateFixup(false), desiredHeaderVisible(false)
+        , correctFlick(false), inFlickCorrection(false)
     {
         highlightMoveDuration = -1; //override default value set in base class
     }
@@ -1391,6 +1401,31 @@ void QQuickListViewPrivate::updateFooter()
         emit q->footerItemChanged();
 }
 
+void QQuickListViewPrivate::fixupHeaderCompleted()
+{
+    headerNeedsSeparateFixup = false;
+    QObjectPrivate::disconnect(&timeline, &QQuickTimeLine::updated, this, &QQuickListViewPrivate::fixupHeader);
+}
+
+void QQuickListViewPrivate::fixupHeader()
+{
+    FxListItemSG *listItem = static_cast<FxListItemSG*>(header);
+    const bool fixingUp = (orient == QQuickListView::Vertical ? vData : hData).fixingUp;
+    if (fixingUp && headerPositioning == QQuickListView::PullBackHeader && visibleItems.count()) {
+        int fixupDura = timeline.duration();
+        if (fixupDura < 0)
+            fixupDura = fixupDuration/2;
+        const int t = timeline.time();
+
+        const qreal progress = qreal(t)/fixupDura;
+        const qreal ultimateHeaderPosition = desiredHeaderVisible ? desiredViewportPosition : desiredViewportPosition - headerSize();
+        const qreal headerPosition = fixupHeaderPosition * (1 - progress) + ultimateHeaderPosition * progress;
+        const qreal viewPos = isContentFlowReversed() ? -position() - size() : position();
+        const qreal clampedPos = qBound(originPosition() - headerSize(), headerPosition, lastPosition() - size());
+        listItem->setPosition(qBound(viewPos - headerSize(), clampedPos, viewPos));
+    }
+}
+
 void QQuickListViewPrivate::updateHeader()
 {
     Q_Q(QQuickListView);
@@ -1408,9 +1443,14 @@ void QQuickListViewPrivate::updateHeader()
     if (headerPositioning == QQuickListView::OverlayHeader) {
         listItem->setPosition(isContentFlowReversed() ? -position() - size() : position());
     } else if (visibleItems.count()) {
+        const bool fixingUp = (orient == QQuickListView::Vertical ? vData : hData).fixingUp;
         if (headerPositioning == QQuickListView::PullBackHeader) {
-            qreal viewPos = isContentFlowReversed() ? -position() - size() : position();
-            qreal clampedPos = qBound(originPosition() - headerSize(), listItem->position(), lastPosition() - headerSize() - size());
+            qreal headerPosition = listItem->position();
+            const qreal viewPos = isContentFlowReversed() ? -position() - size() : position();
+            // Make sure the header is not shown if we absolutely do not have any plans to show it
+            if (fixingUp && !headerNeedsSeparateFixup)
+                headerPosition = viewPos - headerSize();
+            qreal clampedPos = qBound(originPosition() - headerSize(), headerPosition, lastPosition() - size());
             listItem->setPosition(qBound(viewPos - headerSize(), clampedPos, viewPos));
         } else {
             qreal startPos = originPosition();
@@ -1528,13 +1568,46 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
                 bias = -bias;
             tempPosition -= bias;
         }
-        FxViewItem *topItem = snapItemAt(tempPosition+highlightRangeStart);
+
+        qreal snapOffset = 0;
+        qreal overlayHeaderOffset = 0;
+        bool isHeaderWithinBounds = false;
+        if (header) {
+            qreal visiblePartOfHeader = header->position() + header->size() - tempPosition;
+            isHeaderWithinBounds = visiblePartOfHeader > 0;
+            switch (headerPositioning) {
+            case QQuickListView::OverlayHeader:
+                snapOffset = header->size();
+                overlayHeaderOffset = header->size();
+                break;
+            case QQuickListView::InlineHeader:
+                if (isHeaderWithinBounds && tempPosition < originPosition())
+                    // For the inline header, we want to snap to the first item
+                    // if we're more than halfway down the inline header.
+                    // So if we look for an item halfway down of the header
+                    snapOffset = header->size() / 2;
+                break;
+            case QQuickListView::PullBackHeader:
+                desiredHeaderVisible = visiblePartOfHeader > header->size()/2;
+                if (qFuzzyCompare(header->position(), tempPosition)) {
+                    // header was pulled down; make sure it remains visible and snap items to bottom of header
+                    snapOffset = header->size();
+                } else if (desiredHeaderVisible) {
+                    // More than 50% of the header is shown. Show it fully.
+                    // Scroll the view so the next item snaps to the header.
+                    snapOffset = header->size();
+                    overlayHeaderOffset = header->size();
+                }
+                break;
+            }
+        }
+        FxViewItem *topItem = snapItemAt(tempPosition + snapOffset + highlightRangeStart);
         if (strictHighlightRange && currentItem && (!topItem || (topItem->index != currentIndex && fixupMode == Immediate))) {
             // StrictlyEnforceRange always keeps an item in range
             updateHighlight();
             topItem = currentItem;
         }
-        FxViewItem *bottomItem = snapItemAt(tempPosition+highlightRangeEnd);
+        FxViewItem *bottomItem = snapItemAt(tempPosition + snapOffset + highlightRangeEnd);
         if (strictHighlightRange && currentItem && (!bottomItem || (bottomItem->index != currentIndex && fixupMode == Immediate))) {
             // StrictlyEnforceRange always keeps an item in range
             updateHighlight();
@@ -1542,27 +1615,92 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
         }
         qreal pos;
         bool isInBounds = -position() > maxExtent && -position() <= minExtent;
-        if (topItem && (isInBounds || strictHighlightRange)) {
-            if (topItem->index == 0 && header && tempPosition+highlightRangeStart < header->position()+header->size()/2 && !strictHighlightRange) {
-                pos = isContentFlowReversed() ? - header->position() + highlightRangeStart - size() : header->position() - highlightRangeStart;
+
+        if (header && !topItem && isInBounds) {
+            // We are trying to pull back further than needed
+            switch (headerPositioning) {
+            case QQuickListView::OverlayHeader:
+                pos = startPosition() - overlayHeaderOffset;
+                break;
+            case QQuickListView::InlineHeader:
+                pos = isContentFlowReversed() ? header->size() - size() : header->position();
+                break;
+            case QQuickListView::PullBackHeader:
+                pos = isContentFlowReversed() ? -size() : startPosition();
+                break;
+            }
+        } else if (topItem && (isInBounds || strictHighlightRange)) {
+            if (topItem->index == 0 && header && !hasStickyHeader() && tempPosition+highlightRangeStart < header->position()+header->size()/2 && !strictHighlightRange) {
+                pos = isContentFlowReversed() ? -header->position() + highlightRangeStart - size() : (header->position() - highlightRangeStart + header->size());
             } else {
-                if (isContentFlowReversed())
-                    pos = qMax(qMin(-static_cast<FxListItemSG*>(topItem)->itemPosition() + highlightRangeStart - size(), -maxExtent), -minExtent);
-                else
-                    pos = qMax(qMin(static_cast<FxListItemSG*>(topItem)->itemPosition() - highlightRangeStart, -maxExtent), -minExtent);
+                if (header && headerPositioning == QQuickListView::PullBackHeader) {
+                    // We pulled down the header. If it isn't pulled all way down, we need to snap
+                    // the header.
+                    if (qFuzzyCompare(tempPosition, header->position())) {
+                        // It is pulled all way down. Scroll-snap the content, but not the header.
+                        if (isContentFlowReversed())
+                            pos = -static_cast<FxListItemSG*>(topItem)->itemPosition() + highlightRangeStart - size() + snapOffset;
+                        else
+                            pos = static_cast<FxListItemSG*>(topItem)->itemPosition() - highlightRangeStart - snapOffset;
+                    } else {
+                        // Header is not pulled all way down, make it completely visible or hide it.
+                        // Depends on how much of the header is visible.
+                        if (desiredHeaderVisible) {
+                            // More than half of the header is visible - show it.
+                            // Scroll so that the topItem is aligned to a fully visible header
+                            if (isContentFlowReversed())
+                                pos = -static_cast<FxListItemSG*>(topItem)->itemPosition() + highlightRangeStart - size() + headerSize();
+                            else
+                                pos = static_cast<FxListItemSG*>(topItem)->itemPosition() - highlightRangeStart - headerSize();
+                        } else {
+                            // Less than half is visible - hide the header. Scroll so
+                            // that the topItem is aligned to the top of the view
+                            if (isContentFlowReversed())
+                                pos = -static_cast<FxListItemSG*>(topItem)->itemPosition() + highlightRangeStart - size();
+                            else
+                                pos = static_cast<FxListItemSG*>(topItem)->itemPosition() - highlightRangeStart;
+                        }
+                    }
+
+                    headerNeedsSeparateFixup = isHeaderWithinBounds || desiredHeaderVisible;
+                    if (headerNeedsSeparateFixup) {
+                        // We need to animate the header independently if it starts visible or should end as visible,
+                        // since the header should not necessarily follow the content.
+                        // Store the desired viewport position.
+                        // Also store the header position so we know where to animate the header from (fixupHeaderPosition).
+                        // We deduce the desired header position from the desiredViewportPosition variable.
+                        pos = qBound(-minExtent, pos, -maxExtent);
+                        desiredViewportPosition = isContentFlowReversed() ? -pos - size() : pos;
+
+                        FxListItemSG *headerItem = static_cast<FxListItemSG*>(header);
+                        fixupHeaderPosition = headerItem->position();
+
+                        // follow the same fixup timeline
+                        QObjectPrivate::connect(&timeline, &QQuickTimeLine::updated, this, &QQuickListViewPrivate::fixupHeader);
+                        QObjectPrivate::connect(&timeline, &QQuickTimeLine::completed, this, &QQuickListViewPrivate::fixupHeaderCompleted);
+                    }
+                } else if (isContentFlowReversed()) {
+                    pos = -static_cast<FxListItemSG*>(topItem)->itemPosition() + highlightRangeStart - size() + overlayHeaderOffset;
+                } else {
+                    pos = static_cast<FxListItemSG*>(topItem)->itemPosition() - highlightRangeStart - overlayHeaderOffset;
+                }
             }
         } else if (bottomItem && isInBounds) {
             if (isContentFlowReversed())
-                pos = qMax(qMin(-static_cast<FxListItemSG*>(bottomItem)->itemPosition() + highlightRangeEnd - size(), -maxExtent), -minExtent);
+                pos = -static_cast<FxListItemSG*>(bottomItem)->itemPosition() + highlightRangeEnd - size() + overlayHeaderOffset;
             else
-                pos = qMax(qMin(static_cast<FxListItemSG*>(bottomItem)->itemPosition() - highlightRangeEnd, -maxExtent), -minExtent);
+                pos = static_cast<FxListItemSG*>(bottomItem)->itemPosition() - highlightRangeEnd - overlayHeaderOffset;
         } else {
             QQuickItemViewPrivate::fixup(data, minExtent, maxExtent);
             return;
         }
+        pos = qBound(-minExtent, pos, -maxExtent);
 
         qreal dist = qAbs(data.move + pos);
-        if (dist > 0) {
+        if (dist >= 0) {
+            // Even if dist == 0 we still start the timeline, because we use the same timeline for
+            // moving the header. And we might need to move the header while the content does not
+            // need moving
             timeline.reset(data.move);
             if (fixupMode != Immediate) {
                 timeline.move(data.move, -pos, QEasingCurve(QEasingCurve::InOutQuad), fixupDuration/2);
