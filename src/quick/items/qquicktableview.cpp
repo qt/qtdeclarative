@@ -1074,11 +1074,7 @@ void QQuickTableViewPrivate::releaseItem(FxTableItem *fxTableItem, QQmlTableInst
         Q_TABLEVIEW_ASSERT(item, fxTableItem->index);
         delete item;
     } else if (item) {
-        // Only QQmlTableInstanceModel supports reusing items
-        auto releaseFlag = tableModel ?
-                    tableModel->release(item, reusableFlag) :
-                    model->release(item);
-
+        auto releaseFlag = model->release(item, reusableFlag);
         if (releaseFlag == QQmlInstanceModel::Pooled) {
             fxTableItem->setVisible(false);
 
