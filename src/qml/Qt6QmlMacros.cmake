@@ -72,6 +72,7 @@
 function(qt6_add_qml_module target)
 
     set(args_optional
+        GENERATE_QMLTYPES
         DESIGNER_SUPPORTED
         DO_NOT_INSTALL_METADATA
         SKIP_TYPE_REGISTRATION
@@ -310,6 +311,11 @@ function(qt6_add_qml_module target)
                 ${target_output_dir}
         )
     endif()
+
+    # Generate meta types data
+    if (arg_GENERATE_QMLTYPES)
+        qt6_qml_type_registration(${target})
+    endif()
 endfunction()
 
 
@@ -408,4 +414,132 @@ function(qt6_target_qml_files target)
 
     endforeach()
     file(APPEND ${qmldir_file} ${file_contents})
+endfunction()
+
+function(__qt6_extract_dependencies target out_list)
+    set(dep_list)
+    get_target_property(link_dependencies ${target} INTERFACE_LINK_LIBRARIES)
+    foreach(dep IN LISTS link_dependencies)
+        string(FIND ${dep} "Qt::" qt_loc)
+        if (NOT ${qt_loc} EQUAL -1)
+
+            if (NOT ${qt_loc} EQUAL 0)
+                # probably stuck in a generator expression
+                string(SUBSTRING "${dep}" ${qt_loc} -1 dep_fixed)
+                string(FIND ${dep_fixed} ">" qt_loc)
+                if (${qt_loc} EQUAL -1)
+                    message(FATAL_ERROR "Expected generator expression for ${target}' depdency ${dep}")
+                endif()
+                string(SUBSTRING ${dep_fixed} 0 ${qt_loc} dep)
+            endif()
+
+            list(APPEND dep_list ${dep})
+            __qt6_extract_dependencies(${dep} recurse_list)
+            list(APPEND dep_list ${recurse_list})
+        endif()
+    endforeach()
+    set(${out_list} ${dep_list} PARENT_SCOPE)
+endfunction()
+
+function(qt6_qml_type_registration target)
+    get_target_property(import_name ${target} QT_QML_MODULE_URI)
+    if (NOT import_name)
+        message(FATAL_ERROR "Target ${target} is not a QML module")
+    endif()
+
+    qt6_generate_meta_types_json_file(${target})
+
+    get_target_property(import_version ${target} QT_QML_MODULE_VERSION)
+    get_target_property(target_source_dir ${target} SOURCE_DIR)
+    get_target_property(target_binary_dir ${target} BINARY_DIR)
+
+    # Extract major and minor version
+    if (NOT import_version MATCHES "[0-9]+\\.[0-9]+")
+        message(FATAL_ERROR "Invalid module dependency version number. Expected VersionMajor.VersionMinor.")
+    endif()
+    string(FIND "${import_version}" "." dot_location)
+    string(SUBSTRING ${import_version} 0 ${dot_location} major_version)
+    math(EXPR dot_location "${dot_location}+1")
+    string(SUBSTRING ${import_version} ${dot_location} -1 minor_version)
+
+    set(cmd_args)
+    set(plugin_types_file ${target_binary_dir}/plugin.types)
+    set_target_properties(${target} PROPERTIES
+        QT_QML_MODULE_PLUGIN_TYPES_FILE ${plugin_types_file}
+    )
+    list(APPEND cmd_args
+        --generate-qmltypes=${plugin_types_file}
+        --import-name=${import_name}
+        --major-version=${major_version}
+        --minor-version=${minor_version}
+    )
+
+    # Extra metatypes.json
+    set(foreign_types)
+    set(link_dependencies)
+    __qt6_extract_dependencies(${target} link_dependencies)
+    list(REMOVE_DUPLICATES link_dependencies)
+    foreach(dep IN LISTS link_dependencies)
+        string(SUBSTRING ${dep} 4 -1 module_name)
+        string(TOLOWER "qt6${module_name}_${CMAKE_BUILD_TYPE}_metatypes.json" metatypes_file)
+
+        set(module_metatypes_file "${CMAKE_BINARY_DIR}/lib/metatypes/${metatypes_file}")
+        set(installed_metatypes_file "${Qt6_DIR}/../../metatypes/${metatypes_file}")
+        if (EXISTS ${module_metatypes_file})
+            list(APPEND foreign_types ${module_metatypes_file})
+        elseif (EXISTS ${installed_metatypes_file})
+            list(APPEND foreign_types ${installed_metatypes_file})
+        endif()
+    endforeach()
+
+    list(REMOVE_DUPLICATES foreign_types)
+    string(REPLACE ";" "," foreign_types_list "${foreign_types}")
+    list(APPEND cmd_args
+        "--foreign-types=${foreign_types_list}"
+    )
+
+    set(dependencies_json_file "${target_source_dir}/dependencies.json")
+    if (EXISTS ${dependencies_json_file})
+        list(APPEND cmd_args --dependencies=${dependencies_json_file})
+    endif()
+
+    if (TARGET ${target}Private)
+        list(APPEND cmd_args --private-includes)
+    endif()
+
+    get_target_property(target_metatypes_json_file ${target} QT_MODULE_META_TYPES_FILE)
+    if (NOT target_metatypes_json_file)
+        message(FATAL_ERROR "Need target metatypes.json file")
+    endif()
+    string(TOLOWER "${target}_qmltyperegistrations.cpp" type_registration_cpp_file)
+
+    set(type_registration_cpp_file "${target_binary_dir}/${type_registration_cpp_file}")
+
+    add_custom_command(OUTPUT ${type_registration_cpp_file}
+        DEPENDS ${foreign_types} ${target_metatypes_json_file}
+        COMMAND
+            ${CMAKE_COMMAND} -E env PATH=${CMAKE_INSTALL_PREFIX}/${INSTALL_BINDIR}
+            $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar>
+            ${cmd_args}
+            -o ${type_registration_cpp_file}
+            ${target_metatypes_json_file}
+        COMMENT "Automatic QML type registration for target ${target}"
+        COMMAND_EXPAND_LISTS
+    )
+
+    target_sources(${target} PRIVATE ${type_registration_cpp_file})
+    set_source_files_properties(${type_registration_cpp_file} PROPERTIES
+        SKIP_AUTOGEN ON
+    )
+
+    # Only install qml types if necessary
+    get_target_property(install_qmltypes ${target} QT_QML_MODULE_INSTALL_QMLTYPES)
+    if (install_qmltypes)
+        get_target_property(qml_install_dir ${target} QT_QML_MODULE_INSTALL_DIR)
+        install(FILES ${plugin_types_file} DESTINATION ${qml_install_dir})
+    endif()
+
+    target_include_directories(${target} PRIVATE
+        $<TARGET_PROPERTY:Qt::QmlPrivate,INTERFACE_INCLUDE_DIRECTORIES>
+    )
 endfunction()

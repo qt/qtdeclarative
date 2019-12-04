@@ -1,5 +1,11 @@
 # Generated from src.pro.
 # special case skip regeneration
+
+if (NOT QT_FEATURE_commandlineparser)
+    message(FATAL_ERROR "QT_FEATURE_commandlineparser required to compile qmltyperegistrar")
+endif()
+
+add_subdirectory(qmltyperegistrar)
 add_subdirectory(qml)
 add_subdirectory(qmlmodels)
 
