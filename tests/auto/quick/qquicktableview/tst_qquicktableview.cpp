@@ -2708,9 +2708,9 @@ void tst_QQuickTableView::replaceModel()
     tableView->setProperty("modelId", 0);
     QTRY_COMPARE(tableView->rows(), 2);
     tableView->setProperty("modelId", 1);
-    QTRY_COMPARE(tableView->rows(), 0);
+    QTRY_COMPARE(tableView->rows(), 3);
     tableView->setProperty("modelId", 2);
-    QTRY_COMPARE(tableView->rows(), 0);
+    QTRY_COMPARE(tableView->rows(), 2);
     tableView->setProperty("modelId", 0);
     QTRY_COMPARE(tableView->rows(), 2);
 }

@@ -11,9 +11,9 @@ Item {
 
     ObjectModel {
         id: om
-        Rectangle { height: 30; width: 80; color: "red" }
-        Rectangle { height: 30; width: 80; color: "green" }
-        Rectangle { height: 30; width: 80; color: "blue" }
+        Rectangle { implicitHeight: 30; implicitWidth: 80; color: "red" }
+        Rectangle { implicitHeight: 30; implicitWidth: 80; color: "green" }
+        Rectangle { implicitHeight: 30; implicitWidth: 80; color: "blue" }
     }
 
     ListModel {
@@ -29,8 +29,8 @@ Item {
            ListElement { name: "Orange" }
        }
        delegate: Rectangle {
-           height: 25
-           width: 100
+           implicitHeight: 25
+           implicitWidth: 100
            Text { text: "Name: " + name}
        }
     }

@@ -1054,12 +1054,14 @@ void QQuickTableViewPrivate::releaseLoadedItems(QQmlTableInstanceModel::Reusable
 void QQuickTableViewPrivate::releaseItem(FxTableItem *fxTableItem, QQmlTableInstanceModel::ReusableFlag reusableFlag)
 {
     Q_Q(QQuickTableView);
+    // Note that fxTableItem->item might already have been destroyed, in case
+    // the item is owned by the QML context rather than the model (e.g ObjectModel etc).
     auto item = fxTableItem->item;
-    Q_TABLEVIEW_ASSERT(item, fxTableItem->index);
 
     if (fxTableItem->ownItem) {
+        Q_TABLEVIEW_ASSERT(item, fxTableItem->index);
         delete item;
-    } else {
+    } else if (item) {
         // Only QQmlTableInstanceModel supports reusing items
         auto releaseFlag = tableModel ?
                     tableModel->release(item, reusableFlag) :
@@ -2219,13 +2221,15 @@ void QQuickTableViewPrivate::syncRebuildOptions()
 
 void QQuickTableViewPrivate::syncDelegate()
 {
-    if (tableModel && assignedDelegate == tableModel->delegate())
+    if (!tableModel) {
+        // Only the tableModel uses the delegate assigned to a
+        // TableView. DelegateModel has it's own delegate, and
+        // ObjectModel etc. doesn't use one.
         return;
+    }
 
-    if (!tableModel)
-        createWrapperModel();
-
-    tableModel->setDelegate(assignedDelegate);
+    if (assignedDelegate != tableModel->delegate())
+        tableModel->setDelegate(assignedDelegate);
 }
 
 void QQuickTableViewPrivate::syncModel()
