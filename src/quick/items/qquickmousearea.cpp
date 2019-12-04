@@ -942,6 +942,12 @@ void QQuickMouseArea::mouseUngrabEvent()
     ungrabMouse();
 }
 
+void QQuickMouseArea::touchUngrabEvent()
+{
+    // allow a Pointer Handler to steal the grab from MouseArea
+    ungrabMouse();
+}
+
 bool QQuickMouseArea::sendMouseEvent(QMouseEvent *event)
 {
     Q_D(QQuickMouseArea);

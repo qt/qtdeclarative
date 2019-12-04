@@ -72,6 +72,7 @@ private:
     QString grabberPath;
     int consecutiveErrors;   // Not test failures (image mismatches), but system failures (so no image at all)
     bool aborted;            // This run given up because of too many system failures
+    bool usingRhi;
 };
 
 
@@ -105,6 +106,23 @@ void tst_Scenegraph::initTestCase()
     const QString backend = qEnvironmentVariable(backendVarName, QString::fromLatin1("default"));
     QBaselineTest::addClientProperty(QString::fromLatin1(backendVarName), backend);
 
+#if defined(Q_OS_WIN)
+    const char *defaultRhiBackend = "d3d11";
+#elif defined(Q_OS_DARWIN)
+    const char *defaultRhiBackend = "metal";
+#else
+    const char *defaultRhiBackend = "opengl";
+#endif
+    usingRhi = qEnvironmentVariableIntValue("QSG_RHI") != 0;
+    QString stack;
+    if (usingRhi) {
+        const QString rhiBackend = qEnvironmentVariable("QSG_RHI_BACKEND", QString::fromLatin1(defaultRhiBackend));
+        stack = QString::fromLatin1("RHI_%1").arg(rhiBackend);
+    } else {
+        stack = qEnvironmentVariable("QT_QUICK_BACKEND", QString::fromLatin1("DirectGL"));
+    }
+    QBaselineTest::addClientProperty(QString::fromLatin1("GraphicsStack"), stack);
+
     QByteArray msg;
     if (!QBaselineTest::connectToBaselineServer(&msg))
         QSKIP(msg);
@@ -134,7 +152,7 @@ void tst_Scenegraph::testNoTextRendering()
 
 void tst_Scenegraph::testRendering_data()
 {
-    setupTestSuite();
+    setupTestSuite(usingRhi ? "shaders/" : "");   // on RHI, skip shader effects tests for now
     consecutiveErrors = 0;
     aborted = false;
 }

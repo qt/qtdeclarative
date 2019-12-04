@@ -268,6 +268,7 @@ private slots:
     void QTBUG_61269_appendDuringScrollDown_data();
     void QTBUG_50097_stickyHeader_positionViewAtIndex();
     void QTBUG_63974_stickyHeader_positionViewAtIndex_Contain();
+    void QTBUG_66163_setModelViewPortSizeChange();
     void itemFiltered();
     void releaseItems();
 
@@ -8853,6 +8854,62 @@ void tst_QQuickListView::QTBUG_63974_stickyHeader_positionViewAtIndex_Contain()
 
     listview->positionViewAtIndex(0, QQuickListView::SnapPosition);
     QTRY_COMPARE(listview->contentY(), -headerSize);
+}
+
+void tst_QQuickListView::QTBUG_66163_setModelViewPortSizeChange()
+{
+    QScopedPointer<QQuickView> window(createView());
+    QQmlComponent comp(window->engine());
+    comp.setData(R"(
+    import QtQuick 2.0
+
+    Item {
+        id: root
+        width: 400
+        height: 400
+
+        ListView {
+            id: view
+            objectName: "view"
+            anchors.fill: parent
+
+            model: 4
+            highlightRangeMode: ListView.StrictlyEnforceRange
+
+            delegate: Rectangle {
+                color: index % 2 ? "green" : "orange"
+                width: parent.width
+                height: 50
+            }
+
+            populate: Transition {
+                SequentialAnimation {
+                    NumberAnimation { property: "y"; from: 100; duration: 1000 }
+                }
+            }
+        }
+    }
+    )", QUrl("testData"));
+    auto root {qobject_cast<QQuickItem*>(comp.create())};
+    QVERIFY(root);
+    window->setContent(QUrl(), &comp, root);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    auto view = root->findChild<QQuickListView *>("view");
+    QVERIFY(view);
+    QVERIFY(QQuickTest::qWaitForItemPolished(view));
+    QSignalSpy spy(view, &QQuickListView::contentYChanged);
+    auto transition = view->property("populate").value<QQuickTransition*>();
+    QVERIFY(transition);
+    QQmlProperty model(view, "model");
+    QVERIFY(model.isValid());
+    model.write(5);
+    // Animations inside a Transition do not emit a finished signal
+    // so we cannot wait for them in that way
+    QTest::qWait(1100); // animation takes 1000ms, + 10% extra delay
+    /* the viewport should not have changed, thus there should not have
+       been any contentYChanged signal*/
+    QCOMPARE(spy.count(), 0);
 }
 
 void tst_QQuickListView::itemFiltered()
