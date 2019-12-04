@@ -51,6 +51,7 @@ public:
 
 private slots:
     void dragHandlerInSiblingStealingGrabFromMouseAreaViaMouse();
+    void dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch_data();
     void dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch();
 
 private:
@@ -110,8 +111,18 @@ void tst_MouseAreaInterop::dragHandlerInSiblingStealingGrabFromMouseAreaViaMouse
     QCOMPARE(handler->active(), false);
 }
 
-void tst_MouseAreaInterop::dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch() // QTBUG-77624
+void tst_MouseAreaInterop::dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch_data()
 {
+    QTest::addColumn<bool>("preventStealing");
+
+    QTest::newRow("allow stealing") << false;
+    QTest::newRow("prevent stealing") << true;
+}
+
+void tst_MouseAreaInterop::dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch() // QTBUG-77624 and QTBUG-79163
+{
+    QFETCH(bool, preventStealing);
+
     const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
     QScopedPointer<QQuickView> windowPtr;
     createView(windowPtr, "dragTakeOverFromSibling.qml");
@@ -122,6 +133,7 @@ void tst_MouseAreaInterop::dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch
     QVERIFY(handler);
     QQuickMouseArea *ma = window->rootObject()->findChild<QQuickMouseArea*>();
     QVERIFY(ma);
+    ma->setPreventStealing(preventStealing);
 
     QPoint p1(150, 150);
     QTest::QTouchEventSequence touch = QTest::touchEvent(window, touchDevice);
@@ -135,7 +147,7 @@ void tst_MouseAreaInterop::dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch
 
     // Start dragging
     // DragHandler keeps monitoring, due to its passive grab,
-    // and eventually steals the exclusive grab from MA
+    // and eventually steals the exclusive grab from MA if MA allows it
     int dragStoleGrab = 0;
     for (int i = 0; i < 4; ++i) {
         p1 += QPoint(dragThreshold / 2, 0);
@@ -146,9 +158,15 @@ void tst_MouseAreaInterop::dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch
     }
     if (dragStoleGrab)
         qCDebug(lcPointerTests, "DragHandler stole the grab after %d events", dragStoleGrab);
-    QVERIFY(dragStoleGrab > 1);
-    QCOMPARE(handler->active(), true);
-    QCOMPARE(ma->pressed(), false);
+    if (preventStealing) {
+        QCOMPARE(dragStoleGrab, 0);
+        QCOMPARE(handler->active(), false);
+        QCOMPARE(ma->pressed(), true);
+    } else {
+        QVERIFY(dragStoleGrab > 1);
+        QCOMPARE(handler->active(), true);
+        QCOMPARE(ma->pressed(), false);
+    }
 
     touch.release(1, p1).commit();
     QQuickTouchUtils::flush(window);

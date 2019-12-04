@@ -227,8 +227,25 @@ bool QQuickPointerHandler::approveGrabTransition(QQuickEventPoint *point, QObjec
             } else if ((d->grabPermissions & CanTakeOverFromItems)) {
                 QQuickItem * existingItemGrabber = point->grabberItem();
                 if (existingItemGrabber && !((existingItemGrabber->keepMouseGrab() && point->pointerEvent()->asPointerMouseEvent()) ||
-                                             (existingItemGrabber->keepTouchGrab() && point->pointerEvent()->asPointerTouchEvent())))
+                                             (existingItemGrabber->keepTouchGrab() && point->pointerEvent()->asPointerTouchEvent()))) {
                     allowed = true;
+                    // If the handler wants to steal the exclusive grab from an Item, the Item can usually veto
+                    // by having its keepMouseGrab flag set.  But an exception is if that Item is a parent that
+                    // normally filters events (such as a Flickable): it needs to be possible for e.g. a
+                    // DragHandler to operate on an Item inside a Flickable.  Flickable is aggressive about
+                    // grabbing on press (for fear of missing updates), but DragHandler uses a passive grab
+                    // at first and then expects to be able to steal the grab later on.  It cannot respect
+                    // Flickable's wishes in that case, because then it would never have a chance.
+                    if (existingItemGrabber->keepMouseGrab() &&
+                            !(existingItemGrabber->filtersChildMouseEvents() && existingItemGrabber->isAncestorOf(parentItem()))) {
+                        QQuickWindowPrivate *winPriv = QQuickWindowPrivate::get(parentItem()->window());
+                        if (winPriv->isDeliveringTouchAsMouse() && point->pointId() == winPriv->touchMouseId) {
+                            qCDebug(lcPointerHandlerGrab) << this << "wants to grab touchpoint" << point->pointId()
+                                << "but declines to steal grab from touch-mouse grabber with keepMouseGrab=true" << existingItemGrabber;
+                            allowed = false;
+                        }
+                    }
+                }
             }
         }
     } else {
