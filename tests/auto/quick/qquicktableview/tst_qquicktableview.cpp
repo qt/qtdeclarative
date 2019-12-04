@@ -2093,7 +2093,7 @@ void tst_QQuickTableView::checkThatWeAlwaysEmitChangedUponItemReused()
     // any data referred to by the index property inside the delegate
     // will change too. So we need to refresh any bindings to index.
     // QTBUG-79209
-    LOAD_TABLEVIEW("plaintableview.qml");
+    LOAD_TABLEVIEW("checkalwaysemit.qml");
 
     TestModel model(1, 1);
     tableView->setModel(QVariant::fromValue(&model));
