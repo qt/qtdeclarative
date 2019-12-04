@@ -295,6 +295,7 @@ void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
 
     d->pix.load(qmlEngine(this),
                 loadUrl,
+                QRect(),
                 (loadOptions & HandleDPR) ? d->sourcesize * d->devicePixelRatio : QSize(),
                 options,
                 (loadOptions & UseProviderOptions) ? d->providerOptions : QQuickImageProviderOptions(),
