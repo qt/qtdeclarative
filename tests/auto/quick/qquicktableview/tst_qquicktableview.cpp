@@ -2705,14 +2705,20 @@ void tst_QQuickTableView::replaceModel()
 {
     LOAD_TABLEVIEW("replaceModelTableView.qml");
 
-    tableView->setProperty("modelId", 0);
+    const auto objectModel = view->rootObject()->property("objectModel");
+    const auto listModel = view->rootObject()->property("listModel");
+    const auto delegateModel = view->rootObject()->property("delegateModel");
+
+    tableView->setModel(listModel);
     QTRY_COMPARE(tableView->rows(), 2);
-    tableView->setProperty("modelId", 1);
+    tableView->setModel(objectModel);
     QTRY_COMPARE(tableView->rows(), 3);
-    tableView->setProperty("modelId", 2);
+    tableView->setModel(delegateModel);
     QTRY_COMPARE(tableView->rows(), 2);
-    tableView->setProperty("modelId", 0);
+    tableView->setModel(listModel);
     QTRY_COMPARE(tableView->rows(), 2);
+    tableView->setModel(QVariant());
+    QTRY_COMPARE(tableView->rows(), 0);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

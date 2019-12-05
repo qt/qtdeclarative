@@ -8,6 +8,9 @@ Item {
     height: 480
 
     property alias tableView: tv
+    property alias objectModel: om
+    property alias listModel: lm
+    property alias delegateModel: dm
 
     ObjectModel {
         id: om
@@ -38,16 +41,6 @@ Item {
         id: tv
         visible: true
         anchors.fill: parent
-        property int modelId: 0
-
-        model: {
-            switch (modelId) {
-            case 0:  return lm;
-            case 1:  return om;
-            case 2:  return dm;
-            default: return null;
-            }
-        }
 
         delegate: Rectangle {
             id: dlg

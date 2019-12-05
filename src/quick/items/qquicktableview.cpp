@@ -1786,10 +1786,12 @@ void QQuickTableViewPrivate::beginRebuildTable()
     QPointF topLeftPos;
     calculateTopLeft(topLeft, topLeftPos);
 
-    if (rebuildOptions & RebuildOption::All)
-        releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
-    else if (rebuildOptions & RebuildOption::ViewportOnly)
-        releaseLoadedItems(reusableFlag);
+    if (!loadedItems.isEmpty()) {
+        if (rebuildOptions & RebuildOption::All)
+            releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
+        else if (rebuildOptions & RebuildOption::ViewportOnly)
+            releaseLoadedItems(reusableFlag);
+    }
 
     if (rebuildOptions & RebuildOption::All) {
         origin = QPointF(0, 0);
@@ -2237,8 +2239,10 @@ void QQuickTableViewPrivate::syncModel()
     if (modelVariant == assignedModel)
         return;
 
-    if (model)
+    if (model) {
         disconnectFromModel();
+        releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
+    }
 
     modelVariant = assignedModel;
     QVariant effectiveModelVariant = modelVariant;
@@ -2249,7 +2253,6 @@ void QQuickTableViewPrivate::syncModel()
 
     if (instanceModel) {
         if (tableModel) {
-            releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
             delete tableModel;
             tableModel = nullptr;
         }
