@@ -288,6 +288,7 @@ private slots:
 
     void reuse_reuseIsOffByDefault();
     void reuse_checkThatItemsAreReused();
+    void moveObjectModelItemToAnotherObjectModel();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -9374,6 +9375,40 @@ void tst_QQuickListView::dragOverFloatingHeaderOrFooter() // QTBUG-74046
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier);
 
     releaseView(window);
+}
+
+void tst_QQuickListView::moveObjectModelItemToAnotherObjectModel()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("moveObjectModelItemToAnotherObjectModel.qml"));
+    QCOMPARE(window->status(), QQuickView::Ready);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QObject *root = window->rootObject();
+    QVERIFY(root);
+
+    const QQuickListView *listView1 = root->property("listView1").value<QQuickListView*>();
+    QVERIFY(listView1);
+
+    const QQuickListView *listView2 = root->property("listView2").value<QQuickListView*>();
+    QVERIFY(listView2);
+
+    const QQuickItem *redRect = listView1->itemAtIndex(0);
+    QVERIFY(redRect);
+    QCOMPARE(redRect->objectName(), QString::fromLatin1("redRect"));
+
+    QVERIFY(QMetaObject::invokeMethod(root, "moveRedRectToModel2"));
+    QVERIFY(QQuickTest::qIsPolishScheduled(listView2));
+    QVERIFY(QQuickTest::qWaitForItemPolished(listView2));
+    QVERIFY(redRect->isVisible());
+    QVERIFY(!QQuickItemPrivate::get(redRect)->culled);
+
+    QVERIFY(QMetaObject::invokeMethod(root, "moveRedRectToModel1"));
+    QVERIFY(QQuickTest::qIsPolishScheduled(listView1));
+    QVERIFY(QQuickTest::qWaitForItemPolished(listView1));
+    QVERIFY(redRect->isVisible());
+    QVERIFY(!QQuickItemPrivate::get(redRect)->culled);
 }
 
 QTEST_MAIN(tst_QQuickListView)
