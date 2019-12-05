@@ -226,6 +226,8 @@ public:
 private:
     int m_size;
     QQuickParticleSystem* m_system;
+    // Only used in recycle() for tracking of alive particles after latest recycling round
+    QVector<QQuickParticleData*> m_latestAliveParticles;
 };
 
 struct Color4ub {

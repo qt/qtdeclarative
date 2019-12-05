@@ -389,15 +389,20 @@ QQuickParticleData* QQuickParticleGroupData::newDatum(bool respectsLimits)
 
 bool QQuickParticleGroupData::recycle()
 {
+    m_latestAliveParticles.clear();
+
     while (dataHeap.top() <= m_system->timeInt) {
         foreach (QQuickParticleData* datum, dataHeap.pop()) {
             if (!datum->stillAlive(m_system)) {
                 freeList.free(datum->index);
             } else {
-                prepareRecycler(datum); //ttl has been altered mid-way, put it back
+                m_latestAliveParticles.push_back(datum);
             }
         }
     }
+
+    for (auto particle : m_latestAliveParticles)
+        prepareRecycler(particle); //ttl has been altered mid-way, put it back
 
     //TODO: If the data is clear, gc (consider shrinking stack size)?
     return freeList.count() == 0;
