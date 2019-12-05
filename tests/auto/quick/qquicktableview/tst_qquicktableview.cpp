@@ -177,6 +177,7 @@ private slots:
     void checkSyncView_connect_late();
     void delegateWithRequiredProperties();
     void checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable();
+    void replaceModel();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -2094,7 +2095,7 @@ void tst_QQuickTableView::checkThatWeAlwaysEmitChangedUponItemReused()
     // any data referred to by the index property inside the delegate
     // will change too. So we need to refresh any bindings to index.
     // QTBUG-79209
-    LOAD_TABLEVIEW("plaintableview.qml");
+    LOAD_TABLEVIEW("checkalwaysemit.qml");
 
     TestModel model(1, 1);
     tableView->setModel(QVariant::fromValue(&model));
@@ -2743,6 +2744,20 @@ void tst_QQuickTableView::delegateWithRequiredProperties()
         WAIT_UNTIL_POLISHED;
         QTRY_VERIFY(view->errors().empty());
     }
+}
+
+void tst_QQuickTableView::replaceModel()
+{
+    LOAD_TABLEVIEW("replaceModelTableView.qml");
+
+    tableView->setProperty("modelId", 0);
+    QTRY_COMPARE(tableView->rows(), 2);
+    tableView->setProperty("modelId", 1);
+    QTRY_COMPARE(tableView->rows(), 0);
+    tableView->setProperty("modelId", 2);
+    QTRY_COMPARE(tableView->rows(), 0);
+    tableView->setProperty("modelId", 0);
+    QTRY_COMPARE(tableView->rows(), 2);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

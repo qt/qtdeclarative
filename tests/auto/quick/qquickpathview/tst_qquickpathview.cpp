@@ -140,6 +140,7 @@ private slots:
     void cacheItemCount();
     void changePathDuringRefill();
     void nestedinFlickable();
+    void ungrabNestedinFlickable();
     void flickableDelegate();
     void jsArrayChange();
     void qtbug37815();
@@ -2411,6 +2412,40 @@ void tst_QQuickPathView::nestedinFlickable()
     QCOMPARE(fflickStartedSpy.count(), 0);
     QCOMPARE(fflickEndedSpy.count(), 0);
 
+}
+
+void tst_QQuickPathView::ungrabNestedinFlickable()
+{
+    QScopedPointer<QQuickView> window(createView());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->setSource(testFileUrl("ungrabNestedinFlickable.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QCOMPARE(window.data(), qGuiApp->focusWindow());
+
+    QQuickPathView *pathview = findItem<QQuickPathView>(window->rootObject(), "pathView");
+    QVERIFY(pathview != nullptr);
+
+    double pathviewOffsetBefore = pathview->offset();
+
+    // Drag slowly upwards so that it does not flick, release, and let it start snapping back
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(200, 350));
+    for (int i = 0; i < 4; ++i)
+        QTest::mouseMove(window.data(), QPoint(200, 325 - i * 25), 500);
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0,  QPoint(200, 250));
+    QCOMPARE(pathview->isMoving(), true);
+
+    // Press again to stop moving
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(200, 350));
+    QTRY_COMPARE(pathview->isMoving(), false);
+
+    // Cancel the grab, wait for movement to stop, and expect it to snap to
+    // the nearest delegate, which should be at the same offset as where we started
+    pathview->ungrabMouse();
+    QTRY_COMPARE(pathview->offset(), pathviewOffsetBefore);
+    QCOMPARE(pathview->isMoving(), false);
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(200, 350));
 }
 
 void tst_QQuickPathView::flickableDelegate()

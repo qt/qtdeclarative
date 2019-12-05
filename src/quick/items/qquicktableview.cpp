@@ -1249,9 +1249,9 @@ qreal QQuickTableViewPrivate::getColumnLayoutWidth(int column)
     if (qIsNaN(columnWidth) || columnWidth <= 0) {
         if (!layoutWarningIssued) {
             layoutWarningIssued = true;
-            qmlWarning(q_func()) << "the delegate's implicitHeight needs to be greater than zero";
+            qmlWarning(q_func()) << "the delegate's implicitWidth needs to be greater than zero";
         }
-        columnWidth = kDefaultRowHeight;
+        columnWidth = kDefaultColumnWidth;
     }
 
     return columnWidth;
@@ -2242,6 +2242,7 @@ void QQuickTableViewPrivate::syncModel()
 
     if (instanceModel) {
         if (tableModel) {
+            releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
             delete tableModel;
             tableModel = nullptr;
         }
