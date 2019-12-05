@@ -600,10 +600,32 @@ void tst_TapHandler::buttonsMultiTouch()
     touchSeq.stationary(1).press(2, p2, window).commit();
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(buttonWithinBounds->property("pressed").toBool());
+    QVERIFY(buttonWithinBounds->property("active").toBool());
     QPoint p3 = buttonReleaseWithinBounds->mapToScene(QPointF(20, 20)).toPoint();
     touchSeq.stationary(1).stationary(2).press(3, p3, window).commit();
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(buttonReleaseWithinBounds->property("pressed").toBool());
+    QVERIFY(buttonReleaseWithinBounds->property("active").toBool());
+    QVERIFY(buttonWithinBounds->property("pressed").toBool());
+    QVERIFY(buttonWithinBounds->property("active").toBool());
+    QVERIFY(buttonDragThreshold->property("pressed").toBool());
+
+    // combinations of small touchpoint movements and stationary points should not cause state changes
+    p1 += QPoint(2, 0);
+    p2 += QPoint(3, 0);
+    touchSeq.move(1, p1).move(2, p2).stationary(3).commit();
+    QVERIFY(buttonDragThreshold->property("pressed").toBool());
+    QVERIFY(buttonWithinBounds->property("pressed").toBool());
+    QVERIFY(buttonWithinBounds->property("active").toBool());
+    QVERIFY(buttonReleaseWithinBounds->property("pressed").toBool());
+    QVERIFY(buttonReleaseWithinBounds->property("active").toBool());
+    p3 += QPoint(4, 0);
+    touchSeq.stationary(1).stationary(2).move(3, p3).commit();
+    QVERIFY(buttonDragThreshold->property("pressed").toBool());
+    QVERIFY(buttonWithinBounds->property("pressed").toBool());
+    QVERIFY(buttonWithinBounds->property("active").toBool());
+    QVERIFY(buttonReleaseWithinBounds->property("pressed").toBool());
+    QVERIFY(buttonReleaseWithinBounds->property("active").toBool());
 
     // can release top button and press again: others stay pressed the whole time
     touchSeq.stationary(2).stationary(3).release(1, p1, window).commit();
