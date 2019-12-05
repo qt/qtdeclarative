@@ -1,7 +1,7 @@
 dependencies:
   ../qtgraphicaleffects:
-    ref: 82029c7a1be72875c81c5a629ea759d179add09b
+    ref: 540f41a5c632a1186eac0d2a73e78df1c7c8b6df
     required: true
   ../qtimageformats:
-    ref: f325dbab1d5ba72be340ae697a094de3dbb8bcd6
+    ref: b2cf7804e3197a6d3a55d77405ef6fa2a8b0fd4f
     required: false
