@@ -2719,6 +2719,8 @@ void tst_QQuickTableView::replaceModel()
     QTRY_COMPARE(tableView->rows(), 2);
     tableView->setModel(QVariant());
     QTRY_COMPARE(tableView->rows(), 0);
+    QCOMPARE(tableView->contentWidth(), 0);
+    QCOMPARE(tableView->contentHeight(), 0);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

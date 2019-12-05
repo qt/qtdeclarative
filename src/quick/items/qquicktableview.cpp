@@ -628,6 +628,12 @@ void QQuickTableViewPrivate::updateContentWidth()
         return;
     }
 
+    if (loadedItems.isEmpty()) {
+        QBoolBlocker fixupGuard(inUpdateContentSize, true);
+        q->QQuickFlickable::setContentWidth(0);
+        return;
+    }
+
     const int nextColumn = nextVisibleEdgeIndexAroundLoadedTable(Qt::RightEdge);
     const int columnsRemaining = nextColumn == kEdgeIndexAtEnd ? 0 : tableSize.width() - nextColumn;
     const qreal remainingColumnWidths = columnsRemaining * averageEdgeSize.width();
@@ -652,6 +658,12 @@ void QQuickTableViewPrivate::updateContentHeight()
     if (explicitContentHeight.isValid()) {
         // Don't calculate contentHeight when it
         // was set explicitly by the application.
+        return;
+    }
+
+    if (loadedItems.isEmpty()) {
+        QBoolBlocker fixupGuard(inUpdateContentSize, true);
+        q->QQuickFlickable::setContentHeight(0);
         return;
     }
 
@@ -1614,6 +1626,8 @@ void QQuickTableViewPrivate::processRebuildTable()
     if (rebuildState == RebuildState::VerifyTable) {
         if (loadedItems.isEmpty()) {
             qCDebug(lcTableViewDelegateLifecycle()) << "no items loaded!";
+            updateContentWidth();
+            updateContentHeight();
             rebuildState = RebuildState::Done;
         } else if (!moveToNextRebuildState()) {
             return;
