@@ -1730,6 +1730,12 @@ bool QQuickComboBox::eventFilter(QObject *object, QEvent *event)
             // the user clicked on the popup button to open it, not close it).
             d->hidePopup(false);
             setPressed(false);
+
+            // The focus left the text field, so if the edit text matches an item in the model,
+            // change our currentIndex to that. This matches widgets' behavior.
+            const int indexForEditText = find(d->extra.value().editText, Qt::MatchFixedString);
+            if (indexForEditText > -1)
+                setCurrentIndex(indexForEditText);
         }
         break;
 #if QT_CONFIG(im)
