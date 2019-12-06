@@ -369,8 +369,11 @@ public:
                 ++arrayIndex;
                 if (attrs)
                     *attrs = QV4::Attr_Data;
+
+                // TODO: remove conflicting comment when merged in from 5.14
+
                 if (pd)
-                    pd->value = convertElementToValue(s->engine(), s->d()->container->at(index));
+                    pd->value = convertElementToValue(s->engine(), (*s->d()->container)[index]);
                 return PropertyKey::fromArrayIndex(index);
             }
 
