@@ -393,7 +393,7 @@ void tst_QQuickTableView::checkColumnWidthProviderInvalidReturnValues()
 
     tableView->setModel(model);
 
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*implicitHeight.*zero"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*implicit.*zero"));
 
     WAIT_UNTIL_POLISHED;
 
@@ -490,7 +490,7 @@ void tst_QQuickTableView::checkRowHeightProviderInvalidReturnValues()
 
     tableView->setModel(model);
 
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*implicitHeight.*zero"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*implicit.*zero"));
 
     WAIT_UNTIL_POLISHED;
 
