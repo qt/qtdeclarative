@@ -1885,7 +1885,7 @@ void tst_QQuickMouseArea::nestedStopAtBounds()
     QTest::mouseMove(&view, position);
     axis += invert ? threshold : -threshold;
     QTest::mouseMove(&view, position);
-    QCOMPARE(outer->drag()->active(), true);
+    QTRY_COMPARE(outer->drag()->active(), true);
     QCOMPARE(inner->drag()->active(), false);
     QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, position);
 
