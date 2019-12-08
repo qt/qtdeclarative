@@ -219,7 +219,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
         ok = false;
         maxCallDepth = qEnvironmentVariableIntValue("QV4_MAX_CALL_DEPTH", &ok);
         if (!ok || maxCallDepth <= 0) {
-#if defined(QT_NO_DEBUG) && !defined(__SANITIZE_ADDRESS__) && !QT_HAS_FEATURE(address_sanitizer)
+#if defined(QT_NO_DEBUG) && !defined(__SANITIZE_ADDRESS__) && !__has_feature(address_sanitizer)
             maxCallDepth = 1234;
 #else
             // no (tail call) optimization is done, so there'll be a lot mare stack frames active
