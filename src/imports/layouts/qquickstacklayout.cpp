@@ -38,7 +38,10 @@
 ****************************************************************************/
 
 #include "qquickstacklayout_p.h"
+
 #include <limits>
+
+#include <QtQml/qqmlinfo.h>
 
 /*!
     \qmltype StackLayout
@@ -99,6 +102,12 @@
 
 QT_BEGIN_NAMESPACE
 
+static QQuickStackLayoutAttached *attachedStackLayoutObject(QQuickItem *item, bool create = false)
+{
+    return static_cast<QQuickStackLayoutAttached*>(
+        qmlAttachedPropertiesObject<QQuickStackLayout>(item, create));
+}
+
 QQuickStackLayout::QQuickStackLayout(QQuickItem *parent) :
     QQuickLayout(*new QQuickStackLayoutPrivate, parent)
 {
@@ -132,20 +141,34 @@ int QQuickStackLayout::currentIndex() const
 void QQuickStackLayout::setCurrentIndex(int index)
 {
     Q_D(QQuickStackLayout);
-    if (index != d->currentIndex) {
-        QQuickItem *prev = itemAt(d->currentIndex);
-        QQuickItem *next = itemAt(index);
-        d->currentIndex = index;
-        d->explicitCurrentIndex = true;
-        if (prev)
-            prev->setVisible(false);
-        if (next)
-            next->setVisible(true);
+    if (index == d->currentIndex)
+        return;
 
-        if (isComponentComplete()) {
-            rearrange(QSizeF(width(), height()));
-            emit currentIndexChanged();
-        }
+    QQuickItem *prev = itemAt(d->currentIndex);
+    QQuickItem *next = itemAt(index);
+    d->currentIndex = index;
+    d->explicitCurrentIndex = true;
+    if (prev)
+        prev->setVisible(false);
+    if (next)
+        next->setVisible(true);
+
+    if (isComponentComplete()) {
+        rearrange(QSizeF(width(), height()));
+        emit currentIndexChanged();
+    }
+
+    // Update attached properties after emitting currentIndexChanged()
+    // to maintain a more sensible emission order.
+    if (prev) {
+        auto stackLayoutAttached = attachedStackLayoutObject(prev);
+        if (stackLayoutAttached)
+            stackLayoutAttached->setIsCurrentItem(false);
+    }
+    if (next) {
+        auto stackLayoutAttached = attachedStackLayoutObject(next);
+        if (stackLayoutAttached)
+            stackLayoutAttached->setIsCurrentItem(true);
     }
 }
 
@@ -160,6 +183,21 @@ void QQuickStackLayout::componentComplete()
         return;
 
     rearrange(QSizeF(width(), height()));
+}
+
+void QQuickStackLayout::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
+{
+    QQuickLayout::itemChange(change, value);
+
+    if (change == ItemChildRemovedChange) {
+        QQuickItem *item = value.item;
+        auto stackLayoutAttached = attachedStackLayoutObject(item);
+        if (stackLayoutAttached) {
+            stackLayoutAttached->setLayout(nullptr);
+            stackLayoutAttached->setIndex(-1);
+            stackLayoutAttached->setIsCurrentItem(false);
+        }
+    }
 }
 
 QSizeF QQuickStackLayout::sizeHint(Qt::SizeHint whichSizeHint) const
@@ -203,6 +241,11 @@ int QQuickStackLayout::indexOf(QQuickItem *childItem) const
         }
     }
     return -1;
+}
+
+QQuickStackLayoutAttached *QQuickStackLayout::qmlAttachedProperties(QObject *object)
+{
+    return new QQuickStackLayoutAttached(object);
 }
 
 QQuickItem *QQuickStackLayout::itemAt(int index) const
@@ -294,6 +337,13 @@ void QQuickStackLayout::updateLayoutItems()
         QQuickItem *child = itemAt(i);
         checkAnchors(child);
         child->setVisible(d->currentIndex == i);
+
+        auto stackLayoutAttached = attachedStackLayoutObject(child);
+        if (stackLayoutAttached) {
+            stackLayoutAttached->setLayout(this);
+            stackLayoutAttached->setIndex(i);
+            stackLayoutAttached->setIsCurrentItem(d->currentIndex == i);
+        }
     }
 
     invalidate();
@@ -345,6 +395,105 @@ bool QQuickStackLayout::shouldIgnoreItem(QQuickItem *item) const
     if (ignored)
         d_func()->m_ignoredItems << item;
     return ignored;
+}
+
+QQuickStackLayoutAttached::QQuickStackLayoutAttached(QObject *object)
+{
+    auto item = qobject_cast<QQuickItem*>(object);
+    if (!item) {
+        qmlWarning(object) << "StackLayout must be attached to an Item";
+        return;
+    }
+
+    auto stackLayout = qobject_cast<QQuickStackLayout*>(item->parentItem());
+    if (!stackLayout) {
+        // It might not be a child of a StackLayout yet, and that's OK.
+        // The index will get set by updateLayoutItems() when it's reparented.
+        return;
+    }
+
+    if (!stackLayout->isComponentComplete()) {
+        // Don't try to get the index if the StackLayout itself hasn't loaded yet.
+        return;
+    }
+
+    // If we got this far, the item was added as a child to the StackLayout after it loaded.
+    const int index = stackLayout->indexOf(item);
+    setLayout(stackLayout);
+    setIndex(index);
+    setIsCurrentItem(stackLayout->currentIndex() == index);
+}
+
+/*!
+    \qmlattachedproperty int StackLayout::index
+
+    This attached property holds the index of each child item in the
+    \l StackLayout.
+
+    \sa isCurrentItem, layout
+
+    \since QtQuick.Layouts 1.15
+*/
+int QQuickStackLayoutAttached::index() const
+{
+    return m_index;
+}
+
+void QQuickStackLayoutAttached::setIndex(int index)
+{
+    if (index == m_index)
+        return;
+
+    m_index = index;
+    emit indexChanged();
+}
+
+/*!
+    \qmlattachedproperty bool StackLayout::isCurrentItem
+
+    This attached property is \c true if this child is the current item
+    in the \l StackLayout.
+
+    \sa index, layout
+
+    \since QtQuick.Layouts 1.15
+*/
+bool QQuickStackLayoutAttached::isCurrentItem() const
+{
+    return m_isCurrentItem;
+}
+
+void QQuickStackLayoutAttached::setIsCurrentItem(bool isCurrentItem)
+{
+    if (isCurrentItem == m_isCurrentItem)
+        return;
+
+    m_isCurrentItem = isCurrentItem;
+    emit isCurrentItemChanged();
+}
+
+/*!
+    \qmlattachedproperty StackLayout StackLayout::layout
+
+    This attached property holds the \l StackLayout that manages this child
+    item.
+
+    \sa index, isCurrentItem
+
+    \since QtQuick.Layouts 1.15
+*/
+QQuickStackLayout *QQuickStackLayoutAttached::layout() const
+{
+    return m_layout;
+}
+
+void QQuickStackLayoutAttached::setLayout(QQuickStackLayout *layout)
+{
+    if (layout == m_layout)
+        return;
+
+    m_layout = layout;
+    emit layoutChanged();
 }
 
 QT_END_NAMESPACE

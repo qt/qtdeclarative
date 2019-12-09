@@ -45,6 +45,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickStackLayoutPrivate;
+class QQuickStackLayoutAttached;
 
 class QQuickStackLayout : public QQuickLayout
 {
@@ -53,6 +54,7 @@ class QQuickStackLayout : public QQuickLayout
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
     QML_NAMED_ELEMENT(StackLayout)
     QML_ADDED_IN_VERSION(1, 3)
+    QML_ATTACHED(QQuickStackLayoutAttached)
 
 public:
     explicit QQuickStackLayout(QQuickItem *parent = 0);
@@ -61,6 +63,7 @@ public:
     void setCurrentIndex(int index);
 
     void componentComplete() override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
     QSizeF sizeHint(Qt::SizeHint whichSizeHint) const override;
     void setAlignment(QQuickItem *item, Qt::Alignment align)  override;
     void invalidate(QQuickItem *childItem = 0)  override;
@@ -72,7 +75,7 @@ public:
     int itemCount() const override;
     int indexOf(QQuickItem *item) const;
 
-
+    static QQuickStackLayoutAttached *qmlAttachedProperties(QObject *object);
 
 signals:
     void currentIndexChanged();
@@ -84,6 +87,8 @@ private:
     static void collectItemSizeHints(QQuickItem *item, QSizeF *sizeHints);
     bool shouldIgnoreItem(QQuickItem *item) const;
     Q_DECLARE_PRIVATE(QQuickStackLayout)
+
+    friend class QQuickStackLayoutAttached;
 
     QList<QQuickItem*> m_items;
 
@@ -107,6 +112,36 @@ private:
     int count;
     int currentIndex;
     bool explicitCurrentIndex;
+};
+
+class QQuickStackLayoutAttached : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int index READ index NOTIFY indexChanged)
+    Q_PROPERTY(bool isCurrentItem READ isCurrentItem NOTIFY isCurrentItemChanged)
+    Q_PROPERTY(QQuickStackLayout *layout READ layout NOTIFY layoutChanged)
+
+public:
+    QQuickStackLayoutAttached(QObject *object);
+
+    int index() const;
+    void setIndex(int index);
+
+    bool isCurrentItem() const;
+    void setIsCurrentItem(bool isCurrentItem);
+
+    QQuickStackLayout *layout() const;
+    void setLayout(QQuickStackLayout *layout);
+
+signals:
+    void indexChanged();
+    void isCurrentItemChanged();
+    void layoutChanged();
+
+private:
+    int m_index = -1;
+    bool m_isCurrentItem = false;
+    QQuickStackLayout *m_layout = nullptr;
 };
 
 QT_END_NAMESPACE
