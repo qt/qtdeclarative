@@ -1644,7 +1644,6 @@ ReturnedValue IntrinsicTypedArrayCtor::method_of(const FunctionObject *f, const 
 ReturnedValue IntrinsicTypedArrayCtor::method_from(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(f);
-    ScopedFunctionObject thatCtor(scope, thisObject);
     ScopedObject itemsObject(scope, argv[0]);
     bool usingIterator = false;
 
