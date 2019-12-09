@@ -53,6 +53,7 @@
 
 #include "qquickimplicitsizeitem_p.h"
 #include <private/qtquickglobal_p.h>
+#include <QtGui/qcolorspace.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -70,6 +71,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImageBase : public QQuickImplicitSizeItem
     Q_PROPERTY(bool mirror READ mirror WRITE setMirror NOTIFY mirrorChanged)
     Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY currentFrameChanged REVISION 14)
     Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged REVISION 14)
+    Q_PROPERTY(QColorSpace colorSpace READ colorSpace WRITE setColorSpace NOTIFY colorSpaceChanged REVISION 15)
 
     QML_NAMED_ELEMENT(ImageBase);
     QML_ADDED_IN_MINOR_VERSION(14)
@@ -122,6 +124,9 @@ public:
     virtual void setAutoTransform(bool transform);
     bool autoTransform() const;
 
+    QColorSpace colorSpace() const;
+    virtual void setColorSpace(const QColorSpace &colorSpace);
+
     static void resolve2xLocalFile(const QUrl &url, qreal targetDevicePixelRatio, QUrl *sourceUrl, qreal *sourceDevicePixelRatio);
 
     // Use a virtual rather than a signal->signal to avoid the huge
@@ -139,6 +144,7 @@ Q_SIGNALS:
     Q_REVISION(14) void currentFrameChanged();
     Q_REVISION(14) void frameCountChanged();
     Q_REVISION(15) void sourceClipRectChanged();
+    Q_REVISION(15) void colorSpaceChanged();
 
 protected:
     void loadEmptyUrl();

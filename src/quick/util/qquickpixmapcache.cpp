@@ -318,6 +318,7 @@ public:
     QSize requestSize;
     QQuickImageProviderOptions providerOptions;
     QQuickImageProviderOptions::AutoTransform appliedTransform;
+    QColorSpace targetColorSpace;
 
     QQuickTextureFactory *textureFactory;
 
@@ -436,6 +437,12 @@ static bool readImage(const QUrl& url, QIODevice *dev, QImage *image, QString *e
         maybeRemoveAlpha(image);
         if (impsize && impsize->width() < 0)
             *impsize = image->size();
+        if (providerOptions.targetColorSpace().isValid()) {
+            if (image->colorSpace().isValid())
+                image->convertToColorSpace(providerOptions.targetColorSpace());
+            else
+                image->setColorSpace(providerOptions.targetColorSpace());
+        }
         return true;
     } else {
         if (errorString)
@@ -1761,6 +1768,13 @@ bool QQuickPixmap::connectDownloadProgress(QObject *object, int method)
     }
 
     return QMetaObject::connect(d->reply, QQuickPixmapReply::downloadProgressIndex, object, method);
+}
+
+QColorSpace QQuickPixmap::colorSpace() const
+{
+    if (!d || !d->textureFactory)
+        return QColorSpace();
+    return d->textureFactory->image().colorSpace();
 }
 
 QT_END_NAMESPACE

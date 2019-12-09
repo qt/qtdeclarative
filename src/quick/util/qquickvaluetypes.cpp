@@ -41,6 +41,7 @@
 
 #include <qtquickglobal.h>
 #include <private/qqmlvaluetype_p.h>
+#include <private/qcolorspace_p.h>
 #include <private/qfont_p.h>
 
 
@@ -782,6 +783,47 @@ void QQuickFontValueType::setPreferShaping(bool enable)
         v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() & ~QFont::PreferNoShaping));
     else
         v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() | QFont::PreferNoShaping));
+}
+
+QQuickColorSpaceValueType::NamedColorSpace QQuickColorSpaceValueType::namedColorSpace() const noexcept
+{
+    if (const auto *p = QColorSpacePrivate::get(v))
+        return (QQuickColorSpaceValueType::NamedColorSpace)p->namedColorSpace;
+    return QQuickColorSpaceValueType::Unknown;
+}
+void QQuickColorSpaceValueType::setNamedColorSpace(QQuickColorSpaceValueType::NamedColorSpace namedColorSpace)
+{
+    v = { (QColorSpace::NamedColorSpace)namedColorSpace };
+}
+
+QQuickColorSpaceValueType::Primaries QQuickColorSpaceValueType::primaries() const noexcept
+{
+    return (QQuickColorSpaceValueType::Primaries)v.primaries();
+}
+
+void QQuickColorSpaceValueType::setPrimaries(QQuickColorSpaceValueType::Primaries primariesId)
+{
+    v.setPrimaries((QColorSpace::Primaries)primariesId);
+}
+
+QQuickColorSpaceValueType::TransferFunction QQuickColorSpaceValueType::transferFunction() const noexcept
+{
+    return (QQuickColorSpaceValueType::TransferFunction)v.transferFunction();
+}
+
+void QQuickColorSpaceValueType::setTransferFunction(QQuickColorSpaceValueType::TransferFunction transferFunction)
+{
+    v.setTransferFunction((QColorSpace::TransferFunction)transferFunction, v.gamma());
+}
+
+float QQuickColorSpaceValueType::gamma() const noexcept
+{
+    return v.gamma();
+}
+
+void QQuickColorSpaceValueType::setGamma(float gamma)
+{
+    v.setTransferFunction(v.transferFunction(), gamma);
 }
 
 QT_END_NAMESPACE

@@ -43,6 +43,7 @@
 #include "qquickpixmapcache_p.h"
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qqmlglobal_p.h>
+#include <QtGui/qcolorspace.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -510,6 +511,7 @@ public:
     {
     }
 
+    QColorSpace targetColorSpace;
     QQuickImageProviderOptions::AutoTransform autoTransform = QQuickImageProviderOptions::UsePluginDefaultTransform;
     bool preserveAspectRatioCrop = false;
     bool preserveAspectRatioFit = false;
@@ -558,7 +560,8 @@ bool QQuickImageProviderOptions::operator==(const QQuickImageProviderOptions &ot
 {
     return d->autoTransform == other.d->autoTransform &&
            d->preserveAspectRatioCrop == other.d->preserveAspectRatioCrop &&
-           d->preserveAspectRatioFit == other.d->preserveAspectRatioFit;
+           d->preserveAspectRatioFit == other.d->preserveAspectRatioFit &&
+           d->targetColorSpace == other.d->targetColorSpace;
 }
 
 /*!
@@ -600,6 +603,19 @@ bool QQuickImageProviderOptions::preserveAspectRatioFit() const
 void QQuickImageProviderOptions::setPreserveAspectRatioFit(bool preserveAspectRatioFit)
 {
     d->preserveAspectRatioFit = preserveAspectRatioFit;
+}
+
+/*!
+    Returns the color space the image provider should return the image in.
+*/
+QColorSpace QQuickImageProviderOptions::targetColorSpace() const
+{
+    return d->targetColorSpace;
+}
+
+void QQuickImageProviderOptions::setTargetColorSpace(const QColorSpace &colorSpace)
+{
+    d->targetColorSpace = colorSpace;
 }
 
 QQuickImageProviderWithOptions::QQuickImageProviderWithOptions(ImageType type, Flags flags)

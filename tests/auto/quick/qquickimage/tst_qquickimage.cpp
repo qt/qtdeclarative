@@ -99,6 +99,7 @@ private slots:
     void urlInterceptor();
     void multiFrame_data();
     void multiFrame();
+    void colorSpace();
 
 private:
     QQmlEngine engine;
@@ -1188,6 +1189,34 @@ void tst_qquickimage::multiFrame()
     QVERIFY(qRed(color) < 0xc0);
     QVERIFY(qGreen(color) > 0xc0);
     QVERIFY(qBlue(color) < 0xc0);
+}
+
+void tst_qquickimage::colorSpace()
+{
+    QString componentStr1 = "import QtQuick 2.15\n"
+                            "Image { source: srcImage; }";
+    QQmlComponent component1(&engine);
+    component1.setData(componentStr1.toLatin1(), QUrl::fromLocalFile(""));
+    engine.rootContext()->setContextProperty("srcImage", testFileUrl("ProPhoto.jpg"));
+
+    QScopedPointer<QQuickImage> object1 { qobject_cast<QQuickImage*>(component1.create())};
+    QVERIFY(object1);
+    QTRY_COMPARE(object1->status(), QQuickImageBase::Ready);
+    QCOMPARE(object1->colorSpace(), QColorSpace(QColorSpace::ProPhotoRgb));
+
+    QString componentStr2 = "import QtQuick 2.15\n"
+                            "Image {\n"
+                            "  source: srcImage;\n"
+                            "  colorSpace.namedColorSpace: ColorSpace.SRgb;\n"
+                            "}";
+
+    QQmlComponent component2(&engine);
+    component2.setData(componentStr2.toLatin1(), QUrl::fromLocalFile(""));
+
+    QScopedPointer<QQuickImage> object2 { qobject_cast<QQuickImage*>(component2.create())};
+    QVERIFY(object2);
+    QTRY_COMPARE(object2->status(), QQuickImageBase::Ready);
+    QCOMPARE(object2->colorSpace(), QColorSpace(QColorSpace::SRgb));
 }
 
 QTEST_MAIN(tst_qquickimage)

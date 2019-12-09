@@ -56,6 +56,7 @@
 #include <private/qqmlvaluetype_p.h>
 
 #include <QtGui/QColor>
+#include <QtGui/QColorSpace>
 #include <QtGui/QVector2D>
 #include <QtGui/QVector3D>
 #include <QtGui/QVector4D>
@@ -406,6 +407,57 @@ public:
 
     bool preferShaping() const;
     void setPreferShaping(bool b);
+};
+
+class QQuickColorSpaceValueType
+{
+    QColorSpace v;
+    Q_GADGET
+
+    Q_PROPERTY(NamedColorSpace namedColorSpace READ namedColorSpace WRITE setNamedColorSpace FINAL)
+    Q_PROPERTY(Primaries primaries READ primaries WRITE setPrimaries FINAL)
+    Q_PROPERTY(TransferFunction transferFunction READ transferFunction WRITE setTransferFunction FINAL)
+    Q_PROPERTY(float gamma READ gamma WRITE setGamma FINAL)
+
+    QML_NAMED_ELEMENT(ColorSpace)
+    Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+
+public:
+    enum NamedColorSpace {
+        Unknown = 0,
+        SRgb,
+        SRgbLinear,
+        AdobeRgb,
+        DisplayP3,
+        ProPhotoRgb
+    };
+    Q_ENUM(NamedColorSpace)
+
+    enum class Primaries {
+        Custom = 0,
+        SRgb,
+        AdobeRgb,
+        DciP3D65,
+        ProPhotoRgb
+    };
+    Q_ENUM(Primaries)
+    enum class TransferFunction {
+        Custom = 0,
+        Linear,
+        Gamma,
+        SRgb,
+        ProPhotoRgb
+    };
+    Q_ENUM(TransferFunction)
+
+    NamedColorSpace namedColorSpace() const noexcept;
+    void setNamedColorSpace(NamedColorSpace namedColorSpace);
+    Primaries primaries() const noexcept;
+    void setPrimaries(Primaries primariesId);
+    TransferFunction transferFunction() const noexcept;
+    void setTransferFunction(TransferFunction transferFunction);
+    float gamma() const noexcept;
+    void setGamma(float gamma);
 };
 
 QT_END_NAMESPACE
