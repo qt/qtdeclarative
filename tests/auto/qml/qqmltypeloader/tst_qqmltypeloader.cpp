@@ -58,6 +58,7 @@ private slots:
     void qmlSingletonWithinModule();
     void multiSingletonModule();
     void implicitComponentModule();
+    void customDiskCachePath();
     void qrcRootPathUrl();
     void implicitImport();
     void compositeSingletonCycle();
@@ -517,6 +518,35 @@ void tst_QQMLTypeLoader::implicitComponentModule()
     QVERIFY(!obj.isNull());
 
     checkCleanCacheLoad(QLatin1String("implicitComponentModule"));
+}
+
+void tst_QQMLTypeLoader::customDiskCachePath()
+{
+#if QT_CONFIG(process)
+    const char *skipKey = "QT_TST_QQMLTYPELOADER_SKIP_MISMATCH";
+    if (qEnvironmentVariableIsSet(skipKey)) {
+        QQmlEngine engine;
+        QQmlComponent component(&engine, testFileUrl("Base.qml"));
+        QCOMPARE(component.status(), QQmlComponent::Ready);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        return;
+    }
+
+    QTemporaryDir dir;
+    QProcess child;
+    child.setProgram(QCoreApplication::applicationFilePath());
+    child.setArguments(QStringList(QLatin1String("customDiskCachePath")));
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QLatin1String(skipKey), QLatin1String("1"));
+    env.insert(QLatin1String("QML_DISK_CACHE_PATH"), dir.path());
+    child.setProcessEnvironment(env);
+    child.start();
+    QVERIFY(child.waitForFinished());
+    QCOMPARE(child.exitCode(), 0);
+    QDir cacheDir(dir.path());
+    QVERIFY(!cacheDir.isEmpty());
+#endif
 }
 
 void tst_QQMLTypeLoader::qrcRootPathUrl()
