@@ -43,6 +43,7 @@
 #include <private/qqmljsdiagnosticmessage_p.h>
 
 #include <QtCore/QTextStream>
+#include <QtCore/private/qvariant_p.h>
 #include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
@@ -118,6 +119,7 @@
 #endif
 #include <private/qv4sqlerrors_p.h>
 #include <qqmlfile.h>
+#include <qmetatype.h>
 
 #if USE(PTHREADS)
 #  include <pthread.h>
@@ -183,6 +185,91 @@ static void restoreJSValue(QDataStream &stream, void *data)
         v.load(stream);
         QJSValuePrivate::setVariant(jsv, v);
     }
+}
+
+struct JSArrayIterator {
+    QJSValue const* data;
+    quint32 index;
+};
+
+namespace  {
+void createNewIteratorIfNonExisting(void **iterator) {
+    if (*iterator == nullptr)
+        *iterator = new JSArrayIterator;
+}
+}
+
+static QtMetaTypePrivate::QSequentialIterableImpl jsvalueToSequence (const QJSValue& value) {
+    using namespace QtMetaTypePrivate;
+
+    QSequentialIterableImpl iterator {};
+    if (!value.isArray()) {
+        // set up some functions so that non-array QSequentialIterables do not crash
+        // but instead appear as an empty sequence
+        iterator._size = [](const void *) {return 0;};
+        iterator._moveToBegin = [](const void *, void **) {};
+        iterator._moveToEnd = [](const void *, void **) {};
+        iterator._advance = [](void **, int) {};
+        iterator._equalIter = [](void * const *, void * const *){return true; /*all iterators are nullptr*/};
+        iterator._destroyIter = [](void **){};
+        return iterator;
+    }
+
+    iterator._iterable = &value;
+    iterator._iterator = nullptr;
+    iterator._metaType_id = qMetaTypeId<QVariant>();
+    iterator._metaType_flags = QVariantConstructionFlags::ShouldDeleteVariantData;
+    iterator._iteratorCapabilities = RandomAccessCapability | BiDirectionalCapability | ForwardCapability;
+    iterator._size = [](const void *p) -> int {
+        return static_cast<QJSValue const *>(p)->property(QString::fromLatin1("length")).toInt();
+    };
+    /* Lifetime management notes:
+     * _at and _get return a pointer to a JSValue allocated via QMetaType::create
+     * Because we set QVariantConstructionFlags::ShouldDeleteVariantData, QSequentialIterable::at
+     * and QSequentialIterable::operator*() will free that memory
+    */
+
+    iterator._at = [](const void *iterable, int index) -> void const * {
+        auto const value = static_cast<QJSValue const *>(iterable)->property(quint32(index)).toVariant();
+        return QMetaType::create(qMetaTypeId<QVariant>(), &value);
+    };
+    iterator._moveToBegin = [](const void *iterable, void **iterator) {
+        createNewIteratorIfNonExisting(iterator);
+        auto jsArrayIterator = static_cast<JSArrayIterator *>(*iterator);
+        jsArrayIterator->index = 0;
+        jsArrayIterator->data = reinterpret_cast<QJSValue const*>(iterable);
+    };
+    iterator._moveToEnd = [](const void *iterable, void **iterator) {
+        createNewIteratorIfNonExisting(iterator);
+        auto jsArrayIterator = static_cast<JSArrayIterator *>(*iterator);
+        auto length = static_cast<QJSValue const *>(iterable)->property(QString::fromLatin1("length")).toInt();
+        jsArrayIterator->data = reinterpret_cast<QJSValue const*>(iterable);
+        jsArrayIterator->index = quint32(length);
+    };
+    iterator._advance = [](void **iterator, int advanceBy) {
+        static_cast<JSArrayIterator *>(*iterator)->index += quint32(advanceBy);
+    };
+    iterator._get = []( void * const *iterator, int metaTypeId, uint flags) ->  VariantData {
+        auto const * const arrayIterator = static_cast<const JSArrayIterator *>(*iterator);
+        QJSValue const * const jsArray = arrayIterator->data;
+        auto const value = jsArray->property(arrayIterator->index).toVariant();
+        Q_ASSERT(flags & QVariantConstructionFlags::ShouldDeleteVariantData);
+        return {metaTypeId, QMetaType::create(qMetaTypeId<QVariant>(), &value), flags};
+    };
+    iterator._destroyIter = [](void **iterator) {
+        delete static_cast<JSArrayIterator *>(*iterator);
+    };
+    iterator._equalIter = [](void * const *p, void * const *other) {
+        auto this_ = static_cast<const JSArrayIterator *>(*p);
+        auto that_ = static_cast<const JSArrayIterator *>(*other);
+        return this_->index == that_->index && this_->data == that_->data;
+    };
+    iterator._copyIter = [](void **iterator, void * const * otherIterator) {
+        auto *otherIter = (static_cast<JSArrayIterator const *>(*otherIterator));
+        static_cast<JSArrayIterator *>(*iterator)->index = otherIter->index;
+        static_cast<JSArrayIterator *>(*iterator)->data = otherIter->data;
+    };
+    return iterator;
 }
 
 ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
@@ -708,6 +795,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
         QMetaType::registerConverter<QJSValue, QVariantList>(convertJSValueToVariantType<QVariantList>);
     if (!QMetaType::hasRegisteredConverterFunction<QJSValue, QStringList>())
         QMetaType::registerConverter<QJSValue, QStringList>(convertJSValueToVariantType<QStringList>);
+    if (!QMetaType::hasRegisteredConverterFunction<QJSValue, QtMetaTypePrivate::QSequentialIterableImpl>())
+        QMetaType::registerConverter<QJSValue, QtMetaTypePrivate::QSequentialIterableImpl>(jsvalueToSequence);
     QMetaType::registerStreamOperators(qMetaTypeId<QJSValue>(), saveJSValue, restoreJSValue);
 
     QV4::QObjectWrapper::initializeBindings(this);
