@@ -1641,6 +1641,159 @@ ReturnedValue IntrinsicTypedArrayCtor::method_of(const FunctionObject *f, const 
     return newObj->asReturnedValue();
 }
 
+ReturnedValue IntrinsicTypedArrayCtor::method_from(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(f);
+    ScopedFunctionObject thatCtor(scope, thisObject);
+    ScopedObject itemsObject(scope, argv[0]);
+    bool usingIterator = false;
+
+    ScopedFunctionObject mapfn(scope, Value::undefinedValue());
+    Value *mapArguments = nullptr;
+    if (argc > 1) {
+        mapfn = ScopedFunctionObject(scope, argv[1]);
+        if (!mapfn)
+            return scope.engine->throwTypeError(QString::fromLatin1("%1 is not a function").arg(argv[1].toQStringNoThrow()));
+        mapArguments = scope.alloc(2);
+    }
+
+    // Iterator validity check goes after map function validity has been checked.
+    if (itemsObject) {
+        // If the object claims to support iterators, then let's try use them.
+        ScopedValue it(scope, itemsObject->get(scope.engine->symbol_iterator()));
+        CHECK_EXCEPTION();
+        if (!it->isNullOrUndefined()) {
+            ScopedFunctionObject itfunc(scope, it);
+            if (!itfunc)
+                return scope.engine->throwTypeError();
+            usingIterator = true;
+        }
+    }
+
+    ScopedValue thisArg(scope);
+    if (argc > 2)
+        thisArg = argv[2];
+
+    const FunctionObject *C = thisObject->as<FunctionObject>();
+
+    if (usingIterator) {
+        // Item iteration supported, so let's go ahead and try use that.
+        CHECK_EXCEPTION();
+
+        qint64 iterableLength = 0;
+        Value *nextValue = scope.alloc(1);
+        ScopedValue done(scope);
+
+        ScopedObject lengthIterator(scope, Runtime::GetIterator::call(scope.engine, itemsObject, true));
+        CHECK_EXCEPTION(); // symbol_iterator threw; whoops.
+        if (!lengthIterator) {
+            return scope.engine->throwTypeError(); // symbol_iterator wasn't an object.
+        }
+
+        forever {
+            // Here we calculate the length of the iterable range.
+            if (iterableLength > (static_cast<qint64>(1) << 53) - 1) {
+                ScopedValue falsey(scope, Encode(false));
+                ScopedValue error(scope, scope.engine->throwTypeError());
+                return Runtime::IteratorClose::call(scope.engine, lengthIterator, falsey);
+            }
+            // Retrieve the next value. If the iteration ends, we're done here.
+            done = Value::fromReturnedValue(Runtime::IteratorNext::call(scope.engine, lengthIterator, nextValue));
+            if (scope.engine->hasException)
+                return Runtime::IteratorClose::call(scope.engine, lengthIterator, Value::fromBoolean(false));
+            if (done->toBoolean()) {
+                break;
+            }
+            iterableLength++;
+        }
+
+        // Constructor validity check goes after we have calculated the length, because that calculation can throw
+        // errors that are not type errors and at least the tests expect those rather than type errors.
+        if (!C || !C->isConstructor())
+            return scope.engine->throwTypeError();
+
+        ScopedObject iterator(scope, Runtime::GetIterator::call(scope.engine, itemsObject, true));
+        CHECK_EXCEPTION(); // symbol_iterator can throw.
+        if (!iterator) {
+            return scope.engine->throwTypeError(); // symbol_iterator wasn't an object.
+        }
+
+        ScopedObject a(scope, Value::undefinedValue());
+        ScopedValue ctorArgument(scope, Value::fromReturnedValue(QV4::Encode(int(iterableLength))));
+        a = C->callAsConstructor(ctorArgument, 1);
+        CHECK_EXCEPTION();
+
+        // We check exceptions above, and only after doing so, check the array's validity after construction.
+        if (!::validateTypedArray(a) || (a->getLength() < iterableLength))
+            return scope.engine->throwTypeError();
+
+
+        // The loop below traverses the iterator, and puts elements into the created array.
+        ScopedValue mappedValue(scope, Value::undefinedValue());
+        for (qint64 k = 0; k < iterableLength; ++k) {
+            done = Value::fromReturnedValue(Runtime::IteratorNext::call(scope.engine, iterator, nextValue));
+            if (scope.engine->hasException)
+                return Runtime::IteratorClose::call(scope.engine, iterator, Value::fromBoolean(false));
+
+            if (mapfn) {
+                mapArguments[0] = *nextValue;
+                mapArguments[1] = Value::fromDouble(k);
+                mappedValue = mapfn->call(thisArg, mapArguments, 2);
+                if (scope.engine->hasException)
+                    return Runtime::IteratorClose::call(scope.engine, iterator, Value::fromBoolean(false));
+            } else {
+                mappedValue = *nextValue;
+            }
+
+            a->put(k, mappedValue);
+            if (scope.engine->hasException)
+                return Runtime::IteratorClose::call(scope.engine, iterator, Value::fromBoolean(false));
+        }
+        return a.asReturnedValue();
+    } else {
+        // Array-like fallback. We request elements by index, and put them into the created array.
+        ScopedObject arrayLike(scope, argv[0].toObject(scope.engine));
+        if (!arrayLike)
+            return scope.engine->throwTypeError(QString::fromLatin1("Cannot convert %1 to object").arg(argv[0].toQStringNoThrow()));
+
+        int len = arrayLike->getLength();
+        CHECK_EXCEPTION();
+
+        // Getting the length may throw, and must do so before we check the constructor validity.
+        if (!C || !C->isConstructor())
+            return scope.engine->throwTypeError();
+
+        ScopedObject a(scope, Value::undefinedValue());
+        ScopedValue ctorArgument(scope, Value::fromReturnedValue(QV4::Encode(len)));
+        a = C->callAsConstructor(ctorArgument, 1);
+        CHECK_EXCEPTION();
+
+        // We check exceptions above, and only after doing so, check the array's validity after construction.
+        if (!::validateTypedArray(a) || (a->getLength() < len))
+            return scope.engine->throwTypeError();
+
+        ScopedValue mappedValue(scope, Value::undefinedValue());
+        ScopedValue kValue(scope);
+        for (int k = 0; k < len; ++k) {
+            kValue = arrayLike->get(k);
+            CHECK_EXCEPTION();
+
+            if (mapfn) {
+                mapArguments[0] = kValue;
+                mapArguments[1] = Value::fromDouble(k);
+                mappedValue = mapfn->call(thisArg, mapArguments, 2);
+                CHECK_EXCEPTION();
+            } else {
+                mappedValue = kValue;
+            }
+
+            a->put(k, mappedValue);
+            CHECK_EXCEPTION();
+        }
+        return a.asReturnedValue();
+    }
+}
+
 void IntrinsicTypedArrayPrototype::init(ExecutionEngine *engine, IntrinsicTypedArrayCtor *ctor)
 {
     Scope scope(engine);
@@ -1650,6 +1803,8 @@ void IntrinsicTypedArrayPrototype::init(ExecutionEngine *engine, IntrinsicTypedA
     ctor->defineReadonlyConfigurableProperty(engine->id_name(), s);
     s = scope.engine->newString(QStringLiteral("of"));
     ctor->defineDefaultProperty(s, IntrinsicTypedArrayCtor::method_of);
+    s = scope.engine->newString(QStringLiteral("from"));
+    ctor->defineDefaultProperty(s, IntrinsicTypedArrayCtor::method_from, 1);
     ctor->addSymbolSpecies();
 
     defineAccessorProperty(QStringLiteral("buffer"), method_get_buffer, nullptr);
