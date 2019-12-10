@@ -394,7 +394,7 @@ void tst_QQuickTableView::checkColumnWidthProviderInvalidReturnValues()
 
     tableView->setModel(model);
 
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*implicitHeight.*zero"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*implicit.*zero"));
 
     WAIT_UNTIL_POLISHED;
 
@@ -491,7 +491,7 @@ void tst_QQuickTableView::checkRowHeightProviderInvalidReturnValues()
 
     tableView->setModel(model);
 
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*implicitHeight.*zero"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*implicit.*zero"));
 
     WAIT_UNTIL_POLISHED;
 
@@ -2750,14 +2750,22 @@ void tst_QQuickTableView::replaceModel()
 {
     LOAD_TABLEVIEW("replaceModelTableView.qml");
 
-    tableView->setProperty("modelId", 0);
+    const auto objectModel = view->rootObject()->property("objectModel");
+    const auto listModel = view->rootObject()->property("listModel");
+    const auto delegateModel = view->rootObject()->property("delegateModel");
+
+    tableView->setModel(listModel);
     QTRY_COMPARE(tableView->rows(), 2);
-    tableView->setProperty("modelId", 1);
-    QTRY_COMPARE(tableView->rows(), 0);
-    tableView->setProperty("modelId", 2);
-    QTRY_COMPARE(tableView->rows(), 0);
-    tableView->setProperty("modelId", 0);
+    tableView->setModel(objectModel);
+    QTRY_COMPARE(tableView->rows(), 3);
+    tableView->setModel(delegateModel);
     QTRY_COMPARE(tableView->rows(), 2);
+    tableView->setModel(listModel);
+    QTRY_COMPARE(tableView->rows(), 2);
+    tableView->setModel(QVariant());
+    QTRY_COMPARE(tableView->rows(), 0);
+    QCOMPARE(tableView->contentWidth(), 0);
+    QCOMPARE(tableView->contentHeight(), 0);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

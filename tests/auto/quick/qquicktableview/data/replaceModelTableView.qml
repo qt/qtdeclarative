@@ -8,12 +8,15 @@ Item {
     height: 480
 
     property alias tableView: tv
+    property alias objectModel: om
+    property alias listModel: lm
+    property alias delegateModel: dm
 
     ObjectModel {
         id: om
-        Rectangle { height: 30; width: 80; color: "red" }
-        Rectangle { height: 30; width: 80; color: "green" }
-        Rectangle { height: 30; width: 80; color: "blue" }
+        Rectangle { implicitHeight: 30; implicitWidth: 80; color: "red" }
+        Rectangle { implicitHeight: 30; implicitWidth: 80; color: "green" }
+        Rectangle { implicitHeight: 30; implicitWidth: 80; color: "blue" }
     }
 
     ListModel {
@@ -29,8 +32,8 @@ Item {
            ListElement { name: "Orange" }
        }
        delegate: Rectangle {
-           height: 25
-           width: 100
+           implicitHeight: 25
+           implicitWidth: 100
            Text { text: "Name: " + name}
        }
     }
@@ -38,16 +41,6 @@ Item {
         id: tv
         visible: true
         anchors.fill: parent
-        property int modelId: 0
-
-        model: {
-            switch (modelId) {
-            case 0:  return lm;
-            case 1:  return om;
-            case 2:  return dm;
-            default: return null;
-            }
-        }
 
         delegate: Rectangle {
             id: dlg

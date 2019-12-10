@@ -628,6 +628,12 @@ void QQuickTableViewPrivate::updateContentWidth()
         return;
     }
 
+    if (loadedItems.isEmpty()) {
+        QBoolBlocker fixupGuard(inUpdateContentSize, true);
+        q->QQuickFlickable::setContentWidth(0);
+        return;
+    }
+
     const int nextColumn = nextVisibleEdgeIndexAroundLoadedTable(Qt::RightEdge);
     const int columnsRemaining = nextColumn == kEdgeIndexAtEnd ? 0 : tableSize.width() - nextColumn;
     const qreal remainingColumnWidths = columnsRemaining * averageEdgeSize.width();
@@ -652,6 +658,12 @@ void QQuickTableViewPrivate::updateContentHeight()
     if (explicitContentHeight.isValid()) {
         // Don't calculate contentHeight when it
         // was set explicitly by the application.
+        return;
+    }
+
+    if (loadedItems.isEmpty()) {
+        QBoolBlocker fixupGuard(inUpdateContentSize, true);
+        q->QQuickFlickable::setContentHeight(0);
         return;
     }
 
@@ -1054,12 +1066,14 @@ void QQuickTableViewPrivate::releaseLoadedItems(QQmlTableInstanceModel::Reusable
 void QQuickTableViewPrivate::releaseItem(FxTableItem *fxTableItem, QQmlTableInstanceModel::ReusableFlag reusableFlag)
 {
     Q_Q(QQuickTableView);
+    // Note that fxTableItem->item might already have been destroyed, in case
+    // the item is owned by the QML context rather than the model (e.g ObjectModel etc).
     auto item = fxTableItem->item;
-    Q_TABLEVIEW_ASSERT(item, fxTableItem->index);
 
     if (fxTableItem->ownItem) {
+        Q_TABLEVIEW_ASSERT(item, fxTableItem->index);
         delete item;
-    } else {
+    } else if (item) {
         // Only QQmlTableInstanceModel supports reusing items
         auto releaseFlag = tableModel ?
                     tableModel->release(item, reusableFlag) :
@@ -1609,6 +1623,8 @@ void QQuickTableViewPrivate::processRebuildTable()
     if (rebuildState == RebuildState::VerifyTable) {
         if (loadedItems.isEmpty()) {
             qCDebug(lcTableViewDelegateLifecycle()) << "no items loaded!";
+            updateContentWidth();
+            updateContentHeight();
             rebuildState = RebuildState::Done;
         } else if (!moveToNextRebuildState()) {
             return;
@@ -1781,10 +1797,12 @@ void QQuickTableViewPrivate::beginRebuildTable()
     QPointF topLeftPos;
     calculateTopLeft(topLeft, topLeftPos);
 
-    if (rebuildOptions & RebuildOption::All)
-        releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
-    else if (rebuildOptions & RebuildOption::ViewportOnly)
-        releaseLoadedItems(reusableFlag);
+    if (!loadedItems.isEmpty()) {
+        if (rebuildOptions & RebuildOption::All)
+            releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
+        else if (rebuildOptions & RebuildOption::ViewportOnly)
+            releaseLoadedItems(reusableFlag);
+    }
 
     if (rebuildOptions & RebuildOption::All) {
         origin = QPointF(0, 0);
@@ -2216,13 +2234,15 @@ void QQuickTableViewPrivate::syncRebuildOptions()
 
 void QQuickTableViewPrivate::syncDelegate()
 {
-    if (tableModel && assignedDelegate == tableModel->delegate())
+    if (!tableModel) {
+        // Only the tableModel uses the delegate assigned to a
+        // TableView. DelegateModel has it's own delegate, and
+        // ObjectModel etc. doesn't use one.
         return;
+    }
 
-    if (!tableModel)
-        createWrapperModel();
-
-    tableModel->setDelegate(assignedDelegate);
+    if (assignedDelegate != tableModel->delegate())
+        tableModel->setDelegate(assignedDelegate);
 }
 
 void QQuickTableViewPrivate::syncModel()
@@ -2230,8 +2250,10 @@ void QQuickTableViewPrivate::syncModel()
     if (modelVariant == assignedModel)
         return;
 
-    if (model)
+    if (model) {
         disconnectFromModel();
+        releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
+    }
 
     modelVariant = assignedModel;
     QVariant effectiveModelVariant = modelVariant;
@@ -2242,7 +2264,6 @@ void QQuickTableViewPrivate::syncModel()
 
     if (instanceModel) {
         if (tableModel) {
-            releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
             delete tableModel;
             tableModel = nullptr;
         }

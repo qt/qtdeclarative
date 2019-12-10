@@ -86,7 +86,6 @@ struct Q_QML_EXPORT EngineBase {
     quint8 isExecutingInRegExpJIT = false;
     quint8 padding[3];
     MemoryManager *memoryManager = nullptr;
-    Runtime runtime;
 
     qint32 callDepth = 0;
     Value *jsStackLimit = nullptr;
@@ -146,7 +145,6 @@ Q_STATIC_ASSERT(offsetof(EngineBase, currentStackFrame) == 0);
 Q_STATIC_ASSERT(offsetof(EngineBase, jsStackTop) == offsetof(EngineBase, currentStackFrame) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(EngineBase, hasException) == offsetof(EngineBase, jsStackTop) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(EngineBase, memoryManager) == offsetof(EngineBase, hasException) + 8);
-Q_STATIC_ASSERT(offsetof(EngineBase, runtime) == offsetof(EngineBase, memoryManager) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(EngineBase, isInterrupted) + sizeof(EngineBase::isInterrupted) <= offsetof(EngineBase, hasException) + 4);
 
 }
