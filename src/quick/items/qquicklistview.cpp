@@ -2710,21 +2710,25 @@ void QQuickListView::setSnapMode(SnapMode mode)
 
     This property determines the positioning of the \l{headerItem}{header item}.
 
-    The possible values are:
-    \list
-    \li ListView.InlineHeader (default) - the header is positioned in the beginning
+    \value ListView.InlineHeader (default) The header is positioned at the beginning
     of the content and moves together with the content like an ordinary item.
-    \li ListView.OverlayHeader - the header is positioned in the beginning of the view.
-    \li ListView.PullBackHeader - the header is positioned in the beginning of the view.
+
+    \value ListView.OverlayHeader  The header is positioned at the beginning of the view.
+
+    \value ListView.PullBackHeader The header is positioned at the beginning of the view.
     The header can be pushed away by moving the content forwards, and pulled back by
     moving the content backwards.
-    \endlist
 
     \note This property has no effect on the \l {QQuickItem::z}{stacking order}
     of the header. For example, if the header should be shown above the
     \l delegate items when using \c ListView.OverlayHeader, its Z value
     should be set to a value higher than that of the delegates. For more
     information, see \l {Stacking Order in ListView}.
+
+    \note If \c headerPositioning is not set to \c ListView.InlineHeader, the
+    user cannot press and flick the list from the header. In any case, the
+    \l{headerItem}{header item} may contain items or event handlers that
+    provide custom handling of mouse or touch input.
 */
 QQuickListView::HeaderPositioning QQuickListView::headerPositioning() const
 {
@@ -2753,21 +2757,25 @@ void QQuickListView::setHeaderPositioning(QQuickListView::HeaderPositioning posi
 
     This property determines the positioning of the \l{footerItem}{footer item}.
 
-    The possible values are:
-    \list
-    \li ListView.InlineFooter (default) - the footer is positioned in the end
+    \value ListView.InlineFooter (default) The footer is positioned at the end
     of the content and moves together with the content like an ordinary item.
-    \li ListView.OverlayFooter - the footer is positioned in the end of the view.
-    \li ListView.PullBackFooter - the footer is positioned in the end of the view.
+
+    \value ListView.OverlayFooter The footer is positioned at the end of the view.
+
+    \value ListView.PullBackFooter The footer is positioned at the end of the view.
     The footer can be pushed away by moving the content backwards, and pulled back by
     moving the content forwards.
-    \endlist
 
     \note This property has no effect on the \l {QQuickItem::z}{stacking order}
     of the footer. For example, if the footer should be shown above the
     \l delegate items when using \c ListView.OverlayFooter, its Z value
     should be set to a value higher than that of the delegates. For more
     information, see \l {Stacking Order in ListView}.
+
+    \note If \c footerPositioning is not set to \c ListView.InlineFooter, the
+    user cannot press and flick the list from the footer. In any case, the
+    \l{footerItem}{footer item} may contain items or event handlers that
+    provide custom handling of mouse or touch input.
 */
 QQuickListView::FooterPositioning QQuickListView::footerPositioning() const
 {
