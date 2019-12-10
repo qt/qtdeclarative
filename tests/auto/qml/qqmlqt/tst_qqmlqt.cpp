@@ -1069,12 +1069,6 @@ void tst_qqmlqt::later()
 
 void tst_qqmlqt::qtObjectContents()
 {
-    struct StaticQtMetaObject : public QObject
-    {
-        static const QMetaObject *get()
-        { return &staticQtMetaObject; }
-    };
-
     QQmlComponent component(&engine, testFileUrl("qtObjectContents.qml"));
 
     QScopedPointer<QObject> object(component.create());
@@ -1085,7 +1079,7 @@ void tst_qqmlqt::qtObjectContents()
 
     QSet<const char *> keys;
     int uniqueKeys = 0;
-    const QMetaObject *qtMetaObject = StaticQtMetaObject::get();
+    const QMetaObject *qtMetaObject = &Qt::staticMetaObject;
     for (int ii = 0; ii < qtMetaObject->enumeratorCount(); ++ii) {
         QMetaEnum enumerator = qtMetaObject->enumerator(ii);
         for (int jj = 0; jj < enumerator.keyCount(); ++jj) {

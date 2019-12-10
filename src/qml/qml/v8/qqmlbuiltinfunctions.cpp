@@ -93,12 +93,6 @@ DEFINE_OBJECT_VTABLE(QtObject);
         return scope.engine->throwTypeError(QString::fromUtf8(msg)); \
     } while (false)
 
-struct StaticQtMetaObject : public QObject
-{
-    static const QMetaObject *get()
-        { return &staticQtMetaObject; }
-};
-
 void Heap::QtObject::init(QQmlEngine *qmlEngine)
 {
     Heap::Object::init();
@@ -177,7 +171,7 @@ ReturnedValue QtObject::findAndAdd(const QString *name, bool &foundProperty) con
     ScopedString key(scope);
     ScopedValue value(scope);
 
-    const QMetaObject *qtMetaObject = StaticQtMetaObject::get();
+    const QMetaObject *qtMetaObject = &Qt::staticMetaObject;
     for (int enumCount = qtMetaObject->enumeratorCount(); d()->enumeratorIterator < enumCount;
          ++d()->enumeratorIterator) {
         QMetaEnum enumerator = qtMetaObject->enumerator(d()->enumeratorIterator);

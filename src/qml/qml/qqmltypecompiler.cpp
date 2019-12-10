@@ -530,12 +530,6 @@ bool QQmlEnumTypeResolver::resolveEnumBindings()
     return true;
 }
 
-struct StaticQtMetaObject : public QObject
-{
-    static const QMetaObject *get()
-        { return &staticQtMetaObject; }
-};
-
 bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, const QStringRef &enumName, int enumValue, bool isQtObject)
 {
     if (enumName.length() > 0 && enumName[0].isLower() && !isQtObject) {
@@ -626,7 +620,7 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
                 value = type.enumValue(compiler->enginePrivate(), QHashedStringRef(enumValue), &ok);
         } else {
             QByteArray enumName = enumValue.toUtf8();
-            const QMetaObject *metaObject = StaticQtMetaObject::get();
+            const QMetaObject *metaObject = &Qt::staticMetaObject;
             for (int ii = metaObject->enumeratorCount() - 1; !ok && ii >= 0; --ii) {
                 QMetaEnum e = metaObject->enumerator(ii);
                 value = e.keyToValue(enumName.constData(), &ok);
@@ -655,7 +649,7 @@ int QQmlEnumTypeResolver::evaluateEnum(const QString &scope, const QStringRef &e
         return type.enumValue(compiler->enginePrivate(), QHashedStringRef(enumValue.constData(), enumValue.length()), ok);
     }
 
-    const QMetaObject *mo = StaticQtMetaObject::get();
+    const QMetaObject *mo = &Qt::staticMetaObject;
     int i = mo->enumeratorCount();
     const QByteArray ba = enumValue.toUtf8();
     while (i--) {

@@ -179,15 +179,6 @@ void collectReachableMetaObjects(QQmlEnginePrivate *engine, const QQmlType &ty, 
     }
 }
 
-/* We want to add the MetaObject for 'Qt' to the list, this is a
-   simple way to access it.
-*/
-class FriendlyQObject: public QObject
-{
-public:
-    static const QMetaObject *qtMeta() { return &staticQtMetaObject; }
-};
-
 /* When we dump a QMetaObject, we want to list all the types it is exported as.
    To do this, we need to find the QQmlTypes associated with this
    QMetaObject.
@@ -258,7 +249,7 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
                                                       )
 {
     QSet<const QMetaObject *> metas;
-    metas.insert(FriendlyQObject::qtMeta());
+    metas.insert(&Qt::staticMetaObject);
 
     const auto qmlTypes = QQmlMetaType::qmlTypes();
     for (const QQmlType &ty : qmlTypes) {
