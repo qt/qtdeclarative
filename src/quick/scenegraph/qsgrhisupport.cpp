@@ -463,6 +463,10 @@ QOffscreenSurface *QSGRhiSupport::maybeCreateOffscreenSurface(QWindow *window)
 // must be called on the render thread
 QRhi *QSGRhiSupport::createRhi(QWindow *window, QOffscreenSurface *offscreenSurface)
 {
+#if !QT_CONFIG(opengl) && !QT_CONFIG(vulkan)
+    Q_UNUSED(window);
+#endif
+
     QRhi *rhi = nullptr;
 
     QRhi::Flags flags = 0;
