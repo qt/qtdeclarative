@@ -113,10 +113,7 @@ void tst_QQuickWorkerScript::ready()
 
     const QMetaObject *mo = worker->metaObject();
 
-    // Give the component some time to become ready
-    QTest::qSleep(1000);
-
-    QVERIFY(worker->ready());
+    QTRY_VERIFY(worker->ready());
 
     QVariant readyChangedCalled = mo->property(mo->indexOfProperty("readyChangedCalled")).read(worker.data()).value<QVariant>();
 
