@@ -358,6 +358,9 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 
     // QtQuick.Templates 2.14 (new types and revisions in Qt 5.14)
     qmlRegisterType<QQuickComboBox, 14>(uri, 2, 14, "ComboBox");
+
+    // QtQuick.Templates 2.15 (new types and revisions in Qt 5.15)
+    qmlRegisterType<QQuickComboBox, 15>(uri, 2, 15, "ComboBox");
 }
 
 QT_END_NAMESPACE

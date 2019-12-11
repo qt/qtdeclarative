@@ -293,6 +293,7 @@ public:
         bool editable = false;
         bool accepting = false;
         bool allowComplete = false;
+        bool selectTextByMouse = false;
         Qt::InputMethodHints inputMethodHints = Qt::ImhNone;
         QString editText;
         QValidator *validator = nullptr;
@@ -1567,6 +1568,30 @@ int QQuickComboBox::indexOfValue(const QVariant &value) const
     return -1;
 }
 
+/*!
+    \since QtQuick.Controls 2.15 (Qt 5.15)
+    \qmlproperty bool QtQuick.Controls::ComboBox::selectTextByMouse
+
+    This property holds whether the text field for an editable ComboBox
+    can be selected with the mouse.
+
+    The default value is \c false.
+*/
+bool QQuickComboBox::selectTextByMouse() const
+{
+    Q_D(const QQuickComboBox);
+    return d->extra.isAllocated() ? d->extra->selectTextByMouse : false;
+}
+
+void QQuickComboBox::setSelectTextByMouse(bool canSelect)
+{
+    Q_D(QQuickComboBox);
+    if (canSelect == selectTextByMouse())
+        return;
+
+    d->extra.value().selectTextByMouse = canSelect;
+    emit selectTextByMouseChanged();
+}
 /*!
     \qmlmethod string QtQuick.Controls::ComboBox::textAt(int index)
 
