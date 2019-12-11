@@ -103,7 +103,10 @@ QStringList completeImportPaths(const QString &uri, const QString &basePath, int
         return str;
     };
 
-    for (int version = FullyVersioned; version <= BasePath; ++version) {
+    const ImportVersion initial = (vmin >= 0)
+            ? FullyVersioned
+            : (vmaj >= 0 ? PartiallyVersioned : Unversioned);
+    for (int version = initial; version <= BasePath; ++version) {
         const QString ver = versionString(vmaj, vmin, static_cast<ImportVersion>(version));
 
         QString dir = basePath;
@@ -185,9 +188,16 @@ void FindUnqualifiedIDVisitor::processImport(const QString &prefix, const FindUn
     for (auto const &dependency : qAsConst(import.dependencies)) {
         auto const split = dependency.split(" ");
         auto const &id = split.at(0);
-        auto const major = split.at(1).split('.').at(0).toInt();
-        auto const minor = split.at(1).split('.').at(1).toInt();
-        importHelper(id, QString(), major, minor);
+        if (split.length() > 1) {
+            const auto version = split.at(1).split('.');
+            importHelper(id, QString(),
+                         version.at(0).toInt(),
+                         version.length() > 1 ? version.at(1).toInt() : -1);
+        } else {
+            importHelper(id, QString(), -1, -1);
+        }
+
+
     }
 
     // add objects
@@ -205,9 +215,10 @@ void FindUnqualifiedIDVisitor::processImport(const QString &prefix, const FindUn
     }
 }
 
-void FindUnqualifiedIDVisitor::importHelper(QString id, QString prefix, int major, int minor)
+void FindUnqualifiedIDVisitor::importHelper(const QString &module, const QString &prefix,
+                                            int major, int minor)
 {
-    id = id.replace(QLatin1String("/"), QLatin1String("."));
+    const QString id = QString(module).replace(QLatin1Char('/'), QLatin1Char('.'));
     QPair<QString, QString> importId { id, prefix };
     if (m_alreadySeenImports.contains(importId))
         return;

@@ -88,7 +88,8 @@ private:
 
     void enterEnvironment(ScopeType type, QString name);
     void leaveEnvironment();
-    void importHelper(QString id, QString prefix, int major, int minor);
+    void importHelper(const QString &module, const QString &prefix = QString(),
+                      int major = -1, int minor = -1);
 
     void readQmltypes(const QString &filename, Import &result);
     Import readQmldir(const QString &dirname);
