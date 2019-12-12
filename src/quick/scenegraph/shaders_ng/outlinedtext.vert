@@ -28,5 +28,6 @@ void main()
      sCoordDown = (tCoord - vec2(0.0, 1.0)) * ubuf.textureScale;
      sCoordLeft = (tCoord - vec2(-1.0, 0.0)) * ubuf.textureScale;
      sCoordRight = (tCoord - vec2(1.0, 0.0)) * ubuf.textureScale;
-     gl_Position = ubuf.matrix * vCoord;
+     vec3 dprSnapPos = floor(vCoord.xyz * ubuf.dpr + 0.5) / ubuf.dpr;
+     gl_Position = ubuf.matrix * vec4(dprSnapPos, vCoord.w);
 }

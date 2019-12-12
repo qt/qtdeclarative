@@ -349,10 +349,13 @@ void SquircleRenderer::init(int framesInFlight)
     rpDesc.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOne;
     rpDesc.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOne;
 
+#ifdef Q_OS_MACOS
     if (m_device.depth24Stencil8PixelFormatSupported) {
         rpDesc.depthAttachmentPixelFormat = MTLPixelFormatDepth24Unorm_Stencil8;
         rpDesc.stencilAttachmentPixelFormat = MTLPixelFormatDepth24Unorm_Stencil8;
-    } else {
+    } else
+#endif
+    {
         rpDesc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
         rpDesc.stencilAttachmentPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
     }

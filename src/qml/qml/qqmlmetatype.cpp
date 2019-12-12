@@ -329,7 +329,6 @@ QQmlType QQmlMetaType::registerInterface(const QQmlPrivate::RegisterInterface &t
 
     data->idToType.insert(priv->typeId, priv);
     data->idToType.insert(priv->listId, priv);
-    // XXX No insertMulti, so no multi-version interfaces?
     if (!priv->elementName.isEmpty())
         data->nameToType.insert(priv->elementName, priv);
 
@@ -414,10 +413,10 @@ void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data)
     Q_ASSERT(type);
 
     if (!type->elementName.isEmpty())
-        data->nameToType.insertMulti(type->elementName, type);
+        data->nameToType.insert(type->elementName, type);
 
     if (type->baseMetaObject)
-        data->metaObjectToType.insertMulti(type->baseMetaObject, type);
+        data->metaObjectToType.insert(type->baseMetaObject, type);
 
     if (type->typeId) {
         data->idToType.insert(type->typeId, type);
@@ -492,7 +491,7 @@ QQmlType QQmlMetaType::registerCompositeSingletonType(const QQmlPrivate::Registe
     addTypeToData(priv, data);
 
     QQmlMetaTypeData::Files *files = fileImport ? &(data->urlToType) : &(data->urlToNonFileImportType);
-    files->insertMulti(QQmlTypeLoader::normalize(type.url), priv);
+    files->insert(QQmlTypeLoader::normalize(type.url), priv);
 
     return QQmlType(priv);
 }
@@ -513,7 +512,7 @@ QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterComposit
     addTypeToData(priv, data);
 
     QQmlMetaTypeData::Files *files = fileImport ? &(data->urlToType) : &(data->urlToNonFileImportType);
-    files->insertMulti(QQmlTypeLoader::normalize(type.url), priv);
+    files->insert(QQmlTypeLoader::normalize(type.url), priv);
 
     return QQmlType(priv);
 }
@@ -797,7 +796,7 @@ QQmlType QQmlMetaType::typeForUrl(const QString &urlString,
 
         data->registerType(priv);
         addTypeToData(priv, data);
-        data->urlToType.insertMulti(url, priv);
+        data->urlToType.insert(url, priv);
         return QQmlType(priv);
     }
 
@@ -927,11 +926,11 @@ int QQmlMetaType::attachedPropertiesFuncId(QQmlEnginePrivate *engine, const QMet
 
     for (auto it = data->metaObjectToType.constFind(mo), end = data->metaObjectToType.constEnd();
          it != end && it.key() == mo; ++it) {
-        const QQmlType type(it.value());
-        if (type.attachedPropertiesFunction(engine))
-            return type.attachedPropertiesId(engine);
+        if (const QQmlTypePrivate *type = it.value()) {
+            if (const QQmlTypePrivate *base = type->attachedPropertiesBase(engine))
+                return base->index;
+        }
     }
-
     return -1;
 }
 

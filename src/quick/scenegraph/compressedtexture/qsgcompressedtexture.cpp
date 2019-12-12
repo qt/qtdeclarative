@@ -296,7 +296,7 @@ void QSGCompressedTexturePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdate
         return;
     }
 
-    QRhiTexture::Flags texFlags = 0;
+    QRhiTexture::Flags texFlags;
     if (fmt.second)
         texFlags |= QRhiTexture::sRGB;
 

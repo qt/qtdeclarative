@@ -47,6 +47,7 @@ public:
     tst_QQuickWorkerScript() {}
 private slots:
     void source();
+    void ready();
     void messaging();
     void messaging_data();
     void messaging_sendQObjectList();
@@ -102,6 +103,22 @@ void tst_QQuickWorkerScript::source()
     QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker.data()).value<QVariant>(), QVariant::fromValue(QString("Hello from the module")));
 
     qApp->processEvents();
+}
+
+void tst_QQuickWorkerScript::ready()
+{
+    QQmlComponent component(&m_engine, testFileUrl("worker.qml"));
+    QScopedPointer<QQuickWorkerScript>worker(qobject_cast<QQuickWorkerScript*>(component.create()));
+    QVERIFY(worker != nullptr);
+
+    const QMetaObject *mo = worker->metaObject();
+
+    QTRY_VERIFY(worker->ready());
+
+    QVariant readyChangedCalled = mo->property(mo->indexOfProperty("readyChangedCalled")).read(worker.data()).value<QVariant>();
+
+    QVERIFY(!readyChangedCalled.isNull());
+    QVERIFY(readyChangedCalled.toBool());
 }
 
 void tst_QQuickWorkerScript::messaging()

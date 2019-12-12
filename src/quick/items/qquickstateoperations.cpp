@@ -600,11 +600,6 @@ class QQuickAnchorSetPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickAnchorSet)
 public:
-    QQuickAnchorSetPrivate()
-      : usedAnchors(nullptr), resetAnchors(nullptr)
-    {
-    }
-
     QQuickAnchors::Anchors usedAnchors;
     QQuickAnchors::Anchors resetAnchors;
 

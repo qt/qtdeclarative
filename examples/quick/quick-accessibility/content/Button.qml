@@ -79,7 +79,6 @@ Rectangle {
 
     Text {
         id: buttonText
-        text: parent.description
         anchors.centerIn: parent
         font.pixelSize: parent.height * .5
         style: Text.Sunken

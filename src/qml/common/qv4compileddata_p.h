@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
 // Also change the comment behind the number to describe the latest change. This has the added
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
-#define QV4_DATA_STRUCTURE_VERSION 0x26// support required properties
+#define QV4_DATA_STRUCTURE_VERSION 0x27 // resolved merge
 
 class QIODevice;
 class QQmlTypeNameCache;
@@ -304,13 +304,15 @@ struct Function
     quint16_le nLineNumbers;
     size_t lineNumberOffset() const { return localsOffset + nLocals * sizeof(quint32); }
     quint32_le nestedFunctionIndex; // for functions that only return a single closure, used in signal handlers
+
+    quint32_le nRegisters;
+    Location location;
+    quint32_le nLabelInfos;
+
     quint16_le sizeOfLocalTemporalDeadZone;
     quint16_le firstTemporalDeadZoneRegister;
     quint16_le sizeOfRegisterTemporalDeadZone;
-    quint16_le nRegisters;
-    Location location;
 
-    quint32_le nLabelInfos;
     size_t labelInfosOffset() const { return lineNumberOffset() + nLineNumbers * sizeof(CodeOffsetToLine); }
 
     // Keep all unaligned data at the end

@@ -110,6 +110,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickItemView : public QQuickFlickable
     Q_PROPERTY(qreal preferredHighlightEnd READ preferredHighlightEnd WRITE setPreferredHighlightEnd NOTIFY preferredHighlightEndChanged RESET resetPreferredHighlightEnd)
     Q_PROPERTY(int highlightMoveDuration READ highlightMoveDuration WRITE setHighlightMoveDuration NOTIFY highlightMoveDurationChanged)
 
+    Q_PROPERTY(bool reuseItems READ reuseItems WRITE setReuseItems NOTIFY reuseItemsChanged REVISION 15)
+
     QML_NAMED_ELEMENT(ItemView)
     QML_UNCREATABLE("ItemView is an abstract base class.")
     QML_ADDED_IN_MINOR_VERSION(1)
@@ -226,6 +228,9 @@ public:
     int highlightMoveDuration() const;
     virtual void setHighlightMoveDuration(int);
 
+    bool reuseItems() const;
+    void setReuseItems(bool reuse);
+
     enum PositionMode { Beginning, Center, End, Visible, Contain, SnapPosition };
     Q_ENUM(PositionMode)
 
@@ -281,6 +286,8 @@ Q_SIGNALS:
     void preferredHighlightEndChanged();
     void highlightMoveDurationChanged();
 
+    Q_REVISION(15) void reuseItemsChanged();
+
 protected:
     void updatePolish() override;
     void componentComplete() override;
@@ -296,6 +303,8 @@ protected Q_SLOTS:
     virtual void initItem(int index, QObject *item);
     void modelUpdated(const QQmlChangeSet &changeSet, bool reset);
     void destroyingItem(QObject *item);
+    void onItemPooled(int modelIndex, QObject *object);
+    void onItemReused(int modelIndex, QObject *object);
     void animStopped();
     void trackedPositionChanged();
 
@@ -398,6 +407,9 @@ Q_SIGNALS:
     void sectionChanged();
     void prevSectionChanged();
     void nextSectionChanged();
+
+    void pooled();
+    void reused();
 
 public:
     QPointer<QQuickItemView> m_view;

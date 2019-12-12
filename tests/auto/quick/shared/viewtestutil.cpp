@@ -73,13 +73,13 @@ void QQuickViewTestUtil::moveMouseAway(QQuickView *window)
 void QQuickViewTestUtil::moveAndRelease(QQuickView *window, const QPoint &position)
 {
     QTest::mouseMove(window, position);
-    QTest::mouseRelease(window, Qt::LeftButton, 0, position);
+    QTest::mouseRelease(window, Qt::LeftButton, {}, position);
 }
 
 void QQuickViewTestUtil::moveAndPress(QQuickView *window, const QPoint &position)
 {
     QTest::mouseMove(window, position);
-    QTest::mousePress(window, Qt::LeftButton, 0, position);
+    QTest::mousePress(window, Qt::LeftButton, {}, position);
 }
 
 void QQuickViewTestUtil::flick(QQuickView *window, const QPoint &from, const QPoint &to, int duration)

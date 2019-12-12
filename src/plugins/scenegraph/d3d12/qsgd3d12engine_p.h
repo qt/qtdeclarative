@@ -363,8 +363,8 @@ public:
     uint genTexture();
     void createTexture(uint id, const QSize &size, QImage::Format format, TextureCreateFlags flags);
     void queueTextureResize(uint id, const QSize &size);
-    void queueTextureUpload(uint id, const QImage &image, const QPoint &dstPos = QPoint(), TextureUploadFlags flags = 0);
-    void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos, TextureUploadFlags flags = 0);
+    void queueTextureUpload(uint id, const QImage &image, const QPoint &dstPos = QPoint(), TextureUploadFlags flags = { });
+    void queueTextureUpload(uint id, const QVector<QImage> &images, const QVector<QPoint> &dstPos, TextureUploadFlags flags = { });
     void releaseTexture(uint id);
     void useTexture(uint id);
 

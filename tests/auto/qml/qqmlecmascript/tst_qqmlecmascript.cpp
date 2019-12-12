@@ -379,6 +379,7 @@ private slots:
     void singletonTypeWrapperLookup();
     void getThisObject();
     void semicolonAfterProperty();
+    void hugeStack();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -9198,6 +9199,18 @@ void tst_qqmlecmascript::semicolonAfterProperty()
     QVERIFY(component.isReady());
     QScopedPointer<QObject> test(component.create());
     QVERIFY(!test.isNull());
+}
+
+void tst_qqmlecmascript::hugeStack()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("hugeStack.qml"));
+    QVERIFY(component.isReady());
+    QScopedPointer<QObject> test(component.create());
+    QVERIFY(!test.isNull());
+
+    QVariant huge = test->property("longList");
+    QCOMPARE(qvariant_cast<QJSValue>(huge).property(QLatin1String("length")).toInt(), 33059);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

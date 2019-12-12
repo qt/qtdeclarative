@@ -153,7 +153,6 @@ static void qt_print_material_count()
  */
 
 QSGMaterial::QSGMaterial()
-    : m_flags(nullptr)
 {
     Q_UNUSED(m_reserved);
 #ifndef QT_NO_DEBUG

@@ -533,6 +533,17 @@ void QQuickWorkerScript::setSource(const QUrl &source)
 }
 
 /*!
+    \qmlproperty url WorkerScript::ready
+
+    This holds whether the WorkerScript has been initialized and is ready
+    for receiving messages via \tt WorkerScript.sendMessage().
+*/
+bool QQuickWorkerScript::ready() const
+{
+    return m_engine != nullptr;
+}
+
+/*!
     \qmlmethod WorkerScript::sendMessage(jsobject message)
 
     Sends the given \a message to a worker script handler in another
@@ -591,6 +602,8 @@ QQuickWorkerScriptEngine *QQuickWorkerScript::engine()
 
         if (m_source.isValid())
             m_engine->executeUrl(m_scriptId, m_source);
+
+        emit readyChanged();
 
         return m_engine;
     }

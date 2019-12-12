@@ -16,7 +16,7 @@ SUBDIRS += \
         rendernode \
         threadedanimation
 
-macos {
+macos|ios {
     SUBDIRS += \
         metalunderqml \
         metaltextureimport

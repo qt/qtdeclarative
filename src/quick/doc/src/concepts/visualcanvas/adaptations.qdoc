@@ -55,7 +55,7 @@ appropriate for the various graphics APIs.
 Unlike \c software or \c d3d12, the RHI-based renderer is not an additional
 adaptation, and is always built-in. As of Qt 5.14 it can be enabled by setting
 the environment variable \c{QSG_RHI} to a non-zero value before starting the
-application, or via \l QQuickWindow::setScenegraphBackend() in combination with
+application, or via \l QQuickWindow::setSceneGraphBackend() in combination with
 \l QSGRendererInterface::GraphicsApi. When none of this is done, OpenGL is used
 directly like in previous versions.
 

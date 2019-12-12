@@ -1396,6 +1396,10 @@ void QQmlXMLHttpRequest::finished()
                 if (code.isValid() && code.toInt() == 303 && m_method != QLatin1String("GET"))
                     m_method = QStringLiteral("GET");
                 destroyNetwork();
+
+                // Discard redirect response body
+                m_responseEntityBody = QByteArray();
+
                 requestFromUrl(url);
                 return;
             }

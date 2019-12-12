@@ -275,6 +275,7 @@
 
 /*!
   \fn int qmlRegisterAnonymousType(const char *uri, int versionMajor)
+  \relates QQmlEngine
 
   This template function registers the C++ type in the QML system as an anonymous type. The
   resulting QML type does not have a name. Therefore, instances of this type cannot be created from

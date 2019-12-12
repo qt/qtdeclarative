@@ -89,7 +89,7 @@ public:
     virtual void beginSync(int totalCount) = 0;
     virtual void endSync(bool async) = 0;
     virtual void setAsyncCallback(void (*)(void *), void *) { }
-    virtual Flags flags() const { return 0; }
+    virtual Flags flags() const { return {}; }
     virtual void setPath(int index, const QQuickPath *path) = 0;
     virtual void setStrokeColor(int index, const QColor &color) = 0;
     virtual void setStrokeWidth(int index, qreal w) = 0;

@@ -159,7 +159,7 @@ void QSGRhiSupport::applySettings()
         } else {
 #if defined(Q_OS_WIN)
             m_rhiBackend = QRhi::D3D11;
-#elif defined(Q_OS_DARWIN)
+#elif defined(Q_OS_MACOS) || defined(Q_OS_IOS)
             m_rhiBackend = QRhi::Metal;
 #else
             m_rhiBackend = QRhi::OpenGLES2;
@@ -185,29 +185,10 @@ void QSGRhiSupport::applySettings()
     if (m_killDeviceFrameCount > 0 && m_rhiBackend == QRhi::D3D11)
         qDebug("Graphics device will be reset every %d frames", m_killDeviceFrameCount);
 
-    const char *backendName = "unknown";
-    switch (m_rhiBackend) {
-    case QRhi::Null:
-        backendName = "Null";
-        break;
-    case QRhi::Vulkan:
-        backendName = "Vulkan";
-        break;
-    case QRhi::OpenGLES2:
-        backendName = "OpenGL";
-        break;
-    case QRhi::D3D11:
-        backendName = "D3D11";
-        break;
-    case QRhi::Metal:
-        backendName = "Metal";
-        break;
-    default:
-        break;
-    }
+    const QString backendName = rhiBackendName();
     qCDebug(QSG_LOG_INFO,
             "Using QRhi with backend %s\n  graphics API debug/validation layers: %d\n  QRhi profiling and debug markers: %d",
-            backendName, m_debugLayer, m_profile);
+            qPrintable(backendName), m_debugLayer, m_profile);
     if (m_preferSoftwareRenderer)
         qCDebug(QSG_LOG_INFO, "Prioritizing software renderers");
 }
@@ -245,6 +226,27 @@ QSGRhiSupport *QSGRhiSupport::instance()
     if (!inst->m_set)
         inst->applySettings();
     return inst;
+}
+
+QString QSGRhiSupport::rhiBackendName() const
+{
+    if (m_enableRhi) {
+        switch (m_rhiBackend) {
+        case QRhi::Null:
+            return QLatin1String("Null");
+        case QRhi::Vulkan:
+            return QLatin1String("Vulkan");
+        case QRhi::OpenGLES2:
+            return QLatin1String("OpenGL");
+        case QRhi::D3D11:
+            return QLatin1String("D3D11");
+        case QRhi::Metal:
+            return QLatin1String("Metal");
+        default:
+            return QLatin1String("Unknown");
+        }
+    }
+    return QLatin1String("Unknown (RHI not enabled)");
 }
 
 QSGRendererInterface::GraphicsApi QSGRhiSupport::graphicsApi() const
@@ -350,7 +352,7 @@ static const void *qsgrhi_d3d11_rifResource(QSGRendererInterface::Resource res, 
 }
 #endif
 
-#ifdef Q_OS_DARWIN
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
 static const void *qsgrhi_mtl_rifResource(QSGRendererInterface::Resource res, const QRhiNativeHandles *nat,
                                     const QRhiNativeHandles *cbNat)
 {
@@ -408,7 +410,7 @@ const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res, const
     case QRhi::D3D11:
         return qsgrhi_d3d11_rifResource(res, nat);
 #endif
-#ifdef Q_OS_DARWIN
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
     case QRhi::Metal:
     {
         QRhiCommandBuffer *cb = rc->currentFrameCommandBuffer();
@@ -465,7 +467,7 @@ QRhi *QSGRhiSupport::createRhi(QWindow *window, QOffscreenSurface *offscreenSurf
 {
     QRhi *rhi = nullptr;
 
-    QRhi::Flags flags = 0;
+    QRhi::Flags flags;
     if (isProfilingRequested())
         flags |= QRhi::EnableProfiling | QRhi::EnableDebugMarkers;
     if (isSoftwareRendererRequested())
@@ -507,7 +509,7 @@ QRhi *QSGRhiSupport::createRhi(QWindow *window, QOffscreenSurface *offscreenSurf
         rhi = QRhi::create(backend, &rhiParams, flags);
     }
 #endif
-#ifdef Q_OS_DARWIN
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
     if (backend == QRhi::Metal) {
         QRhiMetalInitParams rhiParams;
         rhi = QRhi::create(backend, &rhiParams, flags);

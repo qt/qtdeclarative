@@ -53,6 +53,7 @@ import QtQuick 2.0
 Rectangle {
     id: myRect
 
+    property FocusRect focusItem
     property string text
 
     width: 75; height: 50
@@ -64,9 +65,9 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         onEntered: {
-            focusRect.x = myRect.x;
-            focusRect.y = myRect.y;
-            focusRect.text = myRect.text;
+            myRect.focusItem.x = myRect.x;
+            myRect.focusItem.y = myRect.y;
+            myRect.focusItem.text = myRect.text;
         }
     }
 }

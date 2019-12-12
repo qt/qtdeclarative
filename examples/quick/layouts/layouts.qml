@@ -53,6 +53,8 @@ import QtQuick.Controls 1.2
 import QtQuick.Layouts 1.3
 
 ApplicationWindow {
+    id: appWindow
+
     visible: true
     title: "Basic layouts"
     property int margin: 11
@@ -64,7 +66,7 @@ ApplicationWindow {
     ColumnLayout {
         id: mainLayout
         anchors.fill: parent
-        anchors.margins: margin
+        anchors.margins: appWindow.margin
         GroupBox {
             id: rowBox
             title: "Row layout"
@@ -135,8 +137,13 @@ ApplicationWindow {
                     id: stackRepeater
                     model: 5
                     Rectangle {
-                        color: Qt.hsla((0.5 + index)/stackRepeater.count, 0.3, 0.7, 1)
-                        Button { anchors.centerIn: parent; text: "Page " + (index + 1); onClicked: { stackLayout.advance() } }
+                        required property int index
+                        color: Qt.hsla((0.5 + index) / stackRepeater.count, 0.3, 0.7, 1)
+                        Button {
+                            anchors.centerIn: parent
+                            text: "Page " + (parent.index + 1)
+                            onClicked: { stackLayout.advance() }
+                        }
                     }
                 }
             }

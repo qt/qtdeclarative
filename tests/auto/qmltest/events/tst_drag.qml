@@ -113,6 +113,52 @@ Rectangle{
         }
     }
 
+    Component {
+        id: nestedFlickableComponent
+
+        Flickable {
+            objectName: "outerFlickable"
+            width: parent.width
+            height: parent.height
+            contentWidth: 400
+            contentHeight: 400
+
+            property alias innerFlickable: innerFlickable
+
+            Flickable {
+                id: innerFlickable
+                objectName: "innerFlickable"
+                width: parent.width
+                height: parent.height
+                contentWidth: 400
+                contentHeight: 400
+
+                Rectangle {
+                    width: 400
+                    height: 400
+                    gradient: Gradient {
+                        GradientStop { position: 0; color: "salmon" }
+                        GradientStop { position: 0; color: "navajowhite" }
+                    }
+                }
+            }
+        }
+    }
+
+    Component {
+        id: signalSpyComponent
+        SignalSpy {}
+    }
+
+    Component {
+        id: mouseAreaComponent
+
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+        }
+    }
+
     TestCase {
         name:"mouserelease"
         when:windowShown
@@ -162,6 +208,122 @@ Rectangle{
             mouseDrag(container2, container2.x + 10, container2.y + 10, 0, 2*util.dragThreshold);
             compare(spyX.count, 0)
             compare(spyY.count, 1)
+        }
+
+        function test_dragAxis_data() {
+            return [
+                { tag: "horizontal" },
+                { tag: "vertical" }
+            ]
+        }
+
+        // mouseDrag() should not drag along an axis if the distance passed in for
+        // that axis was 0. Doing so can interfere with tests for an item that e.g.
+        // handles horizontal flicks which is within e.g. a Flickable that handles
+        // vertical flicks.
+        function test_dragAxis(data) {
+            let horizontal = data.tag === "horizontal"
+
+            let outerFlickable = createTemporaryObject(nestedFlickableComponent, root)
+            verify(outerFlickable)
+            // We want the outer flickable to use the opposite flick direction of the inner one,
+            // as the inner one has the direction that we're interested in testing.
+            outerFlickable.flickableDirection = horizontal ? Flickable.VerticalFlick : Flickable.HorizontalFlick
+
+            let innerFlickable = outerFlickable.innerFlickable
+            verify(innerFlickable)
+            let horizontalFlickable = null
+            let verticalFlickable = null
+            if (horizontal) {
+                innerFlickable.flickableDirection = Flickable.HorizontalFlick
+                horizontalFlickable = innerFlickable
+                verticalFlickable = outerFlickable
+            } else {
+                innerFlickable.flickableDirection = Flickable.VerticalFlick
+                horizontalFlickable = outerFlickable
+                verticalFlickable = innerFlickable
+            }
+
+            let movingHorizontallySpy = createTemporaryObject(signalSpyComponent, root,
+                { target: horizontalFlickable, signalName: "movingHorizontallyChanged" })
+            verify(movingHorizontallySpy)
+            verify(movingHorizontallySpy.valid)
+
+            let movingVerticallySpy = createTemporaryObject(signalSpyComponent, root,
+                { target: verticalFlickable, signalName: "movingVerticallyChanged" })
+            verify(movingVerticallySpy)
+            verify(movingVerticallySpy.valid)
+
+            let flickingHorizontallySpy = createTemporaryObject(signalSpyComponent, root,
+                { target: horizontalFlickable, signalName: "flickingHorizontallyChanged" })
+            verify(flickingHorizontallySpy)
+            verify(flickingHorizontallySpy.valid)
+
+            let flickingVerticallySpy = createTemporaryObject(signalSpyComponent, root,
+                { target: verticalFlickable, signalName: "flickingVerticallyChanged" })
+            verify(flickingVerticallySpy)
+            verify(flickingVerticallySpy.valid)
+
+            let contentXSpy = createTemporaryObject(signalSpyComponent, root,
+                { target: horizontalFlickable, signalName: "contentXChanged" })
+            verify(contentXSpy)
+            verify(contentXSpy.valid)
+
+            let contentYSpy = createTemporaryObject(signalSpyComponent, root,
+                { target: verticalFlickable, signalName: "contentYChanged" })
+            verify(contentYSpy)
+            verify(contentYSpy.valid)
+
+            // Dragging only horizontally should not result in movement on the Y axis, and vice versa.
+            let horizontalDragDistance = horizontal ? innerFlickable.width - 10 : 0
+            let verticalDragDistance = horizontal ? 0 : innerFlickable.height - 10
+            mouseDrag(innerFlickable, 10, 10, horizontalDragDistance, verticalDragDistance)
+
+            // Wait for it to stop moving.
+            if (horizontal) {
+                tryCompare(horizontalFlickable, "movingHorizontally", false)
+                tryCompare(horizontalFlickable, "flickingHorizontally", false)
+            } else {
+                tryCompare(verticalFlickable, "movingVertically", false)
+                tryCompare(verticalFlickable, "flickingVertically", false)
+            }
+
+            // 2 because it should change to true then false.
+            compare(movingHorizontallySpy.count, horizontal ? 2 : 0)
+            compare(movingVerticallySpy.count, horizontal ? 0 : 2)
+            compare(flickingHorizontallySpy.count, horizontal ? 2 : 0)
+            compare(flickingVerticallySpy.count, horizontal ? 0 : 2)
+
+            if (horizontal)
+                verify(contentXSpy.count > 0)
+            else
+                compare(contentXSpy.count, 0)
+
+            if (horizontal)
+                compare(contentYSpy.count, 0)
+            else
+                verify(contentYSpy.count > 0)
+        }
+
+        function test_negativeDragDistance_data() {
+            return [
+                { tag: "horizontal", startX: 100, startY: 100, xDistance: -90, yDistance: 0 },
+                { tag: "vertical", startX: 100, startY: 100, xDistance: 0, yDistance: -90 }
+            ]
+        }
+
+        // Tests that dragging to the left or top actually results in intermediate mouse moves.
+        function test_negativeDragDistance(data) {
+            let mouseArea = createTemporaryObject(mouseAreaComponent, root)
+            verify(mouseArea)
+
+            let positionSpy = signalSpyComponent.createObject(mouseArea,
+                { target: mouseArea, signalName: "positionChanged" })
+            verify(positionSpy)
+            verify(positionSpy.valid)
+
+            mouseDrag(mouseArea, data.startX, data.startY, data.xDistance, data.yDistance)
+            verify(positionSpy.count > 2, "Expected more than 2 mouse position changes, but only got " + positionSpy.count)
         }
     }
 }

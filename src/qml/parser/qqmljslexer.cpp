@@ -580,7 +580,14 @@ again:
 
     case ']': return T_RBRACKET;
     case '[': return T_LBRACKET;
-    case '?': return T_QUESTION;
+    case '?': {
+        if (_char == QLatin1Char('?')) {
+            scanChar();
+            return T_QUESTION_QUESTION;
+        }
+
+        return T_QUESTION;
+    }
 
     case '>':
         if (_char == QLatin1Char('>')) {

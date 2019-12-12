@@ -226,7 +226,7 @@ private:
     void simulateKeys(QWindow *window, const QKeySequence &sequence);
 #endif
 
-    void simulateKey(QWindow *, int key, Qt::KeyboardModifiers modifiers = nullptr);
+    void simulateKey(QWindow *, int key, Qt::KeyboardModifiers modifiers = {});
 
     QStringList standard;
     QStringList richText;
@@ -1389,7 +1389,7 @@ void tst_qquicktextedit::focusOnPress()
     QCOMPARE(textEditObject->hasActiveFocus(), false);
 
     QPoint centerPoint(window.width()/2, window.height()/2);
-    Qt::KeyboardModifiers noModifiers = nullptr;
+    Qt::KeyboardModifiers noModifiers;
     QTest::mousePress(&window, Qt::LeftButton, noModifiers, centerPoint);
     QGuiApplication::processEvents();
     QCOMPARE(textEditObject->hasFocus(), true);

@@ -48,7 +48,7 @@ void QSGRhiNativeTextureImporter::buildWrapper(QRhi *rhi, QRhiTexture *t,
 #if !QT_CONFIG(vulkan)
     Q_UNUSED(nativeLayout);
 #endif
-#if !QT_CONFIG(opengl) && !QT_CONFIG(vulkan) && !defined(Q_OS_WIN) && !defined(Q_OS_DARWIN)
+#if !QT_CONFIG(opengl) && !QT_CONFIG(vulkan) && !defined(Q_OS_WIN) && !defined(Q_OS_MACOS) && !defined(Q_OS_IOS)
     Q_UNUSED(nativeObjectPtr);
 #endif
 
@@ -83,7 +83,7 @@ void QSGRhiNativeTextureImporter::buildWrapper(QRhi *rhi, QRhiTexture *t,
         break;
     case QRhi::Metal:
     {
-#ifdef Q_OS_DARWIN
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
         QRhiMetalTextureNativeHandles h;
         h.texture = *reinterpret_cast<void * const *>(nativeObjectPtr);
         t->buildFrom(&h);

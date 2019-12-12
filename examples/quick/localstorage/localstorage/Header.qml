@@ -186,11 +186,11 @@ Item {
                     }
                 }
             }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: dateInput.forceActiveFocus()
-            }
         }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        onClicked: dateInput.forceActiveFocus()
     }
 }

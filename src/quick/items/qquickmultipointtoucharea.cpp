@@ -42,6 +42,7 @@
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qevent_p.h>
 #include <private/qquickitem_p.h>
+#include <private/qquickwindow_p.h>
 #include <private/qguiapplication_p.h>
 #include <QEvent>
 #include <QMouseEvent>
@@ -448,6 +449,7 @@ QQuickMultiPointTouchArea::QQuickMultiPointTouchArea(QQuickItem *parent)
     : QQuickItem(parent),
       _minimumTouchPoints(0),
       _maximumTouchPoints(INT_MAX),
+      _touchMouseDevice(nullptr),
       _stealMouse(false),
       _mouseEnabled(true)
 {
@@ -586,10 +588,10 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
     bool ended = false;
     bool moved = false;
     bool started = false;
-    bool isMouseEvent = false;
 
     clearTouchLists();
     QList<QTouchEvent::TouchPoint> touchPoints;
+    QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window());
 
     switch (event->type()) {
     case QEvent::TouchBegin:
@@ -598,6 +600,9 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
         touchPoints = static_cast<QTouchEvent*>(event)->touchPoints();
         break;
     case QEvent::MouseButtonPress:
+        _mouseQpaTouchPoint = QTouchEvent::TouchPoint(windowPriv->touchMouseId);
+        _touchMouseDevice = windowPriv->touchMouseDevice->qTouchDevice();
+        Q_FALLTHROUGH();
     case QEvent::MouseMove:
     case QEvent::MouseButtonRelease: {
         QMouseEvent *me = static_cast<QMouseEvent*>(event);
@@ -617,7 +622,6 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
             _mouseQpaTouchPoint.setState(Qt::TouchPointPressed);
         }
         touchPoints << _mouseQpaTouchPoint;
-        isMouseEvent = true;
         break;
     }
     default:
@@ -625,11 +629,6 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
         break;
     }
 
-    if (!isMouseEvent && _mouseTouchPoint) {
-        QQuickWindow *c = window();
-        if (c && c->mouseGrabberItem() == this)
-            touchPoints << _mouseQpaTouchPoint;
-    }
     int numTouchPoints = touchPoints.count();
     //always remove released touches, and make sure we handle all releases before adds.
     for (const QTouchEvent::TouchPoint &p : qAsConst(touchPoints)) {
@@ -756,7 +755,7 @@ void QQuickMultiPointTouchArea::addTouchPoint(const QMouseEvent *e)
         dtp = new QQuickTouchPoint(false);
     updateTouchPoint(dtp, e);
     dtp->setPressed(true);
-    _touchPoints.insert(-1, dtp);
+    _touchPoints.insert(_touchMouseDevice && _mouseQpaTouchPoint.id() > 0 ? _mouseQpaTouchPoint.id() : -1, dtp);
     _pressedTouchPoints.append(dtp);
     _mouseTouchPoint = dtp;
 }
@@ -839,8 +838,7 @@ void QQuickMultiPointTouchArea::mousePressEvent(QMouseEvent *event)
     setKeepMouseGrab(false);
     event->setAccepted(true);
     _mousePos = event->localPos();
-
-    if (event->source() != Qt::MouseEventNotSynthesized)
+    if (event->source() != Qt::MouseEventNotSynthesized && event->source() != Qt::MouseEventSynthesizedByQt)
         return;
 
     if (_touchPoints.count() >= _minimumTouchPoints - 1 && _touchPoints.count() < _maximumTouchPoints) {
@@ -855,7 +853,7 @@ void QQuickMultiPointTouchArea::mouseMoveEvent(QMouseEvent *event)
         return;
     }
 
-    if (event->source() != Qt::MouseEventNotSynthesized)
+    if (event->source() != Qt::MouseEventNotSynthesized && event->source() != Qt::MouseEventSynthesizedByQt)
         return;
 
     _movedTouchPoints.clear();
@@ -870,7 +868,7 @@ void QQuickMultiPointTouchArea::mouseReleaseEvent(QMouseEvent *event)
         return;
     }
 
-    if (event->source() != Qt::MouseEventNotSynthesized)
+    if (event->source() != Qt::MouseEventNotSynthesized && event->source() != Qt::MouseEventSynthesizedByQt)
         return;
 
     if (_mouseTouchPoint) {
@@ -880,18 +878,16 @@ void QQuickMultiPointTouchArea::mouseReleaseEvent(QMouseEvent *event)
         _mouseTouchPoint = nullptr;
     }
 
-    QQuickWindow *c = window();
-    if (c && c->mouseGrabberItem() == this)
-        ungrabMouse();
     setKeepMouseGrab(false);
 }
 
-void QQuickMultiPointTouchArea::ungrab()
+void QQuickMultiPointTouchArea::ungrab(bool normalRelease)
 {
     _stealMouse = false;
     setKeepMouseGrab(false);
     setKeepTouchGrab(false);
-    ungrabTouchPoints();
+    if (!normalRelease)
+        ungrabTouchPoints();
 
     if (_touchPoints.count()) {
         for (QObject *obj : qAsConst(_touchPoints))
@@ -969,13 +965,25 @@ bool QQuickMultiPointTouchArea::childMouseEventFilter(QQuickItem *receiver, QEve
     if (!isEnabled() || !isVisible())
         return QQuickItem::childMouseEventFilter(receiver, event);
     switch (event->type()) {
-    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonPress: {
+        QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window());
+        // If we already got a chance to filter the touchpoint that generated this synth-mouse-press,
+        // and chose not to filter it, ignore it now, too.
+        if (static_cast<QMouseEvent *>(event)->source() == Qt::MouseEventSynthesizedByQt &&
+                _lastFilterableTouchPointIds.contains(windowPriv->touchMouseId))
+            return false;
+        } Q_FALLTHROUGH();
     case QEvent::MouseMove:
     case QEvent::MouseButtonRelease:
         return sendMouseEvent(static_cast<QMouseEvent *>(event));
-        break;
     case QEvent::TouchBegin:
+        _lastFilterableTouchPointIds.clear();
+        Q_FALLTHROUGH();
     case QEvent::TouchUpdate:
+        for (auto tp : static_cast<QTouchEvent*>(event)->touchPoints()) {
+            if (tp.state() == Qt::TouchPointPressed)
+                _lastFilterableTouchPointIds << tp.id();
+        }
         if (!shouldFilter(event))
             return false;
         updateTouchData(event);
@@ -984,7 +992,7 @@ bool QQuickMultiPointTouchArea::childMouseEventFilter(QQuickItem *receiver, QEve
             if (!shouldFilter(event))
                 return false;
             updateTouchData(event);
-            ungrab();
+            ungrab(true);
         }
         break;
     default:

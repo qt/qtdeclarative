@@ -117,8 +117,7 @@ QQuickLayoutAttached::QQuickLayoutAttached(QObject *parent)
       m_isLeftMarginSet(false),
       m_isTopMarginSet(false),
       m_isRightMarginSet(false),
-      m_isBottomMarginSet(false),
-      m_alignment(nullptr)
+      m_isBottomMarginSet(false)
 {
 
 }

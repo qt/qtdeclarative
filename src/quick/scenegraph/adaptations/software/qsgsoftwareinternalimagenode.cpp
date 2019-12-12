@@ -465,7 +465,7 @@ void QSGSoftwareInternalImageNode::paint(QPainter *painter)
                          m_targetRect.right() - m_innerTargetRect.right(), m_targetRect.bottom() - m_innerTargetRect.bottom());
         QSGSoftwareHelpers::QTileRules tilerules(getTileRule(m_subSourceRect.width()), getTileRule(m_subSourceRect.height()));
         QSGSoftwareHelpers::qDrawBorderPixmap(painter, m_targetRect.toRect(), margins, pm, QRect(0, 0, pm.width(), pm.height()),
-                                              margins, tilerules, QSGSoftwareHelpers::QDrawBorderPixmap::DrawingHints(nullptr));
+                                              margins, tilerules, QSGSoftwareHelpers::QDrawBorderPixmap::DrawingHints{});
         return;
     }
 

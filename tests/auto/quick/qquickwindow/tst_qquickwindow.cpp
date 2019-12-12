@@ -73,7 +73,7 @@ static QTouchEvent::TouchPoint makeTouchPoint(QQuickItem *item, const QPointF &p
     return tp;
 }
 
-static TouchEventData makeTouchData(QEvent::Type type, QWindow *w, Qt::TouchPointStates states = nullptr,
+static TouchEventData makeTouchData(QEvent::Type type, QWindow *w, Qt::TouchPointStates states = {},
                                     const QList<QTouchEvent::TouchPoint>& touchPoints = QList<QTouchEvent::TouchPoint>())
 {
     TouchEventData d = { type, nullptr, w, states, touchPoints };
@@ -157,7 +157,7 @@ public:
         setEnabled(true);
         setVisible(true);
 
-        lastEvent = makeTouchData(QEvent::None, window(), nullptr, QList<QTouchEvent::TouchPoint>());//CHECK_VALID
+        lastEvent = makeTouchData(QEvent::None, window(), {}, QList<QTouchEvent::TouchPoint>());//CHECK_VALID
 
         lastVelocity = lastVelocityFromMouseMove = QVector2D();
         lastMousePos = QPointF();
@@ -2082,7 +2082,7 @@ void tst_qquickwindow::requestActivate()
         QString warning = QString::fromLatin1("Mouse event MousePress not accepted by receiving window");
         QWARN(warning.toLatin1().data());
     }
-    me = QMouseEvent(QEvent::MouseButtonPress, pos, window1->mapToGlobal(pos), Qt::LeftButton, nullptr, Qt::NoModifier);
+    me = QMouseEvent(QEvent::MouseButtonPress, pos, window1->mapToGlobal(pos), Qt::LeftButton, {}, Qt::NoModifier);
     QSpontaneKeyEvent::setSpontaneous(&me);
     if (!qApp->notify(window1.data(), &me)) {
         QString warning = QString::fromLatin1("Mouse event MouseRelease not accepted by receiving window");

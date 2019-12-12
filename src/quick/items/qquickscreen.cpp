@@ -424,9 +424,6 @@ QScreen *QQuickScreenInfo::wrappedScreen() const
 
 QQuickScreenAttached::QQuickScreenAttached(QObject* attachee)
     : QQuickScreenInfo(attachee)
-    , m_window(nullptr)
-    , m_updateMask(nullptr)
-    , m_updateMaskSet(false)
 {
     m_attachee = qobject_cast<QQuickItem*>(attachee);
 

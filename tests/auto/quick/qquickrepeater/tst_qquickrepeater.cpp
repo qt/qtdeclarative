@@ -81,6 +81,7 @@ private slots:
     void package();
     void ownership();
     void requiredProperties();
+    void contextProperties();
 };
 
 class TestObject : public QObject
@@ -1129,6 +1130,29 @@ void tst_QQuickRepeater::requiredProperties()
     QQmlComponent component(&engine, testFileUrl("requiredProperty.qml"));
     QScopedPointer<QObject> o {component.create()};
     QVERIFY(o);
+}
+
+void tst_QQuickRepeater::contextProperties()
+{
+    QQmlEngine engine;
+
+    QQmlComponent component(&engine, testFileUrl("contextProperty.qml"));
+    QScopedPointer<QObject> o {component.create()};
+    QVERIFY(o);
+
+    auto *root = qobject_cast<QQuickItem *>(o.get());
+    QVERIFY(root);
+
+    QQueue<QQuickItem *> items;
+    items.append(root);
+
+    while (!items.isEmpty()) {
+        QQuickItem *item = items.dequeue();
+        QQmlContextData *data = QQmlContextData::get(qmlContext(item));
+        QVERIFY(!data->hasExtraObject);
+        for (QQuickItem *child : item->childItems())
+            items.enqueue(child);
+    }
 }
 
 QTEST_MAIN(tst_QQuickRepeater)

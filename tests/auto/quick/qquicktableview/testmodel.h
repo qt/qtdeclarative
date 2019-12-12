@@ -46,6 +46,13 @@ public:
         , m_columns(columns)
     {}
 
+    TestModel(int rows, int columns, bool dataCanBeFetched, QObject *parent = nullptr)
+        : QAbstractTableModel(parent)
+          , m_rows(rows)
+          , m_columns(columns)
+          , m_dataCanBeFetched(dataCanBeFetched)
+    {}
+
     int rowCount(const QModelIndex & = QModelIndex()) const override { return m_rows; }
     void setRowCount(int count) { beginResetModel(); m_rows = count; emit rowCountChanged(); endResetModel(); }
 
@@ -61,6 +68,13 @@ public:
         if (modelData.contains(serializedIndex))
             return modelData.value(serializedIndex);
         return QStringLiteral("%1").arg(index.row());
+    }
+
+    Q_INVOKABLE QVariant dataFromSerializedIndex(int index) const
+    {
+        if (modelData.contains(index))
+            return modelData.value(index);
+        return QString();
     }
 
     QHash<int, QByteArray> roleNames() const override
@@ -102,6 +116,12 @@ public:
 
         beginRemoveRows(parent, row, row + count - 1);
         m_rows -= count;
+        for (int c = 0; c < m_columns; ++c) {
+            for (int r = 0; r < count; ++r) {
+                const int serializedIndex = (row + r) + (c * m_rows);
+                modelData.remove(serializedIndex);
+            }
+        }
         endRemoveRows();
         return true;
     }
@@ -128,6 +148,12 @@ public:
         return true;
     }
 
+    bool canFetchMore(const QModelIndex &parent) const override
+    {
+        Q_UNUSED(parent)
+        return m_dataCanBeFetched;
+    }
+
     void swapRows(int row1, int row2)
     {
         layoutAboutToBeChanged();
@@ -137,6 +163,12 @@ public:
         modelData[row1] = modelData[row2];
         modelData[row2] = tmp;
         layoutChanged();
+    }
+
+    void fetchMore(const QModelIndex &parent) override
+    {
+        Q_UNUSED(parent)
+        addRow(m_rows - 1);
     }
 
     void clear() {
@@ -159,6 +191,7 @@ signals:
 private:
     int m_rows = 0;
     int m_columns = 0;
+    bool m_dataCanBeFetched = false;
     QHash<int, QString> modelData;
 };
 

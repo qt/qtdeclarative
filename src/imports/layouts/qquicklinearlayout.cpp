@@ -645,6 +645,7 @@ void QQuickGridLayout::insertLayoutItems()
     int &nextColumn = nextCellPos[0];
     int &nextRow = nextCellPos[1];
 
+    const QSize gridSize(columns(), rows());
     const int flowOrientation = flow();
     int &flowColumn = nextCellPos[flowOrientation];
     int &flowRow = nextCellPos[1 - flowOrientation];
@@ -664,7 +665,7 @@ void QQuickGridLayout::insertLayoutItems()
         if (shouldIgnoreItem(child, info, sizeHints))
             continue;
 
-        Qt::Alignment alignment = nullptr;
+        Qt::Alignment alignment;
         int row = -1;
         int column = -1;
         int span[2] = {1,1};
@@ -677,8 +678,21 @@ void QQuickGridLayout::insertLayoutItems()
                 // the unspecified component of the cell position should default to 0
                 // The getters do this for us, as they will return 0 for an
                 // unset (or negative) value.
-                row = info->row();
-                column = info->column();
+                // In addition, if \a rows is less than Layout.row, treat Layout.row as if it was not set
+                // This will basically make it find the next available cell (potentially wrapping to
+                // the next line). Likewise for an invalid Layout.column
+
+                if (gridSize.height() >= 0 && row >= gridSize.height()) {
+                    qmlWarning(child) << QString::fromLatin1("Layout: row (%1) should be less than the number of rows (%2)").arg(info->row()).arg(rows());
+                } else {
+                    row = info->row();
+                }
+
+                if (gridSize.width() >= 0 && info->column() >= gridSize.width()) {
+                    qmlWarning(child) << QString::fromLatin1("Layout: column (%1) should be less than the number of columns (%2)").arg(info->column()).arg(columns());
+                } else {
+                    column = info->column();
+                }
             }
             rowSpan = info->rowSpan();
             columnSpan = info->columnSpan();
@@ -840,7 +854,7 @@ void QQuickLinearLayout::insertLayoutItems()
         if (shouldIgnoreItem(child, info, sizeHints))
             continue;
 
-        Qt::Alignment alignment = nullptr;
+        Qt::Alignment alignment;
         if (info)
             alignment = info->alignment();
 

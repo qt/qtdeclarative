@@ -1073,5 +1073,38 @@ Item {
             layout[propName] = data.value
             compare(layout.spy.count, 1)
         }
+
+        Component {
+            id: layout_columnIsOutsideGrid_Component
+            GridLayout {
+                columns: 2
+                Item {
+                    Layout.row: 0
+                    Layout.column: 1
+                }
+                Item {
+                    implicitWidth: 10
+                    implicitHeight: 10
+                    Layout.row: 0
+                    Layout.column: 2
+                }
+                Item {
+                    Layout.columnSpan: 2
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+            }
+        }
+
+        function test_columnIsOutsideGrid()
+        {
+            ignoreWarning(/QML Item: Layout: column \(2\) should be less than the number of columns \(2\)/);
+            var layout = layout_columnIsOutsideGrid_Component.createObject(container);
+            layout.width = layout.implicitWidth
+            layout.height = layout.implicitHeight
+            waitForRendering(layout);
+            layout.destroy()
+        }
+
     }
 }

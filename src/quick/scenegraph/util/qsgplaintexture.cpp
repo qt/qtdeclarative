@@ -281,7 +281,7 @@ void QSGPlainTexture::setTextureFromNativeObject(QRhi *rhi, QQuickWindow::Native
 {
     Q_UNUSED(type);
 
-    QRhiTexture::Flags flags = 0;
+    QRhiTexture::Flags flags;
     if (mipmap)
         flags |= QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips;
 
@@ -421,7 +421,7 @@ void QSGPlainTexturePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch
     }
 
     if (!q->m_texture) {
-        QRhiTexture::Flags f = 0;
+        QRhiTexture::Flags f;
         if (hasMipMaps)
             f |= QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips;
 

@@ -94,11 +94,15 @@ ExecutableCompilationUnit::~ExecutableCompilationUnit()
 
 QString ExecutableCompilationUnit::localCacheFilePath(const QUrl &url)
 {
+    static const QByteArray envCachePath = qgetenv("QML_DISK_CACHE_PATH");
+
     const QString localSourcePath = QQmlFile::urlToLocalFileOrQrc(url);
     const QString cacheFileSuffix = QFileInfo(localSourcePath + QLatin1Char('c')).completeSuffix();
     QCryptographicHash fileNameHash(QCryptographicHash::Sha1);
     fileNameHash.addData(localSourcePath.toUtf8());
-    QString directory = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QLatin1String("/qmlcache/");
+    QString directory = envCachePath.isEmpty()
+            ? QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QLatin1String("/qmlcache/")
+            : QString::fromLocal8Bit(envCachePath) + QLatin1String("/");
     QDir::root().mkpath(directory);
     return directory + QString::fromUtf8(fileNameHash.result().toHex()) + QLatin1Char('.') + cacheFileSuffix;
 }

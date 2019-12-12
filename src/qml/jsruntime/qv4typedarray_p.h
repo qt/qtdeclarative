@@ -181,6 +181,7 @@ struct IntrinsicTypedArrayCtor: FunctionObject
     static constexpr VTable::Call virtualCall = nullptr;
 
     static ReturnedValue method_of(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_from(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct TypedArrayCtor: FunctionObject

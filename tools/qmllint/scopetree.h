@@ -29,15 +29,28 @@
 #ifndef SCOPETREE_H
 #define SCOPETREE_H
 
-#include "fakemetaobject.h"
-#include "private/qqmljsast_p.h"
-#include "private/qqmljssourcelocation_p.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
 
-#include <QSet>
-#include <QString>
-#include <QMap>
+#include "metatypes.h"
+#include "componentversion.h"
 
-enum MessageColors{
+#include <QtQml/private/qqmljsast_p.h>
+#include <QtQml/private/qqmljssourcelocation_p.h>
+
+#include <QtCore/qset.h>
+#include <QtCore/qhash.h>
+#include <QtCore/qstring.h>
+
+enum MessageColors
+{
     Error,
     Warning,
     Info,
@@ -54,58 +67,137 @@ enum class ScopeType
 
 struct MethodUsage
 {
-    LanguageUtils::FakeMetaMethod method;
+    MetaMethod method;
     QQmlJS::AST::SourceLocation loc;
     bool hasMultilineHandlerBody;
 };
 
 class ColorOutput;
-
-class ScopeTree {
+class ScopeTree
+{
+    Q_DISABLE_COPY_MOVE(ScopeTree)
 public:
-    ScopeTree(ScopeType type, QString name="<none given>", ScopeTree* parentScope=nullptr);
-    ~ScopeTree() {qDeleteAll(m_childScopes);}
+    using Ptr = QSharedPointer<ScopeTree>;
+    using ConstPtr = QSharedPointer<const ScopeTree>;
 
-    ScopeTree* createNewChildScope(ScopeType type, QString name);
-    ScopeTree* parentScope();
+    class Export {
+    public:
+        Export() = default;
+        Export(QString package, QString type, const ComponentVersion &version,
+               int metaObjectRevision);
 
-    void insertJSIdentifier(QString id, QQmlJS::AST::VariableScope scope);
-    void insertQMLIdentifier(QString id);
-    void insertSignalIdentifier(QString id, LanguageUtils::FakeMetaMethod method, QQmlJS::AST::SourceLocation loc, bool hasMultilineHandlerBody);
-    void insertPropertyIdentifier(QString id); // inserts property as qml identifier as well as the corresponding
+        bool isValid() const;
+
+        int metaObjectRevision() const { return m_metaObjectRevision; }
+        void setMetaObjectRevision(int metaObjectRevision)
+        {
+            m_metaObjectRevision = metaObjectRevision;
+        }
+
+        QString package() const { return m_package; }
+        QString type() const { return m_type; }
+
+    private:
+        QString m_package;
+        QString m_type;
+        ComponentVersion m_version;
+        int m_metaObjectRevision = 0;
+    };
+
+    ScopeTree(ScopeType type, QString name="<none given>", ScopeTree *parentScope=nullptr);
+    ~ScopeTree() { qDeleteAll(m_childScopes); }
+
+    ScopeTree *createNewChildScope(ScopeType type, QString name);
+    ScopeTree *parentScope() { return m_parentScope; }
+
+    void insertJSIdentifier(const QString &id, QQmlJS::AST::VariableScope scope);
+    void insertSignalIdentifier(const QString &id, const MetaMethod &method,
+                                const QQmlJS::AST::SourceLocation &loc, bool hasMultilineHandlerBody);
+    // inserts property as qml identifier as well as the corresponding
+    void insertPropertyIdentifier(const MetaProperty &prop);
     void addUnmatchedSignalHandler(const QString &handler,
                                    const QQmlJS::AST::SourceLocation &location);
 
-    bool isIdInCurrentScope(QString const &id) const;
-    void addIdToAccssedIfNotInParentScopes(QPair<QString, QQmlJS::AST::SourceLocation> const& id_loc_pair, const QSet<QString>& unknownImports);
+    bool isIdInCurrentScope(const QString &id) const;
+    void addIdToAccssedIfNotInParentScopes(
+            const QPair<QString, QQmlJS::AST::SourceLocation> &idLocationPair,
+            const QSet<QString> &unknownImports);
 
     bool isVisualRootScope() const;
-    QString name() const;
+    QString name() const { return m_name; }
 
-    bool recheckIdentifiers(const QString &code,  const QHash<QString, LanguageUtils::FakeMetaObject::ConstPtr>& qmlIDs, const ScopeTree *root, const QString& rootId, ColorOutput &colorOut) const;
-    ScopeType scopeType();
-    void addMethod(LanguageUtils::FakeMetaMethod);
-    void addMethodsFromMetaObject(LanguageUtils::FakeMetaObject::ConstPtr metaObject);
-    QMap<QString, LanguageUtils::FakeMetaMethod>const & methods() const;
+    bool recheckIdentifiers(
+            const QString &code, const QHash<QString, ScopeTree::ConstPtr> &qmlIDs,
+            const ScopeTree *root, const QString &rootId, ColorOutput &colorOut) const;
+
+    ScopeType scopeType() const { return m_scopeType; }
+
+    void addMethods(const QHash<QString, MetaMethod> &methods) { m_methods.unite(methods); }
+    void addMethod(const MetaMethod &method) { m_methods.insert(method.methodName(), method); }
+    QHash<QString, MetaMethod> methods() const { return m_methods; }
+
+    void addEnum(const MetaEnum &fakeEnum) { m_enums.insert(fakeEnum.name(), fakeEnum); }
+    QHash<QString, MetaEnum> enums() const { return m_enums; }
+
+    QString className() const { return m_className; }
+    void setClassName(const QString &name) { m_className = name; }
+
+    void addExport(const QString &name, const QString &package, const ComponentVersion &version);
+    void setExportMetaObjectRevision(int exportIndex, int metaObjectRevision);
+    QList<Export> exports() const { return m_exports; }
+
+    void setSuperclassName(const QString &superclass) { m_superName = superclass; }
+    QString superclassName() const { return m_superName; }
+
+    void addProperty(const MetaProperty &prop) { m_properties.insert(prop.name(), prop); }
+    QHash<QString, MetaProperty> properties() const { return m_properties; }
+
+    QString defaultPropertyName() const { return m_defaultPropertyName; }
+    void setDefaultPropertyName(const QString &name) { m_defaultPropertyName = name; }
+
+    QString attachedTypeName() const { return m_attachedTypeName; }
+    void setAttachedTypeName(const QString &name) { m_attachedTypeName = name; }
+
+    bool isSingleton() const { return m_isSingleton; }
+    bool isCreatable() const { return m_isCreatable; }
+    bool isComposite() const { return m_isComposite; }
+    void setIsSingleton(bool value) { m_isSingleton = value; }
+    void setIsCreatable(bool value) { m_isCreatable = value; }
+    void setIsComposite(bool value) { m_isSingleton = value; }
 
 private:
-    QSet<QString> m_currentScopeJSIdentifiers;
-    QSet<QString> m_currentScopeQMLIdentifiers;
+    QSet<QString> m_jsIdentifiers;
     QMultiHash<QString, MethodUsage> m_injectedSignalIdentifiers;
-    QMap<QString, LanguageUtils::FakeMetaMethod> m_methods;
+
+    QHash<QString, MetaMethod> m_methods;
+    QHash<QString, MetaProperty> m_properties;
+    QHash<QString, MetaEnum> m_enums;
+
     QVector<QPair<QString, QQmlJS::AST::SourceLocation>> m_accessedIdentifiers;
-    QVector<ScopeTree*> m_childScopes;
-    ScopeTree *m_parentScope;
-    QString m_name;
-    ScopeType m_scopeType;
     QVector<QPair<QString, QQmlJS::AST::SourceLocation>> m_unmatchedSignalHandlers;
 
-    bool isIdInCurrentQMlScopes(QString id) const;
-    bool isIdInCurrentJSScopes(QString id) const;
-    bool isIdInjectedFromSignal(QString id) const;
-    const ScopeTree* getCurrentQMLScope() const;
-    ScopeTree* getCurrentQMLScope();
-    void printContext(ColorOutput& colorOut, const QString &code,
+    QVector<ScopeTree *> m_childScopes;
+    ScopeTree *m_parentScope = nullptr;
+
+    QString m_name;
+    QString m_className;
+    QString m_superName;
+
+    ScopeType m_scopeType = ScopeType::QMLScope;
+    QList<Export> m_exports;
+
+    QString m_defaultPropertyName;
+    QString m_attachedTypeName;
+    bool m_isSingleton = false;
+    bool m_isCreatable = true;
+    bool m_isComposite = false;
+
+    bool isIdInCurrentQMlScopes(const QString &id) const;
+    bool isIdInCurrentJSScopes(const QString &id) const;
+    bool isIdInjectedFromSignal(const QString &id) const;
+    const ScopeTree *currentQMLScope() const;
+    void printContext(ColorOutput &colorOut, const QString &code,
                       const QQmlJS::AST::SourceLocation &location) const;
 };
+
 #endif // SCOPETREE_H

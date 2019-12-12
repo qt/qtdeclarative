@@ -64,6 +64,7 @@ class QQmlEngine;
 class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlDirParser
 {
 public:
+    void clear();
     bool parse(const QString &source);
 
     bool hasError() const;
@@ -75,7 +76,7 @@ public:
 
     static void checkNonRelative(const char *item, const QString &typeName, const QString &fileName)
     {
-        if (fileName.startsWith(QLatin1Char('/')) || fileName.contains(QLatin1Char(':'))) {
+        if (fileName.startsWith(QLatin1Char('/'))) {
             qWarning() << item << typeName
                        << "is specified with non-relative URL" << fileName << "in a qmldir file."
                        << "URLs in qmldir files should be relative to the qmldir file's directory.";
@@ -131,7 +132,7 @@ public:
         int minorVersion = 0;
     };
 
-    QHash<QString,Component> components() const;
+    QMultiHash<QString,Component> components() const;
     QHash<QString,Component> dependencies() const;
     QStringList imports() const;
     QList<Script> scripts() const;
@@ -158,7 +159,7 @@ private:
 private:
     QList<QQmlJS::DiagnosticMessage> _errors;
     QString _typeNamespace;
-    QHash<QString,Component> _components; // multi hash
+    QMultiHash<QString,Component> _components;
     QHash<QString,Component> _dependencies;
     QStringList _imports;
     QList<Script> _scripts;
@@ -168,7 +169,7 @@ private:
     QString _className;
 };
 
-using QQmlDirComponents = QHash<QString,QQmlDirParser::Component>;
+using QQmlDirComponents = QMultiHash<QString,QQmlDirParser::Component>;
 using QQmlDirScripts = QList<QQmlDirParser::Script>;
 using QQmlDirPlugins = QList<QQmlDirParser::Plugin>;
 

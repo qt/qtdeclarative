@@ -69,8 +69,10 @@ private:
     quint16 checksumFileOrDir(const QString &path);
 
     QString testSuitePath;
+    QString grabberPath;
     int consecutiveErrors;   // Not test failures (image mismatches), but system failures (so no image at all)
     bool aborted;            // This run given up because of too many system failures
+    bool usingRhi;
 };
 
 
@@ -90,9 +92,36 @@ void tst_Scenegraph::initTestCase()
         QSKIP("Test suite data directory missing or unreadable: " + fi.canonicalFilePath().toLatin1());
     testSuitePath = fi.canonicalFilePath();
 
+#if defined(Q_OS_WIN)
+    grabberPath = QFINDTESTDATA("qmlscenegrabber.exe");
+#elif defined(Q_OS_DARWIN)
+    grabberPath = QFINDTESTDATA("qmlscenegrabber.app/Contents/MacOS/qmlscenegrabber");
+#else
+    grabberPath = QFINDTESTDATA("qmlscenegrabber");
+#endif
+    if (grabberPath.isEmpty())
+        grabberPath = QCoreApplication::applicationDirPath() + "/qmlscenegrabber";
+
     const char *backendVarName = "QT_QUICK_BACKEND";
     const QString backend = qEnvironmentVariable(backendVarName, QString::fromLatin1("default"));
     QBaselineTest::addClientProperty(QString::fromLatin1(backendVarName), backend);
+
+#if defined(Q_OS_WIN)
+    const char *defaultRhiBackend = "d3d11";
+#elif defined(Q_OS_DARWIN)
+    const char *defaultRhiBackend = "metal";
+#else
+    const char *defaultRhiBackend = "opengl";
+#endif
+    usingRhi = qEnvironmentVariableIntValue("QSG_RHI") != 0;
+    QString stack;
+    if (usingRhi) {
+        const QString rhiBackend = qEnvironmentVariable("QSG_RHI_BACKEND", QString::fromLatin1(defaultRhiBackend));
+        stack = QString::fromLatin1("RHI_%1").arg(rhiBackend);
+    } else {
+        stack = qEnvironmentVariable("QT_QUICK_BACKEND", QString::fromLatin1("DirectGL"));
+    }
+    QBaselineTest::addClientProperty(QString::fromLatin1("GraphicsStack"), stack);
 
     QByteArray msg;
     if (!QBaselineTest::connectToBaselineServer(&msg))
@@ -123,7 +152,7 @@ void tst_Scenegraph::testNoTextRendering()
 
 void tst_Scenegraph::testRendering_data()
 {
-    setupTestSuite();
+    setupTestSuite(usingRhi ? "shaders/" : "");   // on RHI, skip shader effects tests for now
     consecutiveErrors = 0;
     aborted = false;
 }
@@ -201,11 +230,11 @@ bool tst_Scenegraph::renderAndGrab(const QString& qmlFile, const QStringList& ex
 {
     bool usePipe = true;  // Whether to transport the grabbed image using temp. file or pipe. TBD: cmdline option
     QProcess grabber;
-    QString cmd = QCoreApplication::applicationDirPath() + "/qmlscenegrabber";
+    grabber.setProcessChannelMode(QProcess::ForwardedErrorChannel);
     QStringList args = extraArgs;
     QString tmpfile = usePipe ? QString("-") : QString("/tmp/qmlscenegrabber-%1-out.ppm").arg(QCoreApplication::applicationPid());
     args << qmlFile << "-o" << tmpfile;
-    grabber.start(cmd, args, QIODevice::ReadOnly);
+    grabber.start(grabberPath, args, QIODevice::ReadOnly);
     grabber.waitForFinished(17000);         //### hardcoded, must be larger than the scene timeout in qmlscenegrabber
     if (grabber.state() != QProcess::NotRunning) {
         grabber.terminate();

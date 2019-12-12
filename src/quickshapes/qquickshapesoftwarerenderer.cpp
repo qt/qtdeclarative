@@ -266,7 +266,7 @@ void QQuickShapeSoftwareRenderNode::render(const RenderState *state)
 
 QSGRenderNode::StateFlags QQuickShapeSoftwareRenderNode::changedStates() const
 {
-    return nullptr;
+    return {};
 }
 
 QSGRenderNode::RenderingFlags QQuickShapeSoftwareRenderNode::flags() const

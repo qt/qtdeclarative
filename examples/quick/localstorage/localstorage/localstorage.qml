@@ -166,8 +166,8 @@ Window {
             Component {
                 id: highlightBar
                 Rectangle {
-                    width: listView.currentItem.width
-                    height: listView.currentItem.height
+                    width: listView.currentItem !== null ? listView.currentItem.width : implicitWidth
+                    height: listView.currentItem !== null ? listView.currentItem.height : implicitHeight
                     color: "lightgreen"
                 }
             }

@@ -308,6 +308,11 @@ In both the Q_PROPERTY and return from Q_INVOKABLE cases, the elements
 of a std::vector are copied. This copying may be an expensive operation,
 so std::vector should be used judiciously.
 
+You can also create a list-like data structure by constructing a QJSValue using
+QJSEngine::newArray(). Such a JavaScript array does not need any conversion
+when passing it between QML and C++. See \l{QJSValue#Working With Arrays} for
+details on how to manipulate JavaScript arrays from C++.
+
 Other sequence types are not supported transparently, and instead an
 instance of any other sequence type will be passed between QML and C++ as an
 opaque QVariantList.

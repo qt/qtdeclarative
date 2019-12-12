@@ -315,13 +315,12 @@ inline typename LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::Code
     va_start(argList, format);
     WTF::dataLogFV(format, argList);
     va_end(argList);
-    dataLogF(":\n");
 
     dataLogF(
 #if OS(WINDOWS)
-                "    Code at [0x%p, 0x%p):\n",
+                ":    Code at [0x%p, 0x%p):",
 #else
-                "    Code at [%p, %p):\n",
+                ":    Code at [%p, %p):",
 #endif
                 result.code().executableAddress(), static_cast<char*>(result.code().executableAddress()) + result.size());
     disassemble(result.code(), m_size, "    ", WTF::dataFile());

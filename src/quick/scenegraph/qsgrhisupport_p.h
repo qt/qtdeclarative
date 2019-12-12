@@ -70,7 +70,7 @@
 #include <QtGui/private/qrhid3d11_p.h>
 #endif
 
-#ifdef Q_OS_DARWIN
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
 #include <QtGui/private/qrhimetal_p.h>
 #endif
 
@@ -109,6 +109,7 @@ public:
 
     bool isRhiEnabled() const { return m_enableRhi; }
     QRhi::Implementation rhiBackend() const { return m_rhiBackend; }
+    QString rhiBackendName() const;
     QSGRendererInterface::GraphicsApi graphicsApi() const;
 
     bool isDebugLayerRequested() const { return m_debugLayer; }

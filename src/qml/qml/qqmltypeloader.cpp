@@ -710,7 +710,7 @@ bool QQmlTypeLoader::Blob::isDebugging() const
 
 bool QQmlTypeLoader::Blob::diskCacheEnabled() const
 {
-    return (!disableDiskCache() || forceDiskCache()) && !isDebugging();
+    return (!disableDiskCache() && !isDebugging()) || forceDiskCache();
 }
 
 bool QQmlTypeLoader::Blob::qmldirDataAvailable(const QQmlRefPointer<QQmlQmldirData> &data, QList<QQmlError> *errors)
@@ -1129,7 +1129,8 @@ void QQmlTypeLoader::setQmldirContent(const QString &url, const QString &content
         m_importQmlDirCache.insert(url, qmldir);
     }
 
-    qmldir->setContent(url, content);
+    if (!qmldir->hasContent())
+        qmldir->setContent(url, content);
 }
 
 /*!

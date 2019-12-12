@@ -546,7 +546,7 @@ void Updater::visitNode(Node *n)
 
     m_added = count;
     m_force_update = force;
-    n->dirtyState = nullptr;
+    n->dirtyState = {};
 }
 
 void Updater::visitClipNode(Node *n)
@@ -2627,7 +2627,7 @@ QRhiGraphicsPipeline *Renderer::buildStencilPipeline(const Batch *batch, bool fi
     QRhiGraphicsPipeline *ps = m_rhi->newGraphicsPipeline();
     ps->setFlags(QRhiGraphicsPipeline::UsesStencilRef);
     QRhiGraphicsPipeline::TargetBlend blend;
-    blend.colorWrite = 0;
+    blend.colorWrite = {};
     ps->setTargetBlends({ blend });
     ps->setSampleCount(renderTarget()->sampleCount());
     ps->setStencilTest(true);
@@ -3257,7 +3257,7 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms)
     ps->setShaderResourceBindings(e->srb);
     ps->setRenderPassDescriptor(renderPassDescriptor());
 
-    QRhiGraphicsPipeline::Flags flags = 0;
+    QRhiGraphicsPipeline::Flags flags;
     if (needsBlendConstant(m_gstate.srcColor) || needsBlendConstant(m_gstate.dstColor))
         flags |= QRhiGraphicsPipeline::UsesBlendConstants;
     if (m_gstate.usesScissor)

@@ -1417,19 +1417,23 @@ Item {
         // Divide dx and dy to have intermediate mouseMove while dragging
         // Fractions of dx/dy need be superior to the dragThreshold
         // to make the drag works though
-        var ddx = Math.round(dx/3)
-        if (ddx < (util.dragThreshold + 1))
-            ddx = 0
-        var ddy = Math.round(dy/3)
-        if (ddy < (util.dragThreshold + 1))
-            ddy = 0
+        var intermediateDx = Math.round(dx/3)
+        if (Math.abs(intermediateDx) < (util.dragThreshold + 1))
+            intermediateDx = 0
+        var intermediateDy = Math.round(dy/3)
+        if (Math.abs(intermediateDy) < (util.dragThreshold + 1))
+            intermediateDy = 0
 
         mousePress(item, x, y, button, modifiers, delay)
-        //trigger dragging
-        mouseMove(item, x + util.dragThreshold + 1, y + util.dragThreshold + 1, moveDelay, button)
-        if (ddx > 0 || ddy > 0) {
-            mouseMove(item, x + ddx, y + ddy, moveDelay, button)
-            mouseMove(item, x + 2*ddx, y + 2*ddy, moveDelay, button)
+
+        // Trigger dragging by dragging past the drag threshold, but making sure to only drag
+        // along a certain axis if a distance greater than zero was given for that axis.
+        var dragTriggerXDistance = dx > 0 ? (util.dragThreshold + 1) : 0
+        var dragTriggerYDistance = dy > 0 ? (util.dragThreshold + 1) : 0
+        mouseMove(item, x + dragTriggerXDistance, y + dragTriggerYDistance, moveDelay, button)
+        if (intermediateDx !== 0 || intermediateDy !== 0) {
+            mouseMove(item, x + intermediateDx, y + intermediateDy, moveDelay, button)
+            mouseMove(item, x + 2*intermediateDx, y + 2*intermediateDy, moveDelay, button)
         }
         mouseMove(item, x + dx, y + dy, moveDelay, button)
         mouseRelease(item, x + dx, y + dy, button, modifiers, delay)

@@ -27,66 +27,23 @@
 ****************************************************************************/
 
 #include "componentversion.h"
-
-#include <QString>
-#include <QCryptographicHash>
-
-#include <limits>
-
-using namespace LanguageUtils;
-
-const int ComponentVersion::NoVersion = -1;
-const int ComponentVersion::MaxVersion = std::numeric_limits<int>::max();
-
-ComponentVersion::ComponentVersion()
-    : _major(NoVersion), _minor(NoVersion)
-{
-}
-
-ComponentVersion::ComponentVersion(int major, int minor)
-    : _major(major), _minor(minor)
-{
-}
+#include <QtCore/qstring.h>
 
 ComponentVersion::ComponentVersion(const QString &versionString)
-    : _major(NoVersion), _minor(NoVersion)
 {
-    int dotIdx = versionString.indexOf(QLatin1Char('.'));
+    const int dotIdx = versionString.indexOf(QLatin1Char('.'));
     if (dotIdx == -1)
         return;
     bool ok = false;
-    int maybeMajor = versionString.leftRef(dotIdx).toInt(&ok);
+    const int maybeMajor = versionString.leftRef(dotIdx).toInt(&ok);
     if (!ok)
         return;
-    int maybeMinor = versionString.midRef(dotIdx + 1).toInt(&ok);
+    const int maybeMinor = versionString.midRef(dotIdx + 1).toInt(&ok);
     if (!ok)
         return;
-    _major = maybeMajor;
-    _minor = maybeMinor;
+    m_major = maybeMajor;
+    m_minor = maybeMinor;
 }
-
-ComponentVersion::~ComponentVersion()
-{
-}
-
-bool ComponentVersion::isValid() const
-{
-    return _major >= 0 && _minor >= 0;
-}
-
-QString ComponentVersion::toString() const
-{
-    return QString::fromLatin1("%1.%2").arg(QString::number(_major),
-                                            QString::number(_minor));
-}
-
-void ComponentVersion::addToHash(QCryptographicHash &hash) const
-{
-    hash.addData(reinterpret_cast<const char *>(&_major), sizeof(_major));
-    hash.addData(reinterpret_cast<const char *>(&_minor), sizeof(_minor));
-}
-
-namespace LanguageUtils {
 
 bool operator<(const ComponentVersion &lhs, const ComponentVersion &rhs)
 {
@@ -97,7 +54,8 @@ bool operator<(const ComponentVersion &lhs, const ComponentVersion &rhs)
 bool operator<=(const ComponentVersion &lhs, const ComponentVersion &rhs)
 {
     return lhs.majorVersion() < rhs.majorVersion()
-            || (lhs.majorVersion() == rhs.majorVersion() && lhs.minorVersion() <= rhs.minorVersion());
+            || (lhs.majorVersion() == rhs.majorVersion()
+                && lhs.minorVersion() <= rhs.minorVersion());
 }
 
 bool operator>(const ComponentVersion &lhs, const ComponentVersion &rhs)
@@ -112,12 +70,11 @@ bool operator>=(const ComponentVersion &lhs, const ComponentVersion &rhs)
 
 bool operator==(const ComponentVersion &lhs, const ComponentVersion &rhs)
 {
-    return lhs.majorVersion() == rhs.majorVersion() && lhs.minorVersion() == rhs.minorVersion();
+    return lhs.majorVersion() == rhs.majorVersion()
+            && lhs.minorVersion() == rhs.minorVersion();
 }
 
 bool operator!=(const ComponentVersion &lhs, const ComponentVersion &rhs)
 {
     return !(lhs == rhs);
-}
-
 }

@@ -376,7 +376,7 @@ bool QQmlComponentPrivate::setInitialProperty(QObject *component, const QString&
 {
     QQmlProperty prop = QQmlComponentPrivate::removePropertyFromRequired(component, name, requiredProperties());
     QQmlPropertyPrivate *privProp = QQmlPropertyPrivate::get(prop);
-    if (!prop.isValid() || !privProp->writeValueProperty(value, nullptr)) {
+    if (!prop.isValid() || !privProp->writeValueProperty(value, {})) {
         QQmlError error{};
         error.setUrl(url);
         error.setDescription(QLatin1String("Could not set property %1").arg(name));

@@ -196,7 +196,7 @@ void QQuickBehavior::write(const QVariant &value)
     bool bypass = !d->enabled || !d->finalized || QQmlEnginePrivate::designerMode();
     if (!bypass)
         qmlExecuteDeferred(this);
-    if (!d->animation || bypass) {
+    if (QQmlData::wasDeleted(d->animation) || bypass) {
         if (d->animationInstance)
             d->animationInstance->stop();
         QQmlPropertyPrivate::write(d->property, value, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);

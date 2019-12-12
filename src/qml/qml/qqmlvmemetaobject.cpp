@@ -62,30 +62,73 @@
 
 QT_BEGIN_NAMESPACE
 
+class ResolvedList
+{
+    Q_DISABLE_COPY_MOVE(ResolvedList)
+
+public:
+    ResolvedList(QQmlListProperty<QObject> *prop) :
+        m_metaObject(static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(prop->object)->metaObject)),
+        m_id(quintptr(prop->data))
+    {
+        Q_ASSERT(m_metaObject);
+        Q_ASSERT(m_metaObject->object == prop->object);
+        Q_ASSERT(m_id <= quintptr(std::numeric_limits<int>::max() - m_metaObject->methodOffset()));
+
+        // readPropertyAsList() with all the checks transformed into Q_ASSERT
+        // and without allocation.
+        Q_ASSERT(!m_metaObject->propertyAndMethodStorage.isUndefined());
+        auto *md = static_cast<QV4::MemberData *>(m_metaObject->propertyAndMethodStorage.asManaged());
+        Q_ASSERT(md);
+        const auto *v = (md->data() + m_id)->as<QV4::VariantObject>();
+        Q_ASSERT(v);
+        Q_ASSERT(v->d());
+        QVariant &data = v->d()->data();
+        Q_ASSERT(data.userType() == qMetaTypeId<QList<QObject *>>());
+        m_list = static_cast<QList<QObject *> *>(data.data());
+        Q_ASSERT(m_list);
+    }
+
+    ~ResolvedList() = default;
+
+    QQmlVMEMetaObject *metaObject() const { return m_metaObject; }
+    QList<QObject *> *list() const { return m_list; }
+    quintptr id() const { return m_id; }
+
+    void activateSignal() const
+    {
+        m_metaObject->activate(m_metaObject->object, int(m_id + m_metaObject->methodOffset()),
+                               nullptr);
+    }
+
+private:
+    QQmlVMEMetaObject *m_metaObject = nullptr;
+    QList<QObject *> *m_list = nullptr;
+    quintptr m_id = 0;
+};
+
 static void list_append(QQmlListProperty<QObject> *prop, QObject *o)
 {
-    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
-    list->append(o);
-    static_cast<QQmlVMEMetaObject *>(prop->dummy1)->activate(prop->object, reinterpret_cast<quintptr>(prop->dummy2), nullptr);
+    const ResolvedList resolved(prop);
+    resolved.list()->append(o);
+    resolved.activateSignal();
 }
 
 static int list_count(QQmlListProperty<QObject> *prop)
 {
-    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
-    return list->count();
+    return ResolvedList(prop).list()->count();
 }
 
 static QObject *list_at(QQmlListProperty<QObject> *prop, int index)
 {
-    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
-    return list->at(index);
+    return ResolvedList(prop).list()->at(index);
 }
 
 static void list_clear(QQmlListProperty<QObject> *prop)
 {
-    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
-    list->clear();
-    static_cast<QQmlVMEMetaObject *>(prop->dummy1)->activate(prop->object, reinterpret_cast<quintptr>(prop->dummy2), nullptr);
+    const ResolvedList resolved(prop);
+    resolved.list()->clear();
+    resolved.activateSignal();
 }
 
 QQmlVMEVariantQObjectPtr::QQmlVMEVariantQObjectPtr()
@@ -401,57 +444,20 @@ void QQmlVMEMetaObject::writeProperty(int id, double v)
 void QQmlVMEMetaObject::writeProperty(int id, const QString& v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
-    if (md)
-        md->set(engine, id, engine->newString(v));
-}
-
-void QQmlVMEMetaObject::writeProperty(int id, const QUrl& v)
-{
-    QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
-    if (md)
-        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
-}
-
-void QQmlVMEMetaObject::writeProperty(int id, const QDate& v)
-{
-    QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
-    if (md)
-        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
-}
-
-void QQmlVMEMetaObject::writeProperty(int id, const QDateTime& v)
-{
-    QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
-    if (md)
-        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
-}
-
-void QQmlVMEMetaObject::writeProperty(int id, const QPointF& v)
-{
-    QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
-    if (md)
-        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
-}
-
-void QQmlVMEMetaObject::writeProperty(int id, const QSizeF& v)
-{
-    QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
-    if (md)
-        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
-}
-
-void QQmlVMEMetaObject::writeProperty(int id, const QRectF& v)
-{
-    QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
-    if (md)
-        md->set(engine, id, engine->newVariantObject(QVariant::fromValue(v)));
+    if (md) {
+        QV4::Scope scope(engine);
+        QV4::Scoped<QV4::MemberData>(scope, md)->set(engine, id, engine->newString(v));
+    }
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, QObject* v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
-    if (md)
-        md->set(engine, id, QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(engine, v)));
+    if (md) {
+        QV4::Scope scope(engine);
+        QV4::Scoped<QV4::MemberData>(scope, md)->set(engine, id, QV4::Value::fromReturnedValue(
+                                                         QV4::QObjectWrapper::wrap(engine, v)));
+    }
 
     QQmlVMEVariantQObjectPtr *guard = getQObjectGuardForProperty(id);
     if (v && !guard) {
@@ -720,13 +726,11 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         break;
                     case QV4::CompiledData::BuiltinType::InvalidBuiltin:
                         if (property.isList) {
-                            QList<QObject *> *list = readPropertyAsList(id);
-                            QQmlListProperty<QObject> *p = static_cast<QQmlListProperty<QObject> *>(a[0]);
-                            *p = QQmlListProperty<QObject>(object, list,
-                                                           list_append, list_count, list_at,
-                                                           list_clear);
-                            p->dummy1 = this;
-                            p->dummy2 = reinterpret_cast<void *>(quintptr(methodOffset() + id));
+                            readPropertyAsList(id); // Initializes if necessary
+                            *static_cast<QQmlListProperty<QObject> *>(a[0])
+                                    = QQmlListProperty<QObject>(
+                                        object, reinterpret_cast<void *>(quintptr(id)),
+                                        list_append, list_count, list_at, list_clear);
                         } else {
                             *reinterpret_cast<QObject **>(a[0]) = readPropertyAsQObject(id);
                         }
@@ -877,7 +881,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         int rv = QMetaObject::metacall(valueType, c, valueTypePropertyIndex, a);
 
                         if (c == QMetaObject::WriteProperty)
-                            valueType->write(target, coreIndex, nullptr);
+                            valueType->write(target, coreIndex, {});
 
                         return rv;
                     } else {

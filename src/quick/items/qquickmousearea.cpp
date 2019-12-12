@@ -62,7 +62,7 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
 QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
 : enabled(true), scrollGestureEnabled(true), hovered(false), longPress(false),
   moved(false), stealMouse(false), doubleClick(false), preventStealing(false),
-  propagateComposedEvents(false), overThreshold(false), pressed(nullptr),
+  propagateComposedEvents(false), overThreshold(false),
   pressAndHoldInterval(-1)
 #if QT_CONFIG(quick_draganddrop)
   , drag(nullptr)
@@ -939,6 +939,12 @@ void QQuickMouseArea::ungrabMouse()
 
 void QQuickMouseArea::mouseUngrabEvent()
 {
+    ungrabMouse();
+}
+
+void QQuickMouseArea::touchUngrabEvent()
+{
+    // allow a Pointer Handler to steal the grab from MouseArea
     ungrabMouse();
 }
 

@@ -7,6 +7,7 @@ Rectangle {
     property bool showHeader: false
     property bool showFooter: false
     property int currentItemChangedCount: 0
+    property string s: ""+list.currentIndex
 
     width: 240
     height: 320

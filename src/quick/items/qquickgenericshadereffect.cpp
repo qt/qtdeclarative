@@ -78,7 +78,6 @@ QQuickGenericShaderEffect::QQuickGenericShaderEffect(QQuickShaderEffect *item, Q
     , m_mgr(nullptr)
     , m_fragNeedsUpdate(true)
     , m_vertNeedsUpdate(true)
-    , m_dirty(nullptr)
 {
     qRegisterMetaType<QSGGuiThreadShaderEffectManager::ShaderInfo::Type>("ShaderInfo::Type");
     for (int i = 0; i < NShader; ++i)
@@ -311,7 +310,7 @@ QSGNode *QQuickGenericShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQui
         m_dirty &= ~QSGShaderEffectNode::DirtyShaderGeometry;
     }
 
-    m_dirty = nullptr;
+    m_dirty = {};
     for (int i = 0; i < NShader; ++i) {
         m_dirtyConstants[i].clear();
         m_dirtyTextures[i].clear();

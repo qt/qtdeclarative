@@ -29,32 +29,47 @@
 #ifndef FINDUNQUALIFIED_H
 #define FINDUNQUALIFIED_H
 
-#include "qmljstypedescriptionreader.h"
-#include "qcoloroutput_p.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
 
-#include <private/qqmljsastvisitor_p.h>
-#include <private/qqmljsast_p.h>
+#include "typedescriptionreader.h"
+#include "scopetree.h"
+#include "qcoloroutput.h"
 
-#include <QScopedPointer>
+#include <QtQml/private/qqmljsastvisitor_p.h>
+#include <QtQml/private/qqmljsast_p.h>
 
-class ScopeTree;
-enum class ScopeType;
+#include <QtCore/qscopedpointer.h>
 
-class FindUnqualifiedIDVisitor : public QQmlJS::AST::Visitor {
-
+class FindUnqualifiedIDVisitor : public QQmlJS::AST::Visitor
+{
+    Q_DISABLE_COPY_MOVE(FindUnqualifiedIDVisitor)
 public:
-    explicit FindUnqualifiedIDVisitor(QStringList const &qmltypeDirs, const QString& code,
-                                      const QString& fileName, bool silent);
-    ~FindUnqualifiedIDVisitor() override;
+    explicit FindUnqualifiedIDVisitor(QStringList qmltypeDirs, QString code,
+                                      QString fileName, bool silent);
+    ~FindUnqualifiedIDVisitor() override = default;
     bool check();
 
 private:
+    struct Import {
+        QHash<QString, ScopeTree::ConstPtr> objects;
+        QList<ModuleApiInfo> moduleApis;
+        QStringList dependencies;
+    };
+
     QScopedPointer<ScopeTree> m_rootScope;
-    ScopeTree *m_currentScope;
-    QHash<QString, LanguageUtils::FakeMetaObject::ConstPtr> m_exportedName2MetaObject;
+    ScopeTree *m_currentScope = nullptr;
+    QHash<QString, ScopeTree::ConstPtr> m_exportedName2Scope;
     QStringList m_qmltypeDirs;
-    const QString& m_code;
-    QHash<QString, LanguageUtils::FakeMetaObject::ConstPtr> m_qmlid2meta;
+    QString m_code;
+    QHash<QString, ScopeTree::ConstPtr> m_qmlid2scope;
     QString m_rootId;
     QString m_filePath;
     QSet<QPair<QString, QString>> m_alreadySeenImports;
@@ -62,17 +77,28 @@ private:
     ColorOutput m_colorOut;
     bool m_visitFailed = false;
 
-    struct OutstandingConnection {QString targetName; ScopeTree *scope; QQmlJS::AST::UiObjectDefinition *uiod;};
+    struct OutstandingConnection
+    {
+        QString targetName;
+        ScopeTree *scope;
+        QQmlJS::AST::UiObjectDefinition *uiod;
+    };
 
     QVarLengthArray<OutstandingConnection, 3> m_outstandingConnections; // Connections whose target we have not encountered
 
     void enterEnvironment(ScopeType type, QString name);
     void leaveEnvironment();
-    void importHelper(QString id, QString prefix, int major, int minor);
-    LanguageUtils::FakeMetaObject* localQmlFile2FakeMetaObject(QString filePath);
+    void importHelper(const QString &module, const QString &prefix = QString(),
+                      int major = -1, int minor = -1);
+
+    void readQmltypes(const QString &filename, Import &result);
+    Import readQmldir(const QString &dirname);
+    void processImport(const QString &prefix, const Import &import);
+
+    ScopeTree *localQmlFile2ScopeTree(const QString &filePath);
 
     void importDirectory(const QString &directory, const QString &prefix);
-    void importExportedNames(QStringRef prefix, QString name);
+    void importExportedNames(const QStringRef &prefix, QString name);
 
     void throwRecursionDepthError() override;
 
@@ -129,6 +155,5 @@ private:
 
     bool visit(QQmlJS::AST::PatternElement *) override;
 };
-
 
 #endif // FINDUNQUALIFIED_H

@@ -195,8 +195,16 @@ public:
     bool eventFilter(QObject *watched, QEvent *event) override;
 
     struct WindowData {
+        WindowData()
+            : updatePending(false),
+              grabOnly(false),
+              rhiDeviceLost(false),
+              rhiDoomed(false)
+        { }
         bool updatePending : 1;
         bool grabOnly : 1;
+        bool rhiDeviceLost : 1;
+        bool rhiDoomed : 1;
     };
 
     QHash<QQuickWindow *, WindowData> m_windows;
@@ -316,15 +324,19 @@ void QSGRenderLoop::setInstance(QSGRenderLoop *instance)
     s_instance = instance;
 }
 
-void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window,
-                                                 bool isEs)
+void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window)
 {
     QString translatedMessage;
     QString untranslatedMessage;
-    QQuickWindowPrivate::contextCreationFailureMessage(window->requestedFormat(),
+    if (QSGRhiSupport::instance()->isRhiEnabled()) {
+        QQuickWindowPrivate::rhiCreationFailureMessage(QSGRhiSupport::instance()->rhiBackendName(),
                                                        &translatedMessage,
-                                                       &untranslatedMessage,
-                                                       isEs);
+                                                       &untranslatedMessage);
+    } else {
+        QQuickWindowPrivate::contextCreationFailureMessage(window->requestedFormat(),
+                                                           &translatedMessage,
+                                                           &untranslatedMessage);
+    }
     // If there is a slot connected to the error signal, emit it and leave it to
     // the application to do something with the message. If nothing is connected,
     // show a message on our own and terminate.
@@ -362,10 +374,7 @@ QSGGuiThreadRenderLoop::~QSGGuiThreadRenderLoop()
 
 void QSGGuiThreadRenderLoop::show(QQuickWindow *window)
 {
-    WindowData data;
-    data.updatePending = false;
-    data.grabOnly = false;
-    m_windows[window] = data;
+    m_windows[window] = WindowData();
 
     maybeUpdate(window);
 }
@@ -451,8 +460,10 @@ void QSGGuiThreadRenderLoop::handleDeviceLoss()
 
     rc->invalidate();
 
-    for (auto it = m_windows.constBegin(), itEnd = m_windows.constEnd(); it != itEnd; ++it)
+    for (auto it = m_windows.begin(), itEnd = m_windows.end(); it != itEnd; ++it) {
         releaseSwapchain(it.key());
+        it->rhiDeviceLost = true;
+    }
 
     delete rhi;
     rhi = nullptr;
@@ -508,6 +519,13 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     const bool enableRhi = rhiSupport->isRhiEnabled();
 
     if (enableRhi && !rhi) {
+        // This block below handles both the initial QRhi initialization and
+        // also the subsequent reinitialization attempts after a device lost
+        // (reset) situation.
+
+        if (data.rhiDoomed) // no repeated attempts if the initial attempt failed
+            return;
+
         if (!offscreenSurface)
             offscreenSurface = rhiSupport->maybeCreateOffscreenSurface(window);
 
@@ -516,6 +534,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         if (rhi) {
             if (rhiSupport->isProfilingRequested())
                 QSGRhiProfileConnection::instance()->initialize(rhi);
+
+            data.rhiDeviceLost = false;
 
             current = true;
             rhi->makeThreadLocalNativeContextCurrent();
@@ -533,7 +553,11 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             rcParams.maybeSurface = window;
             cd->context->initialize(&rcParams);
         } else {
-            handleContextCreationFailure(window, false);
+            if (!data.rhiDeviceLost) {
+                data.rhiDoomed = true;
+                handleContextCreationFailure(window);
+            }
+            // otherwise no error, will retry on a subsequent rendering attempt
         }
     } else if (!enableRhi && !gl) {
         gl = new QOpenGLContext();
@@ -542,10 +566,9 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         if (qt_gl_global_share_context())
             gl->setShareContext(qt_gl_global_share_context());
         if (!gl->create()) {
-            const bool isEs = gl->isOpenGLES();
             delete gl;
             gl = nullptr;
-            handleContextCreationFailure(window, isEs);
+            handleContextCreationFailure(window);
         } else {
             if (!offscreenSurface) {
                 offscreenSurface = new QOffscreenSurface;
@@ -619,7 +642,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         i++;
     }
 
-    // Check for context loss.
+    // Check for context loss. (legacy GL only)
     if (!current && !rhi && !gl->isValid()) {
         for (auto it = m_windows.constBegin() ; it != m_windows.constEnd(); it++) {
             QQuickWindowPrivate *windowPrivate = QQuickWindowPrivate::get(it.key());
@@ -747,7 +770,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 
     const bool needsPresent = alsoSwap && window->isVisible();
     if (cd->swapchain) {
-        QRhi::EndFrameFlags flags = 0;
+        QRhi::EndFrameFlags flags;
         if (!needsPresent)
             flags |= QRhi::SkipPresent;
         QRhi::FrameOpResult frameResult = rhi->endFrame(cd->swapchain, flags);

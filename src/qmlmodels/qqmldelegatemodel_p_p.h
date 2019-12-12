@@ -49,6 +49,8 @@
 #include <private/qqmladaptormodel_p.h>
 #include <private/qqmlopenmetaobject_p.h>
 
+#include <QtCore/qloggingcategory.h>
+
 //
 //  W A R N I N G
 //  -------------
@@ -63,6 +65,8 @@
 QT_REQUIRE_CONFIG(qml_delegate_model);
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcItemViewDelegateRecycling)
 
 typedef QQmlListCompositor Compositor;
 
@@ -129,7 +133,7 @@ public:
     int modelRow() const { return row; }
     int modelColumn() const { return column; }
     int modelIndex() const { return index; }
-    virtual void setModelIndex(int idx, int newRow, int newColumn);
+    virtual void setModelIndex(int idx, int newRow, int newColumn, bool alwaysEmit = false);
 
     virtual QV4::ReturnedValue get() { return QV4::QObjectWrapper::wrap(v4, this); }
 
@@ -190,7 +194,18 @@ void QV4::Heap::QQmlDelegateModelItemObject::init(QQmlDelegateModelItem *item)
     this->item = item;
 }
 
+class QQmlReusableDelegateModelItemsPool
+{
+public:
+    void insertItem(QQmlDelegateModelItem *modelItem);
+    QQmlDelegateModelItem *takeItem(const QQmlComponent *delegate, int newIndexHint);
+    void reuseItem(QQmlDelegateModelItem *item, int newModelIndex);
+    void drain(int maxPoolTime, std::function<void(QQmlDelegateModelItem *cacheItem)> releaseItem);
+    int size() { return m_reusableItemsPool.size(); }
 
+private:
+    QList<QQmlDelegateModelItem *> m_reusableItemsPool;
+};
 
 class QQmlDelegateModelPrivate;
 class QQDMIncubationTask : public QQmlIncubator
@@ -278,7 +293,7 @@ public:
 
     void requestMoreIfNecessary();
     QObject *object(Compositor::Group group, int index, QQmlIncubator::IncubationMode incubationMode);
-    QQmlDelegateModel::ReleaseFlags release(QObject *object);
+    QQmlDelegateModel::ReleaseFlags release(QObject *object, QQmlInstanceModel::ReusableFlag reusable = QQmlInstanceModel::NotReusable);
     QVariant variantValue(Compositor::Group group, int index, const QString &name);
     void emitCreatedPackage(QQDMIncubationTask *incubationTask, QQuickPackage *package);
     void emitInitPackage(QQDMIncubationTask *incubationTask, QQuickPackage *package);
@@ -290,8 +305,12 @@ public:
     void emitDestroyingItem(QObject *item) { Q_EMIT q_func()->destroyingItem(item); }
     void addCacheItem(QQmlDelegateModelItem *item, Compositor::iterator it);
     void removeCacheItem(QQmlDelegateModelItem *cacheItem);
-
+    void destroyCacheItem(QQmlDelegateModelItem *cacheItem);
     void updateFilterGroup();
+
+    void reuseItem(QQmlDelegateModelItem *item, int newModelIndex, int newGroups);
+    void drainReusableItemsPool(int maxPoolTime);
+    QQmlComponent *resolveDelegate(int index);
 
     void addGroups(Compositor::iterator from, int count, Compositor::Group group, int groupFlags);
     void removeGroups(Compositor::iterator from, int count, Compositor::Group group, int groupFlags);
@@ -337,6 +356,7 @@ public:
     QQmlDelegateModelGroupEmitterList m_pendingParts;
 
     QList<QQmlDelegateModelItem *> m_cache;
+    QQmlReusableDelegateModelItemsPool m_reusableItemsPool;
     QList<QQDMIncubationTask *> m_finishedIncubating;
     QList<QByteArray> m_watchedRoles;
 
@@ -380,7 +400,7 @@ public:
     int count() const override;
     bool isValid() const override;
     QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
-    ReleaseFlags release(QObject *item) override;
+    ReleaseFlags release(QObject *item, ReusableFlag reusable = NotReusable) override;
     QVariant variantValue(int index, const QString &role) override;
     QList<QByteArray> watchedRoles() const { return m_watchedRoles; }
     void setWatchedRoles(const QList<QByteArray> &roles) override;
@@ -399,7 +419,7 @@ Q_SIGNALS:
 
 private:
     QQmlDelegateModel *m_model;
-    QHash<QObject *, QQuickPackage *> m_packaged;
+    QMultiHash<QObject *, QQuickPackage *> m_packaged;
     QString m_part;
     QString m_filterGroup;
     QList<QByteArray> m_watchedRoles;

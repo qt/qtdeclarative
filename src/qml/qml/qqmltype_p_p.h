@@ -82,6 +82,18 @@ public:
         }
     }
 
+    const QQmlTypePrivate *attachedPropertiesBase(QQmlEnginePrivate *engine) const
+    {
+        for (const QQmlTypePrivate *d = this; d; d = d->resolveCompositeBaseType(engine).d.data()) {
+            if (d->regType == QQmlType::CppType)
+                return d->extraData.cd->attachedPropertiesType ? d : nullptr;
+
+            if (d->regType != QQmlType::CompositeType)
+                return nullptr;
+        }
+        return nullptr;
+    }
+
     bool isComposite() const
     {
         return regType == QQmlType::CompositeType || regType == QQmlType::CompositeSingletonType;

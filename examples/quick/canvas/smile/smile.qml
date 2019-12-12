@@ -97,7 +97,6 @@ Item {
                 ctx.save();
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.translate(originX, originX);
-                ctx.globalAlpha = canvas.alpha;
                 ctx.strokeStyle = canvas.strokeStyle;
                 ctx.fillStyle = canvas.fillStyle;
                 ctx.lineWidth = canvas.lineWidth;
