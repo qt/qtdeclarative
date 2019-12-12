@@ -299,6 +299,13 @@ Additional import paths can be added through QQmlEngine::addImportPath() or the
 \l{Prototyping with qmlscene}{qmlscene} tool, you can also use the \c -I option
 to add an import path.
 
+You can specify multiple import paths in the \c QML2_IMPORT_PATH environment
+variable by joining them using the path separator. On Windows the path separator
+is a semicolon (;), on other platforms it is a colon (:). This means that you
+cannot specify resource paths or URLs in QML2_IMPORT_PATH, as they contain
+colons themselves. However, you can add resource paths and URLs by calling
+QQmlEngine::addImportPath() programatically.
+
 
 \section1 Debugging
 
