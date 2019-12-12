@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC_WITH_ARGS(QString, GlobalPath, (QLatin1String("qrc:/qt-project.org/imports/QtQuick/Controls.2/Imagine/images/")))
 
-static const QString ensureSlash(const QString &path)
+static QString ensureSlash(const QString &path)
 {
     const QChar slash = QLatin1Char('/');
     return path.endsWith(slash) ? path : path + slash;
