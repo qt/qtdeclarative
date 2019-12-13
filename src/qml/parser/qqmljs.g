@@ -122,6 +122,7 @@
 --%left T_PLUS T_MINUS
 %nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET T_OF T_STATIC T_FROM T_AS
 %nonassoc REDUCE_HERE
+%right T_WITHOUTAS T_AS
 
 %start TopLevel
 
@@ -4390,7 +4391,10 @@ ImportsList: ImportsList T_COMMA ImportSpecifier;
     } break;
 ./
 
-ImportSpecifier: ImportedBinding;
+-- When enconutering an IdentifierReference it can resolve to both ImportedBinding and IdentifierName
+-- Using %right and %prec, we tell qlalr that it should not reduce immediately, but rather shift
+-- so that we have a chance of actually parsing the correct rule if there is an "as" identifier
+ImportSpecifier: ImportedBinding %prec T_WITHOUTAS;
 /.
     case $rule_number: {
         auto importSpecifier = new (pool) AST::ImportSpecifier(stringRef(1));

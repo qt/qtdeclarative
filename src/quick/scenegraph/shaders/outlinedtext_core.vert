@@ -21,6 +21,6 @@ void main()
      sCoordDown = (tCoord - vec2(0.0, 1.0)) * textureScale;
      sCoordLeft = (tCoord - vec2(-1.0, 0.0)) * textureScale;
      sCoordRight = (tCoord - vec2(1.0, 0.0)) * textureScale;
-     vec3 dprSnapPos = round(vCoord.xyz * dpr + 0.5) / dpr;
+     vec3 dprSnapPos = floor(vCoord.xyz * dpr + 0.5) / dpr;
      gl_Position = matrix * vec4(dprSnapPos, vCoord.w);
 }

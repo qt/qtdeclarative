@@ -12,6 +12,6 @@ uniform float dpr;
 void main()
 {
      sampleCoord = tCoord * textureScale;
-     vec3 dprSnapPos = round(vCoord.xyz * dpr + 0.5) / dpr;
+     vec3 dprSnapPos = floor(vCoord.xyz * dpr + 0.5) / dpr;
      gl_Position = matrix * vec4(dprSnapPos, vCoord.w);
 }
