@@ -1,0 +1,123 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the tools applications of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:GPL-EXCEPT$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 as published by the Free Software
+** Foundation with exceptions as appearing in the file LICENSE.GPL3-EXCEPT
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef DUMPAST_H
+#define DUMPAST_H
+
+#include <QtQml/private/qqmljsastvisitor_p.h>
+#include <QtQml/private/qqmljsast_p.h>
+
+#include "commentastvisitor.h"
+
+using namespace QQmlJS::AST;
+
+class DumpAstVisitor : protected Visitor
+{
+public:
+    DumpAstVisitor(Node *rootNode, CommentAstVisitor *comment);
+
+    QString toString() const { return m_result; }
+
+    bool visit(UiScriptBinding *node) override;
+
+    bool visit(UiArrayBinding *node) override;
+    void endVisit(UiArrayBinding *node) override;
+
+    bool visit(UiObjectBinding *node) override;
+    void endVisit(UiObjectBinding *node) override;
+
+    bool visit(FunctionDeclaration *node) override;
+
+    bool visit(UiObjectDefinition *node) override;
+    void endVisit(UiObjectDefinition *node) override;
+
+    bool visit(UiEnumDeclaration *node) override;
+    void endVisit(UiEnumDeclaration *node) override;
+
+    bool visit(UiEnumMemberList *node) override;
+    bool visit(UiPublicMember *node) override;
+    bool visit(UiImport *node) override;
+
+    void throwRecursionDepthError() override {}
+
+    bool error() const { return m_error; }
+private:
+    QString generateIndent() const;
+    QString formatLine(QString line, bool newline=true) const;
+
+    QString formatComment(const Comment &comment) const;
+
+    QString getComment(Node *node, Comment::Location location) const;
+    QString getListItemComment(SourceLocation srcLocation, Comment::Location location) const;
+
+    void addNewLine(bool always=false);
+    void addLine(QString line);
+
+    QString getOrphanedComments(Node *node) const;
+
+    QString parseStatement(Statement *statement, bool blockHasNext=false,
+                           bool blockAllowBraceless=true);
+    QString parseStatementList(StatementList *list);
+
+    QString parseExpression(ExpressionNode *expression);
+
+    QString parsePatternElement(PatternElement *element, bool scope=true);
+    QString parsePatternElementList(PatternElementList *element);
+
+    QString parseArgumentList(ArgumentList *list);
+
+    QString parseUiParameterList(UiParameterList *list);
+
+    QString parseVariableDeclarationList(VariableDeclarationList *list);
+
+    QString parseCaseBlock(CaseBlock *block);
+    QString parseBlock(Block *block, bool hasNext, bool allowBraceless);
+
+    QString parseExportsList(ExportsList *list);
+    QString parseExportSpecifier(ExportSpecifier *specifier);
+
+    QString parseFormalParameterList(FormalParameterList *list);
+
+    int m_indentLevel = 0;
+
+    bool m_error = false;
+    bool m_blockNeededBraces = false;
+    bool m_inArrayBinding = false;
+
+    bool m_firstOfAll = false;
+    bool m_firstSignal = false;
+    bool m_firstProperty = false;
+    bool m_firstBinding = false;
+    bool m_firstObject = true;
+
+    UiObjectMember* m_lastInArrayBinding = nullptr;
+    QString m_result = "";
+    CommentAstVisitor *m_comment;
+};
+
+#endif // DUMPAST_H

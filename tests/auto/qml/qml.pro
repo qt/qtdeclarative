@@ -12,6 +12,7 @@ PUBLICTESTS += \
     qqmlfileselector
 
 PUBLICTESTS += \
+    qmlformat \
     qmlmin \
     qqmlcomponent \
     qqmlconsole \
