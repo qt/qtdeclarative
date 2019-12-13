@@ -168,6 +168,7 @@ void tst_QQuickWorkerScript::messaging_data()
                                                          QRegExp::RegExp2));
     QTest::newRow("regularexpression") << QVariant::fromValue(QRegularExpression(
             "^\\d\\d?$", QRegularExpression::CaseInsensitiveOption));
+    QTest::newRow("url") << QVariant::fromValue(QUrl("http://example.com/foo/bar"));
 }
 
 void tst_QQuickWorkerScript::messaging_sendQObjectList()
