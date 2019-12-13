@@ -557,8 +557,9 @@ void QQuickToolTipAttached::hide()
     QQuickToolTip *tip = d->instance(false);
     if (!tip)
         return;
-
-    tip->close();
+    // check the parent item to prevent unexpectedly closing tooltip by new created invisible tooltip
+    if (parent() == tip->parentItem())
+        tip->close();
 }
 
 QT_END_NAMESPACE
