@@ -4,10 +4,10 @@ Rectangle {
     width: 320
     height: 480
     color: "skyblue"
-    ShaderEffect{
+    ShaderEffect {
         anchors.centerIn: parent
-        width: 16 * 16
-        height: 24 * 16
+        width: 22 * 12
+        height: 16 * 12
         property variant source: ShaderEffectSource {
             sourceItem: Rectangle {
                 width: 22 * 20
@@ -40,18 +40,7 @@ Rectangle {
             }
             smooth: true
         }
-        vertexShader: "
-            uniform highp mat4 qt_Matrix;
-            attribute highp vec4 qt_Vertex;
-            attribute highp vec2 qt_MultiTexCoord0;
-            varying highp vec2 qt_TexCoord0;
-            void main() {
-                highp vec4 pos = qt_Vertex;
-                pos.x += sin(qt_Vertex.y * 0.02) * 20.;
-                pos.y += sin(qt_Vertex.x * 0.02) * 20.;
-                gl_Position = qt_Matrix * pos;
-                qt_TexCoord0 = qt_MultiTexCoord0;
-            }"
+        vertexShader: "qrc:shaders/wave.vert"
         mesh: GridMesh {
             property int r: 2
             resolution: Qt.size(r, r)

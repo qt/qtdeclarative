@@ -152,7 +152,7 @@ void tst_Scenegraph::testNoTextRendering()
 
 void tst_Scenegraph::testRendering_data()
 {
-    setupTestSuite(usingRhi ? "shaders/" : "");   // on RHI, skip shader effects tests for now
+    setupTestSuite();
     consecutiveErrors = 0;
     aborted = false;
 }
