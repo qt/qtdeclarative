@@ -132,7 +132,11 @@ public:
 
     ScopeType scopeType() const { return m_scopeType; }
 
-    void addMethods(const QHash<QString, MetaMethod> &methods) { m_methods.unite(methods); }
+    void addMethods(const QHash<QString, MetaMethod> &methods)
+    {
+        for (auto it = methods.begin(), end = methods.end(); it != end; ++it)
+            m_methods.insert(it.key(), it.value());
+    }
     void addMethod(const MetaMethod &method) { m_methods.insert(method.methodName(), method); }
     QHash<QString, MetaMethod> methods() const { return m_methods; }
 
