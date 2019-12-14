@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -57,6 +57,7 @@ Window {
             addExample("multibuttons", "TapHandler: gesturePolicy (99 red balloons)", Qt.resolvedUrl("multibuttons.qml"))
             addExample("flickable with Handlers", "Flickable with buttons, sliders etc. implemented in various ways", Qt.resolvedUrl("flickableWithHandlers.qml"))
             addExample("tap and drag", "Flickable with all possible combinations of TapHandler and DragHandler children", Qt.resolvedUrl("pointerDrag.qml"))
+            addExample("tablet canvas", "PointHandler and HoverHandler with a tablet: detect the stylus, and draw", Qt.resolvedUrl("tabletCanvasDrawing.qml"))
         }
     }
     Item {

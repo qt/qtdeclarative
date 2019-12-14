@@ -93,6 +93,7 @@ Q_LOGGING_CATEGORY(DBG_TOUCH, "qt.quick.touch")
 Q_LOGGING_CATEGORY(DBG_TOUCH_TARGET, "qt.quick.touch.target")
 Q_LOGGING_CATEGORY(DBG_MOUSE, "qt.quick.mouse")
 Q_LOGGING_CATEGORY(DBG_MOUSE_TARGET, "qt.quick.mouse.target")
+Q_LOGGING_CATEGORY(lcTablet, "qt.quick.tablet")
 Q_LOGGING_CATEGORY(lcWheelTarget, "qt.quick.wheel.target")
 Q_LOGGING_CATEGORY(lcGestureTarget, "qt.quick.gesture.target")
 Q_LOGGING_CATEGORY(DBG_HOVER_TRACE, "qt.quick.hover.trace")
@@ -2122,6 +2123,17 @@ void QQuickWindow::wheelEvent(QWheelEvent *event)
 }
 #endif // wheelevent
 
+#if QT_CONFIG(tabletevent)
+/*! \reimp */
+void QQuickWindow::tabletEvent(QTabletEvent *event)
+{
+    Q_D(QQuickWindow);
+    qCDebug(lcTablet) << event;
+    // TODO Qt 6: make sure TabletEnterProximity and TabletLeaveProximity are delivered here
+    d->deliverPointerEvent(d->pointerEventInstance(event));
+}
+#endif // tabletevent
+
 bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
 {
     qCDebug(DBG_TOUCH) << event;
@@ -2400,8 +2412,12 @@ QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QQuickPointerDevic
 #endif
             ev = new QQuickPointerTouchEvent(q, device);
         break;
+    case QQuickPointerDevice::Stylus:
+    case QQuickPointerDevice::Airbrush:
+    case QQuickPointerDevice::Puck:
+        ev = new QQuickPointerTabletEvent(q, device);
+        break;
     default:
-        // TODO tablet event types
         break;
     }
     pointerEventInstances << ev;
@@ -2432,7 +2448,15 @@ QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QEvent *event) con
     case QEvent::TouchCancel:
         dev = QQuickPointerDevice::touchDevice(static_cast<QTouchEvent *>(event)->device());
         break;
-    // TODO tablet event types
+#if QT_CONFIG(tabletevent)
+    case QEvent::TabletPress:
+    case QEvent::TabletMove:
+    case QEvent::TabletRelease:
+    case QEvent::TabletEnterProximity:
+    case QEvent::TabletLeaveProximity:
+        dev = QQuickPointerDevice::tabletDevice(static_cast<QTabletEvent *>(event));
+        break;
+#endif
 #if QT_CONFIG(gestures)
     case QEvent::NativeGesture:
         dev = QQuickPointerDevice::touchDevice(static_cast<QNativeGestureEvent *>(event)->device());
@@ -2467,6 +2491,11 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
         deliverTouchEvent(event->asPointerTouchEvent());
     } else {
         deliverSinglePointEventUntilAccepted(event);
+        // If any handler got interested in the tablet event, we don't want to receive a synth-mouse event from QtGui
+        // TODO Qt 6: QTabletEvent will be accepted by default, like other events
+        if (event->asPointerTabletEvent() &&
+                (!event->point(0)->passiveGrabbers().isEmpty() || event->point(0)->exclusiveGrabber()))
+            event->setAccepted(true);
     }
 
     event->reset(nullptr);

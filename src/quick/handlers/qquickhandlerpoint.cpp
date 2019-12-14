@@ -120,7 +120,10 @@ void QQuickHandlerPoint::reset(const QQuickEventPoint *point)
         m_pressure = tp->pressure();
         m_ellipseDiameters = tp->ellipseDiameters();
     } else if (event->asPointerTabletEvent()) {
-        // TODO
+        m_uniqueId = event->device()->uniqueId();
+        m_rotation = static_cast<const QQuickEventTabletPoint *>(point)->rotation();
+        m_pressure = static_cast<const QQuickEventTabletPoint *>(point)->pressure();
+        m_ellipseDiameters = QSizeF();
     } else {
         m_uniqueId = event->device()->uniqueId();
         m_rotation = 0;

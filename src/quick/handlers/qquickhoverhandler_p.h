@@ -84,6 +84,7 @@ private:
 
 private:
     bool m_hovered = false;
+    bool m_hoveredTablet = false;
 };
 
 QT_END_NAMESPACE
