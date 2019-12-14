@@ -92,6 +92,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickComboBox : public QQuickControl
     // 2.14 (Qt 5.14)
     Q_PROPERTY(QVariant currentValue READ currentValue NOTIFY currentValueChanged FINAL REVISION 14)
     Q_PROPERTY(QString valueRole READ valueRole WRITE setValueRole NOTIFY valueRoleChanged FINAL REVISION 14)
+    // 2.15 (Qt 5.15)
+    Q_PROPERTY(bool selectTextByMouse READ selectTextByMouse WRITE setSelectTextByMouse NOTIFY selectTextByMouseChanged FINAL REVISION 15)
 
 public:
     explicit QQuickComboBox(QQuickItem *parent = nullptr);
@@ -169,6 +171,10 @@ public:
     Q_REVISION(14) Q_INVOKABLE QVariant valueAt(int index) const;
     Q_REVISION(14) Q_INVOKABLE int indexOfValue(const QVariant &value) const;
 
+    // 2.15 (Qt 5.15)
+    bool selectTextByMouse() const;
+    void setSelectTextByMouse(bool canSelect);
+
 public Q_SLOTS:
     void incrementCurrentIndex();
     void decrementCurrentIndex();
@@ -206,6 +212,8 @@ Q_SIGNALS:
     // 2.14 (Qt 5.14)
     Q_REVISION(14) void valueRoleChanged();
     Q_REVISION(14) void currentValueChanged();
+    // 2.15 (Qt 5.15)
+    Q_REVISION(15) void selectTextByMouseChanged();
 
 protected:
     bool eventFilter(QObject *object, QEvent *event) override;
