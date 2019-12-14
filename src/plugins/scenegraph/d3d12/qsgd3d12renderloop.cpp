@@ -49,6 +49,8 @@
 #include <QGuiApplication>
 #include <QScreen>
 
+#include <qtquick_tracepoints_p.h>
+
 QT_BEGIN_NAMESPACE
 
 // NOTE: Avoid categorized logging. It is slow.
@@ -403,6 +405,8 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
         return;
     }
 
+    Q_TRACE_SCOPE(QSG_renderWindow);
+
     if (!data.grabOnly)
         wd->flushFrameSynchronousEvents();
 
@@ -412,14 +416,17 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
     if (profileFrames)
         renderTimer.start();
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphPolishFrame);
+    Q_TRACE(QSG_polishItems_entry);
 
     wd->polishItems();
 
     if (profileFrames)
         polishTime = renderTimer.nsecsElapsed();
+    Q_TRACE(QSG_polishItems_exit);
     Q_QUICK_SG_PROFILE_SWITCH(QQuickProfiler::SceneGraphPolishFrame,
                               QQuickProfiler::SceneGraphRenderLoopFrame,
                               QQuickProfiler::SceneGraphPolishPolish);
+    Q_TRACE(QSG_sync_entry);
 
     emit window->afterAnimating();
 
@@ -462,15 +469,19 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
 
     if (profileFrames)
         syncTime = renderTimer.nsecsElapsed();
+    Q_TRACE(QSG_sync_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
                               QQuickProfiler::SceneGraphRenderLoopSync);
+    Q_TRACE(QSG_render_entry);
 
     wd->renderSceneGraph(window->size());
 
     if (profileFrames)
         renderTime = renderTimer.nsecsElapsed();
+    Q_TRACE(QSG_render_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
                               QQuickProfiler::SceneGraphRenderLoopRender);
+    Q_TRACE(QSG_swap_entry);
 
     if (!data.grabOnly) {
         // The engine is able to have multiple frames in flight. This in effect is
@@ -497,6 +508,7 @@ void QSGD3D12RenderLoop::renderWindow(QQuickWindow *window)
     qint64 swapTime = 0;
     if (profileFrames)
         swapTime = renderTimer.nsecsElapsed();
+    Q_TRACE(QSG_swap_exit);
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame,
                            QQuickProfiler::SceneGraphRenderLoopSwap);
 

@@ -27,7 +27,9 @@ win32 {
 }
 
 qtConfig(vulkan) {
-    SUBDIRS += vulkanunderqml
+    SUBDIRS += \
+        vulkanunderqml \
+        vulkantextureimport
 }
 
 EXAMPLE_FILES += \

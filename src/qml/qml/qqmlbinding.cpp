@@ -54,6 +54,8 @@
 #include <private/qv4variantobject_p.h>
 #include <private/qv4jscall_p.h>
 
+#include <qtqml_tracepoints_p.h>
+
 #include <QVariant>
 #include <QtCore/qdebug.h>
 #include <QVector>
@@ -182,6 +184,8 @@ void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
     if (canUseAccessor())
         flags.setFlag(QQmlPropertyData::BypassInterceptor);
 
+    Q_TRACE_SCOPE(QQmlBinding, engine, function() ? function()->name()->toQString() : QString(),
+                  sourceLocation().sourceFile, sourceLocation().line, sourceLocation().column);
     QQmlBindingProfiler prof(QQmlEnginePrivate::get(engine)->profiler, function());
     doUpdate(watcher, flags, scope);
 

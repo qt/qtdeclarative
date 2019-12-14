@@ -60,6 +60,7 @@
 
 #include <QtCore/qdebug.h>
 
+#include <qtqml_tracepoints_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -352,6 +353,10 @@ void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
 
     QQmlEngine *engine;
     if (s->m_expression && (engine = s->m_expression->engine())) {
+        Q_TRACE_SCOPE(QQmlHandlingSignal, engine,
+                      s->m_expression->function() ? s->m_expression->function()->name()->toQString() : QString(),
+                      s->m_expression->sourceLocation().sourceFile, s->m_expression->sourceLocation().line,
+                      s->m_expression->sourceLocation().column);
         QQmlHandlingSignalProfiler prof(QQmlEnginePrivate::get(engine)->profiler, s->m_expression);
         s->m_expression->evaluate(a);
         if (s->m_expression && s->m_expression->hasError()) {

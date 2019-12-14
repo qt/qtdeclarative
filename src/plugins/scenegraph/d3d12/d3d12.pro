@@ -6,6 +6,18 @@ PLUGIN_TYPE = scenegraph
 PLUGIN_CLASS_NAME = QSGD3D12Adaptation
 load(qt_plugin)
 
+TRACEPOINT_PROVIDER = $$PWD/d3d12.tracepoints
+CONFIG += qt_tracepoints
+debug_and_release {
+    CONFIG(debug, debug|release) {
+        INCLUDEPATH += $$OUT_PWD/../../../quick/.tracegen/debug
+    } else {
+        INCLUDEPATH += $$OUT_PWD/../../../quick/.tracegen/release
+    }
+} else {
+    INCLUDEPATH += $$OUT_PWD/../../../quick/.tracegen/
+}
+
 QMAKE_TARGET_PRODUCT = "Qt Quick D3D12 Renderer (Qt $$QT_VERSION)"
 QMAKE_TARGET_DESCRIPTION = "Quick D3D12 Renderer for Qt."
 

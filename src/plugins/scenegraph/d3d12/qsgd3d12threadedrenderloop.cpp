@@ -52,6 +52,8 @@
 #include <QQueue>
 #include <QGuiApplication>
 
+#include <qtquick_tracepoints_p.h>
+
 QT_BEGIN_NAMESPACE
 
 // NOTE: Avoid categorized logging. It is slow.
@@ -560,11 +562,13 @@ void QSGD3D12RenderThread::sync(bool inExpose)
 
 void QSGD3D12RenderThread::syncAndRender()
 {
+    Q_TRACE_SCOPE(QSG_syncAndRender);
     if (Q_UNLIKELY(debug_time())) {
         sinceLastTime = threadTimer.nsecsElapsed();
         threadTimer.start();
     }
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphRenderLoopFrame);
+    Q_TRACE(QSG_sync_entry);
 
     QElapsedTimer waitTimer;
     waitTimer.start();
@@ -587,6 +591,7 @@ void QSGD3D12RenderThread::syncAndRender()
     if (Q_UNLIKELY(debug_time()))
         syncTime = threadTimer.nsecsElapsed();
 #endif
+    Q_TRACE(QSG_sync_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
                               QQuickProfiler::SceneGraphRenderLoopSync);
 
@@ -598,6 +603,7 @@ void QSGD3D12RenderThread::syncAndRender()
             msleep(waitTime);
         return;
     }
+    Q_TRACE(QSG_render_entry);
 
     if (Q_UNLIKELY(debug_loop()))
         qDebug("RT - rendering started");
@@ -623,8 +629,10 @@ void QSGD3D12RenderThread::syncAndRender()
         wd->renderSceneGraph(engine->windowSize());
         if (Q_UNLIKELY(debug_time()))
             renderTime = threadTimer.nsecsElapsed();
+        Q_TRACE(QSG_render_exit);
         Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
                                   QQuickProfiler::SceneGraphRenderLoopRender);
+        Q_TRACE(QSG_swap_entry);
 
         // The engine is able to have multiple frames in flight. This in effect is
         // similar to BufferQueueingOpenGL. Provide an env var to force the
@@ -641,8 +649,10 @@ void QSGD3D12RenderThread::syncAndRender()
         // blockOnEachFrame is not used, but emit it for compatibility.
         wd->fireFrameSwapped();
     } else {
+        Q_TRACE(QSG_render_exit);
         Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphRenderLoopFrame,
                                 QQuickProfiler::SceneGraphRenderLoopSync, 1);
+        Q_TRACE(QSG_swap_entry);
         if (Q_UNLIKELY(debug_loop()))
             qDebug("RT - window not ready, skipping render");
     }
@@ -664,6 +674,7 @@ void QSGD3D12RenderThread::syncAndRender()
                int((renderTime - syncTime) / 1000000),
                int(threadTimer.elapsed() - renderTime / 1000000));
 
+    Q_TRACE(QSG_swap_exit);
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame,
                            QQuickProfiler::SceneGraphRenderLoopSwap);
 
@@ -1103,6 +1114,8 @@ void QSGD3D12ThreadedRenderLoop::polishAndSync(WindowData *w, bool inExpose)
         return;
     }
 
+    Q_TRACE_SCOPE(QSG_polishAndSync);
+
     // Flush pending touch events.
     QQuickWindowPrivate::get(window)->flushFrameSynchronousEvents();
     // The delivery of the event might have caused the window to stop rendering
@@ -1120,14 +1133,17 @@ void QSGD3D12ThreadedRenderLoop::polishAndSync(WindowData *w, bool inExpose)
     if (Q_UNLIKELY(debug_time()))
         timer.start();
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphPolishAndSync);
+    Q_TRACE(QSG_polishItems_entry);
 
     QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
     wd->polishItems();
 
     if (Q_UNLIKELY(debug_time()))
         polishTime = timer.nsecsElapsed();
+    Q_TRACE(QSG_polishItems_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
                               QQuickProfiler::SceneGraphPolishAndSyncPolish);
+    Q_TRACE(QSG_wait_entry);
 
     w->updateDuringSync = false;
 
@@ -1144,8 +1160,11 @@ void QSGD3D12ThreadedRenderLoop::polishAndSync(WindowData *w, bool inExpose)
         qDebug("polishAndSync - wait for sync");
     if (Q_UNLIKELY(debug_time()))
         waitTime = timer.nsecsElapsed();
+    Q_TRACE(QSG_wait_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
                               QQuickProfiler::SceneGraphPolishAndSyncWait);
+    Q_TRACE(QSG_sync_entry);
+
     w->thread->waitCondition.wait(&w->thread->mutex);
     lockedForSync = false;
     w->thread->mutex.unlock();
@@ -1154,8 +1173,10 @@ void QSGD3D12ThreadedRenderLoop::polishAndSync(WindowData *w, bool inExpose)
 
     if (Q_UNLIKELY(debug_time()))
         syncTime = timer.nsecsElapsed();
+    Q_TRACE(QSG_sync_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
                               QQuickProfiler::SceneGraphPolishAndSyncSync);
+    Q_TRACE(QSG_animations_entry);
 
     if (!animationTimer && anim->isRunning()) {
         if (Q_UNLIKELY(debug_loop()))
@@ -1177,6 +1198,7 @@ void QSGD3D12ThreadedRenderLoop::polishAndSync(WindowData *w, bool inExpose)
                 << ", animations=" << (timer.nsecsElapsed() - syncTime) / 1000000
                 << " - (on gui thread) " << window;
 
+    Q_TRACE(QSG_animations_exit);
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphPolishAndSync,
                            QQuickProfiler::SceneGraphPolishAndSyncAnimations);
 }

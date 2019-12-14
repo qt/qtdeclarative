@@ -53,6 +53,8 @@
 #endif
 #include <QtGui/private/qrhi_p.h>
 
+#include <qtquick_tracepoints_p.h>
+
 #if QT_CONFIG(opengl)
 static QElapsedTimer qsg_renderer_timer;
 #endif
@@ -150,9 +152,11 @@ void QSGPlainTexture::setTextureId(int id) // legacy (GL-only)
 void QSGPlainTexture::bind() // legacy (GL-only)
 {
 #if QT_CONFIG(opengl)
+    Q_TRACE_SCOPE(QSG_texture_prepare);
     QOpenGLContext *context = QOpenGLContext::currentContext();
     QOpenGLFunctions *funcs = context->functions();
     if (!m_dirty_texture) {
+        Q_TRACE_SCOPE(QSG_texture_bind);
         funcs->glBindTexture(GL_TEXTURE_2D, m_texture_id);
         if (mipmapFiltering() != QSGTexture::None && !m_mipmaps_generated) {
             funcs->glGenerateMipmap(GL_TEXTURE_2D);
@@ -174,6 +178,7 @@ void QSGPlainTexture::bind() // legacy (GL-only)
 
     if (m_image.isNull()) {
         if (m_texture_id && m_owns_texture) {
+            Q_TRACE_SCOPE(QSG_texture_delete);
             funcs->glDeleteTextures(1, &m_texture_id);
             qCDebug(QSG_LOG_TIME_TEXTURE, "plain texture deleted in %dms - %dx%d",
                     (int) qsg_renderer_timer.elapsed(),
@@ -189,6 +194,8 @@ void QSGPlainTexture::bind() // legacy (GL-only)
         return;
     }
 
+    Q_TRACE(QSG_texture_bind_entry);
+
     if (m_texture_id == 0)
         funcs->glGenTextures(1, &m_texture_id);
     funcs->glBindTexture(GL_TEXTURE_2D, m_texture_id);
@@ -196,8 +203,10 @@ void QSGPlainTexture::bind() // legacy (GL-only)
     qint64 bindTime = 0;
     if (profileFrames)
         bindTime = qsg_renderer_timer.nsecsElapsed();
+    Q_TRACE(QSG_texture_bind_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare,
                               QQuickProfiler::SceneGraphTexturePrepareBind);
+    Q_TRACE(QSG_texture_upload_entry);
 
     // ### TODO: check for out-of-memory situations...
 
@@ -232,8 +241,10 @@ void QSGPlainTexture::bind() // legacy (GL-only)
     qint64 uploadTime = 0;
     if (profileFrames)
         uploadTime = qsg_renderer_timer.nsecsElapsed();
+    Q_TRACE(QSG_texture_upload_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare,
                               QQuickProfiler::SceneGraphTexturePrepareUpload);
+    Q_TRACE(QSG_texture_mipmap_entry);
 
     if (mipmapFiltering() != QSGTexture::None) {
         funcs->glGenerateMipmap(GL_TEXTURE_2D);
@@ -252,6 +263,7 @@ void QSGPlainTexture::bind() // legacy (GL-only)
                 int((mipmapTime - uploadTime)/1000000),
                 m_texture_size != m_image.size() ? " (scaled to GL_MAX_TEXTURE_SIZE)" : "");
     }
+    Q_TRACE(QSG_texture_mipmap_exit);
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphTexturePrepare,
                            QQuickProfiler::SceneGraphTexturePrepareMipmap);
 

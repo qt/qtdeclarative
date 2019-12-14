@@ -4,6 +4,9 @@ QT = core-private gui-private qml-private qmlmodels-private
 qtConfig(qml-network): \
     QT_PRIVATE += network
 
+TRACEPOINT_PROVIDER = $$PWD/qtquick.tracepoints
+CONFIG += qt_tracepoints
+
 DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 msvc:DEFINES *= _CRT_SECURE_NO_WARNINGS
 solaris-cc*:QMAKE_CXXFLAGS_RELEASE -= -O2
