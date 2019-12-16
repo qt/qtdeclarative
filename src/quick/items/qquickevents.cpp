@@ -1626,6 +1626,8 @@ bool QQuickSinglePointEvent::allPointsGrabbed() const
 
 QMouseEvent *QQuickPointerMouseEvent::asMouseEvent(const QPointF &localPos) const
 {
+    if (!m_event)
+        return nullptr;
     auto event = static_cast<QMouseEvent *>(m_event);
     event->setLocalPos(localPos);
     return event;
