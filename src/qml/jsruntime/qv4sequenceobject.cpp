@@ -375,6 +375,22 @@ public:
                 ++arrayIndex;
                 if (attrs)
                     *attrs = QV4::Attr_Data;
+
+                // TODO: Replace the container->at() below with operator[] in Qt6!
+                // TODO: But _not_ in Qt5!
+                //
+                // gcc 5.3.1 as shipped on RHEL 7.6 includes a copy of basic_string<char>
+                // into QtQml, when it sees a std::vector::at(). The basic_string symbols
+                // are publicly visible and preferred over the ones from libstdc++ when
+                // building user code. Therefore, removing this at() breaks binary
+                // compatibility. We _do_ want to remove it in Qt6, though.
+                //
+                // The exact mechanism is that at() checks its argument and can throw an
+                // out_of_range exception. The construction of this exception then triggers
+                // some string manipulation that uses the std::basic_string symbols. Clearly,
+                // this is a compiler bug. And clearly, we don't want the check as we can't
+                // catch the exception anyway.
+
                 if (pd)
                     pd->value = convertElementToValue(s->engine(), s->d()->container->at(index));
                 return PropertyKey::fromArrayIndex(index);
