@@ -16,11 +16,11 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(pixelator
+add_qt_gui_executable(qml_pixelator
     imagemodel.cpp imagemodel.h
     main.cpp
 )
-target_link_libraries(pixelator PUBLIC
+target_link_libraries(qml_pixelator PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Qml
@@ -34,14 +34,14 @@ set(qmake_immediate_resource_files
     "qt.png"
 )
 
-qt6_add_resources(pixelator "qmake_immediate"
+qt6_add_resources(qml_pixelator "qmake_immediate"
     PREFIX
         "/"
     FILES
         ${qmake_immediate_resource_files}
 )
 
-install(TARGETS pixelator
+install(TARGETS qml_pixelator
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"

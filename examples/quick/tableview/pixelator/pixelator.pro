@@ -1,5 +1,6 @@
 TEMPLATE = app
 
+TARGET = qml_pixelator
 QT += quick qml
 HEADERS += imagemodel.h
 SOURCES += main.cpp \
