@@ -374,7 +374,7 @@ static bool saveUnitAsCpp(const QString &inputFileName, const QString &outputFil
         {
             QTextStream stream(&hexifiedData);
             const uchar *end = begin + size;
-            stream << hex;
+            stream << Qt::hex;
             int col = 0;
             for (const uchar *data = begin; data < end; ++data, ++col) {
                 if (data > begin)
