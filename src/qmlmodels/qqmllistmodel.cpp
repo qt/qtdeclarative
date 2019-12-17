@@ -269,19 +269,6 @@ const ListLayout::Role *ListLayout::getExistingRole(QV4::String *key) const
     return r;
 }
 
-StringOrTranslation::StringOrTranslation(const QString &s)
-{
-    d.setFlag();
-    setString(s);
-}
-
-StringOrTranslation::StringOrTranslation(const QV4::CompiledData::Binding *binding)
-{
-    d.setFlag();
-    clear();
-    d = binding;
-}
-
 StringOrTranslation::~StringOrTranslation()
 {
     clear();
@@ -289,53 +276,48 @@ StringOrTranslation::~StringOrTranslation()
 
 void StringOrTranslation::setString(const QString &s)
 {
-    d.setFlag();
     clear();
-    QStringData *stringData = const_cast<QString &>(s).data_ptr();
-    d = stringData;
-    if (stringData)
-        stringData->ref.ref();
+    QString mutableString(s);
+    QString::DataPointer dataPointer = mutableString.data_ptr();
+    arrayData = dataPointer->d_ptr();
+    stringData = dataPointer->data();
+    stringSize = mutableString.length();
+    arrayData->ref();
 }
 
 void StringOrTranslation::setTranslation(const QV4::CompiledData::Binding *binding)
 {
-    d.setFlag();
     clear();
-    d = binding;
+    this->binding = binding;
 }
 
 QString StringOrTranslation::toString(const QQmlListModel *owner) const
 {
-    if (d.isNull())
-        return QString();
-    if (d.isT1()) {
-        QStringDataPtr holder = { d.asT1() };
-        holder.ptr->ref.ref();
-        return QString(holder);
+    if (arrayData) {
+        arrayData->ref();
+        return QString(QStringPrivate(arrayData, stringData, stringSize));
     }
     if (!owner)
         return QString();
-    return owner->m_compilationUnit->bindingValueAsString(d.asT2());
+    return owner->m_compilationUnit->bindingValueAsString(binding);
 }
 
 QString StringOrTranslation::asString() const
 {
-    if (d.isNull())
+    if (!arrayData)
         return QString();
-    if (!d.isT1())
-        return QString();
-    QStringDataPtr holder = { d.asT1() };
-    holder.ptr->ref.ref();
-    return QString(holder);
+    arrayData->ref();
+    return QString(QStringPrivate(arrayData, stringData, stringSize));
 }
 
 void StringOrTranslation::clear()
 {
-    if (QStringData *strData = d.isT1() ? d.asT1() : nullptr) {
-        if (!strData->ref.deref())
-            QStringData::deallocate(strData);
-    }
-    d = static_cast<QStringData *>(nullptr);
+    if (arrayData && !arrayData->deref())
+        QTypedArrayData<ushort>::deallocate(arrayData);
+    arrayData = nullptr;
+    stringData = nullptr;
+    stringSize = 0;
+    binding = nullptr;
 }
 
 QObject *ListModel::getOrCreateModelObject(QQmlListModel *model, int elementIndex)
@@ -1148,7 +1130,7 @@ int ListElement::setTranslationProperty(const ListLayout::Role &role, const QV4:
 void ListElement::setStringPropertyFast(const ListLayout::Role &role, const QString &s)
 {
     char *mem = getPropertyMemory(role);
-    new (mem) StringOrTranslation(s);
+    reinterpret_cast<StringOrTranslation *>(mem)->setString(s);
 }
 
 void ListElement::setDoublePropertyFast(const ListLayout::Role &role, double d)

@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 // Copy of QString's qMemCompare
 bool QHashedString::compare(const QChar *lhs, const QChar *rhs, int length)
 {
-    Q_ASSERT(lhs && rhs);
+    Q_ASSERT((lhs && rhs) || !length);
     const quint16 *a = (const quint16 *)lhs;
     const quint16 *b = (const quint16 *)rhs;
 

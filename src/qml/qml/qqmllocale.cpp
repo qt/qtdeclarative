@@ -835,7 +835,7 @@ QV4::ReturnedValue QQmlLocale::locale(ExecutionEngine *engine, const QString &lo
 {
     QLocale qlocale;
     if (!localeName.isEmpty())
-        qlocale = localeName;
+        qlocale = QLocale(localeName);
     return wrap(engine, qlocale);
 }
 

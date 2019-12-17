@@ -540,12 +540,12 @@ void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::WithStatement *)
     leaveEnvironment();
 }
 
-static QString signalName(const QStringRef &handlerName)
+static QString signalName(QStringView handlerName)
 {
-    if (handlerName.startsWith("on") && handlerName.size() > 2) {
+    if (handlerName.startsWith(u"on") && handlerName.size() > 2) {
         QString signal = handlerName.mid(2).toString();
         for (int i = 0; i < signal.length(); ++i) {
-            QCharRef ch = signal[i];
+            QChar &ch = signal[i];
             if (ch.isLower())
                 return QString();
             if (ch.isUpper()) {

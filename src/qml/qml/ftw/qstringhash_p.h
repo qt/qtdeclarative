@@ -54,25 +54,31 @@
 #include <private/qhashedstring_p.h>
 #include <private/qprimefornumbits_p.h>
 
-#include <QtCore/qglobal.h>
+#include <QtCore/qbytearray.h>
+#include <QtCore/qstring.h>
 
 QT_BEGIN_NAMESPACE
+
+static inline QString::DataPointer &mutableStringData(const QHashedString &key)
+{
+    return const_cast<QHashedString &>(key).data_ptr();
+}
 
 class QStringHashData;
 class QStringHashNode
 {
 public:
     QStringHashNode()
-    : ckey(nullptr)
     {
     }
 
     QStringHashNode(const QHashedString &key)
     : length(key.length()), hash(key.hash()), symbolId(0)
+    , arrayData(mutableStringData(key).d_ptr())
+    , strData(mutableStringData(key).data())
     {
-        strData = const_cast<QHashedString &>(key).data_ptr();
+        arrayData->ref();
         setQString(true);
-        strData->ref.ref();
     }
 
     QStringHashNode(const QHashedCStringRef &key)
@@ -81,15 +87,21 @@ public:
     }
 
     QStringHashNode(const QStringHashNode &o)
-    : length(o.length), hash(o.hash), symbolId(o.symbolId), ckey(o.ckey)
+    : length(o.length), hash(o.hash), symbolId(o.symbolId), arrayData(o.arrayData)
     {
         setQString(o.isQString());
-        if (isQString()) { strData->ref.ref(); }
+        if (isQString()) {
+            strData = o.strData;
+            arrayData->ref();
+        } else {
+            ckey = o.ckey;
+        }
     }
 
     ~QStringHashNode()
     {
-        if (isQString()) { if (!strData->ref.deref()) free(strData); }
+        if (isQString() && !arrayData->deref())
+            QTypedArrayData<ushort>::deallocate(arrayData);
     }
 
     QFlagPointer<QStringHashNode> next;
@@ -98,15 +110,18 @@ public:
     quint32 hash = 0;
     quint32 symbolId = 0;
 
+    QTypedArrayData<ushort> *arrayData = nullptr;
     union {
-        const char *ckey;
-        QStringData *strData;
+        const char *ckey = nullptr;
+        ushort *strData;
     };
 
     inline QHashedString key() const
     {
-        if (isQString())
-            return QHashedString(QString((QChar *)strData->data(), length), hash);
+        if (isQString()) {
+            arrayData->ref();
+            return QHashedString(QString(QStringPrivate(arrayData, strData, length)), hash);
+        }
 
         return QHashedString(QString::fromLatin1(ckey, length), hash);
     }
@@ -114,16 +129,14 @@ public:
     bool isQString() const { return next.flag(); }
     void setQString(bool v) { if (v) next.setFlag(); else next.clearFlag(); }
 
-    inline char *cStrData() const { return (char *)ckey; }
-    inline quint16 *utf16Data() const { return (quint16 *)strData->data(); }
+    inline qsizetype size() const { return length; }
+    inline const char *cStrData() const { return ckey; }
+    inline const quint16 *utf16Data() const { return strData; }
 
     inline bool equals(const QV4::Value &string) const {
         QString s = string.toQStringNoThrow();
         if (isQString()) {
-            QStringDataPtr dd;
-            dd.ptr = strData;
-            strData->ref.ref();
-            return QString(dd) == s;
+            return QStringView(utf16Data(), length) == s;
         } else {
             return QLatin1String(cStrData(), length) == s;
         }
@@ -133,10 +146,7 @@ public:
         if (length != string->d()->length() || hash != string->hashValue())
                 return false;
         if (isQString()) {
-            QStringDataPtr dd;
-            dd.ptr = strData;
-            strData->ref.ref();
-            return QString(dd) == string->toQString();
+            return QStringView(utf16Data(), length) == string->toQString();
         } else {
             return QLatin1String(cStrData(), length) == string->toQString();
         }
@@ -510,8 +520,9 @@ void QStringHash<T>::initializeNode(Node *node, const QHashedString &key)
 {
     node->length = key.length();
     node->hash = key.hash();
-    node->strData = const_cast<QHashedString &>(key).data_ptr();
-    node->strData->ref.ref();
+    node->arrayData = mutableStringData(key).d_ptr();
+    node->strData = mutableStringData(key).data();
+    node->arrayData->ref();
     node->setQString(true);
 }
 
@@ -547,10 +558,11 @@ typename QStringHash<T>::Node *QStringHash<T>::takeNode(const Node &o)
         Node *rv = nodePool->nodes + nodePool->used++;
         rv->length = o.length;
         rv->hash = o.hash;
+        rv->arrayData = o.arrayData;
         if (o.isQString()) {
             rv->strData = o.strData;
-            rv->strData->ref.ref();
             rv->setQString(true);
+            rv->arrayData->ref();
         } else {
             rv->ckey = o.ckey;
         }

@@ -77,7 +77,18 @@ struct Q_QML_PRIVATE_EXPORT StringOrSymbol : Base
         StringType_Complex = StringType_AddedString
     };
 
-    mutable QStringData *text;
+    void init() {
+        Base::init();
+        new (&textStorage) QStringPrivate;
+    }
+
+    void init(QStringPrivate text)
+    {
+        Base::init();
+        new (&textStorage) QStringPrivate(std::move(text));
+    }
+
+    mutable std::aligned_storage<sizeof(QStringPrivate), alignof(QStringPrivate)>::type textStorage;
     mutable PropertyKey identifier;
     mutable uint subtype;
     mutable uint stringHash;
@@ -85,12 +96,11 @@ struct Q_QML_PRIVATE_EXPORT StringOrSymbol : Base
     static void markObjects(Heap::Base *that, MarkStack *markStack);
     void destroy();
 
+    QStringPrivate &text() const { return *reinterpret_cast<QStringPrivate *>(&textStorage); }
+
     inline QString toQString() const {
-        if (!text)
-            return QString();
-        QStringDataPtr ptr = { text };
-        text->ref.ref();
-        return QString(ptr);
+        QStringPrivate dd = text();
+        return QString(std::move(dd));
     }
     void createHashValue() const;
     inline unsigned hashValue() const {
@@ -113,14 +123,12 @@ struct Q_QML_PRIVATE_EXPORT String : StringOrSymbol {
     void simplifyString() const;
     int length() const;
     std::size_t retainedTextSize() const {
-        return subtype >= StringType_Complex ? 0 : (std::size_t(text->size) * sizeof(QChar));
+        return subtype >= StringType_Complex ? 0 : (std::size_t(text().size) * sizeof(QChar));
     }
     inline QString toQString() const {
         if (subtype >= StringType_Complex)
             simplifyString();
-        QStringDataPtr ptr = { text };
-        text->ref.ref();
-        return QString(ptr);
+        return StringOrSymbol::toQString();
     }
     inline bool isEqualTo(const String *other) const {
         if (this == other)
@@ -158,7 +166,7 @@ Q_STATIC_ASSERT(std::is_trivial< ComplexString >::value);
 
 inline
 int String::length() const {
-    return text ? text->size : static_cast<const ComplexString *>(this)->len;
+    return subtype < StringType_AddedString ? text().size : static_cast<const ComplexString *>(this)->len;
 }
 
 }
@@ -252,7 +260,7 @@ public:
         }
 
         if (subtype)
-            *subtype = (charToUInt(ch) == '@') ? Heap::StringOrSymbol::StringType_Symbol : Heap::StringOrSymbol::StringType_Regular;
+            *subtype = (ch != end && charToUInt(ch) == '@') ? Heap::StringOrSymbol::StringType_Symbol : Heap::StringOrSymbol::StringType_Regular;
         return h;
     }
 };

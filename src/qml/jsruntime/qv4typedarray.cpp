@@ -338,8 +338,8 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
         array->d()->byteLength = destByteLength;
         array->d()->byteOffset = 0;
 
-        const char *src = buffer->d()->data->data() + typedArray->d()->byteOffset;
-        char *dest = newBuffer->d()->data->data();
+        const char *src = buffer->d()->data()->data() + typedArray->d()->byteOffset;
+        char *dest = newBuffer->d()->data()->data();
 
         // check if src and new type have the same size. In that case we can simply memcpy the data
         if (srcElementSize == destElementSize) {
@@ -420,7 +420,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
     array->d()->byteOffset = 0;
 
     uint idx = 0;
-    char *b = newBuffer->d()->data->data();
+    char *b = newBuffer->d()->data()->data();
     ScopedValue val(scope);
     while (idx < l) {
         val = o->get(idx);
@@ -480,7 +480,7 @@ ReturnedValue TypedArray::virtualGet(const Managed *m, PropertyKey id, const Val
 
     if (hasProperty)
         *hasProperty = true;
-    return a->d()->type->read(a->d()->buffer->data->data() + byteOffset);
+    return a->d()->type->read(a->d()->buffer->data()->data() + byteOffset);
 }
 
 bool TypedArray::virtualHasProperty(const Managed *m, PropertyKey id)
@@ -538,7 +538,7 @@ bool TypedArray::virtualPut(Managed *m, PropertyKey id, const Value &value, Valu
     Value v = Value::fromReturnedValue(value.convertedToNumber());
     if (scope.hasException() || a->d()->buffer->isDetachedBuffer())
         return scope.engine->throwTypeError();
-    a->d()->type->write(a->d()->buffer->data->data() + byteOffset, v);
+    a->d()->type->write(a->d()->buffer->data()->data() + byteOffset, v);
     return true;
 }
 
@@ -569,7 +569,7 @@ bool TypedArray::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Prop
         uint bytesPerElement = a->d()->type->bytesPerElement;
         uint byteOffset = a->d()->byteOffset + index * bytesPerElement;
         Q_ASSERT(byteOffset + bytesPerElement <= (uint)a->d()->buffer->byteLength());
-        a->d()->type->write(a->d()->buffer->data->data() + byteOffset, v);
+        a->d()->type->write(a->d()->buffer->data()->data() + byteOffset, v);
     }
     return true;
 }
@@ -713,7 +713,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_copyWithin(const FunctionObje
 
     if (from != to) {
         int elementSize = O->d()->type->bytesPerElement;
-        char *data = O->d()->buffer->data->data() + O->d()->byteOffset;
+        char *data = O->d()->buffer->data()->data() + O->d()->byteOffset;
         memmove(data + to*elementSize, data + from*elementSize, count*elementSize);
     }
 
@@ -749,7 +749,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_every(const FunctionObject *b
     ScopedValue r(scope);
     Value *arguments = scope.alloc(3);
 
-    const char *data = v->d()->buffer->data->data();
+    const char *data = v->d()->buffer->data()->data();
     uint bytesPerElement = v->d()->type->bytesPerElement;
     uint byteOffset = v->d()->byteOffset;
 
@@ -802,7 +802,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_fill(const FunctionObject *b,
     if (scope.hasException() || v->d()->buffer->isDetachedBuffer())
         return scope.engine->throwTypeError();
 
-    char *data = v->d()->buffer->data->data();
+    char *data = v->d()->buffer->data()->data();
     uint bytesPerElement = v->d()->type->bytesPerElement;
     uint byteOffset = v->d()->byteOffset;
 
@@ -1416,7 +1416,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
         uint idx = 0;
         if (buffer->isDetachedBuffer())
             return scope.engine->throwTypeError();
-        char *b = buffer->d()->data->data() + a->d()->byteOffset + offset*elementSize;
+        char *b = buffer->d()->data()->data() + a->d()->byteOffset + offset*elementSize;
         ScopedValue val(scope);
         while (idx < l) {
             val = o->get(idx);
@@ -1445,8 +1445,8 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
     if (offset > aLength || l > aLength - offset)
         RETURN_RESULT(scope.engine->throwRangeError(QStringLiteral("TypedArray.set: out of range")));
 
-    char *dest = buffer->d()->data->data() + a->d()->byteOffset + offset*elementSize;
-    const char *src = srcBuffer->d()->data->data() + srcTypedArray->d()->byteOffset;
+    char *dest = buffer->d()->data()->data() + a->d()->byteOffset + offset*elementSize;
+    const char *src = srcBuffer->d()->data()->data() + srcTypedArray->d()->byteOffset;
     if (srcTypedArray->d()->type == a->d()->type) {
         // same type of typed arrays, use memmove (as srcbuffer and buffer could be the same)
         memmove(dest, src, srcTypedArray->d()->byteLength);

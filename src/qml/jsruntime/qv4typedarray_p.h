@@ -156,8 +156,8 @@ struct Q_QML_PRIVATE_EXPORT TypedArray : Object
         return d()->byteLength/d()->type->bytesPerElement;
     }
 
-    QTypedArrayData<char> *arrayData() {
-        return d()->buffer->data;
+    QArrayDataPointer<char> *arrayData() {
+        return &d()->buffer->data();
     }
 
     Heap::TypedArray::Type arrayType() const {

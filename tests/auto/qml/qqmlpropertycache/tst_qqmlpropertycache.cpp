@@ -492,7 +492,9 @@ class TestClassWithClassInfo : public QObject
     int(sizeof(arr) / sizeof(arr[0]))
 
 #define TEST_CLASS(Class) \
-    QTest::newRow(#Class) << &Class::staticMetaObject << ARRAY_SIZE(qt_meta_data_##Class) << ARRAY_SIZE(qt_meta_stringdata_##Class.data)
+    QTest::newRow(#Class) \
+            << &Class::staticMetaObject << ARRAY_SIZE(qt_meta_data_##Class) \
+            << int(sizeof(qt_meta_stringdata_##Class.offsetsAndSize) / (sizeof(uint) * 2))
 
 Q_DECLARE_METATYPE(const QMetaObject*);
 

@@ -252,18 +252,23 @@ private:
 
 struct StringOrTranslation
 {
-    explicit StringOrTranslation(const QString &s);
-    explicit StringOrTranslation(const QV4::CompiledData::Binding *binding);
     ~StringOrTranslation();
-    bool isSet() const { return d.flag(); }
-    bool isTranslation() const { return d.isT2(); }
+    bool isSet() const { return binding || arrayData; }
+    bool isTranslation() const { return binding && !arrayData; }
     void setString(const QString &s);
     void setTranslation(const QV4::CompiledData::Binding *binding);
     QString toString(const QQmlListModel *owner) const;
     QString asString() const;
 private:
     void clear();
-    QBiPointer<QStringData, const QV4::CompiledData::Binding> d;
+
+    union {
+        ushort *stringData = nullptr;
+        const QV4::CompiledData::Binding *binding;
+    };
+
+    QTypedArrayData<ushort> *arrayData = nullptr;
+    uint stringSize = 0;
 };
 
 /*!
