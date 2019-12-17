@@ -1044,7 +1044,7 @@ QQmlEngine::~QQmlEngine()
     // we do this here and not in the private dtor since otherwise a crash can
     // occur (if we are the QObject parent of the QObject singleton instance)
     // XXX TODO: performance -- store list of singleton types separately?
-    QList<QQmlType> singletonTypes = QQmlMetaType::qmlSingletonTypes();
+    const QList<QQmlType> singletonTypes = QQmlMetaType::qmlSingletonTypes();
     for (const QQmlType &currType : singletonTypes)
         d->destroySingletonInstance(currType);
 
