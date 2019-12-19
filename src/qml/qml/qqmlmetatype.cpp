@@ -273,7 +273,7 @@ void QQmlMetaType::qmlInsertModuleRegistration(const QString &uri, int majorVers
     const QQmlMetaTypeData::VersionedUri versionedUri(uri, majorVersion);
     QQmlMetaTypeDataPtr data;
     if (data->moduleTypeRegistrationFunctions.contains(versionedUri))
-        qFatal("Canot add multiple registrations for %s %d", qPrintable(uri), majorVersion);
+        qFatal("Cannot add multiple registrations for %s %d", qPrintable(uri), majorVersion);
     else
         data->moduleTypeRegistrationFunctions.insert(versionedUri, registerFunction);
 }
