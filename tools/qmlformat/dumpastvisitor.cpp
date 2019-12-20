@@ -34,6 +34,9 @@ DumpAstVisitor::DumpAstVisitor(Node *rootNode, CommentAstVisitor *comment): m_co
     m_result += getOrphanedComments(nullptr);
 
     rootNode->accept(this);
+
+    // We need to get rid of one new-line so our output doesn't append an empty line
+    m_result.chop(1);
 }
 
 static QString parseUiQualifiedId(UiQualifiedId *id)
@@ -223,6 +226,17 @@ QString DumpAstVisitor::parsePatternElement(PatternElement *element, bool scope)
     }
 }
 
+QString escapeString(QString string)
+{
+    // Escape \r, \n and \t
+    string = string.replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t");
+
+    // Escape "
+    string = string.replace("\"", "\\\"");
+
+    return "\"" + string + "\"";
+}
+
 QString DumpAstVisitor::parsePatternElementList(PatternElementList *list)
 {
     QString result = "";
@@ -301,7 +315,7 @@ QString DumpAstVisitor::parseExpression(ExpressionNode *expression)
     case Node::Kind_NumericLiteral:
         return QString::number(cast<NumericLiteral *>(expression)->value);
     case Node::Kind_StringLiteral:
-        return "\""+cast<StringLiteral *>(expression)->value+"\"";
+        return escapeString(cast<StringLiteral *>(expression)->value.toString());
     case Node::Kind_BinaryExpression: {
         auto *binExpr = expression->binaryExpressionCast();
         return parseExpression(binExpr->left) + " " + operatorToString(binExpr->op)
@@ -339,7 +353,7 @@ QString DumpAstVisitor::parseExpression(ExpressionNode *expression)
         QString result = "";
 
         result += parseExpression(condExpr->expression) + " ? ";
-        result += parseExpression(condExpr->ok) + ": ";
+        result += parseExpression(condExpr->ok) + " : ";
         result += parseExpression(condExpr->ko);
 
         return result;
@@ -474,21 +488,45 @@ QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
 
         m_blockNeededBraces = false;
 
-        QString if_false = parseStatement(ifStatement->ko, false, true);
-        QString if_true = parseStatement(ifStatement->ok, !if_false.isEmpty(), true);
+        QString ifFalse = parseStatement(ifStatement->ko, false, true);
+        QString ifTrue = parseStatement(ifStatement->ok, !ifFalse.isEmpty(), true);
+
+        bool ifTrueBlock = ifStatement->ok->kind == Node::Kind_Block;
+        bool ifFalseBlock = ifStatement->ko
+                ? (ifStatement->ko->kind == Node::Kind_Block || ifStatement->ko->kind == Node::Kind_IfStatement)
+                : false;
 
         if (m_blockNeededBraces) {
-            if_false = parseStatement(ifStatement->ko, false, false);
-            if_true = parseStatement(ifStatement->ok, !if_false.isEmpty(), false);
+            ifFalse = parseStatement(ifStatement->ko, false, false);
+            ifTrue = parseStatement(ifStatement->ok, !ifFalse.isEmpty(), false);
         }
 
-        QString result = "if (" + parseExpression(ifStatement->expression) + ") ";
+        QString result = "if (" + parseExpression(ifStatement->expression) + ")";
 
-        result += if_true;
+        if (ifTrueBlock) {
+            result += " " + ifTrue;
+        } else {
+            result += "\n";
+            m_indentLevel++;
+            result += formatLine(ifTrue);
+            m_indentLevel--;
+        }
 
-        if (!if_false.isEmpty())
+        if (!ifFalse.isEmpty())
         {
-            result += "else " + if_false;
+            if (ifTrueBlock)
+                result += "else";
+            else
+                result += formatLine("else", false);
+
+            if (ifFalseBlock) {
+                result += " " + ifFalse;
+            } else {
+                result += "\n";
+                m_indentLevel++;
+                result += formatLine(ifFalse, false);
+                m_indentLevel--;
+            }
         }
 
         return result;
@@ -537,8 +575,13 @@ QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
     case Node::Kind_WhileStatement: {
         auto *whileStatement = cast<WhileStatement *>(statement);
 
-        return "while ("+parseExpression(whileStatement->expression) + ") "
-                + parseStatement(whileStatement->statement);
+        m_blockNeededBraces = false;
+
+        auto statement = parseStatement(whileStatement->statement, false, true);
+
+        return "while ("+parseExpression(whileStatement->expression) + ")"
+                + (m_blockNeededBraces ? " " : "")
+                + statement;
     }
     case Node::Kind_DoWhileStatement: {
         auto *doWhileStatement = cast<DoWhileStatement *>(statement);
@@ -758,6 +801,7 @@ bool DumpAstVisitor::visit(UiObjectDefinition *node) {
 void DumpAstVisitor::endVisit(UiObjectDefinition *node) {
     m_indentLevel--;
     addLine(m_inArrayBinding && m_lastInArrayBinding != node ? "}," : "}");
+    addLine(getComment(node, Comment::Location::Back));
     if (!m_inArrayBinding)
         addNewLine();
 }
@@ -809,7 +853,8 @@ bool DumpAstVisitor::visit(UiScriptBinding *node) {
         else
             addNewLine();
 
-        m_firstBinding = false;
+        if (parseUiQualifiedId(node->qualifiedId) != "id")
+            m_firstBinding = false;
     }
 
     addLine(getComment(node, Comment::Location::Front));
@@ -833,6 +878,12 @@ bool DumpAstVisitor::visit(UiArrayBinding *node) {
 
     m_indentLevel++;
     m_inArrayBinding = true;
+
+    m_firstOfAll = true;
+    m_firstObject = true;
+    m_firstSignal = true;
+    m_firstBinding = true;
+    m_firstProperty = true;
 
     for (auto *item = node->members; item != nullptr; item = item->next) {
         if (item->next == nullptr)
@@ -883,6 +934,8 @@ bool DumpAstVisitor::visit(UiObjectBinding *node) {
 
     if (node->hasOnToken)
         result += " on "+parseUiQualifiedId(node->qualifiedId);
+    else
+        result.prepend(parseUiQualifiedId(node->qualifiedId) + ": ");
 
     addNewLine();
     addLine(getComment(node, Comment::Location::Front));
@@ -893,9 +946,10 @@ bool DumpAstVisitor::visit(UiObjectBinding *node) {
     return true;
 }
 
-void DumpAstVisitor::endVisit(UiObjectBinding *) {
+void DumpAstVisitor::endVisit(UiObjectBinding *node) {
     m_indentLevel--;
     addLine("}");
+    addLine(getComment(node, Comment::Location::Back));
 
     addNewLine();
 }
@@ -906,7 +960,7 @@ bool DumpAstVisitor::visit(UiImport *node) {
     QString result = "import ";
 
     if (!node->fileName.isEmpty())
-        result += node->fileName;
+        result += escapeString(node->fileName.toString());
     else
         result += parseUiQualifiedId(node->importUri);
 

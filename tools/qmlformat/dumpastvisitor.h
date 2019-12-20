@@ -81,7 +81,7 @@ private:
     QString getOrphanedComments(Node *node) const;
 
     QString parseStatement(Statement *statement, bool blockHasNext=false,
-                           bool blockAllowBraceless=true);
+                           bool blockAllowBraceless = false);
     QString parseStatementList(StatementList *list);
 
     QString parseExpression(ExpressionNode *expression);

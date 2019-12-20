@@ -198,13 +198,13 @@ void CommentAstVisitor::endVisit(StatementList *node)
 
 bool CommentAstVisitor::visit(UiObjectBinding *node)
 {
-    attachComment(node);
+    attachComment(node, Comment::Front | Comment::Back);
     return true;
 }
 
 bool CommentAstVisitor::visit(UiObjectDefinition *node)
 {
-    attachComment(node);
+    attachComment(node, Comment::Front | Comment::Back);
     return true;
 }
 

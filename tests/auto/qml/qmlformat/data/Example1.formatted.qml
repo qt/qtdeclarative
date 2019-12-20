@@ -62,7 +62,7 @@ Item {
             y++;
             console.log("Bar");
         }
-        while (true) 
+        while (true)
             console.log("Wee");
 
         with (foo) {
@@ -148,4 +148,3 @@ Item {
     }
 
 }
-
