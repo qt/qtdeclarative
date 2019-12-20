@@ -264,6 +264,17 @@ public:
     QVariantList bezierCurve() const;
 };
 
+struct QQmlPropertyValueType
+{
+    QQmlProperty v;
+    Q_PROPERTY(QObject *object READ object CONSTANT FINAL)
+    Q_PROPERTY(QString name READ name CONSTANT FINAL)
+    Q_GADGET
+public:
+    QObject *object() const;
+    QString name() const;
+};
+
 template<typename T>
 int qmlRegisterValueTypeEnums(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
 {

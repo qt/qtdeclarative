@@ -48,6 +48,8 @@
 #endif
 #include <private/qmetatype_p.h>
 
+Q_DECLARE_METATYPE(QQmlProperty)
+
 QT_BEGIN_NAMESPACE
 
 namespace {
@@ -143,7 +145,8 @@ const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
         if (t == qMetaTypeId<QItemSelectionRange>())
             return &QQmlItemSelectionRangeValueType::staticMetaObject;
 #endif
-
+        if (t == qMetaTypeId<QQmlProperty>())
+            return &QQmlPropertyValueType::staticMetaObject;
         if (const QMetaObject *mo = QQml_valueTypeProvider()->metaObjectForMetaType(t))
             return mo;
         break;
@@ -578,6 +581,16 @@ void QQmlEasingValueType::setBezierCurve(const QVariantList &customCurveVariant)
     }
 
     v = newEasingCurve;
+}
+
+QObject *QQmlPropertyValueType::object() const
+{
+    return v.object();
+}
+
+QString QQmlPropertyValueType::name() const
+{
+    return v.name();
 }
 
 QVariantList QQmlEasingValueType::bezierCurve() const

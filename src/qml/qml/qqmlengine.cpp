@@ -101,8 +101,6 @@
 #  endif
 #endif // Q_OS_WIN
 
-Q_DECLARE_METATYPE(QQmlProperty)
-
 QT_BEGIN_NAMESPACE
 
 // Declared in qqml.h
