@@ -11,8 +11,7 @@ qtConfig(qml-devtools) {
 }
 
 qtConfig(thread):!android|android_app:!wasm:!rtems {
-    SUBDIRS += \
-        qml
+    qtConfig(commandlineparser): SUBDIRS += qml
 
     qtConfig(qml-profiler): SUBDIRS += qmlprofiler
     qtConfig(qml-preview): SUBDIRS += qmlpreview
