@@ -199,12 +199,11 @@ public:
             RETURN_RESULT(scope.engine->throwTypeError(QStringLiteral("Not a valid DelegateModel object")));
 
         const QQmlAdaptorModel *const model = static_cast<QQmlDMCachedModelData *>(o->d()->item)->type->model;
-        if (o->d()->item->index >= 0 && *model) {
-            const QAbstractItemModel * const aim = model->aim();
-            RETURN_RESULT(QV4::Encode(aim->hasChildren(aim->index(o->d()->item->index, 0, model->rootIndex))));
-        } else {
-            RETURN_RESULT(QV4::Encode(false));
+        if (o->d()->item->index >= 0) {
+            if (const QAbstractItemModel *const aim = model->aim())
+                RETURN_RESULT(QV4::Encode(aim->hasChildren(aim->index(o->d()->item->index, 0, model->rootIndex))));
         }
+        RETURN_RESULT(QV4::Encode(false));
     }
 
 
@@ -400,23 +399,24 @@ public:
 
     bool hasModelChildren() const
     {
-        if (index >= 0 && *type->model) {
-            const QAbstractItemModel * const model = type->model->aim();
-            return model->hasChildren(model->index(row, column, type->model->rootIndex));
-        } else {
-            return false;
+        if (index >= 0) {
+            if (const QAbstractItemModel *const model = type->model->aim())
+                return model->hasChildren(model->index(row, column, type->model->rootIndex));
         }
+        return false;
     }
 
     QVariant value(int role) const override
     {
-        return type->model->aim()->index(row, column, type->model->rootIndex).data(role);
+        if (const QAbstractItemModel *aim = type->model->aim())
+            return aim->index(row, column, type->model->rootIndex).data(role);
+        return QVariant();
     }
 
     void setValue(int role, const QVariant &value) override
     {
-        type->model->aim()->setData(
-                type->model->aim()->index(row, column, type->model->rootIndex), value, role);
+        if (QAbstractItemModel *aim = type->model->aim())
+            aim->setData(aim->index(row, column, type->model->rootIndex), value, role);
     }
 
     QV4::ReturnedValue get() override
@@ -444,12 +444,16 @@ public:
 
     int rowCount(const QQmlAdaptorModel &model) const override
     {
-        return model.aim()->rowCount(model.rootIndex);
+        if (const QAbstractItemModel *aim = model.aim())
+            return aim->rowCount(model.rootIndex);
+        return 0;
     }
 
     int columnCount(const QQmlAdaptorModel &model) const override
     {
-        return model.aim()->columnCount(model.rootIndex);
+        if (const QAbstractItemModel *aim = model.aim())
+            return aim->columnCount(model.rootIndex);
+        return 0;
     }
 
     void cleanup(QQmlAdaptorModel &) const override
@@ -459,39 +463,46 @@ public:
 
     QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const override
     {
-        QHash<QByteArray, int>::const_iterator it = roleNames.find(role.toUtf8());
-        if (it != roleNames.end()) {
-            return model.aim()->index(model.rowAt(index), model.columnAt(index), model.rootIndex).data(*it);
-        } else if (role == QLatin1String("hasModelChildren")) {
-            return QVariant(model.aim()->hasChildren(model.aim()->index(model.rowAt(index), model.columnAt(index), model.rootIndex)));
-        } else {
-            return QVariant();
+        if (const QAbstractItemModel *aim = model.aim()) {
+            QHash<QByteArray, int>::const_iterator it = roleNames.find(role.toUtf8());
+            if (it != roleNames.end()) {
+                return aim->index(model.rowAt(index), model.columnAt(index),
+                                  model.rootIndex).data(*it);
+            } else if (role == QLatin1String("hasModelChildren")) {
+                return QVariant(aim->hasChildren(aim->index(model.rowAt(index),
+                                                            model.columnAt(index),
+                                                            model.rootIndex)));
+            }
         }
+        return QVariant();
     }
 
     QVariant parentModelIndex(const QQmlAdaptorModel &model) const override
     {
-        return model
-                ? QVariant::fromValue(model.aim()->parent(model.rootIndex))
-                : QVariant();
+        if (const QAbstractItemModel *aim = model.aim())
+            return QVariant::fromValue(aim->parent(model.rootIndex));
+        return QVariant();
     }
 
     QVariant modelIndex(const QQmlAdaptorModel &model, int index) const override
     {
-        return model
-                ? QVariant::fromValue(model.aim()->index(model.rowAt(index), model.columnAt(index), model.rootIndex))
-                : QVariant();
+        if (const QAbstractItemModel *aim = model.aim())
+            return QVariant::fromValue(aim->index(model.rowAt(index), model.columnAt(index),
+                                                  model.rootIndex));
+        return QVariant();
     }
 
     bool canFetchMore(const QQmlAdaptorModel &model) const override
     {
-        return model && model.aim()->canFetchMore(model.rootIndex);
+        if (const QAbstractItemModel *aim = model.aim())
+            return aim->canFetchMore(model.rootIndex);
+        return false;
     }
 
     void fetchMore(QQmlAdaptorModel &model) const override
     {
-        if (model)
-            model.aim()->fetchMore(model.rootIndex);
+        if (QAbstractItemModel *aim = model.aim())
+            aim->fetchMore(model.rootIndex);
     }
 
     QQmlDelegateModelItem *createItem(
@@ -511,7 +522,8 @@ public:
         setModelDataType<QQmlDMAbstractItemModelData>(&builder, this);
 
         const QByteArray propertyType = QByteArrayLiteral("QVariant");
-        const QHash<int, QByteArray> names = model.aim()->roleNames();
+        const QAbstractItemModel *aim = model.aim();
+        const QHash<int, QByteArray> names = aim ? aim->roleNames() : QHash<int, QByteArray>();
         for (QHash<int, QByteArray>::const_iterator it = names.begin(), cend = names.end(); it != cend; ++it) {
             const int propertyId = propertyRoles.count();
             propertyRoles.append(it.key());
