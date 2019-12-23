@@ -76,14 +76,8 @@ QSGTexture *QQuickImageTextureProvider::texture() const {
 }
 
 QQuickImagePrivate::QQuickImagePrivate()
-    : fillMode(QQuickImage::Stretch)
-    , paintedWidth(0)
-    , paintedHeight(0)
-    , pixmapChanged(false)
+    : pixmapChanged(false)
     , mipmap(false)
-    , hAlign(QQuickImage::AlignHCenter)
-    , vAlign(QQuickImage::AlignVCenter)
-    , provider(nullptr)
 {
 }
 
