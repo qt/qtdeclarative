@@ -86,6 +86,7 @@ public:
     QSize sourcesize;
     QSize oldSourceSize;
     qreal devicePixelRatio;
+    QRectF sourceClipRect;
     QQuickImageProviderOptions providerOptions;
     int currentFrame;
     int frameCount;

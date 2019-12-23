@@ -167,6 +167,29 @@ void QQuickImageBase::resetSourceSize()
     setSourceSize(QSize());
 }
 
+QRectF QQuickImageBase::sourceClipRect() const
+{
+    Q_D(const QQuickImageBase);
+    return d->sourceClipRect;
+}
+
+void QQuickImageBase::setSourceClipRect(const QRectF &r)
+{
+    Q_D(QQuickImageBase);
+    if (d->sourceClipRect == r)
+        return;
+
+    d->sourceClipRect = r;
+    emit sourceClipRectChanged();
+    if (isComponentComplete())
+        load();
+}
+
+void QQuickImageBase::resetSourceClipRect()
+{
+    setSourceClipRect(QRect());
+}
+
 bool QQuickImageBase::cache() const
 {
     Q_D(const QQuickImageBase);
@@ -295,7 +318,7 @@ void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
 
     d->pix.load(qmlEngine(this),
                 loadUrl,
-                QRect(),
+                d->sourceClipRect.toRect(),
                 (loadOptions & HandleDPR) ? d->sourcesize * d->devicePixelRatio : QSize(),
                 options,
                 (loadOptions & UseProviderOptions) ? d->providerOptions : QQuickImageProviderOptions(),
