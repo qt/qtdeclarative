@@ -213,6 +213,10 @@ Item {
         id: multiDelegate2
     }
 
+    MultiDelegate3 {
+        id: multiDelegate3
+    }
+
     TestCase {
         name: "ListView"
         when: windowShown
@@ -413,6 +417,19 @@ Item {
         function test_multipleDelegates2(row) {
             var delegate = multiDelegate2.itemAt(10, row.y)
             compare(delegate.choiceType, row.type)
+        }
+
+        function test_multipleDelegates3_data() {
+            return [
+                { y: 25, type: "Rectangle", property: "color", value: "#ff0000" },
+                { y: 75, type: "Text", property: "text", value: "Hello world" }
+            ]
+        }
+
+        function test_multipleDelegates3(row) {
+            var delegate = multiDelegate3.itemAt(10, row.y)
+            verify(delegate.toString().includes(row.type))
+            compare(delegate[row.property], row.value)
         }
     }
 }
