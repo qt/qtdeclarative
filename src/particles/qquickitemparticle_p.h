@@ -106,9 +106,8 @@ protected:
 private:
     void processDeletables();
     void tick(int time = 0);
-    QList<QQuickItem* > m_deletables;
+    QSet<QQuickItem* > m_deletables;
     QList<QQuickItem* > m_managed;
-    QList< QQuickParticleData* > m_loadables;
     bool m_fade;
 
     QList<QQuickItem*> m_pendingItems;
