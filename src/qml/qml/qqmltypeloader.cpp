@@ -577,8 +577,10 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
         QString qmldirFilePath;
         QString qmldirUrl;
 
-        if (m_importCache.locateQmldir(importDatabase, import->uri, import->majorVersion, import->minorVersion,
-                                 &qmldirFilePath, &qmldirUrl)) {
+        const QQmlImports::LocalQmldirResult qmldirResult = m_importCache.locateLocalQmldir(
+                    importDatabase, import->uri, import->majorVersion, import->minorVersion,
+                    &qmldirFilePath, &qmldirUrl);
+        if (qmldirResult == QQmlImports::QmldirFound) {
             // This is a local library import
             if (!m_importCache.addLibraryImport(importDatabase, import->uri, import->qualifier, import->majorVersion,
                                           import->minorVersion, qmldirFilePath, qmldirUrl, false, errors))
@@ -603,7 +605,9 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
         } else {
             // Is this a module?
             if (QQmlMetaType::isAnyModule(import->uri)
-                    || QQmlMetaType::qmlRegisterModuleTypes(import->uri, import->majorVersion)) {
+                    || (qmldirResult != QQmlImports::QmldirInterceptedToRemote
+                        && QQmlMetaType::qmlRegisterModuleTypes(import->uri,
+                                                                import->majorVersion))) {
                 if (!m_importCache.addLibraryImport(importDatabase, import->uri, import->qualifier, import->majorVersion,
                                               import->minorVersion, QString(), QString(), false, errors))
                     return false;
