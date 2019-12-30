@@ -1,0 +1,7 @@
+import QtQuick 2.12
+import QtQuick.Controls 2.12
+
+SwitchDelegate {
+    text: "SwitchDelegate"
+    Accessible.name: text + "Override"
+}

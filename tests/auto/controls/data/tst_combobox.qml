@@ -1869,4 +1869,56 @@ TestCase {
         mouseRelease(control, control.leftPadding + control.contentItem.width, control.height / 2)
         compare(control.contentItem.selectedText, "Some text")
     }
+
+    // QTBUG-78885: When the edit text is changed on an editable ComboBox,
+    // and then that ComboBox loses focus, its currentIndex should change
+    // to the index of the edit text (assuming a match is found).
+    function test_currentIndexChangeOnLostFocus() {
+        if (Qt.styleHints.tabFocusBehavior !== Qt.TabFocusAllControls)
+            skip("This platform only allows tab focus for text controls")
+
+        let theModel = []
+        for (let i = 0; i < 10; ++i)
+            theModel.push("Item " + (i + 1))
+
+        let comboBox1 = createTemporaryObject(comboBox, testCase,
+            { objectName: "comboBox1", editable: true, model: theModel })
+        verify(comboBox1)
+        compare(comboBox1.currentIndex, 0)
+
+        let comboBox2 = createTemporaryObject(comboBox, testCase, { objectName: "comboBox2" })
+        verify(comboBox2)
+
+        // Give the first ComboBox focus and type in 0 to select "Item 10" (default is "Item 1").
+        waitForRendering(comboBox1)
+        comboBox1.forceActiveFocus()
+        verify(comboBox1.activeFocus)
+        keyClick(Qt.Key_0)
+        compare(comboBox1.editText, "Item 10")
+
+        let currentIndexSpy = signalSpy.createObject(comboBox1,
+            { target: comboBox1, signalName: "currentIndexChanged" })
+        verify(currentIndexSpy.valid)
+
+        // Give focus to the other ComboBox so that the first one loses it.
+        // The first ComboBox's currentIndex should change to that of "Item 10".
+        keyClick(Qt.Key_Tab)
+        verify(comboBox2.activeFocus)
+        compare(comboBox1.currentIndex, 9)
+        compare(currentIndexSpy.count, 1)
+
+        // Give focus back to the first ComboBox, and try the same thing except
+        // with non-existing text; the currentIndex should not change.
+        comboBox1.forceActiveFocus()
+        verify(comboBox1.activeFocus)
+        keySequence(StandardKey.SelectAll)
+        compare(comboBox1.contentItem.selectedText, "Item 10")
+        keyClick(Qt.Key_N)
+        keyClick(Qt.Key_O)
+        keyClick(Qt.Key_P)
+        keyClick(Qt.Key_E)
+        compare(comboBox1.editText, "nope")
+        compare(comboBox1.currentIndex, 9)
+        compare(currentIndexSpy.count, 1)
+    }
 }

@@ -285,7 +285,7 @@ void QQuickPage::setTitle(const QString &title)
         return;
 
     d->title = title;
-    setAccessibleName(title);
+    maybeSetAccessibleName(title);
     emit titleChanged();
 }
 
@@ -473,7 +473,7 @@ void QQuickPage::accessibilityActiveChanged(bool active)
     QQuickPane::accessibilityActiveChanged(active);
 
     if (active)
-        setAccessibleName(d->title);
+        maybeSetAccessibleName(d->title);
 }
 #endif
 

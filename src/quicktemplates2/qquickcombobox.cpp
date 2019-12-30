@@ -448,7 +448,7 @@ void QQuickComboBoxPrivate::updateCurrentText()
     if (currentText != text) {
         currentText = text;
         if (!hasDisplayText)
-           q->setAccessibleName(text);
+           q->maybeSetAccessibleName(text);
         emit q->currentTextChanged();
     }
     if (!hasDisplayText && displayText != text) {
@@ -1012,7 +1012,7 @@ void QQuickComboBox::setDisplayText(const QString &text)
         return;
 
     d->displayText = text;
-    setAccessibleName(text);
+    maybeSetAccessibleName(text);
     emit displayTextChanged();
 }
 
@@ -1705,6 +1705,12 @@ bool QQuickComboBox::eventFilter(QObject *object, QEvent *event)
             // the user clicked on the popup button to open it, not close it).
             d->hidePopup(false);
             setPressed(false);
+
+            // The focus left the text field, so if the edit text matches an item in the model,
+            // change our currentIndex to that. This matches widgets' behavior.
+            const int indexForEditText = find(d->extra.value().editText, Qt::MatchFixedString);
+            if (indexForEditText > -1)
+                setCurrentIndex(indexForEditText);
         }
         break;
 #if QT_CONFIG(im)
@@ -1945,7 +1951,7 @@ void QQuickComboBox::accessibilityActiveChanged(bool active)
     QQuickControl::accessibilityActiveChanged(active);
 
     if (active) {
-        setAccessibleName(d->hasDisplayText ? d->displayText : d->currentText);
+        maybeSetAccessibleName(d->hasDisplayText ? d->displayText : d->currentText);
         setAccessibleProperty("editable", isEditable());
     }
 }

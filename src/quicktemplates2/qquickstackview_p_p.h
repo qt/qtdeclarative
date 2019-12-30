@@ -94,6 +94,7 @@ public:
     void depthChange(int newDepth, int oldDepth);
 
     bool busy = false;
+    bool removingElements = false;
     QString operation;
     QJSValue initialItem;
     QQuickItem *currentItem = nullptr;
