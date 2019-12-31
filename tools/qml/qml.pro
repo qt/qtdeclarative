@@ -8,7 +8,7 @@ RESOURCES += qml.qrc
 
 QMAKE_TARGET_DESCRIPTION = QML Runtime
 
-ICON = resources/qml64.png
+ICON = resources/qml-64.png
 win32 {
     RC_ICONS = resources/qml.ico
 }
