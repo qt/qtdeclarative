@@ -586,7 +586,7 @@ uint ArrayData::append(Object *obj, ArrayObject *otherObj, uint n)
         obj->arrayPut(oldSize, os->values.data() + os->offset, chunk);
         toCopy -= chunk;
         if (toCopy)
-            obj->arrayPut(oldSize + chunk, os->values.data(), toCopy);
+            obj->setArrayLength(oldSize + chunk + toCopy);
     }
 
     return oldSize + n;

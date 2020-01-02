@@ -252,6 +252,7 @@ private slots:
     void interrupt();
 
     void triggerBackwardJumpWithDestructuring();
+    void arrayConcatOnSparseArray();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -4959,6 +4960,26 @@ void tst_QJSEngine::triggerBackwardJumpWithDestructuring()
             "}"
             );
     QVERIFY(!value.isError());
+}
+
+void tst_QJSEngine::arrayConcatOnSparseArray()
+{
+    QJSEngine engine;
+    engine.installExtensions(QJSEngine::GarbageCollectionExtension);
+    const auto value = engine.evaluate(
+            "(function() {\n"
+            "   const v4 = [1,2,3];\n"
+            "   const v7 = [4,5];\n"
+            "   v7.length = 1337;\n"
+            "   const v9 = v4.concat(v7);\n"
+            "   gc();\n"
+            "   return v9;\n"
+            "})();");
+    QCOMPARE(value.property("length").toInt(), 1340);
+    for (int i = 0; i < 5; ++i)
+        QCOMPARE(value.property(i).toInt(), i + 1);
+    for (int i = 5; i < 1340; ++i)
+        QVERIFY(value.property(i).isUndefined());
 }
 
 QTEST_MAIN(tst_QJSEngine)
