@@ -5792,13 +5792,12 @@ void tst_qqmlecmascript::sequenceConversionWrite()
         MySequenceConversionObject *seq = object->findChild<MySequenceConversionObject*>("msco");
         QVERIFY(seq != nullptr);
 
-        // we haven't registered QList<QPoint> as a sequence type, so writing shouldn't work.
-        QString warningOne = qmlFile.toString() + QLatin1String(":16: Error: Cannot assign QJSValue to QList<QPoint>");
-        QTest::ignoreMessage(QtWarningMsg, warningOne.toLatin1().constData());
-
+        // Behavior change in 5.14: due to added auto-magical conversions, it is possible to assign to
+        // QList<QPoint>, even though it is not a registered sequence type
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression("Could not convert array value at position 1 from QString to QPoint"));
         QMetaObject::invokeMethod(object, "performTest");
 
-        QList<QPoint> pointList; pointList << QPoint(1, 2) << QPoint(3, 4) << QPoint(5, 6); // original values, shouldn't have changed
+        QList<QPoint> pointList; pointList << QPoint(7, 7) << QPoint(0,0) << QPoint(8, 8) << QPoint(9, 9); // original values, shouldn't have changed
         QCOMPARE(seq->pointListProperty(), pointList);
 
         delete object;
