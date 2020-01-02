@@ -68,6 +68,7 @@ variables:
         \li \c{QML_DISK_CACHE_PATH}
         \li Specifies a custom location where the cache files shall be stored
             instead of using the default location.
+\endtable
 
 You can also specify \c{CONFIG += qtquickcompiler} in your \c{.pro} file
 to perform the compilation ahead of time and integrate the resulting byte code
