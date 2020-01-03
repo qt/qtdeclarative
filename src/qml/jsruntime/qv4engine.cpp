@@ -2323,4 +2323,9 @@ int ExecutionEngine::registerExtension()
     return registrationData()->extensionCount++;
 }
 
+QNetworkAccessManager *QV4::detail::getNetworkAccessManager(ExecutionEngine *engine)
+{
+    return engine->qmlEngine()->networkAccessManager();
+}
+
 QT_END_NAMESPACE
