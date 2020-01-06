@@ -1263,8 +1263,11 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
 void ExecutionEngine::markObjects(MarkStack *markStack)
 {
     for (int i = 0; i < NClasses; ++i)
-        if (classes[i])
+        if (classes[i]) {
             classes[i]->mark(markStack);
+            if (markStack->top >= markStack->limit)
+                markStack->drain();
+        }
     markStack->drain();
 
     identifierTable->markObjects(markStack);
