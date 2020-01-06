@@ -253,6 +253,7 @@ private slots:
 
     void triggerBackwardJumpWithDestructuring();
     void arrayConcatOnSparseArray();
+    void sortSparseArray();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -4980,6 +4981,26 @@ void tst_QJSEngine::arrayConcatOnSparseArray()
         QCOMPARE(value.property(i).toInt(), i + 1);
     for (int i = 5; i < 1340; ++i)
         QVERIFY(value.property(i).isUndefined());
+}
+
+void tst_QJSEngine::sortSparseArray()
+{
+    QJSEngine engine;
+    engine.installExtensions(QJSEngine::ConsoleExtension);
+    const auto value = engine.evaluate(
+            "(function() {\n"
+            "   var sparse = [0];\n"
+            "   sparse = Object.defineProperty(sparse, \"10\", "
+            "           {get: ()=>{return 2}, set: ()=>{return 2}} );\n"
+            "   return Array.prototype.sort.call(sparse, ()=>{});\n"
+            "})();");
+
+    QCOMPARE(value.property("length").toInt(), 11);
+    QVERIFY(value.property(0).isNumber());
+    QCOMPARE(value.property(0).toInt(), 0);
+    QVERIFY(value.property(1).isNumber());
+    QCOMPARE(value.property(1).toInt(), 2);
+    QVERIFY(value.property(10).isUndefined());
 }
 
 QTEST_MAIN(tst_QJSEngine)
