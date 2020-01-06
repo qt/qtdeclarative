@@ -262,6 +262,7 @@ private slots:
     void tostringRecursionCheck();
     void arrayIncludesWithLargeArray();
     void printCircularArray();
+    void typedArraySet();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -5105,6 +5106,41 @@ void tst_QJSEngine::applyOnHugeArray()
     );
     QVERIFY(value.isError());
     QCOMPARE(value.toString(), "RangeError: Array too large for apply().");
+}
+
+void tst_QJSEngine::typedArraySet()
+{
+    QJSEngine engine;
+    const auto value = engine.evaluate(
+        "(function() {"
+        "   var length = 0xffffffe;"
+        "   var offset = 0xfffffff0;"
+        "   var e1;"
+        "   var e2;"
+        "   try {"
+        "       var source1 = new Int8Array(length);"
+        "       var target1 = new Int8Array(length);"
+        "       target1.set(source1, offset);"
+        "   } catch (intError) {"
+        "       e1 = intError;"
+        "   }"
+        "   try {"
+        "       var source2 = new Array(length);"
+        "       var target2 = new Int8Array(length);"
+        "       target2.set(source2, offset);"
+        "   } catch (arrayError) {"
+        "       e2 = arrayError;"
+        "   }"
+        "   return [e1, e2];"
+        "})();"
+    );
+
+    QVERIFY(value.isArray());
+    for (int i = 0; i < 2; ++i) {
+        const auto error = value.property(i);
+        QVERIFY(error.isError());
+        QCOMPARE(error.toString(), "RangeError: TypedArray.set: out of range");
+    }
 }
 
 QTEST_MAIN(tst_QJSEngine)

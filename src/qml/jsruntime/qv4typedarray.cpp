@@ -1416,7 +1416,8 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
         if (scope.engine->hasException || l != len)
             return scope.engine->throwTypeError();
 
-        if (offset + l > a->length())
+        const uint aLength = a->length();
+        if (offset > aLength || l > aLength - offset)
             RETURN_RESULT(scope.engine->throwRangeError(QStringLiteral("TypedArray.set: out of range")));
 
         uint idx = 0;
@@ -1446,7 +1447,9 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
         return scope.engine->throwTypeError();
 
     uint l = srcTypedArray->length();
-    if (offset + l > a->length())
+
+    const uint aLength = a->length();
+    if (offset > aLength || l > aLength - offset)
         RETURN_RESULT(scope.engine->throwRangeError(QStringLiteral("TypedArray.set: out of range")));
 
     char *dest = buffer->d()->data->data() + a->d()->byteOffset + offset*elementSize;
