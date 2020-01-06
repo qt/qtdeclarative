@@ -256,6 +256,8 @@ private slots:
     void sortSparseArray();
     void compileBrokenRegexp();
 
+    void tostringRecursionCheck();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -5018,6 +5020,26 @@ void tst_QJSEngine::compileBrokenRegexp()
 
     QVERIFY(value.isError());
     QCOMPARE(value.toString(), "SyntaxError: Invalid flags supplied to RegExp constructor");
+}
+
+void tst_QJSEngine::tostringRecursionCheck()
+{
+    QJSEngine engine;
+    auto value = engine.evaluate(R"js(
+    var a = {};
+    var b = new Array(1337);
+    function main() {
+        var ret = a.toLocaleString;
+        b[1] = ret;
+        Array = {};
+        Object.toString = b[1];
+        var ret = String.prototype.lastIndexOf.call({}, b[1]);
+        var ret = String.prototype.charAt.call(Function, Object);
+    }
+    main();
+    )js");
+    QVERIFY(value.isError());
+    QCOMPARE(value.toString(), QLatin1String("RangeError: Maximum call stack size exceeded."));
 }
 
 QTEST_MAIN(tst_QJSEngine)
