@@ -258,6 +258,7 @@ private slots:
 
     void tostringRecursionCheck();
     void arrayIncludesWithLargeArray();
+    void printCircularArray();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -5052,6 +5053,18 @@ void tst_QJSEngine::arrayIncludesWithLargeArray()
     )js");
     QVERIFY(value.isBool());
     QCOMPARE(value.toBool(), false);
+}
+
+void tst_QJSEngine::printCircularArray()
+{
+    QJSEngine engine;
+    engine.installExtensions(QJSEngine::ConsoleExtension);
+    QTest::ignoreMessage(QtMsgType::QtDebugMsg, "[[Circular]]");
+    auto value = engine.evaluate(R"js(
+    let v1 = []
+    v1.push(v1)
+    console.log(v1)
+    )js");
 }
 
 QTEST_MAIN(tst_QJSEngine)
