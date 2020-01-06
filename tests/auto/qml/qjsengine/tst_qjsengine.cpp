@@ -254,6 +254,7 @@ private slots:
     void triggerBackwardJumpWithDestructuring();
     void arrayConcatOnSparseArray();
     void sortSparseArray();
+    void compileBrokenRegexp();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -5001,6 +5002,22 @@ void tst_QJSEngine::sortSparseArray()
     QVERIFY(value.property(1).isNumber());
     QCOMPARE(value.property(1).toInt(), 2);
     QVERIFY(value.property(10).isUndefined());
+}
+
+void tst_QJSEngine::compileBrokenRegexp()
+{
+    QJSEngine engine;
+    const auto value = engine.evaluate(
+        "(function() {"
+        "var ret = new RegExp(Array(4097).join("
+        "       String.fromCharCode(58)) + Array(4097).join(String.fromCharCode(480)) "
+        "       + Array(65537).join(String.fromCharCode(5307)));"
+        "return RegExp.prototype.compile.call(ret, 'a','b');"
+        "})();"
+    );
+
+    QVERIFY(value.isError());
+    QCOMPARE(value.toString(), "SyntaxError: Invalid flags supplied to RegExp constructor");
 }
 
 QTEST_MAIN(tst_QJSEngine)
