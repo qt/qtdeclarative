@@ -127,7 +127,7 @@ void QQmlApplicationEnginePrivate::finishLoad(QQmlComponent *c)
     switch (c->status()) {
     case QQmlComponent::Error:
         qWarning() << "QQmlApplicationEngine failed to load component";
-        qWarning() << qPrintable(c->errorString());
+        warning(c->errors());
         q->objectCreated(nullptr, c->url());
         break;
     case QQmlComponent::Ready: {
