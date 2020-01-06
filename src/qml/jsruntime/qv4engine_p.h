@@ -355,7 +355,7 @@ public:
     FunctionObject *getStackFunction() const { return reinterpret_cast<FunctionObject *>(jsObjects + GetStack_Function); }
     FunctionObject *thrower() const { return reinterpret_cast<FunctionObject *>(jsObjects + ThrowerObject); }
 
-    std::function<QNetworkAccessManager*(ExecutionEngine*)> networkAccessManager = detail::getNetworkAccessManager;
+    QNetworkAccessManager* (*networkAccessManager)(ExecutionEngine*)  = detail::getNetworkAccessManager;
 
     enum JSStrings {
         String_Empty,

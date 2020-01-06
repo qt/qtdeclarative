@@ -390,14 +390,14 @@ WorkerScript::WorkerScript(int id, QQuickWorkerScriptEnginePrivate *parent)
     QV4::ScopedValue sendMessage(scope, QV4::FunctionObject::createBuiltinFunction(this, name, QQuickWorkerScriptEnginePrivate::method_sendMessage, 1));
     api->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("sendMessage"))), sendMessage);
     globalObject->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("WorkerScript"))), api);
-    networkAccessManager = [this](QV4::ExecutionEngine *engine){
+    networkAccessManager = [](QV4::ExecutionEngine *engine){
         auto *workerScript = static_cast<WorkerScript *>(engine);
         if (workerScript->scriptLocalNAM)
             return workerScript->scriptLocalNAM.get();
-        if (auto *namFactory = p->qmlengine->networkAccessManagerFactory())
-            workerScript->scriptLocalNAM.reset(namFactory->create(p));
+        if (auto *namFactory = workerScript->p->qmlengine->networkAccessManagerFactory())
+            workerScript->scriptLocalNAM.reset(namFactory->create(workerScript->p));
         else
-            workerScript->scriptLocalNAM.reset(new QNetworkAccessManager(p));
+            workerScript->scriptLocalNAM.reset(new QNetworkAccessManager(workerScript->p));
         return workerScript->scriptLocalNAM.get();
     };
 }
