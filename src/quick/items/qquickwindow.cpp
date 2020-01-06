@@ -4045,7 +4045,7 @@ QImage QQuickWindow::grabWindow()
     Q_D(QQuickWindow);
 
     if (!isVisible() && !d->renderControl) {
-        // backends like software and d3d12 can grab regardless of the window state
+        // backends like software can grab regardless of the window state
         if (d->windowManager && (d->windowManager->flags() & QSGRenderLoop::SupportsGrabWithoutExpose))
             return d->windowManager->grab(this);
     }
@@ -5513,9 +5513,6 @@ void QQuickWindow::setSceneGraphBackend(QSGRendererInterface::GraphicsApi api)
     switch (api) {
     case QSGRendererInterface::Software:
         setSceneGraphBackend(QStringLiteral("software"));
-        break;
-    case QSGRendererInterface::Direct3D12:
-        setSceneGraphBackend(QStringLiteral("d3d12"));
         break;
     default:
         break;

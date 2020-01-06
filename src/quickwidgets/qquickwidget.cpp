@@ -500,7 +500,7 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
     \section1 Support when not using OpenGL
 
     In addition to OpenGL, the \c software backend of Qt Quick also supports
-    QQuickWidget. Other backends, for example the Direct 3D 12 one, are not
+    QQuickWidget. Other backends, for example OpenVG, are not
     compatible however and attempting to construct a QQuickWidget will lead to
     problems.
 

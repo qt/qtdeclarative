@@ -56,9 +56,6 @@
 #ifdef Q_OS_MACOS
 #include "metalrenderer.h"
 #endif
-#if QT_CONFIG(d3d12)
-#include "d3d12renderer.h"
-#endif
 #include "softwarerenderer.h"
 
 //! [1]
@@ -102,14 +99,6 @@ QSGNode *CustomRenderItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
                              metalNode->resourceBuilder(), &MetalRenderNodeResourceBuilder::build);
         }
         static_cast<MetalRenderNode *>(n)->sync(this);
-#endif
-        break;
-
-    case QSGRendererInterface::Direct3D12: // ### Qt 6: remove
-#if QT_CONFIG(d3d12)
-        if (!n)
-            n = new D3D12RenderNode;
-        static_cast<D3D12RenderNode *>(n)->sync(this);
 #endif
         break;
 

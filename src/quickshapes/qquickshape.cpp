@@ -595,8 +595,6 @@ void QQuickShapePath::resetFillGradient()
     \li The \c software backend is fully supported. The path is rendered via
     QPainter::strokePath() and QPainter::fillPath() in this case.
 
-    \li The Direct 3D 12 backend is not currently supported.
-
     \li The OpenVG backend is not currently supported.
 
     \endlist

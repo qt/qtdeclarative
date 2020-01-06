@@ -95,7 +95,6 @@ QQuickGraphicsInfo *QQuickGraphicsInfo::qmlAttachedProperties(QObject *object)
     \li GraphicsInfo.Unknown - the default value when no active scenegraph is associated with the item
     \li GraphicsInfo.Software - Qt Quick's software renderer based on QPainter with the raster paint engine
     \li GraphicsInfo.OpenGL - OpenGL or OpenGL ES
-    \li GraphicsInfo.Direct3D12 - Direct3D 12
     \li GraphicsInfo.OpenVG - OpenVG
     \li GraphicsInfo.OpenGLRhi - OpenGL on top of QRhi, a graphics abstraction layer
     \li GraphicsInfo.Direct3D11Rhi - Direct3D 11 on top of QRhi, a graphics abstraction layer

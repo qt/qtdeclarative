@@ -53,7 +53,6 @@ public:
         Unknown,
         Software,
         OpenGL,
-        Direct3D12,
         OpenVG,
         OpenGLRhi,
         Direct3D11Rhi,

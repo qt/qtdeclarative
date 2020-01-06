@@ -423,7 +423,7 @@ void QSGSoftwareRenderThread::sync(bool inExpose)
     qCDebug(QSG_RASTER_LOG_RENDERLOOP, "RT - sync");
 
     mutex.lock();
-    Q_ASSERT_X(renderLoop->lockedForSync, "QSGD3D12RenderThread::sync()", "sync triggered with gui not locked");
+    Q_ASSERT_X(renderLoop->lockedForSync, "QSGSoftwareRenderThread::sync()", "sync triggered with gui not locked");
 
     if (exposedWindow) {
         QQuickWindowPrivate *wd = QQuickWindowPrivate::get(exposedWindow);

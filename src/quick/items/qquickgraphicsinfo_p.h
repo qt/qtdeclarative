@@ -85,7 +85,6 @@ public:
         Unknown = QSGRendererInterface::Unknown,
         Software = QSGRendererInterface::Software,
         OpenGL = QSGRendererInterface::OpenGL,
-        Direct3D12 = QSGRendererInterface::Direct3D12,
         OpenVG = QSGRendererInterface::OpenVG,
         OpenGLRhi = QSGRendererInterface::OpenGLRhi,
         Direct3D11Rhi = QSGRendererInterface::Direct3D11Rhi,

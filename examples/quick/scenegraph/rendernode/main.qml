@@ -143,7 +143,6 @@ Item {
                 var apiStr;
                 switch (api) {
                 case GraphicsInfo.OpenGL: apiStr = "OpenGL (direct)"; break;
-                case GraphicsInfo.Direct3D12: apiStr = "Direct3D 12 (direct)"; break;
                 case GraphicsInfo.Software: apiStr = "Software (QPainter)"; break;
                 case GraphicsInfo.OpenGLRhi: apiStr = "OpenGL (RHI)"; break;
                 case GraphicsInfo.MetalRhi: apiStr = "Metal (RHI)"; break;
