@@ -869,6 +869,8 @@ struct ValueArray {
         } else {
             while (v < end) {
                 v->mark(markStack);
+                if (markStack->top >= markStack->limit)
+                    markStack->drain();
                 ++v;
             }
         }

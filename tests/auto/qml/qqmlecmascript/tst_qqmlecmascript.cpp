@@ -374,6 +374,8 @@ private slots:
     void getThisObject();
     void semicolonAfterProperty();
 
+    void gcCrashRegressionTest();
+
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
     static void verifyContextLifetime(QQmlContextData *ctxt);
@@ -9063,6 +9065,53 @@ void tst_qqmlecmascript::semicolonAfterProperty()
     QVERIFY(component.isReady());
     QScopedPointer<QObject> test(component.create());
     QVERIFY(!test.isNull());
+}
+
+void tst_qqmlecmascript::gcCrashRegressionTest()
+{
+    const QString qmljs = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmljs";
+    if (!QFile::exists(qmljs)) {
+        QSKIP("Tets requires qmljs");
+    }
+    QProcess process;
+
+    QTemporaryFile infile;
+    QVERIFY(infile.open());
+    infile.write(R"js(
+        function i_want_to_break_free() {
+            var n = 400;
+            var m = 10;
+            var regex = new RegExp("(ab)".repeat(n), "g"); // g flag to trigger the vulnerable path
+            var part = "ab".repeat(n); // matches have to be at least size 2 to prevent interning
+            var s = (part + "|").repeat(m);
+            var cnt = 0;
+            var ary = [];
+            s.replace(regex, function() {
+                for (var i = 1; i < arguments.length-2; ++i) {
+                    if (typeof arguments[i] !== 'string') {
+                        i_am_free = arguments[i];
+                        throw "success";
+                    }
+                    ary[cnt++] = arguments[i];  // root everything to force GC
+                }
+                return "x";
+            });
+        }
+        try { i_want_to_break_free(); } catch (e) {console.log("hi") }
+        console.log(typeof(i_am_free));  // will print "object"
+    )js");
+    infile.close();
+
+    QProcessEnvironment environment = QProcessEnvironment::systemEnvironment();
+    environment.insert("QV4_GC_MAX_STACK_SIZE", "32768");
+
+    process.setProcessEnvironment(environment);
+    process.start(qmljs, QStringList({infile.fileName()}));
+    QVERIFY(process.waitForStarted());
+    const qint64 pid = process.processId();
+    QVERIFY(pid != 0);
+    QVERIFY(process.waitForFinished());
+    QCOMPARE(process.exitCode(), 0);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
