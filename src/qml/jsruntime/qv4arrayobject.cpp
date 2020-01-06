@@ -1050,8 +1050,9 @@ ReturnedValue ArrayPrototype::method_includes(const FunctionObject *b, const Val
         }
     }
 
+    ScopedValue val(scope);
     while (k < len) {
-        ScopedValue val(scope, instance->get(k));
+        val = instance->get(k);
         if (val->sameValueZero(argv[0])) {
             return Encode(true);
         }

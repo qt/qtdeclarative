@@ -257,6 +257,7 @@ private slots:
     void compileBrokenRegexp();
 
     void tostringRecursionCheck();
+    void arrayIncludesWithLargeArray();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -5040,6 +5041,17 @@ void tst_QJSEngine::tostringRecursionCheck()
     )js");
     QVERIFY(value.isError());
     QCOMPARE(value.toString(), QLatin1String("RangeError: Maximum call stack size exceeded."));
+}
+
+void tst_QJSEngine::arrayIncludesWithLargeArray()
+{
+    QJSEngine engine;
+    auto value = engine.evaluate(R"js(
+        let arr = new Array(10000000)
+        arr.includes(42)
+    )js");
+    QVERIFY(value.isBool());
+    QCOMPARE(value.toBool(), false);
 }
 
 QTEST_MAIN(tst_QJSEngine)
