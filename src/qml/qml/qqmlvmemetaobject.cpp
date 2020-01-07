@@ -75,18 +75,23 @@ public:
         Q_ASSERT(m_metaObject->object == prop->object);
         Q_ASSERT(m_id <= quintptr(std::numeric_limits<int>::max() - m_metaObject->methodOffset()));
 
-        // readPropertyAsList() with all the checks transformed into Q_ASSERT
+        // readPropertyAsList() with checks transformed into Q_ASSERT
         // and without allocation.
-        Q_ASSERT(!m_metaObject->propertyAndMethodStorage.isUndefined());
-        auto *md = static_cast<QV4::MemberData *>(m_metaObject->propertyAndMethodStorage.asManaged());
-        Q_ASSERT(md);
-        const auto *v = (md->data() + m_id)->as<QV4::VariantObject>();
-        Q_ASSERT(v);
-        Q_ASSERT(v->d());
-        QVariant &data = v->d()->data();
-        Q_ASSERT(data.userType() == qMetaTypeId<QVector<QQmlGuard<QObject>>>());
-        m_list = static_cast<QVector<QQmlGuard<QObject>> *>(data.data());
-        Q_ASSERT(m_list);
+        if (m_metaObject->propertyAndMethodStorage.isUndefined() &&
+                m_metaObject->propertyAndMethodStorage.valueRef()) {
+            return;
+        }
+
+        if (auto *md = static_cast<QV4::MemberData *>(
+                    m_metaObject->propertyAndMethodStorage.asManaged())) {
+            const auto *v = (md->data() + m_id)->as<QV4::VariantObject>();
+            Q_ASSERT(v);
+            Q_ASSERT(v->d());
+            QVariant &data = v->d()->data();
+            Q_ASSERT(data.userType() == qMetaTypeId<QVector<QQmlGuard<QObject>>>());
+            m_list = static_cast<QVector<QQmlGuard<QObject>> *>(data.data());
+            Q_ASSERT(m_list);
+        }
     }
 
     ~ResolvedList() = default;
