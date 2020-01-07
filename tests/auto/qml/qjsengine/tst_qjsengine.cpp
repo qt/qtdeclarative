@@ -256,6 +256,7 @@ private slots:
     void sortSparseArray();
     void compileBrokenRegexp();
     void sortNonStringArray();
+    void iterateInvalidProxy();
 
     void tostringRecursionCheck();
     void arrayIncludesWithLargeArray();
@@ -5077,6 +5078,20 @@ void tst_QJSEngine::sortNonStringArray()
     );
     QVERIFY(value.isError());
     QCOMPARE(value.toString(), "TypeError: Cannot convert a symbol to a string.");
+}
+
+void tst_QJSEngine::iterateInvalidProxy()
+{
+    QJSEngine engine;
+    const auto value = engine.evaluate(
+        "const v1 = new Proxy(Reflect, Reflect);"
+        "for (const v2 in v1) {}"
+        "const v3 = { getOwnPropertyDescriptor: eval, getPrototypeOf: eval };"
+        "const v4 = new Proxy(v3, v3);"
+        "for (const v5 in v4) {}"
+    );
+    QVERIFY(value.isError());
+    QCOMPARE(value.toString(), "TypeError: Type error");
 }
 
 QTEST_MAIN(tst_QJSEngine)

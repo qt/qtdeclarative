@@ -515,7 +515,7 @@ ProxyObjectOwnPropertyKeyIterator::ProxyObjectOwnPropertyKeyIterator(ArrayObject
 
 PropertyKey ProxyObjectOwnPropertyKeyIterator::next(const Object *m, Property *pd, PropertyAttributes *attrs)
 {
-    if (index >= len)
+    if (index >= len || m == nullptr)
         return PropertyKey::invalid();
 
     Scope scope(m);
