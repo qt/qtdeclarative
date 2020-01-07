@@ -255,7 +255,8 @@ int main(int argc, char **argv)
             "** WARNING! All changes made in this file will be lost!\n"
             "*****************************************************************************/\n\n");
     fprintf(output,
-            "#include <QtQml/qqmlengine.h>\n");
+            "#include <QtQml/qqml.h>\n"
+            "#include <QtQml/qqmlmoduleregistration.h>\n");
 
     QStringList includes;
     QVector<QJsonObject> types;
@@ -332,7 +333,10 @@ int main(int argc, char **argv)
 
     sortTypes(types);
 
-    fprintf(output, "\n#include <QtQml/qqmlmoduleregistration.h>");
+    std::sort(includes.begin(), includes.end());
+    const auto newEnd = std::unique(includes.begin(), includes.end());
+    includes.erase(newEnd, includes.end());
+
     const bool privateIncludes = parser.isSet(privateIncludesOption);
     for (const QString &include : qAsConst(includes)) {
         if (privateIncludes && include.endsWith(QLatin1String("_p.h")))
