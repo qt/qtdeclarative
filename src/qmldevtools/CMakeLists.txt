@@ -59,19 +59,38 @@ qt_process_qlalr(QmlDevTools "${CMAKE_CURRENT_SOURCE_DIR}/../qml/parser/qqmljs.g
 # for other tools, and also for the main QmlDevTools module,
 # until we fix the script to handle internal_module to create only one single Private module.
 qt_internal_module_info(qml_module "Qml")
-set(_qml_dev_tools_private_includes
-        $<BUILD_INTERFACE:${qml_module_include_dir}>
-        $<BUILD_INTERFACE:${qml_module_repo_include_dir}>
-        $<BUILD_INTERFACE:${qml_module_include_dir}/${PROJECT_VERSION}>
-        $<BUILD_INTERFACE:${qml_module_include_dir}/${PROJECT_VERSION}/${qml_module}>
-    )
+if(QT_FEATURE_framework)
+    get_target_property(_qml_fw_headers_dir Qt::Qml LIBRARY_OUTPUT_DIRECTORY)
+    string(APPEND _qml_fw_headers_dir /${qml_module}.framework/Versions/${PROJECT_VERSION_MAJOR}/Headers)
+    set(_qml_dev_tools_private_includes
+        $<BUILD_INTERFACE:${_qml_fw_headers_dir}>
+        $<BUILD_INTERFACE:${_qml_fw_headers_dir}/${PROJECT_VERSION}>
+        $<BUILD_INTERFACE:${_qml_fw_headers_dir}/${PROJECT_VERSION}/${qml_module}>
+        )
+else()
+    set(_qml_dev_tools_private_includes
+            $<BUILD_INTERFACE:${qml_module_include_dir}>
+            $<BUILD_INTERFACE:${qml_module_repo_include_dir}>
+            $<BUILD_INTERFACE:${qml_module_include_dir}/${PROJECT_VERSION}>
+            $<BUILD_INTERFACE:${qml_module_include_dir}/${PROJECT_VERSION}/${qml_module}>
+        )
+endif()
 target_include_directories(QmlDevTools PRIVATE ${_qml_dev_tools_private_includes})
 target_include_directories(QmlDevToolsPrivate INTERFACE ${_qml_dev_tools_private_includes})
-set(_qml_dev_tools_public_includes
-        $<INSTALL_INTERFACE:include/${qml_module}>
-        $<INSTALL_INTERFACE:include/${qml_module}/${PROJECT_VERSION}>
-        $<INSTALL_INTERFACE:include/${qml_module}/${PROJECT_VERSION}/${qml_module}>
-    )
+if(QT_FEATURE_framework)
+    set(_qml_fw_headers_dir lib/${qml_module}.framework/Headers)
+    set(_qml_dev_tools_public_includes
+        $<INSTALL_INTERFACE:${_qml_fw_headers_dir}>
+        $<INSTALL_INTERFACE:${_qml_fw_headers_dir}/${PROJECT_VERSION}>
+        $<INSTALL_INTERFACE:${_qml_fw_headers_dir}/${PROJECT_VERSION}/${qml_module}>
+        )
+else()
+    set(_qml_dev_tools_public_includes
+            $<INSTALL_INTERFACE:include/${qml_module}>
+            $<INSTALL_INTERFACE:include/${qml_module}/${PROJECT_VERSION}>
+            $<INSTALL_INTERFACE:include/${qml_module}/${PROJECT_VERSION}/${qml_module}>
+        )
+endif()
 target_include_directories(QmlDevTools PRIVATE ${_qml_dev_tools_public_includes})
 target_include_directories(QmlDevToolsPrivate INTERFACE ${_qml_dev_tools_public_includes})
 
