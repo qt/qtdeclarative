@@ -257,6 +257,7 @@ private slots:
     void compileBrokenRegexp();
     void sortNonStringArray();
     void iterateInvalidProxy();
+    void applyOnHugeArray();
 
     void tostringRecursionCheck();
     void arrayIncludesWithLargeArray();
@@ -5092,6 +5093,18 @@ void tst_QJSEngine::iterateInvalidProxy()
     );
     QVERIFY(value.isError());
     QCOMPARE(value.toString(), "TypeError: Type error");
+}
+
+void tst_QJSEngine::applyOnHugeArray()
+{
+    QJSEngine engine;
+    const auto value = engine.evaluate(
+        "var a = new Array(10);"
+        "a[536870912] = Function;"
+        "Function.apply('aaaaaaaa', a);"
+    );
+    QVERIFY(value.isError());
+    QCOMPARE(value.toString(), "RangeError: Array too large for apply().");
 }
 
 QTEST_MAIN(tst_QJSEngine)

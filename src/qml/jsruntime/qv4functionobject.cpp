@@ -364,7 +364,13 @@ ReturnedValue FunctionPrototype::method_apply(const QV4::FunctionObject *b, cons
     if (!arr)
         return v4->throwTypeError();
 
-    uint len = arr->getLength();
+    const qint64 len64 = arr->getLength();
+    if (len64 < 0ll || len64 > qint64(std::numeric_limits<int>::max()))
+        return v4->throwRangeError(QStringLiteral("Invalid array length."));
+    if (len64 > qint64(v4->jsStackLimit - v4->jsStackTop))
+        return v4->throwRangeError(QStringLiteral("Array too large for apply()."));
+
+    const uint len = uint(len64);
 
     Scope scope(v4);
     Value *arguments = scope.alloc<Scope::Uninitialized>(len);
