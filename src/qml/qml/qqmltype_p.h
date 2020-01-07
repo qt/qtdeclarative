@@ -124,8 +124,8 @@ public:
     bool isQObjectSingleton() const;
     bool isQJSValueSingleton() const;
 
-    int typeId() const;
-    int qListTypeId() const;
+    QMetaType typeId() const;
+    QMetaType qListTypeId() const;
 
     const QMetaObject *metaObject() const;
     const QMetaObject *baseMetaObject() const;

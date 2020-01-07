@@ -57,7 +57,6 @@
 
 #include <QtCore/qset.h>
 #include <QtCore/qvector.h>
-#include <QtCore/qbitarray.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -102,9 +101,9 @@ struct QQmlMetaTypeData
     QHash<QString, void (*)()> moduleTypeRegistrationFunctions;
     bool registerModuleTypes(const QString &uri);
 
-    QBitArray objects;
-    QBitArray interfaces;
-    QBitArray lists;
+    QSet<int> interfaces;
+    QSet<int> objects;
+    QSet<int> lists;
 
     QList<QQmlPrivate::AutoParentFunction> parentFunctions;
     QVector<QQmlPrivate::QmlUnitCacheLookupFunction> lookupCachedQmlUnit;

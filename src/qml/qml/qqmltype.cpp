@@ -53,7 +53,7 @@
 QT_BEGIN_NAMESPACE
 
 QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
-    : regType(type), iid(nullptr), typeId(0), listId(0), revision(QTypeRevision::zero()),
+    : regType(type), iid(nullptr), revision(QTypeRevision::zero()),
     containsRevisionedAttributes(false), baseMetaObject(nullptr),
     index(-1), isSetup(false), isEnumFromCacheSetup(false), isEnumFromBaseSetup(false),
     haveSuperType(false)
@@ -587,14 +587,14 @@ bool QQmlType::isQJSValueSingleton() const
     return d && d->regType == SingletonType && d->extraData.sd->singletonInstanceInfo->scriptCallback;
 }
 
-int QQmlType::typeId() const
+QMetaType QQmlType::typeId() const
 {
-    return d ? d->typeId : -1;
+    return d ? d->typeId : QMetaType{};
 }
 
-int QQmlType::qListTypeId() const
+QMetaType QQmlType::qListTypeId() const
 {
-    return d ? d->listId : -1;
+    return d ? d->listId : QMetaType{};
 }
 
 const QMetaObject *QQmlType::metaObject() const

@@ -157,8 +157,8 @@ public:
     QHashedString module;
     QString name;
     QString elementName;
-    int typeId;
-    int listId;
+    QMetaType typeId;
+    QMetaType listId;
     QTypeRevision version;
     QTypeRevision revision;
     mutable bool containsRevisionedAttributes;

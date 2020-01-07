@@ -61,6 +61,7 @@ class PieChart : public QQuickItem
     Q_PROPERTY(PieSlice* pieSlice READ pieSlice WRITE setPieSlice)
 //![0]
     Q_PROPERTY(QString name READ name WRITE setName)
+    Q_MOC_INCLUDE("pieslice.h")
     QML_ELEMENT
 //![1]
 public:

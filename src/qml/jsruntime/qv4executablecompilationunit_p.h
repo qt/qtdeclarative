@@ -182,8 +182,8 @@ public:
 
     CompositeMetaTypeIds typeIdsForComponent(int objectid = 0) const;
 
-    int metaTypeId = -1;
-    int listMetaTypeId = -1;
+    QMetaType metaTypeId;
+    QMetaType listMetaTypeId;
     bool isRegisteredWithEngine = false;
 
     QHash<int, InlineComponentData> inlineComponentData;

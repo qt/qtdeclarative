@@ -591,15 +591,15 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
                 }
 
                 if (p->isList) {
-                    propertyType = typeIds.listId;
+                    propertyType = typeIds.listId.id();
                 } else {
-                    propertyType = typeIds.id;
+                    propertyType = typeIds.id.id();
                 }
             } else {
                 if (p->isList) {
-                    propertyType = qmltype.qListTypeId();
+                    propertyType = qmltype.qListTypeId().id();
                 } else {
-                    propertyType = qmltype.typeId();
+                    propertyType = qmltype.typeId().id();
                     propertyTypeVersion = qmltype.version();
                 }
             }
@@ -647,10 +647,10 @@ inline int QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter(const
         return QMetaType::UnknownType;
 
     if (!qmltype.isComposite())
-        return qmltype.typeId();
+        return qmltype.typeId().id();
 
     if (selfReference)
-        return objectContainer->typeIdsForComponent().id;
+        return objectContainer->typeIdsForComponent().id.id();
 
     QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
     Q_ASSERT(tdata);
@@ -658,7 +658,7 @@ inline int QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter(const
 
     auto compilationUnit = tdata->compilationUnit();
 
-    return compilationUnit->metaTypeId;
+    return compilationUnit->metaTypeId.id();
 }
 
 template <typename ObjectContainer>
@@ -840,9 +840,9 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         }
 
         if (typeRef->type.isValid())
-            *type = typeRef->type.typeId();
+            *type = typeRef->type.typeId().id();
         else
-            *type = typeRef->compilationUnit->metaTypeId;
+            *type = typeRef->compilationUnit->metaTypeId.id();
 
         *version = typeRef->version;
 

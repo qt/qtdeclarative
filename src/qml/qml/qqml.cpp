@@ -366,12 +366,10 @@ namespace QQmlPrivate {
     {
         using T = QQmlTypeNotAvailable;
 
-        QML_GETTYPENAMES
-
         RegisterTypeAndRevisions type = {
             0,
-            qRegisterNormalizedMetaType<T *>(pointerName.constData()),
-            qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
+            QMetaType::fromType<T *>(),
+            QMetaType::fromType<QQmlListProperty<T>>(),
             0,
             nullptr,
 

@@ -83,13 +83,11 @@ static QQmlPropertyData::Flags fastFlagsForProperty(const QMetaProperty &p)
     return flags;
 }
 
-// Flags that do depend on the property's QMetaProperty::userType() and thus are slow to
-// load
-static void flagsForPropertyType(int propType, QQmlPropertyData::Flags &flags)
+// Flags that do depend on the property's QMetaType
+static void flagsForPropertyType(QMetaType metaType, QQmlPropertyData::Flags &flags)
 {
-    Q_ASSERT(propType != -1);
-
-    if (propType == QMetaType::QObjectStar) {
+    int propType = metaType.id();
+    if (metaType.flags() & QMetaType::PointerToQObject) {
         flags.type = QQmlPropertyData::Flags::QObjectDerivedType;
     } else if (propType == QMetaType::QVariant) {
         flags.type = QQmlPropertyData::Flags::QVariantType;
@@ -101,8 +99,7 @@ static void flagsForPropertyType(int propType, QQmlPropertyData::Flags &flags)
         flags.type = QQmlPropertyData::Flags::QJSValueType;
     } else {
         QQmlMetaType::TypeCategory cat = QQmlMetaType::typeCategory(propType);
-
-        if (cat == QQmlMetaType::Object || QMetaType::typeFlags(propType) & QMetaType::PointerToQObject)
+        if (cat == QQmlMetaType::Object)
             flags.type = QQmlPropertyData::Flags::QObjectDerivedType;
         else if (cat == QQmlMetaType::List)
             flags.type = QQmlPropertyData::Flags::QListType;
@@ -121,7 +118,7 @@ QQmlPropertyData::Flags
 QQmlPropertyData::flagsForProperty(const QMetaProperty &p)
 {
     auto flags = fastFlagsForProperty(p);
-    flagsForPropertyType(p.userType(), flags);
+    flagsForPropertyType(p.metaType(), flags);
     return flags;
 }
 
@@ -154,8 +151,9 @@ void QQmlPropertyData::lazyLoad(const QMetaProperty &p)
 void QQmlPropertyData::load(const QMetaProperty &p)
 {
     populate(this, p);
-    setPropType(p.userType());
-    flagsForPropertyType(propType(), m_flags);
+    QMetaType type = p.metaType();
+    setPropType(type.id());
+    flagsForPropertyType(type, m_flags);
 }
 
 void QQmlPropertyData::load(const QMetaMethod &m)
@@ -687,7 +685,7 @@ void QQmlPropertyCache::resolve(QQmlPropertyData *data) const
                 data->setPropType(registerResult == -1 ? QMetaType::UnknownType : registerResult);
             }
         }
-        flagsForPropertyType(data->propType(), data->m_flags);
+        flagsForPropertyType(QMetaType(data->propType()), data->m_flags);
     }
 }
 

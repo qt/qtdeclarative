@@ -310,14 +310,10 @@ public:
 template<typename T>
 int qmlRegisterValueTypeEnums(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
 {
-    QByteArray name(T::staticMetaObject.className());
-
-    QByteArray pointerName(name + '*');
-
     QQmlPrivate::RegisterType type = {
         0,
 
-        qRegisterNormalizedMetaType<T *>(pointerName.constData()), 0, 0, nullptr,
+        QMetaType::fromType<T*>(), QMetaType(), 0, nullptr,
 
         QString(),
 

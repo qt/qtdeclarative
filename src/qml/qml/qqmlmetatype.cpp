@@ -352,15 +352,12 @@ QQmlType QQmlMetaType::registerInterface(const QQmlPrivate::RegisterInterface &t
     QQmlTypePrivate *priv = createQQmlType(data, type);
     Q_ASSERT(priv);
 
-    data->idToType.insert(priv->typeId, priv);
-    data->idToType.insert(priv->listId, priv);
 
-    if (data->interfaces.size() <= type.typeId)
-        data->interfaces.resize(type.typeId + 16);
-    if (data->lists.size() <= type.listId)
-        data->lists.resize(type.listId + 16);
-    data->interfaces.setBit(type.typeId, true);
-    data->lists.setBit(type.listId, true);
+    data->idToType.insert(priv->typeId.id(), priv);
+    data->idToType.insert(priv->listId.id(), priv);
+
+    data->interfaces.insert(type.typeId.id());
+    data->lists.insert(type.listId.id());
 
     return QQmlType(priv);
 }
@@ -441,18 +438,14 @@ void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data)
     if (type->baseMetaObject)
         data->metaObjectToType.insert(type->baseMetaObject, type);
 
-    if (type->typeId) {
-        data->idToType.insert(type->typeId, type);
-        if (data->objects.size() <= type->typeId)
-            data->objects.resize(type->typeId + 16);
-        data->objects.setBit(type->typeId, true);
+    if (type->typeId.isValid()) {
+        data->idToType.insert(type->typeId.id(), type);
+        data->objects.insert(type->typeId.id());
     }
 
-    if (type->listId) {
-        if (data->lists.size() <= type->listId)
-            data->lists.resize(type->listId + 16);
-        data->lists.setBit(type->listId, true);
-        data->idToType.insert(type->listId, type);
+    if (type->listId.isValid()) {
+        data->idToType.insert(type->listId.id(), type);
+        data->lists.insert(type->listId.id());
     }
 
     if (!type->module.isEmpty()) {
@@ -475,8 +468,8 @@ QQmlType QQmlMetaType::registerType(const QQmlPrivate::RegisterType &type)
     QQmlTypePrivate *priv = createQQmlType(data, elementName, type);
 
     addTypeToData(priv, data);
-    if (!type.typeId)
-        data->idToType.insert(priv->typeId, priv);
+    if (!type.typeId.isValid())
+        data->idToType.insert(priv->typeId.id(), priv);
 
     return QQmlType(priv);
 }
@@ -540,26 +533,50 @@ QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterComposit
     return QQmlType(priv);
 }
 
+
+
+template <typename T>
+struct QQmlMetaTypeInterface : QtPrivate::QMetaTypeInterface
+{
+    const QByteArray name;
+    QQmlMetaTypeInterface(const QByteArray &name)
+        : QMetaTypeInterface {
+            /*.revision=*/ 0,
+            /*.size=*/ sizeof(T),
+            /*.alignment=*/ alignof(T),
+            /*.flags=*/ QtPrivate::QMetaTypeTypeFlags<T>::Flags,
+            /*.metaObject=*/ nullptr,
+            /*.name=*/ name.constData(),
+            /*.typeId=*/ 0,
+            /*.ref=*/ Q_REFCOUNT_INITIALIZE_STATIC,
+            /*.deleteSelf=*/ [](QMetaTypeInterface *self) {
+                    delete static_cast<QQmlMetaTypeInterface *>(self);
+                },
+            /*.defaultCtr=*/ [](const QMetaTypeInterface *, void *addr) { new (addr) T(); },
+            /*.copyCtr=*/ [](const QMetaTypeInterface *, void *addr, const void *other) {
+                    new (addr) T(*reinterpret_cast<const T *>(other));
+                },
+            /*.moveCtr=*/ [](const QMetaTypeInterface *, void *addr, void *other) {
+                    new (addr) T(std::move(*reinterpret_cast<T *>(other)));
+                },
+            /*.dtor=*/ [](const QMetaTypeInterface *, void *addr) {
+                reinterpret_cast<T *>(addr)->~T();
+            },
+            /*.legacyRegisterOp=*/ nullptr
+        }
+        , name(name) { }
+};
+
 CompositeMetaTypeIds QQmlMetaType::registerInternalCompositeType(const QByteArray &className)
 {
     QByteArray ptr = className + '*';
     QByteArray lst = "QQmlListProperty<" + className + '>';
 
-    int ptr_type = QMetaType::registerNormalizedType(ptr,
-                                                     QtMetaTypePrivate::QMetaTypeFunctionHelper<QObject*>::Destruct,
-                                                     QtMetaTypePrivate::QMetaTypeFunctionHelper<QObject*>::Construct,
-                                                     sizeof(QObject*),
-                                                     static_cast<QFlags<QMetaType::TypeFlag> >(QtPrivate::QMetaTypeTypeFlags<QObject*>::Flags),
-                                                     nullptr);
-    int lst_type = QMetaType::registerNormalizedType(lst,
-                                                     QtMetaTypePrivate::QMetaTypeFunctionHelper<QQmlListProperty<QObject> >::Destruct,
-                                                     QtMetaTypePrivate::QMetaTypeFunctionHelper<QQmlListProperty<QObject> >::Construct,
-                                                     sizeof(QQmlListProperty<QObject>),
-                                                     static_cast<QFlags<QMetaType::TypeFlag> >(QtPrivate::QMetaTypeTypeFlags<QQmlListProperty<QObject> >::Flags),
-                                                     static_cast<QMetaObject*>(nullptr));
+    QMetaType ptr_type(new QQmlMetaTypeInterface<QObject*>(ptr));
+    QMetaType lst_type(new QQmlMetaTypeInterface<QQmlListProperty<QObject>>(lst));
 
     QQmlMetaTypeDataPtr data;
-    data->qmlLists.insert(lst_type, ptr_type);
+    data->qmlLists.insert(lst_type.id(), ptr_type.id());
 
     return {ptr_type, lst_type};
 }
@@ -567,10 +584,7 @@ CompositeMetaTypeIds QQmlMetaType::registerInternalCompositeType(const QByteArra
 void QQmlMetaType::unregisterInternalCompositeType(const CompositeMetaTypeIds &typeIds)
 {
     QQmlMetaTypeDataPtr data;
-    data->qmlLists.remove(typeIds.listId);
-
-    QMetaType::unregisterType(typeIds.id);
-    QMetaType::unregisterType(typeIds.listId);
+    data->qmlLists.remove(typeIds.listId.id());
 }
 
 int QQmlMetaType::registerUnitCacheHook(
@@ -915,9 +929,8 @@ bool QQmlMetaType::isQObject(int userType)
 {
     if (userType == QMetaType::QObjectStar)
         return true;
-
     QQmlMetaTypeDataPtr data;
-    return userType >= 0 && userType < data->objects.size() && data->objects.testBit(userType);
+    return data->objects.contains(userType);
 }
 
 /*
@@ -930,8 +943,8 @@ int QQmlMetaType::listType(int id)
     if (iter != data->qmlLists.cend())
         return *iter;
     QQmlTypePrivate *type = data->idToType.value(id);
-    if (type && type->listId == id)
-        return type->typeId;
+    if (type && type->listId.id() == id)
+        return type->typeId.id();
     else
         return 0;
 }
@@ -1031,9 +1044,9 @@ QQmlMetaType::TypeCategory QQmlMetaType::typeCategory(int userType)
     QQmlMetaTypeDataPtr data;
     if (data->qmlLists.contains(userType))
         return List;
-    else if (userType < data->objects.size() && data->objects.testBit(userType))
+    else if (data->objects.contains(userType))
         return Object;
-    else if (userType < data->lists.size() && data->lists.testBit(userType))
+    else if (data->lists.contains(userType))
         return List;
     else
         return Unknown;
@@ -1045,7 +1058,7 @@ QQmlMetaType::TypeCategory QQmlMetaType::typeCategory(int userType)
 bool QQmlMetaType::isInterface(int userType)
 {
     const QQmlMetaTypeDataPtr data;
-    return userType >= 0 && userType < data->interfaces.size() && data->interfaces.testBit(userType);
+    return data->interfaces.contains(userType);
 }
 
 const char *QQmlMetaType::interfaceIId(int userType)
@@ -1058,7 +1071,7 @@ const char *QQmlMetaType::interfaceIId(int userType)
     }
 
     QQmlType type(typePrivate);
-    if (type.isInterface() && type.typeId() == userType)
+    if (type.isInterface() && type.typeId().id() == userType)
         return type.interfaceIId();
     else
         return nullptr;
@@ -1066,10 +1079,10 @@ const char *QQmlMetaType::interfaceIId(int userType)
 
 bool QQmlMetaType::isList(int userType)
 {
-    const QQmlMetaTypeDataPtr data;
+    QQmlMetaTypeDataPtr data;
     if (data->qmlLists.contains(userType))
         return true;
-    return userType >= 0 && userType < data->lists.size() && data->lists.testBit(userType);
+    return data->lists.contains(userType);
 }
 
 /*!
@@ -1185,7 +1198,7 @@ QQmlType QQmlMetaType::qmlType(int typeId, TypeIdCategory category)
 
     if (category == TypeIdCategory::MetaType) {
         QQmlTypePrivate *type = data->idToType.value(typeId);
-        if (type && type->typeId == typeId)
+        if (type && type->typeId.id() == typeId)
             return QQmlType(type);
     } else if (category == TypeIdCategory::QmlType) {
         QQmlType type = data->types.value(typeId);

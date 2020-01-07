@@ -407,9 +407,9 @@ ReturnedValue QQmlTypeWrapper::virtualInstanceOf(const Object *typeObject, const
     if (!wrapperObject)
         return engine->throwTypeError();
 
-    const int myTypeId = typeWrapper->d()->type().typeId();
+    const QMetaType myTypeId = typeWrapper->d()->type().typeId();
     QQmlMetaObject myQmlType;
-    if (myTypeId == 0) {
+    if (!myTypeId.isValid()) {
         // we're a composite type; a composite type cannot be equal to a
         // non-composite object instance (Rectangle{} is never an instance of
         // CustomRectangle)
@@ -420,9 +420,9 @@ ReturnedValue QQmlTypeWrapper::virtualInstanceOf(const Object *typeObject, const
 
         QQmlRefPointer<QQmlTypeData> td = qenginepriv->typeLoader.getType(typeWrapper->d()->type().sourceUrl());
         ExecutableCompilationUnit *cu = td->compilationUnit();
-        myQmlType = qenginepriv->metaObjectForType(cu->metaTypeId);
+        myQmlType = qenginepriv->metaObjectForType(cu->metaTypeId.id());
     } else {
-        myQmlType = qenginepriv->metaObjectForType(myTypeId);
+        myQmlType = qenginepriv->metaObjectForType(myTypeId.id());
     }
 
     const QMetaObject *theirType = wrapperObject->metaObject();

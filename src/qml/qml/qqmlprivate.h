@@ -68,20 +68,6 @@
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qdebug.h>
 
-#define QML_GETTYPENAMES \
-    const char *className = T::staticMetaObject.className(); \
-    const int nameLen = int(strlen(className)); \
-    QVarLengthArray<char,48> pointerName(nameLen+2); \
-    memcpy(pointerName.data(), className, size_t(nameLen)); \
-    pointerName[nameLen] = '*'; \
-    pointerName[nameLen+1] = '\0'; \
-    const int listLen = int(strlen("QQmlListProperty<")); \
-    QVarLengthArray<char,64> listName(listLen + nameLen + 2); \
-    memcpy(listName.data(), "QQmlListProperty<", size_t(listLen)); \
-    memcpy(listName.data()+listLen, className, size_t(nameLen)); \
-    listName[listLen+nameLen] = '>'; \
-    listName[listLen+nameLen+1] = '\0';
-
 QT_BEGIN_NAMESPACE
 
 class QQmlPropertyValueInterceptor;
@@ -346,8 +332,8 @@ namespace QQmlPrivate
     struct RegisterType {
         int structVersion;
 
-        int typeId;
-        int listId;
+        QMetaType typeId;
+        QMetaType listId;
         int objectSize;
         void (*create)(void *);
         QString noCreationReason;
@@ -376,8 +362,8 @@ namespace QQmlPrivate
     struct RegisterTypeAndRevisions {
         int structVersion;
 
-        int typeId;
-        int listId;
+        QMetaType typeId;
+        QMetaType listId;
         int objectSize;
         void (*create)(void *);
 
@@ -403,8 +389,8 @@ namespace QQmlPrivate
     struct RegisterInterface {
         int structVersion;
 
-        int typeId;
-        int listId;
+        QMetaType typeId;
+        QMetaType listId;
 
         const char *iid;
 
@@ -428,7 +414,7 @@ namespace QQmlPrivate
         QJSValue (*scriptApi)(QQmlEngine *, QJSEngine *);
         QObject *(*qobjectApi)(QQmlEngine *, QJSEngine *);
         const QMetaObject *instanceMetaObject; // new in version 1
-        int typeId; // new in version 2
+        QMetaType typeId; // new in version 2
         QTypeRevision revision; // new in version 2
         std::function<QObject*(QQmlEngine *, QJSEngine *)> generalizedQobjectApi; // new in version 3
         // If this is extended ensure "version" is bumped!!!
@@ -443,7 +429,7 @@ namespace QQmlPrivate
         const QMetaObject *instanceMetaObject;
         const QMetaObject *classInfoMetaObject;
 
-        int typeId;
+        QMetaType typeId;
         std::function<QObject*(QQmlEngine *, QJSEngine *)> generalizedQobjectApi; // new in version 3
     };
 
@@ -598,8 +584,6 @@ namespace QQmlPrivate
     void qmlRegisterSingletonAndRevisions(const char *uri, int versionMajor,
                                           const QMetaObject *classInfoMetaObject)
     {
-        QML_GETTYPENAMES
-
         RegisterSingletonTypeAndRevisions api = {
             0,
 
@@ -611,7 +595,7 @@ namespace QQmlPrivate
             &T::staticMetaObject,
             classInfoMetaObject,
 
-            qRegisterNormalizedMetaType<T *>(pointerName.constData()),
+            QMetaType::fromType<T *>(),
             Constructors<T>::createSingletonInstance
         };
 
@@ -622,12 +606,10 @@ namespace QQmlPrivate
     void qmlRegisterTypeAndRevisions(const char *uri, int versionMajor,
                                      const QMetaObject *classInfoMetaObject)
     {
-        QML_GETTYPENAMES
-
         RegisterTypeAndRevisions type = {
             0,
-            qRegisterNormalizedMetaType<T *>(pointerName.constData()),
-            qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
+            QMetaType::fromType<T*>(),
+            QMetaType::fromType<QQmlListProperty<T>>(),
             int(sizeof(T)),
             Constructors<T>::createInto,
 

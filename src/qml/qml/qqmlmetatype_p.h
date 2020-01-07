@@ -65,11 +65,9 @@ namespace QV4 { class ExecutableCompilationUnit; }
 
 struct CompositeMetaTypeIds
 {
-    int id = -1;
-    int listId = -1;
-    CompositeMetaTypeIds() = default;
-    CompositeMetaTypeIds(int id, int listId) : id(id), listId(listId) {}
-    bool isValid() const { return id != -1 && listId != -1; }
+    QMetaType id;
+    QMetaType listId;
+    bool isValid() const { return id.isValid() && listId.isValid(); }
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlMetaType

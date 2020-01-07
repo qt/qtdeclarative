@@ -112,8 +112,8 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
     QQmlPrivate::RegisterType type = {
         0,
 
-        0,
-        0,
+        QMetaType(),
+        QMetaType(),
         0,
         nullptr,
         reason,
@@ -2344,10 +2344,10 @@ int QQmlEnginePrivate::listType(int t) const
 
 
 static QQmlPropertyCache *propertyCacheForPotentialInlineComponentType(int t, const QHash<int, QV4::ExecutableCompilationUnit *>::const_iterator &iter) {
-    if (t != (*iter)->metaTypeId) {
+    if (t != (*iter)->metaTypeId.id()) {
         // this is an inline component, and what we have in the iterator is currently the parent compilation unit
         for (auto &&icDatum: (*iter)->inlineComponentData)
-            if (icDatum.typeIds.id == t)
+            if (icDatum.typeIds.id.id() == t)
                 return (*iter)->propertyCaches.at(icDatum.objectIndex);
     }
     return (*iter)->rootPropertyCache().data();
@@ -2447,10 +2447,9 @@ void QQmlEnginePrivate::registerInternalCompositeType(QV4::ExecutableCompilation
     Locker locker(this);
     // The QQmlCompiledData is not referenced here, but it is removed from this
     // hash in the QQmlCompiledData destructor
-    m_compositeTypes.insert(compilationUnit->metaTypeId, compilationUnit);
-    for (auto &&data: compilationUnit->inlineComponentData) {
-        m_compositeTypes.insert(data.typeIds.id, compilationUnit);
-    }
+    m_compositeTypes.insert(compilationUnit->metaTypeId.id(), compilationUnit);
+    for (auto &&data: compilationUnit->inlineComponentData)
+        m_compositeTypes.insert(data.typeIds.id.id(), compilationUnit);
 }
 
 void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
@@ -2458,9 +2457,9 @@ void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::ExecutableCompilati
     compilationUnit->isRegisteredWithEngine = false;
 
     Locker locker(this);
-    m_compositeTypes.remove(compilationUnit->metaTypeId);
+    m_compositeTypes.remove(compilationUnit->metaTypeId.id());
     for (auto&& icDatum: compilationUnit->inlineComponentData)
-        m_compositeTypes.remove(icDatum.typeIds.id);
+        m_compositeTypes.remove(icDatum.typeIds.id.id());
 }
 
 QV4::ExecutableCompilationUnit *QQmlEnginePrivate::obtainExecutableCompilationUnit(int typeId)

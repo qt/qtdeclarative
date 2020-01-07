@@ -387,24 +387,24 @@ void tst_qqmlmetatype::unregisterCustomType()
         QQmlEngine engine;
         QQmlType type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"),
                                               QTypeRevision::fromVersion(1, 0));
-        QVERIFY(!type.isValid());
+        QVERIFY2(!type.isValid(), "Type is not valid yet");
         controllerId = qmlRegisterType<Controller1>("mytypes", 1, 0, "Controller");
         type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"),
                                      QTypeRevision::fromVersion(1, 0));
-        QVERIFY(type.isValid());
-        QVERIFY(!type.isInterface());
-        QVERIFY(!type.isSingleton());
-        QVERIFY(!type.isComposite());
+        QVERIFY2(type.isValid(), "Type is valid now");
+        QVERIFY2(!type.isInterface(), "Type is not an interface");
+        QVERIFY2(!type.isSingleton(), "Type is not a singleton");
+        QVERIFY2(!type.isComposite(), "Types is not a composite type");
         QQmlComponent c(&engine, testFileUrl("testUnregisterCustomType.qml"));
         QScopedPointer<QObject> obj(c.create());
-        QVERIFY(obj);
+        QVERIFY2(obj, "obj is not null");
         QObject *controller = obj->findChild<QObject *>("controller");
-        QVERIFY(qobject_cast<Controller1 *>(controller));
+        QVERIFY2(qobject_cast<Controller1 *>(controller), "child 'controller' could be found and is a Controller1*");
         QVariant stringVal = controller->property("string");
         QCOMPARE(stringVal.userType(), QVariant::String);
         QCOMPARE(stringVal.toString(), QStringLiteral("Controller #1"));
         QVariant enumVal = controller->property("enumVal");
-        QCOMPARE(enumVal.userType(), QVariant::Int);
+        QVERIFY2(QMetaType(enumVal.userType()).flags() & QMetaType::IsEnumeration, "enumVal's type is enumeratoion");
         QCOMPARE(enumVal.toInt(), 1);
     }
     QQmlMetaType::unregisterType(controllerId);
@@ -412,24 +412,24 @@ void tst_qqmlmetatype::unregisterCustomType()
         QQmlEngine engine;
         QQmlType type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"),
                                               QTypeRevision::fromVersion(1, 0));
-        QVERIFY(!type.isValid());
+        QVERIFY2(!type.isValid(), "Type is not valid anymore");
         controllerId = qmlRegisterType<Controller2>("mytypes", 1, 0, "Controller");
         type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"),
                                      QTypeRevision::fromVersion(1, 0));
-        QVERIFY(type.isValid());
-        QVERIFY(!type.isInterface());
-        QVERIFY(!type.isSingleton());
-        QVERIFY(!type.isComposite());
+        QVERIFY2(type.isValid(), "Type is valid again");
+        QVERIFY2(!type.isInterface(), "Type is not an interface");
+        QVERIFY2(!type.isSingleton(), "Type is not a singleton");
+        QVERIFY2(!type.isComposite(), "Type is not a composite");
         QQmlComponent c(&engine, testFileUrl("testUnregisterCustomType.qml"));
         QScopedPointer<QObject> obj(c.create());
-        QVERIFY(obj);
+        QVERIFY2(obj, "obj is not null");
         QObject *controller = obj->findChild<QObject *>("controller");
-        QVERIFY(qobject_cast<Controller2 *>(controller));
+        QVERIFY2(qobject_cast<Controller2 *>(controller), "child 'controller' could be found and is a Controller2*");
         QVariant stringVal = controller->property("string");
         QCOMPARE(stringVal.userType(), QVariant::String);
         QCOMPARE(stringVal.toString(), QStringLiteral("Controller #2"));
         QVariant enumVal = controller->property("enumVal");
-        QCOMPARE(enumVal.userType(), QVariant::Int);
+        QVERIFY2(QMetaType(enumVal.userType()).flags() & QMetaType::IsEnumeration, "enumVal's type is enumeratoion");
         QCOMPARE(enumVal.toInt(), 111);
     }
     QQmlMetaType::unregisterType(controllerId);
@@ -437,24 +437,24 @@ void tst_qqmlmetatype::unregisterCustomType()
         QQmlEngine engine;
         QQmlType type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"),
                                               QTypeRevision::fromVersion(1, 0));
-        QVERIFY(!type.isValid());
+        QVERIFY2(!type.isValid(), "Type is not valid anymore");
         controllerId = qmlRegisterType<Controller1>("mytypes", 1, 0, "Controller");
         type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"),
                                      QTypeRevision::fromVersion(1, 0));
-        QVERIFY(type.isValid());
-        QVERIFY(!type.isInterface());
-        QVERIFY(!type.isSingleton());
-        QVERIFY(!type.isComposite());
+        QVERIFY2(type.isValid(), "Type is valid again");
+        QVERIFY2(!type.isInterface(), "Type is not an interface");
+        QVERIFY2(!type.isSingleton(), "Type is not a singleton");
+        QVERIFY2(!type.isComposite(), "Type is not a composite");
         QQmlComponent c(&engine, testFileUrl("testUnregisterCustomType.qml"));
         QScopedPointer<QObject> obj(c.create());
-        QVERIFY(obj);
+        QVERIFY2(obj, "obj is not null");
         QObject *controller = obj->findChild<QObject *>("controller");
-        QVERIFY(qobject_cast<Controller1 *>(controller));
+        QVERIFY2(qobject_cast<Controller1 *>(controller), "child 'controller' could be found and is a Controller1*");
         QVariant stringVal = controller->property("string");
         QCOMPARE(stringVal.userType(), QVariant::String);
         QCOMPARE(stringVal.toString(), QStringLiteral("Controller #1"));
         QVariant enumVal = controller->property("enumVal");
-        QCOMPARE(enumVal.userType(), QVariant::Int);
+        QVERIFY2(QMetaType(enumVal.userType()).flags() & QMetaType::IsEnumeration, "enumVal's type is enumeratoion");
         QCOMPARE(enumVal.toInt(), 1);
     }
 }
