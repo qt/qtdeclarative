@@ -255,6 +255,7 @@ private slots:
     void arrayConcatOnSparseArray();
     void sortSparseArray();
     void compileBrokenRegexp();
+    void sortNonStringArray();
 
     void tostringRecursionCheck();
     void arrayIncludesWithLargeArray();
@@ -5065,6 +5066,17 @@ void tst_QJSEngine::printCircularArray()
     v1.push(v1)
     console.log(v1)
     )js");
+}
+
+void tst_QJSEngine::sortNonStringArray()
+{
+    QJSEngine engine;
+    const auto value = engine.evaluate(
+        "const v4 = [Symbol.iterator, 1];"
+        "const v5 = v4.sort();"
+    );
+    QVERIFY(value.isError());
+    QCOMPARE(value.toString(), "TypeError: Cannot convert a symbol to a string.");
 }
 
 QTEST_MAIN(tst_QJSEngine)

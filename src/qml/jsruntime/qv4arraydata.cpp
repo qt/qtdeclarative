@@ -659,6 +659,12 @@ bool ArrayElementLessThan::operator()(Value v1, Value v2) const
     }
     ScopedString p1s(scope, v1.toString(scope.engine));
     ScopedString p2s(scope, v2.toString(scope.engine));
+
+    if (!p1s)
+        return false;
+    if (!p2s)
+        return true;
+
     return p1s->toQString() < p2s->toQString();
 }
 
