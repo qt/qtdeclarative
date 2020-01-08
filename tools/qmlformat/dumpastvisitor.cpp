@@ -436,7 +436,7 @@ QString DumpAstVisitor::parseExportsList(ExportsList *list)
 
 QString DumpAstVisitor::parseBlock(Block *block, bool hasNext, bool allowBraceless)
 {
-    bool hasOneLine = block->statements->next == nullptr && allowBraceless;
+    bool hasOneLine = (block->statements == nullptr || block->statements->next == nullptr) && allowBraceless;
 
     QString result = hasOneLine ? "\n" : "{\n";
     m_indentLevel++;
@@ -449,7 +449,7 @@ QString DumpAstVisitor::parseBlock(Block *block, bool hasNext, bool allowBracele
     if (!hasNext && !hasOneLine)
         result += formatLine("}", false);
 
-    m_blockNeededBraces |= (block->statements->next != nullptr);
+    m_blockNeededBraces |= (block->statements && block->statements->next != nullptr);
 
     return result;
 }
@@ -554,7 +554,12 @@ QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
 
         QString result = "for (";
 
-        result += parsePatternElement(cast<PatternElement *>(forEachStatement->lhs));
+        PatternElement *patternElement = cast<PatternElement *>(forEachStatement->lhs);
+
+        if (patternElement != nullptr)
+            result += parsePatternElement(patternElement);
+        else
+            result += parseExpression(forEachStatement->lhs->expressionCast());
 
         switch (forEachStatement->type)
         {
