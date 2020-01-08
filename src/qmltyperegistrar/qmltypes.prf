@@ -36,10 +36,12 @@ isEmpty(QMLTYPES_FILENAME) {
 
 qt_module_deps = $$replace(QT, -private$, '')
 qt_module_deps += $$replace(QT_PRIVATE, -private$, '')
+qt_module_deps = $$resolve_depends(qt_module_deps, "QT.", ".depends" ".run_depends")
 qt_module_deps = $$replace(qt_module_deps, _private$, '')
-all_qt_module_deps = $$resolve_depends(qt_module_deps, "QT.", ".depends" ".run_depends")
+qt_module_deps = $$unique(qt_module_deps)
+
 foreign_types =
-for(dep, all_qt_module_deps) {
+for(dep, qt_module_deps) {
     METATYPES_FILENAME = $$lower($$eval(QT.$${dep}.module))_metatypes.json
     INSTALLED_METATYPES = $$[QT_INSTALL_LIBS]/metatypes/$$METATYPES_FILENAME
     isEmpty(MODULE_BASE_OUTDIR) {
