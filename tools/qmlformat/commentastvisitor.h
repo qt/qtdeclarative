@@ -48,9 +48,9 @@ struct Comment
         Back_Inline = Back << 1,
         DefaultLocations = Front | Back_Inline,
         AllLocations = Front | Back | Back_Inline
-    } m_location;
+    } m_location = Front;
 
-    Comment() {}
+    Comment() = default;
     Comment(const QQmlJS::Engine *engine, Location location, QList<SourceLocation> srcLocations)
         : m_location(location), m_srcLocations(srcLocations) {
         for (const auto& srcLoc : srcLocations) {
