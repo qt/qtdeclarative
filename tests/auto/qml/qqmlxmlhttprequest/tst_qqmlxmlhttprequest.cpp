@@ -35,6 +35,13 @@
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
+#include <QTemporaryFile>
+
+#if QT_CONFIG(process)
+#include <QProcess>
+#include <QProcessEnvironment>
+#endif
+
 #include "testhttpserver.h"
 #include "../../shared/util.h"
 
@@ -45,6 +52,8 @@ public:
     tst_qqmlxmlhttprequest() {}
 
 private slots:
+    void initTestCase();
+
     void domExceptionCodes();
     void callbackException();
     void callbackException_data();
@@ -97,6 +106,14 @@ private slots:
     void nonUtf8();
     void nonUtf8_data();
 
+    void sendFileRequest();
+
+#if QT_CONFIG(process)
+    void sendFileRequestNotSet();
+    void sendFileRequestNoWrite();
+    void sendFileRequestNoRead();
+#endif
+
     // WebDAV
     void sendPropfind();
     void sendPropfind_data();
@@ -119,13 +136,27 @@ private slots:
     void stateChangeCallingContext();
 
 private:
-    QQmlEngine engine;
+    void doFileRequest(std::function<void(QObject *component, QTemporaryFile &writeFile)> verifyFunction);
+
+    QScopedPointer<QQmlEngine> engine;
 };
+
+void tst_qqmlxmlhttprequest::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+
+    if (!qEnvironmentVariableIsSet("TEST_CUSTOM_PERMISSIONS")) {
+        qputenv("QML_XHR_ALLOW_FILE_READ", "1");
+        qputenv("QML_XHR_ALLOW_FILE_WRITE", "1");
+    }
+
+    engine.reset(new QQmlEngine);
+}
 
 // Test that the dom exception codes are correct
 void tst_qqmlxmlhttprequest::domExceptionCodes()
 {
-    QQmlComponent component(&engine, testFileUrl("domExceptionCodes.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("domExceptionCodes.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -168,8 +199,8 @@ void tst_qqmlxmlhttprequest::callbackException()
     QString expect = testFileUrl("callbackException.qml").toString() + ":"+QString::number(line)+": Error: Exception from Callback";
     QTest::ignoreMessage(QtWarningMsg, expect.toLatin1());
 
-    QQmlComponent component(&engine, testFileUrl("callbackException.qml"));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl("callbackException.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", "testdocument.html");
     object->setProperty("which", which);
@@ -182,7 +213,7 @@ void tst_qqmlxmlhttprequest::callbackException()
 // ### WebKit does not do this, but it seems to fit the standard and QML better
 void tst_qqmlxmlhttprequest::staticStateValues()
 {
-    QQmlComponent component(&engine, testFileUrl("staticStateValues.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("staticStateValues.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -196,7 +227,7 @@ void tst_qqmlxmlhttprequest::staticStateValues()
 // Test that the state value properties on instances have the correct values.
 void tst_qqmlxmlhttprequest::instanceStateValues()
 {
-    QQmlComponent component(&engine, testFileUrl("instanceStateValues.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("instanceStateValues.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -210,7 +241,7 @@ void tst_qqmlxmlhttprequest::instanceStateValues()
 // Test calling constructor
 void tst_qqmlxmlhttprequest::constructor()
 {
-    QQmlComponent component(&engine, testFileUrl("constructor.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("constructor.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -221,7 +252,7 @@ void tst_qqmlxmlhttprequest::constructor()
 // Test that all the properties are set correctly before any request is sent
 void tst_qqmlxmlhttprequest::defaultState()
 {
-    QQmlComponent component(&engine, testFileUrl("defaultState.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("defaultState.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -248,8 +279,8 @@ void tst_qqmlxmlhttprequest::open()
         url = server.urlString(url);
     }
 
-    QQmlComponent component(&engine, qmlFile);
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), qmlFile);
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", url);
     component.completeCreate();
@@ -281,7 +312,7 @@ void tst_qqmlxmlhttprequest::open_data()
 // Test that calling XMLHttpRequest.open() with an invalid method raises an exception
 void tst_qqmlxmlhttprequest::open_invalid_method()
 {
-    QQmlComponent component(&engine, testFileUrl("open_invalid_method.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("open_invalid_method.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -330,8 +361,8 @@ void tst_qqmlxmlhttprequest::open_sync()
 {
     TestThreadedHTTPServer server(testFileUrl("open_network.expect"), testFileUrl("open_network.reply"), testFileUrl("testdocument.html"));
 
-    QQmlComponent component(&engine, testFileUrl("open_sync.qml"));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl("open_sync.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", server.serverBaseUrl.resolved(QStringLiteral("/testdocument.html")).toString());
     component.completeCreate();
@@ -343,7 +374,7 @@ void tst_qqmlxmlhttprequest::open_sync()
 void tst_qqmlxmlhttprequest::open_arg_count()
 {
     {
-        QQmlComponent component(&engine, testFileUrl("open_arg_count.1.qml"));
+        QQmlComponent component(engine.get(), testFileUrl("open_arg_count.1.qml"));
         QScopedPointer<QObject> object(component.create());
         QVERIFY(!object.isNull());
 
@@ -351,7 +382,7 @@ void tst_qqmlxmlhttprequest::open_arg_count()
     }
 
     {
-        QQmlComponent component(&engine, testFileUrl("open_arg_count.2.qml"));
+        QQmlComponent component(engine.get(), testFileUrl("open_arg_count.2.qml"));
         QScopedPointer<QObject> object(component.create());
         QVERIFY(!object.isNull());
 
@@ -368,8 +399,8 @@ void tst_qqmlxmlhttprequest::setRequestHeader()
                         testFileUrl("setRequestHeader.reply"),
                         testFileUrl("testdocument.html")));
 
-    QQmlComponent component(&engine, testFileUrl("setRequestHeader.qml"));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl("setRequestHeader.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", server.urlString("/testdocument.html"));
     component.completeCreate();
@@ -386,8 +417,8 @@ void tst_qqmlxmlhttprequest::setRequestHeader_caseInsensitive()
                         testFileUrl("setRequestHeader.reply"),
                         testFileUrl("testdocument.html")));
 
-    QQmlComponent component(&engine, testFileUrl("setRequestHeader_caseInsensitive.qml"));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl("setRequestHeader_caseInsensitive.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", server.urlString("/testdocument.html"));
     component.completeCreate();
@@ -397,7 +428,7 @@ void tst_qqmlxmlhttprequest::setRequestHeader_caseInsensitive()
 // Test setting headers before open() throws exception
 void tst_qqmlxmlhttprequest::setRequestHeader_unsent()
 {
-    QQmlComponent component(&engine, testFileUrl("setRequestHeader_unsent.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("setRequestHeader_unsent.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -443,8 +474,8 @@ void tst_qqmlxmlhttprequest::setRequestHeader_illegalName()
                         testFileUrl("open_network.reply"),
                         testFileUrl("testdocument.html")));
 
-    QQmlComponent component(&engine, testFileUrl("setRequestHeader_illegalName.qml"));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl("setRequestHeader_illegalName.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", server.urlString("/testdocument.html"));
     object->setProperty("header", name);
@@ -469,8 +500,8 @@ void tst_qqmlxmlhttprequest::setRequestHeader_sent()
                         testFileUrl("open_network.reply"),
                         testFileUrl("testdocument.html")));
 
-    QQmlComponent component(&engine, testFileUrl("setRequestHeader_sent.qml"));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl("setRequestHeader_sent.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", server.urlString("/testdocument.html"));
     component.completeCreate();
@@ -483,7 +514,7 @@ void tst_qqmlxmlhttprequest::setRequestHeader_sent()
 // Invalid arg count throws exception
 void tst_qqmlxmlhttprequest::setRequestHeader_args()
 {
-    QQmlComponent component(&engine, testFileUrl("setRequestHeader_args.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("setRequestHeader_args.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -493,7 +524,7 @@ void tst_qqmlxmlhttprequest::setRequestHeader_args()
 // Test that calling send() in UNSENT state throws an exception
 void tst_qqmlxmlhttprequest::send_unsent()
 {
-    QQmlComponent component(&engine, testFileUrl("send_unsent.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("send_unsent.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -503,7 +534,7 @@ void tst_qqmlxmlhttprequest::send_unsent()
 // Test attempting to resend a sent request throws an exception
 void tst_qqmlxmlhttprequest::send_alreadySent()
 {
-    QQmlComponent component(&engine, testFileUrl("send_alreadySent.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("send_alreadySent.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -521,8 +552,8 @@ void tst_qqmlxmlhttprequest::send_ignoreData()
                             testFileUrl("send_ignoreData.reply"),
                             testFileUrl("testdocument.html")));
 
-        QQmlComponent component(&engine, testFileUrl("send_ignoreData.qml"));
-        QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+        QQmlComponent component(engine.get(), testFileUrl("send_ignoreData.qml"));
+        QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
         QVERIFY(!object.isNull());
         object->setProperty("reqType", "GET");
         object->setProperty("url", server.urlString("/testdocument.html"));
@@ -538,8 +569,8 @@ void tst_qqmlxmlhttprequest::send_ignoreData()
                             testFileUrl("send_ignoreData.reply"),
                             QUrl()));
 
-        QQmlComponent component(&engine, testFileUrl("send_ignoreData.qml"));
-        QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+        QQmlComponent component(engine.get(), testFileUrl("send_ignoreData.qml"));
+        QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
         QVERIFY(!object.isNull());
         object->setProperty("reqType", "HEAD");
         object->setProperty("url", server.urlString("/testdocument.html"));
@@ -555,8 +586,8 @@ void tst_qqmlxmlhttprequest::send_ignoreData()
                             testFileUrl("send_ignoreData.reply"),
                             QUrl()));
 
-        QQmlComponent component(&engine, testFileUrl("send_ignoreData.qml"));
-        QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+        QQmlComponent component(engine.get(), testFileUrl("send_ignoreData.qml"));
+        QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
         QVERIFY(!object.isNull());
         object->setProperty("reqType", "DELETE");
         object->setProperty("url", server.urlString("/testdocument.html"));
@@ -578,8 +609,8 @@ void tst_qqmlxmlhttprequest::send_withdata()
                         testFileUrl("send_data.reply"),
                         testFileUrl("testdocument.html")));
 
-    QQmlComponent component(&engine, testFileUrl(file_qml));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl(file_qml));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", server.urlString("/testdocument.html"));
     component.completeCreate();
@@ -615,8 +646,8 @@ void tst_qqmlxmlhttprequest::send_options()
                         testFileUrl(file_reply),
                         testFileUrl("testdocument.html")));
 
-    QQmlComponent component(&engine, testFileUrl(file_qml));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl(file_qml));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     QString url = server.baseUrl().toString();
     if (url_suffix != "/")
@@ -652,8 +683,8 @@ void tst_qqmlxmlhttprequest::send_patch()
                         // the content of response file will be ignored due to 204 status code
                         testFileUrl("testdocument.html")));
 
-    QQmlComponent component(&engine, testFileUrl("send_patch.qml"));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl("send_patch.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", server.urlString("/qqmlxmlhttprequest.cpp"));
     component.completeCreate();
@@ -666,8 +697,8 @@ void tst_qqmlxmlhttprequest::send_patch()
 // Test abort() has no effect in unsent state
 void tst_qqmlxmlhttprequest::abort_unsent()
 {
-    QQmlComponent component(&engine, testFileUrl("abort_unsent.qml"));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl("abort_unsent.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", "testdocument.html");
     component.completeCreate();
@@ -685,8 +716,8 @@ void tst_qqmlxmlhttprequest::abort_unsent()
 // Test abort() cancels an open (but unsent) request
 void tst_qqmlxmlhttprequest::abort_opened()
 {
-    QQmlComponent component(&engine, testFileUrl("abort_opened.qml"));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl("abort_opened.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", "testdocument.html");
     component.completeCreate();
@@ -710,8 +741,8 @@ void tst_qqmlxmlhttprequest::abort()
                         testFileUrl("abort.reply"),
                         testFileUrl("testdocument.html")));
 
-    QQmlComponent component(&engine, testFileUrl("abort.qml"));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl("abort.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     const QUrl url = server.url("/testdocument.html");
     QUrl dummyUrl = url;
@@ -767,7 +798,7 @@ void tst_qqmlxmlhttprequest::getResponseHeader()
 // Test getResponseHeader throws an exception in an invalid state
 void tst_qqmlxmlhttprequest::getResponseHeader_unsent()
 {
-    QQmlComponent component(&engine, testFileUrl("getResponseHeader_unsent.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("getResponseHeader_unsent.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -777,7 +808,7 @@ void tst_qqmlxmlhttprequest::getResponseHeader_unsent()
 // Test getResponseHeader throws an exception in an invalid state
 void tst_qqmlxmlhttprequest::getResponseHeader_sent()
 {
-    QQmlComponent component(&engine, testFileUrl("getResponseHeader_sent.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("getResponseHeader_sent.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -787,7 +818,7 @@ void tst_qqmlxmlhttprequest::getResponseHeader_sent()
 // Invalid arg count throws exception
 void tst_qqmlxmlhttprequest::getResponseHeader_args()
 {
-    QQmlComponent component(&engine, testFileUrl("getResponseHeader_args.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("getResponseHeader_args.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -827,7 +858,7 @@ void tst_qqmlxmlhttprequest::getAllResponseHeaders()
 // Test getAllResponseHeaders throws an exception in an invalid state
 void tst_qqmlxmlhttprequest::getAllResponseHeaders_unsent()
 {
-    QQmlComponent component(&engine, testFileUrl("getAllResponseHeaders_unsent.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("getAllResponseHeaders_unsent.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -837,7 +868,7 @@ void tst_qqmlxmlhttprequest::getAllResponseHeaders_unsent()
 // Test getAllResponseHeaders throws an exception in an invalid state
 void tst_qqmlxmlhttprequest::getAllResponseHeaders_sent()
 {
-    QQmlComponent component(&engine, testFileUrl("getAllResponseHeaders_sent.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("getAllResponseHeaders_sent.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -847,7 +878,7 @@ void tst_qqmlxmlhttprequest::getAllResponseHeaders_sent()
 // Invalid arg count throws exception
 void tst_qqmlxmlhttprequest::getAllResponseHeaders_args()
 {
-    QQmlComponent component(&engine, testFileUrl("getAllResponseHeaders_args.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("getAllResponseHeaders_args.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -862,8 +893,8 @@ void tst_qqmlxmlhttprequest::getBinaryData()
                         testFileUrl("receive_binary_data.reply"),
                         testFileUrl("qml_logo.png")));
 
-    QQmlComponent component(&engine, testFileUrl("receiveBinaryData.qml"));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl("receiveBinaryData.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", server.urlString("/gml_logo.png"));
     component.completeCreate();
@@ -881,8 +912,8 @@ void tst_qqmlxmlhttprequest::getJsonData()
                         testFileUrl("receive_binary_data.reply"),
                         testFileUrl("json.data")));
 
-    QQmlComponent component(&engine, testFileUrl("receiveJsonData.qml"));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl("receiveJsonData.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", server.urlString("/json.data"));
     component.completeCreate();
@@ -901,8 +932,8 @@ void tst_qqmlxmlhttprequest::status()
                         replyUrl,
                         testFileUrl("testdocument.html")));
 
-    QQmlComponent component(&engine, testFileUrl("status.qml"));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl("status.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", server.urlString("/testdocument.html"));
     object->setProperty("expectedStatus", status);
@@ -943,8 +974,8 @@ void tst_qqmlxmlhttprequest::statusText()
                         replyUrl,
                         testFileUrl("testdocument.html")));
 
-    QQmlComponent component(&engine, testFileUrl("statusText.qml"));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl("statusText.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", server.urlString("/testdocument.html"));
     object->setProperty("expectedStatus", statusText);
@@ -983,8 +1014,8 @@ void tst_qqmlxmlhttprequest::responseText()
                         replyUrl,
                         bodyUrl));
 
-    QQmlComponent component(&engine, testFileUrl("responseText.qml"));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl("responseText.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", server.urlString("/testdocument.html"));
     object->setProperty("expectedText", responseText);
@@ -1020,7 +1051,7 @@ void tst_qqmlxmlhttprequest::nonUtf8()
     QFETCH(QString, responseText);
     QFETCH(QString, xmlRootNodeValue);
 
-    QQmlComponent component(&engine, testFileUrl("utf16.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("utf16.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -1053,6 +1084,163 @@ void tst_qqmlxmlhttprequest::nonUtf8_data()
     QTest::newRow("responseXML") << "utf16.xml" << "<?xml version=\"1.0\" encoding=\"UTF-16\" standalone='yes'?>\n<root>\n" + uc + "\n</root>\n" << QString('\n' + uc + '\n');
 }
 
+static const QString testString = QStringLiteral("Test-String");
+
+void tst_qqmlxmlhttprequest::doFileRequest(std::function<void(QObject *component, QTemporaryFile &writeFile)> verifyFunction)
+{
+    // Create test files
+    QTemporaryFile writeFile;
+    QTemporaryFile readFile;
+
+    writeFile.open();
+    writeFile.close();
+
+    QVERIFY(readFile.open());
+    readFile.write(testString.toUtf8());
+    readFile.close();
+
+    // Avoid cached environment variables
+    QQmlEngine engine;
+
+    QQmlComponent component(&engine, testFileUrl("file_request.qml"));
+
+    const QVariantMap properties = {
+      {"writeURL", QUrl::fromLocalFile(writeFile.fileName()).toString()},
+      {"readURL", QUrl::fromLocalFile(readFile.fileName()).toString()}
+    };
+
+    QScopedPointer<QObject> object(component.createWithInitialProperties(properties, engine.rootContext()));
+    QVERIFY(!object.isNull());
+
+    verifyFunction(object.get(), writeFile);
+}
+
+// Test file:// requests
+void tst_qqmlxmlhttprequest::sendFileRequest()
+{
+    // Test with both writing and reading allowed
+    doFileRequest([](QObject* object, QTemporaryFile &writeFile) {
+        QTRY_COMPARE(object->property("readResult").toString(), testString);
+
+        QTRY_VERIFY(object->property("writeDone").toBool());
+
+        QVERIFY(writeFile.open());
+        QCOMPARE(QString::fromUtf8(writeFile.readAll()), testString);
+        writeFile.close();
+    });
+}
+
+#if QT_CONFIG(process)
+void tst_qqmlxmlhttprequest::sendFileRequestNotSet() {
+    if (qEnvironmentVariableIsSet("TEST_CUSTOM_PERMISSIONS")) {
+        // Test with no settings
+        // Should just result in warnings in Qt 5
+        doFileRequest([](QObject* object, QTemporaryFile &writeFile) {
+            QTRY_COMPARE(object->property("readResult").toString(), testString);
+
+            QTRY_VERIFY(object->property("writeDone").toBool());
+
+            QVERIFY(writeFile.open());
+            QCOMPARE(QString::fromUtf8(writeFile.readAll()), testString);
+            writeFile.close();
+        });
+        return;
+    }
+
+    QProcess child;
+    child.setProgram(QCoreApplication::applicationFilePath());
+    child.setArguments(QStringList(QLatin1String("sendFileRequestNotSet")));
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QLatin1String("TEST_CUSTOM_PERMISSIONS"), QLatin1String("1"));
+    env.remove("QML_XHR_ALLOW_FILE_WRITE");
+    env.remove("QML_XHR_ALLOW_FILE_READ");
+    child.setProcessEnvironment(env);
+    child.start();
+    QVERIFY(child.waitForFinished());
+
+    // Check exit code
+    QCOMPARE(child.exitCode(), 0);
+
+    // Check if all warnings were printed
+    QString output = QString::fromUtf8(child.readAllStandardOutput());
+
+
+    const QString readingWarning = QLatin1String(
+                "XMLHttpRequest: Using GET on a local file is dangerous "
+                "and will be disabled by default in a future Qt version."
+                "Set QML_XHR_ALLOW_FILE_READ to 1 if you wish to continue using this feature.");
+
+    const QString writingWarning = QLatin1String(
+                "XMLHttpRequest: Using PUT on a local file is dangerous "
+                "and will be disabled by default in a future Qt version."
+                "Set QML_XHR_ALLOW_FILE_WRITE to 1 if you wish to continue using this feature.");
+
+    QVERIFY(output.contains(readingWarning));
+    QVERIFY(output.contains(writingWarning));
+}
+#endif
+
+#if QT_CONFIG(process)
+void tst_qqmlxmlhttprequest::sendFileRequestNoWrite() {
+    if (qEnvironmentVariableIsSet("TEST_CUSTOM_PERMISSIONS")) {
+        // Test with no writing enabled
+        doFileRequest([](QObject* object, QTemporaryFile &writeFile) {
+            QTRY_COMPARE(object->property("readResult").toString(), testString);
+
+            // Check that the file stays empty
+            QVERIFY(writeFile.open());
+            QCOMPARE(QString::fromUtf8(writeFile.readAll()), "");
+            writeFile.close();
+        });
+        return;
+    }
+
+    QProcess child;
+    child.setProgram(QCoreApplication::applicationFilePath());
+    child.setArguments(QStringList(QLatin1String("sendFileRequestNoWrite")));
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QLatin1String("TEST_CUSTOM_PERMISSIONS"), QLatin1String("1"));
+    env.insert(QLatin1String("QML_XHR_ALLOW_FILE_WRITE"), QLatin1String("0"));
+    env.insert(QLatin1String("QML_XHR_ALLOW_FILE_READ"), QLatin1String("1"));
+    child.setProcessEnvironment(env);
+    child.start();
+    QVERIFY(child.waitForFinished());
+    QCOMPARE(child.exitCode(), 0);
+}
+#endif
+
+#if QT_CONFIG(process)
+void tst_qqmlxmlhttprequest::sendFileRequestNoRead() {
+    if (qEnvironmentVariableIsSet("TEST_CUSTOM_PERMISSIONS")) {
+        // Test with no reading enabled
+        doFileRequest([](QObject* object, QTemporaryFile &writeFile) {
+            // Check that the write happens
+            QTRY_VERIFY(object->property("writeDone").toBool());
+
+            QVERIFY(writeFile.open());
+            QCOMPARE(QString::fromUtf8(writeFile.readAll()), testString);
+            writeFile.close();
+
+            // Verify that the read has not yielded any value
+            QVERIFY(object->property("readResult").isNull());
+        });
+        return;
+    }
+
+    QProcess child;
+    child.setProgram(QCoreApplication::applicationFilePath());
+    child.setArguments(QStringList(QLatin1String("sendFileRequestNoRead")));
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QLatin1String("TEST_CUSTOM_PERMISSIONS"), QLatin1String("1"));
+    env.insert(QLatin1String("QML_XHR_ALLOW_FILE_WRITE"), QLatin1String("1"));
+    env.insert(QLatin1String("QML_XHR_ALLOW_FILE_READ"), QLatin1String("0"));
+    child.setProcessEnvironment(env);
+    child.start();
+    QVERIFY(child.waitForFinished());
+    QCOMPARE(child.exitCode(), 0);
+}
+#endif
+
 void tst_qqmlxmlhttprequest::sendPropfind()
 {
     const QString prefix = "WebDAV//";
@@ -1070,8 +1258,8 @@ void tst_qqmlxmlhttprequest::sendPropfind()
                 testFileUrl(prefix + replyHeader),
                 testFileUrl(prefix + replyBody)));
 
-    QQmlComponent component(&engine, testFileUrl(prefix + qml));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl(prefix + qml));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("url", server.urlString(resource));
     component.completeCreate();
@@ -1097,7 +1285,7 @@ void tst_qqmlxmlhttprequest::sendPropfind_data()
 // throws an exception
 void tst_qqmlxmlhttprequest::invalidMethodUsage()
 {
-    QQmlComponent component(&engine, testFileUrl("invalidMethodUsage.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("invalidMethodUsage.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -1124,8 +1312,8 @@ void tst_qqmlxmlhttprequest::redirects()
         server.addRedirect("redirect.html", server.urlString("/redirecttarget.html"));
         server.serveDirectory(dataDirectory());
 
-        QQmlComponent component(&engine, testFileUrl("redirects.qml"));
-        QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+        QQmlComponent component(engine.get(), testFileUrl("redirects.qml"));
+        QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
         QVERIFY(!object.isNull());
         object->setProperty("url", server.urlString("/redirect.html"));
         object->setProperty("expectedText", "");
@@ -1141,8 +1329,8 @@ void tst_qqmlxmlhttprequest::redirects()
         server.addRedirect("redirect.html", server.urlString("/redirectmissing.html"));
         server.serveDirectory(dataDirectory());
 
-        QQmlComponent component(&engine, testFileUrl("redirectError.qml"));
-        QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+        QQmlComponent component(engine.get(), testFileUrl("redirectError.qml"));
+        QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
         QVERIFY(!object.isNull());
         object->setProperty("url", server.urlString("/redirect.html"));
         object->setProperty("expectedText", "");
@@ -1158,8 +1346,8 @@ void tst_qqmlxmlhttprequest::redirects()
         server.addRedirect("redirect.html", server.urlString("/redirect.html"));
         server.serveDirectory(dataDirectory());
 
-        QQmlComponent component(&engine, testFileUrl("redirectRecur.qml"));
-        QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+        QQmlComponent component(engine.get(), testFileUrl("redirectRecur.qml"));
+        QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
         QVERIFY(!object.isNull());
         object->setProperty("url", server.urlString("/redirect.html"));
         object->setProperty("expectedText", "");
@@ -1177,7 +1365,7 @@ void tst_qqmlxmlhttprequest::redirects()
 
 void tst_qqmlxmlhttprequest::responseXML_invalid()
 {
-    QQmlComponent component(&engine, testFileUrl("responseXML_invalid.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("responseXML_invalid.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -1189,7 +1377,7 @@ void tst_qqmlxmlhttprequest::responseXML_invalid()
 // Test the Document DOM element
 void tst_qqmlxmlhttprequest::document()
 {
-    QQmlComponent component(&engine, testFileUrl("document.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("document.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -1201,7 +1389,7 @@ void tst_qqmlxmlhttprequest::document()
 // Test the Element DOM element
 void tst_qqmlxmlhttprequest::element()
 {
-    QQmlComponent component(&engine, testFileUrl("element.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("element.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -1213,7 +1401,7 @@ void tst_qqmlxmlhttprequest::element()
 // Test the Attr DOM element
 void tst_qqmlxmlhttprequest::attr()
 {
-    QQmlComponent component(&engine, testFileUrl("attr.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("attr.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -1225,7 +1413,7 @@ void tst_qqmlxmlhttprequest::attr()
 // Test the Text DOM element
 void tst_qqmlxmlhttprequest::text()
 {
-    QQmlComponent component(&engine, testFileUrl("text.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("text.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -1238,7 +1426,7 @@ void tst_qqmlxmlhttprequest::text()
 // Test the CDataSection DOM element
 void tst_qqmlxmlhttprequest::cdata()
 {
-    QQmlComponent component(&engine, testFileUrl("cdata.qml"));
+    QQmlComponent component(engine.get(), testFileUrl("cdata.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
@@ -1285,8 +1473,8 @@ void tst_qqmlxmlhttprequest::stateChangeCallingContext()
     QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
-    QQmlComponent component(&engine, testFileUrl("stateChangeCallingContext.qml"));
-    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQmlComponent component(engine.get(), testFileUrl("stateChangeCallingContext.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
     object->setProperty("serverBaseUrl", server.baseUrl().toString());
     component.completeCreate();

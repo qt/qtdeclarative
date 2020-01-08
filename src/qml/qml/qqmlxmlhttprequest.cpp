@@ -54,6 +54,7 @@
 #include <QtCore/qobject.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qjsengine.h>
+#include <QtQml/qqmlfile.h>
 #include <QtNetwork/qnetworkreply.h>
 #include <QtCore/qtextcodec.h>
 #include <QtCore/qxmlstream.h>
@@ -77,6 +78,8 @@ using namespace QV4;
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(xhrDump, QML_XHR_DUMP);
+DEFINE_BOOL_CONFIG_OPTION(xhrFileWrite, QML_XHR_ALLOW_FILE_WRITE);
+DEFINE_BOOL_CONFIG_OPTION(xhrFileRead, QML_XHR_ALLOW_FILE_READ);
 
 struct QQmlXMLHttpRequestData {
     QQmlXMLHttpRequestData();
@@ -1195,6 +1198,37 @@ void QQmlXMLHttpRequest::fillHeadersList()
 void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
 {
     QNetworkRequest request = m_request;
+
+    if (QQmlFile::isLocalFile(url)) {
+        if (m_method == QLatin1String("PUT"))
+        {
+            if (!xhrFileWrite()) {
+                if (qEnvironmentVariableIsSet("QML_XHR_ALLOW_FILE_WRITE")) {
+                    qWarning("XMLHttpRequest: Tried to use PUT on a local file despite being disabled.");
+                    return;
+                } else {
+                    qWarning("XMLHttpRequest: Using PUT on a local file is dangerous "
+                             "and will be disabled by default in a future Qt version."
+                             "Set QML_XHR_ALLOW_FILE_WRITE to 1 if you wish to continue using this feature.");
+                }
+            }
+        } else if (m_method == QLatin1String("GET")) {
+            if (!xhrFileRead()) {
+                if (qEnvironmentVariableIsSet("QML_XHR_ALLOW_FILE_READ")) {
+                    qWarning("XMLHttpRequest: Tried to use GET on a local file despite being disabled.");
+                    return;
+                } else {
+                    qWarning("XMLHttpRequest: Using GET on a local file is dangerous "
+                             "and will be disabled by default in a future Qt version."
+                             "Set QML_XHR_ALLOW_FILE_READ to 1 if you wish to continue using this feature.");
+                }
+            }
+        } else {
+            qWarning("XMLHttpRequest: Unsupported method used on a local file");
+            return;
+        }
+    }
+
     request.setUrl(url);
     if(m_method == QLatin1String("POST") ||
        m_method == QLatin1String("PUT")) {
@@ -1389,7 +1423,7 @@ void QQmlXMLHttpRequest::finished()
         QVariant redirect = m_network->attribute(QNetworkRequest::RedirectionTargetAttribute);
         if (redirect.isValid()) {
             QUrl url = m_network->url().resolved(redirect.toUrl());
-            if (url.scheme() != QLatin1String("file")) {
+            if (!QQmlFile::isLocalFile(url)) {
                 // See http://www.ietf.org/rfc/rfc2616.txt, section 10.3.4 "303 See Other":
                 // Result of 303 redirection should be a new "GET" request.
                 const QVariant code = m_network->attribute(QNetworkRequest::HttpStatusCodeAttribute);
