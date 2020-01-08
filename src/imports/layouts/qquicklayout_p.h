@@ -131,7 +131,7 @@ class QQuickLayoutPrivate : public QQuickItemPrivate
 {
     Q_DECLARE_PUBLIC(QQuickLayout)
 public:
-    QQuickLayoutPrivate() : m_isReady(false), m_disableRearrange(true) {}
+    QQuickLayoutPrivate() : m_isReady(false), m_disableRearrange(true), m_hasItemChangeListeners(false) {}
 
 protected:
     unsigned m_isReady : 1;
