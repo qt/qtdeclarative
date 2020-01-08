@@ -68,25 +68,25 @@ public:
     bool error() const { return m_error; }
 private:
     QString generateIndent() const;
-    QString formatLine(QString line, bool newline=true) const;
+    QString formatLine(QString line, bool newline = true) const;
 
     QString formatComment(const Comment &comment) const;
 
     QString getComment(Node *node, Comment::Location location) const;
     QString getListItemComment(SourceLocation srcLocation, Comment::Location location) const;
 
-    void addNewLine(bool always=false);
+    void addNewLine(bool always = false);
     void addLine(QString line);
 
     QString getOrphanedComments(Node *node) const;
 
-    QString parseStatement(Statement *statement, bool blockHasNext=false,
+    QString parseStatement(Statement *statement, bool blockHasNext = false,
                            bool blockAllowBraceless = false);
     QString parseStatementList(StatementList *list);
 
     QString parseExpression(ExpressionNode *expression);
 
-    QString parsePatternElement(PatternElement *element, bool scope=true);
+    QString parsePatternElement(PatternElement *element, bool scope = true);
     QString parsePatternElementList(PatternElementList *element);
 
     QString parseArgumentList(ArgumentList *list);

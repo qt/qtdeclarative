@@ -113,7 +113,7 @@ public:
 private:
     bool isCommentAttached(const SourceLocation& location) const;
 
-    QList<SourceLocation> findCommentsInLine(quint32 line, bool includePrevious=false) const;
+    QList<SourceLocation> findCommentsInLine(quint32 line, bool includePrevious = false) const;
 
     Comment findComment(SourceLocation first, SourceLocation last,
                         int locations = Comment::DefaultLocations) const;
