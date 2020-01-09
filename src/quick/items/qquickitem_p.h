@@ -533,7 +533,7 @@ public:
     void refWindow(QQuickWindow *);
     void derefWindow();
 
-    QQuickItem *subFocusItem;
+    QPointer<QQuickItem> subFocusItem;
     void updateSubFocusItem(QQuickItem *scope, bool focus);
 
     QTransform windowToItemTransform() const;
