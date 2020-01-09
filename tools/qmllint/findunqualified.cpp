@@ -203,11 +203,11 @@ void FindUnqualifiedIDVisitor::processImport(const QString &prefix, const FindUn
     // add objects
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
         const auto &val = it.value();
-        m_exportedName2Scope[prefix + val->className()] = val;
+        m_exportedName2Scope.insert(prefix + val->className(), val);
 
         const auto exports = val->exports();
         for (const auto &valExport : exports)
-            m_exportedName2Scope[prefix + valExport.type()] = val;
+            m_exportedName2Scope.insert(prefix + valExport.type(), val);
 
         const auto enums = val->enums();
         for (const auto &valEnum : enums)
@@ -401,17 +401,18 @@ void FindUnqualifiedIDVisitor::importDirectory(const QString &directory, const Q
 
     QDirIterator it { dirname, QStringList() << QLatin1String("*.qml"), QDir::NoFilter };
     while (it.hasNext()) {
-        const ScopeTree *scope = localQmlFile2ScopeTree(it.next());
-        m_exportedName2Scope.insert(prefix + scope->className(), ScopeTree::ConstPtr(scope));
+        ScopeTree::ConstPtr scope(localQmlFile2ScopeTree(it.next()));
+        if (!scope->className().isEmpty())
+            m_exportedName2Scope.insert(prefix + scope->className(), scope);
     }
 }
 
 void FindUnqualifiedIDVisitor::importExportedNames(const QStringRef &prefix, QString name)
 {
     for (;;) {
-        auto scope = m_exportedName2Scope[m_exportedName2Scope.contains(name)
-                                                            ? name
-                                                            : prefix + QLatin1Char('.') + name];
+        ScopeTree::ConstPtr scope = m_exportedName2Scope.value(m_exportedName2Scope.contains(name)
+                                                               ? name
+                                                               : prefix + QLatin1Char('.') + name);
         if (scope) {
             const auto properties = scope->properties();
             for (const auto &property : properties)
@@ -460,7 +461,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiProgram *)
 
         const auto exports = val->exports();
         for (const auto &valExport : exports)
-            m_exportedName2Scope[valExport.type()] = val;
+            m_exportedName2Scope.insert(valExport.type(), val);
 
         const auto enums = val->enums();
         for (const auto &valEnum : enums)
@@ -468,7 +469,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiProgram *)
     }
     // add "self" (as we only ever check the first part of a qualified identifier, we get away with
     // using an empty ScopeTree
-    m_exportedName2Scope[QFileInfo { m_filePath }.baseName()] = {};
+    m_exportedName2Scope.insert(QFileInfo { m_filePath }.baseName(), {});
 
     importDirectory(".", QString());
     return true;
@@ -602,7 +603,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
         auto expstat = cast<ExpressionStatement *>(uisb->statement);
         auto identexp = cast<IdentifierExpression *>(expstat->expression);
         QString elementName = m_currentScope->name();
-        m_qmlid2scope.insert(identexp->name.toString(), m_exportedName2Scope[elementName]);
+        m_qmlid2scope.insert(identexp->name.toString(), m_exportedName2Scope.value(elementName));
         if (m_currentScope->isVisualRootScope())
             m_rootId = identexp->name.toString();
     } else {
@@ -881,7 +882,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
             do {
                 scope = scope->parentScope(); // TODO: rename method
             } while (scope->scopeType() != ScopeType::QMLScope);
-            targetScope = m_exportedName2Scope[scope->name()];
+            targetScope = m_exportedName2Scope.value(scope->name());
         } else {
             // there was a target, check if we already can find it
             auto scopeIt =  m_qmlid2scope.find(target);
