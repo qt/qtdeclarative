@@ -87,10 +87,10 @@ static ReturnedValue method_detachArrayBuffer(const FunctionObject *f, const Val
     if (!a)
         return scope.engine->throwTypeError();
 
-    if (a->isShared())
+    if (a->hasSharedArrayData())
         return scope.engine->throwTypeError();
 
-    a->d()->detachArrayBuffer();
+    a->d()->detachArrayData();
 
     return Encode::null();
 }

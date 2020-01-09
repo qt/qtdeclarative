@@ -82,10 +82,10 @@ ReturnedValue DataViewCtor::virtualCallAsConstructor(const FunctionObject *f, co
     uint offset = ::toIndex(scope.engine, argc > 1 ? argv[1] : Value::undefinedValue());
     if (scope.hasException())
         return Encode::undefined();
-    if (buffer->isDetachedBuffer())
+    if (buffer->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
-    uint bufferLength = buffer->d()->data()->size;
+    uint bufferLength = buffer->arrayDataLength();
     if (offset > bufferLength)
         return scope.engine->throwRangeError(QStringLiteral("DataView: constructor arguments out of range"));
 
@@ -163,7 +163,7 @@ ReturnedValue DataViewPrototype::method_get_byteLength(const FunctionObject *b, 
     if (!v)
         return b->engine()->throwTypeError();
 
-    if (v->d()->buffer->isDetachedBuffer())
+    if (v->d()->buffer->hasDetachedArrayData())
         return b->engine()->throwTypeError();
 
     return Encode(v->d()->byteLength);
@@ -175,7 +175,7 @@ ReturnedValue DataViewPrototype::method_get_byteOffset(const FunctionObject *b, 
     if (!v)
         return b->engine()->throwTypeError();
 
-    if (v->d()->buffer->isDetachedBuffer())
+    if (v->d()->buffer->hasDetachedArrayData())
         return b->engine()->throwTypeError();
 
     return Encode(v->d()->byteOffset);
@@ -191,13 +191,13 @@ ReturnedValue DataViewPrototype::method_getChar(const FunctionObject *b, const V
     uint idx = ::toIndex(e, argc ? argv[0] : Value::undefinedValue());
     if (e->hasException)
         return Encode::undefined();
-    if (v->d()->buffer->isDetachedBuffer())
+    if (v->d()->buffer->hasDetachedArrayData())
         return e->throwTypeError();
     if (idx + sizeof(T) > v->d()->byteLength)
         return e->throwRangeError(QStringLiteral("index out of range"));
     idx += v->d()->byteOffset;
 
-    T t = T(v->d()->buffer->data()->data()[idx]);
+    T t = T(v->d()->buffer->constArrayData()[idx]);
 
     return Encode((int)t);
 }
@@ -212,7 +212,7 @@ ReturnedValue DataViewPrototype::method_get(const FunctionObject *b, const Value
     uint idx = ::toIndex(e, argc ? argv[0] : Value::undefinedValue());
     if (e->hasException)
         return Encode::undefined();
-    if (v->d()->buffer->isDetachedBuffer())
+    if (v->d()->buffer->hasDetachedArrayData())
         return e->throwTypeError();
     if (idx + sizeof(T) > v->d()->byteLength)
         return e->throwRangeError(QStringLiteral("index out of range"));
@@ -221,8 +221,8 @@ ReturnedValue DataViewPrototype::method_get(const FunctionObject *b, const Value
     bool littleEndian = argc < 2 ? false : argv[1].toBoolean();
 
     T t = littleEndian
-            ? qFromLittleEndian<T>((uchar *)v->d()->buffer->data()->data() + idx)
-            : qFromBigEndian<T>((uchar *)v->d()->buffer->data()->data() + idx);
+            ? qFromLittleEndian<T>((const uchar *)v->d()->buffer->constArrayData() + idx)
+            : qFromBigEndian<T>((const uchar *)v->d()->buffer->constArrayData() + idx);
 
     return Encode(t);
 }
@@ -237,7 +237,7 @@ ReturnedValue DataViewPrototype::method_getFloat(const FunctionObject *b, const 
     uint idx = ::toIndex(e, argc ? argv[0] : Value::undefinedValue());
     if (e->hasException)
         return Encode::undefined();
-    if (v->d()->buffer->isDetachedBuffer())
+    if (v->d()->buffer->hasDetachedArrayData())
         return e->throwTypeError();
     if (idx + sizeof(T) > v->d()->byteLength)
         return e->throwRangeError(QStringLiteral("index out of range"));
@@ -252,8 +252,8 @@ ReturnedValue DataViewPrototype::method_getFloat(const FunctionObject *b, const 
             float f;
         } u;
         u.i = littleEndian
-                ? qFromLittleEndian<uint>((uchar *)v->d()->buffer->data()->data() + idx)
-                : qFromBigEndian<uint>((uchar *)v->d()->buffer->data()->data() + idx);
+                ? qFromLittleEndian<uint>((const uchar *)v->d()->buffer->constArrayData() + idx)
+                : qFromBigEndian<uint>((const uchar *)v->d()->buffer->constArrayData() + idx);
         return Encode(u.f);
     } else {
         Q_ASSERT(sizeof(T) == 8);
@@ -262,8 +262,8 @@ ReturnedValue DataViewPrototype::method_getFloat(const FunctionObject *b, const 
             double d;
         } u;
         u.i = littleEndian
-                ? qFromLittleEndian<quint64>((uchar *)v->d()->buffer->data()->data() + idx)
-                : qFromBigEndian<quint64>((uchar *)v->d()->buffer->data()->data() + idx);
+                ? qFromLittleEndian<quint64>((const uchar *)v->d()->buffer->constArrayData() + idx)
+                : qFromBigEndian<quint64>((const uchar *)v->d()->buffer->constArrayData() + idx);
         return Encode(u.d);
     }
 }
@@ -281,14 +281,14 @@ ReturnedValue DataViewPrototype::method_setChar(const FunctionObject *b, const V
 
     int val = argc >= 2 ? argv[1].toInt32() : 0;
 
-    if (v->d()->buffer->isDetachedBuffer())
+    if (v->d()->buffer->hasDetachedArrayData())
         return e->throwTypeError();
 
     if (idx + sizeof(T) > v->d()->byteLength)
         return e->throwRangeError(QStringLiteral("index out of range"));
     idx += v->d()->byteOffset;
 
-    v->d()->buffer->data()->data()[idx] = (char)val;
+    v->d()->buffer->arrayData()[idx] = (char)val;
 
     RETURN_UNDEFINED();
 }
@@ -307,7 +307,7 @@ ReturnedValue DataViewPrototype::method_set(const FunctionObject *b, const Value
     int val = argc >= 2 ? argv[1].toInt32() : 0;
     bool littleEndian = argc < 3 ? false : argv[2].toBoolean();
 
-    if (v->d()->buffer->isDetachedBuffer())
+    if (v->d()->buffer->hasDetachedArrayData())
         return e->throwTypeError();
 
     if (idx + sizeof(T) > v->d()->byteLength)
@@ -316,9 +316,9 @@ ReturnedValue DataViewPrototype::method_set(const FunctionObject *b, const Value
 
 
     if (littleEndian)
-        qToLittleEndian<T>(val, (uchar *)v->d()->buffer->data()->data() + idx);
+        qToLittleEndian<T>(val, (uchar *)v->d()->buffer->arrayData() + idx);
     else
-        qToBigEndian<T>(val, (uchar *)v->d()->buffer->data()->data() + idx);
+        qToBigEndian<T>(val, (uchar *)v->d()->buffer->arrayData() + idx);
 
     RETURN_UNDEFINED();
 }
@@ -337,7 +337,7 @@ ReturnedValue DataViewPrototype::method_setFloat(const FunctionObject *b, const 
     double val = argc >= 2 ? argv[1].toNumber() : qt_qnan();
     bool littleEndian = argc < 3 ? false : argv[2].toBoolean();
 
-    if (v->d()->buffer->isDetachedBuffer())
+    if (v->d()->buffer->hasDetachedArrayData())
         return e->throwTypeError();
 
     if (idx + sizeof(T) > v->d()->byteLength)
@@ -352,9 +352,9 @@ ReturnedValue DataViewPrototype::method_setFloat(const FunctionObject *b, const 
         } u;
         u.f = val;
         if (littleEndian)
-            qToLittleEndian(u.i, (uchar *)v->d()->buffer->data()->data() + idx);
+            qToLittleEndian(u.i, (uchar *)v->d()->buffer->arrayData() + idx);
         else
-            qToBigEndian(u.i, (uchar *)v->d()->buffer->data()->data() + idx);
+            qToBigEndian(u.i, (uchar *)v->d()->buffer->arrayData() + idx);
     } else {
         Q_ASSERT(sizeof(T) == 8);
         union {
@@ -363,9 +363,9 @@ ReturnedValue DataViewPrototype::method_setFloat(const FunctionObject *b, const 
         } u;
         u.d = val;
         if (littleEndian)
-            qToLittleEndian(u.i, (uchar *)v->d()->buffer->data()->data() + idx);
+            qToLittleEndian(u.i, (uchar *)v->d()->buffer->arrayData() + idx);
         else
-            qToBigEndian(u.i, (uchar *)v->d()->buffer->data()->data() + idx);
+            qToBigEndian(u.i, (uchar *)v->d()->buffer->arrayData() + idx);
     }
     RETURN_UNDEFINED();
 }

@@ -131,11 +131,12 @@ void Heap::SharedArrayBuffer::init(size_t length)
     if (length < UINT_MAX)
         pair =  QTypedArrayData<char>::allocate(length + 1);
     if (!pair.first) {
-        new (&d) QArrayDataPointer<char>();
+        new (&arrayDataPointerStorage) QArrayDataPointer<char>();
         internalClass->engine->throwRangeError(QStringLiteral("ArrayBuffer: out of memory"));
         return;
     }
-    auto data = new (&d) QArrayDataPointer<char>{ pair.first, pair.second, qsizetype(length) };
+    auto data = new (&arrayDataPointerStorage) QArrayDataPointer<char>{
+            pair.first, pair.second, qsizetype(length) };
 
     // can't use appendInitialize() because we want to set the terminating '\0'
     memset(data->data(), 0, length + 1);
@@ -145,24 +146,24 @@ void Heap::SharedArrayBuffer::init(size_t length)
 void Heap::SharedArrayBuffer::init(const QByteArray& array)
 {
     Object::init();
-    new (&d) QArrayDataPointer<char>(*const_cast<QByteArray &>(array).data_ptr());
+    new (&arrayDataPointerStorage) QArrayDataPointer<char>(*const_cast<QByteArray &>(array).data_ptr());
     isShared = true;
 }
 
 void Heap::SharedArrayBuffer::destroy()
 {
-    data().~QArrayDataPointer();
+    arrayDataPointer().~QArrayDataPointer();
     Object::destroy();
 }
 
 QByteArray ArrayBuffer::asByteArray() const
 {
-    return QByteArray(d()->data());
+    return QByteArray(constArrayData(), arrayDataLength());
 }
 
 void ArrayBuffer::detach()
 {
-    d()->data().detach();
+    detachArrayData();
 }
 
 
@@ -184,10 +185,10 @@ void SharedArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
 ReturnedValue SharedArrayBufferPrototype::method_get_byteLength(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     const SharedArrayBuffer *a = thisObject->as<SharedArrayBuffer>();
-    if (!a || a->isDetachedBuffer() || !a->isSharedArrayBuffer())
+    if (!a || a->hasDetachedArrayData() || !a->isSharedArrayBuffer())
         return b->engine()->throwTypeError();
 
-    return Encode(int(a->d()->data()->size));
+    return Encode(a->arrayDataLength());
 }
 
 ReturnedValue SharedArrayBufferPrototype::method_slice(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
@@ -199,17 +200,18 @@ ReturnedValue SharedArrayBufferPrototype::slice(const FunctionObject *b, const V
 {
     Scope scope(b);
     const SharedArrayBuffer *a = thisObject->as<SharedArrayBuffer>();
-    if (!a || a->isDetachedBuffer() || (a->isSharedArrayBuffer() != shared))
+    if (!a || a->hasDetachedArrayData() || (a->isSharedArrayBuffer() != shared))
         return scope.engine->throwTypeError();
 
+    const uint aDataLength = a->arrayDataLength();
+
     double start = argc > 0 ? argv[0].toInteger() : 0;
-    double end = (argc < 2 || argv[1].isUndefined()) ?
-                a->d()->data()->size : argv[1].toInteger();
+    double end = (argc < 2 || argv[1].isUndefined()) ? aDataLength : argv[1].toInteger();
     if (scope.hasException())
         return QV4::Encode::undefined();
 
-    double first = (start < 0) ? qMax(a->d()->data()->size + start, 0.) : qMin(start, (double)a->d()->data()->size);
-    double final = (end < 0) ? qMax(a->d()->data()->size + end, 0.) : qMin(end, (double)a->d()->data()->size);
+    double first = (start < 0) ? qMax(aDataLength + start, 0.) : qMin(start, double(aDataLength));
+    double final = (end < 0) ? qMax(aDataLength + end, 0.) : qMin(end, double(aDataLength));
 
     const FunctionObject *constructor = a->speciesConstructor(scope, shared ? scope.engine->sharedArrayBufferCtor() : scope.engine->arrayBufferCtor());
     if (!constructor)
@@ -218,13 +220,13 @@ ReturnedValue SharedArrayBufferPrototype::slice(const FunctionObject *b, const V
     double newLen = qMax(final - first, 0.);
     ScopedValue argument(scope, QV4::Encode(newLen));
     QV4::Scoped<SharedArrayBuffer> newBuffer(scope, constructor->callAsConstructor(argument, 1));
-    if (!newBuffer || newBuffer->d()->data()->size < newLen ||
-        newBuffer->isDetachedBuffer() || (newBuffer->isSharedArrayBuffer() != shared) ||
+    if (!newBuffer || newBuffer->arrayDataLength() < newLen ||
+        newBuffer->hasDetachedArrayData() || (newBuffer->isSharedArrayBuffer() != shared) ||
         newBuffer->sameValue(*a) ||
-        a->isDetachedBuffer())
+        a->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
-    memcpy(newBuffer->d()->data()->data(), a->d()->data()->data() + (uint)first, newLen);
+    memcpy(newBuffer->arrayData(), a->constArrayData() + (uint)first, newLen);
     return newBuffer->asReturnedValue();
 }
 
@@ -249,10 +251,10 @@ void ArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
 ReturnedValue ArrayBufferPrototype::method_get_byteLength(const FunctionObject *f, const Value *thisObject, const Value *, int)
 {
     const ArrayBuffer *a = thisObject->as<ArrayBuffer>();
-    if (!a || a->isDetachedBuffer() || a->isSharedArrayBuffer())
+    if (!a || a->hasDetachedArrayData() || a->isSharedArrayBuffer())
         return f->engine()->throwTypeError();
 
-    return Encode(int(a->d()->data()->size));
+    return Encode(a->arrayDataLength());
 }
 
 ReturnedValue ArrayBufferPrototype::method_slice(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)

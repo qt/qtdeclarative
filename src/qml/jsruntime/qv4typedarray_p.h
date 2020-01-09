@@ -148,19 +148,18 @@ struct Q_QML_PRIVATE_EXPORT TypedArray : Object
 
     static Heap::TypedArray *create(QV4::ExecutionEngine *e, Heap::TypedArray::Type t);
 
-    uint byteLength() const {
-        return d()->byteLength;
-    }
+    uint byteOffset() const noexcept { return d()->byteOffset; }
+    uint byteLength() const noexcept { return d()->byteLength; }
+    int bytesPerElement() const noexcept { return d()->type->bytesPerElement; }
+    uint length() const noexcept  { return d()->byteLength / d()->type->bytesPerElement; }
 
-    uint length() const {
-        return d()->byteLength/d()->type->bytesPerElement;
-    }
+    char *arrayData() noexcept { return d()->buffer->arrayData(); }
+    const char *constArrayData() const noexcept { return d()->buffer->constArrayData(); }
+    bool hasDetachedArrayData() const noexcept { return d()->buffer->hasDetachedArrayData(); }
+    uint arrayDataLength() const noexcept { return d()->buffer->arrayDataLength(); }
 
-    QArrayDataPointer<char> *arrayData() {
-        return &d()->buffer->data();
-    }
-
-    Heap::TypedArray::Type arrayType() const {
+    Heap::TypedArray::Type arrayType() const noexcept
+    {
         return static_cast<Heap::TypedArray::Type>(d()->arrayType);
     }
     using Object::get;

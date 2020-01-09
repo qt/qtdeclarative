@@ -87,7 +87,7 @@ static SharedArrayBuffer *validateSharedIntegerTypedArray(Scope &scope, const Va
         scope.engine->throwTypeError();
         return nullptr;
     }
-    Q_ASSERT(!buffer->isDetachedBuffer());
+    Q_ASSERT(!buffer->hasDetachedArrayData());
     return buffer;
 }
 
@@ -125,7 +125,7 @@ ReturnedValue atomicReadModifyWrite(const FunctionObject *f, const Value *argv, 
     int bytesPerElement = a.d()->type->bytesPerElement;
     int byteOffset = a.d()->byteOffset + index * bytesPerElement;
 
-    return a.d()->type->atomicModifyOps[modify](buffer->data() + byteOffset, v);
+    return a.d()->type->atomicModifyOps[modify](buffer->arrayData() + byteOffset, v);
 }
 
 ReturnedValue Atomics::method_add(const FunctionObject *f, const Value *, const Value *argv, int argc)
@@ -162,7 +162,7 @@ ReturnedValue Atomics::method_compareExchange(const FunctionObject *f, const Val
     int bytesPerElement = a.d()->type->bytesPerElement;
     int byteOffset = a.d()->byteOffset + index * bytesPerElement;
 
-    return a.d()->type->atomicCompareExchange(buffer->data() + byteOffset, expected, v);
+    return a.d()->type->atomicCompareExchange(buffer->arrayData() + byteOffset, expected, v);
 }
 
 ReturnedValue Atomics::method_exchange(const FunctionObject *f, const Value *, const Value *argv, int argc)
@@ -203,7 +203,7 @@ ReturnedValue Atomics::method_load(const FunctionObject *f, const Value *, const
     int bytesPerElement = a.d()->type->bytesPerElement;
     int byteOffset = a.d()->byteOffset + index * bytesPerElement;
 
-    return a.d()->type->atomicLoad(buffer->data() + byteOffset);
+    return a.d()->type->atomicLoad(buffer->arrayData() + byteOffset);
 }
 
 ReturnedValue Atomics::method_or(const FunctionObject *f, const Value *, const Value *argv, int argc)
@@ -232,7 +232,7 @@ ReturnedValue Atomics::method_store(const FunctionObject *f, const Value *, cons
     int bytesPerElement = a.d()->type->bytesPerElement;
     int byteOffset = a.d()->byteOffset + index * bytesPerElement;
 
-    return a.d()->type->atomicStore(buffer->data() + byteOffset, v);
+    return a.d()->type->atomicStore(buffer->arrayData() + byteOffset, v);
 }
 
 ReturnedValue Atomics::method_sub(const FunctionObject *f, const Value *, const Value *argv, int argc)

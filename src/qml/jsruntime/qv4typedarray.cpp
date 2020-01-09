@@ -322,11 +322,11 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
     if (!!typedArray) {
         // ECMA 6 22.2.1.2
         Scoped<ArrayBuffer> buffer(scope, typedArray->d()->buffer);
-        if (!buffer || buffer->isDetachedBuffer())
+        if (!buffer || buffer->hasDetachedArrayData())
             return scope.engine->throwTypeError();
-        uint srcElementSize = typedArray->d()->type->bytesPerElement;
+        uint srcElementSize = typedArray->bytesPerElement();
         uint destElementSize = operations[that->d()->type].bytesPerElement;
-        uint byteLength = typedArray->d()->byteLength;
+        uint byteLength = typedArray->byteLength();
         uint destByteLength = byteLength*destElementSize/srcElementSize;
 
         Scoped<ArrayBuffer> newBuffer(scope, scope.engine->newArrayBuffer(destByteLength));
@@ -338,8 +338,8 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
         array->d()->byteLength = destByteLength;
         array->d()->byteOffset = 0;
 
-        const char *src = buffer->d()->data()->data() + typedArray->d()->byteOffset;
-        char *dest = newBuffer->d()->data()->data();
+        const char *src = buffer->constArrayData() + typedArray->byteOffset();
+        char *dest = newBuffer->arrayData();
 
         // check if src and new type have the same size. In that case we can simply memcpy the data
         if (srcElementSize == destElementSize) {
@@ -365,27 +365,27 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
 
         double dbyteOffset = argc > 1 ? argv[1].toInteger() : 0;
 
-        if (buffer->isDetachedBuffer())
+        if (buffer->hasDetachedArrayData())
             return scope.engine->throwTypeError();
 
         uint byteOffset = (uint)dbyteOffset;
         uint elementSize = operations[that->d()->type].bytesPerElement;
-        if (dbyteOffset < 0 || (byteOffset % elementSize) || dbyteOffset > buffer->byteLength())
+        if (dbyteOffset < 0 || (byteOffset % elementSize) || dbyteOffset > buffer->arrayDataLength())
             return scope.engine->throwRangeError(QStringLiteral("new TypedArray: invalid byteOffset"));
 
         uint byteLength;
         if (argc < 3 || argv[2].isUndefined()) {
-            byteLength = buffer->byteLength() - byteOffset;
-            if (buffer->byteLength() < byteOffset || byteLength % elementSize)
+            byteLength = buffer->arrayDataLength() - byteOffset;
+            if (buffer->arrayDataLength() < byteOffset || byteLength % elementSize)
                 return scope.engine->throwRangeError(QStringLiteral("new TypedArray: invalid length"));
         } else {
             double l = qBound(0., argv[2].toInteger(), (double)UINT_MAX);
             if (scope.hasException())
                 return Encode::undefined();
-            if (buffer->isDetachedBuffer())
+            if (buffer->hasDetachedArrayData())
                 return scope.engine->throwTypeError();
             l *= elementSize;
-            if (buffer->byteLength() - byteOffset < l)
+            if (buffer->arrayDataLength() - byteOffset < l)
                 return scope.engine->throwRangeError(QStringLiteral("new TypedArray: invalid length"));
             byteLength = (uint)l;
         }
@@ -420,7 +420,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
     array->d()->byteOffset = 0;
 
     uint idx = 0;
-    char *b = newBuffer->d()->data()->data();
+    char *b = newBuffer->arrayData();
     ScopedValue val(scope);
     while (idx < l) {
         val = o->get(idx);
@@ -465,7 +465,7 @@ ReturnedValue TypedArray::virtualGet(const Managed *m, PropertyKey id, const Val
 
     Scope scope(static_cast<const Object *>(m)->engine());
     Scoped<TypedArray> a(scope, static_cast<const TypedArray *>(m));
-    if (a->d()->buffer->isDetachedBuffer())
+    if (a->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     if (!isArrayIndex || id.asArrayIndex() >= a->length()) {
@@ -474,13 +474,13 @@ ReturnedValue TypedArray::virtualGet(const Managed *m, PropertyKey id, const Val
         return Encode::undefined();
     }
 
-    uint bytesPerElement = a->d()->type->bytesPerElement;
-    uint byteOffset = a->d()->byteOffset + id.asArrayIndex() * bytesPerElement;
-    Q_ASSERT(byteOffset + bytesPerElement <= (uint)a->d()->buffer->byteLength());
+    uint bytesPerElement = a->bytesPerElement();
+    uint byteOffset = a->byteOffset() + id.asArrayIndex() * bytesPerElement;
+    Q_ASSERT(byteOffset + bytesPerElement <= a->arrayDataLength());
 
     if (hasProperty)
         *hasProperty = true;
-    return a->d()->type->read(a->d()->buffer->data()->data() + byteOffset);
+    return a->d()->type->read(a->constArrayData() + byteOffset);
 }
 
 bool TypedArray::virtualHasProperty(const Managed *m, PropertyKey id)
@@ -490,7 +490,7 @@ bool TypedArray::virtualHasProperty(const Managed *m, PropertyKey id)
         return Object::virtualHasProperty(m, id);
 
     const TypedArray *a = static_cast<const TypedArray *>(m);
-    if (a->d()->buffer->isDetachedBuffer()) {
+    if (a->hasDetachedArrayData()) {
         a->engine()->throwTypeError();
         return false;
     }
@@ -521,7 +521,7 @@ bool TypedArray::virtualPut(Managed *m, PropertyKey id, const Value &value, Valu
 
     Scope scope(v4);
     Scoped<TypedArray> a(scope, static_cast<TypedArray *>(m));
-    if (a->d()->buffer->isDetachedBuffer())
+    if (a->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     if (!isArrayIndex)
@@ -531,14 +531,14 @@ bool TypedArray::virtualPut(Managed *m, PropertyKey id, const Value &value, Valu
     if (index >= a->length())
         return false;
 
-    uint bytesPerElement = a->d()->type->bytesPerElement;
-    uint byteOffset = a->d()->byteOffset + index * bytesPerElement;
-    Q_ASSERT(byteOffset + bytesPerElement <= (uint)a->d()->buffer->byteLength());
+    uint bytesPerElement = a->bytesPerElement();
+    uint byteOffset = a->byteOffset() + index * bytesPerElement;
+    Q_ASSERT(byteOffset + bytesPerElement <= a->arrayDataLength());
 
     Value v = Value::fromReturnedValue(value.convertedToNumber());
-    if (scope.hasException() || a->d()->buffer->isDetachedBuffer())
+    if (scope.hasException() || a->hasDetachedArrayData())
         return scope.engine->throwTypeError();
-    a->d()->type->write(a->d()->buffer->data()->data() + byteOffset, v);
+    a->d()->type->write(a->arrayData() + byteOffset, v);
     return true;
 }
 
@@ -564,12 +564,12 @@ bool TypedArray::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Prop
         ExecutionEngine *engine = a->engine();
 
         Value v = Value::fromReturnedValue(p->value.convertedToNumber());
-        if (engine->hasException || a->d()->buffer->isDetachedBuffer())
+        if (engine->hasException || a->hasDetachedArrayData())
             return engine->throwTypeError();
-        uint bytesPerElement = a->d()->type->bytesPerElement;
-        uint byteOffset = a->d()->byteOffset + index * bytesPerElement;
-        Q_ASSERT(byteOffset + bytesPerElement <= (uint)a->d()->buffer->byteLength());
-        a->d()->type->write(a->d()->buffer->data()->data() + byteOffset, v);
+        uint bytesPerElement = a->bytesPerElement();
+        uint byteOffset = a->byteOffset() + index * bytesPerElement;
+        Q_ASSERT(byteOffset + bytesPerElement <= a->arrayDataLength());
+        a->d()->type->write(a->arrayData() + byteOffset, v);
     }
     return true;
 }
@@ -638,10 +638,10 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_get_byteLength(const Function
     if (!v)
         return v4->throwTypeError();
 
-    if (v->d()->buffer->isDetachedBuffer())
+    if (v->hasDetachedArrayData())
         return Encode(0);
 
-    return Encode(v->d()->byteLength);
+    return Encode(v->byteLength());
 }
 
 ReturnedValue IntrinsicTypedArrayPrototype::method_get_byteOffset(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -651,10 +651,10 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_get_byteOffset(const Function
     if (!v)
         return v4->throwTypeError();
 
-    if (v->d()->buffer->isDetachedBuffer())
+    if (v->hasDetachedArrayData())
         return Encode(0);
 
-    return Encode(v->d()->byteOffset);
+    return Encode(v->byteOffset());
 }
 
 ReturnedValue IntrinsicTypedArrayPrototype::method_get_length(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -664,17 +664,17 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_get_length(const FunctionObje
     if (!v)
         return v4->throwTypeError();
 
-    if (v->d()->buffer->isDetachedBuffer())
+    if (v->hasDetachedArrayData())
         return Encode(0);
 
-    return Encode(v->d()->byteLength/v->d()->type->bytesPerElement);
+    return Encode(v->length());
 }
 
 ReturnedValue IntrinsicTypedArrayPrototype::method_copyWithin(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(f);
     Scoped<TypedArray> O(scope, thisObject);
-    if (!O || O->d()->buffer->isDetachedBuffer())
+    if (!O || O->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     if (!argc)
@@ -708,12 +708,12 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_copyWithin(const FunctionObje
     if (count <= 0)
         return O->asReturnedValue();
 
-    if (O->d()->buffer->isDetachedBuffer())
+    if (O->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     if (from != to) {
-        int elementSize = O->d()->type->bytesPerElement;
-        char *data = O->d()->buffer->data()->data() + O->d()->byteOffset;
+        int elementSize = O->bytesPerElement();
+        char *data = O->arrayData() + O->byteOffset();
         memmove(data + to*elementSize, data + from*elementSize, count*elementSize);
     }
 
@@ -724,7 +724,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_entries(const FunctionObject 
 {
     Scope scope(b);
     Scoped<TypedArray> v(scope, thisObject);
-    if (!v || v->d()->buffer->isDetachedBuffer())
+    if (!v || v->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(v));
@@ -736,7 +736,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_every(const FunctionObject *b
 {
     Scope scope(b);
     Scoped<TypedArray> v(scope, thisObject);
-    if (!v || v->d()->buffer->isDetachedBuffer())
+    if (!v || v->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint len = v->length();
@@ -749,13 +749,13 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_every(const FunctionObject *b
     ScopedValue r(scope);
     Value *arguments = scope.alloc(3);
 
-    const char *data = v->d()->buffer->data()->data();
-    uint bytesPerElement = v->d()->type->bytesPerElement;
-    uint byteOffset = v->d()->byteOffset;
+    const char *data = v->constArrayData();
+    uint bytesPerElement = v->bytesPerElement();
+    uint byteOffset = v->byteOffset();
 
     bool ok = true;
     for (uint k = 0; ok && k < len; ++k) {
-        if (v->d()->buffer->isDetachedBuffer())
+        if (v->hasDetachedArrayData())
             return scope.engine->throwTypeError();
 
         arguments[0] = v->d()->type->read(data + byteOffset + k * bytesPerElement);
@@ -773,7 +773,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_fill(const FunctionObject *b,
 {
     Scope scope(b);
     Scoped<TypedArray> v(scope, thisObject);
-    if (!v || v->d()->buffer->isDetachedBuffer())
+    if (!v || v->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint len = v->length();
@@ -800,12 +800,12 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_fill(const FunctionObject *b,
 
     double val = argc ? argv[0].toNumber() : std::numeric_limits<double>::quiet_NaN();
     Value value = Value::fromDouble(val);
-    if (scope.hasException() || v->d()->buffer->isDetachedBuffer())
+    if (scope.hasException() || v->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
-    char *data = v->d()->buffer->data()->data();
-    uint bytesPerElement = v->d()->type->bytesPerElement;
-    uint byteOffset = v->d()->byteOffset;
+    char *data = v->arrayData();
+    uint bytesPerElement = v->bytesPerElement();
+    uint byteOffset = v->byteOffset();
 
     while (k < fin) {
         v->d()->type->write(data + byteOffset + k * bytesPerElement, value);
@@ -826,7 +826,7 @@ static TypedArray *typedArraySpeciesCreate(Scope &scope, const TypedArray *insta
     Value *arguments = scope.alloc(1);
     arguments[0] = Encode(len);
     Scoped<TypedArray> a(scope, constructor->callAsConstructor(arguments, 1));
-    if (!a || a->d()->buffer->isDetachedBuffer() || a->length() < len) {
+    if (!a || a->hasDetachedArrayData() || a->length() < len) {
         scope.engine->throwTypeError();
         return nullptr;
     }
@@ -837,7 +837,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_filter(const FunctionObject *
 {
     Scope scope(b);
     Scoped<TypedArray> instance(scope, thisObject);
-    if (!instance || instance->d()->buffer->isDetachedBuffer())
+    if (!instance || instance->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint len = instance->length();
@@ -853,7 +853,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_filter(const FunctionObject *
 
     uint to = 0;
     for (uint k = 0; k < len; ++k) {
-        if (instance->d()->buffer->isDetachedBuffer())
+        if (instance->hasDetachedArrayData())
             return scope.engine->throwTypeError();
         bool exists;
         arguments[0] = instance->get(k, &exists);
@@ -885,7 +885,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_find(const FunctionObject *b,
 {
     Scope scope(b);
     Scoped<TypedArray> v(scope, thisObject);
-    if (!v || v->d()->buffer->isDetachedBuffer())
+    if (!v || v->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint len = v->length();
@@ -900,7 +900,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_find(const FunctionObject *b,
     ScopedValue that(scope, argc > 1 ? argv[1] : Value::undefinedValue());
 
     for (uint k = 0; k < len; ++k) {
-        if (v->d()->buffer->isDetachedBuffer())
+        if (v->hasDetachedArrayData())
             return scope.engine->throwTypeError();
         arguments[0] = v->get(k);
         CHECK_EXCEPTION();
@@ -921,7 +921,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_findIndex(const FunctionObjec
 {
     Scope scope(b);
     Scoped<TypedArray> v(scope, thisObject);
-    if (!v || v->d()->buffer->isDetachedBuffer())
+    if (!v || v->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint len = v->length();
@@ -936,7 +936,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_findIndex(const FunctionObjec
     ScopedValue that(scope, argc > 1 ? argv[1] : Value::undefinedValue());
 
     for (uint k = 0; k < len; ++k) {
-        if (v->d()->buffer->isDetachedBuffer())
+        if (v->hasDetachedArrayData())
             return scope.engine->throwTypeError();
         arguments[0] = v->get(k);
         CHECK_EXCEPTION();
@@ -957,7 +957,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_forEach(const FunctionObject 
 {
     Scope scope(b);
     Scoped<TypedArray> v(scope, thisObject);
-    if (!v || v->d()->buffer->isDetachedBuffer())
+    if (!v || v->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint len = v->length();
@@ -970,7 +970,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_forEach(const FunctionObject 
     Value *arguments = scope.alloc(3);
 
     for (uint k = 0; k < len; ++k) {
-        if (v->d()->buffer->isDetachedBuffer())
+        if (v->hasDetachedArrayData())
             return scope.engine->throwTypeError();
         bool exists;
         arguments[0] = v->get(k, &exists);
@@ -989,7 +989,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_includes(const FunctionObject
 {
     Scope scope(b);
     Scoped<TypedArray> v(scope, thisObject);
-    if (!v || v->d()->buffer->isDetachedBuffer())
+    if (!v || v->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint len = v->length();
@@ -1027,7 +1027,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_indexOf(const FunctionObject 
 {
     Scope scope(b);
     Scoped<TypedArray> v(scope, thisObject);
-    if (!v || v->d()->buffer->isDetachedBuffer())
+    if (!v || v->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint len = v->length();
@@ -1075,7 +1075,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_join(
 {
     Scope scope(functionObject);
     Scoped<TypedArray> typedArray(scope, thisObject);
-    if (!typedArray || typedArray->d()->buffer->isDetachedBuffer())
+    if (!typedArray || typedArray->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     // We cannot optimize the resolution of the argument away if length is 0.
@@ -1114,7 +1114,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_keys(const FunctionObject *b,
 {
     Scope scope(b);
     Scoped<TypedArray> v(scope, thisObject);
-    if (!v || v->d()->buffer->isDetachedBuffer())
+    if (!v || v->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(v));
@@ -1127,7 +1127,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_lastIndexOf(const FunctionObj
 {
     Scope scope(b);
     Scoped<TypedArray> instance(scope, thisObject);
-    if (!instance || instance->d()->buffer->isDetachedBuffer())
+    if (!instance || instance->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint len = instance->length();
@@ -1170,7 +1170,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_map(const FunctionObject *b, 
 {
     Scope scope(b);
     Scoped<TypedArray> instance(scope, thisObject);
-    if (!instance || instance->d()->buffer->isDetachedBuffer())
+    if (!instance || instance->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint len = instance->length();
@@ -1189,7 +1189,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_map(const FunctionObject *b, 
     Value *arguments = scope.alloc(3);
 
     for (uint k = 0; k < len; ++k) {
-        if (instance->d()->buffer->isDetachedBuffer())
+        if (instance->hasDetachedArrayData())
             return scope.engine->throwTypeError();
         arguments[0] = instance->get(k);
 
@@ -1206,7 +1206,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_reduce(const FunctionObject *
 {
     Scope scope(b);
     Scoped<TypedArray> instance(scope, thisObject);
-    if (!instance || instance->d()->buffer->isDetachedBuffer())
+    if (!instance || instance->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint len = instance->length();
@@ -1236,7 +1236,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_reduce(const FunctionObject *
     Value *arguments = scope.alloc(4);
 
     while (k < len) {
-        if (instance->d()->buffer->isDetachedBuffer())
+        if (instance->hasDetachedArrayData())
             return scope.engine->throwTypeError();
         bool kPresent;
         v = instance->get(k, &kPresent);
@@ -1257,7 +1257,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_reduceRight(const FunctionObj
 {
     Scope scope(b);
     Scoped<TypedArray> instance(scope, thisObject);
-    if (!instance || instance->d()->buffer->isDetachedBuffer())
+    if (!instance || instance->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint len = instance->length();
@@ -1292,7 +1292,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_reduceRight(const FunctionObj
     Value *arguments = scope.alloc(4);
 
     while (k > 0) {
-        if (instance->d()->buffer->isDetachedBuffer())
+        if (instance->hasDetachedArrayData())
             return scope.engine->throwTypeError();
         bool kPresent;
         v = instance->get(k - 1, &kPresent);
@@ -1313,7 +1313,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_reverse(const FunctionObject 
 {
     Scope scope(b);
     Scoped<TypedArray> instance(scope, thisObject);
-    if (!instance || instance->d()->buffer->isDetachedBuffer())
+    if (!instance || instance->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint length = instance->length();
@@ -1340,7 +1340,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_some(const FunctionObject *b,
 {
     Scope scope(b);
     Scoped<TypedArray> instance(scope, thisObject);
-    if (!instance || instance->d()->buffer->isDetachedBuffer())
+    if (!instance || instance->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint len = instance->length();
@@ -1354,7 +1354,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_some(const FunctionObject *b,
     Value *arguments = scope.alloc(3);
 
     for (uint k = 0; k < len; ++k) {
-        if (instance->d()->buffer->isDetachedBuffer())
+        if (instance->hasDetachedArrayData())
             return scope.engine->throwTypeError();
         bool exists;
         arguments[0] = instance->get(k, &exists);
@@ -1376,7 +1376,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_values(const FunctionObject *
 {
     Scope scope(b);
     Scoped<TypedArray> v(scope, thisObject);
-    if (!v || v->d()->buffer->isDetachedBuffer())
+    if (!v || v->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(v));
@@ -1395,13 +1395,13 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
     double doffset = argc >= 2 ? argv[1].toInteger() : 0;
     if (scope.hasException())
         RETURN_UNDEFINED();
-    if (!buffer || buffer->isDetachedBuffer())
+    if (!buffer || buffer->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     if (doffset < 0 || doffset >= UINT_MAX)
         RETURN_RESULT(scope.engine->throwRangeError(QStringLiteral("TypedArray.set: out of range")));
     uint offset = (uint)doffset;
-    uint elementSize = a->d()->type->bytesPerElement;
+    uint elementSize = a->bytesPerElement();
 
     Scoped<TypedArray> srcTypedArray(scope, argv[0]);
     if (!srcTypedArray) {
@@ -1420,16 +1420,16 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
             RETURN_RESULT(scope.engine->throwRangeError(QStringLiteral("TypedArray.set: out of range")));
 
         uint idx = 0;
-        if (buffer->isDetachedBuffer())
+        if (buffer->hasDetachedArrayData())
             return scope.engine->throwTypeError();
-        char *b = buffer->d()->data()->data() + a->d()->byteOffset + offset*elementSize;
+        char *b = buffer->arrayData() + a->byteOffset() + offset*elementSize;
         ScopedValue val(scope);
         while (idx < l) {
             val = o->get(idx);
             if (scope.hasException())
                 return Encode::undefined();
             val = val->convertedToNumber();
-            if (scope.hasException() || buffer->isDetachedBuffer())
+            if (scope.hasException() || buffer->hasDetachedArrayData())
                 return scope.engine->throwTypeError();
             a->d()->type->write(b, val);
             if (scope.hasException())
@@ -1442,7 +1442,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
 
     // src is a typed array
     Scoped<ArrayBuffer> srcBuffer(scope, srcTypedArray->d()->buffer);
-    if (!srcBuffer || srcBuffer->isDetachedBuffer())
+    if (!srcBuffer || srcBuffer->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint l = srcTypedArray->length();
@@ -1451,24 +1451,24 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
     if (offset > aLength || l > aLength - offset)
         RETURN_RESULT(scope.engine->throwRangeError(QStringLiteral("TypedArray.set: out of range")));
 
-    char *dest = buffer->d()->data()->data() + a->d()->byteOffset + offset*elementSize;
-    const char *src = srcBuffer->d()->data()->data() + srcTypedArray->d()->byteOffset;
+    char *dest = buffer->arrayData() + a->byteOffset() + offset*elementSize;
+    const char *src = srcBuffer->d()->constArrayData() + srcTypedArray->byteOffset();
     if (srcTypedArray->d()->type == a->d()->type) {
         // same type of typed arrays, use memmove (as srcbuffer and buffer could be the same)
-        memmove(dest, src, srcTypedArray->d()->byteLength);
+        memmove(dest, src, srcTypedArray->byteLength());
         RETURN_UNDEFINED();
     }
 
     char *srcCopy = nullptr;
     if (buffer->d() == srcBuffer->d()) {
         // same buffer, need to take a temporary copy, to not run into problems
-        srcCopy = new char[srcTypedArray->d()->byteLength];
-        memcpy(srcCopy, src, srcTypedArray->d()->byteLength);
+        srcCopy = new char[srcTypedArray->byteLength()];
+        memcpy(srcCopy, src, srcTypedArray->byteLength());
         src = srcCopy;
     }
 
     // typed arrays of different kind, need to manually loop
-    uint srcElementSize = srcTypedArray->d()->type->bytesPerElement;
+    uint srcElementSize = srcTypedArray->bytesPerElement();
     TypedArrayOperations::Read read = srcTypedArray->d()->type->read;
     TypedArrayOperations::Write write = a->d()->type->write;
     for (uint i = 0; i < l; ++i) {
@@ -1487,7 +1487,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_slice(const FunctionObject *b
 {
     Scope scope(b);
     Scoped<TypedArray> instance(scope, thisObject);
-    if (!instance || instance->d()->buffer->isDetachedBuffer())
+    if (!instance || instance->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint len = instance->length();
@@ -1519,10 +1519,10 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_slice(const FunctionObject *b
     ScopedValue v(scope);
     uint n = 0;
     for (uint i = start; i < end; ++i) {
-        if (instance->d()->buffer->isDetachedBuffer())
+        if (instance->hasDetachedArrayData())
             return scope.engine->throwTypeError();
         v = instance->get(i);
-        if (a->d()->buffer->isDetachedBuffer())
+        if (a->hasDetachedArrayData())
             return scope.engine->throwTypeError();
         a->put(n, v);
         ++n;
@@ -1565,10 +1565,10 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_subarray(const FunctionObject
 
     Value *arguments = scope.alloc(3);
     arguments[0] = buffer;
-    arguments[1] = Encode(a->d()->byteOffset + begin*a->d()->type->bytesPerElement);
+    arguments[1] = Encode(a->byteOffset() + begin * a->bytesPerElement());
     arguments[2] = Encode(newLen);
     a = constructor->callAsConstructor(arguments, 3);
-    if (!a || a->d()->buffer->isDetachedBuffer())
+    if (!a || a->hasDetachedArrayData())
         return scope.engine->throwTypeError();
     return a->asReturnedValue();
 }
@@ -1577,7 +1577,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_toLocaleString(const Function
 {
     Scope scope(b);
     Scoped<TypedArray> instance(scope, thisObject);
-    if (!instance || instance->d()->buffer->isDetachedBuffer())
+    if (!instance || instance->hasDetachedArrayData())
         return scope.engine->throwTypeError();
 
     uint len = instance->length();
@@ -1589,7 +1589,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_toLocaleString(const Function
     ScopedString s(scope);
 
     for (uint k = 0; k < len; ++k) {
-        if (instance->d()->buffer->isDetachedBuffer())
+        if (instance->hasDetachedArrayData())
             return scope.engine->throwTypeError();
         if (k)
             R += separator;
@@ -1619,7 +1619,7 @@ static bool validateTypedArray(const Object *o)
     const TypedArray *a = o->as<TypedArray>();
     if (!a)
         return false;
-    if (a->d()->buffer->isDetachedBuffer())
+    if (a->hasDetachedArrayData())
         return false;
     return true;
 }
