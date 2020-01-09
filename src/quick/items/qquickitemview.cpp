@@ -1908,21 +1908,25 @@ void QQuickItemViewPrivate::layout()
 
         prepareVisibleItemTransitions();
 
-        for (auto it = releasePendingTransition.begin(); it != releasePendingTransition.end(); ) {
-            auto old_count = releasePendingTransition.count();
-            auto success = prepareNonVisibleItemTransition(*it, viewBounds);
-            // prepareNonVisibleItemTransition() may invalidate iterators while in fast flicking
-            // invisible animating items are kicked in or out the viewPort
-            // use old_count to test if the abrupt erasure occurs
-            if (old_count > releasePendingTransition.count()) {
+        // We cannot use iterators here as erasing from a container invalidates them.
+        for (int i = 0, count = releasePendingTransition.count(); i < count;) {
+            auto success = prepareNonVisibleItemTransition(releasePendingTransition[i], viewBounds);
+            // prepareNonVisibleItemTransition() may remove items while in fast flicking.
+            // Invisible animating items are kicked in or out the viewPort.
+            // Recheck count to test if the item got removed. In that case the same index points
+            // to a different item now.
+            const int old_count = count;
+            count = releasePendingTransition.count();
+            if (old_count > count)
                 continue;
-            }
+
             if (!success) {
-                releaseItem(*it);
-                it = releasePendingTransition.erase(it);
-                continue;
+                releaseItem(releasePendingTransition[i]);
+                releasePendingTransition.remove(i);
+                --count;
+            } else {
+                ++i;
             }
-            ++it;
         }
 
         for (int i=0; i<visibleItems.count(); i++)
