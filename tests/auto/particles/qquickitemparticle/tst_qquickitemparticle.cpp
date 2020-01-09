@@ -46,6 +46,8 @@ private slots:
     void test_deletion();
     void test_noDeletion();
     void test_takeGive();
+    void test_noCrashOnReset();
+    void test_noLeakWhenDeleted();
 };
 
 void tst_qquickitemparticle::initTestCase()
@@ -117,6 +119,41 @@ void tst_qquickitemparticle::test_takeGive()
     QVERIFY(system->property("acc").toInt() == 100);
     QMetaObject::invokeMethod(view->rootObject(), "giveItems");
     QTRY_VERIFY(system->property("acc").toInt() == 0);
+    delete view;
+}
+
+void tst_qquickitemparticle::test_noCrashOnReset()
+{
+    QQuickView* view = createView(testFileUrl("basic.qml"), 600);
+    QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
+
+    for (int i = 0; i < 10; ++i) {
+        ensureAnimTime(16, system->m_animation);
+        system->reset();
+    }
+
+    delete view;
+}
+
+void tst_qquickitemparticle::test_noLeakWhenDeleted()
+{
+    QQuickView* view = createView(testFileUrl("loader.qml"), 500);
+    QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
+    ensureAnimTime(100, system->m_animation);
+
+    auto particles = qAsConst(system->groupData[0]->data);
+    QVERIFY(!particles.isEmpty());
+
+    QQuickParticleData* firstParticleData = particles.first();
+    QPointer<QQuickItem> firstParticleDelegate = firstParticleData->delegate;
+    QVERIFY(!firstParticleDelegate.isNull());
+
+    QQuickItem* loader = view->rootObject()->findChild<QQuickItem*>("loader");
+    loader->setProperty("active", false); //This should destroy the ParticleSystem, ItemParticle and Emitter
+
+    QTest::qWait(1); //Process events to make sure the loader is properly unloaded
+    QVERIFY(firstParticleDelegate.isNull()); //Delegates should be deleted
+
     delete view;
 }
 

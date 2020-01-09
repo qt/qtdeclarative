@@ -73,14 +73,13 @@ DEFINE_MANAGED_VTABLE(RegExp);
 
 uint RegExp::match(const QString &string, int start, uint *matchOffsets)
 {
-    static const uint offsetJITFail = std::numeric_limits<unsigned>::max() - 1;
-
     if (!isValid())
         return JSC::Yarr::offsetNoMatch;
 
     WTF::String s(string);
 
 #if ENABLE(YARR_JIT)
+    static const uint offsetJITFail = std::numeric_limits<unsigned>::max() - 1;
     auto *priv = d();
     if (priv->hasValidJITCode()) {
         uint ret = JSC::Yarr::offsetNoMatch;

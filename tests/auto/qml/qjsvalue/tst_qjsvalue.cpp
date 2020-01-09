@@ -2708,6 +2708,70 @@ void tst_QJSValue::nestedObjectToVariant()
     QCOMPARE(o.toVariant(), expected);
 }
 
+static int instanceCount = 0;
+
+struct MyType
+{
+    MyType(int n = 0, const char *t=nullptr): number(n), text(t)
+    {
+        ++instanceCount;
+    }
+    MyType(const MyType &other)
+        : number(other.number), text(other.text)
+    {
+        ++instanceCount;
+    }
+    ~MyType()
+    {
+        --instanceCount;
+    }
+    int number;
+    const char *text;
+};
+
+Q_DECLARE_METATYPE(MyType)
+Q_DECLARE_METATYPE(MyType*)
+
+void tst_QJSValue::jsvalueArrayToSequenceType()
+{
+    QCOMPARE(instanceCount, 0);
+    {
+        QJSEngine eng {};
+        auto testObject = eng.newObject();
+        testObject.setProperty("test", 42);
+        testObject.setProperty("mytypeobject", eng.toScriptValue(QVariant::fromValue(MyType {42, "hello"})));
+        auto array = eng.newArray(4);
+        array.setProperty(0, QLatin1String("Hello World"));
+        array.setProperty(1, 42);
+        array.setProperty(2, QJSValue(QJSValue::UndefinedValue));
+        array.setProperty(3, testObject);
+        auto asVariant = QVariant::fromValue(array);
+        QVERIFY(asVariant.canConvert<QVariantList>());
+        auto asIterable = asVariant.value<QSequentialIterable>();
+        for (auto it = asIterable.begin(); it != asIterable.end(); ++it) {
+            Q_UNUSED(*it)
+        }
+        int i = 0;
+        for (QVariant myVariant: asIterable) {
+            QCOMPARE(myVariant.isValid(), i != 2);
+            ++i;
+        }
+        QVERIFY(asIterable.at(2).value<QVariant>().isNull());
+        QCOMPARE(asIterable.at(3).value<QVariantMap>().find("mytypeobject")->value<MyType>().number, 42);
+        QCOMPARE(asIterable.at(0).value<QVariant>().toString(), QLatin1String("Hello World"));
+        auto it1 = asIterable.begin();
+        auto it2 = asIterable.begin();
+        QCOMPARE((*it1).value<QVariant>().toString(), (*it2).value<QVariant>().toString());
+        QCOMPARE((*it1).value<QVariant>().toString(), QLatin1String("Hello World"));
+        ++it2;
+        QCOMPARE((*it1).value<QVariant>().toString(), QLatin1String("Hello World"));
+        QCOMPARE((*it2).value<QVariant>().toInt(), 42);
+    }
+    // tests need to be done after engine has been destroyed, else it will hold a reference until
+    // the gc decides to collect it
+    QCOMPARE(instanceCount, 0);
+}
+
 void tst_QJSValue::deleteFromDifferentThread()
 {
 #if !QT_CONFIG(thread)

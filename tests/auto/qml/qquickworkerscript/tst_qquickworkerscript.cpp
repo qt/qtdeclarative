@@ -60,6 +60,7 @@ private slots:
     void script_function();
     void script_var();
     void stressDispose();
+    void xmlHttpRequest();
 
 private:
     void waitForEchoMessage(QQuickWorkerScript *worker) {
@@ -357,6 +358,13 @@ void tst_QQuickWorkerScript::stressDispose()
         QVERIFY(o);
         delete o;
     }
+}
+
+void tst_QQuickWorkerScript::xmlHttpRequest()
+{
+    QQmlComponent component(&m_engine, testFileUrl("xmlHttpRequest.qml"));
+    QScopedPointer<QObject> root{component.create()}; // should not crash
+    QVERIFY(root);
 }
 
 QTEST_MAIN(tst_QQuickWorkerScript)

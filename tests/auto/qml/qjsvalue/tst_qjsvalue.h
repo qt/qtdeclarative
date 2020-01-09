@@ -142,6 +142,8 @@ private slots:
     void nestedObjectToVariant_data();
     void nestedObjectToVariant();
 
+    void jsvalueArrayToSequenceType();
+
     void deleteFromDifferentThread();
 
 private:
