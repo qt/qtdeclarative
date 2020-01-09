@@ -55,6 +55,8 @@ import QtQuick.Controls 2.12
 Pane {
     padding: 0
 
+    property string control : "swipedelegate"
+
     property var delegateComponentMap: {
         "ItemDelegate": itemDelegateComponent,
         "SwipeDelegate": swipeDelegateComponent,

@@ -54,6 +54,8 @@ import QtQuick.Controls 2.12
 Page {
     id: page
 
+    readonly property string control : "flickable"
+
     default property alias content: pane.contentItem
 
     Flickable {
