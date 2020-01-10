@@ -82,6 +82,7 @@ private slots:
     void singletonInstance();
     void aggressiveGc();
     void cachedGetterLookup_qtbug_75335();
+    void createComponentOnSingletonDestruction();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1065,6 +1066,36 @@ void tst_qqmlengine::cachedGetterLookup_qtbug_75335()
     QVERIFY(component.isReady());
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
+}
+
+class EvilSingleton : public QObject
+{
+    Q_OBJECT
+public:
+    QPointer<QQmlEngine> m_engine;
+    EvilSingleton(QQmlEngine *engine) : m_engine(engine) {
+        connect(this, &QObject::destroyed, this, [this]() {
+            QQmlComponent component(m_engine);
+            component.setData("import QtQml 2.0\nQtObject {}", QUrl("file://Stuff.qml"));
+            QVERIFY(component.isReady());
+            QScopedPointer<QObject> obj(component.create());
+            QVERIFY(obj);
+        });
+    }
+};
+
+void tst_qqmlengine::createComponentOnSingletonDestruction()
+{
+    qmlRegisterSingletonType<EvilSingleton>("foo.foo", 1, 0, "Singleton",
+                                            [](QQmlEngine *engine, QJSEngine *) -> QObject * {
+        return new EvilSingleton(engine);
+    });
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("evilSingletonInstantiation.qml"));
+    QVERIFY(component.isReady());
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj);
 }
 
 QTEST_MAIN(tst_qqmlengine)
