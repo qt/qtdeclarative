@@ -62,26 +62,27 @@ QT_BEGIN_NAMESPACE
 
 static void list_append(QQmlListProperty<QObject> *prop, QObject *o)
 {
-    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
+    auto *list = static_cast<QVector<QQmlGuard<QObject>> *>(prop->data);
     list->append(o);
     static_cast<QQmlVMEMetaObject *>(prop->dummy1)->activate(prop->object, reinterpret_cast<quintptr>(prop->dummy2), nullptr);
 }
 
 static int list_count(QQmlListProperty<QObject> *prop)
 {
-    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
+
+    auto *list = static_cast<QVector<QQmlGuard<QObject>> *>(prop->data);
     return list->count();
 }
 
 static QObject *list_at(QQmlListProperty<QObject> *prop, int index)
 {
-    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
+    auto *list = static_cast<QVector<QQmlGuard<QObject>> *>(prop->data);
     return list->at(index);
 }
 
 static void list_clear(QQmlListProperty<QObject> *prop)
 {
-    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
+    auto *list = static_cast<QVector<QQmlGuard<QObject>> *>(prop->data);
     list->clear();
     static_cast<QQmlVMEMetaObject *>(prop->dummy1)->activate(prop->object, reinterpret_cast<quintptr>(prop->dummy2), nullptr);
 }
@@ -548,7 +549,7 @@ QObject* QQmlVMEMetaObject::readPropertyAsQObject(int id) const
     return wrapper->object();
 }
 
-QList<QObject *> *QQmlVMEMetaObject::readPropertyAsList(int id) const
+QVector<QQmlGuard<QObject>> *QQmlVMEMetaObject::readPropertyAsList(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
@@ -556,12 +557,12 @@ QList<QObject *> *QQmlVMEMetaObject::readPropertyAsList(int id) const
 
     QV4::Scope scope(engine);
     QV4::Scoped<QV4::VariantObject> v(scope, *(md->data() + id));
-    if (!v || (int)v->d()->data().userType() != qMetaTypeId<QList<QObject *> >()) {
-        QVariant variant(qVariantFromValue(QList<QObject*>()));
+    if (!v || (int)v->d()->data().userType() != qMetaTypeId<QVector<QQmlGuard<QObject>> >()) {
+        QVariant variant(QVariant::fromValue(QVector<QQmlGuard<QObject>>()));
         v = engine->newVariantObject(variant);
         md->set(engine, id, v);
     }
-    return static_cast<QList<QObject *> *>(v->d()->data().data());
+    return static_cast<QVector<QQmlGuard<QObject>> *>(v->d()->data().data());
 }
 
 QRectF QQmlVMEMetaObject::readPropertyAsRectF(int id) const
@@ -688,7 +689,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                             *reinterpret_cast<QVariant *>(a[0]) = readPropertyAsVariant(id);
                             break;
                         case QV4::CompiledData::Property::CustomList: {
-                            QList<QObject *> *list = readPropertyAsList(id);
+                            QVector<QQmlGuard<QObject>> *list = readPropertyAsList(id);
                             QQmlListProperty<QObject> *p = static_cast<QQmlListProperty<QObject> *>(a[0]);
                             *p = QQmlListProperty<QObject>(object, list,
                                                                   list_append, list_count, list_at,
