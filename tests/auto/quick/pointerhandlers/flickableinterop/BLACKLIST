@@ -1,5 +1,6 @@
 [touchAndDragHandlerOnFlickable]
 windows gcc
+opensuse-leap
 [touchDragFlickableBehindSlider]
 windows gcc
 [touchDragFlickableBehindButton]
