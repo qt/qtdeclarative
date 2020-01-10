@@ -2054,7 +2054,8 @@ bool QQuickTableViewPrivate::updateTableRecursive()
     if (!updateComplete)
         return false;
 
-    for (auto syncChild : qAsConst(syncChildren)) {
+    const auto children = syncChildren;
+    for (auto syncChild : children) {
         auto syncChild_d = syncChild->d_func();
         syncChild_d->scheduledRebuildOptions |= rebuildOptions;
 
