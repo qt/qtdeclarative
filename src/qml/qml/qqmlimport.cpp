@@ -1076,7 +1076,13 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
     if (qmldirPluginCount == 0)
         return true;
 
-    if (!database->qmlDirFilesForWhichPluginsHaveBeenLoaded.contains(qmldirFilePath)) {
+    if (database->qmlDirFilesForWhichPluginsHaveBeenLoaded.contains(qmldirFilePath)) {
+        if ((vmaj >= 0 && vmin >= 0)
+                ? !QQmlMetaType::isModule(uri, vmaj, vmin)
+                : !QQmlMetaType::isAnyModule(uri)) {
+            QQmlMetaType::qmlRegisterModuleTypes(uri, vmaj);
+        }
+    } else {
         // First search for listed qmldir plugins dynamically. If we cannot resolve them all, we continue
         // searching static plugins that has correct metadata uri. Note that since we only know the uri
         // for a static plugin, and not the filename, we cannot know which static plugin belongs to which

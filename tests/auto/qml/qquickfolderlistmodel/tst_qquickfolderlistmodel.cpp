@@ -76,6 +76,7 @@ private slots:
     void sortCaseSensitive_data();
     void sortCaseSensitive();
     void updateProperties();
+    void importBothVersions();
 private:
     void checkNoErrors(const QQmlComponent& component);
     QQmlEngine engine;
@@ -465,6 +466,22 @@ void tst_qquickfolderlistmodel::updateProperties()
     showHidden = folderListModel->property("showHidden");
     QVERIFY(showHidden.isValid());
     QCOMPARE(showHidden.toBool(), true);
+}
+
+void tst_qquickfolderlistmodel::importBothVersions()
+{
+    {
+        QQmlComponent component(&engine, testFileUrl("sortReversed.qml"));
+        checkNoErrors(component);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(obj);
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("qrc.qml"));
+        checkNoErrors(component);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(obj);
+    }
 }
 
 QTEST_MAIN(tst_qquickfolderlistmodel)
