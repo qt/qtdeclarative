@@ -84,15 +84,15 @@ public:
         Q_ASSERT(v);
         Q_ASSERT(v->d());
         QVariant &data = v->d()->data();
-        Q_ASSERT(data.userType() == qMetaTypeId<QList<QObject *>>());
-        m_list = static_cast<QList<QObject *> *>(data.data());
+        Q_ASSERT(data.userType() == qMetaTypeId<QVector<QQmlGuard<QObject>>>());
+        m_list = static_cast<QVector<QQmlGuard<QObject>> *>(data.data());
         Q_ASSERT(m_list);
     }
 
     ~ResolvedList() = default;
 
     QQmlVMEMetaObject *metaObject() const { return m_metaObject; }
-    QList<QObject *> *list() const { return m_list; }
+    QVector<QQmlGuard<QObject>> *list() const { return m_list; }
     quintptr id() const { return m_id; }
 
     void activateSignal() const
@@ -103,7 +103,7 @@ public:
 
 private:
     QQmlVMEMetaObject *m_metaObject = nullptr;
-    QList<QObject *> *m_list = nullptr;
+    QVector<QQmlGuard<QObject>> *m_list = nullptr;
     quintptr m_id = 0;
 };
 
@@ -604,7 +604,7 @@ QObject* QQmlVMEMetaObject::readPropertyAsQObject(int id) const
     return wrapper->object();
 }
 
-QList<QObject *> *QQmlVMEMetaObject::readPropertyAsList(int id) const
+QVector<QQmlGuard<QObject>> *QQmlVMEMetaObject::readPropertyAsList(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
@@ -612,12 +612,12 @@ QList<QObject *> *QQmlVMEMetaObject::readPropertyAsList(int id) const
 
     QV4::Scope scope(engine);
     QV4::Scoped<QV4::VariantObject> v(scope, *(md->data() + id));
-    if (!v || (int)v->d()->data().userType() != qMetaTypeId<QList<QObject *> >()) {
-        QVariant variant(QVariant::fromValue(QList<QObject*>()));
+    if (!v || (int)v->d()->data().userType() != qMetaTypeId<QVector<QQmlGuard<QObject>> >()) {
+        QVariant variant(QVariant::fromValue(QVector<QQmlGuard<QObject>>()));
         v = engine->newVariantObject(variant);
         md->set(engine, id, v);
     }
-    return static_cast<QList<QObject *> *>(v->d()->data().data());
+    return static_cast<QVector<QQmlGuard<QObject>> *>(v->d()->data().data());
 }
 
 QRectF QQmlVMEMetaObject::readPropertyAsRectF(int id) const

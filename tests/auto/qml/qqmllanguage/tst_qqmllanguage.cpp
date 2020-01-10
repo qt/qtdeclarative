@@ -309,6 +309,8 @@ private slots:
     void selfReference();
     void selfReferencingSingleton();
 
+    void listContainingDeletedObject();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -5352,6 +5354,25 @@ void tst_qqmllanguage::selfReferencingSingleton()
 
     QVERIFY(!singletonPointer.isNull());
     QCOMPARE(singletonPointer->property("dummy").toInt(), 42);
+}
+
+void tst_qqmllanguage::listContainingDeletedObject()
+{
+    QQmlEngine engine;
+    auto url = testFileUrl("listContainingDeleted.qml");
+    const QString message = url.toString() + ":24: TypeError: Cannot read property 'enabled' of null";
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, message.toUtf8().data());
+    QQmlComponent comp(&engine, url);
+    QScopedPointer<QObject> root(comp.create());
+    QVERIFY(root);
+
+    auto cmp = root->property("a").value<QQmlComponent*>();
+    auto o = cmp->create();
+
+    QMetaObject::invokeMethod(root.get(), "doAssign", Q_ARG(QVariant, QVariant::fromValue(o)));
+    delete o;
+    QMetaObject::invokeMethod(root.get(), "use");
+
 }
 
 QTEST_MAIN(tst_qqmllanguage)
