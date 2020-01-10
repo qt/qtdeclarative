@@ -31,7 +31,7 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qrect.h>
 #include <QtCore/qdatetime.h>
-#include <QtGui/qmatrix.h>
+#include <QtGui/qtransform.h>
 #include <QtGui/qcolor.h>
 #include <QtGui/qvector2d.h>
 #include <QtGui/qvector3d.h>
@@ -104,7 +104,7 @@ class MyQmlObject : public QObject, public MyInterface
     Q_PROPERTY(QString readOnlyString READ readOnlyString)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled)
     Q_PROPERTY(QRect rect READ rect WRITE setRect)
-    Q_PROPERTY(QMatrix matrix READ matrix WRITE setMatrix)  //assumed to be unsupported by QML
+    Q_PROPERTY(QTransform transform READ transform WRITE setTransform) //assumed to be unsupported by QML
     Q_PROPERTY(MyInterface *interfaceProperty READ interface WRITE setInterface)
     Q_PROPERTY(int onLiteralSignal READ onLiteralSignal WRITE setOnLiteralSignal)
     Q_PROPERTY(MyCustomVariantType customType READ customType WRITE setCustomType)
@@ -129,8 +129,8 @@ public:
     QRect rect() const { return QRect(); }
     void setRect(const QRect&) {}
 
-    QMatrix matrix() const { return QMatrix(); }
-    void setMatrix(const QMatrix&) {}
+    QTransform transform() const { return QTransform(); }
+    void setTransform(const QTransform &) {}
 
     MyInterface *interface() const { return m_interface; }
     void setInterface(MyInterface *iface) { m_interface = iface; }

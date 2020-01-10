@@ -71,6 +71,7 @@ class QQuickTextControlPrivate;
 class QAbstractScrollArea;
 class QEvent;
 class QTimerEvent;
+class QTransform;
 
 class Q_AUTOTEST_EXPORT QQuickTextControl : public QInputControl
 {
@@ -169,7 +170,7 @@ Q_SIGNALS:
     void markerHovered(bool marker);
 
 public:
-    virtual void processEvent(QEvent *e, const QMatrix &matrix);
+    virtual void processEvent(QEvent *e, const QTransform &transform);
     void processEvent(QEvent *e, const QPointF &coordinateOffset = QPointF());
 
 #if QT_CONFIG(im)
