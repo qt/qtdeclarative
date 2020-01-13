@@ -1640,6 +1640,9 @@ void QQuickText::itemChange(ItemChange change, const ItemChangeData &value)
 
     The item will try to automatically determine whether the text should
     be treated as styled text. This determination is made using Qt::mightBeRichText().
+    However, detection of Markdown is not automatic.
+
+    \sa textFormat
 */
 QString QQuickText::text() const
 {
@@ -2067,26 +2070,25 @@ void QQuickText::resetMaximumLineCount()
 /*!
     \qmlproperty enumeration QtQuick::Text::textFormat
 
-    The way the text property should be displayed.
+    The way the \l text property should be displayed.
 
     Supported text formats are:
 
-    \list
-    \li Text.AutoText (default)
-    \li Text.PlainText
-    \li Text.StyledText
-    \li Text.RichText
-    \endlist
+    \value Text.AutoText        (default) detected via the Qt::mightBeRichText() heuristic
+    \value Text.PlainText       all styling tags are treated as plain text
+    \value Text.StyledText      optimized basic rich text as in HTML 3.2
+    \value Text.RichText        \l {Supported HTML Subset} {a subset of HTML 4}
+    \value Text.MarkdownText    \l {https://commonmark.org/help/}{CommonMark} plus the
+                                \l {https://guides.github.com/features/mastering-markdown/}{GitHub}
+                                extensions for tables and task lists (since 5.14)
 
     If the text format is \c Text.AutoText the Text item
     will automatically determine whether the text should be treated as
-    styled text.  This determination is made using Qt::mightBeRichText()
-    which uses a fast and therefore simple heuristic. It mainly checks
-    whether there is something that looks like a tag before the first
-    line break. Although the result may be correct for common cases,
-    there is no guarantee.
+    styled text.  This determination is made using Qt::mightBeRichText(),
+    which can detect the presence of an HTML tag on the first line of text,
+    but cannot distinguish Markdown from plain text.
 
-    Text.StyledText is an optimized format supporting some basic text
+    \c Text.StyledText is an optimized format supporting some basic text
     styling markup, in the style of HTML 3.2:
 
     \code
@@ -2112,30 +2114,21 @@ void QQuickText::resetMaximumLineCount()
     \table
     \row
     \li
-    \qml
-Column {
-    Text {
-        font.pointSize: 24
-        text: "<b>Hello</b> <i>World!</i>"
-    }
-    Text {
-        font.pointSize: 24
-        textFormat: Text.RichText
-        text: "<b>Hello</b> <i>World!</i>"
-    }
-    Text {
-        font.pointSize: 24
-        textFormat: Text.PlainText
-        text: "<b>Hello</b> <i>World!</i>"
-    }
-}
-    \endqml
+    \snippet qml/text/textFormats.qml 0
     \li \image declarative-textformat.png
     \endtable
 
-    Text.RichText supports a larger subset of HTML 4, as described on the
-    \l {Supported HTML Subset} page. You should prefer using Text.PlainText
-    or Text.StyledText instead, as they offer better performance.
+    \c Text.RichText supports a larger subset of HTML 4, as described on the
+    \l {Supported HTML Subset} page. You should prefer using \c Text.PlainText,
+    \c Text.StyledText or \c Text.MarkdownText instead, as they offer better performance.
+
+    \note With \c Text.MarkdownText, and with the supported subset of HTML,
+    some decorative elements are not rendered as they would be in a web browser:
+    \list
+    \li code blocks use the \l {QFontDatabase::FixedFont}{default monospace font} but without a surrounding highlight box
+    \li block quotes are indented, but there is no vertical line alongside the quote
+    \li horizontal rules are not rendered
+    \endlist
 */
 QQuickText::TextFormat QQuickText::textFormat() const
 {
