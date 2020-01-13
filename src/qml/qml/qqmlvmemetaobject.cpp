@@ -241,11 +241,13 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
                 continue;
 
             const int valueIndex = vi->m_propertyIndex.valueTypeIndex();
-            int type = QQmlData::get(object)->propertyCache->property(id)->propType();
+            const QQmlData *data = QQmlData::get(object);
+            const int type = data->propertyCache->property(id)->propType();
 
             if (type != QVariant::Invalid) {
                 if (valueIndex != -1) {
-                    QQmlValueType *valueType = QQmlValueTypeFactory::valueType(type);
+                    QQmlGadgetPtrWrapper *valueType = QQmlGadgetPtrWrapper::instance(
+                                data->context->engine, type);
                     Q_ASSERT(valueType);
 
                     //
@@ -279,7 +281,7 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
                     //   (7) Issue the interceptor call with the new component value.
                     //
 
-                    QMetaProperty valueProp = valueType->metaObject()->property(valueIndex);
+                    QMetaProperty valueProp = valueType->property(valueIndex);
                     QVariant newValue(type, a[0]);
 
                     valueType->read(object, id);
@@ -833,9 +835,9 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         return -1;
                     const QQmlPropertyData *pd = targetDData->propertyCache->property(coreIndex);
                     // Value type property or deep alias
-                    QQmlValueType *valueType = QQmlValueTypeFactory::valueType(pd->propType());
+                    QQmlGadgetPtrWrapper *valueType = QQmlGadgetPtrWrapper::instance(
+                                ctxt->engine, pd->propType());
                     if (valueType) {
-
                         valueType->read(target, coreIndex);
                         int rv = QMetaObject::metacall(valueType, c, valueTypePropertyIndex, a);
 

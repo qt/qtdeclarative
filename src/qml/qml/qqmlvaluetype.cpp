@@ -42,11 +42,11 @@
 #include <QtCore/qmutex.h>
 #include <private/qqmlglobal_p.h>
 #include <QtCore/qdebug.h>
+#include <private/qqmlengine_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #if QT_CONFIG(qml_itemmodel)
 #include <private/qqmlmodelindexvaluetype_p.h>
 #endif
-#include <private/qmetatype_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -214,61 +214,82 @@ void QQmlValueTypeFactory::registerValueTypes(const char *uri, int versionMajor,
     qmlRegisterValueTypeEnums<QQmlEasingValueType>(uri, versionMajor, versionMinor, "Easing");
 }
 
-QQmlValueType::QQmlValueType() :
-    _metaObject(nullptr),
-    gadgetPtr(nullptr),
-    metaType(QMetaType::UnknownType)
-{
-}
-
 QQmlValueType::QQmlValueType(int typeId, const QMetaObject *gadgetMetaObject)
-    : gadgetPtr(QMetaType::create(typeId))
-    , metaType(typeId)
+    : metaType(typeId)
 {
-    QObjectPrivate *op = QObjectPrivate::get(this);
-    Q_ASSERT(!op->metaObject);
-    op->metaObject = this;
-
     QMetaObjectBuilder builder(gadgetMetaObject);
-    _metaObject = builder.toMetaObject();
-
-    *static_cast<QMetaObject*>(this) = *_metaObject;
+    dynamicMetaObject = builder.toMetaObject();
+    *static_cast<QMetaObject*>(this) = *dynamicMetaObject;
 }
 
 QQmlValueType::~QQmlValueType()
 {
-    QObjectPrivate *op = QObjectPrivate::get(this);
-    Q_ASSERT(op->metaObject == nullptr || op->metaObject == this);
-    op->metaObject = nullptr;
-    ::free(const_cast<QMetaObject *>(_metaObject));
-    metaType.destroy(gadgetPtr);
+    ::free(dynamicMetaObject);
 }
 
-void QQmlValueType::read(QObject *obj, int idx)
+QQmlGadgetPtrWrapper *QQmlGadgetPtrWrapper::instance(QQmlEngine *engine, int index)
 {
-    void *a[] = { gadgetPtr, nullptr };
+    return engine ? QQmlEnginePrivate::get(engine)->valueTypeInstance(index) : nullptr;
+}
+
+QQmlGadgetPtrWrapper::QQmlGadgetPtrWrapper(QQmlValueType *valueType, QObject *parent)
+    : QObject(parent), m_gadgetPtr(valueType->create())
+{
+    QObjectPrivate *d = QObjectPrivate::get(this);
+    Q_ASSERT(!d->metaObject);
+    d->metaObject = valueType;
+}
+
+QQmlGadgetPtrWrapper::~QQmlGadgetPtrWrapper()
+{
+    QObjectPrivate *d = QObjectPrivate::get(this);
+    static_cast<const QQmlValueType *>(d->metaObject)->destroy(m_gadgetPtr);
+    d->metaObject = nullptr;
+}
+
+void QQmlGadgetPtrWrapper::read(QObject *obj, int idx)
+{
+    Q_ASSERT(m_gadgetPtr);
+    void *a[] = { m_gadgetPtr, nullptr };
     QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
 }
 
-void QQmlValueType::write(QObject *obj, int idx, QQmlPropertyData::WriteFlags flags)
+void QQmlGadgetPtrWrapper::write(QObject *obj, int idx, QQmlPropertyData::WriteFlags flags)
 {
-    Q_ASSERT(gadgetPtr);
+    Q_ASSERT(m_gadgetPtr);
     int status = -1;
-    void *a[] = { gadgetPtr, nullptr, &status, &flags };
+    void *a[] = { m_gadgetPtr, nullptr, &status, &flags };
     QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
 }
 
-QVariant QQmlValueType::value()
+QVariant QQmlGadgetPtrWrapper::value()
 {
-    Q_ASSERT(gadgetPtr);
-    return QVariant(metaType.id(), gadgetPtr);
+    Q_ASSERT(m_gadgetPtr);
+    return QVariant(metaTypeId(), m_gadgetPtr);
 }
 
-void QQmlValueType::setValue(const QVariant &value)
+void QQmlGadgetPtrWrapper::setValue(const QVariant &value)
 {
-    Q_ASSERT(metaType.id() == value.userType());
-    metaType.destruct(gadgetPtr);
-    metaType.construct(gadgetPtr, value.constData());
+    Q_ASSERT(m_gadgetPtr);
+    Q_ASSERT(metaTypeId() == value.userType());
+    const QQmlValueType *type = valueType();
+    type->destruct(m_gadgetPtr);
+    type->construct(m_gadgetPtr, value.constData());
+}
+
+int QQmlGadgetPtrWrapper::metaCall(QMetaObject::Call type, int id, void **argv)
+{
+    Q_ASSERT(m_gadgetPtr);
+    const QMetaObject *metaObject = valueType();
+    QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(type, &metaObject, &id);
+    metaObject->d.static_metacall(static_cast<QObject *>(m_gadgetPtr), type, id, argv);
+    return id;
+}
+
+const QQmlValueType *QQmlGadgetPtrWrapper::valueType() const
+{
+    const QObjectPrivate *d = QObjectPrivate::get(this);
+    return static_cast<const QQmlValueType *>(d->metaObject);
 }
 
 QAbstractDynamicMetaObject *QQmlValueType::toDynamicMetaObject(QObject *)
@@ -280,12 +301,9 @@ void QQmlValueType::objectDestroyed(QObject *)
 {
 }
 
-int QQmlValueType::metaCall(QObject *, QMetaObject::Call type, int _id, void **argv)
+int QQmlValueType::metaCall(QObject *object, QMetaObject::Call type, int _id, void **argv)
 {
-    const QMetaObject *mo = _metaObject;
-    QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(type, &mo, &_id);
-    mo->d.static_metacall(reinterpret_cast<QObject*>(gadgetPtr), type, _id, argv);
-    return _id;
+    return static_cast<QQmlGadgetPtrWrapper *>(object)->metaCall(type, _id, argv);
 }
 
 QString QQmlPointFValueType::toString() const

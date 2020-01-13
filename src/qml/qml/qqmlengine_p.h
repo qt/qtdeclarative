@@ -263,8 +263,24 @@ public:
 
     mutable QMutex networkAccessManagerMutex;
 
+    QQmlGadgetPtrWrapper *valueTypeInstance(int typeIndex)
+    {
+        auto it = cachedValueTypeInstances.find(typeIndex);
+        if (it != cachedValueTypeInstances.end())
+            return *it;
+
+        if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(typeIndex)) {
+            QQmlGadgetPtrWrapper *instance = new QQmlGadgetPtrWrapper(valueType, q_func());
+            cachedValueTypeInstances.insert(typeIndex, instance);
+            return instance;
+        }
+
+        return nullptr;
+    }
+
 private:
     QHash<QQmlType, QJSValue> singletonInstances;
+    QHash<int, QQmlGadgetPtrWrapper *> cachedValueTypeInstances;
 
     // These members must be protected by a QQmlEnginePrivate::Locker as they are required by
     // the threaded loader.  Only access them through their respective accessor methods.
