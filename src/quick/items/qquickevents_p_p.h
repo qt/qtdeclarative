@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -600,6 +600,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerScrollEvent : public QQuickSinglePoint
     Q_PROPERTY(bool hasAngleDelta READ hasAngleDelta CONSTANT)
     Q_PROPERTY(bool hasPixelDelta READ hasPixelDelta CONSTANT)
     Q_PROPERTY(bool inverted READ isInverted CONSTANT)
+
+    QML_NAMED_ELEMENT(PointerScrollEvent)
+    QML_UNCREATABLE("PointerScrollEvent is only available via the WheelHandler::wheel signal.")
+    QML_ADDED_IN_MINOR_VERSION(14)
 
 public:
     QQuickPointerScrollEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
