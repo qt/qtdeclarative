@@ -53,6 +53,7 @@
 
 #include <qqml.h>
 
+#include <QtQmlWorkerScript/private/qtqmlworkerscriptglobal_p.h>
 #include <QtQml/qqmlparserstatus.h>
 #include <QtCore/qthread.h>
 #include <QtQml/qjsvalue.h>
@@ -83,7 +84,7 @@ private:
 };
 
 class QQmlV4Function;
-class Q_AUTOTEST_EXPORT QQuickWorkerScript : public QObject, public QQmlParserStatus
+class Q_QMLWORKERSCRIPT_PRIVATE_EXPORT QQuickWorkerScript : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
