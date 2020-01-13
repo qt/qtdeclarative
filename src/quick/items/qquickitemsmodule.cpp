@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -494,6 +494,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 #endif
 #if QT_CONFIG(wheelevent)
     qmlRegisterType<QQuickWheelHandler>(uri, 2, 14, "WheelHandler");
+    qmlRegisterUncreatableType<QQuickPointerScrollEvent>(uri, 2, 14, "PointerScrollEvent",
+        QQuickPointerHandler::tr("PointerScrollEvent is only available via the WheelHandler::wheel signal"));
 #endif
     qmlRegisterUncreatableType<QQuickImageBase, 14>(uri, 2, 14, "ImageBase",
         QQuickPointerHandler::tr("ImageBase is an abstract base class"));

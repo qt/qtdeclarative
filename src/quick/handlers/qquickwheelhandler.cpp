@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -499,6 +499,13 @@ void QQuickWheelHandler::timerEvent(QTimerEvent *event)
         setActive(false);
     }
 }
+
+/*!
+    \qmlsignal QtQuick::WheelHandler::wheel(PointerScrollEvent event)
+
+    This signal is emitted every time this handler receives a \l QWheelEvent:
+    that is, every time the wheel is moved or the scrolling gesture is updated.
+*/
 
 QQuickWheelHandlerPrivate::QQuickWheelHandlerPrivate()
     : QQuickSinglePointHandlerPrivate()
