@@ -310,6 +310,7 @@ private slots:
     void selfReferencingSingleton();
 
     void listContainingDeletedObject();
+    void overrideSingleton();
 
 private:
     QQmlEngine engine;
@@ -5373,6 +5374,29 @@ void tst_qqmllanguage::listContainingDeletedObject()
     delete o;
     QMetaObject::invokeMethod(root.get(), "use");
 
+}
+
+void tst_qqmllanguage::overrideSingleton()
+{
+    auto check = [](const QString &name) {
+        const QByteArray testQml = "import Test 1.0\n"
+                                   "import QtQml 2.0\n"
+                                   "QtObject { objectName: BareSingleton.objectName }";
+        QQmlEngine engine;
+        QQmlComponent component(&engine, nullptr);
+        component.setData(testQml, QUrl());
+        QVERIFY(component.isReady());
+        QScopedPointer<QObject> obj(component.create());
+        QCOMPARE(obj->objectName(), name);
+    };
+
+    check("statically registered");
+
+    BareSingleton singleton;
+    singleton.setObjectName("dynamically registered");
+    qmlRegisterSingletonInstance("Test", 1, 0, "BareSingleton", &singleton);
+
+    check("dynamically registered");
 }
 
 QTEST_MAIN(tst_qqmllanguage)
