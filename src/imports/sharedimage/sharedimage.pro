@@ -14,4 +14,5 @@ HEADERS += \
     sharedimageprovider.h \
     qsharedimageloader_p.h
 
+CONFIG += qmltypes install_qmltypes
 load(qml_plugin)

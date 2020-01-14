@@ -48,7 +48,7 @@ private Q_SLOTS:
     void dirtyQmlCode_data();
     void dirtyQmlCode();
 
-    void testUnqualifiedNoSpuriousParentWarning();
+    void testUnknownCausesFail();
 
 private:
     QString runQmllint(const QString &fileToLint, bool shouldSucceed);
@@ -107,9 +107,9 @@ void TestQmllint::testUnqualified_data()
     QTest::newRow("NonSpuriousParent") << QStringLiteral("nonSpuriousParentWarning.qml") << QStringLiteral("property int x: <id>.parent.x") << 6 << 25;
 }
 
-void TestQmllint::testUnqualifiedNoSpuriousParentWarning()
+void TestQmllint::testUnknownCausesFail()
 {
-    const QString unknownNotFound = runQmllint("spuriousParentWarning.qml", true);
+    const QString unknownNotFound = runQmllint("unknownElement.qml", false);
     QVERIFY(unknownNotFound.contains(
                 QStringLiteral("warning: Unknown was not found. Did you add all import paths?")));
 }
@@ -132,6 +132,34 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("AutomatchedSignalHandler.qml")
             << QString("Warning: unqualified access at 12:36")
             << QStringLiteral("no matching signal found");
+    QTest::newRow("MemberNotFound")
+            << QStringLiteral("memberNotFound.qml")
+            << QString("Warning: Property \"foo\" not found on type \"QtObject\" at 6:31")
+            << QString();
+    QTest::newRow("UnknownJavascriptMethd")
+            << QStringLiteral("unknownJavascriptMethod.qml")
+            << QString("Warning: Property \"foo2\" not found on type \"Methods\" at 5:25")
+            << QString();
+    QTest::newRow("badAlias")
+            << QStringLiteral("badAlias.qml")
+            << QString("Warning: unqualified access at 4:27")
+            << QString();
+    QTest::newRow("badAliasProperty")
+            << QStringLiteral("badAliasProperty.qml")
+            << QString("Warning: Property \"nowhere\" not found on type \"QtObject\" at 5:32")
+            << QString();
+    QTest::newRow("badParent")
+            << QStringLiteral("badParent.qml")
+            << QString("Warning: Property \"rrr\" not found on type \"Item\" at 5:34")
+            << QString();
+    QTest::newRow("parentIsComponent")
+            << QStringLiteral("parentIsComponent.qml")
+            << QString("Warning: Property \"progress\" not found on type \"QQuickItem\" at 7:39")
+            << QString();
+    QTest::newRow("badTypeAssertion")
+            << QStringLiteral("badTypeAssertion.qml")
+            << QString("Warning: Property \"rrr\" not found on type \"Item\" at 5:39")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -159,6 +187,11 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("qmldirAndQmltypes")         << QStringLiteral("qmldirAndQmltypes.qml");
     QTest::newRow("forLoop")                   << QStringLiteral("forLoop.qml");
     QTest::newRow("esmodule")                  << QStringLiteral("esmodule.mjs");
+    QTest::newRow("methodsInJavascript")       << QStringLiteral("javascriptMethods.qml");
+    QTest::newRow("goodAlias")                 << QStringLiteral("goodAlias.qml");
+    QTest::newRow("goodParent")                << QStringLiteral("goodParent.qml");
+    QTest::newRow("goodTypeAssertion")         << QStringLiteral("goodTypeAssertion.qml");
+    QTest::newRow("AttachedProps")             << QStringLiteral("AttachedProps.qml");
 }
 
 void TestQmllint::cleanQmlCode()

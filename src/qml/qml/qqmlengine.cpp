@@ -197,25 +197,6 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
 bool QQmlEnginePrivate::qml_debugging_enabled = false;
 bool QQmlEnginePrivate::s_designerMode = false;
 
-void QQmlEnginePrivate::defineModule()
-{
-    const char uri[] = "QtQml";
-
-    qmlRegisterTypesAndRevisions<
-            QObjectForeign,
-#if QT_CONFIG(qml_animation)
-            QQmlTimer,
-#endif
-#if QT_CONFIG(qml_locale)
-            QQmlLocale,
-#endif
-            QQmlComponent,
-            QQmlBind,
-            QQmlConnections,
-            QQmlLoggingCategory
-    >(uri, 2);
-}
-
 bool QQmlEnginePrivate::designerMode()
 {
     return s_designerMode;
@@ -783,10 +764,12 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
     // QQmlEngine to emit signals from a different thread.  These signals are then automatically
     // marshalled back onto the QObject's thread and handled by QML from there.  This is tested
     // by the qqmlecmascript::threadSignal() autotest.
-    if (ddata->notifyList &&
-        QThread::currentThreadId() != QObjectPrivate::get(object)->getThreadData()->threadId.loadRelaxed()) {
+    if (!ddata->notifyList)
+        return;
 
-        if (!QObjectPrivate::get(object)->getThreadData()->thread.loadAcquire())
+    auto objectThreadData = QObjectPrivate::get(object)->threadData.loadRelaxed();
+    if (QThread::currentThreadId() != objectThreadData->threadId.loadRelaxed()) {
+        if (!objectThreadData->thread.loadAcquire())
             return;
 
         QMetaMethod m = QMetaObjectPrivate::signal(object->metaObject(), index);
@@ -818,7 +801,7 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
 
         QQmlThreadNotifierProxyObject *mpo = new QQmlThreadNotifierProxyObject;
         mpo->target = object;
-        mpo->moveToThread(QObjectPrivate::get(object)->getThreadData()->thread.loadAcquire());
+        mpo->moveToThread(objectThreadData->thread.loadAcquire());
         QCoreApplication::postEvent(mpo, ev.take());
 
     } else {
@@ -1013,7 +996,7 @@ QQmlEngine::~QQmlEngine()
     // we do this here and not in the private dtor since otherwise a crash can
     // occur (if we are the QObject parent of the QObject singleton instance)
     // XXX TODO: performance -- store list of singleton types separately?
-    QList<QQmlType> singletonTypes = QQmlMetaType::qmlSingletonTypes();
+    const QList<QQmlType> singletonTypes = QQmlMetaType::qmlSingletonTypes();
     for (const QQmlType &currType : singletonTypes)
         d->destroySingletonInstance(currType);
 

@@ -145,7 +145,9 @@ void QSGRhiTextureGlyphCache::prepareGlyphImage(QImage *img)
 {
     const int maskWidth = img->width();
     const int maskHeight = img->height();
+#if Q_BYTE_ORDER != Q_BIG_ENDIAN
     const bool supportsBgra = m_rhi->isTextureFormatSupported(QRhiTexture::BGRA8);
+#endif
     m_bgra = false;
 
     if (img->format() == QImage::Format_Mono) {

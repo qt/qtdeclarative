@@ -5,7 +5,8 @@ qtConfig(qml-devtools) {
     SUBDIRS += \
         qmllint \
         qmlmin \
-        qmlimportscanner
+        qmlimportscanner \
+        qmlformat
 
     qtConfig(commandlineparser):qtConfig(xmlstreamwriter): SUBDIRS += qmlcachegen
 }

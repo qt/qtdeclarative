@@ -42,6 +42,7 @@
     TableView.
     We use the \l{The Property System}{Qt Property System} and a source property
     as \c QString to set the path of the image.
+    We also add the QML_ELEMENT macro to expose the model to QML.
 
     \snippet tableview/pixelator/imagemodel.cpp setsource
 
@@ -58,11 +59,6 @@
     This overloaded function allows us to access the pixel data from the image.
     When we call this function with the display role, we return the pixel's
     gray value.
-
-    \snippet tableview/pixelator/main.cpp registertype
-
-    We need to register our model in the QML type system to be able to use it
-    from the QML side.
 
     \snippet tableview/pixelator/main.qml pixelcomponent
 

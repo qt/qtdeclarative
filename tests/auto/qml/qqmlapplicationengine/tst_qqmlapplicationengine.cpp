@@ -30,6 +30,7 @@
 #include <QQmlApplicationEngine>
 #include <QScopedPointer>
 #include <QSignalSpy>
+#include <QRegularExpression>
 #if QT_CONFIG(process)
 #include <QProcess>
 #endif
@@ -53,6 +54,7 @@ private slots:
     void loadTranslation_data();
     void loadTranslation();
     void setInitialProperties();
+    void failureToLoadTriggersWarningSignal();
 
 private:
     QString buildDir;
@@ -291,6 +293,20 @@ void tst_qqmlapplicationengine::setInitialProperties()
         QCOMPARE(test.rootObjects().size(), 2);
         QCOMPARE(test.rootObjects().at(1)->property("success").toBool(), true);
     }
+}
+
+Q_DECLARE_METATYPE(QList<QQmlError>) // for signalspy below
+
+void tst_qqmlapplicationengine::failureToLoadTriggersWarningSignal()
+{
+    auto url = testFileUrl("invalid.qml");
+    qRegisterMetaType<QList<QQmlError>>();
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "QQmlApplicationEngine failed to load component");
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression(url.toString() + QLatin1Char('*')));
+    QQmlApplicationEngine test;
+    QSignalSpy warningObserver(&test, &QQmlApplicationEngine::warnings);
+    test.load(url);
+    QTRY_COMPARE(warningObserver.count(), 1);
 }
 
 QTEST_MAIN(tst_qqmlapplicationengine)

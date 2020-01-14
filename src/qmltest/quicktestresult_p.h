@@ -76,7 +76,6 @@ class Q_QUICK_TEST_EXPORT QuickTestResult : public QObject
     Q_PROPERTY(int skipCount READ skipCount)
     Q_PROPERTY(QStringList functionsToRun READ functionsToRun)
     Q_PROPERTY(QStringList tagsToRun READ tagsToRun)
-    QML_NAMED_ELEMENT(TestResult)
 
 public:
     QuickTestResult(QObject *parent = nullptr);

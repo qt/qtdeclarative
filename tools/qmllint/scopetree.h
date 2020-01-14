@@ -104,11 +104,11 @@ public:
         int m_metaObjectRevision = 0;
     };
 
-    ScopeTree(ScopeType type, QString name="<none given>", ScopeTree *parentScope=nullptr);
-    ~ScopeTree() { qDeleteAll(m_childScopes); }
+    ScopeTree(ScopeType type, QString name = QString(),
+              ScopeTree *parentScope = nullptr);
 
-    ScopeTree *createNewChildScope(ScopeType type, QString name);
-    ScopeTree *parentScope() { return m_parentScope; }
+    ScopeTree::Ptr createNewChildScope(ScopeType type, const QString &name);
+    ScopeTree *parentScope() const { return m_parentScope; }
 
     void insertJSIdentifier(const QString &id, QQmlJS::AST::VariableScope scope);
     void insertSignalIdentifier(const QString &id, const MetaMethod &method,
@@ -119,24 +119,23 @@ public:
                                    const QQmlJS::AST::SourceLocation &location);
 
     bool isIdInCurrentScope(const QString &id) const;
-    void addIdToAccssedIfNotInParentScopes(
-            const QPair<QString, QQmlJS::AST::SourceLocation> &idLocationPair,
-            const QSet<QString> &unknownImports);
+    void addIdToAccessed(const QString &id, const QQmlJS::AST::SourceLocation &location);
+    void accessMember(const QString &name, const QString &parentType,
+                      const QQmlJS::AST::SourceLocation &location);
+    void resetMemberScope();
 
     bool isVisualRootScope() const;
     QString name() const { return m_name; }
 
     bool recheckIdentifiers(
-            const QString &code, const QHash<QString, ScopeTree::ConstPtr> &qmlIDs,
-            const ScopeTree *root, const QString &rootId, ColorOutput &colorOut) const;
+            const QString &code,
+            const QHash<QString, const ScopeTree *> &qmlIDs,
+            const QHash<QString, ScopeTree::ConstPtr> &types,
+            const ScopeTree *root, const QString& rootId, ColorOutput &colorOut) const;
 
     ScopeType scopeType() const { return m_scopeType; }
 
-    void addMethods(const QHash<QString, MetaMethod> &methods)
-    {
-        for (auto it = methods.begin(), end = methods.end(); it != end; ++it)
-            m_methods.insert(it.key(), it.value());
-    }
+    void addMethods(const QHash<QString, MetaMethod> &methods) { m_methods.insert(methods); }
     void addMethod(const MetaMethod &method) { m_methods.insert(method.methodName(), method); }
     QHash<QString, MetaMethod> methods() const { return m_methods; }
 
@@ -153,8 +152,9 @@ public:
     void setSuperclassName(const QString &superclass) { m_superName = superclass; }
     QString superclassName() const { return m_superName; }
 
-    void addProperty(const MetaProperty &prop) { m_properties.insert(prop.name(), prop); }
+    void addProperty(const MetaProperty &prop) { m_properties.insert(prop.propertyName(), prop); }
     QHash<QString, MetaProperty> properties() const { return m_properties; }
+    void updateParentProperty(const ScopeTree *scope);
 
     QString defaultPropertyName() const { return m_defaultPropertyName; }
     void setDefaultPropertyName(const QString &name) { m_defaultPropertyName = name; }
@@ -170,6 +170,14 @@ public:
     void setIsComposite(bool value) { m_isSingleton = value; }
 
 private:
+    struct FieldMemberList
+    {
+        QString m_name;
+        QString m_parentType;
+        QQmlJS::AST::SourceLocation m_location;
+        std::unique_ptr<FieldMemberList> m_child;
+    };
+
     QSet<QString> m_jsIdentifiers;
     QMultiHash<QString, MethodUsage> m_injectedSignalIdentifiers;
 
@@ -177,11 +185,13 @@ private:
     QHash<QString, MetaProperty> m_properties;
     QHash<QString, MetaEnum> m_enums;
 
-    QVector<QPair<QString, QQmlJS::AST::SourceLocation>> m_accessedIdentifiers;
+    std::vector<std::unique_ptr<FieldMemberList>> m_accessedIdentifiers;
+    FieldMemberList *m_currentFieldMember = nullptr;
+
     QVector<QPair<QString, QQmlJS::AST::SourceLocation>> m_unmatchedSignalHandlers;
 
-    QVector<ScopeTree *> m_childScopes;
-    ScopeTree *m_parentScope = nullptr;
+    QVector<ScopeTree::Ptr> m_childScopes;
+    ScopeTree *m_parentScope;
 
     QString m_name;
     QString m_className;
@@ -202,6 +212,12 @@ private:
     const ScopeTree *currentQMLScope() const;
     void printContext(ColorOutput &colorOut, const QString &code,
                       const QQmlJS::AST::SourceLocation &location) const;
+    bool checkMemberAccess(
+            const QString &code,
+            FieldMemberList *members,
+            const ScopeTree *scope,
+            const QHash<QString, ScopeTree::ConstPtr> &types,
+            ColorOutput& colorOut) const;
 };
 
 #endif // SCOPETREE_H

@@ -12,4 +12,5 @@ SOURCES += \
 HEADERS += \
     qwavefrontmesh.h
 
+CONFIG += qmltypes install_qmltypes
 load(qml_plugin)

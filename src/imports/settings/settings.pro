@@ -12,4 +12,6 @@ SOURCES += \
     plugin.cpp \
     qqmlsettings.cpp
 
+CONFIG += qmltypes install_qmltypes
+
 load(qml_plugin)

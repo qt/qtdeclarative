@@ -47,7 +47,7 @@
     material state is what we assign to each individual node; in this
     case to give them different colors.
 
-    \snippet scenegraph/simplematerial/simplematerial.cpp 1
+    \snippet scenegraph/simplematerial/simplematerialitem.cpp 1
 
     The first thing we do when creating custom materials with the
     simplified scheme is to create a state class. In this case the
@@ -55,7 +55,7 @@
     compare function which the scene graph can use to reorder the node
     rendering.
 
-    \snippet scenegraph/simplematerial/simplematerial.cpp 2
+    \snippet scenegraph/simplematerial/simplematerialitem.cpp 2
 
     Next we define the material shader, by subclassing a template
     instantiation of \l QSGSimpleMaterialShader with our \c State.
@@ -74,21 +74,21 @@
     classes. Using the same \c State class in multiple shaders will
     will lead to undefined behavior.
 
-    \snippet scenegraph/simplematerial/simplematerial.cpp 3
+    \snippet scenegraph/simplematerial/simplematerialitem.cpp 3
 
     Next comes the declaration of the shader source code, where we
     define a vertex and fragment shader. The simple material assumes
     the presence of \c qt_Matrix in the vertex shader and \c
     qt_Opacity in the fragment shader.
 
-    \snippet scenegraph/simplematerial/simplematerial.cpp 4
+    \snippet scenegraph/simplematerial/simplematerialitem.cpp 4
 
     We reimplement the \c attributes function to return the name of
     the \c aVertex and \c aTexCoord attributes. These attributes
     will be mapped to attribute indices 0 and 1 in the node's
     geometry.
 
-    \snippet scenegraph/simplematerial/simplematerial.cpp 6
+    \snippet scenegraph/simplematerial/simplematerialitem.cpp 6
 
     Uniforms can be accessed either by name or by index, where index
     is faster than name. We reimplement the \c resolveUniforms()
@@ -96,7 +96,7 @@
     to worry about resolving \c qt_Opacity or \c qt_Matrix as these
     are handled by the baseclass.
 
-    \snippet scenegraph/simplematerial/simplematerial.cpp 5
+    \snippet scenegraph/simplematerial/simplematerialitem.cpp 5
 
     The \c updateState() function is called once for every unique
     state and we use it to update the shader program with the current
@@ -105,7 +105,7 @@
     use case, where all the colors are different, the updateState()
     function will be called once for every node.
 
-    \snippet scenegraph/simplematerial/simplematerial.cpp 7
+    \snippet scenegraph/simplematerial/simplematerialitem.cpp 7
 
     The \c ColorNode class is supposed to draw something, so it needs
     to be a subclass of \l QSGGeometryNode.
@@ -129,12 +129,13 @@
     Finally, we tell the node to take ownership of the material, so we
     do not have to explicitly memory-manage it.
 
-    \snippet scenegraph/simplematerial/simplematerial.cpp 8
+    \snippet scenegraph/simplematerial/simplematerialitem.h 8
 
     Since the Item is providing its own graphics to the scene graph,
-    we set the flag \l QQuickItem::ItemHasContents.
+    we set the flag \l QQuickItem::ItemHasContents. We also make sure
+    the item is exposed to QML by adding the QML_ELEMENT macro.
 
-    \snippet scenegraph/simplematerial/simplematerial.cpp 9
+    \snippet scenegraph/simplematerial/simplematerialitem.cpp 9
 
     Whenever the Item has changed graphically, the \l
     QQuickItem::updatePaintNode() function is called.
@@ -159,9 +160,8 @@
 
     \snippet scenegraph/simplematerial/simplematerial.cpp 11
 
-    The \c main() function of the application adds the custom QML type
-    using \l qmlRegisterType() and opens up a \l QQuickView with our
-    QML file.
+    The \c main() function of the application opens up a \l QQuickView
+    with our QML file.
 
     \snippet scenegraph/simplematerial/main.qml 1
 

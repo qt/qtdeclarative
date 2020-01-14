@@ -52,13 +52,8 @@
 
 #include "../textballoon.h"
 
-class TextBalloonPlugin : public QQmlExtensionPlugin
+class TextBalloonPlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
-public:
-    void registerTypes(const char *uri)
-    {
-        qmlRegisterTypesAndRevisions<TextBalloon>(uri, 1);
-    }
+    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 };

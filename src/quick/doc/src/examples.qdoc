@@ -177,6 +177,7 @@ Creator.
         \li \l{Scene Graph - OpenGL Under QML}{OpenGL Under QML}
         \li \l{Scene Graph - Direct3D 11 Under QML}{Direct3D 11 Under QML}
         \li \l{Scene Graph - Vulkan Under QML}{Vulkan Under QML}
+        \li \l{Scene Graph - Vulkan Texture Import}{Vulkan Texture Import}
         \li \l{Scene Graph - Custom Rendering with QSGRenderNode}{Render Node}
         \li \l{Scene Graph - Painted Item}{Painted Item}
         \li \l{Scene Graph - Graph}{Graph}

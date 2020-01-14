@@ -26,4 +26,5 @@ qtConfig(qml-delegate-model) {
         qqmldelegatecomponent_p.h
 }
 
+CONFIG += qmltypes install_qmltypes
 load(qml_plugin)

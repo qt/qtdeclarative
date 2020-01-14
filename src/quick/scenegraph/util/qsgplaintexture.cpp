@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qsgplaintexture_p.h"
-#include "qsgrhinativetextureimporter_p.h"
 #include <QtQuick/private/qsgcontext_p.h>
 #include <qmath.h>
 #include <private/qquickprofiler_p.h>
@@ -300,7 +299,7 @@ void QSGPlainTexture::setTextureFromNativeObject(QRhi *rhi, QQuickWindow::Native
     QRhiTexture *t = rhi->newTexture(QRhiTexture::RGBA8, size, 1, flags);
 
     // ownership of the native object is never taken
-    QSGRhiNativeTextureImporter::buildWrapper(rhi, t, nativeObjectPtr, nativeLayout);
+    t->buildFrom({nativeObjectPtr, nativeLayout});
 
     setTexture(t);
 }

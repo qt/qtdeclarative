@@ -182,7 +182,7 @@ PropertyKey ForInIteratorObject::nextProperty() const
             if (d()->current != d()->object) {
                 o = d()->object;
                 bool shadowed = false;
-                while (o->d() != c->heapObject()) {
+                while (o && o->d() != c->heapObject()) {
                     if (o->getOwnProperty(key) != Attr_Invalid) {
                         shadowed = true;
                         break;

@@ -3,9 +3,11 @@
     "depends": [
         "core-private",
         "qml-private",
+        "gui",
         "gui-private",
         "qmlmodels-private"
     ],
+    "condition": "module.gui",
     "testDir": "../../config.tests",
 
     "commandline": {

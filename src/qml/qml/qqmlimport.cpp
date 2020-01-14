@@ -245,9 +245,9 @@ public:
 
     QQmlTypeLoader *typeLoader;
 
-    static bool locateQmldir(const QString &uri, int vmaj, int vmin,
-                             QQmlImportDatabase *database,
-                             QString *outQmldirFilePath, QString *outUrl);
+    static QQmlImports::LocalQmldirResult locateLocalQmldir(
+            const QString &uri, int vmaj, int vmin, QQmlImportDatabase *database,
+            QString *outQmldirFilePath, QString *outUrl);
 
     static bool validateQmldirVersion(const QQmlTypeLoaderQmldirContent &qmldir, const QString &uri, int vmaj, int vmin,
                                       QList<QQmlError> *errors);
@@ -1076,7 +1076,13 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
     if (qmldirPluginCount == 0)
         return true;
 
-    if (!database->qmlDirFilesForWhichPluginsHaveBeenLoaded.contains(qmldirFilePath)) {
+    if (database->qmlDirFilesForWhichPluginsHaveBeenLoaded.contains(qmldirFilePath)) {
+        if ((vmaj >= 0 && vmin >= 0)
+                ? !QQmlMetaType::isModule(uri, vmaj, vmin)
+                : !QQmlMetaType::isAnyModule(uri)) {
+            QQmlMetaType::qmlRegisterModuleTypes(uri, vmaj);
+        }
+    } else {
         // First search for listed qmldir plugins dynamically. If we cannot resolve them all, we continue
         // searching static plugins that has correct metadata uri. Note that since we only know the uri
         // for a static plugin, and not the filename, we cannot know which static plugin belongs to which
@@ -1237,8 +1243,9 @@ Locates the qmldir file for \a uri version \a vmaj.vmin.  Returns true if found,
 and fills in outQmldirFilePath and outQmldirUrl appropriately.  Otherwise returns
 false.
 */
-bool QQmlImportsPrivate::locateQmldir(const QString &uri, int vmaj, int vmin, QQmlImportDatabase *database,
-                                      QString *outQmldirFilePath, QString *outQmldirPathUrl)
+QQmlImports::LocalQmldirResult QQmlImportsPrivate::locateLocalQmldir(
+        const QString &uri, int vmaj, int vmin, QQmlImportDatabase *database,
+        QString *outQmldirFilePath, QString *outQmldirPathUrl)
 {
     Q_ASSERT(vmaj >= 0 && vmin >= 0); // Versions are always specified for libraries
 
@@ -1246,19 +1253,20 @@ bool QQmlImportsPrivate::locateQmldir(const QString &uri, int vmaj, int vmin, QQ
 
     QQmlImportDatabase::QmldirCache *cacheHead = nullptr;
     {
-    QQmlImportDatabase::QmldirCache **cachePtr = database->qmldirCache.value(uri);
-    if (cachePtr) {
-        cacheHead = *cachePtr;
-        QQmlImportDatabase::QmldirCache *cache = cacheHead;
-        while (cache) {
-            if (cache->versionMajor == vmaj && cache->versionMinor == vmin) {
-                *outQmldirFilePath = cache->qmldirFilePath;
-                *outQmldirPathUrl = cache->qmldirPathUrl;
-                return !cache->qmldirFilePath.isEmpty();
+        QQmlImportDatabase::QmldirCache **cachePtr = database->qmldirCache.value(uri);
+        if (cachePtr) {
+            cacheHead = *cachePtr;
+            QQmlImportDatabase::QmldirCache *cache = cacheHead;
+            while (cache) {
+                if (cache->versionMajor == vmaj && cache->versionMinor == vmin) {
+                    *outQmldirFilePath = cache->qmldirFilePath;
+                    *outQmldirPathUrl = cache->qmldirPathUrl;
+                    return cache->qmldirFilePath.isEmpty() ? QQmlImports::QmldirNotFound
+                                                           : QQmlImports::QmldirFound;
+                }
+                cache = cache->next;
             }
-            cache = cache->next;
         }
-    }
     }
 
     QQmlTypeLoader &typeLoader = QQmlEnginePrivate::get(database->engine)->typeLoader;
@@ -1269,12 +1277,17 @@ bool QQmlImportsPrivate::locateQmldir(const QString &uri, int vmaj, int vmin, QQ
                 interceptor ? QQmlImportDatabase::LocalOrRemote : QQmlImportDatabase::Local);
 
     // Search local import paths for a matching version
-    const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(uri, localImportPaths, vmaj, vmin);
+    const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(
+                uri, localImportPaths, vmaj, vmin);
+    bool pathTurnedRemote = false;
     for (QString qmldirPath : qmlDirPaths) {
         if (interceptor) {
-            qmldirPath = QQmlFile::urlToLocalFileOrQrc(
-                        interceptor->intercept(QQmlImports::urlFromLocalFileOrQrcOrUrl(qmldirPath),
-                                               QQmlAbstractUrlInterceptor::QmldirFile));
+            const QUrl intercepted = interceptor->intercept(
+                        QQmlImports::urlFromLocalFileOrQrcOrUrl(qmldirPath),
+                        QQmlAbstractUrlInterceptor::QmldirFile);
+            qmldirPath = QQmlFile::urlToLocalFileOrQrc(intercepted);
+            if (!pathTurnedRemote && qmldirPath.isEmpty() && !QQmlFile::isLocalFile(intercepted))
+                pathTurnedRemote = true;
         }
 
         QString absoluteFilePath = typeLoader.absoluteFilePath(qmldirPath);
@@ -1297,7 +1310,7 @@ bool QQmlImportsPrivate::locateQmldir(const QString &uri, int vmaj, int vmin, QQ
             *outQmldirFilePath = absoluteFilePath;
             *outQmldirPathUrl = url;
 
-            return true;
+            return QQmlImports::QmldirFound;
         }
     }
 
@@ -1307,7 +1320,7 @@ bool QQmlImportsPrivate::locateQmldir(const QString &uri, int vmaj, int vmin, QQ
     cache->next = cacheHead;
     database->qmldirCache.insert(uri, cache);
 
-    return false;
+    return pathTurnedRemote ? QQmlImports::QmldirInterceptedToRemote : QQmlImports::QmldirNotFound;
 }
 
 bool QQmlImportsPrivate::validateQmldirVersion(const QQmlTypeLoaderQmldirContent &qmldir, const QString &uri, int vmaj, int vmin,
@@ -1701,11 +1714,11 @@ bool QQmlImports::updateQmldirContent(QQmlImportDatabase *importDb,
     return d->updateQmldirContent(uri, prefix, qmldirIdentifier, qmldirUrl, importDb, errors);
 }
 
-bool QQmlImports::locateQmldir(QQmlImportDatabase *importDb,
-                               const QString& uri, int vmaj, int vmin,
-                               QString *qmldirFilePath, QString *url)
+QQmlImports::LocalQmldirResult QQmlImports::locateLocalQmldir(
+        QQmlImportDatabase *importDb, const QString &uri, int vmaj,  int vmin,
+        QString *qmldirFilePath, QString *url)
 {
-    return d->locateQmldir(uri, vmaj, vmin, importDb, qmldirFilePath, url);
+    return d->locateLocalQmldir(uri, vmaj, vmin, importDb, qmldirFilePath, url);
 }
 
 bool QQmlImports::isLocal(const QString &url)

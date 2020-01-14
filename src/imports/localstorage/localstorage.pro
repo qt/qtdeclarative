@@ -14,4 +14,5 @@ HEADERS += \
 
 load(qml_plugin)
 
+CONFIG += qmltypes install_qmltypes
 OTHER_FILES += localstorage.json

@@ -59,7 +59,8 @@ class Person : public QObject
     Q_PROPERTY(QString name READ name WRITE setName)
     Q_PROPERTY(int shoeSize READ shoeSize WRITE setShoeSize)
     //![0]
-    QML_ANONYMOUS
+    QML_ELEMENT
+    QML_UNCREATABLE("Person is an abstract base class.")
     //![0]
 public:
     Person(QObject *parent = nullptr);

@@ -53,10 +53,8 @@ public:
     QtQuick2ParticlesPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
     void registerTypes(const char *uri) override
     {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.Particles"));
+        Q_UNUSED(uri);
         QQuickParticlesModule::defineModule();
-
-        qmlRegisterModule(uri, 2, 15);
     }
 };
 //![class decl]

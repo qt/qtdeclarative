@@ -58,8 +58,6 @@ int main(int argc, char ** argv)
 {
     QCoreApplication app(argc, argv);
 
-    qmlRegisterTypesAndRevisions<BirthdayParty, ShoeDescription, Person, Boy, Girl>("People", 1);
-
     QQmlEngine engine;
     QQmlComponent component(&engine, QUrl("qrc:example.qml"));
     auto *party = qobject_cast<BirthdayParty *>(component.create());

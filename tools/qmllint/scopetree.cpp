@@ -36,13 +36,13 @@
 ScopeTree::ScopeTree(ScopeType type, QString name, ScopeTree *parentScope)
     : m_parentScope(parentScope), m_name(std::move(name)), m_scopeType(type) {}
 
-ScopeTree *ScopeTree::createNewChildScope(ScopeType type, QString name)
+ScopeTree::Ptr ScopeTree::createNewChildScope(ScopeType type, const QString &name)
 {
     Q_ASSERT(type != ScopeType::QMLScope
             || !m_parentScope
             || m_parentScope->m_scopeType == ScopeType::QMLScope
             || m_parentScope->m_name == "global");
-    auto childScope = new ScopeTree{type, std::move(name), this};
+    auto childScope = ScopeTree::Ptr(new ScopeTree{type, name, this});
     m_childScopes.push_back(childScope);
     return childScope;
 }
@@ -72,7 +72,7 @@ void ScopeTree::insertSignalIdentifier(const QString &id, const MetaMethod &meth
 void ScopeTree::insertPropertyIdentifier(const MetaProperty &property)
 {
     addProperty(property);
-    MetaMethod method(property.name() + QLatin1String("Changed"), "void");
+    MetaMethod method(property.propertyName() + QLatin1String("Changed"), "void");
     addMethod(method);
 }
 
@@ -87,21 +87,23 @@ bool ScopeTree::isIdInCurrentScope(const QString &id) const
     return isIdInCurrentQMlScopes(id) || isIdInCurrentJSScopes(id);
 }
 
-void ScopeTree::addIdToAccssedIfNotInParentScopes(
-        const QPair<QString, QQmlJS::AST::SourceLocation> &idLocationPair,
-        const QSet<QString> &unknownImports)
+void ScopeTree::addIdToAccessed(const QString &id, const QQmlJS::AST::SourceLocation &location) {
+    m_currentFieldMember = new FieldMemberList {id, QString(), location, {}};
+    m_accessedIdentifiers.push_back(std::unique_ptr<FieldMemberList>(m_currentFieldMember));
+}
+
+void ScopeTree::accessMember(const QString &name, const QString &parentType,
+                             const QQmlJS::AST::SourceLocation &location)
 {
-    // also do not add id if it is parent
-    // parent is almost always defined valid in QML, and if we could not find a definition for the current QML component
-    // not skipping "parent" will lead to many false positives
-    // Moreover, if the top level item is Item or inherits from it, it will have a parent property to which we would point the user
-    // which makes for a very nonsensical warning
-    const auto *qmlScope = currentQMLScope();
-    if (!isIdInCurrentScope(idLocationPair.first)
-            && !(idLocationPair.first == QLatin1String("parent")
-                 && qmlScope && unknownImports.contains(qmlScope->name()))) {
-        m_accessedIdentifiers.push_back(idLocationPair);
-    }
+    Q_ASSERT(m_currentFieldMember);
+    auto *fieldMember = new FieldMemberList {name, parentType, location, {}};
+    m_currentFieldMember->m_child.reset(fieldMember);
+    m_currentFieldMember = fieldMember;
+}
+
+void ScopeTree::resetMemberScope()
+{
+    m_currentFieldMember = nullptr;
 }
 
 bool ScopeTree::isVisualRootScope() const
@@ -132,9 +134,136 @@ private:
     QStringRef m_afterText;
 };
 
+bool ScopeTree::checkMemberAccess(
+        const QString &code,
+        FieldMemberList *members,
+        const ScopeTree *scope,
+        const QHash<QString, ScopeTree::ConstPtr> &types,
+        ColorOutput& colorOut) const
+{
+    if (!members->m_child)
+        return true;
+
+    Q_ASSERT(scope != nullptr);
+
+    const QString scopeName = scope->name().isEmpty() ? scope->className() : scope->name();
+    const auto &access = members->m_child;
+
+    const auto scopeIt = scope->m_properties.find(access->m_name);
+    if (scopeIt != scope->m_properties.end()) {
+        const QString typeName = access->m_parentType.isEmpty() ? scopeIt->typeName()
+                                                                : access->m_parentType;
+        if (scopeIt->isList() || typeName == QLatin1String("string")) {
+            if (access->m_child && access->m_child->m_name != QLatin1String("length")) {
+                colorOut.write("Warning: ", Warning);
+                colorOut.write(
+                            QString::fromLatin1(
+                                "\"%1\" is a %2. You cannot access \"%3\" on it at %4:%5\n")
+                            .arg(access->m_name)
+                            .arg(QLatin1String(scopeIt->isList() ? "list" : "string"))
+                            .arg(access->m_child->m_name)
+                            .arg(access->m_child->m_location.startLine)
+                            .arg(access->m_child->m_location.startColumn), Normal);
+                printContext(colorOut, code, access->m_child->m_location);
+                return false;
+            }
+            return true;
+        }
+        const ScopeTree *type = (scopeIt->type() && access->m_parentType.isEmpty())
+                ? scopeIt->type()
+                : types.value(typeName).get();
+        return checkMemberAccess(code, access.get(), type, types, colorOut);
+    }
+
+    const auto scopeMethodIt = scope->m_methods.find(access->m_name);
+    if (scopeMethodIt != scope->m_methods.end())
+        return true; // Access to property of JS function
+
+    for (const auto enumerator : scope->m_enums) {
+        for (const QString &key : enumerator.keys()) {
+            if (access->m_name != key)
+                continue;
+
+            if (!access->m_child)
+                return true;
+
+            colorOut.write("Warning: ", Warning);
+            colorOut.write(QString::fromLatin1(
+                               "\"%1\" is an enum value. You cannot access \"%2\" on it at %3:%4\n")
+                           .arg(access->m_name)
+                           .arg(access->m_child->m_name)
+                           .arg(access->m_child->m_location.startLine)
+                           .arg(access->m_child->m_location.startColumn), Normal);
+            printContext(colorOut, code, access->m_child->m_location);
+            return false;
+        }
+    }
+
+    auto type = types.value(scopeName);
+    while (type) {
+        const auto typeIt = type->m_properties.find(access->m_name);
+        if (typeIt != type->m_properties.end()) {
+            const ScopeTree *propType = access->m_parentType.isEmpty()
+                    ? typeIt->type()
+                    : types.value(access->m_parentType).get();
+            return checkMemberAccess(code, access.get(),
+                                     propType ? propType : types.value(typeIt->typeName()).get(),
+                                     types, colorOut);
+        }
+
+        const auto typeMethodIt = type->m_methods.find(access->m_name);
+        if (typeMethodIt != type->m_methods.end()) {
+            if (access->m_child == nullptr)
+                return true;
+
+            colorOut.write("Warning: ", Warning);
+            colorOut.write(QString::fromLatin1(
+                                   "\"%1\" is a method. You cannot access \"%2\" on it at %3:%4\n")
+                                   .arg(access->m_name)
+                                   .arg(access->m_child->m_name)
+                                   .arg(access->m_child->m_location.startLine)
+                                   .arg(access->m_child->m_location.startColumn), Normal);
+            printContext(colorOut, code, access->m_child->m_location);
+            return false;
+        }
+
+        type = types.value(type->superclassName());
+    }
+
+    if (access->m_name.front().isUpper() && scope->scopeType() == ScopeType::QMLScope) {
+        // may be an attached type
+        const auto it = types.find(access->m_name);
+        if (it != types.end() && !(*it)->attachedTypeName().isEmpty()) {
+            const auto attached = types.find((*it)->attachedTypeName());
+            if (attached != types.end())
+                return checkMemberAccess(code, access.get(), attached->get(), types, colorOut);
+        }
+    }
+
+    colorOut.write("Warning: ", Warning);
+    colorOut.write(QString::fromLatin1(
+                           "Property \"%1\" not found on type \"%2\" at %3:%4\n")
+                           .arg(access->m_name)
+                           .arg(scopeName)
+                           .arg(access->m_location.startLine)
+                           .arg(access->m_location.startColumn), Normal);
+    printContext(colorOut, code, access->m_location);
+    return false;
+}
+
+static const QStringList unknownBuiltins = {
+    QStringLiteral("alias"),    // TODO: we cannot properly resolve aliases, yet
+    QStringLiteral("QRectF"),   // TODO: should be added to builtins.qmltypes
+    QStringLiteral("QJSValue"), // We cannot say anything intelligent about untyped JS values.
+    QStringLiteral("variant"),  // Same for generic variants
+};
+
 bool ScopeTree::recheckIdentifiers(
-        const QString &code, const QHash<QString, ScopeTree::ConstPtr> &qmlIDs,
-        const ScopeTree *root, const QString &rootId, ColorOutput &colorOut) const
+        const QString &code,
+        const QHash<QString, const ScopeTree *> &qmlIDs,
+        const QHash<QString, ScopeTree::ConstPtr> &types,
+        const ScopeTree *root, const QString &rootId,
+        ColorOutput& colorOut) const
 {
     bool noUnqualifiedIdentifier = true;
 
@@ -152,15 +281,61 @@ bool ScopeTree::recheckIdentifiers(
             printContext(colorOut, code, handler.second);
         }
 
-        for (const auto &idLocationPair : qAsConst(currentScope->m_accessedIdentifiers)) {
-            if (qmlIDs.contains(idLocationPair.first))
+        for (const auto &memberAccessTree : qAsConst(currentScope->m_accessedIdentifiers)) {
+            if (currentScope->isIdInCurrentJSScopes(memberAccessTree->m_name))
                 continue;
-            if (currentScope->isIdInCurrentScope(idLocationPair.first)) {
+
+            auto it = qmlIDs.find(memberAccessTree->m_name);
+            if (it != qmlIDs.end()) {
+                if (!checkMemberAccess(code, memberAccessTree.get(), *it, types, colorOut))
+                    noUnqualifiedIdentifier = false;
                 continue;
             }
+
+            auto qmlScope = currentScope->currentQMLScope();
+            if (qmlScope->methods().contains(memberAccessTree->m_name)) {
+                // a property of a JavaScript function
+                continue;
+            }
+
+            const auto qmlIt = qmlScope->m_properties.find(memberAccessTree->m_name);
+            if (qmlIt != qmlScope->m_properties.end()) {
+                if (!memberAccessTree->m_child || unknownBuiltins.contains(qmlIt->typeName()))
+                    continue;
+
+                if (!qmlIt->type()) {
+                    colorOut.write("Warning: ", Warning);
+                    colorOut.write(QString::fromLatin1(
+                                           "Type of property \"%2\" not found at %3:%4\n")
+                                           .arg(memberAccessTree->m_name)
+                                           .arg(memberAccessTree->m_location.startLine)
+                                           .arg(memberAccessTree->m_location.startColumn), Normal);
+                    printContext(colorOut, code, memberAccessTree->m_location);
+                    noUnqualifiedIdentifier = false;
+                } else if (!checkMemberAccess(code, memberAccessTree.get(), qmlIt->type(), types,
+                                              colorOut)) {
+                    noUnqualifiedIdentifier = false;
+                }
+
+                continue;
+            }
+
+            // TODO: Lots of builtins are missing
+            if (memberAccessTree->m_name == "Qt")
+                continue;
+
+            const auto typeIt = types.find(memberAccessTree->m_name);
+            if (typeIt != types.end()) {
+                if (!checkMemberAccess(code, memberAccessTree.get(), typeIt->get(), types,
+                                       colorOut)) {
+                    noUnqualifiedIdentifier = false;
+                }
+                continue;
+            }
+
             noUnqualifiedIdentifier = false;
             colorOut.write("Warning: ", Warning);
-            auto location = idLocationPair.second;
+            auto location = memberAccessTree->m_location;
             colorOut.write(QString::fromLatin1("unqualified access at %1:%2\n")
                            .arg(location.startLine).arg(location.startColumn),
                            Normal);
@@ -169,11 +344,11 @@ bool ScopeTree::recheckIdentifiers(
 
             // root(JS) --> program(qml) --> (first element)
             const auto firstElement = root->m_childScopes[0]->m_childScopes[0];
-            if (firstElement->m_properties.contains(idLocationPair.first)
-                    || firstElement->m_methods.contains(idLocationPair.first)
-                    || firstElement->m_enums.contains(idLocationPair.first)) {
+            if (firstElement->m_properties.contains(memberAccessTree->m_name)
+                    || firstElement->m_methods.contains(memberAccessTree->m_name)
+                    || firstElement->m_enums.contains(memberAccessTree->m_name)) {
                 colorOut.write("Note: ", Info);
-                colorOut.write( idLocationPair.first + QLatin1String(" is a meber of the root element\n"), Normal );
+                colorOut.write(memberAccessTree->m_name + QLatin1String(" is a meber of the root element\n"), Normal );
                 colorOut.write(QLatin1String("      You can qualify the access with its id to avoid this warning:\n"), Normal);
                 if (rootId == QLatin1String("<id>")) {
                     colorOut.write("Note: ", Warning);
@@ -184,10 +359,10 @@ bool ScopeTree::recheckIdentifiers(
                 colorOut.write(rootId + QLatin1Char('.'), Hint);
                 colorOut.write(issueLocationWithContext.issueText().toString(), Normal);
                 colorOut.write(issueLocationWithContext.afterText() + QLatin1Char('\n'), Normal);
-            } else if (currentScope->isIdInjectedFromSignal(idLocationPair.first)) {
+            } else if (currentScope->isIdInjectedFromSignal(memberAccessTree->m_name)) {
                 auto methodUsages = currentScope->currentQMLScope()->m_injectedSignalIdentifiers
-                        .values(idLocationPair.first);
-                auto location = idLocationPair.second;
+                        .values(memberAccessTree->m_name);
+                auto location = memberAccessTree->m_location;
                 // sort the list of signal handlers by their occurrence in the source code
                 // then, we select the first one whose location is after the unqualified id
                 // and go one step backwards to get the one which we actually need
@@ -206,7 +381,7 @@ bool ScopeTree::recheckIdentifiers(
                 auto methodUsage = *(--oneBehindIt);
                 colorOut.write("Note:", Info);
                 colorOut.write(
-                            idLocationPair.first + QString::fromLatin1(
+                            memberAccessTree->m_name + QString::fromLatin1(
                                 " is accessible in this scope because "
                                 "you are handling a signal at %1:%2\n")
                             .arg(methodUsage.loc.startLine).arg(methodUsage.loc.startColumn),
@@ -226,8 +401,8 @@ bool ScopeTree::recheckIdentifiers(
             }
             colorOut.write("\n\n\n", Normal);
         }
-        for (auto const& childScope: currentScope->m_childScopes)
-            workQueue.enqueue(childScope);
+        for (auto const &childScope: currentScope->m_childScopes)
+            workQueue.enqueue(childScope.get());
     }
     return noUnqualifiedIdentifier;
 }
@@ -287,6 +462,15 @@ void ScopeTree::addExport(const QString &name, const QString &package,
 void ScopeTree::setExportMetaObjectRevision(int exportIndex, int metaObjectRevision)
 {
     m_exports[exportIndex].setMetaObjectRevision(metaObjectRevision);
+}
+
+void ScopeTree::updateParentProperty(const ScopeTree *scope)
+{
+    auto it = m_properties.find(QLatin1String("parent"));
+    if (it != m_properties.end()
+            && scope->name() != QLatin1String("Component")
+            && scope->name() != QLatin1String("program"))
+        it->setType(scope);
 }
 
 ScopeTree::Export::Export(QString package, QString type, const ComponentVersion &version,

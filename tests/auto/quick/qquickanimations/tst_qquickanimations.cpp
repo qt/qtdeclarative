@@ -265,7 +265,8 @@ void tst_qquickanimations::simplePath()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("pathAnimation.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickRectangle *redRect = rect->findChild<QQuickRectangle*>();
@@ -299,14 +300,13 @@ void tst_qquickanimations::simplePath()
         pathAnim->start();
         QTRY_VERIFY(redRect->rotation() != 0);
         pathAnim->stop();
-
-        delete rect;
     }
 
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("pathAnimation2.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickRectangle *redRect = rect->findChild<QQuickRectangle*>();
@@ -334,8 +334,6 @@ void tst_qquickanimations::simplePath()
         QCOMPARE(redRect->x(), qreal(300));
         QCOMPARE(redRect->y(), qreal(300));
         QCOMPARE(redRect->rotation(), qreal(0));
-
-        delete rect;
     }
 }
 
@@ -343,7 +341,8 @@ void tst_qquickanimations::simpleAnchor()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("reanchor.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
     QVERIFY(rect);
 
     QQuickRectangle *greenRect = rect->findChild<QQuickRectangle*>();
@@ -411,15 +410,14 @@ void tst_qquickanimations::simpleAnchor()
     QCOMPARE(greenRect->y(), qreal(50));
     QCOMPARE(greenRect->width(), qreal(150));
     QCOMPARE(greenRect->height(), qreal(125));
-
-    delete rect;
 }
 
 void tst_qquickanimations::reparent()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("reparent.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
     QVERIFY(rect);
 
     QQuickRectangle *target = rect->findChild<QQuickRectangle*>("target");
@@ -460,15 +458,14 @@ void tst_qquickanimations::reparent()
     QCOMPARE(target->height(), qreal(50));
     QCOMPARE(target->rotation(), qreal(0));
     QCOMPARE(target->scale(), qreal(1));
-
-    delete rect;
 }
 
 void tst_qquickanimations::pathInterpolator()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("pathInterpolator.qml"));
-    QQuickPathInterpolator *interpolator = qobject_cast<QQuickPathInterpolator*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *interpolator = qobject_cast<QQuickPathInterpolator*>(obj.data());
     QVERIFY(interpolator);
 
     QCOMPARE(interpolator->progress(), qreal(0));
@@ -504,7 +501,8 @@ void tst_qquickanimations::pathInterpolatorBackwardJump()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("pathInterpolatorBack.qml"));
-        QQuickPathInterpolator *interpolator = qobject_cast<QQuickPathInterpolator*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *interpolator = qobject_cast<QQuickPathInterpolator*>(obj.data());
         QVERIFY(interpolator);
 
         QCOMPARE(interpolator->progress(), qreal(0));
@@ -535,7 +533,8 @@ void tst_qquickanimations::pathInterpolatorBackwardJump()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("pathInterpolatorBack2.qml"));
-        QQuickPathInterpolator *interpolator = qobject_cast<QQuickPathInterpolator*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *interpolator = qobject_cast<QQuickPathInterpolator*>(obj.data());
         QVERIFY(interpolator);
 
         QCOMPARE(interpolator->progress(), qreal(0));
@@ -562,7 +561,8 @@ void tst_qquickanimations::pathWithNoStart()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("pathAnimationNoStart.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
     QVERIFY(rect);
 
     QQuickRectangle *redRect = rect->findChild<QQuickRectangle*>();
@@ -728,12 +728,9 @@ void tst_qquickanimations::badTypes()
 {
     //don't crash
     {
-        QQuickView *view = new QQuickView;
+        QScopedPointer<QQuickView> view(new QQuickView);
         view->setSource(testFileUrl("badtype1.qml"));
-
         qApp->processEvents();
-
-        delete view;
     }
 
     //make sure we get a compiler error
@@ -741,7 +738,8 @@ void tst_qquickanimations::badTypes()
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("badtype2.qml"));
         QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
-        c.create();
+        QScopedPointer<QObject> obj(c.create());
+        QVERIFY(obj.isNull());
 
         QCOMPARE(c.errors().count(), 1);
         QCOMPARE(c.errors().at(0).description(), QLatin1String("Invalid property assignment: number expected"));
@@ -752,7 +750,8 @@ void tst_qquickanimations::badTypes()
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("badtype3.qml"));
         QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
-        c.create();
+        QScopedPointer<QObject> obj(c.create());
+        QVERIFY(obj.isNull());
 
         QCOMPARE(c.errors().count(), 1);
         QCOMPARE(c.errors().at(0).description(), QLatin1String("Invalid property assignment: color expected"));
@@ -762,7 +761,8 @@ void tst_qquickanimations::badTypes()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("badtype4.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickItemPrivate::get(rect)->setState("state1");
@@ -782,13 +782,15 @@ void tst_qquickanimations::badProperties()
         QQmlComponent c1(&engine, testFileUrl("badproperty1.qml"));
         QByteArray message = testFileUrl("badproperty1.qml").toString().toUtf8() + ":18:9: QML ColorAnimation: Cannot animate non-existent property \"border.colr\"";
         QTest::ignoreMessage(QtWarningMsg, message);
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c1.create());
+        QScopedPointer<QObject> obj(c1.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQmlComponent c2(&engine, testFileUrl("badproperty2.qml"));
         message = testFileUrl("badproperty2.qml").toString().toUtf8() + ":18:9: QML ColorAnimation: Cannot animate read-only property \"border\"";
         QTest::ignoreMessage(QtWarningMsg, message);
-        rect = qobject_cast<QQuickRectangle*>(c2.create());
+        QScopedPointer<QObject> obj2(c2.create());
+        rect = qobject_cast<QQuickRectangle*>(obj2.data());
         QVERIFY(rect);
 
         //### should we warn here are well?
@@ -804,7 +806,8 @@ void tst_qquickanimations::mixedTypes()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("mixedtype1.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickItemPrivate::get(rect)->setState("state1");
@@ -820,7 +823,8 @@ void tst_qquickanimations::mixedTypes()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("mixedtype2.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickItemPrivate::get(rect)->setState("state1");
@@ -840,7 +844,8 @@ void tst_qquickanimations::properties()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("properties.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
@@ -852,7 +857,8 @@ void tst_qquickanimations::properties()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("properties2.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
@@ -864,7 +870,8 @@ void tst_qquickanimations::properties()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("properties3.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
@@ -876,7 +883,8 @@ void tst_qquickanimations::properties()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("properties4.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
@@ -889,7 +897,8 @@ void tst_qquickanimations::properties()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("properties5.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
@@ -906,7 +915,8 @@ void tst_qquickanimations::propertiesTransition()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("propertiesTransition.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickItemPrivate::get(rect)->setState("moved");
@@ -919,7 +929,8 @@ void tst_qquickanimations::propertiesTransition()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("propertiesTransition2.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
@@ -934,7 +945,8 @@ void tst_qquickanimations::propertiesTransition()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("propertiesTransition3.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
@@ -947,7 +959,8 @@ void tst_qquickanimations::propertiesTransition()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("propertiesTransition4.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
@@ -961,7 +974,8 @@ void tst_qquickanimations::propertiesTransition()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("propertiesTransition5.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
@@ -975,7 +989,8 @@ void tst_qquickanimations::propertiesTransition()
     /*{
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("propertiesTransition6.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
@@ -989,7 +1004,8 @@ void tst_qquickanimations::propertiesTransition()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("propertiesTransition7.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickItemPrivate::get(rect)->setState("moved");
@@ -1005,7 +1021,8 @@ void tst_qquickanimations::pathTransition()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("pathTransition.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
     QVERIFY(rect);
 
     QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("redRect");
@@ -1025,7 +1042,8 @@ void tst_qquickanimations::disabledTransition()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("disabledTransition.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
     QVERIFY(rect);
 
     QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
@@ -1053,12 +1071,12 @@ void tst_qquickanimations::disabledTransition()
 
 void tst_qquickanimations::invalidDuration()
 {
-    QQuickPropertyAnimation *animation = new QQuickPropertyAnimation;
+    QScopedPointer<QQuickPropertyAnimation> animation(new QQuickPropertyAnimation);
     QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML PropertyAnimation: Cannot set a duration of < 0");
     animation->setDuration(-1);
     QCOMPARE(animation->duration(), 250);
 
-    QQuickPauseAnimation *pauseAnimation = new QQuickPauseAnimation;
+    QScopedPointer<QQuickPauseAnimation> pauseAnimation(new QQuickPauseAnimation);
     QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML PauseAnimation: Cannot set a duration of < 0");
     pauseAnimation->setDuration(-1);
     QCOMPARE(pauseAnimation->duration(), 250);
@@ -1071,7 +1089,8 @@ void tst_qquickanimations::attached()
     QQmlComponent c(&engine, testFileUrl("attached.qml"));
     QTest::ignoreMessage(QtDebugMsg, "off");
     QTest::ignoreMessage(QtDebugMsg, "on");
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
     QVERIFY(rect);
 }
 
@@ -1082,7 +1101,8 @@ void tst_qquickanimations::propertyValueSourceDefaultStart()
 
         QQmlComponent c(&engine, testFileUrl("valuesource.qml"));
 
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickAbstractAnimation *myAnim = rect->findChild<QQuickAbstractAnimation*>("MyAnim");
@@ -1095,7 +1115,8 @@ void tst_qquickanimations::propertyValueSourceDefaultStart()
 
         QQmlComponent c(&engine, testFileUrl("valuesource2.qml"));
 
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickAbstractAnimation *myAnim = rect->findChild<QQuickAbstractAnimation*>("MyAnim");
@@ -1108,7 +1129,8 @@ void tst_qquickanimations::propertyValueSourceDefaultStart()
 
         QQmlComponent c(&engine, testFileUrl("dontAutoStart.qml"));
 
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickAbstractAnimation *myAnim = rect->findChild<QQuickAbstractAnimation*>("MyAnim");
@@ -1127,7 +1149,8 @@ void tst_qquickanimations::dontStart()
 
         QString warning = c.url().toString() + ":14:13: QML NumberAnimation: setRunning() cannot be used on non-root animation nodes.";
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickAbstractAnimation *myAnim = rect->findChild<QQuickAbstractAnimation*>("MyAnim");
@@ -1142,7 +1165,8 @@ void tst_qquickanimations::dontStart()
 
         QString warning = c.url().toString() + ":15:17: QML NumberAnimation: setRunning() cannot be used on non-root animation nodes.";
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
         QVERIFY(rect);
 
         QQuickAbstractAnimation *myAnim = rect->findChild<QQuickAbstractAnimation*>("MyAnim");
@@ -1158,7 +1182,8 @@ void tst_qquickanimations::easingProperties()
         QString componentStr = "import QtQuick 2.0\nNumberAnimation { easing.type: \"InOutQuad\" }";
         QQmlComponent animationComponent(&engine);
         animationComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickPropertyAnimation *animObject = qobject_cast<QQuickPropertyAnimation*>(animationComponent.create());
+        QScopedPointer<QObject> obj(animationComponent.create());
+        auto *animObject = qobject_cast<QQuickPropertyAnimation *>(obj.data());
 
         QVERIFY(animObject != nullptr);
         QCOMPARE(animObject->easing().type(), QEasingCurve::InOutQuad);
@@ -1169,7 +1194,8 @@ void tst_qquickanimations::easingProperties()
         QString componentStr = "import QtQuick 2.0\nPropertyAnimation { easing.type: \"OutBounce\"; easing.amplitude: 5.0 }";
         QQmlComponent animationComponent(&engine);
         animationComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickPropertyAnimation *animObject = qobject_cast<QQuickPropertyAnimation*>(animationComponent.create());
+        QScopedPointer<QObject> obj(animationComponent.create());
+        auto *animObject = qobject_cast<QQuickPropertyAnimation *>(obj.data());
 
         QVERIFY(animObject != nullptr);
         QCOMPARE(animObject->easing().type(), QEasingCurve::OutBounce);
@@ -1181,7 +1207,8 @@ void tst_qquickanimations::easingProperties()
         QString componentStr = "import QtQuick 2.0\nPropertyAnimation { easing.type: \"OutElastic\"; easing.amplitude: 5.0; easing.period: 3.0}";
         QQmlComponent animationComponent(&engine);
         animationComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickPropertyAnimation *animObject = qobject_cast<QQuickPropertyAnimation*>(animationComponent.create());
+        QScopedPointer<QObject> obj(animationComponent.create());
+        auto *animObject = qobject_cast<QQuickPropertyAnimation *>(obj.data());
 
         QVERIFY(animObject != nullptr);
         QCOMPARE(animObject->easing().type(), QEasingCurve::OutElastic);
@@ -1194,7 +1221,8 @@ void tst_qquickanimations::easingProperties()
         QString componentStr = "import QtQuick 2.0\nPropertyAnimation { easing.type: \"InOutBack\"; easing.overshoot: 2 }";
         QQmlComponent animationComponent(&engine);
         animationComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickPropertyAnimation *animObject = qobject_cast<QQuickPropertyAnimation*>(animationComponent.create());
+        QScopedPointer<QObject> obj(animationComponent.create());
+        auto *animObject = qobject_cast<QQuickPropertyAnimation *>(obj.data());
 
         QVERIFY(animObject != nullptr);
         QCOMPARE(animObject->easing().type(), QEasingCurve::InOutBack);
@@ -1206,7 +1234,8 @@ void tst_qquickanimations::easingProperties()
         QString componentStr = "import QtQuick 2.0\nPropertyAnimation { easing.type: \"Bezier\"; easing.bezierCurve: [0.5, 0.2, 0.13, 0.65, 1.0, 1.0] }";
         QQmlComponent animationComponent(&engine);
         animationComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickPropertyAnimation *animObject = qobject_cast<QQuickPropertyAnimation*>(animationComponent.create());
+        QScopedPointer<QObject> obj(animationComponent.create());
+        auto *animObject = qobject_cast<QQuickPropertyAnimation *>(obj.data());
 
         QVERIFY(animObject != nullptr);
         QCOMPARE(animObject->easing().type(), QEasingCurve::BezierSpline);
@@ -1222,7 +1251,8 @@ void tst_qquickanimations::rotation()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("rotation.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
     QVERIFY(rect);
 
     QQuickRectangle *rr = rect->findChild<QQuickRectangle*>("rr");
@@ -1252,7 +1282,8 @@ void tst_qquickanimations::startStopSignals()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("signals.qml"));
-    QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *root = qobject_cast<QQuickItem *>(obj.data());
     QVERIFY(root);
 
     QCOMPARE(root->property("startedCount").toInt(), 1);    //autostart
@@ -1297,7 +1328,8 @@ void tst_qquickanimations::runningTrueBug()
     //ensure we start correctly when "running: true" is explicitly set
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("runningTrueBug.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
     QVERIFY(rect);
 
     QQuickRectangle *cloud = rect->findChild<QQuickRectangle*>("cloud");
@@ -1312,7 +1344,8 @@ void tst_qquickanimations::pathAnimationInOutBackBug()
     //ensure we don't pass bad progress value (out of [0,1]) to  QQuickPath::backwardsPointAt()
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("pathAnimationInOutBackCrash.qml"));
-    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *item = qobject_cast<QQuickItem *>(obj.data());
     QVERIFY(item);
 
     QQuickRectangle *rect = item->findChild<QQuickRectangle *>("rect");
@@ -1330,7 +1363,8 @@ void tst_qquickanimations::nonTransitionBug()
     QQmlEngine engine;
 
     QQmlComponent c(&engine, testFileUrl("nonTransitionBug.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
     QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     QQuickRectangle *mover = rect->findChild<QQuickRectangle*>("mover");
@@ -1356,7 +1390,8 @@ void tst_qquickanimations::registrationBug()
     QQmlEngine engine;
 
     QQmlComponent c(&engine, testFileUrl("registrationBug.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
     QVERIFY(rect != nullptr);
     QTRY_COMPARE(rect->property("value"), QVariant(int(100)));
 }
@@ -1366,7 +1401,8 @@ void tst_qquickanimations::doubleRegistrationBug()
     QQmlEngine engine;
 
     QQmlComponent c(&engine, testFileUrl("doubleRegistrationBug.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
     QVERIFY(rect != nullptr);
 
     QQuickAbstractAnimation *anim = rect->findChild<QQuickAbstractAnimation*>("animation");
@@ -1407,7 +1443,8 @@ void tst_qquickanimations::transitionAssignmentBug()
     QQmlEngine engine;
 
     QQmlComponent c(&engine, testFileUrl("transitionAssignmentBug.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
     QVERIFY(rect != nullptr);
 
     QCOMPARE(rect->property("nullObject").toBool(), false);
@@ -1419,12 +1456,11 @@ void tst_qquickanimations::pauseBindingBug()
     QQmlEngine engine;
 
     QQmlComponent c(&engine, testFileUrl("pauseBindingBug.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
     QVERIFY(rect != nullptr);
     QQuickAbstractAnimation *anim = rect->findChild<QQuickAbstractAnimation*>("animation");
     QCOMPARE(anim->qtAnimation()->state(), QAbstractAnimationJob::Paused);
-
-    delete rect;
 }
 
 //QTBUG-13598
@@ -1433,13 +1469,12 @@ void tst_qquickanimations::pauseBug()
     QQmlEngine engine;
 
     QQmlComponent c(&engine, testFileUrl("pauseBug.qml"));
-    QQuickAbstractAnimation *anim = qobject_cast<QQuickAbstractAnimation*>(c.create());
+    QScopedPointer<QObject> obj(c.create());
+    auto *anim = qobject_cast<QQuickAbstractAnimation*>(obj.data());
     QVERIFY(anim != nullptr);
     QCOMPARE(anim->qtAnimation()->state(), QAbstractAnimationJob::Paused);
     QCOMPARE(anim->isPaused(), true);
     QCOMPARE(anim->isRunning(), true);
-
-    delete anim;
 }
 
 //QTBUG-23092
@@ -1448,7 +1483,7 @@ void tst_qquickanimations::loopingBug()
     QQmlEngine engine;
 
     QQmlComponent c(&engine, testFileUrl("looping.qml"));
-    QObject *obj = c.create();
+    QScopedPointer<QObject> obj(c.create());
 
     QQuickAbstractAnimation *anim = obj->findChild<QQuickAbstractAnimation*>();
     QVERIFY(anim != nullptr);
@@ -1460,8 +1495,6 @@ void tst_qquickanimations::loopingBug()
     QQuickRectangle *rect = obj->findChild<QQuickRectangle*>();
     QVERIFY(rect != nullptr);
     QCOMPARE(rect->rotation(), qreal(90));
-
-    delete obj;
 }
 
 //QTBUG-24532
@@ -1482,7 +1515,7 @@ void tst_qquickanimations::scriptActionBug()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("scriptActionBug.qml"));
-    QObject *obj = c.create();
+    QScopedPointer<QObject> obj(c.create());
 
     //Both the ScriptAction and StateChangeScript should be triggered
     QCOMPARE(obj->property("actionTriggered").toBool(), true);
@@ -1496,20 +1529,16 @@ void tst_qquickanimations::groupAnimationNullChildBug()
         QQmlEngine engine;
 
         QQmlComponent c(&engine, testFileUrl("sequentialAnimationNullChildBug.qml"));
-        QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
+        QScopedPointer<QObject> root(c.create());
         QVERIFY(root);
-
-        delete root;
     }
 
     {
         QQmlEngine engine;
 
         QQmlComponent c(&engine, testFileUrl("parallelAnimationNullChildBug.qml"));
-        QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
+        QScopedPointer<QObject> root(c.create());
         QVERIFY(root);
-
-        delete root;
     }
 }
 
@@ -1518,12 +1547,10 @@ void tst_qquickanimations::scriptActionCrash()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("scriptActionCrash.qml"));
-    QObject *obj = c.create();
+    QScopedPointer<QObject> obj(c.create());
 
     //just testing that we don't crash
     QTest::qWait(1000); //5x transition duration
-
-    delete obj;
 }
 
 // QTBUG-49364
@@ -1534,12 +1561,10 @@ void tst_qquickanimations::animatorInvalidTargetCrash()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("animatorInvalidTargetCrash.qml"));
-    QObject *obj = c.create();
+    QScopedPointer<QObject> obj(c.create());
 
     //just testing that we don't crash
     QTest::qWait(5000); //animator duration
-
-    delete obj;
 }
 
 Q_DECLARE_METATYPE(QList<QQmlError>)
@@ -1555,7 +1580,8 @@ void tst_qquickanimations::defaultPropertyWarning()
     QVERIFY(warnings.isValid());
 
     QQmlComponent component(&engine, testFileUrl("defaultRotationAnimation.qml"));
-    QScopedPointer<QQuickItem> root(qobject_cast<QQuickItem*>(component.create()));
+    QScopedPointer<QObject> obj(component.create());
+    auto *root = qobject_cast<QQuickItem *>(obj.data());
     QVERIFY(root);
 
     QVERIFY(warnings.isEmpty());
@@ -1566,7 +1592,8 @@ void tst_qquickanimations::pathSvgAnimation()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("pathSvgAnimation.qml"));
-    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(component.create()));
+    QScopedPointer<QObject> obj(component.create());
+    auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
     QVERIFY(rect);
 
     QQuickRectangle *redRect = rect->findChild<QQuickRectangle*>();
@@ -1587,7 +1614,8 @@ void tst_qquickanimations::pathLineUnspecifiedXYBug()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("pathLineUnspecifiedXYBug.qml"));
-    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(component.create()));
+    QScopedPointer<QObject> obj(component.create());
+    auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
     QVERIFY(rect);
 
     QQuickRectangle *redRect = rect->findChild<QQuickRectangle*>();
@@ -1623,7 +1651,8 @@ void tst_qquickanimations::finished()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("finished.qml"));
-    QScopedPointer<QObject> root(component.create());
+    QScopedPointer<QObject> obj(component.create());
+    auto *root = qobject_cast<QQuickItem *>(obj.data());
     QVERIFY(root);
 
     // Test that finished() is emitted for a simple top-level animation.
@@ -1696,7 +1725,8 @@ void tst_qquickanimations::replacingTransitions()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("replacingTransitions.qml"));
-    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));
+    QScopedPointer<QObject> obj(c.create());
+    auto *rect = qobject_cast<QQuickRectangle*>(obj.data());
     if (!c.errors().isEmpty())
         qDebug() << c.errorString();
     QVERIFY(rect);
@@ -1732,13 +1762,14 @@ void tst_qquickanimations::animationJobSelfDestruction()
     QQmlEngine engine;
     engine.clearComponentCache();
     QQmlComponent c(&engine, testFileUrl("animationJobSelfDestructionBug.qml"));
-    QScopedPointer<QQuickWindow> win(qobject_cast<QQuickWindow*>(c.create()));
+    QScopedPointer<QObject> obj(c.create());
+    auto *win = qobject_cast<QQuickWindow *>(obj.data());
     if (!c.errors().isEmpty())
         qDebug() << c.errorString();
     QVERIFY(win);
     win->setTitle(QTest::currentTestFunction());
     win->show();
-    QVERIFY(QTest::qWaitForWindowExposed(win.data()));
+    QVERIFY(QTest::qWaitForWindowExposed(win));
     QQmlTimer *timer = win->property("timer").value<QQmlTimer*>();
     QVERIFY(timer);
     QCOMPARE(timer->isRunning(), false);
@@ -1752,13 +1783,14 @@ void tst_qquickanimations::fastFlickingBug()
     QQmlEngine engine;
     engine.clearComponentCache();
     QQmlComponent c(&engine, testFileUrl("fastFlickingBug.qml"));
-    QScopedPointer<QQuickWindow> win(qobject_cast<QQuickWindow*>(c.create()));
+    QScopedPointer<QObject> obj(c.create());
+    auto *win = qobject_cast<QQuickWindow *>(obj.data());
     if (!c.errors().isEmpty())
         qDebug() << c.errorString();
     QVERIFY(win);
     win->setTitle(QTest::currentTestFunction());
     win->show();
-    QVERIFY(QTest::qWaitForWindowExposed(win.data()));
+    QVERIFY(QTest::qWaitForWindowExposed(win));
     auto timer = win->property("timer").value<QQmlTimer*>();
     QVERIFY(timer);
     QCOMPARE(timer->isRunning(), false);

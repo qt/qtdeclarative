@@ -273,9 +273,23 @@ void QQmlMetaType::qmlInsertModuleRegistration(const QString &uri, int majorVers
     const QQmlMetaTypeData::VersionedUri versionedUri(uri, majorVersion);
     QQmlMetaTypeDataPtr data;
     if (data->moduleTypeRegistrationFunctions.contains(versionedUri))
-        qFatal("Canot add multiple registrations for %s %d", qPrintable(uri), majorVersion);
+        qFatal("Cannot add multiple registrations for %s %d", qPrintable(uri), majorVersion);
     else
         data->moduleTypeRegistrationFunctions.insert(versionedUri, registerFunction);
+}
+
+void QQmlMetaType::qmlRemoveModuleRegistration(const QString &uri, int majorVersion)
+{
+    const QQmlMetaTypeData::VersionedUri versionedUri(uri, majorVersion);
+    QQmlMetaTypeDataPtr data;
+
+    if (!data.isValid())
+        return; // shutdown/deletion race. Not a problem.
+
+    if (!data->moduleTypeRegistrationFunctions.contains(versionedUri))
+        qFatal("Cannot remove multiple registrations for %s %d", qPrintable(uri), majorVersion);
+    else
+        data->moduleTypeRegistrationFunctions.remove(versionedUri);
 }
 
 bool QQmlMetaType::qmlRegisterModuleTypes(const QString &uri, int majorVersion)

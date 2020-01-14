@@ -87,7 +87,9 @@ public:
 
     void waitForLoad()
     {
-        QTRY_VERIFY(status() == QQmlComponent::Ready || status() == QQmlComponent::Error);
+        QTRY_VERIFY_WITH_TIMEOUT(
+                    status() == QQmlComponent::Ready || status() == QQmlComponent::Error,
+                    32768);
     }
 };
 

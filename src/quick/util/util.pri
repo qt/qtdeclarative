@@ -1,6 +1,5 @@
 SOURCES += \
     $$PWD/qquickapplication.cpp\
-    $$PWD/qquickutilmodule.cpp\
     $$PWD/qquickanimation.cpp \
     $$PWD/qquicksystempalette.cpp \
     $$PWD/qquickspringanimation.cpp \
@@ -32,7 +31,6 @@ qtConfig(qml-debug): SOURCES += $$PWD/qquickprofiler.cpp
 
 HEADERS += \
     $$PWD/qquickapplication_p.h\
-    $$PWD/qquickutilmodule_p.h\
     $$PWD/qquickanimation_p.h \
     $$PWD/qquickanimation_p_p.h \
     $$PWD/qquicksystempalette_p.h \

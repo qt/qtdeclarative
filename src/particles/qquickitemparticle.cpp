@@ -136,6 +136,7 @@ QQuickItemParticle::QQuickItemParticle(QQuickItem *parent) :
 QQuickItemParticle::~QQuickItemParticle()
 {
     delete clock;
+    qDeleteAll(m_managed);
 }
 
 void QQuickItemParticle::freeze(QQuickItem* item)
@@ -159,13 +160,21 @@ void QQuickItemParticle::take(QQuickItem *item, bool prioritize)
 
 void QQuickItemParticle::give(QQuickItem *item)
 {
-    //TODO: This
-    Q_UNUSED(item);
+    for (auto groupId : groupIds()) {
+        for (QQuickParticleData* data : qAsConst(m_system->groupData[groupId]->data)) {
+            if (data->delegate == item){
+                m_deletables << item;
+                data->delegate = nullptr;
+                return;
+            }
+        }
+    }
 }
 
 void QQuickItemParticle::initialize(int gIdx, int pIdx)
 {
-    m_loadables << m_system->groupData[gIdx]->data[pIdx];//defer to other thread
+    Q_UNUSED(gIdx);
+    Q_UNUSED(pIdx);
 }
 
 void QQuickItemParticle::commit(int, int)
@@ -179,8 +188,11 @@ void QQuickItemParticle::processDeletables()
             item->setOpacity(0.);
         item->setVisible(false);
         QQuickItemParticleAttached* mpa;
-        if ((mpa = qobject_cast<QQuickItemParticleAttached*>(qmlAttachedPropertiesObject<QQuickItemParticle>(item))))
-            mpa->detach();//reparent as well?
+        if ((mpa = qobject_cast<QQuickItemParticleAttached*>(qmlAttachedPropertiesObject<QQuickItemParticle>(item)))) {
+            if (mpa->m_parentItem != nullptr)
+                item->setParentItem(mpa->m_parentItem);
+            mpa->detach();
+        }
         int idx = -1;
         if ((idx = m_managed.indexOf(item)) != -1) {
             m_managed.takeAt(idx);
@@ -195,46 +207,43 @@ void QQuickItemParticle::tick(int time)
 {
     Q_UNUSED(time);//only needed because QTickAnimationProxy expects one
     processDeletables();
-
-    foreach (QQuickParticleData* d, m_loadables){
-        Q_ASSERT(d);
-        if (m_stasis.contains(d->delegate))
-            qWarning() << "Current model particles prefers overwrite:false";
-        //remove old item from the particle that is dying to make room for this one
-        if (d->delegate) {
-            m_deletables << d->delegate;
-            d->delegate = nullptr;
-        }
-        if (!m_pendingItems.isEmpty()){
-            d->delegate = m_pendingItems.front();
-            m_pendingItems.pop_front();
-        }else if (m_delegate){
-            d->delegate = qobject_cast<QQuickItem*>(m_delegate->create(qmlContext(this)));
-            if (d->delegate)
-                m_managed << d->delegate;
-        }
-        if (d && d->delegate){//###Data can be zero if creating an item leads to a reset - this screws things up.
-            d->delegate->setX(d->curX(m_system) - d->delegate->width() / 2); //TODO: adjust for system?
-            d->delegate->setY(d->curY(m_system) - d->delegate->height() / 2);
-            QQuickItemParticleAttached* mpa = qobject_cast<QQuickItemParticleAttached*>(qmlAttachedPropertiesObject<QQuickItemParticle>(d->delegate));
-            if (mpa){
-                mpa->m_mp = this;
-                mpa->attach();
+    for (auto groupId : groupIds()) {
+        for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
+            if (!d->delegate && d->t != -1 && d->stillAlive(m_system)) {
+                QQuickItem* parentItem = nullptr;
+                if (!m_pendingItems.isEmpty()){
+                    QQuickItem *item = m_pendingItems.front();
+                    m_pendingItems.pop_front();
+                    parentItem = item->parentItem();
+                    d->delegate = item;
+                }else if (m_delegate){
+                    d->delegate = qobject_cast<QQuickItem*>(m_delegate->create(qmlContext(this)));
+                    if (d->delegate)
+                        m_managed << d->delegate;
+                }
+                if (d && d->delegate){//###Data can be zero if creating an item leads to a reset - this screws things up.
+                    d->delegate->setX(d->curX(m_system) - d->delegate->width() / 2); //TODO: adjust for system?
+                    d->delegate->setY(d->curY(m_system) - d->delegate->height() / 2);
+                    QQuickItemParticleAttached* mpa = qobject_cast<QQuickItemParticleAttached*>(qmlAttachedPropertiesObject<QQuickItemParticle>(d->delegate));
+                    if (mpa){
+                        mpa->m_parentItem = parentItem;
+                        mpa->m_mp = this;
+                        mpa->attach();
+                    }
+                    d->delegate->setParentItem(this);
+                    if (m_fade)
+                        d->delegate->setOpacity(0.);
+                    d->delegate->setVisible(false);//Will be set to true when we prepare the next frame
+                    m_activeCount++;
+                }
             }
-            d->delegate->setParentItem(this);
-            if (m_fade)
-                d->delegate->setOpacity(0.);
-            d->delegate->setVisible(false);//Will be set to true when we prepare the next frame
-            m_activeCount++;
         }
     }
-    m_loadables.clear();
 }
 
 void QQuickItemParticle::reset()
 {
     QQuickParticlePainter::reset();
-    m_loadables.clear();
 
     // delete all managed items which had their logical particles cleared
     // but leave it alone if the logical particle is maintained
@@ -244,7 +253,7 @@ void QQuickItemParticle::reset()
             lost.remove(d->delegate);
         }
     }
-    m_deletables.append(lost.values());
+    m_deletables.unite(lost);
     //TODO: This doesn't yet handle calling detach on taken particles in the system reset case
     processDeletables();
 }
@@ -253,18 +262,9 @@ void QQuickItemParticle::reset()
 QSGNode* QQuickItemParticle::updatePaintNode(QSGNode* n, UpdatePaintNodeData* d)
 {
     //Dummy update just to get painting tick
-    if (m_pleaseReset){
+    if (m_pleaseReset)
         m_pleaseReset = false;
-        //Refill loadables, delayed here so as to only happen once per frame max
-        //### Constant resetting might lead to m_loadables never being populated when tick() occurs
-        for (auto groupId : groupIds()) {
-            for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
-                if (!d->delegate && d->t != -1  && d->stillAlive(m_system)) {
-                    m_loadables << d;
-                }
-            }
-        }
-    }
+
     prepareNextFrame();
 
     update();//Get called again

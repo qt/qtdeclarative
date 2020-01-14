@@ -69,7 +69,7 @@
 
     Let's go through the most important parts of the code:
 
-    \snippet scenegraph/rendernode/main.cpp 1
+    \snippet scenegraph/rendernode/customrenderitem.h 0
 
     Our custom QML type is implemented in the class CustomRenderItem.
 

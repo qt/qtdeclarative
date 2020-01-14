@@ -567,9 +567,10 @@ void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
             QBuffer buff(&all);
             buff.open(QIODevice::ReadOnly);
             int frameCount;
-            if (!readImage(reply->url(), &buff, &image, &errorString, &readSize, &frameCount, job->requestSize, job->providerOptions, nullptr, job->data->frame))
+            int const frame = job->data ? job->data->frame : 0;
+            if (!readImage(reply->url(), &buff, &image, &errorString, &readSize, &frameCount, job->requestSize, job->providerOptions, nullptr, frame))
                 error = QQuickPixmapReply::Decoding;
-            else
+            else if (job->data)
                 job->data->frameCount = frameCount;
         }
         // send completion event to the QQuickPixmapReply
@@ -882,7 +883,8 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                     return;
                 } else {
                     int frameCount;
-                    if (!readImage(url, &f, &image, &errorStr, &readSize, &frameCount, runningJob->requestSize, runningJob->providerOptions, nullptr, runningJob->data->frame)) {
+                    int const frame = runningJob->data ? runningJob->data->frame : 0;
+                    if ( !readImage(url, &f, &image, &errorStr, &readSize, &frameCount, runningJob->requestSize, runningJob->providerOptions, nullptr, frame)) {
                         errorCode = QQuickPixmapReply::Loading;
                         if (f.fileName() != localFile)
                             errorStr += QString::fromLatin1(" (%1)").arg(f.fileName());

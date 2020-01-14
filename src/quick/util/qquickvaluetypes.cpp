@@ -50,7 +50,6 @@ namespace QQuickValueTypes {
     void registerValueTypes()
     {
         QQmlValueTypeFactory::registerValueTypes("QtQuick", 2, 0);
-        qmlRegisterValueTypeEnums<QQuickFontValueType>("QtQuick", 2, 0, "Font");
     }
 }
 

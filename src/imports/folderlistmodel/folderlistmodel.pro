@@ -11,4 +11,5 @@ HEADERS += qquickfolderlistmodel.h \
     fileproperty_p.h \
     fileinfothread_p.h
 
+CONFIG += qmltypes install_qmltypes
 load(qml_plugin)

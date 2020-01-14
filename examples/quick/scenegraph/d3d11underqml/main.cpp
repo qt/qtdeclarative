@@ -56,8 +56,6 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
-    qmlRegisterTypesAndRevisions<D3D11Squircle>("D3D11UnderQML", 1);
-
     QQuickWindow::setSceneGraphBackend(QSGRendererInterface::Direct3D11Rhi);
 
     QQuickView view;

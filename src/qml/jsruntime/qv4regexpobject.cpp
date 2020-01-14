@@ -961,8 +961,8 @@ ReturnedValue RegExpPrototype::method_compile(const FunctionObject *b, const Val
         return scope.engine->throwTypeError();
 
     Scoped<RegExpObject> re(scope, scope.engine->regExpCtor()->callAsConstructor(argv, argc));
-
-    r->d()->value.set(scope.engine, re->value());
+    if (re) // Otherwise the regexp constructor should have thrown an exception
+        r->d()->value.set(scope.engine, re->value());
     return Encode::undefined();
 }
 

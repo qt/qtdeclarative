@@ -586,7 +586,7 @@ uint ArrayData::append(Object *obj, ArrayObject *otherObj, uint n)
         obj->arrayPut(oldSize, os->values.data() + os->offset, chunk);
         toCopy -= chunk;
         if (toCopy)
-            obj->arrayPut(oldSize + chunk, os->values.data(), toCopy);
+            obj->setArrayLength(oldSize + chunk + toCopy);
     }
 
     return oldSize + n;
@@ -659,6 +659,12 @@ bool ArrayElementLessThan::operator()(Value v1, Value v2) const
     }
     ScopedString p1s(scope, v1.toString(scope.engine));
     ScopedString p2s(scope, v2.toString(scope.engine));
+
+    if (!p1s)
+        return false;
+    if (!p2s)
+        return true;
+
     return p1s->toQString() < p2s->toQString();
 }
 

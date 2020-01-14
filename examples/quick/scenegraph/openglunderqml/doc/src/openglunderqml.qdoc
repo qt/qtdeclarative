@@ -60,6 +60,7 @@
 
     First of all, we need an object we can expose to QML. This is a
     subclass of QQuickItem so we can easily access \l QQuickItem::window().
+    We expose it to QML using the QML_ELEMENT macro.
 
     \snippet scenegraph/openglunderqml/squircle.h 1
 
@@ -145,9 +146,7 @@
     \snippet scenegraph/openglunderqml/main.cpp 1
 
     The application's \c main() function instantiates a QQuickView and
-    launches the \c main.qml file. The only thing worth noting is that
-    we export the \c Squircle class to QML using the \l
-    qmlRegisterType() macro.
+    launches the \c main.qml file.
 
     \snippet scenegraph/openglunderqml/main.qml 1
 

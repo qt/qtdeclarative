@@ -386,6 +386,14 @@ properties:
  Q_DECLARE_METATYPE(Actor)
 \endcode
 
+The usual pattern is to use a gadget class as the type of a property, or to
+emit a gadget as a signal argument. In such cases, the gadget instance is
+passed by value between C++ and QML (because it's a value type). If QML code
+changes a property of a gadget property, the entire gadget is re-created and
+passed back to the C++ property setter. In Qt 5, gadget types cannot be
+instantiated by direct declaration in QML. In contrast, a QObject instance can
+be declared; and QObject instances are always passed by pointer from C++ to QML.
+
 \section1 Enumeration Types
 
 To use a custom enumeration as a data type, its class must be registered and

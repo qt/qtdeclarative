@@ -2,6 +2,10 @@
 
 QT += qml quick
 
+CONFIG += qmltypes
+QML_IMPORT_NAME = MetalUnderQML
+QML_IMPORT_MAJOR_VERSION = 1
+
 HEADERS += metalsquircle.h
 SOURCES += metalsquircle.mm main.cpp
 RESOURCES += metalunderqml.qrc

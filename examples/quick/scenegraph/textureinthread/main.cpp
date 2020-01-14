@@ -70,7 +70,6 @@ int main(int argc, char **argv)
         return app.exec();
     }
 
-    qmlRegisterTypesAndRevisions<ThreadRenderer>("SceneGraphRendering", 1);
     int execReturn = 0;
 
     {

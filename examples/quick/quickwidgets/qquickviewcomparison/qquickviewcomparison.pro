@@ -1,6 +1,10 @@
 TEMPLATE = app
 TARGET = qquickviewcomparison
 
+CONFIG += qmltypes
+QML_IMPORT_NAME = fbitem
+QML_IMPORT_MAJOR_VERSION = 1
+
 QT += quick widgets quickwidgets
 
 SOURCES += main.cpp \

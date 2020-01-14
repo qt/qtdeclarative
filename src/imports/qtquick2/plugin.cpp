@@ -57,8 +57,6 @@ public:
         Q_UNUSED(uri);
         moduleDefined = true;
         QQmlQtQuick2Module::defineModule();
-
-        qmlRegisterModule("QtQuick", 2, 15);
     }
 
     ~QtQuick2Plugin() override

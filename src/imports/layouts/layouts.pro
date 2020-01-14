@@ -19,4 +19,6 @@ HEADERS += \
     qquickgridlayoutengine_p.h \
     qquicklayoutstyleinfo_p.h
 
+CONFIG += qmltypes install_qmltypes
+
 load(qml_plugin)

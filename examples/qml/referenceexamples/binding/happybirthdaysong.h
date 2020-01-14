@@ -52,14 +52,17 @@
 
 #include <QQmlPropertyValueSource>
 #include <QQmlProperty>
+#include <qqml.h>
 
 #include <QStringList>
+#include <qqml.h>
 
 class HappyBirthdaySong : public QObject, public QQmlPropertyValueSource
 {
     Q_OBJECT
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_INTERFACES(QQmlPropertyValueSource)
+    QML_ELEMENT
 public:
     HappyBirthdaySong(QObject *parent = nullptr);
 

@@ -37,7 +37,6 @@
 **
 ****************************************************************************/
 
-#include <QtQmlWorkerScript/private/qqmlworkerscriptmodule_p.h>
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
 
@@ -59,20 +58,12 @@ QT_BEGIN_NAMESPACE
     \endqml
 */
 
-class QtQmlWorkerScriptPlugin : public QQmlExtensionPlugin
+class QtQmlWorkerScriptPlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 public:
-    QtQmlWorkerScriptPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQml.WorkerScript"));
-
-        QQmlWorkerScriptModule::defineModule();
-
-        qmlRegisterModule(uri, 2, 15);
-    }
+    QtQmlWorkerScriptPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) { }
 };
 
 QT_END_NAMESPACE

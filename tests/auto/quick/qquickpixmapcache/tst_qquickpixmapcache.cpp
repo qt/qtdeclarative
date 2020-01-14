@@ -30,6 +30,7 @@
 #include <QtQuick/private/qquickpixmapcache_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQuick/qquickimageprovider.h>
+#include <QtQml/QQmlComponent>
 #include <QNetworkReply>
 #include "../../shared/util.h"
 #include "testhttpserver.h"
@@ -62,6 +63,7 @@ private slots:
 #endif
     void lockingCrash();
     void uncached();
+    void asynchronousNoCache();
 #if PIXMAP_DATA_LEAK_TEST
     void dataLeak();
 #endif
@@ -471,6 +473,13 @@ void tst_qquickpixmapcache::uncached()
         QImage img = p.image();
         QCOMPARE(img.pixel(0,0), qRgb(0, 0, 255));
     }
+}
+
+void tst_qquickpixmapcache::asynchronousNoCache()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("asynchronousNoCache.qml"));
+    QScopedPointer<QObject> root {component.create()}; // should not crash
 }
 
 

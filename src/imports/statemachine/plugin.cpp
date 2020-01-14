@@ -50,23 +50,13 @@
 
 QT_BEGIN_NAMESPACE
 
-class QtQmlStateMachinePlugin : public QQmlExtensionPlugin
+class QtQmlStateMachinePlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 
 public:
-    QtQmlStateMachinePlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
-    void registerTypes(const char *uri) override
-    {
-        qmlRegisterTypesAndRevisions<
-                State, StateMachine, FinalState, TimeoutTransition, SignalTransition,
-                QHistoryStateForeign, QStateForeign, QAbstractStateForeign, QSignalTransitionForeign
-                >(uri, 1);
-        qmlProtectModule(uri, 1);
-
-        qmlRegisterModule(uri, 1, 15);
-    }
+    QtQmlStateMachinePlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) { }
 };
 
 QT_END_NAMESPACE

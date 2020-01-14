@@ -190,37 +190,44 @@ int main(int argc, char **argv)
     parser.addOption(privateIncludesOption);
 
     QCommandLineOption importNameOption(QStringLiteral("import-name"));
-    importNameOption.setDescription(QStringLiteral("Name of the module to use with QML type registrations."));
-    importNameOption.setValueName(QStringLiteral("QML module name"));
+    importNameOption.setDescription(QStringLiteral("Name of the module to use for type and module "
+                                                   "registrations."));
+    importNameOption.setValueName(QStringLiteral("module name"));
     parser.addOption(importNameOption);
 
     QCommandLineOption majorVersionOption(QStringLiteral("major-version"));
-    majorVersionOption.setDescription(QStringLiteral("Major version to use for type registrations."));
+    majorVersionOption.setDescription(QStringLiteral("Major version to use for type and module "
+                                                     "registrations."));
     majorVersionOption.setValueName(QStringLiteral("major version"));
     parser.addOption(majorVersionOption);
 
     QCommandLineOption minorVersionOption(QStringLiteral("minor-version"));
-    minorVersionOption.setDescription(QStringLiteral("Minor version to use for module registration."));
+    minorVersionOption.setDescription(QStringLiteral("Minor version to use for module "
+                                                     "registration."));
     minorVersionOption.setValueName(QStringLiteral("minor version"));
     parser.addOption(minorVersionOption);
 
-    QCommandLineOption pluginTypesOption(QStringLiteral("generate-plugintypes"));
-    pluginTypesOption.setDescription(QStringLiteral("Generate plugins.qmltypes into specified directory."));
-    pluginTypesOption.setValueName(QStringLiteral("qmltypes target Directory"));
+    QCommandLineOption pluginTypesOption(QStringLiteral("generate-qmltypes"));
+    pluginTypesOption.setDescription(QStringLiteral("Generate qmltypes into specified file."));
+    pluginTypesOption.setValueName(QStringLiteral("qmltypes file"));
     parser.addOption(pluginTypesOption);
 
     QCommandLineOption foreignTypesOption(QStringLiteral("foreign-types"));
-    foreignTypesOption.setDescription(QStringLiteral("Consider foreign types when generating plugins.qmltypes."));
-    foreignTypesOption.setValueName(QStringLiteral("Comma separated list of other modules to consult for types."));
+    foreignTypesOption.setDescription(QStringLiteral(
+                                          "Comma separated list of other modules' metatypes files "
+                                          "to consult for foreign types when generating "
+                                          "qmltypes file."));
+    foreignTypesOption.setValueName(QStringLiteral("foreign types"));
     parser.addOption(foreignTypesOption);
 
     QCommandLineOption dependenciesOption(QStringLiteral("dependencies"));
-    dependenciesOption.setDescription(QStringLiteral("Dependencies to be stated in plugins.qmltypes"));
-    dependenciesOption.setValueName(QStringLiteral("name of JSON file with dependencies"));
+    dependenciesOption.setDescription(QStringLiteral("JSON file with dependencies to be stated in "
+                                                     "qmltypes file."));
+    dependenciesOption.setValueName(QStringLiteral("dependencies.json"));
     parser.addOption(dependenciesOption);
 
     parser.addPositionalArgument(QStringLiteral("[MOC generated json file]"),
-                                 QStringLiteral("MOC generated json output"));
+                                 QStringLiteral("MOC generated json output."));
 
     parser.process(app);
 
@@ -248,7 +255,8 @@ int main(int argc, char **argv)
             "** WARNING! All changes made in this file will be lost!\n"
             "*****************************************************************************/\n\n");
     fprintf(output,
-            "#include <QtQml/qqmlengine.h>\n");
+            "#include <QtQml/qqml.h>\n"
+            "#include <QtQml/qqmlmoduleregistration.h>\n");
 
     QStringList includes;
     QVector<QJsonObject> types;
@@ -325,7 +333,10 @@ int main(int argc, char **argv)
 
     sortTypes(types);
 
-    fprintf(output, "\n#include <QtQml/qqmlmoduleregistration.h>");
+    std::sort(includes.begin(), includes.end());
+    const auto newEnd = std::unique(includes.begin(), includes.end());
+    includes.erase(newEnd, includes.end());
+
     const bool privateIncludes = parser.isSet(privateIncludesOption);
     for (const QString &include : qAsConst(includes)) {
         if (privateIncludes && include.endsWith(QLatin1String("_p.h")))

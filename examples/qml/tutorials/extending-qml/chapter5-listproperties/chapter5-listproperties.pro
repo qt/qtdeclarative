@@ -1,5 +1,9 @@
 QT += qml quick
 
+CONFIG += qmltypes
+QML_IMPORT_NAME = Charts
+QML_IMPORT_MAJOR_VERSION = 1
+
 HEADERS += piechart.h \
            pieslice.h
 SOURCES += piechart.cpp \

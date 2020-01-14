@@ -101,18 +101,12 @@
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickSharedImagePlugin : public QQmlExtensionPlugin
+class QtQuickSharedImagePlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 public:
-    QtQuickSharedImagePlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) {}
-
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(uri == QStringLiteral("Qt.labs.sharedimage"));
-        qmlRegisterModule(uri, 1, 0);
-    }
+    QtQuickSharedImagePlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) {}
 
     void initializeEngine(QQmlEngine *engine, const char *uri) override
     {

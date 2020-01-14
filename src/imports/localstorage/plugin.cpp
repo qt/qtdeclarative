@@ -44,21 +44,14 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlLocalStoragePlugin : public QQmlExtensionPlugin
+class QQmlLocalStoragePlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 
 public:
-    QQmlLocalStoragePlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent)
+    QQmlLocalStoragePlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
     {
-    }
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.LocalStorage"));
-        qmlRegisterTypesAndRevisions<QQuickLocalStorage>(uri, 2);
-
-        qmlRegisterModule(uri, 2, 15);
     }
 };
 
