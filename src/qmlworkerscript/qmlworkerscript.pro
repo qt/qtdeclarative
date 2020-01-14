@@ -20,7 +20,7 @@ include(../3rdparty/masm/masm-defs.pri)
 QMLTYPES_FILENAME = plugins.qmltypes
 QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/QtQml/WorkerScript.2
 QML_IMPORT_NAME = QtQml.WorkerScript
-IMPORT_VERSION = 2.$$QT_MINOR_VERSION
+IMPORT_VERSION = 2.15
 CONFIG += qmltypes install_qmltypes install_metatypes
 
 load(qt_module)

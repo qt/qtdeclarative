@@ -1,7 +1,7 @@
 TARGETPATH = QtQml
 CXX_MODULE = qml
 TARGET  = qmlplugin
-IMPORT_VERSION = 2.$$QT_MINOR_VERSION
+IMPORT_VERSION = 2.15
 
 SOURCES += \
     plugin.cpp
