@@ -231,6 +231,7 @@ public:
     QQmlPropertyCache *rawPropertyCacheForType(int, int minorVersion = -1);
     void registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
     void unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
+    QV4::ExecutableCompilationUnit *obtainExecutableCompilationUnit(int typeId);
 
     bool isTypeLoaded(const QUrl &url) const;
     bool isScriptLoaded(const QUrl &url) const;

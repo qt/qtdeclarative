@@ -1,3 +1,4 @@
 singleton SingletonType SingletonType.qml
+singleton SingletonTypeWithIC SingletonTypeWithIC.qml
 
 

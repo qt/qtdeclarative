@@ -275,6 +275,11 @@ struct Binding : public QV4::CompiledData::Binding
     Binding *next;
 };
 
+struct InlineComponent : public QV4::CompiledData::InlineComponent
+{
+    InlineComponent *next;
+};
+
 struct Alias : public QV4::CompiledData::Alias
 {
     Alias *next;
@@ -316,6 +321,7 @@ public:
     int id;
     int indexOfDefaultPropertyOrAlias;
     bool defaultPropertyIsAlias;
+    bool isInlineComponent = false;
     quint32 flags;
 
     QV4::CompiledData::Location location;
@@ -333,6 +339,8 @@ public:
     int bindingCount() const { return bindings->count; }
     const Function *firstFunction() const { return functions->first; }
     int functionCount() const { return functions->count; }
+    const InlineComponent *inlineComponent() const { return inlineComponents->first; }
+    int inlineComponentCount() const { return inlineComponents->count; }
 
     PoolList<Binding>::Iterator bindingsBegin() const { return bindings->begin(); }
     PoolList<Binding>::Iterator bindingsEnd() const { return bindings->end(); }
@@ -346,6 +354,8 @@ public:
     PoolList<Signal>::Iterator signalsEnd() const { return qmlSignals->end(); }
     PoolList<Function>::Iterator functionsBegin() const { return functions->begin(); }
     PoolList<Function>::Iterator functionsEnd() const { return functions->end(); }
+    PoolList<InlineComponent>::Iterator inlineComponentsBegin() const { return inlineComponents->begin(); }
+    PoolList<InlineComponent>::Iterator inlineComponentsEnd() const { return inlineComponents->end(); }
 
     // If set, then declarations for this object (and init bindings for these) should go into the
     // specified object. Used for declarations inside group properties.
@@ -358,6 +368,7 @@ public:
     QString appendProperty(Property *prop, const QString &propertyName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation);
     QString appendAlias(Alias *prop, const QString &aliasName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation);
     void appendFunction(QmlIR::Function *f);
+    void appendInlineComponent(InlineComponent *ic);
 
     QString appendBinding(Binding *b, bool isListBinding);
     Binding *findBinding(quint32 nameIndex) const;
@@ -381,6 +392,7 @@ private:
     PoolList<Signal> *qmlSignals;
     PoolList<Binding> *bindings;
     PoolList<Function> *functions;
+    PoolList<InlineComponent> *inlineComponents;
 };
 
 struct Q_QMLCOMPILER_PRIVATE_EXPORT Pragma
@@ -409,6 +421,9 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT Document
 
     int registerString(const QString &str) { return jsGenerator.registerString(str); }
     QString stringAt(int index) const { return jsGenerator.stringForIndex(index); }
+
+    int objectCount() const {return objects.size();}
+    Object* objectAt(int i) const {return objects.at(i);}
 };
 
 class Q_QMLCOMPILER_PRIVATE_EXPORT ScriptDirectivesCollector : public QQmlJS::Directives
@@ -449,6 +464,7 @@ public:
     bool visit(QQmlJS::AST::UiArrayBinding *ast) override;
     bool visit(QQmlJS::AST::UiObjectBinding *ast) override;
     bool visit(QQmlJS::AST::UiObjectDefinition *ast) override;
+    bool visit(QQmlJS::AST::UiInlineComponent *ast) override;
     bool visit(QQmlJS::AST::UiEnumDeclaration *ast) override;
     bool visit(QQmlJS::AST::UiPublicMember *ast) override;
     bool visit(QQmlJS::AST::UiScriptBinding *ast) override;
@@ -527,6 +543,8 @@ public:
     QQmlJS::MemoryPool *pool;
     QString sourceCode;
     QV4::Compiler::JSUnitGenerator *jsGenerator;
+
+    bool insideInlineComponent = false;
 };
 
 struct Q_QMLCOMPILER_PRIVATE_EXPORT QmlUnitGenerator

@@ -169,6 +169,7 @@ class UiImport;
 class UiPublicMember;
 class UiParameterList;
 class UiObjectDefinition;
+class UiInlineComponent;
 class UiObjectInitializer;
 class UiObjectBinding;
 class UiScriptBinding;

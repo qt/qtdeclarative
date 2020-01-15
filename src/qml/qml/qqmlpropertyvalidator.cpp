@@ -100,6 +100,9 @@ QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::validateObject(
         int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty) const
 {
     const QV4::CompiledData::Object *obj = compilationUnit->objectAt(objectIndex);
+    for (auto it = obj->inlineComponentsBegin(); it != obj->inlineComponentsEnd(); ++it) {
+        validateObject(it->objectIndex, /* instantiatingBinding*/ nullptr);
+    }
 
     if (obj->flags & QV4::CompiledData::Object::IsComponent) {
         Q_ASSERT(obj->nBindings == 1);

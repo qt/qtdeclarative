@@ -161,6 +161,7 @@ void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, cons
     bindings = pool->New<PoolList<Binding> >();
     functions = pool->New<PoolList<Function> >();
     functionsAndExpressions = pool->New<PoolList<CompiledFunctionOrExpression> >();
+    inlineComponents = pool->New<PoolList<InlineComponent>>();
     declarationsOverride = nullptr;
 }
 
@@ -279,6 +280,11 @@ void Object::appendFunction(QmlIR::Function *f)
     if (!target)
         target = this;
     target->functions->append(f);
+}
+
+void Object::appendInlineComponent(InlineComponent *ic)
+{
+    inlineComponents->append(ic);
 }
 
 QString Object::appendBinding(Binding *b, bool isListBinding)
@@ -503,6 +509,33 @@ bool IRBuilder::visit(QQmlJS::AST::UiObjectDefinition *node)
     return false;
 }
 
+bool IRBuilder::visit(QQmlJS::AST::UiInlineComponent *ast)
+{
+    int idx = -1;
+    if (insideInlineComponent) {
+        recordError(ast->firstSourceLocation(), QLatin1String("Nested inline components are not supported"));
+        return false;
+    }
+    {
+        QScopedValueRollback<bool> rollBack {insideInlineComponent, true};
+        if (!defineQMLObject(&idx, ast->component))
+            return false;
+    }
+    Q_ASSERT(idx > 0);
+    Object* definedObject = _objects.at(idx);
+    definedObject->flags |= QV4::CompiledData::Object::IsInlineComponentRoot;
+    definedObject->flags |= QV4::CompiledData::Object::InPartOfInlineComponent;
+    definedObject->isInlineComponent = true;
+    auto inlineComponent = New<InlineComponent>();
+    inlineComponent->nameIndex = registerString(ast->name.toString());
+    inlineComponent->objectIndex = idx;
+    auto location = ast->firstSourceLocation();
+    inlineComponent->location.line = location.startLine;
+    inlineComponent->location.column = location.startColumn;
+    _object->appendInlineComponent(inlineComponent);
+    return false;
+}
+
 bool IRBuilder::visit(QQmlJS::AST::UiObjectBinding *node)
 {
     int idx = 0;
@@ -597,12 +630,16 @@ bool IRBuilder::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qu
     }
 
     Object *obj = New<Object>();
+
     _objects.append(obj);
     *objectIndex = _objects.size() - 1;
     qSwap(_object, obj);
 
     _object->init(pool, registerString(asString(qualifiedTypeNameId)), emptyStringIndex, location);
     _object->declarationsOverride = declarationsOverride;
+    if (insideInlineComponent) {
+        _object->flags |= QV4::CompiledData::Object::InPartOfInlineComponent;
+    }
 
     // A new object is also a boundary for property declarations.
     Property *declaration = nullptr;
@@ -1553,7 +1590,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
     uint nextOffset = objectOffset + objectOffsetTableSize;
     for (Object *o : qAsConst(output.objects)) {
         objectOffsets.insert(o, nextOffset);
-        nextOffset += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.size());
+        nextOffset += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.size(), o->inlineComponentCount());
 
         int signalTableSize = 0;
         for (const Signal *s = o->firstSignal(); s; s = s->next)
@@ -1632,6 +1669,10 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         objectToWrite->offsetToNamedObjectsInComponent = nextOffset;
         nextOffset += objectToWrite->nNamedObjectsInComponent * sizeof(quint32);
 
+        objectToWrite->nInlineComponents = o->inlineComponentCount();
+        objectToWrite->offsetToInlineComponents = nextOffset;
+        nextOffset += objectToWrite->nInlineComponents * sizeof (QV4::CompiledData::InlineComponent);
+
         quint32_le *functionsTable = reinterpret_cast<quint32_le *>(objectPtr + objectToWrite->offsetToFunctions);
         for (const Function *f = o->firstFunction(); f; f = f->next)
             *functionsTable++ = o->runtimeFunctionIndices.at(f->index);
@@ -1702,6 +1743,14 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         quint32_le *namedObjectInComponentPtr = reinterpret_cast<quint32_le *>(objectPtr + objectToWrite->offsetToNamedObjectsInComponent);
         for (int i = 0; i < o->namedObjectsInComponent.size(); ++i) {
             *namedObjectInComponentPtr++ = o->namedObjectsInComponent.at(i);
+        }
+
+        char *inlineComponentPtr = objectPtr + objectToWrite->offsetToInlineComponents;
+        for (auto it = o->inlineComponentsBegin(); it != o->inlineComponentsEnd(); ++it) {
+            const InlineComponent *ic = it.ptr;
+            QV4::CompiledData::InlineComponent *icToWrite = reinterpret_cast<QV4::CompiledData::InlineComponent*>(inlineComponentPtr);
+            *icToWrite = *ic;
+            inlineComponentPtr += sizeof(QV4::CompiledData::InlineComponent);
         }
     }
 
@@ -1850,12 +1899,14 @@ bool JSCodeGen::generateCodeForComponents(const QVector<quint32> &componentRoots
 bool JSCodeGen::compileComponent(int contextObject)
 {
     const QmlIR::Object *obj = document->objects.at(contextObject);
-    if (obj->flags & QV4::CompiledData::Object::IsComponent) {
+    if (obj->flags & QV4::CompiledData::Object::IsComponent && !obj->isInlineComponent) {
         Q_ASSERT(obj->bindingCount() == 1);
         const QV4::CompiledData::Binding *componentBinding = obj->firstBinding();
         Q_ASSERT(componentBinding->type == QV4::CompiledData::Binding::Type_Object);
         contextObject = componentBinding->value.objectIndex;
     }
+    for (auto it = obj->inlineComponentsBegin(); it != obj->inlineComponentsEnd(); ++it)
+        compileComponent(it->objectIndex);
 
     return compileJavaScriptCodeInObjectsRecursively(contextObject, contextObject);
 }
@@ -1863,7 +1914,7 @@ bool JSCodeGen::compileComponent(int contextObject)
 bool JSCodeGen::compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex)
 {
     QmlIR::Object *object = document->objects.at(objectIndex);
-    if (object->flags & QV4::CompiledData::Object::IsComponent)
+    if (object->flags & QV4::CompiledData::Object::IsComponent && !object->isInlineComponent)
         return true;
 
     if (object->functionsAndExpressions->count > 0) {

@@ -86,6 +86,8 @@ private:
     friend class QQmlTypeLoader;
 
     QQmlTypeData(const QUrl &, QQmlTypeLoader *);
+    template<typename Container>
+    void setCompileUnit(const Container &container);
 
 public:
     ~QQmlTypeData() override;
@@ -93,6 +95,7 @@ public:
     const QList<ScriptReference> &resolvedScripts() const;
 
     QV4::ExecutableCompilationUnit *compilationUnit() const;
+    QV4::ExecutableCompilationUnit *compilationUnitForInlineComponent(unsigned int icObjectId) const;
 
     // Used by QQmlComponent to get notifications
     struct TypeDataCallback {
@@ -103,7 +106,7 @@ public:
     void registerCallback(TypeDataCallback *);
     void unregisterCallback(TypeDataCallback *);
 
-    QQmlMetaType::CompositeMetaTypeIds typeIds() const;
+    CompositeMetaTypeIds typeIds(int objectId = 0) const;
     QByteArray typeClassName() const { return m_typeClassName; }
 
 protected:
@@ -155,10 +158,15 @@ private:
     bool m_typesResolved:1;
 
     // Used for self-referencing types, otherwise -1.
-    QQmlMetaType::CompositeMetaTypeIds m_typeIds;
+    CompositeMetaTypeIds m_typeIds;
     QByteArray m_typeClassName; // used for meta-object later
 
-    QQmlRefPointer<QV4::ExecutableCompilationUnit> m_compiledData;
+    using ExecutableCompilationUnitPtr = QQmlRefPointer<QV4::ExecutableCompilationUnit>;
+
+    QHash<int, InlineComponentData> m_inlineComponentData;
+
+    ExecutableCompilationUnitPtr m_compiledData;
+    QHash<int, ExecutableCompilationUnitPtr> m_inlineComponentToCompiledData;
 
     QList<TypeDataCallback *> m_callbacks;
 
