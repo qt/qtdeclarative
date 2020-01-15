@@ -3340,7 +3340,6 @@ Module {
         Property { name: "minimumPointCount"; type: "int" }
         Property { name: "maximumPointCount"; type: "int" }
         Property { name: "centroid"; type: "QQuickHandlerPoint"; isReadonly: true }
-        Signal { name: "marginChanged" }
     }
     Component {
         name: "QQuickMultiPointTouchArea"

@@ -1505,7 +1505,7 @@ QQuickItemViewPrivate::QQuickItemViewPrivate()
     , inLayout(false), inViewportMoved(false), forceLayout(false), currentIndexCleared(false)
     , haveHighlightRange(false), autoHighlight(true), highlightRangeStartValid(false), highlightRangeEndValid(false)
     , fillCacheBuffer(false), inRequest(false)
-    , runDelayedRemoveTransition(false), delegateValidated(false)
+    , runDelayedRemoveTransition(false), delegateValidated(false), isClearing(false)
 {
     bufferPause.addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
     bufferPause.setLoopCount(1);
@@ -1681,6 +1681,10 @@ void QQuickItemViewPrivate::updateCurrent(int modelIndex)
 void QQuickItemViewPrivate::clear(bool onDestruction)
 {
     Q_Q(QQuickItemView);
+
+    isClearing = true;
+    auto cleanup = qScopeGuard([this] { isClearing = false; });
+
     currentChanges.reset();
     bufferedChanges.reset();
     timeline.clear();
@@ -1908,21 +1912,25 @@ void QQuickItemViewPrivate::layout()
 
         prepareVisibleItemTransitions();
 
-        for (auto it = releasePendingTransition.begin(); it != releasePendingTransition.end(); ) {
-            auto old_count = releasePendingTransition.count();
-            auto success = prepareNonVisibleItemTransition(*it, viewBounds);
-            // prepareNonVisibleItemTransition() may invalidate iterators while in fast flicking
-            // invisible animating items are kicked in or out the viewPort
-            // use old_count to test if the abrupt erasure occurs
-            if (old_count > releasePendingTransition.count()) {
+        // We cannot use iterators here as erasing from a container invalidates them.
+        for (int i = 0, count = releasePendingTransition.count(); i < count;) {
+            auto success = prepareNonVisibleItemTransition(releasePendingTransition[i], viewBounds);
+            // prepareNonVisibleItemTransition() may remove items while in fast flicking.
+            // Invisible animating items are kicked in or out the viewPort.
+            // Recheck count to test if the item got removed. In that case the same index points
+            // to a different item now.
+            const int old_count = count;
+            count = releasePendingTransition.count();
+            if (old_count > count)
                 continue;
-            }
+
             if (!success) {
-                releaseItem(*it);
-                it = releasePendingTransition.erase(it);
-                continue;
+                releaseItem(releasePendingTransition[i]);
+                releasePendingTransition.remove(i);
+                --count;
+            } else {
+                ++i;
             }
-            ++it;
         }
 
         for (int i=0; i<visibleItems.count(); i++)
@@ -2399,7 +2407,7 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item)
     QQmlInstanceModel::ReleaseFlags flags = {};
     if (model && item->item) {
         flags = model->release(item->item);
-        if (!flags) {
+        if (!flags && !isClearing) {
             // item was not destroyed, and we no longer reference it.
             if (item->item->parentItem() == contentItem) {
                 // Only cull the item if its parent item is still our contentItem.
