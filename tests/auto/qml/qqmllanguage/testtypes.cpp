@@ -121,6 +121,7 @@ void registerTypes()
 
     qmlRegisterTypesAndRevisions<Extended, Foreign, ForeignExtended>("Test", 1);
     qmlRegisterTypesAndRevisions<BareSingleton>("Test", 1);
+    qmlRegisterTypesAndRevisions<UncreatableSingleton>("Test", 1);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)
@@ -212,4 +213,10 @@ bool MyQmlObject::event(QEvent *event)
     if (event->type() == QEvent::ChildAdded)
         m_childAddedEventCount++;
     return QObject::event(event);
+}
+
+UncreatableSingleton *UncreatableSingleton::instance()
+{
+    static UncreatableSingleton instance;
+    return &instance;
 }

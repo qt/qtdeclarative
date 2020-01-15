@@ -1468,6 +1468,19 @@ public:
     }
 };
 
+class UncreatableSingleton : public QObject
+{
+    Q_OBJECT
+    QML_SINGLETON
+    QML_ELEMENT
+
+public:
+    static UncreatableSingleton *instance();
+
+private:
+    UncreatableSingleton() { setObjectName("uncreatable"); }
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H
