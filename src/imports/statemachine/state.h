@@ -69,7 +69,7 @@ Q_SIGNALS:
     void childrenChanged();
 
 private:
-    ChildrenPrivate<State> m_children;
+    ChildrenPrivate<State, ChildrenMode::StateOrTransition> m_children;
 };
 
 QT_END_NAMESPACE

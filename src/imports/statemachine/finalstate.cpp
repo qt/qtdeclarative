@@ -50,7 +50,9 @@ FinalState::FinalState(QState *parent)
 
 QQmlListProperty<QObject> FinalState::children()
 {
-    return QQmlListProperty<QObject>(this, &m_children, m_children.appendNoTransition, m_children.count, m_children.at, m_children.clear);
+    return QQmlListProperty<QObject>(this, &m_children,
+                                     m_children.append, m_children.count, m_children.at,
+                                     m_children.clear, m_children.replace, m_children.removeLast);
 }
 
 /*!

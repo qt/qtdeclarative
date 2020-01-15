@@ -66,7 +66,7 @@ Q_SIGNALS:
     void childrenChanged();
 
 private:
-    ChildrenPrivate<FinalState> m_children;
+    ChildrenPrivate<FinalState, ChildrenMode::State> m_children;
 };
 
 QT_END_NAMESPACE
