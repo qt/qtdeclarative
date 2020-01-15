@@ -24,7 +24,8 @@ OTHER_FILES += content/main.qml \
                content/item13.qml \
                content/item14.qml \
                content/item15.qml \
-               content/item17.qml
+               content/item17.qml \
+               content/item18.qml
 
 target.path = $$[QT_INSTALL_EXAMPLES]/quick/shapes
 INSTALLS += target
