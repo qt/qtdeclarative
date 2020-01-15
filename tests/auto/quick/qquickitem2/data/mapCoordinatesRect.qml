@@ -45,8 +45,18 @@ Item {
         return Qt.rect(pos.x, pos.y, pos.width, pos.height)
     }
 
+    function mapAToBRect(x, y, w, h) {
+        var pos = itemA.mapToItem(itemB, Qt.rect(x, y, w, h))
+        return Qt.rect(pos.x, pos.y, pos.width, pos.height)
+    }
+
     function mapAFromB(x, y, w, h) {
         var pos = itemA.mapFromItem(itemB, x, y, w, h)
+        return Qt.rect(pos.x, pos.y, pos.width, pos.height)
+    }
+
+    function mapAFromBRect(x, y, w, h) {
+        var pos = itemA.mapFromItem(itemB, Qt.rect(x, y, w, h))
         return Qt.rect(pos.x, pos.y, pos.width, pos.height)
     }
 

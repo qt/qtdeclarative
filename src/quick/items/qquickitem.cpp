@@ -74,6 +74,7 @@
 #include <private/qv4object_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qdebug_p.h>
+#include <private/qqmlvaluetypewrapper_p.h>
 
 #if QT_CONFIG(cursor)
 # include <QtGui/qcursor.h>
@@ -4475,9 +4476,94 @@ void QQuickItem::polish()
     }
 }
 
+static bool unwrapMapFromToFromItemArgs(QQmlV4Function *args, const QQuickItem *itemForWarning, const QString &functionNameForWarning,
+                                        QQuickItem **itemObj, qreal *x, qreal *y, qreal *w, qreal *h, bool *isRect)
+{
+    QV4::ExecutionEngine *v4 = args->v4engine();
+    if (args->length() != 2 && args->length() != 3 && args->length() != 5) {
+        v4->throwTypeError();
+        return false;
+    }
+
+    QV4::Scope scope(v4);
+    QV4::ScopedValue item(scope, (*args)[0]);
+
+    *itemObj = nullptr;
+    if (!item->isNull()) {
+        QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, item->as<QV4::QObjectWrapper>());
+        if (qobjectWrapper)
+            *itemObj = qobject_cast<QQuickItem*>(qobjectWrapper->object());
+    }
+
+    if (!(*itemObj) && !item->isNull()) {
+        qmlWarning(itemForWarning) << functionNameForWarning << " given argument \"" << item->toQStringNoThrow()
+                                   << "\" which is neither null nor an Item";
+        v4->throwTypeError();
+        return false;
+    }
+
+    *isRect = false;
+
+    if (args->length() == 2) {
+        QV4::ScopedValue sv(scope, (*args)[1]);
+        if (sv->isNull()) {
+            qmlWarning(itemForWarning) << functionNameForWarning << "given argument \"" << sv->toQStringNoThrow()
+                                       << "\" which is neither a point nor a rect";
+            v4->throwTypeError();
+            return false;
+        }
+        const QV4::Scoped<QV4::QQmlValueTypeWrapper> variantWrapper(scope, sv->as<QV4::QQmlValueTypeWrapper>());
+        const QVariant v = variantWrapper ? variantWrapper->toVariant() : QVariant();
+        if (v.canConvert<QPointF>()) {
+            const QPointF p = v.toPointF();
+            *x = p.x();
+            *y = p.y();
+        } else if (v.canConvert<QRectF>()) {
+            const QRectF r = v.toRectF();
+            *x = r.x();
+            *y = r.y();
+            *w = r.width();
+            *h = r.height();
+            *isRect = true;
+        } else {
+            qmlWarning(itemForWarning) << functionNameForWarning << "given argument \"" << sv->toQStringNoThrow()
+                                       << "\" which is neither a point nor a rect";
+            v4->throwTypeError();
+            return false;
+        }
+    } else {
+        QV4::ScopedValue vx(scope, (*args)[1]);
+        QV4::ScopedValue vy(scope, (*args)[2]);
+
+        if (!vx->isNumber() || !vy->isNumber()) {
+            v4->throwTypeError();
+            return false;
+        }
+
+        *x = vx->asDouble();
+        *y = vy->asDouble();
+
+        if (args->length() > 3) {
+            QV4::ScopedValue vw(scope, (*args)[3]);
+            QV4::ScopedValue vh(scope, (*args)[4]);
+            if (!vw->isNumber() || !vh->isNumber()) {
+                v4->throwTypeError();
+                return false;
+            }
+            *w = vw->asDouble();
+            *h = vh->asDouble();
+            *isRect = true;
+        }
+    }
+
+    return true;
+}
+
 /*!
     \qmlmethod object QtQuick::Item::mapFromItem(Item item, real x, real y)
+    \qmlmethod object QtQuick::Item::mapFromItem(Item item, point p)
     \qmlmethod object QtQuick::Item::mapFromItem(Item item, real x, real y, real width, real height)
+    \qmlmethod object QtQuick::Item::mapFromItem(Item item, rect r)
 
     Maps the point (\a x, \a y) or rect (\a x, \a y, \a width, \a height), which is in \a
     item's coordinate system, to this item's coordinate system, and returns a \l point or \l rect
@@ -4487,6 +4573,8 @@ void QQuickItem::polish()
 
     If \a item is a \c null value, this maps the point or rect from the coordinate system of
     the root QML view.
+
+    The versions accepting point and rect are since Qt 5.15.
 */
 /*!
     \internal
@@ -4494,55 +4582,16 @@ void QQuickItem::polish()
 void QQuickItem::mapFromItem(QQmlV4Function *args) const
 {
     QV4::ExecutionEngine *v4 = args->v4engine();
-    if (args->length() != 3 && args->length() != 5) {
-        v4->throwTypeError();
-        return;
-    }
-
     QV4::Scope scope(v4);
-    QV4::ScopedValue item(scope, (*args)[0]);
 
-    QQuickItem *itemObj = nullptr;
-    if (!item->isNull()) {
-        QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, item->as<QV4::QObjectWrapper>());
-        if (qobjectWrapper)
-            itemObj = qobject_cast<QQuickItem*>(qobjectWrapper->object());
-    }
-
-    if (!itemObj && !item->isNull()) {
-        qmlWarning(this) << "mapFromItem() given argument \"" << item->toQStringNoThrow()
-                      << "\" which is neither null nor an Item";
-        v4->throwTypeError();
+    qreal x, y, w, h;
+    bool isRect;
+    QQuickItem *itemObj;
+    if (!unwrapMapFromToFromItemArgs(args, this, QStringLiteral("mapFromItem()"), &itemObj, &x, &y, &w, &h, &isRect))
         return;
-    }
 
-    QV4::ScopedValue vx(scope, (*args)[1]);
-    QV4::ScopedValue vy(scope, (*args)[2]);
-
-    if (!vx->isNumber() || !vy->isNumber()) {
-        v4->throwTypeError();
-        return;
-    }
-
-    qreal x = vx->asDouble();
-    qreal y = vy->asDouble();
-
-    QVariant result;
-
-    if (args->length() > 3) {
-        QV4::ScopedValue vw(scope, (*args)[3]);
-        QV4::ScopedValue vh(scope, (*args)[4]);
-        if (!vw->isNumber() || !vh->isNumber()) {
-            v4->throwTypeError();
-            return;
-        }
-        qreal w = vw->asDouble();
-        qreal h = vh->asDouble();
-
-        result = mapRectFromItem(itemObj, QRectF(x, y, w, h));
-    } else {
-        result = mapFromItem(itemObj, QPointF(x, y));
-    }
+    const QVariant result = isRect ? QVariant(mapRectFromItem(itemObj, QRectF(x, y, w, h)))
+                                   : QVariant(mapFromItem(itemObj, QPointF(x, y)));
 
     QV4::ScopedObject rv(scope, v4->fromVariant(result));
     args->setReturnValue(rv.asReturnedValue());
@@ -4567,7 +4616,9 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
 
 /*!
     \qmlmethod object QtQuick::Item::mapToItem(Item item, real x, real y)
+    \qmlmethod object QtQuick::Item::mapToItem(Item item, point p)
     \qmlmethod object QtQuick::Item::mapToItem(Item item, real x, real y, real width, real height)
+    \qmlmethod object QtQuick::Item::mapToItem(Item item, rect r)
 
     Maps the point (\a x, \a y) or rect (\a x, \a y, \a width, \a height), which is in this
     item's coordinate system, to \a item's coordinate system, and returns a \l point or \l rect
@@ -4577,6 +4628,8 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
 
     If \a item is a \c null value, this maps the point or rect to the coordinate system of the
     root QML view.
+
+    The versions accepting point and rect are since Qt 5.15.
 */
 /*!
     \internal
@@ -4584,55 +4637,16 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
 void QQuickItem::mapToItem(QQmlV4Function *args) const
 {
     QV4::ExecutionEngine *v4 = args->v4engine();
-    if (args->length() != 3 && args->length() != 5) {
-        v4->throwTypeError();
-        return;
-    }
-
     QV4::Scope scope(v4);
-    QV4::ScopedValue item(scope, (*args)[0]);
 
-    QQuickItem *itemObj = nullptr;
-    if (!item->isNull()) {
-        QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, item->as<QV4::QObjectWrapper>());
-        if (qobjectWrapper)
-            itemObj = qobject_cast<QQuickItem*>(qobjectWrapper->object());
-    }
-
-    if (!itemObj && !item->isNull()) {
-        qmlWarning(this) << "mapToItem() given argument \"" << item->toQStringNoThrow()
-                      << "\" which is neither null nor an Item";
-        v4->throwTypeError();
+    qreal x, y, w, h;
+    bool isRect;
+    QQuickItem *itemObj;
+    if (!unwrapMapFromToFromItemArgs(args, this, QStringLiteral("mapToItem()"), &itemObj, &x, &y, &w, &h, &isRect))
         return;
-    }
 
-    QV4::ScopedValue vx(scope, (*args)[1]);
-    QV4::ScopedValue vy(scope, (*args)[2]);
-
-    if (!vx->isNumber() || !vy->isNumber()) {
-        v4->throwTypeError();
-        return;
-    }
-
-    qreal x = vx->asDouble();
-    qreal y = vy->asDouble();
-
-    QVariant result;
-
-    if (args->length() > 3) {
-        QV4::ScopedValue vw(scope, (*args)[3]);
-        QV4::ScopedValue vh(scope, (*args)[4]);
-        if (!vw->isNumber() || !vh->isNumber()) {
-            v4->throwTypeError();
-            return;
-        }
-        qreal w = vw->asDouble();
-        qreal h = vh->asDouble();
-
-        result = mapRectToItem(itemObj, QRectF(x, y, w, h));
-    } else {
-        result = mapToItem(itemObj, QPointF(x, y));
-    }
+    const QVariant result = isRect ? QVariant(mapRectToItem(itemObj, QRectF(x, y, w, h)))
+                                   : QVariant(mapToItem(itemObj, QPointF(x, y)));
 
     QV4::ScopedObject rv(scope, v4->fromVariant(result));
     args->setReturnValue(rv.asReturnedValue());

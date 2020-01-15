@@ -49,8 +49,18 @@ Item {
         return Qt.point(pos.x, pos.y)
     }
 
+    function mapAToBPoint(x, y) {
+        var pos = itemA.mapToItem(itemB, Qt.point(x, y))
+        return Qt.point(pos.x, pos.y)
+    }
+
     function mapAFromB(x, y) {
         var pos = itemA.mapFromItem(itemB, x, y)
+        return Qt.point(pos.x, pos.y)
+    }
+
+    function mapAFromBPoint(x, y) {
+        var pos = itemA.mapFromItem(itemB, Qt.point(x, y))
         return Qt.point(pos.x, pos.y)
     }
 
