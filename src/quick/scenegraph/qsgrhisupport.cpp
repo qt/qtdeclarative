@@ -39,7 +39,8 @@
 
 #include "qsgrhisupport_p.h"
 #include "qsgdefaultrendercontext_p.h"
-#include <QtGui/qwindow.h>
+#include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickwindow_p.h>
 
 #if QT_CONFIG(vulkan)
 #include <QtGui/qvulkaninstance.h>
@@ -88,7 +89,7 @@ QVulkanInstance *QSGRhiSupport::vulkanInstance()
 #endif
 }
 
-void QSGRhiSupport::cleanup()
+void QSGRhiSupport::cleanupVulkanInstance()
 {
 #if QT_CONFIG(vulkan)
     delete s_vulkanInstance;
@@ -97,7 +98,7 @@ void QSGRhiSupport::cleanup()
 }
 
 QSGRhiSupport::QSGRhiSupport()
-    : m_set(false),
+    : m_settingsApplied(false),
       m_enableRhi(false),
       m_debugLayer(false),
       m_profile(false),
@@ -108,7 +109,7 @@ QSGRhiSupport::QSGRhiSupport()
 
 void QSGRhiSupport::applySettings()
 {
-    m_set = true;
+    m_settingsApplied = true;
 
     // This is also done when creating the renderloop but we may be before that
     // in case we get here due to a setScenegraphBackend() -> configure() early
@@ -214,10 +215,6 @@ void QSGRhiSupport::configure(QSGRendererInterface::GraphicsApi api)
 {
     Q_ASSERT(QSGRendererInterface::isApiRhiBased(api));
     QSGRhiSupport *inst = staticInst();
-    if (inst->m_set) {
-        qWarning("QRhi is already configured, request ignored");
-        return;
-    }
     inst->m_requested.valid = true;
     inst->m_requested.api = api;
     inst->m_requested.rhi = true;
@@ -227,7 +224,7 @@ void QSGRhiSupport::configure(QSGRendererInterface::GraphicsApi api)
 QSGRhiSupport *QSGRhiSupport::instance()
 {
     QSGRhiSupport *inst = staticInst();
-    if (!inst->m_set)
+    if (!inst->m_settingsApplied)
         inst->applySettings();
     return inst;
 }
@@ -467,11 +464,10 @@ QOffscreenSurface *QSGRhiSupport::maybeCreateOffscreenSurface(QWindow *window)
 }
 
 // must be called on the render thread
-QRhi *QSGRhiSupport::createRhi(QWindow *window, QOffscreenSurface *offscreenSurface)
+QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscreenSurface)
 {
-#if !QT_CONFIG(opengl) && !QT_CONFIG(vulkan)
-    Q_UNUSED(window);
-#endif
+    const QQuickGraphicsDevice &customDev(QQuickWindowPrivate::get(window)->customDeviceObjects);
+    const QQuickGraphicsDevicePrivate *customDevD = QQuickGraphicsDevicePrivate::get(&customDev);
 
     QRhi *rhi = nullptr;
 
@@ -493,7 +489,14 @@ QRhi *QSGRhiSupport::createRhi(QWindow *window, QOffscreenSurface *offscreenSurf
         rhiParams.format = format;
         rhiParams.fallbackSurface = offscreenSurface;
         rhiParams.window = window;
-        rhi = QRhi::create(backend, &rhiParams, flags);
+        if (customDevD->type == QQuickGraphicsDevicePrivate::Type::OpenGLContext) {
+            QRhiGles2NativeHandles importDev;
+            importDev.context = customDevD->u.context;
+            qCDebug(QSG_LOG_INFO, "Using existing QOpenGLContext %p", importDev.context);
+            rhi = QRhi::create(backend, &rhiParams, flags, &importDev);
+        } else {
+            rhi = QRhi::create(backend, &rhiParams, flags);
+        }
     }
 #else
     Q_UNUSED(offscreenSurface);
@@ -504,8 +507,19 @@ QRhi *QSGRhiSupport::createRhi(QWindow *window, QOffscreenSurface *offscreenSurf
         rhiParams.inst = window->vulkanInstance();
         if (!rhiParams.inst)
             qWarning("No QVulkanInstance set for QQuickWindow, this is wrong.");
-        rhiParams.window = window;
-        rhi = QRhi::create(backend, &rhiParams, flags);
+        if (window->handle()) // only used for vkGetPhysicalDeviceSurfaceSupportKHR and that implies having a valid native window
+            rhiParams.window = window;
+        if (customDevD->type == QQuickGraphicsDevicePrivate::Type::DeviceObjects) {
+            QRhiVulkanNativeHandles importDev;
+            importDev.physDev = reinterpret_cast<VkPhysicalDevice>(customDevD->u.deviceObjects.physicalDevice);
+            importDev.dev = reinterpret_cast<VkDevice>(customDevD->u.deviceObjects.device);
+            importDev.gfxQueueFamilyIdx = customDevD->u.deviceObjects.queueFamilyIndex;
+            qCDebug(QSG_LOG_INFO, "Using existing native Vulkan physical device %p device %p graphics queue family index %d",
+                    importDev.physDev, importDev.dev, importDev.gfxQueueFamilyIdx);
+            rhi = QRhi::create(backend, &rhiParams, flags, &importDev);
+        } else {
+            rhi = QRhi::create(backend, &rhiParams, flags);
+        }
     }
 #endif
 #ifdef Q_OS_WIN
@@ -516,13 +530,31 @@ QRhi *QSGRhiSupport::createRhi(QWindow *window, QOffscreenSurface *offscreenSurf
             rhiParams.framesUntilKillingDeviceViaTdr = m_killDeviceFrameCount;
             rhiParams.repeatDeviceKill = true;
         }
-        rhi = QRhi::create(backend, &rhiParams, flags);
+        if (customDevD->type == QQuickGraphicsDevicePrivate::Type::DeviceAndContext) {
+            QRhiD3D11NativeHandles importDev;
+            importDev.dev = customDevD->u.deviceAndContext.device;
+            importDev.context = customDevD->u.deviceAndContext.context;
+            qCDebug(QSG_LOG_INFO, "Using existing native D3D11 device %p and context %p",
+                    importDev.dev, importDev.context);
+            rhi = QRhi::create(backend, &rhiParams, flags, &importDev);
+        } else {
+            rhi = QRhi::create(backend, &rhiParams, flags);
+        }
     }
 #endif
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
     if (backend == QRhi::Metal) {
         QRhiMetalInitParams rhiParams;
-        rhi = QRhi::create(backend, &rhiParams, flags);
+        if (customDevD->type == QQuickGraphicsDevicePrivate::Type::DeviceAndCommandQueue) {
+            QRhiMetalNativeHandles importDev;
+            importDev.dev = customDevD->u.deviceAndCommandQueue.device;
+            importDev.cmdQueue = customDevD->u.deviceAndCommandQueue.cmdQueue;
+            qCDebug(QSG_LOG_INFO, "Using existing native Metal device %p and command queue %p",
+                    importDev.dev, importDev.cmdQueue);
+            rhi = QRhi::create(backend, &rhiParams, flags, &importDev);
+        } else {
+            rhi = QRhi::create(backend, &rhiParams, flags);
+        }
     }
 #endif
 

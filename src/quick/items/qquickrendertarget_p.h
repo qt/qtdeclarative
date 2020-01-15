@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKRENDERCONTROL_P_H
-#define QQUICKRENDERCONTROL_P_H
+#ifndef QQUICKRENDERTARGET_P_H
+#define QQUICKRENDERTARGET_P_H
 
 //
 //  W A R N I N G
@@ -51,49 +51,40 @@
 // We mean it.
 //
 
-#include "qquickrendercontrol.h"
-#include <QtQuick/private/qsgcontext_p.h>
+#include <QtQuick/private/qtquickglobal_p.h>
+#include "qquickrendertarget.h"
+#include <QAtomicInt>
 
 QT_BEGIN_NAMESPACE
 
 class QRhi;
-class QRhiCommandBuffer;
-class QOffscreenSurface;
+class QQuickWindowRenderTarget;
 
-class Q_AUTOTEST_EXPORT QQuickRenderControlPrivate : public QObjectPrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickRenderTargetPrivate
 {
 public:
-    Q_DECLARE_PUBLIC(QQuickRenderControl)
+    static QQuickRenderTargetPrivate *get(QQuickRenderTarget *rt) { return rt->d; }
+    static const QQuickRenderTargetPrivate *get(const QQuickRenderTarget *rt) { return rt->d; }
+    QQuickRenderTargetPrivate();
+    QQuickRenderTargetPrivate(const QQuickRenderTargetPrivate *other);
+    bool resolve(QRhi *rhi, QQuickWindowRenderTarget *dst);
 
-    QQuickRenderControlPrivate(QQuickRenderControl *renderControl);
+    enum class Type {
+        Null,
+        NativeTexture,
+        RhiRenderTarget
+    };
 
-    static QQuickRenderControlPrivate *get(QQuickRenderControl *renderControl) {
-        return renderControl->d_func();
-    }
-
-    static void cleanup();
-
-    void windowDestroyed();
-
-    void update();
-    void maybeUpdate();
-
-    bool initRhi();
-    void resetRhi();
-
-    QImage grab();
-
-    QQuickRenderControl *q;
-    bool initialized;
-    QQuickWindow *window;
-    static QSGContext *sg;
-    QSGRenderContext *rc;
-    QRhi *rhi;
-    QRhiCommandBuffer *cb;
-    QOffscreenSurface *offscreenSurface;
-    int sampleCount;
+    QAtomicInt ref;
+    Type type = Type::Null;
+    QSize pixelSize;
+    int sampleCount = 1;
+    union {
+        QSGTexture::NativeTexture nativeTexture;
+        QRhiRenderTarget *rhiRt;
+    } u;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKRENDERCONTROL_P_H
+#endif // QQUICKRENDERTARGET_P_H

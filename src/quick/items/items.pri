@@ -65,7 +65,11 @@ HEADERS += \
     $$PWD/qquickpalette_p.h \
     $$PWD/qquickcolorgroup_p.h \
     $$PWD/qquickpalettecolorprovider_p.h \
-    $$PWD/qquickpaletteproviderprivatebase_p.h
+    $$PWD/qquickpaletteproviderprivatebase_p.h \
+    $$PWD/qquickrendertarget.h \
+    $$PWD/qquickrendertarget_p.h \
+    $$PWD/qquickgraphicsdevice.h \
+    $$PWD/qquickgraphicsdevice_p.h
 
 SOURCES += \
     $$PWD/qquickevents.cpp \
@@ -108,7 +112,9 @@ SOURCES += \
     $$PWD/qquickitemgrabresult.cpp \
     $$PWD/qquickpalettecolorprovider.cpp \
     $$PWD/qquickcolorgroup.cpp \
-    $$PWD/qquickpalette.cpp
+    $$PWD/qquickpalette.cpp \
+    $$PWD/qquickrendertarget.cpp \
+    $$PWD/qquickgraphicsdevice.cpp
 
 qtConfig(quick-draganddrop) {
     HEADERS += \

@@ -57,6 +57,8 @@
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qquickpaletteproviderprivatebase_p.h>
+#include <QtQuick/private/qquickrendertarget_p.h>
+#include <QtQuick/private/qquickgraphicsdevice_p.h>
 
 #include <QtCore/qthread.h>
 #include <QtCore/qmutex.h>
@@ -84,6 +86,7 @@ class QRhi;
 class QRhiSwapChain;
 class QRhiRenderBuffer;
 class QRhiRenderPassDescriptor;
+class QRhiTexture;
 
 //Make it easy to identify and customize the root item if needed
 class Q_QUICK_PRIVATE_EXPORT QQuickRootItem : public QQuickItem
@@ -102,6 +105,17 @@ public:
     virtual ~QQuickCustomRenderStage() {}
     virtual bool render() = 0;
     virtual bool swap() = 0;
+};
+
+class QQuickWindowRenderTarget
+{
+public:
+    void reset(QRhi *rhi);
+    QRhiRenderTarget *renderTarget = nullptr;
+    QRhiRenderPassDescriptor *rpDesc = nullptr;
+    QRhiTexture *texture = nullptr;
+    QRhiRenderBuffer *depthStencil = nullptr;
+    bool owns = false;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickWindowPrivate
@@ -218,6 +232,9 @@ public:
     void dirtyItem(QQuickItem *);
     void cleanup(QSGNode *);
 
+    void ensureCustomRenderTarget();
+    void setCustomCommandBuffer(QRhiCommandBuffer *cb);
+
     void polishItems();
     void forcePolish();
     void syncSceneGraph();
@@ -277,11 +294,26 @@ public:
 
     Qt::FocusReason lastFocusReason;
 
-    QOpenGLFramebufferObject *renderTarget;
-    uint renderTargetId;
-    QSize renderTargetSize;
+    // Storage for setRenderTarget(QQuickRenderTarget).
+    // Gets baked into redirect.renderTarget by ensureCustomRenderTarget() when rendering the next frame.
+    QQuickRenderTarget customRenderTarget;
 
-    QOpenGLVertexArrayObjectHelper *vaoHelper;
+    struct Redirect {
+        QRhiCommandBuffer *commandBuffer = nullptr;
+        QQuickWindowRenderTarget rt;
+        bool renderTargetDirty = false;
+    } redirect;
+
+    QQuickGraphicsDevice customDeviceObjects;
+
+    // ### Qt 6 remove
+    struct {
+        QOpenGLFramebufferObject *renderTarget = nullptr;
+        uint renderTargetId = 0;
+        QSize renderTargetSize;
+    } customRenderTargetGl;
+
+    QOpenGLVertexArrayObjectHelper *vaoHelper; // ### Qt 6 remove
 
     mutable QQuickWindowIncubationController *incubationController;
 

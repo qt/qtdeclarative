@@ -66,7 +66,8 @@ class QQuickRenderControl;
 class QSGRectangleNode;
 class QSGImageNode;
 class QSGNinePatchNode;
-class QRhi;
+class QQuickRenderTarget;
+class QQuickGraphicsDevice;
 
 class Q_QUICK_EXPORT QQuickWindow : public QWindow
 {
@@ -131,6 +132,8 @@ public:
 #endif
 
     QImage grabWindow();
+
+    // ### Qt 6 remove all these 5 functions. Replaced by setRenderTarget(QQuickRenderTarget*).
 #if QT_CONFIG(opengl)
     void setRenderTarget(QOpenGLFramebufferObject *fbo);
     QOpenGLFramebufferObject *renderTarget() const;
@@ -138,8 +141,11 @@ public:
     void setRenderTarget(uint fboId, const QSize &size);
     uint renderTargetId() const;
     QSize renderTargetSize() const;
+
+    void setRenderTarget(const QQuickRenderTarget &target);
+
 #if QT_CONFIG(opengl)
-    void resetOpenGLState();
+    void resetOpenGLState(); // ### Qt 6 remove
 #endif
     struct GraphicsStateInfo {
         int currentFrameSlot;
@@ -178,13 +184,14 @@ public:
     static bool hasDefaultAlphaBuffer();
     static void setDefaultAlphaBuffer(bool useAlpha);
 
-    void setPersistentOpenGLContext(bool persistent);
+    void setPersistentOpenGLContext(bool persistent); // ### Qt 6 is this relevant / usable anymore?
     bool isPersistentOpenGLContext() const;
 
-    void setPersistentSceneGraph(bool persistent);
+    void setPersistentSceneGraph(bool persistent); // ### Qt 6 is this relevant / usable anymore?
     bool isPersistentSceneGraph() const;
 
-    QOpenGLContext *openglContext() const;
+    QOpenGLContext *openglContext() const; // ### Qt 6 consider if this is kept or not
+
     bool isSceneGraphInitialized() const;
 
     void scheduleRenderJob(QRunnable *job, RenderStage schedule);
@@ -197,6 +204,8 @@ public:
     static void setSceneGraphBackend(const QString &backend);
     static QString sceneGraphBackend();
 
+    void setGraphicsDevice(const QQuickGraphicsDevice &device);
+
     QSGRectangleNode *createRectangleNode() const;
     QSGImageNode *createImageNode() const;
     QSGNinePatchNode *createNinePatchNode() const;
@@ -206,7 +215,7 @@ public:
 
 Q_SIGNALS:
     void frameSwapped();
-    Q_REVISION(2, 2) void openglContextCreated(QOpenGLContext *context);
+    Q_REVISION(2, 2) void openglContextCreated(QOpenGLContext *context); // ### Qt 6 remove
     void sceneGraphInitialized();
     void sceneGraphInvalidated();
     void beforeSynchronizing();

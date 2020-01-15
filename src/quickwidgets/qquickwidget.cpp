@@ -383,7 +383,7 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
         context->makeCurrent(offscreenSurface);
 #endif
     }
-    return renderControl->grab();
+    return offscreenWindow->grabWindow();
 }
 
 // Intentionally not overriding the QQuickWindow's focusObject.

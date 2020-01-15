@@ -126,7 +126,7 @@ void QSGRenderLoop::cleanup()
     s_instance = nullptr;
 
 #ifdef ENABLE_DEFAULT_BACKEND
-    QSGRhiSupport::instance()->cleanup();
+    QSGRhiSupport::cleanupVulkanInstance();
     QSGRhiProfileConnection::instance()->cleanup();
 #endif
 }

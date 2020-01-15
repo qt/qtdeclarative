@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -37,63 +37,42 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKRENDERCONTROL_P_H
-#define QQUICKRENDERCONTROL_P_H
+#ifndef QQUICKRENDERTARGET_H
+#define QQUICKRENDERTARGET_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qquickrendercontrol.h"
-#include <QtQuick/private/qsgcontext_p.h>
+#include <QtQuick/qtquickglobal.h>
+#include <QtQuick/qsgtexture.h>
 
 QT_BEGIN_NAMESPACE
 
-class QRhi;
-class QRhiCommandBuffer;
-class QOffscreenSurface;
+class QQuickRenderTargetPrivate;
+class QRhiRenderTarget;
 
-class Q_AUTOTEST_EXPORT QQuickRenderControlPrivate : public QObjectPrivate
+class Q_QUICK_EXPORT QQuickRenderTarget
 {
 public:
-    Q_DECLARE_PUBLIC(QQuickRenderControl)
+    QQuickRenderTarget();
+    ~QQuickRenderTarget();
+    QQuickRenderTarget(const QQuickRenderTarget &other);
+    QQuickRenderTarget &operator=(const QQuickRenderTarget &other);
 
-    QQuickRenderControlPrivate(QQuickRenderControl *renderControl);
+    bool isNull() const;
 
-    static QQuickRenderControlPrivate *get(QQuickRenderControl *renderControl) {
-        return renderControl->d_func();
-    }
+    static QQuickRenderTarget fromNativeTexture(const QSGTexture::NativeTexture &nativeTexture,
+                                                const QSize &pixelSize,
+                                                int sampleCount = 1);
 
-    static void cleanup();
+    static QQuickRenderTarget fromRhiRenderTarget(QRhiRenderTarget *renderTarget);
 
-    void windowDestroyed();
-
-    void update();
-    void maybeUpdate();
-
-    bool initRhi();
-    void resetRhi();
-
-    QImage grab();
-
-    QQuickRenderControl *q;
-    bool initialized;
-    QQuickWindow *window;
-    static QSGContext *sg;
-    QSGRenderContext *rc;
-    QRhi *rhi;
-    QRhiCommandBuffer *cb;
-    QOffscreenSurface *offscreenSurface;
-    int sampleCount;
+private:
+    void detach();
+    QQuickRenderTargetPrivate *d;
+    friend class QQuickRenderTargetPrivate;
 };
+
+Q_QUICK_EXPORT bool operator==(const QQuickRenderTarget &a, const QQuickRenderTarget &b) Q_DECL_NOTHROW;
+Q_QUICK_EXPORT bool operator!=(const QQuickRenderTarget &a, const QQuickRenderTarget &b) Q_DECL_NOTHROW;
 
 QT_END_NAMESPACE
 
-#endif // QQUICKRENDERCONTROL_P_H
+#endif // QQUICKRENDERTARGET_H

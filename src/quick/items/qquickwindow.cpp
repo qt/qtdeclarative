@@ -43,6 +43,7 @@
 #include "qquickitem.h"
 #include "qquickitem_p.h"
 #include "qquickevents_p_p.h"
+#include "qquickgraphicsdevice_p.h"
 
 #if QT_CONFIG(quick_draganddrop)
 #include <private/qquickdrag_p.h>
@@ -424,16 +425,66 @@ void forceUpdate(QQuickItem *item)
         forceUpdate(items.at(i));
 }
 
+void QQuickWindowRenderTarget::reset(QRhi *rhi)
+{
+    if (rhi && owns) {
+        delete renderTarget;
+        delete rpDesc;
+        delete texture;
+        delete depthStencil;
+    }
+
+    renderTarget = nullptr;
+    rpDesc = nullptr;
+    texture = nullptr;
+    depthStencil = nullptr;
+    owns = false;
+}
+
+void QQuickWindowPrivate::ensureCustomRenderTarget()
+{
+    // resolve() can be expensive when importing an existing native texture, so
+    // it is important to only do it when the QQuickRenderTarget* was really changed
+    if (!redirect.renderTargetDirty || !rhi)
+        return;
+
+    redirect.renderTargetDirty = false;
+
+    redirect.rt.reset(rhi);
+
+    // a default constructed QQuickRenderTarget means no redirection
+    if (customRenderTarget.isNull())
+        return;
+
+    QQuickRenderTargetPrivate::get(&customRenderTarget)->resolve(rhi, &redirect.rt);
+}
+
+void QQuickWindowPrivate::setCustomCommandBuffer(QRhiCommandBuffer *cb)
+{
+    // ownership not transferred
+    redirect.commandBuffer = cb;
+}
+
 void QQuickWindowPrivate::syncSceneGraph()
 {
     Q_Q(QQuickWindow);
 
+    ensureCustomRenderTarget();
+
     // Calculate the dpr the same way renderSceneGraph() will.
     qreal devicePixelRatio = q->effectiveDevicePixelRatio();
-    if (renderTargetId && !QQuickRenderControl::renderWindowFor(q))
+    const bool hasCustomRenderTarget = customRenderTargetGl.renderTargetId || redirect.rt.renderTarget;
+    if (hasCustomRenderTarget && !QQuickRenderControl::renderWindowFor(q))
         devicePixelRatio = 1;
 
-    context->prepareSync(devicePixelRatio, rhi ? swapchain->currentFrameCommandBuffer() : nullptr);
+    QRhiCommandBuffer *cb = nullptr;
+    if (rhi) {
+        if (redirect.commandBuffer)
+            cb = redirect.commandBuffer;
+        else
+            cb = swapchain->currentFrameCommandBuffer();
+    }
+    context->prepareSync(devicePixelRatio, cb);
 
     animationController->beforeNodeSync();
 
@@ -484,11 +535,32 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
         return;
 
     if (rhi) {
-        // ### no offscreen ("renderTargetId") support yet
-        context->beginNextRhiFrame(renderer,
-                                   swapchain->currentFrameRenderTarget(),
-                                   rpDescForSwapchain,
-                                   swapchain->currentFrameCommandBuffer(),
+        ensureCustomRenderTarget();
+        QRhiRenderTarget *rt;
+        QRhiRenderPassDescriptor *rp;
+        QRhiCommandBuffer *cb;
+        if (redirect.rt.renderTarget) {
+            rt = redirect.rt.renderTarget;
+            rp = rt->renderPassDescriptor();
+            if (!rp) {
+                qWarning("Custom render target is set but no renderpass descriptor has been provided.");
+                return;
+            }
+            cb = redirect.commandBuffer;
+            if (!cb) {
+                qWarning("Custom render target is set but no command buffer has been provided.");
+                return;
+            }
+        } else {
+            if (!swapchain) {
+                qWarning("QQuickWindow: No render target (neither swapchain nor custom target was provided)");
+                return;
+            }
+            rt = swapchain->currentFrameRenderTarget();
+            rp = rpDescForSwapchain;
+            cb = swapchain->currentFrameCommandBuffer();
+        }
+        context->beginNextRhiFrame(renderer, rt, rp, cb,
                                    emitBeforeRenderPassRecording,
                                    emitAfterRenderPassRecording,
                                    q);
@@ -503,18 +575,28 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
     emit q->beforeRendering();
     runAndClearJobs(&beforeRenderingJobs);
     if (!customRenderStage || !customRenderStage->render()) {
+        QSGAbstractRenderer::MatrixTransformFlags matrixFlags;
+        const bool flipY = rhi ? !rhi->isYUpInNDC() : false;
+        if (flipY)
+            matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
         int fboId = 0;
         const qreal devicePixelRatio = q->effectiveDevicePixelRatio();
-        if (renderTargetId) {
-            QRect rect(QPoint(0, 0), renderTargetSize);
-            fboId = renderTargetId;
+        const bool hasCustomRenderTarget = customRenderTargetGl.renderTargetId || redirect.rt.renderTarget;
+        if (hasCustomRenderTarget) {
+            QRect rect;
+            if (redirect.rt.renderTarget) {
+                rect = QRect(QPoint(0, 0), redirect.rt.renderTarget->pixelSize());
+            } else {
+                fboId = customRenderTargetGl.renderTargetId;
+                rect = QRect(QPoint(0, 0), customRenderTargetGl.renderTargetSize);
+            }
             renderer->setDeviceRect(rect);
             renderer->setViewportRect(rect);
             if (QQuickRenderControl::renderWindowFor(q)) {
-                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size));
+                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size), matrixFlags);
                 renderer->setDevicePixelRatio(devicePixelRatio);
             } else {
-                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), rect.size()));
+                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), rect.size()), matrixFlags);
                 renderer->setDevicePixelRatio(1);
             }
         } else {
@@ -530,10 +612,6 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             QRect rect(QPoint(0, 0), pixelSize);
             renderer->setDeviceRect(rect);
             renderer->setViewportRect(rect);
-            const bool flipY = rhi ? !rhi->isYUpInNDC() : false;
-            QSGAbstractRenderer::MatrixTransformFlags matrixFlags;
-            if (flipY)
-                matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
             renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), logicalSize), matrixFlags);
             renderer->setDevicePixelRatio(devicePixelRatio);
         }
@@ -589,8 +667,6 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , allowChildEventFiltering(true)
     , allowDoubleClick(true)
     , lastFocusReason(Qt::OtherFocusReason)
-    , renderTarget(nullptr)
-    , renderTargetId(0)
     , vaoHelper(nullptr)
     , incubationController(nullptr)
     , hasActiveSwapchain(false)
@@ -604,6 +680,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
 
 QQuickWindowPrivate::~QQuickWindowPrivate()
 {
+    redirect.rt.reset(rhi);
     delete customRenderStage;
     if (QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>())
         service->removeWindow(q_func());
@@ -652,7 +729,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
     q->setSurfaceType(windowManager ? windowManager->windowSurfaceType() : QSurface::OpenGLSurface);
     q->setFormat(sg->defaultSurfaceFormat());
 #if QT_CONFIG(vulkan)
-    if (q->surfaceType() == QSurface::VulkanSurface)
+    if (!renderControl && q->surfaceType() == QSurface::VulkanSurface)
         q->setVulkanInstance(QSGRhiSupport::vulkanInstance());
 #endif
 
@@ -4028,13 +4105,13 @@ void QQuickWindow::setRenderTarget(QOpenGLFramebufferObject *fbo)
         return;
     }
 
-    d->renderTarget = fbo;
+    d->customRenderTargetGl.renderTarget = fbo;
     if (fbo) {
-        d->renderTargetId = fbo->handle();
-        d->renderTargetSize = fbo->size();
+        d->customRenderTargetGl.renderTargetId = fbo->handle();
+        d->customRenderTargetGl.renderTargetSize = fbo->size();
     } else {
-        d->renderTargetId = 0;
-        d->renderTargetSize = QSize();
+        d->customRenderTargetGl.renderTargetId = 0;
+        d->customRenderTargetGl.renderTargetSize = QSize();
     }
 }
 #endif
@@ -4069,11 +4146,11 @@ void QQuickWindow::setRenderTarget(uint fboId, const QSize &size)
         return;
     }
 
-    d->renderTargetId = fboId;
-    d->renderTargetSize = size;
+    d->customRenderTargetGl.renderTargetId = fboId;
+    d->customRenderTargetGl.renderTargetSize = size;
 
     // Unset any previously set instance...
-    d->renderTarget = nullptr;
+    d->customRenderTargetGl.renderTarget = nullptr;
 }
 
 
@@ -4083,7 +4160,7 @@ void QQuickWindow::setRenderTarget(uint fboId, const QSize &size)
 uint QQuickWindow::renderTargetId() const
 {
     Q_D(const QQuickWindow);
-    return d->renderTargetId;
+    return d->customRenderTargetGl.renderTargetId;
 }
 
 /*!
@@ -4092,10 +4169,8 @@ uint QQuickWindow::renderTargetId() const
 QSize QQuickWindow::renderTargetSize() const
 {
     Q_D(const QQuickWindow);
-    return d->renderTargetSize;
+    return d->customRenderTargetGl.renderTargetSize;
 }
-
-
 
 #if QT_CONFIG(opengl)
 /*!
@@ -4113,9 +4188,82 @@ QSize QQuickWindow::renderTargetSize() const
 QOpenGLFramebufferObject *QQuickWindow::renderTarget() const
 {
     Q_D(const QQuickWindow);
-    return d->renderTarget;
+    return d->customRenderTargetGl.renderTarget;
 }
 #endif
+
+/*!
+    Sets the render target for this window to be \a target.
+
+    A QQuickRenderTarget serves as an opaque handle for a renderable native
+    object, most commonly a 2D texture, and associated metadata, such as the
+    size in pixels.
+
+    A default constructed QQuickRenderTarget means no redirection. A valid
+    \a target, created via one of the static QQuickRenderTarget factory functions,
+    on the other hand, enables redirection of the rendering of the Qt Quick
+    scene: it will no longer target the color buffers for the surface
+    associated with the window, but rather the textures or other graphics
+    objects specified in \a target.
+
+    For example, assuming the scenegraph is using Vulkan to render, one can
+    redirect its output into a \c VkImage. For graphics APIs like Vulkan, the
+    image layout must be provided as well. QQuickRenderTarget instances are
+    implicitly shared and are copyable and can be passed by value. They do not
+    own the associated native objects (such as, the VkImage in the example),
+    however.
+
+    \badcode
+        QQuickRenderTarget rt = QQuickRenderTarget::fromNativeTexture({ &vulkanImage, VK_IMAGE_LAYOUT_PREINITIALIZED }, pixelSize);
+        quickWindow->setRenderTarget(rt);
+    \endcode
+
+    This function is very often used in combination with QQuickRenderControl
+    and an invisible QQuickWindow, in order to render Qt Quick content into a
+    texture, without creating an on-screen native window for this QQuickWindow.
+
+    When the desired target, or associated data, such as the size, changes,
+    call this function with a new QQuickRenderTarget. Constructing
+    QQuickRenderTarget instances and calling this function is cheap, but be
+    aware that setting a new \a target with a different native object or other
+    data may lead to potentially expensive initialization steps when the
+    scenegraph is about to render the next frame. Therefore change the target
+    only when necessary.
+
+    \note This function should not be used when using the \c software backend.
+    Instead, use grabWindow() to render the content into a QImage.
+
+    \note The window does not take ownership of any native objects referenced
+    in \a target.
+
+    \note It is the caller's responsibility to ensure the native objects
+    referred to in \a target are valid for the scenegraph renderer too. For
+    instance, with Vulkan, Metal, and Direct3D this implies that the texture or
+    image is created on the same graphics device that is used by the scenegraph
+    internally. This is often achieved by using this function in combination
+    with setGraphicsDevice().
+
+    \note With graphics APIs where relevant, the application must pay attention
+    to image layout transitions performed by the scenegraph. For example, once
+    a VkImage is associated with the scenegraph by calling this function, its
+    layout will transition to \c VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL when
+    rendering a frame.
+
+    \warning This function can only be called from the thread doing the
+    rendering.
+
+    \since 6.0
+
+    \sa QQuickRenderControl, setGraphicsDevice(), setSceneGraphBackend()
+ */
+void QQuickWindow::setRenderTarget(const QQuickRenderTarget &target)
+{
+    Q_D(QQuickWindow);
+    if (target != d->customRenderTarget) {
+        d->customRenderTarget = target;
+        d->redirect.renderTargetDirty = true;
+    }
+}
 
 /*!
     Grabs the contents of the window and returns it as an image.
@@ -4124,6 +4272,14 @@ QOpenGLFramebufferObject *QQuickWindow::renderTarget() const
     visible. This requires that the window is \l{QWindow::create()} {created}
     and has a valid size and that no other QQuickWindow instances are rendering
     in the same process.
+
+    \note When using this window in combination with QQuickRenderControl, the
+    result of this function is an empty image, unless the \c software backend
+    is in use. This is because when redirecting the output to an
+    application-managed graphics resource (such as, a texture) by using
+    QQuickRenderControl and setRenderTarget(), the application is better suited
+    for managing and executing an eventual read back operation, since it is in
+    full control of the resource to begin with.
 
     \warning Calling this function will cause performance problems.
 
@@ -4141,12 +4297,8 @@ QImage QQuickWindow::grabWindow()
 
     if (!isVisible() && !d->renderControl) {
         if (d->rhi) {
-            // ### we may need a full offscreen round when non-exposed...
-
-            if (d->renderControl)
-                return d->renderControl->grab();
-            else if (d->windowManager)
-                return d->windowManager->grab(this);
+            if (d->windowManager)
+                return d->windowManager->grab(this); // ### we may need a full offscreen round when non-exposed?
             return QImage();
         }
 
@@ -4184,7 +4336,7 @@ QImage QQuickWindow::grabWindow()
     }
 
     if (d->renderControl)
-        return d->renderControl->grab();
+        return QQuickRenderControlPrivate::get(d->renderControl)->grab();
     else if (d->windowManager)
         return d->windowManager->grab(this);
     return QImage();
@@ -5648,7 +5800,11 @@ QSGRendererInterface *QQuickWindow::rendererInterface() const
     loaded plugins.
 
     \note The call to the function must happen before constructing the first
-    QQuickWindow in the application. It cannot be changed afterwards.
+    QQuickWindow in the application. The graphics API cannot be changed
+    afterwards. When used in combination with QQuickRenderControl, this rule is
+    relaxed: it is possible to change the graphics API, but only when all
+    existing QQuickRenderControl and QQuickWindow instances have been
+    destroyed.
 
     If the selected backend is invalid or an error occurs, the default backend
     (OpenGL or software, depending on the Qt configuration) is used.
@@ -5706,6 +5862,65 @@ void QQuickWindow::setSceneGraphBackend(const QString &backend)
 QString QQuickWindow::sceneGraphBackend()
 {
     return QSGContext::backend();
+}
+
+/*!
+    Sets the graphics device objects for this window. The scenegraph will use
+    existing device, physical device, and other objects specified by \a device
+    instead of creating new ones.
+
+    This function is very often used in combination with QQuickRenderControl
+    and setRenderTarget(), in order to redirect Qt Quick rendering into a
+    texture.
+
+    A default constructed QQuickGraphicsDevice does not change the default
+    behavior in any way. Once a \a device created via one of the
+    QQuickGraphicsDevice factory functions, such as,
+    QQuickGraphicsDevice::fromDeviceObjects(), is passed in, and the scenegraph
+    uses a matching graphics API (with the example of fromDeviceObjects(), that
+    would be Vulkan), the scenegraph will use the existing device objects (such
+    as, the \c VkPhysicalDevice, \c VkDevice, and graphics queue family index,
+    in case of Vulkan) encapsulated by the QQuickGraphicsDevice. This allows
+    using the same device, and so sharing resources, such as buffers and
+    textures, between Qt Quick and native rendering engines.
+
+    \warning This function can only be called before initializing the
+    scenegraph and will have no effect if called afterwards. In practice this
+    typically means calling it right before QQuickRenderControl::initialize().
+
+    As an example, this time with Direct3D, the typical usage is expected to be
+    the following:
+
+    \badcode
+        // native graphics resources set up by a custom D3D rendering engine
+        ID3D11Device *device;
+        ID3D11DeviceContext *context;
+        ID3D11Texture2D *texture;
+        ...
+        // now to redirect Qt Quick content into 'texture' we could do the following:
+        QQuickRenderControl *renderControl = new QQuickRenderControl;
+        QQuickWindow *window = new QQuickWindow(renderControl); // this window will never be shown on-screen
+        ...
+        window->setGraphicsDevice(QQuickGraphicsDevice::fromDeviceAndContext(device, context));
+        renderControl->initialize();
+        window->setRenderTarget(QQuickRenderTarget::fromNativeTexture({ &texture, 0 }, textureSize);
+        ...
+    \endcode
+
+    The key aspect of using this function is to ensure that resources or
+    handles to resources, such as \c texture in the above example, are visible
+    to and usable by both the external rendering engine and the scenegraph
+    renderer. This requires using the same graphics device (or with OpenGL,
+    OpenGL context).
+
+    \since 6.0
+
+    \sa QQuickRenderControl, setRenderTarget(), setSceneGraphBackend()
+ */
+void QQuickWindow::setGraphicsDevice(const QQuickGraphicsDevice &device)
+{
+    Q_D(QQuickWindow);
+    d->customDeviceObjects = device;
 }
 
 /*!

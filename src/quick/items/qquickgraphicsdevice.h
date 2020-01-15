@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -37,63 +37,37 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKRENDERCONTROL_P_H
-#define QQUICKRENDERCONTROL_P_H
+#ifndef QQUICKGRAPHICSDEVICE_H
+#define QQUICKGRAPHICSDEVICE_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qquickrendercontrol.h"
-#include <QtQuick/private/qsgcontext_p.h>
+#include <QtQuick/qtquickglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class QRhi;
-class QRhiCommandBuffer;
-class QOffscreenSurface;
+class QQuickGraphicsDevicePrivate;
+class QOpenGLContext;
 
-class Q_AUTOTEST_EXPORT QQuickRenderControlPrivate : public QObjectPrivate
+class Q_QUICK_EXPORT QQuickGraphicsDevice
 {
 public:
-    Q_DECLARE_PUBLIC(QQuickRenderControl)
+    QQuickGraphicsDevice();
+    ~QQuickGraphicsDevice();
+    QQuickGraphicsDevice(const QQuickGraphicsDevice &other);
+    QQuickGraphicsDevice &operator=(const QQuickGraphicsDevice &other);
 
-    QQuickRenderControlPrivate(QQuickRenderControl *renderControl);
+    bool isNull() const;
 
-    static QQuickRenderControlPrivate *get(QQuickRenderControl *renderControl) {
-        return renderControl->d_func();
-    }
+    static QQuickGraphicsDevice fromOpenGLContext(QOpenGLContext *context);
+    static QQuickGraphicsDevice fromDeviceAndContext(void *device, void *context);
+    static QQuickGraphicsDevice fromDeviceAndCommandQueue(void *device, void *cmdQueue);
+    static QQuickGraphicsDevice fromDeviceObjects(void *physicalDevice, void *device, int queueFamilyIndex);
 
-    static void cleanup();
-
-    void windowDestroyed();
-
-    void update();
-    void maybeUpdate();
-
-    bool initRhi();
-    void resetRhi();
-
-    QImage grab();
-
-    QQuickRenderControl *q;
-    bool initialized;
-    QQuickWindow *window;
-    static QSGContext *sg;
-    QSGRenderContext *rc;
-    QRhi *rhi;
-    QRhiCommandBuffer *cb;
-    QOffscreenSurface *offscreenSurface;
-    int sampleCount;
+private:
+    void detach();
+    QQuickGraphicsDevicePrivate *d;
+    friend class QQuickGraphicsDevicePrivate;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKRENDERCONTROL_P_H
+#endif // QQUICKGRAPHICSDEVICE_H

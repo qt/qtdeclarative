@@ -37,6 +37,7 @@ qt_add_module(Quick
         items/qquickflickable_p_p.h
         items/qquickflickablebehavior_p.h
         items/qquickfocusscope.cpp items/qquickfocusscope_p.h
+        items/qquickgraphicsdevice.cpp items/qquickgraphicsdevice.h items/qquickgraphicsdevice_p.h
         items/qquickgraphicsinfo.cpp items/qquickgraphicsinfo_p.h
         items/qquickimage.cpp items/qquickimage_p.h
         items/qquickimage_p_p.h
@@ -64,6 +65,7 @@ qt_add_module(Quick
         items/qquickrectangle.cpp items/qquickrectangle_p.h
         items/qquickrectangle_p_p.h
         items/qquickrendercontrol.cpp items/qquickrendercontrol.h items/qquickrendercontrol_p.h
+        items/qquickrendertarget.cpp items/qquickrendertarget.h items/qquickrendertarget_p.h
         items/qquickscalegrid.cpp
         items/qquickscalegrid_p_p.h
         items/qquickscreen.cpp items/qquickscreen_p.h

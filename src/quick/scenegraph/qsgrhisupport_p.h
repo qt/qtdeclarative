@@ -91,7 +91,7 @@ class QOffscreenSurface;
 // Opting in/out of QRhi and choosing the default/requested backend is managed
 // by this singleton. This is because this information may be needed before
 // creating a render loop. A well-written render loop sets up its QRhi and
-// related machinery based on the settings queriable from here.
+// related machinery using the helper functions in here.
 //
 // cleanup() must be called to perform global (not per thread) cleanup, such
 // as, destroying the QVulkanInstance (if one was created in vulkanInstance()).
@@ -99,13 +99,13 @@ class QOffscreenSurface;
 // In addition, the class provides handy conversion and query stuff for the
 // renderloop and the QSGRendererInterface implementations.
 //
-class QSGRhiSupport
+class Q_QUICK_PRIVATE_EXPORT QSGRhiSupport
 {
 public:
     static void configure(QSGRendererInterface::GraphicsApi api);
     static QSGRhiSupport *instance();
     static QVulkanInstance *vulkanInstance();
-    void cleanup();
+    static void cleanupVulkanInstance();
 
     bool isRhiEnabled() const { return m_enableRhi; }
     QRhi::Implementation rhiBackend() const { return m_rhiBackend; }
@@ -124,7 +124,7 @@ public:
     int chooseSampleCountForWindowWithRhi(QWindow *window, QRhi *rhi);
 
     QOffscreenSurface *maybeCreateOffscreenSurface(QWindow *window);
-    QRhi *createRhi(QWindow *window, QOffscreenSurface *offscreenSurface);
+    QRhi *createRhi(QQuickWindow *window, QOffscreenSurface *offscreenSurface);
 
     QImage grabAndBlockInCurrentFrame(QRhi *rhi, QRhiSwapChain *swapchain);
 
@@ -141,7 +141,7 @@ private:
     } m_requested;
     QRhi::Implementation m_rhiBackend = QRhi::Null;
     int m_killDeviceFrameCount;
-    uint m_set : 1;
+    uint m_settingsApplied : 1;
     uint m_enableRhi : 1;
     uint m_debugLayer : 1;
     uint m_profile : 1;

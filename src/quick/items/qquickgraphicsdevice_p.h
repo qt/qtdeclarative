@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKRENDERCONTROL_P_H
-#define QQUICKRENDERCONTROL_P_H
+#ifndef QQUICKGRAPHICSDEVICE_P_H
+#define QQUICKGRAPHICSDEVICE_P_H
 
 //
 //  W A R N I N G
@@ -51,49 +51,55 @@
 // We mean it.
 //
 
-#include "qquickrendercontrol.h"
-#include <QtQuick/private/qsgcontext_p.h>
+#include <QtQuick/private/qtquickglobal_p.h>
+#include <QAtomicInt>
+#include "qquickgraphicsdevice.h"
 
 QT_BEGIN_NAMESPACE
 
-class QRhi;
-class QRhiCommandBuffer;
-class QOffscreenSurface;
-
-class Q_AUTOTEST_EXPORT QQuickRenderControlPrivate : public QObjectPrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickGraphicsDevicePrivate
 {
 public:
-    Q_DECLARE_PUBLIC(QQuickRenderControl)
+    static QQuickGraphicsDevicePrivate *get(QQuickGraphicsDevice *p) { return p->d; }
+    static const QQuickGraphicsDevicePrivate *get(const QQuickGraphicsDevice *p) { return p->d; }
+    QQuickGraphicsDevicePrivate();
+    QQuickGraphicsDevicePrivate(const QQuickGraphicsDevicePrivate *other);
 
-    QQuickRenderControlPrivate(QQuickRenderControl *renderControl);
+    enum class Type {
+        Null,
+        OpenGLContext,
+        DeviceAndContext,
+        DeviceAndCommandQueue,
+        DeviceObjects
+    };
 
-    static QQuickRenderControlPrivate *get(QQuickRenderControl *renderControl) {
-        return renderControl->d_func();
-    }
+    QAtomicInt ref;
+    Type type = Type::Null;
 
-    static void cleanup();
+    struct DeviceAndContext {
+        void *device;
+        void *context;
+    };
 
-    void windowDestroyed();
+    struct DeviceAndCommandQueue {
+        void *device;
+        void *cmdQueue;
+    };
 
-    void update();
-    void maybeUpdate();
+    struct DeviceObjects {
+        void *physicalDevice;
+        void *device;
+        int queueFamilyIndex;
+    };
 
-    bool initRhi();
-    void resetRhi();
-
-    QImage grab();
-
-    QQuickRenderControl *q;
-    bool initialized;
-    QQuickWindow *window;
-    static QSGContext *sg;
-    QSGRenderContext *rc;
-    QRhi *rhi;
-    QRhiCommandBuffer *cb;
-    QOffscreenSurface *offscreenSurface;
-    int sampleCount;
+    union {
+        QOpenGLContext *context;
+        DeviceAndContext deviceAndContext;
+        DeviceAndCommandQueue deviceAndCommandQueue;
+        DeviceObjects deviceObjects;
+    } u;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKRENDERCONTROL_P_H
+#endif // QQUICKGRAPHICSDEVICE_P_H

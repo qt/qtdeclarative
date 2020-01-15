@@ -41,7 +41,7 @@
 #define QQUICKRENDERCONTROL_H
 
 #include <QtQuick/qtquickglobal.h>
-#include <QtGui/QImage>
+#include <QtGui/qimage.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,17 +59,26 @@ public:
     ~QQuickRenderControl() override;
 
     void prepareThread(QThread *targetThread);
-    void initialize(QOpenGLContext *gl);
+
+    void setSamples(int sampleCount);
+    int samples() const;
+
+    bool initialize();
+    void initialize(QOpenGLContext *gl); // ### Qt 6 remove
+
     void invalidate();
 
-    void polishItems();
-    void render();
-    bool sync();
+    void beginFrame();
+    void endFrame();
 
-    QImage grab();
+    void polishItems();
+    bool sync();
+    void render();
 
     static QWindow *renderWindowFor(QQuickWindow *win, QPoint *offset = nullptr);
     virtual QWindow *renderWindow(QPoint *offset) { Q_UNUSED(offset); return nullptr; }
+
+    QQuickWindow *window() const;
 
 Q_SIGNALS:
     void renderRequested();

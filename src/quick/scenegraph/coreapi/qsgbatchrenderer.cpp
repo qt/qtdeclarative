@@ -4116,6 +4116,8 @@ void Renderer::renderBatches()
         if (m_renderPassRecordingCallbacks.start)
             m_renderPassRecordingCallbacks.start(m_renderPassRecordingCallbacks.userData);
 
+        cb->debugMarkBegin(QByteArrayLiteral("Qt Quick scene render"));
+
         for (int i = 0, ie = opaqueRenderBatches.count(); i != ie; ++i) {
             PreparedRenderBatch *renderBatch = &opaqueRenderBatches[i];
             if (renderBatch->batch->merged)
@@ -4136,6 +4138,8 @@ void Renderer::renderBatches()
 
         if (m_currentShader)
             setActiveRhiShader(nullptr, nullptr);
+
+        cb->debugMarkEnd();
 
         if (m_renderPassRecordingCallbacks.end)
             m_renderPassRecordingCallbacks.end(m_renderPassRecordingCallbacks.userData);
