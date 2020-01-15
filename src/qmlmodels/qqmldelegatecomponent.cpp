@@ -73,7 +73,7 @@ QVariant QQmlAbstractDelegateComponent::value(QQmlAdaptorModel *adaptorModel, in
 */
 
 /*!
-    \qmlproperty string QtQml.Models::DelegateChoice::roleValue
+    \qmlproperty variant QtQml.Models::DelegateChoice::roleValue
     This property holds the value used to match the role data for the role provided by \l DelegateChooser::role.
 */
 QVariant QQmlDelegateChoice::roleValue() const
@@ -91,7 +91,7 @@ void QQmlDelegateChoice::setRoleValue(const QVariant &value)
 }
 
 /*!
-    \qmlproperty index QtQml.Models::DelegateChoice::row
+    \qmlproperty int QtQml.Models::DelegateChoice::row
     This property holds the value used to match the row value of model elements.
     With models that have only the index property (and thus only one column), this property
     should be intended as an index, and set to the desired index value.
@@ -103,7 +103,7 @@ void QQmlDelegateChoice::setRoleValue(const QVariant &value)
 */
 
 /*!
-    \qmlproperty index QtQml.Models::DelegateChoice::index
+    \qmlproperty int QtQml.Models::DelegateChoice::index
     This property holds the value used to match the index value of model elements.
     This is effectively an alias for \l row.
 
@@ -125,7 +125,7 @@ void QQmlDelegateChoice::setRow(int r)
 }
 
 /*!
-    \qmlproperty index QtQml.Models::DelegateChoice::column
+    \qmlproperty int QtQml.Models::DelegateChoice::column
     This property holds the value used to match the column value of model elements.
 */
 int QQmlDelegateChoice::column() const
