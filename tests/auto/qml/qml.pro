@@ -13,7 +13,6 @@ PUBLICTESTS += \
 
 PUBLICTESTS += \
     qmlformat \
-    qmlmin \
     qqmlcomponent \
     qqmlconsole \
     qqmlengine \

@@ -4,7 +4,6 @@ QT_FOR_CONFIG += qml-private
 qtConfig(qml-devtools) {
     SUBDIRS += \
         qmllint \
-        qmlmin \
         qmlimportscanner \
         qmlformat
 
@@ -45,7 +44,7 @@ qtConfig(qml-devtools) {
     qmleasing.depends = qmlimportscanner
 }
 
-# qmlmin, qmlimportscanner & qmlcachegen are build tools.
+# qmlimportscanner & qmlcachegen are build tools.
 # qmlscene is needed by the autotests.
 # qmltestrunner may be useful for manual testing.
 # qmlplugindump cannot be a build tool, because it loads target plugins.
