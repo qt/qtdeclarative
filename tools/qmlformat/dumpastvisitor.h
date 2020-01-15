@@ -89,6 +89,9 @@ private:
     QString parsePatternElement(PatternElement *element, bool scope = true);
     QString parsePatternElementList(PatternElementList *element);
 
+    QString parsePatternProperty(PatternProperty *property);
+    QString parsePatternPropertyList(PatternPropertyList *list);
+
     QString parseArgumentList(ArgumentList *list);
 
     QString parseUiParameterList(UiParameterList *list);

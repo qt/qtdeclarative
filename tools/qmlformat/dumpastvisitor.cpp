@@ -28,6 +28,8 @@
 
 #include "dumpastvisitor.h"
 
+#include <QtQml/private/qqmljslexer_p.h>
+
 DumpAstVisitor::DumpAstVisitor(Node *rootNode, CommentAstVisitor *comment): m_comment(comment)
 {
     // Add all completely orphaned comments
@@ -257,6 +259,22 @@ QString DumpAstVisitor::parseFormalParameterList(FormalParameterList *list)
     return result;
 }
 
+QString DumpAstVisitor::parsePatternProperty(PatternProperty *property)
+{
+    return escapeString(property->name->asString())+": "+parsePatternElement(property, false);
+}
+
+QString DumpAstVisitor::parsePatternPropertyList(PatternPropertyList *list)
+{
+    QString result = "";
+
+    for (auto *item = list; item != nullptr; item = item->next) {
+        result += formatLine(parsePatternProperty(item->property) + (item->next != nullptr ? "," : ""));
+    }
+
+    return result;
+}
+
 QString DumpAstVisitor::parseExpression(ExpressionNode *expression)
 {
     if (expression == nullptr)
@@ -288,13 +306,23 @@ QString DumpAstVisitor::parseExpression(ExpressionNode *expression)
         auto *functExpr = cast<FunctionExpression *>(expression);
 
         m_indentLevel++;
-        QString result = "function";
+        QString result;
 
-        if (!functExpr->name.isEmpty())
-            result += " " + functExpr->name;
+        if (!functExpr->isArrowFunction) {
+            result += "function";
 
-        result += "("+parseFormalParameterList(functExpr->formals)+") {\n"
-                + parseStatementList(functExpr->body);
+            if (functExpr->isGenerator)
+                result += "*";
+
+            if (!functExpr->name.isEmpty())
+                result += " " + functExpr->name;
+
+            result += "("+parseFormalParameterList(functExpr->formals)+") {\n"
+                    + parseStatementList(functExpr->body);
+        } else {
+             result += "("+parseFormalParameterList(functExpr->formals)+") => {\n";
+             result += parseStatementList(functExpr->body);
+        }
 
         m_indentLevel--;
 
@@ -304,6 +332,8 @@ QString DumpAstVisitor::parseExpression(ExpressionNode *expression)
     }
     case Node::Kind_NullExpression:
         return "null";
+    case Node::Kind_ThisExpression:
+        return "this";
     case Node::Kind_PostIncrementExpression:
         return parseExpression(cast<PostIncrementExpression *>(expression)->base)+"++";
     case Node::Kind_PreIncrementExpression:
@@ -371,6 +401,44 @@ QString DumpAstVisitor::parseExpression(ExpressionNode *expression)
 
         return result;
     }
+    case Node::Kind_ObjectPattern: {
+        auto *objectPattern = cast<ObjectPattern*>(expression);
+        QString result = "{\n";
+
+        m_indentLevel++;
+        result += parsePatternPropertyList(objectPattern->properties);
+        m_indentLevel--;
+
+        result += formatLine("}", false);
+
+        return result;
+    }
+    case Node::Kind_Expression: {
+        auto* expr = cast<Expression*>(expression);
+        return parseExpression(expr->left)+", "+parseExpression(expr->right);
+    }
+    case Node::Kind_Type: {
+        auto* type = reinterpret_cast<Type*>(expression);
+
+        return parseUiQualifiedId(type->typeId);
+    }
+    case Node::Kind_RegExpLiteral: {
+        auto* regexpLiteral = cast<RegExpLiteral*>(expression);
+        QString result = "/"+regexpLiteral->pattern+"/";
+
+        if (regexpLiteral->flags & QQmlJS::Lexer::RegExp_Unicode)
+            result += "u";
+        if (regexpLiteral->flags & QQmlJS::Lexer::RegExp_Global)
+            result += "g";
+        if (regexpLiteral->flags & QQmlJS::Lexer::RegExp_Multiline)
+            result += "m";
+        if (regexpLiteral->flags & QQmlJS::Lexer::RegExp_Sticky)
+            result += "y";
+        if (regexpLiteral->flags & QQmlJS::Lexer::RegExp_IgnoreCase)
+            result += "i";
+
+        return result;
+    }
     default:
         m_error = true;
         return "unknown_expression_"+QString::number(expression->kind);
@@ -383,7 +451,7 @@ QString DumpAstVisitor::parseVariableDeclarationList(VariableDeclarationList *li
 
     for (auto *item = list; item != nullptr; item = item->next) {
         result += parsePatternElement(item->declaration, (item == list))
-               + (item->next != nullptr ? ", " : "");
+                + (item->next != nullptr ? ", " : "");
     }
 
     return result;
@@ -469,7 +537,7 @@ QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
     case Node::Kind_VariableStatement:
         return parseVariableDeclarationList(cast<VariableStatement *>(statement)->declarations);
     case Node::Kind_ReturnStatement:
-         return "return "+parseExpression(cast<ReturnStatement *>(statement)->expression);
+        return "return "+parseExpression(cast<ReturnStatement *>(statement)->expression);
     case Node::Kind_ContinueStatement:
         return "continue";
     case Node::Kind_BreakStatement:
@@ -705,7 +773,7 @@ bool DumpAstVisitor::visit(UiPublicMember *node) {
 
         addLine("signal "+node->name.toString()+"("+parseUiParameterList(node->parameters) + ")"
                 + commentBackInline);
-    break;
+        break;
     case UiPublicMember::Property: {
         if (m_firstProperty) {
             if (m_firstOfAll)
@@ -912,7 +980,15 @@ bool DumpAstVisitor::visit(FunctionDeclaration *node) {
     addNewLine();
 
     addLine(getComment(node, Comment::Location::Front));
-    addLine("function "+node->name+"("+parseFormalParameterList(node->formals)+") {");
+
+    QString head = "function";
+
+    if (node->isGenerator)
+        head += "*";
+
+    head += " "+node->name+"("+parseFormalParameterList(node->formals)+") {";
+
+    addLine(head);
     m_indentLevel++;
     m_result += parseStatementList(node->body);
     m_indentLevel--;
@@ -970,8 +1046,8 @@ bool DumpAstVisitor::visit(UiImport *node) {
         result += parseUiQualifiedId(node->importUri);
 
     if (node->version) {
-       result += " " + QString::number(node->version->majorVersion) + "."
-               + QString::number(node->version->minorVersion);
+        result += " " + QString::number(node->version->majorVersion) + "."
+                + QString::number(node->version->minorVersion);
     }
 
     if (node->asToken.isValid()) {
