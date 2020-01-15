@@ -102,6 +102,25 @@ QHashedStringRef QHashedStringRef::mid(int offset, int length) const
                             (length == -1 || (offset + length) > m_length)?(m_length - offset):length);
 }
 
+QVector<QHashedStringRef> QHashedStringRef::split(const QChar sep) const
+{
+    QVector<QHashedStringRef> ret;
+    auto curLength = 0;
+    auto curOffset = m_data;
+    for (int offset = 0; offset < m_length; ++offset) {
+        if (*(m_data + offset) == sep) {
+            ret.push_back({curOffset, curLength});
+            curOffset = m_data + offset + 1;
+            curLength = 0;
+        } else {
+            ++curLength;
+        }
+    }
+    if (curLength > 0)
+        ret.push_back({curOffset, curLength});
+    return ret;
+}
+
 bool QHashedStringRef::endsWith(const QString &s) const
 {
     return s.length() < m_length &&
