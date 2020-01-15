@@ -332,26 +332,35 @@ void quietMessageHandler(QtMsgType type, const QMessageLogContext &ctxt, const Q
     }
 }
 
-// Called before application initialization, removes arguments it uses
-void getAppFlags(int &argc, char **argv)
+// Called before application initialization
+static void getAppFlags(int argc, char **argv)
 {
 #ifdef QT_GUI_LIB
     for (int i=0; i<argc; i++) {
         if (!strcmp(argv[i], "--apptype") || !strcmp(argv[i], "-a") || !strcmp(argv[i], "-apptype")) {
             applicationType = QmlApplicationTypeUnknown;
             if (i+1 < argc) {
-                if (!strcmp(argv[i+1], "core"))
+                ++i;
+                if (!strcmp(argv[i], "core"))
                     applicationType = QmlApplicationTypeCore;
-                else if (!strcmp(argv[i+1], "gui"))
+                else if (!strcmp(argv[i], "gui"))
                     applicationType = QmlApplicationTypeGui;
-#ifdef QT_WIDGETS_LIB
-                else if (!strcmp(argv[i+1], "widget"))
+#  ifdef QT_WIDGETS_LIB
+                else if (!strcmp(argv[i], "widget"))
                     applicationType = QmlApplicationTypeWidget;
-#endif // QT_WIDGETS_LIB
+#  endif // QT_WIDGETS_LIB
+
             }
-            for (int j=i; j<argc-2; j++)
-                argv[j] = argv[j+2];
-            argc -= 2;
+        } else if (!strcmp(argv[i], "-desktop") || !strcmp(argv[i], "--desktop")) {
+            QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+        } else if (!strcmp(argv[i], "-gles") || !strcmp(argv[i], "--gles")) {
+            QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
+        } else if (!strcmp(argv[i], "-software") || !strcmp(argv[i], "--software")) {
+            QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
+        } else if (!strcmp(argv[i], "-scaling") || !strcmp(argv[i], "--scaling")) {
+            QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+        } else if (!strcmp(argv[i], "-no-scaling") || !strcmp(argv[i], "--no-scaling")) {
+            QCoreApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
         }
     }
 #else
@@ -467,22 +476,24 @@ int main(int argc, char *argv[])
     QCommandLineOption dummyDataOption(QStringLiteral("dummy-data"),
         QCoreApplication::translate("main", "Load QML files from the given directory as context properties."), QStringLiteral("file"));
     parser.addOption(dummyDataOption);
+#ifdef QT_GUI_LIB
     // OpenGL options
     QCommandLineOption glDesktopOption(QStringLiteral("desktop"),
         QCoreApplication::translate("main", "Force use of desktop OpenGL (AA_UseDesktopOpenGL)."));
-    parser.addOption(glDesktopOption);
+    parser.addOption(glDesktopOption); // Just for the help text... we've already handled this argument above
     QCommandLineOption glEsOption(QStringLiteral("gles"),
         QCoreApplication::translate("main", "Force use of GLES (AA_UseOpenGLES)."));
-    parser.addOption(glEsOption);
+    parser.addOption(glEsOption); // Just for the help text... we've already handled this argument above
     QCommandLineOption glSoftwareOption(QStringLiteral("software"),
         QCoreApplication::translate("main", "Force use of software rendering (AA_UseSoftwareOpenGL)."));
-    parser.addOption(glSoftwareOption);
+    parser.addOption(glSoftwareOption); // Just for the help text... we've already handled this argument above
     QCommandLineOption scalingOption(QStringLiteral("scaling"),
         QCoreApplication::translate("main", "Enable High DPI scaling (AA_EnableHighDpiScaling)."));
-    parser.addOption(scalingOption);
+    parser.addOption(scalingOption); // Just for the help text... we've already handled this argument above
     QCommandLineOption noScalingOption(QStringLiteral("no-scaling"),
         QCoreApplication::translate("main", "Disable High DPI scaling (AA_DisableHighDpiScaling)."));
-    parser.addOption(noScalingOption);
+    parser.addOption(noScalingOption); // Just for the help text... we've already handled this argument above
+#endif // QT_GUI_LIB
     // Debugging and verbosity options
     QCommandLineOption quietOption(QStringLiteral("quiet"),
         QCoreApplication::translate("main", "Suppress all output."));
@@ -538,16 +549,6 @@ int main(int argc, char *argv[])
     if (parser.isSet(fixedAnimationsOption))
         QUnifiedTimer::instance()->setConsistentTiming(true);
 #endif
-    if (parser.isSet(glEsOption))
-        QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
-    if (parser.isSet(glSoftwareOption))
-        QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
-    if (parser.isSet(glDesktopOption))
-        QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
-    if (parser.isSet(scalingOption))
-        QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    if (parser.isSet(noScalingOption))
-        QCoreApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
     for (const QString &importPath : parser.values(importOption))
         e.addImportPath(importPath);
     files << parser.values(qmlFileOption);
