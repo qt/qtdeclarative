@@ -1455,6 +1455,19 @@ class ForeignExtended
     QML_EXTENDED(Extension)
 };
 
+class BareSingleton : public QObject
+{
+    Q_OBJECT
+    QML_SINGLETON
+    QML_ELEMENT
+
+public:
+    BareSingleton(QObject *parent = nullptr) : QObject(parent)
+    {
+        setObjectName("statically registered");
+    }
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

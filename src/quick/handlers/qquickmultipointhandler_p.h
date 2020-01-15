@@ -81,7 +81,6 @@ public:
 signals:
     void minimumPointCountChanged();
     void maximumPointCountChanged();
-    void marginChanged();
     void centroidChanged();
 
 protected:

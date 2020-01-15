@@ -985,8 +985,6 @@ QQmlEngine::~QQmlEngine()
     Q_D(QQmlEngine);
     QJSEnginePrivate::removeFromDebugServer(this);
 
-    d->typeLoader.invalidate();
-
     // Emit onDestruction signals for the root context before
     // we destroy the contexts, engine, Singleton Types etc. that
     // may be required to handle the destruction signal.
@@ -1002,6 +1000,8 @@ QQmlEngine::~QQmlEngine()
 
     delete d->rootContext;
     d->rootContext = nullptr;
+
+    d->typeLoader.invalidate();
 }
 
 /*! \fn void QQmlEngine::quit()
