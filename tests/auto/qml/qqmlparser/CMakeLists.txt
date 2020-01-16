@@ -29,7 +29,7 @@ qt_add_test(tst_qqmlparser
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qqmlparser CONDITION cross_compile
+qt_extend_target(tst_qqmlparser CONDITION CMAKE_CROSSCOMPILING
     DEFINES
         QTEST_CROSS_COMPILED
 )

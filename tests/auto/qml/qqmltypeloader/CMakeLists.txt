@@ -14,6 +14,7 @@ qt_add_test(tst_qqmltypeloader
     SOURCES
         ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
         ../../shared/util.cpp ../../shared/util.h
+        declarativetesttype.h
         tst_qqmltypeloader.cpp
     INCLUDE_DIRECTORIES
         ../../shared
@@ -25,6 +26,10 @@ qt_add_test(tst_qqmltypeloader
         Qt::Quick
     TESTDATA ${test_data}
 )
+
+#### Keys ignored in scope 1:.:.:tst_qqmltypeloader.pro:<TRUE>:
+# QML_IMPORT_NAME = "declarative.import.for.typeloader.test"
+# QML_IMPORT_VERSION = "3.2"
 
 ## Scopes:
 #####################################################################

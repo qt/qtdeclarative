@@ -19,7 +19,7 @@ qt_add_test(tst_qmlmin
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qmlmin CONDITION cross_compile AND NOT boot2qt
+qt_extend_target(tst_qmlmin CONDITION CMAKE_CROSSCOMPILING AND NOT boot2qt
     DEFINES
         QTEST_CROSS_COMPILED
 )

@@ -24,7 +24,7 @@ qt_add_cmake_library(Imports
 
 #### Keys ignored in scope 3:.:.:imports.pro:NOT _PRO_FILE_PWD____equals____ss_OUT_PWD:
 # COPIES = "cp"
-# cp.files = "qmldir" "plugins.qmltypes" "CompositeImports.qml"
+# cp.files = "qmldir" "plugins.qmltypes" "CompositeImports.qml" "Derived.qml"
 # cp.path = "$$OUT_PWD"
 
 qt_autogen_tools_initial_setup(Imports)

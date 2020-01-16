@@ -80,6 +80,7 @@ set(qmake_immediate_resource_files
     "data/jsmoduleimport.qml"
     "data/library.js"
     "data/module.mjs"
+    "data/parameterAdjustment.qml"
     "data/script.js"
     "data/script.mjs"
     "data/utils.mjs"
