@@ -57,6 +57,7 @@
 #include <qsggeometry.h>
 #include <qsgmaterial.h>
 #include <qsgrendererinterface.h>
+#include <qsgtexture.h>
 #include <QtCore/qrunnable.h>
 
 QT_BEGIN_NAMESPACE
