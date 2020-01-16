@@ -265,35 +265,32 @@ void QQmlMetaType::clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
     }
 }
 
-void QQmlMetaType::qmlInsertModuleRegistration(const QString &uri, QTypeRevision version,
-                                               void (*registerFunction)())
+void QQmlMetaType::qmlInsertModuleRegistration(const QString &uri, void (*registerFunction)())
 {
-    const QQmlMetaTypeData::VersionedUri versionedUri(uri, version);
     QQmlMetaTypeDataPtr data;
-    if (data->moduleTypeRegistrationFunctions.contains(versionedUri))
-        qFatal("Cannot add multiple registrations for %s %d", qPrintable(uri), version.majorVersion());
+    if (data->moduleTypeRegistrationFunctions.contains(uri))
+        qFatal("Cannot add multiple registrations for %s", qPrintable(uri));
     else
-        data->moduleTypeRegistrationFunctions.insert(versionedUri, registerFunction);
+        data->moduleTypeRegistrationFunctions.insert(uri, registerFunction);
 }
 
-void QQmlMetaType::qmlRemoveModuleRegistration(const QString &uri, QTypeRevision version)
+void QQmlMetaType::qmlRemoveModuleRegistration(const QString &uri)
 {
-    const QQmlMetaTypeData::VersionedUri versionedUri(uri, version);
     QQmlMetaTypeDataPtr data;
 
     if (!data.isValid())
         return; // shutdown/deletion race. Not a problem.
 
-    if (!data->moduleTypeRegistrationFunctions.contains(versionedUri))
-        qFatal("Cannot remove multiple registrations for %s %d", qPrintable(uri), version.majorVersion());
+    if (!data->moduleTypeRegistrationFunctions.contains(uri))
+        qFatal("Cannot remove multiple registrations for %s", qPrintable(uri));
     else
-        data->moduleTypeRegistrationFunctions.remove(versionedUri);
+        data->moduleTypeRegistrationFunctions.remove(uri);
 }
 
-bool QQmlMetaType::qmlRegisterModuleTypes(const QString &uri, QTypeRevision version)
+bool QQmlMetaType::qmlRegisterModuleTypes(const QString &uri)
 {
     QQmlMetaTypeDataPtr data;
-    return data->registerModuleTypes(QQmlMetaTypeData::VersionedUri(uri, version));
+    return data->registerModuleTypes(uri);
 }
 
 void QQmlMetaType::clearTypeRegistrations()
@@ -713,7 +710,7 @@ bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePat
             iface->registerTypes(moduleId);
         }
 
-        data->registerModuleTypes(QQmlMetaTypeData::VersionedUri(uri, version));
+        data->registerModuleTypes(uri);
 
         if (!failures.isEmpty()) {
             if (errors) {

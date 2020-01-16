@@ -44,6 +44,7 @@
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qmetaobject.h>
+#include <QtCore/qversionnumber.h>
 
 #define QML_VERSION     0x020000
 #define QML_VERSION_STR "2.0"
@@ -88,10 +89,16 @@
     friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor);
 
 #define QML_ADDED_IN_MINOR_VERSION(VERSION) \
-    Q_CLASSINFO("QML.AddedInMinorVersion", #VERSION)
+    Q_CLASSINFO("QML.AddedInVersion", Q_REVISION(VERSION))
+
+#define QML_ADDED_IN_VERSION(MAJOR, MINOR) \
+    Q_CLASSINFO("QML.AddedInVersion", Q_REVISION(MAJOR, MINOR))
 
 #define QML_REMOVED_IN_MINOR_VERSION(VERSION) \
-    Q_CLASSINFO("QML.RemovedInMinorVersion", #VERSION)
+    Q_CLASSINFO("QML.RemovedInVersion", Q_REVISION(VERSION))
+
+#define QML_REMOVED_IN_VERSION(MAJOR, MINOR) \
+    Q_CLASSINFO("QML.RemovedInVersion", Q_REVISION(MAJOR, MINOR))
 
 #define QML_ATTACHED(ATTACHED_TYPE) \
     Q_CLASSINFO("QML.Attached", #ATTACHED_TYPE) \
@@ -236,7 +243,7 @@ int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMin
         nullptr, nullptr,
 
         nullptr,
-        QTypeRevision::fromEncodedVersion(metaObjectRevision)
+        QTypeRevision::fromMinorVersion(metaObjectRevision)
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -314,7 +321,7 @@ int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int ve
         QQmlPrivate::createParent<E>, &E::staticMetaObject,
 
         nullptr,
-        QTypeRevision::fromEncodedVersion(metaObjectRevision)
+        QTypeRevision::fromMinorVersion(metaObjectRevision)
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -378,7 +385,7 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
         nullptr, nullptr,
 
         nullptr,
-        QTypeRevision::fromEncodedVersion(metaObjectRevision)
+        QTypeRevision::fromMinorVersion(metaObjectRevision)
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -409,7 +416,7 @@ int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
         nullptr, nullptr,
 
         nullptr,
-        QTypeRevision::fromEncodedVersion(metaObjectRevision)
+        QTypeRevision::fromMinorVersion(metaObjectRevision)
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -565,7 +572,7 @@ int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor,
         nullptr, nullptr,
 
         parser,
-        QTypeRevision::fromEncodedVersion(metaObjectRevision)
+        QTypeRevision::fromMinorVersion(metaObjectRevision)
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);

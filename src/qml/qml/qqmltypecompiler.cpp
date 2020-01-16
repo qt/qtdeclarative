@@ -818,8 +818,12 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         if (!pd || !pd->isQObject())
             continue;
 
-        QQmlPropertyCache *pc = enginePrivate->rawPropertyCacheForType(
-                    pd->propType(), pd->typeVersion());
+        // If the version is given, use it and look up by QQmlType.
+        // Otherwise, make sure we look up by metaobject.
+        // TODO: Is this correct?
+        QQmlPropertyCache *pc = pd->typeVersion().hasMinorVersion()
+                ? enginePrivate->rawPropertyCacheForType(pd->propType(), pd->typeVersion())
+                : enginePrivate->rawPropertyCacheForType(pd->propType());
         const QMetaObject *mo = pc ? pc->firstCppMetaObject() : nullptr;
         while (mo) {
             if (mo == &QQmlComponent::staticMetaObject)

@@ -228,7 +228,8 @@ public:
     QQmlMetaObject rawMetaObjectForType(int) const;
     QQmlMetaObject metaObjectForType(int) const;
     QQmlPropertyCache *propertyCacheForType(int);
-    QQmlPropertyCache *rawPropertyCacheForType(int, QTypeRevision version = QTypeRevision());
+    QQmlPropertyCache *rawPropertyCacheForType(int);
+    QQmlPropertyCache *rawPropertyCacheForType(int, QTypeRevision version);
     void registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
     void unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
     QV4::ExecutableCompilationUnit *obtainExecutableCompilationUnit(int typeId);
@@ -282,6 +283,7 @@ private:
     void doDeleteInEngineThread();
 
     void cleanupScarceResources();
+    QQmlPropertyCache *findPropertyCacheInCompositeTypes(int t) const;
 };
 
 /*

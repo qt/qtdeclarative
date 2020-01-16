@@ -46,23 +46,26 @@ QT_BEGIN_NAMESPACE
 struct QQmlModuleRegistrationPrivate
 {
     const QString uri;
-    const QTypeRevision version;
 };
 
-QQmlModuleRegistration::QQmlModuleRegistration(
-        const char *uri, int majorVersion,
-        void (*registerFunction)()) :
-    d(new QQmlModuleRegistrationPrivate {
-        QString::fromUtf8(uri),
-        QTypeRevision::fromMajorVersion(majorVersion)
-      })
+QQmlModuleRegistration::QQmlModuleRegistration(const char *uri, void (*registerFunction)()) :
+    d(new QQmlModuleRegistrationPrivate { QString::fromUtf8(uri) })
 {
-    QQmlMetaType::qmlInsertModuleRegistration(d->uri, d->version, registerFunction);
+    QQmlMetaType::qmlInsertModuleRegistration(d->uri, registerFunction);
 }
+
+#if QT_DEPRECATED_SINCE(6, 0)
+QQmlModuleRegistration::QQmlModuleRegistration(
+        const char *uri, int majorVersion, void (*registerFunction)()) :
+    QQmlModuleRegistration(uri, registerFunction)
+{
+    Q_UNUSED(majorVersion);
+}
+#endif
 
 QQmlModuleRegistration::~QQmlModuleRegistration()
 {
-    QQmlMetaType::qmlRemoveModuleRegistration(d->uri, d->version);
+    QQmlMetaType::qmlRemoveModuleRegistration(d->uri);
     delete d;
 }
 

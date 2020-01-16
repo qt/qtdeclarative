@@ -168,7 +168,7 @@ void tst_qqmlpropertycache::revisionedProperties()
     QQmlRefPointer<QQmlPropertyCache> cacheWithoutVersion(new QQmlPropertyCache(metaObject),
                                                           QQmlRefPointer<QQmlPropertyCache>::Adopt);
     QQmlRefPointer<QQmlPropertyCache> cacheWithVersion(
-                new QQmlPropertyCache(metaObject, QTypeRevision::fromEncodedVersion(1)),
+                new QQmlPropertyCache(metaObject, QTypeRevision::fromMinorVersion(1)),
                 QQmlRefPointer<QQmlPropertyCache>::Adopt);
     QQmlPropertyData *data;
 

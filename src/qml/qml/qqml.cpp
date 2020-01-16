@@ -144,6 +144,54 @@ static QVector<QTypeRevision> availableRevisions(const QMetaObject *metaObject)
     return revisions;
 }
 
+template<typename Registration>
+void assignVersions(Registration *registration, QTypeRevision revision,
+                    QTypeRevision defaultVersion)
+{
+    const quint8 majorVersion = revision.hasMajorVersion() ? revision.majorVersion()
+                                                           : defaultVersion.majorVersion();
+    registration->version = revision.hasMinorVersion()
+            ? QTypeRevision::fromVersion(majorVersion, revision.minorVersion())
+            : QTypeRevision::fromMajorVersion(majorVersion);
+    registration->revision = revision;
+}
+
+static QVector<QTypeRevision> prepareRevisions(const QMetaObject *metaObject, QTypeRevision added)
+{
+    auto revisions = availableRevisions(metaObject);
+    revisions.append(added);
+    return revisions;
+}
+
+static void uniqueRevisions(QVector<QTypeRevision> *revisions, QTypeRevision defaultVersion,
+                            QTypeRevision added)
+{
+    bool revisionsHaveMajorVersions = false;
+    for (QTypeRevision revision : QVector<QTypeRevision>(*revisions)) { // yes, copy
+        // allow any minor version for each explicitly specified past major one
+        if (revision.hasMajorVersion()) {
+            revisionsHaveMajorVersions = true;
+            if (revision.majorVersion() < defaultVersion.majorVersion())
+                revisions->append(QTypeRevision::fromVersion(revision.majorVersion(), 254));
+        }
+    }
+
+    if (revisionsHaveMajorVersions) {
+        if (!added.hasMajorVersion()) {
+            // If added in unspecified major version, assume default one.
+            revisions->append(QTypeRevision::fromVersion(defaultVersion.majorVersion(),
+                                                         added.minorVersion()));
+        } else if (added.majorVersion() < defaultVersion.majorVersion()) {
+            // If added in past major version, add .0 of default version.
+            revisions->append(QTypeRevision::fromVersion(defaultVersion.majorVersion(), 0));
+        }
+    }
+
+    std::sort(revisions->begin(), revisions->end());
+    const auto it = std::unique(revisions->begin(), revisions->end());
+    revisions->erase(it, revisions->end());
+}
+
 /*
 This method is "over generalized" to allow us to (potentially) register more types of things in
 the future without adding exported symbols.
@@ -191,18 +239,14 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
 
         const QTypeRevision added = revisionClassInfo(
                     type.classInfoMetaObject, "QML.AddedInVersion",
-                    QTypeRevision::zero());
+                    QTypeRevision::fromMinorVersion(0));
         const QTypeRevision removed = revisionClassInfo(
                     type.classInfoMetaObject, "QML.RemovedInVersion");
 
-        auto revisions = availableRevisions(type.metaObject);
-        revisions.append(qMax(added, QTypeRevision::zero()));
+        auto revisions = prepareRevisions(type.metaObject, added);
         if (type.attachedPropertiesMetaObject)
             revisions += availableRevisions(type.attachedPropertiesMetaObject);
-
-        std::sort(revisions.begin(), revisions.end());
-        const auto it = std::unique(revisions.begin(), revisions.end());
-        revisions.erase(it, revisions.end());
+        uniqueRevisions(&revisions, type.version, added);
 
         for (QTypeRevision revision : revisions) {
             if (revision < added)
@@ -217,12 +261,8 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
                 revisionRegistration.create = creatable ? type.create : nullptr;
             }
 
-            // Equivalent of qmlRegisterRevision<T, revision>(...)
-            revisionRegistration.version = QTypeRevision::fromVersion(type.version.majorVersion(),
-                                                                      revision.minorVersion());
-            revisionRegistration.revision = revision;
+            assignVersions(&revisionRegistration, revision, type.version);
             revisionRegistration.customParser = type.customParserFactory();
-
             qmlregister(TypeRegistration, &revisionRegistration);
         }
         break;
@@ -248,16 +288,12 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
 
         const QTypeRevision added = revisionClassInfo(
                     type.classInfoMetaObject, "QML.AddedInVersion",
-                    QTypeRevision::zero());
+                    QTypeRevision::fromMinorVersion(0));
         const QTypeRevision removed = revisionClassInfo(
                     type.classInfoMetaObject, "QML.RemovedInVersion");
 
-        auto revisions = availableRevisions(type.instanceMetaObject);
-        revisions.append(qMax(added, QTypeRevision::zero()));
-
-        std::sort(revisions.begin(), revisions.end());
-        const auto it = std::unique(revisions.begin(), revisions.end());
-        revisions.erase(it, revisions.end());
+        auto revisions = prepareRevisions(type.instanceMetaObject, added);
+        uniqueRevisions(&revisions, type.version, added);
 
         for (QTypeRevision revision : qAsConst(revisions)) {
             if (revision < added)
@@ -274,11 +310,7 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
                 revisionRegistration.generalizedQobjectApi = type.generalizedQobjectApi;
             }
 
-            // Equivalent of qmlRegisterRevision<T, revision>(...)
-            revisionRegistration.version = QTypeRevision::fromVersion(type.version.majorVersion(),
-                                                                      revision.minorVersion());
-            revisionRegistration.revision = revision;
-
+            assignVersions(&revisionRegistration, revision, type.version);
             qmlregister(SingletonRegistration, &revisionRegistration);
         }
         break;

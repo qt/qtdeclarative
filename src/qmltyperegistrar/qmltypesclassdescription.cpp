@@ -61,7 +61,7 @@ const QJsonObject *QmlTypesClassDescription::findType(const QVector<QJsonObject>
 void QmlTypesClassDescription::collect(const QJsonObject *classDef,
                                            const QVector<QJsonObject> &types,
                                            const QVector<QJsonObject> &foreign,
-                                           bool topLevel)
+                                           bool topLevel, QTypeRevision defaultRevision)
 {
     const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
     for (const QJsonValue &classInfo : classInfos) {
@@ -72,7 +72,7 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
         if (name == QLatin1String("DefaultProperty")) {
             if (defaultProp.isEmpty())
                 defaultProp = value;
-        } else if (name == QLatin1String("QML.AddedInMinorVersion")) {
+        } else if (name == QLatin1String("QML.AddedInVersion")) {
             const QTypeRevision revision = QTypeRevision::fromEncodedVersion(value.toInt());
             if (topLevel) {
                 addedInRevision = revision;
@@ -91,16 +91,16 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
                 elementName = classDef->value(QLatin1String("className")).toString();
             else if (value != QLatin1String("anonymous"))
                 elementName = value;
-        } else if (name == QLatin1String("QML.RemovedInMinorVersion")) {
+        } else if (name == QLatin1String("QML.RemovedInVersion")) {
             removedInRevision = QTypeRevision::fromEncodedVersion(value.toInt());
         } else if (name == QLatin1String("QML.Creatable")) {
             isCreatable = (value != QLatin1String("false"));
         } else if (name == QLatin1String("QML.Attached")) {
             attachedType = value;
             if (const QJsonObject *other = findType(types, attachedType))
-                collect(other, types, foreign, false);
+                collect(other, types, foreign, false, defaultRevision);
             else if (const QJsonObject *other = findType(foreign, attachedType))
-                collect(other, types, foreign, false);
+                collect(other, types, foreign, false, defaultRevision);
         } else if (name == QLatin1String("QML.Singleton")) {
             if (value == QLatin1String("true"))
                 isSingleton = true;
@@ -143,15 +143,17 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
                 superClass = superName;
 
             if (const QJsonObject *other = findType(types, superName))
-                collect(other, types, foreign, false);
+                collect(other, types, foreign, false, defaultRevision);
             else if (const QJsonObject *other = findType(foreign, superName))
-                collect(other, types, foreign, false);
+                collect(other, types, foreign, false, defaultRevision);
         }
     }
 
     if (!addedInRevision.isValid()) {
-        revisions.append(QTypeRevision::zero());
-        addedInRevision = QTypeRevision::zero();
+        revisions.append(defaultRevision);
+        addedInRevision = defaultRevision;
+    } else if (addedInRevision < defaultRevision) {
+        revisions.append(defaultRevision);
     }
 
     std::sort(revisions.begin(), revisions.end());

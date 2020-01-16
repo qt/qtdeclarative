@@ -606,7 +606,7 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
             // Is this a module?
             if (QQmlMetaType::isAnyModule(import->uri)
                     || (qmldirResult != QQmlImports::QmldirInterceptedToRemote
-                        && QQmlMetaType::qmlRegisterModuleTypes(import->uri, import->version))) {
+                        && QQmlMetaType::qmlRegisterModuleTypes(import->uri))) {
                 if (!m_importCache.addLibraryImport(
                             importDatabase, import->uri, import->qualifier, import->version,
                             QString(), QString(), false, errors))

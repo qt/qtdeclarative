@@ -368,8 +368,8 @@ int main(int argc, char **argv)
             qPrintable(module), qPrintable(majorVersion),
             qPrintable(parser.value(minorVersionOption)));
     fprintf(output, "\n}\n");
-    fprintf(output, "\nstatic const QQmlModuleRegistration registration(\"%s\", %s, %s);\n",
-            qPrintable(module), qPrintable(majorVersion), qPrintable(functionName));
+    fprintf(output, "\nstatic const QQmlModuleRegistration registration(\"%s\", %s);\n",
+            qPrintable(module), qPrintable(functionName));
 
     if (!parser.isSet(pluginTypesOption))
         return EXIT_SUCCESS;

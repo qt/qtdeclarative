@@ -2354,58 +2354,91 @@ static QQmlPropertyCache *propertyCacheForPotentialInlineComponentType(int t, co
     return (*iter)->rootPropertyCache().data();
 }
 
+/*!
+ * \internal
+ *
+ * Look up by type's baseMetaObject.
+ */
 QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(int t) const
 {
-    Locker locker(this);
-    auto iter = m_compositeTypes.constFind(t);
-    if (iter != m_compositeTypes.cend()) {
-        return propertyCacheForPotentialInlineComponentType(t, iter);
-    } else {
-        QQmlType type = QQmlMetaType::qmlType(t);
-        return QQmlMetaObject(type.baseMetaObject());
-    }
+    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(t))
+        return QQmlMetaObject(composite);
+
+    QQmlType type = QQmlMetaType::qmlType(t);
+    return QQmlMetaObject(type.baseMetaObject());
 }
 
+/*!
+ * \internal
+ *
+ * Look up by type's metaObject.
+ */
 QQmlMetaObject QQmlEnginePrivate::metaObjectForType(int t) const
 {
-    Locker locker(this);
-    auto iter = m_compositeTypes.constFind(t);
-    if (iter != m_compositeTypes.cend()) {
-        return propertyCacheForPotentialInlineComponentType(t, iter);
-    } else {
-        QQmlType type = QQmlMetaType::qmlType(t);
-        return QQmlMetaObject(type.metaObject());
-    }
+    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(t))
+        return QQmlMetaObject(composite);
+
+    QQmlType type = QQmlMetaType::qmlType(t);
+    return QQmlMetaObject(type.metaObject());
 }
 
+/*!
+ * \internal
+ *
+ * Look up by type's metaObject and version.
+ */
 QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(int t)
 {
-    Locker locker(this);
-    auto iter = m_compositeTypes.constFind(t);
-    if (iter != m_compositeTypes.cend()) {
-        return propertyCacheForPotentialInlineComponentType(t, iter);
-    } else {
-        QQmlType type = QQmlMetaType::qmlType(t);
-        locker.unlock();
-        return type.isValid() ? cache(type.metaObject()) : nullptr;
-    }
+    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(t))
+        return composite;
+
+    QQmlType type = QQmlMetaType::qmlType(t);
+    return type.isValid() ? cache(type.metaObject(), type.version()) : nullptr;
 }
 
+/*!
+ * \internal
+ *
+ * Look up by type's baseMetaObject and unspecified/any version.
+ * TODO: Is this correct? Passing a plain QTypeRevision() rather than QTypeRevision::zero() or
+ *       the actual type's version seems strange. The behavior has been in place for a while.
+ */
+QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t)
+{
+    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(t))
+        return composite;
+
+    QQmlType type = QQmlMetaType::qmlType(t);
+    return type.isValid() ? cache(type.baseMetaObject(), QTypeRevision()) : nullptr;
+}
+
+/*!
+ * \internal
+ *
+ * Look up by QQmlType and version. We only fall back to lookup by metaobject if the type
+ * has no revisiononed attributes here. Unspecified versions are interpreted as "any".
+ */
 QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t, QTypeRevision version)
+{
+    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(t))
+        return composite;
+
+    QQmlType type = QQmlMetaType::qmlType(t);
+    if (!type.isValid())
+        return nullptr;
+
+    return type.containsRevisionedAttributes()
+            ? QQmlMetaType::propertyCache(type, version)
+            : cache(type.metaObject(), version);
+}
+
+QQmlPropertyCache *QQmlEnginePrivate::findPropertyCacheInCompositeTypes(int t) const
 {
     Locker locker(this);
     auto iter = m_compositeTypes.constFind(t);
-    if (iter != m_compositeTypes.cend()) {
-        return propertyCacheForPotentialInlineComponentType(t, iter);
-    } else {
-        QQmlType type = QQmlMetaType::qmlType(t);
-        locker.unlock();
-
-        if (version.hasMinorVersion())
-            return type.isValid() ? cache(type, version) : nullptr;
-        else
-            return type.isValid() ? cache(type.baseMetaObject()) : nullptr;
-    }
+    return (iter == m_compositeTypes.constEnd())
+            ? nullptr
+            : propertyCacheForPotentialInlineComponentType(t, iter);
 }
 
 void QQmlEnginePrivate::registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)

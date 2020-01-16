@@ -51,7 +51,7 @@ struct QmlTypesClassDescription
     bool isBuiltin = false;
 
     void collect(const QJsonObject *classDef, const QVector<QJsonObject> &types,
-                 const QVector<QJsonObject> &foreign, bool topLevel);
+                 const QVector<QJsonObject> &foreign, bool topLevel, QTypeRevision defaultRevision);
 
     static const QJsonObject *findType(const QVector<QJsonObject> &types, const QString &name);
 };
