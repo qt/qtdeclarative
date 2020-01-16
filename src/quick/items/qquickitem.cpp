@@ -3244,6 +3244,7 @@ QQuickItemPrivate::QQuickItemPrivate()
 #else
     , touchEnabled(false)
 #endif
+    , hasCursorHandler(false)
     , dirtyAttributes(0)
     , nextDirtyItem(nullptr)
     , prevDirtyItem(nullptr)
@@ -7472,14 +7473,14 @@ void QQuickItem::setAcceptTouchEvents(bool enabled)
     d->touchEnabled = enabled;
 }
 
-void QQuickItemPrivate::setHasCursorInChild(bool hasCursor)
+void QQuickItemPrivate::setHasCursorInChild(bool hc)
 {
 #if QT_CONFIG(cursor)
     Q_Q(QQuickItem);
 
     // if we're asked to turn it off (because of an unsetcursor call, or a node
     // removal) then we should make sure it's really ok to turn it off.
-    if (!hasCursor && subtreeCursorEnabled) {
+    if (!hc && subtreeCursorEnabled) {
         if (hasCursor)
             return; // nope! sorry, I have a cursor myself
         for (QQuickItem *otherChild : qAsConst(childItems)) {
@@ -7489,14 +7490,14 @@ void QQuickItemPrivate::setHasCursorInChild(bool hasCursor)
         }
     }
 
-    subtreeCursorEnabled = hasCursor;
+    subtreeCursorEnabled = hc;
     QQuickItem *parent = q->parentItem();
     if (parent) {
         QQuickItemPrivate *parentPrivate = QQuickItemPrivate::get(parent);
-        parentPrivate->setHasCursorInChild(hasCursor);
+        parentPrivate->setHasCursorInChild(hc);
     }
 #else
-    Q_UNUSED(hasCursor);
+    Q_UNUSED(hc);
 #endif
 }
 
@@ -7573,17 +7574,20 @@ void QQuickItem::setCursor(const QCursor &cursor)
         }
     }
 
+    QPointF updateCursorPos;
     if (!d->hasCursor) {
-        d->setHasCursorInChild(true);
         d->hasCursor = true;
         if (d->window) {
             QWindow *renderWindow = QQuickRenderControl::renderWindowFor(d->window);
             QWindow *window = renderWindow ? renderWindow : d->window;
             QPointF pos = window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint());
             if (contains(mapFromScene(pos)))
-                QQuickWindowPrivate::get(d->window)->updateCursor(pos);
+                updateCursorPos = pos;
         }
     }
+    d->setHasCursorInChild(d->hasCursor || d->hasCursorHandler);
+    if (!updateCursorPos.isNull())
+        QQuickWindowPrivate::get(d->window)->updateCursor(updateCursorPos);
 }
 
 /*!
@@ -7597,8 +7601,8 @@ void QQuickItem::unsetCursor()
     Q_D(QQuickItem);
     if (!d->hasCursor)
         return;
-    d->setHasCursorInChild(false);
     d->hasCursor = false;
+    d->setHasCursorInChild(d->hasCursorHandler);
     if (d->extra.isAllocated())
         d->extra->cursor = QCursor();
 
@@ -7609,6 +7613,64 @@ void QQuickItem::unsetCursor()
             windowPrivate->updateCursor(pos);
         }
     }
+}
+
+/*!
+    \internal
+    Returns the cursor that should actually be shown, allowing the given
+    \handler to override the Item cursor if it is active or hovered.
+
+    \sa cursor(), setCursor(), QtQuick::PointerHandler::cursor
+*/
+QCursor QQuickItemPrivate::effectiveCursor(const QQuickPointerHandler *handler) const
+{
+    Q_Q(const QQuickItem);
+    if (!handler)
+        return q->cursor();
+    bool hoverCursorSet = false;
+    QCursor hoverCursor;
+    bool activeCursorSet = false;
+    QCursor activeCursor;
+    if (const QQuickHoverHandler *hoverHandler = qobject_cast<const QQuickHoverHandler *>(handler)) {
+        hoverCursorSet = hoverHandler->isCursorShapeExplicitlySet();
+        hoverCursor = hoverHandler->cursorShape();
+    } else if (handler->active()) {
+        activeCursorSet = handler->isCursorShapeExplicitlySet();
+        activeCursor = handler->cursorShape();
+    }
+    if (activeCursorSet)
+        return activeCursor;
+    if (hoverCursorSet)
+        return hoverCursor;
+    return q->cursor();
+}
+
+/*!
+    \internal
+    Returns the Pointer Handler that is currently attempting to set the cursor shape,
+    or null if there is no such handler.
+
+    \sa QtQuick::PointerHandler::cursor
+*/
+QQuickPointerHandler *QQuickItemPrivate::effectiveCursorHandler() const
+{
+    if (!hasPointerHandlers())
+        return nullptr;
+    QQuickPointerHandler *retHoverHandler = nullptr;
+    for (QQuickPointerHandler *h : extra->pointerHandlers) {
+        if (!h->isCursorShapeExplicitlySet())
+            continue;
+        QQuickHoverHandler *hoverHandler = qmlobject_cast<QQuickHoverHandler *>(h);
+        // For now, we don't expect multiple hover handlers in one Item, so we choose the first one found;
+        // but a future use case could be to have different cursors for different tablet stylus devices.
+        // In that case, this function needs more information: which device did the event come from.
+        // TODO Qt 6: add QPointerDevice* as argument to this function? (it doesn't exist yet in Qt 5)
+        if (!retHoverHandler && hoverHandler)
+            retHoverHandler = hoverHandler;
+        if (!hoverHandler && h->active())
+            return h;
+    }
+    return retHoverHandler;
 }
 
 #endif

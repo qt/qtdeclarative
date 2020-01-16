@@ -51,7 +51,6 @@ Q_LOGGING_CATEGORY(lcPointerHandlerActive, "qt.quick.handler.active")
     \qmltype PointerHandler
     \qmlabstract
     \since 5.10
-    \preliminary
     \instantiates QQuickPointerHandler
     \inqmlmodule QtQuick
     \brief Abstract handler for pointer events.
@@ -152,6 +151,87 @@ void QQuickPointerHandler::resetDragThreshold()
     d->dragThreshold = -1;
     emit dragThresholdChanged();
 }
+
+/*!
+    \since 5.15
+    \qmlproperty Qt::CursorShape PointerHandler::cursorShape
+    This property holds the cursor shape that will appear whenever the mouse is
+    hovering over the \l parentItem while \l active is \c true.
+
+    The available cursor shapes are:
+    \list
+    \li Qt.ArrowCursor
+    \li Qt.UpArrowCursor
+    \li Qt.CrossCursor
+    \li Qt.WaitCursor
+    \li Qt.IBeamCursor
+    \li Qt.SizeVerCursor
+    \li Qt.SizeHorCursor
+    \li Qt.SizeBDiagCursor
+    \li Qt.SizeFDiagCursor
+    \li Qt.SizeAllCursor
+    \li Qt.BlankCursor
+    \li Qt.SplitVCursor
+    \li Qt.SplitHCursor
+    \li Qt.PointingHandCursor
+    \li Qt.ForbiddenCursor
+    \li Qt.WhatsThisCursor
+    \li Qt.BusyCursor
+    \li Qt.OpenHandCursor
+    \li Qt.ClosedHandCursor
+    \li Qt.DragCopyCursor
+    \li Qt.DragMoveCursor
+    \li Qt.DragLinkCursor
+    \endlist
+
+    The default value is not set, which allows the \l {QQuickItem::cursor()}{cursor}
+    of \l parentItem to appear. This property can be reset to the same initial
+    condition by setting it to undefined.
+
+    \note When this property has not been set, or has been set to \c undefined,
+    if you read the value it will return \c Qt.ArrowCursor.
+
+    \sa Qt::CursorShape, QQuickItem::cursor(), HoverHandler::cursorShape
+*/
+#if QT_CONFIG(cursor)
+Qt::CursorShape QQuickPointerHandler::cursorShape() const
+{
+    Q_D(const QQuickPointerHandler);
+    return d->cursorShape;
+}
+
+void QQuickPointerHandler::setCursorShape(Qt::CursorShape shape)
+{
+    Q_D(QQuickPointerHandler);
+    if (d->cursorSet && shape == d->cursorShape)
+        return;
+    d->cursorShape = shape;
+    d->cursorSet = true;
+    QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(parentItem());
+    itemPriv->hasCursorHandler = true;
+    itemPriv->setHasCursorInChild(true);
+    emit cursorShapeChanged();
+}
+
+void QQuickPointerHandler::resetCursorShape()
+{
+    Q_D(QQuickPointerHandler);
+    if (!d->cursorSet)
+        return;
+    d->cursorShape = Qt::ArrowCursor;
+    d->cursorSet = false;
+    QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(parentItem());
+    itemPriv->hasCursorHandler = false;
+    itemPriv->setHasCursorInChild(itemPriv->hasCursor);
+    emit cursorShapeChanged();
+}
+
+bool QQuickPointerHandler::isCursorShapeExplicitlySet() const
+{
+    Q_D(const QQuickPointerHandler);
+    return d->cursorSet;
+}
+#endif
 
 /*!
     Notification that the grab has changed in some way which is relevant to this handler.
@@ -597,11 +677,13 @@ QQuickPointerHandlerPrivate::QQuickPointerHandlerPrivate()
   : grabPermissions(QQuickPointerHandler::CanTakeOverFromItems |
                       QQuickPointerHandler::CanTakeOverFromHandlersOfDifferentType |
                       QQuickPointerHandler::ApprovesTakeOverByAnything)
+  , cursorShape(Qt::ArrowCursor)
   , enabled(true)
   , active(false)
   , targetExplicitlySet(false)
   , hadKeepMouseGrab(false)
   , hadKeepTouchGrab(false)
+  , cursorSet(false)
 {
 }
 

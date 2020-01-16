@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.15
 
 Rectangle {
     id: root
@@ -52,6 +52,7 @@ Rectangle {
                     id: buttonMA
                     objectName: "buttonMA"
                     hoverEnabled: true
+                    cursorShape: Qt.UpArrowCursor
                     anchors.fill: parent
                     onClicked: console.log("clicked MA")
                 }
@@ -74,9 +75,12 @@ Rectangle {
                     id: buttonHH
                     objectName: "buttonHH"
                     acceptedDevices: PointerDevice.AllDevices
+                    cursorShape: tapHandler.pressed ? Qt.BusyCursor : Qt.PointingHandCursor
                 }
 
-                TapHandler { }
+                TapHandler {
+                    id: tapHandler
+                }
 
                 Text {
                     anchors.centerIn: parent
@@ -127,6 +131,7 @@ Rectangle {
         HoverHandler {
             id: topSidebarHH
             objectName: "topSidebarHH"
+            cursorShape: Qt.OpenHandCursor
         }
 
         Loader {
@@ -152,6 +157,7 @@ Rectangle {
             id: bottomSidebarMA
             objectName: "bottomSidebarMA"
             hoverEnabled: true
+            cursorShape: Qt.ClosedHandCursor
             anchors.fill: parent
         }
 
