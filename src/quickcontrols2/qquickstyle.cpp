@@ -384,7 +384,13 @@ void QQuickStylePrivate::init(const QUrl &baseUrl)
     spec->resolve(baseUrl);
 
     if (!spec->fallbackStyle.isEmpty()) {
-        QString fallbackStyle = spec->findStyle(QQmlFile::urlToLocalFileOrQrc(baseUrl), spec->fallbackStyle);
+        QString fallbackStyle;
+        const QStringList stylePaths = QQuickStylePrivate::stylePaths();
+        for (const QString &path : stylePaths) {
+            fallbackStyle = spec->findStyle(path, spec->fallbackStyle);
+            if (!fallbackStyle.isEmpty())
+                break;
+        }
         if (fallbackStyle.isEmpty()) {
             if (spec->fallbackStyle.compare(QStringLiteral("Default")) != 0) {
                 qWarning() << "ERROR: unable to locate fallback style" << spec->fallbackStyle;
