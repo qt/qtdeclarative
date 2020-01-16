@@ -205,7 +205,7 @@ void QSGSoftwareNinePatchNode::paint(QPainter *painter)
         painter->drawPixmap(m_bounds, m_pixmap, QRectF(0, 0, m_pixmap.width(), m_pixmap.height()));
     else
         QSGSoftwareHelpers::qDrawBorderPixmap(painter, m_bounds.toRect(), m_margins, m_pixmap, QRect(0, 0, m_pixmap.width(), m_pixmap.height()),
-                                              m_margins, Qt::StretchTile, QSGSoftwareHelpers::QDrawBorderPixmap::DrawingHints(nullptr));
+                                              m_margins, Qt::StretchTile, QSGSoftwareHelpers::QDrawBorderPixmap::DrawingHints{});
 }
 
 QRectF QSGSoftwareNinePatchNode::bounds() const

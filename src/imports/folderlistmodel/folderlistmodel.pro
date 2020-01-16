@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET  = qmlfolderlistmodelplugin
 TARGETPATH = Qt/labs/folderlistmodel
-IMPORT_VERSION = 2.$$QT_MINOR_VERSION
+IMPORT_VERSION = 2.15
 
 QT = core-private qml-private
 
@@ -11,4 +11,5 @@ HEADERS += qquickfolderlistmodel.h \
     fileproperty_p.h \
     fileinfothread_p.h
 
+CONFIG += qmltypes install_qmltypes
 load(qml_plugin)

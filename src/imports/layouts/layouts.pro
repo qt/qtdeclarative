@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET  = qquicklayoutsplugin
 TARGETPATH = QtQuick/Layouts
-IMPORT_VERSION = 1.$$QT_MINOR_VERSION
+IMPORT_VERSION = 1.15
 
 QT *= qml-private quick-private gui-private core-private
 
@@ -18,5 +18,7 @@ HEADERS += \
     qquickstacklayout_p.h \
     qquickgridlayoutengine_p.h \
     qquicklayoutstyleinfo_p.h
+
+CONFIG += qmltypes install_qmltypes
 
 load(qml_plugin)

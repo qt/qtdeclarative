@@ -52,12 +52,6 @@ Window {
     property int selectedX: -1
     property int selectedY: -1
 
-    TestTableModel {
-        id: tableModel
-        rowCount: 200
-        columnCount: 200
-    }
-
     Rectangle {
         anchors.fill: parent
         anchors.margins: 10
@@ -72,19 +66,19 @@ Window {
                 spacing: 1
                 Button {
                     text: "Add row"
-                    onClicked: tableModel.insertRows(selectedY, 1)
+                    onClicked: tableView.model.insertRows(selectedY, 1)
                 }
                 Button {
                     text: "Remove row"
-                    onClicked: tableModel.removeRows(selectedY, 1)
+                    onClicked: tableView.model.removeRows(selectedY, 1)
                 }
                 Button {
                     text: "Add column"
-                    onClicked: tableModel.insertColumns(selectedX, 1)
+                    onClicked: tableView.model.insertColumns(selectedX, 1)
                 }
                 Button {
                     text: "Remove column"
-                    onClicked: tableModel.removeColumns(selectedX, 1)
+                    onClicked: tableView.model.removeColumns(selectedX, 1)
                 }
             }
 

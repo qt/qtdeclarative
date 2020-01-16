@@ -53,13 +53,10 @@
 
 #include "maskedmousearea.h"
 
-
 int main(int argc, char* argv[])
 {
     QGuiApplication app(argc,argv);
     QQuickView view;
-
-    qmlRegisterTypesAndRevisions<MaskedMouseArea>("Example", 1);
 
     view.setSource(QUrl("qrc:///customitems/maskedmousearea/maskedmousearea.qml"));
     view.show();

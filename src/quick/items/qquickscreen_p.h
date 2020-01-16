@@ -152,10 +152,10 @@ protected Q_SLOTS:
     void screenChanged(QScreen*);
 
 private:
-    QQuickWindow* m_window;
+    QQuickWindow* m_window = nullptr;
     QQuickItem* m_attachee;
     Qt::ScreenOrientations m_updateMask;
-    bool m_updateMaskSet;
+    bool m_updateMaskSet = false;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickScreen : public QObject

@@ -16,7 +16,7 @@ SUBDIRS += \
         rendernode \
         threadedanimation
 
-macos {
+macos|ios {
     SUBDIRS += \
         metalunderqml \
         metaltextureimport
@@ -27,7 +27,9 @@ win32 {
 }
 
 qtConfig(vulkan) {
-    SUBDIRS += vulkanunderqml
+    SUBDIRS += \
+        vulkanunderqml \
+        vulkantextureimport
 }
 
 EXAMPLE_FILES += \

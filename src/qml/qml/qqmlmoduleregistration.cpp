@@ -39,16 +39,28 @@
 
 #include <QtQml/private/qqmlmetatype_p.h>
 #include <QtQml/qqmlmoduleregistration.h>
-#include <QtCore/qglobalstatic.h>
 
 QT_BEGIN_NAMESPACE
 
+struct QQmlModuleRegistrationPrivate
+{
+    const QString uri;
+    const int majorVersion;
+};
+
 QQmlModuleRegistration::QQmlModuleRegistration(
         const char *uri, int majorVersion,
-        void (*registerFunction)())
+        void (*registerFunction)()) :
+    d(new QQmlModuleRegistrationPrivate { QString::fromUtf8(uri), majorVersion })
 {
-    QQmlMetaType::qmlInsertModuleRegistration(QString::fromUtf8(uri), majorVersion,
+    QQmlMetaType::qmlInsertModuleRegistration(d->uri, d->majorVersion,
                                               registerFunction);
+}
+
+QQmlModuleRegistration::~QQmlModuleRegistration()
+{
+    QQmlMetaType::qmlRemoveModuleRegistration(d->uri, d->majorVersion);
+    delete d;
 }
 
 QT_END_NAMESPACE

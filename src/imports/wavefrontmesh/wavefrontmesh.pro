@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET  = qmlwavefrontmeshplugin
 TARGETPATH = Qt/labs/wavefrontmesh
-IMPORT_VERSION = 1.$$QT_MINOR_VERSION
+IMPORT_VERSION = 1.15
 
 QT = core-private qml-private quick-private
 
@@ -12,4 +12,5 @@ SOURCES += \
 HEADERS += \
     qwavefrontmesh.h
 
+CONFIG += qmltypes install_qmltypes
 load(qml_plugin)

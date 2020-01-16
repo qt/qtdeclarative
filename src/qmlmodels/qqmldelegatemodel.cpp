@@ -55,6 +55,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcItemViewDelegateRecycling, "qt.quick.itemview.delegaterecycling")
+
 class QQmlDelegateModelItem;
 
 namespace QV4 {
@@ -204,6 +206,9 @@ QQmlDelegateModelPrivate::QQmlDelegateModelPrivate(QQmlContext *ctxt)
 QQmlDelegateModelPrivate::~QQmlDelegateModelPrivate()
 {
     qDeleteAll(m_finishedIncubating);
+
+    // Free up all items in the pool
+    drainReusableItemsPool(0);
 
     if (m_cacheMetaType)
         m_cacheMetaType->release();
@@ -588,36 +593,47 @@ int QQmlDelegateModel::count() const
     return d->m_compositor.count(d->m_compositorGroup);
 }
 
-QQmlDelegateModel::ReleaseFlags QQmlDelegateModelPrivate::release(QObject *object)
+QQmlDelegateModel::ReleaseFlags QQmlDelegateModelPrivate::release(QObject *object, QQmlInstanceModel::ReusableFlag reusableFlag)
 {
     if (!object)
-        return QQmlDelegateModel::ReleaseFlags(0);
+        return QQmlDelegateModel::ReleaseFlags{};
 
     QQmlDelegateModelItem *cacheItem = QQmlDelegateModelItem::dataForObject(object);
     if (!cacheItem)
-        return QQmlDelegateModel::ReleaseFlags(0);
+        return QQmlDelegateModel::ReleaseFlags{};
 
     if (!cacheItem->releaseObject())
         return QQmlDelegateModel::Referenced;
 
+    if (reusableFlag == QQmlInstanceModel::Reusable) {
+        removeCacheItem(cacheItem);
+        m_reusableItemsPool.insertItem(cacheItem);
+        emit q_func()->itemPooled(cacheItem->index, cacheItem->object);
+        return QQmlInstanceModel::Pooled;
+    }
+
+    destroyCacheItem(cacheItem);
+    return QQmlInstanceModel::Destroyed;
+}
+
+void QQmlDelegateModelPrivate::destroyCacheItem(QQmlDelegateModelItem *cacheItem)
+{
+    emitDestroyingItem(cacheItem->object);
     cacheItem->destroyObject();
-    emitDestroyingItem(object);
     if (cacheItem->incubationTask) {
         releaseIncubator(cacheItem->incubationTask);
         cacheItem->incubationTask = nullptr;
     }
     cacheItem->Dispose();
-    return QQmlInstanceModel::Destroyed;
 }
 
 /*
   Returns ReleaseStatus flags.
 */
-
-QQmlDelegateModel::ReleaseFlags QQmlDelegateModel::release(QObject *item)
+QQmlDelegateModel::ReleaseFlags QQmlDelegateModel::release(QObject *item, QQmlInstanceModel::ReusableFlag reusableFlag)
 {
     Q_D(QQmlDelegateModel);
-    QQmlInstanceModel::ReleaseFlags stat = d->release(item);
+    QQmlInstanceModel::ReleaseFlags stat = d->release(item, reusableFlag);
     return stat;
 }
 
@@ -937,13 +953,14 @@ void PropertyUpdater::breakBinding()
 void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *modelItemToIncubate, QObject *object)
 {
     auto incubatorPriv = QQmlIncubatorPrivate::get(this);
-    QQmlData *d = QQmlData::get(object);
-    auto contextData = d ? d->context : nullptr;
-    if (contextData) {
-        contextData->hasExtraObject = true;
-        contextData->extraObject = modelItemToIncubate;
-    }
     if (incubatorPriv->hadRequiredProperties()) {
+        QQmlData *d = QQmlData::get(object);
+        auto contextData = d ? d->context : nullptr;
+        if (contextData) {
+            contextData->hasExtraObject = true;
+            contextData->extraObject = modelItemToIncubate;
+        }
+
         if (incubatorPriv->requiredProperties().empty())
             return;
         RequiredProperties &requiredProperties = incubatorPriv->requiredProperties();
@@ -954,21 +971,25 @@ void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *mod
         // column, model and more
         // the most derived subclass of QQmlDelegateModelItem is QQmlDMAbstractModelData at depth 2,
         // so 4 should be plenty
-        QVarLengthArray<const QMetaObject *, 4> mos;
+        QVarLengthArray<QPair<const QMetaObject *, QObject *>, 4> mos;
         // we first check the dynamic meta object for properties originating from the model
-        mos.push_back(qmlMetaObject); // contains abstractitemmodelproperties
+        // contains abstractitemmodelproperties
+        mos.push_back(qMakePair(qmlMetaObject, modelItemToIncubate));
         auto delegateModelItemSubclassMO = qmlMetaObject->superClass();
-        mos.push_back(delegateModelItemSubclassMO);
+        mos.push_back(qMakePair(delegateModelItemSubclassMO, modelItemToIncubate));
 
-        while (strcmp(delegateModelItemSubclassMO->className(), modelItemToIncubate->staticMetaObject.className())) {
+        while (strcmp(delegateModelItemSubclassMO->className(),
+                      modelItemToIncubate->staticMetaObject.className())) {
             delegateModelItemSubclassMO = delegateModelItemSubclassMO->superClass();
-            mos.push_back(delegateModelItemSubclassMO);
+            mos.push_back(qMakePair(delegateModelItemSubclassMO, modelItemToIncubate));
         }
         if (proxiedObject)
-            mos.push_back(proxiedObject->metaObject());
+            mos.push_back(qMakePair(proxiedObject->metaObject(), proxiedObject));
 
         auto updater = new PropertyUpdater(object);
-        for (const QMetaObject *mo : mos) {
+        for (const auto &metaObjectAndObject : mos) {
+            const QMetaObject *mo = metaObjectAndObject.first;
+            QObject *itemOrProxy = metaObjectAndObject.second;
             for (int i = mo->propertyOffset(); i < mo->propertyCount() + mo->propertyOffset(); ++i) {
                 auto prop = mo->property(i);
                 if (!prop.name())
@@ -980,19 +1001,23 @@ void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *mod
                 // only write to property if it was actually requested by the component
                 if (wasInRequired && prop.hasNotifySignal()) {
                     QMetaMethod changeSignal = prop.notifySignal();
-                    static QMetaMethod updateSlot = PropertyUpdater::staticMetaObject.method(PropertyUpdater::staticMetaObject.indexOfSlot("doUpdate()"));
-                    QMetaObject::Connection conn = QObject::connect(modelItemToIncubate, changeSignal, updater, updateSlot);
+                    static QMetaMethod updateSlot = PropertyUpdater::staticMetaObject.method(
+                                PropertyUpdater::staticMetaObject.indexOfSlot("doUpdate()"));
+                    QMetaObject::Connection conn = QObject::connect(itemOrProxy, changeSignal,
+                                                                    updater, updateSlot);
                     auto propIdx = object->metaObject()->indexOfProperty(propName.toUtf8());
-                    QMetaMethod writeToPropSignal = object->metaObject()->property(propIdx).notifySignal();
+                    QMetaMethod writeToPropSignal
+                            = object->metaObject()->property(propIdx).notifySignal();
                     updater->senderToConnection[writeToPropSignal.methodIndex()] = conn;
-                    static QMetaMethod breakBinding = PropertyUpdater::staticMetaObject.method(PropertyUpdater::staticMetaObject.indexOfSlot("breakBinding()"));
-                    componentProp.write(prop.read(modelItemToIncubate));
+                    static QMetaMethod breakBinding = PropertyUpdater::staticMetaObject.method(
+                                PropertyUpdater::staticMetaObject.indexOfSlot("breakBinding()"));
+                    componentProp.write(prop.read(itemOrProxy));
                     // the connection needs to established after the write,
                     // else the signal gets triggered by it and breakBinding will remove the connection
                     QObject::connect(object, writeToPropSignal, updater, breakBinding);
                 }
                 else if (wasInRequired) // we still have to write, even if there is no change signal
-                    componentProp.write(prop.read(modelItemToIncubate));
+                    componentProp.write(prop.read(itemOrProxy));
             }
         }
     } else {
@@ -1031,6 +1056,71 @@ void QQmlDelegateModelPrivate::releaseIncubator(QQDMIncubationTask *incubationTa
         m_incubatorCleanupScheduled = true;
         QCoreApplication::postEvent(q, new QEvent(QEvent::User));
     }
+}
+
+void QQmlDelegateModelPrivate::reuseItem(QQmlDelegateModelItem *item, int newModelIndex, int newGroups)
+{
+    Q_ASSERT(item->object);
+
+    // Update/reset which groups the item belongs to
+    item->groups = newGroups;
+
+    // Update context property index (including row and column) on the delegate
+    // item, and inform the application about it. For a list, the row is the same
+    // as the index, and the column is always 0. We set alwaysEmit to true, to
+    // force all bindings to be reevaluated, even if the index didn't change.
+    const bool alwaysEmit = true;
+    item->setModelIndex(newModelIndex, newModelIndex, 0, alwaysEmit);
+
+    // Notify the application that all 'dynamic'/role-based context data has
+    // changed as well (their getter function will use the updated index).
+    auto const itemAsList = QList<QQmlDelegateModelItem *>() << item;
+    auto const updateAllRoles = QVector<int>();
+    m_adaptorModel.notify(itemAsList, newModelIndex, 1, updateAllRoles);
+
+    if (QQmlDelegateModelAttached *att = static_cast<QQmlDelegateModelAttached *>(
+                qmlAttachedPropertiesObject<QQmlDelegateModel>(item->object, false))) {
+        // Update currentIndex of the attached DelegateModel object
+        // to the index the item has in the cache.
+        att->resetCurrentIndex();
+        // emitChanges will emit both group-, and index changes to the application
+        att->emitChanges();
+    }
+
+    // Inform the view that the item is recycled. This will typically result
+    // in the view updating its own attached delegate item properties.
+    emit q_func()->itemReused(newModelIndex, item->object);
+}
+
+void QQmlDelegateModelPrivate::drainReusableItemsPool(int maxPoolTime)
+{
+    m_reusableItemsPool.drain(maxPoolTime, [=](QQmlDelegateModelItem *cacheItem){ destroyCacheItem(cacheItem); });
+}
+
+void QQmlDelegateModel::drainReusableItemsPool(int maxPoolTime)
+{
+    d_func()->drainReusableItemsPool(maxPoolTime);
+}
+
+int QQmlDelegateModel::poolSize()
+{
+    return d_func()->m_reusableItemsPool.size();
+}
+
+QQmlComponent *QQmlDelegateModelPrivate::resolveDelegate(int index)
+{
+    if (!m_delegateChooser)
+        return m_delegate;
+
+    QQmlComponent *delegate = nullptr;
+    QQmlAbstractDelegateComponent *chooser = m_delegateChooser;
+
+    do {
+        delegate = chooser->delegate(&m_adaptorModel, index);
+        chooser = qobject_cast<QQmlAbstractDelegateComponent *>(delegate);
+    } while (chooser);
+
+    return delegate;
 }
 
 void QQmlDelegateModelPrivate::addCacheItem(QQmlDelegateModelItem *item, Compositor::iterator it)
@@ -1124,13 +1214,33 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
 
     QQmlDelegateModelItem *cacheItem = it->inCache() ? m_cache.at(it.cacheIndex) : 0;
 
-    if (!cacheItem) {
-        cacheItem = m_adaptorModel.createItem(m_cacheMetaType, it.modelIndex());
-        if (!cacheItem)
+    if (!cacheItem || !cacheItem->delegate) {
+        QQmlComponent *delegate = resolveDelegate(it.modelIndex());
+        if (!delegate)
             return nullptr;
 
-        cacheItem->groups = it->flags;
-        addCacheItem(cacheItem, it);
+        if (!cacheItem) {
+            cacheItem = m_reusableItemsPool.takeItem(delegate, index);
+            if (cacheItem) {
+                // Move the pooled item back into the cache, update
+                // all related properties, and return the object (which
+                // has already been incubated, otherwise it wouldn't be in the pool).
+                addCacheItem(cacheItem, it);
+                reuseItem(cacheItem, index, it->flags);
+                cacheItem->referenceObject();
+                return cacheItem->object;
+            }
+
+            // Since we could't find an available item in the pool, we create a new one
+            cacheItem = m_adaptorModel.createItem(m_cacheMetaType, it.modelIndex());
+            if (!cacheItem)
+                return nullptr;
+
+            cacheItem->groups = it->flags;
+            addCacheItem(cacheItem, it);
+        }
+
+        cacheItem->delegate = delegate;
     }
 
     // Bump the reference counts temporarily so neither the content data or the delegate object
@@ -1145,18 +1255,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
             cacheItem->incubationTask->forceCompletion();
         }
     } else if (!cacheItem->object) {
-        QQmlComponent *delegate = m_delegate;
-        if (m_delegateChooser) {
-            QQmlAbstractDelegateComponent *chooser = m_delegateChooser;
-            do {
-                delegate = chooser->delegate(&m_adaptorModel, index);
-                chooser = qobject_cast<QQmlAbstractDelegateComponent *>(delegate);
-            } while (chooser);
-            if (!delegate)
-                return nullptr;
-        }
-
-        QQmlContext *creationContext = delegate->creationContext();
+        QQmlContext *creationContext = cacheItem->delegate->creationContext();
 
         cacheItem->scriptRef += 1;
 
@@ -1185,10 +1284,10 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
             }
         }
 
-        QQmlComponentPrivate *cp = QQmlComponentPrivate::get(delegate);
+        QQmlComponentPrivate *cp = QQmlComponentPrivate::get(cacheItem->delegate);
         cp->incubateObject(
                     cacheItem->incubationTask,
-                    delegate,
+                    cacheItem->delegate,
                     m_context->engine(),
                     ctxt,
                     QQmlContextData::get(m_context));
@@ -2234,7 +2333,7 @@ void QQmlDelegateModelItem::Dispose()
     delete this;
 }
 
-void QQmlDelegateModelItem::setModelIndex(int idx, int newRow, int newColumn)
+void QQmlDelegateModelItem::setModelIndex(int idx, int newRow, int newColumn, bool alwaysEmit)
 {
     const int prevIndex = index;
     const int prevRow = row;
@@ -2244,11 +2343,11 @@ void QQmlDelegateModelItem::setModelIndex(int idx, int newRow, int newColumn)
     row = newRow;
     column = newColumn;
 
-    if (idx != prevIndex)
+    if (idx != prevIndex || alwaysEmit)
         emit modelIndexChanged();
-    if (row != prevRow)
+    if (row != prevRow || alwaysEmit)
         emit rowChanged();
-    if (column != prevColumn)
+    if (column != prevColumn || alwaysEmit)
         emit columnChanged();
 }
 
@@ -3437,7 +3536,7 @@ QObject *QQmlPartsModel::object(int index, QQmlIncubator::IncubationMode incubat
         QObject *part = package->part(m_part);
         if (!part)
             return nullptr;
-        m_packaged.insertMulti(part, package);
+        m_packaged.insert(part, package);
         return part;
     }
 
@@ -3451,11 +3550,11 @@ QObject *QQmlPartsModel::object(int index, QQmlIncubator::IncubationMode incubat
     return nullptr;
 }
 
-QQmlInstanceModel::ReleaseFlags QQmlPartsModel::release(QObject *item)
+QQmlInstanceModel::ReleaseFlags QQmlPartsModel::release(QObject *item, ReusableFlag)
 {
-    QQmlInstanceModel::ReleaseFlags flags = nullptr;
+    QQmlInstanceModel::ReleaseFlags flags;
 
-    QHash<QObject *, QQuickPackage *>::iterator it = m_packaged.find(item);
+    auto it = m_packaged.find(item);
     if (it != m_packaged.end()) {
         QQuickPackage *package = *it;
         QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(m_model);
@@ -3496,7 +3595,7 @@ QQmlIncubator::Status QQmlPartsModel::incubationStatus(int index)
 
 int QQmlPartsModel::indexOf(QObject *item, QObject *) const
 {
-    QHash<QObject *, QQuickPackage *>::const_iterator it = m_packaged.find(item);
+    auto it = m_packaged.find(item);
     if (it != m_packaged.end()) {
         if (QQmlDelegateModelItem *cacheItem = QQmlDelegateModelItem::dataForObject(*it))
             return cacheItem->groupIndex(m_compositorGroup);
@@ -3542,6 +3641,121 @@ void QQmlPartsModel::emitModelUpdated(const QQmlChangeSet &changeSet, bool reset
             emit initItem(index, package->part(m_part));
         model->release(object);
     }
+}
+
+void QQmlReusableDelegateModelItemsPool::insertItem(QQmlDelegateModelItem *modelItem)
+{
+    // Currently, the only way for a view to reuse items is to call release()
+    // in the model class with the second argument explicitly set to
+    // QQmlReuseableDelegateModelItemsPool::Reusable. If the released item is
+    // no longer referenced, it will be added to the pool. Reusing of items can
+    // be specified per item, in case certain items cannot be recycled. A
+    // QQmlDelegateModelItem knows which delegate its object was created from.
+    // So when we are about to create a new item, we first check if the pool
+    // contains an item based on the same delegate from before. If so, we take
+    // it out of the pool (instead of creating a new item), and update all its
+    // context properties and attached properties.
+
+    // When a view is recycling items, it should call drain() regularly. As
+    // there is currently no logic to 'hibernate' items in the pool, they are
+    // only meant to rest there for a short while, ideally only from the time
+    // e.g a row is unloaded on one side of the view, and until a new row is
+    // loaded on the opposite side. Between these times, the application will
+    // see the item as fully functional and 'alive' (just not visible on
+    // screen). Since this time is supposed to be short, we don't take any
+    // action to notify the application about it, since we don't want to
+    // trigger any bindings that can disturb performance.
+
+    // A recommended time for calling drain() is each time a view has finished
+    // loading e.g a new row or column. If there are more items in the pool
+    // after that, it means that the view most likely doesn't need them anytime
+    // soon. Those items should be destroyed to reduce resource consumption.
+
+    // Depending on if a view is a list or a table, it can sometimes be
+    // performant to keep items in the pool for a bit longer than one "row
+    // out/row in" cycle. E.g for a table, if the number of visible rows in a
+    // view is much larger than the number of visible columns. In that case, if
+    // you flick out a row, and then flick in a column, you would throw away a
+    // lot of items in the pool if completely draining it. The reason is that
+    // unloading a row places more items in the pool than what ends up being
+    // recycled when loading a new column. And then, when you next flick in a
+    // new row, you would need to load all those drained items again from
+    // scratch. For that reason, you can specify a maxPoolTime to the
+    // drainReusableItemsPool() that allows you to keep items in the pool for a
+    // bit longer, effectively keeping more items in circulation. A recommended
+    // maxPoolTime would be equal to the number of dimensions in the view,
+    // which means 1 for a list view and 2 for a table view. If you specify 0,
+    // all items will be drained.
+
+    Q_ASSERT(!modelItem->incubationTask);
+    Q_ASSERT(!modelItem->isObjectReferenced());
+    Q_ASSERT(modelItem->object);
+    Q_ASSERT(modelItem->delegate);
+
+    modelItem->poolTime = 0;
+    m_reusableItemsPool.append(modelItem);
+
+    qCDebug(lcItemViewDelegateRecycling)
+            << "item:" << modelItem
+            << "delegate:" << modelItem->delegate
+            << "index:" << modelItem->modelIndex()
+            << "row:" << modelItem->modelRow()
+            << "column:" << modelItem->modelColumn()
+            << "pool size:" << m_reusableItemsPool.size();
+}
+
+QQmlDelegateModelItem *QQmlReusableDelegateModelItemsPool::takeItem(const QQmlComponent *delegate, int newIndexHint)
+{
+    // Find the oldest item in the pool that was made from the same delegate as
+    // the given argument, remove it from the pool, and return it.
+    for (auto it = m_reusableItemsPool.begin(); it != m_reusableItemsPool.end(); ++it) {
+        if ((*it)->delegate != delegate)
+            continue;
+        auto modelItem = *it;
+        m_reusableItemsPool.erase(it);
+
+        qCDebug(lcItemViewDelegateRecycling)
+                << "item:" << modelItem
+                << "delegate:" << delegate
+                << "old index:" << modelItem->modelIndex()
+                << "old row:" << modelItem->modelRow()
+                << "old column:" << modelItem->modelColumn()
+                << "new index:" << newIndexHint
+                << "pool size:" << m_reusableItemsPool.size();
+
+        return modelItem;
+    }
+
+    qCDebug(lcItemViewDelegateRecycling)
+            << "no available item for delegate:" << delegate
+            << "new index:" << newIndexHint
+            << "pool size:" << m_reusableItemsPool.size();
+
+    return nullptr;
+}
+
+void QQmlReusableDelegateModelItemsPool::drain(int maxPoolTime, std::function<void(QQmlDelegateModelItem *cacheItem)> releaseItem)
+{
+    // Rather than releasing all pooled items upon a call to this function, each
+    // item has a poolTime. The poolTime specifies for how many loading cycles an item
+    // has been resting in the pool. And for each invocation of this function, poolTime
+    // will increase. If poolTime is equal to, or exceeds, maxPoolTime, it will be removed
+    // from the pool and released. This way, the view can tweak a bit for how long
+    // items should stay in "circulation", even if they are not recycled right away.
+    qCDebug(lcItemViewDelegateRecycling) << "pool size before drain:" << m_reusableItemsPool.size();
+
+    for (auto it = m_reusableItemsPool.begin(); it != m_reusableItemsPool.end();) {
+        auto modelItem = *it;
+        modelItem->poolTime++;
+        if (modelItem->poolTime <= maxPoolTime) {
+            ++it;
+        } else {
+            it = m_reusableItemsPool.erase(it);
+            releaseItem(modelItem);
+        }
+    }
+
+    qCDebug(lcItemViewDelegateRecycling) << "pool size after drain:" << m_reusableItemsPool.size();
 }
 
 //============================================================================

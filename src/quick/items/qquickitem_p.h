@@ -336,7 +336,7 @@ public:
     struct ChangeListener {
         using ChangeTypes = QQuickItemPrivate::ChangeTypes;
 
-        ChangeListener(QQuickItemChangeListener *l = nullptr, ChangeTypes t = nullptr)
+        ChangeListener(QQuickItemChangeListener *l = nullptr, ChangeTypes t = { })
             : listener(l)
             , types(t)
             , gTypes(QQuickGeometryChange::All)
@@ -533,7 +533,7 @@ public:
     void refWindow(QQuickWindow *);
     void derefWindow();
 
-    QQuickItem *subFocusItem;
+    QPointer<QQuickItem> subFocusItem;
     void updateSubFocusItem(QQuickItem *scope, bool focus);
 
     QTransform windowToItemTransform() const;
@@ -937,7 +937,7 @@ private:
 Qt::MouseButtons QQuickItemPrivate::acceptedMouseButtons() const
 {
     return ((extra.flag() ? Qt::LeftButton : Qt::MouseButton(0)) |
-            (extra.isAllocated() ? extra->acceptedMouseButtons : Qt::MouseButtons(nullptr)));
+            (extra.isAllocated() ? extra->acceptedMouseButtons : Qt::MouseButtons{}));
 }
 
 QSGContext *QQuickItemPrivate::sceneGraphContext() const

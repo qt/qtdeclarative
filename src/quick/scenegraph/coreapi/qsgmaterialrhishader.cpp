@@ -97,14 +97,14 @@ static inline QRhiShaderResourceBinding::StageFlags toSrbStage(QShader::Stage st
         Q_UNREACHABLE();
         break;
     }
-    return 0;
+    return { };
 }
 
 void QSGMaterialRhiShaderPrivate::prepare(QShader::Variant vertexShaderVariant)
 {
     ubufBinding = -1;
     ubufSize = 0;
-    ubufStages = 0;
+    ubufStages = { };
     memset(combinedImageSamplerBindings, 0, sizeof(combinedImageSamplerBindings));
     vertexShader = fragmentShader = nullptr;
     masterUniformData.clear();
@@ -319,7 +319,7 @@ bool QSGMaterialRhiShader::updateUniformData(RenderState &state,
     each variable in the material's shaders'
     \l{QShaderDescription::combinedImageSamplers()}.
 
-    When \c{*texture} is null, it must be set to a QSGTexture pointer before
+    When *\a{texture} is null, it must be set to a QSGTexture pointer before
     returning. When non-null, it is up to the material to decide if a new
     \c{QSGTexture *} is stored to it, or if it updates some parameters on the
     already known QSGTexture. The ownership of the QSGTexture is not

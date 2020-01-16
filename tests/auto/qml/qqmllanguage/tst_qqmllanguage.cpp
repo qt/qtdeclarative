@@ -309,6 +309,9 @@ private slots:
     void selfReference();
     void selfReferencingSingleton();
 
+    void listContainingDeletedObject();
+    void overrideSingleton();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -476,6 +479,11 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("missingSignal2") << "missingSignal.2.qml" << "missingSignal.2.errors.txt" << false;
     QTest::newRow("finalOverride") << "finalOverride.qml" << "finalOverride.errors.txt" << false;
     QTest::newRow("customParserIdNotAllowed") << "customParserIdNotAllowed.qml" << "customParserIdNotAllowed.errors.txt" << false;
+
+    QTest::newRow("nullishCoalescing_LHS_Or") << "nullishCoalescing_LHS_Or.qml" << "nullishCoalescing_LHS_Or.errors.txt" << false;
+    QTest::newRow("nullishCoalescing_LHS_And") << "nullishCoalescing_LHS_And.qml" << "nullishCoalescing_LHS_And.errors.txt" << false;
+    QTest::newRow("nullishCoalescing_RHS_Or") << "nullishCoalescing_RHS_Or.qml" << "nullishCoalescing_RHS_Or.errors.txt" << false;
+    QTest::newRow("nullishCoalescing_RHS_And") << "nullishCoalescing_RHS_And.qml" << "nullishCoalescing_RHS_And.errors.txt" << false;
 
     QTest::newRow("invalidGroupedProperty.1") << "invalidGroupedProperty.1.qml" << "invalidGroupedProperty.1.errors.txt" << false;
     QTest::newRow("invalidGroupedProperty.2") << "invalidGroupedProperty.2.qml" << "invalidGroupedProperty.2.errors.txt" << false;
@@ -5347,6 +5355,48 @@ void tst_qqmllanguage::selfReferencingSingleton()
 
     QVERIFY(!singletonPointer.isNull());
     QCOMPARE(singletonPointer->property("dummy").toInt(), 42);
+}
+
+void tst_qqmllanguage::listContainingDeletedObject()
+{
+    QQmlEngine engine;
+    auto url = testFileUrl("listContainingDeleted.qml");
+    const QString message = url.toString() + ":24: TypeError: Cannot read property 'enabled' of null";
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, message.toUtf8().data());
+    QQmlComponent comp(&engine, url);
+    QScopedPointer<QObject> root(comp.create());
+    QVERIFY(root);
+
+    auto cmp = root->property("a").value<QQmlComponent*>();
+    auto o = cmp->create();
+
+    QMetaObject::invokeMethod(root.get(), "doAssign", Q_ARG(QVariant, QVariant::fromValue(o)));
+    delete o;
+    QMetaObject::invokeMethod(root.get(), "use");
+
+}
+
+void tst_qqmllanguage::overrideSingleton()
+{
+    auto check = [](const QString &name) {
+        const QByteArray testQml = "import Test 1.0\n"
+                                   "import QtQml 2.0\n"
+                                   "QtObject { objectName: BareSingleton.objectName }";
+        QQmlEngine engine;
+        QQmlComponent component(&engine, nullptr);
+        component.setData(testQml, QUrl());
+        QVERIFY(component.isReady());
+        QScopedPointer<QObject> obj(component.create());
+        QCOMPARE(obj->objectName(), name);
+    };
+
+    check("statically registered");
+
+    BareSingleton singleton;
+    singleton.setObjectName("dynamically registered");
+    qmlRegisterSingletonInstance("Test", 1, 0, "BareSingleton", &singleton);
+
+    check("dynamically registered");
 }
 
 QTEST_MAIN(tst_qqmllanguage)

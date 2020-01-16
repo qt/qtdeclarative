@@ -108,12 +108,6 @@ void QQmlCustomParser::error(const QV4::CompiledData::Location &location, const 
     exceptions << error;
 }
 
-struct StaticQtMetaObject : public QObject
-{
-    static const QMetaObject *get()
-        { return &staticQtMetaObject; }
-};
-
 /*!
     If \a script is a simple enumeration expression (eg. Text.AlignLeft),
     returns the integer equivalent (eg. 1), and sets \a ok to true.
@@ -164,7 +158,7 @@ int QQmlCustomParser::evaluateEnum(const QByteArray& script, bool *ok) const
     }
 
     QByteArray enumValue = script.mid(dot + 1);
-    const QMetaObject *mo = StaticQtMetaObject::get();
+    const QMetaObject *mo = &Qt::staticMetaObject;
     int i = mo->enumeratorCount();
     while (i--) {
         int v = mo->enumerator(i).keyToValue(enumValue.constData(), ok);

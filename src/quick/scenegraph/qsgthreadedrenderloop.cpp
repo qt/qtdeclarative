@@ -70,6 +70,8 @@
 #include <private/qsgrhishadereffectnode_p.h>
 #include <private/qsgdefaultrendercontext_p.h>
 
+#include <qtquick_tracepoints_p.h>
+
 /*
    Overall design:
 
@@ -368,6 +370,9 @@ public:
     QSize windowSize;
     float dpr = 1;
     int rhiSampleCount = 1;
+    bool rhiDeviceLost = false;
+    bool rhiDoomed = false;
+    bool guiNotifiedAboutRhiFailure = false;
 
     // Local event queue stuff...
     bool stopEventProcessing;
@@ -622,13 +627,15 @@ void QSGRenderThread::sync(bool inExpose, bool inGrab)
                 sgrc->initialize(&rcParams);
             }
         }
-    } else {
+    } else if (rhi) {
         // With the rhi making the (OpenGL) context current serves only one
         // purpose: to enable external OpenGL rendering connected to one of
         // the QQuickWindow signals (beforeSynchronizing, beforeRendering,
         // etc.) to function like it did on the direct OpenGL path. For our
         // own rendering this call would not be necessary.
         rhi->makeThreadLocalNativeContextCurrent();
+    } else {
+        current = false;
     }
     if (current) {
         QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
@@ -669,6 +676,7 @@ void QSGRenderThread::handleDeviceLoss()
     QQuickWindowPrivate::get(window)->cleanupNodesOnShutdown();
     sgrc->invalidate();
     wm->releaseSwapchain(window);
+    rhiDeviceLost = true;
     delete rhi;
     rhi = nullptr;
 }
@@ -680,7 +688,9 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
         sinceLastTime = threadTimer.nsecsElapsed();
         threadTimer.start();
     }
+    Q_TRACE_SCOPE(QSG_syncAndRender);
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphRenderLoopFrame);
+    Q_TRACE(QSG_sync_entry);
 
     QElapsedTimer waitTimer;
     waitTimer.start();
@@ -693,8 +703,9 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     const bool repaintRequested = (pendingUpdate & RepaintRequest) || d->customRenderStage || grabImage;
     const bool syncRequested = (pendingUpdate & SyncRequest) || grabImage;
     const bool exposeRequested = (pendingUpdate & ExposeRequest) == ExposeRequest;
-    pendingUpdate = 0;
     const bool grabRequested = grabImage != nullptr;
+    if (!grabRequested)
+        pendingUpdate = 0;
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     // Begin the frame before syncing -> sync is where we may invoke
@@ -767,33 +778,46 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     if (profileFrames)
         syncTime = threadTimer.nsecsElapsed();
 #endif
+    Q_TRACE(QSG_sync_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
                               QQuickProfiler::SceneGraphRenderLoopSync);
 
-    if (!syncResultedInChanges && !repaintRequested && sgrc->isValid() && !grabImage) {
-        if (gl || !rhi->isRecordingFrame()) {
-            qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- no changes, render aborted");
-            int waitTime = vsyncDelta - (int) waitTimer.elapsed();
-            if (waitTime > 0)
-                msleep(waitTime);
-            return;
-        }
+    if (!syncResultedInChanges
+            && !repaintRequested
+            && !(pendingUpdate & RepaintRequest) // may have been set in sync()
+            && sgrc->isValid()
+            && !grabRequested
+            && (gl || (rhi && !rhi->isRecordingFrame())))
+    {
+        qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- no changes, render aborted");
+        int waitTime = vsyncDelta - (int) waitTimer.elapsed();
+        if (waitTime > 0)
+            msleep(waitTime);
+        return;
     }
 
     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- rendering started");
 
+    Q_TRACE(QSG_render_entry);
 
-    if (animatorDriver->isRunning() && !grabImage) {
+    // RepaintRequest may have been set in pendingUpdate in an
+    // updatePaintNode() invoked from sync(). We are about to do a repaint
+    // right now, so reset the flag. (bits other than RepaintRequest cannot
+    // be set in pendingUpdate at this point)
+    if (!grabRequested)
+        pendingUpdate = 0;
+
+    if (animatorDriver->isRunning() && !grabRequested) {
         d->animationController->lock();
         animatorDriver->advance();
         d->animationController->unlock();
     }
 
     bool current = true;
-    if (d->renderer && windowSize.width() > 0 && windowSize.height() > 0) {
+    if (d->renderer && windowSize.width() > 0 && windowSize.height() > 0 && (gl || rhi)) {
         if (gl)
             current = gl->makeCurrent(window);
-        else if (rhi)
+        else
             rhi->makeThreadLocalNativeContextCurrent();
     } else {
         current = false;
@@ -811,21 +835,23 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
 
         if (profileFrames)
             renderTime = threadTimer.nsecsElapsed();
+        Q_TRACE(QSG_render_exit);
         Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
                                   QQuickProfiler::SceneGraphRenderLoopRender);
+        Q_TRACE(QSG_swap_entry);
 
         // With the rhi grabs can only be done by adding a readback and then
         // blocking in a real frame. The legacy GL path never gets here with
         // grabs as it rather invokes sync/render directly without going
         // through syncAndRender().
-        if (grabImage) {
+        if (grabRequested) {
             Q_ASSERT(rhi && !gl && cd->swapchain);
             *grabImage = QSGRhiSupport::instance()->grabAndBlockInCurrentFrame(rhi, cd->swapchain);
         }
 
         if (cd->swapchain) {
-            QRhi::EndFrameFlags flags = 0;
-            if (grabImage)
+            QRhi::EndFrameFlags flags;
+            if (grabRequested)
                 flags |= QRhi::SkipPresent;
             QRhi::FrameOpResult frameResult = rhi->endFrame(cd->swapchain, flags);
             if (frameResult != QRhi::FrameOpSuccess) {
@@ -841,12 +867,13 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
                 gl->swapBuffers(window);
         }
 
-        if (!grabImage)
+        if (!grabRequested)
             d->fireFrameSwapped();
-
     } else {
+        Q_TRACE(QSG_render_exit);
         Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphRenderLoopFrame,
                                 QQuickProfiler::SceneGraphRenderLoopSync, 1);
+        Q_TRACE(QSG_swap_entry);
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- window not ready, skipping render");
     }
 
@@ -870,7 +897,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
             int((renderTime - syncTime) / 1000000),
             int(threadTimer.elapsed() - renderTime / 1000000));
 
-
+    Q_TRACE(QSG_swap_exit);
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame,
                            QQuickProfiler::SceneGraphRenderLoopSwap);
 
@@ -912,14 +939,21 @@ void QSGRenderThread::processEventsAndWaitForMore()
 void QSGRenderThread::ensureRhi()
 {
     if (!rhi) {
+        if (rhiDoomed) // no repeated attempts if the initial attempt failed
+            return;
         QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
         rhi = rhiSupport->createRhi(window, offscreenSurface);
         if (rhi) {
+            rhiDeviceLost = false;
             rhiSampleCount = rhiSupport->chooseSampleCountForWindowWithRhi(window, rhi);
             if (rhiSupport->isProfilingRequested())
                 QSGRhiProfileConnection::instance()->initialize(rhi); // ### this breaks down with multiple windows
         } else {
-            qWarning("Failed to create QRhi on the render thread; scenegraph is not functional");
+            if (!rhiDeviceLost) {
+                rhiDoomed = true;
+                qWarning("Failed to create QRhi on the render thread; scenegraph is not functional");
+            }
+            // otherwise no error, will retry on a subsequent rendering attempt
             return;
         }
     }
@@ -975,9 +1009,24 @@ void QSGRenderThread::run()
 
         if (window) {
             if (enableRhi) {
+
                 ensureRhi();
-                if (rhi)
-                    syncAndRender();
+
+                // We absolutely have to syncAndRender() here, even when QRhi
+                // failed to initialize otherwise the gui thread will be left
+                // in a blocked state. It is up to syncAndRender() to
+                // gracefully skip all graphics stuff when rhi is null.
+
+                syncAndRender();
+
+                // Now we can do something about rhi init failures. (reinit
+                // failure after device reset does not count)
+                if (rhiDoomed && !guiNotifiedAboutRhiFailure) {
+                    guiNotifiedAboutRhiFailure = true;
+                    QEvent *e = new QEvent(QEvent::Type(QQuickWindowPrivate::TriggerContextCreationFailure));
+                    QCoreApplication::postEvent(window, e);
+                }
+
             } else {
                 if (!sgrc->openglContext() && windowSize.width() > 0 && windowSize.height() > 0 && gl->makeCurrent(window)) {
                     QSGDefaultRenderContext::InitParams rcParams;
@@ -1282,10 +1331,9 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
                 w->thread->gl->setFormat(w->window->requestedFormat());
                 w->thread->gl->setScreen(w->window->screen());
                 if (!w->thread->gl->create()) {
-                    const bool isEs = w->thread->gl->isOpenGLES();
                     delete w->thread->gl;
                     w->thread->gl = nullptr;
-                    handleContextCreationFailure(w->window, isEs);
+                    handleContextCreationFailure(w->window);
                     return;
                 }
 
@@ -1508,7 +1556,7 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
         return;
     }
 
-
+    Q_TRACE_SCOPE(QSG_polishAndSync);
     QElapsedTimer timer;
     qint64 polishTime = 0;
     qint64 waitTime = 0;
@@ -1517,14 +1565,17 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     if (profileFrames)
         timer.start();
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphPolishAndSync);
+    Q_TRACE(QSG_polishItems_entry);
 
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
     d->polishItems();
 
     if (profileFrames)
         polishTime = timer.nsecsElapsed();
+    Q_TRACE(QSG_polishItems_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
                               QQuickProfiler::SceneGraphPolishAndSyncPolish);
+    Q_TRACE(QSG_wait_entry);
 
     w->updateDuringSync = false;
 
@@ -1539,8 +1590,11 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     qCDebug(QSG_LOG_RENDERLOOP, "- wait for sync");
     if (profileFrames)
         waitTime = timer.nsecsElapsed();
+    Q_TRACE(QSG_wait_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
                               QQuickProfiler::SceneGraphPolishAndSyncWait);
+    Q_TRACE(QSG_sync_entry);
+
     w->thread->waitCondition.wait(&w->thread->mutex);
     m_lockedForSync = false;
     w->thread->mutex.unlock();
@@ -1548,8 +1602,10 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
 
     if (profileFrames)
         syncTime = timer.nsecsElapsed();
+    Q_TRACE(QSG_sync_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphPolishAndSync,
                               QQuickProfiler::SceneGraphPolishAndSyncSync);
+    Q_TRACE(QSG_animations_entry);
 
     if (m_animation_timer == 0 && m_animation_driver->isRunning()) {
         qCDebug(QSG_LOG_RENDERLOOP, "- advancing animations");
@@ -1570,6 +1626,7 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
             << ", animations=" << (timer.nsecsElapsed() - syncTime) / 1000000
             << " - (on Gui thread) " << window;
 
+    Q_TRACE(QSG_animations_exit);
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphPolishAndSync,
                            QQuickProfiler::SceneGraphPolishAndSyncAnimations);
 }

@@ -13,4 +13,6 @@ Project {
     ImageFiles {
         directory: "."
     }
+
+    importPaths: [ "imports" ]
 }

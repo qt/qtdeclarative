@@ -81,6 +81,7 @@ enum Type {
     WorkerDate,
     WorkerRegexp,
     WorkerListModel,
+    WorkerUrl,
 #if QT_CONFIG(qml_sequence_object)
     WorkerSequence
 #endif
@@ -142,10 +143,29 @@ static inline void *popPtr(const char *&data)
     return rv;
 }
 
+#define ALIGN(size) (((size) + 3) & ~3)
+static inline void serializeString(QByteArray &data, const QString &str, Type type)
+{
+    int length = str.length();
+    if (length > 0xFFFFFF) {
+        push(data, valueheader(WorkerUndefined));
+        return;
+    }
+    int utf16size = ALIGN(length * sizeof(quint16));
+
+    reserve(data, utf16size + sizeof(quint32));
+    push(data, valueheader(type, length));
+
+    int offset = data.size();
+    data.resize(data.size() + utf16size);
+    char *buffer = data.data() + offset;
+
+    memcpy(buffer, str.constData(), length*sizeof(QChar));
+}
+
 // XXX TODO: Check that worker script is exception safe in the case of
 // serialization/deserialization failures
 
-#define ALIGN(size) (((size) + 3) & ~3)
 void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine *engine)
 {
     QV4::Scope scope(engine);
@@ -159,22 +179,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
     } else if (v.isBoolean()) {
         push(data, valueheader(v.booleanValue() == true ? WorkerTrue : WorkerFalse));
     } else if (v.isString()) {
-        const QString &qstr = v.toQString();
-        int length = qstr.length();
-        if (length > 0xFFFFFF) {
-            push(data, valueheader(WorkerUndefined));
-            return;
-        }
-        int utf16size = ALIGN(length * sizeof(quint16));
-
-        reserve(data, utf16size + sizeof(quint32));
-        push(data, valueheader(WorkerString, length));
-
-        int offset = data.size();
-        data.resize(data.size() + utf16size);
-        char *buffer = data.data() + offset;
-
-        memcpy(buffer, qstr.constData(), length*sizeof(QChar));
+        serializeString(data, v.toQString(), WorkerString);
     } else if (v.as<FunctionObject>()) {
         // XXX TODO: Implement passing function objects between the main and
         // worker scripts
@@ -259,6 +264,11 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
             return;
         }
 #endif
+        const QVariant variant = engine->toVariant(v, QMetaType::QUrl, false);
+        if (variant.userType() == QMetaType::QUrl) {
+            serializeString(data, variant.value<QUrl>().toString(), WorkerUrl);
+            return;
+        }
 
         // regular object
         QV4::ScopedValue val(scope, v);
@@ -340,11 +350,14 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
     case WorkerFalse:
         return QV4::Encode(false);
     case WorkerString:
+    case WorkerUrl:
     {
         quint32 size = headersize(header);
         QString qstr((const QChar *)data, size);
         data += ALIGN(size * sizeof(quint16));
-        return QV4::Encode(engine->newString(qstr));
+        return  (type == WorkerUrl)
+                ? engine->fromVariant(QVariant::fromValue(QUrl(qstr)))
+                : Encode(engine->newString(qstr));
     }
     case WorkerFunction:
         Q_ASSERT(!"Unreachable");

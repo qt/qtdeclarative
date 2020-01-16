@@ -44,13 +44,16 @@
 
 QT_BEGIN_NAMESPACE
 
+struct QQmlModuleRegistrationPrivate;
 class Q_QML_EXPORT QQmlModuleRegistration
 {
     Q_DISABLE_COPY_MOVE(QQmlModuleRegistration)
-
 public:
     QQmlModuleRegistration(const char *uri, int majorVersion, void (*registerFunction)());
-    ~QQmlModuleRegistration() = default;
+    ~QQmlModuleRegistration();
+
+private:
+    QQmlModuleRegistrationPrivate *d = nullptr;
 };
 
 QT_END_NAMESPACE

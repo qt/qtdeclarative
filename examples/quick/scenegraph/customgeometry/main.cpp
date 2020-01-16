@@ -58,8 +58,6 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
-    qmlRegisterTypesAndRevisions<BezierCurve>("CustomGeometry", 1);
-
     QQuickView view;
     QSurfaceFormat format = view.format();
     format.setSamples(16);

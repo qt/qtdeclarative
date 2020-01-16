@@ -265,7 +265,7 @@ QObject *QQmlObjectModel::object(int index, QQmlIncubator::IncubationMode)
     return item.item;
 }
 
-QQmlInstanceModel::ReleaseFlags QQmlObjectModel::release(QObject *item)
+QQmlInstanceModel::ReleaseFlags QQmlObjectModel::release(QObject *item, ReusableFlag)
 {
     Q_D(QQmlObjectModel);
     int idx = d->indexOf(item);
@@ -273,7 +273,7 @@ QQmlInstanceModel::ReleaseFlags QQmlObjectModel::release(QObject *item)
         if (!d->children[idx].deref())
             return QQmlInstanceModel::Referenced;
     }
-    return nullptr;
+    return {};
 }
 
 QVariant QQmlObjectModel::variantValue(int index, const QString &role)

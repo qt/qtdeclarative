@@ -93,12 +93,6 @@ DEFINE_OBJECT_VTABLE(QtObject);
         return scope.engine->throwTypeError(QString::fromUtf8(msg)); \
     } while (false)
 
-struct StaticQtMetaObject : public QObject
-{
-    static const QMetaObject *get()
-        { return &staticQtMetaObject; }
-};
-
 void Heap::QtObject::init(QQmlEngine *qmlEngine)
 {
     Heap::Object::init();
@@ -177,7 +171,7 @@ ReturnedValue QtObject::findAndAdd(const QString *name, bool &foundProperty) con
     ScopedString key(scope);
     ScopedValue value(scope);
 
-    const QMetaObject *qtMetaObject = StaticQtMetaObject::get();
+    const QMetaObject *qtMetaObject = &Qt::staticMetaObject;
     for (int enumCount = qtMetaObject->enumeratorCount(); d()->enumeratorIterator < enumCount;
          ++d()->enumeratorIterator) {
         QMetaEnum enumerator = qtMetaObject->enumerator(d()->enumeratorIterator);
@@ -1553,11 +1547,12 @@ static QString jsStack(QV4::ExecutionEngine *engine) {
     return stack;
 }
 
-static QString serializeArray(Object *array, ExecutionEngine *v4) {
+static QString serializeArray(Object *array, ExecutionEngine *v4, QSet<QV4::Heap::Object *> &alreadySeen) {
     Scope scope(v4);
     ScopedValue val(scope);
     QString result;
 
+    alreadySeen.insert(array->d());
     result += QLatin1Char('[');
     const uint length = array->getLength();
     for (uint i = 0; i < length; ++i) {
@@ -1565,12 +1560,15 @@ static QString serializeArray(Object *array, ExecutionEngine *v4) {
             result += QLatin1Char(',');
         val = array->get(i);
         if (val->isManaged() && val->managed()->isArrayLike())
-            result += serializeArray(val->objectValue(), v4);
+            if (!alreadySeen.contains(val->objectValue()->d()))
+                result += serializeArray(val->objectValue(), v4, alreadySeen);
+            else
+                result += QLatin1String("[Circular]");
         else
             result += val->toQStringNoThrow();
     }
     result += QLatin1Char(']');
-
+    alreadySeen.remove(array->d());
     return result;
 };
 
@@ -1600,8 +1598,9 @@ static ReturnedValue writeToConsole(const FunctionObject *b, const Value *, cons
         if (i != start)
             result.append(QLatin1Char(' '));
 
+        QSet<QV4::Heap::Object *> alreadySeenElements;
         if (argv[i].isManaged() && argv[i].managed()->isArrayLike())
-            result.append(serializeArray(argv[i].objectValue(), v4));
+            result.append(serializeArray(argv[i].objectValue(), v4, alreadySeenElements));
         else
             result.append(argv[i].toQStringNoThrow());
     }

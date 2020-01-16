@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET  = qmllocalstorageplugin
 TARGETPATH = QtQuick/LocalStorage
-IMPORT_VERSION = 2.$$QT_MINOR_VERSION
+IMPORT_VERSION = 2.15
 
 QT = sql qml-private  core-private
 
@@ -14,4 +14,5 @@ HEADERS += \
 
 load(qml_plugin)
 
+CONFIG += qmltypes install_qmltypes
 OTHER_FILES += localstorage.json

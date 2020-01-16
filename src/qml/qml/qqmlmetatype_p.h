@@ -200,6 +200,8 @@ public:
 
     static void qmlInsertModuleRegistration(const QString &uri, int majorVersion,
                                             void (*registerFunction)());
+    static void qmlRemoveModuleRegistration(const QString &uri, int majorVersion);
+
     static bool qmlRegisterModuleTypes(const QString &uri, int majorVersion);
 };
 

@@ -62,6 +62,9 @@ private slots:
     void typeAnnotations();
     void disallowedTypeAnnotations_data();
     void disallowedTypeAnnotations();
+    void semicolonPartOfExpressionStatement();
+    void typeAssertion_data();
+    void typeAssertion();
 
 private:
     QStringList excludedDirs;
@@ -132,6 +135,30 @@ struct TypeAnnotationObserver: public AST::Visitor
     virtual bool visit(AST::TypeAnnotation *)
     {
         typeAnnotationSeen = true;
+        return true;
+    }
+
+    void throwRecursionDepthError() final
+    {
+        QFAIL("Maximum statement or expression depth exceeded");
+    }
+};
+
+struct ExpressionStatementObserver: public AST::Visitor
+{
+    int expressionsSeen = 0;
+    bool endsWithSemicolon = true;
+
+    void operator()(AST::Node *node)
+    {
+        AST::Node::accept(node, this);
+    }
+
+    virtual bool visit(AST::ExpressionStatement *statement)
+    {
+        ++expressionsSeen;
+        endsWithSemicolon = endsWithSemicolon
+                && (statement->lastSourceLocation().end() == statement->semicolonToken.end());
         return true;
     }
 
@@ -436,6 +463,62 @@ void tst_qqmlparser::disallowedTypeAnnotations()
     bool ok = qmlMode ? parser.parse() : parser.parseProgram();
     QVERIFY(!ok);
     QVERIFY2(parser.errorMessage().startsWith("Type annotations are not permitted "), qPrintable(parser.errorMessage()));
+}
+
+void tst_qqmlparser::semicolonPartOfExpressionStatement()
+{
+    QQmlJS::Engine engine;
+    QQmlJS::Lexer lexer(&engine);
+    lexer.setCode(QLatin1String("A { property int x: 1+1; property int y: 2+2 \n"
+                                "tt: {'a': 5, 'b': 6}; ff: {'c': 'rrr'}}"), 1);
+    QQmlJS::Parser parser(&engine);
+    QVERIFY(parser.parse());
+
+    check::ExpressionStatementObserver observer;
+    observer(parser.rootNode());
+
+    QCOMPARE(observer.expressionsSeen, 4);
+    QVERIFY(observer.endsWithSemicolon);
+}
+
+void tst_qqmlparser::typeAssertion_data()
+{
+    QTest::addColumn<QString>("expression");
+    QTest::addRow("as A")
+            << QString::fromLatin1("A { onStuff: (b as A).happen() }");
+    QTest::addRow("as double paren")
+            << QString::fromLatin1("A { onStuff: console.log((12 as double)); }");
+    QTest::addRow("as double noparen")
+            << QString::fromLatin1("A { onStuff: console.log(12 as double); }");
+    QTest::addRow("property as double")
+            << QString::fromLatin1("A { prop: (12 as double); }");
+    QTest::addRow("property noparen as double")
+            << QString::fromLatin1("A { prop: 12 as double; }");
+
+    // rabbits cannot be discerned from types on a syntactical level.
+    // We could detect this on a semantical level, once we implement type assertions there.
+
+    QTest::addRow("as rabbit")
+            << QString::fromLatin1("A { onStuff: (b as rabbit).happen() }");
+    QTest::addRow("as rabbit paren")
+            << QString::fromLatin1("A { onStuff: console.log((12 as rabbit)); }");
+    QTest::addRow("as rabbit noparen")
+            << QString::fromLatin1("A { onStuff: console.log(12 as rabbit); }");
+    QTest::addRow("property as rabbit")
+            << QString::fromLatin1("A { prop: (12 as rabbit); }");
+    QTest::addRow("property noparen as rabbit")
+            << QString::fromLatin1("A { prop: 12 as rabbit; }");
+}
+
+void tst_qqmlparser::typeAssertion()
+{
+    QFETCH(QString, expression);
+
+    QQmlJS::Engine engine;
+    QQmlJS::Lexer lexer(&engine);
+    lexer.setCode(expression, 1);
+    QQmlJS::Parser parser(&engine);
+    QVERIFY(parser.parse());
 }
 
 QTEST_MAIN(tst_qqmlparser)

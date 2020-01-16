@@ -626,57 +626,6 @@ private:
     QMatrix4x4 m_identityMatrix;
 };
 
-class ShaderManager : public QObject
-{
-    Q_OBJECT
-public:
-    struct Shader {
-        ~Shader() {
-            delete programRhi.program;
-            delete programGL.program;
-        }
-        struct {
-            QSGMaterialShader *program = nullptr;
-            int pos_order;
-        } programGL;
-        struct {
-            QSGMaterialRhiShader *program = nullptr;
-            QRhiVertexInputLayout inputLayout;
-            QVarLengthArray<QRhiGraphicsShaderStage, 2> shaderStages;
-        } programRhi;
-
-        float lastOpacity;
-    };
-
-    ShaderManager(QSGDefaultRenderContext *ctx) : blitProgram(nullptr), context(ctx) { }
-    ~ShaderManager() {
-        qDeleteAll(rewrittenShaders);
-        qDeleteAll(stockShaders);
-    }
-
-    void clearCachedRendererData();
-
-    using ShaderResourceBindingList = QVarLengthArray<QRhiShaderResourceBinding, 8>;
-
-    QRhiShaderResourceBindings *srb(const ShaderResourceBindingList &bindings);
-
-public Q_SLOTS:
-    void invalidated();
-
-public:
-    Shader *prepareMaterial(QSGMaterial *material, bool enableRhiShaders = false, const QSGGeometry *geometry = nullptr);
-    Shader *prepareMaterialNoRewrite(QSGMaterial *material, bool enableRhiShaders = false, const QSGGeometry *geometry = nullptr);
-
-private:
-    QHash<QSGMaterialType *, Shader *> rewrittenShaders;
-    QHash<QSGMaterialType *, Shader *> stockShaders;
-
-    QOpenGLShaderProgram *blitProgram;
-    QSGDefaultRenderContext *context;
-
-    QHash<ShaderResourceBindingList, QRhiShaderResourceBindings *> srbCache;
-};
-
 struct GraphicsState
 {
     bool depthTest = false;
@@ -698,17 +647,74 @@ bool operator==(const GraphicsState &a, const GraphicsState &b) Q_DECL_NOTHROW;
 bool operator!=(const GraphicsState &a, const GraphicsState &b) Q_DECL_NOTHROW;
 uint qHash(const GraphicsState &s, uint seed = 0) Q_DECL_NOTHROW;
 
+struct ShaderManagerShader;
+
 struct GraphicsPipelineStateKey
 {
     GraphicsState state;
-    const ShaderManager::Shader *sms;
-    const QRhiRenderPassDescriptor *rpDesc;
+    const ShaderManagerShader *sms;
+    const QRhiRenderPassDescriptor *compatibleRenderPassDescriptor;
     const QRhiShaderResourceBindings *layoutCompatibleSrb;
 };
 
 bool operator==(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) Q_DECL_NOTHROW;
 bool operator!=(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) Q_DECL_NOTHROW;
 uint qHash(const GraphicsPipelineStateKey &k, uint seed = 0) Q_DECL_NOTHROW;
+
+struct ShaderManagerShader
+{
+    ~ShaderManagerShader() {
+        delete programRhi.program;
+        delete programGL.program;
+    }
+    struct {
+        QSGMaterialShader *program = nullptr;
+        int pos_order;
+    } programGL;
+    struct {
+        QSGMaterialRhiShader *program = nullptr;
+        QRhiVertexInputLayout inputLayout;
+        QVarLengthArray<QRhiGraphicsShaderStage, 2> shaderStages;
+    } programRhi;
+
+    float lastOpacity;
+};
+
+class ShaderManager : public QObject
+{
+    Q_OBJECT
+public:
+    using Shader = ShaderManagerShader;
+
+    ShaderManager(QSGDefaultRenderContext *ctx) : blitProgram(nullptr), context(ctx) { }
+    ~ShaderManager() {
+        qDeleteAll(rewrittenShaders);
+        qDeleteAll(stockShaders);
+    }
+
+    void clearCachedRendererData();
+
+    using ShaderResourceBindingList = QVarLengthArray<QRhiShaderResourceBinding, 8>;
+    QRhiShaderResourceBindings *srb(const ShaderResourceBindingList &bindings);
+
+    QHash<GraphicsPipelineStateKey, QRhiGraphicsPipeline *> pipelineCache;
+
+public Q_SLOTS:
+    void invalidated();
+
+public:
+    Shader *prepareMaterial(QSGMaterial *material, bool enableRhiShaders = false, const QSGGeometry *geometry = nullptr);
+    Shader *prepareMaterialNoRewrite(QSGMaterial *material, bool enableRhiShaders = false, const QSGGeometry *geometry = nullptr);
+
+private:
+    QHash<QSGMaterialType *, Shader *> rewrittenShaders;
+    QHash<QSGMaterialType *, Shader *> stockShaders;
+
+    QOpenGLShaderProgram *blitProgram;
+    QSGDefaultRenderContext *context;
+
+    QHash<ShaderResourceBindingList, QRhiShaderResourceBindings *> srbCache;
+};
 
 struct RenderPassState
 {
@@ -903,7 +909,6 @@ private:
     GraphicsState m_gstate;
     RenderPassState m_pstate;
     QStack<GraphicsState> m_gstateStack;
-    QHash<GraphicsPipelineStateKey, QRhiGraphicsPipeline *> m_pipelines;
     QHash<QSGSamplerDescription, QRhiSampler *> m_samplers;
     QRhiTexture *m_dummyTexture = nullptr;
 

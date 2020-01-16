@@ -59,10 +59,6 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
-    //! [registertype]
-    qmlRegisterTypesAndRevisions<ImageModel>("ImageModel", 1);
-    //! [registertype]
-
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;

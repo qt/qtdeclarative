@@ -107,7 +107,7 @@ void QQuickFolderListModelPrivate::updateSorting()
 {
     Q_Q(QQuickFolderListModel);
 
-    QDir::SortFlags flags = nullptr;
+    QDir::SortFlags flags;
 
     switch (sortField) {
         case QQuickFolderListModel::Unsorted:

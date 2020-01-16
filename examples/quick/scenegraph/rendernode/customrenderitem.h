@@ -53,6 +53,7 @@
 
 #include <QQuickItem>
 
+//! [0]
 class CustomRenderItem : public QQuickItem
 {
     Q_OBJECT
@@ -62,5 +63,6 @@ public:
     CustomRenderItem(QQuickItem *parent = nullptr);
     QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *) override;
 };
+//! [0]
 
 #endif

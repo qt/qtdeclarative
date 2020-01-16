@@ -60,7 +60,7 @@ Q_DECLARE_METATYPE(QMarginsF);
     auto PROPNAME = view->rootObject()->property(#PROPNAME).value<QQuickTableView *>(); \
     QVERIFY(PROPNAME); \
     auto PROPNAME ## Private = QQuickTableViewPrivate::get(PROPNAME); \
-    Q_UNUSED(PROPNAME ## Private)
+    Q_UNUSED(PROPNAME ## Private) void()
 
 #define LOAD_TABLEVIEW(fileName) \
     view->setSource(testFileUrl(fileName)); \
@@ -120,6 +120,7 @@ private slots:
     void checkRowHeightProviderNotCallable();
     void checkForceLayoutFunction();
     void checkForceLayoutEndUpDoingALayout();
+    void checkForceLayoutDuringModelChange();
     void checkContentWidthAndHeight();
     void checkPageFlicking();
     void checkExplicitContentWidthAndHeight();
@@ -159,6 +160,7 @@ private slots:
     void checkContextPropertiesQQmlListProperyModel_data();
     void checkContextPropertiesQQmlListProperyModel();
     void checkRowAndColumnChangedButNotIndex();
+    void checkThatWeAlwaysEmitChangedUponItemReused();
     void checkChangingModelFromDelegate();
     void checkRebuildViewportOnly();
     void useDelegateChooserWithoutDefault();
@@ -174,6 +176,8 @@ private slots:
     void checkSyncView_connect_late_data();
     void checkSyncView_connect_late();
     void delegateWithRequiredProperties();
+    void checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable();
+    void replaceModel();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -390,7 +394,7 @@ void tst_QQuickTableView::checkColumnWidthProviderInvalidReturnValues()
 
     tableView->setModel(model);
 
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*implicitHeight.*zero"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*implicit.*zero"));
 
     WAIT_UNTIL_POLISHED;
 
@@ -487,7 +491,7 @@ void tst_QQuickTableView::checkRowHeightProviderInvalidReturnValues()
 
     tableView->setModel(model);
 
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*implicitHeight.*zero"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*implicit.*zero"));
 
     WAIT_UNTIL_POLISHED;
 
@@ -586,6 +590,29 @@ void tst_QQuickTableView::checkForceLayoutEndUpDoingALayout()
 
     for (auto fxItem : tableViewPrivate->loadedItems)
         QCOMPARE(fxItem->item->height(), newDelegateSize);
+}
+
+void tst_QQuickTableView::checkForceLayoutDuringModelChange()
+{
+    // Check that TableView doesn't assert if we call
+    // forceLayout() in the middle of a model change.
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    const int initialRowCount = 10;
+    TestModel model(initialRowCount, 10);
+    tableView->setModel(QVariant::fromValue(&model));
+
+    connect(&model, &QAbstractItemModel::rowsInserted, [=](){
+        QCOMPARE(tableView->rows(), initialRowCount);
+        tableView->forceLayout();
+        QCOMPARE(tableView->rows(), initialRowCount + 1);
+    });
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->rows(), initialRowCount);
+    model.addRow(0);
+    QCOMPARE(tableView->rows(), initialRowCount + 1);
 }
 
 void tst_QQuickTableView::checkContentWidthAndHeight()
@@ -2060,6 +2087,41 @@ void tst_QQuickTableView::checkRowAndColumnChangedButNotIndex()
     QCOMPARE(contextColumn, 1);
 }
 
+void tst_QQuickTableView::checkThatWeAlwaysEmitChangedUponItemReused()
+{
+    // Check that we always emit changes to index when we reuse an item, even
+    // if it doesn't change. This is needed since the model can have changed
+    // row or column count while the item was in the pool, which means that
+    // any data referred to by the index property inside the delegate
+    // will change too. So we need to refresh any bindings to index.
+    // QTBUG-79209
+    LOAD_TABLEVIEW("checkalwaysemit.qml");
+
+    TestModel model(1, 1);
+    tableView->setModel(QVariant::fromValue(&model));
+    model.setModelData(QPoint(0, 0), QSize(1, 1), "old value");
+
+    WAIT_UNTIL_POLISHED;
+
+    const auto reuseItem = tableViewPrivate->loadedTableItem(QPoint(0, 0))->item;
+    const auto context = qmlContext(reuseItem.data());
+
+    // Remove the cell/row that has "old value" as model data, and
+    // add a new one right after. The new cell will have the same
+    // index, but with no model data assigned.
+    // This change will not be detected by items in the pool. But since
+    // we emit indexChanged when the item is reused, it will be updated then.
+    model.removeRow(0);
+    model.insertRow(0);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(context->contextProperty("index").toInt(), 0);
+    QCOMPARE(context->contextProperty("row").toInt(), 0);
+    QCOMPARE(context->contextProperty("column").toInt(), 0);
+    QCOMPARE(context->contextProperty("modelDataFromIndex").toString(), "");
+}
+
 void tst_QQuickTableView::checkChangingModelFromDelegate()
 {
     // Check that we don't restart a rebuild of the table
@@ -2617,7 +2679,27 @@ void tst_QQuickTableView::checkSyncView_connect_late()
     QCOMPARE(tableViewVPrivate->loadedTableOuterRect.left(), 0);
 
     QCOMPARE(tableViewHVPrivate->loadedTableOuterRect, tableViewPrivate->loadedTableOuterRect);
+}
 
+void tst_QQuickTableView::checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable()
+{
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(5, 5, true);
+    tableView->setModel(model);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->rows(), 5);
+    QCOMPARE(tableView->columns(), 5);
+
+    // Flick table out of view on top
+    tableView->setContentX(0);
+    tableView->setContentY(-tableView->height() - 10);
+    tableView->polish();
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->rows(), 6);
+    QCOMPARE(tableView->columns(), 5);
 }
 
 void tst_QQuickTableView::delegateWithRequiredProperties()
@@ -2648,7 +2730,7 @@ void tst_QQuickTableView::delegateWithRequiredProperties()
     auto model =  QVariant::fromValue(QSharedPointer<MyTable>(new MyTable));
     {
         QTest::ignoreMessage(QtMsgType::QtInfoMsg, "success");
-        LOAD_TABLEVIEW("delegateWithRequired.qml")
+        LOAD_TABLEVIEW("delegateWithRequired.qml");
         QVERIFY(tableView);
         tableView->setModel(model);
         WAIT_UNTIL_POLISHED;
@@ -2656,12 +2738,34 @@ void tst_QQuickTableView::delegateWithRequiredProperties()
     }
     {
         QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression(R"|(TableView: failed loading index: \d)|"));
-        LOAD_TABLEVIEW("delegatewithRequiredUnset.qml")
+        LOAD_TABLEVIEW("delegatewithRequiredUnset.qml");
         QVERIFY(tableView);
         tableView->setModel(model);
         WAIT_UNTIL_POLISHED;
         QTRY_VERIFY(view->errors().empty());
     }
+}
+
+void tst_QQuickTableView::replaceModel()
+{
+    LOAD_TABLEVIEW("replaceModelTableView.qml");
+
+    const auto objectModel = view->rootObject()->property("objectModel");
+    const auto listModel = view->rootObject()->property("listModel");
+    const auto delegateModel = view->rootObject()->property("delegateModel");
+
+    tableView->setModel(listModel);
+    QTRY_COMPARE(tableView->rows(), 2);
+    tableView->setModel(objectModel);
+    QTRY_COMPARE(tableView->rows(), 3);
+    tableView->setModel(delegateModel);
+    QTRY_COMPARE(tableView->rows(), 2);
+    tableView->setModel(listModel);
+    QTRY_COMPARE(tableView->rows(), 2);
+    tableView->setModel(QVariant());
+    QTRY_COMPARE(tableView->rows(), 0);
+    QCOMPARE(tableView->contentWidth(), 0);
+    QCOMPARE(tableView->contentHeight(), 0);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

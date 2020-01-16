@@ -388,7 +388,7 @@ void QSGRhiLayer::grab()
                           m_mirrorHorizontal ? -m_rect.width() : m_rect.width(),
                           m_mirrorVertical ? m_rect.height() : -m_rect.height());
     }
-    QSGAbstractRenderer::MatrixTransformFlags matrixFlags = 0;
+    QSGAbstractRenderer::MatrixTransformFlags matrixFlags;
     if (!m_rhi->isYUpInNDC())
         matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
     m_renderer->setProjectionMatrixToRect(mirrored, matrixFlags);

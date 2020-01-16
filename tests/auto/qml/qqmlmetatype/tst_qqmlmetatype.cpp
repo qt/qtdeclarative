@@ -307,7 +307,7 @@ void tst_qqmlmetatype::compositeType()
 
     //Loading the test file also loads all composite types it imports
     QQmlComponent c(&engine, testFileUrl("testImplicitComposite.qml"));
-    QObject* obj = c.create();
+    QScopedPointer<QObject> obj(c.create());
     QVERIFY(obj);
 
     QQmlType type = QQmlMetaType::qmlType(QString("ImplicitType"), QString(""), 1, 0);
@@ -324,7 +324,7 @@ void tst_qqmlmetatype::externalEnums()
     qmlRegisterSingletonType<ExternalEnums>("x.y.z", 1, 0, "ExternalEnums", ExternalEnums::create);
 
     QQmlComponent c(&engine, testFileUrl("testExternalEnums.qml"));
-    QObject *obj = c.create();
+    QScopedPointer<QObject> obj(c.create());
     QVERIFY(obj);
     QVariant a = obj->property("a");
     QCOMPARE(a.type(), QVariant::Int);
@@ -552,7 +552,8 @@ void tst_qqmlmetatype::unregisterAttachedProperties()
         QCOMPARE(attachedType.attachedPropertiesType(QQmlEnginePrivate::get(&e)),
                  attachedType.metaObject());
 
-        QVERIFY(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        QVERIFY(obj);
     }
 
     qmlClearTypeRegistrations();
@@ -571,7 +572,8 @@ void tst_qqmlmetatype::unregisterAttachedProperties()
         QCOMPARE(attachedType.attachedPropertiesType(QQmlEnginePrivate::get(&e)),
                  attachedType.metaObject());
 
-        QVERIFY(c.create());
+        QScopedPointer<QObject> obj(c.create());
+        QVERIFY(obj);
     }
 }
 

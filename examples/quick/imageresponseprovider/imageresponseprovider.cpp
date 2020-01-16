@@ -128,16 +128,11 @@ private:
 };
 
 
-class ImageProviderExtensionPlugin : public QQmlExtensionPlugin
+class ImageProviderExtensionPlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 public:
-    void registerTypes(const char *uri) override
-    {
-        Q_UNUSED(uri);
-    }
-
     void initializeEngine(QQmlEngine *engine, const char *uri) override
     {
         Q_UNUSED(uri);

@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 class QQuickGridLayoutItem : public QGridLayoutItem {
 public:
     QQuickGridLayoutItem(QQuickItem *item, int row, int column,
-                         int rowSpan = 1, int columnSpan = 1, Qt::Alignment alignment = 0)
+                         int rowSpan = 1, int columnSpan = 1, Qt::Alignment alignment = { })
         : QGridLayoutItem(row, column, rowSpan, columnSpan, alignment), m_item(item), sizeHintCacheDirty(true), useFallbackToWidthOrHeight(true) {}
 
 

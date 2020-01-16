@@ -48,8 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQml.Models 2.1
+import QtQml 2.14
+import QtQuick 2.14
+import QtQml.Models 2.14
 
 GridView {
     id: root
@@ -94,54 +95,21 @@ GridView {
 //! [1]
         delegate: DropArea {
             id: delegateRoot
+            required property color color;
 
             width: 80; height: 80
 
-            onEntered: visualModel.items.move(drag.source.visualIndex, icon.visualIndex)
+            onEntered: function(drag) {
+                visualModel.items.move((drag.source as Icon).visualIndex, icon.visualIndex)
+            }
+
             property int visualIndex: DelegateModel.itemsIndex
-            Binding { target: icon; property: "visualIndex"; value: visualIndex }
 
-            Rectangle {
+            Icon {
                 id: icon
-                property int visualIndex: 0
-                width: 72; height: 72
-                anchors {
-                    horizontalCenter: parent.horizontalCenter;
-                    verticalCenter: parent.verticalCenter
-                }
-                radius: 3
-                color: model.color
-
-                Text {
-                    anchors.centerIn: parent
-                    color: "white"
-                    text: parent.visualIndex
-                }
-
-                DragHandler {
-                    id: dragHandler
-                }
-
-                Drag.active: dragHandler.active
-                Drag.source: icon
-                Drag.hotSpot.x: 36
-                Drag.hotSpot.y: 36
-
-                states: [
-                    State {
-                        when: icon.Drag.active
-                        ParentChange {
-                            target: icon
-                            parent: root
-                        }
-
-                        AnchorChanges {
-                            target: icon
-                            anchors.horizontalCenter: undefined
-                            anchors.verticalCenter: undefined
-                        }
-                    }
-                ]
+                dragParent: root
+                visualIndex: delegateRoot.visualIndex
+                color: delegateRoot.color
             }
         }
 //! [1]

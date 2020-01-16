@@ -58,10 +58,6 @@ public:
 
         // Major version 1 only has a single revision, 0.
         qmlRegisterType<QQuickFolderListModel>(uri, 1, 0, "FolderListModel");
-
-        qmlRegisterTypesAndRevisions<QQuickFolderListModel>(uri, 2);
-
-        qmlRegisterModule(uri, 2, 15);
     }
 };
 //![class decl]

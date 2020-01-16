@@ -1922,9 +1922,10 @@ bool QQuickPathView::childMouseEventFilter(QQuickItem *i, QEvent *e)
 void QQuickPathView::mouseUngrabEvent()
 {
     Q_D(QQuickPathView);
-    if (d->stealMouse) {
+    if (d->stealMouse ||
+            (!d->flicking && d->snapMode != NoSnap && !qFuzzyCompare(qRound(d->offset), d->offset))) {
         // if our mouse grab has been removed (probably by a Flickable),
-        // fix our state
+        // or if we should snap but haven't done it, fix our state
         d->stealMouse = false;
         setKeepMouseGrab(false);
         d->timer.invalidate();

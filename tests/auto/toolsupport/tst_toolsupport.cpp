@@ -87,7 +87,7 @@ void tst_toolsupport::offsets_data()
     {
         QTestData &data = QTest::newRow("sizeof(QObjectData)")
                 << sizeof(QObjectData);
-        data << 28 << 48; // vptr + 3 ptr + 2 int + ptr
+        data << 36 << 64; // vptr + 4 ptr + 3 int + (padding) + ptr
     }
 
     {
@@ -115,8 +115,8 @@ void tst_toolsupport::offsets_data()
 
     {
         QTestData &data
-            = QTest::newRow("Heap::String::text")
-            << pmm_to_offsetof(&QV4::Heap::String::text);
+            = QTest::newRow("Heap::String::textStorage")
+            << pmm_to_offsetof(&QV4::Heap::String::textStorage);
 
         data << 4 << 8;
     }

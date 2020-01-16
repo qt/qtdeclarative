@@ -5,7 +5,8 @@ macx:CONFIG -= app_bundle
 
 HEADERS += incrementalmodel.h \
            proxytestinnermodel.h \
-           randomsortmodel.h
+           randomsortmodel.h \
+           reusemodel.h
 SOURCES += tst_qquicklistview.cpp \
            incrementalmodel.cpp \
            proxytestinnermodel.cpp \

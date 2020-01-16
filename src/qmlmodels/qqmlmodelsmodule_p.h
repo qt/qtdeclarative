@@ -61,13 +61,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlModelsModule
-{
-public:
-    static void defineModule();
-    static void defineLabsModule();
-};
-
 #if QT_CONFIG(itemmodel)
 struct QItemSelectionModelForeign
 {

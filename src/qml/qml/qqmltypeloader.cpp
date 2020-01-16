@@ -51,6 +51,8 @@
 #include <QtQml/qqmlextensioninterface.h>
 #include <QtQml/qqmlfile.h>
 
+#include <qtqml_tracepoints_p.h>
+
 #include <QtCore/qdir.h>
 #include <QtCore/qdiriterator.h>
 #include <QtCore/qfile.h>
@@ -436,6 +438,7 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QString &fileName)
 
 void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::SourceCodeData &d)
 {
+    Q_TRACE_SCOPE(QQmlCompiling, blob->url());
     QQmlCompilingProfiler prof(profiler(), blob);
 
     blob->m_inCallback = true;
@@ -455,6 +458,7 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::SourceCodeD
 
 void QQmlTypeLoader::setCachedUnit(QQmlDataBlob *blob, const QV4::CompiledData::Unit *unit)
 {
+    Q_TRACE_SCOPE(QQmlCompiling, blob->url());
     QQmlCompilingProfiler prof(profiler(), blob);
 
     blob->m_inCallback = true;
@@ -573,8 +577,10 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
         QString qmldirFilePath;
         QString qmldirUrl;
 
-        if (m_importCache.locateQmldir(importDatabase, import->uri, import->majorVersion, import->minorVersion,
-                                 &qmldirFilePath, &qmldirUrl)) {
+        const QQmlImports::LocalQmldirResult qmldirResult = m_importCache.locateLocalQmldir(
+                    importDatabase, import->uri, import->majorVersion, import->minorVersion,
+                    &qmldirFilePath, &qmldirUrl);
+        if (qmldirResult == QQmlImports::QmldirFound) {
             // This is a local library import
             if (!m_importCache.addLibraryImport(importDatabase, import->uri, import->qualifier, import->majorVersion,
                                           import->minorVersion, qmldirFilePath, qmldirUrl, false, errors))
@@ -599,7 +605,9 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
         } else {
             // Is this a module?
             if (QQmlMetaType::isAnyModule(import->uri)
-                    || QQmlMetaType::qmlRegisterModuleTypes(import->uri, import->majorVersion)) {
+                    || (qmldirResult != QQmlImports::QmldirInterceptedToRemote
+                        && QQmlMetaType::qmlRegisterModuleTypes(import->uri,
+                                                                import->majorVersion))) {
                 if (!m_importCache.addLibraryImport(importDatabase, import->uri, import->qualifier, import->majorVersion,
                                               import->minorVersion, QString(), QString(), false, errors))
                     return false;
@@ -710,7 +718,7 @@ bool QQmlTypeLoader::Blob::isDebugging() const
 
 bool QQmlTypeLoader::Blob::diskCacheEnabled() const
 {
-    return (!disableDiskCache() || forceDiskCache()) && !isDebugging();
+    return (!disableDiskCache() && !isDebugging()) || forceDiskCache();
 }
 
 bool QQmlTypeLoader::Blob::qmldirDataAvailable(const QQmlRefPointer<QQmlQmldirData> &data, QList<QQmlError> *errors)
@@ -1129,7 +1137,8 @@ void QQmlTypeLoader::setQmldirContent(const QString &url, const QString &content
         m_importQmlDirCache.insert(url, qmldir);
     }
 
-    qmldir->setContent(url, content);
+    if (!qmldir->hasContent())
+        qmldir->setContent(url, content);
 }
 
 /*!

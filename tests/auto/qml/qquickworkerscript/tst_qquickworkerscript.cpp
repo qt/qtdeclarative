@@ -47,6 +47,7 @@ public:
     tst_QQuickWorkerScript() {}
 private slots:
     void source();
+    void ready();
     void messaging();
     void messaging_data();
     void messaging_sendQObjectList();
@@ -59,6 +60,7 @@ private slots:
     void script_function();
     void script_var();
     void stressDispose();
+    void xmlHttpRequest();
 
 private:
     void waitForEchoMessage(QQuickWorkerScript *worker) {
@@ -102,6 +104,22 @@ void tst_QQuickWorkerScript::source()
     QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker.data()).value<QVariant>(), QVariant::fromValue(QString("Hello from the module")));
 
     qApp->processEvents();
+}
+
+void tst_QQuickWorkerScript::ready()
+{
+    QQmlComponent component(&m_engine, testFileUrl("worker.qml"));
+    QScopedPointer<QQuickWorkerScript>worker(qobject_cast<QQuickWorkerScript*>(component.create()));
+    QVERIFY(worker != nullptr);
+
+    const QMetaObject *mo = worker->metaObject();
+
+    QTRY_VERIFY(worker->ready());
+
+    QVariant readyChangedCalled = mo->property(mo->indexOfProperty("readyChangedCalled")).read(worker.data()).value<QVariant>();
+
+    QVERIFY(!readyChangedCalled.isNull());
+    QVERIFY(readyChangedCalled.toBool());
 }
 
 void tst_QQuickWorkerScript::messaging()
@@ -151,6 +169,7 @@ void tst_QQuickWorkerScript::messaging_data()
                                                          QRegExp::RegExp2));
     QTest::newRow("regularexpression") << QVariant::fromValue(QRegularExpression(
             "^\\d\\d?$", QRegularExpression::CaseInsensitiveOption));
+    QTest::newRow("url") << QVariant::fromValue(QUrl("http://example.com/foo/bar"));
 }
 
 void tst_QQuickWorkerScript::messaging_sendQObjectList()
@@ -339,6 +358,13 @@ void tst_QQuickWorkerScript::stressDispose()
         QVERIFY(o);
         delete o;
     }
+}
+
+void tst_QQuickWorkerScript::xmlHttpRequest()
+{
+    QQmlComponent component(&m_engine, testFileUrl("xmlHttpRequest.qml"));
+    QScopedPointer<QObject> root{component.create()}; // should not crash
+    QVERIFY(root);
 }
 
 QTEST_MAIN(tst_QQuickWorkerScript)

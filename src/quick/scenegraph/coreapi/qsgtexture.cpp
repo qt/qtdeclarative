@@ -317,6 +317,34 @@ static void qt_debug_remove_texture(QSGTexture* texture)
     \since 5.9
 */
 
+/*!
+    \class QSGTexture::NativeTexture
+    \brief Contains information about the underlying native resources of a texture.
+    \since 5.15
+ */
+
+/*!
+    \variable QSGTexture::NativeTexture::object
+    \brief a pointer to the native object handle.
+
+    With OpenGL, the native handle is a GLuint value, so \c object is then a
+    pointer to a GLuint. With Vulkan, the native handle is a VkImage, so \c
+    object is a pointer to a VkImage. With Direct3D 11 and Metal \c
+    object is a pointer to a ID3D11Texture2D or MTLTexture pointer, respectively.
+
+    \note Pay attention to the fact that \a object is always a pointer
+    to the native texture handle type, even if the native type itself is a
+    pointer.
+ */
+
+/*!
+    \variable QSGTexture::NativeTexture::layout
+    \brief Specifies the current image layout for APIs like Vulkan.
+
+    For Vulkan, \c layout contains a \c VkImageLayout value.
+ */
+
+
 #ifndef QT_NO_DEBUG
 Q_QUICK_PRIVATE_EXPORT void qsg_set_material_failure();
 #endif
@@ -394,6 +422,9 @@ QSGTexture::~QSGTexture()
 
     Binding a texture may also include uploading the texture data from
     a previously set QImage.
+
+    \warning This function should only be called when running with the
+    direct OpenGL rendering path.
 
     \warning This function can only be called from the rendering thread.
  */
@@ -701,8 +732,8 @@ void QSGTexture::updateBindOptions(bool force) // legacy (GL-only)
     data (for example, because there was no setImage() since the last call to
     this function), the function does nothing.
 
-    Materials involving textures are expected to call this function from their
-    updateSampledImage() implementation, typically without any conditions.
+    Materials involving \a rhi textures are expected to call this function from
+    their updateSampledImage() implementation, typically without any conditions.
 
     \note This function is only used when running the graphics API independent
     rendering path of the scene graph.
@@ -715,6 +746,28 @@ void QSGTexture::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUp
 {
     Q_D(QSGTexture);
     d->updateRhiTexture(rhi, resourceUpdates);
+}
+
+/*!
+    \return the platform-specific texture data for this texture.
+
+    \note This is only available when running the graphics API independent
+    rendering path of the scene graph. Use textureId() otherwise.
+
+    Returns an empty result (\c object is null) if there is no available
+    underlying native texture.
+
+    \since 5.15
+    \sa QQuickWindow::createTextureFromNativeObject()
+ */
+QSGTexture::NativeTexture QSGTexture::nativeTexture() const
+{
+    Q_D(const QSGTexture);
+    if (auto *tex = d->rhiTexture()) {
+        auto nativeTexture = tex->nativeTexture();
+        return {nativeTexture.object, nativeTexture.layout};
+    }
+    return {};
 }
 
 /*!

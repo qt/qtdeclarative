@@ -107,9 +107,9 @@ public:
     static bool writeValueProperty(QObject *,
                                    const QQmlPropertyData &, const QQmlPropertyData &valueTypeData,
                                    const QVariant &, QQmlContextData *,
-                                   QQmlPropertyData::WriteFlags flags = nullptr);
+                                   QQmlPropertyData::WriteFlags flags = {});
     static bool write(QObject *, const QQmlPropertyData &, const QVariant &,
-                      QQmlContextData *, QQmlPropertyData::WriteFlags flags = nullptr);
+                      QQmlContextData *, QQmlPropertyData::WriteFlags flags = {});
     static void findAliasTarget(QObject *, QQmlPropertyIndex, QObject **, QQmlPropertyIndex *);
 
     enum BindingFlag {

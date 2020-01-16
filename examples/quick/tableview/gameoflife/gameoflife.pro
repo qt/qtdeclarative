@@ -1,6 +1,11 @@
 TEMPLATE = app
 
 QT += quick qml
+
+CONFIG += qmltypes
+QML_IMPORT_NAME = GameOfLifeModel
+QML_IMPORT_MAJOR_VERSION = 1
+
 SOURCES += \
         main.cpp \
     gameoflifemodel.cpp

@@ -45,6 +45,7 @@
 # include <QtGui/QOpenGLFunctions>
 #endif
 #include <private/qquickprofiler_p.h>
+#include <qtquick_tracepoints_p.h>
 
 #include <QtCore/QElapsedTimer>
 
@@ -221,6 +222,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     if (!rootNode())
         return;
 
+    Q_TRACE_SCOPE(QSG_renderScene);
     m_is_rendering = true;
 
 
@@ -235,11 +237,14 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     m_bindable = &bindable;
     preprocess();
 
+    Q_TRACE(QSG_binding_entry);
     bindable.bind();
     if (profileFrames)
         bindTime = frameTimer.nsecsElapsed();
+    Q_TRACE(QSG_binding_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame,
                               QQuickProfiler::SceneGraphRendererBinding);
+    Q_TRACE(QSG_render_entry);
 
 #if QT_CONFIG(opengl)
     // Sanity check that attribute registers are disabled
@@ -259,6 +264,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     render();
     if (profileFrames)
         renderTime = frameTimer.nsecsElapsed();
+    Q_TRACE(QSG_render_exit);
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRendererFrame,
                            QQuickProfiler::SceneGraphRendererRender);
 
@@ -305,6 +311,8 @@ void QSGRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
 
 void QSGRenderer::preprocess()
 {
+    Q_TRACE(QSG_preprocess_entry);
+
     m_is_preprocessing = true;
 
     QSGRootNode *root = rootNode();
@@ -331,13 +339,16 @@ void QSGRenderer::preprocess()
     bool profileFrames = QSG_LOG_TIME_RENDERER().isDebugEnabled();
     if (profileFrames)
         preprocessTime = frameTimer.nsecsElapsed();
+    Q_TRACE(QSG_preprocess_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame,
                               QQuickProfiler::SceneGraphRendererPreprocess);
+    Q_TRACE(QSG_update_entry);
 
     nodeUpdater()->updateStates(root);
 
     if (profileFrames)
         updatePassTime = frameTimer.nsecsElapsed();
+    Q_TRACE(QSG_update_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame,
                               QQuickProfiler::SceneGraphRendererUpdate);
 

@@ -80,6 +80,7 @@
 %token T_COMMENT "comment"
 %token T_COMPATIBILITY_SEMICOLON
 %token T_ARROW "=>"
+%token T_QUESTION_QUESTION "??"
 %token T_ENUM "enum"
 %token T_ELLIPSIS "..."
 %token T_YIELD "yield"
@@ -125,6 +126,7 @@
 %nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET T_OF T_STATIC T_FROM T_AS T_REQUIRED
 %nonassoc REDUCE_HERE
 %right T_THEN T_ELSE
+%right T_WITHOUTAS T_AS
 
 %start TopLevel
 
@@ -1011,15 +1013,27 @@ UiObjectMember: UiQualifiedId T_ON UiQualifiedId  UiObjectInitializer;
 ./
 
 
-UiObjectLiteral: T_LBRACE ExpressionStatementLookahead UiPropertyDefinitionList T_RBRACE;
-/.  case $rule_number: Q_FALLTHROUGH(); ./
-UiObjectLiteral: T_LBRACE ExpressionStatementLookahead UiPropertyDefinitionList T_COMMA T_RBRACE;
+UiObjectLiteral: T_LBRACE ExpressionStatementLookahead UiPropertyDefinitionList T_RBRACE Semicolon;
 /.
     case $rule_number: {
         AST::ObjectPattern *l = new (pool) AST::ObjectPattern(sym(3).PatternPropertyList->finish());
         l->lbraceToken = loc(1);
         l->rbraceToken = loc(4);
         AST::ExpressionStatement *node = new (pool) AST::ExpressionStatement(l);
+        node->semicolonToken = loc(5);
+        sym(1).Node = node;
+    } break;
+./
+
+
+UiObjectLiteral: T_LBRACE ExpressionStatementLookahead UiPropertyDefinitionList T_COMMA T_RBRACE Semicolon;
+/.
+    case $rule_number: {
+        AST::ObjectPattern *l = new (pool) AST::ObjectPattern(sym(3).PatternPropertyList->finish());
+        l->lbraceToken = loc(1);
+        l->rbraceToken = loc(5);
+        AST::ExpressionStatement *node = new (pool) AST::ExpressionStatement(l);
+        node->semicolonToken = loc(6);
         sym(1).Node = node;
     } break;
 ./
@@ -2500,6 +2514,20 @@ RelationalExpression_In: RelationalExpression_In T_IN ShiftExpression;
     } break;
 ./
 
+TypeAssertExpression_In: RelationalExpression_In T_AS Type;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+TypeAssertExpression: RelationalExpression T_AS Type;
+/.
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::As, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+RelationalExpression_In: TypeAssertExpression_In;
+RelationalExpression: TypeAssertExpression;
+
 EqualityExpression_In: RelationalExpression_In;
 EqualityExpression: RelationalExpression;
 
@@ -2611,13 +2639,48 @@ LogicalORExpression_In: LogicalORExpression_In T_OR_OR LogicalANDExpression_In;
     } break;
 ./
 
+CoalesceExpression: LogicalORExpression;
+CoalesceExpression_In: LogicalORExpression_In;
 
-ConditionalExpression: LogicalORExpression;
-ConditionalExpression_In: LogicalORExpression_In;
-
-ConditionalExpression: LogicalORExpression T_QUESTION AssignmentExpression_In T_COLON AssignmentExpression;
+CoalesceExpression: CoalesceExpression T_QUESTION_QUESTION LogicalORExpression;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
-ConditionalExpression_In: LogicalORExpression_In T_QUESTION AssignmentExpression_In T_COLON AssignmentExpression_In;
+CoalesceExpression_In: CoalesceExpression_In T_QUESTION_QUESTION LogicalORExpression_In;
+/.
+    case $rule_number: {
+
+        auto *lhs = sym(1).Expression;
+        auto *rhs = sym(3).Expression;
+
+        // Check if lhs or rhs contain || or &&
+
+        if (lhs->binaryExpressionCast() != nullptr) {
+            auto *binaryExpr = lhs->binaryExpressionCast();
+            if (binaryExpr->op == QSOperator::And || binaryExpr->op == QSOperator::Or) {
+                syntaxError(binaryExpr->operatorToken, "Left-hand side may not contain || or &&");
+                return false;
+            }
+        }
+
+        if (rhs->binaryExpressionCast() != nullptr) {
+            auto *binaryExpr = rhs->binaryExpressionCast();
+            if (binaryExpr->op == QSOperator::And || binaryExpr->op == QSOperator::Or) {
+                syntaxError(binaryExpr->operatorToken, "Right-hand side may not contain || or &&");
+                return false;
+            }
+        }
+
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(lhs, QSOperator::Coalesce, rhs);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+ConditionalExpression: CoalesceExpression;
+ConditionalExpression_In: CoalesceExpression_In;
+
+ConditionalExpression: CoalesceExpression T_QUESTION AssignmentExpression_In T_COLON AssignmentExpression;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+ConditionalExpression_In: CoalesceExpression_In T_QUESTION AssignmentExpression_In T_COLON AssignmentExpression_In;
 /.
     case $rule_number: {
         AST::ConditionalExpression *node = new (pool) AST::ConditionalExpression(sym(1).Expression, sym(3).Expression, sym(5).Expression);
@@ -4356,7 +4419,10 @@ ImportsList: ImportsList T_COMMA ImportSpecifier;
     } break;
 ./
 
-ImportSpecifier: ImportedBinding;
+-- When enconutering an IdentifierReference it can resolve to both ImportedBinding and IdentifierName
+-- Using %right and %prec, we tell qlalr that it should not reduce immediately, but rather shift
+-- so that we have a chance of actually parsing the correct rule if there is an "as" identifier
+ImportSpecifier: ImportedBinding %prec T_WITHOUTAS;
 /.
     case $rule_number: {
         auto importSpecifier = new (pool) AST::ImportSpecifier(stringRef(1));

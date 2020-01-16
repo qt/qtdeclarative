@@ -56,9 +56,6 @@
 int main(int argc, char ** argv)
 {
     QCoreApplication app(argc, argv);
-//![0]
-    qmlRegisterTypesAndRevisions<Person>("People", 1);
-//![0]
 
     QQmlEngine engine;
     QQmlComponent component(&engine, QUrl("qrc:example.qml"));

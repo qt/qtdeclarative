@@ -197,25 +197,6 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
 bool QQmlEnginePrivate::qml_debugging_enabled = false;
 bool QQmlEnginePrivate::s_designerMode = false;
 
-void QQmlEnginePrivate::defineModule()
-{
-    const char uri[] = "QtQml";
-
-    qmlRegisterTypesAndRevisions<
-            QObjectForeign,
-#if QT_CONFIG(qml_animation)
-            QQmlTimer,
-#endif
-#if QT_CONFIG(qml_locale)
-            QQmlLocale,
-#endif
-            QQmlComponent,
-            QQmlBind,
-            QQmlConnections,
-            QQmlLoggingCategory
-    >(uri, 2);
-}
-
 bool QQmlEnginePrivate::designerMode()
 {
     return s_designerMode;
@@ -783,10 +764,12 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
     // QQmlEngine to emit signals from a different thread.  These signals are then automatically
     // marshalled back onto the QObject's thread and handled by QML from there.  This is tested
     // by the qqmlecmascript::threadSignal() autotest.
-    if (ddata->notifyList &&
-        QThread::currentThreadId() != QObjectPrivate::get(object)->getThreadData()->threadId.loadRelaxed()) {
+    if (!ddata->notifyList)
+        return;
 
-        if (!QObjectPrivate::get(object)->getThreadData()->thread.loadAcquire())
+    auto objectThreadData = QObjectPrivate::get(object)->threadData.loadRelaxed();
+    if (QThread::currentThreadId() != objectThreadData->threadId.loadRelaxed()) {
+        if (!objectThreadData->thread.loadAcquire())
             return;
 
         QMetaMethod m = QMetaObjectPrivate::signal(object->metaObject(), index);
@@ -818,7 +801,7 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
 
         QQmlThreadNotifierProxyObject *mpo = new QQmlThreadNotifierProxyObject;
         mpo->target = object;
-        mpo->moveToThread(QObjectPrivate::get(object)->getThreadData()->thread.loadAcquire());
+        mpo->moveToThread(objectThreadData->thread.loadAcquire());
         QCoreApplication::postEvent(mpo, ev.take());
 
     } else {
@@ -1002,8 +985,6 @@ QQmlEngine::~QQmlEngine()
     Q_D(QQmlEngine);
     QJSEnginePrivate::removeFromDebugServer(this);
 
-    d->typeLoader.invalidate();
-
     // Emit onDestruction signals for the root context before
     // we destroy the contexts, engine, Singleton Types etc. that
     // may be required to handle the destruction signal.
@@ -1013,12 +994,14 @@ QQmlEngine::~QQmlEngine()
     // we do this here and not in the private dtor since otherwise a crash can
     // occur (if we are the QObject parent of the QObject singleton instance)
     // XXX TODO: performance -- store list of singleton types separately?
-    QList<QQmlType> singletonTypes = QQmlMetaType::qmlSingletonTypes();
+    const QList<QQmlType> singletonTypes = QQmlMetaType::qmlSingletonTypes();
     for (const QQmlType &currType : singletonTypes)
         d->destroySingletonInstance(currType);
 
     delete d->rootContext;
     d->rootContext = nullptr;
+
+    d->typeLoader.invalidate();
 }
 
 /*! \fn void QQmlEngine::quit()
@@ -1595,6 +1578,9 @@ static QObject *resolveAttachedProperties(QQmlAttachedPropertiesFunc pf, QQmlDat
 }
 
 #if QT_DEPRECATED_SINCE(5, 14)
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_DEPRECATED
+
 QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool create)
 {
     QQmlData *data = QQmlData::get(object, create);
@@ -1605,7 +1591,9 @@ QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool cre
         return nullptr;
 
     QQmlEnginePrivate *engine = QQmlEnginePrivate::get(data->context);
-    return resolveAttachedProperties(QQmlMetaType::attachedPropertiesFuncById(engine, id), data,
+
+    const QQmlType type = QQmlMetaType::qmlType(id, QQmlMetaType::TypeIdCategory::QmlType);
+    return resolveAttachedProperties(type.attachedPropertiesFunction(engine), data,
                                      const_cast<QObject *>(object), create);
 }
 
@@ -1622,6 +1610,8 @@ QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
 
     return qmlAttachedPropertiesObjectById(*idCache, object, create);
 }
+
+QT_WARNING_POP
 #endif
 
 QQmlAttachedPropertiesFunc qmlAttachedPropertiesFunction(QObject *object,
@@ -1650,6 +1640,8 @@ QObject *qmlAttachedPropertiesObject(QObject *object, QQmlAttachedPropertiesFunc
 } // namespace QtQml
 
 #if QT_DEPRECATED_SINCE(5, 1)
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_DEPRECATED
 
 // Also define symbols outside namespace to keep binary compatibility with Qt 5.0
 
@@ -1680,6 +1672,7 @@ Q_QML_EXPORT QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *o
     return QtQml::qmlAttachedPropertiesObject(idCache, object, attachedMetaObject, create);
 }
 
+QT_WARNING_POP
 #endif // QT_DEPRECATED_SINCE(5, 1)
 
 class QQmlDataExtended {

@@ -39,7 +39,6 @@
 
 #include "qtquick2_p.h"
 #include <private/qqmlengine_p.h>
-#include <private/qquickutilmodule_p.h>
 #include <private/qquickvaluetypes_p.h>
 #include <private/qquickitemsmodule_p.h>
 #include <private/qquickaccessiblefactory_p.h>
@@ -54,6 +53,10 @@
 #include <QtQuick/private/qquickstate_p.h>
 #include <qqmlproperty.h>
 #include <QtCore/QPointer>
+
+#if QT_CONFIG(shortcut)
+Q_DECLARE_METATYPE(QKeySequence::StandardKey)
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -182,10 +185,12 @@ void QQmlQtQuick2Module::defineModule()
 {
     QQuick_initializeProviders();
 
-    QQuickUtilModule::defineModule();
-    QQuickItemsModule::defineModule();
+#if QT_CONFIG(shortcut)
+    qRegisterMetaType<QKeySequence::StandardKey>();
+#endif
 
     QQuickValueTypes::registerValueTypes();
+    QQuickItemsModule::defineModule();
 
 #if QT_CONFIG(accessibility)
     QAccessible::installFactory(&qQuickAccessibleFactory);

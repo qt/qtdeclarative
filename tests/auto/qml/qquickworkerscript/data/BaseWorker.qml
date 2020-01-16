@@ -4,8 +4,10 @@ WorkerScript {
     id: worker
 
     property variant response
+    property bool readyChangedCalled : false
 
     signal done()
+    signal ready()
 
     function testSend(value) {
         worker.sendMessage(value)
@@ -20,5 +22,7 @@ WorkerScript {
         worker.response = messageObject
         worker.done()
     }
+
+    onReadyChanged: worker.readyChangedCalled = true
 }
 

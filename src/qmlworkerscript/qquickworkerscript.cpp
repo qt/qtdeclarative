@@ -130,6 +130,7 @@ struct WorkerScript : public QV4::ExecutionEngine {
     QQuickWorkerScriptEnginePrivate *p = nullptr;
     QUrl source;
     QQuickWorkerScript *owner = nullptr;
+    QScopedPointer<QNetworkAccessManager> scriptLocalNAM;
     int id = -1;
 };
 
@@ -389,6 +390,16 @@ WorkerScript::WorkerScript(int id, QQuickWorkerScriptEnginePrivate *parent)
     QV4::ScopedValue sendMessage(scope, QV4::FunctionObject::createBuiltinFunction(this, name, QQuickWorkerScriptEnginePrivate::method_sendMessage, 1));
     api->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("sendMessage"))), sendMessage);
     globalObject->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("WorkerScript"))), api);
+    networkAccessManager = [](QV4::ExecutionEngine *engine){
+        auto *workerScript = static_cast<WorkerScript *>(engine);
+        if (workerScript->scriptLocalNAM)
+            return workerScript->scriptLocalNAM.get();
+        if (auto *namFactory = workerScript->p->qmlengine->networkAccessManagerFactory())
+            workerScript->scriptLocalNAM.reset(namFactory->create(workerScript->p));
+        else
+            workerScript->scriptLocalNAM.reset(new QNetworkAccessManager(workerScript->p));
+        return workerScript->scriptLocalNAM.get();
+    };
 }
 
 int QQuickWorkerScriptEngine::registerWorkerScript(QQuickWorkerScript *owner)
@@ -533,6 +544,17 @@ void QQuickWorkerScript::setSource(const QUrl &source)
 }
 
 /*!
+    \qmlproperty url WorkerScript::ready
+
+    This holds whether the WorkerScript has been initialized and is ready
+    for receiving messages via \tt WorkerScript.sendMessage().
+*/
+bool QQuickWorkerScript::ready() const
+{
+    return m_engine != nullptr;
+}
+
+/*!
     \qmlmethod WorkerScript::sendMessage(jsobject message)
 
     Sends the given \a message to a worker script handler in another
@@ -591,6 +613,8 @@ QQuickWorkerScriptEngine *QQuickWorkerScript::engine()
 
         if (m_source.isValid())
             m_engine->executeUrl(m_scriptId, m_source);
+
+        emit readyChanged();
 
         return m_engine;
     }

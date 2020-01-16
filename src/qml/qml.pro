@@ -63,8 +63,14 @@ qtConfig(qml-animation) {
 include(types/types.pri)
 include(../3rdparty/masm/masm-defs.pri)
 include(../3rdparty/masm/masm.pri)
-include(../3rdparty/llvm/llvm.pri)
 
 MODULE_PLUGIN_TYPES = \
     qmltooling
+
+QMLTYPES_FILENAME = plugins.qmltypes
+QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/QtQml
+QML_IMPORT_NAME = QtQml
+IMPORT_VERSION = 2.15
+CONFIG += qmltypes install_qmltypes install_metatypes
+
 load(qt_module)

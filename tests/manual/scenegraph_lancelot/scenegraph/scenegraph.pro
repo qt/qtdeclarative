@@ -10,6 +10,8 @@ SOURCES += tst_scenegraph.cpp
 # Assuming that we are in a normal Qt5 source code tree
 include(../../../../../qtbase/tests/baselineserver/shared/qbaselinetest.pri)
 
-TEST_HELPER_INSTALLS += .././qmlscenegrabber
+win32: TEST_HELPER_INSTALLS += .././qmlscenegrabber.exe
+else: macos: TEST_HELPER_INSTALLS += .././qmlscenegrabber.app
+else: TEST_HELPER_INSTALLS += .././qmlscenegrabber
 
 TESTDATA += ../data

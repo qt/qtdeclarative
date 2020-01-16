@@ -65,6 +65,8 @@ inline uint charToUInt(const char *ch) { return static_cast<unsigned char>(*ch);
 template <typename T>
 uint stringToArrayIndex(const T *ch, const T *end)
 {
+    if (ch == end)
+        return std::numeric_limits<uint>::max();
     uint i = charToUInt(ch) - '0';
     if (i > 9)
         return std::numeric_limits<uint>::max();

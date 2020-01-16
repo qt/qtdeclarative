@@ -209,9 +209,9 @@ public:
     // complete generation of the code. Alternatively, call
     // finalizeCodeWithoutDisassembly() directly if you have your own way of
     // displaying disassembly.
-    
+
     inline CodeRef finalizeCodeWithoutDisassembly();
-    inline CodeRef finalizeCodeWithDisassembly(const char *jitKind, const char* format, ...) WTF_ATTRIBUTE_PRINTF(3, 4);
+    inline CodeRef finalizeCodeWithDisassembly(const char *jitKind, const char* func);
 
     CodePtr trampolineAt(Label label)
     {
@@ -267,9 +267,9 @@ protected:
 #endif
 };
 
-#define FINALIZE_CODE_IF(condition, linkBufferReference, jitKind, dataLogFArgumentsForHeading)  \
+#define FINALIZE_CODE_IF(condition, linkBufferReference, jitKind, func)  \
     (UNLIKELY((condition))                                              \
-     ? ((linkBufferReference).finalizeCodeWithDisassembly (jitKind, dataLogFArgumentsForHeading)) \
+     ? ((linkBufferReference).finalizeCodeWithDisassembly (jitKind, func)) \
      : (linkBufferReference).finalizeCodeWithoutDisassembly())
 
 // Use this to finalize code, like so:
@@ -288,11 +288,11 @@ protected:
 // Note that the dataLogFArgumentsForHeading are only evaluated when showDisassembly
 // is true, so you can hide expensive disassembly-only computations inside there.
 
-#define FINALIZE_CODE(linkBufferReference, jitKind, dataLogFArgumentsForHeading)  \
-    FINALIZE_CODE_IF(Options::showDisassembly(), linkBufferReference, jitKind, dataLogFArgumentsForHeading)
+#define FINALIZE_CODE(linkBufferReference, jitKind, func)  \
+    FINALIZE_CODE_IF(Options::showDisassembly(), linkBufferReference, jitKind, func)
 
-#define FINALIZE_DFG_CODE(linkBufferReference, jitKind, dataLogFArgumentsForHeading)  \
-    FINALIZE_CODE_IF((Options::showDisassembly() || Options::showDFGDisassembly()), linkBufferReference, jitKind, dataLogFArgumentsForHeading)
+#define FINALIZE_DFG_CODE(linkBufferReference, jitKind, func)  \
+    FINALIZE_CODE_IF((Options::showDisassembly() || Options::showDFGDisassembly()), linkBufferReference, jitKind, func)
 
 
 template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
@@ -304,24 +304,19 @@ inline typename LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::Code
 }
 
 template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
-inline typename LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::CodeRef LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::finalizeCodeWithDisassembly(const char *jitKind, const char* format, ...)
+inline typename LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::CodeRef LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::finalizeCodeWithDisassembly(const char *jitKind, const char* func)
 {
     ASSERT(Options::showDisassembly() || Options::showDFGDisassembly());
 
     CodeRef result = finalizeCodeWithoutDisassembly();
 
-    dataLogF("Generated %s code for ", jitKind);
-    va_list argList;
-    va_start(argList, format);
-    WTF::dataLogFV(format, argList);
-    va_end(argList);
-    dataLogF(":\n");
+    dataLogF("Generated %s code for function %s:", jitKind, func);
 
     dataLogF(
 #if OS(WINDOWS)
-                "    Code at [0x%p, 0x%p):\n",
+                "    Code at [0x%p, 0x%p):",
 #else
-                "    Code at [%p, %p):\n",
+                "    Code at [%p, %p):",
 #endif
                 result.code().executableAddress(), static_cast<char*>(result.code().executableAddress()) + result.size());
     disassemble(result.code(), m_size, "    ", WTF::dataFile());

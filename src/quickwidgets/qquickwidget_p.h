@@ -97,7 +97,7 @@ public:
     void renderSceneGraph();
     void createContext();
     void destroyContext();
-    void handleContextCreationFailure(const QSurfaceFormat &format, bool isEs);
+    void handleContextCreationFailure(const QSurfaceFormat &format);
 
 #if QT_CONFIG(opengl)
     GLuint textureId() const override;

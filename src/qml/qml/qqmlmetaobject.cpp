@@ -44,12 +44,6 @@
 
 QT_BEGIN_NAMESPACE
 
-struct StaticQtMetaObject : public QObject
-{
-    static const QMetaObject *get()
-    { return &staticQtMetaObject; }
-};
-
 static bool isNamedEnumeratorInScope(const QMetaObject *resolvedMetaObject, const QByteArray &scope,
                                      const QByteArray &name)
 {
@@ -74,7 +68,7 @@ static bool isNamedEnumerator(const QMetaObject *metaObj, const QByteArray &scop
     }
 
     if (scope == "Qt")
-        return isNamedEnumeratorInScope(StaticQtMetaObject::get(), scope, name);
+        return isNamedEnumeratorInScope(&Qt::staticMetaObject, scope, name);
 
     if (isNamedEnumeratorInScope(metaObj, scope, name))
         return true;

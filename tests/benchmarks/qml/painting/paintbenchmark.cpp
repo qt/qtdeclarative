@@ -31,7 +31,7 @@
 #include <QImage>
 #include <QPainter>
 #include <QPainterPath>
-#include <QGLWidget>
+#include <QOpenGLWidget>
 #include <QTextLayout>
 #include <QVBoxLayout>
 #include <QElapsedTimer>
@@ -46,7 +46,7 @@ const int spacing = 36;
 QSizeF size(1000, 800);
 const qreal lineWidth = 1000;
 QString strings[lines];
-QGLWidget *testWidget = 0;
+QOpenGLWidget *testWidget = 0;
 
 void paint_QTextLayout(QPainter &p, bool useCache)
 {
@@ -151,8 +151,8 @@ void paint_RoundedRect(QPainter &p)
     static bool first = true;
     if (first) {
         if (testWidget) {
-            QGLFormat format = testWidget->format();
-            if (!format.sampleBuffers())
+            QSurfaceFormat format = testWidget->format();
+            if (format.samples() == -1)
                 qWarning() << "Cannot paint antialiased rounded rect without sampleBuffers";
         }
         first = false;
@@ -314,10 +314,11 @@ struct {
 
 PaintFunc testFunc = 0;
 
-class MyGLWidget : public QGLWidget
+class MyGLWidget : public QOpenGLWidget
 {
 public:
-    MyGLWidget(const QGLFormat &format) : QGLWidget(format), frames(0) {
+    MyGLWidget(const QSurfaceFormat &format) : frames(0) {
+        setFormat(format);
         const char chars[] = "abcd efgh ijkl mnop qrst uvwx yz!$. ABCD 1234";
         int len = strlen(chars);
         for (int i = 0; i < lines; ++i) {
@@ -394,8 +395,11 @@ int main(int argc, char *argv[])
     }
 
     QWidget w;
-    QGLFormat format = QGLFormat::defaultFormat();
-    format.setSampleBuffers(sampleBuffers);
+    QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+    if (!sampleBuffers)
+        format.setSamples(-1);
+    else if (format.samples() == -1)
+        format.setSamples(4);
     testWidget = new MyGLWidget(format);
     testWidget->setAutoFillBackground(false);
     QVBoxLayout *layout = new QVBoxLayout(&w);

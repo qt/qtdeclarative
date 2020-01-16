@@ -62,6 +62,8 @@
 #include "qsgopenglvisualizer_p.h"
 #include "qsgrhivisualizer_p.h"
 
+#include <qtquick_tracepoints_p.h>
+
 #include <algorithm>
 
 #ifndef GL_DOUBLE
@@ -270,6 +272,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material, boo
         return nullptr;
     }
 
+    Q_TRACE_SCOPE(QSG_prepareMaterial);
     if (QSG_LOG_TIME_COMPILATION().isDebugEnabled())
         qsg_renderer_timer.start();
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphContextFrame);
@@ -332,6 +335,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
         return nullptr;
     }
 
+    Q_TRACE_SCOPE(QSG_prepareMaterial);
     if (QSG_LOG_TIME_COMPILATION().isDebugEnabled())
         qsg_renderer_timer.start();
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphContextFrame);
@@ -379,6 +383,9 @@ void ShaderManager::invalidated()
 
     qDeleteAll(srbCache);
     srbCache.clear();
+
+    qDeleteAll(pipelineCache);
+    pipelineCache.clear();
 }
 
 void ShaderManager::clearCachedRendererData()
@@ -546,7 +553,7 @@ void Updater::visitNode(Node *n)
 
     m_added = count;
     m_force_update = force;
-    n->dirtyState = nullptr;
+    n->dirtyState = {};
 }
 
 void Updater::visitClipNode(Node *n)
@@ -1103,13 +1110,9 @@ void Renderer::destroyGraphicsResources()
     // are going to destroy.
     m_shaderManager->clearCachedRendererData();
 
-    qDeleteAll(m_pipelines);
     qDeleteAll(m_samplers);
-
     m_stencilClipCommon.reset();
-
     delete m_dummyTexture;
-
     m_visualizer->releaseResources();
 }
 
@@ -1119,7 +1122,6 @@ void Renderer::releaseCachedResources()
 
     destroyGraphicsResources();
 
-    m_pipelines.clear();
     m_samplers.clear();
     m_dummyTexture = nullptr;
 
@@ -2627,7 +2629,7 @@ QRhiGraphicsPipeline *Renderer::buildStencilPipeline(const Batch *batch, bool fi
     QRhiGraphicsPipeline *ps = m_rhi->newGraphicsPipeline();
     ps->setFlags(QRhiGraphicsPipeline::UsesStencilRef);
     QRhiGraphicsPipeline::TargetBlend blend;
-    blend.colorWrite = 0;
+    blend.colorWrite = {};
     ps->setTargetBlends({ blend });
     ps->setSampleCount(renderTarget()->sampleCount());
     ps->setStencilTest(true);
@@ -3237,15 +3239,17 @@ static inline bool needsBlendConstant(QRhiGraphicsPipeline::BlendFactor f)
 
 bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms) // RHI only, [prepare step]
 {
-    // In unmerged batches the srbs in the elements are all compatible layout-wise.
+    // In unmerged batches the srbs in the elements are all compatible
+    // layout-wise. Note the key's == and qHash implementations: the rp desc and
+    // srb are tested for (layout) compatibility, not pointer equality.
     const GraphicsPipelineStateKey k { m_gstate, sms, renderPassDescriptor(), e->srb };
 
     // Note: dynamic state (viewport rect, scissor rect, stencil ref, blend
     // constant) is never a part of GraphicsState/QRhiGraphicsPipeline.
 
     // See if there is an existing, matching pipeline state object.
-    auto it = m_pipelines.constFind(k);
-    if (it != m_pipelines.constEnd()) {
+    auto it = m_shaderManager->pipelineCache.constFind(k);
+    if (it != m_shaderManager->pipelineCache.constEnd()) {
         e->ps = *it;
         return true;
     }
@@ -3257,7 +3261,7 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms)
     ps->setShaderResourceBindings(e->srb);
     ps->setRenderPassDescriptor(renderPassDescriptor());
 
-    QRhiGraphicsPipeline::Flags flags = 0;
+    QRhiGraphicsPipeline::Flags flags;
     if (needsBlendConstant(m_gstate.srcColor) || needsBlendConstant(m_gstate.dstColor))
         flags |= QRhiGraphicsPipeline::UsesBlendConstants;
     if (m_gstate.usesScissor)
@@ -3302,7 +3306,7 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms)
         return false;
     }
 
-    m_pipelines.insert(k, ps);
+    m_shaderManager->pipelineCache.insert(k, ps);
     e->ps = ps;
     return true;
 }
@@ -4643,7 +4647,7 @@ bool operator==(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKe
 {
     return a.state == b.state
             && a.sms->programRhi.program == b.sms->programRhi.program
-            && a.rpDesc == b.rpDesc
+            && a.compatibleRenderPassDescriptor->isCompatible(b.compatibleRenderPassDescriptor)
             && a.layoutCompatibleSrb->isLayoutCompatible(b.layoutCompatibleSrb);
 }
 
@@ -4654,7 +4658,8 @@ bool operator!=(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKe
 
 uint qHash(const GraphicsPipelineStateKey &k, uint seed) Q_DECL_NOTHROW
 {
-    return qHash(k.state, seed) + qHash(k.sms->programRhi.program, seed) + qHash(k.rpDesc, seed);
+    // no srb and rp included due to their special comparison semantics and lack of hash keys
+    return qHash(k.state, seed) + qHash(k.sms->programRhi.program, seed);
 }
 
 Visualizer::Visualizer(Renderer *renderer)

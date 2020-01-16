@@ -1,0 +1,77 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qmldiskcache.html
+\title The QML Disk Cache
+\brief QML caches compiled documents on disk to improve load time.
+
+When your application loads a QML or JavaScript file for the first time,
+the QML engine compiles the file into a byte code representation on the
+fly and runs it. The compiling process can be time consuming, and subsequent
+loads of the same document yield the same result. To optimize this step, the
+QML engine can cache the result. It stores the byte code in a cache file and
+later loads the cache file instead of re-compiling when the same file is
+requested again. Usually the files are stored in a subdirectory \c{qmlcache}
+of the system's cache directory, as denoted by QStandardPaths::CacheLocation.
+Checks are in place to make sure that the cache files are only loaded if all
+of the following conditions are met:
+\list
+    \li The Qt version has not changed
+    \li The source code in the original file has not changed
+    \li The QML debugger is not running
+\endlist
+
+The disk caching behavior can be fine tuned using the following environment
+variables:
+
+\table
+    \header
+        \li Environment Variable
+        \li Description
+    \row
+        \li \c{QML_DISABLE_DISK_CACHE}
+        \li Disables the disk cache and forces re-compilation from source for
+            all QML and JavaScript files.
+    \row
+        \li \c{QML_FORCE_DISK_CACHE}
+        \li Enables the disk cache even when debugging QML. You cannot use the
+            JavaScript debugger this way. It may fail to stop at breakpoints,
+            for example. You can still use the QML inspector to explore the
+            object hierarchy, though. \c{QML_FORCE_DISK_CACHE} overrides
+            \c{QML_DISABLE_DISK_CACHE}.
+    \row
+        \li \c{QML_DISK_CACHE_PATH}
+        \li Specifies a custom location where the cache files shall be stored
+            instead of using the default location.
+\endtable
+
+You can also specify \c{CONFIG += qtquickcompiler} in your \c{.pro} file
+to perform the compilation ahead of time and integrate the resulting byte code
+directly into your executable. For more information, see \l{Qt Quick Compiler}.
+
+*/

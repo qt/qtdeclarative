@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 Intel Corporation.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -47,6 +48,7 @@
 #include <private/qml_compile_hash_p.h>
 #include <private/qqmlirbuilder_p.h>
 #include <QCryptographicHash>
+#include <QtEndian>
 
 // Efficient implementation that takes advantage of powers of two.
 static inline size_t roundUpToMultipleOf(size_t divisor, size_t x)
@@ -108,19 +110,11 @@ void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
 
         QV4::CompiledData::String *s = reinterpret_cast<QV4::CompiledData::String *>(stringData);
         Q_ASSERT(reinterpret_cast<uintptr_t>(s) % alignof(QV4::CompiledData::String) == 0);
-        s->refcount = -1;
+        Q_ASSERT(qstr.length() >= 0);
         s->size = qstr.length();
-        s->allocAndCapacityReservedFlag = 0;
-        s->offsetOn32Bit = sizeof(QV4::CompiledData::String);
-        s->offsetOn64Bit = sizeof(QV4::CompiledData::String);
 
         ushort *uc = reinterpret_cast<ushort *>(reinterpret_cast<char *>(s) + sizeof(*s));
-#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-        memcpy(uc, qstr.constData(), s->size * sizeof(ushort));
-#else
-        for (int i = 0; i < s->size; ++i)
-            uc[i] = qToLittleEndian<ushort>(qstr.at(i).unicode());
-#endif
+        qToLittleEndian<ushort>(qstr.constData(), s->size, uc);
         uc[s->size] = 0;
 
         stringData += QV4::CompiledData::String::calculateSize(qstr);

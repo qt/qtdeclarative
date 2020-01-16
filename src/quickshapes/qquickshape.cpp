@@ -49,12 +49,12 @@
 #include <QLoggingCategory>
 #include <QtGui/private/qrhi_p.h>
 
-#if defined(QT_STATIC)
 static void initResources()
 {
+#if defined(QT_STATIC)
     Q_INIT_RESOURCE(qtquickshapes);
-}
 #endif
+}
 
 QT_BEGIN_NAMESPACE
 
@@ -72,6 +72,11 @@ Q_LOGGING_CATEGORY(QQSHAPE_LOG_TIME_DIRTY_SYNC, "qt.shape.time.sync")
     import QtQuick.Shapes 1.\1
     \endqml
 */
+
+void QQuickShapesModule::defineModule()
+{
+    initResources();
+}
 
 QQuickShapeStrokeFillParams::QQuickShapeStrokeFillParams()
     : strokeColor(Qt::white),
@@ -595,8 +600,6 @@ void QQuickShapePath::resetFillGradient()
     \li The \c software backend is fully supported. The path is rendered via
     QPainter::strokePath() and QPainter::fillPath() in this case.
 
-    \li The Direct 3D 12 backend is not currently supported.
-
     \li The OpenVG backend is not currently supported.
 
     \endlist
@@ -667,22 +670,9 @@ void QQuickShapePrivate::setStatus(QQuickShape::Status newStatus)
     }
 }
 
-struct QQuickShapeResourceInitializer
-{
-    QQuickShapeResourceInitializer()
-    {
-#if defined(QT_STATIC)
-        initResources();
-#endif
-    }
-};
-
-Q_GLOBAL_STATIC(QQuickShapeResourceInitializer, initQQuickShapeResources)
-
 QQuickShape::QQuickShape(QQuickItem *parent)
   : QQuickItem(*(new QQuickShapePrivate), parent)
 {
-    initQQuickShapeResources();
     setFlag(ItemHasContents);
 }
 

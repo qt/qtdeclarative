@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -448,7 +448,7 @@ Item {
 */
 
 /*!
-    \qmlproperty int QtQuick::WheelEvent::inverted
+    \qmlproperty bool QtQuick::WheelEvent::inverted
 
     Returns whether the delta values delivered with the event are inverted.
 
@@ -1431,6 +1431,135 @@ QQuickEventPoint *QQuickSinglePointEvent::point(int i) const
     return nullptr;
 }
 
+
+/*!
+    \qmltype PointerScrollEvent
+    \instantiates QQuickPointerScrollEvent
+    \inqmlmodule QtQuick
+    \ingroup qtquick-input-events
+    \brief Provides information about a scrolling event, such as from a mouse wheel.
+
+    \sa WheelHandler
+*/
+
+/*!
+    \internal
+    \class QQuickPointerScrollEvent
+*/
+
+/*!
+    \readonly
+    \qmlproperty PointerDevice QtQuick::PointerScrollEvent::device
+
+    This property holds the device that generated the event.
+*/
+
+/*!
+    \qmlproperty int QtQuick::PointerScrollEvent::buttons
+
+    This property holds the mouse buttons pressed when the wheel event was generated.
+
+    It contains a bitwise combination of:
+    \list
+    \li \l {Qt::LeftButton} {Qt.LeftButton}
+    \li \l {Qt::RightButton} {Qt.RightButton}
+    \li \l {Qt::MiddleButton} {Qt.MiddleButton}
+    \endlist
+*/
+
+/*!
+    \readonly
+    \qmlproperty int QtQuick::PointerScrollEvent::modifiers
+
+    This property holds the \l {Qt::KeyboardModifier}{keyboard modifier} keys
+    that were pressed immediately before the event occurred.
+
+    It contains a bitwise combination of the following flags:
+    \value Qt.NoModifier
+        No modifier key is pressed.
+    \value Qt.ShiftModifier
+        A Shift key on the keyboard is pressed.
+    \value Qt.ControlModifier
+        A Ctrl key on the keyboard is pressed.
+    \value Qt.AltModifier
+        An Alt key on the keyboard is pressed.
+    \value Qt.MetaModifier
+        A Meta key on the keyboard is pressed.
+    \value Qt.KeypadModifier
+        A keypad button is pressed.
+
+    For example, to react to a Shift key + Left mouse button click:
+    \qml
+    Item {
+        TapHandler {
+            onTapped: {
+                if ((event.button == Qt.LeftButton) && (event.modifiers & Qt.ShiftModifier))
+                    doSomething();
+            }
+        }
+    }
+    \endqml
+*/
+
+/*!
+    \qmlproperty point QtQuick::PointerScrollEvent::angleDelta
+
+    This property holds the distance that the wheel is rotated in wheel degrees.
+    The x and y cordinate of this property holds the delta in horizontal and
+    vertical orientation.
+
+    A positive value indicates that the wheel was rotated up/right;
+    a negative value indicates that the wheel was rotated down/left.
+
+    Most mouse types work in steps of 15 degrees, in which case the delta value is a
+    multiple of 120; i.e., 120 units * 1/8 = 15 degrees.
+*/
+
+/*!
+    \qmlproperty point QtQuick::PointerScrollEvent::pixelDelta
+
+    This property holds the delta in screen pixels and is available in platforms that
+    have high-resolution trackpads, such as \macos.
+    The x and y coordinates of this property hold the delta in horizontal and
+    vertical orientation. The value should be used directly to scroll content on screen.
+
+    For platforms without high-resolution touchpad support, pixelDelta will
+    always be (0,0), and angleDelta should be used instead.
+*/
+
+/*!
+    \qmlproperty bool QtQuick::PointerScrollEvent::hasAngleDelta
+
+    Returns whether the \l angleDelta property has a non-null value.
+*/
+
+/*!
+    \qmlproperty bool QtQuick::PointerScrollEvent::hasPixelDelta
+
+    Returns whether the \l pixelDelta property has a non-null value.
+*/
+
+/*!
+    \qmlproperty bool QtQuick::PointerScrollEvent::inverted
+
+    Returns whether the delta values delivered with the event are inverted.
+
+    Normally, a vertical wheel will produce a PointerScrollEvent with positive delta
+    values if the top of the wheel is rotating away from the hand operating it.
+    Similarly, a horizontal wheel movement will produce a PointerScrollEvent with
+    positive delta values if the top of the wheel is moved to the left.
+
+    However, on some platforms this is configurable, so that the same
+    operations described above will produce negative delta values (but with the
+    same magnitude). In a QML component (such as a tumbler or a slider) where
+    it is appropriate to synchronize the movement or rotation of an item with
+    the direction of the wheel, regardless of the system settings, the wheel
+    event handler can use the inverted property to decide whether to negate the
+    \l angleDelta or \l pixelDelta values.
+
+    \note Many platforms provide no such information. On such platforms,
+    \c inverted always returns false.
+*/
 QQuickPointerEvent *QQuickPointerScrollEvent::reset(QEvent *event)
 {
     m_event = static_cast<QInputEvent*>(event);

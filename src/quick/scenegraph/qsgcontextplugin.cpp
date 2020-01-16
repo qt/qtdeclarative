@@ -87,7 +87,6 @@ struct QSGAdaptationBackendData
 };
 
 QSGAdaptationBackendData::QSGAdaptationBackendData()
-    : flags(nullptr)
 {
     // Fill in the table with the built-in adaptations.
     builtIns.append(new QSGSoftwareAdaptation);

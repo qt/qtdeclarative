@@ -22,5 +22,6 @@ void main()
 {
      sampleCoord = tCoord * ubuf.textureScale;
      shiftedSampleCoord = (tCoord - ubuf.shift) * ubuf.textureScale;
-     gl_Position = ubuf.matrix * floor((vCoord * ubuf.dpr) + 0.5) / ubuf.dpr;
+     vec3 dprSnapPos = floor(vCoord.xyz * ubuf.dpr + 0.5) / ubuf.dpr;
+     gl_Position = ubuf.matrix * vec4(dprSnapPos, vCoord.w);
 }

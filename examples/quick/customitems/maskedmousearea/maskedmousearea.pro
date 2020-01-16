@@ -2,6 +2,10 @@ TEMPLATE = app
 
 QT += quick qml
 
+CONFIG += qmltypes
+QML_IMPORT_NAME = Example
+QML_IMPORT_MAJOR_VERSION = 1
+
 HEADERS += maskedmousearea.h
 
 SOURCES += main.cpp \

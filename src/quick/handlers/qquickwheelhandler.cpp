@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -49,6 +49,7 @@ Q_LOGGING_CATEGORY(lcWheelHandler, "qt.quick.handler.wheel")
 /*!
     \qmltype WheelHandler
     \instantiates QQuickWheelHandler
+    \inherits SinglePointHandler
     \inqmlmodule QtQuick
     \ingroup qtquick-input-handlers
     \brief Handler for the mouse wheel.
@@ -71,7 +72,7 @@ Q_LOGGING_CATEGORY(lcWheelHandler, "qt.quick.handler.wheel")
 
     \snippet pointerHandlers/handlerFlick.qml 0
 
-    Alternatively if \l targetProperty is not set or \l target is null,
+    Alternatively, if \l property is not set or \l target is null,
     WheelHandler will not automatically manipulate anything; but the
     \l rotation property can be used in a binding to manipulate another
     property, or you can implement \c onWheel and handle the wheel event
@@ -79,15 +80,16 @@ Q_LOGGING_CATEGORY(lcWheelHandler, "qt.quick.handler.wheel")
 
     WheelHandler handles only a rotating mouse wheel by default.
     Optionally it can handle smooth-scrolling events from touchpad gestures,
-    by setting \l acceptedDevices to \c{PointerDevice.Mouse | PointerDevice.TouchPad}.
+    by setting \l {QtQuick::PointerDeviceHandler::}{acceptedDevices} to
+    \c{PointerDevice.Mouse | PointerDevice.TouchPad}.
 
     \note Some non-mouse hardware (such as a touch-sensitive Wacom tablet, or
     a Linux laptop touchpad) generates real wheel events from gestures.
     WheelHandler will respond to those events as wheel events regardless of the
-    setting of the \l acceptedDevices property.
+    setting of the \l {QtQuick::PointerDeviceHandler::}{acceptedDevices}
+    property.
 
-    \sa MouseArea
-    \sa Flickable
+    \sa MouseArea, Flickable
 */
 
 QQuickWheelHandler::QQuickWheelHandler(QQuickItem *parent)
@@ -125,13 +127,13 @@ void QQuickWheelHandler::setOrientation(Qt::Orientation orientation)
     \qmlproperty bool QtQuick::WheelHandler::invertible
 
     Whether or not to reverse the direction of property change if
-    \l QQuickPointerScrollEvent::inverted is true. The default is \c true.
+    QQuickPointerScrollEvent::inverted is true. The default is \c true.
 
     If the operating system has a "natural scrolling" setting that causes
     scrolling to be in the same direction as the finger movement, then if this
     property is set to \c true, and WheelHandler is directly setting a property
     on \l target, the direction of movement will correspond to the system setting.
-    If this property is set to \l false, it will invert the \l rotation so that
+    If this property is set to \c false, it will invert the \l rotation so that
     the direction of motion is always the same as the direction of finger movement.
 */
 bool QQuickWheelHandler::isInvertible() const
@@ -497,6 +499,13 @@ void QQuickWheelHandler::timerEvent(QTimerEvent *event)
         setActive(false);
     }
 }
+
+/*!
+    \qmlsignal QtQuick::WheelHandler::wheel(PointerScrollEvent event)
+
+    This signal is emitted every time this handler receives a \l QWheelEvent:
+    that is, every time the wheel is moved or the scrolling gesture is updated.
+*/
 
 QQuickWheelHandlerPrivate::QQuickWheelHandlerPrivate()
     : QQuickSinglePointHandlerPrivate()

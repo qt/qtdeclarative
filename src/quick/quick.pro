@@ -4,6 +4,9 @@ QT = core-private gui-private qml-private qmlmodels-private
 qtConfig(qml-network): \
     QT_PRIVATE += network
 
+TRACEPOINT_PROVIDER = $$PWD/qtquick.tracepoints
+CONFIG += qt_tracepoints
+
 DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 msvc:DEFINES *= _CRT_SECURE_NO_WARNINGS
 solaris-cc*:QMAKE_CXXFLAGS_RELEASE -= -O2
@@ -47,3 +50,9 @@ SOURCES += qtquick2.cpp
 INCLUDEPATH += $$PWD
 
 load(qt_module)
+
+QMLTYPES_FILENAME = plugins.qmltypes
+QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/QtQuick.2
+QML_IMPORT_NAME = QtQuick
+IMPORT_VERSION = 2.15
+CONFIG += qmltypes install_qmltypes install_metatypes

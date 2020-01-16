@@ -122,7 +122,10 @@ public:
             return QString();
         return m_name;
     }
+
+    bool wasNameExplicitlySet() const;
     void setName(const QString &name) {
+        m_nameExplicitlySet = true;
         if (name != m_name) {
             m_name = name;
             Q_EMIT nameChanged();
@@ -130,6 +133,7 @@ public:
             QAccessible::updateAccessibility(&ev);
         }
     }
+    void setNameImplicitly(const QString &name);
 
     QString description() const { return m_description; }
     void setDescription(const QString &description)
@@ -220,6 +224,7 @@ private:
     QAccessible::State m_state;
     QAccessible::State m_stateExplicitlySet;
     QString m_name;
+    bool m_nameExplicitlySet = false;
     QString m_description;
 
     static QMetaMethod sigPress;

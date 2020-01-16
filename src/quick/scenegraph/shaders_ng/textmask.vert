@@ -17,5 +17,6 @@ out gl_PerVertex { vec4 gl_Position; };
 void main()
 {
      sampleCoord = tCoord * ubuf.textureScale;
-     gl_Position = ubuf.matrix * floor((vCoord * ubuf.dpr) + 0.5) / ubuf.dpr;
+     vec3 dprSnapPos = floor(vCoord.xyz * ubuf.dpr + 0.5) / ubuf.dpr;
+     gl_Position = ubuf.matrix * vec4(dprSnapPos, vCoord.w);
 }

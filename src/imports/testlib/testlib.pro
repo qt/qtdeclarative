@@ -1,11 +1,19 @@
 CXX_MODULE = qml
 TARGET  = qmltestplugin
 TARGETPATH = QtTest
-IMPORT_VERSION = 1.$$QT_MINOR_VERSION
+IMPORT_VERSION = 1.15
 
-QT += qml quick qmltest qmltest-private  qml-private core-private testlib
+QT += quick qmltest-private qml-private core-private testlib gui-private
 
-SOURCES += main.cpp
+SOURCES += \
+    main.cpp \
+    quicktestevent.cpp \
+    quicktestutil.cpp
+
+HEADERS += \
+    quicktestevent_p.h \
+    quicktestresultforeign_p.h \
+    quicktestutil_p.h
 
 QML_FILES = \
     TestCase.qml \
@@ -15,3 +23,4 @@ QML_FILES = \
 load(qml_plugin)
 
 OTHER_FILES += testlib.json
+CONFIG += qmltypes install_qmltypes

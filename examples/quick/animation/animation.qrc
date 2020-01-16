@@ -9,6 +9,7 @@
         <file>basics/color-animation.qml</file>
         <file>basics/property-animation.qml</file>
         <file>behaviors/behavior-example.qml</file>
+        <file>behaviors/FocusRect.qml</file>
         <file>behaviors/SideRect.qml</file>
         <file>behaviors/tvtennis.qml</file>
         <file>behaviors/wigglytext.qml</file>

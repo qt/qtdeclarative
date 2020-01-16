@@ -1,0 +1,372 @@
+Qt 5.14 introduces many new features and improvements as well as bugfixes
+over the 5.13.x series. For more details, refer to the online documentation
+included in this distribution. The documentation is also available online:
+
+https://doc.qt.io/qt-5/index.html
+
+The Qt version 5.14 series is binary compatible with the 5.13.x series.
+Applications compiled for 5.13 will continue to run with 5.14.
+
+Some of the changes listed in this file include issue tracking numbers
+corresponding to tasks in the Qt Bug Tracker:
+
+https://bugreports.qt.io/
+
+Each of these identifiers can be entered in the bug tracker to obtain more
+information about a particular change.
+
+****************************************************************************
+*                                  QtQml                                   *
+****************************************************************************
+
+ - On Android, QML plugins are loaded directly from the APK libs dir and
+   use qrc:/android_rcc_bundle/qml to search for QML files.
+
+ - [QTBUG-38913] Added ability to import static qml plugins with CMake
+   builds using the new QT5_IMPORT_QML_PLUGINS function.
+
+ - The NaN obtained by Math.pow(+/-1, +/-infinity) and
+   (+/-1)**(+/-infinity) is now quiet rather than signalling.
+
+ - It is now possible to specify types for method parameters and their
+   return value in QML (basic and object types), using TypeScript-like
+   syntax with a colon separator. The syntax for QML declared signals
+   supports the same style.
+
+ - QML Binding elements now support restoring previous values
+   of the bound property when the binding is disabled. This will be the
+   default behavior in Qt 6.0. Reliance on the old behavior of only
+   restoring binding, not literal values will results in a warning beginning
+   with Qt 5.15.
+
+ - The regular expression engine was updated, causing somewhat better
+   compliance with the ECMAScript specification.
+
+ - [QTBUG-74190] Fixed a crash due to combination of aggressive GC with logging.
+   Also, the qt.qml.gc.* logging rules don't produce false warnings about huge
+   amounts of lost memory anymore.
+
+ - [QTBUG-75007] Usage of singletons from QML engines in different threads
+   does not cause race conditions anymore.
+
+ - The JIT compiler is now a configurable feature. You can pass
+   -no-feature-qml-jit to configure in order to skip it, or -feature-qml-jit
+   in order to build it for platforms where it's disabled by default, e.g.
+   iOS and tvOS.
+
+ - [QTBUG-49080][QTBUG-78955] You can now interrupt a QJSEngine running a
+   JavaScript program by setting its isInterrupted flag from a different thread.
+
+ - qmlscene will not run into an infinite loop anymore if you pass a QML
+   document without any executable code.
+
+ - You can configure the maximum sizes of the JavaScript and the garbage
+   collector stacks now, using the QV4_JS_MAX_STACK_SIZE and
+   QV4_GC_MAX_STACK_SIZE environment variables.
+
+ - [QTBUG-76346] Context properties carrying QObjects are automatically
+   reset when the objects are destroyed now.
+
+ - [QTBUG-40487] You can now use Component properties in Binding elements.
+
+ - [QTBUG-76932] Changing sourceComponent in a Loader does not delete
+   C++-owned objects anymore.
+
+ - qmllint can now check for unqualified access to to properties of the
+   root object and undeclared signal parameters.
+
+ - [QTBUG-77096] You can use generator functions in QML components now.
+
+ - You can and should use plain JavaScript functions as signal handlers in
+   Connections elements now. This avoids the overhead of the custom parser
+   that otherwise needs to run for each Connections element, and forces you
+   to specify the signal parameters you are going to use.
+
+ - You can pass a set of initial properties to QQmlApplicationEngine,
+   QQmlComponent, and QQuickView now. Those will be used as defaults in any
+   subsequent instantiation of top-level QML objects.
+
+ - Anonymous types should be registered via the new qmlRegisterAnonymousType()
+   function now, rather than via the parameter-less qmlRegisterType(). That
+   is, you should specify a URI and a major version for your type.
+
+ - [QTBUG-74087] The QML parser can parse more complex JavaScript code now
+   without overflowing the stack. This allows for deeper list nesting in QML.
+
+ - [QTBUG-76021] instanceof does not confuse derived types with no additional
+   properties with their parent types anymore.
+
+ - [QTBUG-78943] Binding elements will not randomly convert strings to other
+   types anymore.
+
+ - [QTBUG-48150] You can use aliases of "depth" 2 now. That is, something like
+   "property alias topMargin: myItem.anchors.topMargin" works now.
+
+ - [QTBUG-78325] The "color" type has a property "valid" now.
+
+ - [QTBUG-78044] The qmlprofiler command line tool's interactive mode is more
+   stable now.
+
+ - [QTBUG-48809] Fixed a warning about non-relative paths in qmldir files.
+   We now permit the use of resource urls in qmldir files to allow a plugin
+   to include its .qml files in resources, optionally compiled ahead of time.
+
+ - [QTBUG-79614] QQmlProperty now handles reads of QQmlPropertyMap correctly.
+
+ - [QTBUG-79443] In the debugger, we now avoid loading cache files, so that
+   JavaScript breakpoints keep working after the first run.
+
+ - [QTBUG-55259] qmlimportscanner now scans resources in qrc files.
+
+ - [QTBUG-78486] Calling a function with 14 arguments no longer crashes.
+
+ - [QTBUG-78721] Fixed handling of properties with interface type in bindings.
+
+ - [QTBUG-71078] Increased the QML loader thread's stack size to avoid problems
+   parsing deeply nested QML/JS files on some platforms.
+
+ - [QTBUG-72442] Fixed float value binding to an integer (including NaN values).
+
+ - [QTBUG-78566] A warning is emitted when overriding a declared Binding from
+   elsewhere.  The Binding stays active and updates the target property again
+   on the next change.
+
+ - [QTBUG-77027] Fixed nullptr handling in Binding.
+
+ - [QTBUG-78859] Fixed a property cache memory leak.
+
+ - [QTBUG-78865] Fixed a memory leak due to declaring unused scripts in
+   qmldir files.
+
+ - [QTBUG-78706] Fixed inconsistent daylight saving time behavior by
+   converting QTime to V4 Date on a date with no DST in force.
+
+ - [QTBUG-78098] QQmlTypeLoader now prevents more trivial cycles.
+
+ - [QTBUG-77751] Fixed the translation context in Qt.include()d JS files.
+
+ - [QTBUG-76514] Avoid duplicate singleton creation.
+
+ - [QTBUG-77237] Using an enum in a switch statement performs much better.
+
+ - [QTBUG-76866] Fixed a crash due to inconsistency between
+   isValueType() and valueType()'s return value.
+
+ - [QTBUG-77954] Semicolon is always allowed after property declaration.
+
+ - [QTBUG-73512] Fixed a bug with use of resource paths in
+   QQmlEngine::setImportPathList().
+
+ - [QTBUG-76303] When converting from number to string, we now keep
+   double precision if the number of significant digits exceeds six, so that
+   precision isn't lost if the string is converted back to a number.
+
+ - [QTBUG-76838] Binding.when is stored as boolean to support primitive values.
+
+ - [QTBUG-76033] Fixed several bugs in frozen(), sealed(), nonExtensible()
+   and propertiesFrozen().
+
+ - [QTBUG-75983] Fixed a crash in XMLHttpRequest::open().
+
+ - [QTBUG-49975] Warn rather than crashing in case of invalid top-level
+   parallel states.
+
+ - [QTBUG-73786] We now filter out duplicate entries in Object.keys().
+
+ - [QTBUG-73491] Added QQmlInstanceModel::variantValue() to enable ComboBox.valueRole.
+
+ - [QTBUG-74348] Fixed memory leaks due to value type provider deletion order.
+
+ - There are two new functions to register singleton types and help you to
+   get rid of context properties:
+   * qmlRegisterSingletonType() has an overload taking a std::function now,
+     instead of a bare function pointer. Therefore, you can capture context
+     now when creating singletons.
+   * qmlRegisterSingletonInstance() directly passes a single instance of the
+     type to be used in all QML engines. No QML engine assumes ownership of
+     such a singleton and any concurrent access has to be handled by the
+     object itself.
+
+ - qml Runtime tool:
+   * [QTBUG-53557] The QML Runtime tool now accepts command-line arguments
+     in double-dash GNU style as well as the old single-dash style.
+   * [QTBUG-53557] The QML Runtime tool now has default behavior matching
+     qmlscene when the root QML object is an Item: it will be wrapped in a
+     Window which will resize the Item when the Window is resized. But you
+     can alternatively use the --config resizeToItem option, resulting in
+     the same behavior as qmlscene --resizeToRoot: resizing the root Item
+     programmatically causes the wrapping Window to be resized. Behavior
+     can still be customized in other ways using the --config option with
+     an external QML configuration file.
+   * The QML Runtime tool --quiet option now disables categorized logging
+     in addition to qDebug, qInfo, qWarning and qFatal, except for some
+     early QPA-level categorized logging that occurs during application
+     construction. You can still override specific categories by setting
+     QT_LOGGING_CONF or QT_LOGGING_RULES.
+   * [QTBUG-78828] Fixed a crash at exit when the qmldebugger channel is
+     connected.
+
+ - qmlplugindump:
+   * [QTBUG-78745] If given a "--strict" argument, qmlplugindump will check
+     the URI as exact match; whereas by default it will ignore the given
+     major version, as before.
+   * [QTBUG-78744] qmlplugindump no longer ignores base classes of QML files
+     registered as components.
+
+ - Important Behavior Changes:
+   * QRegularExpression is now supported the same way QRegExp was in QML.
+     QJSValue::toVariant() creates a QRegularExpression variant rather than
+     a QRegExp one from a JavaScript regular expression now.
+   * The accidentally exported function qmlRegisterBaseTypes() was removed.
+   * QJSEngine::toScriptValue will now return correct JavaScript objects in
+     more cases, for example, for gadget types like QPointF.
+   * QJSEngine::toScriptValue now uses the same behavior as the rest of the
+     engine when building JavaScript values, which will cause the types of
+     some returned JavaScript objects to change. For instance, string lists
+     are now returned as sequence objects, not array objects, and QChar now
+     constructs a JavaScript string.
+   * [QTBUG-75176] Attached properties are internally not identified by
+     integer IDs anymore, but rather by the functions used to produce them.
+     Using the integer indexes is a bad idea because the same metatype can
+     be registered as several different QML types and the integer IDs refer
+     to the QML types. Therefore, qmlAttachedPropertiesObjectById() and the
+     overload of qmlAttachedPropertiesObject() taking an integer ID are
+     deprecated.
+   * We expect QMetaObject revisions and import minor versions to be equal.
+     That is, when registering a revision X of a metaobject as QML type for
+     a version Y.Z of your module, X should equal Z. This is not enforced,
+     yet, but future versions of Qt will build on this assumption.
+
+****************************************************************************
+*                                 QtQuick                                  *
+****************************************************************************
+
+ - Qt Quick is now able to render via Vulkan, Metal, and Direct 3D 11. The
+   new rendering path is currently a preview feature and has to be opted-in
+   to explicitly.
+
+ - Drag and Drop:
+   * [QTBUG-30305] When DropAreas intersect, the higher z-order item now
+     steals the drop.
+   * [QTBUG-72045] Fixed a crash when using an image provider url with Drag.
+
+ - DelegateModel:
+   * [QTBUG-63477] DelegateModel.delegate is now a notifying property,
+     and an Item View with model: DelegateModel { } is now refilled when
+     the delegate is changed.
+
+ - Event Handlers:
+   * Added WheelHandler, which handles mouse wheel rotation by modifying
+     arbitrary Item properties.
+   * [QTBUG-75661] Added DragHandler.snapMode which can be used to configure
+     conditions under which the dragged item is snapped to the cursor.  The
+     default mode is SnapAuto. The old behavior can be obtained through the
+     SnapIfPressedOutsideTarget mode.
+
+ - Image:
+   * [QTBUG-77506] Image and BorderImage now have currentFrame and
+     frameCount properties which can be used to step through the frames of
+     multi-page image formats such as TIFF, WEBP and ICO (and PDF in the
+     future).
+   * [QTBUG-55027] Any URL interceptor is applied to the source binding.
+   * [QTBUG-76527] ImageProvider is kept alive while in use.
+
+ - FolderListModel:
+   * update the values of some properties when setting new values to them
+
+ - Layouts:
+   * [QTBUG-67204] GridLayout now warns rather than asserting when an
+     invalid row or column is specified.
+   * [QTBUG-79359] GridLayout now emits appropriate signals for
+     layoutDirection, columnSpacing, and rowSpacing changes.
+
+ - ListModel:
+   * [QTBUG-63569] We now emit a warning if an object with an undefined or
+     null member is added.
+   * [QTBUG-79083] JSON.stringify(model.get(i)) now works correctly when the
+     row contains a nested list model.
+
+ - Loader:
+   * [QTBUG-79435] Loader now clears all initial properties when changing source.
+
+ - MouseArea:
+   * [QTBUG-75993] mouseX and mouseY will now be synchronized after dragging
+     the target item.
+   * [QTBUG-77983] The containsMouse property will not become true when an
+     invisible mousearea become visible, if the enabled property is false or
+     its parent item is not enabled.
+
+ - MultiPointTouchArea:
+   * [QTBUG-77142] When a stationary touchpoint contains some "interesting"
+     property change (pressure or velocity, so far), it is delivered normally,
+     and MultiPointTouchArea will react to that.
+
+ - Particles:
+   * [QTBUG-54673] Fixed image particle flickering due to dynamic creation
+     of Emitter objects.
+
+ - Path and Shapes:
+   * Added Path.scale property to scale a path prior to rendering via
+     Shape or to scale the movement in PathView.  The width and height
+     can be different, to achieve anisotropic scaling.
+   * Added PathPolyline, to render an array, list or vector of QPointF,
+     or a single QPolygonF.
+   * Added PathMultiLine, to render an array, list or vector of
+     polylines or QPolygonF.
+   * Exposed QQuickPath::pointAtPercent as invokable in QML.
+   * [QTBUG-77332] Fixed incorrect colors when shapes change scene.
+
+ - PathView:
+   * [QTBUG-77173] When the mouse is pressed while PathView is already moving,
+     PathView now grabs rather than allowing the delegate to handle it.  The
+     position will then snap to the nearest delegate on release, as usual.
+   * [QTBUG-77173] If the user drags quickly, pauses, and then releases,
+     the calculated velocity is reduced according to a linear decay model
+     up to 50ms (and zero after that), to prevent excessive movement when
+     the user intended the pause to stop the movement.
+
+ - TableView:
+   * [QTBUG-79395] forceLayout() now rebuilds the table if the size of the
+     model has changed, to avoid a crash.
+
+ - Text:
+   * Markdown (GitHub dialect by default) is now a supported format, when
+     textFormat: Text.MarkdownText is declared.  All features such as
+     hyperlinks, images, tables, lists, checklists, etc. are supported.
+
+ - TextEdit:
+   * Markdown (GitHub dialect by default) is now a supported format, when
+     textFormat: TextEdit.MarkdownText is declared.  If it contains checkboxes,
+     the user can click on them to toggle the states.
+   * [QTBUG-14769][QTBUG-50482] The mouse cursor is now IBeamCursor by default,
+     or PointingHandCursor when the mouse is hovering over a checkbox or a
+     hyperlink.  However this can be overridden in C++.
+   * [QTBUG-74745] Fixed overlapping text after line deletion.
+
+ - TextInput:
+   * [QTBUG-77814] Fixed text selection logic after insert() and remove().
+
+ - [QTBUG-79573] Fixed application deadlock when an item is reparented
+   to contentItem in a user-defined windowChanged handler, e.g. on exit.
+
+ - [QTBUG-78304] A ShortCutOverride event is now sent even when receiving a
+   non-spontaneous key press (e.g. from sendEvent()), so that Shortcut reacts.
+
+ - [QTBUG-76749] Fixed a crash when using an animation while destroying an item.
+
+****************************************************************************
+*                            Qt Labs Animation                             *
+****************************************************************************
+
+ - Added the BoundaryRule QML type, a PropertyValueInterceptor that
+   restricts the range of values a numeric property can have, applies
+   "resistance" when the value is overshooting, and provides the ability to
+   animate it back within range.  This is especially useful in combination
+   with WheelHandler to limit its range of motion or adjustment.
+
+****************************************************************************
+*                            Qt Labs QML Models                            *
+****************************************************************************
+
+ - Added the TableModel QML type, a JavaScript-based model for the new
+   TableView.

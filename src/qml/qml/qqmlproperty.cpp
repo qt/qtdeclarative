@@ -785,7 +785,7 @@ static void removeOldBinding(QObject *object, QQmlPropertyIndex index, QQmlPrope
         return;
 
     if (!(flags & QQmlPropertyPrivate::DontEnable))
-        oldBinding->setEnabled(false, nullptr);
+        oldBinding->setEnabled(false, {});
     oldBinding->removeFromObject();
 }
 
@@ -1451,7 +1451,7 @@ QQmlMetaObject QQmlPropertyPrivate::rawMetaObjectForType(QQmlEnginePrivate *engi
  */
 bool QQmlProperty::write(const QVariant &value) const
 {
-    return QQmlPropertyPrivate::write(*this, value, nullptr);
+    return QQmlPropertyPrivate::write(*this, value, {});
 }
 
 /*!

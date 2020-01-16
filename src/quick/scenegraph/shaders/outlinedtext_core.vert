@@ -12,6 +12,7 @@ out vec2 sCoordRight;
 uniform mat4 matrix;
 uniform vec2 textureScale;
 uniform vec2 shift;
+uniform float dpr;
 
 void main()
 {
@@ -20,5 +21,6 @@ void main()
      sCoordDown = (tCoord - vec2(0.0, 1.0)) * textureScale;
      sCoordLeft = (tCoord - vec2(-1.0, 0.0)) * textureScale;
      sCoordRight = (tCoord - vec2(1.0, 0.0)) * textureScale;
-     gl_Position = matrix * vCoord;
+     vec3 dprSnapPos = floor(vCoord.xyz * dpr + 0.5) / dpr;
+     gl_Position = matrix * vec4(dprSnapPos, vCoord.w);
 }

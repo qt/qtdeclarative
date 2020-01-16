@@ -50,6 +50,8 @@
 #include <private/qquickprofiler_p.h>
 #include <QElapsedTimer>
 
+#include <qtquick_tracepoints_p.h>
+
 QT_BEGIN_NAMESPACE
 
 static QElapsedTimer qsg_render_timer;
@@ -169,10 +171,13 @@ void QSGDistanceFieldGlyphCache::update()
     if (m_pendingGlyphs.isEmpty())
         return;
 
+    Q_TRACE_SCOPE(QSGDistanceFieldGlyphCache_update, m_pendingGlyphs.size());
+
     bool profileFrames = QSG_LOG_TIME_GLYPH().isDebugEnabled();
     if (profileFrames)
         qsg_render_timer.start();
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphAdaptationLayerFrame);
+    Q_TRACE(QSGDistanceFieldGlyphCache_glyphRender_entry);
 
     QList<QDistanceField> distanceFields;
     const int pendingGlyphsSize = m_pendingGlyphs.size();
@@ -189,8 +194,11 @@ void QSGDistanceFieldGlyphCache::update()
     int count = m_pendingGlyphs.size();
     if (profileFrames)
         renderTime = qsg_render_timer.nsecsElapsed();
+
+    Q_TRACE(QSGDistanceFieldGlyphCache_glyphRender_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphAdaptationLayerFrame,
                               QQuickProfiler::SceneGraphAdaptationLayerGlyphRender);
+    Q_TRACE(QSGDistanceFieldGlyphCache_glyphStore_entry);
 
     m_pendingGlyphs.reset();
 
@@ -210,6 +218,7 @@ void QSGDistanceFieldGlyphCache::update()
                 int(renderTime / 1000000),
                 int((now - (renderTime / 1000000))));
     }
+    Q_TRACE(QSGDistanceFieldGlyphCache_glyphStore_exit);
     Q_QUICK_SG_PROFILE_END_WITH_PAYLOAD(QQuickProfiler::SceneGraphAdaptationLayerFrame,
                                         QQuickProfiler::SceneGraphAdaptationLayerGlyphStore,
                                         (qint64)count);

@@ -30,6 +30,7 @@
 #include <QtQuick/private/qquickpixmapcache_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQuick/qquickimageprovider.h>
+#include <QtQml/QQmlComponent>
 #include <QNetworkReply>
 #include "../../shared/util.h"
 #include "testhttpserver.h"
@@ -62,6 +63,7 @@ private slots:
 #endif
     void lockingCrash();
     void uncached();
+    void asynchronousNoCache();
 #if PIXMAP_DATA_LEAK_TEST
     void dataLeak();
 #endif
@@ -431,7 +433,7 @@ void tst_qquickpixmapcache::uncached()
     QUrl url("image://mypixmaps/mypix");
     {
         QQuickPixmap p;
-        p.load(&engine, url, nullptr);
+        p.load(&engine, url, QQuickPixmap::Options{});
         QImage img = p.image();
         QCOMPARE(img.pixel(0,0), qRgb(255, 0, 0));
     }
@@ -440,7 +442,7 @@ void tst_qquickpixmapcache::uncached()
     MyPixmapProvider::fillColor = qRgb(0, 255, 0);
     {
         QQuickPixmap p;
-        p.load(&engine, url, nullptr);
+        p.load(&engine, url, QQuickPixmap::Options{});
         QImage img = p.image();
         QCOMPARE(img.pixel(0,0), qRgb(0, 255, 0));
     }
@@ -458,7 +460,7 @@ void tst_qquickpixmapcache::uncached()
     MyPixmapProvider::fillColor = qRgb(255, 0, 255);
     {
         QQuickPixmap p;
-        p.load(&engine, url, nullptr);
+        p.load(&engine, url, QQuickPixmap::Options{});
         QImage img = p.image();
         QCOMPARE(img.pixel(0,0), qRgb(255, 0, 255));
     }
@@ -471,6 +473,13 @@ void tst_qquickpixmapcache::uncached()
         QImage img = p.image();
         QCOMPARE(img.pixel(0,0), qRgb(0, 0, 255));
     }
+}
+
+void tst_qquickpixmapcache::asynchronousNoCache()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("asynchronousNoCache.qml"));
+    QScopedPointer<QObject> root {component.create()}; // should not crash
 }
 
 

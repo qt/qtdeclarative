@@ -31,6 +31,7 @@ import QtQuick 2.12
 Rectangle {
     id: root
     property alias label: label.text
+    property alias active: tap.active
     property alias pressed: tap.pressed
     property bool checked: false
     property alias gesturePolicy: tap.gesturePolicy

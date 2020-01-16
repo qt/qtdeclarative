@@ -32,7 +32,7 @@
 // libfuzzer test for QJSEngine::evaluate()
 
 extern "C" int LLVMFuzzerTestOneInput(const char *Data, size_t Size) {
-    const QByteArray ba(Data, Size);
+    const QByteArray ba = QByteArray::fromRawData(Data, Size);
     // avoid potential endless loops
     if (ba.contains("for") || ba.contains("while"))
         return 1;

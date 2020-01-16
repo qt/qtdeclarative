@@ -304,8 +304,10 @@ public:
             return false;
         }
 
-        if (d()->isReadOnly)
+        if (d()->isReadOnly) {
+            engine()->throwTypeError(QLatin1String("Cannot insert into a readonly container"));
             return false;
+        }
 
         if (d()->isReference) {
             if (!d()->object)
@@ -370,7 +372,7 @@ public:
                 if (attrs)
                     *attrs = QV4::Attr_Data;
                 if (pd)
-                    pd->value = convertElementToValue(s->engine(), s->d()->container->at(index));
+                    pd->value = convertElementToValue(s->engine(), (*s->d()->container)[index]);
                 return PropertyKey::fromArrayIndex(index);
             }
 

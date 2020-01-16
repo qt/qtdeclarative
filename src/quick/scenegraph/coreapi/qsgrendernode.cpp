@@ -99,8 +99,8 @@ QSGRenderNodePrivate::QSGRenderNodePrivate()
 
     With APIs other than OpenGL, the only relevant values are the ones that
     correspond to dynamic state changes recorded on the command list/buffer.
-    For example, RSSetViewports, RSSetScissorRects, OMSetBlendFactor,
-    OMSetStencilRef in case of D3D12, or vkCmdSetViewport, vkCmdSetScissor,
+    For example, RSSetViewports, RSSetScissorRects, OMSetBlendState,
+    OMSetDepthStencilState in case of D3D11, or vkCmdSetViewport, vkCmdSetScissor,
     vkCmdSetBlendConstants, vkCmdSetStencilRef in case of Vulkan, and only when
     such commands were added to the scenegraph's command list queried via the
     QSGRendererInterface::CommandList resource enum. States set in pipeline
@@ -131,7 +131,7 @@ QSGRenderNodePrivate::QSGRenderNodePrivate()
   */
 QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
 {
-    return nullptr;
+    return {};
 }
 
 /*!
@@ -311,7 +311,7 @@ void QSGRenderNode::releaseResources()
  */
 QSGRenderNode::RenderingFlags QSGRenderNode::flags() const
 {
-    return nullptr;
+    return {};
 }
 
 /*!
@@ -381,11 +381,6 @@ QSGRenderNode::RenderState::~RenderState()
 
     \return the current scissor rectangle when clipping is active. x and y are
     the bottom left coordinates.
-
-    \note Be aware of the differences between graphics APIs: for some the
-    scissor rect is only active when scissoring is enabled (for example,
-    OpenGL), while for others the scissor rect is equal to the viewport rect
-    when there is no need to scissor away anything (for example, Direct3D 12).
  */
 
 /*!

@@ -597,7 +597,7 @@ int main(int argc, char *argv[])
     }
 
     if (files.count() <= 0) {
-#if defined(Q_OS_DARWIN)
+#if defined(Q_OS_DARWIN) && defined(QT_GUI_LIB)
         if (applicationType == QmlApplicationTypeGui)
             exitTimerId = static_cast<LoaderApplication *>(app.get())->startTimer(FILE_OPEN_EVENT_WAIT_TIME);
         else

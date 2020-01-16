@@ -80,19 +80,18 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImagePrivate : public QQuickImageBasePrivate
 
 public:
     QQuickImagePrivate();
-
-    QQuickImage::FillMode fillMode;
-    qreal paintedWidth;
-    qreal paintedHeight;
     void setImage(const QImage &img);
     void setPixmap(const QQuickPixmap &pixmap);
 
     bool pixmapChanged : 1;
     bool mipmap : 1;
-    QQuickImage::HAlignment hAlign;
-    QQuickImage::VAlignment vAlign;
+    QQuickImage::HAlignment hAlign = QQuickImage::AlignHCenter;
+    QQuickImage::VAlignment vAlign = QQuickImage::AlignVCenter;
+    QQuickImage::FillMode fillMode = QQuickImage::Stretch;
 
-    QQuickImageTextureProvider *provider;
+    qreal paintedWidth = 0;
+    qreal paintedHeight = 0;
+    QQuickImageTextureProvider *provider = nullptr;
 };
 
 QT_END_NAMESPACE

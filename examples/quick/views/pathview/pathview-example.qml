@@ -71,19 +71,23 @@ Rectangle {
             width: 100; height: 100
             scale: PathView.iconScale
 
+            required property string name
+            required property string icon
+            required property int index
+
             Image {
                 id: myIcon
                 y: 20; anchors.horizontalCenter: parent.horizontalCenter
-                source: icon
+                source: parent.icon
             }
             Text {
                 anchors { top: myIcon.bottom; horizontalCenter: parent.horizontalCenter }
-                text: name
+                text: parent.name
             }
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: view.currentIndex = index
+                onClicked: view.currentIndex = parent.index
             }
         }
     }

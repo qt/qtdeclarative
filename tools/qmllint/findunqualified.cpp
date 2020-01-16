@@ -27,19 +27,24 @@
 ****************************************************************************/
 
 #include "findunqualified.h"
+#include "importedmembersvisitor.h"
 #include "scopetree.h"
+#include "typedescriptionreader.h"
 
-#include "qmljstypedescriptionreader.h"
+#include <QtQml/private/qqmljsast_p.h>
+#include <QtQml/private/qqmljslexer_p.h>
+#include <QtQml/private/qqmljsparser_p.h>
+#include <QtQml/private/qv4codegen_p.h>
+#include <QtQml/private/qqmldirparser_p.h>
 
-#include <QFile>
-#include <QDirIterator>
-#include <QScopedValueRollback>
+#include <QtCore/qfile.h>
+#include <QtCore/qdiriterator.h>
+#include <QtCore/qscopedvaluerollback.h>
 
-#include <private/qqmljsast_p.h>
-#include <private/qqmljslexer_p.h>
-#include <private/qqmljsparser_p.h>
-#include <private/qv4codegen_p.h>
-#include <private/qqmldirparser_p.h>
+static const QString prefixedName(const QString &prefix, const QString &name)
+{
+    return prefix.isEmpty() ? name : (prefix  + QLatin1Char('.') + name);
+}
 
 static QQmlDirParser createQmldirParserForFile(const QString &filename)
 {
@@ -50,17 +55,17 @@ static QQmlDirParser createQmldirParserForFile(const QString &filename)
     return parser;
 }
 
-static QQmlJS::TypeDescriptionReader createQmltypesReaderForFile(QString const &filename)
+static TypeDescriptionReader createQmltypesReaderForFile(const QString &filename)
 {
     QFile f(filename);
     f.open(QFile::ReadOnly);
-    QQmlJS::TypeDescriptionReader reader { filename, f.readAll() };
+    TypeDescriptionReader reader { filename, f.readAll() };
     return reader;
 }
 
-void FindUnqualifiedIDVisitor::enterEnvironment(ScopeType type, QString name)
+void FindUnqualifiedIDVisitor::enterEnvironment(ScopeType type, const QString &name)
 {
-    m_currentScope = m_currentScope->createNewChildScope(type, name);
+    m_currentScope = m_currentScope->createNewChildScope(type, name).get();
 }
 
 void FindUnqualifiedIDVisitor::leaveEnvironment()
@@ -68,168 +73,10 @@ void FindUnqualifiedIDVisitor::leaveEnvironment()
     m_currentScope = m_currentScope->parentScope();
 }
 
-enum ImportVersion { FullyVersioned, PartiallyVersioned, Unversioned, BasePath };
-
-QStringList completeImportPaths(const QString &uri, const QStringList &basePaths, int vmaj, int vmin)
-{
-    static const QLatin1Char Slash('/');
-    static const QLatin1Char Backslash('\\');
-
-    const QVector<QStringRef> parts = uri.splitRef(QLatin1Char('.'), QString::SkipEmptyParts);
-
-    QStringList qmlDirPathsPaths;
-    // fully & partially versioned parts + 1 unversioned for each base path
-    qmlDirPathsPaths.reserve(basePaths.count() * (2 * parts.count() + 1));
-
-    auto versionString = [](int vmaj, int vmin, ImportVersion version)
-    {
-        if (version == FullyVersioned) {
-            // extension with fully encoded version number (eg. MyModule.3.2)
-            return QString::asprintf(".%d.%d", vmaj, vmin);
-        } else if (version == PartiallyVersioned) {
-            // extension with encoded version major (eg. MyModule.3)
-            return QString::asprintf(".%d", vmaj);
-        } // else extension without version number (eg. MyModule)
-        return QString();
-    };
-    auto joinStringRefs = [](const QVector<QStringRef> &refs, const QChar &sep)
-    {
-        QString str;
-        for (auto it = refs.cbegin(); it != refs.cend(); ++it) {
-            if (it != refs.cbegin())
-                str += sep;
-            str += *it;
-        }
-        return str;
-    };
-
-    for (int version = FullyVersioned; version <= BasePath; ++version) {
-        const QString ver = versionString(vmaj, vmin, static_cast<ImportVersion>(version));
-
-        for (const QString &path : basePaths) {
-            QString dir = path;
-            if (!dir.endsWith(Slash) && !dir.endsWith(Backslash))
-                dir += Slash;
-
-            if (version == BasePath) {
-                qmlDirPathsPaths += dir;
-            } else {
-                // append to the end
-                qmlDirPathsPaths += dir + joinStringRefs(parts, Slash) + ver;
-            }
-
-            if (version < Unversioned) {
-                // insert in the middle
-                for (int index = parts.count() - 2; index >= 0; --index) {
-                    qmlDirPathsPaths += dir + joinStringRefs(parts.mid(0, index + 1), Slash)
-                            + ver + Slash
-                            + joinStringRefs(parts.mid(index + 1), Slash);
-                }
-            }
-        }
-    }
-    return qmlDirPathsPaths;
-}
-
-void FindUnqualifiedIDVisitor::importHelper(QString id, QString prefix, int major, int minor)
-{
-    QPair<QString, QString> importId { id, prefix };
-    if (m_alreadySeenImports.contains(importId)) {
-        return;
-    } else {
-        m_alreadySeenImports.insert(importId);
-    }
-    id = id.replace(QLatin1String("/"), QLatin1String("."));
-    auto qmltypesPaths = completeImportPaths(id, m_qmltypeDirs, major, minor);
-
-    QHash<QString, LanguageUtils::FakeMetaObject::ConstPtr> objects;
-    QList<QQmlJS::ModuleApiInfo> moduleApis;
-    QStringList dependencies;
-    static const QLatin1String SlashPluginsDotQmltypes("/plugins.qmltypes");
-    static const QLatin1String SlashQmldir("/qmldir");
-    for (auto const &qmltypesPath : qmltypesPaths) {
-        if (QFile::exists(qmltypesPath + SlashQmldir)) {
-            auto reader = createQmldirParserForFile(qmltypesPath + SlashQmldir);
-            const auto imports = reader.imports();
-            for (const QString &import : imports)
-                importHelper(import, prefix, major, minor);
-
-            QHash<QString, LanguageUtils::FakeMetaObject *> qmlComponents;
-            const auto components = reader.components();
-            for (auto it = components.begin(), end = components.end(); it != end; ++it) {
-                const QString filePath = qmltypesPath + QLatin1Char('/') + it->fileName;
-                if (!QFile::exists(filePath)) {
-                    m_colorOut.write(QLatin1String("warning: "), Warning);
-                    m_colorOut.write(it->fileName + QLatin1String(" is listed as component in ")
-                                     + qmltypesPath + SlashQmldir
-                                     + QLatin1String(" but does not exist.\n"));
-                    continue;
-                }
-
-                auto mo = qmlComponents.find(it.key());
-                if (mo == qmlComponents.end())
-                    mo = qmlComponents.insert(it.key(), localQmlFile2FakeMetaObject(filePath));
-
-                (*mo)->addExport(
-                            it.key(), reader.typeNamespace(),
-                            LanguageUtils::ComponentVersion(it->majorVersion, it->minorVersion));
-            }
-            for (auto it = qmlComponents.begin(), end = qmlComponents.end(); it != end; ++it) {
-                objects.insert(it.key(),
-                               QSharedPointer<const LanguageUtils::FakeMetaObject>(it.value()));
-            }
-        }
-        if (QFile::exists(qmltypesPath + SlashPluginsDotQmltypes)) {
-            auto reader = createQmltypesReaderForFile(qmltypesPath + SlashPluginsDotQmltypes);
-            auto succ = reader(&objects, &moduleApis, &dependencies);
-            if (!succ)
-                m_colorOut.writeUncolored(reader.errorMessage());
-        }
-    }
-    for (auto const &dependency : qAsConst(dependencies)) {
-        auto const split = dependency.split(" ");
-        auto const id = split.at(0);
-        auto const major = split.at(1).split('.').at(0).toInt();
-        auto const minor = split.at(1).split('.').at(1).toInt();
-        importHelper(id, QString(), major, minor);
-    }
-    // add objects
-    for (auto ob_it = objects.begin(); ob_it != objects.end(); ++ob_it) {
-        auto val = ob_it.value();
-        m_exportedName2MetaObject[prefix + val->className()] = val;
-        for (auto export_ : val->exports()) {
-            m_exportedName2MetaObject[prefix + export_.type] = val;
-        }
-        for (auto enumCount = 0; enumCount < val->enumeratorCount(); ++enumCount) {
-            m_currentScope->insertQMLIdentifier(val->enumerator(enumCount).name());
-        }
-    }
-}
-
-LanguageUtils::FakeMetaObject *
-FindUnqualifiedIDVisitor::localQmlFile2FakeMetaObject(QString filePath)
+void FindUnqualifiedIDVisitor::parseHeaders(QQmlJS::AST::UiHeaderItemList *header)
 {
     using namespace QQmlJS::AST;
-    auto fake = new LanguageUtils::FakeMetaObject;
-    QString baseName = QFileInfo { filePath }.baseName();
-    fake->setClassName(baseName.endsWith(".ui") ? baseName.chopped(3) : baseName);
-    QFile file(filePath);
-    if (!file.open(QFile::ReadOnly)) {
-        return fake;
-    }
-    QString code = file.readAll();
-    file.close();
 
-    QQmlJS::Engine engine;
-    QQmlJS::Lexer lexer(&engine);
-
-    lexer.setCode(code, 1, true);
-    QQmlJS::Parser parser(&engine);
-    if (!parser.parse()) {
-        return fake;
-    }
-    QQmlJS::AST::UiProgram *program = parser.ast();
-    auto header = program->headers;
     while (header) {
         if (auto import = cast<UiImport *>(header->headerItem)) {
             if (import->version) {
@@ -245,150 +92,303 @@ FindUnqualifiedIDVisitor::localQmlFile2FakeMetaObject(QString filePath)
                 if (import->asToken.isValid()) {
                     prefix += import->importId + QLatin1Char('.');
                 }
-                importHelper(path, prefix, import->version->majorVersion, import->version->minorVersion);
+                importHelper(path, prefix, import->version->majorVersion,
+                             import->version->minorVersion);
             }
         }
         header = header->next;
     }
-    auto member = program->members;
-    // member should be the sole element
-    Q_ASSERT(!member->next);
-    Q_ASSERT(member && member->member->kind == UiObjectMember::Kind_UiObjectDefinition);
-    auto definition = static_cast<UiObjectDefinition *>(member->member);
-    auto qualifiedId = definition->qualifiedTypeNameId;
-    while (qualifiedId && qualifiedId->next) {
-        qualifiedId = qualifiedId->next;
-    }
-    fake->setSuperclassName(qualifiedId->name.toString());
-    UiObjectMemberList *initMembers = definition->initializer->members;
-    while (initMembers) {
-        switch (initMembers->member->kind) {
-        case UiObjectMember::Kind_UiArrayBinding: {
-            // nothing to do
-            break;
-        }
-        case UiObjectMember::Kind_UiEnumDeclaration: {
-            // nothing to do
-            break;
-        }
-        case UiObjectMember::Kind_UiObjectBinding: {
-            // nothing to do
-            break;
-        }
-        case UiObjectMember::Kind_UiObjectDefinition: {
-            // creates nothing accessible
-            break;
-        }
-        case UiObjectMember::Kind_UiPublicMember: {
-            auto publicMember = static_cast<UiPublicMember *>(initMembers->member);
-            switch (publicMember->type) {
-            case UiPublicMember::Signal: {
-                UiParameterList *param = publicMember->parameters;
-                LanguageUtils::FakeMetaMethod method;
-                method.setMethodType(LanguageUtils::FakeMetaMethod::Signal);
-                method.setMethodName(publicMember->name.toString());
-                while (param) {
-                    method.addParameter(param->name.toString(), param->type->name.toString());
-                    param = param->next;
-                }
-                fake->addMethod(method);
-                break;
-            }
-            case UiPublicMember::Property: {
-                LanguageUtils::FakeMetaProperty fakeprop { publicMember->name.toString(),
-                                                           publicMember->typeModifier.toString(),
-                                                           false,
-                                                           false,
-                                                           false,
-                                                           0 };
-                fake->addProperty(fakeprop);
-                break;
-            }
-            }
-            break;
-        }
-        case UiObjectMember::Kind_UiScriptBinding: {
-            // does not create anything new, ignore
-            break;
-        }
-        case UiObjectMember::Kind_UiSourceElement: {
-            auto sourceElement = static_cast<UiSourceElement *>(initMembers->member);
-            if (FunctionExpression *fexpr = sourceElement->sourceElement->asFunctionDefinition()) {
-                LanguageUtils::FakeMetaMethod method;
-                method.setMethodName(fexpr->name.toString());
-                method.setMethodType(LanguageUtils::FakeMetaMethod::Method);
-                FormalParameterList *parameters = fexpr->formals;
-                while (parameters) {
-                    method.addParameter(parameters->element->bindingIdentifier.toString(),
-                                        "");
-                    parameters = parameters->next;
-                }
-                fake->addMethod(method);
-            } else if (ClassExpression *clexpr =
-                               sourceElement->sourceElement->asClassDefinition()) {
-                LanguageUtils::FakeMetaProperty prop {
-                    clexpr->name.toString(), "", false, false, false, 1
-                };
-                fake->addProperty(prop);
-            } else if (cast<VariableStatement *>(sourceElement->sourceElement)) {
-                // nothing to do
-            } else {
-                const auto loc = sourceElement->firstSourceLocation();
-                m_colorOut.writeUncolored(
-                            "unsupportedd sourceElement at "
-                            + QString::fromLatin1("%1:%2: ").arg(loc.startLine).arg(loc.startColumn)
-                            + QString::number(sourceElement->sourceElement->kind));
-            }
-            break;
-        }
-        default: {
-            m_colorOut.writeUncolored("unsupported element of kind "
-                                      + QString::number(initMembers->member->kind));
-        }
-        }
-        initMembers = initMembers->next;
-    }
-    return fake;
 }
 
-void FindUnqualifiedIDVisitor::importDirectory(const QString &directory, const QString &prefix)
+ScopeTree *FindUnqualifiedIDVisitor::parseProgram(QQmlJS::AST::Program *program,
+                                                  const QString &name)
 {
-    QString dirname = directory;
-    QFileInfo info { dirname };
-    if (info.isRelative())
-        dirname = QDir(QFileInfo { m_filePath }.path()).filePath(dirname);
+    using namespace QQmlJS::AST;
+    ScopeTree *result = new ScopeTree(ScopeType::JSLexicalScope, name);
+    for (auto *statement = program->statements; statement; statement = statement->next) {
+        if (auto *function = cast<FunctionDeclaration *>(statement->statement)) {
+            MetaMethod method(function->name.toString());
+            method.setMethodType(MetaMethod::Method);
+            for (auto *parameters = function->formals; parameters; parameters = parameters->next)
+                method.addParameter(parameters->element->bindingIdentifier.toString(), "");
+            result->addMethod(method);
+        }
+    }
+    return result;
+}
 
-    QDirIterator it { dirname, QStringList() << QLatin1String("*.qml"), QDir::NoFilter };
-    while (it.hasNext()) {
-        LanguageUtils::FakeMetaObject *fake = localQmlFile2FakeMetaObject(it.next());
-        m_exportedName2MetaObject.insert(
-                prefix + fake->className(),
-                QSharedPointer<const LanguageUtils::FakeMetaObject>(fake));
+enum ImportVersion { FullyVersioned, PartiallyVersioned, Unversioned, BasePath };
+
+QStringList completeImportPaths(const QString &uri, const QString &basePath, int vmaj, int vmin)
+{
+    static const QLatin1Char Slash('/');
+    static const QLatin1Char Backslash('\\');
+
+    const QVector<QStringRef> parts = uri.splitRef(QLatin1Char('.'), QString::SkipEmptyParts);
+
+    QStringList qmlDirPathsPaths;
+    // fully & partially versioned parts + 1 unversioned for each base path
+    qmlDirPathsPaths.reserve(2 * parts.count() + 1);
+
+    auto versionString = [](int vmaj, int vmin, ImportVersion version)
+    {
+        if (version == FullyVersioned) {
+            // extension with fully encoded version number (eg. MyModule.3.2)
+            return QString::fromLatin1(".%1.%2").arg(vmaj).arg(vmin);
+        }
+        if (version == PartiallyVersioned) {
+            // extension with encoded version major (eg. MyModule.3)
+            return QString::fromLatin1(".%1").arg(vmaj);
+        }
+        // else extension without version number (eg. MyModule)
+        return QString();
+    };
+    auto joinStringRefs = [](const QVector<QStringRef> &refs, const QChar &sep) {
+        QString str;
+        for (auto it = refs.cbegin(); it != refs.cend(); ++it) {
+            if (it != refs.cbegin())
+                str += sep;
+            str += *it;
+        }
+        return str;
+    };
+
+    const ImportVersion initial = (vmin >= 0)
+            ? FullyVersioned
+            : (vmaj >= 0 ? PartiallyVersioned : Unversioned);
+    for (int version = initial; version <= BasePath; ++version) {
+        const QString ver = versionString(vmaj, vmin, static_cast<ImportVersion>(version));
+
+        QString dir = basePath;
+        if (!dir.endsWith(Slash) && !dir.endsWith(Backslash))
+            dir += Slash;
+
+        if (version == BasePath) {
+            qmlDirPathsPaths += dir;
+        } else {
+            // append to the end
+            qmlDirPathsPaths += dir + joinStringRefs(parts, Slash) + ver;
+        }
+
+        if (version < Unversioned) {
+            // insert in the middle
+            for (int index = parts.count() - 2; index >= 0; --index) {
+                qmlDirPathsPaths += dir + joinStringRefs(parts.mid(0, index + 1), Slash)
+                        + ver + Slash
+                        + joinStringRefs(parts.mid(index + 1), Slash);
+            }
+        }
+    }
+    return qmlDirPathsPaths;
+}
+
+static const QLatin1String SlashQmldir             = QLatin1String("/qmldir");
+static const QLatin1String SlashAppDotQmltypes     = QLatin1String("/app.qmltypes");
+static const QLatin1String SlashLibDotQmltypes     = QLatin1String("/lib.qmltypes");
+static const QLatin1String SlashPluginsDotQmltypes = QLatin1String("/plugins.qmltypes");
+
+void FindUnqualifiedIDVisitor::readQmltypes(const QString &filename,
+                                            FindUnqualifiedIDVisitor::Import &result)
+{
+    auto reader = createQmltypesReaderForFile(filename);
+    auto succ = reader(&result.objects, &result.moduleApis, &result.dependencies);
+    if (!succ)
+        m_colorOut.writeUncolored(reader.errorMessage());
+}
+
+FindUnqualifiedIDVisitor::Import FindUnqualifiedIDVisitor::readQmldir(const QString &path)
+{
+    Import result;
+    auto reader = createQmldirParserForFile(path + SlashQmldir);
+    const auto imports = reader.imports();
+    for (const QString &import : imports)
+        result.dependencies.append(import);
+
+    QHash<QString, ScopeTree *> qmlComponents;
+    const auto components = reader.components();
+    for (auto it = components.begin(), end = components.end(); it != end; ++it) {
+        const QString filePath = path + QLatin1Char('/') + it->fileName;
+        if (!QFile::exists(filePath)) {
+            m_colorOut.write(QLatin1String("warning: "), Warning);
+            m_colorOut.write(it->fileName + QLatin1String(" is listed as component in ")
+                             + path + SlashQmldir
+                             + QLatin1String(" but does not exist.\n"));
+            continue;
+        }
+
+        auto mo = qmlComponents.find(it.key());
+        if (mo == qmlComponents.end())
+            mo = qmlComponents.insert(it.key(), localFile2ScopeTree(filePath));
+
+        (*mo)->addExport(
+                    it.key(), reader.typeNamespace(),
+                    ComponentVersion(it->majorVersion, it->minorVersion));
+    }
+    for (auto it = qmlComponents.begin(), end = qmlComponents.end(); it != end; ++it)
+        result.objects.insert( it.key(), ScopeTree::ConstPtr(it.value()));
+
+    if (!reader.plugins().isEmpty() && QFile::exists(path + SlashPluginsDotQmltypes))
+        readQmltypes(path + SlashPluginsDotQmltypes, result);
+
+    return result;
+}
+
+void FindUnqualifiedIDVisitor::processImport(const QString &prefix, const FindUnqualifiedIDVisitor::Import &import)
+{
+    for (auto const &dependency : qAsConst(import.dependencies)) {
+        auto const split = dependency.split(" ");
+        auto const &id = split.at(0);
+        if (split.length() > 1) {
+            const auto version = split.at(1).split('.');
+            importHelper(id, QString(),
+                         version.at(0).toInt(),
+                         version.length() > 1 ? version.at(1).toInt() : -1);
+        } else {
+            importHelper(id, QString(), -1, -1);
+        }
+
+
+    }
+
+    // add objects
+    for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
+        const auto &val = it.value();
+        m_types[it.key()] = val;
+        m_exportedName2Scope.insert(prefixedName(prefix, val->className()), val);
+
+        const auto exports = val->exports();
+        for (const auto &valExport : exports)
+            m_exportedName2Scope.insert(prefixedName(prefix, valExport.type()), val);
+
+        const auto enums = val->enums();
+        for (const auto &valEnum : enums)
+            m_currentScope->addEnum(valEnum);
     }
 }
 
-void FindUnqualifiedIDVisitor::importExportedNames(QStringRef prefix, QString name)
+void FindUnqualifiedIDVisitor::importHelper(const QString &module, const QString &prefix,
+                                            int major, int minor)
+{
+    const QString id = QString(module).replace(QLatin1Char('/'), QLatin1Char('.'));
+    QPair<QString, QString> importId { id, prefix };
+    if (m_alreadySeenImports.contains(importId))
+        return;
+    m_alreadySeenImports.insert(importId);
+
+    for (const QString &qmltypeDir : m_qmltypeDirs) {
+        auto qmltypesPaths = completeImportPaths(id, qmltypeDir, major, minor);
+
+        for (auto const &qmltypesPath : qmltypesPaths) {
+            if (QFile::exists(qmltypesPath + SlashQmldir)) {
+                processImport(prefix, readQmldir(qmltypesPath));
+
+                // break so that we don't import unversioned qml components
+                // in addition to versioned ones
+                break;
+            }
+
+            Import result;
+            if (QFile::exists(qmltypesPath + SlashAppDotQmltypes))
+                readQmltypes(qmltypesPath + SlashAppDotQmltypes, result);
+            else if (QFile::exists(qmltypesPath + SlashLibDotQmltypes))
+                readQmltypes(qmltypesPath + SlashLibDotQmltypes, result);
+            else
+                continue;
+            processImport(prefix, result);
+        }
+    }
+}
+
+ScopeTree *FindUnqualifiedIDVisitor::localFile2ScopeTree(const QString &filePath)
+{
+    using namespace QQmlJS::AST;
+    const QFileInfo info { filePath };
+    QString baseName = info.baseName();
+    const QString scopeName = baseName.endsWith(".ui") ? baseName.chopped(3) : baseName;
+
+    QQmlJS::Engine engine;
+    QQmlJS::Lexer lexer(&engine);
+
+    const QString lowerSuffix = info.suffix().toLower();
+    const bool isESModule = lowerSuffix == QLatin1String("mjs");
+    const bool isJavaScript = isESModule || lowerSuffix == QLatin1String("js");
+
+    QFile file(filePath);
+    if (!file.open(QFile::ReadOnly)) {
+        return new ScopeTree(isJavaScript ? ScopeType::JSLexicalScope : ScopeType::QMLScope,
+                             scopeName);
+    }
+
+    QString code = file.readAll();
+    file.close();
+
+    lexer.setCode(code, /*line = */ 1, /*qmlMode=*/ !isJavaScript);
+    QQmlJS::Parser parser(&engine);
+
+    const bool success = isJavaScript ? (isESModule ? parser.parseModule()
+                                                    : parser.parseProgram())
+                                      : parser.parse();
+    if (!success) {
+        return new ScopeTree(isJavaScript ? ScopeType::JSLexicalScope : ScopeType::QMLScope,
+                             scopeName);
+    }
+
+    if (!isJavaScript) {
+        QQmlJS::AST::UiProgram *program = parser.ast();
+        parseHeaders(program->headers);
+        ImportedMembersVisitor membersVisitor(&m_colorOut);
+        program->members->accept(&membersVisitor);
+        return membersVisitor.result(scopeName);
+    }
+
+    // TODO: Anything special to do with ES modules here?
+    return parseProgram(QQmlJS::AST::cast<QQmlJS::AST::Program *>(parser.rootNode()), scopeName);
+}
+
+void FindUnqualifiedIDVisitor::importFileOrDirectory(const QString &fileOrDirectory,
+                                                     const QString &prefix)
+{
+    QString name = fileOrDirectory;
+
+    if (QFileInfo(name).isRelative())
+        name = QDir(QFileInfo { m_filePath }.path()).filePath(name);
+
+    if (QFileInfo(name).isFile()) {
+        m_exportedName2Scope.insert(prefix, ScopeTree::ConstPtr(localFile2ScopeTree(name)));
+        return;
+    }
+
+    QDirIterator it { name, QStringList() << QLatin1String("*.qml"), QDir::NoFilter };
+    while (it.hasNext()) {
+        ScopeTree::ConstPtr scope(localFile2ScopeTree(it.next()));
+        if (!scope->className().isEmpty())
+            m_exportedName2Scope.insert(prefixedName(prefix, scope->className()), scope);
+    }
+}
+
+void FindUnqualifiedIDVisitor::importExportedNames(const QStringRef &prefix, QString name)
 {
     for (;;) {
-        auto metaObject = m_exportedName2MetaObject[m_exportedName2MetaObject.contains(name)
-                                                            ? name
-                                                            : prefix + QLatin1Char('.') + name];
-        if (metaObject) {
-            auto propertyCount = metaObject->propertyCount();
-            for (auto i = 0; i < propertyCount; ++i) {
-                m_currentScope->insertPropertyIdentifier(metaObject->property(i).name());
+        ScopeTree::ConstPtr scope = m_exportedName2Scope.value(m_exportedName2Scope.contains(name)
+                                                               ? name
+                                                               : prefix + QLatin1Char('.') + name);
+        if (scope) {
+            const auto properties = scope->properties();
+            for (auto property : properties) {
+                property.setType(m_exportedName2Scope.value(property.typeName()).get());
+                m_currentScope->insertPropertyIdentifier(property);
             }
 
-            m_currentScope->addMethodsFromMetaObject(metaObject);
-
-            name = metaObject->superclassName();
-            if (name.isEmpty() || name == QLatin1String("QObject")) {
+            m_currentScope->addMethods(scope->methods());
+            name = scope->superclassName();
+            if (name.isEmpty() || name == QLatin1String("QObject"))
                 break;
-            }
         } else {
             m_colorOut.write(QLatin1String("warning: "), Warning);
-            m_colorOut.write(name + QLatin1String(" was not found. Did you add all import paths?\n"));
+            m_colorOut.write(name + QLatin1String(" was not found."
+                                                  " Did you add all import paths?\n"));
             m_unknownImports.insert(name);
+            m_visitFailed = true;
             break;
         }
     }
@@ -404,8 +404,8 @@ void FindUnqualifiedIDVisitor::throwRecursionDepthError()
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiProgram *)
 {
     enterEnvironment(ScopeType::QMLScope, "program");
-    QHash<QString, LanguageUtils::FakeMetaObject::ConstPtr> objects;
-    QList<QQmlJS::ModuleApiInfo> moduleApis;
+    QHash<QString, ScopeTree::ConstPtr> objects;
+    QList<ModuleApiInfo> moduleApis;
     QStringList dependencies;
     for (auto const &dir : m_qmltypeDirs) {
         QDirIterator it { dir, QStringList() << QLatin1String("builtins.qmltypes"), QDir::NoFilter,
@@ -418,29 +418,23 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiProgram *)
         }
     }
     // add builtins
-    for (auto ob_it = objects.begin(); ob_it != objects.end(); ++ob_it) {
-        auto val = ob_it.value();
-        for (auto export_ : val->exports()) {
-            m_exportedName2MetaObject[export_.type] = val;
-        }
-        for (auto enumCount = 0; enumCount < val->enumeratorCount(); ++enumCount) {
-            m_currentScope->insertQMLIdentifier(val->enumerator(enumCount).name());
-        }
+    for (auto objectIt = objects.begin(); objectIt != objects.end(); ++objectIt) {
+        auto val = objectIt.value();
+        m_types[objectIt.key()] = val;
+
+        const auto exports = val->exports();
+        for (const auto &valExport : exports)
+            m_exportedName2Scope.insert(valExport.type(), val);
+
+        const auto enums = val->enums();
+        for (const auto &valEnum : enums)
+            m_currentScope->addEnum(valEnum);
     }
     // add "self" (as we only ever check the first part of a qualified identifier, we get away with
-    // using an empty FakeMetaObject
-    m_exportedName2MetaObject[QFileInfo { m_filePath }.baseName()] = {};
+    // using an empty ScopeTree
+    m_exportedName2Scope.insert(QFileInfo { m_filePath }.baseName(), {});
 
-    // add QML builtins
-    m_exportedName2MetaObject["QtObject"] = {}; // QtObject contains nothing of interest
-
-    LanguageUtils::FakeMetaObject *meta = new LanguageUtils::FakeMetaObject{};
-    meta->addProperty(LanguageUtils::FakeMetaProperty {"enabled", "bool", false, false, false, 0});
-    meta->addProperty(LanguageUtils::FakeMetaProperty {"ignoreUnknownSignals", "bool", false, false, false, 0});
-    meta->addProperty(LanguageUtils::FakeMetaProperty {"target", "QObject", false, false, false, 0});
-    m_exportedName2MetaObject["Connections"] = LanguageUtils::FakeMetaObject::ConstPtr { meta };
-
-    importDirectory(".", QString());
+    importFileOrDirectory(".", QString());
     return true;
 }
 
@@ -518,7 +512,8 @@ void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::CaseBlock *)
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::Catch *catchStatement)
 {
     enterEnvironment(ScopeType::JSLexicalScope, "catch");
-    m_currentScope->insertJSIdentifier(catchStatement->patternElement->bindingIdentifier.toString(), QQmlJS::AST::VariableScope::Let);
+    m_currentScope->insertJSIdentifier(catchStatement->patternElement->bindingIdentifier.toString(),
+                                       QQmlJS::AST::VariableScope::Let);
     return true;
 }
 
@@ -529,8 +524,13 @@ void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::Catch *)
 
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::WithStatement *withStatement)
 {
-    m_colorOut.write(QString::asprintf("Warning: "), Warning);
-    m_colorOut.write(QString::asprintf("%d:%d: with statements are strongly discouraged in QML and might cause false positives when analysing unqalified identifiers\n", withStatement->firstSourceLocation().startLine, withStatement->firstSourceLocation().startColumn), Normal);
+    m_colorOut.write(QString::fromLatin1("Warning: "), Warning);
+    m_colorOut.write(QString::fromLatin1(
+                         "%1:%2: with statements are strongly discouraged in QML "
+                         "and might cause false positives when analysing unqalified identifiers\n")
+                     .arg(withStatement->firstSourceLocation().startLine)
+                     .arg(withStatement->firstSourceLocation().startColumn),
+                     Normal);
     enterEnvironment(ScopeType::JSLexicalScope, "with");
     return true;
 }
@@ -540,12 +540,12 @@ void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::WithStatement *)
     leaveEnvironment();
 }
 
-static QString signalName(const QStringRef &handlerName)
+static QString signalName(QStringView handlerName)
 {
-    if (handlerName.startsWith("on") && handlerName.size() > 2) {
+    if (handlerName.startsWith(u"on") && handlerName.size() > 2) {
         QString signal = handlerName.mid(2).toString();
         for (int i = 0; i < signal.length(); ++i) {
-            QCharRef ch = signal[i];
+            QChar &ch = signal[i];
             if (ch.isLower())
                 return QString();
             if (ch.isUpper()) {
@@ -563,13 +563,12 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
     auto name = uisb->qualifiedId->name;
     if (name == QLatin1String("id")) {
         // found id
-        auto expstat = static_cast<ExpressionStatement *>(uisb->statement);
-        auto identexp = static_cast<IdentifierExpression *>(expstat->expression);
+        auto expstat = cast<ExpressionStatement *>(uisb->statement);
+        auto identexp = cast<IdentifierExpression *>(expstat->expression);
         QString elementName = m_currentScope->name();
-        m_qmlid2meta.insert(identexp->name.toString(), m_exportedName2MetaObject[elementName]);
-        if (m_currentScope->isVisualRootScope()) {
+        m_qmlid2scope.insert(identexp->name.toString(), m_currentScope);
+        if (m_currentScope->isVisualRootScope())
             m_rootId = identexp->name.toString();
-        }
     } else {
         const QString signal = signalName(name);
         if (signal.isEmpty())
@@ -582,7 +581,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
 
         const auto statement = uisb->statement;
         if (statement->kind == Node::Kind::Kind_ExpressionStatement) {
-            if (static_cast<ExpressionStatement *>(statement)->expression->asFunctionDefinition()) {
+            if (cast<ExpressionStatement *>(statement)->expression->asFunctionDefinition()) {
                 // functions are already handled
                 // they do not get names inserted according to the signal, but access their formal
                 // parameters
@@ -607,37 +606,44 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiPublicMember *uipm)
 {
     // property bool inactive: !active
     // extract name inactive
-    m_currentScope->insertPropertyIdentifier(uipm->name.toString());
+    MetaProperty property(
+                uipm->name.toString(),
+                // TODO: signals, complex types etc.
+                uipm->memberType ? uipm->memberType->name.toString() : QString(),
+                uipm->typeModifier == QLatin1String("list"),
+                !uipm->isReadonlyMember,
+                false,
+                uipm->memberType ? (uipm->memberType->name == QLatin1String("alias")) : false,
+                0);
+    property.setType(m_exportedName2Scope.value(property.typeName()).get());
+    m_currentScope->insertPropertyIdentifier(property);
     return true;
 }
 
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
 {
     auto name = idexp->name;
-    if (!m_exportedName2MetaObject.contains(name.toString())) {
-        m_currentScope->addIdToAccssedIfNotInParentScopes(
-                { name.toString(), idexp->firstSourceLocation() }, m_unknownImports);
-    }
+    m_currentScope->addIdToAccessed(name.toString(), idexp->firstSourceLocation());
+    m_fieldMemberBase = idexp;
     return true;
 }
 
-FindUnqualifiedIDVisitor::FindUnqualifiedIDVisitor(QStringList const &qmltypeDirs,
-                                                   const QString &code, const QString &fileName,
-                                                   bool silent)
+FindUnqualifiedIDVisitor::FindUnqualifiedIDVisitor(QStringList qmltypeDirs, QString code,
+                                                   QString fileName, bool silent)
     : m_rootScope(new ScopeTree { ScopeType::JSFunctionScope, "global" }),
       m_currentScope(m_rootScope.get()),
-      m_qmltypeDirs(qmltypeDirs),
-      m_code(code),
+      m_qmltypeDirs(std::move(qmltypeDirs)),
+      m_code(std::move(code)),
       m_rootId(QLatin1String("<id>")),
-      m_filePath(fileName),
+      m_filePath(std::move(fileName)),
       m_colorOut(silent)
 {
     // setup color output
-    m_colorOut.insertColorMapping(Error, ColorOutput::RedForeground);
-    m_colorOut.insertColorMapping(Warning, ColorOutput::PurpleForeground);
-    m_colorOut.insertColorMapping(Info, ColorOutput::BlueForeground);
-    m_colorOut.insertColorMapping(Normal, ColorOutput::DefaultColor);
-    m_colorOut.insertColorMapping(Hint, ColorOutput::GreenForeground);
+    m_colorOut.insertMapping(Error, ColorOutput::RedForeground);
+    m_colorOut.insertMapping(Warning, ColorOutput::PurpleForeground);
+    m_colorOut.insertMapping(Info, ColorOutput::BlueForeground);
+    m_colorOut.insertMapping(Normal, ColorOutput::DefaultColor);
+    m_colorOut.insertMapping(Hint, ColorOutput::GreenForeground);
     QLatin1String jsGlobVars[] = {
         /* Not listed on the MDN page; browser and QML extensions: */
         // console/debug api
@@ -645,18 +651,20 @@ FindUnqualifiedIDVisitor::FindUnqualifiedIDVisitor(QStringList const &qmltypeDir
         // garbage collector
         QLatin1String("gc"),
         // i18n
-        QLatin1String("qsTr"), QLatin1String("qsTrId"), QLatin1String("QT_TR_NOOP"), QLatin1String("QT_TRANSLATE_NOOP"), QLatin1String("QT_TRID_NOOP"),
+        QLatin1String("qsTr"), QLatin1String("qsTrId"), QLatin1String("QT_TR_NOOP"),
+        QLatin1String("QT_TRANSLATE_NOOP"), QLatin1String("QT_TRID_NOOP"),
         // XMLHttpRequest
         QLatin1String("XMLHttpRequest")
     };
-    for (const char **globalName = QV4::Compiler::Codegen::s_globalNames; *globalName != nullptr; ++globalName) {
-        m_currentScope->insertJSIdentifier(QString::fromLatin1(*globalName), QQmlJS::AST::VariableScope::Const);
+    for (const char **globalName = QV4::Compiler::Codegen::s_globalNames;
+         *globalName != nullptr;
+         ++globalName) {
+        m_currentScope->insertJSIdentifier(QString::fromLatin1(*globalName),
+                                           QQmlJS::AST::VariableScope::Const);
     }
     for (const auto& jsGlobVar: jsGlobVars)
         m_currentScope->insertJSIdentifier(jsGlobVar, QQmlJS::AST::VariableScope::Const);
 }
-
-FindUnqualifiedIDVisitor::~FindUnqualifiedIDVisitor() = default;
 
 bool FindUnqualifiedIDVisitor::check()
 {
@@ -664,13 +672,15 @@ bool FindUnqualifiedIDVisitor::check()
         return false;
 
     // now that all ids are known, revisit any Connections whose target were perviously unknown
-    for (auto const& outstandingConnection: m_outstandingConnections) {
-        auto metaObject = m_qmlid2meta[outstandingConnection.targetName];
-        outstandingConnection.scope->addMethodsFromMetaObject(metaObject);
+    for (auto const &outstandingConnection: m_outstandingConnections) {
+        auto targetScope = m_qmlid2scope[outstandingConnection.targetName];
+        if (outstandingConnection.scope)
+            outstandingConnection.scope->addMethods(targetScope->methods());
         QScopedValueRollback<ScopeTree*> rollback(m_currentScope, outstandingConnection.scope);
         outstandingConnection.uiod->initializer->accept(this);
     }
-    return m_rootScope->recheckIdentifiers(m_code, m_qmlid2meta, m_rootScope.get(), m_rootId, m_colorOut);
+    return m_rootScope->recheckIdentifiers(m_code, m_qmlid2scope, m_exportedName2Scope,
+                                           m_rootScope.get(), m_rootId, m_colorOut);
 }
 
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::VariableDeclarationList *vdl)
@@ -686,18 +696,16 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::VariableDeclarationList *vdl)
 void FindUnqualifiedIDVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr)
 {
     using namespace QQmlJS::AST;
-    if (!fexpr->name.isEmpty()) {
-        auto name = fexpr->name.toString();
-        if (m_currentScope->scopeType() == ScopeType::QMLScope) {
-            m_currentScope->insertQMLIdentifier(name);
-        } else {
+    auto name = fexpr->name.toString();
+    if (!name.isEmpty()) {
+        if (m_currentScope->scopeType() == ScopeType::QMLScope)
+            m_currentScope->addMethod(MetaMethod(name, QLatin1String("void")));
+        else
             m_currentScope->insertJSIdentifier(name, VariableScope::Const);
-        }
+        enterEnvironment(ScopeType::JSFunctionScope, name);
+    } else {
+        enterEnvironment(ScopeType::JSFunctionScope, QLatin1String("<anon>"));
     }
-    QString name = fexpr->name.toString();
-    if (name.isEmpty())
-        name = "<anon>";
-    enterEnvironment(ScopeType::JSFunctionScope, name);
 }
 
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::FunctionExpression *fexpr)
@@ -735,15 +743,17 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiImport *import)
     // construct path
     QString prefix = QLatin1String("");
     if (import->asToken.isValid()) {
-        prefix += import->importId + QLatin1Char('.');
+        prefix += import->importId;
     }
     auto dirname = import->fileName.toString();
     if (!dirname.isEmpty())
-        importDirectory(dirname, prefix);
+        importFileOrDirectory(dirname, prefix);
 
     QString path {};
     if (!import->importId.isEmpty()) {
-        m_qmlid2meta.insert(import->importId.toString(), {}); // TODO: do not put imported ids into the same space as qml IDs
+        // TODO: do not put imported ids into the same space as qml IDs
+        const QString importId = import->importId.toString();
+        m_qmlid2scope.insert(importId, m_exportedName2Scope.value(importId).get());
     }
     if (import->version) {
         auto uri = import->importUri;
@@ -761,14 +771,17 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiImport *import)
 
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
 {
-    m_currentScope->insertQMLIdentifier(uied->name.toString());
+    MetaEnum qmlEnum(uied->name.toString());
+    for (const auto *member = uied->members; member; member = member->next)
+        qmlEnum.addKey(member->member.toString());
+    m_currentScope->addEnum(qmlEnum);
     return true;
 }
 
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 {
     // property QtObject __styleData: QtObject {...}
-    m_currentScope->insertPropertyIdentifier(uiob->qualifiedId->name.toString());
+
     QString name {};
     auto id = uiob->qualifiedTypeNameId;
     QStringRef prefix = uiob->qualifiedTypeNameId->name;
@@ -777,20 +790,34 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
         id = id->next;
     }
     name.chop(1);
+
+    MetaProperty prop(uiob->qualifiedId->name.toString(), name, false, true, true,
+                      name == QLatin1String("alias"), 0);
+    prop.setType(m_exportedName2Scope.value(uiob->qualifiedTypeNameId->name.toString()).get());
+    m_currentScope->addProperty(prop);
+
     enterEnvironment(ScopeType::QMLScope, name);
-    if (name == QLatin1String("Component") || name == QLatin1String("QtObject")) // there is no typeinfo for Component and QtObject, but they also have no interesting properties
-        return true;
     importExportedNames(prefix, name);
     return true;
 }
 
-void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::UiObjectBinding *)
+void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 {
+    const auto childScope = m_currentScope;
     leaveEnvironment();
+    MetaProperty property(uiob->qualifiedId->name.toString(),
+                          uiob->qualifiedTypeNameId->name.toString(),
+                          false, true, true,
+                          uiob->qualifiedTypeNameId->name == QLatin1String("alias"),
+                          0);
+    property.setType(childScope);
+    m_currentScope->addProperty(property);
 }
 
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
 {
+    using namespace QQmlJS::AST;
+
     QString name {};
     auto id = uiod->qualifiedTypeNameId;
     QStringRef prefix = uiod->qualifiedTypeNameId->name;
@@ -802,8 +829,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
     enterEnvironment(ScopeType::QMLScope, name);
     if (name.isLower())
         return false; // Ignore grouped properties for now
-    if (name == QLatin1String("Component") || name == QLatin1String("QtObject")) // there is no typeinfo for Component
-        return true;
+
     importExportedNames(prefix, name);
     if (name.endsWith("Connections")) {
         QString target;
@@ -825,25 +851,26 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
             }
             member = member->next;
         }
-        LanguageUtils::FakeMetaObject::ConstPtr metaObject {};
+        const ScopeTree *targetScope;
         if (target.isEmpty()) {
             // no target set, connection comes from parentF
             ScopeTree* scope = m_currentScope;
             do {
                 scope = scope->parentScope(); // TODO: rename method
             } while (scope->scopeType() != ScopeType::QMLScope);
-            auto metaObject = m_exportedName2MetaObject[scope->name()];
+            targetScope = m_exportedName2Scope.value(scope->name()).get();
         } else {
             // there was a target, check if we already can find it
-            auto metaObjectIt =  m_qmlid2meta.find(target);
-            if (metaObjectIt != m_qmlid2meta.end()) {
-                metaObject = *metaObjectIt;
+            auto scopeIt =  m_qmlid2scope.find(target);
+            if (scopeIt != m_qmlid2scope.end()) {
+                targetScope = *scopeIt;
             } else {
                 m_outstandingConnections.push_back({target, m_currentScope, uiod});
                 return false; // visit children later once target is known
             }
         }
-        m_currentScope->addMethodsFromMetaObject(metaObject);
+        if (targetScope)
+            m_currentScope->addMethods(targetScope->methods());
     }
     return true;
 }
@@ -862,5 +889,49 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::PatternElement *element)
 
 void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *)
 {
+    auto childScope = m_currentScope;
     leaveEnvironment();
+    childScope->updateParentProperty(m_currentScope);
+}
+
+bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::FieldMemberExpression *)
+{
+    return true;
+}
+
+void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMember)
+{
+    using namespace QQmlJS::AST;
+    ExpressionNode *base = fieldMember->base;
+    while (auto *nested = cast<NestedExpression *>(base))
+        base = nested->expression;
+
+    if (m_fieldMemberBase == base) {
+        QString type;
+        if (auto *binary = cast<BinaryExpression *>(base)) {
+            if (binary->op == QSOperator::As) {
+                if (auto *right = cast<IdentifierExpression *>(binary->right))
+                    type = right->name.toString();
+            }
+        }
+        m_currentScope->accessMember(fieldMember->name.toString(),
+                                     type,
+                                     fieldMember->identifierToken);
+        m_fieldMemberBase = fieldMember;
+    } else {
+        m_fieldMemberBase = nullptr;
+    }
+}
+
+bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::BinaryExpression *)
+{
+    return true;
+}
+
+void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::BinaryExpression *binExp)
+{
+    if (binExp->op == QSOperator::As && m_fieldMemberBase == binExp->left)
+        m_fieldMemberBase = binExp;
+    else
+        m_fieldMemberBase = nullptr;
 }

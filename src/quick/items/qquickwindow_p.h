@@ -112,7 +112,8 @@ public:
     Q_DECLARE_PUBLIC(QQuickWindow)
 
     enum CustomEvents {
-        FullUpdateRequest = QEvent::User + 1
+        FullUpdateRequest = QEvent::User + 1,
+        TriggerContextCreationFailure = QEvent::User + 2
     };
 
     static inline QQuickWindowPrivate *get(QQuickWindow *c) { return c->d_func(); }
@@ -206,8 +207,8 @@ public:
     };
     Q_DECLARE_FLAGS(FocusOptions, FocusOption)
 
-    void setFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = nullptr);
-    void clearFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = nullptr);
+    void setFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = { });
+    void clearFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = { });
     static void notifyFocusChangesRecur(QQuickItem **item, int remaining);
     void clearFocusObject() override;
 
@@ -300,8 +301,10 @@ public:
 
     static void contextCreationFailureMessage(const QSurfaceFormat &format,
                                               QString *translatedMessage,
-                                              QString *untranslatedMessage,
-                                              bool isEs);
+                                              QString *untranslatedMessage);
+    static void rhiCreationFailureMessage(const QString &backendName,
+                                          QString *translatedMessage,
+                                          QString *untranslatedMessage);
 
     static void emitBeforeRenderPassRecording(void *ud);
     static void emitAfterRenderPassRecording(void *ud);

@@ -52,10 +52,6 @@ type, the C++ class can be named differently, or appear in a namespace.
 The Person class implementation is quite basic.  The property accessors simply
 return members of the object instance.
 
-The \c main.cpp file also calls the \c qmlRegisterType() function to
-register the \c Person type with QML as a type in the People library version 1.0,
-and defines the mapping between the C++ and QML class names.
-
 \section1 Running the Example
 
 The main.cpp file in the example includes a simple shell application that
@@ -77,9 +73,11 @@ Shows how to use \l {QQmlEngine::}{qmlRegisterExtendedType()} to provide an
 \l {Registering Extension Objects}{extension object} to a \l QLineEdit without modifying or
 subclassing it.
 
-Firstly, the LineEditExtension class is registered with the QML system as an extension of QLineEdit:
+Firstly, the LineEditExtension class is registered with the QML system as an
+extension of QLineEdit. We declare a foreign type to do this as we cannot modify
+Qt's internal QLineEdit class.
 
-\snippet referenceexamples/extended/main.cpp 0
+\snippet referenceexamples/extended/lineedit.h 0
 
 The QML engine then instantiates a \l QLineEdit:
 
@@ -182,9 +180,8 @@ directly - an explicit Boy or Girl should be instantiated instead.
 
 While we want to disallow instantiating Person from within QML, it still needs
 to be registered with the QML engine, so that it can be used as a property type
-and other types can be coerced to it.
-
-\snippet referenceexamples/coercion/main.cpp 0
+and other types can be coerced to it. This is what the QML_UNCREATABLE macro
+does.
 
 \section2 Define Boy and Girl
 

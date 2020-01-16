@@ -89,8 +89,8 @@ public:
                                   QQmlContext *context,
                                   bool preloadImages,
                                   bool *fontSizeModified)
-        : text(t), layout(l), imgTags(&imgTags), baseFont(layout.font()), baseUrl(baseUrl), hasNewLine(true), nbImages(0), updateImagePositions(false)
-        , preFormat(false), prependSpace(false), hasSpace(true), preloadImages(preloadImages), fontSizeModified(fontSizeModified), context(context)
+        : text(t), layout(l), imgTags(&imgTags), baseFont(layout.font()), baseUrl(baseUrl),
+          fontSizeModified(fontSizeModified), context(context), preloadImages(preloadImages)
     {
     }
 
@@ -122,15 +122,15 @@ public:
     QFont baseFont;
     QStack<List> listStack;
     QUrl baseUrl;
-    bool hasNewLine;
-    int nbImages;
-    bool updateImagePositions;
-    bool preFormat;
-    bool prependSpace;
-    bool hasSpace;
-    bool preloadImages;
     bool *fontSizeModified;
     QQmlContext *context;
+    int nbImages = 0;
+    bool hasNewLine = true;
+    bool updateImagePositions = false;
+    bool preFormat = false;
+    bool prependSpace = false;
+    bool hasSpace = true;
+    bool preloadImages;
 
     static const QChar lessThan;
     static const QChar greaterThan;

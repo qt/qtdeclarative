@@ -58,8 +58,6 @@ int main(int argc, char *argv[])
 {
     QGuiApplication a(argc, argv);
 
-    qmlRegisterTypesAndRevisions<Graph>("Graph", 1);
-
     QQuickView view;
     view.resize(800, 400);
     view.setResizeMode(QQuickView::SizeRootObjectToView);

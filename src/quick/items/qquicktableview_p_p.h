@@ -54,6 +54,7 @@
 #include "qquicktableview_p.h"
 
 #include <QtCore/qtimer.h>
+#include <QtCore/private/qflatmap_p.h>
 #include <QtQmlModels/private/qqmltableinstancemodel_p.h>
 #include <QtQml/private/qqmlincubator_p.h>
 #include <QtQmlModels/private/qqmlchangeset_p.h>
@@ -119,7 +120,7 @@ public:
             qCDebug(lcTableViewDelegateLifecycle()) << "begin top-left:" << toString();
         }
 
-        void begin(Qt::Edge edgeToLoad, int edgeIndex, const QList<int> visibleCellsInEdge, QQmlIncubator::IncubationMode incubationMode)
+        void begin(Qt::Edge edgeToLoad, int edgeIndex, const QVector<int> visibleCellsInEdge, QQmlIncubator::IncubationMode incubationMode)
         {
             Q_ASSERT(!m_active);
             m_active = true;
@@ -169,7 +170,7 @@ public:
 
     private:
         Qt::Edge m_edge = Qt::Edge(0);
-        QList<int> m_visibleCellsInEdge;
+        QVector<int> m_visibleCellsInEdge;
         int m_edgeIndex = 0;
         int m_currentIndex = 0;
         bool m_active = false;
@@ -246,8 +247,8 @@ public:
     // we need to fill up with more rows/columns. loadedTableInnerRect describes the pixels
     // that the loaded table covers if you remove one row/column on each side of the table, and
     // is used to determine rows/columns that are no longer visible and can be unloaded.
-    QMap<int, int> loadedColumns;
-    QMap<int, int> loadedRows;
+    QFlatMap<int, int> loadedColumns;
+    QFlatMap<int, int> loadedRows;
     QRectF loadedTableOuterRect;
     QRectF loadedTableInnerRect;
 
@@ -322,7 +323,8 @@ public:
 
     qreal sizeHintForColumn(int column);
     qreal sizeHintForRow(int row);
-    void calculateTableSize();
+    QSize calculateTableSize();
+    void updateTableSize();
 
     inline bool isColumnHidden(int column);
     inline bool isRowHidden(int row);
@@ -332,10 +334,10 @@ public:
     qreal getColumnWidth(int column);
     qreal getRowHeight(int row);
 
-    inline int topRow() const { return loadedRows.firstKey(); }
-    inline int bottomRow() const { return loadedRows.lastKey(); }
-    inline int leftColumn() const { return loadedColumns.firstKey(); }
-    inline int rightColumn() const { return loadedColumns.lastKey(); }
+    inline int topRow() const { return loadedRows.cbegin().key(); }
+    inline int bottomRow() const { return (--loadedRows.cend()).key(); }
+    inline int leftColumn() const { return loadedColumns.cbegin().key(); }
+    inline int rightColumn() const { return (--loadedColumns.cend()).key(); }
 
     QQuickTableView *rootSyncView() const;
 
@@ -351,6 +353,7 @@ public:
     void updateContentWidth();
     void updateContentHeight();
     void updateAverageEdgeSize();
+    RebuildOptions checkForVisibilityChanges();
     void forceLayout();
 
     void updateExtents();
@@ -423,6 +426,8 @@ public:
     void setLocalViewportX(qreal contentX);
     void setLocalViewportY(qreal contentY);
     void syncViewportPosRecursive();
+
+    void fetchMoreData();
 
     void _q_componentFinalized();
     void registerCallbackWhenBindingsAreEvaluated();

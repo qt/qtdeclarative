@@ -91,18 +91,14 @@ bool String::virtualIsEqualTo(Managed *t, Managed *o)
 
 void Heap::String::init(const QString &t)
 {
-    Base::init();
-
+    QString mutableText(t);
+    StringOrSymbol::init(mutableText.data_ptr());
     subtype = String::StringType_Unknown;
-
-    text = const_cast<QString &>(t).data_ptr();
-    text->ref.ref();
 }
 
 void Heap::ComplexString::init(String *l, String *r)
 {
-    Base::init();
-
+    StringOrSymbol::init();
     subtype = String::StringType_AddedString;
 
     left = l;
@@ -125,7 +121,7 @@ void Heap::ComplexString::init(String *l, String *r)
 void Heap::ComplexString::init(Heap::String *ref, int from, int len)
 {
     Q_ASSERT(ref->length() >= from + len);
-    Base::init();
+    StringOrSymbol::init();
 
     subtype = String::StringType_SubString;
 
@@ -136,11 +132,11 @@ void Heap::ComplexString::init(Heap::String *ref, int from, int len)
 
 void Heap::StringOrSymbol::destroy()
 {
-    if (text) {
-        internalClass->engine->memoryManager->changeUnmanagedHeapSizeUsage(qptrdiff(-text->size) * (int)sizeof(QChar));
-        if (!text->ref.deref())
-            QStringData::deallocate(text);
+    if (subtype < Heap::String::StringType_AddedString) {
+        internalClass->engine->memoryManager->changeUnmanagedHeapSizeUsage(
+                    qptrdiff(-text()->size) * qptrdiff(sizeof(QChar)));
     }
+    text().~QStringPrivate();
     Base::destroy();
 }
 
@@ -164,27 +160,27 @@ uint String::toUInt(bool *ok) const
 
 void String::createPropertyKeyImpl() const
 {
-    if (!d()->text)
+    if (d()->subtype >= Heap::String::StringType_AddedString)
         d()->simplifyString();
-    Q_ASSERT(d()->text);
+    Q_ASSERT(d()->subtype < Heap::String::StringType_AddedString);
     engine()->identifierTable->asPropertyKey(this);
 }
 
 void Heap::String::simplifyString() const
 {
-    Q_ASSERT(!text);
+    Q_ASSERT(subtype >= StringType_AddedString);
 
     int l = length();
     QString result(l, Qt::Uninitialized);
     QChar *ch = const_cast<QChar *>(result.constData());
     append(this, ch);
-    text = result.data_ptr();
-    text->ref.ref();
+    text() = result.data_ptr();
     const ComplexString *cs = static_cast<const ComplexString *>(this);
     identifier = PropertyKey::invalid();
     cs->left = cs->right = nullptr;
 
-    internalClass->engine->memoryManager->changeUnmanagedHeapSizeUsage(qptrdiff(text->size) * (qptrdiff)sizeof(QChar));
+    internalClass->engine->memoryManager->changeUnmanagedHeapSizeUsage(
+                qptrdiff(text().size) * qptrdiff(sizeof(QChar)));
     subtype = StringType_Unknown;
 }
 
@@ -206,7 +202,7 @@ bool Heap::String::startsWithUpper() const
         offset = cs->from;
     }
     Q_ASSERT(str->subtype < Heap::String::StringType_Complex);
-    return str->text->size > offset && QChar::isUpper(str->text->data()[offset]);
+    return str->text().size > offset && QChar::isUpper(str->text().data()[offset]);
 }
 
 void Heap::String::append(const String *data, QChar *ch)
@@ -228,21 +224,21 @@ void Heap::String::append(const String *data, QChar *ch)
             memcpy(ch, cs->left->toQString().constData() + cs->from, cs->len*sizeof(QChar));
             ch += cs->len;
         } else {
-            memcpy(static_cast<void *>(ch), static_cast<const void *>(item->text->data()), item->text->size * sizeof(QChar));
-            ch += item->text->size;
+            memcpy(static_cast<void *>(ch), item->text().data(), item->text().size * sizeof(QChar));
+            ch += item->text().size;
         }
     }
 }
 
 void Heap::StringOrSymbol::createHashValue() const
 {
-    if (!text) {
+    if (subtype >= StringType_AddedString) {
         Q_ASSERT(internalClass->vtable->isString);
         static_cast<const Heap::String *>(this)->simplifyString();
     }
-    Q_ASSERT(text);
-    const QChar *ch = reinterpret_cast<const QChar *>(text->data());
-    const QChar *end = ch + text->size;
+    Q_ASSERT(subtype < StringType_AddedString);
+    const QChar *ch = reinterpret_cast<const QChar *>(text().data());
+    const QChar *end = ch + text().size;
     stringHash = QV4::String::calculateHashValue(ch, end, &subtype);
 }
 

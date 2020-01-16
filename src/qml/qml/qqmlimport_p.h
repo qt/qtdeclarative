@@ -163,9 +163,15 @@ public:
                              const QString &uri, const QString &prefix,
                              const QString &qmldirIdentifier, const QString &qmldirUrl, QList<QQmlError> *errors);
 
-    bool locateQmldir(QQmlImportDatabase *,
-                      const QString &uri, int vmaj, int vmin,
-                      QString *qmldirFilePath, QString *url);
+    enum LocalQmldirResult {
+        QmldirFound,
+        QmldirNotFound,
+        QmldirInterceptedToRemote
+    };
+
+    LocalQmldirResult locateLocalQmldir(
+            QQmlImportDatabase *, const QString &uri, int vmaj, int vmin,
+            QString *qmldirFilePath, QString *url);
 
     void populateCache(QQmlTypeNameCache *cache) const;
 

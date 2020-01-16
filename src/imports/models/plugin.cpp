@@ -37,12 +37,16 @@
 **
 ****************************************************************************/
 
+#include <QtQmlModels/private/qqmlobjectmodel_p.h>
+
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
 
-#include <private/qqmlmodelsmodule_p.h>
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(qmlModelsPlugin, "qt.qmlModelsPlugin")
 
 /*!
     \qmlmodule QtQml.Models 2.\QtMinorVersion
@@ -59,25 +63,42 @@ QT_BEGIN_NAMESPACE
     import QtQml.Models 2.\1
     \endqml
 
-    Note that QtQml.Models module started at version 2.1 to match the version
+    \note QtQml.Models module started at version 2.1 to match the version
     of the parent module, \l{Qt QML}.
+
+    In addition, Qt.labs.qmlmodels provides experimental QML types for models.
+    To use these experimental types, import the module with the following line:
+
+    \qml
+    import Qt.labs.qmlmodels 1.0
+    \endqml
+
+    \section1 QML Types
+    \generatelist qmltypesbymodule QtQml.Models
+
+    \section1 Experimental QML Types
+    \generatelist qmltypesbymodule Qt.labs.qmlmodels
+
+    \noautolist
 */
 
 
 
 //![class decl]
-class QtQmlModelsPlugin : public QQmlExtensionPlugin
+class QtQmlModelsPlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 public:
-    QtQmlModelsPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
-    void registerTypes(const char *uri) override
+    QtQmlModelsPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
     {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQml.Models"));
-        QQmlModelsModule::defineModule();
-
-        qmlRegisterModule(uri, 2, 15);
+        if (qmlModelsPlugin().isDebugEnabled()) {
+            // Superficial debug message that causes the dependency between QtQmlWorkerScript
+            // and the workerscript plugin to be retained.
+            // As qCDebug() can be a noop, retrieve the className in a separate step.
+            const QString className = QQmlObjectModel::staticMetaObject.className();
+            qCDebug(qmlModelsPlugin) << "Loading QmlModels plugin:" << className;
+        }
     }
 };
 //![class decl]

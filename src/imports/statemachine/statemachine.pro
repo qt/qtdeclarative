@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET = qtqmlstatemachine
 TARGETPATH = QtQml/StateMachine
-IMPORT_VERSION = 1.$$QT_MINOR_VERSION
+IMPORT_VERSION = 1.15
 
 QT = core-private qml-private
 
@@ -21,5 +21,7 @@ HEADERS = \
     $$PWD/statemachine.h  \
     $$PWD/timeouttransition.h \
     $$PWD/statemachineforeign.h
+
+CONFIG += qmltypes install_qmltypes
 
 load(qml_plugin)

@@ -50,9 +50,6 @@
     the view should be scrolled to.
 
     \snippet tableview/gameoflife/main.qml model
-    The model that we use is a custom C++ class that we register
-    in the QML system:
-    \snippet tableview/gameoflife/main.cpp registertype
 
     \section1 The C++ Model
 
@@ -61,7 +58,8 @@
     used as the model of our TableView component. Therefore, it needs to
     implement some functions so the TableView component can interact with
     the model. As you can see in the \c private part of the class, the model
-    uses a fixed-size array to store the current state of all the cells.
+    uses a fixed-size array to store the current state of all the cells. We
+    also use the QML_ELEMENT macro in order to expose the class to QML.
 
     \snippet tableview/gameoflife/gameoflifemodel.cpp modelsize
     Here, the \c rowCount and \c columnCount methods are implemented so

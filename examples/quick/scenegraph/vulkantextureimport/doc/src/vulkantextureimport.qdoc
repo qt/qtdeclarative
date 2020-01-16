@@ -1,0 +1,48 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example scenegraph/vulkantextureimport
+    \title Scene Graph - Vulkan Texture Import
+    \ingroup qtquickexamples
+    \brief Shows how to use a texture created directly with use a texture created directly withulkan.
+
+    \image vulkantextureimport-example.jpg
+
+
+    The Vulkan Texture Import example shows how an application can import and
+    use a
+    \l{https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkImage.html}
+    {VkImage} in the Qt Quick scene. This provides an alternative to the \l{Scene Graph -
+    Vulkan Under QML}{underlay}, overlay, or \l{Scene Graph - Custom Rendering
+    with QSGRenderNode}{render node} approaches when it comes to integrating
+    native Vulkan rendering.
+
+    This example is equivalent in most ways to the \l{Scene Graph - Metal Texture Import}{Metal Texture Import}
+    example. The Vulkan rendering code is taken from the \l{Scene Graph - Vulkan Under QML}{Vulkan Under QML} example.
+
+  */

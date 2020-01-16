@@ -97,9 +97,13 @@ void QQmlTypeModule::add(QQmlTypePrivate *type)
 
     QList<QQmlTypePrivate *> &list = d->typeHash[type->elementName];
     for (int ii = 0; ii < list.count(); ++ii) {
-        Q_ASSERT(list.at(ii));
-        if (list.at(ii)->version_min < type->version_min) {
+        QQmlTypePrivate *in_list = list.at(ii);
+        Q_ASSERT(in_list);
+        if (in_list->version_min < type->version_min) {
             list.insert(ii, type);
+            return;
+        } else if (in_list->version_min == type->version_min) {
+            list[ii] = type;
             return;
         }
     }

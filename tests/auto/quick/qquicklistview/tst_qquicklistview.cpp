@@ -49,6 +49,7 @@
 #include "incrementalmodel.h"
 #include "proxytestinnermodel.h"
 #include "randomsortmodel.h"
+#include "reusemodel.h"
 #include <math.h>
 
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
@@ -268,6 +269,7 @@ private slots:
     void QTBUG_61269_appendDuringScrollDown_data();
     void QTBUG_50097_stickyHeader_positionViewAtIndex();
     void QTBUG_63974_stickyHeader_positionViewAtIndex_Contain();
+    void QTBUG_66163_setModelViewPortSizeChange();
     void itemFiltered();
     void releaseItems();
 
@@ -280,8 +282,13 @@ private slots:
     void setPositionOnLayout();
     void touchCancel();
     void resizeAfterComponentComplete();
+    void dragOverFloatingHeaderOrFooter();
 
     void delegateWithRequiredProperties();
+
+    void reuse_reuseIsOffByDefault();
+    void reuse_checkThatItemsAreReused();
+    void moveObjectModelItemToAnotherObjectModel();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -2901,7 +2908,11 @@ void tst_QQuickListView::currentIndex()
 
     // empty model should reset currentIndex to -1
     QaimModel emptyModel;
+    window->rootObject()->setProperty("currentItemChangedCount", QVariant(0));
+    QVERIFY(QQmlProperty(window->rootObject(), "s").read().toString() != QLatin1String("-1"));
     ctxt->setContextProperty("testModel", &emptyModel);
+    QCOMPARE(QQmlProperty(window->rootObject(), "s").read().toString(), "-1");
+    QCOMPARE(window->rootObject()->property("currentItemChangedCount").toInt(), 1);
     QCOMPARE(listview->currentIndex(), -1);
 
     delete window;
@@ -8855,6 +8866,62 @@ void tst_QQuickListView::QTBUG_63974_stickyHeader_positionViewAtIndex_Contain()
     QTRY_COMPARE(listview->contentY(), -headerSize);
 }
 
+void tst_QQuickListView::QTBUG_66163_setModelViewPortSizeChange()
+{
+    QScopedPointer<QQuickView> window(createView());
+    QQmlComponent comp(window->engine());
+    comp.setData(R"(
+    import QtQuick 2.0
+
+    Item {
+        id: root
+        width: 400
+        height: 400
+
+        ListView {
+            id: view
+            objectName: "view"
+            anchors.fill: parent
+
+            model: 4
+            highlightRangeMode: ListView.StrictlyEnforceRange
+
+            delegate: Rectangle {
+                color: index % 2 ? "green" : "orange"
+                width: parent.width
+                height: 50
+            }
+
+            populate: Transition {
+                SequentialAnimation {
+                    NumberAnimation { property: "y"; from: 100; duration: 1000 }
+                }
+            }
+        }
+    }
+    )", QUrl("testData"));
+    auto root {qobject_cast<QQuickItem*>(comp.create())};
+    QVERIFY(root);
+    window->setContent(QUrl(), &comp, root);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    auto view = root->findChild<QQuickListView *>("view");
+    QVERIFY(view);
+    QVERIFY(QQuickTest::qWaitForItemPolished(view));
+    QSignalSpy spy(view, &QQuickListView::contentYChanged);
+    auto transition = view->property("populate").value<QQuickTransition*>();
+    QVERIFY(transition);
+    QQmlProperty model(view, "model");
+    QVERIFY(model.isValid());
+    model.write(5);
+    // Animations inside a Transition do not emit a finished signal
+    // so we cannot wait for them in that way
+    QTest::qWait(1100); // animation takes 1000ms, + 10% extra delay
+    /* the viewport should not have changed, thus there should not have
+       been any contentYChanged signal*/
+    QCOMPARE(spy.count(), 0);
+}
+
 void tst_QQuickListView::itemFiltered()
 {
     QStringListModel model(QStringList() << "one" << "two" << "three" << "four" << "five" << "six");
@@ -9156,6 +9223,196 @@ void tst_QQuickListView::delegateWithRequiredProperties()
         QObject *listView = window->rootObject();
         QVERIFY(listView);
     }
+}
+
+void tst_QQuickListView::reuse_reuseIsOffByDefault()
+{
+    // Check that delegate recycling is off by default. The reason is that
+    // ListView needs to be backwards compatible with legacy applications. And
+    // when using delegate recycling, there are certain differences, like that
+    // a delegates Component.onCompleted will just be called the first time the
+    // item is created, and not when it's reused.
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("listviewtest.qml"));
+    window->resize(640, 480);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listView = findItem<QQuickListView>(window->rootObject(), "list");
+    QVERIFY(listView != nullptr);
+    QVERIFY(!listView->reuseItems());
+}
+
+void tst_QQuickListView::reuse_checkThatItemsAreReused()
+{
+    // Flick up and down one page of items. Check that this results in the
+    // delegate items being reused once.
+    // Note that this is slightly different from tableview, which will reuse the items
+    // twice during a similar down-then-up flick. The reason is that listview fills up
+    // free space in the view with items  _before_ it release old items that have been
+    // flicked out. But changing this will break other auto tests (and perhaps legacy
+    // apps), so we have chosen to stick with this behavior for now.
+    QScopedPointer<QQuickView> window(createView());
+
+    ReuseModel model(100);
+    QQmlContext *ctxt = window->rootContext();
+    ctxt->setContextProperty("reuseModel", &model);
+
+    window->setSource(testFileUrl("reusedelegateitems.qml"));
+    window->resize(640, 480);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listView = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listView != nullptr);
+    const auto itemView_d = QQuickItemViewPrivate::get(listView);
+
+    QVERIFY(listView->reuseItems());
+
+    auto items = findItems<QQuickItem>(listView, "delegate");
+    const int initialItemCount = items.count();
+    QVERIFY(initialItemCount > 0);
+
+    // Sanity check that the size of the initial list of items match the count we tracked from QML
+    QCOMPARE(listView->property("delegatesCreatedCount").toInt(), initialItemCount);
+
+    // Go through all the initial items and check that they have not been reused yet
+    for (const auto item : qAsConst(items))
+        QCOMPARE(item->property("reusedCount").toInt(), 0);
+
+    // Flick one page down and count how many items we have created thus
+    // far. We expect this number to be twice as high as the initial count
+    // since we flicked one whole page.
+    const qreal delegateHeight = items.at(0)->height();
+    const qreal flickDistance = (initialItemCount * delegateHeight) + 1;
+    listView->setContentY(flickDistance);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listView));
+    const int countAfterDownFlick = listView->property("delegatesCreatedCount").toInt();
+    QCOMPARE(countAfterDownFlick, initialItemCount * 2);
+
+    // Check that the reuse pool is now populated. We expect all initial items to be pooled,
+    // except model index 0, which was never reused or released, since it's ListView.currentItem.
+    const int poolSizeAfterDownFlick = itemView_d->model->poolSize();
+    QCOMPARE(poolSizeAfterDownFlick, initialItemCount - 1);
+
+    // Go through all items and check that all model data inside the delegate
+    // have values updated according to their model index. Since model roles
+    // like 'display' are injected into the context in a special way by the
+    // QML model classes, we need to catch it through a binding instead (which is
+    // OK, since then we can also check that bindings are updated when reused).
+    items = findItems<QQuickItem>(listView, "delegate");
+    for (const auto item : qAsConst(items)) {
+        const QString display = item->property("displayBinding").toString();
+        const int modelIndex = item->property("modelIndex").toInt();
+        QVERIFY(modelIndex >= initialItemCount);
+        QCOMPARE(display, model.displayStringForRow(modelIndex));
+    }
+
+    // Flick one page up. This time there shouldn't be any new items created, so
+    // delegatesCreatedCount should remain unchanged. But while we reuse all the items
+    // in the pool during the flick, we also fill it up again with all the items that
+    // were inside the page that was flicked out.
+    listView->setContentY(0);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listView));
+    const int countAfterUpFlick = listView->property("delegatesCreatedCount").toInt();
+    const int poolSizeAfterUpFlick = itemView_d->model->poolSize();
+    QCOMPARE(countAfterUpFlick, countAfterDownFlick);
+    QCOMPARE(poolSizeAfterUpFlick, initialItemCount);
+
+    // Go through all items and check that they have been reused exactly once
+    // (except for ListView.currentItem, which was never released).
+    const auto listViewCurrentItem = listView->currentItem();
+    items = findItems<QQuickItem>(listView, "delegate");
+    for (const auto item : qAsConst(items)) {
+        const int reusedCount = item->property("reusedCount").toInt();
+        if (item == listViewCurrentItem)
+            QCOMPARE(reusedCount, 0);
+        else
+            QCOMPARE(reusedCount, 1);
+    }
+
+    // Go through all items again and check that all model data inside the delegate
+    // have correct values now that they have been reused.
+    items = findItems<QQuickItem>(listView, "delegate");
+    for (const auto item : qAsConst(items)) {
+        const QString display = item->property("displayBinding").toString();
+        const int modelIndex = item->property("modelIndex").toInt();
+        QVERIFY(modelIndex < initialItemCount);
+        QCOMPARE(display, model.displayStringForRow(modelIndex));
+    }
+}
+
+void tst_QQuickListView::dragOverFloatingHeaderOrFooter() // QTBUG-74046
+{
+    QQuickView *window = getView();
+    QQuickViewTestUtil::moveMouseAway(window);
+    window->setSource(testFileUrl("qtbug63974.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickListView *listview = qmlobject_cast<QQuickListView *>(window->rootObject());
+    QVERIFY(listview);
+    QCOMPARE(listview->contentY(), -20);
+
+    // Drag downwards from the header: the list shouldn't move
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(10,10));
+    for (int i = 0; i < 10; ++i)
+        QTest::mouseMove(window, QPoint(10, 10 + i * 10));
+    QCOMPARE(listview->isMoving(), false);
+    QCOMPARE(listview->contentY(), -20);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier);
+
+    // Drag upwards from the footer: the list shouldn't move
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(10,190));
+    for (int i = 0; i < 10; ++i)
+        QTest::mouseMove(window, QPoint(10, 190 - i * 10));
+    QCOMPARE(listview->isMoving(), false);
+    QCOMPARE(listview->contentY(), -20);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier);
+
+    // Drag upwards from the middle: the list should move
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(10,100));
+    for (int i = 0; i < 10 && listview->contentY() == -20; ++i)
+        QTest::mouseMove(window, QPoint(10, 100 - i * 10));
+    QVERIFY(listview->isMoving());
+    QVERIFY(listview->contentY() > -20);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier);
+
+    releaseView(window);
+}
+
+void tst_QQuickListView::moveObjectModelItemToAnotherObjectModel()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("moveObjectModelItemToAnotherObjectModel.qml"));
+    QCOMPARE(window->status(), QQuickView::Ready);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QObject *root = window->rootObject();
+    QVERIFY(root);
+
+    const QQuickListView *listView1 = root->property("listView1").value<QQuickListView*>();
+    QVERIFY(listView1);
+
+    const QQuickListView *listView2 = root->property("listView2").value<QQuickListView*>();
+    QVERIFY(listView2);
+
+    const QQuickItem *redRect = listView1->itemAtIndex(0);
+    QVERIFY(redRect);
+    QCOMPARE(redRect->objectName(), QString::fromLatin1("redRect"));
+
+    QVERIFY(QMetaObject::invokeMethod(root, "moveRedRectToModel2"));
+    QVERIFY(QQuickTest::qIsPolishScheduled(listView2));
+    QVERIFY(QQuickTest::qWaitForItemPolished(listView2));
+    QVERIFY(redRect->isVisible());
+    QVERIFY(!QQuickItemPrivate::get(redRect)->culled);
+
+    QVERIFY(QMetaObject::invokeMethod(root, "moveRedRectToModel1"));
+    QVERIFY(QQuickTest::qIsPolishScheduled(listView1));
+    QVERIFY(QQuickTest::qWaitForItemPolished(listView1));
+    QVERIFY(redRect->isVisible());
+    QVERIFY(!QQuickItemPrivate::get(redRect)->culled);
 }
 
 QTEST_MAIN(tst_QQuickListView)

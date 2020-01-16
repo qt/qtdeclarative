@@ -52,6 +52,7 @@
 
 #include "qv4object_p.h"
 #include "qv4functionobject_p.h"
+#include <QtCore/qarraydatapointer.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -71,12 +72,14 @@ struct Q_QML_PRIVATE_EXPORT SharedArrayBuffer : Object {
     void init(size_t length);
     void init(const QByteArray& array);
     void destroy();
-    QTypedArrayData<char> *data;
+    std::aligned_storage_t<sizeof(QArrayDataPointer<char>), alignof(QArrayDataPointer<char>)> d;
+    const QArrayDataPointer<char> &data() const { return *reinterpret_cast<const QArrayDataPointer<char> *>(&d); }
+    QArrayDataPointer<char> &data()  { return *reinterpret_cast<QArrayDataPointer<char> *>(&d); }
     bool isShared;
 
-    uint byteLength() const { return data ? data->size : 0; }
+    uint byteLength() const { return data().size; }
 
-    bool isDetachedBuffer() const { return !data; }
+    bool isDetachedBuffer() const { return data().isNull(); }
     bool isSharedArrayBuffer() const { return isShared; }
 };
 
@@ -90,9 +93,7 @@ struct Q_QML_PRIVATE_EXPORT ArrayBuffer : SharedArrayBuffer {
         isShared = false;
     }
     void detachArrayBuffer() {
-        if (data && !data->ref.deref())
-            QTypedArrayData<char>::deallocate(data);
-        data = nullptr;
+        data().clear();
     }
 };
 
@@ -124,11 +125,11 @@ struct Q_QML_PRIVATE_EXPORT SharedArrayBuffer : Object
 
     QByteArray asByteArray() const;
     uint byteLength() const { return d()->byteLength(); }
-    char *data() { Q_ASSERT(d()->data); return d()->data->data(); }
-    const char *constData() { Q_ASSERT(d()->data); return d()->data->data(); }
+    char *data() { return d()->data()->data(); }
+    const char *constData() { return d()->data()->data(); }
 
-    bool isShared() { return d()->data->ref.isShared(); }
-    bool isDetachedBuffer() const { return !d()->data; }
+    bool isShared() { return d()->data()->isShared(); }
+    bool isDetachedBuffer() const { return d()->data().isNull(); }
     bool isSharedArrayBuffer() const { return d()->isShared; }
 };
 
@@ -140,11 +141,11 @@ struct Q_QML_PRIVATE_EXPORT ArrayBuffer : SharedArrayBuffer
 
     QByteArray asByteArray() const;
     uint byteLength() const { return d()->byteLength(); }
-    char *data() { detach(); return d()->data ? d()->data->data() : nullptr; }
+    char *data() { if (d()->data().needsDetach()) detach(); return d()->data().data(); }
     // ### is that detach needed?
-    const char *constData() { detach(); return d()->data ? d()->data->data() : nullptr; }
+    const char *constData() const { return d()->data().data(); }
 
-    bool isShared() { return d()->data && d()->data->ref.isShared(); }
+    bool isShared() { return d()->data()->isShared(); }
     void detach();
     void detachArrayBuffer() { d()->detachArrayBuffer(); }
 };

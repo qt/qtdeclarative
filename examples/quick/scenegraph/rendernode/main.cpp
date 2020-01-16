@@ -58,10 +58,6 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
-//! [1]
-    qmlRegisterTypesAndRevisions<CustomRenderItem>("SceneGraphRendering", 2);
-//! [1]
-
     QQuickView view;
 
     QCoreApplication::setApplicationName("Qt Scene Graph Render Node Example");

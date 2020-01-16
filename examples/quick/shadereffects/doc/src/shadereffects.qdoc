@@ -59,21 +59,6 @@
     Direct 3D, or OpenGL. Qt automatically selects the file under the \c qsb
     selector, for example \c{shaders/+qsb/wobble.frag}, when present.
 
-    On the traditional code path, which can mean using OpenGL or Direct3D 12,
-    file selectors are used to select the correct variant at runtime. Based on
-    the Qt Quick backend in use, Qt will automatically select either
-    \c{shaders/wobble.frag} with the GLSL source code or
-    \c{shaders/+hlsl/wobble.frag} with the HLSL source code.
-
-    \note For simplicity shader source code is used in all variants of the
-    files. However, with the Direct3D backend of Qt Quick pre-compiled shaders
-    are also supported. For example, try the following commands in the
-    \c{content/shaders/+hlsl} directory: \c{move wobble.frag wobble.frag.src}
-    followed by \c{fxc /E main /T ps_5_0 /Fo wobble.frag wobble.frag.src}. Now
-    \c wobble.frag contains Direct3D bytecode and that is what gets shipped
-    with the application instead of the shader source. Further changes are not
-    necessary, the application will function like before.
-
     You can use any custom property on the ShaderEffect in your shader. This
     makes animated shader code very easy:
     \snippet shadereffects/shadereffects.qml properties

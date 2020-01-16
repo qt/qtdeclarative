@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -90,7 +90,7 @@ class QQuickKeyEvent : public QObject
 
 public:
     QQuickKeyEvent()
-        : event(QEvent::None, 0, nullptr)
+        : event(QEvent::None, 0, { })
     {}
 
     void reset(QEvent::Type type, int key, Qt::KeyboardModifiers modifiers,
@@ -144,12 +144,11 @@ public:
     QQuickMouseEvent()
       : _buttons(Qt::NoButton), _modifiers(Qt::NoModifier)
       , _wasHeld(false), _isClick(false), _accepted(false)
-      , _flags(Qt::MouseEventFlags(nullptr))
     {}
 
     void reset(qreal x, qreal y, Qt::MouseButton button, Qt::MouseButtons buttons,
                Qt::KeyboardModifiers modifiers, bool isClick = false, bool wasHeld = false,
-               Qt::MouseEventFlags flags = nullptr)
+               Qt::MouseEventFlags flags = { })
     {
         _x = x;
         _y = y;
@@ -601,6 +600,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerScrollEvent : public QQuickSinglePoint
     Q_PROPERTY(bool hasAngleDelta READ hasAngleDelta CONSTANT)
     Q_PROPERTY(bool hasPixelDelta READ hasPixelDelta CONSTANT)
     Q_PROPERTY(bool inverted READ isInverted CONSTANT)
+
+    QML_NAMED_ELEMENT(PointerScrollEvent)
+    QML_UNCREATABLE("PointerScrollEvent is only available via the WheelHandler::wheel signal.")
+    QML_ADDED_IN_MINOR_VERSION(14)
 
 public:
     QQuickPointerScrollEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)

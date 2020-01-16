@@ -341,7 +341,17 @@ static struct InstrCount {
     }
 #endif
 
-#define STACK_VALUE(temp) stack[temp]
+static inline QV4::Value &stackValue(QV4::Value *stack, size_t slot, const CppStackFrame *frame)
+{
+    Q_ASSERT(slot < CallData::HeaderSize() / sizeof(QV4::StaticValue)
+                    + frame->jsFrame->argc()
+                    + frame->v4Function->compiledFunction->nRegisters);
+    Q_UNUSED(frame);
+
+    return stack[slot];
+}
+
+#define STACK_VALUE(temp) stackValue(stack, temp, frame)
 
 // qv4scopedvalue_p.h also defines a CHECK_EXCEPTION macro
 #ifdef CHECK_EXCEPTION
@@ -424,7 +434,7 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
 
     Function *function = frame->v4Function;
     Q_TRACE_SCOPE(QQmlV4_function_call, engine, function->name()->toQString(),
-                  function->compilationUnit->fileName(),
+                  function->executableCompilationUnit()->fileName(),
                   function->compiledFunction->location.line,
                   function->compiledFunction->location.column);
     Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling
@@ -521,14 +531,14 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(LoadImport)
 
     MOTH_BEGIN_INSTR(LoadLocal)
-        auto cc = static_cast<Heap::CallContext *>(stack[CallData::Context].m());
+        auto cc = static_cast<Heap::CallContext *>(STACK_VALUE(CallData::Context).m());
         Q_ASSERT(cc->type != QV4::Heap::CallContext::Type_GlobalContext);
         acc = cc->locals[index].asReturnedValue();
     MOTH_END_INSTR(LoadLocal)
 
     MOTH_BEGIN_INSTR(StoreLocal)
         CHECK_EXCEPTION;
-        auto cc = static_cast<Heap::CallContext *>(stack[CallData::Context].m());
+        auto cc = static_cast<Heap::CallContext *>(STACK_VALUE(CallData::Context).m());
         Q_ASSERT(cc->type != QV4::Heap::CallContext::Type_GlobalContext);
         QV4::WriteBarrier::write(engine, cc, cc->locals.values[index].data_ptr(), acc);
     MOTH_END_INSTR(StoreLocal)
@@ -714,7 +724,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(CallProperty)
         STORE_IP();
-        acc = Runtime::CallProperty::call(engine, stack[base], name, stack + argv, argc);
+        acc = Runtime::CallProperty::call(engine, STACK_VALUE(base), name, stack + argv, argc);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallProperty)
 
@@ -722,21 +732,21 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         STORE_IP();
         Lookup *l = function->executableCompilationUnit()->runtimeLookups + lookupIndex;
 
-        if (stack[base].isNullOrUndefined()) {
+        if (STACK_VALUE(base).isNullOrUndefined()) {
             QString message = QStringLiteral("Cannot call method '%1' of %2")
                     .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString())
-                    .arg(stack[base].toQStringNoThrow());
+                    .arg(STACK_VALUE(base).toQStringNoThrow());
             acc = engine->throwTypeError(message);
             goto handleUnwind;
         }
 
         // ok to have the value on the stack here
-        Value f = Value::fromReturnedValue(l->getter(l, engine, stack[base]));
+        Value f = Value::fromReturnedValue(l->getter(l, engine, STACK_VALUE(base)));
 
         if (Q_UNLIKELY(!f.isFunctionObject())) {
             QString message = QStringLiteral("Property '%1' of object %2 is not a function")
                     .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString())
-                    .arg(stack[base].toQStringNoThrow());
+                    .arg(STACK_VALUE(base).toQStringNoThrow());
             acc = engine->throwTypeError(message);
             goto handleUnwind;
         }
@@ -747,7 +757,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(CallElement)
         STORE_IP();
-        acc = Runtime::CallElement::call(engine, stack[base], STACK_VALUE(index), stack + argv, argc);
+        acc = Runtime::CallElement::call(engine, STACK_VALUE(base), STACK_VALUE(index), stack + argv, argc);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallElement)
 
@@ -864,7 +874,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(PushWithContext)
         STORE_IP();
         STORE_ACC();
-        acc = Runtime::PushWithContext::call(engine, stack[CallData::Accumulator]);
+        acc = Runtime::PushWithContext::call(engine, STACK_VALUE(CallData::Accumulator));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(PushWithContext)
 
@@ -971,12 +981,13 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(ConvertThisToObject)
         STORE_ACC();
-        stack[CallData::This] = Runtime::ConvertThisToObject::call(engine, stack[CallData::This]);
+        stack[CallData::This] = Runtime::ConvertThisToObject::call(
+                    engine, STACK_VALUE(CallData::This));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(ConvertThisToObject)
 
     MOTH_BEGIN_INSTR(LoadSuperConstructor)
-        acc = Runtime::LoadSuperConstructor::call(engine, stack[CallData::Function]);
+        acc = Runtime::LoadSuperConstructor::call(engine, STACK_VALUE(CallData::Function));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadSuperConstructor)
 

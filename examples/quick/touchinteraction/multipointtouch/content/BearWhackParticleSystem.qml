@@ -52,6 +52,9 @@ import QtQuick.Particles 2.0
 
 ParticleSystem {
     id: particleSystem
+
+    property int score
+
     function explode(x,y) {
         fireEmitter.burst(100,x,y);
     }
@@ -116,13 +119,13 @@ ParticleSystem {
         once: true
         y: parent.height - 32
         groups: "bears"
-        onAffectParticles: {
+        onAffectParticles: function(particles) {
             for (var i=0;i<particles.length; i++) {
                 if (particles[i].animationIndex != 0) {
-                    score++;
+                    particleSystem.score++;
                     bloodEmitter.burst(100, particles[i].x, particles[i].y);
                 } else {
-                    score--;
+                    particleSystem.score--;
                     heartEmitter.burst(100, particles[i].x, particles[i].y);
                 }
                 particles[i].update = 1.0;

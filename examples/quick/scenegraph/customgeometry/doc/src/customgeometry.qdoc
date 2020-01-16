@@ -169,11 +169,16 @@
     \snippet scenegraph/customgeometry/main.cpp 1
 
     The application is a straightforward QML application, with a
-    QGuiApplication and a QQuickView that we pass a .qml file. To make
-    use of the BezierCurve item, we need to register it in the QML
-    engine, using the qmlRegisterType() function. We give it the name
-    BezierCurve and make it part of the \c {CustomGeometry 1.0}
-    module.
+    QGuiApplication and a QQuickView that we pass a .qml file.
+
+    \snippet scenegraph/customgeometry/beziercurve.h 3
+
+    To make use of the BezierCurve item, we need to register it in the QML
+    engine, using the QML_ELEMENT macro. This gives it the name
+    BezierCurve and makes it part of the \c {CustomGeometry 1.0}
+    module as defined in the customgeometry.pro file:
+
+    \quotefile scenegraph/customgeometry/customgeometry.pro
 
     As the bezier curve is drawn using GL_LINE_STRIP, we specify that
     the view should be multisampled to get antialiasing. This is not

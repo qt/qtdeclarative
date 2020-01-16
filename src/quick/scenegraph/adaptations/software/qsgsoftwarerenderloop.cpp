@@ -52,6 +52,8 @@
 
 #include <QtGui/QBackingStore>
 
+#include <qtquick_tracepoints_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QSGSoftwareRenderLoop::QSGSoftwareRenderLoop()
@@ -133,20 +135,25 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window, bool isNewExpose)
         if (!m_windows.contains(window))
             return;
     }
+
+    Q_TRACE_SCOPE(QSG_renderWindow)
     QElapsedTimer renderTimer;
     qint64 renderTime = 0, syncTime = 0, polishTime = 0;
     bool profileFrames = QSG_RASTER_LOG_TIME_RENDERLOOP().isDebugEnabled();
     if (profileFrames)
         renderTimer.start();
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphPolishFrame);
+    Q_TRACE(QSG_polishItems_entry);
 
     cd->polishItems();
 
     if (profileFrames)
         polishTime = renderTimer.nsecsElapsed();
+    Q_TRACE(QSG_polishItems_exit);
     Q_QUICK_SG_PROFILE_SWITCH(QQuickProfiler::SceneGraphPolishFrame,
                               QQuickProfiler::SceneGraphRenderLoopFrame,
                               QQuickProfiler::SceneGraphPolishPolish);
+    Q_TRACE(QSG_sync_entry);
 
     emit window->afterAnimating();
 
@@ -155,8 +162,10 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window, bool isNewExpose)
 
     if (profileFrames)
         syncTime = renderTimer.nsecsElapsed();
+    Q_TRACE(QSG_sync_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
                               QQuickProfiler::SceneGraphRenderLoopSync);
+    Q_TRACE(QSG_render_entry);
 
     //Tell the renderer about the windows backing store
     auto softwareRenderer = static_cast<QSGSoftwareRenderer*>(cd->renderer);
@@ -167,8 +176,10 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window, bool isNewExpose)
 
     if (profileFrames)
         renderTime = renderTimer.nsecsElapsed();
+    Q_TRACE(QSG_render_exit);
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
                               QQuickProfiler::SceneGraphRenderLoopRender);
+    Q_TRACE(QSG_swap_entry);
 
     if (data.grabOnly) {
         grabContent = m_backingStores[window]->handle()->toImage();
@@ -187,6 +198,7 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window, bool isNewExpose)
     qint64 swapTime = 0;
     if (profileFrames)
         swapTime = renderTimer.nsecsElapsed();
+    Q_TRACE(QSG_swap_exit);
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame,
                            QQuickProfiler::SceneGraphRenderLoopSwap);
 

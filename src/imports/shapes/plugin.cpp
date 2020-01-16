@@ -56,12 +56,8 @@ public:
 
     void registerTypes(const char *uri) override
     {
-        Q_ASSERT(QByteArray(uri) == QByteArray("QtQuick.Shapes"));
-        qmlRegisterTypesAndRevisions<QQuickShape, QQuickShapePath, QQuickShapeGradient,
-                                     QQuickShapeLinearGradient, QQuickShapeRadialGradient,
-                                     QQuickShapeConicalGradient>(uri, 1);
-
-        qmlRegisterModule(uri, 1, 15);
+        Q_UNUSED(uri);
+        QQuickShapesModule::defineModule();
     }
 };
 

@@ -3,14 +3,15 @@
     "depends": [
         "core-private",
         "qml-private",
+        "gui",
         "gui-private",
         "qmlmodels-private"
     ],
+    "condition": "module.gui",
     "testDir": "../../config.tests",
 
     "commandline": {
         "options": {
-            "d3d12": "boolean",
             "quick-animatedimage": "boolean",
             "quick-canvas": "boolean",
             "quick-designer": "boolean",
@@ -26,24 +27,7 @@
         }
     },
 
-    "tests": {
-        "d3d12": {
-            "label": "Direct3D 12",
-            "type": "compile",
-            "test": "d3d12"
-        }
-    },
-
     "features": {
-        "d3d12": {
-            "label": "Direct3D 12",
-            "purpose": "Provides a Direct3D 12 backend for the scenegraph.",
-            "section": "Qt Quick",
-            "condition": "tests.d3d12",
-            "output": [
-                "publicFeature"
-            ]
-        },
         "quick-animatedimage": {
             "label": "AnimatedImage item",
             "purpose": "Provides the AnimatedImage item.",
@@ -200,7 +184,6 @@
         {
             "section": "Qt Quick",
             "entries": [
-                "d3d12",
                 "quick-animatedimage",
                 "quick-canvas",
                 "quick-designer",

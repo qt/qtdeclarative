@@ -6,7 +6,7 @@ Item {
 
     Image {
         id: image;
-        source: "./face-smile.png"
+        source: "face-smile.png"
         visible: false
         asynchronous: true
     }
@@ -14,15 +14,7 @@ Item {
     ShaderEffect {
         anchors.fill: image
         property variant source: image
-
-        fragmentShader: "
-        uniform lowp sampler2D source;
-        varying highp vec2 qt_TexCoord0;
-        uniform lowp float qt_Opacity;
-        void main() {
-            gl_FragColor = vec4(qt_TexCoord0.x, qt_TexCoord0.y, 0, 1) + texture2D(source, qt_TexCoord0);
-        }
-        "
+        fragmentShader: "qrc:shaders/gradient2.frag"
         visible: image.status == Image.Ready
     }
 }

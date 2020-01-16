@@ -2073,11 +2073,15 @@ void tst_qquicktextinput::validators()
     QTest::keyPress(&window, Qt::Key_Comma);
     QTest::keyRelease(&window, Qt::Key_Comma, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12,"));
-    QCOMPARE(dblInput->hasAcceptableInput(), true);
-    QTest::keyPress(&window, Qt::Key_1);
-    QTest::keyRelease(&window, Qt::Key_1, Qt::NoModifier);
-    QTRY_COMPARE(dblInput->text(), QLatin1String("12,"));
-    QCOMPARE(dblInput->hasAcceptableInput(), true);
+    int extraSignals = 2;
+    if (dblInput->hasAcceptableInput()) {
+        // TODO: old behavior of QDoubleValidator - remove when merged from qtbase
+        QTest::keyPress(&window, Qt::Key_1);
+        QTest::keyRelease(&window, Qt::Key_1, Qt::NoModifier);
+        QTRY_COMPARE(dblInput->text(), QLatin1String("12,"));
+        QCOMPARE(dblInput->hasAcceptableInput(), true);
+        extraSignals = 0;
+    }
     dblValidator->setLocaleName(deLocale.name());
     QCOMPARE(dblInput->hasAcceptableInput(), true);
     QTest::keyPress(&window, Qt::Key_1);
@@ -2106,84 +2110,84 @@ void tst_qquicktextinput::validators()
     QTRY_COMPARE(dblInput->text(), QLatin1String("12."));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
     QCOMPARE(dblInput->property("acceptable").toBool(), true);
-    QCOMPARE(dblSpy.count(), 1);
+    QCOMPARE(dblSpy.count(), 1 + extraSignals);
     QTest::keyPress(&window, Qt::Key_1);
     QTest::keyRelease(&window, Qt::Key_1, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.1"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
     QCOMPARE(dblInput->property("acceptable").toBool(), true);
-    QCOMPARE(dblSpy.count(), 1);
+    QCOMPARE(dblSpy.count(), 1 + extraSignals);
     QTest::keyPress(&window, Qt::Key_1);
     QTest::keyRelease(&window, Qt::Key_1, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.11"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
     QCOMPARE(dblInput->property("acceptable").toBool(), true);
-    QCOMPARE(dblSpy.count(), 1);
+    QCOMPARE(dblSpy.count(), 1 + extraSignals);
     QTest::keyPress(&window, Qt::Key_1);
     QTest::keyRelease(&window, Qt::Key_1, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.11"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
     QCOMPARE(dblInput->property("acceptable").toBool(), true);
-    QCOMPARE(dblSpy.count(), 1);
+    QCOMPARE(dblSpy.count(), 1 + extraSignals);
 
     // Ensure the validator doesn't prevent characters being removed.
     dblInput->setValidator(intInput->validator());
     QCOMPARE(dblInput->text(), QLatin1String("12.11"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
     QCOMPARE(dblInput->property("acceptable").toBool(), false);
-    QCOMPARE(dblSpy.count(), 2);
+    QCOMPARE(dblSpy.count(), 2 + extraSignals);
     QTest::keyPress(&window, Qt::Key_Backspace);
     QTest::keyRelease(&window, Qt::Key_Backspace, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.1"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
     QCOMPARE(dblInput->property("acceptable").toBool(), false);
-    QCOMPARE(dblSpy.count(), 2);
+    QCOMPARE(dblSpy.count(), 2 + extraSignals);
     // Once unacceptable input is in anything goes until it reaches an acceptable state again.
     QTest::keyPress(&window, Qt::Key_1);
     QTest::keyRelease(&window, Qt::Key_1, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.11"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
-    QCOMPARE(dblSpy.count(), 2);
+    QCOMPARE(dblSpy.count(), 2 + extraSignals);
     QTest::keyPress(&window, Qt::Key_Backspace);
     QTest::keyRelease(&window, Qt::Key_Backspace, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.1"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
     QCOMPARE(dblInput->property("acceptable").toBool(), false);
-    QCOMPARE(dblSpy.count(), 2);
+    QCOMPARE(dblSpy.count(), 2 + extraSignals);
     QTest::keyPress(&window, Qt::Key_Backspace);
     QTest::keyRelease(&window, Qt::Key_Backspace, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12."));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
     QCOMPARE(dblInput->property("acceptable").toBool(), false);
-    QCOMPARE(dblSpy.count(), 2);
+    QCOMPARE(dblSpy.count(), 2 + extraSignals);
     QTest::keyPress(&window, Qt::Key_Backspace);
     QTest::keyRelease(&window, Qt::Key_Backspace, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
     QCOMPARE(dblInput->property("acceptable").toBool(), false);
-    QCOMPARE(dblSpy.count(), 2);
+    QCOMPARE(dblSpy.count(), 2 + extraSignals);
     QTest::keyPress(&window, Qt::Key_Backspace);
     QTest::keyRelease(&window, Qt::Key_Backspace, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("1"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
     QCOMPARE(dblInput->property("acceptable").toBool(), false);
-    QCOMPARE(dblSpy.count(), 2);
+    QCOMPARE(dblSpy.count(), 2 + extraSignals);
     QTest::keyPress(&window, Qt::Key_1);
     QTest::keyRelease(&window, Qt::Key_1, Qt::NoModifier);
     QCOMPARE(dblInput->text(), QLatin1String("11"));
     QCOMPARE(dblInput->property("acceptable").toBool(), true);
     QCOMPARE(dblInput->hasAcceptableInput(), true);
-    QCOMPARE(dblSpy.count(), 3);
+    QCOMPARE(dblSpy.count(), 3 + extraSignals);
 
     // Changing the validator properties will re-evaluate whether the input is acceptable.
     intValidator->setTop(10);
     QCOMPARE(dblInput->property("acceptable").toBool(), false);
     QCOMPARE(dblInput->hasAcceptableInput(), false);
-    QCOMPARE(dblSpy.count(), 4);
+    QCOMPARE(dblSpy.count(), 4 + extraSignals);
     intValidator->setTop(12);
     QCOMPARE(dblInput->property("acceptable").toBool(), true);
     QCOMPARE(dblInput->hasAcceptableInput(), true);
-    QCOMPARE(dblSpy.count(), 5);
+    QCOMPARE(dblSpy.count(), 5 + extraSignals);
 
     QQuickTextInput *strInput = qobject_cast<QQuickTextInput *>(qvariant_cast<QObject *>(window.rootObject()->property("strInput")));
     QVERIFY(strInput);
@@ -6408,8 +6412,20 @@ void tst_qquicktextinput::setInputMask_data()
         QTest::newRow(QString(insert_mode + "blank=input").toLatin1())
             << QString("9999;0")
             << QString("2004")
+            << QString("24")
             << QString("2004")
-            << QString("2004")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "any_opt").toLatin1())
+            << QString("@xxx@")
+            << QString("@A C@")
+            << QString("@AC@")
+            << QString("@A C@")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "any_req").toLatin1())
+            << QString("@XXX@")
+            << QString("@A C@")
+            << QString("@AC@@")
+            << QString("@AC@@")
             << bool(insert_text);
     }
 }
@@ -6428,6 +6444,14 @@ void tst_qquicktextinput::setInputMask()
     QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
     QVERIFY(textInput != nullptr);
 
+    // [QTBUG-80190] check if setting the same property value again doesn't emit an
+    // inputMaskChanged signal
+    QString unescapedMask = mask;   // mask is escaped, because '\' is also escape in a JS string
+    unescapedMask.replace(QLatin1String("\\\\"), QLatin1String("\\"));  // simple unescape
+    QSignalSpy spy(textInput, SIGNAL(inputMaskChanged(const QString &)));
+    textInput->setInputMask(unescapedMask);
+    QCOMPARE(spy.count(), 0);
+
     // then either insert using insert() or keyboard
     if (insert_text) {
         textInput->insert(0, input);
@@ -6443,9 +6467,6 @@ void tst_qquicktextinput::setInputMask()
         for (int i = 0; i < input.length(); i++)
             QTest::keyClick(&window, input.at(i).toLatin1());
     }
-
-    QEXPECT_FAIL( "keys blank=input", "To eat blanks or not? Known issue. Task 43172", Abort);
-    QEXPECT_FAIL( "insert blank=input", "To eat blanks or not? Known issue. Task 43172", Abort);
 
     QCOMPARE(textInput->text(), expectedText);
     QCOMPARE(textInput->displayText(), expectedDisplay);

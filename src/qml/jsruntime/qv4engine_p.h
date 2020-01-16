@@ -91,7 +91,14 @@ class PageAllocation;
 
 QT_BEGIN_NAMESPACE
 
-namespace QV4 { struct QObjectMethod; }
+class QNetworkAccessManager;
+
+namespace QV4 {
+struct QObjectMethod;
+namespace detail {
+QNetworkAccessManager *getNetworkAccessManager(ExecutionEngine *engine);
+}
+}
 
 // Used to allow a QObject method take and return raw V4 handles without having to expose
 // 48 in the public API.
@@ -347,6 +354,8 @@ public:
     EvalFunction *evalFunction() const { return reinterpret_cast<EvalFunction *>(jsObjects + Eval_Function); }
     FunctionObject *getStackFunction() const { return reinterpret_cast<FunctionObject *>(jsObjects + GetStack_Function); }
     FunctionObject *thrower() const { return reinterpret_cast<FunctionObject *>(jsObjects + ThrowerObject); }
+
+    QNetworkAccessManager* (*networkAccessManager)(ExecutionEngine*)  = detail::getNetworkAccessManager;
 
     enum JSStrings {
         String_Empty,

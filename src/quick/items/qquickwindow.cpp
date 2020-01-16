@@ -527,7 +527,7 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             renderer->setDeviceRect(rect);
             renderer->setViewportRect(rect);
             const bool flipY = rhi ? !rhi->isYUpInNDC() : false;
-            QSGAbstractRenderer::MatrixTransformFlags matrixFlags = 0;
+            QSGAbstractRenderer::MatrixTransformFlags matrixFlags;
             if (flipY)
                 matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
             renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), logicalSize), matrixFlags);
@@ -1768,6 +1768,8 @@ bool QQuickWindow::event(QEvent *e)
 
     if (e->type() == QEvent::Type(QQuickWindowPrivate::FullUpdateRequest))
         update();
+    else if (e->type() == QEvent::Type(QQuickWindowPrivate::TriggerContextCreationFailure))
+        d->windowManager->handleContextCreationFailure(this);
 
     return QWindow::event(e);
 }
@@ -3254,10 +3256,9 @@ bool QQuickWindowPrivate::isRenderable() const
 
 void QQuickWindowPrivate::contextCreationFailureMessage(const QSurfaceFormat &format,
                                                         QString *translatedMessage,
-                                                        QString *untranslatedMessage,
-                                                        bool isEs)
+                                                        QString *untranslatedMessage)
 {
-    const QString contextType = QLatin1String(isEs ? "EGL" : "OpenGL");
+    const QString contextType = QLatin1String("OpenGL");
     QString formatStr;
     QDebug(&formatStr) << format;
 #if defined(Q_OS_WIN32)
@@ -3280,6 +3281,16 @@ void QQuickWindowPrivate::contextCreationFailureMessage(const QSurfaceFormat &fo
     *translatedMessage = QQuickWindow::tr(msg).arg(contextType, formatStr);
     *untranslatedMessage = QString::fromLatin1(msg).arg(contextType, formatStr);
 #endif // !Q_OS_WIN32
+}
+
+void QQuickWindowPrivate::rhiCreationFailureMessage(const QString &backendName,
+                                                    QString *translatedMessage,
+                                                    QString *untranslatedMessage)
+{
+    const char msg[] = QT_TRANSLATE_NOOP("QQuickWindow",
+        "Failed to initialize graphics backend for %1.");
+    *translatedMessage = QQuickWindow::tr(msg).arg(backendName);
+    *untranslatedMessage = QString::fromLatin1(msg).arg(backendName);
 }
 
 #if QT_DEPRECATED_SINCE(5, 8)
@@ -4034,7 +4045,7 @@ QImage QQuickWindow::grabWindow()
     Q_D(QQuickWindow);
 
     if (!isVisible() && !d->renderControl) {
-        // backends like software and d3d12 can grab regardless of the window state
+        // backends like software can grab regardless of the window state
         if (d->windowManager && (d->windowManager->flags() & QSGRenderLoop::SupportsGrabWithoutExpose))
             return d->windowManager->grab(this);
     }
@@ -4444,7 +4455,7 @@ bool QQuickWindow::clearBeforeRendering() const
 
 QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
 {
-    return createTextureFromImage(image, nullptr);
+    return createTextureFromImage(image, {});
 }
 
 
@@ -4603,7 +4614,7 @@ QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, Create
     \a nativeLayout is only used for APIs like Vulkan. When applicable, it must
     specify the current image layout, such as, a VkImageLayout value.
 
-    \sa sceneGraphInitialized(), QSGTextures
+    \sa sceneGraphInitialized(), QSGTexture, QSGTexture::nativeTexture()
 
     \since 5.14
  */
@@ -5502,9 +5513,6 @@ void QQuickWindow::setSceneGraphBackend(QSGRendererInterface::GraphicsApi api)
     switch (api) {
     case QSGRendererInterface::Software:
         setSceneGraphBackend(QStringLiteral("software"));
-        break;
-    case QSGRendererInterface::Direct3D12:
-        setSceneGraphBackend(QStringLiteral("d3d12"));
         break;
     default:
         break;

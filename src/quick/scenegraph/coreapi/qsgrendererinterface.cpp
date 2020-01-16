@@ -76,7 +76,6 @@ QT_BEGIN_NAMESPACE
     \value Unknown An unknown graphics API is in use
     \value Software The Qt Quick 2D Renderer is in use
     \value OpenGL OpenGL ES 2.0 or higher
-    \value Direct3D12 Direct3D 12
     \value OpenVG OpenVG via EGL
     \value OpenGLRhi OpenGL ES 2.0 or higher via a graphics abstraction layer. This value was introduced in Qt 5.14.
     \value Direct3D11Rhi Direct3D 11 via a graphics abstraction layer. This value was introduced in Qt 5.14.
@@ -189,10 +188,10 @@ QSGRendererInterface::~QSGRendererInterface()
     not supported or not available.
 
     When successful, the returned pointer is either a direct pointer to an
-    interface (and can be cast, for example, to \c{ID3D12Device *}) or a
-    pointer to an opaque handle that needs to be dereferenced first (for
-    example, \c{VkDevice dev = *static_cast<VkDevice *>(result)}). The latter
-    is necessary since such handles may have sizes different from a pointer.
+    interface, or a pointer to an opaque handle that needs to be dereferenced
+    first (for example, \c{VkDevice dev = *static_cast<VkDevice
+    *>(result)}). The latter is necessary since such handles may have sizes
+    different from a pointer.
 
     \note The ownership of the returned pointer is never transferred to the caller.
 

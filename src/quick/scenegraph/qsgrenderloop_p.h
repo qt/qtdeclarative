@@ -112,11 +112,10 @@ public:
 
     static void cleanup();
 
+    void handleContextCreationFailure(QQuickWindow *window);
+
 Q_SIGNALS:
     void timeToIncubate();
-
-protected:
-    void handleContextCreationFailure(QQuickWindow *window, bool isEs);
 
 private:
     static QSGRenderLoop *s_instance;
