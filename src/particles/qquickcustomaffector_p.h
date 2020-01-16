@@ -68,6 +68,7 @@ class QQuickCustomAffector : public QQuickParticleAffector
     Q_PROPERTY(QQuickDirection *velocity READ velocity WRITE setVelocity NOTIFY velocityChanged RESET velocityReset)
     Q_PROPERTY(QQuickDirection *acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged RESET accelerationReset)
     QML_NAMED_ELEMENT(Affector)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickCustomAffector(QQuickItem *parent = 0);

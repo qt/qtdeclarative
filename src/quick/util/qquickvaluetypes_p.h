@@ -330,6 +330,7 @@ class QQuickFontValueType
     Q_PROPERTY(bool preferShaping READ preferShaping WRITE setPreferShaping FINAL)
 
     QML_NAMED_ELEMENT(Font)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_UNCREATABLE("Element is not creatable.")
 
 public:
@@ -420,6 +421,7 @@ class QQuickColorSpaceValueType
     Q_PROPERTY(float gamma READ gamma WRITE setGamma FINAL)
 
     QML_NAMED_ELEMENT(ColorSpace)
+    QML_ADDED_IN_VERSION(2, 15)
     Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
 
 public:

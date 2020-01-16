@@ -74,6 +74,7 @@ class QQmlTableModel : public QAbstractTableModel, public QQmlParserStatus
     Q_INTERFACES(QQmlParserStatus)
     Q_CLASSINFO("DefaultProperty", "columns")
     QML_NAMED_ELEMENT(TableModel)
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     QQmlTableModel(QObject *parent = nullptr);

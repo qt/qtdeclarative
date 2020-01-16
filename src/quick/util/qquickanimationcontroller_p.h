@@ -65,6 +65,7 @@ class Q_AUTOTEST_EXPORT QQuickAnimationController : public QObject, public QQmlP
     Q_DECLARE_PRIVATE(QQuickAnimationController)
     Q_CLASSINFO("DefaultProperty", "animation")
     QML_NAMED_ELEMENT(AnimationController)
+    QML_ADDED_IN_VERSION(2, 0)
 
     Q_PROPERTY(qreal progress READ progress WRITE setProgress NOTIFY progressChanged)
     Q_PROPERTY(QQuickAbstractAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged)

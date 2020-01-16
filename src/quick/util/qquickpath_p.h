@@ -79,6 +79,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathElement : public QObject
 {
     Q_OBJECT
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickPathElement(QObject *parent=nullptr) : QObject(parent) {}
 Q_SIGNALS:
@@ -92,6 +93,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathAttribute : public QQuickPathElement
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged)
     QML_NAMED_ELEMENT(PathAttribute)
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickPathAttribute(QObject *parent=nullptr) : QQuickPathElement(parent) {}
 
@@ -120,6 +122,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickCurve : public QQuickPathElement
     Q_PROPERTY(qreal relativeX READ relativeX WRITE setRelativeX NOTIFY relativeXChanged)
     Q_PROPERTY(qreal relativeY READ relativeY WRITE setRelativeY NOTIFY relativeYChanged)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickCurve(QObject *parent=nullptr) : QQuickPathElement(parent) {}
 
@@ -158,6 +161,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathLine : public QQuickCurve
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(PathLine)
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickPathLine(QObject *parent=nullptr) : QQuickCurve(parent) {}
 
@@ -168,7 +172,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathMove : public QQuickCurve
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(PathMove)
-    QML_ADDED_IN_MINOR_VERSION(9)
+    QML_ADDED_IN_VERSION(2, 9)
 public:
     QQuickPathMove(QObject *parent=nullptr) : QQuickCurve(parent) {}
 
@@ -185,6 +189,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathQuad : public QQuickCurve
     Q_PROPERTY(qreal relativeControlY READ relativeControlY WRITE setRelativeControlY NOTIFY relativeControlYChanged)
 
     QML_NAMED_ELEMENT(PathQuad)
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickPathQuad(QObject *parent=nullptr) : QQuickCurve(parent) {}
 
@@ -230,6 +235,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathCubic : public QQuickCurve
     Q_PROPERTY(qreal relativeControl2X READ relativeControl2X WRITE setRelativeControl2X NOTIFY relativeControl2XChanged)
     Q_PROPERTY(qreal relativeControl2Y READ relativeControl2Y WRITE setRelativeControl2Y NOTIFY relativeControl2YChanged)
     QML_NAMED_ELEMENT(PathCubic)
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickPathCubic(QObject *parent=nullptr) : QQuickCurve(parent) {}
 
@@ -288,6 +294,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathCatmullRomCurve : public QQuickCurve
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(PathCurve)
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickPathCatmullRomCurve(QObject *parent=nullptr) : QQuickCurve(parent) {}
 
@@ -301,8 +308,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathArc : public QQuickCurve
     Q_PROPERTY(qreal radiusY READ radiusY WRITE setRadiusY NOTIFY radiusYChanged)
     Q_PROPERTY(bool useLargeArc READ useLargeArc WRITE setUseLargeArc NOTIFY useLargeArcChanged)
     Q_PROPERTY(ArcDirection direction READ direction WRITE setDirection NOTIFY directionChanged)
-    Q_PROPERTY(qreal xAxisRotation READ xAxisRotation WRITE setXAxisRotation NOTIFY xAxisRotationChanged REVISION 9)
+    Q_PROPERTY(qreal xAxisRotation READ xAxisRotation WRITE setXAxisRotation NOTIFY xAxisRotationChanged REVISION(2, 9))
     QML_NAMED_ELEMENT(PathArc)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickPathArc(QObject *parent=nullptr)
@@ -333,7 +341,7 @@ Q_SIGNALS:
     void radiusYChanged();
     void useLargeArcChanged();
     void directionChanged();
-    Q_REVISION(9) void xAxisRotationChanged();
+    Q_REVISION(2, 9) void xAxisRotationChanged();
 
 private:
     qreal _radiusX = 0;
@@ -355,7 +363,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathAngleArc : public QQuickCurve
     Q_PROPERTY(bool moveToStart READ moveToStart WRITE setMoveToStart NOTIFY moveToStartChanged)
 
     QML_NAMED_ELEMENT(PathAngleArc)
-    QML_ADDED_IN_MINOR_VERSION(11)
+    QML_ADDED_IN_VERSION(2, 11)
 
 public:
     QQuickPathAngleArc(QObject *parent=nullptr)
@@ -408,6 +416,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathSvg : public QQuickCurve
     Q_OBJECT
     Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged)
     QML_NAMED_ELEMENT(PathSvg)
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickPathSvg(QObject *parent=nullptr) : QQuickCurve(parent) {}
 
@@ -428,6 +437,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathPercent : public QQuickPathElement
     Q_OBJECT
     Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged)
     QML_NAMED_ELEMENT(PathPercent)
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickPathPercent(QObject *parent=nullptr) : QQuickPathElement(parent) {}
 
@@ -447,7 +457,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathPolyline : public QQuickCurve
     Q_PROPERTY(QPointF start READ start NOTIFY startChanged)
     Q_PROPERTY(QVariant path READ path WRITE setPath NOTIFY pathChanged)
     QML_NAMED_ELEMENT(PathPolyline)
-    QML_ADDED_IN_MINOR_VERSION(14)
+    QML_ADDED_IN_VERSION(2, 14)
 public:
     QQuickPathPolyline(QObject *parent=nullptr);
 
@@ -471,7 +481,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathMultiline : public QQuickCurve
     Q_PROPERTY(QPointF start READ start NOTIFY startChanged)
     Q_PROPERTY(QVariant paths READ paths WRITE setPaths NOTIFY pathsChanged)
     QML_NAMED_ELEMENT(PathMultiline)
-    QML_ADDED_IN_MINOR_VERSION(14)
+    QML_ADDED_IN_VERSION(2, 14)
 public:
     QQuickPathMultiline(QObject *parent=nullptr);
 
@@ -512,9 +522,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPath : public QObject, public QQmlParserStatu
     Q_PROPERTY(qreal startX READ startX WRITE setStartX NOTIFY startXChanged)
     Q_PROPERTY(qreal startY READ startY WRITE setStartY NOTIFY startYChanged)
     Q_PROPERTY(bool closed READ isClosed NOTIFY changed)
-    Q_PROPERTY(QSizeF scale READ scale WRITE setScale NOTIFY scaleChanged REVISION 14)
+    Q_PROPERTY(QSizeF scale READ scale WRITE setScale NOTIFY scaleChanged REVISION(2, 14))
     Q_CLASSINFO("DefaultProperty", "pathElements")
     QML_NAMED_ELEMENT(Path)
+    QML_ADDED_IN_VERSION(2, 0)
     Q_INTERFACES(QQmlParserStatus)
 public:
     QQuickPath(QObject *parent=nullptr);
@@ -535,7 +546,7 @@ public:
     QPainterPath path() const;
     QStringList attributes() const;
     qreal attributeAt(const QString &, qreal) const;
-    Q_REVISION(14) Q_INVOKABLE QPointF pointAtPercent(qreal t) const;
+    Q_REVISION(2, 14) Q_INVOKABLE QPointF pointAtPercent(qreal t) const;
     QPointF sequentialPointAt(qreal p, qreal *angle = nullptr) const;
     void invalidateSequentialHistory() const;
 
@@ -546,7 +557,7 @@ Q_SIGNALS:
     void changed();
     void startXChanged();
     void startYChanged();
-    Q_REVISION(14) void scaleChanged();
+    Q_REVISION(2, 14) void scaleChanged();
 
 protected:
     QQuickPath(QQuickPathPrivate &dd, QObject *parent = nullptr);
@@ -609,7 +620,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathText : public QQuickPathElement
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged)
     QML_NAMED_ELEMENT(PathText)
-    QML_ADDED_IN_MINOR_VERSION(15)
+    QML_ADDED_IN_VERSION(2, 15)
 public:
     QQuickPathText(QObject *parent=nullptr) : QQuickPathElement(parent)
     {

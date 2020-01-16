@@ -58,6 +58,7 @@ class SignalTransition : public QSignalTransition, public QQmlParserStatus
     Q_PROPERTY(QJSValue signal READ signal WRITE setSignal NOTIFY qmlSignalChanged)
     Q_PROPERTY(QQmlScriptString guard READ guard WRITE setGuard NOTIFY guardChanged)
     QML_ELEMENT
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     explicit SignalTransition(QState *parent = nullptr);

@@ -63,6 +63,7 @@ class QQuickParticleExtruder : public QObject
     Q_OBJECT
 
     QML_NAMED_ELEMENT(ParticleExtruder)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_UNCREATABLE("Abstract type. Use one of the inheriting types instead.")
 
 public:

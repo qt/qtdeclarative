@@ -79,10 +79,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickItemView : public QQuickFlickable
     Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged)
 
     Q_PROPERTY(bool keyNavigationWraps READ isWrapEnabled WRITE setWrapEnabled NOTIFY keyNavigationWrapsChanged)
-    Q_PROPERTY(bool keyNavigationEnabled READ isKeyNavigationEnabled WRITE setKeyNavigationEnabled NOTIFY keyNavigationEnabledChanged REVISION 7)
+    Q_PROPERTY(bool keyNavigationEnabled READ isKeyNavigationEnabled WRITE setKeyNavigationEnabled NOTIFY keyNavigationEnabledChanged REVISION(2, 7))
     Q_PROPERTY(int cacheBuffer READ cacheBuffer WRITE setCacheBuffer NOTIFY cacheBufferChanged)
-    Q_PROPERTY(int displayMarginBeginning READ displayMarginBeginning WRITE setDisplayMarginBeginning NOTIFY displayMarginBeginningChanged REVISION 3)
-    Q_PROPERTY(int displayMarginEnd READ displayMarginEnd WRITE setDisplayMarginEnd NOTIFY displayMarginEndChanged REVISION 3)
+    Q_PROPERTY(int displayMarginBeginning READ displayMarginBeginning WRITE setDisplayMarginBeginning NOTIFY displayMarginBeginningChanged REVISION(2, 3))
+    Q_PROPERTY(int displayMarginEnd READ displayMarginEnd WRITE setDisplayMarginEnd NOTIFY displayMarginEndChanged REVISION(2, 3))
 
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
@@ -110,11 +110,11 @@ class Q_QUICK_PRIVATE_EXPORT QQuickItemView : public QQuickFlickable
     Q_PROPERTY(qreal preferredHighlightEnd READ preferredHighlightEnd WRITE setPreferredHighlightEnd NOTIFY preferredHighlightEndChanged RESET resetPreferredHighlightEnd)
     Q_PROPERTY(int highlightMoveDuration READ highlightMoveDuration WRITE setHighlightMoveDuration NOTIFY highlightMoveDurationChanged)
 
-    Q_PROPERTY(bool reuseItems READ reuseItems WRITE setReuseItems NOTIFY reuseItemsChanged REVISION 15)
+    Q_PROPERTY(bool reuseItems READ reuseItems WRITE setReuseItems NOTIFY reuseItemsChanged REVISION(2, 15))
 
     QML_NAMED_ELEMENT(ItemView)
     QML_UNCREATABLE("ItemView is an abstract base class.")
-    QML_ADDED_IN_MINOR_VERSION(1)
+    QML_ADDED_IN_VERSION(2, 1)
 
 public:
     // this holds all layout enum values so they can be referred to by other enums
@@ -237,10 +237,10 @@ public:
     Q_INVOKABLE void positionViewAtIndex(int index, int mode);
     Q_INVOKABLE int indexAt(qreal x, qreal y) const;
     Q_INVOKABLE QQuickItem *itemAt(qreal x, qreal y) const;
-    Q_REVISION(13) Q_INVOKABLE QQuickItem *itemAtIndex(int index) const;
+    Q_REVISION(2, 13) Q_INVOKABLE QQuickItem *itemAtIndex(int index) const;
     Q_INVOKABLE void positionViewAtBeginning();
     Q_INVOKABLE void positionViewAtEnd();
-    Q_REVISION(1) Q_INVOKABLE void forceLayout();
+    Q_REVISION(2, 1) Q_INVOKABLE void forceLayout();
 
     void setContentX(qreal pos) override;
     void setContentY(qreal pos) override;
@@ -255,7 +255,7 @@ Q_SIGNALS:
     void currentItemChanged();
 
     void keyNavigationWrapsChanged();
-    Q_REVISION(7) void keyNavigationEnabledChanged();
+    Q_REVISION(2, 7) void keyNavigationEnabledChanged();
     void cacheBufferChanged();
     void displayMarginBeginningChanged();
     void displayMarginEndChanged();
@@ -286,7 +286,7 @@ Q_SIGNALS:
     void preferredHighlightEndChanged();
     void highlightMoveDurationChanged();
 
-    Q_REVISION(15) void reuseItemsChanged();
+    Q_REVISION(2, 15) void reuseItemsChanged();
 
 protected:
     void updatePolish() override;

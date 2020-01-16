@@ -80,6 +80,7 @@ class Q_AUTOTEST_EXPORT QQuickSystemPalette : public QObject
     Q_PROPERTY(QColor highlight READ highlight NOTIFY paletteChanged)
     Q_PROPERTY(QColor highlightedText READ highlightedText NOTIFY paletteChanged)
     QML_NAMED_ELEMENT(SystemPalette)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickSystemPalette(QObject *parent=nullptr);

@@ -78,6 +78,7 @@ class QQuickBoundaryRule : public QObject, public QQmlPropertyValueInterceptor
     Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged)
     Q_PROPERTY(int returnDuration READ returnDuration WRITE setReturnDuration NOTIFY returnDurationChanged)
     QML_NAMED_ELEMENT(BoundaryRule)
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     enum OvershootFilter {

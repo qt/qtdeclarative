@@ -68,9 +68,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickScreenInfo : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString name READ name NOTIFY nameChanged)
-    Q_PROPERTY(QString manufacturer READ manufacturer NOTIFY manufacturerChanged REVISION 10)
-    Q_PROPERTY(QString model READ model NOTIFY modelChanged REVISION 10)
-    Q_PROPERTY(QString serialNumber READ serialNumber NOTIFY serialNumberChanged REVISION 10)
+    Q_PROPERTY(QString manufacturer READ manufacturer NOTIFY manufacturerChanged REVISION(2, 10))
+    Q_PROPERTY(QString model READ model NOTIFY modelChanged REVISION(2, 10))
+    Q_PROPERTY(QString serialNumber READ serialNumber NOTIFY serialNumberChanged REVISION(2, 10))
     Q_PROPERTY(int width READ width NOTIFY widthChanged)
     Q_PROPERTY(int height READ height NOTIFY heightChanged)
     Q_PROPERTY(int desktopAvailableWidth READ desktopAvailableWidth NOTIFY desktopGeometryChanged)
@@ -83,8 +83,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickScreenInfo : public QObject
     // TODO Qt 6 Remove this orientation -> incomplete device orientation -> better use OrientationSensor
     Q_PROPERTY(Qt::ScreenOrientation orientation READ orientation NOTIFY orientationChanged)
 
-    Q_PROPERTY(int virtualX READ virtualX NOTIFY virtualXChanged REVISION 3)
-    Q_PROPERTY(int virtualY READ virtualY NOTIFY virtualYChanged REVISION 3)
+    Q_PROPERTY(int virtualX READ virtualX NOTIFY virtualXChanged REVISION(2, 3))
+    Q_PROPERTY(int virtualY READ virtualY NOTIFY virtualYChanged REVISION(2, 3))
 
 public:
     QQuickScreenInfo(QObject *parent = nullptr, QScreen *wrappedScreen = nullptr);
@@ -110,9 +110,9 @@ public:
 
 Q_SIGNALS:
     void nameChanged();
-    Q_REVISION(10) void manufacturerChanged();
-    Q_REVISION(10) void modelChanged();
-    Q_REVISION(10) void serialNumberChanged();
+    Q_REVISION(2, 10) void manufacturerChanged();
+    Q_REVISION(2, 10) void modelChanged();
+    Q_REVISION(2, 10) void serialNumberChanged();
     void widthChanged();
     void heightChanged();
     void desktopGeometryChanged();
@@ -121,8 +121,8 @@ Q_SIGNALS:
     void devicePixelRatioChanged();
     void primaryOrientationChanged();
     void orientationChanged();
-    Q_REVISION(3) void virtualXChanged();
-    Q_REVISION(3) void virtualYChanged();
+    Q_REVISION(2, 3) void virtualXChanged();
+    Q_REVISION(2, 3) void virtualYChanged();
 
 protected:
     QPointer<QScreen> m_screen;

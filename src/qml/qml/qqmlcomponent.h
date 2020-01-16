@@ -71,6 +71,7 @@ class Q_QML_EXPORT QQmlComponent : public QObject
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QUrl url READ url CONSTANT)
     QML_NAMED_ELEMENT(Component)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_ATTACHED(QQmlComponentAttached)
     Q_CLASSINFO("QML.Builtin", "QML")
 

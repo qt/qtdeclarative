@@ -74,6 +74,7 @@ class Q_AUTOTEST_EXPORT QQuickGridView : public QQuickItemView
 
     Q_CLASSINFO("DefaultProperty", "data")
     QML_NAMED_ELEMENT(GridView)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_ATTACHED(QQuickGridViewAttached)
 
 public:

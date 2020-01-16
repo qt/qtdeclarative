@@ -70,7 +70,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnimator : public QQuickAbstractAnimation
     Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged)
 
     QML_NAMED_ELEMENT(Animator)
-    QML_ADDED_IN_MINOR_VERSION(2)
+    QML_ADDED_IN_VERSION(2, 2)
     QML_UNCREATABLE("Animator is an abstract class")
 
 public:
@@ -114,7 +114,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickScaleAnimator : public QQuickAnimator
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(ScaleAnimator)
-    QML_ADDED_IN_MINOR_VERSION(2)
+    QML_ADDED_IN_VERSION(2, 2)
 public:
     QQuickScaleAnimator(QObject *parent = nullptr);
 protected:
@@ -126,7 +126,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickXAnimator : public QQuickAnimator
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(XAnimator)
-    QML_ADDED_IN_MINOR_VERSION(2)
+    QML_ADDED_IN_VERSION(2, 2)
 public:
     QQuickXAnimator(QObject *parent = nullptr);
 protected:
@@ -138,7 +138,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickYAnimator : public QQuickAnimator
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(YAnimator)
-    QML_ADDED_IN_MINOR_VERSION(2)
+    QML_ADDED_IN_VERSION(2, 2)
 public:
     QQuickYAnimator(QObject *parent = nullptr);
 protected:
@@ -150,7 +150,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickOpacityAnimator : public QQuickAnimator
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(OpacityAnimator)
-    QML_ADDED_IN_MINOR_VERSION(2)
+    QML_ADDED_IN_VERSION(2, 2)
 public:
     QQuickOpacityAnimator(QObject *parent = nullptr);
 protected:
@@ -165,7 +165,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRotationAnimator : public QQuickAnimator
     Q_DECLARE_PRIVATE(QQuickRotationAnimator)
     Q_PROPERTY(RotationDirection direction READ direction WRITE setDirection NOTIFY directionChanged)
     QML_NAMED_ELEMENT(RotationAnimator)
-    QML_ADDED_IN_MINOR_VERSION(2)
+    QML_ADDED_IN_VERSION(2, 2)
 
 public:
     enum RotationDirection { Numerical, Shortest, Clockwise, Counterclockwise };
@@ -192,7 +192,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimator : public QQuickAnimator
     Q_DECLARE_PRIVATE(QQuickUniformAnimator)
     Q_PROPERTY(QString uniform READ uniform WRITE setUniform NOTIFY uniformChanged)
     QML_NAMED_ELEMENT(UniformAnimator)
-    QML_ADDED_IN_MINOR_VERSION(2)
+    QML_ADDED_IN_VERSION(2, 2)
 
 public:
     QQuickUniformAnimator(QObject *parent = nullptr);

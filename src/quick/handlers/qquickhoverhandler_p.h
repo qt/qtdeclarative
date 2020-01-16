@@ -63,7 +63,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickHoverHandler : public QQuickSinglePointHandle
     Q_OBJECT
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged)
     QML_NAMED_ELEMENT(HoverHandler)
-    QML_ADDED_IN_MINOR_VERSION(12)
+    QML_ADDED_IN_VERSION(2, 12)
 
 public:
     explicit QQuickHoverHandler(QQuickItem *parent = nullptr);

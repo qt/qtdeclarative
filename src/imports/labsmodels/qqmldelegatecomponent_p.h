@@ -69,6 +69,8 @@ class QQmlDelegateChoice : public QObject
     Q_PROPERTY(QQmlComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     Q_CLASSINFO("DefaultProperty", "delegate")
     QML_NAMED_ELEMENT(DelegateChoice)
+    QML_ADDED_IN_VERSION(1, 0)
+
 public:
     QVariant roleValue() const;
     void setRoleValue(const QVariant &roleValue);

@@ -105,6 +105,7 @@ struct QObjectForeign {
     Q_GADGET
     QML_FOREIGN(QObject)
     QML_NAMED_ELEMENT(QtObject)
+    QML_ADDED_IN_VERSION(2, 0)
     Q_CLASSINFO("QML.Root", "QML")
 };
 

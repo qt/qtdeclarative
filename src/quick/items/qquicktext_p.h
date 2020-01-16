@@ -90,17 +90,18 @@ class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
     Q_PROPERTY(int minimumPointSize READ minimumPointSize WRITE setMinimumPointSize NOTIFY minimumPointSizeChanged)
     Q_PROPERTY(FontSizeMode fontSizeMode READ fontSizeMode WRITE setFontSizeMode NOTIFY fontSizeModeChanged)
     Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
-    Q_PROPERTY(QString hoveredLink READ hoveredLink NOTIFY linkHovered REVISION 2)
+    Q_PROPERTY(QString hoveredLink READ hoveredLink NOTIFY linkHovered REVISION(2, 2))
 
-    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION 6)
-    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION 6)
-    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION 6)
-    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION 6)
-    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION 6)
+    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION(2, 6))
 
-    Q_PROPERTY(QJSValue fontInfo READ fontInfo NOTIFY fontInfoChanged REVISION 9)
-    Q_PROPERTY(QSizeF advance READ advance NOTIFY contentSizeChanged REVISION 10)
+    Q_PROPERTY(QJSValue fontInfo READ fontInfo NOTIFY fontInfoChanged REVISION(2, 9))
+    Q_PROPERTY(QSizeF advance READ advance NOTIFY contentSizeChanged REVISION(2, 10))
     QML_NAMED_ELEMENT(Text)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickText(QQuickItem *parent=nullptr);
@@ -224,14 +225,14 @@ public:
     QRectF boundingRect() const override;
     QRectF clipRect() const override;
     Q_INVOKABLE void doLayout(); // ### Qt 6: remove
-    Q_REVISION(9) Q_INVOKABLE void forceLayout();
+    Q_REVISION(2, 9) Q_INVOKABLE void forceLayout();
 
     RenderType renderType() const;
     void setRenderType(RenderType renderType);
 
     QString hoveredLink() const;
 
-    Q_REVISION(3) Q_INVOKABLE QString linkAt(qreal x, qreal y) const;
+    Q_REVISION(2, 3) Q_INVOKABLE QString linkAt(qreal x, qreal y) const;
 
     qreal padding() const;
     void setPadding(qreal padding);
@@ -259,7 +260,7 @@ public:
 Q_SIGNALS:
     void textChanged(const QString &text);
     void linkActivated(const QString &link);
-    Q_REVISION(2) void linkHovered(const QString &link);
+    Q_REVISION(2, 2) void linkHovered(const QString &link);
     void fontChanged(const QFont &font);
     void colorChanged();
     void linkColorChanged();
@@ -274,7 +275,7 @@ Q_SIGNALS:
     void textFormatChanged(QQuickText::TextFormat textFormat);
     void elideModeChanged(QQuickText::TextElideMode mode);
     void contentSizeChanged();
-    // The next two signals should be marked as Q_REVISION(12). See QTBUG-71247
+    // The next two signals should be marked as Q_REVISION(2, 12). See QTBUG-71247
     void contentWidthChanged(qreal contentWidth);
     void contentHeightChanged(qreal contentHeight);
 
@@ -287,12 +288,12 @@ Q_SIGNALS:
     void lineLaidOut(QQuickTextLine *line);
     void baseUrlChanged();
     void renderTypeChanged();
-    Q_REVISION(6) void paddingChanged();
-    Q_REVISION(6) void topPaddingChanged();
-    Q_REVISION(6) void leftPaddingChanged();
-    Q_REVISION(6) void rightPaddingChanged();
-    Q_REVISION(6) void bottomPaddingChanged();
-    Q_REVISION(9) void fontInfoChanged();
+    Q_REVISION(2, 6) void paddingChanged();
+    Q_REVISION(2, 6) void topPaddingChanged();
+    Q_REVISION(2, 6) void leftPaddingChanged();
+    Q_REVISION(2, 6) void rightPaddingChanged();
+    Q_REVISION(2, 6) void bottomPaddingChanged();
+    Q_REVISION(2, 9) void fontInfoChanged();
 
 protected:
     QQuickText(QQuickTextPrivate &dd, QQuickItem *parent = nullptr);
@@ -333,6 +334,7 @@ class QQuickTextLine : public QObject
     Q_PROPERTY(qreal implicitWidth READ implicitWidth)
     Q_PROPERTY(bool isLast READ isLast)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickTextLine();

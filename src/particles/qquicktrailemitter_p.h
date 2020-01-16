@@ -65,6 +65,7 @@ class QQuickTrailEmitter : public QQuickParticleEmitter
     Q_PROPERTY(qreal emitHeight READ emitterYVariation WRITE setEmitterYVariation NOTIFY emitterYVariationChanged)
     Q_PROPERTY(qreal emitWidth READ emitterXVariation WRITE setEmitterXVariation NOTIFY emitterXVariationChanged)
     QML_NAMED_ELEMENT(TrailEmitter)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     enum EmitSize {

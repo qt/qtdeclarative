@@ -76,6 +76,7 @@ class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapeGradient : public QQuickGradient
     Q_CLASSINFO("DefaultProperty", "stops")
 
     QML_NAMED_ELEMENT(ShapeGradient)
+    QML_ADDED_IN_VERSION(1, 0)
     QML_UNCREATABLE("ShapeGradient is an abstract base class.");
 
 public:
@@ -107,6 +108,7 @@ class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapeLinearGradient : public QQuickShap
     Q_PROPERTY(qreal y2 READ y2 WRITE setY2 NOTIFY y2Changed)
     Q_CLASSINFO("DefaultProperty", "stops")
     QML_NAMED_ELEMENT(LinearGradient)
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     QQuickShapeLinearGradient(QObject *parent = nullptr);
@@ -142,6 +144,7 @@ class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapeRadialGradient : public QQuickShap
     Q_PROPERTY(qreal focalRadius READ focalRadius WRITE setFocalRadius NOTIFY focalRadiusChanged)
     Q_CLASSINFO("DefaultProperty", "stops")
     QML_NAMED_ELEMENT(RadialGradient)
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     QQuickShapeRadialGradient(QObject *parent = nullptr);
@@ -187,6 +190,7 @@ class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapeConicalGradient : public QQuickSha
     Q_PROPERTY(qreal angle READ angle WRITE setAngle NOTIFY angleChanged)
     Q_CLASSINFO("DefaultProperty", "stops")
     QML_NAMED_ELEMENT(ConicalGradient)
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     QQuickShapeConicalGradient(QObject *parent = nullptr);
@@ -225,8 +229,9 @@ class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapePath : public QQuickPath
     Q_PROPERTY(qreal dashOffset READ dashOffset WRITE setDashOffset NOTIFY dashOffsetChanged)
     Q_PROPERTY(QVector<qreal> dashPattern READ dashPattern WRITE setDashPattern NOTIFY dashPatternChanged)
     Q_PROPERTY(QQuickShapeGradient *fillGradient READ fillGradient WRITE setFillGradient RESET resetFillGradient)
-    Q_PROPERTY(QSizeF scale READ scale WRITE setScale NOTIFY scaleChanged REVISION 14)
+    Q_PROPERTY(QSizeF scale READ scale WRITE setScale NOTIFY scaleChanged REVISION(1, 14))
     QML_NAMED_ELEMENT(ShapePath)
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     enum FillRule {
@@ -318,10 +323,11 @@ class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShape : public QQuickItem
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
     Q_PROPERTY(bool vendorExtensionsEnabled READ vendorExtensionsEnabled WRITE setVendorExtensionsEnabled NOTIFY vendorExtensionsEnabledChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
-    Q_PROPERTY(ContainsMode containsMode READ containsMode WRITE setContainsMode NOTIFY containsModeChanged REVISION 11)
+    Q_PROPERTY(ContainsMode containsMode READ containsMode WRITE setContainsMode NOTIFY containsModeChanged REVISION(1, 11))
     Q_PROPERTY(QQmlListProperty<QObject> data READ data)
     Q_CLASSINFO("DefaultProperty", "data")
     QML_NAMED_ELEMENT(Shape)
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     enum RendererType {
@@ -377,7 +383,7 @@ Q_SIGNALS:
     void asynchronousChanged();
     void vendorExtensionsEnabledChanged();
     void statusChanged();
-    Q_REVISION(11) void containsModeChanged();
+    Q_REVISION(1, 11) void containsModeChanged();
 
 private:
     Q_DISABLE_COPY(QQuickShape)

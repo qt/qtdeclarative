@@ -40,6 +40,7 @@ class PartialScene : public QObject
     Q_PROPERTY(QUrl container READ container WRITE setContainer NOTIFY containerChanged)
     Q_PROPERTY(QString itemType READ itemType WRITE setItemType NOTIFY itemTypeChanged)
     QML_ELEMENT
+    QML_ADDED_IN_VERSION(1, 0)
 public:
     PartialScene(QObject *parent = 0) : QObject(parent)
     {}
@@ -75,6 +76,7 @@ class Config : public QObject
     Q_PROPERTY(QQmlListProperty<PartialScene> sceneCompleters READ sceneCompleters)
     Q_CLASSINFO("DefaultProperty", "sceneCompleters")
     QML_NAMED_ELEMENT(Configuration)
+    QML_ADDED_IN_VERSION(1, 0)
 public:
     Config (QObject* parent=0) : QObject(parent)
     {}

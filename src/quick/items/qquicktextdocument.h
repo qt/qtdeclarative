@@ -50,6 +50,7 @@ class Q_QUICK_EXPORT QQuickTextDocument : public QObject
 {
     Q_OBJECT
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickTextDocument(QQuickItem *parent);

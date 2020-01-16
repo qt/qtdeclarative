@@ -60,6 +60,7 @@ class StateMachine : public QStateMachine, public QQmlParserStatus
 
     Q_CLASSINFO("DefaultProperty", "children")
     QML_ELEMENT
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     explicit StateMachine(QObject *parent = 0);

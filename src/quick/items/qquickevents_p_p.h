@@ -89,6 +89,7 @@ class QQuickKeyEvent : public QObject
     Q_PROPERTY(quint32 nativeScanCode READ nativeScanCode CONSTANT)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickKeyEvent()
@@ -119,7 +120,7 @@ public:
     void setAccepted(bool accepted) { event.setAccepted(accepted); }
 
 #if QT_CONFIG(shortcut)
-    Q_REVISION(2) Q_INVOKABLE bool matches(QKeySequence::StandardKey key) const { return event.matches(key); }
+    Q_REVISION(2, 2) Q_INVOKABLE bool matches(QKeySequence::StandardKey key) const { return event.matches(key); }
 #endif
 
 private:
@@ -135,12 +136,13 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
     Q_PROPERTY(int button READ button CONSTANT)
     Q_PROPERTY(int buttons READ buttons CONSTANT)
     Q_PROPERTY(int modifiers READ modifiers CONSTANT)
-    Q_PROPERTY(int source READ source CONSTANT REVISION 7)
+    Q_PROPERTY(int source READ source CONSTANT REVISION(2, 7))
     Q_PROPERTY(bool wasHeld READ wasHeld CONSTANT)
     Q_PROPERTY(bool isClick READ isClick CONSTANT)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
-    Q_PROPERTY(int flags READ flags CONSTANT REVISION 11)
+    Q_PROPERTY(int flags READ flags CONSTANT REVISION(2, 11))
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickMouseEvent()
@@ -207,6 +209,7 @@ class QQuickWheelEvent : public QObject
     Q_PROPERTY(bool inverted READ inverted CONSTANT)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickWheelEvent()
@@ -252,6 +255,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickCloseEvent : public QObject
     Q_OBJECT
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickCloseEvent() {}
@@ -280,7 +284,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
 
     QML_NAMED_ELEMENT(EventPoint)
     QML_UNCREATABLE("EventPoint is only available as a member of PointerEvent.")
-    QML_ADDED_IN_MINOR_VERSION(12)
+    QML_ADDED_IN_VERSION(2, 12)
 
 public:
     enum State {
@@ -375,7 +379,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventTouchPoint : public QQuickEventPoint
 
     QML_NAMED_ELEMENT(EventTouchPoint)
     QML_UNCREATABLE("EventTouchPoint is only available as a member of PointerEvent.")
-    QML_ADDED_IN_MINOR_VERSION(12)
+    QML_ADDED_IN_VERSION(2, 12)
 
 public:
     QQuickEventTouchPoint(QQuickPointerTouchEvent *parent);
@@ -408,7 +412,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerEvent : public QObject
 
     QML_NAMED_ELEMENT(PointerEvent)
     QML_UNCREATABLE("PointerEvent is only available as a parameter of several signals in PointerHandler")
-    QML_ADDED_IN_MINOR_VERSION(12)
+    QML_ADDED_IN_VERSION(2, 12)
 
 public:
     QQuickPointerEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
@@ -504,7 +508,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerMouseEvent : public QQuickSinglePointE
 
     QML_NAMED_ELEMENT(PointerMouseEvent)
     QML_UNCREATABLE("PointerMouseEvent is only available as a parameter of several signals in PointerHandler")
-    QML_ADDED_IN_MINOR_VERSION(12)
+    QML_ADDED_IN_VERSION(2, 12)
 
 public:
     QQuickPointerMouseEvent(QObject *parent, QQuickPointerDevice *device);
@@ -528,7 +532,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerTouchEvent : public QQuickPointerEvent
 
     QML_NAMED_ELEMENT(PointerTouchEvent)
     QML_UNCREATABLE("PointerTouchEvent is only available as a parameter of several signals in PointerHandler")
-    QML_ADDED_IN_MINOR_VERSION(12)
+    QML_ADDED_IN_VERSION(2, 12)
 
 public:
     QQuickPointerTouchEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
@@ -580,7 +584,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventTabletPoint : public QQuickEventPoint
 
     QML_NAMED_ELEMENT(EventTabletPoint)
     QML_UNCREATABLE("EventTouchPoint is only available as a member of PointerEvent.")
-    QML_ADDED_IN_MINOR_VERSION(15)
+    QML_ADDED_IN_VERSION(2, 15)
 
 public:
     QQuickEventTabletPoint(QQuickPointerTabletEvent *parent);
@@ -657,7 +661,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerScrollEvent : public QQuickSinglePoint
 
     QML_NAMED_ELEMENT(PointerScrollEvent)
     QML_UNCREATABLE("PointerScrollEvent is only available via the WheelHandler::wheel signal.")
-    QML_ADDED_IN_MINOR_VERSION(14)
+    QML_ADDED_IN_VERSION(2, 14)
 
 public:
     QQuickPointerScrollEvent(QObject *parent, QQuickPointerDevice *device);
@@ -709,7 +713,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerDevice : public QObject
 
     QML_NAMED_ELEMENT(PointerDevice)
     QML_UNCREATABLE("PointerDevice is only available as a property of PointerEvent.")
-    QML_ADDED_IN_MINOR_VERSION(12)
+    QML_ADDED_IN_VERSION(2, 12)
 
 public:
     enum DeviceType : qint16 {

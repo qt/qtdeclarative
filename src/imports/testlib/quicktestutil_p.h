@@ -63,6 +63,7 @@ class QuickTestUtil : public QObject
     Q_PROPERTY(bool printAvailableFunctions READ printAvailableFunctions NOTIFY printAvailableFunctionsChanged)
     Q_PROPERTY(int dragThreshold READ dragThreshold NOTIFY dragThresholdChanged)
     QML_NAMED_ELEMENT(TestUtil)
+    QML_ADDED_IN_VERSION(1, 0)
 public:
     QuickTestUtil(QObject *parent = nullptr) :QObject(parent) {}
     ~QuickTestUtil() override {}

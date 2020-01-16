@@ -68,7 +68,7 @@ struct QPointingDeviceUniqueIdForeign
     Q_GADGET
     QML_FOREIGN(QPointingDeviceUniqueId)
     QML_NAMED_ELEMENT(PointingDeviceUniqueId)
-    QML_ADDED_IN_MINOR_VERSION(9)
+    QML_ADDED_IN_VERSION(2, 9)
     QML_UNCREATABLE("PointingDeviceUniqueId is only available via read-only properties.")
 };
 

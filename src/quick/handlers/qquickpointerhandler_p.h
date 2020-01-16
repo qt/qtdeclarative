@@ -71,14 +71,14 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject, public QQmlP
     Q_PROPERTY(QQuickItem * parent READ parentItem CONSTANT)
     Q_PROPERTY(GrabPermissions grabPermissions READ grabPermissions WRITE setGrabPermissions NOTIFY grabPermissionChanged)
     Q_PROPERTY(qreal margin READ margin WRITE setMargin NOTIFY marginChanged)
-    Q_PROPERTY(int dragThreshold READ dragThreshold WRITE setDragThreshold RESET resetDragThreshold NOTIFY dragThresholdChanged REVISION 15)
+    Q_PROPERTY(int dragThreshold READ dragThreshold WRITE setDragThreshold RESET resetDragThreshold NOTIFY dragThresholdChanged REVISION(2, 15))
 #if QT_CONFIG(cursor)
-    Q_PROPERTY(Qt::CursorShape cursorShape READ cursorShape WRITE setCursorShape RESET resetCursorShape NOTIFY cursorShapeChanged REVISION 15)
+    Q_PROPERTY(Qt::CursorShape cursorShape READ cursorShape WRITE setCursorShape RESET resetCursorShape NOTIFY cursorShapeChanged REVISION(2, 15))
 #endif
 
     QML_NAMED_ELEMENT(PointerHandler)
     QML_UNCREATABLE("PointerHandler is an abstract base class.")
-    QML_ADDED_IN_MINOR_VERSION(12)
+    QML_ADDED_IN_VERSION(2, 12)
 
 public:
     explicit QQuickPointerHandler(QQuickItem *parent = nullptr);
@@ -134,12 +134,12 @@ Q_SIGNALS:
     void activeChanged();
     void targetChanged();
     void marginChanged();
-    Q_REVISION(15) void dragThresholdChanged();
+    Q_REVISION(2, 15) void dragThresholdChanged();
     void grabChanged(QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point);
     void grabPermissionChanged();
     void canceled(QQuickEventPoint *point);
 #if QT_CONFIG(cursor)
-    Q_REVISION(15) void cursorShapeChanged();
+    Q_REVISION(2, 15) void cursorShapeChanged();
 #endif
 
 protected:

@@ -352,6 +352,7 @@ class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleSystem : public QQuickItem
     Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
     Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged)
     QML_NAMED_ELEMENT(ParticleSystem)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickParticleSystem(QQuickItem *parent = nullptr);

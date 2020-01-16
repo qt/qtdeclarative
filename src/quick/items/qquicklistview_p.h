@@ -71,6 +71,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickViewSection : public QObject
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     Q_PROPERTY(int labelPositioning READ labelPositioning WRITE setLabelPositioning NOTIFY labelPositioningChanged)
     QML_NAMED_ELEMENT(ViewSection)
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickViewSection(QQuickListView *parent=nullptr);
 
@@ -127,11 +128,12 @@ class Q_QUICK_PRIVATE_EXPORT QQuickListView : public QQuickItemView
 
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged)
 
-    Q_PROPERTY(HeaderPositioning headerPositioning READ headerPositioning WRITE setHeaderPositioning NOTIFY headerPositioningChanged REVISION 4)
-    Q_PROPERTY(FooterPositioning footerPositioning READ footerPositioning WRITE setFooterPositioning NOTIFY footerPositioningChanged REVISION 4)
+    Q_PROPERTY(HeaderPositioning headerPositioning READ headerPositioning WRITE setHeaderPositioning NOTIFY headerPositioningChanged REVISION(2, 4))
+    Q_PROPERTY(FooterPositioning footerPositioning READ footerPositioning WRITE setFooterPositioning NOTIFY footerPositioningChanged REVISION(2, 4))
 
     Q_CLASSINFO("DefaultProperty", "data")
     QML_NAMED_ELEMENT(ListView)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_ATTACHED(QQuickListViewAttached)
 
 public:
@@ -193,8 +195,8 @@ Q_SIGNALS:
     void highlightResizeVelocityChanged();
     void highlightResizeDurationChanged();
     void snapModeChanged();
-    Q_REVISION(4) void headerPositioningChanged();
-    Q_REVISION(4) void footerPositioningChanged();
+    Q_REVISION(2, 4) void headerPositioningChanged();
+    Q_REVISION(2, 4) void footerPositioningChanged();
 
 protected:
     void viewportMoved(Qt::Orientations orient) override;

@@ -86,7 +86,7 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModel : public QQmlInstanceModel, p
     Q_PROPERTY(QVariant rootIndex READ rootIndex WRITE setRootIndex NOTIFY rootIndexChanged)
     Q_CLASSINFO("DefaultProperty", "delegate")
     QML_NAMED_ELEMENT(DelegateModel)
-    QML_ADDED_IN_MINOR_VERSION(1)
+    QML_ADDED_IN_VERSION(2, 1)
     QML_ATTACHED(QQmlDelegateModelAttached)
     Q_INTERFACES(QQmlParserStatus)
 
@@ -172,7 +172,7 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModelGroup : public QObject
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(bool includeByDefault READ defaultInclude WRITE setDefaultInclude NOTIFY defaultIncludeChanged)
     QML_NAMED_ELEMENT(DelegateModelGroup)
-    QML_ADDED_IN_MINOR_VERSION(1)
+    QML_ADDED_IN_VERSION(2, 1)
 public:
     QQmlDelegateModelGroup(QObject *parent = nullptr);
     QQmlDelegateModelGroup(const QString &name, QQmlDelegateModel *model, int compositorType, QObject *parent = nullptr);

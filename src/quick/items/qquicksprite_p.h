@@ -87,6 +87,7 @@ class Q_QUICK_EXPORT QQuickSprite : public QQuickStochasticState
     Q_PROPERTY(int frameDuration READ frameDuration WRITE setFrameDuration NOTIFY frameDurationChanged RESET resetFrameDuration)
     Q_PROPERTY(int frameDurationVariation READ frameDurationVariation WRITE setFrameDurationVariation NOTIFY frameDurationVariationChanged)
     QML_NAMED_ELEMENT(Sprite)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickSprite(QObject *parent = nullptr);

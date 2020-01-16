@@ -73,6 +73,7 @@ class QQmlListModelWorkerAgent : public QObject
     Q_PROPERTY(int count READ count)
     Q_PROPERTY(QV4::ExecutionEngine *engine READ engine WRITE setEngine NOTIFY engineChanged)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQmlListModelWorkerAgent(QQmlListModel *);

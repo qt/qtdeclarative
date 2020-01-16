@@ -63,6 +63,7 @@ class QQuickTurbulenceAffector : public QQuickParticleAffector
     Q_PROPERTY(qreal strength READ strength WRITE setStrength NOTIFY strengthChanged)
     Q_PROPERTY(QUrl noiseSource READ noiseSource WRITE setNoiseSource NOTIFY noiseSourceChanged)
     QML_NAMED_ELEMENT(Turbulence)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickTurbulenceAffector(QQuickItem *parent = 0);

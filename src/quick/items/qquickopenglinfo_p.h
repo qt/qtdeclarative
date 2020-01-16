@@ -72,7 +72,7 @@ class QQuickOpenGLInfo : public QObject
 
     QML_NAMED_ELEMENT(OpenGLInfo)
     QML_UNCREATABLE("OpenGLInfo is only available via attached properties.")
-    QML_ADDED_IN_MINOR_VERSION(4)
+    QML_ADDED_IN_VERSION(2, 4)
     QML_ATTACHED(QQuickOpenGLInfo)
 
 public:

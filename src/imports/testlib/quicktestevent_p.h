@@ -63,6 +63,7 @@ class QQuickTouchEventSequence : public QObject
 {
     Q_OBJECT
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     explicit QQuickTouchEventSequence(QuickTestEvent *testEvent, QObject *item = nullptr);
@@ -83,6 +84,7 @@ class QuickTestEvent : public QObject
     Q_OBJECT
     Q_PROPERTY(int defaultMouseDelay READ defaultMouseDelay FINAL)
     QML_NAMED_ELEMENT(TestEvent)
+    QML_ADDED_IN_VERSION(1, 0)
 public:
     QuickTestEvent(QObject *parent = nullptr);
     ~QuickTestEvent() override;
@@ -97,7 +99,7 @@ public Q_SLOTS:
     bool keyReleaseChar(const QString &character, int modifiers, int delay);
     bool keyClickChar(const QString &character, int modifiers, int delay);
 
-    Q_REVISION(2) bool keySequence(const QVariant &keySequence);
+    Q_REVISION(1, 2) bool keySequence(const QVariant &keySequence);
 
     bool mousePress(QObject *item, qreal x, qreal y, int button,
                     int modifiers, int delay);

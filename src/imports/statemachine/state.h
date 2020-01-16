@@ -56,6 +56,7 @@ class State : public QState, public QQmlParserStatus
     Q_PROPERTY(QQmlListProperty<QObject> children READ children NOTIFY childrenChanged)
     Q_CLASSINFO("DefaultProperty", "children")
     QML_ELEMENT
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     explicit State(QState *parent = 0);

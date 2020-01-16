@@ -52,7 +52,7 @@ class QQuickStackLayout : public QQuickLayout
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
     QML_NAMED_ELEMENT(StackLayout)
-    QML_ADDED_IN_MINOR_VERSION(3)
+    QML_ADDED_IN_VERSION(1, 3)
 
 public:
     explicit QQuickStackLayout(QQuickItem *parent = 0);

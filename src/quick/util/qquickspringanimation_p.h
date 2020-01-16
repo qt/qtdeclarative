@@ -72,6 +72,7 @@ class Q_AUTOTEST_EXPORT QQuickSpringAnimation : public QQuickNumberAnimation
     Q_PROPERTY(qreal modulus READ modulus WRITE setModulus NOTIFY modulusChanged)
     Q_PROPERTY(qreal mass READ mass WRITE setMass NOTIFY massChanged)
     QML_NAMED_ELEMENT(SpringAnimation)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickSpringAnimation(QObject *parent=nullptr);

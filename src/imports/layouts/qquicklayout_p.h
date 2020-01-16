@@ -62,6 +62,7 @@ class QQuickLayout : public QQuickItem, public QQuickItemChangeListener
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(Layout)
+    QML_ADDED_IN_VERSION(1, 0)
     QML_UNCREATABLE("Do not create objects of type Layout.")
     QML_ATTACHED(QQuickLayoutAttached)
 

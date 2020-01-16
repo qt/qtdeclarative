@@ -68,6 +68,7 @@ class Q_AUTOTEST_EXPORT QQuickBorderImage : public QQuickImageBase
     // read-only for BorderImage
     Q_PROPERTY(QSize sourceSize READ sourceSize NOTIFY sourceSizeChanged)
     QML_NAMED_ELEMENT(BorderImage)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickBorderImage(QQuickItem *parent=nullptr);

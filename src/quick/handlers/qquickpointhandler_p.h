@@ -60,7 +60,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointHandler : public QQuickSinglePointHandle
     Q_OBJECT
     Q_PROPERTY(QVector2D translation READ translation NOTIFY translationChanged)
     QML_NAMED_ELEMENT(PointHandler)
-    QML_ADDED_IN_MINOR_VERSION(12)
+    QML_ADDED_IN_VERSION(2, 12)
 
 public:
     explicit QQuickPointHandler(QQuickItem *parent = nullptr);

@@ -91,6 +91,7 @@ class Q_AUTOTEST_EXPORT QQuickWorkerScript : public QObject, public QQmlParserSt
     Q_PROPERTY(bool ready READ ready NOTIFY readyChanged)
 
     QML_NAMED_ELEMENT(WorkerScript);
+    QML_ADDED_IN_VERSION(2, 0)
 
     Q_INTERFACES(QQmlParserStatus)
 public:

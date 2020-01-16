@@ -67,7 +67,7 @@ struct QItemSelectionModelForeign
     Q_GADGET
     QML_FOREIGN(QItemSelectionModel)
     QML_NAMED_ELEMENT(ItemSelectionModel)
-    QML_ADDED_IN_MINOR_VERSION(2)
+    QML_ADDED_IN_VERSION(2, 2)
 };
 #endif
 

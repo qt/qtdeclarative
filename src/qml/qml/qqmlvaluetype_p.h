@@ -246,6 +246,7 @@ struct QQmlEasingValueType
     QEasingCurve v;
     Q_GADGET
     QML_NAMED_ELEMENT(Easing)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_UNCREATABLE("Use the Type enum.")
 
     Q_PROPERTY(QQmlEasingValueType::Type type READ type WRITE setType FINAL)

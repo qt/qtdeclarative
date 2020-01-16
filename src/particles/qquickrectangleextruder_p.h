@@ -60,6 +60,7 @@ class QQuickRectangleExtruder : public QQuickParticleExtruder
     Q_OBJECT
     Q_PROPERTY(bool fill READ fill WRITE setFill NOTIFY fillChanged)
     QML_NAMED_ELEMENT(RectangleShape)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickRectangleExtruder(QObject *parent = 0);

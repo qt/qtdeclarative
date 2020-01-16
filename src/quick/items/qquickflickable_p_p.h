@@ -285,6 +285,7 @@ class QQuickFlickableVisibleArea : public QObject
     Q_PROPERTY(qreal widthRatio READ widthRatio NOTIFY widthRatioChanged)
     Q_PROPERTY(qreal heightRatio READ heightRatio NOTIFY heightRatioChanged)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickFlickableVisibleArea(QQuickFlickable *parent=nullptr);

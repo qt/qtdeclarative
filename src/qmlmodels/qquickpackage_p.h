@@ -67,6 +67,7 @@ class Q_AUTOTEST_EXPORT QQuickPackage : public QObject
 
     Q_CLASSINFO("DefaultProperty", "data")
     QML_NAMED_ELEMENT(Package)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_ATTACHED(QQuickPackageAttached)
     Q_PROPERTY(QQmlListProperty<QObject> data READ data)
 

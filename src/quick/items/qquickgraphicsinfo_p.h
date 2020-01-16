@@ -76,7 +76,7 @@ class QQuickGraphicsInfo : public QObject
     Q_PROPERTY(RenderableType renderableType READ renderableType NOTIFY renderableTypeChanged FINAL)
 
     QML_NAMED_ELEMENT(GraphicsInfo)
-    QML_ADDED_IN_MINOR_VERSION(8)
+    QML_ADDED_IN_VERSION(2, 8)
     QML_UNCREATABLE("GraphicsInfo is only available via attached properties.")
     QML_ATTACHED(QQuickGraphicsInfo)
 

@@ -94,7 +94,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(bool persistentSelection READ persistentSelection WRITE setPersistentSelection NOTIFY persistentSelectionChanged)
     Q_PROPERTY(qreal textMargin READ textMargin WRITE setTextMargin NOTIFY textMarginChanged)
     Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged)
-    Q_PROPERTY(bool selectByKeyboard READ selectByKeyboard WRITE setSelectByKeyboard NOTIFY selectByKeyboardChanged REVISION 1)
+    Q_PROPERTY(bool selectByKeyboard READ selectByKeyboard WRITE setSelectByKeyboard NOTIFY selectByKeyboardChanged REVISION(2, 1))
     Q_PROPERTY(bool selectByMouse READ selectByMouse WRITE setSelectByMouse NOTIFY selectByMouseChanged)
     Q_PROPERTY(SelectionMode mouseSelectionMode READ mouseSelectionMode WRITE setMouseSelectionMode NOTIFY mouseSelectionModeChanged)
     Q_PROPERTY(bool canPaste READ canPaste NOTIFY canPasteChanged)
@@ -103,16 +103,17 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged)
     Q_PROPERTY(QUrl baseUrl READ baseUrl WRITE setBaseUrl RESET resetBaseUrl NOTIFY baseUrlChanged)
     Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
-    Q_PROPERTY(QQuickTextDocument *textDocument READ textDocument CONSTANT FINAL REVISION 1)
-    Q_PROPERTY(QString hoveredLink READ hoveredLink NOTIFY linkHovered REVISION 2)
-    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION 6)
-    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION 6)
-    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION 6)
-    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION 6)
-    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION 6)
-    Q_PROPERTY(QString preeditText READ preeditText NOTIFY preeditTextChanged REVISION 7)
-    Q_PROPERTY(qreal tabStopDistance READ tabStopDistance WRITE setTabStopDistance NOTIFY tabStopDistanceChanged REVISION 10)
+    Q_PROPERTY(QQuickTextDocument *textDocument READ textDocument CONSTANT FINAL REVISION(2, 1))
+    Q_PROPERTY(QString hoveredLink READ hoveredLink NOTIFY linkHovered REVISION(2, 2))
+    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(QString preeditText READ preeditText NOTIFY preeditTextChanged REVISION(2, 7))
+    Q_PROPERTY(qreal tabStopDistance READ tabStopDistance WRITE setTabStopDistance NOTIFY tabStopDistanceChanged REVISION(2, 10))
     QML_NAMED_ELEMENT(TextEdit)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickTextEdit(QQuickItem *parent=nullptr);
@@ -162,7 +163,7 @@ public:
     QString text() const;
     void setText(const QString &);
 
-    Q_REVISION(7) QString preeditText() const;
+    Q_REVISION(2, 7) QString preeditText() const;
 
     TextFormat textFormat() const;
     void setTextFormat(TextFormat format);
@@ -247,7 +248,7 @@ public:
 
 #if QT_CONFIG(im)
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const override;
-    Q_REVISION(4) Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, QVariant argument) const;
+    Q_REVISION(2, 4) Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, QVariant argument) const;
 #endif
 
     qreal contentWidth() const;
@@ -277,7 +278,7 @@ public:
 
     QString hoveredLink() const;
 
-    Q_REVISION(3) Q_INVOKABLE QString linkAt(qreal x, qreal y) const;
+    Q_REVISION(2, 3) Q_INVOKABLE QString linkAt(qreal x, qreal y) const;
 
     qreal padding() const;
     void setPadding(qreal padding);
@@ -304,7 +305,7 @@ public:
 
 Q_SIGNALS:
     void textChanged();
-    Q_REVISION(7) void preeditTextChanged();
+    Q_REVISION(2, 7) void preeditTextChanged();
     void contentSizeChanged();
     void cursorPositionChanged();
     void cursorRectangleChanged();
@@ -327,11 +328,11 @@ Q_SIGNALS:
     void activeFocusOnPressChanged(bool activeFocusOnPressed);
     void persistentSelectionChanged(bool isPersistentSelection);
     void textMarginChanged(qreal textMargin);
-    Q_REVISION(1) void selectByKeyboardChanged(bool selectByKeyboard);
+    Q_REVISION(2, 1) void selectByKeyboardChanged(bool selectByKeyboard);
     void selectByMouseChanged(bool selectByMouse);
     void mouseSelectionModeChanged(QQuickTextEdit::SelectionMode mode);
     void linkActivated(const QString &link);
-    Q_REVISION(2) void linkHovered(const QString &link);
+    Q_REVISION(2, 2) void linkHovered(const QString &link);
     void canPasteChanged();
     void canUndoChanged();
     void canRedoChanged();
@@ -340,13 +341,13 @@ Q_SIGNALS:
     void baseUrlChanged();
     void inputMethodHintsChanged();
     void renderTypeChanged();
-    Q_REVISION(6) void editingFinished();
-    Q_REVISION(6) void paddingChanged();
-    Q_REVISION(6) void topPaddingChanged();
-    Q_REVISION(6) void leftPaddingChanged();
-    Q_REVISION(6) void rightPaddingChanged();
-    Q_REVISION(6) void bottomPaddingChanged();
-    Q_REVISION(10) void tabStopDistanceChanged(qreal distance);
+    Q_REVISION(2, 6) void editingFinished();
+    Q_REVISION(2, 6) void paddingChanged();
+    Q_REVISION(2, 6) void topPaddingChanged();
+    Q_REVISION(2, 6) void leftPaddingChanged();
+    Q_REVISION(2, 6) void rightPaddingChanged();
+    Q_REVISION(2, 6) void bottomPaddingChanged();
+    Q_REVISION(2, 10) void tabStopDistanceChanged(qreal distance);
 
 public Q_SLOTS:
     void selectAll();
@@ -363,8 +364,8 @@ public Q_SLOTS:
     void redo();
     void insert(int position, const QString &text);
     void remove(int start, int end);
-    Q_REVISION(2) void append(const QString &text);
-    Q_REVISION(7) void clear();
+    Q_REVISION(2, 2) void append(const QString &text);
+    Q_REVISION(2, 7) void clear();
 
 private Q_SLOTS:
     void q_textChanged();

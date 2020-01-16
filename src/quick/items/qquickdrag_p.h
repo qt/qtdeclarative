@@ -173,6 +173,7 @@ class Q_AUTOTEST_EXPORT QQuickDrag : public QObject
     //### consider drag and drop
 
     QML_NAMED_ELEMENT(Drag)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_UNCREATABLE("Drag is only available via attached properties.")
     QML_ATTACHED(QQuickDragAttached)
 
@@ -260,6 +261,7 @@ class QQuickDragAttached : public QObject
     Q_PROPERTY(QQuickDrag::DragType dragType READ dragType WRITE setDragType NOTIFY dragTypeChanged)
 
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickDragAttached(QObject *parent);

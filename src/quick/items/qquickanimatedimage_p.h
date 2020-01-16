@@ -70,11 +70,12 @@ class Q_AUTOTEST_EXPORT QQuickAnimatedImage : public QQuickImage
     Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
     Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY frameChanged)
     Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged)
-    Q_PROPERTY(qreal speed READ speed WRITE setSpeed NOTIFY speedChanged REVISION 11)
+    Q_PROPERTY(qreal speed READ speed WRITE setSpeed NOTIFY speedChanged REVISION(2, 11))
 
     // read-only for AnimatedImage
     Q_PROPERTY(QSize sourceSize READ sourceSize NOTIFY sourceSizeChanged)
     QML_NAMED_ELEMENT(AnimatedImage)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickAnimatedImage(QQuickItem *parent=nullptr);
@@ -104,7 +105,7 @@ Q_SIGNALS:
     void frameChanged();
     void currentFrameChanged();
     void frameCountChanged();
-    Q_REVISION(11) void speedChanged();
+    Q_REVISION(2, 11) void speedChanged();
 
 private Q_SLOTS:
     void movieUpdate();

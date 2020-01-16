@@ -70,6 +70,7 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlInstanceModel : public QObject
 
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     enum ReusableFlag {
@@ -125,7 +126,7 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlObjectModel : public QQmlInstanceModel
     Q_PROPERTY(QQmlListProperty<QObject> children READ children NOTIFY childrenChanged DESIGNABLE false)
     Q_CLASSINFO("DefaultProperty", "children")
     QML_NAMED_ELEMENT(ObjectModel)
-    QML_ADDED_IN_MINOR_VERSION(1)
+    QML_ADDED_IN_VERSION(2, 1)
     QML_ATTACHED(QQmlObjectModelAttached)
 
 public:
@@ -146,14 +147,14 @@ public:
 
     static QQmlObjectModelAttached *qmlAttachedProperties(QObject *obj);
 
-    Q_REVISION(3) Q_INVOKABLE QObject *get(int index) const;
-    Q_REVISION(3) Q_INVOKABLE void append(QObject *object);
-    Q_REVISION(3) Q_INVOKABLE void insert(int index, QObject *object);
-    Q_REVISION(3) Q_INVOKABLE void move(int from, int to, int n = 1);
-    Q_REVISION(3) Q_INVOKABLE void remove(int index, int n = 1);
+    Q_REVISION(2, 3) Q_INVOKABLE QObject *get(int index) const;
+    Q_REVISION(2, 3) Q_INVOKABLE void append(QObject *object);
+    Q_REVISION(2, 3) Q_INVOKABLE void insert(int index, QObject *object);
+    Q_REVISION(2, 3) Q_INVOKABLE void move(int from, int to, int n = 1);
+    Q_REVISION(2, 3) Q_INVOKABLE void remove(int index, int n = 1);
 
 public Q_SLOTS:
-    Q_REVISION(3) void clear();
+    Q_REVISION(2, 3) void clear();
 
 Q_SIGNALS:
     void childrenChanged();

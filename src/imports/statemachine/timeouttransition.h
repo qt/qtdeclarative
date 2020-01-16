@@ -53,6 +53,7 @@ class TimeoutTransition : public QSignalTransition, public QQmlParserStatus
     Q_PROPERTY(int timeout READ timeout WRITE setTimeout NOTIFY timeoutChanged)
     Q_INTERFACES(QQmlParserStatus)
     QML_ELEMENT
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     TimeoutTransition(QState *parent = nullptr);

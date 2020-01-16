@@ -153,6 +153,7 @@ class QQuickItemLayer : public QObject, public QQuickItemChangeListener
     Q_PROPERTY(QQuickShaderEffectSource::TextureMirroring textureMirroring READ textureMirroring WRITE setTextureMirroring NOTIFY textureMirroringChanged)
     Q_PROPERTY(int samples READ samples WRITE setSamples NOTIFY samplesChanged)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickItemLayer(QQuickItem *item);
@@ -722,6 +723,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickKeyNavigationAttached : public QObject, publi
     Q_PROPERTY(Priority priority READ priority WRITE setPriority NOTIFY priorityChanged)
 
     QML_NAMED_ELEMENT(KeyNavigation)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_UNCREATABLE("KeyNavigation is only available via attached properties.")
     QML_ATTACHED(QQuickKeyNavigationAttached)
 
@@ -771,6 +773,7 @@ class QQuickLayoutMirroringAttached : public QObject
     Q_PROPERTY(bool childrenInherit READ childrenInherit WRITE setChildrenInherit NOTIFY childrenInheritChanged)
 
     QML_NAMED_ELEMENT(LayoutMirroring)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_UNCREATABLE("LayoutMirroring is only available via attached properties.")
     QML_ATTACHED(QQuickLayoutMirroringAttached)
 
@@ -800,7 +803,7 @@ class QQuickEnterKeyAttached : public QObject
 
     QML_NAMED_ELEMENT(EnterKey)
     QML_UNCREATABLE("EnterKey is only available via attached properties")
-    QML_ADDED_IN_MINOR_VERSION(6)
+    QML_ADDED_IN_VERSION(2, 6)
     QML_ATTACHED(QQuickEnterKeyAttached)
 
 public:
@@ -849,6 +852,7 @@ class QQuickKeysAttached : public QObject, public QQuickItemKeyFilter
     Q_PROPERTY(Priority priority READ priority WRITE setPriority NOTIFY priorityChanged)
 
     QML_NAMED_ELEMENT(Keys)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_UNCREATABLE("Keys is only available via attached properties")
     QML_ATTACHED(QQuickKeysAttached)
 

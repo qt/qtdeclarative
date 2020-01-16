@@ -64,6 +64,7 @@ class QQuickSpriteGoalAffector : public QQuickParticleAffector
     Q_PROPERTY(bool jump READ jump WRITE setJump NOTIFY jumpChanged)
     Q_PROPERTY(bool systemStates READ systemStates WRITE setSystemStates NOTIFY systemStatesChanged)
     QML_NAMED_ELEMENT(SpriteGoal)
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     explicit QQuickSpriteGoalAffector(QQuickItem *parent = 0);
 

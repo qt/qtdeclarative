@@ -80,7 +80,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFlickable : public QQuickItem
     Q_PROPERTY(qreal verticalVelocity READ verticalVelocity NOTIFY verticalVelocityChanged)
 
     Q_PROPERTY(BoundsBehavior boundsBehavior READ boundsBehavior WRITE setBoundsBehavior NOTIFY boundsBehaviorChanged)
-    Q_PROPERTY(BoundsMovement boundsMovement READ boundsMovement WRITE setBoundsMovement NOTIFY boundsMovementChanged REVISION 10)
+    Q_PROPERTY(BoundsMovement boundsMovement READ boundsMovement WRITE setBoundsMovement NOTIFY boundsMovementChanged REVISION(2, 10))
     Q_PROPERTY(QQuickTransition *rebound READ rebound WRITE setRebound NOTIFY reboundChanged)
     Q_PROPERTY(qreal maximumFlickVelocity READ maximumFlickVelocity WRITE setMaximumFlickVelocity NOTIFY maximumFlickVelocityChanged)
     Q_PROPERTY(qreal flickDeceleration READ flickDeceleration WRITE setFlickDeceleration NOTIFY flickDecelerationChanged)
@@ -106,15 +106,16 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFlickable : public QQuickItem
     Q_PROPERTY(QQuickFlickableVisibleArea *visibleArea READ visibleArea CONSTANT)
 
     Q_PROPERTY(bool pixelAligned READ pixelAligned WRITE setPixelAligned NOTIFY pixelAlignedChanged)
-    Q_PROPERTY(bool synchronousDrag READ synchronousDrag WRITE setSynchronousDrag NOTIFY synchronousDragChanged REVISION 12)
+    Q_PROPERTY(bool synchronousDrag READ synchronousDrag WRITE setSynchronousDrag NOTIFY synchronousDragChanged REVISION(2, 12))
 
-    Q_PROPERTY(qreal horizontalOvershoot READ horizontalOvershoot NOTIFY horizontalOvershootChanged REVISION 9)
-    Q_PROPERTY(qreal verticalOvershoot READ verticalOvershoot NOTIFY verticalOvershootChanged REVISION 9)
+    Q_PROPERTY(qreal horizontalOvershoot READ horizontalOvershoot NOTIFY horizontalOvershootChanged REVISION(2, 9))
+    Q_PROPERTY(qreal verticalOvershoot READ verticalOvershoot NOTIFY verticalOvershootChanged REVISION(2, 9))
 
     Q_PROPERTY(QQmlListProperty<QObject> flickableData READ flickableData)
     Q_PROPERTY(QQmlListProperty<QQuickItem> flickableChildren READ flickableChildren)
     Q_CLASSINFO("DefaultProperty", "flickableData")
     QML_NAMED_ELEMENT(Flickable)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickFlickable(QQuickItem *parent=nullptr);
@@ -252,7 +253,7 @@ Q_SIGNALS:
     void flickableDirectionChanged();
     void interactiveChanged();
     void boundsBehaviorChanged();
-    Q_REVISION(10) void boundsMovementChanged();
+    Q_REVISION(2, 10) void boundsMovementChanged();
     void reboundChanged();
     void maximumFlickVelocityChanged();
     void flickDecelerationChanged();
@@ -264,11 +265,11 @@ Q_SIGNALS:
     void dragStarted();
     void dragEnded();
     void pixelAlignedChanged();
-    Q_REVISION(12) void synchronousDragChanged();
-    Q_REVISION(9) void horizontalOvershootChanged();
-    Q_REVISION(9) void verticalOvershootChanged();
+    Q_REVISION(2, 12) void synchronousDragChanged();
+    Q_REVISION(2, 9) void horizontalOvershootChanged();
+    Q_REVISION(2, 9) void verticalOvershootChanged();
 
-    // The next four signals should be marked as Q_REVISION(12). See QTBUG-71243
+    // The next four signals should be marked as Q_REVISION(2, 12). See QTBUG-71243
     void atXEndChanged();
     void atYEndChanged();
     void atXBeginningChanged();
