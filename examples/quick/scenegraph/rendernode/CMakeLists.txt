@@ -35,8 +35,6 @@ set(rendernode_resource_files
     "main.qml"
     "metalshader.frag"
     "metalshader.vert"
-    "shader_frag.cso"
-    "shader_vert.cso"
 )
 
 qt6_add_resources(rendernode "rendernode"
@@ -45,16 +43,6 @@ qt6_add_resources(rendernode "rendernode"
     FILES
         ${rendernode_resource_files}
 )
-
-if(QT_FEATURE_d3d12)
-    target_sources(rendernode PUBLIC
-        d3d12renderer.cpp d3d12renderer.h
-    )
-
-    target_link_libraries(rendernode PUBLIC
-        d3d12
-    )
-endif()
 
 if(APPLE_OSX)
     target_sources(rendernode PUBLIC

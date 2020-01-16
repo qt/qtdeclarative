@@ -47,6 +47,21 @@ qt_add_plugin(qsgopenvgbackend
 ## Scopes:
 #####################################################################
 
+qt_extend_target(qsgopenvgbackend CONDITION CMAKE_BUILD_TYPE STREQUAL Debug AND debug_and_release
+    INCLUDE_DIRECTORIES
+        ${CMAKE_CURRENT_BINARY_DIR}/../../../quick/.tracegen/debug
+)
+
+qt_extend_target(qsgopenvgbackend CONDITION debug_and_release AND NOT CMAKE_BUILD_TYPE STREQUAL Debug
+    INCLUDE_DIRECTORIES
+        ${CMAKE_CURRENT_BINARY_DIR}/../../../quick/.tracegen/release
+)
+
+qt_extend_target(qsgopenvgbackend CONDITION NOT debug_and_release
+    INCLUDE_DIRECTORIES
+        ${CMAKE_CURRENT_BINARY_DIR}/../../../quick/.tracegen
+)
+
 qt_extend_target(qsgopenvgbackend CONDITION QT_FEATURE_quick_sprite
     SOURCES
         qsgopenvgspritenode.cpp qsgopenvgspritenode.h

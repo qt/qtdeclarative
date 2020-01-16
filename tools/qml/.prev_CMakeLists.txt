@@ -33,7 +33,7 @@ qt_add_resource(qml "qml"
 
 
 #### Keys ignored in scope 1:.:.:qml.pro:<TRUE>:
-# ICON = "resources/qml64.png"
+# ICON = "resources/qml-64.png"
 # QMAKE_TARGET_DESCRIPTION = "QML" "Runtime"
 
 ## Scopes:

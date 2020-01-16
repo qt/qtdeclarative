@@ -98,7 +98,11 @@ qt_add_resource(QuickParticles "particles1"
 
 
 #### Keys ignored in scope 1:.:.:particles.pro:<TRUE>:
+# IMPORT_VERSION = "2.15"
 # MODULE = "quickparticles"
+# QMLTYPES_FILENAME = "plugins.qmltypes"
+# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick/Particles.2"
+# QML_IMPORT_NAME = "QtQuick.Particles"
 
 ## Scopes:
 #####################################################################

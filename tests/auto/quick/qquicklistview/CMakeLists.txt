@@ -19,6 +19,7 @@ qt_add_test(tst_qquicklistview
         incrementalmodel.cpp incrementalmodel.h
         proxytestinnermodel.cpp proxytestinnermodel.h
         randomsortmodel.cpp randomsortmodel.h
+        reusemodel.h
         tst_qquicklistview.cpp
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"

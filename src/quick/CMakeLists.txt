@@ -124,7 +124,6 @@ qt_add_module(Quick
         scenegraph/util/qsgninepatchnode.cpp scenegraph/util/qsgninepatchnode.h
         scenegraph/util/qsgplaintexture.cpp scenegraph/util/qsgplaintexture_p.h
         scenegraph/util/qsgrectanglenode.cpp scenegraph/util/qsgrectanglenode.h
-        scenegraph/util/qsgrhinativetextureimporter.cpp scenegraph/util/qsgrhinativetextureimporter_p.h
         scenegraph/util/qsgsimplematerial.cpp scenegraph/util/qsgsimplematerial.h
         scenegraph/util/qsgsimplerectnode.cpp scenegraph/util/qsgsimplerectnode.h
         scenegraph/util/qsgsimpletexturenode.cpp scenegraph/util/qsgsimpletexturenode.h
@@ -165,7 +164,6 @@ qt_add_module(Quick
         util/qquicktransition.cpp util/qquicktransition_p.h
         util/qquicktransitionmanager.cpp
         util/qquicktransitionmanager_p_p.h
-        util/qquickutilmodule.cpp util/qquickutilmodule_p.h
         util/qquickvalidator.cpp util/qquickvalidator_p.h
         util/qquickvaluetypes.cpp util/qquickvaluetypes_p.h
     DEFINES
@@ -347,6 +345,12 @@ if(ANDROID)
         qml
     )
 endif()
+
+#### Keys ignored in scope 1:.:.:quick.pro:<TRUE>:
+# IMPORT_VERSION = "2.15"
+# QMLTYPES_FILENAME = "plugins.qmltypes"
+# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick.2"
+# QML_IMPORT_NAME = "QtQuick"
 
 ## Scopes:
 #####################################################################
@@ -581,6 +585,9 @@ qt_extend_target(Quick CONDITION QT_FEATURE_wheelevent
         handlers/qquickwheelhandler.cpp handlers/qquickwheelhandler_p.h
         handlers/qquickwheelhandler_p_p.h
 )
+
+
+qt_create_tracepoints(Quick qtquick.tracepoints)
 qt_add_docs(Quick
     doc/qtquick.qdocconf
 )

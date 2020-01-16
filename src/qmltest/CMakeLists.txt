@@ -5,14 +5,13 @@
 #####################################################################
 
 qt_add_module(QuickTest
+    GENERATE_METATYPES
     QMAKE_MODULE_CONFIG $${QT.testlib.CONFIG}
     SOURCES
         qtestoptions_p.h
         quicktest.cpp quicktest.h
-        quicktestevent.cpp quicktestevent_p.h
         quicktestglobal.h
         quicktestresult.cpp quicktestresult_p.h
-        quicktestutil.cpp quicktestutil_p.h
     DEFINES
         QT_NO_FOREACH
         QT_NO_URL_CAST_FROM_STRING
@@ -20,7 +19,6 @@ qt_add_module(QuickTest
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui
-        Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::Quick
         Qt::QuickPrivate

@@ -16,7 +16,7 @@ endif()
 
 qt_add_qml_module(qmlplugin
     URI "QtQml"
-    VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
+    VERSION "2.15"
     DESIGNER_SUPPORTED
     CLASSNAME QtQmlPlugin
     SKIP_TYPE_REGISTRATION
@@ -35,7 +35,7 @@ qt_add_qml_module(qmlplugin
 #### Keys ignored in scope 1:.:.:qtqml.pro:<TRUE>:
 # CXX_MODULE = "qml"
 # DYNAMIC_QMLDIR = "module QtQml" "plugin qmlplugin" "classname QtQmlPlugin" "typeinfo plugins.qmltypes" "designersupported" "import QtQml.Models"
-# IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
+# IMPORT_VERSION = "2.15"
 # TARGETPATH = "QtQml"
 
 ## Scopes:

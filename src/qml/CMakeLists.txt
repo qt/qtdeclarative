@@ -7,21 +7,6 @@
 qt_add_module(Qml
     PLUGIN_TYPES qmltooling
     SOURCES
-        ../3rdparty/llvm/include/llvm-c/DataTypes.h
-        ../3rdparty/llvm/include/llvm/ADT/PointerIntPair.h
-        ../3rdparty/llvm/include/llvm/ADT/ilist.h
-        ../3rdparty/llvm/include/llvm/ADT/ilist_base.h
-        ../3rdparty/llvm/include/llvm/ADT/ilist_iterator.h
-        ../3rdparty/llvm/include/llvm/ADT/ilist_node.h
-        ../3rdparty/llvm/include/llvm/ADT/ilist_node_base.h
-        ../3rdparty/llvm/include/llvm/ADT/ilist_node_options.h
-        ../3rdparty/llvm/include/llvm/ADT/iterator.h
-        ../3rdparty/llvm/include/llvm/ADT/iterator_range.h
-        ../3rdparty/llvm/include/llvm/ADT/simple_ilist.h
-        ../3rdparty/llvm/include/llvm/Demangle/Compiler.h
-        ../3rdparty/llvm/include/llvm/Support/Compiler.h
-        ../3rdparty/llvm/include/llvm/Support/DataTypes.h
-        ../3rdparty/llvm/include/llvm/Support/PointerLikeTypeTraits.h
         # ../3rdparty/masm/assembler/*.h special case remove
         ../3rdparty/masm/assembler/ARMv7Assembler.cpp
         ../3rdparty/masm/assembler/LinkBuffer.cpp
@@ -306,7 +291,6 @@ qt_add_module(Qml
         ${CMAKE_CURRENT_BINARY_DIR}/jsruntime
         ${CMAKE_CURRENT_BINARY_DIR}/memory
         ${CMAKE_CURRENT_BINARY_DIR}/qmldirparser
-        ../3rdparty/llvm/include
         ../3rdparty/masm
         ../3rdparty/masm/assembler
         ../3rdparty/masm/disassembler
@@ -342,6 +326,12 @@ set(_qt_qlalr_flags "--no-debug" "--qt")
 qt_process_qlalr(Qml "${CMAKE_CURRENT_SOURCE_DIR}/parser/qqmljs.g" "${_qt_qlalr_flags}")
 qt_declarative_generate_reg_exp_jit_tables(Qml)
 # special case end
+
+#### Keys ignored in scope 1:.:.:qml.pro:<TRUE>:
+# IMPORT_VERSION = "2.15"
+# QMLTYPES_FILENAME = "plugins.qmltypes"
+# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQml"
+# QML_IMPORT_NAME = "QtQml"
 
 ## Scopes:
 #####################################################################

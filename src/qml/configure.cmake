@@ -117,71 +117,71 @@ qt_feature("cxx14_make_unique" PRIVATE
     LABEL "C++14 make_unique"
     CONDITION QT_FEATURE_cxx14 OR TEST_cxx14_make_unique
 )
-qt_feature("qml_network" PUBLIC
+qt_feature("qml-network" PUBLIC
     SECTION "QML"
     LABEL "QML network support"
     PURPOSE "Provides network transparency."
     CONDITION QT_FEATURE_network
 )
 # On arm and arm64 we need a specialization of cacheFlush() for each OS to be enabeled. Therefore the config white list. Also Mind that e.g. x86_32 has arch.x86_64 but 32bit pointers. Therefore the checks for architecture and pointer size. Finally, ios and tvos can technically use the JIT but Apple does not allow it. Therefore, it's disabled by default.
-qt_feature("qml_jit" PRIVATE
+qt_feature("qml-jit" PRIVATE
     SECTION "QML"
     LABEL "QML just-in-time compiler"
     PURPOSE "Provides a JIT for QML and JavaScript"
     AUTODETECT NOT APPLE_IOS AND NOT APPLE_TVOS
     CONDITION ( ( ( TEST_architecture_arch STREQUAL i386 ) AND TEST_pointer_32bit AND QT_FEATURE_sse2 ) OR ( ( TEST_architecture_arch STREQUAL x86_64 ) AND TEST_pointer_64bit AND QT_FEATURE_sse2 ) OR ( ( TEST_architecture_arch STREQUAL arm ) AND TEST_pointer_32bit AND TEST_arm_fp AND TEST_arm_thumb AND ( LINUX OR APPLE_IOS OR APPLE_TVOS OR QNX ) ) OR ( ( TEST_architecture_arch STREQUAL arm64 ) AND TEST_pointer_64bit AND TEST_arm_fp AND ( LINUX OR APPLE_IOS OR APPLE_TVOS OR QNX OR INTEGRITY ) ) )
 )
-qt_feature("qml_debug" PUBLIC
+qt_feature("qml-debug" PUBLIC
     SECTION "QML"
     LABEL "QML debugging and profiling support"
     PURPOSE "Provides infrastructure and plugins for debugging and profiling."
 )
-qt_feature("qml_profiler" PRIVATE
+qt_feature("qml-profiler" PRIVATE
     SECTION "QML"
     LABEL "Command line QML Profiler"
     PURPOSE "Supports retrieving QML tracing data from an application."
     CONDITION ( QT_FEATURE_commandlineparser ) AND ( QT_FEATURE_qml_debug ) AND ( QT_FEATURE_qml_network AND QT_FEATURE_localserver ) AND ( QT_FEATURE_xmlstreamwriter )
 )
-qt_feature("qml_preview" PRIVATE
+qt_feature("qml-preview" PRIVATE
     SECTION "QML"
     LABEL "Command line QML Preview tool"
     PURPOSE "Updates QML documents in your application live as you change them on disk"
     CONDITION ( QT_FEATURE_commandlineparser ) AND ( QT_FEATURE_filesystemwatcher ) AND ( QT_FEATURE_qml_network AND QT_FEATURE_localserver ) AND ( QT_FEATURE_process ) AND ( QT_FEATURE_qml_debug )
 )
-qt_feature("qml_devtools" PRIVATE
+qt_feature("qml-devtools" PRIVATE
     SECTION "QML"
     LABEL "QML Development Tools"
     PURPOSE "Provides the QmlDevtools library and various utilities."
 )
-qt_feature("qml_sequence_object" PRIVATE
+qt_feature("qml-sequence-object" PRIVATE
     SECTION "QML"
     LABEL "QML sequence object"
     PURPOSE "Supports mapping sequence types into QML."
 )
-qt_feature("qml_xml_http_request" PRIVATE
+qt_feature("qml-xml-http-request" PRIVATE
     SECTION "QML"
     LABEL "QML XML http request"
     PURPOSE "Provides support for sending XML http requests."
     CONDITION ( QT_FEATURE_xmlstreamreader ) AND ( QT_FEATURE_qml_network )
 )
-qt_feature("qml_locale" PRIVATE
+qt_feature("qml-locale" PRIVATE
     SECTION "QML"
     LABEL "QML Locale"
     PURPOSE "Provides support for locales in QML."
 )
-qt_feature("qml_animation" PRIVATE
+qt_feature("qml-animation" PRIVATE
     SECTION "QML"
     LABEL "QML Animations"
     PURPOSE "Provides support for animations and timers in QML."
     CONDITION QT_FEATURE_animation
 )
-qt_feature("qml_worker_script" PRIVATE
+qt_feature("qml-worker-script" PRIVATE
     SECTION "QML"
     LABEL "QML WorkerScript"
     PURPOSE "Enables the use of threads in QML."
     CONDITION QT_FEATURE_thread
 )
-qt_feature("qml_itemmodel" PRIVATE
+qt_feature("qml-itemmodel" PRIVATE
     SECTION "QML"
     LABEL "QML Item Model"
     PURPOSE "Provides the item model for item views in QML"

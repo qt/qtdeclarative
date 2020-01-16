@@ -21,7 +21,6 @@ add_qt_gui_executable(metalunderqml
     metalsquircle.h metalsquircle.mm
 )
 target_link_libraries(metalunderqml PUBLIC
-    "-framework AppKit"
     "-framework Metal"
     Qt::Core
     Qt::Gui
@@ -43,6 +42,12 @@ qt6_add_resources(metalunderqml "metalunderqml"
     FILES
         ${metalunderqml_resource_files}
 )
+
+if(APPLE_OSX)
+    target_link_libraries(metalunderqml PUBLIC
+        "-framework AppKit"
+    )
+endif()
 
 install(TARGETS metalunderqml
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -31,6 +31,12 @@ target_link_libraries(twotextureproviders PUBLIC
 # Resources:
 set(twotextureproviders_resource_files
     "main.qml"
+    "shaders/+qsb/checker.frag"
+    "shaders/+qsb/xorblender.frag"
+    "shaders/+qsb/xorblender.vert"
+    "shaders/checker.frag"
+    "shaders/xorblender.frag"
+    "shaders/xorblender.vert"
 )
 
 qt6_add_resources(twotextureproviders "twotextureproviders"

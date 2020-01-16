@@ -6,7 +6,7 @@
 
 qt_add_qml_module(qtqmlstatemachine
     URI "QtQml.StateMachine"
-    VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
+    VERSION "1.15"
     CLASSNAME QtQmlStateMachinePlugin
     SKIP_TYPE_REGISTRATION
     SOURCES
@@ -28,5 +28,5 @@ qt_add_qml_module(qtqmlstatemachine
 
 #### Keys ignored in scope 1:.:.:statemachine.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# IMPORT_VERSION = "1.$$QT_MINOR_VERSION"
+# IMPORT_VERSION = "1.15"
 # TARGETPATH = "QtQml/StateMachine"

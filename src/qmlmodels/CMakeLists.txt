@@ -7,7 +7,7 @@
 qt_add_module(QmlModels
     SOURCES
         qqmlchangeset.cpp qqmlchangeset_p.h
-        qqmlmodelsmodule.cpp qqmlmodelsmodule_p.h
+        qqmlmodelsmodule_p.h
         qtqmlmodelsglobal.h qtqmlmodelsglobal_p.h
     DEFINES
         QT_NO_FOREACH
@@ -20,6 +20,12 @@ qt_add_module(QmlModels
         Qt::Core
         Qt::Qml
 )
+
+#### Keys ignored in scope 1:.:.:qmlmodels.pro:<TRUE>:
+# IMPORT_VERSION = "2.15"
+# QMLTYPES_FILENAME = "plugins.qmltypes"
+# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQml/Models.2"
+# QML_IMPORT_NAME = "QtQml.Models"
 
 ## Scopes:
 #####################################################################

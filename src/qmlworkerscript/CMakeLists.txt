@@ -6,7 +6,6 @@
 
 qt_add_module(QmlWorkerScript
     SOURCES
-        qqmlworkerscriptmodule.cpp qqmlworkerscriptmodule_p.h
         qquickworkerscript.cpp qquickworkerscript_p.h
         qtqmlworkerscriptglobal.h qtqmlworkerscriptglobal_p.h
         qv4serialize.cpp qv4serialize_p.h
@@ -44,6 +43,12 @@ qt_add_module(QmlWorkerScript
         Qt::Core
         Qt::Qml
 )
+
+#### Keys ignored in scope 1:.:.:qmlworkerscript.pro:<TRUE>:
+# IMPORT_VERSION = "2.15"
+# QMLTYPES_FILENAME = "plugins.qmltypes"
+# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQml/WorkerScript.2"
+# QML_IMPORT_NAME = "QtQml.WorkerScript"
 
 ## Scopes:
 #####################################################################

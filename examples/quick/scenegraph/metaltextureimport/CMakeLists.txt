@@ -21,7 +21,6 @@ add_qt_gui_executable(metaltextureimport
     metaltextureimport.h metaltextureimport.mm
 )
 target_link_libraries(metaltextureimport PUBLIC
-    "-framework AppKit"
     "-framework Metal"
     Qt::Core
     Qt::Gui
@@ -43,6 +42,12 @@ qt6_add_resources(metaltextureimport "metaltextureimport"
     FILES
         ${metaltextureimport_resource_files}
 )
+
+if(APPLE_OSX)
+    target_link_libraries(metaltextureimport PUBLIC
+        "-framework AppKit"
+    )
+endif()
 
 install(TARGETS metaltextureimport
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -36,6 +36,8 @@ target_link_libraries(fboitem PUBLIC
 # Resources:
 set(fboitem_resource_files
     "main.qml"
+    "shaders/+qsb/checker.frag"
+    "shaders/checker.frag"
 )
 
 qt6_add_resources(fboitem "fboitem"

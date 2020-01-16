@@ -6,14 +6,18 @@
 
 qt_add_qml_module(qmltestplugin
     URI "QtTest"
-    VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
+    VERSION "1.15"
     CLASSNAME QTestQmlModule
     DEPENDENCIES
         QtQuick.Window/2.0
     SOURCES
         main.cpp
+        quicktestevent.cpp quicktestevent_p.h
+        quicktestresultforeign_p.h
+        quicktestutil.cpp quicktestutil_p.h
     LIBRARIES
         Qt::CorePrivate
+        Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickTestPrivate
     PUBLIC_LIBRARIES
@@ -27,7 +31,7 @@ qt_add_qml_module(qmltestplugin
 
 #### Keys ignored in scope 1:.:.:testlib.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# IMPORT_VERSION = "1.$$QT_MINOR_VERSION"
+# IMPORT_VERSION = "1.15"
 # OTHER_FILES = "testlib.json"
 # QML_FILES = "TestCase.qml" "SignalSpy.qml" "testlogger.js"
 # TARGETPATH = "QtTest"

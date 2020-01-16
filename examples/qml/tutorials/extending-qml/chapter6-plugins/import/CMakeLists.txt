@@ -24,7 +24,7 @@ qt6_add_qml_module(chartsplugin
 )
 
 target_sources(chartsplugin PRIVATE
-    chartsplugin.cpp chartsplugin.h
+    chartsplugin.h
     piechart.cpp piechart.h
     pieslice.cpp pieslice.h
 )

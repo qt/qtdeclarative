@@ -3,7 +3,6 @@
 
 if(QT_FEATURE_qml_devtools)
     add_subdirectory(qmllint)
-    add_subdirectory(qmlmin)
     add_subdirectory(qmlimportscanner)
     # special case: Do not build qmlcachegen here but build it at src/
     # time, so that we can use it for our own .qml files in src/imports.

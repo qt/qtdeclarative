@@ -56,6 +56,12 @@ qt_add_resource(QuickShapes "qtquickshapes"
 )
 
 
+#### Keys ignored in scope 1:.:.:quickshapes.pro:<TRUE>:
+# IMPORT_VERSION = "1.15"
+# QMLTYPES_FILENAME = "plugins.qmltypes"
+# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick/Shapes"
+# QML_IMPORT_NAME = "QtQuick.Shapes"
+
 ## Scopes:
 #####################################################################
 

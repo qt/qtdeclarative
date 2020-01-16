@@ -17,6 +17,7 @@ find_package(Qt6 COMPONENTS Quick)
 
 add_qt_gui_executable(simplematerial
     simplematerial.cpp
+    simplematerialitem.cpp simplematerialitem.h
 )
 target_link_libraries(simplematerial PUBLIC
     Qt::Core

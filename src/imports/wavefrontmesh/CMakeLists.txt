@@ -6,7 +6,7 @@
 
 qt_add_qml_module(qmlwavefrontmeshplugin
     URI "Qt.labs.wavefrontmesh"
-    VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
+    VERSION "1.15"
     CLASSNAME QmlWavefrontMeshPlugin
     SKIP_TYPE_REGISTRATION
     SOURCES
@@ -24,5 +24,5 @@ qt_add_qml_module(qmlwavefrontmeshplugin
 
 #### Keys ignored in scope 1:.:.:wavefrontmesh.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# IMPORT_VERSION = "1.$$QT_MINOR_VERSION"
+# IMPORT_VERSION = "1.15"
 # TARGETPATH = "Qt/labs/wavefrontmesh"

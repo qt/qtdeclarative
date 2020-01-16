@@ -7,7 +7,7 @@
 qt_add_qml_module(qtquick2plugin
     TARGET_PATH "QtQuick.2"
     URI "QtQuick"
-    VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
+    VERSION "2.15"
     DESIGNER_SUPPORTED
     CLASSNAME QtQuick2Plugin
     SKIP_TYPE_REGISTRATION
@@ -29,7 +29,7 @@ qt_add_qml_module(qtquick2plugin
 
 #### Keys ignored in scope 1:.:.:qtquick2.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
+# IMPORT_VERSION = "2.15"
 # TARGETPATH = "QtQuick.2"
 
 ## Scopes:
