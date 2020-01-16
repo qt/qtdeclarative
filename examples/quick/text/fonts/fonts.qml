@@ -56,9 +56,6 @@ Rectangle {
     width: 320; height: 480
     color: "steelblue"
 
-//! [fontloader]
-    FontLoader { id: fixedFont; name: "Courier" }
-//! [fontloader]
 //! [fontloaderlocal]
     FontLoader { id: localFont; source: "content/fonts/tarzeau_ocr_a.ttf" }
 //! [fontloaderlocal]
@@ -94,14 +91,14 @@ Rectangle {
             width: parent.width
             horizontalAlignment: Text.AlignRight
             wrapMode: Text.WordWrap
-            font { family: fixedFont.name; pixelSize: 20; weight: Font.Bold; capitalization: Font.AllLowercase }
+            font { family: "Courier"; pixelSize: 20; weight: Font.Bold; capitalization: Font.AllLowercase }
         }
         Text {
             text: myText
             color: "lightsteelblue"
             width: parent.width
             wrapMode: Text.WordWrap
-            font { family: fixedFont.name; pixelSize: 20; italic: true; capitalization: Font.SmallCaps }
+            font { family: "Courier"; pixelSize: 20; italic: true; capitalization: Font.SmallCaps }
         }
         Text {
             text: myText

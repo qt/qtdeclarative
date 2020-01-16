@@ -65,7 +65,7 @@ class Q_AUTOTEST_EXPORT QQuickFontLoader : public QObject
     Q_DECLARE_PRIVATE(QQuickFontLoader)
 
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
-    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(QString name READ name NOTIFY nameChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     QML_NAMED_ELEMENT(FontLoader)
 
@@ -80,7 +80,6 @@ public:
     void setSource(const QUrl &url);
 
     QString name() const;
-    void setName(const QString &name);
 
     Status status() const;
 

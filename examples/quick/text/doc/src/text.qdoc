@@ -49,9 +49,6 @@
     Simply by name, using the font.family property directly:
     \snippet text/fonts/fonts.qml name
 
-    or using a \l FontLoader type:
-    \snippet text/fonts/fonts.qml fontloader
-
     or using a FontLoader and specifying a local font file:
     \snippet text/fonts/fonts.qml fontloaderlocal
 
