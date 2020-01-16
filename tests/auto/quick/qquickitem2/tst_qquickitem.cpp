@@ -2407,7 +2407,15 @@ void tst_QQuickItem::mapCoordinates()
             Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y)));
     QCOMPARE(result.value<QPointF>(), qobject_cast<QQuickItem*>(a)->mapToGlobal(QPointF(x, y)));
 
+    QVERIFY(QMetaObject::invokeMethod(root, "mapAToGlobalPoint",
+            Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y)));
+    QCOMPARE(result.value<QPointF>(), qobject_cast<QQuickItem*>(a)->mapToGlobal(QPointF(x, y)));
+
     QVERIFY(QMetaObject::invokeMethod(root, "mapAFromGlobal",
+            Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y)));
+    QCOMPARE(result.value<QPointF>(), qobject_cast<QQuickItem*>(a)->mapFromGlobal(QPointF(x, y)));
+
+    QVERIFY(QMetaObject::invokeMethod(root, "mapAFromGlobalPoint",
             Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y)));
     QCOMPARE(result.value<QPointF>(), qobject_cast<QQuickItem*>(a)->mapFromGlobal(QPointF(x, y)));
 

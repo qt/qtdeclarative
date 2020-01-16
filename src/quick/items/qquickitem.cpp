@@ -4638,6 +4638,52 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
     args->setReturnValue(rv.asReturnedValue());
 }
 
+static bool unwrapMapFromToFromGlobalArgs(QQmlV4Function *args, const QQuickItem *itemForWarning, const QString &functionNameForWarning, qreal *x, qreal *y)
+{
+    QV4::ExecutionEngine *v4 = args->v4engine();
+    if (args->length() != 1 && args->length() != 2) {
+        v4->throwTypeError();
+        return false;
+    }
+
+    QV4::Scope scope(v4);
+
+    if (args->length() == 1) {
+        QV4::ScopedValue sv(scope, (*args)[0]);
+        if (sv->isNull()) {
+            qmlWarning(itemForWarning) << functionNameForWarning << "given argument \"" << sv->toQStringNoThrow()
+                                       << "\" which is not a point";
+            v4->throwTypeError();
+            return false;
+        }
+        const QV4::Scoped<QV4::QQmlValueTypeWrapper> variantWrapper(scope, sv->as<QV4::QQmlValueTypeWrapper>());
+        const QVariant v = variantWrapper ? variantWrapper->toVariant() : QVariant();
+        if (v.canConvert<QPointF>()) {
+            const QPointF p = v.toPointF();
+            *x = p.x();
+            *y = p.y();
+        } else {
+            qmlWarning(itemForWarning) << functionNameForWarning << "given argument \"" << sv->toQStringNoThrow()
+                                       << "\" which is not a point";
+            v4->throwTypeError();
+            return false;
+        }
+    } else {
+        QV4::ScopedValue vx(scope, (*args)[0]);
+        QV4::ScopedValue vy(scope, (*args)[1]);
+
+        if (!vx->isNumber() || !vy->isNumber()) {
+            v4->throwTypeError();
+            return false;
+        }
+
+        *x = vx->asDouble();
+        *y = vy->asDouble();
+    }
+
+    return true;
+}
+
 /*!
     \since 5.7
     \qmlmethod object QtQuick::Item::mapFromGlobal(real x, real y)
@@ -4653,22 +4699,12 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
 void QQuickItem::mapFromGlobal(QQmlV4Function *args) const
 {
     QV4::ExecutionEngine *v4 = args->v4engine();
-    if (args->length() != 2) {
-        v4->throwTypeError();
-        return;
-    }
-
     QV4::Scope scope(v4);
-    QV4::ScopedValue vx(scope, (*args)[0]);
-    QV4::ScopedValue vy(scope, (*args)[1]);
 
-    if (!vx->isNumber() || !vy->isNumber()) {
-        v4->throwTypeError();
+    qreal x, y;
+    if (!unwrapMapFromToFromGlobalArgs(args, this, QStringLiteral("mapFromGlobal()"), &x, &y))
         return;
-    }
 
-    qreal x = vx->asDouble();
-    qreal y = vy->asDouble();
     QVariant result = mapFromGlobal(QPointF(x, y));
 
     QV4::ScopedObject rv(scope, v4->fromVariant(result));
@@ -4690,22 +4726,12 @@ void QQuickItem::mapFromGlobal(QQmlV4Function *args) const
 void QQuickItem::mapToGlobal(QQmlV4Function *args) const
 {
     QV4::ExecutionEngine *v4 = args->v4engine();
-    if (args->length() != 2) {
-        v4->throwTypeError();
-        return;
-    }
-
     QV4::Scope scope(v4);
-    QV4::ScopedValue vx(scope, (*args)[0]);
-    QV4::ScopedValue vy(scope, (*args)[1]);
 
-    if (!vx->isNumber() || !vy->isNumber()) {
-        v4->throwTypeError();
+    qreal x, y;
+    if (!unwrapMapFromToFromGlobalArgs(args, this, QStringLiteral("mapFromGlobal()"), &x, &y))
         return;
-    }
 
-    qreal x = vx->asDouble();
-    qreal y = vy->asDouble();
     QVariant result = mapToGlobal(QPointF(x, y));
 
     QV4::ScopedObject rv(scope, v4->fromVariant(result));
