@@ -17,8 +17,9 @@ qtHaveModule(quick) {
     SUBDIRS += \
         layouts \
         qtquick2 \
-        window \
-        wavefrontmesh
+        window
+
+    qtConfig(quick-shadereffect): SUBDIRS += wavefrontmesh
 
     qtHaveModule(testlib): SUBDIRS += testlib
     qtConfig(systemsemaphore): SUBDIRS += sharedimage
