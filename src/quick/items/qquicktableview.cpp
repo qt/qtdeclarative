@@ -2241,6 +2241,21 @@ void QQuickTableViewPrivate::syncDelegate()
         tableModel->setDelegate(assignedDelegate);
 }
 
+QVariant QQuickTableViewPrivate::modelImpl() const
+{
+    return assignedModel;
+}
+
+void QQuickTableViewPrivate::setModelImpl(const QVariant &newModel)
+{
+    if (newModel == assignedModel)
+        return;
+
+    assignedModel = newModel;
+    scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::All);
+    emit q_func()->modelChanged();
+}
+
 void QQuickTableViewPrivate::syncModel()
 {
     if (modelVariant == assignedModel)
@@ -2662,18 +2677,12 @@ void QQuickTableView::setColumnWidthProvider(const QJSValue &provider)
 
 QVariant QQuickTableView::model() const
 {
-    return d_func()->assignedModel;
+    return d_func()->modelImpl();
 }
 
 void QQuickTableView::setModel(const QVariant &newModel)
 {
-    Q_D(QQuickTableView);
-    if (newModel == d->assignedModel)
-        return;
-
-    d->assignedModel = newModel;
-    d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::All);
-    emit modelChanged();
+    return d_func()->setModelImpl(newModel);
 }
 
 QQmlComponent *QQuickTableView::delegate() const
