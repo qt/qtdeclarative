@@ -91,11 +91,11 @@ Item {
             x = 100;
             break;
         }
-        if (x == 50) 
+        if (x == 50)
             console.log("true");
-        else if (x == 50) 
+        else if (x == 50)
             console.log("other thing");
-        else 
+        else
             console.log("false");
 
         if (x == 50) {
@@ -132,6 +132,7 @@ Item {
         Rectangle {
         }
     ]
+
     Text {
         required property string batman
 
@@ -143,6 +144,7 @@ Item {
     // This comment is related to the property animation
     PropertyAnimation on x {
         id: foo
+
         x: 3
         y: x + 3
     }
