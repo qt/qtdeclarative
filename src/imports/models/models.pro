@@ -1,6 +1,6 @@
 CXX_MODULE = qml
 TARGET  = modelsplugin
-TARGETPATH = QtQml/Models.2
+TARGETPATH = QtQml/Models
 IMPORT_VERSION = 2.15
 
 SOURCES += \
