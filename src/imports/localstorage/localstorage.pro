@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET  = qmllocalstorageplugin
 TARGETPATH = QtQuick/LocalStorage
-IMPORT_VERSION = 2.15
+QML_IMPORT_VERSION = $$QT_VERSION
 
 QT = sql qml-private  core-private
 

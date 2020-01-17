@@ -53,5 +53,5 @@ load(qt_module)
 QMLTYPES_FILENAME = plugins.qmltypes
 QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/QtQuick
 QML_IMPORT_NAME = QtQuick
-IMPORT_VERSION = 2.15
+QML_IMPORT_VERSION = $$QT_VERSION
 CONFIG += qmltypes install_qmltypes install_metatypes

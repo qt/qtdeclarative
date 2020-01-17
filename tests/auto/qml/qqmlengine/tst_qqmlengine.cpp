@@ -687,9 +687,9 @@ void tst_qqmlengine::qtqmlModule_data()
             << QString(testFileUrl("qtqmlModule.3.qml").toString() + QLatin1String(":1 module \"QtQml\" version 1.0 is not installed\n"))
             << QStringList();
 
-    QTest::newRow("import QtQml of incorrect version (2.50)")
+    QTest::newRow("import QtQml of old version (2.50)")
             << testFileUrl("qtqmlModule.4.qml")
-            << QString(testFileUrl("qtqmlModule.4.qml").toString() + QLatin1String(":1 module \"QtQml\" version 2.50 is not installed\n"))
+            << QString()
             << QStringList();
 
     QTest::newRow("QtQml 2.0 module provides Component, QtObject, Connections, Binding and Timer")
@@ -715,6 +715,11 @@ void tst_qqmlengine::qtqmlModule_data()
     QTest::newRow("importing QtQml only results in no Item availability")
             << testFileUrl("qtqmlModule.9.qml")
             << QString(testFileUrl("qtqmlModule.9.qml").toString() + QLatin1String(":4 Item is not a type\n"))
+            << QStringList();
+
+    QTest::newRow("import QtQml of incorrect version (6.50)")
+            << testFileUrl("qtqmlModule.10.qml")
+            << QString(testFileUrl("qtqmlModule.10.qml").toString() + QLatin1String(":1 module \"QtQml\" version 6.50 is not installed\n"))
             << QStringList();
 }
 

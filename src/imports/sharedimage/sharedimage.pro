@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET = sharedimageplugin
 TARGETPATH = Qt/labs/sharedimage
-IMPORT_VERSION = 1.0
+QML_IMPORT_VERSION = 1.0
 
 QT *= quick-private qml gui-private core-private
 
