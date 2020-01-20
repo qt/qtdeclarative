@@ -291,7 +291,7 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
             const int valueIndex = vi->m_propertyIndex.valueTypeIndex();
             int type = QQmlData::get(object)->propertyCache->property(id)->propType();
 
-            if (type != QVariant::Invalid) {
+            if (type != QMetaType::UnknownType) {
                 if (valueIndex != -1) {
                     QQmlValueType *valueType = QQmlValueTypeFactory::valueType(type);
                     Q_ASSERT(valueType);
@@ -534,7 +534,7 @@ QUrl QQmlVMEMetaObject::readPropertyAsUrl(int id) const
     QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
-    if (!v || v->d()->data().type() != QVariant::Url)
+    if (!v || v->d()->data().userType() != QMetaType::QUrl)
         return QUrl();
     return v->d()->data().value<QUrl>();
 }
@@ -548,7 +548,7 @@ QDate QQmlVMEMetaObject::readPropertyAsDate(int id) const
     QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
-    if (!v || v->d()->data().type() != QVariant::Date)
+    if (!v || v->d()->data().userType() != QMetaType::QDate)
         return QDate();
     return v->d()->data().value<QDate>();
 }
@@ -562,7 +562,7 @@ QDateTime QQmlVMEMetaObject::readPropertyAsDateTime(int id)
     QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
-    if (!v || v->d()->data().type() != QVariant::DateTime)
+    if (!v || v->d()->data().userType() != QMetaType::QDateTime)
         return QDateTime();
     return v->d()->data().value<QDateTime>();
 }
@@ -576,7 +576,7 @@ QSizeF QQmlVMEMetaObject::readPropertyAsSizeF(int id) const
     QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
-    if (!v || v->d()->data().type() != QVariant::SizeF)
+    if (!v || v->d()->data().userType() != QMetaType::QSizeF)
         return QSizeF();
     return v->d()->data().value<QSizeF>();
 }
@@ -590,7 +590,7 @@ QPointF QQmlVMEMetaObject::readPropertyAsPointF(int id) const
     QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
-    if (!v || v->d()->data().type() != QVariant::PointF)
+    if (!v || v->d()->data().userType() != QMetaType::QPointF)
         return QPointF();
     return v->d()->data().value<QPointF>();
 }
@@ -634,7 +634,7 @@ QRectF QQmlVMEMetaObject::readPropertyAsRectF(int id) const
     QV4::Scope scope(engine);
     QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
-    if (!v || v->d()->data().type() != QVariant::RectF)
+    if (!v || v->d()->data().userType() != QMetaType::QRectF)
         return QRectF();
     return v->d()->data().value<QRectF>();
 }

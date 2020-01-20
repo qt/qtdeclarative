@@ -111,7 +111,7 @@ public:
     void setCurrentTime(int);
 
     QQuickAnimationGroup *group() const;
-    void setGroup(QQuickAnimationGroup *);
+    void setGroup(QQuickAnimationGroup *, int index = -1);
 
     void setDefaultTarget(const QQmlProperty &);
     void setDisableUserControl();

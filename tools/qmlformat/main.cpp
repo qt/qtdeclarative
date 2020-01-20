@@ -43,7 +43,7 @@
 #include "dumpastvisitor.h"
 #include "restructureastvisitor.h"
 
-bool parseFile(const QString& filename, bool inplace, bool verbose, bool sortImports)
+bool parseFile(const QString& filename, bool inplace, bool verbose, bool sortImports, bool force)
 {
     QFile file(filename);
 
@@ -101,8 +101,14 @@ bool parseFile(const QString& filename, bool inplace, bool verbose, bool sortImp
 
     DumpAstVisitor dump(parser.rootNode(), &comment);
 
-    if (dump.error())
-        qWarning().noquote() << "An error has occurred. The output may not be reliable.";
+    if (dump.error()) {
+        if (force) {
+            qWarning().noquote() << "An error has occurred. The output may not be reliable.";
+        } else {
+            qWarning().noquote() << "Am error has occurred. Aborting.";
+            return false;
+        }
+   }
 
     if (inplace) {
         if (verbose)
@@ -145,6 +151,9 @@ int main(int argc, char *argv[])
     parser.addOption(QCommandLineOption({"i", "inplace"},
                      QStringLiteral("Edit file in-place instead of outputting to stdout.")));
 
+    parser.addOption(QCommandLineOption({"f", "force"},
+                     QStringLiteral("Continue even if an error has occurred.")));
+
     parser.addPositionalArgument("filenames", "files to be processed by qmlformat");
 
     parser.process(app);
@@ -155,7 +164,7 @@ int main(int argc, char *argv[])
         parser.showHelp(-1);
 
     for (const QString& file: parser.positionalArguments()) {
-        if (!parseFile(file, parser.isSet("inplace"), parser.isSet("verbose"), !parser.isSet("no-sort")))
+        if (!parseFile(file, parser.isSet("inplace"), parser.isSet("verbose"), !parser.isSet("no-sort"), parser.isSet("force")))
             success = false;
     }
 #endif

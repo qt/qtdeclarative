@@ -36,7 +36,6 @@
 #include <QtCore/qregularexpression.h>
 #include <QtQml/qqmllist.h>
 #include <QtCore/qrect.h>
-#include <QtGui/qmatrix.h>
 #include <QtGui/qcolor.h>
 #include <QtGui/qvector3d.h>
 #include <QtGui/QFont>

@@ -45,6 +45,9 @@ class tst_qqmllistreference : public QQmlDataTest
 public:
     tst_qqmllistreference() {}
 
+private:
+    void modeData();
+
 private slots:
     void initTestCase();
     void qmllistreference();
@@ -56,12 +59,19 @@ private slots:
     void canAt();
     void canClear();
     void canCount();
+    void canReplace();
+    void canRemoveLast();
     void isReadable();
     void isManipulable();
     void append();
     void at();
+    void clear_data() { modeData(); }
     void clear();
     void count();
+    void replace_data() { modeData(); }
+    void replace();
+    void removeLast_data() { modeData(); }
+    void removeLast();
     void copy();
     void qmlmetaproperty();
     void engineTypes();
@@ -76,13 +86,87 @@ class TestType : public QObject
     Q_PROPERTY(int intProperty READ intProperty)
 
 public:
-    TestType() : property(this, data) {}
+    enum Mode {
+        SyntheticClear,
+        SyntheticReplace,
+        SyntheticClearAndReplace,
+        SyntheticRemoveLast,
+        SyntheticRemoveLastAndReplace,
+        AutomaticReference,
+        AutomaticPointer
+    };
+
+    static void append(QQmlListProperty<TestType> *p, TestType *v) {
+        reinterpret_cast<QList<TestType *> *>(p->data)->append(v);
+    }
+    static int count(QQmlListProperty<TestType> *p) {
+        return reinterpret_cast<QList<TestType *> *>(p->data)->count();
+    }
+    static TestType *at(QQmlListProperty<TestType> *p, int idx) {
+        return reinterpret_cast<QList<TestType *> *>(p->data)->at(idx);
+    }
+    static void clear(QQmlListProperty<TestType> *p) {
+        return reinterpret_cast<QList<TestType *> *>(p->data)->clear();
+    }
+    static void replace(QQmlListProperty<TestType> *p, int idx, TestType *v) {
+        return reinterpret_cast<QList<TestType *> *>(p->data)->replace(idx, v);
+    }
+    static void removeLast(QQmlListProperty<TestType> *p) {
+        return reinterpret_cast<QList<TestType *> *>(p->data)->removeLast();
+    }
+
+    TestType(Mode mode = AutomaticReference)
+    {
+        switch (mode) {
+        case SyntheticClear:
+            property = QQmlListProperty<TestType>(this, &data, append, count, at, nullptr,
+                                                  replace, removeLast);
+            break;
+        case SyntheticReplace:
+            property = QQmlListProperty<TestType>(this, &data, append, count, at, clear,
+                                                  nullptr, removeLast);
+            break;
+        case SyntheticClearAndReplace:
+            property = QQmlListProperty<TestType>(this, &data, append, count, at, nullptr,
+                                                  nullptr, removeLast);
+            break;
+        case SyntheticRemoveLast:
+            property = QQmlListProperty<TestType>(this, &data, append, count, at, clear,
+                                                  replace, nullptr);
+            break;
+        case SyntheticRemoveLastAndReplace:
+            property = QQmlListProperty<TestType>(this, &data, append, count, at, clear,
+                                                  nullptr, nullptr);
+            break;
+        case AutomaticReference:
+            property = QQmlListProperty<TestType>(this, data);
+            break;
+        case AutomaticPointer:
+            property = QQmlListProperty<TestType>(this, &data);
+            break;
+        }
+    }
+
     QQmlListProperty<TestType> dataProperty() { return property; }
     int intProperty() const { return 10; }
 
     QList<TestType *> data;
     QQmlListProperty<TestType> property;
 };
+
+Q_DECLARE_METATYPE(TestType::Mode)
+
+void tst_qqmllistreference::modeData()
+{
+    QTest::addColumn<TestType::Mode>("mode");
+    QTest::addRow("AutomaticReference") << TestType::AutomaticReference;
+    QTest::addRow("AutomaticPointer") << TestType::AutomaticPointer;
+    QTest::addRow("SyntheticClear") << TestType::SyntheticClear;
+    QTest::addRow("SyntheticReplace") << TestType::SyntheticReplace;
+    QTest::addRow("SyntheticClearAndReplace") << TestType::SyntheticClearAndReplace;
+    QTest::addRow("SyntheticRemoveLast") << TestType::SyntheticRemoveLast;
+    QTest::addRow("SyntheticRemoveLastAndReplace") << TestType::SyntheticRemoveLastAndReplace;
+}
 
 void tst_qqmllistreference::initTestCase()
 {
@@ -340,6 +424,64 @@ void tst_qqmllistreference::canCount()
     }
 }
 
+void tst_qqmllistreference::canReplace()
+{
+    QScopedPointer<TestType> tt(new TestType);
+
+    {
+        QQmlListReference ref;
+        QVERIFY(!ref.canReplace());
+    }
+
+    {
+        QQmlListReference ref(tt.data(), "blah");
+        QVERIFY(!ref.canReplace());
+    }
+
+    {
+        QQmlListReference ref(tt.data(), "data");
+        QVERIFY(ref.canReplace());
+        tt.reset();
+        QVERIFY(!ref.canReplace());
+    }
+
+    {
+        TestType tt;
+        tt.property.replace = nullptr;
+        QQmlListReference ref(&tt, "data");
+        QVERIFY(!ref.canReplace());
+    }
+}
+
+void tst_qqmllistreference::canRemoveLast()
+{
+    QScopedPointer<TestType> tt(new TestType);
+
+    {
+        QQmlListReference ref;
+        QVERIFY(!ref.canRemoveLast());
+    }
+
+    {
+        QQmlListReference ref(tt.data(), "blah");
+        QVERIFY(!ref.canRemoveLast());
+    }
+
+    {
+        QQmlListReference ref(tt.data(), "data");
+        QVERIFY(ref.canRemoveLast());
+        tt.reset();
+        QVERIFY(!ref.canRemoveLast());
+    }
+
+    {
+        TestType tt;
+        tt.property.removeLast = nullptr;
+        QQmlListReference ref(&tt, "data");
+        QVERIFY(!ref.canRemoveLast());
+    }
+}
+
 void tst_qqmllistreference::isReadable()
 {
     TestType *tt = new TestType;
@@ -474,7 +616,8 @@ void tst_qqmllistreference::at()
 
 void tst_qqmllistreference::clear()
 {
-    TestType *tt = new TestType;
+    QFETCH(TestType::Mode, mode);
+    TestType *tt = new TestType(mode);
     tt->data.append(tt);
     tt->data.append(0);
     tt->data.append(tt);
@@ -537,6 +680,70 @@ void tst_qqmllistreference::count()
     tt.property.count = nullptr;
     QQmlListReference ref(&tt, "data");
     QCOMPARE(ref.count(), 0);
+    }
+}
+
+void tst_qqmllistreference::replace()
+{
+    QFETCH(TestType::Mode, mode);
+    QScopedPointer<TestType> tt(new TestType(mode));
+    tt->data.append(tt.get());
+    tt->data.append(nullptr);
+    tt->data.append(tt.get());
+
+    {
+        QQmlListReference ref(tt.get(), "data");
+        QVERIFY(ref.replace(1, tt.get()));
+        QCOMPARE(ref.at(1), tt.get());
+        QVERIFY(ref.replace(2, nullptr));
+        QCOMPARE(ref.at(2), nullptr);
+        QCOMPARE(ref.count(), 3);
+        tt.reset();
+        QVERIFY(!ref.replace(0, tt.get()));
+    }
+
+    {
+        TestType tt;
+        tt.data.append(&tt);
+        tt.property.replace = nullptr;
+        QQmlListReference ref(&tt, "data");
+        QVERIFY(!ref.replace(0, nullptr));
+    }
+}
+
+void tst_qqmllistreference::removeLast()
+{
+    QFETCH(TestType::Mode, mode);
+    QScopedPointer<TestType> tt(new TestType(mode));
+    tt->data.append(tt.get());
+    tt->data.append(nullptr);
+    tt->data.append(tt.get());
+
+    {
+        QQmlListReference ref;
+        QVERIFY(!ref.removeLast());
+    }
+
+    {
+        QQmlListReference ref(tt.get(), "blah");
+        QVERIFY(!ref.removeLast());
+    }
+
+    {
+        QQmlListReference ref(tt.get(), "data");
+        QCOMPARE(tt->data.count(), 3);
+        QVERIFY(ref.removeLast());
+        QCOMPARE(tt->data.count(), 2);
+        tt.reset();
+        QVERIFY(!ref.removeLast());
+    }
+
+    {
+        TestType tt;
+        tt.property.removeLast = nullptr;
+        QQmlListReference ref(&tt, "data");
+        ref.append(&tt);
+        QVERIFY(!ref.removeLast());
     }
 }
 

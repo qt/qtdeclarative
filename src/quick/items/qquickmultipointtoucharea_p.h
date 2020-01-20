@@ -198,7 +198,7 @@ public:
     bool wantsGrab() const { return _grab; }
 
     QQmlListProperty<QObject> touchPoints() {
-        return QQmlListProperty<QObject>(this, _touchPoints);
+        return QQmlListProperty<QObject>(this, &_touchPoints);
     }
     qreal dragThreshold() const { return _dragThreshold; }
 

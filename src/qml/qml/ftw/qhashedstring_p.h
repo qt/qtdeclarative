@@ -125,6 +125,7 @@ public:
     bool endsWith(const QString &) const;
     int indexOf(const QChar &, int from=0) const;
     QHashedStringRef mid(int, int) const;
+    QVector<QHashedStringRef> split(const QChar sep) const;
 
     inline bool isEmpty() const;
     inline int length() const;

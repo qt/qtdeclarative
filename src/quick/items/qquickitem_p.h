@@ -867,7 +867,7 @@ public:
 
     QQmlListProperty<QQuickItem> forwardTo() {
         Q_D(QQuickKeysAttached);
-        return QQmlListProperty<QQuickItem>(this, d->targets);
+        return QQmlListProperty<QQuickItem>(this, &(d->targets));
     }
 
     void componentComplete() override;

@@ -60,6 +60,7 @@
 #include <QtCore/qloggingcategory.h>
 
 #include <qtextformat.h>
+#include <qtransform.h>
 #include <qdatetime.h>
 #include <qbuffer.h>
 #include <qguiapplication.h>
@@ -718,12 +719,12 @@ void QQuickTextControl::selectAll()
 
 void QQuickTextControl::processEvent(QEvent *e, const QPointF &coordinateOffset)
 {
-    QMatrix m;
-    m.translate(coordinateOffset.x(), coordinateOffset.y());
-    processEvent(e, m);
+    QTransform t;
+    t.translate(coordinateOffset.x(), coordinateOffset.y());
+    processEvent(e, t);
 }
 
-void QQuickTextControl::processEvent(QEvent *e, const QMatrix &matrix)
+void QQuickTextControl::processEvent(QEvent *e, const QTransform &transform)
 {
     Q_D(QQuickTextControl);
     if (d->interactionFlags == Qt::NoTextInteraction) {
@@ -740,25 +741,25 @@ void QQuickTextControl::processEvent(QEvent *e, const QMatrix &matrix)
             break;
         case QEvent::MouseButtonPress: {
             QMouseEvent *ev = static_cast<QMouseEvent *>(e);
-            d->mousePressEvent(ev, matrix.map(ev->localPos()));
+            d->mousePressEvent(ev, transform.map(ev->localPos()));
             break; }
         case QEvent::MouseMove: {
             QMouseEvent *ev = static_cast<QMouseEvent *>(e);
-            d->mouseMoveEvent(ev, matrix.map(ev->localPos()));
+            d->mouseMoveEvent(ev, transform.map(ev->localPos()));
             break; }
         case QEvent::MouseButtonRelease: {
             QMouseEvent *ev = static_cast<QMouseEvent *>(e);
-            d->mouseReleaseEvent(ev, matrix.map(ev->localPos()));
+            d->mouseReleaseEvent(ev, transform.map(ev->localPos()));
             break; }
         case QEvent::MouseButtonDblClick: {
             QMouseEvent *ev = static_cast<QMouseEvent *>(e);
-            d->mouseDoubleClickEvent(ev, matrix.map(ev->localPos()));
+            d->mouseDoubleClickEvent(ev, transform.map(ev->localPos()));
             break; }
         case QEvent::HoverEnter:
         case QEvent::HoverMove:
         case QEvent::HoverLeave: {
             QHoverEvent *ev = static_cast<QHoverEvent *>(e);
-            d->hoverEvent(ev, matrix.map(ev->posF()));
+            d->hoverEvent(ev, transform.map(ev->posF()));
             break; }
 #if QT_CONFIG(im)
         case QEvent::InputMethod:

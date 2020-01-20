@@ -5378,25 +5378,34 @@ void tst_qqmllanguage::listContainingDeletedObject()
 
 void tst_qqmllanguage::overrideSingleton()
 {
-    auto check = [](const QString &name) {
+    auto check = [](const QString &name, const QByteArray &singletonElement) {
         const QByteArray testQml = "import Test 1.0\n"
                                    "import QtQml 2.0\n"
-                                   "QtObject { objectName: BareSingleton.objectName }";
+                                   "QtObject { objectName: " + singletonElement + ".objectName }";
         QQmlEngine engine;
         QQmlComponent component(&engine, nullptr);
-        component.setData(testQml, QUrl());
+        component.setData(testQml, QUrl("singleton.qml"));
         QVERIFY(component.isReady());
         QScopedPointer<QObject> obj(component.create());
         QCOMPARE(obj->objectName(), name);
     };
 
-    check("statically registered");
+    check("statically registered", "BareSingleton");
 
     BareSingleton singleton;
     singleton.setObjectName("dynamically registered");
     qmlRegisterSingletonInstance("Test", 1, 0, "BareSingleton", &singleton);
 
-    check("dynamically registered");
+    check("dynamically registered", "BareSingleton");
+
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                "singleton.qml:3: TypeError: Cannot read property 'objectName' of undefined");
+    check("", "UncreatableSingleton");
+
+    qmlRegisterSingletonInstance("Test", 1, 0, "UncreatableSingleton",
+                                 UncreatableSingleton::instance());
+    check("uncreatable", "UncreatableSingleton");
 }
 
 QTEST_MAIN(tst_qqmllanguage)

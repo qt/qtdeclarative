@@ -340,22 +340,22 @@ ReturnedValue QtObject::method_colorEqual(const FunctionObject *b, const Value *
     bool ok = false;
 
     QVariant lhs = scope.engine->toVariant(argv[0], -1);
-    if (lhs.userType() == QVariant::String) {
+    if (lhs.userType() == QMetaType::QString) {
         lhs = QQmlStringConverters::colorFromString(lhs.toString(), &ok);
         if (!ok) {
             THROW_GENERIC_ERROR("Qt.colorEqual(): Invalid color name");
         }
-    } else if (lhs.userType() != QVariant::Color) {
+    } else if (lhs.userType() != QMetaType::QColor) {
         THROW_GENERIC_ERROR("Qt.colorEqual(): Invalid arguments");
     }
 
     QVariant rhs = scope.engine->toVariant(argv[1], -1);
-    if (rhs.userType() == QVariant::String) {
+    if (rhs.userType() == QMetaType::QString) {
         rhs = QQmlStringConverters::colorFromString(rhs.toString(), &ok);
         if (!ok) {
             THROW_GENERIC_ERROR("Qt.colorEqual(): Invalid color name");
         }
-    } else if (rhs.userType() != QVariant::Color) {
+    } else if (rhs.userType() != QMetaType::QColor) {
         THROW_GENERIC_ERROR("Qt.colorEqual(): Invalid arguments");
     }
 
@@ -606,13 +606,13 @@ ReturnedValue QtObject::method_lighter(const FunctionObject *b, const Value *, c
         THROW_GENERIC_ERROR("Qt.lighter(): Invalid arguments");
 
     QVariant v = scope.engine->toVariant(argv[0], -1);
-    if (v.userType() == QVariant::String) {
+    if (v.userType() == QMetaType::QString) {
         bool ok = false;
         v = QQmlStringConverters::colorFromString(v.toString(), &ok);
         if (!ok) {
             return QV4::Encode::null();
         }
-    } else if (v.userType() != QVariant::Color) {
+    } else if (v.userType() != QMetaType::QColor) {
         return QV4::Encode::null();
     }
 
@@ -646,13 +646,13 @@ ReturnedValue QtObject::method_darker(const FunctionObject *b, const Value *, co
         THROW_GENERIC_ERROR("Qt.darker(): Invalid arguments");
 
     QVariant v = scope.engine->toVariant(argv[0], -1);
-    if (v.userType() == QVariant::String) {
+    if (v.userType() == QMetaType::QString) {
         bool ok = false;
         v = QQmlStringConverters::colorFromString(v.toString(), &ok);
         if (!ok) {
             return QV4::Encode::null();
         }
-    } else if (v.userType() != QVariant::Color) {
+    } else if (v.userType() != QMetaType::QColor) {
         return QV4::Encode::null();
     }
 
@@ -697,25 +697,25 @@ ReturnedValue QtObject::method_tint(const FunctionObject *b, const Value *, cons
 
     // base color
     QVariant v1 = scope.engine->toVariant(argv[0], -1);
-    if (v1.userType() == QVariant::String) {
+    if (v1.userType() == QMetaType::QString) {
         bool ok = false;
         v1 = QQmlStringConverters::colorFromString(v1.toString(), &ok);
         if (!ok) {
             return QV4::Encode::null();
         }
-    } else if (v1.userType() != QVariant::Color) {
+    } else if (v1.userType() != QMetaType::QColor) {
         return QV4::Encode::null();
     }
 
     // tint color
     QVariant v2 = scope.engine->toVariant(argv[1], -1);
-    if (v2.userType() == QVariant::String) {
+    if (v2.userType() == QMetaType::QString) {
         bool ok = false;
         v2 = QQmlStringConverters::colorFromString(v2.toString(), &ok);
         if (!ok) {
             return QV4::Encode::null();
         }
-    } else if (v2.userType() != QVariant::Color) {
+    } else if (v2.userType() != QMetaType::QColor) {
         return QV4::Encode::null();
     }
 
@@ -789,7 +789,7 @@ ReturnedValue QtObject::method_formatTime(const FunctionObject *b, const Value *
 
     QVariant argVariant = scope.engine->toVariant(argv[0], -1);
     QTime time;
-    if (argv[0].as<DateObject>() || (argVariant.type() == QVariant::String))
+    if (argv[0].as<DateObject>() || (argVariant.userType() == QMetaType::QString))
         time = argVariant.toDateTime().time();
     else // if (argVariant.type() == QVariant::Time), or invalid.
         time = argVariant.toTime();

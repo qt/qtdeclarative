@@ -500,8 +500,8 @@ bool QuickTestResult::verify
 
 bool QuickTestResult::fuzzyCompare(const QVariant &actual, const QVariant &expected, qreal delta)
 {
-    if (actual.type() == QVariant::Color || expected.type() == QVariant::Color) {
-        if (!actual.canConvert(QVariant::Color) || !expected.canConvert(QVariant::Color))
+    if (actual.userType() == QMetaType::QColor || expected.userType() == QMetaType::QColor) {
+        if (!actual.canConvert(QMetaType::QColor) || !expected.canConvert(QMetaType::QColor))
             return false;
 
         //fuzzy color comparison
@@ -556,20 +556,20 @@ void QuickTestResult::stringify(QQmlV4Function *args)
         && !value->as<QV4::ArrayObject>()) {
         QVariant v = scope.engine->toVariant(value, QMetaType::UnknownType);
         if (v.isValid()) {
-            switch (v.type()) {
-            case QVariant::Vector3D:
+            switch (v.userType()) {
+            case QMetaType::QVector3D:
             {
                 QVector3D v3d = v.value<QVector3D>();
                 result = QString::fromLatin1("Qt.vector3d(%1, %2, %3)").arg(v3d.x()).arg(v3d.y()).arg(v3d.z());
                 break;
             }
-            case QVariant::Url:
+            case QMetaType::QUrl:
             {
                 QUrl url = v.value<QUrl>();
                 result = QString::fromLatin1("Qt.url(%1)").arg(url.toString());
                 break;
             }
-            case QVariant::DateTime:
+            case QMetaType::QDateTime:
             {
                 QDateTime dt = v.value<QDateTime>();
                 result = dt.toString(Qt::ISODateWithMs);

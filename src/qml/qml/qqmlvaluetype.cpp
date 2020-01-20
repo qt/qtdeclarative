@@ -48,6 +48,8 @@
 #endif
 #include <private/qmetatype_p.h>
 
+Q_DECLARE_METATYPE(QQmlProperty)
+
 QT_BEGIN_NAMESPACE
 
 namespace {
@@ -62,7 +64,7 @@ struct QQmlValueTypeFactoryImpl
     const QMetaObject *metaObjectForMetaType(int);
     QQmlValueType *valueType(int);
 
-    QQmlValueType *valueTypes[QVariant::UserType];
+    QQmlValueType *valueTypes[QMetaType::User];
     QHash<int, QQmlValueType *> userTypes;
     QMutex mutex;
 
@@ -71,7 +73,7 @@ struct QQmlValueTypeFactoryImpl
 
 QQmlValueTypeFactoryImpl::QQmlValueTypeFactoryImpl()
 {
-    std::fill_n(valueTypes, int(QVariant::UserType), &invalidValueType);
+    std::fill_n(valueTypes, int(QMetaType::User), &invalidValueType);
 
 #if QT_CONFIG(qml_itemmodel)
     // See types wrapped in qqmlmodelindexvaluetype_p.h
@@ -118,26 +120,26 @@ bool QQmlValueTypeFactoryImpl::isValueType(int idx)
 const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
 {
     switch (t) {
-    case QVariant::Point:
+    case QMetaType::QPoint:
         return &QQmlPointValueType::staticMetaObject;
-    case QVariant::PointF:
+    case QMetaType::QPointF:
         return &QQmlPointFValueType::staticMetaObject;
-    case QVariant::Size:
+    case QMetaType::QSize:
         return &QQmlSizeValueType::staticMetaObject;
-    case QVariant::SizeF:
+    case QMetaType::QSizeF:
         return &QQmlSizeFValueType::staticMetaObject;
-    case QVariant::Rect:
+    case QMetaType::QRect:
         return &QQmlRectValueType::staticMetaObject;
-    case QVariant::RectF:
+    case QMetaType::QRectF:
         return &QQmlRectFValueType::staticMetaObject;
 #if QT_CONFIG(easingcurve)
-    case QVariant::EasingCurve:
+    case QMetaType::QEasingCurve:
         return &QQmlEasingValueType::staticMetaObject;
 #endif
 #if QT_CONFIG(qml_itemmodel)
-    case QVariant::ModelIndex:
+    case QMetaType::QModelIndex:
         return &QQmlModelIndexValueType::staticMetaObject;
-    case QVariant::PersistentModelIndex:
+    case QMetaType::QPersistentModelIndex:
         return &QQmlPersistentModelIndexValueType::staticMetaObject;
 #endif
     default:
@@ -145,7 +147,8 @@ const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
         if (t == qMetaTypeId<QItemSelectionRange>())
             return &QQmlItemSelectionRangeValueType::staticMetaObject;
 #endif
-
+        if (t == qMetaTypeId<QQmlProperty>())
+            return &QQmlPropertyValueType::staticMetaObject;
         if (const QMetaObject *mo = QQml_valueTypeProvider()->metaObjectForMetaType(t))
             return mo;
         break;
@@ -159,7 +162,7 @@ const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
 
 QQmlValueType *QQmlValueTypeFactoryImpl::valueType(int idx)
 {
-    if (idx >= (int)QVariant::UserType) {
+    if (idx >= (int)QMetaType::User) {
         // Protect the hash with a mutex
         mutex.lock();
 
@@ -583,6 +586,16 @@ void QQmlEasingValueType::setBezierCurve(const QVariantList &customCurveVariant)
     }
 
     v = newEasingCurve;
+}
+
+QObject *QQmlPropertyValueType::object() const
+{
+    return v.object();
+}
+
+QString QQmlPropertyValueType::name() const
+{
+    return v.name();
 }
 
 QVariantList QQmlEasingValueType::bezierCurve() const

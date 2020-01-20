@@ -136,7 +136,7 @@ void QSGRhiShaderLinker::linkTextureSubRects()
     // texture binding point.
     for (Constant &c : m_constants) {
         if (c.specialType == QSGShaderEffectNode::VariableData::SubRect) {
-            if (c.value.type() == QVariant::ByteArray) {
+            if (c.value.userType() == QMetaType::QByteArray) {
                 const QByteArray name = c.value.toByteArray();
                 if (!m_samplerNameMap.contains(name))
                     qWarning("ShaderEffect: qt_SubRect_%s refers to unknown source texture", name.constData());
@@ -270,7 +270,7 @@ bool QSGRhiShaderEffectMaterialShader::updateUniformData(RenderState &state, QSG
             memcpy(dst, f, sizeof(f));
         } else if (c.specialType == QSGShaderEffectNode::VariableData::None) {
             changed = true;
-            switch (int(c.value.type())) {
+            switch (int(c.value.userType())) {
             case QMetaType::QColor: {
                 const QColor v = qsg_premultiply_color(qvariant_cast<QColor>(c.value));
                 const float f[4] = { float(v.redF()), float(v.greenF()), float(v.blueF()), float(v.alphaF()) };

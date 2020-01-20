@@ -196,7 +196,7 @@ public:
 
     QQmlListProperty<QQuickStochasticState> states()
     {
-        return QQmlListProperty<QQuickStochasticState>(this, m_states);
+        return QQmlListProperty<QQuickStochasticState>(this, &m_states);
     }
 
     QString globalGoal() const
@@ -272,7 +272,7 @@ public:
     ~QQuickSpriteEngine() override;
     QQmlListProperty<QQuickSprite> sprites()
     {
-        return QQmlListProperty<QQuickSprite>(this, m_sprites);
+        return QQmlListProperty<QQuickSprite>(this, &m_sprites);
     }
 
     QQuickSprite* sprite(int sprite = 0) const;

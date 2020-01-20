@@ -92,7 +92,7 @@ static void flagsForPropertyType(int propType, QQmlPropertyData::Flags &flags)
         flags.type = QQmlPropertyData::Flags::QObjectDerivedType;
     } else if (propType == QMetaType::QVariant) {
         flags.type = QQmlPropertyData::Flags::QVariantType;
-    } else if (propType < static_cast<int>(QVariant::UserType)) {
+    } else if (propType < static_cast<int>(QMetaType::User)) {
         // nothing to do
     } else if (propType == qMetaTypeId<QQmlBinding *>()) {
         flags.type = QQmlPropertyData::Flags::QmlBindingType;
@@ -136,14 +136,14 @@ static void populate(QQmlPropertyData *data, const QMetaProperty &p)
 void QQmlPropertyData::lazyLoad(const QMetaProperty &p)
 {
     populate(this, p);
-    int type = static_cast<int>(p.type());
+    int type = static_cast<int>(p.userType());
     if (type == QMetaType::QObjectStar) {
         setPropType(type);
         m_flags.type = Flags::QObjectDerivedType;
     } else if (type == QMetaType::QVariant) {
         setPropType(type);
         m_flags.type = Flags::QVariantType;
-    } else if (type == QVariant::UserType || type == -1) {
+    } else if (type >= QMetaType::User || type == 0) {
         m_flags.notFullyResolved = true;
     } else {
         setPropType(type);
@@ -314,7 +314,7 @@ void QQmlPropertyCache::appendSignal(const QString &name, QQmlPropertyData::Flag
                                      const QList<QByteArray> &names)
 {
     QQmlPropertyData data;
-    data.setPropType(QVariant::Invalid);
+    data.setPropType(QMetaType::UnknownType);
     data.setCoreIndex(coreIndex);
     data.setFlags(flags);
     data.setArguments(nullptr);

@@ -116,14 +116,14 @@ private:
     {
     public:
         ColumnRoleMetadata();
-        ColumnRoleMetadata(bool isStringRole, const QString &name, QVariant::Type type, const QString &typeName);
+        ColumnRoleMetadata(bool isStringRole, const QString &name, int type, const QString &typeName);
 
         bool isValid() const;
 
         // If this is false, it's a function role.
         bool isStringRole = false;
         QString name;
-        QVariant::Type type = QVariant::Invalid;
+        int type = QMetaType::UnknownType;
         QString typeName;
     };
 

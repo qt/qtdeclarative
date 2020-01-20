@@ -479,7 +479,7 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
                 if (!propertyMetaObject.isNull())
                     propertyType = propertyMetaObject.className();
             }
-        } else if (userType != QVariant::Invalid) {
+        } else if (userType != QMetaType::UnknownType) {
             if (userType == QMetaType::Nullptr || userType == QMetaType::VoidStar)
                 valueType = "null";
             else

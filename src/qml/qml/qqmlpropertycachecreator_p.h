@@ -806,12 +806,12 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>:
             if (valueTypeIndex != -1) {
                 const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(*type);
                 if (valueTypeMetaObject->property(valueTypeIndex).isEnumType())
-                    *type = QVariant::Int;
+                    *type = QMetaType::Int;
                 else
                     *type = valueTypeMetaObject->property(valueTypeIndex).userType();
             } else {
                 if (targetProperty->isEnum()) {
-                    *type = QVariant::Int;
+                    *type = QMetaType::Int;
                 } else {
                     // Copy type flags
                     propertyFlags->copyPropertyTypeFlags(targetProperty->flags());

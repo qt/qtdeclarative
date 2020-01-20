@@ -601,7 +601,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
 
     QVariant v = v4->toVariant(value, property.userType());
 
-    if (property.isEnumType() && (QMetaType::Type)v.type() == QMetaType::Double)
+    if (property.isEnumType() && (QMetaType::Type)v.userType() == QMetaType::Double)
         v = v.toInt();
 
     void *gadget = r->d()->gadgetPtr();

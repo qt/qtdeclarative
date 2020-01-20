@@ -1461,7 +1461,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
     if (const QV4::VariantObject *v = value.as<QV4::VariantObject>())
         return v->d()->data();
 
-    if (typeHint == QVariant::Bool)
+    if (typeHint == QMetaType::Bool)
         return QVariant(value.toBoolean());
 
     if (typeHint == QMetaType::QJsonValue)
@@ -1533,7 +1533,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
     if (String *s = value.stringValue()) {
         const QString &str = s->toQString();
         // QChars are stored as a strings
-        if (typeHint == QVariant::Char && str.size() == 1)
+        if (typeHint == QMetaType::QChar && str.size() == 1)
             return str.at(0);
         return str;
     }
@@ -1832,7 +1832,7 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
     Q_ASSERT(data != nullptr);
 
     QVariant variant(type, data);
-    if (QMetaType::Type(variant.type()) == QMetaType::QVariant) {
+    if (QMetaType::Type(variant.userType()) == QMetaType::QVariant) {
         // unwrap it: this is tested in QJSEngine, and makes the most sense for
         // end-user code too.
         return variantToJS(this, *reinterpret_cast<const QVariant*>(data));
