@@ -1,0 +1,4 @@
+module QtQuick.Controls.macOS
+plugin qtquickcontrols2macosstyleplugin
+classname QtQuickControls2MacOSStylePlugin
+depends QtQuick.Controls 2.5

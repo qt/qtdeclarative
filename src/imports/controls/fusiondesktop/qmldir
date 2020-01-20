@@ -1,0 +1,4 @@
+module QtQuick.Controls.FusionDesktop
+plugin qtquickcontrols2fusiondesktopstyleplugin
+classname QtQuickControls2FusionDesktopStylePlugin
+depends QtQuick.Controls 2.5

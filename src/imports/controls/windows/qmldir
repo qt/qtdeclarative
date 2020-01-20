@@ -1,0 +1,4 @@
+module QtQuick.Controls.Windows
+plugin qtquickcontrols2windowsstyleplugin
+classname QtQuickControls2WindowsStylePlugin
+depends QtQuick.Controls 2.5
