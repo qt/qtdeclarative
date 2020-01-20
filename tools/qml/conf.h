@@ -81,7 +81,7 @@ public:
 
     QQmlListProperty<PartialScene> sceneCompleters()
     {
-        return QQmlListProperty<PartialScene>(this, completers);
+        return QQmlListProperty<PartialScene>(this, &completers);
     }
 
     QList<PartialScene*> completers;

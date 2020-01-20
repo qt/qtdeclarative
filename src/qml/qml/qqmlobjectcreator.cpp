@@ -414,25 +414,25 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         }
     }
     break;
-    case QVariant::String: {
+    case QMetaType::QString: {
         assertOrNull(binding->evaluatesToString());
         QString value = compilationUnit->bindingValueAsString(binding);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-    case QVariant::StringList: {
+    case QMetaType::QStringList: {
         assertOrNull(binding->evaluatesToString());
         QStringList value(compilationUnit->bindingValueAsString(binding));
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-    case QVariant::ByteArray: {
+    case QMetaType::QByteArray: {
         assertType(QV4::CompiledData::Binding::Type_String);
         QByteArray value(compilationUnit->bindingValueAsString(binding).toUtf8());
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-    case QVariant::Url: {
+    case QMetaType::QUrl: {
         assertType(QV4::CompiledData::Binding::Type_String);
         QString string = compilationUnit->bindingValueAsString(binding);
         // Encoded dir-separators defeat QUrl processing - decode them first
@@ -444,7 +444,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-    case QVariant::UInt: {
+    case QMetaType::UInt: {
         assertType(QV4::CompiledData::Binding::Type_Number);
         double d = compilationUnit->bindingValueAsNumber(binding);
         uint value = uint(d);
@@ -452,7 +452,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         break;
     }
     break;
-    case QVariant::Int: {
+    case QMetaType::Int: {
         assertType(QV4::CompiledData::Binding::Type_Number);
         double d = compilationUnit->bindingValueAsNumber(binding);
         int value = int(d);
@@ -466,13 +466,13 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-    case QVariant::Double: {
+    case QMetaType::Double: {
         assertType(QV4::CompiledData::Binding::Type_Number);
         double value = compilationUnit->bindingValueAsNumber(binding);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-    case QVariant::Color: {
+    case QMetaType::QColor: {
         bool ok = false;
         uint colorValue = QQmlStringConverters::rgbaFromString(compilationUnit->bindingValueAsString(binding), &ok);
         assertOrNull(ok);
@@ -483,21 +483,21 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     }
     break;
 #if QT_CONFIG(datestring)
-    case QVariant::Date: {
+    case QMetaType::QDate: {
         bool ok = false;
         QDate value = QQmlStringConverters::dateFromString(compilationUnit->bindingValueAsString(binding), &ok);
         assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-    case QVariant::Time: {
+    case QMetaType::QTime: {
         bool ok = false;
         QTime value = QQmlStringConverters::timeFromString(compilationUnit->bindingValueAsString(binding), &ok);
         assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-    case QVariant::DateTime: {
+    case QMetaType::QDateTime: {
         bool ok = false;
         QDateTime value = QQmlStringConverters::dateTimeFromString(compilationUnit->bindingValueAsString(binding), &ok);
         // ### VME compatibility :(
@@ -511,55 +511,55 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     }
     break;
 #endif // datestring
-    case QVariant::Point: {
+    case QMetaType::QPoint: {
         bool ok = false;
         QPoint value = QQmlStringConverters::pointFFromString(compilationUnit->bindingValueAsString(binding), &ok).toPoint();
         assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-    case QVariant::PointF: {
+    case QMetaType::QPointF: {
         bool ok = false;
         QPointF value = QQmlStringConverters::pointFFromString(compilationUnit->bindingValueAsString(binding), &ok);
         assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-    case QVariant::Size: {
+    case QMetaType::QSize: {
         bool ok = false;
         QSize value = QQmlStringConverters::sizeFFromString(compilationUnit->bindingValueAsString(binding), &ok).toSize();
         assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-    case QVariant::SizeF: {
+    case QMetaType::QSizeF: {
         bool ok = false;
         QSizeF value = QQmlStringConverters::sizeFFromString(compilationUnit->bindingValueAsString(binding), &ok);
         assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-    case QVariant::Rect: {
+    case QMetaType::QRect: {
         bool ok = false;
         QRect value = QQmlStringConverters::rectFFromString(compilationUnit->bindingValueAsString(binding), &ok).toRect();
         assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-    case QVariant::RectF: {
+    case QMetaType::QRectF: {
         bool ok = false;
         QRectF value = QQmlStringConverters::rectFFromString(compilationUnit->bindingValueAsString(binding), &ok);
         assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-    case QVariant::Bool: {
+    case QMetaType::Bool: {
         assertType(QV4::CompiledData::Binding::Type_Boolean);
         bool value = binding->valueAsBoolean();
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-    case QVariant::Vector2D: {
+    case QMetaType::QVector2D: {
         struct {
             float xp;
             float yp;
@@ -570,7 +570,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         property->writeProperty(_qobject, &vec, propertyWriteFlags);
     }
     break;
-    case QVariant::Vector3D: {
+    case QMetaType::QVector3D: {
         struct {
             float xp;
             float yp;
@@ -582,7 +582,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         property->writeProperty(_qobject, &vec, propertyWriteFlags);
     }
     break;
-    case QVariant::Vector4D: {
+    case QMetaType::QVector4D: {
         struct {
             float xp;
             float yp;
@@ -595,7 +595,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         property->writeProperty(_qobject, &vec, propertyWriteFlags);
     }
     break;
-    case QVariant::Quaternion: {
+    case QMetaType::QQuaternion: {
         struct {
             float wp;
             float xp;
@@ -608,7 +608,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         property->writeProperty(_qobject, &vec, propertyWriteFlags);
     }
     break;
-    case QVariant::RegExp:
+    case QMetaType::QRegExp:
         assertOrNull(!"not possible");
         break;
     default: {
@@ -673,7 +673,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         QVariant value = (*converter)(stringValue);
 
         QMetaProperty metaProperty = _qobject->metaObject()->property(property->coreIndex());
-        if (value.isNull() || ((int)metaProperty.type() != property->propType() && metaProperty.userType() != property->propType())) {
+        if (value.isNull() || metaProperty.userType() != property->propType()) {
             recordError(binding->location, tr("Cannot assign value %1 to property %2").arg(stringValue).arg(QString::fromUtf8(metaProperty.name())));
             break;
         }

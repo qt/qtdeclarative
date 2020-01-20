@@ -509,7 +509,7 @@ QString generateCmakeIncludeFileContent(const QVariantList &importList) {
     QTextStream s(&content);
     int importsCount = 0;
     for (const QVariant &importVariant: importList) {
-        if (static_cast<QMetaType::Type>(importVariant.type()) == QMetaType::QVariantMap) {
+        if (static_cast<QMetaType::Type>(importVariant.userType()) == QMetaType::QVariantMap) {
             s << QStringLiteral("set(qml_import_scanner_import_") << importsCount
               << QStringLiteral(" \"");
 

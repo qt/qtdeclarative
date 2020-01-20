@@ -96,7 +96,7 @@ static bool isSaveable(const QVariant &value)
 {
     NullDevice nullDevice;
     QDataStream fakeStream(&nullDevice);
-    return QMetaType::save(fakeStream, static_cast<int>(value.type()), value.constData());
+    return QMetaType::save(fakeStream, static_cast<int>(value.userType()), value.constData());
 }
 
 QQmlEngineDebugServiceImpl::QQmlEngineDebugServiceImpl(QObject *parent) :
@@ -217,7 +217,7 @@ QVariant QQmlEngineDebugServiceImpl::valueContents(QVariant value) const
     //QObject * is not streamable.
     //Convert all such instances to a String value
 
-    if (value.type() == QVariant::List) {
+    if (value.userType() == QMetaType::QVariantList) {
         QVariantList contents;
         QVariantList list = value.toList();
         int count = list.size();
@@ -227,7 +227,7 @@ QVariant QQmlEngineDebugServiceImpl::valueContents(QVariant value) const
         return contents;
     }
 
-    if (value.type() == QVariant::Map) {
+    if (value.userType() == QMetaType::QVariantMap) {
         QVariantMap contents;
         const auto map = value.toMap();
         for (auto i = map.cbegin(), end = map.cend(); i != end; ++i)

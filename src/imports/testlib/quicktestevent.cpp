@@ -125,7 +125,7 @@ bool QuickTestEvent::keyClickChar(const QString &character, int modifiers, int d
 // valueToKeySequence() is copied from qquickshortcut.cpp
 static QKeySequence valueToKeySequence(const QVariant &value)
 {
-    if (value.type() == QVariant::Int)
+    if (value.userType() == QMetaType::Int)
         return QKeySequence(static_cast<QKeySequence::StandardKey>(value.toInt()));
     return QKeySequence::fromString(value.toString());
 }

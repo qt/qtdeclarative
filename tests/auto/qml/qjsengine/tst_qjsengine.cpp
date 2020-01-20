@@ -1543,7 +1543,7 @@ void tst_QJSEngine::valueConversion_QVariant()
     {
         QVariant tmp1;
         QVariant tmp2(QMetaType::QVariant, &tmp1);
-        QCOMPARE(QMetaType::Type(tmp2.type()), QMetaType::QVariant);
+        QCOMPARE(QMetaType::Type(tmp2.userType()), QMetaType::QVariant);
 
         QJSValue val1 = eng.toScriptValue(tmp1);
         QJSValue val2 = eng.toScriptValue(tmp2);
@@ -1558,9 +1558,9 @@ void tst_QJSEngine::valueConversion_QVariant()
         QVariant tmp1(123);
         QVariant tmp2(QMetaType::QVariant, &tmp1);
         QVariant tmp3(QMetaType::QVariant, &tmp2);
-        QCOMPARE(QMetaType::Type(tmp1.type()), QMetaType::Int);
-        QCOMPARE(QMetaType::Type(tmp2.type()), QMetaType::QVariant);
-        QCOMPARE(QMetaType::Type(tmp3.type()), QMetaType::QVariant);
+        QCOMPARE(QMetaType::Type(tmp1.userType()), QMetaType::Int);
+        QCOMPARE(QMetaType::Type(tmp2.userType()), QMetaType::QVariant);
+        QCOMPARE(QMetaType::Type(tmp3.userType()), QMetaType::QVariant);
 
         QJSValue val1 = eng.toScriptValue(tmp2);
         QJSValue val2 = eng.toScriptValue(tmp3);

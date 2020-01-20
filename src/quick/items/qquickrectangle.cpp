@@ -257,7 +257,7 @@ QQuickGradient::~QQuickGradient()
 
 QQmlListProperty<QQuickGradientStop> QQuickGradient::stops()
 {
-    return QQmlListProperty<QQuickGradientStop>(this, m_stops);
+    return QQmlListProperty<QQuickGradientStop>(this, &m_stops);
 }
 
 /*!
