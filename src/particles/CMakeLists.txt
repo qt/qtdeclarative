@@ -6,6 +6,7 @@
 
 qt_add_module(QuickParticles
     INTERNAL_MODULE
+    GENERATE_METATYPES
     SOURCES
         qquickage.cpp qquickage_p.h
         qquickangledirection.cpp qquickangledirection_p.h
@@ -128,3 +129,12 @@ qt_extend_target(QuickParticles CONDITION QT_FEATURE_quick_shadereffect
     SOURCES
         qquickcustomparticle.cpp qquickcustomparticle_p.h
 )
+
+set_target_properties(QuickParticles PROPERTIES
+    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
+    QT_QML_MODULE_VERSION 2.15
+    QT_QML_MODULE_URI QtQuick.Particles
+    QT_QML_MODULE_INSTALL_DIR "${Qt6_DIR}/../../../qml/QtQuick/Particles.2"
+)
+
+qt6_qml_type_registration(QuickParticles)

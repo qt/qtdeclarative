@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_module(Qml
+    GENERATE_METATYPES
     PLUGIN_TYPES qmltooling
     SOURCES
         # ../3rdparty/masm/assembler/*.h special case remove
@@ -611,3 +612,12 @@ qt_add_docs(Qml
     doc/qtqml.qdocconf
 )
 
+
+set_target_properties(Qml PROPERTIES
+    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
+    QT_QML_MODULE_VERSION 2.15
+    QT_QML_MODULE_URI QtQml
+    QT_QML_MODULE_INSTALL_DIR "${Qt6_DIR}/../../../qml/QtQml"
+)
+
+qt6_qml_type_registration(Qml)

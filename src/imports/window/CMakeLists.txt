@@ -11,6 +11,7 @@ qt_add_qml_module(windowplugin
     DESIGNER_SUPPORTED
     CLASSNAME QtQuick2WindowPlugin
     SKIP_TYPE_REGISTRATION
+    GENERATE_QMLTYPES
     SOURCES
         plugin.cpp plugin.h
     LIBRARIES

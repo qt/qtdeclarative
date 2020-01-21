@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_module(QmlModels
+    GENERATE_METATYPES
     SOURCES
         qqmlchangeset.cpp qqmlchangeset_p.h
         qqmlmodelsmodule_p.h
@@ -63,3 +64,12 @@ qt_add_docs(QmlModels
     doc/qtqmlmodels.qdocconf
 )
 
+
+set_target_properties(QmlModels PROPERTIES
+    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
+    QT_QML_MODULE_VERSION 2.15
+    QT_QML_MODULE_URI QtQml.Models
+    QT_QML_MODULE_INSTALL_DIR "${Qt6_DIR}/../../../qml/QtQml/Models.2"
+)
+
+qt6_qml_type_registration(QmlModels)

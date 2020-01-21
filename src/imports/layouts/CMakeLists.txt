@@ -10,6 +10,7 @@ qt_add_qml_module(qquicklayoutsplugin
     DESIGNER_SUPPORTED
     CLASSNAME QtQuickLayoutsPlugin
     SKIP_TYPE_REGISTRATION
+    GENERATE_QMLTYPES
     SOURCES
         plugin.cpp
         qquickgridlayoutengine.cpp qquickgridlayoutengine_p.h

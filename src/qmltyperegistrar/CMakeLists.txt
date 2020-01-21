@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qmltyperegistrar
+    TOOLS_TARGET Qml # special case
     SOURCES
         ../../tools/shared/qmlstreamwriter.cpp ../../tools/shared/qmlstreamwriter.h
         ../../tools/shared/resourcefilemapper.cpp ../../tools/shared/resourcefilemapper.h

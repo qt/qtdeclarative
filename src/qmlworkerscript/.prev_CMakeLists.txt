@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_module(QmlWorkerScript
+    GENERATE_METATYPES
     SOURCES
         qquickworkerscript.cpp qquickworkerscript_p.h
         qtqmlworkerscriptglobal.h qtqmlworkerscriptglobal_p.h
@@ -99,3 +100,12 @@ qt_add_docs(QmlWorkerScript
     doc/qtqmlworkerscript.qdocconf
 )
 
+
+set_target_properties(QmlWorkerScript PROPERTIES
+    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
+    QT_QML_MODULE_VERSION 2.15
+    QT_QML_MODULE_URI QtQml.WorkerScript
+    QT_QML_MODULE_INSTALL_DIR "${Qt6_DIR}/../../../qml/QtQml/WorkerScript.2"
+)
+
+qt6_qml_type_registration(QmlWorkerScript)

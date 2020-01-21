@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_module(Quick
+    GENERATE_METATYPES
     PLUGIN_TYPES scenegraph
     SOURCES
         handlers/qquickdragaxis.cpp handlers/qquickdragaxis_p.h
@@ -592,3 +593,12 @@ qt_add_docs(Quick
     doc/qtquick.qdocconf
 )
 
+
+set_target_properties(Quick PROPERTIES
+    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
+    QT_QML_MODULE_VERSION 2.15
+    QT_QML_MODULE_URI QtQuick
+    QT_QML_MODULE_INSTALL_DIR "${Qt6_DIR}/../../../qml/QtQuick.2"
+)
+
+qt6_qml_type_registration(Quick)

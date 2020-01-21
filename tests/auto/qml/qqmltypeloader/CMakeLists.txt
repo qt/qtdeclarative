@@ -1,4 +1,4 @@
-# Generated from tst_qqmltypeloader.pro.
+# Generated from qqmltypeloader.pro.
 
 #####################################################################
 ## tst_qqmltypeloader Test:
@@ -21,13 +21,12 @@ qt_add_test(tst_qqmltypeloader
     LIBRARIES
         Qt::QmlPrivate
     PUBLIC_LIBRARIES
-        Qt::Gui
         Qt::Qml
         Qt::Quick
     TESTDATA ${test_data}
 )
 
-#### Keys ignored in scope 1:.:.:tst_qqmltypeloader.pro:<TRUE>:
+#### Keys ignored in scope 2:.:.:tst_qqmltypeloader.pro:<TRUE>:
 # QML_IMPORT_NAME = "declarative.import.for.typeloader.test"
 # QML_IMPORT_VERSION = "3.2"
 
@@ -43,3 +42,12 @@ qt_extend_target(tst_qqmltypeloader CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )
+
+set_target_properties(tst_qqmltypeloader PROPERTIES
+    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
+    QT_QML_MODULE_VERSION 3.2
+    QT_QML_MODULE_URI declarative.import.for.typeloader.test
+)
+
+qt6_qml_type_registration(tst_qqmltypeloader)
+add_subdirectory(SlowImport)

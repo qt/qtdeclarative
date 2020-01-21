@@ -9,6 +9,7 @@ qt_add_qml_module(sharedimageplugin
     VERSION "1.0"
     CLASSNAME QtQuickSharedImagePlugin
     SKIP_TYPE_REGISTRATION
+    GENERATE_QMLTYPES
     SOURCES
         plugin.cpp
         qsharedimageloader.cpp qsharedimageloader_p.h

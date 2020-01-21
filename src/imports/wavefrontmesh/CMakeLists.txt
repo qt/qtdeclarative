@@ -9,6 +9,7 @@ qt_add_qml_module(qmlwavefrontmeshplugin
     VERSION "1.15"
     CLASSNAME QmlWavefrontMeshPlugin
     SKIP_TYPE_REGISTRATION
+    GENERATE_QMLTYPES
     SOURCES
         plugin.cpp
         qwavefrontmesh.cpp qwavefrontmesh.h

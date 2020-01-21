@@ -9,6 +9,7 @@ qt_add_qml_module(qtqmlstatemachine
     VERSION "1.15"
     CLASSNAME QtQmlStateMachinePlugin
     SKIP_TYPE_REGISTRATION
+    GENERATE_QMLTYPES
     SOURCES
         childrenprivate.h
         finalstate.cpp finalstate.h

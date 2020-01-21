@@ -6,6 +6,7 @@
 
 qt_add_module(QuickShapes
     INTERNAL_MODULE
+    GENERATE_METATYPES
     SOURCES
         qquickshape.cpp qquickshape_p.h
         qquickshape_p_p.h
@@ -71,3 +72,12 @@ qt_extend_target(QuickShapes CONDITION QT_FEATURE_opengl
         qquicknvprfunctions_p_p.h
         qquickshapenvprrenderer.cpp qquickshapenvprrenderer_p.h
 )
+
+set_target_properties(QuickShapes PROPERTIES
+    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
+    QT_QML_MODULE_VERSION 1.15
+    QT_QML_MODULE_URI QtQuick.Shapes
+    QT_QML_MODULE_INSTALL_DIR "${Qt6_DIR}/../../../qml/QtQuick/Shapes"
+)
+
+qt6_qml_type_registration(QuickShapes)

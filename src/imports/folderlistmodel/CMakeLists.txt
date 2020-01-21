@@ -9,6 +9,7 @@ qt_add_qml_module(qmlfolderlistmodelplugin
     VERSION "2.15"
     CLASSNAME QmlFolderListModelPlugin
     SKIP_TYPE_REGISTRATION
+    GENERATE_QMLTYPES
     SOURCES
         fileinfothread.cpp fileinfothread_p.h
         fileproperty_p.h

@@ -9,6 +9,7 @@ qt_add_qml_module(qmlsettingsplugin
     VERSION "1.1"
     CLASSNAME QmlSettingsPlugin
     SKIP_TYPE_REGISTRATION
+    GENERATE_QMLTYPES
     SOURCES
         plugin.cpp
         qqmlsettings.cpp qqmlsettings_p.h
