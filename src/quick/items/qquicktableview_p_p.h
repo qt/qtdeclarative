@@ -404,11 +404,13 @@ public:
     void itemReusedCallback(int modelIndex, QObject *object);
     void modelUpdated(const QQmlChangeSet &changeSet, bool reset);
 
-    inline void syncWithPendingChanges();
-    inline void syncDelegate();
-    inline void syncModel();
+    virtual void syncWithPendingChanges();
+    virtual void syncDelegate();
+    virtual QVariant modelImpl() const;
+    virtual void setModelImpl(const QVariant &newModel);
+    virtual void syncModel();
     inline void syncRebuildOptions();
-    inline void syncSyncView();
+    virtual void syncSyncView();
 
     void connectToModel();
     void disconnectFromModel();

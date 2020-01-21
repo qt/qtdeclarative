@@ -51,7 +51,7 @@ static QVector<QQmlPreviewPosition::ScreenData> initScreensData()
     QVector<QQmlPreviewPosition::ScreenData> screensData;
 
     for (QScreen *screen : QGuiApplication::screens()) {
-        QQmlPreviewPosition::ScreenData sd{screen->name(), screen->size()};
+        QQmlPreviewPosition::ScreenData sd{screen->name(), screen->geometry()};
         screensData.append(sd);
     }
     return screensData;
@@ -69,20 +69,20 @@ static QScreen *findScreen(const QString &nameOfScreen)
 static QDataStream &operator<<(QDataStream &out, const QQmlPreviewPosition::ScreenData &screenData)
 {
     out << screenData.name;
-    out << screenData.size;
+    out << screenData.rect;
     return out;
 }
 
 static QDataStream &operator>>(QDataStream &in, QQmlPreviewPosition::ScreenData &screenData)
 {
     in >> screenData.name;
-    in >> screenData.size;
+    in >> screenData.rect;
     return in;
 }
 
 bool QQmlPreviewPosition::ScreenData::operator==(const QQmlPreviewPosition::ScreenData &other) const
 {
-    return other.size == size && other.name == name;
+    return other.rect == rect && other.name == name;
 }
 
 QQmlPreviewPosition::QQmlPreviewPosition()
@@ -211,8 +211,13 @@ void QQmlPreviewPosition::setPosition(const QQmlPreviewPosition::Position &posit
         return;
     if (QScreen *screen = findScreen(position.screenName)) {
         window->setScreen(screen);
-        window->setFramePosition(QHighDpiScaling::mapPositionFromNative(position.nativePosition,
-                                                                        screen->handle()));
+        const auto point = QHighDpiScaling::mapPositionFromNative(position.nativePosition,
+                                                                  screen->handle());
+        const QRect geometry(point, window->size());
+        if (screen->virtualGeometry().contains(geometry))
+            window->setFramePosition(point);
+        else
+            qWarning("preview position is out of screen");
     }
 }
 
