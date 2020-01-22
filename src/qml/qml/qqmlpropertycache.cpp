@@ -75,6 +75,7 @@ static QQmlPropertyData::Flags fastFlagsForProperty(const QMetaProperty &p)
     flags.setIsWritable(p.isWritable());
     flags.setIsResettable(p.isResettable());
     flags.setIsFinal(p.isFinal());
+    flags.setIsRequired(p.isRequired());
 
     if (p.isEnumType())
         flags.type = QQmlPropertyData::Flags::EnumType;

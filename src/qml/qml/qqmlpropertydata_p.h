@@ -109,7 +109,7 @@ public:
         unsigned isFinalORisV4Function         : 1; // Has FINAL flag OR Function takes QQmlV4Function* args
         unsigned isSignalHandler               : 1; // Function is a signal handler
         unsigned isOverload                    : 1; // Function is an overload of another function
-        unsigned isCloned                      : 1; // The function was marked as cloned
+        unsigned isRequiredORisCloned          : 1; // Has REQUIRED flag OR The function was marked as cloned
         unsigned isConstructor                 : 1; // The function was marked is a constructor
         unsigned isDirect                      : 1; // Exists on a C++ QMetaObject
         unsigned isOverridden                  : 1; // Is overridden by a extension property
@@ -159,6 +159,11 @@ public:
             isDirect = b;
         }
 
+        void setIsRequired(bool b) {
+            Q_ASSERT(type != FunctionType);
+            isRequiredORisCloned = b;
+        }
+
         void setIsVMEFunction(bool b) {
             Q_ASSERT(type == FunctionType);
             isConstantORisVMEFunction = b;
@@ -193,7 +198,7 @@ public:
 
         void setIsCloned(bool b) {
             Q_ASSERT(type == FunctionType);
-            isCloned = b;
+            isRequiredORisCloned = b;
         }
 
         void setIsConstructor(bool b) {
@@ -224,6 +229,7 @@ public:
     bool isFinal() const { return !isFunction() && m_flags.isFinalORisV4Function; }
     bool isOverridden() const { return m_flags.isOverridden; }
     bool isDirect() const { return m_flags.isOverload; }
+    bool isRequired() const { return !isFunction() && m_flags.isRequiredORisCloned; }
     bool hasStaticMetaCallFunction() const { return staticMetaCallFunction() != nullptr; }
     bool isFunction() const { return m_flags.type == Flags::FunctionType; }
     bool isQObject() const { return m_flags.type == Flags::QObjectDerivedType; }
@@ -241,7 +247,7 @@ public:
     bool isSignalHandler() const { return m_flags.isSignalHandler; }
     bool isOverload() const { return m_flags.isOverload; }
     void setOverload(bool onoff) { m_flags.isOverload = onoff; }
-    bool isCloned() const { return isFunction() && m_flags.isCloned; }
+    bool isCloned() const { return isFunction() && m_flags.isRequiredORisCloned; }
     bool isConstructor() const { return m_flags.isConstructor; }
 
     bool hasOverride() const { return overrideIndex() >= 0; }
@@ -438,7 +444,7 @@ QQmlPropertyData::Flags::Flags()
     , isFinalORisV4Function(false)
     , isSignalHandler(false)
     , isOverload(false)
-    , isCloned(false)
+    , isRequiredORisCloned(false)
     , isConstructor(false)
     , isOverridden(false)
     , type(OtherType)
@@ -455,7 +461,7 @@ bool QQmlPropertyData::Flags::operator==(const QQmlPropertyData::Flags &other) c
             isFinalORisV4Function == other.isFinalORisV4Function &&
             isOverridden == other.isOverridden &&
             isSignalHandler == other.isSignalHandler &&
-            isCloned == other.isCloned &&
+            isRequiredORisCloned == other.isRequiredORisCloned &&
             type == other.type &&
             isConstructor == other.isConstructor &&
             notFullyResolved == other.notFullyResolved &&
