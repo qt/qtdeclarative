@@ -192,7 +192,10 @@ QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::validateObject(
                 QString typeName = stringAt(obj->inheritedTypeNameIndex);
                 auto *objectType = resolvedType(obj->inheritedTypeNameIndex);
                 if (objectType && objectType->type.isValid()) {
-                    return recordError(binding->location, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(name).arg(objectType->type.module()).arg(objectType->majorVersion).arg(objectType->minorVersion));
+                    return recordError(binding->location, tr("\"%1.%2\" is not available in %3 %4.%5.")
+                                       .arg(typeName).arg(name).arg(objectType->type.module())
+                                       .arg(objectType->version.majorVersion())
+                                       .arg(objectType->version.minorVersion()));
                 } else {
                     return recordError(binding->location, tr("\"%1.%2\" is not available due to component versioning.").arg(typeName).arg(name));
                 }
@@ -212,7 +215,7 @@ QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::validateObject(
         if (name.constData()->isUpper() && !binding->isAttachedProperty()) {
             QQmlType type;
             QQmlImportNamespace *typeNamespace = nullptr;
-            imports.resolveType(stringAt(binding->propertyNameIndex), &type, nullptr, nullptr, &typeNamespace);
+            imports.resolveType(stringAt(binding->propertyNameIndex), &type, nullptr, &typeNamespace);
             if (typeNamespace)
                 return recordError(binding->location, tr("Invalid use of namespace"));
             return recordError(binding->location, tr("Invalid attached object assignment"));
@@ -745,7 +748,8 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateObjectBinding(QQmlPrope
         // actual property type before we applied any extensions that might
         // effect the properties on the type, but don't effect assignability
         // Using -1 for the minor version ensures that we get the raw metaObject.
-        QQmlPropertyCache *propertyMetaObject = enginePrivate->rawPropertyCacheForType(propType, -1);
+        QQmlPropertyCache *propertyMetaObject = enginePrivate->rawPropertyCacheForType(propType,
+                                                                                       QTypeRevision());
 
         if (propertyMetaObject) {
             // Will be true if the assigned type inherits propertyMetaObject

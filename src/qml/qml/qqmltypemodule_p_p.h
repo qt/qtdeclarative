@@ -62,15 +62,15 @@ QT_BEGIN_NAMESPACE
 class QQmlTypeModulePrivate
 {
 public:
-    QQmlTypeModulePrivate(QString module, int majorVersion) :
+    QQmlTypeModulePrivate(QString module, quint8 majorVersion) :
         module(std::move(module)), majorVersion(majorVersion)
     {}
 
     const QString module;
-    const int majorVersion = 0;
+    const quint8 majorVersion = 0;
 
     // Can only ever decrease
-    QAtomicInt minMinorVersion = std::numeric_limits<int>::max();
+    QAtomicInt minMinorVersion = std::numeric_limits<quint8>::max();
 
     // Can only ever increase
     QAtomicInt maxMinorVersion = 0;

@@ -196,7 +196,7 @@ void tst_creation::qobject_10tree_cpp()
 
 void tst_creation::qobject_qmltype()
 {
-    QQmlType t = QQmlMetaType::qmlType("QtQuick/QtObject", 2, 0);
+    QQmlType t = QQmlMetaType::qmlType("QtQuick/QtObject", QTypeRevision::fromVersion(2, 0));
 
     QBENCHMARK {
         QObject *obj = t.create();

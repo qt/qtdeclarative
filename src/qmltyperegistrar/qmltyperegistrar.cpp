@@ -414,7 +414,7 @@ int main(int argc, char **argv)
     creator.setOwnTypes(std::move(types));
     creator.setForeignTypes(std::move(foreignTypes));
     creator.setModule(module);
-    creator.setMajorVersion(parser.value(majorVersionOption).toInt());
+    creator.setVersion(QTypeRevision::fromVersion(parser.value(majorVersionOption).toInt(), 0));
 
     creator.generate(parser.value(pluginTypesOption), parser.value(dependenciesOption));
     return EXIT_SUCCESS;

@@ -92,8 +92,7 @@ void FindUnqualifiedIDVisitor::parseHeaders(QQmlJS::AST::UiHeaderItemList *heade
                 if (import->asToken.isValid()) {
                     prefix += import->importId + QLatin1Char('.');
                 }
-                importHelper(path, prefix, import->version->majorVersion,
-                             import->version->minorVersion);
+                importHelper(path, prefix, import->version->version);
             }
         }
         header = header->next;
@@ -119,7 +118,7 @@ ScopeTree *FindUnqualifiedIDVisitor::parseProgram(QQmlJS::AST::Program *program,
 
 enum ImportVersion { FullyVersioned, PartiallyVersioned, Unversioned, BasePath };
 
-QStringList completeImportPaths(const QString &uri, const QString &basePath, int vmaj, int vmin)
+QStringList completeImportPaths(const QString &uri, const QString &basePath, QTypeRevision version)
 {
     static const QLatin1Char Slash('/');
     static const QLatin1Char Backslash('\\');
@@ -130,15 +129,16 @@ QStringList completeImportPaths(const QString &uri, const QString &basePath, int
     // fully & partially versioned parts + 1 unversioned for each base path
     qmlDirPathsPaths.reserve(2 * parts.count() + 1);
 
-    auto versionString = [](int vmaj, int vmin, ImportVersion version)
+    auto versionString = [](QTypeRevision version, ImportVersion mode)
     {
-        if (version == FullyVersioned) {
+        if (mode == FullyVersioned) {
             // extension with fully encoded version number (eg. MyModule.3.2)
-            return QString::fromLatin1(".%1.%2").arg(vmaj).arg(vmin);
+            return QString::fromLatin1(".%1.%2").arg(version.majorVersion())
+                    .arg(version.minorVersion());
         }
-        if (version == PartiallyVersioned) {
+        if (mode == PartiallyVersioned) {
             // extension with encoded version major (eg. MyModule.3)
-            return QString::fromLatin1(".%1").arg(vmaj);
+            return QString::fromLatin1(".%1").arg(version.majorVersion());
         }
         // else extension without version number (eg. MyModule)
         return QString();
@@ -153,24 +153,24 @@ QStringList completeImportPaths(const QString &uri, const QString &basePath, int
         return str;
     };
 
-    const ImportVersion initial = (vmin >= 0)
+    const ImportVersion initial = (version.hasMinorVersion())
             ? FullyVersioned
-            : (vmaj >= 0 ? PartiallyVersioned : Unversioned);
-    for (int version = initial; version <= BasePath; ++version) {
-        const QString ver = versionString(vmaj, vmin, static_cast<ImportVersion>(version));
+            : (version.hasMajorVersion() ? PartiallyVersioned : Unversioned);
+    for (int mode = initial; mode <= BasePath; ++mode) {
+        const QString ver = versionString(version, ImportVersion(mode));
 
         QString dir = basePath;
         if (!dir.endsWith(Slash) && !dir.endsWith(Backslash))
             dir += Slash;
 
-        if (version == BasePath) {
+        if (mode == BasePath) {
             qmlDirPathsPaths += dir;
         } else {
             // append to the end
             qmlDirPathsPaths += dir + joinStringRefs(parts, Slash) + ver;
         }
 
-        if (version < Unversioned) {
+        if (mode < Unversioned) {
             // insert in the middle
             for (int index = parts.count() - 2; index >= 0; --index) {
                 qmlDirPathsPaths += dir + joinStringRefs(parts.mid(0, index + 1), Slash)
@@ -222,7 +222,7 @@ FindUnqualifiedIDVisitor::Import FindUnqualifiedIDVisitor::readQmldir(const QStr
 
         (*mo)->addExport(
                     it.key(), reader.typeNamespace(),
-                    ComponentVersion(it->majorVersion, it->minorVersion));
+                    ComponentVersion(it->version));
     }
     for (auto it = qmlComponents.begin(), end = qmlComponents.end(); it != end; ++it)
         result.objects.insert( it.key(), ScopeTree::ConstPtr(it.value()));
@@ -240,11 +240,11 @@ void FindUnqualifiedIDVisitor::processImport(const QString &prefix, const FindUn
         auto const &id = split.at(0);
         if (split.length() > 1) {
             const auto version = split.at(1).split('.');
-            importHelper(id, QString(),
-                         version.at(0).toInt(),
-                         version.length() > 1 ? version.at(1).toInt() : -1);
+            importHelper(id, QString(), QTypeRevision::fromVersion(
+                             version.at(0).toInt(),
+                             version.length() > 1 ? version.at(1).toInt() : -1));
         } else {
-            importHelper(id, QString(), -1, -1);
+            importHelper(id, QString(), QTypeRevision());
         }
 
 
@@ -267,7 +267,7 @@ void FindUnqualifiedIDVisitor::processImport(const QString &prefix, const FindUn
 }
 
 void FindUnqualifiedIDVisitor::importHelper(const QString &module, const QString &prefix,
-                                            int major, int minor)
+                                            QTypeRevision version)
 {
     const QString id = QString(module).replace(QLatin1Char('/'), QLatin1Char('.'));
     QPair<QString, QString> importId { id, prefix };
@@ -276,7 +276,7 @@ void FindUnqualifiedIDVisitor::importHelper(const QString &module, const QString
     m_alreadySeenImports.insert(importId);
 
     for (const QString &qmltypeDir : m_qmltypeDirs) {
-        auto qmltypesPaths = completeImportPaths(id, qmltypeDir, major, minor);
+        auto qmltypesPaths = completeImportPaths(id, qmltypeDir, version);
 
         for (auto const &qmltypesPath : qmltypesPaths) {
             if (QFile::exists(qmltypesPath + SlashQmldir)) {
@@ -764,7 +764,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiImport *import)
         }
         path.chop(1);
 
-        importHelper(path, prefix, import->version->majorVersion, import->version->minorVersion);
+        importHelper(path, prefix, import->version->version);
     }
     return true;
 }

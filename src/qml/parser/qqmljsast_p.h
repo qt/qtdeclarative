@@ -57,6 +57,7 @@
 #include <private/qqmljsmemorypool_p.h>
 
 #include <QtCore/qstring.h>
+#include <QtCore/qversionnumber.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -643,7 +644,10 @@ class QML_PARSER_EXPORT UiVersionSpecifier : public Node
 public:
     QQMLJS_DECLARE_AST_NODE(UiVersionSpecifier)
 
-    UiVersionSpecifier(int majorum, int minorum) : majorVersion(majorum), minorVersion(minorum) { kind = K; }
+    UiVersionSpecifier(int majorum, int minorum) : version(QTypeRevision::fromVersion(majorum, minorum))
+    {
+        kind = K;
+    }
 
     void accept0(Visitor *visitor) override;
 
@@ -655,8 +659,7 @@ public:
     }
 
     // attributes:
-    int majorVersion;
-    int minorVersion;
+    QTypeRevision version;
     SourceLocation majorToken;
     SourceLocation minorToken;
 };

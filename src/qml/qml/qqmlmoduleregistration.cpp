@@ -39,27 +39,30 @@
 
 #include <QtQml/private/qqmlmetatype_p.h>
 #include <QtQml/qqmlmoduleregistration.h>
+#include <QtCore/qversionnumber.h>
 
 QT_BEGIN_NAMESPACE
 
 struct QQmlModuleRegistrationPrivate
 {
     const QString uri;
-    const int majorVersion;
+    const QTypeRevision version;
 };
 
 QQmlModuleRegistration::QQmlModuleRegistration(
         const char *uri, int majorVersion,
         void (*registerFunction)()) :
-    d(new QQmlModuleRegistrationPrivate { QString::fromUtf8(uri), majorVersion })
+    d(new QQmlModuleRegistrationPrivate {
+        QString::fromUtf8(uri),
+        QTypeRevision::fromMajorVersion(majorVersion)
+      })
 {
-    QQmlMetaType::qmlInsertModuleRegistration(d->uri, d->majorVersion,
-                                              registerFunction);
+    QQmlMetaType::qmlInsertModuleRegistration(d->uri, d->version, registerFunction);
 }
 
 QQmlModuleRegistration::~QQmlModuleRegistration()
 {
-    QQmlMetaType::qmlRemoveModuleRegistration(d->uri, d->majorVersion);
+    QQmlMetaType::qmlRemoveModuleRegistration(d->uri, d->version);
     delete d;
 }
 

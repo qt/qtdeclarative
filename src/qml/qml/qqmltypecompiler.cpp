@@ -257,7 +257,7 @@ QString QQmlTypeCompiler::bindingAsString(const QmlIR::Object *object, int scrip
     return object->bindingAsString(document, scriptIndex);
 }
 
-void QQmlTypeCompiler::addImport(const QString &module, const QString &qualifier, int majorVersion, int minorVersion)
+void QQmlTypeCompiler::addImport(const QString &module, const QString &qualifier, QTypeRevision version)
 {
     const quint32 moduleIdx = registerString(module);
     const quint32 qualifierIdx = registerString(qualifier);
@@ -272,8 +272,7 @@ void QQmlTypeCompiler::addImport(const QString &module, const QString &qualifier
     auto pool = memoryPool();
     QV4::CompiledData::Import *import = pool->New<QV4::CompiledData::Import>();
     import->type = QV4::CompiledData::Import::ImportLibrary;
-    import->majorVersion = majorVersion;
-    import->minorVersion = minorVersion;
+    import->version = version;
     import->uriIndex = moduleIdx;
     import->qualifierIndex = qualifierIdx;
     document->imports.append(import);
@@ -394,7 +393,10 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
                 auto *typeRef = resolvedType(obj->inheritedTypeNameIndex);
                 const QQmlType type = typeRef ? typeRef->type : QQmlType();
                 if (type.isValid()) {
-                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(originalPropertyName).arg(type.module()).arg(type.majorVersion()).arg(type.minorVersion()));
+                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.")
+                                      .arg(typeName).arg(originalPropertyName).arg(type.module())
+                                      .arg(type.version().majorVersion())
+                                      .arg(type.version().minorVersion()));
                 } else {
                     COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available due to component versioning.").arg(typeName).arg(originalPropertyName));
                 }
@@ -816,7 +818,8 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         if (!pd || !pd->isQObject())
             continue;
 
-        QQmlPropertyCache *pc = enginePrivate->rawPropertyCacheForType(pd->propType(), pd->typeMinorVersion());
+        QQmlPropertyCache *pc = enginePrivate->rawPropertyCacheForType(
+                    pd->propType(), pd->typeVersion());
         const QMetaObject *mo = pc ? pc->firstCppMetaObject() : nullptr;
         while (mo) {
             if (mo == &QQmlComponent::staticMetaObject)
@@ -832,7 +835,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         Q_ASSERT(componentType.isValid());
         const QString qualifier = QStringLiteral("QmlInternals");
 
-        compiler->addImport(componentType.module(), qualifier, componentType.majorVersion(), componentType.minorVersion());
+        compiler->addImport(componentType.module(), qualifier, componentType.version());
 
         QmlIR::Object *syntheticComponent = pool->New<QmlIR::Object>();
         syntheticComponent->init(pool, compiler->registerString(qualifier + QLatin1Char('.') + componentType.elementName()), compiler->registerString(QString()));
@@ -842,8 +845,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         if (!containsResolvedType(syntheticComponent->inheritedTypeNameIndex)) {
             auto typeRef = new QV4::ResolvedTypeReference;
             typeRef->type = componentType;
-            typeRef->majorVersion = componentType.majorVersion();
-            typeRef->minorVersion = componentType.minorVersion();
+            typeRef->version = componentType.version();
             insertResolvedType(syntheticComponent->inheritedTypeNameIndex, typeRef);
         }
 

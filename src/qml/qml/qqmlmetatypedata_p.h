@@ -83,18 +83,17 @@ struct QQmlMetaTypeData
     MetaObjects metaObjectToType;
     typedef QHash<int, QQmlMetaType::StringConverter> StringConverters;
     StringConverters stringConverters;
-    QVector<QHash<int, QQmlRefPointer<QQmlPropertyCache>>> typePropertyCaches;
+    QVector<QHash<QTypeRevision, QQmlRefPointer<QQmlPropertyCache>>> typePropertyCaches;
 
     struct VersionedUri {
-        VersionedUri()
-            : majorVersion(0) {}
-        VersionedUri(const QHashedString &uri, int majorVersion)
-            : uri(uri), majorVersion(majorVersion) {}
+        VersionedUri() : majorVersion(0) {}
+        VersionedUri(const QHashedString &uri, QTypeRevision version)
+            : uri(uri), majorVersion(version.majorVersion()) {}
         bool operator==(const VersionedUri &other) const {
             return other.majorVersion == majorVersion && other.uri == uri;
         }
         QHashedString uri;
-        int majorVersion;
+        quint8 majorVersion;
     };
 
     typedef QHash<VersionedUri, QQmlTypeModule *> TypeModules;
@@ -114,12 +113,12 @@ struct QQmlMetaTypeData
 
     QHash<const QMetaObject *, QQmlPropertyCache *> propertyCaches;
 
-    QQmlPropertyCache *propertyCacheForMinorVersion(int index, int minorVersion) const;
-    void setPropertyCacheForMinorVersion(int index, int minorVersion, QQmlPropertyCache *cache);
-    void clearPropertyCachesForMinorVersion(int index);
+    QQmlPropertyCache *propertyCacheForVersion(int index, QTypeRevision version) const;
+    void setPropertyCacheForVersion(int index, QTypeRevision version, QQmlPropertyCache *cache);
+    void clearPropertyCachesForVersion(int index);
 
-    QQmlPropertyCache *propertyCache(const QMetaObject *metaObject, int minorVersion);
-    QQmlPropertyCache *propertyCache(const QQmlType &type, int minorVersion);
+    QQmlPropertyCache *propertyCache(const QMetaObject *metaObject, QTypeRevision version);
+    QQmlPropertyCache *propertyCache(const QQmlType &type, QTypeRevision version);
 
     void setTypeRegistrationFailures(QStringList *failures)
     {

@@ -94,7 +94,8 @@ namespace {
     QString toString(const QQmlDirParser::Component &c)
     {
         return c.typeName + QLatin1Char('|') + c.fileName + QLatin1Char('|')
-            + QString::number(c.majorVersion) + QLatin1Char('|') + QString::number(c.minorVersion)
+            + QString::number(c.version.majorVersion()) + QLatin1Char('|')
+            + QString::number(c.version.minorVersion())
             + QLatin1Char('|') + (c.internal ? "true" : "false");
     }
 
@@ -112,7 +113,8 @@ namespace {
     QString toString(const QQmlDirParser::Script &s)
     {
         return s.nameSpace + QLatin1Char('|') + s.fileName + QLatin1Char('|')
-            + QString::number(s.majorVersion) + '|' + QString::number(s.minorVersion);
+            + QString::number(s.version.majorVersion()) + '|'
+            + QString::number(s.version.minorVersion());
     }
 
     QStringList toStringList(const QList<QQmlDirParser::Script> &scripts)
@@ -248,7 +250,7 @@ void tst_qqmldirparser::parse_data()
         << "unversioned-component/qmldir"
         << QStringList()
         << QStringList()
-        << (QStringList() << "foo|bar|-1|-1|false")
+        << (QStringList() << "foo|bar|255|255|false")
         << QStringList()
         << QStringList()
         << false;

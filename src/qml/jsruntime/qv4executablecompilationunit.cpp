@@ -817,7 +817,7 @@ QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::createPropertyCache(QQm
     if (typePropertyCache) {
         return typePropertyCache;
     } else if (type.isValid()) {
-        typePropertyCache = QQmlEnginePrivate::get(engine)->cache(type.metaObject(), minorVersion);
+        typePropertyCache = QQmlEnginePrivate::get(engine)->cache(type.metaObject(), version);
         return typePropertyCache;
     } else {
         Q_ASSERT(compilationUnit);

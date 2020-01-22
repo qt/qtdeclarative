@@ -60,6 +60,7 @@
 #include <QtQml/qjsvalue.h>
 
 #include <QtCore/qobject.h>
+#include <QtCore/qversionnumber.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -98,11 +99,10 @@ public:
     QString elementName() const;
 
     QHashedString module() const;
-    int majorVersion() const;
-    int minorVersion() const;
+    QTypeRevision version() const;
 
-    bool availableInVersion(int vmajor, int vminor) const;
-    bool availableInVersion(const QHashedStringRef &module, int vmajor, int vminor) const;
+    bool availableInVersion(QTypeRevision version) const;
+    bool availableInVersion(const QHashedStringRef &module, QTypeRevision version) const;
 
     QObject *create() const;
     void create(QObject **, void **, size_t) const;
@@ -129,7 +129,7 @@ public:
 
     const QMetaObject *metaObject() const;
     const QMetaObject *baseMetaObject() const;
-    int metaObjectRevision() const;
+    QTypeRevision metaObjectRevision() const;
     bool containsRevisionedAttributes() const;
 
     QQmlAttachedPropertiesFunc attachedPropertiesFunction(QQmlEnginePrivate *engine) const;

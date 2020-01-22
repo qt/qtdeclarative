@@ -118,7 +118,7 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
         nullptr,
         reason,
 
-        uri, versionMajor, versionMinor, qmlName, &staticMetaObject,
+        uri, QTypeRevision::fromVersion(versionMajor, versionMinor), qmlName, &staticMetaObject,
 
         QQmlAttachedPropertiesFunc(),
         nullptr,
@@ -130,7 +130,7 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
         nullptr, nullptr,
 
         nullptr,
-        0
+        QTypeRevision::zero()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -2244,7 +2244,7 @@ void QQmlEngine::setPluginPathList(const QStringList &paths)
 bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors)
 {
     Q_D(QQmlEngine);
-    return d->importDatabase.importDynamicPlugin(filePath, uri, QString(), -1, errors);
+    return d->importDatabase.importDynamicPlugin(filePath, uri, QString(), QTypeRevision(), errors);
 }
 #endif
 
@@ -2402,7 +2402,7 @@ QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(int t)
     }
 }
 
-QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t, int minorVersion)
+QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t, QTypeRevision version)
 {
     Locker locker(this);
     auto iter = m_compositeTypes.constFind(t);
@@ -2412,8 +2412,8 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t, int minorVe
         QQmlType type = QQmlMetaType::qmlType(t);
         locker.unlock();
 
-        if (minorVersion >= 0)
-            return type.isValid() ? cache(type, minorVersion) : nullptr;
+        if (version.hasMinorVersion())
+            return type.isValid() ? cache(type, version) : nullptr;
         else
             return type.isValid() ? cache(type.baseMetaObject()) : nullptr;
     }

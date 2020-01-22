@@ -1032,9 +1032,9 @@ int QQmlAdaptorModel::indexAt(int row, int column) const
     return column * rowCount() + row;
 }
 
-void QQmlAdaptorModel::useImportVersion(int minorVersion)
+void QQmlAdaptorModel::useImportVersion(QTypeRevision revision)
 {
-    modelItemRevision = minorVersion;
+    modelItemRevision = revision;
 }
 
 void QQmlAdaptorModel::objectDestroyed(QObject *)

@@ -53,6 +53,7 @@
 
 #include <private/qobject_p.h>
 #include <QtCore/qglobal.h>
+#include <QtCore/qversionnumber.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -251,7 +252,7 @@ public:
     bool isConstructor() const { return m_flags.isConstructor; }
 
     bool hasOverride() const { return overrideIndex() >= 0; }
-    bool hasRevision() const { return revision() != 0; }
+    bool hasRevision() const { return revision() != QTypeRevision::zero(); }
 
     bool isFullyResolved() const { return !m_flags.notFullyResolved; }
 
@@ -290,12 +291,8 @@ public:
         m_coreIndex = qint16(idx);
     }
 
-    quint8 revision() const { return m_revision; }
-    void setRevision(quint8 rev)
-    {
-        Q_ASSERT(rev <= std::numeric_limits<quint8>::max());
-        m_revision = quint8(rev);
-    }
+    QTypeRevision revision() const { return m_revision; }
+    void setRevision(QTypeRevision revision) { m_revision = revision; }
 
     /* If a property is a C++ type, then we store the minor
      * version of this type.
@@ -315,12 +312,8 @@ public:
      *
      */
 
-    quint8 typeMinorVersion() const { return m_typeMinorVersion; }
-    void setTypeMinorVersion(quint8 rev)
-    {
-        Q_ASSERT(rev <= std::numeric_limits<quint8>::max());
-        m_typeMinorVersion = quint8(rev);
-    }
+    QTypeRevision typeVersion() const { return m_typeVersion; }
+    void setTypeVersion(QTypeRevision typeVersion) { m_typeVersion = typeVersion; }
 
     QQmlPropertyCacheMethodArguments *arguments() const { return m_arguments; }
     void setArguments(QQmlPropertyCacheMethodArguments *args) { m_arguments = args; }
@@ -412,18 +405,20 @@ private:
     qint16 m_notifyIndex = -1;
     qint16 m_overrideIndex = -1;
 
-    quint8 m_revision = 0;
-    quint8 m_typeMinorVersion = 0;
     qint16 m_metaObjectOffset = -1;
+    quint16 m_reserved = 0;
+
+    QTypeRevision m_revision = QTypeRevision::zero();
+    QTypeRevision m_typeVersion = QTypeRevision::zero();
 
     QQmlPropertyCacheMethodArguments *m_arguments = nullptr;
     StaticMetaCallFunction m_staticMetaCallFunction = nullptr;
 };
 
 #if QT_POINTER_SIZE == 4
-    Q_STATIC_ASSERT(sizeof(QQmlPropertyData) == 24);
+    Q_STATIC_ASSERT(sizeof(QQmlPropertyData) == 28);
 #else // QT_POINTER_SIZE == 8
-    Q_STATIC_ASSERT(sizeof(QQmlPropertyData) == 32);
+    Q_STATIC_ASSERT(sizeof(QQmlPropertyData) == 40);
 #endif
 
 bool QQmlPropertyData::operator==(const QQmlPropertyData &other) const

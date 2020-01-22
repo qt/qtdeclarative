@@ -27,18 +27,19 @@
 ****************************************************************************/
 
 #include "qmltypesclassdescription.h"
+#include "qmltypescreator.h"
 
 #include <QtCore/qjsonarray.h>
 
 static void collectExtraVersions(const QJsonObject *component, const QString &key,
-                                 QList<int> &extraVersions)
+                                 QList<QTypeRevision> &extraVersions)
 {
     const QJsonArray &items = component->value(key).toArray();
     for (const QJsonValue &item : items) {
         const QJsonObject obj = item.toObject();
         const auto revision = obj.find(QLatin1String("revision"));
         if (revision != obj.end()) {
-            const int extraVersion = revision.value().toInt();
+            const auto extraVersion = QTypeRevision::fromEncodedVersion(revision.value().toInt());
             if (!extraVersions.contains(extraVersion))
                 extraVersions.append(extraVersion);
         }
@@ -72,11 +73,12 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
             if (defaultProp.isEmpty())
                 defaultProp = value;
         } else if (name == QLatin1String("QML.AddedInMinorVersion")) {
+            const QTypeRevision revision = QTypeRevision::fromEncodedVersion(value.toInt());
             if (topLevel) {
-                addedInRevision = value.toInt();
-                revisions.append(value.toInt());
+                addedInRevision = revision;
+                revisions.append(revision);
             } else if (!elementName.isEmpty()) {
-                revisions.append(value.toInt());
+                revisions.append(revision);
             }
         }
 
@@ -90,7 +92,7 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
             else if (value != QLatin1String("anonymous"))
                 elementName = value;
         } else if (name == QLatin1String("QML.RemovedInMinorVersion")) {
-            removedInRevision = value.toInt();
+            removedInRevision = QTypeRevision::fromEncodedVersion(value.toInt());
         } else if (name == QLatin1String("QML.Creatable")) {
             isCreatable = (value != QLatin1String("false"));
         } else if (name == QLatin1String("QML.Attached")) {
@@ -147,9 +149,9 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
         }
     }
 
-    if (addedInRevision == -1) {
-        revisions.append(0);
-        addedInRevision = 0;
+    if (!addedInRevision.isValid()) {
+        revisions.append(QTypeRevision::zero());
+        addedInRevision = QTypeRevision::zero();
     }
 
     std::sort(revisions.begin(), revisions.end());

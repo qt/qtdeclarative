@@ -155,7 +155,7 @@ bool generateLoader(const QStringList &compiledFiles, const QString &outputFileN
         }
 
         stream << "    QQmlPrivate::RegisterQmlUnitCacheHook registration;\n";
-        stream << "    registration.version = 0;\n";
+        stream << "    registration.structVersion = 0;\n";
         stream << "    registration.lookupCachedQmlUnit = &lookupCachedUnit;\n";
         stream << "    QQmlPrivate::qmlregister(QQmlPrivate::QmlUnitCacheHookRegistration, &registration);\n";
 

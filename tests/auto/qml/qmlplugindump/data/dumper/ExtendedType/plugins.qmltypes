@@ -27,9 +27,9 @@ Module {
             "dumper.ExtendedType/Type 1.0",
             "dumper.ExtendedType/Type 1.1"
         ]
-        exportMetaObjectRevisions: [0, 101]
+        exportMetaObjectRevisions: [0, 257]
         Property { name: "baseProperty"; type: "int" }
-        Property { name: "extendedProperty"; revision: 101; type: "int" }
-        Property { name: "data"; revision: 101; type: "QObject"; isList: true; isReadonly: true }
+        Property { name: "extendedProperty"; revision: 257; type: "int" }
+        Property { name: "data"; revision: 257; type: "QObject"; isList: true; isReadonly: true }
     }
 }

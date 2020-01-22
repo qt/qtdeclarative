@@ -61,19 +61,20 @@ void qmlClearTypeRegistrations() // Declared in qqml.h
 //From qqml.h
 bool qmlProtectModule(const char *uri, int majVersion)
 {
-    return QQmlMetaType::protectModule(QString::fromUtf8(uri), majVersion);
+    return QQmlMetaType::protectModule(QString::fromUtf8(uri),
+                                       QTypeRevision::fromMajorVersion(majVersion));
 }
 
 //From qqml.h
 void qmlRegisterModule(const char *uri, int versionMajor, int versionMinor)
 {
-    QQmlMetaType::registerModule(uri, versionMajor, versionMinor);
+    QQmlMetaType::registerModule(uri, QTypeRevision::fromVersion(versionMajor, versionMinor));
 }
 
 //From qqml.h
 int qmlTypeId(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
 {
-    return QQmlMetaType::typeId(uri, versionMajor, versionMinor, qmlName);
+    return QQmlMetaType::typeId(uri, QTypeRevision::fromVersion(versionMajor, versionMinor), qmlName);
 }
 
 // From qqmlprivate.h
@@ -103,9 +104,20 @@ QObject *QQmlPrivate::RegisterSingletonFunctor::operator()(QQmlEngine *qeng, QJS
     return m_object;
 };
 
-static QVector<int> availableRevisions(const QMetaObject *metaObject)
+// We cannot generally assume that the unspecified version is smaller than any specified one.
+// Therefore, this operator< should not move to QtCore.
+static bool operator<(QTypeRevision lhs, QTypeRevision rhs)
 {
-    QVector<int> revisions;
+    return lhs.hasMajorVersion()
+            ? (rhs.hasMajorVersion()
+               && lhs.toEncodedVersion<quint16>() < rhs.toEncodedVersion<quint16>())
+            : (rhs.hasMajorVersion()
+               || lhs.minorVersion() < rhs.minorVersion());
+}
+
+static QVector<QTypeRevision> availableRevisions(const QMetaObject *metaObject)
+{
+    QVector<QTypeRevision> revisions;
     if (!metaObject)
         return revisions;
     const int propertyOffset = metaObject->propertyOffset();
@@ -114,7 +126,7 @@ static QVector<int> availableRevisions(const QMetaObject *metaObject)
          propertyIndex < propertyEnd; ++propertyIndex) {
         const QMetaProperty property = metaObject->property(propertyIndex);
         if (int revision = property.revision())
-            revisions.append(revision);
+            revisions.append(QTypeRevision::fromEncodedVersion(revision));
     }
     const int methodOffset = metaObject->methodOffset();
     const int methodCount = metaObject->methodCount();
@@ -122,7 +134,7 @@ static QVector<int> availableRevisions(const QMetaObject *metaObject)
          methodIndex < methodEnd; ++methodIndex) {
         const QMetaMethod method = metaObject->method(methodIndex);
         if (int revision = method.revision())
-            revisions.append(revision);
+            revisions.append(QTypeRevision::fromEncodedVersion(revision));
     }
 
     // Need to also check parent meta objects, as their revisions are inherited.
@@ -163,8 +175,7 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
             nullptr,
             noCreateReason,
             type.uri,
-            type.versionMajor,
-            -1,
+            type.version,
             nullptr,
             type.metaObject,
             type.attachedPropertiesFunction,
@@ -175,14 +186,17 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
             type.extensionObjectCreate,
             type.extensionMetaObject,
             nullptr,
-            -1
+            QTypeRevision()
         };
 
-        const int added = intClassInfo(type.classInfoMetaObject, "QML.AddedInMinorVersion", 0);
-        const int removed = intClassInfo(type.classInfoMetaObject, "QML.RemovedInMinorVersion", -1);
+        const QTypeRevision added = revisionClassInfo(
+                    type.classInfoMetaObject, "QML.AddedInVersion",
+                    QTypeRevision::zero());
+        const QTypeRevision removed = revisionClassInfo(
+                    type.classInfoMetaObject, "QML.RemovedInVersion");
 
         auto revisions = availableRevisions(type.metaObject);
-        revisions.append(qMax(added, 0));
+        revisions.append(qMax(added, QTypeRevision::zero()));
         if (type.attachedPropertiesMetaObject)
             revisions += availableRevisions(type.attachedPropertiesMetaObject);
 
@@ -190,13 +204,12 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         const auto it = std::unique(revisions.begin(), revisions.end());
         revisions.erase(it, revisions.end());
 
-        const bool typeWasRemoved = removed >= added;
-        for (int revision : revisions) {
+        for (QTypeRevision revision : revisions) {
             if (revision < added)
                 continue;
 
             // When removed, we still add revisions, but anonymous ones
-            if (typeWasRemoved && revision >= removed) {
+            if (removed.isValid() && !(revision < removed)) {
                 revisionRegistration.elementName = nullptr;
                 revisionRegistration.create = nullptr;
             } else {
@@ -205,7 +218,8 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
             }
 
             // Equivalent of qmlRegisterRevision<T, revision>(...)
-            revisionRegistration.versionMinor = revision;
+            revisionRegistration.version = QTypeRevision::fromVersion(type.version.majorVersion(),
+                                                                      revision.minorVersion());
             revisionRegistration.revision = revision;
             revisionRegistration.customParser = type.customParserFactory();
 
@@ -220,36 +234,37 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         RegisterSingletonType revisionRegistration = {
             QmlCurrentSingletonTypeRegistrationVersion,
             type.uri,
-            type.versionMajor,
-            -1,
+            type.version,
             elementName,
 
             type.scriptApi,
             nullptr,
             type.instanceMetaObject,
             type.typeId,
-            -1,
+            QTypeRevision(),
 
             type.generalizedQobjectApi
         };
 
-        const int added = intClassInfo(type.classInfoMetaObject, "QML.AddedInMinorVersion", 0);
-        const int removed = intClassInfo(type.classInfoMetaObject, "QML.RemovedInMinorVersion", -1);
+        const QTypeRevision added = revisionClassInfo(
+                    type.classInfoMetaObject, "QML.AddedInVersion",
+                    QTypeRevision::zero());
+        const QTypeRevision removed = revisionClassInfo(
+                    type.classInfoMetaObject, "QML.RemovedInVersion");
 
         auto revisions = availableRevisions(type.instanceMetaObject);
-        revisions.append(qMax(added, 0));
+        revisions.append(qMax(added, QTypeRevision::zero()));
 
         std::sort(revisions.begin(), revisions.end());
         const auto it = std::unique(revisions.begin(), revisions.end());
         revisions.erase(it, revisions.end());
 
-        const bool typeWasRemoved = removed >= added;
-        for (int revision : qAsConst(revisions)) {
+        for (QTypeRevision revision : qAsConst(revisions)) {
             if (revision < added)
                 continue;
 
             // When removed, we still add revisions, but anonymous ones
-            if (typeWasRemoved && revision >= removed) {
+            if (removed.isValid() && !(revision < removed)) {
                 revisionRegistration.typeName = nullptr;
                 revisionRegistration.scriptApi = nullptr;
                 revisionRegistration.generalizedQobjectApi = nullptr;
@@ -260,7 +275,8 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
             }
 
             // Equivalent of qmlRegisterRevision<T, revision>(...)
-            revisionRegistration.versionMinor = revision;
+            revisionRegistration.version = QTypeRevision::fromVersion(type.version.majorVersion(),
+                                                                      revision.minorVersion());
             revisionRegistration.revision = revision;
 
             qmlregister(SingletonRegistration, &revisionRegistration);

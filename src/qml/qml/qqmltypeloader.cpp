@@ -487,8 +487,7 @@ QQmlTypeLoader::Blob::PendingImport::PendingImport(QQmlTypeLoader::Blob *blob, c
     type = static_cast<QV4::CompiledData::Import::ImportType>(quint32(import->type));
     uri = blob->stringAt(import->uriIndex);
     qualifier = blob->stringAt(import->qualifierIndex);
-    majorVersion = import->majorVersion;
-    minorVersion = import->minorVersion;
+    version = import->version;
     location = import->location;
 }
 
@@ -578,12 +577,13 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
         QString qmldirUrl;
 
         const QQmlImports::LocalQmldirResult qmldirResult = m_importCache.locateLocalQmldir(
-                    importDatabase, import->uri, import->majorVersion, import->minorVersion,
+                    importDatabase, import->uri, import->version,
                     &qmldirFilePath, &qmldirUrl);
         if (qmldirResult == QQmlImports::QmldirFound) {
             // This is a local library import
-            if (!m_importCache.addLibraryImport(importDatabase, import->uri, import->qualifier, import->majorVersion,
-                                          import->minorVersion, qmldirFilePath, qmldirUrl, false, errors))
+            if (!m_importCache.addLibraryImport(
+                        importDatabase, import->uri, import->qualifier,
+                        import->version, qmldirFilePath, qmldirUrl, false, errors))
                 return false;
 
             if (!loadImportDependencies(import, qmldirFilePath, errors))
@@ -606,10 +606,10 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
             // Is this a module?
             if (QQmlMetaType::isAnyModule(import->uri)
                     || (qmldirResult != QQmlImports::QmldirInterceptedToRemote
-                        && QQmlMetaType::qmlRegisterModuleTypes(import->uri,
-                                                                import->majorVersion))) {
-                if (!m_importCache.addLibraryImport(importDatabase, import->uri, import->qualifier, import->majorVersion,
-                                              import->minorVersion, QString(), QString(), false, errors))
+                        && QQmlMetaType::qmlRegisterModuleTypes(import->uri, import->version))) {
+                if (!m_importCache.addLibraryImport(
+                            importDatabase, import->uri, import->qualifier, import->version,
+                            QString(), QString(), false, errors))
                     return false;
             } else {
                 // We haven't yet resolved this import
@@ -624,13 +624,15 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
                                         : QQmlImportDatabase::Remote);
                 if (!remotePathList.isEmpty()) {
                     // Add this library and request the possible locations for it
-                    if (!m_importCache.addLibraryImport(importDatabase, import->uri, import->qualifier, import->majorVersion,
-                                                  import->minorVersion, QString(), QString(), true, errors))
+                    if (!m_importCache.addLibraryImport(
+                                importDatabase, import->uri, import->qualifier, import->version,
+                                QString(), QString(), true, errors))
                         return false;
 
                     // Probe for all possible locations
                     int priority = 0;
-                    const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(import->uri, remotePathList, import->majorVersion, import->minorVersion);
+                    const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(
+                                import->uri, remotePathList, import->version);
                     for (const QString &qmldirPath : qmlDirPaths) {
                         if (interceptor) {
                             QUrl url = interceptor->intercept(
@@ -663,8 +665,8 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
             incomplete = true;
         }
 
-        if (!m_importCache.addFileImport(importDatabase, import->uri, import->qualifier, import->majorVersion,
-                                   import->minorVersion, incomplete, errors))
+        if (!m_importCache.addFileImport(importDatabase, import->uri, import->qualifier,
+                                         import->version, incomplete, errors))
             return false;
 
         if (incomplete) {
@@ -703,8 +705,7 @@ bool QQmlTypeLoader::Blob::loadImportDependencies(PendingImportPtr currentImport
         auto dependencyImport = std::make_shared<PendingImport>();
         dependencyImport->uri = implicitImports;
         dependencyImport->qualifier = currentImport->qualifier;
-        dependencyImport->majorVersion = currentImport->majorVersion;
-        dependencyImport->minorVersion = currentImport->minorVersion;
+        dependencyImport->version = currentImport->version;
         if (!addImport(dependencyImport, errors))
             return false;
     }

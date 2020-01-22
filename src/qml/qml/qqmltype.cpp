@@ -53,7 +53,7 @@
 QT_BEGIN_NAMESPACE
 
 QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
-    : regType(type), iid(nullptr), typeId(0), listId(0), revision(0),
+    : regType(type), iid(nullptr), typeId(0), listId(0), revision(QTypeRevision::zero()),
     containsRevisionedAttributes(false), baseMetaObject(nullptr),
     index(-1), isSetup(false), isEnumFromCacheSetup(false), isEnumFromBaseSetup(false),
     haveSuperType(false)
@@ -132,34 +132,29 @@ QHashedString QQmlType::module() const
     return d->module;
 }
 
-int QQmlType::majorVersion() const
+QTypeRevision QQmlType::version() const
 {
     if (!d)
-        return -1;
-    return d->version_maj;
+        return QTypeRevision();
+    return d->version;
 }
 
-int QQmlType::minorVersion() const
+bool QQmlType::availableInVersion(QTypeRevision version) const
 {
-    if (!d)
-        return -1;
-    return d->version_min;
-}
-
-bool QQmlType::availableInVersion(int vmajor, int vminor) const
-{
-    Q_ASSERT(vmajor >= 0 && vminor >= 0);
+    Q_ASSERT(version.hasMajorVersion() && version.hasMinorVersion());
     if (!d)
         return false;
-    return vmajor == d->version_maj && vminor >= d->version_min;
+    return version.majorVersion() == d->version.majorVersion()
+            && version.minorVersion() >= d->version.minorVersion();
 }
 
-bool QQmlType::availableInVersion(const QHashedStringRef &module, int vmajor, int vminor) const
+bool QQmlType::availableInVersion(const QHashedStringRef &module, QTypeRevision version) const
 {
-    Q_ASSERT(vmajor >= 0 && vminor >= 0);
+    Q_ASSERT(version.hasMajorVersion() && version.hasMinorVersion());
     if (!d)
         return false;
-    return module == d->module && vmajor == d->version_maj && vminor >= d->version_min;
+    return module == d->module && version.majorVersion() == d->version.majorVersion()
+            && version.minorVersion() >= d->version.minorVersion();
 }
 
 QQmlType QQmlTypePrivate::resolveCompositeBaseType(QQmlEnginePrivate *engine) const
@@ -629,9 +624,9 @@ bool QQmlType::containsRevisionedAttributes() const
     return d->containsRevisionedAttributes;
 }
 
-int QQmlType::metaObjectRevision() const
+QTypeRevision QQmlType::metaObjectRevision() const
 {
-    return d ? d->revision : -1;
+    return d ? d->revision : QTypeRevision();
 }
 
 QQmlAttachedPropertiesFunc QQmlType::attachedPropertiesFunction(QQmlEnginePrivate *engine) const

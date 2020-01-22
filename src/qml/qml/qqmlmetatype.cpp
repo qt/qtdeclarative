@@ -92,8 +92,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data,
     d->typeId = type.typeId;
     d->listId = type.listId;
     d->isSetup = true;
-    d->version_maj = 0;
-    d->version_min = 0;
+    d->version = QTypeRevision::zero();
     data->registerType(d);
     return d;
 }
@@ -105,28 +104,30 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     data->registerType(d);
 
     d->setName(QString::fromUtf8(type.uri), elementName);
-    d->version_maj = type.versionMajor;
-    d->version_min = type.versionMinor;
+    d->version = type.version;
 
-    if (type.qobjectApi || (type.version >= 3 && type.generalizedQobjectApi)) {
-        if (type.version >= 1) // static metaobject added in version 1
+    if (type.qobjectApi || (type.structVersion >= 3 && type.generalizedQobjectApi)) {
+        if (type.structVersion >= 1) // static metaobject added in version 1
             d->baseMetaObject = type.instanceMetaObject;
-        if (type.version >= 2) // typeId added in version 2
+        if (type.structVersion >= 2) // typeId added in version 2
             d->typeId = type.typeId;
-        if (type.version >= 2) // revisions added in version 2
+        if (type.structVersion >= 2) // revisions added in version 2
             d->revision = type.revision;
     }
 
     d->extraData.sd->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
     d->extraData.sd->singletonInstanceInfo->scriptCallback = type.scriptApi;
-    if (type.version >= 3) {
+    if (type.structVersion >= 3) {
         d->extraData.sd->singletonInstanceInfo->qobjectCallback = type.generalizedQobjectApi;
     } else {
         d->extraData.sd->singletonInstanceInfo->qobjectCallback = type.qobjectApi;
     }
     d->extraData.sd->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
     d->extraData.sd->singletonInstanceInfo->instanceMetaObject
-            = ((type.qobjectApi || (type.version >= 3 && type.generalizedQobjectApi) ) && type.version >= 1) ? type.instanceMetaObject : nullptr;
+            = ((type.qobjectApi || (type.structVersion >= 3 && type.generalizedQobjectApi) )
+               && type.structVersion >= 1)
+            ? type.instanceMetaObject
+            : nullptr;
 
     return d;
 }
@@ -138,9 +139,8 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     data->registerType(d);
     d->setName(QString::fromUtf8(type.uri), elementName);
 
-    d->version_maj = type.versionMajor;
-    d->version_min = type.versionMinor;
-    if (type.version >= 1) // revisions added in version 1
+    d->version = type.version;
+    if (type.structVersion >= 1) // revisions added in version 1
         d->revision = type.revision;
     d->typeId = type.typeId;
     d->listId = type.listId;
@@ -176,8 +176,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     auto *d = new QQmlTypePrivate(QQmlType::CompositeType);
     data->registerType(d);
     d->setName(QString::fromUtf8(type.uri), elementName);
-    d->version_maj = type.versionMajor;
-    d->version_min = type.versionMinor;
+    d->version = type.version;
 
     d->extraData.fd->url = QQmlTypeLoader::normalize(type.url);
     return d;
@@ -190,8 +189,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     data->registerType(d);
     d->setName(QString::fromUtf8(type.uri), elementName);
 
-    d->version_maj = type.versionMajor;
-    d->version_min = type.versionMinor;
+    d->version = type.version;
 
     d->extraData.sd->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
     d->extraData.sd->singletonInstanceInfo->url = QQmlTypeLoader::normalize(type.url);
@@ -267,35 +265,35 @@ void QQmlMetaType::clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
     }
 }
 
-void QQmlMetaType::qmlInsertModuleRegistration(const QString &uri, int majorVersion,
+void QQmlMetaType::qmlInsertModuleRegistration(const QString &uri, QTypeRevision version,
                                                void (*registerFunction)())
 {
-    const QQmlMetaTypeData::VersionedUri versionedUri(uri, majorVersion);
+    const QQmlMetaTypeData::VersionedUri versionedUri(uri, version);
     QQmlMetaTypeDataPtr data;
     if (data->moduleTypeRegistrationFunctions.contains(versionedUri))
-        qFatal("Cannot add multiple registrations for %s %d", qPrintable(uri), majorVersion);
+        qFatal("Cannot add multiple registrations for %s %d", qPrintable(uri), version.majorVersion());
     else
         data->moduleTypeRegistrationFunctions.insert(versionedUri, registerFunction);
 }
 
-void QQmlMetaType::qmlRemoveModuleRegistration(const QString &uri, int majorVersion)
+void QQmlMetaType::qmlRemoveModuleRegistration(const QString &uri, QTypeRevision version)
 {
-    const QQmlMetaTypeData::VersionedUri versionedUri(uri, majorVersion);
+    const QQmlMetaTypeData::VersionedUri versionedUri(uri, version);
     QQmlMetaTypeDataPtr data;
 
     if (!data.isValid())
         return; // shutdown/deletion race. Not a problem.
 
     if (!data->moduleTypeRegistrationFunctions.contains(versionedUri))
-        qFatal("Cannot remove multiple registrations for %s %d", qPrintable(uri), majorVersion);
+        qFatal("Cannot remove multiple registrations for %s %d", qPrintable(uri), version.majorVersion());
     else
         data->moduleTypeRegistrationFunctions.remove(versionedUri);
 }
 
-bool QQmlMetaType::qmlRegisterModuleTypes(const QString &uri, int majorVersion)
+bool QQmlMetaType::qmlRegisterModuleTypes(const QString &uri, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data;
-    return data->registerModuleTypes(QQmlMetaTypeData::VersionedUri(uri, majorVersion));
+    return data->registerModuleTypes(QQmlMetaTypeData::VersionedUri(uri, version));
 }
 
 void QQmlMetaType::clearTypeRegistrations()
@@ -334,7 +332,7 @@ void QQmlMetaType::unregisterAutoParentFunction(const QQmlPrivate::AutoParentFun
 
 QQmlType QQmlMetaType::registerInterface(const QQmlPrivate::RegisterInterface &type)
 {
-    if (type.version > 0)
+    if (type.structVersion > 0)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
 
     QQmlMetaTypeDataPtr data;
@@ -372,7 +370,7 @@ QString registrationTypeString(QQmlType::RegistrationType typeType)
 
 // NOTE: caller must hold a QMutexLocker on "data"
 bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *data,
-                       const char *uri, const QString &typeName, int majorVersion)
+                       const char *uri, const QString &typeName, QTypeRevision version)
 {
     if (!typeName.isEmpty()) {
         if (typeName.at(0).isLower()) {
@@ -393,14 +391,14 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
 
     if (uri && !typeName.isEmpty()) {
         QString nameSpace = QString::fromUtf8(uri);
-        QQmlMetaTypeData::VersionedUri versionedUri;
-        versionedUri.uri = nameSpace;
-        versionedUri.majorVersion = majorVersion;
+        QQmlMetaTypeData::VersionedUri versionedUri(nameSpace, version);
         if (QQmlTypeModule* qqtm = data->uriToModule.value(versionedUri, 0)){
             if (qqtm->isLocked()){
                 QString failure(QCoreApplication::translate("qmlRegisterType",
                                                             "Cannot install %1 '%2' into protected module '%3' version '%4'"));
-                data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType)).arg(typeName).arg(nameSpace).arg(majorVersion));
+                data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType))
+                                           .arg(typeName).arg(nameSpace)
+                                           .arg(version.majorVersion()));
                 return false;
             }
         }
@@ -410,9 +408,9 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
 }
 
 // NOTE: caller must hold a QMutexLocker on "data"
-QQmlTypeModule *getTypeModule(const QHashedString &uri, int majorVersion, QQmlMetaTypeData *data)
+QQmlTypeModule *getTypeModule(const QHashedString &uri, QTypeRevision version, QQmlMetaTypeData *data)
 {
-    QQmlMetaTypeData::VersionedUri versionedUri(uri, majorVersion);
+    QQmlMetaTypeData::VersionedUri versionedUri(uri, version);
     QQmlTypeModule *module = data->uriToModule.value(versionedUri);
     if (!module) {
         module = new QQmlTypeModule(versionedUri.uri, versionedUri.majorVersion);
@@ -449,7 +447,7 @@ void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data)
     if (!type->module.isEmpty()) {
         const QHashedString &mod = type->module;
 
-        QQmlTypeModule *module = getTypeModule(mod, type->version_maj, data);
+        QQmlTypeModule *module = getTypeModule(mod, type->version, data);
         Q_ASSERT(module);
         module->add(type);
     }
@@ -460,7 +458,7 @@ QQmlType QQmlMetaType::registerType(const QQmlPrivate::RegisterType &type)
     QQmlMetaTypeDataPtr data;
 
     QString elementName = QString::fromUtf8(type.elementName);
-    if (!checkRegistration(QQmlType::CppType, data, type.uri, elementName, type.versionMajor))
+    if (!checkRegistration(QQmlType::CppType, data, type.uri, elementName, type.version))
         return QQmlType();
 
     QQmlTypePrivate *priv = createQQmlType(data, elementName, type);
@@ -477,7 +475,7 @@ QQmlType QQmlMetaType::registerSingletonType(const QQmlPrivate::RegisterSingleto
     QQmlMetaTypeDataPtr data;
 
     QString typeName = QString::fromUtf8(type.typeName);
-    if (!checkRegistration(QQmlType::SingletonType, data, type.uri, typeName, type.versionMajor))
+    if (!checkRegistration(QQmlType::SingletonType, data, type.uri, typeName, type.version))
         return QQmlType();
 
     QQmlTypePrivate *priv = createQQmlType(data, typeName, type);
@@ -497,7 +495,7 @@ QQmlType QQmlMetaType::registerCompositeSingletonType(const QQmlPrivate::Registe
     if (*(type.uri) == '\0')
         fileImport = true;
     if (!checkRegistration(QQmlType::CompositeSingletonType, data, fileImport ? nullptr : type.uri,
-                           typeName, type.versionMajor)) {
+                           typeName, type.version)) {
         return QQmlType();
     }
 
@@ -519,7 +517,7 @@ QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterComposit
     bool fileImport = false;
     if (*(type.uri) == '\0')
         fileImport = true;
-    if (!checkRegistration(QQmlType::CompositeType, data, fileImport?nullptr:type.uri, typeName, type.versionMajor))
+    if (!checkRegistration(QQmlType::CompositeType, data, fileImport?nullptr:type.uri, typeName, type.version))
         return QQmlType();
 
     QQmlTypePrivate *priv = createQQmlType(data, typeName, type);
@@ -567,7 +565,7 @@ void QQmlMetaType::unregisterInternalCompositeType(const CompositeMetaTypeIds &t
 int QQmlMetaType::registerUnitCacheHook(
         const QQmlPrivate::RegisterQmlUnitCacheHook &hookRegistration)
 {
-    if (hookRegistration.version > 0)
+    if (hookRegistration.structVersion > 0)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
 
     QQmlMetaTypeDataPtr data;
@@ -575,40 +573,37 @@ int QQmlMetaType::registerUnitCacheHook(
     return 0;
 }
 
-bool QQmlMetaType::protectModule(const QString &uri, int majVersion)
+bool QQmlMetaType::protectModule(const QString &uri, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data;
 
-    QQmlMetaTypeData::VersionedUri versionedUri;
-    versionedUri.uri = uri;
-    versionedUri.majorVersion = majVersion;
-
-    if (QQmlTypeModule* qqtm = data->uriToModule.value(versionedUri, 0)) {
+    if (QQmlTypeModule* qqtm = data->uriToModule.value(
+                QQmlMetaTypeData::VersionedUri(uri, version), nullptr)) {
         qqtm->lock();
         return true;
     }
     return false;
 }
 
-void QQmlMetaType::registerModule(const char *uri, int versionMajor, int versionMinor)
+void QQmlMetaType::registerModule(const char *uri, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data;
 
-    QQmlTypeModule *module = getTypeModule(QString::fromUtf8(uri), versionMajor, data);
+    QQmlTypeModule *module = getTypeModule(QString::fromUtf8(uri), version, data);
     Q_ASSERT(module);
 
-    module->addMinorVersion(versionMinor);
+    module->addMinorVersion(version.minorVersion());
 }
 
-int QQmlMetaType::typeId(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
+int QQmlMetaType::typeId(const char *uri, QTypeRevision version, const char *qmlName)
 {
     QQmlMetaTypeDataPtr data;
 
-    QQmlTypeModule *module = getTypeModule(QString::fromUtf8(uri), versionMajor, data);
+    QQmlTypeModule *module = getTypeModule(QString::fromUtf8(uri), version, data);
     if (!module)
         return -1;
 
-    QQmlType type = module->type(QHashedStringRef(QString::fromUtf8(qmlName)), versionMinor);
+    QQmlType type = module->type(QHashedStringRef(QString::fromUtf8(qmlName)), version);
     if (!type.isValid())
         return -1;
 
@@ -622,12 +617,12 @@ void QQmlMetaType::registerUndeletableType(const QQmlType &dtype)
 }
 
 static bool namespaceContainsRegistrations(const QQmlMetaTypeData *data, const QString &uri,
-                                           int majorVersion)
+                                           QTypeRevision version)
 {
     // Has any type previously been installed to this namespace?
     QHashedString nameSpace(uri);
     for (const QQmlType &type : data->types) {
-        if (type.module() == nameSpace && type.majorVersion() == majorVersion)
+        if (type.module() == nameSpace && type.version().majorVersion() == version.majorVersion())
             return true;
     }
 
@@ -654,8 +649,8 @@ public:
 
 
 bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePath,
-                                       const QString &uri, const QString &typeNamespace, int vmaj,
-                                       QList<QQmlError> *errors)
+                                       const QString &uri, const QString &typeNamespace,
+                                       QTypeRevision version, QList<QQmlError> *errors)
 {
     if (!typeNamespace.isEmpty() && typeNamespace != uri) {
         // This is an 'identified' module
@@ -676,7 +671,7 @@ bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePat
         QQmlMetaTypeRegistrationFailureRecorder failureRecorder(data, &failures);
         if (!typeNamespace.isEmpty()) {
             // This is an 'identified' module
-            if (namespaceContainsRegistrations(data, typeNamespace, vmaj)) {
+            if (namespaceContainsRegistrations(data, typeNamespace, version)) {
                 // Other modules have already installed to this namespace
                 if (errors) {
                     QQmlError error;
@@ -718,7 +713,7 @@ bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePat
             iface->registerTypes(moduleId);
         }
 
-        data->registerModuleTypes(QQmlMetaTypeData::VersionedUri(uri, vmaj));
+        data->registerModuleTypes(QQmlMetaTypeData::VersionedUri(uri, version));
 
         if (!failures.isEmpty()) {
             if (errors) {
@@ -749,7 +744,7 @@ bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePat
 QQmlType QQmlMetaType::typeForUrl(const QString &urlString,
                                   const QHashedStringRef &qualifiedType,
                                   bool isCompositeSingleton, QList<QQmlError> *errors,
-                                  int majorVersion, int minorVersion)
+                                  QTypeRevision version)
 {
     // ### unfortunate (costly) conversion
     const QUrl url = QQmlTypeLoader::normalize(QUrl(urlString));
@@ -794,11 +789,10 @@ QQmlType QQmlMetaType::typeForUrl(const QString &urlString,
     const QQmlType::RegistrationType registrationType = isCompositeSingleton
             ? QQmlType::CompositeSingletonType
             : QQmlType::CompositeType;
-    if (checkRegistration(registrationType, data, nullptr, typeName, majorVersion)) {
+    if (checkRegistration(registrationType, data, nullptr, typeName, version)) {
         auto *priv = new QQmlTypePrivate(registrationType);
         priv->setName(QString(), typeName);
-        priv->version_maj = majorVersion;
-        priv->version_min = minorVersion;
+        priv->version = version;
 
         if (isCompositeSingleton) {
             priv->extraData.sd->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
@@ -851,14 +845,12 @@ bool QQmlMetaType::isAnyModule(const QString &uri)
 /*
     Returns true if a module \a uri of this version is installed and locked;
 */
-bool QQmlMetaType::isLockedModule(const QString &uri, int majVersion)
+bool QQmlMetaType::isLockedModule(const QString &uri, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data;
 
-    QQmlMetaTypeData::VersionedUri versionedUri;
-    versionedUri.uri = uri;
-    versionedUri.majorVersion = majVersion;
-    if (QQmlTypeModule* qqtm = data->uriToModule.value(versionedUri, 0))
+    if (QQmlTypeModule* qqtm = data->uriToModule.value(
+                QQmlMetaTypeData::VersionedUri(uri, version), nullptr))
         return qqtm->isLocked();
     return false;
 }
@@ -870,24 +862,24 @@ bool QQmlMetaType::isLockedModule(const QString &uri, int majVersion)
 
     So if only 4.7 and 4.9 have been registered, 4.7,4.8, and 4.9 are valid, but not 4.6 nor 4.10.
 */
-bool QQmlMetaType::isModule(const QString &module, int versionMajor, int versionMinor)
+bool QQmlMetaType::isModule(const QString &module, QTypeRevision version)
 {
-    Q_ASSERT(versionMajor >= 0 && versionMinor >= 0);
+    Q_ASSERT(version.hasMajorVersion() && version.hasMinorVersion());
     QQmlMetaTypeDataPtr data;
 
     // first, check Types
     QQmlTypeModule *tm =
-        data->uriToModule.value(QQmlMetaTypeData::VersionedUri(module, versionMajor));
-    if (tm && tm->minimumMinorVersion() <= versionMinor && tm->maximumMinorVersion() >= versionMinor)
+        data->uriToModule.value(QQmlMetaTypeData::VersionedUri(module, version));
+    if (tm && tm->minimumMinorVersion() <= version.minorVersion() && tm->maximumMinorVersion() >= version.minorVersion())
         return true;
 
     return false;
 }
 
-QQmlTypeModule *QQmlMetaType::typeModule(const QString &uri, int majorVersion)
+QQmlTypeModule *QQmlMetaType::typeModule(const QString &uri, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data;
-    return data->uriToModule.value(QQmlMetaTypeData::VersionedUri(uri, majorVersion));
+    return data->uriToModule.value(QQmlMetaTypeData::VersionedUri(uri, version));
 }
 
 QList<QQmlPrivate::AutoParentFunction> QQmlMetaType::parentFunctions()
@@ -1106,7 +1098,7 @@ QQmlMetaType::StringConverter QQmlMetaType::customStringConverter(int type)
     Returns the type (if any) of URI-qualified named \a qualifiedName and version specified
     by \a version_major and \a version_minor.
 */
-QQmlType QQmlMetaType::qmlType(const QString &qualifiedName, int version_major, int version_minor)
+QQmlType QQmlMetaType::qmlType(const QString &qualifiedName, QTypeRevision version)
 {
     int slash = qualifiedName.indexOf(QLatin1Char('/'));
     if (slash <= 0)
@@ -1115,23 +1107,23 @@ QQmlType QQmlMetaType::qmlType(const QString &qualifiedName, int version_major, 
     QHashedStringRef module(qualifiedName.constData(), slash);
     QHashedStringRef name(qualifiedName.constData() + slash + 1, qualifiedName.length() - slash - 1);
 
-    return qmlType(name, module, version_major, version_minor);
+    return qmlType(name, module, version);
 }
 
 /*!
     Returns the type (if any) of \a name in \a module and version specified
     by \a version_major and \a version_minor.
 */
-QQmlType QQmlMetaType::qmlType(const QHashedStringRef &name, const QHashedStringRef &module, int version_major, int version_minor)
+QQmlType QQmlMetaType::qmlType(const QHashedStringRef &name, const QHashedStringRef &module,
+                               QTypeRevision version)
 {
-    Q_ASSERT(version_major >= 0 && version_minor >= 0);
+    Q_ASSERT(version.hasMajorVersion() && version.hasMinorVersion());
     const QQmlMetaTypeDataPtr data;
 
     QQmlMetaTypeData::Names::ConstIterator it = data->nameToType.constFind(name);
     while (it != data->nameToType.cend() && it.key() == name) {
         QQmlType t(*it);
-        // XXX version_major<0 just a kludge for QQmlPropertyPrivate::initProperty
-        if (version_major < 0 || module.isEmpty() || t.availableInVersion(module, version_major,version_minor))
+        if (module.isEmpty() || t.availableInVersion(module, version))
             return t;
         ++it;
     }
@@ -1154,15 +1146,16 @@ QQmlType QQmlMetaType::qmlType(const QMetaObject *metaObject)
     by \a version_major and \a version_minor in module specified by \a uri.  Returns null if no
     type is registered.
 */
-QQmlType QQmlMetaType::qmlType(const QMetaObject *metaObject, const QHashedStringRef &module, int version_major, int version_minor)
+QQmlType QQmlMetaType::qmlType(const QMetaObject *metaObject, const QHashedStringRef &module,
+                               QTypeRevision version)
 {
-    Q_ASSERT(version_major >= 0 && version_minor >= 0);
+    Q_ASSERT(version.hasMajorVersion() && version.hasMinorVersion());
     const QQmlMetaTypeDataPtr data;
 
     QQmlMetaTypeData::MetaObjects::const_iterator it = data->metaObjectToType.constFind(metaObject);
     while (it != data->metaObjectToType.cend() && it.key() == metaObject) {
         QQmlType t(*it);
-        if (version_major < 0 || module.isEmpty() || t.availableInVersion(module, version_major,version_minor))
+        if (module.isEmpty() || t.availableInVersion(module, version))
             return t;
         ++it;
     }
@@ -1212,16 +1205,16 @@ QQmlType QQmlMetaType::qmlType(const QUrl &unNormalizedUrl, bool includeNonFileI
         return QQmlType();
 }
 
-QQmlPropertyCache *QQmlMetaType::propertyCache(const QMetaObject *metaObject, int minorVersion)
+QQmlPropertyCache *QQmlMetaType::propertyCache(const QMetaObject *metaObject, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data; // not const: the cache is created on demand
-    return data->propertyCache(metaObject, minorVersion);
+    return data->propertyCache(metaObject, version);
 }
 
-QQmlPropertyCache *QQmlMetaType::propertyCache(const QQmlType &type, int minorVersion)
+QQmlPropertyCache *QQmlMetaType::propertyCache(const QQmlType &type, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data; // not const: the cache is created on demand
-    return data->propertyCache(type, minorVersion);
+    return data->propertyCache(type, version);
 }
 
 void QQmlMetaType::unregisterType(int typeIndex)
@@ -1236,7 +1229,7 @@ void QQmlMetaType::unregisterType(int typeIndex)
         removeQQmlTypePrivate(data->metaObjectToType, d);
         for (auto & module : data->uriToModule)
             module->remove(d);
-        data->clearPropertyCachesForMinorVersion(typeIndex);
+        data->clearPropertyCachesForVersion(typeIndex);
         data->types[typeIndex] = QQmlType();
         data->undeletableTypes.remove(type);
     }
@@ -1268,7 +1261,7 @@ void QQmlMetaType::freeUnusedTypesAndCaches()
                 for (auto &module : data->uriToModule)
                     module->remove(d);
 
-                data->clearPropertyCachesForMinorVersion(d->index);
+                data->clearPropertyCachesForVersion(d->index);
                 *it = QQmlType();
             } else {
                 ++it;

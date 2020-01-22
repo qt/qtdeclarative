@@ -77,7 +77,8 @@ void tst_qqmlenginecleanup::test_qmlClearTypeRegistrations()
     QUrl testFile = testFileUrl("types.qml");
 
     const auto qmlTypeForTestType = []() {
-        return QQmlMetaType::qmlType(QStringLiteral("TestTypeCpp"), QStringLiteral("Test"), 2, 0);
+        return QQmlMetaType::qmlType(QStringLiteral("TestTypeCpp"), QStringLiteral("Test"),
+                                     QTypeRevision::fromVersion(2, 0));
     };
 
     QVERIFY(!qmlTypeForTestType().isValid());

@@ -91,7 +91,7 @@ private:
     void enterEnvironment(ScopeType type, const QString &name);
     void leaveEnvironment();
     void importHelper(const QString &module, const QString &prefix = QString(),
-                      int major = -1, int minor = -1);
+                      QTypeRevision version = QTypeRevision());
 
     void readQmltypes(const QString &filename, Import &result);
     Import readQmldir(const QString &dirname);

@@ -124,7 +124,7 @@ public:
 
     QString bindingAsString(const QmlIR::Object *object, int scriptIndex) const;
 
-    void addImport(const QString &module, const QString &qualifier, int majorVersion, int minorVersion);
+    void addImport(const QString &module, const QString &qualifier, QTypeRevision version);
 
     QV4::ResolvedTypeReference *resolvedType(int id) const
     {

@@ -217,13 +217,14 @@ void tst_qqmlmetatype::qmlPropertyValueInterceptorCast()
 
 void tst_qqmlmetatype::qmlType()
 {
-    QQmlType type = QQmlMetaType::qmlType(QString("ParserStatusTestType"), QString("Test"), 1, 0);
+    QQmlType type = QQmlMetaType::qmlType(QString("ParserStatusTestType"), QString("Test"),
+                                          QTypeRevision::fromVersion(1, 0));
     QVERIFY(type.isValid());
     QVERIFY(type.module() == QLatin1String("Test"));
     QVERIFY(type.elementName() == QLatin1String("ParserStatusTestType"));
     QCOMPARE(type.qmlTypeName(), QLatin1String("Test/ParserStatusTestType"));
 
-    type = QQmlMetaType::qmlType("Test/ParserStatusTestType", 1, 0);
+    type = QQmlMetaType::qmlType("Test/ParserStatusTestType", QTypeRevision::fromVersion(1, 0));
     QVERIFY(type.isValid());
     QVERIFY(type.module() == QLatin1String("Test"));
     QVERIFY(type.elementName() == QLatin1String("ParserStatusTestType"));
@@ -282,19 +283,22 @@ void tst_qqmlmetatype::defaultObject()
 
 void tst_qqmlmetatype::registrationType()
 {
-    QQmlType type = QQmlMetaType::qmlType(QString("TestType"), QString("Test"), 1, 0);
+    QQmlType type = QQmlMetaType::qmlType(QString("TestType"), QString("Test"),
+                                          QTypeRevision::fromVersion(1, 0));
     QVERIFY(type.isValid());
     QVERIFY(!type.isInterface());
     QVERIFY(!type.isSingleton());
     QVERIFY(!type.isComposite());
 
-    type = QQmlMetaType::qmlType(QString("TestTypeSingleton"), QString("Test"), 1, 0);
+    type = QQmlMetaType::qmlType(QString("TestTypeSingleton"), QString("Test"),
+                                 QTypeRevision::fromVersion(1, 0));
     QVERIFY(type.isValid());
     QVERIFY(!type.isInterface());
     QVERIFY(type.isSingleton());
     QVERIFY(!type.isComposite());
 
-    type = QQmlMetaType::qmlType(QString("TestTypeComposite"), QString("Test"), 1, 0);
+    type = QQmlMetaType::qmlType(QString("TestTypeComposite"), QString("Test"),
+                                 QTypeRevision::fromVersion(1, 0));
     QVERIFY(type.isValid());
     QVERIFY(!type.isInterface());
     QVERIFY(!type.isSingleton());
@@ -310,7 +314,8 @@ void tst_qqmlmetatype::compositeType()
     QScopedPointer<QObject> obj(c.create());
     QVERIFY(obj);
 
-    QQmlType type = QQmlMetaType::qmlType(QString("ImplicitType"), QString(""), 1, 0);
+    QQmlType type = QQmlMetaType::qmlType(QString("ImplicitType"), QString(""),
+                                          QTypeRevision::fromVersion(1, 0));
     QVERIFY(type.isValid());
     QVERIFY(type.module().isEmpty());
     QCOMPARE(type.elementName(), QLatin1String("ImplicitType"));
@@ -380,10 +385,12 @@ void tst_qqmlmetatype::unregisterCustomType()
     int controllerId = 0;
     {
         QQmlEngine engine;
-        QQmlType type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"), 1, 0);
+        QQmlType type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"),
+                                              QTypeRevision::fromVersion(1, 0));
         QVERIFY(!type.isValid());
         controllerId = qmlRegisterType<Controller1>("mytypes", 1, 0, "Controller");
-        type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"), 1, 0);
+        type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"),
+                                     QTypeRevision::fromVersion(1, 0));
         QVERIFY(type.isValid());
         QVERIFY(!type.isInterface());
         QVERIFY(!type.isSingleton());
@@ -403,10 +410,12 @@ void tst_qqmlmetatype::unregisterCustomType()
     QQmlMetaType::unregisterType(controllerId);
     {
         QQmlEngine engine;
-        QQmlType type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"), 1, 0);
+        QQmlType type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"),
+                                              QTypeRevision::fromVersion(1, 0));
         QVERIFY(!type.isValid());
         controllerId = qmlRegisterType<Controller2>("mytypes", 1, 0, "Controller");
-        type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"), 1, 0);
+        type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"),
+                                     QTypeRevision::fromVersion(1, 0));
         QVERIFY(type.isValid());
         QVERIFY(!type.isInterface());
         QVERIFY(!type.isSingleton());
@@ -426,10 +435,12 @@ void tst_qqmlmetatype::unregisterCustomType()
     QQmlMetaType::unregisterType(controllerId);
     {
         QQmlEngine engine;
-        QQmlType type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"), 1, 0);
+        QQmlType type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"),
+                                              QTypeRevision::fromVersion(1, 0));
         QVERIFY(!type.isValid());
         controllerId = qmlRegisterType<Controller1>("mytypes", 1, 0, "Controller");
-        type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"), 1, 0);
+        type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"),
+                                     QTypeRevision::fromVersion(1, 0));
         QVERIFY(type.isValid());
         QVERIFY(!type.isInterface());
         QVERIFY(!type.isSingleton());
@@ -480,7 +491,8 @@ void tst_qqmlmetatype::unregisterCustomSingletonType()
     {
         QQmlEngine engine;
         staticProviderId = qmlRegisterSingletonType<StaticProvider1>("mytypes", 1, 0, "StaticProvider", createStaticProvider1);
-        QQmlType type = QQmlMetaType::qmlType(QString("StaticProvider"), QString("mytypes"), 1, 0);
+        QQmlType type = QQmlMetaType::qmlType(QString("StaticProvider"), QString("mytypes"),
+                                              QTypeRevision::fromVersion(1, 0));
         QVERIFY(type.isValid());
         QVERIFY(!type.isInterface());
         QVERIFY(type.isSingleton());
@@ -496,7 +508,8 @@ void tst_qqmlmetatype::unregisterCustomSingletonType()
     {
         QQmlEngine engine;
         staticProviderId = qmlRegisterSingletonType<StaticProvider2>("mytypes", 1, 0, "StaticProvider", createStaticProvider2);
-        QQmlType type = QQmlMetaType::qmlType(QString("StaticProvider"), QString("mytypes"), 1, 0);
+        QQmlType type = QQmlMetaType::qmlType(QString("StaticProvider"), QString("mytypes"),
+                                              QTypeRevision::fromVersion(1, 0));
         QVERIFY(type.isValid());
         QVERIFY(!type.isInterface());
         QVERIFY(type.isSingleton());
@@ -512,7 +525,8 @@ void tst_qqmlmetatype::unregisterCustomSingletonType()
     {
         QQmlEngine engine;
         staticProviderId = qmlRegisterSingletonType<StaticProvider1>("mytypes", 1, 0, "StaticProvider", createStaticProvider1);
-        QQmlType type = QQmlMetaType::qmlType(QString("StaticProvider"), QString("mytypes"), 1, 0);
+        QQmlType type = QQmlMetaType::qmlType(QString("StaticProvider"), QString("mytypes"),
+                                              QTypeRevision::fromVersion(1, 0));
         QVERIFY(type.isValid());
         QVERIFY(!type.isInterface());
         QVERIFY(type.isSingleton());
@@ -548,7 +562,8 @@ void tst_qqmlmetatype::unregisterAttachedProperties()
         QQmlComponent c(&e);
         c.setData("import QtQuick 2.2\n Item { }", dummy);
 
-        const QQmlType attachedType = QQmlMetaType::qmlType("QtQuick/KeyNavigation", 2, 2);
+        const QQmlType attachedType = QQmlMetaType::qmlType("QtQuick/KeyNavigation",
+                                                            QTypeRevision::fromVersion(2, 2));
         QCOMPARE(attachedType.attachedPropertiesType(QQmlEnginePrivate::get(&e)),
                  attachedType.metaObject());
 
@@ -568,7 +583,8 @@ void tst_qqmlmetatype::unregisterAttachedProperties()
                   "import QtQuick 2.2 \n"
                   "Item { KeyNavigation.up: null }", dummy);
 
-        const QQmlType attachedType = QQmlMetaType::qmlType("QtQuick/KeyNavigation", 2, 2);
+        const QQmlType attachedType = QQmlMetaType::qmlType("QtQuick/KeyNavigation",
+                                                            QTypeRevision::fromVersion(2, 2));
         QCOMPARE(attachedType.attachedPropertiesType(QQmlEnginePrivate::get(&e)),
                  attachedType.metaObject());
 

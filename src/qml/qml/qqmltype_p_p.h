@@ -157,11 +157,10 @@ public:
     QHashedString module;
     QString name;
     QString elementName;
-    int version_maj;
-    int version_min;
     int typeId;
     int listId;
-    int revision;
+    QTypeRevision version;
+    QTypeRevision revision;
     mutable bool containsRevisionedAttributes;
     mutable QQmlType superType;
     const QMetaObject *baseMetaObject;

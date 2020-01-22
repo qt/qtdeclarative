@@ -58,6 +58,7 @@
 #include <QVariant>
 #include <QList>
 #include <QByteArray>
+#include <QTypeRevision>
 #include <QQmlContext>
 #include <QQmlListReference>
 
@@ -66,7 +67,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_EXPORT QQuickDesignerSupportItems
 {
 public:
-    static QObject *createPrimitive(const QString &typeName, int majorNumber, int minorNumber, QQmlContext *context);
+    static QObject *createPrimitive(const QString &typeName, QTypeRevision version, QQmlContext *context);
     static QObject *createComponent(const QUrl &componentUrl, QQmlContext *context);
     static void tweakObjects(QObject *object);
     static bool objectWasDeleted(QObject *object);

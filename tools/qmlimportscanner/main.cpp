@@ -123,7 +123,11 @@ QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, con
             if (!name.isEmpty())
                 import[nameLiteral()] = name;
             import[typeLiteral()] = moduleLiteral();
-            auto versionString = importNode->version ? QString::number(importNode->version->majorVersion) + QLatin1Char('.') + QString::number(importNode->version->minorVersion) : QString();
+            auto versionString = importNode->version
+                    ? QString::number(importNode->version->version.majorVersion())
+                      + QLatin1Char('.')
+                      + QString::number(importNode->version->version.minorVersion())
+                    : QString();
             import[versionLiteral()] = versionString;
         }
 

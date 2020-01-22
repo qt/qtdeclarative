@@ -63,6 +63,7 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qpointer.h>
+#include <QtCore/qversionnumber.h>
 
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qdebug.h>
@@ -342,7 +343,7 @@ namespace QQmlPrivate
     typedef AutoParentResult (*AutoParentFunction)(QObject *object, QObject *parent);
 
     struct RegisterType {
-        int version;
+        int structVersion;
 
         int typeId;
         int listId;
@@ -351,8 +352,7 @@ namespace QQmlPrivate
         QString noCreationReason;
 
         const char *uri;
-        int versionMajor;
-        int versionMinor;
+        QTypeRevision version;
         const char *elementName;
         const QMetaObject *metaObject;
 
@@ -368,12 +368,12 @@ namespace QQmlPrivate
 
         QQmlCustomParser *customParser;
 
-        int revision;
+        QTypeRevision revision;
         // If this is extended ensure "version" is bumped!!!
     };
 
     struct RegisterTypeAndRevisions {
-        int version;
+        int structVersion;
 
         int typeId;
         int listId;
@@ -381,7 +381,7 @@ namespace QQmlPrivate
         void (*create)(void *);
 
         const char *uri;
-        int versionMajor;
+        QTypeRevision version;
 
         const QMetaObject *metaObject;
         const QMetaObject *classInfoMetaObject;
@@ -400,7 +400,7 @@ namespace QQmlPrivate
     };
 
     struct RegisterInterface {
-        int version;
+        int structVersion;
 
         int typeId;
         int listId;
@@ -415,26 +415,25 @@ namespace QQmlPrivate
     };
 
     struct RegisterSingletonType {
-        int version;
+        int structVersion;
 
         const char *uri;
-        int versionMajor;
-        int versionMinor;
+        QTypeRevision version;
         const char *typeName;
 
         QJSValue (*scriptApi)(QQmlEngine *, QJSEngine *);
         QObject *(*qobjectApi)(QQmlEngine *, QJSEngine *);
         const QMetaObject *instanceMetaObject; // new in version 1
         int typeId; // new in version 2
-        int revision; // new in version 2
+        QTypeRevision revision; // new in version 2
         std::function<QObject*(QQmlEngine *, QJSEngine *)> generalizedQobjectApi; // new in version 3
         // If this is extended ensure "version" is bumped!!!
     };
 
     struct RegisterSingletonTypeAndRevisions {
-        int version;
+        int structVersion;
         const char *uri;
-        int versionMajor;
+        QTypeRevision version;
 
         QJSValue (*scriptApi)(QQmlEngine *, QJSEngine *);
         const QMetaObject *instanceMetaObject;
@@ -447,16 +446,14 @@ namespace QQmlPrivate
     struct RegisterCompositeType {
         QUrl url;
         const char *uri;
-        int versionMajor;
-        int versionMinor;
+        QTypeRevision version;
         const char *typeName;
     };
 
     struct RegisterCompositeSingletonType {
         QUrl url;
         const char *uri;
-        int versionMajor;
-        int versionMinor;
+        QTypeRevision version;
         const char *typeName;
     };
 
@@ -468,7 +465,7 @@ namespace QQmlPrivate
 
     typedef const CachedQmlUnit *(*QmlUnitCacheLookupFunction)(const QUrl &url);
     struct RegisterQmlUnitCacheHook {
-        int version;
+        int structVersion;
         QmlUnitCacheLookupFunction lookupCachedQmlUnit;
     };
 
@@ -512,11 +509,13 @@ namespace QQmlPrivate
         return metaObject->classInfo(indexOfOwnClassInfo(metaObject, key)).value();
     }
 
-    inline int intClassInfo(const QMetaObject *metaObject, const char *key, int defaultValue = 0)
+    inline QTypeRevision revisionClassInfo(const QMetaObject *metaObject, const char *key,
+                                       QTypeRevision defaultValue = QTypeRevision())
     {
         const int index = indexOfOwnClassInfo(metaObject, key);
         return (index == -1) ? defaultValue
-                             : QByteArray(metaObject->classInfo(index).value()).toInt();
+                             : QTypeRevision::fromEncodedVersion(
+                                   QByteArray(metaObject->classInfo(index).value()).toInt());
     }
 
     inline bool boolClassInfo(const QMetaObject *metaObject, const char *key,
@@ -589,7 +588,7 @@ namespace QQmlPrivate
             0,
 
             uri,
-            versionMajor,
+            QTypeRevision::fromMajorVersion(versionMajor),
 
             nullptr,
 
@@ -617,7 +616,7 @@ namespace QQmlPrivate
             Constructors<T>::createInto,
 
             uri,
-            versionMajor,
+            QTypeRevision::fromMajorVersion(versionMajor),
 
             &T::staticMetaObject,
             classInfoMetaObject,

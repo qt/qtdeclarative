@@ -293,7 +293,7 @@ int qmlRegisterValueTypeEnums(const char *uri, int versionMajor, int versionMino
 
         QString(),
 
-        uri, versionMajor, versionMinor, qmlName, &T::staticMetaObject,
+        uri, QTypeRevision::fromVersion(versionMajor, versionMinor), qmlName, &T::staticMetaObject,
 
         nullptr, nullptr,
 
@@ -302,7 +302,7 @@ int qmlRegisterValueTypeEnums(const char *uri, int versionMajor, int versionMino
         nullptr, nullptr,
 
         nullptr,
-        0
+        QTypeRevision::zero()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);

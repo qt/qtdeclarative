@@ -374,11 +374,7 @@ void ScriptDirectivesCollector::importModule(const QString &uri, const QString &
     QV4::CompiledData::Import *import = engine->pool()->New<QV4::CompiledData::Import>();
     import->type = QV4::CompiledData::Import::ImportLibrary;
     import->uriIndex = jsGenerator->registerString(uri);
-    int vmaj;
-    int vmin;
-    IRBuilder::extractVersion(QStringRef(&version), &vmaj, &vmin);
-    import->majorVersion = vmaj;
-    import->minorVersion = vmin;
+    import->version = IRBuilder::extractVersion(QStringRef(&version));
     import->qualifierIndex = jsGenerator->registerString(module);
     import->location.line = lineNumber;
     import->location.column = column;
@@ -715,16 +711,14 @@ bool IRBuilder::visit(QQmlJS::AST::UiImport *node)
     }
 
     if (node->version) {
-        import->majorVersion = node->version->majorVersion;
-        import->minorVersion = node->version->minorVersion;
+        import->version = node->version->version;
     } else if (import->type == QV4::CompiledData::Import::ImportLibrary) {
         recordError(node->importIdToken, QCoreApplication::translate("QQmlParser","Library import requires a version"));
         return false;
     } else {
         // For backward compatibility in how the imports are loaded we
-        // must otherwise initialize the major and minor version to -1.
-        import->majorVersion = -1;
-        import->minorVersion = -1;
+        // must otherwise initialize the major and minor version to invalid.
+        import->version = QTypeRevision();
     }
 
     import->location.line = node->importToken.startLine;
@@ -1010,22 +1004,15 @@ QStringRef IRBuilder::asStringRef(QQmlJS::AST::Node *node)
     return textRefAt(node->firstSourceLocation(), node->lastSourceLocation());
 }
 
-void IRBuilder::extractVersion(const QStringRef &string, int *maj, int *min)
+QTypeRevision IRBuilder::extractVersion(const QStringRef &string)
 {
-    *maj = -1; *min = -1;
+    if (string.isEmpty())
+        return QTypeRevision();
 
-    if (!string.isEmpty()) {
-
-        int dot = string.indexOf(QLatin1Char('.'));
-
-        if (dot < 0) {
-            *maj = string.toInt();
-            *min = 0;
-        } else {
-            *maj = string.left(dot).toInt();
-            *min = string.mid(dot + 1).toInt();
-        }
-    }
+    const int dot = string.indexOf(QLatin1Char('.'));
+    return (dot < 0)
+        ? QTypeRevision::fromVersion(string.toInt(), 0)
+        : QTypeRevision::fromVersion(string.left(dot).toInt(), string.mid(dot + 1).toInt());
 }
 
 QStringRef IRBuilder::textRefAt(const QQmlJS::AST::SourceLocation &first, const QQmlJS::AST::SourceLocation &last) const

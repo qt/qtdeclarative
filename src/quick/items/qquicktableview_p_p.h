@@ -395,7 +395,7 @@ public:
 
     void scheduleRebuildTable(QQuickTableViewPrivate::RebuildOptions options);
 
-    int resolveImportVersion();
+    QTypeRevision resolveImportVersion();
     void createWrapperModel();
 
     void initItemCallback(int modelIndex, QObject *item);

@@ -2121,15 +2121,17 @@ void QQuickTableViewPrivate::fixup(QQuickFlickablePrivate::AxisData &data, qreal
     QQuickFlickablePrivate::fixup(data, minExtent, maxExtent);
 }
 
-int QQuickTableViewPrivate::resolveImportVersion()
+QTypeRevision QQuickTableViewPrivate::resolveImportVersion()
 {
     const auto data = QQmlData::get(q_func());
     if (!data || !data->propertyCache)
-        return 0;
+        return QTypeRevision::zero();
 
     const auto cppMetaObject = data->propertyCache->firstCppMetaObject();
     const auto qmlTypeView = QQmlMetaType::qmlType(cppMetaObject);
-    return qmlTypeView.minorVersion();
+
+    // TODO: did we rather want qmlTypeView.revision() here?
+    return qmlTypeView.metaObjectRevision();
 }
 
 void QQuickTableViewPrivate::createWrapperModel()

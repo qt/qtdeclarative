@@ -182,8 +182,8 @@ bool QQmlTypeData::tryLoadFromDiskCache()
                 const QV4::CompiledData::Import *import = m_compiledData->importAt(i);
                 if (m_compiledData->stringAt(import->uriIndex) == QLatin1String(".")
                     && import->qualifierIndex == 0
-                    && import->majorVersion == -1
-                    && import->minorVersion == -1) {
+                    && !import->version.hasMajorVersion()
+                    && !import->version.hasMinorVersion()) {
                     QList<QQmlError> errors;
                     auto pendingImport = std::make_shared<PendingImport>(this, import);
                     if (!fetchQmldir(qmldirUrl, pendingImport, 1, &errors)) {
@@ -213,9 +213,9 @@ bool QQmlTypeData::tryLoadFromDiskCache()
 
     QQmlType containingType;
     auto containingTypeName = finalUrl().fileName().split(QLatin1Char('.')).first();
-    int major = -1, minor = -1;
+    QTypeRevision version;
     QQmlImportNamespace *ns = nullptr;
-    m_importCache.resolveType(containingTypeName, &containingType, &major, &minor, &ns);
+    m_importCache.resolveType(containingTypeName, &containingType, &version, &ns);
     for (auto&& ic: ics) {
         QString const nameString = m_compiledData->stringAt(ic.nameIndex);
         QByteArray const name = nameString.toUtf8();
@@ -651,9 +651,9 @@ void QQmlTypeData::continueLoadFromIR()
 {
     QQmlType containingType;
     auto containingTypeName = finalUrl().fileName().split(QLatin1Char('.')).first();
-    int major = -1, minor = -1;
+    QTypeRevision version;
     QQmlImportNamespace *ns = nullptr;
-    m_importCache.resolveType(containingTypeName, &containingType, &major, &minor, &ns);
+    m_importCache.resolveType(containingTypeName, &containingType, &version, &ns);
     for (auto const& object: m_document->objects) {
         for (auto it = object->inlineComponentsBegin(); it != object->inlineComponentsEnd(); ++it) {
             QString const nameString = m_document->stringAt(it->nameIndex);
@@ -679,8 +679,7 @@ void QQmlTypeData::continueLoadFromIR()
             // This qmldir is for the implicit import
             auto implicitImport = std::make_shared<PendingImport>();
             implicitImport->uri = QLatin1String(".");
-            implicitImport->majorVersion = -1;
-            implicitImport->minorVersion = -1;
+            implicitImport->version = QTypeRevision();
             QList<QQmlError> errors;
 
             if (!fetchQmldir(qmldirUrl, implicitImport, 1, &errors)) {
@@ -824,11 +823,8 @@ void QQmlTypeData::resolveTypes()
             typeName = csRef.typeName;
         }
 
-        int majorVersion = csRef.majorVersion > -1 ? csRef.majorVersion : -1;
-        int minorVersion = csRef.minorVersion > -1 ? csRef.minorVersion : -1;
-
-        if (!resolveType(typeName, majorVersion, minorVersion, ref, -1, -1, true,
-                         QQmlType::CompositeSingletonType))
+        QTypeRevision version = csRef.version;
+        if (!resolveType(typeName, version, ref, -1, -1, true, QQmlType::CompositeSingletonType))
             return;
 
         if (ref.type.isCompositeSingleton()) {
@@ -851,14 +847,13 @@ void QQmlTypeData::resolveTypes()
 
         const bool reportErrors = unresolvedRef->errorWhenNotFound;
 
-        int majorVersion = -1;
-        int minorVersion = -1;
+        QTypeRevision version;
 
         const QString name = stringAt(unresolvedRef.key());
 
         bool *selfReferenceDetection = unresolvedRef->needsCreation ? nullptr : &ref.selfReference;
 
-        if (!resolveType(name, majorVersion, minorVersion, ref, unresolvedRef->location.line,
+        if (!resolveType(name, version, ref, unresolvedRef->location.line,
                          unresolvedRef->location.column, reportErrors,
                          QQmlType::AnyRegistrationType, selfReferenceDetection) && reportErrors)
             return;
@@ -878,8 +873,7 @@ void QQmlTypeData::resolveTypes()
                 }
             }
         }
-        ref.majorVersion = majorVersion;
-        ref.minorVersion = minorVersion;
+        ref.version = version;
 
         ref.location.line = unresolvedRef->location.line;
         ref.location.column = unresolvedRef->location.column;
@@ -962,13 +956,10 @@ QQmlJS::DiagnosticMessage QQmlTypeData::buildTypeResolutionCaches(
                 return qQmlCompileError(resolvedType->location, reason);
             }
 
-            if (ref->type.containsRevisionedAttributes()) {
-                ref->typePropertyCache = engine->cache(ref->type,
-                                                       resolvedType->minorVersion);
-            }
+            if (ref->type.containsRevisionedAttributes())
+                ref->typePropertyCache = engine->cache(ref->type, resolvedType->version);
         }
-        ref->majorVersion = resolvedType->majorVersion;
-        ref->minorVersion = resolvedType->minorVersion;
+        ref->version = resolvedType->version;
         ref->doDynamicTypeCheck();
         resolvedTypeCache->insert(resolvedType.key(), ref.take());
     }
@@ -976,7 +967,7 @@ QQmlJS::DiagnosticMessage QQmlTypeData::buildTypeResolutionCaches(
     return noError;
 }
 
-bool QQmlTypeData::resolveType(const QString &typeName, int &majorVersion, int &minorVersion,
+bool QQmlTypeData::resolveType(const QString &typeName, QTypeRevision &version,
                                TypeReference &ref, int lineNumber, int columnNumber,
                                bool reportErrors, QQmlType::RegistrationType registrationType,
                                bool *typeRecursionDetected)
@@ -984,7 +975,7 @@ bool QQmlTypeData::resolveType(const QString &typeName, int &majorVersion, int &
     QQmlImportNamespace *typeNamespace = nullptr;
     QList<QQmlError> errors;
 
-    bool typeFound = m_importCache.resolveType(typeName, &ref.type, &majorVersion, &minorVersion,
+    bool typeFound = m_importCache.resolveType(typeName, &ref.type, &version,
                                                &typeNamespace, &errors, registrationType,
                                                typeRecursionDetected);
     if (!typeNamespace && !typeFound && !m_implicitImportLoaded) {
@@ -992,7 +983,7 @@ bool QQmlTypeData::resolveType(const QString &typeName, int &majorVersion, int &
         if (loadImplicitImport()) {
             // Try again to find the type
             errors.clear();
-            typeFound = m_importCache.resolveType(typeName, &ref.type, &majorVersion, &minorVersion,
+            typeFound = m_importCache.resolveType(typeName, &ref.type, &version,
                                                   &typeNamespace, &errors, registrationType,
                                                   typeRecursionDetected);
         } else {

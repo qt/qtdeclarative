@@ -1221,8 +1221,8 @@ bool DumpAstVisitor::visit(UiImport *node) {
         result += parseUiQualifiedId(node->importUri);
 
     if (node->version) {
-        result += " " + QString::number(node->version->majorVersion) + "."
-                + QString::number(node->version->minorVersion);
+        result += " " + QString::number(node->version->version.majorVersion()) + "."
+                + QString::number(node->version->version.minorVersion());
     }
 
     if (node->asToken.isValid()) {

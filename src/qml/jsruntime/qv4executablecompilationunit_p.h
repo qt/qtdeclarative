@@ -326,17 +326,15 @@ private:
 struct ResolvedTypeReference
 {
     ResolvedTypeReference()
-        : majorVersion(0)
-          , minorVersion(0)
-          , isFullyDynamicType(false)
+        : version(QTypeRevision::zero())
+        , isFullyDynamicType(false)
     {}
 
     QQmlType type;
     QQmlRefPointer<QQmlPropertyCache> typePropertyCache;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
 
-    int majorVersion;
-    int minorVersion;
+    QTypeRevision version;
     // Types such as QQmlPropertyMap can add properties dynamically at run-time and
     // therefore cannot have a property cache installed when instantiated.
     bool isFullyDynamicType;

@@ -83,9 +83,9 @@ QQmlTableInstanceModel::QQmlTableInstanceModel(QQmlContext *qmlContext, QObject 
 {
 }
 
-void QQmlTableInstanceModel::useImportVersion(int minorVersion)
+void QQmlTableInstanceModel::useImportVersion(QTypeRevision version)
 {
-    m_adaptorModel.useImportVersion(minorVersion);
+    m_adaptorModel.useImportVersion(version);
 }
 
 QQmlTableInstanceModel::~QQmlTableInstanceModel()
