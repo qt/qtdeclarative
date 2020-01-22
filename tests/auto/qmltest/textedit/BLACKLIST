@@ -1,6 +1,6 @@
 # Blacklist for testing
 [TextEdit::test_textentry]
-osx-10.12
+macos
 [TextEdit::test_textentry_char]
-osx-10.12
+macos
 
