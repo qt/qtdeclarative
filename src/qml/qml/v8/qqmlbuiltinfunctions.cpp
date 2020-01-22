@@ -1338,6 +1338,41 @@ ReturnedValue QtObject::method_createComponent(const FunctionObject *b, const Va
     return QV4::QObjectWrapper::wrap(scope.engine, c);
 }
 
+ReturnedValue QtObject::method_get_uiLanguage(const FunctionObject *b, const Value * /*thisObject*/, const Value * /*argv*/, int /*argc*/)
+{
+    QV4::Scope scope(b);
+    QJSEngine *jsEngine = scope.engine->jsEngine();
+    if (!jsEngine)
+        return Encode::null();
+
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(scope.engine);
+    if (ep && ep->propertyCapture) {
+        static int propertyIndex = -1;
+        static int notifySignalIndex = -1;
+        if (propertyIndex < 0) {
+            QMetaProperty metaProperty =
+                    QQmlEngine::staticMetaObject.property(QQmlEngine::staticMetaObject.indexOfProperty("uiLanguage"));
+            propertyIndex = metaProperty.propertyIndex();
+            notifySignalIndex = metaProperty.notifySignalIndex();
+        }
+        ep->propertyCapture->captureProperty(QQmlEnginePrivate::get(ep), propertyIndex, notifySignalIndex);
+    }
+
+    return Encode(scope.engine->newString(QJSEnginePrivate::get(jsEngine)->uiLanguage));
+}
+
+ReturnedValue QtObject::method_set_uiLanguage(const FunctionObject *b, const Value * /*thisObject*/, const Value *argv, int argc)
+{
+    Scope scope(b);
+    if (!argc)
+        THROW_TYPE_ERROR();
+    QJSEngine *jsEngine = scope.engine->jsEngine();
+    if (!jsEngine)
+        THROW_TYPE_ERROR();
+    jsEngine->setUiLanguage(argv[0].toQString());
+    return Encode::undefined();
+}
+
 #if QT_CONFIG(qml_locale)
 /*!
     \qmlmethod Qt::locale(name)
@@ -1834,6 +1869,14 @@ void QV4::GlobalExtensions::init(Object *globalObject, QJSEngine::Extensions ext
         globalObject->defineDefaultProperty(QStringLiteral("QT_TR_NOOP"), QV4::GlobalExtensions::method_qsTrNoOp);
         globalObject->defineDefaultProperty(QStringLiteral("qsTrId"), QV4::GlobalExtensions::method_qsTrId);
         globalObject->defineDefaultProperty(QStringLiteral("QT_TRID_NOOP"), QV4::GlobalExtensions::method_qsTrIdNoOp);
+
+        ScopedString qtName(scope, v4->newString(QStringLiteral("Qt")));
+        ScopedObject qt(scope, globalObject->get(qtName));
+        if (!qt) {
+            qt = v4->newObject();
+            globalObject->defineDefaultProperty(qtName, qt);
+        }
+        qt->defineAccessorProperty(QStringLiteral("uiLanguage"), QV4::QtObject::method_get_uiLanguage, QV4::QtObject::method_set_uiLanguage);
 
         // string prototype extension
         scope.engine->stringPrototype()->defineDefaultProperty(QStringLiteral("arg"), QV4::GlobalExtensions::method_string_arg);

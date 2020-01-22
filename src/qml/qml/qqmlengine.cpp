@@ -1336,6 +1336,21 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
 }
 
 /*!
+  \qmlproperty string Qt::uiLanguage
+  \since 5.15
+
+  The uiLanguage holds the name of the language to be used for user interface
+  string translations. It is exposed in C++ as QQmlEngine::uiLanguage property.
+
+  You can set the value freely and use it in bindings. It is recommended to set it
+  after installing translators in your application. By convention, an empty string
+  means no translation from the language used in the source code is intended to occur.
+
+  If you're using QQmlApplicationEngine and the value changes, QQmlEngine::retranslate()
+  will be called.
+*/
+
+/*!
   \fn template<typename T> T QQmlEngine::singletonInstance(int qmlTypeId)
 
   Returns the instance of a singleton type that was registered under \a qmlTypeId.

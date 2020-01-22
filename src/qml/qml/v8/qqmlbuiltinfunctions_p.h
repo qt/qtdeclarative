@@ -126,6 +126,8 @@ struct QtObject : Object
     static ReturnedValue method_resolvedUrl(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_createQmlObject(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_createComponent(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_uiLanguage(const FunctionObject *b, const Value *, const Value *, int);
+    static ReturnedValue method_set_uiLanguage(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 #if QT_CONFIG(qml_locale)
     static ReturnedValue method_locale(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 #endif

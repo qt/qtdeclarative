@@ -107,6 +107,7 @@ public:
     // Shared by QQmlEngine
     mutable QRecursiveMutex mutex;
 
+    QString uiLanguage;
 
     // These methods may be called from the QML loader thread
     inline QQmlPropertyCache *cache(QObject *obj, int minorVersion = -1);
