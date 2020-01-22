@@ -428,7 +428,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
 
         auto flags = QQmlPropertyData::defaultSignalFlags();
         if (paramCount)
-            flags.hasArguments = true;
+            flags.setHasArguments(true);
 
         QString signalName = stringAt(s->nameIndex);
         if (seenSignals.contains(signalName))
@@ -457,7 +457,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
         auto formal = function->formalsBegin();
         auto end = function->formalsEnd();
         for ( ; formal != end; ++formal) {
-            flags.hasArguments = true;
+            flags.setHasArguments(true);
             parameterNames << stringAt(formal->nameIndex).toUtf8();
             int type = metaTypeForParameter(formal->type);
             if (type == QMetaType::UnknownType)
@@ -539,7 +539,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
         }
 
         if (!p->isReadOnly && !p->isList)
-            propertyFlags.isWritable = true;
+            propertyFlags.setIsWritable(true);
 
 
         QString propertyName = stringAt(p->nameIndex);
@@ -721,7 +721,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>:
     bool writable = false;
     bool resettable = false;
 
-    propertyFlags->isAlias = true;
+    propertyFlags->setIsAlias(true);
 
     if (alias.aliasToLocalAlias) {
         const QV4::CompiledData::Alias *lastAlias = &alias;
@@ -823,8 +823,8 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>:
         }
     }
 
-    propertyFlags->isWritable = !(alias.flags & QV4::CompiledData::Alias::IsReadOnly) && writable;
-    propertyFlags->isResettable = resettable;
+    propertyFlags->setIsWritable(!(alias.flags & QV4::CompiledData::Alias::IsReadOnly) && writable);
+    propertyFlags->setIsResettable(resettable);
     return QQmlJS::DiagnosticMessage();
 }
 
