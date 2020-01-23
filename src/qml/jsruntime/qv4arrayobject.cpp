@@ -1382,6 +1382,7 @@ ReturnedValue ArrayPrototype::method_filter(const FunctionObject *b, const Value
         arguments[1] = Value::fromDouble(k);
         arguments[2] = instance;
         selected = callback->call(that, arguments, 3);
+        CHECK_EXCEPTION();
         if (selected->toBoolean()) {
             a->arraySet(to, arguments[0]);
             ++to;
