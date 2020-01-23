@@ -1,0 +1,2 @@
+[popup]
+macos # Can't control cursor (QTBUG-76312)
