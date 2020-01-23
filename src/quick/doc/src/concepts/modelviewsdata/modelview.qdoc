@@ -164,6 +164,16 @@ To visualize data, bind the view's \c model property to a model and the
 
     \snippet qml/qml-data-models/listmodel-listview.qml document
 
+    To get finer control over which roles are accessible, and to make delegates
+    more self-contained and usable outside of views,
+    \li{Required Properties}{required properties} can be used. If a delegate
+    contains required properties, the named roles are not provided. Instead,
+    the QML engine will check if the name of a required property matches that of
+    a model role. If so, that property will be bound to the corresponding value
+    from the model.
+
+    \snippet qml/qml-data-models/listmodel-listview-required.qml document
+
     If there is a naming clash between the model's properties and the delegate's
     properties, the roles can be accessed with the qualified \e model name
     instead. For example, if a \l Text type had \e type or \e age properties,
@@ -185,6 +195,10 @@ To visualize data, bind the view's \c model property to a model and the
     below) will have the data provided via the \e modelData role. The \e
     modelData role is also provided for models that have only one role. In this
     case the \e modelData role contains the same data as the named role.
+
+    \note \e model, \e index, and \e modelData roles are not accessible
+    if the delegate contains required properties, unless it has also required
+    properties with matching names.
 
     QML provides several types of data models among the built-in set of QML
     types. In addition, models can be created with Qt C++ and then made
@@ -416,6 +430,12 @@ ListView {
 
 \note The \c edit role is equal to \l Qt::EditRole. See \l{QAbstractItemModel::}{roleNames}()
 for the built-in role names. However, real life models would usually register custom roles.
+
+\node If a model role is bound to a \li{Required Property}{required property}, assigning to
+that property will not modify the model. It will instead break the binding to the model (just
+like assigning to any other property breaks existing bindings). If you want to use
+required properties and change the model data, make model also a required property and assign to
+\e model.propertyName.
 
 For more information, visit the \l{qtquick-modelviewsdata-cppmodels.html#changing-model-data}{Using C++ Models with Qt Quick Views}
 article.
