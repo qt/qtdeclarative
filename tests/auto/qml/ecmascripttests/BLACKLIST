@@ -1,0 +1,4 @@
+[runInterpreted]
+macos ci
+[runJitted]
+macos

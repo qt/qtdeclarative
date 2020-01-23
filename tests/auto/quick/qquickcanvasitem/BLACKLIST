@@ -1,0 +1,14 @@
+[arcTo::test_transform]
+macos
+[canvas::test_paint]
+macos
+[canvas::test_save]
+macos
+[canvas::test_implicitlySizedParent]
+macos ci
+[canvas::test_toDataURL]
+macos
+[fillRect::test_fillRect]
+macos
+[imagedata::test_rounding]
+macos ci

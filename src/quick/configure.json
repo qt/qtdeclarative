@@ -134,7 +134,7 @@
             "label": "Path support",
             "purpose": "Provides Path elements.",
             "section": "Qt Quick",
-            "condition": "features.quick-shadereffect",
+            "condition": "module.gui",
             "output": [
                 "privateFeature"
             ]
