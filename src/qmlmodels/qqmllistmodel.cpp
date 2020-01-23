@@ -2802,10 +2802,12 @@ bool QQmlListModelParser::applyProperty(
                 QV4::ScopedContext context(scope, QV4::QmlContext::create(v4->rootContext(), QQmlContextData::get(qmlContext(model->m_modelCache)), nullptr));
                 QV4::ScopedFunctionObject function(scope, QV4::FunctionObject::createScriptFunction(context, compilationUnit->runtimeFunctions[id]));
 
-                QV4::ReturnedValue result = function->call(v4->globalObject, nullptr, 0);
-
                 QJSValue v;
-                QJSValuePrivate::setValue(&v, v4, result);
+                QV4::ScopedValue result(scope, function->call(v4->globalObject, nullptr, 0));
+                if (v4->hasException)
+                    v4->catchException();
+                else
+                    QJSValuePrivate::setValue(&v, v4, result->asReturnedValue());
                 value.setValue<QJSValue>(v);
             } else {
                 QByteArray script = scriptStr.toUtf8();
