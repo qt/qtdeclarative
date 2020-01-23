@@ -1547,7 +1547,7 @@ ReturnedValue DatePrototype::method_toJSON(const FunctionObject *b, const Value 
     if (!toIso)
         return v4->throwTypeError();
 
-    return toIso->call(O, nullptr, 0);
+    return checkedResult(v4, toIso->call(O, nullptr, 0));
 }
 
 ReturnedValue DatePrototype::method_symbolToPrimitive(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)

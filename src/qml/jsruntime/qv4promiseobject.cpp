@@ -617,7 +617,7 @@ ReturnedValue PromiseCtor::method_all(const FunctionObject *f, const Value *this
         }
 
         ScopedObject nextPromise(scope, Value::fromReturnedValue(resolve->call(thisObject, nextValue, 1)));
-        if (!nextPromise || scope.hasException()) {
+        if (scope.hasException() || !nextPromise) {
             ScopedValue completion(scope, Runtime::method_iteratorClose(e, iteratorObject, doneValue));
             if (scope.hasException()) {
                 completion = e->exceptionValue->asReturnedValue();
@@ -763,7 +763,7 @@ ReturnedValue PromiseCtor::method_race(const FunctionObject *f, const Value *thi
         }
 
         ScopedObject nextPromise(scope, Value::fromReturnedValue(resolve->call(thisObject, nextValue, 1)));
-        if (!nextPromise || scope.hasException()) {
+        if (scope.hasException() || !nextPromise) {
             ScopedValue completion(scope, Runtime::method_iteratorClose(e, iteratorObject, doneValue));
             if (scope.hasException()) {
                 completion = e->exceptionValue->asReturnedValue();

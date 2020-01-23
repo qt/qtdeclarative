@@ -304,7 +304,8 @@ ReturnedValue Lookup::getterAccessor(Lookup *l, ExecutionEngine *engine, const V
             if (!getter->isFunctionObject()) // ### catch at resolve time
                 return Encode::undefined();
 
-            return static_cast<const FunctionObject *>(getter)->call(&object, nullptr, 0);
+            return checkedResult(engine, static_cast<const FunctionObject *>(getter)->call(
+                                     &object, nullptr, 0));
         }
     }
     l->getter = getterFallback;
@@ -321,7 +322,8 @@ ReturnedValue Lookup::getterProtoAccessor(Lookup *l, ExecutionEngine *engine, co
         if (!getter->isFunctionObject()) // ### catch at resolve time
             return Encode::undefined();
 
-        return static_cast<const FunctionObject *>(getter)->call(&object, nullptr, 0);
+        return checkedResult(engine, static_cast<const FunctionObject *>(getter)->call(
+                                 &object, nullptr, 0));
     }
     return getterTwoClasses(l, engine, object);
 }
@@ -341,7 +343,8 @@ ReturnedValue Lookup::getterProtoAccessorTwoClasses(Lookup *l, ExecutionEngine *
             if (!getter->isFunctionObject()) // ### catch at resolve time
                 return Encode::undefined();
 
-            return static_cast<const FunctionObject *>(getter)->call(&object, nullptr, 0);
+            return checkedResult(engine, static_cast<const FunctionObject *>(getter)->call(
+                                     &object, nullptr, 0));
         }
     }
     l->getter = getterFallback;
@@ -386,7 +389,8 @@ ReturnedValue Lookup::primitiveGetterAccessor(Lookup *l, ExecutionEngine *engine
             if (!getter->isFunctionObject()) // ### catch at resolve time
                 return Encode::undefined();
 
-            return static_cast<const FunctionObject *>(getter)->call(&object, nullptr, 0);
+            return checkedResult(engine, static_cast<const FunctionObject *>(getter)->call(
+                                     &object, nullptr, 0));
         }
     }
     l->getter = getterGeneric;
@@ -424,7 +428,8 @@ ReturnedValue Lookup::globalGetterProtoAccessor(Lookup *l, ExecutionEngine *engi
         if (!getter->isFunctionObject()) // ### catch at resolve time
             return Encode::undefined();
 
-        return static_cast<const FunctionObject *>(getter)->call(engine->globalObject, nullptr, 0);
+        return checkedResult(engine, static_cast<const FunctionObject *>(getter)->call(
+                                  engine->globalObject, nullptr, 0));
     }
     l->globalGetter = globalGetterGeneric;
     return globalGetterGeneric(l, engine);

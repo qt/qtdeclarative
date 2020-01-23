@@ -765,6 +765,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_every(const FunctionObject *b
         arguments[1] = Value::fromDouble(k);
         arguments[2] = v;
         r = callback->call(that, arguments, 3);
+        CHECK_EXCEPTION();
         ok = r->toBoolean();
     }
     return Encode(ok);
@@ -864,6 +865,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_filter(const FunctionObject *
         arguments[1] = Value::fromDouble(k);
         arguments[2] = instance;
         selected = callback->call(that, arguments, 3);
+        CHECK_EXCEPTION();
         if (selected->toBoolean()) {
             ++arguments;
             scope.alloc(1);
@@ -1203,6 +1205,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_map(const FunctionObject *b, 
         arguments[1] = Value::fromDouble(k);
         arguments[2] = instance;
         mapped = callback->call(that, arguments, 3);
+        CHECK_EXCEPTION();
         a->put(k, mapped);
     }
     return a->asReturnedValue();
@@ -1252,6 +1255,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_reduce(const FunctionObject *
             arguments[2] = Value::fromDouble(k);
             arguments[3] = instance;
             acc = callback->call(nullptr, arguments, 4);
+            CHECK_EXCEPTION();
         }
         ++k;
     }
@@ -1307,6 +1311,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_reduceRight(const FunctionObj
             arguments[2] = Value::fromDouble(k - 1);
             arguments[3] = instance;
             acc = callback->call(nullptr, arguments, 4);
+            CHECK_EXCEPTION();
         }
         --k;
     }
@@ -1368,6 +1373,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_some(const FunctionObject *b,
         arguments[1] = Value::fromDouble(k);
         arguments[2] = instance;
         result = callback->call(that, arguments, 3);
+        CHECK_EXCEPTION();
         if (result->toBoolean())
             return Encode(true);
     }

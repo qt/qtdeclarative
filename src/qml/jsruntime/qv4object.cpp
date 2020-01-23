@@ -104,7 +104,7 @@ ReturnedValue Object::getValueAccessor(const Value &thisObject, const Value &v, 
     Scope scope(f->engine());
     JSCallData jsCallData(scope);
     *jsCallData->thisObject = thisObject;
-    return f->call(jsCallData);
+    return checkedResult(scope.engine, f->call(jsCallData));
 }
 
 bool Object::putValue(uint memberIndex, PropertyAttributes attrs, const Value &value)

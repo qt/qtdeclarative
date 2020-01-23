@@ -703,6 +703,8 @@ QString Stringify::Str(const QString &key, const Value &v)
             *jsCallData->thisObject = value;
             jsCallData->args[0] = v4->newString(key);
             value = toJSON->call(jsCallData);
+            if (v4->hasException)
+                return QString();
         }
     }
 
@@ -714,6 +716,8 @@ QString Stringify::Str(const QString &key, const Value &v)
         jsCallData->args[1] = value;
         *jsCallData->thisObject = holder;
         value = replacerFunction->call(jsCallData);
+        if (v4->hasException)
+            return QString();
     }
 
     o = value->asReturnedValue();
