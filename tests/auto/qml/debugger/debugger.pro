@@ -4,6 +4,7 @@ SUBDIRS += qqmldebugjsserver
 
 PUBLICTESTS += \
     qdebugmessageservice \
+    qqmldebugtranslationservice \
     qqmlenginedebugservice \
     qqmldebugjs \
     qqmlinspector \

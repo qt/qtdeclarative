@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -36,20 +36,46 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#ifndef QQMLDEBUGTRANSLATIONCLIENT_P_H
+#define QQMLDEBUGTRANSLATIONCLIENT_P_H
 
-#include "qqmldebugserviceinterfaces_p.h"
+#include "qqmldebugclient_p.h"
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 QT_BEGIN_NAMESPACE
 
-const QString QV4DebugService::s_key = QStringLiteral("V8Debugger");
-const QString QQmlEngineDebugService::s_key = QStringLiteral("QmlDebugger");
-const QString QQmlInspectorService::s_key = QStringLiteral("QmlInspector");
-const QString QQmlProfilerService::s_key = QStringLiteral("CanvasFrameRate");
-const QString QDebugMessageService::s_key = QStringLiteral("DebugMessages");
-const QString QQmlEngineControlService::s_key = QStringLiteral("EngineControl");
-const QString QQmlNativeDebugService::s_key = QStringLiteral("NativeQmlDebugger");
-const QString QQmlDebugTranslationService::s_key = QStringLiteral("DebugTranslation");
+class QQmlDebugTranslationClient : public QQmlDebugClient
+{
+    Q_OBJECT
+
+public:
+    //needs to be in sync with QQmlDebugTranslationServiceImpl in qqmldebugtranslationservice.h
+    enum Command {
+        ChangeLanguage,
+        ChangeWarningColor,
+        ChangeElidedTextWarningString,
+        SetDebugTranslationServiceLogFile,
+        EnableElidedTextWarning,
+        DisableElidedTextWarning,
+        TestAllLanguages
+    };
+
+    explicit QQmlDebugTranslationClient(QQmlDebugConnection *client);
+
+    virtual void messageReceived(const QByteArray &) override;
+    void triggerLanguage(const QUrl &url, const QString &locale);
+};
 
 QT_END_NAMESPACE
 
-#include "moc_qqmldebugserviceinterfaces_p.cpp"
+#endif // QQMLDEBUGTRANSLATIONCLIENT_P_H

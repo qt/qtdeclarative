@@ -39,12 +39,18 @@
 
 #include "qqmlpreviewservicefactory.h"
 #include "qqmlpreviewservice.h"
+#include "qqmldebugtranslationservice.h"
 
 QT_BEGIN_NAMESPACE
 
 QQmlDebugService *QQmlPreviewServiceFactory::create(const QString &key)
 {
-    return key == QQmlPreviewServiceImpl::s_key ? new QQmlPreviewServiceImpl(this) : nullptr;
+    if (key == QQmlPreviewServiceImpl::s_key)
+        return new QQmlPreviewServiceImpl(this);
+    if (key == QQmlDebugTranslationServiceImpl::s_key)
+        return new QQmlDebugTranslationServiceImpl(this);
+
+    return nullptr;
 }
 
 QT_END_NAMESPACE

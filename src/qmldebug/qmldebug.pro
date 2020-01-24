@@ -1,5 +1,5 @@
 TARGET    =  QtQmlDebug
-QT        =  core-private network packetprotocol-private
+QT        =  core-private qml-private network packetprotocol-private
 CONFIG    += static internal_module
 
 load(qt_module)
@@ -8,6 +8,7 @@ SOURCES += \
     qqmldebugclient.cpp \
     qqmldebugconnection.cpp \
     qqmldebugmessageclient.cpp \
+    qqmldebugtranslationclient.cpp \
     qqmlenginecontrolclient.cpp \
     qqmlenginedebugclient.cpp \
     qqmlinspectorclient.cpp \
@@ -24,6 +25,7 @@ HEADERS += \
     qqmldebugclient_p_p.h \
     qqmldebugconnection_p.h \
     qqmldebugmessageclient_p.h \
+    qqmldebugtranslationclient_p.h \
     qqmlenginedebugclient_p.h \
     qqmlenginedebugclient_p_p.h \
     qqmlenginecontrolclient_p.h \

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,19 +37,40 @@
 **
 ****************************************************************************/
 
-#include "qqmldebugserviceinterfaces_p.h"
+#include "qqmldebugtranslationclient_p.h"
+#include "qqmldebugconnection_p.h"
+
+#include <QUrl>
+#include <QDataStream>
+
+#include <QDebug>
+#include <QtPacketProtocol/private/qpacket_p.h>
 
 QT_BEGIN_NAMESPACE
 
-const QString QV4DebugService::s_key = QStringLiteral("V8Debugger");
-const QString QQmlEngineDebugService::s_key = QStringLiteral("QmlDebugger");
-const QString QQmlInspectorService::s_key = QStringLiteral("QmlInspector");
-const QString QQmlProfilerService::s_key = QStringLiteral("CanvasFrameRate");
-const QString QDebugMessageService::s_key = QStringLiteral("DebugMessages");
-const QString QQmlEngineControlService::s_key = QStringLiteral("EngineControl");
-const QString QQmlNativeDebugService::s_key = QStringLiteral("NativeQmlDebugger");
-const QString QQmlDebugTranslationService::s_key = QStringLiteral("DebugTranslation");
+/*!
+  \class QQmlDebugTranslationClient
+  \internal
+
+  \brief Client for the debug translation service
+
+  The QQmlDebugTranslationClient can test if translated texts will fit.
+ */
+
+QQmlDebugTranslationClient::QQmlDebugTranslationClient(QQmlDebugConnection *client)
+    : QQmlDebugClient(QLatin1String("DebugTranslation"), client)
+{
+}
+
+void QQmlDebugTranslationClient::messageReceived(const QByteArray &data)
+{
+    Q_UNUSED(data);
+}
+
+void QQmlDebugTranslationClient::triggerLanguage(const QUrl &url, const QString &locale)
+{
+    Q_UNUSED(url)
+    Q_UNUSED(locale)
+}
 
 QT_END_NAMESPACE
-
-#include "moc_qqmldebugserviceinterfaces_p.cpp"

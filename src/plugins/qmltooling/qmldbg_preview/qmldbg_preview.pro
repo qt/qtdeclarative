@@ -3,6 +3,7 @@ QT += core-private qml-private packetprotocol-private network quick-private gui-
 TARGET = qmldbg_preview
 
 SOURCES += \
+    $$PWD/qqmldebugtranslationservice.cpp \
     $$PWD/qqmlpreviewblacklist.cpp \
     $$PWD/qqmlpreviewfileengine.cpp \
     $$PWD/qqmlpreviewfileloader.cpp \
@@ -12,6 +13,7 @@ SOURCES += \
     $$PWD/qqmlpreviewservicefactory.cpp
 
 HEADERS += \
+    $$PWD/qqmldebugtranslationservice.h \
     $$PWD/qqmlpreviewblacklist.h \
     $$PWD/qqmlpreviewfileengine.h \
     $$PWD/qqmlpreviewfileloader.h \

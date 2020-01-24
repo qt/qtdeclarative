@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,19 +37,32 @@
 **
 ****************************************************************************/
 
-#include "qqmldebugserviceinterfaces_p.h"
+#include "qqmldebugtranslationservice.h"
 
 QT_BEGIN_NAMESPACE
 
-const QString QV4DebugService::s_key = QStringLiteral("V8Debugger");
-const QString QQmlEngineDebugService::s_key = QStringLiteral("QmlDebugger");
-const QString QQmlInspectorService::s_key = QStringLiteral("QmlInspector");
-const QString QQmlProfilerService::s_key = QStringLiteral("CanvasFrameRate");
-const QString QDebugMessageService::s_key = QStringLiteral("DebugMessages");
-const QString QQmlEngineControlService::s_key = QStringLiteral("EngineControl");
-const QString QQmlNativeDebugService::s_key = QStringLiteral("NativeQmlDebugger");
-const QString QQmlDebugTranslationService::s_key = QStringLiteral("DebugTranslation");
+QQmlDebugTranslationServiceImpl::QQmlDebugTranslationServiceImpl(QObject *parent) :
+    QQmlDebugTranslationService(1, parent)
+{
+}
+
+void QQmlDebugTranslationServiceImpl::messageReceived(const QByteArray &message)
+{
+    Q_UNUSED(message)
+}
+
+QString QQmlDebugTranslationServiceImpl::foundElidedText(QObject *textObject, const QString &layoutText, const QString &elideText)
+{
+    Q_UNUSED(textObject)
+    Q_UNUSED(layoutText)
+    return elideText;
+}
+
+void QQmlDebugTranslationServiceImpl::foundTranslationBinding(QQmlTranslationBinding *binding, QObject *scopeObject, QQmlContextData *contextData)
+{
+    Q_UNUSED(binding)
+    Q_UNUSED(scopeObject)
+    Q_UNUSED(contextData)
+}
 
 QT_END_NAMESPACE
-
-#include "moc_qqmldebugserviceinterfaces_p.cpp"
