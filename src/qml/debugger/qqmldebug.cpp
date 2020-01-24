@@ -65,8 +65,7 @@ QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
  */
 QStringList QQmlDebuggingEnabler::debuggerServices()
 {
-    return QStringList() << QV4DebugService::s_key << QQmlEngineDebugService::s_key
-                         << QDebugMessageService::s_key;
+    return {QV4DebugService::s_key, QQmlEngineDebugService::s_key, QDebugMessageService::s_key};
 }
 
 /*!
@@ -76,7 +75,7 @@ QStringList QQmlDebuggingEnabler::debuggerServices()
  */
 QStringList QQmlDebuggingEnabler::inspectorServices()
 {
-    return QStringList() << QQmlInspectorService::s_key;
+    return {QQmlInspectorService::s_key};
 }
 
 /*!
@@ -87,8 +86,7 @@ QStringList QQmlDebuggingEnabler::inspectorServices()
  */
 QStringList QQmlDebuggingEnabler::profilerServices()
 {
-    return QStringList() << QQmlProfilerService::s_key << QQmlEngineControlService::s_key
-                         << QDebugMessageService::s_key;
+    return {QQmlProfilerService::s_key, QQmlEngineControlService::s_key, QDebugMessageService::s_key};
 }
 
 /*!
@@ -99,7 +97,7 @@ QStringList QQmlDebuggingEnabler::profilerServices()
  */
 QStringList QQmlDebuggingEnabler::nativeDebuggerServices()
 {
-    return QStringList() << QQmlNativeDebugService::s_key;
+    return {QQmlNativeDebugService::s_key};
 }
 
 /*!
