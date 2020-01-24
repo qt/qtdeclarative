@@ -53,7 +53,6 @@ public:
     static QString clientStateString(const QQmlDebugClient *client);
     static QString connectionStateString(const QQmlDebugConnection *connection);
 
-protected:
     enum ConnectResult {
         ConnectSuccess,
         ProcessFailed,
@@ -64,6 +63,8 @@ protected:
         RestrictFailed
     };
 
+    Q_ENUM(ConnectResult)
+protected:
     ConnectResult connect(const QString &executable, const QString &services,
                           const QString &extraArgs, bool block);
 
