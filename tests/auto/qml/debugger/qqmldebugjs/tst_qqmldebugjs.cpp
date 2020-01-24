@@ -180,7 +180,7 @@ QQmlDebugTest::ConnectResult tst_QQmlDebugJS::init(bool qmlscene, const QString 
     const QString executable = qmlscene
             ? QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene"
             : debugJsServerPath("qqmldebugjs");
-    return QQmlDebugTest::connect(
+    return QQmlDebugTest::connectTo(
                 executable, restrictServices ? QStringLiteral("V8Debugger") : QString(),
                 testFile(qmlFile), blockMode);
 }
