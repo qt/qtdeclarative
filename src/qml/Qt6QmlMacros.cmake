@@ -28,7 +28,7 @@
 #   right location.  (OPTIONAL)
 #
 # INSTALL_LOCATION: Intended installation directory for this module. If no
-#   value is supplied, the default installation path will be ${Qt6_DIR}/qml.
+#   value is supplied, the default installation path will be ${INSTALL_QMLDIR}.
 #   (OPTIONAL).
 #
 # DO_NOT_INSTALL_METADATA: When present, will not install the supporting files.
@@ -157,7 +157,7 @@ function(qt6_add_qml_module target)
     endif()
 
     if (NOT arg_INSTALL_LOCATION)
-        set(arg_INSTALL_LOCATION "${Qt6_DIR}/../../../qml/${arg_TARGET_PATH}")
+        set(arg_INSTALL_LOCATION "${INSTALL_QMLDIR}/${arg_TARGET_PATH}")
     endif()
 
     set_target_properties(${target}
