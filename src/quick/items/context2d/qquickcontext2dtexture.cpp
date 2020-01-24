@@ -43,12 +43,12 @@
 #include <private/qquickitem_p.h>
 #include <QtQuick/private/qsgplaintexture_p.h>
 #include "qquickcontext2dcommandbuffer_p.h"
-#include <QOpenGLPaintDevice>
 #if QT_CONFIG(opengl)
+#include <QOpenGLPaintDevice>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
 #include <QOpenGLFunctions>
-#include <QtGui/private/qopenglextensions_p.h>
+#include <private/qopenglextensions_p.h>
 #endif
 #include <QtCore/QThread>
 #include <QtGui/QGuiApplication>

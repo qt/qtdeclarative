@@ -51,7 +51,7 @@
 #include "fboinsgrenderer.h"
 #include "logorenderer.h"
 
-#include <QtGui/QOpenGLFramebufferObject>
+#include <QOpenGLFramebufferObject>
 
 #include <QtQuick/QQuickWindow>
 #include <qsgsimpletexturenode.h>

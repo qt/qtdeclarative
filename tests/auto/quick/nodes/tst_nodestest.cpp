@@ -30,7 +30,7 @@
 #include <QtTest/QtTest>
 
 #include <QtGui/QOffscreenSurface>
-#include <QtGui/QOpenGLContext>
+#include <QOpenGLContext>
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/private/qsgbatchrenderer_p.h>
 #include <QtQuick/private/qsgnodeupdater_p.h>

@@ -51,8 +51,8 @@
 #include "squircle.h"
 
 #include <QtQuick/qquickwindow.h>
-#include <QtGui/QOpenGLShaderProgram>
-#include <QtGui/QOpenGLContext>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLContext>
 #include <QtCore/QRunnable>
 
 //! [7]

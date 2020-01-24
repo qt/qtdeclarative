@@ -434,14 +434,6 @@ void QQuickRotation::setAxis(Qt::Axis axis)
     }
 }
 
-class QGraphicsRotation {
-public:
-    static inline void projectedRotate(QMatrix4x4 *matrix, qreal angle, qreal x, qreal y, qreal z)
-    {
-        matrix->projectedRotate(angle, x, y, z);
-    }
-};
-
 void QQuickRotation::applyTo(QMatrix4x4 *matrix) const
 {
     Q_D(const QQuickRotation);
@@ -450,7 +442,7 @@ void QQuickRotation::applyTo(QMatrix4x4 *matrix) const
         return;
 
     matrix->translate(d->origin);
-    QGraphicsRotation::projectedRotate(matrix, d->angle, d->axis.x(), d->axis.y(), d->axis.z());
+    matrix->projectedRotate(d->angle, d->axis.x(), d->axis.y(), d->axis.z());
     matrix->translate(-d->origin);
 }
 

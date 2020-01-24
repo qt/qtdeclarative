@@ -58,7 +58,7 @@
 #include <private/qsgcontext_p.h>
 
 #if QT_CONFIG(opengl)
-# include <QtGui/QOpenGLContext>
+# include <QOpenGLContext>
 #endif
 
 QT_BEGIN_NAMESPACE

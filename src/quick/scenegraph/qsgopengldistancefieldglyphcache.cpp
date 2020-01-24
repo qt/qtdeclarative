@@ -45,7 +45,7 @@
 #include <QtQml/qqmlfile.h>
 
 #include <QtGui/private/qdistancefield_p.h>
-#include <QtGui/private/qopenglcontext_p.h>
+#include <private/qopenglcontext_p.h>
 #include <QtQml/private/qqmlglobal_p.h>
 #include <qopenglfunctions.h>
 #include <qopenglframebufferobject.h>

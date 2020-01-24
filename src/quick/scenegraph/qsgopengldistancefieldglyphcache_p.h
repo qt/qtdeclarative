@@ -56,7 +56,7 @@
 #include <qopenglshaderprogram.h>
 #include <qopenglbuffer.h>
 #include <qopenglvertexarrayobject.h>
-#include <QtGui/private/qopenglengineshadersource_p.h>
+#include <private/qopenglengineshadersource_p.h>
 #include <private/qsgareaallocator_p.h>
 
 QT_BEGIN_NAMESPACE

@@ -65,7 +65,7 @@
 #include <private/qsgrhishadereffectnode_p.h>
 
 #if QT_CONFIG(opengl)
-#include <QtGui/QOpenGLContext>
+#include <QOpenGLContext>
 #if QT_CONFIG(quick_shadereffect)
 #include <private/qquickopenglshadereffectnode_p.h>
 #endif

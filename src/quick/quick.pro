@@ -3,6 +3,8 @@ TARGET = QtQuick
 QT = core-private gui-private qml-private qmlmodels-private
 qtConfig(qml-network): \
     QT_PRIVATE += network
+qtConfig(opengl): \
+    QT_PRIVATE += opengl-private
 
 TRACEPOINT_PROVIDER = $$PWD/qtquick.tracepoints
 CONFIG += qt_tracepoints

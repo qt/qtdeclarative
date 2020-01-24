@@ -40,7 +40,7 @@
 #include "qsgdefaultrendercontext_p.h"
 
 #include <QtGui/QGuiApplication>
-#include <QtGui/QOpenGLFramebufferObject>
+#include <QOpenGLFramebufferObject>
 
 #include <QtQuick/private/qsgbatchrenderer_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>

@@ -52,8 +52,8 @@
 #define SQUIRCLE_H
 
 #include <QtQuick/QQuickItem>
-#include <QtGui/QOpenGLShaderProgram>
-#include <QtGui/QOpenGLFunctions>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLFunctions>
 
 
 

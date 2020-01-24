@@ -52,7 +52,7 @@
 //
 
 #include <QtCore/QThread>
-#include <QtGui/QOpenGLContext>
+#include <QOpenGLContext>
 #include <private/qsgcontext_p.h>
 
 #include "qsgrenderloop_p.h"

@@ -44,8 +44,8 @@
 #include <QtQuick/qsgtexture.h>
 #include <QtGui/QPaintEngine>
 #if QT_CONFIG(opengl)
-# include <QtGui/QOpenGLContext>
-# include <QtGui/private/qopenglpaintengine_p.h>
+# include <QOpenGLContext>
+# include <private/qopenglpaintengine_p.h>
 #endif
 
 #define HAS_SHADOW(offsetX, offsetY, blur, color) (color.isValid() && color.alpha() && (blur || offsetX || offsetY))

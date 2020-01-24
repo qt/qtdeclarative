@@ -57,8 +57,8 @@
 #endif
 #include <QtQuick/private/qsgrhishadereffectnode_p.h>
 
-#include <QtGui/QOpenGLContext>
-#include <QtGui/QOpenGLFramebufferObject>
+#include <QOpenGLContext>
+#include <QOpenGLFramebufferObject>
 
 #include <QtQuick/private/qquickwindow_p.h>
 

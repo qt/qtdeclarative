@@ -52,8 +52,8 @@
 
 #include <QtCore/QPointer>
 
-#include <QtGui/QOpenGLContext>
-#include <QtGui/QOpenGLFunctions>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
 
 #include <QtQuick/QSGMaterial>
 #include <QtQuick/QSGTexture>

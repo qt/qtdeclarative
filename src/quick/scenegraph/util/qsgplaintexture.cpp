@@ -45,9 +45,9 @@
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qpa/qplatformnativeinterface.h>
 #if QT_CONFIG(opengl)
-# include <QtGui/qopenglcontext.h>
-# include <QtGui/qopenglfunctions.h>
-# include <QtGui/private/qopengltextureuploader_p.h>
+# include <qopenglcontext.h>
+# include <qopenglfunctions.h>
+# include <private/qopengltextureuploader_p.h>
 # include <private/qsgdefaultrendercontext_p.h>
 #endif
 #include <QtGui/private/qrhi_p.h>

@@ -52,8 +52,8 @@
 //
 
 #include <QtCore/qsize.h>
-#include <QtGui/private/qopenglcontext_p.h>
-#include <QtGui/private/qopenglextensions_p.h>
+#include <private/qopenglcontext_p.h>
+#include <private/qopenglextensions_p.h>
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qhash.h>
 

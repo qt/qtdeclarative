@@ -50,10 +50,10 @@
 #include <QtCore/QtNumeric>
 
 #include <QtGui/QGuiApplication>
-#include <QtGui/QOpenGLFramebufferObject>
-#include <QtGui/QOpenGLVertexArrayObject>
-#include <QtGui/QOpenGLFunctions_1_0>
-#include <QtGui/QOpenGLFunctions_3_2_Core>
+#include <QOpenGLFramebufferObject>
+#include <QOpenGLVertexArrayObject>
+#include <QOpenGLFunctions_1_0>
+#include <QOpenGLFunctions_3_2_Core>
 
 #include <private/qnumeric_p.h>
 #include <private/qquickprofiler_p.h>

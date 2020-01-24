@@ -42,9 +42,9 @@
 #include <private/qsgrenderer_p.h>
 #include <private/qsgdefaultrendercontext_p.h>
 
-#include <QtGui/QOpenGLFramebufferObject>
-#include <QtGui/QOpenGLFunctions>
-#include <QtGui/private/qopenglextensions_p.h>
+#include <QOpenGLFramebufferObject>
+#include <QOpenGLFunctions>
+#include <private/qopenglextensions_p.h>
 
 #include <QtQuick/private/qsgdepthstencilbuffer_p.h>
 

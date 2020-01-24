@@ -39,8 +39,8 @@
 
 #include "qquickframebufferobject.h"
 
-#include <QtGui/QOpenGLFramebufferObject>
-#include <QtGui/QOpenGLFunctions>
+#include <QOpenGLFramebufferObject>
+#include <QOpenGLFunctions>
 #include <private/qquickitem_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <qsgtextureprovider.h>
