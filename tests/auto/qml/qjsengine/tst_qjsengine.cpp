@@ -264,6 +264,8 @@ private slots:
     void printCircularArray();
     void typedArraySet();
 
+    void uiLanguage();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -5140,6 +5142,33 @@ void tst_QJSEngine::typedArraySet()
         const auto error = value.property(i);
         QVERIFY(error.isError());
         QCOMPARE(error.toString(), "RangeError: TypedArray.set: out of range");
+    }
+}
+
+void tst_QJSEngine::uiLanguage()
+{
+    {
+        QJSEngine engine;
+
+        QVERIFY(!engine.globalObject().hasProperty("Qt"));
+
+        engine.installExtensions(QJSEngine::TranslationExtension);
+        QVERIFY(engine.globalObject().hasProperty("Qt"));
+        QVERIFY(engine.globalObject().property("Qt").hasProperty("uiLanguage"));
+
+        engine.setUiLanguage("Blah");
+        QCOMPARE(engine.globalObject().property("Qt").property("uiLanguage").toString(), "Blah");
+
+        engine.evaluate("Qt.uiLanguage = \"another\"");
+        QCOMPARE(engine.globalObject().property("Qt").property("uiLanguage").toString(), "another");
+    }
+
+    {
+        QQmlEngine qmlEngine;
+        QVERIFY(qmlEngine.globalObject().hasProperty("Qt"));
+        QVERIFY(qmlEngine.globalObject().property("Qt").hasProperty("uiLanguage"));
+        qmlEngine.setUiLanguage("Blah");
+        QCOMPARE(qmlEngine.globalObject().property("Qt").property("uiLanguage").toString(), "Blah");
     }
 }
 

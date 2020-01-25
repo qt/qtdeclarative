@@ -80,10 +80,12 @@ struct QQmlImportInstance
     QString uri; // e.g. QtQuick
     QString url; // the base path of the import
     QString localDirectoryPath; // the base path of the import if it's a local file
+    QQmlType containingType; // points to the containing type for inline components
     int majversion; // the major version imported
     int minversion; // the minor version imported
     bool isLibrary; // true means that this is not a file import
     bool implicitlyImported = false;
+    bool isInlineComponent = false;
     QQmlDirComponents qmlDirComponents; // a copy of the components listed in the qmldir
     QQmlDirScripts qmlDirScripts; // a copy of the scripts in the qmldir
 
@@ -150,6 +152,8 @@ public:
                      = QQmlType::AnyRegistrationType) const;
 
     bool addImplicitImport(QQmlImportDatabase *importDb, QList<QQmlError> *errors);
+
+    bool addInlineComponentImport(QQmlImportInstance  *const importInstance, const QString &name, const QUrl importUrl, QQmlType containingType);
 
     bool addFileImport(QQmlImportDatabase *,
                        const QString& uri, const QString& prefix, int vmaj, int vmin, bool incomplete,

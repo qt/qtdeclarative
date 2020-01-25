@@ -672,17 +672,17 @@ QSize QQuickImageProviderWithOptions::loadSize(const QSize &originalSize, const 
         return res;
 
     const bool preserveAspectCropOrFit = options.preserveAspectRatioCrop() || options.preserveAspectRatioFit();
-    const bool formatIsSvg = (format == "svg" || format == "svgz");
+    const bool formatIsScalable = (format == "svg" || format == "svgz" || format == "pdf");
 
-    if (!preserveAspectCropOrFit && formatIsSvg && !requestedSize.isEmpty())
+    if (!preserveAspectCropOrFit && formatIsScalable && !requestedSize.isEmpty())
         return requestedSize;
 
     qreal ratio = 0.0;
-    if (requestedSize.width() && (preserveAspectCropOrFit || formatIsSvg ||
+    if (requestedSize.width() && (preserveAspectCropOrFit || formatIsScalable ||
                                   requestedSize.width() < originalSize.width())) {
         ratio = qreal(requestedSize.width()) / originalSize.width();
     }
-    if (requestedSize.height() && (preserveAspectCropOrFit || formatIsSvg ||
+    if (requestedSize.height() && (preserveAspectCropOrFit || formatIsScalable ||
                                    requestedSize.height() < originalSize.height())) {
         qreal hr = qreal(requestedSize.height()) / originalSize.height();
         if (ratio == 0.0)

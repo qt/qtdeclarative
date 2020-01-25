@@ -76,6 +76,15 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImageBase : public QQuickImplicitSizeItem
     QML_UNCREATABLE("ImageBase is an abstract base class.")
 
 public:
+    enum LoadPixmapOption {
+        NoOption            = 0x0000,
+        HandleDPR           = 0x0001,
+        UseProviderOptions  = 0x0002
+    };
+
+    Q_DECLARE_FLAGS(LoadPixmapOptions, LoadPixmapOption)
+    Q_FLAG(LoadPixmapOptions)
+
     QQuickImageBase(QQuickItem *parent=nullptr);
     ~QQuickImageBase();
     enum Status { Null, Ready, Loading, Error };
@@ -127,6 +136,8 @@ Q_SIGNALS:
     Q_REVISION(14) void frameCountChanged();
 
 protected:
+    void loadEmptyUrl();
+    void loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions = NoOption);
     virtual void load();
     void componentComplete() override;
     virtual void pixmapChange();

@@ -58,10 +58,10 @@ QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *type
                                    QV4::ResolvedTypeReferenceMap *resolvedTypeCache, const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
     : resolvedTypes(resolvedTypeCache)
     , engine(engine)
-    , typeData(typeData)
     , dependencyHasher(dependencyHasher)
-    , typeNameCache(typeNameCache)
     , document(parsedQML)
+    , typeNameCache(typeNameCache)
+    , typeData(typeData)
 {
 }
 
@@ -279,9 +279,9 @@ void QQmlTypeCompiler::addImport(const QString &module, const QString &qualifier
     document->imports.append(import);
 }
 
-QQmlMetaType::CompositeMetaTypeIds QQmlTypeCompiler::typeIds() const
+CompositeMetaTypeIds QQmlTypeCompiler::typeIdsForComponent(int objectId) const
 {
-    return typeData->typeIds();
+    return typeData->typeIds(objectId);
 }
 
 QQmlCompilePass::QQmlCompilePass(QQmlTypeCompiler *typeCompiler)
@@ -1215,7 +1215,7 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
     if (obj->idNameIndex != 0)
         _seenObjectWithId = true;
 
-    if (obj->flags & QV4::CompiledData::Object::IsComponent) {
+    if (obj->flags & QV4::CompiledData::Object::IsComponent && !obj->isInlineComponent) {
         Q_ASSERT(obj->bindingCount() == 1);
         const QV4::CompiledData::Binding *componentBinding = obj->firstBinding();
         Q_ASSERT(componentBinding->type == QV4::CompiledData::Binding::Type_Object);

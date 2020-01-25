@@ -74,6 +74,7 @@ Q_SIGNALS:
 
 private:
     Q_DISABLE_COPY(QQmlApplicationEngine)
+    Q_PRIVATE_SLOT(d_func(), void _q_loadTranslations())
     Q_DECLARE_PRIVATE(QQmlApplicationEngine)
 };
 

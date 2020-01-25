@@ -700,7 +700,7 @@ void tst_qqmllistmodel::error_data()
 
     QTest::newRow("unknown qualified ListElement not allowed")
         << "import QtQuick 2.0\nListModel { Foo.ListElement { a: 123 } }"
-        << "Foo.ListElement - Foo is not a namespace";
+        << "Foo.ListElement - Foo is neither a type nor a namespace";
 }
 
 void tst_qqmllistmodel::error()

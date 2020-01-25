@@ -52,6 +52,7 @@
 //
 
 #include <private/qobject_p.h>
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -69,6 +70,7 @@ public:
     typedef QObjectPrivate::StaticMetaCallFunction StaticMetaCallFunction;
 
     struct Flags {
+        friend class QQmlPropertyData;
         enum Types {
             OtherType            = 0,
             FunctionType         = 1, // Is an invokable
@@ -87,30 +89,34 @@ public:
         // trySetStaticMetaCallFunction for details.
         // (Note: this padding is done here, because certain compilers have surprising behavior
         // when an enum is declared in-between two bit fields.)
-        enum { BitsLeftInFlags = 10 };
+        enum { BitsLeftInFlags = 15 };
         unsigned otherBits       : BitsLeftInFlags; // align to 32 bits
 
-        // Can apply to all properties, except IsFunction
-        unsigned isConstant       : 1; // Has CONST flag
-        unsigned isWritable       : 1; // Has WRITE function
-        unsigned isResettable     : 1; // Has RESET function
-        unsigned isAlias          : 1; // Is a QML alias to another property
-        unsigned isFinal          : 1; // Has FINAL flag
-        unsigned isOverridden     : 1; // Is overridden by a extension property
-        unsigned isDirect         : 1; // Exists on a C++ QMetaObject
-
+        // Members of the form aORb can only be a when type is not FunctionType, and only be
+        // b when type equals FunctionType. For that reason, the semantic meaning of the bit is
+        // overloaded, and the accessor functions are used to get the correct value
+        //
+        // Moreover, isSignalHandler, isOverload and isCloned and isConstructor make only sense
+        // for functions, too (and could at a later point be reused for flags that only make sense
+        // for non-functions)
+        //
+        // Lastly, isDirect and isOverridden apply to both functions and non-functions
+    private:
+        unsigned isConstantORisVMEFunction     : 1; // Has CONST flag OR Function was added by QML
+        unsigned isWritableORhasArguments      : 1; // Has WRITE function OR Function takes arguments
+        unsigned isResettableORisSignal        : 1; // Has RESET function OR Function is a signal
+        unsigned isAliasORisVMESignal          : 1; // Is a QML alias to another property OR Signal was added by QML
+        unsigned isFinalORisV4Function         : 1; // Has FINAL flag OR Function takes QQmlV4Function* args
+        unsigned isSignalHandler               : 1; // Function is a signal handler
+        unsigned isOverload                    : 1; // Function is an overload of another function
+        unsigned isCloned                      : 1; // The function was marked as cloned
+        unsigned isConstructor                 : 1; // The function was marked is a constructor
+        unsigned isDirect                      : 1; // Exists on a C++ QMetaObject
+        unsigned isOverridden                  : 1; // Is overridden by a extension property
+    public:
         unsigned type             : 4; // stores an entry of Types
 
         // Apply only to IsFunctions
-        unsigned isVMEFunction    : 1; // Function was added by QML
-        unsigned hasArguments     : 1; // Function takes arguments
-        unsigned isSignal         : 1; // Function is a signal
-        unsigned isVMESignal      : 1; // Signal was added by QML
-        unsigned isV4Function     : 1; // Function takes QQmlV4Function* args
-        unsigned isSignalHandler  : 1; // Function is a signal handler
-        unsigned isOverload       : 1; // Function is an overload of another function
-        unsigned isCloned         : 1; // The function was marked as cloned
-        unsigned isConstructor    : 1; // The function was marked is a constructor
 
         // Internal QQmlPropertyCache flags
         unsigned notFullyResolved : 1; // True if the type data is to be lazily resolved
@@ -119,7 +125,84 @@ public:
         inline Flags();
         inline bool operator==(const Flags &other) const;
         inline void copyPropertyTypeFlags(Flags from);
+
+        void setIsConstant(bool b) {
+            Q_ASSERT(type != FunctionType);
+            isConstantORisVMEFunction = b;
+        }
+
+        void setIsWritable(bool b) {
+            Q_ASSERT(type != FunctionType);
+            isWritableORhasArguments = b;
+        }
+
+        void setIsResettable(bool b) {
+            Q_ASSERT(type != FunctionType);
+            isResettableORisSignal = b;
+        }
+
+        void setIsAlias(bool b) {
+            Q_ASSERT(type != FunctionType);
+            isAliasORisVMESignal = b;
+        }
+
+        void setIsFinal(bool b) {
+            Q_ASSERT(type != FunctionType);
+            isFinalORisV4Function = b;
+        }
+
+        void setIsOverridden(bool b) {
+            isOverridden = b;
+        }
+
+        void setIsDirect(bool b) {
+            isDirect = b;
+        }
+
+        void setIsVMEFunction(bool b) {
+            Q_ASSERT(type == FunctionType);
+            isConstantORisVMEFunction = b;
+        }
+        void setHasArguments(bool b) {
+            Q_ASSERT(type == FunctionType);
+            isWritableORhasArguments = b;
+        }
+        void setIsSignal(bool b) {
+            Q_ASSERT(type == FunctionType);
+            isResettableORisSignal = b;
+        }
+        void setIsVMESignal(bool b) {
+            Q_ASSERT(type == FunctionType);
+            isAliasORisVMESignal = b;
+        }
+
+        void setIsV4Function(bool b) {
+            Q_ASSERT(type == FunctionType);
+            isFinalORisV4Function = b;
+        }
+
+        void setIsSignalHandler(bool b) {
+            Q_ASSERT(type == FunctionType);
+            isSignalHandler = b;
+        }
+
+        void setIsOverload(bool b) {
+            Q_ASSERT(type == FunctionType);
+            isOverload = b;
+        }
+
+        void setIsCloned(bool b) {
+            Q_ASSERT(type == FunctionType);
+            isCloned = b;
+        }
+
+        void setIsConstructor(bool b) {
+            Q_ASSERT(type == FunctionType);
+            isConstructor = b;
+        }
+
     };
+
 
     inline bool operator==(const QQmlPropertyData &) const;
 
@@ -133,14 +216,14 @@ public:
 
     bool isValid() const { return coreIndex() != -1; }
 
-    bool isConstant() const { return m_flags.isConstant; }
-    bool isWritable() const { return m_flags.isWritable; }
-    void setWritable(bool onoff) { m_flags.isWritable = onoff; }
-    bool isResettable() const { return m_flags.isResettable; }
-    bool isAlias() const { return m_flags.isAlias; }
-    bool isFinal() const { return m_flags.isFinal; }
+    bool isConstant() const { return !isFunction() && m_flags.isConstantORisVMEFunction; }
+    bool isWritable() const { return !isFunction() && m_flags.isWritableORhasArguments; }
+    void setWritable(bool onoff) { Q_ASSERT(!isFunction()); m_flags.isWritableORhasArguments = onoff; }
+    bool isResettable() const { return !isFunction() && m_flags.isResettableORisSignal; }
+    bool isAlias() const { return !isFunction() && m_flags.isAliasORisVMESignal; }
+    bool isFinal() const { return !isFunction() && m_flags.isFinalORisV4Function; }
     bool isOverridden() const { return m_flags.isOverridden; }
-    bool isDirect() const { return m_flags.isDirect; }
+    bool isDirect() const { return m_flags.isOverload; }
     bool hasStaticMetaCallFunction() const { return staticMetaCallFunction() != nullptr; }
     bool isFunction() const { return m_flags.type == Flags::FunctionType; }
     bool isQObject() const { return m_flags.type == Flags::QObjectDerivedType; }
@@ -150,15 +233,15 @@ public:
     bool isQJSValue() const { return m_flags.type == Flags::QJSValueType; }
     bool isVarProperty() const { return m_flags.type == Flags::VarPropertyType; }
     bool isQVariant() const { return m_flags.type == Flags::QVariantType; }
-    bool isVMEFunction() const { return m_flags.isVMEFunction; }
-    bool hasArguments() const { return m_flags.hasArguments; }
-    bool isSignal() const { return m_flags.isSignal; }
-    bool isVMESignal() const { return m_flags.isVMESignal; }
-    bool isV4Function() const { return m_flags.isV4Function; }
+    bool isVMEFunction() const { return isFunction() && m_flags.isConstantORisVMEFunction; }
+    bool hasArguments() const { return isFunction() && m_flags.isWritableORhasArguments; }
+    bool isSignal() const { return isFunction() && m_flags.isResettableORisSignal; }
+    bool isVMESignal() const { return isFunction() && m_flags.isAliasORisVMESignal; }
+    bool isV4Function() const { return isFunction() && m_flags.isFinalORisV4Function; }
     bool isSignalHandler() const { return m_flags.isSignalHandler; }
     bool isOverload() const { return m_flags.isOverload; }
     void setOverload(bool onoff) { m_flags.isOverload = onoff; }
-    bool isCloned() const { return m_flags.isCloned; }
+    bool isCloned() const { return isFunction() && m_flags.isCloned; }
     bool isConstructor() const { return m_flags.isConstructor; }
 
     bool hasOverride() const { return overrideIndex() >= 0; }
@@ -294,9 +377,9 @@ public:
     static Flags defaultSignalFlags()
     {
         Flags f;
-        f.isSignal = true;
         f.type = Flags::FunctionType;
-        f.isVMESignal = true;
+        f.setIsSignal(true);
+        f.setIsVMESignal(true);
         return f;
     }
 
@@ -304,7 +387,7 @@ public:
     {
         Flags f;
         f.type = Flags::FunctionType;
-        f.isVMEFunction = true;
+        f.setIsVMEFunction(true);
         return f;
     }
 
@@ -348,44 +431,32 @@ bool QQmlPropertyData::operator==(const QQmlPropertyData &other) const
 
 QQmlPropertyData::Flags::Flags()
     : otherBits(0)
-    , isConstant(false)
-    , isWritable(false)
-    , isResettable(false)
-    , isAlias(false)
-    , isFinal(false)
-    , isOverridden(false)
-    , isDirect(false)
-    , type(OtherType)
-    , isVMEFunction(false)
-    , hasArguments(false)
-    , isSignal(false)
-    , isVMESignal(false)
-    , isV4Function(false)
+    , isConstantORisVMEFunction(false)
+    , isWritableORhasArguments(false)
+    , isResettableORisSignal(false)
+    , isAliasORisVMESignal(false)
+    , isFinalORisV4Function(false)
     , isSignalHandler(false)
     , isOverload(false)
     , isCloned(false)
     , isConstructor(false)
+    , isOverridden(false)
+    , type(OtherType)
     , notFullyResolved(false)
     , overrideIndexIsProperty(false)
 {}
 
 bool QQmlPropertyData::Flags::operator==(const QQmlPropertyData::Flags &other) const
 {
-    return isConstant == other.isConstant &&
-            isWritable == other.isWritable &&
-            isResettable == other.isResettable &&
-            isAlias == other.isAlias &&
-            isFinal == other.isFinal &&
+    return isConstantORisVMEFunction == other.isConstantORisVMEFunction &&
+            isWritableORhasArguments == other.isWritableORhasArguments &&
+            isResettableORisSignal == other.isResettableORisSignal &&
+            isAliasORisVMESignal == other.isAliasORisVMESignal &&
+            isFinalORisV4Function == other.isFinalORisV4Function &&
             isOverridden == other.isOverridden &&
-            type == other.type &&
-            isVMEFunction == other.isVMEFunction &&
-            hasArguments == other.hasArguments &&
-            isSignal == other.isSignal &&
-            isVMESignal == other.isVMESignal &&
-            isV4Function == other.isV4Function &&
             isSignalHandler == other.isSignalHandler &&
-            isOverload == other.isOverload &&
             isCloned == other.isCloned &&
+            type == other.type &&
             isConstructor == other.isConstructor &&
             notFullyResolved == other.notFullyResolved &&
             overrideIndexIsProperty == other.overrideIndexIsProperty;

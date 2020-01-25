@@ -130,6 +130,10 @@ Rectangle {
             name: "Tiger"
             shapeUrl: "item17.qml"
         }
+        ListElement {
+            name: "Text"
+            shapeUrl: "item18.qml"
+        }
     }
 
     property int gridSpacing: 10

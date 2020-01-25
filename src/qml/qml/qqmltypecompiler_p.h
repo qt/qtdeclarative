@@ -79,7 +79,9 @@ struct QQmlTypeCompiler
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeCompiler)
 public:
-    QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData, QmlIR::Document *document,
+    QQmlTypeCompiler(QQmlEnginePrivate *engine,
+                     QQmlTypeData *typeData,
+                     QmlIR::Document *document,
                      const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
                      QV4::ResolvedTypeReferenceMap *resolvedTypeCache,
                      const QV4::CompiledData::DependentTypesHasher &dependencyHasher);
@@ -129,14 +131,12 @@ public:
         return resolvedTypes->value(id);
     }
 
-    QQmlMetaType::CompositeMetaTypeIds typeIds() const;
+    CompositeMetaTypeIds typeIdsForComponent(int objectId = 0) const;
 
 private:
     QList<QQmlError> errors;
     QQmlEnginePrivate *engine;
-    QQmlTypeData *typeData;
     const QV4::CompiledData::DependentTypesHasher &dependencyHasher;
-    QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
     QmlIR::Document *document;
     // index is string index of type name (use obj->inheritedTypeNameIndex)
     QHash<int, QQmlCustomParser*> customParsers;
@@ -144,6 +144,9 @@ private:
     // index in first hash is component index, vector inside contains object indices of objects with id property
     QVector<quint32> m_componentRoots;
     QQmlPropertyCacheVector m_propertyCaches;
+
+    QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
+    QQmlTypeData *typeData;
 };
 
 struct QQmlCompilePass

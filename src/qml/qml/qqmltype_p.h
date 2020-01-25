@@ -74,6 +74,7 @@ class QQmlPropertyCache;
 namespace QV4 {
 struct String;
 }
+struct CompositeMetaTypeIds;
 
 class Q_QML_PRIVATE_EXPORT QQmlType
 {
@@ -144,6 +145,9 @@ public:
 
     int index() const;
 
+    bool isInlineComponentType() const;
+    int inlineComponendId() const;
+
     struct Q_QML_PRIVATE_EXPORT SingletonInstanceInfo
     {
         QJSValue (*scriptCallback)(QQmlEngine *, QJSEngine *) = nullptr;
@@ -166,6 +170,8 @@ public:
     int scopedEnumValue(QQmlEnginePrivate *engine, int index, const QString &, bool *ok) const;
     int scopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &, const QByteArray &, bool *ok) const;
     int scopedEnumValue(QQmlEnginePrivate *engine, const QStringRef &, const QStringRef &, bool *ok) const;
+    int inlineComponentObjectId();
+    void setInlineComponentObjectId(int id) const; // TODO: const setters are BAD
 
     const QQmlTypePrivate *priv() const { return d.data(); }
     static void refHandle(const QQmlTypePrivate *priv);
@@ -178,8 +184,18 @@ public:
         InterfaceType = 2,
         CompositeType = 3,
         CompositeSingletonType = 4,
+        InlineComponentType = 5,
         AnyRegistrationType = 255
     };
+
+    QQmlType containingType() const;
+    int lookupInlineComponentIdByName(const QString &name) const;
+    QQmlType lookupInlineComponentById(int objectid) const;
+    int generatePlaceHolderICId() const;
+
+    void associateInlineComponent(const QString &name, int objectID, const CompositeMetaTypeIds &metaTypeIds, QQmlType existingType);
+    void setPendingResolutionName(const QString &name);
+    QString pendingResolutionName() const;
 
 private:
     friend class QQmlTypePrivate;

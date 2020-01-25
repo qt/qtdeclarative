@@ -80,6 +80,7 @@ public:
     QList<QQuickPath::AttributePoint> _attributePoints;
     QStringList _attributes;
     QList<QQuickCurve*> _pathCurves;
+    QList<QQuickPathText*> _pathTexts;
     mutable QQuickCachedBezier prevBez;
     QQmlNullableValue<qreal> startX;
     QQmlNullableValue<qreal> startY;

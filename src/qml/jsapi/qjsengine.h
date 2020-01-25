@@ -60,6 +60,7 @@ class Q_QML_EXPORT QJSEngine
     : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QString uiLanguage READ uiLanguage WRITE setUiLanguage NOTIFY uiLanguageChanged)
 public:
     QJSEngine();
     explicit QJSEngine(QObject *parent);
@@ -120,6 +121,12 @@ public:
 
     void throwError(const QString &message);
     void throwError(QJSValue::ErrorType errorType, const QString &message = QString());
+
+    QString uiLanguage() const;
+    void setUiLanguage(const QString &language);
+
+Q_SIGNALS:
+    void uiLanguageChanged();
 
 private:
     QJSValue create(int type, const void *ptr);

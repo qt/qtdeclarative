@@ -62,6 +62,7 @@
 #include <QScopedValueRollback>
 
 #include <qtqml_tracepoints_p.h>
+#include <QScopedValueRollback>
 
 QT_USE_NAMESPACE
 
@@ -77,9 +78,9 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, const QQmlR
     init(parentContext);
 
     sharedState->componentAttached = nullptr;
-    sharedState->allCreatedBindings.allocate(compilationUnit->totalBindingsCount);
-    sharedState->allParserStatusCallbacks.allocate(compilationUnit->totalParserStatusCount);
-    sharedState->allCreatedObjects.allocate(compilationUnit->totalObjectCount);
+    sharedState->allCreatedBindings.allocate(compilationUnit->totalBindingsCount());
+    sharedState->allParserStatusCallbacks.allocate(compilationUnit->totalParserStatusCount());
+    sharedState->allCreatedObjects.allocate(compilationUnit->totalObjectCount());
     sharedState->allJavaScriptObjects = nullptr;
     sharedState->creationContext = creationContext;
     sharedState->rootContext = nullptr;
@@ -87,7 +88,7 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, const QQmlR
 
     if (auto profiler = QQmlEnginePrivate::get(engine)->profiler) {
         Q_QML_PROFILE_IF_ENABLED(QQmlProfilerDefinitions::ProfileCreating, profiler,
-                sharedState->profiler.init(profiler, compilationUnit->totalParserStatusCount));
+                sharedState->profiler.init(profiler, compilationUnit->totalParserStatusCount()));
     } else {
         Q_UNUSED(profiler);
     }
@@ -145,7 +146,7 @@ QQmlObjectCreator::~QQmlObjectCreator()
     }
 }
 
-QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlInstantiationInterrupt *interrupt)
+QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlInstantiationInterrupt *interrupt, int flags)
 {
     if (phase == CreatingObjectsPhase2) {
         phase = ObjectsCreated;
@@ -159,14 +160,20 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     if (subComponentIndex == -1) {
         objectToCreate = /*root object*/0;
     } else {
-        const QV4::CompiledData::Object *compObj = compilationUnit->objectAt(subComponentIndex);
-        objectToCreate = compObj->bindingTable()->value.objectIndex;
+        Q_ASSERT(subComponentIndex >= 0);
+        if (flags & CreationFlags::InlineComponent) {
+            objectToCreate = subComponentIndex;
+        } else {
+            Q_ASSERT(flags & CreationFlags::NormalObject);
+            const QV4::CompiledData::Object *compObj = compilationUnit->objectAt(subComponentIndex);
+            objectToCreate = compObj->bindingTable()->value.objectIndex;
+        }
     }
 
     context = new QQmlContextData;
     context->isInternal = true;
     context->imports = compilationUnit->typeNameCache;
-    context->initFromTypeCompilationUnit(compilationUnit, subComponentIndex);
+    context->initFromTypeCompilationUnit(compilationUnit, flags & CreationFlags::NormalObject ? subComponentIndex : -1);
     context->setParent(parentContext);
 
     if (!sharedState->rootContext) {
@@ -179,7 +186,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
 
     Q_ASSERT(sharedState->allJavaScriptObjects || topLevelCreator);
     if (topLevelCreator)
-        sharedState->allJavaScriptObjects = scope.alloc(compilationUnit->totalObjectCount);
+        sharedState->allJavaScriptObjects = scope.alloc(compilationUnit->totalObjectCount());
 
     if (subComponentIndex == -1 && compilationUnit->dependentScripts.count()) {
         QV4::ScopedObject scripts(scope, v4->newArrayObject(compilationUnit->dependentScripts.count()));
@@ -231,6 +238,9 @@ void QQmlObjectCreator::beginPopulateDeferred(QQmlContextData *newContext)
 
     Q_ASSERT(topLevelCreator);
     Q_ASSERT(!sharedState->allJavaScriptObjects);
+
+    QV4::Scope valueScope(v4);
+    sharedState->allJavaScriptObjects = valueScope.alloc(compilationUnit->totalObjectCount());
 }
 
 void QQmlObjectCreator::populateDeferred(QObject *instance, int deferredIndex,
@@ -248,7 +258,7 @@ void QQmlObjectCreator::populateDeferred(QObject *instance, int deferredIndex,
 
     QV4::Scope valueScope(v4);
     QScopedValueRollback<QV4::Value*> jsObjectGuard(sharedState->allJavaScriptObjects,
-                                                    valueScope.alloc(compilationUnit->totalObjectCount));
+                                                    valueScope.alloc(compilationUnit->totalObjectCount()));
 
     Q_ASSERT(topLevelCreator);
     QV4::QmlContext *qmlContext = static_cast<QV4::QmlContext *>(valueScope.alloc());
@@ -263,7 +273,6 @@ void QQmlObjectCreator::populateDeferred(QObject *instance, int deferredIndex,
 
     const QV4::CompiledData::Object *obj = compilationUnit->objectAt(_compiledObjectIndex);
     qSwap(_compiledObject, obj);
-
     qSwap(_ddata, declarativeData);
     qSwap(_bindingTarget, bindingTarget);
     qSwap(_vmeMetaObject, vmeMetaObject);
@@ -1172,7 +1181,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         Q_ASSERT(typeRef);
         installPropertyCache = !typeRef->isFullyDynamicType;
         QQmlType type = typeRef->type;
-        if (type.isValid()) {
+        if (type.isValid() && !type.isInlineComponentType()) {
             typeName = type.qmlTypeName();
 
             void *ddataMemory = nullptr;
@@ -1206,17 +1215,31 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         } else {
             Q_ASSERT(typeRef->compilationUnit);
             typeName = typeRef->compilationUnit->fileName();
-            if (typeRef->compilationUnit->unitData()->isSingleton())
+            // compilation unit is shared between root type and its inline component types
+            // so isSingleton errorneously returns true for inline components
+            if (typeRef->compilationUnit->unitData()->isSingleton() && !type.isInlineComponentType())
             {
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return nullptr;
             }
 
-            QQmlObjectCreator subCreator(context, typeRef->compilationUnit, sharedState.data());
-            instance = subCreator.create();
-            if (!instance) {
-                errors += subCreator.errors;
-                return nullptr;
+
+            if (!type.isInlineComponentType()) {
+                QQmlObjectCreator subCreator(context, typeRef->compilationUnit, sharedState.data());
+                instance = subCreator.create();
+                if (!instance) {
+                    errors += subCreator.errors;
+                    return nullptr;
+                }
+            } else {
+                int subObjectId = type.inlineComponendId();
+                QScopedValueRollback<int> rollback {typeRef->compilationUnit->icRoot, subObjectId};
+                QQmlObjectCreator subCreator(context, typeRef->compilationUnit, sharedState.data());
+                instance = subCreator.create(subObjectId, nullptr, nullptr, CreationFlags::InlineComponent);
+                if (!instance) {
+                    errors += subCreator.errors;
+                    return nullptr;
+                }
             }
         }
         if (instance->isWidgetType()) {

@@ -1949,10 +1949,11 @@ void ExecutionEngine::initQmlGlobalObject()
 void ExecutionEngine::initializeGlobal()
 {
     QV4::Scope scope(this);
-    QV4::GlobalExtensions::init(globalObject, QJSEngine::AllExtensions);
 
     QV4::ScopedObject qt(scope, memoryManager->allocate<QV4::QtObject>(qmlEngine()));
     globalObject->defineDefaultProperty(QStringLiteral("Qt"), qt);
+
+    QV4::GlobalExtensions::init(globalObject, QJSEngine::AllExtensions);
 
 #if QT_CONFIG(qml_locale)
     QQmlLocale::registerStringLocaleCompare(this);

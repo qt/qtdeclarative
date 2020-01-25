@@ -244,6 +244,7 @@ public:
         Kind_UiImport,
         Kind_UiObjectBinding,
         Kind_UiObjectDefinition,
+        Kind_UiInlineComponent,
         Kind_UiObjectInitializer,
         Kind_UiObjectMemberList,
         Kind_UiArrayMemberList,
@@ -3375,6 +3376,28 @@ public:
 // attributes
     UiQualifiedId *qualifiedTypeNameId;
     UiObjectInitializer *initializer;
+};
+
+class QML_PARSER_EXPORT UiInlineComponent: public UiObjectMember
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(UiInlineComponent)
+
+    UiInlineComponent(const QStringRef& inlineComponentName, UiObjectDefinition* inlineComponent)
+        : name(inlineComponentName), component(inlineComponent)
+    { kind = K; }
+
+    QStringRef name;
+    UiObjectDefinition* component;
+    SourceLocation componentToken;
+
+    SourceLocation lastSourceLocation() const override
+    {return component->lastSourceLocation();}
+
+    SourceLocation firstSourceLocation() const override
+    {return componentToken;}
+
+    void accept0(Visitor *visitor) override;
 };
 
 class QML_PARSER_EXPORT UiSourceElement: public UiObjectMember

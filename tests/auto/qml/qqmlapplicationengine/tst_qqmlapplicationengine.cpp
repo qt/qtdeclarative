@@ -53,6 +53,7 @@ private slots:
     void removeObjectsWhenDestroyed();
     void loadTranslation_data();
     void loadTranslation();
+    void translationChange();
     void setInitialProperties();
     void failureToLoadTriggersWarningSignal();
 
@@ -276,6 +277,28 @@ void tst_qqmlapplicationengine::loadTranslation()
     QVERIFY(rootObject);
 
     QCOMPARE(rootObject->property("translation").toString(), translation);
+}
+
+void tst_qqmlapplicationengine::translationChange()
+{
+    if (QLocale().language() == QLocale::SwissGerman) {
+        QSKIP("Skipping this when running under the Swiss locale as we would always load translation.");
+    }
+
+    QQmlApplicationEngine engine(testFileUrl("loadTranslation.qml"));
+
+    QCOMPARE(engine.uiLanguage(), QLocale().bcp47Name());
+
+    QObject *rootObject = engine.rootObjects().first();
+    QVERIFY(rootObject);
+
+    QCOMPARE(rootObject->property("translation").toString(), "translated");
+
+    engine.setUiLanguage("de_CH");
+    QCOMPARE(rootObject->property("translation").toString(), QString::fromUtf8("Gr\u00FCezi"));
+
+    engine.setUiLanguage(QString());
+    QCOMPARE(rootObject->property("translation").toString(), "translate it");
 }
 
 void tst_qqmlapplicationengine::setInitialProperties()

@@ -64,6 +64,26 @@ QT_BEGIN_NAMESPACE
 
 class QQmlScriptData;
 class QQmlEnginePrivate;
+
+struct InlineComponentData {
+
+    InlineComponentData() = default;
+    InlineComponentData(const CompositeMetaTypeIds &typeIds, int objectIndex, int nameIndex, int totalObjectCount, int totalBindingCount, int totalParserStatusCount)
+        :   typeIds(typeIds)
+          , objectIndex(objectIndex)
+          , nameIndex(nameIndex)
+          , totalObjectCount(totalObjectCount)
+          , totalBindingCount(totalBindingCount)
+          , totalParserStatusCount(totalParserStatusCount) {}
+
+    CompositeMetaTypeIds typeIds;
+    int objectIndex = -1;
+    int nameIndex = -1;
+    int totalObjectCount = 0;
+    int totalBindingCount = 0;
+    int totalParserStatusCount = 0;
+};
+
 namespace QV4 {
 
 // index is per-object binding index
@@ -143,11 +163,16 @@ public:
     QHash<int, IdentifierHash> namedObjectsPerComponentCache;
     inline IdentifierHash namedObjectsPerComponent(int componentObjectIndex);
 
-    void finalizeCompositeType(QQmlEnginePrivate *qmlEngine, QQmlMetaType::CompositeMetaTypeIds typeIds);
+    void finalizeCompositeType(QQmlEnginePrivate *qmlEngine, CompositeMetaTypeIds typeIdsForComponent);
 
-    int totalBindingsCount = 0; // Number of bindings used in this type
-    int totalParserStatusCount = 0; // Number of instantiated types that are QQmlParserStatus subclasses
-    int totalObjectCount = 0; // Number of objects explicitly instantiated
+    int m_totalBindingsCount = 0; // Number of bindings used in this type
+    int m_totalParserStatusCount = 0; // Number of instantiated types that are QQmlParserStatus subclasses
+    int m_totalObjectCount = 0; // Number of objects explicitly instantiated
+    int icRoot = -1;
+
+    int totalBindingsCount() const;
+    int totalParserStatusCount() const;
+    int totalObjectCount() const;
 
     QVector<QQmlRefPointer<QQmlScriptData>> dependentScripts;
     ResolvedTypeReferenceMap resolvedTypes;
@@ -155,11 +180,13 @@ public:
 
     bool verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const;
 
-    QQmlMetaType::CompositeMetaTypeIds typeIds() const { return {metaTypeId, listMetaTypeId}; }
+    CompositeMetaTypeIds typeIdsForComponent(int objectid = 0) const;
 
     int metaTypeId = -1;
     int listMetaTypeId = -1;
     bool isRegisteredWithEngine = false;
+
+    QHash<int, InlineComponentData> inlineComponentData;
 
     QScopedPointer<CompilationUnitMapper> backingFile;
 

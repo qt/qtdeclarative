@@ -53,6 +53,7 @@
 #include <private/qv4compilationunitmapper_p.h>
 #include <private/qml_compile_hash_p.h>
 #include <private/qqmltypewrapper_p.h>
+#include <private/inlinecomponentutils_p.h>
 
 #include <QtQml/qqmlfile.h>
 #include <QtQml/qqmlpropertymap.h>
@@ -62,6 +63,7 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qscopeguard.h>
 #include <QtCore/qcryptographichash.h>
+#include <QtCore/QScopedValueRollback>
 
 #if defined(QML_COMPILE_HASH)
 #  ifdef Q_OS_LINUX
@@ -387,7 +389,7 @@ IdentifierHash ExecutableCompilationUnit::createNamedObjectsPerComponent(int com
     return *namedObjectsPerComponentCache.insert(componentObjectIndex, namedObjectCache);
 }
 
-void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngine, QQmlMetaType::CompositeMetaTypeIds typeIds)
+void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngine, CompositeMetaTypeIds typeIds)
 {
     this->qmlEngine = qmlEngine;
 
@@ -399,6 +401,7 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
         metaTypeId = typeIds.id;
         listMetaTypeId = typeIds.listId;
         qmlEngine->registerInternalCompositeType(this);
+
     } else {
         const QV4::CompiledData::Object *obj = objectAt(/*root object*/0);
         auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
@@ -413,29 +416,105 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
     }
 
     // Collect some data for instantiation later.
+    using namespace  icutils;
+    std::vector<QV4::CompiledData::InlineComponent> allICs {};
+    for (int i=0; i != objectCount(); ++i) {
+        const CompiledObject *obj = objectAt(i);
+        for (auto it = obj->inlineComponentsBegin(); it != obj->inlineComponentsEnd(); ++it) {
+            allICs.push_back(*it);
+        }
+    }
+    std::vector<Node> nodes;
+    nodes.resize(allICs.size());
+    std::iota(nodes.begin(), nodes.end(), 0);
+    AdjacencyList adjacencyList;
+    adjacencyList.resize(nodes.size());
+    fillAdjacencyListForInlineComponents(this, adjacencyList, nodes, allICs);
+    bool hasCycle = false;
+    auto nodesSorted = topoSort(nodes, adjacencyList, hasCycle);
+    Q_ASSERT(!hasCycle); // would have already been discovered by qqmlpropertycachcecreator
+
+    // We need to first iterate over all inline components, as the containing component might create instances of them
+    // and in that case we need to add its object count
+    for (auto nodeIt = nodesSorted.rbegin(); nodeIt != nodesSorted.rend(); ++nodeIt) {
+        const auto &ic = allICs.at(nodeIt->index);
+        int lastICRoot = ic.objectIndex;
+        for (int i = ic.objectIndex; i<objectCount(); ++i) {
+            const QV4::CompiledData::Object *obj = objectAt(i);
+            bool leftCurrentInlineComponent =
+                       (i != lastICRoot && obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot)
+                    || !(obj->flags & QV4::CompiledData::Object::InPartOfInlineComponent);
+            if (leftCurrentInlineComponent)
+                break;
+            inlineComponentData[lastICRoot].totalBindingCount += obj->nBindings;
+
+            if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
+                if (typeRef->type.isValid() && typeRef->type.parserStatusCast() != -1)
+                    ++inlineComponentData[lastICRoot].totalParserStatusCount;
+
+                ++inlineComponentData[lastICRoot].totalObjectCount;
+                if (typeRef->compilationUnit) {
+                    // if the type is an inline component type, we have to extract the information from it
+                    // This requires that inline components are visited in the correct order
+                    auto icRoot = typeRef->compilationUnit->icRoot;
+                    if (typeRef->type.isInlineComponentType()) {
+                        icRoot = typeRef->type.inlineComponendId();
+                    }
+                    QScopedValueRollback<int> rollback {typeRef->compilationUnit->icRoot, icRoot};
+                    inlineComponentData[lastICRoot].totalBindingCount += typeRef->compilationUnit->totalBindingsCount();
+                    inlineComponentData[lastICRoot].totalParserStatusCount += typeRef->compilationUnit->totalParserStatusCount();
+                    inlineComponentData[lastICRoot].totalObjectCount += typeRef->compilationUnit->totalObjectCount();
+                }
+            }
+        }
+    }
     int bindingCount = 0;
     int parserStatusCount = 0;
     int objectCount = 0;
     for (quint32 i = 0, count = this->objectCount(); i < count; ++i) {
         const QV4::CompiledData::Object *obj = objectAt(i);
+        if (obj->flags & QV4::CompiledData::Object::InPartOfInlineComponent) {
+            continue;
+        }
         bindingCount += obj->nBindings;
         if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
-            if (typeRef->type.isValid()) {
-                if (typeRef->type.parserStatusCast() != -1)
-                    ++parserStatusCount;
-            }
+            if (typeRef->type.isValid() && typeRef->type.parserStatusCast() != -1)
+                ++parserStatusCount;
             ++objectCount;
             if (typeRef->compilationUnit) {
-                bindingCount += typeRef->compilationUnit->totalBindingsCount;
-                parserStatusCount += typeRef->compilationUnit->totalParserStatusCount;
-                objectCount += typeRef->compilationUnit->totalObjectCount;
+                auto icRoot = typeRef->compilationUnit->icRoot;
+                if (typeRef->type.isInlineComponentType()) {
+                    icRoot = typeRef->type.inlineComponendId();
+                }
+                QScopedValueRollback<int> rollback {typeRef->compilationUnit->icRoot, icRoot};
+                bindingCount += typeRef->compilationUnit->totalBindingsCount();
+                parserStatusCount += typeRef->compilationUnit->totalParserStatusCount();
+                objectCount += typeRef->compilationUnit->totalObjectCount();
             }
         }
     }
 
-    totalBindingsCount = bindingCount;
-    totalParserStatusCount = parserStatusCount;
-    totalObjectCount = objectCount;
+    m_totalBindingsCount = bindingCount;
+    m_totalParserStatusCount = parserStatusCount;
+    m_totalObjectCount = objectCount;
+}
+
+int ExecutableCompilationUnit::totalBindingsCount() const {
+    if (icRoot == -1)
+        return m_totalBindingsCount;
+    return inlineComponentData[icRoot].totalBindingCount;
+}
+
+int ExecutableCompilationUnit::totalObjectCount() const {
+    if (icRoot == -1)
+        return m_totalObjectCount;
+    return inlineComponentData[icRoot].totalObjectCount;
+}
+
+int ExecutableCompilationUnit::totalParserStatusCount() const {
+    if (icRoot == -1)
+        return m_totalParserStatusCount;
+    return inlineComponentData[icRoot].totalParserStatusCount;
 }
 
 bool ExecutableCompilationUnit::verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const
@@ -451,6 +530,13 @@ bool ExecutableCompilationUnit::verifyChecksum(const CompiledData::DependentType
     return checksum.size() == sizeof(data->dependencyMD5Checksum)
             && memcmp(data->dependencyMD5Checksum, checksum.constData(),
                       sizeof(data->dependencyMD5Checksum)) == 0;
+}
+
+CompositeMetaTypeIds ExecutableCompilationUnit::typeIdsForComponent(int objectid) const
+{
+    if (objectid == 0)
+        return {metaTypeId, listMetaTypeId};
+    return inlineComponentData[objectid].typeIds;
 }
 
 QStringList ExecutableCompilationUnit::moduleRequests() const
@@ -734,13 +820,14 @@ QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::createPropertyCache(QQm
         typePropertyCache = QQmlEnginePrivate::get(engine)->cache(type.metaObject(), minorVersion);
         return typePropertyCache;
     } else {
+        Q_ASSERT(compilationUnit);
         return compilationUnit->rootPropertyCache();
     }
 }
 
 bool ResolvedTypeReference::addToHash(QCryptographicHash *hash, QQmlEngine *engine)
 {
-    if (type.isValid()) {
+    if (type.isValid() && !type.isInlineComponentType()) {
         bool ok = false;
         hash->addData(createPropertyCache(engine)->checksum(&ok));
         return ok;

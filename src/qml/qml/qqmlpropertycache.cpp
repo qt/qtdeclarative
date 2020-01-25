@@ -71,10 +71,10 @@ static QQmlPropertyData::Flags fastFlagsForProperty(const QMetaProperty &p)
 {
     QQmlPropertyData::Flags flags;
 
-    flags.isConstant = p.isConstant();
-    flags.isWritable = p.isWritable();
-    flags.isResettable = p.isResettable();
-    flags.isFinal = p.isFinal();
+    flags.setIsConstant(p.isConstant());
+    flags.setIsWritable(p.isWritable());
+    flags.setIsResettable(p.isResettable());
+    flags.setIsFinal(p.isFinal());
 
     if (p.isEnumType())
         flags.type = QQmlPropertyData::Flags::EnumType;
@@ -166,21 +166,21 @@ void QQmlPropertyData::load(const QMetaMethod &m)
 
     m_flags.type = Flags::FunctionType;
     if (m.methodType() == QMetaMethod::Signal) {
-        m_flags.isSignal = true;
+        m_flags.setIsSignal(true);
     } else if (m.methodType() == QMetaMethod::Constructor) {
-        m_flags.isConstructor = true;
+        m_flags.setIsConstructor(true);
         setPropType(QMetaType::QObjectStar);
     }
 
     const int paramCount = m.parameterCount();
     if (paramCount) {
-        m_flags.hasArguments = true;
+        m_flags.setHasArguments(true);
         if ((paramCount == 1) && (m.parameterTypes().constFirst() == "QQmlV4Function*"))
-            m_flags.isV4Function = true;
+            m_flags.setIsV4Function(true);
     }
 
     if (m.attributes() & QMetaMethod::Cloned)
-        m_flags.isCloned = true;
+        m_flags.setIsCloned(true);
 
     Q_ASSERT(m.revision() <= Q_INT16_MAX);
     setRevision(m.revision());
@@ -320,7 +320,7 @@ void QQmlPropertyCache::appendSignal(const QString &name, QQmlPropertyData::Flag
     data.setArguments(nullptr);
 
     QQmlPropertyData handler = data;
-    handler.m_flags.isSignalHandler = true;
+    handler.m_flags.setIsSignalHandler(true);
 
     if (types) {
         int argumentCount = *types;
@@ -519,7 +519,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
             data->setFlags(methodFlags);
 
         data->lazyLoad(m);
-        data->m_flags.isDirect = !dynamicMetaObject;
+        data->m_flags.setIsDirect(!dynamicMetaObject);
 
         Q_ASSERT((allowedRevisionCache.count() - 1) < Q_INT16_MAX);
         data->setMetaObjectOffset(allowedRevisionCache.count() - 1);
@@ -527,7 +527,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         if (data->isSignal()) {
             sigdata = &signalHandlerIndexCache[signalHandlerIndex - signalHandlerIndexCacheStart];
             *sigdata = *data;
-            sigdata->m_flags.isSignalHandler = true;
+            sigdata->m_flags.setIsSignalHandler(true);
         }
 
         QQmlPropertyData *old = nullptr;
@@ -569,7 +569,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         if (old) {
             // We only overload methods in the same class, exactly like C++
             if (old->isFunction() && old->coreIndex() >= methodOffset)
-                data->m_flags.isOverload = true;
+                data->m_flags.setIsOverload(true);
 
             data->markAsOverrideOf(old);
         }
@@ -600,7 +600,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         data->lazyLoad(p);
         data->setTypeMinorVersion(typeMinorVersion);
 
-        data->m_flags.isDirect = !dynamicMetaObject;
+        data->m_flags.setIsDirect(!dynamicMetaObject);
 
         Q_ASSERT((allowedRevisionCache.count() - 1) < Q_INT16_MAX);
         data->setMetaObjectOffset(allowedRevisionCache.count() - 1);
@@ -626,7 +626,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         }
 
         if (isGadget) // always dispatch over a 'normal' meta-call so the QQmlValueType can intercept
-            data->m_flags.isDirect = false;
+            data->m_flags.setIsDirect(false);
         else
             data->trySetStaticMetaCallFunction(metaObject->d.static_metacall, ii - propOffset);
         if (old)
@@ -849,7 +849,7 @@ void QQmlPropertyData::markAsOverrideOf(QQmlPropertyData *predecessor)
     setOverrideIndexIsProperty(!predecessor->isFunction());
     setOverrideIndex(predecessor->coreIndex());
 
-    predecessor->m_flags.isOverridden = true;
+    predecessor->m_flags.setIsOverridden(true);
 }
 
 QQmlPropertyCacheMethodArguments *QQmlPropertyCache::createArgumentsObject(int argc, const QList<QByteArray> &names)

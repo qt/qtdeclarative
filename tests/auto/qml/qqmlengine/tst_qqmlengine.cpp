@@ -84,6 +84,7 @@ private slots:
     void aggressiveGc();
     void cachedGetterLookup_qtbug_75335();
     void createComponentOnSingletonDestruction();
+    void uiLanguage();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1173,6 +1174,38 @@ void tst_qqmlengine::createComponentOnSingletonDestruction()
     QVERIFY(component.isReady());
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(obj);
+}
+
+void tst_qqmlengine::uiLanguage()
+{
+    QQmlEngine engine;
+
+    QObject::connect(&engine, &QJSEngine::uiLanguageChanged, [&engine]() {
+        engine.retranslate();
+    });
+
+    QSignalSpy uiLanguageChangeSpy(&engine, SIGNAL(uiLanguageChanged()));
+
+    QQmlComponent component(&engine, testFileUrl("uiLanguage.qml"));
+
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, (component.url().toString() + ":2:1: QML QtObject: Binding loop detected for property \"textToTranslate\"").toLatin1());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QVERIFY(engine.uiLanguage().isEmpty());
+    QCOMPARE(object->property("numberOfTranslationBindingEvaluations").toInt(), 1);
+
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, (component.url().toString() + ":2:1: QML QtObject: Binding loop detected for property \"textToTranslate\"").toLatin1());
+    engine.setUiLanguage("TestLanguage");
+    QCOMPARE(object->property("numberOfTranslationBindingEvaluations").toInt(), 2);
+    QCOMPARE(object->property("chosenLanguage").toString(), "TestLanguage");
+
+
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, (component.url().toString() + ":2:1: QML QtObject: Binding loop detected for property \"textToTranslate\"").toLatin1());
+    engine.evaluate("Qt.uiLanguage = \"anotherLanguage\"");
+    QCOMPARE(engine.uiLanguage(), QString("anotherLanguage"));
+    QCOMPARE(object->property("numberOfTranslationBindingEvaluations").toInt(), 3);
+    QCOMPARE(object->property("chosenLanguage").toString(), "anotherLanguage");
 }
 
 QTEST_MAIN(tst_qqmlengine)
