@@ -94,9 +94,12 @@ qint64 NullDevice::writeData(const char *data, qint64 len)
 // (otherwise we assert in QVariant::operator<< when actually saving it)
 static bool isSaveable(const QVariant &value)
 {
+    const int valType = static_cast<int>(value.type());
+    if (valType >= QMetaType::User)
+        return false;
     NullDevice nullDevice;
     QDataStream fakeStream(&nullDevice);
-    return QMetaType::save(fakeStream, static_cast<int>(value.type()), value.constData());
+    return QMetaType::save(fakeStream, valType, value.constData());
 }
 
 QQmlEngineDebugServiceImpl::QQmlEngineDebugServiceImpl(QObject *parent) :
