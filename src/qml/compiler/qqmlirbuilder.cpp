@@ -749,12 +749,8 @@ bool IRBuilder::visit(QQmlJS::AST::UiImport *node)
 
     if (node->version) {
         import->version = node->version->version;
-    } else if (import->type == QV4::CompiledData::Import::ImportLibrary) {
-        recordError(node->importIdToken, QCoreApplication::translate("QQmlParser","Library import requires a version"));
-        return false;
     } else {
-        // For backward compatibility in how the imports are loaded we
-        // must otherwise initialize the major and minor version to invalid.
+        // Otherwise initialize the major and minor version to invalid to signal "latest".
         import->version = QTypeRevision();
     }
 

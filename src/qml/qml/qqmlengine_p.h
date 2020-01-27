@@ -402,9 +402,7 @@ The returned cache is not referenced, so if it is to be stored, call addref().
 QQmlPropertyCache *QQmlEnginePrivate::cache(const QQmlType &type, QTypeRevision version)
 {
     Q_ASSERT(type.isValid());
-
-    if (!version.hasMinorVersion() || !type.containsRevisionedAttributes())
-        return cache(type.metaObject(), version);
+    Q_ASSERT(type.containsRevisionedAttributes());
 
     Locker locker(this);
     return QQmlMetaType::propertyCache(type, version);

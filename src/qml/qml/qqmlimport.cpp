@@ -548,6 +548,19 @@ QStringList QQmlImports::completeQmldirPaths(const QString &uri, const QStringLi
     qmlDirPathsPaths.reserve(basePaths.count() * (2 * parts.count() + 1));
 
     for (int versionMode = FullyVersioned; versionMode <= Unversioned; ++versionMode) {
+        switch (versionMode) {
+        case FullyVersioned:
+            if (!version.hasMinorVersion())
+                continue;
+            break;
+        case PartiallyVersioned:
+            if (!version.hasMajorVersion())
+                continue;
+            break;
+        default:
+            break;
+        }
+
         const QString ver = versionString(version, QQmlImports::ImportVersion(versionMode));
 
         for (const QString &path : basePaths) {
@@ -711,15 +724,13 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
                                      QQmlImport::RecursionRestriction recursionRestriction,
                                      QList<QQmlError> *errors) const
 {
-    if (version.hasMajorVersion() && version.hasMinorVersion()) {
-        QQmlType t = QQmlMetaType::qmlType(type, uri, version);
-        if (t.isValid()) {
-            if (version_return)
-                *version_return = version;
-            if (type_return)
-                *type_return = t;
-            return true;
-        }
+    QQmlType t = QQmlMetaType::qmlType(type, uri, version);
+    if (t.isValid()) {
+        if (version_return)
+            *version_return = version;
+        if (type_return)
+            *type_return = t;
+        return true;
     }
 
     const QString typeStr = type.toString();
@@ -1350,9 +1361,6 @@ QQmlImports::LocalQmldirResult QQmlImportsPrivate::locateLocalQmldir(
         const QString &uri, QTypeRevision version, QQmlImportDatabase *database,
         QString *outQmldirFilePath, QString *outQmldirPathUrl)
 {
-    // Versions are always specified for libraries
-    Q_ASSERT(version.hasMajorVersion() && version.hasMinorVersion());
-
     // Check cache first
 
     QQmlImportDatabase::QmldirCache *cacheHead = nullptr;
@@ -1565,15 +1573,19 @@ bool QQmlImportsPrivate::addLibraryImport(
         }
 
         // Ensure that we are actually providing something
-        if (!version.hasMajorVersion() || !version.hasMinorVersion()
-                || !QQmlMetaType::isModule(uri, version)) {
+        if (!QQmlMetaType::isModule(uri, version)) {
             if (inserted->qmlDirComponents.isEmpty() && inserted->qmlDirScripts.isEmpty()) {
                 QQmlError error;
                 if (QQmlMetaType::isAnyModule(uri)) {
-                    error.setDescription(QQmlImportDatabase::tr("module \"%1\" version %2.%3 is not installed")
-                                         .arg(uri).arg(version.majorVersion()).arg(version.minorVersion()));
+                    error.setDescription(QQmlImportDatabase::tr(
+                                             "module \"%1\" version %2.%3 is not installed")
+                                         .arg(uri).arg(version.majorVersion())
+                                         .arg(version.hasMinorVersion()
+                                              ? QString::number(version.minorVersion())
+                                              : QLatin1String("x")));
                 } else {
-                    error.setDescription(QQmlImportDatabase::tr("module \"%1\" is not installed").arg(uri));
+                    error.setDescription(QQmlImportDatabase::tr("module \"%1\" is not installed")
+                                         .arg(uri));
                 }
                 errors->prepend(error);
                 return false;

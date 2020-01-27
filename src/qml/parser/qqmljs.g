@@ -861,7 +861,7 @@ UiVersionSpecifier: T_VERSION_NUMBER;
                     QLatin1String("Invalid major version. Version numbers must be >= 0 and < 255.")));
             return false;
         }
-        auto version = new (pool) AST::UiVersionSpecifier(sym(1).dval, 0);
+        auto version = new (pool) AST::UiVersionSpecifier(sym(1).dval);
         version->majorToken = loc(1);
         sym(1).UiVersionSpecifier = version;
     } break;

@@ -647,6 +647,11 @@ class QML_PARSER_EXPORT UiVersionSpecifier : public Node
 public:
     QQMLJS_DECLARE_AST_NODE(UiVersionSpecifier)
 
+    UiVersionSpecifier(int majorum) : version(QTypeRevision::fromMajorVersion(majorum))
+    {
+        kind = K;
+    }
+
     UiVersionSpecifier(int majorum, int minorum) : version(QTypeRevision::fromVersion(majorum, minorum))
     {
         kind = K;

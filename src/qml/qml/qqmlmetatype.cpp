@@ -889,14 +889,18 @@ bool QQmlMetaType::isLockedModule(const QString &uri, QTypeRevision version)
 */
 bool QQmlMetaType::isModule(const QString &module, QTypeRevision version)
 {
-    Q_ASSERT(version.hasMajorVersion() && version.hasMinorVersion());
+    if (!version.hasMajorVersion())
+        return isAnyModule(module);
+
     QQmlMetaTypeDataPtr data;
 
     // first, check Types
-    QQmlTypeModule *tm =
-        data->uriToModule.value(QQmlMetaTypeData::VersionedUri(module, version));
-    if (tm && tm->minimumMinorVersion() <= version.minorVersion() && tm->maximumMinorVersion() >= version.minorVersion())
-        return true;
+    if (QQmlTypeModule *tm
+            = data->uriToModule.value(QQmlMetaTypeData::VersionedUri(module, version))) {
+        return !version.hasMinorVersion()
+                || (tm->minimumMinorVersion() <= version.minorVersion()
+                    && tm->maximumMinorVersion() >= version.minorVersion());
+    }
 
     return false;
 }
@@ -1141,7 +1145,6 @@ QQmlType QQmlMetaType::qmlType(const QString &qualifiedName, QTypeRevision versi
 QQmlType QQmlMetaType::qmlType(const QHashedStringRef &name, const QHashedStringRef &module,
                                QTypeRevision version)
 {
-    Q_ASSERT(version.hasMajorVersion() && version.hasMinorVersion());
     const QQmlMetaTypeDataPtr data;
 
     QQmlMetaTypeData::Names::ConstIterator it = data->nameToType.constFind(name);
@@ -1173,7 +1176,6 @@ QQmlType QQmlMetaType::qmlType(const QMetaObject *metaObject)
 QQmlType QQmlMetaType::qmlType(const QMetaObject *metaObject, const QHashedStringRef &module,
                                QTypeRevision version)
 {
-    Q_ASSERT(version.hasMajorVersion() && version.hasMinorVersion());
     const QQmlMetaTypeDataPtr data;
 
     QQmlMetaTypeData::MetaObjects::const_iterator it = data->metaObjectToType.constFind(metaObject);

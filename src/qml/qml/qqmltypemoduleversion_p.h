@@ -52,6 +52,8 @@
 //
 
 #include <QtQml/qtqmlglobal.h>
+#include <QtQml/private/qqmltype_p.h>
+#include <QtQml/private/qqmltypemodule_p.h>
 #include <QtCore/qversionnumber.h>
 
 QT_BEGIN_NAMESPACE
@@ -72,8 +74,15 @@ public:
     QQmlTypeModuleVersion(const QQmlTypeModuleVersion &);
     QQmlTypeModuleVersion &operator=(const QQmlTypeModuleVersion &);
 
-    QQmlType type(const QHashedStringRef &) const;
-    QQmlType type(const QV4::String *) const;
+    template<typename String>
+    QQmlType type(String name) const
+    {
+        if (!m_module)
+            return QQmlType();
+        return m_module->type(name, QTypeRevision::isValidSegment(m_minor)
+                              ? QTypeRevision::fromMinorVersion(m_minor)
+                              : QTypeRevision());
+    }
 
 private:
     QQmlTypeModule *m_module;

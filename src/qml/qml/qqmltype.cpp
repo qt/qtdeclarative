@@ -141,20 +141,24 @@ QTypeRevision QQmlType::version() const
 
 bool QQmlType::availableInVersion(QTypeRevision version) const
 {
-    Q_ASSERT(version.hasMajorVersion() && version.hasMinorVersion());
     if (!d)
         return false;
-    return version.majorVersion() == d->version.majorVersion()
-            && version.minorVersion() >= d->version.minorVersion();
+
+    if (!version.hasMajorVersion())
+        return true;
+
+    if (version.majorVersion() != d->version.majorVersion())
+        return false;
+
+    return !version.hasMinorVersion() || version.minorVersion() >= d->version.minorVersion();
 }
 
 bool QQmlType::availableInVersion(const QHashedStringRef &module, QTypeRevision version) const
 {
-    Q_ASSERT(version.hasMajorVersion() && version.hasMinorVersion());
-    if (!d)
+    if (!d || module != d->module)
         return false;
-    return module == d->module && version.majorVersion() == d->version.majorVersion()
-            && version.minorVersion() >= d->version.minorVersion();
+
+    return availableInVersion(version);
 }
 
 QQmlType QQmlTypePrivate::resolveCompositeBaseType(QQmlEnginePrivate *engine) const

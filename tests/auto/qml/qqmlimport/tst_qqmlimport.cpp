@@ -48,6 +48,8 @@ private slots:
     void interceptQmldir();
     void singletonVersionResolution();
     void removeDynamicPlugin();
+    void partialImportVersions_data();
+    void partialImportVersions();
     void cleanup();
 };
 
@@ -162,37 +164,57 @@ void tst_QQmlImport::completeQmldirPaths_data()
 {
     QTest::addColumn<QString>("uri");
     QTest::addColumn<QStringList>("basePaths");
-    QTest::addColumn<int>("majorVersion");
-    QTest::addColumn<int>("minorVersion");
+    QTest::addColumn<QTypeRevision>("version");
     QTest::addColumn<QStringList>("expectedPaths");
 
-    QTest::newRow("QtQml") << "QtQml" << (QStringList() << "qtbase/qml/" << "path/to/qml") << 2 << 7
+    QTest::newRow("QtQml") << "QtQml" << (QStringList() << "qtbase/qml/" << "path/to/qml")
+                           << QTypeRevision::fromVersion(2, 7)
                            << (QStringList() << "qtbase/qml/QtQml.2.7/qmldir" << "path/to/qml/QtQml.2.7/qmldir"
                                              << "qtbase/qml/QtQml.2/qmldir" << "path/to/qml/QtQml.2/qmldir"
                                              << "qtbase/qml/QtQml/qmldir" << "path/to/qml/QtQml/qmldir");
 
-    QTest::newRow("QtQml.Models") << "QtQml.Models" << QStringList("qtbase/qml/") << 2 << 2
+    QTest::newRow("QtQml.Models") << "QtQml.Models" << QStringList("qtbase/qml/")
+                                  << QTypeRevision::fromVersion(2, 2)
                                   << (QStringList() << "qtbase/qml/QtQml/Models.2.2/qmldir" << "qtbase/qml/QtQml.2.2/Models/qmldir"
                                                     << "qtbase/qml/QtQml/Models.2/qmldir" << "qtbase/qml/QtQml.2/Models/qmldir"
                                                     << "qtbase/qml/QtQml/Models/qmldir");
 
-    QTest::newRow("org.qt-project.foo.bar") << "org.qt-project.foo.bar" << QStringList("qtbase/qml/") << 0 << 1
-                                            << (QStringList() << "qtbase/qml/org/qt-project/foo/bar.0.1/qmldir" << "qtbase/qml/org/qt-project/foo.0.1/bar/qmldir" << "qtbase/qml/org/qt-project.0.1/foo/bar/qmldir" << "qtbase/qml/org.0.1/qt-project/foo/bar/qmldir"
-                                                              << "qtbase/qml/org/qt-project/foo/bar.0/qmldir" << "qtbase/qml/org/qt-project/foo.0/bar/qmldir" << "qtbase/qml/org/qt-project.0/foo/bar/qmldir" << "qtbase/qml/org.0/qt-project/foo/bar/qmldir"
-                                                              << "qtbase/qml/org/qt-project/foo/bar/qmldir");
+    QTest::newRow("org.qt-project.foo.bar 0.1") << "org.qt-project.foo.bar" << QStringList("qtbase/qml/")
+                                                << QTypeRevision::fromVersion(0, 1)
+                                                << (QStringList()
+                                                    << "qtbase/qml/org/qt-project/foo/bar.0.1/qmldir"
+                                                    << "qtbase/qml/org/qt-project/foo.0.1/bar/qmldir"
+                                                    << "qtbase/qml/org/qt-project.0.1/foo/bar/qmldir"
+                                                    << "qtbase/qml/org.0.1/qt-project/foo/bar/qmldir"
+                                                    << "qtbase/qml/org/qt-project/foo/bar.0/qmldir"
+                                                    << "qtbase/qml/org/qt-project/foo.0/bar/qmldir"
+                                                    << "qtbase/qml/org/qt-project.0/foo/bar/qmldir"
+                                                    << "qtbase/qml/org.0/qt-project/foo/bar/qmldir"
+                                                    << "qtbase/qml/org/qt-project/foo/bar/qmldir");
+
+    QTest::newRow("org.qt-project.foo.bar 4") << "org.qt-project.foo.bar" << QStringList("qtbase/qml/")
+                                              << QTypeRevision::fromMajorVersion(4)
+                                              << (QStringList()
+                                                  << "qtbase/qml/org/qt-project/foo/bar.4/qmldir"
+                                                  << "qtbase/qml/org/qt-project/foo.4/bar/qmldir"
+                                                  << "qtbase/qml/org/qt-project.4/foo/bar/qmldir"
+                                                  << "qtbase/qml/org.4/qt-project/foo/bar/qmldir"
+                                                  << "qtbase/qml/org/qt-project/foo/bar/qmldir");
+
+    QTest::newRow("org.qt-project.foo.bar") << "org.qt-project.foo.bar" << QStringList("qtbase/qml/")
+                                            << QTypeRevision()
+                                            << (QStringList()
+                                                << "qtbase/qml/org/qt-project/foo/bar/qmldir");
 }
 
 void tst_QQmlImport::completeQmldirPaths()
 {
     QFETCH(QString, uri);
     QFETCH(QStringList, basePaths);
-    QFETCH(int, majorVersion);
-    QFETCH(int, minorVersion);
+    QFETCH(QTypeRevision, version);
     QFETCH(QStringList, expectedPaths);
 
-    QCOMPARE(QQmlImports::completeQmldirPaths(
-                 uri, basePaths, QTypeRevision::fromVersion(majorVersion, minorVersion)),
-             expectedPaths);
+    QCOMPARE(QQmlImports::completeQmldirPaths(uri, basePaths, version), expectedPaths);
 }
 
 class QmldirUrlInterceptor : public QQmlAbstractUrlInterceptor {
@@ -281,6 +303,38 @@ void tst_QQmlImport::removeDynamicPlugin()
         QVERIFY(imports->removeDynamicPlugin(plugin));
     QVERIFY(imports->dynamicPlugins().isEmpty());
     qmlClearTypeRegistrations();
+}
+
+void tst_QQmlImport::partialImportVersions_data()
+{
+    QTest::addColumn<QString>("version");
+    QTest::addColumn<bool>("valid");
+
+    QTest::addRow("empty") << "" << true;
+    QTest::addRow("2") << "2" << true;
+    QTest::addRow("6") << "6" << true;
+    QTest::addRow("2.0") << "2.0" << false;
+    QTest::addRow("2.3") << "2.3" << true;
+    QTest::addRow("2.15") << "2.15" << true;
+    QTest::addRow("6.0") << "6.0" << true;
+}
+
+void tst_QQmlImport::partialImportVersions()
+{
+    QFETCH(QString, version);
+    QFETCH(bool, valid);
+
+    QQmlEngine engine;
+
+    QQmlComponent component(&engine);
+
+    component.setData("import QtQml " + version.toUtf8() + "; Connections { enabled: false }",
+                      QUrl());
+    QCOMPARE(component.isReady(), valid);
+    if (valid) {
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+    }
 }
 
 

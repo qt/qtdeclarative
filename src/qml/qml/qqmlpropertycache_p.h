@@ -354,9 +354,23 @@ QQmlPropertyCache::overrideData(QQmlPropertyData *data) const
 
 bool QQmlPropertyCache::isAllowedInRevision(QQmlPropertyData *data) const
 {
-    return (data->metaObjectOffset() == -1 && data->revision() == QTypeRevision::zero())
-            || (allowedRevisionCache[data->metaObjectOffset()].toEncodedVersion<quint16>()
-                >= data->revision().toEncodedVersion<quint16>());
+    const QTypeRevision requested = data->revision();
+    const int offset = data->metaObjectOffset();
+    if (offset == -1 && requested == QTypeRevision::zero())
+        return true;
+
+    Q_ASSERT(offset >= 0);
+    Q_ASSERT(offset < allowedRevisionCache.length());
+    const QTypeRevision allowed = allowedRevisionCache[data->metaObjectOffset()];
+
+    if (requested.hasMajorVersion()) {
+        if (requested.majorVersion() > allowed.majorVersion())
+            return false;
+        if (requested.majorVersion() < allowed.majorVersion())
+            return true;
+    }
+
+    return !requested.hasMinorVersion() || requested.minorVersion() <= allowed.minorVersion();
 }
 
 int QQmlPropertyCache::propertyCount() const
