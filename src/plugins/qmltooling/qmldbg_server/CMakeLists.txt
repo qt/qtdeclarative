@@ -1,12 +1,12 @@
 # Generated from qmldbg_server.pro.
 
 #####################################################################
-## qmldbg_server Plugin:
+## QQmlDebugServerFactory Plugin:
 #####################################################################
 
-qt_add_plugin(qmldbg_server
+qt_add_plugin(QQmlDebugServerFactory
+    OUTPUT_NAME qmldbg_server
     TYPE qmltooling
-    CLASS_NAME QQmlDebugServerFactory
     SOURCES
         qqmldebugserver.cpp
         qqmldebugserverfactory.h

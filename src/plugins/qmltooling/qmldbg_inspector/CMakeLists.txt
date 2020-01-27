@@ -1,12 +1,12 @@
 # Generated from qmldbg_inspector.pro.
 
 #####################################################################
-## qmldbg_inspector Plugin:
+## QQmlInspectorServiceFactory Plugin:
 #####################################################################
 
-qt_add_plugin(qmldbg_inspector
+qt_add_plugin(QQmlInspectorServiceFactory
+    OUTPUT_NAME qmldbg_inspector
     TYPE qmltooling
-    CLASS_NAME QQmlInspectorServiceFactory
     SOURCES
         globalinspector.cpp globalinspector.h
         highlight.cpp highlight.h

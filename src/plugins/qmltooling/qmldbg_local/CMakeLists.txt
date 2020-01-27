@@ -1,12 +1,12 @@
 # Generated from qmldbg_local.pro.
 
 #####################################################################
-## qmldbg_local Plugin:
+## QLocalClientConnectionFactory Plugin:
 #####################################################################
 
-qt_add_plugin(qmldbg_local
+qt_add_plugin(QLocalClientConnectionFactory
+    OUTPUT_NAME qmldbg_local
     TYPE qmltooling
-    CLASS_NAME QLocalClientConnectionFactory
     SOURCES
         qlocalclientconnection.cpp
         qlocalclientconnectionfactory.h

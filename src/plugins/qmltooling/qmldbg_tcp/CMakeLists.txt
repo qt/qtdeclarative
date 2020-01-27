@@ -1,12 +1,12 @@
 # Generated from qmldbg_tcp.pro.
 
 #####################################################################
-## qmldbg_tcp Plugin:
+## QTcpServerConnectionFactory Plugin:
 #####################################################################
 
-qt_add_plugin(qmldbg_tcp
+qt_add_plugin(QTcpServerConnectionFactory
+    OUTPUT_NAME qmldbg_tcp
     TYPE qmltooling
-    CLASS_NAME QTcpServerConnectionFactory
     SOURCES
         qtcpserverconnection.cpp
         qtcpserverconnectionfactory.h

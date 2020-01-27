@@ -1,12 +1,12 @@
 # Generated from qmldbg_preview.pro.
 
 #####################################################################
-## qmldbg_preview Plugin:
+## QQmlPreviewServiceFactory Plugin:
 #####################################################################
 
-qt_add_plugin(qmldbg_preview
+qt_add_plugin(QQmlPreviewServiceFactory
+    OUTPUT_NAME qmldbg_preview
     TYPE qmltooling
-    CLASS_NAME QQmlPreviewServiceFactory
     SOURCES
         qqmlpreviewblacklist.cpp qqmlpreviewblacklist.h
         qqmlpreviewfileengine.cpp qqmlpreviewfileengine.h

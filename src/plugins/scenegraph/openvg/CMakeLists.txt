@@ -1,12 +1,12 @@
 # Generated from openvg.pro.
 
 #####################################################################
-## qsgopenvgbackend Plugin:
+## QSGOpenVGAdaptation Plugin:
 #####################################################################
 
-qt_add_plugin(qsgopenvgbackend
+qt_add_plugin(QSGOpenVGAdaptation
+    OUTPUT_NAME qsgopenvgbackend
     TYPE scenegraph
-    CLASS_NAME QSGOpenVGAdaptation
     SOURCES
         qopenvgcontext.cpp qopenvgcontext_p.h
         qopenvgmatrix.cpp qopenvgmatrix.h
@@ -47,22 +47,22 @@ qt_add_plugin(qsgopenvgbackend
 ## Scopes:
 #####################################################################
 
-qt_extend_target(qsgopenvgbackend CONDITION CMAKE_BUILD_TYPE STREQUAL Debug AND debug_and_release
+qt_extend_target(QSGOpenVGAdaptation CONDITION CMAKE_BUILD_TYPE STREQUAL Debug AND debug_and_release
     INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_BINARY_DIR}/../../../quick/.tracegen/debug
 )
 
-qt_extend_target(qsgopenvgbackend CONDITION debug_and_release AND NOT CMAKE_BUILD_TYPE STREQUAL Debug
+qt_extend_target(QSGOpenVGAdaptation CONDITION debug_and_release AND NOT CMAKE_BUILD_TYPE STREQUAL Debug
     INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_BINARY_DIR}/../../../quick/.tracegen/release
 )
 
-qt_extend_target(qsgopenvgbackend CONDITION NOT debug_and_release
+qt_extend_target(QSGOpenVGAdaptation CONDITION NOT debug_and_release
     INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_BINARY_DIR}/../../../quick/.tracegen
 )
 
-qt_extend_target(qsgopenvgbackend CONDITION QT_FEATURE_quick_sprite
+qt_extend_target(QSGOpenVGAdaptation CONDITION QT_FEATURE_quick_sprite
     SOURCES
         qsgopenvgspritenode.cpp qsgopenvgspritenode.h
 )

@@ -1,12 +1,12 @@
 # Generated from qmldbg_debugger.pro.
 
 #####################################################################
-## qmldbg_debugger Plugin:
+## QQmlDebuggerServiceFactory Plugin:
 #####################################################################
 
-qt_add_plugin(qmldbg_debugger
+qt_add_plugin(QQmlDebuggerServiceFactory
+    OUTPUT_NAME qmldbg_debugger
     TYPE qmltooling
-    CLASS_NAME QQmlDebuggerServiceFactory
     SOURCES
         qqmldebuggerservicefactory.cpp qqmldebuggerservicefactory.h
         qqmlenginedebugservice.cpp qqmlenginedebugservice.h

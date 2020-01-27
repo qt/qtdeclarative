@@ -1,12 +1,12 @@
 # Generated from qmldbg_native.pro.
 
 #####################################################################
-## qmldbg_native Plugin:
+## QQmlNativeDebugConnectorFactory Plugin:
 #####################################################################
 
-qt_add_plugin(qmldbg_native
+qt_add_plugin(QQmlNativeDebugConnectorFactory
+    OUTPUT_NAME qmldbg_native
     TYPE qmltooling
-    CLASS_NAME QQmlNativeDebugConnectorFactory
     SOURCES
         qqmlnativedebugconnector.cpp qqmlnativedebugconnector.h
     LIBRARIES

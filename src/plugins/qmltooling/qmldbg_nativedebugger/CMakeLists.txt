@@ -1,12 +1,12 @@
 # Generated from qmldbg_nativedebugger.pro.
 
 #####################################################################
-## qmldbg_nativedebugger Plugin:
+## QQmlNativeDebugServiceFactory Plugin:
 #####################################################################
 
-qt_add_plugin(qmldbg_nativedebugger
+qt_add_plugin(QQmlNativeDebugServiceFactory
+    OUTPUT_NAME qmldbg_nativedebugger
     TYPE qmltooling
-    CLASS_NAME QQmlNativeDebugServiceFactory
     SOURCES
         qqmlnativedebugservice.cpp qqmlnativedebugservice.h
         qqmlnativedebugservicefactory.cpp qqmlnativedebugservicefactory.h

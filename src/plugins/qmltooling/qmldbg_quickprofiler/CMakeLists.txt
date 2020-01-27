@@ -1,12 +1,12 @@
 # Generated from qmldbg_quickprofiler.pro.
 
 #####################################################################
-## qmldbg_quickprofiler Plugin:
+## QQuickProfilerAdapterFactory Plugin:
 #####################################################################
 
-qt_add_plugin(qmldbg_quickprofiler
+qt_add_plugin(QQuickProfilerAdapterFactory
+    OUTPUT_NAME qmldbg_quickprofiler
     TYPE qmltooling
-    CLASS_NAME QQuickProfilerAdapterFactory
     SOURCES
         qquickprofileradapter.cpp qquickprofileradapter.h
         qquickprofileradapterfactory.cpp qquickprofileradapterfactory.h

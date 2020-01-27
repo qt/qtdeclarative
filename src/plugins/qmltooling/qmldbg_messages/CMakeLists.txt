@@ -1,12 +1,12 @@
 # Generated from qmldbg_messages.pro.
 
 #####################################################################
-## qmldbg_messages Plugin:
+## QDebugMessageServiceFactory Plugin:
 #####################################################################
 
-qt_add_plugin(qmldbg_messages
+qt_add_plugin(QDebugMessageServiceFactory
+    OUTPUT_NAME qmldbg_messages
     TYPE qmltooling
-    CLASS_NAME QDebugMessageServiceFactory
     SOURCES
         qdebugmessageservice.cpp qdebugmessageservice.h
         qdebugmessageservicefactory.cpp qdebugmessageservicefactory.h

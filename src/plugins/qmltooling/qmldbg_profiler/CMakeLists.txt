@@ -1,12 +1,12 @@
 # Generated from qmldbg_profiler.pro.
 
 #####################################################################
-## qmldbg_profiler Plugin:
+## QQmlProfilerServiceFactory Plugin:
 #####################################################################
 
-qt_add_plugin(qmldbg_profiler
+qt_add_plugin(QQmlProfilerServiceFactory
+    OUTPUT_NAME qmldbg_profiler
     TYPE qmltooling
-    CLASS_NAME QQmlProfilerServiceFactory
     SOURCES
         qqmlenginecontrolservice.cpp qqmlenginecontrolservice.h
         qqmlprofileradapter.cpp qqmlprofileradapter.h
