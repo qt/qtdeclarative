@@ -2267,9 +2267,10 @@ void QV4::Heap::QQmlDelegateModelItemObject::destroy()
 }
 
 
-QQmlDelegateModelItem::QQmlDelegateModelItem(QQmlDelegateModelItemMetaType *metaType,
-                                             QQmlAdaptorModel::Accessors *accessor,
-                                             int modelIndex, int row, int column)
+QQmlDelegateModelItem::QQmlDelegateModelItem(
+        const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
+        QQmlAdaptorModel::Accessors *accessor,
+        int modelIndex, int row, int column)
     : v4(metaType->v4Engine)
     , metaType(metaType)
     , contextData(nullptr)
@@ -2285,8 +2286,6 @@ QQmlDelegateModelItem::QQmlDelegateModelItem(QQmlDelegateModelItemMetaType *meta
     , row(row)
     , column(column)
 {
-    metaType->addref();
-
     if (accessor->propertyCache) {
         // The property cache in the accessor is common for all the model
         // items in the model it wraps. It describes available model roles,
@@ -2315,9 +2314,6 @@ QQmlDelegateModelItem::~QQmlDelegateModelItem()
         else
             delete incubationTask;
     }
-
-    metaType->release();
-
 }
 
 void QQmlDelegateModelItem::Dispose()

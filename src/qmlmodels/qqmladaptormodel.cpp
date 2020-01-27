@@ -93,7 +93,7 @@ class QQmlDMCachedModelData : public QQmlDelegateModelItem
 {
 public:
     QQmlDMCachedModelData(
-            QQmlDelegateModelItemMetaType *metaType,
+            const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
             VDMModelDelegateDataType *dataType,
             int index, int row, int column);
 
@@ -255,7 +255,9 @@ public:
     bool hasModelData;
 };
 
-QQmlDMCachedModelData::QQmlDMCachedModelData(QQmlDelegateModelItemMetaType *metaType, VDMModelDelegateDataType *dataType, int index, int row, int column)
+QQmlDMCachedModelData::QQmlDMCachedModelData(
+        const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
+        VDMModelDelegateDataType *dataType, int index, int row, int column)
     : QQmlDelegateModelItem(metaType, dataType, index, row, column)
     , type(dataType)
 {
@@ -390,7 +392,7 @@ class QQmlDMAbstractItemModelData : public QQmlDMCachedModelData
 
 public:
     QQmlDMAbstractItemModelData(
-            QQmlDelegateModelItemMetaType *metaType,
+            const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
             VDMModelDelegateDataType *dataType,
             int index, int row, int column)
         : QQmlDMCachedModelData(metaType, dataType, index, row, column)
@@ -512,7 +514,7 @@ public:
 
     QQmlDelegateModelItem *createItem(
             QQmlAdaptorModel &model,
-            QQmlDelegateModelItemMetaType *metaType,
+            const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
             int index, int row, int column) const override
     {
         VDMAbstractItemModelDataType *dataType = const_cast<VDMAbstractItemModelDataType *>(this);
@@ -560,7 +562,7 @@ class QQmlDMListAccessorData : public QQmlDelegateModelItem
     Q_OBJECT
     Q_PROPERTY(QVariant modelData READ modelData WRITE setModelData NOTIFY modelDataChanged)
 public:
-    QQmlDMListAccessorData(QQmlDelegateModelItemMetaType *metaType,
+    QQmlDMListAccessorData(const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
                            QQmlAdaptorModel::Accessors *accessor,
                            int index, int row, int column, const QVariant &value)
         : QQmlDelegateModelItem(metaType, accessor, index, row, column)
@@ -676,7 +678,7 @@ public:
 
     QQmlDelegateModelItem *createItem(
             QQmlAdaptorModel &model,
-            QQmlDelegateModelItemMetaType *metaType,
+            const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
             int index, int row, int column) const override
     {
         VDMListDelegateDataType *dataType = const_cast<VDMListDelegateDataType *>(this);
@@ -719,7 +721,7 @@ class QQmlDMObjectData : public QQmlDelegateModelItem, public QQmlAdaptorModelPr
     Q_INTERFACES(QQmlAdaptorModelProxyInterface)
 public:
     QQmlDMObjectData(
-            QQmlDelegateModelItemMetaType *metaType,
+            const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
             VDMObjectDelegateDataType *dataType,
             int index, int row, int column,
             QObject *object);
@@ -790,7 +792,7 @@ public:
 
     QQmlDelegateModelItem *createItem(
             QQmlAdaptorModel &model,
-            QQmlDelegateModelItemMetaType *metaType,
+            const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
             int index, int row, int column) const override
     {
         VDMObjectDelegateDataType *dataType = const_cast<VDMObjectDelegateDataType *>(this);
@@ -930,7 +932,7 @@ public:
     VDMObjectDelegateDataType *m_type;
 };
 
-QQmlDMObjectData::QQmlDMObjectData(QQmlDelegateModelItemMetaType *metaType,
+QQmlDMObjectData::QQmlDMObjectData(const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
         VDMObjectDelegateDataType *dataType,
         int index, int row, int column,
         QObject *object)

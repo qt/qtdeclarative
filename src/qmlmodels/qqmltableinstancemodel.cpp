@@ -78,7 +78,8 @@ void QQmlTableInstanceModel::deleteModelItemLater(QQmlDelegateModelItem *modelIt
 QQmlTableInstanceModel::QQmlTableInstanceModel(QQmlContext *qmlContext, QObject *parent)
     : QQmlInstanceModel(*(new QObjectPrivate()), parent)
     , m_qmlContext(qmlContext)
-    , m_metaType(new QQmlDelegateModelItemMetaType(m_qmlContext->engine()->handle(), nullptr, QStringList()))
+    , m_metaType(new QQmlDelegateModelItemMetaType(m_qmlContext->engine()->handle(), nullptr, QStringList()),
+                 QQmlRefPointer<QQmlDelegateModelItemMetaType>::Adopt)
 {
 }
 
