@@ -157,7 +157,12 @@ public:
     // Scene graph specific functions
     QSGTexture *createTextureFromImage(const QImage &image) const;
     QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options) const;
+
+#if QT_DEPRECATED_SINCE(5, 15)
+    QT_DEPRECATED_X("Use createTextureFromNativeObject() instead")
     QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption()) const;
+#endif
+
     QSGTexture *createTextureFromNativeObject(NativeObjectType type,
                                               const void *nativeObjectPtr,
                                               int nativeLayout,

@@ -4513,7 +4513,7 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
 }
 
 
-
+#if QT_DEPRECATED_SINCE(5, 15)
 /*!
     Creates a new QSGTexture object from an existing OpenGL texture \a id and \a size.
 
@@ -4534,6 +4534,8 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
 
     \note This function has no effect when running on the RHI graphics
     abstraction. Use createTextureFromNativeObject() instead.
+
+    \obsolete
 
     \sa sceneGraphInitialized(), QSGTexture
  */
@@ -4561,6 +4563,7 @@ QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, Create
 #endif
     return nullptr;
 }
+#endif
 
 /*!
     \enum QQuickWindow::NativeObjectType
