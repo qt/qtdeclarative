@@ -834,7 +834,15 @@ UiImport: UiImportHead Semicolon;
 UiVersionSpecifier: T_VERSION_NUMBER T_DOT T_VERSION_NUMBER;
 /.
     case $rule_number: {
-        auto version = new (pool) AST::UiVersionSpecifier(sym(1).dval, sym(3).dval);
+        const int major = sym(1).dval;
+        const int minor = sym(3).dval;
+        if (!QTypeRevision::isValidSegment(major) || !QTypeRevision::isValidSegment(minor)) {
+            diagnostic_messages.append(
+                    compileError(loc(1),
+                    QLatin1String("Invalid version. Version numbers must be >= 0 and < 255.")));
+            return false;
+        }
+        auto version = new (pool) AST::UiVersionSpecifier(major, minor);
         version->majorToken = loc(1);
         version->minorToken = loc(3);
         sym(1).UiVersionSpecifier = version;
@@ -845,6 +853,13 @@ UiVersionSpecifier: T_VERSION_NUMBER T_DOT T_VERSION_NUMBER;
 UiVersionSpecifier: T_VERSION_NUMBER;
 /.
     case $rule_number: {
+        const int major = sym(1).dval;
+        if (!QTypeRevision::isValidSegment(major)) {
+            diagnostic_messages.append(
+                    compileError(loc(1),
+                    QLatin1String("Invalid major version. Version numbers must be >= 0 and < 255.")));
+            return false;
+        }
         auto version = new (pool) AST::UiVersionSpecifier(sym(1).dval, 0);
         version->majorToken = loc(1);
         sym(1).UiVersionSpecifier = version;

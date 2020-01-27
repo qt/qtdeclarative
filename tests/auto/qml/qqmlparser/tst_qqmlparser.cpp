@@ -37,6 +37,7 @@
 #include <qtest.h>
 #include <QDir>
 #include <QDebug>
+#include <QRegularExpression>
 #include <cstdlib>
 
 class tst_qqmlparser : public QQmlDataTest
@@ -67,6 +68,8 @@ private slots:
     void typeAssertion();
     void annotations_data();
     void annotations();
+    void invalidImportVersion_data();
+    void invalidImportVersion();
 
 private:
     QStringList excludedDirs;
@@ -582,6 +585,47 @@ void tst_qqmlparser::annotations()
 
         // to do: compare for equality skipping annotations
     }
+}
+
+void tst_qqmlparser::invalidImportVersion_data()
+{
+    QTest::addColumn<QString>("expression");
+
+    const QStringList segments = {
+        "0", "255", "500", "3030303030303030303030303"
+    };
+
+    for (const QString &major : segments) {
+        if (major != "0") {
+            QTest::addRow("%s", qPrintable(major))
+                    << QString::fromLatin1("import Foo %1").arg(major);
+        }
+
+        for (const QString &minor : segments) {
+            if (major == "0" && minor == "0")
+                continue;
+
+            QTest::addRow("%s.%s", qPrintable(major), qPrintable(minor))
+                    << QString::fromLatin1("import Foo %1.%2").arg(major).arg(minor);
+        }
+    }
+
+
+}
+
+void tst_qqmlparser::invalidImportVersion()
+{
+    QFETCH(QString, expression);
+
+    QQmlJS::Engine engine;
+    QQmlJS::Lexer lexer(&engine);
+    lexer.setCode(expression, 1);
+    QQmlJS::Parser parser(&engine);
+    QVERIFY(!parser.parse());
+
+    QRegularExpression regexp(
+                "^Invalid (major )?version. Version numbers must be >= 0 and < 255\\.$");
+    QVERIFY(regexp.match(parser.errorMessage()).hasMatch());
 }
 
 QTEST_MAIN(tst_qqmlparser)
