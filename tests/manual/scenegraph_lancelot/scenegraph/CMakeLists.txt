@@ -24,14 +24,11 @@ qt_add_test(tst_scenegraph
     TESTDATA ${test_data}
 )
 
-#### Keys ignored in scope 1:.:.:scenegraph.pro:<TRUE>:
-# TEST_HELPER_INSTALLS = ".././qmlscenegrabber"
-
 ## Scopes:
 #####################################################################
 
-#### Keys ignored in scope 4:.:../../../../../qtbase/tests/baselineserver/shared:../../../../../qtbase/tests/baselineserver/shared/qbaselinetest.pri:WIN32:
-# MKSPEC = "$$replace(QMAKESPEC, \\\\, /)"
+#### Keys ignored in scope 3:.:.:scenegraph.pro:WIN32:
+# TEST_HELPER_INSTALLS = ".././qmlscenegrabber.exe"
 
-#### Keys ignored in scope 5:.:../../../../../qtbase/tests/baselineserver/shared:../../../../../qtbase/tests/baselineserver/shared/qbaselinetest.pri:else:
-# MKSPEC = "$$QMAKESPEC"
+#### Keys ignored in scope 6:.:.:scenegraph.pro:else:
+# TEST_HELPER_INSTALLS = ".././qmlscenegrabber"

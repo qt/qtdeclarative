@@ -37,6 +37,9 @@ qt_add_test(tst_qquicktableview
     TESTDATA ${test_data}
 )
 
+#### Keys ignored in scope 1:.:.:qquicktableview.pro:<TRUE>:
+# DISTFILES = <EMPTY>
+
 ## Scopes:
 #####################################################################
 
