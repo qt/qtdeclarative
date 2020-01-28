@@ -54,8 +54,6 @@ import QtQuick.Controls 2.12
 ScrollablePage {
     id: page
 
-    property string control : "delaybutton"
-
     Column {
         spacing: 40
         width: parent.width

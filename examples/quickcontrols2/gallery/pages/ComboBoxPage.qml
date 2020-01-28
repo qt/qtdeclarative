@@ -54,8 +54,6 @@ import QtQuick.Controls 2.12
 ScrollablePage {
     id: page
 
-    readonly property string control : "combobox"
-
     Column {
         spacing: 40
         width: parent.width
