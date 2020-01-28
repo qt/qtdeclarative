@@ -73,6 +73,9 @@ set_source_files_properties("content/item15.qml"
 set_source_files_properties("content/item17.qml"
     PROPERTIES QT_RESOURCE_ALIAS "item17.qml"
 )
+set_source_files_properties("content/item18.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "item18.qml"
+)
 set_source_files_properties("content/item2.qml"
     PROPERTIES QT_RESOURCE_ALIAS "item2.qml"
 )
@@ -128,6 +131,7 @@ set(shapes_resource_files
     "content/item14.qml"
     "content/item15.qml"
     "content/item17.qml"
+    "content/item18.qml"
     "content/item2.qml"
     "content/item3.qml"
     "content/item4.qml"

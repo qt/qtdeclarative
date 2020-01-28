@@ -5,7 +5,6 @@
 #####################################################################
 
 qt_add_qml_module(windowplugin
-    TARGET_PATH "QtQuick/Window.2"
     URI "QtQuick.Window"
     VERSION "2.15"
     DESIGNER_SUPPORTED
@@ -27,4 +26,4 @@ qt_add_qml_module(windowplugin
 #### Keys ignored in scope 1:.:.:window.pro:<TRUE>:
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "2.15"
-# TARGETPATH = "QtQuick/Window.2"
+# TARGETPATH = "QtQuick/Window"

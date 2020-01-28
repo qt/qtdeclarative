@@ -25,7 +25,7 @@ qt_add_module(QmlModels
 #### Keys ignored in scope 1:.:.:qmlmodels.pro:<TRUE>:
 # IMPORT_VERSION = "2.15"
 # QMLTYPES_FILENAME = "plugins.qmltypes"
-# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQml/Models.2"
+# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQml/Models"
 # QML_IMPORT_NAME = "QtQml.Models"
 
 ## Scopes:
@@ -69,7 +69,7 @@ set_target_properties(QmlModels PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
     QT_QML_MODULE_VERSION 2.15
     QT_QML_MODULE_URI QtQml.Models
-    QT_QML_MODULE_INSTALL_DIR "${Qt6_DIR}/../../../qml/QtQml/Models.2"
+    QT_QML_MODULE_INSTALL_DIR "${Qt6_DIR}/../../../qml/QtQml/Models"
 )
 
 qt6_qml_type_registration(QmlModels)

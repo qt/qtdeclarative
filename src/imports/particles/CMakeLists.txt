@@ -5,7 +5,6 @@
 #####################################################################
 
 qt_add_qml_module(particlesplugin
-    TARGET_PATH "QtQuick/Particles.2"
     URI "QtQuick.Particles"
     VERSION "2.15"
     CLASSNAME QtQuick2ParticlesPlugin
@@ -27,4 +26,4 @@ qt_add_qml_module(particlesplugin
 #### Keys ignored in scope 1:.:.:particles.pro:<TRUE>:
 # CXX_MODULE = "qml"
 # IMPORT_VERSION = "2.15"
-# TARGETPATH = "QtQuick/Particles.2"
+# TARGETPATH = "QtQuick/Particles"

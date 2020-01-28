@@ -350,7 +350,7 @@ endif()
 #### Keys ignored in scope 1:.:.:quick.pro:<TRUE>:
 # IMPORT_VERSION = "2.15"
 # QMLTYPES_FILENAME = "plugins.qmltypes"
-# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick.2"
+# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick"
 # QML_IMPORT_NAME = "QtQuick"
 
 ## Scopes:
@@ -361,12 +361,17 @@ qt_extend_target(Quick CONDITION QT_FEATURE_qml_network
         Qt::Network
 )
 
+qt_extend_target(Quick CONDITION QT_FEATURE_opengl
+    LIBRARIES
+        Qt::OpenGLPrivate
+)
+
 qt_extend_target(Quick CONDITION MSVC
     DEFINES
         _CRT_SECURE_NO_WARNINGS
 )
 
-#### Keys ignored in scope 4:.:.:quick.pro:solaris-cc_x_:
+#### Keys ignored in scope 5:.:.:quick.pro:solaris-cc_x_:
 # QMAKE_CXXFLAGS_RELEASE = "--O2"
 
 qt_extend_target(Quick CONDITION WIN32 AND NOT WINRT
@@ -568,7 +573,7 @@ qt_extend_target(Quick CONDITION QT_FEATURE_opengl AND QT_FEATURE_quick_shaderef
         items/qquickopenglshadereffectnode.cpp items/qquickopenglshadereffectnode_p.h
 )
 
-#### Keys ignored in scope 40:.:items:items/items.pri:QT_FEATURE_opengl:
+#### Keys ignored in scope 41:.:items:items/items.pri:QT_FEATURE_opengl:
 # OTHER_FILES = "$$PWD/shaders/shadereffect.vert" "$$PWD/shaders/shadereffect.frag" "$$PWD/shaders/shadereffectfallback.vert" "$$PWD/shaders/shadereffectfallback.frag" "$$PWD/shaders/shadereffect_core.vert" "$$PWD/shaders/shadereffect_core.frag" "$$PWD/shaders/shadereffectfallback_core.vert" "$$PWD/shaders/shadereffectfallback_core.frag"
 
 qt_extend_target(Quick CONDITION QT_FEATURE_quick_canvas
@@ -598,7 +603,7 @@ set_target_properties(Quick PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
     QT_QML_MODULE_VERSION 2.15
     QT_QML_MODULE_URI QtQuick
-    QT_QML_MODULE_INSTALL_DIR "${Qt6_DIR}/../../../qml/QtQuick.2"
+    QT_QML_MODULE_INSTALL_DIR "${Qt6_DIR}/../../../qml/QtQuick"
 )
 
 qt6_qml_type_registration(Quick)

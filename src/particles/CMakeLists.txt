@@ -102,7 +102,7 @@ qt_add_resource(QuickParticles "particles1"
 # IMPORT_VERSION = "2.15"
 # MODULE = "quickparticles"
 # QMLTYPES_FILENAME = "plugins.qmltypes"
-# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick/Particles.2"
+# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick/Particles"
 # QML_IMPORT_NAME = "QtQuick.Particles"
 
 ## Scopes:
@@ -134,7 +134,7 @@ set_target_properties(QuickParticles PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
     QT_QML_MODULE_VERSION 2.15
     QT_QML_MODULE_URI QtQuick.Particles
-    QT_QML_MODULE_INSTALL_DIR "${Qt6_DIR}/../../../qml/QtQuick/Particles.2"
+    QT_QML_MODULE_INSTALL_DIR "${Qt6_DIR}/../../../qml/QtQuick/Particles"
 )
 
 qt6_qml_type_registration(QuickParticles)

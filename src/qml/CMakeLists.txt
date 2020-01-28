@@ -76,6 +76,7 @@ qt_add_module(Qml
         debugger/qqmldebugserviceinterfaces_p.h
         debugger/qqmldebugstatesdelegate_p.h
         debugger/qqmlprofiler_p.h
+        inlinecomponentutils_p.h
         jsapi/qjsengine.cpp jsapi/qjsengine.h jsapi/qjsengine_p.h
         jsapi/qjsvalue.cpp jsapi/qjsvalue.h jsapi/qjsvalue_p.h
         jsapi/qjsvalueiterator.cpp jsapi/qjsvalueiterator.h jsapi/qjsvalueiterator_p.h
