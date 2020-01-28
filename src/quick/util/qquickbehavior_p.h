@@ -70,6 +70,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickBehavior : public QObject, public QQmlPropert
     Q_PROPERTY(QQuickAbstractAnimation *animation READ animation WRITE setAnimation)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(QVariant targetValue READ targetValue NOTIFY targetValueChanged REVISION 13)
+    Q_PROPERTY(QQmlProperty targetProperty READ targetProperty NOTIFY targetPropertyChanged REVISION 15)
     Q_CLASSINFO("DeferredPropertyNames", "animation")
     QML_NAMED_ELEMENT(Behavior)
 
@@ -88,9 +89,12 @@ public:
 
     QVariant targetValue() const;
 
+    QQmlProperty targetProperty() const;
+
 Q_SIGNALS:
     void enabledChanged();
     void targetValueChanged();
+    void targetPropertyChanged();
 
 private Q_SLOTS:
     void componentFinalized();
