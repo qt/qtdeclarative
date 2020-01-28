@@ -73,7 +73,7 @@
 %token T_VAR "var"              T_VOID "void"               T_WHILE "while"
 %token T_WITH "with"            T_XOR "^"                   T_XOR_EQ "^="
 %token T_NULL "null"            T_TRUE "true"               T_FALSE "false"
-%token T_CONST "const"          T_LET "let"
+%token T_CONST "const"          T_LET "let"                 T_AT "@"
 %token T_DEBUGGER "debugger"
 %token T_RESERVED_WORD "reserved word"
 %token T_MULTILINE_STRING_LITERAL "multiline string literal"
@@ -739,7 +739,7 @@ TopLevel: T_FEED_JS_EXPRESSION Expression;
     } break;
 ./
 
-TopLevel: T_FEED_UI_OBJECT_MEMBER UiObjectMember;
+TopLevel: T_FEED_UI_OBJECT_MEMBER UiAnnotatedObjectMember;
 /.
     case $rule_number: {
         sym(1).Node = sym(2).Node;
@@ -913,21 +913,84 @@ Empty: ;
     } break;
 ./
 
-UiRootMember: UiObjectDefinition;
+UiRootMember: UiAnnotatedObject;
 /.
     case $rule_number: {
         sym(1).Node = new (pool) AST::UiObjectMemberList(sym(1).UiObjectMember);
     } break;
 ./
 
-UiObjectMemberList: UiObjectMember;
+UiSimpleQualifiedId: T_IDENTIFIER;
+/.
+    case $rule_number: {
+        AST::IdentifierExpression *node = new (pool) AST::IdentifierExpression(stringRef(1));
+        node->identifierToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
+UiSimpleQualifiedId: UiSimpleQualifiedId T_DOT T_IDENTIFIER;
+/.
+    case $rule_number: {
+        AST::FieldMemberExpression *node = new (pool) AST::FieldMemberExpression(sym(1).Expression, stringRef(3));
+        node->dotToken = loc(2);
+        node->identifierToken = loc(3);
+        sym(1).Node = node;
+    } break;
+./
+
+UiAnnotationObjectDefinition: UiSimpleQualifiedId UiObjectInitializer;
+/.
+    case $rule_number: {
+        if (AST::UiQualifiedId *qualifiedId = reparseAsQualifiedId(sym(1).Expression)) {
+            sym(1).UiQualifiedId = qualifiedId;
+        } else {
+            sym(1).UiQualifiedId = 0;
+
+            diagnostic_messages.append(compileError(loc(1),
+            QLatin1String("Expected a qualified name id")));
+
+            return false;
+        }
+        AST::UiObjectDefinition *node = new (pool) AST::UiObjectDefinition(sym(1).UiQualifiedId, sym(2).UiObjectInitializer);
+        sym(1).Node = node;
+    } break;
+./
+
+UiAnnotation: T_AT UiAnnotationObjectDefinition;
+
+UiAnnotationList: UiAnnotation;
+/.
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::UiArrayMemberList(sym(1).UiObjectMember);
+    } break;
+./
+
+UiAnnotationList: UiAnnotationList UiAnnotation;
+/.
+    case $rule_number: {
+        AST::UiArrayMemberList *node = new (pool) AST::UiArrayMemberList(sym(1).UiArrayMemberList, sym(3).UiObjectMember);
+        sym(1).Node = node;
+    } break;
+./
+
+UiAnnotatedObject: UiAnnotationList UiObjectDefinition;
+/.
+   case $rule_number: {
+       sym(1).Node = sym(2).Node;
+   } break;
+./
+
+UiAnnotatedObject: UiObjectDefinition;
+
+UiObjectMemberList: UiAnnotatedObjectMember;
 /.
     case $rule_number: {
         sym(1).Node = new (pool) AST::UiObjectMemberList(sym(1).UiObjectMember);
     } break;
 ./
 
-UiObjectMemberList: UiObjectMemberList UiObjectMember;
+UiObjectMemberList: UiObjectMemberList UiAnnotatedObjectMember;
 /.
     case $rule_number: {
         AST::UiObjectMemberList *node = new (pool) AST:: UiObjectMemberList(sym(1).UiObjectMemberList, sym(2).UiObjectMember);
@@ -978,6 +1041,15 @@ UiObjectDefinition: UiQualifiedId UiObjectInitializer;
         sym(1).Node = node;
     } break;
 ./
+
+UiAnnotatedObjectMember: UiAnnotationList UiObjectMember;
+/.
+   case $rule_number: {
+       sym(1).Node = sym(2).Node;
+   } break;
+./
+
+UiAnnotatedObjectMember: UiObjectMember;
 
 UiObjectMember: UiObjectDefinition;
 

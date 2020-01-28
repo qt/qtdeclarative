@@ -719,6 +719,8 @@ again:
     case ')': return T_RPAREN;
     case '(': return T_LPAREN;
 
+    case '@': return T_AT;
+
     case '&':
         if (_char == QLatin1Char('=')) {
             scanChar();
