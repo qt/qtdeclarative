@@ -416,42 +416,33 @@ function(qt6_target_qml_files target)
     file(APPEND ${qmldir_file} ${file_contents})
 endfunction()
 
-function(__qt6_extract_dependencies target out_list)
-    set(dep_list)
-    get_target_property(link_dependencies ${target} INTERFACE_LINK_LIBRARIES)
-    foreach(dep IN LISTS link_dependencies)
-        string(FIND ${dep} "Qt::" qt_loc)
-        if (NOT ${qt_loc} EQUAL -1)
-
-            if (NOT ${qt_loc} EQUAL 0)
-                # probably stuck in a generator expression
-                string(SUBSTRING "${dep}" ${qt_loc} -1 dep_fixed)
-                string(FIND ${dep_fixed} ">" qt_loc)
-                if (${qt_loc} EQUAL -1)
-                    message(FATAL_ERROR "Expected generator expression for ${target}' depdency ${dep}")
-                endif()
-                string(SUBSTRING ${dep_fixed} 0 ${qt_loc} dep)
-            endif()
-
-            list(APPEND dep_list ${dep})
-            __qt6_extract_dependencies(${dep} recurse_list)
-            list(APPEND dep_list ${recurse_list})
-        endif()
-    endforeach()
-    set(${out_list} ${dep_list} PARENT_SCOPE)
-endfunction()
-
 function(qt6_qml_type_registration target)
+
     get_target_property(import_name ${target} QT_QML_MODULE_URI)
     if (NOT import_name)
         message(FATAL_ERROR "Target ${target} is not a QML module")
     endif()
 
-    qt6_generate_meta_types_json_file(${target})
+    cmake_parse_arguments(args "COPY_OVER_INSTALL" "INSTALL_DIR" "" ${ARGN})
+
+    set(meta_types_args)
+    if (arg_INSTALL_DIR)
+        list(APPEND meta_types_args INSTALL_DIR "${arg_INSTALL_DIR}")
+    endif()
+    if (arg_COPY_OVER_INSTALL)
+        list(APPEND meta_types_args COPY_OVER_INSTALL)
+    endif()
+
+    qt6_generate_meta_types_json_file(${target} ${meta_types_args})
 
     get_target_property(import_version ${target} QT_QML_MODULE_VERSION)
     get_target_property(target_source_dir ${target} SOURCE_DIR)
     get_target_property(target_binary_dir ${target} BINARY_DIR)
+    get_target_property(target_metatypes_dep_file ${target} INTERFACE_QT_META_TYPES_BUILD_DEP_FILE)
+    get_target_property(target_metatypes_file ${target} INTERFACE_QT_META_TYPES_BUILD_FILE)
+    if (NOT target_metatypes_dep_file)
+        message(FATAL_ERROR "Target ${target} does not have a meta types dependency file")
+    endif()
 
     # Extract major and minor version
     if (NOT import_version MATCHES "[0-9]+\\.[0-9]+")
@@ -474,28 +465,34 @@ function(qt6_qml_type_registration target)
         --minor-version=${minor_version}
     )
 
-    # Extra metatypes.json
-    set(foreign_types)
-    set(link_dependencies)
-    __qt6_extract_dependencies(${target} link_dependencies)
-    list(REMOVE_DUPLICATES link_dependencies)
-    foreach(dep IN LISTS link_dependencies)
-        string(SUBSTRING ${dep} 4 -1 module_name)
-        string(TOLOWER "qt6${module_name}_${CMAKE_BUILD_TYPE}_metatypes.json" metatypes_file)
+    # Run a script to recursively evaluate all the metatypes.json files in order
+    # to collect all foreign types.
+    set(foreign_types_file "${target_binary_dir}/qmltypes/foreign_types.txt")
+    set(foreign_types_file_tmp "${target_binary_dir}/qmltypes/foreign_types.txt.tmp")
 
-        set(module_metatypes_file "${CMAKE_BINARY_DIR}/lib/metatypes/${metatypes_file}")
-        set(installed_metatypes_file "${Qt6_DIR}/../../metatypes/${metatypes_file}")
-        if (EXISTS ${module_metatypes_file})
-            list(APPEND foreign_types ${module_metatypes_file})
-        elseif (EXISTS ${installed_metatypes_file})
-            list(APPEND foreign_types ${installed_metatypes_file})
-        endif()
-    endforeach()
+    if (NOT QT_QMTYPES_RESOLVE_DEPENDENCIES_SCRIPT)
+        set("${Qt6Qml_DIR}/Qt6QmlResolveMetatypesDependencies.cmake")
+    endif()
 
-    list(REMOVE_DUPLICATES foreign_types)
-    string(REPLACE ";" "," foreign_types_list "${foreign_types}")
+    add_custom_target(${target}_resolve_foreign_types
+        DEPENDS ${target_metatypes_file}
+        COMMAND ${CMAKE_COMMAND}
+            -DOUTPUT_FILE:PATH="${foreign_types_file_tmp}"
+            -DMAIN_DEP_FILE:PATH="${target_metatypes_dep_file}"
+            -DQT_INSTALL_DIR:PATH="${Qt6_DIR}/../../.."
+            -P "${QT_QMTYPES_RESOLVE_DEPENDENCIES_SCRIPT}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${foreign_types_file_tmp}"
+            "${foreign_types_file}"
+        BYPRODUCTS ${foreign_types_file}
+        COMMAND_EXPAND_LISTS
+        COMMENT "Resolving foreign type dependencies for target ${target}"
+    )
+
+    add_dependencies(${target}_resolve_foreign_types ${target}_autogen)
+
     list(APPEND cmd_args
-        "--foreign-types=${foreign_types_list}"
+        "@${foreign_types_file}"
     )
 
     set(dependencies_json_file "${target_source_dir}/dependencies.json")
@@ -507,7 +504,7 @@ function(qt6_qml_type_registration target)
         list(APPEND cmd_args --private-includes)
     endif()
 
-    get_target_property(target_metatypes_json_file ${target} QT_MODULE_META_TYPES_FILE)
+    get_target_property(target_metatypes_json_file ${target} INTERFACE_QT_META_TYPES_BUILD_FILE)
     if (NOT target_metatypes_json_file)
         message(FATAL_ERROR "Need target metatypes.json file")
     endif()
@@ -516,15 +513,15 @@ function(qt6_qml_type_registration target)
     set(type_registration_cpp_file "${target_binary_dir}/${type_registration_cpp_file}")
 
     add_custom_command(OUTPUT ${type_registration_cpp_file}
-        DEPENDS ${foreign_types} ${target_metatypes_json_file}
+        DEPENDS ${foreign_types_file} ${target_metatypes_json_file}
         COMMAND
             ${CMAKE_COMMAND} -E env PATH=${CMAKE_INSTALL_PREFIX}/${INSTALL_BINDIR}
             $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar>
             ${cmd_args}
             -o ${type_registration_cpp_file}
             ${target_metatypes_json_file}
-        COMMENT "Automatic QML type registration for target ${target}"
         COMMAND_EXPAND_LISTS
+        COMMENT "Automatic QML type registration for target ${target}"
     )
 
     target_sources(${target} PRIVATE ${type_registration_cpp_file})
