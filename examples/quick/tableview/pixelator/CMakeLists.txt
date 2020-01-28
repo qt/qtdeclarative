@@ -1,7 +1,7 @@
 # Generated from pixelator.pro.
 
 cmake_minimum_required(VERSION 3.14)
-project(pixelator LANGUAGES CXX)
+project(qml_pixelator LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -46,3 +46,11 @@ install(TARGETS qml_pixelator
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
+
+set_target_properties(qml_pixelator PROPERTIES
+    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
+    QT_QML_MODULE_VERSION 1.0
+    QT_QML_MODULE_URI ImageModel
+)
+
+qt6_qml_type_registration(qml_pixelator)

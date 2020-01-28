@@ -46,3 +46,11 @@ install(TARGETS chapter4-customPropertyTypes
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
+
+set_target_properties(chapter4-customPropertyTypes PROPERTIES
+    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
+    QT_QML_MODULE_VERSION 1.0
+    QT_QML_MODULE_URI Charts
+)
+
+qt6_qml_type_registration(chapter4-customPropertyTypes)

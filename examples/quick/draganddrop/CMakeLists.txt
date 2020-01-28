@@ -33,6 +33,7 @@ set(draganddrop_resource_files
     "tiles/DragTile.qml"
     "tiles/DropTile.qml"
     "tiles/tiles.qml"
+    "views/Icon.qml"
     "views/gridview.qml"
 )
 

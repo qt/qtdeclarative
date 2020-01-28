@@ -49,3 +49,11 @@ install(TARGETS d3d11underqml
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
+
+set_target_properties(d3d11underqml PROPERTIES
+    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
+    QT_QML_MODULE_VERSION 1.0
+    QT_QML_MODULE_URI D3D11UnderQML
+)
+
+qt6_qml_type_registration(d3d11underqml)

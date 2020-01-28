@@ -109,6 +109,7 @@ set(animation_resource_files
     "basics/images/star.png"
     "basics/images/sun.png"
     "basics/property-animation.qml"
+    "behaviors/FocusRect.qml"
     "behaviors/SideRect.qml"
     "behaviors/behavior-example.qml"
     "behaviors/tvtennis.qml"
