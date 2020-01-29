@@ -362,7 +362,7 @@ ReturnedValue ArrayPrototype::method_toString(const FunctionObject *builtin, con
     ScopedString string(scope, scope.engine->newString(QStringLiteral("join")));
     ScopedFunctionObject f(scope, that->get(string));
     if (f)
-        return f->call(that, argv, argc);
+        return checkedResult(scope.engine, f->call(that, argv, argc));
     return ObjectPrototype::method_toString(builtin, that, argv, argc);
 }
 
@@ -1209,6 +1209,7 @@ ReturnedValue ArrayPrototype::method_every(const FunctionObject *b, const Value 
         arguments[1] = Value::fromDouble(k);
         arguments[2] = instance;
         r = callback->call(that, arguments, 3);
+        CHECK_EXCEPTION();
         ok = r->toBoolean();
     }
     return Encode(ok);
@@ -1276,6 +1277,7 @@ ReturnedValue ArrayPrototype::method_some(const FunctionObject *b, const Value *
         arguments[1] = Value::fromDouble(k);
         arguments[2] = instance;
         result = callback->call(that, arguments, 3);
+        CHECK_EXCEPTION();
         if (result->toBoolean())
             return Encode(true);
     }
@@ -1345,6 +1347,7 @@ ReturnedValue ArrayPrototype::method_map(const FunctionObject *b, const Value *t
         arguments[1] = Value::fromDouble(k);
         arguments[2] = instance;
         mapped = callback->call(that, arguments, 3);
+        CHECK_EXCEPTION();
         a->arraySet(k, mapped);
     }
     return a.asReturnedValue();
@@ -1380,6 +1383,7 @@ ReturnedValue ArrayPrototype::method_filter(const FunctionObject *b, const Value
         arguments[1] = Value::fromDouble(k);
         arguments[2] = instance;
         selected = callback->call(that, arguments, 3);
+        CHECK_EXCEPTION();
         if (selected->toBoolean()) {
             a->arraySet(to, arguments[0]);
             ++to;
@@ -1430,6 +1434,7 @@ ReturnedValue ArrayPrototype::method_reduce(const FunctionObject *b, const Value
             arguments[2] = Value::fromDouble(k);
             arguments[3] = instance;
             acc = callback->call(nullptr, arguments, 4);
+            CHECK_EXCEPTION();
         }
         ++k;
     }
@@ -1483,6 +1488,7 @@ ReturnedValue ArrayPrototype::method_reduceRight(const FunctionObject *b, const 
             arguments[2] = Value::fromDouble(k - 1);
             arguments[3] = instance;
             acc = callback->call(nullptr, arguments, 4);
+            CHECK_EXCEPTION();
         }
         --k;
     }
