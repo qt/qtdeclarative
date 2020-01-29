@@ -2827,11 +2827,11 @@ void QQuickPathText::updatePath() const
     if (!_path.isEmpty())
         return;
 
-    _path.addText(_x, _y, _font, _text);
+    _path.addText(0.0, 0.0, _font, _text);
 
     // Account for distance from baseline to top, since addText() takes baseline position
     QRectF brect = _path.boundingRect();
-    _path.translate(0.0, -brect.y());
+    _path.translate(_x, _y - brect.y());
 }
 
 void QQuickPathText::addToPath(QPainterPath &path)
