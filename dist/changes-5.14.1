@@ -1,0 +1,89 @@
+Qt 5.14.1 is a bug-fix release. It maintains both forward and backward
+compatibility (source and binary) with Qt 5.14.0.
+
+For more details, refer to the online documentation included in this
+distribution. The documentation is also available online:
+
+https://doc.qt.io/qt-5/index.html
+
+The Qt version 5.14 series is binary compatible with the 5.13.x series.
+Applications compiled for 5.13 will continue to run with 5.14.
+
+Some of the changes listed in this file include issue tracking numbers
+corresponding to tasks in the Qt Bug Tracker:
+
+https://bugreports.qt.io/
+
+Each of these identifiers can be entered in the bug tracker to obtain more
+information about a particular change.
+
+****************************************************************************
+*                                  QtQml                                   *
+****************************************************************************
+ - [QTBUG-81109] Don't crash when iterating invalid Proxy objects
+ - [QTBUG-81108] Don't crash when sorting arrays with non-stringifyable entries
+ - [QTBUG-81105] Support printing arrays with circular references
+ - [QTBUG-81104] Array.includes now works even with large arrays.
+ - [QTBUG-81037] Fixed oob access on Array.concat.
+ - [QTBUG-81093] Emit QQmlEngine::warnings when load fails instead of
+   simply qWarning.
+ - [QTBUG-81055] XMLHttpRequest works correctly in a QML WorkerThread.
+ - [QTBUG-80963] Fixed a crash in QQmlAdaptorModel.
+ - [QTBUG-80609] Fixed a crash related to the use of QSequentialIterable
+   as a JS container type.
+ - [QTBUG-80511] The compiler now supports larger stack slots to avoid
+   crashing when passing long lists or vectors.
+ - [QTBUG-30467] QQmlTypeLoader no longer parses qmldir content multiple times.
+   It can be told to forget the qmldir contents via QQmlTypeLoader::clearCache(),
+   as before.
+
+****************************************************************************
+*                                 QtQuick                                  *
+****************************************************************************
+
+ - [QTBUG-71193] Fixed two crashes and a memory leak in ItemParticle.
+ - [QTBUG-34779] Fixed a crash in QQuickWindow that was discovered during
+   fuzz testing.
+ - [QTBUG-80505] TableView now resets its content size to empty if the
+   model becomes empty.
+ - [QTBUG-80505][QTBUG-71374] Fixed crashes in TableView when deleting or
+   setting the model to null.
+ - [QTBUG-80534] TableView behaves better when both a delegate and an
+   ObjectModel or DelegateModel are declared.
+ - [QTBUG-67986] ObjectModel items are now re-rendered when moved between models.
+ - [QTBUG-78297] DelegateModel and DelegateChoice now work together better.
+ - [QTBUG-79163] If a MouseArea has its preventStealing flag set,
+   a Pointer Handler that is a child is not allowed to steal the grab.
+ - [QTBUG-77624] MouseArea now reacts to touch ungrab, so that it will
+   know the interaction has been cancelled if the user begins dragging
+   after the press, and a DragHandler takes over.
+ - [QTBUG-68232] ListView now emits currentIndexChanged (to indicate a
+   value of -1) if an empty model is assigned.
+ - [QTBUG-66163] If the populate animation runs as a result of model assignment,
+   the viewport should not move.
+ - [QTBUG-79592] PathView now continues animating to the nearest
+   detent, as usual, when ungrabMouse() is called.
+ - [QTBUG-76954] Multiple TapHandlers (again) are able to react to
+   multiple touchpoints simultaneously, without losing the active state
+   when one of the points is stationary.
+ - [QTBUG-64138] Particle effects can now run continuously over longer
+   periods of time.
+ - [QTBUG-80190] We no longer emit TextInput.inputMaskChanged when you are
+   setting the same input mask again.
+ - [QTBUG-80070] When an animation is set on an Item which is loaded by a
+   Loader, it will no longer crash when the animation is deleted.
+ - [QTBUG-80364] Attempting to call QSGTexture::bind() outside the direct
+   OpenGL rendering path now generates a warning.
+ - [QTBUG-80297] QRhi now follows non-integer scaling fixes for native text.
+ - [QTBUG-75750] MultiPointTouchArea no longer ignores Qt-synthesized mouse
+   events. It's now possible to use a stylus with Qt Virtual Keyboard
+   because MPTA will react to the synth-mouse event that occurs after the
+   QTabletEvent was not handled. In the case that a touch event is sent,
+   MPTA will accept it; so a synth-mouse event is not expected afterwards.
+   If Flickable has pressDelay set, and intercepts a touch press, it will
+   send the delayed press in the form of a mouse press, and MPTA will now
+   react, which is useful in case MPTA is used in an item view delegate.
+   But it will also receive a touch release after the synthetic delayed press,
+   so now it checks whether the touchpoint ID is the same as the synth-mouse
+   touch ID, to verify that the touch release corresponds with the synth-mouse
+   press that arrived earlier, and react to it.

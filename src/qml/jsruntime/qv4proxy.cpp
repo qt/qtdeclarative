@@ -96,6 +96,8 @@ ReturnedValue ProxyObject::virtualGet(const Managed *m, PropertyKey id, const Va
     cdata.args[2] = *receiver;
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
+    if (scope.engine->hasException)
+        return Encode::undefined();
     ScopedProperty targetDesc(scope);
     PropertyAttributes attributes = target->getOwnProperty(id, targetDesc);
     if (attributes != Attr_Invalid && !attributes.isConfigurable()) {
@@ -136,7 +138,7 @@ bool ProxyObject::virtualPut(Managed *m, PropertyKey id, const Value &value, Val
     cdata.args[3] = *receiver;
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
-    if (!trapResult->toBoolean())
+    if (scope.engine->hasException || !trapResult->toBoolean())
         return false;
     ScopedProperty targetDesc(scope);
     PropertyAttributes attributes = target->getOwnProperty(id, targetDesc);
@@ -176,7 +178,7 @@ bool ProxyObject::virtualDeleteProperty(Managed *m, PropertyKey id)
     cdata.args[2] = o->d(); // ### fix receiver handling
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
-    if (!trapResult->toBoolean())
+    if (scope.engine->hasException || !trapResult->toBoolean())
         return false;
     ScopedProperty targetDesc(scope);
     PropertyAttributes attributes = target->getOwnProperty(id, targetDesc);
@@ -211,6 +213,8 @@ bool ProxyObject::virtualHasProperty(const Managed *m, PropertyKey id)
     cdata.args[1] = id.isArrayIndex() ? Value::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asStringOrSymbol();
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
+    if (scope.engine->hasException)
+        return false;
     bool result = trapResult->toBoolean();
     if (!result) {
         ScopedProperty targetDesc(scope);
@@ -251,6 +255,8 @@ PropertyAttributes ProxyObject::virtualGetOwnProperty(const Managed *m, Property
     cdata.args[1] = id.isArrayIndex() ? Value::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asStringOrSymbol();
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
+    if (scope.engine->hasException)
+        return Attr_Invalid;
     if (!trapResult->isObject() && !trapResult->isUndefined()) {
         scope.engine->throwTypeError();
         return Attr_Invalid;
@@ -323,7 +329,7 @@ bool ProxyObject::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Pro
     cdata.args[2] = ObjectPrototype::fromPropertyDescriptor(scope.engine, p, attrs);
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
-    bool result = trapResult->toBoolean();
+    bool result = !scope.engine->hasException && trapResult->toBoolean();
     if (!result)
         return false;
 
@@ -373,6 +379,8 @@ bool ProxyObject::virtualIsExtensible(const Managed *m)
     cdata.args[0] = target;
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
+    if (scope.engine->hasException)
+        return false;
     bool result = trapResult->toBoolean();
     if (result != target->isExtensible()) {
         scope.engine->throwTypeError();
@@ -404,6 +412,8 @@ bool ProxyObject::virtualPreventExtensions(Managed *m)
     cdata.args[0] = target;
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
+    if (scope.engine->hasException)
+        return false;
     bool result = trapResult->toBoolean();
     if (result && target->isExtensible()) {
         scope.engine->throwTypeError();
@@ -439,6 +449,8 @@ Heap::Object *ProxyObject::virtualGetPrototypeOf(const Managed *m)
     cdata.args[0] = target;
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
+    if (scope.engine->hasException)
+        return nullptr;
     if (!trapResult->isNull() && !trapResult->isObject()) {
         scope.engine->throwTypeError();
         return nullptr;
@@ -482,7 +494,7 @@ bool ProxyObject::virtualSetPrototypeOf(Managed *m, const Object *p)
     cdata.args[1] = p ? p->asReturnedValue() : Encode::null();
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
-    bool result = trapResult->toBoolean();
+    bool result = !scope.engine->hasException && trapResult->toBoolean();
     if (!result)
         return false;
     if (!target->isExtensible()) {
@@ -573,6 +585,8 @@ OwnPropertyKeyIterator *ProxyObject::virtualOwnPropertyKeys(const Object *m, Val
     JSCallData cdata(scope, 1, nullptr, handler);
     cdata.args[0] = target;
     ScopedObject trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
+    if (scope.engine->hasException)
+        return nullptr;
     if (!trapResult) {
         scope.engine->throwTypeError();
         return nullptr;
@@ -699,7 +713,7 @@ ReturnedValue ProxyFunctionObject::virtualCall(const FunctionObject *f, const Va
     if (scope.hasException())
         return Encode::undefined();
     if (trap->isNullOrUndefined())
-        return target->call(thisObject, argv, argc);
+        return checkedResult(scope.engine, target->call(thisObject, argv, argc));
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
 

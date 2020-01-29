@@ -328,6 +328,10 @@ inline bool FunctionObject::isBoundFunction() const
     return d()->vtable() == BoundFunction::staticVTable();
 }
 
+inline ReturnedValue checkedResult(QV4::ExecutionEngine *v4, ReturnedValue result)
+{
+    return v4->hasException ? QV4::Encode::undefined() : result;
+}
 
 }
 
