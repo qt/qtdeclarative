@@ -301,6 +301,8 @@ void QQuickPath::pathElements_append(QQmlListProperty<QQuickPathElement> *proper
         QQuickCurve *curve = qobject_cast<QQuickCurve *>(pathElement);
         if (curve)
             d->_pathCurves.append(curve);
+        else if (QQuickPathText *text = qobject_cast<QQuickPathText *>(pathElement))
+            d->_pathTexts.append(text);
         else {
             QQuickPathAttribute *attribute = qobject_cast<QQuickPathAttribute *>(pathElement);
             if (attribute && !d->_attributes.contains(attribute->name()))
@@ -329,6 +331,7 @@ void QQuickPath::pathElements_clear(QQmlListProperty<QQuickPathElement> *propert
     d->_pathElements.clear();
     d->_pathCurves.clear();
     d->_pointCache.clear();
+    d->_pathTexts.clear();
 }
 
 void QQuickPath::interpolate(int idx, const QString &name, qreal value)
@@ -478,6 +481,8 @@ QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &en
             point.values[percentString] = percent->value();
             interpolate(attributePoints, attributePoints.count() - 1, percentString, percent->value());
             usesPercent = true;
+        } else if (QQuickPathText *text = qobject_cast<QQuickPathText *>(pathElement)) {
+            text->addToPath(path);
         }
     }
 
@@ -547,6 +552,9 @@ QPainterPath QQuickPath::createShapePath(const QPointF &startPoint, const QPoint
         ++index;
     }
 
+    for (QQuickPathText *text : qAsConst(d->_pathTexts))
+        text->addToPath(path);
+
     if (closed) {
         QPointF end = path.currentPosition();
         *closed = startX == end.x() && startY == end.y();
@@ -593,6 +601,8 @@ void QQuickPath::gatherAttributes()
     for (QQuickPathElement *pathElement : qAsConst(d->_pathElements)) {
         if (QQuickCurve *curve = qobject_cast<QQuickCurve *>(pathElement))
             d->_pathCurves.append(curve);
+        else if (QQuickPathText *text = qobject_cast<QQuickPathText *>(pathElement))
+            d->_pathTexts.append(text);
         else if (QQuickPathAttribute *attribute = qobject_cast<QQuickPathAttribute *>(pathElement))
             attributes.insert(attribute->name());
     }
@@ -2415,7 +2425,7 @@ QVariant QQuickPathPolyline::path() const
 
 void QQuickPathPolyline::setPath(const QVariant &path)
 {
-    if (path.type() == QVariant::PolygonF) {
+    if (path.userType() == QMetaType::QPolygonF) {
         setPath(path.value<QPolygonF>());
     } else if (path.canConvert<QVector<QPointF>>()) {
         setPath(path.value<QVector<QPointF>>());
@@ -2431,7 +2441,7 @@ void QQuickPathPolyline::setPath(const QVariant &path)
             pathList.append(v.toPointF());
         setPath(pathList);
     } else {
-        qWarning() << "PathPolyline: path of type" << path.type() << "not supported";
+        qWarning() << "PathPolyline: path of type" << path.userType() << "not supported";
     }
 }
 
@@ -2583,7 +2593,7 @@ void QQuickPathMultiline::setPaths(const QVariant &paths)
         }
         setPaths(pathsList);
     } else {
-        qWarning() << "PathMultiline: paths of type" << paths.type() << "not supported";
+        qWarning() << "PathMultiline: paths of type" << paths.userType() << "not supported";
         setPaths(QVector<QVector<QPointF>>());
     }
 }
@@ -2617,6 +2627,219 @@ void QQuickPathMultiline::addToPath(QPainterPath &path, const QQuickPathData &)
         for (int i = 1; i < p.size(); ++i)
             path.lineTo(p.at(i));
     }
+}
+
+/*!
+    \qmltype PathText
+    \instantiates QQuickPathText
+    \inqmlmodule QtQuick
+    \ingroup qtquick-animation-paths
+    \brief Defines a string in a specified font.
+    \since QtQuick 2.15
+
+    This element defines the shape of a specified string in a specified font. The text's
+    baseline will be translated to the x and y coordinates, and the outlines from the font
+    will be added to the path accordingly.
+
+    \qml
+    PathText {
+        x: 0
+        y: font.pixelSize
+        font.family: "Arial"
+        font.pixelSize: 100
+        text: "Foobar"
+    }
+    \endqml
+
+    \sa Path, QPainterPath::setFillRule, PathPolyline, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg, PathMove
+*/
+
+/*!
+    \qmlproperty real QtQuick::PathText::x
+
+    The horizontal position of the PathText's baseline.
+*/
+
+/*!
+    \qmlproperty real QtQuick::PathText::y
+
+    The vertical position of the PathText's baseline.
+
+    \note This property refers to the position of the baseline of the text, not the top of its bounding box. This may
+    cause some confusion, e.g. when using the PathText with Qt Quick Shapes. See \l FontMetrics for information on how to
+    get the ascent of a font, which can be used to translate the text into the expected position.
+*/
+
+/*!
+    \qmlproperty string QtQuick::PathText::text
+
+    The text for which this PathText should contain the outlines.
+*/
+
+/*!
+    \qmlproperty string QtQuick::PathText::font.family
+
+    Sets the family name of the font.
+
+    The family name is case insensitive and may optionally include a foundry name, e.g. "Helvetica [Cronyx]".
+    If the family is available from more than one foundry and the foundry isn't specified, an arbitrary foundry is chosen.
+    If the family isn't available a family will be set using the font matching algorithm.
+*/
+
+/*!
+    \qmlproperty string QtQuick::PathText::font.styleName
+
+    Sets the style name of the font.
+
+    The style name is case insensitive. If set, the font will be matched against style name instead
+    of the font properties \l font.weight, \l font.bold and \l font.italic.
+*/
+
+/*!
+    \qmlproperty bool QtQuick::PathText::font.bold
+
+    Sets whether the font weight is bold.
+*/
+
+/*!
+    \qmlproperty enumeration QtQuick::PathText::font.weight
+
+    Sets the font's weight.
+
+    The weight can be one of:
+    \list
+    \li Font.Thin
+    \li Font.Light
+    \li Font.ExtraLight
+    \li Font.Normal - the default
+    \li Font.Medium
+    \li Font.DemiBold
+    \li Font.Bold
+    \li Font.ExtraBold
+    \li Font.Black
+    \endlist
+
+    \qml
+    PathText { text: "Hello"; font.weight: Font.DemiBold }
+    \endqml
+*/
+
+/*!
+    \qmlproperty bool QtQuick::PathText::font.italic
+
+    Sets whether the font has an italic style.
+*/
+
+/*!
+    \qmlproperty bool QtQuick::PathText::font.underline
+
+    Sets whether the text is underlined.
+*/
+
+/*!
+    \qmlproperty bool QtQuick::PathText::font.strikeout
+
+    Sets whether the font has a strikeout style.
+*/
+
+/*!
+    \qmlproperty real QtQuick::PathText::font.pointSize
+
+    Sets the font size in points. The point size must be greater than zero.
+*/
+
+/*!
+    \qmlproperty int QtQuick::PathText::font.pixelSize
+
+    Sets the font size in pixels.
+
+    Using this function makes the font device dependent.
+    Use \c pointSize to set the size of the font in a device independent manner.
+*/
+
+/*!
+    \qmlproperty real QtQuick::PathText::font.letterSpacing
+
+    Sets the letter spacing for the font.
+
+    Letter spacing changes the default spacing between individual letters in the font.
+    A positive value increases the letter spacing by the corresponding pixels; a negative value decreases the spacing.
+*/
+
+/*!
+    \qmlproperty real QtQuick::PathText::font.wordSpacing
+
+    Sets the word spacing for the font.
+
+    Word spacing changes the default spacing between individual words.
+    A positive value increases the word spacing by a corresponding amount of pixels,
+    while a negative value decreases the inter-word spacing accordingly.
+*/
+
+/*!
+    \qmlproperty enumeration QtQuick::PathText::font.capitalization
+
+    Sets the capitalization for the text.
+
+    \list
+    \li Font.MixedCase - This is the normal text rendering option where no capitalization change is applied.
+    \li Font.AllUppercase - This alters the text to be rendered in all uppercase type.
+    \li Font.AllLowercase - This alters the text to be rendered in all lowercase type.
+    \li Font.SmallCaps - This alters the text to be rendered in small-caps type.
+    \li Font.Capitalize - This alters the text to be rendered with the first character of each word as an uppercase character.
+    \endlist
+
+    \qml
+    PathText { text: "Hello"; font.capitalization: Font.AllLowercase }
+    \endqml
+*/
+
+/*!
+    \qmlproperty bool QtQuick::PathText::font.kerning
+
+    Enables or disables the kerning OpenType feature when shaping the text. Disabling this may
+    improve performance when creating or changing the text, at the expense of some cosmetic
+    features. The default value is true.
+
+    \qml
+    PathText { text: "OATS FLAVOUR WAY"; font.kerning: false }
+    \endqml
+*/
+
+/*!
+    \qmlproperty bool QtQuick::PathText::font.preferShaping
+
+    Sometimes, a font will apply complex rules to a set of characters in order to
+    display them correctly. In some writing systems, such as Brahmic scripts, this is
+    required in order for the text to be legible, but in e.g. Latin script, it is merely
+    a cosmetic feature. Setting the \c preferShaping property to false will disable all
+    such features when they are not required, which will improve performance in most cases.
+
+    The default value is true.
+
+    \qml
+    PathText { text: "Some text"; font.preferShaping: false }
+    \endqml
+*/
+
+void QQuickPathText::updatePath() const
+{
+    if (!_path.isEmpty())
+        return;
+
+    _path.addText(_x, _y, _font, _text);
+
+    // Account for distance from baseline to top, since addText() takes baseline position
+    QRectF brect = _path.boundingRect();
+    _path.translate(0.0, -brect.y());
+}
+
+void QQuickPathText::addToPath(QPainterPath &path)
+{
+    if (_text.isEmpty())
+        return;
+    updatePath();
+    path.addPath(_path);
 }
 
 QT_END_NAMESPACE

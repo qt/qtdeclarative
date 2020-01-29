@@ -531,7 +531,7 @@ QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterComposit
     return QQmlType(priv);
 }
 
-QQmlMetaType::CompositeMetaTypeIds QQmlMetaType::registerInternalCompositeType(const QByteArray &className)
+CompositeMetaTypeIds QQmlMetaType::registerInternalCompositeType(const QByteArray &className)
 {
     QByteArray ptr = className + '*';
     QByteArray lst = "QQmlListProperty<" + className + '>';
@@ -555,7 +555,7 @@ QQmlMetaType::CompositeMetaTypeIds QQmlMetaType::registerInternalCompositeType(c
     return {ptr_type, lst_type};
 }
 
-void QQmlMetaType::unregisterInternalCompositeType(const QQmlMetaType::CompositeMetaTypeIds &typeIds)
+void QQmlMetaType::unregisterInternalCompositeType(const CompositeMetaTypeIds &typeIds)
 {
     QQmlMetaTypeDataPtr data;
     data->qmlLists.remove(typeIds.listId);

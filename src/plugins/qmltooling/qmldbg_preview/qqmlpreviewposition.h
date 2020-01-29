@@ -56,7 +56,7 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qtimer.h>
 #include <QtCore/qsettings.h>
-#include <QtCore/qsize.h>
+#include <QtCore/qrect.h>
 #include <QtCore/qdatastream.h>
 
 QT_BEGIN_NAMESPACE
@@ -70,7 +70,7 @@ public:
     public:
         bool operator==(const QQmlPreviewPosition::ScreenData &other) const;
         QString name;
-        QSize size;
+        QRect rect;
     };
     class Position {
     public:

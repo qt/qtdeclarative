@@ -200,6 +200,13 @@ QmlIR::Object *QQmlIRLoader::loadObject(const QV4::CompiledData::Object *seriali
 
     object->runtimeFunctionIndices.allocate(pool, functionIndices);
 
+    const QV4::CompiledData::InlineComponent *serializedInlineComponent = serializedObject->inlineComponentTable();
+    for (uint i = 0; i < serializedObject->nInlineComponents; ++i, ++serializedInlineComponent) {
+        QmlIR::InlineComponent *ic = pool->New<QmlIR::InlineComponent>();
+        *static_cast<QV4::CompiledData::InlineComponent*>(ic) = *serializedInlineComponent;
+        object->inlineComponents->append(ic);
+    }
+
     return object;
 }
 

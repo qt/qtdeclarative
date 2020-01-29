@@ -12,7 +12,6 @@ PUBLICTESTS += \
     qqmlfileselector
 
 PUBLICTESTS += \
-    qmlformat \
     qqmlcomponent \
     qqmlconsole \
     qqmlengine \
@@ -91,7 +90,7 @@ SUBDIRS += $$METATYPETESTS
 qtConfig(process) {
     qtConfig(qml-debug): SUBDIRS += debugger
     !boot2qt {
-        SUBDIRS += qmllint qmlplugindump
+        SUBDIRS += qmlformat qmllint qmlplugindump
     }
 }
 

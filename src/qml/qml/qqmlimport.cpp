@@ -58,6 +58,7 @@
 #include <private/qqmltypeloaderqmldircontent_p.h>
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonarray.h>
+#include <QtQml/private/qqmltype_p_p.h>
 
 #include <algorithm>
 #include <functional>
@@ -613,6 +614,8 @@ bool QQmlImports::resolveType(const QHashedStringRef &type,
                         RESOLVE_TYPE_DEBUG << type_return->typeName() << ' ' << type_return->sourceUrl() << " TYPE/URL-SINGLETON";
                     else if (type_return->isComposite())
                         RESOLVE_TYPE_DEBUG << type_return->typeName() << ' ' << type_return->sourceUrl() << " TYPE/URL";
+                    else if (type_return->isInlineComponentType())
+                        RESOLVE_TYPE_DEBUG << type_return->typeName() << ' ' << type_return->sourceUrl() << " TYPE(INLINECOMPONENT)";
                     else
                         RESOLVE_TYPE_DEBUG << type_return->typeName() << " TYPE";
                 }
@@ -709,6 +712,37 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
     }
 
     const QString typeStr = type.toString();
+    if (isInlineComponent) {
+        Q_ASSERT(type_return);
+        bool ret = uri == typeStr;
+        if (ret) {
+            Q_ASSERT(!type_return->isValid());
+            auto createICType = [&]() {
+                auto typePriv = new QQmlTypePrivate {QQmlType::RegistrationType::InlineComponentType};
+                bool ok = false;
+                typePriv->extraData.id->objectId = QUrl(this->url).fragment().toInt(&ok);
+                Q_ASSERT(ok);
+                typePriv->extraData.id->url = QUrl(this->url);
+                auto icType = QQmlType(typePriv);
+                return icType;
+            };
+            if (containingType.isValid()) {
+                // we currently cannot reference a Singleton inside itself
+                // in that case, containingType is still invalid
+                if (int icID = containingType.lookupInlineComponentIdByName(typeStr) != -1) {
+                    *type_return = containingType.lookupInlineComponentById(icID);
+                } else {
+                    auto icType = createICType();
+                    int placeholderId = containingType.generatePlaceHolderICId();
+                    const_cast<QQmlImportInstance*>(this)->containingType.associateInlineComponent(typeStr, placeholderId, CompositeMetaTypeIds {}, icType);
+                    *type_return = QQmlType(icType);
+                }
+            } else  {
+                *type_return = createICType();
+            }
+        }
+        return ret;
+    }
     QQmlDirComponents::ConstIterator it = qmlDirComponents.find(typeStr), end = qmlDirComponents.end();
     if (it != end) {
         QString componentUrl;
@@ -826,47 +860,107 @@ bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, 
                                      QQmlType::RegistrationType registrationType,
                                      bool *typeRecursionDetected)
 {
-    QQmlImportNamespace *s = nullptr;
-    int dot = type.indexOf(Dot);
-    if (dot >= 0) {
-        QHashedStringRef namespaceName(type.constData(), dot);
-        s = findQualifiedNamespace(namespaceName);
-        if (!s) {
-            if (errors) {
-                QQmlError error;
-                error.setDescription(QQmlImportDatabase::tr("- %1 is not a namespace").arg(namespaceName.toString()));
-                errors->prepend(error);
-            }
-            return false;
-        }
-        int ndot = type.indexOf(Dot,dot+1);
-        if (ndot > 0) {
-            if (errors) {
-                QQmlError error;
-                error.setDescription(QQmlImportDatabase::tr("- nested namespaces not allowed"));
-                errors->prepend(error);
-            }
-            return false;
-        }
-    } else {
-        s = &unqualifiedset;
-    }
-    QHashedStringRef unqualifiedtype = dot < 0 ? type : QHashedStringRef(type.constData()+dot+1, type.length()-dot-1);
-    if (s) {
-        if (s->resolveType(typeLoader, unqualifiedtype, vmajor, vminor, type_return, &base, errors,
+    const QVector<QHashedStringRef> splitName = type.split(Dot);
+    auto resolveTypeInNamespace = [&](QHashedStringRef unqualifiedtype, QQmlImportNamespace *nameSpace, QList<QQmlError> *errors) -> bool {
+        if (nameSpace->resolveType(typeLoader, unqualifiedtype, vmajor, vminor, type_return, &base, errors,
                            registrationType, typeRecursionDetected))
             return true;
-        if (s->imports.count() == 1 && !s->imports.at(0)->isLibrary && type_return && s != &unqualifiedset) {
+        if (nameSpace->imports.count() == 1 && !nameSpace->imports.at(0)->isLibrary && type_return && nameSpace != &unqualifiedset) {
             // qualified, and only 1 url
             *type_return = QQmlMetaType::typeForUrl(
-                    resolveLocalUrl(s->imports.at(0)->url,
+                    resolveLocalUrl(nameSpace->imports.at(0)->url,
                                     unqualifiedtype.toString() + QLatin1String(".qml")),
                     type, false, errors);
             return type_return->isValid();
         }
+        return false;
+    };
+    switch (splitName.size()) {
+    case 1: {
+        // must be a simple type
+        return resolveTypeInNamespace(type, &unqualifiedset, errors);
     }
-
-    return false;
+    case 2: {
+        // either namespace + simple type OR simple type + inline component
+        QQmlImportNamespace *s = findQualifiedNamespace(splitName.at(0));
+        if (s) {
+            // namespace + simple type
+            return resolveTypeInNamespace(splitName.at(1), s, errors);
+        } else {
+            if (resolveTypeInNamespace(splitName.at(0), &unqualifiedset, nullptr)) {
+                // either simple type + inline component
+                auto const icName = splitName.at(1).toString();
+                auto objectIndex = type_return->lookupInlineComponentIdByName(icName);
+                if (objectIndex != -1) {
+                    *type_return = type_return->lookupInlineComponentById(objectIndex);
+                } else {
+                    auto icTypePriv = new QQmlTypePrivate(QQmlType::RegistrationType::InlineComponentType);
+                    icTypePriv->setContainingType(type_return);
+                    icTypePriv->extraData.id->url = type_return->sourceUrl();
+                    int placeholderId = type_return->generatePlaceHolderICId();
+                    icTypePriv->extraData.id->url.setFragment(QString::number(placeholderId));
+                    auto icType = QQmlType(icTypePriv);
+                    type_return->associateInlineComponent(icName, placeholderId, CompositeMetaTypeIds {}, icType);
+                    *type_return = icType;
+                }
+                Q_ASSERT(type_return->containingType().isValid());
+                type_return->setPendingResolutionName(icName);
+                return true;
+            } else {
+                // or a failure
+                if (errors) {
+                    QQmlError error;
+                    error.setDescription(QQmlImportDatabase::tr("- %1 is neither a type nor a namespace").arg(splitName.at(0).toString()));
+                    errors->prepend(error);
+                }
+                return false;
+            }
+        }
+    }
+    case 3: {
+        // must be namespace + simple type + inline component
+        QQmlImportNamespace *s = findQualifiedNamespace(splitName.at(0));
+        QQmlError error;
+        if (!s) {
+            error.setDescription(QQmlImportDatabase::tr("- %1 is not a namespace").arg(splitName.at(0).toString()));
+        } else {
+            if (resolveTypeInNamespace(splitName.at(1), s, nullptr)) {
+                auto const icName = splitName.at(2).toString();
+                auto objectIndex = type_return->lookupInlineComponentIdByName(icName);
+                if (objectIndex != -1)
+                    *type_return = type_return->lookupInlineComponentById(objectIndex);
+                else {
+                    auto icTypePriv = new QQmlTypePrivate(QQmlType::RegistrationType::InlineComponentType);
+                    icTypePriv->setContainingType(type_return);
+                    icTypePriv->extraData.id->url = type_return->sourceUrl();
+                    int placeholderId = type_return->generatePlaceHolderICId();
+                    icTypePriv->extraData.id->url.setFragment(QString::number(placeholderId));
+                    auto icType = QQmlType(icTypePriv);
+                    type_return->associateInlineComponent(icName, placeholderId, CompositeMetaTypeIds {}, icType);
+                    *type_return = icType;
+                }
+                type_return->setPendingResolutionName(icName);
+                return true;
+            } else {
+                error.setDescription(QQmlImportDatabase::tr("- %1 is not a type").arg(splitName.at(1).toString()));
+            }
+        }
+        if (errors) {
+            errors->prepend(error);
+        }
+        return false;
+    }
+    default: {
+        // all other numbers suggest a user error
+        if (errors) {
+            QQmlError error;
+            error.setDescription(QQmlImportDatabase::tr("- nested namespaces not allowed"));
+            errors->prepend(error);
+        }
+        return false;
+    }
+    }
+    Q_UNREACHABLE();
 }
 
 QQmlImportInstance *QQmlImportNamespace::findImport(const QString &uri) const
@@ -1649,6 +1743,21 @@ bool QQmlImports::addImplicitImport(QQmlImportDatabase *importDb, QList<QQmlErro
 
     bool incomplete = !isLocal(baseUrl());
     return d->addFileImport(QLatin1String("."), QString(), -1, -1, true, incomplete, importDb, errors);
+}
+
+/*!
+ \internal
+ */
+bool QQmlImports::addInlineComponentImport(QQmlImportInstance *const importInstance, const QString &name, const QUrl importUrl, QQmlType containingType)
+{
+    importInstance->url = importUrl.toString();
+    importInstance->uri = name;
+    importInstance->isInlineComponent = true;
+    importInstance->majversion = 0;
+    importInstance->minversion = 0;
+    importInstance->containingType = containingType;
+    d->unqualifiedset.imports.push_back(importInstance);
+    return true;
 }
 
 /*!

@@ -3,6 +3,8 @@ TARGET = QtQuick
 QT = core-private gui-private qml-private qmlmodels-private
 qtConfig(qml-network): \
     QT_PRIVATE += network
+qtConfig(opengl): \
+    QT_PRIVATE += opengl-private
 
 TRACEPOINT_PROVIDER = $$PWD/qtquick.tracepoints
 CONFIG += qt_tracepoints
@@ -52,7 +54,7 @@ INCLUDEPATH += $$PWD
 load(qt_module)
 
 QMLTYPES_FILENAME = plugins.qmltypes
-QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/QtQuick.2
+QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/QtQuick
 QML_IMPORT_NAME = QtQuick
 IMPORT_VERSION = 2.15
 CONFIG += qmltypes install_qmltypes install_metatypes

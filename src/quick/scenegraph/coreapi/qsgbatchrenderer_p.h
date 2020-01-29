@@ -62,7 +62,7 @@
 
 #include <QtCore/QBitArray>
 #include <QtCore/QStack>
-#include <QtGui/QOpenGLFunctions>
+#include <QOpenGLFunctions>
 
 #include <QtGui/private/qrhi_p.h>
 

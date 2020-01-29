@@ -45,7 +45,6 @@ public:
 private slots:
     void initTestCase();
     void noFont();
-    void namedFont();
     void localFont();
     void failLocalFont();
     void webFont();
@@ -83,19 +82,6 @@ void tst_qquickfontloader::noFont()
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Null);
 
     delete fontObject;
-}
-
-void tst_qquickfontloader::namedFont()
-{
-    QString componentStr = "import QtQuick 2.0\nFontLoader { name: \"Helvetica\" }";
-    QQmlComponent component(&engine);
-    component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-    QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(component.create());
-
-    QVERIFY(fontObject != nullptr);
-    QCOMPARE(fontObject->source(), QUrl(""));
-    QCOMPARE(fontObject->name(), QString("Helvetica"));
-    QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
 }
 
 void tst_qquickfontloader::localFont()
@@ -223,16 +209,10 @@ void tst_qquickfontloader::changeFontSourceViaState()
     QVERIFY(fontObject->source() != QUrl(""));
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
 
-    window.rootObject()->setProperty("usename", true);
+    window.rootObject()->setProperty("useotherfont", true);
 
-    // This warning should probably not be printed once QTBUG-20268 is fixed
-    QString warning = QString(testFileUrl("qtbug-20268.qml").toString()) +
-                              QLatin1String(":13:5: QML FontLoader: Cannot load font: \"\"");
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
-
-    QEXPECT_FAIL("", "QTBUG-20268", Abort);
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
-    QCOMPARE(window.rootObject()->property("name").toString(), QString("Tahoma"));
+    QCOMPARE(window.rootObject()->property("name").toString(), QString("Daniel"));
 }
 
 QTEST_MAIN(tst_qquickfontloader)

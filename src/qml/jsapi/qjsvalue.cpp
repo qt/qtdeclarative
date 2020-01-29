@@ -314,7 +314,7 @@ bool QJSValue::isBool() const
     if (val)
         return val->isBoolean();
     QVariant *variant = QJSValuePrivate::getVariant(this);
-    return variant && variant->type() == QVariant::Bool;
+    return variant && variant->userType() == QMetaType::Bool;
 }
 
 /*!
@@ -520,9 +520,9 @@ QString QJSValue::toString() const
     if (!val) {
         QVariant *variant = QJSValuePrivate::getVariant(this);
         Q_ASSERT(variant);
-        if (variant->type() == QVariant::Map)
+        if (variant->userType() == QMetaType::QVariantMap)
             return QStringLiteral("[object Object]");
-        else if (variant->type() == QVariant::List) {
+        else if (variant->userType() == QMetaType::QVariantList) {
             const QVariantList list = variant->toList();
             QString result;
             for (int i = 0; i < list.count(); ++i) {
@@ -558,7 +558,7 @@ double QJSValue::toNumber() const
         QVariant *variant = QJSValuePrivate::getVariant(this);
         Q_ASSERT(variant);
 
-        if (variant->type() == QVariant::String)
+        if (variant->userType() == QMetaType::QString)
             return RuntimeHelpers::stringToNumber(variant->toString());
         else if (variant->canConvert<double>())
             return variant->value<double>();
@@ -1040,7 +1040,7 @@ bool QJSValue::equals(const QJSValue& other) const
         Q_ASSERT(variant);
         if (!ov)
             return *variant == *QJSValuePrivate::getVariant(&other);
-        if (variant->type() == QVariant::Map || variant->type() == QVariant::List)
+        if (variant->userType() == QMetaType::QVariantMap || variant->userType() == QMetaType::QVariantList)
             return false;
         return js_equal(variant->toString(), *ov);
         }
@@ -1083,7 +1083,7 @@ bool QJSValue::strictlyEquals(const QJSValue& other) const
         Q_ASSERT(variant);
         if (!ov)
             return *variant == *QJSValuePrivate::getVariant(&other);
-        if (variant->type() == QVariant::Map || variant->type() == QVariant::List)
+        if (variant->userType() == QMetaType::QVariantMap || variant->userType() == QMetaType::QVariantList)
             return false;
         if (String *s = ov->stringValue())
             return variant->toString() == s->toQString();

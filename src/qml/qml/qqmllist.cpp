@@ -250,10 +250,37 @@ bool QQmlListReference::canCount() const
 }
 
 /*!
-    Return true if at(), count(), append() and clear() are implemented, so you can manipulate
-    the list.
+Returns true if items in the list property can be replaced, otherwise false.
+Returns false if the reference is invalid.
 
-\sa isReadable(), at(), count(), append(), clear()
+\sa replace()
+*/
+bool QQmlListReference::canReplace() const
+{
+    return (isValid() && d->property.replace);
+}
+
+/*!
+Returns true if the last item can be removed from the list property, otherwise false.
+Returns false if the reference is invalid.
+
+\sa removeLast()
+*/
+bool QQmlListReference::canRemoveLast() const
+{
+    return (isValid() && d->property.removeLast);
+}
+
+/*!
+    Return true if at(), count(), append(), and either clear() or removeLast()
+    are implemented, so you can manipulate the list.
+
+    Mind that replace() and removeLast() can be emulated by stashing all
+    items and rebuilding the list using clear() and append(). Therefore,
+    they are not required for the list to be manipulable. Furthermore,
+    clear() can be emulated using removeLast().
+
+\sa isReadable(), at(), count(), append(), clear(), replace(), removeLast()
 */
 bool QQmlListReference::isManipulable() const
 {
@@ -329,6 +356,39 @@ int QQmlListReference::count() const
 }
 
 /*!
+Replaces the item at \a index in the list with \a object.
+Returns true if the operation succeeded, otherwise false.
+
+\sa canReplace()
+*/
+bool QQmlListReference::replace(int index, QObject *object) const
+{
+    if (!canReplace())
+        return false;
+
+    if (object && !QQmlMetaObject::canConvert(object, d->elementType))
+        return false;
+
+    d->property.replace(&d->property, index, object);
+    return true;
+}
+
+/*!
+Removes the last item in the list.
+Returns true if the operation succeeded, otherwise false.
+
+\sa canRemoveLast()
+*/
+bool QQmlListReference::removeLast() const
+{
+    if (!canRemoveLast())
+        return false;
+
+    d->property.removeLast(&d->property);
+    return true;
+}
+
+/*!
 \class QQmlListProperty
 \since 5.0
 \inmodule QtQml
@@ -375,14 +435,25 @@ QML list properties are type-safe - in this case \c {Fruit} is a QObject type th
 
 /*!
 \fn template<typename T> QQmlListProperty<T>::QQmlListProperty(QObject *object, QList<T *> &list)
+\deprecated
 
 Convenience constructor for making a QQmlListProperty value from an existing
 QList \a list.  The \a list reference must remain valid for as long as \a object
 exists.  \a object must be provided.
 
-Generally this constructor should not be used in production code, as a
-writable QList violates QML's memory management rules.  However, this constructor
-can be very useful while prototyping.
+This constructor synthesizes the removeLast() and replace() methods
+introduced in Qt 5.15, using count(), at(), clear(), and append(). This is slow.
+If you intend to manipulate the list beyond clearing it, you should explicitly
+provide these methods.
+*/
+
+/*!
+\fn template<typename T> QQmlListProperty<T>::QQmlListProperty(QObject *object, QList<T *> *list)
+\since 5.15
+
+Convenience constructor for making a QQmlListProperty value from an existing
+QList \a list. The \a list reference must remain valid for as long as \a object
+exists. \a object must be provided.
 */
 
 /*!
@@ -408,6 +479,39 @@ remains valid while \a object exists.
 Null pointers can be passed for any function. If any null pointers are passed in, the list
 will be neither designable nor alterable by the debugger. It is recommended to provide valid
 pointers for all functions.
+
+\note The resulting QQmlListProperty will synthesize the removeLast() and
+replace() methods using \a count, \a at, \a clear, and \a append if all of those
+are given. This is slow. If you intend to manipulate the list beyond clearing it,
+you should explicitly provide these methods.
+*/
+
+/*!
+\fn template<typename T> QQmlListProperty<T>::QQmlListProperty(
+        QObject *object, void *data, AppendFunction append, CountFunction count,
+        AtFunction at, ClearFunction clear, ReplaceFunction replace,
+        RemoveLastFunction removeLast)
+
+Construct a QQmlListProperty from a set of operation functions \a append,
+\a count, \a at, \a clear, \a replace, and \removeLast. An opaque \a data handle
+may be passed which can be accessed from within the operation functions. The
+list property remains valid while \a object exists.
+
+Null pointers can be passed for any function, causing the respective function to
+be synthesized using the others, if possible. QQmlListProperty can synthesize
+\list
+    \li \a clear using \a count and \a removeLast
+    \li \a replace using \a count, \a at, \a clear, and \a append
+    \li \a replace using \a count, \a at, \a removeLast, and \a append
+    \li \a removeLast using \a count, \a at, \a clear, and \a append
+\endlist
+if those are given. This is slow, but if your list does not natively provide
+faster options for these primitives, you may want to use the synthesized ones.
+
+Furthermore, if either of \a count, \a at, \a append, and \a clear are neither
+given explicitly nor synthesized, the list will be neither designable nor
+alterable by the debugger. It is recommended to provide enough valid pointers
+to avoid this situation.
 */
 
 /*!
@@ -446,6 +550,22 @@ Return the element at position \a index in the list \a property.
 Synonym for \c {void (*)(QQmlListProperty<T> *property)}.
 
 Clear the list \a property.
+*/
+
+/*!
+\typedef QQmlListProperty::ReplaceFunction
+
+Synonym for \c {void (*)(QQmlListProperty<T> *property, int index, T *value)}.
+
+Replace the element at position \a index in the list \a property with \a value.
+*/
+
+/*!
+\typedef QQmlListProperty::RemoveLastFunction
+
+Synonym for \c {void (*)(QQmlListProperty<T> *property)}.
+
+Remove the last element from the list \a property.
 */
 
 QT_END_NAMESPACE

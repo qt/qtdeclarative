@@ -306,6 +306,16 @@ private slots:
 
     void extendedForeignTypes();
 
+    void inlineComponent();
+    void inlineComponent_data();
+    void inlineComponentReferenceCycle_data();
+    void inlineComponentReferenceCycle();
+    void nestedInlineComponentNotAllowed();
+    void inlineComponentStaticTypeResolution();
+    void inlineComponentInSingleton();
+    void nonExistingInlineComponent_data();
+    void nonExistingInlineComponent();
+
     void selfReference();
     void selfReferencingSingleton();
 
@@ -2780,12 +2790,12 @@ void tst_qqmllanguage::importsLocal_data()
     QTest::newRow("local import QTBUG-7721 A")
         << "subdir.Test {}" // no longer allowed (QTBUG-7721)
         << ""
-        << "subdir.Test - subdir is not a namespace";
+        << "subdir.Test - subdir is neither a type nor a namespace";
     QTest::newRow("local import QTBUG-7721 B")
         << "import \"subdir\" as X\n"
            "X.subsubdir.SubTest {}" // no longer allowed (QTBUG-7721)
         << ""
-        << "X.subsubdir.SubTest - nested namespaces not allowed";
+        << "X.subsubdir.SubTest - subsubdir is not a type";
     QTest::newRow("local import as")
         << "import \"subdir\" as T\n"
            "T.Test {}"
@@ -5378,25 +5388,156 @@ void tst_qqmllanguage::listContainingDeletedObject()
 
 void tst_qqmllanguage::overrideSingleton()
 {
-    auto check = [](const QString &name) {
+    auto check = [](const QString &name, const QByteArray &singletonElement) {
         const QByteArray testQml = "import Test 1.0\n"
                                    "import QtQml 2.0\n"
-                                   "QtObject { objectName: BareSingleton.objectName }";
+                                   "QtObject { objectName: " + singletonElement + ".objectName }";
         QQmlEngine engine;
         QQmlComponent component(&engine, nullptr);
-        component.setData(testQml, QUrl());
+        component.setData(testQml, QUrl("singleton.qml"));
         QVERIFY(component.isReady());
         QScopedPointer<QObject> obj(component.create());
         QCOMPARE(obj->objectName(), name);
     };
 
-    check("statically registered");
+    check("statically registered", "BareSingleton");
 
     BareSingleton singleton;
     singleton.setObjectName("dynamically registered");
     qmlRegisterSingletonInstance("Test", 1, 0, "BareSingleton", &singleton);
 
-    check("dynamically registered");
+    check("dynamically registered", "BareSingleton");
+
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                "singleton.qml:3: TypeError: Cannot read property 'objectName' of undefined");
+    check("", "UncreatableSingleton");
+
+    qmlRegisterSingletonInstance("Test", 1, 0, "UncreatableSingleton",
+                                 UncreatableSingleton::instance());
+    check("uncreatable", "UncreatableSingleton");
+}
+
+void tst_qqmllanguage::inlineComponent()
+{
+    QFETCH(QUrl, componentUrl);
+    QFETCH(QColor, color);
+    QFETCH(int, width);
+    QQmlEngine engine;
+    QQmlComponent component(&engine, componentUrl);
+    QScopedPointer<QObject> o(component.create());
+    if (component.isError()) {
+        qDebug() << component.errorString();
+    }
+    QVERIFY(!o.isNull());
+    auto icInstance = o->findChild<QObject *>("icInstance");
+    QVERIFY(icInstance);
+    QCOMPARE(icInstance->property("color").value<QColor>(),color);
+    QCOMPARE(icInstance->property("width").value<qreal>(), width);
+}
+
+void tst_qqmllanguage::inlineComponent_data()
+{
+    QTest::addColumn<QUrl>("componentUrl");
+    QTest::addColumn<QColor>("color");
+    QTest::addColumn<int>("width");
+
+    QTest::newRow("Usage from other component") << testFileUrl("inlineComponentUser1.qml") << QColorConstants::Blue << 24;
+    QTest::newRow("Reexport")                   << testFileUrl("inlineComponentUser2.qml") << QColorConstants::Svg::green << 24;
+    QTest::newRow("Usage in same component")    << testFileUrl("inlineComponentUser3.qml") << QColorConstants::Blue << 24;
+
+    QTest::newRow("Resolution happens at instantiation") << testFileUrl("inlineComponentUser4.qml") << QColorConstants::Blue << 24;
+    QTest::newRow("Non-toplevel IC is found") << testFileUrl("inlineComponentUser5.qml") << QColorConstants::Svg::red << 24;
+
+    QTest::newRow("Resolved in correct order") << testFileUrl("inlineComponentOrder.qml") << QColorConstants::Blue << 200;
+}
+
+void tst_qqmllanguage::inlineComponentReferenceCycle_data()
+{
+    QTest::addColumn<QUrl>("componentUrl");
+
+    QTest::newRow("Simple cycle") << testFileUrl("icSimpleCycle.qml");
+    QTest::newRow("Via property") << testFileUrl("icCycleViaProperty.qml");
+}
+
+void tst_qqmllanguage::inlineComponentReferenceCycle()
+{
+    QFETCH(QUrl, componentUrl);
+    QQmlEngine engine;
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "QQmlComponent: Component is not ready");
+    QQmlComponent component(&engine, componentUrl);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o.isNull());
+    QVERIFY(component.isError());
+    QCOMPARE(component.errorString(), componentUrl.toString() + QLatin1String(":-1 Inline components form a cycle!\n"));
+}
+
+void tst_qqmllanguage::nestedInlineComponentNotAllowed()
+{
+    QQmlEngine engine;
+    auto url = testFileUrl("nestedIC.qml");
+    QQmlComponent component(&engine, url);
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "QQmlComponent: Component is not ready");
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(component.isError());
+    QCOMPARE(component.errorString(), QLatin1String("%1:%2").arg(url.toString(), QLatin1String("5 Nested inline components are not supported\n")));
+}
+
+void tst_qqmllanguage::inlineComponentStaticTypeResolution()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("InlineComponentChild.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("i").toInt(), 42);
+}
+
+void tst_qqmllanguage::inlineComponentInSingleton()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("singletonICTest.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    auto untyped = o->property("singleton1");
+    QVERIFY(untyped.isValid());
+    auto singleton1 = untyped.value<QObject*>();
+    QVERIFY(singleton1);
+    QCOMPARE(singleton1->property("iProp").value<int>(), 42);
+    QCOMPARE(singleton1->property("sProp").value<QString>(), QString::fromLatin1("Hello, world"));
+    QVERIFY(!o.isNull());
+}
+
+void tst_qqmllanguage::nonExistingInlineComponent_data()
+{
+    QTest::addColumn<QUrl>("componentUrl");
+    QTest::addColumn<QString>("errorMessage");
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("column");
+
+    QTest::newRow("Property type")  << testFileUrl("nonExistingICUser1.qml") << QString("Type InlineComponentProvider has no inline component type called NonExisting") << 4 << 5;
+    QTest::newRow("Instantiation")  << testFileUrl("nonExistingICUser2.qml") << QString("Type InlineComponentProvider has no inline component type called NotExisting") << 4 << 5;
+    QTest::newRow("Inheritance")    << testFileUrl("nonExistingICUser3.qml") << QString("Type InlineComponentProvider has no inline component type called NotExisting") << 3 << 1;
+    QTest::newRow("From singleton") << testFileUrl("nonExistingICUser4.qml") << QString("Type MySingleton.SingletonTypeWithIC has no inline component type called NonExisting") << 5 << 5;
+
+    QTest::newRow("Cannot access parent inline components from child")  << testFileUrl("nonExistingICUser5.qml") << QString("Type InlineComponentProviderChild has no inline component type called StyledRectangle") << 4 << 5;
+}
+
+void tst_qqmllanguage::nonExistingInlineComponent()
+{
+    QFETCH(QUrl, componentUrl);
+    QFETCH(QString, errorMessage);
+    QFETCH(int, line);
+    QFETCH(int, column);
+    QQmlEngine engine;
+    QQmlComponent component(&engine, componentUrl);
+    auto errors = component.errors();
+    QCOMPARE(errors.size(), 1);
+    const auto &error = errors.first();
+    QCOMPARE(error.description(), errorMessage);
+    QCOMPARE(error.line(), line);
+    QCOMPARE(error.column(), column);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

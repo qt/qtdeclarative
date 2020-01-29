@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty string QtQml.Models::DelegateChoice::roleValue
+    \qmlproperty variant QtQml.Models::DelegateChoice::roleValue
     This property holds the value used to match the role data for the role provided by \l DelegateChooser::role.
 */
 QVariant QQmlDelegateChoice::roleValue() const
@@ -75,7 +75,7 @@ void QQmlDelegateChoice::setRoleValue(const QVariant &value)
 }
 
 /*!
-    \qmlproperty index QtQml.Models::DelegateChoice::row
+    \qmlproperty int QtQml.Models::DelegateChoice::row
     This property holds the value used to match the row value of model elements.
     With models that have only the index property (and thus only one column), this property
     should be intended as an index, and set to the desired index value.
@@ -87,7 +87,7 @@ void QQmlDelegateChoice::setRoleValue(const QVariant &value)
 */
 
 /*!
-    \qmlproperty index QtQml.Models::DelegateChoice::index
+    \qmlproperty int QtQml.Models::DelegateChoice::index
     This property holds the value used to match the index value of model elements.
     This is effectively an alias for \l row.
 
@@ -109,7 +109,7 @@ void QQmlDelegateChoice::setRow(int r)
 }
 
 /*!
-    \qmlproperty index QtQml.Models::DelegateChoice::column
+    \qmlproperty int QtQml.Models::DelegateChoice::column
     This property holds the value used to match the column value of model elements.
 */
 int QQmlDelegateChoice::column() const
@@ -218,7 +218,7 @@ bool QQmlDelegateChoice::match(int row, int column, const QVariant &value) const
 
 /*!
     \qmlproperty string QtQml.Models::DelegateChooser::role
-    This property holds the role used to determine the delegate for a given model item.
+    This property holds the role or the property name used to determine the delegate for a given model item.
 
     \sa DelegateChoice
 */
@@ -289,9 +289,15 @@ QQmlComponent *QQmlDelegateChooser::delegate(QQmlAdaptorModel *adaptorModel, int
         v = value(adaptorModel, row, column, m_role);
     if (!v.isValid()) { // check if the row only has modelData, for example if the row is a QVariantMap
         v = value(adaptorModel, row, column, QStringLiteral("modelData"));
-        if (v.isValid())
-            v = v.toMap().value(m_role);
+
+        if (v.isValid()) {
+            if (v.canConvert(QMetaType::QVariantMap))
+                v = v.toMap().value(m_role);
+            else if (v.canConvert(QMetaType::QObjectStar))
+                v = v.value<QObject*>()->property(m_role.toUtf8());
+        }
     }
+
     // loop through choices, finding first one that fits
     for (int i = 0; i < m_choices.count(); ++i) {
         const QQmlDelegateChoice *choice = m_choices.at(i);

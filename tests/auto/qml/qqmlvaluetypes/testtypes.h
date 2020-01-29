@@ -71,6 +71,8 @@ class MyTypeObject : public QObject
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY changed)
     Q_PROPERTY(QColor invalidColor READ invalidColor CONSTANT)
     Q_PROPERTY(QVariant variant READ variant NOTIFY changed)
+    Q_PROPERTY(QQmlProperty colorProperty READ colorProperty CONSTANT)
+    Q_PROPERTY(QQmlProperty invalidProperty READ invalidProperty CONSTANT)
 
 public:
     MyTypeObject() :
@@ -172,6 +174,10 @@ public:
     QColor invalidColor() const { return QColor(); }
 
     QVariant variant() const { return sizef(); }
+
+    QQmlProperty colorProperty() { return QQmlProperty(this, "color"); }
+
+    QQmlProperty invalidProperty() const { return QQmlProperty(); }
 
     void emitRunScript() { emit runScript(); }
 

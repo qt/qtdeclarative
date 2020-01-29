@@ -63,6 +63,7 @@ QT_REQUIRE_CONFIG(quick_path);
 
 #include <QtCore/QObject>
 #include <QtGui/QPainterPath>
+#include <QtGui/QFont>
 
 QT_BEGIN_NAMESPACE
 
@@ -598,6 +599,106 @@ public:
     static QPointF sequentialPointAt(const QPainterPath &path, const qreal &pathLength, const QList<AttributePoint> &attributePoints, QQuickCachedBezier &prevBez, qreal p, qreal *angle = nullptr);
 };
 
+class Q_QUICK_PRIVATE_EXPORT QQuickPathText : public QQuickPathElement
+{
+    Q_OBJECT
+    Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged)
+    Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged)
+    Q_PROPERTY(qreal width READ width NOTIFY changed)
+    Q_PROPERTY(qreal height READ height NOTIFY changed)
+    Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
+    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged)
+    QML_NAMED_ELEMENT(PathText)
+    QML_ADDED_IN_MINOR_VERSION(15)
+public:
+    QQuickPathText(QObject *parent=nullptr) : QQuickPathElement(parent)
+    {
+        connect(this, &QQuickPathText::xChanged, this, &QQuickPathElement::changed);
+        connect(this, &QQuickPathText::yChanged, this, &QQuickPathElement::changed);
+        connect(this, &QQuickPathText::textChanged, this, &QQuickPathElement::changed);
+        connect(this, &QQuickPathText::fontChanged, this, &QQuickPathElement::changed);
+
+        connect(this, &QQuickPathElement::changed, this, &QQuickPathText::invalidate);
+    }
+
+    void addToPath(QPainterPath &path);
+
+    qreal x() const { return _x; }
+    qreal y() const { return _y; }
+    QString text() const { return _text; }
+    QFont font() const { return _font; }
+
+    void setX(qreal x)
+    {
+        if (qFuzzyCompare(_x, x))
+            return;
+
+        _x = x;
+        Q_EMIT xChanged();
+    }
+
+    void setY(qreal y)
+    {
+        if (qFuzzyCompare(_y, y))
+            return;
+
+        _y = y;
+        Q_EMIT yChanged();
+    }
+
+    void setText(const QString &text)
+    {
+        if (text == _text)
+            return;
+
+        _text = text;
+        Q_EMIT textChanged();
+    }
+
+    void setFont(const QFont &font)
+    {
+        if (font == _font)
+            return;
+
+        _font = font;
+        Q_EMIT fontChanged();
+    }
+
+    qreal width() const
+    {
+        updatePath();
+        return _path.boundingRect().width();
+    }
+
+    qreal height() const
+    {
+        updatePath();
+        return _path.boundingRect().height();
+    }
+
+Q_SIGNALS:
+    void xChanged();
+    void yChanged();
+    void textChanged();
+    void fontChanged();
+
+private Q_SLOTS:
+    void invalidate()
+    {
+        _path.clear();
+    }
+
+private:
+    void updatePath() const;
+
+    QString _text;
+    qreal _x = qreal(0.0);
+    qreal _y = qreal(0.0);
+    QFont _font;
+
+    mutable QPainterPath _path;
+};
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickPathElement)
@@ -614,5 +715,6 @@ QML_DECLARE_TYPE(QQuickPathSvg)
 QML_DECLARE_TYPE(QQuickPathPercent)
 QML_DECLARE_TYPE(QQuickPathPolyline)
 QML_DECLARE_TYPE(QQuickPath)
+QML_DECLARE_TYPE(QQuickPathText)
 
 #endif // QQUICKPATH_H

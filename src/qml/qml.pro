@@ -39,6 +39,7 @@ greaterThan(QT_CLANG_MAJOR_VERSION, 3)|greaterThan(QT_CLANG_MINOR_VERSION, 3)| \
     WERROR += -Wno-error=unused-const-variable
 
 HEADERS += qtqmlglobal.h \
+           inlinecomponentutils_p.h \
            qtqmlglobal_p.h \
            qtqmlcompilerglobal.h \
            qtqmlcompilerglobal_p.h

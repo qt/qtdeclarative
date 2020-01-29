@@ -43,9 +43,9 @@
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QtMath>
 
-#include <QtGui/QOpenGLContext>
-#include <QtGui/QOpenGLTexture>
-#include <QtGui/QOpenGLFunctions>
+#include <QOpenGLContext>
+#include <QOpenGLTexture>
+#include <QOpenGLFunctions>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QScreen>
 #include <QtGui/QSurface>

@@ -490,7 +490,7 @@ QQuickAnimationGroup *QQuickAbstractAnimation::group() const
     return d->group;
 }
 
-void QQuickAbstractAnimation::setGroup(QQuickAnimationGroup *g)
+void QQuickAbstractAnimation::setGroup(QQuickAnimationGroup *g, int index)
 {
     Q_D(QQuickAbstractAnimation);
     if (d->group == g)
@@ -500,8 +500,12 @@ void QQuickAbstractAnimation::setGroup(QQuickAnimationGroup *g)
 
     d->group = g;
 
-    if (d->group && !d->group->d_func()->animations.contains(this))
-        d->group->d_func()->animations.append(this);
+    if (d->group && !d->group->d_func()->animations.contains(this)) {
+        if (index >= 0)
+            d->group->d_func()->animations.insert(index, this);
+        else
+            d->group->d_func()->animations.append(this);
+    }
 }
 
 /*!
@@ -1170,7 +1174,7 @@ void QQuickPropertyAction::setProperties(const QString &p)
 QQmlListProperty<QObject> QQuickPropertyAction::targets()
 {
     Q_D(QQuickPropertyAction);
-    return QQmlListProperty<QObject>(this, d->targets);
+    return QQmlListProperty<QObject>(this, &(d->targets));
 }
 
 /*!
@@ -1182,7 +1186,7 @@ QQmlListProperty<QObject> QQuickPropertyAction::targets()
 QQmlListProperty<QObject> QQuickPropertyAction::exclude()
 {
     Q_D(QQuickPropertyAction);
-    return QQmlListProperty<QObject>(this, d->exclude);
+    return QQmlListProperty<QObject>(this, &(d->exclude));
 }
 
 /*!
@@ -1722,6 +1726,20 @@ void QQuickAnimationGroupPrivate::append_animation(QQmlListProperty<QQuickAbstra
         a->setGroup(q);
 }
 
+QQuickAbstractAnimation *QQuickAnimationGroupPrivate::at_animation(QQmlListProperty<QQuickAbstractAnimation> *list, int index)
+{
+    if (auto q = qmlobject_cast<QQuickAnimationGroup *>(list->object))
+        return q->d_func()->animations.at(index);
+    return nullptr;
+}
+
+int QQuickAnimationGroupPrivate::count_animation(QQmlListProperty<QQuickAbstractAnimation> *list)
+{
+    if (auto q = qmlobject_cast<QQuickAnimationGroup *>(list->object))
+        return q->d_func()->animations.count();
+    return 0;
+}
+
 void QQuickAnimationGroupPrivate::clear_animation(QQmlListProperty<QQuickAbstractAnimation> *list)
 {
     QQuickAnimationGroup *q = qobject_cast<QQuickAnimationGroup *>(list->object);
@@ -1731,6 +1749,23 @@ void QQuickAnimationGroupPrivate::clear_animation(QQmlListProperty<QQuickAbstrac
             firstAnim->setGroup(nullptr);
         }
     }
+}
+
+void QQuickAnimationGroupPrivate::replace_animation(QQmlListProperty<QQuickAbstractAnimation> *list,
+                                                    int i, QQuickAbstractAnimation *a)
+{
+    if (auto *q = qmlobject_cast<QQuickAnimationGroup *>(list->object)) {
+        if (QQuickAbstractAnimation *anim = q->d_func()->animations.at(i))
+            anim->setGroup(nullptr);
+        if (a)
+            a->setGroup(q, i);
+    }
+}
+
+void QQuickAnimationGroupPrivate::removeLast_animation(QQmlListProperty<QQuickAbstractAnimation> *list)
+{
+    if (auto *q = qobject_cast<QQuickAnimationGroup *>(list->object))
+        q->d_func()->animations.last()->setGroup(nullptr);
 }
 
 QQuickAnimationGroup::~QQuickAnimationGroup()
@@ -1744,10 +1779,14 @@ QQuickAnimationGroup::~QQuickAnimationGroup()
 QQmlListProperty<QQuickAbstractAnimation> QQuickAnimationGroup::animations()
 {
     Q_D(QQuickAnimationGroup);
-    QQmlListProperty<QQuickAbstractAnimation> list(this, d->animations);
-    list.append = &QQuickAnimationGroupPrivate::append_animation;
-    list.clear = &QQuickAnimationGroupPrivate::clear_animation;
-    return list;
+    return QQmlListProperty<QQuickAbstractAnimation>(
+                this, &(d->animations),
+                &QQuickAnimationGroupPrivate::append_animation,
+                &QQuickAnimationGroupPrivate::count_animation,
+                &QQuickAnimationGroupPrivate::at_animation,
+                &QQuickAnimationGroupPrivate::clear_animation,
+                &QQuickAnimationGroupPrivate::replace_animation,
+                &QQuickAnimationGroupPrivate::removeLast_animation);
 }
 
 /*!
@@ -1927,20 +1966,20 @@ QAbstractAnimationJob* QQuickParallelAnimation::transition(QQuickStateActions &a
 //convert a variant from string type to another animatable type
 void QQuickPropertyAnimationPrivate::convertVariant(QVariant &variant, int type)
 {
-    if (variant.userType() != QVariant::String) {
+    if (variant.userType() != QMetaType::QString) {
         variant.convert(type);
         return;
     }
 
     switch (type) {
-    case QVariant::Rect:
-    case QVariant::RectF:
-    case QVariant::Point:
-    case QVariant::PointF:
-    case QVariant::Size:
-    case QVariant::SizeF:
-    case QVariant::Color:
-    case QVariant::Vector3D:
+    case QMetaType::QRect:
+    case QMetaType::QRectF:
+    case QMetaType::QPoint:
+    case QMetaType::QPointF:
+    case QMetaType::QSize:
+    case QMetaType::QSizeF:
+    case QMetaType::QColor:
+    case QMetaType::QVector3D:
         {
         bool ok = false;
         variant = QQmlStringConverters::variantFromString(variant.toString(), type, &ok);
@@ -2533,7 +2572,7 @@ void QQuickPropertyAnimation::setProperties(const QString &prop)
 QQmlListProperty<QObject> QQuickPropertyAnimation::targets()
 {
     Q_D(QQuickPropertyAnimation);
-    return QQmlListProperty<QObject>(this, d->targets);
+    return QQmlListProperty<QObject>(this, &(d->targets));
 }
 
 /*!
@@ -2544,7 +2583,7 @@ QQmlListProperty<QObject> QQuickPropertyAnimation::targets()
 QQmlListProperty<QObject> QQuickPropertyAnimation::exclude()
 {
     Q_D(QQuickPropertyAnimation);
-    return QQmlListProperty<QObject>(this, d->exclude);
+    return QQmlListProperty<QObject>(this, &(d->exclude));
 }
 
 void QQuickAnimationPropertyUpdater::setValue(qreal v)

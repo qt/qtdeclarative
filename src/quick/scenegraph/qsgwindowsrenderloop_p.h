@@ -54,7 +54,7 @@
 #include <QtCore/QObject>
 #include <QtCore/QElapsedTimer>
 
-#include <QtGui/QOpenGLContext>
+#include <QOpenGLContext>
 
 #include "qsgrenderloop_p.h"
 

@@ -4,7 +4,7 @@ Rectangle {
     id: test
     property variant fontloader: fontloaderelement
     height: 100; width: 100
-    property bool usename: false
+    property bool useotherfont: false
     property int statenum: 1
     property alias name: fontloaderelement.name
     property alias source: fontloaderelement.source
@@ -15,11 +15,11 @@ Rectangle {
     }
 
     states: [
-        State { name: "start"; when: !usename
+        State { name: "start"; when: !useotherfont
             PropertyChanges { target: fontloaderelement; source: "tarzeau_ocr_a.ttf" }
         },
-        State { name: "changefont"; when: usename
-            PropertyChanges { target: fontloaderelement; name: "Tahoma" }
+        State { name: "changefont"; when: useotherfont
+            PropertyChanges { target: fontloaderelement; source: "daniel.ttf" }
         }
     ]
 

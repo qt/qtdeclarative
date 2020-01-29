@@ -36,7 +36,7 @@
 #include <QtCore/qregularexpression.h>
 
 #include <QtGui/QGuiApplication>
-#include <QtGui/QOpenGLFunctions>
+#include <QOpenGLFunctions>
 
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlengine.h>

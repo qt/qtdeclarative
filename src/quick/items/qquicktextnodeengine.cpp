@@ -532,7 +532,7 @@ void QQuickTextNodeEngine::addGlyphsForRanges(const QVarLengthArray<QTextLayout:
     int remainingLength = end - start;
     for (int j=0; j<ranges.size(); ++j) {
         const QTextLayout::FormatRange &range = ranges.at(j);
-        if (range.start + range.length >= currentPosition
+        if (range.start + range.length > currentPosition
                 && range.start < currentPosition + remainingLength) {
 
             if (range.start > currentPosition) {

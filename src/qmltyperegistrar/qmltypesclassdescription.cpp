@@ -152,8 +152,7 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
         addedInRevision = 0;
     }
 
-    std::sort(revisions.begin(), revisions.end(),
-              [](int a, int b) { return QByteArray::number(a) < QByteArray::number(b); });
+    std::sort(revisions.begin(), revisions.end());
     const auto end = std::unique(revisions.begin(), revisions.end());
     revisions.erase(end, revisions.end());
 

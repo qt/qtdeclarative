@@ -49,9 +49,9 @@
 ****************************************************************************/
 
 #include "fbitem.h"
-#include <QtGui/QOpenGLFramebufferObject>
-#include <QtGui/QOpenGLContext>
-#include <QtGui/QOpenGLFunctions>
+#include <QOpenGLFramebufferObject>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
 #include <QtCore/QDebug>
 
 #if QT_CONFIG(opengl)

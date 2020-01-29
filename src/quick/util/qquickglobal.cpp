@@ -346,7 +346,7 @@ public:
             if (ok) *ok = true;
         }
         if (vweight->isInt32()) {
-            retn.setWeight(static_cast<QFont::Weight>(vweight->integerValue()));
+            retn.setWeight(vweight->integerValue());
             if (ok) *ok = true;
         }
         if (vwspac->isNumber()) {
@@ -719,7 +719,7 @@ public:
     bool typedRead(const QVariant& src, int dstType, void *dst)
     {
         T *dstT = reinterpret_cast<T *>(dst);
-        if (src.type() == static_cast<uint>(dstType)) {
+        if (src.userType() == dstType) {
             *dstT = src.value<T>();
         } else {
             *dstT = T();

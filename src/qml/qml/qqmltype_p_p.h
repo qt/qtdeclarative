@@ -56,6 +56,7 @@
 #include <private/qqmlproxymetaobject_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmlpropertycache_p.h>
+#include <private/qqmlmetatype_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -69,6 +70,7 @@ public:
     void initEnums(QQmlEnginePrivate *engine) const;
     void insertEnums(const QMetaObject *metaObject) const;
     void insertEnumsFromPropertyCache(const QQmlPropertyCache *cache) const;
+    void setContainingType(QQmlType *containingType);
 
     QUrl sourceUrl() const
     {
@@ -77,6 +79,8 @@ public:
             return extraData.fd->url;
         case QQmlType::CompositeSingletonType:
             return extraData.sd->singletonInstanceInfo->url;
+        case QQmlType::InlineComponentType:
+            return extraData.id->url;
         default:
             return QUrl();
         }
@@ -130,10 +134,23 @@ public:
         QUrl url;
     };
 
+    struct QQmlInlineTypeData
+    {
+        QUrl url = QUrl();
+        // The containing type stores a pointer to the inline component type
+        // Using QQmlType here would create a reference cycle
+        // As the inline component type cannot outlive the containing type
+        // this should still be fine
+        QQmlTypePrivate const * containingType = nullptr;
+        QString inlineComponentName = QString();
+        int objectId = -1;
+    };
+
     union extraData {
         QQmlCppTypeData* cd;
         QQmlSingletonTypeData* sd;
         QQmlCompositeTypeData* fd;
+        QQmlInlineTypeData* id;
     } extraData;
 
     const char *iid;
@@ -160,6 +177,8 @@ public:
     mutable QList<QStringHash<int>*> scopedEnums;
 
     void setName(const QString &uri, const QString &element);
+    mutable QHash<QString, int> namesToInlineComponentObjectIndex;
+    mutable QHash<int, QQmlType> objectIdToICType;
 
 private:
     ~QQmlTypePrivate() override;

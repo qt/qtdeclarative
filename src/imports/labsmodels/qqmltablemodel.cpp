@@ -271,7 +271,7 @@ QQmlTableModel::ColumnRoleMetadata QQmlTableModel::fetchColumnRoleData(const QSt
 
     if (columnRoleGetter.isString()) {
         // The role is set as a string, so we assume the row is a simple object.
-        if (firstRow.type() != QVariant::Map) {
+        if (firstRow.userType() != QMetaType::QVariantMap) {
             qmlWarning(this).quote() << "expected row for role "
                 << roleNameKey << " of TableModelColumn at index "
                 << columnIndex << " to be a simple object, but it's "
@@ -284,7 +284,7 @@ QQmlTableModel::ColumnRoleMetadata QQmlTableModel::fetchColumnRoleData(const QSt
 
         roleData.isStringRole = true;
         roleData.name = rolePropertyName;
-        roleData.type = roleProperty.type();
+        roleData.type = roleProperty.userType();
         roleData.typeName = QString::fromLatin1(roleProperty.typeName());
     } else if (columnRoleGetter.isCallable()) {
         // The role is provided via a function, which means the row is complex and
@@ -296,7 +296,7 @@ QQmlTableModel::ColumnRoleMetadata QQmlTableModel::fetchColumnRoleData(const QSt
         // We don't know the property name since it's provided through the function.
         // roleData.name = ???
         roleData.isStringRole = false;
-        roleData.type = cellData.type();
+        roleData.type = cellData.userType();
         roleData.typeName = QString::fromLatin1(cellData.typeName());
     } else {
         // Invalid role.
@@ -326,7 +326,7 @@ void QQmlTableModel::fetchColumnMetadata()
         for (const int builtInRoleKey : builtInRoleKeys) {
             const QString builtInRoleName = supportedRoleNames.value(builtInRoleKey);
             ColumnRoleMetadata roleData = fetchColumnRoleData(builtInRoleName, column, columnIndex);
-            if (roleData.type == QVariant::Invalid) {
+            if (roleData.type == QMetaType::UnknownType) {
                 // This built-in role was not specified in this column.
                 continue;
             }
@@ -847,7 +847,7 @@ bool QQmlTableModel::setData(const QModelIndex &index, const QVariant &value, in
     // If the value set is not of the expected type, we can try to convert it automatically.
     const ColumnRoleMetadata roleData = columnMetadata.roles.value(roleName);
     QVariant effectiveValue = value;
-    if (value.type() != roleData.type) {
+    if (value.userType() != roleData.type) {
         if (!value.canConvert(int(roleData.type))) {
             qmlWarning(this).nospace() << "setData(): the value " << value
                 << " set at row " << row << " column " << column << " with role " << roleName
@@ -933,7 +933,7 @@ QQmlTableModel::ColumnRoleMetadata::ColumnRoleMetadata()
 }
 
 QQmlTableModel::ColumnRoleMetadata::ColumnRoleMetadata(
-    bool isStringRole, const QString &name, QVariant::Type type, const QString &typeName) :
+    bool isStringRole, const QString &name, int type, const QString &typeName) :
     isStringRole(isStringRole),
     name(name),
     type(type),
@@ -995,7 +995,7 @@ bool QQmlTableModel::validateNewRow(const char *functionName, const QVariant &ro
 
     const QVariant rowAsVariant = operation == SetRowsOperation
         ? row : row.value<QJSValue>().toVariant();
-    if (rowAsVariant.type() != QVariant::Map) {
+    if (rowAsVariant.userType() != QMetaType::QVariantMap) {
         qmlWarning(this) << functionName << ": row manipulation functions "
             << "do not support complex rows (row index: " << rowIndex << ")";
         return false;
@@ -1028,7 +1028,7 @@ bool QQmlTableModel::validateNewRow(const char *functionName, const QVariant &ro
             }
 
             const QVariant rolePropertyValue = rowAsMap.value(roleData.name);
-            if (rolePropertyValue.type() != roleData.type) {
+            if (rolePropertyValue.userType() != roleData.type) {
                 qmlWarning(this).quote() << functionName << ": expected the property named "
                     << roleData.name << " to be of type " << roleData.typeName
                     << ", but got " << QString::fromLatin1(rolePropertyValue.typeName()) << " instead";

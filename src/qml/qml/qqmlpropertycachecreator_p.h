@@ -55,6 +55,10 @@
 #include <private/qqmlmetaobject_p.h>
 #include <private/qqmlpropertyresolver_p.h>
 #include <private/qqmltypedata_p.h>
+#include <private/inlinecomponentutils_p.h>
+
+#include <QScopedValueRollback>
+#include <vector>
 
 QT_BEGIN_NAMESPACE
 
@@ -115,8 +119,12 @@ public:
 
     QQmlJS::DiagnosticMessage buildMetaObjects();
 
+    enum class VMEMetaObjectIsRequired {
+        Maybe,
+        Always
+    };
 protected:
-    QQmlJS::DiagnosticMessage buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context);
+    QQmlJS::DiagnosticMessage buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context, VMEMetaObjectIsRequired isVMERequired);
     QQmlRefPointer<QQmlPropertyCache> propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlJS::DiagnosticMessage *error) const;
     QQmlJS::DiagnosticMessage createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlRefPointer<QQmlPropertyCache> &baseTypeCache);
 
@@ -129,7 +137,8 @@ protected:
     const QQmlImports * const imports;
     QQmlPropertyCacheVector *propertyCaches;
     QQmlPendingGroupPropertyBindings *pendingGroupPropertyBindings;
-    const QByteArray typeClassName;
+    QByteArray typeClassName; // not const as we temporarily chang it for inline components
+    unsigned int currentRoot; // set to objectID of inline component root when handling inline components
 };
 
 template <typename ObjectContainer>
@@ -151,12 +160,59 @@ inline QQmlPropertyCacheCreator<ObjectContainer>::QQmlPropertyCacheCreator(QQmlP
 template <typename ObjectContainer>
 inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjects()
 {
+    using namespace icutils;
     QQmlBindingInstantiationContext context;
-    return buildMetaObjectRecursively(/*root object*/0, context);
+
+    // get a list of all inline components
+    using InlineComponent = typename std::remove_reference<decltype (*(std::declval<CompiledObject>().inlineComponentsBegin()))>::type;
+    std::vector<InlineComponent> allICs {};
+    for (int i=0; i != objectContainer->objectCount(); ++i) {
+        const CompiledObject *obj = objectContainer->objectAt(i);
+        for (auto it = obj->inlineComponentsBegin(); it != obj->inlineComponentsEnd(); ++it) {
+            allICs.push_back(*it);
+        }
+    }
+
+    // create a graph on inline components referencing inline components
+    std::vector<Node> nodes;
+    nodes.resize(allICs.size());
+    std::iota(nodes.begin(), nodes.end(), 0);
+    AdjacencyList adjacencyList;
+    adjacencyList.resize(nodes.size());
+    fillAdjacencyListForInlineComponents(objectContainer, adjacencyList, nodes, allICs);
+
+    bool hasCycle = false;
+    auto nodesSorted = topoSort(nodes, adjacencyList, hasCycle);
+
+    if (hasCycle) {
+        QQmlJS::DiagnosticMessage diag;
+        diag.message = QLatin1String("Inline components form a cycle!");
+        return diag;
+    }
+
+    // create meta objects for inline components before compiling actual root component
+    for (auto nodeIt = nodesSorted.rbegin(); nodeIt != nodesSorted.rend(); ++nodeIt) {
+        const auto &ic = allICs[nodeIt->index];
+        QV4::ResolvedTypeReference *typeRef = objectContainer->resolvedType(ic.nameIndex);
+        Q_ASSERT(propertyCaches->at(ic.objectIndex) == nullptr);
+        Q_ASSERT(typeRef->typePropertyCache.isNull()); // not set yet
+
+        QByteArray icTypeName { objectContainer->stringAt(ic.nameIndex).toUtf8() };
+        QScopedValueRollback<QByteArray> nameChange {typeClassName, icTypeName};
+        QScopedValueRollback<unsigned int> rootChange {currentRoot, ic.objectIndex};
+        QQmlJS::DiagnosticMessage diag = buildMetaObjectRecursively(ic.objectIndex, context, VMEMetaObjectIsRequired::Always);
+        if (diag.isValid()) {
+            return diag;
+        }
+        typeRef->typePropertyCache = propertyCaches->at(ic.objectIndex);
+        Q_ASSERT(!typeRef->typePropertyCache.isNull());
+    }
+
+    return buildMetaObjectRecursively(/*root object*/0, context, VMEMetaObjectIsRequired::Maybe);
 }
 
 template <typename ObjectContainer>
-inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context)
+inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context, VMEMetaObjectIsRequired isVMERequired)
 {
     auto isAddressable = [](const QUrl &url) {
         const QString fileName = url.fileName();
@@ -164,7 +220,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buil
     };
 
     const CompiledObject *obj = objectContainer->objectAt(objectIndex);
-    bool needVMEMetaObject = obj->propertyCount() != 0 || obj->aliasCount() != 0
+    bool needVMEMetaObject = isVMERequired == VMEMetaObjectIsRequired::Always || obj->propertyCount() != 0 || obj->aliasCount() != 0
             || obj->signalCount() != 0 || obj->functionCount() != 0 || obj->enumCount() != 0
             || (((obj->flags & QV4::CompiledData::Object::IsComponent)
                  || (objectIndex == 0 && isAddressable(objectContainer->url())))
@@ -230,7 +286,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buil
                 if (!context.resolveInstantiatingProperty())
                     pendingGroupPropertyBindings->append(context);
 
-                QQmlJS::DiagnosticMessage error = buildMetaObjectRecursively(binding->value.objectIndex, context);
+                QQmlJS::DiagnosticMessage error = buildMetaObjectRecursively(binding->value.objectIndex, context, VMEMetaObjectIsRequired::Maybe);
                 if (error.isValid())
                     return error;
             }
@@ -247,6 +303,7 @@ inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContaine
         return context.instantiatingPropertyCache(enginePrivate);
     } else if (obj->inheritedTypeNameIndex != 0) {
         auto *typeRef = objectContainer->resolvedType(obj->inheritedTypeNameIndex);
+        QQmlType qmltype = typeRef->type;
         Q_ASSERT(typeRef);
 
         if (typeRef->isFullyDynamicType) {
@@ -298,7 +355,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
 
     QByteArray newClassName;
 
-    if (objectIndex == /*root object*/0) {
+    if (objectIndex == /*root object*/0 || int(currentRoot) == objectIndex) {
         newClassName = typeClassName;
     }
     if (newClassName.isEmpty()) {
@@ -428,7 +485,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
 
         auto flags = QQmlPropertyData::defaultSignalFlags();
         if (paramCount)
-            flags.hasArguments = true;
+            flags.setHasArguments(true);
 
         QString signalName = stringAt(s->nameIndex);
         if (seenSignals.contains(signalName))
@@ -457,7 +514,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
         auto formal = function->formalsBegin();
         auto end = function->formalsEnd();
         for ( ; formal != end; ++formal) {
-            flags.hasArguments = true;
+            flags.setHasArguments(true);
             parameterNames << stringAt(formal->nameIndex).toUtf8();
             int type = metaTypeForParameter(formal->type);
             if (type == QMetaType::UnknownType)
@@ -504,18 +561,31 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
                 return qQmlCompileError(p->location, QQmlPropertyCacheCreatorBase::tr("Invalid property type"));
             }
 
-            Q_ASSERT(qmltype.isValid());
-            if (qmltype.isComposite()) {
-                QQmlMetaType::CompositeMetaTypeIds typeIds;
-                if (selfReference) {
-                     typeIds = objectContainer->typeIds();
+            // inline components are not necessarily valid yet
+            Q_ASSERT(qmltype.isValid() || qmltype.isInlineComponentType());
+            if (qmltype.isComposite() || qmltype.isInlineComponentType()) {
+                CompositeMetaTypeIds typeIds;
+                if (qmltype.isInlineComponentType()) {
+                    auto objectId = qmltype.inlineComponendId();
+                    auto containingType = qmltype.containingType();
+                    if (containingType.isValid()) {
+                        auto icType = containingType.lookupInlineComponentById(objectId);
+                        typeIds = {icType.typeId(), icType.qListTypeId()};
+                    } else {
+                        typeIds = {};
+                    }
+                    if (!typeIds.isValid()) // type has not been registered yet, we must be in containing type
+                        typeIds = objectContainer->typeIdsForComponent(objectId);
+                    Q_ASSERT(typeIds.isValid());
+                } else if (selfReference) {
+                     typeIds = objectContainer->typeIdsForComponent();
                 } else {
                     QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
                     Q_ASSERT(tdata);
                     Q_ASSERT(tdata->isComplete());
 
                     auto compilationUnit = tdata->compilationUnit();
-                    typeIds = compilationUnit->typeIds();
+                    typeIds = compilationUnit->typeIdsForComponent();
                 }
 
                 if (p->isList) {
@@ -539,7 +609,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
         }
 
         if (!p->isReadOnly && !p->isList)
-            propertyFlags.isWritable = true;
+            propertyFlags.setIsWritable(true);
 
 
         QString propertyName = stringAt(p->nameIndex);
@@ -578,7 +648,7 @@ inline int QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter(const
         return qmltype.typeId();
 
     if (selfReference)
-        return objectContainer->typeIds().id;
+        return objectContainer->typeIdsForComponent().id;
 
     QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
     Q_ASSERT(tdata);
@@ -721,7 +791,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>:
     bool writable = false;
     bool resettable = false;
 
-    propertyFlags->isAlias = true;
+    propertyFlags->setIsAlias(true);
 
     if (alias.aliasToLocalAlias) {
         const QV4::CompiledData::Alias *lastAlias = &alias;
@@ -806,12 +876,12 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>:
             if (valueTypeIndex != -1) {
                 const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(*type);
                 if (valueTypeMetaObject->property(valueTypeIndex).isEnumType())
-                    *type = QVariant::Int;
+                    *type = QMetaType::Int;
                 else
                     *type = valueTypeMetaObject->property(valueTypeIndex).userType();
             } else {
                 if (targetProperty->isEnum()) {
-                    *type = QVariant::Int;
+                    *type = QMetaType::Int;
                 } else {
                     // Copy type flags
                     propertyFlags->copyPropertyTypeFlags(targetProperty->flags());
@@ -823,8 +893,8 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>:
         }
     }
 
-    propertyFlags->isWritable = !(alias.flags & QV4::CompiledData::Alias::IsReadOnly) && writable;
-    propertyFlags->isResettable = resettable;
+    propertyFlags->setIsWritable(!(alias.flags & QV4::CompiledData::Alias::IsReadOnly) && writable);
+    propertyFlags->setIsResettable(resettable);
     return QQmlJS::DiagnosticMessage();
 }
 

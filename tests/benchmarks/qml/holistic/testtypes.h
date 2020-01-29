@@ -36,7 +36,6 @@
 #include <QtQml/qqmllist.h>
 #include <QtCore/qrandom.h>
 #include <QtCore/qrect.h>
-#include <QtGui/qmatrix.h>
 #include <QtGui/qcolor.h>
 #include <QtGui/qpixmap.h>
 #include <QtGui/qvector3d.h>

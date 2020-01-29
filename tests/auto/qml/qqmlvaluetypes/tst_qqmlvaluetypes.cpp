@@ -67,6 +67,7 @@ private slots:
     void color();
     void variant();
     void locale();
+    void qmlproperty();
 
     void bindingAssignment();
     void bindingRead();
@@ -358,6 +359,20 @@ void tst_qqmlvaluetypes::locale()
         QCOMPARE(object->property("zeroDigit").toString().at(0), locale.zeroDigit());
 #endif // im
     }
+}
+
+void tst_qqmlvaluetypes::qmlproperty()
+{
+    QQmlComponent component(&engine, testFileUrl("qmlproperty_read.qml"));
+    MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+    QVERIFY(object != nullptr);
+
+    QCOMPARE(object->property("colorPropertyObject").value<QObject *>(), object);
+    QCOMPARE(object->property("colorPropertyName").toString(), "color");
+    QCOMPARE(object->property("invalidPropertyObject").value<QObject *>(), nullptr);
+    QCOMPARE(object->property("invalidPropertyName").toString(), "");
+
+    delete object;
 }
 
 void tst_qqmlvaluetypes::sizereadonly()

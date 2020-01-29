@@ -153,7 +153,7 @@ void QQmlProfilerAdapter::receiveData(const QVector<QQmlProfilerData> &new_data,
     if (locations.isEmpty())
         locations = new_locations;
     else
-        locations.unite(new_locations);
+        locations.insert(new_locations);
 
     service->dataReady(this);
 }

@@ -1545,6 +1545,15 @@ void Type::toString(QString *out) const
     };
 }
 
+void UiInlineComponent::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(component, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
 } } // namespace QQmlJS::AST
 
 QT_END_NAMESPACE

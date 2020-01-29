@@ -88,8 +88,7 @@ public:
     QList<LogEntry> logBuffer;
 
 protected:
-    //inherited from QQmlDebugClient
-    void messageReceived(const QByteArray &data);
+    void messageReceived(const QByteArray &data) override;
 
 signals:
     void debugOutput();

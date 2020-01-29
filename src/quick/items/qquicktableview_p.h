@@ -104,8 +104,8 @@ public:
     QJSValue columnWidthProvider() const;
     void setColumnWidthProvider(const QJSValue &provider);
 
-    virtual QVariant model() const;
-    virtual void setModel(const QVariant &newModel);
+    QVariant model() const;
+    void setModel(const QVariant &newModel);
 
     QQmlComponent *delegate() const;
     void setDelegate(QQmlComponent *);

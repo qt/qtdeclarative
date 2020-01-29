@@ -111,7 +111,8 @@ public:
     QQmlObjectCreator(QQmlContextData *parentContext, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, QQmlContextData *creationContext, QQmlIncubatorPrivate  *incubator = nullptr);
     ~QQmlObjectCreator();
 
-    QObject *create(int subComponentIndex = -1, QObject *parent = nullptr, QQmlInstantiationInterrupt *interrupt = nullptr);
+    enum CreationFlags { NormalObject = 1, InlineComponent = 2 };
+    QObject *create(int subComponentIndex = -1, QObject *parent = nullptr, QQmlInstantiationInterrupt *interrupt = nullptr, int flags = NormalObject);
 
     bool populateDeferredProperties(QObject *instance, const QQmlData::DeferredData *deferredData);
 

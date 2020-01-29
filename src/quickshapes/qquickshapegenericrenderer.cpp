@@ -49,7 +49,7 @@
 #if QT_CONFIG(opengl)
 #include <QOpenGLContext>
 #include <QOffscreenSurface>
-#include <QtGui/private/qopenglextensions_p.h>
+#include <private/qopenglextensions_p.h>
 #endif
 
 QT_BEGIN_NAMESPACE

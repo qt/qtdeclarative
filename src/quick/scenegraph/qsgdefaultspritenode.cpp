@@ -40,7 +40,7 @@
 #include "qsgdefaultspritenode_p.h"
 
 #include <QtQuick/QSGMaterial>
-#include <QtGui/QOpenGLShaderProgram>
+#include <QOpenGLShaderProgram>
 
 QT_BEGIN_NAMESPACE
 

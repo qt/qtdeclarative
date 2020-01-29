@@ -91,6 +91,7 @@
 %token T_EXPORT "export"
 %token T_FROM "from"
 %token T_REQUIRED "required"
+%token T_COMPONENT "component"
 
 --- template strings
 %token T_NO_SUBSTITUTION_TEMPLATE"(no subst template)"
@@ -123,7 +124,7 @@
 %token T_FOR_LOOKAHEAD_OK "(for lookahead ok)"
 
 --%left T_PLUS T_MINUS
-%nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET T_OF T_STATIC T_FROM T_AS T_REQUIRED
+%nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET T_OF T_STATIC T_FROM T_AS T_REQUIRED T_COMPONENT
 %nonassoc REDUCE_HERE
 %right T_THEN T_ELSE
 %right T_WITHOUTAS T_AS
@@ -1426,6 +1427,19 @@ UiObjectMember: T_ENUM T_IDENTIFIER T_LBRACE EnumMemberList T_RBRACE;
     }
 ./
 
+UiObjectMember: T_COMPONENT T_IDENTIFIER T_COLON UiObjectDefinition;
+/.
+    case $rule_number: {
+        if (!stringRef(2).front().isUpper()) {
+            diagnostic_messages.append(compileError(loc(2),
+                QLatin1String("Type name must be upper case"), QtWarningMsg));
+        }
+        auto inlineComponent = new (pool) AST::UiInlineComponent(stringRef(2), sym(4).UiObjectDefinition);
+        inlineComponent->componentToken = loc(1);
+        sym(1).Node = inlineComponent;
+    } break;
+./
+
 EnumMemberList: T_IDENTIFIER;
 /.
     case $rule_number: {
@@ -1468,29 +1482,31 @@ EnumMemberList: EnumMemberList T_COMMA T_IDENTIFIER T_EQ T_NUMERIC_LITERAL;
     }
 ./
 
-QmlIdentifier: T_IDENTIFIER;
-QmlIdentifier: T_PROPERTY;
-QmlIdentifier: T_SIGNAL;
-QmlIdentifier: T_READONLY;
-QmlIdentifier: T_ON;
-QmlIdentifier: T_GET;
-QmlIdentifier: T_SET;
-QmlIdentifier: T_FROM;
-QmlIdentifier: T_OF;
-QmlIdentifier: T_REQUIRED;
+QmlIdentifier: T_IDENTIFIER
+             | T_PROPERTY
+             | T_SIGNAL
+             | T_READONLY
+             | T_ON
+             | T_GET
+             | T_SET
+             | T_FROM
+             | T_OF
+             | T_REQUIRED
+             | T_COMPONENT;
 
-JsIdentifier: T_IDENTIFIER;
-JsIdentifier: T_PROPERTY;
-JsIdentifier: T_SIGNAL;
-JsIdentifier: T_READONLY;
-JsIdentifier: T_ON;
-JsIdentifier: T_GET;
-JsIdentifier: T_SET;
-JsIdentifier: T_FROM;
-JsIdentifier: T_STATIC;
-JsIdentifier: T_OF;
-JsIdentifier: T_AS;
-JsIdentifier: T_REQUIRED;
+JsIdentifier: T_IDENTIFIER
+            | T_PROPERTY
+            | T_SIGNAL
+            | T_READONLY
+            | T_ON
+            | T_GET
+            | T_SET
+            | T_FROM
+            | T_STATIC
+            | T_OF
+            | T_AS
+            | T_REQUIRED
+            | T_COMPONENT;
 
 IdentifierReference: JsIdentifier;
 BindingIdentifier: IdentifierReference;

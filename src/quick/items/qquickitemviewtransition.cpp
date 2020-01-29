@@ -925,7 +925,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
 */
 QQmlListProperty<QObject> QQuickViewTransitionAttached::targetItems()
 {
-    return QQmlListProperty<QObject>(this, m_targetItems);
+    return QQmlListProperty<QObject>(this, &m_targetItems);
 }
 
 QQuickViewTransitionAttached *QQuickViewTransitionAttached::qmlAttachedProperties(QObject *obj)

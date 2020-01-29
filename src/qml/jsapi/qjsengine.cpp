@@ -71,11 +71,6 @@
 #include <private/qqmlglobal_p.h>
 #include <qqmlengine.h>
 
-#undef Q_D
-#undef Q_Q
-#define Q_D(blah)
-#define Q_Q(blah)
-
 Q_DECLARE_METATYPE(QList<int>)
 
 /*!
@@ -257,7 +252,7 @@ Q_DECLARE_METATYPE(QList<int>)
     \l installExtensions().
 
     \value TranslationExtension Indicates that translation functions (\c qsTr(),
-        for example) should be installed.
+        for example) should be installed. This also installs the Qt.uiLanguage property.
 
     \value ConsoleExtension Indicates that console functions (\c console.log(),
         for example) should be installed.
@@ -692,7 +687,6 @@ QJSValue QJSEngine::newArray(uint length)
 */
 QJSValue QJSEngine::newQObject(QObject *object)
 {
-    Q_D(QJSEngine);
     QV4::ExecutionEngine *v4 = m_v4Engine;
     QV4::Scope scope(v4);
     if (object) {
@@ -719,7 +713,6 @@ QJSValue QJSEngine::newQObject(QObject *object)
 */
 
 QJSValue QJSEngine::newQMetaObject(const QMetaObject* metaObject) {
-    Q_D(QJSEngine);
     QV4::ExecutionEngine *v4 = m_v4Engine;
     QV4::Scope scope(v4);
     QV4::ScopedValue v(scope, QV4::QMetaObjectWrapper::create(v4, metaObject));
@@ -1002,6 +995,35 @@ void QJSEngine::throwError(QJSValue::ErrorType errorType, const QString &message
     if (!e)
         return;
     m_v4Engine->throwError(e);
+}
+
+/*!
+  \property QJSEngine::uiLanguage
+  \brief the language to be used for translating user interface strings
+  \since 5.15
+
+  This property holds the name of the language to be used for user interface
+  string translations. It is exposed for reading and writing as \c{Qt.uiLanguage} when
+  the QJSEngine::TranslationExtension is installed on the engine. It is always exposed
+  in instances of QQmlEngine.
+
+  You can set the value freely and use it in bindings. It is recommended to set it
+  after installing translators in your application. By convention, an empty string
+  means no translation from the language used in the source code is intended to occur.
+*/
+void QJSEngine::setUiLanguage(const QString &language)
+{
+    Q_D(QJSEngine);
+    if (language == d->uiLanguage)
+        return;
+    d->uiLanguage = language;
+    emit uiLanguageChanged();
+}
+
+QString QJSEngine::uiLanguage() const
+{
+    Q_D(const QJSEngine);
+    return d->uiLanguage;
 }
 
 QJSEnginePrivate *QJSEnginePrivate::get(QV4::ExecutionEngine *e)

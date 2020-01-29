@@ -1,6 +1,6 @@
 CXX_MODULE = qml
 TARGET  = windowplugin
-TARGETPATH = QtQuick/Window.2
+TARGETPATH = QtQuick/Window
 IMPORT_VERSION = 2.15
 
 SOURCES += \

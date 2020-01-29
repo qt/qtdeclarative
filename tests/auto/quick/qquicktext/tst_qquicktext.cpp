@@ -168,6 +168,8 @@ private slots:
 
     void transparentBackground();
 
+    void displaySuperscriptedTag();
+
 private:
     QStringList standard;
     QStringList richText;
@@ -1504,7 +1506,7 @@ void tst_qquicktext::weight()
         delete textObject;
     }
     {
-        QString componentStr = "import QtQuick 2.0\nText { font.weight: \"Bold\"; text: \"Hello world!\" }";
+        QString componentStr = "import QtQuick 2.0\nText { font.weight: Font.Bold; text: \"Hello world!\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
@@ -4507,6 +4509,32 @@ void tst_qquicktext::transparentBackground()
     QCOMPARE(color.blue(), 255);
     QCOMPARE(color.green(), 255);
 }
+
+void tst_qquicktext::displaySuperscriptedTag()
+{
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabToImage not functional on offscreen/minimimal platforms");
+
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("displaySuperscriptedTag.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickText *text = window->findChild<QQuickText *>("text");
+    QVERIFY(text);
+
+    QImage img = window->grabWindow();
+    QCOMPARE(img.isNull(), false);
+
+    QColor color = img.pixelColor(1, static_cast<int>(text->contentHeight()) / 4 * 3);
+    QCOMPARE(color.red(), 255);
+    QCOMPARE(color.blue(), 255);
+    QCOMPARE(color.green(), 255);
+}
+
 QTEST_MAIN(tst_qquicktext)
 
 #include "tst_qquicktext.moc"

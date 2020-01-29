@@ -54,8 +54,8 @@
 #include <QtCore/QMutex>
 #include <QtCore/QThread>
 
-#include <QtGui/QOpenGLContext>
-#include <QtGui/QOpenGLFramebufferObject>
+#include <QOpenGLContext>
+#include <QOpenGLFramebufferObject>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QOffscreenSurface>
 

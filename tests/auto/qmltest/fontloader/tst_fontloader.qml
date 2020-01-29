@@ -81,10 +81,6 @@ Item {
             fontloader.source = "dummy.ttf";
             tryCompare(fontloader, 'status', FontLoader.Error)
             compare(testinput.font.family, "")
-            fontloader.source = "";
-            fontloader.name = "Courier";
-            tryCompare(fontloader, 'status', FontLoader.Ready)
-            compare(testinput.font.family, "Courier")
         }
 
         function test_fontswitching() {
@@ -92,10 +88,9 @@ Item {
             fontswitch.source = "tarzeau_ocr_a.ttf";
             tryCompare(fontswitch, 'status', FontLoader.Ready)
             compare(fontswitch.name, "OCRA")
-            fontswitch.source = "";
-            fontswitch.name = "Courier";
+            fontswitch.source = "daniel.ttf";
             tryCompare(fontswitch, 'status', FontLoader.Ready)
-            compare(fontswitch.name, "Courier")
+            compare(fontswitch.name, "Daniel")
             fontswitch.source = "tarzeau_ocr_a.ttf";
             tryCompare(fontswitch, 'status', FontLoader.Ready)
             compare(fontswitch.name, "OCRA")

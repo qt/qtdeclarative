@@ -121,7 +121,7 @@ void QQuickFontObject::replyFinished()
         }
         redirectCount = 0;
 
-        if (!reply->error()) {
+        if (!reply->networkError()) {
             id = QFontDatabase::addApplicationFontFromData(reply->readAll());
             if (id != -1)
                 emit fontDownloaded(QFontDatabase::applicationFontFamilies(id).at(0), QQuickFontLoader::Ready);
@@ -310,6 +310,7 @@ void QQuickFontLoader::updateFontInfo(const QString& name, QQuickFontLoader::Sta
 
 /*!
     \qmlproperty string QtQuick::FontLoader::name
+    \readonly
 
     This property holds the name of the font family.
     It is set automatically when a font is loaded using the \l source property.
@@ -336,17 +337,6 @@ QString QQuickFontLoader::name() const
 {
     Q_D(const QQuickFontLoader);
     return d->name;
-}
-
-void QQuickFontLoader::setName(const QString &name)
-{
-    Q_D(QQuickFontLoader);
-    if (d->name == name)
-        return;
-    d->name = name;
-    emit nameChanged();
-    d->status = Ready;
-    emit statusChanged();
 }
 
 /*!

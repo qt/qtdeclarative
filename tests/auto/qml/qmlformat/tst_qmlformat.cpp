@@ -42,11 +42,22 @@ private Q_SLOTS:
     void testFormat();
     void testFormatNoSort();
 
+
+#if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
+    void testExample();
+    void testExample_data();
+#endif
+
 private:
     QString readTestFile(const QString &path);
     QString runQmlformat(const QString &fileToFormat, bool sortImports, bool shouldSucceed);
 
     QString m_qmlformatPath;
+    QStringList m_excludedDirs;
+    QStringList m_invalidFiles;
+
+    QStringList findFiles(const QDir &);
+    bool isInvalidFile(const QFileInfo &fileName) const;
 };
 
 void TestQmlformat::initTestCase()
@@ -60,6 +71,91 @@ void TestQmlformat::initTestCase()
         QString message = QStringLiteral("qmlformat executable not found (looked for %0)").arg(m_qmlformatPath);
         QFAIL(qPrintable(message));
     }
+
+    // Add directories you want excluded here
+
+    // These snippets are not expected to run on their own.
+    m_excludedDirs << "doc/src/snippets/qml/visualdatamodel_rootindex";
+    m_excludedDirs << "doc/src/snippets/qml/qtbinding";
+    m_excludedDirs << "doc/src/snippets/qml/imports";
+    m_excludedDirs << "doc/src/snippets/qtquick1/visualdatamodel_rootindex";
+    m_excludedDirs << "doc/src/snippets/qtquick1/qtbinding";
+    m_excludedDirs << "doc/src/snippets/qtquick1/imports";
+    m_excludedDirs << "tests/manual/v4";
+    m_excludedDirs << "tests/auto/qml/ecmascripttests";
+    m_excludedDirs << "tests/auto/qml/qmllint";
+
+    // Add invalid files (i.e. files with syntax errors)
+    m_invalidFiles << "tests/auto/quick/qquickloader/data/InvalidSourceComponent.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/signal.2.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/signal.3.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/signal.5.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/property.4.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/empty.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/missingObject.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/insertedSemicolon.1.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/nonexistantProperty.5.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidRoot.1.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidQmlEnumValue.1.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidQmlEnumValue.2.qml";
+    m_invalidFiles << "tests/auto/qml/qquickfolderlistmodel/data/dummy.qml";
+    m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/stringParsing_error.1.qml";
+    m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/stringParsing_error.2.qml";
+    m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/stringParsing_error.3.qml";
+    m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/stringParsing_error.4.qml";
+    m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/stringParsing_error.5.qml";
+    m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/stringParsing_error.6.qml";
+    m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/numberParsing_error.1.qml";
+    m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/numberParsing_error.2.qml";
+    m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon_error1.qml";
+    m_invalidFiles << "tests/auto/qml/debugger/qqmlpreview/data/broken.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/fuzzed.2.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/fuzzed.3.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/requiredProperties.2.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/requiredProperties.3.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/nullishCoalescing_LHS_And.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/nullishCoalescing_LHS_And.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/nullishCoalescing_LHS_Or.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/nullishCoalescing_RHS_And.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/nullishCoalescing_RHS_Or.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/typeAnnotations.2.qml";
+    m_invalidFiles << "tests/auto/qml/qqmlparser/data/disallowedtypeannotations/qmlnestedfunction.qml";
+}
+
+QStringList TestQmlformat::findFiles(const QDir &d)
+{
+    for (int ii = 0; ii < m_excludedDirs.count(); ++ii) {
+        QString s = m_excludedDirs.at(ii);
+        if (d.absolutePath().endsWith(s))
+            return QStringList();
+    }
+
+    QStringList rv;
+
+    QStringList files = d.entryList(QStringList() << QLatin1String("*.qml"),
+                                    QDir::Files);
+    foreach (const QString &file, files) {
+        rv << d.absoluteFilePath(file);
+    }
+
+    QStringList dirs = d.entryList(QDir::Dirs | QDir::NoDotAndDotDot |
+                                   QDir::NoSymLinks);
+    foreach (const QString &dir, dirs) {
+        QDir sub = d;
+        sub.cd(dir);
+        rv << findFiles(sub);
+    }
+
+    return rv;
+}
+
+bool TestQmlformat::isInvalidFile(const QFileInfo &fileName) const
+{
+    for (const QString &invalidFile : m_invalidFiles) {
+        if (fileName.absoluteFilePath().endsWith(invalidFile))
+            return true;
+    }
+    return false;
 }
 
 QString TestQmlformat::readTestFile(const QString &path)
@@ -74,18 +170,46 @@ QString TestQmlformat::readTestFile(const QString &path)
 
 void TestQmlformat::testFormat()
 {
-    QCOMPARE(runQmlformat("Example1.qml", true, true), readTestFile("Example1.formatted.qml"));
+    QCOMPARE(runQmlformat(testFile("Example1.qml"), true, true), readTestFile("Example1.formatted.qml"));
 }
 
 void TestQmlformat::testFormatNoSort()
 {
-    QCOMPARE(runQmlformat("Example1.qml", false, true), readTestFile("Example1.formatted.nosort.qml"));
+    QCOMPARE(runQmlformat(testFile("Example1.qml"), false, true), readTestFile("Example1.formatted.nosort.qml"));
 }
+
+#if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
+void TestQmlformat::testExample_data()
+{
+    QTest::addColumn<QString>("file");
+
+    QString examples = QLatin1String(SRCDIR) + "/../../../../examples/";
+    QString tests = QLatin1String(SRCDIR) + "/../../../../tests/";
+
+    QStringList files;
+    files << findFiles(QDir(examples));
+    files << findFiles(QDir(tests));
+
+    for (const QString &file : files)
+        QTest::newRow(qPrintable(file)) << file;
+}
+#endif
+
+#if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
+void TestQmlformat::testExample()
+{
+    QFETCH(QString, file);
+    QString output = runQmlformat(file, true, !isInvalidFile(file));
+
+    if (!isInvalidFile(file))
+        QVERIFY(!output.isEmpty());
+}
+#endif
 
 QString TestQmlformat::runQmlformat(const QString &fileToFormat, bool sortImports, bool shouldSucceed)
 {
     QStringList args;
-    args << testFile(fileToFormat);
+    args << fileToFormat;
 
     if (!sortImports)
         args << "-n";

@@ -1,6 +1,6 @@
 CXX_MODULE = qml
 TARGET  = workerscriptplugin
-TARGETPATH = QtQml/WorkerScript.2
+TARGETPATH = QtQml/WorkerScript
 IMPORT_VERSION = 2.15
 
 SOURCES += \

@@ -544,7 +544,7 @@ void QQuickWorkerScript::setSource(const QUrl &source)
 }
 
 /*!
-    \qmlproperty url WorkerScript::ready
+    \qmlproperty bool WorkerScript::ready
 
     This holds whether the WorkerScript has been initialized and is ready
     for receiving messages via \tt WorkerScript.sendMessage().

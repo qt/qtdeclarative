@@ -65,8 +65,8 @@ void Heap::VariantObject::init(const QVariant &value)
 
 bool VariantObject::Data::isScarce() const
 {
-    QVariant::Type t = data().type();
-    return t == QVariant::Pixmap || t == QVariant::Image;
+    int t = data().userType();
+    return t == QMetaType::QPixmap || t == QMetaType::QImage;
 }
 
 bool VariantObject::virtualIsEqualTo(Managed *m, Managed *other)
@@ -139,7 +139,7 @@ ReturnedValue VariantPrototype::method_toString(const FunctionObject *b, const V
         RETURN_UNDEFINED();
     const QVariant variant = o->d()->data();
     QString result = variant.toString();
-    if (result.isEmpty() && !variant.canConvert(QVariant::String)) {
+    if (result.isEmpty() && !variant.canConvert(QMetaType::QString)) {
         QDebug dbg(&result);
         dbg << variant;
         // QDebug appends a space, we're not interested in continuing the stream so we chop it off.
@@ -154,17 +154,17 @@ ReturnedValue VariantPrototype::method_valueOf(const FunctionObject *b, const Va
     const VariantObject *o = thisObject->as<QV4::VariantObject>();
     if (o) {
         QVariant v = o->d()->data();
-        switch (v.type()) {
-        case QVariant::Invalid:
+        switch (v.userType()) {
+        case QMetaType::UnknownType:
             return Encode::undefined();
-        case QVariant::String:
+        case QMetaType::QString:
             return Encode(b->engine()->newString(v.toString()));
-        case QVariant::Int:
+        case QMetaType::Int:
             return Encode(v.toInt());
-        case QVariant::Double:
-        case QVariant::UInt:
+        case QMetaType::Double:
+        case QMetaType::UInt:
             return Encode(v.toDouble());
-        case QVariant::Bool:
+        case QMetaType::Bool:
             return Encode(v.toBool());
         default:
             if (QMetaType::typeFlags(v.userType()) & QMetaType::IsEnumeration)

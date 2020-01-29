@@ -43,13 +43,13 @@
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QtMath>
 
-#include <QtGui/QOpenGLContext>
+#include <QOpenGLContext>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QScreen>
 #include <QtGui/QSurface>
 #include <QtGui/QWindow>
-#include <QtGui/QOpenGLFunctions>
-#include <QtGui/QOpenGLTexture>
+#include <QOpenGLFunctions>
+#include <QOpenGLTexture>
 #include <QDebug>
 
 #include <private/qqmlglobal_p.h>
