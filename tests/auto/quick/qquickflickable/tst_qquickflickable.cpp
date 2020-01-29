@@ -205,6 +205,7 @@ private slots:
     void overshoot_reentrant();
     void synchronousDrag_data();
     void synchronousDrag();
+    void visibleAreaBinding();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -2539,6 +2540,16 @@ void tst_qquickflickable::synchronousDrag()
     if (!synchronousDrag)
         QVERIFY(flickable->contentY() < 50.0f);
     QTest::touchEvent(window, touchDevice).release(0, p5, window);
+}
+
+// QTBUG-81098: tests that a binding to visibleArea doesn't result
+// in a division-by-zero exception (when exceptions are enabled).
+void tst_qquickflickable::visibleAreaBinding()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("visibleAreaBinding.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    // Shouldn't crash.
 }
 
 QTEST_MAIN(tst_qquickflickable)
