@@ -1224,10 +1224,10 @@ void tst_qqmlproperty::read()
     }
     {
         QQmlComponent component(&engine, testFileUrl("readSynthesizedObject.qml"));
-        QObject *object = component.create();
+        QScopedPointer<QObject> object(component.create());
         QVERIFY(object != nullptr);
 
-        QQmlProperty p(object, "test", &engine);
+        QQmlProperty p(object.data(), "test", &engine);
 
         QCOMPARE(p.propertyTypeCategory(), QQmlProperty::Object);
         QVERIFY(p.propertyType() != QMetaType::QObjectStar);
@@ -1239,10 +1239,10 @@ void tst_qqmlproperty::read()
     }
     {   // static
         QQmlComponent component(&engine, testFileUrl("readSynthesizedObject.qml"));
-        QObject *object = component.create();
+        QScopedPointer<QObject> object(component.create());
         QVERIFY(object != nullptr);
 
-        QVariant v = QQmlProperty::read(object, "test", &engine);
+        QVariant v = QQmlProperty::read(object.data(), "test", &engine);
         QCOMPARE(v.userType(), int(QMetaType::QObjectStar));
         QCOMPARE(qvariant_cast<QObject *>(v)->property("a").toInt(), 10);
         QCOMPARE(qvariant_cast<QObject *>(v)->property("b").toInt(), 19);
@@ -1252,41 +1252,38 @@ void tst_qqmlproperty::read()
     {
         QQmlComponent component(&engine);
         component.setData("import Test 1.0\nMyContainer { }", QUrl());
-        QObject *object = component.create();
+        QScopedPointer<QObject> object(component.create());
         QVERIFY(object != nullptr);
 
-        QQmlProperty p(object, "MyContainer.foo", qmlContext(object));
+        QQmlProperty p(object.data(), "MyContainer.foo", qmlContext(object.data()));
         QCOMPARE(p.read(), QVariant(13));
-        delete object;
     }
     {
         QQmlComponent component(&engine);
         component.setData("import Test 1.0\nMyContainer { MyContainer.foo: 10 }", QUrl());
-        QObject *object = component.create();
+        QScopedPointer<QObject> object(component.create());
         QVERIFY(object != nullptr);
 
-        QQmlProperty p(object, "MyContainer.foo", qmlContext(object));
+        QQmlProperty p(object.data(), "MyContainer.foo", qmlContext(object.data()));
         QCOMPARE(p.read(), QVariant(10));
-        delete object;
     }
     {
         QQmlComponent component(&engine);
         component.setData("import Test 1.0 as Foo\nFoo.MyContainer { Foo.MyContainer.foo: 10 }", QUrl());
-        QObject *object = component.create();
+        QScopedPointer<QObject> object(component.create());
         QVERIFY(object != nullptr);
 
-        QQmlProperty p(object, "Foo.MyContainer.foo", qmlContext(object));
+        QQmlProperty p(object.data(), "Foo.MyContainer.foo", qmlContext(object.data()));
         QCOMPARE(p.read(), QVariant(10));
-        delete object;
     }
     {   // static
         QQmlComponent component(&engine);
         component.setData("import Test 1.0 as Foo\nFoo.MyContainer { Foo.MyContainer.foo: 10 }", QUrl());
-        QObject *object = component.create();
+        QScopedPointer<QObject> object(component.create());
         QVERIFY(object != nullptr);
 
-        QCOMPARE(QQmlProperty::read(object, "Foo.MyContainer.foo", qmlContext(object)), QVariant(10));
-        delete object;
+        QCOMPARE(QQmlProperty::read(object.data(), "Foo.MyContainer.foo",
+                                    qmlContext(object.data())), QVariant(10));
     }
 }
 
@@ -1447,11 +1444,12 @@ void tst_qqmlproperty::write()
         { // QChar -> QString
             QQmlComponent component(&engine);
             component.setData("import Test 1.0\nPropertyObject { stringProperty: constQChar }", QUrl());
-            PropertyObject *obj = qobject_cast<PropertyObject*>(component.create());
-            QVERIFY(obj != nullptr);
-            if (obj) {
-                QQmlProperty stringProperty(obj, "stringProperty");
-                QCOMPARE(stringProperty.read(), QVariant(QString(obj->constQChar())));
+            QScopedPointer<QObject> object(component.create());
+            PropertyObject *propertyObject = qobject_cast<PropertyObject*>(object.data());
+            QVERIFY(propertyObject != nullptr);
+            if (propertyObject) {
+                QQmlProperty stringProperty(propertyObject, "stringProperty");
+                QCOMPARE(stringProperty.read(), QVariant(QString(propertyObject->constQChar())));
             }
         }
 
@@ -1628,29 +1626,32 @@ void tst_qqmlproperty::writeObjectToList()
 {
     QQmlComponent containerComponent(&engine);
     containerComponent.setData("import Test 1.0\nMyContainer { children: MyQmlObject {} }", QUrl());
-    MyContainer *container = qobject_cast<MyContainer*>(containerComponent.create());
+    QScopedPointer<QObject> object(containerComponent.create());
+    MyContainer *container = qobject_cast<MyContainer*>(object.data());
     QVERIFY(container != nullptr);
     QQmlListReference list(container, "children");
     QCOMPARE(list.count(), 1);
 
-    MyQmlObject *object = new MyQmlObject;
+    QScopedPointer<MyQmlObject> childObject(new MyQmlObject);
     QQmlProperty prop(container, "children");
-    prop.write(QVariant::fromValue(object));
+    prop.write(QVariant::fromValue(childObject.data()));
     QCOMPARE(list.count(), 1);
-    QCOMPARE(list.at(0), qobject_cast<QObject*>(object));
+    QCOMPARE(list.at(0), qobject_cast<QObject*>(childObject.data()));
 }
 
 void tst_qqmlproperty::writeListToList()
 {
     QQmlComponent containerComponent(&engine);
     containerComponent.setData("import Test 1.0\nMyContainer { children: MyQmlObject {} }", QUrl());
-    MyContainer *container = qobject_cast<MyContainer*>(containerComponent.create());
+    QScopedPointer<QObject> object(containerComponent.create());
+    MyContainer *container = qobject_cast<MyContainer*>(object.data());
     QVERIFY(container != nullptr);
     QQmlListReference list(container, "children");
     QCOMPARE(list.count(), 1);
 
     QList<QObject*> objList;
-    objList << new MyQmlObject() << new MyQmlObject() << new MyQmlObject() << new MyQmlObject();
+    objList << new MyQmlObject(this) << new MyQmlObject(this)
+            << new MyQmlObject(this) << new MyQmlObject(this);
     QQmlProperty prop(container, "children");
     prop.write(QVariant::fromValue(objList));
     QCOMPARE(list.count(), 4);
@@ -1828,10 +1829,11 @@ void tst_qqmlproperty::crashOnValueProperty()
     QQmlComponent component(engine);
 
     component.setData("import Test 1.0\nPropertyObject { wrectProperty.x: 10 }", QUrl());
-    PropertyObject *obj = qobject_cast<PropertyObject*>(component.create());
-    QVERIFY(obj != nullptr);
+    QScopedPointer<QObject> object(component.create());
+    PropertyObject *propertyObject = qobject_cast<PropertyObject*>(object.data());
+    QVERIFY(propertyObject != nullptr);
 
-    QQmlProperty p(obj, "wrectProperty.x", qmlContext(obj));
+    QQmlProperty p(propertyObject, "wrectProperty.x", qmlContext(propertyObject));
     QCOMPARE(p.name(), QString("wrectProperty.x"));
 
     QCOMPARE(p.read(), QVariant(10));
