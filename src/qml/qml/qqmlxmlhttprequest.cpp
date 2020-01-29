@@ -1203,25 +1203,15 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
         if (m_method == QLatin1String("PUT"))
         {
             if (!xhrFileWrite()) {
-                if (qEnvironmentVariableIsSet("QML_XHR_ALLOW_FILE_WRITE")) {
-                    qWarning("XMLHttpRequest: Tried to use PUT on a local file despite being disabled.");
-                    return;
-                } else {
-                    qWarning("XMLHttpRequest: Using PUT on a local file is dangerous "
-                             "and will be disabled by default in a future Qt version."
-                             "Set QML_XHR_ALLOW_FILE_WRITE to 1 if you wish to continue using this feature.");
-                }
+                qWarning("XMLHttpRequest: Using PUT on a local file is disabled by default.\n"
+                         "Set QML_XHR_ALLOW_FILE_WRITE to 1 to enable this feature.");
+                return;
             }
         } else if (m_method == QLatin1String("GET")) {
             if (!xhrFileRead()) {
-                if (qEnvironmentVariableIsSet("QML_XHR_ALLOW_FILE_READ")) {
-                    qWarning("XMLHttpRequest: Tried to use GET on a local file despite being disabled.");
-                    return;
-                } else {
-                    qWarning("XMLHttpRequest: Using GET on a local file is dangerous "
-                             "and will be disabled by default in a future Qt version."
-                             "Set QML_XHR_ALLOW_FILE_READ to 1 if you wish to continue using this feature.");
-                }
+                qWarning("XMLHttpRequest: Using GET on a local file is disabled by default.\n"
+                         "Set QML_XHR_ALLOW_FILE_READ to 1 to enable this feature.");
+                return;
             }
         } else {
             qWarning("XMLHttpRequest: Unsupported method used on a local file");
