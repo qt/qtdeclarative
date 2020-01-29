@@ -1247,6 +1247,31 @@ UiObjectMember: T_DEFAULT UiObjectMemberListPropertyNoInitialiser;
     } break;
 ./
 
+UiObjectMember: T_DEFAULT T_REQUIRED UiObjectMemberPropertyNoInitialiser;
+/.
+    case $rule_number: {
+        AST::UiPublicMember *node = sym(3).UiPublicMember;
+        node->isDefaultMember = true;
+        node->defaultToken = loc(1);
+        node->isRequired = true;
+        node->requiredToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+
+UiObjectMember: T_REQUIRED T_DEFAULT UiObjectMemberPropertyNoInitialiser;
+/.
+    case $rule_number: {
+        AST::UiPublicMember *node = sym(3).UiPublicMember;
+        node->isDefaultMember = true;
+        node->defaultToken = loc(2);
+        node->isRequired = true;
+        node->requiredToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
 OptionalSemicolon: | Semicolon;
 /.
 /* we need OptionalSemicolon because UiScriptStatement might already parse the last semicolon

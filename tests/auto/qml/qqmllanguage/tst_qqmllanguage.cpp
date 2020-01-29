@@ -1675,10 +1675,6 @@ void tst_qqmllanguage::requiredProperty()
         QQmlComponent component(&engine, testFileUrl("requiredProperties.2.qml"));
         QVERIFY(!component.errors().empty());
     }
-    {
-        QQmlComponent component(&engine, testFileUrl("requiredProperties.3.qml"));
-        QVERIFY(!component.errors().empty());
-    }
 }
 
 class MyClassWithRequiredProperty : public QObject

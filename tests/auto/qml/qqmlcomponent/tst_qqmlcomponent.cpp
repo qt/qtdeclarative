@@ -671,8 +671,20 @@ void tst_qqmlcomponent::setDataNoEngineNoSegfault()
     QVERIFY(!c);
 }
 
+class RequiredDefaultCpp : public QObject
+{
+    Q_OBJECT
+public:
+    Q_PROPERTY(QQuickItem *defaultProperty MEMBER m_defaultProperty NOTIFY defaultPropertyChanged REQUIRED)
+    Q_SIGNAL void defaultPropertyChanged();
+    Q_CLASSINFO("DefaultProperty", "defaultProperty")
+private:
+    QQuickItem *m_defaultProperty = nullptr;
+};
+
 void tst_qqmlcomponent::testRequiredProperties_data()
 {
+    qmlRegisterType<RequiredDefaultCpp>("qt.test", 1, 0, "RequiredDefaultCpp");
     QTest::addColumn<QUrl>("testFile");
     QTest::addColumn<bool>("shouldSucceed");
     QTest::addColumn<QString>("errorMsg");
@@ -687,6 +699,10 @@ void tst_qqmlcomponent::testRequiredProperties_data()
     QTest::addRow("setLater") << testFileUrl("requiredSetLater.qml") << true << "";
     QTest::addRow("setViaAliasToSubcomponent") << testFileUrl("setViaAliasToSubcomponent.qml") << true << "";
     QTest::addRow("aliasToSubcomponentNotSet") << testFileUrl("aliasToSubcomponentNotSet.qml") << false << "It can be set via the alias property i_alias";
+    QTest::addRow("required default set") << testFileUrl("requiredDefault.1.qml") << true << "";
+    QTest::addRow("required default not set") << testFileUrl("requiredDefault.2.qml") << false << "Required property requiredDefault was not initialized";
+    QTest::addRow("required default set (C++)") << testFileUrl("requiredDefault.3.qml") << true << "";
+    QTest::addRow("required default not set (C++)") << testFileUrl("requiredDefault.4.qml") << false << "Required property defaultProperty was not initialized";
 }
 
 
