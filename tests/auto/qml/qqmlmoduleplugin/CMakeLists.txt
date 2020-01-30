@@ -5,27 +5,20 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "imports/*")
+    imports/*)
 list(APPEND test_data ${test_data_glob})
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "${CMAKE_CURRENT_BINARY_DIR}/imports/*")
+    ${CMAKE_CURRENT_BINARY_DIR}/imports/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qqmlmoduleplugin
-    GUI
     SOURCES
         ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
         ../../shared/util.cpp ../../shared/util.h
@@ -44,17 +37,25 @@ add_qt_test(tst_qqmlmoduleplugin
 )
 
 # Resources:
+set(qmake_waitingPlugin_resource_files
+    "moduleWithWaitingPlugin"
+)
+
 add_qt_resource(tst_qqmlmoduleplugin "qmake_waitingPlugin"
     PREFIX
         "/qt-project.org/imports/"
     FILES
-        moduleWithWaitingPlugin
+        ${qmake_waitingPlugin_resource_files}
 )
+set(qmake_staticPlugin_resource_files
+    "moduleWithStaticPlugin"
+)
+
 add_qt_resource(tst_qqmlmoduleplugin "qmake_staticPlugin"
     PREFIX
         "/qt-project.org/imports/"
     FILES
-        moduleWithStaticPlugin
+        ${qmake_staticPlugin_resource_files}
 )
 
 
@@ -108,3 +109,4 @@ add_subdirectory(plugin/childplugin)
 add_subdirectory(plugin.2/childplugin)
 add_subdirectory(plugin.2.1/childplugin)
 add_subdirectory(plugin.2.2)
+add_subdirectory(moduleWithQmlSingleton)
