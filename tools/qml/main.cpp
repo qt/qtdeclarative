@@ -59,6 +59,7 @@
 #include <QLibraryInfo>
 #include <qqml.h>
 #include <qqmldebug.h>
+#include <qqmlfileselector.h>
 
 #include <private/qmemory_p.h>
 #include <private/qtqmlglobal_p.h>
@@ -511,6 +512,9 @@ int main(int argc, char *argv[])
                                     "Backend is one of: default, vulkan, metal, d3d11, gl"),
                                  QStringLiteral("backend"));
     parser.addOption(rhiOption);
+    QCommandLineOption selectorOption(QStringLiteral("S"), QCoreApplication::translate("main",
+        "Add selector to the list of QQmlFileSelectors."), QStringLiteral("selector"));
+    parser.addOption(selectorOption);
 
     // Positional arguments
     parser.addPositionalArgument("files",
@@ -550,6 +554,15 @@ int main(int argc, char *argv[])
 #endif
     for (const QString &importPath : parser.values(importOption))
         e.addImportPath(importPath);
+
+    QStringList customSelectors;
+    for (const QString &selector : parser.values(selectorOption))
+        customSelectors.append(selector);
+    if (!customSelectors.isEmpty()) {
+        QQmlFileSelector *selector =  QQmlFileSelector::get(&e);
+        selector->setExtraSelectors(customSelectors);
+    }
+
     files << parser.values(qmlFileOption);
     if (parser.isSet(configOption))
         confFile = parser.value(configOption);
