@@ -4694,6 +4694,18 @@ void QQuickTextInput::clear()
 
     These properties hold the padding around the content. This space is reserved
     in addition to the contentWidth and contentHeight.
+
+    The individual padding properties assume the value of the \c padding
+    property unless they are set explicitly. For example, if \c padding is
+    set to \c 4 and \c leftPadding to \c 8, \c 8 will be used as the left
+    padding.
+
+    \note If an explicit width or height is given to a TextInput, care must be
+    taken to ensure it is large enough to accommodate the relevant padding
+    values. For example: if \c topPadding and \c bottomPadding are set to
+    \c 10, but the height of the TextInput is only set to \c 20, the text will
+    not have enough vertical space in which to be rendered, and will appear
+    clipped.
 */
 qreal QQuickTextInput::padding() const
 {

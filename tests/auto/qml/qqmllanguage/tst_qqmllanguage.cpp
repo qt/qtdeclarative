@@ -133,6 +133,8 @@ private slots:
     void autoComponentCreationInGroupProperty();
     void propertyValueSource();
     void requiredProperty();
+    void requiredPropertyFromCpp_data();
+    void requiredPropertyFromCpp();
     void attachedProperties();
     void dynamicObjects();
     void customVariantTypes();
@@ -1673,9 +1675,74 @@ void tst_qqmllanguage::requiredProperty()
         QQmlComponent component(&engine, testFileUrl("requiredProperties.2.qml"));
         QVERIFY(!component.errors().empty());
     }
+}
+
+class MyClassWithRequiredProperty : public QObject
+{
+public:
+    Q_OBJECT
+    Q_PROPERTY(int test MEMBER m_test REQUIRED NOTIFY testChanged)
+    Q_SIGNAL void testChanged();
+private:
+    int m_test;
+};
+
+class ChildClassWithoutOwnRequired : public MyClassWithRequiredProperty
+{
+public:
+    Q_OBJECT
+    Q_PROPERTY(int test2 MEMBER m_test2 NOTIFY test2Changed)
+    Q_SIGNAL void test2Changed();
+private:
+    int m_test2;
+};
+
+class ChildClassWithOwnRequired : public MyClassWithRequiredProperty
+{
+public:
+    Q_OBJECT
+    Q_PROPERTY(int test2 MEMBER m_test2 REQUIRED NOTIFY test2Changed)
+    Q_SIGNAL void test2Changed();
+private:
+    int m_test2;
+};
+
+void tst_qqmllanguage::requiredPropertyFromCpp_data()
+{
+    qmlRegisterType<MyClassWithRequiredProperty>("example.org", 1, 0, "MyClass");
+    qmlRegisterType<ChildClassWithoutOwnRequired>("example.org", 1, 0, "Child");
+    qmlRegisterType<ChildClassWithOwnRequired>("example.org", 1, 0, "Child2");
+
+
+    QTest::addColumn<QUrl>("setFile");
+    QTest::addColumn<QUrl>("notSetFile");
+    QTest::addColumn<QString>("errorMessage");
+    QTest::addColumn<int>("expectedValue");
+
+    QTest::addRow("direct") << testFileUrl("cppRequiredProperty.qml") << testFileUrl("cppRequiredPropertyNotSet.qml") << QString(":4 Required property test was not initialized\n") << 42;
+    QTest::addRow("in parent") << testFileUrl("cppRequiredPropertyInParent.qml") << testFileUrl("cppRequiredPropertyInParentNotSet.qml") << QString(":4 Required property test was not initialized\n") << 42;
+    QTest::addRow("in child and parent") << testFileUrl("cppRequiredPropertyInChildAndParent.qml") << testFileUrl("cppRequiredPropertyInChildAndParentNotSet.qml") << QString(":4 Required property test2 was not initialized\n") << 18;
+}
+
+void tst_qqmllanguage::requiredPropertyFromCpp()
+{
+    QQmlEngine engine;
+    QFETCH(QUrl, setFile);
+    QFETCH(QUrl, notSetFile);
+    QFETCH(QString, errorMessage);
+    QFETCH(int, expectedValue);
     {
-        QQmlComponent component(&engine, testFileUrl("requiredProperties.3.qml"));
-        QVERIFY(!component.errors().empty());
+        QQmlComponent comp(&engine, notSetFile);
+        QScopedPointer<QObject> o { comp.create() };
+        QVERIFY(o.isNull());
+        QVERIFY(comp.isError());
+        QCOMPARE(comp.errorString(), notSetFile.toString() + errorMessage);
+    }
+    {
+        QQmlComponent comp(&engine, setFile);
+        QScopedPointer<QObject> o { comp.create() };
+        QVERIFY(!o.isNull());
+        QCOMPARE(o->property("test").toInt(), expectedValue);
     }
 }
 

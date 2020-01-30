@@ -133,7 +133,7 @@ private:
     QQmlAbstractDelegateComponent *m_delegateChooser = nullptr;
     QQmlComponent *m_delegate = nullptr;
     QPointer<QQmlContext> m_qmlContext;
-    QQmlDelegateModelItemMetaType *m_metaType;
+    QQmlRefPointer<QQmlDelegateModelItemMetaType> m_metaType;
 
     QHash<int, QQmlDelegateModelItem *> m_modelItems;
     QQmlReusableDelegateModelItemsPool m_reusableItemsPool;

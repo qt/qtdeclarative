@@ -1515,6 +1515,14 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         }
     }
 
+    for (int i = 0; i <= _propertyCache->propertyOffset(); ++i) {
+        QQmlPropertyData *propertyData = _propertyCache->property(i);
+        if (propertyData && propertyData->isRequired()) {
+            sharedState->hadRequiredProperties = true;
+            sharedState->requiredProperties.insert(propertyData, RequiredPropertyInfo {propertyData->name(_qobject),  compilationUnit->finalUrl(), _compiledObject->location, {}});
+        }
+    }
+
     if (_compiledObject->nFunctions > 0)
         setupFunctions();
     setupBindings();

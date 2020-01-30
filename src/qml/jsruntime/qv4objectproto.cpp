@@ -667,7 +667,7 @@ ReturnedValue ObjectPrototype::method_toLocaleString(const FunctionObject *b, co
     if (!f)
         THROW_TYPE_ERROR();
 
-    return f->call(thisObject, argv, argc);
+    return checkedResult(scope.engine, f->call(thisObject, argv, argc));
 }
 
 ReturnedValue ObjectPrototype::method_valueOf(const FunctionObject *b, const Value *thisObject, const Value *, int)

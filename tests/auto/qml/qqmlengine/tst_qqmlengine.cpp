@@ -997,6 +997,11 @@ public:
     SomeQObjectClass() : QObject(nullptr){}
 };
 
+class Dayfly : public QObject
+{
+    Q_OBJECT
+};
+
 void tst_qqmlengine::singletonInstance()
 {
     QQmlEngine engine;
@@ -1115,7 +1120,7 @@ void tst_qqmlengine::singletonInstance()
 
     {
         // deleted object
-        auto dayfly = new QObject{};
+        auto dayfly = new Dayfly{};
         auto id = qmlRegisterSingletonInstance("Vanity", 1, 0, "Dayfly", dayfly);
         delete dayfly;
         QTest::ignoreMessage(QtMsgType::QtWarningMsg, "<Unknown File>: The registered singleton has already been deleted. Ensure that it outlives the engine.");

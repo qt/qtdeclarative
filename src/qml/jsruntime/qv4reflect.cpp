@@ -98,7 +98,8 @@ ReturnedValue Reflect::method_apply(const FunctionObject *f, const Value *, cons
     if (scope.hasException())
         return Encode::undefined();
 
-    return static_cast<const FunctionObject &>(argv[0]).call(&argv[1], arguments.argv, arguments.argc);
+    return checkedResult(scope.engine, static_cast<const FunctionObject &>(argv[0]).call(
+                &argv[1], arguments.argv, arguments.argc));
 }
 
 ReturnedValue Reflect::method_construct(const FunctionObject *f, const Value *, const Value *argv, int argc)

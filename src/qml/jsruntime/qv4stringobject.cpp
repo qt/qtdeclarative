@@ -591,7 +591,7 @@ ReturnedValue StringPrototype::method_match(const FunctionObject *b, const Value
     ScopedFunctionObject match(scope, that->get(scope.engine->symbol_match()));
     if (!match)
         return scope.engine->throwTypeError();
-    return match->call(that, s, 1);
+    return checkedResult(scope.engine, match->call(that, s, 1));
 }
 
 ReturnedValue StringPrototype::method_normalize(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)

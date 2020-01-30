@@ -104,7 +104,7 @@ class QQmlDelegateModelItem : public QObject
     Q_PROPERTY(int column READ modelColumn NOTIFY columnChanged REVISION 12)
     Q_PROPERTY(QObject *model READ modelObject CONSTANT)
 public:
-    QQmlDelegateModelItem(QQmlDelegateModelItemMetaType *metaType,
+    QQmlDelegateModelItem(const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
                           QQmlAdaptorModel::Accessors *accessor, int modelIndex,
                           int row, int column);
     ~QQmlDelegateModelItem();
@@ -148,7 +148,7 @@ public:
     static QV4::ReturnedValue get_index(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &arg);
 
     QV4::ExecutionEngine *v4;
-    QQmlDelegateModelItemMetaType * const metaType;
+    QQmlRefPointer<QQmlDelegateModelItemMetaType> const metaType;
     QQmlContextDataRef contextData;
     QPointer<QObject> object;
     QPointer<QQmlDelegateModelAttached> attached;
