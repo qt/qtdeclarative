@@ -37,6 +37,7 @@
 #include <QFileOpenEvent>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
+#include <QSurfaceFormat>
 #ifdef QT_WIDGETS_LIB
 #include <QApplication>
 #endif // QT_WIDGETS_LIB
@@ -562,6 +563,17 @@ int main(int argc, char *argv[])
         QQmlFileSelector *selector =  QQmlFileSelector::get(&e);
         selector->setExtraSelectors(customSelectors);
     }
+
+#if defined(QT_GUI_LIB) && QT_CONFIG(opengl)
+    if (qEnvironmentVariableIsSet("QSG_CORE_PROFILE") || qEnvironmentVariableIsSet("QML_CORE_PROFILE")) {
+        QSurfaceFormat surfaceFormat;
+        surfaceFormat.setStencilBufferSize(8);
+        surfaceFormat.setDepthBufferSize(24);
+        surfaceFormat.setVersion(4, 1);
+        surfaceFormat.setProfile(QSurfaceFormat::CoreProfile);
+        QSurfaceFormat::setDefaultFormat(surfaceFormat);
+    }
+#endif
 
     files << parser.values(qmlFileOption);
     if (parser.isSet(configOption))

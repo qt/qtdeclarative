@@ -500,7 +500,8 @@ int main(int argc, char ** argv)
         }
     }
 
-    if (qEnvironmentVariableIsSet("QMLSCENE_CORE_PROFILE"))
+    if (qEnvironmentVariableIsSet("QMLSCENE_CORE_PROFILE")
+        || qEnvironmentVariableIsSet("QSG_CORE_PROFILE"))
         options.coreProfile = true;
 
     // Set default surface format before creating the window
