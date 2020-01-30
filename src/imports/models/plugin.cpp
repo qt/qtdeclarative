@@ -37,12 +37,16 @@
 **
 ****************************************************************************/
 
+#include <QtQmlModels/private/qqmlobjectmodel_p.h>
+
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
 
-#include <private/qqmlmodelsmodule_p.h>
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(qmlModelsPlugin, "qt.qmlModelsPlugin")
 
 /*!
     \qmlmodule QtQml.Models 2.\QtMinorVersion
@@ -86,7 +90,16 @@ class QtQmlModelsPlugin : public QQmlEngineExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 public:
-    QtQmlModelsPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) { }
+    QtQmlModelsPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
+    {
+        if (qmlModelsPlugin().isDebugEnabled()) {
+            // Superficial debug message that causes the dependency between QtQmlWorkerScript
+            // and the workerscript plugin to be retained.
+            // As qCDebug() can be a noop, retrieve the className in a separate step.
+            const QString className = QQmlObjectModel::staticMetaObject.className();
+            qCDebug(qmlModelsPlugin) << "Loading QmlModels plugin:" << className;
+        }
+    }
 };
 //![class decl]
 
