@@ -43,6 +43,8 @@ private Q_SLOTS:
     void testFormatNoSort();
 
     void testReadOnlyProps();
+    void testStatesAndTransitions();
+    void testLargeBindings();
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void testExample();
@@ -186,6 +188,16 @@ void TestQmlformat::testFormatNoSort()
 void TestQmlformat::testReadOnlyProps()
 {
     QCOMPARE(runQmlformat(testFile("readOnlyProps.qml"), false, true), readTestFile("readOnlyProps.formatted.qml"));
+}
+
+void TestQmlformat::testStatesAndTransitions()
+{
+    QCOMPARE(runQmlformat(testFile("statesAndTransitions.qml"), false, true), readTestFile("statesAndTransitions.formatted.qml"));
+}
+
+void TestQmlformat::testLargeBindings()
+{
+    QCOMPARE(runQmlformat(testFile("largeBindings.qml"), false, true), readTestFile("largeBindings.formatted.qml"));
 }
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
