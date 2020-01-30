@@ -467,29 +467,65 @@ function(qt6_qml_type_registration target)
 
     # Run a script to recursively evaluate all the metatypes.json files in order
     # to collect all foreign types.
+    string(TOLOWER "${target}_qmltyperegistrations.cpp" type_registration_cpp_file_name)
     set(foreign_types_file "${target_binary_dir}/qmltypes/foreign_types.txt")
-    set(foreign_types_file_tmp "${target_binary_dir}/qmltypes/foreign_types.txt.tmp")
+    set(type_registration_cpp_file "${target_binary_dir}/${type_registration_cpp_file_name}")
 
     if (NOT QT_QMTYPES_RESOLVE_DEPENDENCIES_SCRIPT)
         set("${Qt6Qml_DIR}/Qt6QmlResolveMetatypesDependencies.cmake")
     endif()
 
-    add_custom_target(${target}_resolve_foreign_types
-        DEPENDS ${target_metatypes_file}
-        COMMAND ${CMAKE_COMMAND}
-            -DOUTPUT_FILE:PATH="${foreign_types_file_tmp}"
-            -DMAIN_DEP_FILE:PATH="${target_metatypes_dep_file}"
-            -DQT_INSTALL_DIR:PATH="${Qt6_DIR}/../../.."
-            -P "${QT_QMTYPES_RESOLVE_DEPENDENCIES_SCRIPT}"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${foreign_types_file_tmp}"
-            "${foreign_types_file}"
-        BYPRODUCTS ${foreign_types_file}
-        COMMAND_EXPAND_LISTS
-        COMMENT "Resolving foreign type dependencies for target ${target}"
+    set(dependency_file_foreign_types "${target_binary_dir}/qmltypes/foreign_types.txt.d")
+    set(dependency_file_cpp "${target_binary_dir}/qmltypes/${type_registration_cpp_file_name}.d")
+
+    file(RELATIVE_PATH dep_file_name "${${CMAKE_PROJECT_NAME}_BINARY_DIR}" "${foreign_types_file}")
+    file(RELATIVE_PATH cpp_file_name "${${CMAKE_PROJECT_NAME}_BINARY_DIR}" "${type_registration_cpp_file}")
+
+    set(foreign_types_dependency_args
+        -DFOREIGN_TYPES_DEP_FILE="${dependency_file_foreign_types}"
+        -DFOREIGN_TYPES_FILE_NAME="${dep_file_name}"
+        -DCPP_DEP_FILE="${dependency_file_cpp}"
+        -DCPP_FILE_NAME="${cpp_file_name}"
     )
 
-    add_dependencies(${target}_resolve_foreign_types ${target}_autogen)
+    set (use_dep_files FALSE)
+    if (CMAKE_GENERATOR STREQUAL "Ninja" OR CMAKE_GENERATOR STREQUAL "Ninja Multi-Config")
+        set(use_dep_files TRUE)
+    endif()
+
+    set(foreign_types_common_args
+        -DMAIN_DEP_FILE:PATH="${target_metatypes_dep_file}"
+        -DQT_INSTALL_DIR:PATH="${Qt6_DIR}/../../.."
+    )
+
+    if (NOT use_dep_files)
+        set(foreign_types_file_tmp "${foreign_types_file}.tmp")
+        add_custom_target(${target}_resolve_foreign_types
+            BYPRODUCTS "${foreign_types_file}"
+            COMMAND ${CMAKE_COMMAND}
+                -DOUTPUT_FILE:PATH="${foreign_types_file_tmp}"
+                ${foreign_types_common_args}
+                -P "${QT_QMTYPES_RESOLVE_DEPENDENCIES_SCRIPT}"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${foreign_types_file_tmp}"
+                "${foreign_types_file}"
+            COMMAND_EXPAND_LISTS
+            COMMENT "Resolving foreign type dependencies for target ${target}"
+        )
+        add_dependencies(${target}_resolve_foreign_types ${target}_autogen)
+    else()
+        add_custom_command(
+            OUTPUT "${foreign_types_file}"
+            COMMAND ${CMAKE_COMMAND}
+                -DOUTPUT_FILE:PATH="${foreign_types_file}"
+                ${foreign_types_common_args}
+                ${foreign_types_dependency_args}
+                -P "${QT_QMTYPES_RESOLVE_DEPENDENCIES_SCRIPT}"
+            COMMAND_EXPAND_LISTS
+            DEPFILE "${dependency_file_foreign_types}"
+            COMMENT "Resolving foreign type dependencies for target ${target}"
+        )
+    endif()
 
     list(APPEND cmd_args
         "@${foreign_types_file}"
@@ -508,9 +544,11 @@ function(qt6_qml_type_registration target)
     if (NOT target_metatypes_json_file)
         message(FATAL_ERROR "Need target metatypes.json file")
     endif()
-    string(TOLOWER "${target}_qmltyperegistrations.cpp" type_registration_cpp_file)
 
-    set(type_registration_cpp_file "${target_binary_dir}/${type_registration_cpp_file}")
+    set(registration_cpp_file_dep_args)
+    if (use_dep_files)
+        set(registration_cpp_file_dep_args DEPFILE ${dependency_file_cpp})
+    endif()
 
     add_custom_command(OUTPUT ${type_registration_cpp_file}
         DEPENDS ${foreign_types_file} ${target_metatypes_json_file}
@@ -521,6 +559,7 @@ function(qt6_qml_type_registration target)
             -o ${type_registration_cpp_file}
             ${target_metatypes_json_file}
         COMMAND_EXPAND_LISTS
+        ${registration_cpp_file_dep_args}
         COMMENT "Automatic QML type registration for target ${target}"
     )
 
