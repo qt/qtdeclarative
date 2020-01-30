@@ -33,6 +33,7 @@ defineTest(qtQuickSkippedResourceFile) {
 # Flatten RESOURCES that may contain individual files or objects
 load(resources_functions)
 qtFlattenResources()
+qtEnsurePluginResourcesCpp()
 
 NEWRESOURCES =
 QMLCACHE_RESOURCE_FILES =
