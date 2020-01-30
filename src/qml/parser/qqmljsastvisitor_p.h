@@ -414,6 +414,9 @@ public:
     virtual bool visit(TypeAnnotation *) { return true; }
     virtual void endVisit(TypeAnnotation *) {}
 
+    virtual bool visit(UiRequired *) { return true; }
+    virtual void endVisit(UiRequired *) {}
+
     virtual void throwRecursionDepthError() = 0;
 
     quint16 recursionDepth() const { return m_recursionDepth; }

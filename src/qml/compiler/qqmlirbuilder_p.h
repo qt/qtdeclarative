@@ -285,6 +285,11 @@ struct Alias : public QV4::CompiledData::Alias
     Alias *next;
 };
 
+struct RequiredPropertyExtraData : public QV4::CompiledData::RequiredPropertyExtraData
+{
+    RequiredPropertyExtraData *next;
+};
+
 struct Function
 {
     QV4::CompiledData::Location location;
@@ -341,6 +346,9 @@ public:
     int functionCount() const { return functions->count; }
     const InlineComponent *inlineComponent() const { return inlineComponents->first; }
     int inlineComponentCount() const { return inlineComponents->count; }
+    const RequiredPropertyExtraData *requiredPropertyExtraData() const {return requiredPropertyExtraDatas->first; }
+    int requiredPropertyExtraDataCount() const { return requiredPropertyExtraDatas->count; }
+    void simplifyRequiredProperties();
 
     PoolList<Binding>::Iterator bindingsBegin() const { return bindings->begin(); }
     PoolList<Binding>::Iterator bindingsEnd() const { return bindings->end(); }
@@ -356,6 +364,8 @@ public:
     PoolList<Function>::Iterator functionsEnd() const { return functions->end(); }
     PoolList<InlineComponent>::Iterator inlineComponentsBegin() const { return inlineComponents->begin(); }
     PoolList<InlineComponent>::Iterator inlineComponentsEnd() const { return inlineComponents->end(); }
+    PoolList<RequiredPropertyExtraData>::Iterator requiredPropertyExtraDataBegin() const {return requiredPropertyExtraDatas->begin(); }
+    PoolList<RequiredPropertyExtraData>::Iterator requiredPropertyExtraDataEnd() const {return requiredPropertyExtraDatas->end(); }
 
     // If set, then declarations for this object (and init bindings for these) should go into the
     // specified object. Used for declarations inside group properties.
@@ -369,6 +379,7 @@ public:
     QString appendAlias(Alias *prop, const QString &aliasName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation);
     void appendFunction(QmlIR::Function *f);
     void appendInlineComponent(InlineComponent *ic);
+    void appendRequiredPropertyExtraData(RequiredPropertyExtraData *extraData);
 
     QString appendBinding(Binding *b, bool isListBinding);
     Binding *findBinding(quint32 nameIndex) const;
@@ -393,6 +404,7 @@ private:
     PoolList<Binding> *bindings;
     PoolList<Function> *functions;
     PoolList<InlineComponent> *inlineComponents;
+    PoolList<RequiredPropertyExtraData> *requiredPropertyExtraDatas;
 };
 
 struct Q_QMLCOMPILER_PRIVATE_EXPORT Pragma
@@ -469,6 +481,7 @@ public:
     bool visit(QQmlJS::AST::UiPublicMember *ast) override;
     bool visit(QQmlJS::AST::UiScriptBinding *ast) override;
     bool visit(QQmlJS::AST::UiSourceElement *ast) override;
+    bool visit(QQmlJS::AST::UiRequired *ast) override;
 
     void throwRecursionDepthError() override
     {

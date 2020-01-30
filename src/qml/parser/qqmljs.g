@@ -1350,6 +1350,18 @@ OptionalSemicolon: | Semicolon;
   and then we would miss a semicolon (see tests/auto/quick/qquickvisualdatamodel/data/objectlist.qml)*/
  ./
 
+UiRequired: T_REQUIRED QmlIdentifier Semicolon;
+/.
+    case $rule_number: {
+        AST::UiRequired *node = new (pool) AST::UiRequired(stringRef(2));
+        node->requiredToken = loc(1);
+        node->semicolonToken = loc(3);
+        sym(1).Node = node;
+    } break;
+./
+
+UiObjectMember: UiRequired;
+
 UiObjectMember: T_REQUIRED UiObjectMemberPropertyNoInitialiser;
 /.
     case $rule_number: {
@@ -1359,7 +1371,6 @@ UiObjectMember: T_REQUIRED UiObjectMemberPropertyNoInitialiser;
         sym(1).Node = node;
     } break;
 ./
-
 
 UiObjectMemberWithScriptStatement: T_PROPERTY UiPropertyType QmlIdentifier T_COLON UiScriptStatement OptionalSemicolon;
 /.

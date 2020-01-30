@@ -113,7 +113,6 @@ void TestQmlformat::initTestCase()
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/fuzzed.2.qml";
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/fuzzed.3.qml";
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/requiredProperties.2.qml";
-    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/requiredProperties.3.qml";
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/nullishCoalescing_LHS_And.qml";
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/nullishCoalescing_LHS_And.qml";
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/nullishCoalescing_LHS_Or.qml";

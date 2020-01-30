@@ -1675,6 +1675,36 @@ void tst_qqmllanguage::requiredProperty()
         QQmlComponent component(&engine, testFileUrl("requiredProperties.2.qml"));
         QVERIFY(!component.errors().empty());
     }
+    {
+        QQmlComponent component(&engine, testFileUrl("requiredProperties.4.qml"));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!component.errors().empty());
+        QVERIFY(component.errorString().contains("Required property objectName was not initialized"));
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("requiredProperties.3.qml"));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!component.errors().empty());
+        QVERIFY(component.errorString().contains("Required property i was not initialized"));
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("requiredProperties.5.qml"));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!component.errors().empty());
+        QVERIFY(component.errorString().contains("Required property i was not initialized"));
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("requiredProperties.6.qml"));
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object);
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("requiredProperties.7.qml"));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!component.errors().empty());
+        QVERIFY(component.errorString().contains("Property blub was marked as required but does not exist"));
+    }
 }
 
 class MyClassWithRequiredProperty : public QObject
