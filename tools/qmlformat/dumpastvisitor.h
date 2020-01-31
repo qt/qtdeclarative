@@ -32,6 +32,9 @@
 #include <QtQml/private/qqmljsastvisitor_p.h>
 #include <QtQml/private/qqmljsast_p.h>
 
+#include <QHash>
+#include <QStack>
+
 #include "commentastvisitor.h"
 
 using namespace QQmlJS::AST;
@@ -62,11 +65,25 @@ public:
     bool visit(UiEnumMemberList *node) override;
     bool visit(UiPublicMember *node) override;
     bool visit(UiImport *node) override;
+    bool visit(UiPragma *node) override;
 
     void throwRecursionDepthError() override {}
 
     bool error() const { return m_error; }
 private:
+    struct ScopeProperties {
+        bool m_firstOfAll = true;
+        bool m_firstSignal = true;
+        bool m_firstProperty = true;
+        bool m_firstBinding = true;
+        bool m_firstObject = true;
+        bool m_inArrayBinding = false;
+        bool m_pendingBinding = false;
+
+        UiObjectMember* m_lastInArrayBinding = nullptr;
+        QHash<QString, UiObjectMember*> m_bindings;
+    };
+
     QString generateIndent() const;
     QString formatLine(QString line, bool newline = true) const;
 
@@ -106,19 +123,19 @@ private:
 
     QString parseFormalParameterList(FormalParameterList *list);
 
+    QString parseType(Type *type);
+
+    QString parseFunctionExpression(FunctionExpression *expression, bool omitFunction = false);
+
+    ScopeProperties& scope() { return m_scope_properties.top(); }
+
     int m_indentLevel = 0;
 
     bool m_error = false;
     bool m_blockNeededBraces = false;
-    bool m_inArrayBinding = false;
 
-    bool m_firstOfAll = false;
-    bool m_firstSignal = false;
-    bool m_firstProperty = false;
-    bool m_firstBinding = false;
-    bool m_firstObject = true;
+    QStack<ScopeProperties> m_scope_properties;
 
-    UiObjectMember* m_lastInArrayBinding = nullptr;
     QString m_result = "";
     CommentAstVisitor *m_comment;
 };

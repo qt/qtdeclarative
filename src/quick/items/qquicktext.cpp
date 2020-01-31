@@ -1212,7 +1212,7 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
 
                 if (!image->pix) {
                     QUrl url = q->baseUrl().resolved(image->url);
-                    image->pix = new QQuickPixmap(qmlEngine(q), url, image->size);
+                    image->pix = new QQuickPixmap(qmlEngine(q), url, QRect(), image->size);
                     if (image->pix->isLoading()) {
                         image->pix->connectFinished(q, SLOT(imageDownloadFinished()));
                         if (!extra.isAllocated() || !extra->nbActiveDownloads)

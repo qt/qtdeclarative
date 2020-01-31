@@ -42,6 +42,7 @@ private Q_SLOTS:
     void testFormat();
     void testFormatNoSort();
 
+    void testReadOnlyProps();
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void testExample();
@@ -120,6 +121,11 @@ void TestQmlformat::initTestCase()
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/nullishCoalescing_RHS_Or.qml";
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/typeAnnotations.2.qml";
     m_invalidFiles << "tests/auto/qml/qqmlparser/data/disallowedtypeannotations/qmlnestedfunction.qml";
+
+    // These files rely on exact formatting
+    m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon1.qml";
+    m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon_error1.qml";
+    m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon2.qml";
 }
 
 QStringList TestQmlformat::findFiles(const QDir &d)
@@ -176,6 +182,11 @@ void TestQmlformat::testFormat()
 void TestQmlformat::testFormatNoSort()
 {
     QCOMPARE(runQmlformat(testFile("Example1.qml"), false, true), readTestFile("Example1.formatted.nosort.qml"));
+}
+
+void TestQmlformat::testReadOnlyProps()
+{
+    QCOMPARE(runQmlformat(testFile("readOnlyProps.qml"), false, true), readTestFile("readOnlyProps.formatted.qml"));
 }
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled

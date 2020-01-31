@@ -268,3 +268,9 @@ bool CommentAstVisitor::visit(UiImport *node)
     attachComment(node);
     return true;
 }
+
+bool CommentAstVisitor::visit(UiPragma *node)
+{
+    attachComment(node);
+    return true;
+}

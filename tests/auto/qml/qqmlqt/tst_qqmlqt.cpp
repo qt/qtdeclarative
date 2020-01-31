@@ -91,6 +91,7 @@ private slots:
     void dateTimeFormatting_data();
     void dateTimeFormattingVariants();
     void dateTimeFormattingVariants_data();
+    void dateTimeFormattingWithLocale();
     void isQtObject();
     void btoa();
     void atob();
@@ -738,12 +739,12 @@ void tst_qqmlqt::dateTimeFormatting()
     QQmlComponent component(&eng, testFileUrl("formatting.qml"));
 
     QStringList warnings;
-    warnings << component.url().toString() + ":37: Error: Qt.formatDate(): Invalid date format"
-        << component.url().toString() + ":36: Error: Qt.formatDate(): Invalid arguments"
-        << component.url().toString() + ":40: Error: Qt.formatTime(): Invalid time format"
-        << component.url().toString() + ":39: Error: Qt.formatTime(): Invalid arguments"
-        << component.url().toString() + ":43: Error: Qt.formatDateTime(): Invalid datetime format"
-        << component.url().toString() + ":42: Error: Qt.formatDateTime(): Invalid arguments";
+    warnings << component.url().toString() + ":37: Error: Qt.formatDate(): Bad second argument (must be either string, number or locale)"
+        << component.url().toString() + ":36: Error: Qt.formatDate(): Missing argument"
+        << component.url().toString() + ":40: Error: Qt.formatTime(): Bad second argument (must be either string, number or locale)"
+        << component.url().toString() + ":39: Error: Qt.formatTime(): Missing argument"
+        << component.url().toString() + ":43: Error: Qt.formatDateTime(): Bad second argument (must be either string, number or locale)"
+        << component.url().toString() + ":42: Error: Qt.formatDateTime(): Missing argument";
 
     foreach (const QString &warning, warnings)
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
@@ -773,6 +774,8 @@ void tst_qqmlqt::dateTimeFormatting()
 
 void tst_qqmlqt::dateTimeFormatting_data()
 {
+    QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
+    // Test intentionally uses deprecated enumerators from Qt::DateFormat
     QTest::addColumn<QString>("method");
     QTest::addColumn<QStringList>("inputProperties");
     QTest::addColumn<QStringList>("expectedResults");
@@ -802,6 +805,7 @@ void tst_qqmlqt::dateTimeFormatting_data()
         << (QStringList() << dateTime.toString(Qt::DefaultLocaleShortDate)
                           << dateTime.toString(Qt::DefaultLocaleLongDate)
                           << dateTime.toString("M/d/yy H:m:s a"));
+    QT_WARNING_POP
 }
 
 void tst_qqmlqt::dateTimeFormattingVariants()
@@ -814,12 +818,12 @@ void tst_qqmlqt::dateTimeFormattingVariants()
     QQmlComponent component(&eng, testFileUrl("formatting.qml"));
 
     QStringList warnings;
-    warnings << component.url().toString() + ":37: Error: Qt.formatDate(): Invalid date format"
-        << component.url().toString() + ":36: Error: Qt.formatDate(): Invalid arguments"
-        << component.url().toString() + ":40: Error: Qt.formatTime(): Invalid time format"
-        << component.url().toString() + ":39: Error: Qt.formatTime(): Invalid arguments"
-        << component.url().toString() + ":43: Error: Qt.formatDateTime(): Invalid datetime format"
-        << component.url().toString() + ":42: Error: Qt.formatDateTime(): Invalid arguments";
+    warnings << component.url().toString() + ":37: Error: Qt.formatDate(): Bad second argument (must be either string, number or locale)"
+             << component.url().toString() + ":36: Error: Qt.formatDate(): Missing argument"
+             << component.url().toString() + ":40: Error: Qt.formatTime(): Bad second argument (must be either string, number or locale)"
+             << component.url().toString() + ":39: Error: Qt.formatTime(): Missing argument"
+             << component.url().toString() + ":43: Error: Qt.formatDateTime(): Bad second argument (must be either string, number or locale)"
+             << component.url().toString() + ":42: Error: Qt.formatDateTime(): Missing argument";
 
     foreach (const QString &warning, warnings)
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
@@ -840,6 +844,8 @@ void tst_qqmlqt::dateTimeFormattingVariants()
 
 void tst_qqmlqt::dateTimeFormattingVariants_data()
 {
+    QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
+    // Test intentionally uses deprecated enumerators from Qt::DateFormat
     QTest::addColumn<QString>("method");
     QTest::addColumn<QVariant>("variant");
     QTest::addColumn<QStringList>("expectedResults");
@@ -880,6 +886,28 @@ void tst_qqmlqt::dateTimeFormattingVariants_data()
     QTest::newRow("formatDate, int") << "formatDate" << QVariant::fromValue(integer) << (QStringList() << temporary.date().toString(Qt::DefaultLocaleShortDate) << temporary.date().toString(Qt::DefaultLocaleLongDate) << temporary.date().toString("ddd MMMM d yy"));
     QTest::newRow("formatDateTime, int") << "formatDateTime" << QVariant::fromValue(integer) << (QStringList() << temporary.toString(Qt::DefaultLocaleShortDate) << temporary.toString(Qt::DefaultLocaleLongDate) << temporary.toString("M/d/yy H:m:s a"));
     QTest::newRow("formatTime, int") << "formatTime" << QVariant::fromValue(integer) << (QStringList() << temporary.time().toString(Qt::DefaultLocaleShortDate) << temporary.time().toString(Qt::DefaultLocaleLongDate) << temporary.time().toString("H:m:s a") << temporary.time().toString("hh:mm:ss.zzz"));
+    QT_WARNING_POP
+}
+
+void tst_qqmlqt::dateTimeFormattingWithLocale()
+{
+    QQmlEngine engine;
+    auto url = testFileUrl("formattingLocale.qml");
+    QQmlComponent comp(&engine, url);
+    QDateTime dateTime = QDateTime::fromString("M1d1y9800:01:02",
+                                               "'M'M'd'd'y'yyhh:mm:ss");
+    QDate date(1995, 5, 17);
+    QScopedPointer<QObject> o(comp.createWithInitialProperties({ {"myDateTime", dateTime}, {"myDate", date} }));
+    QVERIFY(!o.isNull());
+
+    auto dateTimeString = o->property("dateTimeString").toString();
+    QCOMPARE(dateTimeString, QLocale("de_DE").toString(dateTime, QLocale::NarrowFormat));
+    auto dateString = o->property("dateString").toString();
+    QCOMPARE(dateString, QLocale("de_DE").toString(date, QLocale::ShortFormat));
+
+    QString warningMsg = url.toString() + QLatin1String(":11: Error: Qt.formatTime(): Third argument must be a Locale format option");
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, warningMsg.toUtf8().constData());
+    QMetaObject::invokeMethod(o.get(), "invalidUsage");
 }
 
 void tst_qqmlqt::isQtObject()

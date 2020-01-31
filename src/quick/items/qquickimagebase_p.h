@@ -107,6 +107,10 @@ public:
     QSize sourceSize() const;
     void resetSourceSize();
 
+    QRectF sourceClipRect() const;
+    void setSourceClipRect(const QRectF &r);
+    void resetSourceClipRect();
+
     virtual void setMirror(bool mirror);
     bool mirror() const;
 
@@ -134,6 +138,7 @@ Q_SIGNALS:
     void mirrorChanged();
     Q_REVISION(14) void currentFrameChanged();
     Q_REVISION(14) void frameCountChanged();
+    Q_REVISION(15) void sourceClipRectChanged();
 
 protected:
     void loadEmptyUrl();
