@@ -6,6 +6,8 @@ SOURCES += tst_ecmascripttests.cpp qjstest/test262runner.cpp
 HEADERS += qjstest/test262runner.h
 DEFINES += SRCDIR=\\\"$$PWD\\\"
 
+CONFIG += c++14
+
 # The ES test suite takes approximately 5 mins to run, on a fairly
 # vanilla developer machine, so the default watchdog timer kills the
 # test some of the time.  Fix by raising time-out to 400s when
