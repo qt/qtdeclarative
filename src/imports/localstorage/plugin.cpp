@@ -42,6 +42,8 @@
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
 
+extern void qml_register_types_QtQuick_LocalStorage();
+
 QT_BEGIN_NAMESPACE
 
 class QQmlLocalStoragePlugin : public QQmlEngineExtensionPlugin
@@ -52,6 +54,8 @@ class QQmlLocalStoragePlugin : public QQmlEngineExtensionPlugin
 public:
     QQmlLocalStoragePlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
     {
+        volatile auto registration = &qml_register_types_QtQuick_LocalStorage;
+        Q_UNUSED(registration);
     }
 };
 

@@ -37,10 +37,8 @@
 **
 ****************************************************************************/
 
+#include <QtQml/private/qtqmlglobal_p.h>
 #include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/private/qqmlengine_p.h>
-#include <QtQml/private/qqmlcomponentattached_p.h>
-#include <QtQml/private/qqmlbind_p.h>
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include <QtQmlModels/private/qqmlmodelsmodule_p.h>
@@ -71,7 +69,12 @@ class QtQmlPlugin : public QQmlExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    QtQmlPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
+    QtQmlPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent)
+    {
+        volatile auto registration = &qml_register_types_QtQml;
+        Q_UNUSED(registration);
+    }
+
     void registerTypes(const char *) override { QQmlModelsModule::registerQmlTypes(); }
 };
 #else
@@ -80,7 +83,11 @@ class QtQmlPlugin : public QQmlEngineExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 public:
-    QtQmlPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) {}
+    QtQmlPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
+    {
+        volatile auto registration = &qml_register_types_QtQml;
+        Q_UNUSED(registration);
+    }
 };
 #endif
 //![class decl]
