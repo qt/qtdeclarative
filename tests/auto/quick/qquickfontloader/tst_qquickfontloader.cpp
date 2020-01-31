@@ -158,9 +158,9 @@ void tst_qquickfontloader::failWebFont()
 
 void tst_qquickfontloader::changeFont()
 {
-    QString componentStr = "import QtQuick 2.0\nFontLoader { source: font }";
+    QString componentStr = "import QtQuick 2.0\nFontLoader { source: fnt }";
     QQmlContext *ctxt = engine.rootContext();
-    ctxt->setContextProperty("font", testFileUrl("tarzeau_ocr_a.ttf"));
+    ctxt->setContextProperty("fnt", testFileUrl("tarzeau_ocr_a.ttf"));
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(component.create());
@@ -175,20 +175,20 @@ void tst_qquickfontloader::changeFont()
     QCOMPARE(statusSpy.count(), 0);
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
 
-    ctxt->setContextProperty("font", server.urlString("/daniel.ttf"));
+    ctxt->setContextProperty("fnt", server.urlString("/daniel.ttf"));
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Loading);
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
     QCOMPARE(nameSpy.count(), 1);
     QCOMPARE(statusSpy.count(), 2);
     QTRY_COMPARE(fontObject->name(), QString("Daniel"));
 
-    ctxt->setContextProperty("font", testFileUrl("tarzeau_ocr_a.ttf"));
+    ctxt->setContextProperty("fnt", testFileUrl("tarzeau_ocr_a.ttf"));
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
     QCOMPARE(nameSpy.count(), 2);
     QCOMPARE(statusSpy.count(), 2);
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
 
-    ctxt->setContextProperty("font", server.urlString("/daniel.ttf"));
+    ctxt->setContextProperty("fnt", server.urlString("/daniel.ttf"));
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
     QCOMPARE(nameSpy.count(), 3);
     QCOMPARE(statusSpy.count(), 2);

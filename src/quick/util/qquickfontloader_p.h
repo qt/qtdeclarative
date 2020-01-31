@@ -67,6 +67,7 @@ class Q_AUTOTEST_EXPORT QQuickFontLoader : public QObject
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(QString name READ name NOTIFY nameChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    Q_PROPERTY(QFont font READ font NOTIFY fontChanged)
     QML_NAMED_ELEMENT(FontLoader)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -82,14 +83,17 @@ public:
 
     QString name() const;
 
+    QFont font() const;
+
     Status status() const;
 
 private Q_SLOTS:
-    void updateFontInfo(const QString&, QQuickFontLoader::Status);
+    void updateFontInfo(int);
 
 Q_SIGNALS:
     void sourceChanged();
     void nameChanged();
+    void fontChanged();
     void statusChanged();
 };
 
