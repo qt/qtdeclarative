@@ -502,6 +502,7 @@ function(qt6_qml_type_registration target)
         set(foreign_types_file_tmp "${foreign_types_file}.tmp")
         add_custom_target(${target}_resolve_foreign_types
             BYPRODUCTS "${foreign_types_file}"
+            DEPENDS "${QT_QMTYPES_RESOLVE_DEPENDENCIES_SCRIPT}"
             COMMAND ${CMAKE_COMMAND}
                 -DOUTPUT_FILE:PATH="${foreign_types_file_tmp}"
                 ${foreign_types_common_args}
@@ -516,6 +517,7 @@ function(qt6_qml_type_registration target)
     else()
         add_custom_command(
             OUTPUT "${foreign_types_file}"
+            DEPENDS "${QT_QMTYPES_RESOLVE_DEPENDENCIES_SCRIPT}"
             COMMAND ${CMAKE_COMMAND}
                 -DOUTPUT_FILE:PATH="${foreign_types_file}"
                 ${foreign_types_common_args}
@@ -551,7 +553,10 @@ function(qt6_qml_type_registration target)
     endif()
 
     add_custom_command(OUTPUT ${type_registration_cpp_file}
-        DEPENDS ${foreign_types_file} ${target_metatypes_json_file}
+        DEPENDS
+            ${foreign_types_file}
+            ${target_metatypes_json_file}
+            ${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar
         COMMAND
             ${CMAKE_COMMAND} -E env PATH=${CMAKE_INSTALL_PREFIX}/${INSTALL_BINDIR}
             $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar>
