@@ -45,9 +45,9 @@ T.Tumbler {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            implicitContentWidth + leftPadding + rightPadding) || 60 // ### remove 60 in Qt 6
+                            implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                             implicitContentHeight + topPadding + bottomPadding) || 200 // ### remove 200 in Qt 6
+                             implicitContentHeight + topPadding + bottomPadding)
 
     delegate: Text {
         text: modelData

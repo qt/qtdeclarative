@@ -52,7 +52,8 @@ import QtQuick 2.12
 import QtQuick.Controls 2.12
 
 ListView {
-    anchors.fill: parent
+    implicitWidth: 60
+    implicitHeight: 200
     snapMode: ListView.SnapToItem
     highlightRangeMode: ListView.StrictlyEnforceRange
     preferredHighlightBegin: height / 2 - (height / parent.visibleItemCount / 2)

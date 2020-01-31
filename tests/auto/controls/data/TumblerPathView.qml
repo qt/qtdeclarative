@@ -53,6 +53,8 @@ import QtQuick.Controls 2.12
 
 PathView {
     id: pathView
+    implicitWidth: 60
+    implicitHeight: 200
     clip: true
     pathItemCount: parent.visibleItemCount + 1
     preferredHighlightBegin: 0.5

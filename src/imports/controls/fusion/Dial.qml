@@ -45,9 +45,9 @@ T.Dial {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            implicitContentWidth + leftPadding + rightPadding) || 100 // ### remove 100 in Qt 6
+                            implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                             implicitContentHeight + topPadding + bottomPadding) || 100 // ### remove 100 in Qt 6
+                             implicitContentHeight + topPadding + bottomPadding)
 
     background: DialImpl {
         implicitWidth: 100
