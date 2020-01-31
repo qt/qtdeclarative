@@ -72,9 +72,6 @@ public:
     QQmlTypeModuleVersion(const QQmlTypeModuleVersion &);
     QQmlTypeModuleVersion &operator=(const QQmlTypeModuleVersion &);
 
-    QQmlTypeModule *module() const;
-    quint8 minorVersion() const;
-
     QQmlType type(const QHashedStringRef &) const;
     QQmlType type(const QV4::String *) const;
 

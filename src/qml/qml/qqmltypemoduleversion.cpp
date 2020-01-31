@@ -68,16 +68,6 @@ QQmlTypeModuleVersion &QQmlTypeModuleVersion::operator=(const QQmlTypeModuleVers
     return *this;
 }
 
-QQmlTypeModule *QQmlTypeModuleVersion::module() const
-{
-    return m_module;
-}
-
-quint8 QQmlTypeModuleVersion::minorVersion() const
-{
-    return m_minor;
-}
-
 QQmlType QQmlTypeModuleVersion::type(const QHashedStringRef &name) const
 {
     if (!m_module)
