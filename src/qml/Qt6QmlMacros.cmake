@@ -454,7 +454,7 @@ function(qt6_qml_type_registration target)
     string(SUBSTRING ${import_version} ${dot_location} -1 minor_version)
 
     set(cmd_args)
-    set(plugin_types_file ${target_binary_dir}/plugin.types)
+    set(plugin_types_file ${target_binary_dir}/plugin.qmltypes)
     set_target_properties(${target} PROPERTIES
         QT_QML_MODULE_PLUGIN_TYPES_FILE ${plugin_types_file}
     )
