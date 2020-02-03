@@ -396,6 +396,10 @@ void QQuickImageBase::requestFinished()
         d->frameCount = d->pix.frameCount();
         emit frameCountChanged();
     }
+    if (d->colorSpace != d->pix.colorSpace()) {
+        d->colorSpace = d->pix.colorSpace();
+        emit colorSpaceChanged();
+    }
 
     update();
 }
@@ -486,6 +490,22 @@ void QQuickImageBase::setAutoTransform(bool transform)
         return;
     d->providerOptions.setAutoTransform(transform ? QQuickImageProviderOptions::ApplyTransform : QQuickImageProviderOptions::DoNotApplyTransform);
     emitAutoTransformBaseChanged();
+}
+
+QColorSpace QQuickImageBase::colorSpace() const
+{
+    Q_D(const QQuickImageBase);
+    return d->colorSpace;
+}
+
+void QQuickImageBase::setColorSpace(const QColorSpace &colorSpace)
+{
+    Q_D(QQuickImageBase);
+    if (d->colorSpace == colorSpace)
+        return;
+    d->colorSpace = colorSpace;
+    d->providerOptions.setTargetColorSpace(colorSpace);
+    emit colorSpaceChanged();
 }
 
 QT_END_NAMESPACE

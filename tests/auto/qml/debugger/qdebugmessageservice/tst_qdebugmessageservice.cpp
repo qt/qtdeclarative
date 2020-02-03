@@ -135,7 +135,7 @@ QList<QQmlDebugClient *> tst_QDebugMessageService::createClients()
 
 void tst_QDebugMessageService::retrieveDebugOutput()
 {
-    QCOMPARE(QQmlDebugTest::connect(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qml",
+    QCOMPARE(QQmlDebugTest::connectTo(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qml",
                                     QString(), testFile(QMLFILE), true), ConnectSuccess);
 
     QTRY_VERIFY(m_client->logBuffer.size() >= 2);

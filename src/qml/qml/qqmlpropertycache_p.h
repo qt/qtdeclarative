@@ -120,6 +120,7 @@ public:
     }
 
     QQmlPropertyData *property(int) const;
+    QQmlPropertyData *maybeUnresolvedProperty(int) const;
     QQmlPropertyData *method(int) const;
     QQmlPropertyData *signal(int index) const;
     QQmlEnumData *qmlEnum(int) const;

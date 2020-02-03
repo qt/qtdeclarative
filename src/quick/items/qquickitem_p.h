@@ -471,6 +471,7 @@ public:
     bool isTabFence:1;
     bool replayingPressEvent:1;
     bool touchEnabled:1;
+    bool hasCursorHandler:1;
 
     enum DirtyType {
         TransformOrigin         = 0x00000001,
@@ -651,6 +652,10 @@ public:
 
     void setHasCursorInChild(bool hasCursor);
     void setHasHoverInChild(bool hasHover);
+#if QT_CONFIG(cursor)
+    QCursor effectiveCursor(const QQuickPointerHandler *handler) const;
+    QQuickPointerHandler *effectiveCursorHandler() const;
+#endif
 
     virtual void updatePolish() { }
 };

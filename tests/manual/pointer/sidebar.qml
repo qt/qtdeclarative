@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.15
 import "content"
 
 Rectangle {
@@ -53,6 +53,7 @@ Rectangle {
                     id: buttonMA
                     objectName: "buttonMA"
                     hoverEnabled: true
+                    cursorShape: Qt.UpArrowCursor
                     anchors.fill: parent
                     onClicked: console.log("clicked MA")
                 }
@@ -75,9 +76,11 @@ Rectangle {
                     id: buttonHH
                     objectName: "buttonHH"
                     acceptedDevices: PointerDevice.AllDevices
+                    cursorShape: tapHandler.pressed ? Qt.BusyCursor : Qt.PointingHandCursor
                 }
 
                 TapHandler {
+                    id: tapHandler
                     onTapped: tapFlash.start()
                 }
 
@@ -148,6 +151,7 @@ Rectangle {
         HoverHandler {
             id: topSidebarHH
             objectName: "topSidebarHH"
+            cursorShape: Qt.OpenHandCursor
         }
 
         Loader {
@@ -173,6 +177,7 @@ Rectangle {
             id: bottomSidebarMA
             objectName: "bottomSidebarMA"
             hoverEnabled: true
+            cursorShape: Qt.ClosedHandCursor
             anchors.fill: parent
         }
 

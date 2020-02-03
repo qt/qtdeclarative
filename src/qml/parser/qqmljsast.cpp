@@ -1554,6 +1554,14 @@ void UiInlineComponent::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
+void UiRequired::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+    }
+
+    visitor->endVisit(this);
+}
+
 } } // namespace QQmlJS::AST
 
 QT_END_NAMESPACE

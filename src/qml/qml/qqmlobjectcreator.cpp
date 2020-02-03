@@ -1505,23 +1505,45 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     if (_compiledObject->flags & QV4::CompiledData::Object::HasDeferredBindings)
         _ddata->deferData(_compiledObjectIndex, compilationUnit, context);
 
+    QSet<QString> postHocRequired;
+    for (auto it = _compiledObject->requiredPropertyExtraDataBegin(); it != _compiledObject->requiredPropertyExtraDataEnd(); ++it)
+        postHocRequired.insert(stringAt(it->nameIndex));
+    bool hadInheritedRequiredProperties = !postHocRequired.empty();
+
     for (int propertyIndex = 0; propertyIndex != _compiledObject->propertyCount(); ++propertyIndex) {
         const QV4::CompiledData::Property* property = _compiledObject->propertiesBegin() + propertyIndex;
         QQmlPropertyData *propertyData = _propertyCache->property(_propertyCache->propertyOffset() + propertyIndex);
-        if (property->isRequired) {
-            sharedState->hadRequiredProperties = true;
-            sharedState->requiredProperties.insert(propertyData,
-                                                   RequiredPropertyInfo {compilationUnit->stringAt(property->nameIndex), compilationUnit->finalUrl(), property->location, {}});
-        }
+        // only compute stringAt if there's a chance for the lookup to succeed
+        auto postHocIt = postHocRequired.isEmpty() ? postHocRequired.end() : postHocRequired.find(stringAt(property->nameIndex));
+        if (!property->isRequired && postHocRequired.end() == postHocIt)
+            continue;
+        if (postHocIt != postHocRequired.end())
+            postHocRequired.erase(postHocIt);
+        sharedState->hadRequiredProperties = true;
+        sharedState->requiredProperties.insert(propertyData,
+                                               RequiredPropertyInfo {compilationUnit->stringAt(property->nameIndex), compilationUnit->finalUrl(), property->location, {}});
+
     }
 
     for (int i = 0; i <= _propertyCache->propertyOffset(); ++i) {
-        QQmlPropertyData *propertyData = _propertyCache->property(i);
-        if (propertyData && propertyData->isRequired()) {
-            sharedState->hadRequiredProperties = true;
-            sharedState->requiredProperties.insert(propertyData, RequiredPropertyInfo {propertyData->name(_qobject),  compilationUnit->finalUrl(), _compiledObject->location, {}});
-        }
+        QQmlPropertyData *propertyData = _propertyCache->maybeUnresolvedProperty(i);
+        if (!propertyData)
+            continue;
+        if (!propertyData->isRequired() && postHocRequired.isEmpty())
+            continue;
+        QString name = propertyData->name(_qobject);
+        auto postHocIt = postHocRequired.find(name);
+        if (!propertyData->isRequired() && postHocRequired.end() == postHocIt )
+            continue;
+
+        if (postHocIt != postHocRequired.end())
+            postHocRequired.erase(postHocIt);
+
+        sharedState->hadRequiredProperties = true;
+        sharedState->requiredProperties.insert(propertyData, RequiredPropertyInfo {name,  compilationUnit->finalUrl(), _compiledObject->location, {}});
     }
+    if (!postHocRequired.isEmpty() && hadInheritedRequiredProperties)
+        recordError({}, QLatin1String("Property %1 was marked as required but does not exist").arg(*postHocRequired.begin()));
 
     if (_compiledObject->nFunctions > 0)
         setupFunctions();

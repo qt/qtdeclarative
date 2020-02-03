@@ -1797,22 +1797,26 @@ void tst_qquickwindow::cursor()
     window.resize(320, 290);
 
     QQuickItem parentItem;
+    parentItem.setObjectName("parentItem");
     parentItem.setPosition(QPointF(0, 0));
     parentItem.setSize(QSizeF(180, 180));
     parentItem.setParentItem(window.contentItem());
 
     QQuickItem childItem;
+    childItem.setObjectName("childItem");
     childItem.setPosition(QPointF(60, 90));
     childItem.setSize(QSizeF(120, 120));
     childItem.setParentItem(&parentItem);
 
     QQuickItem clippingItem;
+    clippingItem.setObjectName("clippingItem");
     clippingItem.setPosition(QPointF(120, 120));
     clippingItem.setSize(QSizeF(180, 180));
     clippingItem.setClip(true);
     clippingItem.setParentItem(window.contentItem());
 
     QQuickItem clippedItem;
+    clippedItem.setObjectName("clippedItem");
     clippedItem.setPosition(QPointF(-30, -30));
     clippedItem.setSize(QSizeF(120, 120));
     clippedItem.setParentItem(&clippingItem);

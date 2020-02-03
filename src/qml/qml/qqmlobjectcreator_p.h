@@ -86,7 +86,7 @@ struct RequiredPropertyInfo
     QVector<AliasToRequiredInfo> aliasesToRequired;
 };
 
-using RequiredProperties = QHash<QQmlPropertyData*, RequiredPropertyInfo>;
+class RequiredProperties : public QHash<QQmlPropertyData*, RequiredPropertyInfo> {};
 
 struct QQmlObjectCreatorSharedState : public QSharedData
 {

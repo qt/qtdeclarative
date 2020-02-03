@@ -117,6 +117,9 @@ public:
     bool preserveAspectRatioFit() const;
     void setPreserveAspectRatioFit(bool preserveAspectRatioFit);
 
+    QColorSpace targetColorSpace() const;
+    void setTargetColorSpace(const QColorSpace &colorSpace);
+
 private:
     QSharedDataPointer<QQuickImageProviderOptionsPrivate> d;
 };
@@ -155,6 +158,8 @@ public:
     QImage image() const;
     void setImage(const QImage &);
     void setPixmap(const QQuickPixmap &other);
+
+    QColorSpace colorSpace() const;
 
     QQuickTextureFactory *textureFactory() const;
 

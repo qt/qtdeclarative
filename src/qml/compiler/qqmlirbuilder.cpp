@@ -64,6 +64,33 @@ using namespace QQmlJS;
         return false; \
     }
 
+void Object::simplifyRequiredProperties() {
+    // if a property of the current object was marked as required
+    // do not store that information in the ExtraData
+    // but rather mark the property as required
+    QSet<int> required;
+    for (auto it = this->requiredPropertyExtraDataBegin(); it != this->requiredPropertyExtraDataEnd(); ++it)
+        required.insert(it->nameIndex);
+    if (required.isEmpty())
+        return;
+    for (auto it = this->propertiesBegin(); it != this->propertiesEnd(); ++it) {
+        auto requiredIt = required.find(it->nameIndex);
+        if (requiredIt != required.end()) {
+            it->isRequired = true;
+            required.erase(requiredIt);
+        }
+    }
+    QmlIR::RequiredPropertyExtraData *prev = nullptr;
+    auto current = this->requiredPropertyExtraDatas->first;
+    while (current) {
+        if (required.contains(current->nameIndex))
+            prev = current;
+        else
+            requiredPropertyExtraDatas->unlink(prev, current);
+        current = current->next;
+    }
+}
+
 bool Parameter::init(QV4::Compiler::JSUnitGenerator *stringGenerator, const QString &parameterName,
                      const QString &typeName)
 {
@@ -162,6 +189,7 @@ void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, cons
     functions = pool->New<PoolList<Function> >();
     functionsAndExpressions = pool->New<PoolList<CompiledFunctionOrExpression> >();
     inlineComponents = pool->New<PoolList<InlineComponent>>();
+    requiredPropertyExtraDatas = pool->New<PoolList<RequiredPropertyExtraData>>();
     declarationsOverride = nullptr;
 }
 
@@ -285,6 +313,11 @@ void Object::appendFunction(QmlIR::Function *f)
 void Object::appendInlineComponent(InlineComponent *ic)
 {
     inlineComponents->append(ic);
+}
+
+void Object::appendRequiredPropertyExtraData(RequiredPropertyExtraData *extraData)
+{
+    requiredPropertyExtraDatas->append(extraData);
 }
 
 QString Object::appendBinding(Binding *b, bool isListBinding)
@@ -448,6 +481,10 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, Documen
     qSwap(_imports, output->imports);
     qSwap(_pragmas, output->pragmas);
     qSwap(_objects, output->objects);
+
+    for (auto object: output->objects)
+        object->simplifyRequiredProperties();
+
     return errors.isEmpty();
 }
 
@@ -979,6 +1016,14 @@ bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
     } else {
         recordError(node->firstSourceLocation(), QCoreApplication::translate("QQmlParser","JavaScript declaration outside Script element"));
     }
+    return false;
+}
+
+bool IRBuilder::visit(AST::UiRequired *ast)
+{
+    auto extraData = New<RequiredPropertyExtraData>();
+    extraData->nameIndex = registerString(ast->name.toString());
+    _object->appendRequiredPropertyExtraData(extraData);
     return false;
 }
 
@@ -1577,7 +1622,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
     uint nextOffset = objectOffset + objectOffsetTableSize;
     for (Object *o : qAsConst(output.objects)) {
         objectOffsets.insert(o, nextOffset);
-        nextOffset += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.size(), o->inlineComponentCount());
+        nextOffset += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.size(), o->inlineComponentCount(), o->requiredPropertyExtraDataCount());
 
         int signalTableSize = 0;
         for (const Signal *s = o->firstSignal(); s; s = s->next)
@@ -1660,6 +1705,10 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         objectToWrite->offsetToInlineComponents = nextOffset;
         nextOffset += objectToWrite->nInlineComponents * sizeof (QV4::CompiledData::InlineComponent);
 
+        objectToWrite->nRequiredPropertyExtraData = o->requiredPropertyExtraDataCount();
+        objectToWrite->offsetToRequiredPropertyExtraData = nextOffset;
+        nextOffset += objectToWrite->nRequiredPropertyExtraData * sizeof(QV4::CompiledData::RequiredPropertyExtraData);
+
         quint32_le *functionsTable = reinterpret_cast<quint32_le *>(objectPtr + objectToWrite->offsetToFunctions);
         for (const Function *f = o->firstFunction(); f; f = f->next)
             *functionsTable++ = o->runtimeFunctionIndices.at(f->index);
@@ -1738,6 +1787,14 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
             QV4::CompiledData::InlineComponent *icToWrite = reinterpret_cast<QV4::CompiledData::InlineComponent*>(inlineComponentPtr);
             *icToWrite = *ic;
             inlineComponentPtr += sizeof(QV4::CompiledData::InlineComponent);
+        }
+
+        char *requiredPropertyExtraDataPtr = objectPtr + objectToWrite->offsetToRequiredPropertyExtraData;
+        for (auto it = o->requiredPropertyExtraDataBegin(); it != o->requiredPropertyExtraDataEnd(); ++it) {
+            const RequiredPropertyExtraData *extraData = it.ptr;
+            QV4::CompiledData::RequiredPropertyExtraData *extraDataToWrite = reinterpret_cast<QV4::CompiledData::RequiredPropertyExtraData*>(requiredPropertyExtraDataPtr);
+            *extraDataToWrite = *extraData;
+            requiredPropertyExtraDataPtr += sizeof(QV4::CompiledData::RequiredPropertyExtraData);
         }
     }
 

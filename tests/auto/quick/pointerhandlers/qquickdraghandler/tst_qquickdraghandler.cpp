@@ -249,8 +249,11 @@ void tst_DragHandler::mouseDrag()
     QPointF ballCenter = ball->clipRect().center();
     QPointF scenePressPos = ball->mapToScene(ballCenter);
     QPoint p1 = scenePressPos.toPoint();
-    QTest::mousePress(window, static_cast<Qt::MouseButton>(int(dragButton)), Qt::NoModifier, p1);
+    QTest::mousePress(window, static_cast<Qt::MouseButton>(int(dragButton)), Qt::NoModifier, p1, 500);
     QVERIFY(!dragHandler->active());
+#if QT_CONFIG(cursor)
+    QCOMPARE(window->cursor().shape(), Qt::ArrowCursor);
+#endif
     if (shouldDrag) {
         QCOMPARE(dragHandler->centroid().position(), ballCenter);
         QCOMPARE(dragHandler->centroid().pressPosition(), ballCenter);
@@ -265,6 +268,9 @@ void tst_DragHandler::mouseDrag()
         QTRY_VERIFY(dragHandler->centroid().velocity().x() > 0);
         QCOMPARE(centroidChangedSpy.count(), 2);
         QVERIFY(!dragHandler->active());
+#if QT_CONFIG(cursor)
+        QCOMPARE(window->cursor().shape(), Qt::ArrowCursor);
+#endif
     }
     p1 += QPoint(1, 0);
     QTest::mouseMove(window, p1);
@@ -292,6 +298,9 @@ void tst_DragHandler::mouseDrag()
         QCOMPARE(dragHandler->translation().y(), 0.0);
         QVERIFY(dragHandler->centroid().velocity().x() > 0);
         QCOMPARE(centroidChangedSpy.count(), 4);
+#if QT_CONFIG(cursor)
+        QCOMPARE(window->cursor().shape(), Qt::ClosedHandCursor);
+#endif
     }
     QTest::mouseRelease(window, static_cast<Qt::MouseButton>(int(dragButton)), Qt::NoModifier, p1);
     QTRY_VERIFY(!dragHandler->active());
@@ -300,6 +309,10 @@ void tst_DragHandler::mouseDrag()
         QCOMPARE(ball->mapToScene(ballCenter).toPoint(), p1);
     QCOMPARE(translationChangedSpy.count(), shouldDrag ? 1 : 0);
     QCOMPARE(centroidChangedSpy.count(), shouldDrag ? 5 : 0);
+#if QT_CONFIG(cursor)
+    QTest::mouseMove(window, p1 + QPoint(1, 0)); // TODO after fixing QTBUG-53987, don't send mouseMove
+    QCOMPARE(window->cursor().shape(), Qt::ArrowCursor);
+#endif
 }
 
 void tst_DragHandler::mouseDragThreshold_data()

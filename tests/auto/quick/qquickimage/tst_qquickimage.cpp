@@ -51,6 +51,7 @@
 #include "../../shared/testhttpserver.h"
 #include "../shared/visualtestutil.h"
 
+// #define DEBUG_WRITE_OUTPUT
 
 using namespace QQuickVisualTestUtil;
 
@@ -89,6 +90,8 @@ private slots:
     void imageCrash_QTBUG_32513();
     void sourceSize_data();
     void sourceSize();
+    void sourceClipRect_data();
+    void sourceClipRect();
     void progressAndStatusChanges();
     void sourceSizeChanges();
     void correctStatus();
@@ -99,6 +102,7 @@ private slots:
     void urlInterceptor();
     void multiFrame_data();
     void multiFrame();
+    void colorSpace();
 
 private:
     QQmlEngine engine;
@@ -879,6 +883,72 @@ void tst_qquickimage::sourceSizeChanges()
     delete img;
 }
 
+void tst_qquickimage::sourceClipRect_data()
+{
+    QTest::addColumn<QRectF>("sourceClipRect");
+    QTest::addColumn<QSize>("sourceSize");
+    QTest::addColumn<QList<QPoint>>("redPixelLocations");
+    QTest::addColumn<QList<QPoint>>("bluePixelLocations");
+
+    QTest::newRow("unclipped") << QRectF() << QSize()
+                               << (QList<QPoint>() << QPoint(80, 80) << QPoint(150, 256))
+                               << (QList<QPoint>() << QPoint(28, 28) << QPoint(215, 215));
+    QTest::newRow("upperLeft") << QRectF(10, 10, 100, 100) << QSize()
+                               << (QList<QPoint>() << QPoint(99, 99))
+                               << (QList<QPoint>() << QPoint(100, 100) << QPoint(28, 28));
+    QTest::newRow("lowerRight") << QRectF(200, 200, 20, 20) << QSize()
+                               << (QList<QPoint>() << QPoint(0, 0))
+                               << (QList<QPoint>() << QPoint(14, 14));
+    QTest::newRow("miniMiddle") << QRectF(20, 20, 60, 60) << QSize(100, 100)
+                                << (QList<QPoint>() << QPoint(59, 0) << QPoint(6, 12) << QPoint(42, 42))
+                                << (QList<QPoint>() << QPoint(54, 54) << QPoint(15, 59));
+}
+
+void tst_qquickimage::sourceClipRect()
+{
+    QFETCH(QRectF, sourceClipRect);
+    QFETCH(QSize, sourceSize);
+    QFETCH(QList<QPoint>, redPixelLocations);
+    QFETCH(QList<QPoint>, bluePixelLocations);
+
+    QScopedPointer<QQuickView> window(new QQuickView(nullptr));
+
+    window->setColor(Qt::blue);
+    window->setSource(testFileUrl("image.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickImage *image = qobject_cast<QQuickImage*>(window->rootObject());
+    QVERIFY(image);
+
+    image->setSourceSize(sourceSize);
+    QCOMPARE(image->implicitWidth(), sourceSize.isValid() ? sourceSize.width() : 300);
+    QCOMPARE(image->implicitHeight(), sourceSize.isValid() ? sourceSize.height() : 300);
+    image->setSourceClipRect(sourceClipRect);
+    QCOMPARE(image->implicitWidth(), sourceClipRect.isNull() ? 300 : sourceClipRect.width());
+    QCOMPARE(image->implicitHeight(), sourceClipRect.isNull() ? 300 : sourceClipRect.height());
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+    QImage contents = window->grabWindow();
+    if (contents.width() < sourceClipRect.width())
+        QSKIP("Skipping due to grabWindow not functional");
+#ifdef DEBUG_WRITE_OUTPUT
+    contents.save("/tmp/sourceClipRect_" + QLatin1String(QTest::currentDataTag()) + ".png");
+#endif
+    for (auto p : redPixelLocations) {
+        QRgb color = contents.pixel(p);
+        QVERIFY(qRed(color) > 0xc0);
+        QVERIFY(qBlue(color) < 0x0f);
+    }
+    for (auto p : bluePixelLocations){
+        QRgb color = contents.pixel(p);
+        QVERIFY(qBlue(color) > 0xc0);
+        QVERIFY(qRed(color) < 0x0f);
+    }
+}
+
 void tst_qquickimage::progressAndStatusChanges()
 {
     TestHTTPServer server;
@@ -1188,6 +1258,34 @@ void tst_qquickimage::multiFrame()
     QVERIFY(qRed(color) < 0xc0);
     QVERIFY(qGreen(color) > 0xc0);
     QVERIFY(qBlue(color) < 0xc0);
+}
+
+void tst_qquickimage::colorSpace()
+{
+    QString componentStr1 = "import QtQuick 2.15\n"
+                            "Image { source: srcImage; }";
+    QQmlComponent component1(&engine);
+    component1.setData(componentStr1.toLatin1(), QUrl::fromLocalFile(""));
+    engine.rootContext()->setContextProperty("srcImage", testFileUrl("ProPhoto.jpg"));
+
+    QScopedPointer<QQuickImage> object1 { qobject_cast<QQuickImage*>(component1.create())};
+    QVERIFY(object1);
+    QTRY_COMPARE(object1->status(), QQuickImageBase::Ready);
+    QCOMPARE(object1->colorSpace(), QColorSpace(QColorSpace::ProPhotoRgb));
+
+    QString componentStr2 = "import QtQuick 2.15\n"
+                            "Image {\n"
+                            "  source: srcImage;\n"
+                            "  colorSpace.namedColorSpace: ColorSpace.SRgb;\n"
+                            "}";
+
+    QQmlComponent component2(&engine);
+    component2.setData(componentStr2.toLatin1(), QUrl::fromLocalFile(""));
+
+    QScopedPointer<QQuickImage> object2 { qobject_cast<QQuickImage*>(component2.create())};
+    QVERIFY(object2);
+    QTRY_COMPARE(object2->status(), QQuickImageBase::Ready);
+    QCOMPARE(object2->colorSpace(), QColorSpace(QColorSpace::SRgb));
 }
 
 QTEST_MAIN(tst_qquickimage)

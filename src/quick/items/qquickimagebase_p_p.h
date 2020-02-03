@@ -88,6 +88,7 @@ public:
     qreal devicePixelRatio;
     QRectF sourceClipRect;
     QQuickImageProviderOptions providerOptions;
+    QColorSpace colorSpace;
     int currentFrame;
     int frameCount;
     bool async : 1;

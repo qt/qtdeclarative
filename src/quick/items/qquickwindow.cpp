@@ -560,6 +560,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , activeFocusItem(nullptr)
 #if QT_CONFIG(cursor)
     , cursorItem(nullptr)
+    , cursorHandler(nullptr)
 #endif
 #if QT_CONFIG(quick_draganddrop)
     , dragGrabber(nullptr)
@@ -2967,26 +2968,27 @@ void QQuickWindowPrivate::updateCursor(const QPointF &scenePos)
 {
     Q_Q(QQuickWindow);
 
-    QQuickItem *oldCursorItem = cursorItem;
-    cursorItem = findCursorItem(contentItem, scenePos);
+    auto cursorItemAndHandler = findCursorItemAndHandler(contentItem, scenePos);
 
-    if (cursorItem != oldCursorItem) {
+    if (cursorItem != cursorItemAndHandler.first || cursorHandler != cursorItemAndHandler.second) {
         QWindow *renderWindow = QQuickRenderControl::renderWindowFor(q);
         QWindow *window = renderWindow ? renderWindow : q;
+        cursorItem = cursorItemAndHandler.first;
+        cursorHandler = cursorItemAndHandler.second;
         if (cursorItem)
-            window->setCursor(cursorItem->cursor());
+            window->setCursor(QQuickItemPrivate::get(cursorItem)->effectiveCursor(cursorHandler));
         else
             window->unsetCursor();
     }
 }
 
-QQuickItem *QQuickWindowPrivate::findCursorItem(QQuickItem *item, const QPointF &scenePos)
+QPair<QQuickItem*, QQuickPointerHandler*> QQuickWindowPrivate::findCursorItemAndHandler(QQuickItem *item, const QPointF &scenePos) const
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
         QPointF p = item->mapFromScene(scenePos);
         if (!item->contains(p))
-            return nullptr;
+            return {nullptr, nullptr};
     }
 
     if (itemPrivate->subtreeCursorEnabled) {
@@ -2995,17 +2997,24 @@ QQuickItem *QQuickWindowPrivate::findCursorItem(QQuickItem *item, const QPointF 
             QQuickItem *child = children.at(ii);
             if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
                 continue;
-            if (QQuickItem *cursorItem = findCursorItem(child, scenePos))
-                return cursorItem;
+            auto ret = findCursorItemAndHandler(child, scenePos);
+            if (ret.first)
+                return ret;
+        }
+        if (itemPrivate->hasCursor || itemPrivate->hasCursorHandler) {
+            QPointF p = item->mapFromScene(scenePos);
+            if (!item->contains(p))
+                return {nullptr, nullptr};
+            if (itemPrivate->hasCursorHandler) {
+                if (auto handler = itemPrivate->effectiveCursorHandler())
+                    return {item, handler};
+            }
+            if (itemPrivate->hasCursor)
+                return {item, nullptr};
         }
     }
 
-    if (itemPrivate->hasCursor) {
-        QPointF p = item->mapFromScene(scenePos);
-        if (item->contains(p))
-            return item;
-    }
-    return nullptr;
+    return {nullptr, nullptr};
 }
 #endif
 

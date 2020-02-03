@@ -259,7 +259,8 @@ public:
         Kind_UiHeaderItemList,
         Kind_UiEnumDeclaration,
         Kind_UiEnumMemberList,
-        Kind_UiVersionSpecifier
+        Kind_UiVersionSpecifier,
+        Kind_UiRequired
     };
 
     inline Node() {}
@@ -3103,6 +3104,28 @@ public:
 // attributes
     QStringRef name;
     SourceLocation pragmaToken;
+    SourceLocation semicolonToken;
+};
+
+class QML_PARSER_EXPORT UiRequired: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(UiRequired)
+
+    UiRequired(QStringRef name)
+        :name(name)
+    { kind = K; }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return requiredToken; }
+
+    SourceLocation lastSourceLocation() const override
+    { return semicolonToken; }
+
+    QStringRef name;
+    SourceLocation requiredToken;
     SourceLocation semicolonToken;
 };
 

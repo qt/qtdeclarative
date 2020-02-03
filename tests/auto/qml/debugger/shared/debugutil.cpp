@@ -120,7 +120,7 @@ void QQmlDebugTestClient::messageReceived(const QByteArray &ba)
     emit serverMessage(ba);
 }
 
-QQmlDebugTest::ConnectResult QQmlDebugTest::connect(
+QQmlDebugTest::ConnectResult QQmlDebugTest::connectTo(
         const QString &executable, const QString &services, const QString &extraArgs,
         bool block)
 {

@@ -87,7 +87,7 @@ QQmlEngineDebugObjectReference tst_QQmlEngineDebugInspectorIntegration::findRoot
 
 QQmlDebugTest::ConnectResult tst_QQmlEngineDebugInspectorIntegration::init(bool restrictServices)
 {
-    return QQmlDebugTest::connect(
+    return QQmlDebugTest::connectTo(
                 QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qml",
                 restrictServices ? QStringLiteral("QmlDebugger,QmlInspector") : QString(),
                 testFile("qtquick2.qml"), true);
