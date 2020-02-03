@@ -44,6 +44,9 @@
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <qsgtextureprovider.h>
+#if QT_CONFIG(opengl)
+#include <QOpenGLContext>
+#endif // QT_CONFIG(opengl)
 
 #include <qmath.h>
 

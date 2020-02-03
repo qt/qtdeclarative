@@ -78,8 +78,11 @@
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugconnector_p.h>
 #if QT_CONFIG(opengl)
-# include <private/qopenglvertexarrayobject_p.h>
-# include <private/qsgdefaultrendercontext_p.h>
+#include <private/qopenglvertexarrayobject_p.h>
+#include <private/qsgdefaultrendercontext_p.h>
+#include <private/qopengl_p.h>
+#include <QOpenGLContext>
+#include <QOpenGLFramebufferObject>
 #endif
 #ifndef QT_NO_DEBUG_STREAM
 #include <private/qdebug_p.h>

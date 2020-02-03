@@ -39,7 +39,7 @@
 
 #include "qsgdistancefieldglyphnode_p_p.h"
 #include "qsgrhidistancefieldglyphcache_p.h"
-#include <QtGui/qopenglfunctions.h>
+#include <qopenglfunctions.h>
 #include <QtGui/qsurface.h>
 #include <QtGui/qwindow.h>
 #include <qmath.h>

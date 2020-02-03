@@ -32,7 +32,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 
-#include <QtGui/qopenglcontext.h>
+#include <qopenglcontext.h>
 #include <QtGui/qsurfaceformat.h>
 
 #include "../../shared/util.h"

@@ -43,7 +43,7 @@
 #include <QtQuick/qtquickglobal.h>
 #include <QtQuick/qsgrendererinterface.h>
 #include <QtCore/qmetatype.h>
-#include <QtGui/qopengl.h>
+#include <qopengl.h>
 #include <QtGui/qwindow.h>
 #include <QtGui/qevent.h>
 #include <QtQml/qqml.h>

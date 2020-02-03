@@ -62,9 +62,6 @@
 #include <QtCore/qwaitcondition.h>
 #include <QtCore/qrunnable.h>
 #include <private/qwindow_p.h>
-#include <private/qopengl_p.h>
-#include <qopenglcontext.h>
-#include <QtGui/qopenglframebufferobject.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>

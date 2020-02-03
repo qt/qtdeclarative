@@ -30,8 +30,8 @@
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
-#include <QtGui/qopenglcontext.h>
-#include <QtGui/qopenglfunctions.h>
+#include <qopenglcontext.h>
+#include <qopenglfunctions.h>
 #include <QtGui/qscreen.h>
 #include <private/qsgrendernode_p.h>
 

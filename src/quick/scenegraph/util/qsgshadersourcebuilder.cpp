@@ -39,8 +39,8 @@
 
 #include "qsgshadersourcebuilder_p.h"
 
-#include <QtGui/qopenglcontext.h>
-#include <QtGui/qopenglshaderprogram.h>
+#include <qopenglcontext.h>
+#include <qopenglshaderprogram.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qfile.h>

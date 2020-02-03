@@ -39,8 +39,8 @@
 
 #include "qsgtexture_p.h"
 #if QT_CONFIG(opengl)
-# include <QtGui/qopenglcontext.h>
-# include <QtGui/qopenglfunctions.h>
+# include <qopenglcontext.h>
+# include <qopenglfunctions.h>
 #endif
 #include <private/qqmlglobal_p.h>
 #include <private/qsgmaterialshader_p.h>

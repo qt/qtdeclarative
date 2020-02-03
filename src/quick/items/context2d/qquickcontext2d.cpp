@@ -74,12 +74,12 @@
 #include <QtCore/private/qnumeric_p.h>
 #include <QtCore/QRunnable>
 #include <QtGui/qguiapplication.h>
-#include <QtGui/qopenglframebufferobject.h>
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
 
 #if QT_CONFIG(opengl)
-# include <private/qsgdefaultrendercontext_p.h>
+#include <qopenglframebufferobject.h>
+#include <private/qsgdefaultrendercontext_p.h>
 #endif
 
 #include <cmath>

@@ -34,6 +34,9 @@
 #include "private/qquickfocusscope_p.h"
 #include "private/qquickitem_p.h"
 #include <qpa/qwindowsysteminterface.h>
+#ifdef Q_OS_WIN
+#include <QOpenGLContext>
+#endif
 #include <QDebug>
 #include <QTimer>
 #include <QQmlEngine>

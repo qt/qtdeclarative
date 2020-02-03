@@ -41,7 +41,7 @@
 #include <private/qsgdefaultrendercontext_p.h>
 #include <private/qsgmaterialshader_p.h>
 #include <private/qsgtexturematerial_p.h>
-#include <QtGui/qopenglfunctions.h>
+#include <qopenglfunctions.h>
 #include <QtCore/qmath.h>
 #include <QtGui/private/qrhi_p.h>
 

@@ -34,8 +34,8 @@
 #include <private/qquickitem_p.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtGui/qpainter.h>
-#include <QtGui/qopenglcontext.h>
-#include <QtGui/qopenglfunctions.h>
+#include <qopenglcontext.h>
+#include <qopenglfunctions.h>
 #include <QtGui/qoffscreensurface.h>
 #include <QtQml/qqmlproperty.h>
 
