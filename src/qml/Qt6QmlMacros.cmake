@@ -216,6 +216,14 @@ function(qt6_add_qml_module target)
     endif()
     if (arg_TYPEINFO)
         string(APPEND qmldir_file_contents "typeinfo ${arg_TYPEINFO}\n")
+    else()
+        # This always need to be written out since at the moment we have cases
+        # where qmltyperegistrar is not run with the plugin but on a module
+        # e.g: src/qml generates the qmltypes for src/imports/qtqml.
+        # When this has been fixed/standardized we should move this to
+        # qt6_qml_type_registration() so that it is written out when the
+        # plugins.qmltypes is actually generated.
+        string(APPEND qmldir_file_contents "typeinfo plugins.qmltypes\n")
     endif()
     foreach(import IN LISTS arg_IMPORTS)
         string(APPEND qmldir_file_contents "import ${import}\n")
@@ -283,6 +291,9 @@ function(qt6_add_qml_module target)
     # Install and Copy plugin.qmltypes if exists
     set(target_plugin_qmltypes "${CMAKE_CURRENT_SOURCE_DIR}/plugins.qmltypes")
     if (EXISTS ${target_plugin_qmltypes})
+        set_target_properties(${target}
+            PROPERTIES QT_QML_MODULE_PLUGIN_TYPES_FILE "${target_plugin_qmltypes}"
+        )
         file(APPEND ${qmldir_file} "typeinfo plugins.qmltypes\n")
         if (NOT arg_DO_NOT_INSTALL_METADATA)
             install(FILES ${target_plugin_qmltypes}
@@ -453,8 +464,14 @@ function(qt6_qml_type_registration target)
     math(EXPR dot_location "${dot_location}+1")
     string(SUBSTRING ${import_version} ${dot_location} -1 minor_version)
 
+    # check if plugins.qmltypes is already defined
+    get_target_property(target_plugin_qmltypes ${target} QT_QML_MODULE_PLUGIN_TYPES_FILE)
+    if (target_plugin_qmltypes)
+        message(FATAL_ERROR "Target ${target} already has a plugins.qmltypes set.")
+    endif()
+
     set(cmd_args)
-    set(plugin_types_file ${target_binary_dir}/plugin.qmltypes)
+    set(plugin_types_file ${target_binary_dir}/plugins.qmltypes)
     set_target_properties(${target} PROPERTIES
         QT_QML_MODULE_PLUGIN_TYPES_FILE ${plugin_types_file}
     )
