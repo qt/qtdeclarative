@@ -399,6 +399,19 @@ const QMetaObject *QQmlPropertyCache::createMetaObject()
     return _metaObject;
 }
 
+QQmlPropertyData *QQmlPropertyCache::maybeUnresolvedProperty(int index) const
+{
+    if (index < 0 || index >= (propertyIndexCacheStart + propertyIndexCache.count()))
+        return nullptr;
+
+    QQmlPropertyData *rv = nullptr;
+    if (index < propertyIndexCacheStart)
+        return _parent->maybeUnresolvedProperty(index);
+    else
+        rv = const_cast<QQmlPropertyData *>(&propertyIndexCache.at(index - propertyIndexCacheStart));
+    return rv;
+}
+
 QQmlPropertyData *QQmlPropertyCache::defaultProperty() const
 {
     return property(defaultPropertyName(), nullptr, nullptr);

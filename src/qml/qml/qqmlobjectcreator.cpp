@@ -1526,7 +1526,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     }
 
     for (int i = 0; i <= _propertyCache->propertyOffset(); ++i) {
-        QQmlPropertyData *propertyData = _propertyCache->property(i);
+        QQmlPropertyData *propertyData = _propertyCache->maybeUnresolvedProperty(i);
         if (!propertyData)
             continue;
         if (!propertyData->isRequired() && postHocRequired.isEmpty())
