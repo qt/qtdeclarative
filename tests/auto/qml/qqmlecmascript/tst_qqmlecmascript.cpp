@@ -74,6 +74,7 @@ public:
 
 private slots:
     void initTestCase();
+    void arrayIncludesValueType();
     void assignBasicTypes();
     void assignDate_data();
     void assignDate();
@@ -412,6 +413,36 @@ void tst_qqmlecmascript::initTestCase()
 {
     QQmlDataTest::initTestCase();
     registerTypes();
+}
+
+void tst_qqmlecmascript::arrayIncludesValueType()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    // It is vital that QtQuick is imported below else we get a warning about
+    // QQml_colorProvider and tst_qqmlecmascript::signalParameterTypes fails due
+    // to some static variable being initialized with the wrong value
+    component.setData(R"(
+    import QtQuick 2.15
+    import QtQml 2.15
+    QtObject {
+        id: root
+        property color r: Qt.rgba(1, 0, 0)
+        property color g: Qt.rgba(0, 1, 0)
+        property color b: Qt.rgba(0, 0, 1)
+        property var colors: [r, g, b]
+        property bool success: false
+
+        Component.onCompleted: {
+            root.success = root.colors.includes(root.g)
+        }
+    }
+    )", QUrl("testData"));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o);
+    auto success = o->property("success");
+    QVERIFY(success.isValid());
+    QVERIFY(success.toBool());
 }
 
 void tst_qqmlecmascript::assignBasicTypes()
