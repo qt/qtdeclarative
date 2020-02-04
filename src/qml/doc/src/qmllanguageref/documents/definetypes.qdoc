@@ -82,6 +82,42 @@ The \c SquareButton type encapsulates the tree of QML objects declared in \c Squ
 
 \note the letter case of the file name is significant on some (notably UNIX) filesystems. It is recommended the file name case matches the case of the desired QML type name exactly - for example, \c Box.qml and not \c BoX.qml - regardless of the platform to which the QML type will be deployed.
 
+\section2 Inline Components
+
+Sometimes, it can be inconvenient to create  a new file for a type, for
+instance when reusing a small delegate in multiple views. If you don't actually
+need to expose the type, but only need to create an instance,
+\l{QtQml::Component}{Component} is an option.
+But if you want to declare properties with the component types, or if you
+want to use it in multiple files, \c Component is not an option. In that case,
+you can use \e {inline components}. Inline components declare a new component
+inside of a file. The syntax for that is
+\code
+component <component name> : BaseType {
+    // declare properties and bindings here
+}
+\endcode
+
+Inside the file which declares the inline component, the type can be referenced
+simply by its name.
+
+\snippet src/qml/doc/snippets/qml/qml-documents/Images.qml document
+
+In other files, it has to be prefixed with the name of its containing component.
+\snippet src/qml/doc/snippets/qml/qml-documents/LabeledImageBox.qml document
+
+\note Inline components don't share their scope with the component they are
+declared in. In the following example, when \c A.MyInlineComponent in file
+B.qml gets created, a ReferenceError will occur, as \c root does not exist as
+an id in B.qml.
+It is therefore advisable not to reference objects in an inline component
+which are not part of it.
+
+\snippet src/qml/doc/snippets/qml/qml-documents/A.qml document
+\snippet src/qml/doc/snippets/qml/qml-documents/B.qml document
+
+\note Inline components cannot be nested.
+
 \section2 Importing Types Defined Outside the Current Directory
 
 If \c SquareButton.qml was not in the same directory as \c myapplication.qml,
