@@ -41,6 +41,7 @@
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuick/private/qquicktext_p.h>
+#include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQmlModels/private/qqmlobjectmodel_p.h>
 #include <QtQmlModels/private/qqmllistmodel_p.h>
 #include <QtQmlModels/private/qqmldelegatemodel_p.h>
@@ -293,6 +294,8 @@ private slots:
     void reuse_checkThatItemsAreReused();
     void moveObjectModelItemToAnotherObjectModel();
     void changeModelAndDestroyTheOldOne();
+
+    void requiredObjectListModel();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -10030,6 +10033,60 @@ void tst_QQuickListView::changeModelAndDestroyTheOldOne()  // QTBUG-80203
 
     QVERIFY(QQuickTest::qWaitForItemPolished(root));
     // no crash
+}
+
+class DataObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString name READ name CONSTANT)
+    Q_PROPERTY(QString color READ color CONSTANT)
+
+public:
+    DataObject(QObject *parent = nullptr) : QObject(parent) {}
+    DataObject(const QString &name, const QString &color, QObject *parent = nullptr)
+        : QObject(parent), m_name(name), m_color(color) {}
+
+    QString name() const { return m_name; }
+    QString color() const { return m_color; }
+
+private:
+    QString m_name;
+    QString m_color;
+};
+
+void tst_QQuickListView::requiredObjectListModel()
+{
+    QList<QObject *> dataList = {
+        new DataObject("Item 1", "red", this),
+        new DataObject("Item 2", "green", this),
+        new DataObject("Item 3", "blue", this),
+        new DataObject("Item 4", "yellow", this)
+    };
+
+    const auto deleter = qScopeGuard([&](){ qDeleteAll(dataList); });
+    Q_UNUSED(deleter);
+
+    QQuickView view;
+    view.setInitialProperties({{ "model", QVariant::fromValue(dataList) }});
+    view.setSource(testFileUrl("requiredObjectListModel.qml"));
+    view.show();
+
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    const auto *root = qobject_cast<QQuickListView *>(view.rootObject());
+    QVERIFY(root);
+
+    QCOMPARE(root->count(), dataList.count());
+
+    for (int i = 0, end = dataList.count(); i != end; ++i) {
+        const auto *rect = qobject_cast<QQuickRectangle *>(root->itemAtIndex(i));
+        QVERIFY(rect);
+        const auto *data = qobject_cast<DataObject *>(dataList.at(i));
+        QVERIFY(data);
+
+        QCOMPARE(rect->color(), QColor(data->color()));
+        QCOMPARE(rect->property("name").toString(), data->name());
+    }
 }
 
 QTEST_MAIN(tst_QQuickListView)

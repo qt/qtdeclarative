@@ -70,7 +70,7 @@ public:
     int count() const;
     QVariant at(int) const;
 
-    enum Type { Invalid, StringList, VariantList, ListProperty, Instance, Integer };
+    enum Type { Invalid, StringList, VariantList, ObjectList, ListProperty, Instance, Integer };
     Type type() const { return m_type; }
 
 private:

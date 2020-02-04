@@ -977,6 +977,9 @@ void QQmlAdaptorModel::setModel(const QVariant &variant, QObject *parent, QQmlEn
     } else if (list.type() == QQmlListAccessor::ListProperty) {
         setObject(static_cast<const QQmlListReference *>(variant.constData())->object(), parent);
         accessors = new VDMObjectDelegateDataType;
+    } else if (list.type() == QQmlListAccessor::ObjectList) {
+        setObject(nullptr, parent);
+        accessors = new VDMObjectDelegateDataType;
     } else if (list.type() != QQmlListAccessor::Invalid
             && list.type() != QQmlListAccessor::Instance) { // Null QObject
         setObject(nullptr, parent);
