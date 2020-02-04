@@ -548,7 +548,7 @@ QString QQuickStyle::path()
 */
 void QQuickStyle::setStyle(const QString &style)
 {
-    if (QQmlMetaType::isModule(QStringLiteral("QtQuick.Controls"), 2, 0)) {
+    if (QQmlMetaType::isModule(QStringLiteral("QtQuick.Controls"), QTypeRevision::fromVersion(2, 0))) {
         qWarning() << "ERROR: QQuickStyle::setStyle() must be called before loading QML that imports Qt Quick Controls 2.";
         return;
     }
@@ -572,7 +572,7 @@ void QQuickStyle::setStyle(const QString &style)
 */
 void QQuickStyle::setFallbackStyle(const QString &style)
 {
-    if (QQmlMetaType::isModule(QStringLiteral("QtQuick.Controls"), 2, 0)) {
+    if (QQmlMetaType::isModule(QStringLiteral("QtQuick.Controls"), QTypeRevision::fromVersion(2, 0))) {
         qWarning() << "ERROR: QQuickStyle::setFallbackStyle() must be called before loading QML that imports Qt Quick Controls 2.";
         return;
     }
