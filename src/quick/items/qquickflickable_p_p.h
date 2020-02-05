@@ -73,7 +73,7 @@ class QQuickFlickableVisibleArea;
 class QQuickTransition;
 class QQuickFlickableReboundTransition;
 
-class Q_AUTOTEST_EXPORT QQuickFlickablePrivate : public QQuickItemPrivate, public QQuickItemChangeListener
+class Q_QUICK_PRIVATE_EXPORT QQuickFlickablePrivate : public QQuickItemPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickFlickable)
 
