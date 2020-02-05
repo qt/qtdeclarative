@@ -441,6 +441,9 @@ function(qt6_qml_type_registration target)
     cmake_parse_arguments(args "COPY_OVER_INSTALL" "INSTALL_DIR" "" ${ARGN})
 
     set(meta_types_args)
+    if (QT_BUILDING_QT AND NOT QT_WILL_INSTALL)
+        set(arg_COPY_OVER_INSTALL TRUE)
+    endif()
     if (arg_INSTALL_DIR)
         list(APPEND meta_types_args INSTALL_DIR "${arg_INSTALL_DIR}")
     endif()
@@ -598,7 +601,16 @@ function(qt6_qml_type_registration target)
     get_target_property(install_qmltypes ${target} QT_QML_MODULE_INSTALL_QMLTYPES)
     if (install_qmltypes)
         get_target_property(qml_install_dir ${target} QT_QML_MODULE_INSTALL_DIR)
-        install(FILES ${plugin_types_file} DESTINATION ${qml_install_dir})
+        if(NOT arg_COPY_OVER_INSTALL)
+            install(FILES ${plugin_types_file} DESTINATION ${qml_install_dir})
+        else()
+            add_custom_command(TARGET ${target} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${plugin_types_file}"
+                    "${qml_install_dir}/plugins.qmltypes"
+                COMMENT "Copying ${plugin_types_file} to ${qml_install_dir}"
+            )
+        endif()
     endif()
 
     target_include_directories(${target} PRIVATE
