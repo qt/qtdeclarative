@@ -173,7 +173,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     context = new QQmlContextData;
     context->isInternal = true;
     context->imports = compilationUnit->typeNameCache;
-    context->initFromTypeCompilationUnit(compilationUnit, flags & CreationFlags::NormalObject ? subComponentIndex : -1);
+    context->initFromTypeCompilationUnit(compilationUnit, subComponentIndex);
     context->setParent(parentContext);
 
     if (!sharedState->rootContext) {

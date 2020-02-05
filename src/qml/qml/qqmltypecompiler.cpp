@@ -881,6 +881,10 @@ bool QQmlComponentAndAliasResolver::resolve()
     const int objCountWithoutSynthesizedComponents = qmlObjects->count();
     for (int i = 0; i < objCountWithoutSynthesizedComponents; ++i) {
         QmlIR::Object *obj = qmlObjects->at(i);
+        if (obj->isInlineComponent) {
+            componentRoots.append(i);
+            continue;
+        }
         QQmlPropertyCache *cache = propertyCaches.at(i);
         if (obj->inheritedTypeNameIndex == 0 && !cache)
             continue;
@@ -936,7 +940,7 @@ bool QQmlComponentAndAliasResolver::resolve()
 
         _objectsWithAliases.clear();
 
-        if (!collectIdsAndAliases(rootBinding->value.objectIndex))
+        if (!collectIdsAndAliases(component->isInlineComponent ? componentRoots.at(i) : rootBinding->value.objectIndex))
             return false;
 
         component->namedObjectsInComponent.allocate(pool, _idToObjectIndex);

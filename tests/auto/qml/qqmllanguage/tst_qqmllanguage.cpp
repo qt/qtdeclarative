@@ -5547,6 +5547,9 @@ void tst_qqmllanguage::inlineComponent_data()
     QTest::newRow("Non-toplevel IC is found") << testFileUrl("inlineComponentUser5.qml") << QColorConstants::Svg::red << 24;
 
     QTest::newRow("Resolved in correct order") << testFileUrl("inlineComponentOrder.qml") << QColorConstants::Blue << 200;
+
+    QTest::newRow("ID resolves correctly") << testFileUrl("inlineComponentWithId.qml") << QColorConstants::Svg::red << 42;
+    QTest::newRow("Alias resolves correctly") << testFileUrl("inlineComponentWithAlias.qml") << QColorConstants::Svg::lime << 42;
 }
 
 void tst_qqmllanguage::inlineComponentReferenceCycle_data()
