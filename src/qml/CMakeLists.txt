@@ -313,6 +313,8 @@ qt_add_module(Qml
         Qt::CorePrivate
     PUBLIC_LIBRARIES
         Qt::Core
+    PRIVATE_MODULE_INTERFACE
+        Qt::CorePrivate
 )
 
 # special case begin remove the block, handled manually

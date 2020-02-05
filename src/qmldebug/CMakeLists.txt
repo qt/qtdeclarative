@@ -30,11 +30,8 @@ qt_add_module(QmlDebug
         qqmlprofilertypedevent.cpp qqmlprofilertypedevent_p.h
         qv4debugclient.cpp qv4debugclient_p.h
         qv4debugclient_p_p.h
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::PacketProtocolPrivate
     PUBLIC_LIBRARIES
-        Qt::Core
+        Qt::CorePrivate
         Qt::Network
-        Qt::PacketProtocol
+        Qt::PacketProtocolPrivate
 )

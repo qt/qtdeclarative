@@ -14,18 +14,14 @@ qt_add_plugin(QQmlInspectorServiceFactory
         qqmlinspectorservice.cpp
         qqmlinspectorservicefactory.h
         qquickwindowinspector.cpp qquickwindowinspector.h
-    LIBRARIES
+    PUBLIC_LIBRARIES
+        Qt::Core
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::PacketProtocolPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::Gui
-        Qt::PacketProtocol
-        Qt::Qml
-        Qt::Quick
 )
 
 #### Keys ignored in scope 1:.:.:qmldbg_inspector.pro:<TRUE>:

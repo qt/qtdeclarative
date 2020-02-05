@@ -16,17 +16,14 @@ qt_add_qml_module(qmltestplugin
         quicktestevent.cpp quicktestevent_p.h
         quicktestresultforeign_p.h
         quicktestutil.cpp quicktestutil_p.h
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::GuiPrivate
-        Qt::QmlPrivate
-        Qt::QuickTestPrivate
     PUBLIC_LIBRARIES
         Qt::Core
+        Qt::CorePrivate
         Qt::Gui
-        Qt::Qml
+        Qt::GuiPrivate
+        Qt::QmlPrivate
         Qt::Quick
-        Qt::QuickTest
+        Qt::QuickTestPrivate
         Qt::Test
 )
 

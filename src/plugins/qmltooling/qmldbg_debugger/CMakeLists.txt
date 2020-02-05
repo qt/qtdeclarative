@@ -16,14 +16,10 @@ qt_add_plugin(QQmlDebuggerServiceFactory
         qv4debuggeragent.cpp qv4debuggeragent.h
         qv4debugjob.cpp qv4debugjob.h
         qv4debugservice.cpp qv4debugservice.h
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::PacketProtocolPrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::PacketProtocol
-        Qt::Qml
 )
 
 #### Keys ignored in scope 1:.:.:qmldbg_debugger.pro:<TRUE>:

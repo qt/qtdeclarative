@@ -13,12 +13,9 @@ qt_add_qml_module(qmllocalstorageplugin
     SOURCES
         plugin.cpp
         qquicklocalstorage.cpp qquicklocalstorage_p.h
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::Qml
         Qt::Sql
 )
 

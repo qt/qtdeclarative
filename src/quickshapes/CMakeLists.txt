@@ -13,14 +13,11 @@ qt_add_module(QuickShapes
         qquickshapegenericrenderer.cpp qquickshapegenericrenderer_p.h
         qquickshapesglobal.h qquickshapesglobal_p.h
         qquickshapesoftwarerenderer.cpp qquickshapesoftwarerenderer_p.h
-    LIBRARIES
-        Qt::GuiPrivate
-        Qt::QuickPrivate
     PUBLIC_LIBRARIES
         Qt::Core
-        Qt::Gui
+        Qt::GuiPrivate
         Qt::Qml
-        Qt::Quick
+        Qt::QuickPrivate
 )
 
 # Resources:

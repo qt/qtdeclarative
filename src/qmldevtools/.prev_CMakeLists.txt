@@ -44,10 +44,8 @@ qt_add_module(QmlDevTools
         ${CMAKE_CURRENT_BINARY_DIR}/../qml/qmldirparser
         ../qml/compiler
         ../qml/qmldirparser
-    LIBRARIES
-        Qt::CorePrivate
     PUBLIC_LIBRARIES
-        Qt::Core
+        Qt::CorePrivate
 )
 
 # QLALR Grammars:

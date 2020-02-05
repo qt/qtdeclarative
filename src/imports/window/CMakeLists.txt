@@ -13,14 +13,11 @@ qt_add_qml_module(windowplugin
     GENERATE_QMLTYPES
     SOURCES
         plugin.cpp plugin.h
-    LIBRARIES
-        Qt::QmlPrivate
-        Qt::QuickPrivate
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Gui
-        Qt::Qml
-        Qt::Quick
+        Qt::QmlPrivate
+        Qt::QuickPrivate
 )
 
 #### Keys ignored in scope 1:.:.:window.pro:<TRUE>:

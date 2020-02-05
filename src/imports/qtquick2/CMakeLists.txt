@@ -14,16 +14,12 @@ qt_add_qml_module(qtquick2plugin
         QtQml
     SOURCES
         plugin.cpp
-    LIBRARIES
-        Qt::QmlModelsPrivate
-        Qt::QmlPrivate
-        Qt::QuickPrivate
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Gui
-        Qt::Qml
-        Qt::QmlModels
-        Qt::Quick
+        Qt::QmlModelsPrivate
+        Qt::QmlPrivate
+        Qt::QuickPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qtquick2.pro:<TRUE>:
@@ -35,8 +31,6 @@ qt_add_qml_module(qtquick2plugin
 #####################################################################
 
 qt_extend_target(qtquick2plugin CONDITION QT_FEATURE_qml_worker_script
-    LIBRARIES
-        Qt::QmlWorkerScriptPrivate
     PUBLIC_LIBRARIES
-        Qt::QmlWorkerScript
+        Qt::QmlWorkerScriptPrivate
 )

@@ -9,14 +9,10 @@ qt_add_plugin(QQmlNativeDebugConnectorFactory
     TYPE qmltooling
     SOURCES
         qqmlnativedebugconnector.cpp qqmlnativedebugconnector.h
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::PacketProtocolPrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::PacketProtocol
-        Qt::Qml
 )
 
 #### Keys ignored in scope 1:.:.:qmldbg_native.pro:<TRUE>:

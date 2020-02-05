@@ -20,6 +20,9 @@ qt_add_module(QmlModels
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Qml
+    PRIVATE_MODULE_INTERFACE
+        Qt::CorePrivate
+        Qt::QmlPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmlmodels.pro:<TRUE>:

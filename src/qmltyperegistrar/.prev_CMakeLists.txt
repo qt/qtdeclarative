@@ -16,7 +16,7 @@ qt_add_tool(qmltyperegistrar
         QT_NO_CAST_TO_ASCII
     INCLUDE_DIRECTORIES
         ../../tools/shared
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
 )
 

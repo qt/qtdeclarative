@@ -26,16 +26,13 @@ qt_add_plugin(QSGOpenVGAdaptation
         qsgopenvgrenderer.cpp qsgopenvgrenderer_p.h
         qsgopenvgrenderloop.cpp qsgopenvgrenderloop_p.h
         qsgopenvgtexture.cpp qsgopenvgtexture.h
-    LIBRARIES
+    PUBLIC_LIBRARIES
+        Qt::Core
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
         openvg
 )
 

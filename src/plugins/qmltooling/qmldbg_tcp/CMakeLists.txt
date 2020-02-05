@@ -10,11 +10,9 @@ qt_add_plugin(QTcpServerConnectionFactory
     SOURCES
         qtcpserverconnection.cpp
         qtcpserverconnectionfactory.h
-    LIBRARIES
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
         Qt::Network
-        Qt::Qml
+        Qt::QmlPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmldbg_tcp.pro:<TRUE>:

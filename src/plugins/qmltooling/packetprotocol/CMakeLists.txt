@@ -11,8 +11,6 @@ qt_add_module(PacketProtocol
         qpacket.cpp qpacket_p.h
         qpacketprotocol.cpp qpacketprotocol_p.h
         qversionedpacket_p.h
-    LIBRARIES
-        Qt::CorePrivate
     PUBLIC_LIBRARIES
-        Qt::Core
+        Qt::CorePrivate
 )

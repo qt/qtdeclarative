@@ -12,12 +12,9 @@ qt_add_qml_module(workerscriptplugin
     SKIP_TYPE_REGISTRATION
     SOURCES
         plugin.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::QmlPrivate
         Qt::QmlWorkerScriptPrivate
-    PUBLIC_LIBRARIES
-        Qt::Qml
-        Qt::QmlWorkerScript
 )
 
 #### Keys ignored in scope 1:.:.:workerscript.pro:<TRUE>:

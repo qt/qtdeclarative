@@ -183,6 +183,11 @@ qt_add_module(Quick
         Qt::Gui
         Qt::Qml
         Qt::QmlModels
+    PRIVATE_MODULE_INTERFACE
+        Qt::CorePrivate
+        Qt::GuiPrivate
+        Qt::QmlModelsPrivate
+        Qt::QmlPrivate
 )
 
 # Resources:
@@ -415,6 +420,10 @@ qt_extend_target(Quick CONDITION QT_FEATURE_accessibility
         Qt::Core
         Qt::Gui
         Qt::Qml
+    PRIVATE_MODULE_INTERFACE
+        Qt::CorePrivate
+        Qt::GuiPrivate
+        Qt::QmlPrivate
 )
 
 qt_extend_target(Quick CONDITION QT_FEATURE_qml_debug

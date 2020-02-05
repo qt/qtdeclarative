@@ -10,17 +10,13 @@ qt_add_plugin(QQuickProfilerAdapterFactory
     SOURCES
         qquickprofileradapter.cpp qquickprofileradapter.h
         qquickprofileradapterfactory.cpp qquickprofileradapterfactory.h
-    LIBRARIES
+    PUBLIC_LIBRARIES
+        Qt::Core
         Qt::CorePrivate
+        Qt::Gui
         Qt::PacketProtocolPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::Gui
-        Qt::PacketProtocol
-        Qt::Qml
-        Qt::Quick
 )
 
 #### Keys ignored in scope 1:.:.:qmldbg_quickprofiler.pro:<TRUE>:

@@ -13,14 +13,10 @@ qt_add_plugin(QQmlProfilerServiceFactory
         qqmlprofilerservice.cpp qqmlprofilerservice.h
         qqmlprofilerservicefactory.cpp qqmlprofilerservicefactory.h
         qv4profileradapter.cpp qv4profileradapter.h
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::PacketProtocolPrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::PacketProtocol
-        Qt::Qml
 )
 
 #### Keys ignored in scope 1:.:.:qmldbg_profiler.pro:<TRUE>:

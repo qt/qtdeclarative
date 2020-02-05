@@ -24,4 +24,10 @@ qt_add_module(QuickWidgets
         Qt::Qml
         Qt::Quick
         Qt::Widgets
+    PRIVATE_MODULE_INTERFACE
+        Qt::CorePrivate
+        Qt::GuiPrivate
+        Qt::QmlPrivate
+        Qt::QuickPrivate
+        Qt::WidgetsPrivate
 )

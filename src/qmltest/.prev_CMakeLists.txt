@@ -25,6 +25,8 @@ qt_add_module(QuickTest
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Test
+    PRIVATE_MODULE_INTERFACE
+        Qt::TestPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmltest.pro:<TRUE>:

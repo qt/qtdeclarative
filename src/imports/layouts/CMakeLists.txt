@@ -18,16 +18,13 @@ qt_add_qml_module(qquicklayoutsplugin
         qquicklayoutstyleinfo.cpp qquicklayoutstyleinfo_p.h
         qquicklinearlayout.cpp qquicklinearlayout_p.h
         qquickstacklayout.cpp qquickstacklayout_p.h
-    LIBRARIES
+    PUBLIC_LIBRARIES
+        Qt::Core
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
 )
 
 #### Keys ignored in scope 1:.:.:layouts.pro:<TRUE>:

@@ -15,19 +15,15 @@ qt_add_plugin(QQmlPreviewServiceFactory
         qqmlpreviewposition.cpp qqmlpreviewposition.h
         qqmlpreviewservice.cpp qqmlpreviewservice.h
         qqmlpreviewservicefactory.cpp qqmlpreviewservicefactory.h
-    LIBRARIES
+    PUBLIC_LIBRARIES
+        Qt::Core
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
+        Qt::Network
         Qt::PacketProtocolPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::Gui
-        Qt::Network
-        Qt::PacketProtocol
-        Qt::Qml
-        Qt::Quick
 )
 
 #### Keys ignored in scope 1:.:.:qmldbg_preview.pro:<TRUE>:

@@ -14,15 +14,13 @@ qt_add_qml_module(sharedimageplugin
         plugin.cpp
         qsharedimageloader.cpp qsharedimageloader_p.h
         sharedimageprovider.cpp sharedimageprovider.h
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::GuiPrivate
-        Qt::QuickPrivate
     PUBLIC_LIBRARIES
         Qt::Core
+        Qt::CorePrivate
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Qml
-        Qt::Quick
+        Qt::QuickPrivate
 )
 
 #### Keys ignored in scope 1:.:.:sharedimage.pro:<TRUE>:

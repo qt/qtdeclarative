@@ -13,14 +13,10 @@ qt_add_qml_module(qmlwavefrontmeshplugin
     SOURCES
         plugin.cpp
         qwavefrontmesh.cpp qwavefrontmesh.h
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::Qml
-        Qt::Quick
 )
 
 #### Keys ignored in scope 1:.:.:wavefrontmesh.pro:<TRUE>:

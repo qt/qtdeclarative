@@ -15,12 +15,9 @@ qt_add_qml_module(qmlfolderlistmodelplugin
         fileproperty_p.h
         plugin.cpp
         qquickfolderlistmodel.cpp qquickfolderlistmodel.h
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::Qml
 )
 
 #### Keys ignored in scope 1:.:.:folderlistmodel.pro:<TRUE>:

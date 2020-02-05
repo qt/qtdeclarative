@@ -10,10 +10,8 @@ qt_add_plugin(QLocalClientConnectionFactory
     SOURCES
         qlocalclientconnection.cpp
         qlocalclientconnectionfactory.h
-    LIBRARIES
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
-        Qt::Qml
+        Qt::QmlPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmldbg_local.pro:<TRUE>:

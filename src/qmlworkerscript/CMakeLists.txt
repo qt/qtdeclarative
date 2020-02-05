@@ -43,6 +43,9 @@ qt_add_module(QmlWorkerScript
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Qml
+    PRIVATE_MODULE_INTERFACE
+        Qt::CorePrivate
+        Qt::QmlPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmlworkerscript.pro:<TRUE>:

@@ -12,12 +12,9 @@ qt_add_qml_module(labsmodelsplugin
     GENERATE_QMLTYPES
     SOURCES
         plugin.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::QmlModelsPrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Qml
-        Qt::QmlModels
 )
 
 #### Keys ignored in scope 1:.:.:labsmodels.pro:<TRUE>:

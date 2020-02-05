@@ -10,13 +10,10 @@ qt_add_plugin(QDebugMessageServiceFactory
     SOURCES
         qdebugmessageservice.cpp qdebugmessageservice.h
         qdebugmessageservicefactory.cpp qdebugmessageservicefactory.h
-    LIBRARIES
-        Qt::PacketProtocolPrivate
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
         Qt::Core
-        Qt::PacketProtocol
-        Qt::Qml
+        Qt::PacketProtocolPrivate
+        Qt::QmlPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmldbg_messages.pro:<TRUE>:

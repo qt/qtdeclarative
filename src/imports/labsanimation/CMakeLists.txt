@@ -13,12 +13,9 @@ qt_add_qml_module(labsanimationplugin
     SOURCES
         plugin.cpp
         qquickboundaryrule.cpp qquickboundaryrule_p.h
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Qml
-        Qt::Quick
 )
 
 #### Keys ignored in scope 1:.:.:labsanimation.pro:<TRUE>:

@@ -11,16 +11,12 @@ qt_add_qml_module(qmlshapesplugin
     SKIP_TYPE_REGISTRATION
     SOURCES
         plugin.cpp
-    LIBRARIES
-        Qt::GuiPrivate
-        Qt::QuickPrivate
-        Qt::QuickShapesPrivate
     PUBLIC_LIBRARIES
         Qt::Core
-        Qt::Gui
+        Qt::GuiPrivate
         Qt::Qml
-        Qt::Quick
-        Qt::QuickShapes
+        Qt::QuickPrivate
+        Qt::QuickShapesPrivate
 )
 
 #### Keys ignored in scope 1:.:.:shapes.pro:<TRUE>:

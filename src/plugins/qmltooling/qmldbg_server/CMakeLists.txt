@@ -10,12 +10,9 @@ qt_add_plugin(QQmlDebugServerFactory
     SOURCES
         qqmldebugserver.cpp
         qqmldebugserverfactory.h
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::PacketProtocolPrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::PacketProtocol
-        Qt::Qml
 )
 
 #### Keys ignored in scope 1:.:.:qmldbg_server.pro:<TRUE>:

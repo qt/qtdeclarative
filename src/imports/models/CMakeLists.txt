@@ -12,12 +12,9 @@ qt_add_qml_module(modelsplugin
     SKIP_TYPE_REGISTRATION
     SOURCES
         plugin.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::QmlModelsPrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Qml
-        Qt::QmlModels
 )
 
 #### Keys ignored in scope 1:.:.:models.pro:<TRUE>:
