@@ -30,7 +30,7 @@ qt_add_cmake_library(Imports
 qt_autogen_tools_initial_setup(Imports)
 # special case begin
 get_target_property(binary_dir Imports BINARY_DIR)
-file(COPY qmldir plugins.qmltypes CompositeImports.qml
+file(COPY qmldir plugins.qmltypes CompositeImports.qml Derived.qml
     DESTINATION ${binary_dir}
 )
 # special case end
