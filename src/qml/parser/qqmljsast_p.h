@@ -3414,10 +3414,6 @@ public:
         : name(inlineComponentName), component(inlineComponent)
     { kind = K; }
 
-    QStringRef name;
-    UiObjectDefinition* component;
-    SourceLocation componentToken;
-
     SourceLocation lastSourceLocation() const override
     {return component->lastSourceLocation();}
 
@@ -3425,6 +3421,11 @@ public:
     {return componentToken;}
 
     void accept0(Visitor *visitor) override;
+
+    // attributes
+    QStringRef name;
+    UiObjectDefinition* component;
+    SourceLocation componentToken;
 };
 
 class QML_PARSER_EXPORT UiSourceElement: public UiObjectMember
