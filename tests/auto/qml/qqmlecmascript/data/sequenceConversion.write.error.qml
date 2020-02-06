@@ -12,7 +12,7 @@ Item {
 
     function performTest() {
         // we have NOT registered QList<QPoint> as a type
-        var pointList = [ Qt.point(7,7), Qt.point(8,8), Qt.point(9,9) ];
+        var pointList = [ Qt.point(7,7), "hello world", Qt.point(8,8), Qt.point(9,9) ];
         msco.pointListProperty = pointList; // error.
     }
 }

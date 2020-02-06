@@ -54,7 +54,9 @@
 #include "qqml.h"
 #include "qqmlproperty.h"
 #include "qqmlproperty_p.h"
+
 #include <private/qqmlnullablevalue_p.h>
+#include <private/qmetatype_p.h>
 
 #include <QtCore/qobject.h>
 #include <QtCore/qrect.h>
@@ -63,16 +65,20 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlValueType : public QObject, public QAbstractDynamicMetaObject
+class Q_QML_PRIVATE_EXPORT QQmlValueType : public QAbstractDynamicMetaObject
 {
 public:
-    QQmlValueType();
+    QQmlValueType() : metaType(QMetaType::UnknownType) {}
     QQmlValueType(int userType, const QMetaObject *metaObject);
-    ~QQmlValueType() override;
-    void read(QObject *, int);
-    void write(QObject *, int, QQmlPropertyData::WriteFlags flags);
-    QVariant value();
-    void setValue(const QVariant &);
+    ~QQmlValueType();
+
+    void *create() const { return metaType.create(); }
+    void destroy(void *gadgetPtr) const { metaType.destroy(gadgetPtr); }
+
+    void construct(void *gadgetPtr, const void *copy) const { metaType.construct(gadgetPtr, copy); }
+    void destruct(void *gadgetPtr) const { metaType.destruct(gadgetPtr); }
+
+    int metaTypeId() const { return metaType.id(); }
 
     // ---- dynamic meta object data interface
     QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *) override;
@@ -80,12 +86,33 @@ public:
     int metaCall(QObject *obj, QMetaObject::Call type, int _id, void **argv) override;
     // ----
 
-private:
-    const QMetaObject *_metaObject;
-    void *gadgetPtr;
-
 public:
     QMetaType metaType;
+    QMetaObject *dynamicMetaObject = nullptr;
+};
+
+class Q_QML_PRIVATE_EXPORT QQmlGadgetPtrWrapper : public QObject
+{
+    Q_OBJECT
+public:
+    static QQmlGadgetPtrWrapper *instance(QQmlEngine *engine, int index);
+
+    QQmlGadgetPtrWrapper(QQmlValueType *valueType, QObject *parent);
+    ~QQmlGadgetPtrWrapper();
+
+    void read(QObject *obj, int idx);
+    void write(QObject *obj, int idx, QQmlPropertyData::WriteFlags flags);
+    QVariant value();
+    void setValue(const QVariant &value);
+
+    int metaTypeId() const { return valueType()->metaTypeId(); }
+    int metaCall(QMetaObject::Call type, int id, void **argv);
+    QMetaProperty property(int index) { return valueType()->property(index); }
+
+private:
+    const QQmlValueType *valueType() const;
+
+    void *m_gadgetPtr = nullptr;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlValueTypeFactory

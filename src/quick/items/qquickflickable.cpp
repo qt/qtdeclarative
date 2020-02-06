@@ -128,8 +128,13 @@ void QQuickFlickableVisibleArea::updateVisible()
     // Vertical
     const qreal viewheight = flickable->height();
     const qreal maxyextent = -flickable->maxYExtent() + flickable->minYExtent();
-    qreal pagePos = (-p->vData.move.value() + flickable->minYExtent()) / (maxyextent + viewheight);
-    qreal pageSize = viewheight / (maxyextent + viewheight);
+    const qreal maxYBounds = maxyextent + viewheight;
+    qreal pagePos = 0;
+    qreal pageSize = 0;
+    if (!qFuzzyIsNull(maxYBounds)) {
+        pagePos = (-p->vData.move.value() + flickable->minYExtent()) / maxYBounds;
+        pageSize = viewheight / maxYBounds;
+    }
 
     if (pageSize != m_heightRatio) {
         m_heightRatio = pageSize;
@@ -143,8 +148,14 @@ void QQuickFlickableVisibleArea::updateVisible()
     // Horizontal
     const qreal viewwidth = flickable->width();
     const qreal maxxextent = -flickable->maxXExtent() + flickable->minXExtent();
-    pagePos = (-p->hData.move.value() + flickable->minXExtent()) / (maxxextent + viewwidth);
-    pageSize = viewwidth / (maxxextent + viewwidth);
+    const qreal maxXBounds = maxxextent + viewwidth;
+    if (!qFuzzyIsNull(maxXBounds)) {
+        pagePos = (-p->hData.move.value() + flickable->minXExtent()) / maxXBounds;
+        pageSize = viewwidth / maxXBounds;
+    } else {
+        pagePos = 0;
+        pageSize = 0;
+    }
 
     if (pageSize != m_widthRatio) {
         m_widthRatio = pageSize;

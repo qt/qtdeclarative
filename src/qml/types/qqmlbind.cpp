@@ -486,9 +486,10 @@ void QQmlBind::eval()
                     qmlWarning(this)
                             << "Not restoring previous value because restoreMode has not been set.\n"
                             << "This behavior is deprecated.\n"
-                            << "You have to import QtQml 2.15 and set the restoreMode of the binding to fix this warning.\n"
+                            << "You have to import QtQml 2.15 after any QtQuick imports and set\n"
+                            << "the restoreMode of the binding to fix this warning.\n"
                             << "In Qt < 6.0 the default is Binding.RestoreBinding.\n"
-                            << "In Qt >= 6.0 the default is Binding.RestoreBindingOrValue.\n";
+                            << "In Qt >= 6.0 the default is Binding.RestoreBindingOrValue.";
                 }
             } else if (d->prevIsVariant) {
                 if (d->restoreValue) {
@@ -498,7 +499,8 @@ void QQmlBind::eval()
                     qmlWarning(this)
                             << "Not restoring previous value because restoreMode has not been set.\n"
                             << "This behavior is deprecated.\n"
-                            << "You have to import QtQml 2.15 and set the restoreMode of the binding to fix this warning.\n"
+                            << "You have to import QtQml 2.15 after any QtQuick imports and set\n"
+                            << "the restoreMode of the binding to fix this warning.\n"
                             << "In Qt < 6.0 the default is Binding.RestoreBinding.\n"
                             << "In Qt >= 6.0 the default is Binding.RestoreBindingOrValue.\n";
                 }

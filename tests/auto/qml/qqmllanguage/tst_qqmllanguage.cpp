@@ -324,6 +324,8 @@ private slots:
     void listContainingDeletedObject();
     void overrideSingleton();
 
+    void arrayToContainer();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -5638,6 +5640,31 @@ void tst_qqmllanguage::nonExistingInlineComponent()
     QCOMPARE(error.description(), errorMessage);
     QCOMPARE(error.line(), line);
     QCOMPARE(error.column(), column);
+}
+
+class TestItem : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY( QVector<QPointF> positions MEMBER m_points  )
+
+public:
+    TestItem() = default;
+    QVector< QPointF > m_points;
+};
+
+
+Q_DECLARE_METATYPE(QVector<QPointF>);
+void tst_qqmllanguage::arrayToContainer()
+{
+    QQmlEngine engine;
+    qmlRegisterType<TestItem>("qt.test", 1, 0, "TestItem");
+    QVector<QPointF> points { QPointF (2.0, 3.0) };
+    engine.rootContext()->setContextProperty("test", QVariant::fromValue(points));
+    QQmlComponent component(&engine, testFileUrl("arrayToContainer.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<TestItem> root(qobject_cast<TestItem *>(component.createWithInitialProperties( {{"vector", QVariant::fromValue(points)}} )));
+    QVERIFY(root);
+    QCOMPARE(root->m_points.at(0), QPointF (2.0, 3.0) );
 }
 
 QTEST_MAIN(tst_qqmllanguage)
