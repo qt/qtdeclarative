@@ -398,9 +398,6 @@ public:
     virtual bool visit(ExportDeclaration *) { return true; }
     virtual void endVisit(ExportDeclaration *) {}
 
-    virtual bool visit(ModuleItem *) { return true; }
-    virtual void endVisit(ModuleItem *) {}
-
     virtual bool visit(ESModule *) { return true; }
     virtual void endVisit(ESModule *) {}
 
