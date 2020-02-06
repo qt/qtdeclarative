@@ -624,3 +624,5 @@ set_target_properties(Qml PROPERTIES
 )
 
 qt6_qml_type_registration(Qml)
+
+include(Qt6QmlBuildInternals.cmake) # special case
