@@ -543,6 +543,7 @@ function(qt6_qml_type_registration target)
             OUTPUT "${foreign_types_file}"
             DEPENDS "${QT_QMTYPES_RESOLVE_DEPENDENCIES_SCRIPT}"
             COMMAND ${CMAKE_COMMAND}
+
                 -DOUTPUT_FILE:PATH="${foreign_types_file}"
                 ${foreign_types_common_args}
                 ${foreign_types_dependency_args}
@@ -576,18 +577,22 @@ function(qt6_qml_type_registration target)
         set(registration_cpp_file_dep_args DEPFILE ${dependency_file_cpp})
     endif()
 
+    set(extra_env_command)
+    if (WIN32)
+        file(TO_NATIVE_PATH "${${PROJECT_NAME}_BINARY_DIR}/bin$<SEMICOLON>${CMAKE_INSTALL_PREFIX}/${INSTALL_BINDIR}$<SEMICOLON>%PATH%" env_path_native)
+        set(extra_env_command COMMAND set PATH=${env_path_native})
+    endif()
     add_custom_command(OUTPUT ${type_registration_cpp_file}
         DEPENDS
             ${foreign_types_file}
             ${target_metatypes_json_file}
             ${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar
+        ${extra_env_command}
         COMMAND
-            ${CMAKE_COMMAND} -E env PATH=${CMAKE_INSTALL_PREFIX}/${INSTALL_BINDIR}
             $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar>
             ${cmd_args}
             -o ${type_registration_cpp_file}
             ${target_metatypes_json_file}
-        COMMAND_EXPAND_LISTS
         ${registration_cpp_file_dep_args}
         COMMENT "Automatic QML type registration for target ${target}"
     )
