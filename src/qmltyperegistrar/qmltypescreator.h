@@ -65,19 +65,4 @@ private:
     QTypeRevision m_version = QTypeRevision::zero();
 };
 
-QT_BEGIN_NAMESPACE
-
-// We cannot generally assume that the unspecified version is smaller than any specified one.
-// Therefore, this operator< should not move to QtCore.
-inline bool operator<(QTypeRevision lhs, QTypeRevision rhs)
-{
-    return lhs.hasMajorVersion()
-            ? (rhs.hasMajorVersion()
-               && lhs.toEncodedVersion<quint16>() < rhs.toEncodedVersion<quint16>())
-            : (rhs.hasMajorVersion()
-               || lhs.minorVersion() < rhs.minorVersion());
-}
-
-QT_END_NAMESPACE
-
 #endif // QMLTYPESCREATOR_H

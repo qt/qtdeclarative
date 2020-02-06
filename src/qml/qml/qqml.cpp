@@ -104,17 +104,6 @@ QObject *QQmlPrivate::RegisterSingletonFunctor::operator()(QQmlEngine *qeng, QJS
     return m_object;
 };
 
-// We cannot generally assume that the unspecified version is smaller than any specified one.
-// Therefore, this operator< should not move to QtCore.
-static bool operator<(QTypeRevision lhs, QTypeRevision rhs)
-{
-    return lhs.hasMajorVersion()
-            ? (rhs.hasMajorVersion()
-               && lhs.toEncodedVersion<quint16>() < rhs.toEncodedVersion<quint16>())
-            : (rhs.hasMajorVersion()
-               || lhs.minorVersion() < rhs.minorVersion());
-}
-
 static QVector<QTypeRevision> availableRevisions(const QMetaObject *metaObject)
 {
     QVector<QTypeRevision> revisions;
