@@ -660,6 +660,11 @@ void QSGRenderThread::sync(bool inExpose, bool inGrab)
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- window has bad size, sync aborted");
     }
 
+    // Two special cases: For grabs we do not care about blocking the gui
+    // (main) thread. When this is from an expose, we will keep locked until
+    // the frame is rendered (submitted), so in that case waking happens later
+    // in syncAndRender(). Otherwise, wake now and let the main thread go on
+    // while we render.
     if (!inExpose && !inGrab) {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- sync complete, waking Gui");
         waitCondition.wakeOne();
@@ -756,13 +761,11 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
                 QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));
             // Before returning we need to ensure the same wake up logic that
             // would have happened if beginFrame() had suceeded.
-            if (exposeRequested) {
+            if (syncRequested && !grabRequested) {
+                // Lock like sync() would do. Note that exposeRequested always includes syncRequested.
                 qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- bailing out due to failed beginFrame, wake Gui");
-                waitCondition.wakeOne();
-                mutex.unlock();
-            } else if (syncRequested && !grabRequested) {
-                qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- bailing out due to failed beginFrame, wake Gui like sync would do");
                 mutex.lock();
+                // Go ahead with waking because we will return right after this.
                 waitCondition.wakeOne();
                 mutex.unlock();
             }
@@ -885,7 +888,8 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     // has started rendering with a bad window, causing makeCurrent to
     // fail or if the window has a bad size.
     if (exposeRequested) {
-        qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- wake Gui after initial expose");
+        // With expose sync() did not wake gui, do it now.
+        qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- wake Gui after expose");
         waitCondition.wakeOne();
         mutex.unlock();
     }
