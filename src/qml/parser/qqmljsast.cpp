@@ -1186,8 +1186,11 @@ void UiProgram::accept0(Visitor *visitor)
 void UiPublicMember::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
+        // accept(annotations, visitor); // accept manually in visit if interested
+        // accept(memberType, visitor); // accept manually in visit if interested
         accept(statement, visitor);
         accept(binding, visitor);
+        // accept(parameters, visitor); // accept manually in visit if interested
     }
 
     visitor->endVisit(this);
@@ -1196,6 +1199,7 @@ void UiPublicMember::accept0(Visitor *visitor)
 void UiObjectDefinition::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
+        // accept(annotations, visitor); // accept manually in visit if interested
         accept(qualifiedTypeNameId, visitor);
         accept(initializer, visitor);
     }
@@ -1215,6 +1219,7 @@ void UiObjectInitializer::accept0(Visitor *visitor)
 void UiParameterList::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
+        // accept(type, visitor); // accept manually in visit if interested
     }
     visitor->endVisit(this);
 }
@@ -1222,6 +1227,7 @@ void UiParameterList::accept0(Visitor *visitor)
 void UiObjectBinding::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
+        // accept(annotations, visitor); // accept manually in visit if interested
         accept(qualifiedId, visitor);
         accept(qualifiedTypeNameId, visitor);
         accept(initializer, visitor);
@@ -1233,6 +1239,7 @@ void UiObjectBinding::accept0(Visitor *visitor)
 void UiScriptBinding::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
+        // accept(annotations, visitor); // accept manually in visit if interested
         accept(qualifiedId, visitor);
         accept(statement, visitor);
     }
@@ -1243,6 +1250,7 @@ void UiScriptBinding::accept0(Visitor *visitor)
 void UiArrayBinding::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
+        // accept(annotations, visitor); // accept manually in visit if interested
         accept(qualifiedId, visitor);
         accept(members, visitor);
     }
@@ -1273,6 +1281,7 @@ void UiArrayMemberList::accept0(Visitor *visitor)
 void UiQualifiedId::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
+        // accept(next, visitor) // accept manually in visit if interested
     }
 
     visitor->endVisit(this);
@@ -1311,6 +1320,7 @@ void UiImport::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
         accept(importUri, visitor);
+        // accept(version, visitor); // accept manually in visit if interested
     }
 
     visitor->endVisit(this);
@@ -1340,6 +1350,7 @@ void UiHeaderItemList::accept0(Visitor *visitor)
 void UiSourceElement::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
+        // accept(annotations, visitor); // accept manually in visit if interested
         accept(sourceElement, visitor);
     }
 
@@ -1349,6 +1360,7 @@ void UiSourceElement::accept0(Visitor *visitor)
 void UiEnumDeclaration::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
+        // accept(annotations, visitor); // accept manually in visit if interested
         accept(members, visitor);
     }
 
@@ -1548,6 +1560,7 @@ void Type::toString(QString *out) const
 void UiInlineComponent::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
+        // accept(annotations, visitor); // accept manually in visit if interested
         accept(component, visitor);
     }
 
