@@ -113,6 +113,7 @@ public:
     virtual bool visit(UiEnumMemberList *) { return true; }
     virtual bool visit(UiVersionSpecifier *) { return true; }
     virtual bool visit(UiInlineComponent *) { return true; }
+    virtual bool visit(UiAnnotationList *) { return true; }
 
     virtual void endVisit(UiProgram *) {}
     virtual void endVisit(UiImport *) {}
@@ -133,6 +134,7 @@ public:
     virtual void endVisit(UiEnumMemberList *) { }
     virtual void endVisit(UiVersionSpecifier *) {}
     virtual void endVisit(UiInlineComponent *) {}
+    virtual void endVisit(UiAnnotationList *) {}
 
     // QQmlJS
     virtual bool visit(ThisExpression *) { return true; }

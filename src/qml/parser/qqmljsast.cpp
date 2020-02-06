@@ -1562,6 +1562,15 @@ void UiRequired::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
+void UiAnnotationList::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(annotation, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
 } } // namespace QQmlJS::AST
 
 QT_END_NAMESPACE

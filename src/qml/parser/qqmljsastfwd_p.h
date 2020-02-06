@@ -184,6 +184,7 @@ class UiEnumDeclaration;
 class UiEnumMemberList;
 class UiVersionSpecifier;
 class UiRequired;
+class UiAnnotationList;
 
 } // namespace AST
 } // namespace QQmlJS

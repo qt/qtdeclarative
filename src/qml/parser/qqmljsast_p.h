@@ -259,7 +259,8 @@ public:
         Kind_UiEnumDeclaration,
         Kind_UiEnumMemberList,
         Kind_UiVersionSpecifier,
-        Kind_UiRequired
+        Kind_UiRequired,
+        Kind_UiAnnotationList
     };
 
     inline Node() {}
@@ -3042,6 +3043,9 @@ public:
     SourceLocation lastSourceLocation() const override = 0;
 
     UiObjectMember *uiObjectMemberCast() override;
+
+// attributes
+    UiAnnotationList *annotations = nullptr;
 };
 
 class QML_PARSER_EXPORT UiObjectMemberList: public Node
@@ -3624,8 +3628,44 @@ public:
     UiEnumMemberList *members;
 };
 
-} } // namespace AST
+class QML_PARSER_EXPORT UiAnnotationList: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(UiAnnotationList)
 
+    UiAnnotationList(UiObjectDefinition *annotation)
+        : next(this), annotation(annotation)
+    { kind = K; }
+
+    UiAnnotationList(UiAnnotationList *previous, UiObjectDefinition *annotation)
+        : annotation(annotation)
+    {
+        kind = K;
+        next = previous->next;
+        previous->next = this;
+    }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return annotation->firstSourceLocation(); }
+
+    SourceLocation lastSourceLocation() const override
+    { return lastListElement(this)->annotation->lastSourceLocation(); }
+
+    UiAnnotationList *finish()
+    {
+        UiAnnotationList *head = next;
+        next = nullptr;
+        return head;
+    }
+
+// attributes
+    UiAnnotationList *next;
+    UiObjectDefinition *annotation;
+};
+
+} } // namespace AST
 
 
 QT_END_NAMESPACE
