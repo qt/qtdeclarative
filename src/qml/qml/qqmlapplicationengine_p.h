@@ -74,8 +74,10 @@ public:
     void finishLoad(QQmlComponent *component);
     QList<QObject *> objects;
     QVariantMap initialProperties;
+    QStringList extraFileSelectors;
     QString translationsDirectory;
     QScopedPointer<QTranslator> activeTranslator;
+    bool isInitialized = false;
 };
 
 QT_END_NAMESPACE

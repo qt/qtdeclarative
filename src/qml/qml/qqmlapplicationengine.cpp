@@ -81,7 +81,8 @@ void QQmlApplicationEnginePrivate::init()
     else
         delete qtTranslator;
 #endif
-    new QQmlFileSelector(q,q);
+    auto *selector = new QQmlFileSelector(q,q);
+    selector->setExtraSelectors(extraFileSelectors);
     QCoreApplication::instance()->setProperty("__qml_using_qqmlapplicationengine", QVariant(true));
 }
 
@@ -114,6 +115,11 @@ void QQmlApplicationEnginePrivate::_q_loadTranslations()
 void QQmlApplicationEnginePrivate::startLoad(const QUrl &url, const QByteArray &data, bool dataFlag)
 {
     Q_Q(QQmlApplicationEngine);
+
+    if (!isInitialized) {
+        init();
+        isInitialized = true;
+    }
 
     if (url.scheme() == QLatin1String("file") || url.scheme() == QLatin1String("qrc")) {
         QFileInfo fi(QQmlFile::urlToLocalFileOrQrc(url));
@@ -227,8 +233,6 @@ void QQmlApplicationEnginePrivate::finishLoad(QQmlComponent *c)
 QQmlApplicationEngine::QQmlApplicationEngine(QObject *parent)
 : QQmlEngine(*(new QQmlApplicationEnginePrivate(this)), parent)
 {
-    Q_D(QQmlApplicationEngine);
-    d->init();
     QJSEnginePrivate::addToDebugServer(this);
 }
 
@@ -309,6 +313,26 @@ void QQmlApplicationEngine::setInitialProperties(const QVariantMap &initialPrope
 {
     Q_D(QQmlApplicationEngine);
     d->initialProperties = initialProperties;
+}
+
+/*!
+  Sets the \a extraFileSelectors to be passed to the internal QQmlFileSelector
+  used for resolving URLs to local files. The \a extraFileSelectors are applied
+  when the first QML file is loaded. Setting them afterwards has no effect.
+
+  \sa QQmlFileSelector
+  \sa QFileSelector::setExtraSelectors
+  \since 6.0
+*/
+void QQmlApplicationEngine::setExtraFileSelectors(const QStringList &extraFileSelectors)
+{
+    Q_D(QQmlApplicationEngine);
+    if (d->isInitialized) {
+        qWarning() << "QQmlApplicationEngine::setExtraFileSelectors()"
+                   << "called after loading QML files. This has no effect.";
+    } else {
+        d->extraFileSelectors = extraFileSelectors;
+    }
 }
 
 /*!

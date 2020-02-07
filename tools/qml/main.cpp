@@ -558,10 +558,9 @@ int main(int argc, char *argv[])
     QStringList customSelectors;
     for (const QString &selector : parser.values(selectorOption))
         customSelectors.append(selector);
-    if (!customSelectors.isEmpty()) {
-        QQmlFileSelector *selector =  QQmlFileSelector::get(&e);
-        selector->setExtraSelectors(customSelectors);
-    }
+
+    if (!customSelectors.isEmpty())
+        e.setExtraFileSelectors(customSelectors);
 
 #if defined(QT_GUI_LIB) && QT_CONFIG(opengl)
     if (qEnvironmentVariableIsSet("QSG_CORE_PROFILE") || qEnvironmentVariableIsSet("QML_CORE_PROFILE")) {

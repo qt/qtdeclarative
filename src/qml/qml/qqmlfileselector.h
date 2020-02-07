@@ -59,7 +59,10 @@ public:
     QFileSelector *selector() const Q_DECL_NOTHROW;
     void setSelector(QFileSelector *selector);
     void setExtraSelectors(const QStringList &strings);
-    static QQmlFileSelector* get(QQmlEngine*);
+
+#if QT_DEPRECATED_SINCE(6, 0)
+    QT_DEPRECATED static QQmlFileSelector *get(QQmlEngine*);
+#endif
 
 private:
     Q_DISABLE_COPY(QQmlFileSelector)

@@ -67,6 +67,7 @@ public Q_SLOTS:
     void load(const QUrl &url);
     void load(const QString &filePath);
     void setInitialProperties(const QVariantMap &initialProperties);
+    void setExtraFileSelectors(const QStringList &extraFileSelectors);
     void loadData(const QByteArray &data, const QUrl &url = QUrl());
 
 Q_SIGNALS:

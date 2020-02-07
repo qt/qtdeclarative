@@ -39,6 +39,8 @@
 
 #include <QtCore/QFileSelector>
 #include <QtQml/QQmlAbstractUrlInterceptor>
+#include <QtQml/private/qqmlengine_p.h>
+#include <QtQml/private/qqmlapplicationengine_p.h>
 #include <qobjectdefs.h>
 #include "qqmlfileselector.h"
 #include "qqmlfileselector_p.h"
@@ -47,8 +49,6 @@
 
 QT_BEGIN_NAMESPACE
 
-typedef QHash<QQmlAbstractUrlInterceptor*, QQmlFileSelector*> interceptorSelectorMap;
-Q_GLOBAL_STATIC(interceptorSelectorMap, interceptorInstances);
 /*!
    \class QQmlFileSelector
    \since 5.2
@@ -105,7 +105,6 @@ QQmlFileSelector::QQmlFileSelector(QQmlEngine* engine, QObject* parent)
 {
     Q_D(QQmlFileSelector);
     d->engine = engine;
-    interceptorInstances()->insert(d->myInstance.data(), this);
     d->engine->addUrlInterceptor(d->myInstance.data());
 }
 
@@ -115,11 +114,10 @@ QQmlFileSelector::QQmlFileSelector(QQmlEngine* engine, QObject* parent)
 QQmlFileSelector::~QQmlFileSelector()
 {
     Q_D(QQmlFileSelector);
-    if (d->engine && QQmlFileSelector::get(d->engine) == this) {
+    if (d->engine) {
         d->engine->removeUrlInterceptor(d->myInstance.data());
         d->engine = nullptr;
     }
-    interceptorInstances()->remove(d->myInstance.data());
 }
 
 /*!
@@ -180,19 +178,44 @@ void QQmlFileSelector::setExtraSelectors(const QStringList &strings)
     d->selector->setExtraSelectors(strings);
 }
 
+#if QT_DEPRECATED_SINCE(6, 0)
 /*!
+  \deprecated
   Gets the QQmlFileSelector currently active on the target \a engine.
+
+  This method is deprecated. You should not retrieve the files selector from an
+  engine after setting it. It may be in use.
+
+  If the \a engine passed here is a QQmlApplicationEngine that hasn't loaded any
+  QML files, yet, it will be initialized. Any later calls to
+  QQmlApplicationEngine::setExtraFileSelectors() will have no effect.
+
+  \sa QQmlApplicationEngine
 */
 QQmlFileSelector* QQmlFileSelector::get(QQmlEngine* engine)
 {
-    //Since I think we still can't use dynamic_cast inside Qt...
-    const QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
-    for (QQmlAbstractUrlInterceptor *current : enginePrivate->urlInterceptors) {
-        if (interceptorInstances()->contains(current))
-            return interceptorInstances()->value(current);
+    QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
+
+    if (qobject_cast<QQmlApplicationEngine *>(engine)) {
+        auto *appEnginePrivate = static_cast<QQmlApplicationEnginePrivate *>(enginePrivate);
+        if (!appEnginePrivate->isInitialized) {
+            appEnginePrivate->init();
+            appEnginePrivate->isInitialized = true;
+        }
+    }
+
+    const QUrl nonEmptyInvalid(QLatin1String(":"));
+    for (QQmlAbstractUrlInterceptor *interceptor : enginePrivate->urlInterceptors) {
+        const QUrl result = interceptor->intercept(
+                    nonEmptyInvalid, QQmlAbstractUrlInterceptor::UrlString);
+        if (result.scheme() == QLatin1String("type")
+                && result.path() == QLatin1String("fileselector")) {
+            return static_cast<QQmlFileSelectorInterceptor *>(interceptor)->d->q_func();
+        }
     }
     return nullptr;
 }
+#endif
 
 /*!
   \internal
@@ -207,9 +230,12 @@ QQmlFileSelectorInterceptor::QQmlFileSelectorInterceptor(QQmlFileSelectorPrivate
 */
 QUrl QQmlFileSelectorInterceptor::intercept(const QUrl &path, DataType type)
 {
-    if ( type ==  QQmlAbstractUrlInterceptor::QmldirFile ) //Don't intercept qmldir files, to prevent double interception
-        return path;
-    return d->selector->select(path);
+    if (!path.isEmpty() && !path.isValid())
+        return QUrl(QLatin1String("type:fileselector"));
+
+    return type == QQmlAbstractUrlInterceptor::QmldirFile
+            ? path // Don't intercept qmldir files, to prevent double interception
+            : d->selector->select(path);
 }
 
 QT_END_NAMESPACE
