@@ -46,13 +46,3 @@ function(qt_declarative_generate_reg_exp_jit_tables consuming_target)
     target_sources(${consuming_target} PRIVATE ${output_file})
     target_include_directories(${consuming_target} PRIVATE $<BUILD_INTERFACE:${generate_dir}>)
 endfunction()
-
-# special case to set the qmltype resolve dependencies script at build time
-set(QT_QMTYPES_RESOLVE_DEPENDENCIES_SCRIPT
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/qml/Qt6QmlResolveMetatypesDependencies.cmake"
-)
-
-# install QmlResolveDependency script
-qt_copy_or_install(FILES "src/qml/Qt6QmlResolveMetatypesDependencies.cmake"
-    DESTINATION "${QT_CONFIG_INSTALL_DIR}/${INSTALL_CMAKE_NAMESPACE}Qml"
-)

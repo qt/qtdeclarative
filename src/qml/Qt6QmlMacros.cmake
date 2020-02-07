@@ -456,10 +456,9 @@ function(qt6_qml_type_registration target)
     get_target_property(import_version ${target} QT_QML_MODULE_VERSION)
     get_target_property(target_source_dir ${target} SOURCE_DIR)
     get_target_property(target_binary_dir ${target} BINARY_DIR)
-    get_target_property(target_metatypes_dep_file ${target} INTERFACE_QT_META_TYPES_BUILD_DEP_FILE)
     get_target_property(target_metatypes_file ${target} INTERFACE_QT_META_TYPES_BUILD_FILE)
-    if (NOT target_metatypes_dep_file)
-        message(FATAL_ERROR "Target ${target} does not have a meta types dependency file")
+    if (NOT target_metatypes_file)
+        message(FATAL_ERROR "Target ${target} does not have a meta types file")
     endif()
 
     # Extract major and minor version
@@ -495,64 +494,21 @@ function(qt6_qml_type_registration target)
     set(foreign_types_file "${target_binary_dir}/qmltypes/foreign_types.txt")
     set(type_registration_cpp_file "${target_binary_dir}/${type_registration_cpp_file_name}")
 
-    if (NOT QT_QMTYPES_RESOLVE_DEPENDENCIES_SCRIPT)
-        set("${Qt6Qml_DIR}/Qt6QmlResolveMetatypesDependencies.cmake")
-    endif()
-
-    set(dependency_file_foreign_types "${target_binary_dir}/qmltypes/foreign_types.txt.d")
     set(dependency_file_cpp "${target_binary_dir}/qmltypes/${type_registration_cpp_file_name}.d")
-
-    file(RELATIVE_PATH dep_file_name "${${CMAKE_PROJECT_NAME}_BINARY_DIR}" "${foreign_types_file}")
     file(RELATIVE_PATH cpp_file_name "${${CMAKE_PROJECT_NAME}_BINARY_DIR}" "${type_registration_cpp_file}")
-
-    set(foreign_types_dependency_args
-        -DFOREIGN_TYPES_DEP_FILE="${dependency_file_foreign_types}"
-        -DFOREIGN_TYPES_FILE_NAME="${dep_file_name}"
-        -DCPP_DEP_FILE="${dependency_file_cpp}"
-        -DCPP_FILE_NAME="${cpp_file_name}"
-    )
 
     set (use_dep_files FALSE)
     if (CMAKE_GENERATOR STREQUAL "Ninja" OR CMAKE_GENERATOR STREQUAL "Ninja Multi-Config")
         set(use_dep_files TRUE)
     endif()
 
-    set(foreign_types_common_args
-        -DMAIN_DEP_FILE:PATH="${target_metatypes_dep_file}"
-        -DQT_INSTALL_DIR:PATH="${Qt6_DIR}/../../.."
+    # Enable evaluation of metatypes.json source interfaces
+    set_target_properties(${target} PROPERTIES QT_CONSUMES_METATYPES TRUE)
+    set(genex_list "$<REMOVE_DUPLICATES:$<FILTER:$<TARGET_PROPERTY:${target},SOURCES>,INCLUDE,metatypes.json$>>")
+    set(genex_main "$<JOIN:${genex_list},$<COMMA>>")
+    file(GENERATE OUTPUT "${foreign_types_file}"
+        CONTENT "$<IF:$<BOOL:${genex_list}>,--foreign-types=${genex_main},\n>"
     )
-
-    if (NOT use_dep_files)
-        set(foreign_types_file_tmp "${foreign_types_file}.tmp")
-        add_custom_target(${target}_resolve_foreign_types
-            BYPRODUCTS "${foreign_types_file}"
-            DEPENDS "${QT_QMTYPES_RESOLVE_DEPENDENCIES_SCRIPT}"
-            COMMAND ${CMAKE_COMMAND}
-                -DOUTPUT_FILE:PATH="${foreign_types_file_tmp}"
-                ${foreign_types_common_args}
-                -P "${QT_QMTYPES_RESOLVE_DEPENDENCIES_SCRIPT}"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${foreign_types_file_tmp}"
-                "${foreign_types_file}"
-            COMMAND_EXPAND_LISTS
-            COMMENT "Resolving foreign type dependencies for target ${target}"
-        )
-        add_dependencies(${target}_resolve_foreign_types ${target}_autogen)
-    else()
-        add_custom_command(
-            OUTPUT "${foreign_types_file}"
-            DEPENDS "${QT_QMTYPES_RESOLVE_DEPENDENCIES_SCRIPT}"
-            COMMAND ${CMAKE_COMMAND}
-
-                -DOUTPUT_FILE:PATH="${foreign_types_file}"
-                ${foreign_types_common_args}
-                ${foreign_types_dependency_args}
-                -P "${QT_QMTYPES_RESOLVE_DEPENDENCIES_SCRIPT}"
-            COMMAND_EXPAND_LISTS
-            DEPFILE "${dependency_file_foreign_types}"
-            COMMENT "Resolving foreign type dependencies for target ${target}"
-        )
-    endif()
 
     list(APPEND cmd_args
         "@${foreign_types_file}"
@@ -575,6 +531,9 @@ function(qt6_qml_type_registration target)
     set(registration_cpp_file_dep_args)
     if (use_dep_files)
         set(registration_cpp_file_dep_args DEPFILE ${dependency_file_cpp})
+        file(GENERATE OUTPUT "${dependency_file_cpp}"
+            CONTENT "${cpp_file_name}: $<IF:$<BOOL:${genex_list}>,\\\n$<JOIN:${genex_list}, \\\n>, \\\n>"
+        )
     endif()
 
     set(extra_env_command)
