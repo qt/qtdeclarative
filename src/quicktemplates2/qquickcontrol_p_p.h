@@ -224,7 +224,9 @@ public:
     bool explicitHoverEnabled = false;
 #endif
     bool resizingBackground = false;
+    bool pressWasTouch = false;
     int touchId = -1;
+    QPointF previousPressPos;
     qreal padding = 0;
     qreal horizontalPadding = 0;
     qreal verticalPadding = 0;
