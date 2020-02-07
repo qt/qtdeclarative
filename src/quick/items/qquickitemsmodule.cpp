@@ -183,13 +183,6 @@ static void qt_quickitems_defineModule()
     qRegisterMetaType<QQuickAnchorLine>("QQuickAnchorLine");
     qRegisterMetaType<QPointingDeviceUniqueId>("QPointingDeviceUniqueId");
     qRegisterMetaType<QQuickHandlerPoint>();
-
-#if !QT_CONFIG(quick_animatedimage)
-    qmlRegisterTypeNotAvailable(
-                uri, major, 15, "AnimatedImage",
-                QCoreApplication::translate("QQuickAnimatedImage",
-                                            "Qt was built without support for QMovie"));
-#endif
 }
 
 static void initResources()

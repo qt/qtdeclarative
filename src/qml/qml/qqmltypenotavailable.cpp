@@ -46,8 +46,6 @@ int qmlRegisterTypeNotAvailable(const char *uri, int versionMajor, int versionMi
     return qmlRegisterUncreatableType<QQmlTypeNotAvailable>(uri,versionMajor,versionMinor,qmlName,message);
 }
 
-QQmlTypeNotAvailable::QQmlTypeNotAvailable() { }
-
 QT_END_NAMESPACE
 
 #include "moc_qqmltypenotavailable_p.cpp"

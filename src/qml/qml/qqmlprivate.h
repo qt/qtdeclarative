@@ -124,6 +124,7 @@ class QJSValue;
 class QJSEngine;
 class QQmlEngine;
 class QQmlCustomParser;
+class QQmlTypeNotAvailable;
 
 template<class T>
 QQmlCustomParser *qmlCreateCustomParser()
@@ -652,6 +653,11 @@ namespace QQmlPrivate
 
         qmlregister(TypeAndRevisionsRegistration, &type);
     }
+
+    template<>
+    void Q_QML_EXPORT qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
+            const char *uri, int versionMajor, const QMetaObject *classInfoMetaObject);
+
 } // namespace QQmlPrivate
 
 QT_END_NAMESPACE
