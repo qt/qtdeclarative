@@ -41,6 +41,9 @@
 
 #include "qqmldebugclient_p.h"
 
+#include <QtCore/qvector.h>
+#include <private/qqmldebugtranslationprotocol_p.h>
+
 //
 //  W A R N I N G
 //  -------------
@@ -59,21 +62,14 @@ class QQmlDebugTranslationClient : public QQmlDebugClient
     Q_OBJECT
 
 public:
-    //needs to be in sync with QQmlDebugTranslationServiceImpl in qqmldebugtranslationservice.h
-    enum Command {
-        ChangeLanguage,
-        ChangeWarningColor,
-        ChangeElidedTextWarningString,
-        SetDebugTranslationServiceLogFile,
-        EnableElidedTextWarning,
-        DisableElidedTextWarning,
-        TestAllLanguages
-    };
-
     explicit QQmlDebugTranslationClient(QQmlDebugConnection *client);
+    ~QQmlDebugTranslationClient() = default;
 
-    virtual void messageReceived(const QByteArray &) override;
-    void triggerLanguage(const QUrl &url, const QString &locale);
+    virtual void messageReceived(const QByteArray &message) override;
+    bool languageChanged = false;
+    QVector<QQmlDebugTranslation::TranslationIssue> translationIssues;
+    QVector<QQmlDebugTranslation::QmlElement> qmlElements;
+    QVector<QQmlDebugTranslation::QmlState> qmlStates;
 };
 
 QT_END_NAMESPACE

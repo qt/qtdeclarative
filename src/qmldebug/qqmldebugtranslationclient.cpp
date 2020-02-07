@@ -40,37 +40,46 @@
 #include "qqmldebugtranslationclient_p.h"
 #include "qqmldebugconnection_p.h"
 
-#include <QUrl>
-#include <QDataStream>
-
 #include <QDebug>
-#include <QtPacketProtocol/private/qpacket_p.h>
+
+#include <private/qqmldebugconnector_p.h>
+#include <private/qversionedpacket_p.h>
 
 QT_BEGIN_NAMESPACE
-
-/*!
-  \class QQmlDebugTranslationClient
-  \internal
-
-  \brief Client for the debug translation service
-
-  The QQmlDebugTranslationClient can test if translated texts will fit.
- */
 
 QQmlDebugTranslationClient::QQmlDebugTranslationClient(QQmlDebugConnection *client)
     : QQmlDebugClient(QLatin1String("DebugTranslation"), client)
 {
 }
 
-void QQmlDebugTranslationClient::messageReceived(const QByteArray &data)
+void QQmlDebugTranslationClient::messageReceived(const QByteArray &message)
 {
-    Q_UNUSED(data);
-}
+    QVersionedPacket<QQmlDebugConnector> packet(message);
+    QQmlDebugTranslation::Reply type;
 
-void QQmlDebugTranslationClient::triggerLanguage(const QUrl &url, const QString &locale)
-{
-    Q_UNUSED(url);
-    Q_UNUSED(locale);
+    packet >> type;
+    switch (type) {
+    case QQmlDebugTranslation::Reply::MissingTranslations: {
+        packet >> translationIssues;
+        break;
+    }
+    case QQmlDebugTranslation::Reply::LanguageChanged: {
+        languageChanged = true;
+        break;
+    }
+    case QQmlDebugTranslation::Reply::TranslatableTextOccurrences: {
+        packet >> qmlElements;
+        break;
+    }
+    case QQmlDebugTranslation::Reply::StateList: {
+        packet >> qmlStates;
+        break;
+    }
+
+    default:
+        qWarning() << "TestDebugTranslationClient: received unknown command: " << static_cast<int>(type);
+        break;
+    }
 }
 
 QT_END_NAMESPACE

@@ -33,23 +33,25 @@ Item {
     id: root
     width: 360
     height: 360
-    property int widthFactor: 7
+    property var widthFactor: 7
+    // used in the multilanguage translator
+    property var screenId: "yi"
 
     Column {
         Text {
-            id: text1
             text: qsTr("hello")
             width: root.width / widthFactor
+            elide: Text.ElideRight
         }
         Text {
-            id: text2
             text: qsTr("short")
             width: root.width / widthFactor
+            elide: Text.ElideRight
         }
         Text {
-            id: text3
             text: "long not translated text"
             width: root.width / widthFactor
+            elide: Text.ElideRight
         }
     }
     // this is necessary to have the test working for different font sizes and dpi settings
@@ -60,52 +62,4 @@ Item {
         anchors.bottom: root.bottom
         onWidthChanged: root.width = originHelloTextToGetTheNecessaryWidth.width * widthFactor
     }
-    states: [
-        State {
-            name: "BiggerFontState"
-
-            PropertyChanges {
-                target: text1
-                font.pointSize: 20
-            }
-
-            PropertyChanges {
-                target: text2
-                font.pointSize: 20
-            }
-
-            PropertyChanges {
-                target: text3
-                font.pointSize: 20
-            }
-
-            PropertyChanges {
-                target: originHelloTextToGetTheNecessaryWidth
-                font.pointSize: 20
-            }
-        },
-        State {
-            name: "WayBiggerFontState"
-
-            PropertyChanges {
-                target: text1
-                font.pointSize: 30
-            }
-
-            PropertyChanges {
-                target: text2
-                font.pointSize: 30
-            }
-
-            PropertyChanges {
-                target: text3
-                font.pointSize: 30
-            }
-
-            PropertyChanges {
-                target: originHelloTextToGetTheNecessaryWidth
-                font.pointSize: 30
-            }
-        }
-    ]
 }

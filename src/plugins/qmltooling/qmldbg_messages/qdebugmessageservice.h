@@ -59,8 +59,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QDebugMessageServicePrivate;
-
 class QDebugMessageServiceImpl : public QDebugMessageService
 {
     Q_OBJECT

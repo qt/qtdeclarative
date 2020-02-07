@@ -39,7 +39,9 @@
 
 #include "qqmlpreviewservicefactory.h"
 #include "qqmlpreviewservice.h"
+#if QT_CONFIG(translation)
 #include "qqmldebugtranslationservice.h"
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -47,9 +49,10 @@ QQmlDebugService *QQmlPreviewServiceFactory::create(const QString &key)
 {
     if (key == QQmlPreviewServiceImpl::s_key)
         return new QQmlPreviewServiceImpl(this);
+#if QT_CONFIG(translation)
     if (key == QQmlDebugTranslationServiceImpl::s_key)
         return new QQmlDebugTranslationServiceImpl(this);
-
+#endif
     return nullptr;
 }
 

@@ -1153,10 +1153,12 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
 
         elideLayout->setFont(layout.font());
         elideLayout->setTextOption(layout.textOption());
+#if QT_CONFIG(translation)
         if (QQmlDebugTranslationService *service
                      = QQmlDebugConnector::service<QQmlDebugTranslationService>()) {
             elideText = service->foundElidedText(q, layoutText, elideText);
         }
+#endif //QT_CONFIG(translation)
         elideLayout->setText(elideText);
         elideLayout->beginLayout();
 

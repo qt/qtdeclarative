@@ -42,7 +42,6 @@
 #include <QtCore/qtimer.h>
 #include <QtCore/qsettings.h>
 #include <QtCore/qlibraryinfo.h>
-#include <QtCore/qtranslator.h>
 
 #include <QtGui/qwindow.h>
 #include <QtGui/qguiapplication.h>
@@ -93,9 +92,6 @@ QQmlPreviewHandler::QQmlPreviewHandler(QObject *parent) : QObject(parent)
 
 QQmlPreviewHandler::~QQmlPreviewHandler()
 {
-#if QT_CONFIG(translation)
-    removeTranslators();
-#endif
     clear();
 }
 
@@ -224,41 +220,6 @@ void QQmlPreviewHandler::doZoom()
     m_currentWindow->show();
     m_lastPosition.initLastSavedWindowPosition(m_currentWindow);
 }
-
-#if QT_CONFIG(translation)
-void QQmlPreviewHandler::removeTranslators()
-{
-    if (!m_qtTranslator.isNull()) {
-        QCoreApplication::removeTranslator(m_qtTranslator.get());
-        m_qtTranslator.reset();
-    }
-
-    if (m_qmlTranslator.isNull()) {
-        QCoreApplication::removeTranslator(m_qmlTranslator.get());
-        m_qmlTranslator.reset();
-    }
-}
-
-void QQmlPreviewHandler::language(const QUrl &context, const QLocale &locale)
-{
-    removeTranslators();
-
-    m_qtTranslator.reset(new QTranslator(this));
-    if (m_qtTranslator->load(locale, QLatin1String("qt"), QLatin1String("_"),
-                           QLibraryInfo::path(QLibraryInfo::TranslationsPath))) {
-        QCoreApplication::installTranslator(m_qtTranslator.get());
-    }
-
-    m_qmlTranslator.reset(new QTranslator(this));
-    if (m_qmlTranslator->load(locale, QLatin1String("qml"), QLatin1String("_"),
-                              context.toLocalFile() + QLatin1String("/i18n"))) {
-        QCoreApplication::installTranslator(m_qmlTranslator.get());
-    }
-
-    for (QQmlEngine *engine : qAsConst(m_engines))
-        engine->retranslate();
-}
-#endif
 
 void QQmlPreviewHandler::clear()
 {

@@ -73,8 +73,7 @@ public:
         Directory,
         ClearCache,
         Zoom,
-        Fps,
-        Language
+        Fps
     };
 
     static const QString s_key;
@@ -99,9 +98,6 @@ signals:
     void rerun();
     void clearCache();
     void zoom(qreal factor);
-#if QT_CONFIG(translation)
-    void language(const QUrl &context, const QLocale &locale);
-#endif
 
 private:
     QScopedPointer<QQmlPreviewFileEngineHandler> m_fileEngine;

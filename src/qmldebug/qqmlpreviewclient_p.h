@@ -72,8 +72,7 @@ public:
         Directory,
         ClearCache,
         Zoom,
-        Fps,
-        Language
+        Fps
     };
 
     struct FpsInfo {
@@ -98,7 +97,6 @@ public:
     void triggerLoad(const QUrl &url);
     void triggerRerun();
     void triggerZoom(float factor);
-    void triggerLanguage(const QUrl &url, const QString &locale);
 
 signals:
     void request(const QString &path);

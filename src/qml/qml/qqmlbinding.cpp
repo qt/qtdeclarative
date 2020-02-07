@@ -391,7 +391,6 @@ public:
         return QQmlSourceLocation(m_compilationUnit->fileName(), m_binding->valueLocation.line, m_binding->valueLocation.column);
     }
 
-
     void doUpdate(const DeleteWatcher &watcher,
                   QQmlPropertyData::WriteFlags flags, QV4::Scope &scope) override final
     {
@@ -433,12 +432,12 @@ QQmlBinding *QQmlBinding::createTranslationBinding(
     b->setNotifyOnValueChanged(true);
     b->QQmlJavaScriptExpression::setContext(ctxt);
     b->setScopeObject(obj);
-
+#if QT_CONFIG(translation)
     if (QQmlDebugTranslationService *service
                  = QQmlDebugConnector::service<QQmlDebugTranslationService>()) {
-        service->foundTranslationBinding(b, obj, ctxt);
+        service->foundTranslationBinding({unit, binding, b->scopeObject(), ctxt});
     }
-
+#endif
     return b;
 }
 

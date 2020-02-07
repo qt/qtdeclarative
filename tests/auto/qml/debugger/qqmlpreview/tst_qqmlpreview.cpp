@@ -26,9 +26,9 @@
 **
 ****************************************************************************/
 
-#include "qqmldebugprocess_p.h"
-#include "debugutil_p.h"
-#include "qqmlpreviewblacklist.h"
+#include <qqmldebugprocess_p.h>
+#include <debugutil_p.h>
+#include <qqmlpreviewblacklist.h>
 
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
@@ -69,7 +69,6 @@ private slots:
     void error();
     void zoom();
     void fps();
-    void language();
 };
 
 QQmlDebugTest::ConnectResult tst_QQmlPreview::startQmlProcess(const QString &qmlFile)
@@ -349,14 +348,6 @@ void tst_QQmlPreview::fps()
     } else {
         QSKIP("offscreen rendering doesn't produce any frames");
     }
-}
-
-void tst_QQmlPreview::language()
-{
-    QCOMPARE(startQmlProcess("window.qml"), ConnectSuccess);
-    QVERIFY(m_client);
-    m_client->triggerLanguage(dataDirectoryUrl(), "fr_FR");
-    QTRY_VERIFY_WITH_TIMEOUT(m_files.contains(testFile("i18n/qml_fr_FR.qm")), 30000);
 }
 
 QTEST_MAIN(tst_QQmlPreview)

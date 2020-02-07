@@ -36,9 +36,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
-#ifndef QDEBUGMESSAGESERVICE_H
-#define QDEBUGMESSAGESERVICE_H
+#ifndef QQMLDEBUGTRANSLATIONSERVICE_H
+#define QQMLDEBUGTRANSLATIONSERVICE_H
 
 //
 //  W A R N I N G
@@ -50,39 +49,44 @@
 //
 // We mean it.
 //
+#include <QtCore/qglobal.h>
 
 #include <private/qqmldebugserviceinterfaces_p.h>
 
-#include <QtCore/qlogging.h>
-#include <QtCore/qmutex.h>
-#include <QtCore/qelapsedtimer.h>
+#include <QtCore/qbytearray.h>
+#include <QtCore/qstring.h>
+#include <QtCore/qurl.h>
+#include <QtGui/qcolor.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlDebugTranslationServicePrivate;
-
 class QQmlDebugTranslationServiceImpl : public QQmlDebugTranslationService
 {
     Q_OBJECT
 public:
-    //needs to be in sync with QQmlDebugTranslationClient in qqmldebugtranslationclient_p.h
-    enum Command {
-        ChangeLanguage,
-        ChangeWarningColor,
-        ChangeElidedTextWarningString,
-        SetDebugTranslationServiceLogFile,
-        EnableElidedTextWarning,
-        DisableElidedTextWarning,
-        TestAllLanguages
-    };
     QQmlDebugTranslationServiceImpl(QObject *parent = 0);
+    ~QQmlDebugTranslationServiceImpl();
 
     QString foundElidedText(QObject *textObject, const QString &layoutText, const QString &elideText) override;
-    void foundTranslationBinding(QQmlTranslationBinding *binding, QObject *scopeObject,
-                                 const QQmlRefPointer<QQmlContextData> &contextData) override;
+    void foundTranslationBinding(const TranslationBindingInformation &translationBindingInformation) override;
+
     void messageReceived(const QByteArray &message) override;
+    void engineAboutToBeAdded(QJSEngine *engine) override;
+    void engineAboutToBeRemoved(QJSEngine *engine) override;
+
+signals:
+    void language(const QUrl &context, const QLocale &locale);
+    void state(const QString &stateName);
+    void stateList();
+    void watchTextElides(bool);
+    void missingTranslations();
+    void sendTranslatableTextOccurrences();
+
+private:
+    QQmlDebugTranslationServicePrivate *d;
 };
 
 QT_END_NAMESPACE
 
-#endif // QDEBUGMESSAGESERVICE_H
+#endif // QQMLDEBUGTRANSLATIONSERVICE_H

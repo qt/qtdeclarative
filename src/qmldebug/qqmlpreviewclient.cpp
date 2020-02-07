@@ -129,11 +129,4 @@ void QQmlPreviewClient::triggerZoom(float factor)
     sendMessage(packet.data());
 }
 
-void QQmlPreviewClient::triggerLanguage(const QUrl &url, const QString &locale)
-{
-    QPacket packet(connection()->currentDataStreamVersion());
-    packet << static_cast<qint8>(Language) << url << locale;
-    sendMessage(packet.data());
-}
-
 QT_END_NAMESPACE

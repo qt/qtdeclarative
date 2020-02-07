@@ -66,7 +66,6 @@ class QQmlEngine;
 class QQuickItem;
 class QQmlPreviewUrlInterceptor;
 class QQuickWindow;
-class QTranslator;
 
 class QQmlPreviewHandler : public QObject
 {
@@ -81,9 +80,6 @@ public:
     void loadUrl(const QUrl &url);
     void rerun();
     void zoom(qreal newFactor);
-#if QT_CONFIG(translation)
-    void language(const QUrl &context, const QLocale &locale);
-#endif
 
     void clear();
 
@@ -117,9 +113,6 @@ private:
     void frameSwapped();
 
     void fpsTimerHit();
-#if QT_CONFIG(translation)
-    void removeTranslators();
-#endif
 
     QScopedPointer<QQuickItem> m_dummyItem;
     QList<QQmlEngine *> m_engines;
@@ -148,11 +141,6 @@ private:
 
     FrameTime m_rendering;
     FrameTime m_synchronizing;
-
-#if QT_CONFIG(translation)
-    QScopedPointer<QTranslator> m_qtTranslator;
-    QScopedPointer<QTranslator> m_qmlTranslator;
-#endif
 };
 
 QT_END_NAMESPACE

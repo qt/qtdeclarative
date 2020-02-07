@@ -500,6 +500,11 @@ qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_debug
         jsruntime/qv4profiling.cpp
 )
 
+qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_debug AND QT_FEATURE_translation
+    SOURCES
+        debugger/qqmldebugtranslationprotocol_p.h
+)
+
 qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_sequence_object
     SOURCES
         jsruntime/qv4sequenceobject.cpp jsruntime/qv4sequenceobject_p.h

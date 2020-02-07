@@ -48,8 +48,9 @@ const QString QQmlProfilerService::s_key = QStringLiteral("CanvasFrameRate");
 const QString QDebugMessageService::s_key = QStringLiteral("DebugMessages");
 const QString QQmlEngineControlService::s_key = QStringLiteral("EngineControl");
 const QString QQmlNativeDebugService::s_key = QStringLiteral("NativeQmlDebugger");
+#if QT_CONFIG(translation)
 const QString QQmlDebugTranslationService::s_key = QStringLiteral("DebugTranslation");
-
+#endif
 static QQmlDebugStatesDelegate *(*statesDelegateFactory)() = nullptr;
 void QQmlEngineDebugService::setStatesDelegateFactory(QQmlDebugStatesDelegate *(*factory)())
 {
