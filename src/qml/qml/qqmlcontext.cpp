@@ -465,9 +465,8 @@ QUrl QQmlContextData::resolvedUrl(const QUrl &src)
     if (resolved.isEmpty()) //relative but no ctxt
         return resolved;
 
-    if (engine && engine->urlInterceptor())
-        resolved = engine->urlInterceptor()->intercept(resolved, QQmlAbstractUrlInterceptor::UrlString);
-    return resolved;
+    return engine ? engine->interceptUrl(resolved, QQmlAbstractUrlInterceptor::UrlString)
+                  : resolved;
 }
 
 

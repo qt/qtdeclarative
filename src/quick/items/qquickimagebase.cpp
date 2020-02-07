@@ -298,9 +298,8 @@ void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
         options |= QQuickPixmap::Cache;
     d->pix.clear(this);
     QUrl loadUrl = url;
-    QQmlEngine* engine = qmlEngine(this);
-    if (engine && engine->urlInterceptor())
-        loadUrl = engine->urlInterceptor()->intercept(loadUrl, QQmlAbstractUrlInterceptor::UrlString);
+    if (const QQmlEngine *engine = qmlEngine(this))
+        loadUrl = engine->interceptUrl(loadUrl, QQmlAbstractUrlInterceptor::UrlString);
 
     if (loadOptions & HandleDPR) {
         const qreal targetDevicePixelRatio = (window() ? window()->effectiveDevicePixelRatio() : qApp->devicePixelRatio());

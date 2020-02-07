@@ -625,13 +625,15 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
             // We haven't yet resolved this import
             m_unresolvedImports << import;
 
-            QQmlAbstractUrlInterceptor *interceptor = typeLoader()->engine()->urlInterceptor();
+            const QQmlEngine *engine = typeLoader()->engine();
+            const bool hasInterceptors
+                    = !(QQmlEnginePrivate::get(engine)->urlInterceptors.isEmpty());
 
             // Query any network import paths for this library.
             // Interceptor might redirect local paths.
             QStringList remotePathList = importDatabase->importPathList(
-                        interceptor ? QQmlImportDatabase::LocalOrRemote
-                                    : QQmlImportDatabase::Remote);
+                        hasInterceptors ? QQmlImportDatabase::LocalOrRemote
+                                        : QQmlImportDatabase::Remote);
             if (!remotePathList.isEmpty()) {
                 // Add this library and request the possible locations for it
                 if (!m_importCache.addLibraryImport(
@@ -644,8 +646,8 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
                 const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(
                             import->uri, remotePathList, import->version);
                 for (const QString &qmldirPath : qmlDirPaths) {
-                    if (interceptor) {
-                        QUrl url = interceptor->intercept(
+                    if (hasInterceptors) {
+                        QUrl url = engine->interceptUrl(
                                     QQmlImports::urlFromLocalFileOrQrcOrUrl(qmldirPath),
                                     QQmlAbstractUrlInterceptor::QmldirFile);
                         if (!QQmlFile::isLocalFile(url)

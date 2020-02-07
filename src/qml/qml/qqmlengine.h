@@ -46,10 +46,9 @@
 #include <QtQml/qjsengine.h>
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlerror.h>
+#include <QtQml/qqmlabstracturlinterceptor.h>
 
 QT_BEGIN_NAMESPACE
-
-class QQmlAbstractUrlInterceptor;
 
 class Q_QML_EXPORT QQmlImageProviderBase
 {
@@ -127,8 +126,17 @@ public:
     QNetworkAccessManager *networkAccessManager() const;
 #endif
 
-    void setUrlInterceptor(QQmlAbstractUrlInterceptor* urlInterceptor);
-    QQmlAbstractUrlInterceptor* urlInterceptor() const;
+#if QT_DEPRECATED_SINCE(6, 0)
+    QT_DEPRECATED void setUrlInterceptor(QQmlAbstractUrlInterceptor* urlInterceptor)
+    {
+        addUrlInterceptor(urlInterceptor);
+    }
+    QT_DEPRECATED QQmlAbstractUrlInterceptor *urlInterceptor() const;
+#endif
+
+    void addUrlInterceptor(QQmlAbstractUrlInterceptor *urlInterceptor);
+    void removeUrlInterceptor(QQmlAbstractUrlInterceptor *urlInterceptor);
+    QUrl interceptUrl(const QUrl &url, QQmlAbstractUrlInterceptor::DataType type) const;
 
     void addImageProvider(const QString &id, QQmlImageProviderBase *);
     QQmlImageProviderBase *imageProvider(const QString &id) const;

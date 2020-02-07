@@ -218,8 +218,8 @@ QV4::ReturnedValue QV4Include::method_include(const QV4::FunctionObject *b, cons
         callbackFunction = argv[1];
 
     QUrl url(scope.engine->resolvedUrl(argv[0].toQStringNoThrow()));
-    if (scope.engine->qmlEngine() && scope.engine->qmlEngine()->urlInterceptor())
-        url = scope.engine->qmlEngine()->urlInterceptor()->intercept(url, QQmlAbstractUrlInterceptor::JavaScriptFile);
+    if (const QQmlEngine *qmlEngine = scope.engine->qmlEngine())
+        url = qmlEngine->interceptUrl(url, QQmlAbstractUrlInterceptor::JavaScriptFile);
 
     QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
 

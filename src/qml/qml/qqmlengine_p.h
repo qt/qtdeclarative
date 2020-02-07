@@ -178,8 +178,7 @@ public:
     QHash<QString,QSharedPointer<QQmlImageProviderBase> > imageProviders;
     QSharedPointer<QQmlImageProviderBase> imageProvider(const QString &providerId) const;
 
-
-    QQmlAbstractUrlInterceptor* urlInterceptor;
+    QList<QQmlAbstractUrlInterceptor *> urlInterceptors;
 
     int scarceResourcesRefCount;
     void referenceScarceResources();

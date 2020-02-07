@@ -233,7 +233,7 @@ void tst_QQmlImport::interceptQmldir()
 {
     QQmlEngine engine;
     QmldirUrlInterceptor interceptor;
-    engine.setUrlInterceptor(&interceptor);
+    engine.addUrlInterceptor(&interceptor);
 
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("interceptQmldir.qml"));

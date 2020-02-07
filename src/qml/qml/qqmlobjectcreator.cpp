@@ -449,8 +449,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         string.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
         QUrl value = string.isEmpty() ? QUrl() : compilationUnit->finalUrl().resolved(QUrl(string));
         // Apply URL interceptor
-        if (engine->urlInterceptor())
-            value = engine->urlInterceptor()->intercept(value, QQmlAbstractUrlInterceptor::UrlString);
+        value = engine->interceptUrl(value, QQmlAbstractUrlInterceptor::UrlString);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;

@@ -105,9 +105,8 @@ QQmlDataBlob::QQmlDataBlob(const QUrl &url, Type type, QQmlTypeLoader *manager)
   m_inCallback(false), m_isDone(false)
 {
     //Set here because we need to get the engine from the manager
-    if (m_typeLoader->engine() && m_typeLoader->engine()->urlInterceptor())
-        m_url = m_typeLoader->engine()->urlInterceptor()->intercept(m_url,
-                    (QQmlAbstractUrlInterceptor::DataType)m_type);
+    if (const QQmlEngine *qmlEngine = m_typeLoader->engine())
+        m_url = qmlEngine->interceptUrl(m_url, (QQmlAbstractUrlInterceptor::DataType)m_type);
 }
 
 /*!  \internal */

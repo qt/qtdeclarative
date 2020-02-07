@@ -1193,7 +1193,7 @@ void tst_qquickimage::urlInterceptor()
 {
     QQmlEngine engine;
     MyInterceptor interceptor {testFileUrl("colors.png")};
-    engine.setUrlInterceptor(&interceptor);
+    engine.addUrlInterceptor(&interceptor);
 
     QQmlComponent c(&engine);
 

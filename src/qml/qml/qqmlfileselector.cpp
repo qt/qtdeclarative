@@ -42,6 +42,7 @@
 #include <qobjectdefs.h>
 #include "qqmlfileselector.h"
 #include "qqmlfileselector_p.h"
+#include "qqmlengine_p.h"
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
@@ -105,7 +106,7 @@ QQmlFileSelector::QQmlFileSelector(QQmlEngine* engine, QObject* parent)
     Q_D(QQmlFileSelector);
     d->engine = engine;
     interceptorInstances()->insert(d->myInstance.data(), this);
-    d->engine->setUrlInterceptor(d->myInstance.data());
+    d->engine->addUrlInterceptor(d->myInstance.data());
 }
 
 /*!
@@ -115,7 +116,7 @@ QQmlFileSelector::~QQmlFileSelector()
 {
     Q_D(QQmlFileSelector);
     if (d->engine && QQmlFileSelector::get(d->engine) == this) {
-        d->engine->setUrlInterceptor(nullptr);
+        d->engine->removeUrlInterceptor(d->myInstance.data());
         d->engine = nullptr;
     }
     interceptorInstances()->remove(d->myInstance.data());
@@ -185,9 +186,11 @@ void QQmlFileSelector::setExtraSelectors(const QStringList &strings)
 QQmlFileSelector* QQmlFileSelector::get(QQmlEngine* engine)
 {
     //Since I think we still can't use dynamic_cast inside Qt...
-    QQmlAbstractUrlInterceptor* current = engine->urlInterceptor();
-    if (current && interceptorInstances()->contains(current))
-        return interceptorInstances()->value(current);
+    const QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
+    for (QQmlAbstractUrlInterceptor *current : enginePrivate->urlInterceptors) {
+        if (interceptorInstances()->contains(current))
+            return interceptorInstances()->value(current);
+    }
     return nullptr;
 }
 

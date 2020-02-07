@@ -626,7 +626,7 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 #if QT_CONFIG(qml_network)
   networkAccessManager(nullptr), networkAccessManagerFactory(nullptr),
 #endif
-  urlInterceptor(nullptr), scarceResourcesRefCount(0), importDatabase(e), typeLoader(e),
+  scarceResourcesRefCount(0), importDatabase(e), typeLoader(e),
   uniqueId(1), incubatorCount(0), incubationController(nullptr)
 {
 }
@@ -1077,32 +1077,62 @@ QQmlContext *QQmlEngine::rootContext() const
     return d->rootContext;
 }
 
+#if QT_DEPRECATED_SINCE(6, 0)
 /*!
   \internal
+  \deprecated
   This API is private for 5.1
 
-  Sets the \a urlInterceptor to be used when resolving URLs in QML.
-  This also applies to URLs used for loading script files and QML types.
-  This should not be modifed while the engine is loading files, or URL
-  selection may be inconsistent.
-*/
-void QQmlEngine::setUrlInterceptor(QQmlAbstractUrlInterceptor *urlInterceptor)
-{
-    Q_D(QQmlEngine);
-    d->urlInterceptor = urlInterceptor;
-}
-
-/*!
-  \internal
-  This API is private for 5.1
-
-  Returns the current QQmlAbstractUrlInterceptor. It must not be modified outside
+  Returns the last QQmlAbstractUrlInterceptor. It must not be modified outside
   the GUI thread.
 */
 QQmlAbstractUrlInterceptor *QQmlEngine::urlInterceptor() const
 {
     Q_D(const QQmlEngine);
-    return d->urlInterceptor;
+    return d->urlInterceptors.last();
+}
+#endif
+
+/*!
+  Adds a \a urlInterceptor to be used when resolving URLs in QML.
+  This also applies to URLs used for loading script files and QML types.
+  The URL interceptors should not be modifed while the engine is loading files,
+  or URL selection may be inconsistent. Multiple URL interceptors, when given,
+  will be called in the order they were added for each URL.
+
+  QQmlEngine does not take ownership of the interceptor and won't delete it.
+*/
+void QQmlEngine::addUrlInterceptor(QQmlAbstractUrlInterceptor *urlInterceptor)
+{
+    Q_D(QQmlEngine);
+    d->urlInterceptors.append(urlInterceptor);
+}
+
+/*!
+  Remove a \a urlInterceptor that was previously added using
+  \l addUrlInterceptor. The URL interceptors should not be modifed while the
+  engine is loading files, or URL selection may be inconsistent.
+
+  This does not delete the interceptor, but merely removes it from the engine.
+  You can re-use it on the same or a different engine afterwards.
+*/
+void QQmlEngine::removeUrlInterceptor(QQmlAbstractUrlInterceptor *urlInterceptor)
+{
+    Q_D(QQmlEngine);
+    d->urlInterceptors.removeOne(urlInterceptor);
+}
+
+/*!
+  Run the current URL interceptors on the given \a url of the given \a type and
+  return the result.
+ */
+QUrl QQmlEngine::interceptUrl(const QUrl &url, QQmlAbstractUrlInterceptor::DataType type) const
+{
+    Q_D(const QQmlEngine);
+    QUrl result = url;
+    for (QQmlAbstractUrlInterceptor *interceptor : d->urlInterceptors)
+        result = interceptor->intercept(result, type);
+    return result;
 }
 
 void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
@@ -2198,7 +2228,6 @@ void QQmlEngine::addPluginPath(const QString& path)
     Q_D(QQmlEngine);
     d->importDatabase.addPluginPath(path);
 }
-
 
 /*!
   Returns the list of directories where the engine searches for

@@ -419,7 +419,7 @@ void tst_QQMLTypeLoader::intercept()
     UrlInterceptor interceptor;
     NetworkAccessManagerFactory factory;
 
-    engine.setUrlInterceptor(&interceptor);
+    engine.addUrlInterceptor(&interceptor);
     engine.setNetworkAccessManagerFactory(&factory);
 
     QQmlComponent component(&engine, testFileUrl("test_intercept.qml"));

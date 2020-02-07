@@ -1381,20 +1381,21 @@ QQmlImports::LocalQmldirResult QQmlImportsPrivate::locateLocalQmldir(
         }
     }
 
-    QQmlTypeLoader &typeLoader = QQmlEnginePrivate::get(database->engine)->typeLoader;
+    QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(database->engine);
+    QQmlTypeLoader &typeLoader = enginePrivate->typeLoader;
+    const bool hasInterceptors = !enginePrivate->urlInterceptors.isEmpty();
 
     // Interceptor might redirect remote files to local ones.
-    QQmlAbstractUrlInterceptor *interceptor = typeLoader.engine()->urlInterceptor();
     QStringList localImportPaths = database->importPathList(
-                interceptor ? QQmlImportDatabase::LocalOrRemote : QQmlImportDatabase::Local);
+                hasInterceptors ? QQmlImportDatabase::LocalOrRemote : QQmlImportDatabase::Local);
 
     // Search local import paths for a matching version
     const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(
                 uri, localImportPaths, version);
     bool pathTurnedRemote = false;
     for (QString qmldirPath : qmlDirPaths) {
-        if (interceptor) {
-            const QUrl intercepted = interceptor->intercept(
+        if (hasInterceptors) {
+            const QUrl intercepted = database->engine->interceptUrl(
                         QQmlImports::urlFromLocalFileOrQrcOrUrl(qmldirPath),
                         QQmlAbstractUrlInterceptor::QmldirFile);
             qmldirPath = QQmlFile::urlToLocalFileOrQrc(intercepted);
@@ -1616,10 +1617,8 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
     QString qmldirUrl = resolveLocalUrl(base, importUri + (importUri.endsWith(Slash)
                                                            ? String_qmldir
                                                            : Slash_qmldir));
-    if (QQmlAbstractUrlInterceptor *interceptor = typeLoader->engine()->urlInterceptor()) {
-        qmldirUrl = interceptor->intercept(QUrl(qmldirUrl),
-                                           QQmlAbstractUrlInterceptor::QmldirFile).toString();
-    }
+    qmldirUrl = typeLoader->engine()->interceptUrl(
+                QUrl(qmldirUrl), QQmlAbstractUrlInterceptor::QmldirFile).toString();
     QString qmldirIdentifier;
 
     if (QQmlFile::isLocalFile(qmldirUrl)) {

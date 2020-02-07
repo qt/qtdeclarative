@@ -852,7 +852,7 @@ void tst_qqmlengine::urlInterceptor()
     e.addImportPath(testFileUrl("interception/imports").url());
     CustomSelector cs(testFileUrl(""));
     cs.m_interceptionPoints = interceptionPoint;
-    e.setUrlInterceptor(&cs);
+    e.addUrlInterceptor(&cs);
     QQmlComponent c(&e, testFile); //Note that this can get intercepted too
     QObject *o = c.create();
     if (!o)
