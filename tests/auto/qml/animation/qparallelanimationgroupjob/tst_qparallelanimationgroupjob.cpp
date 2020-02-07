@@ -432,8 +432,7 @@ void tst_QParallelAnimationGroupJob::deleteChildrenWithRunningGroup()
     QCOMPARE(group.state(), QAnimationGroupJob::Running);
     QCOMPARE(anim1->state(), QAnimationGroupJob::Running);
 
-    QTest::qWait(80);
-    QVERIFY(group.currentLoopTime() > 0);
+    QTRY_VERIFY(group.currentLoopTime() > 0);
 
     delete anim1;
     QVERIFY(!group.firstChild());
