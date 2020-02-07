@@ -112,7 +112,9 @@ public:
     void setPluginPathList(const QStringList &paths);
     void addPluginPath(const QString& dir);
 
-    bool addNamedBundle(const QString &name, const QString &fileName);
+#if QT_DEPRECATED_SINCE(6, 0)
+    QT_DEPRECATED bool addNamedBundle(const QString &, const QString &) { return false; }
+#endif
 
 #if QT_CONFIG(library)
     bool importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors);

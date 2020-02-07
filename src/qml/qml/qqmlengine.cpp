@@ -2301,17 +2301,6 @@ QString QQmlEngine::offlineStorageDatabaseFilePath(const QString &databaseName) 
     return d->offlineStorageDatabaseDirectory() + QLatin1String(md5.result().toHex());
 }
 
-// #### Qt 6: Remove this function, it exists only for binary compatibility.
-/*!
- * \internal
- */
-bool QQmlEngine::addNamedBundle(const QString &name, const QString &fileName)
-{
-    Q_UNUSED(name)
-    Q_UNUSED(fileName)
-    return false;
-}
-
 QString QQmlEnginePrivate::offlineStorageDatabaseDirectory() const
 {
     Q_Q(const QQmlEngine);
