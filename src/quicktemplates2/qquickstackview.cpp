@@ -651,6 +651,13 @@ void QQuickStackView::push(QQmlV4Function *args)
 void QQuickStackView::pop(QQmlV4Function *args)
 {
     Q_D(QQuickStackView);
+    if (d->removingElements) {
+        d->warn(QStringLiteral("cannot pop while already in the process of removing elements"));
+        args->setReturnValue(QV4::Encode::null());
+        return;
+    }
+
+    QScopedValueRollback<bool> removingElements(d->removingElements, true);
     QScopedValueRollback<QString> rollback(d->operation, QStringLiteral("pop"));
     int argc = args->length();
     if (d->elements.count() <= 1 || argc > 2) {
@@ -806,6 +813,13 @@ void QQuickStackView::pop(QQmlV4Function *args)
 void QQuickStackView::replace(QQmlV4Function *args)
 {
     Q_D(QQuickStackView);
+    if (d->removingElements) {
+        d->warn(QStringLiteral("cannot replace while already in the process of removing elements"));
+        args->setReturnValue(QV4::Encode::null());
+        return;
+    }
+
+    QScopedValueRollback<bool> removingElements(d->removingElements, true);
     QScopedValueRollback<QString> rollback(d->operation, QStringLiteral("replace"));
     if (args->length() <= 0) {
         d->warn(QStringLiteral("missing arguments"));
@@ -902,6 +916,12 @@ void QQuickStackView::clear(Operation operation)
     if (d->elements.isEmpty())
         return;
 
+    if (d->removingElements) {
+        d->warn(QStringLiteral("cannot clear while already in the process of removing elements"));
+        return;
+    }
+
+    QScopedValueRollback<bool> removingElements(d->removingElements, true);
     if (operation != Immediate) {
         QQuickStackElement *exit = d->elements.pop();
         exit->removal = true;

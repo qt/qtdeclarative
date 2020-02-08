@@ -55,6 +55,8 @@ import QtQuick.Controls 2.12
 ScrollablePage {
     id: page
 
+    readonly property string control : "dialog"
+
     readonly property int buttonWidth: Math.max(button.implicitWidth, Math.min(button.implicitWidth * 2, page.availableWidth / 3))
 
     Column {

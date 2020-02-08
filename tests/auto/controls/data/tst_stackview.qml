@@ -1245,4 +1245,163 @@ TestCase {
         gc()
         verify(control.initialItem)
     }
+
+    // Need to use this specific structure in order to reproduce the crash.
+    Component {
+        id: clearUponDestructionContainerComponent
+
+        Item {
+            id: container
+            objectName: "container"
+
+            property alias control: stackView
+            property var onDestructionCallback
+
+            property Component clearUponDestructionComponent: Component {
+                id: clearUponDestructionComponent
+
+                Item {
+                    objectName: "clearUponDestructionItem"
+                    Component.onDestruction: container.onDestructionCallback(stackView)
+                }
+            }
+
+            StackView {
+                id: stackView
+                initialItem: Item {
+                    objectName: "initialItem"
+                }
+            }
+        }
+    }
+
+    // QTBUG-80353
+    // Tests that calling clear() in Component.onDestruction in response to that
+    // item being removed (e.g. via an earlier call to clear()) results in a warning and not a crash.
+    function test_recursiveClearClear() {
+        let container = createTemporaryObject(clearUponDestructionContainerComponent, testCase,
+            { onDestructionCallback: function(stackView) { stackView.clear(StackView.Immediate) }})
+        verify(container)
+
+        let control = container.control
+        control.push(container.clearUponDestructionComponent, StackView.Immediate)
+
+        // Shouldn't crash.
+        ignoreWarning(new RegExp(".*cannot clear while already in the process of removing elements"))
+        control.clear(StackView.Immediate)
+    }
+
+    function test_recursivePopClear() {
+        let container = createTemporaryObject(clearUponDestructionContainerComponent, testCase,
+            { onDestructionCallback: function(stackView) { stackView.clear(StackView.Immediate) }})
+        verify(container)
+
+        let control = container.control
+        control.push(container.clearUponDestructionComponent, StackView.Immediate)
+
+        // Pop all items except the first, removing the second item we pushed in the process.
+        // Shouldn't crash.
+        ignoreWarning(new RegExp(".*cannot clear while already in the process of removing elements"))
+        control.pop(null, StackView.Immediate)
+    }
+
+    function test_recursivePopPop() {
+        let container = createTemporaryObject(clearUponDestructionContainerComponent, testCase,
+            { onDestructionCallback: function(stackView) { stackView.pop(null, StackView.Immediate) }})
+        verify(container)
+
+        let control = container.control
+        // Push an extra item so that we can call pop(null) and reproduce the conditions for the crash.
+        control.push(component, StackView.Immediate)
+        control.push(container.clearUponDestructionComponent, StackView.Immediate)
+
+        // Pop the top item, then pop down to the first item in response.
+        ignoreWarning(new RegExp(".*cannot pop while already in the process of removing elements"))
+        control.pop(StackView.Immediate)
+    }
+
+    function test_recursiveReplaceClear() {
+        let container = createTemporaryObject(clearUponDestructionContainerComponent, testCase,
+            { onDestructionCallback: function(stackView) { stackView.clear(StackView.Immediate) }})
+        verify(container)
+
+        let control = container.control
+        control.push(container.clearUponDestructionComponent, StackView.Immediate)
+
+        // Replace the top item, then clear in response.
+        ignoreWarning(new RegExp(".*cannot clear while already in the process of removing elements"))
+        control.replace(component, StackView.Immediate)
+    }
+
+    function test_recursiveClearReplace() {
+        let container = createTemporaryObject(clearUponDestructionContainerComponent, testCase,
+            { onDestructionCallback: function(stackView) { stackView.replace(component, StackView.Immediate) }})
+        verify(container)
+
+        let control = container.control
+        control.push(container.clearUponDestructionComponent, StackView.Immediate)
+
+        // Replace the top item, then clear in response.
+        ignoreWarning(new RegExp(".*cannot replace while already in the process of removing elements"))
+        control.clear(StackView.Immediate)
+    }
+
+    Component {
+        id: rectangleComponent
+        Rectangle {}
+    }
+
+    Component {
+        id: qtbug57267_StackViewComponent
+
+        StackView {
+            id: stackView
+
+            popEnter: Transition {
+                XAnimator { from: (stackView.mirrored ? -1 : 1) * -stackView.width; to: 0; duration: 400; easing.type: Easing.Linear }
+            }
+            popExit: Transition {
+                XAnimator { from: 0; to: (stackView.mirrored ? -1 : 1) * stackView.width; duration: 400; easing.type: Easing.Linear }
+            }
+            pushEnter: Transition {
+                XAnimator { from: (stackView.mirrored ? -1 : 1) * stackView.width; to: 0; duration: 400; easing.type: Easing.Linear }
+            }
+            pushExit: Transition {
+                XAnimator { from: 0; to: (stackView.mirrored ? -1 : 1) * -stackView.width; duration: 400; easing.type: Easing.Linear }
+            }
+            replaceEnter: Transition {
+                XAnimator { from: (stackView.mirrored ? -1 : 1) * stackView.width; to: 0; duration: 400; easing.type: Easing.Linear }
+            }
+            replaceExit: Transition {
+                XAnimator { from: 0; to: (stackView.mirrored ? -1 : 1) * -stackView.width; duration: 400; easing.type: Easing.Linear }
+            }
+        }
+    }
+
+    function test_qtbug57267() {
+        let redRect = createTemporaryObject(rectangleComponent, testCase, { color: "red" })
+        verify(redRect)
+        let blueRect = createTemporaryObject(rectangleComponent, testCase, { color: "blue" })
+        verify(blueRect)
+        let control = createTemporaryObject(qtbug57267_StackViewComponent, testCase,
+            { "anchors.fill": testCase, initialItem: redRect })
+        verify(control)
+
+        control.replace(blueRect)
+        compare(control.currentItem, blueRect)
+        compare(control.depth, 1)
+
+        // Wait until the animation has started and then interrupt it by pushing the redRect.
+        tryCompare(control, "busy", true)
+        control.replace(redRect)
+        // The blue rect shouldn't be visible since we replaced it and therefore interrupted its animation.
+        tryCompare(blueRect, "visible", false)
+        // We did the replace very early on, so the transition for the redRect should still be happening.
+        compare(control.busy, true)
+        compare(redRect.visible, true)
+
+        // After finishing the transition, the red rect should still be visible.
+        tryCompare(control, "busy", false)
+        compare(redRect.visible, true)
+    }
 }

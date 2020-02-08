@@ -2026,4 +2026,55 @@ TestCase {
         compare(control.repeater.count, 3)
         compare(control.contentChildren.length, 3)
     }
+
+    Component {
+        id: hoverableChildrenSplitViewComponent
+
+        SplitView {
+            handle: handleComponent
+            anchors.fill: parent
+
+            MouseArea {
+                objectName: "mouseArea1"
+                hoverEnabled: true
+
+                SplitView.preferredWidth: 200
+            }
+            MouseArea {
+                objectName: "mouseArea2"
+                hoverEnabled: true
+            }
+        }
+    }
+
+    function test_hoverableChilden() {
+        if (Qt.platform.pluginName === "offscreen" || Qt.platform.pluginName === "minimal")
+            skip("Mouse hovering not functional on offscreen/minimal platforms")
+
+        var control = createTemporaryObject(hoverableChildrenSplitViewComponent, testCase)
+        verify(control)
+
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
+
+        // Move the mouse over the handle.
+        var handles = findHandles(control)
+        var targetHandle = handles[0]
+        // Test fails if we don't do two moves for some reason...
+        mouseMove(targetHandle, targetHandle.width / 2, targetHandle.height / 2)
+        mouseMove(targetHandle, targetHandle.width / 2, targetHandle.height / 2)
+        verify(targetHandle.SplitHandle.hovered)
+
+        // Move the mouse to the MouseArea on the left. The handle should no longer be hovered.
+        mouseMove(control, 100, control.height / 2)
+        verify(!targetHandle.SplitHandle.hovered)
+
+        // Move the mouse back over the handle.
+        mouseMove(targetHandle, targetHandle.width / 2, targetHandle.height / 2)
+        verify(targetHandle.SplitHandle.hovered)
+
+        // Move the mouse to the MouseArea on the right. The handle should no longer be hovered.
+        mouseMove(control, control.width - 100, control.height / 2)
+        verify(!targetHandle.SplitHandle.hovered)
+    }
 }

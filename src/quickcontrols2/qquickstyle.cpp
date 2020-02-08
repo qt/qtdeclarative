@@ -119,10 +119,15 @@ static QStringList defaultImportPathList()
 {
     QStringList importPaths;
     importPaths.reserve(3);
-#ifndef QT_STATIC
+#ifdef Q_OS_ANDROID
+    // androiddeployqt puts the QML files inside a resource file and they are not
+    // showing up in the Qml2ImportsPath as a result
+    importPaths += QStringLiteral(":/android_rcc_bundle/qml");
+#else
+# ifndef QT_STATIC
     importPaths += QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
+# endif
 #endif
-    importPaths += envPathList("QML2_IMPORT_PATH");
     importPaths += QStringLiteral(":/qt-project.org/imports");
     importPaths += QCoreApplication::applicationDirPath();
     return importPaths;

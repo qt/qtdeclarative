@@ -167,7 +167,7 @@ void QQuickGroupBox::setTitle(const QString &title)
         return;
 
     d->title = title;
-    setAccessibleName(title);
+    maybeSetAccessibleName(title);
     emit titleChanged();
 }
 
@@ -283,7 +283,7 @@ void QQuickGroupBox::accessibilityActiveChanged(bool active)
     QQuickFrame::accessibilityActiveChanged(active);
 
     if (active)
-        setAccessibleName(d->title);
+        maybeSetAccessibleName(d->title);
 }
 #endif
 

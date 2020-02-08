@@ -55,6 +55,8 @@ StackView {
     id: stackView
     initialItem: page
 
+    readonly property string control : "stackview"
+
     Component {
         id: page
 

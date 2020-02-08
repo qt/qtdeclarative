@@ -54,6 +54,8 @@ import QtQuick.Controls 2.12
 Pane {
     id: pane
 
+    readonly property string control : "swipeview"
+
     SwipeView {
         id: view
         currentIndex: 1

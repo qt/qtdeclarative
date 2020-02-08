@@ -54,6 +54,8 @@ import QtQuick.Controls 2.12
 ScrollablePage {
     id: page
 
+    readonly property string control : "frame"
+
     readonly property int itemWidth: Math.max(button.implicitWidth, Math.min(button.implicitWidth * 3, page.availableWidth / 3 * 2))
 
     Column {

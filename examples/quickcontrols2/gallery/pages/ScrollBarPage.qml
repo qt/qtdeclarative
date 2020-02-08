@@ -54,6 +54,8 @@ import QtQuick.Controls 2.12
 Flickable {
     id: flickable
 
+    readonly property string control : "scrollbar"
+
     contentHeight: pane.height
 
     Pane {

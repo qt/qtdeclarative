@@ -459,7 +459,7 @@ protected:
 #endif
 
     QString accessibleName() const;
-    void setAccessibleName(const QString &name);
+    void maybeSetAccessibleName(const QString &name);
 
     QVariant accessibleProperty(const char *propertyName);
     bool setAccessibleProperty(const char *propertyName, const QVariant &value);

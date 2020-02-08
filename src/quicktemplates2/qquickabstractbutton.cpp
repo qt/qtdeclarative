@@ -1128,7 +1128,7 @@ void QQuickAbstractButton::buttonChange(ButtonChange change)
         break;
     case ButtonTextChange: {
         const QString txt = text();
-        setAccessibleName(txt);
+        maybeSetAccessibleName(txt);
 #if QT_CONFIG(shortcut)
         setShortcut(QKeySequence::mnemonic(txt));
 #endif
@@ -1154,7 +1154,7 @@ void QQuickAbstractButton::accessibilityActiveChanged(bool active)
 
     Q_D(QQuickAbstractButton);
     if (active) {
-        setAccessibleName(text());
+        maybeSetAccessibleName(text());
         setAccessibleProperty("pressed", d->pressed);
         setAccessibleProperty("checked", d->checked);
         setAccessibleProperty("checkable", d->checkable);
