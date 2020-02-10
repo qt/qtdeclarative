@@ -117,7 +117,6 @@ public:
     void replace(int index, QObject *item) {
         Q_Q(QQmlObjectModel);
         auto *attached = QQmlObjectModelAttached::properties(children.at(index).item);
-        emit q->destroyingItem(attached);
         attached->setIndex(-1);
         children.replace(index, Item(item));
         QQmlObjectModelAttached::properties(children.at(index).item)->setIndex(index);
@@ -160,7 +159,6 @@ public:
         Q_Q(QQmlObjectModel);
         for (int i = index; i < index + n; ++i) {
             QQmlObjectModelAttached *attached = QQmlObjectModelAttached::properties(children.at(i).item);
-            emit q->destroyingItem(attached);
             attached->setIndex(-1);
         }
         children.erase(children.begin() + index, children.begin() + index + n);
@@ -176,6 +174,9 @@ public:
     }
 
     void clear() {
+        Q_Q(QQmlObjectModel);
+        for (const Item &child : qAsConst(children))
+            emit q->destroyingItem(child.item);
         remove(0, children.count());
     }
 
