@@ -114,6 +114,7 @@ public:
     virtual bool visit(UiVersionSpecifier *) { return true; }
     virtual bool visit(UiInlineComponent *) { return true; }
     virtual bool visit(UiAnnotationList *) { return true; }
+    virtual bool visit(UiRequired *) { return true; }
 
     virtual void endVisit(UiProgram *) {}
     virtual void endVisit(UiImport *) {}
@@ -135,6 +136,7 @@ public:
     virtual void endVisit(UiVersionSpecifier *) {}
     virtual void endVisit(UiInlineComponent *) {}
     virtual void endVisit(UiAnnotationList *) {}
+    virtual void endVisit(UiRequired *) {}
 
     // QQmlJS
     virtual bool visit(ThisExpression *) { return true; }
@@ -412,9 +414,6 @@ public:
 
     virtual bool visit(TypeAnnotation *) { return true; }
     virtual void endVisit(TypeAnnotation *) {}
-
-    virtual bool visit(UiRequired *) { return true; }
-    virtual void endVisit(UiRequired *) {}
 
     virtual void throwRecursionDepthError() = 0;
 
