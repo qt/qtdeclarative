@@ -202,6 +202,8 @@ public:
     static void qmlRemoveModuleRegistration(const QString &uri, int majorVersion);
 
     static bool qmlRegisterModuleTypes(const QString &uri, int majorVersion);
+
+    static int qmlRegisteredListTypeCount();
 };
 
 Q_DECLARE_TYPEINFO(QQmlMetaType, Q_MOVABLE_TYPE);

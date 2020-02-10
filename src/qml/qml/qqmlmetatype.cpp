@@ -298,6 +298,17 @@ bool QQmlMetaType::qmlRegisterModuleTypes(const QString &uri, int majorVersion)
     return data->registerModuleTypes(QQmlMetaTypeData::VersionedUri(uri, majorVersion));
 }
 
+/*!
+   \internal
+    Method is only used to in tst_qqmlenginecleanup.cpp to test whether all
+    types have been removed from qmlLists after shutdown of QQmlEngine
+ */
+int QQmlMetaType::qmlRegisteredListTypeCount()
+{
+    QQmlMetaTypeDataPtr data;
+    return data->qmlLists.count();
+}
+
 void QQmlMetaType::clearTypeRegistrations()
 {
     //Only cleans global static, assumed no running engine
