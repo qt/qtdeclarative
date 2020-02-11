@@ -323,6 +323,7 @@ private slots:
 
     void listContainingDeletedObject();
     void overrideSingleton();
+    void revisionedPropertyOfAttachedObjectProperty();
 
 private:
     QQmlEngine engine;
@@ -5513,6 +5514,85 @@ void tst_qqmllanguage::overrideSingleton()
     qmlRegisterSingletonInstance("Test", 1, 0, "UncreatableSingleton",
                                  UncreatableSingleton::instance());
     check("uncreatable", "UncreatableSingleton");
+}
+
+class AttachedObject;
+class InnerObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(bool revisionedProperty READ revisionedProperty WRITE setRevisionedProperty
+               NOTIFY revisionedPropertyChanged REVISION 2)
+
+public:
+    InnerObject(QObject *parent = nullptr) : QObject(parent) {}
+
+    bool revisionedProperty() const { return m_revisionedProperty; }
+    void setRevisionedProperty(bool revisionedProperty)
+    {
+        if (revisionedProperty != m_revisionedProperty) {
+            m_revisionedProperty = revisionedProperty;
+            emit revisionedPropertyChanged();
+        }
+    }
+
+    static AttachedObject *qmlAttachedProperties(QObject *object);
+
+signals:
+    Q_REVISION(2) void revisionedPropertyChanged();
+
+private:
+    bool m_revisionedProperty = false;
+};
+
+class AttachedObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(InnerObject *attached READ attached CONSTANT)
+
+public:
+    explicit AttachedObject(QObject *parent = nullptr) :
+        QObject(parent),
+        m_attached(new InnerObject(this))
+    {}
+
+    InnerObject *attached() const { return m_attached; }
+
+private:
+    InnerObject *m_attached;
+};
+
+class OuterObject : public QObject
+{
+    Q_OBJECT
+public:
+    explicit OuterObject(QObject *parent = nullptr) : QObject(parent) {}
+};
+
+AttachedObject *InnerObject::qmlAttachedProperties(QObject *object)
+{
+    return new AttachedObject(object);
+}
+
+QML_DECLARE_TYPE(InnerObject)
+QML_DECLARE_TYPEINFO(InnerObject, QML_HAS_ATTACHED_PROPERTIES)
+
+void tst_qqmllanguage::revisionedPropertyOfAttachedObjectProperty()
+{
+    qmlRegisterAnonymousType<AttachedObject>("foo", 2);
+    qmlRegisterType<InnerObject>("foo", 2, 0, "InnerObject");
+    qmlRegisterType<InnerObject, 2>("foo", 2, 2, "InnerObject");
+    qmlRegisterType<OuterObject>("foo", 2, 2, "OuterObject");
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import foo 2.2\n"
+                      "OuterObject {\n"
+                      "    InnerObject.attached.revisionedProperty: true\n"
+                      "}", QUrl());
+
+    QVERIFY(component.isReady());
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
 }
 
 void tst_qqmllanguage::inlineComponent()
