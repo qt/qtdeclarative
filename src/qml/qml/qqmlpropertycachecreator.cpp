@@ -119,9 +119,13 @@ QQmlRefPointer<QQmlPropertyCache> QQmlBindingInstantiationContext::instantiating
 {
     if (instantiatingProperty) {
         if (instantiatingProperty->isQObject()) {
+            // If the typeVersion is invalid here, we want to match any version we can find.
+            // 254.254 is the largest version QTypeRevision can hold.
             return enginePrivate->rawPropertyCacheForType(
                         instantiatingProperty->propType(),
-                        instantiatingProperty->typeVersion());
+                        instantiatingProperty->typeVersion().isValid()
+                            ? instantiatingProperty->typeVersion()
+                            : QTypeRevision::fromVersion(254, 254));
         } else if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(instantiatingProperty->propType())) {
             return enginePrivate->cache(vtmo, instantiatingProperty->typeVersion());
         }
