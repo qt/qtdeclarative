@@ -42,8 +42,10 @@
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates2/private/qquickcombobox_p.h>
 #include <QtQuickTemplates2/private/qquickdialog_p.h>
 #include <QtQuickTemplates2/private/qquickdialogbuttonbox_p.h>
+#include <QtQuickTemplates2/private/qquicktextfield_p.h>
 
 using namespace QQuickVisualTestUtil;
 
@@ -54,6 +56,7 @@ class tst_translation : public QQmlDataTest
 private slots:
     void dialogButtonBox();
     void dialogButtonBoxWithCustomButtons();
+    void comboBox();
 };
 
 void tst_translation::dialogButtonBox()
@@ -83,7 +86,7 @@ void tst_translation::dialogButtonBox()
     QCOMPARE(discardButton->text(), defaultDiscardText);
 
     QTranslator translator;
-    QVERIFY(translator.load(":/i18n/qtbase_fr.qm"));
+    QVERIFY(translator.load("qtbase_fr.qm", ":/"));
     QVERIFY(qApp->installTranslator(&translator));
     view.engine()->retranslate();
 
@@ -104,7 +107,7 @@ void tst_translation::dialogButtonBoxWithCustomButtons()
     // after the QML has been loaded.
     QScopedPointer<QTranslator> translator(new QTranslator);
     // Doesn't matter which language it is, as we won't be using it anyway.
-    QVERIFY(translator->load(":/i18n/qtbase_fr.qm"));
+    QVERIFY(translator->load("qtbase_fr.qm", ":/"));
     QVERIFY(qApp->installTranslator(translator.data()));
 
     QQuickView view(testFileUrl("dialogButtonBoxWithCustomButtons.qml"));
@@ -133,6 +136,26 @@ void tst_translation::dialogButtonBoxWithCustomButtons()
     translator.reset();
     QCOMPARE(okButton->text(), QLatin1String("OK"));
     QCOMPARE(cancelButton->text(), QLatin1String("Cancel"));
+}
+
+void tst_translation::comboBox()
+{
+    QQuickView view(testFileUrl("comboBox.qml"));
+
+    QQuickComboBox *comboBox = qobject_cast<QQuickComboBox*>(view.rootObject());
+    QVERIFY(comboBox);
+    QCOMPARE(comboBox->displayText(), QLatin1String("Hello"));
+
+    QQuickTextField *contentItem = qobject_cast<QQuickTextField*>(comboBox->contentItem());
+    QVERIFY(contentItem);
+    QCOMPARE(contentItem->text(), QLatin1String("Hello"));
+
+    QTranslator translator;
+    QVERIFY(translator.load("qml_jp.qm", ":/"));
+    QVERIFY(qApp->installTranslator(&translator));
+    view.engine()->retranslate();
+    QTRY_COMPARE(comboBox->displayText(), QString::fromUtf8("こんにちは"));
+    QCOMPARE(contentItem->text(), QString::fromUtf8("こんにちは"));
 }
 
 QTEST_MAIN(tst_translation)

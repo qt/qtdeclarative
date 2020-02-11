@@ -13,7 +13,4 @@ TESTDATA = data/*
 OTHER_FILES += \
     data/*.qml
 
-# We only want to run lrelease, which is why we use EXTRA_TRANSLATIONS.
-EXTRA_TRANSLATIONS = qtbase_fr.ts
-# Embed the translations in a qrc file.
-CONFIG += lrelease embed_translations
+RESOURCES += qml_jp.qm qtbase_fr.qm

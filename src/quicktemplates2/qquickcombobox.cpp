@@ -1865,6 +1865,14 @@ void QQuickComboBox::wheelEvent(QWheelEvent *event)
 }
 #endif
 
+bool QQuickComboBox::event(QEvent *e)
+{
+    Q_D(QQuickComboBox);
+    if (e->type() == QEvent::LanguageChange)
+        d->updateCurrentText();
+    return QQuickControl::event(e);
+}
+
 void QQuickComboBox::componentComplete()
 {
     Q_D(QQuickComboBox);

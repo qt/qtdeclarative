@@ -227,6 +227,7 @@ protected:
 #if QT_CONFIG(wheelevent)
     void wheelEvent(QWheelEvent *event) override;
 #endif
+    bool event(QEvent *e) override;
 
     void componentComplete() override;
     void itemChange(ItemChange change, const ItemChangeData &value) override;
