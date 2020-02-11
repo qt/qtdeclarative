@@ -158,6 +158,8 @@ private slots:
     void copy();
 
     void nestedQQmlPropertyMap();
+
+    void underscorePropertyChangeHandler();
 private:
     QQmlEngine engine;
 };
@@ -2228,6 +2230,24 @@ void tst_qqmlproperty::nestedQQmlPropertyMap()
 
     QQmlProperty success{&mainPropertyMap, "nesting1.nesting2.value"};
     QCOMPARE(success.read().toString(), QLatin1String("success"));
+}
+
+void tst_qqmlproperty::underscorePropertyChangeHandler()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(R"(
+        import QtQuick 2.12
+
+        Item {
+            property int __withUnderScore
+        }
+    )", QUrl::fromLocalFile("."));
+    QScopedPointer<QObject> root { component.create() };
+    QVERIFY(root);
+    QQmlProperty changeHandler(root.get(), "on__WithUnderScoreChanged");
+    QVERIFY(changeHandler.isValid());
+    QVERIFY(changeHandler.isSignalProperty());
 }
 
 QTEST_MAIN(tst_qqmlproperty)

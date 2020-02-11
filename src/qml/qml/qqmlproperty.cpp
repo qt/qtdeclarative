@@ -353,10 +353,15 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
     if (terminal.count() >= 3 &&
         terminal.at(0) == QLatin1Char('o') &&
         terminal.at(1) == QLatin1Char('n') &&
-        terminal.at(2).isUpper()) {
+        (terminal.at(2).isUpper() || terminal.at(2) == '_')) {
 
         QString signalName = terminal.mid(2).toString();
-        signalName[0] = signalName.at(0).toLower();
+        int firstNon_;
+        int length = signalName.length();
+        for (firstNon_ = 0; firstNon_ < length; ++firstNon_)
+            if (signalName.at(firstNon_) != '_')
+                break;
+        signalName[firstNon_] = signalName.at(firstNon_).toLower();
 
         // XXX - this code treats methods as signals
 
