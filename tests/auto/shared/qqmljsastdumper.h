@@ -71,7 +71,7 @@ bool operator & (DumperOptions lhs, DumperOptions rhs);
 DumperOptions operator | (DumperOptions lhs, DumperOptions rhs);
 
 // no export, currently just a supporting file...
-class AstDumper: public AST::Visitor
+class AstDumper: public AST::BaseVisitor
 {
 public:
     static QString printNode2(AST::Node *);

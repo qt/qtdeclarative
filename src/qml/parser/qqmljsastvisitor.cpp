@@ -43,11 +43,13 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlJS { namespace AST {
 
-Visitor::Visitor(quint16 parentRecursionDepth) : m_recursionDepth(parentRecursionDepth)
+Visitor::Visitor(quint16 parentRecursionDepth) : BaseVisitor(parentRecursionDepth)
 {
 }
 
-Visitor::~Visitor()
+BaseVisitor::BaseVisitor(quint16 parentRecursionDepth) : m_recursionDepth(parentRecursionDepth) {}
+
+BaseVisitor::~BaseVisitor()
 {
 }
 

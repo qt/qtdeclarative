@@ -60,6 +60,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlJS { namespace AST {
 
+class BaseVisitor;
 class Visitor;
 class Node;
 class ExpressionNode;
