@@ -60,6 +60,7 @@ class CustomTextureItem : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(qreal t READ t WRITE setT NOTIFY tChanged)
+    QML_ELEMENT
 
 public:
     CustomTextureItem();

@@ -50,14 +50,10 @@
 
 #include <QGuiApplication>
 #include <QtQuick/QQuickView>
-#include "metaltextureimport.h"
 
 int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
-
-    qmlRegisterType<CustomTextureItem>("MetalTextureImport", 1, 0, "CustomTextureItem");
-
     QQuickWindow::setSceneGraphBackend(QSGRendererInterface::MetalRhi);
 
     QQuickView view;
