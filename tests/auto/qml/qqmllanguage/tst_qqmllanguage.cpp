@@ -325,6 +325,7 @@ private slots:
     void overrideSingleton();
 
     void arrayToContainer();
+    void qualifiedScopeInCustomParser();
 
 private:
     QQmlEngine engine;
@@ -5665,6 +5666,35 @@ void tst_qqmllanguage::arrayToContainer()
     QScopedPointer<TestItem> root(qobject_cast<TestItem *>(component.createWithInitialProperties( {{"vector", QVariant::fromValue(points)}} )));
     QVERIFY(root);
     QCOMPARE(root->m_points.at(0), QPointF (2.0, 3.0) );
+}
+
+class EnumTester : public QObject
+{
+    Q_OBJECT
+public:
+    enum Types
+    {
+        FIRST = 0,
+        SECOND,
+        THIRD
+    };
+    Q_ENUM(Types)
+};
+
+void tst_qqmllanguage::qualifiedScopeInCustomParser()
+{
+    qmlRegisterUncreatableType<EnumTester>("scoped.custom.test", 1, 0, "EnumTester",
+                                           "Object only creatable in C++");
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQml.Models 2.12\n"
+                      "import scoped.custom.test 1.0 as BACKEND\n"
+                      "ListModel {\n"
+                      "    ListElement { text: \"a\"; type: BACKEND.EnumTester.FIRST }\n"
+                      "}\n", QUrl());
+    QVERIFY(component.isReady());
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
 }
 
 QTEST_MAIN(tst_qqmllanguage)
