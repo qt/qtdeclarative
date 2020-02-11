@@ -113,6 +113,13 @@
     template<typename T, typename... Args> \
     friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor);
 
+#define QML_INTERFACE \
+    Q_CLASSINFO("QML.Element", "anonymous") \
+    enum class QmlIsInterface {yes = true}; \
+    template<typename, typename> friend struct QML_PRIVATE_NAMESPACE::QmlInterface; \
+    template<typename T, typename... Args> \
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor);
+
 enum { /* TYPEINFO flags */
     QML_HAS_ATTACHED_PROPERTIES = 0x01
 };
@@ -495,7 +502,9 @@ int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor,
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
 }
 
+#if QT_DEPRECATED_SINCE(5, 15)
 template<typename T>
+QT_DEPRECATED_VERSION_X_5_15("Use qmlRegisterInterface(uri, versionMajor) instead")
 int qmlRegisterInterface(const char *typeName)
 {
     QByteArray name(typeName);
@@ -504,12 +513,33 @@ int qmlRegisterInterface(const char *typeName)
     QByteArray listName("QQmlListProperty<" + name + '>');
 
     QQmlPrivate::RegisterInterface qmlInterface = {
-        0,
+        1,
 
         qRegisterNormalizedMetaType<T *>(pointerName.constData()),
         qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
 
-        qobject_interface_iid<T *>()
+        qobject_interface_iid<T *>(),
+        "",
+        0
+    };
+
+    return QQmlPrivate::qmlregister(QQmlPrivate::InterfaceRegistration, &qmlInterface);
+}
+#endif
+
+template<typename T>
+int qmlRegisterInterface(const char *uri, int versionMajor)
+{
+    QML_GETTYPENAMES
+
+    QQmlPrivate::RegisterInterface qmlInterface = {
+        1,
+        qRegisterNormalizedMetaType<T *>(pointerName.constData()),
+        qRegisterNormalizedMetaType<QQmlListProperty<T>>(listName.constData()),
+        qobject_interface_iid<T *>(),
+
+        uri,
+        versionMajor
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::InterfaceRegistration, &qmlInterface);
@@ -767,11 +797,11 @@ inline int qmlRegisterType(const QUrl &url, const char *uri, int versionMajor, i
     return QQmlPrivate::qmlregister(QQmlPrivate::CompositeRegistration, &type);
 }
 
-template<class T, class Resolved, class Extended, bool Singleton>
+template<class T, class Resolved, class Extended, bool Singleton, bool Interface>
 struct QmlTypeAndRevisionsRegistration;
 
 template<class T, class Resolved, class Extended>
-struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, false> {
+struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, false, false> {
     static void registerTypeAndRevisions(const char *uri, int versionMajor)
     {
         QQmlPrivate::qmlRegisterTypeAndRevisions<Resolved, Extended>(
@@ -780,11 +810,19 @@ struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, false> {
 };
 
 template<class T, class Resolved>
-struct QmlTypeAndRevisionsRegistration<T, Resolved, void, true> {
+struct QmlTypeAndRevisionsRegistration<T, Resolved, void, true, false> {
     static void registerTypeAndRevisions(const char *uri, int versionMajor)
     {
         QQmlPrivate::qmlRegisterSingletonAndRevisions<Resolved>(
                     uri, versionMajor, &T::staticMetaObject);
+    }
+};
+
+template<class T, class Resolved>
+struct QmlTypeAndRevisionsRegistration<T, Resolved, void, false, true> {
+    static void registerTypeAndRevisions(const char *uri, int versionMajor)
+    {
+        qmlRegisterInterface<Resolved>(uri, versionMajor);
     }
 };
 
@@ -797,7 +835,8 @@ void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor)
     QmlTypeAndRevisionsRegistration<
             T, typename QQmlPrivate::QmlResolved<T>::Type,
             typename QQmlPrivate::QmlExtended<T>::Type,
-            QQmlPrivate::QmlSingleton<T>::Value>
+            QQmlPrivate::QmlSingleton<T>::Value,
+            QQmlPrivate::QmlInterface<T>::Value>
             ::registerTypeAndRevisions(uri, versionMajor);
     qmlRegisterTypesAndRevisions<Args...>(uri, versionMajor);
 }

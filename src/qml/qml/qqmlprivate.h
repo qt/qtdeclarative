@@ -406,6 +406,9 @@ namespace QQmlPrivate
         int listId;
 
         const char *iid;
+
+        const char *uri;
+        int versionMajor;
     };
 
     struct RegisterAutoParent {
@@ -577,6 +580,18 @@ namespace QQmlPrivate
     struct QmlSingleton<T, QmlVoidT<typename T::QmlIsSingleton>>
     {
         static constexpr bool Value = bool(T::QmlIsSingleton::yes);
+    };
+
+    template<class T, class = QmlVoidT<>>
+    struct QmlInterface
+    {
+        static constexpr bool Value = false;
+    };
+
+    template<class T>
+    struct QmlInterface<T, QmlVoidT<typename T::QmlIsInterface>>
+    {
+        static constexpr bool Value = bool(T::QmlIsInterface::yes);
     };
 
     template<typename T>

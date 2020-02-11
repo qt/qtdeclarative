@@ -92,8 +92,13 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data,
     d->typeId = type.typeId;
     d->listId = type.listId;
     d->isSetup = true;
-    d->version_maj = 0;
     d->version_min = 0;
+    if (type.version > 0) {
+        d->module = QString::fromUtf8(type.uri);
+        d->version_maj = type.versionMajor;
+    } else {
+        d->version_maj = 0;
+    }
     data->registerType(d);
     return d;
 }
@@ -345,7 +350,7 @@ void QQmlMetaType::unregisterAutoParentFunction(const QQmlPrivate::AutoParentFun
 
 QQmlType QQmlMetaType::registerInterface(const QQmlPrivate::RegisterInterface &type)
 {
-    if (type.version > 0)
+    if (type.version > 1)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
 
     QQmlMetaTypeDataPtr data;
@@ -354,8 +359,6 @@ QQmlType QQmlMetaType::registerInterface(const QQmlPrivate::RegisterInterface &t
 
     data->idToType.insert(priv->typeId, priv);
     data->idToType.insert(priv->listId, priv);
-    if (!priv->elementName.isEmpty())
-        data->nameToType.insert(priv->elementName, priv);
 
     if (data->interfaces.size() <= type.typeId)
         data->interfaces.resize(type.typeId + 16);

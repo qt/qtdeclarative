@@ -56,6 +56,7 @@ class C : public QObject {
 struct Interface2
 {
     Q_GADGET
+    QML_INTERFACE
 };
 
 QT_BEGIN_NAMESPACE

@@ -2100,8 +2100,6 @@ void tst_qqmlproperty::interfaceBinding()
     qmlRegisterType<C>("io.qt.bugreports", 1, 0, "C");
     qmlRegisterType<InterfaceConsumer>("io.qt.bugreports", 1, 0, "InterfaceConsumer");
 
-    qmlRegisterInterface<Interface2>("Interface2");
-
     const QVector<QUrl> urls = {
         testFileUrl("interfaceBinding.qml"),
         testFileUrl("interfaceBinding2.qml")
