@@ -219,7 +219,7 @@ QQmlPropertyCache::QQmlPropertyCache(const QMetaObject *metaObject, QTypeRevisio
 
     update(metaObject);
 
-    if (metaObjectRevision != QTypeRevision::zero()) {
+    if (metaObjectRevision.isValid() && metaObjectRevision != QTypeRevision::zero()) {
         // Set the revision of the meta object that this cache describes to be
         // 'metaObjectRevision'. This is useful when constructing a property cache
         // from a type that was created directly in C++, and not through QML. For such
