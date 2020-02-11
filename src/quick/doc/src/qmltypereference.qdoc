@@ -179,6 +179,7 @@ available when you import \c QtQuick.
     \li \l bool \c font.kerning
     \li \l bool \c font.preferShaping
     \li \l enumeration \c font.hintingPreference
+    \li \l string \c font.styleName
     \endlist
 
     Example:
