@@ -46,6 +46,8 @@ public:
 
     QString toString() const { return m_result; }
 
+    bool preVisit(Node *) override;
+
     bool visit(UiScriptBinding *node) override;
 
     bool visit(UiArrayBinding *node) override;
@@ -66,6 +68,9 @@ public:
     bool visit(UiPublicMember *node) override;
     bool visit(UiImport *node) override;
     bool visit(UiPragma *node) override;
+
+    bool visit(UiAnnotation *node) override;
+    void endVisit(UiAnnotation *node) override;
 
     void throwRecursionDepthError() override {}
 
