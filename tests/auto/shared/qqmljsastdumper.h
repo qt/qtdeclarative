@@ -119,6 +119,8 @@ public:
     bool visit(AST::UiVersionSpecifier *) override;
     bool visit(AST::UiInlineComponent *) override;
     bool visit(AST::UiRequired *) override;
+    bool visit(AST::UiAnnotation *) override;
+    bool visit(AST::UiAnnotationList *) override;
 
     void endVisit(AST::UiProgram *) override;
     void endVisit(AST::UiImport *) override;
@@ -140,6 +142,8 @@ public:
     void endVisit(AST::UiVersionSpecifier *) override;
     void endVisit(AST::UiInlineComponent *) override;
     void endVisit(AST::UiRequired *) override;
+    void endVisit(AST::UiAnnotation *) override;
+    void endVisit(AST::UiAnnotationList *) override;
 
     // QQmlJS
     bool visit(AST::ThisExpression *) override;

@@ -326,6 +326,7 @@ public:
       AST::UiQualifiedId *UiQualifiedId;
       AST::UiEnumMemberList *UiEnumMemberList;
       AST::UiVersionSpecifier *UiVersionSpecifier;
+      AST::UiAnnotation *UiAnnotation;
       AST::UiAnnotationList *UiAnnotationList;
     };
 
@@ -953,7 +954,7 @@ UiAnnotationObjectDefinition: UiSimpleQualifiedId UiObjectInitializer;
 
             return false;
         }
-        AST::UiObjectDefinition *node = new (pool) AST::UiObjectDefinition(sym(1).UiQualifiedId, sym(2).UiObjectInitializer);
+        AST::UiAnnotation *node = new (pool) AST::UiAnnotation(sym(1).UiQualifiedId, sym(2).UiObjectInitializer);
         sym(1).Node = node;
     } break;
 ./
@@ -969,14 +970,14 @@ case $rule_number: {
 UiAnnotationList: UiAnnotation;
 /.
     case $rule_number: {
-        sym(1).Node = new (pool) AST::UiAnnotationList(sym(1).UiObjectDefinition);
+        sym(1).Node = new (pool) AST::UiAnnotationList(sym(1).UiAnnotation);
     } break;
 ./
 
 UiAnnotationList: UiAnnotationList UiAnnotation;
 /.
     case $rule_number: {
-        AST::UiAnnotationList *node = new (pool) AST::UiAnnotationList(sym(1).UiAnnotationList, sym(2).UiObjectDefinition);
+        AST::UiAnnotationList *node = new (pool) AST::UiAnnotationList(sym(1).UiAnnotationList, sym(2).UiAnnotation);
         sym(1).Node = node;
     } break;
 ./
@@ -984,7 +985,7 @@ UiAnnotationList: UiAnnotationList UiAnnotation;
 UiAnnotatedObject: UiAnnotationList UiObjectDefinition;
 /.
    case $rule_number: {
-       AST::UiObjectMember *node = sym(2).UiObjectMember;
+       AST::UiObjectDefinition *node = sym(2).UiObjectDefinition;
        node->annotations = sym(1).UiAnnotationList->finish();
        sym(1).Node = node;
    } break;

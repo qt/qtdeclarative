@@ -113,6 +113,7 @@ public:
     virtual bool visit(UiEnumMemberList *) = 0;
     virtual bool visit(UiVersionSpecifier *) = 0;
     virtual bool visit(UiInlineComponent *) = 0;
+    virtual bool visit(UiAnnotation *) = 0;
     virtual bool visit(UiAnnotationList *) = 0;
     virtual bool visit(UiRequired *) = 0;
 
@@ -135,6 +136,7 @@ public:
     virtual void endVisit(UiEnumMemberList *) = 0;
     virtual void endVisit(UiVersionSpecifier *) = 0;
     virtual void endVisit(UiInlineComponent *) = 0;
+    virtual void endVisit(UiAnnotation *) = 0;
     virtual void endVisit(UiAnnotationList *) = 0;
     virtual void endVisit(UiRequired *) = 0;
 
@@ -452,6 +454,7 @@ public:
     bool visit(UiEnumMemberList *) override { return true; }
     bool visit(UiVersionSpecifier *) override { return true; }
     bool visit(UiInlineComponent *) override { return true; }
+    bool visit(UiAnnotation *) override { return true; }
     bool visit(UiAnnotationList *) override { return true; }
     bool visit(UiRequired *) override { return true; }
 
@@ -474,6 +477,7 @@ public:
     void endVisit(UiEnumMemberList *) override {}
     void endVisit(UiVersionSpecifier *) override {}
     void endVisit(UiInlineComponent *) override {}
+    void endVisit(UiAnnotation *) override {}
     void endVisit(UiAnnotationList *) override {}
     void endVisit(UiRequired *) override {}
 

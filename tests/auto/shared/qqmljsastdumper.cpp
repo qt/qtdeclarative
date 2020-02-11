@@ -366,6 +366,12 @@ bool AstDumper::visit(UiRequired *el)
     return true;
 }
 
+bool AstDumper::visit(UiAnnotation *)
+{
+    start(QLatin1String("UiAnnotation"));
+    return true;
+}
+
 bool AstDumper::visit(UiAnnotationList *)
 {
     start(QLatin1String("UiAnnotationList"));
@@ -409,6 +415,7 @@ void AstDumper::endVisit(AST::UiEnumMemberList *el) {
 void AstDumper::endVisit(AST::UiVersionSpecifier *) { stop("UiVersionSpecifier"); }
 void AstDumper::endVisit(AST::UiInlineComponent *) { stop("UiInlineComponent"); }
 void AstDumper::endVisit(UiRequired *) { stop("UiRequired"); }
+void AstDumper::endVisit(UiAnnotation *) { stop("UiAnnotation"); }
 void AstDumper::endVisit(UiAnnotationList *) { stop("UiAnnotationList"); }
 
 // QQmlJS

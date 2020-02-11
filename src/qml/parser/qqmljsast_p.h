@@ -260,6 +260,7 @@ public:
         Kind_UiEnumMemberList,
         Kind_UiVersionSpecifier,
         Kind_UiRequired,
+        Kind_UiAnnotation,
         Kind_UiAnnotationList
     };
 
@@ -3629,16 +3630,39 @@ public:
     UiEnumMemberList *members;
 };
 
+class QML_PARSER_EXPORT UiAnnotation: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(UiAnnotation)
+
+    UiAnnotation(UiQualifiedId *qualifiedTypeNameId,
+                       UiObjectInitializer *initializer)
+        : qualifiedTypeNameId(qualifiedTypeNameId), initializer(initializer)
+    { kind = K; }
+
+    void accept0(BaseVisitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return qualifiedTypeNameId->identifierToken; }
+
+    SourceLocation lastSourceLocation() const override
+    { return initializer->rbraceToken; }
+
+// attributes
+    UiQualifiedId *qualifiedTypeNameId;
+    UiObjectInitializer *initializer;
+};
+
 class QML_PARSER_EXPORT UiAnnotationList: public Node
 {
 public:
     QQMLJS_DECLARE_AST_NODE(UiAnnotationList)
 
-    UiAnnotationList(UiObjectDefinition *annotation)
+    UiAnnotationList(UiAnnotation *annotation)
         : next(this), annotation(annotation)
     { kind = K; }
 
-    UiAnnotationList(UiAnnotationList *previous, UiObjectDefinition *annotation)
+    UiAnnotationList(UiAnnotationList *previous, UiAnnotation *annotation)
         : annotation(annotation)
     {
         kind = K;
@@ -3663,7 +3687,7 @@ public:
 
 // attributes
     UiAnnotationList *next;
-    UiObjectDefinition *annotation;
+    UiAnnotation *annotation;
 };
 
 } } // namespace AST

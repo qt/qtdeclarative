@@ -1578,7 +1578,18 @@ void UiRequired::accept0(BaseVisitor *visitor)
 void UiAnnotationList::accept0(BaseVisitor *visitor)
 {
     if (visitor->visit(this)) {
-        accept(annotation, visitor);
+        for (UiAnnotationList *it = this; it; it = it->next)
+            accept(it->annotation, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
+void UiAnnotation::accept0(BaseVisitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(qualifiedTypeNameId, visitor);
+        accept(initializer, visitor);
     }
 
     visitor->endVisit(this);
