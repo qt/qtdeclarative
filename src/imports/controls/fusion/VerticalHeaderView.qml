@@ -44,8 +44,18 @@ T.VerticalHeaderView {
     delegate: Rectangle {
         implicitWidth: 50
         implicitHeight: 25
-        color: "#f6f6f6"
-        border.color: "#e4e4e4"
+        border.color: "#cacaca"
+
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: "#fbfbfb"
+            }
+            GradientStop {
+                position: 1
+                color: "#e0dfe0"
+            }
+        }
 
         Text {
             text: model[control.textRole]
