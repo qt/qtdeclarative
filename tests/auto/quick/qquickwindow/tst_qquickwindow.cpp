@@ -2860,7 +2860,7 @@ void tst_qquickwindow::pointerEventTypeAndPointCount()
         QList<QTouchEvent::TouchPoint>() << QTouchEvent::TouchPoint(1));
 
 
-    QQuickPointerMouseEvent pme;
+    QQuickPointerMouseEvent pme(nullptr, QQuickPointerDevice::genericMouseDevice());
     pme.reset(&me);
     QCOMPARE(pme.asMouseEvent(localPosition), &me);
     QVERIFY(pme.asPointerMouseEvent());
@@ -2872,7 +2872,7 @@ void tst_qquickwindow::pointerEventTypeAndPointCount()
     QCOMPARE(pme.asMouseEvent(localPosition)->localPos(), localPosition);
     QCOMPARE(pme.asMouseEvent(localPosition)->screenPos(), screenPosition);
 
-    QQuickPointerTouchEvent pte;
+    QQuickPointerTouchEvent pte(nullptr, QQuickPointerDevice::touchDevice(touchDevice));
     pte.reset(&te);
     QCOMPARE(pte.asTouchEvent(), &te);
     QVERIFY(!pte.asPointerMouseEvent());
