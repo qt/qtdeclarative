@@ -39,6 +39,7 @@
 #include "testhttpserver.h"
 #include "../../shared/util.h"
 #include "../shared/geometrytestutil.h"
+#include <QQmlApplicationEngine>
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
@@ -128,6 +129,7 @@ private slots:
     void rootContext();
     void sourceURLKeepComponent();
 
+    void statusChangeOnlyEmittedOnce();
 };
 
 Q_DECLARE_METATYPE(QList<QQmlError>)
@@ -1444,6 +1446,18 @@ void tst_QQuickLoader::sourceURLKeepComponent()
     loader->setSource(testFileUrl("/Rect120x60.qml"));
     QVERIFY(loader->sourceComponent() != newSourceComponent.data());
 
+}
+
+// QTBUG-82002
+void tst_QQuickLoader::statusChangeOnlyEmittedOnce()
+{
+    QQmlApplicationEngine engine;
+    auto url = testFileUrl("statusChanged.qml");
+    engine.load(url);
+    auto root = engine.rootObjects().at(0);
+    QVERIFY(root);
+    QTRY_COMPARE(QQuickLoader::Status(root->property("status").toInt()), QQuickLoader::Ready);
+    QCOMPARE(root->property("statusChangedCounter").toInt(), 2); // 1xLoading + 1xReady*/
 }
 
 QTEST_MAIN(tst_QQuickLoader)

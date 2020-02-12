@@ -55,7 +55,7 @@ static const QQuickItemPrivate::ChangeTypes watchedChanges
 
 QQuickLoaderPrivate::QQuickLoaderPrivate()
     : item(nullptr), object(nullptr), itemContext(nullptr), incubator(nullptr), updatingSize(false),
-      active(true), loadingFromSource(false), asynchronous(false)
+      active(true), loadingFromSource(false), asynchronous(false), status(computeStatus())
 {
 }
 
@@ -378,7 +378,7 @@ void QQuickLoader::setActive(bool newVal)
             d->object = nullptr;
             emit itemChanged();
         }
-        emit statusChanged();
+        d->updateStatus();
     }
     emit activeChanged();
 }
@@ -431,7 +431,7 @@ void QQuickLoader::loadFromSource()
     Q_D(QQuickLoader);
     if (d->source.isEmpty()) {
         emit sourceChanged();
-        emit statusChanged();
+        d->updateStatus();
         emit progressChanged();
         emit itemChanged();
         return;
@@ -502,7 +502,7 @@ void QQuickLoader::loadFromSourceComponent()
     Q_D(QQuickLoader);
     if (!d->component) {
         emit sourceComponentChanged();
-        emit statusChanged();
+        d->updateStatus();
         emit progressChanged();
         emit itemChanged();
         return;
@@ -618,7 +618,7 @@ void QQuickLoaderPrivate::load()
                 q, SLOT(_q_sourceLoaded()));
         QObject::connect(component, SIGNAL(progressChanged(qreal)),
                 q, SIGNAL(progressChanged()));
-        emit q->statusChanged();
+        updateStatus();
         emit q->progressChanged();
         if (loadingFromSource)
             emit q->sourceChanged();
@@ -705,7 +705,7 @@ void QQuickLoaderPrivate::incubatorStateChanged(QQmlIncubator::Status status)
         emit q->sourceChanged();
     else
         emit q->sourceComponentChanged();
-    emit q->statusChanged();
+    updateStatus();
     emit q->progressChanged();
     if (status == QQmlIncubator::Ready)
         emit q->loaded();
@@ -722,7 +722,7 @@ void QQuickLoaderPrivate::_q_sourceLoaded()
             emit q->sourceChanged();
         else
             emit q->sourceComponentChanged();
-        emit q->statusChanged();
+        updateStatus();
         emit q->progressChanged();
         emit q->itemChanged(); //Like clearing source, emit itemChanged even if previous item was also null
         disposeInitialPropertyValues(); // cleanup
@@ -740,7 +740,7 @@ void QQuickLoaderPrivate::_q_sourceLoaded()
     component->create(*incubator, itemContext);
 
     if (incubator && incubator->status() == QQmlIncubator::Loading)
-        emit q->statusChanged();
+        updateStatus();
 }
 
 /*!
@@ -787,37 +787,7 @@ QQuickLoader::Status QQuickLoader::status() const
 {
     Q_D(const QQuickLoader);
 
-    if (!d->active)
-        return Null;
-
-    if (d->component) {
-        switch (d->component->status()) {
-        case QQmlComponent::Loading:
-            return Loading;
-        case QQmlComponent::Error:
-            return Error;
-        case QQmlComponent::Null:
-            return Null;
-        default:
-            break;
-        }
-    }
-
-    if (d->incubator) {
-        switch (d->incubator->status()) {
-        case QQmlIncubator::Loading:
-            return Loading;
-        case QQmlIncubator::Error:
-            return Error;
-        default:
-            break;
-        }
-    }
-
-    if (d->object)
-        return Ready;
-
-    return d->source.isEmpty() ? Null : Error;
+    return static_cast<Status>(d->status);
 }
 
 void QQuickLoader::componentComplete()
@@ -1016,6 +986,51 @@ QV4::ReturnedValue QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV4Funct
     }
 
     return valuemap->asReturnedValue();
+}
+
+QQuickLoader::Status QQuickLoaderPrivate::computeStatus() const
+{
+    if (!active)
+        return QQuickLoader::Status::Null;
+
+    if (component) {
+        switch (component->status()) {
+        case QQmlComponent::Loading:
+            return QQuickLoader::Status::Loading;
+        case QQmlComponent::Error:
+            return QQuickLoader::Status::Error;
+        case QQmlComponent::Null:
+            return QQuickLoader::Status::Null;
+        default:
+            break;
+        }
+    }
+
+    if (incubator) {
+        switch (incubator->status()) {
+        case QQmlIncubator::Loading:
+            return QQuickLoader::Status::Loading;
+        case QQmlIncubator::Error:
+            return QQuickLoader::Status::Error;
+        default:
+            break;
+        }
+    }
+
+    if (object)
+        return QQuickLoader::Status::Ready;
+
+    return source.isEmpty() ? QQuickLoader::Status::Null : QQuickLoader::Status::Error;
+}
+
+void QQuickLoaderPrivate::updateStatus()
+{
+    Q_Q(QQuickLoader);
+    auto newStatus = computeStatus();
+    if (status != newStatus) {
+        status = newStatus;
+        emit q->statusChanged();
+    }
 }
 
 #include <moc_qquickloader_p.cpp>
