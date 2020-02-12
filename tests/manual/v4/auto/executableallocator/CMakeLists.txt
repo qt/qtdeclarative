@@ -7,11 +7,9 @@
 qt_add_manual_test(tst_executableallocator
     SOURCES
         tst_executableallocator.cpp
-    LIBRARIES
-        v4Private
     PUBLIC_LIBRARIES
         Qt::Test
-        v4
+        v4Private
 )
 
 #### Keys ignored in scope 1:.:.:executableallocator.pro:<TRUE>:

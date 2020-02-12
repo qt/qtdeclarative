@@ -13,12 +13,11 @@ list(APPEND test_data ${test_data_glob})
 qt_add_test(tst_qjsengine
     SOURCES
         tst_qjsengine.cpp
-    LIBRARIES
-        Qt::GuiPrivate
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Qml
+        Qt::QmlPrivate
         Qt::Widgets
     TESTDATA ${test_data}
 )

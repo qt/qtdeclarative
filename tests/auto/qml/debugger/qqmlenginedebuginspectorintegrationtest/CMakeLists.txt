@@ -19,13 +19,11 @@ qt_add_test(tst_qqmlenginedebuginspectorintegration
     INCLUDE_DIRECTORIES
         ../../../shared
         ../shared
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlDebugPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::QmlDebug
     TESTDATA ${test_data}
 )
 

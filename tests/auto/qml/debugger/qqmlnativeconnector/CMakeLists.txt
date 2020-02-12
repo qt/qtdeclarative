@@ -9,11 +9,10 @@ qt_add_test(tst_qqmlnativeconnector
         tst_qqmlnativeconnector.cpp
     DEFINES
         QT_QML_DEBUG
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::GuiPrivate
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Qml
 )
 

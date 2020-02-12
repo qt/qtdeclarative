@@ -13,11 +13,9 @@ list(APPEND test_data ${test_data_glob})
 qt_add_test(tst_sharedimage
     SOURCES
         tst_sharedimage.cpp
-    LIBRARIES
-        Qt::QuickPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
-        Qt::Quick
+        Qt::QuickPrivate
     TESTDATA ${test_data}
 )
 

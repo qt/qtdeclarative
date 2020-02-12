@@ -15,15 +15,14 @@ qt_add_benchmark(tst_qevents
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
     INCLUDE_DIRECTORIES
         ../../../auto/shared
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::GuiPrivate
-        Qt::QmlPrivate
-        Qt::QuickPrivate
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Qml
+        Qt::QmlPrivate
         Qt::Quick
+        Qt::QuickPrivate
         Qt::Test
 )
 

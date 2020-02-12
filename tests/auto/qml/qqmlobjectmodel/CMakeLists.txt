@@ -7,14 +7,12 @@
 qt_add_test(tst_qqmlobjectmodel
     SOURCES
         tst_qqmlobjectmodel.cpp
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::QmlModelsPrivate
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
         Qt::Qml
-        Qt::QmlModels
+        Qt::QmlModelsPrivate
+        Qt::QmlPrivate
 )
 
 ## Scopes:

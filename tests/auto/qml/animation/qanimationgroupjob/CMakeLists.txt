@@ -7,11 +7,9 @@
 qt_add_test(tst_qanimationgroupjob
     SOURCES
         tst_qanimationgroupjob.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Qml
 )
 
 ## Scopes:

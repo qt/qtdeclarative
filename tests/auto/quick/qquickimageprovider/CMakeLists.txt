@@ -7,16 +7,13 @@
 qt_add_test(tst_qquickimageprovider
     SOURCES
         tst_qquickimageprovider.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
+        Qt::Network
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Network
-        Qt::Qml
-        Qt::Quick
 )
 
 ## Scopes:

@@ -7,12 +7,10 @@
 qt_add_test(tst_qmldiskcache
     SOURCES
         tst_qmldiskcache.cpp
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
-        Qt::Qml
+        Qt::QmlPrivate
 )
 
 # special case begin

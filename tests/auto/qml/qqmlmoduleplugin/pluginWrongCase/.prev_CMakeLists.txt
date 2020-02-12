@@ -9,14 +9,12 @@ qt_add_cmake_library(Plugin
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/WrongCase"
     SOURCES
         plugin.cpp
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::GuiPrivate
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
         Qt::Core
-        Qt::Gui
+        Qt::CorePrivate
+        Qt::GuiPrivate
         Qt::Qml
+        Qt::QmlPrivate
 )
 
 #### Keys ignored in scope 1:.:.:pluginWrongCase.pro:<TRUE>:

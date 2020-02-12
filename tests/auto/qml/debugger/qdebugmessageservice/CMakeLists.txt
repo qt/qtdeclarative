@@ -19,14 +19,12 @@ qt_add_test(tst_qdebugmessageservice
     INCLUDE_DIRECTORIES
         ../../../shared
         ../shared
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::GuiPrivate
-        Qt::QmlDebugPrivate
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Network
-        Qt::QmlDebug
+        Qt::QmlDebugPrivate
     TESTDATA ${test_data}
 )
 

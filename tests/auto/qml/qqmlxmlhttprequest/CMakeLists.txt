@@ -17,14 +17,12 @@ qt_add_test(tst_qqmlxmlhttprequest
         tst_qqmlxmlhttprequest.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::GuiPrivate
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Network
-        Qt::Qml
+        Qt::QmlPrivate
     TESTDATA ${test_data}
 )
 

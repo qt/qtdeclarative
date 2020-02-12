@@ -17,17 +17,14 @@ qt_add_test(tst_qquickpixmapcache
         tst_qquickpixmapcache.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::GuiPrivate
-        Qt::QmlPrivate
-        Qt::QuickPrivate
     PUBLIC_LIBRARIES
         Qt::Concurrent
+        Qt::CorePrivate
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Network
-        Qt::Qml
-        Qt::Quick
+        Qt::QmlPrivate
+        Qt::QuickPrivate
     TESTDATA ${test_data}
 )
 

@@ -7,12 +7,10 @@
 qt_add_test(tst_v4misc
     SOURCES
         tst_v4misc.cpp
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
-        Qt::Qml
+        Qt::QmlPrivate
 )
 
 ## Scopes:

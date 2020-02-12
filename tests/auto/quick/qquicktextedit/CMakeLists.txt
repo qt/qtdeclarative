@@ -22,17 +22,13 @@ qt_add_test(tst_qquicktextedit
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::NetworkPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Network
-        Qt::Qml
-        Qt::Quick
     TESTDATA ${test_data}
 )
 

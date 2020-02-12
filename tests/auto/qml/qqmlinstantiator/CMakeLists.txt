@@ -17,15 +17,12 @@ qt_add_test(tst_qqmlinstantiator
         tst_qqmlinstantiator.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlModelsPrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
-        Qt::QmlModels
     TESTDATA ${test_data}
 )
 

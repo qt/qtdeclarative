@@ -7,15 +7,14 @@
 qt_add_test(tst_qquicktimeline
     SOURCES
         tst_qquicktimeline.cpp
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::GuiPrivate
-        Qt::QmlPrivate
-        Qt::QuickPrivate
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Qml
+        Qt::QmlPrivate
         Qt::Quick
+        Qt::QuickPrivate
 )
 
 ## Scopes:

@@ -13,13 +13,11 @@ list(APPEND test_data ${test_data_glob})
 qt_add_test(tst_parserstress
     SOURCES
         tst_parserstress.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
     TESTDATA ${test_data}
 )
 

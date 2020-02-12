@@ -16,17 +16,13 @@ qt_add_test(tst_qquickimageparticle
         tst_qquickimageparticle.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickParticlesPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
-        Qt::QuickParticles
     TESTDATA ${test_data}
 )
 

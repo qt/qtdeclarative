@@ -10,11 +10,10 @@ qt_add_test(tst_qqmlenginecleanup
         tst_qqmlenginecleanup.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Qml
+        Qt::QmlPrivate
 )
 
 ## Scopes:

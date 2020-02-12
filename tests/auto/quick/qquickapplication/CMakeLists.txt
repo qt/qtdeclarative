@@ -16,15 +16,14 @@ qt_add_test(tst_qquickapplication
         tst_qquickapplication.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::GuiPrivate
-        Qt::QmlPrivate
-        Qt::QuickPrivate
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Qml
+        Qt::QmlPrivate
         Qt::Quick
+        Qt::QuickPrivate
     TESTDATA ${test_data}
 )
 

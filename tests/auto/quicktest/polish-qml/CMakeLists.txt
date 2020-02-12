@@ -17,11 +17,10 @@ qt_add_test(tst_polish-qml
         tst_polish-qml.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
-        Qt::QuickPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Quick
+        Qt::QuickPrivate
     TESTDATA ${test_data}
 )
 

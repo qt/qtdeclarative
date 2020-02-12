@@ -16,15 +16,12 @@ qt_add_test(tst_qquickworkerscript
         tst_qquickworkerscript.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QmlWorkerScriptPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
-        Qt::QmlWorkerScript
     TESTDATA ${test_data}
 )
 

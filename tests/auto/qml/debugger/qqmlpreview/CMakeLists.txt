@@ -24,12 +24,10 @@ qt_add_test(tst_qqmlpreview
         ../../../../../src/plugins/qmltooling/qmldbg_preview
         ../../../shared
         ../shared
-    LIBRARIES
-        Qt::QmlDebugPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Qml
-        Qt::QmlDebug
+        Qt::QmlDebugPrivate
     TESTDATA ${test_data}
 )
 

@@ -15,13 +15,10 @@ qt_add_test(tst_qqmlenginedebugservice
     INCLUDE_DIRECTORIES
         ../../../shared
         ../shared
-    LIBRARIES
-        Qt::QmlDebugPrivate
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
-        Qt::Qml
-        Qt::QmlDebug
+        Qt::QmlDebugPrivate
+        Qt::QmlPrivate
         Qt::Quick
 )
 

@@ -7,15 +7,13 @@
 qt_add_test(tst_nokeywords
     SOURCES
         tst_nokeywords.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
-        Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
         Qt::Quick
+        Qt::QuickPrivate
 )
 
 ## Scopes:

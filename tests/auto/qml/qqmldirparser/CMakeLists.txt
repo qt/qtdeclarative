@@ -16,11 +16,10 @@ qt_add_test(tst_qqmldirparser
         tst_qqmldirparser.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Qml
+        Qt::QmlPrivate
     TESTDATA ${test_data}
 )
 

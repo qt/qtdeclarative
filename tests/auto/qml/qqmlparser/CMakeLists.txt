@@ -18,11 +18,9 @@ qt_add_test(tst_qqmlparser
         SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
-        Qt::Qml
+        Qt::QmlPrivate
     TESTDATA ${test_data}
 )
 

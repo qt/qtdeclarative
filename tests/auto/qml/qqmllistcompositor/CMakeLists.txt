@@ -7,17 +7,13 @@
 qt_add_test(tst_qqmllistcompositor
     SOURCES
         tst_qqmllistcompositor.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlModelsPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
-        Qt::QmlModels
-        Qt::Quick
 )
 
 ## Scopes:

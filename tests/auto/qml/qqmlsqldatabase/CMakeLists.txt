@@ -16,15 +16,12 @@ qt_add_test(tst_qqmlsqldatabase
         tst_qqmlsqldatabase.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
         Qt::Sql
     TESTDATA ${test_data}
 )

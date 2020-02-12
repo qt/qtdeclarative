@@ -15,13 +15,11 @@ qt_add_test(tst_qquicklayouts
     QMLTEST
     SOURCES
         tst_qquicklayouts.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
     TESTDATA ${test_data}
 )
 

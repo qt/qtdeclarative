@@ -7,12 +7,11 @@
 qt_add_test(tst_qjsvalue
     SOURCES
         tst_qjsvalue.cpp tst_qjsvalue.h
-    LIBRARIES
-        Qt::GuiPrivate
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Qml
+        Qt::QmlPrivate
         Qt::Widgets
 )
 

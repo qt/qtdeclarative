@@ -7,15 +7,12 @@
 qt_add_test(tst_qquickanimators
     SOURCES
         tst_qquickanimators.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
 )
 
 ## Scopes:

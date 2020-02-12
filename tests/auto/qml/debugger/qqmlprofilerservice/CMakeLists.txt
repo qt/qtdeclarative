@@ -19,12 +19,10 @@ qt_add_test(tst_qqmlprofilerservice
     INCLUDE_DIRECTORIES
         ../../../shared
         ../shared
-    LIBRARIES
-        Qt::GuiPrivate
-        Qt::QmlDebugPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
-        Qt::QmlDebug
+        Qt::GuiPrivate
+        Qt::QmlDebugPrivate
     TESTDATA ${test_data}
 )
 

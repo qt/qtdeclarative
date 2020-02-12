@@ -16,10 +16,9 @@ qt_add_test(tst_qqmlconsole
         tst_qqmlconsole.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
-        Qt::GuiPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Qml
     TESTDATA ${test_data}
 )

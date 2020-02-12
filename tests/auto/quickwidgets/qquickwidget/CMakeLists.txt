@@ -16,19 +16,15 @@ qt_add_test(tst_qquickwidget
         tst_qquickwidget.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
+        Qt::QuickWidgets
         Qt::QuickWidgetsPrivate
         Qt::WidgetsPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
-        Qt::QuickWidgets
-        Qt::Widgets
     TESTDATA ${test_data}
 )
 

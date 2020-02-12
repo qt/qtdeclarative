@@ -28,11 +28,10 @@ qt_add_test(tst_qqmlimport
         tst_qqmlimport.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Qml
+        Qt::QmlPrivate
         Qt::Quick
     TESTDATA ${test_data}
 )

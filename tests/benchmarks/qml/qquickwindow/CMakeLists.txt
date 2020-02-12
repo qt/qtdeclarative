@@ -9,17 +9,13 @@ qt_add_benchmark(tst_qquickwindow
         tst_qquickwindow.cpp
     DEFINES
         QT_DISABLE_DEPRECATED_BEFORE=0
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::OpenGLPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::OpenGL
-        Qt::Qml
-        Qt::Quick
         Qt::Test
 )
 

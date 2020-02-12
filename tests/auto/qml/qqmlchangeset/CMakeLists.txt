@@ -7,15 +7,12 @@
 qt_add_test(tst_qqmlhangeset
     SOURCES
         tst_qqmlchangeset.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlModelsPrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
-        Qt::QmlModels
 )
 
 ## Scopes:

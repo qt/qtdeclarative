@@ -9,12 +9,11 @@ qt_add_manual_test(pointer
     SOURCES
         inputinspector.cpp inputinspector.h
         main.cpp
-    LIBRARIES
-        Qt::QuickPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::Quick
+        Qt::QuickPrivate
         Qt::Svg
 )
 

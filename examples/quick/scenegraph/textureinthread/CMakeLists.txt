@@ -24,14 +24,11 @@ target_include_directories(textureinthread PUBLIC
     ../shared
 )
 
-target_link_libraries(textureinthread PRIVATE
-    Qt::CorePrivate
-    Qt::GuiPrivate
-)
-
 target_link_libraries(textureinthread PUBLIC
     Qt::Core
+    Qt::CorePrivate
     Qt::Gui
+    Qt::GuiPrivate
     Qt::Quick
 )
 

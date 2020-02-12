@@ -16,13 +16,11 @@ qt_add_test(tst_qqmlcontext
         tst_qqmlcontext.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
     TESTDATA ${test_data}
 )
 

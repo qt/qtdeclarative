@@ -9,10 +9,9 @@ qt_add_test(tst_qwidgetsinqml
         tst_qwidgetsinqml.cpp
     DEFINES
         QT_DISABLE_DEPRECATED_BEFORE=0
-    LIBRARIES
-        Qt::GuiPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Qml
         Qt::Widgets
 )

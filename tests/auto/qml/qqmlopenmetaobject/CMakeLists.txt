@@ -7,13 +7,11 @@
 qt_add_test(tst_qqmlopenmetaobject
     SOURCES
         tst_qqmlopenmetaobject.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
 )
 
 ## Scopes:

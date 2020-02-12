@@ -10,15 +10,12 @@ qt_add_benchmark(tst_script
     DEFINES
         QT_DISABLE_DEPRECATED_BEFORE=0
         SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
         Qt::Test
 )
 

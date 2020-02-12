@@ -7,15 +7,12 @@
 qt_add_test(tst_qqmltimer
     SOURCES
         tst_qqmltimer.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
 )
 
 ## Scopes:

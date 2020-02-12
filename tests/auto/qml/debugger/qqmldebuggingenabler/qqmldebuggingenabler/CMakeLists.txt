@@ -13,14 +13,12 @@ qt_add_test(tst_qqmldebuggingenabler
     INCLUDE_DIRECTORIES
         ../../../../shared
         ../../shared
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::GuiPrivate
-        Qt::QmlDebugPrivate
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Qml
-        Qt::QmlDebug
+        Qt::QmlDebugPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qqmldebuggingenabler.pro:<TRUE>:

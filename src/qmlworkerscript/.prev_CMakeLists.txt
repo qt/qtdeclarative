@@ -108,7 +108,7 @@ set_target_properties(QmlWorkerScript PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
     QT_QML_MODULE_VERSION 2.15
     QT_QML_MODULE_URI QtQml.WorkerScript
-    QT_QML_MODULE_INSTALL_DIR "${Qt6_DIR}/../../../qml/QtQml/WorkerScript"
+    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQml/WorkerScript"
 )
 
 qt6_qml_type_registration(QmlWorkerScript)

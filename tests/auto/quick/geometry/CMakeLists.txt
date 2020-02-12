@@ -7,15 +7,12 @@
 qt_add_test(tst_geometry
     SOURCES
         tst_geometry.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
 )
 
 ## Scopes:

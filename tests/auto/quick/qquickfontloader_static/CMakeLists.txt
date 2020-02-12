@@ -18,16 +18,13 @@ qt_add_test(tst_qquickfontloader_static
         QT_DISABLE_DEPRECATED_BEFORE=0
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
+        Qt::Network
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Network
-        Qt::Qml
-        Qt::Quick
     TESTDATA ${test_data}
 )
 

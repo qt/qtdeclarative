@@ -7,13 +7,10 @@
 qt_add_test(tst_qpauseanimationjob
     SOURCES
         tst_qpauseanimationjob.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
 )
 
 ## Scopes:

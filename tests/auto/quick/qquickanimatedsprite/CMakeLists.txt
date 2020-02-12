@@ -16,16 +16,13 @@ qt_add_test(tst_qquickanimatedsprite
         tst_qquickanimatedsprite.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
+        Qt::Network
         Qt::QmlPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Network
-        Qt::Qml
-        Qt::Quick
         Qt::QuickTest
     TESTDATA ${test_data}
 )

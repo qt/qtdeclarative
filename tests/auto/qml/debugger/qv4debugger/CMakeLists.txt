@@ -12,14 +12,12 @@ qt_add_test(tst_qv4debugger
         tst_qv4debugger.cpp
     INCLUDE_DIRECTORIES
         ../../../../../src/plugins/qmltooling/qmldbg_debugger
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::GuiPrivate
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Network
-        Qt::Qml
+        Qt::QmlPrivate
 )
 
 ## Scopes:

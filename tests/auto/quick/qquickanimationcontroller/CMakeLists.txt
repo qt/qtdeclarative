@@ -15,13 +15,11 @@ qt_add_test(tst_qquickanimationcontroller
     QMLTEST
     SOURCES
         tst_qquickanimationcontroller.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
     TESTDATA ${test_data}
 )
 

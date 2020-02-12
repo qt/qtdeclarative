@@ -9,12 +9,11 @@ qt_add_benchmark(tst_compilation
         tst_compilation.cpp
     DEFINES
         SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
         Qt::Qml
+        Qt::QmlPrivate
         Qt::Test
 )
 

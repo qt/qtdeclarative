@@ -9,12 +9,10 @@ qt_add_benchmark(tst_qqmlchangeset
         tst_qqmlchangeset.cpp
     DEFINES
         QT_DISABLE_DEPRECATED_BEFORE=0
-    LIBRARIES
-        Qt::QuickPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Qml
-        Qt::Quick
+        Qt::QuickPrivate
         Qt::Test
 )
 

@@ -12,11 +12,9 @@ qt_add_tool(qjstest
         QT_DEPRECATED_WARNINGS
     INCLUDE_DIRECTORIES
         .
-    LIBRARIES
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
-        Qt::Qml
+        Qt::QmlPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qjstest.pro:<TRUE>:

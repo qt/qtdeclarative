@@ -612,7 +612,7 @@ set_target_properties(Quick PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
     QT_QML_MODULE_VERSION 2.15
     QT_QML_MODULE_URI QtQuick
-    QT_QML_MODULE_INSTALL_DIR "${Qt6_DIR}/../../../qml/QtQuick"
+    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick"
 )
 
 qt6_qml_type_registration(Quick)

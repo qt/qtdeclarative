@@ -16,12 +16,10 @@ qt_add_test(tst_qmlcachegen
         tst_qmlcachegen.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
-        Qt::Qml
+        Qt::QmlPrivate
     TESTDATA ${test_data}
 )
 

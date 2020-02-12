@@ -8,11 +8,9 @@ qt_add_executable(tst_compile
     GUI
     SOURCES
         tst_compile.cpp
-    LIBRARIES
-        Qt::QmlDevToolsPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
-        Qt::QmlDevTools
+        Qt::QmlDevToolsPrivate
 )
 
 #### Keys ignored in scope 1:.:.:compile.pro:<TRUE>:
@@ -22,10 +20,8 @@ qt_add_executable(tst_compile
 #####################################################################
 
 qt_extend_target(tst_compile CONDITION force_bootstrap
-    LIBRARIES
-        Qt::BootstrapPrivate
     PUBLIC_LIBRARIES
-        Qt::Bootstrap
+        Qt::BootstrapPrivate
 )
 
 qt_extend_target(tst_compile CONDITION NOT force_bootstrap

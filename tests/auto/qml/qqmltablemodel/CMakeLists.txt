@@ -16,13 +16,12 @@ qt_add_test(tst_qqmltablemodel
         tst_qqmltablemodel.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
-        Qt::QmlPrivate
-        Qt::QuickPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Qml
+        Qt::QmlPrivate
         Qt::Quick
+        Qt::QuickPrivate
     TESTDATA ${test_data}
 )
 

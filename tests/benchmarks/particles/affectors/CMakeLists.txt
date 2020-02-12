@@ -9,11 +9,9 @@ qt_add_benchmark(tst_affectors
         tst_affectors.cpp
     DEFINES
         SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
-    LIBRARIES
-        Qt::QuickParticlesPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
-        Qt::QuickParticles
+        Qt::QuickParticlesPrivate
         Qt::Test
 )
 

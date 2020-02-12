@@ -16,15 +16,12 @@ qt_add_test(tst_qqmldebuglocal
     INCLUDE_DIRECTORIES
         ../../../shared
         ../shared
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlDebugPrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
-        Qt::QmlDebug
 )
 
 ## Scopes:

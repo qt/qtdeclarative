@@ -16,11 +16,9 @@ qt_add_test(tst_qv4assembler
         tst_qv4assembler.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
-        Qt::QmlPrivate
     PUBLIC_LIBRARIES
         Qt::Gui
-        Qt::Qml
+        Qt::QmlPrivate
     TESTDATA ${test_data}
 )
 

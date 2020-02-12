@@ -74,7 +74,7 @@ set_target_properties(QuickShapes PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
     QT_QML_MODULE_VERSION 1.15
     QT_QML_MODULE_URI QtQuick.Shapes
-    QT_QML_MODULE_INSTALL_DIR "${Qt6_DIR}/../../../qml/QtQuick/Shapes"
+    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick/Shapes"
 )
 
 qt6_qml_type_registration(QuickShapes)
