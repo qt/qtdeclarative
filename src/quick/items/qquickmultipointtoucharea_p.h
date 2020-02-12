@@ -97,10 +97,8 @@ public:
     void setUniqueId(const QPointingDeviceUniqueId &id);
 
     qreal x() const { return _x; }
-    void setX(qreal x);
-
     qreal y() const { return _y; }
-    void setY(qreal y);
+    void setPosition(QPointF pos);
 
     QSizeF ellipseDiameters() const { return _ellipseDiameters; }
     void setEllipseDiameters(const QSizeF &d);
