@@ -2419,7 +2419,7 @@ void QQuickItemView::destroyingItem(QObject *object)
     Q_D(QQuickItemView);
     QQuickItem* item = qmlobject_cast<QQuickItem*>(object);
     if (item) {
-        item->setParentItem(nullptr);
+        QQuickItemPrivate::get(item)->setCulled(true);
         d->unrequestedItems.remove(item);
     }
 }
