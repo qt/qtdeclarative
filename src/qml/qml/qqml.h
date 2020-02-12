@@ -415,9 +415,8 @@ int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
 }
 
-
 template<typename T, typename E>
-int qmlRegisterExtendedType()
+int qmlRegisterExtendedType(const char *uri, int versionMajor)
 {
     QML_GETTYPENAMES
 
@@ -430,7 +429,7 @@ int qmlRegisterExtendedType()
         nullptr,
         QString(),
 
-        nullptr, 0, 0, nullptr, &T::staticMetaObject,
+        uri, versionMajor, 0, nullptr, &T::staticMetaObject,
 
         QQmlPrivate::attachedPropertiesFunc<T>(),
         QQmlPrivate::attachedPropertiesMetaObject<T>(),
@@ -447,6 +446,15 @@ int qmlRegisterExtendedType()
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
 }
+
+#if QT_DEPRECATED_SINCE(5, 15)
+template<typename T, typename E>
+QT_DEPRECATED_VERSION_X_5_15("Use qmlRegisterExtendedType(uri, versionMajor) instead")
+int qmlRegisterExtendedType()
+{
+    return qmlRegisterExtendedType<T, E>("", 0);
+}
+#endif
 
 template<typename T, typename E>
 int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor,
