@@ -26,6 +26,273 @@
 ****************************************************************************/
 
 /*!
+  \macro QML_ELEMENT
+  \related QQmlEngine
+
+  Declares the enclosing type or namespace to be available in QML, using its
+  class or namespace name as the QML element name.
+
+  For example, this makes the C++ class \c Slider available as a QML type
+  named \c Slider.
+
+  \code
+  class Slider : public QObject
+  {
+      Q_OBJECT
+      QML_ELEMENT
+      ...
+  }
+  \endcode
+
+  You can use the build system to register the type in the type namespace
+  "com.mycompany.qmlcomponents" with major version \c 1 by specifying the
+  following in your project file:
+
+  \code
+  CONFIG += qmltypes
+  QML_IMPORT_NAME = com.mycompany.qmlcomponents
+  QML_IMPORT_MAJOR_VERSION = 1
+  \endcode
+
+  Once registered, the type can be used in QML by importing the
+  same type namespace and version number:
+
+  \qml
+  import com.mycompany.qmlcomponents 1.0
+
+  Slider {
+      // ...
+  }
+  \endqml
+
+  You can also make namespaces tagged with Q_NAMESPACE available this way, in
+  order to expose any enums tagged with Q_ENUM_NS they contain.
+
+  \sa {Choosing the Correct Integration Method Between C++ and QML}, QML_NAMED_ELEMENT(),
+      Q_REVISION(), QML_ADDED_IN_MINOR_VERSION()
+*/
+
+/*!
+  \macro QML_NAMED_ELEMENT(name)
+  \related QQmlEngine
+
+  Declares the enclosing type or namespace to be available in QML, using \a name
+  as the element name. Otherwise behaves the same as QML_ELEMENT.
+
+  \sa {Choosing the Correct Integration Method Between C++ and QML}, QML_ELEMENT
+*/
+
+/*!
+  \macro QML_ANONYMOUS
+  \relates QQmlEngine
+
+  Declares the enclosing type to be available, but anonymous in QML. The type
+  cannot be created or used as property type, but when passed from C++, it is
+  recognized.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_UNCREATABLE(), QML_INTERFACE
+*/
+
+/*!
+  \macro QML_INTERFACE
+  \relates QQmlEngine
+
+  This macro registers the enclosing C++ type in the QML system as an interface.
+
+  Types registered as an interface in QML should also declare themselves as an
+  interface with the \l {The Meta-Object System}{meta object system}. For
+  example:
+
+  \code
+  struct FooInterface
+  {
+      QML_INTERFACE
+  public:
+      virtual ~FooInterface();
+      virtual void doSomething() = 0;
+  };
+
+  Q_DECLARE_INTERFACE(FooInterface, "org.foo.FooInterface")
+  \endcode
+
+  When registered with QML in this way, they can be used as property types:
+
+  Q_PROPERTY(FooInterface *foo READ foo WRITE setFoo)
+
+  When you assign a \l QObject sub-class to this property, the QML engine does
+  the interface cast to \c FooInterface* automatically.
+
+  Interface types are implicitly anonymous and uncreatable in QML.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_UNCREATABLE(), QML_ANONYMOUS
+*/
+
+/*!
+  \macro QML_UNCREATABLE(reason)
+  \relates QQmlEngine
+
+  Declares that the enclosing type shall not be creatable from QML. This takes
+  effect if the type is available in QML, by having a \l QML_ELEMENT or
+  \l QML_NAMED_ELEMENT() macro. The \a reason will be emitted as error message if an
+  attempt to create the type from QML is detected.
+
+  Some QML types are implicitly uncreatable, in particular types exposed with
+  \l QML_ANONYMOUS or namespaces exposed with \l QML_ELEMENT or
+  \l QML_NAMED_ELEMENT(). For such types, \l QML_UNCREATABLE() can be used to
+  provide a custom error message.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_ANONYMOUS
+*/
+
+/*!
+  \macro QML_SINGLETON
+  \relates QQmlEngine
+
+  Declares the enclosing type to be a singleton in QML. This only takes effect
+  if the type is available in QML, by having a \l QML_ELEMENT or
+  \l QML_NAMED_ELEMENT() macro. By default, each QQmlEngine will try to create a
+  singleton instance using the type's default constructor when the type is first
+  accessed. If there is no default constructor the singleton is initially
+  inaccessible. This behavior can be overridden by calling
+  \l qmlRegisterSingletonType() with a specific factory function or
+  \l qmlRegisterSingletonInstance() with a specific instance for the same class
+  and the same type namespace and version.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), qmlRegisterSingletonInstance().
+*/
+
+/*!
+  \macro QML_ADDED_IN_MINOR_VERSION(VERSION)
+  \relates QQmlEngine
+
+  Declares that the enclosing type or namespace was added in the specified minor
+  \a VERSION, relative to the module major version. The minor version is assumed
+  to be in line with any revisions given by \l Q_REVISION() macros on methods,
+  slots, or signals, and any REVISION tags on properties declared with
+  \l Q_PROPERTY().
+
+  \l QML_ADDED_IN_MINOR_VERSION() only takes effect if the type or namespace is
+  available in QML, by having a \l QML_ELEMENT, \l QML_NAMED_ELEMENT(),
+  \l QML_ANONYMOUS, or \l QML_INTERFACE macro.
+
+  If the QML module the type belongs to is imported with a lower version than
+  the one determined this way, the QML type is invisible.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT()
+*/
+
+/*!
+  \macro QML_REMOVED_IN_MINOR_VERSION(VERSION)
+  \relates QQmlEngine
+
+  Declares that the enclosing type or namespace was removed in the specified
+  minor \a VERSION, relative to the module major version. This is primarily
+  useful when replacing the implementation of a QML type. If a corresponding
+  \l QML_ADDED_IN_MINOR_VERSION() is present on a different type or namespace of
+  the same QML name, then the removed type is used when importing versions of
+  the module lower than \a VERSION, and the added type is used when importing
+  versions of the module greater or equal \a VERSION.
+
+  \l QML_REMOVED_IN_MINOR_VERSION() only takes effect if type or namespace is
+  available in QML, by having a \l QML_ELEMENT, \l QML_NAMED_ELEMENT(),
+  \l QML_ANONYMOUS, or \l QML_INTERFACE macro.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT()
+*/
+
+/*!
+  \macro QML_ATTACHED(ATTACHED_TYPE)
+  \relates QQmlEngine
+
+  Declares that the enclosing type attaches \a ATTACHED_TYPE as an
+  \l {Attached Properties and Attached Signal Handlers}
+  {attached property} to other types. This takes effect if the type
+  is exposed to QML using a \l QML_ELEMENT or \l QML_NAMED_ELEMENT() macro.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), qmlAtachedPropertiesObject(),
+      {Providing Attached Properties}
+*/
+
+/*!
+  \macro QML_EXTENDED(EXTENDED_TYPE)
+  \relates QQmlEngine
+
+  Declares that the enclosing type uses \a EXTENDED_TYPE as an extension to
+  provide further properties and methods in QML. This takes effect if the type
+  is exposed to QML using a \l QML_ELEMENT or \l QML_NAMED_ELEMENT() macro.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), {Registering Extension Objects}
+*/
+
+/*!
+  \macro QML_FOREIGN(FOREIGN_TYPE)
+  \relates QQmlEngine
+
+  Declares that any \l QML_ELEMENT, \l QML_NAMED_ELEMENT(), \l QML_ANONYMOUS,
+  \l QML_INTERFACE, \l QML_UNCREATABLE(), \l QML_SINGLETON,
+  \l QML_ADDED_IN_MINOR_VERSION(), \l QML_REMOVED_IN_MINOR_VERSION(),
+  \l QML_ATTACHED(), or \l QML_EXTENDED() macros in the enclosing C++ type do
+  not apply to the enclosing type but instead to \a FOREIGN_TYPE. The enclosing
+  type still needs to be registered with the
+  \l {The Meta-Object System}{meta object system} using a \l G_GADGET or
+  \l Q_OBJECT macro.
+
+  This is useful for registering types that cannot be amended to add the macros,
+  for example because they belong to 3rdparty libraries.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT()
+*/
+
+/*!
+  \macro QML_UNAVAILABLE
+  \relates QQmlEngine
+
+  This macro declares the enclosing type to be unavailable in QML. It registers
+  an internal dummy type called \c QQmlTypeNotAvailable as \l QML_FOREIGN()
+  type, using any further QML macros you specify.
+
+  Normally, the types exported by a module should be fixed. However, if a C++
+  type is not available, you should at least "reserve" the QML type name, and
+  give the user of the unavailable type a meaningful error message.
+
+  Example:
+
+  \code
+  #ifdef NO_GAMES_ALLOWED
+  struct MinehuntGame
+  {
+      Q_GADGET
+      QML_NAMED_ELEMENT(Game)
+      QML_UNAVAILABLE
+      QML_UNCREATABLE("Get back to work, slacker!");
+  };
+  #else
+  class MinehuntGame : public QObject
+  {
+      Q_OBJECT
+      QML_NAMED_ELEMENT(Game)
+      // ...
+  };
+  #endif
+  \endcode
+
+  This will cause any QML which attempts to use the "Game" type to produce an
+  error message:
+  \code
+  fun.qml: Get back to work, slacker!
+     Game {
+     ^
+  \endcode
+
+  Using this technique, you only need a \l G_GADGET struct to customize the error
+  message, not a full-blown \l QObject. Without \l QML_UNCREATABLE(),
+  \l QML_UNAVAILABLE still results in a more specific error message than the usual
+  "is not a type" for completely unknown types.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_UNCREATABLE(), QML_FOREIGN()
+*/
+
+/*!
   \macro QML_DECLARE_TYPE()
   \relates QQmlEngine
 
@@ -41,7 +308,8 @@
 
   Current the only supported type info is \c QML_HAS_ATTACHED_PROPERTIES which
   declares that the \a Type supports \l {Attached Properties and Attached Signal Handlers}
-  {attached properties}.
+  {attached properties}. QML_DECLARE_TYPEINFO() is not necessary if \a Type contains the
+  QML_ATTACHED macro.
 */
 
 /*!
@@ -106,7 +374,8 @@
   QML written to previous versions to continue to work, even if more advanced versions of
   some of its types are available.
 
-  \sa {Choosing the Correct Integration Method Between C++ and QML}
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(),
+      {Choosing the Correct Integration Method Between C++ and QML}
 */
 
 /*!
@@ -143,7 +412,7 @@
 
   Returns the QML type id.
 
-  \sa qmlRegisterTypeNotAvailable(),
+  \sa QML_UNCREATABLE(), qmlRegisterTypeNotAvailable(),
       {Choosing the Correct Integration Method Between C++ and QML}
 */
 
@@ -158,7 +427,7 @@
 
   Returns the QML type id.
 
-  \sa qmlRegisterType(), {Registering Extension Objects}
+  \sa QML_EXTENDED(), qmlRegisterType(), {Registering Extension Objects}
 */
 
 
@@ -180,7 +449,7 @@
 
   Returns the QML type id.
 
-  \sa qmlRegisterUncreatableType()
+  \sa QML_EXTENDED(), QML_UNCREATABLE(), qmlRegisterUncreatableType()
 */
 
 /*!
@@ -220,6 +489,8 @@
   \code
   Component.onCompleted: console.log(MyNamespace.Key2)
   \endcode
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_UNCREATABLE()
 */
 
 /*!
@@ -235,6 +506,8 @@
   the \a parser provided.
 
   Returns the QML type id.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_EXTENDED()
 */
 
 /*!
@@ -269,7 +542,7 @@
 
   Without this, a generic "Game is not a type" message would be given.
 
-  \sa qmlRegisterUncreatableType(),
+  \sa QML_UNAVAILABLE, qmlRegisterUncreatableType(),
       {Choosing the Correct Integration Method Between C++ and QML}
 */
 
@@ -353,7 +626,7 @@
   Returns the QML type id.
 
   \since 5.14
-  \sa {Choosing the Correct Integration Method Between C++ and QML}
+  \sa QML_ANONYMOUS, {Choosing the Correct Integration Method Between C++ and QML}
 */
 
 /*!
@@ -397,6 +670,8 @@
     the interface cast to \c FooInterface* automatically.
 
     Returns the QML type id.
+
+    \sa QML_INTERFACE
 */
 
 /*!
@@ -455,7 +730,7 @@
    }
    \endqml
 
-   \sa {Choosing the Correct Integration Method Between C++ and QML}
+   \sa QML_SINGLETON, {Choosing the Correct Integration Method Between C++ and QML}
 */
 
 /*!
@@ -477,8 +752,7 @@
     Returns 0 if type \e T is not a valid attaching type, or if \a create is false and no
     attachment object instance has previously been created for \a attachee.
 
-    \sa {Providing Attached Properties}
-
+    \sa QML_ATTACHED(), {Providing Attached Properties}
 */
 
 /*!
@@ -571,7 +845,7 @@
    }
    \endqml
 
-   \sa {Choosing the Correct Integration Method Between C++ and QML}
+   \sa QML_SINGLETON, {Choosing the Correct Integration Method Between C++ and QML}
 */
 
 
@@ -626,6 +900,8 @@
    That can be done by adding a pragma Singleton statement among the imports of the type's QML file. In addition
    the type must be defined in a qmldir file with a singleton keyword and the qmldir must be imported by the QML
    files using the singleton.
+
+   \sa QML_SINGLETON
 */
 
 /*!
@@ -718,7 +994,7 @@
     }
     \endqml
 
-   \sa qmlRegisterSingletonType
+   \sa QML_SINGLETON, qmlRegisterSingletonType
  */
 
 /*!
@@ -792,5 +1068,5 @@
   Returns -1 if no matching type was found or one of the given parameters
   was invalid.
 
-  \sa qmlRegisterType(), qmlRegisterSingletonType()
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT, QML_SINGLETON, qmlRegisterType(), qmlRegisterSingletonType()
 */

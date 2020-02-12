@@ -154,7 +154,7 @@ var importedEnumValue = JsQtTest.MyQmlObject.EnumValue3
 \endcode
 
 In particular, this may be useful in order to access functionality provided
-via a singleton type; see qmlRegisterSingletonType() for more information.
+via a singleton type; see QML_SINGLETON for more information.
 
 \note The .import syntax doesn't work for scripts used in the \l {WorkerScript}
 */
