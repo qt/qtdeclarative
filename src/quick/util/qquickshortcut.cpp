@@ -80,16 +80,12 @@
 /*! \qmlsignal QtQuick::Shortcut::activated()
 
     This signal is emitted when the shortcut is activated.
-
-    The corresponding handler is \c onActivated.
 */
 
 /*! \qmlsignal QtQuick::Shortcut::activatedAmbiguously()
 
     This signal is emitted when the shortcut is activated ambigously,
     meaning that it matches the start of more than one shortcut.
-
-    The corresponding handler is \c onActivatedAmbiguously.
 */
 
 static bool qQuickShortcutContextMatcher(QObject *obj, Qt::ShortcutContext context)

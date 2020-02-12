@@ -249,9 +249,8 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     execute script code at startup, once the full QML environment has been
     established.
 
-    The corresponding handler is \c onCompleted. It can be declared on
-    any object. The order of running the \c onCompleted handlers is
-    undefined.
+    The \c onCompleted signal handler can be declared on any object. The order
+    of running the handlers is undefined.
 
     \qml
     Rectangle {
@@ -270,9 +269,8 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     work done in response to the \l {completed}{completed()} signal, or other
     imperative code in your application.
 
-    The corresponding handler is \c onDestruction. It can be declared on
-    any object. The order of running the \c onDestruction handlers is
-    undefined.
+    The \c onDestruction signal handler can be declared on any object. The
+    order of running the handlers is undefined.
 
     \qml
     Rectangle {

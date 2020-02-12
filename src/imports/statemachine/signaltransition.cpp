@@ -268,8 +268,6 @@ void SignalTransitionParser::applyBindings(
     \qmlsignal QAbstractTransition::triggered()
 
     This signal is emitted when the transition has been triggered.
-
-    The corresponding handler is \c onTriggered.
 */
 
 /*!

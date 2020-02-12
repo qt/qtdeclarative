@@ -591,8 +591,6 @@ void QQuickFlickablePrivate::updateBeginningEnd()
 
     This signal is emitted when the view starts to be dragged due to user
     interaction.
-
-    The corresponding handler is \c onDragStarted.
 */
 
 /*!
@@ -602,8 +600,6 @@ void QQuickFlickablePrivate::updateBeginningEnd()
 
     If the velocity of the drag is sufficient at the time the
     touch/mouse button is released then a flick will start.
-
-    The corresponding handler is \c onDragEnded.
 */
 
 /*!
@@ -689,8 +685,6 @@ void QQuickFlickablePrivate::updateBeginningEnd()
 
     This signal is emitted when the view begins moving due to user
     interaction or a generated flick().
-
-    The corresponding handler is \c onMovementStarted.
 */
 
 /*!
@@ -701,8 +695,6 @@ void QQuickFlickablePrivate::updateBeginningEnd()
     be emitted once the flick stops.  If a flick was not
     active, this signal will be emitted when the
     user stops dragging - i.e. a mouse or touch release.
-
-    The corresponding handler is \c onMovementEnded.
 */
 
 /*!
@@ -711,16 +703,12 @@ void QQuickFlickablePrivate::updateBeginningEnd()
     This signal is emitted when the view is flicked.  A flick
     starts from the point that the mouse or touch is released,
     while still in motion.
-
-    The corresponding handler is \c onFlickStarted.
 */
 
 /*!
     \qmlsignal QtQuick::Flickable::flickEnded()
 
     This signal is emitted when the view stops moving due to a flick.
-
-    The corresponding handler is \c onFlickEnded.
 */
 
 /*!

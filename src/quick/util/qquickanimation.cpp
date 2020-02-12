@@ -213,8 +213,6 @@ QQmlProperty QQuickAbstractAnimationPrivate::createProperty(QObject *obj, const 
     It is only triggered for top-level, standalone animations. It will not be
     triggered for animations in a Behavior or Transition, or animations
     that are part of an animation group.
-
-    The corresponding handler is \c onStarted.
 */
 
 /*!
@@ -230,8 +228,6 @@ QQmlProperty QQuickAbstractAnimationPrivate::createProperty(QObject *obj, const 
 
     If \l alwaysRunToEnd is true, this signal will not be emitted until the animation
     has completed its current iteration.
-
-    The corresponding handler is \c onStopped.
 */
 
 /*!
@@ -249,8 +245,6 @@ QQmlProperty QQuickAbstractAnimationPrivate::createProperty(QObject *obj, const 
 
     If \l alwaysRunToEnd is true, this signal will not be emitted until the
     animation has completed its current iteration.
-
-    The corresponding handler is \c onFinished.
 
     \sa stopped(), started(), running
 */

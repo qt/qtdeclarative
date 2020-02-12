@@ -313,8 +313,6 @@ void QQmlTimer::componentComplete()
     \qmlsignal QtQml::Timer::triggered()
 
     This signal is emitted when the Timer times out.
-
-    The corresponding handler is \c onTriggered.
 */
 void QQmlTimer::ticked()
 {

@@ -250,8 +250,6 @@ QQmlInstantiator::~QQmlInstantiator()
     This signal is emitted when an object is added to the Instantiator. The \a index
     parameter holds the index which the object has been given, and the \a object
     parameter holds the \l QtObject that has been added.
-
-    The corresponding handler is \c onObjectAdded.
 */
 
 /*!
@@ -263,8 +261,6 @@ QQmlInstantiator::~QQmlInstantiator()
 
     Do not keep a reference to \a object if it was created by this Instantiator, as
     in these cases it will be deleted shortly after the signal is handled.
-
-    The corresponding handler is \c onObjectRemoved.
 */
 /*!
     \qmlproperty bool QtQml::Instantiator::active

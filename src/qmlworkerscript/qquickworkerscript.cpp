@@ -636,8 +636,6 @@ void QQuickWorkerScript::componentComplete()
 
     This signal is emitted when a message \a msg is received from a worker
     script in another thread through a call to sendMessage().
-
-    The corresponding handler is \c onMessage.
 */
 
 bool QQuickWorkerScript::event(QEvent *event)

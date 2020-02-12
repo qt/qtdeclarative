@@ -211,8 +211,6 @@ QQmlListProperty<QObject> StateMachine::children()
     This signal is emitted when the state machine has entered its initial state
     (State::initialState).
 
-    The corresponding handler is \c onStarted.
-
     \sa running, start(), State::finished
 */
 
@@ -229,8 +227,6 @@ QQmlListProperty<QObject> StateMachine::children()
     \qmlsignal StateMachine::stopped()
 
     This signal is emitted when the state machine has stopped.
-
-    The corresponding handler is \c onStopped.
 
     \sa running, stop(), State::finished
 */

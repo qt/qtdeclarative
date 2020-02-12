@@ -744,8 +744,6 @@ void QQuickDragAttached::cancel()
 
     This signal is emitted when a drag is started with the \l startDrag() method
     or when it is started automatically using the \l dragType property.
-
-    The corresponding handler is \c onDragStarted.
  */
 
 /*!
@@ -755,8 +753,6 @@ void QQuickDragAttached::cancel()
     \l startDrag() method or started automatically using the \l dragType property.
 
     \a dropAction holds the action accepted by the target item.
-
-    The corresponding handler is \c onDragFinished.
 
     \sa drop()
  */

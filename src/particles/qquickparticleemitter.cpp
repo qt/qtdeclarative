@@ -196,8 +196,6 @@ QT_BEGIN_NAMESPACE
 
     \note JavaScript is slower to execute, so it is not recommended to use this in
     high-volume particle systems.
-
-    The corresponding handler is \c onEmitParticles.
 */
 
 /*! \qmlmethod QtQuick.Particles::Emitter::burst(int count)

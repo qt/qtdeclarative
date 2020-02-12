@@ -123,7 +123,7 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
 
     This signal is emitted when particles are emitted from the \a followed particle. \a particles contains an array of particle objects which can be directly manipulated.
 
-    The corresponding handler is \c onEmitFollowParticles. If you use this signal handler, emitParticles will not be emitted.
+    If you use this signal handler, emitParticles will not be emitted.
 */
 
 bool QQuickTrailEmitter::isEmitFollowConnected()

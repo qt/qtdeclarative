@@ -126,8 +126,6 @@ QT_BEGIN_NAMESPACE
     signal with a high-volume particle system.
 
     (\a {x}, \a {y}) is the particle's current position.
-
-    The corresponding handler is \c onAffected.
 */
 QQuickParticleAffector::QQuickParticleAffector(QQuickItem *parent) :
     QQuickItem(parent), m_needsReset(false), m_ignoresTime(false), m_onceOff(false), m_enabled(true)

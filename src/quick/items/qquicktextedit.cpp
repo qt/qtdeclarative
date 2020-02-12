@@ -118,8 +118,6 @@ TextEdit {
     This signal is emitted when the user clicks on a link embedded in the text.
     The link must be in rich text or HTML format and the
     \a link string provides access to the particular link.
-
-    The corresponding handler is \c onLinkActivated.
 */
 
 // This is a pretty arbitrary figure. The idea is that we don't want to break down the document
@@ -2903,8 +2901,6 @@ bool QQuickTextEditPrivate::isLinkHoveredConnected()
     The link must be in rich text or HTML format and the
     \a link string provides access to the particular link.
 
-    The corresponding handler is \c onLinkHovered.
-
     \sa hoveredLink, linkAt()
 */
 
@@ -2913,8 +2909,6 @@ bool QQuickTextEditPrivate::isLinkHoveredConnected()
     \since 5.6
 
     This signal is emitted when the text edit loses focus.
-
-    The corresponding handler is \c onEditingFinished.
 */
 
 /*!

@@ -928,8 +928,6 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     \since 5.9
 
     This signal is emitted when positioning has been completed.
-
-    The corresponding handler is \c onPositioningComplete.
 */
 
 QQuickColumn::QQuickColumn(QQuickItem *parent)
@@ -1113,8 +1111,6 @@ void QQuickColumn::reportConflictingAnchors()
     \since 5.9
 
     This signal is emitted when positioning has been completed.
-
-    The corresponding handler is \c onPositioningComplete.
 */
 
 class QQuickRowPrivate : public QQuickBasePositionerPrivate
@@ -1408,8 +1404,6 @@ void QQuickRow::reportConflictingAnchors()
     \since 5.9
 
     This signal is emitted when positioning has been completed.
-
-    The corresponding handler is \c onPositioningComplete.
 */
 
 class QQuickGridPrivate : public QQuickBasePositionerPrivate
@@ -1992,8 +1986,6 @@ void QQuickGrid::reportConflictingAnchors()
     \since 5.9
 
     This signal is emitted when positioning has been completed.
-
-    The corresponding handler is \c onPositioningComplete.
 */
 
 class QQuickFlowPrivate : public QQuickBasePositionerPrivate

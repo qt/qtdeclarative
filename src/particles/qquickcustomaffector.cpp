@@ -57,8 +57,6 @@ QT_BEGIN_NAMESPACE
 
     Note that JavaScript is slower to execute, so it is not recommended to use this in
     high-volume particle systems.
-
-    The corresponding handler is \c onAffectParticles.
 */
 
 /*!

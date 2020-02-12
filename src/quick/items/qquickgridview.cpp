@@ -1298,8 +1298,6 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 /*!
     \qmlattachedsignal QtQuick::GridView::add()
     This attached signal is emitted immediately after an item is added to the view.
-
-    The corresponding handler is \c onAdd.
 */
 
 /*!
@@ -1308,8 +1306,6 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
     If a \l remove transition has been specified, it is applied after
     this signal is handled, providing that \l delayRemove is false.
-
-    The corresponding handler is \c onRemove.
 */
 
 
