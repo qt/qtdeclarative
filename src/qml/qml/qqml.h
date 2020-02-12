@@ -848,6 +848,38 @@ void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor)
 template<>
 inline void qmlRegisterTypesAndRevisions<>(const char *, int) {}
 
+inline void qmlRegisterNamespaceAndRevisions(const QMetaObject *metaObject,
+                                             const char *uri, int versionMajor)
+{
+    QQmlPrivate::RegisterTypeAndRevisions type = {
+        0,
+        0,
+        0,
+        0,
+        nullptr,
+
+        uri,
+        versionMajor,
+
+        metaObject,
+        metaObject,
+
+        nullptr,
+        nullptr,
+
+        -1,
+        -1,
+        -1,
+
+        nullptr,
+        nullptr,
+
+        &qmlCreateCustomParser<void>
+    };
+
+    qmlregister(QQmlPrivate::TypeAndRevisionsRegistration, &type);
+}
+
 int Q_QML_EXPORT qmlTypeId(const char *uri, int versionMajor, int versionMinor, const char *qmlName);
 
 QT_END_NAMESPACE
