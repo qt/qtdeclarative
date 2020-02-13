@@ -122,6 +122,7 @@ public:
     bool autoExclusive = false;
     bool autoRepeat = false;
     bool wasHeld = false;
+    bool wasDoubleClick = false;
     int holdTimer = 0;
     int delayTimer = 0;
     int repeatTimer = 0;
