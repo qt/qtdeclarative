@@ -119,7 +119,7 @@ QPlatformDialogHelper *QQuickPlatformDialog::handle() const
 */
 QQmlListProperty<QObject> QQuickPlatformDialog::data()
 {
-    return QQmlListProperty<QObject>(this, m_data);
+    return QQmlListProperty<QObject>(this, &m_data);
 }
 
 /*!
