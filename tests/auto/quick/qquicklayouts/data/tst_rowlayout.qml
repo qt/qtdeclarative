@@ -1100,5 +1100,36 @@ Item {
             waitForRendering(rootRect.layout)
             compare(rootRect.item1.width, 100)
         }
+
+//---------------------------
+        Component {
+            id: rowlayoutWithTextItems_Component
+            RowLayout {
+                Text {
+                    Layout.fillWidth: true
+                    text: "OneWord"
+                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                }
+                Text {
+                    Layout.fillWidth: true
+                    text: "OneWord"
+                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                }
+            }
+        }
+
+        // QTBUG-73683
+        function test_rowlayoutWithTextItems() {
+            var layout = createTemporaryObject(rowlayoutWithTextItems_Component, container)
+            waitForRendering(layout)
+            for (var i = 0; i < 3; i++) {
+                ignoreWarning(/Qt Quick Layouts: Detected recursive rearrange. Aborting after two iterations./)
+            }
+            ignoreWarning(/Qt Quick Layouts: Polish loop detected. Aborting after two iterations./)
+            layout.width = layout.width - 2     // set the size to be smaller than its "minimum size"
+            waitForRendering(layout)    // do not exit before all warnings have been received
+
+            // DO NOT CRASH due to stack overflow (or loop endlessly due to updatePolish()/polish() loop)
+        }
     }
 }

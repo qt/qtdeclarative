@@ -548,7 +548,7 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
     else
         context->endNextFrame(renderer);
 
-    if (renderer->hasCustomRenderModeWithContinuousUpdate()) {
+    if (renderer && renderer->hasCustomRenderModeWithContinuousUpdate()) {
         // For the overdraw visualizer. This update is not urgent so avoid a
         // direct update() call, this is only here to keep the overdraw
         // visualization box rotating even when the scene is static.

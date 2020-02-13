@@ -123,7 +123,9 @@ protected slots:
     void invalidateSenderItem();
 
 private:
-    bool m_dirty;
+    unsigned m_dirty : 1;
+    unsigned m_inUpdatePolish : 1;
+    unsigned m_polishInsideUpdatePolish : 2;
 
     Q_DECLARE_PRIVATE(QQuickLayout)
 
