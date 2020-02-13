@@ -36,5 +36,9 @@ Item {
     }
     id: root
     property int a: 10
+
+    Item {
+        property int b: 11
+    }
 }
 
