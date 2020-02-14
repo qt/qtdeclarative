@@ -427,11 +427,12 @@ static bool readImage(const QUrl& url, QIODevice *dev, QImage *image, QString *e
         imgio.setScaledSize(scSize);
     if (!requestRegion.isNull())
         imgio.setScaledClipRect(requestRegion);
+    const QSize originalSize = imgio.size();
     qCDebug(lcImg) << url << "frame" << frame << "of" << imgio.imageCount()
-                   << "requestRegion" << requestRegion << "QImageReader size" << imgio.size() << "-> scSize" << scSize;
+                   << "requestRegion" << requestRegion << "QImageReader size" << originalSize << "-> scSize" << scSize;
 
     if (impsize)
-        *impsize = imgio.size();
+        *impsize = originalSize;
 
     if (imgio.read(image)) {
         maybeRemoveAlpha(image);
