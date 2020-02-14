@@ -251,6 +251,8 @@ bool QQuickDragAttached::event(QEvent *event)
         d->eventQueued = false;
         if (d->dragRestarted) {
             d->deliverLeaveEvent();
+            if (!d->mimeData)
+                d->mimeData = new QQuickDragMimeData;
             d->deliverEnterEvent();
 
             if (d->target != d->dragGrabber.target()) {
