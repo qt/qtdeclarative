@@ -1026,8 +1026,11 @@ public:
 
 inline bool operator==(const QQuickPixmapKey &lhs, const QQuickPixmapKey &rhs)
 {
-    return *lhs.region == *rhs.region && *lhs.size == *rhs.size && *lhs.url == *rhs.url &&
-            lhs.options == rhs.options && lhs.frame == rhs.frame;
+    return *lhs.url == *rhs.url &&
+           *lhs.region == *rhs.region &&
+           *lhs.size == *rhs.size &&
+            lhs.frame == rhs.frame &&
+            lhs.options == rhs.options;
 }
 
 inline uint qHash(const QQuickPixmapKey &key)
