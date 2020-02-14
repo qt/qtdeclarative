@@ -8254,6 +8254,10 @@ bool QQuickItem::event(QEvent *ev)
         ev->ignore();
         break;
 #endif // gestures
+    case QEvent::LanguageChange:
+        for (QQuickItem *item : d->childItems)
+            QCoreApplication::sendEvent(item, ev);
+        break;
     default:
         return QObject::event(ev);
     }

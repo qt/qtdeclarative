@@ -1767,6 +1767,10 @@ bool QQuickWindow::event(QEvent *e)
         if (d->activeFocusItem)
             QCoreApplication::sendEvent(d->activeFocusItem, e);
         return true;
+    case QEvent::LanguageChange:
+        if (d->contentItem)
+            QCoreApplication::sendEvent(d->contentItem, e);
+        break;
     default:
         break;
     }
