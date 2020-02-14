@@ -1859,8 +1859,11 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
     static const QStringList suffixes = {
 # ifdef QT_DEBUG
         QLatin1String("d.dll"), // try a qmake-style debug build first
-# endif
         QLatin1String(".dll")
+#else
+        QLatin1String(".dll"),
+        QLatin1String("d.dll") // try a qmake-style debug build after
+# endif
     };
 #elif defined(Q_OS_DARWIN)
     static const QString prefix = QLatin1String("lib");
