@@ -1028,13 +1028,9 @@ inline bool operator==(const QQuickPixmapKey &lhs, const QQuickPixmapKey &rhs)
             lhs.options == rhs.options;
 }
 
-inline size_t qHash(const QQuickPixmapKey &key)
+inline size_t qHash(const QQuickPixmapKey &key, size_t seed) noexcept
 {
-    return qHash(*key.url) ^ (key.size->width()*7) ^ (key.size->height()*17) ^ (key.frame*23) ^
-            (key.region->x()*29) ^ (key.region->y()*31) ^ (key.options.autoTransform() * 0x5c5c5c5c);
-    // key.region.width() and height() are not included, because the hash function should be simple,
-    // and they are more likely to be held constant for some batches of images
-    // (e.g. tiles, or repeatedly cropping to the same viewport at different positions).
+    return qHashMulti(seed, *key.url, *key.region, *key.size, key.frame, key.options.autoTransform());
 }
 
 class QQuickPixmapStore : public QObject
