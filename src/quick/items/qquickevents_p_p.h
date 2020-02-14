@@ -56,12 +56,14 @@
 
 #include <QtCore/qobject.h>
 #include <QtCore/qpointer.h>
-#include <QtGui/qvector2d.h>
 #include <QtGui/qevent.h>
+#include <QtGui/qtouchdevice.h>
+#include <QtGui/qvector2d.h>
+#include <QtQuick/qquickitem.h>
+
 #if QT_CONFIG(shortcut)
 #  include <QtGui/qkeysequence.h>
 #endif
-#include <QtQuick/qquickitem.h>
 
 QT_BEGIN_NAMESPACE
 
