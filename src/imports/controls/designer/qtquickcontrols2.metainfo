@@ -443,7 +443,7 @@ MetaInfo {
             version: "2.0"
             requiredImport: "QtQuick.Controls"
 
-            Property { name: "text"; type: "binding"; value: "qsTr(\"Text Area\")" }
+            Property { name: "placeholderText"; type: "binding"; value: "qsTr(\"Text Area\")" }
         }
     }
 
@@ -458,7 +458,7 @@ MetaInfo {
             version: "2.0"
             requiredImport: "QtQuick.Controls"
 
-            Property { name: "text"; type: "binding"; value: "qsTr(\"Text Field\")" }
+            Property { name: "placeholderText"; type: "binding"; value: "qsTr(\"Text Field\")" }
         }
     }
 

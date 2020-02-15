@@ -53,6 +53,7 @@ class tst_translation : public QQmlDataTest
 
 private slots:
     void dialogButtonBox();
+    void dialogButtonBoxWithCustomButtons();
 };
 
 void tst_translation::dialogButtonBox()
@@ -93,6 +94,45 @@ void tst_translation::dialogButtonBox()
     QString translatedDiscardText = QGuiApplicationPrivate::platformTheme()->standardButtonText(QPlatformDialogHelper::Discard);
     translatedDiscardText = QPlatformTheme::removeMnemonics(translatedDiscardText);
     QCOMPARE(discardButton->text(), translatedDiscardText);
+}
+
+// Test that custom buttons with explicitly specified text
+// do not have that text overwritten on language changes.
+void tst_translation::dialogButtonBoxWithCustomButtons()
+{
+    // This is just a way of simulating the translator going out of scope
+    // after the QML has been loaded.
+    QScopedPointer<QTranslator> translator(new QTranslator);
+    // Doesn't matter which language it is, as we won't be using it anyway.
+    QVERIFY(translator->load(":/i18n/qtbase_fr.qm"));
+    QVERIFY(qApp->installTranslator(translator.data()));
+
+    QQuickView view(testFileUrl("dialogButtonBoxWithCustomButtons.qml"));
+    if (view.status() != QQuickView::Ready)
+        QFAIL("Failed to load QML file");
+    view.show();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+
+    QQuickDialog *dialog = view.rootObject()->property("dialog").value<QQuickDialog*>();
+    QVERIFY(dialog);
+
+    QQuickDialogButtonBox *dialogButtonBox = qobject_cast<QQuickDialogButtonBox*>(dialog->footer());
+    QVERIFY(dialogButtonBox);
+
+    auto okButton = dialogButtonBox->findChild<QQuickAbstractButton*>("okButton");
+    QVERIFY(okButton);
+    QCOMPARE(okButton->text(), QLatin1String("OK"));
+
+    QQuickAbstractButton *cancelButton = dialogButtonBox->findChild<QQuickAbstractButton*>("cancelButton");
+    QVERIFY(cancelButton);
+    QCOMPARE(cancelButton->text(), QLatin1String("Cancel"));
+
+    // Delete the translator and hence cause a LanguageChange event,
+    // but _without_ calling QQmlEngine::retranslate(), which would
+    // restore the original bindings and hence not reproduce the issue.
+    translator.reset();
+    QCOMPARE(okButton->text(), QLatin1String("OK"));
+    QCOMPARE(cancelButton->text(), QLatin1String("Cancel"));
 }
 
 QTEST_MAIN(tst_translation)

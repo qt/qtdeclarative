@@ -128,6 +128,7 @@ static QStringList defaultImportPathList()
     importPaths += QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
 # endif
 #endif
+    importPaths += envPathList("QML2_IMPORT_PATH");
     importPaths += QStringLiteral(":/qt-project.org/imports");
     importPaths += QCoreApplication::applicationDirPath();
     return importPaths;
@@ -384,7 +385,13 @@ void QQuickStylePrivate::init(const QUrl &baseUrl)
     spec->resolve(baseUrl);
 
     if (!spec->fallbackStyle.isEmpty()) {
-        QString fallbackStyle = spec->findStyle(QQmlFile::urlToLocalFileOrQrc(baseUrl), spec->fallbackStyle);
+        QString fallbackStyle;
+        const QStringList stylePaths = QQuickStylePrivate::stylePaths();
+        for (const QString &path : stylePaths) {
+            fallbackStyle = spec->findStyle(path, spec->fallbackStyle);
+            if (!fallbackStyle.isEmpty())
+                break;
+        }
         if (fallbackStyle.isEmpty()) {
             if (spec->fallbackStyle.compare(QStringLiteral("Default")) != 0) {
                 qWarning() << "ERROR: unable to locate fallback style" << spec->fallbackStyle;
