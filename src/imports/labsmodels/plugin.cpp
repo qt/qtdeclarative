@@ -50,6 +50,8 @@
 #include "qqmldelegatecomponent_p.h"
 #endif
 
+extern void qml_register_types_Qt_labs_qmlmodels();
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -74,7 +76,11 @@ class QtQmlLabsModelsPlugin : public QQmlEngineExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 public:
-    QtQmlLabsModelsPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) { }
+    QtQmlLabsModelsPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
+    {
+        volatile auto registration = &qml_register_types_Qt_labs_qmlmodels;
+        Q_UNUSED(registration);
+    }
 };
 //![class decl]
 

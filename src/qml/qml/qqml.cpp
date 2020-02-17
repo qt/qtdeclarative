@@ -46,6 +46,7 @@
 #include <private/qqmlmetatypedata_p.h>
 #include <private/qqmltype_p_p.h>
 #include <private/qqmltypemodule_p_p.h>
+#include <private/qqmltypenotavailable_p.h>
 
 #include <QtCore/qmutex.h>
 
@@ -355,6 +356,42 @@ void QQmlPrivate::qmlunregister(RegistrationType type, quintptr data)
         // each of them.
         Q_UNREACHABLE();
         break;
+    }
+}
+
+namespace QQmlPrivate {
+    template<>
+    void qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
+            const char *uri, int versionMajor, const QMetaObject *classInfoMetaObject)
+    {
+        using T = QQmlTypeNotAvailable;
+
+        QML_GETTYPENAMES
+
+        RegisterTypeAndRevisions type = {
+            0,
+            qRegisterNormalizedMetaType<T *>(pointerName.constData()),
+            qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
+            0,
+            nullptr,
+
+            uri,
+            QTypeRevision::fromMajorVersion(versionMajor),
+
+            &QQmlTypeNotAvailable::staticMetaObject,
+            classInfoMetaObject,
+
+            attachedPropertiesFunc<T>(),
+            attachedPropertiesMetaObject<T>(),
+
+            StaticCastSelector<T, QQmlParserStatus>::cast(),
+            StaticCastSelector<T, QQmlPropertyValueSource>::cast(),
+            StaticCastSelector<T, QQmlPropertyValueInterceptor>::cast(),
+
+            nullptr, nullptr, qmlCreateCustomParser<T>
+        };
+
+        qmlregister(TypeAndRevisionsRegistration, &type);
     }
 }
 

@@ -63,6 +63,6 @@ Rectangle {
     Text { id: text; anchors.centerIn: parent; font.pixelSize: 14 }
     MouseArea {
         anchors.fill: parent
-        onClicked: { active = !active; root.toggled() }
+        onClicked: { root.active = !root.active; root.toggled() }
     }
 }

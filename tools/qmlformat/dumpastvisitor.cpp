@@ -52,6 +52,14 @@ DumpAstVisitor::DumpAstVisitor(Node *rootNode, CommentAstVisitor *comment): m_co
     m_result = lines.join("\n");
 }
 
+bool DumpAstVisitor::preVisit(Node *el)
+{
+    UiObjectMember *m = el->uiObjectMemberCast();
+    if (m != 0)
+        Node::accept(m->annotations, this);
+    return true;
+}
+
 static QString parseUiQualifiedId(UiQualifiedId *id)
 {
     QString name = id->name.toString();
@@ -1246,4 +1254,38 @@ bool DumpAstVisitor::visit(UiPragma *node) {
     addLine(result);
 
     return true;
+}
+
+bool DumpAstVisitor::visit(UiAnnotation *node)
+{
+    if (scope().m_firstObject) {
+        if (scope().m_firstOfAll)
+            scope().m_firstOfAll = false;
+        else
+            addNewLine();
+
+        scope().m_firstObject = false;
+    }
+
+    addLine(getComment(node, Comment::Location::Front));
+    addLine(QLatin1String("@") + parseUiQualifiedId(node->qualifiedTypeNameId) + " {");
+
+    m_indentLevel++;
+
+    ScopeProperties props;
+    props.m_bindings = findBindings(node->initializer->members);
+    m_scope_properties.push(props);
+
+    m_result += getOrphanedComments(node);
+
+    return true;
+}
+
+void DumpAstVisitor::endVisit(UiAnnotation *node) {
+    m_indentLevel--;
+
+    m_scope_properties.pop();
+
+    addLine("}");
+    addLine(getComment(node, Comment::Location::Back));
 }

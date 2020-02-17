@@ -52,6 +52,7 @@
 //
 
 #include <QtCore/QObject>
+#include <private/qtquickglobal_p.h>
 #include "private/qabstractanimationjob_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -61,7 +62,7 @@ class QQuickTimeLineValue;
 class QQuickTimeLineCallback;
 struct QQuickTimeLinePrivate;
 class QQuickTimeLineObject;
-class Q_AUTOTEST_EXPORT QQuickTimeLine : public QObject, QAbstractAnimationJob
+class Q_QUICK_PRIVATE_EXPORT QQuickTimeLine : public QObject, QAbstractAnimationJob
 {
 Q_OBJECT
 public:

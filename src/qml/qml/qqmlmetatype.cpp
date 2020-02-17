@@ -92,7 +92,12 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data,
     d->typeId = type.typeId;
     d->listId = type.listId;
     d->isSetup = true;
-    d->version = QTypeRevision::zero();
+    if (type.structVersion > 0) {
+        d->module = QString::fromUtf8(type.uri);
+        d->version = type.version;
+    } else {
+        d->version = QTypeRevision::zero();
+    }
     data->registerType(d);
     return d;
 }
@@ -293,6 +298,17 @@ bool QQmlMetaType::qmlRegisterModuleTypes(const QString &uri)
     return data->registerModuleTypes(uri);
 }
 
+/*!
+   \internal
+    Method is only used to in tst_qqmlenginecleanup.cpp to test whether all
+    types have been removed from qmlLists after shutdown of QQmlEngine
+ */
+int QQmlMetaType::qmlRegisteredListTypeCount()
+{
+    QQmlMetaTypeDataPtr data;
+    return data->qmlLists.count();
+}
+
 void QQmlMetaType::clearTypeRegistrations()
 {
     //Only cleans global static, assumed no running engine
@@ -329,7 +345,7 @@ void QQmlMetaType::unregisterAutoParentFunction(const QQmlPrivate::AutoParentFun
 
 QQmlType QQmlMetaType::registerInterface(const QQmlPrivate::RegisterInterface &type)
 {
-    if (type.structVersion > 0)
+    if (type.structVersion > 1)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
 
     QQmlMetaTypeDataPtr data;
@@ -338,8 +354,6 @@ QQmlType QQmlMetaType::registerInterface(const QQmlPrivate::RegisterInterface &t
 
     data->idToType.insert(priv->typeId, priv);
     data->idToType.insert(priv->listId, priv);
-    if (!priv->elementName.isEmpty())
-        data->nameToType.insert(priv->elementName, priv);
 
     if (data->interfaces.size() <= type.typeId)
         data->interfaces.resize(type.typeId + 16);

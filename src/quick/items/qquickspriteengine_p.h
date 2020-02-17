@@ -330,6 +330,18 @@ inline int spriteCount(QQmlListProperty<QQuickSprite> *p)
     return reinterpret_cast<QList<QQuickSprite *> *>(p->data)->count();
 }
 
+inline void spriteReplace(QQmlListProperty<QQuickSprite> *p, int idx, QQuickSprite *s)
+{
+    reinterpret_cast<QList<QQuickSprite *> *>(p->data)->replace(idx, s);
+    p->object->metaObject()->invokeMethod(p->object, "createEngine");
+}
+
+inline void spriteRemoveLast(QQmlListProperty<QQuickSprite> *p)
+{
+    reinterpret_cast<QList<QQuickSprite *> *>(p->data)->removeLast();
+    p->object->metaObject()->invokeMethod(p->object, "createEngine");
+}
+
 QT_END_NAMESPACE
 
 #endif // QQUICKSPRITEENGINE_P_H

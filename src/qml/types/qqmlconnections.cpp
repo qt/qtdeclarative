@@ -238,7 +238,8 @@ void QQmlConnectionsParser::verifyBindings(const QQmlRefPointer<QV4::ExecutableC
         const QV4::CompiledData::Binding *binding = props.at(ii);
         const QString &propName = compilationUnit->stringAt(binding->propertyNameIndex);
 
-        if (!propName.startsWith(QLatin1String("on")) || (propName.length() < 3 || !propName.at(2).isUpper())) {
+        const bool thirdCharacterIsValid = (propName.length() >= 2) && (propName.at(2).isUpper() || propName.at(2) == '_');
+        if (!propName.startsWith(QLatin1String("on")) || !thirdCharacterIsValid) {
             error(props.at(ii), QQmlConnections::tr("Cannot assign to non-existent property \"%1\"").arg(propName));
             return;
         }

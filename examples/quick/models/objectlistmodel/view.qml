@@ -53,13 +53,15 @@ import QtQuick 2.0
 //![0]
 ListView {
     width: 100; height: 100
+    required model
 
-    model: myModel
     delegate: Rectangle {
+        required color
+        required property string name
+
         height: 25
         width: 100
-        color: model.modelData.color
-        Text { text: name }
+        Text { text: parent.name }
     }
 }
 //![0]

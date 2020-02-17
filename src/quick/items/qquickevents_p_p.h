@@ -478,8 +478,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickSinglePointEvent : public QQuickPointerEvent
 {
     Q_OBJECT
 public:
-    QQuickSinglePointEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
-        : QQuickPointerEvent(parent, device), m_point(new QQuickEventPoint(this)) { }
+    QQuickSinglePointEvent(QObject *parent, QQuickPointerDevice *device)
+        : QQuickPointerEvent(parent, device) { }
 
     void localize(QQuickItem *target) override;
     int pointCount() const override { return 1; }
@@ -493,7 +493,7 @@ public:
     bool hasExclusiveGrabber(const QQuickPointerHandler *handler) const override;
 
 protected:
-    QQuickEventPoint *m_point;
+    QQuickEventPoint *m_point = nullptr;
 
     Q_DISABLE_COPY(QQuickSinglePointEvent)
 };
@@ -507,8 +507,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerMouseEvent : public QQuickSinglePointE
     QML_ADDED_IN_MINOR_VERSION(12)
 
 public:
-    QQuickPointerMouseEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
-        : QQuickSinglePointEvent(parent, device) { }
+    QQuickPointerMouseEvent(QObject *parent, QQuickPointerDevice *device);
 
     QQuickPointerEvent *reset(QEvent *) override;
     bool isPressEvent() const override;
@@ -570,6 +569,60 @@ private:
     Q_DISABLE_COPY(QQuickPointerTouchEvent)
 };
 
+#if QT_CONFIG(tabletevent)
+class Q_QUICK_PRIVATE_EXPORT QQuickEventTabletPoint : public QQuickEventPoint
+{
+    Q_OBJECT
+    Q_PROPERTY(qreal rotation READ rotation)
+    Q_PROPERTY(qreal pressure READ pressure)
+    Q_PROPERTY(qreal tangentialPressure READ tangentialPressure)
+    Q_PROPERTY(QVector2D tilt READ tilt)
+
+    QML_NAMED_ELEMENT(EventTabletPoint)
+    QML_UNCREATABLE("EventTouchPoint is only available as a member of PointerEvent.")
+    QML_ADDED_IN_MINOR_VERSION(15)
+
+public:
+    QQuickEventTabletPoint(QQuickPointerTabletEvent *parent);
+
+    void reset(const QTabletEvent *e);
+
+    qreal rotation() const { return m_rotation; }
+    qreal pressure() const { return m_pressure; }
+    qreal tangentialPressure() const { return m_tangentialPressure; }
+    QVector2D tilt() const { return m_tilt; }
+
+private:
+    qreal m_rotation;
+    qreal m_pressure;
+    qreal m_tangentialPressure;
+    QVector2D m_tilt;
+
+    friend class QQuickPointerTouchEvent;
+
+    Q_DISABLE_COPY(QQuickEventTabletPoint)
+};
+
+class Q_QUICK_PRIVATE_EXPORT QQuickPointerTabletEvent : public QQuickSinglePointEvent
+{
+    Q_OBJECT
+public:
+    QQuickPointerTabletEvent(QObject *parent, QQuickPointerDevice *device);
+
+    QQuickPointerEvent *reset(QEvent *) override;
+    bool isPressEvent() const override;
+    bool isUpdateEvent() const override;
+    bool isReleaseEvent() const override;
+    QQuickPointerTabletEvent *asPointerTabletEvent() override { return this; }
+    const QQuickPointerTabletEvent *asPointerTabletEvent() const override { return this; }
+    const QQuickEventTabletPoint *tabletPoint() const { return static_cast<QQuickEventTabletPoint *>(m_point); }
+
+    QTabletEvent *asTabletEvent() const;
+
+    Q_DISABLE_COPY(QQuickPointerTabletEvent)
+};
+#endif // QT_CONFIG(tabletevent)
+
 #if QT_CONFIG(gestures)
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerNativeGestureEvent : public QQuickSinglePointEvent
 {
@@ -578,8 +631,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerNativeGestureEvent : public QQuickSing
     Q_PROPERTY(qreal value READ value CONSTANT)
 
 public:
-    QQuickPointerNativeGestureEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
-        : QQuickSinglePointEvent(parent, device) { }
+    QQuickPointerNativeGestureEvent(QObject *parent, QQuickPointerDevice *device);
 
     QQuickPointerEvent *reset(QEvent *) override;
     bool isPressEvent() const override;
@@ -608,8 +660,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerScrollEvent : public QQuickSinglePoint
     QML_ADDED_IN_MINOR_VERSION(14)
 
 public:
-    QQuickPointerScrollEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
-        : QQuickSinglePointEvent(parent, device) { }
+    QQuickPointerScrollEvent(QObject *parent, QQuickPointerDevice *device);
 
     QQuickPointerEvent *reset(QEvent *) override;
     void localize(QQuickItem *target) override;
@@ -714,7 +765,7 @@ public:
     static QQuickPointerDevice *touchDevice(const QTouchDevice *d);
     static QList<QQuickPointerDevice *> touchDevices();
     static QQuickPointerDevice *genericMouseDevice();
-    static QQuickPointerDevice *tabletDevice(qint64);
+    static QQuickPointerDevice *tabletDevice(const QTabletEvent *event);
 
     QVector<QQuickPointerHandler *> &eventDeliveryTargets() { return m_eventDeliveryTargets; }
 

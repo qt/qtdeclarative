@@ -48,6 +48,7 @@ const QString QQmlProfilerService::s_key = QStringLiteral("CanvasFrameRate");
 const QString QDebugMessageService::s_key = QStringLiteral("DebugMessages");
 const QString QQmlEngineControlService::s_key = QStringLiteral("EngineControl");
 const QString QQmlNativeDebugService::s_key = QStringLiteral("NativeQmlDebugger");
+const QString QQmlDebugTranslationService::s_key = QStringLiteral("DebugTranslation");
 
 QT_END_NAMESPACE
 

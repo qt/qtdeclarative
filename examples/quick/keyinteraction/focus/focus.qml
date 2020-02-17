@@ -48,6 +48,7 @@
 **
 ****************************************************************************/
 
+import QtQml 2.1
 import QtQuick 2.1
 import "Core"
 
@@ -67,20 +68,45 @@ Rectangle {
             id: tabMenu
             y: 160; width: parent.width; height: 160
 
+            keyUpTarget: listMenu
+            keyDownTarget: gridMenu
+
             focus: true
             activeFocusOnTab: true
+
+            onActiveFocusChanged: {
+                if (activeFocus)
+                    mainView.state = "showTabViews"
+            }
         }
 
         GridMenu {
             id: gridMenu
             y: 320; width: parent.width; height: 320
             activeFocusOnTab: true
+
+            keyUpTarget: tabMenu
+            keyDownTarget: listMenu
+            keyLeftTarget: contextMenu
+
+            onActiveFocusChanged: {
+                if (activeFocus)
+                    mainView.state = "showGridViews"
+            }
         }
 
         ListMenu {
             id: listMenu
             y: 640; width: parent.width; height: 320
             activeFocusOnTab: true
+
+            keyUpTarget: gridMenu
+            keyLeftTarget: contextMenu
+
+            onActiveFocusChanged: {
+                if (activeFocus)
+                    mainView.state = "showListViews"
+            }
         }
 
         Rectangle {
@@ -129,7 +155,13 @@ Rectangle {
         }
     }
 
-    ContextMenu { id: contextMenu; x: -265; width: 260; height: parent.height }
+    ContextMenu {
+        keyRightTarget: mainView
+        id: contextMenu
+        x: -265
+        width: 260
+        height: parent.height
+    }
 
     states: State {
         name: "contextMenuOpen"

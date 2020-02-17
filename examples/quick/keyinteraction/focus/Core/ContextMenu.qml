@@ -52,6 +52,7 @@ import QtQuick 2.1
 
 FocusScope {
     id: container
+    required property Item keyRightTarget
 
     property bool open: false
 
@@ -62,7 +63,7 @@ FocusScope {
             anchors.fill: parent
             color: "#D1DBBD"
             focus: true
-            Keys.onRightPressed: mainView.focus = true
+            Keys.onRightPressed: container.keyRightTarget.focus = true
 
             Text {
                 anchors { top: parent.top; horizontalCenter: parent.horizontalCenter; margins: 30 }

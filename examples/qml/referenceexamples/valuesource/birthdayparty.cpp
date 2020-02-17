@@ -82,7 +82,7 @@ void BirthdayParty::setHost(Person *c)
 
 QQmlListProperty<Person> BirthdayParty::guests()
 {
-    return {this, m_guests};
+    return {this, &m_guests};
 }
 
 int BirthdayParty::guestCount() const

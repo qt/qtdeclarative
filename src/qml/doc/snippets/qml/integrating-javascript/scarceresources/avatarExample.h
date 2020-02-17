@@ -53,6 +53,7 @@
 
 #include <QObject>
 #include <QPixmap>
+#include <qqml.h>
 
 //![0]
 // avatarExample.h
@@ -60,6 +61,8 @@ class AvatarExample : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QPixmap avatar READ avatar WRITE setAvatar NOTIFY avatarChanged)
+    QML_ELEMENT
+
 public:
     AvatarExample(QObject *parent = 0)
         : QObject(parent), m_value(100, 100)

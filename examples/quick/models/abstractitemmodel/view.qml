@@ -53,8 +53,14 @@ import QtQuick 2.0
 ListView {
     width: 200; height: 250
 
-    model: myModel
-    delegate: Text { text: "Animal: " + type + ", " + size }
+    required model
+
+    delegate: Text {
+        required property string type
+        required property string size
+
+        text: "Animal: " + type + ", " + size
+    }
 }
 //![0]
 

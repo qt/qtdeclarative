@@ -62,7 +62,7 @@ BirthdayParty {
         shoe { size: 12; color: "white"; brand: "Nike"; price: 90.0 }
     }
 // ![0]
-    onPartyStarted: console.log("This party started rockin' at " + time);
+    onPartyStarted: (time) => { console.log("This party started rockin' at " + time); }
 
 
     Boy {

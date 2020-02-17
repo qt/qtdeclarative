@@ -61,7 +61,9 @@ void State::componentComplete()
 
 QQmlListProperty<QObject> State::children()
 {
-    return QQmlListProperty<QObject>(this, &m_children, m_children.append, m_children.count, m_children.at, m_children.clear);
+    return QQmlListProperty<QObject>(this, &m_children,
+                                     m_children.append, m_children.count, m_children.at,
+                                     m_children.clear, m_children.replace, m_children.removeLast);
 }
 
 /*!

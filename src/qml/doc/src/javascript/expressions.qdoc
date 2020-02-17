@@ -147,7 +147,7 @@ Rectangle {
 
     TapHandler {
         id: inputHandler
-        onTapped: {
+        onTapped: {
             // arbitrary JavaScript expression
             console.log("Tapped!")
         }
@@ -339,7 +339,7 @@ For the following examples, imagine that we have defined the following class:
 
 and that we have registered it with the QML type-system as follows:
 
-\snippet qml/integrating-javascript/scarceresources/avatarExample.cpp 0
+\snippet qml/integrating-javascript/scarceresources/scarceresources.pro 0
 
 The AvatarExample class has a property which is a pixmap. When the property
 is accessed in JavaScript scope, a copy of the resource will be created and

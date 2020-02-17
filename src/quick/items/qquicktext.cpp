@@ -40,6 +40,9 @@
 #include "qquicktext_p.h"
 #include "qquicktext_p_p.h"
 
+#include <private/qqmldebugserviceinterfaces_p.h>
+#include <private/qqmldebugconnector_p.h>
+
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qsgadaptationlayer_p.h>
@@ -1146,6 +1149,10 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
 
         elideLayout->setFont(layout.font());
         elideLayout->setTextOption(layout.textOption());
+        if (QQmlDebugTranslationService *service
+                     = QQmlDebugConnector::service<QQmlDebugTranslationService>()) {
+            elideText = service->foundElidedText(q, layoutText, elideText);
+        }
         elideLayout->setText(elideText);
         elideLayout->beginLayout();
 

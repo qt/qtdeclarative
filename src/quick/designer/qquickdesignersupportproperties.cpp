@@ -155,8 +155,8 @@ QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::propert
                                                                                   baseName +  QQuickDesignerSupport::PropertyName(metaProperty.name())
                                                                                   + '.', inspectedObjects));
             }
-        } else if (QQmlValueTypeFactory::valueType(metaProperty.userType())) {
-            QQmlValueType *valueType = QQmlValueTypeFactory::valueType(metaProperty.userType());
+        } else if (QQmlGadgetPtrWrapper *valueType
+                   = QQmlGadgetPtrWrapper::instance(qmlEngine(object), metaProperty.userType())) {
             valueType->setValue(metaProperty.read(object));
             propertyNameList.append(propertyNameListForWritableProperties(valueType,
                                                                           baseName +  QQuickDesignerSupport::PropertyName(metaProperty.name())
@@ -223,8 +223,8 @@ QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::allProp
                                                              + QQuickDesignerSupport::PropertyName(metaProperty.name())
                                                              + '.', inspectedObjects));
             }
-        } else if (QQmlValueTypeFactory::valueType(metaProperty.userType())) {
-            QQmlValueType *valueType = QQmlValueTypeFactory::valueType(metaProperty.userType());
+        } else if (QQmlGadgetPtrWrapper *valueType
+                   = QQmlGadgetPtrWrapper::instance(qmlEngine(object), metaProperty.userType())) {
             valueType->setValue(metaProperty.read(object));
             propertyNameList.append(baseName + QQuickDesignerSupport::PropertyName(metaProperty.name()));
             propertyNameList.append(allPropertyNames(valueType,

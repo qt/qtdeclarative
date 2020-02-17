@@ -58,6 +58,9 @@ Rectangle {
     width: ListView.view.width
     height: button.implicitHeight + 22
 
+    required property string name
+    required property string description
+
     signal clicked()
 
     gradient: Gradient {

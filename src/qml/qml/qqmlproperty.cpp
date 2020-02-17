@@ -353,10 +353,15 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
     if (terminal.count() >= 3 &&
         terminal.at(0) == QLatin1Char('o') &&
         terminal.at(1) == QLatin1Char('n') &&
-        terminal.at(2).isUpper()) {
+        (terminal.at(2).isUpper() || terminal.at(2) == '_')) {
 
         QString signalName = terminal.mid(2).toString();
-        signalName[0] = signalName.at(0).toLower();
+        int firstNon_;
+        int length = signalName.length();
+        for (firstNon_ = 0; firstNon_ < length; ++firstNon_)
+            if (signalName.at(firstNon_) != '_')
+                break;
+        signalName[firstNon_] = signalName.at(firstNon_).toLower();
 
         // XXX - this code treats methods as signals
 
@@ -1044,13 +1049,19 @@ QVariant QQmlProperty::read(const QObject *object, const QString &name, QQmlEngi
 
 QVariant QQmlPropertyPrivate::readValueProperty()
 {
+    auto doRead = [&](QQmlGadgetPtrWrapper *wrapper) {
+        wrapper->read(object, core.coreIndex());
+        return wrapper->property(valueTypeData.coreIndex()).read(wrapper);
+    };
+
     if (isValueType()) {
-
-        QQmlValueType *valueType = QQmlValueTypeFactory::valueType(core.propType());
-        Q_ASSERT(valueType);
-        valueType->read(object, core.coreIndex());
-        return valueType->metaObject()->property(valueTypeData.coreIndex()).read(valueType);
-
+        if (QQmlGadgetPtrWrapper *wrapper = QQmlGadgetPtrWrapper::instance(engine, core.propType()))
+            return doRead(wrapper);
+        if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(core.propType())) {
+            QQmlGadgetPtrWrapper wrapper(valueType, nullptr);
+            return doRead(&wrapper);
+        }
+        return QVariant();
     } else if (core.isQList()) {
 
         QQmlListProperty<QObject> prop;
@@ -1183,10 +1194,22 @@ QQmlPropertyPrivate::writeValueProperty(QObject *object,
 
     bool rv = false;
     if (valueTypeData.isValid()) {
-        QQmlValueType *writeBack = QQmlValueTypeFactory::valueType(core.propType());
-        writeBack->read(object, core.coreIndex());
-        rv = write(writeBack, valueTypeData, value, context, flags);
-        writeBack->write(object, core.coreIndex(), flags);
+        auto doWrite = [&](QQmlGadgetPtrWrapper *wrapper) {
+            wrapper->read(object, core.coreIndex());
+            rv = write(wrapper, valueTypeData, value, context, flags);
+            wrapper->write(object, core.coreIndex(), flags);
+        };
+
+        QQmlGadgetPtrWrapper *wrapper = context
+                ? QQmlGadgetPtrWrapper::instance(context->engine, core.propType())
+                : nullptr;
+        if (wrapper) {
+            doWrite(wrapper);
+        } else if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(core.propType())) {
+            QQmlGadgetPtrWrapper wrapper(valueType, nullptr);
+            doWrite(&wrapper);
+        }
+
     } else {
         rv = write(object, core, value, context, flags);
     }

@@ -325,6 +325,9 @@ private slots:
     void overrideSingleton();
     void revisionedPropertyOfAttachedObjectProperty();
 
+    void arrayToContainer();
+    void qualifiedScopeInCustomParser();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -5627,6 +5630,9 @@ void tst_qqmllanguage::inlineComponent_data()
     QTest::newRow("Non-toplevel IC is found") << testFileUrl("inlineComponentUser5.qml") << QColorConstants::Svg::red << 24;
 
     QTest::newRow("Resolved in correct order") << testFileUrl("inlineComponentOrder.qml") << QColorConstants::Blue << 200;
+
+    QTest::newRow("ID resolves correctly") << testFileUrl("inlineComponentWithId.qml") << QColorConstants::Svg::red << 42;
+    QTest::newRow("Alias resolves correctly") << testFileUrl("inlineComponentWithAlias.qml") << QColorConstants::Svg::lime << 42;
 }
 
 void tst_qqmllanguage::inlineComponentReferenceCycle_data()
@@ -5715,6 +5721,60 @@ void tst_qqmllanguage::nonExistingInlineComponent()
     QCOMPARE(error.description(), errorMessage);
     QCOMPARE(error.line(), line);
     QCOMPARE(error.column(), column);
+}
+
+class TestItem : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY( QVector<QPointF> positions MEMBER m_points  )
+
+public:
+    TestItem() = default;
+    QVector< QPointF > m_points;
+};
+
+
+Q_DECLARE_METATYPE(QVector<QPointF>);
+void tst_qqmllanguage::arrayToContainer()
+{
+    QQmlEngine engine;
+    qmlRegisterType<TestItem>("qt.test", 1, 0, "TestItem");
+    QVector<QPointF> points { QPointF (2.0, 3.0) };
+    engine.rootContext()->setContextProperty("test", QVariant::fromValue(points));
+    QQmlComponent component(&engine, testFileUrl("arrayToContainer.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<TestItem> root(qobject_cast<TestItem *>(component.createWithInitialProperties( {{"vector", QVariant::fromValue(points)}} )));
+    QVERIFY(root);
+    QCOMPARE(root->m_points.at(0), QPointF (2.0, 3.0) );
+}
+
+class EnumTester : public QObject
+{
+    Q_OBJECT
+public:
+    enum Types
+    {
+        FIRST = 0,
+        SECOND,
+        THIRD
+    };
+    Q_ENUM(Types)
+};
+
+void tst_qqmllanguage::qualifiedScopeInCustomParser()
+{
+    qmlRegisterUncreatableType<EnumTester>("scoped.custom.test", 1, 0, "EnumTester",
+                                           "Object only creatable in C++");
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQml.Models 2.12\n"
+                      "import scoped.custom.test 1.0 as BACKEND\n"
+                      "ListModel {\n"
+                      "    ListElement { text: \"a\"; type: BACKEND.EnumTester.FIRST }\n"
+                      "}\n", QUrl());
+    QVERIFY(component.isReady());
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
 }
 
 QTEST_MAIN(tst_qqmllanguage)

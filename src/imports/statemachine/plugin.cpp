@@ -48,6 +48,8 @@
 #include <QQmlExtensionPlugin>
 #include <qqml.h>
 
+extern void qml_register_types_QtQml_StateMachine();
+
 QT_BEGIN_NAMESPACE
 
 class QtQmlStateMachinePlugin : public QQmlEngineExtensionPlugin
@@ -56,7 +58,11 @@ class QtQmlStateMachinePlugin : public QQmlEngineExtensionPlugin
     Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 
 public:
-    QtQmlStateMachinePlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) { }
+    QtQmlStateMachinePlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
+    {
+        volatile auto registration = &qml_register_types_QtQml_StateMachine;
+        Q_UNUSED(registration);
+    }
 };
 
 QT_END_NAMESPACE

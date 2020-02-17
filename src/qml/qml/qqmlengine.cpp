@@ -654,11 +654,7 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
 
     for (auto iter = m_compositeTypes.cbegin(), end = m_compositeTypes.cend(); iter != end; ++iter) {
         iter.value()->isRegisteredWithEngine = false;
-
-        // since unregisterInternalCompositeType() will not be called in this
-        // case, we have to clean up the type registration manually
-        QMetaType::unregisterType(iter.value()->metaTypeId);
-        QMetaType::unregisterType(iter.value()->listMetaTypeId);
+        QQmlMetaType::unregisterInternalCompositeType({iter.value()->metaTypeId, iter.value()->listMetaTypeId});
     }
 #if QT_CONFIG(qml_debug)
     delete profiler;

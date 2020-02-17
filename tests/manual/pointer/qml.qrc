@@ -13,6 +13,7 @@
         <file>pointerDrag.qml</file>
         <file>singlePointHandlerProperties.qml</file>
         <file>sidebar.qml</file>
+        <file>tabletCanvasDrawing.qml</file>
         <file>tapHandler.qml</file>
         <file>content/CheckBox.qml</file>
         <file>content/FakeFlickable.qml</file>
@@ -30,6 +31,10 @@
         <file>content/TouchpointFeedbackSprite.qml</file>
         <file>resources/arrowhead.png</file>
         <file>resources/balloon.png</file>
+        <file>resources/cursor-airbrush.png</file>
+        <file>resources/cursor-eraser.png</file>
+        <file>resources/cursor-felt-marker.png</file>
+        <file>resources/cursor-pencil.png</file>
         <file>resources/fighter.png</file>
         <file>resources/fingersprite.png</file>
         <file>resources/grabbing-location.svg</file>

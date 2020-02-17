@@ -829,8 +829,9 @@ void QQmlTypeData::resolveTypes()
 
         if (ref.type.isCompositeSingleton()) {
             ref.typeData = typeLoader()->getType(ref.type.sourceUrl());
-            if (ref.typeData->status() == QQmlDataBlob::ResolvingDependencies || m_waitingOnMe.contains(ref.typeData.data())) {
-                // TODO: give an error message? If so, we should record and show the path of the cycle.
+            if (ref.typeData->isWaiting() || m_waitingOnMe.contains(ref.typeData.data())) {
+                qWarning() << "Cyclic dependency detected between" << ref.typeData->urlString()
+                           << "and" << urlString();
                 continue;
             }
             addDependency(ref.typeData.data());

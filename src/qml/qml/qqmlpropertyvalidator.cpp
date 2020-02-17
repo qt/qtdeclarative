@@ -104,7 +104,7 @@ QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::validateObject(
         validateObject(it->objectIndex, /* instantiatingBinding*/ nullptr);
     }
 
-    if (obj->flags & QV4::CompiledData::Object::IsComponent) {
+    if (obj->flags & QV4::CompiledData::Object::IsComponent && !(obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot)) {
         Q_ASSERT(obj->nBindings == 1);
         const QV4::CompiledData::Binding *componentBinding = obj->bindingTable();
         Q_ASSERT(componentBinding->type == QV4::CompiledData::Binding::Type_Object);

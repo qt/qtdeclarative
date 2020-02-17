@@ -101,6 +101,11 @@ Rectangle {
             width: listView.width; height: 80
             clip: true
 
+            required property int index
+            required property string name
+            required property real cost
+            required property var attributes
+
             Column {
                 id: arrows
                 anchors {
@@ -109,10 +114,16 @@ Rectangle {
                 }
                 Image {
                     source: "content/pics/arrow-up.png"
-                    MouseArea { anchors.fill: parent; onClicked: fruitModel.move(index, index-1, 1) }
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: fruitModel.move(delegateItem.index, delegateItem.index - 1, 1)
+                    }
                 }
                 Image { source: "content/pics/arrow-down.png"
-                    MouseArea { anchors.fill: parent; onClicked: fruitModel.move(index, index+1, 1) }
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: fruitModel.move(delegateItem.index, delegateItem.index + 1, 1)
+                    }
                 }
             }
 
@@ -125,7 +136,7 @@ Rectangle {
 
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: name
+                    text: delegateItem.name
                     font.pixelSize: 15
                     color: "white"
                 }
@@ -133,8 +144,12 @@ Rectangle {
                     anchors.horizontalCenter: parent.horizontalCenter
                     spacing: 5
                     Repeater {
-                        model: attributes
-                        Text { text: description; color: "White" }
+                        model: delegateItem.attributes
+                        Text {
+                            required property string description
+                            text: description
+                            color: "White"
+                        }
                     }
                 }
             }
@@ -154,13 +169,13 @@ Rectangle {
                     PressAndHoldButton {
                         anchors.verticalCenter: parent.verticalCenter
                         source: "content/pics/plus-sign.png"
-                        onClicked: fruitModel.setProperty(index, "cost", cost + 0.25)
+                        onClicked: fruitModel.setProperty(delegateItem.index, "cost", delegateItem.cost + 0.25)
                     }
 
                     Text {
                         id: costText
                         anchors.verticalCenter: parent.verticalCenter
-                        text: '$' + Number(cost).toFixed(2)
+                        text: '$' + Number(delegateItem.cost).toFixed(2)
                         font.pixelSize: 15
                         color: "white"
                         font.bold: true
@@ -169,12 +184,16 @@ Rectangle {
                     PressAndHoldButton {
                         anchors.verticalCenter: parent.verticalCenter
                         source: "content/pics/minus-sign.png"
-                        onClicked: fruitModel.setProperty(index, "cost", Math.max(0,cost-0.25))
+                        onClicked: fruitModel.setProperty(delegateItem.index, "cost",
+                                                          Math.max(0, delegateItem.cost - 0.25))
                     }
 
                     Image {
                         source: "content/pics/list-delete.png"
-                        MouseArea { anchors.fill:parent; onClicked: fruitModel.remove(index) }
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: fruitModel.remove(delegateItem.index)
+                        }
                     }
                 }
             }

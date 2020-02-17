@@ -25,6 +25,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
+#include "interfaces.h"
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -160,6 +162,8 @@ private slots:
     void bindingToAlias();
 
     void nestedQQmlPropertyMap();
+
+    void underscorePropertyChangeHandler();
 private:
     QQmlEngine engine;
 };
@@ -2090,74 +2094,20 @@ void tst_qqmlproperty::nullPropertyBinding()
     QMetaObject::invokeMethod(root.get(), "tog");
 }
 
-struct Interface {
-};
-
-QT_BEGIN_NAMESPACE
-#define MyInterface_iid "io.qt.bugreports.Interface"
-Q_DECLARE_INTERFACE(Interface, MyInterface_iid);
-QT_END_NAMESPACE
-
-class A : public QObject, Interface {
-    Q_OBJECT
-    Q_INTERFACES(Interface)
-};
-
-class B : public QObject, Interface {
-    Q_OBJECT
-    Q_INTERFACES(Interface)
-};
-
-class C : public QObject {
-    Q_OBJECT
-};
-
-class InterfaceConsumer : public QObject {
-    Q_OBJECT
-    Q_PROPERTY(Interface* i READ interface WRITE setInterface NOTIFY interfaceChanged)
-    Q_PROPERTY(int testValue READ testValue NOTIFY testValueChanged)
-
-
-public:
-
-    Interface* interface() const
-    {
-        return m_interface;
-    }
-    void setInterface(Interface* interface)
-    {
-        QObject* object = reinterpret_cast<QObject*>(interface);
-        m_testValue = object->property("i").toInt();
-        emit testValueChanged();
-        if (m_interface == interface)
-            return;
-
-        m_interface = interface;
-        emit interfaceChanged();
-    }
-
-    int testValue() {
-        return m_testValue;
-    }
-
-signals:
-    void interfaceChanged();
-    void testValueChanged();
-
-private:
-    Interface* m_interface = nullptr;
-    int m_testValue = 0;
-};
 void tst_qqmlproperty::interfaceBinding()
 {
+    qmlRegisterInterface<Interface>("Interface");
+    qmlRegisterType<A>("io.qt.bugreports", 1, 0, "A");
+    qmlRegisterType<B>("io.qt.bugreports", 1, 0, "B");
+    qmlRegisterType<C>("io.qt.bugreports", 1, 0, "C");
+    qmlRegisterType<InterfaceConsumer>("io.qt.bugreports", 1, 0, "InterfaceConsumer");
 
-        qmlRegisterInterface<Interface>("Interface");
-        qmlRegisterType<A>("io.qt.bugreports", 1, 0, "A");
-        qmlRegisterType<B>("io.qt.bugreports", 1, 0, "B");
-        qmlRegisterType<C>("io.qt.bugreports", 1, 0, "C");
-        qmlRegisterType<InterfaceConsumer>("io.qt.bugreports", 1, 0, "InterfaceConsumer");
+    const QVector<QUrl> urls = {
+        testFileUrl("interfaceBinding.qml"),
+        testFileUrl("interfaceBinding2.qml")
+    };
 
-        const QUrl url = testFileUrl("interfaceBinding.qml");
+    for (const QUrl &url : urls) {
         QQmlEngine engine;
         QQmlComponent component(&engine, url);
         QScopedPointer<QObject> root(component.create());
@@ -2165,6 +2115,7 @@ void tst_qqmlproperty::interfaceBinding()
         QCOMPARE(root->findChild<QObject*>("a1")->property("testValue").toInt(), 42);
         QCOMPARE(root->findChild<QObject*>("a2")->property("testValue").toInt(), 43);
         QCOMPARE(root->findChild<QObject*>("a3")->property("testValue").toInt(), 44);
+    }
 }
 
 void tst_qqmlproperty::floatToStringPrecision_data()
@@ -2239,6 +2190,24 @@ void tst_qqmlproperty::nestedQQmlPropertyMap()
 
     QQmlProperty success{&mainPropertyMap, "nesting1.nesting2.value"};
     QCOMPARE(success.read().toString(), QLatin1String("success"));
+}
+
+void tst_qqmlproperty::underscorePropertyChangeHandler()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(R"(
+        import QtQuick 2.12
+
+        Item {
+            property int __withUnderScore
+        }
+    )", QUrl::fromLocalFile("."));
+    QScopedPointer<QObject> root { component.create() };
+    QVERIFY(root);
+    QQmlProperty changeHandler(root.get(), "on__WithUnderScoreChanged");
+    QVERIFY(changeHandler.isValid());
+    QVERIFY(changeHandler.isSignalProperty());
 }
 
 QTEST_MAIN(tst_qqmlproperty)

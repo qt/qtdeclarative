@@ -79,7 +79,7 @@ ParticleSystem {
         size: 12
         anchors.centerIn: parent
         //! [0]
-        onEmitParticles: {
+        onEmitParticles: (particles) => {
             for (var i=0; i<particles.length; i++) {
                 var particle = particles[i];
                 particle.startSize = Math.max(02,Math.min(492,Math.tan(particle.t/2)*24));
@@ -90,8 +90,8 @@ ParticleSystem {
                 theta /= 6.0;
                 theta *= 2.0*Math.PI;
                 theta += sys.convert(sys.petalRotation);//Convert from degrees to radians
-                particle.initialVX = petalLength * Math.cos(theta);
-                particle.initialVY = petalLength * Math.sin(theta);
+                particle.initialVX = sys.petalLength * Math.cos(theta);
+                particle.initialVY = sys.petalLength * Math.sin(theta);
                 particle.initialAX = particle.initialVX * -0.5;
                 particle.initialAY = particle.initialVY * -0.5;
             }

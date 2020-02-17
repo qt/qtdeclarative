@@ -61,11 +61,12 @@ Rectangle {
 
         delegate: Item {
             height: 40; width: ListView.view.width
+            required property string modelData
             Text {
                 anchors.centerIn: parent
-                text: modelData
+                text: parent.modelData
 //! [delegate]
-                font.family: modelData
+                font.family: parent.modelData
 //! [delegate]
                 font.pixelSize: 20
                 color: "white"

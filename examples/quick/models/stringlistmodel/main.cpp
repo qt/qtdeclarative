@@ -68,15 +68,15 @@ int main(int argc, char ** argv)
     QGuiApplication app(argc, argv);
 
 //![0]
-    QStringList dataList;
-    dataList.append("Item 1");
-    dataList.append("Item 2");
-    dataList.append("Item 3");
-    dataList.append("Item 4");
+    QStringList dataList = {
+        "Item 1",
+        "Item 2",
+        "Item 3",
+        "Item 4"
+    };
 
     QQuickView view;
-    QQmlContext *ctxt = view.rootContext();
-    ctxt->setContextProperty("myModel", QVariant::fromValue(dataList));
+    view.setInitialProperties({{ "model", QVariant::fromValue(dataList) }});
 //![0]
 
     view.setSource(QUrl("qrc:view.qml"));

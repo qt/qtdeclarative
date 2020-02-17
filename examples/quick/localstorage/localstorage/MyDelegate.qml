@@ -54,18 +54,27 @@ import QtQuick.Layouts 1.1
 import "Database.js" as JS
 
 Item {
+    id: delegate
+
     width: parent.width
     height: rDate.implicitHeight
+
+    required property int index
+    required property int distance
+    required property string trip_desc
+    required property string date
+
+    signal clicked()
 
     Rectangle {
         id: baseRec
         anchors.fill: parent
         opacity: 0.8
-        color: index % 2 ? "lightgrey" : "grey"
+        color: delegate.index % 2 ? "lightgrey" : "grey"
 
         MouseArea {
             anchors.fill: parent
-            onClicked: listView.currentIndex = index
+            onClicked: delegate.clicked()
         }
         GridLayout {
             anchors.fill:parent
@@ -73,21 +82,21 @@ Item {
 
             Text {
                 id: rDate
-                text: date
+                text: delegate.date
                 font.pixelSize: 22
                 Layout.preferredWidth: parent.width / 4
                 color: "black"
             }
             Text {
                 id: rDesc
-                text: trip_desc
+                text: delegate.trip_desc
                 Layout.fillWidth: true
                 font.pixelSize: 22
                 color: "black"
             }
             Text {
                 id: rDistance
-                text: distance
+                text: delegate.distance
                 font.pixelSize: 22
                 Layout.alignment: Qt.AlignRight
                 color: "black"

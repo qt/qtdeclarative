@@ -1128,6 +1128,10 @@ void tst_QJSValue::toVariant()
 
     // array
     {
+        auto handler = qInstallMessageHandler([](QtMsgType type, const QMessageLogContext &, const QString &) {
+            if (type == QtMsgType::QtWarningMsg)
+                QFAIL("Converting QJSValue to QVariant should not cause error messages");
+        });
         QVariantList listIn;
         listIn << 123 << "hello";
         QJSValue array = eng.toScriptValue(listIn);
@@ -1145,8 +1149,9 @@ void tst_QJSValue::toVariant()
         QCOMPARE(array2.property("length").toInt(), array.property("length").toInt());
         for (int i = 0; i < array.property("length").toInt(); ++i)
             QVERIFY(array2.property(i).strictlyEquals(array.property(i)));
-    }
 
+        qInstallMessageHandler(handler);
+    }
 }
 
 void tst_QJSValue::toQObject_nonQObject_data()

@@ -78,9 +78,9 @@ Window {
     }
     //! [timer]
     Timer {
-        interval: timeoutInterval; running: true; repeat: false
+        interval: splash.timeoutInterval; running: true; repeat: false
         onTriggered: {
-            visible = false
+            splash.visible = false
             splash.timeout()
         }
     }

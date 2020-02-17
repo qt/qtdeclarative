@@ -116,6 +116,8 @@ public:
     static int choices_count(QQmlListProperty<QQmlDelegateChoice> *);
     static QQmlDelegateChoice *choices_at(QQmlListProperty<QQmlDelegateChoice> *, int);
     static void choices_clear(QQmlListProperty<QQmlDelegateChoice> *);
+    static void choices_replace(QQmlListProperty<QQmlDelegateChoice> *, int, QQmlDelegateChoice *);
+    static void choices_removeLast(QQmlListProperty<QQmlDelegateChoice> *);
 
     QQmlComponent *delegate(QQmlAdaptorModel *adaptorModel, int row, int column = -1) const override;
 

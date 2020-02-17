@@ -1,2 +1,6 @@
 [pressAndHold]
 macos ci
+
+# QTBUG-78153
+[nestedStopAtBounds]
+opensuse-leap

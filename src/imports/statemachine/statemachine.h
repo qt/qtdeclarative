@@ -82,7 +82,7 @@ Q_SIGNALS:
     void qmlRunningChanged();
 
 private:
-    ChildrenPrivate<StateMachine> m_children;
+    ChildrenPrivate<StateMachine, ChildrenMode::StateOrTransition> m_children;
     bool m_completed;
     bool m_running;
 };

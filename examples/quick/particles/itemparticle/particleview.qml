@@ -156,7 +156,7 @@ Item {
         interval: 800
         onTriggered: {
             force.enabled = false;
-            mp.take(alertItem, true);
+            mp.take(root.alertItem, true);
             centerEmitter.burst(1);
         }
     }
@@ -216,6 +216,11 @@ Item {
     Component {
         id: theDelegate
         Image {
+            required property int index
+            required property string title
+            required property string media
+            required property string thumbnail
+
             id: image
             antialiasing: true;
             source: thumbnail
@@ -237,7 +242,7 @@ Item {
                 width: parent.paintedWidth + 1
                 height: parent.paintedHeight + 1
                 color: "black"
-                opacity: darken * (1 - depth)
+                opacity: image.darken * (1 - image.depth)
                 antialiasing: true;
             }
             Text {
@@ -247,7 +252,7 @@ Item {
                 width: parent.paintedWidth - 4
                 horizontalAlignment: Text.AlignHCenter
                 elide: Text.ElideRight
-                text: title
+                text: image.title
                 color: "black"
             }
             ItemParticle.onDetached: mp.take(image); // respawns
@@ -277,7 +282,7 @@ Item {
                 }
                 PropertyChanges {
                     target: image
-                    source: media
+                    source: image.media
                     x: 0
                     y: 0
                     width: root.width

@@ -104,6 +104,8 @@ Q_SIGNALS:
     void createdItem(int index, QObject *object);
     void initItem(int index, QObject *object);
     void destroyingItem(QObject *object);
+    void itemPooled(int index, QObject *object);
+    void itemReused(int index, QObject *object);
 
 protected:
     QQmlInstanceModel(QObjectPrivate &dd, QObject *parent = nullptr)

@@ -252,6 +252,9 @@ protected:
 #if QT_CONFIG(wheelevent)
     void wheelEvent(QWheelEvent *) override;
 #endif
+#if QT_CONFIG(tabletevent)
+    void tabletEvent(QTabletEvent *) override;
+#endif
 
 private Q_SLOTS:
     void maybeUpdate();

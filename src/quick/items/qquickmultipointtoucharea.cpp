@@ -88,20 +88,18 @@ void QQuickTouchPoint::setPointId(int id)
     These properties hold the current position of the touch point.
 */
 
-void QQuickTouchPoint::setX(qreal x)
+void QQuickTouchPoint::setPosition(QPointF p)
 {
-    if (_x == x)
+    bool xch = (_x != p.x());
+    bool ych = (_y != p.y());
+    if (!xch && !ych)
         return;
-    _x = x;
-    emit xChanged();
-}
-
-void QQuickTouchPoint::setY(qreal y)
-{
-    if (_y == y)
-        return;
-    _y = y;
-    emit yChanged();
+    _x = p.x();
+    _y = p.y();
+    if (xch)
+        emit xChanged();
+    if (ych)
+        emit yChanged();
 }
 
 /*!
@@ -798,8 +796,7 @@ void QQuickMultiPointTouchArea::updateTouchPoint(QQuickTouchPoint *dtp, const QT
     //TODO: if !qmlDefined, could bypass setters.
     //      also, should only emit signals after all values have been set
     dtp->setUniqueId(p->uniqueId());
-    dtp->setX(p->pos().x());
-    dtp->setY(p->pos().y());
+    dtp->setPosition(p->pos());
     dtp->setEllipseDiameters(p->ellipseDiameters());
     dtp->setPressure(p->pressure());
     dtp->setRotation(p->rotation());
@@ -817,8 +814,7 @@ void QQuickMultiPointTouchArea::updateTouchPoint(QQuickTouchPoint *dtp, const QM
 {
     dtp->setPreviousX(dtp->x());
     dtp->setPreviousY(dtp->y());
-    dtp->setX(e->localPos().x());
-    dtp->setY(e->localPos().y());
+    dtp->setPosition(e->localPos());
     if (e->type() == QEvent::MouseButtonPress) {
         dtp->setStartX(e->localPos().x());
         dtp->setStartY(e->localPos().y());

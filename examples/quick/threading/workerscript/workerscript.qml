@@ -58,7 +58,7 @@ Rectangle {
         id: myWorker
         source: "workerscript.mjs"
 
-        onMessage: {
+        onMessage: (messageObject) => {
             if (messageObject.row == rowSpinner.value && messageObject.column == columnSpinner.value){ //Not an old result
                 if (messageObject.result == -1)
                     resultText.text = "Column must be <= Row";

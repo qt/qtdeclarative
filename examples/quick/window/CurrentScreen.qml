@@ -115,10 +115,10 @@ Item {
         Shared.Label { text: Screen.virtualX + ", " + Screen.virtualY }
 
         Shared.Label { text: "orientation" }
-        Shared.Label { text: orientationToString(Screen.orientation) + " (" + Screen.orientation + ")" }
+        Shared.Label { text: root.orientationToString(Screen.orientation) + " (" + Screen.orientation + ")" }
 
         Shared.Label { text: "primary orientation" }
-        Shared.Label { text: orientationToString(Screen.primaryOrientation) + " (" + Screen.primaryOrientation + ")" }
+        Shared.Label { text: root.orientationToString(Screen.primaryOrientation) + " (" + Screen.primaryOrientation + ")" }
         //! [screen]
 
         Shared.Label { text: "10mm rectangle" }

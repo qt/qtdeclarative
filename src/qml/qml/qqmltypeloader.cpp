@@ -602,51 +602,59 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
                     scriptImported(blob, import->location, script.nameSpace, import->qualifier);
                 }
             }
+        } else if (
+                // Major version of module already registered:
+                // We believe that the registration is complete.
+                QQmlMetaType::typeModule(import->uri, import->version)
+
+                // Otherwise, try to register further module types.
+                || (qmldirResult != QQmlImports::QmldirInterceptedToRemote
+                    && QQmlMetaType::qmlRegisterModuleTypes(import->uri))
+
+                // Otherwise, there is no way to register any further types.
+                // Try with any module of that name.
+                || QQmlMetaType::isAnyModule(import->uri)) {
+
+            if (!m_importCache.addLibraryImport(
+                        importDatabase, import->uri, import->qualifier, import->version,
+                        QString(), QString(), false, errors)) {
+                return false;
+            }
         } else {
-            // Is this a module?
-            if (QQmlMetaType::isAnyModule(import->uri)
-                    || (qmldirResult != QQmlImports::QmldirInterceptedToRemote
-                        && QQmlMetaType::qmlRegisterModuleTypes(import->uri))) {
+            // We haven't yet resolved this import
+            m_unresolvedImports << import;
+
+            QQmlAbstractUrlInterceptor *interceptor = typeLoader()->engine()->urlInterceptor();
+
+            // Query any network import paths for this library.
+            // Interceptor might redirect local paths.
+            QStringList remotePathList = importDatabase->importPathList(
+                        interceptor ? QQmlImportDatabase::LocalOrRemote
+                                    : QQmlImportDatabase::Remote);
+            if (!remotePathList.isEmpty()) {
+                // Add this library and request the possible locations for it
                 if (!m_importCache.addLibraryImport(
                             importDatabase, import->uri, import->qualifier, import->version,
-                            QString(), QString(), false, errors))
+                            QString(), QString(), true, errors))
                     return false;
-            } else {
-                // We haven't yet resolved this import
-                m_unresolvedImports << import;
 
-                QQmlAbstractUrlInterceptor *interceptor = typeLoader()->engine()->urlInterceptor();
-
-                // Query any network import paths for this library.
-                // Interceptor might redirect local paths.
-                QStringList remotePathList = importDatabase->importPathList(
-                            interceptor ? QQmlImportDatabase::LocalOrRemote
-                                        : QQmlImportDatabase::Remote);
-                if (!remotePathList.isEmpty()) {
-                    // Add this library and request the possible locations for it
-                    if (!m_importCache.addLibraryImport(
-                                importDatabase, import->uri, import->qualifier, import->version,
-                                QString(), QString(), true, errors))
-                        return false;
-
-                    // Probe for all possible locations
-                    int priority = 0;
-                    const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(
-                                import->uri, remotePathList, import->version);
-                    for (const QString &qmldirPath : qmlDirPaths) {
-                        if (interceptor) {
-                            QUrl url = interceptor->intercept(
-                                        QQmlImports::urlFromLocalFileOrQrcOrUrl(qmldirPath),
-                                        QQmlAbstractUrlInterceptor::QmldirFile);
-                            if (!QQmlFile::isLocalFile(url)
-                                    && !fetchQmldir(url, import, ++priority, errors)) {
-                                return false;
-                            }
-                        } else if (!fetchQmldir(QUrl(qmldirPath), import, ++priority, errors)) {
+                // Probe for all possible locations
+                int priority = 0;
+                const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(
+                            import->uri, remotePathList, import->version);
+                for (const QString &qmldirPath : qmlDirPaths) {
+                    if (interceptor) {
+                        QUrl url = interceptor->intercept(
+                                    QQmlImports::urlFromLocalFileOrQrcOrUrl(qmldirPath),
+                                    QQmlAbstractUrlInterceptor::QmldirFile);
+                        if (!QQmlFile::isLocalFile(url)
+                                && !fetchQmldir(url, import, ++priority, errors)) {
                             return false;
                         }
-
+                    } else if (!fetchQmldir(QUrl(qmldirPath), import, ++priority, errors)) {
+                        return false;
                     }
+
                 }
             }
         }

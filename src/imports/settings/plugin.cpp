@@ -42,6 +42,8 @@
 
 #include "qqmlsettings_p.h"
 
+extern void qml_register_types_Qt_labs_settings();
+
 QT_BEGIN_NAMESPACE
 
 class QmlSettingsPlugin : public QQmlEngineExtensionPlugin
@@ -50,7 +52,11 @@ class QmlSettingsPlugin : public QQmlEngineExtensionPlugin
     Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 
 public:
-    QmlSettingsPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) {}
+    QmlSettingsPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
+    {
+        volatile auto registration = &qml_register_types_Qt_labs_settings;
+        Q_UNUSED(registration);
+    }
 };
 
 QT_END_NAMESPACE

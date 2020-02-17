@@ -33,6 +33,7 @@
 #include <private/qqmljsast_p.h>
 
 #include "../../shared/util.h"
+#include "../../shared/qqmljsastdumper.h"
 
 #include <qtest.h>
 #include <QDir>
@@ -583,7 +584,7 @@ void tst_qqmlparser::annotations()
         Parser parser2(&engine2);
         QVERIFY(parser2.parse());
 
-        // to do: compare for equality skipping annotations
+        QCOMPARE(AstDumper::diff(parser.ast(), parser2.rootNode(), 3, DumperOptions::NoAnnotations | DumperOptions::NoLocations), QString());
     }
 }
 

@@ -41,6 +41,8 @@
 
 #include "plugin.h"
 
+extern void qml_register_types_QtQuick_Window();
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -64,7 +66,11 @@ class QtQuick2WindowPlugin : public QQmlEngineExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 public:
-    QtQuick2WindowPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) { }
+    QtQuick2WindowPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
+    {
+        volatile auto registration = &qml_register_types_QtQuick_Window;
+        Q_UNUSED(registration);
+    }
 };
 //![class decl]
 

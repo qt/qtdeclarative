@@ -52,6 +52,8 @@ import QtQuick 2.0
 import QtQuick.Particles 2.0
 
 Rectangle {
+    id: root
+
     width: 320
     height: 480
     color: "black"
@@ -63,12 +65,12 @@ Rectangle {
         repeat: true
         onTriggered: {
         //! [0]
-            if (lastWasPulse) {
+            if (root.lastWasPulse) {
                 burstEmitter.burst(500);
-                lastWasPulse = false;
+                root.lastWasPulse = false;
             } else {
                 pulseEmitter.pulse(500);
-                lastWasPulse = true;
+                root.lastWasPulse = true;
             }
         //! [0]
         }

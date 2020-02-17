@@ -53,65 +53,66 @@ import QtQuick.Window 2.3
 import "../shared" as Shared
 
 QtObject {
+    id: root
     property real defaultSpacing: 10
     property SystemPalette palette: SystemPalette { }
 
     property var controlWindow: Window {
-        width: col.implicitWidth + defaultSpacing * 2
-        height: col.implicitHeight + defaultSpacing * 2
-        color: palette.window
+        width: col.implicitWidth + root.defaultSpacing * 2
+        height: col.implicitHeight + root.defaultSpacing * 2
+        color: root.palette.window
         title: "Control Window"
         Column {
             id: col
             anchors.fill: parent
-            anchors.margins: defaultSpacing
-            spacing: defaultSpacing
+            anchors.margins: root.defaultSpacing
+            spacing: root.defaultSpacing
             property real cellWidth: col.width / 3 - spacing
             Shared.Label { text: "Control the second window:" }
             Grid {
                 id: grid
                 columns: 3
-                spacing: defaultSpacing
+                spacing: root.defaultSpacing
                 width: parent.width
                 Shared.Button {
                     id: showButton
                     width: col.cellWidth
-                    text: testWindow.visible ? "Hide" : "Show"
-                    onClicked: testWindow.visible = !testWindow.visible
+                    text: root.testWindow.visible ? "Hide" : "Show"
+                    onClicked: root.testWindow.visible = !root.testWindow.visible
                 }
                 //! [windowedCheckbox]
                 Shared.CheckBox {
                     text: "Windowed"
                     height: showButton.height
                     width: col.cellWidth
-                    Binding on checked { value: testWindow.visibility === Window.Windowed }
-                    onClicked: testWindow.visibility = Window.Windowed
+                    Binding on checked { value: root.testWindow.visibility === Window.Windowed }
+                    onClicked: root.testWindow.visibility = Window.Windowed
                 }
                 //! [windowedCheckbox]
                 Shared.CheckBox {
                     height: showButton.height
                     width: col.cellWidth
                     text: "Full Screen"
-                    Binding on checked { value: testWindow.visibility === Window.FullScreen }
-                    onClicked: testWindow.visibility = Window.FullScreen
+                    Binding on checked { value: root.testWindow.visibility === Window.FullScreen }
+                    onClicked: root.testWindow.visibility = Window.FullScreen
                 }
                 Shared.Button {
                     id: autoButton
                     width: col.cellWidth
                     text: "Automatic"
-                    onClicked: testWindow.visibility = Window.AutomaticVisibility
+                    onClicked: root.testWindow.visibility = Window.AutomaticVisibility
                 }
                 Shared.CheckBox {
                     height: autoButton.height
                     text: "Minimized"
-                    Binding on checked { value: testWindow.visibility === Window.Minimized }
-                    onClicked: testWindow.visibility = Window.Minimized
+                    Binding on checked { value: root.testWindow.visibility === Window.Minimized }
+                    onClicked: root.testWindow.visibility = Window.Minimized
                 }
                 Shared.CheckBox {
                     height: autoButton.height
                     text: "Maximized"
-                    Binding on checked { value: testWindow.visibility === Window.Maximized }
-                    onClicked: testWindow.visibility = Window.Maximized
+                    Binding on checked { value: root.testWindow.visibility === Window.Maximized }
+                    onClicked: root.testWindow.visibility = Window.Maximized
                 }
             }
             function visibilityToString(v) {
@@ -133,17 +134,17 @@ QtObject {
             }
             Shared.Label {
                 id: visibilityLabel
-                text: "second window is " + (testWindow.visible ? "visible" : "invisible") +
-                      " and has visibility " + parent.visibilityToString(testWindow.visibility)
+                text: "second window is " + (root.testWindow.visible ? "visible" : "invisible") +
+                      " and has visibility " + parent.visibilityToString(root.testWindow.visibility)
             }
             Rectangle {
-                color: palette.text
+                color: root.palette.text
                 width: parent.width
                 height: 1
             }
             CurrentScreen { }
             Rectangle {
-                color: palette.text
+                color: root.palette.text
                 width: parent.width
                 height: 1
             }
@@ -159,40 +160,40 @@ QtObject {
         flags: Qt.Window | Qt.WindowFullscreenButtonHint
         Rectangle {
             anchors.fill: parent
-            anchors.margins: defaultSpacing
+            anchors.margins: root.defaultSpacing
             Shared.Label {
                 anchors.centerIn: parent
                 text: "Second Window"
             }
             MouseArea {
                 anchors.fill: parent
-                onClicked: testWindow.color = "#e0c31e"
+                onClicked: root.testWindow.color = "#e0c31e"
             }
             Shared.Button {
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: defaultSpacing
-                text: testWindow.visibility === Window.FullScreen ? "exit fullscreen" : "go fullscreen"
+                anchors.margins: root.defaultSpacing
+                text: root.testWindow.visibility === Window.FullScreen ? "exit fullscreen" : "go fullscreen"
                 width: 150
                 onClicked: {
-                    if (testWindow.visibility === Window.FullScreen)
-                        testWindow.visibility = Window.AutomaticVisibility
+                    if (root.testWindow.visibility === Window.FullScreen)
+                        root.testWindow.visibility = Window.AutomaticVisibility
                     else
-                        testWindow.visibility = Window.FullScreen
+                        root.testWindow.visibility = Window.FullScreen
                 }
             }
             Shared.Button {
                 anchors.left: parent.left
                 anchors.top: parent.top
-                anchors.margins: defaultSpacing
+                anchors.margins: root.defaultSpacing
                 text: "X"
                 width: 30
-                onClicked: testWindow.close()
+                onClicked: root.testWindow.close()
             }
         }
     }
 
     property var splashWindow: Splash {
-        onTimeout: controlWindow.visible = true
+        onTimeout: root.controlWindow.visible = true
     }
 }

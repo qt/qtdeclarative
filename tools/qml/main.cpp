@@ -37,6 +37,7 @@
 #include <QFileOpenEvent>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
+#include <QSurfaceFormat>
 #ifdef QT_WIDGETS_LIB
 #include <QApplication>
 #endif // QT_WIDGETS_LIB
@@ -59,6 +60,7 @@
 #include <QLibraryInfo>
 #include <qqml.h>
 #include <qqmldebug.h>
+#include <qqmlfileselector.h>
 
 #include <private/qmemory_p.h>
 #include <private/qtqmlglobal_p.h>
@@ -511,6 +513,9 @@ int main(int argc, char *argv[])
                                     "Backend is one of: default, vulkan, metal, d3d11, gl"),
                                  QStringLiteral("backend"));
     parser.addOption(rhiOption);
+    QCommandLineOption selectorOption(QStringLiteral("S"), QCoreApplication::translate("main",
+        "Add selector to the list of QQmlFileSelectors."), QStringLiteral("selector"));
+    parser.addOption(selectorOption);
 
     // Positional arguments
     parser.addPositionalArgument("files",
@@ -550,6 +555,26 @@ int main(int argc, char *argv[])
 #endif
     for (const QString &importPath : parser.values(importOption))
         e.addImportPath(importPath);
+
+    QStringList customSelectors;
+    for (const QString &selector : parser.values(selectorOption))
+        customSelectors.append(selector);
+    if (!customSelectors.isEmpty()) {
+        QQmlFileSelector *selector =  QQmlFileSelector::get(&e);
+        selector->setExtraSelectors(customSelectors);
+    }
+
+#if defined(QT_GUI_LIB) && QT_CONFIG(opengl)
+    if (qEnvironmentVariableIsSet("QSG_CORE_PROFILE") || qEnvironmentVariableIsSet("QML_CORE_PROFILE")) {
+        QSurfaceFormat surfaceFormat;
+        surfaceFormat.setStencilBufferSize(8);
+        surfaceFormat.setDepthBufferSize(24);
+        surfaceFormat.setVersion(4, 1);
+        surfaceFormat.setProfile(QSurfaceFormat::CoreProfile);
+        QSurfaceFormat::setDefaultFormat(surfaceFormat);
+    }
+#endif
+
     files << parser.values(qmlFileOption);
     if (parser.isSet(configOption))
         confFile = parser.value(configOption);

@@ -64,7 +64,7 @@ DropArea {
         id: dropRectangle
 
         anchors.fill: parent
-        color: colorKey
+        color: dragTarget.colorKey
 
         states: [
             State {

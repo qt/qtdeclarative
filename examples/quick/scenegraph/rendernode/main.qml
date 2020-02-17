@@ -66,7 +66,7 @@ Item {
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
-            onClicked: {
+            onClicked: (mouse) => {
                 if (mouse.button === Qt.LeftButton) {
                     clipper.clip = !clipper.clip
                 } else if (mouse.button === Qt.RightButton) {

@@ -73,7 +73,7 @@ Item {
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: {
+        onClicked: (mouse) => {
             if (!sprite.running)
                 sprite.start();
             if (!sprite.paused)

@@ -51,12 +51,11 @@
 import QtQuick 2.1
 
 FocusScope {
+    id: menu
     property alias interactive: gridView.interactive
-
-    onActiveFocusChanged: {
-        if (activeFocus)
-            mainView.state = "showGridViews"
-    }
+    required property Item keyUpTarget
+    required property Item keyDownTarget
+    required property Item keyLeftTarget
 
     Rectangle {
         anchors.fill: parent
@@ -73,13 +72,15 @@ FocusScope {
             focus: true
             model: 12
 
-            KeyNavigation.up: tabMenu
-            KeyNavigation.down: listMenu
-            KeyNavigation.left: contextMenu
+            KeyNavigation.up: menu.keyUpTarget
+            KeyNavigation.down: menu.keyDownTarget
+            KeyNavigation.left: menu.keyLeftTarget
 
             delegate: Item {
                 id: container
-                width: GridView.view.cellWidth; height: GridView.view.cellHeight
+                width: GridView.view.cellWidth
+                height: GridView.view.cellHeight
+                required property int index
 
                 Rectangle {
                     id: content
@@ -97,7 +98,7 @@ FocusScope {
                     hoverEnabled: true
 
                     onClicked: {
-                        container.GridView.view.currentIndex = index
+                        container.GridView.view.currentIndex = container.index
                         container.forceActiveFocus()
                     }
                 }

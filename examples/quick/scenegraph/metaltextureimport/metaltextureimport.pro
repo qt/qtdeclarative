@@ -1,6 +1,9 @@
 !macos:!ios: error("This example requires macOS or iOS")
 
 QT += qml quick
+CONFIG += qmltypes
+QML_IMPORT_NAME = MetalTextureImport
+QML_IMPORT_MAJOR_VERSION = 1
 
 HEADERS += metaltextureimport.h
 SOURCES += metaltextureimport.mm main.cpp

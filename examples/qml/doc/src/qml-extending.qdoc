@@ -69,7 +69,7 @@ This example builds on:
 \li \l {Extending QML - Adding Types Example}
 \endlist
 
-Shows how to use \l {QQmlEngine::}{qmlRegisterExtendedType()} to provide an
+Shows how to use \l {QML_EXTENDED} to provide an
 \l {Registering Extension Objects}{extension object} to a \l QLineEdit without modifying or
 subclassing it.
 

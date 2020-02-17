@@ -144,8 +144,6 @@ Q_SIGNALS:
     void defaultGroupsChanged();
     void rootIndexChanged();
     void delegateChanged();
-    void itemPooled(int index, QObject *object);
-    void itemReused(int index, QObject *object);
 
 private Q_SLOTS:
     void _q_itemsChanged(int index, int count, const QVector<int> &roles);

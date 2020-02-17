@@ -60,6 +60,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlJS { namespace AST {
 
+class BaseVisitor;
 class Visitor;
 class Node;
 class ExpressionNode;
@@ -151,7 +152,6 @@ class NamedImport;
 class ImportClause;
 class FromClause;
 class ImportDeclaration;
-class ModuleItem;
 class ESModule;
 class DebuggerStatement;
 class NestedExpression;
@@ -184,6 +184,8 @@ class UiEnumDeclaration;
 class UiEnumMemberList;
 class UiVersionSpecifier;
 class UiRequired;
+class UiAnnotation;
+class UiAnnotationList;
 
 } // namespace AST
 } // namespace QQmlJS

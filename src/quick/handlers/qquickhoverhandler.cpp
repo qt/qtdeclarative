@@ -93,11 +93,22 @@ bool QQuickHoverHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
     QQuickEventPoint *point = event->point(0);
     if (QQuickPointerDeviceHandler::wantsPointerEvent(event) && wantsEventPoint(point) && parentContains(point)) {
-        // assume this is a mouse event, so there's only one point
+        // assume this is a mouse or tablet event, so there's only one point
         setPointId(point->pointId());
         return true;
     }
-    setHovered(false);
+
+    // Some hover events come from QQuickWindow::tabletEvent(). In between,
+    // some hover events come from QQWindowPrivate::flushFrameSynchronousEvents(),
+    // but those look like mouse events. If a particular HoverHandler instance
+    // is filtering for tablet events only (e.g. by setting
+    // acceptedDevices:PointerDevice.Stylus), those events should not cause
+    // the hovered property to transition to false prematurely.
+    // If a QQuickPointerTabletEvent caused the hovered property to become true,
+    // then only another QQuickPointerTabletEvent can make it become false.
+    if (!(m_hoveredTablet && event->asPointerMouseEvent()))
+        setHovered(false);
+
     return false;
 }
 
@@ -107,6 +118,8 @@ void QQuickHoverHandler::handleEventPoint(QQuickEventPoint *point)
     if (point->state() == QQuickEventPoint::Released &&
             point->pointerEvent()->device()->pointerType() == QQuickPointerDevice::Finger)
         hovered = false;
+    else if (point->pointerEvent()->asPointerTabletEvent())
+        m_hoveredTablet = true;
     setHovered(hovered);
     setPassiveGrab(point);
 }
@@ -124,6 +137,8 @@ void QQuickHoverHandler::setHovered(bool hovered)
     if (m_hovered != hovered) {
         qCDebug(lcHoverHandler) << objectName() << "hovered" << m_hovered << "->" << hovered;
         m_hovered = hovered;
+        if (!hovered)
+            m_hoveredTablet = false;
         emit hoveredChanged();
     }
 }

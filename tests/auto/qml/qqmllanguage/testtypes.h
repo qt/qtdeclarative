@@ -1440,17 +1440,22 @@ public:
     int base() const { return 43; }
 };
 
+class Local : public QObject
+{
+    Q_OBJECT
+};
+
 class Foreign
 {
     Q_GADGET
-    QML_FOREIGN(QObject)
+    QML_FOREIGN(Local)
     QML_NAMED_ELEMENT(Foreign)
 };
 
 class ForeignExtended
 {
     Q_GADGET
-    QML_FOREIGN(QObject)
+    QML_FOREIGN(Local)
     QML_NAMED_ELEMENT(ForeignExtended)
     QML_EXTENDED(Extension)
 };

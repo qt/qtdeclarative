@@ -50,7 +50,12 @@ class QtQuick2ParticlesPlugin : public QQmlExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    QtQuick2ParticlesPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
+    QtQuick2ParticlesPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent)
+    {
+        volatile auto registration = &qml_register_types_QtQuick_Particles;
+        Q_UNUSED(registration);
+    }
+
     void registerTypes(const char *uri) override
     {
         Q_UNUSED(uri);

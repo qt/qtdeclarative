@@ -125,6 +125,7 @@ class QJSValue;
 class QJSEngine;
 class QQmlEngine;
 class QQmlCustomParser;
+class QQmlTypeNotAvailable;
 
 template<class T>
 QQmlCustomParser *qmlCreateCustomParser()
@@ -406,6 +407,9 @@ namespace QQmlPrivate
         int listId;
 
         const char *iid;
+
+        const char *uri;
+        QTypeRevision version;
     };
 
     struct RegisterAutoParent {
@@ -578,6 +582,18 @@ namespace QQmlPrivate
         static constexpr bool Value = bool(T::QmlIsSingleton::yes);
     };
 
+    template<class T, class = QmlVoidT<>>
+    struct QmlInterface
+    {
+        static constexpr bool Value = false;
+    };
+
+    template<class T>
+    struct QmlInterface<T, QmlVoidT<typename T::QmlIsInterface>>
+    {
+        static constexpr bool Value = bool(T::QmlIsInterface::yes);
+    };
+
     template<typename T>
     void qmlRegisterSingletonAndRevisions(const char *uri, int versionMajor,
                                           const QMetaObject *classInfoMetaObject)
@@ -636,6 +652,11 @@ namespace QQmlPrivate
 
         qmlregister(TypeAndRevisionsRegistration, &type);
     }
+
+    template<>
+    void Q_QML_EXPORT qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
+            const char *uri, int versionMajor, const QMetaObject *classInfoMetaObject);
+
 } // namespace QQmlPrivate
 
 QT_END_NAMESPACE

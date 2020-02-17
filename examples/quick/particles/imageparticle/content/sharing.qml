@@ -56,6 +56,8 @@ import QtQuick 2.0
 import QtQuick.Particles 2.0
 
 Rectangle {
+    id: root
+
     property real delegateHeight: 65
     width: 200; height: 300
     gradient: Gradient {
@@ -65,53 +67,53 @@ Rectangle {
 
     // Define a delegate component.  A component will be
     // instantiated for each visible item in the list.
-    Component {
-        id: petDelegate
-        Item {
-            id: wrapper
-            width: 200; height: delegateHeight
-            z: 10
-            Column {
-                Text {color: "white"; text: name; font.pixelSize: 18 }
-                Text {color: "white"; text: 'Type: ' + type; font.pixelSize: 14 }
-                Text {color: "white"; text: 'Age: ' + age; font.pixelSize: 14 }
-            }
-            MouseArea { anchors.fill: parent; onClicked: listView.currentIndex = index; }
-            // indent the item if it is the current item
-            states: State {
-                name: "Current"
-                when: wrapper.ListView.isCurrentItem
-                PropertyChanges { target: wrapper; x: 20 }
-            }
-            transitions: Transition {
-                NumberAnimation { properties: "x"; duration: 200 }
-            }
+    component PetDelegate: Item {
+        id: pet
+        width: 200; height: root.delegateHeight
+        z: 10
+
+        required property int index
+        required property string name
+        required property string type
+        required property int age
+
+        Column {
+            Text {color: "white"; text: pet.name; font.pixelSize: 18 }
+            Text {color: "white"; text: 'Type: ' + pet.type; font.pixelSize: 14 }
+            Text {color: "white"; text: 'Age: ' + pet.age; font.pixelSize: 14 }
+        }
+        MouseArea { anchors.fill: parent; onClicked: listView.currentIndex = pet.index; }
+        // indent the item if it is the current item
+        states: State {
+            name: "Current"
+            when: pet.ListView.isCurrentItem
+            PropertyChanges { target: pet; x: 20 }
+        }
+        transitions: Transition {
+            NumberAnimation { properties: "x"; duration: 200 }
         }
     }
 
     // Define a highlight with customized movement between items.
-    Component {
-        id: highlightBar
-        Rectangle {
-            z: 0
-            width: 200; height: delegateHeight
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: "#99FF99" }
-                GradientStop { position: 1.0; color: "#88FF88" }
-            }
-            y: listView.currentItem.y;
-            Behavior on y { SpringAnimation { spring: 2; damping: 0.2 } }
-            //! [1]
-            ImageParticle {
-                anchors.fill: parent
-                system: particles
-                source: "../../images/flower.png"
-                color: "red"
-                clip: true
-                alpha: 1.0
-            }
-            //! [1]
+    component HighlightBar : Rectangle {
+        z: 0
+        width: 200; height: root.delegateHeight
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: "#99FF99" }
+            GradientStop { position: 1.0; color: "#88FF88" }
         }
+        y: listView.currentItem.y;
+        Behavior on y { SpringAnimation { spring: 2; damping: 0.2 } }
+        //! [1]
+        ImageParticle {
+            anchors.fill: parent
+            system: particles
+            source: "../../images/flower.png"
+            color: "red"
+            clip: true
+            alpha: 1.0
+        }
+        //! [1]
     }
 
     ListView {
@@ -119,12 +121,12 @@ Rectangle {
         width: 200; height: parent.height
 
         model: petsModel
-        delegate: petDelegate
+        delegate: PetDelegate {}
         focus: true
 
         // Set the highlight delegate. Note we must also set highlightFollowsCurrentItem
         // to false so the highlight delegate can control how the highlight is moved.
-        highlight: highlightBar
+        highlight: HighlightBar {}
         highlightFollowsCurrentItem: false
 
         ParticleSystem { id: particles }

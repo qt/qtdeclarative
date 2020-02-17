@@ -92,6 +92,8 @@ Rectangle {
         orientation: ListView.Horizontal
         snapMode: ListView.SnapOneItem
         model: list
-        delegate: Panel { }
+        delegate: Panel {
+            horizontalVelocity: flickable.horizontalVelocity
+        }
     }
 }

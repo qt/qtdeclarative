@@ -41,6 +41,8 @@ private Q_SLOTS:
 
     void testFormat();
     void testFormatNoSort();
+    void testAnnotations();
+    void testAnnotationsNoSort();
 
     void testReadOnlyProps();
     void testStatesAndTransitions();
@@ -183,6 +185,16 @@ void TestQmlformat::testFormat()
 void TestQmlformat::testFormatNoSort()
 {
     QCOMPARE(runQmlformat(testFile("Example1.qml"), false, true), readTestFile("Example1.formatted.nosort.qml"));
+}
+
+void TestQmlformat::testAnnotations()
+{
+    QCOMPARE(runQmlformat(testFile("Annotations.qml"), true, true), readTestFile("Annotations.formatted.qml"));
+}
+
+void TestQmlformat::testAnnotationsNoSort()
+{
+    QCOMPARE(runQmlformat(testFile("Annotations.qml"), false, true), readTestFile("Annotations.formatted.nosort.qml"));
 }
 
 void TestQmlformat::testReadOnlyProps()

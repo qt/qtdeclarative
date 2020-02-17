@@ -59,7 +59,10 @@ Rectangle {
         anchors.fill: parent
         model: listModel
         delegate: Component {
-            Text { text: time }
+            Text {
+                required property string time
+                text: time
+            }
         }
 
         ListModel { id: listModel }
