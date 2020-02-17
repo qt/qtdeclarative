@@ -1360,12 +1360,16 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
   \code
   class MySingleton : public QObject {
     Q_OBJECT
+
+    // Register as default constructed singleton.
+    QML_ELEMENT
+    QML_SINGLETON
+
     static int typeId;
     // ...
   };
 
-  // Register with QObject* callback
-  MySingleton::typeId = qmlRegisterSingletonType<MySingleton>(...);
+  MySingleton::typeId = qmlTypeId(...);
 
   // Retrieve as QObject*
   QQmlEngine engine;
@@ -1382,11 +1386,10 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
   QJSValue instance = engine.singletonInstance<QJSValue>(typeId);
   \endcode
 
-  It is recommended to store the QML type id during registration, e.g. as a static member
-  in the singleton class. Otherwise, a costly lookup via qmlTypeId() has to be performed
-  at run-time.
+  It is recommended to store the QML type id, e.g. as a static member in the
+  singleton class. The lookup via qmlTypeId() is costly.
 
-  \sa qmlRegisterSingletonType(), qmlTypeId()
+  \sa QML_SINGLETON, qmlRegisterSingletonType(), qmlTypeId()
   \since 5.12
 */
 template<>
