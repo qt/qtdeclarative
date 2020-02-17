@@ -153,6 +153,7 @@ inline QQmlPropertyCacheCreator<ObjectContainer>::QQmlPropertyCacheCreator(QQmlP
     , propertyCaches(propertyCaches)
     , pendingGroupPropertyBindings(pendingGroupPropertyBindings)
     , typeClassName(typeClassName)
+    , currentRoot(-1)
 {
     propertyCaches->resize(objectContainer->objectCount());
 }
