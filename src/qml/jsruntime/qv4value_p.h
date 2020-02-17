@@ -537,29 +537,8 @@ struct ValueArray {
     }
 
     void mark(MarkStack *markStack) {
-        Value *v = values;
-        const Value *end = v + alloc;
-        if (alloc > 32*1024) {
-            // drain from time to time to avoid overflows in the js stack
-            Value::HeapBasePtr *currentBase = markStack->top;
-            while (v < end) {
-                v->mark(markStack);
-                ++v;
-                if (markStack->top >= currentBase + 32*1024) {
-                    Value::HeapBasePtr *oldBase = markStack->base;
-                    markStack->base = currentBase;
-                    markStack->drain();
-                    markStack->base = oldBase;
-                }
-            }
-        } else {
-            while (v < end) {
-                v->mark(markStack);
-                if (markStack->top >= markStack->limit)
-                    markStack->drain();
-                ++v;
-            }
-        }
+        for (Value *v = values, *end = values + alloc; v < end; ++v)
+            v->mark(markStack);
     }
 };
 

@@ -1266,20 +1266,15 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
 
 void ExecutionEngine::markObjects(MarkStack *markStack)
 {
-    for (int i = 0; i < NClasses; ++i)
-        if (classes[i]) {
-            classes[i]->mark(markStack);
-            if (markStack->top >= markStack->limit)
-                markStack->drain();
-        }
-    markStack->drain();
+    for (int i = 0; i < NClasses; ++i) {
+        if (Heap::InternalClass *c = classes[i])
+            c->mark(markStack);
+    }
 
     identifierTable->markObjects(markStack);
 
-    for (auto compilationUnit: compilationUnits) {
+    for (auto compilationUnit: compilationUnits)
         compilationUnit->markObjects(markStack);
-        markStack->drain();
-    }
 }
 
 ReturnedValue ExecutionEngine::throwError(const Value &value)
