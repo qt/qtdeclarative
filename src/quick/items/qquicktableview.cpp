@@ -82,7 +82,7 @@
     The following example shows how to create a model from C++ with multiple
     columns:
 
-    \snippet qml/tableview/cpp-tablemodel.cpp 0
+    \snippet qml/tableview/cpp-tablemodel.h 0
 
     And then how to use it from QML:
 
