@@ -1,19 +1,22 @@
-QQmlExtensionPlugin is a plugin interface that makes it possible to
+\l QQmlEngineExtensionPlugin is a plugin interface that makes it possible to
 create QML extensions that can be loaded dynamically into QML applications.
 These extensions allow custom QML types to be made available to the
 QML engine.
 
 To write a QML extension plugin:
 \list 1
-\li Subclass QQmlExtensionPlugin
+\li Subclass \l QQmlEngineExtensionPlugin and use the Q_PLUGIN_METADATA() macro
+    to register the plugin with the Qt meta object system.
+\li Use the \l QML_ELEMENT and \l QML_NAMED_ELEMENT() macros to declare
+    QML types.
+\li Write a project file for the plugin. Add:
     \list
-        \li Use the Q_PLUGIN_METADATA() macro to register the plugin with
-            the Qt meta object system
-        \li Override the \l{QQmlExtensionPlugin::}{registerTypes()} method
-            and call qmlRegisterType() to register the types to be exported
-            by the plugin
+        \li \c {CONFIG += qmltypes} to instruct the build system to generate
+            QML types.
+        \li \c {QML_IMPORT_NAME = <my.import.name>} to specify the import name.
+        \li \c {QML_IMPORT_MAJOR_VERSION = <version>} to specify the import
+            major version.
     \endlist
-\li Write a project file for the plugin
 \li Create a \l{Module Definition qmldir Files}{qmldir file} to
     describe the plugin
 \endlist
@@ -27,25 +30,17 @@ issues in the library user's code.
 
 Suppose there is a new \c TimeModel C++ class that should be made available
 as a new QML type. It provides the current time through \c hour and \c minute
-properties.
+properties. It declares a QML type called \c Time via \l QML_NAMED_ELEMENT().
 
 \snippet qmlextensionplugins/timemodel.h 0
 \dots
 
 To make this type available, we create a plugin class named \c QExampleQmlPlugin
-which is a subclass of \l QQmlExtensionPlugin. It overrides the
-\l{QQmlExtensionPlugin::}{registerTypes()} method in order to register the \c TimeModel
-type using qmlRegisterType(). It also uses the Q_PLUGIN_METADATA() macro in the class
-definition to register the plugin with the Qt meta object system using a unique
-identifier for the plugin.
+which is a subclass of \l QQmlEngineExtensionPlugin. It uses the
+Q_PLUGIN_METADATA() macro in the class definition to register the plugin with the
+Qt meta object system using a unique identifier for the plugin.
 
 \snippet qmlextensionplugins/plugin.cpp plugin
-
-This registers the \c TimeModel class with version \c{1.0} of this plugin library, as
-a QML type called \c Time. The Q_ASSERT() macro can ensure the type namespace is
-imported correctly by any QML components that use this plugin. The
-\l{Defining QML Types from C++} article has more information about registering C++
-types into the runtime.
 
 \section1 Project settings for the plugin
 
@@ -55,13 +50,21 @@ the plugin target name and various other details:
 
 \code
 TEMPLATE = lib
-CONFIG += qt plugin
+CONFIG += qt plugin qmltypes
 QT += qml
 
-DESTDIR = imports/TimeExample
-TARGET = qmlqtimeexampleplugin
+QML_IMPORT_NAME = TimeExample
+QML_IMPORT_MAJOR_VERSION = 1
+
+DESTDIR = imports/$$QML_IMPORT_NAME
+TARGET  = qmlqtimeexampleplugin
+
 SOURCES += qexampleqmlplugin.cpp
 \endcode
+
+This registers the \c TimeModel class with the import \c{TimeExample 1.0}, as
+a QML type called \c Time. The \l{Defining QML Types from C++} article has more
+information about registering C++ types for usage in QML.
 
 \section1 Plugin definition in the qmldir
 

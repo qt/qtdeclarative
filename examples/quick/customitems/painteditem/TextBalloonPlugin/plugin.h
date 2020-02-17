@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-#include <QQmlExtensionPlugin>
+#include <QQmlEngineExtensionPlugin>
 
 #include "../textballoon.h"
 
