@@ -1067,7 +1067,7 @@ void tst_QJSValue::toVariant()
     }
 
     {
-        QDateTime dateTime = QDateTime(QDate(1980, 10, 4));
+        QDateTime dateTime = QDate(1980, 10, 4).startOfDay();
         QJSValue dateObject = eng.toScriptValue(dateTime);
         QVariant var = dateObject.toVariant();
         QCOMPARE(var, QVariant(dateTime));
@@ -1222,7 +1222,7 @@ void tst_QJSValue::toDateTime()
     QDateTime dt = eng.evaluate("new Date(0)").toDateTime();
     QVERIFY(dt.isValid());
     QCOMPARE(dt.timeSpec(), Qt::LocalTime);
-    QCOMPARE(dt.toUTC(), QDateTime(QDate(1970, 1, 1), QTime(0, 0, 0), Qt::UTC));
+    QCOMPARE(dt.toUTC(), QDate(1970, 1, 1).startOfDay(Qt::UTC));
 
     QVERIFY(!eng.evaluate("[]").toDateTime().isValid());
     QVERIFY(!eng.evaluate("{}").toDateTime().isValid());
@@ -2145,8 +2145,8 @@ void tst_QJSValue::equals()
     QCOMPARE(str2.equals(QJSValue(321)), false);
     QCOMPARE(str2.equals(QJSValue()), false);
 
-    QJSValue date1 = eng.toScriptValue(QDateTime(QDate(2000, 1, 1)));
-    QJSValue date2 = eng.toScriptValue(QDateTime(QDate(1999, 1, 1)));
+    QJSValue date1 = eng.toScriptValue(QDate(2000, 1, 1).startOfDay());
+    QJSValue date2 = eng.toScriptValue(QDate(1999, 1, 1).startOfDay());
     QCOMPARE(date1.equals(date2), false);
     QCOMPARE(date1.equals(date1), true);
     QCOMPARE(date2.equals(date2), true);
@@ -2278,8 +2278,8 @@ void tst_QJSValue::strictlyEquals()
     QCOMPARE(str2.strictlyEquals(QJSValue(321)), false);
     QVERIFY(!str2.strictlyEquals(QJSValue()));
 
-    QJSValue date1 = eng.toScriptValue(QDateTime(QDate(2000, 1, 1)));
-    QJSValue date2 = eng.toScriptValue(QDateTime(QDate(1999, 1, 1)));
+    QJSValue date1 = eng.toScriptValue(QDate(2000, 1, 1).startOfDay());
+    QJSValue date2 = eng.toScriptValue(QDate(1999, 1, 1).startOfDay());
     QCOMPARE(date1.strictlyEquals(date2), false);
     QCOMPARE(date1.strictlyEquals(date1), true);
     QCOMPARE(date2.strictlyEquals(date2), true);

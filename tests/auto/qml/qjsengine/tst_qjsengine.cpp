@@ -3342,7 +3342,7 @@ void tst_QJSEngine::dateRoundtripJSQtJS()
 #ifdef Q_OS_WIN
     QSKIP("This test fails on Windows due to a bug in QDateTime.");
 #endif
-    qint64 secs = QDateTime(QDate(2009, 1, 1)).toUTC().toSecsSinceEpoch();
+    qint64 secs = QDate(2009, 1, 1).startOfDay(Qt::UTC).toSecsSinceEpoch();
     QJSEngine eng;
     for (int i = 0; i < 8000; ++i) {
         QJSValue jsDate = eng.evaluate(QString::fromLatin1("new Date(%0)").arg(secs * 1000.0));
@@ -3359,7 +3359,7 @@ void tst_QJSEngine::dateRoundtripQtJSQt()
 #ifdef Q_OS_WIN
     QSKIP("This test fails on Windows due to a bug in QDateTime.");
 #endif
-    QDateTime qtDate = QDateTime(QDate(2009, 1, 1));
+    QDateTime qtDate = QDate(2009, 1, 1).startOfDay();
     QJSEngine eng;
     for (int i = 0; i < 8000; ++i) {
         QJSValue jsDate = eng.toScriptValue(qtDate);
@@ -3375,7 +3375,7 @@ void tst_QJSEngine::dateConversionJSQt()
 #ifdef Q_OS_WIN
     QSKIP("This test fails on Windows due to a bug in QDateTime.");
 #endif
-    qint64 secs = QDateTime(QDate(2009, 1, 1)).toUTC().toSecsSinceEpoch();
+    qint64 secs = QDate(2009, 1, 1).startOfDay(Qt::UTC).toSecsSinceEpoch();
     QJSEngine eng;
     for (int i = 0; i < 8000; ++i) {
         QJSValue jsDate = eng.evaluate(QString::fromLatin1("new Date(%0)").arg(secs * 1000.0));
@@ -3391,7 +3391,7 @@ void tst_QJSEngine::dateConversionJSQt()
 
 void tst_QJSEngine::dateConversionQtJS()
 {
-    QDateTime qtDate = QDateTime(QDate(2009, 1, 1));
+    QDateTime qtDate = QDate(2009, 1, 1).startOfDay();
     QJSEngine eng;
     for (int i = 0; i < 8000; ++i) {
         QJSValue jsDate = eng.toScriptValue(qtDate);

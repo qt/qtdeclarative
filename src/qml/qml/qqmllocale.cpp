@@ -314,7 +314,7 @@ ReturnedValue QQmlDateExtension::method_fromLocaleDateString(const QV4::Function
             QLocale locale;
             QString dateString = s->toQString();
             QDate date = locale.toDate(dateString);
-            RETURN_RESULT(engine->newDateObject(QDateTime(date)));
+            RETURN_RESULT(engine->newDateObject(date.startOfDay()));
         }
     }
 
@@ -341,7 +341,7 @@ ReturnedValue QQmlDateExtension::method_fromLocaleDateString(const QV4::Function
         dt = r->d()->locale->toDate(dateString, enumFormat);
     }
 
-    RETURN_RESULT(engine->newDateObject(QDateTime(dt)));
+    RETURN_RESULT(engine->newDateObject(dt.startOfDay()));
 }
 
 ReturnedValue QQmlDateExtension::method_timeZoneUpdated(const QV4::FunctionObject *b, const QV4::Value *, const QV4::Value *, int argc)
