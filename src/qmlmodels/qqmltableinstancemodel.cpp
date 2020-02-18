@@ -78,7 +78,10 @@ void QQmlTableInstanceModel::deleteModelItemLater(QQmlDelegateModelItem *modelIt
 QQmlTableInstanceModel::QQmlTableInstanceModel(QQmlContext *qmlContext, QObject *parent)
     : QQmlInstanceModel(*(new QObjectPrivate()), parent)
     , m_qmlContext(qmlContext)
-    , m_metaType(new QQmlDelegateModelItemMetaType(m_qmlContext->engine()->handle(), nullptr, QStringList()))
+    , m_metaType(
+          new QQmlDelegateModelItemMetaType(m_qmlContext->engine()->handle(), nullptr,
+                                            QStringList()),
+          QQmlRefPointer<QQmlDelegateModelItemMetaType>::Adopt)
 {
 }
 
@@ -149,7 +152,7 @@ QQmlDelegateModelItem *QQmlTableInstanceModel::resolveModelItem(int index)
     }
 
     // Create a new item from scratch
-    modelItem = m_adaptorModel.createItem(m_metaType, index);
+    modelItem = m_adaptorModel.createItem(m_metaType.data(), index);
     if (modelItem) {
         modelItem->delegate = delegate;
         m_modelItems.insert(index, modelItem);
@@ -333,7 +336,14 @@ void QQmlTableInstanceModel::drainReusableItemsPool(int maxPoolTime)
             ++it;
         } else {
             it = m_reusableItemsPool.erase(it);
-            release(modelItem->object, NotReusable);
+
+            Q_ASSERT(!modelItem->incubationTask);
+            Q_ASSERT(!modelItem->isObjectReferenced());
+            Q_ASSERT(!modelItem->isReferenced());
+            Q_ASSERT(modelItem->object);
+            emit destroyingItem(modelItem->object);
+            delete modelItem->object;
+            delete modelItem;
         }
     }
 }
