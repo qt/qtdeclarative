@@ -597,8 +597,10 @@ Q_GLOBAL_STATIC_WITH_ARGS(ConstructableQQuickPointerDevice, g_genericMouseDevice
                              QQuickPointerDevice::Position | QQuickPointerDevice::Scroll | QQuickPointerDevice::Hover,
                              1, 3, QLatin1String("core pointer"), 0))
 
+#if QT_CONFIG(tabletevent)
 typedef QHash<qint64, QQuickPointerDevice *> PointerDeviceForDeviceIdHash;
 Q_GLOBAL_STATIC(PointerDeviceForDeviceIdHash, g_tabletDevices)
+#endif
 
 // debugging helpers
 static const char *pointStateString(const QQuickEventPoint *point)
@@ -658,6 +660,7 @@ QQuickPointerDevice *QQuickPointerDevice::genericMouseDevice()
     return g_genericMouseDevice;
 }
 
+#if QT_CONFIG(tabletevent)
 QQuickPointerDevice *QQuickPointerDevice::tabletDevice(const QTabletEvent *event)
 {
     // QTabletEvent::uniqueId() is the same for the pointy end and the eraser end of the stylus.
@@ -726,6 +729,7 @@ QQuickPointerDevice *QQuickPointerDevice::tabletDevice(const QTabletEvent *event
     g_tabletDevices->insert(key, device);
     return device;
 }
+#endif
 
 /*!
     \qmltype EventPoint

@@ -763,7 +763,9 @@ public:
     static QQuickPointerDevice *touchDevice(const QTouchDevice *d);
     static QList<QQuickPointerDevice *> touchDevices();
     static QQuickPointerDevice *genericMouseDevice();
+#if QT_CONFIG(tabletevent)
     static QQuickPointerDevice *tabletDevice(const QTabletEvent *event);
+#endif
 
     QVector<QQuickPointerHandler *> &eventDeliveryTargets() { return m_eventDeliveryTargets; }
 
