@@ -2,3 +2,7 @@
 [nestedStopAtBounds]
 opensuse-leap
 
+# QTBUG-82282
+[pressOneAndTapAnother]
+opensuse-leap
+
