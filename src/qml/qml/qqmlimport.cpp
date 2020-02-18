@@ -724,6 +724,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
                 Q_ASSERT(ok);
                 typePriv->extraData.id->url = QUrl(this->url);
                 auto icType = QQmlType(typePriv);
+                typePriv->release();
                 return icType;
             };
             if (containingType.isValid()) {
