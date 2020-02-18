@@ -81,4 +81,4 @@ Item {
     }
     property LabeledImage selectedImage: before
 }
-// Images.qml
+//! [document]

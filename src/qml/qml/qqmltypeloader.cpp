@@ -393,7 +393,7 @@ QQmlEngine *QQmlTypeLoader::engine() const
     return m_engine;
 }
 
-/*!
+/*! \internal
 Call the initializeEngine() method on \a iface.  Used by QQmlImportDatabase to ensure it
 gets called in the correct thread.
 */
