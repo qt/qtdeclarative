@@ -458,7 +458,7 @@ public:
 
     void cleanup(QQmlAdaptorModel &) const override
     {
-        const_cast<VDMAbstractItemModelDataType *>(this)->release();
+        release();
     }
 
     QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const override
