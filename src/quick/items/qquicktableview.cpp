@@ -441,7 +441,16 @@ QQuickTableViewPrivate::QQuickTableViewPrivate()
 
 QQuickTableViewPrivate::~QQuickTableViewPrivate()
 {
-    releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
+    for (auto *fxTableItem : loadedItems) {
+        if (auto item = fxTableItem->item) {
+            if (fxTableItem->ownItem)
+                delete item;
+            else if (tableModel)
+                tableModel->dispose(item);
+        }
+        delete fxTableItem;
+    }
+
     if (tableModel)
         delete tableModel;
 }

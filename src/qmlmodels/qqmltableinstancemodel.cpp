@@ -240,6 +240,25 @@ QQmlInstanceModel::ReleaseFlags QQmlTableInstanceModel::release(QObject *object,
     return QQmlInstanceModel::Destroyed;
 }
 
+void QQmlTableInstanceModel::dispose(QObject *object)
+{
+    Q_ASSERT(object);
+    auto modelItem = qvariant_cast<QQmlDelegateModelItem *>(object->property(kModelItemTag));
+    Q_ASSERT(modelItem);
+
+    modelItem->releaseObject();
+
+    // The item is not referenced by anyone
+    Q_ASSERT(!modelItem->isObjectReferenced());
+    Q_ASSERT(!modelItem->isReferenced());
+
+    m_modelItems.remove(modelItem->index);
+
+    emit destroyingItem(object);
+    delete object;
+    delete modelItem;
+}
+
 void QQmlTableInstanceModel::cancel(int index)
 {
     auto modelItem = m_modelItems.value(index);

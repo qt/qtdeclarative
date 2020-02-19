@@ -117,6 +117,7 @@ public:
     QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
     ReleaseFlags release(QObject *object) override { return release(object, NotReusable); }
     ReleaseFlags release(QObject *object, ReusableFlag reusable);
+    void dispose(QObject *object);
     void cancel(int) override;
 
     void insertIntoReusableItemsPool(QQmlDelegateModelItem *modelItem);
