@@ -105,6 +105,7 @@ class QDebugMessageService {};
 class QQmlEngineControlService {};
 class QQmlNativeDebugService {};
 class QQmlDebugTranslationService {
+public:
     virtual QString foundElidedText(QObject *, const QString &, const QString &) {return {};}
     virtual void foundTranslationBinding(QQmlTranslationBinding *, QObject *, QQmlContextData *) {}
 };
