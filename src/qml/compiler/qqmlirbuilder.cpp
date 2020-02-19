@@ -553,6 +553,12 @@ bool IRBuilder::visit(QQmlJS::AST::UiInlineComponent *ast)
         recordError(ast->firstSourceLocation(), QLatin1String("Nested inline components are not supported"));
         return false;
     }
+    if (inlineComponentsNames.contains(ast->name.toString())) {
+        recordError(ast->firstSourceLocation(), QLatin1String("Inline component names must be unique per file"));
+        return false;
+    } else {
+        inlineComponentsNames.insert(ast->name.toString());
+    }
     {
         QScopedValueRollback<bool> rollBack {insideInlineComponent, true};
         if (!defineQMLObject(&idx, ast->component))

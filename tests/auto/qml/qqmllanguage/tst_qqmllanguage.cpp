@@ -319,6 +319,7 @@ private slots:
     void nonExistingInlineComponent_data();
     void nonExistingInlineComponent();
     void inlineComponentFoundBeforeOtherImports();
+    void inlineComponentDuplicateNameError();
 
     void selfReference();
     void selfReferencingSingleton();
@@ -5672,6 +5673,19 @@ void tst_qqmllanguage::inlineComponentFoundBeforeOtherImports()
 
     QTest::ignoreMessage(QtMsgType::QtInfoMsg, "Created");
     QScopedPointer<QObject> root {component.create()};
+}
+
+void tst_qqmllanguage::inlineComponentDuplicateNameError()
+{
+    QQmlEngine engine;
+    QUrl url = testFileUrl("inlineComponentDuplicateName.qml");
+    QQmlComponent component(&engine, url);
+
+    QString message = QLatin1String("%1:5 Inline component names must be unique per file\n").arg(url.toString());
+    QScopedPointer<QObject> root {component.create()};
+    QVERIFY(root.isNull());
+    QVERIFY(component.isError());
+    QCOMPARE(component.errorString(), message);
 }
 
 class TestItem : public QObject

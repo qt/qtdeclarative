@@ -543,6 +543,7 @@ public:
     QList<QQmlJS::DiagnosticMessage> errors;
 
     QSet<QString> illegalNames;
+    QSet<QString> inlineComponentsNames;
 
     QList<const QV4::CompiledData::Import *> _imports;
     QList<Pragma*> _pragmas;
