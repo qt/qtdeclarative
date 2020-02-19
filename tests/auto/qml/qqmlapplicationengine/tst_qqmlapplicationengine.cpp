@@ -302,7 +302,8 @@ void tst_qqmlapplicationengine::failureToLoadTriggersWarningSignal()
     auto url = testFileUrl("invalid.qml");
     qRegisterMetaType<QList<QQmlError>>();
     QTest::ignoreMessage(QtMsgType::QtWarningMsg, "QQmlApplicationEngine failed to load component");
-    QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression(url.toString() + QLatin1Char('*')));
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg,
+                         QRegularExpression(QRegularExpression::escape(url.toString()) + QLatin1Char('*')));
     QQmlApplicationEngine test;
     QSignalSpy warningObserver(&test, &QQmlApplicationEngine::warnings);
     test.load(url);
