@@ -63,8 +63,6 @@ ApplicationWindow {
         id: horizontalHeader
         syncView: tableView
         anchors.left: tableView.left
-        width: parent.width
-        height: contentHeight
     }
     //! [horizontal]
 
@@ -73,8 +71,6 @@ ApplicationWindow {
         id: verticalHeader
         syncView: tableView
         anchors.top: tableView.top
-        width: contentWidth
-        height: parent.height
     }
     //! [vertical]
 

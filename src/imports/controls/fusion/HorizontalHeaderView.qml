@@ -41,9 +41,15 @@ import QtQuick.Templates 2.15 as T
 T.HorizontalHeaderView {
     id: control
 
+    implicitWidth: syncView ? syncView.width : 0
+    implicitHeight: contentHeight
+
     delegate: Rectangle {
-        implicitWidth: 50
-        implicitHeight: 25
+        // Qt6: add cellPadding (and font etc) as public API in headerview
+        readonly property real cellPadding: 8
+
+        implicitWidth: text.implicitWidth + (cellPadding * 2)
+        implicitHeight: Math.max(control.height, text.implicitHeight + (cellPadding * 2))
         border.color: "#cacaca"
 
         gradient: Gradient {
@@ -58,6 +64,7 @@ T.HorizontalHeaderView {
         }
 
         Text {
+            id: text
             text: model[control.textRole]
             width: parent.width
             height: parent.height

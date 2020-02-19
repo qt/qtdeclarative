@@ -41,9 +41,15 @@ import QtQuick.Templates 2.15 as T
 T.VerticalHeaderView {
     id: control
 
+    implicitWidth: contentWidth
+    implicitHeight: syncView ? syncView.height : 0
+
     delegate: Rectangle {
-        implicitWidth: 50
-        implicitHeight: 25
+        // Qt6: add cellPadding (and font etc) as public API in headerview
+        readonly property real cellPadding: 8
+
+        implicitWidth: Math.max(control.width, text.implicitWidth + (cellPadding * 2))
+        implicitHeight: text.implicitHeight + (cellPadding * 2)
         border.color: "#cacaca"
 
         gradient: Gradient {
@@ -58,6 +64,7 @@ T.VerticalHeaderView {
         }
 
         Text {
+            id: text
             text: model[control.textRole]
             width: parent.width
             height: parent.height

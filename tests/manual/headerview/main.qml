@@ -101,8 +101,6 @@ Window {
     HorizontalHeaderView {
         id: horizontalHeader
         objectName: "horizontalHeader"
-        height: contentHeight
-        width: syncView.width
         anchors.top: parent.top
         anchors.left: tableView.left
         syncView: tableView
@@ -112,8 +110,6 @@ Window {
     VerticalHeaderView {
         id: verticalHeader
         objectName: "verticalHeader"
-        width: contentWidth
-        height: syncView.height
         anchors.top: tableView.top
         syncView: tableView
         clip: true
