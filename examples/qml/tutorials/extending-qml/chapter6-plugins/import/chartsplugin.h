@@ -51,7 +51,7 @@
 #define CHARTSPLUGIN_H
 
 //![0]
-#include <QQmlExtensionPlugin>
+#include <QQmlEngineExtensionPlugin>
 
 class ChartsPlugin : public QQmlEngineExtensionPlugin
 {

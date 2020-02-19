@@ -107,11 +107,6 @@ private:
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlCustomParser::Flags)
 
-#if 0
-#define QML_REGISTER_CUSTOM_TYPE(URI, VERSION_MAJ, VERSION_MIN, NAME, TYPE, CUSTOMTYPE) \
-            qmlRegisterCustomType<TYPE>(#URI, VERSION_MAJ, VERSION_MIN, #NAME, #TYPE, new CUSTOMTYPE)
-#endif
-
 QT_END_NAMESPACE
 
 #endif

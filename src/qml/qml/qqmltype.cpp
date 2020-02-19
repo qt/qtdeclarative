@@ -631,14 +631,14 @@ QTypeRevision QQmlType::metaObjectRevision() const
 
 QQmlAttachedPropertiesFunc QQmlType::attachedPropertiesFunction(QQmlEnginePrivate *engine) const
 {
-    if (const QQmlTypePrivate *base = d->attachedPropertiesBase(engine))
+    if (const QQmlTypePrivate *base = d ? d->attachedPropertiesBase(engine) : nullptr)
         return base->extraData.cd->attachedPropertiesFunc;
     return nullptr;
 }
 
 const QMetaObject *QQmlType::attachedPropertiesType(QQmlEnginePrivate *engine) const
 {
-    if (const QQmlTypePrivate *base = d->attachedPropertiesBase(engine))
+    if (const QQmlTypePrivate *base = d ? d->attachedPropertiesBase(engine) : nullptr)
         return base->extraData.cd->attachedPropertiesType;
     return nullptr;
 }
