@@ -318,6 +318,7 @@ private slots:
     void inlineComponentInSingleton();
     void nonExistingInlineComponent_data();
     void nonExistingInlineComponent();
+    void inlineComponentFoundBeforeOtherImports();
 
     void selfReference();
     void selfReferencingSingleton();
@@ -5661,6 +5662,16 @@ void tst_qqmllanguage::nonExistingInlineComponent()
     QCOMPARE(error.description(), errorMessage);
     QCOMPARE(error.line(), line);
     QCOMPARE(error.column(), column);
+}
+
+void tst_qqmllanguage::inlineComponentFoundBeforeOtherImports()
+{
+    QQmlEngine engine;
+    QUrl url = testFileUrl("inlineComponentFoundBeforeOtherImports.qml");
+    QQmlComponent component(&engine, url);
+
+    QTest::ignoreMessage(QtMsgType::QtInfoMsg, "Created");
+    QScopedPointer<QObject> root {component.create()};
 }
 
 class TestItem : public QObject
