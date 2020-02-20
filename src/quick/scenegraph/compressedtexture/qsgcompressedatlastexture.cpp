@@ -151,7 +151,7 @@ Texture::~Texture()
 
 bool Texture::hasAlphaChannel() const
 {
-    return QSGCompressedTexture::formatIsOpaque(static_cast<Atlas*>(m_atlas)->format());
+    return !QSGCompressedTexture::formatIsOpaque(static_cast<Atlas*>(m_atlas)->format());
 }
 
 QSGTexture *Texture::removedFromAtlas() const
