@@ -901,6 +901,7 @@ bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, 
                     int placeholderId = type_return->generatePlaceHolderICId();
                     icTypePriv->extraData.id->url.setFragment(QString::number(placeholderId));
                     auto icType = QQmlType(icTypePriv);
+                    icTypePriv->release();
                     type_return->associateInlineComponent(icName, placeholderId, CompositeMetaTypeIds {}, icType);
                     *type_return = icType;
                 }
@@ -937,6 +938,7 @@ bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, 
                     int placeholderId = type_return->generatePlaceHolderICId();
                     icTypePriv->extraData.id->url.setFragment(QString::number(placeholderId));
                     auto icType = QQmlType(icTypePriv);
+                    icTypePriv->release();
                     type_return->associateInlineComponent(icName, placeholderId, CompositeMetaTypeIds {}, icType);
                     *type_return = icType;
                 }
