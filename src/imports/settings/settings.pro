@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET  = qmlsettingsplugin
 TARGETPATH = Qt/labs/settings
-QML_IMPORT_VERSION = 1.1
+QML_IMPORT_VERSION = $$QT_VERSION
 
 QT = core qml
 

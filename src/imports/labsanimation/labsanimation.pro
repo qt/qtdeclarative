@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET  = labsanimationplugin
 TARGETPATH = Qt/labs/animation
-QML_IMPORT_VERSION = 1.0
+QML_IMPORT_VERSION = $$QT_VERSION
 
 SOURCES += \
     qquickboundaryrule.cpp \

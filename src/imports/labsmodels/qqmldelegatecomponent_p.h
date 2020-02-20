@@ -108,6 +108,7 @@ class QQmlDelegateChooser : public QQmlAbstractDelegateComponent
     Q_PROPERTY(QQmlListProperty<QQmlDelegateChoice> choices READ choices CONSTANT)
     Q_CLASSINFO("DefaultProperty", "choices")
     QML_NAMED_ELEMENT(DelegateChooser)
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     QString role() const { return m_role; }
