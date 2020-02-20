@@ -436,7 +436,6 @@ int main(int argc, char *argv[])
     app->setOrganizationDomain("qt-project.org");
     QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
 
-    qmlRegisterTypesAndRevisions<Config, PartialScene>("QmlRuntime.Config", 1);
     QQmlApplicationEngine e;
     QStringList files;
     QString confFile;
