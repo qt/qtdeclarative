@@ -1537,8 +1537,8 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
                     if (!couldConvert) {
                         qWarning() << QLatin1String("Could not convert array value at position %1 from %2 to %3")
                                                     .arg(QString::number(i),
-                                                         QMetaType::typeName(originalType),
-                                                         QMetaType::typeName(retnAsIterable._metaType_id));
+                                                         QString::fromUtf8(QMetaType::typeName(originalType)),
+                                                         QString::fromUtf8(QMetaType::typeName(retnAsIterable._metaType_id)));
                         // create default constructed value
                         asVariant = QVariant(retnAsIterable._metaType_id, nullptr);
                     }
