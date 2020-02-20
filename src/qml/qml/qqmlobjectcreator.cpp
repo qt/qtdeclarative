@@ -1264,7 +1264,10 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     ddata->columnNumber = obj->location.column;
 
     ddata->setImplicitDestructible();
-    if (static_cast<quint32>(index) == /*root object*/0 || ddata->rootObjectInCreation) {
+    // inline components are root objects, but their index is != 0, so we need
+    // an additional check
+    const bool isInlineComponent = obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot;
+    if (static_cast<quint32>(index) == /*root object*/0 || ddata->rootObjectInCreation || isInlineComponent) {
         if (ddata->context) {
             Q_ASSERT(ddata->context != context);
             Q_ASSERT(ddata->outerContext);
