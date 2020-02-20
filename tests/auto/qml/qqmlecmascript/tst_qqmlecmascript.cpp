@@ -4514,9 +4514,9 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("missing module version")
             << testFileUrl("jsimportfail/missingModuleVersion.qml")
-            << false /* compilation should succeed */
+            << true /* compilation should succeed */
             << QString()
-            << (QStringList() << testFileUrl("jsimportfail/missingModuleVersion.js").toString() + QLatin1String(":1:17: Module import requires a version"))
+            << QStringList()
             << QStringList()
             << QVariantList();
 
@@ -4524,7 +4524,7 @@ void tst_qqmlecmascript::importScripts_data()
             << testFileUrl("jsimportfail/malformedModuleVersion.qml")
             << false /* compilation should succeed */
             << QString()
-            << (QStringList() << testFileUrl("jsimportfail/malformedModuleVersion.js").toString() + QLatin1String(":1:17: Module import requires a version"))
+            << (QStringList() << testFileUrl("jsimportfail/malformedModuleVersion.js").toString() + QLatin1String(":1:17: Module import requires a qualifier"))
             << QStringList()
             << QVariantList();
 

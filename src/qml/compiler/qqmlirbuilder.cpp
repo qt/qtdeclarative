@@ -1052,7 +1052,7 @@ QTypeRevision IRBuilder::extractVersion(const QStringRef &string)
 
     const int dot = string.indexOf(QLatin1Char('.'));
     return (dot < 0)
-        ? QTypeRevision::fromVersion(string.toInt(), 0)
+        ? QTypeRevision::fromMajorVersion(string.toInt())
         : QTypeRevision::fromVersion(string.left(dot).toInt(), string.mid(dot + 1).toInt());
 }
 

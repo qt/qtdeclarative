@@ -59,7 +59,7 @@ private slots:
     void templateLiteral();
     void leadingSemicolonInClass();
     void templatedReadonlyProperty();
-    void qmlImportInJSRequiresFullVersion();
+    void qmlImportInJS();
     void typeAnnotations_data();
     void typeAnnotations();
     void disallowedTypeAnnotations_data();
@@ -361,37 +361,28 @@ void tst_qqmlparser::templatedReadonlyProperty()
     QVERIFY(parser.parse());
 }
 
-void tst_qqmlparser::qmlImportInJSRequiresFullVersion()
+void tst_qqmlparser::qmlImportInJS()
 {
     {
         QQmlJS::Engine engine;
         QQmlJS::Lexer lexer(&engine);
         lexer.setCode(QLatin1String(".import Test 1.0 as T"), 0, false);
         QQmlJS::Parser parser(&engine);
-        bool b = parser.parseProgram();
-        qDebug() << parser.errorMessage();
-        QVERIFY(b);
+        QVERIFY(parser.parseProgram());
     }
     {
         QQmlJS::Engine engine;
         QQmlJS::Lexer lexer(&engine);
         lexer.setCode(QLatin1String(".import Test 1 as T"), 0, false);
         QQmlJS::Parser parser(&engine);
-        QVERIFY(!parser.parseProgram());
-    }
-    {
-        QQmlJS::Engine engine;
-        QQmlJS::Lexer lexer(&engine);
-        lexer.setCode(QLatin1String(".import Test 1 as T"), 0, false);
-        QQmlJS::Parser parser(&engine);
-        QVERIFY(!parser.parseProgram());
+        QVERIFY(parser.parseProgram());
     }
     {
         QQmlJS::Engine engine;
         QQmlJS::Lexer lexer(&engine);
         lexer.setCode(QLatin1String(".import Test as T"), 0, false);
         QQmlJS::Parser parser(&engine);
-        QVERIFY(!parser.parseProgram());
+        QVERIFY(parser.parseProgram());
     }
 }
 

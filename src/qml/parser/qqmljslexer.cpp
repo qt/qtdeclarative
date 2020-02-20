@@ -1538,9 +1538,10 @@ bool Lexer::scanDirectives(Directives *directives, DiagnosticMessage *error)
                     setError(QCoreApplication::translate("QQmlParser","Imported file must be a script"));
                     return false;
                 }
+                lex();
 
             } else if (_tokenKind == T_IDENTIFIER) {
-                // .import T_IDENTIFIER (. T_IDENTIFIER)* T_VERSION_NUMBER . T_VERSION_NUMBER as T_IDENTIFIER
+                // .import T_IDENTIFIER (. T_IDENTIFIER)* (T_VERSION_NUMBER (. T_VERSION_NUMBER)?)? as T_IDENTIFIER
                 while (true) {
                     if (!isUriToken(_tokenKind)) {
                         setError(QCoreApplication::translate("QQmlParser","Invalid module URI"));
@@ -1566,31 +1567,27 @@ bool Lexer::scanDirectives(Directives *directives, DiagnosticMessage *error)
                     }
                 }
 
-                if (_tokenKind != T_VERSION_NUMBER) {
-                    setError(QCoreApplication::translate("QQmlParser","Module import requires a version"));
-                    return false; // expected the module version number
+                if (_tokenKind == T_VERSION_NUMBER) {
+                    version = tokenText();
+                    lex();
+                    if (_tokenKind == T_DOT) {
+                        version += QLatin1Char('.');
+                        lex();
+                        if (_tokenKind != T_VERSION_NUMBER) {
+                            setError(QCoreApplication::translate(
+                                         "QQmlParser", "Incomplete version number (dot but no minor)"));
+                            return false; // expected the module version number
+                        }
+                        version += tokenText();
+                        lex();
+                    }
                 }
-
-                version = tokenText();
-                lex();
-                if (_tokenKind != T_DOT) {
-                    setError(QCoreApplication::translate( "QQmlParser", "Module import requires a minor version (missing dot)"));
-                    return false; // expected the module version number
-                }
-                version += QLatin1Char('.');
-
-                lex();
-                if (_tokenKind != T_VERSION_NUMBER) {
-                    setError(QCoreApplication::translate( "QQmlParser", "Module import requires a minor version (missing number)"));
-                    return false; // expected the module version number
-                }
-                version += tokenText();
             }
 
             //
             // recognize the mandatory `as' followed by the module name
             //
-            if (! (lex() == T_AS && tokenStartLine() == lineNumber)) {
+            if (! (_tokenKind == T_AS && tokenStartLine() == lineNumber)) {
                 if (fileImport)
                     setError(QCoreApplication::translate("QQmlParser", "File import requires a qualifier"));
                 else
