@@ -197,6 +197,25 @@ type or method parameter, the value can be created as a JavaScript array or
 object in QML, and is automatically converted to a QVariantList or QVariantMap
 when it is passed to C++.
 
+Mind that QVariantList and QVariantMap properties of C++ types are stored as
+values and cannot be changed in place by QML code. You can only replace the
+whole map or list, but not manipulate its contents. The following code does
+not work if the property \c l is a QVariantList:
+
+\code
+MyListExposingItem {
+   l: [1, 2, 3]
+   Component.onCompleted: l[0] = 10
+}
+\endcode
+
+The following code does work:
+\code
+MyListExposingItem {
+   l: [1, 2, 3]
+   Component.onCompleted: l = [10, 2, 3]
+}
+\endcode
 
 \section2 QDateTime to JavaScript Date
 
