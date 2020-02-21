@@ -25,46 +25,17 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
+#include "qmltime.h"
+
 #include <QQmlEngine>
-#include <QQmlComponent>
 #include <QDebug>
 #include <QGuiApplication>
 #include <QElapsedTimer>
 #include <QQmlContext>
-#include <QQuickView>
 #include <QQuickItem>
 
 #include <private/qquickview_p.h>
-
-class Timer : public QObject
-{
-    Q_OBJECT
-    Q_PROPERTY(QQmlComponent *component READ component WRITE setComponent)
-
-public:
-    Timer();
-
-    QQmlComponent *component() const;
-    void setComponent(QQmlComponent *);
-
-    static Timer *timerInstance();
-
-    void run(uint);
-
-    bool willParent() const;
-    void setWillParent(bool p);
-
-private:
-    void runTest(QQmlContext *, uint);
-
-    QQmlComponent *m_component;
-    static Timer *m_timer;
-
-    bool m_willparent;
-    QQuickView m_view;
-    QQuickItem *m_item;
-};
-QML_DECLARE_TYPE(Timer);
 
 Timer *Timer::m_timer = nullptr;
 
@@ -207,8 +178,6 @@ int main(int argc, char ** argv)
     QGuiApplication app(argc, argv);
     QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
 
-    qmlRegisterTypesAndRevisions<Timer>("QmlTime", 1);
-
     uint iterations = 1024;
     QString filename;
     bool willParent = false;
@@ -269,5 +238,3 @@ int main(int argc, char ** argv)
 
     return 0;
 }
-
-#include "qmltime.moc"

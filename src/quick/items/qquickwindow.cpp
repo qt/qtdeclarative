@@ -2415,11 +2415,13 @@ QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QQuickPointerDevic
 #endif
             ev = new QQuickPointerTouchEvent(q, device);
         break;
+#if QT_CONFIG(tabletevent)
     case QQuickPointerDevice::Stylus:
     case QQuickPointerDevice::Airbrush:
     case QQuickPointerDevice::Puck:
         ev = new QQuickPointerTabletEvent(q, device);
         break;
+#endif
     default:
         break;
     }

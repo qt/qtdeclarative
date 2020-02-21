@@ -127,15 +127,15 @@ Rectangle {
 
 In this case, the engine will emit an error and refuse to load the file.
 
-\section4 Non-module Namespace Imports
+\section4 C++ Module Imports
 
-Types can also be registered into namespaces directly via the various
-registration functions in C++ (such as qmlRegisterType()).  The types which
-have been registered into a namespace in this way may be imported by importing
-the namespace, as if the namespace was a module identifier.
+Usually, C++ types are declared using the QML_ELEMENT and QML_NAMED_ELEMENT()
+macros and registered via the build system using QML_IMPORT_NAME and
+QML_IMPORT_MAJOR_VERSION. The import name and version given this way form a
+module that can be imported to access the types.
 
 This is most common in client applications which define their own QML object
-types in C++ and register them with the QML type system manually.
+types in C++.
 
 \section4 Importing into a Qualified Local Namespace
 

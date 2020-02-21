@@ -803,7 +803,7 @@ parameter may be any of the possible format values as described for
 \l{QtQml::Qt::formatDateTime()}{Qt.formatDateTime()}.
 
 If \a format is not specified, \a date is formatted using
-\l {QLocale::FormatType::ShortFormat}{Locale.ShortFormat} using the
+\l {QLocale::FormatType}{Locale.ShortFormat} using the
 default locale.
 
 \sa Locale
@@ -832,7 +832,7 @@ possible format values as described for
 \l{QtQml::Qt::formatDateTime()}{Qt.formatDateTime()}.
 
 If \a format is not specified, \a time is formatted using
-\l {QLocale::FormatType::ShortFormat}{Locale.ShortFormat} using the default locale.
+\l {QLocale::FormatType}{Locale.ShortFormat} using the default locale.
 
 \sa Locale
 */
@@ -857,13 +857,13 @@ ReturnedValue QtObject::method_formatTime(const FunctionObject *b, const Value *
 \qmlmethod string Qt::formatDateTime(datetime dateTime, variant format, variant localeFormatOption)
 
 Returns a string representation of \a dateTime, optionally formatted using
-\a format.
+\a format and \a localeFormatOption.
 
 The \a dateTime parameter may be a JavaScript \c Date object, a \l{date}{date}
 property, a QDate, QTime, or QDateTime value.
 
 If \a format is not provided, \a dateTime is formatted using
-\l {QLocale::FormatType::ShortFormat}{Locale.ShortFormat} using the
+\l {QLocale::FormatType}{Locale.ShortFormat} using the
 default locale. Otherwise, \a format should be either:
 
 \list
@@ -874,9 +874,9 @@ default locale. Otherwise, \a format should be either:
 \endlist
 
 If \a format specifies a locale object, \dateTime is formatted
-with \li{QLocale::toString}. In this case, localeFormatType can hold a value
+with \l{QLocale::toString}. In this case, \a localeFormatOption can hold a value
 of type \l {QLocale::FormatType} to further tune the formatting. If none is
-provided, \l {QLocale::FormatType::ShortFormat}{Locale.ShortFormat} is used.
+provided, \l {QLocale::FormatType}{Locale.ShortFormat} is used.
 
 If \a format specifies a format string, it should use the following expressions
 to specify the date:

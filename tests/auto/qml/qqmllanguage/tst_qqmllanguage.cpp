@@ -123,6 +123,7 @@ private slots:
     void dynamicProperties();
     void dynamicPropertiesNested();
     void listProperties();
+    void listPropertiesInheritanceNoCrash();
     void badListItemType();
     void dynamicObjectProperties();
     void dynamicSignalsAndSlots();
@@ -1490,6 +1491,16 @@ void tst_qqmllanguage::listProperties()
     QVERIFY(object != nullptr);
 
     QCOMPARE(object->property("test").toInt(), 2);
+}
+
+// Tests that initializing list properties of a base class does not crash
+// (QTBUG-82171)
+void tst_qqmllanguage::listPropertiesInheritanceNoCrash()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("listPropertiesChild.qml"));
+    QScopedPointer<QObject> object(component.create()); // should not crash
+    QVERIFY(object != nullptr);
 }
 
 void tst_qqmllanguage::badListItemType()

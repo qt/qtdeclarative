@@ -422,7 +422,7 @@ import QtQuick.tooling 1.1
 // Component objects.
 Module {
     // A Component object directly corresponds to a type exported
-    // in a plugin with a call to qmlRegisterType.
+    // using the QML_ELEMENT or QML_NAMED_ELEMENT macros.
     Component {
 
         // The name is a unique identifier used to refer to this type.
@@ -440,25 +440,34 @@ Module {
         attachedType: "QQuickAnimationAttached"
 
         // The list of exports determines how a type can be imported.
-        // Each string has the format "URI/Name version" and matches the
-        // arguments to qmlRegisterType. Usually types are only exported
-        // once, if at all.
-        // If the "URI/" part of the string is missing that means the
-        // type should be put into the package defined by the URI the
-        // module was imported with.
-        // For example if this module was imported with 'import Foo 4.8'
-        // the Animation object would be found in the package Foo and
-        // QtQuick.
+        // Each string has the format "URI/Name version". The URI is
+        // the import name given via the build system, for example as
+        // QML_IMPORT_NAME in qmake. The name is either the C++ class
+        // name or, in case of QML_NAMED_ELEMENT(), an explicitly given
+        // name. The version is constructed from the major version
+        // given via the build system, as QML_IMPORT_MAJOR_VERSION in
+        // qmake, and any revisions given in the class or its base
+        // classes by Q_REVISION(), the REVISION argument to Q_PROPERTY,
+        // or QML_ADDED_IN_MINOR_VERSION(). Usually types are only
+        // exported once, if at all. The following tells us that there
+        // are two variants of Animation, and that 'import QtQuick 2.0'
+        // will expose a different revision than imports of later
+        // versions.
         exports: [
-            "Animation 4.7",
-            "QtQuick/Animation 1.0"
+            "QtQuick/Animation 2.0",
+            "QtQuick/Animation 2.1"
         ]
 
         // The meta object revisions for the exports specified in 'exports'.
-        // Describes with revisioned properties will be visible in an export.
-        // The list must have exactly the same length as the 'exports' list.
-        // For example the 'animations' propery described below will only be
-        // available through the QtQuick/Animation 1.0 export.
+        // Each meta object revision may add additional properties or methods,
+        // relative to the previous one. Those will only be visible when the
+        // module is imported with at least the corresponding version as
+        // specified in the 'exports' list.
+        // The exportMetaObjectRevisions list must have exactly the same
+        // length as the 'exports' list. For example, the 'animations' property
+        // described below will only be available through the QtQuick/Animation
+        // 2.1 export. Usually the revisions will match the versions in the
+        // 'exports' list.
         exportMetaObjectRevisions: [0, 1]
 
         Property {
@@ -486,7 +495,7 @@ Module {
         // declarations also support the isReadonly, isPointer and isList
         // attributes which mean the same as for Property
         Method { name: "restart" }
-        Signal { name: "started"; revision: 2 }
+        Signal { name: "started"; revision: 1 }
         Signal {
             name: "runningChanged"
             Parameter { type: "bool" }

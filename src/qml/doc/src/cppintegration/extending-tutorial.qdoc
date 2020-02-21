@@ -103,11 +103,22 @@ functionality of an existing QObject-based class, it could inherit from that cla
 Alternatively, if we want to create a visual item that doesn't need to perform drawing
 operations with the QPainter API, we can just subclass QQuickItem.
 
-The \c PieChart class defines the two properties, \c name and \c color, with the Q_PROPERTY macro,
-and overrides QQuickPaintedItem::paint(). The class implementation in \c piechart.cpp
-simply sets and returns the \c m_name and \c m_color values as appropriate, and
-implements \c paint() to draw a simple pie chart. It also turns off the
-QGraphicsItem::ItemHasNoContents flag to enable painting:
+The \c PieChart class defines the two properties, \c name and \c color, with the
+Q_PROPERTY macro, and overrides QQuickPaintedItem::paint(). The \c PieChart
+class is registered using the QML_ELEMENT macro, to allow it to be used from
+QML. If you don't register the class, \c app.qml won't be able to create a
+\c PieChart.
+
+For the registration to take effect, the \c qmltypes option is added to
+\c CONFIG in the project file and a \c QML_IMPORT_NAME and
+\c QML_IMPORT_MAJOR_VERSION are given:
+
+\snippet tutorials/extending-qml/chapter1-basics/chapter1-basics.pro 0
+
+The class implementation in \c piechart.cpp simply sets and returns the
+\c m_name and \c m_color values as appropriate, and implements \c paint() to
+draw a simple pie chart. It also turns off the QGraphicsItem::ItemHasNoContents
+flag to enable painting:
 
 \snippet tutorials/extending-qml/chapter1-basics/piechart.cpp 0
 \dots 0
@@ -125,9 +136,7 @@ provided for various other \l {QML Basic Types}{basic types}; for example, a str
 like "640x480" can be automatically converted to a QSize value.
 
 We'll also create a C++ application that uses a QQuickView to run and
-display \c app.qml. The application must register the \c PieChart type
-using the qmlRegisterType() function, to allow it to be used from QML. If
-you don't register the type, \c app.qml won't be able to create a \c PieChart.
+display \c app.qml.
 
 Here is the application \c main.cpp:
 
@@ -143,7 +152,7 @@ Now we can build and run the application:
 
 \image extending-tutorial-chapter1.png
 
-\note You may see a warning \e {Expression ... depends on non-NOTIFYable properties:
+\note You may see a warning \e {Expression ... depends on non-NOTIFYable properties:
       PieChart::name}. This happens because we add a binding to the writable \c name
       property, but haven't yet defined a notify signal for it. The QML engine therefore
       cannot update the binding if the \c name value changes. This is addressed in
@@ -450,7 +459,7 @@ In this tutorial, we've shown the basic steps for creating a QML extension:
 
 \list
 \li Define new QML types by subclassing QObject and registering them with
-    qmlRegisterType()
+    QML_ELEMENT or QML_NAMED_ELEMENT()
 \li Add callable methods using \l Q_INVOKABLE or Qt slots, and connect to Qt signals
     with an \c onSignal syntax
 \li Add property bindings by defining \l{Qt's Property System}{NOTIFY} signals

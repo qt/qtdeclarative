@@ -941,7 +941,8 @@ int QQmlType::generatePlaceHolderICId() const
 
 void QQmlType::associateInlineComponent(const QString &name, int objectID, const CompositeMetaTypeIds &metaTypeIds, QQmlType existingType)
 {
-    auto priv = existingType.isValid() ? const_cast<QQmlTypePrivate *>(existingType.d.data()) : new QQmlTypePrivate { RegistrationType::InlineComponentType } ;
+    bool const reuseExistingType = existingType.isValid();
+    auto priv = reuseExistingType ? const_cast<QQmlTypePrivate *>(existingType.d.data()) : new QQmlTypePrivate { RegistrationType::InlineComponentType } ;
     priv->setName( QString::fromUtf8(typeName()), name);
     auto icUrl = QUrl(sourceUrl());
     icUrl.setFragment(QString::number(objectID));
@@ -953,6 +954,8 @@ void QQmlType::associateInlineComponent(const QString &name, int objectID, const
     d->namesToInlineComponentObjectIndex.insert(name, objectID);
     QQmlType icType(priv);
     d->objectIdToICType.insert(objectID, icType);
+    if (!reuseExistingType)
+        priv->release();
 }
 
 void QQmlType::setPendingResolutionName(const QString &name)

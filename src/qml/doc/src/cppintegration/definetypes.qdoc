@@ -307,7 +307,7 @@ merged with the original target class when used from within QML. For example:
 The \c leftMargin property is a new property added to an existing C++ type, \l
 QLineEdit, without modifying its source code.
 
-The \l {QML_EXTENDED(extended)} macro is for registering extended types. The
+The QML_EXTENDED(extended) macro is for registering extended types. The
 argument is the name of another class to be used as extension.
 
 An extension class is a regular QObject, with a constructor that takes a QObject

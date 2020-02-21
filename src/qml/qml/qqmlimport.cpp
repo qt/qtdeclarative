@@ -727,6 +727,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
                 Q_ASSERT(ok);
                 typePriv->extraData.id->url = QUrl(this->url);
                 auto icType = QQmlType(typePriv);
+                typePriv->release();
                 return icType;
             };
             if (containingType.isValid()) {
@@ -902,6 +903,7 @@ bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, QTypeRevision
                     int placeholderId = type_return->generatePlaceHolderICId();
                     icTypePriv->extraData.id->url.setFragment(QString::number(placeholderId));
                     auto icType = QQmlType(icTypePriv);
+                    icTypePriv->release();
                     type_return->associateInlineComponent(icName, placeholderId, CompositeMetaTypeIds {}, icType);
                     *type_return = icType;
                 }
@@ -938,6 +940,7 @@ bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, QTypeRevision
                     int placeholderId = type_return->generatePlaceHolderICId();
                     icTypePriv->extraData.id->url.setFragment(QString::number(placeholderId));
                     auto icType = QQmlType(icTypePriv);
+                    icTypePriv->release();
                     type_return->associateInlineComponent(icName, placeholderId, CompositeMetaTypeIds {}, icType);
                     *type_return = icType;
                 }
@@ -1996,8 +1999,11 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
     static const QStringList suffixes = {
 # ifdef QT_DEBUG
         QLatin1String("d.dll"), // try a qmake-style debug build first
-# endif
         QLatin1String(".dll")
+#else
+        QLatin1String(".dll"),
+        QLatin1String("d.dll") // try a qmake-style debug build after
+# endif
     };
 #elif defined(Q_OS_DARWIN)
     static const QString prefix = QLatin1String("lib");

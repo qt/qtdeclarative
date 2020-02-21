@@ -5,6 +5,10 @@ qtHaveModule(widgets): QT += widgets
 HEADERS += conf.h
 SOURCES += main.cpp
 RESOURCES += qml.qrc
+CONFIG += qmltypes
+
+QML_IMPORT_NAME = QmlRuntime.Config
+QML_IMPORT_VERSION = 1.0
 
 QMAKE_TARGET_DESCRIPTION = QML Runtime
 

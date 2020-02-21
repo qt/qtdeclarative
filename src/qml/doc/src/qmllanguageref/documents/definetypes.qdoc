@@ -125,10 +125,11 @@ component <component name> : BaseType {
 Inside the file which declares the inline component, the type can be referenced
 simply by its name.
 
-\snippet src/qml/doc/snippets/qml/qml-documents/Images.qml document
+\snippet qml/qml-documents/Images.qml document
 
 In other files, it has to be prefixed with the name of its containing component.
-\snippet src/qml/doc/snippets/qml/qml-documents/LabeledImageBox.qml document
+
+\snippet qml/qml-documents/LabeledImageBox.qml document
 
 \note Inline components don't share their scope with the component they are
 declared in. In the following example, when \c A.MyInlineComponent in file
@@ -137,8 +138,8 @@ an id in B.qml.
 It is therefore advisable not to reference objects in an inline component
 which are not part of it.
 
-\snippet src/qml/doc/snippets/qml/qml-documents/A.qml document
-\snippet src/qml/doc/snippets/qml/qml-documents/B.qml document
+\snippet qml/qml-documents/A.qml document
+\snippet qml/qml-documents/B.qml document
 
 \note Inline components cannot be nested.
 

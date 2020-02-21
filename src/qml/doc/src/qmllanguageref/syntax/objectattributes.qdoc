@@ -684,7 +684,7 @@ Required properties play a special role in model-view-delegate code:
 If the delegate of a view has required properties whose names match with
 the role names of the view's model, then those properties will be initialized
 with the model's corresponding values.
-For more information, visit the \l{Models and Views in QtQuick} page.
+For more information, visit the \l{Models and Views in Qt Quick} page.
 
 \sa {QQmlComponent::createWithInitialProperties}, {QQmlApplicationEngine::setInitialProperties}
 and {QQuickView::setInitialProperties} for ways to initialize required properties from C++.

@@ -27,7 +27,7 @@
 
 /*!
   \macro QML_ELEMENT
-  \related QQmlEngine
+  \relates QQmlEngine
 
   Declares the enclosing type or namespace to be available in QML, using its
   class or namespace name as the QML element name.
@@ -45,10 +45,10 @@
   \endcode
 
   You can use the build system to register the type in the type namespace
-  "com.mycompany.qmlcomponents" with major version \c 1 by specifying the
+  \e {com.mycompany.qmlcomponents} with major version \c 1 by specifying the
   following in your project file:
 
-  \code
+  \badcode
   CONFIG += qmltypes
   QML_IMPORT_NAME = com.mycompany.qmlcomponents
   QML_IMPORT_MAJOR_VERSION = 1
@@ -74,7 +74,7 @@
 
 /*!
   \macro QML_NAMED_ELEMENT(name)
-  \related QQmlEngine
+  \relates QQmlEngine
 
   Declares the enclosing type or namespace to be available in QML, using \a name
   as the element name. Otherwise behaves the same as QML_ELEMENT.
@@ -209,7 +209,7 @@
   {attached property} to other types. This takes effect if the type
   is exposed to QML using a \l QML_ELEMENT or \l QML_NAMED_ELEMENT() macro.
 
-  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), qmlAtachedPropertiesObject(),
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), qmlAttachedPropertiesObject(),
       {Providing Attached Properties}
 */
 
@@ -234,7 +234,7 @@
   \l QML_ATTACHED(), or \l QML_EXTENDED() macros in the enclosing C++ type do
   not apply to the enclosing type but instead to \a FOREIGN_TYPE. The enclosing
   type still needs to be registered with the
-  \l {The Meta-Object System}{meta object system} using a \l G_GADGET or
+  \l {The Meta-Object System}{meta object system} using a \l Q_GADGET or
   \l Q_OBJECT macro.
 
   This is useful for registering types that cannot be amended to add the macros,
@@ -278,13 +278,14 @@
 
   This will cause any QML which attempts to use the "Game" type to produce an
   error message:
-  \code
+
+  \badcode
   fun.qml: Get back to work, slacker!
      Game {
      ^
   \endcode
 
-  Using this technique, you only need a \l G_GADGET struct to customize the error
+  Using this technique, you only need a \l Q_GADGET struct to customize the error
   message, not a full-blown \l QObject. Without \l QML_UNCREATABLE(),
   \l QML_UNAVAILABLE still results in a more specific error message than the usual
   "is not a type" for completely unknown types.
@@ -905,7 +906,7 @@
 */
 
 /*!
-   \fn int qmlRegisterSingletonInstance(const char *uri, int versionMajor, int versionMinor, const char *typeName, QObject* cppObject)
+   \fn template<typename T> auto qmlRegisterSingletonInstance(const char *uri, int versionMajor, int versionMinor, const char *typeName, T *cppObject)
    \relates QQmlEngine
    \since 5.14
 

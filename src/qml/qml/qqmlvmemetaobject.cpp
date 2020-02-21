@@ -48,6 +48,7 @@
 #include "qqmlcontext_p.h"
 #include "qqmlbinding_p.h"
 #include "qqmlpropertyvalueinterceptor_p.h"
+#include <qqmlinfo.h>
 
 #include <private/qqmlglobal_p.h>
 
@@ -60,6 +61,8 @@
 #include <private/qqmlpropertycachecreator_p.h>
 #include <private/qqmlpropertycachemethodarguments_p.h>
 
+#include <climits> // for CHAR_BIT
+
 QT_BEGIN_NAMESPACE
 
 class ResolvedList
@@ -67,13 +70,22 @@ class ResolvedList
     Q_DISABLE_COPY_MOVE(ResolvedList)
 
 public:
-    ResolvedList(QQmlListProperty<QObject> *prop) :
-        m_metaObject(static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(prop->object)->metaObject)),
-        m_id(quintptr(prop->data))
+    ResolvedList(QQmlListProperty<QObject> *prop)
     {
+        // see QQmlVMEMetaObject::metaCall for how this was constructed
+        auto encodedIndex = quintptr(prop->data);
+        constexpr quintptr usableBits = sizeof(quintptr)  * CHAR_BIT;
+        quintptr inheritanceDepth = encodedIndex >> (usableBits / 2);
+        m_id = encodedIndex & ((quintptr(1) << (usableBits / 2)) - 1);
+
+        // walk up to the correct meta object if necessary
+        auto mo = prop->object->metaObject();
+        while (inheritanceDepth--)
+            mo = mo->superClass();
+        m_metaObject = static_cast<QQmlVMEMetaObject *>(const_cast<QMetaObject *>(mo));
         Q_ASSERT(m_metaObject);
+        Q_ASSERT( ::strstr(m_metaObject->property(m_metaObject->propOffset() + m_id).typeName(), "QQmlListProperty") );
         Q_ASSERT(m_metaObject->object == prop->object);
-        Q_ASSERT(m_id <= quintptr(std::numeric_limits<int>::max() - m_metaObject->methodOffset()));
 
         // readPropertyAsList() with checks transformed into Q_ASSERT
         // and without allocation.
@@ -747,10 +759,35 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         break;
                     case QV4::CompiledData::BuiltinType::InvalidBuiltin:
                         if (property.isList) {
+                            // when reading from the list, we need to find the correct MetaObject,
+                            // namely this. However, obejct->metaObject might point to any MetaObject
+                            // down the inheritance hierarchy, so we need to store how far we have
+                            // to go down
+                            // To do this, we encode the hierarchy depth together with the id of the
+                            // property in a single quintptr, with the first half storing the depth
+                            // and the second half storing the property id
+                            auto mo = object->metaObject();
+                            quintptr inheritanceDepth = 0u;
+                            while (mo && mo != this) {
+                                mo = mo->superClass();
+                                ++inheritanceDepth;
+                            }
+                            constexpr quintptr usableBits = sizeof(quintptr)  * CHAR_BIT;
+                            if (Q_UNLIKELY(inheritanceDepth >= (quintptr(1) << quintptr(usableBits / 2u) ) )) {
+                                qmlWarning(object) << "Too many objects in inheritance hierarchy for list property";
+                                return -1;
+                            }
+                            if (Q_UNLIKELY(quintptr(id) >= (quintptr(1) << quintptr(usableBits / 2) ) )) {
+                                qmlWarning(object) << "Too many properties in object for list property";
+                                return -1;
+                            }
+                            quintptr encodedIndex = (inheritanceDepth << (usableBits/2)) + id;
+
+
                             readPropertyAsList(id); // Initializes if necessary
                             *static_cast<QQmlListProperty<QObject> *>(a[0])
                                     = QQmlListProperty<QObject>(
-                                        object, reinterpret_cast<void *>(quintptr(id)),
+                                        object, reinterpret_cast<void *>(quintptr(encodedIndex)),
                                         list_append, list_count, list_at,
                                         list_clear, list_replace, list_removeLast);
                         } else {
