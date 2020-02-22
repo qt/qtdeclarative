@@ -255,7 +255,8 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     \list
     \li \c fileName
     \li \c filePath
-    \li \c fileURL (since Qt 5.2)
+    \li \c fileURL (since Qt 5.2; deprecated since Qt 5.15)
+    \li \c fileUrl (since Qt 5.15)
     \li \c fileBaseName
     \li \c fileSuffix
     \li \c fileSize
@@ -334,7 +335,8 @@ QQuickFolderListModel::QQuickFolderListModel(QObject *parent)
     d->roleNames[FileLastModifiedRole] = "fileModified";
     d->roleNames[FileLastReadRole] = "fileAccessed";
     d->roleNames[FileIsDirRole] = "fileIsDir";
-    d->roleNames[FileUrlRole] = "fileURL";
+    d->roleNames[FileUrlRole] = "fileUrl";
+    d->roleNames[FileURLRole] = "fileURL";
     d->init();
 }
 
@@ -377,6 +379,7 @@ QVariant QQuickFolderListModel::data(const QModelIndex &index, int role) const
             rv = d->data.at(index.row()).isDir();
             break;
         case FileUrlRole:
+        case FileURLRole:
             rv = QUrl::fromLocalFile(d->data.at(index.row()).filePath());
             break;
         default:
@@ -886,7 +889,8 @@ void QQuickFolderListModel::setSortCaseSensitive(bool on)
     \list
         \li \c fileName
         \li \c filePath
-        \li \c fileURL (since Qt 5.2)
+        \li \c fileURL (since Qt 5.2; deprecated since Qt 5.15)
+        \li \c fileUrl (since Qt 5.15)
         \li \c fileBaseName
         \li \c fileSuffix
         \li \c fileSize
