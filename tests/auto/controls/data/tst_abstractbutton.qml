@@ -887,4 +887,27 @@ TestCase {
         mouseRelease(control)
         compare(clickedSpy.count, 1)
     }
+
+    function test_doubleClick() {
+        let control = createTemporaryObject(button, testCase, { text: "Hello" })
+        verify(control)
+
+        let pressedSpy = signalSpy.createObject(control, { target: control, signalName: "pressed" })
+        verify(pressedSpy.valid)
+
+        let releasedSpy = signalSpy.createObject(control, { target: control, signalName: "released" })
+        verify(releasedSpy.valid)
+
+        let clickedSpy = signalSpy.createObject(control, { target: control, signalName: "clicked" })
+        verify(clickedSpy.valid)
+
+        let doubleClickedSpy = signalSpy.createObject(control, { target: control, signalName: "doubleClicked" })
+        verify(doubleClickedSpy.valid)
+
+        mouseDoubleClickSequence(control)
+        compare(pressedSpy.count, 2)
+        compare(releasedSpy.count, 2)
+        compare(clickedSpy.count, 1)
+        compare(doubleClickedSpy.count, 1)
+    }
 }

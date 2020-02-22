@@ -252,9 +252,18 @@ void QQuickToolTip::setVisible(bool visible)
 {
     Q_D(QQuickToolTip);
     if (visible) {
-        if (!d->visible && d->delay > 0) {
-            d->startDelay();
-            return;
+        if (!d->visible) {
+            // We are being made visible, and we weren't before.
+            if (d->delay > 0) {
+                d->startDelay();
+                return;
+            }
+        } else {
+            // We are being made visible, even though we already were.
+            // We've probably been re-opened before our exit transition could finish.
+            // In that case, we need to manually start the timeout, as that is usually
+            // done in itemChange(), which won't be called in this situation.
+            d->startTimeout();
         }
     } else {
         d->stopDelay();

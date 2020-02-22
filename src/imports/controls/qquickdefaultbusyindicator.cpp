@@ -124,7 +124,7 @@ void QQuickDefaultBusyIndicatorNode::sync(QQuickItem *item)
         Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
 
         QPointF pos = QPointF(sz / 2 - circleRadius, sz / 2 - circleRadius);
-        pos = moveCircle(pos, 360 / CircleCount * i, sz / 2 - circleRadius);
+        pos = moveCircle(pos, 360.0 / CircleCount * i, sz / 2 - circleRadius);
 
         QMatrix4x4 m;
         m.translate(dx + pos.x(), dy + pos.y());
