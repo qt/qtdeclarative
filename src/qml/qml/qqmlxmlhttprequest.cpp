@@ -1291,7 +1291,7 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
         if (m_network->bytesAvailable() > 0)
             readyRead();
 
-        QNetworkReply::NetworkError networkError = m_network->networkError();
+        QNetworkReply::NetworkError networkError = m_network->error();
         if (networkError != QNetworkReply::NoError) {
             error(networkError);
         } else {

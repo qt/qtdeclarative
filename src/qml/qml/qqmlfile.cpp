@@ -187,7 +187,7 @@ void QQmlFileNetworkReply::networkFinished()
         }
     }
 
-    if (m_reply->networkError()) {
+    if (m_reply->error()) {
         m_p->errorString = m_reply->errorString();
         m_p->error = QQmlFilePrivate::Network;
     } else {
