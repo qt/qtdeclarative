@@ -2351,9 +2351,11 @@ int ExecutionEngine::registerExtension()
     return registrationData()->extensionCount++;
 }
 
+#if QT_CONFIG(qml_network)
 QNetworkAccessManager *QV4::detail::getNetworkAccessManager(ExecutionEngine *engine)
 {
     return engine->qmlEngine()->networkAccessManager();
 }
+#endif // qml_network
 
 QT_END_NAMESPACE
