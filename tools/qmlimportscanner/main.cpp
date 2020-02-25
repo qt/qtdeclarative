@@ -179,7 +179,7 @@ QPair<QString, QString> resolveImportPath(const QString &uri, const QString &ver
 {
     const QLatin1Char dot('.');
     const QLatin1Char slash('/');
-    const QStringList parts = uri.split(dot, QString::SkipEmptyParts);
+    const QStringList parts = uri.split(dot, Qt::SkipEmptyParts);
 
     QString ver = version;
     while (true) {

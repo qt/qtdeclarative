@@ -257,7 +257,7 @@ void QWavefrontMesh::readData()
 
             while (!stream.atEnd()) {
                 stream.readLineInto(&buffer);
-                QVector<QStringRef> tokens = buffer.splitRef(space, QString::SkipEmptyParts);
+                QVector<QStringRef> tokens = buffer.splitRef(space, Qt::SkipEmptyParts);
                 if (tokens.size() < 2)
                     continue;
 
@@ -316,7 +316,7 @@ void QWavefrontMesh::readData()
                     if (tokens.size() >= 4 && tokens.size() <= 5) {
                         {
                             bool ok;
-                            QVector<QStringRef> faceTokens = tokens.at(1).split(slash, QString::SkipEmptyParts);
+                            QVector<QStringRef> faceTokens = tokens.at(1).split(slash, Qt::SkipEmptyParts);
                             Q_ASSERT(!faceTokens.isEmpty());
 
                             p1 = faceTokens.at(0).toInt(&ok) - 1;
@@ -336,7 +336,7 @@ void QWavefrontMesh::readData()
 
                         {
                             bool ok;
-                            QVector<QStringRef> faceTokens = tokens.at(2).split(slash, QString::SkipEmptyParts);
+                            QVector<QStringRef> faceTokens = tokens.at(2).split(slash, Qt::SkipEmptyParts);
                             Q_ASSERT(!faceTokens.isEmpty());
 
                             p2 = faceTokens.at(0).toInt(&ok) - 1;
@@ -356,7 +356,7 @@ void QWavefrontMesh::readData()
 
                         {
                             bool ok;
-                            QVector<QStringRef> faceTokens = tokens.at(3).split(slash, QString::SkipEmptyParts);
+                            QVector<QStringRef> faceTokens = tokens.at(3).split(slash, Qt::SkipEmptyParts);
                             Q_ASSERT(!faceTokens.isEmpty());
 
                             p3 = faceTokens.at(0).toInt(&ok) - 1;
@@ -394,7 +394,7 @@ void QWavefrontMesh::readData()
 
                     if (tokens.size() == 5) {
                         bool ok;
-                        QVector<QStringRef> faceTokens = tokens.at(4).split(slash, QString::SkipEmptyParts);
+                        QVector<QStringRef> faceTokens = tokens.at(4).split(slash, Qt::SkipEmptyParts);
                         Q_ASSERT(!faceTokens.isEmpty());
 
                         int p4 = faceTokens.at(0).toInt(&ok) - 1;

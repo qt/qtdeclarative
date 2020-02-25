@@ -534,7 +534,7 @@ static QString joinStringRefs(const QVector<QStringRef> &refs, const QChar &sep)
 */
 QStringList QQmlImports::completeQmldirPaths(const QString &uri, const QStringList &basePaths, int vmaj, int vmin)
 {
-    const QVector<QStringRef> parts = uri.splitRef(Dot, QString::SkipEmptyParts);
+    const QVector<QStringRef> parts = uri.splitRef(Dot, Qt::SkipEmptyParts);
 
     QStringList qmlDirPathsPaths;
     // fully & partially versioned parts + 1 unversioned for each base path
@@ -1881,7 +1881,7 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 #else
         QLatin1Char pathSep(':');
 #endif
-        QStringList paths = envImportPath.split(pathSep, QString::SkipEmptyParts);
+        QStringList paths = envImportPath.split(pathSep, Qt::SkipEmptyParts);
         for (int ii = paths.count() - 1; ii >= 0; --ii)
             addImportPath(paths.at(ii));
     }
@@ -1893,7 +1893,7 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
     if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QT_BUNDLED_LIBS_PATH"))) {
         const QString envImportPath = qEnvironmentVariable("QT_BUNDLED_LIBS_PATH");
         QLatin1Char pathSep(':');
-        QStringList paths = envImportPath.split(pathSep, QString::SkipEmptyParts);
+        QStringList paths = envImportPath.split(pathSep, Qt::SkipEmptyParts);
         for (int ii = paths.count() - 1; ii >= 0; --ii)
             addPluginPath(paths.at(ii));
     }
