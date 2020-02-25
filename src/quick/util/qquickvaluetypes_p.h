@@ -420,6 +420,7 @@ class QQuickColorSpaceValueType
     Q_PROPERTY(float gamma READ gamma WRITE setGamma FINAL)
 
     QML_NAMED_ELEMENT(ColorSpace)
+    QML_ADDED_IN_MINOR_VERSION(15)
     Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
 
 public:
