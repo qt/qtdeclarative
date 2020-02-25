@@ -110,7 +110,7 @@ static QStringList envPathList(const QByteArray &var)
     QStringList paths;
     if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty(var))) {
         const QByteArray value = qgetenv(var);
-        paths += QString::fromLocal8Bit(value).split(QDir::listSeparator(), QString::SkipEmptyParts);
+        paths += QString::fromLocal8Bit(value).split(QDir::listSeparator(), Qt::SkipEmptyParts);
     }
     return paths;
 }
@@ -347,7 +347,7 @@ QStringList QQuickStylePrivate::stylePaths(bool resolve)
         } else {
             // Fast/simpler path for systems where something other than : is used as
             // the list separator (such as ';').
-            const QStringList customPaths = value.split(listSeparator, QString::SkipEmptyParts);
+            const QStringList customPaths = value.split(listSeparator, Qt::SkipEmptyParts);
             paths += customPaths;
         }
     }

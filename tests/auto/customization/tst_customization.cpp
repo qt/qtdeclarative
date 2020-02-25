@@ -311,7 +311,7 @@ void tst_customization::creation()
     QVERIFY2(qt_createdQObjects()->removeOne(controlName), qPrintable(controlName + " was not created as expected"));
 
     for (QString delegate : qAsConst(delegates)) {
-        QStringList properties = delegate.split(".", QString::SkipEmptyParts);
+        QStringList properties = delegate.split(".", Qt::SkipEmptyParts);
 
         // <control>-<delegate>-<style>(-<override>)
         delegate.append("-" + style);
@@ -412,7 +412,7 @@ void tst_customization::override()
     QVERIFY2(qt_createdQObjects()->removeOne(controlName), qPrintable(controlName + " was not created as expected"));
 
     for (QString delegate : qAsConst(delegates)) {
-        QStringList properties = delegate.split(".", QString::SkipEmptyParts);
+        QStringList properties = delegate.split(".", Qt::SkipEmptyParts);
 
         // <control>-<delegate>-<style>(-override)
         delegate.append("-" + style);
