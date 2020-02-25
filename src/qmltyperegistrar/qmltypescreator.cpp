@@ -245,7 +245,8 @@ void QmlTypesCreator::writeComponents()
         m_qml.writeStartObject(componentElement);
 
         QmlTypesClassDescription collector;
-        collector.collect(&component, m_ownTypes, m_foreignTypes, true);
+        collector.collect(&component, m_ownTypes, m_foreignTypes,
+                          QmlTypesClassDescription::TopLevel);
 
         writeClassProperties(collector);
 
