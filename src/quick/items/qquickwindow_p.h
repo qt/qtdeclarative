@@ -88,7 +88,7 @@ class QRhiRenderBuffer;
 class QRhiRenderPassDescriptor;
 
 //Make it easy to identify and customize the root item if needed
-class QQuickRootItem : public QQuickItem
+class Q_QUICK_PRIVATE_EXPORT QQuickRootItem : public QQuickItem
 {
     Q_OBJECT
 public:
