@@ -59,6 +59,7 @@ class QQmlTypeNotAvailable : public QObject {
     Q_OBJECT
     QML_NAMED_ELEMENT(TypeNotAvailable)
     QML_UNCREATABLE("Type not available.")
+    QML_ADDED_IN_MINOR_VERSION(15)
 };
 
 QT_END_NAMESPACE
