@@ -153,49 +153,6 @@ void QQuickPinchHandler::setMaximumRotation(qreal maximumRotation)
     emit maximumRotationChanged();
 }
 
-#if QT_DEPRECATED_SINCE(5, 12)
-void QQuickPinchHandler::warnAboutMinMaxDeprecated() const
-{
-    qmlWarning(this) << "min and max constraints are now part of the xAxis and yAxis properties";
-}
-
-void QQuickPinchHandler::setMinimumX(qreal minX)
-{
-    warnAboutMinMaxDeprecated();
-    if (qFuzzyCompare(m_minimumX, minX))
-        return;
-    m_minimumX = minX;
-    emit minimumXChanged();
-}
-
-void QQuickPinchHandler::setMaximumX(qreal maxX)
-{
-    warnAboutMinMaxDeprecated();
-    if (qFuzzyCompare(m_maximumX, maxX))
-        return;
-    m_maximumX = maxX;
-    emit maximumXChanged();
-}
-
-void QQuickPinchHandler::setMinimumY(qreal minY)
-{
-    warnAboutMinMaxDeprecated();
-    if (qFuzzyCompare(m_minimumY, minY))
-        return;
-    m_minimumY = minY;
-    emit minimumYChanged();
-}
-
-void QQuickPinchHandler::setMaximumY(qreal maxY)
-{
-    warnAboutMinMaxDeprecated();
-    if (qFuzzyCompare(m_maximumY, maxY))
-        return;
-    m_maximumY = maxY;
-    emit maximumYChanged();
-}
-#endif
-
 bool QQuickPinchHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
     if (!QQuickMultiPointHandler::wantsPointerEvent(event))
