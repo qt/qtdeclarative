@@ -59,7 +59,7 @@ T.ComboBox {
     bottomInset: background ? -background.bottomInset || 0 : 0
 
     delegate: ItemDelegate {
-        width: parent.width
+        width: ListView.view.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         font.weight: control.currentIndex === index ? Font.DemiBold : Font.Normal
         highlighted: control.highlightedIndex === index

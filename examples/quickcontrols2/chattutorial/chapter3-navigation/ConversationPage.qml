@@ -78,6 +78,7 @@ Page {
         anchors.fill: parent
 
         ListView {
+            id: listView
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.margins: pane.leftPadding + messageField.leftPadding
@@ -89,7 +90,7 @@ Page {
             delegate: Row {
                 readonly property bool sentByMe: index % 2 == 0
 
-                anchors.right: sentByMe ? parent.right : undefined
+                anchors.right: sentByMe ? listView.contentItem.right : undefined
                 spacing: 6
 
                 Rectangle {

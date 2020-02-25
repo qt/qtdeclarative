@@ -110,7 +110,6 @@ Pane {
 
         CheckDelegate {
             text: labelText
-            width: parent.width
         }
     }
 

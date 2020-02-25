@@ -269,6 +269,7 @@ ApplicationWindow {
                         Layout.preferredHeight: 128
 
                         ListView {
+                            id: stationListView
                             clip: true
                             anchors.fill: parent
 
@@ -296,7 +297,7 @@ ApplicationWindow {
                             }
                             delegate: ItemDelegate {
                                 id: stationDelegate
-                                width: parent.width
+                                width: stationListView.width
                                 height: 22
                                 text: model.name
                                 font.pixelSize: fontSizeExtraSmall

@@ -67,7 +67,7 @@ ApplicationWindow {
             id: flickable
             model: 100
             delegate: ItemDelegate {
-                width: parent.width
+                width: flickable.width
                 text: index
             }
         }

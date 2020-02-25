@@ -63,7 +63,7 @@ T.ComboBox {
     Material.foreground: flat ? undefined : Material.primaryTextColor
 
     delegate: MenuItem {
-        width: parent.width
+        width: ListView.view.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         Material.foreground: control.currentIndex === index ? parent.Material.accent : parent.Material.foreground
         highlighted: control.highlightedIndex === index

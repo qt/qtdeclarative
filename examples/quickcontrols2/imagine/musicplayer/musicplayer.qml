@@ -431,6 +431,7 @@ ApplicationWindow {
                 Layout.fillHeight: true
 
                 ListView {
+                    id: filesListView
                     clip: true
                     anchors.fill: parent
                     model: ListModel {
@@ -446,7 +447,7 @@ ApplicationWindow {
                     }
                     delegate: ItemDelegate {
                         text: model.author + " - " + model.album + " - " + model.track
-                        width: parent.width
+                        width: filesListView.width
                     }
 
                     ScrollBar.vertical: ScrollBar {

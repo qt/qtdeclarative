@@ -132,7 +132,7 @@ ApplicationWindow {
 
             delegate: ItemDelegate {
                 text: qsTr("Title %1").arg(index + 1)
-                width: parent.width
+                width: listView.width
             }
 
             ScrollIndicator.vertical: ScrollIndicator { }

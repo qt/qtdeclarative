@@ -77,7 +77,7 @@ ListView {
     delegate: Item {
         height: missedCallsView.height
         width: missedCallsView.width / 2
-        anchors.left: parent.horizontalCenter
+        anchors.left: missedCallsView.contentItem.horizontalCenter
 
         Column {
             spacing: 15

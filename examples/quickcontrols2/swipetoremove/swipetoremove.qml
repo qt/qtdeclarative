@@ -67,7 +67,7 @@ ApplicationWindow {
             id: delegate
 
             text: modelData
-            width: parent.width
+            width: listView.width
 
             //! [delegate]
             swipe.right: Rectangle {

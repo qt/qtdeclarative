@@ -53,7 +53,7 @@ T.ComboBox {
     rightPadding: padding + (control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
 
     delegate: ItemDelegate {
-        width: parent.width
+        width: ListView.view.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         palette.text: control.palette.text
         palette.highlightedText: control.palette.highlightedText

@@ -92,7 +92,7 @@ Page {
                 recipient: inConversationWith
             }
             delegate: Column {
-                anchors.right: sentByMe ? parent.right : undefined
+                anchors.right: sentByMe ? listView.contentItem.right : undefined
                 spacing: 6
 
                 readonly property bool sentByMe: model.recipient !== "Me"

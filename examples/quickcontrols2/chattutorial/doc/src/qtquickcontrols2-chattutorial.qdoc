@@ -490,7 +490,7 @@ we distinguish between different authors in three ways:
 
 \list
 \li Messages sent by the user are aligned to the right side of the screen
-by setting \c anchors.right to \c parent.right.
+by setting \c anchors.right to \c listView.contentItem.right.
 
 \li By setting the \c visible property of the avatar (which is simply a
 Rectangle for now) based on \c sentByMe, we only show it if the message was
