@@ -223,7 +223,12 @@ public:
 
     QRectF boundingRect() const override;
     QRectF clipRect() const override;
-    Q_INVOKABLE void doLayout(); // ### Qt 6: remove
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#if QT_DEPRECATED_SINCE(5, 15)
+    QT_DEPRECATED_X("Use forceLayout() instead")
+    Q_INVOKABLE void doLayout();
+#endif
+#endif
     Q_REVISION(9) Q_INVOKABLE void forceLayout();
 
     RenderType renderType() const;

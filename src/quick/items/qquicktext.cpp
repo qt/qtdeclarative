@@ -2969,6 +2969,8 @@ void QQuickText::setRenderType(QQuickText::RenderType renderType)
         d->updateLayout();
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#if QT_DEPRECATED_SINCE(5, 15)
 /*!
     \qmlmethod QtQuick::Text::doLayout()
     \deprecated
@@ -2980,6 +2982,8 @@ void QQuickText::doLayout()
     forceLayout();
 }
 
+#endif
+#endif
 /*!
     \qmlmethod QtQuick::Text::forceLayout()
     \since 5.9
