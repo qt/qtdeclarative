@@ -124,6 +124,7 @@ public:
     bool paused() const;
     int currentFrame() const;
     FinishBehavior finishBehavior() const;
+    void setFinishBehavior(FinishBehavior arg);
 
 Q_SIGNALS:
 
@@ -172,7 +173,6 @@ public Q_SLOTS:
     void resetFrameDuration();
     void setLoops(int arg);
     void setCurrentFrame(int arg);
-    void setFinishBehavior(FinishBehavior arg);
 
 private Q_SLOTS:
     void createEngine();

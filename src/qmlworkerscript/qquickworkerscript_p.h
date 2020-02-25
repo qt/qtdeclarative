@@ -88,7 +88,7 @@ class Q_AUTOTEST_EXPORT QQuickWorkerScript : public QObject, public QQmlParserSt
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
-    Q_PROPERTY(bool ready READ ready NOTIFY readyChanged)
+    Q_PROPERTY(bool ready READ ready NOTIFY readyChanged REVISION 15)
 
     QML_NAMED_ELEMENT(WorkerScript);
 
@@ -107,7 +107,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void sourceChanged();
-    void readyChanged();
+    Q_REVISION(15) void readyChanged();
     void message(const QJSValue &messageObject);
 
 protected:

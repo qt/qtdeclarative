@@ -330,8 +330,8 @@ class QQuickTextLine : public QObject
     Q_PROPERTY(qreal height READ height WRITE setHeight)
     Q_PROPERTY(qreal x READ x WRITE setX)
     Q_PROPERTY(qreal y READ y WRITE setY)
-    Q_PROPERTY(qreal implicitWidth READ implicitWidth)
-    Q_PROPERTY(bool isLast READ isLast)
+    Q_PROPERTY(qreal implicitWidth READ implicitWidth REVISION 15)
+    Q_PROPERTY(bool isLast READ isLast REVISION 15)
     QML_ANONYMOUS
 
 public:

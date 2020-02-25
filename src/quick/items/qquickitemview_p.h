@@ -303,8 +303,8 @@ protected Q_SLOTS:
     virtual void initItem(int index, QObject *item);
     void modelUpdated(const QQmlChangeSet &changeSet, bool reset);
     void destroyingItem(QObject *item);
-    void onItemPooled(int modelIndex, QObject *object);
-    void onItemReused(int modelIndex, QObject *object);
+    Q_REVISION(15) void onItemPooled(int modelIndex, QObject *object);
+    Q_REVISION(15) void onItemReused(int modelIndex, QObject *object);
     void animStopped();
     void trackedPositionChanged();
 
