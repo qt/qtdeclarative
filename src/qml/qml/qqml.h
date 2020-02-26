@@ -228,7 +228,7 @@ template<typename T, int metaObjectRevision>
 int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
 {
     QQmlPrivate::RegisterType type = {
-        1,
+        0,
 
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
@@ -302,7 +302,7 @@ int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int ve
     }
 
     QQmlPrivate::RegisterType type = {
-        1,
+        0,
 
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
@@ -363,7 +363,7 @@ template<typename T, int metaObjectRevision>
 int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
 {
     QQmlPrivate::RegisterType type = {
-        1,
+        0,
 
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
@@ -392,7 +392,7 @@ template<typename T, int metaObjectRevision>
 int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
 {
     QQmlPrivate::RegisterType type = {
-        1,
+        0,
 
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
@@ -504,7 +504,7 @@ int qmlRegisterInterface(const char *typeName)
     QByteArray listName("QQmlListProperty<" + name + '>');
 
     QQmlPrivate::RegisterInterface qmlInterface = {
-        1,
+        0,
 
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
@@ -522,7 +522,7 @@ template<typename T>
 int qmlRegisterInterface(const char *uri, int versionMajor)
 {
     QQmlPrivate::RegisterInterface qmlInterface = {
-        1,
+        0,
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
         qobject_interface_iid<T *>(),
@@ -569,7 +569,7 @@ int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor,
                           const char *qmlName, QQmlCustomParser *parser)
 {
     QQmlPrivate::RegisterType type = {
-        1,
+        0,
 
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
@@ -690,24 +690,27 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
 
         uri, QTypeRevision::fromVersion(versionMajor, versionMinor), typeName,
 
-        callback, nullptr, nullptr, QMetaType(), QTypeRevision::zero(), {}
+        callback, nullptr, nullptr, QMetaType(), QTypeRevision::zero()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
 }
 
-enum { QmlCurrentSingletonTypeRegistrationVersion = 3 };
 template <typename T>
-inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName,
-                                QObject *(*callback)(QQmlEngine *, QJSEngine *))
+inline int qmlRegisterSingletonType(
+        const char *uri, int versionMajor, int versionMinor,  const char *typeName,
+        QObject *(*callback)(QQmlEngine *, QJSEngine *))
 {
     QQmlPrivate::RegisterSingletonType api = {
-        QmlCurrentSingletonTypeRegistrationVersion,
-
-        uri, QTypeRevision::fromVersion(versionMajor, versionMinor), typeName,
-
-
-        nullptr, nullptr, &T::staticMetaObject, QMetaType::fromType<T *>(), QTypeRevision::zero(), callback
+        0,
+        uri,
+        QTypeRevision::fromVersion(versionMajor, versionMinor),
+        typeName,
+        nullptr,
+        callback,
+        &T::staticMetaObject,
+        QMetaType::fromType<T *>(),
+        QTypeRevision::zero()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
@@ -719,12 +722,15 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
                                     F&& callback)
 {
     QQmlPrivate::RegisterSingletonType api = {
-        QmlCurrentSingletonTypeRegistrationVersion,
-
-        uri, QTypeRevision::fromVersion(versionMajor, versionMinor), typeName,
-
-
-        nullptr, nullptr, &T::staticMetaObject, QMetaType::fromType<T *>(), QTypeRevision::zero(), callback
+        0,
+        uri,
+        QTypeRevision::fromVersion(versionMajor, versionMinor),
+        typeName,
+        nullptr,
+        callback,
+        &T::staticMetaObject,
+        QMetaType::fromType<T *>(),
+        QTypeRevision::zero()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
@@ -734,7 +740,7 @@ template<typename T>
 inline auto qmlRegisterSingletonInstance(const char *uri, int versionMajor, int versionMinor,
                                          const char *typeName, T *cppObject) -> typename std::enable_if<std::is_base_of<QObject, T>::value, int>::type
 {
-    QQmlPrivate::RegisterSingletonFunctor registrationFunctor;
+    QQmlPrivate::SingletonFunctor registrationFunctor;
     registrationFunctor.m_object = cppObject;
     return qmlRegisterSingletonType<T>(uri, versionMajor, versionMinor, typeName, registrationFunctor);
 }
@@ -748,6 +754,7 @@ inline int qmlRegisterSingletonType(const QUrl &url, const char *uri, int versio
     }
 
     QQmlPrivate::RegisterCompositeSingletonType type = {
+        0,
         url,
         uri,
         QTypeRevision::fromVersion(versionMajor, versionMinor),
@@ -766,6 +773,7 @@ inline int qmlRegisterType(const QUrl &url, const char *uri, int versionMajor, i
     }
 
     QQmlPrivate::RegisterCompositeType type = {
+        0,
         url,
         uri,
         QTypeRevision::fromVersion(versionMajor, versionMinor),

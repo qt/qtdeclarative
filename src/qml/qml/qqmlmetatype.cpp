@@ -92,12 +92,8 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data,
     d->typeId = type.typeId;
     d->listId = type.listId;
     d->isSetup = true;
-    if (type.structVersion > 0) {
-        d->module = QString::fromUtf8(type.uri);
-        d->version = type.version;
-    } else {
-        d->version = QTypeRevision::zero();
-    }
+    d->module = QString::fromUtf8(type.uri);
+    d->version = type.version;
     data->registerType(d);
     return d;
 }
@@ -111,28 +107,18 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->setName(QString::fromUtf8(type.uri), elementName);
     d->version = type.version;
 
-    if (type.qobjectApi || (type.structVersion >= 3 && type.generalizedQobjectApi)) {
-        if (type.structVersion >= 1) // static metaobject added in version 1
-            d->baseMetaObject = type.instanceMetaObject;
-        if (type.structVersion >= 2) // typeId added in version 2
-            d->typeId = type.typeId;
-        if (type.structVersion >= 2) // revisions added in version 2
-            d->revision = type.revision;
+    if (type.qObjectApi) {
+        d->baseMetaObject = type.instanceMetaObject;
+        d->typeId = type.typeId;
+        d->revision = type.revision;
     }
 
     d->extraData.sd->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
     d->extraData.sd->singletonInstanceInfo->scriptCallback = type.scriptApi;
-    if (type.structVersion >= 3) {
-        d->extraData.sd->singletonInstanceInfo->qobjectCallback = type.generalizedQobjectApi;
-    } else {
-        d->extraData.sd->singletonInstanceInfo->qobjectCallback = type.qobjectApi;
-    }
+    d->extraData.sd->singletonInstanceInfo->qobjectCallback = type.qObjectApi;
     d->extraData.sd->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
     d->extraData.sd->singletonInstanceInfo->instanceMetaObject
-            = ((type.qobjectApi || (type.structVersion >= 3 && type.generalizedQobjectApi) )
-               && type.structVersion >= 1)
-            ? type.instanceMetaObject
-            : nullptr;
+            = type.qObjectApi ? type.instanceMetaObject : nullptr;
 
     return d;
 }
@@ -145,8 +131,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->setName(QString::fromUtf8(type.uri), elementName);
 
     d->version = type.version;
-    if (type.structVersion >= 1) // revisions added in version 1
-        d->revision = type.revision;
+    d->revision = type.revision;
     d->typeId = type.typeId;
     d->listId = type.listId;
     d->extraData.cd->allocationSize = type.objectSize;
@@ -328,11 +313,14 @@ void QQmlMetaType::clearTypeRegistrations()
     data->undeletableTypes.clear();
 }
 
-int QQmlMetaType::registerAutoParentFunction(const QQmlPrivate::RegisterAutoParent &autoparent)
+int QQmlMetaType::registerAutoParentFunction(const QQmlPrivate::RegisterAutoParent &function)
 {
+    if (function.structVersion > 0)
+        qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
+
     QQmlMetaTypeDataPtr data;
 
-    data->parentFunctions.append(autoparent.function);
+    data->parentFunctions.append(function.function);
 
     return data->parentFunctions.count() - 1;
 }
@@ -345,7 +333,7 @@ void QQmlMetaType::unregisterAutoParentFunction(const QQmlPrivate::AutoParentFun
 
 QQmlType QQmlMetaType::registerInterface(const QQmlPrivate::RegisterInterface &type)
 {
-    if (type.structVersion > 1)
+    if (type.structVersion > 0)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
 
     QQmlMetaTypeDataPtr data;
@@ -459,6 +447,9 @@ void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data)
 
 QQmlType QQmlMetaType::registerType(const QQmlPrivate::RegisterType &type)
 {
+    if (type.structVersion > 0)
+        qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
+
     QQmlMetaTypeDataPtr data;
 
     QString elementName = QString::fromUtf8(type.elementName);
@@ -476,6 +467,9 @@ QQmlType QQmlMetaType::registerType(const QQmlPrivate::RegisterType &type)
 
 QQmlType QQmlMetaType::registerSingletonType(const QQmlPrivate::RegisterSingletonType &type)
 {
+    if (type.structVersion > 0)
+        qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
+
     QQmlMetaTypeDataPtr data;
 
     QString typeName = QString::fromUtf8(type.typeName);
@@ -491,6 +485,9 @@ QQmlType QQmlMetaType::registerSingletonType(const QQmlPrivate::RegisterSingleto
 
 QQmlType QQmlMetaType::registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &type)
 {
+    if (type.structVersion > 0)
+        qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
+
     // Assumes URL is absolute and valid. Checking of user input should happen before the URL enters type.
     QQmlMetaTypeDataPtr data;
 
@@ -514,6 +511,9 @@ QQmlType QQmlMetaType::registerCompositeSingletonType(const QQmlPrivate::Registe
 
 QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterCompositeType &type)
 {
+    if (type.structVersion > 0)
+        qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
+
     // Assumes URL is absolute and valid. Checking of user input should happen before the URL enters type.
     QQmlMetaTypeDataPtr data;
 

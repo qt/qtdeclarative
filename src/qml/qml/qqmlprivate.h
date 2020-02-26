@@ -400,7 +400,7 @@ namespace QQmlPrivate
     };
 
     struct RegisterAutoParent {
-        int version;
+        int structVersion;
 
         AutoParentFunction function;
     };
@@ -413,12 +413,11 @@ namespace QQmlPrivate
         const char *typeName;
 
         QJSValue (*scriptApi)(QQmlEngine *, QJSEngine *);
-        QObject *(*qobjectApi)(QQmlEngine *, QJSEngine *);
-        const QMetaObject *instanceMetaObject; // new in version 1
-        QMetaType typeId; // new in version 2
-        QTypeRevision revision; // new in version 2
-        std::function<QObject*(QQmlEngine *, QJSEngine *)> generalizedQobjectApi; // new in version 3
-        // If this is extended ensure "version" is bumped!!!
+        std::function<QObject*(QQmlEngine *, QJSEngine *)> qObjectApi;
+
+        const QMetaObject *instanceMetaObject;
+        QMetaType typeId;
+        QTypeRevision revision;
     };
 
     struct RegisterSingletonTypeAndRevisions {
@@ -426,16 +425,17 @@ namespace QQmlPrivate
         const char *uri;
         QTypeRevision version;
 
-        QJSValue (*scriptApi)(QQmlEngine *, QJSEngine *);
+        std::function<QObject*(QQmlEngine *, QJSEngine *)> qObjectApi;
+
         const QMetaObject *instanceMetaObject;
         const QMetaObject *classInfoMetaObject;
 
         QMetaType typeId;
-        std::function<QObject*(QQmlEngine *, QJSEngine *)> generalizedQobjectApi; // new in version 3
         QVector<int> *qmlTypeIds;
     };
 
     struct RegisterCompositeType {
+        int structVersion;
         QUrl url;
         const char *uri;
         QTypeRevision version;
@@ -443,6 +443,7 @@ namespace QQmlPrivate
     };
 
     struct RegisterCompositeSingletonType {
+        int structVersion;
         QUrl url;
         const char *uri;
         QTypeRevision version;
@@ -475,7 +476,7 @@ namespace QQmlPrivate
 
     int Q_QML_EXPORT qmlregister(RegistrationType, void *);
     void Q_QML_EXPORT qmlunregister(RegistrationType, quintptr);
-    struct Q_QML_EXPORT RegisterSingletonFunctor
+    struct Q_QML_EXPORT SingletonFunctor
     {
         QObject *operator()(QQmlEngine *, QJSEngine *);
 
@@ -593,13 +594,12 @@ namespace QQmlPrivate
             uri,
             QTypeRevision::fromMajorVersion(versionMajor),
 
-            nullptr,
+            Constructors<T>::createSingletonInstance,
 
             &T::staticMetaObject,
             classInfoMetaObject,
 
             QMetaType::fromType<T *>(),
-            Constructors<T>::createSingletonInstance,
             qmlTypeIds
         };
 

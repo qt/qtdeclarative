@@ -79,7 +79,7 @@ int qmlTypeId(const char *uri, int versionMajor, int versionMinor, const char *q
 }
 
 // From qqmlprivate.h
-QObject *QQmlPrivate::RegisterSingletonFunctor::operator()(QQmlEngine *qeng, QJSEngine *)
+QObject *QQmlPrivate::SingletonFunctor::operator()(QQmlEngine *qeng, QJSEngine *)
 {
     if (!m_object) {
         QQmlError error;
@@ -206,7 +206,7 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
                 ? QString()
                 : QString::fromUtf8(classInfo(type.classInfoMetaObject, "QML.UncreatableReason"));
         RegisterType revisionRegistration = {
-            1,
+            0,
             type.typeId,
             type.listId,
             creatable ? type.objectSize : 0,
@@ -264,18 +264,15 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
                 = *reinterpret_cast<RegisterSingletonTypeAndRevisions *>(data);
         const char *elementName = classElementName(type.classInfoMetaObject);
         RegisterSingletonType revisionRegistration = {
-            QmlCurrentSingletonTypeRegistrationVersion,
+            0,
             type.uri,
             type.version,
             elementName,
-
-            type.scriptApi,
             nullptr,
+            type.qObjectApi,
             type.instanceMetaObject,
             type.typeId,
-            QTypeRevision(),
-
-            type.generalizedQobjectApi
+            QTypeRevision()
         };
 
         const QTypeRevision added = revisionClassInfo(
@@ -294,12 +291,10 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
             // When removed, we still add revisions, but anonymous ones
             if (removed.isValid() && !(revision < removed)) {
                 revisionRegistration.typeName = nullptr;
-                revisionRegistration.scriptApi = nullptr;
-                revisionRegistration.generalizedQobjectApi = nullptr;
+                revisionRegistration.qObjectApi = nullptr;
             } else {
                 revisionRegistration.typeName = elementName;
-                revisionRegistration.scriptApi = type.scriptApi;
-                revisionRegistration.generalizedQobjectApi = type.generalizedQobjectApi;
+                revisionRegistration.qObjectApi = type.qObjectApi;
             }
 
             assignVersions(&revisionRegistration, revision, type.version);
