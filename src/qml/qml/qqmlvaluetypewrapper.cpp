@@ -569,7 +569,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
                 return false;
             }
 
-            QQmlContextData *context = v4->callingQmlContext();
+            QQmlRefPointer<QQmlContextData> context = v4->callingQmlContext();
 
             QQmlPropertyData cacheData;
             cacheData.setWritable(true);

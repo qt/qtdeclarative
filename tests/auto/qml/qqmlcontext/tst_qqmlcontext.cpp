@@ -34,6 +34,7 @@
 #include <QQmlComponent>
 #include <QQmlExpression>
 #include <private/qqmlcontext_p.h>
+#include <private/qqmlguardedcontextdata_p.h>
 #include <private/qv4qmlcontext_p.h>
 #include <private/qv4object_p.h>
 #include "../../shared/util.h"
@@ -737,7 +738,7 @@ void tst_qqmlcontext::qobjectDerived()
     // the engine
     QQmlContext context(engine.rootContext());
 
-    QObject *o1 = component.create(&context);
+    QScopedPointer<QObject> o1(component.create(&context));
     Q_UNUSED(o1);
 
     QCOMPARE(command.count, 2);
@@ -800,32 +801,33 @@ void tst_qqmlcontext::contextLeak()
 
         QQmlData *ddata = QQmlData::get(obj.data());
         QVERIFY(ddata);
-        QQmlContextData *context = ddata->context;
+        QQmlRefPointer<QQmlContextData> context = ddata->context;
         QVERIFY(context);
-        QVERIFY(!context->importedScripts.isNullOrUndefined());
-        QCOMPARE(int(context->importedScripts.valueRef()->as<QV4::Object>()->getLength()), 1);
+        QVERIFY(!context->importedScripts().isNullOrUndefined());
+        QCOMPARE(int(context->importedScripts().valueRef()->as<QV4::Object>()->getLength()), 1);
 
-        {
-            QV4::Scope scope(ddata->jsWrapper.engine());
-            QV4::ScopedValue scriptContextWrapper(scope);
-            scriptContextWrapper = context->importedScripts.valueRef()->as<QV4::Object>()->get(uint(0));
-            scriptContext = scriptContextWrapper->as<QV4::QQmlContextWrapper>()->getContext();
-        }
+        QV4::Scope scope(ddata->jsWrapper.engine());
+        QV4::ScopedValue scriptContextWrapper(scope);
+        scriptContextWrapper = context->importedScripts().valueRef()
+                ->as<QV4::Object>()->get(uint(0));
+        scriptContext = scriptContextWrapper->as<QV4::QQmlContextWrapper>()->getContext();
     }
 
     engine.collectGarbage();
 
     // Each time a JS file (non-pragma-shared) is imported, we create a QQmlContext(Data) for it.
     // Make sure that context does not leak.
-    QVERIFY(scriptContext.isNull());
+    // The QQmlGuardedContextData also holds a reference. Therefore, the refCount is still 1.
+    // All other references should be gone by now.
+    QCOMPARE(scriptContext->refCount(), 1);
 }
 
 
 static bool buildObjectList(QQmlContext *ctxt)
 {
     static QHash<QObject *, QString> deletedObjects;
-    QQmlContextData *p = QQmlContextData::get(ctxt);
-    QObject *object = p->contextObject;
+    QQmlRefPointer<QQmlContextData> p = QQmlContextData::get(ctxt);
+    QObject *object = p->contextObject();
     if (object) {
         // If the object was actually deleted this is likely to crash in one way or another.
         // Either the memory is still intact, then we will probably find the objectName, or it is
@@ -838,11 +840,11 @@ static bool buildObjectList(QQmlContext *ctxt)
         });
     }
 
-    QQmlContextData *child = p->childContexts;
+    QQmlRefPointer<QQmlContextData> child = p->childContexts();
     while (child) {
         if (!buildObjectList(child->asQQmlContext()))
             return false;
-        child = child->nextChild;
+        child = child->nextChild();
     }
 
     return true;
@@ -878,10 +880,14 @@ void tst_qqmlcontext::outerContextObject()
 void tst_qqmlcontext::contextObjectHierarchy()
 {
     QQmlEngine engine;
-    QQmlComponent component(&engine);
-    component.loadUrl(testFileUrl("contextObjectHierarchy.qml"));
-    QVERIFY(component.isReady());
-    QScopedPointer<QObject> root(component.create());
+    QScopedPointer<QObject> root;
+    {
+        // Drop the component after create(), to release the root context.
+        QQmlComponent component(&engine);
+        component.loadUrl(testFileUrl("contextObjectHierarchy.qml"));
+        QVERIFY(component.isReady());
+        root.reset(component.create());
+    }
     QVERIFY(!root.isNull());
 
     for (const QObject *child : root->children())

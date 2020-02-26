@@ -66,15 +66,14 @@ QT_BEGIN_NAMESPACE
 class Q_QML_PRIVATE_EXPORT QQmlBoundSignalExpression : public QQmlJavaScriptExpression, public QQmlRefCount
 {
 public:
-    QQmlBoundSignalExpression(QObject *target, int index,
-                              QQmlContextData *ctxt, QObject *scope, const QString &expression,
-                              const QString &fileName, quint16 line, quint16 column,
-                              const QString &handlerName = QString(),
-                              const QString &parameterString = QString());
+    QQmlBoundSignalExpression(
+            QObject *target, int index, const QQmlRefPointer<QQmlContextData> &ctxt, QObject *scope,
+            const QString &expression, const QString &fileName, quint16 line, quint16 column,
+            const QString &handlerName = QString(), const QString &parameterString = QString());
 
-    QQmlBoundSignalExpression(QObject *target, int index,
-                              QQmlContextData *ctxt, QObject *scopeObject, QV4::Function *function,
-                              QV4::ExecutionContext *scope = nullptr);
+    QQmlBoundSignalExpression(
+            QObject *target, int index, const QQmlRefPointer<QQmlContextData> &ctxt,
+            QObject *scopeObject, QV4::Function *function, QV4::ExecutionContext *scope = nullptr);
 
     // inherited from QQmlJavaScriptExpression.
     QString expressionIdentifier() const override;
@@ -87,12 +86,10 @@ public:
     QString expression() const;
     QObject *target() const { return m_target; }
 
-    QQmlEngine *engine() const { return context() ? context()->engine : nullptr; }
-
 private:
     ~QQmlBoundSignalExpression() override;
 
-    void init(QQmlContextData *ctxt, QObject *scope);
+    void init(const QQmlRefPointer<QQmlContextData> &ctxt, QObject *scope);
 
     bool expressionFunctionValid() const { return function() != nullptr; }
 

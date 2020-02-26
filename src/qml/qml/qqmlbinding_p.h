@@ -76,12 +76,21 @@ public:
     typedef QExplicitlySharedDataPointer<QQmlBinding> Ptr;
 
     static QQmlBinding *create(const QQmlPropertyData *, const QQmlScriptString &, QObject *, QQmlContext *);
-    static QQmlBinding *create(const QQmlPropertyData *, const QString &, QObject *, QQmlContextData *,
-                               const QString &url = QString(), quint16 lineNumber = 0);
-    static QQmlBinding *create(const QQmlPropertyData *property, QV4::Function *function,
-                               QObject *obj, QQmlContextData *ctxt, QV4::ExecutionContext *scope);
-    static QQmlBinding *createTranslationBinding(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, const QV4::CompiledData::Binding *binding,
-                                                 QObject *obj, QQmlContextData *ctxt);
+
+    static QQmlBinding *create(
+            const QQmlPropertyData *, const QString &, QObject *,
+            const QQmlRefPointer<QQmlContextData> &, const QString &url = QString(),
+            quint16 lineNumber = 0);
+
+    static QQmlBinding *create(
+            const QQmlPropertyData *property, QV4::Function *function, QObject *obj,
+            const QQmlRefPointer<QQmlContextData> &ctxt, QV4::ExecutionContext *scope);
+
+    static QQmlBinding *createTranslationBinding(
+            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+            const QV4::CompiledData::Binding *binding, QObject *obj,
+            const QQmlRefPointer<QQmlContextData> &ctxt);
+
     ~QQmlBinding() override;
 
     void setTarget(const QQmlProperty &);

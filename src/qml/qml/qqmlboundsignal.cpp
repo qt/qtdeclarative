@@ -64,11 +64,10 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
-                                                     QQmlContextData *ctxt, QObject *scope, const QString &expression,
-                                                     const QString &fileName, quint16 line, quint16 column,
-                                                     const QString &handlerName,
-                                                     const QString &parameterString)
+QQmlBoundSignalExpression::QQmlBoundSignalExpression(
+        QObject *target, int index, const QQmlRefPointer<QQmlContextData> &ctxt, QObject *scope,
+        const QString &expression, const QString &fileName, quint16 line, quint16 column,
+        const QString &handlerName, const QString &parameterString)
     : QQmlJavaScriptExpression(),
       m_index(index),
       m_target(target)
@@ -105,8 +104,9 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     setupFunction(context, f->function());
 }
 
-QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scopeObject,
-                                                     QV4::Function *function, QV4::ExecutionContext *scope)
+QQmlBoundSignalExpression::QQmlBoundSignalExpression(
+        QObject *target, int index, const QQmlRefPointer<QQmlContextData> &ctxt,
+        QObject *scopeObject, QV4::Function *function, QV4::ExecutionContext *scope)
     : QQmlJavaScriptExpression(),
       m_index(index),
       m_target(target)
@@ -114,7 +114,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     // It's important to call init first, because m_index gets remapped in case of cloned signals.
     init(ctxt, scopeObject);
 
-    QV4::ExecutionEngine *engine = ctxt->engine->handle();
+    QV4::ExecutionEngine *engine = ctxt->engine()->handle();
 
     // If the function is marked as having a nested function, then the user wrote:
     //   onSomeSignal: function() { /*....*/ }
@@ -141,7 +141,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     setupFunction(qmlContext, function);
 }
 
-void QQmlBoundSignalExpression::init(QQmlContextData *ctxt, QObject *scope)
+void QQmlBoundSignalExpression::init(const QQmlRefPointer<QQmlContextData> &ctxt, QObject *scope)
 {
     setNotifyOnValueChanged(false);
     setContext(ctxt);
@@ -177,7 +177,7 @@ QString QQmlBoundSignalExpression::expression() const
 // Changes made here may need to be made there and vice versa.
 void QQmlBoundSignalExpression::evaluate(void **a)
 {
-    Q_ASSERT (context() && engine());
+    Q_ASSERT (engine());
 
     if (!expressionFunctionValid())
         return;
@@ -225,7 +225,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
 
 void QQmlBoundSignalExpression::evaluate(const QList<QVariant> &args)
 {
-    Q_ASSERT (context() && engine());
+    Q_ASSERT (engine());
 
     if (!expressionFunctionValid())
         return;

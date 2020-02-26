@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qqmlpropertyresolver_p.h"
+#include <private/qqmlcontextdata_p.h>
 
 QT_BEGIN_NAMESPACE
 

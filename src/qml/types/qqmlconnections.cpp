@@ -292,9 +292,9 @@ void QQmlConnections::connectSignalsToMethods()
     if (!ddata)
         return;
 
-    QV4::ExecutionEngine *engine = ddata->context->engine->handle();
+    QV4::ExecutionEngine *engine = ddata->context->engine()->handle();
 
-    QQmlContextData *ctxtdata = ddata->outerContext;
+    QQmlRefPointer<QQmlContextData> ctxtdata = ddata->outerContext;
     for (int i = ddata->propertyCache->methodOffset(),
              end = ddata->propertyCache->methodOffset() + ddata->propertyCache->methodCount();
          i < end;
@@ -344,7 +344,7 @@ void QQmlConnections::connectSignalsToBindings()
     Q_D(QQmlConnections);
     QObject *target = this->target();
     QQmlData *ddata = QQmlData::get(this);
-    QQmlContextData *ctxtdata = ddata ? ddata->outerContext : nullptr;
+    QQmlRefPointer<QQmlContextData> ctxtdata = ddata ? ddata->outerContext : nullptr;
 
     for (const QV4::CompiledData::Binding *binding : qAsConst(d->bindings)) {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Script);

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLEXPRESSION_P_H
-#define QQMLEXPRESSION_P_H
+#ifndef QQMLGUARDEDCONTEXTDATA_P_H
+#define QQMLGUARDEDCONTEXTDATA_P_H
 
 //
 //  W A R N I N G
@@ -51,62 +51,81 @@
 // We mean it.
 //
 
-#include "qqmlexpression.h"
-
-#include <private/qqmlengine_p.h>
-#include <private/qfieldlist_p.h>
-#include <private/qflagpointer_p.h>
-#include <private/qqmljavascriptexpression_p.h>
+#include <QtQml/private/qqmlglobal_p.h>
+#include <QtQml/private/qqmlcontextdata_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlExpression;
-class QString;
-class QQmlExpressionPrivate : public QObjectPrivate,
-                              public QQmlJavaScriptExpression
+class QQmlGuardedContextData
 {
-    Q_DECLARE_PUBLIC(QQmlExpression)
+    Q_DISABLE_COPY(QQmlGuardedContextData);
 public:
-    QQmlExpressionPrivate();
-    ~QQmlExpressionPrivate() override;
+    QQmlGuardedContextData() = default;
+    ~QQmlGuardedContextData() { unlink(); }
 
-    void init(const QQmlRefPointer<QQmlContextData> &, const QString &, QObject *);
-    void init(const QQmlRefPointer<QQmlContextData> &, QV4::Function *runtimeFunction, QObject *);
+    QQmlGuardedContextData(QQmlGuardedContextData &&) = default;
+    QQmlGuardedContextData &operator=(QQmlGuardedContextData &&) = default;
 
-    QVariant value(bool *isUndefined = nullptr);
+    QQmlGuardedContextData(QQmlRefPointer<QQmlContextData> data)
+    {
+        setContextData(std::move(data));
+    }
 
-    QV4::ReturnedValue v4value(bool *isUndefined = nullptr);
+    QQmlGuardedContextData &operator=(QQmlRefPointer<QQmlContextData> d)
+    {
+        setContextData(std::move(d));
+        return *this;
+    }
 
-    static inline QQmlExpressionPrivate *get(QQmlExpression *expr);
-    static inline QQmlExpression *get(QQmlExpressionPrivate *expr);
+    QQmlRefPointer<QQmlContextData> contextData() const { return m_contextData; }
+    void setContextData(QQmlRefPointer<QQmlContextData> contextData)
+    {
+        if (m_contextData.data() == contextData.data())
+            return;
+        unlink();
 
-    void _q_notify();
+        if (contextData) {
+            m_contextData = std::move(contextData);
+            m_next = m_contextData->m_contextGuards;
+            if (m_next)
+                m_next->m_prev = &m_next;
 
-    bool expressionFunctionValid:1;
+            m_contextData->m_contextGuards = this;
+            m_prev = &m_contextData->m_contextGuards;
+        }
+    }
 
-    // Inherited from QQmlJavaScriptExpression
-    QString expressionIdentifier() const override;
-    void expressionChanged() override;
+    bool isNull() const { return !m_contextData; }
 
-    QString expression;
+    operator const QQmlRefPointer<QQmlContextData> &() const { return m_contextData; }
+    QQmlContextData &operator*() const { return m_contextData.operator*(); }
+    QQmlContextData *operator->() const { return m_contextData.operator->(); }
 
-    QString url; // This is a QString for a reason.  QUrls are slooooooow...
-    quint16 line;
-    quint16 column;
-    QString name; //function name, hint for the debugger
+    QQmlGuardedContextData *next() const { return m_next; }
+
+    void reset()
+    {
+        m_contextData = nullptr;
+        m_next = nullptr;
+        m_prev = nullptr;
+    }
+
+private:
+    void unlink()
+    {
+        if (m_prev) {
+            *m_prev = m_next;
+            if (m_next)
+                m_next->m_prev = m_prev;
+            reset();
+        }
+    }
+
+    QQmlRefPointer<QQmlContextData> m_contextData;
+    QQmlGuardedContextData  *m_next = nullptr;
+    QQmlGuardedContextData **m_prev = nullptr;
 };
-
-QQmlExpressionPrivate *QQmlExpressionPrivate::get(QQmlExpression *expr)
-{
-    return static_cast<QQmlExpressionPrivate *>(QObjectPrivate::get(expr));
-}
-
-QQmlExpression *QQmlExpressionPrivate::get(QQmlExpressionPrivate *expr)
-{
-    return expr->q_func();
-}
-
 
 QT_END_NAMESPACE
 
-#endif // QQMLEXPRESSION_P_H
+#endif // QQMLGUARDEDCONTEXTDATA_P_H

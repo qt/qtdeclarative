@@ -61,6 +61,7 @@
 #include "qqml.h"
 #include <private/qqmlobjectcreator_p.h>
 #include <private/qqmltypedata_p.h>
+#include <private/qqmlguardedcontextdata_p.h>
 
 #include <QtCore/QString>
 #include <QtCore/QStringList>
@@ -84,7 +85,7 @@ public:
 
     void loadUrl(const QUrl &newUrl, QQmlComponent::CompilationMode mode = QQmlComponent::PreferSynchronous);
 
-    QObject *beginCreate(QQmlContextData *);
+    QObject *beginCreate(QQmlRefPointer<QQmlContextData>);
     void completeCreate();
     void initializeObjectWithInitialProperties(QV4::QmlContext *qmlContext, const QV4::Value &valuemap, QObject *toCreate, RequiredProperties &requiredProperties);
     static void setInitialProperties(QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o, const QV4::Value &v, RequiredProperties &requiredProperties, QObject *createdComponent);
@@ -94,8 +95,8 @@ public:
             QQmlIncubator *incubationTask,
             QQmlComponent *component,
             QQmlEngine *engine,
-            QQmlContextData *context,
-            QQmlContextData *forContext);
+            const QQmlRefPointer<QQmlContextData> &context,
+            const QQmlRefPointer<QQmlContextData> &forContext);
 
     QQmlRefPointer<QQmlTypeData> typeData;
     void typeDataReady(QQmlTypeData *) override;

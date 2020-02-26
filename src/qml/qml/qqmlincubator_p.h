@@ -46,7 +46,7 @@
 #include <private/qqmlvme_p.h>
 #include <private/qrecursionwatcher_p.h>
 #include <private/qqmlengine_p.h>
-#include <private/qqmlcontext_p.h>
+#include <private/qqmlguardedcontextdata_p.h>
 
 //
 //  W A R N I N G

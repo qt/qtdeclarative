@@ -53,11 +53,11 @@
 
 #include <QtCore/qobject.h>
 #include <QtCore/qurl.h>
-
-#include <private/qqmlcontext_p.h>
+#include <QtCore/qpointer.h>
 
 #include <private/qv4value_p.h>
 #include <private/qv4context_p.h>
+#include <private/qv4persistent_p.h>
 
 QT_BEGIN_NAMESPACE
 

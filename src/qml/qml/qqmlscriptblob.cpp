@@ -42,6 +42,7 @@
 #include <private/qqmlscriptblob_p.h>
 #include <private/qqmlscriptdata_p.h>
 #include <private/qqmlsourcecoordinate_p.h>
+#include <private/qqmlcontextdata_p.h>
 #include <private/qv4runtimecodegen_p.h>
 #include <private/qv4script_p.h>
 

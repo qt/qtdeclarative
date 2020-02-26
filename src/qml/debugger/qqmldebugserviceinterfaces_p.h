@@ -107,7 +107,8 @@ class QQmlNativeDebugService {};
 class QQmlDebugTranslationService {
 public:
     virtual QString foundElidedText(QObject *, const QString &, const QString &) {return {};}
-    virtual void foundTranslationBinding(QQmlTranslationBinding *, QObject *, QQmlContextData *) {}
+    virtual void foundTranslationBinding(QQmlTranslationBinding *, QObject *,
+                                         const QQmlRefPointer<QQmlContextData> &) {}
 };
 
 #else
@@ -175,7 +176,8 @@ public:
     static const QString s_key;
 
     virtual QString foundElidedText(QObject *qQuickTextObject, const QString &layoutText, const QString &elideText) = 0;
-    virtual void foundTranslationBinding(QQmlTranslationBinding *binding, QObject *scopeObject, QQmlContextData *contextData) = 0;
+    virtual void foundTranslationBinding(QQmlTranslationBinding *binding, QObject *scopeObject,
+                                         const QQmlRefPointer<QQmlContextData> &contextData) = 0;
 protected:
     friend class QQmlDebugConnector;
 

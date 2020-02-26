@@ -521,6 +521,10 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, QObject *parent)
 {
     Q_D(QQmlComponent);
     d->engine = engine;
+    QObject::connect(engine, &QObject::destroyed, this, [d]() {
+        d->state.creator.reset();
+        d->engine = nullptr;
+    });
 }
 
 /*!
@@ -635,7 +639,7 @@ void QQmlComponent::setData(const QByteArray &data, const QUrl &url)
 QQmlContext *QQmlComponent::creationContext() const
 {
     Q_D(const QQmlComponent);
-    if(d->creationContext)
+    if (!d->creationContext.isNull())
         return d->creationContext->asQQmlContext();
 
     return qmlContext(this);
@@ -879,15 +883,11 @@ QObject *QQmlComponent::createWithInitialProperties(const QVariantMap& initialPr
 QObject *QQmlComponent::beginCreate(QQmlContext *publicContext)
 {
     Q_D(QQmlComponent);
-
     Q_ASSERT(publicContext);
-    QQmlContextData *context = QQmlContextData::get(publicContext);
-
-    return d->beginCreate(context);
+    return d->beginCreate(QQmlContextData::get(publicContext));
 }
 
-QObject *
-QQmlComponentPrivate::beginCreate(QQmlContextData *context)
+QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> context)
 {
     Q_Q(QQmlComponent);
     if (!context) {
@@ -900,7 +900,7 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
         return nullptr;
     }
 
-    if (context->engine != engine) {
+    if (context->engine() != engine) {
         qWarning("QQmlComponent: Must create component in context from the same QQmlEngine");
         return nullptr;
     }
@@ -930,7 +930,7 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
 
     enginePriv->referenceScarceResources();
     QObject *rv = nullptr;
-    state.creator.reset(new QQmlObjectCreator(context, compilationUnit, creationContext));
+    state.creator.reset(new QQmlObjectCreator(std::move(context), compilationUnit, creationContext));
     rv = state.creator->create(start);
     if (!rv)
         state.errors = state.creator->errors;
@@ -963,8 +963,9 @@ void QQmlComponentPrivate::beginDeferred(QQmlEnginePrivate *enginePriv,
         ConstructionState *state = new ConstructionState;
         state->completePending = true;
 
-        QQmlContextData *creationContext = nullptr;
-        state->creator.reset(new QQmlObjectCreator(deferredData->context->parent, deferredData->compilationUnit, creationContext));
+        state->creator.reset(new QQmlObjectCreator(
+                                 deferredData->context->parent(), deferredData->compilationUnit,
+                                 QQmlRefPointer<QQmlContextData>()));
 
         if (!state->creator->populateDeferredProperties(object, deferredData))
             state->errors << state->creator->errors;
@@ -1082,16 +1083,16 @@ void QQmlComponentPrivate::completeCreate()
 }
 
 QQmlComponentAttached::QQmlComponentAttached(QObject *parent)
-: QObject(parent), prev(nullptr), next(nullptr)
+: QObject(parent), m_prev(nullptr), m_next(nullptr)
 {
 }
 
 QQmlComponentAttached::~QQmlComponentAttached()
 {
-    if (prev) *prev = next;
-    if (next) next->prev = prev;
-    prev = nullptr;
-    next = nullptr;
+    if (m_prev) *m_prev = m_next;
+    if (m_next) m_next->m_prev = m_prev;
+    m_prev = nullptr;
+    m_next = nullptr;
 }
 
 /*!
@@ -1107,12 +1108,12 @@ QQmlComponentAttached *QQmlComponent::qmlAttachedProperties(QObject *obj)
 
     QQmlEnginePrivate *p = QQmlEnginePrivate::get(engine);
     if (p->activeObjectCreator) { // XXX should only be allowed during begin
-        a->add(p->activeObjectCreator->componentAttachment());
+        a->insertIntoList(p->activeObjectCreator->componentAttachment());
     } else {
         QQmlData *d = QQmlData::get(obj);
         Q_ASSERT(d);
         Q_ASSERT(d->context);
-        a->add(&d->context->componentAttached);
+        d->context->addComponentAttached(a);
     }
 
     return a;
@@ -1138,24 +1139,23 @@ QQmlComponentAttached *QQmlComponent::qmlAttachedProperties(QObject *obj)
     \sa QQmlIncubator
 */
 
-void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context,
-                                   QQmlContext *forContext)
+void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context, QQmlContext *forContext)
 {
     Q_D(QQmlComponent);
 
     if (!context)
         context = d->engine->rootContext();
 
-    QQmlContextData *contextData = QQmlContextData::get(context);
-    QQmlContextData *forContextData = contextData;
-    if (forContext) forContextData = QQmlContextData::get(forContext);
+    QQmlRefPointer<QQmlContextData> contextData = QQmlContextData::get(context);
+    QQmlRefPointer<QQmlContextData> forContextData =
+            forContext ?  QQmlContextData::get(forContext) : contextData;
 
     if (!contextData->isValid()) {
         qWarning("QQmlComponent: Cannot create a component in an invalid context");
         return;
     }
 
-    if (contextData->engine != d->engine) {
+    if (contextData->engine() != d->engine) {
         qWarning("QQmlComponent: Must create component in context from the same QQmlEngine");
         return;
     }
@@ -1209,8 +1209,8 @@ void QQmlComponentPrivate::incubateObject(
         QQmlIncubator *incubationTask,
         QQmlComponent *component,
         QQmlEngine *engine,
-        QQmlContextData *context,
-        QQmlContextData *forContext)
+        const QQmlRefPointer<QQmlContextData> &context,
+        const QQmlRefPointer<QQmlContextData> &forContext)
 {
     QQmlIncubatorPrivate *incubatorPriv = QQmlIncubatorPrivate::get(incubationTask);
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(engine);

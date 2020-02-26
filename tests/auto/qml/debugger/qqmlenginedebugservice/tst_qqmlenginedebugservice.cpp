@@ -1395,15 +1395,12 @@ void tst_QQmlEngineDebugService::invalidContexts()
     QQmlContext context(m_engine);
     getContexts();
     QCOMPARE(m_dbg->rootContext().contexts.count(), base + 1);
-    QQmlContextData *contextData = QQmlContextData::get(&context);
+    QQmlRefPointer<QQmlContextData> contextData = QQmlContextData::get(&context);
     contextData->invalidate();
     getContexts();
     QCOMPARE(m_dbg->rootContext().contexts.count(), base);
-    QQmlContextData *rootData = QQmlContextData::get(m_engine->rootContext());
+    QQmlRefPointer<QQmlContextData> rootData = QQmlContextData::get(m_engine->rootContext());
     rootData->invalidate();
-    getContexts();
-    QCOMPARE(m_dbg->rootContext().contexts.count(), 0);
-    contextData->setParent(rootData); // makes context valid again, but not root.
     getContexts();
     QCOMPARE(m_dbg->rootContext().contexts.count(), 0);
 }

@@ -154,9 +154,9 @@ void QQuickWindowQmlImpl::setWindowVisibility()
         QQmlError error;
         error.setObject(this);
 
-        const QQmlContextData* urlContext = data->context;
+        QQmlRefPointer<QQmlContextData> urlContext = data->context;
         while (urlContext && urlContext->url().isEmpty())
-            urlContext = urlContext->parent;
+            urlContext = urlContext->parent();
         error.setUrl(urlContext ? urlContext->url() : QUrl());
 
         QString objectId = data->context->findObjectId(this);
@@ -167,7 +167,7 @@ void QQuickWindowQmlImpl::setWindowVisibility()
             error.setDescription(QCoreApplication::translate("QQuickWindowQmlImpl",
                 "Conflicting properties 'visible' and 'visibility'"));
 
-        QQmlEnginePrivate::get(data->context->engine)->warning(error);
+        QQmlEnginePrivate::get(data->context->engine())->warning(error);
     }
 
     if (d->visibility == AutomaticVisibility) {

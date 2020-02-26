@@ -230,8 +230,8 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
     } else {
         const QV4::CompiledData::Alias *aliasData = &metaObject->compiledObject->aliasTable()[aliasId];
         if (!aliasData->isObjectAlias()) {
-            QQmlContextData *ctxt = metaObject->ctxt;
-            QObject *target = ctxt->idValues[aliasData->targetObjectId].data();
+            QQmlRefPointer<QQmlContextData> ctxt = metaObject->ctxt;
+            QObject *target = ctxt->idValue(aliasData->targetObjectId);
             if (!target)
                 return;
 
@@ -255,7 +255,7 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
                 return;
 
             if (pd->notifyIndex() != -1)
-                connect(target, pd->notifyIndex(), ctxt->engine);
+                connect(target, pd->notifyIndex(), ctxt->engine());
         }
 
         metaObject.setFlag();
@@ -321,7 +321,7 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
             if (type != QMetaType::UnknownType) {
                 if (valueIndex != -1) {
                     QQmlGadgetPtrWrapper *valueType = QQmlGadgetPtrWrapper::instance(
-                                data->context->engine, type);
+                                data->context->engine(), type);
                     Q_ASSERT(valueType);
 
                     //
@@ -694,7 +694,9 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 const QV4::CompiledData::BuiltinType t = property.builtinType();
 
                 // the context can be null if accessing var properties from cpp after re-parenting an item.
-                QQmlEnginePrivate *ep = (ctxt == nullptr || ctxt->engine == nullptr) ? nullptr : QQmlEnginePrivate::get(ctxt->engine);
+                QQmlEnginePrivate *ep = (ctxt.isNull() || ctxt->engine() == nullptr)
+                        ? nullptr
+                        : QQmlEnginePrivate::get(ctxt->engine());
 
                 const int fallbackMetaType = QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(t);
 
@@ -891,15 +893,13 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 if ((aliasData->flags & QV4::CompiledData::Alias::AliasPointsToPointerObject) && c == QMetaObject::ReadProperty)
                         *reinterpret_cast<void **>(a[0]) = nullptr;
 
-                if (!ctxt) return -1;
+                if (ctxt.isNull())
+                    return -1;
 
                 while (aliasData->aliasToLocalAlias)
                     aliasData = &compiledObject->aliasTable()[aliasData->localAliasIndex];
 
-                QQmlContext *context = ctxt->asQQmlContext();
-                QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(context);
-
-                QObject *target = ctxtPriv->data->idValues[aliasData->targetObjectId].data();
+                QObject *target = ctxt->idValue(aliasData->targetObjectId);
                 if (!target)
                     return -1;
 
@@ -934,7 +934,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     const QQmlPropertyData *pd = targetDData->propertyCache->property(coreIndex);
                     // Value type property or deep alias
                     QQmlGadgetPtrWrapper *valueType = QQmlGadgetPtrWrapper::instance(
-                                ctxt->engine, pd->propType());
+                                ctxt->engine(), pd->propType());
                     if (valueType) {
                         valueType->read(target, coreIndex);
                         int rv = QMetaObject::metacall(valueType, c, valueTypePropertyIndex, a);
@@ -973,7 +973,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
             id -= plainSignals;
 
             if (id < methodCount) {
-                QQmlEngine *engine = ctxt->engine;
+                QQmlEngine *engine = ctxt->engine();
                 if (!engine)
                     return -1; // We can't run the method
 
@@ -1050,7 +1050,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
 
 QV4::ReturnedValue QQmlVMEMetaObject::method(int index) const
 {
-    if (!ctxt || !ctxt->isValid() || !compiledObject) {
+    if (ctxt.isNull() || !ctxt->isValid() || !compiledObject) {
         qWarning("QQmlVMEMetaObject: Internal error - attempted to evaluate a function in an invalid context");
         return QV4::Encode::undefined();
     }
@@ -1255,14 +1255,14 @@ bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex,
     *coreIndex = -1;
     *valueTypeIndex = -1;
 
-    if (!ctxt)
+    if (ctxt.isNull())
         return false;
 
     const int aliasId = index - propOffset() - compiledObject->nProperties;
     const QV4::CompiledData::Alias *aliasData = &compiledObject->aliasTable()[aliasId];
     while (aliasData->aliasToLocalAlias)
         aliasData = &compiledObject->aliasTable()[aliasData->localAliasIndex];
-    *target = ctxt->idValues[aliasData->targetObjectId].data();
+    *target = ctxt->idValue(aliasData->targetObjectId);
     if (!*target)
         return false;
 
@@ -1290,7 +1290,7 @@ void QQmlVMEMetaObject::connectAlias(int aliasId)
     }
 
     endpoint->metaObject = this;
-    endpoint->connect(&ctxt->idValues[aliasData->targetObjectId].bindings);
+    endpoint->connect(ctxt->idValueBindings(aliasData->targetObjectId));
     endpoint->tryConnect();
 }
 

@@ -59,7 +59,7 @@
 #include "qqml.h"
 #include "qqmlvaluetype_p.h"
 #include "qqmlcontext.h"
-#include "qqmlcontext_p.h"
+#include "qqmlcontextdata_p.h"
 #include "qqmlexpression.h"
 #include "qqmlproperty_p.h"
 #include "qqmlmetatype_p.h"
@@ -205,7 +205,7 @@ public:
     QIntrusiveList<Incubator, &Incubator::next> incubatorList;
     unsigned int incubatorCount;
     QQmlIncubationController *incubationController;
-    void incubate(QQmlIncubator &, QQmlContextData *);
+    void incubate(QQmlIncubator &, const QQmlRefPointer<QQmlContextData> &);
 
     // These methods may be called from any thread
     inline bool isEngineThread() const;
@@ -255,7 +255,7 @@ public:
     inline static QQmlEnginePrivate *get(QQmlEngine *e);
     inline static const QQmlEnginePrivate *get(const QQmlEngine *e);
     inline static QQmlEnginePrivate *get(QQmlContext *c);
-    inline static QQmlEnginePrivate *get(QQmlContextData *c);
+    inline static QQmlEnginePrivate *get(const QQmlRefPointer<QQmlContextData> &c);
     inline static QQmlEngine *get(QQmlEnginePrivate *p);
     inline static QQmlEnginePrivate *get(QV4::ExecutionEngine *e);
 
@@ -442,14 +442,24 @@ const QQmlEnginePrivate *QQmlEnginePrivate::get(const QQmlEngine *e)
     return e ? e->d_func() : nullptr;
 }
 
-QQmlEnginePrivate *QQmlEnginePrivate::get(QQmlContext *c)
+template<typename Context>
+QQmlEnginePrivate *contextEngine(const Context &context)
 {
-    return (c && c->engine()) ? QQmlEnginePrivate::get(c->engine()) : nullptr;
+    if (!context)
+        return nullptr;
+    if (QQmlEngine *engine = context->engine())
+        return QQmlEnginePrivate::get(engine);
+    return nullptr;
 }
 
-QQmlEnginePrivate *QQmlEnginePrivate::get(QQmlContextData *c)
+QQmlEnginePrivate *QQmlEnginePrivate::get(QQmlContext *c)
 {
-    return (c && c->engine) ? QQmlEnginePrivate::get(c->engine) : nullptr;
+    return contextEngine(c);
+}
+
+QQmlEnginePrivate *QQmlEnginePrivate::get(const QQmlRefPointer<QQmlContextData> &c)
+{
+    return contextEngine(c);
 }
 
 QQmlEngine *QQmlEnginePrivate::get(QQmlEnginePrivate *p)

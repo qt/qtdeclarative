@@ -1198,13 +1198,13 @@ QObject *ExecutionEngine::qmlScopeObject() const
     return ctx->qml()->scopeObject;
 }
 
-QQmlContextData *ExecutionEngine::callingQmlContext() const
+QQmlRefPointer<QQmlContextData> ExecutionEngine::callingQmlContext() const
 {
     Heap::QmlContext *ctx = qmlContext();
     if (!ctx)
         return nullptr;
 
-    return ctx->qml()->context->contextData();
+    return ctx->qml()->context;
 }
 
 StackTrace ExecutionEngine::stackTrace(int frameLimit) const

@@ -100,7 +100,7 @@ private:
     friend class QQmlComponentPrivate;
     friend class QQmlScriptPrivate;
     friend class QQmlContextData;
-    QQmlContext(QQmlContextData *);
+    QQmlContext(QQmlContextPrivate &dd, QObject *parent = nullptr);
     QQmlContext(QQmlEngine *, bool);
     Q_DISABLE_COPY(QQmlContext)
 };

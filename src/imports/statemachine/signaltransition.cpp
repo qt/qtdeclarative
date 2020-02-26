@@ -69,8 +69,7 @@ bool SignalTransition::eventTest(QEvent *event)
 
     QQmlContext *outerContext = QQmlEngine::contextForObject(this);
     QQmlContext context(outerContext);
-    QQmlContextData::get(outerContext)->imports->addref();
-    QQmlContextData::get(&context)->imports = QQmlContextData::get(outerContext)->imports;
+    QQmlContextData::get(&context)->setImports(QQmlContextData::get(outerContext)->imports());
 
     QStateMachine::SignalEvent *e = static_cast<QStateMachine::SignalEvent*>(event);
 
@@ -163,7 +162,7 @@ void SignalTransition::connectTriggered()
 
     QObject *target = senderObject();
     QQmlData *ddata = QQmlData::get(this);
-    QQmlContextData *ctxtdata = ddata ? ddata->outerContext : nullptr;
+    QQmlRefPointer<QQmlContextData> ctxtdata = ddata ? ddata->outerContext : nullptr;
 
     Q_ASSERT(m_bindings.count() == 1);
     const QV4::CompiledData::Binding *binding = m_bindings.at(0);

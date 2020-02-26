@@ -63,7 +63,8 @@ QQmlExpressionPrivate::~QQmlExpressionPrivate()
 {
 }
 
-void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr, QObject *me)
+void QQmlExpressionPrivate::init(const QQmlRefPointer<QQmlContextData> &ctxt, const QString &expr,
+                                 QObject *me)
 {
     expression = expr;
 
@@ -72,10 +73,11 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr, QOb
     expressionFunctionValid = false;
 }
 
-void QQmlExpressionPrivate::init(QQmlContextData *ctxt, QV4::Function *runtimeFunction, QObject *me)
+void QQmlExpressionPrivate::init(const QQmlRefPointer<QQmlContextData> &ctxt,
+                                 QV4::Function *runtimeFunction, QObject *me)
 {
     expressionFunctionValid = true;
-    QV4::ExecutionEngine *engine = ctxt->engine->handle();
+    QV4::ExecutionEngine *engine = ctxt->engine()->handle();
     QV4::Scope scope(engine);
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(engine->rootContext(), ctxt, me));
     setupFunction(qmlContext, runtimeFunction);
@@ -144,20 +146,24 @@ QQmlExpression::QQmlExpression(const QQmlScriptString &script, QQmlContext *ctxt
     if (!ctxt && (!scriptPrivate->context || !scriptPrivate->context->isValid()))
         return;
 
-    QQmlContextData *evalCtxtData = QQmlContextData::get(ctxt ? ctxt : scriptPrivate->context);
+    QQmlRefPointer<QQmlContextData> evalCtxtData
+            = QQmlContextData::get(ctxt ? ctxt : scriptPrivate->context);
     QObject *scopeObject = scope ? scope : scriptPrivate->scope;
     QV4::Function *runtimeFunction = nullptr;
 
     if (scriptPrivate->context) {
-        QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
+        QQmlRefPointer<QQmlContextData> ctxtdata = QQmlContextData::get(scriptPrivate->context);
         QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
-        if (engine && ctxtdata && !ctxtdata->urlString().isEmpty() && ctxtdata->typeCompilationUnit) {
+        if (engine
+                && ctxtdata
+                && !ctxtdata->urlString().isEmpty()
+                && ctxtdata->typeCompilationUnit()) {
             d->url = ctxtdata->urlString();
             d->line = scriptPrivate->lineNumber;
             d->column = scriptPrivate->columnNumber;
 
             if (scriptPrivate->bindingId != QQmlBinding::Invalid)
-                runtimeFunction = ctxtdata->typeCompilationUnit->runtimeFunctions.at(scriptPrivate->bindingId);
+                runtimeFunction = ctxtdata->typeCompilationUnit()->runtimeFunctions.at(scriptPrivate->bindingId);
         }
     }
 
@@ -175,10 +181,8 @@ QQmlExpression::QQmlExpression(const QQmlScriptString &script, QQmlContext *ctxt
     If specified, the \a scope object's properties will also be in scope during
     the expression's execution.
 */
-QQmlExpression::QQmlExpression(QQmlContext *ctxt,
-                                               QObject *scope,
-                                               const QString &expression,
-                                               QObject *parent)
+QQmlExpression::QQmlExpression(QQmlContext *ctxt, QObject *scope, const QString &expression,
+                               QObject *parent)
 : QObject(*new QQmlExpressionPrivate, parent)
 {
     Q_D(QQmlExpression);
@@ -188,12 +192,10 @@ QQmlExpression::QQmlExpression(QQmlContext *ctxt,
 /*!
     \internal
 */
-QQmlExpression::QQmlExpression(QQmlContextData *ctxt, QObject *scope,
-                                               const QString &expression)
-: QObject(*new QQmlExpressionPrivate, nullptr)
+QQmlExpression::QQmlExpression(QQmlExpressionPrivate &dd, QObject *parent) : QObject(dd, parent)
 {
-    Q_D(QQmlExpression);
-    d->init(ctxt, expression, scope);
+//    Q_D(QQmlExpression);
+//    d->init(QQmlContextData::get(ctxt), expression, scope);
 }
 
 /*!
@@ -210,7 +212,7 @@ QQmlExpression::~QQmlExpression()
 QQmlEngine *QQmlExpression::engine() const
 {
     Q_D(const QQmlExpression);
-    return d->context()?d->context()->engine:nullptr;
+    return d->engine();
 }
 
 /*!
@@ -220,8 +222,7 @@ QQmlEngine *QQmlExpression::engine() const
 QQmlContext *QQmlExpression::context() const
 {
     Q_D(const QQmlExpression);
-    QQmlContextData *data = d->context();
-    return data?data->asQQmlContext():nullptr;
+    return d->publicContext();
 }
 
 /*!
@@ -265,7 +266,7 @@ QVariant QQmlExpressionPrivate::value(bool *isUndefined)
 {
     Q_Q(QQmlExpression);
 
-    if (!context() || !context()->isValid()) {
+    if (!hasValidContext()) {
         qWarning("QQmlExpression: Attempted to evaluate an expression in an invalid context");
         return QVariant();
     }

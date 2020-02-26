@@ -389,7 +389,7 @@ void QQmlEngineDebugServiceImpl::buildObjectList(QDataStream &message,
     if (!ctxt->isValid())
         return;
 
-    QQmlContextData *p = QQmlContextData::get(ctxt);
+    QQmlRefPointer<QQmlContextData> p = QQmlContextData::get(ctxt);
 
     QString ctxtName = ctxt->objectName();
     int ctxtId = QQmlDebugService::idForObject(ctxt);
@@ -400,31 +400,31 @@ void QQmlEngineDebugServiceImpl::buildObjectList(QDataStream &message,
 
     int count = 0;
 
-    QQmlContextData *child = p->childContexts;
+    QQmlRefPointer<QQmlContextData> child = p->childContexts();
     while (child) {
         ++count;
-        child = child->nextChild;
+        child = child->nextChild();
     }
 
     message << count;
 
-    child = p->childContexts;
+    child = p->childContexts();
     while (child) {
         buildObjectList(message, child->asQQmlContext(), instances);
-        child = child->nextChild;
+        child = child->nextChild();
     }
 
     count = 0;
     for (int ii = 0; ii < instances.count(); ++ii) {
         QQmlData *data = QQmlData::get(instances.at(ii));
-        if (data->context == p)
+        if (data->context == p.data())
             count ++;
     }
     message << count;
 
     for (int ii = 0; ii < instances.count(); ++ii) {
         QQmlData *data = QQmlData::get(instances.at(ii));
-        if (data->context == p)
+        if (data->context == p.data())
             message << objectData(instances.at(ii));
     }
 }
@@ -522,16 +522,11 @@ void QQmlEngineDebugServiceImpl::processMessage(const QByteArray &message)
 
         if (engine) {
             QQmlContext *rootContext = engine->rootContext();
-            // Clean deleted objects
             QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(rootContext);
-            for (int ii = 0; ii < ctxtPriv->instances.count(); ++ii) {
-                if (!ctxtPriv->instances.at(ii)) {
-                    ctxtPriv->instances.removeAt(ii);
-                    --ii;
-                }
-            }
-            buildObjectList(rs, rootContext, ctxtPriv->instances);
-            buildStatesList(true, ctxtPriv->instances);
+            ctxtPriv->cleanInstances(); // Clean deleted objects
+            const QList<QPointer<QObject>> instances = ctxtPriv->instances();
+            buildObjectList(rs, rootContext, instances);
+            buildStatesList(true, instances);
         }
 
     } else if (type == "FETCH_OBJECT") {
@@ -783,7 +778,7 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
     QQmlContext *context = qmlContext(object);
     if (!object || !context || !context->isValid())
         return false;
-    QQmlContextData *contextData = QQmlContextData::get(context);
+    QQmlRefPointer<QQmlContextData> contextData = QQmlContextData::get(context);
 
     QQmlPropertyData dummy;
     QQmlPropertyData *prop =

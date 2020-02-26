@@ -85,7 +85,7 @@ public:
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
     QVector<QQmlRefPointer<QQmlScriptBlob>> scripts;
 
-    QV4::ReturnedValue scriptValueForContext(QQmlContextData *parentCtxt);
+    QV4::ReturnedValue scriptValueForContext(const QQmlRefPointer<QQmlContextData> &parentCtxt);
 
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit() const { return m_precompiledScript; }
 
@@ -96,7 +96,8 @@ private:
     friend class QQmlScriptBlob;
 
     void initialize(QQmlEngine *);
-    QQmlContextData *qmlContextDataForContext(QQmlContextData *parentQmlContextData);
+    QQmlRefPointer<QQmlContextData> qmlContextDataForContext(
+            const QQmlRefPointer<QQmlContextData> &parentQmlContextData);
 
     bool m_loaded;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> m_precompiledScript;

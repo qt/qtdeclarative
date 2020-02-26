@@ -609,7 +609,7 @@ public:
 
     Heap::QmlContext *qmlContext() const;
     QObject *qmlScopeObject() const;
-    QQmlContextData *callingQmlContext() const;
+    QQmlRefPointer<QQmlContextData> callingQmlContext() const;
 
 
     StackTrace stackTrace(int frameLimit = -1) const;

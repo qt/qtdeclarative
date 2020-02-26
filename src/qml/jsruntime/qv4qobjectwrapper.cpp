@@ -212,13 +212,17 @@ void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
     engine->functionPrototype()->defineDefaultProperty(QStringLiteral("disconnect"), method_disconnect);
 }
 
-QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const
+QQmlPropertyData *QObjectWrapper::findProperty(
+        ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext, String *name,
+        RevisionMode revisionMode, QQmlPropertyData *local) const
 {
     QObject *o = d()->object();
     return findProperty(engine, o, qmlContext, name, revisionMode, local);
 }
 
-QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QObject *o, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local)
+QQmlPropertyData *QObjectWrapper::findProperty(
+        ExecutionEngine *engine, QObject *o, const QQmlRefPointer<QQmlContextData> &qmlContext,
+        String *name, RevisionMode revisionMode, QQmlPropertyData *local)
 {
     Q_UNUSED(revisionMode);
 
@@ -285,13 +289,14 @@ static OptionalReturnedValue getDestroyOrToStringMethod(ExecutionEngine *v4, Str
     return OptionalReturnedValue(QV4::QObjectMethod::create(global, qobj, index));
 }
 
-static OptionalReturnedValue getPropertyFromImports(ExecutionEngine *v4, String *name, QQmlContextData *qmlContext, QObject *qobj,
-                                            bool *hasProperty = nullptr)
+static OptionalReturnedValue getPropertyFromImports(
+        ExecutionEngine *v4, String *name, const QQmlRefPointer<QQmlContextData> &qmlContext,
+        QObject *qobj, bool *hasProperty = nullptr)
 {
-    if (!qmlContext || !qmlContext->imports)
+    if (!qmlContext || !qmlContext->imports())
         return OptionalReturnedValue();
 
-    QQmlTypeNameCache::Result r = qmlContext->imports->query(name);
+    QQmlTypeNameCache::Result r = qmlContext->imports()->query(name);
 
     if (hasProperty)
         *hasProperty = true;
@@ -304,15 +309,17 @@ static OptionalReturnedValue getPropertyFromImports(ExecutionEngine *v4, String 
     } else if (r.type.isValid()) {
         return OptionalReturnedValue(QQmlTypeWrapper::create(v4, qobj,r.type, Heap::QQmlTypeWrapper::ExcludeEnums));
     } else if (r.importNamespace) {
-        return OptionalReturnedValue(QQmlTypeWrapper::create(v4, qobj, qmlContext->imports, r.importNamespace,
-                                     Heap::QQmlTypeWrapper::ExcludeEnums));
+        return OptionalReturnedValue(QQmlTypeWrapper::create(
+                                         v4, qobj, qmlContext->imports(), r.importNamespace,
+                                         Heap::QQmlTypeWrapper::ExcludeEnums));
     }
     Q_UNREACHABLE();
     return OptionalReturnedValue();
 }
 
-ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String *name, QObjectWrapper::RevisionMode revisionMode,
-                                             bool *hasProperty, bool includeImports) const
+ReturnedValue QObjectWrapper::getQmlProperty(
+        const QQmlRefPointer<QQmlContextData> &qmlContext, String *name,
+        QObjectWrapper::RevisionMode revisionMode, bool *hasProperty, bool includeImports) const
 {
     // Keep this code in sync with ::virtualResolveLookupGetter
 
@@ -355,7 +362,10 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
     return getProperty(v4, d()->object(), result);
 }
 
-ReturnedValue QObjectWrapper::getQmlProperty(QV4::ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty, QQmlPropertyData **property)
+ReturnedValue QObjectWrapper::getQmlProperty(
+        QV4::ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
+        QObject *object, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty,
+        QQmlPropertyData **property)
 {
     if (QQmlData::wasDeleted(object)) {
         if (hasProperty)
@@ -415,8 +425,9 @@ ReturnedValue QObjectWrapper::getQmlProperty(QV4::ExecutionEngine *engine, QQmlC
 }
 
 
-bool QObjectWrapper::setQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name,
-                                    QObjectWrapper::RevisionMode revisionMode, const Value &value)
+bool QObjectWrapper::setQmlProperty(
+        ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext, QObject *object,
+        String *name, QObjectWrapper::RevisionMode revisionMode, const Value &value)
 {
     if (QQmlData::wasDeleted(object))
         return false;
@@ -462,7 +473,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
             }
         } else {
             // binding assignment.
-            QQmlContextData *callingQmlContext = scope.engine->callingQmlContext();
+            QQmlRefPointer<QQmlContextData> callingQmlContext = scope.engine->callingQmlContext();
 
             QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, (const Value &)f);
 
@@ -561,7 +572,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
         else
             v = scope.engine->toVariant(value, property->propType());
 
-        QQmlContextData *callingQmlContext = scope.engine->callingQmlContext();
+        QQmlRefPointer<QQmlContextData> callingQmlContext = scope.engine->callingQmlContext();
         if (!QQmlPropertyPrivate::write(object, *property, v, callingQmlContext)) {
             const char *valueType = (v.userType() == QMetaType::UnknownType)
                     ? "an unknown type"
@@ -702,7 +713,7 @@ QV4::ReturnedValue QObjectWrapper::virtualGet(const Managed *m, PropertyKey id, 
     const QObjectWrapper *that = static_cast<const QObjectWrapper*>(m);
     Scope scope(that);
     ScopedString n(scope, id.asStringOrSymbol());
-    QQmlContextData *qmlContext = that->engine()->callingQmlContext();
+    QQmlRefPointer<QQmlContextData> qmlContext = that->engine()->callingQmlContext();
     return that->getQmlProperty(qmlContext, n, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
@@ -718,7 +729,7 @@ bool QObjectWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, 
     if (scope.engine->hasException || QQmlData::wasDeleted(that->d()->object()))
         return false;
 
-    QQmlContextData *qmlContext = scope.engine->callingQmlContext();
+    QQmlRefPointer<QQmlContextData> qmlContext = scope.engine->callingQmlContext();
     if (!setQmlProperty(scope.engine, qmlContext, that->d()->object(), name, QV4::QObjectWrapper::IgnoreRevision, value)) {
         QQmlData *ddata = QQmlData::get(that->d()->object());
         // Types created by QML are not extensible at run-time, but for other QObjects we can store them
@@ -744,7 +755,7 @@ PropertyAttributes QObjectWrapper::virtualGetOwnProperty(const Managed *m, Prope
         if (!QQmlData::wasDeleted(thatObject)) {
             Scope scope(m);
             ScopedString n(scope, id.asStringOrSymbol());
-            QQmlContextData *qmlContext = scope.engine->callingQmlContext();
+            QQmlRefPointer<QQmlContextData> qmlContext = scope.engine->callingQmlContext();
             QQmlPropertyData local;
             if (that->findProperty(scope.engine, qmlContext, n, IgnoreRevision, &local)
                     || n->equals(scope.engine->id_destroy()) || n->equals(scope.engine->id_toString())) {
@@ -848,7 +859,7 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
 
     const QObjectWrapper *This = static_cast<const QObjectWrapper *>(object);
     ScopedString name(scope, id.asStringOrSymbol());
-    QQmlContextData *qmlContext = engine->callingQmlContext();
+    QQmlRefPointer<QQmlContextData> qmlContext = engine->callingQmlContext();
 
     QObject * const qobj = This->d()->object();
 
@@ -1168,7 +1179,7 @@ void QObjectWrapper::destroyObject(bool lastCall)
         if (ddata) {
             if (!h->object()->parent() && !ddata->indestructible) {
                 if (ddata && ddata->ownContext) {
-                    Q_ASSERT(ddata->ownContext == ddata->context);
+                    Q_ASSERT(ddata->ownContext.data() == ddata->context);
                     ddata->ownContext->emitDestruction();
                     ddata->ownContext = nullptr;
                     ddata->context = nullptr;

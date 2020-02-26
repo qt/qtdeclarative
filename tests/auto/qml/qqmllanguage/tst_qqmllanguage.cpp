@@ -4871,8 +4871,9 @@ static void beginDeferredOnce(QQmlEnginePrivate *enginePriv,
         QQmlComponentPrivate::ConstructionState *state = new QQmlComponentPrivate::ConstructionState;
         state->completePending = true;
 
-        QQmlContextData *creationContext = nullptr;
-        state->creator.reset(new QQmlObjectCreator(deferData->context->parent, deferData->compilationUnit, creationContext));
+        state->creator.reset(new QQmlObjectCreator(
+                                 deferData->context->parent(), deferData->compilationUnit,
+                                 QQmlRefPointer<QQmlContextData>()));
 
         enginePriv->inProgressCreations++;
 
@@ -4904,7 +4905,7 @@ static void testExecuteDeferredOnce(const QQmlProperty &property)
     QObject *object = property.object();
     QQmlData *data = QQmlData::get(object);
     if (data && !data->deferredData.isEmpty() && !data->wasDeleted(object)) {
-        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine);
+        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine());
 
         QQmlComponentPrivate::DeferredState state;
         beginDeferredOnce(ep, property, &state);

@@ -118,10 +118,21 @@ public:
 
     virtual QQmlSourceLocation sourceLocation() const;
 
-    bool isValid() const { return context() != nullptr; }
+    bool hasContext() const { return m_context != nullptr; }
+    bool hasValidContext() const { return m_context && m_context->isValid(); }
+    QQmlContext *publicContext() const { return m_context ? m_context->asQQmlContext() : nullptr; }
 
-    QQmlContextData *context() const { return m_context; }
-    void setContext(QQmlContextData *context);
+    QQmlRefPointer<QQmlContextData> context() const { return m_context; }
+    void setContext(const QQmlRefPointer<QQmlContextData> &context);
+
+    void insertIntoList(QQmlJavaScriptExpression **listHead)
+    {
+        m_nextExpression = *listHead;
+        if (m_nextExpression)
+            m_nextExpression->m_prevExpression = &m_nextExpression;
+        m_prevExpression = listHead;
+        *listHead = this;
+    }
 
     QV4::Function *function() const;
 
@@ -146,11 +157,16 @@ public:
     void clearActiveGuards();
     QQmlDelayedError *delayedError();
 
-    static QV4::ReturnedValue evalFunction(QQmlContextData *ctxt, QObject *scope,
-                                                     const QString &code, const QString &filename,
-                                                     quint16 line);
+    static QV4::ReturnedValue evalFunction(
+            const QQmlRefPointer<QQmlContextData> &ctxt, QObject *scope, const QString &code,
+            const QString &filename, quint16 line);
+
+    QQmlEngine *engine() const { return m_context ? m_context->engine() : nullptr; }
+    bool hasUnresolvedNames() const { return m_context && m_context->hasUnresolvedNames(); }
+
 protected:
-    void createQmlBinding(QQmlContextData *ctxt, QObject *scope, const QString &code, const QString &filename, quint16 line);
+    void createQmlBinding(const QQmlRefPointer<QQmlContextData> &ctxt, QObject *scope,
+                          const QString &code, const QString &filename, quint16 line);
 
     void setupFunction(QV4::ExecutionContext *qmlContext, QV4::Function *f);
     void setCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit);
@@ -173,7 +189,9 @@ private:
     // m_error:flag1 translationsCapturedDuringEvaluation
     QFlagPointer<QQmlDelayedError> m_error;
 
+    // Not refcounted as the context will clear the expressions when destructed.
     QQmlContextData *m_context;
+
     QQmlJavaScriptExpression **m_prevExpression;
     QQmlJavaScriptExpression  *m_nextExpression;
 

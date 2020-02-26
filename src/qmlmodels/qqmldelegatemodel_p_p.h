@@ -149,7 +149,7 @@ public:
 
     QV4::ExecutionEngine *v4;
     QQmlRefPointer<QQmlDelegateModelItemMetaType> const metaType;
-    QQmlContextDataRef contextData;
+    QQmlRefPointer<QQmlContextData> contextData;
     QPointer<QObject> object;
     QPointer<QQmlDelegateModelAttached> attached;
     QQDMIncubationTask *incubationTask;
@@ -222,7 +222,7 @@ public:
 
     QQmlDelegateModelItem *incubating = nullptr;
     QQmlDelegateModelPrivate *vdm = nullptr;
-    QQmlContextData *proxyContext = nullptr;
+    QQmlRefPointer<QQmlContextData> proxyContext;
     QPointer<QObject> proxiedObject  = nullptr; // the proxied object might disapear, so we use a QPointer instead of a raw one
     int index[QQmlListCompositor::MaximumGroupCount];
 };

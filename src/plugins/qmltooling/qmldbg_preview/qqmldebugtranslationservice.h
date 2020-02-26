@@ -78,7 +78,8 @@ public:
     QQmlDebugTranslationServiceImpl(QObject *parent = 0);
 
     QString foundElidedText(QObject *textObject, const QString &layoutText, const QString &elideText) override;
-    void foundTranslationBinding(QQmlTranslationBinding *binding, QObject *scopeObject, QQmlContextData *contextData) override;
+    void foundTranslationBinding(QQmlTranslationBinding *binding, QObject *scopeObject,
+                                 const QQmlRefPointer<QQmlContextData> &contextData) override;
     void messageReceived(const QByteArray &message) override;
 };
 

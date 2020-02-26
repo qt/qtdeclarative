@@ -87,7 +87,7 @@ namespace QQmlVMETypes {
 
         State() : flags(0), context(nullptr), instructionStream(nullptr) {}
         quint32 flags;
-        QQmlContextData *context;
+        QQmlRefPointer<QQmlContextData> context;
         const char *instructionStream;
         QBitField bindingSkipList;
     };

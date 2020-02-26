@@ -149,7 +149,7 @@ void CustomBinding::componentComplete()
 
         int bindingId = binding->value.compiledScriptIndex;
 
-        QQmlContextData *context = QQmlContextData::get(qmlContext(this));
+        QQmlRefPointer<QQmlContextData> context = QQmlContextData::get(qmlContext(this));
 
         QQmlProperty property(m_target, name, qmlContext(this));
         QV4::Scope scope(qmlEngine(this)->handle());

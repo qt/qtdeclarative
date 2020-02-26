@@ -138,7 +138,7 @@ bool QQmlVMEGuard::isOK() const
             return false;
 
     for (int ii = 0; ii < m_contextCount; ++ii)
-        if (m_contexts[ii].isNull() || !m_contexts[ii]->engine)
+        if (m_contexts[ii].isNull() || !m_contexts[ii]->engine())
             return false;
 
     return true;

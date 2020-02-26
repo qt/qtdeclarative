@@ -988,8 +988,7 @@ ReturnedValue QtObject::method_resolvedUrl(const FunctionObject *b, const Value 
     QQmlEnginePrivate *p = nullptr;
     if (e) p = QQmlEnginePrivate::get(e);
     if (p) {
-        QQmlContextData *ctxt = scope.engine->callingQmlContext();
-        if (ctxt)
+        if (QQmlRefPointer<QQmlContextData> ctxt = scope.engine->callingQmlContext())
             return Encode(scope.engine->newString(ctxt->resolvedUrl(url).toString()));
         else
             return Encode(scope.engine->newString(url.toString()));
@@ -1156,7 +1155,7 @@ ReturnedValue QtObject::method_createQmlObject(const FunctionObject *b, const Va
 
     QQmlEngine *engine = scope.engine->qmlEngine();
 
-    QQmlContextData *context = scope.engine->callingQmlContext();
+    QQmlRefPointer<QQmlContextData> context = scope.engine->callingQmlContext();
     if (!context) {
         QQmlEngine *qmlEngine = scope.engine->qmlEngine();
         if (qmlEngine)
@@ -1164,7 +1163,7 @@ ReturnedValue QtObject::method_createQmlObject(const FunctionObject *b, const Va
     }
     Q_ASSERT(context);
     QQmlContext *effectiveContext = nullptr;
-    if (context->isPragmaLibraryContext)
+    if (context->isPragmaLibraryContext())
         effectiveContext = engine->rootContext();
     else
         effectiveContext = context->asQQmlContext();
@@ -1288,16 +1287,15 @@ ReturnedValue QtObject::method_createComponent(const FunctionObject *b, const Va
 
     QQmlEngine *engine = scope.engine->qmlEngine();
 
-    QQmlContextData *context = scope.engine->callingQmlContext();
+    QQmlRefPointer<QQmlContextData> context = scope.engine->callingQmlContext();
     if (!context) {
         QQmlEngine *qmlEngine = scope.engine->qmlEngine();
         if (qmlEngine)
             context = QQmlContextData::get(QQmlEnginePrivate::get(qmlEngine)->rootContext);
     }
     Q_ASSERT(context);
-    QQmlContextData *effectiveContext = context;
-    if (context->isPragmaLibraryContext)
-        effectiveContext = nullptr;
+    QQmlRefPointer<QQmlContextData> effectiveContext
+            = context->isPragmaLibraryContext() ? nullptr : context;
 
     QString arg = argv[0].toQStringNoThrow();
     if (arg.isEmpty())
@@ -2044,7 +2042,7 @@ ReturnedValue GlobalExtensions::method_qsTr(const FunctionObject *b, const Value
     }
 
     if (context.isEmpty()) {
-        if (QQmlContextData *ctxt = scope.engine->callingQmlContext()) {
+        if (QQmlRefPointer<QQmlContextData> ctxt = scope.engine->callingQmlContext()) {
             QString path = ctxt->urlString();
             int lastSlash = path.lastIndexOf(QLatin1Char('/'));
             int lastDot = path.lastIndexOf(QLatin1Char('.'));

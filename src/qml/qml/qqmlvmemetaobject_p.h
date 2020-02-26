@@ -64,8 +64,8 @@
 #include <private/qobject_p.h>
 
 #include "qqmlguard_p.h"
-#include "qqmlcontext_p.h"
 
+#include <private/qqmlguardedcontextdata_p.h>
 #include <private/qflagpointer_p.h>
 
 #include <private/qv4object_p.h>
@@ -144,7 +144,10 @@ class QQmlVMEMetaObjectEndpoint;
 class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QQmlInterceptorMetaObject
 {
 public:
-    QQmlVMEMetaObject(QV4::ExecutionEngine *engine, QObject *obj, const QQmlRefPointer<QQmlPropertyCache> &cache, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &qmlCompilationUnit, int qmlObjectId);
+    QQmlVMEMetaObject(QV4::ExecutionEngine *engine, QObject *obj,
+                      const QQmlRefPointer<QQmlPropertyCache> &cache,
+                      const QQmlRefPointer<QV4::ExecutableCompilationUnit> &qmlCompilationUnit,
+                      int qmlObjectId);
     ~QQmlVMEMetaObject() override;
 
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;

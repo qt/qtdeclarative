@@ -298,7 +298,7 @@ QString GlobalInspector::idStringForObject(QObject *obj) const
 {
     QQmlContext *context = qmlContext(obj);
     if (context) {
-        QQmlContextData *cdata = QQmlContextData::get(context);
+        QQmlRefPointer<QQmlContextData> cdata = QQmlContextData::get(context);
         if (cdata)
             return cdata->findObjectId(obj);
     }

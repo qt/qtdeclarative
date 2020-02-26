@@ -183,7 +183,7 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
     if (hasProperty)
         *hasProperty = true;
 
-    QQmlContextData *context = v4->callingQmlContext();
+    QQmlRefPointer<QQmlContextData> context = v4->callingQmlContext();
 
     QObject *object = w->d()->object;
     QQmlType type = w->d()->type();
@@ -283,10 +283,10 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
             if (r.type.isValid()) {
                 return create(scope.engine, object, r.type, w->d()->mode);
             } else if (r.scriptIndex != -1) {
-                QV4::ScopedObject scripts(scope, context->importedScripts.valueRef());
+                QV4::ScopedObject scripts(scope, context->importedScripts().valueRef());
                 return scripts->get(r.scriptIndex);
             } else if (r.importNamespace) {
-                return create(scope.engine, object, context->imports, r.importNamespace);
+                return create(scope.engine, object, context->imports(), r.importNamespace);
             }
 
             return QV4::Encode::undefined();
@@ -329,7 +329,7 @@ bool QQmlTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value,
         return false;
 
     ScopedString name(scope, id.asStringOrSymbol());
-    QQmlContextData *context = scope.engine->callingQmlContext();
+    QQmlRefPointer<QQmlContextData> context = scope.engine->callingQmlContext();
 
     QQmlType type = w->d()->type();
     if (type.isValid() && !type.isSingleton() && w->d()->object) {
@@ -440,7 +440,7 @@ ReturnedValue QQmlTypeWrapper::virtualResolveLookupGetter(const Object *object, 
 
     const QQmlTypeWrapper *This = static_cast<const QQmlTypeWrapper *>(object);
     ScopedString name(scope, id.asStringOrSymbol());
-    QQmlContextData *qmlContext = engine->callingQmlContext();
+    QQmlRefPointer<QQmlContextData> qmlContext = engine->callingQmlContext();
 
     Scoped<QQmlTypeWrapper> w(scope, static_cast<const QQmlTypeWrapper *>(This));
     QQmlType type = w->d()->type();

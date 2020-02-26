@@ -4219,11 +4219,15 @@ void tst_qquickvisualdatamodel::invalidContext()
     engine.rootContext()->setContextProperty("myModel", &model);
 
     QScopedPointer<QQmlContext> context(new QQmlContext(engine.rootContext()));
+    QScopedPointer<QObject> obj;
+    {
+        // The component keeps a reference to the root context as long as the engine lives.
+        // In order to drop the root context we need to drop the component first.
+        QQmlComponent c(&engine, testFileUrl("visualdatamodel.qml"));
+        obj.reset(c.create(context.data()));
+    }
 
-    QQmlComponent c(&engine, testFileUrl("visualdatamodel.qml"));
-
-
-    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(c.create(context.data()));
+    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel *>(obj.get());
     QVERIFY(visualModel);
 
     QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(4));

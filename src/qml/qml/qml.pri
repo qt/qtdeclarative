@@ -17,6 +17,7 @@ SOURCES += \
     $$PWD/qqmlcomponent.cpp \
     $$PWD/qqmlincubator.cpp \
     $$PWD/qqmlcontext.cpp \
+    $$PWD/qqmlcontextdata.cpp \
     $$PWD/qqmlcustomparser.cpp \
     $$PWD/qqmlpropertyvaluesource.cpp \
     $$PWD/qqmlpropertyvalueinterceptor.cpp \
@@ -112,6 +113,8 @@ HEADERS += \
     $$PWD/qqmlinfo.h \
     $$PWD/qqmlproperty_p.h \
     $$PWD/qqmlcontext_p.h \
+    $$PWD/qqmlcontextdata_p.h \
+    $$PWD/qqmlguardedcontextdata_p.h \
     $$PWD/qqmltypeloader_p.h \
     $$PWD/qqmllist.h \
     $$PWD/qqmllist_p.h \

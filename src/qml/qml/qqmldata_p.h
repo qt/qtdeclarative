@@ -82,34 +82,6 @@ struct Binding;
 }
 }
 
-// This is declared here because QQmlData below needs it and this file
-// in turn is included from qqmlcontext_p.h.
-class QQmlContextData;
-class Q_QML_PRIVATE_EXPORT QQmlContextDataRef
-{
-public:
-    inline QQmlContextDataRef();
-    inline QQmlContextDataRef(QQmlContextData *);
-    inline QQmlContextDataRef(const QQmlContextDataRef &);
-    inline ~QQmlContextDataRef();
-
-    inline QQmlContextData *contextData() const;
-    inline void setContextData(QQmlContextData *);
-
-    inline bool isNull() const { return !m_contextData; }
-
-    inline operator QQmlContextData*() const { return m_contextData; }
-    inline QQmlContextData* operator->() const { return m_contextData; }
-    inline QQmlContextDataRef &operator=(QQmlContextData *d);
-    inline QQmlContextDataRef &operator=(const QQmlContextDataRef &other);
-
-private:
-
-    inline void clear();
-
-    QQmlContextData *m_contextData;
-};
-
 // This class is structured in such a way, that simply zero'ing it is the
 // default state for elemental object allocations.  This is crucial in the
 // workings of the QQmlInstruction::CreateSimpleObject instruction.
@@ -195,11 +167,11 @@ public:
     bool signalHasEndpoint(int index) const;
     void disconnectNotifiers();
 
-    // The context that created the C++ object
+    // The context that created the C++ object; not refcounted to prevent cycles
     QQmlContextData *context = nullptr;
-    // The outermost context in which this object lives
+    // The outermost context in which this object lives; not refcounted to prevent cycles
     QQmlContextData *outerContext = nullptr;
-    QQmlContextDataRef ownContext;
+    QQmlRefPointer<QQmlContextData> ownContext;
 
     QQmlAbstractBinding *bindings;
     QQmlBoundSignal *signalHandlers;
@@ -226,14 +198,19 @@ public:
         ~DeferredData();
         unsigned int deferredIdx;
         QMultiHash<int, const QV4::CompiledData::Binding *> bindings;
-        QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;//Not always the same as the other compilation unit
-        QQmlContextData *context;//Could be either context or outerContext
+
+        // Not always the same as the other compilation unit
+        QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
+
+        // Could be either context or outerContext
+        QQmlRefPointer<QQmlContextData> context;
         Q_DISABLE_COPY(DeferredData);
     };
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
     QVector<DeferredData *> deferredData;
 
-    void deferData(int objectIndex, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, QQmlContextData *);
+    void deferData(int objectIndex, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &,
+                   const QQmlRefPointer<QQmlContextData> &);
     void releaseDeferredData();
 
     QV4::WeakValue jsWrapper;

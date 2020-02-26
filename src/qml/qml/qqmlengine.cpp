@@ -665,20 +665,21 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 {
     if (QQmlData *d = QQmlData::get(o)) {
         if (d->ownContext) {
-            for (QQmlContextData *lc = d->ownContext->linkedContext; lc; lc = lc->linkedContext) {
+            for (QQmlRefPointer<QQmlContextData> lc = d->ownContext->linkedContext().data(); lc;
+                 lc = lc->linkedContext()) {
                 lc->invalidate();
-                if (lc->contextObject == o)
-                    lc->contextObject = nullptr;
+                if (lc->contextObject() == o)
+                    lc->setContextObject(nullptr);
             }
             d->ownContext->invalidate();
-            if (d->ownContext->contextObject == o)
-                d->ownContext->contextObject = nullptr;
+            if (d->ownContext->contextObject() == o)
+                d->ownContext->setContextObject(nullptr);
             d->ownContext = nullptr;
             d->context = nullptr;
         }
 
-        if (d->outerContext && d->outerContext->contextObject == o)
-            d->outerContext->contextObject = nullptr;
+        if (d->outerContext && d->outerContext->contextObject() == o)
+            d->outerContext->setContextObject(nullptr);
 
         // Mark this object as in the process of deletion to
         // prevent it resolving in bindings
@@ -849,10 +850,10 @@ void QQmlData::setQueuedForDeletion(QObject *object)
     if (object) {
         if (QQmlData *ddata = QQmlData::get(object)) {
             if (ddata->ownContext) {
-                Q_ASSERT(ddata->ownContext == ddata->context);
+                Q_ASSERT(ddata->ownContext.data() == ddata->context);
                 ddata->context->emitDestruction();
-                if (ddata->ownContext->contextObject == object)
-                    ddata->ownContext->contextObject = nullptr;
+                if (ddata->ownContext->contextObject() == object)
+                    ddata->ownContext->setContextObject(nullptr);
                 ddata->ownContext = nullptr;
                 ddata->context = nullptr;
             }
@@ -982,7 +983,7 @@ QQmlEngine::~QQmlEngine()
     // Emit onDestruction signals for the root context before
     // we destroy the contexts, engine, Singleton Types etc. that
     // may be required to handle the destruction signal.
-    QQmlContextData::get(rootContext())->emitDestruction();
+    QQmlContextPrivate::get(rootContext())->emitDestruction();
 
     // clean up all singleton type instances which we own.
     // we do this here and not in the private dtor since otherwise a crash can
@@ -1422,10 +1423,10 @@ QJSValue QQmlEngine::singletonInstance<QJSValue>(int qmlTypeId)
 void QQmlEngine::retranslate()
 {
     Q_D(QQmlEngine);
-    QQmlContextData *context = QQmlContextData::get(d->rootContext)->childContexts;
-    while (context) {
+    for (QQmlRefPointer<QQmlContextData> context
+                = QQmlContextData::get(d->rootContext)->childContexts();
+         context; context = context->nextChild()) {
         context->refreshExpressions();
-        context = context->nextChild;
     }
 }
 
@@ -1469,10 +1470,10 @@ void QQmlEngine::setContextForObject(QObject *object, QQmlContext *context)
         return;
     }
 
-    QQmlContextData *contextData = QQmlContextData::get(context);
+    QQmlRefPointer<QQmlContextData> contextData = QQmlContextData::get(context);
     Q_ASSERT(data->context == nullptr);
-    data->context = contextData;
-    contextData->addObject(data);
+    data->context = contextData.data();
+    contextData->addOwnedObject(data);
 }
 
 /*!
@@ -1576,7 +1577,7 @@ void qmlExecuteDeferred(QObject *object)
     QQmlData *data = QQmlData::get(object);
 
     if (data && !data->deferredData.isEmpty() && !data->wasDeleted(object)) {
-        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine);
+        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine());
 
         QQmlComponentPrivate::DeferredState state;
         QQmlComponentPrivate::beginDeferred(ep, object, &state);
@@ -1598,7 +1599,7 @@ QQmlEngine *qmlEngine(const QObject *obj)
     QQmlData *data = QQmlData::get(obj, false);
     if (!data || !data->context)
         return nullptr;
-    return data->context->engine;
+    return data->context->engine();
 }
 
 static QObject *resolveAttachedProperties(QQmlAttachedPropertiesFunc pf, QQmlData *data,
@@ -1786,7 +1787,9 @@ void QQmlData::NotifyList::layout()
     todo = nullptr;
 }
 
-void QQmlData::deferData(int objectIndex, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, QQmlContextData *context)
+void QQmlData::deferData(
+        int objectIndex, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+        const QQmlRefPointer<QQmlContextData> &context)
 {
     QQmlData::DeferredData *deferData = new QQmlData::DeferredData;
     deferData->deferredIdx = objectIndex;
@@ -1880,8 +1883,8 @@ void QQmlData::destroyed(QObject *object)
         nextContextObject->prevContextObject = prevContextObject;
     if (prevContextObject)
         *prevContextObject = nextContextObject;
-    else if (outerContext && outerContext->contextObjects == this)
-        outerContext->contextObjects = nextContextObject;
+    else if (outerContext && outerContext->ownedObjects() == this)
+        outerContext->setOwnedObjects(nextContextObject);
 
     QQmlAbstractBinding *binding = bindings;
     while (binding) {

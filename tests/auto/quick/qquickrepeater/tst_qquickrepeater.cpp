@@ -1148,8 +1148,7 @@ void tst_QQuickRepeater::contextProperties()
 
     while (!items.isEmpty()) {
         QQuickItem *item = items.dequeue();
-        QQmlContextData *data = QQmlContextData::get(qmlContext(item));
-        QVERIFY(!data->hasExtraObject);
+        QVERIFY(!QQmlContextData::get(qmlContext(item))->extraObject());
         for (QQuickItem *child : item->childItems())
             items.enqueue(child);
     }

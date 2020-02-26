@@ -191,6 +191,7 @@ qt_add_module(Qml
         qml/qqmlcomponent.cpp qml/qqmlcomponent.h qml/qqmlcomponent_p.h
         qml/qqmlcomponentattached_p.h
         qml/qqmlcontext.cpp qml/qqmlcontext.h qml/qqmlcontext_p.h
+        qml/qqmlcontextdata.cpp qml/qqmlcontextdata_p.h
         qml/qqmlcustomparser.cpp qml/qqmlcustomparser_p.h
         qml/qqmldata_p.h
         qml/qqmldatablob.cpp qml/qqmldatablob_p.h
@@ -207,6 +208,7 @@ qt_add_module(Qml
         qml/qqmlfileselector.cpp qml/qqmlfileselector.h qml/qqmlfileselector_p.h
         qml/qqmlglobal.cpp qml/qqmlglobal_p.h
         qml/qqmlguard_p.h
+        qml/qqmlguardedcontextdata_p.h
         qml/qqmlimport.cpp qml/qqmlimport_p.h
         qml/qqmlincubator.cpp qml/qqmlincubator.h qml/qqmlincubator_p.h
         qml/qqmlinfo.cpp qml/qqmlinfo.h

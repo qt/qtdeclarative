@@ -68,7 +68,7 @@ void QQmlTableInstanceModel::deleteModelItemLater(QQmlDelegateModelItem *modelIt
 
     if (modelItem->contextData) {
         modelItem->contextData->invalidate();
-        Q_ASSERT(modelItem->contextData->refCount == 1);
+        Q_ASSERT(modelItem->contextData->refCount() == 1);
         modelItem->contextData = nullptr;
     }
 
@@ -325,10 +325,10 @@ void QQmlTableInstanceModel::incubateModelItem(QQmlDelegateModelItem *modelItem,
     } else {
         modelItem->incubationTask = new QQmlTableInstanceModelIncubationTask(this, modelItem, incubationMode);
 
-        QQmlContextData *ctxt = new QQmlContextData;
         QQmlContext *creationContext = modelItem->delegate->creationContext();
-        ctxt->setParent(QQmlContextData::get(creationContext  ? creationContext : m_qmlContext.data()));
-        ctxt->contextObject = modelItem;
+        QQmlRefPointer<QQmlContextData> ctxt = QQmlContextData::createRefCounted(
+                    QQmlContextData::get(creationContext  ? creationContext : m_qmlContext.data()));
+        ctxt->setContextObject(modelItem);
         modelItem->contextData = ctxt;
 
         QQmlComponentPrivate::get(modelItem->delegate)->incubateObject(

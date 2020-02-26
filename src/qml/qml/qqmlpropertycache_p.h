@@ -114,7 +114,8 @@ public:
     const QMetaObject *firstCppMetaObject() const;
 
     template<typename K>
-    QQmlPropertyData *property(const K &key, QObject *object, QQmlContextData *context) const
+    QQmlPropertyData *property(const K &key, QObject *object,
+                               const QQmlRefPointer<QQmlContextData> &context) const
     {
         return findProperty(stringCache.find(key), object, context);
     }
@@ -136,14 +137,15 @@ public:
     inline bool isAllowedInRevision(QQmlPropertyData *) const;
 
     static QQmlPropertyData *property(QJSEngine *, QObject *, const QStringRef &,
-                                              QQmlContextData *, QQmlPropertyData &);
+                                      const QQmlRefPointer<QQmlContextData> &, QQmlPropertyData &);
     static QQmlPropertyData *property(QJSEngine *, QObject *, const QLatin1String &,
-                                      QQmlContextData *, QQmlPropertyData &);
+                                      const QQmlRefPointer<QQmlContextData> &, QQmlPropertyData &);
     static QQmlPropertyData *property(QJSEngine *, QObject *, const QV4::String *,
-                                              QQmlContextData *, QQmlPropertyData &);
+                                      const QQmlRefPointer<QQmlContextData> &, QQmlPropertyData &);
 
     static QQmlPropertyData *property(QJSEngine *engine, QObject *obj, const QString &name,
-                                      QQmlContextData *context, QQmlPropertyData &local)
+                                      const QQmlRefPointer<QQmlContextData> &context,
+                                      QQmlPropertyData &local)
     {
         return property(engine, obj, QStringRef(&name), context, local);
     }
@@ -200,8 +202,10 @@ private:
     typedef QLinkedStringMultiHash<QPair<int, QQmlPropertyData *> > StringCache;
     typedef QVector<QTypeRevision> AllowedRevisionCache;
 
-    QQmlPropertyData *findProperty(StringCache::ConstIterator it, QObject *, QQmlContextData *) const;
-    QQmlPropertyData *findProperty(StringCache::ConstIterator it, const QQmlVMEMetaObject *, QQmlContextData *) const;
+    QQmlPropertyData *findProperty(StringCache::ConstIterator it, QObject *,
+                                   const QQmlRefPointer<QQmlContextData> &) const;
+    QQmlPropertyData *findProperty(StringCache::ConstIterator it, const QQmlVMEMetaObject *,
+                                   const QQmlRefPointer<QQmlContextData> &) const;
 
     QQmlPropertyData *ensureResolved(QQmlPropertyData*) const;
 

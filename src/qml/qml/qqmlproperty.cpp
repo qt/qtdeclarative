@@ -163,7 +163,6 @@ QQmlProperty::QQmlProperty(QObject *obj, QQmlContext *ctxt)
 QQmlProperty::QQmlProperty(QObject *obj, QQmlEngine *engine)
   : d(new QQmlPropertyPrivate)
 {
-    d->context = nullptr;
     d->engine = engine;
     d->initDefault(obj);
 }
@@ -205,7 +204,11 @@ QQmlProperty::QQmlProperty(QObject *obj, const QString &name, QQmlContext *ctxt)
     d->context = ctxt?QQmlContextData::get(ctxt):nullptr;
     d->engine = ctxt?ctxt->engine():nullptr;
     d->initProperty(obj, name);
-    if (!isValid()) { d->object = nullptr; d->context = nullptr; d->engine = nullptr; }
+    if (!isValid()) {
+        d->object = nullptr;
+        d->context = nullptr;
+        d->engine = nullptr;
+    }
 }
 
 /*!
@@ -216,19 +219,23 @@ QQmlProperty::QQmlProperty(QObject *obj, const QString &name, QQmlContext *ctxt)
 QQmlProperty::QQmlProperty(QObject *obj, const QString &name, QQmlEngine *engine)
 : d(new QQmlPropertyPrivate)
 {
-    d->context = nullptr;
     d->engine = engine;
     d->initProperty(obj, name);
-    if (!isValid()) { d->object = nullptr; d->context = nullptr; d->engine = nullptr; }
+    if (!isValid()) {
+        d->object = nullptr;
+        d->context = nullptr;
+        d->engine = nullptr;
+    }
 }
 
-QQmlProperty QQmlPropertyPrivate::create(QObject *target, const QString &propertyName, QQmlContextData *context)
+QQmlProperty QQmlPropertyPrivate::create(QObject *target, const QString &propertyName,
+                                         const QQmlRefPointer<QQmlContextData> &context)
 {
     QQmlProperty result;
     auto d = new QQmlPropertyPrivate;
     result.d = d;
     d->context = context;
-    d->engine = context ? context->engine : nullptr;
+    d->engine = context ? context->engine() : nullptr;
     d->initProperty(target, propertyName);
     if (!result.isValid()) {
         d->object = nullptr;
@@ -238,23 +245,21 @@ QQmlProperty QQmlPropertyPrivate::create(QObject *target, const QString &propert
     return result;
 }
 
-QQmlPropertyPrivate::QQmlPropertyPrivate()
-: context(nullptr), engine(nullptr), object(nullptr), isNameCached(false)
+QQmlRefPointer<QQmlContextData> QQmlPropertyPrivate::effectiveContext() const
 {
-}
-
-QQmlContextData *QQmlPropertyPrivate::effectiveContext() const
-{
-    if (context) return context;
-    else if (engine) return QQmlContextData::get(engine->rootContext());
-    else return nullptr;
+    if (context)
+        return context;
+    else if (engine)
+        return QQmlContextData::get(engine->rootContext());
+    else
+        return nullptr;
 }
 
 void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
 {
     if (!obj) return;
 
-    QQmlRefPointer<QQmlTypeNameCache> typeNameCache = context?context->imports:nullptr;
+    QQmlRefPointer<QQmlTypeNameCache> typeNameCache = context ? context->imports() : nullptr;
 
     QObject *currentObject = obj;
     QVector<QStringRef> path;
@@ -974,7 +979,7 @@ void QQmlPropertyPrivate::takeSignalExpression(const QQmlProperty &that,
     if (expr) {
         int signalIndex = QQmlPropertyPrivate::get(that)->signalIndex();
         QQmlBoundSignal *signal = new QQmlBoundSignal(that.d->object, signalIndex, that.d->object,
-                                                      expr->context()->engine);
+                                                      expr->engine());
         signal->takeExpression(expr);
     }
 }
@@ -1097,7 +1102,8 @@ QVariant QQmlPropertyPrivate::readValueProperty()
 }
 
 // helper function to allow assignment / binding to QList<QUrl> properties.
-QVariant QQmlPropertyPrivate::resolvedUrlSequence(const QVariant &value, QQmlContextData *context)
+QVariant QQmlPropertyPrivate::resolvedUrlSequence(
+        const QVariant &value, const QQmlRefPointer<QQmlContextData> &context)
 {
     QList<QUrl> urls;
     if (value.userType() == qMetaTypeId<QUrl>()) {
@@ -1186,7 +1192,8 @@ QQmlPropertyPrivate::writeValueProperty(QObject *object,
                                         const QQmlPropertyData &core,
                                         const QQmlPropertyData &valueTypeData,
                                         const QVariant &value,
-                                        QQmlContextData *context,QQmlPropertyData::WriteFlags flags)
+                                        const QQmlRefPointer<QQmlContextData> &context,
+                                        QQmlPropertyData::WriteFlags flags)
 {
     // Remove any existing bindings on this property
     if (!(flags & QQmlPropertyData::DontRemoveBinding) && object)
@@ -1201,7 +1208,7 @@ QQmlPropertyPrivate::writeValueProperty(QObject *object,
         };
 
         QQmlGadgetPtrWrapper *wrapper = context
-                ? QQmlGadgetPtrWrapper::instance(context->engine, core.propType())
+                ? QQmlGadgetPtrWrapper::instance(context->engine(), core.propType())
                 : nullptr;
         if (wrapper) {
             doWrite(wrapper);
@@ -1217,10 +1224,9 @@ QQmlPropertyPrivate::writeValueProperty(QObject *object,
     return rv;
 }
 
-bool QQmlPropertyPrivate::write(QObject *object,
-                                        const QQmlPropertyData &property,
-                                        const QVariant &value, QQmlContextData *context,
-                                        QQmlPropertyData::WriteFlags flags)
+bool QQmlPropertyPrivate::write(
+        QObject *object, const QQmlPropertyData &property, const QVariant &value,
+        const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData::WriteFlags flags)
 {
     const int propertyType = property.propType();
     const int variantType = value.userType();
@@ -1647,14 +1653,15 @@ QQmlPropertyIndex QQmlPropertyPrivate::propertyIndex(const QQmlProperty &that)
 
 QQmlProperty
 QQmlPropertyPrivate::restore(QObject *object, const QQmlPropertyData &data,
-                             const QQmlPropertyData *valueTypeData, QQmlContextData *ctxt)
+                             const QQmlPropertyData *valueTypeData,
+                             const QQmlRefPointer<QQmlContextData> &ctxt)
 {
     QQmlProperty prop;
 
     prop.d = new QQmlPropertyPrivate;
     prop.d->object = object;
     prop.d->context = ctxt;
-    prop.d->engine = ctxt ? ctxt->engine : nullptr;
+    prop.d->engine = ctxt ? ctxt->engine() : nullptr;
 
     prop.d->core = data;
     if (valueTypeData)

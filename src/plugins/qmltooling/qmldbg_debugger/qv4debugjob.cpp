@@ -88,10 +88,10 @@ void JavaScriptJob::run()
             QV4::ScopedObject withContext(scope, engine->newObject());
             QV4::ScopedString k(scope);
             QV4::ScopedValue v(scope);
-            for (int ii = 0; ii < ctxtPriv->instances.count(); ++ii) {
-                QObject *object = ctxtPriv->instances.at(ii);
-                if (QQmlContext *context = qmlContext(object)) {
-                    if (QQmlContextData *cdata = QQmlContextData::get(context)) {
+            const QList<QPointer<QObject>> instances = ctxtPriv->instances();
+            for (const QPointer<QObject> &object : instances) {
+                if (QQmlContext *context = qmlContext(object.data())) {
+                    if (QQmlRefPointer<QQmlContextData> cdata = QQmlContextData::get(context)) {
                         v = QV4::QObjectWrapper::wrap(engine, object);
                         k = engine->newString(cdata->findObjectId(object));
                         withContext->put(k, v);

@@ -962,12 +962,7 @@ QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV4Function *args)
     QV4::Scope scope(args->v4engine());
     QV4::ScopedValue v(scope, (*args)[0]);
     QString arg = v->toQString();
-    if (arg.isEmpty())
-        return QUrl();
-
-    QQmlContextData *context = scope.engine->callingQmlContext();
-    Q_ASSERT(context);
-    return context->resolvedUrl(QUrl(arg));
+    return arg.isEmpty() ? QUrl() : scope.engine->callingQmlContext()->resolvedUrl(QUrl(arg));
 }
 
 QV4::ReturnedValue QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error)

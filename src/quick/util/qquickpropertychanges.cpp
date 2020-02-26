@@ -411,10 +411,9 @@ QQmlProperty
 QQuickPropertyChangesPrivate::property(const QString &property)
 {
     Q_Q(QQuickPropertyChanges);
-    QQmlContextData *context = nullptr;
-    if (QQmlData *ddata = QQmlData::get(q))
-        context = ddata->outerContext;
-    QQmlProperty prop = QQmlPropertyPrivate::create(object, property, context);
+    QQmlData *ddata = QQmlData::get(q);
+    QQmlProperty prop = QQmlPropertyPrivate::create(
+                object, property, ddata ? ddata->outerContext : QQmlRefPointer<QQmlContextData>());
     if (!prop.isValid()) {
         qmlWarning(q) << QQuickPropertyChanges::tr("Cannot assign to non-existent property \"%1\"").arg(property);
         return QQmlProperty();
@@ -469,7 +468,7 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
             a.specifiedObject = d->object;
             a.specifiedProperty = property;
 
-            QQmlContextData *context = QQmlContextData::get(qmlContext(this));
+            QQmlRefPointer<QQmlContextData> context = QQmlContextData::get(qmlContext(this));
 
             QQmlBinding *newBinding = nullptr;
             if (e.binding && e.binding->isTranslationBinding()) {

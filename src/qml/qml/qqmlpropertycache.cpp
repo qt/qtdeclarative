@@ -753,7 +753,9 @@ void QQmlPropertyCache::invalidate(const QMetaObject *metaObject)
     }
 }
 
-QQmlPropertyData *QQmlPropertyCache::findProperty(StringCache::ConstIterator it, QObject *object, QQmlContextData *context) const
+QQmlPropertyData *QQmlPropertyCache::findProperty(
+        StringCache::ConstIterator it, QObject *object,
+        const QQmlRefPointer<QQmlContextData> &context) const
 {
     QQmlData *data = (object ? QQmlData::get(object) : nullptr);
     const QQmlVMEMetaObject *vmemo = nullptr;
@@ -766,11 +768,11 @@ QQmlPropertyData *QQmlPropertyCache::findProperty(StringCache::ConstIterator it,
 
 namespace {
 
-inline bool contextHasNoExtensions(QQmlContextData *context)
+inline bool contextHasNoExtensions(const QQmlRefPointer<QQmlContextData> &context)
 {
     // This context has no extension if its parent is the engine's rootContext,
     // which has children but no imports
-    return (!context->parent || !context->parent->imports);
+    return (!context->parent() || !context->parent()->imports());
 }
 
 inline int maximumIndexForProperty(QQmlPropertyData *prop, const int methodCount, const int signalCount, const int propertyCount)
@@ -782,7 +784,9 @@ inline int maximumIndexForProperty(QQmlPropertyData *prop, const int methodCount
 
 }
 
-QQmlPropertyData *QQmlPropertyCache::findProperty(StringCache::ConstIterator it, const QQmlVMEMetaObject *vmemo, QQmlContextData *context) const
+QQmlPropertyData *QQmlPropertyCache::findProperty(
+        StringCache::ConstIterator it, const QQmlVMEMetaObject *vmemo,
+        const QQmlRefPointer<QQmlContextData> &context) const
 {
     StringCache::ConstIterator end = stringCache.end();
 
@@ -796,7 +800,7 @@ QQmlPropertyData *QQmlPropertyCache::findProperty(StringCache::ConstIterator it,
         if (vmemo && context && !contextHasNoExtensions(context)) {
             // Find the meta-object that corresponds to the supplied context
             do {
-                if (vmemo->ctxt == context)
+                if (vmemo->ctxt.contextData().data() == context.data())
                     break;
 
                 vmemo = vmemo->parentVMEMetaObject();
@@ -1007,7 +1011,7 @@ static inline QByteArray qQmlPropertyCacheToString(const QV4::String *string)
 template<typename T>
 QQmlPropertyData *
 qQmlPropertyCacheProperty(QJSEngine *engine, QObject *obj, T name,
-                          QQmlContextData *context, QQmlPropertyData &local)
+                          const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData &local)
 {
     QQmlPropertyCache *cache = nullptr;
 
@@ -1040,21 +1044,21 @@ qQmlPropertyCacheProperty(QJSEngine *engine, QObject *obj, T name,
 
 QQmlPropertyData *
 QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QV4::String *name,
-                            QQmlContextData *context, QQmlPropertyData &local)
+                            const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData &local)
 {
     return qQmlPropertyCacheProperty<const QV4::String *>(engine, obj, name, context, local);
 }
 
 QQmlPropertyData *
 QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QStringRef &name,
-                            QQmlContextData *context, QQmlPropertyData &local)
+                            const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData &local)
 {
     return qQmlPropertyCacheProperty<const QStringRef &>(engine, obj, name, context, local);
 }
 
 QQmlPropertyData *
 QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QLatin1String &name,
-                            QQmlContextData *context, QQmlPropertyData &local)
+                            const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData &local)
 {
     return qQmlPropertyCacheProperty<const QLatin1String &>(engine, obj, name, context, local);
 }

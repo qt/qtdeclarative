@@ -90,7 +90,7 @@ Q_SIGNALS:
     void valueChanged();
 
 private:
-    QQmlExpression(QQmlContextData *, QObject *, const QString &);
+    QQmlExpression(QQmlExpressionPrivate &dd, QObject *parent);
 
     Q_DISABLE_COPY(QQmlExpression)
     Q_DECLARE_PRIVATE(QQmlExpression)

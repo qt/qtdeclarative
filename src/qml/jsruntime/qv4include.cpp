@@ -208,9 +208,9 @@ QV4::ReturnedValue QV4Include::method_include(const QV4::FunctionObject *b, cons
     if (!argc)
         RETURN_UNDEFINED();
 
-    QQmlContextData *context = scope.engine->callingQmlContext();
+    QQmlRefPointer<QQmlContextData> context = scope.engine->callingQmlContext();
 
-    if ((!context || !context->isJSContext) && scope.engine->qmlEngine())
+    if ((!context || !context->isJSContext()) && scope.engine->qmlEngine())
         RETURN_RESULT(scope.engine->throwError(QString::fromUtf8("Qt.include(): Can only be called from JavaScript files")));
 
     QV4::ScopedValue callbackFunction(scope, QV4::Value::undefinedValue());

@@ -1020,7 +1020,8 @@ public:
     QString replyStatusText() const;
 
     ReturnedValue open(Object *thisObject, const QString &, const QUrl &, LoadType);
-    ReturnedValue send(Object *thisObject, QQmlContextData *context, const QByteArray &);
+    ReturnedValue send(Object *thisObject, const QQmlRefPointer<QQmlContextData> &context,
+                       const QByteArray &);
     ReturnedValue abort(Object *thisObject);
 
     void addHeader(const QString &, const QString &);
@@ -1068,7 +1069,7 @@ private:
     void readEncoding();
 
     PersistentValue m_thisObject;
-    QQmlContextDataRef m_qmlContext;
+    QQmlRefPointer<QQmlContextData> m_qmlContext;
     bool m_wasConstructedWithQmlContext = true;
 
     void dispatchCallbackNow(Object *thisObj);
@@ -1095,7 +1096,7 @@ QQmlXMLHttpRequest::QQmlXMLHttpRequest(QNetworkAccessManager *manager, QV4::Exec
     , m_responseType()
     , m_parsedDocument()
 {
-    m_wasConstructedWithQmlContext = v4->callingQmlContext() != nullptr;
+    m_wasConstructedWithQmlContext = !v4->callingQmlContext().isNull();
 }
 
 QQmlXMLHttpRequest::~QQmlXMLHttpRequest()
@@ -1297,7 +1298,8 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
     }
 }
 
-ReturnedValue QQmlXMLHttpRequest::send(Object *thisObject, QQmlContextData *context, const QByteArray &data)
+ReturnedValue QQmlXMLHttpRequest::send(
+        Object *thisObject, const QQmlRefPointer<QQmlContextData> &context, const QByteArray &data)
 {
     m_errorFlag = false;
     m_sendFlag = true;
@@ -1462,7 +1464,7 @@ void QQmlXMLHttpRequest::finished()
     dispatchCallbackSafely();
 
     m_thisObject.clear();
-    m_qmlContext.setContextData(nullptr);
+    m_qmlContext = nullptr;
 }
 
 
@@ -1615,12 +1617,13 @@ void QQmlXMLHttpRequest::dispatchCallbackNow(Object *thisObj, bool done, bool er
 
 void QQmlXMLHttpRequest::dispatchCallbackSafely()
 {
-    if (m_wasConstructedWithQmlContext && !m_qmlContext.contextData())
+    if (m_wasConstructedWithQmlContext && m_qmlContext.isNull()) {
         // if the calling context object is no longer valid, then it has been
         // deleted explicitly (e.g., by a Loader deleting the itemContext when
         // the source is changed).  We do nothing in this case, as the evaluation
         // cannot succeed.
         return;
+    }
 
     dispatchCallbackNow(m_thisObject.as<Object>());
 }
@@ -1791,8 +1794,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(const FunctionObject *b, const
     QUrl url = QUrl(argv[1].toQStringNoThrow());
 
     if (url.isRelative()) {
-        QQmlContextData *qmlContextData = scope.engine->callingQmlContext();
-        if (qmlContextData)
+        if (QQmlRefPointer<QQmlContextData> qmlContextData = scope.engine->callingQmlContext())
             url = qmlContextData->resolvedUrl(url);
         else
             url = scope.engine->resolvedUrl(url.url());

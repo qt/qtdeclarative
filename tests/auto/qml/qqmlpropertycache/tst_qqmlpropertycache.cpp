@@ -32,6 +32,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlcomponent.h>
 #include <private/qmetaobjectbuilder_p.h>
+#include <private/qqmlcontextdata_p.h>
 #include <QCryptographicHash>
 #include "../../shared/util.h"
 

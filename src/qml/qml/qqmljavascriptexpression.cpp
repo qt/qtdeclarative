@@ -134,7 +134,7 @@ QQmlSourceLocation QQmlJavaScriptExpression::sourceLocation() const
     return QQmlSourceLocation();
 }
 
-void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
+void QQmlJavaScriptExpression::setContext(const QQmlRefPointer<QQmlContextData> &context)
 {
     if (m_prevExpression) {
         *m_prevExpression = m_nextExpression;
@@ -144,15 +144,10 @@ void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
         m_nextExpression = nullptr;
     }
 
-    m_context = context;
+    m_context = context.data();
 
-    if (context) {
-        m_nextExpression = context->expressions;
-        if (m_nextExpression)
-            m_nextExpression->m_prevExpression = &m_nextExpression;
-        m_prevExpression = &context->expressions;
-        context->expressions = this;
-    }
+    if (context)
+        context->addExpression(this);
 }
 
 QV4::Function *QQmlJavaScriptExpression::function() const
@@ -166,7 +161,7 @@ void QQmlJavaScriptExpression::refresh()
 
 QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(bool *isUndefined)
 {
-    QV4::ExecutionEngine *v4 = m_context->engine->handle();
+    QV4::ExecutionEngine *v4 = m_context->engine()->handle();
     QV4::Scope scope(v4);
     QV4::JSCallData jsCall(scope);
 
@@ -175,7 +170,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(bool *isUndefined)
 
 QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefined)
 {
-    Q_ASSERT(m_context && m_context->engine);
+    Q_ASSERT(m_context && m_context->engine());
 
     QV4::Function *v4Function = function();
     if (!v4Function) {
@@ -184,14 +179,14 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
         return QV4::Encode::undefined();
     }
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(m_context->engine);
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(m_context->engine());
 
     // All code that follows must check with watcher before it accesses data members
     // incase we have been deleted.
     DeleteWatcher watcher(this);
 
     Q_ASSERT(notifyOnValueChanged() || activeGuards.isEmpty());
-    QQmlPropertyCapture capture(m_context->engine, this, &watcher);
+    QQmlPropertyCapture capture(m_context->engine(), this, &watcher);
 
     QQmlPropertyCapture *lastPropertyCapture = ep->propertyCapture;
     ep->propertyCapture = notifyOnValueChanged() ? &capture : nullptr;
@@ -200,7 +195,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
     if (notifyOnValueChanged())
         capture.guards.copyAndClearPrepend(activeGuards);
 
-    QV4::ExecutionEngine *v4 = m_context->engine->handle();
+    QV4::ExecutionEngine *v4 = m_context->engine()->handle();
     callData->thisObject = v4->globalObject;
     if (scopeObject()) {
          QV4::ReturnedValue scope = QV4::QObjectWrapper::wrap(v4, scopeObject());
@@ -337,10 +332,11 @@ QQmlDelayedError *QQmlJavaScriptExpression::delayedError()
 }
 
 QV4::ReturnedValue
-QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObject,
-                                       const QString &code, const QString &filename, quint16 line)
+QQmlJavaScriptExpression::evalFunction(
+        const QQmlRefPointer<QQmlContextData> &ctxt, QObject *scopeObject,
+        const QString &code, const QString &filename, quint16 line)
 {
-    QQmlEngine *engine = ctxt->engine;
+    QQmlEngine *engine = ctxt->engine();
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
 
     QV4::ExecutionEngine *v4 = engine->handle();
@@ -367,10 +363,11 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObje
     return result->asReturnedValue();
 }
 
-void QQmlJavaScriptExpression::createQmlBinding(QQmlContextData *ctxt, QObject *qmlScope,
-                                          const QString &code, const QString &filename, quint16 line)
+void QQmlJavaScriptExpression::createQmlBinding(
+        const QQmlRefPointer<QQmlContextData> &ctxt, QObject *qmlScope, const QString &code,
+        const QString &filename, quint16 line)
 {
-    QQmlEngine *engine = ctxt->engine;
+    QQmlEngine *engine = ctxt->engine();
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
 
     QV4::ExecutionEngine *v4 = engine->handle();

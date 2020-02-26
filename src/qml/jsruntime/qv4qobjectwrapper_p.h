@@ -165,10 +165,19 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
 
     QObject *object() const { return d()->object(); }
 
-    ReturnedValue getQmlProperty(QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, bool *hasProperty = nullptr, bool includeImports = false) const;
-    static ReturnedValue getQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = nullptr, QQmlPropertyData **property = nullptr);
+    ReturnedValue getQmlProperty(
+            const QQmlRefPointer<QQmlContextData> &qmlContext, String *name,
+            RevisionMode revisionMode, bool *hasProperty = nullptr,
+            bool includeImports = false) const;
+    \
+    static ReturnedValue getQmlProperty(
+            ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
+            QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = nullptr,
+            QQmlPropertyData **property = nullptr);
 
-    static bool setQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, const Value &value);
+    static bool setQmlProperty(
+            ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
+            QObject *object, String *name, RevisionMode revisionMode, const Value &value);
 
     static ReturnedValue wrap(ExecutionEngine *engine, QObject *object);
     static void markWrapper(QObject *object, MarkStack *markStack);
@@ -193,8 +202,13 @@ protected:
     static bool virtualIsEqualTo(Managed *that, Managed *o);
     static ReturnedValue create(ExecutionEngine *engine, QObject *object);
 
-    static QQmlPropertyData *findProperty(ExecutionEngine *engine, QObject *o, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local);
-    QQmlPropertyData *findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
+    static QQmlPropertyData *findProperty(
+            ExecutionEngine *engine, QObject *o, const QQmlRefPointer<QQmlContextData> &qmlContext,
+            String *name, RevisionMode revisionMode, QQmlPropertyData *local);
+
+    QQmlPropertyData *findProperty(
+            ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
+            String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
 
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);

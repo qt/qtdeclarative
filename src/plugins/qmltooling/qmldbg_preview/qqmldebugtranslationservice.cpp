@@ -58,7 +58,9 @@ QString QQmlDebugTranslationServiceImpl::foundElidedText(QObject *textObject, co
     return elideText;
 }
 
-void QQmlDebugTranslationServiceImpl::foundTranslationBinding(QQmlTranslationBinding *binding, QObject *scopeObject, QQmlContextData *contextData)
+void QQmlDebugTranslationServiceImpl::foundTranslationBinding(
+        QQmlTranslationBinding *binding, QObject *scopeObject,
+        const QQmlRefPointer<QQmlContextData> &contextData)
 {
     Q_UNUSED(binding)
     Q_UNUSED(scopeObject)

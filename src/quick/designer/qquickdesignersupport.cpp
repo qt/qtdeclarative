@@ -390,13 +390,13 @@ void QQuickDesignerSupport::emitComponentCompleteSignalForAttachedProperty(QObje
 
     QQmlData *data = QQmlData::get(object);
     if (data && data->context) {
-        QQmlComponentAttached *componentAttached = data->context->componentAttached;
+        QQmlComponentAttached *componentAttached = data->context->componentAttacheds();
         while (componentAttached) {
             if (componentAttached->parent())
                 if (componentAttached->parent() == object)
                     emit componentAttached->completed();
 
-            componentAttached = componentAttached->next;
+            componentAttached = componentAttached->next();
         }
     }
 }
@@ -429,7 +429,7 @@ int QQuickDesignerSupport::borderWidth(QQuickItem *item)
 
 void QQuickDesignerSupport::refreshExpressions(QQmlContext *context)
 {
-    QQmlContextPrivate::get(context)->data->refreshExpressions();
+    QQmlContextData::get(context)->refreshExpressions();
 }
 
 void QQuickDesignerSupport::setRootItem(QQuickView *view, QQuickItem *item)

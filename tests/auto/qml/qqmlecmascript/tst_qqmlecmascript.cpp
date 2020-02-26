@@ -386,7 +386,7 @@ private slots:
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
-    static void verifyContextLifetime(QQmlContextData *ctxt);
+    static void verifyContextLifetime(const QQmlRefPointer<QQmlContextData> &ctxt);
 
     // When calling into JavaScript, the specific type of the return value can differ if that return
     // value is a number. This is not only the case for non-integral numbers, or numbers that do not
@@ -4289,16 +4289,16 @@ void tst_qqmlecmascript::singletonTypeResolution()
     delete object;
 }
 
-void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
-    QQmlContextData *childCtxt = ctxt->childContexts;
+void tst_qqmlecmascript::verifyContextLifetime(const QQmlRefPointer<QQmlContextData> &ctxt) {
+    QQmlRefPointer<QQmlContextData> childCtxt = ctxt->childContexts();
 
-    if (!ctxt->importedScripts.isNullOrUndefined()) {
-        QV4::ExecutionEngine *v4 = ctxt->engine->handle();
+    if (!ctxt->importedScripts().isNullOrUndefined()) {
+        QV4::ExecutionEngine *v4 = ctxt->engine()->handle();
         QV4::Scope scope(v4);
-        QV4::ScopedArrayObject scripts(scope, ctxt->importedScripts.value());
+        QV4::ScopedArrayObject scripts(scope, ctxt->importedScripts().value());
         QV4::Scoped<QV4::QQmlContextWrapper> qml(scope);
         for (quint32 i = 0; i < scripts->getLength(); ++i) {
-            QQmlContextData *scriptContext, *newContext;
+            QQmlRefPointer<QQmlContextData> scriptContext, newContext;
             qml = scripts->get(i);
 
             scriptContext = qml ? qml->getContext() : nullptr;
@@ -4310,17 +4310,16 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
                 Q_UNUSED(temporaryScope)
             }
 
-            ctxt->engine->collectGarbage();
+            ctxt->engine()->collectGarbage();
             qml = scripts->get(i);
             newContext = qml ? qml->getContext() : nullptr;
-            QCOMPARE(scriptContext, newContext);
+            QCOMPARE(scriptContext.data(), newContext.data());
         }
     }
 
     while (childCtxt) {
         verifyContextLifetime(childCtxt);
-
-        childCtxt = childCtxt->nextChild;
+        childCtxt = childCtxt->nextChild();
     }
 }
 
@@ -4592,9 +4591,7 @@ void tst_qqmlecmascript::importScripts()
         QVERIFY(!object);
     } else {
         QVERIFY(object != nullptr);
-
-        QQmlContextData *ctxt = QQmlContextData::get(engine.rootContext());
-        tst_qqmlecmascript::verifyContextLifetime(ctxt);
+        tst_qqmlecmascript::verifyContextLifetime(QQmlContextData::get(engine.rootContext()));
 
         for (int i = 0; i < propertyNames.size(); ++i)
             QCOMPARE(object->property(propertyNames.at(i).toLatin1().constData()), propertyValues.at(i));
@@ -6138,24 +6135,22 @@ void tst_qqmlecmascript::nullObjectInitializer()
 // Test that bindings don't evaluate once the engine has been destroyed
 void tst_qqmlecmascript::deletedEngine()
 {
-    QQmlEngine *engine = new QQmlEngine;
-    QQmlComponent component(engine, testFileUrl("deletedEngine.qml"));
+    QScopedPointer<QQmlEngine> engine(new QQmlEngine);
+    QQmlComponent component(engine.data(), testFileUrl("deletedEngine.qml"));
+    QScopedPointer<QObject> object(component.create());
 
-    QObject *object = component.create();
     QVERIFY(object != nullptr);
 
     QCOMPARE(object->property("a").toInt(), 39);
     object->setProperty("b", QVariant(9));
     QCOMPARE(object->property("a").toInt(), 117);
 
-    delete engine;
+    engine.reset(); // This drops the engine's context hierarchy and the object gets notified.
 
     QCOMPARE(object->property("a").toInt(), 0);
     object->setProperty("b", QVariant(10));
     object->setProperty("b", QVariant());
     QCOMPARE(object->property("a").toInt(), 0);
-
-    delete object;
 }
 
 // Test the crashing part of QTBUG-9705
@@ -6217,25 +6212,30 @@ void tst_qqmlecmascript::variants()
 void tst_qqmlecmascript::qtbug_9792()
 {
     QQmlEngine engine;
-    QQmlComponent component(&engine, testFileUrl("qtbug_9792.qml"));
 
-    QQmlContext *context = new QQmlContext(engine.rootContext());
+    QScopedPointer<QQmlContext> context(new QQmlContext(engine.rootContext()));
+    QScopedPointer<QObject> object;
 
-    MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create(context));
-    QVERIFY(object != nullptr);
+    MyQmlObject *myQmlObject = nullptr;
+    {
+        // Drop the component after creation as that holds a strong reference
+        // to the root QQmlContextData. We want the context data to be destroyed.
+        QQmlComponent component(&engine, testFileUrl("qtbug_9792.qml"));
+        object.reset(component.create(context.data()));
+        myQmlObject = qobject_cast<MyQmlObject*>(object.data());
+    }
+    QVERIFY(myQmlObject != nullptr);
 
     QTest::ignoreMessage(QtDebugMsg, "Hello world!");
-    object->basicSignal();
+    myQmlObject->basicSignal();
 
-    delete context;
+    context.reset();
 
     QQmlTestMessageHandler messageHandler;
 
-    object->basicSignal();
+    myQmlObject->basicSignal();
 
     QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
-
-    delete object;
 }
 
 // Verifies that QPointer<>s used in the vmemetaobject are cleaned correctly
