@@ -742,7 +742,7 @@ QVariant QJSValue::toVariant() const
 
   \sa isCallable(), callWithInstance(), callAsConstructor()
 */
-QJSValue QJSValue::call(const QJSValueList &args)
+QJSValue QJSValue::call(const QJSValueList &args) const
 {
     QV4::Value *val = QJSValuePrivate::getValue(this);
     if (!val)
@@ -795,7 +795,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
 
   \sa call()
 */
-QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList &args)
+QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList &args) const
 {
     QV4::Value *val = QJSValuePrivate::getValue(this);
     if (!val)
@@ -851,7 +851,7 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
 
   \sa call(), QJSEngine::newObject()
 */
-QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
+QJSValue QJSValue::callAsConstructor(const QJSValueList &args) const
 {
     QV4::Value *val = QJSValuePrivate::getValue(this);
     if (!val)
