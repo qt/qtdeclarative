@@ -58,7 +58,6 @@ public:
     ~QQmlFileSelector() override;
     QFileSelector *selector() const Q_DECL_NOTHROW;
     void setSelector(QFileSelector *selector);
-    void setExtraSelectors(QStringList &strings); // TODO Qt6: remove
     void setExtraSelectors(const QStringList &strings);
     static QQmlFileSelector* get(QQmlEngine*);
 
