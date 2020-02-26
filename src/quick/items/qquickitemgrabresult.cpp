@@ -195,6 +195,7 @@ bool QQuickItemGrabResult::saveToFile(const QString &fileName) const
 }
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#if QT_DEPRECATED_SINCE(5, 15)
 /*!
  * \overload
  * \internal
@@ -203,6 +204,7 @@ bool QQuickItemGrabResult::saveToFile(const QString &fileName)
 {
     return qAsConst(*this).saveToFile(fileName);
 }
+#endif
 #endif // < Qt 6
 
 QUrl QQuickItemGrabResult::url() const

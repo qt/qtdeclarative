@@ -68,7 +68,10 @@ public:
     QUrl url() const;
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    Q_INVOKABLE bool saveToFile(const QString &fileName); // ### Qt 6: remove
+#if QT_DEPRECATED_SINCE(5, 15)
+    QT_DEPRECATED_X("This overload is deprecated. Use the const member function instead")
+    Q_INVOKABLE bool saveToFile(const QString &fileName);
+#endif
 #endif
     Q_INVOKABLE bool saveToFile(const QString &fileName) const;
 
