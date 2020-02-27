@@ -54,9 +54,12 @@
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
+#include <QtQuick/private/qquicktextinput_p_p.h>
 #include <QtQuick/private/qquickitemview_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcCalculateWidestTextWidth, "qt.quick.controls.combobox.calculatewidesttextwidth")
 
 /*!
     \qmltype ComboBox
@@ -230,6 +233,7 @@ public:
     void modelUpdated();
     void countChanged();
 
+    QString effectiveTextRole() const;
     void updateEditText();
     void updateCurrentText();
     void updateCurrentValue();
@@ -265,6 +269,10 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
+    virtual qreal getContentWidth() const override;
+    qreal calculateWidestTextWidth() const;
+    void maybeUpdateImplicitContentWidth();
+
     static void hideOldPopup(QQuickPopup *popup);
 
     QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::ComboBox); }
@@ -277,8 +285,10 @@ public:
     bool keyNavigating = false;
     bool hasDisplayText = false;
     bool hasCurrentIndex = false;
+    bool hasCalculatedWidestText = false;
     int highlightedIndex = -1;
     int currentIndex = -1;
+    QQuickComboBox::ImplicitContentWidthPolicy implicitContentWidthPolicy = QQuickComboBox::ContentItemImplicitWidth;
     QVariant model;
     QString textRole;
     QString currentText;
@@ -411,8 +421,12 @@ void QQuickComboBoxPrivate::createdItem(int index, QObject *object)
 
 void QQuickComboBoxPrivate::modelUpdated()
 {
-    if (!extra.isAllocated() || !extra->accepting)
+    if (componentComplete && (!extra.isAllocated() || !extra->accepting)) {
         updateCurrentTextAndValue();
+
+        if (implicitContentWidthPolicy == QQuickComboBox::WidestText)
+            updateImplicitContentSize();
+    }
 }
 
 void QQuickComboBoxPrivate::countChanged()
@@ -421,6 +435,11 @@ void QQuickComboBoxPrivate::countChanged()
     if (q->count() == 0)
         q->setCurrentIndex(-1);
     emit q->countChanged();
+}
+
+QString QQuickComboBoxPrivate::effectiveTextRole() const
+{
+    return textRole.isEmpty() ? QStringLiteral("modelData") : textRole;
 }
 
 void QQuickComboBoxPrivate::updateEditText()
@@ -780,6 +799,72 @@ void QQuickComboBoxPrivate::itemImplicitHeightChanged(QQuickItem *item)
         emit q->implicitIndicatorHeightChanged();
 }
 
+qreal QQuickComboBoxPrivate::getContentWidth() const
+{
+    if (componentComplete) {
+        switch (implicitContentWidthPolicy) {
+        case QQuickComboBox::WidestText:
+            return calculateWidestTextWidth();
+        case QQuickComboBox::WidestTextWhenCompleted:
+            if (!hasCalculatedWidestText)
+                return calculateWidestTextWidth();
+            break;
+        default:
+            break;
+        }
+    }
+
+    return QQuickControlPrivate::getContentWidth();
+}
+
+qreal QQuickComboBoxPrivate::calculateWidestTextWidth() const
+{
+    Q_Q(const QQuickComboBox);
+    if (!componentComplete)
+        return 0;
+
+    const int count = q->count();
+    if (count == 0)
+        return 0;
+
+    auto textInput = qobject_cast<QQuickTextInput*>(contentItem);
+    if (!textInput)
+        return 0;
+
+    qCDebug(lcCalculateWidestTextWidth) << "calculating widest text from" << count << "items...";
+
+    // Avoid the index check and repeated calls to effectiveTextRole()
+    // that would result from calling textAt() in a loop.
+    const QString textRole = effectiveTextRole();
+    auto textInputPrivate = QQuickTextInputPrivate::get(textInput);
+    qreal widest = 0;
+    for (int i = 0; i < count; ++i) {
+        const QString text = delegateModel->stringValue(i, textRole);
+        const qreal textImplicitWidth = textInputPrivate->calculateImplicitWidthForText(text);
+        widest = qMax(widest, textImplicitWidth);
+    }
+
+    qCDebug(lcCalculateWidestTextWidth) << "... widest text is" << widest;
+    return widest;
+}
+
+/*!
+    If the user requested it (and we haven't already done it, depending on the policy),
+    update the implicit content width to the largest text in the model.
+*/
+void QQuickComboBoxPrivate::maybeUpdateImplicitContentWidth()
+{
+    if (!componentComplete)
+        return;
+
+    if (implicitContentWidthPolicy == QQuickComboBox::ContentItemImplicitWidth
+        || (implicitContentWidthPolicy == QQuickComboBox::WidestTextWhenCompleted && hasCalculatedWidestText))
+        return;
+
+    updateImplicitContentWidth();
+    hasCalculatedWidestText = true;
+}
+
 void QQuickComboBoxPrivate::hideOldPopup(QQuickPopup *popup)
 {
     if (!popup)
@@ -885,6 +970,8 @@ void QQuickComboBox::setModel(const QVariant& m)
         d->updateCurrentTextAndValue();
     }
     emit modelChanged();
+
+    d->maybeUpdateImplicitContentWidth();
 }
 
 /*!
@@ -1597,6 +1684,80 @@ void QQuickComboBox::setSelectTextByMouse(bool canSelect)
     d->extra.value().selectTextByMouse = canSelect;
     emit selectTextByMouseChanged();
 }
+
+/*!
+    \since QtQuick.Controls 6.0 (Qt 6.0)
+    \qmlproperty enumeration QtQuick.Controls::ComboBox::implicitContentWidthPolicy
+
+    This property controls how the \l implicitContentWidth of the ComboBox is
+    calculated.
+
+    When the width of a ComboBox is not large enough to display text, that text
+    is elided. Depending on which parts of the text are elided, this can make
+    selecting an item difficult for the end user. An efficient way of ensuring
+    that a ComboBox is wide enough to avoid text being elided is to set a width
+    that is known to be large enough:
+
+    \code
+    width: 300
+    implicitContentWidthPolicy: ComboBox.ContentItemImplicitWidth
+    \endcode
+
+    However, it is often not possible to know whether or not a hard-coded value
+    will be large enough, as the size of text depends on many factors, such as
+    font family, font size, translations, and so on.
+
+    implicitContentWidthPolicy provides an easy way to control how the
+    implicitContentWidth is calculated, which in turn affects the
+    \l implicitWidth of the ComboBox and ensures that text will not be elided.
+
+    The available values are:
+
+    \value ContentItemImplicitWidth
+        The implicitContentWidth will default to that of the \l contentItem.
+
+        This is the most efficient option, as no extra text layout is done.
+    \value WidestText
+        The implicitContentWidth will be set to the implicit width of the
+        the largest text for the given \l textRole every time the model
+        changes.
+
+        This option should be used with smaller models, as it can be expensive.
+    \value WidestTextWhenCompleted
+        The implicitContentWidth will be set to the implicit width of the
+        the largest text for the given \l textRole once after
+        \l {QQmlParserStatus::componentComplete()}{component completion}.
+
+        This option should be used with smaller models, as it can be expensive.
+
+    The default value is \c ContentItemImplicitWidth.
+
+    As this property only affects the \l implicitWidth of the ComboBox, setting
+    an explicit \l width can still result in eliding.
+
+    \note This feature requires the contentItem to be a type derived from
+        \l TextInput.
+
+    \note This feature requires text to be laid out, and can therefore be
+        expensive for large models or models whose contents are updated
+        frequently.
+*/
+QQuickComboBox::ImplicitContentWidthPolicy QQuickComboBox::implicitContentWidthPolicy() const
+{
+    Q_D(const QQuickComboBox);
+    return d->implicitContentWidthPolicy;
+}
+
+void QQuickComboBox::setImplicitContentWidthPolicy(QQuickComboBox::ImplicitContentWidthPolicy policy)
+{
+    Q_D(QQuickComboBox);
+    if (policy == d->implicitContentWidthPolicy)
+        return;
+
+    d->implicitContentWidthPolicy = policy;
+    d->maybeUpdateImplicitContentWidth();
+    emit implicitContentWidthPolicyChanged();
+}
 /*!
     \qmlmethod string QtQuick.Controls::ComboBox::textAt(int index)
 
@@ -1611,8 +1772,7 @@ QString QQuickComboBox::textAt(int index) const
     if (!d->isValidIndex(index))
         return QString();
 
-    const QString effectiveTextRole = d->textRole.isEmpty() ? QStringLiteral("modelData") : d->textRole;
-    return d->delegateModel->stringValue(index, effectiveTextRole);
+    return d->delegateModel->stringValue(index, d->effectiveTextRole());
 }
 
 /*!
@@ -1894,6 +2054,11 @@ void QQuickComboBox::componentComplete()
             setCurrentIndex(0);
         else
             d->updateCurrentTextAndValue();
+
+        // If the widest text was already calculated in the call to
+        // QQmlDelegateModel::componentComplete() above, then we shouldn't do it here too.
+        if (!d->hasCalculatedWidestText)
+            d->maybeUpdateImplicitContentWidth();
     }
 }
 
@@ -1905,6 +2070,13 @@ void QQuickComboBox::itemChange(QQuickItem::ItemChange change, const QQuickItem:
         d->hidePopup(false);
         setPressed(false);
     }
+}
+
+void QQuickComboBox::fontChange(const QFont &newFont, const QFont &oldFont)
+{
+    Q_D(QQuickComboBox);
+    QQuickControl::fontChange(newFont, oldFont);
+    d->maybeUpdateImplicitContentWidth();
 }
 
 void QQuickComboBox::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
