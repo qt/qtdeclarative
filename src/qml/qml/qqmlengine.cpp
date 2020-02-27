@@ -61,7 +61,6 @@
 #include <private/qqmlboundsignal_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <QtCore/qstandardpaths.h>
-#include <QtCore/qsettings.h>
 #include <QtCore/qmetaobject.h>
 #include <QDebug>
 #include <QtCore/qcoreapplication.h>

@@ -36,7 +36,7 @@ qtHaveModule(quick) {
         qmldbg_inspector \
         qmldbg_quickprofiler
 
-    qtConfig(qml-network): SUBDIRS += qmldbg_preview
+    qtConfig(settings):qtConfig(qml-network): SUBDIRS += qmldbg_preview
 
     qmldbg_inspector.depends = packetprotocol
     qmldbg_quickprofiler.depends = packetprotocol
