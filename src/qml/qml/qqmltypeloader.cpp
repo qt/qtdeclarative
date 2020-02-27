@@ -357,8 +357,8 @@ void QQmlTypeLoader::networkReplyFinished(QNetworkReply *reply)
         }
     }
 
-    if (reply->error()) {
-        blob->networkError(reply->error());
+    if (reply->networkError()) {
+        blob->networkError(reply->networkError());
     } else {
         QByteArray data = reply->readAll();
         setData(blob, data);
