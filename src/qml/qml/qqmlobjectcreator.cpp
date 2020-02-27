@@ -1148,11 +1148,6 @@ void QQmlObjectCreator::registerObjectWithContextById(const QV4::CompiledData::O
         context->setIdProperty(object->id, instance);
 }
 
-void QQmlObjectCreator::createQmlContext()
-{
-    _qmlContext->setM(QV4::QmlContext::create(v4->rootContext(), context, _scopeObject));
-}
-
 QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isContextObject)
 {
     const QV4::CompiledData::Object *obj = compilationUnit->objectAt(index);

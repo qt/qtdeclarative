@@ -162,7 +162,6 @@ private:
     void registerObjectWithContextById(const QV4::CompiledData::Object *object, QObject *instance) const;
 
     inline QV4::QmlContext *currentQmlContext();
-    Q_NEVER_INLINE void createQmlContext();
     QV4::ResolvedTypeReference *resolvedType(int id) const
     {
         return compilationUnit->resolvedType(id);
