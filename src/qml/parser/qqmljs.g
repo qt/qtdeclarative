@@ -390,10 +390,10 @@ public:
     { return diagnosticMessage().message; }
 
     inline int errorLineNumber() const
-    { return diagnosticMessage().line; }
+    { return diagnosticMessage().loc.startLine; }
 
     inline int errorColumnNumber() const
-    { return diagnosticMessage().column; }
+    { return diagnosticMessage().loc.startColumn; }
 
 protected:
     bool parse(int startToken);
@@ -409,7 +409,7 @@ protected:
     inline QStringRef &rawStringRef(int index)
     { return rawString_stack [tos + index - 1]; }
 
-    inline AST::SourceLocation &loc(int index)
+    inline SourceLocation &loc(int index)
     { return location_stack [tos + index - 1]; }
 
     AST::UiQualifiedId *reparseAsQualifiedId(AST::ExpressionNode *expr);
@@ -417,21 +417,20 @@ protected:
     void pushToken(int token);
     int lookaheadToken(Lexer *lexer);
 
-    static DiagnosticMessage compileError(const AST::SourceLocation &location,
+    static DiagnosticMessage compileError(const SourceLocation &location,
                                           const QString &message, QtMsgType kind = QtCriticalMsg)
     {
         DiagnosticMessage error;
-        error.line = location.startLine;
-        error.column = location.startColumn;
+        error.loc = location;
         error.message = message;
         error.type = kind;
         return error;
     }
 
-    void syntaxError(const AST::SourceLocation &location, const char *message) {
+    void syntaxError(const SourceLocation &location, const char *message) {
         diagnostic_messages.append(compileError(location, QLatin1String(message)));
      }
-     void syntaxError(const AST::SourceLocation &location, const QString &message) {
+     void syntaxError(const SourceLocation &location, const QString &message) {
         diagnostic_messages.append(compileError(location, message));
       }
 
@@ -444,7 +443,7 @@ protected:
     int stack_size = 0;
     Value *sym_stack = nullptr;
     int *state_stack = nullptr;
-    AST::SourceLocation *location_stack = nullptr;
+    SourceLocation *location_stack = nullptr;
     QVector<QStringRef> string_stack;
     QVector<QStringRef> rawString_stack;
 
@@ -456,7 +455,7 @@ protected:
     struct SavedToken {
        int token;
        double dval;
-       AST::SourceLocation loc;
+       SourceLocation loc;
        QStringRef spell;
        QStringRef raw;
     };
@@ -465,8 +464,8 @@ protected:
     double yylval = 0.;
     QStringRef yytokenspell;
     QStringRef yytokenraw;
-    AST::SourceLocation yylloc;
-    AST::SourceLocation yyprevlloc;
+    SourceLocation yylloc;
+    SourceLocation yyprevlloc;
 
     SavedToken token_buffer[TOKEN_BUFFER_SIZE];
     SavedToken *first_token = nullptr;
@@ -479,7 +478,7 @@ protected:
         CE_ParenthesizedExpression,
         CE_FormalParameterList
     };
-    AST::SourceLocation coverExpressionErrorLocation;
+    SourceLocation coverExpressionErrorLocation;
     CoverExpressionType coverExpressionType = CE_Invalid;
 
     QList<DiagnosticMessage> diagnostic_messages;
@@ -524,7 +523,7 @@ void Parser::reallocateStack()
 
     sym_stack = reinterpret_cast<Value*> (realloc(sym_stack, stack_size * sizeof(Value)));
     state_stack = reinterpret_cast<int*> (realloc(state_stack, stack_size * sizeof(int)));
-    location_stack = reinterpret_cast<AST::SourceLocation*> (realloc(location_stack, stack_size * sizeof(AST::SourceLocation)));
+    location_stack = reinterpret_cast<SourceLocation*> (realloc(location_stack, stack_size * sizeof(SourceLocation)));
     string_stack.resize(stack_size);
     rawString_stack.resize(stack_size);
 }
@@ -544,9 +543,9 @@ Parser::~Parser()
     }
 }
 
-static inline AST::SourceLocation location(Lexer *lexer)
+static inline SourceLocation location(Lexer *lexer)
 {
-    AST::SourceLocation loc;
+    SourceLocation loc;
     loc.offset = lexer->tokenOffset();
     loc.length = lexer->tokenLength();
     loc.startLine = lexer->tokenStartLine();
@@ -557,7 +556,7 @@ static inline AST::SourceLocation location(Lexer *lexer)
 AST::UiQualifiedId *Parser::reparseAsQualifiedId(AST::ExpressionNode *expr)
 {
     QVarLengthArray<QStringRef, 4> nameIds;
-    QVarLengthArray<AST::SourceLocation, 4> locations;
+    QVarLengthArray<SourceLocation, 4> locations;
 
     AST::ExpressionNode *it = expr;
     while (AST::FieldMemberExpression *m = AST::cast<AST::FieldMemberExpression *>(it)) {
@@ -2842,7 +2841,7 @@ AssignmentExpression_In: LeftHandSideExpression T_EQ AssignmentExpression_In;
     case $rule_number: {
         // need to convert the LHS to an AssignmentPattern if it was an Array/ObjectLiteral
         if (AST::Pattern *p = sym(1).Expression->patternCast()) {
-            AST::SourceLocation errorLoc;
+            SourceLocation errorLoc;
             QString errorMsg;
             if (!p->convertLiteralToAssignmentPattern(pool, &errorLoc, &errorMsg)) {
                 syntaxError(errorLoc, errorMsg);
@@ -3508,7 +3507,7 @@ IterationStatement: T_FOR T_LPAREN LeftHandSideExpression InOrOf Expression_In T
     case $rule_number: {
         // need to convert the LHS to an AssignmentPattern if it was an Array/ObjectLiteral
         if (AST::Pattern *p = sym(3).Expression->patternCast()) {
-            AST::SourceLocation errorLoc;
+            SourceLocation errorLoc;
             QString errorMsg;
             if (!p->convertLiteralToAssignmentPattern(pool, &errorLoc, &errorMsg)) {
                 syntaxError(errorLoc, errorMsg);

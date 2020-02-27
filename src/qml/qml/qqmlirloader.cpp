@@ -78,14 +78,14 @@ struct FakeExpression : public QQmlJS::AST::NullExpression
         : location(start, length)
     {}
 
-    virtual QQmlJS::AST::SourceLocation firstSourceLocation() const
+    virtual QQmlJS::SourceLocation firstSourceLocation() const
     { return location; }
 
-    virtual QQmlJS::AST::SourceLocation lastSourceLocation() const
+    virtual QQmlJS::SourceLocation lastSourceLocation() const
     { return location; }
 
 private:
-    QQmlJS::AST::SourceLocation location;
+    QQmlJS::SourceLocation location;
 };
 
 QmlIR::Object *QQmlIRLoader::loadObject(const QV4::CompiledData::Object *serializedObject)

@@ -44,6 +44,7 @@
 #include "qqmlcontext_p.h"
 #include "qqmlmetatype_p.h"
 #include "qqmlengine_p.h"
+#include "qqmlsourcecoordinate_p.h"
 
 #include <QCoreApplication>
 
@@ -218,8 +219,8 @@ QQmlInfo::~QQmlInfo()
                 QQmlData *ddata = QQmlData::get(object, false);
                 if (ddata && ddata->outerContext) {
                     error.setUrl(ddata->outerContext->url());
-                    error.setLine(ddata->lineNumber);
-                    error.setColumn(ddata->columnNumber);
+                    error.setLine(qmlConvertSourceCoordinate<quint16, int>(ddata->lineNumber));
+                    error.setColumn(qmlConvertSourceCoordinate<quint16, int>(ddata->columnNumber));
                 }
             }
 

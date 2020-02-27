@@ -40,8 +40,6 @@
 #ifndef QQMLJSSOURCELOCATION_P_H
 #define QQMLJSSOURCELOCATION_P_H
 
-#include "qqmljsglobal_p.h"
-
 #include <QtCore/qglobal.h>
 
 //
@@ -57,7 +55,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS { namespace AST {
+namespace QQmlJS {
 
 class SourceLocation
 {
@@ -80,7 +78,7 @@ public:
     quint32 startColumn;
 };
 
-} } // namespace AST
+} // namespace QQmlJS
 
 QT_END_NAMESPACE
 

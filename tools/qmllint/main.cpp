@@ -78,7 +78,7 @@ static bool lint_file(const QString &filename, const bool silent, const bool war
         const auto diagnosticMessages = parser.diagnosticMessages();
         for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
             qWarning().noquote() << QString::fromLatin1("%1:%2 : %3")
-                                    .arg(filename).arg(m.line).arg(m.message);
+                                    .arg(filename).arg(m.loc.startLine).arg(m.message);
         }
     }
 

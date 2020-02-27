@@ -69,8 +69,8 @@ public:
                                         QQmlJS::AST::FunctionExpression *ast,
                                         Compiler::Module *module);
 
-    void throwSyntaxError(const QQmlJS::AST::SourceLocation &loc, const QString &detail) override;
-    void throwReferenceError(const QQmlJS::AST::SourceLocation &loc, const QString &detail) override;
+    void throwSyntaxError(const QQmlJS::SourceLocation &loc, const QString &detail) override;
+    void throwReferenceError(const QQmlJS::SourceLocation &loc, const QString &detail) override;
 
 private:
     ExecutionEngine *engine;

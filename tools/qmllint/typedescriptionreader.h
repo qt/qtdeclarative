@@ -90,8 +90,8 @@ private:
     void readMetaObjectRevisions(QQmlJS::AST::UiScriptBinding *ast, const ScopeTree::Ptr &scope);
     void readEnumValues(QQmlJS::AST::UiScriptBinding *ast, MetaEnum *metaEnum);
 
-    void addError(const QQmlJS::AST::SourceLocation &loc, const QString &message);
-    void addWarning(const QQmlJS::AST::SourceLocation &loc, const QString &message);
+    void addError(const QQmlJS::SourceLocation &loc, const QString &message);
+    void addWarning(const QQmlJS::SourceLocation &loc, const QString &message);
 
     QString m_fileName;
     QString m_source;

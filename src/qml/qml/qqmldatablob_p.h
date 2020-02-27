@@ -132,7 +132,7 @@ protected:
     void setError(const QQmlError &);
     void setError(const QList<QQmlError> &errors);
     void setError(const QQmlJS::DiagnosticMessage &error);
-    void setError(const QVector<QQmlJS::DiagnosticMessage> &errors);
+    void setError(const QVector<QQmlError> &errors);
     void setError(const QString &description);
     void addDependency(QQmlDataBlob *);
 

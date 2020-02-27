@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include <private/qqmltypeloaderqmldircontent_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
 #include <QtQml/qqmlerror.h>
 
 QT_BEGIN_NAMESPACE
@@ -59,8 +60,8 @@ QList<QQmlError> QQmlTypeLoaderQmldirContent::errors(const QString &uri) const
     for (const auto &parseError : parseErrors) {
         QQmlError error;
         error.setUrl(url);
-        error.setLine(parseError.line);
-        error.setColumn(parseError.column);
+        error.setLine(qmlConvertSourceCoordinate<quint32, int>(parseError.loc.startLine));
+        error.setColumn(qmlConvertSourceCoordinate<quint32, int>(parseError.loc.startColumn));
         error.setDescription(parseError.message);
         errors.append(error);
     }
@@ -83,8 +84,8 @@ void QQmlTypeLoaderQmldirContent::setContent(const QString &location, const QStr
 void QQmlTypeLoaderQmldirContent::setError(const QQmlError &error)
 {
     QQmlJS::DiagnosticMessage parseError;
-    parseError.line = error.line();
-    parseError.column = error.column();
+    parseError.loc.startLine = error.line();
+    parseError.loc.startColumn = error.column();
     parseError.message = error.description();
     m_parser.setError(parseError);
 }

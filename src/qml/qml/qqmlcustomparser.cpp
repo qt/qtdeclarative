@@ -40,6 +40,7 @@
 #include "qqmlcustomparser_p.h"
 
 #include <private/qv4compileddata_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
 
 #include <QtCore/qdebug.h>
 
@@ -100,10 +101,10 @@ void QQmlCustomParser::clearErrors()
 */
 void QQmlCustomParser::error(const QV4::CompiledData::Location &location, const QString &description)
 {
-    QQmlJS::DiagnosticMessage error;
-    error.line = location.line;
-    error.column = location.column;
-    error.message = description;
+    QQmlError error;
+    error.setLine(qmlConvertSourceCoordinate<quint32, int>(location.line));
+    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(location.column));
+    error.setDescription(description);
 
     exceptions << error;
 }

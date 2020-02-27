@@ -42,6 +42,7 @@
 #include <private/qqmlprofiler_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmltypeloaderthread_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
 
 #include <QtQml/qqmlengine.h>
 
@@ -306,22 +307,19 @@ void QQmlDataBlob::setError(const QList<QQmlError> &errors)
 void QQmlDataBlob::setError(const QQmlJS::DiagnosticMessage &error)
 {
     QQmlError e;
-    e.setColumn(error.column);
-    e.setLine(error.line);
+    e.setColumn(qmlConvertSourceCoordinate<quint32, int>(error.loc.startColumn));
+    e.setLine(qmlConvertSourceCoordinate<quint32, int>(error.loc.startLine));
     e.setDescription(error.message);
     e.setUrl(url());
     setError(e);
 }
 
-void QQmlDataBlob::setError(const QVector<QQmlJS::DiagnosticMessage> &errors)
+void QQmlDataBlob::setError(const QVector<QQmlError> &errors)
 {
     QList<QQmlError> finalErrors;
     finalErrors.reserve(errors.count());
     for (const auto &error : errors) {
-        QQmlError e;
-        e.setColumn(error.column);
-        e.setLine(error.line);
-        e.setDescription(error.message);
+        QQmlError e = error;
         e.setUrl(url());
         finalErrors << e;
     }

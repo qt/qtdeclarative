@@ -45,7 +45,7 @@ QT_USE_NAMESPACE
 using namespace QV4;
 using namespace Moth;
 
-void BytecodeGenerator::setLocation(const QQmlJS::AST::SourceLocation &loc)
+void BytecodeGenerator::setLocation(const QQmlJS::SourceLocation &loc)
 {
     currentLine = static_cast<int>(loc.startLine);
 }

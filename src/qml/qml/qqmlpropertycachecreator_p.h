@@ -56,19 +56,20 @@
 #include <private/qqmlpropertyresolver_p.h>
 #include <private/qqmltypedata_p.h>
 #include <private/inlinecomponentutils_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
 
 #include <QScopedValueRollback>
 #include <vector>
 
 QT_BEGIN_NAMESPACE
 
-inline QQmlJS::DiagnosticMessage qQmlCompileError(const QV4::CompiledData::Location &location,
+inline QQmlError qQmlCompileError(const QV4::CompiledData::Location &location,
                                                   const QString &description)
 {
-    QQmlJS::DiagnosticMessage error;
-    error.line = location.line;
-    error.column = location.column;
-    error.message = description;
+    QQmlError error;
+    error.setLine(qmlConvertSourceCoordinate<quint32, int>(location.line));
+    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(location.column));
+    error.setDescription(description);
     return error;
 }
 
@@ -117,16 +118,16 @@ public:
                              const ObjectContainer *objectContainer, const QQmlImports *imports,
                              const QByteArray &typeClassName);
 
-    QQmlJS::DiagnosticMessage buildMetaObjects();
+    QQmlError buildMetaObjects();
 
     enum class VMEMetaObjectIsRequired {
         Maybe,
         Always
     };
 protected:
-    QQmlJS::DiagnosticMessage buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context, VMEMetaObjectIsRequired isVMERequired);
-    QQmlRefPointer<QQmlPropertyCache> propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlJS::DiagnosticMessage *error) const;
-    QQmlJS::DiagnosticMessage createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlRefPointer<QQmlPropertyCache> &baseTypeCache);
+    QQmlError buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context, VMEMetaObjectIsRequired isVMERequired);
+    QQmlRefPointer<QQmlPropertyCache> propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlError *error) const;
+    QQmlError createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlRefPointer<QQmlPropertyCache> &baseTypeCache);
 
     int metaTypeForParameter(const QV4::CompiledData::ParameterType &param, QString *customTypeName = nullptr);
 
@@ -159,7 +160,7 @@ inline QQmlPropertyCacheCreator<ObjectContainer>::QQmlPropertyCacheCreator(QQmlP
 }
 
 template <typename ObjectContainer>
-inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjects()
+inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjects()
 {
     using namespace icutils;
     QQmlBindingInstantiationContext context;
@@ -186,8 +187,8 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buil
     auto nodesSorted = topoSort(nodes, adjacencyList, hasCycle);
 
     if (hasCycle) {
-        QQmlJS::DiagnosticMessage diag;
-        diag.message = QLatin1String("Inline components form a cycle!");
+        QQmlError diag;
+        diag.setDescription(QLatin1String("Inline components form a cycle!"));
         return diag;
     }
 
@@ -201,7 +202,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buil
         QByteArray icTypeName { objectContainer->stringAt(ic.nameIndex).toUtf8() };
         QScopedValueRollback<QByteArray> nameChange {typeClassName, icTypeName};
         QScopedValueRollback<unsigned int> rootChange {currentRoot, ic.objectIndex};
-        QQmlJS::DiagnosticMessage diag = buildMetaObjectRecursively(ic.objectIndex, context, VMEMetaObjectIsRequired::Always);
+        QQmlError diag = buildMetaObjectRecursively(ic.objectIndex, context, VMEMetaObjectIsRequired::Always);
         if (diag.isValid()) {
             return diag;
         }
@@ -213,7 +214,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buil
 }
 
 template <typename ObjectContainer>
-inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context, VMEMetaObjectIsRequired isVMERequired)
+inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context, VMEMetaObjectIsRequired isVMERequired)
 {
     auto isAddressable = [](const QUrl &url) {
         const QString fileName = url.fileName();
@@ -242,7 +243,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buil
                         auto *typeRef = objectContainer->resolvedType(obj->inheritedTypeNameIndex);
                         Q_ASSERT(typeRef);
                         QQmlRefPointer<QQmlPropertyCache> baseTypeCache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
-                        QQmlJS::DiagnosticMessage error = createMetaObject(context.referencingObjectIndex, obj, baseTypeCache);
+                        QQmlError error = createMetaObject(context.referencingObjectIndex, obj, baseTypeCache);
                         if (error.isValid())
                             return error;
                     }
@@ -257,7 +258,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buil
 
     QQmlRefPointer<QQmlPropertyCache> baseTypeCache;
     {
-        QQmlJS::DiagnosticMessage error;
+        QQmlError error;
         baseTypeCache = propertyCacheForObject(obj, context, &error);
         if (error.isValid())
             return error;
@@ -265,7 +266,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buil
 
     if (baseTypeCache) {
         if (needVMEMetaObject) {
-            QQmlJS::DiagnosticMessage error = createMetaObject(objectIndex, obj, baseTypeCache);
+            QQmlError error = createMetaObject(objectIndex, obj, baseTypeCache);
             if (error.isValid())
                 return error;
         } else {
@@ -287,18 +288,18 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::buil
                 if (!context.resolveInstantiatingProperty())
                     pendingGroupPropertyBindings->append(context);
 
-                QQmlJS::DiagnosticMessage error = buildMetaObjectRecursively(binding->value.objectIndex, context, VMEMetaObjectIsRequired::Maybe);
+                QQmlError error = buildMetaObjectRecursively(binding->value.objectIndex, context, VMEMetaObjectIsRequired::Maybe);
                 if (error.isValid())
                     return error;
             }
     }
 
-    QQmlJS::DiagnosticMessage noError;
+    QQmlError noError;
     return noError;
 }
 
 template <typename ObjectContainer>
-inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContainer>::propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlJS::DiagnosticMessage *error) const
+inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContainer>::propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlError *error) const
 {
     if (context.instantiatingProperty) {
         return context.instantiatingPropertyCache(enginePrivate);
@@ -344,7 +345,7 @@ inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContaine
 }
 
 template <typename ObjectContainer>
-inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlRefPointer<QQmlPropertyCache> &baseTypeCache)
+inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlRefPointer<QQmlPropertyCache> &baseTypeCache)
 {
     QQmlRefPointer<QQmlPropertyCache> cache;
     cache.adopt(baseTypeCache->copyAndReserve(obj->propertyCount() + obj->aliasCount(),
@@ -622,7 +623,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheCreator<ObjectContainer>::crea
         effectiveSignalIndex++;
     }
 
-    QQmlJS::DiagnosticMessage noError;
+    QQmlError noError;
     return noError;
 }
 
@@ -670,11 +671,11 @@ public:
 
     void appendAliasPropertiesToMetaObjects(QQmlEnginePrivate *enginePriv);
 
-    QQmlJS::DiagnosticMessage appendAliasesToPropertyCache(const CompiledObject &component, int objectIndex, QQmlEnginePrivate *enginePriv);
+    QQmlError appendAliasesToPropertyCache(const CompiledObject &component, int objectIndex, QQmlEnginePrivate *enginePriv);
 
 private:
     void appendAliasPropertiesInMetaObjectsWithinComponent(const CompiledObject &component, int firstObjectIndex, QQmlEnginePrivate *enginePriv);
-    QQmlJS::DiagnosticMessage propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, int *rev, QQmlPropertyData::Flags *propertyFlags, QQmlEnginePrivate *enginePriv);
+    QQmlError propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, int *rev, QQmlPropertyData::Flags *propertyFlags, QQmlEnginePrivate *enginePriv);
 
     void collectObjectsWithAliasesRecursively(int objectIndex, QVector<int> *objectsWithAliases) const;
 
@@ -785,7 +786,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::collectObjectsWithAl
 }
 
 template <typename ObjectContainer>
-inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, int *minorVersion,
+inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, int *minorVersion,
         QQmlPropertyData::Flags *propertyFlags, QQmlEnginePrivate *enginePriv)
 {
     *type = 0;
@@ -896,16 +897,16 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>:
 
     propertyFlags->setIsWritable(!(alias.flags & QV4::CompiledData::Alias::IsReadOnly) && writable);
     propertyFlags->setIsResettable(resettable);
-    return QQmlJS::DiagnosticMessage();
+    return QQmlError();
 }
 
 template <typename ObjectContainer>
-inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesToPropertyCache(
+inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesToPropertyCache(
         const CompiledObject &component, int objectIndex, QQmlEnginePrivate *enginePriv)
 {
     const CompiledObject &object = *objectContainer->objectAt(objectIndex);
     if (!object.aliasCount())
-        return QQmlJS::DiagnosticMessage();
+        return QQmlError();
 
     QQmlPropertyCache *propertyCache = propertyCaches->at(objectIndex);
     Q_ASSERT(propertyCache);
@@ -922,7 +923,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>:
         int type = 0;
         int minorVersion = 0;
         QQmlPropertyData::Flags propertyFlags;
-        QQmlJS::DiagnosticMessage error = propertyDataForAlias(component, *alias, &type, &minorVersion, &propertyFlags, enginePriv);
+        QQmlError error = propertyDataForAlias(component, *alias, &type, &minorVersion, &propertyFlags, enginePriv);
         if (error.isValid())
             return error;
 
@@ -935,7 +936,7 @@ inline QQmlJS::DiagnosticMessage QQmlPropertyCacheAliasCreator<ObjectContainer>:
                                       type, minorVersion, effectiveSignalIndex++);
     }
 
-    return QQmlJS::DiagnosticMessage();
+    return QQmlError();
 }
 
 template <typename ObjectContainer>

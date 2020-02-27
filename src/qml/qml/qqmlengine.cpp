@@ -57,6 +57,7 @@
 #include "qqmlnotifier_p.h"
 #include "qqmlincubator.h"
 #include "qqmlabstracturlinterceptor.h"
+#include "qqmlsourcecoordinate_p.h"
 #include <private/qqmldirparser_p.h>
 #include <private/qqmlboundsignal_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
@@ -2124,15 +2125,15 @@ QList<QQmlError> QQmlEnginePrivate::qmlErrorFromDiagnostics(
     QList<QQmlError> errors;
     for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
         if (m.isWarning()) {
-            qWarning("%s:%d : %s", qPrintable(fileName), m.line, qPrintable(m.message));
+            qWarning("%s:%d : %s", qPrintable(fileName), m.loc.startLine, qPrintable(m.message));
             continue;
         }
 
         QQmlError error;
         error.setUrl(QUrl(fileName));
         error.setDescription(m.message);
-        error.setLine(m.line);
-        error.setColumn(m.column);
+        error.setLine(qmlConvertSourceCoordinate<quint32, int>(m.loc.startLine));
+        error.setColumn(qmlConvertSourceCoordinate<quint32, int>(m.loc.startColumn));
         errors << error;
     }
     return errors;

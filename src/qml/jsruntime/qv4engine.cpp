@@ -1910,10 +1910,10 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(
                                                  sourceCode, sourceTimeStamp, &diagnostics);
     for (const QQmlJS::DiagnosticMessage &m : diagnostics) {
         if (m.isError()) {
-            throwSyntaxError(m.message, url.toString(), m.line, m.column);
+            throwSyntaxError(m.message, url.toString(), m.loc.startLine, m.loc.startColumn);
             return nullptr;
         } else {
-            qWarning() << url << ':' << m.line << ':' << m.column
+            qWarning() << url << ':' << m.loc.startLine << ':' << m.loc.startColumn
                       << ": warning: " << m.message;
         }
     }

@@ -82,7 +82,7 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
     {
         QQmlPropertyCacheCreator<QQmlTypeCompiler> propertyCacheBuilder(&m_propertyCaches, &pendingGroupPropertyBindings,
                                                                         engine, this, imports(), typeData->typeClassName());
-        QQmlJS::DiagnosticMessage error = propertyCacheBuilder.buildMetaObjects();
+        QQmlError error = propertyCacheBuilder.buildMetaObjects();
         if (error.isValid()) {
             recordError(error);
             return nullptr;
@@ -174,8 +174,8 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
 void QQmlTypeCompiler::recordError(const QV4::CompiledData::Location &location, const QString &description)
 {
     QQmlError error;
-    error.setLine(location.line);
-    error.setColumn(location.column);
+    error.setLine(qmlConvertSourceCoordinate<quint32, int>(location.line));
+    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(location.column));
     error.setDescription(description);
     error.setUrl(url());
     errors << error;
@@ -185,8 +185,15 @@ void QQmlTypeCompiler::recordError(const QQmlJS::DiagnosticMessage &message)
 {
     QQmlError error;
     error.setDescription(message.message);
-    error.setLine(message.line);
-    error.setColumn(message.column);
+    error.setLine(qmlConvertSourceCoordinate<quint32, int>(message.loc.startLine));
+    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(message.loc.startColumn));
+    error.setUrl(url());
+    errors << error;
+}
+
+void QQmlTypeCompiler::recordError(const QQmlError &e)
+{
+    QQmlError error = e;
     error.setUrl(url());
     errors << error;
 }
@@ -1016,7 +1023,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases(int componentIndex)
 
         for (int objectIndex: qAsConst(_objectsWithAliases)) {
 
-            QQmlJS::DiagnosticMessage error;
+            QQmlError error;
             const auto result = resolveAliasesInObject(objectIndex, &error);
 
             if (error.isValid()) {
@@ -1025,7 +1032,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases(int componentIndex)
             }
 
             if (result == AllAliasesResolved) {
-                QQmlJS::DiagnosticMessage error = aliasCacheCreator.appendAliasesToPropertyCache(*qmlObjects->at(componentIndex), objectIndex, enginePrivate);
+                QQmlError error = aliasCacheCreator.appendAliasesToPropertyCache(*qmlObjects->at(componentIndex), objectIndex, enginePrivate);
                 if (error.isValid()) {
                     recordError(error);
                     return false;
@@ -1056,7 +1063,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases(int componentIndex)
 
 QQmlComponentAndAliasResolver::AliasResolutionResult
 QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
-                                                      QQmlJS::DiagnosticMessage *error)
+                                                      QQmlError *error)
 {
     const QmlIR::Object * const obj = qmlObjects->at(objectIndex);
     if (!obj->aliasCount())

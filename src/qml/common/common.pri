@@ -28,6 +28,7 @@ HEADERS += \
     $$PWD/qqmljsdiagnosticmessage_p.h \
     $$PWD/qqmljsfixedpoolarray_p.h \
     $$PWD/qqmljsmemorypool_p.h \
+    $$PWD/qqmljssourcelocation_p.h \
     $$PWD/qv4alloca_p.h \
     $$PWD/qv4calldata_p.h \
     $$PWD/qv4compileddata_p.h \

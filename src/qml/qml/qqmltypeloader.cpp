@@ -45,6 +45,7 @@
 #include <private/qqmltypedata_p.h>
 #include <private/qqmltypeloaderqmldircontent_p.h>
 #include <private/qqmltypeloaderthread_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
 
 #include <QtQml/qqmlabstracturlinterceptor.h>
 #include <QtQml/qqmlengine.h>
@@ -696,8 +697,8 @@ void QQmlTypeLoader::Blob::dependencyComplete(QQmlDataBlob *blob)
             Q_ASSERT(errors.size());
             QQmlError error(errors.takeFirst());
             error.setUrl(m_importCache.baseUrl());
-            error.setLine(import->location.line);
-            error.setColumn(import->location.column);
+            error.setLine(qmlConvertSourceCoordinate<quint32, int>(import->location.line));
+            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(import->location.column));
             errors.prepend(error); // put it back on the list after filling out information.
             setError(errors);
         }

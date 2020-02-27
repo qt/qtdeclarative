@@ -302,8 +302,8 @@ bool QQmlDirParser::parse(const QString &source)
 void QQmlDirParser::reportError(quint16 line, quint16 column, const QString &description)
 {
     QQmlJS::DiagnosticMessage error;
-    error.line = line;
-    error.column = column;
+    error.loc.startLine = line;
+    error.loc.startColumn = column;
     error.message = description;
     _errors.append(error);
 }
@@ -319,7 +319,7 @@ bool QQmlDirParser::hasError() const
 void QQmlDirParser::setError(const QQmlJS::DiagnosticMessage &e)
 {
     _errors.clear();
-    reportError(e.line, e.column, e.message);
+    reportError(e.loc.startLine, e.loc.startColumn, e.message);
 }
 
 QList<QQmlJS::DiagnosticMessage> QQmlDirParser::errors(const QString &uri) const
