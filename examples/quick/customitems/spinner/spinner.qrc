@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>content/spinner-bg.png</file>
+        <file>content/spinner-select.png</file>
+        <file>content/Spinner.qml</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/shared/pics">
+        <file>background.jpg</file>
+        <file>blueStar.png</file>
+        <file>blueStone.png</file>
+        <file>greenStar.png</file>
+        <file>greenStone.png</file>
+        <file>redStar.png</file>
+        <file>redStone.png</file>
+        <file>star.png</file>
+        <file>yellowStone.png</file>
+    </qresource>
+</RCC>

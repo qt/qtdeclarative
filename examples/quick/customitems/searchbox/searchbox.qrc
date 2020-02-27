@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>SearchBox.qml</file>
+        <file>images/clear.png</file>
+        <file>images/lineedit-bg-focus.png</file>
+        <file>images/lineedit-bg.png</file>
+    </qresource>
+</RCC>

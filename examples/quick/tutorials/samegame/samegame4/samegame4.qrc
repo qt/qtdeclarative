@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+        <file>samegame.qml</file>
+        <file>content/BoomBlock.qml</file>
+        <file>content/Button.qml</file>
+        <file>content/Dialog.qml</file>
+        <file>content/samegame.js</file>
+        <file>highscores/README</file>
+        <file>highscores/score_data.xml</file>
+        <file>highscores/score_style.xsl</file>
+        <file>highscores/scores.php</file>
+    </qresource>
+</RCC>

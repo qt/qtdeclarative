@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>ScrollBar.qml</file>
+        <file>pics/niagara_falls.jpg</file>
+    </qresource>
+</RCC>
