@@ -2907,6 +2907,31 @@ void QQuickTextInputPrivate::updateDisplayText(bool forceUpdate)
     }
 }
 
+qreal QQuickTextInputPrivate::calculateImplicitWidthForText(const QString &text) const
+{
+    Q_Q(const QQuickTextInput);
+    QTextLayout layout(text);
+
+    QTextOption option = m_textLayout.textOption();
+    option.setTextDirection(m_layoutDirection);
+    option.setFlags(QTextOption::IncludeTrailingSpaces);
+    option.setWrapMode(QTextOption::WrapMode(wrapMode));
+    option.setAlignment(Qt::Alignment(q->effectiveHAlign()));
+    layout.setTextOption(option);
+    layout.setFont(font);
+#if QT_CONFIG(im)
+    layout.setPreeditArea(m_textLayout.preeditAreaPosition(), m_textLayout.preeditAreaText());
+#endif
+    layout.beginLayout();
+
+    QTextLine line = layout.createLine();
+    line.setLineWidth(INT_MAX);
+    const qreal theImplicitWidth = qCeil(line.naturalTextWidth()) + q->leftPadding() + q->rightPadding();
+
+    layout.endLayout();
+    return theImplicitWidth;
+}
+
 qreal QQuickTextInputPrivate::getImplicitWidth() const
 {
     Q_Q(const QQuickTextInput);
@@ -2914,29 +2939,8 @@ qreal QQuickTextInputPrivate::getImplicitWidth() const
         QQuickTextInputPrivate *d = const_cast<QQuickTextInputPrivate *>(this);
         d->requireImplicitWidth = true;
 
-        if (q->isComponentComplete()) {
-            // One time cost, only incurred if implicitWidth is first requested after
-            // componentComplete.
-            QTextLayout layout(m_text);
-
-            QTextOption option = m_textLayout.textOption();
-            option.setTextDirection(m_layoutDirection);
-            option.setFlags(QTextOption::IncludeTrailingSpaces);
-            option.setWrapMode(QTextOption::WrapMode(wrapMode));
-            option.setAlignment(Qt::Alignment(q->effectiveHAlign()));
-            layout.setTextOption(option);
-            layout.setFont(font);
-#if QT_CONFIG(im)
-            layout.setPreeditArea(m_textLayout.preeditAreaPosition(), m_textLayout.preeditAreaText());
-#endif
-            layout.beginLayout();
-
-            QTextLine line = layout.createLine();
-            line.setLineWidth(INT_MAX);
-            d->implicitWidth = qCeil(line.naturalTextWidth()) + q->leftPadding() + q->rightPadding();
-
-            layout.endLayout();
-        }
+        if (q->isComponentComplete())
+            d->implicitWidth = calculateImplicitWidthForText(m_text);
     }
     return implicitWidth;
 }

@@ -456,6 +456,7 @@ public:
     void updateLayout();
     void updateBaselineOffset();
 
+    qreal calculateImplicitWidthForText(const QString &text) const;
     qreal getImplicitWidth() const override;
 
     inline qreal padding() const { return extra.isAllocated() ? extra->padding : 0.0; }
