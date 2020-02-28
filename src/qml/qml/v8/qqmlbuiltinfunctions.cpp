@@ -731,23 +731,10 @@ QString formatDateTimeObjectUsingDateFormat(T formatThis, Qt::DateFormat format)
     case Qt::RFC2822Date:
     case Qt::ISODateWithMs:
         return formatThis.toString(format);
-    // ### Qt 6: Remove all locale dependent cases
-    QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
-    case Qt::SystemLocaleDate:
-        // case Qt::LocalDate: covered by SystemLocaleDate
-        return QLocale::system().toString(formatThis);
-    case Qt::LocaleDate:
-    case Qt::DefaultLocaleShortDate:
-        return QLocale().toString(formatThis, QLocale::ShortFormat);
-    case Qt::SystemLocaleShortDate:
-        return QLocale::system().toString(formatThis, QLocale::ShortFormat);
-    case Qt::SystemLocaleLongDate:
-        return QLocale::system().toString(formatThis, QLocale::LongFormat);
-    case Qt::DefaultLocaleLongDate:
-        return QLocale().toString(formatThis, QLocale::LongFormat);
+    default: // ### Qt 6: remove once qtbase has removed the rest of the enum !
+        break;
     }
-    QT_WARNING_POP
-    Q_UNREACHABLE();
+    // Q_UNREACHABLE(); // ### Qt 6: restore once the default is gone
     return QString();
 }
 

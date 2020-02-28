@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.15
 
 QtObject {
     property date dateFromString: "2008-12-24"
@@ -8,7 +8,7 @@ QtObject {
         var v = eval(prop)
         return [
             Qt.formatDate(v),
-            Qt.formatDate(v, Qt.DefaultLocaleLongDate),
+            Qt.formatDate(v, Qt.locale(), Locale.LongFormat),
             Qt.formatDate(v, "ddd MMMM d yy")
         ]
     }
@@ -17,7 +17,7 @@ QtObject {
         var v = eval(prop)
         return [
             Qt.formatTime(v),
-            Qt.formatTime(v, Qt.DefaultLocaleLongDate),
+            Qt.formatTime(v, Qt.locale(), Locale.LongFormat),
             Qt.formatTime(v, "H:m:s a"),
             Qt.formatTime(v, "hh:mm:ss.zzz")
         ]
@@ -27,7 +27,7 @@ QtObject {
         var v = eval(prop)
         return [
             Qt.formatDateTime(v),
-            Qt.formatDateTime(v, Qt.DefaultLocaleLongDate),
+            Qt.formatDateTime(v, Qt.locale(), Locale.LongFormat),
             Qt.formatDateTime(v, "M/d/yy H:m:s a")
         ]
     }
