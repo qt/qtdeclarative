@@ -1028,11 +1028,24 @@ bool QQmlTableModel::validateNewRow(const char *functionName, const QVariant &ro
             }
 
             const QVariant rolePropertyValue = rowAsMap.value(roleData.name);
+
             if (rolePropertyValue.type() != roleData.type) {
-                qmlWarning(this).quote() << functionName << ": expected the property named "
-                    << roleData.name << " to be of type " << roleData.typeName
-                    << ", but got " << QString::fromLatin1(rolePropertyValue.typeName()) << " instead";
-                return false;
+                if (!rolePropertyValue.canConvert(int(roleData.type))) {
+                    qmlWarning(this).quote() << functionName << ": expected the property named "
+                        << roleData.name << " to be of type " << roleData.typeName
+                        << ", but got " << QString::fromLatin1(rolePropertyValue.typeName())
+                        << " instead";
+                    return false;
+                }
+
+                QVariant effectiveValue = rolePropertyValue;
+                if (!effectiveValue.convert(int(roleData.type))) {
+                    qmlWarning(this).nospace() << functionName << ": failed converting value "
+                        << rolePropertyValue << " set at column " << columnIndex << " with role "
+                        << QString::fromLatin1(rolePropertyValue.typeName()) << " to "
+                        << roleData.typeName;
+                    return false;
+                }
             }
         }
     }
