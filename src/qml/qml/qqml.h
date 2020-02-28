@@ -86,7 +86,7 @@
     enum class QmlIsSingleton {yes = true}; \
     template<typename, typename> friend struct QML_PRIVATE_NAMESPACE::QmlSingleton; \
     template<typename T, typename... Args> \
-    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor);
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QVector<int> *);
 
 #define QML_ADDED_IN_MINOR_VERSION(VERSION) \
     Q_CLASSINFO("QML.AddedInVersion", Q_REVISION(VERSION))
@@ -111,21 +111,21 @@
     using QmlExtendedType = EXTENDED_TYPE; \
     template<class, class> friend struct QML_PRIVATE_NAMESPACE::QmlExtended; \
     template<typename T, typename... Args> \
-    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor);
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QVector<int> *);
 
 #define QML_FOREIGN(FOREIGN_TYPE) \
     Q_CLASSINFO("QML.Foreign", #FOREIGN_TYPE) \
     using QmlForeignType = FOREIGN_TYPE; \
     template<class, class> friend struct QML_PRIVATE_NAMESPACE::QmlResolved; \
     template<typename T, typename... Args> \
-    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor);
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QVector<int> *);
 
 #define QML_INTERFACE \
     Q_CLASSINFO("QML.Element", "anonymous") \
     enum class QmlIsInterface {yes = true}; \
     template<typename, typename> friend struct QML_PRIVATE_NAMESPACE::QmlInterface; \
     template<typename T, typename... Args> \
-    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor);
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QVector<int> *);
 
 #define QML_UNAVAILABLE \
     QML_FOREIGN(QQmlTypeNotAvailable)
@@ -780,50 +780,57 @@ struct QmlTypeAndRevisionsRegistration;
 
 template<class T, class Resolved, class Extended>
 struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, false, false> {
-    static void registerTypeAndRevisions(const char *uri, int versionMajor)
+    static void registerTypeAndRevisions(const char *uri, int versionMajor,
+                                         QVector<int> *qmlTypeIds)
     {
         QQmlPrivate::qmlRegisterTypeAndRevisions<Resolved, Extended>(
-                    uri, versionMajor, &T::staticMetaObject);
+                    uri, versionMajor, &T::staticMetaObject, qmlTypeIds);
     }
 };
 
 template<class T, class Resolved>
 struct QmlTypeAndRevisionsRegistration<T, Resolved, void, true, false> {
-    static void registerTypeAndRevisions(const char *uri, int versionMajor)
+    static void registerTypeAndRevisions(const char *uri, int versionMajor,
+                                         QVector<int> *qmlTypeIds)
     {
         QQmlPrivate::qmlRegisterSingletonAndRevisions<Resolved>(
-                    uri, versionMajor, &T::staticMetaObject);
+                    uri, versionMajor, &T::staticMetaObject, qmlTypeIds);
     }
 };
 
 template<class T, class Resolved>
 struct QmlTypeAndRevisionsRegistration<T, Resolved, void, false, true> {
-    static void registerTypeAndRevisions(const char *uri, int versionMajor)
+    static void registerTypeAndRevisions(const char *uri, int versionMajor,
+                                         QVector<int> *qmlTypeIds)
     {
-        qmlRegisterInterface<Resolved>(uri, versionMajor);
+        const int id = qmlRegisterInterface<Resolved>(uri, versionMajor);
+        if (qmlTypeIds)
+            qmlTypeIds->append(id);
     }
 };
 
 template<typename T = void, typename... Args>
-void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor);
+void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor,
+                                  QVector<int> *qmlTypeIds = nullptr);
 
 template<typename T, typename... Args>
-void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor)
+void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor, QVector<int> *qmlTypeIds)
 {
     QmlTypeAndRevisionsRegistration<
             T, typename QQmlPrivate::QmlResolved<T>::Type,
             typename QQmlPrivate::QmlExtended<T>::Type,
             QQmlPrivate::QmlSingleton<T>::Value,
             QQmlPrivate::QmlInterface<T>::Value>
-            ::registerTypeAndRevisions(uri, versionMajor);
-    qmlRegisterTypesAndRevisions<Args...>(uri, versionMajor);
+            ::registerTypeAndRevisions(uri, versionMajor, qmlTypeIds);
+    qmlRegisterTypesAndRevisions<Args...>(uri, versionMajor, qmlTypeIds);
 }
 
 template<>
-inline void qmlRegisterTypesAndRevisions<>(const char *, int) {}
+inline void qmlRegisterTypesAndRevisions<>(const char *, int, QVector<int> *) {}
 
 inline void qmlRegisterNamespaceAndRevisions(const QMetaObject *metaObject,
-                                             const char *uri, int versionMajor)
+                                             const char *uri, int versionMajor,
+                                             QVector<int> *qmlTypeIds = nullptr)
 {
     QQmlPrivate::RegisterTypeAndRevisions type = {
         0,
@@ -848,7 +855,8 @@ inline void qmlRegisterNamespaceAndRevisions(const QMetaObject *metaObject,
         nullptr,
         nullptr,
 
-        &qmlCreateCustomParser<void>
+        &qmlCreateCustomParser<void>,
+        qmlTypeIds
     };
 
     qmlregister(QQmlPrivate::TypeAndRevisionsRegistration, &type);

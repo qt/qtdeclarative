@@ -253,7 +253,9 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
 
             assignVersions(&revisionRegistration, revision, type.version);
             revisionRegistration.customParser = type.customParserFactory();
-            qmlregister(TypeRegistration, &revisionRegistration);
+            const int id = qmlregister(TypeRegistration, &revisionRegistration);
+            if (type.qmlTypeIds)
+                type.qmlTypeIds->append(id);
         }
         break;
     }
@@ -301,7 +303,9 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
             }
 
             assignVersions(&revisionRegistration, revision, type.version);
-            qmlregister(SingletonRegistration, &revisionRegistration);
+            const int id = qmlregister(SingletonRegistration, &revisionRegistration);
+            if (type.qmlTypeIds)
+                type.qmlTypeIds->append(id);
         }
         break;
     }
@@ -362,7 +366,8 @@ void QQmlPrivate::qmlunregister(RegistrationType type, quintptr data)
 namespace QQmlPrivate {
     template<>
     void qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
-            const char *uri, int versionMajor, const QMetaObject *classInfoMetaObject)
+            const char *uri, int versionMajor, const QMetaObject *classInfoMetaObject,
+            QVector<int> *qmlTypeIds)
     {
         using T = QQmlTypeNotAvailable;
 
@@ -386,7 +391,7 @@ namespace QQmlPrivate {
             StaticCastSelector<T, QQmlPropertyValueSource>::cast(),
             StaticCastSelector<T, QQmlPropertyValueInterceptor>::cast(),
 
-            nullptr, nullptr, qmlCreateCustomParser<T>
+            nullptr, nullptr, qmlCreateCustomParser<T>, qmlTypeIds
         };
 
         qmlregister(TypeAndRevisionsRegistration, &type);

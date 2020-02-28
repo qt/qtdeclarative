@@ -384,6 +384,7 @@ namespace QQmlPrivate
         const QMetaObject *extensionMetaObject;
 
         QQmlCustomParser *(*customParserFactory)();
+        QVector<int> *qmlTypeIds;
     };
 
     struct RegisterInterface {
@@ -431,6 +432,7 @@ namespace QQmlPrivate
 
         QMetaType typeId;
         std::function<QObject*(QQmlEngine *, QJSEngine *)> generalizedQobjectApi; // new in version 3
+        QVector<int> *qmlTypeIds;
     };
 
     struct RegisterCompositeType {
@@ -582,7 +584,8 @@ namespace QQmlPrivate
 
     template<typename T>
     void qmlRegisterSingletonAndRevisions(const char *uri, int versionMajor,
-                                          const QMetaObject *classInfoMetaObject)
+                                          const QMetaObject *classInfoMetaObject,
+                                          QVector<int> *qmlTypeIds)
     {
         RegisterSingletonTypeAndRevisions api = {
             0,
@@ -596,7 +599,8 @@ namespace QQmlPrivate
             classInfoMetaObject,
 
             QMetaType::fromType<T *>(),
-            Constructors<T>::createSingletonInstance
+            Constructors<T>::createSingletonInstance,
+            qmlTypeIds
         };
 
         qmlregister(SingletonAndRevisionsRegistration, &api);
@@ -604,7 +608,8 @@ namespace QQmlPrivate
 
     template<typename T, typename E>
     void qmlRegisterTypeAndRevisions(const char *uri, int versionMajor,
-                                     const QMetaObject *classInfoMetaObject)
+                                     const QMetaObject *classInfoMetaObject,
+                                     QVector<int> *qmlTypeIds)
     {
         RegisterTypeAndRevisions type = {
             0,
@@ -629,7 +634,8 @@ namespace QQmlPrivate
             ExtendedType<E>::createParent,
             ExtendedType<E>::staticMetaObject,
 
-            &qmlCreateCustomParser<T>
+            &qmlCreateCustomParser<T>,
+            qmlTypeIds
         };
 
         qmlregister(TypeAndRevisionsRegistration, &type);
@@ -637,7 +643,8 @@ namespace QQmlPrivate
 
     template<>
     void Q_QML_EXPORT qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
-            const char *uri, int versionMajor, const QMetaObject *classInfoMetaObject);
+            const char *uri, int versionMajor, const QMetaObject *classInfoMetaObject,
+            QVector<int> *qmlTypeIds);
 
 } // namespace QQmlPrivate
 
