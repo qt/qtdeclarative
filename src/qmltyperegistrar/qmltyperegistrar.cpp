@@ -49,7 +49,8 @@ struct ScopedPointerFileCloser
 
 enum RegistrationMode {
     NoRegistration,
-    ClassRegistration,
+    ObjectRegistration,
+    GadgetRegistration,
     NamespaceRegistration
 };
 
@@ -59,8 +60,16 @@ static RegistrationMode qmlTypeRegistrationMode(const QJsonObject &classDef)
     for (const QJsonValue &info: classInfos) {
         const QString name = info[QLatin1String("name")].toString();
         if (name == QLatin1String("QML.Element")) {
-            return classDef[QLatin1String("namespace")].toBool() ? NamespaceRegistration
-                                                                 : ClassRegistration;
+            if (classDef[QLatin1String("object")].toBool())
+                return ObjectRegistration;
+            if (classDef[QLatin1String("gadget")].toBool())
+                return GadgetRegistration;
+            if (classDef[QLatin1String("namespace")].toBool())
+                return NamespaceRegistration;
+            qWarning() << "Not registering classInfo which is neither an object, "
+                          "nor a gadget, nor a namespace:"
+                       << name;
+            break;
         }
     }
     return NoRegistration;
@@ -295,9 +304,8 @@ int main(int argc, char **argv)
                 QJsonObject classDef = cls.toObject();
                 switch (qmlTypeRegistrationMode(classDef)) {
                 case NamespaceRegistration:
-                    classDef.insert(QLatin1String("namespace"), true);
-                    Q_FALLTHROUGH();
-                case ClassRegistration: {
+                case GadgetRegistration:
+                case ObjectRegistration: {
                     const QString include = metaObject[QLatin1String("inputFile")].toString();
                     const bool declaredInHeader = include.endsWith(QLatin1String(".h"));
                     if (declaredInHeader) {
@@ -309,6 +317,7 @@ int main(int argc, char **argv)
                                 qPrintable(classDef.value(QLatin1String("qualifiedClassName"))
                                            .toString()));
                     }
+
                     types.append(classDef);
                     break;
                 }

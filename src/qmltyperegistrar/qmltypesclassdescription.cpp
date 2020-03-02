@@ -154,6 +154,9 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
     revisions.erase(end, revisions.end());
 
     resolvedClass = classDef;
+
+    // If it's not a QObject, it's not creatable
+    isCreatable = isCreatable && classDef->value(QLatin1String("object")).toBool();
 }
 
 void QmlTypesClassDescription::collectAttached(const QString &attached,
