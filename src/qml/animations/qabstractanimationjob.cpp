@@ -45,8 +45,6 @@
 #include "private/qqmlengine_p.h"
 #include "private/qqmlglobal_p.h"
 
-#define DEFAULT_TIMER_INTERVAL 16
-
 QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_THREAD
