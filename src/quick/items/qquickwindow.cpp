@@ -4438,7 +4438,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     OpenGL context is actually created.
 
     QQuickWindow::openglContext() will still return 0 for this window
-    until after the QQuickWindow::sceneGraphInitialize() has been
+    until after the QQuickWindow::sceneGraphInitialized() has been
     emitted.
 
     \note
