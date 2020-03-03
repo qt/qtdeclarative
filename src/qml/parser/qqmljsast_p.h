@@ -1068,7 +1068,7 @@ public:
     PatternPropertyList *next;
 };
 
-class QML_PARSER_EXPORT IdentifierPropertyName : public PropertyName
+class QML_PARSER_EXPORT IdentifierPropertyName: public PropertyName
 {
 public:
     QQMLJS_DECLARE_AST_NODE(IdentifierPropertyName)
