@@ -151,7 +151,11 @@
 
     This property holds the model role used to display text in each header cell.
 
-    The default value is the \c "display" role.
+    When the model has multiple roles, textRole can be set to determine which
+    role should be displayed.
+
+    If model is a QAbstractItemModel then it will default to "display"; otherwise
+    it is empty.
 
     \sa QAbstractItemModel::roleNames()
 */
@@ -161,7 +165,11 @@
 
     This property holds the model role used to display text in each header cell.
 
-    The default value is the \c "display" role.
+    When the model has multiple roles, textRole can be set to determine which
+    role should be displayed.
+
+    If model is a QAbstractItemModel then it will default to "display"; otherwise
+    it is empty.
 
     \sa QAbstractItemModel::roleNames()
 */
@@ -241,6 +249,18 @@ void QQuickHeaderViewBasePrivate::syncModel()
     }
 
     QQuickTableViewPrivate::syncModel();
+
+    isTransposed = false;
+    const auto aim = model->abstractItemModel();
+    if (orientation() == Qt::Horizontal) {
+        // For models that are just a list or a number, and especially not a
+        // table, we transpose the view when the orientation is horizontal.
+        // The model (list) will then be laid out horizontally rather than
+        // vertically, which is the otherwise the default.
+        isTransposed = !aim || aim->columnCount() == 1;
+    }
+    if (m_textRole.isEmpty() && aim)
+        m_textRole = QLatin1String("display");
 }
 
 void QQuickHeaderViewBasePrivate::syncSyncView()

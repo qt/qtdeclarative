@@ -42,6 +42,7 @@
 #include <QAbstractItemModelTester>
 #include <QtQml/QQmlEngine>
 #include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/private/qquicktext_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickheaderview_p.h>
 #include <private/qquickheaderview_p_p.h>
@@ -218,6 +219,7 @@ private slots:
     void testHeaderDataProxyModel();
     void testOrientation();
     void testModel();
+    void listModel();
 
 private:
     QQmlEngine *engine;
@@ -347,6 +349,38 @@ void tst_QQuickHeaderView::testModel()
     ttm2.setColumnCount(30);
     hhv->setModel(QVariant::fromValue(&ttm2));
     QCOMPARE(modelChangedSpy.count(), 2);
+}
+
+void tst_QQuickHeaderView::listModel()
+{
+    QQmlComponent component(engine);
+    component.loadUrl(testFileUrl("ListModel.qml"));
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+
+    auto hhv = root->findChild<QQuickHorizontalHeaderView *>("horizontalHeader");
+    QVERIFY(hhv);
+    auto vhv = root->findChild<QQuickVerticalHeaderView *>("verticalHeader");
+    QVERIFY(vhv);
+
+    auto hhvCell1 = hhv->childAt(0, 0)->childAt(0, 0)->findChild<QQuickText *>();
+    QVERIFY(hhvCell1);
+    QCOMPARE(hhvCell1->property("text"), "AAA");
+
+    auto hhvCell2 = hhv->childAt(hhvCell1->width() + 5, 0)->
+                        childAt(hhvCell1->width() + 5, 0)->findChild<QQuickText *>();
+    QVERIFY(hhvCell2);
+    QCOMPARE(hhvCell2->property("text"), "BBB");
+
+    auto vhvCell1 = vhv->childAt(0, 0)->childAt(0, 0)->findChild<QQuickText *>();
+    QVERIFY(vhvCell1);
+    QCOMPARE(vhvCell1->property("text"), "111");
+
+    auto vhvCell2 = vhv->childAt(0, vhvCell1->height() + 5)->
+                        childAt(0, vhvCell1->height() + 5)->findChild<QQuickText *>();
+    QVERIFY(vhvCell2);
+    QCOMPARE(vhvCell2->property("text"), "222");
 }
 
 QTEST_MAIN(tst_QQuickHeaderView)
